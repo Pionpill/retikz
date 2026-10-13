@@ -67,8 +67,8 @@ const translations: Partial<Record<string, string>> = {
   是否把连续映射结果限制在输出区间内: 'Whether continuous mapping results are clamped to the output interval',
   数值通道缺省的输出区间: 'Default output interval for a numeric channel',
   符号通道可选用的形状序列: 'Shape sequence available to a symbol channel',
-  '通道解析可见的 palette 默认值；由 IRPlot.plotDefaults 在 lowering 前解析':
-    'Palette defaults visible to channel resolution, resolved from IRPlot.plotDefaults before lowering',
+  '通道解析可见的 palette 默认值；由 IRPlot.defaultPlot 在 lowering 前解析':
+    'Palette defaults visible to channel resolution, resolved from IRPlot.defaultPlot before lowering',
   '分类 scale 默认颜色': 'Default colors for categorical scales',
   '发散色阶默认 scheme': 'Default scheme for diverging color scales',
   '连续单向色阶默认 scheme': 'Default scheme for sequential color scales',

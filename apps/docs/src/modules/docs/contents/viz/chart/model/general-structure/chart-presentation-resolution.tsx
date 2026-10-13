@@ -21,21 +21,23 @@ const ChartPresentationResolution: FC<ChartPresentationResolutionProps> = props 
         id="source-presentation"
         position={[12, 24]}
         label={label(t.source)}
-        layout={{ height: 30, padding: 0, key: { width: 80 }, value: { width: 190 } }}
-        style={{ font: { size: 13 } }}
         entries={[
           { key: 'note', value: t.note },
           { key: 'title', value: t.title },
           { key: 'source', value: t.dataSource },
           { key: 'subtitle', value: t.subtitle },
         ]}
+        defaultCell={{
+          style: { font: { size: 13 } },
+          layout: { height: 30, padding: 0 },
+          key: { layout: { width: 80 } },
+          value: { layout: { width: 190 } },
+        }}
       />
       <Array
         id="resolved-flex"
         position={[435, 12]}
         label={label(t.resolved)}
-        layout={{ direction: 'column', height: 30, width: 145, padding: 0 }}
-        style={{ font: { size: 13 } }}
         items={[
           'title',
           'subtitle',
@@ -43,6 +45,8 @@ const ChartPresentationResolution: FC<ChartPresentationResolutionProps> = props 
           'note',
           'source',
         ]}
+        layout={{ direction: 'column' }}
+        defaultCell={{ style: { font: { size: 13 } }, layout: { height: 30, width: 145, padding: 0 } }}
       />
       <Draw way={['source-presentation.right', 'resolved-flex.left']} arrow="->" />
     </Layout>

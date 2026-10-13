@@ -290,7 +290,7 @@ describe('Graph Scope and Theme compile semantics', () => {
                 namespace: 'graph',
                 type: 'graph',
                 children: [{ namespace: 'graph', type: 'entity', role: 'activity', position: [0, 0], text: 'reset' }],
-                graphDefaults: { entity: { style: { fill: '#ef4444' } } },
+                defaultGraph: { entity: { style: { fill: '#ef4444' } } },
                 defaults: { reset: ['node'] },
               },
             ],

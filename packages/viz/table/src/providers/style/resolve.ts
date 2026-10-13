@@ -94,12 +94,12 @@ export const mergeTableDefaults = (
   if (patch === undefined) return clone(current ?? {});
 
   const result: Record<string, unknown> = clone(current ?? {});
-  if (patch.appearanceDefaults === null) {
-    delete result.appearanceDefaults;
-  } else if (isRecord(patch.appearanceDefaults)) {
-    result.appearanceDefaults = mergeAppearanceDefaults(
-      isRecord(result.appearanceDefaults) ? result.appearanceDefaults : undefined,
-      patch.appearanceDefaults,
+  if (patch.defaultAppearance === null) {
+    delete result.defaultAppearance;
+  } else if (isRecord(patch.defaultAppearance)) {
+    result.defaultAppearance = mergeAppearanceDefaults(
+      isRecord(result.defaultAppearance) ? result.defaultAppearance : undefined,
+      patch.defaultAppearance,
     );
   }
 
@@ -109,23 +109,20 @@ export const mergeTableDefaults = (
     result.layout = mergeLayoutDefaults(isRecord(result.layout) ? result.layout : undefined, patch.layout);
   }
 
-  if (patch.cellLayoutDefaults === null) {
-    delete result.cellLayoutDefaults;
-  } else if (isRecord(patch.cellLayoutDefaults)) {
-    result.cellLayoutDefaults = mergeRecord(
-      isRecord(result.cellLayoutDefaults) ? result.cellLayoutDefaults : {},
-      patch.cellLayoutDefaults,
+  if (patch.defaultCellLayout === null) {
+    delete result.defaultCellLayout;
+  } else if (isRecord(patch.defaultCellLayout)) {
+    result.defaultCellLayout = mergeRecord(
+      isRecord(result.defaultCellLayout) ? result.defaultCellLayout : {},
+      patch.defaultCellLayout,
       'padding',
     );
   }
 
-  if (patch.visualDefaults === null) {
-    delete result.visualDefaults;
-  } else if (isRecord(patch.visualDefaults)) {
-    result.visualDefaults = mergeRecord(
-      isRecord(result.visualDefaults) ? result.visualDefaults : {},
-      patch.visualDefaults,
-    );
+  if (patch.defaultVisual === null) {
+    delete result.defaultVisual;
+  } else if (isRecord(patch.defaultVisual)) {
+    result.defaultVisual = mergeRecord(isRecord(result.defaultVisual) ? result.defaultVisual : {}, patch.defaultVisual);
   }
 
   return TableDefaultsSchema.parse(pruneClearedRecords(result, true));
@@ -151,7 +148,7 @@ export const resolveTableThemeDefaults = (
   }
 
   const neutralDefaults = mergeTableDefaults(getDefaultTableDefaults(mode), {
-    visualDefaults: { categorical: [...effectiveTheme.colors.categorical] },
+    defaultVisual: { categorical: [...effectiveTheme.colors.categorical] },
   });
   const layers: Array<TableThemeDefaultsSource> = [
     { kind: 'neutral', path: `$default/${mode}`, defaults: neutralDefaults },

@@ -97,7 +97,7 @@ export type ResolveTableCellPlansOptions = Readonly<{
   /** 同次 Table theme resolution 产生的 required palette */
   scaleContext: CellVisualScaleResolveContext;
   /** 同次 Table defaults resolution 产生的完整 Cell defaults */
-  tableDefaults?: ResolvedTableDefaults;
+  defaultTable?: ResolvedTableDefaults;
 }>;
 
 /** manifest 消费的单个 encoding 解析摘要 */

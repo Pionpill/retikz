@@ -5,7 +5,6 @@ export const treeSchemaLocalization = {
     '/field/"namespace"': '命名空间，固定 standard',
     '/field/"type"': '组件类型，固定 tree',
     '/field/"frame"': '绘制在容器内容下方的可选外框',
-    '/field/"style"': '当前图例的级联视觉属性',
     '/field/"theme"': '由后代继承的稀疏主题覆盖',
     '/field/"id"': '可选命名引用 id，注册在父命名空间',
     '/field/"localNamespace"': '将后代节点、坐标及嵌套作用域的 id 限定在本地；容器自身 id 仍注册在父命名空间',
@@ -22,80 +21,88 @@ export const treeSchemaLocalization = {
     '/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
     '/field/"defaults"/field/"arrow"': '箭头默认样式',
     '/field/"defaults"/field/"reset"': '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
-    '/field/"node"': '所有节点的稀疏形状、外观与布局覆盖',
-    '/field/"node"/field/"shape"': '节点形状；覆盖合并后默认为 circle',
-    '/field/"node"/field/"style"': '节点外观；各字段独立覆盖默认值',
-    '/field/"node"/field/"layout"': '节点尺寸、留白与文字排版覆盖',
-    '/field/"connection"': '父子连接配置；false 隐藏，默认无箭头直线',
-    '/field/"connection"/union/1/union/0/field/"route"': '直线或两段折线，省略时为 straight',
-    '/field/"connection"/union/1/union/0/field/"fraction"': '该路由不接受 fraction',
-    '/field/"connection"/union/1/union/0/field/"path"': 'Core 路径的非结构属性',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"meta"': '透传至Scene的JSON元数据，编译器不解释其内容',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"animations"': '声明式动画轨道，不影响布局或包围盒',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"zIndex"': '同组绘制顺序，数值较大时在上方',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"roundedCorners"':
+    '/field/"defaultNode"': '所有节点的稀疏形状、外观与布局覆盖',
+    '/field/"defaultNode"/field/"shape"': '节点形状；覆盖合并后默认为 circle',
+    '/field/"defaultNode"/field/"style"': '节点外观；各字段独立覆盖默认值',
+    '/field/"defaultNode"/field/"layout"': '节点尺寸、留白与文字排版覆盖',
+    '/field/"defaultConnection"': '父子连接配置；false 隐藏，默认无箭头直线',
+    '/field/"defaultConnection"/union/1/union/0/field/"route"': '直线或两段折线，省略时为 straight',
+    '/field/"defaultConnection"/union/1/union/0/field/"fraction"': '该路由不接受 fraction',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"': 'Core 路径的非结构属性',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"meta"':
+      '透传至Scene的JSON元数据，编译器不解释其内容',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"animations"': '声明式动画轨道，不影响布局或包围盒',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"zIndex"': '同组绘制顺序，数值较大时在上方',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"roundedCorners"':
       '线段连接处的几何圆角，与描边lineJoin独立',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"rotate"': '围绕路径包围盒中心旋转整个边框',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"scale"': '围绕路径包围盒中心缩放整个边框',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"scale"/union/1/field/"x"': '横轴缩放比例',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"scale"/union/1/field/"y"': '纵轴缩放比例',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"label"': '附着于边框路径的标签',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"marks"': '沿路径归一化位置放置标记，方向跟随切线',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"style"': '路径外观；各字段独立覆盖默认值',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"style"/field/"color"':
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"rotate"': '围绕路径包围盒中心旋转整个边框',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"scale"': '围绕路径包围盒中心缩放整个边框',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"scale"/union/1/field/"x"': '横轴缩放比例',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"scale"/union/1/field/"y"': '纵轴缩放比例',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"label"': '附着于边框路径的标签',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"marks"': '沿路径归一化位置放置标记，方向跟随切线',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"style"': '路径外观；各字段独立覆盖默认值',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"style"/field/"color"':
       '主色，描边、填充、标签与箭头可继承，独立设置优先',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"style"/field/"fill"': '填充颜色或绘制对象',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"style"/field/"stroke"': '描边颜色或绘制对象',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"style"/field/"strokeOpacity"': '仅描边透明度',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"style"/field/"opacity"': '单元格整体透明度',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"style"/field/"shadow"':
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"style"/field/"fill"': '填充颜色或绘制对象',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"style"/field/"stroke"': '描边颜色或绘制对象',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"style"/field/"opacity"': '单元格整体透明度',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"style"/field/"strokeWidth"':
+      '描边宽度，使用绘图单位',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"style"/field/"shadow"':
       '主要路径图形的阴影预设或自定义阴影',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"style"/field/"blendMode"':
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"style"/field/"blendMode"':
       '与下方内容的混合模式，默认普通覆盖',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"style"/field/"lineCap"':
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"style"/field/"dashPattern"':
+      '虚线各段长度，省略为实线',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"style"/field/"dashOffset"':
+      '虚线偏移，可为正或负的有限值',
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"style"/field/"lineCap"':
       '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"style"/field/"lineJoin"':
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"style"/field/"lineJoin"':
       '折角样式，省略为 miter；round 圆角，bevel 切角',
-    '/field/"connection"/union/1/union/0/field/"path"/field/"style"/field/"fillRule"':
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"style"/field/"fillRule"':
       '填充规则：nonzero按绕向计数，evenodd按交叉次数切换',
-    '/field/"connection"/union/1/union/1/field/"route"': '三段折线方向：-|- 为横竖横，|-| 为竖横竖',
-    '/field/"connection"/union/1/union/1/field/"fraction"': '中间段的归一化位置，省略时为 0.5',
-    '/field/"connection"/union/1/union/1/field/"path"': 'Core 路径的非结构属性',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"meta"': '透传至Scene的JSON元数据，编译器不解释其内容',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"animations"': '声明式动画轨道，不影响布局或包围盒',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"zIndex"': '同组绘制顺序，数值较大时在上方',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"roundedCorners"':
+    '/field/"defaultConnection"/union/1/union/1/field/"route"': '三段折线方向：-|- 为横竖横，|-| 为竖横竖',
+    '/field/"defaultConnection"/union/1/union/1/field/"fraction"': '中间段的归一化位置，省略时为 0.5',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"': 'Core 路径的非结构属性',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"meta"':
+      '透传至Scene的JSON元数据，编译器不解释其内容',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"animations"': '声明式动画轨道，不影响布局或包围盒',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"zIndex"': '同组绘制顺序，数值较大时在上方',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"roundedCorners"':
       '线段连接处的几何圆角，与描边lineJoin独立',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"rotate"': '围绕路径包围盒中心旋转整个边框',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"scale"': '围绕路径包围盒中心缩放整个边框',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"scale"/union/1/field/"x"': '横轴缩放比例',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"scale"/union/1/field/"y"': '纵轴缩放比例',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"label"': '附着于边框路径的标签',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"marks"': '沿路径归一化位置放置标记，方向跟随切线',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"style"': '路径外观；各字段独立覆盖默认值',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"style"/field/"color"':
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"rotate"': '围绕路径包围盒中心旋转整个边框',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"scale"': '围绕路径包围盒中心缩放整个边框',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"scale"/union/1/field/"x"': '横轴缩放比例',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"scale"/union/1/field/"y"': '纵轴缩放比例',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"label"': '附着于边框路径的标签',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"marks"': '沿路径归一化位置放置标记，方向跟随切线',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"style"': '路径外观；各字段独立覆盖默认值',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"style"/field/"color"':
       '主色，描边、填充、标签与箭头可继承，独立设置优先',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"style"/field/"fill"': '填充颜色或绘制对象',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"style"/field/"stroke"': '描边颜色或绘制对象',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"style"/field/"strokeOpacity"': '仅描边透明度',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"style"/field/"opacity"': '单元格整体透明度',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"style"/field/"shadow"':
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"style"/field/"fill"': '填充颜色或绘制对象',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"style"/field/"stroke"': '描边颜色或绘制对象',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"style"/field/"opacity"': '单元格整体透明度',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"style"/field/"strokeWidth"':
+      '描边宽度，使用绘图单位',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"style"/field/"shadow"':
       '主要路径图形的阴影预设或自定义阴影',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"style"/field/"blendMode"':
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"style"/field/"blendMode"':
       '与下方内容的混合模式，默认普通覆盖',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"style"/field/"lineCap"':
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"style"/field/"dashPattern"':
+      '虚线各段长度，省略为实线',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"style"/field/"dashOffset"':
+      '虚线偏移，可为正或负的有限值',
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"style"/field/"lineCap"':
       '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"style"/field/"lineJoin"':
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"style"/field/"lineJoin"':
       '折角样式，省略为 miter；round 圆角，bevel 切角',
-    '/field/"connection"/union/1/union/1/field/"path"/field/"style"/field/"fillRule"':
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"style"/field/"fillRule"':
       '填充规则：nonzero按绕向计数，evenodd按交叉次数切换',
     '/field/"layout"': '四向排列及层间、子树间净距',
     '/field/"layout"/field/"direction"': '根到后代的生长方向，默认 down',

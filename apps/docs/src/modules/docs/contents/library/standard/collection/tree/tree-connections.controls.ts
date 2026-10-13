@@ -44,7 +44,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       ],
     }),
     canonicalValues: { route: '-|-', fraction: 0.5, arrows: true, reference: true },
-    relatedApis: ['Tree.connection', 'Tree.root', 'Draw.way'],
+    relatedApis: ['Tree.defaultConnection', 'Tree.root', 'Draw.way'],
   } satisfies PreviewControlContract;
 };
 export const previewControlContract = createPreviewControlContract('zh');

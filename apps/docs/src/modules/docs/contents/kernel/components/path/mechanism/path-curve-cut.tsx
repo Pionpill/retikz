@@ -66,8 +66,7 @@ const PathCurveCut: FC<PathCurveCutProps> = props => {
         position={[115, 120]}
         label={{ text: t.fragments, opacity: 0.8, font: { size: 12 } }}
         items={[{ content: `${t.left}: move → quad` }, { content: `${t.right}: move → quad` }]}
-        style={{ font: { size: 13 } }}
-        layout={{ width: 230, height: 36 }}
+        defaultCell={{ style: { font: { size: 13 } }, layout: { width: 230, height: 36 } }}
       />
 
       <Node position={[325, 205]} text={t.note} style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }} />

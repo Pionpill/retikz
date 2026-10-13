@@ -8,7 +8,7 @@ const line = (stroke: string, width: number) => ({ kind: 'line' as const, stroke
 
 const presets: Readonly<Record<ThemeMode, IRTableDefaults>> = deepFreeze({
   light: TableDefaultsSchema.parse({
-    appearanceDefaults: {
+    defaultAppearance: {
       body: {
         background: { fill: '#ffffff', fillOpacity: 1 },
         content: {
@@ -32,10 +32,10 @@ const presets: Readonly<Record<ThemeMode, IRTableDefaults>> = deepFreeze({
       },
     },
     layout: { borders: { horizontal: line('#e4e4e7', 1) } },
-    visualDefaults: { sequential: ['#eff6ff', '#1d4ed8'] },
+    defaultVisual: { sequential: ['#eff6ff', '#1d4ed8'] },
   }),
   dark: TableDefaultsSchema.parse({
-    appearanceDefaults: {
+    defaultAppearance: {
       body: {
         background: { fill: '#09090b', fillOpacity: 1 },
         content: {
@@ -59,7 +59,7 @@ const presets: Readonly<Record<ThemeMode, IRTableDefaults>> = deepFreeze({
       },
     },
     layout: { borders: { horizontal: line('#27272a', 1) } },
-    visualDefaults: { sequential: ['#172554', '#60a5fa'] },
+    defaultVisual: { sequential: ['#172554', '#60a5fa'] },
   }),
 });
 

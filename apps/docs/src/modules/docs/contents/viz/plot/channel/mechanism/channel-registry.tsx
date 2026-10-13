@@ -19,12 +19,16 @@ const ChannelRegistry: FC<ChannelRegistryProps> = props => {
       <Map
         position={[0, 30]}
         label={label(t.index)}
-        layout={{ height: 36, padding: 0, key: { width: 90 }, value: { width: 160 } }}
-        style={{ font: { size: 14 } }}
         entries={[
           { key: { content: 'size' }, value: { id: 'size-index', content: 'size / node' } },
           { key: { content: 'opacity' }, value: { id: 'opacity-index', content: 'opacity / node' } },
         ]}
+        defaultCell={{
+          style: { font: { size: 14 } },
+          layout: { height: 36, padding: 0 },
+          key: { layout: { width: 90 } },
+          value: { layout: { width: 160 } },
+        }}
       />
       <Node id="size-legend" position={[445, 48]} text={t.sizeLegend} cornerRadius={4} style={{ font: { size: 14 } }} />
       <Node
@@ -39,13 +43,13 @@ const ChannelRegistry: FC<ChannelRegistryProps> = props => {
       <Array
         position={[0, 190]}
         label={label(t.list)}
-        layout={{ direction: 'column', width: 250, height: 36, padding: 0, gap: 4 }}
-        style={{ font: { size: 14 } }}
         items={[
           { id: 'opacity-node', content: 'opacity / node', style: { fill: 'dodgerblue', opacity: { fill: 0.16 } } },
           { id: 'size-node', content: 'size / node', style: { fill: 'dodgerblue', opacity: { fill: 0.16 } } },
           { id: 'opacity-path', content: 'opacity / path', style: { fill: 'darkorange', opacity: { fill: 0.16 } } },
         ]}
+        layout={{ direction: 'column', gap: 4 }}
+        defaultCell={{ style: { font: { size: 14 } }, layout: { width: 250, height: 36, padding: 0 } }}
       />
       <Node
         id="point-target"

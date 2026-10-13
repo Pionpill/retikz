@@ -47,8 +47,8 @@ it('父布局额外空间不拉伸单元或开放边框，过小的proposal失�
             child: {
               ...base,
               items: [{ id: 'a' }],
-              layout: { width: 20, height: 10 },
               border: { meta: { outline: true } },
+              defaultCell: { layout: { width: 20, height: 10 } },
             },
           },
         ],
@@ -104,7 +104,8 @@ it.each([
   const result = compile({
     ...base,
     items: [{ id: 'bottom' }, { id: 'top' }],
-    layout: { direction, width: 30, height: 20 },
+    layout: { direction },
+    defaultCell: { layout: { width: 30, height: 20 } },
   });
   expect(bounds(result, 'stack-cell')).toEqual(expected);
 });
@@ -136,7 +137,7 @@ it('空栈只有padding容器且不显示栈顶标签，移除边框和留白后
   ]);
 });
 it('骨架与显式单元等价，箭头不改变allocation', () => {
-  const props = { ...base, layout: { width: 32, height: 24 } };
+  const props = { ...base, defaultCell: { layout: { width: 32, height: 24 } } };
   expect(compile({ ...props, skeleton: { labels: ['A', ''] } }).scene).toEqual(
     compile({ ...props, items: ['A', {}] }).scene,
   );
@@ -154,8 +155,8 @@ it('开放边框只有三边，隐藏边框不改变独立留白', () => {
   const props = {
     ...base,
     items: [{}],
-    layout: { width: 20, height: 10 },
     padding: { left: 1, right: 3, top: 5, bottom: 7 },
+    defaultCell: { layout: { width: 20, height: 10 } },
   };
   const result = compile({ ...props, border: { meta: { outline: true } } });
   const outline = flat(result.scene.primitives).find(p => p.type === 'path' && p.meta?.outline === true);
@@ -178,8 +179,8 @@ it('根frame与开放border独立，外部连接命中变换后的单格而非�
         id: 'root',
         frame: { padding: 2, style: { stroke: 'red' } },
         items: [{ id: 'target' }],
-        layout: { width: 20, height: 10 },
         transforms: [{ kind: 'translate', x: 7, y: 11 }],
+        defaultCell: { layout: { width: 20, height: 10 } },
       },
       {
         type: 'path',
@@ -204,7 +205,7 @@ it('根frame与开放border独立，外部连接命中变换后的单格而非�
   expect(result.spatialHandles.entries.filter(e => e.id === 'cell:target')).toHaveLength(2);
 });
 it('嵌套Stack不叠加外层padding，显式覆盖仍然优先', () => {
-  const child = { ...base, items: ['A'], layout: { width: 20, height: 10 } };
+  const child = { ...base, items: ['A'], defaultCell: { layout: { width: 20, height: 10 } } };
   const nested = compile({ namespace: 'standard', type: 'array', items: [{ id: 'outer', content: child }] });
   const explicit = compile({
     namespace: 'standard',
@@ -273,7 +274,12 @@ it.each([
 ] as const)(
   '%s operation paths match manual Core geometry and preserve allocation',
   (direction, incoming, outgoing) => {
-    const source = { ...base, items: [{ id: 'cell' }], layout: { direction, width: 20, height: 10 } };
+    const source = {
+      ...base,
+      items: [{ id: 'cell' }],
+      layout: { direction },
+      defaultCell: { layout: { width: 20, height: 10 } },
+    };
     const actual = compile({ ...source, arrow: { input: true, output: true } });
     const disabled = compile({ ...source, arrow: { input: false, output: false } });
     const path = (points: ReadonlyArray<readonly [number, number]>) => ({

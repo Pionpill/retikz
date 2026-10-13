@@ -4,7 +4,7 @@ import { LayoutRowColumnGapSchema } from '@retikz/layout';
 import { array, boolean, enum as zodEnum, literal, never, strictObject, string, union } from 'zod';
 
 import { DataExpandSchema } from '../../_cell/data';
-import { CellLayoutSchema, CellSchema, CellStyleSchema } from '../../_cell/schema';
+import { CellSchema, CellDefaultSchema } from '../../_cell/schema';
 import { CollectionIndexOptionsSchema } from '../../_index';
 
 /** Matrix 单轴的自动或自定义索引 */
@@ -25,8 +25,8 @@ export const MatrixIndexSchema = union([
   .default(false)
   .describe('False hides both axes; true enables both; objects configure axes independently.');
 
-/** Matrix 的普通单格布局与行列间距 */
-export const MatrixLayoutSchema = CellLayoutSchema.extend({
+/** Matrix 的行列间距 */
+export const MatrixLayoutSchema = strictObject({
   gap: LayoutRowColumnGapSchema.default(2).describe('Uniform or separate gaps between rows and columns.'),
 });
 
@@ -51,13 +51,13 @@ const MatrixBaseSchema = CompositeBaseSchema.extend({
   namespace: literal('standard').describe('Standard composite namespace.'),
   type: literal('matrix').describe('Rectangular cell presentation.'),
   ...ScopePropsSchema.shape,
-  style: CellStyleSchema.optional(),
-  layout: MatrixLayoutSchema.optional().describe('Cell dimensions, padding, overflow, and row or column gaps.'),
   label: NodeSchema.shape.label,
   index: MatrixIndexSchema,
   cellIdMode: zodEnum(['explicit', 'index'])
     .default('explicit')
     .describe('Explicit cell ids or zero-based row/column ids derived from the Matrix id.'),
+  layout: MatrixLayoutSchema.optional().describe('Row and column gaps.'),
+  defaultCell: CellDefaultSchema.optional(),
 });
 
 /** 三种互斥的矩形输入，结构校验只在 Source 边界执行 */

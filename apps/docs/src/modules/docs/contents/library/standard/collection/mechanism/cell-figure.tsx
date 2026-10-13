@@ -23,7 +23,7 @@ const CellFigure: FC<CellFigureProps> = props => {
           { key: 'layout', value: t.layout },
           { key: 'id', value: t.id },
         ]}
-        style={{ font: { size: 14 } }}
+        defaultCell={{ style: { font: { size: 14 } } }}
       />
       <Map
         position={[310, 0]}
@@ -34,7 +34,7 @@ const CellFigure: FC<CellFigureProps> = props => {
           { key: t.overall, value: 'padding: 10' },
           { key: t.fallback, value: 'padding: 8' },
         ]}
-        style={{ font: { size: 14 } }}
+        defaultCell={{ style: { font: { size: 14 } } }}
       />
     </Layout>
   );

@@ -35,10 +35,10 @@ const ArraySizingFigure: FC<ArraySizingFigureProps> = props => {
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Node position={[45, -30]} text={t.before} style={{ fill: 'none', stroke: 'none', font: { size: 12 } }} />
-      <Array layout={{ padding: 8 }} label={{ ...label, text: '56 × 40' }}>
+      <Array label={{ ...label, text: '56 × 40' }} defaultCell={{ layout: { padding: 8 } }}>
         <ArrayItem>{a}</ArrayItem>
       </Array>
-      <Array position={[0, 85]} layout={{ padding: 8 }} label={{ ...label, text: '96 × 52' }}>
+      <Array position={[0, 85]} label={{ ...label, text: '96 × 52' }} defaultCell={{ layout: { padding: 8 } }}>
         <ArrayItem>{b}</ArrayItem>
       </Array>
       <Draw
@@ -47,8 +47,9 @@ const ArraySizingFigure: FC<ArraySizingFigureProps> = props => {
       />
       <Array
         position={[305, 39]}
-        layout={{ width: 'auto', height: 'auto', padding: 8, gap: 8 }}
         label={{ ...label, text: t.after }}
+        layout={{ gap: 8 }}
+        defaultCell={{ layout: { width: 'auto', height: 'auto', padding: 8 } }}
       >
         <ArrayItem>{a}</ArrayItem>
         <ArrayItem>{b}</ArrayItem>

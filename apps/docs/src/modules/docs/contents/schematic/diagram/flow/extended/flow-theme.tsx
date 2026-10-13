@@ -19,7 +19,7 @@ export const renderFlowThemePreview = (
 ): ReactElement => (
   <FlowDiagram
     viewBox={{ x: -71, y: -82.5, width: 420, height: 240 }}
-    flowDefaults={{
+    defaultFlow={{
       entity: {
         style: {
           color: values.entityColor,

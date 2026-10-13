@@ -495,7 +495,7 @@ export const lowerPlotWithDataArtifact = (
   const themeResolution = resolvePlotTheme(
     effectiveTheme,
     {
-      plotDefaults: node.plotDefaults,
+      defaultPlot: node.defaultPlot,
       plotRules: node.plotRules,
     },
     options.plotThemeStyles,

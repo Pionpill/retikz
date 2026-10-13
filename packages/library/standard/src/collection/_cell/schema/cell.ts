@@ -46,6 +46,11 @@ export const CellSchema = strictObject({
   layout: CellLayoutSchema.optional(),
 }).describe('A drawable cell with optional allocation identity.');
 
+/** 单元格的稀疏默认配置，不包含内容或身份 */
+export const CellDefaultSchema = CellSchema.pick({ style: true, layout: true }).describe(
+  'Sparse shared cell style and layout defaults; explicit cell fields take precedence.',
+);
+
 /** 在样式继承完成后补齐单格的基础填充、描边与圆角默认值 */
 export const CellDefaultsSchema = CellStyleSchema.extend({
   fill: CellStyleSchema.shape.fill.default('gray'),

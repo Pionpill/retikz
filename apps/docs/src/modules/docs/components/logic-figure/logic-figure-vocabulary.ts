@@ -124,8 +124,8 @@ export const logicFigureTableThemeStyle = defineTableThemeStyle({
   name: logicFigureThemeName,
   resolve: () => ({
     defaults: {
-      cellLayoutDefaults: { body: { padding: 4 }, columnHeader: { padding: 4 } },
-      appearanceDefaults: {
+      defaultCellLayout: { body: { padding: 4 }, columnHeader: { padding: 4 } },
+      defaultAppearance: {
         body: {
           content: {
             defaults: {

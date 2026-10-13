@@ -97,7 +97,7 @@ export const BlockSchema = strictObject({
   type: literal(GraphType.Block).describe('Block Source composite discriminator.'),
   ...ScopePropsSchema.shape,
   ...BlockSurfaceFields,
-  graphDefaults: GraphDefaultsSchema.optional().describe('Optional sparse Graph defaults for visible descendants.'),
+  defaultGraph: GraphDefaultsSchema.optional().describe('Optional sparse Graph defaults for visible descendants.'),
   graphRules: array(GraphRuleSchema).optional().describe('Optional ordered Graph rules for visible descendants.'),
   children: array(ChildSchema).optional().describe('Optional ordered arbitrary Core or Tier 2 children.'),
   width: NonNegativeNumberSchema.optional().describe('Optional fixed outer Block width including horizontal padding.'),

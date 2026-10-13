@@ -21,37 +21,49 @@ const ChartEncodingsMap: FC<ChartEncodingsMapProps> = props => {
         id="encoding-data"
         position={[12, 28]}
         label={label(t.data)}
-        layout={{ height: 34, padding: 0, key: { width: 90 }, value: { width: 70 } }}
-        style={{ font: { size: 13 } }}
         entries={[
           { key: 'weight', value: '2.0' },
           { key: 'efficiency', value: '4.2' },
           { key: 'group', value: '"A"' },
         ]}
+        defaultCell={{
+          style: { font: { size: 13 } },
+          layout: { height: 34, padding: 0 },
+          key: { layout: { width: 90 } },
+          value: { layout: { width: 70 } },
+        }}
       />
       <Map
         id="encoding-recipe"
         position={[260, 28]}
         label={label(t.encodings)}
-        layout={{ height: 34, padding: 0, key: { width: 60 }, value: { width: 100 } }}
-        style={{ font: { size: 13 } }}
         entries={[
           { key: 'x', value: 'weight' },
           { key: 'y', value: 'efficiency' },
           { key: 'color', value: 'group' },
         ]}
+        defaultCell={{
+          style: { font: { size: 13 } },
+          layout: { height: 34, padding: 0 },
+          key: { layout: { width: 60 } },
+          value: { layout: { width: 100 } },
+        }}
       />
       <Map
         id="encoding-mark"
         position={[508, 28]}
         label={label(t.mark)}
-        layout={{ height: 34, padding: 0, key: { width: 60 }, value: { width: 130 } }}
-        style={{ font: { size: 13 } }}
         entries={[
           { key: 'x', value: '2.0' },
           { key: 'y', value: '4.2' },
           { key: 'color', value: 'scale("A")' },
         ]}
+        defaultCell={{
+          style: { font: { size: 13 } },
+          layout: { height: 34, padding: 0 },
+          key: { layout: { width: 60 } },
+          value: { layout: { width: 130 } },
+        }}
       />
       <Draw way={['encoding-data.right', 'encoding-recipe.left']} arrow="->" />
       <Draw way={['encoding-recipe.right', 'encoding-mark.left']} arrow="->" />

@@ -156,7 +156,9 @@ Empty value cells retain shared and role styles, dimensions, and padding. Use en
 
 ### Style and dimensions
 
-Style precedence is **structural defaults → overall style → style.key / style.value → cell style**. Keys and values can have distinct appearances.
+`defaultCell` groups shared cell `style` and `layout` defaults. Root `layout` controls collection arrangement, such as direction and gaps; each cell overrides its own `style` and `layout`.
+
+Style precedence is **structural defaults → defaultCell.style → defaultCell.key.style / defaultCell.value.style → cell style**. Keys and values can have distinct appearances.
 
 Font fields merge individually. `opacity.fill` affects only the background; `opacity` affects the whole cell. Use `fill: 'none'` to hide the background or `stroke: 'none'` to hide the border. Defaults are no border or rounding, gray / 0.14 backgrounds, and gray / 0.4 for Map keys.
 
@@ -167,9 +169,9 @@ Font fields merge individually. `opacity.fill` affects only the background; `opa
   caption="Change column widths, then disable the first-cell override to compare inheritance levels."
 />
 
-`layout.width` / `height` set the cell border-box dimensions, including padding; zero is valid. Omit them or use `'auto'` for natural sizing. Cell-level values take precedence, and explicit `'auto'` clears an inherited fixed dimension. `layout.padding` defaults to 8 and `layout.gap` to 2. Content is centered inside the padded area.
+`defaultCell.layout.width` / `height` set the cell border-box dimensions, including padding; zero is valid. Omit them or use `'auto'` for natural sizing. Cell-level values take precedence, and explicit `'auto'` clears an inherited fixed dimension. `defaultCell.layout.padding` defaults to 8 and `layout.gap` to 2. Content is centered inside the padded area.
 
-Layout precedence is **overall layout → layout.key / layout.value → cell layout**. Each column uses its largest width requirement and each row its tallest cell. Fixed dimensions are not stretched; smaller cells align to the track start, so borders in one column or row may differ in size. `layout.gap` accepts a number or `{ row, column }`.
+Layout precedence is **defaultCell.layout → defaultCell.key.layout / defaultCell.value.layout → cell layout**. Each column uses its largest width requirement and each row its tallest cell. Fixed dimensions are not stretched; smaller cells align to the track start, so borders in one column or row may differ in size. `layout.gap` accepts a number or `{ row, column }`.
 
 ### Container labels
 
@@ -232,7 +234,7 @@ Generated components recursively use the same selection. A structure displayed a
 
 Object keys are displayed as plain text; string values use quoted, escaped JSON literals, distinguishing `"null"` from `null`. Numbers, booleans, and null retain their literal forms. Nested empty objects and arrays appear as `{}` and `[]`; an empty root has zero natural size. Objects follow own enumerable string-key order, with integer-index keys first. Use Map `entries` for custom ordering or repeated keys.
 
-Data never generates cell ids, so repeated values and empty strings are valid. Fields named `id`, `style`, or `type` remain ordinary data. For connections or per-cell customization, use explicit cells containing a nested component with `data`. Overall style / layout affects the current level only; nested structures use their own defaults, with font and text color inherited through content. Fixed sizes clip the nested drawing as a whole instead of resizing every descendant cell.
+Data never generates cell ids, so repeated values and empty strings are valid. Fields named `id`, `style`, or `type` remain ordinary data. For connections or per-cell customization, use explicit cells containing a nested component with `data`. defaultCell.style / defaultCell.layout affects the current level only; nested structures use their own defaults, with font and text color inherited through content. Fixed sizes clip the nested drawing as a whole instead of resizing every descendant cell.
 
 React / Vanilla assemble nested dependencies automatically. For direct IR with `data`, register `ArrayDefinition` and `MapDefinition` in `composites` and `PathClipDefinition` from `@retikz/extension` in `clips`. Source IR preserves the original data, not JSX or functions.
 
@@ -240,7 +242,7 @@ React / Vanilla assemble nested dependencies automatically. For direct IR with `
 
 Set a cell `id` to reference it from a path endpoint, for example `to={{ id: 'selected', anchor: 'right' }}`. The reference uses the cell border rectangle, excluding gaps, indices, and visual overflow. Hiding the background does not change it. An id on the content references its own geometry. Cells without ids do not acquire identities from array indices.
 
-Automatic cells default to `overflow: 'visible'`; fixing either axis changes the default to `'clip'`. Set `layout.overflow` explicitly to override it; cell-level settings win. Clipping neither scales content nor automatically wraps it to fit a slot. Direct IR using clipping must register `PathClipDefinition` in `clips`. Container transforms and clipping also affect labels, but cell clipping does not clip container labels.
+Automatic cells default to `overflow: 'visible'`; fixing either axis changes the default to `'clip'`. Set `defaultCell.layout.overflow` explicitly to override it; cell-level settings win. Clipping neither scales content nor automatically wraps it to fit a slot. Direct IR using clipping must register `PathClipDefinition` in `clips`. Container transforms and clipping also affect labels, but cell clipping does not clip container labels.
 
 <ComponentPreview
   files={['map-overflow', 'map-overflow.preview.tsx']}

@@ -95,7 +95,7 @@ it('字符串继承端点默认，局部 allow 可覆盖 separate', () => {
       { source: 'a', target: 'c' },
       { source: 'b', target: { id: 'c', overlap: 'allow' } },
     ],
-    { flowDefaults: { relation: { target: { overlap: 'separate' } } } },
+    { defaultFlow: { relation: { target: { overlap: 'separate' } } } },
   );
 
   expect(artifact.relations.map(relation => relation.target.anchor)).toEqual([

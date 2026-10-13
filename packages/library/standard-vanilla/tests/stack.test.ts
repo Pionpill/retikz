@@ -24,7 +24,8 @@ it('三入口及嵌套内容自动装配依赖，源输入保持稀疏', () => {
 it('直接IR与Vanilla保持相同的开放框及单格空间', () => {
   const input = {
     items: [{ id: 'a' }, { id: 'b' }],
-    layout: { width: 20, height: 16, direction: 'left' as const },
+    layout: { direction: 'left' as const },
+    defaultCell: { layout: { width: 20, height: 16 } },
     border: { style: { dashPattern: [3, 2] } },
     padding: 5,
   };

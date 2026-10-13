@@ -118,7 +118,7 @@ const svg = renderToSvgString(
 
 ### 调整轨道、样式与索引
 
-每列宽度取该列单格需求的最大值，每行高度取该行最大值。`layout.width` / `height` 为数字或 `'auto'`，不支持 `'content'`。自适应格填满对应轨道；固定小格保持自己的尺寸，从轨道左上角放置，留下的空位不属于该格引用区域。
+每列宽度取该列单格需求的最大值，每行高度取该行最大值。`defaultCell.layout.width` / `height` 为数字或 `'auto'`，不支持 `'content'`。自适应格填满对应轨道；固定小格保持自己的尺寸，从轨道左上角放置，留下的空位不属于该格引用区域。
 
 <ComponentPreview
   files={['matrix-layout', 'matrix-layout.preview.tsx']}
@@ -174,7 +174,7 @@ React 的 items 只放文字配置，嵌套组件使用 JSX；Vanilla 的 conten
 | `['map']`       | Map       | JSON 文本 |
 | `['array']`     | JSON 文本 | Array     |
 
-展开选择递归沿用，转为文本的整个子树不再展开；空对象和空数组显示为 `{}` / `[]`。更深的二维数组仍嵌套为 Array，不自动推断 Matrix，也没有 matrix 展开选项。整体单格 style / layout 只控制当前层，字体与文本颜色沿内容继承。
+展开选择递归沿用，转为文本的整个子树不再展开；空对象和空数组显示为 `{}` / `[]`。更深的二维数组仍嵌套为 Array，不自动推断 Matrix，也没有 matrix 展开选项。defaultCell.style / defaultCell.layout 只控制当前层，字体与文本颜色沿内容继承。
 
 直接 IR 使用 data 时额外注入 ArrayDefinition、MapDefinition；使用裁切时注入 PathClipDefinition。React 与 Vanilla 自动装配这些依赖。
 

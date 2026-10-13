@@ -361,7 +361,7 @@ describe('Flow Diagram ComponentPreview', () => {
       const preview = buildPreviewIR(Demo);
       const flow = FlowDiagramSchema.parse(preview.sourceIr.children[0]);
 
-      expect(flow.flowDefaults).toEqual({
+      expect(flow.defaultFlow).toEqual({
         entity: { style: { color: '#334155', strokeWidth: 1, opacity: { fill: 1 } } },
         relation: { style: { stroke: '#64748b', strokeWidth: 1, opacity: { stroke: 0.9 } } },
       });

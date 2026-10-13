@@ -59,9 +59,9 @@ export type GroupProps = Omit<InputGroup, 'children'> &
 | `readonly children?` | `ReadonlyArray<InputGraphChild>`                                                                                                                                                                                   | —       | 可见分组包含的有序绘制子内容                           |
 | `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | 局部坐标系中的裁剪区域                                 |
 | `cornerRadius?`      | `number`                                                                                                                                                                                                           | —       | 外框圆角                                               |
+| `defaultGraph?`      | `GroupInputEmbedProps["defaultGraph"]`                                                                                                                                                                             | —       | 可见后代的稀疏默认值                                   |
 | `defaults?`          | `GroupInputEmbedProps["defaults"]`                                                                                                                                                                                 | —       | 后代默认样式及继承屏障                                 |
 | `frame?`             | `GroupInputEmbedProps["frame"]`                                                                                                                                                                                    | —       | 固有包络装饰，不参与布局                               |
-| `graphDefaults?`     | `GroupInputEmbedProps["graphDefaults"]`                                                                                                                                                                            | —       | 可见后代的稀疏默认值                                   |
 | `graphRules?`        | `GroupInputEmbedProps["graphRules"]`                                                                                                                                                                               | —       | 可见 Entity / Relation 后代的有序规则                  |
 | `id?`                | `string`                                                                                                                                                                                                           | —       | 可选引用 id，注册到父命名空间                          |
 | `labels?`            | `GroupInputEmbedProps["labels"]`                                                                                                                                                                                   | —       | 非空外围标签数组，只扩展视觉边界                       |
@@ -270,7 +270,7 @@ export declare const createGraphProviders: (options?: GraphDefinitionOptions) =>
 export type IRGroup = Omit<ZodInfer<typeof GroupSchema>, 'position'> & Pick<ZodInput<typeof GroupSchema>, 'position'>;
 ```
 
-#### <ApiSourceLink label={"IRGroupCaption"} path={"packages/schematic/graph/src/schemas/group/types.ts"} startLine={12}>IRGroupCaption</ApiSourceLink> / <ApiSourceLink label={"GroupCaptionSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={31}>GroupCaptionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRGroupCaption"} path={"packages/schematic/graph/src/schemas/group/types.ts"} startLine={12}>IRGroupCaption</ApiSourceLink> / <ApiSourceLink label={"GroupCaptionSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={38}>GroupCaptionSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -318,7 +318,7 @@ export type IRGroupCaption = ZodInfer<typeof GroupCaptionSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRGroupCaptionText"} path={"packages/schematic/graph/src/schemas/group/types.ts"} startLine={6}>IRGroupCaptionText</ApiSourceLink> / <ApiSourceLink label={"GroupCaptionTextSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={10}>GroupCaptionTextSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRGroupCaptionText"} path={"packages/schematic/graph/src/schemas/group/types.ts"} startLine={6}>IRGroupCaptionText</ApiSourceLink> / <ApiSourceLink label={"GroupCaptionTextSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={17}>GroupCaptionTextSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -332,7 +332,7 @@ export type IRGroupCaption = ZodInfer<typeof GroupCaptionSchema>;
 | `font?`         | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }` | —      | 字体配置           |
 | `lineHeight?`   | `number`                                                                                                                                                                              | —      | 行高               |
 | `maxTextWidth?` | `number`                                                                                                                                                                              | —      | 换行的最大文字宽度 |
-| `opacity?`      | `number \| { overall?: number \| undefined; fill?: number \| undefined; stroke?: number \| undefined; }`                                                                              | —      | 不透明度           |
+| `opacity?`      | `number`                                                                                                                                                                              | —      | 不透明度           |
 | `text`          | `ZodInfer<typeof GroupCaptionTextSchema.shape["text"]>`                                                                                                                               | —      | 必填文字内容       |
 | `textColor?`    | `string \| number`                                                                                                                                                                    | —      | 文字颜色覆盖       |
 
@@ -368,7 +368,7 @@ export type IRGroupCaptionText = ZodInfer<typeof GroupCaptionTextSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"GroupSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={47}>GroupSchema</ApiSourceLink>
+#### <ApiSourceLink label={"GroupSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={54}>GroupSchema</ApiSourceLink>
 
 <ZodSchema
   name="GroupSchema"
@@ -388,7 +388,7 @@ export type IRGroupCaptionText = ZodInfer<typeof GroupCaptionTextSchema>;
     meta: '透传的 JSON 元信息',
     animations: '作用于整体的动画轨道，不参与布局或向后代继承',
     defaults: '后代默认样式及继承屏障',
-    graphDefaults: '可见后代的稀疏默认值',
+    defaultGraph: '可见后代的稀疏默认值',
     graphRules: '可见 Entity / Relation 后代的有序规则',
     caption: '外框内部的标题说明区',
     labels: '非空外围标签数组，只扩展视觉边界',
@@ -401,10 +401,10 @@ export type IRGroupCaptionText = ZodInfer<typeof GroupCaptionTextSchema>;
   }}
 />
 
-#### <ApiSourceLink label={"GroupCaptionSideSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={21}>GroupCaptionSideSchema</ApiSourceLink>
+#### <ApiSourceLink label={"GroupCaptionSideSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={28}>GroupCaptionSideSchema</ApiSourceLink>
 
 <ZodSchema name="GroupCaptionSideSchema" shallow />
 
-#### <ApiSourceLink label={"GroupCaptionDirectionSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={26}>GroupCaptionDirectionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"GroupCaptionDirectionSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={33}>GroupCaptionDirectionSchema</ApiSourceLink>
 
 <ZodSchema name="GroupCaptionDirectionSchema" shallow />

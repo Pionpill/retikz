@@ -11,7 +11,7 @@ export const scopeFlowDefaults = {
     caption: { title: { font: { size: 12 }, textColor: 'gray' } },
   },
   relation: { labelFont: { size: 12 }, labelTextForeground: 'gray' },
-} satisfies NonNullable<FlowDiagramProps['flowDefaults']>;
+} satisfies NonNullable<FlowDiagramProps['defaultFlow']>;
 
 /** 标题与次行说明保持统一层级 */
 export const scopeFlowText = (lines: readonly [string, ...Array<string>]) =>

@@ -68,7 +68,7 @@ export const resolveSelectedChart = <TSource extends IRChartSource>(
     encodingResolution,
     semanticMarkResolution.marks,
     context.runtime,
-    theme.plotDefaults,
+    theme.defaultPlot,
   );
   const presentation = resolveChartPresentation(source, plot, theme.defaults);
 

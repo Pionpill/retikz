@@ -18,7 +18,7 @@ export type ScaleOrdinalPreviewValues = {
 export const ScaleOrdinalPreview = (values: ScaleOrdinalPreviewValues) => (
   <Plot
     data={climate}
-    plotDefaults={{ palette: { categorical: [...palettes[values.palette]] } }}
+    defaultPlot={{ palette: { categorical: [...palettes[values.palette]] } }}
     width={400}
     height={250}
   >

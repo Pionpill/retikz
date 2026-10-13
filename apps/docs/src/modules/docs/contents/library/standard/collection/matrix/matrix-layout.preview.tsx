@@ -19,16 +19,15 @@ export const renderMatrixPreview = (values: MatrixPreviewValues) => {
           [{ content: 'A', layout: { width: 30 } }, 'longer'],
           ['wide cell', 'B'],
         ]}
-        layout={{
-          width: values.width === 'fixed' ? 90 : 'auto',
-          height: 40,
-          gap: { row: values.rowGap, column: values.columnGap },
-        }}
         index={{
           row: values.row === 'none' ? false : { position: values.row, labels: ['r₁', 'r₂'] },
           column: values.column === 'none' ? false : { position: values.column, start: 1 },
         }}
-        style={{ fill: 'dodgerblue', stroke: 'dodgerblue', opacity: { fill: 0.14 } }}
+        layout={{ gap: { row: values.rowGap, column: values.columnGap } }}
+        defaultCell={{
+          style: { fill: 'dodgerblue', stroke: 'dodgerblue', opacity: { fill: 0.14 } },
+          layout: { width: values.width === 'fixed' ? 90 : 'auto', height: 40 },
+        }}
       />
     </Layout>
   );

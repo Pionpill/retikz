@@ -86,44 +86,47 @@ export const matrixSchemaLocalization = {
     '/union/0/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
     '/union/0/field/"defaults"/field/"arrow"': '箭头默认样式',
     '/union/0/field/"defaults"/field/"reset"': '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
-    '/union/0/field/"style"': '集合 单元格的稀疏外观覆盖',
-    '/union/0/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
-    '/union/0/field/"style"/field/"opacity"': '单元格整体透明度',
-    '/union/0/field/"style"/field/"stroke"': '描边颜色或绘制对象',
-    '/union/0/field/"style"/field/"stroke"/union/1/union/3/field/"dashPattern"/array': '大于或等于零的有限数值',
-    '/union/0/field/"style"/field/"stroke"/union/1/union/3/field/"horizontalStyle"/field/"dashPattern"/array':
+    '/union/0/field/"defaultCell"/field/"style"': '集合 单元格的稀疏外观覆盖',
+    '/union/0/field/"defaultCell"/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/0/field/"defaultCell"/field/"style"/field/"opacity"': '单元格整体透明度',
+    '/union/0/field/"defaultCell"/field/"style"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/0/field/"defaultCell"/field/"style"/field/"stroke"/union/1/union/3/field/"dashPattern"/array':
       '大于或等于零的有限数值',
-    '/union/0/field/"style"/field/"stroke"/union/1/union/3/field/"verticalStyle"/field/"dashPattern"/array':
+    '/union/0/field/"defaultCell"/field/"style"/field/"stroke"/union/1/union/3/field/"horizontalStyle"/field/"dashPattern"/array':
       '大于或等于零的有限数值',
-    '/union/0/field/"style"/field/"stroke"/union/1/union/3/field/"lineStyleCycle"/field/"overrides"/array/field/"style"/field/"dashPattern"/array':
+    '/union/0/field/"defaultCell"/field/"style"/field/"stroke"/union/1/union/3/field/"verticalStyle"/field/"dashPattern"/array':
       '大于或等于零的有限数值',
-    '/union/0/field/"style"/field/"strokeOpacity"': '仅描边透明度',
-    '/union/0/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
-    '/union/0/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
-    '/union/0/field/"style"/field/"dashPattern"/array': '大于或等于零的有限数值',
-    '/union/0/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
-    '/union/0/field/"style"/field/"lineCap"': '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
-    '/union/0/field/"style"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
-    '/union/0/field/"style"/field/"fill"': '填充颜色或绘制对象',
-    '/union/0/field/"style"/field/"fill"/union/1/union/3/field/"dashPattern"/array': '大于或等于零的有限数值',
-    '/union/0/field/"style"/field/"fill"/union/1/union/3/field/"horizontalStyle"/field/"dashPattern"/array':
+    '/union/0/field/"defaultCell"/field/"style"/field/"stroke"/union/1/union/3/field/"lineStyleCycle"/field/"overrides"/array/field/"style"/field/"dashPattern"/array':
       '大于或等于零的有限数值',
-    '/union/0/field/"style"/field/"fill"/union/1/union/3/field/"verticalStyle"/field/"dashPattern"/array':
+    '/union/0/field/"defaultCell"/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/0/field/"defaultCell"/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/0/field/"defaultCell"/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
+    '/union/0/field/"defaultCell"/field/"style"/field/"dashPattern"/array': '大于或等于零的有限数值',
+    '/union/0/field/"defaultCell"/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
+    '/union/0/field/"defaultCell"/field/"style"/field/"lineCap"':
+      '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/0/field/"defaultCell"/field/"style"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/0/field/"defaultCell"/field/"style"/field/"fill"': '填充颜色或绘制对象',
+    '/union/0/field/"defaultCell"/field/"style"/field/"fill"/union/1/union/3/field/"dashPattern"/array':
       '大于或等于零的有限数值',
-    '/union/0/field/"style"/field/"fill"/union/1/union/3/field/"lineStyleCycle"/field/"overrides"/array/field/"style"/field/"dashPattern"/array':
+    '/union/0/field/"defaultCell"/field/"style"/field/"fill"/union/1/union/3/field/"horizontalStyle"/field/"dashPattern"/array':
       '大于或等于零的有限数值',
-    '/union/0/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
-    '/union/0/field/"style"/field/"textColor"':
+    '/union/0/field/"defaultCell"/field/"style"/field/"fill"/union/1/union/3/field/"verticalStyle"/field/"dashPattern"/array':
+      '大于或等于零的有限数值',
+    '/union/0/field/"defaultCell"/field/"style"/field/"fill"/union/1/union/3/field/"lineStyleCycle"/field/"overrides"/array/field/"style"/field/"dashPattern"/array':
+      '大于或等于零的有限数值',
+    '/union/0/field/"defaultCell"/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/0/field/"defaultCell"/field/"style"/field/"textColor"':
       '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
-    '/union/0/field/"style"/field/"font"': '内容文字的字体设置，省略字段沿用文字默认',
-    '/union/0/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
-    '/union/0/field/"layout"/field/"width"': '含内边距的固定边框宽度，auto 使用结构的自然尺寸',
-    '/union/0/field/"layout"/field/"width"/union/0': '大于或等于零的有限数值',
-    '/union/0/field/"layout"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
-    '/union/0/field/"layout"/field/"height"/union/0': '大于或等于零的有限数值',
-    '/union/0/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
-    '/union/0/field/"layout"/field/"padding"/union/0': '大于或等于零的有限数值',
-    '/union/0/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
+    '/union/0/field/"defaultCell"/field/"style"/field/"font"': '内容文字的字体设置，省略字段沿用文字默认',
+    '/union/0/field/"defaultCell"/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
+    '/union/0/field/"defaultCell"/field/"layout"/field/"width"': '含内边距的固定边框宽度，auto 使用结构的自然尺寸',
+    '/union/0/field/"defaultCell"/field/"layout"/field/"width"/union/0': '大于或等于零的有限数值',
+    '/union/0/field/"defaultCell"/field/"layout"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
+    '/union/0/field/"defaultCell"/field/"layout"/field/"height"/union/0': '大于或等于零的有限数值',
+    '/union/0/field/"defaultCell"/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
+    '/union/0/field/"defaultCell"/field/"layout"/field/"padding"/union/0': '大于或等于零的有限数值',
+    '/union/0/field/"defaultCell"/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
     '/union/0/field/"layout"/field/"gap"': '统一间距，或分别设置行、列间距',
     '/union/0/field/"layout"/field/"gap"/union/1/field/"row"': '大于或等于零的有限数值',
     '/union/0/field/"layout"/field/"gap"/union/1/field/"column"': '大于或等于零的有限数值',
@@ -318,44 +321,47 @@ export const matrixSchemaLocalization = {
     '/union/1/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
     '/union/1/field/"defaults"/field/"arrow"': '箭头默认样式',
     '/union/1/field/"defaults"/field/"reset"': '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
-    '/union/1/field/"style"': '集合 单元格的稀疏外观覆盖',
-    '/union/1/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
-    '/union/1/field/"style"/field/"opacity"': '单元格整体透明度',
-    '/union/1/field/"style"/field/"stroke"': '描边颜色或绘制对象',
-    '/union/1/field/"style"/field/"stroke"/union/1/union/3/field/"dashPattern"/array': '大于或等于零的有限数值',
-    '/union/1/field/"style"/field/"stroke"/union/1/union/3/field/"horizontalStyle"/field/"dashPattern"/array':
+    '/union/1/field/"defaultCell"/field/"style"': '集合 单元格的稀疏外观覆盖',
+    '/union/1/field/"defaultCell"/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/1/field/"defaultCell"/field/"style"/field/"opacity"': '单元格整体透明度',
+    '/union/1/field/"defaultCell"/field/"style"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/1/field/"defaultCell"/field/"style"/field/"stroke"/union/1/union/3/field/"dashPattern"/array':
       '大于或等于零的有限数值',
-    '/union/1/field/"style"/field/"stroke"/union/1/union/3/field/"verticalStyle"/field/"dashPattern"/array':
+    '/union/1/field/"defaultCell"/field/"style"/field/"stroke"/union/1/union/3/field/"horizontalStyle"/field/"dashPattern"/array':
       '大于或等于零的有限数值',
-    '/union/1/field/"style"/field/"stroke"/union/1/union/3/field/"lineStyleCycle"/field/"overrides"/array/field/"style"/field/"dashPattern"/array':
+    '/union/1/field/"defaultCell"/field/"style"/field/"stroke"/union/1/union/3/field/"verticalStyle"/field/"dashPattern"/array':
       '大于或等于零的有限数值',
-    '/union/1/field/"style"/field/"strokeOpacity"': '仅描边透明度',
-    '/union/1/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
-    '/union/1/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
-    '/union/1/field/"style"/field/"dashPattern"/array': '大于或等于零的有限数值',
-    '/union/1/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
-    '/union/1/field/"style"/field/"lineCap"': '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
-    '/union/1/field/"style"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
-    '/union/1/field/"style"/field/"fill"': '填充颜色或绘制对象',
-    '/union/1/field/"style"/field/"fill"/union/1/union/3/field/"dashPattern"/array': '大于或等于零的有限数值',
-    '/union/1/field/"style"/field/"fill"/union/1/union/3/field/"horizontalStyle"/field/"dashPattern"/array':
+    '/union/1/field/"defaultCell"/field/"style"/field/"stroke"/union/1/union/3/field/"lineStyleCycle"/field/"overrides"/array/field/"style"/field/"dashPattern"/array':
       '大于或等于零的有限数值',
-    '/union/1/field/"style"/field/"fill"/union/1/union/3/field/"verticalStyle"/field/"dashPattern"/array':
+    '/union/1/field/"defaultCell"/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/1/field/"defaultCell"/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/1/field/"defaultCell"/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
+    '/union/1/field/"defaultCell"/field/"style"/field/"dashPattern"/array': '大于或等于零的有限数值',
+    '/union/1/field/"defaultCell"/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
+    '/union/1/field/"defaultCell"/field/"style"/field/"lineCap"':
+      '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/1/field/"defaultCell"/field/"style"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/1/field/"defaultCell"/field/"style"/field/"fill"': '填充颜色或绘制对象',
+    '/union/1/field/"defaultCell"/field/"style"/field/"fill"/union/1/union/3/field/"dashPattern"/array':
       '大于或等于零的有限数值',
-    '/union/1/field/"style"/field/"fill"/union/1/union/3/field/"lineStyleCycle"/field/"overrides"/array/field/"style"/field/"dashPattern"/array':
+    '/union/1/field/"defaultCell"/field/"style"/field/"fill"/union/1/union/3/field/"horizontalStyle"/field/"dashPattern"/array':
       '大于或等于零的有限数值',
-    '/union/1/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
-    '/union/1/field/"style"/field/"textColor"':
+    '/union/1/field/"defaultCell"/field/"style"/field/"fill"/union/1/union/3/field/"verticalStyle"/field/"dashPattern"/array':
+      '大于或等于零的有限数值',
+    '/union/1/field/"defaultCell"/field/"style"/field/"fill"/union/1/union/3/field/"lineStyleCycle"/field/"overrides"/array/field/"style"/field/"dashPattern"/array':
+      '大于或等于零的有限数值',
+    '/union/1/field/"defaultCell"/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/1/field/"defaultCell"/field/"style"/field/"textColor"':
       '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
-    '/union/1/field/"style"/field/"font"': '内容文字的字体设置，省略字段沿用文字默认',
-    '/union/1/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
-    '/union/1/field/"layout"/field/"width"': '含内边距的固定边框宽度，auto 使用结构的自然尺寸',
-    '/union/1/field/"layout"/field/"width"/union/0': '大于或等于零的有限数值',
-    '/union/1/field/"layout"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
-    '/union/1/field/"layout"/field/"height"/union/0': '大于或等于零的有限数值',
-    '/union/1/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
-    '/union/1/field/"layout"/field/"padding"/union/0': '大于或等于零的有限数值',
-    '/union/1/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
+    '/union/1/field/"defaultCell"/field/"style"/field/"font"': '内容文字的字体设置，省略字段沿用文字默认',
+    '/union/1/field/"defaultCell"/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
+    '/union/1/field/"defaultCell"/field/"layout"/field/"width"': '含内边距的固定边框宽度，auto 使用结构的自然尺寸',
+    '/union/1/field/"defaultCell"/field/"layout"/field/"width"/union/0': '大于或等于零的有限数值',
+    '/union/1/field/"defaultCell"/field/"layout"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
+    '/union/1/field/"defaultCell"/field/"layout"/field/"height"/union/0': '大于或等于零的有限数值',
+    '/union/1/field/"defaultCell"/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
+    '/union/1/field/"defaultCell"/field/"layout"/field/"padding"/union/0': '大于或等于零的有限数值',
+    '/union/1/field/"defaultCell"/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
     '/union/1/field/"layout"/field/"gap"': '统一间距，或分别设置行、列间距',
     '/union/1/field/"layout"/field/"gap"/union/1/field/"row"': '大于或等于零的有限数值',
     '/union/1/field/"layout"/field/"gap"/union/1/field/"column"': '大于或等于零的有限数值',
@@ -505,44 +511,47 @@ export const matrixSchemaLocalization = {
     '/union/2/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
     '/union/2/field/"defaults"/field/"arrow"': '箭头默认样式',
     '/union/2/field/"defaults"/field/"reset"': '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
-    '/union/2/field/"style"': '集合 单元格的稀疏外观覆盖',
-    '/union/2/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
-    '/union/2/field/"style"/field/"opacity"': '单元格整体透明度',
-    '/union/2/field/"style"/field/"stroke"': '描边颜色或绘制对象',
-    '/union/2/field/"style"/field/"stroke"/union/1/union/3/field/"dashPattern"/array': '大于或等于零的有限数值',
-    '/union/2/field/"style"/field/"stroke"/union/1/union/3/field/"horizontalStyle"/field/"dashPattern"/array':
+    '/union/2/field/"defaultCell"/field/"style"': '集合 单元格的稀疏外观覆盖',
+    '/union/2/field/"defaultCell"/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/2/field/"defaultCell"/field/"style"/field/"opacity"': '单元格整体透明度',
+    '/union/2/field/"defaultCell"/field/"style"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/2/field/"defaultCell"/field/"style"/field/"stroke"/union/1/union/3/field/"dashPattern"/array':
       '大于或等于零的有限数值',
-    '/union/2/field/"style"/field/"stroke"/union/1/union/3/field/"verticalStyle"/field/"dashPattern"/array':
+    '/union/2/field/"defaultCell"/field/"style"/field/"stroke"/union/1/union/3/field/"horizontalStyle"/field/"dashPattern"/array':
       '大于或等于零的有限数值',
-    '/union/2/field/"style"/field/"stroke"/union/1/union/3/field/"lineStyleCycle"/field/"overrides"/array/field/"style"/field/"dashPattern"/array':
+    '/union/2/field/"defaultCell"/field/"style"/field/"stroke"/union/1/union/3/field/"verticalStyle"/field/"dashPattern"/array':
       '大于或等于零的有限数值',
-    '/union/2/field/"style"/field/"strokeOpacity"': '仅描边透明度',
-    '/union/2/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
-    '/union/2/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
-    '/union/2/field/"style"/field/"dashPattern"/array': '大于或等于零的有限数值',
-    '/union/2/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
-    '/union/2/field/"style"/field/"lineCap"': '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
-    '/union/2/field/"style"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
-    '/union/2/field/"style"/field/"fill"': '填充颜色或绘制对象',
-    '/union/2/field/"style"/field/"fill"/union/1/union/3/field/"dashPattern"/array': '大于或等于零的有限数值',
-    '/union/2/field/"style"/field/"fill"/union/1/union/3/field/"horizontalStyle"/field/"dashPattern"/array':
+    '/union/2/field/"defaultCell"/field/"style"/field/"stroke"/union/1/union/3/field/"lineStyleCycle"/field/"overrides"/array/field/"style"/field/"dashPattern"/array':
       '大于或等于零的有限数值',
-    '/union/2/field/"style"/field/"fill"/union/1/union/3/field/"verticalStyle"/field/"dashPattern"/array':
+    '/union/2/field/"defaultCell"/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/2/field/"defaultCell"/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/2/field/"defaultCell"/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
+    '/union/2/field/"defaultCell"/field/"style"/field/"dashPattern"/array': '大于或等于零的有限数值',
+    '/union/2/field/"defaultCell"/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
+    '/union/2/field/"defaultCell"/field/"style"/field/"lineCap"':
+      '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/2/field/"defaultCell"/field/"style"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/2/field/"defaultCell"/field/"style"/field/"fill"': '填充颜色或绘制对象',
+    '/union/2/field/"defaultCell"/field/"style"/field/"fill"/union/1/union/3/field/"dashPattern"/array':
       '大于或等于零的有限数值',
-    '/union/2/field/"style"/field/"fill"/union/1/union/3/field/"lineStyleCycle"/field/"overrides"/array/field/"style"/field/"dashPattern"/array':
+    '/union/2/field/"defaultCell"/field/"style"/field/"fill"/union/1/union/3/field/"horizontalStyle"/field/"dashPattern"/array':
       '大于或等于零的有限数值',
-    '/union/2/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
-    '/union/2/field/"style"/field/"textColor"':
+    '/union/2/field/"defaultCell"/field/"style"/field/"fill"/union/1/union/3/field/"verticalStyle"/field/"dashPattern"/array':
+      '大于或等于零的有限数值',
+    '/union/2/field/"defaultCell"/field/"style"/field/"fill"/union/1/union/3/field/"lineStyleCycle"/field/"overrides"/array/field/"style"/field/"dashPattern"/array':
+      '大于或等于零的有限数值',
+    '/union/2/field/"defaultCell"/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/2/field/"defaultCell"/field/"style"/field/"textColor"':
       '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
-    '/union/2/field/"style"/field/"font"': '内容文字的字体设置，省略字段沿用文字默认',
-    '/union/2/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
-    '/union/2/field/"layout"/field/"width"': '含内边距的固定边框宽度，auto 使用结构的自然尺寸',
-    '/union/2/field/"layout"/field/"width"/union/0': '大于或等于零的有限数值',
-    '/union/2/field/"layout"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
-    '/union/2/field/"layout"/field/"height"/union/0': '大于或等于零的有限数值',
-    '/union/2/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
-    '/union/2/field/"layout"/field/"padding"/union/0': '大于或等于零的有限数值',
-    '/union/2/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
+    '/union/2/field/"defaultCell"/field/"style"/field/"font"': '内容文字的字体设置，省略字段沿用文字默认',
+    '/union/2/field/"defaultCell"/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
+    '/union/2/field/"defaultCell"/field/"layout"/field/"width"': '含内边距的固定边框宽度，auto 使用结构的自然尺寸',
+    '/union/2/field/"defaultCell"/field/"layout"/field/"width"/union/0': '大于或等于零的有限数值',
+    '/union/2/field/"defaultCell"/field/"layout"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
+    '/union/2/field/"defaultCell"/field/"layout"/field/"height"/union/0': '大于或等于零的有限数值',
+    '/union/2/field/"defaultCell"/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
+    '/union/2/field/"defaultCell"/field/"layout"/field/"padding"/union/0': '大于或等于零的有限数值',
+    '/union/2/field/"defaultCell"/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
     '/union/2/field/"layout"/field/"gap"': '统一间距，或分别设置行、列间距',
     '/union/2/field/"layout"/field/"gap"/union/1/field/"row"': '大于或等于零的有限数值',
     '/union/2/field/"layout"/field/"gap"/union/1/field/"column"': '大于或等于零的有限数值',
@@ -617,5 +626,11 @@ export const matrixSchemaLocalization = {
     '/union/2/field/"items"': '示意骨架入口不接受此字段',
     '/union/2/field/"data"': '示意骨架入口不接受此字段',
     '/union/2/field/"dataExpand"': '仅用于 JSON 数据入口',
+    '/union/0/field/"defaultCell"': '共享单元格默认配置',
+    '/union/0/field/"defaultCell"/field/"layout"': '共享单元格尺寸、内边距和溢出默认值',
+    '/union/1/field/"defaultCell"': '共享单元格默认配置',
+    '/union/1/field/"defaultCell"/field/"layout"': '共享单元格尺寸、内边距和溢出默认值',
+    '/union/2/field/"defaultCell"': '共享单元格默认配置',
+    '/union/2/field/"defaultCell"/field/"layout"': '共享单元格尺寸、内边距和溢出默认值',
   },
 };

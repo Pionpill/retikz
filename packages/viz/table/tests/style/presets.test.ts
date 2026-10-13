@@ -10,14 +10,14 @@ describe('default Table Source defaults', () => {
 
       expect(TableDefaultsSchema.parse(defaults)).toEqual(defaults);
       expect(Object.isFrozen(defaults)).toBe(false);
-      expect(Object.isFrozen(defaults.appearanceDefaults)).toBe(false);
-      expect(Object.isFrozen(defaults.visualDefaults?.sequential)).toBe(false);
+      expect(Object.isFrozen(defaults.defaultAppearance)).toBe(false);
+      expect(Object.isFrozen(defaults.defaultVisual?.sequential)).toBe(false);
     }
   });
 
   it('keeps the observable default values', () => {
     expect(getDefaultTableDefaults(ThemeMode.Light)).toMatchObject({
-      appearanceDefaults: {
+      defaultAppearance: {
         body: {
           background: { fill: '#ffffff', fillOpacity: 1 },
           content: { defaults: { style: { color: '#18181b' } } },
@@ -28,7 +28,7 @@ describe('default Table Source defaults', () => {
         },
       },
       layout: { borders: { horizontal: { kind: 'line', stroke: '#e4e4e7', width: 1 } } },
-      visualDefaults: { sequential: ['#eff6ff', '#1d4ed8'] },
+      defaultVisual: { sequential: ['#eff6ff', '#1d4ed8'] },
     });
   });
 });

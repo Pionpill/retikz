@@ -20,7 +20,7 @@ const ShadowFlow: FC<ShadowFlowProps> = props => {
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}
-      flowDefaults={{ entity: { style: { font: { size: 14 } } } }}
+      defaultFlow={{ entity: { style: { font: { size: 14 } } } }}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
       <FlowLayout id="shadow-layout" kind="linear" direction="right">

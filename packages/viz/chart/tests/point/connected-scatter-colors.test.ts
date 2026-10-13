@@ -81,7 +81,7 @@ const render = (properties: Record<string, unknown> = {}, series = true, extras:
   const all = descendants(
     materialize(
       lowerPlotWithLineage(
-        { ...plot, plotDefaults: { ...plot.plotDefaults, palette: { categorical: palette, series: palette } } },
+        { ...plot, defaultPlot: { ...plot.defaultPlot, palette: { categorical: palette, series: palette } } },
         { rows },
         { width: 480, height: 320 },
       ).children,

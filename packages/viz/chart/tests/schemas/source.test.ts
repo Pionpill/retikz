@@ -37,11 +37,11 @@ describe('Chart Source schema primitives', () => {
       background: { fill: '#f8fafc' },
       layout: { width: 640, height: 360, padding: 0, gap: 0 },
       presentation: { title: { text: 'Revenue', style: { font: { size: 20 } }, layout: { align: 'start' } } },
-      chartDefaults: {
+      defaultChart: {
         layout: { padding: 12, gap: 4 },
         presentation: { title: { style: { textColor: '#0f172a' }, layout: { lineHeight: 24 } } },
       },
-      plotExtension: { plotDefaults: { palette: { series: ['#0f766e'] } }, plotRules: [] },
+      plotExtension: { defaultPlot: { palette: { series: ['#0f766e'] } }, plotRules: [] },
     });
 
     expect(JSON.parse(JSON.stringify(source))).toEqual(source);
@@ -53,15 +53,15 @@ describe('Chart Source schema primitives', () => {
     expect(FixtureSourceSchema.safeParse({ ...minimalSource, presentation: { title: 'Title' } }).success).toBe(false);
   });
 
-  it('only permits defaultable visual and layout fields in chartDefaults', () => {
-    expect(FixtureSourceSchema.safeParse({ ...minimalSource, chartDefaults: { layout: { width: 640 } } }).success).toBe(
+  it('only permits defaultable visual and layout fields in defaultChart', () => {
+    expect(FixtureSourceSchema.safeParse({ ...minimalSource, defaultChart: { layout: { width: 640 } } }).success).toBe(
       false,
     );
     expect(
-      FixtureSourceSchema.safeParse({ ...minimalSource, chartDefaults: { presentation: { title: { text: 'new' } } } })
+      FixtureSourceSchema.safeParse({ ...minimalSource, defaultChart: { presentation: { title: { text: 'new' } } } })
         .success,
     ).toBe(false);
-    expect(FixtureSourceSchema.safeParse({ ...minimalSource, chartDefaults: { recipe: {} } }).success).toBe(false);
+    expect(FixtureSourceSchema.safeParse({ ...minimalSource, defaultChart: { recipe: {} } }).success).toBe(false);
   });
 
   it('keeps fixed presentation slots, root coordinate, and explicit Plot fragment boundaries', () => {

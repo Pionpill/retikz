@@ -21,23 +21,31 @@ const ChartPropertiesMap: FC<ChartPropertiesMapProps> = props => {
         id="strip-properties"
         position={[12, 28]}
         label={label(t.strip)}
-        layout={{ height: 34, padding: 0, key: { width: 72 }, value: { width: 238 } }}
-        style={{ font: { size: 13 } }}
         entries={[
           { key: 'jitter', value: '{ span: { kind: "ratio", value: 0.3 } }' },
           { key: 'opacity', value: '0.8' },
         ]}
+        defaultCell={{
+          style: { font: { size: 13 } },
+          layout: { height: 34, padding: 0 },
+          key: { layout: { width: 72 } },
+          value: { layout: { width: 238 } },
+        }}
       />
       <Map
         id="regression-properties"
         position={[12, 177]}
         label={label(t.regression)}
-        layout={{ height: 34, padding: 0, key: { width: 90 }, value: { width: 220 } }}
-        style={{ font: { size: 13 } }}
         entries={[
           { key: 'method', value: '{ kind: "linear" }' },
           { key: 'opacity', value: '0.8' },
         ]}
+        defaultCell={{
+          style: { font: { size: 13 } },
+          layout: { height: 34, padding: 0 },
+          key: { layout: { width: 90 } },
+          value: { layout: { width: 220 } },
+        }}
       />
       <Node id="strip-result" position={[540, 64]} cornerRadius={4}>
         {t.spread}

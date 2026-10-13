@@ -95,7 +95,7 @@ const completeFlow = {
   ],
   layout: { direction: 'right', nodeGap: 18 },
   routing: { kind: 'orthogonal', cornerRadius: 8 },
-  flowDefaults: {
+  defaultFlow: {
     layout: { nodeGap: 16, rankGap: 32 },
     entity: { style: { fill: '#ffffff', opacity: 0.95 }, layout: { minimumSize: 48, margin: 4 } },
     group: { padding: 12 },
@@ -413,8 +413,8 @@ describe('Flow Source schema', () => {
     { layout: { nodeGap: -1 } },
     { layout: { direction: 'right' } },
     { relation: { routing: { kind: 'straight' } } },
-  ])('rejects structural or invalid Flow defaults: %j', flowDefaults => {
-    expect(FlowDiagramSchema.safeParse({ ...completeFlow, flowDefaults }).success).toBe(false);
+  ])('rejects structural or invalid Flow defaults: %j', defaultFlow => {
+    expect(FlowDiagramSchema.safeParse({ ...completeFlow, defaultFlow }).success).toBe(false);
   });
 
   it('rejects the unsupported structured Flow Block theme slice', () => {
@@ -426,7 +426,7 @@ describe('Flow Source schema', () => {
         groups: [],
         layouts: [],
         children: ['entity'],
-        flowDefaults: { block: { layout: { minWidth: 160 } } },
+        defaultFlow: { block: { layout: { minWidth: 160 } } },
       }).success,
     ).toBe(false);
   });

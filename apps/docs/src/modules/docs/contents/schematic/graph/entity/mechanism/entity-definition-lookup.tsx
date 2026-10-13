@@ -42,15 +42,18 @@ const EntityDefinitionLookup: FC<EntityDefinitionLookupProps> = props => {
         id="definition-options"
         position={[215, 55]}
         label={label(t.options)}
-        layout={{ padding: 0, key: { width: 90 }, value: { width: 320 } }}
-        style={{ font: { size: 13 } }}
+        defaultCell={{
+          style: { font: { size: 13 } },
+          layout: { padding: 0 },
+          key: { layout: { width: 90 } },
+          value: { layout: { width: 320 } },
+        }}
       >
         <MapEntry>
           <MapKey text="entityRoles" />
           <MapValue>
             <Map
               id="roles"
-              layout={{ height: 32, padding: 0, key: { width: 76 }, value: { width: 205 } }}
               entries={[
                 {
                   key: {
@@ -69,19 +72,30 @@ const EntityDefinitionLookup: FC<EntityDefinitionLookupProps> = props => {
                   value: { content: t.serviceDefinition, style: { fill: 'darkorange', opacity: { fill: 0.12 } } },
                 },
               ]}
+              defaultCell={{
+                layout: { height: 32, padding: 0 },
+                key: { layout: { width: 76 } },
+                value: { layout: { width: 205 } },
+              }}
             />
           </MapValue>
         </MapEntry>
         <MapEntry>
           <MapKey text="entityKinds" />
           <MapValue>
-            <Map id="kinds" layout={{ padding: 0, key: { width: 68 }, value: { width: 250 } }}>
+            <Map
+              id="kinds"
+              defaultCell={{
+                layout: { padding: 0 },
+                key: { layout: { width: 68 } },
+                value: { layout: { width: 250 } },
+              }}
+            >
               <MapEntry>
                 <MapKey text="service" />
                 <MapValue>
                   <Map
                     id="service-kinds"
-                    layout={{ height: 32, padding: 0, key: { width: 122 }, value: { width: 125 } }}
                     entries={[
                       {
                         key: {
@@ -92,6 +106,11 @@ const EntityDefinitionLookup: FC<EntityDefinitionLookupProps> = props => {
                         value: { content: t.gatewayDefinition, style: { fill: 'darkorange', opacity: { fill: 0.12 } } },
                       },
                     ]}
+                    defaultCell={{
+                      layout: { height: 32, padding: 0 },
+                      key: { layout: { width: 122 } },
+                      value: { layout: { width: 125 } },
+                    }}
                   />
                 </MapValue>
               </MapEntry>
@@ -103,8 +122,6 @@ const EntityDefinitionLookup: FC<EntityDefinitionLookupProps> = props => {
         id="builtin-canonical"
         position={[135, 205]}
         label={label(t.builtinResult)}
-        layout={{ height: 30, padding: 0, key: { width: 108 }, value: { width: 166 } }}
-        style={{ font: { size: 12 } }}
         entries={[
           {
             key: { content: t.roleDefinition },
@@ -112,13 +129,17 @@ const EntityDefinitionLookup: FC<EntityDefinitionLookupProps> = props => {
           },
           { key: { content: t.kindDefinition }, value: { content: t.noKind } },
         ]}
+        defaultCell={{
+          style: { font: { size: 12 } },
+          layout: { height: 30, padding: 0 },
+          key: { layout: { width: 108 } },
+          value: { layout: { width: 166 } },
+        }}
       />
       <Map
         id="custom-canonical"
         position={[445, 205]}
         label={label(t.customResult)}
-        layout={{ height: 30, padding: 0, key: { width: 108 }, value: { width: 166 } }}
-        style={{ font: { size: 12 } }}
         entries={[
           {
             key: { content: t.roleDefinition },
@@ -129,6 +150,12 @@ const EntityDefinitionLookup: FC<EntityDefinitionLookupProps> = props => {
             value: { content: 'gatewayKind', style: { fill: 'darkorange', opacity: { fill: 0.12 } } },
           },
         ]}
+        defaultCell={{
+          style: { font: { size: 12 } },
+          layout: { height: 30, padding: 0 },
+          key: { layout: { width: 108 } },
+          value: { layout: { width: 166 } },
+        }}
       />
       <Node
         id="custom-node"

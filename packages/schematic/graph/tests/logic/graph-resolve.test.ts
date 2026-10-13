@@ -112,7 +112,7 @@ describe('Graph context projection', () => {
     expect(projected[1]).toMatchObject({
       namespace: 'graph',
       type: 'graph',
-      children: [{ id: 'nested', style: { opacity: 0.5, fill: '#ffffff' } }],
+      children: [{ id: 'nested', style: { opacity: { overall: 0.5 }, fill: '#ffffff' } }],
     });
   });
 
@@ -125,7 +125,7 @@ describe('Graph context projection', () => {
         {
           namespace: 'graph',
           type: 'graph',
-          graphDefaults: { entity: { style: { fill: '#2563eb' } } },
+          defaultGraph: { entity: { style: { fill: '#2563eb' } } },
           children: [entity('nested')],
         },
       ],

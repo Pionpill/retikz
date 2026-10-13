@@ -25,13 +25,13 @@ const MeasurementFigure: FC<MeasurementFigureProps> = props => {
         <Array
           key={sample.name}
           position={[250, i * 110]}
-          layout={{ padding: 8 }}
           label={{
             text: `${sample.width + 16} × ${sample.height + 16}`,
             position: 'bottom',
             font: { size: 12 },
             opacity: 0.8,
           }}
+          defaultCell={{ layout: { padding: 8 } }}
         >
           <ArrayItem>
             <Node
@@ -68,8 +68,8 @@ const MeasurementFigure: FC<MeasurementFigureProps> = props => {
       ))}
       <Array
         position={[480, 110]}
-        layout={{ width: 60, padding: 8 }}
         label={{ text: '60 × 52', position: 'bottom', font: { size: 12 }, opacity: 0.8 }}
+        defaultCell={{ layout: { width: 60, padding: 8 } }}
       >
         <ArrayItem>
           <Node

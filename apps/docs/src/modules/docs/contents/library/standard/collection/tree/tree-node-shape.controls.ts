@@ -49,7 +49,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       ],
     }),
     canonicalValues: { shape: 'rectangle', cornerRadius: 8, content: 'Review the complete request' },
-    relatedApis: ['Tree.root', 'Tree.node'],
+    relatedApis: ['Tree.root', 'Tree.defaultNode'],
   } satisfies PreviewControlContract;
 };
 export const previewControlContract = createPreviewControlContract('zh');

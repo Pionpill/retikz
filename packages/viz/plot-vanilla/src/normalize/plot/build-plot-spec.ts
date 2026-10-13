@@ -105,7 +105,7 @@ export const normalizePlotIR = (
     ...coordinateRoot,
     marks,
     guides,
-    ...(options.plotDefaults === undefined ? {} : { plotDefaults: options.plotDefaults }),
+    ...(options.defaultPlot === undefined ? {} : { defaultPlot: options.defaultPlot }),
     ...(options.plotRules === undefined ? {} : { plotRules: options.plotRules }),
     ...(options.width === undefined ? {} : { width: options.width }),
     ...(options.height === undefined ? {} : { height: options.height }),

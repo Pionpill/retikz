@@ -55,11 +55,11 @@ describe('buildPlotIR IntervalMark / color / series / stack / BuiltinPlotScale',
   it('plot_defaults_palette_is_preserved_without_adapter_owned_range', () => {
     const colors = ['#2563eb', '#f97316', 'currentColor'];
     const spec = buildPlotIR(<PointMark x="gdp" y="life" color="continent" />, '__plot', {
-      plotDefaults: { palette: { categorical: colors } },
+      defaultPlot: { palette: { categorical: colors } },
       dataFieldNames: new Set(['continent']),
     });
 
-    expect(spec.plotDefaults?.palette?.categorical).toEqual(colors);
+    expect(spec.defaultPlot?.palette?.categorical).toEqual(colors);
     expect(spec.scales).toContainEqual({ type: 'ordinal', name: '__color' });
   });
 

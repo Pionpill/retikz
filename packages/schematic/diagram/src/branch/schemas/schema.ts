@@ -52,7 +52,7 @@ export const BranchDiagramSchema = strictObject({
   layout: BranchLayoutIntentSchema.optional(),
   presentation: DiagramPresentationSchema.optional(),
   frame: DiagramFrameSchema.optional(),
-  diagramDefaults: DiagramDefaultsSchema.optional(),
+  defaultDiagram: DiagramDefaultsSchema.optional(),
 }).describe('Branch diagram with ordered paths as the only topology source.');
 
 const BranchArtifactBoundsSchema = strictObject({

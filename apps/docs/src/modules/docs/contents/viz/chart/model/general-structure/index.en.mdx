@@ -37,7 +37,7 @@ This Point-family Scatter Source preserves authored input. Plot marks, scales, a
 | `type`      | Family such as `point`; selects an exact schema together with `recipe.chartType` |
 | `id`        | Optional identity for this Chart within larger drawing content                   |
 
-The remaining root fields group by responsibility: `data`, `presentation`, `layout`, `background`, `chartDefaults`, and `coordinate`. See [Core Structure](/viz/chart/model/core-structure) for the type-specific `recipe` and lower-level `plotExtension`.
+The remaining root fields group by responsibility: `data`, `presentation`, `layout`, `background`, `defaultChart`, and `coordinate`. See [Core Structure](/viz/chart/model/core-structure) for the type-specific `recipe` and lower-level `plotExtension`.
 
 ## Data entry
 
@@ -122,19 +122,19 @@ During resolution, Chart uses a Standard `Surface` as the chart-wide container a
 
 `layout` allocates the outer Chart Surface, not the internal Plot area. Without authored dimensions, Cartesian coordinates default to `800 × 500` and Polar coordinates to `400 × 500`; authored width and height override those defaults separately. Titles and notes take their own space, while the Plot fills the area left after these regions, padding, and gaps.
 
-| Field           | Subfield       | Purpose                                                       |
-| --------------- | -------------- | ------------------------------------------------------------- |
-| `layout`        | `width`        | Optional; outer width of the Chart Surface                    |
-|                 | `height`       | Optional; outer height of the Chart Surface                   |
-|                 | `padding`      | Optional; padding around presentation and Plot content        |
-|                 | `gap`          | Optional; spacing between existing regions and Plot           |
-| `background`    | `fill`         | Required when `background` is supplied; explicit Surface fill |
-|                 | `opacity.fill` | Optional; opacity of the background fill                      |
-| `chartDefaults` | `background`   | Optional; default background, overridden by an explicit value |
-|                 | `layout`       | Optional; defaults for `padding` and `gap`                    |
-|                 | `presentation` | Optional; `style` and `layout` defaults for existing slots    |
+| Field          | Subfield       | Purpose                                                       |
+| -------------- | -------------- | ------------------------------------------------------------- |
+| `layout`       | `width`        | Optional; outer width of the Chart Surface                    |
+|                | `height`       | Optional; outer height of the Chart Surface                   |
+|                | `padding`      | Optional; padding around presentation and Plot content        |
+|                | `gap`          | Optional; spacing between existing regions and Plot           |
+| `background`   | `fill`         | Required when `background` is supplied; explicit Surface fill |
+|                | `opacity.fill` | Optional; opacity of the background fill                      |
+| `defaultChart` | `background`   | Optional; default background, overridden by an explicit value |
+|                | `layout`       | Optional; defaults for `padding` and `gap`                    |
+|                | `presentation` | Optional; `style` and `layout` defaults for existing slots    |
 
-Both root `background` and `chartDefaults.background` are optional; when both are omitted, the Chart theme supplies the background. `chartDefaults.layout` only accepts `padding` and `gap`, not outer dimensions. `chartDefaults.presentation` only supplies `style` and `layout` for existing slots; it does not create text. Visual properties of a concrete chart type remain in `recipe.properties`.
+Both root `background` and `defaultChart.background` are optional; when both are omitted, the Chart theme supplies the background. `defaultChart.layout` only accepts `padding` and `gap`, not outer dimensions. `defaultChart.presentation` only supplies `style` and `layout` for existing slots; it does not create text. Visual properties of a concrete chart type remain in `recipe.properties`.
 
 ## Coordinate configuration
 

@@ -46,19 +46,25 @@ const AllocationFigure: FC<AllocationFigureProps> = props => {
   const label = { position: 'top' as const, font: { size: 12 }, opacity: 0.8 };
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
-      <Array layout={{ padding: 8, gap: 8 }} label={{ ...label, text: t.auto }}>
+      <Array label={{ ...label, text: t.auto }} layout={{ gap: 8 }} defaultCell={{ layout: { padding: 8 } }}>
         <ArrayItem>{a}</ArrayItem>
         <ArrayItem>{b}</ArrayItem>
       </Array>
       <Array
         position={[330, 0]}
-        layout={{ width: 'content', padding: 8, gap: 8 }}
         label={{ ...label, text: t.content }}
+        layout={{ gap: 8 }}
+        defaultCell={{ layout: { width: 'content', padding: 8 } }}
       >
         <ArrayItem>{a}</ArrayItem>
         <ArrayItem>{b}</ArrayItem>
       </Array>
-      <Map position={[0, 125]} layout={{ padding: 8, gap: 8 }} label={{ ...label, text: t.map }}>
+      <Map
+        position={[0, 125]}
+        label={{ ...label, text: t.map }}
+        layout={{ gap: 8 }}
+        defaultCell={{ layout: { padding: 8 } }}
+      >
         <MapEntry>
           <MapKey>{a}</MapKey>
           <MapValue>{b}</MapValue>
@@ -68,7 +74,12 @@ const AllocationFigure: FC<AllocationFigureProps> = props => {
           <MapValue>{a}</MapValue>
         </MapEntry>
       </Map>
-      <Matrix position={[330, 125]} layout={{ padding: 8, gap: 8 }} label={{ ...label, text: t.matrix }}>
+      <Matrix
+        position={[330, 125]}
+        label={{ ...label, text: t.matrix }}
+        layout={{ gap: 8 }}
+        defaultCell={{ layout: { padding: 8 } }}
+      >
         <MatrixRow>
           <MatrixCell>{a}</MatrixCell>
           <MatrixCell>{b}</MatrixCell>
@@ -78,11 +89,21 @@ const AllocationFigure: FC<AllocationFigureProps> = props => {
           <MatrixCell>{b}</MatrixCell>
         </MatrixRow>
       </Matrix>
-      <Chain position={[0, 310]} layout={{ padding: 8, gap: 24 }} label={{ ...label, text: t.chain }}>
+      <Chain
+        position={[0, 310]}
+        label={{ ...label, text: t.chain }}
+        layout={{ gap: 24 }}
+        defaultCell={{ layout: { padding: 8 } }}
+      >
         <ChainCell>{a}</ChainCell>
         <ChainCell>{b}</ChainCell>
       </Chain>
-      <Array position={[330, 310]} layout={{ padding: 8, gap: 8 }} label={{ ...label, text: t.fixed }}>
+      <Array
+        position={[330, 310]}
+        label={{ ...label, text: t.fixed }}
+        layout={{ gap: 8 }}
+        defaultCell={{ layout: { padding: 8 } }}
+      >
         <ArrayItem layout={{ width: 60 }}>{a}</ArrayItem>
         <ArrayItem>{b}</ArrayItem>
       </Array>

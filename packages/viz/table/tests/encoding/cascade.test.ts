@@ -6,13 +6,13 @@ import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { resolveTableCellPlans } from '../../src/pipeline/rule';
 import { cascadeTableCellAppearance } from '../../src/pipeline/rule/cascade';
 
-const tableDefaults = resolveTableThemeDefaults();
+const defaultTable = resolveTableThemeDefaults();
 
-const sequential = tableDefaults.defaults.visualDefaults?.sequential;
+const sequential = defaultTable.defaults.defaultVisual?.sequential;
 if (sequential === undefined || sequential === null)
   throw new Error('test fixture requires the default sequential palette');
 const scaleContext = {
-  categoricalColors: tableDefaults.defaults.visualDefaults?.categorical ?? [],
+  categoricalColors: defaultTable.defaults.defaultVisual?.categorical ?? [],
   sequentialColors: [sequential[0], sequential[1]] as const,
 };
 
@@ -44,7 +44,7 @@ describe('Table visual encoding cascade', () => {
       },
     });
     const result = resolveTableCellPlans(model, {
-      tableDefaults,
+      defaultTable,
       scaleContext,
       visualScaleDefinitions: [custom],
       encodings: [
@@ -79,7 +79,7 @@ describe('Table visual encoding cascade', () => {
   it('applies style, ordered owned channels, then ordered root rules', () => {
     const model = normalizeTableStructure({ kind: 'manual', rows: [[1]] });
     const result = resolveTableCellPlans(model, {
-      tableDefaults,
+      defaultTable,
       scaleContext,
       encodings: [
         {
@@ -118,7 +118,7 @@ describe('Table visual encoding cascade', () => {
   it('treats undefined resolution as no patch, trace, descriptor, or evaluator call', () => {
     const model = normalizeTableStructure({ kind: 'manual', rows: [[{ value: null }]] });
     const result = resolveTableCellPlans(model, {
-      tableDefaults,
+      defaultTable,
       scaleContext,
       encodings: [
         {

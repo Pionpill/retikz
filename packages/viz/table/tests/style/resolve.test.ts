@@ -20,12 +20,12 @@ describe('Table Source defaults resolution', () => {
     const resolved = resolveTableThemeDefaults();
 
     expect(resolved.defaults).toMatchObject(getDefaultTableDefaults(ThemeMode.Light));
-    expect(resolved.defaults.visualDefaults?.categorical).toEqual(lightTheme.colors.categorical);
+    expect(resolved.defaults.defaultVisual?.categorical).toEqual(lightTheme.colors.categorical);
     expect(resolved.layers).toMatchObject([
       {
         kind: 'neutral',
         path: '$default/light',
-        defaults: { visualDefaults: { categorical: lightTheme.colors.categorical } },
+        defaults: { defaultVisual: { categorical: lightTheme.colors.categorical } },
       },
     ]);
     expect(resolved.layers).toHaveLength(1);
@@ -37,31 +37,31 @@ describe('Table Source defaults resolution', () => {
   it('merges sparse Source defaults by formal groups while detaching inputs', () => {
     const categorical = ['pink', 'purple'];
     const patch = TableDefaultsSchema.parse({
-      appearanceDefaults: {
+      defaultAppearance: {
         body: {
           background: { fill: '#f8fafc' },
           content: { defaults: { style: { color: '#123456' } } },
         },
       },
-      visualDefaults: { categorical },
+      defaultVisual: { categorical },
     });
     const resolved = mergeTableDefaults(getDefaultTableDefaults(ThemeMode.Light), patch);
 
-    expect(resolved.appearanceDefaults?.body).toMatchObject({
+    expect(resolved.defaultAppearance?.body).toMatchObject({
       background: { fill: '#f8fafc' },
       content: { defaults: { style: { color: '#123456' } } },
     });
-    expect(resolved.appearanceDefaults?.columnHeader?.content?.defaults?.style?.color).toBe('#71717a');
-    expect(resolved.visualDefaults?.categorical).toEqual(['pink', 'purple']);
+    expect(resolved.defaultAppearance?.columnHeader?.content?.defaults?.style?.color).toBe('#71717a');
+    expect(resolved.defaultVisual?.categorical).toEqual(['pink', 'purple']);
 
     categorical[0] = 'mutated';
 
-    expect(resolved.visualDefaults?.categorical).toEqual(['pink', 'purple']);
+    expect(resolved.defaultVisual?.categorical).toEqual(['pink', 'purple']);
   });
 
   it('atomically replaces same-kind borders and removes null-cleared defaults', () => {
     const base = TableDefaultsSchema.parse({
-      appearanceDefaults: {
+      defaultAppearance: {
         body: {
           background: { fill: '#ffffff', fillOpacity: 0.5 },
           content: {
@@ -73,10 +73,10 @@ describe('Table Source defaults resolution', () => {
         },
       },
       layout: { borders: { horizontal: { kind: 'line', stroke: '#111111', width: 5 } } },
-      visualDefaults: { categorical: ['red'], sequential: ['white', 'black'] },
+      defaultVisual: { categorical: ['red'], sequential: ['white', 'black'] },
     });
     const patch = TableDefaultsSchema.parse({
-      appearanceDefaults: {
+      defaultAppearance: {
         body: {
           background: { fill: null, fillOpacity: 0 },
           content: {
@@ -85,31 +85,31 @@ describe('Table Source defaults resolution', () => {
         },
       },
       layout: { borders: { horizontal: { kind: 'line', stroke: 'red' } } },
-      visualDefaults: { categorical: null },
+      defaultVisual: { categorical: null },
     });
 
     expect(mergeTableDefaults(base, patch)).toEqual({
-      appearanceDefaults: {
+      defaultAppearance: {
         body: {
           background: { fillOpacity: 0 },
           content: { defaults: { node: { layout: { padding: 4 }, style: { font: { family: 'serif' } } } } },
         },
       },
       layout: { borders: { horizontal: { kind: 'line', stroke: 'red' } } },
-      visualDefaults: { sequential: ['white', 'black'] },
+      defaultVisual: { sequential: ['white', 'black'] },
     });
   });
 
-  it('accepts an empty tableDefaults no-op but rejects empty nested defaults groups', () => {
+  it('accepts an empty defaultTable no-op but rejects empty nested defaults groups', () => {
     expect(TableDefaultsSchema.parse({})).toEqual({});
 
     for (const invalid of [
-      { appearanceDefaults: {} },
-      { appearanceDefaults: { body: {} } },
-      { appearanceDefaults: { body: { background: {} } } },
+      { defaultAppearance: {} },
+      { defaultAppearance: { body: {} } },
+      { defaultAppearance: { body: { background: {} } } },
       { layout: {} },
       { layout: { borders: {} } },
-      { visualDefaults: {} },
+      { defaultVisual: {} },
     ]) {
       expect(() => TableDefaultsSchema.parse(invalid)).toThrow(/at least one field/i);
     }
@@ -120,12 +120,12 @@ describe('Table Source defaults resolution', () => {
       name: 'brand',
       resolve: theme => ({
         defaults: {
-          appearanceDefaults: {
+          defaultAppearance: {
             body: {
               content: { defaults: { style: { color: theme.mode === ThemeMode.Light ? '#123456' : '#abcdef' } } },
             },
           },
-          visualDefaults: { sequential: ['orange', 'purple'] },
+          defaultVisual: { sequential: ['orange', 'purple'] },
         },
       }),
     });
@@ -137,10 +137,10 @@ describe('Table Source defaults resolution', () => {
 
     const resolved = resolveTableThemeDefaults(theme, [brand]);
 
-    expect(resolved.defaults.appearanceDefaults?.body?.content?.defaults?.style?.color).toBe('#123456');
-    expect(resolved.defaults.appearanceDefaults?.body?.background?.fill).toBe('#ffffff');
-    expect(resolved.defaults.visualDefaults?.categorical).toEqual(['red']);
-    expect(resolved.defaults.visualDefaults?.sequential).toEqual(['orange', 'purple']);
+    expect(resolved.defaults.defaultAppearance?.body?.content?.defaults?.style?.color).toBe('#123456');
+    expect(resolved.defaults.defaultAppearance?.body?.background?.fill).toBe('#ffffff');
+    expect(resolved.defaults.defaultVisual?.categorical).toEqual(['red']);
+    expect(resolved.defaults.defaultVisual?.sequential).toEqual(['orange', 'purple']);
     expect(resolved.layers.map(layer => ({ kind: layer.kind, path: layer.path }))).toEqual([
       { kind: 'neutral', path: '$default/light' },
       { kind: 'style', path: '$style/brand/light' },

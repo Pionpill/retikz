@@ -8,7 +8,10 @@ export type MapSkeletonPreviewValues = { keys: string; empty: boolean };
 export const renderMapSkeletonPreview = (values: MapSkeletonPreviewValues) => {
   return (
     <Layout viewBox={{ x: -30, y: -20, width: 280, height: 200 }}>
-      <Map skeleton={{ keys: values.empty ? [] : values.keys.split('|') }} layout={{ width: 64, height: 32 }} />
+      <Map
+        skeleton={{ keys: values.empty ? [] : values.keys.split('|') }}
+        defaultCell={{ layout: { width: 64, height: 32 } }}
+      />
     </Layout>
   );
 };

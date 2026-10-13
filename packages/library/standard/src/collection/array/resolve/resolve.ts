@@ -10,7 +10,10 @@ export const resolveArray = (source: IRArray): CanonicalArray => {
   const { data, items, skeleton, cellIdMode, dataExpand, ...input } = source;
   const cells =
     items ??
-    expandLinearCells(data !== undefined ? { data, dataExpand } : { skeleton }, source.layout?.width === 'content');
+    expandLinearCells(
+      data !== undefined ? { data, dataExpand } : { skeleton },
+      source.defaultCell?.layout?.width === 'content',
+    );
 
   return {
     ...input,
@@ -19,7 +22,7 @@ export const resolveArray = (source: IRArray): CanonicalArray => {
         typeof cell === 'string'
           ? { content: cell, ...(cellIdMode === ArrayCellIdMode.String ? { id: cell } : {}) }
           : cell,
-        { overallStyle: source.style, overallLayout: source.layout },
+        { overallStyle: source.defaultCell?.style, overallLayout: source.defaultCell?.layout },
       );
       if (cellIdMode !== ArrayCellIdMode.Index) return resolved;
 
@@ -36,6 +39,6 @@ export const resolveArray = (source: IRArray): CanonicalArray => {
       direction: source.layout?.direction ?? ArrayLayoutSchema.shape.direction.parse(undefined),
       gap: source.layout?.gap ?? ArrayLayoutSchema.shape.gap.parse(undefined),
     },
-    index: resolveCollectionIndex(source.index, source.style),
+    index: resolveCollectionIndex(source.index, source.defaultCell?.style),
   };
 };

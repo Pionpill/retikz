@@ -10,8 +10,11 @@ const ArrayCellReference: FC = () => (
       cellIdMode="index"
       data={['A', 'B']}
       index
-      layout={{ width: 62, height: 42, gap: 8 }}
-      style={{ fill: 'dodgerblue', stroke: 'dodgerblue', opacity: { fill: 0.14 } }}
+      layout={{ gap: 8 }}
+      defaultCell={{
+        style: { fill: 'dodgerblue', stroke: 'dodgerblue', opacity: { fill: 0.14 } },
+        layout: { width: 62, height: 42 },
+      }}
     />
     <Draw way={[[225, 21], 'queue-1.right']} arrow="->" style={{ stroke: 'dodgerblue' }} />
   </Layout>

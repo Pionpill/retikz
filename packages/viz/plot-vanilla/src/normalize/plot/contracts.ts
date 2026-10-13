@@ -117,7 +117,7 @@ export type BuildPlotOptions = {
   /** 把 mark 形态转换为普通 Plot-level transforms 的作者侧简写 */
   markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
   /** Plot-owned Source-shaped visual defaults 稀疏覆盖 */
-  plotDefaults?: IRPlot['plotDefaults'];
+  defaultPlot?: IRPlot['defaultPlot'];
   /** 按 Axis dimension 覆盖 Plot-owned defaults 的有序规则 */
   plotRules?: IRPlot['plotRules'];
   /** 当前数据集可见字段名集合 */

@@ -76,7 +76,7 @@ describe('Flow Source resolve', () => {
         { source: 'rule', target: 'explicit', kind: 'docs.logic.data-flow', style: { color: 'green' } },
         { source: 'explicit', target: 'rule', kind: 'docs.logic.data-flow' },
       ],
-      flowDefaults: { entity: { style: { fill: 'lightgray' } }, relation: { style: { strokeWidth: 2 } } },
+      defaultFlow: { entity: { style: { fill: 'lightgray' } }, relation: { style: { strokeWidth: 2 } } },
     };
 
     const resolved = resolve(source, graph);

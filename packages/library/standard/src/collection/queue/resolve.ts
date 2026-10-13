@@ -30,7 +30,9 @@ export const resolveQueue = (source: IRQueue): CanonicalQueue => {
   const style = QueueBorderSchema.shape.style.unwrap().parse(path.style ?? {});
   return {
     ...common,
-    items: cells.map(cell => resolveCell(cell, { overallStyle: source.style, overallLayout: layout })),
+    items: cells.map(cell =>
+      resolveCell(cell, { overallStyle: source.defaultCell?.style, overallLayout: source.defaultCell?.layout }),
+    ),
     layout: QueueLayoutSchema.parse(layout ?? {}),
     padding: resolveBoxSpacing(padding ?? QueueSchema.options[0].shape.padding.parse(undefined), 0),
     ...(border === false ? {} : { border: { ...path, style } }),

@@ -104,7 +104,7 @@ const primitiveFillsOf = (primitives: ReadonlyArray<unknown>): Array<unknown> =>
   });
 
 const resolveAxis = (
-  input: Pick<IRPlot, 'plotDefaults' | 'plotRules'>,
+  input: Pick<IRPlot, 'defaultPlot' | 'plotRules'>,
   guide: IRPlotAxisGuide,
 ): ReturnType<typeof resolveAxisGuideTokens> => {
   const resolution = resolvePlotTheme(
@@ -116,10 +116,7 @@ const resolveAxis = (
 
 describe('Plot Source defaults and guide lowering', () => {
   it('keeps an explicit axis grid when the theme default disables grids', () => {
-    const guide = resolveAxis(
-      { plotDefaults: { axis: { grid: false } } },
-      { type: 'axis', dimension: 'y', grid: true },
-    );
+    const guide = resolveAxis({ defaultPlot: { axis: { grid: false } } }, { type: 'axis', dimension: 'y', grid: true });
 
     expect(guide.grid).toBe(true);
   });
@@ -132,7 +129,7 @@ describe('Plot Source defaults and guide lowering', () => {
           { type: 'axis', dimension: 'x', placement: { kind: 'side', side: 'bottom' }, title: 'x' },
           { type: 'axis', dimension: 'y', placement: { kind: 'side', side: 'left' }, title: 'y' },
         ],
-        plotDefaults: { plotArea: { fill: '#f8fafc' } },
+        defaultPlot: { plotArea: { fill: '#f8fafc' } },
       }),
     );
     const content = root.children[0] as IRScope;
@@ -152,7 +149,7 @@ describe('Plot Source defaults and guide lowering', () => {
           { type: 'axis', dimension: 'x', placement: { kind: 'side', side: 'bottom' } },
           { type: 'axis', dimension: 'y', placement: { kind: 'side', side: 'left' } },
         ],
-        plotDefaults: { plotArea: { border: { stroke: '#334155', strokeWidth: 1.5, drawOpacity: 0.8 } } },
+        defaultPlot: { plotArea: { border: { stroke: '#334155', strokeWidth: 1.5, drawOpacity: 0.8 } } },
       }),
     );
     const content = root.children[0] as IRScope;
@@ -176,7 +173,7 @@ describe('Plot Source defaults and guide lowering', () => {
     const root = expandOf(
       baseSpec({
         coordinate: { type: 'polar2D', angle: 'x', radius: 'y' },
-        plotDefaults: { plotArea: { fill: '#f8fafc' } },
+        defaultPlot: { plotArea: { fill: '#f8fafc' } },
       }),
     );
 
@@ -193,7 +190,7 @@ describe('Plot Source defaults and guide lowering', () => {
     const root = expandOf(
       baseSpec({
         coordinate: { type: 'polar2D', angle: 'x', radius: 'y' },
-        plotDefaults: { plotArea: { border: {} } },
+        defaultPlot: { plotArea: { border: {} } },
       }),
     );
 
@@ -212,7 +209,7 @@ describe('Plot Source defaults and guide lowering', () => {
     ['polar1D', { type: 'polar1D', angle: 'x' }, { type: 'point', encoding: { x: { field: 'x' } } }],
   ] as const)('%s does not emit a plot area', (_name, coordinate, mark) => {
     const fill = '#f8fafc';
-    const root = expandOf(baseSpec({ coordinate, marks: [mark], plotDefaults: { plotArea: { fill, border: {} } } }));
+    const root = expandOf(baseSpec({ coordinate, marks: [mark], defaultPlot: { plotArea: { fill, border: {} } } }));
 
     expect(nodesOf(root).some(node => node.style?.fill === fill)).toBe(false);
     expect(nodesOf(root).some(node => node.style?.stroke === 'currentColor')).toBe(false);
@@ -272,7 +269,7 @@ describe('Plot Source defaults and guide lowering', () => {
           { type: 'axis', dimension: 'x', placement: { kind: 'side', side: 'bottom' }, grid: true },
           { type: 'axis', dimension: 'y', placement: { kind: 'side', side: 'left' }, grid: true },
         ],
-        plotDefaults: { plotArea: { fill: '#e2e8f0', border: { stroke: '#334155' } } },
+        defaultPlot: { plotArea: { fill: '#e2e8f0', border: { stroke: '#334155' } } },
       }),
     );
     const content = root.children[0] as IRScope;
@@ -287,15 +284,15 @@ describe('Plot Source defaults and guide lowering', () => {
     ).toBe(true);
   });
 
-  it('plotDefaults palette categorical drives an ordinal scale', () => {
-    const root = expandOf(baseSpec({ plotDefaults: { palette: { categorical: ['#111111', '#222222'] } } }));
+  it('defaultPlot palette categorical drives an ordinal scale', () => {
+    const root = expandOf(baseSpec({ defaultPlot: { palette: { categorical: ['#111111', '#222222'] } } }));
     const markLayer = root.children[0] as IRScope;
     const colorScopes = markLayer.children as Array<IRScope>;
 
     expect(colorScopes.map(scope => scope.defaults?.node?.style?.fill)).toEqual(['#111111', '#222222']);
   });
 
-  it('explicit scale range beats plotDefaults palette', () => {
+  it('explicit scale range beats defaultPlot palette', () => {
     const root = expandOf(
       baseSpec({
         scales: [
@@ -303,7 +300,7 @@ describe('Plot Source defaults and guide lowering', () => {
           { type: 'linear', name: 'y' },
           { type: 'ordinal', name: 'color', range: ['#aaaaaa', '#bbbbbb'] },
         ],
-        plotDefaults: { palette: { categorical: ['#111111', '#222222'] } },
+        defaultPlot: { palette: { categorical: ['#111111', '#222222'] } },
       }),
     );
     const markLayer = root.children[0] as IRScope;
@@ -312,14 +309,14 @@ describe('Plot Source defaults and guide lowering', () => {
     expect(colorScopes.map(scope => scope.defaults?.node?.style?.fill)).toEqual(['#aaaaaa', '#bbbbbb']);
   });
 
-  it('plotDefaults series drives marks without color encoding', () => {
+  it('defaultPlot series drives marks without color encoding', () => {
     const root = expandOf(
       baseSpec({
         marks: [
           { type: 'path', order: 'x', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
           { type: 'interval', encoding: { x: { field: 'x' }, y: { field: 'value' } } },
         ],
-        plotDefaults: { palette: { series: ['#0f766e', '#f97316'] } },
+        defaultPlot: { palette: { series: ['#0f766e', '#f97316'] } },
       }),
     );
     const [lineLayer, intervalLayer] = root.children as Array<IRScope>;
@@ -339,7 +336,7 @@ describe('Plot Source defaults and guide lowering', () => {
             tickLabels: { textColor: '#2563eb' },
           },
         ],
-        plotDefaults: {
+        defaultPlot: {
           axis: {
             line: { lineCap: 'round' },
             ticks: { mark: { kind: 'circle', size: 4, fill: '#111827' } },
@@ -407,8 +404,8 @@ describe('Plot Source defaults and guide lowering', () => {
       { axis: { title: { layout: false } } },
     ];
 
-    for (const plotDefaults of invalidDefaults) {
-      expect(PlotSchema.safeParse({ ...baseSpec(), plotDefaults }).success).toBe(false);
+    for (const defaultPlot of invalidDefaults) {
+      expect(PlotSchema.safeParse({ ...baseSpec(), defaultPlot }).success).toBe(false);
     }
   });
 
@@ -422,7 +419,7 @@ describe('Plot Source defaults and guide lowering', () => {
             title: { text: 'Revenue', textColor: '#dc2626', font: { weight: 700 } },
           },
         ],
-        plotDefaults: {
+        defaultPlot: {
           typography: { font: { family: 'Source Serif 4', size: 15 }, textColor: '#0f766e', lineHeight: 1.4 },
           axis: { tickLabels: { textColor: '#2563eb', font: { size: 10 } } },
         },
@@ -450,7 +447,7 @@ describe('Plot Source defaults and guide lowering', () => {
           { type: 'axis', dimension: 'x', tickLabels: { rotate: 0, layout: false, textColor: '#0891b2' } },
           { type: 'axis', dimension: 'y', title: { text: 'y', orientation: 'horizontal' } },
         ],
-        plotDefaults: { axis: { tickLabels: { rotate: -90 }, title: { rotate: 90, padding: 20 } } },
+        defaultPlot: { axis: { tickLabels: { rotate: -90 }, title: { rotate: 90, padding: 20 } } },
       }),
     );
     const labels = nodesOf(root).filter(node => node.style?.textColor === '#0891b2');
@@ -462,7 +459,7 @@ describe('Plot Source defaults and guide lowering', () => {
 
     expect(
       resolveAxis(
-        { plotDefaults: { axis: { title: { padding: 20 } } } },
+        { defaultPlot: { axis: { title: { padding: 20 } } } },
         { type: 'axis', dimension: 'x', title: { text: 'x', padding: 4 } },
       ).title,
     ).toMatchObject({ padding: 4 });
@@ -480,7 +477,7 @@ describe('Plot Source defaults and guide lowering', () => {
   it('legend local style overrides Plot legend defaults', () => {
     const resolution = resolvePlotTheme(
       { mode: ThemeMode.Light, colors: resolveDefaultCoreThemeColors(ThemeMode.Light) },
-      { plotDefaults: { legend: { swatchSize: 20, label: { textColor: '#475569' } } } },
+      { defaultPlot: { legend: { swatchSize: 20, label: { textColor: '#475569' } } } },
     );
     const theme = resolvePlotGuideTheme(resolution);
     const legend = resolveLegendGuideTokens(theme, { swatchSize: 8, label: { textColor: '#dc2626' } });

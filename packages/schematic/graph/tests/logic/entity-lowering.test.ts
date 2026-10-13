@@ -134,7 +134,7 @@ describe('Entity lowering', () => {
           Graph.GraphSchema.parse({
             namespace: 'graph',
             type: 'graph',
-            graphDefaults: { entity: { style: { color: '#7c3aed' } } },
+            defaultGraph: { entity: { style: { color: '#7c3aed' } } },
             children: [
               {
                 namespace: 'graph',

@@ -32,11 +32,13 @@ import { previewSource as mapDataPreviewSource } from '../../src/modules/docs/co
 import { previewSource as mapSkeletonPreviewSource } from '../../src/modules/docs/contents/library/standard/collection/map/map-skeleton';
 import { createPreviewControlContract as createMapSkeletonContract } from '../../src/modules/docs/contents/library/standard/collection/map/map-skeleton.controls';
 import { renderMapSkeletonPreview } from '../../src/modules/docs/contents/library/standard/collection/map/map-skeleton.preview';
-import MapStyles from '../../src/modules/docs/contents/library/standard/collection/map/map-styles';
+import { previewSource as mapStylesPreviewSource } from '../../src/modules/docs/contents/library/standard/collection/map/map-styles';
 
 const ArraySkeletonCanonical: FC = () => arraySkeletonPreviewSource.canonicalRender?.() ?? null;
 
 const MapSkeletonCanonical: FC = () => mapSkeletonPreviewSource.canonicalRender?.() ?? null;
+
+const MapStylesCanonical: FC = () => mapStylesPreviewSource.canonicalRender?.() ?? null;
 
 const ArrayStylesCanonical: FC = () => arrayStylesPreviewSource.canonicalRender?.() ?? null;
 
@@ -70,7 +72,7 @@ describe('Array / Map documentation consumers', () => {
     ArrayStylesCanonical,
     ArrayComposition,
     MapBasic,
-    MapStyles,
+    MapStylesCanonical,
     MapComposition,
     NamespaceStorage,
     NamespaceConsumption,

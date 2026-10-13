@@ -19,28 +19,29 @@ const PathDeferred: FC<PathDeferredProps> = props => {
       <Array
         position={[0, 0]}
         label={{ text: t.queue, opacity: 0.8, font: { size: 12 } }}
-        layout={{ width: 150, height: 36 }}
         items={[{ id: 'task', content: t.task, style: { fill: 'dodgerblue' } }]}
-        style={{ font: { size: 13 } }}
         index
+        defaultCell={{ style: { font: { size: 13 } }, layout: { width: 150, height: 36 } }}
       />
       <Map
         id="record"
         position={[340, 0]}
         label={{ text: t.record, opacity: 0.8, font: { size: 12 } }}
-        layout={{ height: 32, key: { width: 140 }, value: { width: 130 } }}
-        style={{ font: { size: 13 } }}
         entries={[
           { key: { content: 'path' }, value: { content: t.path } },
           { key: { content: 'placeholderSlot' }, value: { id: 'slot-ref', content: '{ … }' } },
         ]}
+        defaultCell={{
+          style: { font: { size: 13 } },
+          layout: { height: 32 },
+          key: { layout: { width: 140 } },
+          value: { layout: { width: 130 } },
+        }}
       />
       <Map
         id="slot"
         position={[340, 160]}
         label={{ text: t.slot, opacity: 0.8, font: { size: 12 } }}
-        layout={{ height: 32, key: { width: 140 }, value: { width: 130 } }}
-        style={{ font: { size: 13 } }}
         entries={[
           { key: { id: 'sink-ref', content: 'primitiveSink' }, value: { content: 'Array' } },
           {
@@ -48,29 +49,35 @@ const PathDeferred: FC<PathDeferredProps> = props => {
             value: { content: t.placeholder, style: { fill: 'dodgerblue' } },
           },
         ]}
+        defaultCell={{
+          style: { font: { size: 13 } },
+          layout: { height: 32 },
+          key: { layout: { width: 140 } },
+          value: { layout: { width: 130 } },
+        }}
       />
       <Array
         id="sink"
         position={[0, 165]}
         label={{ text: t.before, opacity: 0.8, font: { size: 12 } }}
-        layout={{ direction: 'column', width: 170, height: 34 }}
-        style={{ font: { size: 13 } }}
         items={[
           { id: 'placeholder', content: t.placeholder, style: { fill: 'dodgerblue' } },
           { content: 'Node a …' },
           { content: 'Node b …' },
         ]}
+        layout={{ direction: 'column' }}
+        defaultCell={{ style: { font: { size: 13 } }, layout: { width: 170, height: 34 } }}
       />
       <Array
         position={[0, 385]}
         label={{ text: t.after, opacity: 0.8, font: { size: 12 } }}
-        layout={{ direction: 'column', width: 170, height: 34 }}
-        style={{ font: { size: 13 } }}
         items={[
           { id: 'output', content: 'PathPrim(a → b)', style: { fill: 'dodgerblue' } },
           { content: 'Node a …' },
           { content: 'Node b …' },
         ]}
+        layout={{ direction: 'column' }}
+        defaultCell={{ style: { font: { size: 13 } }, layout: { width: 170, height: 34 } }}
       />
       <Draw
         way={[

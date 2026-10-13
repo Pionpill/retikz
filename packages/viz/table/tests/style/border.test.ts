@@ -21,7 +21,7 @@ describe('Source defaults Border Graph integration', () => {
         namespace: 'table',
         type: 'table',
         id: 'academic',
-        tableDefaults: sourceBorders,
+        defaultTable: sourceBorders,
         structure: { kind: 'manual', rows: [['x']] },
       },
       {},
@@ -38,7 +38,7 @@ describe('Source defaults Border Graph integration', () => {
         origin: 'defaults',
         priority: -100,
         source: { kind: 'default', scope: 'outer' },
-        defaults: { path: '$spec/tableDefaults' },
+        defaults: { path: '$spec/defaultTable' },
       });
       expect(winner).not.toHaveProperty('styleToken');
     }
@@ -50,7 +50,7 @@ describe('Source defaults Border Graph integration', () => {
         namespace: 'table',
         type: 'table',
         id: 'explicit',
-        tableDefaults: sourceBorders,
+        defaultTable: sourceBorders,
         structure: { kind: 'manual', rows: [['x'], ['y']] },
         layout: {
           borders: {
@@ -80,10 +80,10 @@ describe('Source defaults Border Graph integration', () => {
         namespace: 'table',
         type: 'table',
         id: 'vibrant',
-        tableDefaults: {
+        defaultTable: {
           ...sourceBorders,
           layout: { borders: { horizontal: { kind: 'line', stroke: '#ffffff', width: 1 } } },
-          appearanceDefaults: {
+          defaultAppearance: {
             columnHeader: {
               borders: { bottom: { kind: 'line', stroke: '#ffffff', width: 1 } },
             },
@@ -104,7 +104,7 @@ describe('Source defaults Border Graph integration', () => {
       priority: -100,
       specificity: 1,
       origin: 'defaults',
-      defaults: { path: '$spec/tableDefaults' },
+      defaults: { path: '$spec/defaultTable' },
     });
   });
 
@@ -114,8 +114,8 @@ describe('Source defaults Border Graph integration', () => {
         namespace: 'table',
         type: 'table',
         id: 'spanning-header',
-        tableDefaults: {
-          appearanceDefaults: {
+        defaultTable: {
+          defaultAppearance: {
             columnHeader: { borders: { bottom: { kind: 'line', stroke: '#ffffff', width: 1 } } },
           },
         },
@@ -135,11 +135,11 @@ describe('Source defaults Border Graph integration', () => {
     expect(result.manifest.borders[0].atoms.map(atom => atom.winner)).toEqual([
       expect.objectContaining({
         source: expect.objectContaining({ kind: 'cell', cellId: 'heading', side: 'bottom' }),
-        defaults: { path: '$spec/tableDefaults' },
+        defaults: { path: '$spec/defaultTable' },
       }),
       expect.objectContaining({
         source: expect.objectContaining({ kind: 'cell', cellId: 'heading', side: 'bottom' }),
-        defaults: { path: '$spec/tableDefaults' },
+        defaults: { path: '$spec/defaultTable' },
       }),
     ]);
   });
@@ -150,7 +150,7 @@ describe('Source defaults Border Graph integration', () => {
         namespace: 'table',
         type: 'table',
         id: 'border-precedence',
-        tableDefaults: { layout: { borders: { horizontal: { kind: 'line', stroke: '#ffffff', width: 1 } } } },
+        defaultTable: { layout: { borders: { horizontal: { kind: 'line', stroke: '#ffffff', width: 1 } } } },
         structure: {
           kind: 'manual',
           rows: [
@@ -192,7 +192,7 @@ describe('Source defaults Border Graph integration', () => {
         expect.objectContaining({
           priority: -100,
           origin: 'defaults',
-          defaults: { path: '$spec/tableDefaults' },
+          defaults: { path: '$spec/defaultTable' },
         }),
         expect.objectContaining({ priority: 0, source: expect.objectContaining({ cellId: 'target' }) }),
       ]),

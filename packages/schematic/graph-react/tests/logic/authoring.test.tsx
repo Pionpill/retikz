@@ -456,11 +456,11 @@ describe('Entity and Relation React authoring', () => {
 });
 
 describe('Graph Source and child authoring', () => {
-  it('keeps graphDefaults and graphRules identical to Direct and Vanilla Source IR', () => {
+  it('keeps defaultGraph and graphRules identical to Direct and Vanilla Source IR', () => {
     const input = {
       id: 'parity',
       position: [0, 0],
-      graphDefaults: {
+      defaultGraph: {
         entity: { style: { fill: '#111111' }, layout: { align: 'middle' } },
         relation: { style: { stroke: '#222222' } },
       },

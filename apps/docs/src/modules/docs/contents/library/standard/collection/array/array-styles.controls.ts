@@ -156,7 +156,7 @@ export const createPreviewControlContract = (lang: Lang) =>
       fontSize: 14,
       override: true,
     },
-    relatedApis: ['Array.layout', 'Array.style', 'Array.index', 'Array.items'],
+    relatedApis: ['Array.layout', 'Array.defaultCell.style', 'Array.index', 'Array.items'],
   }) satisfies PreviewControlContract;
 
 /** 注册与源码派生使用的默认契约 */

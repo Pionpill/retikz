@@ -243,12 +243,12 @@ describe('Table React composition root integration', () => {
   it('keeps one sparse defaults fixture equivalent across Direct, Vanilla, and React authoring', () => {
     const input = {
       id: 'sparse-defaults-parity',
-      cellLayoutDefaults: { body: { padding: 3 }, columnHeader: { padding: 4 } },
+      defaultCellLayout: { body: { padding: 3 }, columnHeader: { padding: 4 } },
       rows: [[1]],
-      tableDefaults: { appearanceDefaults: { body: { content: { defaults: { style: { color: '#111111' } } } } } },
-      appearanceDefaults: { body: { background: { fill: '#f8fafc', fillOpacity: 0 } } },
+      defaultTable: { defaultAppearance: { body: { content: { defaults: { style: { color: '#111111' } } } } } },
+      defaultAppearance: { body: { background: { fill: '#f8fafc', fillOpacity: 0 } } },
       layout: { borders: { horizontal: { kind: 'line' as const, stroke: '#cbd5e1', width: 1 } } },
-      visualDefaults: { categorical: ['#2563eb'], sequential: ['#eff6ff', '#1d4ed8'] as [string, string] },
+      defaultVisual: { categorical: ['#2563eb'], sequential: ['#eff6ff', '#1d4ed8'] as [string, string] },
     };
     const direct = createManualTableIR(input);
     const vanilla = manualTable(input);
@@ -374,8 +374,8 @@ describe('Table React composition root integration', () => {
       encodings,
       theme: { style: 'academic', mode: 'dark' },
       themeStyles,
-      appearanceDefaults: { body: { content: { defaults: { style: { color: '#fafafa' } } } } },
-      cellLayoutDefaults: { body: { padding: 0 } },
+      defaultAppearance: { body: { content: { defaults: { style: { color: '#fafafa' } } } } },
+      defaultCellLayout: { body: { padding: 0 } },
       children: <DetailColumn id="name" field="name" formatter={{ name: 'root-props-formatter' }} />,
       structureDefinitions,
       formatterDefinitions,
@@ -408,8 +408,8 @@ describe('Table React composition root integration', () => {
         meta: { source: 'root-props-test' },
         rules,
         encodings,
-        appearanceDefaults: { body: { content: { defaults: { style: { color: '#fafafa' } } } } },
-        cellLayoutDefaults: { body: { padding: 0 } },
+        defaultAppearance: { body: { content: { defaults: { style: { color: '#fafafa' } } } } },
+        defaultCellLayout: { body: { padding: 0 } },
       },
     });
     expect(runtime.table).not.toHaveProperty('namespace');
@@ -493,8 +493,8 @@ describe('Table React composition root integration', () => {
           legend: false as const,
         },
       ],
-      appearanceDefaults: { body: { content: { defaults: { style: { color: '#fafafa' } } } } },
-      cellLayoutDefaults: { body: { padding: 0 } },
+      defaultAppearance: { body: { content: { defaults: { style: { color: '#fafafa' } } } } },
+      defaultCellLayout: { body: { padding: 0 } },
     };
     const propsRuntime = resolveReactTableRuntime(ReactTableRuntimeKind.Manual, {
       ...root,
