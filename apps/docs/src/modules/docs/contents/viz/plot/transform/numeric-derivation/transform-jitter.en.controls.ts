@@ -37,6 +37,7 @@ export const jitterControls = definePreviewControls({
 export const previewControlContract = {
   controls: jitterControls,
   canonicalValues: { amount: 0.18, seed: 42 },
+  presetSelector: { label: 'Preset', customLabel: 'Custom' },
   presets: [
     { id: 'subtle', label: 'Subtle jitter', values: { amount: 0.1, seed: 42 } },
     { id: 'strong', label: 'Strong jitter', values: { amount: 0.32, seed: 42 } },

@@ -39,6 +39,30 @@ export const PreviewControlBar: FC<PreviewControlBarProps> = props => {
   return (
     <TooltipProvider delayDuration={250}>
       <div data-slot="preview-control-bar" className="flex flex-wrap items-center gap-2 py-3">
+        {sections
+          .flatMap(section => section.controls)
+          .filter(field => field.kind === 'table')
+          .map(field => (
+            <Popover key={field.id}>
+              <PopoverTrigger
+                className={cn(
+                  buttonVariants({ size: 'sm', variant: 'ghost' }),
+                  'h-8 rounded-md bg-muted px-2.5 text-xs',
+                )}
+              >
+                <Table2 className="size-3.5" />
+                {field.label}
+              </PopoverTrigger>
+              <PopoverContent
+                side="bottom"
+                align="start"
+                collisionPadding={4}
+                className="max-h-[min(24rem,var(--radix-popover-content-available-height))] w-[min(42rem,var(--radix-popover-content-available-width))] overflow-auto"
+              >
+                <PreviewTableControl field={field} values={controlState.values} density="compact" />
+              </PopoverContent>
+            </Popover>
+          ))}
         {presetField ? (
           <div
             data-slot="preview-preset-selector"
@@ -78,74 +102,53 @@ export const PreviewControlBar: FC<PreviewControlBarProps> = props => {
         )}
         {sections
           .flatMap(section => section.controls)
-          .map(field =>
-            field.kind === 'table' ? (
-              <Popover key={field.id}>
-                <PopoverTrigger
-                  className={cn(
-                    buttonVariants({ size: 'sm', variant: 'ghost' }),
-                    'h-8 rounded-md bg-muted px-2.5 text-xs',
-                  )}
-                >
-                  <Table2 className="size-3.5" />
-                  {field.label}
-                </PopoverTrigger>
-                <PopoverContent
-                  side="bottom"
-                  align="start"
-                  collisionPadding={4}
-                  className="max-h-[min(24rem,var(--radix-popover-content-available-height))] w-[min(42rem,var(--radix-popover-content-available-width))] overflow-auto"
-                >
-                  <PreviewTableControl field={field} values={controlState.values} density="compact" />
-                </PopoverContent>
-              </Popover>
-            ) : (
-              <div
-                key={field.id}
-                data-control-id={field.id}
-                className="flex min-h-8 max-w-full items-center gap-2 rounded-md bg-muted px-2.5 py-0.5 text-xs"
-              >
-                {field.kind === 'range' ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        aria-pressed={controlState.rangePlaybackId === field.id}
-                        disabled={controlState.startRangePlayback === undefined || field.min >= field.max}
-                        className={cn(
-                          'shrink-0 cursor-pointer rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-50',
-                          controlState.rangePlaybackId === field.id && 'text-primary',
-                        )}
-                        onClick={() => {
-                          if (controlState.rangePlaybackId === field.id) controlState.stopRangePlayback?.();
-                          else controlState.startRangePlayback?.(field);
-                        }}
-                      >
-                        {field.label}
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {t(controlState.rangePlaybackId === field.id ? 'preview.stopRangeHint' : 'preview.playRangeHint')}
-                    </TooltipContent>
-                  </Tooltip>
-                ) : (
-                  <span className="shrink-0">{field.label}</span>
-                )}
-                <div className={field.kind === 'range' ? 'w-24' : field.kind === 'point' ? 'w-32' : 'min-w-0'}>
-                  <PreviewControlFieldInput
-                    field={field}
-                    compact
-                    showRangePlaybackButton={false}
-                    value={controlState.values[field.id] ?? field.defaultValue}
-                    onValueChange={value => controlState.setValue(field.id, value)}
-                    playingRangeId={controlState.rangePlaybackId}
-                    onRangePlaybackStart={controlState.startRangePlayback}
-                    onRangePlaybackStop={controlState.stopRangePlayback}
-                  />
-                </div>
+          .filter(field => field.kind !== 'table')
+          .map(field => (
+            <div
+              key={field.id}
+              data-control-id={field.id}
+              className="flex min-h-8 max-w-full items-center gap-2 rounded-md bg-muted px-2.5 py-0.5 text-xs"
+            >
+              {field.kind === 'range' ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      aria-pressed={controlState.rangePlaybackId === field.id}
+                      disabled={controlState.startRangePlayback === undefined || field.min >= field.max}
+                      className={cn(
+                        'shrink-0 cursor-pointer rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-50',
+                        controlState.rangePlaybackId === field.id && 'text-primary',
+                      )}
+                      onClick={() => {
+                        if (controlState.rangePlaybackId === field.id) controlState.stopRangePlayback?.();
+                        else controlState.startRangePlayback?.(field);
+                      }}
+                    >
+                      {field.label}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {t(controlState.rangePlaybackId === field.id ? 'preview.stopRangeHint' : 'preview.playRangeHint')}
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <span className="shrink-0">{field.label}</span>
+              )}
+              <div className={field.kind === 'range' ? 'w-24' : field.kind === 'point' ? 'w-32' : 'min-w-0'}>
+                <PreviewControlFieldInput
+                  field={field}
+                  compact
+                  showRangePlaybackButton={false}
+                  value={controlState.values[field.id] ?? field.defaultValue}
+                  onValueChange={value => controlState.setValue(field.id, value)}
+                  playingRangeId={controlState.rangePlaybackId}
+                  onRangePlaybackStart={controlState.startRangePlayback}
+                  onRangePlaybackStop={controlState.stopRangePlayback}
+                />
               </div>
-            ),
-          )}
+            </div>
+          ))}
         <Button
           size="icon-sm"
           variant="ghost"

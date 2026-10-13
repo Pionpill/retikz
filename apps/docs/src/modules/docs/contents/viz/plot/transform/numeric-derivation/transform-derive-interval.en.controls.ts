@@ -33,11 +33,11 @@ export const deriveIntervalControls = definePreviewControls({
         {
           kind: 'select',
           id: 'mode',
-          label: 'Mode',
+          label: 'Preset',
           defaultValue: 'fields',
           options: [
-            { value: 'fields', label: 'Explicit fields' },
-            { value: 'baseline', label: 'Baseline to end' },
+            { value: 'fields', label: 'Explicit bounds' },
+            { value: 'baseline', label: 'From baseline' },
           ],
         },
         {
@@ -59,10 +59,6 @@ export const deriveIntervalControls = definePreviewControls({
 export const previewControlContract = {
   controls: deriveIntervalControls,
   canonicalValues: { mode: 'fields', baseline: 0 },
-  presets: [
-    { id: 'fields', label: 'Explicit bounds', values: { mode: 'fields', baseline: 0 } },
-    { id: 'baseline', label: 'From baseline', values: { mode: 'baseline', baseline: 0 } },
-  ],
   relatedApis: [
     'IRDataDeriveIntervalTransform.from',
     'IRDataDeriveIntervalTransform.baseline',

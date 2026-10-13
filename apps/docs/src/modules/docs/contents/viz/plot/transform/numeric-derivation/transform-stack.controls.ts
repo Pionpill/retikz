@@ -56,6 +56,7 @@ export const stackControls = definePreviewControls({
 export const previewControlContract = {
   controls: stackControls,
   canonicalValues: { offset: 'zero' },
+  presetSelector: { label: '预设', customLabel: '自定义' },
   presets: [
     { id: 'zero', label: '普通堆叠', values: { offset: 'zero' } },
     { id: 'normalize', label: '归一堆叠', values: { offset: 'normalize' } },

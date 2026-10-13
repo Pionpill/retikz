@@ -58,6 +58,7 @@ export const smoothControls = definePreviewControls({
 export const previewControlContract = {
   controls: smoothControls,
   canonicalValues: { sampleCount: 32, extentMode: 'observed' },
+  presetSelector: { label: 'Preset', customLabel: 'Custom' },
   presets: [
     { id: 'observed', label: 'Observed range', values: { sampleCount: 32, extentMode: 'observed' } },
     { id: 'extend', label: 'Extrapolated trend', values: { sampleCount: 48, extentMode: 'extend' } },

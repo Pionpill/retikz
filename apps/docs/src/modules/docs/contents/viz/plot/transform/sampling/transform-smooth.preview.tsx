@@ -34,19 +34,19 @@ export const TransformSmoothPreview = (
     >
       <PlotScale dimension="x" type="linear" domain={[-1, 5]} />
       <PlotScale dimension="y" type="linear" domain={[0, 10]} />
-      <PointMark color="series" opacity={{ fill: 0.72 }} x="time" y="value" />
+      <PointMark color={{ kind: 'constant', value: 'gray' }} x="time" y="value" />
       <PathMark
         color="series"
         order="trendX"
         series="series"
-        strokeWidth={2.4}
+        strokeWidth={2}
         transform={smoothTransform.map(operation => ({ operation }))}
         x="trendX"
         y="trendY"
       />
       <PointMark
         fill={{ kind: 'constant', value: 'white' }}
-        size={3.5}
+        size={2.5}
         stroke="series"
         strokeWidth={1}
         transform={smoothTransform.map(operation => ({ operation }))}

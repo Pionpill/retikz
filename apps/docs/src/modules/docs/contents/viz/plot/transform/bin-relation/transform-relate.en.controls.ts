@@ -85,6 +85,7 @@ export const previewControlContract = {
     sourceSelector: 'first',
     targetSelector: 'last',
   },
+  presetSelector: { label: 'Preset', customLabel: 'Custom' },
   presets: [
     {
       id: 'timeline',

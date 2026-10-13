@@ -50,6 +50,7 @@ export const stackControls = definePreviewControls({
 export const previewControlContract = {
   controls: stackControls,
   canonicalValues: { offset: 'zero' },
+  presetSelector: { label: 'Preset', customLabel: 'Custom' },
   presets: [
     { id: 'zero', label: 'Standard stack', values: { offset: 'zero' } },
     { id: 'normalize', label: 'Normalized stack', values: { offset: 'normalize' } },

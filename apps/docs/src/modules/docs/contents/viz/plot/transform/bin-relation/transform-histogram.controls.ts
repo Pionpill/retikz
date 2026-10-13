@@ -101,6 +101,7 @@ export const histogramControls = definePreviewControls({
 export const previewControlContract = {
   controls: histogramControls,
   canonicalValues: { strategy: 'count', count: 8, step: 4, thresholdPreset: 'regular' },
+  presetSelector: { label: '预设', customLabel: '自定义' },
   presets: [
     { id: 'count', label: '8 个箱', values: { strategy: 'count', count: 8, step: 4, thresholdPreset: 'regular' } },
     { id: 'step', label: '箱宽 4', values: { strategy: 'step', count: 8, step: 4, thresholdPreset: 'regular' } },

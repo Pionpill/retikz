@@ -77,6 +77,7 @@ export const smoothControls = definePreviewControls({
 export const previewControlContract = {
   controls: smoothControls,
   canonicalValues: { sampleCount: 32, extentMode: 'observed' },
+  presetSelector: { label: '预设', customLabel: '自定义' },
   presets: [
     { id: 'observed', label: '观测范围', values: { sampleCount: 32, extentMode: 'observed' } },
     { id: 'extend', label: '外推趋势', values: { sampleCount: 48, extentMode: 'extend' } },

@@ -65,6 +65,7 @@ export const normalizeControls = definePreviewControls({
 export const previewControlContract = {
   controls: normalizeControls,
   canonicalValues: { basis: 'percent', grouping: 'quarter' },
+  presetSelector: { label: 'Preset', customLabel: 'Custom' },
   presets: [
     { id: 'quarter-percent', label: 'Quarterly percent', values: { basis: 'percent', grouping: 'quarter' } },
     { id: 'global-fraction', label: 'Global fraction', values: { basis: 'fraction', grouping: 'global' } },

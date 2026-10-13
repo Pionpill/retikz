@@ -106,6 +106,7 @@ export const previewControlContract = {
     sourceSelector: 'first',
     targetSelector: 'last',
   },
+  presetSelector: { label: '预设', customLabel: '自定义' },
   presets: [
     {
       id: 'timeline',

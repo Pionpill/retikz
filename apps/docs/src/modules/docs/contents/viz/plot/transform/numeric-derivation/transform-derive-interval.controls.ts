@@ -38,11 +38,11 @@ export const deriveIntervalControls = definePreviewControls({
         {
           kind: 'select',
           id: 'mode',
-          label: '模式',
+          label: '预设',
           defaultValue: 'fields',
           options: [
-            { value: 'fields', label: '显式起止字段' },
-            { value: 'baseline', label: '基线到终点' },
+            { value: 'fields', label: '显式起止' },
+            { value: 'baseline', label: '从基线开始' },
           ],
         },
         {
@@ -64,10 +64,6 @@ export const deriveIntervalControls = definePreviewControls({
 export const previewControlContract = {
   controls: deriveIntervalControls,
   canonicalValues: { mode: 'fields', baseline: 0 },
-  presets: [
-    { id: 'fields', label: '显式起止', values: { mode: 'fields', baseline: 0 } },
-    { id: 'baseline', label: '从基线开始', values: { mode: 'baseline', baseline: 0 } },
-  ],
   relatedApis: [
     'IRDataDeriveIntervalTransform.from',
     'IRDataDeriveIntervalTransform.baseline',

@@ -47,6 +47,7 @@ export const jitterControls = definePreviewControls({
 export const previewControlContract = {
   controls: jitterControls,
   canonicalValues: { amount: 0.18, seed: 42 },
+  presetSelector: { label: '预设', customLabel: '自定义' },
   presets: [
     { id: 'subtle', label: '轻微抖动', values: { amount: 0.1, seed: 42 } },
     { id: 'strong', label: '明显抖动', values: { amount: 0.32, seed: 42 } },

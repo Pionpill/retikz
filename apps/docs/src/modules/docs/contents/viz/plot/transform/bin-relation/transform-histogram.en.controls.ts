@@ -81,6 +81,7 @@ export const histogramControls = definePreviewControls({
 export const previewControlContract = {
   controls: histogramControls,
   canonicalValues: { strategy: 'count', count: 8, step: 4, thresholdPreset: 'regular' },
+  presetSelector: { label: 'Preset', customLabel: 'Custom' },
   presets: [
     { id: 'count', label: '8 bins', values: { strategy: 'count', count: 8, step: 4, thresholdPreset: 'regular' } },
     { id: 'step', label: 'Width 4', values: { strategy: 'step', count: 8, step: 4, thresholdPreset: 'regular' } },

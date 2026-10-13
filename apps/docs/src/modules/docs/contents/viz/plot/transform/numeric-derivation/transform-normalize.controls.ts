@@ -83,6 +83,7 @@ export const normalizeControls = definePreviewControls({
 export const previewControlContract = {
   controls: normalizeControls,
   canonicalValues: { basis: 'percent', grouping: 'quarter' },
+  presetSelector: { label: '预设', customLabel: '自定义' },
   presets: [
     { id: 'quarter-percent', label: '季度百分比', values: { basis: 'percent', grouping: 'quarter' } },
     { id: 'global-fraction', label: '全局比例', values: { basis: 'fraction', grouping: 'global' } },

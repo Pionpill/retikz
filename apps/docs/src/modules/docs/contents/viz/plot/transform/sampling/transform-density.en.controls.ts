@@ -68,6 +68,7 @@ export const densityControls = definePreviewControls({
 export const previewControlContract = {
   controls: densityControls,
   canonicalValues: { bandwidthMode: 'silverman', bandwidth: 0.6, sampleCount: 48 },
+  presetSelector: { label: 'Preset', customLabel: 'Custom' },
   presets: [
     {
       id: 'silverman',
