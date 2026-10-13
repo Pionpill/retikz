@@ -1,3 +1,4 @@
+import type { Transform } from '../../contract';
 import type { NodeReferenceView, PathTargetView, TargetResolution } from '../../resolve';
 import type { PositionTargetResolveContext } from '../../resolve/position';
 import { resolvePositionTarget } from '../../resolve/position';
@@ -9,7 +10,8 @@ import { createNodeGeometryContext } from '../node';
 import type { NodeGeometryContext } from '../node';
 import { boundaryPointOf, clipNodePolyline } from '../node';
 import { resolveAnchorRef } from '../reference';
-import { applyTransformChain, inverseTransformChain } from '../transform';
+import type { EffectiveScopeTransform } from '../transform';
+import { applyScopeTransform, inverseScopeTransform, composeScopeTransform } from '../transform';
 
 /** 判断 target 是否为按 id 引用节点或坐标的对象目标 */
 const isNodeTarget = (t: IRTarget): t is IRNodeTarget => isNodeTargetLike(t);
@@ -133,6 +135,7 @@ export const pathTargetViewOf = (
   targets: ReadonlyMap<string, TargetResolution>,
   warn?: (code: string, message: string, node?: NodeReferenceView) => void,
   geometryContext: NodeGeometryContext = createNodeGeometryContext(),
+  resolveTransform: (chain: ReadonlyArray<Transform>) => EffectiveScopeTransform = composeScopeTransform,
 ): PathTargetView => {
   const byTarget = new Map<string, TargetResolution>();
 
@@ -156,24 +159,26 @@ export const pathTargetViewOf = (
       const binding = bindingOf(target);
       if (binding?.node === undefined || !isNodeTarget(target) || !isAutoBoundaryTarget(target)) return [...points];
 
+      const transform = resolveTransform(scopeChain);
       const node = binding.node;
       const clipped = clipNodePolyline(
         node,
-        points.map(position => applyTransformChain(position, scopeChain)),
+        points.map(position => applyScopeTransform(position, transform)),
         target.boundary ?? node.boundary,
         binding.boundaryResolution,
         warn === undefined ? undefined : (code, message) => warn(code, message, node),
         geometryContext.get(node),
       );
-      return clipped.map(position => inverseTransformChain(position, scopeChain));
+      return clipped.map(position => inverseScopeTransform(position, transform));
     },
     clipTarget: (target, toward, scopeChain) => {
       const binding = bindingOf(target);
       if (binding?.node === undefined || !isNodeTarget(target)) return pointOf(target);
 
+      const transform = resolveTransform(scopeChain);
       const node = binding.node;
       const boundary = target.boundary ?? node.boundary;
-      const towardGlobal = scopeChain.length === 0 ? toward : applyTransformChain(toward, scopeChain);
+      const towardGlobal = scopeChain.length === 0 ? toward : applyScopeTransform(toward, transform);
       const base =
         target.anchor === undefined
           ? boundaryPointOf(
@@ -187,7 +192,7 @@ export const pathTargetViewOf = (
           : resolveAnchorRef(node, target.anchor, boundary, binding.boundaryResolution, geometryContext.get(node));
       const global = addOffset(base, target.offset);
 
-      return scopeChain.length === 0 ? global : inverseTransformChain(global, scopeChain);
+      return scopeChain.length === 0 ? global : inverseScopeTransform(global, transform);
     },
   };
 };

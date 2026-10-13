@@ -20,7 +20,8 @@ import type { CompileWarningCode } from '../constants';
 import { resolveAnchorRefUncached } from '../reference';
 import { snapshotProviderPosition, withProviderOutputValidationBoundary } from '../scene-primitive';
 import type { TextMeasurer } from '../text';
-import { inverseTransformChain, isTransformChainInvertible, projectLayoutToGlobal } from '../transform';
+import type { EffectiveScopeTransform } from '../transform';
+import { composeScopeTransform, inverseScopeTransform, projectLayoutWithTransform } from '../transform';
 import { layoutNodeContent } from './content/layout';
 import { createNodeGeometryContext } from './geometry-context';
 import type { NodeGeometryContext } from './geometry-context';
@@ -38,18 +39,18 @@ const isAnchorPosition = (position: CanonicalNode['position']): position is IRAn
 const localDeltaOf = (
   deltaGlobal: IRPosition,
   globalOrigin: IRPosition,
-  scopeChain: ReadonlyArray<Transform>,
+  transform: EffectiveScopeTransform,
 ): IRPosition => {
-  if (scopeChain.length === 0) return deltaGlobal;
-  if (!isTransformChainInvertible(scopeChain)) {
+  if (transform.chain.length === 0) return deltaGlobal;
+  if (transform.inverse === null) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
       'Cannot resolve anchor position through a Scope transform with a zero scale axis',
     );
   }
 
-  const before = inverseTransformChain(globalOrigin, scopeChain);
-  const after = inverseTransformChain([globalOrigin[0] + deltaGlobal[0], globalOrigin[1] + deltaGlobal[1]], scopeChain);
+  const before = inverseScopeTransform(globalOrigin, transform);
+  const after = inverseScopeTransform([globalOrigin[0] + deltaGlobal[0], globalOrigin[1] + deltaGlobal[1]], transform);
 
   return [after[0] - before[0], after[1] - before[1]];
 };
@@ -60,7 +61,7 @@ const placeAnchorPositionedLayout = (
   position: IRAnchorPosition,
   provisional: NodeLayout,
   positionContext: PositionTargetResolveContext,
-  scopeChain: ReadonlyArray<Transform>,
+  transform: EffectiveScopeTransform,
   geometryContext: NodeGeometryContext,
 ): NodeLayout => {
   if (node.id === position.target.id || node.aliasIds?.includes(position.target.id)) {
@@ -93,7 +94,7 @@ const placeAnchorPositionedLayout = (
     );
   }
 
-  const projected = scopeChain.length === 0 ? provisional : projectLayoutToGlobal(provisional, scopeChain);
+  const projected = transform.chain.length === 0 ? provisional : projectLayoutWithTransform(provisional, transform);
   const selfPoint = resolveAnchorRefUncached(
     projected,
     position.selfAnchor ?? CenterAnchor.Center,
@@ -102,7 +103,7 @@ const placeAnchorPositionedLayout = (
     geometryContext.get(provisional),
   );
   const deltaGlobal: IRPosition = [target.referencePoint[0] - selfPoint[0], target.referencePoint[1] - selfPoint[1]];
-  const deltaLocal = localDeltaOf(deltaGlobal, [projected.geometry.rect.x, projected.geometry.rect.y], scopeChain);
+  const deltaLocal = localDeltaOf(deltaGlobal, [projected.geometry.rect.x, projected.geometry.rect.y], transform);
 
   return {
     ...provisional,
@@ -133,6 +134,8 @@ export type LayoutNodeContext = {
   rootFontSize?: number;
   /** 当前 scope 累积 transform */
   scopeChain?: ReadonlyArray<Transform>;
+  /** 当前 Scope 已合成的坐标消费态 */
+  effectiveTransform?: EffectiveScopeTransform;
   /** TeX 降级上下文 */
   texLowering?: TexLoweringContext;
   /** 当前 node 的 compile warning 分发函数 */
@@ -435,6 +438,13 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
   const resolved: NodeLayout = { ...provisional, labels: layoutNodeLabels(provisional, measuredLabels) };
 
   return anchorPosition
-    ? placeAnchorPositionedLayout(node, anchorPosition, resolved, positionContext, scopeChain, geometryContext)
+    ? placeAnchorPositionedLayout(
+        node,
+        anchorPosition,
+        resolved,
+        positionContext,
+        context.effectiveTransform ?? composeScopeTransform(scopeChain),
+        geometryContext,
+      )
     : resolved;
 };

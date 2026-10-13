@@ -4,7 +4,7 @@ import { NamespaceStack } from '../../src/compile/namespace';
 import { boundaryPointOf, createNodeGeometryContext, layoutNode, nodeReferenceViewOf } from '../../src/compile/node';
 import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
 import { resolveAnchor } from '../../src/compile/reference';
-import { projectLayoutToGlobal } from '../../src/compile/transform';
+import { composeScopeTransform, projectLayoutWithTransform } from '../../src/compile/transform';
 import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
 import { resolveShapeRegistry } from '../../src/providers/shape';
@@ -44,13 +44,13 @@ describe('NodeLayout boundary / shapes', () => {
     shapes.set('rectangle', { ...rectangle, connectionEnvelope: envelope });
     const layout = layoutOf({ type: 'node', position: [0, 0], boundary: 'circle' }, shapes);
     const context = createNodeGeometryContext();
-    const projected = projectLayoutToGlobal(layout, []);
+    const projected = projectLayoutWithTransform(layout, composeScopeTransform([]));
     const reference = nodeReferenceViewOf(projected, context);
     const first = boundaryPointOf(layout, [100, 0], 'circle', undefined, undefined, context.get(layout));
     expect(boundaryPointOf(reference, [100, 0], 'circle', undefined, undefined, context.get(reference))).toEqual(first);
     expect(envelope).toHaveBeenCalledTimes(1);
 
-    const moved = projectLayoutToGlobal(layout, [{ kind: 'translate', x: 10, y: 0 }]);
+    const moved = projectLayoutWithTransform(layout, composeScopeTransform([{ kind: 'translate', x: 10, y: 0 }]));
     expect(boundaryPointOf(moved, [100, 0], 'circle', undefined, undefined, context.get(moved))[0]).toBe(first[0] + 10);
     expect(envelope).toHaveBeenCalledTimes(2);
   });
@@ -62,7 +62,7 @@ describe('NodeLayout boundary / shapes', () => {
     const warn = vi.fn();
     const context = createNodeGeometryContext();
     context.get(layout).warn = warn;
-    const moved = projectLayoutToGlobal(layout, [{ kind: 'translate', x: 10, y: 0 }]);
+    const moved = projectLayoutWithTransform(layout, composeScopeTransform([{ kind: 'translate', x: 10, y: 0 }]));
     boundaryPointOf(layout, [100, 0], 'circle', undefined, undefined, context.get(layout));
     boundaryPointOf(moved, [100, 0], 'circle', undefined, undefined, context.get(moved));
     expect(warn).toHaveBeenCalledTimes(1);
