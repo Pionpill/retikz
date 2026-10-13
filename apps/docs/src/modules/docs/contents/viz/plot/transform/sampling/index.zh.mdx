@@ -1,0 +1,68 @@
+---
+title: 密度与趋势
+description: 将密度和趋势变换生成的采样行绑定到路径图元，观察带宽、采样数与范围的效果。
+---
+
+密度与趋势变换从观测数据生成采样行，再由路径图元连接这些采样点。接入与作用域见 [transform · 变换](/viz/plot/transform)；本页关注结果的绘制，算法和完整参数由 Data 说明。
+
+## 密度
+
+`density` 从连续样本生成采样位置与密度值。本例将 `densityX` / `density` 绑定到路径的 `x` / `y`，按组绘制密度曲线。
+
+| 参数          | 本例用途与约束                                       |
+| ------------- | ---------------------------------------------------- |
+| `field`       | 本例读取 `value` 作为观测值。                        |
+| `groupBy`     | 本例使用 `group` 分别估计密度。                      |
+| `bandwidth`   | 自动规则或显式数值；显式带宽较小会保留更多局部起伏。 |
+| `sampleCount` | 控制输出采样点数量。                                 |
+| `xAs`         | 采样位置输出名，本例为 `densityX`。                  |
+| `densityAs`   | 密度输出名，本例为 `density`。                       |
+
+<ComponentPreview
+  files={[
+    'transform-density',
+    'transform-density.preview.tsx',
+    'transform-density.data.ts',
+    'transform-density.i18n.ts',
+  ]}
+  responsive
+  mode="showcase"
+  size="lg"
+  defaultSourceFile="transform-density.preview.tsx"
+  caption="切换自动与显式带宽，调整带宽和采样数，观察曲线轮廓。"
+/>
+
+示例固定横轴为 1–10，纵轴为 0–0.7。路径按 `densityX` 排序，并闭合到零基线；闭合与填充是图元配置。
+
+## 趋势
+
+`smooth` 拟合观测值并生成预测采样行。本例使用线性拟合；原始点保留，趋势路径和空心采样点分别消费局部变换的结果。
+
+| 参数          | 本例用途与约束                                 |
+| ------------- | ---------------------------------------------- |
+| `x`           | 本例读取 `time` 作为自变量。                   |
+| `y`           | 本例读取 `value` 作为观测值。                  |
+| `groupBy`     | 本例使用 `series` 分别拟合。                   |
+| `method`      | 本例固定为 `{ kind: 'linear' }`。              |
+| `sampleCount` | 控制预测采样点数量，不改变线性拟合模型。       |
+| `extent`      | 省略时使用观测范围，本例也可扩展到 `[-1, 5]`。 |
+| `xAs`         | 采样位置输出名，本例为 `trendX`。              |
+| `yAs`         | 预测值输出名，本例为 `trendY`。                |
+
+<ComponentPreview
+  files={['transform-smooth', 'transform-smooth.preview.tsx', 'transform-smooth.data.ts', 'transform-smooth.i18n.ts']}
+  responsive
+  mode="showcase"
+  size="lg"
+  defaultSourceFile="transform-smooth.preview.tsx"
+  caption="调整预测点数和采样范围，对照实心观测点、趋势线与空心预测点。"
+/>
+
+增加采样数会增加空心点，线性趋势仍是同一条直线；扩展范围时可观察外推部分。它不会自动添加观测图元，也不是路径的曲线连接方式。
+
+## API 参考
+
+以下链接提供对应变换的完整参数、类型与 Schema；声明入口和作用域见 [Plot 变换契约](/viz/plot/reference/transform)。
+
+- [`density`](/viz/data/transforms/bin-density#density--密度采样)
+- [`smooth`](/viz/data/transforms/trend-sampling#smooth--趋势采样)

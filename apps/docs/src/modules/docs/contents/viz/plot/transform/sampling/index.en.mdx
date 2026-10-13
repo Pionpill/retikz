@@ -1,0 +1,68 @@
+---
+title: Density and trends
+description: Bind density and trend samples to path marks and compare bandwidth, sample counts, and sampling ranges.
+---
+
+Density and trend transforms generate sample rows from observations. Path marks then connect those samples. See [Transforms](/viz/plot/transform) for authoring and scopes; this page covers plotting results, while Data explains the algorithms and full parameters.
+
+## Density
+
+`density` produces sampling positions and density values from continuous observations. This demo binds `densityX` / `density` to the path’s `x` / `y` channels and draws a curve for each group.
+
+| Parameter     | Use and constraints in this demo                                                                       |
+| ------------- | ------------------------------------------------------------------------------------------------------ |
+| `field`       | Read observations from `value`.                                                                        |
+| `groupBy`     | Estimate density separately by `group`.                                                                |
+| `bandwidth`   | Use an automatic rule or an explicit value; a smaller explicit bandwidth retains more local variation. |
+| `sampleCount` | Set the number of output samples.                                                                      |
+| `xAs`         | Sampling position output, named `densityX` here.                                                       |
+| `densityAs`   | Density output, named `density` here.                                                                  |
+
+<ComponentPreview
+  files={[
+    'transform-density',
+    'transform-density.preview.tsx',
+    'transform-density.data.ts',
+    'transform-density.i18n.ts',
+  ]}
+  responsive
+  mode="showcase"
+  size="lg"
+  defaultSourceFile="transform-density.preview.tsx"
+  caption="Switch between automatic and explicit bandwidth, then adjust bandwidth and sample count to compare the curve shapes."
+/>
+
+The x axis is fixed to 1–10; the y axis uses 0–0.7. The path orders points by `densityX` and closes to the zero baseline. Closure and fill are mark settings.
+
+## Trends
+
+`smooth` fits observations and generates prediction samples. This demo uses linear fitting and retains the original points. The trend path and hollow sample points each consume a local transform result.
+
+| Parameter     | Use and constraints in this demo                                                  |
+| ------------- | --------------------------------------------------------------------------------- |
+| `x`           | Read the independent variable from `time`.                                        |
+| `y`           | Read observations from `value`.                                                   |
+| `groupBy`     | Fit separately by `series`.                                                       |
+| `method`      | Fixed to `{ kind: 'linear' }` in this demo.                                       |
+| `sampleCount` | Set prediction sample count without changing the linear model.                    |
+| `extent`      | Omit it to sample over the observed range; the demo can also extend to `[-1, 5]`. |
+| `xAs`         | Sampling position output, named `trendX` here.                                    |
+| `yAs`         | Prediction output, named `trendY` here.                                           |
+
+<ComponentPreview
+  files={['transform-smooth', 'transform-smooth.preview.tsx', 'transform-smooth.data.ts', 'transform-smooth.i18n.ts']}
+  responsive
+  mode="showcase"
+  size="lg"
+  defaultSourceFile="transform-smooth.preview.tsx"
+  caption="Adjust prediction count and range; compare filled observations, the trend line, and hollow predictions."
+/>
+
+More samples add hollow points while retaining the same straight trend line. Extending the range reveals extrapolation. The transform does not add observation marks or set the path’s curve interpolation.
+
+## API reference
+
+The links below provide the full parameters, types, and schemas. See the [Plot transform contract](/viz/plot/reference/transform) for declaration entries and scopes.
+
+- [`density`](/viz/data/transforms/bin-density#density)
+- [`smooth`](/viz/data/transforms/trend-sampling#smooth)

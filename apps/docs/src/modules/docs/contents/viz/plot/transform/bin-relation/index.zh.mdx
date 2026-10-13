@@ -1,0 +1,65 @@
+---
+title: 分箱与关系
+description: 将分箱统计行绘制为直方图，将配对结果绘制为关系连线。
+---
+
+分箱和配对会生成新的结果行，图元应绑定这些结果中的字段。接入与作用域见 [transform · 变换](/viz/plot/transform)。下面只介绍绘图所需的参数，完整契约见页末的 Data 参考。
+
+## 分箱
+
+`bin` 将连续观测值归入区间，每箱输出一行。本例用 `IntervalMark.x0` / `x1` 读取箱边，`y` 读取频数，绘制具有真实区间宽度的直方图。
+
+| 参数         | 本例用途与约束                           |
+| ------------ | ---------------------------------------- |
+| `field`      | 本例对 `measurement` 分箱。              |
+| `count`      | 按目标箱数分箱，与其它策略互斥。         |
+| `step`       | 指定箱宽，与其它策略互斥。               |
+| `thresholds` | 指定内部边界，与其它策略互斥。           |
+| `extent`     | 本例固定为 `[0, 20]`，保持分箱范围不变。 |
+
+<ComponentPreview
+  files={[
+    'transform-histogram',
+    'transform-histogram.preview.tsx',
+    'transform-histogram.data.ts',
+    'transform-histogram.i18n.ts',
+  ]}
+  responsive
+  mode="showcase"
+  size="lg"
+  defaultSourceFile="transform-histogram.preview.tsx"
+  caption="切换箱数、箱宽与显式边界策略，观察柱宽和频数；当前分支的参数才会显示。"
+/>
+
+示例使用默认输出 `binStart`、`binEnd` 和 `binCount`。分箱不保留每条观测，因此后续编码应读取箱边与统计字段。
+
+## 关系生成
+
+`relate` 从每组选择起点和终点，输出可供 `RelationMark` 消费的关系行。本例保留折线与观测点，仅对关系图元执行局部变换。
+
+| 参数              | 本例用途与约束                                    |
+| ----------------- | ------------------------------------------------- |
+| `groupBy`         | 按系列分别生成关系；省略时在全部记录中配对。      |
+| `source.selector` | 选择起点，本例支持最小值、最大值、首行和末行。    |
+| `target.selector` | 独立选择终点，取值与起点相同。                    |
+| `source.fields`   | 起点投影读取 `id`，输出 `sourceId` 用于锚点引用。 |
+| `target.fields`   | 终点投影读取 `id`，输出 `targetId` 用于锚点引用。 |
+| `measures`        | 本例计算两端数值差，并生成连线标签。              |
+
+<ComponentPreview
+  files={['transform-relate', 'transform-relate.preview.tsx', 'transform-relate.data.ts', 'transform-relate.i18n.ts']}
+  responsive
+  mode="showcase"
+  size="xl"
+  defaultSourceFile="transform-relate.preview.tsx"
+  caption="切换分组范围及起终点选择方式，观察紫色连线与差值标签。"
+/>
+
+背景折线为观测记录建立锚点；关系图元从输出的端点 ID 找到这些锚点。局部配对不会替换背景图元的数据。
+
+## API 参考
+
+以下链接提供对应变换的完整参数、类型与 Schema；声明入口和作用域见 [Plot 变换契约](/viz/plot/reference/transform)。
+
+- [`bin`](/viz/data/transforms/bin-density#bin--分桶)
+- [`relate`](/viz/data/transforms/relation-generation#relate--关系生成)

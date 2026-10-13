@@ -1,89 +1,265 @@
 ---
-title: 变换
-description: 了解 Plot 变换的能力边界，并按输出行形态选择区间、堆叠、分箱、密度、趋势或关系变换。
+title: transform · 变换
+description: 在 Plot 中接入 Data 变换，选择共享或图元局部作用域，并将结果字段绑定到图元。
 ---
 
-Plot 变换把规范化后的数据行改造成适合绘图的行。它们生成区间、堆叠边界、分箱、密度采样、趋势采样或关系字段，随后由比例尺和图元消费。
+变换先处理数据行，图元再读取结果字段绘图。例如，先将数值转成占比，再把占比绑定到纵向位置。变换的定义、参数和计算由 [Data](/viz/data/transforms) 提供；Plot 负责接入声明、组织绘图数据作用域并消费结果。
 
-排序、汇总、筛选、注解和自定义数据变换属于[数据变换](/viz/data/transform)。本分组说明 Plot 注册的绘图变换及其作用域和管线语义，也演示怎样在 Plot 中注入并消费 Data 自定义变换。
+## 接入方式
 
-<ComponentPreview files="transform-pipeline" size="md" hideCode />
+先完成 [Plot 快速开始](/viz/plot/get-start)。本例将三行数值归一化为 `share`，再绘制三个点；输出纵坐标为 0.2、0.3、0.5。变换声明用 `operation` 包裹 `{ kind, params }`。
 
-## 作用域与管线
+<ComponentPreview
+  files={['transform-entry', 'transform-entry.data.ts']}
+  responsive
+  mode="showcase"
+  hideCode
+  size="md"
+/>
 
-根级变换改写整张 Plot 共享的数据；图元局部变换只为当前图元建立数据视图。先确定作用域，再选择具体的 transform kind。
+在 HTML 中准备 `<div id="plot"></div>`，选择以下一种入口运行。
 
-| 入口                     | 作用域    | 何时使用                     |
-| ------------------------ | --------- | ---------------------------- |
-| `<PlotTransform ... />`  | Plot 根级 | 在 JSX 中按顺序声明共享变换  |
-| `dataTransforms={[...]}` | Plot 根级 | 程序化生成共享变换数组       |
-| mark 的 `transform`      | 当前图元  | 只为一层图元派生、汇总或采样 |
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
 
-根级变换先运行，所有图元都读取它的结果；图元局部变换随后运行，只替换当前图元看到的行。图元快捷写法生成的自动变换也会进入同一条根级管线。
+通过 `PlotTransform` 声明根级变换；变换类型从 `@retikz/data` 导入，绘图组件从 `@retikz/plot-react` 导入。
 
-变换读取的输入字段仍需符合 `model`，派生输出字段不需要预先写进 strict model。图元局部变换的最终数据视图仍会参与共享比例尺和图例推断。
+```tsx
+import { Plot, PlotAxis, PlotScale, PlotTransform, PointMark } from '@retikz/plot-react';
+import { createRoot } from 'react-dom/client';
 
-需要追踪变换前后的行与图元输出时，见[Plot 溯源](/viz/plot/provenance)。
+const rows = [
+  { month: 1, value: 20 },
+  { month: 2, value: 30 },
+  { month: 3, value: 50 },
+];
 
-<SourceLinks
-  sources={[
+createRoot(document.getElementById('plot')!).render(
+  <Plot data={rows} width={360} height={220}>
+    <PlotTransform operation={{ kind: 'normalize', params: { field: 'value', as: 'share' } }} />
+    <PlotScale dimension="x" type="linear" domain={[0.5, 3.5]} />
+    <PlotScale dimension="y" type="linear" domain={[0, 1]} />
+    <PointMark x="month" y="share" size={6} />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" />
+  </Plot>,
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+将变换声明写入 `IRPlot.transform`，通过 `spec` 传给 React `Plot`。
+
+```tsx
+import type { IRPlot } from '@retikz/plot';
+import { Plot } from '@retikz/plot-react';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { month: 1, value: 20 },
+  { month: 2, value: 30 },
+  { month: 3, value: 50 },
+];
+
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  transform: [{ operation: { kind: 'normalize', params: { field: 'value', as: 'share' } } }],
+  scales: [
+    { type: 'linear', name: 'x', domain: [0.5, 3.5] },
+    { type: 'linear', name: 'y', domain: [0, 1] },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'share' } }, size: { kind: 'constant', value: 6 } },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
+
+createRoot(document.getElementById('plot')!).render(<Plot spec={spec} data={{ rows }} width={360} height={220} />);
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+用 `plot` 创建配置，交给 `renderPlot` 渲染。
+
+```ts
+import { plot, renderPlot } from '@retikz/plot-vanilla';
+
+const rows = [
+  { month: 1, value: 20 },
+  { month: 2, value: 30 },
+  { month: 3, value: 50 },
+];
+
+const spec = plot({
+  data: { reference: 'rows' },
+  transform: [{ operation: { kind: 'normalize', params: { field: 'value', as: 'share' } } }],
+  scales: [
+    { type: 'linear', name: 'x', domain: [0.5, 3.5] },
+    { type: 'linear', name: 'y', domain: [0, 1] },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'share' } }, size: { kind: 'constant', value: 6 } },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+});
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width: 360, height: 220 });
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+直接声明 `IRPlot`，交给 `renderPlot` 渲染。
+
+```ts
+import type { IRPlot } from '@retikz/plot';
+import { renderPlot } from '@retikz/plot-vanilla';
+
+const rows = [
+  { month: 1, value: 20 },
+  { month: 2, value: 30 },
+  { month: 3, value: 50 },
+];
+
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  transform: [{ operation: { kind: 'normalize', params: { field: 'value', as: 'share' } } }],
+  scales: [
+    { type: 'linear', name: 'x', domain: [0.5, 3.5] },
+    { type: 'linear', name: 'y', domain: [0, 1] },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'share' } }, size: { kind: 'constant', value: 6 } },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width: 360, height: 220 });
+```
+
+</DocTab>
+</DocTabs>
+
+## 数据作用域
+
+根级变换先执行，其结果供所有图元读取。图元局部变换随后从该图元的输入视图派生结果，只替换当前图元看到的行。局部变换的最终结果仍参与共享比例尺和图例推断。
+
+| 入口                                | 作用域                                      |
+| ----------------------------------- | ------------------------------------------- |
+| `<PlotTransform operation={...} />` | React 根级声明，按顺序收集。                |
+| `Plot.dataTransforms`               | React 根级声明数组，在 JSX 子声明之前执行。 |
+| `IRPlot.transform`                  | IR / Vanilla 的根级声明数组。               |
+| 图元 `transform`                    | 仅对当前图元执行的声明数组。                |
+
+示例固定两层点：灰色圆点为图层 A，蓝色菱形为图层 B。切换扰动作用域，观察只移动蓝点还是两层一起移动。
+
+<ComponentPreview
+  files={['transform-scope', 'transform-scope.preview.tsx', 'transform-scope.data.ts', 'transform-scope.i18n.ts']}
+  responsive
+  mode="showcase"
+  size="lg"
+  defaultSourceFile="transform-scope.preview.tsx"
+  caption="根级扰动影响两层；局部扰动只影响图层 B。"
+/>
+
+## 声明顺序与字段
+
+数组中的操作按声明顺序执行，下一步读取上一步的输出。例如先 `normalize` 再 `stack`，堆叠时应读取归一化生成的占比字段。分箱或采样会生成新的行与字段，后续编码不能继续假定原始明细字段都存在。
+
+输入字段需符合数据模型；变换声明的派生输出字段无需预先加入输入模型。React 图元快捷写法生成的自动变换会追加到显式根级变换之后。需要追踪输入、变换结果与图元时，见 [Plot 溯源](/viz/plot/provenance)。
+
+## 自定义变换
+
+自定义 Definition 和 Implementation 从 `@retikz/data` 定义，Plot 通过 `transformDefinitions` 与 `transformImplementations` 接收它们，声明仍使用同一 `operation` 结构。完整定义过程见 [Data 扩展机制](/viz/data/transform/extensions)。
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+下面仅展示注入位置；`definition`、`implementation` 和匹配的 `operation` 来自已有的 Data 扩展。
+
+```tsx
+<Plot data={rows} transformDefinitions={[definition]} transformImplementations={[implementation]}>
+  <PlotTransform operation={operation} />
+  {/* 图元绑定该变换声明的输出字段 */}
+</Plot>
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+IR 中保存变换声明；运行时依赖放在 `renderPlot` 的 options 中。
+
+```ts
+renderPlot(
+  spec,
+  { rows },
+  {
+    transformDefinitions: [definition],
+    transformImplementations: [implementation],
+  },
+);
+```
+
+</DocTab>
+</DocTabs>
+
+## 相关属性
+
+这里只列出 Plot 接入所需的入口，完整作用域契约见 [Plot 变换契约](/viz/plot/reference/transform)，声明与扩展类型见 [Data API 参考](/viz/data/transform/reference)。
+
+<ComponentProps
+  items={[
     {
-      label: '根级显式变换与图元快捷变换的装配顺序',
-      path: 'packages/viz/plot-vanilla/src/normalize/plot/topology.ts',
+      name: 'PlotTransform.operation',
+      kind: 'property',
+      type: 'IRDataTransform',
+      required: true,
+      description:
+        '由 Data 定义的操作。本例为 `{ kind: "normalize", params: { field: "value", as: "share" } }`；其它 kind 的 params 按对应 Schema 编写。',
     },
     {
-      label: '根级结果与图元局部数据视图',
-      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
-      startLine: 459,
-      endLine: 503,
+      name: 'Plot.dataTransforms',
+      kind: 'property',
+      type: 'Array<{ operation: IRDataTransform; dataExecution?: IRDataExecution }>',
+      description: '根级声明数组。每项包含 operation，可选 dataExecution 指定执行配置。',
+    },
+    {
+      name: 'IRPlot.transform',
+      kind: 'property',
+      type: 'Array<{ operation: IRDataTransform; dataExecution?: IRDataExecution }>',
+      description: 'IR / Vanilla 的共享数据变换，按声明顺序执行。',
     },
   ]}
 />
-
-## 职责一览
-
-| 页面       | Plot 成员或入口             | 输出形态                         |
-| ---------- | --------------------------- | -------------------------------- |
-| 派生与抖动 | `derive-interval`、`jitter` | 每个输入行对应一个输出行         |
-| 堆叠与占比 | `stack`、`normalize`        | 保留明细行并补充边界或占比字段   |
-| 分箱       | `bin`                       | 每个分箱对应一个输出行           |
-| 密度与趋势 | `density`、`smooth`         | 每个分组生成一批连续采样行       |
-| 行配对     | `relate`                    | 每个分组生成零个或一个关系输出行 |
-| 自定义变换 | `transformDefinitions`      | 由运行时 Definition 决定         |
 
 ## 章节内容
 
 <LinkedSections
   items={[
     {
-      title: '派生与抖动',
-      description: '按单行字段补出区间，或在数据空间做确定性抖点。',
-      url: '/viz/plot/transform/row',
+      title: '数值派生',
+      description: '区间、抖动、堆叠与占比的绘图效果。',
+      url: '/viz/plot/transform/numeric-derivation',
     },
-    {
-      title: '堆叠与占比',
-      description: '保留明细行，同时补出堆叠区间或占比字段。',
-      url: '/viz/plot/transform/annotation',
-    },
-    {
-      title: '分箱',
-      description: '把连续数值明细行归入区间并生成计数。',
-      url: '/viz/plot/transform/bin',
-    },
-    {
-      title: '密度与趋势',
-      description: '生成 KDE 密度采样行或线性趋势采样行。',
-      url: '/viz/plot/transform/statistics',
-    },
-    {
-      title: '行配对',
-      description: '选择 source / target 行并投影出关系字段。',
-      url: '/viz/plot/transform/relate',
-    },
-    {
-      title: '自定义变换',
-      description: '用 Data Definition 派生 Plot 区间、位置或关系编码需要的字段。',
-      url: '/viz/plot/transform/custom-transform',
-    },
+    { title: '分箱与关系', description: '直方图与端点配对连线。', url: '/viz/plot/transform/bin-relation' },
+    { title: '密度与趋势', description: '密度采样与拟合结果的路径绘制。', url: '/viz/plot/transform/sampling' },
   ]}
 />

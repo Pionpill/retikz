@@ -1,0 +1,113 @@
+---
+title: 数值派生
+description: 用区间派生、数据抖动、堆叠和归一化生成绘图字段，并观察参数如何改变图形。
+---
+
+本页展示保留明细行的四种变换。接入与作用域见 [transform · 变换](/viz/plot/transform)；完整参数由 Data 提供。示例中的参数写在 `operation.params`，图元读取变换后的字段。
+
+## 派生区间
+
+`derive-interval` 为每行生成下界和上界。`IntervalMark` 将输出字段绑定到 `bounds.y`，绘制任务区间或从基线开始的柱。
+
+| 参数        | 本例用途与约束                                     |
+| ----------- | -------------------------------------------------- |
+| `startFrom` | 双字段模式的起点字段，与 `endFrom` 配合。          |
+| `endFrom`   | 双字段模式的终点字段，与 `startFrom` 配合。        |
+| `from`      | 单字段模式的终点值字段；本例在两种写法之间切换。   |
+| `baseline`  | 单字段模式的固定起点；显式起止字段优先于这组配置。 |
+
+<ComponentPreview
+  files={[
+    'transform-derive-interval',
+    'transform-derive-interval.preview.tsx',
+    'transform-derive-interval.data.ts',
+    'transform-derive-interval.i18n.ts',
+  ]}
+  responsive
+  mode="showcase"
+  size="lg"
+  defaultSourceFile="transform-derive-interval.preview.tsx"
+  caption="切换显式起止字段与基线模式；基线模式下调整基线，观察柱的起点。"
+/>
+
+示例沿用默认输出名 `y0` / `y1`，纵轴固定为 0–12。
+
+## 数据抖动
+
+`jitter` 在数据单位中扰动连续字段，帮助分开重叠点。本例只修改横向字段 `dose`，纵向响应值保持不变。
+
+| 参数     | 本例用途与约束                           |
+| -------- | ---------------------------------------- |
+| `axis`   | 本例固定为 `'x'`，只扰动横向字段。       |
+| `xField` | 本例读取并覆盖 `'dose'` 字段。           |
+| `amount` | 控制数据空间中的扰动幅度，0 表示不扰动。 |
+| `seed`   | 相同输入、幅度和种子产生相同结果。       |
+
+<ComponentPreview
+  files={['transform-jitter', 'transform-jitter.preview.tsx', 'transform-jitter.data.ts', 'transform-jitter.i18n.ts']}
+  responsive
+  mode="showcase"
+  size="lg"
+  defaultSourceFile="transform-jitter.preview.tsx"
+  caption="先将幅度设为 0，再增加幅度；更换种子，观察点的横向偏移。"
+/>
+
+这与投影后的图元位置调整不同；这里改变的是进入比例尺的数据值。
+
+## 堆叠
+
+`stack` 按横向分组累加系列值，生成每行的上下边界。图元绑定 `y0` / `y1`，将同一季度的产品收入绘制为堆叠区间。
+
+| 参数      | 本例用途与约束                                                                         |
+| --------- | -------------------------------------------------------------------------------------- |
+| `x`       | 本例使用 `quarter`，在每个季度内累加。                                                 |
+| `y`       | 本例读取 `revenue` 作为累加值。                                                        |
+| `groupBy` | 本例使用 `product` 标识各系列。                                                        |
+| `offset`  | `zero` 普通累加；`normalize` 归一化堆叠；`center` 围绕零居中；`overlap` 每段从零开始。 |
+
+<ComponentPreview
+  files={['transform-stack', 'transform-stack.preview.tsx', 'transform-stack.data.ts', 'transform-stack.i18n.ts']}
+  responsive
+  mode="showcase"
+  size="lg"
+  defaultSourceFile="transform-stack.preview.tsx"
+  caption="切换堆叠方式，比较同一批收入记录的区间位置。"
+/>
+
+示例随方式切换纵轴：普通与重叠为 0–120，归一化为 0–1，居中为 −60–60。含负值时的 `diverging` 见 Data 参考。
+
+## 归一化
+
+`normalize` 将数值除以组内总和，写入占比字段。本例先生成 `share`，再堆叠这些占比，比较每季度或全部记录的收入构成。
+
+| 参数      | 本例用途与约束                                          |
+| --------- | ------------------------------------------------------- |
+| `field`   | 本例读取 `amount` 作为归一化输入。                      |
+| `as`      | 本例将占比写入 `share`，保留原值。                      |
+| `groupBy` | 按季度计算各自总和；省略时使用全部记录的总和。          |
+| `basis`   | `fraction` 输出 0–1 比例；`percent` 输出 0–100 百分比。 |
+
+<ComponentPreview
+  files={[
+    'transform-normalize',
+    'transform-normalize.preview.tsx',
+    'transform-normalize.data.ts',
+    'transform-normalize.i18n.ts',
+  ]}
+  responsive
+  mode="showcase"
+  size="lg"
+  defaultSourceFile="transform-normalize.preview.tsx"
+  caption="切换季度与全局分组，再切换比例和百分比；观察每根柱的总高度。"
+/>
+
+`normalize` 本身不生成堆叠边界；本例在它之后执行 `stack`。两种基准按对应范围显示纵轴。
+
+## API 参考
+
+以下链接提供对应变换的完整参数、类型与 Schema；声明入口和作用域见 [Plot 变换契约](/viz/plot/reference/transform)。
+
+- [`derive-interval`](/viz/data/transforms/numeric-derivation#derive-interval--派生区间)
+- [`jitter`](/viz/data/transforms/numeric-derivation#jitter--数值扰动)
+- [`stack`](/viz/data/transforms/numeric-derivation#stack--堆叠)
+- [`normalize`](/viz/data/transforms/numeric-derivation#normalize--归一化)

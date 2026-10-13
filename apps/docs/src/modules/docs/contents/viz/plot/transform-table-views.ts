@@ -6,11 +6,11 @@ import { createTransformResultView, createTransformTableViews } from '@/modules/
 
 /** Plot transform table view 的可选运行时依赖 */
 export type PlotTransformTableViewOptions = Omit<TransformTableViewOptions, 'registry'> & {
-  /** 在 Plot 内置 definitions 之后注册的自定义 transform definitions */
+  /** 在 Data 内置 definitions 之后注册的自定义 transform definitions */
   transformDefinitions?: Parameters<typeof resolveTransformRegistry>[0];
 };
 
-/** 创建使用完整 Plot transform registry 的单一结果视图 */
+/** 创建使用 Data transform registry 的单一结果视图 */
 export const createPlotTransformResultView = <TValues extends object>(
   id: string,
   label: string,
@@ -24,7 +24,7 @@ export const createPlotTransformResultView = <TValues extends object>(
     transformImplementations: options.transformImplementations,
   });
 
-/** 创建使用完整 Plot transform registry 的原始行与结果视图 */
+/** 创建使用 Data transform registry 的原始行与结果视图 */
 export const createPlotTransformTableViews = <TValues extends object>(
   labels: { source: string; result: string },
   rows: TransformTableRows<TValues>,
