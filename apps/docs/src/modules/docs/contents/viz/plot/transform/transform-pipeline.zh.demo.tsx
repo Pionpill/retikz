@@ -11,7 +11,7 @@ const Demo: FC = () => (
       id="data"
       position={[-215, 0]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 106, height: 58 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>数据层</Text>
@@ -23,7 +23,7 @@ const Demo: FC = () => (
       id="root"
       position={[-80, 0]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 120, height: 58 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>根级 transform</Text>
@@ -35,7 +35,7 @@ const Demo: FC = () => (
       id="shared"
       position={[60, 0]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 106, height: 58 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>共享行</Text>
@@ -47,7 +47,7 @@ const Demo: FC = () => (
       id="mark-a"
       position={[205, -63]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 132, height: 58 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>图元 A 数据视图</Text>
@@ -59,7 +59,7 @@ const Demo: FC = () => (
       id="mark-b"
       position={[205, 63]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 132, height: 58 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>图元 B 数据视图</Text>

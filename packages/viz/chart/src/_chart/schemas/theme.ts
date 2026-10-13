@@ -27,7 +27,7 @@ export const ChartThemeDefinitionSchema = strictObject({
   name: NonBlankStringSchema.describe('Registered Chart theme name'),
   base: NonBlankStringSchema.optional().describe('Optional registered base Chart theme name'),
   defaults: ChartDefaultsSchema.optional().describe('Sparse Chart Source defaults'),
-  plotDefaults: PlotDefaultsSchema.optional().describe('Sparse Plot Source defaults forwarded to Plot'),
+  defaultPlot: PlotDefaultsSchema.optional().describe('Sparse Plot Source defaults forwarded to Plot'),
 }).describe('Registered Chart theme Definition with Chart and Plot defaults');
 
 /** Chart Source 的稀疏默认片段类型 */

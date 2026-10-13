@@ -24,7 +24,7 @@ export type EffectiveDiagramTextAppearance = Readonly<{
   /** 文字使用的颜色 */
   textColor: NonNullable<NonNullable<IRNode['style']>['textColor']>;
   /** 文字的整体透明度 */
-  opacity: NonNullable<NonNullable<IRNode['style']>['opacity']>;
+  opacity: number;
   /** 文字排版使用的字体属性 */
   font: NonNullable<NonNullable<IRNode['style']>['font']>;
   /** 文字行在内容框中的水平对齐方式 */

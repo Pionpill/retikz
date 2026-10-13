@@ -19,7 +19,7 @@ const renderMobileNode = (node: MobileFlowNode) => (
     id={node.id}
     position={node.position}
     cornerRadius={4}
-    style={{ stroke: node.color, fill: node.color, fillOpacity: 0.08 }}
+    style={{ stroke: node.color, fill: node.color, opacity: { fill: 0.08 } }}
     layout={{ minimumSize: { width: node.width, height: 48 }, align: 'middle', lineHeight: 15 }}
   >
     <Text font={{ size: 13, weight: 'bold' }}>{node.title}</Text>
@@ -40,7 +40,7 @@ const Demo: FC = () => (
             id="canonical"
             position={[-278, 0]}
             cornerRadius={4}
-            style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+            style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
             layout={{ minimumSize: { width: 126, height: 54 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>Canonical model</Text>
@@ -52,7 +52,7 @@ const Demo: FC = () => (
             id="intrinsic"
             position={[-140, 0]}
             cornerRadius={4}
-            style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+            style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
             layout={{ minimumSize: { width: 120, height: 54 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>Natural probes</Text>
@@ -64,7 +64,7 @@ const Demo: FC = () => (
             id="columns"
             position={[0, 0]}
             cornerRadius={4}
-            style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+            style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
             layout={{ minimumSize: { width: 128, height: 54 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>列求解 + wrap</Text>
@@ -76,7 +76,7 @@ const Demo: FC = () => (
             id="rows"
             position={[145, 0]}
             cornerRadius={4}
-            style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+            style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
             layout={{ minimumSize: { width: 138, height: 54 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>行求解 + 放置</Text>
@@ -88,7 +88,7 @@ const Demo: FC = () => (
             id="publish"
             position={[295, 0]}
             cornerRadius={4}
-            style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+            style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
             layout={{ minimumSize: { width: 132, height: 54 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>Replay + publish</Text>
@@ -102,7 +102,7 @@ const Demo: FC = () => (
           id="runtime-inputs"
           position={[-278, 98]}
           cornerRadius={4}
-          style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+          style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
           layout={{ minimumSize: { width: 138, height: 46 }, align: 'middle', lineHeight: 15 }}
         >
           <Text font={{ size: 13, weight: 'bold' }}>运行时输入</Text>
@@ -114,7 +114,7 @@ const Demo: FC = () => (
           id="parent-constraint"
           position={[0, 98]}
           cornerRadius={4}
-          style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+          style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
           layout={{ minimumSize: { width: 138, height: 46 }, align: 'middle', lineHeight: 15 }}
         >
           <Text font={{ size: 13, weight: 'bold' }}>父级 x proposal</Text>
@@ -126,7 +126,7 @@ const Demo: FC = () => (
           id="scene-output"
           position={[230, 98]}
           cornerRadius={4}
-          style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+          style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
           layout={{ minimumSize: { width: 104, height: 46 }, align: 'middle', lineHeight: 15 }}
         >
           <Text font={{ size: 13, weight: 'bold' }}>Scene</Text>
@@ -138,7 +138,7 @@ const Demo: FC = () => (
           id="manifest-output"
           position={[355, 98]}
           cornerRadius={4}
-          style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+          style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
           layout={{ minimumSize: { width: 128, height: 46 }, align: 'middle', lineHeight: 15 }}
         >
           <Text font={{ size: 13, weight: 'bold' }}>TableLayoutManifest</Text>

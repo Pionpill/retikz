@@ -219,7 +219,7 @@ Place FlexLayout / GridLayout inside Group when objects need arrangement. The la
 
 - caption requires title or description, using `{ text: ... }` objects. A provided labels array must be nonempty.
 - Group does not avoid obstacles or label collisions and does not connect children automatically. Ids must be unique within their namespace.
-- graphDefaults / graphRules affect visible descendants, not the current shell, caption, or boundary labels. Set background / border on the current shell.
+- defaultGraph / graphRules affect visible descendants, not the current shell, caption, or boundary labels. Set background / border on the current shell.
 - overflow constrains Surface content. Outside labels still contribute to visual bounds; do not assume they are clipped.
 
 ## Implementation
@@ -235,7 +235,7 @@ Place FlexLayout / GridLayout inside Group when objects need arrangement. The la
 - `children` directly uses Core `IRChild`: Entity, Relation, Group, Node, Path, Scope, Layout, Plot, or any registered composite
 - `defaults.node`, `defaults.path`, `defaults.label`, Core `theme`, transforms, placement, clipping, and namespaces retain Scope semantics
 - A named Graph Theme supplies the Group root shell `background`, `border`, and `cornerRadius` baseline. Explicit Source fields win and use complete top-level field replacement instead of deep-merging inside `border` or `background`
-- `graphDefaults` affects visible Entity / Relation descendants and descendant Group / Block shells; `graphRules` matches only descendant Entities and Relations. Neither affects this Group’s own shell, caption, boundary labels, or ordinary Core children
+- `defaultGraph` affects visible Entity / Relation descendants and descendant Group / Block shells; `graphRules` matches only descendant Entities and Relations. Neither affects this Group’s own shell, caption, boundary labels, or ordinary Core children
 - Changing the content `theme` or setting Core `defaults.reset` preserves author defaults and rules. This shell uses the incoming theme and ancestor defaults
 - Group does not stack children automatically and owns no routing, obstacle avoidance, or label collision. Put FlexLayout, GridLayout, or OverlayLayout inside when ordinary arrangement is required
 - An explicit Group `id` names the shell envelope and remains targetable through Core `IRNodeTarget`

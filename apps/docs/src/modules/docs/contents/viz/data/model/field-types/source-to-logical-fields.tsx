@@ -20,34 +20,46 @@ const SourceToLogicalFields: FC<SourceToLogicalFieldsProps> = props => {
         id="sales"
         position={[15, 20]}
         label={{ text: t.sales, opacity: 0.8, font: { size: 12 } }}
-        layout={{ height: 32, padding: 0, key: { width: 124 }, value: { width: 70 } }}
-        style={{ font: { size: 13 } }}
         entries={[
           { key: { content: 'region' }, value: { content: 'north' } },
           { key: { content: 'revenue' }, value: { content: '12' } },
         ]}
+        defaultCell={{
+          style: { font: { size: 13 } },
+          layout: { height: 32, padding: 0 },
+          key: { layout: { width: 124 } },
+          value: { layout: { width: 70 } },
+        }}
       />
       <Map
         id="forecast"
         position={[15, 130]}
         label={{ text: t.forecast, opacity: 0.8, font: { size: 12 } }}
-        layout={{ height: 32, padding: 0, key: { width: 124 }, value: { width: 70 } }}
-        style={{ font: { size: 13 } }}
         entries={[
           { key: { content: 'area' }, value: { content: 'north' } },
           { key: { content: 'pricing.amount' }, value: { content: '"12"' } },
         ]}
+        defaultCell={{
+          style: { font: { size: 13 } },
+          layout: { height: 32, padding: 0 },
+          key: { layout: { width: 124 } },
+          value: { layout: { width: 70 } },
+        }}
       />
       <Map
         id="normalized"
         position={[255, 75]}
         label={{ text: t.normalized, opacity: 0.8, font: { size: 12 } }}
-        layout={{ height: 32, padding: 0, key: { width: 124 }, value: { width: 70 } }}
-        style={{ fill: 'dodgerblue', font: { size: 13 } }}
         entries={[
           { key: { content: 'region' }, value: { content: 'north' } },
           { key: { content: 'revenue' }, value: { content: '12' } },
         ]}
+        defaultCell={{
+          style: { fill: 'dodgerblue', font: { size: 13 } },
+          layout: { height: 32, padding: 0 },
+          key: { layout: { width: 124 } },
+          value: { layout: { width: 70 } },
+        }}
       />
       <Draw way={['sales.right', '-|-', 'normalized.left']} arrow="->" />
       <Draw way={['forecast.right', '-|-', 'normalized.left']} arrow="->" />

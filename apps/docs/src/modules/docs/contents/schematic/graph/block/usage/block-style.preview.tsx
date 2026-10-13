@@ -71,8 +71,8 @@ export const BlockStylePreview = (values: BlockStylePreviewValues, lang: Lang = 
       <Block
         padding={padding}
         cornerRadius={cornerRadius}
-        background={{ fill: '#64748b', fillOpacity: backgroundOpacity }}
-        border={{ stroke: '#64748b', strokeOpacity: 0.5, strokeWidth: borderWidth }}
+        background={{ fill: '#64748b', opacity: { fill: backgroundOpacity } }}
+        border={{ stroke: '#64748b', strokeWidth: borderWidth, opacity: { stroke: 0.5 } }}
       >
         <BlockHeader
           title={{

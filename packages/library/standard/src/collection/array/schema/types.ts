@@ -2,7 +2,6 @@ import type { IRScopeProps } from '@retikz/core';
 import type { IRChild } from '@retikz/core';
 import type { input } from 'zod';
 
-import type { IRCell } from '../../_cell/schema';
 import type { ArrayCellSchema, ArrayIndexOptionsSchema, ArrayIndexStyleSchema, ArraySchema } from './schema';
 
 /** 启用索引带时的位置、自动起点或显式标号与文本外观 */
@@ -22,9 +21,7 @@ export type IRArray = Omit<
   input<typeof ArraySchema>,
   keyof IRScopeProps | 'items' | 'data' | 'cellIdMode' | 'dataExpand' | 'skeleton'
 > &
-  Omit<IRScopeProps, 'style'> & {
-    /** 供各格继承的集合视觉样式，格内显式字段可覆盖对应值 */
-    style?: IRCell['style'];
+  IRScopeProps & {
     /**
      * 直属格身份：explicit 仅显式 id，string 使用 items 字符串，index 由 Array id 与零基下标生成
      * @default 'explicit'

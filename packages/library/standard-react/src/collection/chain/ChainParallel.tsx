@@ -7,7 +7,7 @@ import { invalidCellAuthoring } from '../cell';
 /** 并行块局部覆盖与直属支路 */
 export type ChainParallelProps = {
   /** 排布覆盖 */ layout?: IRChainParallel['layout'];
-  /** 连接覆盖 */ connection?: InputChainConnection;
+  /** 连接覆盖 */ defaultConnection?: InputChainConnection;
   /** 支路声明 */ children?: ReactNode;
 };
 

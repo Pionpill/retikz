@@ -39,7 +39,7 @@ describe('changelogForModule', () => {
   it('Plot 更新日志只含三个 Plot 包', () => {
     const releases = changelogForModule('viz', 'plot');
 
-    expect(releases).toHaveLength(2);
+    expect(releases.map(release => release.minor)).toEqual(['v0.2', 'v0.1']);
 
     for (const release of releases) {
       expect(release.packages.map(block => block.pkg)).toEqual([

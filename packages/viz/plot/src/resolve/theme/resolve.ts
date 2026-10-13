@@ -41,7 +41,7 @@ const ruleSourcesOf = (layers: ReadonlyArray<DefaultsLayer>) =>
 /** 按 Core Theme、Plot style 与 Direct Plot Source 顺序解析 Plot defaults */
 export const resolvePlotTheme = (
   effectiveTheme: ResolvedTheme,
-  input: Pick<IRPlot, 'plotDefaults' | 'plotRules'> = {},
+  input: Pick<IRPlot, 'defaultPlot' | 'plotRules'> = {},
   plotThemeStyles: ReadonlyArray<PlotThemeStyleDefinition> | undefined = undefined,
 ): IRPlotThemeResolution => {
   const { style, mode } = effectiveTheme;
@@ -73,11 +73,11 @@ export const resolvePlotTheme = (
     }
   }
 
-  if (input.plotDefaults !== undefined || input.plotRules !== undefined) {
+  if (input.defaultPlot !== undefined || input.plotRules !== undefined) {
     layers.push({
       kind: PlotThemeLayerKind.Source,
       path: '$spec',
-      ...(input.plotDefaults === undefined ? {} : { defaults: input.plotDefaults }),
+      ...(input.defaultPlot === undefined ? {} : { defaults: input.defaultPlot }),
       ...(input.plotRules === undefined ? {} : { rules: input.plotRules }),
     });
   }

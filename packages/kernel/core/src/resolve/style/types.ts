@@ -36,3 +36,13 @@ export type EffectiveScopeDefaults = Readonly<{
 
 /** label 默认值经过级联后的有效视图 */
 export type EffectiveLabelDefault = Readonly<IRLabelDefault>;
+
+/** Scene 与几何消费的独立不透明度因子 */
+export type GraphicOpacityResolution = {
+  /** 主体整体不透明度 */
+  opacity?: number;
+  /** 填充区域不透明度 */
+  fillOpacity?: number;
+  /** 描边区域不透明度 */
+  strokeOpacity?: number;
+};

@@ -960,7 +960,7 @@ describe('Chart providers through Core compile', () => {
           PointMarkSchema.parse({
             type: 'point',
             encoding: { x: { field: 'x' }, y: { field: 'y' } },
-            opacity: { kind: 'constant', value: 0.25 },
+            opacity: { overall: { kind: 'constant', value: 0.25 } },
           }),
         ],
       }),

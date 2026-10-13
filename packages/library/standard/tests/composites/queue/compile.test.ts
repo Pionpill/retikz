@@ -27,7 +27,8 @@ it.each([
   const result = compile({
     ...base,
     items: [{ id: 'front' }, { id: 'back' }],
-    layout: { direction, width: 30, height: 20 },
+    layout: { direction },
+    defaultCell: { layout: { width: 30, height: 20 } },
   });
   expect(bounds(result, 'queue-cell')).toEqual([
     { x: coords[0], y: coords[1], width: 30, height: 20 },
@@ -38,8 +39,9 @@ it.each(['right', 'left', 'up', 'down'] as const)('%s边框只有两条独立边
   const props = {
     ...base,
     items: [{}],
-    layout: { direction, width: 20, height: 10 },
     padding: { left: 1, right: 3, top: 5, bottom: 7 },
+    layout: { direction },
+    defaultCell: { layout: { width: 20, height: 10 } },
   };
   const result = compile({ ...props, border: { meta: { outline: true } } });
   const border = flat(result.scene.primitives).find(p => p.type === 'path' && p.meta?.outline === true);
@@ -89,7 +91,12 @@ it('空队列无进出箭头，单格可同时附着进出箭头而不撑大allo
   expect(bounds(compile({ ...base, items: [], padding: 0, border: false }), 'container')).toEqual([
     { x: 0, y: 0, width: 0, height: 0 },
   ]);
-  const single = compile({ ...base, items: [{ id: 'only' }], layout: { width: 30, height: 20 }, ...labels });
+  const single = compile({
+    ...base,
+    items: [{ id: 'only' }],
+    ...labels,
+    defaultCell: { layout: { width: 30, height: 20 } },
+  });
   expect(bounds(single, 'container')).toEqual([{ x: 0, y: 0, width: 46, height: 36 }]);
   expect(
     flat(single.scene.primitives)
@@ -111,8 +118,8 @@ it('根frame、变换与外部连线命中实际单格，局部命名空间可�
         id: 'q',
         frame: { padding: 2, style: { stroke: 'red' } },
         items: [{ id: 'target' }],
-        layout: { width: 20, height: 10 },
         transforms: [{ kind: 'translate', x: 7, y: 11 }],
+        defaultCell: { layout: { width: 20, height: 10 } },
       },
       {
         type: 'path',
@@ -137,7 +144,7 @@ it('根frame、变换与外部连线命中实际单格，局部命名空间可�
   expect(bounds(result, 'queue-cell')).toHaveLength(2);
 });
 it('嵌套Queue免去额外单格留白，显式覆盖优先', () => {
-  const child = { ...base, items: ['A'], layout: { width: 20, height: 10 } };
+  const child = { ...base, items: ['A'], defaultCell: { layout: { width: 20, height: 10 } } };
   const nested = compile({ namespace: 'standard', type: 'array', items: [{ id: 'outer', content: child }] });
   const explicit = compile({
     namespace: 'standard',
@@ -176,8 +183,8 @@ it('父布局额外空间不拉伸单元或开放边框，过小的proposal失�
             child: {
               ...base,
               items: [{ id: 'a' }],
-              layout: { width: 20, height: 10 },
               border: { meta: { outline: true } },
+              defaultCell: { layout: { width: 20, height: 10 } },
             },
           },
         ],
@@ -248,7 +255,12 @@ it.each([
 ] as const)(
   '%s operation paths match manual Core geometry and preserve allocation',
   (direction, incoming, outgoing) => {
-    const source = { ...base, items: [{ id: 'cell' }], layout: { direction, width: 20, height: 10 } };
+    const source = {
+      ...base,
+      items: [{ id: 'cell' }],
+      layout: { direction },
+      defaultCell: { layout: { width: 20, height: 10 } },
+    };
     const actual = compile({ ...source, arrow: { input: true, output: true } });
     const disabled = compile({ ...source, arrow: { input: false, output: false } });
     const path = (points: ReadonlyArray<readonly [number, number]>) => ({

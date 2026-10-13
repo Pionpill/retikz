@@ -43,7 +43,7 @@ const textPrimitives = (source: ReturnType<typeof compileChart>): Array<Extract<
   );
 
 describe('Chart formal presentation, defaults, and Plot forwarding', () => {
-  it('accepts formal presentation regions and sparse chartDefaults', () => {
+  it('accepts formal presentation regions and sparse defaultChart', () => {
     const source = baseChart({
       presentation: {
         title: {
@@ -53,7 +53,7 @@ describe('Chart formal presentation, defaults, and Plot forwarding', () => {
         },
       },
       layout: { width: 640, height: 360, padding: 0, gap: 0 },
-      chartDefaults: {
+      defaultChart: {
         background: { fill: '#f8fafc' },
         layout: { padding: 12, gap: 4 },
         presentation: { title: { style: { font: { size: 22 } }, layout: { align: 'middle' } } },
@@ -68,7 +68,7 @@ describe('Chart formal presentation, defaults, and Plot forwarding', () => {
   it('does not create a title or other presentation region from defaults alone', () => {
     const output = compileChart(
       baseChart({
-        chartDefaults: {
+        defaultChart: {
           presentation: {
             title: { style: { font: { size: 28 } } },
             subtitle: { style: { opacity: 0 } },
@@ -85,12 +85,12 @@ describe('Chart formal presentation, defaults, and Plot forwarding', () => {
     const output = compileChart(
       baseChart({
         plotExtension: {
-          plotDefaults: { palette: { series: ['#0f766e'] } },
+          defaultPlot: { palette: { series: ['#0f766e'] } },
         },
       }),
     );
 
     expect(JSON.stringify(output.scene)).toContain('#0f766e');
-    expect(JSON.stringify(output.scene)).not.toContain('chartDefaults');
+    expect(JSON.stringify(output.scene)).not.toContain('defaultChart');
   });
 });

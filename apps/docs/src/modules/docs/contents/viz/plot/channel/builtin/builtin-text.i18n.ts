@@ -1,0 +1,43 @@
+import type { Lang } from '@/i18n';
+
+/** 试验场的双语文案 */
+export const builtinTextI18n = {
+  zh: {
+    title: '文字排版',
+    data: '数据',
+    rows: '文字数据',
+    typography: '节点内文本',
+    padding: '内边距',
+    textColor: '文字颜色',
+    align: '文字对齐',
+    start: '左对齐',
+    middle: '居中',
+    end: '右对齐',
+    fontSize: '字号',
+    lineHeight: '行高',
+    maxTextWidth: '最大文字宽度',
+    preset: '预设',
+    custom: '自定义',
+    compact: '紧凑文字',
+    large: '大号文字',
+  },
+  en: {
+    title: 'Text layout',
+    data: 'Data',
+    rows: 'Text data',
+    typography: 'Text inside nodes',
+    padding: 'padding',
+    textColor: 'textColor',
+    align: 'align',
+    start: 'Start',
+    middle: 'Middle',
+    end: 'End',
+    fontSize: 'font.size',
+    lineHeight: 'lineHeight',
+    maxTextWidth: 'maxTextWidth',
+    preset: 'Preset',
+    custom: 'Custom',
+    compact: 'Compact text',
+    large: 'Larger text',
+  },
+} satisfies Record<Lang, Record<string, string>>;

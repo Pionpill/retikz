@@ -203,7 +203,7 @@ describe('Code block root and composition semantics', () => {
     );
   });
 
-  it('passes graphDefaults to generated descendants and keeps empty composed content as one Block', () => {
+  it('passes defaultGraph to generated descendants and keeps empty composed content as one Block', () => {
     const definition = Graph.defineCodeBlock({
       namespace: 'test',
       type: 'service',
@@ -222,7 +222,7 @@ describe('Code block root and composition semantics', () => {
             namespace: 'test',
             type: 'service',
             name: 'Service',
-            graphDefaults: { entity: { style: { fill: '#fedcba' } } },
+            defaultGraph: { entity: { style: { fill: '#fedcba' } } },
           }),
         ],
       },

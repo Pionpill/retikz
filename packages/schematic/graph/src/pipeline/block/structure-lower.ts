@@ -20,7 +20,7 @@ const DEFAULT_SECTION_GAP = 4;
 
 const DEFAULT_SECTION_PADDING = 8;
 
-const DEFAULT_SECTION_BACKGROUND = { fill: 'currentColor', fillOpacity: 0.037 } as const;
+const DEFAULT_SECTION_BACKGROUND = { fill: 'currentColor', opacity: { fill: 0.037 } } as const;
 
 const DEFAULT_SECTION_BORDER = { stroke: 'none' } as const;
 

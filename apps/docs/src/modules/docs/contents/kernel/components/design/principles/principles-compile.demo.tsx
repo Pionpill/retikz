@@ -8,7 +8,7 @@ const Demo: FC = () => (
       id="ir"
       position={[-330, 30]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14, weight: 'bold' } }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 14, weight: 'bold' }, opacity: { fill: 0.08 } }}
     >
       IR
     </Node>
@@ -16,7 +16,7 @@ const Demo: FC = () => (
       id="lower"
       position={[-220, 30]}
       cornerRadius={4}
-      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08, font: { size: 13 } }}
+      style={{ stroke: 'dimgray', fill: 'dimgray', font: { size: 13 }, opacity: { fill: 0.08 } }}
     >
       composite lowering
     </Node>
@@ -24,7 +24,7 @@ const Demo: FC = () => (
       id="layout"
       position={[-50, 30]}
       cornerRadius={4}
-      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08, font: { size: 13 } }}
+      style={{ stroke: 'dimgray', fill: 'dimgray', font: { size: 13 }, opacity: { fill: 0.08 } }}
     >
       node / scope layout
     </Node>
@@ -32,7 +32,7 @@ const Demo: FC = () => (
       id="paths"
       position={[155, 30]}
       cornerRadius={4}
-      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08, font: { size: 13 } }}
+      style={{ stroke: 'dimgray', fill: 'dimgray', font: { size: 13 }, opacity: { fill: 0.08 } }}
     >
       path resolution
     </Node>
@@ -40,7 +40,7 @@ const Demo: FC = () => (
       id="scene"
       position={[295, 30]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14, weight: 'bold' } }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 14, weight: 'bold' }, opacity: { fill: 0.08 } }}
     >
       Scene assembly
     </Node>
@@ -48,7 +48,7 @@ const Demo: FC = () => (
       id="context"
       position={[-40, -50]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 12 } }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 12 }, opacity: { fill: 0.08 } }}
     >
       {'compile-local context\nregistries + services'}
     </Node>

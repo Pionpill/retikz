@@ -326,7 +326,7 @@ Set `strokeWidth` directly or use the semantic `thickness` presets from `ultraTh
 
 ### Gradient stroke
 
-Besides a plain color string, `stroke` accepts an `IRPaint`. Linear / radial / conic gradients, patterns, and images enter the same paint resource table; `dashPattern`, `dashOffset`, `lineCap`, `strokeOpacity`, and other stroke styles still apply to the line itself. Switch among the three gradients in the panel: linear uses a direction angle, radial uses a center and radius, and conic uses a center and start angle. They share the same three color stops. The curve shows the stroke result, while the swatch below makes the full gradient distribution easier to inspect.
+Besides a plain color string, `stroke` accepts an `IRPaint`. Linear / radial / conic gradients, patterns, and images enter the same paint resource table; `dashPattern`, `dashOffset`, `lineCap`, `opacity.stroke`, and other stroke styles still apply to the line itself. Switch among the three gradients in the panel: linear uses a direction angle, radial uses a center and radius, and conic uses a center and start angle. They share the same three color stops. The curve shows the stroke result, while the swatch below makes the full gradient distribution easier to inspect.
 
 <ComponentPreview
   files={['path-stroke-paint', 'path-stroke-paint.preview.tsx']}

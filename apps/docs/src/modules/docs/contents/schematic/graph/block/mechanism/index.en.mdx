@@ -62,7 +62,7 @@ Header, Section, and Row have independent composite definitions. Compilation mea
 
 The current Block shell starts from the effective Graph Theme baseline. Explicit background, border, and cornerRadius replace their corresponding top-level fields. An explicit border replaces the complete theme border; it does not inherit individual dash or opacity fields.
 
-Block graphDefaults / graphRules establish descendant context: defaults can affect Entity, Relation, Group, and Block; rules match Entity / Relation. They pass through known content boundaries without changing the current Block shell, ordinary Core children, or unknown composites. A local theme does not erase these author rules.
+Block defaultGraph / graphRules establish descendant context: defaults can affect Entity, Relation, Group, and Block; rules match Entity / Relation. They pass through known content boundaries without changing the current Block shell, ordinary Core children, or unknown composites. A local theme does not erase these author rules.
 
 The id enters Scope unchanged; Block adds no parent prefix. Enable localNamespace for isolated naming. Target resolution and boundary diagnostics use the same Core rules.
 

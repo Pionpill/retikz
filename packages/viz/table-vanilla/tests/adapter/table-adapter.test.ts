@@ -64,7 +64,7 @@ describe('Table Vanilla adapter', () => {
           legend: false,
         },
       ],
-      appearanceDefaults: { body: { content: { defaults: { style: { color: '#fafafa' } } } } },
+      defaultAppearance: { body: { content: { defaults: { style: { color: '#fafafa' } } } } },
     });
 
     const lowered = TableSchema.parse(
@@ -74,7 +74,7 @@ describe('Table Vanilla adapter', () => {
     expect(lowered).toEqual(spec);
     expect(lowered.rules).toEqual(spec.rules);
     expect(lowered.encodings).toEqual(spec.encodings);
-    expect(lowered.appearanceDefaults).toEqual(spec.appearanceDefaults);
+    expect(lowered.defaultAppearance).toEqual(spec.defaultAppearance);
   });
 
   it('returns table.table roots and the shared stable provider maker for every lower call', () => {

@@ -74,8 +74,7 @@ describe('Regression exact Source schema', () => {
           trend: {
             stroke: '#dc2626',
             strokeWidth: 2,
-            strokeOpacity: 0.8,
-            opacity: 0.9,
+            opacity: { stroke: 0.8, overall: 0.9 },
             lineCap: 'round',
             lineJoin: 'round',
             zIndex: 2,

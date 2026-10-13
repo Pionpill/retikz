@@ -730,7 +730,7 @@ describe('convertIRToReactNode', () => {
               { type: 'step', kind: 'line', to: [10, 10] },
               { type: 'step', kind: 'cycle' },
             ],
-            style: { fill: 'red', opacity: 0.8, fillOpacity: 0.4, strokeOpacity: 0.6 },
+            style: { fill: 'red', opacity: { overall: 0.8, fill: 0.4, stroke: 0.6 } },
           },
         ],
       };

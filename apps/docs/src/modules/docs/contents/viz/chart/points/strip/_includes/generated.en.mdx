@@ -64,8 +64,8 @@ Corresponds to `StripProperties`, Vanilla `properties` and IR `recipe.properties
 |                | `dotted`              | `boolean`                                                | Enables a dotted stroke                                                                                 |
 |                | `dashPattern`         | `Array<number>`                                          | Custom dash sequence; at least one entry, all entries nonnegative                                       |
 | Opacity        | `opacity`             | `number`                                                 | Overall opacity, from 0 to 1                                                                            |
-|                | `fillOpacity`         | `number`                                                 | Fill opacity, from 0 to 1                                                                               |
-|                | `strokeOpacity`       | `number`                                                 | Stroke opacity, from 0 to 1                                                                             |
+|                | `opacity.fill`        | `number`                                                 | Fill opacity, from 0 to 1                                                                               |
+|                | `opacity.stroke`      | `number`                                                 | Stroke opacity, from 0 to 1                                                                             |
 | Jitter         | `jitter.span`         | `IRStripChartJitter['span']`                             | Total spread; a number uses role output units, ratio uses 0–1 of tick spacing                           |
 |                | `jitter.distribution` | `IRStripChartJitter['distribution']`                     | Uniform or truncated normal; positive sigma is relative to half the spread                              |
 |                | `jitter.seed`         | `number`                                                 | Repeatable placement for identical ordered data and settings; default 0                                 |

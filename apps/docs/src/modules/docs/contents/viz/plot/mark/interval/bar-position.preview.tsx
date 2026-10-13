@@ -33,14 +33,16 @@ export const BarPositionPreview = (values: BarPositionPreviewValues) => {
           direction={isPolar ? undefined : values.direction}
           color="quarter"
           cornerRadius={values.cornerRadius}
-          fillOpacity={values.fillOpacity}
+          opacity={{ fill: values.fillOpacity }}
           stroke="#ffffff"
           strokeWidth={values.strokeWidth}
           shadow={shadow}
-          label={label}
-          labelPosition={isHorizontal ? 'right' : 'top'}
-          labelDistance={6}
-          labelFont={{ size: 10, weight: 'bold' }}
+          label={{
+            field: label,
+            position: isHorizontal ? 'right' : 'top',
+            distance: 6,
+            font: { size: 10, weight: 'bold' },
+          }}
         />
         <BuiltinPlotScale
           dimension={isHorizontal ? 'y' : 'x'}

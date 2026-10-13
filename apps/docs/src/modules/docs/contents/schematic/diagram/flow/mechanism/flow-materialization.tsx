@@ -22,8 +22,8 @@ const FlowMaterialization: FC<FlowMaterializationProps> = props => {
         id="output"
         position={[0, 85]}
         label={{ text: t.output, font: { size: 12 }, opacity: 0.8 }}
-        style={{ font: { size: 13 } }}
         data={{ id: 'receive', bounds: { x: 240, y: 120, width: 80, height: 40 } }}
+        defaultCell={{ style: { font: { size: 13 } } }}
       />
       <Node
         id="graph"
@@ -55,8 +55,8 @@ const FlowMaterialization: FC<FlowMaterializationProps> = props => {
         id="artifact"
         position={[360, 175]}
         label={{ text: t.artifact, font: { size: 12 }, opacity: 0.8 }}
-        style={{ font: { size: 13 } }}
         data={{ kind: 'entity', bounds: { x: 240, y: 120, width: 80, height: 40 } }}
+        defaultCell={{ style: { font: { size: 13 } } }}
       />
       <Path way={['output.right', [260, 176]]} />
       <Path way={[[260, 176], [260, 60], 'graph.left']} arrow="->" />

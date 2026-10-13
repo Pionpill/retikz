@@ -25,7 +25,7 @@ const extensionChannelsOf = (mark: {
 const intensityChannel = defineNodeChannel<number>({
   channel: 'intensity',
   output: { outputKind: 'number', range: [0.2, 1] },
-  resolve: () => mark => {
+  resolve: (_ctx, mark) => {
     const binding = extensionChannelsOf(mark).intensity;
     if (binding?.field === undefined) return undefined;
 

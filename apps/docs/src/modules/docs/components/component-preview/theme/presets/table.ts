@@ -12,7 +12,7 @@ const line = (stroke: string, width: number) => ({ kind: 'line' as const, stroke
 const styles = {
   academic: {
     light: {
-      appearanceDefaults: {
+      defaultAppearance: {
         body: {
           content: {
             defaults: {
@@ -34,10 +34,10 @@ const styles = {
         },
       },
       layout: { borders: { outer: { top: line('#111111', 1.2), bottom: line('#111111', 1.2) } } },
-      visualDefaults: { sequential: ['#f7fbff', '#08306b'] },
+      defaultVisual: { sequential: ['#f7fbff', '#08306b'] },
     },
     dark: {
-      appearanceDefaults: {
+      defaultAppearance: {
         body: {
           background: { fill: '#111111' },
           content: {
@@ -61,12 +61,12 @@ const styles = {
         },
       },
       layout: { borders: { outer: { top: line('#f5f5f5', 1.2), bottom: line('#f5f5f5', 1.2) } } },
-      visualDefaults: { sequential: ['#1e3a5f', '#90caf9'] },
+      defaultVisual: { sequential: ['#1e3a5f', '#90caf9'] },
     },
   },
   vibrant: {
     light: {
-      appearanceDefaults: {
+      defaultAppearance: {
         body: {
           background: { fill: '#e5ecf6' },
           content: { defaults: { style: { color: '#2a3f5f' } } },
@@ -83,10 +83,10 @@ const styles = {
           vertical: line('#ffffff', 1),
         },
       },
-      visualDefaults: { sequential: ['#dbeafe', '#2563eb'] },
+      defaultVisual: { sequential: ['#dbeafe', '#2563eb'] },
     },
     dark: {
-      appearanceDefaults: {
+      defaultAppearance: {
         body: {
           background: { fill: '#111827' },
           content: { defaults: { style: { color: '#f0f6fc' } } },
@@ -107,14 +107,14 @@ const styles = {
   },
   clean: {
     light: {
-      appearanceDefaults: {
+      defaultAppearance: {
         body: { background: { fill: 'none' }, content: { defaults: { style: { color: 'currentColor' } } } },
         columnHeader: { background: { fill: 'none' }, content: { defaults: { style: { color: 'currentColor' } } } },
       },
       layout: { borders: { horizontal: { kind: 'none' } } },
     },
     dark: {
-      appearanceDefaults: {
+      defaultAppearance: {
         body: { background: { fill: 'none' }, content: { defaults: { style: { color: 'currentColor' } } } },
         columnHeader: { background: { fill: 'none' }, content: { defaults: { style: { color: 'currentColor' } } } },
       },

@@ -55,7 +55,7 @@ describe('Flow Group Graph surface', () => {
       zIndex: 4,
       boundingShape: 'circle',
       meta: { owner: 'runtime' },
-      graphDefaults: { entity: { style: { textColor: 'red' } } },
+      defaultGraph: { entity: { style: { textColor: 'red' } } },
     });
     const parsed = Flow.FlowDiagramSchema.parse(source);
 
@@ -83,7 +83,7 @@ describe('Flow Group Graph surface', () => {
   it('merges both caption text defaults without creating absent text items', () => {
     const source = {
       ...flow({ caption: { description: { text: 'Detail', font: { weight: 700 } } } }),
-      flowDefaults: {
+      defaultFlow: {
         group: {
           caption: {
             side: 'bottom' as const,
@@ -122,7 +122,7 @@ describe('Flow Group Graph surface', () => {
       groups: [
         {
           id: 'outer',
-          graphDefaults: {
+          defaultGraph: {
             entity: { layout: { maxTextWidth: 45 } },
             group: { border: { stroke: 'red' } },
             relation: { style: { stroke: 'red' } },

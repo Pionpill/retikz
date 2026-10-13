@@ -11,6 +11,7 @@ import { useDemoLocationContext } from './context';
 import { PreviewThemeBoundary } from './context-bar';
 import { usePreviewDemoModule } from './hooks';
 import { DemoRenderer } from './preview-panel';
+import { PreviewErrorBoundary } from './PreviewErrorBoundary';
 import { resolveDemoKey } from './registry';
 import { usePreviewTheme } from './theme';
 import type { ComponentPreviewFiles } from './types';
@@ -53,31 +54,37 @@ export const ComponentPreviewThumbnail: FC<ComponentPreviewThumbnailProps> = pro
   return (
     <div
       data-slot="component-preview-thumbnail"
+      data-demo-name={name}
+      data-demo-render
       className={cn(
         'flex aspect-2/1 w-full items-center justify-center overflow-hidden bg-muted/20 p-4 pointer-events-none select-none',
         '[&_canvas]:max-h-full [&_canvas]:max-w-full [&_svg]:max-h-full [&_svg]:max-w-full',
         className,
       )}
     >
-      {Component ? (
-        <PreviewThemeBoundary themeMode={themeMode} className="flex h-full w-full items-center justify-center">
-          <AnimationModeProvider mode={animationMode}>
-            <DemoRenderer Component={Component} rendererMode={rendererMode} theme={theme} />
-          </AnimationModeProvider>
-        </PreviewThemeBoundary>
-      ) : moduleState.status === 'loading' ? (
-        <span
-          data-slot="component-preview-thumbnail-loading"
-          className="h-full w-full animate-pulse rounded-md bg-muted/40"
-          aria-hidden
-        />
-      ) : moduleState.status === 'error' ? (
-        <span className="text-xs text-destructive">Failed to load demo {name}</span>
-      ) : (
-        <span className="text-xs text-muted-foreground">
-          Demo <code>{name}</code> not found
-        </span>
-      )}
+      <PreviewErrorBoundary key={key}>
+        {Component ? (
+          <PreviewThemeBoundary themeMode={themeMode} className="flex h-full w-full items-center justify-center">
+            <AnimationModeProvider mode={animationMode}>
+              <DemoRenderer Component={Component} rendererMode={rendererMode} theme={theme} />
+            </AnimationModeProvider>
+          </PreviewThemeBoundary>
+        ) : moduleState.status === 'loading' ? (
+          <span
+            data-slot="component-preview-thumbnail-loading"
+            className="h-full w-full animate-pulse rounded-md bg-muted/40"
+            aria-hidden
+          />
+        ) : moduleState.status === 'error' ? (
+          <span data-demo-error className="text-xs text-destructive">
+            Failed to load demo {name}
+          </span>
+        ) : (
+          <span data-demo-error className="text-xs text-muted-foreground">
+            Demo <code>{name}</code> not found
+          </span>
+        )}
+      </PreviewErrorBoundary>
     </div>
   );
 };

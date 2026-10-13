@@ -103,8 +103,8 @@ const FlowMeasurement: FC<FlowMeasurementProps> = props => {
         id="input"
         position={[118, 170]}
         label={{ text: t.input, position: 'left', font: { size: 12 }, opacity: 0.8 }}
-        style={{ font: { size: 13 } }}
         data={{ kind: 'leaf', id: 'receive', size: { width: 80, height: 40 } }}
+        defaultCell={{ style: { font: { size: 13 } } }}
       />
       <Path
         way={['group.bottom', 'input.top']}

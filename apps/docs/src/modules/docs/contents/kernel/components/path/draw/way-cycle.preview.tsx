@@ -36,7 +36,7 @@ export const WayCyclePreview = (values: WayCyclePreviewValues) => {
       )}
       <Draw
         way={presentation.way}
-        style={{ stroke: 'dodgerblue', strokeWidth: 2, fill: presentation.fill, fillOpacity: 0.16 }}
+        style={{ stroke: 'dodgerblue', strokeWidth: 2, fill: presentation.fill, opacity: { fill: 0.16 } }}
       />
     </Layout>
   );

@@ -75,15 +75,15 @@ describe('Table plain authoring', () => {
         legend: false,
       },
     ];
-    const tableDefaults = {
-      appearanceDefaults: { body: { content: { defaults: { style: { color: '#27272a' } } } } },
+    const defaultTable = {
+      defaultAppearance: { body: { content: { defaults: { style: { color: '#27272a' } } } } },
     } as const;
     const input: DetailTableInput = {
       dataRef: 'scores',
       columns: [{ id: 'score', field: 'score', formatter }],
       rules,
       encodings,
-      tableDefaults,
+      defaultTable,
     };
     const spec = createDetailTableIR(input);
 
@@ -91,12 +91,12 @@ describe('Table plain authoring', () => {
       structure: { columns: [{ id: 'score', field: 'score', formatter }] },
       rules,
       encodings,
-      tableDefaults,
+      defaultTable,
     });
     expect(spec.structure.columns[0]).not.toBe(input.columns[0]);
     expect(spec.rules).not.toBe(rules);
     expect(spec.encodings).not.toBe(encodings);
-    expect(spec.tableDefaults).not.toBe(tableDefaults);
+    expect(spec.defaultTable).not.toBe(defaultTable);
 
     formatter.options.maximumFractionDigits = 3;
     rules[0].selector.fields!.push('ignored');
@@ -155,12 +155,12 @@ describe('Table plain authoring', () => {
         legend: false,
       },
     ];
-    const tableDefaults = { appearanceDefaults: { body: { background: { fill: '#18181b' } } } } as const;
+    const defaultTable = { defaultAppearance: { body: { background: { fill: '#18181b' } } } } as const;
     const input: ManualTableInput = {
       rows,
       rules,
       encodings,
-      tableDefaults,
+      defaultTable,
     };
     const spec = createManualTableIR(input);
 
@@ -168,13 +168,13 @@ describe('Table plain authoring', () => {
       structure: { rows },
       rules,
       encodings,
-      tableDefaults,
+      defaultTable,
     });
     expect(spec.structure.rows).not.toBe(rows);
     expect(spec.structure.rows[0]?.[0]).not.toBe(rows[0]?.[0]);
     expect(spec.rules).not.toBe(rules);
     expect(spec.encodings).not.toBe(encodings);
-    expect(spec.tableDefaults).not.toBe(tableDefaults);
+    expect(spec.defaultTable).not.toBe(defaultTable);
 
     const inputCell = rows[0]?.[0];
     if (typeof inputCell !== 'object' || inputCell === null || !('formatter' in inputCell)) {

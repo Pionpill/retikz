@@ -19,7 +19,7 @@ export const WaterfallPreview = (values: WaterfallPreviewValues) => (
       data={waterfallRows}
       width={420}
       height={260}
-      plotDefaults={{ palette: { categorical: ['#16a34a', '#dc2626'] } }}
+      defaultPlot={{ palette: { categorical: ['#16a34a', '#dc2626'] } }}
       transformDefinitions={[waterfallTransform]}
       transformImplementations={[waterfallTransformImplementation]}
     >

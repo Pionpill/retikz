@@ -68,9 +68,9 @@ An empty array or zero count means an empty stack. Its default open container is
 
 ### Arrange cells and border
 
-layout.direction supports up, down, left and right. The open end follows the direction without changing input order. layout.width/height always mean physical cell dimensions. Cells retain their main-axis sizes; auto cells fill the largest cross-axis demand, while smaller fixed cells are centered without stretching.
+layout.direction supports up, down, left and right. The open end follows the direction without changing input order. defaultCell.layout.width/height always mean physical cell dimensions. Cells retain their main-axis sizes; auto cells fill the largest cross-axis demand, while smaller fixed cells are centered without stretching.
 
-layout.gap defaults to 8, larger than the nested Array/Map default of 2 so outer items remain visually distinct. layout.padding controls cell padding; root padding controls container padding, both defaulting to 8. border draws three sides by default. Use `border={{ style: { stroke: 'dodgerblue', dashPattern: [4, 3] } }}` to configure the outline. false hides only the border and preserves padding. Root frame retains the general container decoration contract independently.
+layout.gap defaults to 8, larger than the nested Array/Map default of 2 so outer items remain visually distinct. defaultCell.layout.padding controls cell padding; root padding controls container padding, both defaulting to 8. border draws three sides by default. Use `border={{ style: { stroke: 'dodgerblue', dashPattern: [4, 3] } }}` to configure the outline. false hides only the border and preserves padding. Root frame retains the general container decoration contract independently.
 
 arrow defaults to false. Set it to true to enable both arrows at the open top, or configure input and output independently with an object; omitted sides stay hidden. In the default upward layout, input follows a horizontal-then-vertical `-|` bend and output follows a vertical-then-horizontal `|-` bend. Other directions rotate the arrangement. Each accepts true, false, or an appearance object. style controls color, width and dashes; arrowDetail controls the arrow-tip shape, size and color. Arrows do not change cell or container allocation and are hidden when empty. label remains the overall text label.
 

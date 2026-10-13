@@ -87,18 +87,18 @@ export const resolveChartTheme = (
   }>,
 ): ChartThemeResolution => {
   let defaults = neutralChartDefaultsOf(context.theme.mode);
-  let plotDefaults: IRPlotDefaults | undefined;
+  let defaultPlot: IRPlotDefaults | undefined;
 
   for (const definition of context.themeDefinitions) {
     defaults = mergeChartDefaults(defaults, definition.defaults);
-    plotDefaults = mergePlotDefaults(plotDefaults, definition.plotDefaults);
+    defaultPlot = mergePlotDefaults(defaultPlot, definition.defaultPlot);
   }
 
-  defaults = mergeChartDefaults(defaults, source.chartDefaults);
+  defaults = mergeChartDefaults(defaults, source.defaultChart);
 
   return {
     defaults,
-    ...(plotDefaults === undefined || Object.keys(plotDefaults).length === 0 ? {} : { plotDefaults }),
+    ...(defaultPlot === undefined || Object.keys(defaultPlot).length === 0 ? {} : { defaultPlot }),
     mode: context.theme.mode,
   };
 };

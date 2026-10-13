@@ -22,7 +22,7 @@ const stageNode = (stage: Stage) => (
     id={stage.id}
     position={[stage.x, 0]}
     cornerRadius={4}
-    style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16 }}
+    style={{ stroke: 'gray', fill: 'lightgray', opacity: { fill: 0.16 } }}
     layout={{
       minimumSize: { width: stage.id === 'tracks' || stage.id === 'place' ? 144 : 122, height: 50 },
       align: 'middle',
@@ -47,7 +47,7 @@ const Demo: FC = () => (
       id="output"
       position={[95, 62]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 12, weight: 'bold' } }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 12, weight: 'bold' }, opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 144, height: 34 } }}
     >
       Final replay

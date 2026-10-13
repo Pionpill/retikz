@@ -40,25 +40,26 @@ export const renderArrayStylesPreview = (values: ArrayStylesPreviewValues) => (
             }
           : false
       }
-      layout={{
-        direction: values.direction,
-        width: values.widthMode === 'fixed' ? values.width : values.widthMode,
-        height: values.autoHeight ? 'auto' : values.height,
-        padding: values.padding,
-        gap: values.gap,
-      }}
-      style={{
-        fill: values.fill,
-        fillOpacity: 0.25,
-        stroke: values.stroke,
-        strokeWidth: values.strokeWidth,
-        cornerRadius: values.cornerRadius,
-        font: { size: values.fontSize },
-      }}
       items={['A', 'B1', 'C'].map(content => ({
         content,
-        ...(content === 'B1' && values.override ? { style: { fill: '#2563eb', fillOpacity: 0.4 } } : {}),
+        ...(content === 'B1' && values.override ? { style: { fill: '#2563eb', opacity: { fill: 0.4 } } } : {}),
       }))}
+      layout={{ direction: values.direction, gap: values.gap }}
+      defaultCell={{
+        style: {
+          fill: values.fill,
+          stroke: values.stroke,
+          strokeWidth: values.strokeWidth,
+          cornerRadius: values.cornerRadius,
+          font: { size: values.fontSize },
+          opacity: { fill: 0.25 },
+        },
+        layout: {
+          width: values.widthMode === 'fixed' ? values.width : values.widthMode,
+          height: values.autoHeight ? 'auto' : values.height,
+          padding: values.padding,
+        },
+      }}
     />
   </Layout>
 );

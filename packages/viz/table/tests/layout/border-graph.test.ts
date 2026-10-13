@@ -622,7 +622,7 @@ describe('Table Border Graph', () => {
               kind: 'line' as const,
               priority: 0,
               line: line(),
-              defaults: { path: '$spec/tableDefaults' },
+              defaults: { path: '$spec/defaultTable' },
             },
           },
         },

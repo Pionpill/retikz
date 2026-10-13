@@ -8,7 +8,6 @@ import {
   defineFieldFormat,
   resolveFormatRegistry,
 } from '../../src';
-import { isBuiltinFieldFormat } from '../../src/providers/format';
 
 /** 读取已注册内置 format；缺失时让测试直接失败 */
 const formatOf = (name: string) => {
@@ -52,12 +51,6 @@ describe('field format provider runtime', () => {
     for (const value of ['', '50', '%', Number.POSITIVE_INFINITY]) {
       expect(Number.isNaN(percent.parse(value))).toBe(true);
     }
-  });
-
-  it('recognizes only built-in format names', () => {
-    for (const format of Object.values(BuiltinDataFieldFormat)) expect(isBuiltinFieldFormat(format)).toBe(true);
-
-    expect(isBuiltinFieldFormat('currency')).toBe(false);
   });
 
   it('registers custom formats without mutating subsequent registries', () => {

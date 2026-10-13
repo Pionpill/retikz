@@ -39,7 +39,7 @@ export const renderBubbleBasicPreview = (
       <BubbleProperties
         strokeWidth={values.pointStrokeWidth}
         {...(values.pointStrokeEnabled ? { stroke: values.pointStroke } : {})}
-        {...(values.pointFillOpacity === 0.7 ? {} : { fillOpacity: values.pointFillOpacity })}
+        {...(values.pointFillOpacity === 0.7 ? {} : { opacity: { fill: values.pointFillOpacity } })}
         shape={values.pointShape}
       />
     </BubbleChart>

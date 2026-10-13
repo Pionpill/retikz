@@ -21,23 +21,25 @@ const CoordinateStorage: FC<CoordinateStorageProps> = props => {
         position={[20, 35]}
         label={{ text: t.input, opacity: 0.8, font: { size: 12 } }}
         data={{ id: 'hub', position: [40, 20] }}
-        layout={{ height: 30, padding: 4 }}
-        style={{ font: { size: 13 } }}
+        defaultCell={{ style: { font: { size: 13 } }, layout: { height: 30, padding: 4 } }}
       />
       <Map
         position={[20, 175]}
         label={{ text: t.map, position: 'bottom', opacity: 0.8, font: { size: 12 } }}
-        layout={{ height: 32, padding: 0, key: { width: 60 }, value: { width: 145 } }}
-        style={{ fill: 'dodgerblue', font: { size: 13 } }}
         entries={[{ key: { id: 'hub-key', content: 'hub' }, value: { id: 'hub-entry', content: '{ layout, state }' } }]}
+        defaultCell={{
+          style: { fill: 'dodgerblue', font: { size: 13 } },
+          layout: { height: 32, padding: 0 },
+          key: { layout: { width: 60 } },
+          value: { layout: { width: 145 } },
+        }}
       />
       <Map
         id="record"
         position={[410, 35]}
         label={{ text: t.record, opacity: 0.8, font: { size: 12 } }}
-        layout={{ padding: 6 }}
-        style={{ font: { size: 13 } }}
         data={{ state: 'resolved', layout: { rect: { x: 40, y: 20, width: 0, height: 0 } } }}
+        defaultCell={{ style: { font: { size: 13 } }, layout: { padding: 6 } }}
       />
       <Node
         id="result"
@@ -45,7 +47,7 @@ const CoordinateStorage: FC<CoordinateStorageProps> = props => {
         text="[40, 20]"
         cornerRadius={8}
         label={{ text: t.result, position: 'bottom', textColor: 'gray', font: { size: 12 } }}
-        style={{ fill: 'dodgerblue', fillOpacity: 0.14, stroke: 'none', font: { size: 13 } }}
+        style={{ fill: 'dodgerblue', stroke: 'none', font: { size: 13 }, opacity: { fill: 0.14 } }}
       />
       <Draw
         way={[

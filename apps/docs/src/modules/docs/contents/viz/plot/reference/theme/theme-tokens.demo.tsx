@@ -13,7 +13,7 @@ const points = [
 ];
 
 /** Plot defaults 通过 IRPlot 局部 defaults cascade 进入 Plot area、axis 与 palette */
-const plotDefaults = {
+const defaultPlot = {
   typography: { textColor: '#2563EB' },
   plotArea: { fill: 0.08 },
   palette: { categorical: ['#2563EB', '#F97316'] },
@@ -32,7 +32,7 @@ const plotRules = [
 export default function ThemeTokensDemo() {
   return (
     <Layout>
-      <Plot data={points} width={440} height={270} plotDefaults={plotDefaults} plotRules={plotRules}>
+      <Plot data={points} width={440} height={270} defaultPlot={defaultPlot} plotRules={plotRules}>
         <PointMark x="x" y="y" color="series" size={8} />
         <PlotAxis dimension="x" />
         <PlotAxis dimension="y" />

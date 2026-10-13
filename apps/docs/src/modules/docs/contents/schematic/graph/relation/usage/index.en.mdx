@@ -234,7 +234,7 @@ The polyline must include its own endpoints and bends. Relation neither adds end
 ## Errors and limitations
 
 - Unregistered roles, kinds, or predicates, mismatched role / kind, invalid directions, and invalid predicate parameters cause errors. There are no built-in predicates.
-- `style` excludes fill, fillOpacity, and fillRule. Relation does not expose arbitrary Path marks. Use Core Path when you need them.
+- `style` excludes fill and fillRule. Relation does not expose arbitrary Path marks. Use Core Path when you need them.
 - Within Graph, Entity and Relation values with the same `group` share a categorical color. This is distinct from the Group container; standalone Relations do not allocate group colors. Status and group colors supply defaults; explicit appearance and matching author rules take precedence.
 
 ## Related props

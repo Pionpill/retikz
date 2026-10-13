@@ -16,7 +16,7 @@ export const renderChainPreview = (values: ChainPreviewValues) => (
       id="chain"
       skeleton={{ items: ['A', { branches: [['B', 'C'], ['D']] }, 'E'] }}
       label={{ text: values.label, position: 'top' }}
-      connection={{
+      defaultConnection={{
         ...(values.route === '-|-' || values.route === '|-|'
           ? { route: values.route, fraction: values.fraction }
           : { route: values.route }),

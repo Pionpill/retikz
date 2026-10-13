@@ -37,8 +37,6 @@ describe('Array / Map provider assembly', () => {
       children: [
         map({
           id: 'map',
-          layout: { overflow: 'clip', key: { width: 60 }, value: { width: 100 } },
-          style: { key: { fill: 'blue' }, value: { fillOpacity: 0.2 } },
           entries: [
             {
               key: 'key',
@@ -47,6 +45,11 @@ describe('Array / Map provider assembly', () => {
               },
             },
           ],
+          defaultCell: {
+            layout: { overflow: 'clip' },
+            key: { style: { fill: 'blue' }, layout: { width: 60 } },
+            value: { style: { opacity: { fill: 0.2 } }, layout: { width: 100 } },
+          },
         }),
       ],
     });
@@ -55,8 +58,10 @@ describe('Array / Map provider assembly', () => {
     const result = compileToScene(normalized.ir, options);
 
     expect(normalized.ir.children[0]).toMatchObject({
-      layout: { key: { width: 60 }, value: { width: 100 } },
-      style: { key: { fill: 'blue' }, value: { fillOpacity: 0.2 } },
+      defaultCell: {
+        key: { style: { fill: 'blue' }, layout: { width: 60 } },
+        value: { style: { opacity: { fill: 0.2 } }, layout: { width: 100 } },
+      },
     });
     expect(JSON.stringify(normalized.ir)).toContain('"key":"key"');
     expect(result.scene.resources?.some(resource => resource.kind === 'clip')).toBe(true);
@@ -67,8 +72,8 @@ describe('Array / Map provider assembly', () => {
 
 it('assembles both data definitions and clipping from either root adapter', () => {
   for (const child of [
-    map({ data: { values: [1, { id: 'a' }] }, layout: { width: 30 } }),
-    array({ data: [{ values: [1, 1] }], layout: { height: 20 } }),
+    map({ data: { values: [1, { id: 'a' }] }, defaultCell: { layout: { width: 30 } } }),
+    array({ data: [{ values: [1, 1] }], defaultCell: { layout: { height: 20 } } }),
   ]) {
     const normalized = normalizeScene(scene({ children: [child] }), { adapters: StandardInputEmbedAdapters });
     const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
@@ -84,8 +89,8 @@ it('assembles both data definitions and clipping from either root adapter', () =
 
 it('骨架与空单元格通过公开 adapter 装配裁切依赖并保留输入', () => {
   for (const child of [
-    array({ skeleton: { count: 2 }, layout: { width: 30 } }),
-    map({ skeleton: { keys: ['k'] }, layout: { height: 20 } }),
+    array({ skeleton: { count: 2 }, defaultCell: { layout: { width: 30 } } }),
+    map({ skeleton: { keys: ['k'] }, defaultCell: { layout: { height: 20 } } }),
     array({ items: [{}] }),
   ]) {
     const normalized = normalizeScene(scene({ children: [child] }), { adapters: StandardInputEmbedAdapters });

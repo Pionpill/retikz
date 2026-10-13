@@ -9,13 +9,13 @@ const Demo: FC = () => (
       position={[-270, 30]}
       cornerRadius={4}
       text={[{ text: 'parse/', font: { size: 14, weight: 'bold' } }, 'sugar → IR']}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 13 }, opacity: { fill: 0.08 } }}
     />
     <Node
       id="ir"
       position={[-115, 30]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14, weight: 'bold' } }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 14, weight: 'bold' }, opacity: { fill: 0.08 } }}
     >
       IR
     </Node>
@@ -24,13 +24,13 @@ const Demo: FC = () => (
       position={[70, 30]}
       cornerRadius={4}
       text={[{ text: 'compile/', font: { size: 14, weight: 'bold' } }, 'IR → Scene']}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 13 }, opacity: { fill: 0.08 } }}
     />
     <Node
       id="scene"
       position={[255, 30]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14, weight: 'bold' } }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 14, weight: 'bold' }, opacity: { fill: 0.08 } }}
     >
       Scene
     </Node>
@@ -40,20 +40,20 @@ const Demo: FC = () => (
       position={[-115, -65]}
       cornerRadius={4}
       text={[{ text: 'schemas/', font: { size: 14, weight: 'bold' } }, 'IR truth']}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 13 }, opacity: { fill: 0.08 } }}
     />
     <Node
       id="contract"
       position={[70, -108]}
       cornerRadius={4}
       text={[{ text: 'contract/', font: { size: 14, weight: 'bold' } }, 'Definition protocol']}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 13 }, opacity: { fill: 0.08 } }}
     />
     <Node
       id="shared"
       position={[0, 112]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06, font: { size: 13 } }}
+      style={{ stroke: 'gray', fill: 'gray', font: { size: 13 }, opacity: { fill: 0.06 } }}
       layout={{ minimumSize: { width: 620, height: 42 } }}
     >
       shared/ · pure vocabulary + utilities
@@ -63,7 +63,7 @@ const Demo: FC = () => (
       position={[70, -43]}
       cornerRadius={4}
       text={[{ text: 'providers/', font: { size: 14, weight: 'bold' } }, 'built-ins + registry']}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 13 }, opacity: { fill: 0.08 } }}
     />
 
     <Draw way={['parse', 'ir']} arrow="->" />

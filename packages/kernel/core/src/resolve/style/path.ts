@@ -1,8 +1,9 @@
 import { mergeProperties } from '@retikz/foundation';
 
-import type { IRGeometryLabel, IRPathBase, IRStep } from '../../schemas';
+import type { IRGeometryLabel, IRPathBase, IRPathStyle, IRStep } from '../../schemas';
 import { resolvePathMarks } from './arrow';
 import { resolveGeometryLabel } from './label';
+import { mergeGraphicStyle } from './opacity';
 import type { EffectiveLabelDefault, EffectiveScopeDefaults } from './types';
 
 /** 替换 path children 中各 step 的 label 为已解析 effective label */
@@ -35,10 +36,7 @@ const resolveGeometryLabelField = (
 /** 解析 path 的最终样式 */
 export const resolveEffectivePath = (path: IRPathBase, scopeDefaults: EffectiveScopeDefaults): IRPathBase => {
   const defaults = scopeDefaults.path;
-  const style = {
-    ...defaults?.style,
-    ...mergeProperties([path.style ?? {}], { shouldOverride: value => value !== undefined }),
-  };
+  const style = mergeGraphicStyle<IRPathStyle>(defaults?.style, path.style);
   const masterColor = style.color;
   const effective: IRPathBase = {
     ...defaults?.geometry,

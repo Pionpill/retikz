@@ -27,12 +27,16 @@ const labelContentChannel = (mark: IRPlotMarkOperation): IRPlotTextChannel | IRP
   return Array.isArray(label) ? label[0]?.content : label?.content;
 };
 
-/** 创建内置 text channel definitions */
+/**
+ * 创建内置 text channel definitions
+ * @param options 按图元标识注入标签回调；省略时只读取声明的标签绑定
+ * @returns 包含 label 通道的新定义集合
+ */
 export const createBuiltinTextChannels = (options: BuiltinTextChannelOptions = {}): BuiltinTextChannels => ({
   label: {
     channel: 'label',
     kind: ChannelDefinitionKind.Mark,
-    resolve: ctx => mark => {
+    resolve: (ctx, mark) => {
       const content = labelContentChannel(mark);
       const id = (mark as { id?: string }).id;
       const runtime = id !== undefined ? options.resolveLabel?.[id] : undefined;

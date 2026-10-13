@@ -42,10 +42,10 @@ it('preserves Graph Group captions, labels and local context through React and V
     id: 'service',
     caption: { description: { text: ['Service', 'Runtime boundary'] }, side: 'bottom' as const },
     labels: [{ text: 'Internal', position: 'bottom' as const }],
-    graphDefaults: { entity: { style: { font: { size: 18 } } } },
+    defaultGraph: { entity: { style: { font: { size: 18 } } } },
     graphRules: [{ type: 'entity' as const, selector: { role: 'concept' }, style: { textColor: 'red' } }],
     meta: { owner: 'service' },
-    style: { opacity: 0.8 },
+    defaults: { style: { opacity: { overall: 0.8 } } },
     zIndex: 2,
   };
   const input = createInputScene(
@@ -165,7 +165,7 @@ const expectedSource = {
       routing: { kind: 'orthogonal', cornerRadius: 0 },
     },
   ],
-  flowDefaults: { layout: { nodeGap: 0, rankGap: 48 } },
+  defaultFlow: { layout: { nodeGap: 0, rankGap: 48 } },
 };
 
 describe('@retikz/diagram-react/flow', () => {
@@ -250,7 +250,7 @@ describe('@retikz/diagram-react/flow', () => {
       const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) }).ir.children[0];
 
       expect(FlowDiagramSchema.parse(react)).toEqual(direct);
-      expect(normalizeFlowDiagram(source)).toEqual(direct);
+      expect(FlowDiagramSchema.parse(normalizeFlowDiagram(source))).toEqual(direct);
 
       const result = processToStaticInputResult(input.scene, {
         adapters: synchronousAdapters(input.adapters),
@@ -264,8 +264,8 @@ describe('@retikz/diagram-react/flow', () => {
   it('preserves Source-shaped defaults and instance paths through typed React and Vanilla authoring', () => {
     const props = {
       presentation: { title: { text: 'Pipeline', style: { font: { size: 21 } } } },
-      diagramDefaults: { presentation: { title: { style: { opacity: 0.8 } } } },
-      flowDefaults: { entity: { layout: { maxTextWidth: 180 } }, relation: { labelFont: { size: 11 } } },
+      defaultDiagram: { presentation: { title: { style: { opacity: 0.8 } } } },
+      defaultFlow: { entity: { layout: { maxTextWidth: 180 } }, relation: { labelFont: { size: 11 } } },
       graphRules: [{ type: 'entity' as const, selector: { role: 'concept' }, style: { color: 'dodgerblue' } }],
     } satisfies FlowReact.FlowDiagramProps;
     const entity = { id: 'node', text: 'Node', layout: { lineHeight: 18 } };
@@ -671,7 +671,7 @@ describe('@retikz/diagram-react/flow', () => {
     const input = createInputScene(
       createElement(
         FlowDiagram,
-        { id: 'architecture', theme: { mode: 'dark' }, flowDefaults: { layout: { nodeGap: 0, rankGap: 48 } } },
+        { id: 'architecture', theme: { mode: 'dark' }, defaultFlow: { layout: { nodeGap: 0, rankGap: 48 } } },
         flowChildren(FlowEntity, FlowGroup, FlowLayout, FlowRelation),
       ),
     );
@@ -939,9 +939,9 @@ it('keeps endpoint constraints and sparse defaults equal across React, Vanilla a
   const relations = [
     { source: { id: 'a', side: 'right' as const }, target: { id: 'b', overlap: 'separate' as const } },
   ];
-  const flowDefaults = { relation: { source: { overlap: 'separate' as const } } };
+  const defaultFlow = { relation: { source: { overlap: 'separate' as const } } };
   const input = createInputScene(
-    <FlowReact.FlowDiagram flowDefaults={flowDefaults}>
+    <FlowReact.FlowDiagram defaultFlow={defaultFlow}>
       <FlowReact.FlowEntities items={entities} />
       <FlowReact.FlowRelations items={relations} />
     </FlowReact.FlowDiagram>,
@@ -950,7 +950,7 @@ it('keeps endpoint constraints and sparse defaults equal across React, Vanilla a
   const vanilla = normalizeFlowDiagram({
     entities,
     relations,
-    flowDefaults,
+    defaultFlow,
     children: ['a', 'b'],
   });
   const direct = FlowDiagramSchema.parse({
@@ -958,7 +958,7 @@ it('keeps endpoint constraints and sparse defaults equal across React, Vanilla a
     type: 'flow',
     entities,
     relations,
-    flowDefaults,
+    defaultFlow,
     children: ['a', 'b'],
   });
 

@@ -8,7 +8,7 @@ const Demo: FC = () => (
       id="rows"
       position={[-290, 35]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>连续字段行</Text>
@@ -20,7 +20,7 @@ const Demo: FC = () => (
       id="strategy"
       position={[-170, -35]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>唯一分箱策略</Text>
@@ -32,7 +32,7 @@ const Demo: FC = () => (
       id="edges"
       position={[-170, 35]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>解析箱边</Text>
@@ -44,7 +44,7 @@ const Demo: FC = () => (
       id="error"
       position={[-170, -105]}
       cornerRadius={4}
-      style={{ stroke: 'red', fill: 'red', fillOpacity: 0.06 }}
+      style={{ stroke: 'red', fill: 'red', opacity: { fill: 0.06 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>策略冲突</Text>
@@ -56,7 +56,7 @@ const Demo: FC = () => (
       id="buckets"
       position={[-35, 35]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>分配到半开区间</Text>
@@ -68,7 +68,7 @@ const Demo: FC = () => (
       id="metrics"
       position={[115, 35]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>运行 reducer</Text>
@@ -80,7 +80,7 @@ const Demo: FC = () => (
       id="output"
       position={[265, 35]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>输出每箱一行</Text>

@@ -12,6 +12,7 @@ import { RetikzPlotError } from '../../../error';
 import type { IRPlotMark, IRPlotPointMark } from '../../../schemas';
 import { BuiltinPlotMark, PointMarkSchema } from '../../../schemas';
 import { channelValue } from '../../channel';
+import { constantMarkOpacity } from '../shared';
 import type { MarkPaint } from '../shared';
 import {
   attachDatumAnchor,
@@ -34,7 +35,7 @@ import { POINT_DEFAULT_RADIUS } from './point-glyph';
 /** 自由文本 node 样式（无 shape 边框：padding0 + 无描边 + textColor 上提到子 Scope；色走文本而非 fill） */
 const textStyle = (textColor: string, mark: IRPlotPointMark): IRNodeDefault => {
   const padding = mark.padding?.kind === 'constant' ? mark.padding.value : undefined;
-  const opacity = mark.opacity?.kind === 'constant' ? mark.opacity.value : undefined;
+  const opacity = constantMarkOpacity(mark.opacity);
   const rotate = mark.rotate?.kind === 'constant' ? mark.rotate.value : undefined;
 
   return {

@@ -14,7 +14,12 @@ const ChartOverlayMarks: FC<ChartOverlayMarksProps> = props => {
   const { lang = 'zh' } = props;
   const t = chartOverlayMarksI18n[lang];
   const label = (text: string) => ({ text, position: 'top' as const, distance: 18, font: { size: 12 } });
-  const markLayout = { height: 28, padding: 0, key: { width: 95 }, value: { width: 110 } } as const;
+  const defaultCell = {
+    style: { font: { size: 13 } },
+    layout: { height: 28, padding: 0 },
+    key: { layout: { width: 95 } },
+    value: { layout: { width: 110 } },
+  } as const;
 
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
@@ -22,8 +27,6 @@ const ChartOverlayMarks: FC<ChartOverlayMarksProps> = props => {
         id="mark-source"
         position={[12, 24]}
         label={label(t.source)}
-        layout={{ height: 26, padding: 0, key: { width: 145 }, value: { width: 110 } }}
-        style={{ font: { size: 13 } }}
         entries={[
           { key: 'namespace', value: 'chart' },
           { key: 'type', value: 'point' },
@@ -38,13 +41,17 @@ const ChartOverlayMarks: FC<ChartOverlayMarksProps> = props => {
           { key: 'marks[0].stroke', value: 'dodgerblue' },
           { key: 'marks[0].strokeWidth', value: '2' },
         ]}
+        defaultCell={{
+          style: { font: { size: 13 } },
+          layout: { height: 26, padding: 0 },
+          key: { layout: { width: 145 } },
+          value: { layout: { width: 110 } },
+        }}
       />
       <Map
         id="mark-default"
         position={[375, 28]}
         label={label(t.builtIn)}
-        layout={markLayout}
-        style={{ font: { size: 13 } }}
         entries={[
           { key: 'x', value: 'time' },
           { key: 'y', value: 'value' },
@@ -52,30 +59,34 @@ const ChartOverlayMarks: FC<ChartOverlayMarksProps> = props => {
           { key: 'size', value: '5' },
           { key: 'opacity', value: '0.8' },
         ]}
+        defaultCell={defaultCell}
       />
       <Map
         id="mark-overlay"
         position={[375, 230]}
         label={label(t.overlay)}
-        layout={markLayout}
-        style={{ font: { size: 13 } }}
         entries={[
           { key: 'x', value: 'time' },
           { key: 'y', value: 'value' },
           { key: 'stroke', value: 'dodgerblue' },
           { key: 'strokeWidth', value: '2' },
         ]}
+        defaultCell={defaultCell}
       />
       <Map
         id="mark-result"
         position={[700, 156]}
         label={label(t.result)}
-        layout={{ height: 34, padding: 0, key: { width: 32 }, value: { width: 115 } }}
-        style={{ font: { size: 13 } }}
         entries={[
           { key: '1', value: t.defaultMark },
           { key: '2', value: t.addedMark },
         ]}
+        defaultCell={{
+          style: { font: { size: 13 } },
+          layout: { height: 34, padding: 0 },
+          key: { layout: { width: 32 } },
+          value: { layout: { width: 115 } },
+        }}
       />
       <Draw way={['mark-source.right', '-|-', 'mark-default.left']} arrow="->" />
       <Draw way={['mark-source.right', '-|-', 'mark-overlay.left']} arrow="->" />

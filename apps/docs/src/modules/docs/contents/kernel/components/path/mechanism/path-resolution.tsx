@@ -27,13 +27,12 @@ const PathResolution: FC<PathResolutionProps> = props => {
           opacity: 0.8,
           font: { size: 12 },
         }}
-        layout={{ width: 275, padding: 2 }}
-        style={{ font: { size: 13 } }}
         data={[
           { kind: 'move', to: [0, 0] },
           { kind: 'curve', control: [90, -100], to: [180, 0] },
         ]}
         index
+        defaultCell={{ style: { font: { size: 13 } }, layout: { width: 275, padding: 2 } }}
       />
       <Array
         id="commands"
@@ -46,13 +45,12 @@ const PathResolution: FC<PathResolutionProps> = props => {
           opacity: 0.8,
           font: { size: 12 },
         }}
-        layout={{ width: 275, padding: 2 }}
-        style={{ font: { size: 13 } }}
         data={[
           { kind: 'move', to: [0, 0] },
           { kind: 'quad', control: [90, -100], to: [180, 0] },
         ]}
         index
+        defaultCell={{ style: { font: { size: 13 } }, layout: { width: 275, padding: 2 } }}
       />
       <Draw
         way={[
@@ -73,14 +71,18 @@ const PathResolution: FC<PathResolutionProps> = props => {
           opacity: 0.8,
           font: { size: 12 },
         }}
-        style={{ font: { size: 13 } }}
-        layout={{ height: 28, key: { width: 160 }, value: { width: 90 } }}
         data={{
           commandIndex: 1,
           sourceStepIndex: 1,
           subPathIndex: 0,
           logicalStart: 0,
           logicalEnd: Number(cutNumber(cutLength)),
+        }}
+        defaultCell={{
+          style: { font: { size: 13 } },
+          layout: { height: 28 },
+          key: { layout: { width: 160 } },
+          value: { layout: { width: 90 } },
         }}
       />
       <Draw way={['commands.bottom', '|-', 'occurrence.left']} arrow="->" />

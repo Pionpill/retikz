@@ -21,8 +21,8 @@ const BranchLayoutFigure: FC<BranchLayoutFigureProps> = props => {
           position={[index * 340, 0]}
           skeleton={{ items: ['A', { branches: [['Bbbbbbbb', 'C', 'D'], ['E']] }, 'F'] }}
           layout={{ spacing, justify: 'center', branchAlign: 'center' }}
-          style={{ font: { size: 14 } }}
           label={{ text: t[spacing], position: 'top', font: { size: 12 }, opacity: 0.8 }}
+          defaultCell={{ style: { font: { size: 14 } } }}
         />
       ))}
     </Layout>

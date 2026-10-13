@@ -4,7 +4,7 @@ import type { ZodArray, ZodObject, ZodUnion, ZodString, input } from 'zod';
 import { strictObject, enum as zodEnum, union, literal, string, array, never } from 'zod';
 
 import { DataExpandSchema } from '../../_cell/data';
-import { CellSchema, CellStyleSchema, CellLayoutSchema } from '../../_cell/schema';
+import { CellSchema, CellDefaultSchema } from '../../_cell/schema';
 
 /** 自动连接的非结构性路径属性 */
 export const ChainPathSchema = PathSchema.omit({ type: true, id: true, children: true, kind: true, kindOptions: true });
@@ -43,8 +43,8 @@ export const ChainParallelLayoutSchema = strictObject({
   justify: zodEnum(['start', 'center', 'end']).default('start').describe('Short branch position in the shared span.'),
 });
 
-/** 根布局包含单元格默认与链方向 */
-export const ChainLayoutSchema = CellLayoutSchema.extend({
+/** 根布局配置链方向与串并联排列 */
+export const ChainLayoutSchema = strictObject({
   ...ChainParallelLayoutSchema.shape,
   direction: zodEnum(['right', 'down']).default('right').describe('Main chain direction.'),
 });
@@ -69,7 +69,7 @@ export const ChainParallelSchema = strictObject({
     spacing: ChainParallelLayoutSchema.shape.spacing.unwrap().optional(),
     justify: ChainParallelLayoutSchema.shape.justify.unwrap().optional(),
   }).optional(),
-  connection: union([
+  defaultConnection: union([
     ChainConnectionSchema.options[0].extend({
       route: ChainConnectionSchema.options[0].shape.route.unwrap().optional(),
     }),
@@ -103,10 +103,10 @@ const ChainBaseSchema = CompositeBaseSchema.extend({
   namespace: literal('standard').describe('Standard collection namespace.'),
   type: literal('chain').describe('Series-parallel chain discriminator.'),
   ...ScopePropsSchema.shape,
-  style: CellStyleSchema.optional().describe('Shared cell visual style.'),
-  layout: ChainLayoutSchema.optional().describe('Chain direction, branch placement, spacing, and cell dimensions.'),
-  connection: ChainConnectionSchema.optional().describe('Connection routing and path presentation.'),
+  defaultConnection: ChainConnectionSchema.optional().describe('Connection routing and path presentation.'),
   label: NodeSchema.shape.label,
+  layout: ChainLayoutSchema.optional().describe('Chain direction, branch placement and spacing.'),
+  defaultCell: CellDefaultSchema.optional(),
 });
 
 /** 三入口与递归结构的 Source 真源 */

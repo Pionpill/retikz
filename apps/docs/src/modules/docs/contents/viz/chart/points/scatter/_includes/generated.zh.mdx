@@ -71,22 +71,22 @@ export type IRScatterChartEncodings = ZodInfer<typeof ScatterChartEncodingsSchem
 
 React 使用 `ScatterProperties`，Vanilla API 使用 `properties`，直接 IR 使用 `recipe.properties`。属性设置常量外观；随数据变化的取值应放在映射中。
 
-| 分类       | 属性            | 类型                                                     | 说明                                                             |
-| ---------- | --------------- | -------------------------------------------------------- | ---------------------------------------------------------------- |
-| 形状与尺寸 | `size`          | `number`                                                 | 统一点半径，必须大于或等于 0                                     |
-|            | `shape`         | `string`                                                 | 已注册的形状名                                                   |
-| 颜色与填充 | `color`         | `string`                                                 | 设置主色                                                         |
-|            | `fill`          | `string`、`JsonObject`                                   | 设置填充颜色、画笔                                               |
-| 描边       | `stroke`        | `string`、`JsonObject`                                   | 设置描边颜色、画笔                                               |
-|            | `strokeWidth`   | `number`                                                 | 描边宽度，必须大于或等于 0                                       |
-|            | `dashed`        | `boolean`                                                | 启用虚线描边                                                     |
-|            | `dotted`        | `boolean`                                                | 启用点线描边                                                     |
-|            | `dashPattern`   | `Array<number>`                                          | 自定义虚线序列；至少一项，各项非负                               |
-| 透明度     | `opacity`       | `number`                                                 | 整体透明度，范围 0–1                                             |
-|            | `fillOpacity`   | `number`                                                 | 填充透明度，范围 0–1                                             |
-|            | `strokeOpacity` | `number`                                                 | 描边透明度，范围 0–1                                             |
-| 留白       | `autoPadding`   | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
-|            | `domainPadding` | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                   |
+| 分类       | 属性             | 类型                                                     | 说明                                                             |
+| ---------- | ---------------- | -------------------------------------------------------- | ---------------------------------------------------------------- |
+| 形状与尺寸 | `size`           | `number`                                                 | 统一点半径，必须大于或等于 0                                     |
+|            | `shape`          | `string`                                                 | 已注册的形状名                                                   |
+| 颜色与填充 | `color`          | `string`                                                 | 设置主色                                                         |
+|            | `fill`           | `string`、`JsonObject`                                   | 设置填充颜色、画笔                                               |
+| 描边       | `stroke`         | `string`、`JsonObject`                                   | 设置描边颜色、画笔                                               |
+|            | `strokeWidth`    | `number`                                                 | 描边宽度，必须大于或等于 0                                       |
+|            | `dashed`         | `boolean`                                                | 启用虚线描边                                                     |
+|            | `dotted`         | `boolean`                                                | 启用点线描边                                                     |
+|            | `dashPattern`    | `Array<number>`                                          | 自定义虚线序列；至少一项，各项非负                               |
+| 透明度     | `opacity`        | `number`                                                 | 整体透明度，范围 0–1                                             |
+|            | `opacity.fill`   | `number`                                                 | 填充透明度，范围 0–1                                             |
+|            | `opacity.stroke` | `number`                                                 | 描边透明度，范围 0–1                                             |
+| 留白       | `autoPadding`    | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
+|            | `domainPadding`  | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                   |
 
 其余字体、标签、变换与阴影等公共外观不在这里逐项解释，完整字段见 [属性 Schema](#scatterproperties--irscatterchartproperties--scatterchartpropertiesschema)。留白策略的触发条件和边界见[点图公共留白原理](/viz/chart/points#自动补齐边缘留白)。
 
@@ -114,8 +114,8 @@ export type IRScatterChartProperties = ZodInfer<typeof ScatterChartPropertiesSch
     fill: '填充颜色或画笔',
     stroke: '描边颜色或画笔',
     strokeWidth: '描边宽度',
-    fillOpacity: '填充不透明度，0 到 1',
-    strokeOpacity: '描边不透明度，0 到 1',
+    'opacity.fill': '填充不透明度，0 到 1',
+    'opacity.stroke': '描边不透明度，0 到 1',
     opacity: '整体不透明度，0 到 1',
     rotate: '旋转角度',
     minimumSize: '最小尺寸',
@@ -208,7 +208,7 @@ export type IRScatterChart = ZodInfer<typeof ScatterChartSchema>;
     id: '图表标识',
     background: '图表背景',
     presentation: '标题、副标题、注释与来源',
-    chartDefaults: '图表内部默认配置',
+    defaultChart: '图表内部默认配置',
     transform: '有序 { operation, dataExecution? } 数据变换声明。',
     dataExecution: '本 Chart 的稀疏执行配置。',
     data: '外部数据集引用，不内嵌运行时数据',

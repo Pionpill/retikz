@@ -8,6 +8,8 @@ export type CanvasCall = {
   args: Array<unknown>;
   /** 调用时的字体状态快照 */
   font?: string;
+  /** 调用时的有效不透明度 */
+  globalAlpha?: number;
   /** 调用时的填充样式快照 */
   fillStyle?: string | CanvasGradient | CanvasPattern;
   /** 调用时的线帽样式快照 */
@@ -150,6 +152,7 @@ export const createSpyCanvasContext = (width = 300, height = 150): SpyCanvasCont
         name,
         args,
         font: context.font,
+        globalAlpha: context.globalAlpha,
         fillStyle: context.fillStyle,
         lineCap: context.lineCap,
         lineDashOffset: context.lineDashOffset,

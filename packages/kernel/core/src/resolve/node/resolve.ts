@@ -14,6 +14,7 @@ import type {
 } from '../../schemas';
 import { NodeSchema } from '../../schemas';
 import { resolvePaint } from '../resource';
+import { resolveGraphicOpacity } from '../style';
 import { resolveContextualColor, resolveDashPattern, resolveDropShadow, resolveEffectiveNodeStyle } from '../style';
 import type { EffectiveLabelDefault } from '../style';
 import type { ResolvedInlineSourceRun, ResolvedLabelTextContent, ResolvedTextLine } from '../text';
@@ -161,8 +162,8 @@ const expandNodeFields = (
   node: ResolvedNodeSource,
 ): Omit<CanonicalNode, 'fill' | 'stroke'> & Pick<NonNullable<ResolvedNodeSource['style']>, 'fill' | 'stroke'> => {
   const { style, layout, ...structure } = node;
-  const { dashed, dotted, ...visual } = style ?? {};
-  const source = { ...structure, ...visual, ...layout };
+  const { dashed, dotted, opacity, ...visual } = style ?? {};
+  const source = { ...structure, ...visual, ...resolveGraphicOpacity(opacity), ...layout };
 
   return {
     ...source,

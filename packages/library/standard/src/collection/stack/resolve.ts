@@ -30,7 +30,9 @@ export const resolveStack = (source: IRStack): CanonicalStack => {
   const style = StackBorderSchema.shape.style.unwrap().parse(path.style ?? {});
   return {
     ...common,
-    items: cells.map(cell => resolveCell(cell, { overallStyle: source.style, overallLayout: layout })),
+    items: cells.map(cell =>
+      resolveCell(cell, { overallStyle: source.defaultCell?.style, overallLayout: source.defaultCell?.layout }),
+    ),
     layout: StackLayoutSchema.parse(layout ?? {}),
     padding: resolveBoxSpacing(padding ?? StackSchema.options[0].shape.padding.parse(undefined), 0),
     ...(border === false ? {} : { border: { ...path, style } }),

@@ -52,19 +52,13 @@ const DEG_TO_RAD = Math.PI / 180;
 type Segment = [readonly [number, number], readonly [number, number]];
 
 type GuideLineStyle = Partial<
-  Pick<
-    NonNullable<IRPath['style']>,
-    'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'
-  >
+  Pick<NonNullable<IRPath['style']>, 'stroke' | 'strokeWidth' | 'opacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>
 > & {
   drawOpacity?: number;
 };
 
 type GuidePathStyle = Partial<
-  Pick<
-    NonNullable<IRPath['style']>,
-    'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'
-  >
+  Pick<NonNullable<IRPath['style']>, 'stroke' | 'strokeWidth' | 'opacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>
 >;
 
 type GuideTextStyle = Partial<
@@ -77,9 +71,11 @@ type GuideTextStyle = Partial<
 const lineStyleProps = (style: GuideLineStyle | undefined): GuidePathStyle => ({
   ...(style?.stroke !== undefined ? { stroke: style.stroke } : {}),
   ...(style?.strokeWidth !== undefined ? { strokeWidth: style.strokeWidth } : {}),
-  ...(style?.strokeOpacity !== undefined || style?.drawOpacity !== undefined
-    ? { strokeOpacity: style.strokeOpacity ?? style.drawOpacity }
-    : {}),
+  ...(style?.opacity !== undefined
+    ? { opacity: style.opacity }
+    : style?.drawOpacity !== undefined
+      ? { opacity: { stroke: style.drawOpacity } }
+      : {}),
   ...(style?.dashPattern !== undefined ? { dashPattern: style.dashPattern } : {}),
   ...(style?.dashOffset !== undefined ? { dashOffset: style.dashOffset } : {}),
   ...(style?.lineCap !== undefined ? { lineCap: style.lineCap } : {}),
@@ -421,7 +417,7 @@ const axisTickShapeNodesOf = (guide: IRPlotAxisGuide, placements: ReadonlyArray<
         ...(mark.stroke !== undefined ? { stroke: mark.stroke } : {}),
         ...(mark.strokeWidth !== undefined ? { strokeWidth: mark.strokeWidth } : {}),
         ...(mark.opacity !== undefined ? { opacity: mark.opacity } : {}),
-        ...(mark.drawOpacity !== undefined ? { strokeOpacity: mark.drawOpacity } : {}),
+        ...(mark.drawOpacity !== undefined ? { opacity: { stroke: mark.drawOpacity } } : {}),
       },
       layout: {
         padding: 0,
@@ -1993,7 +1989,7 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
         if (entry.color !== undefined) swatch.style = { ...swatch.style, fill: entry.color };
         if (entry.opacity !== undefined) {
           swatch.style = { ...swatch.style, fill: 'currentColor' };
-          swatch.style = { ...swatch.style, fillOpacity: entry.opacity };
+          swatch.style = { ...swatch.style, opacity: { fill: entry.opacity } };
         }
 
         children.push(swatch);

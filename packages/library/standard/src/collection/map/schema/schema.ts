@@ -4,20 +4,18 @@ import { LayoutRowColumnGapSchema } from '@retikz/layout';
 import { array, literal, never, strictObject, string, union } from 'zod';
 
 import { DataExpandSchema } from '../../_cell/data';
-import { CellSchema, CellStyleSchema, CellLayoutSchema } from '../../_cell/schema';
+import { CellSchema, CellDefaultSchema } from '../../_cell/schema';
 
-/** Map 共用单元格样式及键值角色覆盖 */
-export const MapStyleSchema = CellStyleSchema.extend({
-  key: CellStyleSchema.optional().describe('Key cell visual overrides over shared style fields.'),
-  value: CellStyleSchema.optional().describe('Value cell visual overrides over shared style fields.'),
-}).describe('Shared cell visual defaults with key and value overrides.');
+/** Map 共享单格配置与键值角色覆盖 */
+export const MapCellDefaultSchema = CellDefaultSchema.extend({
+  key: CellDefaultSchema.optional().describe('Key cell defaults overriding shared cell fields.'),
+  value: CellDefaultSchema.optional().describe('Value cell defaults overriding shared cell fields.'),
+}).describe('Shared cell defaults with key and value role overrides.');
 
-/** Map 共用单元格布局、间距及键值角色覆盖 */
-export const MapLayoutSchema = CellLayoutSchema.extend({
+/** Map 的行列间距 */
+export const MapLayoutSchema = strictObject({
   gap: LayoutRowColumnGapSchema.default(2).describe('Uniform or separate row and column gaps between cells.'),
-  key: CellLayoutSchema.optional().describe('Key cell layout overrides over shared layout fields.'),
-  value: CellLayoutSchema.optional().describe('Value cell layout overrides over shared layout fields.'),
-}).describe('Map two-column allocation and spacing.');
+}).describe('Map two-column spacing.');
 
 /** 校验由键格和值格组成的一条展示记录；展示键允许重复 */
 export const MapEntrySchema = strictObject({
@@ -43,9 +41,9 @@ const MapBaseSchema = CompositeBaseSchema.extend({
   data: JsonObjectSchema.optional().describe(
     'JSON object rendered recursively in own enumerable key order; mutually exclusive with entries.',
   ),
-  style: MapStyleSchema.optional(),
   label: NodeSchema.shape.label,
   layout: MapLayoutSchema.optional(),
+  defaultCell: MapCellDefaultSchema.optional(),
 });
 
 /** 校验键值集合的显式条目、JSON 数据或骨架输入，并拒绝混用互斥来源 */

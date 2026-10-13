@@ -10,7 +10,7 @@ import type { CellProps } from '../cell';
 import { createCellsInput } from '../cell';
 import { collectMapEntries } from './convert-children';
 
-/** Map 的 React authoring 属性；键值角色覆盖统一位于 style.key/value 与 layout.key/value */
+/** Map 的 React authoring 属性；键值角色覆盖统一位于 defaultCell.key/value */
 export type MapProps = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | 'dataExpand' | 'skeleton'> &
   (
     | {

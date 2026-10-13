@@ -18,30 +18,26 @@ const NamespaceConsumption: FC<NamespaceConsumptionProps> = props => {
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Array
         position={[24, 29]}
-        layout={{ width: 192, height: 36, padding: 0 }}
-        style={{ font: { size: 14 } }}
         items={['Path(a, b)', 'Node a', 'Node b'].map((text, index) => ({
           id: `child-${index}`,
           content: `[${index}]  ${text}`,
         }))}
+        defaultCell={{ style: { font: { size: 14 } }, layout: { width: 192, height: 36, padding: 0 } }}
       />
       <Array
         position={[24, 135]}
         label={{ text: t.queue, position: 'bottom', opacity: 0.8, font: { size: 12 } }}
-        layout={{ width: 192, height: 36, padding: 0 }}
-        style={{ font: { size: 14 } }}
         items={[
           {
             id: 'queued',
             content: '[0]  Path(a, b)',
           },
         ]}
+        defaultCell={{ style: { font: { size: 14 } }, layout: { width: 192, height: 36, padding: 0 } }}
       />
       <Map
         position={[440, 137]}
         label={{ text: t.map, position: 'bottom', opacity: 0.8, font: { size: 12 } }}
-        layout={{ height: 32, padding: 0, key: { width: 60 }, value: { width: 152 } }}
-        style={{ font: { size: 13 }, textColor: 'currentColor' }}
         entries={[
           {
             key: { id: 'map-a-key', content: 'a', style: { fill: 'dodgerblue' } },
@@ -52,6 +48,12 @@ const NamespaceConsumption: FC<NamespaceConsumptionProps> = props => {
             value: { id: 'map-b', content: '{ layout, state }' },
           },
         ]}
+        defaultCell={{
+          style: { font: { size: 13 }, textColor: 'currentColor' },
+          layout: { height: 32, padding: 0 },
+          key: { layout: { width: 60 } },
+          value: { layout: { width: 152 } },
+        }}
       />
       <Draw
         way={[
@@ -83,8 +85,6 @@ const NamespaceConsumption: FC<NamespaceConsumptionProps> = props => {
       <Map
         position={[45, 269]}
         label={{ text: t.immediate, opacity: 0.8, font: { size: 12 } }}
-        layout={{ height: 32, padding: 0, key: { width: 90 }, value: { width: 114 } }}
-        style={{ font: { size: 13 }, textColor: 'currentColor' }}
         entries={[
           {
             key: { id: 'query-id-key', content: 'id', style: { fill: 'dodgerblue' } },
@@ -95,13 +95,19 @@ const NamespaceConsumption: FC<NamespaceConsumptionProps> = props => {
             value: { id: 'query-anchor', content: "'right'" },
           },
         ]}
+        defaultCell={{
+          style: { font: { size: 13 }, textColor: 'currentColor' },
+          layout: { height: 32, padding: 0 },
+          key: { layout: { width: 90 } },
+          value: { layout: { width: 114 } },
+        }}
       />
       <Node
         id="point"
         position={[585, 285]}
         cornerRadius={8}
         text="[70, 0]"
-        style={{ fill: 'dodgerblue', fillOpacity: 0.14, stroke: 'none', font: { size: 13 } }}
+        style={{ fill: 'dodgerblue', stroke: 'none', font: { size: 13 }, opacity: { fill: 0.14 } }}
       />
       <Draw
         way={[

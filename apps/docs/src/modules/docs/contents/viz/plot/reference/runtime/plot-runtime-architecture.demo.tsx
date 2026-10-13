@@ -12,7 +12,7 @@ const Demo: FC = () => (
         id="host-adapters"
         position={[-250, 10]}
         cornerRadius={4}
-        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
         layout={{ minimumSize: { width: 174, height: 58 }, align: 'middle', lineHeight: 17 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Host adapters</Text>
@@ -28,7 +28,7 @@ const Demo: FC = () => (
         id="lower"
         position={[-60, 10]}
         cornerRadius={4}
-        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+        style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
         layout={{ minimumSize: { width: 132, height: 58 }, align: 'middle', lineHeight: 17 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>lowerPlots</Text>
@@ -44,7 +44,7 @@ const Demo: FC = () => (
         id="compile"
         position={[110, 10]}
         cornerRadius={4}
-        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+        style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
         layout={{ minimumSize: { width: 144, height: 58 }, align: 'middle', lineHeight: 17 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>compileToScene</Text>
@@ -58,7 +58,7 @@ const Demo: FC = () => (
       id="outputs"
       position={[280, 10]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 146, height: 58 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Outputs</Text>

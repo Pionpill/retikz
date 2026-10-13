@@ -77,9 +77,7 @@ describe('Draw: 基础展开', () => {
           blendMode: 'multiply',
           fill: '#fed',
           fillRule: 'evenodd',
-          opacity: 0.8,
-          fillOpacity: 0.5,
-          strokeOpacity: 0.7,
+          opacity: { overall: 0.8, fill: 0.5, stroke: 0.7 },
         }}
       />,
     );
@@ -103,9 +101,7 @@ describe('Draw: 基础展开', () => {
         blendMode: 'multiply',
         fill: '#fed',
         fillRule: 'evenodd',
-        opacity: 0.8,
-        fillOpacity: 0.5,
-        strokeOpacity: 0.7,
+        opacity: { overall: 0.8, fill: 0.5, stroke: 0.7 },
       },
     });
   });

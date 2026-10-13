@@ -6,14 +6,14 @@ export type StackPreviewValues = { matrix: boolean; dashed: boolean; connect: bo
 /** 只通过公开属性组合栈的当前快照 */
 export const renderStackPreview = (values: StackPreviewValues) => (
   <Layout>
-    <Stack layout={{ width: 80 }}>
+    <Stack defaultCell={{ layout: { width: 80 } }}>
       <StackItem text="A" />
       <StackItem
         id="selected"
         {...(values.dashed ? { style: { fill: 'none', stroke: 'dodgerblue', dashPattern: [4, 3] } } : {})}
       >
         {values.matrix ? (
-          <Matrix skeleton={{ rows: 2, columns: 2 }} layout={{ width: 18, height: 18, padding: 0 }} />
+          <Matrix skeleton={{ rows: 2, columns: 2 }} defaultCell={{ layout: { width: 18, height: 18, padding: 0 } }} />
         ) : (
           <Node text="B" />
         )}

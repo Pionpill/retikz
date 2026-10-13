@@ -20,7 +20,7 @@ const RibbonCompileFlow: FC<RibbonCompileFlowProps> = props => {
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}
-      flowDefaults={{ entity: { style: { font: { size: 14 } } } }}
+      defaultFlow={{ entity: { style: { font: { size: 14 } } } }}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
       <FlowLayout id="ribbon-compile" kind="linear" direction="right">

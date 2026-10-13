@@ -12,7 +12,7 @@ export type DiagramFoundationSource = Readonly<{
   /** 覆盖主题的外框样式与区域间距 */
   frame?: IRDiagramFrame;
   /** 应用于当前图示的稀疏默认片段 */
-  diagramDefaults?: IRDiagramDefaults;
+  defaultDiagram?: IRDiagramDefaults;
 }>;
 
 /** Diagram Foundation 解析所需的调用位置上下文 */

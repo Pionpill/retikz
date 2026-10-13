@@ -59,9 +59,9 @@ const screenShift = definePositionAdjustment<ScreenShift>({
     })),
 });
 
-const plotDefaults = {
+const defaultPlot = {
   plotArea: { fill: '#123456' },
-} satisfies NonNullable<IRPlot['plotDefaults']>;
+} satisfies NonNullable<IRPlot['defaultPlot']>;
 
 const revenue = [
   { quarter: 'Q1', value: 18 },
@@ -198,7 +198,7 @@ describe('<Plot spec data> 薄包装', () => {
 
   it('standalone Plot 的 local defaults override 生效', () => {
     const svg = renderToStaticMarkup(
-      <Plot spec={spec} data={data} plotDefaults={plotDefaults} width={480} height={300} />,
+      <Plot spec={spec} data={data} defaultPlot={defaultPlot} width={480} height={300} />,
     );
 
     expect(svg).toContain('fill="#123456"');
@@ -234,7 +234,7 @@ describe('<Plot spec data> 薄包装', () => {
   it('embedded Plot 的 local defaults override 只作用于该 Plot', () => {
     const svg = renderToStaticMarkup(
       <Layout width={960} height={300}>
-        <Plot spec={spec} data={data} plotDefaults={plotDefaults} width={480} height={300} />
+        <Plot spec={spec} data={data} defaultPlot={defaultPlot} width={480} height={300} />
         <Plot position={[480, 0]} spec={spec} data={data} width={480} height={300} />
       </Layout>,
     );

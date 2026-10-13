@@ -48,7 +48,7 @@ const RibbonBoundaryGeometry: FC<RibbonBoundaryGeometryProps> = props => {
             <Path
               kind="ribbon"
               kindOptions={options}
-              style={{ fill: 'dodgerblue', fillOpacity: 0.12, stroke: 'none' }}
+              style={{ fill: 'dodgerblue', stroke: 'none', opacity: { fill: 0.12 } }}
             />
           )}
           {sides.map((side, index) => {

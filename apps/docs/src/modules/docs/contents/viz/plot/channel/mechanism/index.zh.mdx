@@ -1,0 +1,253 @@
+---
+title: 实现原理
+description: 跟踪 Plot 通道从字段绑定、定义注册、逐图元解析到属性交付与图例生成的过程。
+---
+
+阅读前可先了解[通道绑定](/viz/plot/channel/binding)与[内置通道](/viz/plot/channel/builtin)。本页以常见的 `size` 通道为主线，追踪一次 Plot 下沉中，数据里的 `amount` 如何变成点的大小，以及同一映射如何供大小图例使用。这里的“下沉”指把 Plot 图元展开为可绘制的基础图元；本文止于图元属性和图例的生成，不展开后端绘制。
+
+## 整体流程
+
+先区分三个对象：
+
+- **绑定**：指定从哪里取值，例如 size 的字段绑定 `{ kind: 'field', value: 'amount' }`；它保存在 Plot IR 中。
+- **定义**：说明如何解析和使用这些值的运行时对象；`size` 的定义由 Plot 内置提供。
+- **解析结果**：针对当前图元及其数据生成的取值函数、交付记录和可选图例描述。
+
+下面展示非位置通道的两条消费路径。蓝色分支把数值写入图元，橙色分支说明这些数值代表什么。
+
+<ComponentPreview files="channel-overview" hideCode type="flow" size="sm" />
+
+假设 `amount` 的数据为 `[0, 25, 100]`，没有显式指定比例尺。`size` 自动使用数据范围 `[0, 100]` 和半径范围 `[2, 20]`，通过平方根映射得到 $r = 2 + \sqrt{25 / 100} \times (20 - 2) = 11$。值为 25 的点使用半径 11；大小图例使用相同的映射范围，不需要反读生成的节点。
+
+## 注册与查找
+
+Plot 下沉时先建立通道注册表，收集内置的颜色、大小、形状等定义。`size` 对应一个 node 类定义：解析入口是 `resolveSizeChannel`，图例形态是 `size`，交付函数负责把半径换算为节点布局属性。定义里的函数留在运行时，不写入 IR。
+
+注册表同时保留名称索引和完整定义列表，因为图例和图元需要回答不同的问题。
+
+例如，配置 `channel: 'size'` 的图例时，图例已经知道要解释哪个通道，只需按名称找到 size 定义，读取 `legend: 'size'`，决定画大小不同的符号。具体数值和半径范围来自解析产生的 descriptor；图例不需要执行节点的交付函数。
+
+一个点却可以同时绑定 size、shape 和 opacity，需要多项定义共同处理。当前实现会遍历完整列表，先按图元支持的种类筛选，再让各定义读取自己的绑定。没有绑定的定义不产生结果，适用的定义分别生成大小、形状、透明度等交付记录。
+
+同名、不同种类的例子是 `opacity`。用户表达的都是“不透明度”，但点要写入节点，线要写入路径，因此内置实现保留两个同名定义：
+
+| 定义             | 消费图元 | 交付目标                       |
+| ---------------- | -------- | ------------------------------ |
+| `opacity / node` | 点图元   | 节点的 `style.opacity.overall` |
+| `opacity / path` | 路径图元 | 路径的 `style.opacity.overall` |
+
+点图元筛选 node 定义，路径图元筛选 path 定义，不会把两者都应用到同一个点上。两个定义都声明 `legend: 'ramp'`，所以图例按名称读取形态即可，不需要关心最终画成点还是线。名称索引保留首个定义供这种查询使用；完整列表保留两个定义，避免其中一个交付目标被同名项覆盖。这是内置定义的安排，自定义通道仍禁止重复名称。
+
+<ComponentPreview
+  files="channel-registry"
+  hideCode
+  type="illustration"
+  size="lg"
+  caption="上方按通道名查询，下方按交付种类筛选；完整列表保留两个 opacity 定义。"
+/>
+
+注册完成后，图元解析器会遍历适用定义。`size` 从图元的命名属性读取绑定，不从 `encoding.channels.size` 读取；把内置名放入扩展绑定区会报错。
+
+<ComponentAlert
+  type="tip"
+  title="自定义通道复用同一处理链"
+  description="宿主传入的 channelDefinitions 会在内置定义后合并。自定义名称不能为空、不能覆盖内置名，也不能重复；未注册的扩展绑定会报错。其余解析和交付步骤与内置通道共用，具体写法见自定义通道文档。"
+/>
+
+<SourceLinks
+  sources={[
+    {
+      label: '建立运行时通道上下文',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
+      startLine: 540,
+      endLine: 558,
+    },
+    {
+      label: '名称索引、完整列表与冲突检查',
+      path: 'packages/viz/plot/src/providers/channel/registry.ts',
+      startLine: 64,
+      endLine: 108,
+    },
+    { label: '检查扩展绑定名称', path: 'packages/viz/plot/src/resolve/channel/resolve.ts', startLine: 50, endLine: 67 },
+    {
+      label: 'opacity 的节点定义与交付',
+      path: 'packages/viz/plot/src/providers/channel/features/node.ts',
+      startLine: 376,
+      endLine: 394,
+    },
+    {
+      label: 'opacity 的路径定义与交付',
+      path: 'packages/viz/plot/src/providers/channel/features/path.ts',
+      startLine: 163,
+      endLine: 181,
+    },
+  ]}
+/>
+
+## 解析绑定
+
+每个图元先取得自己的数据视图，其中 `rows` 是当前数据行，`model` 是字段模型。解析上下文还提供比例尺、分类顺序和调色方案的解析能力。通道用这些输入建立当前图元的映射，不直接修改数据。
+
+定义通过 `resolve(context, mark)` 同时接收数据上下文与当前图元，读取绑定并建立映射；没有适用绑定时返回 `undefined`，表示这个定义本次不产生结果。
+
+以 `size` 为例，解析时先确定字段、domain 和平方根比例尺，再返回 `resolver(row)`。绘制每个点时，只需用这个函数读取该行的数值并换算半径。两层职责分别是“为当前图元准备映射”和“用映射计算每行的值”；逐行计算时不必重复准备比例尺。
+
+`resolveSizeChannel` 从图元的 `size` 属性读取绑定。字段模式要求连续、非负的数据：没有显式比例尺时，自动建立 domain 为 `[0, 最大正值]`、range 为 `[2, 20]` 的平方根比例尺；显式引用的比例尺也必须是 sqrt 类型。常量模式则直接返回给定半径，绕过比例尺。
+
+字段模式同时返回逐行 resolver 和图例 descriptor；后者记录字段、比例尺名、domain 与 range。没有显式 domain 且数据中没有正值时，映射固定为 range 下界；单行值缺失或不是有限数时，resolver 返回 `undefined`。检测到负数或非连续字段则报错。
+
+| 追踪对象 | 当前内容                                   | 消费方    |
+| -------- | ------------------------------------------ | --------- |
+| 原始绑定 | `size: { kind: 'field', value: 'amount' }` | size 定义 |
+| 取值函数 | `amount = 25 → radius = 11`                | 节点交付  |
+| 映射描述 | `domain: [0, 100]`、`range: [2, 20]`       | 大小图例  |
+| 节点属性 | `layout.minimumSize: 11 × √2`              | 圆形布局  |
+
+解析结果不是全局缓存。图例收集、布局测量和最终图元生成都可能调用解析逻辑，因此 resolver 不应依赖“只执行一次”，也不应在求值时修改输入数据。
+
+<SourceLinks
+  sources={[
+    {
+      label: '上下文与按种类组装解析结果',
+      path: 'packages/viz/plot/src/resolve/channel/resolve.ts',
+      startLine: 32,
+      endLine: 145,
+    },
+    {
+      label: 'size 的字段映射与常量分支',
+      path: 'packages/viz/plot/src/providers/channel/features/node.ts',
+      startLine: 231,
+      endLine: 323,
+    },
+    {
+      label: '布局测量也会解析通道',
+      path: 'packages/viz/plot/src/resolve/scale/mark-domain.ts',
+      startLine: 210,
+      endLine: 233,
+    },
+  ]}
+/>
+
+## 消费与交付
+
+图元定义通过 `channelKinds` 声明自己支持哪些通道种类。例如点图元消费 `mark / scope / node`，路径图元消费 `mark / scope / path`。解析器先按这个集合筛选，再调用对应定义；通道本身不需要逐个判断图元名称。未声明集合时不会在这一步按种类过滤，实际消费仍由图元实现负责。
+
+| 种类    | 解析产物                 | 如何使用                                     |
+| ------- | ------------------------ | -------------------------------------------- |
+| `mark`  | `values` 与 `defaults`   | 图元自行解释，例如颜色用于点的填充或线的描边 |
+| `node`  | 逐行 resolver 与 deliver | 创建节点后，将本行的值写入节点属性           |
+| `path`  | resolver 与 deliver      | 由图元选取数据行，写入生成路径的属性         |
+| `scope` | 整层 value 与 deliver    | 图元生成 Scope 图层后，写入整层属性或默认值  |
+
+点图元对每个可绘制数据行求值，再调用 `deliver(node, value, context)`。在默认圆形点上，`size` 的交付函数将半径 11 换算为 `layout.minimumSize = 11 × √2`，供基础节点的圆形布局使用；它不是直接把半径写成宽高。这里没有额外的 padding、minimumSize 或 scale 覆盖，最终圆半径为 11。
+
+`size` 只向 `pointGlyph` 交付大小，文本节点不会使用这条交付分支。逐行结果为 `undefined` 时不会调用该项 deliver；点图元还会检查 size 的缺失结果，并跳过该点。
+
+路径不一定与数据行一一对应。折线路径可以由多行组成，其实现使用每个路径片段的首行求路径级通道值，不能把它理解为“每个顶点分别设置一次透明度”。Scope 则在图元下沉返回 Scope 后统一交付，不对每一行重复写入。
+
+<ComponentAlert
+  type="tip"
+  title="基础图元负责绘制"
+  description="通道交付使用 Kernel 已有的节点、路径或作用域属性。Plot 负责数据到这些属性的映射；后续几何解析与 SVG / Canvas 绘制由基础绘图层完成。"
+/>
+
+<SourceLinks
+  sources={[
+    {
+      label: '内置图元支持的通道种类',
+      path: 'packages/viz/plot/src/providers/mark/shared/common.ts',
+      startLine: 474,
+      endLine: 480,
+    },
+    {
+      label: 'size 半径到节点布局的换算',
+      path: 'packages/viz/plot/src/providers/channel/features/node.ts',
+      startLine: 634,
+      endLine: 642,
+    },
+    {
+      label: '点的逐行求值与节点交付',
+      path: 'packages/viz/plot/src/providers/mark/features/point.ts',
+      startLine: 85,
+      endLine: 138,
+    },
+    {
+      label: '路径片段使用首行交付',
+      path: 'packages/viz/plot/src/providers/mark/features/path.ts',
+      startLine: 656,
+      endLine: 675,
+    },
+    {
+      label: '图层生成后的 Scope 交付',
+      path: 'packages/viz/plot/src/providers/mark/registry.ts',
+      startLine: 67,
+      endLine: 102,
+    },
+  ]}
+/>
+
+## 位置与图例
+
+位置需要先推导比例尺，再投影为坐标，因此有独立入口。`resolveCoordinateFrame` 从坐标系定义读取 roles，创建位置绑定读取器，收集各角色的数据并解析比例尺，最终提供投影能力。图元通过投影结果确定位置，再应用视觉属性通道。
+
+Plot 的位置编码使用 `x / y / z`；极坐标改变这些角色的解释方式，不增加 `angle / radius` 别名。`size` 负责大小，不参与位置角色投影。
+
+图例走另一条路径：`collectChannelDescriptors` 针对各图元的数据视图收集 descriptor，`buildLegendLayers` 再按通道和可选比例尺名选择映射。对 `size` 而言，descriptor 携带平方根比例尺的 domain 与半径 range，图例据此生成大小不同的符号，而不是从节点尺寸反推原始数据。一个通道对应多个不同映射时，需要通过图例的 `scale` 消歧；同一 size 比例尺对应的重复描述还必须一致。
+
+`size` 的字段绑定返回 descriptor，因此可以生成大小图例；常量绑定只返回固定半径，不产生 descriptor，也就没有数据范围可供图例使用。若仍显式请求缺少 descriptor 的 size 图例，下沉会报错。
+
+<SourceLinks
+  sources={[
+    { label: '从坐标系角色创建位置绑定读取器', path: 'packages/viz/plot/src/providers/channel/features/position.ts' },
+    {
+      label: '角色校验与坐标框架解析',
+      path: 'packages/viz/plot/src/resolve/coordinate/resolve.ts',
+      startLine: 293,
+      endLine: 312,
+    },
+    {
+      label: '图例描述收集与比例尺消歧',
+      path: 'packages/viz/plot/src/pipeline/expand/legend.ts',
+      startLine: 29,
+      endLine: 149,
+    },
+    {
+      label: '由描述与图例形态生成图层',
+      path: 'packages/viz/plot/src/pipeline/expand/legend.ts',
+      startLine: 397,
+      endLine: 510,
+    },
+  ]}
+/>
+
+## 完整实现流程
+
+下面把前面的主线对应到可搜索的实现成员。箭头表达数据依赖：图例收集会自行调用通道解析，不表示复用最终节点生成时的同一个解析结果。
+
+<ComponentPreview files="channel-pipeline" hideCode type="flow" size="sm" />
+
+阅读源码时，先从 `resolveChannelRegistry` 看定义如何汇合，再沿 `resolveMarkChannels` 看结果如何按种类分发。接着阅读 `lowerPoint` 的节点交付，最后阅读 `collectChannelDescriptors` 与 `buildLegendLayers` 的图例分支。位置部分单独从 `resolveCoordinateFrame` 进入；无需先读完整 Plot 下沉函数。
+
+<SourceLinks
+  sources={[
+    { label: '通道分派主入口', path: 'packages/viz/plot/src/resolve/channel/resolve.ts', startLine: 50, endLine: 145 },
+    {
+      label: '节点生成与属性交付',
+      path: 'packages/viz/plot/src/providers/mark/features/point.ts',
+      startLine: 60,
+      endLine: 165,
+    },
+    { label: '图例消费入口', path: 'packages/viz/plot/src/pipeline/expand/legend.ts', startLine: 397, endLine: 430 },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '通道绑定', description: '回查字段与常量的输入形式。', url: '/viz/plot/channel/binding' },
+    { title: '自定义通道', description: '定义并注入一个可运行的通道。', url: '/viz/plot/channel/custom-channel' },
+    { title: '自定义图元', description: '了解图元如何声明和消费通道。', url: '/viz/plot/mark/custom-mark' },
+    { title: 'API 参考', description: '查询通道定义、注册与解析交付的公开契约', url: '/viz/plot/channel/reference' },
+  ]}
+/>

@@ -19,7 +19,7 @@ const ScopeNamespaceLookup: FC<ScopeNamespaceLookupProps> = props => {
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}
-      flowDefaults={scopeFlowDefaults}
+      defaultFlow={scopeFlowDefaults}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
       <FlowLayout id="namespace-operations" kind="linear" direction="right" align="start">

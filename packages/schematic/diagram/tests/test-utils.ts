@@ -34,7 +34,7 @@ const TestDiagramFoundationSchema = CompositeBaseSchema.extend({
   type: literal('foundation'),
   presentation: DiagramPresentationSchema.optional(),
   frame: DiagramFrameSchema.optional(),
-  diagramDefaults: DiagramDefaultsSchema.optional(),
+  defaultDiagram: DiagramDefaultsSchema.optional(),
   drawing: ChildSchema,
 });
 
@@ -57,7 +57,7 @@ const createTestDiagramFoundationDefinition = (
         {
           ...(source.presentation === undefined ? {} : { presentation: source.presentation }),
           ...(source.frame === undefined ? {} : { frame: source.frame }),
-          ...(source.diagramDefaults === undefined ? {} : { diagramDefaults: source.diagramDefaults }),
+          ...(source.defaultDiagram === undefined ? {} : { defaultDiagram: source.defaultDiagram }),
         },
         { theme: context.theme, diagramThemeStyles: options.diagramThemeStyles },
       );
@@ -86,7 +86,7 @@ const createTestDiagramFoundationProvider = (
 type TestFoundationSource = Readonly<{
   presentation?: ReturnType<typeof DiagramPresentationSchema.parse>;
   frame?: ReturnType<typeof DiagramFrameSchema.parse>;
-  diagramDefaults?: ReturnType<typeof DiagramDefaultsSchema.parse>;
+  defaultDiagram?: ReturnType<typeof DiagramDefaultsSchema.parse>;
   drawing: IRChild;
 }>;
 

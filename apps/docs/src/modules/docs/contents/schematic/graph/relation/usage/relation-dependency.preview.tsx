@@ -27,7 +27,7 @@ export const RelationDependencyPreview = (values: RelationDependencyPreviewValue
   return (
     <Graph
       viewBox={{ x: 0, y: 0, width: 420, height: 180 }}
-      {...(color === 'currentColor' ? {} : { graphDefaults: { relation: relationDefaults } })}
+      {...(color === 'currentColor' ? {} : { defaultGraph: { relation: relationDefaults } })}
     >
       <Entity id="source" role="activity" position={[80, 90]}>
         {relationDependencyI18n[lang].source}

@@ -3,14 +3,34 @@ title: Custom Channels
 description: Use a ChannelDefinition to resolve fields or constants into existing Core properties, then inject it into Plot's shared channel registry through channelDefinitions.
 ---
 
-A custom channel delivers data values to existing Core `Scope`, `Node`, or `Path` properties. For example, `intensity` can map `score` to node opacity. It extends the **data-to-visual-property delivery path**, not the rendering foundation.
+After learning [field and constant bindings](/viz/plot/channel/binding), you can define your own channel names and value mappings. This page maps `score` to point opacity through `intensity`: higher scores produce more opaque points, while a constant gives every point the same opacity.
 
 ## Applicability
 
 - Define a custom channel when you need a new `encoding.channels.<name>` that participates in field / constant binding, per-row evaluation, and legend descriptors.
 - Use a [Custom Scale](/viz/plot/scale/custom-scale) only when changing value-to-coordinate or value-to-color mapping. Other visual properties such as size and opacity are still evaluated and delivered by their channels.
-- If Core does not expose the target visual property, add the capability to Core first; a channel definition should not create parallel rendering semantics.
 - Field preparation, aggregation, and filtering belong to [Data Extensions](/viz/data/model/extensions), not a channel resolver.
+
+<ComponentAlert
+  type="tip"
+  title="Prefer built-in channels"
+  description="Plot already provides a comprehensive set of built-in channels and will continue to improve them. Prefer built-in channels for typical plotting needs; custom channels are generally intended for application-specific requirements or higher-level abstractions."
+/>
+
+## Minimal result
+
+The `intensity` channel below maps field values into `[0.3, 1]` and also accepts a numeric constant that directly represents opacity. Use the panel to switch between field and constant bindings; switch source files to inspect the definition, data, and host injection:
+
+<ComponentPreview
+  files={['custom-channel', 'custom-channel.preview.tsx', 'custom-channel.definition.ts', 'custom-channel.data.ts']}
+  mode="showcase"
+  responsive
+  size="lg"
+  caption="A field binding preserves per-row score differences; a constant binding gives every point the same opacity."
+  defaultSourceFile="custom-channel.preview.tsx"
+/>
+
+The example sets `domainPadding: 16` on both position scales to leave space around edge points. Field mode produces an opacity legend; constant mode has no data range to explain, so it omits that legend.
 
 ## Define the capability
 
@@ -24,65 +44,128 @@ Use `defineScopeChannel`, `defineNodeChannel`, `definePathChannel`, or the gener
 | `resolve` | Reads a field or constant binding, performs mapping and clamp, and returns a resolver plus descriptor      |
 | `deliver` | Writes each resolved value to an existing Core property                                                    |
 
-The `intensity` channel below maps field values into `[0.3, 1]` and also accepts a numeric constant that directly represents opacity. Use the panel to switch between field and constant bindings; switch source files to inspect the definition, data, and host injection:
+This example uses `defineNodeChannel` because opacity is delivered to each point. The complete definition below is shared by the React and Vanilla hosts:
 
-<ComponentPreview
-  files={['custom-channel', 'custom-channel.preview.tsx', 'custom-channel.definition.ts', 'custom-channel.data.ts']}
-  size="lg"
-  caption="A field binding preserves per-row score differences; a constant binding gives every point the same opacity."
-  defaultSourceFile="custom-channel.preview.tsx"
+```ts
+import { defineNodeChannel } from '@retikz/plot';
+
+type ExtensionChannelBinding = { field?: string; value?: unknown };
+
+const extensionChannelsOf = (mark: {
+  encoding?: { channels?: Partial<Record<string, ExtensionChannelBinding>> };
+}): Partial<Record<string, ExtensionChannelBinding>> => mark.encoding?.channels ?? {};
+
+const clampIntensity = (value: number): number => Math.min(1, Math.max(0.3, value));
+
+/** Custom intensity channel: map field values to opacity and clamp constants before delivery */
+export const intensityChannel = defineNodeChannel<number>({
+  channel: 'intensity',
+  output: { outputKind: 'number', range: [0.3, 1], clamp: true },
+  legend: 'ramp',
+  resolve: (ctx, mark) => {
+    const binding = extensionChannelsOf(mark).intensity;
+    if (binding === undefined) return undefined;
+    if (binding.value !== undefined) {
+      if (typeof binding.value !== 'number' || !Number.isFinite(binding.value)) {
+        throw new Error('lowerPlots: intensity constant must be a finite number');
+      }
+
+      const value = clampIntensity(binding.value);
+
+      return { resolver: () => value };
+    }
+
+    if (binding.field === undefined) return undefined;
+
+    const field = binding.field;
+    const values = ctx.rows.map(row => Number(row[field])).filter(Number.isFinite);
+    if (values.length === 0) return undefined;
+
+    const lo = Math.min(...values);
+    const hi = Math.max(...values);
+    const map = (value: number): number => clampIntensity(0.3 + (hi === lo ? 0.5 : (value - lo) / (hi - lo)) * 0.7);
+
+    return {
+      resolver: row => {
+        const value = Number(row[field]);
+        return Number.isFinite(value) ? map(value) : undefined;
+      },
+      descriptor: {
+        channel: 'intensity',
+        scaleType: 'linear',
+        domain: [lo, hi],
+        range: [0.3, 1],
+        field,
+        fieldType: ctx.model.find(definition => definition.name === field)?.type,
+      },
+    };
+  },
+  deliver: (node, value) => {
+    node.style = { ...node.style, opacity: value };
+  },
+});
+```
+
+`resolve` reads the current mark’s `intensity` binding. In field mode, it maps the data minimum and maximum to `[0.3, 1]`; in constant mode, it clamps the number to that range. The returned `resolver` supplies opacity for each row. Field mode also returns a `descriptor` that tells the legend the data and visual ranges. `output.range` and `output.clamp` declare metadata only; this definition performs the mapping and clamping.
+
+Finally, `deliver` writes the resolved opacity to the node style.
+
+<ComponentAlert
+  type="tip"
+  title="Delivery and execution (optional)"
+  description="Custom channels write existing Kernel node, path, or scope properties; they do not add rendering capabilities. Plot puts built-in and custom definitions in one registry. Marks declare which channel kinds they consume, then Plot resolves and delivers the values. A channel need not inspect mark.type; choose the matching define helper. You can continue with injection and usage below without learning the internal pipeline."
 />
 
-## Inject into the host
+## Inject and use
 
-Inject the definition with `<Plot channelDefinitions={[intensityChannel]}>`; the Vanilla source injects the same definition through `renderPlot` options.
+React and Vanilla share the definition above; choose the host used by your project. The preview’s React and Vanilla source views contain complete examples. The excerpts below show only where injection differs.
 
-A string in the React DSL means a field name. Typed authoring accepts `{ kind: 'constant', value }` for a constant; an already normalized raw IR binding uses `{ value }` for the same constant. The authoring normalizer converts the former to the latter:
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+Inject the definition on `Plot`, then reference its registered name in the child mark’s `channels`:
+
+```tsx
+<Plot data={customChannelPoints} channelDefinitions={[intensityChannel]}>
+  <PointMark x="x" y="y" channels={{ intensity: 'score' }} />
+</Plot>
+```
+
+A string in the React DSL means a field name; use `{ kind: 'constant', value }` for a constant:
 
 ```tsx
 <PointMark channels={{ intensity: 'score' }} />
 <PointMark channels={{ intensity: { kind: 'constant', value: 0.65 } }} />
 ```
 
-These assemble to `{ field: 'score' }` and `{ value: 0.65 }`. The raw IR form is valid wherever an `IRPlot` binding is supplied:
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+Inject through the third argument of `renderPlot`. Here, `spec` is the Plot configuration in the preview’s Vanilla source, where `encoding.channels.intensity` already binds score:
 
 ```ts
-const rawChannelBinding: IRPlotChannel = { value: 0.65 };
+const svg = renderPlot(
+  spec,
+  { points: customChannelPoints },
+  {
+    channelDefinitions: [intensityChannel],
+  },
+);
 ```
 
+The Vanilla example uses Plot IR directly: bind a field with `{ field }` or a constant with `{ value }`:
+
+```ts
+import type { IRPlotChannel } from '@retikz/plot';
+
+const fieldBinding: IRPlotChannel = { field: 'score' };
+const constantBinding: IRPlotChannel = { value: 0.65 };
+```
+
+</DocTab>
+</DocTabs>
+
 The definition always stays in the runtime and never enters Plot IR.
-
-## Execution
-
-1. The host merges built-in and custom definitions into one channel registry and rejects built-in collisions or duplicate registrations.
-2. Lowering verifies that every bound channel is registered, then calls the definition's `resolve` with the binding and rows.
-3. A mark definition uses `channelKinds` to declare which delivery surfaces it consumes.
-4. Lowering calls `deliver` on scope / node / path definitions and writes resolver results into Core IR.
-
-A channel definition should not inspect `mark.type`. It owns resolution and delivery; the mark definition decides whether a mark consumes node, path, or scope channels, so custom marks can reuse the same path.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'ChannelDefinition and define-helper contracts',
-      path: 'packages/viz/plot/src/contract/channel.ts',
-      startLine: 299,
-      endLine: 439,
-    },
-    {
-      label: 'Merge built-in and custom channels into one registry',
-      path: 'packages/viz/plot/src/providers/channel/registry.ts',
-      startLine: 69,
-      endLine: 102,
-    },
-    {
-      label: 'Channel lookup, resolve, and delivery dispatch',
-      path: 'packages/viz/plot/src/resolve/channel/resolve.ts',
-      startLine: 42,
-      endLine: 145,
-    },
-  ]}
-/>
 
 ## Errors and limits
 
@@ -100,28 +183,68 @@ encoding: {
 }
 ```
 
-## API reference
+## Related props
 
-Public exports:
+These are the entries used by this example. See the [encoding reference](/viz/plot/reference/encoding) for binding structures and the [runtime reference](/viz/plot/reference/runtime) for runtime options.
 
-| Import from `@retikz/plot`        | Use                                                                                                 |
-| --------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `defineScopeChannel`              | Defines a channel delivered to a Core Scope                                                         |
-| `defineNodeChannel`               | Defines a channel delivered to a Core Node                                                          |
-| `definePathChannel`               | Defines a channel delivered to a Core Path                                                          |
-| `defineChannel`                   | Defines a generic channel with explicit kind and delivery                                           |
-| `ChannelDefinition`               | Full channel, output, resolve, and deliver contract                                                 |
-| `ChannelDefinitionResolveContext` | Shared rows, field types, and scale-registry context; Node / Scope / Path expose equivalent aliases |
+<ComponentProps
+  items={[
+    {
+      name: 'defineNodeChannel',
+      kind: 'function',
+      type: "<T extends ChannelValue>(definition: WithOptionalProperties<NodeChannelDefinition<T>, 'kind'>) => NodeChannelDefinition<T>",
+      description:
+        'Defines a per-node channel. The definition supplies a unique channel name, output metadata, optional legend, resolve, and deliver. The helper supplies kind: node when omitted.',
+    },
+    {
+      name: 'NodeChannelDefinition',
+      kind: 'type',
+      type: 'NodeChannelDefinition<T extends ChannelValue = ChannelValue>',
+      description:
+        'The definition type used here. resolve takes the data context and current mark together and produces a per-row resolver and optional descriptor. deliver receives the node, resolved value, and delivery context. legend supports swatch, ramp, size, and symbol; this example uses ramp for continuous opacity.',
+    },
+    {
+      name: 'channelDefinitions',
+      kind: 'property',
+      type: 'Array<AnyChannelDefinition>',
+      description:
+        'Inject through Plot props in React or renderPlot options in Vanilla. Each element contains channel, kind, and the matching resolution and delivery functions. These objects stay in the runtime and do not enter IR.',
+    },
+    {
+      name: 'PointMark.channels',
+      kind: 'property',
+      type: 'Record<string, InputPlotExtensionChannel>',
+      description:
+        "Binds values by registered channel name. This example uses the field string 'score' or an explicit constant { kind: 'constant', value: 0.65 }. Normalized IR stores { field: 'score' } or { value: 0.65 }; field and value are mutually exclusive.",
+    },
+  ]}
+/>
 
-Host injection:
+## Further reading
 
-| Host                                     | Public contract     | Injection field                                  |
-| ---------------------------------------- | ------------------- | ------------------------------------------------ |
-| `<Plot>` from `@retikz/plot-react`       | `PlotProps`         | `channelDefinitions`                             |
-| `renderPlot` from `@retikz/plot-vanilla` | `RenderPlotOptions` | Inherited `LowerPlotsOptions.channelDefinitions` |
-
-## Related
-
-- [Channel Binding](/viz/plot/channel/binding) — how field and constant bindings enter Plot IR
-- [Built-In Channels](/viz/plot/channel/builtin) — built-in definition delivery surfaces
-- [Custom Marks](/viz/plot/mark/custom-mark) — how marks declare and consume channel kinds
+<LinkedSections
+  items={[
+    {
+      title: 'Implementation',
+      description: 'Trace registration, resolution, property delivery, and legend generation.',
+      url: '/viz/plot/channel/mechanism',
+    },
+    {
+      title: 'Encoding reference',
+      description: 'Look up field, constant, and extension channel bindings.',
+      url: '/viz/plot/reference/encoding',
+    },
+    {
+      title: 'Runtime reference',
+      description: 'Look up host injection and compilation options.',
+      url: '/viz/plot/reference/runtime',
+    },
+    { title: 'Custom marks', description: 'Let a new mark consume channel kinds.', url: '/viz/plot/mark/custom-mark' },
+    { title: 'Custom scales', description: 'Extend position or color mappings.', url: '/viz/plot/scale/custom-scale' },
+    {
+      title: 'API Reference',
+      description: 'Look up public definitions, registration, resolution, and delivery contracts',
+      url: '/viz/plot/channel/reference',
+    },
+  ]}
+/>

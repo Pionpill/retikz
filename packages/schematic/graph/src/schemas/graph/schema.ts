@@ -9,7 +9,7 @@ export const GraphSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.Graph).describe('Graph Source assembly discriminator.'),
   ...ScopePropsSchema.shape,
-  graphDefaults: GraphDefaultsSchema.optional().describe('Optional sparse Graph defaults for visible descendants.'),
+  defaultGraph: GraphDefaultsSchema.optional().describe('Optional sparse Graph defaults for visible descendants.'),
   graphRules: array(GraphRuleSchema).optional().describe('Optional ordered Graph rules for visible descendants.'),
   children: array(ChildSchema).optional().describe('Optional ordered Core children in this Graph Scope.'),
 }).describe('JSON-safe Graph Source composite combining the complete Core Scope surface with Graph-local context.');

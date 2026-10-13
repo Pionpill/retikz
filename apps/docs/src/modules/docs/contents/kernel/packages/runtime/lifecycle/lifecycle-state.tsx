@@ -31,8 +31,6 @@ const LifecycleState: FC<LifecycleStateProps> = props => {
           key={state.x}
           position={[state.x, 0]}
           label={{ text: state.title, font: { size: 12 } }}
-          layout={{ height: 30, key: { width: 90 }, value: { width: 180 } }}
-          style={{ font: { size: 14 } }}
           entries={[
             { key: text.revision, value: state.revision },
             { key: text.source, value: state.source },
@@ -43,6 +41,12 @@ const LifecycleState: FC<LifecycleStateProps> = props => {
               value: { content: "graph / ['nodes', 'A']", style: { fill: 'dodgerblue' } },
             },
           ]}
+          defaultCell={{
+            style: { font: { size: 14 } },
+            layout: { height: 30 },
+            key: { layout: { width: 90 } },
+            value: { layout: { width: 180 } },
+          }}
         />
       ))}
     </Layout>

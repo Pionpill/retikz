@@ -1,131 +1,65 @@
 ---
-title: Plot
-description: Plot 模块总览：从 React props、Vanilla InputPlot 或 Plot IR 进入统一输入路径，接入外部数据，经 lowering 下沉到 Core IR、Scene 与渲染器。
+title: Plot · 语法
+description: 组合数据、图元、比例尺与坐标系，用图形语法构建数据图形。
 ---
 
-`@retikz/plot` 是 Viz 组的绘图语义层。它用可序列化的 Plot IR 描述字段绑定、比例尺、坐标系、图元、辅助元素与组合关系，再把这些高层语义下沉为 Kernel 能编译的 Core IR。
+Plot 将数据记录绘制为点、线或区间。你决定哪些字段控制位置、颜色和尺寸，并组合坐标轴、图例等辅助元素。这里按图形语法的组成部分组织文档；首次使用可从[简介](/viz/plot/introduction)与[快速开始](/viz/plot/get-start)进入。
 
-Plot 不拥有数据底座或渲染器：[Data](/viz/data/introduction)负责字段模型与通用数据处理，Kernel 负责编译、布局和 Scene，SVG / Canvas renderer 只消费 Scene。这样，React、Vanilla、手写 spec 或 AI 生成的配置都能复用同一份语义契约和 lowering 路径。
+## 职责一览
 
-## 一张图看懂
+| 章节      | 职责                                         | 何时阅读                         |
+| --------- | -------------------------------------------- | -------------------------------- |
+| 通道      | 把字段或常量绑定到位置、颜色、尺寸等视觉属性 | 确定数据怎样表现在图上           |
+| 变换      | 处理数据并形成绘图所需的结果                 | 绘图前需要派生、汇总或统计       |
+| 图元      | 将记录绘制为点、路径、区间等形状             | 选择或叠加绘制形式               |
+| 比例尺    | 将数据范围换算为位置或样式                   | 调整数值范围、分类顺序与颜色映射 |
+| 坐标系    | 将位置映射到平面、极坐标或组合视图           | 改变图形的空间表达               |
+| 辅助      | 用坐标轴与图例解释映射                       | 帮助读者读出数值和分类           |
+| Plot 溯源 | 将绘制结果关联回数据及处理过程               | 解释某个图元为什么出现在这里     |
+| API 参考  | 汇集字段契约和运行时入口                     | 查询准确的参数与调用方式         |
 
-<ComponentPreview files="plot-pipeline" size="sm" hideCode />
+## 一张图怎样组成
 
-实线是从声明到渲染结果的主链。外部数据集只在 `lowerPlots` 阶段接入，不写进 Plot IR；lineage、locator 与 diagnostics 是下沉过程的可观察旁路，也不会反写 IR。
+下面的折线来自四行测量数据。时间字段控制横向位置，测量值控制纵向位置；路径图元按时间顺序连接各次测量，两条坐标轴标出数值。
 
-## 从声明到 Scene
-
-1. **形成 Plot IR**：`<Plot>` 子组件、Vanilla `plot()` 与完整 `InputPlot` 最终都形成同一份 JSON-safe `IRPlot`。`InputPlot` 是 `@retikz/plot-vanilla` 的 TypeScript authoring 输入；React DSL 只是桥接入口，不拥有另一套图表语义。
-2. **接入外部数据**：IR 通过 `data.reference` 指向运行时数据集。字段解析、通用变换与来源追溯由 Data 提供，数据行本身不进入 IR。
-3. **解析绘图语义**：lowering 依次处理数据变换、通道绑定、比例尺和坐标投影，再由 mark 与 guide definition 生成可下沉结果。内置与自定义能力走同一套 registry、resolver 与 consumer 路径。
-4. **下沉到 Core IR**：`lowerPlots` 作为 Tier 2 composite definition，把 Plot 节点展开为 `Scope`、`Node`、`Path` 等 Core IR；lineage、locator 和 diagnostics 作为运行时结果单独返回。
-5. **编译与渲染**：Kernel 将 Core IR 编译为 renderer-agnostic Scene，随后由 SVG 或 Canvas renderer 输出。Plot 不绕开 Scene，也不实现平行渲染器。
-
-<SourceLinks
-  sources={[
-    {
-      label: 'React Plot 将 props 收集为 Plot Vanilla 嵌入输入',
-      path: 'packages/viz/plot-react/src/Plot.tsx',
-      startLine: 175,
-      endLine: 193,
-    },
-    {
-      label: 'React 子组件收集后交给 Plot Vanilla 归一化',
-      path: 'packages/viz/plot-react/src/adapter/build-plot-spec.ts',
-      startLine: 10,
-      endLine: 16,
-    },
-    {
-      label: 'Plot Vanilla 将 InputPlot 规范化为 Plot Source IR',
-      path: 'packages/viz/plot-vanilla/src/normalize/plot/normalize.ts',
-      startLine: 20,
-      endLine: 43,
-    },
-    {
-      label: 'Plot composite 的统一下沉入口',
-      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
-      startLine: 1539,
-      endLine: 1581,
-    },
-    {
-      label: 'Vanilla 从 Plot IR 到 Scene 与 SVG 的入口',
-      path: 'packages/viz/plot-vanilla/src/runtime/render-plot.ts',
-      startLine: 56,
-      endLine: 86,
-    },
+<ComponentPreview
+  files={[
+    '/viz/plot/get-start/first-plot',
+    '/viz/plot/get-start/first-plot.preview.tsx',
+    '/viz/plot/get-start/first-plot.data.ts',
   ]}
+  responsive
+  defaultSourceFile="first-plot.preview.tsx"
+  size="lg"
+  hideCode
 />
 
-## 三个包怎样分工
+这里的通道回答“用哪个字段”，比例尺回答“数值换算成什么位置”，坐标系安排两个方向，路径图元将这些位置连接为折线。辅助元素让读者能从位置读回数据值。各部分围绕同一份数据协作。
 
-| 包                     | 拥有的职责                                                       | 典型入口                                                   |
-| ---------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------- |
-| `@retikz/plot`         | `IRPlot*` schema、Definition / registry、领域解析与 lowering     | `PlotSchema`、`lowerPlots`                                 |
-| `@retikz/plot-react`   | React `XxxProps` / children 收集与 React 宿主接线                | `<Plot>`                                                   |
-| `@retikz/plot-vanilla` | `InputPlot*` 类型、normalize、InputEmbed 接线、SSR 与无 DOM 渲染 | `plot()`、`normalizePlot()`、`embedPlot()`、`renderPlot()` |
+## 安装与使用
 
-三包共享 `@retikz/plot` 的 IR 与 lowering 真源。`@retikz/plot-vanilla` 是 framework-neutral 的 authoring owner：它拥有 TypeScript-only `InputPlot*`、`PlotSource` 与 `InputPlotEmbed`，把 `InputPlot` 的 `facets`、`scaffolds` 与 axis / topology binding 展开为 `IRPlot`，但不会对已类型化输入重复 schema 校验。只有 `IRPlot*` 是持久化 schema 类型；未知外部数据仍应通过 Plot schema 或 parser 进入 IR。
+React 项目使用 `@retikz/plot-react`，普通 TypeScript 项目使用 `@retikz/plot-vanilla`。两种入口都可以独立生成图形，所需依赖、完整导入和挂载代码见[快速开始](/viz/plot/get-start)。需要保存或校验 JSON 配置时，再查阅 `@retikz/plot` 的[规格契约](/viz/plot/reference/plot)。
 
-React 只负责收集 JSX / props 并调度 Plot Vanilla；它不维护平行的 Plot IR builder、schema parse 或 lowering。已经持有完整 `IRPlot` 时，可以直接交给运行时，无需再次套 authoring helper。
+## 从哪里开始
 
-## React 宿主与嵌入
+先选择图元，再配置字段与通道。默认映射不能满足任务时，继续调整比例尺、坐标系和辅助元素；需要处理数据时再阅读变换。
 
-`<Plot>` 默认就是完整的 standalone 入口：直接渲染时内部建立一个 `Layout`，因此不需要再包一层宿主。把同一个 `<Plot>` 放进已有 `<Layout>` 时，它会降级为一个 Plot Scope/composite，只共享外层 Scene、renderer 与 effective Theme，不创建嵌套 SVG。
-
-Plot 的 `width` / `height` 只决定绘图区几何尺寸，standalone 显示宽高跟随包含坐标轴、标签和 padding 的完整内容边界，默认不缩放。它们和 `position`、`transforms`、`clip` 等 panel 字段在 embedded 模式仍属于 Plot 输入。`className`、`style`、`renderer` 与 Core `themeStyles` 只控制 standalone host，应移动到外层 `<Layout>`；`lineage`、`hostLineageMetadata` 与 `onLineage` 依赖 standalone React 生命周期，embedded 时应省略。embedded Plot 如果自带任一上述字段——即使显式写成 `undefined`——都会 fail-loud。这种区分避免宿主或 observer 配置被静默忽略，也不会为 embedded Plot 生成额外模型 id。
-
-## Plot 负责与不负责什么
-
-| Plot 负责                               | 交给其它模块                                                                       |
-| --------------------------------------- | ---------------------------------------------------------------------------------- |
-| Plot IR、领域主题 token 与图形语法契约  | 字段模型、解析、通用变换与来源追溯交给 [Data](/viz/data/introduction)              |
-| channel、scale、coordinate、mark、guide | Core IR、布局、引用解析与 Scene 编译交给 [Kernel](/kernel/components/introduction) |
-| composition 与 Plot → Core lowering     | SVG / Canvas 输出交给 renderer                                                     |
-| Definition、registry、resolver 与诊断   | React / Vanilla 生命周期与宿主接线交给 adapter                                     |
-| 面向图表的语义映射与主题 lowering       | 行列结构、Cell 语义与表格布局交给独立的 [Table](/viz/table)                        |
-
-如果一种能力不依赖图表字段映射，例如通用数据变换、底层几何或表格 Cell，它就不应进入 Plot。反过来，新的 scale、coordinate、mark 或 guide 应先成为可注册的 Definition，再以内置能力使用同一条路径。
-
-Plot 还拥有绘图区、guide、palette 与已有 Axis 的稀疏 defaults。它消费 Core effective Theme 选择同名领域 preset，再把局部 `plotDefaults` 与有序 `plotRules` 通过同一 lowering 主链解析。内置与自定义 preset 都通过 `definePlotThemeStyle` / `plotThemeStyles` 走同一 resolver；Source-shaped 字段与级联顺序见[主题契约](/viz/plot/reference/theme)。
+若已确定具体图表类型，希望直接配置整张图，先看 [Chart](/viz/chart/introduction)。可复用的数据清洗与统计由 [Data](/viz/data/introduction) 提供；以单元格组织数据则使用 [Table](/viz/table)。
 
 ## 章节内容
 
 <LinkedSections
   items={[
-    {
-      title: '通道',
-      description: '把字段或常量绑定到位置、颜色、尺寸、文字等视觉角色。',
-      url: '/viz/plot/channel',
-    },
-    {
-      title: '变换',
-      description: '在绘图管线中派生、堆叠、汇总、统计或关联数据行。',
-      url: '/viz/plot/transform',
-    },
-    {
-      title: '图元',
-      description: '把投影后的数据实例化为点、路径、区间、参考或关系图形。',
-      url: '/viz/plot/mark',
-    },
-    {
-      title: '比例尺',
-      description: '把数据 domain 映射到位置或视觉属性的 range。',
-      url: '/viz/plot/scale',
-    },
-    {
-      title: '坐标系',
-      description: '把比例尺结果投影到笛卡尔、极坐标或组合视图。',
-      url: '/viz/plot/coordinate',
-    },
-    {
-      title: '辅助',
-      description: '用坐标轴与图例解释比例尺和通道映射。',
-      url: '/viz/plot/guide',
-    },
-    {
-      title: 'Plot 溯源',
-      description: '把数据来源补充为图元、比例尺与布局语义。',
-      url: '/viz/plot/provenance',
-    },
+    { title: '简介', description: '判断 Plot 是否适合当前任务。', url: '/viz/plot/introduction' },
+    { title: '快速开始', description: '安装并绘制第一张图。', url: '/viz/plot/get-start' },
+    { title: '更新日志', description: '查询版本变化。', url: '/viz/plot/changelog' },
+    { title: '通道', description: '将字段绑定到位置、颜色和尺寸。', url: '/viz/plot/channel' },
+    { title: '变换', description: '在绘图过程中处理与组织数据。', url: '/viz/plot/transform' },
+    { title: '图元', description: '选择点、路径、区间等绘制形式。', url: '/viz/plot/mark' },
+    { title: '比例尺', description: '控制数据范围到视觉属性的映射。', url: '/viz/plot/scale' },
+    { title: '坐标系', description: '选择直角、极坐标或组合视图。', url: '/viz/plot/coordinate' },
+    { title: '辅助', description: '配置坐标轴与图例。', url: '/viz/plot/guide' },
+    { title: 'Plot 溯源', description: '追查图元对应的数据与绘图过程。', url: '/viz/plot/provenance' },
+    { title: 'API 参考', description: '查询完整字段和运行时接口。', url: '/viz/plot/reference' },
   ]}
 />

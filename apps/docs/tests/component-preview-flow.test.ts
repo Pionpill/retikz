@@ -58,7 +58,7 @@ describe('Flow Diagram ComponentPreview', () => {
     expect(code).toContain('layouts: []');
     expect(code).toContain("children: ['source', 'target']");
     expect(code).not.toContain("type: 'entity'");
-    expect(code).not.toContain('position:');
+    expect(code).toContain('position: [0, 0]');
     expect(code).not.toContain("namespace: 'graph'");
   });
 
@@ -361,9 +361,9 @@ describe('Flow Diagram ComponentPreview', () => {
       const preview = buildPreviewIR(Demo);
       const flow = FlowDiagramSchema.parse(preview.sourceIr.children[0]);
 
-      expect(flow.flowDefaults).toEqual({
-        entity: { style: { color: '#334155', fillOpacity: 1, strokeWidth: 1, font: { size: 14 } } },
-        relation: { style: { stroke: '#64748b', strokeWidth: 1, strokeOpacity: 0.9 }, labelFont: { size: 12 } },
+      expect(flow.defaultFlow).toEqual({
+        entity: { style: { color: '#334155', strokeWidth: 1, opacity: { fill: 1 } } },
+        relation: { style: { stroke: '#64748b', strokeWidth: 1, opacity: { stroke: 0.9 } } },
       });
       expect(flow.entities).toHaveLength(3);
       expect(flow.relations).toEqual([

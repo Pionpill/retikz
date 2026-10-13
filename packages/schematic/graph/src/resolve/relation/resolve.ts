@@ -1,4 +1,4 @@
-import { mergeProperties } from '@retikz/foundation';
+import { mergeGraphicStyle } from '@retikz/core';
 
 import type { RelationPredicateDefinition } from '../../contract';
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
@@ -265,7 +265,6 @@ const relationSourceAppearanceOf = (source: IRGraphRelation): IRGraphRelationDef
           color: style.color,
           stroke: style.stroke,
           strokeWidth: style.strokeWidth,
-          strokeOpacity: style.strokeOpacity,
           opacity: style.opacity,
           shadow: style.shadow,
           blendMode: style.blendMode,
@@ -294,11 +293,11 @@ export const projectRelationGraphLayers = (
   if (Object.keys(authorAppearance).length === 0 && authorStructure === undefined) return relation.source;
 
   const projected = mergeRelationAppearance(authorAppearance, relationSourceAppearanceOf(relation.source));
-  const style = {
-    ...mergeProperties([projected.style], { shouldOverride: value => value !== undefined }),
-    ...(authorStructure === undefined ? {} : { dashPattern: authorStructure.dashPattern }),
-    ...mergeProperties([relation.source.style], { shouldOverride: value => value !== undefined }),
-  };
+  const style = mergeGraphicStyle<NonNullable<IRGraphRelation['style']>>(
+    projected.style,
+    authorStructure === undefined ? undefined : { dashPattern: authorStructure.dashPattern },
+    relation.source.style,
+  );
 
   return {
     ...relation.source,

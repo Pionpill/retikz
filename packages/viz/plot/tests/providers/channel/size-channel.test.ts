@@ -119,21 +119,24 @@ const sizeResolutionOf = (
   } = {},
 ) => {
   const node = pointSpec(size, extraScales, options.model);
-  const resolution = BUILTIN_NODE_CHANNELS.size.resolve({
-    node,
-    rows,
-    model: [{ name: size.value, ...(options.fieldType === undefined ? {} : { type: options.fieldType }) }],
-    resolveChannelScale: () => ({
-      of: () => undefined,
-      legendForm: 'swatch',
-      domain: [],
-      range: [],
-      scaleType: 'test',
-    }),
-    resolveCategoryDomain: values =>
-      values.filter((value): value is string | number => typeof value === 'string' || typeof value === 'number'),
-    resolveColorScheme: () => () => '#000000',
-  })(node.marks[0]);
+  const resolution = BUILTIN_NODE_CHANNELS.size.resolve(
+    {
+      node,
+      rows,
+      model: [{ name: size.value, ...(options.fieldType === undefined ? {} : { type: options.fieldType }) }],
+      resolveChannelScale: () => ({
+        of: () => undefined,
+        legendForm: 'swatch',
+        domain: [],
+        range: [],
+        scaleType: 'test',
+      }),
+      resolveCategoryDomain: values =>
+        values.filter((value): value is string | number => typeof value === 'string' || typeof value === 'number'),
+      resolveColorScheme: () => () => '#000000',
+    },
+    node.marks[0],
+  );
 
   expect(resolution).toBeDefined();
 
@@ -409,21 +412,24 @@ describe('size channel 错误输入', () => {
 
   it('observed_derived_continuous_size_descriptor_reports_its_type', () => {
     const node = pointSpec({ kind: 'field', value: 'derivedSize' });
-    const resolution = BUILTIN_NODE_CHANNELS.size.resolve({
-      node,
-      rows: [{ derivedSize: 4 }],
-      model: [],
-      resolveChannelScale: () => ({
-        of: () => undefined,
-        legendForm: 'swatch',
-        domain: [],
-        range: [],
-        scaleType: 'test',
-      }),
-      resolveCategoryDomain: values =>
-        values.filter((value): value is string | number => typeof value === 'string' || typeof value === 'number'),
-      resolveColorScheme: () => () => '#000000',
-    })(node.marks[0]);
+    const resolution = BUILTIN_NODE_CHANNELS.size.resolve(
+      {
+        node,
+        rows: [{ derivedSize: 4 }],
+        model: [],
+        resolveChannelScale: () => ({
+          of: () => undefined,
+          legendForm: 'swatch',
+          domain: [],
+          range: [],
+          scaleType: 'test',
+        }),
+        resolveCategoryDomain: values =>
+          values.filter((value): value is string | number => typeof value === 'string' || typeof value === 'number'),
+        resolveColorScheme: () => () => '#000000',
+      },
+      node.marks[0],
+    );
 
     expect(resolution?.descriptor?.fieldType).toBe(DataFieldType.Continuous);
   });

@@ -11,7 +11,7 @@ These transforms preserve row count while deriving bounds, shares or perturbed v
 
 Its Schema is `StackTransformSchema`; parameters are listed below:
 
-#### <ApiSourceLink label={"IRDataStackTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={74}>IRDataStackTransform</ApiSourceLink> / <ApiSourceLink label={"StackTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={185}>StackTransformSchema</ApiSourceLink> / <ApiSourceLink label={"StackParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={165}>StackParamsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataStackTransform"} path={"packages/viz/data/src/transform/types.ts"} startLine={46}>IRDataStackTransform</ApiSourceLink> / <ApiSourceLink label={"StackTransformSchema"} path={"packages/viz/data/src/transform/schema.ts"} startLine={183}>StackTransformSchema</ApiSourceLink> / <ApiSourceLink label={"StackParamsSchema"} path={"packages/viz/data/src/transform/schema.ts"} startLine={163}>StackParamsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -64,7 +64,7 @@ export type IRDataStackTransform = ZodInfer<typeof StackTransformSchema>;
 
 `normalize` divides each value by its group total. fraction produces shares from 0 to 1, and percent from 0 to 100. Row count and input order are preserved. Omitting as overwrites the source field; setting as adds a field. Finite negative values fail, missing or non-finite values count as zero, and a zero total produces zero shares. Its Schema is `NormalizeTransformSchema`; parameters are listed below:
 
-#### <ApiSourceLink label={"IRDataNormalizeTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={80}>IRDataNormalizeTransform</ApiSourceLink> / <ApiSourceLink label={"NormalizeTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={321}>NormalizeTransformSchema</ApiSourceLink> / <ApiSourceLink label={"NormalizeParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={300}>NormalizeParamsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataNormalizeTransform"} path={"packages/viz/data/src/transform/types.ts"} startLine={52}>IRDataNormalizeTransform</ApiSourceLink> / <ApiSourceLink label={"NormalizeTransformSchema"} path={"packages/viz/data/src/transform/schema.ts"} startLine={319}>NormalizeTransformSchema</ApiSourceLink> / <ApiSourceLink label={"NormalizeParamsSchema"} path={"packages/viz/data/src/transform/schema.ts"} startLine={298}>NormalizeParamsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -120,7 +120,7 @@ export type IRDataNormalizeTransform = ZodInfer<typeof NormalizeTransformSchema>
 
 `derive-interval` builds a baseline-to-value interval per row, or reads both endpoints from fields. It preserves rows, fields and input order without accumulating other records. When both startFrom and endFrom are set, they take precedence; otherwise from is required. Non-finite endpoints fall back to the baseline, and reversed endpoints are not automatically swapped. Its Schema is `DeriveIntervalTransformSchema`; parameters are listed below:
 
-#### <ApiSourceLink label={"IRDataDeriveIntervalTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={83}>IRDataDeriveIntervalTransform</ApiSourceLink> / <ApiSourceLink label={"DeriveIntervalTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={347}>DeriveIntervalTransformSchema</ApiSourceLink> / <ApiSourceLink label={"DeriveIntervalParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={327}>DeriveIntervalParamsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataDeriveIntervalTransform"} path={"packages/viz/data/src/transform/types.ts"} startLine={55}>IRDataDeriveIntervalTransform</ApiSourceLink> / <ApiSourceLink label={"DeriveIntervalTransformSchema"} path={"packages/viz/data/src/transform/schema.ts"} startLine={345}>DeriveIntervalTransformSchema</ApiSourceLink> / <ApiSourceLink label={"DeriveIntervalParamsSchema"} path={"packages/viz/data/src/transform/schema.ts"} startLine={325}>DeriveIntervalParamsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -173,7 +173,7 @@ export type IRDataDeriveIntervalTransform = ZodInfer<typeof DeriveIntervalTransf
 
 `jitter` adds deterministic pseudo-random offsets to continuous fields, often to separate overlapping observations. Offsets use data units in [-amount, amount], rather than pixels. The same input order, axis, seed and amount reproduce the same result; non-finite values are preserved. Rows and order stay intact, and specified fields are overwritten. Its Schema is `JitterTransformSchema`; parameters are listed below:
 
-#### <ApiSourceLink label={"IRDataJitterTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={95}>IRDataJitterTransform</ApiSourceLink> / <ApiSourceLink label={"JitterTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={379}>JitterTransformSchema</ApiSourceLink> / <ApiSourceLink label={"JitterParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={353}>JitterParamsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataJitterTransform"} path={"packages/viz/data/src/transform/types.ts"} startLine={67}>IRDataJitterTransform</ApiSourceLink> / <ApiSourceLink label={"JitterTransformSchema"} path={"packages/viz/data/src/transform/schema.ts"} startLine={377}>JitterTransformSchema</ApiSourceLink> / <ApiSourceLink label={"JitterParamsSchema"} path={"packages/viz/data/src/transform/schema.ts"} startLine={351}>JitterParamsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

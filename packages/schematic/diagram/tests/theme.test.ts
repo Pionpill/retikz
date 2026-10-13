@@ -145,7 +145,7 @@ describe('Diagram Theme cascade', () => {
     });
     const inline = DiagramDefaultsSchema.parse({
       frame: {
-        background: { fill: '#f8fafc', fillOpacity: 0.8 },
+        background: { fill: '#f8fafc', opacity: { fill: 0.8 } },
         border: { strokeWidth: 3 },
       },
       presentation: { title: { style: { opacity: 0.75, font: { size: 24, style: 'normal' } } } },
@@ -154,7 +154,7 @@ describe('Diagram Theme cascade', () => {
     const resolved = resolveDiagramTheme(themeWith({ style: 'brand' }), registryOf(definition), inline);
 
     expect(resolved.frame.padding).toEqual({ top: 0, right: 0, bottom: 0, left: 20 });
-    expect(resolved.frame.background).toEqual({ fill: '#f8fafc', fillOpacity: 0.8 });
+    expect(resolved.frame.background).toEqual({ fill: '#f8fafc', opacity: { fill: 0.8 } });
     expect(resolved.frame.border).toEqual({ strokeWidth: 3 });
     expect(resolved.presentation.title).toMatchObject({
       textColor: '#1d4ed8',

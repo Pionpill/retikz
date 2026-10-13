@@ -83,7 +83,7 @@ const hasOwnPath = (value: unknown, path: ReadonlyArray<string>): boolean => {
 
 /** 找到某个 defaults Source 字段最终采用的来源层 */
 const defaultsSourceOf = (options: ResolveTableCellPlansOptions, path: ReadonlyArray<string>): TableCellPlanSource => {
-  const layers = options.tableDefaults?.layers ?? [];
+  const layers = options.defaultTable?.layers ?? [];
 
   for (let index = layers.length - 1; index >= 0; index -= 1) {
     const layer = layers[index];
@@ -122,7 +122,7 @@ const styleAppearanceOf = (
   options: ResolveTableCellPlansOptions,
 ): Readonly<{ appearance: IRTableCellAppearance; trace: TableCellAppearanceTrace }> => {
   const location = cell.location === TableCellLocation.ColumnHeader ? 'columnHeader' : 'body';
-  const defaults = options.tableDefaults?.defaults.appearanceDefaults?.[location];
+  const defaults = options.defaultTable?.defaults.defaultAppearance?.[location];
   const trace: Partial<Record<TableCellAppearanceTracePath, TableCellPlanSource>> = {};
   const appearance: IRTableCellAppearance = {};
 
@@ -145,7 +145,7 @@ const styleAppearanceOf = (
     traceAppearanceLeaves(
       appearance.background,
       ['background'],
-      ['appearanceDefaults', location, 'background'],
+      ['defaultAppearance', location, 'background'],
       options,
       trace,
     );
@@ -155,13 +155,13 @@ const styleAppearanceOf = (
   }
 
   if (appearance.content !== undefined)
-    traceAppearanceLeaves(appearance.content, ['content'], ['appearanceDefaults', location, 'content'], options, trace);
+    traceAppearanceLeaves(appearance.content, ['content'], ['defaultAppearance', location, 'content'], options, trace);
   if (appearance.borders !== undefined)
     Object.keys(appearance.borders).forEach(side => {
       const path = `/${['borders', side].join('/')}`;
       const parsedPath = TableCellAppearanceTracePathSchema.safeParse(path);
       if (parsedPath.success) {
-        trace[parsedPath.data] = defaultsSourceOf(options, ['appearanceDefaults', location, 'borders', side]);
+        trace[parsedPath.data] = defaultsSourceOf(options, ['defaultAppearance', location, 'borders', side]);
       }
     });
 

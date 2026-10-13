@@ -34,14 +34,14 @@ export type EllipsePrim = {
    * 填充透明度 0~1
    * @default 1
    */
-  fillOpacity?: IRGraphicStyle['fillOpacity'];
+  fillOpacity?: number;
   /** 描边：纯色 / 资源表 paint server（gradient）/ contextStroke */
   stroke?: PaintValue;
   /**
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: IRGraphicStyle['strokeOpacity'];
+  strokeOpacity?: number;
   /** 描边宽度，采用场景坐标单位 */
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 沿椭圆边界重复的虚线段与间隙序列 */
@@ -52,7 +52,7 @@ export type EllipsePrim = {
    * 整体透明度 0~1
    * @default 1
    */
-  opacity?: IRGraphicStyle['opacity'];
+  opacity?: number;
   /** 投影：解析后对象（preset 已展开 + 显式覆盖合并）；undefined = 无投影 */
   shadow?: ResolvedDropShadow;
   /**

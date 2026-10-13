@@ -161,7 +161,7 @@ export const compileBranchDiagram = (
       layout: _layout,
       presentation: _presentation,
       frame: _frame,
-      diagramDefaults: _defaults,
+      defaultDiagram: _defaults,
       ...scope
     } = source;
 

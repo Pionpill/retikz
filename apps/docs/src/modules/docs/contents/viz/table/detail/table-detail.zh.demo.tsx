@@ -11,7 +11,7 @@ type ScoreTableProps = { embedded?: boolean };
 
 const rootTheme = { style: 'academic', mode: 'light' } as const;
 
-const appearanceDefaults = {
+const defaultAppearance = {
   body: {
     background: { fill: 0.08 },
     content: {
@@ -43,7 +43,7 @@ const ScoreTable: FC<ScoreTableProps> = props => {
       id="score-detail"
       dataRef="scores"
       data={scoreRows}
-      appearanceDefaults={appearanceDefaults}
+      defaultAppearance={defaultAppearance}
       rules={[
         {
           selector: { fields: ['score'], value: { kind: 'compare', operator: 'lt', value: 0 } },

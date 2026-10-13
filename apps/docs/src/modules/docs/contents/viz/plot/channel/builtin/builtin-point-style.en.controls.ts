@@ -57,7 +57,7 @@ export const builtinPointStyleControls = definePreviewControls({
         {
           kind: 'range',
           id: 'fillOpacity',
-          label: 'fillOpacity',
+          label: 'opacity.fill',
           defaultValue: 0.85,
           min: 0.1,
           max: 1,
@@ -66,7 +66,7 @@ export const builtinPointStyleControls = definePreviewControls({
         {
           kind: 'range',
           id: 'strokeOpacity',
-          label: 'strokeOpacity',
+          label: 'opacity.stroke',
           defaultValue: 1,
           min: 0.1,
           max: 1,
@@ -107,6 +107,7 @@ export const previewControlContract = {
     size: 13,
     shape: BuiltinShape.Circle,
   },
+  presetSelector: { label: 'Preset', customLabel: 'Custom' },
   presets: [
     {
       id: 'semantic-color',
@@ -143,8 +144,8 @@ export const previewControlContract = {
     'PointMark.stroke',
     'PointMark.strokeWidth',
     'PointMark.opacity',
-    'PointMark.fillOpacity',
-    'PointMark.strokeOpacity',
+    'PointMark.opacity.fill',
+    'PointMark.opacity.stroke',
     'PointMark.size',
     'PointMark.shape',
   ],

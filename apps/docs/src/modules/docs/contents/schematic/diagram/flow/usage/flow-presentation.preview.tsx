@@ -26,7 +26,7 @@ export const renderFlowPresentationPreview = (
         legend: LegendSchema.parse({
           namespace: 'standard',
           type: 'legend',
-          style: { opacity: values.legend ? 1 : 0 },
+          defaults: { style: { opacity: values.legend ? 1 : 0 } },
           content: {
             kind: 'items',
             items: [

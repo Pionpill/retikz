@@ -180,7 +180,7 @@ Entity 提供 `kind` 字段，但不提供内置 kind 值；这个字段预留�
 
 内置 `role` 主要决定形状和基础尺寸，与内置 `status` 的外观分工明确。自定义 role 可以另配外观规则，与 status 或 kind 规则作用于同一字段；建议沿用内置能力的分工，但不强制。
 
-主色冲突时，优先级是：Entity 实例显式的 `style.color` ＞ 作者 `graphDefaults` / `graphRules` 指定的主色 ＞ `group` 分类色 ＞ 内置 `status` 状态色。`group` 只直接补主色；其它外观字段仍由实例样式优先于作者规则和内置状态外观。多条业务规则命中时，后声明的规则覆盖先声明的规则；role 与 kind 本身没有固定的外观优先级。更完整的规则说明见[实现原理](/schematic/graph/entity/mechanism)。
+主色冲突时，优先级是：Entity 实例显式的 `style.color` ＞ 作者 `defaultGraph` / `graphRules` 指定的主色 ＞ `group` 分类色 ＞ 内置 `status` 状态色。`group` 只直接补主色；其它外观字段仍由实例样式优先于作者规则和内置状态外观。多条业务规则命中时，后声明的规则覆盖先声明的规则；role 与 kind 本身没有固定的外观优先级。更完整的规则说明见[实现原理](/schematic/graph/entity/mechanism)。
 
 下方试验场可以切换角色与状态，也可以为实体应用分组。开启“应用分组”后，分组对应的颜色会覆盖状态色；再开启“覆盖主题主色”，实例颜色会优先于两者。
 

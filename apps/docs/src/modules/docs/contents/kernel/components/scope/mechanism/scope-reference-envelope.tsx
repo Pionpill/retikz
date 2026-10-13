@@ -19,7 +19,7 @@ const ScopeReferenceEnvelope: FC<ScopeReferenceEnvelopeProps> = props => {
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}
-      flowDefaults={{
+      defaultFlow={{
         ...scopeFlowDefaults,
         entity: { style: { font: { size: 14 } }, layout: { lineHeight: 16 } },
       }}

@@ -19,7 +19,7 @@ const ScopeCoordinateProjection: FC<ScopeCoordinateProjectionProps> = props => {
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}
-      flowDefaults={scopeFlowDefaults}
+      defaultFlow={scopeFlowDefaults}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
       <FlowLayout id="coordinate-actions" kind="linear" direction="right" gap={26} itemWidth="match-largest">

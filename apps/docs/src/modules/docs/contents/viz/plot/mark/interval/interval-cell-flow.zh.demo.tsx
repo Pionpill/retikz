@@ -85,7 +85,7 @@ const Demo: FC = () => (
             id={node.id}
             position={node.position}
             cornerRadius={4}
-            style={{ stroke: node.color, fill: node.color, fillOpacity: 0.08 }}
+            style={{ stroke: node.color, fill: node.color, opacity: { fill: 0.08 } }}
             layout={{ minimumSize: { width: node.width, height: 50 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{node.title}</Text>
@@ -105,7 +105,7 @@ const Demo: FC = () => (
               id={`desktop-${kind}`}
               position={[350, -60 + index * 60]}
               cornerRadius={4}
-              style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+              style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
               layout={{ minimumSize: { width: 130, height: 40 }, align: 'middle' }}
             >
               {kind}
@@ -126,7 +126,7 @@ const Demo: FC = () => (
             id={node.id}
             position={node.position}
             cornerRadius={4}
-            style={{ stroke: node.color, fill: node.color, fillOpacity: 0.08 }}
+            style={{ stroke: node.color, fill: node.color, opacity: { fill: 0.08 } }}
             layout={{ minimumSize: { width: node.width, height: 32 }, align: 'middle', lineHeight: 13 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{node.title}</Text>

@@ -17,12 +17,12 @@ sharing structure normalization, presentation, layout, and lowering.
 
 Table first resolves one deterministic Cell plan: the Core host Theme selects a same-named style definition,
 shared categorical colors project into the Table data channel, and sparse Source fragments provide
-Table defaults. `appearanceDefaults`, `visualDefaults`, and `tableDefaults` follow the Table Source
+Table defaults. `defaultAppearance`, `defaultVisual`, and `defaultTable` follow the Table Source
 shape, while `layout.borders.outer` keeps the four physical sides. Cell-local
 formatter/presentation/appearance, ordered visual encodings, and ordered root rules then contribute
 in increasing priority. Value Cells run the winning formatter and presentation with that final appearance.
 The mode baseline and named styles use the same public Core and Table definition registries. Their
-defaults are resolved before `tableDefaults`, then explicit Source fragments; omitted fields remain
+defaults are resolved before `defaultTable`, then explicit Source fragments; omitted fields remain
 absent and defaults never create Cells, borders, encodings, or Legend descriptors. Content Cells
 already own renderable children and therefore bypass formatter and presentation dispatch.
 

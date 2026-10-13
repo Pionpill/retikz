@@ -21,7 +21,7 @@ const render = (lang: Lang, dimensions?: PreviewDimensions, values: DemoValues =
     dimensions,
     header: values.header,
     panelGap: values.panelGap,
-    fillOpacity: values.fillOpacity,
+    opacity: { fill: values.fillOpacity },
   });
 };
 

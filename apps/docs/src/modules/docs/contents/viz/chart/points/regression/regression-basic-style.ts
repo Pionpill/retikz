@@ -14,5 +14,5 @@ export const regressionTrendPropertiesOf = (
   ...(!grouped ? { stroke } : {}),
   ...(lineStyle === 'dashed' ? { dashPattern: [8, 4] } : {}),
   strokeWidth,
-  strokeOpacity,
+  opacity: { stroke: strokeOpacity },
 });

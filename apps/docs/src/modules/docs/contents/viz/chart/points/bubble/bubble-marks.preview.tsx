@@ -6,13 +6,13 @@ import { gapminderBubbleData } from './bubble-basic.data';
 export type BubbleMarksPreviewOptions = {
   dimensions?: { width: number; height: number };
   coordinateSystem: 'cartesian2D' | 'polar2D';
-  fillOpacity: number;
+  opacity: { fill: number };
   strokeWidth: number;
 };
 
 /** 覆盖默认气泡图元并调整外观 */
 export const renderBubbleMarksPreview = (options: BubbleMarksPreviewOptions) => {
-  const { dimensions, coordinateSystem, fillOpacity, strokeWidth } = options;
+  const { dimensions, coordinateSystem, opacity, strokeWidth } = options;
   const bounds = dimensions ?? { width: 720, height: 440 };
 
   return (
@@ -27,10 +27,10 @@ export const renderBubbleMarksPreview = (options: BubbleMarksPreviewOptions) => 
           size: 'population',
           color: 'continent',
         },
-        properties: { fillOpacity: 0.55 },
+        properties: { opacity: { fill: 0.55 } },
       }}
     >
-      <BubbleMark override properties={{ fillOpacity, strokeWidth }} />
+      <BubbleMark override properties={{ opacity, strokeWidth }} />
     </BubbleChart>
   );
 };

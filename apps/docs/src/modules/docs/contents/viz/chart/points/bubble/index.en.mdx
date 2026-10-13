@@ -194,7 +194,7 @@ Constant properties style bubbles without replacing the required numeric size en
 <DocTab value="react-jsx" label="React + JSX">
 
 ```tsx
-<BubbleProperties fillOpacity={0.35} stroke="#475569" strokeWidth={1.5} shape="circle" />
+<BubbleProperties opacity={{ fill: 0.35 }} stroke="#475569" strokeWidth={1.5} shape="circle" />
 ```
 
 </DocTab>
@@ -202,7 +202,7 @@ Constant properties style bubbles without replacing the required numeric size en
 
 ```ts
 properties: {
-  fillOpacity: 0.35,
+  opacity: { fill: 0.35 },
   stroke: '#475569',
   strokeWidth: 1.5,
   shape: 'circle',
@@ -215,7 +215,7 @@ properties: {
 ```ts
 recipe: {
   properties: {
-    fillOpacity: 0.35,
+    opacity: { fill: 0.35 },
     stroke: '#475569',
     strokeWidth: 1.5,
     shape: 'circle',
@@ -228,7 +228,7 @@ recipe: {
 
 In the same data, larger populations can obscure nearby countries. Appearance controls make overlaps easier to read while preserving positions and population encoding.
 
-- `fillOpacity`: Set 0.35 to make overlapping regions easier to distinguish.
+- `opacity.fill`: Set 0.35 to make overlapping regions easier to distinguish.
 - `stroke`: Choose an outline color to separate nearby bubbles.
 - `strokeWidth`: Set 1.5 to emphasize outlines; set 0 to compare bubbles without strokes.
 - `shape`: Change the glyph shape without assigning a constant size.
@@ -259,7 +259,7 @@ Marks append or replace bubbles while inheriting the chart’s numeric size enco
 <BubbleMark
   override
   properties={{
-    fillOpacity: 0.15,
+    opacity: { fill: 0.15 },
     strokeWidth: 2,
   }}
 />
@@ -274,7 +274,7 @@ marks: [
     kind: 'bubble',
     override: true,
     properties: {
-      fillOpacity: 0.15,
+      opacity: { fill: 0.15 },
       strokeWidth: 2,
     },
   },
@@ -291,7 +291,7 @@ recipe: {
       kind: 'bubble',
       override: true,
       properties: {
-        fillOpacity: 0.15,
+        opacity: { fill: 0.15 },
         strokeWidth: 2,
       },
     },
@@ -305,7 +305,7 @@ recipe: {
 This example retains income, longevity and population but replaces the primary bubbles with lighter fills and stronger outlines. Replacement does not add a second population layer.
 
 - `override`: Set true to replace the primary mark in place.
-- `properties.fillOpacity`: Use 0.15 to reduce occlusion.
+- `properties.opacity.fill`: Use 0.15 to reduce occlusion.
 - `properties.strokeWidth`: Use 2 for clearer outlines.
 
 Size remains inherited from the recipe population field. Bubble marks deliberately have no size override, so the third numeric role is retained.
@@ -331,12 +331,12 @@ When income spans orders of magnitude, a linear axis compresses many countries. 
 
 Groups below are properties inside IR `recipe`; React and Vanilla use the corresponding inputs described above.
 
-| Group        | Property      | Type             | Description                                 |
-| ------------ | ------------- | ---------------- | ------------------------------------------- |
-| `encodings`  | `x.scale`     | log scale object | GDP per capita must be positive             |
-|              | `size`        | string           | Use population to represent population size |
-|              | `color`       | string           | continent categories                        |
-| `properties` | `fillOpacity` | number           | Reduce overlapping occlusion                |
+| Group        | Property       | Type             | Description                                 |
+| ------------ | -------------- | ---------------- | ------------------------------------------- |
+| `encodings`  | `x.scale`      | log scale object | GDP per capita must be positive             |
+|              | `size`         | string           | Use population to represent population size |
+|              | `color`        | string           | continent categories                        |
+| `properties` | `opacity.fill` | number           | Reduce overlapping occlusion                |
 
 Switch the x scale and inspect how horizontal distances change. Equal distances on a log axis are not equal dollar differences.
 
@@ -361,7 +361,7 @@ Groups below are properties inside IR `recipe`; React and Vanilla use the corres
 | `encodings`  | `x / y / size` | field mappings | Income, longevity and population                     |
 |              | `row`          | string         | Create rows by continent                             |
 |              | `facet`        | facet options  | Keep shared scales, show row headers and set spacing |
-| `properties` | `fillOpacity`  | number         | Use translucent fills                                |
+| `properties` | `opacity.fill` | number         | Use translucent fills                                |
 
 Compare panels within the same x interval. The number of bubbles represents countries, not total population.
 
@@ -396,11 +396,11 @@ Fully explicit `domainPadding` bypasses point-aware solving. See [shared point-c
 
 Chart resolves a bubble mark to a Plot Point whose size comes from a numeric field. The table lists only bubble-specific conversions.
 
-| Group      | `@retikz/chart`              | `@retikz/plot`               | Description                                                                       |
-| ---------- | ---------------------------- | ---------------------------- | --------------------------------------------------------------------------------- |
-| Encodings  | `size`                       | `size`                       | Maps the required numeric field to point size; the default size scale uses `sqrt` |
-| Properties | `fillOpacity`, `strokeWidth` | `fillOpacity`, `strokeWidth` | Applies defaults of 0.7 and 1 before explicit properties override them            |
-| Mark       | `BubbleChartMarkSchema`      | `PointMarkSchema`            | Resolves each bubble mark to one Plot Point                                       |
+| Group      | `@retikz/chart`               | `@retikz/plot`                | Description                                                                       |
+| ---------- | ----------------------------- | ----------------------------- | --------------------------------------------------------------------------------- |
+| Encodings  | `size`                        | `size`                        | Maps the required numeric field to point size; the default size scale uses `sqrt` |
+| Properties | `opacity.fill`, `strokeWidth` | `opacity.fill`, `strokeWidth` | Applies defaults of 0.7 and 1 before explicit properties override them            |
+| Mark       | `BubbleChartMarkSchema`       | `PointMarkSchema`             | Resolves each bubble mark to one Plot Point                                       |
 
 <SourceLinks
   sources={[

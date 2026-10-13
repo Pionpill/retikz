@@ -94,8 +94,8 @@ export const TreeSchema = CompositeBaseSchema.extend({
   namespace: literal('standard').describe('Standard composite namespace.'),
   type: literal('tree').describe('Tree composite discriminator.'),
   ...ScopePropsSchema.shape,
-  node: TreeNodeSchema.optional().describe('Sparse node shape, style, and layout overrides.'),
-  connection: union([literal(false), TreeConnectionSchema])
+  defaultNode: TreeNodeSchema.optional().describe('Sparse node shape, style, and layout overrides.'),
+  defaultConnection: union([literal(false), TreeConnectionSchema])
     .optional()
     .describe('Parent-child connection overrides; false hides the connection.'),
   layout: TreeLayoutSchema.optional().describe('Growth direction and clearances between levels and subtree envelopes.'),

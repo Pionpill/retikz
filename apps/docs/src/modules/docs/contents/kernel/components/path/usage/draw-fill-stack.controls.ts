@@ -53,7 +53,7 @@ export const createPreviewControlContract = (lang: Lang) =>
   ({
     controls: createControls(lang),
     canonicalValues: { fillA: '#1e90ff', fillB: '#ef4444', fillOpacity: 0.7, zIndexA: 0 },
-    relatedApis: ['Draw.style.fill', 'Draw.style.fillOpacity', 'Draw.zIndex'],
+    relatedApis: ['Draw.style.fill', 'Draw.style.opacity.fill', 'Draw.zIndex'],
   }) satisfies PreviewControlContract;
 
 /** 默认中文预览契约 */

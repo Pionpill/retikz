@@ -33,7 +33,8 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
   return out;
 };
 
-const opacityOf = (node: IRNode): number | undefined => node.style?.opacity;
+const opacityOf = (node: IRNode): number | undefined =>
+  typeof node.style?.opacity === 'number' ? node.style.opacity : node.style?.opacity?.overall;
 
 const pointSpec = (opacity: Record<string, unknown> | undefined): IRPlot =>
   PlotSchema.parse({
@@ -45,7 +46,13 @@ const pointSpec = (opacity: Record<string, unknown> | undefined): IRPlot =>
       { type: 'linear', name: 'y', domainPadding: 0 },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', ...(opacity ? { opacity } : {}), encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+    marks: [
+      {
+        type: 'point',
+        ...(opacity ? { opacity: { overall: opacity } } : {}),
+        encoding: { x: { field: 'x' }, y: { field: 'y' } },
+      },
+    ],
   });
 
 describe('opacity channel (contract)', () => {
@@ -78,8 +85,8 @@ describe('opacity channel (contract)', () => {
       marks: [
         {
           type: 'point',
-          opacity: { kind: 'field', value: 'd', scale: 'alpha' },
           encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          opacity: { overall: { kind: 'field', value: 'd', scale: 'alpha' } },
         },
       ],
     });
@@ -103,7 +110,7 @@ describe('opacity channel (contract)', () => {
     ];
     const layer = firstLayer(pointSpec({ kind: 'constant', value: 0.4 }), { d: data });
 
-    expect(layer.defaults?.node?.style?.opacity).toBeCloseTo(0.4, 6);
+    expect(layer.defaults?.node?.style?.opacity).toEqual({ overall: 0.4 });
     expect(collectNodes(layer).every(n => opacityOf(n) === undefined)).toBe(true);
   });
 
@@ -158,8 +165,8 @@ describe('opacity channel (contract)', () => {
         {
           type: 'point',
           size: { kind: 'field', value: 'p' },
-          opacity: { kind: 'field', value: 'd' },
           encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          opacity: { overall: { kind: 'field', value: 'd' } },
         },
       ],
     });
@@ -171,4 +178,34 @@ describe('opacity channel (contract)', () => {
 
     expect(nodes.every(n => opacityOf(n) !== undefined && n.layout?.minimumSize !== undefined)).toBe(true);
   });
+});
+
+it('opacity members resolve independent fields and named scales', () => {
+  const spec = pointSpec(undefined);
+  spec.scales.push(
+    { type: 'linear', name: 'overall-alpha', domain: [0, 10] },
+    { type: 'linear', name: 'fill-alpha', domain: [0, 100] },
+    { type: 'linear', name: 'stroke-alpha', domain: [0, 1] },
+  );
+  spec.marks = [
+    {
+      type: 'point',
+      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+      opacity: {
+        overall: { kind: 'field', value: 'a', scale: 'overall-alpha' },
+        fill: { kind: 'field', value: 'b', scale: 'fill-alpha' },
+        stroke: { kind: 'field', value: 'c', scale: 'stroke-alpha' },
+      },
+    },
+  ];
+  const nodes = collectNodes(
+    firstLayer(spec, {
+      d: [
+        { x: 0, y: 0, a: 0, b: 100, c: 0.5 },
+        { x: 1, y: 1, a: 10, b: 0, c: 1 },
+      ],
+    }),
+  );
+  expect(nodes[0].style?.opacity).toEqual({ overall: OPACITY_MIN, fill: 1, stroke: 0.6 });
+  expect(nodes[1].style?.opacity).toEqual({ overall: 1, fill: OPACITY_MIN, stroke: 1 });
 });

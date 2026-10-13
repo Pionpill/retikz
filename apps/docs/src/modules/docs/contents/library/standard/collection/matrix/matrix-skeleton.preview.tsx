@@ -18,7 +18,7 @@ export const renderMatrixPreview = (values: MatrixPreviewValues) => {
         };
   return (
     <Layout viewBox={{ x: -35, y: -35, width: 360, height: 250 }}>
-      <Matrix skeleton={skeleton} index={values.index === 'auto'} layout={{ width: 48, height: 36 }} />
+      <Matrix skeleton={skeleton} index={values.index === 'auto'} defaultCell={{ layout: { width: 48, height: 36 } }} />
     </Layout>
   );
 };

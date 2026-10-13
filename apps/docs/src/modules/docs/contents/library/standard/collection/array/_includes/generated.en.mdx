@@ -18,16 +18,16 @@ The data, items, skeleton, and ArrayItem children inputs are mutually exclusive;
 | `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —            | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
 | `cellIdMode?`     | `input<typeof ArraySchema>['cellIdMode']`                                                | `'explicit'` | Direct cell identity: explicit ids only, items strings, or zero-based ids derived from the Array id                                             |
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `defaultCell?`    | `IRArray['defaultCell']`                                                                 | —            | Shared Array cell style and layout defaults.                                                                                                    |
 | `defaults?`       | `IRArray['defaults']`                                                                    | —            | Named descendant defaults and their inheritance barrier.                                                                                        |
 | `frame?`          | `IRScopeFrame`                                                                           | —            | Envelope decoration with optional defaults                                                                                                      |
 | `id?`             | `string`                                                                                 | —            | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
 | `index?`          | `IRArray['index']`                                                                       | `false`      | False hides indices; true or an object enables the index strip.                                                                                 |
 | `label?`          | `IRArray['label']`                                                                       | —            | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
-| `layout?`         | `IRArray['layout']`                                                                      | —            | Array cell allocation and ordering.                                                                                                             |
+| `layout?`         | `{ direction?: "row" \| "column" \| undefined; gap?: number \| undefined; }`             | —            | Array cell allocation and ordering.                                                                                                             |
 | `localNamespace?` | `false \| true`                                                                          | —            | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
 | `meta?`           | `Record<string, JsonValue>`                                                              | —            | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
 | `position?`       | `IRScopePosition`                                                                        | —            | Origin position in the parent frame or final anchor alignment; defaults to the origin                                                           |
-| `style?`          | `IRArray['style']`                                                                       | —            | Shared visual styles inherited by cells; explicit cell fields override matching values                                                          |
 | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | Sparse Theme override inherited by this Scope descendants.                                                                                      |
 | `transforms?`     | `IRArray['transforms']`                                                                  | —            | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
 | `zIndex?`         | `number`                                                                                 | —            | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
@@ -220,16 +220,16 @@ Choose items, data, or skeleton; dataExpand applies only to data. Other fields f
 | `boundingShape?`    | `"rectangle" \| "circle"`                                                                | —            | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
 | `cellIdMode?`       | `input<typeof ArraySchema>['cellIdMode']`                                                | `'explicit'` | Direct cell identity: explicit ids only, items strings, or zero-based ids derived from the Array id                                             |
 | `clip?`             | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `defaultCell?`      | `IRArray['defaultCell']`                                                                 | —            | Shared Array cell style and layout defaults.                                                                                                    |
 | `defaults?`         | `IRArray['defaults']`                                                                    | —            | Named descendant defaults and their inheritance barrier.                                                                                        |
 | `frame?`            | `IRScopeFrame`                                                                           | —            | Envelope decoration with optional defaults                                                                                                      |
 | `id?`               | `string`                                                                                 | —            | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
 | `index?`            | `IRArray['index']`                                                                       | `false`      | False hides indices; true or an object enables the index strip.                                                                                 |
 | `label?`            | `IRArray['label']`                                                                       | —            | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
-| `layout?`           | `IRArray['layout']`                                                                      | —            | Array cell allocation and ordering.                                                                                                             |
+| `layout?`           | `{ direction?: "row" \| "column" \| undefined; gap?: number \| undefined; }`             | —            | Array cell allocation and ordering.                                                                                                             |
 | `localNamespace?`   | `false \| true`                                                                          | —            | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
 | `meta?`             | `Record<string, JsonValue>`                                                              | —            | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
 | `position?`         | `IRScopePosition`                                                                        | —            | Origin position in the parent frame or final anchor alignment; defaults to the origin                                                           |
-| `style?`            | `IRArray['style']`                                                                       | —            | Shared visual styles inherited by cells; explicit cell fields override matching values                                                          |
 | `theme?`            | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | Sparse Theme override inherited by this Scope descendants.                                                                                      |
 | `transforms?`       | `IRArray['transforms']`                                                                  | —            | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
 | `zIndex?`           | `number`                                                                                 | —            | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
@@ -327,7 +327,7 @@ export declare const ArrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputA
 
 **Persistent configuration**
 
-#### <ApiSourceLink label={"IRArray"} path={"packages/library/standard/src/collection/array/schema/types.ts"} startLine={21}>IRArray</ApiSourceLink>
+#### <ApiSourceLink label={"IRArray"} path={"packages/library/standard/src/collection/array/schema/types.ts"} startLine={20}>IRArray</ApiSourceLink>
 
 **Common members**
 
@@ -339,17 +339,17 @@ export declare const ArrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputA
 | `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —            | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
 | `cellIdMode?`     | `input<typeof ArraySchema>['cellIdMode']`                                                | `'explicit'` | Direct cell identity: explicit ids only, items strings, or zero-based ids derived from the Array id                                             |
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `defaultCell?`    | `IRArray["defaultCell"]`                                                                 | —            | Shared Array cell style and layout defaults.                                                                                                    |
 | `defaults?`       | `IRScopeProps['defaults']`                                                               | —            | Named descendant defaults and their inheritance barrier.                                                                                        |
 | `frame?`          | `IRScopeFrame`                                                                           | —            | Envelope decoration with optional defaults                                                                                                      |
 | `id?`             | `string`                                                                                 | —            | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
 | `index?`          | `IRArray["index"]`                                                                       | `false`      | False hides indices; true or an object enables the index strip.                                                                                 |
 | `label?`          | `IRArray["label"]`                                                                       | —            | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
-| `layout?`         | `IRArray["layout"]`                                                                      | —            | Array cell allocation and ordering.                                                                                                             |
+| `layout?`         | `{ direction?: "row" \| "column" \| undefined; gap?: number \| undefined; }`             | —            | Array cell allocation and ordering.                                                                                                             |
 | `localNamespace?` | `false \| true`                                                                          | —            | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
 | `meta?`           | `Record<string, JsonValue>`                                                              | —            | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
 | `namespace`       | `"standard"`                                                                             | —            | Composite namespace for Standard drawing capabilities.                                                                                          |
 | `position?`       | `IRScopePosition`                                                                        | —            | Origin position in the parent frame or final anchor alignment; defaults to the origin                                                           |
-| `style?`          | `IRCell['style']`                                                                        | —            | Shared visual styles inherited by cells; explicit cell fields override matching values                                                          |
 | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | Sparse Theme override inherited by this Scope descendants.                                                                                      |
 | `transforms?`     | `IRScopeProps['transforms']`                                                             | —            | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
 | `type`            | `"array"`                                                                                | —            | Composite type for the array presentation.                                                                                                      |
@@ -413,8 +413,7 @@ export type IRArray = Omit<
   input<typeof ArraySchema>,
   keyof IRScopeProps | 'items' | 'data' | 'cellIdMode' | 'dataExpand' | 'skeleton'
 > &
-  Omit<IRScopeProps, 'style'> & {
-    style?: IRCell['style'];
+  IRScopeProps & {
     cellIdMode?: input<typeof ArraySchema>['cellIdMode'];
   } & (
     | {
@@ -442,7 +441,7 @@ export type IRArray = Omit<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRArrayCell"} path={"packages/library/standard/src/collection/array/schema/types.ts"} startLine={15}>IRArrayCell</ApiSourceLink>
+#### <ApiSourceLink label={"IRArrayCell"} path={"packages/library/standard/src/collection/array/schema/types.ts"} startLine={14}>IRArrayCell</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -473,7 +472,7 @@ export type IRArrayCell = Omit<input<typeof ArrayCellSchema>, 'content'> & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRArrayIndexOptions"} path={"packages/library/standard/src/collection/array/schema/types.ts"} startLine={9}>IRArrayIndexOptions</ApiSourceLink>
+#### <ApiSourceLink label={"IRArrayIndexOptions"} path={"packages/library/standard/src/collection/array/schema/types.ts"} startLine={8}>IRArrayIndexOptions</ApiSourceLink>
 
 **Common members**
 
@@ -526,7 +525,7 @@ export type IRArrayIndexOptions = input<typeof ArrayIndexOptionsSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRArrayIndexStyle"} path={"packages/library/standard/src/collection/array/schema/types.ts"} startLine={12}>IRArrayIndexStyle</ApiSourceLink>
+#### <ApiSourceLink label={"IRArrayIndexStyle"} path={"packages/library/standard/src/collection/array/schema/types.ts"} startLine={11}>IRArrayIndexStyle</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -555,7 +554,7 @@ export type IRArrayIndexStyle = input<typeof ArrayIndexStyleSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ArraySchema"} path={"packages/library/standard/src/collection/array/schema/schema.ts"} startLine={66}>ArraySchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArraySchema"} path={"packages/library/standard/src/collection/array/schema/schema.ts"} startLine={71}>ArraySchema</ApiSourceLink>
 
 <ZodSchema name="ArraySchema" expandNested />
 

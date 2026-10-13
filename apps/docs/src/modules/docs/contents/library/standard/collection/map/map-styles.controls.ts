@@ -22,7 +22,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       ],
     }),
     canonicalValues: { keyWidth: 60, valueWidth: 112, local: true },
-    relatedApis: ['Map.layout', 'Map.style', 'Map.entries'],
+    relatedApis: ['Map.layout', 'Map.defaultCell.style', 'Map.entries'],
   } satisfies PreviewControlContract;
 };
 
