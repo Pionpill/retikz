@@ -1,5 +1,3 @@
-import { point, pointAtArcAngle, pointAtEllipseArcAngle } from '@retikz/math';
-
 import type { ArrowEmitContext, MarkerFill, MarkerPrimitive, PathCommand, ResolvedArrowEnd } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { ArrowMarkResolution } from '../../../resolve';
@@ -8,9 +6,9 @@ import {
   createLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../../resolve/diagnostics';
-import type { IRPosition } from '../../../schemas';
 import { validateMarkerPrimitives } from '../../resource';
-import { arcCommandPointAt, trimArcEnd, trimArcStart } from './arc-shrink';
+import { shortenEndpointContacts } from './endpoint-contact';
+import type { EndpointArrowSpecs } from './endpoint-contact';
 
 /** 调用 arrow emit，并校验 marker 产物 */
 const emitArrowMarkerPrimitives = (
@@ -83,9 +81,13 @@ export const emitEndpointArrowMark = (
   round: (n: number) => number,
 ): EndpointArrowMarkEmission => {
   const { geometry } = resolution;
+  const spec = emitArrowEnd(resolution, round);
+  // 将半线宽接缝重叠放在线接触点内侧，尖端的目标位置保持不变
+  const contactWithOverlap = geometry.tipX - (geometry.shrink * geometry.baseSize) / geometry.resolvedLength;
+  spec.refX += (contactWithOverlap - geometry.contactX) * (1 - endpointOverlap);
   if (endpointOverlap === 0) {
     return {
-      spec: emitArrowEnd(resolution, round),
+      spec,
       shrink: geometry.shrink,
       boundaryOuterInset: geometry.boundaryOuterInset,
     };
@@ -108,7 +110,7 @@ export const emitEndpointArrowMark = (
   }
 
   return {
-    spec: emitArrowEnd(resolution, round),
+    spec,
     shrink: endpointShrink,
     boundaryOuterInset: geometry.boundaryOuterInset * (1 - endpointOverlap),
   };
@@ -119,129 +121,20 @@ export const emitMarkArrow = (resolution: ArrowMarkResolution, round: (n: number
   return emitArrowEnd(resolution, round);
 };
 
-/** 取一个 PathCommand 末端 endpoint（move/line/quad/cubic → to；arc/ellipseArc → polar(end)；close 无端点） */
-const endpointOf = (cmd: PathCommand): IRPosition | null => {
-  switch (cmd.kind) {
-    case 'move':
-    case 'line':
-    case 'quad':
-    case 'cubic':
-      return [cmd.to[0], cmd.to[1]];
-    case 'arc':
-      return pointAtArcAngle(cmd.center, cmd.radius, cmd.endAngle);
-    case 'ellipseArc':
-      return pointAtEllipseArcAngle({
-        center: cmd.center,
-        radiusX: cmd.radiusX,
-        radiusY: cmd.radiusY,
-        angleDeg: cmd.endAngle,
-      });
-    case 'close':
-      return null;
-  }
-};
-
-type SetEndpointInput = {
-  commands: Array<PathCommand>;
-  index: number;
-  endpoint: IRPosition;
-  round: (n: number) => number;
-};
-
-/** 改写一个 PathCommand 的 endpoint（用于 shrink） */
-const setEndpoint = ({ commands, index, endpoint, round }: SetEndpointInput): void => {
-  const cmd = commands[index];
-  if (cmd.kind === 'close') return;
-
-  const rp: [number, number] = [round(endpoint[0]), round(endpoint[1])];
-  if (cmd.kind === 'move' || cmd.kind === 'line') {
-    commands[index] = { ...cmd, to: rp };
-  } else if (cmd.kind === 'quad') {
-    commands[index] = { ...cmd, to: rp };
-  } else if (cmd.kind === 'cubic') {
-    commands[index] = { ...cmd, to: rp };
-  }
-};
-
-const isDrawableCommand = (command: PathCommand): boolean => command.kind !== 'move' && command.kind !== 'close';
-
-const precedingMoveIndex = (commands: ReadonlyArray<PathCommand>, commandIndex: number): number => {
-  for (let index = commandIndex - 1; index >= 0; index -= 1) {
-    if (commands[index].kind === 'move') return index;
-    if (isDrawableCommand(commands[index])) break;
-  }
-
-  return -1;
-};
-
 /** 箭头收缩改写所需上下文 */
-export type ApplyArrowShrinksContext = {
+export type ApplyArrowShrinksContext = EndpointArrowSpecs & {
   /** 起点收缩系数，乘 strokeWidth 得到实际距离 */
   shrinkStart: number;
   /** 终点收缩系数，乘 strokeWidth 得到实际距离 */
   shrinkEnd: number;
-  /** 宿主描边宽度，用于换算箭头收缩距离 */
+  /** 宿主描边宽度 */
   strokeWidth: number;
-  /** 统一改写端点的坐标精度 */
+  /** 坐标输出精度 */
   round: (n: number) => number;
 };
 
-/** 按箭头收缩量改写 path 首尾端点 */
-export const applyArrowShrinks = (commands: Array<PathCommand>, context: ApplyArrowShrinksContext): void => {
-  const { shrinkStart, shrinkEnd, strokeWidth, round } = context;
-  if (shrinkStart !== 0) {
-    const firstDrawableIndex = commands.findIndex(isDrawableCommand);
-    const moveIndex = precedingMoveIndex(commands, firstDrawableIndex);
-    if (firstDrawableIndex >= 0 && moveIndex >= 0) {
-      const command = commands[firstDrawableIndex];
-      if (command.kind === 'arc' || command.kind === 'ellipseArc') {
-        const trimmed = trimArcStart(command, shrinkStart * strokeWidth);
-        commands[firstDrawableIndex] = trimmed;
-        setEndpoint({
-          commands,
-          index: moveIndex,
-          endpoint: arcCommandPointAt(trimmed, trimmed.startAngle),
-          round,
-        });
-      } else {
-        const move = commands[moveIndex];
-        const nextPoint = endpointOf(command);
-        if (move.kind === 'move' && nextPoint) {
-          const shifted = point.shiftToward([move.to[0], move.to[1]], nextPoint, shrinkStart * strokeWidth);
-          setEndpoint({ commands, index: moveIndex, endpoint: shifted, round });
-        }
-      }
-    }
-  }
-
-  if (shrinkEnd !== 0) {
-    let lastDrawableIndex = -1;
-
-    for (let i = commands.length - 1; i >= 0; i--) {
-      if (isDrawableCommand(commands[i])) {
-        lastDrawableIndex = i;
-        break;
-      }
-    }
-
-    if (lastDrawableIndex >= 0) {
-      const command = commands[lastDrawableIndex];
-      if (command.kind === 'arc' || command.kind === 'ellipseArc') {
-        commands[lastDrawableIndex] = trimArcEnd(command, shrinkEnd * strokeWidth);
-        return;
-      }
-
-      let prevIdx = lastDrawableIndex - 1;
-
-      while (prevIdx >= 0 && commands[prevIdx].kind === 'close') prevIdx--;
-      if (prevIdx >= 0) {
-        const curPt = endpointOf(command);
-        const prevPt = endpointOf(commands[prevIdx]);
-        if (curPt && prevPt) {
-          const shifted = point.shiftToward(curPt, prevPt, shrinkEnd * strokeWidth);
-          setEndpoint({ commands, index: lastDrawableIndex, endpoint: shifted, round });
-        }
-      }
-    }
-  }
-};
+/** 保留原曲线并计算端点箭头的接合位置与朝向 */
+export const applyArrowShrinks = (
+  commands: Array<PathCommand>,
+  context: ApplyArrowShrinksContext,
+): EndpointArrowSpecs => shortenEndpointContacts(commands, context);

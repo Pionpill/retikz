@@ -427,26 +427,46 @@ const emitCanonicalPathPrimitive = (
   });
   boundsPoints.push(...marks.boundsPoints);
 
-  const endpointSpecs = pathEndpointArrows(arrows);
+  let endpointSpecs = pathEndpointArrows(arrows);
   const fragments = splitStrokePathAtInterruptions(logicalGeometry, interruptionIntervals, round, {
     separateTerminalDrawable: endpointSpecs.arrowEnd !== undefined,
   });
   let primitive: ScenePrimitive;
   if (interruptionIntervals.length === 0) {
-    applyArrowShrinks(commands, { shrinkStart, shrinkEnd, strokeWidth, round });
+    endpointSpecs = applyArrowShrinks(commands, { ...endpointSpecs, shrinkStart, shrinkEnd, strokeWidth, round });
     primitive = splitSubPathsForEndpointArrows(commands, baseProps, endpointSpecs).primitive;
   } else {
     const startFragment = fragments.find(fragment => fragment.hasPathStart);
     const endFragment = fragments.find(fragment => fragment.hasPathEnd);
     if (startFragment !== undefined && startFragment === endFragment) {
-      applyArrowShrinks(startFragment.commands, { shrinkStart, shrinkEnd, strokeWidth, round });
+      endpointSpecs = applyArrowShrinks(startFragment.commands, {
+        ...endpointSpecs,
+        shrinkStart,
+        shrinkEnd,
+        strokeWidth,
+        round,
+      });
     } else {
       if (startFragment !== undefined) {
-        applyArrowShrinks(startFragment.commands, { shrinkStart, shrinkEnd: 0, strokeWidth, round });
+        const adjusted = applyArrowShrinks(startFragment.commands, {
+          arrowStart: endpointSpecs.arrowStart,
+          shrinkStart,
+          shrinkEnd: 0,
+          strokeWidth,
+          round,
+        });
+        endpointSpecs.arrowStart = adjusted.arrowStart;
       }
 
       if (endFragment !== undefined) {
-        applyArrowShrinks(endFragment.commands, { shrinkStart: 0, shrinkEnd, strokeWidth, round });
+        const adjusted = applyArrowShrinks(endFragment.commands, {
+          arrowEnd: endpointSpecs.arrowEnd,
+          shrinkStart: 0,
+          shrinkEnd,
+          strokeWidth,
+          round,
+        });
+        endpointSpecs.arrowEnd = adjusted.arrowEnd;
       }
     }
 

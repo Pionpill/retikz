@@ -115,7 +115,7 @@ const pointsEqual = (left: IRPosition, right: IRPosition): boolean =>
 type StrokeCommandGeometry = Pick<StrokeCommandOccurrence, 'command' | 'from' | 'to'>;
 
 /** 将 Core 的最终 drawable command 映射为不含 Drawing 语义的 Math 曲线段 */
-const curveSegmentOfOccurrence = ({ command, from, to }: StrokeCommandGeometry): CurveSegment => {
+export const curveSegmentOfOccurrence = ({ command, from, to }: StrokeCommandGeometry): CurveSegment => {
   if (command.kind === 'line' || command.kind === 'close') {
     return { kind: 'line', from, to };
   }
@@ -456,7 +456,8 @@ const roundPoint = (point: IRPosition, round: (value: number) => number): IRPosi
   round(point[1]),
 ];
 
-const sliceOccurrenceCommand = (
+/** 保留原曲线形状，输出给定参数区间的命令 */
+export const sliceOccurrenceCommand = (
   occurrence: StrokeCommandOccurrence,
   fromParameter: number,
   toParameter: number,
