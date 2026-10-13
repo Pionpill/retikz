@@ -135,7 +135,7 @@ export const logicFigureTableThemeStyle = defineTableThemeStyle({
           },
         },
         columnHeader: {
-          background: { fill: 'lightgray', opacity: { fill: 0.3 } },
+          background: { fill: 'lightgray', fillOpacity: 0.3 },
           content: {
             defaults: {
               node: { style: { font: { size: 12, weight: 'bold' } } },

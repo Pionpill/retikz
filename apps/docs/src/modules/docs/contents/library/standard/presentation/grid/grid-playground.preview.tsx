@@ -46,7 +46,7 @@ export const renderGridPlaygroundPreview = (values: GridPlaygroundPreviewValues)
   const lineStyle = {
     stroke: values.lineStroke,
     strokeWidth: values.lineStrokeWidth,
-    strokeOpacity: values.lineOpacity,
+    opacity: { stroke: values.lineOpacity },
     ...(values.lineDashed ? { dashPattern: [6, 4] } : {}),
   };
   const major = values.majorEnabled

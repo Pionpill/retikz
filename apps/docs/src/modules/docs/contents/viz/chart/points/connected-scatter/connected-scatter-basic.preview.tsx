@@ -51,7 +51,7 @@ export const renderConnectedScatterBasicPreview = (
 
         path={{
           curve: values.curve,
-          ...(values.colorMode === 'muted' ? {} : { strokeOpacity: values.lineOpacity }),
+          ...(values.colorMode === 'muted' ? {} : { opacity: { stroke: values.lineOpacity } }),
           connectNulls: values.connectNulls,
           strokeWidth: values.strokeWidth,
           ...(values.lineStyle === 'dashed' ? { dashPattern: [8, 4] } : {}),
