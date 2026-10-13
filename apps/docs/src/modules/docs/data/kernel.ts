@@ -608,6 +608,12 @@ export const kernelSection: Array<Section> = [
             difficulty: DocDifficulty.Internals,
             meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
           },
+          {
+            id: 'coordinates',
+            label: 'kernel.pkgCoreCoordinates',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+          },
         ],
       },
       {

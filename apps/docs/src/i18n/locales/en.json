@@ -142,6 +142,7 @@
     "pkgHydration": "render · Hydration",
     "pkgCoreCompilation": "Compilation Flow",
     "pkgCoreResolution": "Configuration resolution",
+    "pkgCoreCoordinates": "Coordinate resolution",
     "pkgOverview": "Overview",
     "pkgFoundationUtilities": "Utilities",
     "pkgFoundationTypesSchemas": "Types & Schemas",
