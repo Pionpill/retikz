@@ -615,8 +615,8 @@ export const kernelSection: Array<Section> = [
             meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
           },
           {
-            id: 'node-layout',
-            label: 'kernel.pkgCoreNodeLayout',
+            id: 'node-compilation',
+            label: 'kernel.pkgCoreNodeCompilation',
             difficulty: DocDifficulty.Internals,
             meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
           },

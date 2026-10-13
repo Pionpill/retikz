@@ -143,7 +143,7 @@
     "pkgCoreCompilation": "Compilation Flow",
     "pkgCoreResolution": "Configuration resolution",
     "pkgCoreCoordinates": "Coordinate resolution",
-    "pkgCoreNodeLayout": "Node Layout",
+    "pkgCoreNodeCompilation": "Node Compilation",
     "pkgOverview": "Overview",
     "pkgFoundationUtilities": "Utilities",
     "pkgFoundationTypesSchemas": "Types & Schemas",
