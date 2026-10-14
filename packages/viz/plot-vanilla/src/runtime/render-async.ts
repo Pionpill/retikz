@@ -93,7 +93,15 @@ const renderPlotAsyncImpl = async <TSource = never>(
   if (options.lineage === undefined || options.lineage === false) return svg;
   if (preparedData === undefined) throw new RetikzPlotVanillaError('Plot async result is missing its prepared data');
 
-  return { svg, lineage: lowerPlotWithLineage(spec, {}, options, preparedData).lineage };
+  return {
+    svg,
+    lineage: lowerPlotWithLineage(
+      spec,
+      {},
+      { ...options, environment: { theme: options.theme, compile: { themeStyles: options.themeStyles } } },
+      preparedData,
+    ).lineage,
+  };
 };
 
 /** 以 Promise 渲染规范数据绑定，与同步入口保持相同的 SVG/lineage 返回形态 */

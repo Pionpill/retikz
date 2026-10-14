@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
+import { measureLabel } from '../helpers/text-measurement';
 
 const rows = [
   { day: 0, temperature: 10, rainfall: 0, x: 1, y: 0, z: 0 },
@@ -89,7 +90,11 @@ const sharedYOverlaySpec = {
 const parsePlotIR = (spec: unknown): IRPlot => PlotSchema.parse(spec);
 
 const expandOf = (spec: IRPlot): IRScope => {
-  return lowerPlot(spec, { weather: rows }, { width: 480, height: 300, provenance: true }) as IRScope;
+  return lowerPlot(
+    spec,
+    { weather: rows },
+    { textMeasurer: measureLabel, width: 480, height: 300, provenance: true },
+  ) as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';

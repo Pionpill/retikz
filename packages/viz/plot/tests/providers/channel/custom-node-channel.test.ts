@@ -7,6 +7,7 @@ import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { measureLabel } from '../../helpers/text-measurement';
 
 /**
  * 自定义 `intensity`（→ node.opacity）经 options.channelDefinitions 注册，
@@ -226,7 +227,7 @@ const firstLayer = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
-  return (lowerPlot(spec, datasets, options) as IRScope).children[0] as IRScope;
+  return (lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope).children[0] as IRScope;
 };
 
 const expandOf = (
@@ -234,7 +235,7 @@ const expandOf = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
-  return lowerPlot(spec, datasets, options) as IRScope;
+  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
 describe('custom node channel registry', () => {
@@ -279,7 +280,9 @@ describe('custom node channel registry', () => {
       deliver: () => {},
     });
 
-    expect(() => lowerPlot(scatterSpec(), { d: rows }, opts([bad]))).toThrow(/collides with a built-in channel/);
+    expect(() => lowerPlot(scatterSpec(), { d: rows }, { ...opts([bad]), textMeasurer: measureLabel })).toThrow(
+      /collides with a built-in channel/,
+    );
   });
 
   // 错误路径：缺 deliver → fail-loud
@@ -291,14 +294,20 @@ describe('custom node channel registry', () => {
       resolve: () => undefined,
     } as unknown as AnyChannelDefinition;
 
-    expect(() => lowerPlot(scatterSpec(), { d: rows }, opts([bad]))).toThrow(/must provide deliver/);
+    expect(() => lowerPlot(scatterSpec(), { d: rows }, { ...opts([bad]), textMeasurer: measureLabel })).toThrow(
+      /must provide deliver/,
+    );
   });
 
   // 错误路径：两个自定义通道同名 → fail-loud
   it('duplicate_custom_channel_fails_loud', () => {
-    expect(() => lowerPlot(scatterSpec(), { d: rows }, opts([intensityChannel, intensityChannel]))).toThrow(
-      /duplicate custom channel/,
-    );
+    expect(() =>
+      lowerPlot(
+        scatterSpec(),
+        { d: rows },
+        { ...opts([intensityChannel, intensityChannel]), textMeasurer: measureLabel },
+      ),
+    ).toThrow(/duplicate custom channel/);
   });
 
   it('empty_custom_channel_name_fails_loud', () => {
@@ -309,7 +318,9 @@ describe('custom node channel registry', () => {
       deliver: () => {},
     });
 
-    expect(() => lowerPlot(scatterSpec(), { d: rows }, opts([bad]))).toThrow(/non-empty channel name/);
+    expect(() => lowerPlot(scatterSpec(), { d: rows }, { ...opts([bad]), textMeasurer: measureLabel })).toThrow(
+      /non-empty channel name/,
+    );
   });
 
   // 交互：自定义通道 + 内置 size 同图各自生效（size→radius、intensity→opacity）

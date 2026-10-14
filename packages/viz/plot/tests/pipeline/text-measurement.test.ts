@@ -2,6 +2,7 @@ import type { ScenePrimitive, TextMeasurer } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
+import { createPlotLineageLocator, createPlotLocator, lowerPlotWithLineage } from '../../src';
 import { lowerPlots } from '../../src/pipeline/expand';
 import { PlotSchema } from '../../src/schemas';
 
@@ -10,7 +11,12 @@ const leaves = (primitives: Array<ScenePrimitive>): Array<ScenePrimitive> =>
   primitives.flatMap(primitive => (primitive.type === 'group' ? leaves(primitive.children) : [primitive]));
 
 /** 用可控字体度量编译真实 Plot，验证布局和最终文字消费同一宿主能力 */
-const compile = (measureText: TextMeasurer, extra: Record<string, unknown> = {}, firstGroup = 'Alpha') => {
+const compile = (
+  measureText: TextMeasurer,
+  extra: Record<string, unknown> = {},
+  firstGroup = 'Alpha',
+  fontSize = 16,
+) => {
   const plot = PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -47,6 +53,7 @@ const compile = (measureText: TextMeasurer, extra: Record<string, unknown> = {},
           ],
         }),
         measureText,
+        fontSize,
         padding: 0,
       },
     ).scene.primitives,
@@ -54,6 +61,81 @@ const compile = (measureText: TextMeasurer, extra: Record<string, unknown> = {},
 };
 
 describe('Plot 使用 Core 文字测量参与布局', () => {
+  it('独立下沉和两种定位器使用显式 Core 环境，与实际绘制位置一致', () => {
+    const spec = PlotSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      id: 'sample',
+      data: { reference: 'd' },
+      scales: [
+        { name: 'x', type: 'linear', domain: [0, 1], domainPadding: 0 },
+        { name: 'y', type: 'linear', domain: [0, 1], domainPadding: 0 },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      guides: [
+        { type: 'axis', dimension: 'x', tickLabels: { font: { size: '1.5em' } } },
+        { type: 'axis', dimension: 'y', tickLabels: { font: { size: '1.5em' } } },
+      ],
+    });
+    const data = {
+      d: [
+        { x: 0, y: 0 },
+        { x: 1, y: 1 },
+      ],
+    };
+    const measureText: TextMeasurer = (text, font) => ({ width: text.length * font.size, height: font.size });
+    const environment = { compile: { measureText, fontSize: 20, padding: 0 } };
+    const normal = compileToScene(
+      { version: 1, type: 'scene', children: [spec] },
+      { ...environment.compile, composites: lowerPlots(data) },
+    ).scene;
+    const lowered = lowerPlotWithLineage(spec, data, { environment });
+    const standalone = compileToScene(
+      { version: 1, type: 'scene', children: lowered.children },
+      environment.compile,
+    ).scene;
+    expect(leaves(standalone.primitives)).toEqual(leaves(normal.primitives));
+    const points = leaves(normal.primitives).filter(p => p.type === 'ellipse');
+    const locator = createPlotLocator(spec, data, { environment });
+    const lineageLocator = createPlotLineageLocator(spec, data, { environment });
+    for (const [index, point] of points.entries()) {
+      expect(locator.datum(index)?.position).toEqual([point.cx, point.cy]);
+      expect(lineageLocator.datum(index)?.anchor.position).toEqual([point.cx, point.cy]);
+    }
+    expect(createPlotLocator(spec, data, { environment: {} }).datum(0)?.position).not.toEqual(
+      locator.datum(0)?.position,
+    );
+  });
+
+  it('一维直角坐标的留白也使用宿主测量', () => {
+    const extra = {
+      coordinate: { type: 'cartesian1D', x: 'x' },
+      marks: [{ type: 'point', encoding: { x: { field: 'x' } } }],
+      guides: [{ type: 'axis', dimension: 'x' }],
+    };
+    const narrow = compile(text => ({ width: text.length * 4, height: 10 }), extra).filter(p => p.type === 'ellipse');
+    const wide = compile(text => ({ width: text.length * 20, height: 10 }), extra).filter(p => p.type === 'ellipse');
+    expect(wide[1].cx).toBeLessThan(narrow[1].cx);
+  });
+
+  it.each([16, 20])('轴与图例的 em 字号继承外层 %s，测量与数值字号绘制一致', inheritedSize => {
+    const measure: TextMeasurer = (text, font) => ({ width: (text.length * font.size) / 2, height: font.size });
+    const guides = (size: number | string) => ({
+      guides: [
+        { type: 'axis', dimension: 'x', tickLabels: { font: { size } }, title: { text: 'Time', font: { size } } },
+        { type: 'axis', dimension: 'y', tickLabels: { font: { size } } },
+        { type: 'legend', channel: 'color', scale: 'color', style: { label: { font: { size } } }, title: 'Legend' },
+      ],
+    });
+    const relative = compile(measure, guides('1.5em'), 'Alpha', inheritedSize);
+    const absolute = compile(measure, guides(inheritedSize * 1.5), 'Alpha', inheritedSize);
+    expect(relative).toEqual(absolute);
+    const labels = relative.filter(p => p.type === 'text').filter(p => !p.lines.some(line => line.text === 'Legend'));
+    expect(labels.length).toBeGreaterThan(0);
+    expect(labels.every(p => p.fontSize === inheritedSize * 1.5)).toBe(true);
+  });
+
   it('富文本标题按 run 字体测量并保持与刻度标签的间距', () => {
     const measure: TextMeasurer = (text, font) => ({ width: text.length * font.size, height: font.size });
     const titleOf = (size: number) =>
@@ -89,7 +171,7 @@ describe('Plot 使用 Core 文字测量参与布局', () => {
             scale: 'color',
             position: 'right',
             orient: 'vertical',
-            labels: { maxTextWidth: 20, lineHeight: 24 },
+            style: { label: { maxTextWidth: 20, lineHeight: 24 } },
           },
         ],
       },

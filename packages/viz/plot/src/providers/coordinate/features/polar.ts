@@ -780,6 +780,7 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
     });
 
     const guideContext: GuideContext = {
+      textMeasurer: ctx.textMeasurer,
       plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
       projectX: angleScale,
       projectY: radiusScale,
@@ -873,6 +874,7 @@ const polar1DCoordinateDefinition: CoordinateDefinition<IRPlotPolar1DCoordinate>
       secondary: angleScale,
     });
     const guideContext: GuideContext = {
+      textMeasurer: ctx.textMeasurer,
       plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
       projectX: angleScale,
       projectY: angleScale,

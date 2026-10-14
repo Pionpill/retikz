@@ -333,7 +333,7 @@ export type PlotDataArtifactLowerResult = {
 export const lowerPlotWithDataArtifact = (
   node: IRPlot,
   datasets: ExternalDatasets,
-  options: PlotLayoutOptions = {},
+  options: PlotLayoutOptions,
   effectiveTheme: ResolvedTheme = DEFAULT_PLOT_THEME,
   lineageOptions?: DataLineageOptions,
   preparedData?: PreparedPlotData,
@@ -1545,7 +1545,7 @@ export const lowerPlotWithDataArtifact = (
 export const lowerPlot = (
   node: IRPlot,
   datasets: ExternalDatasets,
-  options: PlotLayoutOptions = {},
+  options: PlotLayoutOptions,
   effectiveTheme: ResolvedTheme = DEFAULT_PLOT_THEME,
   preparedData?: PreparedPlotData,
 ): IRChild => lowerPlotWithDataArtifact(node, datasets, options, effectiveTheme, undefined, preparedData).child;

@@ -29,7 +29,7 @@ import {
   BuiltinPlotScale,
 } from '../../../schemas';
 import type { PlotLabelMeasure } from '../../../shared';
-import { computePlotArea, measurePlotText, guideTextSourceProps } from '../../../shared';
+import { computePlotArea, guideTextSourceProps } from '../../../shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
 type Cartesian2DCoordinate = Extract<IRPlotCoordinate, { type: typeof BuiltinPlotCoordinate.Cartesian2D }>;
@@ -400,6 +400,7 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
         height: Math.abs(yRangeEnd - yRangeStart),
       };
       const guideContext: GuideContext = {
+        textMeasurer: ctx.textMeasurer,
         plotArea: guideFrame,
         projectX: xScale,
         projectY: yScale,
@@ -423,7 +424,7 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
         ctx.width,
         ctx.height,
         ctx.fontSize,
-        ctx.textMeasurer ?? measurePlotText,
+        ctx.textMeasurer,
       );
       if (Object.values(overflow).every(value => value <= 1e-6)) break;
       guideReserve = addMarginReserve(guideReserve, overflow);
@@ -470,7 +471,7 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<IRPlotCartesian1DCoo
         yLabels: horizontal ? [] : (layoutTicks?.labels ?? []),
         legendReserve: ctx.legendReserve,
       },
-      { fontSize: ctx.fontSize, reserve: ctx.layoutReserve, margin: ctx.margin },
+      { fontSize: ctx.fontSize, textMeasurer: ctx.textMeasurer, reserve: ctx.layoutReserve, margin: ctx.margin },
     );
     const plotArea = ctx.plotAreaOverride ?? computed.plotArea;
     if (horizontal) scale.setRange([plotArea.x, plotArea.x + plotArea.width]);
@@ -484,6 +485,7 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<IRPlotCartesian1DCoo
       : undefined;
 
     const guideContext: GuideContext = {
+      textMeasurer: ctx.textMeasurer,
       plotArea,
       projectX: scale,
       projectY: scale,

@@ -110,5 +110,5 @@ export type LowerPlotsOptions = {
 /** 本次下沉使用的布局环境，不写入 Plot IR */
 export type PlotLayoutOptions = LowerPlotsOptions & {
   /** 当前 Core 编译环境的文字测量 */
-  textMeasurer?: PlotLabelMeasure;
+  textMeasurer: PlotLabelMeasure;
 };

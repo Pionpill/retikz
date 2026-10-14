@@ -7,7 +7,8 @@ import { lowerPlots } from '../../src/pipeline/expand';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotLayerZIndex, PlotSchema } from '../../src/schemas';
-import { DEFAULT_FONT_SIZE, measurePlotText } from '../../src/shared';
+import { DEFAULT_FONT_SIZE } from '../../src/shared';
+import { measureLabel } from '../helpers/text-measurement';
 
 const SALES = [
   { month: 0, revenue: 10 },
@@ -54,7 +55,7 @@ const expandOf = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   options?: LowerPlotsOptions,
 ): IRScope => {
-  return lowerPlot(spec, datasets, options) as IRScope;
+  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */
@@ -81,7 +82,7 @@ const textNodeVisualBottom = (node: IRNode): number => {
   const position = node.position as [number, number];
   const authoredFontSize = node.style?.font?.size;
   const fontSize = typeof authoredFontSize === 'number' ? authoredFontSize : DEFAULT_FONT_SIZE;
-  const width = measurePlotText({ type: 'node', text: String(node.text) }, fontSize).width;
+  const width = measureLabel({ type: 'node', text: String(node.text) }, fontSize).width;
   const height = typeof node.layout?.lineHeight === 'number' ? node.layout.lineHeight : fontSize;
   const radians = (Math.abs(node.rotate ?? 0) * Math.PI) / 180;
   const rotatedHeight = width * Math.abs(Math.sin(radians)) + height * Math.abs(Math.cos(radians));

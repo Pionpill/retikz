@@ -46,6 +46,8 @@ After the basic roles are clear, tune the complete configuration in a Cartesian 
 
 Label margins and collision handling use Core text layout, including font family, weight, wrapping, and line height. A host measurer supplied through `CompileOptions.measureText` serves both Plot layout and final text rendering; without one, Core's default measurement applies. Polar angular-label radius reserves and legend text spacing use the same measurement path.
 
+Explicit `em` sizes on axis and legend labels inherit the enclosing font size. For example, with an enclosing size of `16`, `1.5em` is measured and rendered at `24`; Plot does not introduce a separate relative-size baseline.
+
 In the origin scene, both axes use `placement.kind="origin"` to cross the other dimension at 0. Placement does not expand the domain; `crossing` controls the intersection label, while `line.arrow` and `ticks.endpoint` control endpoint arrows and nearby tick avoidance.
 
 <ComponentPreview

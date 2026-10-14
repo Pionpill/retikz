@@ -41,7 +41,7 @@ export type CoordinateAxisLowerer = (
  */
 export type CoordinateResolveContext = {
   /** 当前 Core 编译环境的标签测量 */
-  textMeasurer?: PlotLabelMeasure;
+  textMeasurer: PlotLabelMeasure;
   /** 当前请求的分类顺序定义 */
   fieldOrderRegistry?: ReadonlyMap<string, FieldOrderDefinition>;
   /** 当前 lowering 共享的逐点留白求解状态 */

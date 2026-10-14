@@ -10,6 +10,7 @@ import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { lowerCustomAxis, lowerGuide } from '../../../src/pipeline/guide';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { measureLabel } from '../../helpers/text-measurement';
 
 /** 测试用最小 PositionScale：guide 只调 coordinate，其余成员给占位 */
 const fakeScale = (
@@ -62,6 +63,7 @@ const fakePolarPlacementBoundary = {
 } satisfies NonNullable<CoordinateFrame['placementBoundary']>;
 
 const ctx: GuideContext = {
+  textMeasurer: measureLabel,
   plotArea: { x: 40, y: 10, width: 400, height: 250 },
   projectX: fakeScale(value => 40 + value * 40),
   projectY: fakeScale(value => 260 - value * 25),
@@ -435,6 +437,7 @@ describe('lowerGuide (contract)', () => {
       { type: 'axis', dimension: 'u', title: { text: 'u', placement: 'at-end' } },
       11,
       undefined,
+      measureLabel,
     );
     const title = nodeByText(axisLayer as IRScope, 'u');
 
@@ -840,7 +843,7 @@ describe('lowerGuide (contract)', () => {
     const { gridLayer, axisLayer } = lowerGuide({ type: 'axis', dimension: 'x', grid: true }, ctx);
 
     expect((axisLayer as IRScope).defaults?.path?.style?.stroke).toBe('currentColor');
-    expect((axisLayer as IRScope).defaults?.node?.style?.font?.size).toBe(11);
+    expect(nodeChildren(axisLayer as IRScope).every(node => node.style?.font?.size === 11)).toBe(true);
     expect((axisLayer as IRScope).defaults?.node?.style?.stroke).toBe('none');
     expect(((gridLayer as IRScope).children[0] as IRPath).style?.opacity).toEqual({ stroke: 0.15 });
   });
@@ -1346,7 +1349,7 @@ const guidedSpec = (guides: Array<unknown>): IRPlot =>
   });
 
 const expandOf = (spec: IRPlot): IRScope => {
-  return lowerPlot(spec, { sales: SALES }, { width: 480, height: 300 }) as IRScope;
+  return lowerPlot(spec, { sales: SALES }, { textMeasurer: measureLabel, width: 480, height: 300 }) as IRScope;
 };
 
 describe('lowerPlots guide orchestration (contract)', () => {

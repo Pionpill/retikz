@@ -14,7 +14,7 @@ import type { PositionScale, TickSet } from './scale';
  */
 export type GuideContext = {
   /** 当前 Core 编译环境的标签测量 */
-  textMeasurer?: PlotLabelMeasure;
+  textMeasurer: PlotLabelMeasure;
   /** 缩进后的绘图区矩形（cartesian 轴线 / 网格框） */
   plotArea: BoundsRect;
   /** x 维位置 scale（值 -> 像素 x，含 band 中心；cartesian 用） */

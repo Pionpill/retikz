@@ -404,7 +404,7 @@ export const buildLegendLayers = (
   channelRegistry: ReadonlyMap<string, AnyChannelDefinition>,
   scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
   resolvedTheme: EffectivePlotGuideTheme,
-  measure?: PlotLabelMeasure,
+  measure: PlotLabelMeasure,
 ): Array<IRScope> => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   return legendGuides.map((guide, legendIndex): IRScope => {

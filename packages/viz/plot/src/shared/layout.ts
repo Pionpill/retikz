@@ -3,7 +3,6 @@ import type { BoundsInsets, BoundsRect } from '@retikz/math';
 
 import { RetikzPlotError } from '../error';
 import type { PlotLabelMeasure } from './text';
-import { measurePlotText } from './text';
 
 /** 默认整图宽度（user units），用于 lowering 与 locator 缺省尺寸 */
 export const DEFAULT_PLOT_WIDTH = 480;
@@ -37,7 +36,7 @@ export type PlotAreaLayoutContext = {
 /** computePlotArea 选项：字号 + 用户覆盖 margin */
 export type PlotAreaOptions = {
   /** 当前 Core 编译环境的文字测量 */
-  textMeasurer?: PlotLabelMeasure;
+  textMeasurer: PlotLabelMeasure;
   /** 与绘制共用的横轴标签配置 */
   xLabelNode?: IRNode;
   /** 与绘制共用的纵轴标签配置 */
@@ -69,10 +68,10 @@ export const computePlotArea = (
   width: number,
   height: number,
   context: PlotAreaLayoutContext,
-  options: PlotAreaOptions = {},
+  options: PlotAreaOptions,
 ): { plotArea: BoundsRect; margins: BoundsInsets } => {
   const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
-  const measure = options.textMeasurer ?? measurePlotText;
+  const measure = options.textMeasurer;
   const xLabelHeight = Math.max(
     0,
     ...context.xLabels.map(text => measure({ type: 'node', ...options.xLabelNode, text }, fontSize).height),
@@ -170,7 +169,7 @@ export const layoutPolarAngularLabel = (
   label: PolarAngularLabel,
   fontSize: number,
   radialOffset = DEFAULT_AXIS_TICK_LENGTH + DEFAULT_AXIS_LABEL_GAP,
-  measure: PlotLabelMeasure = measurePlotText,
+  measure: PlotLabelMeasure,
 ): PolarAngularLabelLayout => {
   const radians = (label.angle * Math.PI) / 180;
   const horizontal = Math.cos(radians);
@@ -213,10 +212,10 @@ export const computePolarCoordinate = (
   width: number,
   height: number,
   context: PolarLayoutContext,
-  options: PlotAreaOptions = {},
+  options: PlotAreaOptions,
 ): PolarLayout => {
   const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
-  const measure = options.textMeasurer ?? measurePlotText;
+  const measure = options.textMeasurer;
   const explicit: Partial<BoundsInsets> = options.margin ?? {};
   const layoutReserve = options.reserve ?? {};
   const margins: BoundsInsets = {

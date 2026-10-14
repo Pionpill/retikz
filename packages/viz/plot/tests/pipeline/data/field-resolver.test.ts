@@ -242,7 +242,7 @@ describe('render ⟺ locator parity + scale 兼容', () => {
   });
 
   it('locator_builds_with_same_resolveField', () => {
-    expect(() => createPlotLocator(spec, datasets, { resolveField })).not.toThrow();
+    expect(() => createPlotLocator(spec, datasets, { environment: {}, resolveField })).not.toThrow();
   });
 
   it('resolved_type_feeds_scale_compat', () => {

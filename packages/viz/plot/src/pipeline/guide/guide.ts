@@ -42,7 +42,6 @@ import type { GuideTextStyle, PlotLabelMeasure } from '../../shared';
 import {
   DEFAULT_AXIS_LABEL_GAP,
   DEFAULT_AXIS_TICK_LENGTH,
-  measurePlotText,
   guideTextSourceProps,
   layoutPolarAngularLabel,
 } from '../../shared';
@@ -434,7 +433,7 @@ type TickLabelBox = {
 };
 
 type TickLabelLayoutOptions = {
-  textMeasurer?: PlotLabelMeasure;
+  textMeasurer: PlotLabelMeasure;
   fontSize: number;
   mode: TickLabelLayoutMode;
   axis: TickLabelLayoutAxis;
@@ -449,7 +448,7 @@ const rotatedLabelSizeOf = (
   node: IRNode,
   fontSize: number,
   rotate: number,
-  measure: PlotLabelMeasure = measurePlotText,
+  measure: PlotLabelMeasure,
 ): { width: number; height: number } => {
   const { width, height } = measure(node, fontSize);
   const radians = Math.abs(rotate) * DEG_TO_RAD;
@@ -490,7 +489,7 @@ const tickLabelBoxesOf = (
   nodes: ReadonlyArray<IRNode>,
   fontSize: number,
   rotate: number,
-  measure: PlotLabelMeasure = measurePlotText,
+  measure: PlotLabelMeasure,
 ): Array<TickLabelBox> => nodes.map((node, index) => tickLabelBoxOf(node, index, fontSize, rotate, measure));
 
 const tickLabelBoxesOverlap = (
@@ -666,7 +665,7 @@ const alignRotatedTickLabelEndpoint = (
   fontSize: number,
   rotate: number,
   sideNormal: readonly [number, number] | undefined,
-  measure: PlotLabelMeasure = measurePlotText,
+  measure: PlotLabelMeasure,
 ): IRNode => {
   if (sideNormal === undefined || rotate === 0) return node;
 
@@ -920,7 +919,7 @@ const lowerCartesianGuide = (
   ctx: GuideContext,
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
-  const measure = ctx.textMeasurer ?? measurePlotText;
+  const measure = ctx.textMeasurer;
 
   const { plotArea, fontSize } = ctx;
   const labelGap = ctx.labelGap ?? DEFAULT_AXIS_LABEL_GAP;
@@ -1056,18 +1055,22 @@ const lowerCartesianGuide = (
                     tickDirection *
                       (tickLength +
                         tickLabelGap +
-                        measure({ type: 'node', text, ...guideTextSourceProps(tickLabelStyle) }, fontSize).height / 2),
+                        measure({ type: 'node', text, ...guideTextSourceProps(tickLabelStyle, fontSize) }, fontSize)
+                          .height /
+                          2),
                 ]
               : [
                   axisX +
                     tickDirection *
                       (tickLength +
                         tickLabelGap +
-                        measure({ type: 'node', text, ...guideTextSourceProps(tickLabelStyle) }, fontSize).width / 2),
+                        measure({ type: 'node', text, ...guideTextSourceProps(tickLabelStyle, fontSize) }, fontSize)
+                          .width /
+                          2),
                   p,
                 ];
           })();
-          const node: IRNode = { type: 'node', position, text, ...guideTextSourceProps(tickLabelStyle) };
+          const node: IRNode = { type: 'node', position, text, ...guideTextSourceProps(tickLabelStyle, fontSize) };
           if (isCornerLabel) {
             cornerLabels.push(node);
             return [];
@@ -1099,7 +1102,7 @@ const lowerCartesianGuide = (
     const titleStyle = axisTitleTextStyleOf(title, axisTangent);
     const titlePadding = title.padding ?? labelGap;
     const titleSize = rotatedLabelSizeOf(
-      { type: 'node', text: title.text, ...guideTextSourceProps(titleStyle) },
+      { type: 'node', text: title.text, ...guideTextSourceProps(titleStyle, fontSize) },
       fontSize,
       rotate ?? 0,
       measure,
@@ -1126,7 +1129,7 @@ const lowerCartesianGuide = (
       type: 'node',
       position,
       text: title.text,
-      ...guideTextSourceProps(titleStyle),
+      ...guideTextSourceProps(titleStyle, fontSize),
       ...(rotate !== undefined ? { rotate } : {}),
     };
   })();
@@ -1149,7 +1152,7 @@ const lowerCartesianGuide = (
                 style: { stroke: 'currentColor' },
               },
               node: {
-                style: { font: { size: fontSize }, stroke: 'none', fill: 'none' },
+                style: { stroke: 'none', fill: 'none' },
                 layout: { padding: 0 },
               },
             },
@@ -1240,7 +1243,7 @@ const lowerAngularAxis = (
   frame: PolarCoordinateFrame,
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
-  const measure = ctx.textMeasurer ?? measurePlotText;
+  const measure = ctx.textMeasurer;
 
   const { fontSize } = ctx;
   const labelGap = ctx.labelGap ?? DEFAULT_AXIS_LABEL_GAP;
@@ -1287,7 +1290,7 @@ const lowerAngularAxis = (
           const labelLayout = layoutPolarAngularLabel(
             frame.center,
             outer,
-            { angle: theta, text, node: { type: 'node', ...guideTextSourceProps(tickLabelStyle) } },
+            { angle: theta, text, node: { type: 'node', ...guideTextSourceProps(tickLabelStyle, fontSize) } },
             fontSize,
             tickLength + tickLabelGap,
             measure,
@@ -1297,7 +1300,7 @@ const lowerAngularAxis = (
             type: 'node',
             position: labelLayout.position,
             text,
-            ...guideTextSourceProps({ ...tickLabelStyle, align: tickLabelStyle.align ?? labelLayout.align }),
+            ...guideTextSourceProps({ ...tickLabelStyle, align: tickLabelStyle.align ?? labelLayout.align }, fontSize),
           };
         }),
         { fontSize, textMeasurer: measure, mode: 'generic', axis: 'both' },
@@ -1315,7 +1318,7 @@ const lowerAngularAxis = (
     const rotate = axisTitleRotateOf(title, undefined, axisTangent);
     const titleStyle = axisTitleTextStyleOf(title, axisTangent);
     const titleSize = rotatedLabelSizeOf(
-      { type: 'node', text: title.text, ...guideTextSourceProps(titleStyle) },
+      { type: 'node', text: title.text, ...guideTextSourceProps(titleStyle, fontSize) },
       fontSize,
       rotate ?? 0,
       measure,
@@ -1341,7 +1344,7 @@ const lowerAngularAxis = (
       type: 'node',
       position: shiftedAxisTitlePosition(basePosition, axisTangent, axisNormal, title.shift),
       text: title.text,
-      ...guideTextSourceProps(titleStyle),
+      ...guideTextSourceProps(titleStyle, fontSize),
       ...(rotate !== undefined ? { rotate } : {}),
     });
   }
@@ -1355,7 +1358,7 @@ const lowerAngularAxis = (
         style: { stroke: 'currentColor' },
       },
       node: {
-        style: { font: { size: fontSize }, stroke: 'none', fill: 'none' },
+        style: { stroke: 'none', fill: 'none' },
         layout: { padding: 0 },
       },
     },
@@ -1425,7 +1428,7 @@ const lowerRadialAxis = (
   frame: PolarCoordinateFrame,
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
-  const measure = ctx.textMeasurer ?? measurePlotText;
+  const measure = ctx.textMeasurer;
 
   const { fontSize } = ctx;
   const labelGap = ctx.labelGap ?? DEFAULT_AXIS_LABEL_GAP;
@@ -1477,12 +1480,12 @@ const lowerRadialAxis = (
           const text = ticks.labels[index];
 
           // 标签在刻度外侧（与刻度同侧、沿 -tangent），偏移 = 刻度长 + gap + 半字高
-          const size = measure({ type: 'node', text, ...guideTextSourceProps(tickLabelStyle) }, fontSize);
+          const size = measure({ type: 'node', text, ...guideTextSourceProps(tickLabelStyle, fontSize) }, fontSize);
           const offset =
             tickLength + tickLabelGap + (Math.abs(tangent[0]) * size.width + Math.abs(tangent[1]) * size.height) / 2;
           const position: [number, number] = [point[0] - tangent[0] * offset, point[1] - tangent[1] * offset];
 
-          return { type: 'node', position, text, ...guideTextSourceProps(tickLabelStyle) };
+          return { type: 'node', position, text, ...guideTextSourceProps(tickLabelStyle, fontSize) };
         }),
         { fontSize, textMeasurer: measure, mode: 'generic', axis: 'both' },
       )
@@ -1498,7 +1501,7 @@ const lowerRadialAxis = (
     const rotate = axisTitleRotateOf(title, undefined, axisTangent);
     const titleStyle = axisTitleTextStyleOf(title, axisTangent);
     const titleSize = rotatedLabelSizeOf(
-      { type: 'node', text: title.text, ...guideTextSourceProps(titleStyle) },
+      { type: 'node', text: title.text, ...guideTextSourceProps(titleStyle, fontSize) },
       fontSize,
       rotate ?? 0,
       measure,
@@ -1524,7 +1527,7 @@ const lowerRadialAxis = (
       type: 'node',
       position: shiftedAxisTitlePosition(basePosition, axisTangent, axisNormal, title.shift),
       text: title.text,
-      ...guideTextSourceProps(titleStyle),
+      ...guideTextSourceProps(titleStyle, fontSize),
       ...(rotate !== undefined ? { rotate } : {}),
     });
   }
@@ -1545,7 +1548,7 @@ const lowerRadialAxis = (
               style: { stroke: 'currentColor' },
             },
             node: {
-              style: { font: { size: fontSize }, stroke: 'none', fill: 'none' },
+              style: { stroke: 'none', fill: 'none' },
               layout: { padding: 0 },
             },
           },
@@ -1641,7 +1644,7 @@ export const lowerCustomAxis = (
   guide: IRPlotAxisGuide,
   fontSize: number,
   context: ProvenanceContext | undefined,
-  measure: PlotLabelMeasure = measurePlotText,
+  measure: PlotLabelMeasure,
 ): LoweredGuide => {
   assertNoCartesianOnlyAxisLineGeometry(guide);
   if (guide.placement?.kind === AxisPlacementKind.Origin) {
@@ -1723,14 +1726,17 @@ export const lowerCustomAxis = (
     tickSegments.push([point, [point[0] + normal[0] * tickLength, point[1] + normal[1] * tickLength]]);
     tickShapePlacements.push({ point, normal, tangent: unitTangent });
     if (showLabels) {
-      const size = measure({ type: 'node', text: tick.label, ...guideTextSourceProps(tickLabelStyle) }, fontSize);
+      const size = measure(
+        { type: 'node', text: tick.label, ...guideTextSourceProps(tickLabelStyle, fontSize) },
+        fontSize,
+      );
       const offset =
         tickLength + tickLabelGap + (Math.abs(normal[0]) * size.width + Math.abs(normal[1]) * size.height) / 2;
       tickLabelNodes.push({
         type: 'node',
         position: [point[0] + normal[0] * offset, point[1] + normal[1] * offset],
         text: tick.label,
-        ...guideTextSourceProps(tickLabelStyle),
+        ...guideTextSourceProps(tickLabelStyle, fontSize),
       });
     }
   }
@@ -1753,7 +1759,7 @@ export const lowerCustomAxis = (
       const rotate = axisTitleRotateOf(title, undefined, unitTangent);
       const titleStyle = axisTitleTextStyleOf(title, unitTangent);
       const titleSize = rotatedLabelSizeOf(
-        { type: 'node', text: title.text, ...guideTextSourceProps(titleStyle) },
+        { type: 'node', text: title.text, ...guideTextSourceProps(titleStyle, fontSize) },
         fontSize,
         rotate ?? 0,
         measure,
@@ -1776,7 +1782,7 @@ export const lowerCustomAxis = (
         type: 'node',
         position: shiftedAxisTitlePosition(basePosition, unitTangent, normal, title.shift),
         text: title.text,
-        ...guideTextSourceProps(titleStyle),
+        ...guideTextSourceProps(titleStyle, fontSize),
         ...(rotate !== undefined ? { rotate } : {}),
       });
     }
@@ -1802,7 +1808,7 @@ export const lowerCustomAxis = (
         style: { stroke: 'currentColor' },
       },
       node: {
-        style: { font: { size: fontSize }, stroke: 'none', fill: 'none' },
+        style: { stroke: 'none', fill: 'none' },
         layout: { padding: 0 },
       },
     },
@@ -1954,7 +1960,7 @@ const legendTextNode = (node: IRNode): IRNode => ({
  *   条目从传入 band 左上角开始排列，文字尺寸复用 Core 测量；band 的预留宽高仍由图例布局配置决定。
  *   下沉目标统一是 core Node（标签 / swatch / ramp 矩形 / size 圆点），纯 JSON
  */
-export const lowerLegend = (options: LowerLegendOptions, measure: PlotLabelMeasure = measurePlotText): IRScope => {
+export const lowerLegend = (options: LowerLegendOptions, measure: PlotLabelMeasure): IRScope => {
   const { fontSize, band, orient } = options;
   const {
     swatchSize,
@@ -1971,13 +1977,16 @@ export const lowerLegend = (options: LowerLegendOptions, measure: PlotLabelMeasu
   // 标题占一行（顶部），条目区从标题下方起
   let cursorY = band.y;
   if (options.title !== undefined) {
-    const titleSize = measure({ type: 'node', text: options.title, ...guideTextSourceProps(titleStyle) }, fontSize);
+    const titleSize = measure(
+      { type: 'node', text: options.title, ...guideTextSourceProps(titleStyle, fontSize) },
+      fontSize,
+    );
     children.push(
       legendTextNode({
         type: 'node',
         position: [band.x + titleSize.width / 2, cursorY + titleSize.height / 2],
         text: options.title,
-        ...guideTextSourceProps(titleStyle),
+        ...guideTextSourceProps(titleStyle, fontSize),
       }),
     );
     cursorY += titleSize.height + titleGap;
@@ -1999,11 +2008,13 @@ export const lowerLegend = (options: LowerLegendOptions, measure: PlotLabelMeasu
 
     // 沿带刻度标签
     for (const tick of options.ramp.ticks) {
-      const size = measure({ type: 'node', text: tick.label, ...guideTextSourceProps(labelStyle) }, fontSize);
+      const size = measure({ type: 'node', text: tick.label, ...guideTextSourceProps(labelStyle, fontSize) }, fontSize);
       const position: [number, number] = vertical
         ? [rampX + rampThickness + swatchGap + size.width / 2, rampY + tick.offset * rampLength]
         : [rampX + tick.offset * rampLength, rampY + rampThickness + swatchGap + size.height / 2];
-      children.push(legendTextNode({ type: 'node', position, text: tick.label, ...guideTextSourceProps(labelStyle) }));
+      children.push(
+        legendTextNode({ type: 'node', position, text: tick.label, ...guideTextSourceProps(labelStyle, fontSize) }),
+      );
     }
   } else {
     // 离散 swatch：逐条目堆叠（vertical 自上而下、horizontal 自左而右）
@@ -2012,7 +2023,10 @@ export const lowerLegend = (options: LowerLegendOptions, measure: PlotLabelMeasu
     let rowY = cursorY;
 
     for (const entry of options.entries) {
-      const size = measure({ type: 'node', text: entry.label, ...guideTextSourceProps(labelStyle) }, fontSize);
+      const size = measure(
+        { type: 'node', text: entry.label, ...guideTextSourceProps(labelStyle, fontSize) },
+        fontSize,
+      );
       const symbolSide =
         entry.radius !== undefined
           ? Math.max(swatchSize, entry.radius * Math.SQRT2)
@@ -2072,7 +2086,7 @@ export const lowerLegend = (options: LowerLegendOptions, measure: PlotLabelMeasu
           type: 'node',
           position: [labelX, labelY],
           text: entry.label,
-          ...guideTextSourceProps(labelStyle),
+          ...guideTextSourceProps(labelStyle, fontSize),
         }),
       );
       if (vertical) {
@@ -2091,7 +2105,7 @@ export const lowerLegend = (options: LowerLegendOptions, measure: PlotLabelMeasu
     children,
     defaults: {
       node: {
-        style: { font: { size: fontSize }, strokeWidth: 0 },
+        style: { strokeWidth: 0 },
         layout: { padding: 0 },
       },
     },

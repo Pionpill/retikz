@@ -69,7 +69,7 @@ export type CoordinateScaleBinding<TCoordinateOperation extends IRPlotCoordinate
 
 export type CoordinateDefinitionResolveContext = {
   /** 当前 Core 编译环境的标签测量 */
-  textMeasurer?: PlotLabelMeasure;
+  textMeasurer: PlotLabelMeasure;
   /** 画布宽度 */
   width: number;
   /** 画布高度 */

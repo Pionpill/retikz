@@ -13,6 +13,7 @@ import { lowerPlot, lowerPlotWithDataArtifact } from '../../../src/pipeline/expa
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import type { IRPlot } from '../../../src/schemas';
 import { EncodingSchema, PlotSchema } from '../../../src/schemas';
+import { measureLabel } from '../../helpers/text-measurement';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
@@ -27,7 +28,7 @@ type DotMark = ZodInfer<typeof DotMarkSchema>;
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
-  return lowerPlot(spec, datasets, options) as IRScope;
+  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
 const firstLayer = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
@@ -128,6 +129,7 @@ describe('mark-local transform', () => {
       spec,
       { rows: [] },
       {
+        textMeasurer: measureLabel,
         transformDefinitions: [doubleTransform],
         transformImplementations: [doubleTransformImplementation],
       },
