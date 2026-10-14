@@ -50,7 +50,7 @@ const view = mount(document.getElementById('diagram')!, ir, {
 
 重复的注册 key 会被拒绝；没有注册的 composite 会产生警告并跳过。数据不满足 schema 会使编译失败。本例只接收非负数，所有数值为零时柱高也为零。
 
-本例的 `expand` 只做数据到图元的结构转换，不能测量文字或查询子布局。需要这些反馈时改用互斥的 `compile` 分支，先阅读实现原理。
+本例的 `compile` 直接返回子声明，不需要使用布局能力。需要文字测量或子布局反馈时，可在同一个回调中调用 `context.layoutChild`，再选择并重放结果，详见实现原理。
 
 ## 延伸阅读
 

@@ -11,7 +11,7 @@ export const barChart = defineComposite({
     type: z.literal('bar-chart'),
     data: z.array(z.number().nonnegative()).min(1),
   }),
-  expand: node => {
+  compile: node => {
     const peak = Math.max(...node.data, 1);
     return {
       children: node.data.map((value, index) => {

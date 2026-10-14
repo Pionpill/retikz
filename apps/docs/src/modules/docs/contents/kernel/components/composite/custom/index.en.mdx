@@ -50,7 +50,7 @@ Call `view.dispose()` before removing the container.
 
 Duplicate registration keys are rejected. An unregistered composite emits a warning and is skipped. Data that violates its schema fails compilation. This example only accepts nonnegative numbers; all-zero data produces zero-height bars.
 
-The expand branch only transforms data into primitives. It cannot measure text or query child layout. Use the mutually exclusive compile branch when that feedback is required, after reading Implementation.
+This `compile` callback returns children directly without layout methods. When text measurement or child layout feedback is needed, use `context.layoutChild` in the same callback and replay the selected result, as explained in Implementation.
 
 ## Further reading
 

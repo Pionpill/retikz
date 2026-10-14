@@ -9,6 +9,8 @@ keywords: 'Composite、expand、IRChild、onNodeLayout、defineComposite'
 - 决策日期：2026-07-23
 - 关联：[ADR-015](./015-box-layout-composite-contract.md) · [ADR-017](./017-layout-proposal-probe-contract.md)
 
+> 双回调契约已由 [ADR-052](./052-unified-composite-compilation.md) 替代，当前统一使用 compile；本篇其余布局、隔离试算与产物语义继续有效。
+
 ## 背景
 
 Tier 2 layout composite 需要在完整 Core compile 环境中测量任意 `IRChild`，求解真实尺寸后反馈约束并复用选中结果。结构化 `expand()` 无法访问 provider、namespace、reference、文字 / TeX 测量或父级约束；事后 `onNodeLayout` 也不能布局任意 child 或表达 replay

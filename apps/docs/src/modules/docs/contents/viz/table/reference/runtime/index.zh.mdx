@@ -261,7 +261,7 @@ result.manifest;
 
 `compileTable(spec, datasets, options?)` 合并 `lowerTables()` 与 `compile.composites` 后只调用一次 `compileToScene()`。返回的 `manifest` 与 exact root artifact 的 `value` 是同一 immutable 引用；nested Table、重复 table id 或其它 composite artifacts 不会误选。
 
-layout-aware Table 不能通过纯 Tier 1 `lowerIRToKernel()` 保存 compile-local replay tree。需要 standalone 结果时使用 `compileTable()`；嵌入其它 Scene 时把 `lowerTables()` definitions 交给宿主 `compileToScene()`、React `<Layout>` 或 Vanilla adapter。
+Table 的 replay tree 属于当前编译，不能作为可持久化 Kernel IR 保存。需要 standalone 结果时使用 `compileTable()`；嵌入其它 Scene 时把 `lowerTables()` definitions 交给宿主 `compileToScene()`、React `<Layout>` 或 Vanilla adapter。
 
 manifest 是 JSON-safe、detached、递归冻结的 typed artifact payload；字段与嵌套 DTO 见[产物契约](/viz/table/reference/manifest)。根 artifact occurrence 由 Core compile traversal 生成，不进入 IRTable 或 manifest；`tableId` 不是实例 selector，匿名根、nested Table 与重复 id 都由 exact occurrence 区分。
 

@@ -13,7 +13,7 @@ description: 复合编译中的空间条件、隔离试算、结果提交与依�
 - artifact：领域算法附带输出的结构化数据
 - spatial handle：供外层工具查询的具名区域
 
-先按 Definition 选择展开分支；需要布局反馈时先试算，再提交。最后发布领域产物和已转换到整图坐标的空间区域。
+Core 调用 Definition 的 `compile` 回调；需要布局反馈时先试算，再提交。最后发布领域产物和已转换到整图坐标的空间区域。
 
 <ComponentPreview files="/kernel/components/design/composite/composite-pipeline" size="xs" hideCode />
 
@@ -21,7 +21,7 @@ description: 复合编译中的空间条件、隔离试算、结果提交与依�
 
 例如，一个卡片先询问文字至少需要多宽，再决定给文字分配的矩形空间（slot）。文字实际占据的区域称为 allocation bounds；可见笔画的范围称为 visual bounds。一次试算的 occurrence 表示这次调用在嵌套输出中的位置，用于把结果和正确的对象对应起来。
 
-`CompositeDefinition.expand()` 拿不到文字测量、provider、引用环境或父级可用空间，因此不能表达“查询子贡献 → 求解父布局 → 再分配 child slot”的反馈过程。`compile(node, context)` 把这条闭环放在同一次 Core compile 中；根 composite 收到冻结的 `NaturalLayoutProposal`，nested composite 收到父级为该 occurrence 发出的完整双轴 `context.proposal`。
+统一的 `compile(node, context)` 可以直接返回子声明，也可以在同一次编译中完成“查询子贡献 → 求解父布局 → 再分配 child slot”。根 composite 收到冻结的 `NaturalLayoutProposal`，nested composite 收到父级为该 occurrence 发出的完整双轴 `context.proposal`。
 
 Proposal 是父级提供的**可用空间条件**，不是 child 的真实尺寸，也不是 slot 本身。`LayoutProposal` 必须同时给出 `x` 与 `y`：
 
@@ -84,19 +84,19 @@ Replay wrapper 先用 `transforms` 把 child 放进 parent allocation coordinate
 
 例如，artifact 可保存 `{ width: 120 }` 这样的领域结果，且必须满足 `artifactSchema`。它与最终 Scene 同次产生，供应用读取，而不是交给 renderer 再布局。
 
-布局感知定义可以声明 `artifactSchema` 并从 `compile` 返回 JSON-safe `artifact`。Core 在 `CompileResult.artifacts` 中用 `namespace`、`type` 和 occurrence locator 封装它；locator 由原始 `sourcePath` 与结构化 expansion / output / replay 路径组成，不依赖全局 Map、回调捕获或第二次遍历。宿主因而能从同一次 compile 同时得到 Scene 与领域产物。
+复合定义可以声明 `artifactSchema` 并从 `compile` 返回 JSON-safe `artifact`。Core 在 `CompileResult.artifacts` 中用 `namespace`、`type` 和 occurrence locator 封装它；locator 由原始 `sourcePath` 与结构化 output / probe / replay 路径组成，不依赖全局 Map、回调捕获或第二次遍历。宿主因而能从同一次 compile 同时得到 Scene 与领域产物。
 
 同一个 artifact 也可作为外部观察者的输入；观察者由 `@retikz/inspect` 独立定义。
 
 如需将 artifact 可视化为辅助图形，使用独立的 [`@retikz/inspect`](/kernel/packages/inspect)；复合定义本身只返回数据，不负责选择或注册观察者。
 
-`lowerIRToKernel()` 只支持可独立执行的 `expand` 分支。它遇到布局感知 composite 会明确报错，因为正确结果依赖完整 compile 环境。
-
 <SourceLinks sources={[{ label: '相关实现', path: 'packages/kernel/core/src/compile/types.ts' }]} />
 
 ## 空间透明与 qualified handle
 
-有些 composite 不只生成可见图元，还要让外层工具在嵌套 Scope、布局 replay 与变换之后找到一个有领域含义的区域。`expand` 因而统一返回结构化结果；布局感知 `compile` 也可通过结果中的 `spatialHandles` 声明局部矩形。
+有些 composite 不只生成可见图元，还要让外层工具在嵌套 Scope、布局 replay 与变换之后找到一个有领域含义的区域。`compile` 返回结构化结果，并可通过 `spatialHandles` 声明局部矩形。
+
+直接返回的 `spatialHandles` 属于组件自身坐标；若普通生成子树含带位置或变换的 Scope，Core 会拒绝同时直接声明空间区域。此时用 `context.scope(props, children, spatialHandles)` 将声明放在对应 Scope 的局部坐标中。
 
 声明中的 `bounds` 位于当前 composite allocation coordinate。Core 在最终 traversal、Scope transform 与 replay settle 后，把它投影成 整图坐标中的轴对齐包围矩形（AABB），并在 `CompileResult.spatialHandles` 发布；`ownerPath` 按外到内保留每层 composite 的 `namespace`、`type`、显式 `id` 与 occurrence。
 
@@ -109,8 +109,6 @@ Replay wrapper 先用 `transforms` 把 child 放进 parent allocation coordinate
 `selectSpatialHandles()` 返回零到多项，`resolveSpatialHandle()` 要求恰好一项；跨 owner 查询不充分时会明确报告 miss 或 ambiguity，不猜“最近”的节点。没有声明时 index 仍存在且为空。
 
 声明可用 `aliasIds` 为同一区域补充查询名称。selector 的 `id` 匹配主 id 或任一别名，返回同一条冻结记录，不复制几何或增加 entries；主 id 与别名共同占用 owner 内的身份空间，冲突会报错。空间 id 不自动成为路径端点，Node 引用仍是独立的命名登记。
-
-`lowerIRToKernel()` 无法结算 world geometry：无声明或空声明仍可下沉，遇到非空 `spatialHandles` 会同步失败并要求改用 `compileToScene()`。这避免把局部矩形静默丢弃，或冒充已经结算的空间结果。
 
 <SourceLinks sources={[{ label: '相关实现', path: 'packages/kernel/core/src/contract/spatial-handle/types.ts' }]} />
 

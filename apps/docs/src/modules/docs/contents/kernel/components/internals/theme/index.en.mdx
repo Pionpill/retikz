@@ -27,7 +27,7 @@ Without a selected style, Core uses its default colors for the current mode. Wit
 
 ## Consume and reuse
 
-Both expand and compile callbacks read context.theme. The composite maps colors to explicit Node/Path styles; Core does not interpret chart or table tokens. The Core registry owns shared colors; a domain resolver maps the same style name to domain-specific styling. A custom style must provide both implementations. Domain entry points vary: use that package’s custom-theme documentation.
+The `compile` callback reads `context.theme`. The composite maps colors to explicit Node/Path styles; Core does not interpret chart or table tokens. The Core registry owns shared colors; a domain resolver maps the same style name to domain-specific styling. A custom style must provide both implementations. Domain entry points vary: use that package’s custom-theme documentation.
 
 A probe computes child layout in isolation; replay commits a selected result. An ordinary Scope can introduce an inner theme, while replay keeps the theme already resolved during the probe instead of recoloring at the commit position. Measurement and final output therefore share the same environment.
 
