@@ -580,6 +580,10 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const namespaceStack = new NamespaceStack();
     const identityTracker = createRuntimeTopologyTracker(1 as RuntimeRevision);
     const session: CompositeCompileSession = {
+      measurements: new Map(),
+      measurementIdentities: new WeakMap(),
+      measurementPrimitiveIdentities: new Map(),
+      nextMeasurementIdentity: 0,
       replayTransactions: new WeakMap(),
       layoutResults: new WeakMap(),
       outputChildren: new WeakMap(),

@@ -378,6 +378,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '按需布局测量', en: 'On-demand layout measurement' },
+          content: {
+            zh: '复合组件新增按轴 measureChild 贡献查询；同次编译复用等价尺寸贡献与纯文字度量，完整布局和一次 replay 仍保持独立。',
+            en: 'Composite components gain axis-specific measureChild queries. Equivalent size contributions and text metrics are reused within a compilation, while full layout and one-use replay remain separate.',
+          },
+        },
+        {
           label: {
             zh: '待发布：BREAKING 统一 Composite 编译',
             en: 'Unreleased: BREAKING unified Composite compilation',

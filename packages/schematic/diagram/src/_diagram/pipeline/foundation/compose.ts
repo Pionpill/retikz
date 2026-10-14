@@ -115,6 +115,7 @@ const collectFoundationFlexRegions = (
   const children = flex.children?.map(item => context.bindChild(item.child, [])) ?? [];
   const artifact = compileFlexLayout(flex, {
     ...context,
+    evaluation: { kind: 'layout' },
     proposal,
     sourceChild: path => children[path[1] as number],
   }).artifact;

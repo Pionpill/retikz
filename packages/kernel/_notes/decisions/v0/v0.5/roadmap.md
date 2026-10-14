@@ -46,6 +46,7 @@
 
 - 统一上下文布局、proposal / probe 和完整 Scope 输出；作者主位置由 `position` 承担，局部变换保持辅助职责：[049](./049-scope-position-contract.md)。
 - 支持空间引用与跨组合装配，保留真实布局边界及公开职责。
+- 支持按需尺寸贡献查询与同次编译跨试算缓存，减少嵌套布局重复求值：[053](./053-layout-measurement-reuse.md)。
 
 预期效果：
 

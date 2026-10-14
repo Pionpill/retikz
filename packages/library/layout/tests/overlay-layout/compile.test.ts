@@ -206,7 +206,7 @@ describe('OverlayLayout compile contract', () => {
     expect(natural.observed.allocationBounds).toEqual({ x: 0, y: 0, width: 30, height: 20 });
   });
 
-  it('uses the frozen physical x-to-y proposal matrix for aligned and positioned profiles', () => {
+  it('uses final constraints directly and measures only missing positioned dimensions', () => {
     const result = compileOverlay(
       createOverlayLayout({
         size: { x: { kind: 'fixed', value: 40 }, y: { kind: 'fixed', value: 20 } },
@@ -229,46 +229,17 @@ describe('OverlayLayout compile contract', () => {
     );
 
     expect(result.logs.filter(log => log.id === 'aligned').map(log => log.proposal)).toEqual([
-      {
-        x: { kind: 'intrinsic', mode: 'minimum' },
-        y: { kind: 'range', min: 0, max: 16 },
-      },
-      {
-        x: { kind: 'range', min: 0, max: 36 },
-        y: { kind: 'intrinsic', mode: 'minimum' },
-      },
-      {
-        x: { kind: 'intrinsic', mode: 'natural' },
-        y: { kind: 'range', min: 0, max: 16 },
-      },
-      {
-        x: { kind: 'range', min: 0, max: 36 },
-        y: { kind: 'intrinsic', mode: 'natural' },
-      },
-      {
-        x: { kind: 'range', min: 0, max: 36 },
-        y: { kind: 'range', min: 0, max: 16 },
-      },
+      { x: { kind: 'range', min: 0, max: 36 }, y: { kind: 'range', min: 0, max: 16 } },
     ]);
     expect(result.logs.filter(log => log.id === 'positioned').map(log => log.proposal)).toEqual([
-      {
-        x: { kind: 'intrinsic', mode: 'minimum' },
-        y: { kind: 'intrinsic', mode: 'natural' },
-      },
-      {
-        x: { kind: 'exact', value: 4 },
-        y: { kind: 'intrinsic', mode: 'minimum' },
-      },
       intrinsicProposal('natural'),
-      {
-        x: { kind: 'exact', value: 10 },
-        y: { kind: 'intrinsic', mode: 'natural' },
-      },
+      { x: { kind: 'exact', value: 10 }, y: { kind: 'intrinsic', mode: 'natural' } },
       exactProposal(10, 5),
     ]);
+    expect(result.observed.allocationBounds).toEqual({ x: 0, y: 0, width: 40, height: 20 });
   });
 
-  it('uses exact authored positioned sizes and the same probe chain for include and exclude items', () => {
+  it('uses exact authored positioned sizes for include and exclude items', () => {
     const result = compileOverlay(
       createOverlayLayout({
         size: { x: { kind: 'fixed', value: 40 }, y: { kind: 'fixed', value: 20 } },
@@ -306,7 +277,8 @@ describe('OverlayLayout compile contract', () => {
     const includeProposals = result.logs.filter(log => log.id === 'include').map(log => log.proposal);
     const excludeProposals = result.logs.filter(log => log.id === 'exclude').map(log => log.proposal);
 
-    expect(includeProposals).toEqual(Array.from({ length: 5 }, () => exactProposal(8, 6)));
+    expect(includeProposals.length).toBeGreaterThan(0);
+    for (const proposal of includeProposals) expect(proposal).toEqual(exactProposal(8, 6));
     expect(excludeProposals).toEqual(includeProposals);
   });
 

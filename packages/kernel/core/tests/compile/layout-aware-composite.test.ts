@@ -239,7 +239,7 @@ describe('layout-aware composite', () => {
         value: { naturalWidth: 50, rangeWidth: 20 },
       },
     ]);
-    expect(measureText).toHaveBeenCalledTimes(4);
+    expect(measureText).toHaveBeenCalledTimes(2);
   });
 
   it('forwards a range Scope proposal to nested layout-aware composites', () => {

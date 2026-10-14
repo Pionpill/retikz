@@ -251,3 +251,30 @@ describe('NamespaceStack Scope placeholder 生命周期', () => {
     expect(stack.lookupEntry('scope')).toEqual({ layout: childWithSameId, state: 'resolved' });
   });
 });
+
+it('preserves measurement identity for unchanged forks and invalidates every namespace mutation', () => {
+  const stack = new NamespaceStack();
+  let identity = stack.measurementIdentity;
+  expect(stack.fork().measurementIdentity).toBe(identity);
+  const changed = () => {
+    expect(stack.measurementIdentity).not.toBe(identity);
+    identity = stack.measurementIdentity;
+    expect(stack.fork().measurementIdentity).toBe(identity);
+  };
+  stack.register('target', makeLayout('target', 10));
+  changed();
+  stack.replaceLayout('target', makeLayout('target', 20), 0);
+  changed();
+  const fork = stack.fork();
+  fork.register('other', makeLayout('other', 30));
+  expect(stack.lookup('other')).toBeUndefined();
+  for (const change of fork.diffTopFrame(stack)) stack.commitForkChange(change);
+  changed();
+  expect(stack.lookup('other')).toBe(fork.lookup('other'));
+  stack.pushFrame();
+  changed();
+  stack.popFrame();
+  changed();
+  stack.enterResolvingPhase();
+  changed();
+});

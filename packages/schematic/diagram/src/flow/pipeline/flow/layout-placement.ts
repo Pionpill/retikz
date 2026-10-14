@@ -227,7 +227,10 @@ export const createFlowLayoutExecutionContext = (
           }
         }
 
-        const artifact = compileGridLayout({ ...grid, rowGap, columnGap }, compileContext).artifact;
+        const artifact = compileGridLayout(
+          { ...grid, rowGap, columnGap },
+          { ...compileContext, evaluation: { kind: 'layout' } },
+        ).artifact;
         if (artifact === undefined) return placementFailure(input, 'GridLayout returned no placement artifact.');
 
         return projectPlacementBounds(
@@ -255,6 +258,7 @@ export const createFlowLayoutExecutionContext = (
       const children = flex.children?.map(item => context.bindChild(item.child, [])) ?? [];
       const artifact = compileFlexLayout(flex, {
         ...context,
+        evaluation: { kind: 'layout' },
         proposal: intrinsicLayoutProposal('natural'),
         sourceChild: path => children[path[1] as number],
       }).artifact;

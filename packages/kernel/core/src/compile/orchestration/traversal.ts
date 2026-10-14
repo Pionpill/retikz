@@ -16,6 +16,10 @@ import type {
   EmitStrokeOwnerOutputOptions,
   GroupPrim,
   LayoutChildResult,
+  LayoutContribution,
+  LayoutMeasurementAxis,
+  CompositeCompileResult,
+  CompositeContributionResult,
   CompositeCompileContext,
   LayoutProposal,
   PaintValue,
@@ -138,7 +142,7 @@ import {
   transformWarnCode,
   withCompileWarningOccurrence,
 } from './diagnostics';
-import { cloneLayoutProposal, resolveLayoutSlotSize } from './layout-proposal';
+import { cloneLayoutProposal, resolveLayoutAxisSlotSize, resolveLayoutSlotSize } from './layout-proposal';
 import { bindPathTarget, pathTargetViewOf, targetKeyOf } from './path-target';
 import { createPositionResolveContext } from './position-context';
 import type { InternalScenePrimitive } from './primitive';
@@ -179,6 +183,27 @@ const replayStyleFingerprint = (scopeDefaults: TraversalFrame['scopeDefaults']):
 /** 对 resolved Theme 做 compile-local 稳定比较 */
 const replayThemeFingerprint = (theme: TraversalFrame['theme']): string => JSON.stringify(theme);
 
+/** 从真实边界提取指定轴，不补齐未查询的尺寸 */
+const contributionOfBounds = (axis: LayoutMeasurementAxis, bounds: Readonly<BoundsRect>): LayoutContribution =>
+  axis === 'x'
+    ? { axis, width: bounds.width }
+    : axis === 'y'
+      ? { axis, height: bounds.height }
+      : { axis, width: bounds.width, height: bounds.height };
+
+/** 共享既有单轴槽位语义，隔离并冻结可缓存贡献 */
+const projectContribution = (contribution: LayoutContribution, proposal: LayoutProposal): LayoutContribution => {
+  if (contribution.axis === 'x')
+    return Object.freeze({ axis: 'x', width: resolveLayoutAxisSlotSize(contribution.width, proposal.x) });
+  if (contribution.axis === 'y')
+    return Object.freeze({ axis: 'y', height: resolveLayoutAxisSlotSize(contribution.height, proposal.y) });
+  return Object.freeze({
+    axis: 'both',
+    width: resolveLayoutAxisSlotSize(contribution.width, proposal.x),
+    height: resolveLayoutAxisSlotSize(contribution.height, proposal.y),
+  });
+};
+
 /** 编译 child 树，完成 namespace 注册、延迟 path 回填、zIndex 排序和自动 layout bbox 收集 */
 export const compileChildrenToPrimitives = (
   rootChildren: ReadonlyArray<IRChild>,
@@ -187,11 +212,16 @@ export const compileChildrenToPrimitives = (
 ): TraversalResult => {
   const scopeTransformsContext = createScopeTransformContext();
   const session = options.session ?? {
+    measurements: new Map<string, LayoutContribution>(),
+    measurementIdentities: new WeakMap<object, number>(),
+    measurementPrimitiveIdentities: new Map<unknown, number>(),
+    nextMeasurementIdentity: 0,
     replayTransactions: new WeakMap(),
     layoutResults: new WeakMap(),
     outputChildren: new WeakMap(),
     failures: new WeakMap(),
   };
+  let rootContribution: LayoutContribution | undefined;
   const warningOccurrences: Array<CompileOccurrenceLocator> = [];
 
   const dispatchWarning = (warning: CompileWarningInput): void => {
@@ -2316,7 +2346,7 @@ export const compileChildrenToPrimitives = (
     let callbackResult: unknown;
     let layoutProbeIndex = 0;
 
-    const probeLayoutChild = (
+    const evaluateLayoutChild = (
       clonedChild: IRChild,
       clonedProposal: LayoutProposal,
       probeOccurrence: CompileOccurrenceLocator,
@@ -2326,11 +2356,8 @@ export const compileChildrenToPrimitives = (
       scopeChainApplied = false,
       probeInputs?: CompositeRuntimeInputScope,
       captureScopeTargets?: TraversalCompileOptions['captureScopeTargets'],
-    ): Readonly<{
-      layoutResult: LayoutChildResult;
-      transaction: CompositeReplayTransaction;
-      namespaceStack: NamespaceStack;
-    }> => {
+      measurementAxis?: LayoutMeasurementAxis,
+    ) => {
       const warnings: Array<CompileWarningInput> = [];
       const namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarningInput }> = [];
 
@@ -2391,6 +2418,7 @@ export const compileChildrenToPrimitives = (
         generated: true,
         probe: true,
         proposal: clonedProposal,
+        ...(measurementAxis === undefined ? {} : { measurementAxis }),
         session: runtime.context.session,
         runtimeInputs: probeInputs ?? { source: clonedChild, bindings: [] },
         ...(captureScopeTargets === undefined ? {} : { captureScopeTargets }),
@@ -2401,6 +2429,58 @@ export const compileChildrenToPrimitives = (
         },
       });
 
+      return {
+        laid,
+        paint,
+        clip,
+        namespaceStack,
+        namespaceBaseline,
+        registrationOccurrences,
+        registrationKey,
+        probeOccurrence,
+        namespaceBaselineWarnings,
+        warnings,
+        probeIdentityTracker,
+      };
+    };
+
+    const probeLayoutChild = (
+      clonedChild: IRChild,
+      clonedProposal: LayoutProposal,
+      probeOccurrence: CompileOccurrenceLocator,
+      probeScopeChain: ReadonlyArray<Transform>,
+      probeScopeDefaults: TraversalFrame['scopeDefaults'],
+      probeTheme: TraversalFrame['theme'],
+      scopeChainApplied = false,
+      probeInputs?: CompositeRuntimeInputScope,
+      captureScopeTargets?: TraversalCompileOptions['captureScopeTargets'],
+    ): Readonly<{
+      layoutResult: LayoutChildResult;
+      transaction: CompositeReplayTransaction;
+      namespaceStack: NamespaceStack;
+    }> => {
+      const {
+        laid,
+        paint,
+        clip,
+        namespaceStack,
+        namespaceBaseline,
+        registrationOccurrences,
+        registrationKey,
+        namespaceBaselineWarnings,
+        warnings,
+        probeIdentityTracker,
+      } = evaluateLayoutChild(
+        clonedChild,
+        clonedProposal,
+        probeOccurrence,
+        probeScopeChain,
+        probeScopeDefaults,
+        probeTheme,
+        scopeChainApplied,
+        probeInputs,
+        captureScopeTargets,
+      );
       const token = Object.freeze({}) as CompositeReplay;
       const resources: Array<SceneResource> = [...paint.resources(), ...clip.resources()];
       const namespaceChanges = namespaceStack.diffTopFrame(namespaceBaseline);
@@ -2450,6 +2530,95 @@ export const compileChildrenToPrimitives = (
         withTheme: override =>
           createLayoutContext(resolveTheme(theme, override, `${compositeIrPath}.theme`, context.themeStyles)),
         proposal: cloneLayoutProposal(frame.childProposal ?? NaturalLayoutProposal, key, occurrence),
+        evaluation:
+          options.measurementAxis !== undefined && child === rootChildren[0]
+            ? { kind: 'contribution', axis: options.measurementAxis }
+            : { kind: 'layout' },
+        measureChild: (nextChild, proposal, axis) => {
+          const clonedProposal = cloneLayoutProposal(proposal, key, occurrence);
+          const inputEntry = session.outputChildren.get(nextChild);
+          if (inputEntry !== undefined && (inputEntry.owner !== owner || inputEntry.child.kind !== 'bound'))
+            throw createCompositeContractError(`${owner.label} measureChild requires a child from this callback`);
+          const inputs = inputEntry?.child.kind === 'bound' ? inputEntry.child.runtimeInputs : undefined;
+          const clonedChild = withProviderOutputValidationBoundary(owner.label, () =>
+            snapshotCompositeLayoutChild(
+              owner.label,
+              inputEntry?.child.kind === 'bound' ? inputEntry.child.child : nextChild,
+              layoutProbeIndex,
+            ),
+          );
+          const probeOccurrence = freezeOccurrence({
+            sourcePath: occurrence.sourcePath,
+            expansionPath: [
+              ...occurrence.expansionPath,
+              { kind: CompileExpansionKind.Probe, index: layoutProbeIndex++ },
+            ],
+          });
+          const identityOf = (dependency: unknown): string | number => {
+            if ((typeof dependency !== 'object' || dependency === null) && typeof dependency !== 'function') {
+              const existing = session.measurementPrimitiveIdentities.get(dependency);
+              if (existing !== undefined) return existing;
+              const identity = session.nextMeasurementIdentity++;
+              if (session.measurementPrimitiveIdentities.size >= 4096) session.measurementPrimitiveIdentities.clear();
+              session.measurementPrimitiveIdentities.set(dependency, identity);
+              return identity;
+            }
+            const existing = session.measurementIdentities.get(dependency);
+            if (existing !== undefined) return existing;
+            const identity = session.nextMeasurementIdentity++;
+            session.measurementIdentities.set(dependency, identity);
+            return identity;
+          };
+          const cacheKey = JSON.stringify([
+            identityOf(inputs?.source ?? nextChild),
+            inputs === undefined ? identityOf(owner) : null,
+            clonedChild,
+            axis,
+            clonedProposal,
+            frame.scopeDefaults,
+            theme,
+            frame.scopeChain,
+            inputs?.bindings.map(input => [input.path, identityOf(input.input)]),
+            identityOf(runtime.state.namespaceStack.measurementIdentity),
+            compositeDepth,
+          ]);
+          const cached = session.measurements.get(cacheKey);
+          if (cached !== undefined) {
+            session.measurements.delete(cacheKey);
+            session.measurements.set(cacheKey, cached);
+            return { kind: 'resolved', result: cached };
+          }
+          try {
+            const { laid } = evaluateLayoutChild(
+              clonedChild,
+              clonedProposal,
+              probeOccurrence,
+              frame.scopeChain,
+              frame.scopeDefaults,
+              theme,
+              false,
+              inputs,
+              undefined,
+              axis,
+            );
+            const allocation = laid.contribution ?? contributionOfBounds(axis, boundsRectOf(laid));
+            const result = projectContribution(allocation, clonedProposal);
+            session.measurements.set(cacheKey, result);
+            if (session.measurements.size > 4096)
+              session.measurements.delete(session.measurements.keys().next().value!);
+            return { kind: 'resolved', result };
+          } catch (thrown) {
+            if (isFatalProbeError(thrown)) throw thrown;
+            const failure = createLayoutChildFailure(
+              session.failures,
+              owner,
+              normalizeLayoutProbeError(thrown),
+              'namespace' in clonedChild ? `${clonedChild.namespace}.${clonedChild.type}` : clonedChild.type,
+              probeOccurrence,
+            );
+            return { kind: 'failed', failure };
+          }
+        },
         resolvePathTargets: query => {
           const queryChild = snapshotCompositeLayoutChild(owner.label, query.child, layoutProbeIndex++);
           let queryNamespace: NamespaceStack | undefined;
@@ -2635,6 +2804,35 @@ export const compileChildrenToPrimitives = (
       });
     }
 
+    const handledContribution = withProviderOutputValidationBoundary(owner.label, () => {
+      if (
+        callbackResult !== null &&
+        typeof callbackResult === 'object' &&
+        'kind' in callbackResult &&
+        callbackResult.kind === 'contribution'
+      ) {
+        if (options.measurementAxis === undefined || child !== rootChildren[0])
+          throw createCompositeContractError(`${owner.label} returned a contribution during full layout`);
+        const candidate = callbackResult as CompositeContributionResult;
+        const contribution = candidate.contribution;
+        if (contribution.axis !== options.measurementAxis)
+          throw createCompositeContractError(`${owner.label} returned a different contribution axis`);
+        const dimensions =
+          contribution.axis === 'x'
+            ? [contribution.width]
+            : contribution.axis === 'y'
+              ? [contribution.height]
+              : [contribution.width, contribution.height];
+        if (dimensions.some(dimension => !Number.isFinite(dimension) || dimension < 0))
+          throw createCompositeContractError(`${owner.label} returned an invalid contribution size`);
+        rootContribution = Object.freeze({ ...contribution });
+        return true;
+      }
+
+      return false;
+    });
+    if (handledContribution) return;
+
     const validatedResult = withProviderOutputValidationBoundary(owner.label, () => {
       if (
         callbackResult === null ||
@@ -2647,7 +2845,7 @@ export const compileChildrenToPrimitives = (
         );
       }
 
-      const result = callbackResult as ReturnType<typeof callable.compile>;
+      const result = callbackResult as CompositeCompileResult<JsonValue>;
       const resultChildren = result.children;
       const resultAllocationBounds = result.allocationBounds;
       const resultAlignmentGuides = result.alignmentGuides;
@@ -2982,6 +3180,7 @@ export const compileChildrenToPrimitives = (
   return {
     primitives,
     primitiveZIndices: primitives.map(primitive => runtime.state.zIndexOf.get(primitive)),
+    ...(rootContribution === undefined ? {} : { contribution: rootContribution }),
     layoutBounds: runtime.state.layoutBounds,
     layouts: rootLayouts,
     bounds: rootBounds,
