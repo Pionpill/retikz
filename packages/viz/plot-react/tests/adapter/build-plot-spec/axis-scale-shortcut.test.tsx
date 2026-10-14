@@ -5,7 +5,7 @@ import { PlotAxis } from '../../../src/components/guides';
 import { PathMark } from '../../../src/components/marks';
 
 describe('buildPlotIR PlotAxis scale shortcut', () => {
-  it('builds the same dimension scale as <BuiltinPlotScale>', () => {
+  it('builds the same dimension scale as <PlotScale>', () => {
     const spec = buildPlotIR(
       <>
         <PathMark x="m" y="r" />

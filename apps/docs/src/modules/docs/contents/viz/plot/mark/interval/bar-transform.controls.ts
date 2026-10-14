@@ -77,7 +77,7 @@ export const previewControlContract = {
   relatedApis: [
     'IntervalMark.transform',
     'IntervalMark.arrangement',
-    'BuiltinPlotScale.paddingInner',
-    'BuiltinPlotScale.paddingOuter',
+    'PlotScale.paddingInner',
+    'PlotScale.paddingOuter',
   ],
 } satisfies PreviewControlContract;

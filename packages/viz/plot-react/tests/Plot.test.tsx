@@ -354,19 +354,22 @@ describe('<Plot spec data> 薄包装', () => {
   });
 
   it('resolvePlotLineage 复用 <Plot> props 并按配置返回运行时图元链路', () => {
-    const lineage = resolvePlotLineage({
-      spec,
-      data,
-      width: 480,
-      height: 300,
-      lineage: {
-        scaleMappings: true,
-        layoutContext: true,
-        rowValues: { maxRows: 1, fields: ['revenue'] },
-        hostMetadata: { query: true },
+    const lineage = resolvePlotLineage(
+      {
+        spec,
+        data,
+        width: 480,
+        height: 300,
+        lineage: {
+          scaleMappings: true,
+          layoutContext: true,
+          rowValues: { maxRows: 1, fields: ['revenue'] },
+          hostMetadata: { query: true },
+        },
+        hostLineageMetadata: { queryId: 'q-sales', datasetVersion: 'v1' },
       },
-      hostLineageMetadata: { queryId: 'q-sales', datasetVersion: 'v1' },
-    });
+      { environment: {} },
+    );
 
     expect(lineage).toMatchObject<Partial<PlotLineageRun>>({
       dataReference: 'sales',
@@ -384,7 +387,7 @@ describe('<Plot spec data> 薄包装', () => {
   });
 
   it('lineage=false 时 React 链路解析保持关闭', () => {
-    const lineage = resolvePlotLineage({ spec, data, width: 480, height: 300, lineage: false });
+    const lineage = resolvePlotLineage({ spec, data, width: 480, height: 300, lineage: false }, { environment: {} });
 
     expect(lineage).toBeUndefined();
   });

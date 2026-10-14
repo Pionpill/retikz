@@ -7,6 +7,7 @@ import { lowerPlots } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { measureLabel } from '../../helpers/text-measurement';
 
 /**
  * contract legend guide 对抗测试（Adversarial Bug Hunter）。
@@ -22,7 +23,7 @@ const expandOf = (
   datasets: Datasets,
   options: LowerPlotsOptions = { width: 480, height: 300 },
 ): IRScope => {
-  return lowerPlot(spec, datasets, options) as IRScope;
+  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';

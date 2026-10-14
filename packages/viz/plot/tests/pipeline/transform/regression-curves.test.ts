@@ -12,6 +12,7 @@ import { literal, number, strictObject } from 'zod';
 
 import { PlotSchema } from '../../../src';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import { measureLabel } from '../../helpers/text-measurement';
 
 const definition = defineRegression({
   schema: strictObject({ kind: literal('degree-fit'), degree: number().default(1) }),
@@ -74,7 +75,13 @@ const draw = (degree: number, scale = 'linear', clamp = false, curve = 'catmullR
           { x: 3, y: 3 },
         ],
       },
-      { width: 480, height: 300, regressionDefinitions: [definition], regressionImplementations: [implementation] },
+      {
+        textMeasurer: measureLabel,
+        width: 480,
+        height: 300,
+        regressionDefinitions: [definition],
+        regressionImplementations: [implementation],
+      },
     ),
   )[0];
 };

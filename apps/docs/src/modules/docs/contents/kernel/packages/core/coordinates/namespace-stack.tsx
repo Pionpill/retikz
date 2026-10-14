@@ -16,9 +16,12 @@ const NamespaceStack: FC<NamespaceStackProps> = props => {
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Stack
-        layout={{ width: 322, height: 'auto', padding: { top: 28, bottom: 4, left: 0, right: 0 }, gap: 12 }}
+        layout={{ gap: 12 }}
+        defaultCell={{
+          layout: { width: 322, height: 'auto', padding: { top: 28, bottom: 4, left: 0, right: 0 } },
+          style: { fill: 'none' },
+        }}
         padding={4}
-        style={{ fill: 'none' }}
         label={[
           { text: text.lookup, position: 'top', font: { size: 12 } },
           { text: text.lifecycle, position: 'bottom', font: { size: 12 }, textColor: 'gray' },
@@ -26,7 +29,7 @@ const NamespaceStack: FC<NamespaceStackProps> = props => {
       >
         <StackItem>
           <Map
-            layout={{ height: 32, key: { width: 80 }, value: { width: 240 } }}
+            defaultCell={{ layout: { height: 32 }, key: { layout: { width: 80 } }, value: { layout: { width: 240 } } }}
             label={{ text: text.root, position: 'top', font: { size: 12 }, textColor: 'gray' }}
             entries={[
               { key: 'A', value: 'resolved · [0, 0]' },
@@ -36,12 +39,12 @@ const NamespaceStack: FC<NamespaceStackProps> = props => {
         </StackItem>
         <StackItem>
           <Map
-            layout={{ height: 32, key: { width: 80 }, value: { width: 240 } }}
+            defaultCell={{ layout: { height: 32 }, key: { layout: { width: 80 } }, value: { layout: { width: 240 } } }}
             label={{ text: text.local, position: 'top', font: { size: 12 }, textColor: 'gray' }}
             entries={[
               {
                 key: { content: 'A', style: { fill: 'dodgerblue' } },
-                value: { content: 'resolved · [180, -40]', style: { fill: 'dodgerblue', fillOpacity: 0.2 } },
+                value: { content: 'resolved · [180, -40]', style: { fill: 'dodgerblue', opacity: { fill: 0.2 } } },
               },
               { key: 'B', value: 'resolved · [300, -40]' },
               { key: 'C', value: 'resolved · [180, 40]' },

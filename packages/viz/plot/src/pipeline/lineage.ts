@@ -20,13 +20,13 @@ import { RetikzPlotError } from '../error';
 import { resolvePlotLineageOptions } from '../resolve/lineage';
 import type { IRPlot, IRPlotMarkOperation, IRPlotScaleOperation } from '../schemas';
 import { CoordinateArrangementKind } from '../schemas';
-import type { LowerPlotsOptions } from './expand';
 import type { PlotDataArtifact } from './expand/lower';
-import { lowerPlotWithDataArtifact } from './expand/lower';
+import type { PlotStandaloneOptions } from './expand/standalone';
+import { lowerStandalonePlot } from './expand/standalone';
 import { buildPlotLocatorFromDataArtifact } from './locator';
 
 /** lowerPlotWithLineage 选项 */
-export type PlotLineageLowerOptions = LowerPlotsOptions & {
+export type PlotLineageLowerOptions = PlotStandaloneOptions & {
   /** plot lineage 开关；false 时关闭可选摘要，只返回最小结构 */
   lineage?: false | PlotLineageOptions;
   /** 宿主提供的 JSON-safe lineage metadata */
@@ -282,11 +282,11 @@ const buildPlotLineage = (
 export const lowerPlotWithLineage = (
   spec: IRPlot,
   datasets: ExternalDatasets,
-  options: PlotLineageLowerOptions = {},
+  options: PlotLineageLowerOptions,
   preparedData?: PreparedPlotData,
 ): PlotLineageLowerResult => {
   const lineageOptions = resolvePlotLineageOptions(options.lineage);
-  const lowered = lowerPlotWithDataArtifact(spec, datasets, options, undefined, lineageOptions.data, preparedData);
+  const lowered = lowerStandalonePlot(spec, datasets, options, lineageOptions.data, preparedData);
   return { children: [lowered.child], lineage: buildPlotLineage(spec, options, lowered.dataArtifact) };
 };
 
@@ -294,14 +294,13 @@ export const lowerPlotWithLineage = (
 export const createPlotLineageLocator = (
   spec: IRPlot,
   datasets: ExternalDatasets,
-  options: PlotLineageLowerOptions = {},
+  options: PlotLineageLowerOptions,
 ): PlotLineageLocator => {
   const lineageOptions = resolvePlotLineageOptions(options.lineage);
-  const lowered = lowerPlotWithDataArtifact(
+  const lowered = lowerStandalonePlot(
     spec,
     datasets,
     { ...options, provenance: true, datumProvenance: true },
-    undefined,
     lineageOptions.data,
   );
   const locator = buildPlotLocatorFromDataArtifact(spec, options, lowered);

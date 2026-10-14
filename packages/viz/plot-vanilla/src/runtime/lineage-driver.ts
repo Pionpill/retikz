@@ -1,6 +1,6 @@
 import type { CompileResult } from '@retikz/core';
 import { lowerPlotWithLineage } from '@retikz/plot';
-import type { VanillaCompileDriver, VanillaCompileDriverSession } from '@retikz/vanilla';
+import type { VanillaCompileDriver, VanillaCompileDriverSession, VanillaCompileDriverInput } from '@retikz/vanilla';
 
 import type { PreparedPlotLineageNotification } from '../spec';
 
@@ -10,7 +10,7 @@ export const createPlotLineageCompileDriver = (): VanillaCompileDriver => {
     object,
     {
       session: VanillaCompileDriverSession;
-      updateSites: (sites: Array<PreparedPlotLineageNotification>) => void;
+      updateSites: (sites: Array<PreparedPlotLineageNotification>, input: VanillaCompileDriverInput) => void;
     }
   >();
   return {
@@ -20,12 +20,13 @@ export const createPlotLineageCompileDriver = (): VanillaCompileDriver => {
         .map(site => site.authoring as PreparedPlotLineageNotification);
       const existing = sessions.get(input.instance);
       if (existing !== undefined) {
-        existing.updateSites(sites);
+        existing.updateSites(sites, input);
         return existing.session;
       }
 
       const notifications = new WeakMap<CompileResult, Array<() => void>>();
       let currentSites = sites;
+      let currentInput = input;
       const session: VanillaCompileDriverSession = {
         observers: [],
         resolve: output => {
@@ -35,7 +36,12 @@ export const createPlotLineageCompileDriver = (): VanillaCompileDriver => {
               const result = lowerPlotWithLineage(
                 site.spec,
                 {},
-                { ...site.lowerOptions, lineage: site.lineage, hostLineageMetadata: site.hostLineageMetadata },
+                {
+                  ...site.lowerOptions,
+                  environment: { theme: currentInput.source.theme, compile: currentInput.coreOptions },
+                  lineage: site.lineage,
+                  hostLineageMetadata: site.hostLineageMetadata,
+                },
                 site.preparedData,
               );
               return () => site.onLineage(result.lineage);
@@ -56,7 +62,8 @@ export const createPlotLineageCompileDriver = (): VanillaCompileDriver => {
 
       sessions.set(input.instance, {
         session,
-        updateSites: next => {
+        updateSites: (next, nextInput) => {
+          currentInput = nextInput;
           currentSites = next;
         },
       });

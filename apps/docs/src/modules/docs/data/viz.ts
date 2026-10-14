@@ -502,17 +502,13 @@ export const vizSection: Array<Section> = [
         label: 'viz.grammarTransform',
         sidebarGroup: 'viz.plotGrammar',
         children: [
-          { id: 'row', label: 'viz.grammarTransformRow', difficulty: DocDifficulty.Advanced },
-          { id: 'annotation', label: 'viz.grammarTransformAnnotation', difficulty: DocDifficulty.Advanced },
-          { id: 'bin', label: 'viz.grammarTransformBin', difficulty: DocDifficulty.Advanced },
-          { id: 'statistics', label: 'viz.grammarTransformStatistics', difficulty: DocDifficulty.Advanced },
-          { id: 'relate', label: 'viz.grammarTransformRelate', difficulty: DocDifficulty.Advanced },
           {
-            id: 'custom-transform',
-            label: 'viz.grammarTransformCustom',
-            difficulty: DocDifficulty.Internals,
-            meta: extensionGuide('plot.transform.extensions'),
+            id: 'numeric-derivation',
+            label: 'viz.grammarTransformNumericDerivation',
+            difficulty: DocDifficulty.Beginner,
           },
+          { id: 'bin-relation', label: 'viz.grammarTransformBinRelation', difficulty: DocDifficulty.Beginner },
+          { id: 'sampling', label: 'viz.grammarTransformSampling', difficulty: DocDifficulty.Beginner },
         ],
       },
       {

@@ -1,6 +1,7 @@
 import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 import type { IRShapeValue } from '@retikz/core';
 import type { IRDataScalarValue } from '@retikz/data';
+import type { BoundsRect } from '@retikz/math';
 import type { Position } from '@retikz/math';
 import { pointAtArcAngle } from '@retikz/math';
 
@@ -37,11 +38,11 @@ import {
   AxisTitlePlacementKeyword,
   PlotLayerZIndex,
 } from '../../schemas';
-import type { Rect } from '../../shared';
+import type { GuideTextStyle, PlotLabelMeasure } from '../../shared';
 import {
   DEFAULT_AXIS_LABEL_GAP,
   DEFAULT_AXIS_TICK_LENGTH,
-  estimateLabelWidth,
+  guideTextSourceProps,
   layoutPolarAngularLabel,
 } from '../../shared';
 
@@ -59,13 +60,6 @@ type GuideLineStyle = Partial<
 
 type GuidePathStyle = Partial<
   Pick<NonNullable<IRPath['style']>, 'stroke' | 'strokeWidth' | 'opacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>
->;
-
-type GuideTextStyle = Partial<
-  Pick<
-    NonNullable<IRNode['style']> & NonNullable<IRNode['layout']> & Pick<IRNode, 'rotate'>,
-    'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'
-  >
 >;
 
 const lineStyleProps = (style: GuideLineStyle | undefined): GuidePathStyle => ({
@@ -90,20 +84,6 @@ const textStyleProps = (style: GuideTextStyle | undefined): GuideTextStyle => ({
   ...(style?.maxTextWidth !== undefined ? { maxTextWidth: style.maxTextWidth } : {}),
   ...(style?.rotate !== undefined ? { rotate: style.rotate } : {}),
 });
-
-/** 把 guide 文本外观投影为 Core Node 的分组字段 */
-const guideTextSourceProps = (value: GuideTextStyle): Pick<IRNode, 'style' | 'layout' | 'rotate'> => {
-  const { rotate, align, lineHeight, maxTextWidth, ...style } = value;
-  return {
-    style,
-    layout: {
-      ...(align === undefined ? {} : { align }),
-      ...(lineHeight === undefined ? {} : { lineHeight }),
-      ...(maxTextWidth === undefined ? {} : { maxTextWidth }),
-    },
-    ...(rotate === undefined ? {} : { rotate }),
-  };
-};
 
 const axisLineStyleOf = (guide: IRPlotAxisGuide): GuidePathStyle | false =>
   guide.line === false ? false : lineStyleProps(guide.line);
@@ -453,6 +433,7 @@ type TickLabelBox = {
 };
 
 type TickLabelLayoutOptions = {
+  textMeasurer: PlotLabelMeasure;
   fontSize: number;
   mode: TickLabelLayoutMode;
   axis: TickLabelLayoutAxis;
@@ -463,20 +444,13 @@ type TickLabelLayoutOptions = {
 const axisTickLabelsTokenOf = (guide: IRPlotAxisGuide): AxisTickLabelsToken | undefined =>
   guide.tickLabels !== undefined && guide.tickLabels !== false ? guide.tickLabels : undefined;
 
-const labelTextOf = (node: IRNode): string => textBlockMeasureText(node.text);
-
-const labelFontSizeOf = (node: IRNode, fallback: number): number => {
-  const size = node.style?.font?.size;
-  return typeof size === 'number' && Number.isFinite(size) && size > 0 ? size : fallback;
-};
-
-const rotatedLabelSizeOf = (node: IRNode, fontSize: number, rotate: number): { width: number; height: number } => {
-  const size = labelFontSizeOf(node, fontSize);
-  const width = Math.min(
-    estimateLabelWidth(labelTextOf(node), size),
-    node.layout?.maxTextWidth ?? Number.POSITIVE_INFINITY,
-  );
-  const height = node.layout?.lineHeight ?? size;
+const rotatedLabelSizeOf = (
+  node: IRNode,
+  fontSize: number,
+  rotate: number,
+  measure: PlotLabelMeasure,
+): { width: number; height: number } => {
+  const { width, height } = measure(node, fontSize);
   const radians = Math.abs(rotate) * DEG_TO_RAD;
   const cos = Math.abs(Math.cos(radians));
   const sin = Math.abs(Math.sin(radians));
@@ -491,9 +465,15 @@ const nodePointOf = (node: IRNode): [number, number] => {
     : [0, 0];
 };
 
-const tickLabelBoxOf = (node: IRNode, index: number, fontSize: number, rotate: number): TickLabelBox => {
+const tickLabelBoxOf = (
+  node: IRNode,
+  index: number,
+  fontSize: number,
+  rotate: number,
+  measure: PlotLabelMeasure,
+): TickLabelBox => {
   const [x, y] = nodePointOf(node);
-  const size = rotatedLabelSizeOf(node, fontSize, rotate);
+  const size = rotatedLabelSizeOf(node, fontSize, rotate, measure);
 
   return {
     index,
@@ -505,8 +485,12 @@ const tickLabelBoxOf = (node: IRNode, index: number, fontSize: number, rotate: n
   };
 };
 
-const tickLabelBoxesOf = (nodes: ReadonlyArray<IRNode>, fontSize: number, rotate: number): Array<TickLabelBox> =>
-  nodes.map((node, index) => tickLabelBoxOf(node, index, fontSize, rotate));
+const tickLabelBoxesOf = (
+  nodes: ReadonlyArray<IRNode>,
+  fontSize: number,
+  rotate: number,
+  measure: PlotLabelMeasure,
+): Array<TickLabelBox> => nodes.map((node, index) => tickLabelBoxOf(node, index, fontSize, rotate, measure));
 
 const tickLabelBoxesOverlap = (
   a: TickLabelBox,
@@ -557,7 +541,10 @@ const tickLabelAutoRotateOf = (
   const recoverWhenFailed = rotate?.recoverWhenFailed ?? true;
 
   for (const angle of angles) {
-    const boxes = sampleTickLabelBoxes(tickLabelBoxesOf(nodes, options.fontSize, angle), layout?.sampleSize);
+    const boxes = sampleTickLabelBoxes(
+      tickLabelBoxesOf(nodes, options.fontSize, angle, options.textMeasurer),
+      layout?.sampleSize,
+    );
     if (!hasTickLabelOverlap(boxes, options.axis)) return angle;
   }
 
@@ -666,7 +653,7 @@ const applyTickLabelHide = (
   const strategy = hide?.strategy ?? AxisTickLabelHideStrategy.Greedy;
   const preserveEnds = hide?.preserveEnds ?? true;
   const separation = hide?.separation ?? 0;
-  const boxes = tickLabelBoxesOf(nodes, options.fontSize, rotate);
+  const boxes = tickLabelBoxesOf(nodes, options.fontSize, rotate, options.textMeasurer);
   if (strategy === AxisTickLabelHideStrategy.Parity)
     return hideParityTickLabels(boxes, options.axis, preserveEnds, separation);
 
@@ -678,10 +665,11 @@ const alignRotatedTickLabelEndpoint = (
   fontSize: number,
   rotate: number,
   sideNormal: readonly [number, number] | undefined,
+  measure: PlotLabelMeasure,
 ): IRNode => {
   if (sideNormal === undefined || rotate === 0) return node;
 
-  const size = rotatedLabelSizeOf(node, fontSize, rotate);
+  const size = rotatedLabelSizeOf(node, fontSize, rotate, measure);
   const shift = Math.abs(sideNormal[0]) > 0 ? size.width / 2 : size.height / 2;
   const [x, y] = nodePointOf(node);
 
@@ -701,7 +689,9 @@ const layoutTickLabelNodes = (
     const rotate = token.rotate ?? 0;
     return nodes
       .map(node => ({ ...node, ...(token.rotate !== undefined ? { rotate: token.rotate } : {}) }))
-      .map(node => alignRotatedTickLabelEndpoint(node, options.fontSize, rotate, options.sideNormal));
+      .map(node =>
+        alignRotatedTickLabelEndpoint(node, options.fontSize, rotate, options.sideNormal, options.textMeasurer),
+      );
   }
 
   const layoutObject = layout === undefined ? undefined : layout;
@@ -709,13 +699,15 @@ const layoutTickLabelNodes = (
   const hasFixedRotate = token.rotate !== undefined;
   const rotated = nodes
     .map(node => ({ ...node, ...(rotate !== 0 || hasFixedRotate ? { rotate } : {}) }))
-    .map(node => alignRotatedTickLabelEndpoint(node, options.fontSize, rotate, options.sideNormal));
+    .map(node =>
+      alignRotatedTickLabelEndpoint(node, options.fontSize, rotate, options.sideNormal, options.textMeasurer),
+    );
   if (nodes.length === 1) return rotated;
 
   const visible = applyTickLabelHide(rotated, layoutObject, options, rotate);
 
   return applyTickLabelBounds(
-    tickLabelBoxesOf(visible, options.fontSize, rotate),
+    tickLabelBoxesOf(visible, options.fontSize, rotate, options.textMeasurer),
     options.axis,
     options.axisRange,
     layoutObject,
@@ -748,19 +740,6 @@ const axisTitleOf = (
     layout: guide.title.layout,
     ...textStyleProps(guide.title),
   };
-};
-
-const textBlockMeasureText = (text: IRNode['text']): string => {
-  if (text === undefined) return '';
-  if (typeof text === 'string') return text;
-
-  return text
-    .map(line => {
-      if (typeof line === 'string') return line;
-      if ('text' in line) return line.text;
-      return line.runs.map(run => ('text' in run ? run.text : run.tex)).join('');
-    })
-    .join('\n');
 };
 
 type AxisGridToken = Exclude<NonNullable<IRPlotAxisGuide['grid']>, boolean>;
@@ -940,6 +919,8 @@ const lowerCartesianGuide = (
   ctx: GuideContext,
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
+  const measure = ctx.textMeasurer;
+
   const { plotArea, fontSize } = ctx;
   const labelGap = ctx.labelGap ?? DEFAULT_AXIS_LABEL_GAP;
   const left = plotArea.x;
@@ -1068,10 +1049,28 @@ const lowerCartesianGuide = (
             }
 
             return isX
-              ? [p, axisY + tickDirection * (tickLength + tickLabelGap + fontSize / 2)]
-              : [axisX + tickDirection * (tickLength + tickLabelGap + estimateLabelWidth(text, fontSize) / 2), p];
+              ? [
+                  p,
+                  axisY +
+                    tickDirection *
+                      (tickLength +
+                        tickLabelGap +
+                        measure({ type: 'node', text, ...guideTextSourceProps(tickLabelStyle, fontSize) }, fontSize)
+                          .height /
+                          2),
+                ]
+              : [
+                  axisX +
+                    tickDirection *
+                      (tickLength +
+                        tickLabelGap +
+                        measure({ type: 'node', text, ...guideTextSourceProps(tickLabelStyle, fontSize) }, fontSize)
+                          .width /
+                          2),
+                  p,
+                ];
           })();
-          const node: IRNode = { type: 'node', position, text, ...guideTextSourceProps(tickLabelStyle) };
+          const node: IRNode = { type: 'node', position, text, ...guideTextSourceProps(tickLabelStyle, fontSize) };
           if (isCornerLabel) {
             cornerLabels.push(node);
             return [];
@@ -1083,6 +1082,7 @@ const lowerCartesianGuide = (
         return [
           ...layoutTickLabelNodes(guide, layoutLabels, {
             fontSize,
+            textMeasurer: measure,
             mode: isX ? 'cartesian-x' : 'cartesian-y',
             axis: isX ? 'x' : 'y',
             axisRange: isX ? [left, right] : [top, bottom],
@@ -1097,31 +1097,39 @@ const lowerCartesianGuide = (
     const title = axisTitleOf(guide);
     if (title === null) return null;
 
+    const axisTangent = unitVectorOf([axisLine[1][0] - axisLine[0][0], axisLine[1][1] - axisLine[0][1]]);
+    const rotate = axisTitleRotateOf(title, isX ? undefined : cartesianYAxisTitleRotateOf(side), axisTangent);
+    const titleStyle = axisTitleTextStyleOf(title, axisTangent);
     const titlePadding = title.padding ?? labelGap;
-    const yLabelBandWidth =
-      showLabels && ticks.labels.length > 0
-        ? Math.max(...ticks.labels.map(label => estimateLabelWidth(label, fontSize)))
-        : 0;
-    const labelOffset = isX
-      ? tickLength + tickLabelGap + fontSize + titlePadding + fontSize / 2
-      : tickLength + tickLabelGap + yLabelBandWidth + titlePadding + fontSize / 2;
+    const titleSize = rotatedLabelSizeOf(
+      { type: 'node', text: title.text, ...guideTextSourceProps(titleStyle, fontSize) },
+      fontSize,
+      rotate ?? 0,
+      measure,
+    );
+    const labelBand = Math.max(
+      0,
+      ...labels.map(node => {
+        const size = rotatedLabelSizeOf(node, fontSize, node.rotate ?? 0, measure);
+        const position = nodePointOf(node);
+        return isX ? Math.abs(position[1] - axisY) + size.height / 2 : Math.abs(position[0] - axisX) + size.width / 2;
+      }),
+    );
+    const labelOffset = Math.max(tickLength, labelBand) + titlePadding + (isX ? titleSize.height : titleSize.width) / 2;
     const placementRatio = axisTitlePlacementRatioOf(title.placement);
     const baseX = axisLine[0][0] + (axisLine[1][0] - axisLine[0][0]) * placementRatio;
     const baseY = axisLine[0][1] + (axisLine[1][1] - axisLine[0][1]) * placementRatio;
-    const axisTangent = unitVectorOf([axisLine[1][0] - axisLine[0][0], axisLine[1][1] - axisLine[0][1]]);
     const axisNormal: [number, number] = isX ? [0, tickDirection] : [tickDirection, 0];
     const basePosition: [number, number] = isX
       ? [baseX, baseY + tickDirection * labelOffset]
       : [baseX + tickDirection * labelOffset, baseY];
     const position = shiftedAxisTitlePosition(basePosition, axisTangent, axisNormal, title.shift);
-    const rotate = axisTitleRotateOf(title, isX ? undefined : cartesianYAxisTitleRotateOf(side), axisTangent);
-    const titleStyle = axisTitleTextStyleOf(title, axisTangent);
 
     return {
       type: 'node',
       position,
       text: title.text,
-      ...guideTextSourceProps(titleStyle),
+      ...guideTextSourceProps(titleStyle, fontSize),
       ...(rotate !== undefined ? { rotate } : {}),
     };
   })();
@@ -1144,7 +1152,7 @@ const lowerCartesianGuide = (
                 style: { stroke: 'currentColor' },
               },
               node: {
-                style: { font: { size: fontSize }, stroke: 'none', fill: 'none' },
+                style: { stroke: 'none', fill: 'none' },
                 layout: { padding: 0 },
               },
             },
@@ -1235,6 +1243,8 @@ const lowerAngularAxis = (
   frame: PolarCoordinateFrame,
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
+  const measure = ctx.textMeasurer;
+
   const { fontSize } = ctx;
   const labelGap = ctx.labelGap ?? DEFAULT_AXIS_LABEL_GAP;
   const ticks = ctx.angularTicks ?? { values: [], labels: [] };
@@ -1280,19 +1290,20 @@ const lowerAngularAxis = (
           const labelLayout = layoutPolarAngularLabel(
             frame.center,
             outer,
-            { angle: theta, text },
+            { angle: theta, text, node: { type: 'node', ...guideTextSourceProps(tickLabelStyle, fontSize) } },
             fontSize,
             tickLength + tickLabelGap,
+            measure,
           );
 
           return {
             type: 'node',
             position: labelLayout.position,
             text,
-            ...guideTextSourceProps({ ...tickLabelStyle, align: tickLabelStyle.align ?? labelLayout.align }),
+            ...guideTextSourceProps({ ...tickLabelStyle, align: tickLabelStyle.align ?? labelLayout.align }, fontSize),
           };
         }),
-        { fontSize, mode: 'generic', axis: 'both' },
+        { fontSize, textMeasurer: measure, mode: 'generic', axis: 'both' },
       )
     : [];
 
@@ -1305,17 +1316,35 @@ const lowerAngularAxis = (
     const axisTangent: [number, number] = [-Math.sin(titleRadians) * tangentSign, Math.cos(titleRadians) * tangentSign];
     const axisNormal: [number, number] = [Math.cos(titleRadians), Math.sin(titleRadians)];
     const rotate = axisTitleRotateOf(title, undefined, axisTangent);
+    const titleStyle = axisTitleTextStyleOf(title, axisTangent);
+    const titleSize = rotatedLabelSizeOf(
+      { type: 'node', text: title.text, ...guideTextSourceProps(titleStyle, fontSize) },
+      fontSize,
+      rotate ?? 0,
+      measure,
+    );
+    const labelBand = Math.max(
+      0,
+      ...labels.map(node => {
+        const size = rotatedLabelSizeOf(node, fontSize, node.rotate ?? 0, measure);
+        return Math.abs(axisNormal[0]) * size.width + Math.abs(axisNormal[1]) * size.height;
+      }),
+    );
     const basePosition = finitePolarPoint(
       frame.center,
       titleAngle,
-      outer + tickLength + tickLabelGap + fontSize + (title.padding ?? labelGap) + fontSize / 2,
+      outer +
+        tickLength +
+        tickLabelGap +
+        labelBand +
+        (title.padding ?? labelGap) +
+        (Math.abs(axisNormal[0]) * titleSize.width + Math.abs(axisNormal[1]) * titleSize.height) / 2,
     );
-    const titleStyle = axisTitleTextStyleOf(title, axisTangent);
     labels.push({
       type: 'node',
       position: shiftedAxisTitlePosition(basePosition, axisTangent, axisNormal, title.shift),
       text: title.text,
-      ...guideTextSourceProps(titleStyle),
+      ...guideTextSourceProps(titleStyle, fontSize),
       ...(rotate !== undefined ? { rotate } : {}),
     });
   }
@@ -1329,7 +1358,7 @@ const lowerAngularAxis = (
         style: { stroke: 'currentColor' },
       },
       node: {
-        style: { font: { size: fontSize }, stroke: 'none', fill: 'none' },
+        style: { stroke: 'none', fill: 'none' },
         layout: { padding: 0 },
       },
     },
@@ -1399,6 +1428,8 @@ const lowerRadialAxis = (
   frame: PolarCoordinateFrame,
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
+  const measure = ctx.textMeasurer;
+
   const { fontSize } = ctx;
   const labelGap = ctx.labelGap ?? DEFAULT_AXIS_LABEL_GAP;
   const ticks = ctx.radialTicks ?? { values: [], labels: [] };
@@ -1449,12 +1480,14 @@ const lowerRadialAxis = (
           const text = ticks.labels[index];
 
           // 标签在刻度外侧（与刻度同侧、沿 -tangent），偏移 = 刻度长 + gap + 半字高
-          const offset = tickLength + tickLabelGap + fontSize / 2;
+          const size = measure({ type: 'node', text, ...guideTextSourceProps(tickLabelStyle, fontSize) }, fontSize);
+          const offset =
+            tickLength + tickLabelGap + (Math.abs(tangent[0]) * size.width + Math.abs(tangent[1]) * size.height) / 2;
           const position: [number, number] = [point[0] - tangent[0] * offset, point[1] - tangent[1] * offset];
 
-          return { type: 'node', position, text, ...guideTextSourceProps(tickLabelStyle) };
+          return { type: 'node', position, text, ...guideTextSourceProps(tickLabelStyle, fontSize) };
         }),
-        { fontSize, mode: 'generic', axis: 'both' },
+        { fontSize, textMeasurer: measure, mode: 'generic', axis: 'both' },
       )
     : [];
 
@@ -1466,17 +1499,35 @@ const lowerRadialAxis = (
     const axisTangent: [number, number] = [Math.cos(baseAngle * DEG_TO_RAD), Math.sin(baseAngle * DEG_TO_RAD)];
     const axisNormal: [number, number] = [-tangent[0], -tangent[1]];
     const rotate = axisTitleRotateOf(title, undefined, axisTangent);
-    const offset = tickLength + tickLabelGap + fontSize + (title.padding ?? labelGap) + fontSize / 2;
+    const titleStyle = axisTitleTextStyleOf(title, axisTangent);
+    const titleSize = rotatedLabelSizeOf(
+      { type: 'node', text: title.text, ...guideTextSourceProps(titleStyle, fontSize) },
+      fontSize,
+      rotate ?? 0,
+      measure,
+    );
+    const labelBand = Math.max(
+      0,
+      ...labels.map(node => {
+        const size = rotatedLabelSizeOf(node, fontSize, node.rotate ?? 0, measure);
+        return Math.abs(axisNormal[0]) * size.width + Math.abs(axisNormal[1]) * size.height;
+      }),
+    );
+    const offset =
+      tickLength +
+      tickLabelGap +
+      labelBand +
+      (title.padding ?? labelGap) +
+      (Math.abs(axisNormal[0]) * titleSize.width + Math.abs(axisNormal[1]) * titleSize.height) / 2;
     const basePosition: [number, number] = [
       titlePoint[0] + axisNormal[0] * offset,
       titlePoint[1] + axisNormal[1] * offset,
     ];
-    const titleStyle = axisTitleTextStyleOf(title, axisTangent);
     labels.push({
       type: 'node',
       position: shiftedAxisTitlePosition(basePosition, axisTangent, axisNormal, title.shift),
       text: title.text,
-      ...guideTextSourceProps(titleStyle),
+      ...guideTextSourceProps(titleStyle, fontSize),
       ...(rotate !== undefined ? { rotate } : {}),
     });
   }
@@ -1497,7 +1548,7 @@ const lowerRadialAxis = (
               style: { stroke: 'currentColor' },
             },
             node: {
-              style: { font: { size: fontSize }, stroke: 'none', fill: 'none' },
+              style: { stroke: 'none', fill: 'none' },
               layout: { padding: 0 },
             },
           },
@@ -1593,6 +1644,7 @@ export const lowerCustomAxis = (
   guide: IRPlotAxisGuide,
   fontSize: number,
   context: ProvenanceContext | undefined,
+  measure: PlotLabelMeasure,
 ): LoweredGuide => {
   assertNoCartesianOnlyAxisLineGeometry(guide);
   if (guide.placement?.kind === AxisPlacementKind.Origin) {
@@ -1674,18 +1726,24 @@ export const lowerCustomAxis = (
     tickSegments.push([point, [point[0] + normal[0] * tickLength, point[1] + normal[1] * tickLength]]);
     tickShapePlacements.push({ point, normal, tangent: unitTangent });
     if (showLabels) {
-      const offset = tickLength + tickLabelGap + fontSize / 2;
+      const size = measure(
+        { type: 'node', text: tick.label, ...guideTextSourceProps(tickLabelStyle, fontSize) },
+        fontSize,
+      );
+      const offset =
+        tickLength + tickLabelGap + (Math.abs(normal[0]) * size.width + Math.abs(normal[1]) * size.height) / 2;
       tickLabelNodes.push({
         type: 'node',
         position: [point[0] + normal[0] * offset, point[1] + normal[1] * offset],
         text: tick.label,
-        ...guideTextSourceProps(tickLabelStyle),
+        ...guideTextSourceProps(tickLabelStyle, fontSize),
       });
     }
   }
 
   const labels: Array<IRNode> = layoutTickLabelNodes(guide, tickLabelNodes, {
     fontSize,
+    textMeasurer: measure,
     mode: 'generic',
     axis: 'both',
   });
@@ -1699,14 +1757,32 @@ export const lowerCustomAxis = (
       const normal: [number, number] = [-tangent[1] / length, tangent[0] / length];
       const unitTangent: [number, number] = [tangent[0] / length, tangent[1] / length];
       const rotate = axisTitleRotateOf(title, undefined, unitTangent);
-      const offset = tickLength + tickLabelGap + fontSize + (title.padding ?? labelGap) + fontSize / 2;
-      const basePosition: [number, number] = [point[0] + normal[0] * offset, point[1] + normal[1] * offset];
       const titleStyle = axisTitleTextStyleOf(title, unitTangent);
+      const titleSize = rotatedLabelSizeOf(
+        { type: 'node', text: title.text, ...guideTextSourceProps(titleStyle, fontSize) },
+        fontSize,
+        rotate ?? 0,
+        measure,
+      );
+      const labelBand = Math.max(
+        0,
+        ...labels.map(node => {
+          const size = rotatedLabelSizeOf(node, fontSize, node.rotate ?? 0, measure);
+          return Math.abs(normal[0]) * size.width + Math.abs(normal[1]) * size.height;
+        }),
+      );
+      const offset =
+        tickLength +
+        tickLabelGap +
+        labelBand +
+        (title.padding ?? labelGap) +
+        (Math.abs(normal[0]) * titleSize.width + Math.abs(normal[1]) * titleSize.height) / 2;
+      const basePosition: [number, number] = [point[0] + normal[0] * offset, point[1] + normal[1] * offset];
       labels.push({
         type: 'node',
         position: shiftedAxisTitlePosition(basePosition, unitTangent, normal, title.shift),
         text: title.text,
-        ...guideTextSourceProps(titleStyle),
+        ...guideTextSourceProps(titleStyle, fontSize),
         ...(rotate !== undefined ? { rotate } : {}),
       });
     }
@@ -1732,7 +1808,7 @@ export const lowerCustomAxis = (
         style: { stroke: 'currentColor' },
       },
       node: {
-        style: { font: { size: fontSize }, stroke: 'none', fill: 'none' },
+        style: { stroke: 'none', fill: 'none' },
         layout: { padding: 0 },
       },
     },
@@ -1848,7 +1924,7 @@ export type LowerLegendOptions = {
   /** label 字号 */
   fontSize: number;
   /** 预留带矩形（plotArea 旁的 legend 带；条目从带左上角起摆） */
-  band: Rect;
+  band: BoundsRect;
   /** legend scope id（稳定，'legend' 前缀；anchor / 识别用） */
   id?: string;
   /** legend 语义图层的 core zIndex */
@@ -1881,10 +1957,10 @@ const legendTextNode = (node: IRNode): IRNode => ({
  * 把已解析的 legend 内容下沉成一个 core scope（swatch / ramp + 标签）
  * @description swatch 形态：每条目一个矩形 swatch Node（shape rectangle，填 color / opacity；size 条目额外一个圆点 Node）+ 一个标签 Node，纵 / 横堆叠；
  *   ramp 形态：一个矩形 Node 填 core linearGradient paint server（连续真渐变）+ 沿带刻度标签 Node。
- *   条目几何在传入 band 内从左上角起摆，受无文字度量约束（plot-design §13.1）：超 band 溢出可接受、不做测量自适应。
+ *   条目从传入 band 左上角开始排列，文字尺寸复用 Core 测量；band 的预留宽高仍由图例布局配置决定。
  *   下沉目标统一是 core Node（标签 / swatch / ramp 矩形 / size 圆点），纯 JSON
  */
-export const lowerLegend = (options: LowerLegendOptions): IRScope => {
+export const lowerLegend = (options: LowerLegendOptions, measure: PlotLabelMeasure): IRScope => {
   const { fontSize, band, orient } = options;
   const {
     swatchSize,
@@ -1901,16 +1977,19 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
   // 标题占一行（顶部），条目区从标题下方起
   let cursorY = band.y;
   if (options.title !== undefined) {
-    const titleText = textBlockMeasureText(options.title);
+    const titleSize = measure(
+      { type: 'node', text: options.title, ...guideTextSourceProps(titleStyle, fontSize) },
+      fontSize,
+    );
     children.push(
       legendTextNode({
         type: 'node',
-        position: [band.x + estimateLabelWidth(titleText, fontSize) / 2, cursorY + fontSize / 2],
+        position: [band.x + titleSize.width / 2, cursorY + titleSize.height / 2],
         text: options.title,
-        ...guideTextSourceProps(titleStyle),
+        ...guideTextSourceProps(titleStyle, fontSize),
       }),
     );
-    cursorY += fontSize + titleGap;
+    cursorY += titleSize.height + titleGap;
   }
 
   if (options.form === 'ramp' && options.ramp) {
@@ -1929,13 +2008,13 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
 
     // 沿带刻度标签
     for (const tick of options.ramp.ticks) {
+      const size = measure({ type: 'node', text: tick.label, ...guideTextSourceProps(labelStyle, fontSize) }, fontSize);
       const position: [number, number] = vertical
-        ? [
-            rampX + rampThickness + swatchGap + estimateLabelWidth(tick.label, fontSize) / 2,
-            rampY + tick.offset * rampLength,
-          ]
-        : [rampX + tick.offset * rampLength, rampY + rampThickness + swatchGap + fontSize / 2];
-      children.push(legendTextNode({ type: 'node', position, text: tick.label, ...guideTextSourceProps(labelStyle) }));
+        ? [rampX + rampThickness + swatchGap + size.width / 2, rampY + tick.offset * rampLength]
+        : [rampX + tick.offset * rampLength, rampY + rampThickness + swatchGap + size.height / 2];
+      children.push(
+        legendTextNode({ type: 'node', position, text: tick.label, ...guideTextSourceProps(labelStyle, fontSize) }),
+      );
     }
   } else {
     // 离散 swatch：逐条目堆叠（vertical 自上而下、horizontal 自左而右）
@@ -1944,13 +2023,17 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
     let rowY = cursorY;
 
     for (const entry of options.entries) {
+      const size = measure(
+        { type: 'node', text: entry.label, ...guideTextSourceProps(labelStyle, fontSize) },
+        fontSize,
+      );
       const symbolSide =
         entry.radius !== undefined
           ? Math.max(swatchSize, entry.radius * Math.SQRT2)
           : entry.symbolSize !== undefined
             ? Math.max(swatchSize, entry.symbolSize)
             : swatchSize;
-      const symbolCenter: [number, number] = [cursorX + symbolSide / 2, rowY + symbolSide / 2];
+      const symbolCenter: [number, number] = [cursorX + symbolSide / 2, rowY + Math.max(symbolSide, size.height) / 2];
       if (entry.symbols !== undefined) {
         for (const symbol of entry.symbols) {
           const glyph =
@@ -1985,7 +2068,7 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
       } else {
         // color / 分箱 / opacity：矩形色块
         const swatchOffset = (symbolSide - swatchSize) / 2;
-        const swatch = rectNode(cursorX + swatchOffset, rowY + swatchOffset, swatchSize, swatchSize);
+        const swatch = rectNode(cursorX + swatchOffset, symbolCenter[1] - swatchSize / 2, swatchSize, swatchSize);
         if (entry.color !== undefined) swatch.style = { ...swatch.style, fill: entry.color };
         if (entry.opacity !== undefined) {
           swatch.style = { ...swatch.style, fill: 'currentColor' };
@@ -1996,20 +2079,20 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
       }
 
       // 标签：swatch 右侧
-      const labelX = cursorX + symbolSide + swatchGap + estimateLabelWidth(entry.label, fontSize) / 2;
-      const labelY = rowY + symbolSide / 2;
+      const labelX = cursorX + symbolSide + swatchGap + size.width / 2;
+      const labelY = rowY + Math.max(symbolSide, size.height) / 2;
       children.push(
         legendTextNode({
           type: 'node',
           position: [labelX, labelY],
           text: entry.label,
-          ...guideTextSourceProps(labelStyle),
+          ...guideTextSourceProps(labelStyle, fontSize),
         }),
       );
       if (vertical) {
-        rowY += symbolSide + entryGap;
+        rowY += Math.max(symbolSide, size.height) + entryGap;
       } else {
-        cursorX = labelX + estimateLabelWidth(entry.label, fontSize) / 2 + entryGap;
+        cursorX = labelX + size.width / 2 + entryGap;
       }
     }
   }
@@ -2022,7 +2105,7 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
     children,
     defaults: {
       node: {
-        style: { font: { size: fontSize }, strokeWidth: 0 },
+        style: { strokeWidth: 0 },
         layout: { padding: 0 },
       },
     },

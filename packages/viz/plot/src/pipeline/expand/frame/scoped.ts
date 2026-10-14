@@ -1,6 +1,7 @@
 import type { IRScope } from '@retikz/core';
 import type { DataView, FieldOrderDefinition } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
+import type { BoundsRect } from '@retikz/math';
 
 import type { AnyScaleDefinition, CoordinateFrame, DimensionRole } from '../../../contract';
 import type { ProvenanceContext } from '../../../contract';
@@ -35,12 +36,11 @@ import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../../resolve/gu
 import type { MarkPaddingContext } from '../../../resolve/scale';
 import type { IRPlot, IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotGuide } from '../../../schemas';
 import { AxisGridApplyTo, CoordinateViewPlacementKind, PlotGuide, ScaffoldFrameMode } from '../../../schemas';
-import type { Rect } from '../../../shared';
 import { DEFAULT_FONT_SIZE } from '../../../shared';
 import { lowerCustomAxis, lowerGuide } from '../../guide';
 import { withEnabledAxisGrid, withoutAxisGrid, withScopeContext } from '../composition';
 import { legendReserveOf } from '../legend';
-import type { LowerPlotsOptions } from '../types';
+import type { PlotLayoutOptions } from '../types';
 
 /** scoped/scaffold frame 解析所需的显式上下文 */
 export type ScopedFramesResolveContext = {
@@ -55,7 +55,7 @@ export type ScopedFramesResolveContext = {
   /** 当前 Plot 的绘制高度 */
   height: number;
   /** 当前下沉使用的运行时能力与覆盖选项 */
-  options: LowerPlotsOptions;
+  options: PlotLayoutOptions;
   /** 本次下沉的数据来源追踪上下文 */
   provenance?: ProvenanceContext;
   /** 按类型索引的有效尺度定义 */
@@ -110,7 +110,7 @@ export type ScopedFramesResolution = {
   /** 下沉后承载坐标轴的场景作用域 */
   axisLayers: Array<IRScope>;
   /** 布局计算得到的绘图区矩形 */
-  plotArea: Rect;
+  plotArea: BoundsRect;
 };
 
 /** 解析 composition 中 root、overlay、track 与 scaffold 的共享 frame */
@@ -150,13 +150,16 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     height,
     fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
     margin: options.margin,
+    textMeasurer: options.textMeasurer,
     provenance,
     coordinateRegistry,
     fieldOrderRegistry: context.fieldOrderRegistry,
     scaleRegistry,
     legendReserve: legendReserveOf(guides.flatMap(guide => (guide.type === PlotGuide.Legend ? [guide] : []))),
-    lowerGuide,
-    lowerCustomAxis,
+    lowerGuide: (guide, ctx, guideProvenance) =>
+      lowerGuide(guide, { ...ctx, textMeasurer: options.textMeasurer }, guideProvenance),
+    lowerCustomAxis: (frame, guide, fontSize, guideProvenance) =>
+      lowerCustomAxis(frame, guide, fontSize, guideProvenance, options.textMeasurer),
     resolveGuideTicks,
     resolveVisibleGuideTicks,
     ...overrides,

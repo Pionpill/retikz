@@ -1,0 +1,58 @@
+---
+title: Binning and relations
+description: Draw bin statistics as a histogram and paired records as relationship links.
+---
+
+Binning and pairing generate result rows, so marks must bind fields from those results. See [Transforms](/viz/plot/transform) for authoring and scopes. The sections below cover plotting parameters; the final Data links provide the full contracts.
+
+## Binning
+
+`bin` assigns continuous observations to intervals and produces one row per bin. `IntervalMark.x0` / `x1` read the boundaries, while `y` reads the count, producing a histogram with actual interval widths.
+
+| Parameter    | Use and constraints in this demo                                       |
+| ------------ | ---------------------------------------------------------------------- |
+| `field`      | Bin `measurement` in this demo.                                        |
+| `count`      | Use a target bin count; mutually exclusive with the other strategies.  |
+| `step`       | Set a bin width; mutually exclusive with the other strategies.         |
+| `thresholds` | Set internal boundaries; mutually exclusive with the other strategies. |
+| `extent`     | Fixed to `[0, 20]` in this demo to keep the binning range stable.      |
+
+<ComponentPreview
+  files={[
+    'transform-histogram',
+    'transform-histogram.preview.tsx',
+    'transform-histogram.data.ts',
+    'transform-histogram.i18n.ts',
+  ]}
+  responsive
+  mode="showcase"
+  size="lg"
+  defaultSourceFile="transform-histogram.preview.tsx"
+  caption="Switch between count, width, and explicit-boundary strategies; compare bar widths and frequencies. Only the active strategy exposes its controls."
+/>
+
+The demo uses the default outputs `binStart`, `binEnd`, and `binCount`. Binning replaces observation rows, so subsequent encodings must read boundaries and statistics.
+
+## Relation generation
+
+`relate` selects a source and target in each group and produces rows for `RelationMark`. This demo retains the lines and observations, applying the transform only to the relation mark.
+
+| Parameter         | Use and constraints in this demo                                             |
+| ----------------- | ---------------------------------------------------------------------------- |
+| `groupBy`         | Pair records separately by series; omit it to pair across all records.       |
+| `source.selector` | Choose a source using the minimum, maximum, first, or last row in this demo. |
+| `target.selector` | Choose the target independently using the same options.                      |
+| `source.fields`   | Project source IDs to `sourceId` for anchor references.                      |
+| `target.fields`   | Project target IDs to `targetId` for anchor references.                      |
+| `measures`        | Compute the difference between endpoint values and create the link label.    |
+
+<ComponentPreview
+  files={['transform-relate', 'transform-relate.preview.tsx', 'transform-relate.data.ts', 'transform-relate.i18n.ts']}
+  responsive
+  mode="showcase"
+  size="xl"
+  defaultSourceFile="transform-relate.preview.tsx"
+  caption="Switch the grouping scope and endpoint selectors; observe the purple link and its difference label."
+/>
+
+The background lines create anchors for observations. The relation mark looks them up using the output endpoint IDs. Local pairing leaves the background marks’ data intact.

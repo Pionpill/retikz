@@ -22,7 +22,7 @@ import {
   Polar2DSchema,
   PolarInterpolation,
 } from '../../../schemas';
-import { computePolarCoordinate } from '../../../shared';
+import { computePolarCoordinate, guideTextSourceProps } from '../../../shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
 type Polar2DCoordinate = Extract<IRPlotCoordinate, { type: typeof BuiltinPlotCoordinate.Polar2D }>;
@@ -725,17 +725,19 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
         )
       : undefined;
 
-    const layout = computePolarCoordinate(
-      ctx.width,
-      ctx.height,
-      {
-        angularLabels:
-          angularAxis && angularAxis.tickLabels !== false
-            ? polarAngularLayoutLabelsOf(angleScale, layoutAngularTicks)
-            : [],
-      },
-      { fontSize: ctx.fontSize, reserve: ctx.layoutReserve, margin: ctx.margin },
-    );
+    const layout = computePolarCoordinate({
+      size: { width: ctx.width, height: ctx.height },
+      angularLabels:
+        angularAxis && angularAxis.tickLabels !== false
+          ? polarAngularLayoutLabelsOf(angleScale, layoutAngularTicks).map(label => ({
+              ...label,
+              node: { type: 'node' as const, ...guideTextSourceProps(angularAxis.tickLabels || {}) },
+            }))
+          : [],
+      text: { fontSize: ctx.fontSize, measure: ctx.textMeasurer },
+      reserve: ctx.layoutReserve,
+      margin: ctx.margin,
+    });
 
     const innerRadiusUnits = coordinate.innerRadius * layout.outerRadius;
     const radiusScale = ctx.buildPositionScale(radiusScaleDef, radiusValues, [innerRadiusUnits, layout.outerRadius]);
@@ -777,6 +779,7 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
     });
 
     const guideContext: GuideContext = {
+      textMeasurer: ctx.textMeasurer,
       plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
       projectX: angleScale,
       projectY: radiusScale,
@@ -832,17 +835,19 @@ const polar1DCoordinateDefinition: CoordinateDefinition<IRPlotPolar1DCoordinate>
         )
       : undefined;
 
-    const layout = computePolarCoordinate(
-      ctx.width,
-      ctx.height,
-      {
-        angularLabels:
-          angularAxis && angularAxis.tickLabels !== false
-            ? polarAngularLayoutLabelsOf(angleScale, visibleAngularTicks)
-            : [],
-      },
-      { fontSize: ctx.fontSize, reserve: ctx.layoutReserve, margin: ctx.margin },
-    );
+    const layout = computePolarCoordinate({
+      size: { width: ctx.width, height: ctx.height },
+      angularLabels:
+        angularAxis && angularAxis.tickLabels !== false
+          ? polarAngularLayoutLabelsOf(angleScale, visibleAngularTicks).map(label => ({
+              ...label,
+              node: { type: 'node' as const, ...guideTextSourceProps(angularAxis.tickLabels || {}) },
+            }))
+          : [],
+      text: { fontSize: ctx.fontSize, measure: ctx.textMeasurer },
+      reserve: ctx.layoutReserve,
+      margin: ctx.margin,
+    });
 
     const radius = radiusFraction * layout.outerRadius;
     const continuousAngle = isContinuousAngleScale(angleScaleDef.type);
@@ -867,6 +872,7 @@ const polar1DCoordinateDefinition: CoordinateDefinition<IRPlotPolar1DCoordinate>
       secondary: angleScale,
     });
     const guideContext: GuideContext = {
+      textMeasurer: ctx.textMeasurer,
       plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
       projectX: angleScale,
       projectY: angleScale,

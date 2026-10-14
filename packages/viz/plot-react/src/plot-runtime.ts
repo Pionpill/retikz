@@ -1,4 +1,5 @@
 import type { DataInputBindings, ExternalDatasets, ExternalRow } from '@retikz/data';
+import type { PlotCompileEnvironment } from '@retikz/plot';
 import type { IRPlot, LowerPlotsOptions, PlotLineageRun } from '@retikz/plot';
 import { lowerPlotWithLineage } from '@retikz/plot';
 import type { ResolveLabelMap } from '@retikz/plot-vanilla';
@@ -241,7 +242,7 @@ export const resolvePlotAuthoring = <TSource = never>(
  */
 export const resolvePlotLineage = <TSource = never>(
   props: PlotProps<TSource>,
-  options: { embedded?: boolean } = {},
+  options: { embedded?: boolean; environment: PlotCompileEnvironment },
 ): PlotLineageRun | undefined => {
   if (props.lineage === false) return undefined;
 
@@ -251,6 +252,7 @@ export const resolvePlotLineage = <TSource = never>(
 
   return lowerPlotWithLineage(spec, datasets, {
     ...lowerOptions,
+    environment: options.environment,
     lineage: props.lineage ?? {},
     hostLineageMetadata: props.hostLineageMetadata,
   }).lineage;

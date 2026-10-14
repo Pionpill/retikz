@@ -22,7 +22,7 @@ const ScopeLifecycle: FC<ScopeLifecycleProps> = props => {
         <Scope key={title} position={[index * 234, 0]}>
           <Node position={[103, -44]}>{title}</Node>
           <Map
-            layout={{ height: 30, key: { width: 50 }, value: { width: 154 } }}
+            defaultCell={{ layout: { height: 30 }, key: { layout: { width: 50 } }, value: { layout: { width: 154 } } }}
             label={{ text: text.map, position: 'top', font: { size: 12 }, textColor: 'gray' }}
             entries={[
               { key: 'S', value: index === 2 ? 'resolved' : 'scope-placeholder' },
