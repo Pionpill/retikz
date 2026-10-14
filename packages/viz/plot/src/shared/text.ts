@@ -1,4 +1,4 @@
-import type { IRNode, LayoutCompositeCompileContext } from '@retikz/core';
+import type { IRNode, CompositeCompileContext } from '@retikz/core';
 import { LayoutChildProbeKind, NaturalLayoutProposal } from '@retikz/core';
 import type { BoundsRect } from '@retikz/math';
 
@@ -23,7 +23,7 @@ const textProbeOf = (node: IRNode, fontSize: number): IRNode => ({
 
 /** 将标签测量绑定到当前编译的宿主测量器、主题及 TeX 环境 */
 export const createPlotTextMeasurer =
-  (context: LayoutCompositeCompileContext): PlotLabelMeasure =>
+  (context: CompositeCompileContext): PlotLabelMeasure =>
   (node, fontSize) => {
     const probe = context.layoutChild(textProbeOf(node, fontSize), NaturalLayoutProposal);
     if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);

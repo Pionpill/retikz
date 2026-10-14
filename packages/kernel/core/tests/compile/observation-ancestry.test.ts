@@ -42,7 +42,7 @@ describe('最终观测树', () => {
       namespace: 'test',
       type: 'pair',
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('pair') }),
-      expand: () => ({
+      compile: () => ({
         children: [
           { type: 'node', position: [0, 0], text: 'A' },
           { type: 'node', position: [40, 0], text: 'B' },
@@ -136,7 +136,7 @@ describe('最终观测树', () => {
       namespace: 'test',
       type: 'empty-containers',
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('empty-containers') }),
-      expand: () => ({
+      compile: () => ({
         children: [{ type: 'scope', children: [{ type: 'scope', children: [] }] }],
       }),
     });

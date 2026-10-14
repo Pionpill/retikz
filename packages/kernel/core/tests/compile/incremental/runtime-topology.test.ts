@@ -12,7 +12,7 @@ import type {
   IRChild,
   IRScene,
   LayoutChildResult,
-  LayoutCompositeCompileContext,
+  CompositeCompileContext,
   LayoutProposal,
   ScenePrimitive,
 } from '../../../src';
@@ -47,7 +47,7 @@ const flattenPrimitives = (primitives: ReadonlyArray<ScenePrimitive>): Array<Sce
 };
 
 const resolvedResultOf = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   child: IRChild,
   proposal: LayoutProposal = NaturalLayoutProposal,
 ): LayoutChildResult => {
@@ -336,7 +336,7 @@ describe('Core canonical Runtime topology', () => {
         namespace: literal('test'),
         type: literal('generatedBoundary'),
       }),
-      expand: () => ({
+      compile: () => ({
         children: [
           { type: 'node', id: 'duplicate', position: [0, 0] },
           { type: 'node', id: 'duplicate', position: [20, 0] },
@@ -371,7 +371,7 @@ describe('Core canonical Runtime topology', () => {
         namespace: literal('test'),
         type: literal('generatedDuplicate'),
       }),
-      expand: () => ({ children: [{ type: 'node', id: 'duplicate', position: [20, 0] }] }),
+      compile: () => ({ children: [{ type: 'node', id: 'duplicate', position: [20, 0] }] }),
     });
     const compiled = compileCoreSnapshot(
       {
@@ -655,7 +655,7 @@ describe('Core compile warning collection', () => {
         namespace: literal('test'),
         type: literal('warningOrder'),
       }),
-      expand: () => ({
+      compile: () => ({
         children: [
           {
             type: 'path',

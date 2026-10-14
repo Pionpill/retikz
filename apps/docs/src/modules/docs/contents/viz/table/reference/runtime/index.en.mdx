@@ -261,7 +261,7 @@ Top-level `composites` has been removed; use `compile.composites`. `renderTable(
 
 `compileTable(spec, datasets, options?)` merges `lowerTables()` with `compile.composites`, then calls `compileToScene()` once. Its `manifest` is the same immutable reference as the exact root artifact's `value`; nested Tables, repeated table ids, and unrelated composite artifacts cannot be mistaken for the root.
 
-A layout-aware Table cannot persist its compile-local replay tree through pure Tier 1 `lowerIRToKernel()`. Use `compileTable()` for a standalone result. For an embedded Scene, pass `lowerTables()` definitions to host `compileToScene()`, React `<Layout>`, or the Vanilla adapter.
+A Table replay tree belongs to the current compilation and cannot be persisted as Kernel IR. Use `compileTable()` for a standalone result. For an embedded Scene, pass `lowerTables()` definitions to host `compileToScene()`, React `<Layout>`, or the Vanilla adapter.
 
 The manifest is a JSON-safe, detached, recursively frozen typed-artifact payload. See [Artifact contracts](/viz/table/reference/manifest) for its fields and nested DTOs. Core compile traversal creates the root artifact occurrence; it never enters IRTable or the manifest. `tableId` is not an instance selector; exact occurrences distinguish anonymous roots, nested Tables, and repeated ids.
 

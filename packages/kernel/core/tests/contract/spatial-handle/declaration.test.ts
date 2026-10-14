@@ -18,7 +18,7 @@ const defineCard = (spatialHandles: unknown) =>
       namespace: literal('third'),
       type: literal('card'),
     }),
-    expand: () =>
+    compile: () =>
       ({ children: [], spatialHandles }) as {
         children: [];
         spatialHandles: ReadonlyArray<SpatialHandleDeclaration>;
@@ -94,7 +94,7 @@ describe('spatial handle declaration contract', () => {
         namespace: literal('third'),
         type: literal('card'),
       }),
-      expand: () => ({ children: [], spatialHandles: [], unsupported: true }) as never,
+      compile: () => ({ children: [], spatialHandles: [], unsupported: true }) as never,
     });
 
     expect(() => compileToScene(scene, { composites: [definition] })).toThrow(/unsupported.*unsupported/i);
@@ -111,7 +111,7 @@ describe('spatial handle declaration contract', () => {
         namespace: literal('third'),
         type: literal('card'),
       }),
-      expand: () => result as never,
+      compile: () => result as never,
     });
 
     expect(() => compileToScene(scene, { composites: [definition] })).toThrow(

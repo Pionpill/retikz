@@ -3,8 +3,8 @@ import type {
   IRPath,
   IRStep,
   LayoutChildResult,
-  LayoutCompositeCompileContext,
-  LayoutCompositeCompileResult,
+  CompositeCompileContext,
+  CompositeCompileResult,
 } from '@retikz/core';
 import { intrinsicLayoutProposal, requiredLayoutProbe, resolveLayoutAxisSize } from '@retikz/layout/compose';
 
@@ -31,7 +31,7 @@ type MeasuredTreeItem = {
 };
 
 /** 自然测量后组合有序子树，连接复用真实形状的 Core 引用 */
-export const compileTree = (source: IRTree, context: LayoutCompositeCompileContext): LayoutCompositeCompileResult => {
+export const compileTree = (source: IRTree, context: CompositeCompileContext): CompositeCompileResult => {
   const { root, emptyNode, scope, label, layout } = resolveTree(source);
   const horizontal = layout.direction === 'right' || layout.direction === 'left';
   const reverse = layout.direction === 'up' || layout.direction === 'left';

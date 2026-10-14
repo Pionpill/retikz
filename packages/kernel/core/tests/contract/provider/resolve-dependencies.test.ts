@@ -37,7 +37,7 @@ const compositeDefinitionOf = (namespace: string, type: string): AnyCompositeDef
     namespace,
     type,
     schema: strictObject({ namespace: literal(namespace), type: literal(type) }),
-    expand: () => ({ children: [] }),
+    compile: () => ({ children: [] }),
   });
 
 const arrowDefinitionOf = (name: string) =>

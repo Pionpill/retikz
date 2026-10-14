@@ -1,0 +1,341 @@
+---
+title: 坐标解析
+description: 追踪 Core 如何解析位置、查找名称与锚点，并在 Scope 布局完成后确定局部与世界坐标。
+---
+
+[配置解析](/kernel/packages/core/resolution) 确定节点与路径的有效属性，但位置仍可能包含引用：一个节点放在另一个节点右侧，一条路径连接两个锚点，或整个 Scope 对齐到已有对象。本页接着追踪这些表达怎样变成可用于布局和绘制的坐标。
+
+阅读前可先了解 [Node 定位](/kernel/components/node/usage)、[Coordinate](/kernel/components/node/coordinate) 与 [Scope](/kernel/components/scope/usage) 的写法。本页止于位置、引用几何和分组变换的交付；文字测量、路径裁剪与渲染器内部绘制分别由后续主题承接。
+
+## 整体流程
+
+位置解析同时面对两个空间：局部坐标是当前 Scope 内使用的坐标，世界坐标是应用当前 Scope 及祖先 Scope 的变换后、用于跨作用域引用的坐标。没有 Scope 变换时，两者相同。
+
+编译遍历提供当前可见的名称和各层变换。Core 在布局过程中解析位置，再把可引用的几何注册到命名空间。普通位置确定节点的放置点；自身锚点对齐则要先得到临时布局，再计算平移。Scope 收尾时补上依赖子布局的整体定位，并处理本层暂存的路径。
+
+<ComponentPreview files="coordinate-overview" size="lg" hideCode type="flow" />
+
+下面的案例包含内外层同名节点、嵌套坐标和锚点定位。其中一个 Scope 设置了 `id="cluster"`，下文用 `cluster` 指代这个分组，其他元素也通过这个 id 引用它。
+
+包络是由子布局汇总出的范围，供 Scope 定位使用。灰色外框帮助辨认这个分组的内容范围，只是额外绘制的装饰，不改变包络。
+
+<ComponentPreview files="coordinate-example" size="lg" />
+
+外层 A 位于 `[0, 0]`。`cluster` 的原点移到 `[180, -40]`，所以其中 A 的局部位置 `[0, 0]` 对应世界点 `[180, -40]`；B 的局部偏移 `[120, 0]` 把它放到世界点 `[300, -40]`。内层 Scope 再移动 `[0, 80]`，C 的世界点为 `[180, 40]`。D 声明在 `cluster` 之后，读取其已完成的布局，令自身上锚点对齐到其下锚点向下偏移 48 的位置。
+
+<SourceLinks
+  sources={[
+    {
+      label: '遍历中的位置上下文、布局注册与 Scope 收尾',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+    { label: '局部点与世界点的解析结果', path: 'packages/kernel/core/src/resolve/position/types.ts' },
+  ]}
+/>
+
+## 位置表达
+
+Core 不把所有位置都当作一个待查找的节点名称。每种表达决定了从哪里取得基点，以及在哪个空间计算。
+
+| 表达       | 示例                                                     | 计算方式                                       |
+| ---------- | -------------------------------------------------------- | ---------------------------------------------- |
+| 笛卡尔坐标 | `[20, 10]`                                               | 直接作为当前 Scope 的局部点                    |
+| 极坐标     | `{ angle: 90, radius: 40 }`                              | 在局部空间从原点计算；可用 `origin` 指定基点   |
+| 方向定位   | `{ of: 'A', direction: 'right', distance: 40 }`          | 把引用对象的世界中心转回局部，再沿局部方向移动 |
+| 偏移定位   | `{ of: 'A', offset: [40, 0] }`                           | 把基点解析成局部点，再叠加局部偏移             |
+| 两点插值   | `{ between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }` | 解析两个世界参考点，插值后转回当前局部空间     |
+
+锚点定位还需要自身几何，不只是解析一个点。例如下面的 Node 位置声明，把自身左锚点对齐到 A 的右锚点：
+
+```ts
+position: {
+  kind: 'anchor',
+  target: { id: 'A', anchor: 'right' },
+  selfAnchor: 'left',
+}
+```
+
+极坐标的正角度遵循屏幕坐标：从正 x 轴转向正 y 轴，90° 指向下方。方向定位中的 `distance` 是中心间距；它没有指定时使用编译上下文的 `nodeDistance`，默认 24，并不自动变成两个轮廓间的空隙。
+
+表中是共享机制的代表性写法，各消费方接受的范围不同。Node 支持方向与锚点定位；Scope 的 `position` 接受原点坐标或自身锚点对齐；路径步骤的相对游标表达属于路径编译。不要把所有形式任意互换。
+
+`resolvePosition` 返回 `PositionResolution`，同时保留 `localPoint` 和 `worldPoint`。遇到节点目标时，`resolvePositionTargetWorld` 先取得世界参考点，`resolvePositionTarget` 再补上当前空间中的 `point`，并保留引用对象与连接面绑定结果。
+
+<ComponentPreview files="position-flow" size="lg" hideCode type="flow" />
+
+两条分支的差别是计算起点。局部表达先计算再投影；节点目标先查世界几何再反投影。偏移或极坐标中的命名基点也会先反投影，之后才计算局部位移。两点插值在目标分支内递归解析端点，不依赖路径游标。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'resolvePosition：坐标、极坐标、方向与偏移',
+      path: 'packages/kernel/core/src/resolve/position/resolve.ts',
+    },
+    { label: 'resolvePositionTarget：节点目标与两点插值', path: 'packages/kernel/core/src/resolve/position/target.ts' },
+    { label: 'Node 锚点定位的输入契约', path: 'packages/kernel/core/src/schemas/position/anchor-position/schema.ts' },
+  ]}
+/>
+
+## 引用与锚点
+
+名称查找与几何取点是两步。`id` 先选中一个已注册对象，`anchor` 再决定从这个对象的什么位置取点。
+
+- 命名空间：保存当前可见的 Node、Coordinate 与有 `id` 的 Scope 布局，供名称查找使用
+- 节点目标：`{ id, anchor?, offset?, boundary? }`，指定对象、可选锚点、世界偏移与连接面
+- 锚点：目标几何上的具体点，可以是名称、角度或 `{ side, fraction }` 形式的边上比例点
+
+没有显式锚点时，位置目标读取对象中心。Node 锚点定位还需要 `selfAnchor`，即自身要贴到目标点的锚点，省略时也是中心。路径中的裸节点目标可能继续自动裁剪到轮廓；这里取得的中心只是参考点，最终路径端点由路径编译决定。
+
+锚点不是固定在对象旁边的一组静态坐标。`resolveAnchorRef` 根据已绑定的 shape / boundary 能力和当前几何取点；边上比例点使用形状的 `edgePoint` 能力。Coordinate 则注册一个零尺寸布局，只提供位置，不绘制可见图元。
+
+Node 对齐自身锚点时，要先获得临时布局：自己的尺寸与旋转会影响锚点位置。Core 将临时布局投影到世界空间，计算“目标点减自身锚点”的世界位移，再将位移转回当前局部空间，移动节点几何与内容。节点引用自身、引用尚未定义的目标或尚未闭合的 Scope，会导致这次编译失败。
+
+<SourceLinks
+  sources={[
+    { label: '节点目标、角度与边上比例锚点', path: 'packages/kernel/core/src/schemas/position/node-target/schema.ts' },
+    { label: '锚点取点与缓存', path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts' },
+    {
+      label: 'placeAnchorPositionedLayout：自身锚点的最终对齐',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
+    },
+  ]}
+/>
+
+### 命名空间
+
+`NamespaceStack` 是一组从根到当前层排列的 Map。注册写入栈顶，查找从栈顶向外进行，遇到第一个同名对象就停止。Map 条目保存布局及其生命周期状态；保存的引用几何位于世界空间，因此查找不会把另一个 Scope 的局部坐标误当成当前坐标。
+
+下面摘录源码中的核心数据结构，省略诊断、分支快照与操作方法：
+
+```ts
+export type NamespaceEntryState = 'resolved' | 'scope-placeholder';
+
+export type NamespaceEntry = {
+  layout: NodeLayout;
+  state: NamespaceEntryState;
+};
+
+export class NamespaceStack {
+  private readonly frames: Array<Map<string, NamespaceEntry>>;
+
+  // 其余字段、构造函数与方法省略
+}
+```
+
+外层 `Array` 记录作用域层次：`frames[0]` 是根层，最后一项是栈顶；每个 `Map` 用元素 id 查到一条 `NamespaceEntry`。条目中的 `layout` 保存引用所需的布局，`state` 区分已确定的布局与 Scope 占位。虽然类型名是 `NodeLayout`，Coordinate 与 Scope 的引用几何也使用这份布局契约。
+
+构造函数用 `[new Map()]` 建立根层。这里的 `readonly` 只禁止重新赋值 `frames` 字段，不会冻结数组或 Map：入栈仍使用 `frames.push(new Map())`，注册则写入栈顶 Map。
+
+Scope 只有在 `localNamespace: true` 时才推入新 Map。普通 Scope 改变坐标空间，但继续使用当前命名空间。这两个边界彼此独立。
+
+下图摘录案例完成 `cluster` 内部节点、但尚未完成 Scope 收尾时的名称记录。`resolved` 表示布局已确定；`scope-placeholder` 表示名称已登记，但 Scope 的最终包络尚未确定。每格是一个 Map，值只展示这两种状态和世界中心；查找 A 命中栈顶，出栈后才会命中根层 A。
+
+<ComponentPreview files="namespace-stack" size="xl" hideCode type="illustration" />
+
+| 情况                         | 查找结果                               |
+| ---------------------------- | -------------------------------------- |
+| 当前层与外层都有 A           | 命中当前层 A，遮蔽外层 A               |
+| 当前层没有 A，外层有 A       | 向外查找并命中外层 A                   |
+| 退出局部命名空间后查内部名称 | 内部 Map 已出栈，外部无法直接访问      |
+| 同一个 Map 重复注册 A        | 后注册布局覆盖前值，并产生重复名称警告 |
+
+<ComponentAlert
+  type="tip"
+  title="同层重名会覆盖，跨层重名只遮蔽"
+  description="同一个 Map 内，后注册的同名布局会覆盖前值，并产生警告，不会仅因重名终止编译。覆盖不会追溯修改已经完成的位置计算，但此后查找该名称的引用（包括延迟解析的 Path）会读取新布局。不同 Map 中的同名记录互不覆盖；内层出栈后，外层记录仍然可用。"
+/>
+
+Scope 自己的 `id` 注册在父命名空间，早于它为子元素推入的新 Map。因此外部可引用整个 Scope，同时内部名称仍然隔离。案例的内层路径命中内层 A；离开 `cluster` 后，外层路径再次命中外层 A，D 则通过 `cluster` 引用整体包络。
+
+<ComponentAlert
+  type="tip"
+  title="Path 的 id 不用于位置引用"
+  description="Path 的 id 用于图元身份、交互与动画，不注册到这里的位置命名空间。不能因为路径有 id，就把它当作 Node、Coordinate 或 Scope 的位置引用。"
+/>
+
+<SourceLinks
+  sources={[
+    { label: 'NamespaceStack：栈顶注册与由内向外查找', path: 'packages/kernel/core/src/compile/namespace.ts' },
+    {
+      label: 'compileScopeChild：Scope 名称注册与局部 Map 出入栈',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+  ]}
+/>
+
+### 引用时机
+
+命名空间不是在编译开始前一次性建立的完整索引。名称随着布局完成逐步注册，所以“源码里存在这个 id”和“当前可以读取它的几何”是两回事。
+
+| 消费方                          | 何时读取引用                                                 |
+| ------------------------------- | ------------------------------------------------------------ |
+| Node / Coordinate 位置          | 遍历到当前元素时读取；通常只能引用此前已注册的对象           |
+| Node 锚点定位                   | 自身临时布局完成后读取，要求目标已完成布局                   |
+| Scope 对齐的外部目标点 `target` | 进入子树前解析并保存，只允许此前已完成的目标或显式父空间坐标 |
+| Path 目标                       | 本层 Scope 收尾时读取，在局部命名空间出栈前完成              |
+
+这里提前保存的是 Scope 要对齐到的外部目标点 `target`。自身锚点 `selfAnchor` 依赖 Scope 的包络形状、子布局和自身变换，要等子树完成后才能求出。例如把 Scope 的左锚点对齐到已完成布局的 Node 右锚点：先记录 Node 的右锚点，再布局子元素、计算 Scope 包络及自身变换，最后求出 Scope 的左锚点，并在同一坐标空间计算两点之差作为整体平移。因此，目标点提前确定，并不表示 Scope 的自身锚点或最终位置已经确定。
+
+Path 在所在 Scope 的子树遍历完成后解析，并不会统一等到整个 IR 树遍历结束。它只能引用解析当时已注册、且在命名空间栈中可见的节点。
+
+例如依次声明两个兄弟 Scope A、B，内部各有节点 a、b，且都未开启 `localNamespace`。下图从左到右展示遍历顺序：A 中的 Path 尝试引用 b，B 中的 Path 尝试引用 a。
+
+<ComponentPreview files="path-reference-timing" size="xs" hideCode type="flow" />
+
+A 收尾时，b 还未注册，因此 A 中的 Path 无法引用 b。退出普通 Scope A 不会移除 a；B 收尾时，a 仍在共享 Map 中，所以 B 中的 Path 可以引用 a。共享同一个 Map 不代表可以读取稍后才注册的节点。
+
+如果 A 开启 `localNamespace: true`，退出 A 时局部 Map 会弹出，B 中的 Path 也就无法直接引用内部节点 a。若希望连接两个普通兄弟 Scope 中的节点，可以把 Path 放到共同父 Scope 中，让它在两个子 Scope 都完成后解析。
+
+普通位置引用失败时 resolver 返回空结果，由消费方决定失败行为：Node / Coordinate 无法定位会使编译失败，路径未解析引用会产生警告并按对应路径命令处理。
+
+<SourceLinks
+  sources={[
+    { label: '节点布局失败与引用检查', path: 'packages/kernel/core/src/compile/node/layout.ts' },
+    { label: '坐标注册、路径入队与回填顺序', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+  ]}
+/>
+
+## 坐标空间
+
+`createPositionResolveContext` 把遍历状态投影成位置解析需要的窄上下文：名称查询、默认方向距离，以及 `toLocal` / `toWorld`。位置 resolver 不直接持有编译的完整状态，也不管理命名空间出入栈。
+
+变换链 `scopeChain` 按祖先到当前层保存，最后一项最先作用于点。Core 将各项变换转换为仿射矩阵，按链顺序相乘得到可复用的合成矩阵（计算方式见 [Math：二维仿射矩阵](/kernel/packages/math/transforms#二维仿射矩阵)），供节点和路径进行局部与世界坐标转换，避免每个点重复计算整条链。零缩放轴无法反投影。
+
+例如变换链依次保存“平移 `[100, 50]`、缩放 2”，局部点 `[40, 0]` 会先缩放为 `[80, 0]`，再平移为世界点 `[180, 50]`。反投影则先减去平移，再除以缩放，得到原来的局部点。
+
+### 偏移空间
+
+相同的 `[40, 0]` 不一定产生相同的世界位移。下面的 Scope 原点位于 `[100, 50]`，缩放为 2。蓝点使用普通偏移位置，橙点使用节点目标的 `offset`；两者从同一个 Coordinate 出发。
+
+<ComponentPreview files="coordinate-spaces" size="lg" hideCode type="illustration" />
+
+- 普通偏移：`{ of: 'base', offset: [40, 0] }` 在局部移动 40，经缩放后在世界移动 80，得到 `[180, 50]`
+- 目标偏移：`{ id: 'base', offset: [40, 0] }` 在取得世界参考点后移动 40，得到 `[140, 50]`
+
+前者随当前 Scope 的缩放和旋转改变世界方向与距离；后者的偏移始终在世界空间叠加。它们分别属于位置表达和节点目标，字段同名不代表坐标语义相同。
+
+<SourceLinks
+  sources={[
+    {
+      label: '位置上下文的 toLocal / toWorld',
+      path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
+    },
+    { label: '正向、逆向变换与布局投影', path: 'packages/kernel/core/src/compile/transform.ts' },
+    { label: 'NodeTarget 世界偏移与插值', path: 'packages/kernel/core/src/resolve/position/target.ts' },
+  ]}
+/>
+
+### 图元与引用
+
+注册的世界几何服务于引用查询；Scene 中的绘制几何仍可保留局部坐标，再由 Group 的 `transforms` 表达整体变化。这两种表示分别服务查找和绘制，不能把注册布局中的世界坐标再写回局部图元，否则渲染分组时会重复应用变换。
+
+`projectLayoutToGlobal` 为注册和几何消费建立投影，`emitScopeGroup` 则组织局部图元与数值变换。渲染器消费 Scene 的分组结构，不再查找原始的 `of`、`id` 或 `between` 位置表达。
+
+<SourceLinks
+  sources={[
+    { label: '局部布局到世界引用几何的投影', path: 'packages/kernel/core/src/compile/transform.ts' },
+    {
+      label: 'emitScopeGroup：局部图元与分组变换的交付',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+  ]}
+/>
+
+## Scope 定位
+
+Scope 的原点和内容包络中心通常不同。`position: [x, y]` 放置的是局部原点；锚点形式则放置变换后的包络上的某个点，默认自身锚点为包络中心。
+
+下面两组都只有一个局部中心为 `[60, 0]`、宽度为 72 的节点。上组把原点移到目标点，下组把包络左锚点贴到目标点。虚线是共同的 x 参照，实线框显示真实包络边界。
+
+<ComponentPreview files="scope-placement" size="xl" hideCode type="illustration" />
+
+上组目标为 `[140, 0]`，节点中心为 `[200, 0]`，包络左侧位于 x = 164。下组目标为 `[140, 150]`，Core 用包络左锚点的局部 x = 24 计算整体平移，使左侧恰好位于 x = 140，节点中心位于 x = 176。`selfAnchor: 'origin'` 则对齐局部原点，不使用包络中心。
+
+### 包络与占位
+
+Scope 的包络要等子布局完成才知道。Core 从 Node、Coordinate、子 Scope 等贡献的布局汇总包络；`boundingShape` 选择矩形或圆形。路径视觉范围、裁剪和 `frame` 装饰不反过来扩张这个固有包络。
+
+有 `id` 的 Scope 在进入子树前注册一条 `scope-placeholder` 记录，以占住父命名空间中的名称。这个记录是编译中的临时状态，不是完成的包络；需要完整几何的锚点定位不能用它作为目标。子树完成后，Core 用 `replaceLayout` 将同一名称升级为 `resolved`，不把正常升级当作重复名称注册。
+
+下面以 `S` 内依次布局节点 `a`、`b` 为例，展示同一 Map 的三个快照（未设置 `localNamespace: true`）。下方蓝框表示收尾后确定的 Scope 包络。
+
+<ComponentPreview files="scope-lifecycle" size="lg" hideCode type="illustration" />
+
+目标点必须在进入子树前确定，因而 Scope 的锚点定位不能引用自身、内部后代或尚未闭合的祖先 Scope。否则目标又依赖本次子布局，会形成循环。
+
+<SourceLinks
+  sources={[
+    { label: '包络汇总与自身 pivot 解析', path: 'packages/kernel/core/src/compile/scope.ts' },
+    {
+      label: 'Scope target 限制、占位注册与包络替换',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+    { label: 'NamespaceEntry 的布局生命周期', path: 'packages/kernel/core/src/compile/namespace.ts' },
+  ]}
+/>
+
+### 最终变换
+
+不依赖包络的变换，如数字平移、绕原点旋转和缩放，可以在子布局前确定，让内部跨空间引用使用它们。旋转或缩放的 `pivot` 指向包络锚点时，则必须先得到固有子布局，才能解析变换。
+
+锚点定位还要在自身变换之后求 `selfAnchor`，再补一段整体平移：
+
+$$
+\Delta = p_{\text{target}} - p_{\text{self}}
+$$
+
+这里两点都在父 Scope 的局部空间。最终变换先执行自身旋转、缩放等操作，再执行对齐平移；祖先变换随后作用于整个结果。原点形式的 `position` 同样位于自身变换之外，所以自己的缩放不会放大这个位置值。
+
+收尾时 Core 只补上尚未应用的变换，更新已发布的引用几何与暂存路径的变换链，再用最终包络替换占位。这样外部引用读取最终位置，本层路径也使用收尾后的几何，而 Scene 的局部图元仍由分组变换统一放置。
+
+<SourceLinks
+  sources={[
+    { label: 'lowerScopeTransforms：引用平移与包络 pivot', path: 'packages/kernel/core/src/compile/scope.ts' },
+    { label: '预备变换、最终对齐与发布几何更新', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: 'Scope 原点与锚点定位契约', path: 'packages/kernel/core/src/schemas/scope/schema.ts' },
+  ]}
+/>
+
+## Scope 编译流程
+
+下面沿一个有 `id` 的 Scope 串起生命周期。主链处理顺序从上向下，右侧只标出名称状态和世界引用几何这些辅助产物；没有 `localNamespace` 时跳过命名空间出入栈。
+
+<ComponentPreview files="coordinate-implementation" size="xxxl" hideCode type="flow" />
+
+读源码时先从 `compileScopeChild` 看进入与收尾顺序，再沿 `createPositionResolveContext` 进入 `resolvePosition` / `resolvePositionTargetWorld`。普通节点由 `layoutNode` 完成位置与布局，随后投影并注册；Scope 在子树完成后计算包络和最终变换，回填路径，最后组织分组输出。
+
+总览中的“定位与布局”“注册世界引用几何”在子树中逐元素执行，“闭合 Scope”则每层执行一次。位置 resolver 只返回几何结果，引用的可见性、注册时机和生命周期由编译遍历管理。
+
+<SourceLinks
+  sources={[
+    { label: 'compileScopeChild 完整调用链', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    {
+      label: 'compile 状态到位置 resolver 的适配边界',
+      path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
+    },
+    { label: '位置解析的窄上下文与输出类型', path: 'packages/kernel/core/src/resolve/position/types.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: '编译流程',
+      description: '回看节点遍历、延迟路径与 Scene 汇总的整体顺序',
+      url: '/kernel/packages/core/compilation',
+    },
+    {
+      title: '配置解析',
+      description: '查阅位置解析之前的默认值、主题与能力绑定',
+      url: '/kernel/packages/core/resolution',
+    },
+    { title: 'Scope 基础用法', description: '操作分组变换、命名空间与整体定位', url: '/kernel/components/scope/usage' },
+    {
+      title: 'Node 实现原理',
+      description: '继续追踪节点内容、尺寸、边界与锚点',
+      url: '/kernel/components/node/mechanism',
+    },
+  ]}
+/>

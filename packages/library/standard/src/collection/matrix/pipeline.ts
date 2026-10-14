@@ -1,8 +1,8 @@
 import type {
   CompositeCompileChild,
   LayoutChildResult,
-  LayoutCompositeCompileContext,
-  LayoutCompositeCompileResult,
+  CompositeCompileContext,
+  CompositeCompileResult,
 } from '@retikz/core';
 
 import { compileCells, measureCell } from '../_cell';
@@ -12,7 +12,7 @@ import { resolveMatrix } from './resolve';
 import type { IRMatrix } from './schema';
 
 /** 共享行列轨道的矩形布局；测量一次后复用单格与索引 */
-export const compileMatrix = (node: IRMatrix, context: LayoutCompositeCompileContext): LayoutCompositeCompileResult => {
+export const compileMatrix = (node: IRMatrix, context: CompositeCompileContext): CompositeCompileResult => {
   const {
     namespace: _namespace,
     type: _type,

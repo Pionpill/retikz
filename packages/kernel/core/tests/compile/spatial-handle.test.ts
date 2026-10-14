@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { literal, string } from 'zod';
+import { literal, string, strictObject } from 'zod';
 
 import type { IRChild, IRScene, IRScopePosition } from '../../src';
-import { compileToScene, CompositeBaseSchema, defineComposite, ScopeSchema } from '../../src';
+import { compileToScene, CompositeBaseSchema, defineComposite, ScopeSchema, NaturalLayoutProposal } from '../../src';
 
 const card = defineComposite({
   namespace: 'third',
@@ -12,7 +12,7 @@ const card = defineComposite({
     type: literal('card'),
     id: string().optional(),
   }),
-  expand: () => ({
+  compile: () => ({
     children: [],
     spatialHandles: [
       {
@@ -34,12 +34,57 @@ const panel = defineComposite({
     type: literal('panel'),
     id: string().optional(),
   }),
-  expand: () => ({ children: [{ namespace: 'third', type: 'card', id: 'inner-card' }] }),
+  compile: () => ({ children: [{ namespace: 'third', type: 'card', id: 'inner-card' }] }),
 });
 
 const sceneOf = (children: ReadonlyArray<IRChild>): IRScene => ({ version: 1, type: 'scene', children: [...children] });
 
 describe('qualified spatial handle compile', () => {
+  it('commits direct spatial declarations and artifacts only for the selected probe', () => {
+    const measured = defineComposite({
+      namespace: 'third',
+      type: 'measured',
+      schema: CompositeBaseSchema.extend({ namespace: literal('third'), type: literal('measured') }),
+      artifactSchema: strictObject({ selected: literal(true) }),
+      compile: () => ({
+        children: [],
+        artifact: { selected: true },
+        spatialHandles: [{ id: 'body', role: 'card', bounds: { x: 0, y: 0, width: 10, height: 20 } }],
+      }),
+    });
+    const container = defineComposite({
+      namespace: 'third',
+      type: 'container',
+      schema: CompositeBaseSchema.extend({ namespace: literal('third'), type: literal('container') }),
+      compile: (_node, context) => {
+        context.layoutChild({ namespace: 'third', type: 'measured' }, NaturalLayoutProposal);
+        const selected = context.layoutChild({ namespace: 'third', type: 'measured' }, NaturalLayoutProposal);
+        if (selected.kind === 'failed') return context.raise(selected.failure);
+        return { children: [context.replay(selected.result, { transforms: [{ kind: 'translate', x: 30, y: 40 }] })] };
+      },
+    });
+    const result = compileToScene(sceneOf([{ namespace: 'third', type: 'container' }]), {
+      composites: [container, measured],
+    });
+    expect(result.spatialHandles.entries).toHaveLength(1);
+    expect(result.spatialHandles.entries[0]).toMatchObject({
+      id: 'body',
+      geometry: { kind: 'rect', bounds: { x: 30, y: 40, width: 10, height: 20 } },
+      ownerPath: [
+        { namespace: 'third', type: 'container' },
+        { namespace: 'third', type: 'measured' },
+      ],
+    });
+    expect(result.artifacts).toHaveLength(1);
+    expect(result.artifacts[0]).toMatchObject({
+      value: { selected: true },
+      occurrence: {
+        sourcePath: 'children[0]',
+        expansionPath: [{ kind: 'replay', index: 0 }],
+      },
+    });
+  });
+
   it('returns one frozen empty index when no composite declares handles', () => {
     const result = compileToScene(sceneOf([]));
 
@@ -79,7 +124,7 @@ describe('qualified spatial handle compile', () => {
         type: literal('orderedCard'),
         id: string().optional(),
       }),
-      expand: () => ({
+      compile: () => ({
         children: [],
         spatialHandles: [
           { id: 'z', role: 'ordered', bounds: { x: 0, y: 0, width: 1, height: 1 } },
@@ -180,27 +225,7 @@ describe('qualified spatial handle compile', () => {
     expect(result.spatialHandles.entries[0]?.geometry.bounds).toEqual({ x: 12, y: 23, width: 4, height: 5 });
   });
 
-  it('rejects layout result-level declarations at runtime', () => {
-    const layoutCard = defineComposite({
-      namespace: 'third',
-      type: 'legacyLayoutCard',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('third'),
-        type: literal('legacyLayoutCard'),
-      }),
-      compile: () =>
-        ({
-          children: [],
-          spatialHandles: [{ id: 'legacy', role: 'legacy', bounds: { x: 0, y: 0, width: 1, height: 1 } }],
-        }) as never,
-    });
-
-    expect(() =>
-      compileToScene(sceneOf([{ namespace: 'third', type: 'legacyLayoutCard' }]), { composites: [layoutCard] }),
-    ).toThrow(/unsupported.*spatialHandles/i);
-  });
-
-  it('rejects expand declarations combined with an owner-generated spatial Scope', () => {
+  it('rejects direct declarations combined with an owner-generated spatial Scope', () => {
     const scopedCard = defineComposite({
       namespace: 'third',
       type: 'scopedCard',
@@ -208,7 +233,7 @@ describe('qualified spatial handle compile', () => {
         namespace: literal('third'),
         type: literal('scopedCard'),
       }),
-      expand: () => ({
+      compile: () => ({
         children: [
           {
             type: 'scope',
@@ -234,7 +259,7 @@ describe('qualified spatial handle compile', () => {
       namespace: 'third',
       type: 'positionedCard',
       schema: CompositeBaseSchema.extend({ namespace: literal('third'), type: literal('positionedCard') }),
-      expand: () => ({
+      compile: () => ({
         children: [ScopeSchema.parse({ type: 'scope', position, children: [] })],
         spatialHandles: [{ id: 'body', role: 'card', bounds: { x: 0, y: 0, width: 1, height: 1 } }],
       }),

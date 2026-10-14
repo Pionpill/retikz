@@ -1,4 +1,4 @@
-import type { IRScope, LayoutCompositeCompileContext, LayoutCompositeCompileResult } from '@retikz/core';
+import type { IRScope, CompositeCompileContext, CompositeCompileResult } from '@retikz/core';
 import { RetikzCoreError } from '@retikz/core';
 import { intrinsicLayoutProposal, requiredLayoutProbe } from '@retikz/layout/compose';
 import type { Position } from '@retikz/math';
@@ -110,10 +110,7 @@ const drawingFailureContext = (
 /** 创建一次 Flow Source 到 Graph、Foundation、artifact 与spatial handles的原子compile */
 export const createCompileFlowDiagram =
   (options: ResolvedFlowDiagramDefinitionOptions) =>
-  (
-    source: IRFlowDiagram,
-    context: LayoutCompositeCompileContext,
-  ): LayoutCompositeCompileResult<FlowDiagramArtifact> => {
+  (source: IRFlowDiagram, context: CompositeCompileContext): CompositeCompileResult<FlowDiagramArtifact> => {
     if (source.theme !== undefined) context = context.withTheme(source.theme);
     const definition = options.flowLayouts.defaultLayout;
     const diagram = resolveFlowDiagram(source, {

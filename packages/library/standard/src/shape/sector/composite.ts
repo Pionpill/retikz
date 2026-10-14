@@ -11,7 +11,7 @@ export const SectorDefinition = defineComposite({
   namespace: 'standard',
   type: 'sector',
   schema: SectorSchema,
-  expand: (source: IRSector) => ({ children: [lowerSector(source)] }),
+  compile: (source: IRSector) => ({ children: [lowerSector(source)] }),
 });
 
 /** 创建保留几何意图的 Sector Source */

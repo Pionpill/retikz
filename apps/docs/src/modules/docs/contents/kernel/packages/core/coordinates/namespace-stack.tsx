@@ -1,0 +1,59 @@
+import { Layout } from '@retikz/react';
+import { Map, Stack, StackItem } from '@retikz/standard-react/collection';
+import type { FC } from 'react';
+
+import type { Lang } from '@/i18n';
+
+import { namespaceStackI18n } from './namespace-stack.i18n';
+
+/** 名称栈示意图的语言 */
+export type NamespaceStackProps = { lang?: Lang };
+
+/** 展示布局完成但 Scope 尚未闭合时的两层命名空间摘录 */
+const NamespaceStack: FC<NamespaceStackProps> = props => {
+  const { lang = 'zh' } = props;
+  const text = namespaceStackI18n[lang];
+  return (
+    <Layout style={{ maxWidth: '100%', height: 'auto' }}>
+      <Stack
+        layout={{ gap: 12 }}
+        defaultCell={{
+          layout: { width: 322, height: 'auto', padding: { top: 28, bottom: 4, left: 0, right: 0 } },
+          style: { fill: 'none' },
+        }}
+        padding={4}
+        label={[
+          { text: text.lookup, position: 'top', font: { size: 12 } },
+          { text: text.lifecycle, position: 'bottom', font: { size: 12 }, textColor: 'gray' },
+        ]}
+      >
+        <StackItem>
+          <Map
+            defaultCell={{ layout: { height: 32 }, key: { layout: { width: 80 } }, value: { layout: { width: 240 } } }}
+            label={{ text: text.root, position: 'top', font: { size: 12 }, textColor: 'gray' }}
+            entries={[
+              { key: 'A', value: 'resolved · [0, 0]' },
+              { key: 'cluster', value: 'scope-placeholder' },
+            ]}
+          />
+        </StackItem>
+        <StackItem>
+          <Map
+            defaultCell={{ layout: { height: 32 }, key: { layout: { width: 80 } }, value: { layout: { width: 240 } } }}
+            label={{ text: text.local, position: 'top', font: { size: 12 }, textColor: 'gray' }}
+            entries={[
+              {
+                key: { content: 'A', style: { fill: 'dodgerblue' } },
+                value: { content: 'resolved · [180, -40]', style: { fill: 'dodgerblue', opacity: { fill: 0.2 } } },
+              },
+              { key: 'B', value: 'resolved · [300, -40]' },
+              { key: 'C', value: 'resolved · [180, 40]' },
+            ]}
+          />
+        </StackItem>
+      </Stack>
+    </Layout>
+  );
+};
+
+export default NamespaceStack;

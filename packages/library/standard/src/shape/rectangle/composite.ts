@@ -11,7 +11,7 @@ export const RectangleDefinition = defineComposite({
   namespace: 'standard',
   type: 'rectangle',
   schema: RectangleSchema,
-  expand: (source: IRRectangle) => ({ children: [lowerRectangle(source)] }),
+  compile: (source: IRRectangle) => ({ children: [lowerRectangle(source)] }),
 });
 
 /** 创建保留几何意图的 Rectangle Source */

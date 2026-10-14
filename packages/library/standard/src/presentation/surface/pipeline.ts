@@ -1,9 +1,4 @@
-import type {
-  LayoutAxisProposal,
-  LayoutCompositeCompileContext,
-  LayoutCompositeCompileResult,
-  LayoutProposal,
-} from '@retikz/core';
+import type { LayoutAxisProposal, CompositeCompileContext, CompositeCompileResult, LayoutProposal } from '@retikz/core';
 import { LayoutAxisProposalKind } from '@retikz/core';
 import { LayoutOverflow, requiredLayoutProbe } from '@retikz/layout/compose';
 
@@ -61,10 +56,7 @@ const surfaceAxisSize = (proposal: LayoutAxisProposal, childSlotSize: number, pa
   proposal.kind === LayoutAxisProposalKind.Exact ? proposal.value : childSlotSize + padding;
 
 /** 将一个 canonical Surface 编译为普通 Core Scope/Path/replay 输出 */
-export const compileSurface = (
-  sourceSurface: IRSurface,
-  context: LayoutCompositeCompileContext,
-): LayoutCompositeCompileResult => {
+export const compileSurface = (sourceSurface: IRSurface, context: CompositeCompileContext): CompositeCompileResult => {
   const surface = resolveSurface(sourceSurface);
   const child = requiredLayoutProbe(
     context,

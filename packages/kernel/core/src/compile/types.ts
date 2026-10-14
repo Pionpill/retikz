@@ -11,7 +11,6 @@ import type {
   SpatialHandleIndex,
 } from '../contract';
 import type { CoreProviderDefinitions, ThemeStyleDefinition } from '../contract';
-import type { IRCoordinate, IRNode, IRPathBase, IRScene, IRScope } from '../schemas';
 import type { LowerTex, TextMeasurer } from './text';
 import type { CompileWarning } from './warning';
 
@@ -225,28 +224,6 @@ export type CompileCompositeOptions<
    */
   maxCompositeDepth?: number;
 };
-
-/** composite 已全部展开后的 Tier 1 scope */
-export type LoweredIRScope = Omit<IRScope, 'children'> & {
-  /** 只包含 Tier 1 的递归子节点 */
-  children: Array<LoweredIRChild>;
-};
-
-/** composite 已全部展开后的 Tier 1 child */
-export type LoweredIRChild = IRNode | IRPathBase | IRCoordinate | LoweredIRScope;
-
-/** 可由 Kernel adapter 直接消费的 Tier 1 IR scene */
-export type LoweredIRScene = Omit<IRScene, 'children'> & {
-  /** 只包含 Tier 1 的顶层子节点 */
-  children: Array<LoweredIRChild>;
-};
-
-/** `lowerIRToKernel` 使用的 composite Definition 与深度选项 */
-export type LowerIRToKernelOptions = Pick<
-  CompileCompositeOptions,
-  'composites' | 'maxCompositeDepth' | 'compositeInputs'
-> &
-  Pick<CompileProviderOptions, 'themeStyles'>;
 
 /**
  * compileToScene 的可选参数

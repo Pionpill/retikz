@@ -46,7 +46,7 @@ const makePanelComposite = (namespace: string): AnyCompositeDefinition => {
     namespace,
     type: 'panel',
     schema,
-    expand: node => ({
+    compile: node => ({
       children: [{ type: 'node', id: `panel-${node.panelId}`, position: [0, 0], text: node.panelId }],
     }),
   });

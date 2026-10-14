@@ -1,6 +1,6 @@
 import type {
   CompositeCoreProviderKey,
-  ExpandCompositeDefinition,
+  CompositeDefinition,
   CoreDependencyProvider,
   CoreProviderContribution,
 } from '@retikz/core';
@@ -26,12 +26,12 @@ import type { IRCodeBlock } from '../schemas';
 const createCodeBlockDefinition = <TSource extends IRCodeBlock>(
   definition: CodeBlockDefinition<TSource>,
   contentKey: CompositeCoreProviderKey,
-): ExpandCompositeDefinition<TSource> =>
+): CompositeDefinition<TSource> =>
   defineComposite({
     namespace: definition.namespace,
     type: definition.type,
     schema: definition.schema,
-    expand: source => {
+    compile: source => {
       const { theme, ...content } = source;
       const child = { namespace: contentKey.namespace, type: contentKey.type, source: content };
       return { children: theme === undefined ? [child] : [{ type: 'scope', theme, children: [child] }] };
@@ -51,7 +51,7 @@ const createCodeBlockContentDefinition = <TSource extends IRCodeBlock>(
     namespace: key.namespace,
     type: key.type,
     schema: strictObject({ namespace: literal(key.namespace), type: literal(key.type), source: definition.schema }),
-    expand: ({ source }, context) => {
+    compile: ({ source }, context) => {
       const codeBlockTokens = resolveCodeBlockTokens(context.theme, options.graphThemeStyles);
       const surface = resolveCodeBlockSurface(source);
 

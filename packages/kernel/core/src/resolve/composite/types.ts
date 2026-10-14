@@ -1,13 +1,7 @@
 import type { JsonValue } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
-import type {
-  AnyCompositeDefinition,
-  CompositeExpandContext,
-  CompositeExpandResult,
-  LayoutCompositeCompileContext,
-  LayoutCompositeCompileResult,
-} from '../../contract';
+import type { AnyCompositeDefinition, CompositeCompileContext, CompositeCompileResult } from '../../contract';
 import type { IRComposite } from '../../schemas';
 
 /** 已完成 composite key 与 provider lookup 的绑定结果 */
@@ -19,23 +13,7 @@ export type CompositeBinding =
       key: string;
     }>
   | Readonly<{
-      /** 无布局展开分支 */
-      kind: 'expand';
-      /** 以 namespace.type 表示的能力提供者注册键 */
-      key: string;
-      /** provider 定义的 namespace */
-      namespace: string;
-      /** provider 定义的 type */
-      type: string;
-      /** 待 provider schema 解析的 Source IR */
-      source: IRComposite;
-      /** provider 声明的完整节点 schema */
-      schema: ZodType;
-      /** schema 解析后可执行的展开 callback */
-      expand: (node: unknown, context: CompositeExpandContext) => CompositeExpandResult;
-    }>
-  | Readonly<{
-      /** layout-aware compile 分支 */
+      /** 已绑定的复合编译定义 */
       kind: 'compile';
       /** 以 namespace.type 表示的能力提供者注册键 */
       key: string;
@@ -48,7 +26,7 @@ export type CompositeBinding =
       /** provider 声明的完整节点 schema */
       schema: ZodType;
       /** schema 解析后可执行的编译 callback */
-      compile: (node: unknown, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<JsonValue>;
+      compile: (node: unknown, context: CompositeCompileContext) => CompositeCompileResult<JsonValue>;
       /** 可选的 artifact schema */
       artifactSchema?: ZodType<JsonValue>;
     }>;

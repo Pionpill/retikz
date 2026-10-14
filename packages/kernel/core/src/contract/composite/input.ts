@@ -23,7 +23,7 @@ declare const compositeBoundChildBrand: unique symbol;
 /** 当前 callback 独占的可重复测量、单次放置子项句柄 */
 export type CompositeBoundChild = Readonly<{ [compositeBoundChildBrand]: never }>;
 
-/** expand 与 layout-aware compile 共用的实例输入上下文 */
+/** 复合编译的实例输入上下文 */
 export type CompositeRuntimeInputContext = Readonly<{
   /** 当前 Source 位置的同步输入；未绑定时为 undefined */
   runtimeInput: unknown;

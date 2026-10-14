@@ -25,6 +25,7 @@ import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../resolve';
 import type { IRScene } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE, DEFAULT_LAYOUT_PADDING, DEFAULT_NODE_DISTANCE } from '../constants';
+import { DEFAULT_MAX_COMPOSITE_DEPTH } from '../constants';
 import { createNodeGeometryContext } from '../node';
 import type { NodeGeometryContext } from '../node';
 import { createClipRegistry, createPaintRegistry, DEFAULT_MAX_CLIP_DEPTH } from '../resource';
@@ -33,7 +34,6 @@ import { fallbackMeasurer } from '../text';
 import type { CompileOptions } from '../types';
 import type { CompileWarningInput } from '../warning';
 import { formatCompileWarning } from '../warning';
-import { DEFAULT_MAX_COMPOSITE_DEPTH } from './composite';
 import type { CompileObservationRuntime } from './observation';
 
 /**
@@ -59,7 +59,7 @@ export type CompileContext = {
   onWarn: (warning: CompileWarningInput) => void;
   /** layout-aware composite 注册表 */
   composites: ReadonlyMap<string, AnyCompositeDefinition>;
-  /** expand 与 layout-aware compile 共用的嵌套深度上限 */
+  /** 复合编译的嵌套深度上限 */
   maxCompositeDepth: number;
   /** 本次请求的 artifact 开关 */
   artifacts: CompileOptions['artifacts'];

@@ -332,7 +332,7 @@ export type LegendArtifact = ZodInfer<typeof LegendArtifactSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LegendCompileArtifact"} path={"packages/library/standard/src/presentation/legend/composite.ts"} startLine={24}>LegendCompileArtifact</ApiSourceLink>
+#### <ApiSourceLink label={"LegendCompileArtifact"} path={"packages/library/standard/src/presentation/legend/composite.ts"} startLine={20}>LegendCompileArtifact</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -368,7 +368,7 @@ export type LegendCompileArtifact = CompositeArtifactOf<typeof LegendDefinition>
 export type LegendInput = Omit<IRLegend, 'namespace' | 'type'>;
 ```
 
-#### <ApiSourceLink label={"createLegend"} path={"packages/library/standard/src/presentation/legend/composite.ts"} startLine={27}>createLegend</ApiSourceLink>
+#### <ApiSourceLink label={"createLegend"} path={"packages/library/standard/src/presentation/legend/composite.ts"} startLine={23}>createLegend</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -561,21 +561,17 @@ export type IRLegendTick = ZodInfer<typeof LegendTickSchema>;
 #### <ApiSourceLink label={"LegendDefinition"} path={"packages/library/standard/src/presentation/legend/composite.ts"} startLine={10}>LegendDefinition</ApiSourceLink>
 
 ```ts
-export const LegendDefinition: LayoutCompositeDefinition<
-  IRLegend,
-  typeof STANDARD_NAMESPACE,
-  'legend',
-  LegendArtifact
-> = defineComposite({
-  namespace: STANDARD_NAMESPACE,
-  type: 'legend',
-  schema: LegendSchema,
-  compile: compileLegend,
-  artifactSchema: LegendArtifactSchema,
-});
+export const LegendDefinition: CompositeDefinition<IRLegend, typeof STANDARD_NAMESPACE, 'legend', LegendArtifact> =
+  defineComposite({
+    namespace: STANDARD_NAMESPACE,
+    type: 'legend',
+    schema: LegendSchema,
+    compile: compileLegend,
+    artifactSchema: LegendArtifactSchema,
+  });
 ```
 
-#### <ApiSourceLink label={"LegendProvider"} path={"packages/library/standard/src/presentation/legend/composite.ts"} startLine={34}>LegendProvider</ApiSourceLink>
+#### <ApiSourceLink label={"LegendProvider"} path={"packages/library/standard/src/presentation/legend/composite.ts"} startLine={30}>LegendProvider</ApiSourceLink>
 
 ```ts
 export const LegendProvider: CoreDependencyProvider = Object.freeze({

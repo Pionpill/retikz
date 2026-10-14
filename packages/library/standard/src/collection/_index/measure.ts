@@ -1,4 +1,4 @@
-import type { IRScopeProps, LayoutCompositeCompileContext } from '@retikz/core';
+import type { IRScopeProps, CompositeCompileContext } from '@retikz/core';
 
 import { measureCellChild } from '../_cell';
 import type { CanonicalCollectionIndex } from './resolve';
@@ -9,7 +9,7 @@ export const measureCollectionIndex = (
   index: number,
   occurrence: number,
   scope: IRScopeProps,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
 ) => {
   const text = options.labels === undefined ? String(options.start + index) : options.labels[index];
   if (text === '') return undefined;

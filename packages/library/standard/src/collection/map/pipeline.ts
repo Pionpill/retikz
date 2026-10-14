@@ -1,4 +1,4 @@
-import type { LayoutCompositeCompileContext, LayoutCompositeCompileResult } from '@retikz/core';
+import type { CompositeCompileContext, CompositeCompileResult } from '@retikz/core';
 
 import { compileCells, measureCell } from '../_cell';
 import type { CellPlacement } from '../_cell';
@@ -6,7 +6,7 @@ import { resolveMap } from './resolve';
 import type { IRMap } from './schema';
 
 /** 一次测量键值内容，按两列最大宽度与行高直接排布 */
-export const compileMap = (node: IRMap, context: LayoutCompositeCompileContext): LayoutCompositeCompileResult => {
+export const compileMap = (node: IRMap, context: CompositeCompileContext): CompositeCompileResult => {
   const { namespace: _namespace, type: _type, entries, defaultCell, layout, label, ...scope } = resolveMap(node);
   void _namespace;
   void _type;

@@ -1,5 +1,5 @@
 import { defineComposite } from '@retikz/core';
-import type { LayoutCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
+import type { CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { PathClipProvider } from '@retikz/extension';
 
 import { compileQueue } from './pipeline';
@@ -7,7 +7,7 @@ import { QueueSchema } from './schema';
 import type { IRQueue } from './schema';
 
 /** Queue 的布局感知编译定义 */
-export const QueueDefinition: LayoutCompositeDefinition<IRQueue, 'standard', 'queue'> = defineComposite({
+export const QueueDefinition: CompositeDefinition<IRQueue, 'standard', 'queue'> = defineComposite({
   namespace: 'standard',
   type: 'queue',
   schema: QueueSchema,

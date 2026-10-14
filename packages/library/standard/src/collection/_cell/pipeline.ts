@@ -4,8 +4,8 @@ import type {
   IRChild,
   IRNode,
   LayoutChildResult,
-  LayoutCompositeCompileContext,
-  LayoutCompositeCompileResult,
+  CompositeCompileContext,
+  CompositeCompileResult,
   SpatialHandleDeclaration,
 } from '@retikz/core';
 import { intrinsicLayoutProposal, requiredLayoutProbe, resolveLayoutAxisSize } from '@retikz/layout/compose';
@@ -47,7 +47,7 @@ export type CellPlacement = {
 
 /** 在当前组件的样式环境下探测内容，保留结果供最终 replay */
 export const measureCellChild = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   child: IRChild,
   occurrence: number,
   scope: CompositeCompileScopeProps,
@@ -69,7 +69,7 @@ export const measureCellChild = (
 /** 仅测量内容，不为单格构造布局 composite */
 export const measureCell = (
   cell: CanonicalCell,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   occurrence: number,
   scope: CompositeCompileScopeProps,
 ): MeasuredCell => {
@@ -124,7 +124,7 @@ export const cellReferenceNode = (
 });
 
 /** 将已测内容居中放进真实单格，并复用 Surface 的边框与裁切几何 */
-const emitCell = (placed: CellPlacement, context: LayoutCompositeCompileContext): CompositeCompileChild => {
+const emitCell = (placed: CellPlacement, context: CompositeCompileContext): CompositeCompileChild => {
   const {
     measured: { cell, result },
     x,
@@ -197,8 +197,8 @@ export type CompileCellsOptions = {
 export const compileCells = (
   cells: Array<CellPlacement>,
   options: CompileCellsOptions,
-  context: LayoutCompositeCompileContext,
-): LayoutCompositeCompileResult => {
+  context: CompositeCompileContext,
+): CompositeCompileResult => {
   const { width, height, scope, extra = [], decoration = {} } = options;
   const axisSize = (axis: 'x' | 'y', natural: number) =>
     resolveLayoutAxisSize({

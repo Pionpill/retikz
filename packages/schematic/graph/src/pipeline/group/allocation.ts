@@ -1,9 +1,4 @@
-import type {
-  CompositeCoreProviderKey,
-  CoreDependencyProvider,
-  IRChild,
-  LayoutCompositeDefinition,
-} from '@retikz/core';
+import type { CompositeCoreProviderKey, CoreDependencyProvider, IRChild, CompositeDefinition } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { LayoutArtifactRectSchema } from '@retikz/layout';
 import type { BoundsRect } from '@retikz/math';
@@ -28,7 +23,7 @@ const compileGroupBodyAllocation = (source: IRGroupBodyAllocation) => ({
 });
 
 /** 只声明 Group 正文分配边界、不生成绘制子元素的内部组件定义 */
-export const GroupBodyAllocationDefinition: LayoutCompositeDefinition<
+export const GroupBodyAllocationDefinition: CompositeDefinition<
   IRGroupBodyAllocation,
   typeof GRAPH_NAMESPACE,
   typeof GROUP_BODY_ALLOCATION_TYPE

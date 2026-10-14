@@ -503,7 +503,7 @@ export type IRChain = Omit<input<typeof ChainSchema>, keyof IRScopeProps | 'item
 #### <ApiSourceLink label={"ChainDefinition"} path={"packages/library/standard/src/collection/chain/composite.ts"} startLine={10}>ChainDefinition</ApiSourceLink>
 
 ```ts
-export const ChainDefinition: LayoutCompositeDefinition<IRChain, 'standard', 'chain'> = defineComposite({
+export const ChainDefinition: CompositeDefinition<IRChain, 'standard', 'chain'> = defineComposite({
   namespace: 'standard',
   type: 'chain',
   schema: ChainSchema,

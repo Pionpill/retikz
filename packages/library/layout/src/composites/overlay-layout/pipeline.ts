@@ -2,8 +2,8 @@ import type {
   LayoutAlignmentGuide,
   LayoutAxisProposal,
   LayoutChildResult,
-  LayoutCompositeCompileContext,
-  LayoutCompositeCompileResult,
+  CompositeCompileContext,
+  CompositeCompileResult,
   LayoutProposal,
 } from '@retikz/core';
 import {
@@ -75,7 +75,7 @@ const boundedProposal = (max: number): LayoutAxisProposal => ({
 
 /** 执行一次必需的 child probe，并在失败时保留 Core occurrence 提升错误 */
 const requiredProbe = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   sourceIndex: number,
   proposal: LayoutProposal,
 ): LayoutChildResult => {
@@ -128,7 +128,7 @@ const finiteContentLimitOf = (
 
 /** 求一个 Overlay item 在指定 intrinsic profile 下的物理 x→y probe 链 */
 const probeOverlayProfile = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   node: CanonicalOverlayLayout,
   item: MeasuredOverlayItem,
   mode: IntrinsicMode,
@@ -211,8 +211,8 @@ const outgoingOverlayGuide = (
 /** 编译 Layout OverlayLayout 的双 profile probe、placement、stacking 与 replay 流程 */
 export const compileOverlayLayout = (
   sourceLayout: IROverlayLayout,
-  context: LayoutCompositeCompileContext,
-): LayoutCompositeCompileResult<OverlayLayoutArtifact> => {
+  context: CompositeCompileContext,
+): CompositeCompileResult<OverlayLayoutArtifact> => {
   const node = resolveOverlayLayout(sourceLayout);
   const padding = node.padding;
   const finiteXLimit = finiteContentLimitOf(node, 'x', context.proposal.x, padding);

@@ -1,4 +1,4 @@
-import type { CompositeCoreProviderKey, LayoutAxisProposal, LayoutCompositeDefinition } from '@retikz/core';
+import type { CompositeCoreProviderKey, LayoutAxisProposal, CompositeDefinition } from '@retikz/core';
 import { defineComposite, LayoutAxisProposalKind, LayoutChildProbeKind } from '@retikz/core';
 import type { PreparedPlotData } from '@retikz/plot';
 
@@ -43,7 +43,7 @@ const chartProposalOf = (
 /** 从当前 active recipe registry 创建 layout-aware Chart composite */
 export const createChartDefinition = (
   registry: ChartProviderRegistry,
-): LayoutCompositeDefinition<IRChartSource, typeof CHART_NAMESPACE, string> => {
+): CompositeDefinition<IRChartSource, typeof CHART_NAMESPACE, string> => {
   if (registry.recipes.size === 0) {
     throw new RetikzChartError({
       code: RetikzChartErrorCode.InvalidRegistry,

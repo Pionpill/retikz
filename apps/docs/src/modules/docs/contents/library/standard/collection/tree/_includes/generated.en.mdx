@@ -90,7 +90,7 @@ export type IRTree = Omit<input<typeof TreeSchema>, keyof IRScopeProps> & IRScop
 #### <ApiSourceLink label={"TreeDefinition"} path={"packages/library/standard/src/collection/tree/composite.ts"} startLine={9}>TreeDefinition</ApiSourceLink>
 
 ```ts
-export const TreeDefinition: LayoutCompositeDefinition<IRTree, 'standard', 'tree'> = defineComposite({
+export const TreeDefinition: CompositeDefinition<IRTree, 'standard', 'tree'> = defineComposite({
   namespace: 'standard',
   type: 'tree',
   schema: TreeSchema,

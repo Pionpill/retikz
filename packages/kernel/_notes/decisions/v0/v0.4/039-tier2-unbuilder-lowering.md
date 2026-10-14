@@ -9,6 +9,8 @@ keywords: 'Tier、lowering、Kernel、JSX、convertIRToReactNode、IRScene、opt
 - 决策日期：2026-07-12
 - 关联：[v0.3-alpha.2 Tier 2 支撑](../v0.3/006-tier2-support.md)
 
+> 独立 Tier 2 展开决策已由 [ADR-052](../v0.5/052-unified-composite-compilation.md) 替代。当前不再公开 lowerIRToKernel；React 反向转换仅接受递归不含 Composite 的 Kernel IR。
+
 ## 背景
 
 `convertIRToReactNode` 的参数是完整 `IRScene`，但旧实现遇到带 namespace 的 Tier 2 composite 会抛错，公开类型、运行时和 DSL / IR 双向桥文档因此不一致。React 不应复制 Core 的 composite registry、payload 校验和 lowering

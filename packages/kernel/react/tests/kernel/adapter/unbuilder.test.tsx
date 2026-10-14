@@ -1,68 +1,19 @@
-import type { IRClip, IRPathBase, IRScene } from '@retikz/core';
-import {
-  CompositeBaseSchema,
-  CURRENT_IR_VERSION,
-  defineComposite,
-  lowerIRToKernel,
-  NodeTextColor,
-  SceneSchema,
-} from '@retikz/core';
+import type { IRClip, IRPathBase, IRKernelScene } from '@retikz/core';
+import { CURRENT_IR_VERSION, NodeTextColor, SceneSchema } from '@retikz/core';
 import type { ReactElement } from 'react';
 import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
-import { literal, string } from 'zod';
 
 import { convertIRToReactNode } from '../../../src/kernel/adapter';
 import { TIKZ_NODE, TIKZ_PATH, TIKZ_STEP } from '../../../src/kernel/protocol';
 import { Draw } from '../../../src/sugar';
 import { normalizeReactInput } from '../../helpers/normalize-input';
 
-const emptyScene: IRScene = {
+const emptyScene: IRKernelScene = {
   version: CURRENT_IR_VERSION,
   type: 'scene',
   children: [],
 };
-
-const PanelSchema = CompositeBaseSchema.extend({
-  namespace: literal('demo'),
-  type: literal('panel'),
-  id: string(),
-});
-
-/** demo.panel → 同 id 的 Tier 1 node */
-const panelComposite = defineComposite({
-  namespace: 'demo',
-  type: 'panel',
-  schema: PanelSchema,
-  expand: panel => ({ children: [{ type: 'node', id: panel.id, position: [0, 0], text: panel.id }] }),
-});
-
-/** demo.path → 带 steps 的 Tier 1 path */
-const pathComposite = defineComposite({
-  namespace: 'demo',
-  type: 'path',
-  schema: CompositeBaseSchema.extend({ namespace: literal('demo'), type: literal('path') }),
-  expand: () => ({
-    children: [
-      {
-        type: 'path',
-        children: [
-          { type: 'step', kind: 'move', to: [0, 0] },
-          { type: 'step', kind: 'line', to: [10, 20] },
-        ],
-        style: { stroke: '#123456' },
-      },
-    ],
-  }),
-});
-
-/** demo.loop → 自身，用于深度错误透传 */
-const loopComposite = defineComposite({
-  namespace: 'demo',
-  type: 'loop',
-  schema: CompositeBaseSchema.extend({ namespace: literal('demo'), type: literal('loop') }),
-  expand: () => ({ children: [{ namespace: 'demo', type: 'loop' }] }),
-});
 
 /** 把 ReactNode 收成 ReactElement 数组，过滤掉 null/string 等非 element 项 */
 const toElements = (node: ReturnType<typeof convertIRToReactNode>): Array<ReactElement> => {
@@ -72,7 +23,7 @@ const toElements = (node: ReturnType<typeof convertIRToReactNode>): Array<ReactE
 
 describe('convertIRToReactNode', () => {
   it('Scope Theme 随 children bridge 往返，Scene 根 Theme保持 children-only 边界', () => {
-    const ir: IRScene = {
+    const ir: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       theme: { mode: 'dark' },
@@ -93,7 +44,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('axis-line IR → React → IR 保留 axis / target / label', () => {
-    const input: IRScene = {
+    const input: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -123,7 +74,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('单 Node 还原为 <Node /> element，displayName 与关键 props 原样', () => {
-    const ir: IRScene = {
+    const ir: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -153,7 +104,7 @@ describe('convertIRToReactNode', () => {
       target: { id: 'A', anchor: 'bottom-left' as const, offset: [6, -2] as [number, number] },
       selfAnchor: 'top-left' as const,
     };
-    const ir: IRScene = {
+    const ir: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [{ type: 'node', id: 'B', position }],
@@ -166,7 +117,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('IR Node 上 undefined 字段不写进 element props', () => {
-    const ir: IRScene = {
+    const ir: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0] }],
@@ -179,7 +130,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('Path + 2 Step 还原：<Path> 含两个 <Step> children，displayName / kind / to 全对', () => {
-    const ir: IRScene = {
+    const ir: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -207,7 +158,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('Kernel-only round-trip：IR → React → IR 等价', () => {
-    const ir: IRScene = {
+    const ir: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -229,7 +180,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('Ribbon round-trip：IR → React → IR 等价', () => {
-    const ir: IRScene = {
+    const ir: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -257,7 +208,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('Boundary Ribbon round-trip：IR → React → IR 等价', () => {
-    const ir: IRScene = {
+    const ir: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -287,18 +238,21 @@ describe('convertIRToReactNode', () => {
 
   it('Sugar 降级：<Draw> → IR → React 还原成 <Path>，二次 round-trip IR 稳定', () => {
     const ir1 = normalizeReactInput(<Draw way={['A', [10, 0]]} style={{ stroke: 'red' }} />);
-    const ir2 = normalizeReactInput(convertIRToReactNode(ir1));
+    const child = ir1.children[0];
+    if ('namespace' in child || child.type !== 'path') throw new Error('expected Kernel path');
+    const kernel = { ...ir1, children: [child] };
+    const ir2 = normalizeReactInput(convertIRToReactNode(kernel));
 
     expect(ir2).toEqual(ir1);
 
-    const [pathEl] = toElements(convertIRToReactNode(ir1));
+    const [pathEl] = toElements(convertIRToReactNode(kernel));
 
     expect((pathEl.type as { displayName?: string }).displayName).toBe(TIKZ_PATH);
     expect((pathEl.type as { displayName?: string }).displayName).not.toBe('Draw');
   });
 
   it("折角 step 'step' round-trip：via 字段透传保留", () => {
-    const ir: IRScene = {
+    const ir: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -317,7 +271,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('Path fill / fillRule round-trip', () => {
-    const ir: IRScene = {
+    const ir: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -338,7 +292,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('zIndex round-trip：Node / Path / Scope 各自透传保留（重点验 path 手写分支不漏）', () => {
-    const ir: IRScene = {
+    const ir: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -365,7 +319,7 @@ describe('convertIRToReactNode', () => {
 
   it('Node shape round-trip：4 种 shape 字段透传保留', () => {
     for (const shape of ['rectangle', 'circle', 'ellipse', 'diamond'] as const) {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [{ type: 'node', id: 'A', shape, position: [0, 0], text: 'A' }],
@@ -387,7 +341,7 @@ describe('convertIRToReactNode', () => {
     ];
 
     for (const marks of cases) {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -408,7 +362,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('cycle step round-trip：无 to / via 字段保留', () => {
-    const ir: IRScene = {
+    const ir: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -429,7 +383,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('curve step round-trip：control 字段透传保留', () => {
-    const ir: IRScene = {
+    const ir: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -447,7 +401,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('cubic step round-trip：control1 / control2 字段透传保留', () => {
-    const ir: IRScene = {
+    const ir: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -465,7 +419,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('bend step round-trip：bendDirection 必填、bendAngle 可选', () => {
-    const irWithAngle: IRScene = {
+    const irWithAngle: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -481,7 +435,7 @@ describe('convertIRToReactNode', () => {
 
     expect(normalizeReactInput(convertIRToReactNode(irWithAngle))).toEqual(irWithAngle);
 
-    const irNoAngle: IRScene = {
+    const irNoAngle: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -499,7 +453,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('arc step round-trip：startAngle / endAngle / radius 透传保留', () => {
-    const ir: IRScene = {
+    const ir: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -517,7 +471,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('circlePath step round-trip：radius 透传保留', () => {
-    const ir: IRScene = {
+    const ir: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -535,7 +489,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('ellipsePath step round-trip：radius object 透传保留', () => {
-    const ir: IRScene = {
+    const ir: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -554,7 +508,7 @@ describe('convertIRToReactNode', () => {
 
   describe('step.label round-trip', () => {
     it('line + label round-trip 完整保留 text/position/side', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -577,7 +531,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('step label interrupt 往返后仍是有效的 Core IR', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -595,7 +549,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('八种带 label 的 kind 全部 round-trip', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -640,7 +594,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('三段 fold round-trip 保留显式 fraction 与省略状态', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -659,7 +613,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('IR 中没有 label 字段时 round-trip 不会凭空多出 label', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -679,7 +633,7 @@ describe('convertIRToReactNode', () => {
 
   describe('path 级视觉属性 round-trip', () => {
     it('lineCap / lineJoin 双向保留', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -699,7 +653,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('strokeWidth 数值双向保留', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -718,7 +672,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('opacity / fillOpacity / strokeOpacity 三件双向保留', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -741,7 +695,7 @@ describe('convertIRToReactNode', () => {
 
   describe('扩展形态 round-trip', () => {
     it('round-trips AtPosition Node：{ direction, of, distance }', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -771,7 +725,7 @@ describe('convertIRToReactNode', () => {
       ] as const;
 
       for (const direction of directions) {
-        const ir: IRScene = {
+        const ir: IRKernelScene = {
           version: CURRENT_IR_VERSION,
           type: 'scene',
           children: [
@@ -791,7 +745,7 @@ describe('convertIRToReactNode', () => {
 
     it('round-trips OffsetPosition Node：{ of, offset }（of 字符串 / 笛卡尔 / 嵌套 polar）', () => {
       // of = 字符串
-      const irString: IRScene = {
+      const irString: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -808,7 +762,7 @@ describe('convertIRToReactNode', () => {
       expect(normalizeReactInput(convertIRToReactNode(irString))).toEqual(irString);
 
       // of = 笛卡尔
-      const irCartesian: IRScene = {
+      const irCartesian: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -824,7 +778,7 @@ describe('convertIRToReactNode', () => {
       expect(normalizeReactInput(convertIRToReactNode(irCartesian))).toEqual(irCartesian);
 
       // of = 嵌套 polar
-      const irPolar: IRScene = {
+      const irPolar: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -845,7 +799,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips OffsetPosition Step.to：path 内 step 用 { of, offset }', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -864,7 +818,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips arrowDetail 顶层 + start / end 子对象 merge', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -894,7 +848,7 @@ describe('convertIRToReactNode', () => {
     it.each(['at-start', 'very-near-start', 'near-start', 'midway', 'near-end', 'very-near-end', 'at-end'] as const)(
       "round-trips StepLabel.position keyword '%s'",
       position => {
-        const ir: IRScene = {
+        const ir: IRKernelScene = {
           version: CURRENT_IR_VERSION,
           type: 'scene',
           children: [
@@ -918,7 +872,7 @@ describe('convertIRToReactNode', () => {
     );
 
     it.each([0, 0.25, 0.5, 0.75, 1])('round-trips StepLabel.position 数值 t = %s', position => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -941,7 +895,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips IRTarget `relative` / `relativeAccumulate`', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -960,7 +914,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips IRScope：仅 children（无 id / transforms / localNamespace）', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -975,7 +929,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips IRScope：含 placement / pivot / id / localNamespace 的 transform 复合', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -1006,7 +960,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips 嵌套 IRScope', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -1028,7 +982,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips IRScope 含 path 子节点', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -1054,7 +1008,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips IRScope 样式继承字段：级联 + 四通道 + resetStyle + node/path color + step label 样式', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -1104,7 +1058,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips Coordinate 占位节点', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -1124,7 +1078,7 @@ describe('convertIRToReactNode', () => {
 
     it('round-trips Node.label 单对象 + 数组形态', () => {
       // 单对象
-      const irSingle: IRScene = {
+      const irSingle: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -1148,7 +1102,7 @@ describe('convertIRToReactNode', () => {
       expect(normalizeReactInput(convertIRToReactNode(irSingle))).toEqual(irSingle);
 
       // 数组形态：多 label
-      const irArray: IRScene = {
+      const irArray: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -1193,7 +1147,7 @@ describe('convertIRToReactNode', () => {
       ];
 
       for (const fill of fills) {
-        const ir: IRScene = {
+        const ir: IRKernelScene = {
           version: CURRENT_IR_VERSION,
           type: 'scene',
           children: [
@@ -1212,7 +1166,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips Node maxTextWidth + label.pin（true / 对象样式）', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -1249,7 +1203,7 @@ describe('convertIRToReactNode', () => {
       ];
 
       for (const clip of clips) {
-        const ir: IRScene = {
+        const ir: IRKernelScene = {
           version: CURRENT_IR_VERSION,
           type: 'scene',
           children: [{ type: 'scope', clip, children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }] }],
@@ -1260,7 +1214,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips between 定位：Node.position / Coordinate.position / Step.to', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -1292,7 +1246,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips Path rotate / scale（等比 + 非等比）/ marks', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -1321,7 +1275,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips bend out/in/looseness（asymmetric / self-loop）', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -1339,7 +1293,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips generator step：name / to / params / label', () => {
-      const ir: IRScene = {
+      const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -1362,68 +1316,5 @@ describe('convertIRToReactNode', () => {
 
       expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
-  });
-
-  it('Tier 2 composite 经 definitions lowering 后生成等价 Kernel JSX', () => {
-    const ir: IRScene = {
-      version: CURRENT_IR_VERSION,
-      type: 'scene',
-      children: [{ namespace: 'demo', type: 'panel', id: 'panel-a' }],
-    };
-    const options = { composites: [panelComposite] };
-
-    expect(normalizeReactInput(convertIRToReactNode(ir, options))).toEqual(lowerIRToKernel(ir, options));
-  });
-
-  it('scope 内 composite lowering 后保留 scope 与 path children', () => {
-    const ir: IRScene = {
-      version: CURRENT_IR_VERSION,
-      type: 'scene',
-      children: [
-        {
-          type: 'scope',
-          id: 'group',
-          children: [{ namespace: 'demo', type: 'path' }],
-          defaults: { style: { color: '#abcdef' } },
-        },
-      ],
-    };
-    const options = { composites: [pathComposite] };
-
-    expect(normalizeReactInput(convertIRToReactNode(ir, options))).toEqual(lowerIRToKernel(ir, options));
-  });
-
-  it('缺失 composite definition 时错误保留 key 与 IR path', () => {
-    const ir: IRScene = {
-      version: CURRENT_IR_VERSION,
-      type: 'scene',
-      children: [{ namespace: 'demo', type: 'panel', id: 'missing' }],
-    };
-
-    expect(() => convertIRToReactNode(ir)).toThrow(/^convertIRToReactNode:.*demo\.panel.*children\[0\]/);
-  });
-
-  it('invalid composite payload 错误保留 provider 与 path', () => {
-    const ir: IRScene = {
-      version: CURRENT_IR_VERSION,
-      type: 'scene',
-      children: [{ namespace: 'demo', type: 'panel', id: 123 as unknown as string }],
-    };
-
-    expect(() => convertIRToReactNode(ir, { composites: [panelComposite] })).toThrow(
-      /^convertIRToReactNode:.*demo\.panel.*children\[0\]/,
-    );
-  });
-
-  it('composite depth 错误经 unbuilder 前缀包装且不产生部分 JSX', () => {
-    const ir: IRScene = {
-      version: CURRENT_IR_VERSION,
-      type: 'scene',
-      children: [{ namespace: 'demo', type: 'loop' }],
-    };
-
-    expect(() => convertIRToReactNode(ir, { composites: [loopComposite], maxCompositeDepth: 1 })).toThrow(
-      /^convertIRToReactNode:.*COMPOSITE_NEST_TOO_DEEP/,
-    );
   });
 });

@@ -100,30 +100,20 @@ const definitionKey = (definition: ProviderDefinition): string => {
   return `${definition.name}`;
 };
 
-const definitionBranch = (definition: ProviderDefinition): 'expand' | 'compile' | 'plain' => {
-  if ('expand' in definition) return 'expand';
+const definitionBranch = (definition: ProviderDefinition): 'compile' | 'plain' => {
   if ('compile' in definition) return 'compile';
   return 'plain';
 };
 
 const copyDefinition = (definition: ProviderDefinition): ProviderDefinition => {
   if ('namespace' in definition && 'type' in definition) {
-    return Object.freeze(
-      'expand' in definition
-        ? {
-            namespace: definition.namespace,
-            type: definition.type,
-            schema: definition.schema,
-            expand: definition.expand,
-          }
-        : {
-            namespace: definition.namespace,
-            type: definition.type,
-            schema: definition.schema,
-            compile: definition.compile,
-            ...(definition.artifactSchema === undefined ? {} : { artifactSchema: definition.artifactSchema }),
-          },
-    ) as ProviderDefinition;
+    return Object.freeze({
+      namespace: definition.namespace,
+      type: definition.type,
+      schema: definition.schema,
+      compile: definition.compile,
+      ...(definition.artifactSchema === undefined ? {} : { artifactSchema: definition.artifactSchema }),
+    }) as ProviderDefinition;
   }
 
   if ('schema' in definition && 'compile' in definition) {
