@@ -11,6 +11,7 @@ import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { linearPositionScale, resolveLinearScale } from '../../../src/providers';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema, PolarInterpolation } from '../../../src/schemas';
+import { measureLabel } from '../../helpers/text-measurement';
 
 /**
  * contract polar 投影 lowering 测试。
@@ -22,7 +23,7 @@ import { PlotSchema, PolarInterpolation } from '../../../src/schemas';
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
-  return lowerPlot(spec, datasets, options) as IRScope;
+  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
 /** 第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */

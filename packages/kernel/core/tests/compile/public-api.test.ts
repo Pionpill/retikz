@@ -12,7 +12,6 @@ describe('core public compile exports', () => {
     expect(core.resolveCoreProviderDependencies).toBeDefined();
     expect('resolveCompositeDependencies' in core).toBe(false);
     expect(core.CompileWarningCode).toBeDefined();
-    expect(core.lowerIRToKernel).toBeDefined();
     expect(core.ThemeSchema).toBeDefined();
     expect('ThemeStyle' in core).toBe(false);
     expect(core.ThemeMode).toBeDefined();

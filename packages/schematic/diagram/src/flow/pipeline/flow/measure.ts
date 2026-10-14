@@ -1,4 +1,4 @@
-import type { IRNode, LayoutCompositeCompileContext } from '@retikz/core';
+import type { IRNode, CompositeCompileContext } from '@retikz/core';
 import { resolveBoxSpacing } from '@retikz/core';
 import type { GraphDefinitionOptions } from '@retikz/graph';
 import {
@@ -21,7 +21,7 @@ import type { FlowElementMeasurement, FlowMeasurement } from './types';
 const measureEntity = (
   element: Extract<CanonicalFlowElement, { type: 'entity' }>,
   graph: Extract<CanonicalFlowElement, { type: 'entity' }>['graph'],
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   state: MeasurementState,
 ): Extract<FlowLayoutElementInput, { kind: 'leaf' }> => {
   const child = { ...graph, position: [0, 0] as const };
@@ -43,7 +43,7 @@ const applyLayoutItemWidth = (
   source: Extract<CanonicalFlowElement, { type: 'layout' }>['source'],
   elements: ReadonlyArray<CanonicalFlowElement>,
   measuredElements: ReadonlyArray<FlowLayoutElementInput>,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   state: MeasurementState,
 ): ReadonlyArray<FlowLayoutElementInput> => {
   const itemWidth = source.itemWidth;
@@ -92,7 +92,7 @@ const measureFailure = (element: CanonicalFlowElement | CanonicalFlowRelation, c
 
 const measureRelationLabel = (
   relation: CanonicalFlowRelation,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   graphOptions: GraphDefinitionOptions,
 ): Readonly<{ width: number; height: number }> | undefined => {
   if (relation.source.label === undefined) return undefined;
@@ -140,7 +140,7 @@ type MeasurementState = {
 
 const measureElements = (
   elements: ReadonlyArray<CanonicalFlowElement>,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   definition: FlowLayoutDefinition,
   graphOptions: GraphDefinitionOptions,
   inheritedLayout: ReturnType<typeof resolveEffectiveFlowLayout>,
@@ -239,7 +239,7 @@ const commonScopeId = (
 
 const relationInputs = (
   diagram: CanonicalFlowDiagram,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   graphOptions: GraphDefinitionOptions,
   definition: FlowLayoutDefinition,
   rootLayout: ReturnType<typeof resolveEffectiveFlowLayout>,
@@ -271,7 +271,7 @@ const relationInputs = (
 /** 使用最终 Graph definitions 构造一次 detached Flow layout 输入 */
 export const measureFlowDiagram = (
   diagram: CanonicalFlowDiagram,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   definition: FlowLayoutDefinition,
   graphOptions: GraphDefinitionOptions,
 ): FlowMeasurement => {

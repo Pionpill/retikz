@@ -378,6 +378,16 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: {
+            zh: '待发布：BREAKING 统一 Composite 编译',
+            en: 'Unreleased: BREAKING unified Composite compilation',
+          },
+          content: {
+            zh: '复合定义统一使用 compile(node, context)，简单组合直接返回 children，布局试算按需调用。将 expand 改为 compile，并将 ExpandCompositeDefinition / LayoutCompositeDefinition、CompositeExpandContext / LayoutCompositeCompileContext、CompositeExpandResult / LayoutCompositeCompileResult 分别改为 CompositeDefinition、CompositeCompileContext、CompositeCompileResult；异构定义统一为 AnyCompositeDefinition。直接 spatialHandles、输入绑定与产物仍受支持。删除 lowerIRToKernel 及其选项，生成子项的 occurrence 改为 output。React 的 convertIRToReactNode 只接受递归不含 Composite 的 IRKernelScene，并移除第二个 options 参数；包含 Composite 的输入交给完整编译宿主。',
+            en: 'Composite definitions now use compile(node, context). Simple compositions return children directly; layout probing is optional. Replace expand with compile; replace ExpandCompositeDefinition / LayoutCompositeDefinition, CompositeExpandContext / LayoutCompositeCompileContext, and CompositeExpandResult / LayoutCompositeCompileResult with CompositeDefinition, CompositeCompileContext, and CompositeCompileResult. Heterogeneous definitions use AnyCompositeDefinition. Direct spatialHandles, input bindings, and artifacts remain supported. lowerIRToKernel and its options are removed, and generated child occurrences use output. React convertIRToReactNode now accepts only recursively Composite-free IRKernelScene and has no second options argument; use a full compilation host for inputs containing composites.',
+          },
+        },
+        {
           label: { zh: '待发布：BREAKING 渐进式视觉属性', en: 'Unreleased: BREAKING progressive visual properties' },
           content: {
             zh: '图形透明度支持 opacity: number 或 { overall, fill, stroke }，数值只设置 overall。各成员独立继承，overall 与 fill/stroke 相乘；删除图形样式的平级 fillOpacity、strokeOpacity。纯文字、渐变色标等独立标量保持原契约。',

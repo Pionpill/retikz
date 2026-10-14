@@ -78,7 +78,7 @@ const compositeOf = (namespace: string, type: string): AnyCompositeDefinition =>
     namespace,
     type,
     schema,
-    expand: () => ({ children: [{ type: 'scope', children: [] }] }),
+    compile: () => ({ children: [{ type: 'scope', children: [] }] }),
   });
 };
 

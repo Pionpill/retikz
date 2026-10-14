@@ -8,6 +8,7 @@ import { literal, object, union } from 'zod';
 import type { IRPlot } from '../../src';
 import { createPlotLineageLocator, defineNodeChannel, lowerPlotWithLineage, PlotSchema } from '../../src';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { measureLabel } from '../helpers/text-measurement';
 
 const SALES = [
   { region: 'East', month: 'Jan', revenue: 3 },
@@ -161,14 +162,16 @@ const scopeChildrenOf = (child: IRChild): Array<IRScope> => {
 
 describe('plot lineage runtime', () => {
   it('keeps lowerPlots shape unchanged when lineage API is not used', () => {
-    const result = { children: [lowerPlot(pointSpec(), datasets, { width: 480, height: 300 })] };
+    const result = {
+      children: [lowerPlot(pointSpec(), datasets, { textMeasurer: measureLabel, width: 480, height: 300 })],
+    };
 
     expect(result.children).toHaveLength(1);
     expect(scopeChildrenOf(result.children[0]).some(scope => scope.meta?.source === 'plot')).toBe(false);
   });
 
   it('records minimal mark lineage without writing full lineage into scene meta', () => {
-    const { children, lineage } = lowerPlotWithLineage(pointSpec(), datasets, { lineage: {} });
+    const { children, lineage } = lowerPlotWithLineage(pointSpec(), datasets, { environment: {}, lineage: {} });
 
     expect(children).toHaveLength(1);
     expect(lineage.dataReference).toBe('sales');
@@ -190,7 +193,10 @@ describe('plot lineage runtime', () => {
   });
 
   it('keeps the required identity skeleton when markIdentity is disabled', () => {
-    const { lineage } = lowerPlotWithLineage(pointSpec(), datasets, { lineage: { markIdentity: false } });
+    const { lineage } = lowerPlotWithLineage(pointSpec(), datasets, {
+      environment: {},
+      lineage: { markIdentity: false },
+    });
 
     expect(lineage).toMatchObject({
       plotId: 'salesPlot',
@@ -201,7 +207,7 @@ describe('plot lineage runtime', () => {
   });
 
   it('keeps root and mark-local transform scopes separate', () => {
-    const { lineage } = lowerPlotWithLineage(summarySpec(), datasets, { lineage: {} });
+    const { lineage } = lowerPlotWithLineage(summarySpec(), datasets, { environment: {}, lineage: {} });
 
     expect(lineage.data.root.events.filter(event => event.kind === 'transformStep')).toHaveLength(1);
     expect(lineage.marks[0]).toEqual(
@@ -217,7 +223,7 @@ describe('plot lineage runtime', () => {
     spec.transform = [{ operation: { kind: 'sort', params: { field: 'revenue', order: 'descending' } } }];
     spec.marks[0].transform = [{ operation: { kind: 'sort', params: { field: 'revenue', order: 'ascending' } } }];
 
-    const { lineage } = lowerPlotWithLineage(spec, datasets, { lineage: {} });
+    const { lineage } = lowerPlotWithLineage(spec, datasets, { environment: {}, lineage: {} });
     const markSource = lineage.data.marks[0]?.events.find(event => event.kind === 'source');
 
     expect(markSource).toEqual(
@@ -229,6 +235,7 @@ describe('plot lineage runtime', () => {
 
   it('records host metadata, scale mappings, layout context, and row values only when enabled', () => {
     const { lineage } = lowerPlotWithLineage(pointSpec(), datasets, {
+      environment: {},
       lineage: {
         scaleMappings: true,
         layoutContext: true,
@@ -287,6 +294,7 @@ describe('plot lineage runtime', () => {
     spec.marks[0].transform = [{ operation: { kind: 'count-lineage-apply', params: { scope: 'mark' } } }];
 
     lowerPlotWithLineage(spec, datasets, {
+      environment: {},
       lineage: {},
       transformDefinitions: [countingTransform],
       transformImplementations: [countingTransformImplementation],
@@ -314,6 +322,7 @@ describe('plot lineage runtime', () => {
     spec.marks[0].transform = [{ operation: { kind: 'count-lineage-locator-apply', params: { scope: 'mark' } } }];
 
     createPlotLineageLocator(spec, datasets, {
+      environment: {},
       lineage: {},
       transformDefinitions: [countingTransform],
       transformImplementations: [countingTransformImplementation],
@@ -345,14 +354,15 @@ describe('plot lineage runtime', () => {
       transformImplementations: [countingTransformImplementation],
     };
 
-    lowerPlotWithLineage(spec, datasets, options);
-    lowerPlotWithLineage(spec, datasets, options);
+    lowerPlotWithLineage(spec, datasets, { ...options, environment: {} });
+    lowerPlotWithLineage(spec, datasets, { ...options, environment: {} });
 
     expect(applyCounts).toEqual({ root: 2, mark: 2 });
   });
 
   it('omits host metadata when enabled fields are absent', () => {
     const { lineage } = lowerPlotWithLineage(pointSpec(), datasets, {
+      environment: {},
       lineage: { hostMetadata: { query: true } },
       hostLineageMetadata: {},
     });
@@ -362,6 +372,7 @@ describe('plot lineage runtime', () => {
 
   it('records extension channel field and declared scale binding', () => {
     const { lineage } = lowerPlotWithLineage(extensionChannelSpec(), datasets, {
+      environment: {},
       channelDefinitions: [intensityChannel],
       lineage: { scaleMappings: true },
     });
@@ -383,16 +394,23 @@ describe('plot lineage runtime', () => {
 
   it('rejects unbounded row value options', () => {
     expect(() =>
-      lowerPlotWithLineage(pointSpec(), datasets, { lineage: { rowValues: { maxRows: 0, fields: ['region'] } } }),
+      lowerPlotWithLineage(pointSpec(), datasets, {
+        environment: {},
+        lineage: { rowValues: { maxRows: 0, fields: ['region'] } },
+      }),
     ).toThrow(/rowValues.maxRows/);
     expect(() =>
-      lowerPlotWithLineage(pointSpec(), datasets, { lineage: { rowValues: { maxRows: 1, fields: [] } } }),
+      lowerPlotWithLineage(pointSpec(), datasets, {
+        environment: {},
+        lineage: { rowValues: { maxRows: 1, fields: [] } },
+      }),
     ).toThrow(/rowValues.fields/);
   });
 
   it.each([0.5, 1.5, NaN, Infinity])('rejects rowValues.maxRows=%s', maxRows => {
     expect(() =>
       lowerPlotWithLineage(pointSpec(), datasets, {
+        environment: {},
         lineage: { rowValues: { maxRows, fields: ['region'] } },
       }),
     ).toThrow(/rowValues\.maxRows must be a positive integer/);
@@ -404,12 +422,13 @@ describe('plot lineage runtime', () => {
       transform: [{ operation: { kind: 'missing-transform' as const, params: {} } }],
     };
 
-    expect(() => lowerPlot(spec, datasets)).toThrow(/not registered/);
-    expect(() => lowerPlotWithLineage(spec, datasets, { lineage: {} })).toThrow(/not registered/);
+    expect(() => lowerPlot(spec, datasets, { textMeasurer: measureLabel })).toThrow(/not registered/);
+    expect(() => lowerPlotWithLineage(spec, datasets, { environment: {}, lineage: {} })).toThrow(/not registered/);
   });
 
   it('returns locator lineage aligned with anchor meta', () => {
     const locator = createPlotLineageLocator(pointSpec(), datasets, {
+      environment: {},
       width: 480,
       height: 300,
       lineage: { locatorAnchors: true },
@@ -435,6 +454,7 @@ describe('plot lineage runtime', () => {
 
   it('does not fabricate datum lineage for series anchors', () => {
     const locator = createPlotLineageLocator(seriesSpec(), datasets, {
+      environment: {},
       width: 480,
       height: 300,
       lineage: { locatorAnchors: true },

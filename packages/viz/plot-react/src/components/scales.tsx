@@ -4,4 +4,4 @@ import type { FC } from 'react';
 export type PlotScaleProps = InputPlotScale;
 
 /** 位置比例尺声明组件 */
-export const BuiltinPlotScale: FC<PlotScaleProps> = () => null;
+export const PlotScale: FC<PlotScaleProps> = () => null;

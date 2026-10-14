@@ -18,6 +18,7 @@ import {
 } from '../../../src/resolve/scale';
 import type { IRPlot } from '../../../src/schemas';
 import { BUILTIN_SCALE_TYPES, PlotSchema } from '../../../src/schemas';
+import { measureLabel } from '../../helpers/text-measurement';
 
 /** 自定义 position scale：把内置 linear 包一层，仅验证 registry 分派（type 'unit'，固定 domain [0,1]） */
 const unitScale = defineScale({
@@ -88,7 +89,7 @@ const expandOf = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
-  return lowerPlot(spec, datasets, options) as IRScope;
+  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
 describe('scale registry（contract spec）', () => {

@@ -1,4 +1,4 @@
-import type { LayoutCompositeDefinition, CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
+import type { CompositeDefinition, CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
 
 import type { GraphDefinitionOptions } from '../../contract';
@@ -16,7 +16,7 @@ import { createCompileGraph } from './compile';
 /** 用已解析 registries 创建 Graph Composite Definition */
 export const createGraphDefinitionFromOptions = (
   options: ResolvedGraphDefinitionOptions,
-): LayoutCompositeDefinition<IRGraph, typeof GRAPH_NAMESPACE, typeof GraphType.Graph> =>
+): CompositeDefinition<IRGraph, typeof GRAPH_NAMESPACE, typeof GraphType.Graph> =>
   defineComposite({
     namespace: GRAPH_NAMESPACE,
     type: GraphType.Graph,
@@ -27,11 +27,11 @@ export const createGraphDefinitionFromOptions = (
 /** 创建使用指定 registries 的 Graph Composite Definition */
 export const createGraphDefinition = (
   options: GraphDefinitionOptions = {},
-): LayoutCompositeDefinition<IRGraph, typeof GRAPH_NAMESPACE, typeof GraphType.Graph> =>
+): CompositeDefinition<IRGraph, typeof GRAPH_NAMESPACE, typeof GraphType.Graph> =>
   createGraphDefinitionFromOptions(resolveGraphDefinitionOptions(options));
 
 /** 使用内置 registries 的默认 Graph Composite Definition */
-export const GraphDefinition: LayoutCompositeDefinition<IRGraph, typeof GRAPH_NAMESPACE, typeof GraphType.Graph> =
+export const GraphDefinition: CompositeDefinition<IRGraph, typeof GRAPH_NAMESPACE, typeof GraphType.Graph> =
   createGraphDefinition();
 
 /** Graph Composite provider 的公开完整 key */

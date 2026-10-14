@@ -9,6 +9,7 @@ import { createCoordinateFrame, defineCoordinate } from '../../src/contract';
 import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
+import { measureLabel } from '../helpers/text-measurement';
 
 const rows = [
   { category: 'A', value: 1 },
@@ -43,13 +44,13 @@ const isScopeChild = (child: IRScope['children'][number]): child is IRScope =>
 
 const loweredOf = (
   spec: IRPlot,
-  options: Parameters<typeof lowerPlotWithDataArtifact>[2] = {},
+  options: Omit<Parameters<typeof lowerPlotWithDataArtifact>[2], 'textMeasurer'> = {},
   data: Array<ExternalRow> = rows,
-) => lowerPlotWithDataArtifact(spec, { d: data }, { width: 200, height: 100, ...options });
+) => lowerPlotWithDataArtifact(spec, { d: data }, { textMeasurer: measureLabel, width: 200, height: 100, ...options });
 
 const positionsOf = (
   spec: IRPlot,
-  options: Parameters<typeof lowerPlotWithDataArtifact>[2] = {},
+  options: Omit<Parameters<typeof lowerPlotWithDataArtifact>[2], 'textMeasurer'> = {},
   data: Array<ExternalRow> = rows,
 ): Array<[number, number]> => {
   const root = loweredOf(spec, options, data).child as IRScope;
@@ -792,11 +793,7 @@ describe('Mark Placement pipeline', () => {
     const locator = createPlotLocator(
       adjustedSpec,
       { d: rows },
-      {
-        width: 200,
-        height: 100,
-        positionAdjustmentDefinitions: [countedNudge],
-      },
+      { environment: {}, width: 200, height: 100, positionAdjustmentDefinitions: [countedNudge] },
     );
 
     expect(locator.datum(0)?.position).toEqual([base[0][0] + 6, base[0][1]]);

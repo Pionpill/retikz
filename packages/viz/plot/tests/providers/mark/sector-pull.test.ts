@@ -7,6 +7,7 @@ import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { measureLabel } from '../../helpers/text-measurement';
 
 const opts: LowerPlotsOptions = { width: 400, height: 400 };
 
@@ -20,7 +21,7 @@ const expandOf = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = opts,
 ): IRScope => {
-  return lowerPlot(spec, datasets, options) as IRScope;
+  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
 const firstLayer = (
@@ -170,7 +171,7 @@ describe('IntervalMark.pull sector geometry', () => {
 
   it('locator datum anchor follows pulled sector geometry', () => {
     const spec = pieSpec({ kind: 'constant', value: 20 });
-    const locator = createPlotLocator(spec, { share }, opts);
+    const locator = createPlotLocator(spec, { share }, { ...opts, environment: {} });
     const node = sectorNodes(firstLayer(spec, { share }))[0];
     const params = sectorParams(node);
     const midRadius = (params.innerRadius + params.outerRadius) / 2;
@@ -181,7 +182,7 @@ describe('IntervalMark.pull sector geometry', () => {
 
   it('locator series centroid uses pulled datum anchors', () => {
     const spec = pieSpec({ kind: 'field', value: 'offset' }, { series: 'label' });
-    const locator = createPlotLocator(spec, { share }, opts);
+    const locator = createPlotLocator(spec, { share }, { ...opts, environment: {} });
 
     expect(locator.series('B')?.position).toEqual(locator.datum(1)?.position);
   });
@@ -191,6 +192,6 @@ describe('IntervalMark.pull sector geometry', () => {
     const node = sectorNodes(firstLayer(spec, { share }))[0];
 
     expect((node.shape as { type?: string } | undefined)?.type).toBe('contour');
-    expect(createPlotLocator(spec, { share }, opts).datum(0)?.position).toEqual(node.position);
+    expect(createPlotLocator(spec, { share }, { ...opts, environment: {} }).datum(0)?.position).toEqual(node.position);
   });
 });

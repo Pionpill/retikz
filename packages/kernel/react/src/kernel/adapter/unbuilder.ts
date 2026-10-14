@@ -1,5 +1,4 @@
-import type { IRNode, IRScene, IRStep, LoweredIRChild, LoweredIRScope, LowerIRToKernelOptions } from '@retikz/core';
-import { lowerIRToKernel } from '@retikz/core';
+import type { IRNode, IRKernelScene, IRStep, IRKernelChild, IRKernelScope } from '@retikz/core';
 import type { ReactNode } from 'react';
 import { createElement } from 'react';
 
@@ -179,7 +178,7 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
 const assertNever = (x: never): never => x;
 
 /** 单个 IR child → 对应 Kernel element；走 discriminated union 穷举 */
-const childToElement = (child: LoweredIRChild, key: number): ReactNode => {
+const childToElement = (child: IRKernelChild, key: number): ReactNode => {
   switch (child.type) {
     case 'node':
       return createElement(Node, { key, ...nodePropsFromIR(child) });
@@ -205,25 +204,19 @@ const childToElement = (child: LoweredIRChild, key: number): ReactNode => {
 };
 
 /** IR 'scope' child → ScopeProps；样式 / 容器字段走 SCOPE_FIELDS 透传，递归把 scope.children 还原为 Kernel element 数组 */
-const scopePropsFromIR = (s: LoweredIRScope, key: number): ScopeProps & { key: number } => ({
+const scopePropsFromIR = (s: IRKernelScope, key: number): ScopeProps & { key: number } => ({
   key,
   ...pickDefined(s, SCOPE_FIELDS),
   children: s.children.map((c, i) => childToElement(c, i)),
 });
 
-/** IR 转 Kernel React 节点时使用的 Tier 2 composite 定义与递归深度配置 */
-export type ConvertIRToReactNodeOptions = LowerIRToKernelOptions;
-
 /**
- * 把 IR JSON 反向还原为 Kernel element 数组（带 key、不裹外壳）
- * @description 只还原 `ir.children`：根 `theme`、`viewBox` 与 `animations` 不进入返回值。完整 Scene 直接使用
- *   `<Layout ir={ir}>`；把返回 children 装入新 Layout 时，显式传 `theme={ir.theme}` 并按需保留其余根字段。
- *   Tier 1 children 保持结构等价；Tier 2 composite 先按 definitions lowering，再生成语义等价的 Kernel JSX
+ * 将纯 Kernel IR 子树转换为 React children
+ * @description 根 theme、viewBox 与 animations 由调用方显式传给 Layout；复合组件应通过完整编译宿主接入
  */
-export const convertIRToReactNode = (ir: IRScene, options: ConvertIRToReactNodeOptions = {}): ReactNode => {
+export const convertIRToReactNode = (ir: IRKernelScene): ReactNode => {
   try {
-    const lowered = lowerIRToKernel(ir, options);
-    return lowered.children.map((child, i) => childToElement(child, i));
+    return ir.children.map((child, i) => childToElement(child, i));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (message.startsWith('convertIRToReactNode:')) throw error;

@@ -221,7 +221,7 @@ export type IRSurface = Omit<ZodInput<typeof SurfaceSchema>, keyof IRScopeProps 
   Pick<ZodInfer<typeof SurfaceSchema>, 'child'>;
 ```
 
-#### <ApiSourceLink label={"SurfaceSchema"} path={"packages/library/standard/src/presentation/surface/schema.ts"} startLine={39}>SurfaceSchema</ApiSourceLink>
+#### <ApiSourceLink label={"SurfaceSchema"} path={"packages/library/standard/src/presentation/surface/schema.ts"} startLine={38}>SurfaceSchema</ApiSourceLink>
 
 <ZodSchema name="SurfaceSchema" />
 
@@ -230,7 +230,7 @@ export type IRSurface = Omit<ZodInput<typeof SurfaceSchema>, keyof IRScopeProps 
 #### <ApiSourceLink label={"SurfaceDefinition"} path={"packages/library/standard/src/presentation/surface/composite.ts"} startLine={12}>SurfaceDefinition</ApiSourceLink>
 
 ```ts
-export const SurfaceDefinition: LayoutCompositeDefinition<IRSurface, typeof STANDARD_NAMESPACE, typeof SURFACE_TYPE> =
+export const SurfaceDefinition: CompositeDefinition<IRSurface, typeof STANDARD_NAMESPACE, typeof SURFACE_TYPE> =
   defineComposite({
     namespace: STANDARD_NAMESPACE,
     type: SURFACE_TYPE,

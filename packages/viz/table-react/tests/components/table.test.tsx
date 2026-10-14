@@ -375,7 +375,7 @@ describe('Table React components', () => {
       namespace: 'fixture',
       type: 'badge',
       schema,
-      expand: node => ({ children: [{ type: 'node', position: [0, 0], text: node.label }] }),
+      compile: node => ({ children: [{ type: 'node', position: [0, 0], text: node.label }] }),
     });
     const spec = createManualTableIR({
       rows: [[{ content: { namespace: 'fixture', type: 'badge', label: 'Nested' } }]],

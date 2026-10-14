@@ -240,7 +240,7 @@ export type IRStar = ShapeSource<ZodInput<typeof StarSchema>>;
 
 | 成员                 | 类型                                              | 默认值       | 说明 |
 | -------------------- | ------------------------------------------------- | ------------ | ---- |
-| `readonly expand`    | `(source: IRStar) => { children: Array<IRPath> }` | `...`        | —    |
+| `readonly compile`   | `(source: IRStar) => { children: Array<IRPath> }` | `...`        | —    |
 | `readonly namespace` | `'standard'`                                      | `'standard'` | —    |
 | `readonly schema`    | `typeof StarSchema`                               | `StarSchema` | —    |
 | `readonly type`      | `'star'`                                          | `'star'`     | —    |
@@ -256,7 +256,7 @@ export const StarDefinition = defineComposite({
   namespace: 'standard',
   type: 'star',
   schema: StarSchema,
-  expand: (source: IRStar) => ({ children: [lowerStar(source)] }),
+  compile: (source: IRStar) => ({ children: [lowerStar(source)] }),
 });
 ```
 

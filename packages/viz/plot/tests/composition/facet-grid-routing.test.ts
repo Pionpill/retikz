@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
+import { measureLabel } from '../helpers/text-measurement';
 
 const salesRows = [
   { region: 'north', channel: 'online', month: 0, revenue: 0 },
@@ -48,7 +49,11 @@ const expandOf = (
   options: { width?: number; height?: number } = {},
   datasets: { sales: Array<Record<string, string | number>> } = { sales: salesRows },
 ): IRScope => {
-  return lowerPlot(spec, datasets, { width: options.width ?? 480, height: options.height ?? 300 }) as IRScope;
+  return lowerPlot(spec, datasets, {
+    textMeasurer: measureLabel,
+    width: options.width ?? 480,
+    height: options.height ?? 300,
+  }) as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';

@@ -493,12 +493,12 @@ export type IRSector = ShapeSource<ZodInput<typeof SectorSchema>>;
 
 <ApiTable>
 
-| Member               | Type                             | Default      | Description |
-| -------------------- | -------------------------------- | ------------ | ----------- |
-| `readonly expand`    | `typeof ArcDefinition["expand"]` | `...`        | —           |
-| `readonly namespace` | `'standard'`                     | `'standard'` | —           |
-| `readonly schema`    | `typeof ArcSchema`               | `ArcSchema`  | —           |
-| `readonly type`      | `'arc'`                          | `'arc'`      | —           |
+| Member               | Type                              | Default      | Description |
+| -------------------- | --------------------------------- | ------------ | ----------- |
+| `readonly compile`   | `typeof ArcDefinition["compile"]` | `...`        | —           |
+| `readonly namespace` | `'standard'`                      | `'standard'` | —           |
+| `readonly schema`    | `typeof ArcSchema`                | `ArcSchema`  | —           |
+| `readonly type`      | `'arc'`                           | `'arc'`      | —           |
 
 </ApiTable>
 
@@ -511,7 +511,7 @@ export const ArcDefinition = defineComposite({
   namespace: 'standard',
   type: 'arc',
   schema: ArcSchema,
-  expand: (source: IRArc) => ({ children: [lowerArc(source)] }),
+  compile: (source: IRArc) => ({ children: [lowerArc(source)] }),
 });
 ```
 
@@ -540,7 +540,7 @@ export const ArcProvider: CoreDependencyProvider = Object.freeze({
 
 | Member               | Type                                                | Default        | Description |
 | -------------------- | --------------------------------------------------- | -------------- | ----------- |
-| `readonly expand`    | `(source: IRSector) => { children: Array<IRPath> }` | `...`          | —           |
+| `readonly compile`   | `(source: IRSector) => { children: Array<IRPath> }` | `...`          | —           |
 | `readonly namespace` | `'standard'`                                        | `'standard'`   | —           |
 | `readonly schema`    | `typeof SectorSchema`                               | `SectorSchema` | —           |
 | `readonly type`      | `'sector'`                                          | `'sector'`     | —           |
@@ -556,7 +556,7 @@ export const SectorDefinition = defineComposite({
   namespace: 'standard',
   type: 'sector',
   schema: SectorSchema,
-  expand: (source: IRSector) => ({ children: [lowerSector(source)] }),
+  compile: (source: IRSector) => ({ children: [lowerSector(source)] }),
 });
 ```
 

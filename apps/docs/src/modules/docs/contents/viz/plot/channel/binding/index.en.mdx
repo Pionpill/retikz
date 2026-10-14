@@ -32,7 +32,7 @@ Prepare `<div id="plot"></div>` in HTML and choose one entry point. React + JSX 
 Import components from `@retikz/plot-react` and declare field bindings on `PointMark`.
 
 ```tsx
-import { Plot, PlotAxis, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
 import { createRoot } from 'react-dom/client';
 
 const rows = [
@@ -43,8 +43,8 @@ const rows = [
 
 createRoot(document.getElementById('plot')!).render(
   <Plot data={rows} width={360} height={220}>
-    <BuiltinPlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
-    <BuiltinPlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+    <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+    <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
     <PointMark x="gdp" y="life" color="region" size="population" />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" />

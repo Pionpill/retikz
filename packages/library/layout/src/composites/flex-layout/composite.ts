@@ -1,4 +1,4 @@
-import type { CompositeArtifactOf, LayoutCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
+import type { CompositeArtifactOf, CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
 
 import { LAYOUT_NAMESPACE } from '../../shared';
@@ -7,7 +7,7 @@ import { FlexLayoutArtifactSchema, FlexLayoutSchema } from './schema';
 import type { FlexLayoutArtifact, IRFlexLayout, FlexLayoutInput } from './types';
 
 /** Layout FlexLayout 的官方 Core layout-aware composite definition */
-export const FlexLayoutDefinition: LayoutCompositeDefinition<
+export const FlexLayoutDefinition: CompositeDefinition<
   IRFlexLayout,
   typeof LAYOUT_NAMESPACE,
   'flexLayout',

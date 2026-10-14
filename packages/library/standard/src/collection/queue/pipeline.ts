@@ -1,16 +1,11 @@
-import type {
-  CompositeCompileChild,
-  IRPath,
-  LayoutCompositeCompileContext,
-  LayoutCompositeCompileResult,
-} from '@retikz/core';
+import type { CompositeCompileChild, IRPath, CompositeCompileContext, CompositeCompileResult } from '@retikz/core';
 
 import { compileCells, layoutLinearCells, createOperationArrow, linearDirectionVector } from '../_cell';
 import { resolveQueue } from './resolve';
 import type { IRQueue } from './schema';
 
 /** 按队首到队尾排列，并下沉两端开放的边框与进出箭头 */
-export const compileQueue = (source: IRQueue, context: LayoutCompositeCompileContext): LayoutCompositeCompileResult => {
+export const compileQueue = (source: IRQueue, context: CompositeCompileContext): CompositeCompileResult => {
   const { namespace, type, items, layout, defaultCell, label, arrow, border, padding, ...scope } = resolveQueue(source);
   const input = typeof arrow === 'object' ? arrow.input : arrow;
   const output = typeof arrow === 'object' ? arrow.output : arrow;

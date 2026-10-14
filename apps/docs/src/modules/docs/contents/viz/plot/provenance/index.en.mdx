@@ -100,6 +100,7 @@ import { createPlotLineageLocator } from '@retikz/plot';
 
 const datasets = { sales };
 const locator = createPlotLineageLocator(spec, datasets, {
+  environment: {},
   lineage: { locatorAnchors: true },
 });
 
@@ -110,6 +111,8 @@ if (result !== null) {
 ```
 
 This entry is suitable for tooltips, AI explanation panels, or audit navigation. The host still decides what is displayed.
+
+Standalone calls to `createPlotLocator`, `createPlotLineageLocator`, and `lowerPlotWithLineage` require `environment`. An empty object selects the Core defaults. If rendering uses custom text measurement, font size, themes, or TeX, pass the same Core compile options through `environment.compile`, and the corresponding theme and scope defaults through `environment.theme` and `environment.defaults`. This keeps label spacing and locator positions consistent with rendering. The standalone React utility `resolvePlotLineage` also accepts `{ environment }` in its second argument.
 
 <SourceLinks
   sources={[

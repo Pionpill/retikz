@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { lowerPlot } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
+import { measureLabel } from '../helpers/text-measurement';
 
 const rows = [
   { eventX: 0, eventY: 0, volumeX: 10, volumeY: 100, angleA: 0, radiusA: 1, angleB: 300, radiusB: 10 },
@@ -76,7 +77,11 @@ const polarScaffoldSpec = {
 const parsePlotIR = (spec: unknown) => PlotSchema.parse(spec);
 
 const expandOf = (spec: unknown, provenance = false): IRScope => {
-  return lowerPlot(parsePlotIR(spec), { d: rows }, { width: 480, height: 300, provenance }) as IRScope;
+  return lowerPlot(
+    parsePlotIR(spec),
+    { d: rows },
+    { textMeasurer: measureLabel, width: 480, height: 300, provenance },
+  ) as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';

@@ -22,6 +22,7 @@ import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/p
 import { datumAnchor as resolveDatumAnchor, resolveMarkOperation } from '../../../src/resolve/mark';
 import type { IRPlot, IRPlotIntervalMark } from '../../../src/schemas';
 import { isBuiltinMark, PlotSchema, PolarInterpolation } from '../../../src/schemas';
+import { measureLabel } from '../../helpers/text-measurement';
 
 /**
  * 区间几何投影契约测试——frame.projectCell 统一 interval / sector / 曲线轴下沉。
@@ -40,7 +41,7 @@ const datumAnchor = (mark: IRPlotIntervalMark, row: ExternalRow, frame: Coordina
   resolveDatumAnchor(mark, row, frame, { registry: markRegistry }, context);
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
-  return lowerPlot(spec, datasets, options) as IRScope;
+  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
 const firstLayer = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope =>

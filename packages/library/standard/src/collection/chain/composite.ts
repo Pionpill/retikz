@@ -1,4 +1,4 @@
-import type { LayoutCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
+import type { CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
 import { PathClipProvider } from '@retikz/extension';
 
@@ -7,7 +7,7 @@ import { ChainSchema } from './schema';
 import type { IRChain } from './schema';
 
 /** Standard Chain 的布局感知 Definition */
-export const ChainDefinition: LayoutCompositeDefinition<IRChain, 'standard', 'chain'> = defineComposite({
+export const ChainDefinition: CompositeDefinition<IRChain, 'standard', 'chain'> = defineComposite({
   namespace: 'standard',
   type: 'chain',
   schema: ChainSchema,

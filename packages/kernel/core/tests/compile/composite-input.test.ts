@@ -8,7 +8,7 @@ import {
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
-import type { CompositeBoundChild, IRChild, IRScene, LayoutCompositeCompileContext } from '../../src';
+import type { CompositeBoundChild, IRChild, IRScene, CompositeCompileContext } from '../../src';
 import {
   ChildSchema,
   compileToScene,
@@ -21,7 +21,6 @@ import {
   LayoutChildProbeKind,
   NaturalLayoutProposal,
   RetikzCoreError,
-  lowerIRToKernel,
 } from '../../src';
 
 const leaf = (): IRChild => ({ namespace: 'fixture', type: 'prepared' });
@@ -36,12 +35,12 @@ const prepared = defineComposite({
     type: literal('prepared'),
     id: string().optional(),
   }),
-  expand: (_node, context) => ({
+  compile: (_node, context) => ({
     children: [{ type: 'node', position: [0, 0], text: String(context.runtimeInput ?? 'unbound') }],
   }),
 });
 
-const probe = (context: LayoutCompositeCompileContext, child: CompositeBoundChild) => {
+const probe = (context: CompositeCompileContext, child: CompositeBoundChild) => {
   const result = context.layoutChild(child, NaturalLayoutProposal);
   if (result.kind === LayoutChildProbeKind.Failed) return context.raise(result.failure);
   return result.result;
@@ -98,7 +97,7 @@ describe('composite instance runtime input', () => {
       namespace: 'fixture',
       type: 'generated',
       schema: CompositeBaseSchema.extend({ namespace: literal('fixture'), type: literal('generated') }),
-      expand: (_node, context) => ({
+      compile: (_node, context) => ({
         children: [context.bindChild(leaf(), [{ path: [], input: 'generated-prepared' }]), leaf()],
       }),
     });
@@ -199,28 +198,6 @@ describe('composite instance runtime input', () => {
     }
   });
 
-  it('transports bound expand children through direct Kernel lowering', () => {
-    const forward = defineComposite({
-      namespace: 'fixture',
-      type: 'forward',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('fixture'),
-        type: literal('forward'),
-        child: ChildSchema,
-      }),
-      expand: (_node, context) => ({ children: [context.sourceChild(['child'])] }),
-    });
-    const source = sceneOf([{ namespace: 'fixture', type: 'forward', child: leaf() }]);
-    const lowered = lowerIRToKernel(source, {
-      composites: [forward, prepared],
-      compositeInputs: createCompositeInputBindings(source, [
-        { path: ['children', 0, 'child'], input: 'lowered-ready' },
-      ]),
-    });
-
-    expect(lowered.children).toEqual([{ type: 'node', position: [0, 0], text: 'lowered-ready' }]);
-  });
-
   it('rejects repeated author placement in both compilation paths', () => {
     const duplicate = defineComposite({
       namespace: 'fixture',
@@ -230,12 +207,11 @@ describe('composite instance runtime input', () => {
         type: literal('duplicateSource'),
         child: ChildSchema,
       }),
-      expand: (_node, context) => ({ children: [context.sourceChild(['child']), context.sourceChild(['child'])] }),
+      compile: (_node, context) => ({ children: [context.sourceChild(['child']), context.sourceChild(['child'])] }),
     });
     const source = sceneOf([{ namespace: 'fixture', type: 'duplicateSource', child: leaf() }]);
 
     expect(() => compileToScene(source, { composites: [duplicate, prepared] })).toThrow(/more than once/i);
-    expect(() => lowerIRToKernel(source, { composites: [duplicate, prepared] })).toThrow(/more than once/i);
   });
 
   it('preserves the spatial Scope restriction for bound expand output', () => {
@@ -243,7 +219,7 @@ describe('composite instance runtime input', () => {
       namespace: 'fixture',
       type: 'boundSpatial',
       schema: CompositeBaseSchema.extend({ namespace: literal('fixture'), type: literal('boundSpatial') }),
-      expand: (_node, context) => ({
+      compile: (_node, context) => ({
         children: [
           context.bindChild({ type: 'scope', transforms: [{ kind: 'translate', x: 2, y: 3 }], children: [leaf()] }, [
             { path: ['children', 0], input: 'ready' },

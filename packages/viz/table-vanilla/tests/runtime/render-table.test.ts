@@ -317,7 +317,7 @@ describe('renderTable', () => {
       namespace: 'fixture',
       type: 'badge',
       schema: badgeSchema,
-      expand: node => ({ children: [{ type: 'node', position: [0, 0], text: node.label }] }),
+      compile: node => ({ children: [{ type: 'node', position: [0, 0], text: node.label }] }),
     });
     const spec = manualTable({
       rows: [[{ content: { namespace: 'fixture', type: 'badge', label: 'Nested' } }]],

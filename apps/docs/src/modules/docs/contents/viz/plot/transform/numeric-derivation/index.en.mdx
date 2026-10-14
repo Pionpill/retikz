@@ -1,0 +1,104 @@
+---
+title: Numeric derivation
+description: Generate plotting fields with interval derivation, data jitter, stacking, and normalization, then compare their visual results.
+---
+
+These four transforms retain detail rows. See [Transforms](/viz/plot/transform) for authoring and scopes; Data owns the full parameter contracts. Parameters belong to `operation.params`, and marks read the resulting fields.
+
+## Interval derivation
+
+`derive-interval` produces a lower and upper bound for each row. `IntervalMark` binds them to `bounds.y` to draw task intervals or bars starting at a baseline.
+
+| Parameter   | Use and constraints in this demo                                                                     |
+| ----------- | ---------------------------------------------------------------------------------------------------- |
+| `startFrom` | Start field in the two-field mode; pairs with `endFrom`.                                             |
+| `endFrom`   | End field in the two-field mode; pairs with `startFrom`.                                             |
+| `from`      | Endpoint value field in the baseline mode; this demo switches between the two forms.                 |
+| `baseline`  | Fixed start in the baseline mode; explicit start/end fields take precedence over this configuration. |
+
+<ComponentPreview
+  files={[
+    'transform-derive-interval',
+    'transform-derive-interval.preview.tsx',
+    'transform-derive-interval.data.ts',
+    'transform-derive-interval.i18n.ts',
+  ]}
+  responsive
+  mode="showcase"
+  size="lg"
+  defaultSourceFile="transform-derive-interval.preview.tsx"
+  caption="Switch between explicit bounds and baseline mode; in baseline mode, adjust the baseline to move the start of each bar."
+/>
+
+The demo uses the default output names `y0` / `y1` and a fixed y domain of 0–12.
+
+## Data jitter
+
+`jitter` perturbs a continuous field in data units to separate overlapping points. This demo modifies only the horizontal `dose` field and retains each response value.
+
+| Parameter | Use and constraints in this demo                          |
+| --------- | --------------------------------------------------------- |
+| `axis`    | Fixed to `'x'` to jitter only the horizontal field.       |
+| `xField`  | Read and overwrite the `'dose'` field in this demo.       |
+| `amount`  | Perturbation magnitude in data units; 0 disables jitter.  |
+| `seed`    | The same input, amount, and seed produce the same result. |
+
+<ComponentPreview
+  files={['transform-jitter', 'transform-jitter.preview.tsx', 'transform-jitter.data.ts', 'transform-jitter.i18n.ts']}
+  responsive
+  mode="showcase"
+  size="lg"
+  defaultSourceFile="transform-jitter.preview.tsx"
+  caption="Set the amount to 0, increase it, and change the seed to compare horizontal offsets."
+/>
+
+This changes the values entering the scale; mark position adjustments operate after projection.
+
+## Stacking
+
+`stack` accumulates series values within each horizontal group and generates lower and upper bounds. Marks read `y0` / `y1` to draw stacked product revenue for each quarter.
+
+| Parameter | Use and constraints in this demo                                                                                                              |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `x`       | Use `quarter` to accumulate within each quarter.                                                                                              |
+| `y`       | Read `revenue` as the value to accumulate.                                                                                                    |
+| `groupBy` | Use `product` to identify each series.                                                                                                        |
+| `offset`  | `zero` accumulates values; `normalize` makes a proportional stack; `center` centers the stack on zero; `overlap` starts each segment at zero. |
+
+<ComponentPreview
+  files={['transform-stack', 'transform-stack.preview.tsx', 'transform-stack.data.ts', 'transform-stack.i18n.ts']}
+  responsive
+  mode="showcase"
+  size="lg"
+  defaultSourceFile="transform-stack.preview.tsx"
+  caption="Switch the stacking mode to compare interval positions for the same revenue records."
+/>
+
+The y domain changes with the mode: 0–120 for ordinary and overlapping stacks, 0–1 for normalized stacks, and −60–60 for centered stacks. See Data for `diverging` with signed values.
+
+## Normalization
+
+`normalize` divides values by their group total and writes a share field. This demo creates `share`, then stacks the shares to compare revenue composition by quarter or across all records.
+
+| Parameter | Use and constraints in this demo                                                    |
+| --------- | ----------------------------------------------------------------------------------- |
+| `field`   | Read `amount` as the input value.                                                   |
+| `as`      | Write shares to `share`, retaining the original value.                              |
+| `groupBy` | Compute a separate total for each quarter; omit it to use the total of all records. |
+| `basis`   | `fraction` produces 0–1 shares; `percent` produces 0–100 percentages.               |
+
+<ComponentPreview
+  files={[
+    'transform-normalize',
+    'transform-normalize.preview.tsx',
+    'transform-normalize.data.ts',
+    'transform-normalize.i18n.ts',
+  ]}
+  responsive
+  mode="showcase"
+  size="lg"
+  defaultSourceFile="transform-normalize.preview.tsx"
+  caption="Switch between quarter and global grouping, then between fractions and percentages; compare the total height of each bar."
+/>
+
+`normalize` does not generate stack boundaries. This demo runs `stack` afterwards and uses the matching y-axis range for each basis.

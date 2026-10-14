@@ -18,7 +18,7 @@ const child = defineComposite({
     type: literal('child'),
     id: string().optional(),
   }),
-  expand: () => ({
+  compile: () => ({
     children: [{ type: 'node', position: [5, 5], minimumWidth: 10, minimumHeight: 10 }],
     spatialHandles: [{ id: 'body', role: 'child', bounds: { x: 0, y: 0, width: 10, height: 10 } }],
   }),

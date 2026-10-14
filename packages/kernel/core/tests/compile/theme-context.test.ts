@@ -16,7 +16,7 @@ const createProbe = (observed: Array<ResolvedTheme>) =>
     namespace: 'theme-test',
     type: 'probe',
     schema: CompositeBaseSchema.extend({ namespace: literal('theme-test'), type: literal('probe') }),
-    expand: (_node, context) => {
+    compile: (_node, context) => {
       observed.push(context.theme);
       return { children: [{ type: 'node', position: [0, 0] }] };
     },

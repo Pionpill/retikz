@@ -452,7 +452,7 @@ export type IRStack = Omit<
 #### <ApiSourceLink label={"StackDefinition"} path={"packages/library/standard/src/collection/stack/composite.ts"} startLine={10}>StackDefinition</ApiSourceLink>
 
 ```ts
-export const StackDefinition: LayoutCompositeDefinition<IRStack, 'standard', 'stack'> = defineComposite({
+export const StackDefinition: CompositeDefinition<IRStack, 'standard', 'stack'> = defineComposite({
   namespace: 'standard',
   type: 'stack',
   schema: StackSchema,

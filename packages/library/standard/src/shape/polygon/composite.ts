@@ -11,7 +11,7 @@ export const PolygonDefinition = defineComposite({
   namespace: 'standard',
   type: 'polygon',
   schema: PolygonSchema,
-  expand: (source: IRPolygon) => ({ children: [lowerPolygon(source)] }),
+  compile: (source: IRPolygon) => ({ children: [lowerPolygon(source)] }),
 });
 
 /** 创建保留几何意图的 Polygon Source */

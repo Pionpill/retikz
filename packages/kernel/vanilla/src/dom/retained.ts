@@ -40,22 +40,13 @@ import type {
 
 /** 捕获 mount-lifetime composite definition record，保留 schema 与 callback identity */
 const captureCompositeDefinition = (definition: AnyCompositeDefinition): AnyCompositeDefinition =>
-  Object.freeze(
-    typeof definition.expand === 'function'
-      ? {
-          namespace: definition.namespace,
-          type: definition.type,
-          schema: definition.schema,
-          expand: definition.expand,
-        }
-      : {
-          namespace: definition.namespace,
-          type: definition.type,
-          schema: definition.schema,
-          compile: definition.compile,
-          ...(definition.artifactSchema === undefined ? {} : { artifactSchema: definition.artifactSchema }),
-        },
-  ) as AnyCompositeDefinition;
+  Object.freeze({
+    namespace: definition.namespace,
+    type: definition.type,
+    schema: definition.schema,
+    compile: definition.compile,
+    ...(definition.artifactSchema === undefined ? {} : { artifactSchema: definition.artifactSchema }),
+  }) as AnyCompositeDefinition;
 
 /** 捕获 retained runtime 会在后续 normalization 继续读取的 mount options */
 const captureRetainedMountOptions = (options: RetainedMountCanvasOptions): RetainedMountCanvasOptions => {

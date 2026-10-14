@@ -1,0 +1,176 @@
+---
+title: Node Compilation
+description: Follow how Core turns text metrics and shape constraints into node dimensions, text baselines, label placement, and reference geometry.
+---
+
+[Configuration resolution](/kernel/packages/core/resolution) determines the node's font, shape, and styles. [Coordinate resolution](/kernel/packages/core/coordinates) explains where it belongs. This page follows the next questions: how much space does the text need, how does the shape contain it, and which geometry positions labels and connections?
+
+Start with [Node basic usage](/kernel/components/node/usage) and [text syntax](/kernel/components/node/text). This page starts at the resolved `NodeResolution` and ends when `NodeLayout` reaches emission and reference consumers. Browser font loading, the TeX engine, and path clipping algorithms are outside its scope.
+
+## Overall flow
+
+Node layout determines the space needed by content, computes shape dimensions, and then places the body and attached labels. `NodeResolution` contains effective node configuration and bound shape and boundary definitions. `NodeLayout` holds geometry and text layout for later stages.
+
+<ComponentPreview files="layout-overview" size="xs" hideCode type="flow" />
+
+The three nodes below use the same sentence. The middle node narrows the text width, so wrapping increases its height. The right node only adds an outside label; its shape has the same dimensions as the middle node.
+
+<ComponentPreview files="layout-example" size="md" hideCode type="illustration" />
+
+The text is first split into the lines that will actually be displayed, called **physical lines**. Once their bounds are known, padding is added and the result is passed to the shape. A label needs the shape's position before it can be placed, so it does not enlarge the node shape in return.
+
+<SourceLinks
+  sources={[
+    { label: 'layoutNode: layout entry point', path: 'packages/kernel/core/src/compile/node/layout.ts' },
+    { label: 'NodeResolution: layout input', path: 'packages/kernel/core/src/resolve/node/types.ts' },
+    { label: 'NodeLayout: geometry and text layout', path: 'packages/kernel/core/src/compile/node/types.ts' },
+  ]}
+/>
+
+## Content measurement
+
+Core obtains metrics through the injected `measureText` function; it does not read the DOM. Inputs are text and font settings. Results contain width, height, and optional `ascent` and `descent`, the extents above and below the baseline. When both are absent, Core assigns half the height to each. Without an injected measurer, it estimates using average character width. Accuracy depends on the measurement provider.
+
+Plain text is split at explicit line breaks, then wrapped at available break positions within the width limit: words for Western text and characters for CJK. An unbreakable segment wider than the limit remains intact. Content width is the widest physical line; height is the number of physical lines multiplied by `lineHeight`. This includes line spacing and differs from the glyph height itself.
+
+Math or explicit `runs` content is measured fragment by fragment, then aligned to a shared baseline within each line. Widths are added; the required extents above and below the baseline are taken separately. Each line slot is tall enough for those fragments. **Content that mixes formulas with plain text does not use plain-text automatic wrapping**; setting a width does not imply that formulas will wrap.
+
+Within one plain-text layout pass, repeated measurements of the same text and font are reused during wrapping. This local reuse does not imply that old dimensions survive another compilation or a font change.
+
+<SourceLinks
+  sources={[
+    { label: 'Text metrics and fallback estimation', path: 'packages/kernel/core/src/compile/text/metrics.ts' },
+    { label: 'Content branches and physical lines', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
+    { label: 'Plain-text wrapping', path: 'packages/kernel/core/src/compile/node/content/text.ts' },
+    { label: 'Mixed-line measurement and baseline alignment', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+  ]}
+/>
+
+## Node dimensions
+
+Three bounds serve different purposes:
+
+- **Content box**: laid-out text width and the combined height of its line slots.
+- **Visual shape**: the outline that contains the content box plus padding, subject to size constraints.
+- **Layout allocation**: the space reserved by the parent layout, accounting for margin and rotation around the node's outer box.
+
+The shape's `circumscribe` receives content half-width and half-height and returns an outer box that can contain them. A rectangle usually encloses the content directly; a circle needs a larger diameter to contain the same rectangular content area.
+
+The diagram assumes an already measured content box of `40 × 24`, an unrotated rectangle, `padding = 8` on all sides, `minimumSize = { width: 80, height: 48 }`, and `margin = 6`, with no fixed `width`. Geometry is enlarged uniformly for readability. Gray dotted lines show calculated bounds, not additional node borders.
+
+<ComponentPreview files="layout-boxes" size="lg" hideCode type="illustration" />
+
+Padding produces `56 × 40`. The minimum size expands the visual box to `80 × 48`. Margin gives an allocation of `92 × 60`. These dimensions do not replace each other: margin does not make the visible rectangle larger.
+
+Width constraints also have distinct roles:
+
+| Constraint            | Effect                                                                                          |
+| --------------------- | ----------------------------------------------------------------------------------------------- |
+| `maxTextWidth`        | Limits plain-text wrapping width without forcing the shape to that exact width                  |
+| `minimumSize`         | Sets a lower bound for the shape box without shrinking text                                     |
+| `width`               | Fixes the visual box width; plain text may reflow, and compilation fails if it still cannot fit |
+| Parent width proposal | Constrains allocation, accounting for shape, margin, and rotation                               |
+
+A fixed `width` determines the final visual width; horizontal `minimumSize` does not enlarge it. Height still follows content and minimum height. A parent proposal has a different contract: it cannot guarantee that every unbreakable segment fits, and the parent must handle the actual allocation returned. The full proposal and replay process belongs to the later composite-layout topic.
+
+Asymmetric padding can also make the visual box center differ from the content center. Layout stores both so text emission does not accidentally use the outer box center.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Content budgets, circumscribe, and size constraints',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
+    },
+    { label: 'Shape containment contract', path: 'packages/kernel/core/src/contract/shape/types.ts' },
+  ]}
+/>
+
+## Baselines and labels
+
+A baseline is the vertical reference used to place glyphs, not the center line of their box. For plain text, Core takes the first physical line's metrics, divides the remaining line height equally above and below the glyphs, and locates its baseline. Later baselines advance by `lineHeight`. Mixed content determines each line's baseline from its own fragment heights.
+
+For example, with line height `24`, normalized `ascent = 14`, and `descent = 4`, the extra space is `3` on each side. The baseline is `17` from the top of the line slot. The enlarged diagram below uses these metrics: blue marks the baseline, and gray marks the glyph metric box.
+
+<ComponentPreview files="layout-baseline" size="lg" hideCode type="illustration" />
+
+Attached labels are measured independently, then positioned using attachment points on the visible shape, attachment direction, label rotation, and `distance`. That distance is the clear gap between the shape edge and the label's visual box. The opening example shows the result: a label changes neither the body nor the shape dimensions, but the automatic viewBox still includes it so exported images do not crop it.
+
+When placement aligns a node's own anchor with a target, Core first needs a provisional layout to locate that anchor, then translates the layout as a whole. Labels retain offsets relative to the node and move with it. See [Coordinate resolution](/kernel/packages/core/coordinates) for reference timing.
+
+<SourceLinks
+  sources={[
+    { label: 'Line height and baseline offsets', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
+    { label: 'Label measurement and placement', path: 'packages/kernel/core/src/compile/node/label/layout.ts' },
+    { label: 'Label clearance and visual extents', path: 'packages/kernel/core/src/compile/node/label/geometry.ts' },
+    {
+      label: 'Physical baselines shared by emission and observation',
+      path: 'packages/kernel/core/src/compile/node/emit.ts',
+    },
+  ]}
+/>
+
+## Connection boundaries
+
+Completing node layout does not mean every connection ends on the visible outline. `shape` determines what is drawn; `boundary` selects the connection surface for automatic connections and standard border anchors. Only a resolved value of `'shape'` directly reuses the visual shape.
+
+The diagram keeps the same circle and connection direction while changing the boundary and margin. Gray dotted outlines show auxiliary connection bounds; compare the arrow endpoints.
+
+<ComponentPreview files="layout-boundaries" size="lg" hideCode type="illustration" />
+
+Standard directional and numeric-angle anchors use the connection surface with margin. Shape-specific anchors and `{ side, fraction }` edge positions use the visual shape. Outside labels do not move connection endpoints to the label edges.
+
+When the same layout is referenced repeatedly, Core reuses calculated connection envelopes and anchors. These serve the current geometry; they are not another persistent node configuration. See [Node implementation](/kernel/components/node/mechanism#visual-shape-vs-connection-geometry) for the detailed reference rules.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Binding connection surfaces to node geometry',
+      path: 'packages/kernel/core/src/compile/node/boundary.ts',
+    },
+    { label: 'Standard versus shape-specific anchors', path: 'packages/kernel/core/src/compile/node/anchors.ts' },
+    { label: 'Anchor reuse within a layout', path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts' },
+  ]}
+/>
+
+## Complete implementation flow
+
+The flow below follows a plain-text node. The left side shows layout stages; the right side shows consumers of the result. Geometry queries run when needed, without precomputing every anchor before emission.
+
+<ComponentPreview files="layout-implementation" size="xl" hideCode type="flow" />
+
+Start reading at `layoutNode`: it organizes content layout, shape constraints, and label placement, completes self-anchor placement, and returns `NodeLayout` in local coordinates. Its `geometry` contains the outer box, content center, content dimensions, and margin. Its `text` holds physical lines and baselines, while `labels` holds relative positions of attached text.
+
+Traversal then projects geometry into world space for named references. Emission turns the local layout into shape, body-text, and label primitives. Reference geometry in the namespace and local primitives in Scene have different consumers; drawing coordinates do not all need to be expanded into world coordinates beforehand.
+
+<SourceLinks
+  sources={[
+    { label: 'Layout result structure', path: 'packages/kernel/core/src/compile/node/types.ts' },
+    { label: 'From node layout to primitives', path: 'packages/kernel/core/src/compile/node/emit.ts' },
+    {
+      label: 'Layout, registration, and emission handoff',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Node basic usage',
+      description: 'Work with node dimensions, text width, and styles',
+      url: '/kernel/components/node/usage',
+    },
+    {
+      title: 'Node text',
+      description: 'Check body, mixed-content, and label syntax',
+      url: '/kernel/components/node/text',
+    },
+    {
+      title: 'Node implementation',
+      description: 'Look up local shape and connection-surface rules',
+      url: '/kernel/components/node/mechanism',
+    },
+  ]}
+/>

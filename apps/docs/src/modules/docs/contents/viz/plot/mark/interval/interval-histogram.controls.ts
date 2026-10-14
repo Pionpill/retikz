@@ -130,6 +130,6 @@ export const previewControlContract = {
     'IntervalMark.x0',
     'IntervalMark.x1',
     'IntervalMark.width',
-    'BuiltinPlotScale.domainPadding',
+    'PlotScale.domainPadding',
   ],
 } satisfies PreviewControlContract;

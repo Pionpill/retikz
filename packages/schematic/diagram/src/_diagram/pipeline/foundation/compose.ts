@@ -1,4 +1,4 @@
-import type { IRChild, IRScope, LayoutChildResult, LayoutCompositeCompileContext, LayoutProposal } from '@retikz/core';
+import type { IRChild, IRScope, LayoutChildResult, CompositeCompileContext, LayoutProposal } from '@retikz/core';
 import { LayoutChildProbeKind } from '@retikz/core';
 import type { IRFlexLayout, LayoutArtifactItemBase } from '@retikz/layout/compose';
 import { compileFlexLayout, exactLayoutProposal, requiredLayoutProbe } from '@retikz/layout/compose';
@@ -83,7 +83,7 @@ const foundationCompositionFailure = (reason: string): never => {
 /** 用 Standard Surface compiler 捕获真实传给 content child 的 proposal 与 probe result */
 const captureSurfaceContentPlacement = (
   surface: ReturnType<typeof lowerDiagramFoundation>,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
 ): SurfaceContentPlacement => {
   let placement: SurfaceContentPlacement | undefined;
   const content = context.bindChild(surface.child, []);
@@ -107,7 +107,7 @@ const captureSurfaceContentPlacement = (
 const collectFoundationFlexRegions = (
   flex: IRFlexLayout,
   proposal: LayoutProposal,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   containerOffset: Readonly<Position>,
   resolution: DiagramFoundationResolution,
   state: FoundationPlacementState,
@@ -184,7 +184,7 @@ const collectFoundationFlexRegions = (
 export const composeDiagramFoundation = (
   resolution: DiagramFoundationResolution,
   drawingChild: IRChild,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
 ): DiagramFoundationComposition => {
   const surface = lowerDiagramFoundation(resolution, drawingChild);
   const { padding } = resolveSurface(surface);

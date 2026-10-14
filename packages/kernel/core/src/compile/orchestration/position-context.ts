@@ -8,7 +8,8 @@ import type { NamespaceStack } from '../namespace';
 import { nodeReferenceViewOf } from '../node';
 import type { NodeGeometryContext } from '../node';
 import { resolveAnchorRef } from '../reference';
-import { applyTransformChain, inverseTransformChain } from '../transform';
+import type { EffectiveScopeTransform } from '../transform';
+import { applyScopeTransform, inverseScopeTransform, composeScopeTransform } from '../transform';
 
 /** 把视觉 shape 绑定为默认连接面 resolution */
 const shapeBoundaryResolutionOf = (node: NodeReferenceView): BoundaryReferenceResolution => ({
@@ -46,6 +47,8 @@ export type CreatePositionResolveContextInput = Readonly<{
   nodeDistance: number;
   /** 当前 Scope 累积 transform */
   scopeChain?: ReadonlyArray<Transform>;
+  /** traversal 已合成的当前 Scope 变换 */
+  effectiveTransform?: EffectiveScopeTransform;
   /** 显式连接面绑定能力 */
   resolveExplicitBoundary?: BoundaryReferenceResolver;
 }>;
@@ -59,6 +62,8 @@ export const createPositionResolveContext = (
 ): PositionTargetResolveContext => {
   const { namespaceStack, nodeDistance, scopeChain = [], resolveExplicitBoundary } = input;
 
+  const transform = input.effectiveTransform ?? composeScopeTransform(scopeChain);
+
   const lookupReference = (id: string): PositionReferenceView | undefined => {
     const entry = namespaceStack.lookupEntry(id);
     return entry === undefined
@@ -67,9 +72,9 @@ export const createPositionResolveContext = (
   };
 
   const toLocal = (world: IRPosition): IRPosition =>
-    scopeChain.length === 0 ? [world[0], world[1]] : inverseTransformChain(world, scopeChain);
+    scopeChain.length === 0 ? [world[0], world[1]] : inverseScopeTransform(world, transform);
   const toWorld = (local: IRPosition): IRPosition =>
-    scopeChain.length === 0 ? [local[0], local[1]] : applyTransformChain(local, scopeChain);
+    scopeChain.length === 0 ? [local[0], local[1]] : applyScopeTransform(local, transform);
   const boundaryResolutionOf = (target: IRNodeTarget, reference: PositionReferenceView) =>
     targetBoundaryResolutionOf(reference.node, target, resolveExplicitBoundary);
 

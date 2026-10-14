@@ -51,7 +51,9 @@ describe('Plot regression runtime injection', () => {
     );
 
     expect(result.lowerOptions.regressionDefinitions?.[0]).toBe(definition);
-    expect(() => lowerPlotWithLineage(result.spec, result.datasets ?? {}, result.lowerOptions)).not.toThrow();
+    expect(() =>
+      lowerPlotWithLineage(result.spec, result.datasets ?? {}, { ...result.lowerOptions, environment: {} }),
+    ).not.toThrow();
     expect(JSON.stringify(result.spec)).not.toMatch(/regressionDefinitions|predict|schema/);
   });
 });
@@ -79,8 +81,11 @@ it.each([false, true])('injects field orders into React runtime with embedded=%s
     ],
   };
   const result = resolvePlotAuthoring({ spec, data, fieldOrderDefinitions: [definition] }, { embedded });
-  expect(lowerPlotWithLineage(result.spec, result.datasets ?? {}, result.lowerOptions).children).toEqual(
-    lowerPlotWithLineage(spec, data, { ...result.lowerOptions, fieldOrderDefinitions: [definition] }).children,
+  expect(
+    lowerPlotWithLineage(result.spec, result.datasets ?? {}, { ...result.lowerOptions, environment: {} }).children,
+  ).toEqual(
+    lowerPlotWithLineage(spec, data, { environment: {}, ...result.lowerOptions, fieldOrderDefinitions: [definition] })
+      .children,
   );
-  expect(() => lowerPlotWithLineage(spec, data)).toThrow(/unknown order/);
+  expect(() => lowerPlotWithLineage(spec, data, { environment: {} })).toThrow(/unknown order/);
 });

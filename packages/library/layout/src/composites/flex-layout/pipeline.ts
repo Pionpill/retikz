@@ -2,8 +2,8 @@ import type {
   LayoutAlignmentGuide,
   LayoutAxisProposal,
   LayoutChildResult,
-  LayoutCompositeCompileContext,
-  LayoutCompositeCompileResult,
+  CompositeCompileContext,
+  CompositeCompileResult,
   LayoutProposal,
 } from '@retikz/core';
 import {
@@ -132,7 +132,7 @@ const rectAxis = (rect: LayoutRect, axis: PhysicalAxis): Readonly<{ start: numbe
 
 /** 执行一次必需的 child probe，并在失败时保留 Core occurrence 提升错误 */
 const requiredProbe = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   sourceIndex: number,
   proposal: LayoutProposal,
 ): LayoutChildResult => {
@@ -324,8 +324,8 @@ const outgoingLineGuide = (
 /** 编译 Layout FlexLayout 的完整 probe、求解、placement 与 replay 流程 */
 export const compileFlexLayout = (
   sourceLayout: IRFlexLayout,
-  context: LayoutCompositeCompileContext,
-): LayoutCompositeCompileResult<FlexLayoutArtifact> => {
+  context: CompositeCompileContext,
+): CompositeCompileResult<FlexLayoutArtifact> => {
   const node = resolveFlexLayout(sourceLayout);
   const axes = axesOf(node.direction);
   const padding = node.padding;

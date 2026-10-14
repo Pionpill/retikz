@@ -14,7 +14,7 @@ A composite is useful when a group of drawing elements needs to retain its own d
 
 ## From data to a drawing
 
-The figure starts with a high-level declaration. Composite IR retains domain data; lowering converts it to Kernel primitives, which compile into Scene for SVG or Canvas output. IR is the savable declaration; Scene contains drawing results with positions and styles already resolved.
+The figure starts with a high-level declaration. Composite IR retains domain data. The Definition’s compile callback produces child declarations or layout replay handles, which Core compiles and commits to Scene in the same traversal for SVG or Canvas output. IR is the savable declaration; Scene contains drawing results with positions and styles already resolved.
 
 <ComponentPreview files="/kernel/components/design/composite/composite-pipeline" size="xs" hideCode />
 

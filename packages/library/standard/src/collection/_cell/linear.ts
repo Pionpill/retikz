@@ -1,4 +1,4 @@
-import type { CompositeCompileScopeProps, LayoutCompositeCompileContext, resolveBoxSpacing } from '@retikz/core';
+import type { CompositeCompileScopeProps, CompositeCompileContext, resolveBoxSpacing } from '@retikz/core';
 
 import { measureCell } from './pipeline';
 import type { CellPlacement } from './pipeline';
@@ -16,7 +16,7 @@ export const layoutLinearCells = (
   items: Array<CanonicalCell>,
   options: LinearCellLayoutOptions,
   scope: CompositeCompileScopeProps,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
 ) => {
   const { direction, gap, padding, role } = options;
   const horizontal = direction === 'left' || direction === 'right';

@@ -56,6 +56,8 @@ React DSL 只收集 JSX / props 并调度 Plot Vanilla；Vanilla 的 `plot()` �
 
 一次 lowering 会同时得到 Core IR 与本次执行的数据产物：root / mark DataView、composition resolution 和实际 frame。`lowerPlotWithLineage()` 从同一次执行生成 Core IR children 与 `PlotLineageRun`，因此 root 与 mark-local transform 在该请求各执行一次；lineage 不再重放第二条数据管线。
 
+轴与图例的布局测量使用当前 Core 编译上下文的 Node 布局能力。独立的 lineage / locator 入口要求显式传入 `environment`，在一个 Core 上下文内完成下沉；标签测量不会再各自启动独立 Scene 编译。
+
 `createPlotLocator()` 也先完成一次带 provenance 的 lowering，再让 `datum()`、`series()` 与 `resolve()` 持续读取同一份 Scene 与数据产物。一次 locator 查询不会重新执行 transform。重新创建 locator，或独立调用另一条 runtime 入口，仍是新的执行请求，不共享缓存。运行记录不会写回 `IRPlot`；完整开关与数据边界见[Plot 溯源](/viz/plot/provenance)。
 
 ## 入口与输出

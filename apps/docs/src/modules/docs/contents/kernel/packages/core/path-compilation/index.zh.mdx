@@ -1,0 +1,196 @@
+---
+title: 路径编译
+description: 追踪 Core 如何把路径目标和步骤转为几何命令，再生成带箭头与标签的 Scene 图元。
+---
+
+[配置解析](/kernel/packages/core/resolution)确定路径样式与 Definition，[坐标解析](/kernel/packages/core/coordinates)说明引用何时可见，[节点编译](/kernel/packages/core/node-compilation)提供连线需要的节点几何。本页沿一条普通描边路径，追踪目标绑定、路径段计算和最终图元输出。
+
+## 整体流程
+
+路径输入包含目标、步骤、样式和标签。Core 在所属 Scope 完成子树处理后解析这些声明，生成局部坐标下的几何命令，最后组合线条、箭头和文字，回填到 Scene 中原先预留的位置。
+
+<ComponentPreview files="path-overview" size="xs" hideCode type="flow" />
+
+下图从 A 连到 B。左侧直接使用中心坐标，右侧使用节点引用；右侧端点停在节点边缘，并为中间标签留出空隙。后续各节解释这些差别如何产生。
+
+<ComponentPreview files="path-example" size="sm" hideCode type="illustration" />
+
+本页以内置描边路径为主线。自定义 Path kind 通过自己的 Definition 输出图元；路径生成器则在这条主线中提供一组几何命令。
+
+<SourceLinks
+  sources={[
+    { label: '路径解析入口', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
+    { label: '描边路径输出入口', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
+  ]}
+/>
+
+## 目标绑定
+
+遍历器遇到 Path 时先保存待处理记录，其中包含路径输入、当前变换、继承配置和图元占位。所属 Scope 的子树处理完成后，再解析路径目标并替换占位；根级路径在根子树完成后处理。这样既能引用本层后续节点，也能保留原始绘制顺序。跨 Scope 的可见性见[引用时机](/kernel/packages/core/coordinates#引用时机)。
+
+下面按同一个 Scope 内 `Node A → Path P(A, B) → Node B` 的声明顺序展示数据快照。上方只展示一份待处理记录，本例中所示字段在处理过程中不变；`T` 代表当前变换。下方三列对照各阶段的命名空间和图元数组。
+
+<ComponentPreview files="path-timing" size="xl" hideCode type="illustration" />
+
+第二列新增 B 的几何与图元，P 仍占据原来的数组位置；第三列将该占位替换为 Path P。为突出数组变化，这里用一条无标签直线表示 P，用 A、B 表示对应节点图元。
+
+解析后的目标保留后续计算需要的点与引用几何。编译阶段通过 `PathTargetView` 查询局部参考点及边界交点。对 A 到 B 的连线，先取得两个参考点，再由连线方向求出实际端点。
+
+<SourceLinks
+  sources={[
+    { label: '延迟队列及占位回填', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: '目标绑定与确定化路径', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
+    { label: '编译阶段的目标查询', path: 'packages/kernel/core/src/compile/path/host/target.ts' },
+  ]}
+/>
+
+## 游标与路径段
+
+编译器按声明顺序消费步骤，并维护后续步骤需要的位置：
+
+- 前驱目标：普通线段从哪里开始，以及该位置是否带有节点边界。
+- 最近一次 `move` 的目标：供 `cycle` 闭合当前子路径。
+- 特殊步骤留下的笔位：例如圆弧终点，供下一段接续。
+- 相对坐标基准：用于计算 `relative` 与 `relativeAccumulate`。
+
+下图两条路径都从 `[0, 0]` 开始，连续使用两次 `[60, 30]` 偏移。`relative` 保持基准不变，两次终点重合；`relativeAccumulate` 更新基准，第二段继续向前。
+
+<ComponentPreview files="path-relative" size="md" hideCode type="illustration" />
+
+能提前确定的相对目标在解析阶段转为局部坐标；依赖 axis-line 投影等运行结果的后续目标，在消费步骤时继续计算。`move` 开启新的笔位，普通直线、折线和曲线逐段转为命令；圆弧、闭合形状、平滑曲线及生成器由各自分支处理，并交接后续笔位。
+
+| 输入步骤                                   | 几何变化                                             |
+| ------------------------------------------ | ---------------------------------------------------- |
+| line / axis-line                           | 生成直线；axis-line 先把目标投影到当前水平线或竖直线 |
+| fold                                       | 根据方向生成正交折点，再连接成折线                   |
+| curve / cubic / bend                       | 使用给定或计算得到的控制点，生成二次或三次贝塞尔曲线 |
+| arc / circlePath / ellipsePath / rectangle | 生成对应形状命令，并维护后续笔位                     |
+| smooth / generator                         | 生成连续曲线或 Definition 提供的命令序列             |
+| cycle                                      | 回到最近一次 move 的目标，闭合当前子路径             |
+
+<SourceLinks
+  sources={[
+    { label: '游标状态与推进', path: 'packages/kernel/core/src/compile/path/stroke/cursor.ts' },
+    { label: '直线、折线与曲线', path: 'packages/kernel/core/src/compile/path/stroke/segments.ts' },
+    { label: '形状步骤与笔位交接', path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts' },
+    { label: '生成器命令输出', path: 'packages/kernel/core/src/compile/path/stroke/lower.ts' },
+  ]}
+/>
+
+## 边界交点
+
+节点引用作为连线目标时，Core 先计算连接边界上的附着点，再用这些端点生成路径命令。以 A 到 B 的直线为例：
+
+1. **取得参考点与节点几何**：从已绑定的目标读取 A、B 的参考点、形状与连接边界。
+2. **确定连接方向**：计算 A 端时朝向 B 的参考点，计算 B 端时朝向 A 的参考点。
+3. **查询边界交点**：将方向参考点转换到世界坐标，选用目标上的 `boundary`；未指定时使用节点的 `boundary`。Core 取得对应几何并应用节点 `margin`，再调用 Definition 的 `boundaryPoint` 求附着点。
+4. **生成局部路径命令**：将交点转换回当前 Scope 的局部坐标，以它们作为线段起终点。
+
+开篇两个圆的中心分别为 `[0, 0]` 和 `[220, 0]`，半径为 24，margin 为 0。沿中心连线求得的附着点是 `[24, 0]` 和 `[196, 0]`，因此先生成这两个点之间的直线；箭头所需的端点缩短在后续阶段处理。连接面与 margin 的关系见[节点编译](/kernel/packages/core/node-compilation#连接边界)。
+
+### 各类路径如何确定方向
+
+| 路径段       | 边界计算方式                                                  |
+| ------------ | ------------------------------------------------------------- |
+| line         | 两端分别朝向对方参考点求交                                    |
+| curve        | 两端分别朝向同一个二次贝塞尔控制点求交                        |
+| cubic / bend | 起点朝向第一个控制点，终点朝向第二个控制点；bend 先计算控制点 |
+| fold         | 先生成折点，再沿折线查找离开起点边界、进入终点边界的位置      |
+
+贝塞尔曲线用控制点方向确定附着点，然后以新端点和控制点生成曲线。这里求的是方向射线上的边界点，并未求解整条贝塞尔曲线与形状的交点。
+
+对于未指定 anchor 和 offset 的节点目标，折线会依次检查折点，找到第一个从边界内部走到外部的线段。在该线段上求出界点：从边界中心出发时直接查询 `boundaryPoint`，其余情况用二分逼近内外分界。随后去掉节点内部的折线前缀，终点端反向执行同样的处理，以保留原折线的方向。
+
+### 显式锚点与偏移
+
+指定 `anchor` 时，Core 使用锚点位置作为附着点；`offset` 在附着点求出后叠加。仅指定 offset 时，仍会先按方向查询边界点。偏移在世界坐标中应用，再转换回当前 Scope 的局部坐标。
+
+下图保持节点位置一致，对照中心坐标、自动边界交点和显式 right / left 锚点。
+
+<ComponentPreview files="path-clipping" size="md" hideCode type="illustration" />
+
+路径段计算同时记录命令、边界采样点和来源步骤。配置圆角时，Core 在适用的直线接缝处插入圆弧，后续标签与箭头处理基于这份几何继续执行。
+
+<SourceLinks
+  sources={[
+    { label: '目标查询与坐标转换', path: 'packages/kernel/core/src/compile/orchestration/path-target.ts' },
+    { label: '边界点与折线出界点计算', path: 'packages/kernel/core/src/compile/node/anchors.ts' },
+    { label: '连接边界几何', path: 'packages/kernel/core/src/compile/node/boundary.ts' },
+    { label: '各类路径段的方向与命令', path: 'packages/kernel/core/src/compile/path/stroke/segments.ts' },
+    { label: '命令及来源记录', path: 'packages/kernel/core/src/compile/path/stroke/commands.ts' },
+    { label: '折线接缝圆角', path: 'packages/kernel/core/src/compile/path/stroke/rounded-corners.ts' },
+  ]}
+/>
+
+## 箭头与标签
+
+标签根据路径上的采样点和方向定位，再经文字测量得到视觉范围。步骤标签使用所属段的采样规则；路径级标签沿组合后的采样区间定位。不同路径段的参数不一定与弧长成正比，具体 position 语义见 [Path 标签](/kernel/components/path/label)。
+
+需要断线的标签会把视觉范围和 gap 转为路径上的留白区间，Core 据此拆分线条。箭头 Definition 提供端点装饰及所需缩短量，Core 再缩短首尾线段，并保护端点附近的箭头区域。
+
+回看开篇右图：A、B 的连接边界决定两端接触点；标签在中间形成留白；箭头所需的缩短量作用于末段。添加标签不会改变原始目标引用。
+
+<SourceLinks
+  sources={[
+    { label: '步骤与路径级标签采样', path: 'packages/kernel/core/src/compile/path/stroke/sampling.ts' },
+    { label: '标签文字与方向', path: 'packages/kernel/core/src/compile/path/host/label.ts' },
+    { label: '留白区间与线条拆分', path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts' },
+    { label: '箭头与沿线标记', path: 'packages/kernel/core/src/compile/path/stroke/decorations.ts' },
+    { label: '首尾线段缩短', path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts' },
+  ]}
+/>
+
+### 端点如何缩短
+
+默认端点箭头需要同时满足两个条件：**尖端落在目标点，尾部接到原曲线的断点**。Core 根据箭头几何与线宽得到接合长度，再从目标端沿原路径向内寻找断点，使断点到目标点的直线距离等于这个长度。
+
+1. **保留目标**：先记录原路径起终点，标签断口仍按完整路径计算。
+2. **寻找接合点**：在承载端点的片段内逐段向内搜索，再用二分细化曲线参数。需要时可跨过该连续片段中的多个命令。
+3. **保形切片**：保留接合点以内的原曲线。贝塞尔曲线重新计算子曲线控制点；圆弧与椭圆弧调整起止角，保留中心、半径和旋转。
+4. **定位箭头**：终点箭头沿“接合点 → 原目标点”定向，起点箭头反向处理。marker 内部变换校正宿主切线带来的旋转，SVG 与 Canvas 消费同一结果。
+
+线条与箭头尾部保留半个线宽的重叠，避免抗锯齿产生细缝；这部分重叠只调整接触位置，尖端仍固定在目标。箭头方向是断点与目标的连线方向，曲率较大时会与断点处切线略有差别。
+
+`endpointOverlap` 继续控制箭头进入目标的程度，自动节点边界还会应用空心箭头的外缘保护。短路径无法容纳原尺寸时，箭头会缩小以保持接合；无有效长度时不输出端点箭头。保形计算复用[曲线切片](/kernel/components/path/mechanism#为什么曲线也能截断)。
+
+下图灰色表示原路径，蓝色直接使用带箭头的真实 Path 编译结果。两图的尖端都落在 B，蓝色路径沿原曲线延伸到箭头尾部；贝塞尔的子曲线控制点随切片重新计算。
+
+<ComponentPreview files="path-shortening" size="lg" hideCode type="illustration" />
+
+<SourceLinks
+  sources={[
+    { label: '箭头接合系数与接缝重叠', path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts' },
+    { label: '原曲线接合点与箭头朝向', path: 'packages/kernel/core/src/compile/path/stroke/endpoint-contact.ts' },
+    { label: '保形曲线切片', path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts' },
+    { label: '标签断口与端点接合顺序', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
+  ]}
+/>
+
+## 完整实现流程
+
+从 `resolvePath` 读起，跟随确定化结果进入 `emitPathPrimitive`。下图先沿左列向下，再沿右列向上：步骤消费产生几何命令，随后处理圆角、标签与装饰，再把路径主体和附属图元交给遍历器回填。
+
+<ComponentPreview files="path-implementation" size="lg" hideCode type="flow" />
+
+输出可能包含多段线条、标签文字和装饰图元，路径自己的旋转与缩放由输出分组承载。Scope 变换继续由外层分组表达，renderer 消费这些结构化结果。
+
+普通目标未解析或缺少必要前驱时，相关分支会报告警告并跳过整条路径；部分无可绘制内容的步骤可以不产生命令。生成器输出违反契约等错误会抛出异常，不能把所有失败都理解成跳过单段。
+
+<SourceLinks
+  sources={[
+    { label: '步骤循环与后处理顺序', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
+    { label: '子路径拆分与端点箭头归属', path: 'packages/kernel/core/src/compile/path/stroke/split.ts' },
+    { label: '图元组合与路径变换', path: 'packages/kernel/core/src/compile/path/stroke/output.ts' },
+    { label: '输出契约', path: 'packages/kernel/core/src/compile/path/types.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'Path 实现原理', description: '查看各类步骤与标签的局部机制', url: '/kernel/components/path/mechanism' },
+    { title: '坐标解析', description: '查看命名空间与引用时机', url: '/kernel/packages/core/coordinates' },
+    { title: '节点编译', description: '查看连接边界的几何来源', url: '/kernel/packages/core/node-compilation' },
+  ]}
+/>

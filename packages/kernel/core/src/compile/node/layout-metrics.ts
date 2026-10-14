@@ -4,7 +4,8 @@ import type { LayoutAlignmentGuide, Transform } from '../../contract';
 import { LayoutAlignmentGuideDimension, BuiltinLayoutAlignmentGuideName } from '../../contract';
 import type { IRPosition } from '../../schemas';
 import { RAD_TO_DEG } from '../../shared/geometry';
-import { applyTransformChain, projectLayoutToGlobal } from '../transform';
+import type { EffectiveScopeTransform } from '../transform';
+import { applyScopeTransform, composeScopeTransform, projectLayoutWithTransform } from '../transform';
 import type { CompiledNodeLayout } from '../types';
 import type { NodeLayout } from './types';
 
@@ -72,26 +73,27 @@ const contentCorners = (layout: NodeLayout): Array<IRPosition> => {
   ];
 };
 
-const nodeTransformChain = (layout: NodeLayout, scopeChain: ReadonlyArray<Transform>): ReadonlyArray<Transform> =>
+/** 把节点自身旋转组合到已合成的 Scope 变换 */
+const nodeTransformOf = (layout: NodeLayout, transform: EffectiveScopeTransform): EffectiveScopeTransform =>
   (layout.geometry.rect.rotate ?? 0) === 0
-    ? scopeChain
-    : [
-        ...scopeChain,
-        {
-          kind: 'rotate',
-          degrees: (layout.geometry.rect.rotate ?? 0) * RAD_TO_DEG,
-          cx: layout.geometry.rect.x,
-          cy: layout.geometry.rect.y,
-        },
-      ];
+    ? transform
+    : composeScopeTransform(
+        [
+          {
+            kind: 'rotate',
+            degrees: (layout.geometry.rect.rotate ?? 0) * RAD_TO_DEG,
+            cx: layout.geometry.rect.x,
+            cy: layout.geometry.rect.y,
+          },
+        ],
+        transform,
+      );
 
 const contentBounds = (
   layout: NodeLayout,
-  scopeChain: ReadonlyArray<Transform>,
+  transform: EffectiveScopeTransform,
 ): CompiledNodeLayout['content']['bounds'] => {
-  const projected = contentCorners(layout).map(point =>
-    applyTransformChain(point, nodeTransformChain(layout, scopeChain)),
-  );
+  const projected = contentCorners(layout).map(point => applyScopeTransform(point, transform));
   const bounds = boundsOf(projected);
   if (bounds === undefined) {
     return { x: layout.geometry.contentCenter[0], y: layout.geometry.contentCenter[1], width: 0, height: 0 };
@@ -104,18 +106,20 @@ const contentBounds = (
 export const computeCompiledNodeLayout = (
   layout: NodeLayout,
   scopeChain: ReadonlyArray<Transform>,
+  transform: EffectiveScopeTransform = composeScopeTransform(scopeChain),
 ): CompiledNodeLayout => {
-  const globalLayout = scopeChain.length === 0 ? layout : projectLayoutToGlobal(layout, scopeChain);
+  const globalLayout = scopeChain.length === 0 ? layout : projectLayoutWithTransform(layout, transform);
+  const nodeTransform = nodeTransformOf(layout, transform);
   return {
     kind: 'node',
     ...(layout.node.id === undefined ? {} : { id: layout.node.id }),
     content: {
-      center: applyTransformChain(layout.geometry.contentCenter, nodeTransformChain(layout, scopeChain)),
+      center: applyScopeTransform(layout.geometry.contentCenter, nodeTransform),
       size: {
         width: layout.geometry.contentSize.width,
         height: layout.geometry.contentSize.height,
       },
-      bounds: contentBounds(layout, scopeChain),
+      bounds: contentBounds(layout, nodeTransform),
     },
     rect: {
       x: globalLayout.geometry.rect.x,

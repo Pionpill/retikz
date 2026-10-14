@@ -19,7 +19,7 @@ const labeledBox = defineComposite({
     type: literal('labeledBox'),
     text: string(),
   }),
-  expand: node => ({
+  compile: node => ({
     children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: node.text }],
   }),
 });
@@ -30,13 +30,13 @@ describe('lowerComposites — adversarial', () => {
       namespace: 'x',
       type: 'y',
       schema: CompositeBaseSchema.extend({ namespace: literal('x'), type: literal('y') }),
-      expand: () => ({ children: [] }),
+      compile: () => ({ children: [] }),
     });
     const dupB = defineComposite({
       namespace: 'x',
       type: 'y',
       schema: CompositeBaseSchema.extend({ namespace: literal('x'), type: literal('y') }),
-      expand: () => ({ children: [] }),
+      compile: () => ({ children: [] }),
     });
     const ir: IRScene = { version: 1, type: 'scene', children: [] };
 
@@ -50,13 +50,13 @@ describe('lowerComposites — adversarial', () => {
       namespace: 'standard',
       type: 'userExtensionA',
       schema: CompositeBaseSchema.extend({ namespace: literal('standard'), type: literal('userExtensionA') }),
-      expand: () => ({ children: [{ type: 'node', id: 'first', position: [0, 0], text: 'first' }] }),
+      compile: () => ({ children: [{ type: 'node', id: 'first', position: [0, 0], text: 'first' }] }),
     });
     const second = defineComposite({
       namespace: 'standard',
       type: 'userExtensionB',
       schema: CompositeBaseSchema.extend({ namespace: literal('standard'), type: literal('userExtensionB') }),
-      expand: () => ({ children: [{ type: 'node', id: 'second', position: [20, 0], text: 'second' }] }),
+      compile: () => ({ children: [{ type: 'node', id: 'second', position: [20, 0], text: 'second' }] }),
     });
     const ir: IRScene = {
       version: 1,
@@ -77,7 +77,7 @@ describe('lowerComposites — adversarial', () => {
         namespace: 'invalid',
         type: 'invalid',
         schema: string(),
-        expand: () => ({ children: [] }),
+        compile: () => ({ children: [] }),
       }),
     ).toThrow(/ZodObject/);
   });
@@ -88,7 +88,7 @@ describe('lowerComposites — adversarial', () => {
         namespace: 'm',
         type: 'a',
         schema: object({ namespace: string(), type: string() }),
-        expand: () => ({ children: [] }),
+        compile: () => ({ children: [] }),
       }),
     ).toThrow(/literal/);
   });
@@ -98,13 +98,13 @@ describe('lowerComposites — adversarial', () => {
       namespace: 'm',
       type: 'a',
       schema: CompositeBaseSchema.extend({ namespace: literal('m'), type: literal('a') }),
-      expand: () => ({ children: [{ namespace: 'm', type: 'b' }] }),
+      compile: () => ({ children: [{ namespace: 'm', type: 'b' }] }),
     });
     const bDef = defineComposite({
       namespace: 'm',
       type: 'b',
       schema: CompositeBaseSchema.extend({ namespace: literal('m'), type: literal('b') }),
-      expand: () => ({ children: [{ namespace: 'm', type: 'a' }] }),
+      compile: () => ({ children: [{ namespace: 'm', type: 'a' }] }),
     });
     const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'm', type: 'a' }] };
 
@@ -161,7 +161,7 @@ describe('lowerComposites — adversarial', () => {
       namespace: 'mix',
       type: 'pair',
       schema: CompositeBaseSchema.extend({ namespace: literal('mix'), type: literal('pair') }),
-      expand: () => ({
+      compile: () => ({
         children: [
           { type: 'node', id: 'kept', position: [0, 0], text: 'kept' },
           { namespace: 'example', type: 'labeledBox', text: 'inner' },

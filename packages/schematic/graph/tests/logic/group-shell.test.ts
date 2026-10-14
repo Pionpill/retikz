@@ -1,4 +1,4 @@
-import type { IRChild, LayoutCompositeCompileContext } from '@retikz/core';
+import type { IRChild, CompositeCompileContext } from '@retikz/core';
 import { compileToScene, CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import type { BoundsInsets, BoundsRect } from '@retikz/math';
@@ -18,7 +18,7 @@ type GroupShellMetrics = Readonly<{
 
 type MeasureGroupShell = (
   source: IRGroup,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   options?: GraphDefinitionOptions,
 ) => GroupShellMetrics;
 

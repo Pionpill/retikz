@@ -4,7 +4,7 @@ import type {
   LayoutAxisProposal,
   LayoutChildProbe,
   LayoutChildResult,
-  LayoutCompositeCompileContext,
+  CompositeCompileContext,
 } from '@retikz/core';
 import {
   ChildSchema,
@@ -80,7 +80,7 @@ export type PresentedTableTransactionInput = Readonly<{
   /** 与 canonical semantic model 严格对齐的呈现结果 */
   presented: PresentedTableModel;
   /** 同次 style resolution 与选择值 */
-  theme?: LayoutCompositeCompileContext['theme'];
+  theme?: CompositeCompileContext['theme'];
   /** 当前表格布局与呈现共同采用的已解析默认值 */
   defaultTable?: ResolvedTableDefaults;
   /** 同次 Cell/encoding plan bundle */
@@ -182,7 +182,7 @@ const runTableTransactionStage = <T>(
 
 /** 只为可恢复 probe failure 补充 Table 阶段上下文，Core fatal error 在 layoutChild 调用点直接穿透 */
 const resultOfTableProbe = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   probe: LayoutChildProbe,
   stage: TableTransactionStage,
   tableId: string | undefined,
@@ -232,7 +232,7 @@ const trackLayoutsOf = (
 
 /** 从 Core Theme 与 Table Source 片段构造同次 defaults resolution */
 const resolveTableDefaults = (
-  theme: LayoutCompositeCompileContext['theme'],
+  theme: CompositeCompileContext['theme'],
   spec:
     | Pick<IRTable, 'defaultAppearance' | 'defaultCellLayout' | 'layout' | 'defaultVisual' | 'defaultTable'>
     | undefined,
@@ -429,7 +429,7 @@ const cellColumnWidth = (
 
 /** 创建最终 Cell runtime Scope，并只 replay selected child result */
 const cellOutputOf = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   probe: TableCellProbe,
   geometry: TableCellLayout,
 ): CompositeCompileChild => {
@@ -489,7 +489,7 @@ const cellOutputOf = (
 /** 从 Presented model 执行完整 Table layout-aware 后半事务 */
 export const resolvePresentedTableTransaction = (
   input: PresentedTableTransactionInput,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
 ): ResolvedTableTransaction => {
   const { tableId, meta, presented } = input;
   assertPresentedAlignment(presented);
@@ -783,7 +783,7 @@ export const resolveTableTransaction = (
   spec: IRTable,
   datasets: ExternalDatasets,
   options: LowerTablesOptions,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
 ): ResolvedTableTransaction => {
   const defaultTable = resolveTableDefaults(context.theme, spec, options.tableThemeStyles);
   const semantic = normalizeTableStructure(spec.structure, {

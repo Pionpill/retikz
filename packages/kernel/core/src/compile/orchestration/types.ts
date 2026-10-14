@@ -43,7 +43,7 @@ export type PendingPathEmission = {
   /** warning 与诊断使用的 IR locator */
   irPath: string;
   /** path 所在 scope 的累计 transform */
-  scopeChain: Array<Transform>;
+  scopeChain: ReadonlyArray<Transform>;
   /** path 几何完成后写入的当前 frame bbox 贡献 */
   boundsSink: Array<LayoutBoundsContribution>;
   /** path allocation 几何贡献 */
@@ -478,8 +478,8 @@ export type LayoutBoundsContribution = {
 export type PendingNodeLayoutObservation = {
   /** 节点自身局部 layout */
   layout: NodeLayout;
-  /** 从节点所在 frame 到 world 的最终 chain；Scope 收尾期间原位插入 own transforms */
-  scopeChain: Array<Transform>;
+  /** 从节点所在 frame 到 world 的最终只读 chain；Scope 收尾时替换链引用 */
+  scopeChain: ReadonlyArray<Transform>;
   /** 节点在逻辑树中的出现位置 */
   occurrence: CompileOccurrenceLocator;
 };
@@ -495,7 +495,7 @@ export type PendingCompileObservation = {
   /** replay remap 前的所属者 occurrence */
   origin: CompileOccurrenceLocator;
   /** 从当前 subject local coordinate 到 root 的 transform chain */
-  scopeChain: Array<Transform>;
+  scopeChain: ReadonlyArray<Transform>;
   /** 已按 owner schema 解析并冻结的最终产物 */
   value: JsonValue;
   /** 选中该 authored site 的 observer keys */

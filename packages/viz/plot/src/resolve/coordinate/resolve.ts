@@ -698,6 +698,7 @@ export const resolveCoordinateFrame = (
     ...(margin !== undefined ? { margin } : {}),
     ...(layoutReserve !== undefined ? { layoutReserve } : {}),
     legendReserve: context.legendReserve ?? {},
+    textMeasurer: context.textMeasurer,
     ...(plotAreaOverride !== undefined ? { plotAreaOverride } : {}),
     ...(roleRangeOverrides !== undefined ? { roleRangeOverrides } : {}),
     ...(provenance !== undefined ? { provenance } : {}),

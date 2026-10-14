@@ -1,4 +1,4 @@
-import type { LayoutCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
+import type { CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
 import { PathClipProvider } from '@retikz/extension';
 
@@ -7,7 +7,7 @@ import { MatrixSchema } from './schema';
 import type { IRMatrix } from './schema';
 
 /** Standard Matrix 的布局感知 Definition */
-export const MatrixDefinition: LayoutCompositeDefinition<IRMatrix, 'standard', 'matrix'> = defineComposite({
+export const MatrixDefinition: CompositeDefinition<IRMatrix, 'standard', 'matrix'> = defineComposite({
   namespace: 'standard',
   type: 'matrix',
   schema: MatrixSchema,

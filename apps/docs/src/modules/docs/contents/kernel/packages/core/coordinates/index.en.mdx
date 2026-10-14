@@ -1,0 +1,384 @@
+---
+title: Coordinate resolution
+description: Follow how Core resolves positions, names, and anchors, then determines local and world coordinates as Scope layout completes.
+---
+
+[Configuration resolution](/kernel/packages/core/resolution) determines effective node and path properties, but positions may still contain references: a node placed beside another node, a path joining two anchors, or a whole Scope aligned to an existing object. This page follows how those expressions become coordinates for layout and drawing.
+
+Start with the authoring forms in [Node positioning](/kernel/components/node/usage), [Coordinate](/kernel/components/node/coordinate), and [Scope](/kernel/components/scope/usage). This page stops at resolved positions, reference geometry, and group transforms. Text measurement, path clipping, and renderer internals belong to the following topics.
+
+## Overall flow
+
+Position resolution uses two spaces. Local coordinates belong to the current Scope. World coordinates include transforms from the current Scope and its ancestors and allow references across scopes. Without Scope transforms, the two are identical.
+
+Compilation traversal supplies visible names and transforms at each level. Core resolves positions during layout, then registers reference geometry in the namespace. Ordinary positions determine a placement point; self-anchor alignment requires a provisional layout before calculating the translation. Scope finalization adds placement that depends on child layout and processes paths deferred within that Scope.
+
+<ComponentPreview files="coordinate-overview" size="lg" hideCode type="flow" />
+
+The example combines inner and outer nodes with the same name, nested coordinates, and anchor alignment. One Scope has `id="cluster"`. Below, `cluster` refers to that group; other elements also use this id to reference it.
+
+An envelope is the extent collected from child layouts for Scope placement. The gray frame identifies the group's contents; it is decoration and does not change the envelope.
+
+<ComponentPreview files="coordinate-example" size="lg" />
+
+Outer A is at `[0, 0]`. The origin of `cluster` moves to `[180, -40]`, so inner A's local position `[0, 0]` becomes world point `[180, -40]`. B's local offset `[120, 0]` places it at `[300, -40]`. The nested Scope adds `[0, 80]`, placing C at `[180, 40]` in world space. D is declared after `cluster` and reads its completed layout, aligning its top anchor to the cluster's bottom anchor plus a downward offset of 48.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Position contexts, layout registration, and Scope finalization',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+    { label: 'Local and world position results', path: 'packages/kernel/core/src/resolve/position/types.ts' },
+  ]}
+/>
+
+## Position expressions
+
+Core does not treat every position as a node name to look up. Each expression selects a base point and a space in which to calculate.
+
+| Expression            | Example                                                  | Calculation                                                               |
+| --------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Cartesian point       | `[20, 10]`                                               | Used directly as a point in the current Scope                             |
+| Polar point           | `{ angle: 90, radius: 40 }`                              | Calculated locally from the origin; `origin` can select another base      |
+| Directional placement | `{ of: 'A', direction: 'right', distance: 40 }`          | Invert the referenced world center, then move in the local direction      |
+| Offset placement      | `{ of: 'A', offset: [40, 0] }`                           | Resolve the base locally, then add the local offset                       |
+| Interpolation         | `{ between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }` | Resolve two world points, interpolate, then invert into the current space |
+
+Anchor placement also needs the object's own geometry, rather than just a resolved point. This Node position declaration aligns its left anchor with A's right anchor:
+
+```ts
+position: {
+  kind: 'anchor',
+  target: { id: 'A', anchor: 'right' },
+  selfAnchor: 'left',
+}
+```
+
+Positive polar angles follow screen coordinates: from positive x toward positive y, with 90° pointing down. Directional `distance` is center-to-center spacing. When omitted, it uses the compilation context's `nodeDistance`, whose default is 24. It does not automatically measure the gap between outlines.
+
+These are representative forms from the shared mechanism; consumers accept different subsets. Node supports directional and anchor placement. Scope `position` accepts an origin point or self-anchor alignment. Path-relative cursor expressions belong to path compilation. The forms are not interchangeable everywhere.
+
+`resolvePosition` returns a `PositionResolution` with both `localPoint` and `worldPoint`. For node targets, `resolvePositionTargetWorld` first obtains a world reference point. `resolvePositionTarget` then adds the current-space `point`, retaining the reference object and bound connection surface.
+
+<ComponentPreview files="position-flow" size="lg" hideCode type="flow" />
+
+The branches differ in their starting space. Local expressions calculate before projecting. Node targets read world geometry before inverting. Named bases inside offset or polar expressions also undergo inversion before a local displacement is calculated. Interpolation recursively resolves endpoints within the target branch and does not depend on a path cursor.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'resolvePosition: tuples, polar, direction, and offset',
+      path: 'packages/kernel/core/src/resolve/position/resolve.ts',
+    },
+    {
+      label: 'resolvePositionTarget: node targets and interpolation',
+      path: 'packages/kernel/core/src/resolve/position/target.ts',
+    },
+    {
+      label: 'Node anchor placement input',
+      path: 'packages/kernel/core/src/schemas/position/anchor-position/schema.ts',
+    },
+  ]}
+/>
+
+## References and anchors
+
+Name lookup and geometric point selection are separate steps. `id` selects a registered object; `anchor` then selects a point on it.
+
+- Namespace: stores visible layouts of Nodes, Coordinates, and Scopes with an `id` for name lookup
+- Node target: `{ id, anchor?, offset?, boundary? }`, selecting an object, optional anchor, world offset, and connection surface
+- Anchor: a point on the target geometry, expressed as a name, angle, or edge fraction `{ side, fraction }`
+
+Without an explicit anchor, a position target reads the object center. Node anchor placement also uses `selfAnchor`, the current node's anchor to align with the target; it defaults to center. A bare node target in a path may later be clipped to the outline. The center obtained here is a reference point; path compilation determines the final endpoint.
+
+Anchors are not a fixed set of coordinates beside an object. `resolveAnchorRef` reads the bound shape / boundary capability and current geometry. Edge fractions use the shape's `edgePoint` capability. Coordinate registers a zero-size layout that supplies a position without drawing a visible primitive.
+
+Aligning a Node's own anchor requires a provisional layout because its dimensions and rotation affect that point. Core projects the layout into world space, subtracts the self-anchor from the target point, converts this world displacement back to local space, and moves both node geometry and content. A self-reference, an undefined target, or a Scope still being laid out causes this compilation to fail.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Node targets, angle anchors, and edge fractions',
+      path: 'packages/kernel/core/src/schemas/position/node-target/schema.ts',
+    },
+    {
+      label: 'Anchor point calculation and caching',
+      path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
+    },
+    {
+      label: 'placeAnchorPositionedLayout: final self-anchor alignment',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
+    },
+  ]}
+/>
+
+### Namespace
+
+`NamespaceStack` contains Maps ordered from root to current frame. Registration writes to the top Map. Lookup proceeds outward from the top and stops at the first match. Each entry stores layout and lifecycle state. Reference geometry is in world space, so another Scope's local coordinates are not mistaken for current coordinates.
+
+This source excerpt shows the core data structure, omitting diagnostics, branch snapshots, and operations:
+
+```ts
+export type NamespaceEntryState = 'resolved' | 'scope-placeholder';
+
+export type NamespaceEntry = {
+  layout: NodeLayout;
+  state: NamespaceEntryState;
+};
+
+export class NamespaceStack {
+  private readonly frames: Array<Map<string, NamespaceEntry>>;
+
+  // Other fields, constructor, and methods omitted
+}
+```
+
+The outer `Array` records scope levels: `frames[0]` is the root, and the last item is the top frame. Each `Map` maps an element id to a `NamespaceEntry`. Its `layout` holds the geometry needed for references, while `state` distinguishes a resolved layout from a Scope placeholder. Despite its name, `NodeLayout` also represents reference geometry for Coordinates and Scopes.
+
+The constructor creates the root frame with `[new Map()]`. Here, `readonly` prevents reassignment of the `frames` field; it does not freeze the array or its Maps. Entering a frame still calls `frames.push(new Map())`, and registration writes to the top Map.
+
+A Scope pushes a new Map only when `localNamespace: true`. An ordinary Scope changes coordinate space while sharing the current namespace. These boundaries are independent.
+
+This excerpt shows the example's name records after laying out the nodes inside `cluster`, but before finalizing the Scope. `resolved` means the layout is available; `scope-placeholder` means the name is registered but the Scope's final envelope is not yet known. Each cell contains a Map; values show only these states and world centers. Lookup of A hits the top frame. Once it is popped, lookup reaches root A.
+
+<ComponentPreview files="namespace-stack" size="xl" hideCode type="illustration" />
+
+| Situation                                                   | Lookup result                                                                |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Both current and outer frames have A                        | The current A shadows the outer A                                            |
+| Only an outer frame has A                                   | Lookup reaches and returns the outer A                                       |
+| An internal name is queried after the local namespace exits | Its Map has been popped; outside code cannot access it directly              |
+| A is registered twice in one Map                            | The later layout replaces the earlier one and emits a duplicate-name warning |
+
+<ComponentAlert
+  type="tip"
+  title="Same-frame names overwrite; inner-frame names shadow"
+  description="Within one Map, a later registration with the same id replaces the earlier layout and emits a warning; the duplicate alone does not fail compilation. Completed position calculations are not recomputed, but subsequent lookups of that name, including deferred Path resolution, read the new layout. Entries in different Maps do not overwrite one another. After the inner frame is popped, the outer entry remains available."
+/>
+
+The Scope's own `id` is registered in its parent namespace before pushing the child Map. Outside code can therefore reference the whole Scope while its internal names remain isolated. In the example, the inner path finds inner A. After `cluster` exits, the outer path finds outer A again, while D references the whole envelope through `cluster`.
+
+<ComponentAlert
+  type="tip"
+  title="Path ids are not position references"
+  description="A Path's id identifies primitives for interaction and animation. It is not registered in this position namespace and cannot serve as a Node, Coordinate, or Scope position reference."
+/>
+
+<SourceLinks
+  sources={[
+    {
+      label: 'NamespaceStack: top-frame registration and inside-out lookup',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+    },
+    {
+      label: 'compileScopeChild: Scope registration and local Map lifecycle',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+  ]}
+/>
+
+### Reference timing
+
+The namespace is not a complete index built before compilation. Names are registered as layouts finish. An `id` appearing in source does not mean its geometry is already available.
+
+| Consumer                                  | When references are read                                                                                               |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Node / Coordinate position                | When traversal reaches the element; usually only earlier registrations are available                                   |
+| Node anchor placement                     | After its provisional layout, with the target required to be fully laid out                                            |
+| Scope's external alignment point `target` | Resolved and saved before entering children; only an earlier resolved target or explicit parent-frame point is allowed |
+| Path target                               | At this Scope's finalization, before its local namespace is popped                                                     |
+
+The point saved early is the external `target` that the Scope will align to. Its own `selfAnchor` depends on the Scope's envelope shape, child layouts, and own transforms, so it is evaluated after the children finish. For example, aligning a Scope's left anchor with an already laid-out Node's right anchor starts by saving the Node's right anchor. Core then lays out the children, computes the Scope envelope and own transforms, and finds the Scope's left anchor. The difference between the two points in the same coordinate space gives the overall translation. Resolving the target early does not determine the Scope's own anchor or final position early.
+
+A Path resolves after traversal of its containing Scope's subtree, rather than waiting for the entire IR tree. It can reference only nodes already registered and visible in the namespace stack at that moment.
+
+Consider sibling Scopes A and B declared in that order, containing nodes a and b respectively. Neither enables `localNamespace`. The diagram follows traversal from left to right: a Path in A tries to reference b, while a Path in B tries to reference a.
+
+<ComponentPreview files="path-reference-timing" size="xs" hideCode type="flow" />
+
+When A finalizes, b has not been registered, so A's Path cannot reference it. Exiting ordinary Scope A does not remove a. When B finalizes, a remains in the shared Map, so B's Path can reference it. Sharing a Map does not make future registrations available early.
+
+If A enables `localNamespace: true`, its local Map is popped on exit, and B's Path cannot directly reference internal node a either. To connect nodes in two ordinary sibling Scopes, place the Path in their common parent Scope so it resolves after both children finish.
+
+A failed ordinary reference produces an empty resolver result; the consumer determines what follows. An unpositionable Node / Coordinate fails compilation. Unresolved path references emit warnings and are handled by the corresponding path command.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Node positioning failures and reference checks',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
+    },
+    {
+      label: 'Coordinate registration, deferred paths, and flush order',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+  ]}
+/>
+
+## Coordinate spaces
+
+`createPositionResolveContext` projects traversal state into a narrow context: name lookup, default directional distance, and `toLocal` / `toWorld`. Position resolvers do not hold the whole compilation state or manage namespace entry and exit.
+
+The `scopeChain` stores transforms from ancestors to the current level, with the last item applied first. Core converts each transform into an affine matrix and multiplies them in chain order to obtain a reusable matrix (see [Math: two-dimensional affine matrices](/kernel/packages/math/transforms#two-dimensional-affine-matrices)) for nodes and paths to convert between local and world coordinates, avoiding repeated evaluation of the full chain for each point. A zero scale axis prevents inverse projection.
+
+For a chain storing translation by `[100, 50]` followed by scale 2, local point `[40, 0]` is first scaled to `[80, 0]`, then translated to world point `[180, 50]`. Inversion subtracts the translation first, then divides by the scale to recover the local point.
+
+### Offset space
+
+The same `[40, 0]` can produce different world displacements. This Scope has origin `[100, 50]` and scale 2. The blue point uses an ordinary offset position; the orange point uses a node target's `offset`. Both start from the same Coordinate.
+
+<ComponentPreview files="coordinate-spaces" size="lg" hideCode type="illustration" />
+
+- Ordinary offset: `{ of: 'base', offset: [40, 0] }` moves 40 locally, becoming 80 after scaling, for world point `[180, 50]`
+- Target offset: `{ id: 'base', offset: [40, 0] }` adds 40 after reading the world reference point, for world point `[140, 50]`
+
+The first follows the current Scope's scaling and rotation. The second always adds its displacement in world space. One belongs to position expressions and the other to node targets; the matching field name does not imply matching coordinate semantics.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Position context toLocal / toWorld',
+      path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
+    },
+    {
+      label: 'Forward and inverse transforms, and layout projection',
+      path: 'packages/kernel/core/src/compile/transform.ts',
+    },
+    {
+      label: 'NodeTarget world offsets and interpolation',
+      path: 'packages/kernel/core/src/resolve/position/target.ts',
+    },
+  ]}
+/>
+
+### Primitives and references
+
+Registered world geometry serves reference lookup. Drawing geometry in Scene can remain local, with Group `transforms` carrying the overall placement. These representations serve lookup and drawing separately. Writing registered world coordinates back into local primitives would apply the transforms again during rendering.
+
+`projectLayoutToGlobal` establishes the projection for registration and geometric consumers. `emitScopeGroup` organizes local primitives and numeric transforms. Renderers consume the Scene group structure without looking up source `of`, `id`, or `between` expressions again.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Project local layouts into world reference geometry',
+      path: 'packages/kernel/core/src/compile/transform.ts',
+    },
+    {
+      label: 'emitScopeGroup: local primitives and group transforms',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+  ]}
+/>
+
+## Scope placement
+
+A Scope's origin and content envelope center often differ. `position: [x, y]` places the local origin. Anchor placement positions a point on the transformed envelope; its default self-anchor is the envelope center.
+
+Each group below contains one node with local center `[60, 0]` and width 72. The upper group places the origin at the target. The lower group aligns the envelope's left anchor with the target. The dashed line is a shared x reference; the solid frames show the actual envelopes.
+
+<ComponentPreview files="scope-placement" size="xl" hideCode type="illustration" />
+
+The upper target is `[140, 0]`, the node center is `[200, 0]`, and the envelope's left edge is x = 164. For lower target `[140, 150]`, Core uses the left anchor's local x = 24 to calculate translation, placing the left edge at x = 140 and node center at x = 176. `selfAnchor: 'origin'` aligns the local origin instead of the envelope center.
+
+### Envelope and placeholder
+
+A Scope envelope is known only after child layout. Core collects layout contributions from Nodes, Coordinates, child Scopes, and similar children. `boundingShape` selects a rectangle or circle. Path visual extents, clipping, and frame decoration do not expand this intrinsic envelope.
+
+Before entering children, a Scope with an `id` registers a `scope-placeholder` entry in the parent namespace. It is an intermediate compilation state, not a completed envelope. Anchor placement requiring complete geometry cannot use it as a target. Once the children finish, `replaceLayout` upgrades the name to `resolved` without treating the normal upgrade as duplicate registration.
+
+These snapshots follow nodes `a` and `b` being laid out inside `S`, sharing one Map without `localNamespace: true`. The blue outline below marks the Scope envelope determined during finalization.
+
+<ComponentPreview files="scope-lifecycle" size="lg" hideCode type="illustration" />
+
+The target is determined before entering children. Scope anchor placement therefore cannot reference itself, a descendant, or an ancestor Scope that has not finished layout. Such a target would itself depend on the current child layout, creating a cycle.
+
+<SourceLinks
+  sources={[
+    { label: 'Envelope collection and self-pivot resolution', path: 'packages/kernel/core/src/compile/scope.ts' },
+    {
+      label: 'Scope target restrictions, placeholder registration, and replacement',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+    { label: 'NamespaceEntry layout lifecycle', path: 'packages/kernel/core/src/compile/namespace.ts' },
+  ]}
+/>
+
+### Final transforms
+
+Transforms independent of the envelope, such as numeric translation or rotation and scaling about the origin, can be determined before child layout. Internal references across spaces use those transforms. A rotation or scale whose `pivot` refers to an envelope anchor must wait for intrinsic child layout.
+
+Anchor placement also evaluates `selfAnchor` after the own transforms, then adds an overall translation:
+
+$$
+\Delta = p_{\text{target}} - p_{\text{self}}
+$$
+
+Both points here are in the parent Scope's local space. The final chain applies own rotation, scaling, and similar operations before the alignment translation. Ancestor transforms then act on the whole result. An origin-point `position` is also outside the own transforms, so the Scope's own scale does not multiply this position value.
+
+During finalization, Core adds only transforms that have not already been applied. It updates published reference geometry and deferred path chains, then replaces the placeholder with the final envelope. Outside references read the final position; this Scope's paths use finalized geometry; local Scene primitives still receive their placement through group transforms.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'lowerScopeTransforms: referenced translation and envelope pivots',
+      path: 'packages/kernel/core/src/compile/scope.ts',
+    },
+    {
+      label: 'Preliminary transforms, final alignment, and geometry publication',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+    { label: 'Scope origin and anchor placement contract', path: 'packages/kernel/core/src/schemas/scope/schema.ts' },
+  ]}
+/>
+
+## Scope compilation flow
+
+This diagram follows the lifecycle of a Scope with an `id`. The main chain runs downward; the side nodes show auxiliary products such as namespace state and world reference geometry. Without `localNamespace`, namespace push and pop are skipped.
+
+<ComponentPreview files="coordinate-implementation" size="xxxl" hideCode type="flow" />
+
+Start with entry and finalization in `compileScopeChild`, then follow `createPositionResolveContext` into `resolvePosition` / `resolvePositionTargetWorld`. Ordinary nodes go through `layoutNode`, followed by projection and registration. Scope computes its envelope and final transforms after child traversal, fills deferred paths, and assembles group output.
+
+The overview's positioning and layout step, followed by world reference registration, runs per child. Scope finalization runs once per Scope. Position resolvers return geometry; compilation traversal owns reference visibility, registration timing, and lifecycle.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'compileScopeChild complete call chain',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+    {
+      label: 'Compilation state to position resolver adaptation',
+      path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
+    },
+    { label: 'Narrow position contexts and result types', path: 'packages/kernel/core/src/resolve/position/types.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Compilation flow',
+      description: 'Review traversal, deferred paths, and Scene assembly',
+      url: '/kernel/packages/core/compilation',
+    },
+    {
+      title: 'Configuration resolution',
+      description: 'Defaults, themes, and capability binding before position resolution',
+      url: '/kernel/packages/core/resolution',
+    },
+    {
+      title: 'Scope usage',
+      description: 'Use group transforms, namespaces, and overall placement',
+      url: '/kernel/components/scope/usage',
+    },
+    {
+      title: 'Node implementation',
+      description: 'Continue into node content, dimensions, boundaries, and anchors',
+      url: '/kernel/components/node/mechanism',
+    },
+  ]}
+/>

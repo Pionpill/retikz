@@ -1,4 +1,4 @@
-import type { LayoutCompositeDefinition } from '@retikz/core';
+import type { CompositeDefinition } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { output as ZodOutput } from 'zod';
@@ -14,7 +14,7 @@ export const lowerTables = (
   datasets: ExternalDatasets,
   options: LowerTablesOptions = {},
 ): Array<
-  LayoutCompositeDefinition<
+  CompositeDefinition<
     IRTable,
     typeof TABLE_NAMESPACE,
     typeof TableComposite.Table,

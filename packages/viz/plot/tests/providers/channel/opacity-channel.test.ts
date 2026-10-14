@@ -7,11 +7,12 @@ import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { OPACITY_MIN } from '../../../src/providers';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { measureLabel } from '../../helpers/text-measurement';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
-  return lowerPlot(spec, datasets, cartOpts) as IRScope;
+  return lowerPlot(spec, datasets, { ...cartOpts, textMeasurer: measureLabel }) as IRScope;
 };
 
 const firstLayer = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>

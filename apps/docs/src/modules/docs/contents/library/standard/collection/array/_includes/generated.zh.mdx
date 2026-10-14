@@ -563,7 +563,7 @@ export type IRArrayIndexStyle = input<typeof ArrayIndexStyleSchema>;
 #### <ApiSourceLink label={"ArrayDefinition"} path={"packages/library/standard/src/collection/array/composite.ts"} startLine={10}>ArrayDefinition</ApiSourceLink>
 
 ```ts
-export const ArrayDefinition: LayoutCompositeDefinition<IRArray, 'standard', 'array'> = defineComposite({
+export const ArrayDefinition: CompositeDefinition<IRArray, 'standard', 'array'> = defineComposite({
   namespace: 'standard',
   type: 'array',
   schema: ArraySchema,

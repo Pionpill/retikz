@@ -1,4 +1,4 @@
-import type { IRChild, IRScope, LayoutCompositeCompileContext, LayoutCompositeCompileResult } from '@retikz/core';
+import type { IRChild, IRScope, CompositeCompileContext, CompositeCompileResult } from '@retikz/core';
 import type { IRGraphRelation } from '@retikz/graph';
 import { resolveGraphDefinitionOptions, resolveRelation, resolveRelationAppearance } from '@retikz/graph';
 import { createOverlayLayout } from '@retikz/layout';
@@ -21,10 +21,10 @@ const translateBounds = (bounds: Readonly<BoundsRect>, position: Readonly<Positi
 /** 从相同布局结果生成 Graph 路由、Foundation 和参考 artifact */
 export const compileBranchDiagram = (
   source: IRBranchDiagram,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   definition: BranchLayoutDefinition,
   options: BranchDiagramDefinitionOptions,
-): LayoutCompositeCompileResult<BranchDiagramArtifact> => {
+): CompositeCompileResult<BranchDiagramArtifact> => {
   const diagram = resolveBranchDiagram(source);
   const measurements = diagram.nodes.map(node => {
     try {

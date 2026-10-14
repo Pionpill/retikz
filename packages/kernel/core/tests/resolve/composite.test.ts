@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
 
 import type { AnyCompositeDefinition, IRComposite } from '../../src';
-import { CompositeBaseSchema, DEFAULT_RESOLVED_THEME, defineComposite } from '../../src';
+import { CompositeBaseSchema, defineComposite } from '../../src';
 import { bindComposite, resolveComposite } from '../../src/resolve';
 
 const source = (overrides: Record<string, unknown> = {}): IRComposite => ({
@@ -20,7 +20,7 @@ const expandDefinition = defineComposite({
     type: literal('box'),
     value: number(),
   }),
-  expand: node => ({ children: [{ type: 'node', position: [node.value, 0] }] }),
+  compile: node => ({ children: [{ type: 'node', position: [node.value, 0] }] }),
 });
 
 const layoutDefinition = defineComposite({
@@ -46,30 +46,15 @@ describe('resolveComposite', () => {
     });
   });
 
-  it('binds and parses an expand composite once', () => {
+  it('binds and parses a composite once', () => {
     const binding = bindComposite(source(), registryOf(expandDefinition));
     if (binding.kind === 'unregistered') throw new Error('expected registered binding');
 
     const resolution = resolveComposite(binding, 'children[0]');
 
-    expect(resolution).toMatchObject({ kind: 'expand', key: 'test.box', node: source() });
+    expect(resolution).toMatchObject({ kind: 'compile', key: 'test.box', node: source() });
 
-    if (resolution.kind !== 'expand') throw new Error('expected expand resolution');
-
-    expect(
-      resolution.expand(resolution.node, {
-        theme: DEFAULT_RESOLVED_THEME,
-        runtimeInput: undefined,
-        sourceChild: () => {
-          throw new Error('unused source child');
-        },
-        bindChild: () => {
-          throw new Error('unused generated child');
-        },
-      }),
-    ).toEqual({
-      children: [{ type: 'node', position: [3, 0] }],
-    });
+    expect(resolution.compile).toBe(expandDefinition.compile);
   });
 
   it('binds a layout-aware composite with its artifact schema', () => {
@@ -79,8 +64,6 @@ describe('resolveComposite', () => {
     const resolution = resolveComposite(binding, 'children[0]');
 
     expect(resolution).toMatchObject({ kind: 'compile', key: 'test.layout', node: source({ type: 'layout' }) });
-
-    if (resolution.kind !== 'compile') throw new Error('expected compile resolution');
 
     expect(resolution.artifactSchema).toBe(layoutDefinition.artifactSchema);
   });

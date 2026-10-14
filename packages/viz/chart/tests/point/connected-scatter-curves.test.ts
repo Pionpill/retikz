@@ -61,7 +61,7 @@ describe('Connected Scatter connection curves', () => {
         { x: 0, y: 3, order: 0, group: 'b' },
       ],
     };
-    const paths = pathsOf(lowerPlotWithLineage(plot, datasets, { width: 480, height: 320 }).children);
+    const paths = pathsOf(lowerPlotWithLineage(plot, datasets, { environment: {}, width: 480, height: 320 }).children);
     const bridges = paths.filter(item => item.style?.dashPattern !== undefined);
 
     expect(paths).toHaveLength(4);
@@ -105,7 +105,7 @@ describe('Connected Scatter connection curves', () => {
       ],
     };
     const render = (plot: typeof linear) =>
-      pathsOf(lowerPlotWithLineage(plot, datasets, { width: 480, height: 320 }).children);
+      pathsOf(lowerPlotWithLineage(plot, datasets, { environment: {}, width: 480, height: 320 }).children);
 
     expect(render(smooth)).not.toEqual(render(linear));
     expect(JSON.stringify(render(smooth))).toContain('"kind":"smooth"');

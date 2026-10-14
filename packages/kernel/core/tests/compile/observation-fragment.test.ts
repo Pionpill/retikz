@@ -26,7 +26,7 @@ describe('Core isolated observation fragments', () => {
       namespace: 'test',
       type: 'fragment-input',
       schema: core.CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('fragment-input') }),
-      expand: (_node, context) => ({
+      compile: (_node, context) => ({
         children: [{ type: 'node', position: [0, 0], text: String(context.runtimeInput ?? 'unbound') }],
       }),
     });

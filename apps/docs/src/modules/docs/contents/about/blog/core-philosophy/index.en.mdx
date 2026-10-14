@@ -116,7 +116,7 @@ Tier 2 is carried by domain packages such as `@retikz/plot` and `@retikz/table`:
 | ------ | ----------------------------------------------- | ------------------------- | ----------------------- |
 | Tier 2 | `<Axis>` `<BarPlot>` `<Tree>` (domain packages) | High-level form preserved | Inside `compileToScene` |
 
-Their shared trait is algorithmic decision-making, so high-level intent remains through `compileToScene`. A composite uses `expand` for structural transformation or layout-aware `compile` when real child content must feed back into parent layout. The latter measures, solves, constrains, and replays within one Core compile. Core therefore does not need a separate compile channel for every chart or table layout.
+Their shared trait is algorithmic decision-making, so high-level intent remains through `compileToScene`. A composite uses one `compile` callback to return child declarations directly or optionally measure, solve, constrain, and replay within one Core compile. Core therefore does not need a separate compile channel for every chart or table layout.
 
 ## Framework adapter: deliberately thin
 

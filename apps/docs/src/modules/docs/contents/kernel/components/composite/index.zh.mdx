@@ -14,7 +14,7 @@ description: 将一组基础图元封装成可复用的高层能力。
 
 ## 数据怎样变成图形
 
-下图从一个高层声明开始：composite IR 保存有领域含义的数据，下沉过程把它转换成 Kernel 基础图元；随后编译为 Scene，再交给 SVG 或 Canvas 后端。IR 是可保存声明，Scene 是已确定位置与样式的绘制结果。
+下图从一个高层声明开始：composite IR 保存有领域含义的数据，Definition 的 compile 回调生成子声明或布局重放句柄，Core 在同次遍历中将它们编译、提交为 Scene，再交给 SVG 或 Canvas 后端。IR 是可保存声明，Scene 是已确定位置与样式的绘制结果。
 
 <ComponentPreview files="/kernel/components/design/composite/composite-pipeline" size="xs" hideCode />
 

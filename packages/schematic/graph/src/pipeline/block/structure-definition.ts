@@ -1,4 +1,4 @@
-import type { LayoutCompositeDefinition } from '@retikz/core';
+import type { CompositeDefinition } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
 
 import type { IRBlockHeader, IRBlockRow, IRBlockSection } from '../../schemas';
@@ -7,7 +7,7 @@ import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 import { compileBlockHeader, compileBlockRow, compileBlockSection } from './structure-compile';
 
 /** Block Header 的独立 Core layout-aware composite definition */
-export const BlockHeaderDefinition: LayoutCompositeDefinition<
+export const BlockHeaderDefinition: CompositeDefinition<
   IRBlockHeader,
   typeof GRAPH_NAMESPACE,
   typeof GraphType.BlockHeader
@@ -19,7 +19,7 @@ export const BlockHeaderDefinition: LayoutCompositeDefinition<
 });
 
 /** Block Section 的独立 Core layout-aware composite definition */
-export const BlockSectionDefinition: LayoutCompositeDefinition<
+export const BlockSectionDefinition: CompositeDefinition<
   IRBlockSection,
   typeof GRAPH_NAMESPACE,
   typeof GraphType.BlockSection
@@ -31,13 +31,10 @@ export const BlockSectionDefinition: LayoutCompositeDefinition<
 });
 
 /** Block Row 的独立 Core layout-aware composite definition */
-export const BlockRowDefinition: LayoutCompositeDefinition<
-  IRBlockRow,
-  typeof GRAPH_NAMESPACE,
-  typeof GraphType.BlockRow
-> = defineComposite({
-  namespace: GRAPH_NAMESPACE,
-  type: GraphType.BlockRow,
-  schema: BlockRowSchema,
-  compile: compileBlockRow,
-});
+export const BlockRowDefinition: CompositeDefinition<IRBlockRow, typeof GRAPH_NAMESPACE, typeof GraphType.BlockRow> =
+  defineComposite({
+    namespace: GRAPH_NAMESPACE,
+    type: GraphType.BlockRow,
+    schema: BlockRowSchema,
+    compile: compileBlockRow,
+  });

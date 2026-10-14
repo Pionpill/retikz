@@ -1,5 +1,5 @@
 import { defineComposite } from '@retikz/core';
-import type { LayoutCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
+import type { CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { PathClipProvider } from '@retikz/extension';
 
 import { compileStack } from './pipeline';
@@ -7,7 +7,7 @@ import { StackSchema } from './schema';
 import type { IRStack } from './schema';
 
 /** Stack 的布局感知编译定义 */
-export const StackDefinition: LayoutCompositeDefinition<IRStack, 'standard', 'stack'> = defineComposite({
+export const StackDefinition: CompositeDefinition<IRStack, 'standard', 'stack'> = defineComposite({
   namespace: 'standard',
   type: 'stack',
   schema: StackSchema,

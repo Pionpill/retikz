@@ -116,7 +116,7 @@ Tier 2 由 `@retikz/plot`、`@retikz/table` 等 domain 包承担：
 | ------ | ------------------------------------------ | ------------ | ------------------- |
 | Tier 2 | `<Axis>` `<BarPlot>` `<Tree>`（domain 包） | 高层形态保留 | `compileToScene` 内 |
 
-它们的共同特征是有算法决策，需要在编译流水线里以高层形态保留到 `compileToScene`。只做结构变换时使用 composite `expand`；需要真实子内容反馈布局时使用 layout-aware `compile`，在同次 Core compile 中完成测量、求解、约束与 replay。这样 core schema 不为具体 domain 膨胀，新增 chart / table 布局也不用另造编译通道。
+它们的共同特征是有算法决策，需要在编译流水线里以高层形态保留到 `compileToScene`。统一的 composite `compile` 可以直接返回子声明，也可以按需在同次 Core compile 中完成测量、求解、约束与 replay。这样 core schema 不为具体 domain 膨胀，新增 chart / table 布局也不用另造编译通道。
 
 ## Framework adapter：刻意保持薄
 

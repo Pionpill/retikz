@@ -11,6 +11,7 @@ import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { measureLabel } from '../../helpers/text-measurement';
 
 /**
  * datum locator：逻辑地址 → 位置/元素的确定性解析函数
@@ -83,7 +84,7 @@ const SALES = [
 
 /** 用 lowerPlots 把 spec 展成外层 plot scope */
 const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
-  return lowerPlot(spec, datasets, options) as IRScope;
+  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（无 guides 时即外层 plot scope 的第一个子 scope） */
@@ -187,7 +188,7 @@ describe('datum locator — happy path', () => {
     // point mark：locator.datum(i).position === lowering 第 i 行 Node.position（cartesian）
     const spec = pointSpec({ id: 'sales' });
     const datasets: Datasets = { sales: SALES };
-    const locator = createPlotLocator(spec, datasets, opts);
+    const locator = createPlotLocator(spec, datasets, { ...opts, environment: {} });
     const nodes = datumNodes(firstLayer(spec, datasets, opts));
 
     expect(nodes).toHaveLength(SALES.length);
@@ -204,7 +205,7 @@ describe('datum locator — happy path', () => {
     // interval mark：柱锚点 === lowering 柱 Node.position（柱中心 [xCenter,(yBase+yValue)/2]）
     const spec = barSpec({ id: 'sales' });
     const datasets: Datasets = { sales: SALES };
-    const locator = createPlotLocator(spec, datasets, opts);
+    const locator = createPlotLocator(spec, datasets, { ...opts, environment: {} });
     const nodes = datumNodes(firstLayer(spec, datasets, opts));
 
     expect(nodes).toHaveLength(SALES.length);
@@ -221,7 +222,7 @@ describe('datum locator — happy path', () => {
     // datumProvenance 关（默认）→ locator.datum(i).meta 仍给同构 meta（locator 按需合成，零 IR 代价）
     const spec = barSpec({ id: 'sales' });
     const datasets: Datasets = { sales: SALES };
-    const locator = createPlotLocator(spec, datasets, opts);
+    const locator = createPlotLocator(spec, datasets, { ...opts, environment: {} });
 
     for (let index = 0; index < SALES.length; index++) {
       const meta = locator.datum(index)!.meta as {
@@ -266,7 +267,7 @@ describe('datum locator — happy path', () => {
       marks: [{ type: 'path', series: 'city', encoding: { x: { field: 't' }, y: { field: 'v' } } }],
     });
     const datasets: Datasets = { t: TREND };
-    const locator = createPlotLocator(spec, datasets, opts);
+    const locator = createPlotLocator(spec, datasets, { ...opts, environment: {} });
     const anchor = locator.resolve('trend.series.X');
 
     expect(anchor).not.toBeNull();
@@ -337,7 +338,7 @@ describe('datum locator — happy path', () => {
           { panel: 'right', series: 'A', x: 2, y: 20 },
         ],
       },
-      opts,
+      { ...opts, environment: {} },
     );
 
     const left = locator.series('A', { markIndex: 0, facet: { id: 'panel', column: 'left' } });
@@ -362,7 +363,7 @@ describe('datum locator — boundary', () => {
   it('datum_out_of_range', () => {
     // datum(负 / ≥ rowCount) → null（不抛）
     const spec = pointSpec({ id: 'sales' });
-    const locator = createPlotLocator(spec, { sales: SALES }, opts);
+    const locator = createPlotLocator(spec, { sales: SALES }, { ...opts, environment: {} });
 
     expect(locator.datum(-1)).toBeNull();
     expect(locator.datum(SALES.length)).toBeNull();
@@ -389,7 +390,7 @@ describe('datum locator — boundary', () => {
       // series-bearing mark：point 无 series 字段（schema 会剥离），改用 line（含 series）
       marks: [{ type: 'path', series: 'city', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     });
-    const locator = createPlotLocator(spec, { sales: rows }, opts);
+    const locator = createPlotLocator(spec, { sales: rows }, { ...opts, environment: {} });
 
     // 被跳过的中间行（transformedIndex 1）→ null；存活行 0 / 2 仍可解析
     expect(locator.datum(1)).toBeNull();
@@ -427,7 +428,7 @@ describe('datum locator — boundary', () => {
       // series-bearing mark：point 无 series 字段（schema 会剥离），改用 line（含 series）
       marks: [{ type: 'path', series: 'city', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     });
-    const locator = createPlotLocator(spec, { sales: rows }, opts);
+    const locator = createPlotLocator(spec, { sales: rows }, { ...opts, environment: {} });
 
     expect(locator.series('does-not-exist')).toBeNull();
 
@@ -438,7 +439,7 @@ describe('datum locator — boundary', () => {
   it('no_plot_id_structural', () => {
     // root 无 id → 结构寻址 datum(i) 仍解析（不依赖 plotId）；点路径支持无前缀形式 'datum.<i>'
     const spec = pointSpec(); // 无 id
-    const locator = createPlotLocator(spec, { sales: SALES }, opts);
+    const locator = createPlotLocator(spec, { sales: SALES }, { ...opts, environment: {} });
     const nodes = datumNodes(firstLayer(spec, { sales: SALES }, opts));
 
     for (let index = 0; index < nodes.length; index++) {
@@ -465,7 +466,7 @@ describe('datum locator — errors', () => {
   it('invalid_address', () => {
     // 非法 address → null（不抛）：垃圾串、错 plotId、错段、越界、错类别值
     const spec = pointSpec({ id: 'sales' });
-    const locator = createPlotLocator(spec, { sales: SALES }, opts);
+    const locator = createPlotLocator(spec, { sales: SALES }, { ...opts, environment: {} });
 
     expect(locator.resolve('garbage')).toBeNull();
     expect(locator.resolve('')).toBeNull();
@@ -485,7 +486,7 @@ describe('datum locator — errors', () => {
     const datasets: Datasets = { sales: rows };
     const specSnapshot = JSON.stringify(barSpec({ id: 'sales' }));
     const spec = barSpec({ id: 'sales' });
-    const locator = createPlotLocator(spec, datasets, opts);
+    const locator = createPlotLocator(spec, datasets, { ...opts, environment: {} });
 
     // 多次解析稳定（同输入同输出，无内部状态漂移）
     const first = locator.datum(0);
@@ -515,7 +516,7 @@ describe('datum locator — interaction', () => {
     // sector(饼图)：centroid 落在渲染扇区内（inner ≤ |anchor-center| ≤ outer，角度在 [start,end]）
     //   不与 Node.position（圆心）相等——sector 锚点取扇片 centroid
     const spec = pieSpec({ id: 'pie' });
-    const locator = createPlotLocator(spec, { d: PIE_ROWS }, squareOpts);
+    const locator = createPlotLocator(spec, { d: PIE_ROWS }, { ...squareOpts, environment: {} });
     const nodes = datumNodes(firstLayer(spec, { d: PIE_ROWS }, squareOpts));
 
     expect(nodes.length).toBeGreaterThan(0);
@@ -565,7 +566,7 @@ describe('datum locator — interaction', () => {
     ];
     const options: LowerPlotsOptions = { ...opts, datumIdField: 'q' };
     const spec = barSpec({ id: 'sales' });
-    const locator = createPlotLocator(spec, { sales: rows }, options);
+    const locator = createPlotLocator(spec, { sales: rows }, { ...options, environment: {} });
 
     // 与 lowering 实际绑定的 Node.id 对照
     const nodeIds = datumNodes(firstLayer(spec, { sales: rows }, options)).map(n => n.id);
@@ -576,7 +577,7 @@ describe('datum locator — interaction', () => {
     expect(locator.datum(2)!.id).toBe('sales.datum.Q3');
 
     // 未设 datumIdField 时 id 省略
-    const plain = createPlotLocator(spec, { sales: rows }, opts);
+    const plain = createPlotLocator(spec, { sales: rows }, { ...opts, environment: {} });
 
     expect(plain.datum(0)!.id).toBeUndefined();
   });
@@ -587,7 +588,7 @@ describe('datum locator — interaction', () => {
     for (const make of [pointSpec, barSpec]) {
       const spec = make({ id: 'sales' });
       const datasets: Datasets = { sales: SALES };
-      const locator = createPlotLocator(spec, datasets, opts);
+      const locator = createPlotLocator(spec, datasets, { ...opts, environment: {} });
       const nodes = datumNodes(firstLayer(spec, datasets, opts));
 
       for (let index = 0; index < nodes.length; index++) {
@@ -621,7 +622,7 @@ describe('datum locator — bug hunter regressions', () => {
     const datasets = { sales: SALES };
     const options: LowerPlotsOptions = { ...opts, provenance: true, datumProvenance: true };
     const nodes = datumNodes(firstLayer(spec, datasets, options));
-    const locator = createPlotLocator(spec, datasets, options);
+    const locator = createPlotLocator(spec, datasets, { ...options, environment: {} });
 
     // 渲染序：revenue 降序 → [14(month1),10(month0),9(month2)] = source 行 [1,0,2]
     expect(nodes).toHaveLength(3);
@@ -652,7 +653,11 @@ describe('datum locator — bug hunter regressions', () => {
       { month: 0, revenue: 10 },
       { month: 1, revenue: 14 },
     ];
-    const locator = createPlotLocator(barSpec({ id: 'sales' }), { sales: rows }, { ...opts, datumProvenance: true });
+    const locator = createPlotLocator(
+      barSpec({ id: 'sales' }),
+      { sales: rows },
+      { environment: {}, ...opts, datumProvenance: true },
+    );
     locator.datum(0);
     locator.series('x'); // 触发各路径
 
@@ -689,7 +694,7 @@ describe('datum locator transform registry parity', () => {
       transformImplementations: [doubleDefinitionImplementation],
     };
     const nodes = datumNodes(firstLayer(spec, datasets, options));
-    const locator = createPlotLocator(spec, datasets, options);
+    const locator = createPlotLocator(spec, datasets, { ...options, environment: {} });
 
     expect(nodes).toHaveLength(2);
 
@@ -720,7 +725,7 @@ describe('datum locator transform registry parity', () => {
     const datasets = { sales: SALES };
     const options: LowerPlotsOptions = { ...opts, provenance: true, datumProvenance: true };
     const nodes = datumNodes(firstLayer(spec, datasets, options));
-    const locator = createPlotLocator(spec, datasets, options);
+    const locator = createPlotLocator(spec, datasets, { ...options, environment: {} });
 
     expect(nodes).toHaveLength(3);
 
@@ -759,6 +764,7 @@ describe('datum locator transform registry parity', () => {
       ],
     };
     const locator = createPlotLocator(spec, datasets, {
+      environment: {},
       ...opts,
       transformDefinitions: [groupSumDefinition],
       transformImplementations: [groupSumDefinitionImplementation],
@@ -863,7 +869,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
     //   修 #1 前 barCenterAnchor 只匹配 plain → 子带柱漂移；修后共享 intervalRect
     const spec = dodgeSpec();
     const datasets: Datasets = { d: DODGE_ROWS };
-    const locator = createPlotLocator(spec, datasets, opts);
+    const locator = createPlotLocator(spec, datasets, { ...opts, environment: {} });
     const nodes = datumNodes(firstLayer(spec, datasets, opts));
 
     expect(nodes).toHaveLength(DODGE_ROWS.length);
@@ -880,7 +886,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
     // stack 柱：每行 locator.datum(i).position === lowered Node.position（y0/y1 中点）
     const spec = stackSpec();
     const datasets: Datasets = { d: STACK_ROWS };
-    const locator = createPlotLocator(spec, datasets, opts);
+    const locator = createPlotLocator(spec, datasets, { ...opts, environment: {} });
     const nodes = datumNodes(firstLayer(spec, datasets, opts));
 
     expect(nodes).toHaveLength(STACK_ROWS.length);
@@ -897,7 +903,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
     // polar 2 系列 interval：locator datum centroid 落在 lowered 扇区内 + 等于该扇区 params 的 wedgeCentroid
     const spec = polarDodgeSpec();
     const datasets: Datasets = { d: POLAR_DODGE_ROWS };
-    const locator = createPlotLocator(spec, datasets, squareOpts);
+    const locator = createPlotLocator(spec, datasets, { ...squareOpts, environment: {} });
     const nodes = datumNodes(firstLayer(spec, datasets, squareOpts));
 
     expect(nodes.length).toBeGreaterThan(0);
@@ -952,7 +958,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
     const options: LowerPlotsOptions = { ...opts, datumIdField: 'q' };
 
     expect(() => expandOf(spec, { d: rows }, options)).toThrow();
-    expect(() => createPlotLocator(spec, { d: rows }, options)).toThrow();
+    expect(() => createPlotLocator(spec, { d: rows }, { ...options, environment: {} })).toThrow();
   });
 
   it('locator_datum_id_fail_loud', () => {
@@ -965,7 +971,9 @@ describe('datum locator — anchor parity and fail-loud', () => {
     const options: LowerPlotsOptions = { ...opts, datumIdField: 'q' };
 
     expect(() => expandOf(barSpec({ id: 'sales' }), { sales: rows }, options)).toThrow();
-    expect(() => createPlotLocator(barSpec({ id: 'sales' }), { sales: rows }, options)).toThrow();
+    expect(() =>
+      createPlotLocator(barSpec({ id: 'sales' }), { sales: rows }, { ...options, environment: {} }),
+    ).toThrow();
   });
 
   it('resolve_series_numeric', () => {
@@ -988,7 +996,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'path', series: 'g', encoding: { x: { field: 't' }, y: { field: 'v' } } }],
     });
-    const locator = createPlotLocator(spec, { t: TREND }, opts);
+    const locator = createPlotLocator(spec, { t: TREND }, { ...opts, environment: {} });
     const viaAddress = locator.resolve('p.series.5');
 
     expect(viaAddress).not.toBeNull();

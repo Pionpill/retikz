@@ -177,6 +177,10 @@ Centered labels on unfilled built-in Stroke paths leave gaps by default; `interr
   ]}
 />
 
+## How arrows shorten endpoints
+
+Default endpoint arrows keep the tip at the target and join their tail to a cut point on the original curve. Core finds that contact using arrow geometry and stroke width, preserves the curve through slicing, and orients the arrow from the cut toward the target. Antialiasing overlap is handled separately; short paths shrink arrows to maintain contact. See [Path Compilation · How endpoints are shortened](/kernel/packages/core/path-compilation#how-endpoints-are-shortened) for the steps and comparison figure.
+
 ## Further reading
 
 <LinkedSections

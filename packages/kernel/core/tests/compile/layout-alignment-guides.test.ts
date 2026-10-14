@@ -6,7 +6,7 @@ import type {
   IRChild,
   IRScene,
   LayoutAlignmentGuide,
-  LayoutCompositeCompileContext,
+  CompositeCompileContext,
 } from '../../src';
 import {
   compileToScene,
@@ -39,7 +39,7 @@ const explicitGuideDefinition = (guides: ReadonlyArray<LayoutAlignmentGuide>) =>
     compile: () => ({ children: [], alignmentGuides: guides }),
   });
 
-const resolvedGuides = (context: LayoutCompositeCompileContext, child: IRChild) => {
+const resolvedGuides = (context: CompositeCompileContext, child: IRChild) => {
   const probe = context.layoutChild(child, NaturalLayoutProposal);
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
   return probe.result.alignmentGuides;
@@ -355,7 +355,7 @@ describe('layout alignment guide ownership', () => {
     const explicit = explicitGuideDefinition(sourceGuides);
     let first: ReadonlyArray<LayoutAlignmentGuide> | undefined;
     let second: ReadonlyArray<LayoutAlignmentGuide> | undefined;
-    let firstResult: ReturnType<LayoutCompositeCompileContext['layoutChild']> | undefined;
+    let firstResult: ReturnType<CompositeCompileContext['layoutChild']> | undefined;
     const inspector = defineComposite({
       namespace: 'test',
       type: 'doubleInspector',

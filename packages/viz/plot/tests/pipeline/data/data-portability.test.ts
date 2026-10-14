@@ -202,15 +202,15 @@ describe('数据字典 own-key 语义（contract 集成）', () => {
       `lowerPlots: dataset "${reference}" not found in provided datasets`,
     );
 
-    expect(() => createPlotLocator(specNoModel(reference), {})).not.toThrow();
-    expect(createPlotLocator(specNoModel(reference), {}).datum(0)).toBeNull();
+    expect(() => createPlotLocator(specNoModel(reference), {}, { environment: {} })).not.toThrow();
+    expect(createPlotLocator(specNoModel(reference), {}, { environment: {} }).datum(0)).toBeNull();
   });
 
   it.each(['constructor', 'toString', '__proto__'])('own dataset key %s remains usable', reference => {
     const datasets = ownRecord(reference, [{ a: 1, b: 2 }]);
 
     expect(() => compile(specNoModel(reference), datasets)).not.toThrow();
-    expect(createPlotLocator(specNoModel(reference), datasets).datum(0)).not.toBeNull();
+    expect(createPlotLocator(specNoModel(reference), datasets, { environment: {} }).datum(0)).not.toBeNull();
   });
 
   it.each(['constructor', 'toString', '__proto__'])('inherited fieldMaps key %s is ignored', reference => {
@@ -218,7 +218,9 @@ describe('数据字典 own-key 语义（contract 集成）', () => {
     const fieldMaps = inheritedRecord(reference, { month: 'missingMonth', revenue: 'missingRevenue' });
 
     expect(() => compile(specWithModel(reference), datasets, { fieldMaps })).not.toThrow();
-    expect(createPlotLocator(specWithModel(reference), datasets, { fieldMaps }).datum(0)).not.toBeNull();
+    expect(
+      createPlotLocator(specWithModel(reference), datasets, { environment: {}, fieldMaps }).datum(0),
+    ).not.toBeNull();
   });
 
   it.each(['constructor', 'toString', '__proto__'])(
@@ -237,7 +239,9 @@ describe('数据字典 own-key 语义（contract 集成）', () => {
     const fieldMaps = ownRecord(reference, { month: 'period', revenue: 'amount' });
 
     expect(() => compile(specWithModel(reference), datasets, { fieldMaps })).not.toThrow();
-    expect(createPlotLocator(specWithModel(reference), datasets, { fieldMaps }).datum(0)).not.toBeNull();
+    expect(
+      createPlotLocator(specWithModel(reference), datasets, { environment: {}, fieldMaps }).datum(0),
+    ).not.toBeNull();
   });
 
   it('fieldmap_without_model_throws', () => {
@@ -299,15 +303,15 @@ describe('locator fieldMaps parity', () => {
       createPlotLocator(
         specWithModel(),
         { d: [{ month: '2024-01-01', revenue: 1 }] },
-        { fieldMaps: { d: { nope: 'x' } } },
+        { environment: {}, fieldMaps: { d: { nope: 'x' } } },
       ),
     ).toThrow(/unknown logical field/i);
   });
 
   it('locator_build_throws_fieldmap_without_model', () => {
-    expect(() => createPlotLocator(specNoModel(), { d: [{ a: 1, b: 2 }] }, { fieldMaps: { d: { a: 'x' } } })).toThrow(
-      /requires data\.model/i,
-    );
+    expect(() =>
+      createPlotLocator(specNoModel(), { d: [{ a: 1, b: 2 }] }, { environment: {}, fieldMaps: { d: { a: 'x' } } }),
+    ).toThrow(/requires data\.model/i);
   });
 });
 

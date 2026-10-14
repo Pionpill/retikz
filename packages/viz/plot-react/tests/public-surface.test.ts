@@ -12,7 +12,7 @@ describe('@retikz/plot-react public surface', () => {
       'PlotTrack',
       'PlotAxis',
       'PlotLegend',
-      'BuiltinPlotScale',
+      'PlotScale',
       'PlotTransform',
     ]) {
       expect(publicSurface[name], `${name} must be exported`).toBeTypeOf('function');

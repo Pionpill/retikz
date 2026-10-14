@@ -109,14 +109,14 @@ export type LayoutChildProbe =
 declare const compositeCompileChildBrand: unique symbol;
 
 /**
- * layout-aware composite 的 compile-local 输出 child
+ * 复合组件的 compile-local 输出 child
  * @description 只能由当前 composite callback 的 `replay()` 或 `scope()` 创建，不能读取、伪造、序列化、跨 callback 或跨 compile 使用
  */
 export type CompositeCompileChild = Readonly<{
   [compositeCompileChildBrand]: never;
 }>;
 
-/** layout-aware Composite 创建的完整 authored Scope props */
+/** 复合组件创建的完整 authored Scope props */
 export type CompositeCompileScopeProps = Readonly<
   Omit<IRScopeProps, 'transforms' | 'animations'> & {
     /** Scope authored transform，沿普通 Scope pipeline 在 compile 阶段 lowering */
@@ -152,8 +152,8 @@ export type PathTargetQueryResult = Readonly<{
   points: ReadonlyArray<Readonly<IRPosition>>;
 }>;
 
-/** layout-aware composite 可见的受限编译上下文 */
-export type LayoutCompositeCompileContext = CompositeRuntimeInputContext &
+/** 复合组件可见的受限编译上下文 */
+export type CompositeCompileContext = CompositeRuntimeInputContext &
   Readonly<{
     /** 当前 composite 位置完整、只读的有效 Theme */
     theme: ResolvedTheme;
@@ -163,7 +163,7 @@ export type LayoutCompositeCompileContext = CompositeRuntimeInputContext &
      * 创建使用局部 Theme 的编译上下文，复用当前 callback 的 probe、replay 与输入所有权
      * @description 通过 Core 已注册的 Theme definitions 解析覆盖；测量与目标查询使用解析后的主题，不修改父上下文。最终输出仍须由 scope() 声明同一主题边界
      */
-    withTheme: (theme: NonNullable<IRScopeProps['theme']>) => LayoutCompositeCompileContext;
+    withTheme: (theme: NonNullable<IRScopeProps['theme']>) => CompositeCompileContext;
     /**
      * 从当前 composite Source occurrence 发出非致命编译 warning
      * @param code 开放的机器可读 warning code
@@ -200,54 +200,25 @@ export type LayoutCompositeCompileContext = CompositeRuntimeInputContext &
     ) => CompositeCompileChild;
   }>;
 
-/** 无布局 Composite 展开时可见的只读编译上下文 */
-export type CompositeExpandContext = CompositeRuntimeInputContext &
-  Readonly<{
-    /** 当前 composite 位置完整、只读的有效 Theme */
-    theme: ResolvedTheme;
-  }>;
-
-/** 无布局 Composite 的结构化展开结果 */
-export type CompositeExpandResult = Readonly<{
-  /** 继续进入 Core traversal 的普通 IR children */
-  children: ReadonlyArray<IRChild | CompositeBoundChild>;
-  /** 当前 composite allocation coordinate 中声明的局部空间区域 */
-  spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>;
-}>;
-
-/**
- * layout-aware composite 的最终输出
- * @template TArtifact 组件可返回的 JSON 产物类型，默认 never 禁止提供产物
- */
-export type LayoutCompositeCompileResult<TArtifact extends JsonValue = never> = Readonly<{
-  /** 普通 child 继续编译，opaque child 在当前 callback 的 runtime output tree 中解析 */
+/** 复合组件的编译输出 */
+export type CompositeCompileResult<TArtifact extends JsonValue = never> = Readonly<{
+  /** 普通 IR、绑定子项或当前回调创建的运行时输出 */
   children: ReadonlyArray<IRChild | CompositeCompileChild | CompositeBoundChild>;
-  /** composite 对父布局声明的 container allocation box；省略时由最终 children 合并 */
+  /** 当前组件局部坐标中的空间声明；输出含带位置或变换的普通 Scope 时改用 scope() 的局部声明 */
+  spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>;
+  /** 组件对父布局声明的布局占用；省略时合并最终子项 */
   allocationBounds?: Readonly<BoundsRect>;
-  /** composite 在自身局部 allocation coordinate 中显式声明、由 Core 校验并分离的 guides */
+  /** 当前组件局部坐标中的对齐线 */
   alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
 }> &
   ([TArtifact] extends [never] ? { artifact?: never } : { artifact?: TArtifact });
 
-type LayoutCompositeBranch<TNode, TArtifact extends JsonValue> = [TArtifact] extends [never]
-  ? {
-      expand?: never;
-      compile: (node: TNode, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<never>;
-      artifactSchema?: never;
-    }
-  : {
-      expand?: never;
-      compile: (node: TNode, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<TArtifact>;
-      artifactSchema: ZodType<TArtifact>;
-    };
-
 /**
- * Tier 2 composite 注册项
- * @description 精确描述单个 composite 的 schema，以及互斥的轻量 expand 或完整编译期 compile 分支
- * @template TNode schema 解析后传入组件执行回调的节点类型
- * @template TNamespace 复合组件注册命名空间的字面量类型
- * @template TType 复合组件注册类型的字面量类型
- * @template TArtifact 完整编译分支的 JSON 产物类型，默认 never 表示不声明产物
+ * 复合组件统一注册契约
+ * @template TNode 经 schema 解析的组件声明
+ * @template TNamespace 注册命名空间
+ * @template TType 注册类型
+ * @template TArtifact JSON 编译产物类型，默认不声明产物
  */
 export type CompositeDefinition<
   TNode,
@@ -255,78 +226,34 @@ export type CompositeDefinition<
   TType extends string = string,
   TArtifact extends JsonValue = never,
 > = {
-  /** composite IR 节点引用的 provider namespace */
+  /** 注册命名空间 */
   namespace: TNamespace;
-  /** composite IR 节点引用的 provider type */
+  /** 注册类型 */
   type: TType;
-  /** 完整节点 schema；单个对象或对象 union 的 namespace / type 必须是相同 literal */
+  /** 完整组件声明的 schema */
   schema: ZodType<TNode>;
+  /** 在完整编译上下文中生成子项，布局能力按需调用 */
+  compile: (node: TNode, context: CompositeCompileContext) => CompositeCompileResult<TArtifact>;
+} & ([TArtifact] extends [never] ? { artifactSchema?: never } : { artifactSchema: ZodType<TArtifact> });
+
+/** registry 与 adapter 使用的异构复合定义，调用前恢复节点类型关联 */
+export type AnyCompositeDefinition = {
+  /** 注册命名空间 */
+  namespace: string;
+  /** 注册类型 */
+  type: string;
+  /** 完整组件声明的 schema */
+  schema: ZodType;
 } & (
   | {
-      /** 把该 composite 节点按当前位置上下文展开为下一层 IR */
-      expand: (node: TNode, context: CompositeExpandContext) => CompositeExpandResult;
-      compile?: never;
-      artifactSchema?: never;
-    }
-  | LayoutCompositeBranch<TNode, TArtifact>
-);
-
-/** 精确描述单个轻量 expand composite definition */
-export type ExpandCompositeDefinition<
-  TNode,
-  TNamespace extends string = string,
-  TType extends string = string,
-> = Extract<CompositeDefinition<TNode, TNamespace, TType>, { expand: unknown }>;
-
-/** 精确描述单个 layout-aware composite definition */
-export type LayoutCompositeDefinition<
-  TNode,
-  TNamespace extends string = string,
-  TType extends string = string,
-  TArtifact extends JsonValue = never,
-> = Extract<CompositeDefinition<TNode, TNamespace, TType, TArtifact>, { compile: unknown }>;
-
-/** 异构 registry 中擦除后的轻量 expand composite */
-export type AnyExpandCompositeDefinition = {
-  /** 复合组件的注册命名空间 */
-  namespace: string;
-  /** 复合组件的注册类型 */
-  type: string;
-  /** 调用展开回调前校验完整节点的 schema */
-  schema: ZodType;
-  /** 将经 schema 校验的节点展开为下一层 IR；调用前需恢复节点类型关联 */
-  expand: (node: never, context: CompositeExpandContext) => CompositeExpandResult;
-  compile?: never;
-  artifactSchema?: never;
-};
-
-/** 异构 registry 中擦除后的 layout-aware composite */
-export type AnyLayoutCompositeDefinition =
-  | {
-      /** 复合组件的注册命名空间 */
-      namespace: string;
-      /** 复合组件的注册类型 */
-      type: string;
-      /** 调用编译回调前校验完整节点的 schema */
-      schema: ZodType;
-      expand?: never;
-      /** 在布局上下文中编译已校验节点；调用前需恢复节点类型关联 */
-      compile: (node: never, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<never>;
+      /** 生成当前组件的编译输出 */
+      compile: (node: never, context: CompositeCompileContext) => CompositeCompileResult<never>;
       artifactSchema?: never;
     }
   | {
-      /** 复合组件的注册命名空间 */
-      namespace: string;
-      /** 复合组件的注册类型 */
-      type: string;
-      /** 调用编译回调前校验完整节点的 schema */
-      schema: ZodType;
-      expand?: never;
-      /** 在布局上下文中编译已校验节点；调用前需恢复节点类型关联 */
-      compile: (node: never, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<JsonValue>;
-      /** 校验组件返回的 JSON 领域产物 */
+      /** 生成当前组件的编译输出与可选产物 */
+      compile: (node: never, context: CompositeCompileContext) => CompositeCompileResult<JsonValue>;
+      /** JSON 产物校验契约 */
       artifactSchema: ZodType<JsonValue>;
-    };
-
-/** registry、adapter 与 provider resolver 使用的安全异构 composite 容器 */
-export type AnyCompositeDefinition = AnyExpandCompositeDefinition | AnyLayoutCompositeDefinition;
+    }
+);

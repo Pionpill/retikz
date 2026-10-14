@@ -5,7 +5,7 @@ import type { NodeLayout } from '../../src/compile/node';
 import { boxInsets } from '../../src/compile/node';
 import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
 import { lowerScopeTransforms } from '../../src/compile/scope';
-import { projectLayoutToGlobal } from '../../src/compile/transform';
+import { composeScopeTransform, projectLayoutWithTransform } from '../../src/compile/transform';
 import type { Transform } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import type { PositionResolveContext } from '../../src/resolve/position';
@@ -275,8 +275,11 @@ describe('lowerScopeTransforms rotate / scale 透传', () => {
     expect(out).toEqual([{ kind: 'rotate', degrees: 15, cx: -7, cy: -2 }]);
   });
 
-  it('projectLayoutToGlobal 在负 scale 下保持 rect 尺寸为正数', () => {
-    const layout = projectLayoutToGlobal(layoutForProjection(), [{ kind: 'scale', x: -2, y: 3 }]);
+  it('projectLayoutWithTransform 在负 scale 下保持 rect 尺寸为正数', () => {
+    const layout = projectLayoutWithTransform(
+      layoutForProjection(),
+      composeScopeTransform([{ kind: 'scale', x: -2, y: 3 }]),
+    );
 
     expect(layout.geometry.rect.x).toBeCloseTo(-20, 6);
     expect(layout.geometry.rect.y).toBeCloseTo(60, 6);
@@ -285,8 +288,11 @@ describe('lowerScopeTransforms rotate / scale 透传', () => {
     expect(layout.geometry.margin).toEqual({ top: 6, right: 4, bottom: 6, left: 4 });
   });
 
-  it('projectLayoutToGlobal 应同步 rect.rotate 与 rotateDeg', () => {
-    const layout = projectLayoutToGlobal(layoutForProjection(), [{ kind: 'rotate', degrees: 45 }]);
+  it('projectLayoutWithTransform 应同步 rect.rotate 与 rotateDeg', () => {
+    const layout = projectLayoutWithTransform(
+      layoutForProjection(),
+      composeScopeTransform([{ kind: 'rotate', degrees: 45 }]),
+    );
 
     expect(layout.geometry.rect.rotate).toBeCloseTo(Math.PI / 4, 6);
     expect(((layout.geometry.rect.rotate ?? 0) * 180) / Math.PI).toBeCloseTo(45, 6);

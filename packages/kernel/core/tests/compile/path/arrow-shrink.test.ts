@@ -55,7 +55,7 @@ describe('applyArrowShrinks arc commands', () => {
 
     applyArrowShrinks(commands, { shrinkStart: 1, shrinkEnd: 0, strokeWidth: 1, round: identity });
 
-    expect(arcOf(commands).startAngle).toBeCloseTo(-(1 / 10) * (180 / Math.PI), 8);
+    expect(arcOf(commands).startAngle).toBeCloseTo(-2 * Math.asin(1 / 20) * (180 / Math.PI), 8);
   });
 
   it('显式 counterClockwise=false 把 90→0 对齐为 +270° 长弧', () => {
@@ -66,7 +66,7 @@ describe('applyArrowShrinks arc commands', () => {
 
     applyArrowShrinks(commands, { shrinkStart: 1, shrinkEnd: 0, strokeWidth: 1, round: identity });
 
-    expect(arcOf(commands).startAngle).toBeCloseTo(90 + (1 / 10) * (180 / Math.PI), 8);
+    expect(arcOf(commands).startAngle).toBeCloseTo(90 + 2 * Math.asin(1 / 20) * (180 / Math.PI), 8);
   });
 
   it.each([
@@ -80,7 +80,7 @@ describe('applyArrowShrinks arc commands', () => {
 
     applyArrowShrinks(commands, { shrinkStart: 1, shrinkEnd: 1, strokeWidth: 1, round: identity });
 
-    const delta = (1 / 10) * (180 / Math.PI);
+    const delta = 2 * Math.asin(1 / 20) * (180 / Math.PI);
     const arc = arcOf(commands);
 
     expect(arc.startAngle).toBeCloseTo(direction * delta, 8);

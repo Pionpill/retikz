@@ -345,7 +345,7 @@ export type IRFrame = Omit<ZodInput<typeof FrameSchema>, keyof IRScopeProps | 'c
 #### <ApiSourceLink label={"FrameDefinition"} path={"packages/library/standard/src/presentation/frame/composite.ts"} startLine={10}>FrameDefinition</ApiSourceLink>
 
 ```ts
-export const FrameDefinition: LayoutCompositeDefinition<IRFrame, typeof STANDARD_NAMESPACE, 'frame'> = defineComposite({
+export const FrameDefinition: CompositeDefinition<IRFrame, typeof STANDARD_NAMESPACE, 'frame'> = defineComposite({
   namespace: STANDARD_NAMESPACE,
   type: 'frame',
   schema: FrameSchema,

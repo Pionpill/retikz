@@ -2,7 +2,6 @@ export { formatCompileOccurrence, isNodeLayoutCompileArtifact } from './artifact
 export { compileToScene, observeCompileToScene } from './compile';
 export { CompileWarningCode } from './constants';
 export * from './incremental';
-export * from './lower';
 export { samplePathRoute } from './path';
 export { computeLayout } from './scene';
 export type {
@@ -27,10 +26,6 @@ export type {
   CompileResult,
   CompositeArtifactOf,
   CompositeCompileArtifact,
-  LoweredIRChild,
-  LoweredIRScene,
-  LoweredIRScope,
-  LowerIRToKernelOptions,
   NodeLayoutCompileArtifact,
   ObservedCompileResult,
 } from './types';

@@ -112,11 +112,11 @@ export const buildPositionScale = (
   }
 };
 
-/** cartesian x scale 类型：含 <IntervalMark> 或 <IntervalMark> → band；否则按 <BuiltinPlotScale dimension="x"> 或缺省 linear */
+/** cartesian x scale 类型：含 <IntervalMark> 或 <IntervalMark> → band；否则按 <PlotScale dimension="x"> 或缺省 linear */
 export const buildCartesianXScale = (forceBand: boolean, explicit: InputPlotScale | undefined): IRPlotScale => {
   if (forceBand && explicit !== undefined && explicit.type !== 'band') {
     throw new RetikzPlotVanillaError(
-      'buildPlotIR: <IntervalMark> (bar / heatmap) requires a band x scale; omit <BuiltinPlotScale dimension="x" /> or set type="band"',
+      'buildPlotIR: <IntervalMark> (bar / heatmap) requires a band x scale; omit <PlotScale dimension="x" /> or set type="band"',
     );
   }
 
@@ -125,11 +125,11 @@ export const buildCartesianXScale = (forceBand: boolean, explicit: InputPlotScal
   return buildPositionScale(AUTO_X, explicit?.type ?? 'linear', explicit);
 };
 
-/** cartesian y（值轴）scale 类型：含 <IntervalMark>（heatmap 双 band）→ band；否则按 <BuiltinPlotScale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
+/** cartesian y（值轴）scale 类型：含 <IntervalMark>（heatmap 双 band）→ band；否则按 <PlotScale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
 export const buildCartesianYScale = (hasRect: boolean, explicit: InputPlotScale | undefined): IRPlotScale => {
   if (hasRect && explicit !== undefined && explicit.type !== 'band') {
     throw new RetikzPlotVanillaError(
-      'buildPlotIR: <IntervalMark> (heatmap) requires a band y scale; omit <BuiltinPlotScale dimension="y" /> or set type="band"',
+      'buildPlotIR: <IntervalMark> (heatmap) requires a band y scale; omit <PlotScale dimension="y" /> or set type="band"',
     );
   }
 
@@ -145,13 +145,13 @@ export const buildCartesianYScale = (hasRect: boolean, explicit: InputPlotScale 
 export const buildAngleScale = (collected: Collected, explicit: InputPlotScale | undefined): IRPlotScale => {
   if (collected.hasBar && explicit !== undefined && explicit.type !== 'band') {
     throw new RetikzPlotVanillaError(
-      'buildPlotIR: <IntervalMark> in polar coordinates requires a band angle scale; omit <BuiltinPlotScale dimension="x" /> or set type="band"',
+      'buildPlotIR: <IntervalMark> in polar coordinates requires a band angle scale; omit <PlotScale dimension="x" /> or set type="band"',
     );
   }
 
   if (collected.hasSector && explicit !== undefined && explicit.type !== 'linear') {
     throw new RetikzPlotVanillaError(
-      'buildPlotIR: <IntervalMark angle> requires a linear angle scale; omit <BuiltinPlotScale dimension="angle" /> or use type="linear"',
+      'buildPlotIR: <IntervalMark angle> requires a linear angle scale; omit <PlotScale dimension="angle" /> or use type="linear"',
     );
   }
 

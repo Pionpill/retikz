@@ -127,7 +127,7 @@ describe('Table root spec schema', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       schema: TableSchema,
-      expand: () => ({ children: [{ type: 'scope', children: [] }] }),
+      compile: () => ({ children: [{ type: 'scope', children: [] }] }),
     });
 
     expect(definition.schema).toBe(TableSchema);

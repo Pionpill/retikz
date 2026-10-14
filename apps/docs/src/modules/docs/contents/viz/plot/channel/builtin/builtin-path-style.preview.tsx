@@ -1,5 +1,5 @@
 import { DataFieldType } from '@retikz/data';
-import { PathMark, Plot, PlotAxis, BuiltinPlotScale } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
 
 import { pathStyleRows } from './builtin-path-style.data';
 
@@ -36,8 +36,8 @@ export const BuiltinPathStylePreview = (
       width={440}
       height={280}
     >
-      <BuiltinPlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
-      <BuiltinPlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
+      <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
+      <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
       <PathMark
         x="step"
         y="value"

@@ -1,14 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
 
-import type {
-  IRChild,
-  IRPaint,
-  IRScene,
-  LayoutChildResult,
-  LayoutCompositeCompileContext,
-  LayoutProposal,
-} from '../../src';
+import type { IRChild, IRPaint, IRScene, LayoutChildResult, CompositeCompileContext, LayoutProposal } from '../../src';
 import {
   compileToScene,
   CompileWarningCode,
@@ -29,7 +22,7 @@ const scene = (children: IRScene['children']): IRScene => ({
 });
 
 const resolvedResultOf = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   child: IRChild,
   proposal: LayoutProposal = NaturalLayoutProposal,
 ): LayoutChildResult => {
@@ -392,7 +385,7 @@ describe('layout-aware composite transactions and artifacts', () => {
     ]);
   });
 
-  it('tracks expand-generated occurrences and rejects them in lowerIRToKernel separately', () => {
+  it('tracks nested artifacts through generated output occurrences', () => {
     const layout = defineComposite({
       namespace: 'test',
       type: 'layoutArtifact',
@@ -403,23 +396,23 @@ describe('layout-aware composite transactions and artifacts', () => {
       artifactSchema: strictObject({ ok: literal(true) }),
       compile: () => ({ children: [], artifact: { ok: true } }),
     });
-    const expand = defineComposite({
+    const wrapper = defineComposite({
       namespace: 'test',
-      type: 'expand',
+      type: 'wrapper',
       schema: CompositeBaseSchema.extend({
         namespace: literal('test'),
-        type: literal('expand'),
+        type: literal('wrapper'),
       }),
-      expand: () => ({ children: [{ namespace: 'test', type: 'layoutArtifact' }] }),
+      compile: () => ({ children: [{ namespace: 'test', type: 'layoutArtifact' }] }),
     });
 
-    const result = compileToScene(scene([{ namespace: 'test', type: 'expand' }]), {
-      composites: [expand, layout],
+    const result = compileToScene(scene([{ namespace: 'test', type: 'wrapper' }]), {
+      composites: [wrapper, layout],
     });
 
     expect(result.artifacts[0]?.occurrence).toEqual({
       sourcePath: 'children[0]',
-      expansionPath: [{ kind: 'expand', index: 0 }],
+      expansionPath: [{ kind: 'output', index: 0 }],
     });
   });
 
