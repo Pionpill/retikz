@@ -725,20 +725,19 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
         )
       : undefined;
 
-    const layout = computePolarCoordinate(
-      ctx.width,
-      ctx.height,
-      {
-        angularLabels:
-          angularAxis && angularAxis.tickLabels !== false
-            ? polarAngularLayoutLabelsOf(angleScale, layoutAngularTicks).map(label => ({
-                ...label,
-                node: { type: 'node' as const, ...guideTextSourceProps(angularAxis.tickLabels || {}) },
-              }))
-            : [],
-      },
-      { fontSize: ctx.fontSize, textMeasurer: ctx.textMeasurer, reserve: ctx.layoutReserve, margin: ctx.margin },
-    );
+    const layout = computePolarCoordinate({
+      size: { width: ctx.width, height: ctx.height },
+      angularLabels:
+        angularAxis && angularAxis.tickLabels !== false
+          ? polarAngularLayoutLabelsOf(angleScale, layoutAngularTicks).map(label => ({
+              ...label,
+              node: { type: 'node' as const, ...guideTextSourceProps(angularAxis.tickLabels || {}) },
+            }))
+          : [],
+      text: { fontSize: ctx.fontSize, measure: ctx.textMeasurer },
+      reserve: ctx.layoutReserve,
+      margin: ctx.margin,
+    });
 
     const innerRadiusUnits = coordinate.innerRadius * layout.outerRadius;
     const radiusScale = ctx.buildPositionScale(radiusScaleDef, radiusValues, [innerRadiusUnits, layout.outerRadius]);
@@ -836,20 +835,19 @@ const polar1DCoordinateDefinition: CoordinateDefinition<IRPlotPolar1DCoordinate>
         )
       : undefined;
 
-    const layout = computePolarCoordinate(
-      ctx.width,
-      ctx.height,
-      {
-        angularLabels:
-          angularAxis && angularAxis.tickLabels !== false
-            ? polarAngularLayoutLabelsOf(angleScale, visibleAngularTicks).map(label => ({
-                ...label,
-                node: { type: 'node' as const, ...guideTextSourceProps(angularAxis.tickLabels || {}) },
-              }))
-            : [],
-      },
-      { fontSize: ctx.fontSize, textMeasurer: ctx.textMeasurer, reserve: ctx.layoutReserve, margin: ctx.margin },
-    );
+    const layout = computePolarCoordinate({
+      size: { width: ctx.width, height: ctx.height },
+      angularLabels:
+        angularAxis && angularAxis.tickLabels !== false
+          ? polarAngularLayoutLabelsOf(angleScale, visibleAngularTicks).map(label => ({
+              ...label,
+              node: { type: 'node' as const, ...guideTextSourceProps(angularAxis.tickLabels || {}) },
+            }))
+          : [],
+      text: { fontSize: ctx.fontSize, measure: ctx.textMeasurer },
+      reserve: ctx.layoutReserve,
+      margin: ctx.margin,
+    });
 
     const radius = radiusFraction * layout.outerRadius;
     const continuousAngle = isContinuousAngleScale(angleScaleDef.type);

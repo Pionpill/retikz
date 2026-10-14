@@ -29,8 +29,7 @@ import {
   BuiltinPlotScale,
 } from '../../../schemas';
 import type { PlotLabelMeasure } from '../../../shared';
-import { computePlotArea, guideTextSourceProps } from '../../../shared';
-import { assertUniqueAxisPlacement } from '../shared';
+import { assertUniqueAxisPlacement, computePlotArea } from '../shared';
 
 type Cartesian2DCoordinate = Extract<IRPlotCoordinate, { type: typeof BuiltinPlotCoordinate.Cartesian2D }>;
 
@@ -142,11 +141,14 @@ const guideOverflowOf = (
 };
 
 /** 合并 composition/decorations 与 guide 反馈的额外留白 */
-const addMarginReserve = (base: Partial<BoundsInsets> | undefined, extra: BoundsInsets): BoundsInsets => ({
-  top: (base?.top ?? 0) + extra.top,
-  right: (base?.right ?? 0) + extra.right,
-  bottom: (base?.bottom ?? 0) + extra.bottom,
-  left: (base?.left ?? 0) + extra.left,
+const addMarginReserve = (
+  base: Partial<BoundsInsets> | undefined,
+  extra: Partial<BoundsInsets> | undefined,
+): BoundsInsets => ({
+  top: (base?.top ?? 0) + (extra?.top ?? 0),
+  right: (base?.right ?? 0) + (extra?.right ?? 0),
+  bottom: (base?.bottom ?? 0) + (extra?.bottom ?? 0),
+  left: (base?.left ?? 0) + (extra?.left ?? 0),
 });
 
 /** 仅连续数值 scale 的显式 range 会阻止坐标系把 range 收敛到 plotArea（自定义 type 无内置 range 语义、按可收敛处理） */
@@ -356,25 +358,16 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
     let guideReserve: BoundsInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 
     for (let pass = 0; pass < MAX_GUIDE_LAYOUT_PASSES; pass += 1) {
-      const computed = computePlotArea(
-        ctx.width,
-        ctx.height,
-        {
-          hasXAxis: !!xAxis,
-          hasYAxis: !!yAxis,
-          xLabels: layoutXTicks?.labels ?? [],
-          yLabels: layoutYTicks?.labels ?? [],
-          legendReserve: ctx.legendReserve,
-        },
-        {
-          fontSize: ctx.fontSize,
-          textMeasurer: ctx.textMeasurer,
-          xLabelNode: { type: 'node', ...guideTextSourceProps(xAxis?.tickLabels || {}) },
-          yLabelNode: { type: 'node', ...guideTextSourceProps(yAxis?.tickLabels || {}) },
-          reserve: addMarginReserve(ctx.layoutReserve, guideReserve),
-          margin: ctx.margin,
-        },
-      );
+      const computed = computePlotArea({
+        size: { width: ctx.width, height: ctx.height },
+        axes: ctx.axisGuides.map(guide => ({
+          guide,
+          ticks: (guide.dimension === 'x' ? layoutXTicks : layoutYTicks) ?? EMPTY_TICKS,
+        })),
+        text: { fontSize: ctx.fontSize, measure: ctx.textMeasurer },
+        reserve: addMarginReserve(ctx.legendReserve, addMarginReserve(ctx.layoutReserve, guideReserve)),
+        margin: ctx.margin,
+      });
       plotArea = ctx.plotAreaOverride ?? computed.plotArea;
 
       if (!hasExplicitContinuousRange(xScaleDef)) xScale.setRange([plotArea.x, plotArea.x + plotArea.width]);
@@ -461,18 +454,21 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<IRPlotCartesian1DCoo
     const layoutTicks = axis
       ? ctx.resolveVisibleGuideTicks(ticks ?? EMPTY_TICKS, axis.ticks, value => scale.coordinate(value))
       : undefined;
-    const computed = computePlotArea(
-      ctx.width,
-      ctx.height,
-      {
-        hasXAxis: horizontal ? !!axis : false,
-        hasYAxis: horizontal ? false : !!axis,
-        xLabels: horizontal ? (layoutTicks?.labels ?? []) : [],
-        yLabels: horizontal ? [] : (layoutTicks?.labels ?? []),
-        legendReserve: ctx.legendReserve,
-      },
-      { fontSize: ctx.fontSize, textMeasurer: ctx.textMeasurer, reserve: ctx.layoutReserve, margin: ctx.margin },
-    );
+    const computed = computePlotArea({
+      size: { width: ctx.width, height: ctx.height },
+      // 一维轴按屏幕方向参与基础占位，保留其使用缺省标签样式的测量语义
+      axes: axis
+        ? [
+            {
+              guide: { ...axis, dimension: horizontal ? 'x' : 'y', tickLabels: undefined },
+              ticks: layoutTicks ?? EMPTY_TICKS,
+            },
+          ]
+        : [],
+      text: { fontSize: ctx.fontSize, measure: ctx.textMeasurer },
+      reserve: addMarginReserve(ctx.legendReserve, ctx.layoutReserve),
+      margin: ctx.margin,
+    });
     const plotArea = ctx.plotAreaOverride ?? computed.plotArea;
     if (horizontal) scale.setRange([plotArea.x, plotArea.x + plotArea.width]);
     else scale.setRange([plotArea.y + plotArea.height, plotArea.y]);
