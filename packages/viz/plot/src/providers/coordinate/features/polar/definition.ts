@@ -11,19 +11,20 @@ import type {
   PolarCoordinateFrame,
   PositionScale,
   TickSet,
-} from '../../../contract';
-import { cellInterval, PositionScaleContinuity, RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../contract';
-import { RetikzPlotError } from '../../../error';
-import type { IRPlotCoordinate, IRPlotPolar1DCoordinate } from '../../../schemas';
+} from '../../../../contract';
+import { cellInterval, PositionScaleContinuity, RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../../contract';
+import { RetikzPlotError } from '../../../../error';
+import type { IRPlotCoordinate, IRPlotPolar1DCoordinate } from '../../../../schemas';
 import {
   BuiltinPlotCoordinate,
   BuiltinPlotScale,
   Polar1DSchema,
   Polar2DSchema,
   PolarInterpolation,
-} from '../../../schemas';
-import { computePolarCoordinate, guideTextSourceProps } from '../../../shared';
-import { assertUniqueAxisPlacement } from '../shared';
+} from '../../../../schemas';
+import { guideTextSourceProps } from '../../../../shared';
+import { assertUniqueAxisPlacement } from '../../shared';
+import { computePolarCoordinate } from './layout';
 
 type Polar2DCoordinate = Extract<IRPlotCoordinate, { type: typeof BuiltinPlotCoordinate.Polar2D }>;
 

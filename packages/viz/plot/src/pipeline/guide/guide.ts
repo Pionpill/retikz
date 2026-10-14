@@ -17,7 +17,7 @@ import type {
 import type { ProvenanceContext } from '../../contract';
 import { guideLayerId, guideLayerMeta } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import { defaultOriginAxisTickSideOf, polarFixedRadiusSteps } from '../../providers';
+import { defaultOriginAxisTickSideOf, layoutPolarAngularLabel, polarFixedRadiusSteps } from '../../providers';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
 import type { EffectiveLegendGuideTokens } from '../../resolve/theme';
 import type { IRPlotAxisGuide, LegendChannelValue, LegendOrient, LegendPosition } from '../../schemas';
@@ -39,12 +39,7 @@ import {
   PlotLayerZIndex,
 } from '../../schemas';
 import type { GuideTextStyle, PlotLabelMeasure } from '../../shared';
-import {
-  DEFAULT_AXIS_LABEL_GAP,
-  DEFAULT_AXIS_TICK_LENGTH,
-  guideTextSourceProps,
-  layoutPolarAngularLabel,
-} from '../../shared';
+import { DEFAULT_AXIS_LABEL_GAP, DEFAULT_AXIS_TICK_LENGTH, guideTextSourceProps } from '../../shared';
 
 /** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 `@retikz/math` 的 pointAtArcAngle */
 const DEG_TO_RAD = Math.PI / 180;
