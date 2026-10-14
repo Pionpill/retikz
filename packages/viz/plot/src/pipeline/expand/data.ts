@@ -5,7 +5,6 @@ import type {
   ExternalDatasets,
   ExternalRow,
   TransformContext,
-  IRDataTransformDeclaration,
 } from '@retikz/data';
 import {
   applyFieldResolver,
@@ -43,12 +42,12 @@ export const applyMarkTransforms = (
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,
   transformContext: TransformContext,
 ): DataView => {
-  const transform = (mark as { transform?: Array<IRDataTransformDeclaration> }).transform;
-  if (transform === undefined) return dataView;
+  const transformDeclarations = mark.transform;
+  if (transformDeclarations === undefined) return dataView;
 
   return applyTransformsToDataView(
     dataView,
-    transform.map(declaration => declaration.operation),
+    transformDeclarations.map(declaration => declaration.operation),
     { registry: transformRegistry, context: transformContext },
   ).dataView;
 };
