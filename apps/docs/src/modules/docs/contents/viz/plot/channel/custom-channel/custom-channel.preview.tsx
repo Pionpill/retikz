@@ -1,4 +1,4 @@
-import { Plot, PlotAxis, PlotLegend, PointMark, BuiltinPlotScale } from '@retikz/plot-react';
+import { Plot, PlotAxis, PlotLegend, PointMark, PlotScale } from '@retikz/plot-react';
 
 import { customChannelPoints } from './custom-channel.data';
 import { intensityChannel } from './custom-channel.definition';
@@ -14,8 +14,8 @@ export type CustomChannelPreviewValues = {
 /** 绘制示例图形 */
 export const CustomChannelPreview = (values: CustomChannelPreviewValues) => (
   <Plot data={customChannelPoints} channelDefinitions={[intensityChannel]} width={values.width ?? 440} height={220}>
-    <BuiltinPlotScale dimension="x" type="linear" domainPadding={16} />
-    <BuiltinPlotScale dimension="y" type="linear" domainPadding={16} />
+    <PlotScale dimension="x" type="linear" domainPadding={16} />
+    <PlotScale dimension="y" type="linear" domainPadding={16} />
     <PointMark
       x="x"
       y="y"

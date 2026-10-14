@@ -1,5 +1,5 @@
 import { DataFieldType } from '@retikz/data';
-import { Plot, PlotAxis, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
 
 import { positionRows } from './builtin-position.data';
 
@@ -33,10 +33,10 @@ export const BuiltinPositionPreview = (
     height={260}
   >
     {values.xField !== 'month' ? (
-      <BuiltinPlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+      <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
     ) : null}
     {values.yField !== 'month' ? (
-      <BuiltinPlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+      <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
     ) : null}
     <PointMark x={values.xField} y={values.yField} size={8} fill="#2563eb" />
     <PlotAxis dimension="x" />

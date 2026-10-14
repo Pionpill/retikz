@@ -7,6 +7,7 @@ import { lowerPlots } from '../../src/pipeline/expand';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
+import { measureLabel } from '../helpers/text-measurement';
 
 // contract：plot 可被组合 —— 自描述尺寸（L1-a）+ 外部可见面板 anchor（L1-b）
 
@@ -30,7 +31,7 @@ const pointSpec = (extra: Record<string, unknown> = {}): IRPlot =>
   });
 
 const expandOf = (spec: IRPlot, options?: LowerPlotsOptions): IRScope => {
-  return lowerPlot(spec, { sales: SALES }, options) as IRScope;
+  return lowerPlot(spec, { sales: SALES }, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
 const nodeWidth = (node: IRNode): number => {

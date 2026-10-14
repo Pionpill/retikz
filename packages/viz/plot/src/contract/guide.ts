@@ -1,7 +1,8 @@
 import type { IRScope } from '@retikz/core';
+import type { BoundsRect } from '@retikz/math';
 
 import type { IRPlotAxisGuide } from '../schemas';
-import type { Rect } from '../shared';
+import type { PlotLabelMeasure } from '../shared';
 import type { PolarCoordinateFrame } from './coordinate';
 import type { ProvenanceContext } from './provenance';
 import type { PositionScale, TickSet } from './scale';
@@ -12,8 +13,10 @@ import type { PositionScale, TickSet } from './scale';
  *   该类型只描述 coordinate provider 与 pipeline guide lowering 之间的协议，不承载具体下沉实现
  */
 export type GuideContext = {
+  /** 当前 Core 编译环境的标签测量 */
+  textMeasurer: PlotLabelMeasure;
   /** 缩进后的绘图区矩形（cartesian 轴线 / 网格框） */
-  plotArea: Rect;
+  plotArea: BoundsRect;
   /** x 维位置 scale（值 -> 像素 x，含 band 中心；cartesian 用） */
   projectX: PositionScale;
   /** y 维位置 scale（值 -> 像素 y；cartesian 用） */
@@ -22,7 +25,7 @@ export type GuideContext = {
   xTicks: TickSet;
   /** y 轴刻度集（cartesian 用） */
   yTicks: TickSet;
-  /** label 字号（与 layout 估算同源） */
+  /** label 字号（与 layout 测量同源） */
   fontSize: number;
   /** axis title / composition label 与 axis 的固定间距；省略时复用默认 axis label gap */
   labelGap?: number;

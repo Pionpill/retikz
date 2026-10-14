@@ -1,4 +1,4 @@
-import { IntervalMark, PathMark, Plot, PlotAxis, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
+import { IntervalMark, PathMark, Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
 
 import { coordinate2DRows } from './coordinate-2d.data';
 
@@ -25,7 +25,7 @@ export const renderCoordinateCartesian = (values: CoordinateCartesianValues) => 
       left: values.marginLeft,
     }}
   >
-    <BuiltinPlotScale dimension="y" type="linear" domainPadding={0} />
+    <PlotScale dimension="y" type="linear" domainPadding={0} />
     {values.markType === 'point' ? (
       <PointMark x="category" y="value" />
     ) : values.markType === 'line' ? (

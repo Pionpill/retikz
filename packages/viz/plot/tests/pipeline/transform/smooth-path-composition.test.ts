@@ -6,6 +6,7 @@ import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { measureLabel } from '../../helpers/text-measurement';
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
@@ -14,7 +15,7 @@ const expandOf = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   options?: LowerPlotsOptions,
 ): IRScope => {
-  return lowerPlot(spec, datasets, options) as IRScope;
+  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
 describe('smooth path composition (contract)', () => {
@@ -151,6 +152,7 @@ describe('smooth path composition (contract)', () => {
         ],
       },
       {
+        environment: {},
         width: 480,
         height: 300,
         lineage: { rowValues: { maxRows: 10, fields: ['trendX', 'trendY'] } },
@@ -219,12 +221,12 @@ describe('smooth path composition (contract)', () => {
     const cartesian = lowerPlotWithLineage(
       specOf({ type: 'cartesian2D', x: 'xScale', y: 'yScale' }),
       { coordinateRows },
-      options,
+      { ...options, environment: {} },
     );
     const polar = lowerPlotWithLineage(
       specOf({ type: 'polar2D', angle: 'xScale', radius: 'yScale' }),
       { coordinateRows },
-      options,
+      { ...options, environment: {} },
     );
 
     expect(cartesian.lineage.marks[0]?.rowValues).toEqual([

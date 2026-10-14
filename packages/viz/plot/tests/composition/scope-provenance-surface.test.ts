@@ -5,6 +5,7 @@ import { createPlotLocator } from '../../src';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
+import { measureLabel } from '../helpers/text-measurement';
 
 const weatherRows = [
   { region: 'north', day: 0, temperature: 10, rainfall: 100 },
@@ -100,12 +101,7 @@ const expandOf = (spec: IRPlot): IRScope => {
   return lowerPlot(
     spec,
     { weather: weatherRows },
-    {
-      width: 480,
-      height: 300,
-      provenance: true,
-      datumProvenance: true,
-    },
+    { textMeasurer: measureLabel, width: 480, height: 300, provenance: true, datumProvenance: true },
   ) as IRScope;
 };
 
@@ -192,7 +188,11 @@ describe('scope provenance surface lowering', () => {
 
 describe('scope provenance surface locator', () => {
   it('locator_by_coordinate_view_disambiguates_same_index', () => {
-    const locator = createPlotLocator(parsePlotIR(overlaySpec), { weather: weatherRows }, { width: 480, height: 300 });
+    const locator = createPlotLocator(
+      parsePlotIR(overlaySpec),
+      { weather: weatherRows },
+      { environment: {}, width: 480, height: 300 },
+    );
     const temp = locator.datum(0, { coordinateView: 'temp' });
     const rain = locator.datum(0, { coordinateView: 'rain' });
 
@@ -202,7 +202,11 @@ describe('scope provenance surface locator', () => {
   });
 
   it('locator_by_facet_key_disambiguates_panel', () => {
-    const locator = createPlotLocator(parsePlotIR(facetSpec), { weather: weatherRows }, { width: 480, height: 300 });
+    const locator = createPlotLocator(
+      parsePlotIR(facetSpec),
+      { weather: weatherRows },
+      { environment: {}, width: 480, height: 300 },
+    );
     const north = locator.datum(0, { facet: { id: 'region', column: 'north' } });
     const south = locator.datum(0, { facet: { id: 'region', column: 'south' } });
 
@@ -212,14 +216,22 @@ describe('scope provenance surface locator', () => {
   });
 
   it('locator_by_track_returns_track_context', () => {
-    const locator = createPlotLocator(parsePlotIR(trackSpec), { weather: weatherRows }, { width: 480, height: 300 });
+    const locator = createPlotLocator(
+      parsePlotIR(trackSpec),
+      { weather: weatherRows },
+      { environment: {}, width: 480, height: 300 },
+    );
     const rain = locator.datum(0, { track: 'rain' });
 
     expect(rain?.meta).toMatchObject({ coordinateView: 'rain', arrangement: 'lanes', track: 'rain' });
   });
 
   it('root_and_view_addresses_resolve', () => {
-    const locator = createPlotLocator(parsePlotIR(overlaySpec), { weather: weatherRows }, { width: 480, height: 300 });
+    const locator = createPlotLocator(
+      parsePlotIR(overlaySpec),
+      { weather: weatherRows },
+      { environment: {}, width: 480, height: 300 },
+    );
 
     expect(locator.resolve('weather.datum.0')?.meta.transformedIndex).toBe(0);
     expect(locator.resolve('weather.view.rain.datum.0')?.meta.coordinateView).toBe('rain');
@@ -227,7 +239,11 @@ describe('scope provenance surface locator', () => {
   });
 
   it('unknown_view_or_invalid_facet_returns_null', () => {
-    const locator = createPlotLocator(parsePlotIR(facetSpec), { weather: weatherRows }, { width: 480, height: 300 });
+    const locator = createPlotLocator(
+      parsePlotIR(facetSpec),
+      { weather: weatherRows },
+      { environment: {}, width: 480, height: 300 },
+    );
 
     expect(locator.datum(0, { coordinateView: 'missing' })).toBeNull();
     expect(locator.datum(0, { facet: { id: 'region', column: 'west' } })).toBeNull();

@@ -5,3 +5,5 @@ export type { LowerPlotsOptions } from './expand/types';
 export type { PlotLineageLowerOptions } from './lineage';
 export { createPlotLineageLocator, lowerPlotWithLineage } from './lineage';
 export { createPlotLocator } from './locator';
+
+export type { PlotCompileEnvironment, PlotStandaloneOptions } from './expand/standalone';

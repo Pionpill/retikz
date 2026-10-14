@@ -7,6 +7,7 @@ import { lowerPlots } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { measureLabel } from '../../helpers/text-measurement';
 
 /** 正方形画布 → outerRadius = min(w,h)/2 = 200、center = [200,200]（无角向轴 → margin 0） */
 const opts: LowerPlotsOptions = { width: 400, height: 400 };
@@ -16,7 +17,7 @@ const expandOf = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = opts,
 ): IRScope => {
-  return lowerPlot(spec, datasets, options) as IRScope;
+  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
 /** 取第一个 mark 图层 scope */

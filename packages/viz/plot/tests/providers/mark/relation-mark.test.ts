@@ -9,6 +9,7 @@ import { createPolarCoordinate, lowerMark as lowerMarkDefinition, resolveMarkReg
 import { resolveMarkOperation } from '../../../src/resolve/mark';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema, PolarInterpolation } from '../../../src/schemas';
+import { measureLabel } from '../../helpers/text-measurement';
 
 const opts: LowerPlotsOptions = { width: 200, height: 100 };
 
@@ -57,7 +58,7 @@ const expandOf = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = opts,
 ): IRScope => {
-  return lowerPlot(spec, datasets, options) as IRScope;
+  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
 const markLayer = (root: IRScope, index: number): IRScope => root.children[index] as IRScope;

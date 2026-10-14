@@ -9,6 +9,7 @@ import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { measureLabel } from '../../helpers/text-measurement';
 
 /**
  * 自定义坐标系（custom coordinate）lowering 测试。
@@ -19,7 +20,7 @@ import { PlotSchema } from '../../../src/schemas';
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
-  return lowerPlot(spec, datasets, options) as IRScope;
+  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
 const firstLayer = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>

@@ -1,4 +1,4 @@
-import { BuiltinPlotScale, PathMark, Plot, PlotAxis, PointMark } from '@retikz/plot-react';
+import { PlotScale, PathMark, Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -59,8 +59,8 @@ export const RegressionPreview: FC<RegressionPreviewProps> = props => {
   ];
   return (
     <Plot data={plotRows} width={420} height={260}>
-      <BuiltinPlotScale dimension="x" type="linear" domain={[0, 10]} />
-      <BuiltinPlotScale dimension="y" type="linear" domain={[-8, 45]} />
+      <PlotScale dimension="x" type="linear" domain={[0, 10]} />
+      <PlotScale dimension="y" type="linear" domain={[-8, 45]} />
       <PointMark x="x" y="y" fill="gray" size={5} />
       <PathMark x="trendX" y="trendY" order="trendX" connectNulls stroke="dodgerblue" strokeWidth={2} />
       <PointMark x="trendX" y="trendY" fill="white" stroke="dodgerblue" size={2.5} />

@@ -22,7 +22,8 @@ import { isBuiltinMark, BuiltinPlotMark } from '../../schemas';
 import { DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
 import type { LowerPlotsOptions, MarkDataView } from '../expand';
 import type { PlotDataArtifactLowerResult } from '../expand/lower';
-import { lowerPlotWithDataArtifact } from '../expand/lower';
+import type { PlotStandaloneOptions } from '../expand/standalone';
+import { lowerStandalonePlot } from '../expand/standalone';
 
 type PlotFacetLocatorValue = Exclude<PlotFacetLocatorOptions['row'], undefined>;
 
@@ -438,7 +439,7 @@ export const buildPlotLocatorFromDataArtifact = (
 export const createPlotLocator = (
   spec: IRPlot,
   datasets: ExternalDatasets,
-  options: LowerPlotsOptions = {},
+  options: PlotStandaloneOptions,
 ): PlotLocator => {
   const width = options.width ?? DEFAULT_PLOT_WIDTH;
   const height = options.height ?? DEFAULT_PLOT_HEIGHT;
@@ -454,7 +455,7 @@ export const createPlotLocator = (
     };
   }
 
-  const lowered = lowerPlotWithDataArtifact(spec, datasets, {
+  const lowered = lowerStandalonePlot(spec, datasets, {
     ...options,
     width,
     height,

@@ -5,6 +5,7 @@ import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { measureLabel } from '../../helpers/text-measurement';
 
 /**
  * Text mark / datum label 下沉契约测试。
@@ -24,7 +25,7 @@ const expandOf = (
   datasets: Datasets,
   options: LowerPlotsOptions = { width: WIDTH, height: HEIGHT },
 ): IRScope => {
-  return lowerPlot(spec, datasets, options) as IRScope;
+  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
 /** 收集 scope 树内所有 node */

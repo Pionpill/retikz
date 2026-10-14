@@ -124,7 +124,7 @@ export const previewControlContract = {
     'PathMark.closed',
     'PathMark.closure',
     'PathMark.fill',
-    'BuiltinPlotScale.padding',
-    'BuiltinPlotScale.domainPadding',
+    'PlotScale.padding',
+    'PlotScale.domainPadding',
   ],
 } satisfies PreviewControlContract;

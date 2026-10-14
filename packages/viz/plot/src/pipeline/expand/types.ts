@@ -8,6 +8,7 @@ import type {
   FieldOrderDefinition,
   ResolveField,
 } from '@retikz/data';
+import type { BoundsInsets } from '@retikz/math';
 
 import type {
   AnchorIdGenerator,
@@ -19,7 +20,7 @@ import type {
   PlotThemeStyleDefinition,
   ResolveLabel,
 } from '../../contract';
-import type { Margins } from '../../shared';
+import type { PlotLabelMeasure } from '../../shared';
 
 export type { CoordinateFrameResolution, MarkDataView } from '../../resolve/coordinate';
 
@@ -33,10 +34,10 @@ export type LowerPlotsOptions = {
   width?: number;
   /** 整图高（user units），默认 300 */
   height?: number;
-  /** label 字号（估算占位 + 实绘 label 共用），默认 DEFAULT_FONT_SIZE */
+  /** label 字号（测量占位 + 实绘 label 共用），默认 DEFAULT_FONT_SIZE */
   fontSize?: number;
-  /** 逐边覆盖自动估算的 margin */
-  margin?: Partial<Margins>;
+  /** 逐边覆盖自动测量的 margin */
+  margin?: Partial<BoundsInsets>;
   /** 总开关：开启才写 layer/series meta + 合成 `<plotId>.` 内部 id；默认 false 时不写 provenance id/meta */
   provenance?: boolean;
   /** 每个 datum Node 写 per-datum 来源 meta（hit-test；O(rows) 增量，蕴含需 provenance 开），默认 false */
@@ -104,4 +105,10 @@ export type LowerPlotsOptions = {
   positionAdjustmentDefinitions?: ReadonlyArray<AnyPositionAdjustmentDefinition>;
   /** 自定义字段格式 definitions；definition 提供蕴含类型与 canonical parser */
   formatDefinitions?: Array<FieldFormatDefinition>;
+};
+
+/** 本次下沉使用的布局环境，不写入 Plot IR */
+export type PlotLayoutOptions = LowerPlotsOptions & {
+  /** 当前 Core 编译环境的文字测量 */
+  textMeasurer: PlotLabelMeasure;
 };
