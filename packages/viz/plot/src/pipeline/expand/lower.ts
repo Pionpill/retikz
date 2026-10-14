@@ -37,6 +37,7 @@ import {
   makeColorSchemeResolver,
   resolveChannelRegistry,
 } from '../../providers';
+import { resolvePlotDataExecution } from '../../resolve';
 import type { ChannelResolveContext } from '../../resolve/channel';
 import { resolveMarkChannels } from '../../resolve/channel';
 import type {
@@ -349,9 +350,13 @@ export const lowerPlotWithDataArtifact = (
   }
 
   if (preparedData === undefined) {
-    for (const declaration of [...(node.transform ?? []), ...node.marks.flatMap(plotMarkTransformsOf)]) {
-      if (resolveDataExecution(undefined, node.dataExecution, declaration.dataExecution).mode !== 'builtin')
-        throw new RetikzPlotError('Plot external/hybrid transforms require the async preparation entry');
+    for (const scope of ['root', 'marks'] as const) {
+      const declarations = scope === 'root' ? (node.transform ?? []) : node.marks.flatMap(plotMarkTransformsOf);
+      const execution = resolvePlotDataExecution(node.dataExecution, scope);
+      for (const declaration of declarations) {
+        if (resolveDataExecution(undefined, execution, declaration.dataExecution).mode !== 'builtin')
+          throw new RetikzPlotError('Plot external/hybrid transforms require the async preparation entry');
+      }
     }
   } else if (preparedData.marks.length !== node.marks.length) {
     throw new RetikzPlotError('Plot prepared mark scopes do not match the current source');

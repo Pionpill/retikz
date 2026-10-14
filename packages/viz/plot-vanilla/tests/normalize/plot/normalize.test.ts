@@ -4,6 +4,17 @@ import { describe, expect, it } from 'vitest';
 import { normalizePlot, normalizePlotDeclarations } from '../../../src';
 
 describe('normalizePlot', () => {
+  it('保留独立的 root 与 marks 数据执行配置', () => {
+    const spec = normalizePlot({
+      data: { reference: 'rows' },
+      coordinate: { type: 'cartesian2D' },
+      dataExecution: { root: { mode: 'hybrid', external: 'sql' }, marks: { mode: 'builtin' } },
+      scales: [],
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+    });
+    expect(spec.dataExecution).toEqual({ root: { mode: 'hybrid', external: 'sql' }, marks: { mode: 'builtin' } });
+    expect(PlotSchema.parse(spec).dataExecution).toEqual(spec.dataExecution);
+  });
   it('保持 Polar Source 稀疏并保留显式零值', () => {
     const source = normalizePlot({
       data: { reference: 'polar' },

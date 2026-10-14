@@ -9,7 +9,7 @@ The Plot runtime separates how a chart is authored from how it executes. React, 
 
 ## Async data preparation and SSR
 
-Root and mark-local `transform` contain `{ operation, dataExecution? }` declarations. Root `dataExecution` overrides executor defaults; declaration settings take highest priority. The final default is builtin. See [Data execution](/viz/data/transform/extensions).
+Root and mark-local `transform` contain `{ operation, dataExecution? }` declarations. Root `dataExecution` accepts a shared policy or independent `{ root, marks }` policies. Facet marks use the marks policy. The selected policy overrides executor defaults; each declaration overrides its own scope. The final default is builtin. See [Data execution](/viz/data/transform/extensions).
 
 Standalone React Plot clients prepare asynchronously. Embedded Plot uses `runtime={{ preparation: 'async' }}` on the outer Layout. The shared host preflights the complete author tree plus root, mark and facet templates before execution and publication. Failures preserve the previous frame; cancellation and stale results never publish. Layout probes consume prepared results without recomputation.
 

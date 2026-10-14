@@ -15,6 +15,23 @@ Exactly one of `coordinate` and `composition` must be present. Scale names, view
 
 Theme inputs resolve in this order: the Plot preset and Axis rules selected by the Core effective Theme → Chart-forwarded defaults → local `defaultPlot` and `plotRules` → local guide / mark / scale configuration. See the [theme contract](/viz/plot/reference/theme) for the Source-shaped defaults and cascade.
 
+## PlotDataExecutionSchema
+
+<ZodSchema name="PlotDataExecutionSchema" />
+
+`dataExecution` accepts one shared policy or a `{ root, marks }` object. `root` applies to the root transform pipeline; `marks` applies to every mark-local pipeline, including marks in facets. Both groups are required and may be empty objects. Top-level `mode` / `external` cannot be mixed with the groups.
+
+```json
+{
+  "dataExecution": {
+    "root": { "mode": "hybrid", "external": "sql" },
+    "marks": { "mode": "builtin" }
+  }
+}
+```
+
+Neither group inherits from the other. Each declaration overrides its selected group; omitted fields inherit executor defaults, with builtin as the final mode default. The shared form `{ mode: 'hybrid', external: 'sql' }` applies to both groups. React root props, Vanilla inputs and IR use the same structure. See the [runtime contract](/viz/plot/reference/runtime) for entry-point restrictions.
+
 ## CoordinateCompositionSchema
 
 <ZodSchema name="CoordinateCompositionSchema" />
