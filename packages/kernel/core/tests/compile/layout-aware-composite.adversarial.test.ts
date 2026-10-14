@@ -13,7 +13,7 @@ import type {
   IRScene,
   LayoutChildFailure,
   LayoutChildResult,
-  LayoutCompositeCompileContext,
+  CompositeCompileContext,
   LayoutProposal,
   LowerTex,
   MarkerPrimitive,
@@ -37,7 +37,6 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
-  lowerIRToKernel,
   NaturalLayoutProposal,
   PathSchema,
 } from '../../src';
@@ -73,7 +72,7 @@ const sceneOf = (...children: Array<IRChild>): IRScene => ({
 });
 
 const resolvedResultOf = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   child: IRChild,
   proposal: LayoutProposal = NaturalLayoutProposal,
 ): LayoutChildResult => {
@@ -1501,7 +1500,7 @@ describe('layout-aware composite constraints and bounds', () => {
         namespace: literal('test'),
         type: literal('singleRectangleExpand'),
       }),
-      expand: () => ({
+      compile: () => ({
         children: [
           {
             type: 'path',
@@ -1530,7 +1529,7 @@ describe('layout-aware composite constraints and bounds', () => {
   });
 
   it.each([{ variant: 'invalidChild' as const }, { variant: 'hostileArray' as const }])(
-    'does not downgrade $variant expand output to a failed probe',
+    'does not downgrade $variant composite output to a failed probe',
     ({ variant }) => {
       const expanded = defineComposite({
         namespace: 'test',
@@ -1539,7 +1538,7 @@ describe('layout-aware composite constraints and bounds', () => {
           namespace: literal('test'),
           type: literal(`malformedExpand${variant}`),
         }),
-        expand: () =>
+        compile: () =>
           variant === 'invalidChild'
             ? ({ children: [{ type: 'bogus' } as IRChild] } as never)
             : ({
@@ -1547,7 +1546,7 @@ describe('layout-aware composite constraints and bounds', () => {
                   [{ type: 'coordinate' as const, id: 'point', position: [0, 0] as [number, number] }],
                   {
                     get: (target, property, receiver) => {
-                      if (property === 'map') throw new Error('hostile expand output iteration');
+                      if (property === '0') throw new Error('hostile composite output access');
                       return Reflect.get(target, property, receiver);
                     },
                   },
@@ -3405,7 +3404,7 @@ describe('layout-aware composite replay ownership', () => {
         namespace: literal('test'),
         type: literal('multipleRoots'),
       }),
-      expand: () => ({
+      compile: () => ({
         children: [
           {
             type: 'path' as const,
@@ -3737,32 +3736,5 @@ describe('layout-aware composite artifacts and lowering errors', () => {
     for (const value of values) {
       expect(() => cloneAndFreezeJson(value)).toThrow();
     }
-  });
-
-  it('rejects a layout-aware composite produced by an expand branch', () => {
-    const layout = defineComposite({
-      namespace: 'test',
-      type: 'layoutOnly',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('layoutOnly'),
-      }),
-      compile: () => ({ children: [] }),
-    });
-    const expand = defineComposite({
-      namespace: 'test',
-      type: 'expandToLayout',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('expandToLayout'),
-      }),
-      expand: () => ({ children: [{ namespace: 'test', type: 'layoutOnly' }] }),
-    });
-
-    expect(() =>
-      lowerIRToKernel(sceneOf({ namespace: 'test', type: 'expandToLayout' }), {
-        composites: [expand, layout],
-      }),
-    ).toThrow(/test\.layoutOnly.*children\[0\].*full compile environment/i);
   });
 });

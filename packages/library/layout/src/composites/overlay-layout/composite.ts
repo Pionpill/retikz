@@ -1,4 +1,4 @@
-import type { CompositeArtifactOf, LayoutCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
+import type { CompositeArtifactOf, CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
 
 import { LAYOUT_NAMESPACE } from '../../shared';
@@ -7,7 +7,7 @@ import { OverlayLayoutArtifactSchema, OverlayLayoutSchema } from './schema';
 import type { IROverlayLayout, OverlayLayoutArtifact, OverlayLayoutInput } from './types';
 
 /** Layout OverlayLayout 的官方 Core layout-aware composite definition */
-export const OverlayLayoutDefinition: LayoutCompositeDefinition<
+export const OverlayLayoutDefinition: CompositeDefinition<
   IROverlayLayout,
   typeof LAYOUT_NAMESPACE,
   'overlayLayout',

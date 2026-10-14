@@ -4,8 +4,8 @@ import type {
   IRNode,
   IRPath,
   LayoutChildResult,
-  LayoutCompositeCompileContext,
-  LayoutCompositeCompileResult,
+  CompositeCompileContext,
+  CompositeCompileResult,
 } from '@retikz/core';
 import { NaturalLayoutProposal } from '@retikz/core';
 import { requiredLayoutProbe } from '@retikz/layout/compose';
@@ -74,7 +74,7 @@ const unionBounds = (left: BoundsRect, right: BoundsRect): BoundsRect => {
 
 /** 将 probe 结果的指定 anchor 放到目标点，并创建一次性 replay */
 const placeChild = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   result: LayoutChildResult,
   target: Readonly<{ x: number; y: number }>,
   anchor: 'top-left' | 'bottom-left',
@@ -121,10 +121,7 @@ const authoredScopePropsOf = (frame: CanonicalFrame): CompositeCompileScopeProps
 };
 
 /** 用 occurrence-local probe 排布 Frame body/header，并避免生成公开 Core id */
-export const compileFrame = (
-  sourceFrame: IRFrame,
-  context: LayoutCompositeCompileContext,
-): LayoutCompositeCompileResult => {
+export const compileFrame = (sourceFrame: IRFrame, context: CompositeCompileContext): CompositeCompileResult => {
   const frame = resolveFrame(sourceFrame);
   let occurrence = 0;
   const bodyResult = requiredLayoutProbe(

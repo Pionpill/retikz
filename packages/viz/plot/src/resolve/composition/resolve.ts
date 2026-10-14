@@ -1,9 +1,10 @@
+import type { BoundsInsets } from '@retikz/math';
+
 import type { DimensionRole } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { defaultOriginAxisTickSideOf } from '../../providers';
 import type { IRPlot, IRPlotAxisGuide, IRPlotFacetConfiguration, IRPlotGuide } from '../../schemas';
 import { AxisGridApplyTo, CoordinateArrangementKind, CoordinateViewPlacementKind, PlotGuide } from '../../schemas';
-import type { Margins } from '../../shared';
 import type {
   CompositionAxisPolicy,
   CompositionLayout,
@@ -295,8 +296,8 @@ export const withAxisGapOffsets = (
 /** 把 composition padding 作为默认 margin，并让 runtime margin 覆盖 */
 export const mergeCompositionMargin = (
   padding: CompositionLayout['padding'] | undefined,
-  margin: Partial<Margins> | undefined,
-): Partial<Margins> | undefined => {
+  margin: Partial<BoundsInsets> | undefined,
+): Partial<BoundsInsets> | undefined => {
   if (padding === undefined) return margin;
   return { ...padding, ...margin };
 };

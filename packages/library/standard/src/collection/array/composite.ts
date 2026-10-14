@@ -1,4 +1,4 @@
-import type { LayoutCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
+import type { CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
 import { PathClipProvider } from '@retikz/extension';
 
@@ -7,7 +7,7 @@ import { ArraySchema } from './schema';
 import type { IRArray } from './schema';
 
 /** Standard Array 的布局感知 Definition */
-export const ArrayDefinition: LayoutCompositeDefinition<IRArray, 'standard', 'array'> = defineComposite({
+export const ArrayDefinition: CompositeDefinition<IRArray, 'standard', 'array'> = defineComposite({
   namespace: 'standard',
   type: 'array',
   schema: ArraySchema,

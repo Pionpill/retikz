@@ -1,4 +1,4 @@
-import type { IRChild, LayoutCompositeCompileContext, ScenePrimitive } from '@retikz/core';
+import type { IRChild, CompositeCompileContext, ScenePrimitive } from '@retikz/core';
 import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
@@ -203,7 +203,7 @@ describe('Presented Table layout transaction', () => {
         type: literal('presented-table-transaction'),
       }),
       compile: (_node, context) => {
-        const tableContext: LayoutCompositeCompileContext = {
+        const tableContext: CompositeCompileContext = {
           ...context,
           layoutChild: (child, proposal) => {
             const cell = presented.cells.find(candidate => candidate.content === child);

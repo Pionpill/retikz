@@ -13,6 +13,7 @@ import {
 } from '../../src/resolve/theme';
 import type { IRPlot, IRPlotAxisGuide } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
+import { measureLabel } from '../helpers/text-measurement';
 
 const ROWS = [
   { x: 0, y: 1, city: 'A', value: 1 },
@@ -20,7 +21,8 @@ const ROWS = [
   { x: 2, y: 3, city: 'C', value: 3 },
 ];
 
-const expandOf = (spec: IRPlot): IRScope => lowerPlot(spec, { d: ROWS }, { width: 480, height: 300 }) as IRScope;
+const expandOf = (spec: IRPlot): IRScope =>
+  lowerPlot(spec, { d: ROWS }, { textMeasurer: measureLabel, width: 480, height: 300 }) as IRScope;
 
 const baseSpec = (override: Partial<IRPlot> = {}): IRPlot =>
   PlotSchema.parse({

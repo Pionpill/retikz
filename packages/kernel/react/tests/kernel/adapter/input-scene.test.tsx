@@ -15,7 +15,10 @@ describe('React JSX Input 场景', () => {
 
     expect(ir.children[0]).toMatchObject({ id: 'primary', aliasIds: ['alternate'] });
 
-    const rebuilt = createInputScene(convertIRToReactNode(ir));
+    const child = ir.children[0];
+    if ('namespace' in child || child.type !== 'node') throw new Error('expected Kernel node');
+    const kernel = { ...ir, children: [child] };
+    const rebuilt = createInputScene(convertIRToReactNode(kernel));
 
     expect(normalizeScene(rebuilt.scene).ir).toEqual(ir);
   });
@@ -169,7 +172,12 @@ it('Scope 外框在 React、Vanilla 和 IR roundtrip 中保持等价', () => {
 
   expect(ir.children[0]).toMatchObject({ frame: { padding: 12, style: { fill: 'red' } } });
 
-  const restored = normalizeScene(createInputScene(convertIRToReactNode(ir)).scene).ir;
+  const scope = ir.children[0];
+  if ('namespace' in scope || scope.type !== 'scope') throw new Error('expected Kernel scope');
+  const child = scope.children[0];
+  if ('namespace' in child || child.type !== 'node') throw new Error('expected Kernel node');
+  const kernel = { ...ir, children: [{ ...scope, children: [child] }] };
+  const restored = normalizeScene(createInputScene(convertIRToReactNode(kernel)).scene).ir;
 
   expect(compileToScene(restored).scene).toEqual(compileToScene(ir).scene);
 });

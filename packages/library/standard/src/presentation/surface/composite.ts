@@ -1,4 +1,4 @@
-import type { LayoutCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
+import type { CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
 import { PathClipProvider } from '@retikz/extension';
 
@@ -9,7 +9,7 @@ import { SurfaceSchema } from './schema';
 import type { IRSurface, SurfaceInput } from './types';
 
 /** Standard Surface 的官方 Core layout-aware composite definition */
-export const SurfaceDefinition: LayoutCompositeDefinition<IRSurface, typeof STANDARD_NAMESPACE, typeof SURFACE_TYPE> =
+export const SurfaceDefinition: CompositeDefinition<IRSurface, typeof STANDARD_NAMESPACE, typeof SURFACE_TYPE> =
   defineComposite({
     namespace: STANDARD_NAMESPACE,
     type: SURFACE_TYPE,

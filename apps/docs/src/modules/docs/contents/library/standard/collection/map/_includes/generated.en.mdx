@@ -527,7 +527,7 @@ export type IRMap = Omit<input<typeof MapSchema>, keyof IRScopeProps | 'entries'
 #### <ApiSourceLink label={"MapDefinition"} path={"packages/library/standard/src/collection/map/composite.ts"} startLine={10}>MapDefinition</ApiSourceLink>
 
 ```ts
-export const MapDefinition: LayoutCompositeDefinition<IRMap, 'standard', 'map'> = defineComposite({
+export const MapDefinition: CompositeDefinition<IRMap, 'standard', 'map'> = defineComposite({
   namespace: 'standard',
   type: 'map',
   schema: MapSchema,

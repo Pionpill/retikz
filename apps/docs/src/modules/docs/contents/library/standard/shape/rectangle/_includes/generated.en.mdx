@@ -324,7 +324,7 @@ export type IRRectangle = ShapeSource<ZodInput<typeof RectangleSchema>>;
 
 | Member               | Type                                                   | Default           | Description |
 | -------------------- | ------------------------------------------------------ | ----------------- | ----------- |
-| `readonly expand`    | `(source: IRRectangle) => { children: Array<IRPath> }` | `...`             | —           |
+| `readonly compile`   | `(source: IRRectangle) => { children: Array<IRPath> }` | `...`             | —           |
 | `readonly namespace` | `'standard'`                                           | `'standard'`      | —           |
 | `readonly schema`    | `typeof RectangleSchema`                               | `RectangleSchema` | —           |
 | `readonly type`      | `'rectangle'`                                          | `'rectangle'`     | —           |
@@ -340,7 +340,7 @@ export const RectangleDefinition = defineComposite({
   namespace: 'standard',
   type: 'rectangle',
   schema: RectangleSchema,
-  expand: (source: IRRectangle) => ({ children: [lowerRectangle(source)] }),
+  compile: (source: IRRectangle) => ({ children: [lowerRectangle(source)] }),
 });
 ```
 

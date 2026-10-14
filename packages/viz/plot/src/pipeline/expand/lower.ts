@@ -1,11 +1,4 @@
-import type {
-  IRChild,
-  IRNode,
-  IRScope,
-  LayoutAxisProposal,
-  LayoutCompositeDefinition,
-  ResolvedTheme,
-} from '@retikz/core';
+import type { IRChild, IRNode, IRScope, LayoutAxisProposal, CompositeDefinition, ResolvedTheme } from '@retikz/core';
 import {
   categoricalColorAt,
   defineComposite,
@@ -25,6 +18,7 @@ import {
   resolveDataExecution,
 } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
+import type { BoundsRect } from '@retikz/math';
 
 import type {
   AnyScaleDefinition,
@@ -109,7 +103,7 @@ import {
   PlotLayerZIndex,
   PlotSchema,
 } from '../../schemas';
-import type { Rect } from '../../shared';
+import { createPlotTextMeasurer } from '../../shared';
 import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
 import { createAnchorRegistry } from '../anchors';
 import { lowerCustomAxis, lowerGuide } from '../guide';
@@ -120,7 +114,7 @@ import { applyMarkTransforms, preparePlotRegistries, prepareRows } from './data'
 import { resolveScopedFrames } from './frame';
 import { buildLegendLayers, collectChannelDescriptors, legendReserveOf, reserveLegendBands } from './legend';
 import { plotMarkTransformsOf } from './preparation';
-import type { LowerPlotsOptions, MarkDataView } from './types';
+import type { LowerPlotsOptions, PlotLayoutOptions, MarkDataView } from './types';
 
 /** 判断坐标帧是否具有可承载背景与区域锚点的二维绘图区 */
 const supportsPlotArea = (frame: CoordinateFrame | undefined): boolean =>
@@ -197,7 +191,7 @@ const defaultColorPaletteIndicesOf = (marks: ReadonlyArray<IRPlotMarkOperation>)
 };
 
 /** 按坐标帧取得绘图区表面的实际几何 */
-const plotAreaGeometryOf = (plotArea: Rect, frame: CoordinateFrame | undefined) =>
+const plotAreaGeometryOf = (plotArea: BoundsRect, frame: CoordinateFrame | undefined) =>
   frame !== undefined && isPolarCoordinateFrame(frame)
     ? { position: frame.center, shape: 'circle' as const, minimumSize: frame.outerRadius * 2 }
     : {
@@ -208,7 +202,7 @@ const plotAreaGeometryOf = (plotArea: Rect, frame: CoordinateFrame | undefined) 
 
 /** 按坐标帧的实际绘图区几何生成背景节点 */
 const plotBackgroundNode = (
-  plotArea: Rect,
+  plotArea: BoundsRect,
   frame: CoordinateFrame | undefined,
   fill: NonNullable<IRNode['style']>['fill'] | undefined,
   masterColor: string,
@@ -229,7 +223,7 @@ const plotBackgroundNode = (
 
 /** 在数据图元之上按实际绘图区几何绘制边框 */
 const plotAreaBorderNode = (
-  plotArea: Rect,
+  plotArea: BoundsRect,
   frame: CoordinateFrame | undefined,
   border: IRPlotAreaDefaults['border'],
   masterColor: string,
@@ -332,7 +326,7 @@ export type PlotDataArtifactLowerResult = {
 export const lowerPlotWithDataArtifact = (
   node: IRPlot,
   datasets: ExternalDatasets,
-  options: LowerPlotsOptions = {},
+  options: PlotLayoutOptions,
   effectiveTheme: ResolvedTheme = DEFAULT_PLOT_THEME,
   lineageOptions?: DataLineageOptions,
   preparedData?: PreparedPlotData,
@@ -525,13 +519,16 @@ export const lowerPlotWithDataArtifact = (
     height,
     fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
     margin: options.margin,
+    textMeasurer: options.textMeasurer,
     provenance,
     coordinateRegistry,
     fieldOrderRegistry,
     scaleRegistry,
     legendReserve: legendReserveOf(guides.filter(isLegendGuide)),
-    lowerGuide,
-    lowerCustomAxis,
+    lowerGuide: (guide, ctx, guideProvenance) =>
+      lowerGuide(guide, { ...ctx, textMeasurer: options.textMeasurer }, guideProvenance),
+    lowerCustomAxis: (frame, guide, fontSize, guideProvenance) =>
+      lowerCustomAxis(frame, guide, fontSize, guideProvenance, options.textMeasurer),
     resolveGuideTicks,
     resolveVisibleGuideTicks,
     ...overrides,
@@ -893,7 +890,7 @@ export const lowerPlotWithDataArtifact = (
       startIndex: number,
       span: number,
       value: FacetScalar,
-      rect: Rect,
+      rect: BoundsRect,
     ): IRScope => {
       const localStyle = facetHeaderLabelStyleOf(facet, dimension);
       const style = {
@@ -957,7 +954,7 @@ export const lowerPlotWithDataArtifact = (
             const bandIndex = columnLevels - 1 - level;
 
             for (const group of buildFacetLabelGroups(facetPanels, 'column', level)) {
-              const rect: Rect = {
+              const rect: BoundsRect = {
                 x: rowLabelWidth + group.startIndex * panelStrideX,
                 y: panelGridHeight + columnLabelGap + bandIndex * facetLabelBandSize,
                 width: group.span * panelWidth + Math.max(0, group.span - 1) * panelGap,
@@ -971,7 +968,7 @@ export const lowerPlotWithDataArtifact = (
             const bandIndex = rowFacetLevelCount - rowLevels + level;
 
             for (const group of buildFacetLabelGroups(facetPanels, 'row', level)) {
-              const rect: Rect = {
+              const rect: BoundsRect = {
                 x: bandIndex * facetLabelBandSize,
                 y: group.startIndex * panelStrideY,
                 width: facetLabelBandSize,
@@ -1489,6 +1486,7 @@ export const lowerPlotWithDataArtifact = (
         channelRegistry,
         scaleRegistry,
         resolvedTheme,
+        options.textMeasurer,
       ),
     );
   }
@@ -1540,7 +1538,7 @@ export const lowerPlotWithDataArtifact = (
 export const lowerPlot = (
   node: IRPlot,
   datasets: ExternalDatasets,
-  options: LowerPlotsOptions = {},
+  options: PlotLayoutOptions,
   effectiveTheme: ResolvedTheme = DEFAULT_PLOT_THEME,
   preparedData?: PreparedPlotData,
 ): IRChild => lowerPlotWithDataArtifact(node, datasets, options, effectiveTheme, undefined, preparedData).child;
@@ -1552,7 +1550,7 @@ export const lowerPlot = (
 export const lowerPlots = (
   datasets: ExternalDatasets,
   options: LowerPlotsOptions = {},
-): Array<LayoutCompositeDefinition<IRPlot, typeof PLOT_NAMESPACE, 'plot'>> => [
+): Array<CompositeDefinition<IRPlot, typeof PLOT_NAMESPACE, 'plot'>> => [
   defineComposite({
     namespace: PLOT_NAMESPACE,
     type: 'plot',
@@ -1566,7 +1564,7 @@ export const lowerPlots = (
       const child = lowerPlot(
         loweredNode,
         datasets,
-        options,
+        { ...options, textMeasurer: createPlotTextMeasurer(context) },
         context.theme,
         context.runtimeInput as PreparedPlotData | undefined,
       );

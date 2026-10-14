@@ -237,7 +237,7 @@ export type IRPolygon = ShapeSource<ZodInput<typeof PolygonSchema>>;
 
 | Member               | Type                                                 | Default         | Description |
 | -------------------- | ---------------------------------------------------- | --------------- | ----------- |
-| `readonly expand`    | `(source: IRPolygon) => { children: Array<IRPath> }` | `...`           | —           |
+| `readonly compile`   | `(source: IRPolygon) => { children: Array<IRPath> }` | `...`           | —           |
 | `readonly namespace` | `'standard'`                                         | `'standard'`    | —           |
 | `readonly schema`    | `typeof PolygonSchema`                               | `PolygonSchema` | —           |
 | `readonly type`      | `'polygon'`                                          | `'polygon'`     | —           |
@@ -253,7 +253,7 @@ export const PolygonDefinition = defineComposite({
   namespace: 'standard',
   type: 'polygon',
   schema: PolygonSchema,
-  expand: (source: IRPolygon) => ({ children: [lowerPolygon(source)] }),
+  compile: (source: IRPolygon) => ({ children: [lowerPolygon(source)] }),
 });
 ```
 

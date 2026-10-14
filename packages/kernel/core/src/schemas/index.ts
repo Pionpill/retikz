@@ -22,3 +22,4 @@ export * from './tex';
 export * from './text';
 export * from './theme';
 export * from './transform';
+export * from './kernel';

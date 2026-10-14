@@ -1,5 +1,5 @@
 import { defineFieldOrder } from '@retikz/data';
-import { Plot, IntervalMark, PlotAxis, BuiltinPlotScale } from '@retikz/plot-react';
+import { Plot, IntervalMark, PlotAxis, PlotScale } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { versionRows } from './version-order.data';
@@ -27,7 +27,7 @@ export const VersionOrderPreview: FC<VersionOrderPreviewProps> = props => {
       style={{ maxWidth: '100%', height: 'auto' }}
     >
       <IntervalMark x="version" y="value" color="version" />
-      <BuiltinPlotScale dimension="y" type="linear" domainPadding={0} />
+      <PlotScale dimension="y" type="linear" domainPadding={0} />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />
     </Plot>

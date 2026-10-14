@@ -100,6 +100,7 @@ import { createPlotLineageLocator } from '@retikz/plot';
 
 const datasets = { sales };
 const locator = createPlotLineageLocator(spec, datasets, {
+  environment: {},
   lineage: { locatorAnchors: true },
 });
 
@@ -110,6 +111,8 @@ if (result !== null) {
 ```
 
 这个入口适合提示框、AI 解释面板或审计跳转；实际显示什么内容仍由宿主决定。
+
+独立调用 `createPlotLocator`、`createPlotLineageLocator` 或 `lowerPlotWithLineage` 时，必须提供 `environment`。空对象表示使用 Core 默认环境；如果实际绘制使用了自定义字体测量、字号、主题或 TeX，需通过 `environment.compile` 传入相同的 Core 编译选项，通过 `environment.theme` 和 `environment.defaults` 传入对应主题与作用域默认值，保证标签留白和定位结果与绘制一致。React 的独立工具 `resolvePlotLineage` 同样在第二个参数中接收 `{ environment }`。
 
 <SourceLinks
   sources={[

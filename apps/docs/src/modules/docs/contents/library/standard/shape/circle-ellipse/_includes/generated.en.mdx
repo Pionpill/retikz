@@ -702,7 +702,7 @@ export type IREllipse = ShapeSource<ZodInput<typeof EllipseSchema>>;
 
 | Member               | Type                                                | Default        | Description |
 | -------------------- | --------------------------------------------------- | -------------- | ----------- |
-| `readonly expand`    | `(source: IRCircle) => { children: Array<IRPath> }` | `...`          | —           |
+| `readonly compile`   | `(source: IRCircle) => { children: Array<IRPath> }` | `...`          | —           |
 | `readonly namespace` | `'standard'`                                        | `'standard'`   | —           |
 | `readonly schema`    | `typeof CircleSchema`                               | `CircleSchema` | —           |
 | `readonly type`      | `'circle'`                                          | `'circle'`     | —           |
@@ -718,7 +718,7 @@ export const CircleDefinition = defineComposite({
   namespace: 'standard',
   type: 'circle',
   schema: CircleSchema,
-  expand: (source: IRCircle) => ({ children: [lowerCircle(source)] }),
+  compile: (source: IRCircle) => ({ children: [lowerCircle(source)] }),
 });
 ```
 
@@ -747,7 +747,7 @@ export const CircleProvider: CoreDependencyProvider = Object.freeze({
 
 | Member               | Type                                                 | Default         | Description |
 | -------------------- | ---------------------------------------------------- | --------------- | ----------- |
-| `readonly expand`    | `(source: IREllipse) => { children: Array<IRPath> }` | `...`           | —           |
+| `readonly compile`   | `(source: IREllipse) => { children: Array<IRPath> }` | `...`           | —           |
 | `readonly namespace` | `'standard'`                                         | `'standard'`    | —           |
 | `readonly schema`    | `typeof EllipseSchema`                               | `EllipseSchema` | —           |
 | `readonly type`      | `'ellipse'`                                          | `'ellipse'`     | —           |
@@ -763,7 +763,7 @@ export const EllipseDefinition = defineComposite({
   namespace: 'standard',
   type: 'ellipse',
   schema: EllipseSchema,
-  expand: (source: IREllipse) => ({ children: [lowerEllipse(source)] }),
+  compile: (source: IREllipse) => ({ children: [lowerEllipse(source)] }),
 });
 ```
 

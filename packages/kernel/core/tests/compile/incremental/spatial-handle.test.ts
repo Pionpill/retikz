@@ -27,7 +27,7 @@ const card = defineComposite({
     width: number(),
     aliasIds: array(string()).optional(),
   }),
-  expand: node => ({
+  compile: node => ({
     children: [],
     spatialHandles: [
       { id: 'body', aliasIds: node.aliasIds, role: 'card', bounds: { x: 0, y: 0, width: node.width, height: 10 } },

@@ -11,7 +11,7 @@ export const StarDefinition = defineComposite({
   namespace: 'standard',
   type: 'star',
   schema: StarSchema,
-  expand: (source: IRStar) => ({ children: [lowerStar(source)] }),
+  compile: (source: IRStar) => ({ children: [lowerStar(source)] }),
 });
 
 /** 创建保留几何意图的 Star Source */

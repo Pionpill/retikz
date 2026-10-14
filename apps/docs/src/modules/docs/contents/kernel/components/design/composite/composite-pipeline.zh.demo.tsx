@@ -15,7 +15,7 @@ const pipeline = defineComposite({
     stages: z.array(z.string()).min(2),
     arrows: z.array(z.string()),
   }),
-  expand: (node, _context) => {
+  compile: (node, _context) => {
     void _context;
     const boxes = node.stages.map((label, i) => ({
       type: 'node' as const,
@@ -50,8 +50,8 @@ const ir: IRScene = {
     {
       namespace: 'demo',
       type: 'pipeline',
-      stages: ['composite IR', 'Kernel IR', 'Scene', 'SVG / Canvas'],
-      arrows: ['lower', 'compile', 'render'],
+      stages: ['composite IR', '输出子项', 'Scene', 'SVG / Canvas'],
+      arrows: ['compile 回调', '遍历 / 重放', 'render'],
     },
   ],
 };

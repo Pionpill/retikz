@@ -345,7 +345,7 @@ describe('Table React composition root integration', () => {
         namespace: 'root-props',
         type: 'content',
         schema: compositeSchema,
-        expand: () => ({ children: [content] }),
+        compile: () => ({ children: [content] }),
       }),
     ];
     const onManifest = vi.fn();

@@ -1,0 +1,152 @@
+---
+title: 节点编译
+description: 追踪 Core 如何把文字度量和形状约束转为节点尺寸、正文基线、标签位置与引用几何。
+---
+
+[配置解析](/kernel/packages/core/resolution) 已经确定节点采用的字体、形状与样式，[坐标解析](/kernel/packages/core/coordinates) 说明它应放在哪里。本页接着回答：文字需要多大空间，形状如何包住正文，标签和连线又依据哪份几何定位？
+
+阅读前可先了解 [Node 基础用法](/kernel/components/node/usage)与[文字写法](/kernel/components/node/text)。本页从已解析的 `NodeResolution` 开始，到 `NodeLayout` 交给绘制与引用消费为止；不展开浏览器字体加载、TeX 引擎和路径裁剪算法。
+
+## 整体流程
+
+节点布局先确定内容需要的空间，再计算形状尺寸，最后放置正文和附属标签。`NodeResolution` 包含有效节点配置以及已绑定的形状、连接面定义；`NodeLayout` 则保存可以交给后续阶段使用的几何和排版结果。
+
+<ComponentPreview files="layout-overview" size="xs" hideCode type="flow" />
+
+下面三个节点使用同一句正文。中间收紧文字宽度，折行增加了高度；右侧只增加外侧标签，节点形状的尺寸与中间相同。
+
+<ComponentPreview files="layout-example" size="md" hideCode type="illustration" />
+
+图中的正文先被拆成实际显示的行，这些行称为**物理行**。正文范围确定后才加入内边距并交给形状计算。标签需要形状的位置才能放置，因此不反过来撑大节点形状。
+
+<SourceLinks
+  sources={[
+    { label: 'layoutNode：节点布局入口', path: 'packages/kernel/core/src/compile/node/layout.ts' },
+    { label: 'NodeResolution：布局输入', path: 'packages/kernel/core/src/resolve/node/types.ts' },
+    { label: 'NodeLayout：几何与排版结果', path: 'packages/kernel/core/src/compile/node/types.ts' },
+  ]}
+/>
+
+## 内容测量
+
+Core 通过注入的 `measureText` 取得度量，不直接读取 DOM。测量输入是文字和字体，输出包含宽度、高度，以及可选的 `ascent`、`descent`：它们分别表示基线上方和下方的高度。没有提供这两项时，Core 各取总高度的一半。未注入测量器时采用平均字宽估算，精度取决于测量提供方。
+
+普通文本先按显式换行拆分，再按宽度限制寻找可断位置：西文按词，CJK 按字。一个不可断片段超过限制时会保留整段，不强行截断。正文宽度取最宽物理行，高度为物理行数乘以 `lineHeight`，因此包含行间留白，并不等于字形本身的高度。
+
+公式或显式 `runs` 混排则逐片段测量，再把同一行的片段对齐到共同基线。行宽累加，基线上下分别取所需的最大空间，行槽高度至少容纳这些片段。**公式与普通文本混排时，不使用普通文本的自动折行算法**，不能假定设置宽度后公式也会自动换行。
+
+同一次普通正文排版会复用相同文字与字体的测量结果，避免折行试算反复请求度量。这是局部复用，不表示跨编译或字体变化后仍沿用旧尺寸。
+
+<SourceLinks
+  sources={[
+    { label: '文字度量契约与缺省估算', path: 'packages/kernel/core/src/compile/text/metrics.ts' },
+    { label: '正文分支与物理行汇总', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
+    { label: '普通文本折行', path: 'packages/kernel/core/src/compile/node/content/text.ts' },
+    { label: '混排行的度量与基线对齐', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+  ]}
+/>
+
+## 节点尺寸
+
+这里需要区分三层范围：
+
+- **正文盒**：排版完成后的文字宽度与行槽总高度。
+- **视觉形状**：形状包住“正文盒 + padding”后，结合尺寸约束得到的轮廓。
+- **布局占位**：在节点外框基础上考虑 `margin` 与旋转，供父级布局分配空间。
+
+形状的 `circumscribe` 接收内容半宽、半高，返回能够容纳它的形状外框。矩形通常直接包住内容；圆形需要更大的直径才能容纳同一个矩形内容区。
+
+下图假定正文盒已经测得为 `40 × 24`，使用无旋转的矩形、四边 `padding = 8`、`minimumSize = { width: 80, height: 48 }` 和 `margin = 6`，且没有固定 `width`。为便于观察，图形等比放大；灰色点线表示计算范围，不是额外绘制的节点边框。
+
+<ComponentPreview files="layout-boxes" size="lg" hideCode type="illustration" />
+
+加入 padding 后是 `56 × 40`；最小尺寸再把视觉外框扩大为 `80 × 48`；margin 使布局占位达到 `92 × 60`。这三个尺寸并不互相替代：margin 不会把可见矩形也画大。
+
+宽度约束的作用也不同：
+
+| 约束           | 影响                                                         |
+| -------------- | ------------------------------------------------------------ |
+| `maxTextWidth` | 限制普通正文的折行宽度，不保证最终形状恰好等宽               |
+| `minimumSize`  | 为形状外框设置尺寸下限，不压缩正文                           |
+| `width`        | 固定视觉外框宽度；普通正文可尝试重新折行，仍放不下时编译失败 |
+| 父级宽度提案   | 约束布局占位；计算会考虑形状、margin 与旋转                  |
+
+固定 `width` 决定最终视觉宽度，水平的 `minimumSize` 不再把它扩大；高度仍按内容与最小高度确定。父级提案与固定宽度不是同一份契约：提案不能保证每个不可断文本都能缩进目标范围，父级仍需处理实际返回的占位。提案与重放的完整过程由后续复合布局主题承接。
+
+不对称 padding 还会让视觉外框中心与正文中心不同。布局分别保存两者，避免绘制正文时误用外框中心。
+
+<SourceLinks
+  sources={[
+    { label: '内容预算、circumscribe 与尺寸约束', path: 'packages/kernel/core/src/compile/node/layout.ts' },
+    { label: '形状定义的包围契约', path: 'packages/kernel/core/src/contract/shape/types.ts' },
+  ]}
+/>
+
+## 基线与标签
+
+基线是安排字形的垂直参考线，不是文字盒的中心线。对普通正文，Core 根据第一条物理行的度量，把字形上下的剩余行高均分，再确定首行基线；后续基线按 `lineHeight` 递增。混排则按每一行的片段高度单独确定基线。
+
+例如，行高为 `24`，规范化后的 `ascent = 14`、`descent = 4`，则上下各留 `3`，基线距行槽顶部为 `17`。下图将这组度量放大展示，蓝线是基线，灰色范围是字形度量盒。
+
+<ComponentPreview files="layout-baseline" size="lg" hideCode type="illustration" />
+
+附属标签独立测量，再根据可见形状上的附着点、附着方向、标签旋转和 `distance` 放置。`distance` 是形状边缘与标签视觉盒之间的净距。开篇右侧节点说明了结果：label 不改变正文或形状尺寸，但自动视框仍会包含它，避免图像导出时裁掉标签。
+
+如果节点用自身锚点对齐目标，需要先完成临时布局才能知道自身锚点在哪里，然后整体平移。标签保存相对节点的偏移，会随节点一起移动；定位时序详见[坐标解析](/kernel/packages/core/coordinates)。
+
+<SourceLinks
+  sources={[
+    { label: '正文行高与基线偏移', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
+    { label: '标签测量与放置', path: 'packages/kernel/core/src/compile/node/label/layout.ts' },
+    { label: '标签净距与视觉范围', path: 'packages/kernel/core/src/compile/node/label/geometry.ts' },
+    { label: '绘制与观测共用的物理行基线', path: 'packages/kernel/core/src/compile/node/emit.ts' },
+  ]}
+/>
+
+## 连接边界
+
+完成节点布局不意味着每条连线都沿可见轮廓结束。`shape` 决定画出来的形状，`boundary` 决定自动连线与标准边界锚点使用的连接面；最终解析为 `'shape'` 时才直接沿用视觉形状。
+
+下图保留同一个圆形及连线方向，只改变连接面和 margin。灰色点线画出辅助连接范围，比较箭头的终点即可看到差别。
+
+<ComponentPreview files="layout-boundaries" size="lg" hideCode type="illustration" />
+
+标准方位和数字角度锚点使用连接面并考虑 margin；形状专属锚点及 `{ side, fraction }` 边上比例点则使用视觉形状。标签的外伸也不会把连线终点推到标签边缘。
+
+同一份布局被多次引用时，Core 会复用已计算的连接包络和锚点。它们服务于当前布局几何，不是另一份可持久化节点配置；具体引用规则见 [Node 实现原理](/kernel/components/node/mechanism#视觉形状与连接几何)。
+
+<SourceLinks
+  sources={[
+    { label: '连接面绑定到节点几何', path: 'packages/kernel/core/src/compile/node/boundary.ts' },
+    { label: '标准锚点与形状锚点分流', path: 'packages/kernel/core/src/compile/node/anchors.ts' },
+    { label: '单份布局的锚点复用', path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts' },
+  ]}
+/>
+
+## 完整实现流程
+
+以下以普通文本节点为主线。左侧是布局阶段，右侧是拿到结果后的消费方；几何查询按需发生，不要求在绘制前预先算出全部锚点。
+
+<ComponentPreview files="layout-implementation" size="xl" hideCode type="flow" />
+
+阅读源码时从 `layoutNode` 开始：它组织正文排版、形状约束和标签放置，完成自身锚点定位后返回局部坐标下的 `NodeLayout`。其中 `geometry` 保存外框、正文中心、正文尺寸和 margin，`text` 保存物理行与基线，`labels` 保存附属文字的相对位置。
+
+遍历器随后把几何投影到世界空间，供命名引用查询；绘制阶段把局部布局转为形状、正文和标签图元。命名空间中的引用几何与 Scene 中的局部图元用途不同，不必把所有绘制坐标提前展开成世界坐标。
+
+<SourceLinks
+  sources={[
+    { label: '布局结果的数据结构', path: 'packages/kernel/core/src/compile/node/types.ts' },
+    { label: '节点布局到图元', path: 'packages/kernel/core/src/compile/node/emit.ts' },
+    { label: '布局、引用注册与绘制的交接', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'Node 基础用法', description: '操作节点尺寸、文字宽度与样式', url: '/kernel/components/node/usage' },
+    { title: 'Node 文字', description: '查看正文、混排和标签的输入写法', url: '/kernel/components/node/text' },
+    { title: 'Node 实现原理', description: '查阅形状与连接面的局部规则', url: '/kernel/components/node/mechanism' },
+  ]}
+/>

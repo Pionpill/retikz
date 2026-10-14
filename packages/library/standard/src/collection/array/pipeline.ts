@@ -1,8 +1,8 @@
 import type {
   CompositeCompileChild,
   LayoutChildResult,
-  LayoutCompositeCompileContext,
-  LayoutCompositeCompileResult,
+  CompositeCompileContext,
+  CompositeCompileResult,
 } from '@retikz/core';
 
 import { compileCells, measureCell } from '../_cell';
@@ -13,7 +13,7 @@ import { resolveArray } from './resolve';
 import type { IRArray } from './schema';
 
 /** 按轴累加单格尺寸与间距，内容只测量一次并复用 */
-export const compileArray = (node: IRArray, context: LayoutCompositeCompileContext): LayoutCompositeCompileResult => {
+export const compileArray = (node: IRArray, context: CompositeCompileContext): CompositeCompileResult => {
   const {
     namespace: _namespace,
     type: _type,

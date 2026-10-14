@@ -1,0 +1,223 @@
+---
+title: Path Compilation
+description: Follow how Core turns path targets and steps into geometry commands, then emits Scene primitives with arrows and labels.
+---
+
+[Configuration resolution](/kernel/packages/core/resolution) determines styles and Definitions. [Coordinate resolution](/kernel/packages/core/coordinates) explains reference visibility, and [Node Compilation](/kernel/packages/core/node-compilation) supplies node geometry. This page follows a built-in stroke path from target binding through segment construction to primitive output.
+
+## Overall flow
+
+A path declares targets, steps, styles, and labels. Once its Scope finishes processing its subtree, Core resolves those declarations, builds geometry commands in local coordinates, and combines strokes, arrows, and text. The result replaces the slot reserved in Scene.
+
+<ComponentPreview files="path-overview" size="xs" hideCode type="flow" />
+
+Both examples connect A to B. The left uses center coordinates; the right uses node references. On the right, endpoints meet node boundaries and the middle label leaves a gap in the stroke. The following sections trace how these differences arise.
+
+<ComponentPreview files="path-example" size="sm" hideCode type="illustration" />
+
+This page follows the built-in stroke path. Custom Path kinds emit primitives through their own Definitions; path generators supply geometry commands within the stroke pipeline.
+
+<SourceLinks
+  sources={[
+    { label: 'Path resolution entry', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
+    { label: 'Stroke emission entry', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
+  ]}
+/>
+
+## Target binding
+
+When traversal encounters a Path, it saves a pending record containing the input, current transforms, inherited configuration, and a primitive placeholder. After the containing Scope finishes its subtree, Core resolves targets and replaces that placeholder. Root-level paths run after the root subtree. This allows references to later nodes in the same level while preserving drawing order. See [Reference timing](/kernel/packages/core/coordinates) for visibility across Scopes.
+
+These snapshots follow declarations `Node A → Path P(A, B) → Node B` within one Scope. The pending record appears once at the top; its displayed fields stay unchanged in this example. `T` denotes the current transform. The three columns below compare the namespace and primitive array at each stage.
+
+<ComponentPreview files="path-timing" size="xl" hideCode type="illustration" />
+
+The second column adds B geometry and primitives while retaining the slot for P. The third replaces that slot with Path P. Here P is a plain line without labels, and A and B stand for the node primitives.
+
+Resolved targets retain the points and reference geometry needed by subsequent calculations. During compilation, `PathTargetView` provides local reference points and boundary intersections. For A to B, Core first obtains the reference points, then uses the connection direction to find the actual endpoints.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Deferred queue and placeholder replacement',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+    { label: 'Target binding and canonical paths', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
+    { label: 'Target queries during compilation', path: 'packages/kernel/core/src/compile/path/host/target.ts' },
+  ]}
+/>
+
+## Cursor and segments
+
+The compiler consumes steps in declaration order and keeps the positions needed by later steps:
+
+- Previous target: where an ordinary segment starts and whether it carries a node boundary.
+- Latest `move` target: where `cycle` closes the current subpath.
+- Pen position from special steps: an arc endpoint, for example, where the next segment continues.
+- Relative baseline: the origin used by `relative` and `relativeAccumulate`.
+
+Both paths below start at `[0, 0]` and apply `[60, 30]` twice. `relative` keeps the baseline unchanged, so both endpoints coincide. `relativeAccumulate` updates it, letting the second segment continue forward.
+
+<ComponentPreview files="path-relative" size="md" hideCode type="illustration" />
+
+Relative targets that can be determined early become local coordinates during resolution. Targets that depend on runtime results, such as axis-line projection, are calculated while consuming steps. A `move` starts a new pen position. Lines, folds, and curves become commands segment by segment; arcs, closed shapes, smooth curves, and generators use dedicated branches and pass on their pen positions.
+
+| Input step                                 | Geometry change                                                                               |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| line / axis-line                           | Emit a line; axis-line first projects the target onto the current horizontal or vertical line |
+| fold                                       | Compute orthogonal corners and connect them                                                   |
+| curve / cubic / bend                       | Emit a quadratic or cubic Bezier curve using supplied or calculated controls                  |
+| arc / circlePath / ellipsePath / rectangle | Emit shape commands and maintain the following pen position                                   |
+| smooth / generator                         | Emit continuous curves or commands supplied by a Definition                                   |
+| cycle                                      | Return to the latest move target and close the current subpath                                |
+
+<SourceLinks
+  sources={[
+    { label: 'Cursor state and advancement', path: 'packages/kernel/core/src/compile/path/stroke/cursor.ts' },
+    { label: 'Lines, folds, and curves', path: 'packages/kernel/core/src/compile/path/stroke/segments.ts' },
+    { label: 'Shape steps and pen handoff', path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts' },
+    { label: 'Generator command output', path: 'packages/kernel/core/src/compile/path/stroke/lower.ts' },
+  ]}
+/>
+
+## Boundary intersections
+
+For a connection to a node reference, Core computes attachment points on the connection boundary before generating path commands. A line from A to B follows four steps:
+
+1. **Read reference points and node geometry**: the bound targets provide the reference points, shapes, and connection boundaries of A and B.
+2. **Determine the connection direction**: the A endpoint points toward B's reference point; the B endpoint points toward A's reference point.
+3. **Query the boundary intersection**: transform the direction reference point to world coordinates and select the target's `boundary`, or the node's `boundary` when unspecified. Core resolves its geometry, applies the node's `margin`, and calls the Definition's `boundaryPoint` to obtain the attachment point.
+4. **Generate local path commands**: transform the intersection points back to the current Scope's local coordinates and use them as the segment endpoints.
+
+In the opening example, the circle centers are `[0, 0]` and `[220, 0]`, both radii are 24, and margin is 0. The center-to-center direction gives attachment points `[24, 0]` and `[196, 0]`. Core first generates the line between these points; arrow shortening is applied later. See [Node Compilation](/kernel/packages/core/node-compilation#connection-boundaries) for connection surfaces and margin.
+
+### Direction for each segment family
+
+| Segment      | Boundary calculation                                                                                                  |
+| ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| line         | Each endpoint points toward the opposite reference point                                                              |
+| curve        | Both endpoints point toward the shared quadratic Bezier control point                                                 |
+| cubic / bend | The start points toward the first control point; the end points toward the second. A bend computes its controls first |
+| fold         | Build the corners, then locate where the polyline exits the start boundary and enters the end boundary                |
+
+Bezier segments use control-point directions to determine attachment points, then generate the curve from the new endpoints and control points. This queries boundary points along direction rays; it does not solve the intersection of the entire Bezier curve with the shape.
+
+For node targets without an anchor or offset, folds inspect successive corners to find the first segment crossing from inside to outside the boundary. A segment starting at the boundary center uses `boundaryPoint` directly; other segments use bisection to approximate the crossing. Core removes the internal polyline prefix and applies the same operation in reverse at the end, preserving the original polyline directions.
+
+### Explicit anchors and offsets
+
+An explicit `anchor` supplies the attachment point. An `offset` is added after that point is computed, so an offset alone still uses the directional boundary query. The offset is applied in world coordinates before conversion back to the current Scope's local coordinates.
+
+The figure keeps node positions fixed, comparing center coordinates, automatic boundary intersections, and explicit right / left anchors.
+
+<ComponentPreview files="path-clipping" size="md" hideCode type="illustration" />
+
+Segment construction also records commands, bounds samples, and source steps. With rounded corners enabled, Core inserts arcs at eligible line joins before subsequent label and arrow processing.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Target queries and coordinate conversion',
+      path: 'packages/kernel/core/src/compile/orchestration/path-target.ts',
+    },
+    { label: 'Boundary points and polyline crossings', path: 'packages/kernel/core/src/compile/node/anchors.ts' },
+    { label: 'Connection boundary geometry', path: 'packages/kernel/core/src/compile/node/boundary.ts' },
+    {
+      label: 'Segment directions and commands',
+      path: 'packages/kernel/core/src/compile/path/stroke/segments.ts',
+    },
+    { label: 'Commands and source records', path: 'packages/kernel/core/src/compile/path/stroke/commands.ts' },
+    { label: 'Rounded line joins', path: 'packages/kernel/core/src/compile/path/stroke/rounded-corners.ts' },
+  ]}
+/>
+
+## Arrows and labels
+
+Labels use a sampled point and direction on the path, then text measurement determines their visual bounds. Step labels follow their segment's sampling rule; path-level labels use the combined sampling intervals. A segment parameter is not necessarily proportional to arc length. See [Path labels](/kernel/components/path/label) for position semantics.
+
+Labels that interrupt a stroke turn their visual bounds and gap into intervals along the path. Core splits the stroke around those intervals. Arrow Definitions supply endpoint decorations and required shortening; Core shortens terminal segments and protects the arrow regions near the endpoints.
+
+In the opening example, node boundaries determine the contact points, the label creates a middle gap, and arrow shortening affects the terminal segment. Adding the label leaves the original target references unchanged.
+
+<SourceLinks
+  sources={[
+    { label: 'Step and path-level label sampling', path: 'packages/kernel/core/src/compile/path/stroke/sampling.ts' },
+    { label: 'Label text and orientation', path: 'packages/kernel/core/src/compile/path/host/label.ts' },
+    {
+      label: 'Gap intervals and stroke splitting',
+      path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts',
+    },
+    { label: 'Arrows and inline marks', path: 'packages/kernel/core/src/compile/path/stroke/decorations.ts' },
+    { label: 'Terminal segment shortening', path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts' },
+  ]}
+/>
+
+### How endpoints are shortened
+
+Default endpoint arrows satisfy two conditions: **the tip reaches the target, and the tail joins a cut point on the original curve**. Core derives a contact length from arrow geometry and stroke width, then searches inward from the target for a point whose straight-line distance to the target equals that length.
+
+1. **Keep the target**: record the original endpoints; label gaps are still calculated on the complete path.
+2. **Find the contact**: search inward through the endpoint fragment, then refine the curve parameter with bisection. The search can cross multiple commands within that continuous fragment.
+3. **Slice without changing shape**: retain the original curve up to the contact. Bezier slices receive recalculated control points; circular and elliptical arcs change angles while keeping their center, radii, and rotation.
+4. **Place the arrow**: orient an end arrow from the contact toward the original target; reverse this for start arrows. Internal marker transforms compensate for the host tangent rotation, so SVG and Canvas consume the same result.
+
+The stroke overlaps the arrow tail by half a stroke width to prevent antialiasing seams. This adjusts the contact while keeping the tip fixed. The arrow follows the line from the cut point to the target, which can differ slightly from the curve tangent at the cut.
+
+`endpointOverlap` still controls how far the arrow enters the target, and automatic node boundaries retain hollow-arrow outer-edge protection. Arrows shrink to fit short paths; paths with no usable length omit endpoint arrows. Shape preservation reuses [curve slicing](/kernel/components/path/mechanism).
+
+Gray shows the original path below; blue is the actual compiled Path with an endpoint arrow. Both tips reach B, and both blue paths follow the original curve up to the arrow tail. Bezier control points are recalculated for the retained slice.
+
+<ComponentPreview files="path-shortening" size="lg" hideCode type="illustration" />
+
+<SourceLinks
+  sources={[
+    { label: 'Contact coefficients and seam overlap', path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts' },
+    {
+      label: 'Curve contacts and arrow orientation',
+      path: 'packages/kernel/core/src/compile/path/stroke/endpoint-contact.ts',
+    },
+    { label: 'Shape-preserving curve slices', path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts' },
+    { label: 'Label gaps and endpoint contact order', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
+  ]}
+/>
+
+## Full implementation flow
+
+Start at `resolvePath` and follow its canonical result into `emitPathPrimitive`. Read down the left column, then up the right: step consumption produces geometry commands; corner rounding, labels, and decorations follow. Traversal then replaces the placeholder with the path body and attached primitives.
+
+<ComponentPreview files="path-implementation" size="lg" hideCode type="flow" />
+
+Output can contain multiple stroke fragments, text, and decoration primitives. An output group carries the path's own rotation and scale. Outer groups retain Scope transforms, and the renderer consumes this structured result.
+
+An unresolved ordinary target or a missing required predecessor produces a warning in the relevant branch and skips the whole path. Some steps with no drawable content can emit no commands. Contract violations such as invalid generator output throw errors, so failure behavior depends on the branch.
+
+<SourceLinks
+  sources={[
+    { label: 'Step loop and post-processing order', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
+    { label: 'Subpaths and endpoint-arrow ownership', path: 'packages/kernel/core/src/compile/path/stroke/split.ts' },
+    { label: 'Primitive grouping and path transforms', path: 'packages/kernel/core/src/compile/path/stroke/output.ts' },
+    { label: 'Output contract', path: 'packages/kernel/core/src/compile/path/types.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Path implementation',
+      description: 'Explore individual steps and label mechanisms',
+      url: '/kernel/components/path/mechanism',
+    },
+    {
+      title: 'Coordinate resolution',
+      description: 'Check namespaces and reference timing',
+      url: '/kernel/packages/core/coordinates',
+    },
+    {
+      title: 'Node Compilation',
+      description: 'Trace the geometry behind connection boundaries',
+      url: '/kernel/packages/core/node-compilation',
+    },
+  ]}
+/>

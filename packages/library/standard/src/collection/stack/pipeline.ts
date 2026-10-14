@@ -1,16 +1,11 @@
-import type {
-  CompositeCompileChild,
-  IRPath,
-  LayoutCompositeCompileContext,
-  LayoutCompositeCompileResult,
-} from '@retikz/core';
+import type { CompositeCompileChild, IRPath, CompositeCompileContext, CompositeCompileResult } from '@retikz/core';
 
 import { compileCells, layoutLinearCells, createOperationArrow, linearDirectionVector } from '../_cell';
 import { resolveStack } from './resolve';
 import type { IRStack } from './schema';
 
 /** 在输入序列上一次测量，再沿指定方向放置并下沉框与标签 */
-export const compileStack = (source: IRStack, context: LayoutCompositeCompileContext): LayoutCompositeCompileResult => {
+export const compileStack = (source: IRStack, context: CompositeCompileContext): CompositeCompileResult => {
   const { namespace, type, items, layout, defaultCell, label, arrow, border, padding, ...scope } = resolveStack(source);
   const input = typeof arrow === 'object' ? arrow.input : arrow;
   const output = typeof arrow === 'object' ? arrow.output : arrow;

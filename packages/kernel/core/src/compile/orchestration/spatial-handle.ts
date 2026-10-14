@@ -26,7 +26,7 @@ export type PendingSpatialHandle = {
   /** 首次声明 occurrence */
   originOccurrence: CompileOccurrenceLocator;
   /** 从 declaration local coordinate 到 world 的最终 transform chain */
-  scopeChain: Array<Transform>;
+  scopeChain: ReadonlyArray<Transform>;
 };
 
 const freezeOccurrence = (occurrence: CompileOccurrenceLocator): CompileOccurrenceLocator =>
@@ -75,7 +75,7 @@ export const replayPendingSpatialHandle = (
     occurrence: remapSpatialOccurrenceForReplay(parent, outputIndex, origin, owner.occurrence),
   })),
   finalOccurrence: remapSpatialOccurrenceForReplay(parent, outputIndex, origin, pending.finalOccurrence),
-  scopeChain: [...pending.scopeChain],
+  scopeChain: pending.scopeChain,
 });
 
 const projectBounds = (

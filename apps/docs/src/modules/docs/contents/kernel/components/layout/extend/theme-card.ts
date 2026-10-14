@@ -41,7 +41,7 @@ export const themeCardComposite = defineComposite({
     type: z.literal('card').describe('Selects the theme-aware card composite variant.'),
     label: z.string().describe('Provides the text rendered inside the theme-aware card.'),
   }),
-  expand: (node, context) => {
+  compile: (node, context) => {
     const colors = context.theme.colors;
     const visibleCategorical = colors.categorical.slice(0, 3);
     const swatchStartX = -((visibleCategorical.length - 1) * 18) / 2;

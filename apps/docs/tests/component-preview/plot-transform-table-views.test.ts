@@ -1,20 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
+import {
+  scaleField,
+  scaleFieldImplementation,
+  scaleFieldOperationOf,
+} from '../../src/modules/docs/contents/viz/data/transform/extensions/extension-transform-preview';
+import { customTransformRows } from '../../src/modules/docs/contents/viz/data/transform/extensions/extension-transform.data';
 import { previewControlContract as pointTransformContract } from '../../src/modules/docs/contents/viz/plot/mark/point/point-transform.controls';
 import { previewControlContract as pointTransformEnglishContract } from '../../src/modules/docs/contents/viz/plot/mark/point/point-transform.en.controls';
 import { createPlotTransformTableViews } from '../../src/modules/docs/contents/viz/plot/transform-table-views';
-import {
-  CUSTOM_TRANSFORM_CONTROL_IDS,
-  waterfallOperationOf,
-} from '../../src/modules/docs/contents/viz/plot/transform/custom-transform/waterfall.controls';
-import { waterfallRows } from '../../src/modules/docs/contents/viz/plot/transform/custom-transform/waterfall.data';
-import {
-  waterfallTransform,
-  waterfallTransformImplementation,
-} from '../../src/modules/docs/contents/viz/plot/transform/custom-transform/waterfall.definition';
 
 describe('Plot transform table views', () => {
-  it('使用完整 Plot registry 执行内置 transform', () => {
+  it('使用 Data registry 执行内置 transform', () => {
     const views = createPlotTransformTableViews(
       { source: 'Source', result: 'Stacked' },
       [
@@ -37,10 +34,10 @@ describe('Plot transform table views', () => {
 
   it('把实时 controls 值与自定义 Definition 传给结果视图', () => {
     const views = createPlotTransformTableViews(
-      { source: 'Source', result: 'Waterfall' },
-      waterfallRows,
-      waterfallOperationOf,
-      { transformDefinitions: [waterfallTransform], transformImplementations: [waterfallTransformImplementation] },
+      { source: 'Source', result: 'Scaled' },
+      customTransformRows,
+      scaleFieldOperationOf,
+      { transformDefinitions: [scaleField], transformImplementations: [scaleFieldImplementation] },
     );
     const resultRows = views[1].rows;
 
@@ -48,9 +45,9 @@ describe('Plot transform table views', () => {
 
     if (typeof resultRows !== 'function') return;
 
-    expect(resultRows({ [CUSTOM_TRANSFORM_CONTROL_IDS.initialValue]: 60 }).slice(0, 2)).toMatchObject([
-      { period: 'Q1', delta: 35, from: 60, to: 95, direction: 'increase' },
-      { period: 'Q2', delta: -20, from: 95, to: 75, direction: 'decrease' },
+    expect(resultRows({ factor: 3 }).slice(0, 2)).toMatchObject([
+      { x: 1, y: 2, scaledX: 3 },
+      { x: 2, y: 4, scaledX: 6 },
     ]);
   });
 

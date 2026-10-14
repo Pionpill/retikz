@@ -33,7 +33,6 @@ describe('Table layout-aware lowering', () => {
       artifactSchema: TableLayoutManifestSchema,
     });
     expect(definition.compile).toBeTypeOf('function');
-    expect('expand' in definition).toBe(false);
   });
 
   it('compiles one canonical root and returns its exact typed artifact value', () => {
@@ -71,7 +70,7 @@ describe('Table layout-aware lowering', () => {
       namespace: 'fixture',
       type: 'badge',
       schema: BadgeSchema,
-      expand: node => ({
+      compile: node => ({
         children: [{ type: 'node' as const, position: [0, 0] as [number, number], text: node.label }],
       }),
     });

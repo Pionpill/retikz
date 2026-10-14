@@ -39,3 +39,6 @@ export const CompileWarningCode = {
 
 /** 编译期 warning code：包含内置 code，并允许扩展能力提供自定义字符串 code */
 export type CompileWarningCode = ValueOf<typeof CompileWarningCode> | (string & {});
+
+/** 复合组件递归深度上限 */
+export const DEFAULT_MAX_COMPOSITE_DEPTH = 32;

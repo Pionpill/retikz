@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { AxisGridApplyTo, PlotSchema } from '../../src/schemas';
+import { measureLabel } from '../helpers/text-measurement';
 
 const salesRows = [
   { region: 'north', month: 0, revenue: 10 },
@@ -141,7 +142,12 @@ const lanesSpec = {
 };
 
 const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
-  return lowerPlot(spec, datasets, { width: 480, height: 300, provenance: true }) as IRScope;
+  return lowerPlot(spec, datasets, {
+    textMeasurer: measureLabel,
+    width: 480,
+    height: 300,
+    provenance: true,
+  }) as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';

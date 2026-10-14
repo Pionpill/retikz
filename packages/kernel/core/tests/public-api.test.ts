@@ -48,7 +48,6 @@ describe('Core public API', () => {
 
   it('公开 occurrence 展开路径的稳定阶段类别', () => {
     expect(core.CompileExpansionKind).toEqual({
-      Expand: 'expand',
       Output: 'output',
       Probe: 'probe',
       Replay: 'replay',
@@ -65,8 +64,8 @@ describe('Core public API', () => {
   });
 
   it('公开 occurrence 和 observation owner 的稳定比较工具', () => {
-    const first = { sourcePath: 'children[0]', expansionPath: [{ kind: 'expand', index: 0 }] } as const;
-    const second = { sourcePath: 'children[1]', expansionPath: [{ kind: 'expand', index: 0 }] } as const;
+    const first = { sourcePath: 'children[0]', expansionPath: [{ kind: 'output', index: 0 }] } as const;
+    const second = { sourcePath: 'children[1]', expansionPath: [{ kind: 'output', index: 0 }] } as const;
 
     expect(core.isCompileOccurrenceEqual(first, first)).toBe(true);
     expect(core.isCompileOccurrenceEqual(first, second)).toBe(false);

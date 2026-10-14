@@ -1,4 +1,4 @@
-import type { IRPath, IRStep, LayoutCompositeCompileContext, LayoutCompositeCompileResult } from '@retikz/core';
+import type { IRPath, IRStep, CompositeCompileContext, CompositeCompileResult } from '@retikz/core';
 
 import { cellReferenceNode, compileCells, measureCell } from '../_cell';
 import type { CellPlacement } from '../_cell';
@@ -9,7 +9,7 @@ import type { IRChain } from './schema';
 import type { MeasuredChainItem } from './types';
 
 /** 测量内容后排布串并联结构，连接仍由 Core Path 编译 */
-export const compileChain = (source: IRChain, context: LayoutCompositeCompileContext): LayoutCompositeCompileResult => {
+export const compileChain = (source: IRChain, context: CompositeCompileContext): CompositeCompileResult => {
   const resolved = resolveChain(source);
   const {
     items: _items,

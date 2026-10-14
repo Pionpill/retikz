@@ -11,7 +11,7 @@ export const ArcDefinition = defineComposite({
   namespace: 'standard',
   type: 'arc',
   schema: ArcSchema,
-  expand: (source: IRArc) => ({ children: [lowerArc(source)] }),
+  compile: (source: IRArc) => ({ children: [lowerArc(source)] }),
 });
 
 /** 创建保留几何意图的 Arc Source */

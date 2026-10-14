@@ -14,6 +14,7 @@ import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/p
 import { resolveMarkOperation } from '../../../src/resolve/mark';
 import type { IRPlot, IRPlotReferenceMark } from '../../../src/schemas';
 import { PlotSchema, PolarInterpolation } from '../../../src/schemas';
+import { measureLabel } from '../../helpers/text-measurement';
 
 /** core Path 的最小形态（鸭子类型断言端点；避免引入 core 内部 IRPath 类型耦合） */
 type RulePath = {
@@ -49,7 +50,7 @@ const HEIGHT = 400;
 const cartOpts: LowerPlotsOptions = { width: WIDTH, height: HEIGHT };
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
-  return lowerPlot(spec, datasets, options) as IRScope;
+  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
 /** 连续 linear PositionScale 桩（bandwidth = 0） */

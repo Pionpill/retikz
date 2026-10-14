@@ -147,7 +147,7 @@ describe('provider key contract', () => {
       namespace: 'demo',
       type: 'badge',
       schema,
-      expand: () => ({ children: [{ type: 'node', id: 'badge', position: [0, 0], text: 'B' }] }),
+      compile: () => ({ children: [{ type: 'node', id: 'badge', position: [0, 0], text: 'B' }] }),
     });
     const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'demo', type: 'badge' }] };
 
@@ -165,7 +165,7 @@ describe('provider key contract', () => {
         namespace: 'declared',
         type: 'badge',
         schema,
-        expand: () => ({ children: [] }),
+        compile: () => ({ children: [] }),
       }),
     ).toThrow(/namespace.*declared.*actual/s);
   });
@@ -180,7 +180,7 @@ describe('provider key contract', () => {
             namespace: literal(namespace),
             type: literal('badge'),
           }),
-          expand: () => ({ children: [] }),
+          compile: () => ({ children: [] }),
         }),
       RetikzCoreErrorCode.CompositeContractViolation,
       'defineComposite: schema.namespace',
@@ -197,7 +197,7 @@ describe('provider key contract', () => {
             namespace: literal('demo'),
             type: literal(type),
           }),
-          expand: () => ({ children: [] }),
+          compile: () => ({ children: [] }),
         }),
       RetikzCoreErrorCode.CompositeContractViolation,
       'defineComposite: schema.type',
@@ -223,7 +223,7 @@ describe('provider key contract', () => {
       namespace: 'demo',
       type: 'badge',
       schema,
-      expand: node => ({
+      compile: node => ({
         children: [
           {
             type: 'node',
@@ -252,7 +252,7 @@ describe('provider key contract', () => {
       variant: literal('base'),
     });
     const definitionOf = (schema: ZodType) =>
-      defineComposite({ namespace: 'demo', type: 'badge', schema, expand: () => ({ children: [] }) });
+      defineComposite({ namespace: 'demo', type: 'badge', schema, compile: () => ({ children: [] }) });
 
     expect(() => definitionOf(union([base, string()]))).toThrow(/union option 1.*ZodObject/i);
     expect(() =>

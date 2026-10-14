@@ -1,4 +1,4 @@
-import type { LayoutCompositeCompileContext } from '@retikz/core';
+import type { CompositeCompileContext } from '@retikz/core';
 import { createGroupBodyAllocation } from '@retikz/graph';
 import { createFlexLayout, LayoutItemKind } from '@retikz/layout';
 import { compileFlexLayout, intrinsicLayoutProposal } from '@retikz/layout/compose';
@@ -33,7 +33,7 @@ const widthFailure = (element: CanonicalFlowElement, reason: string): never => {
 export const allocateFlowContainerWidths = (
   diagram: CanonicalFlowDiagram,
   input: FlowLayoutInput,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   remeasure: (entity: CanonicalFlowEntity, allocatedWidth: number) => FlowLayoutLeafInput,
 ): FlowLayoutInput => {
   const authored = new Map<string, CanonicalFlowElement>();

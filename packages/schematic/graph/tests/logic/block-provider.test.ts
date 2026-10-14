@@ -45,7 +45,7 @@ describe('Block provider closure', () => {
       namespace: 'test',
       type: 'serviceBlock',
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('serviceBlock') }),
-      expand: () => ({
+      compile: () => ({
         children: [
           Graph.createBlock({
             children: [Graph.createBlockHeader({ title: { text: 'Service' } })],

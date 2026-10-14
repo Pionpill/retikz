@@ -14,7 +14,7 @@ import type {
   IRChild,
   IRScene,
   LayoutChildResult,
-  LayoutCompositeCompileContext,
+  CompositeCompileContext,
   LayoutProposal,
   TextMeasurer,
 } from '../../src';
@@ -46,7 +46,7 @@ const sceneOf = (child: IRChild): IRScene => ({
 });
 
 const resolvedResultOf = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   child: IRChild,
   proposal: LayoutProposal = NaturalLayoutProposal,
 ): LayoutChildResult => {

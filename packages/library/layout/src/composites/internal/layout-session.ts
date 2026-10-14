@@ -3,7 +3,7 @@ import type {
   CompositeBoundChild,
   IRChild,
   LayoutChildResult,
-  LayoutCompositeCompileContext,
+  CompositeCompileContext,
   LayoutProposal,
 } from '@retikz/core';
 import { LayoutAxisProposalKind, LayoutChildProbeKind, LayoutIntrinsicMode } from '@retikz/core';
@@ -64,7 +64,7 @@ export const intrinsicLayoutProposal = (mode: 'minimum' | 'natural'): LayoutProp
 
 /** 执行一次必须成功的 child probe，并保留 Core failure occurrence */
 export const requiredLayoutProbe = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   handle: LayoutChildHandle,
   proposal: LayoutProposal,
 ): LayoutChildResult => {
@@ -74,10 +74,7 @@ export const requiredLayoutProbe = (
 };
 
 /** 取得 child 的 minimum / natural 双轴结构 contribution */
-export const measureLayoutChild = (
-  context: LayoutCompositeCompileContext,
-  handle: LayoutChildHandle,
-): MeasuredLayoutChild =>
+export const measureLayoutChild = (context: CompositeCompileContext, handle: LayoutChildHandle): MeasuredLayoutChild =>
   Object.freeze({
     minimum: requiredLayoutProbe(context, handle, intrinsicLayoutProposal('minimum')),
     natural: requiredLayoutProbe(context, handle, intrinsicLayoutProposal('natural')),
@@ -86,7 +83,7 @@ export const measureLayoutChild = (
 /** 以最终 slot 完成 child exact probe、平移与共享 artifact 构造 */
 export const placeLayoutChild = (
   input: Readonly<{
-    context: LayoutCompositeCompileContext;
+    context: CompositeCompileContext;
     handle: LayoutChildHandle;
     slotBounds: LayoutRect;
     key: string;
@@ -123,7 +120,7 @@ export const placeLayoutChild = (
 
 /** replay 已选 child，并按 container overflow 建立布局 clip scope */
 export const replayLayoutChildren = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   children: ReadonlyArray<PlacedLayoutChild>,
   allocation: LayoutRect,
   overflow: LayoutOverflow,

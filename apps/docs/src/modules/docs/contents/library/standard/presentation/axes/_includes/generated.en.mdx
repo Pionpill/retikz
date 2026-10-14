@@ -137,8 +137,8 @@ export const AxesDefinition = defineComposite({
   namespace: STANDARD_NAMESPACE,
   type: 'axes',
   schema: AxesSchema,
-  expand: axes => ({ children: [lowerAxes(axes)] }),
-} satisfies ExpandCompositeDefinition<IRAxes, typeof STANDARD_NAMESPACE, 'axes'>);
+  compile: axes => ({ children: [lowerAxes(axes)] }),
+} satisfies CompositeDefinition<IRAxes, typeof STANDARD_NAMESPACE, 'axes'>);
 ```
 
 #### <ApiSourceLink label={"AxesProvider"} path={"packages/library/standard/src/presentation/axes/composite.ts"} startLine={25}>AxesProvider</ApiSourceLink>

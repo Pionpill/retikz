@@ -37,7 +37,7 @@ PGFPlots sits above TikZ primitives; similarly, `@retikz/plot` uses composites t
 
 ## Choose an expansion strategy
 
-Use `expand` when data can directly generate primitives. Use `compile` when children must be measured before space is assigned. These are mutually exclusive callbacks in a composite definition, not two steps for users to call in sequence. Ordinary users call the domain component; extension authors implement the callback.
+Every composite definition implements `compile(node, context)`. Return `children` directly for simple composition, or use context layout methods when children must be measured before placement. Ordinary users call the domain component; extension authors implement the callback.
 
 ## Further reading
 

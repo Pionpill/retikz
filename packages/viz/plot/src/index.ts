@@ -1,6 +1,11 @@
 export * from './contract';
 export * from './error';
-export type { LowerPlotsOptions, PlotLineageLowerOptions } from './pipeline';
+export type {
+  LowerPlotsOptions,
+  PlotLineageLowerOptions,
+  PlotCompileEnvironment,
+  PlotStandaloneOptions,
+} from './pipeline';
 export {
   createPlotLineageLocator,
   createPlotLocator,

@@ -1,9 +1,4 @@
-import type {
-  LayoutAxisProposal,
-  LayoutCompositeCompileContext,
-  LayoutCompositeCompileResult,
-  LayoutProposal,
-} from '@retikz/core';
+import type { LayoutAxisProposal, CompositeCompileContext, CompositeCompileResult, LayoutProposal } from '@retikz/core';
 import { requiredLayoutProbe } from '@retikz/layout/compose';
 
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
@@ -44,7 +39,7 @@ const blockProposal = (block: CanonicalBlock, proposal: LayoutProposal): LayoutP
 /** 创建 Block 的 layout-aware compile callback */
 export const createCompileBlock =
   (options: ResolvedGraphDefinitionOptions) =>
-  (source: IRBlock, context: LayoutCompositeCompileContext): LayoutCompositeCompileResult => {
+  (source: IRBlock, context: CompositeCompileContext): CompositeCompileResult => {
     const block = resolveBlock(source, options, context.theme);
     const proposal = blockProposal(block, context.proposal);
     const measuredSurface = requiredLayoutProbe(context, { child: lowerBlockSurface(block), occurrence: 0 }, proposal);

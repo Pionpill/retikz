@@ -11,7 +11,7 @@ export const EllipseDefinition = defineComposite({
   namespace: 'standard',
   type: 'ellipse',
   schema: EllipseSchema,
-  expand: (source: IREllipse) => ({ children: [lowerEllipse(source)] }),
+  compile: (source: IREllipse) => ({ children: [lowerEllipse(source)] }),
 });
 
 /** 创建保留几何意图的 Ellipse Source */

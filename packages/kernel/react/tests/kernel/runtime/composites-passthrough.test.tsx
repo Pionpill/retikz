@@ -19,7 +19,7 @@ const labeledBox = defineComposite({
     type: literal('labeledBox'),
     text: string(),
   }),
-  expand: node => ({
+  compile: node => ({
     children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: node.text }],
   }),
 });

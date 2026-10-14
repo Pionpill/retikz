@@ -80,6 +80,10 @@ description: Use when writing or reviewing Retikz documentation, demos, figures,
 - 正文默认不主动加第三方外链；项目文件使用可点击 GitHub URL，站内导航使用真实路由。博客引用规则单独定义。
 - 正文约 800px，表格优先保持少列；长说明拆到正文，MDX 表格中的 union 竖线须转义。
 
+## Learnings
+
+- 直接说明概念与行为；除非辨析对正确理解或使用特别重要，避免“是……，不是……”及同类反向补充，不预设误解而过度解释。
+
 ## 完成条件
 
 实际文档改动按 [验证规则](references/validation.md) 执行机械检查、源码核对与真实页面检查；脚本通过不代表可读性或契约语义通过。新增页面或重写主线的读者评审按获批计划执行，不由 skill 自动授权调度。

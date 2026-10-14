@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
+import { measureLabel } from '../helpers/text-measurement';
 
 const rows = [
   { month: 0, value: 10 },
@@ -62,7 +63,7 @@ const parsePlotIR = (spec: unknown): IRPlot => PlotSchema.parse(spec);
 const parsedComposition = (): IRPlot => parsePlotIR(compositionSpec);
 
 const expandOf = (spec: IRPlot): IRScope => {
-  return lowerPlot(spec, { sales: rows }, { width: 480, height: 300 }) as IRScope;
+  return lowerPlot(spec, { sales: rows }, { textMeasurer: measureLabel, width: 480, height: 300 }) as IRScope;
 };
 
 describe('coordinate composition registry schema', () => {

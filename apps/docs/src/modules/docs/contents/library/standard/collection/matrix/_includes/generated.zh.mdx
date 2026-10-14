@@ -524,7 +524,7 @@ export type IRMatrixAxisIndex = input<typeof MatrixAxisIndexSchema>;
 #### <ApiSourceLink label={"MatrixDefinition"} path={"packages/library/standard/src/collection/matrix/composite.ts"} startLine={10}>MatrixDefinition</ApiSourceLink>
 
 ```ts
-export const MatrixDefinition: LayoutCompositeDefinition<IRMatrix, 'standard', 'matrix'> = defineComposite({
+export const MatrixDefinition: CompositeDefinition<IRMatrix, 'standard', 'matrix'> = defineComposite({
   namespace: 'standard',
   type: 'matrix',
   schema: MatrixSchema,

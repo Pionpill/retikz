@@ -10,7 +10,7 @@ import type {
   IRPaint,
   IRScene,
   LayoutChildResult,
-  LayoutCompositeCompileContext,
+  CompositeCompileContext,
   LayoutProposal,
   ScenePrimitive,
 } from '../../src';
@@ -48,7 +48,7 @@ const node = (id: string, position: readonly [number, number] = [0, 0]): IRChild
 });
 
 const resolvedResultOf = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   child: IRChild,
   proposal: LayoutProposal = NaturalLayoutProposal,
 ): LayoutChildResult => {

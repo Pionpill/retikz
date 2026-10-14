@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { LowerPlotsOptions } from '../../src/pipeline/expand';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
+import { measureLabel } from '../helpers/text-measurement';
 
 const options: LowerPlotsOptions = { width: 480, height: 300 };
 
@@ -14,7 +15,7 @@ const rows = [
 ];
 
 const lower = (source: unknown, extra: LowerPlotsOptions = {}): IRScope =>
-  lowerPlot(PlotSchema.parse(source), { d: rows }, { ...options, ...extra }) as IRScope;
+  lowerPlot(PlotSchema.parse(source), { d: rows }, { textMeasurer: measureLabel, ...options, ...extra }) as IRScope;
 
 const nodesOf = (root: IRScope): Array<IRNode> => {
   const result: Array<IRNode> = [];

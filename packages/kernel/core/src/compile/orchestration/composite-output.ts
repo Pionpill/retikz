@@ -4,7 +4,6 @@ import type {
   CompositeCompileChild,
   CompositeBoundChild,
   CompositeCompileScopeProps,
-  CompositeExpandResult,
   CompositeReplayWrapper,
   Transform,
 } from '../../contract';
@@ -29,7 +28,7 @@ export const validateCompositeSpatialHandles = (owner: string, value: unknown) =
 
 const builtinChildTypes = new Set(['node', 'path', 'coordinate', 'scope']);
 
-/** 判断当前 expand owner 直接生成的普通 IR 区域是否引入空间 Scope */
+/** 判断当前 composite owner 直接生成的普通 IR 区域是否引入空间 Scope */
 const containsGeneratedSpatialScope = (children: ReadonlyArray<IRChild>): boolean =>
   children.some(child => {
     if ('namespace' in child || child.type !== 'scope') return false;
@@ -82,40 +81,16 @@ export const snapshotCompositeOutputChild = (owner: string, value: unknown, inde
 export const snapshotCompositeLayoutChild = (owner: string, value: unknown, index: number): IRChild =>
   snapshotCompositeCallbackChild(owner, value, `layoutChild input at probe ${index}`);
 
-/** 校验、脱离并冻结 Expand Composite 的结构化返回值 */
-export const validateExpandCompositeOutput = (
-  owner: string,
-  produced: unknown,
-  snapshotChild: (value: unknown, index: number) => IRChild | CompositeBoundChild = (value, index) =>
-    snapshotCompositeOutputChild(owner, value, index),
-  resolveChild: (child: IRChild | CompositeBoundChild) => IRChild = child => child as IRChild,
-): CompositeExpandResult =>
-  withProviderOutputValidationBoundary(owner, () => {
-    if (produced === null || typeof produced !== 'object' || Array.isArray(produced)) {
-      throw createCompositeContractError(`${owner} returned an invalid expand result; children must be an array.`);
-    }
-
-    const raw = produced as Record<string, unknown>;
-    const unsupported = Object.keys(raw).filter(field => !['children', 'spatialHandles'].includes(field));
-    if (unsupported.length > 0) {
-      throw createCompositeContractError(`${owner} returned unsupported expand result field '${unsupported[0]}'.`);
-    }
-
-    if (!Array.isArray(raw.children)) {
-      throw createCompositeContractError(`${owner} returned an invalid expand result; children must be an array.`);
-    }
-
-    const children = Object.freeze(raw.children.map(snapshotChild));
-    const spatialHandles =
-      raw.spatialHandles === undefined ? undefined : validateCompositeSpatialHandles(owner, raw.spatialHandles);
-    if ((spatialHandles?.length ?? 0) > 0 && containsGeneratedSpatialScope(children.map(resolveChild))) {
-      throw createCompositeContractError(
-        `${owner} cannot declare result-level spatial handles while its generated output contains a Scope with position or transforms; use layout-aware Scope attachment.`,
-      );
-    }
-
-    return Object.freeze({ children, ...(spatialHandles === undefined ? {} : { spatialHandles }) });
-  });
+/** 校验直接声明的空间区域，带变换的子 Scope 应在自身局部坐标声明 */
+export const validateCompositeSpatialOutput = (owner: string, value: unknown, children: ReadonlyArray<IRChild>) => {
+  const spatialHandles = value === undefined ? undefined : validateCompositeSpatialHandles(owner, value);
+  if ((spatialHandles?.length ?? 0) > 0 && containsGeneratedSpatialScope(children)) {
+    throw createCompositeContractError(
+      `${owner} spatialHandles cannot accompany a generated Scope with placement or transforms; declare them on the Scope.`,
+    );
+  }
+  return spatialHandles;
+};
 
 /** 以普通 Scope props schema 校验并脱离完整 authored Scope props */
 const cloneScopeProps = (props: unknown, owner: CompositeCompileOwner): CompositeCompileScopeProps => {
