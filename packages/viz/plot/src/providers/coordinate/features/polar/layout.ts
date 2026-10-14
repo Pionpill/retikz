@@ -1,41 +1,9 @@
-import type { IRNode } from '@retikz/core';
 import type { BoundsInsets } from '@retikz/math';
 
-import { RetikzPlotError } from '../error';
-import type { PlotLabelMeasure } from './text';
-
-/** 默认整图宽度（user units），用于 lowering 与 locator 缺省尺寸 */
-export const DEFAULT_PLOT_WIDTH = 480;
-
-/** 默认整图高度（user units），用于 lowering 与 locator 缺省尺寸 */
-export const DEFAULT_PLOT_HEIGHT = 300;
-
-/** label 字号（测量与实绘共用），无显式 fontSize 时的默认值 */
-export const DEFAULT_FONT_SIZE = 11;
-
-/** 默认刻度线长（user units）；axis 与 guide 复用 */
-export const DEFAULT_AXIS_TICK_LENGTH = 6;
-
-/** 默认刻度线到 label 的间距（user units）；axis 与 guide 共用 */
-export const DEFAULT_AXIS_LABEL_GAP = 4;
-
-/** 极坐标角向标签的布局输入 */
-export type PolarAngularLabel = {
-  /** 标签所在角度，单位为度 */
-  angle: number;
-  /** 标签文本 */
-  text: string;
-  /** 标签字体与换行配置 */
-  node?: IRNode;
-};
-
-/** 极坐标角向标签的屏幕空间布局结果 */
-export type PolarAngularLabelLayout = {
-  /** 标签视觉盒中心 */
-  position: [number, number];
-  /** 随象限变化的默认文字对齐 */
-  align: 'start' | 'middle' | 'end';
-};
+import { RetikzPlotError } from '../../../../error';
+import type { PlotLabelMeasure } from '../../../../shared';
+import { DEFAULT_AXIS_LABEL_GAP, DEFAULT_AXIS_TICK_LENGTH } from '../../../../shared';
+import type { PolarAngularLabel, PolarAngularLabelLayout, PolarLayout, PolarLayoutContext } from './types';
 
 /** 极坐标方向分量视为轴向的误差阈值 */
 const POLAR_AXIS_EPSILON = 1e-9;
@@ -77,33 +45,6 @@ export const layoutPolarAngularLabel = (
     position: [center[0] + projectedHorizontal * labelRadius, center[1] + projectedVertical * labelRadius],
     align: horizontalSign < 0 ? 'end' : horizontalSign > 0 ? 'start' : 'middle',
   };
-};
-
-/** computePolarCoordinate 输入：角向刻度的实际角度与标签文本 */
-export type PolarLayoutContext = {
-  /** 本次分配的局部尺寸 */
-  size: { width: number; height: number };
-  /** 与实绘一致的文字测量环境 */
-  text: {
-    /** Core 提供的文字测量能力 */
-    measure: PlotLabelMeasure;
-    /** 标签缺省字号 */
-    fontSize: number;
-  };
-  /** 布局与装饰的四边预留 */
-  reserve?: Partial<BoundsInsets>;
-  /** 用户逐边覆盖留白 */
-  margin?: Partial<BoundsInsets>;
-  /** 可见角向刻度标签 */
-  angularLabels: ReadonlyArray<PolarAngularLabel>;
-};
-
-/** computePolarCoordinate 结果：圆心（屏幕坐标）+ 外半径（user units） */
-export type PolarLayout = {
-  /** 圆心（显式留白后的可用区域中心，屏幕坐标） */
-  center: [number, number];
-  /** 外半径（user units，满足圆与角向标签包围盒约束） */
-  outerRadius: number;
 };
 
 /**

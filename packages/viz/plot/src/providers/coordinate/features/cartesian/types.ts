@@ -1,8 +1,8 @@
 import type { BoundsInsets, BoundsRect } from '@retikz/math';
 
-import type { TickSet } from '../../../contract';
-import type { IRPlotAxisGuide } from '../../../schemas';
-import type { PlotLabelMeasure } from '../../../shared';
+import type { TickSet } from '../../../../contract';
+import type { IRPlotAxisGuide } from '../../../../schemas';
+import type { PlotLabelMeasure } from '../../../../shared';
 
 /** 单根轴参与绘图区布局的上下文 */
 export type PlotAxisLayoutContext = {

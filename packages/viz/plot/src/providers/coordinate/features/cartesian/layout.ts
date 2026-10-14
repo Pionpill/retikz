@@ -1,9 +1,9 @@
 import type { IRNode } from '@retikz/core';
 import type { BoundsInsets, BoundsRect } from '@retikz/math';
 
-import { RetikzPlotError } from '../../../error';
-import type { PlotLabelMeasure } from '../../../shared';
-import { DEFAULT_AXIS_LABEL_GAP, DEFAULT_AXIS_TICK_LENGTH, guideTextSourceProps } from '../../../shared';
+import { RetikzPlotError } from '../../../../error';
+import type { PlotLabelMeasure } from '../../../../shared';
+import { DEFAULT_AXIS_LABEL_GAP, DEFAULT_AXIS_TICK_LENGTH, guideTextSourceProps } from '../../../../shared';
 import type { PlotAreaLayout, PlotAreaLayoutContext } from './types';
 
 /** 一组 label 中最宽的测量像素宽（空集 0） */

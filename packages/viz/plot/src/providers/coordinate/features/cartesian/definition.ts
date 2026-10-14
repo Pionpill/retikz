@@ -12,14 +12,14 @@ import type {
   LoweredGuide,
   PositionScale,
   TickSet,
-} from '../../../contract';
-import { cellInterval } from '../../../contract';
+} from '../../../../contract';
+import { cellInterval } from '../../../../contract';
 import type {
   Cartesian1DOrientationType,
   IRPlotCartesian1DCoordinate,
   IRPlotCoordinate,
   IRPlotScaleOperation,
-} from '../../../schemas';
+} from '../../../../schemas';
 import {
   AxisPlacementKind,
   Cartesian1DOrientation,
@@ -27,9 +27,10 @@ import {
   Cartesian2DSchema,
   BuiltinPlotCoordinate,
   BuiltinPlotScale,
-} from '../../../schemas';
-import type { PlotLabelMeasure } from '../../../shared';
-import { assertUniqueAxisPlacement, computePlotArea } from '../shared';
+} from '../../../../schemas';
+import type { PlotLabelMeasure } from '../../../../shared';
+import { assertUniqueAxisPlacement } from '../../shared';
+import { computePlotArea } from './layout';
 
 type Cartesian2DCoordinate = Extract<IRPlotCoordinate, { type: typeof BuiltinPlotCoordinate.Cartesian2D }>;
 
