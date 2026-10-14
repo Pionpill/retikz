@@ -1,4 +1,4 @@
-import type { ExpandCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
+import type { CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
 
 import { STANDARD_NAMESPACE } from '../../shared';
@@ -11,8 +11,8 @@ export const AxesDefinition = defineComposite({
   namespace: STANDARD_NAMESPACE,
   type: 'axes',
   schema: AxesSchema,
-  expand: axes => ({ children: [lowerAxes(axes)] }),
-} satisfies ExpandCompositeDefinition<IRAxes, typeof STANDARD_NAMESPACE, 'axes'>);
+  compile: axes => ({ children: [lowerAxes(axes)] }),
+} satisfies CompositeDefinition<IRAxes, typeof STANDARD_NAMESPACE, 'axes'>);
 
 /** 组装持久化的 Standard Axes composite */
 export const createAxes = (input: AxesInput): IRAxes => ({

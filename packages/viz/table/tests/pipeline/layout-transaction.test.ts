@@ -1,4 +1,4 @@
-import type { LayoutCompositeCompileContext, NodeLayoutCompileArtifact } from '@retikz/core';
+import type { CompositeCompileContext, NodeLayoutCompileArtifact } from '@retikz/core';
 import {
   compileToScene,
   CompositeBaseSchema,
@@ -164,7 +164,7 @@ describe('Table layout transaction', () => {
   });
 
   it('uses a full finite range proposal as the selected wrap replay and publishes its nested artifact once', () => {
-    const calls: Array<LayoutCompositeCompileContext['proposal']> = [];
+    const calls: Array<CompositeCompileContext['proposal']> = [];
     const ProbeSchema = CompositeBaseSchema.extend({
       namespace: literal('fixture'),
       type: literal('probe'),
@@ -763,7 +763,7 @@ describe('Table layout transaction', () => {
         }
 
         expectedFailure = failedProbe.failure;
-        const tableContext: LayoutCompositeCompileContext = {
+        const tableContext: CompositeCompileContext = {
           ...context,
           layoutChild: (child, proposal) => {
             if (

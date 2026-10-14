@@ -18,7 +18,7 @@ const labeledBox = defineComposite({
     type: literal('labeledBox'),
     text: string(),
   }),
-  expand: (node, context) => ({
+  compile: (node, context) => ({
     children: [
       {
         type: 'node',

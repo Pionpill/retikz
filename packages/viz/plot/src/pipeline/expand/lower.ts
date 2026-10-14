@@ -1,11 +1,4 @@
-import type {
-  IRChild,
-  IRNode,
-  IRScope,
-  LayoutAxisProposal,
-  LayoutCompositeDefinition,
-  ResolvedTheme,
-} from '@retikz/core';
+import type { IRChild, IRNode, IRScope, LayoutAxisProposal, CompositeDefinition, ResolvedTheme } from '@retikz/core';
 import {
   categoricalColorAt,
   defineComposite,
@@ -1552,7 +1545,7 @@ export const lowerPlot = (
 export const lowerPlots = (
   datasets: ExternalDatasets,
   options: LowerPlotsOptions = {},
-): Array<LayoutCompositeDefinition<IRPlot, typeof PLOT_NAMESPACE, 'plot'>> => [
+): Array<CompositeDefinition<IRPlot, typeof PLOT_NAMESPACE, 'plot'>> => [
   defineComposite({
     namespace: PLOT_NAMESPACE,
     type: 'plot',

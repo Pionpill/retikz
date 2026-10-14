@@ -24,7 +24,7 @@ const themedBox = defineComposite({
     namespace: literal('theme-test'),
     type: literal('box'),
   }),
-  expand: (_node, context) => ({
+  compile: (_node, context) => ({
     children: [
       {
         type: 'node',
@@ -77,7 +77,7 @@ const themeProbe = defineComposite({
     namespace: literal('theme-test'),
     type: literal('probe'),
   }),
-  expand: (_node, context) => {
+  compile: (_node, context) => {
     const styleColor =
       context.theme.style === 'clean'
         ? '#layout-style'

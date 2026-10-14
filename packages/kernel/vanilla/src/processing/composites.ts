@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition, AnyExpandCompositeDefinition, AnyLayoutCompositeDefinition } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 import { RetikzRenderError, RetikzRenderErrorCode } from '@retikz/render/runtime';
 import { defineRuntimeSource } from '@retikz/runtime';
 
@@ -48,64 +48,39 @@ export const VanillaCompositeRevisionSourceDefinition = defineRuntimeSource<numb
   },
 });
 
-/** 用稳定 callback 包装 normalization 每轮生成的 expand definition */
-const createExpandDelegate = (
-  initial: AnyExpandCompositeDefinition,
-  slot: CompositeSlot,
-): AnyExpandCompositeDefinition => ({
-  namespace: initial.namespace,
-  type: initial.type,
-  schema: initial.schema,
-  expand: (node, context) => {
-    const expand = slot.current.expand;
-    if (typeof expand !== 'function') return invalidDefinitions(slot.current);
-    return expand(node, context);
-  },
-});
-
-/** 用稳定 callback 包装 normalization 每轮生成的 layout-aware definition */
-const createLayoutDelegate = (
-  initial: AnyLayoutCompositeDefinition,
-  slot: CompositeSlot,
-): AnyLayoutCompositeDefinition => {
+/** 用稳定 callback 包装 normalization 每轮生成的 composite definition */
+const createCompositeDelegate = (initial: AnyCompositeDefinition, slot: CompositeSlot): AnyCompositeDefinition => {
   const delegate = {
     namespace: initial.namespace,
     type: initial.type,
     schema: initial.schema,
-    compile: (node: never, context: Parameters<NonNullable<AnyLayoutCompositeDefinition['compile']>>[1]) => {
+    compile: (node: never, context: Parameters<AnyCompositeDefinition['compile']>[1]) => {
       const compile = slot.current.compile;
-      if (typeof compile !== 'function') return invalidDefinitions(slot.current);
       return compile(node, context);
     },
     ...(initial.artifactSchema === undefined ? {} : { artifactSchema: initial.artifactSchema }),
   };
-  return delegate as AnyLayoutCompositeDefinition;
+  return delegate as AnyCompositeDefinition;
 };
 
 const createDelegate = (slot: CompositeSlot): AnyCompositeDefinition => {
   const initial = slot.current;
-  return typeof initial.expand === 'function'
-    ? createExpandDelegate(initial, slot)
-    : createLayoutDelegate(initial, slot);
+  return createCompositeDelegate(initial, slot);
 };
 
 /** 判断 candidate 是否保持当前 Core Computation 的 definition topology */
 const isCompatibleDefinition = (initial: AnyCompositeDefinition, next: AnyCompositeDefinition): boolean => {
-  const initialExpand = typeof initial.expand === 'function';
-  const nextExpand = typeof next.expand === 'function';
-
   return (
     initial.namespace === next.namespace &&
     initial.type === next.type &&
     initial.schema === next.schema &&
-    initialExpand === nextExpand &&
     initial.artifactSchema === next.artifactSchema
   );
 };
 
 /**
  * 为 Vanilla normalization 生成的 definitions 建立稳定代理
- * @description Core Computation options 在 session 内固定；同 key/schema/分支的 callback 可在 transaction prepare 前切到候选值，
+ * @description Core Computation options 在 session 内固定；同 key/schema/artifactSchema的 callback 可在 transaction prepare 前切到候选值，
  *   失败时恢复旧 callback，成功时与 Core artifact 一起成为 committed 语义
  */
 export const createRetainedCompositeDefinitions = (

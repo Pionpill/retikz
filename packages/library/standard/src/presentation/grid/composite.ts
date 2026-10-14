@@ -1,4 +1,4 @@
-import type { ExpandCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
+import type { CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
 
 import { STANDARD_NAMESPACE } from '../../shared';
@@ -11,8 +11,8 @@ export const GridDefinition = defineComposite({
   namespace: STANDARD_NAMESPACE,
   type: 'grid',
   schema: GridSchema,
-  expand: grid => ({ children: [lowerGrid(grid)] }),
-} satisfies ExpandCompositeDefinition<IRGrid, typeof STANDARD_NAMESPACE, 'grid'>);
+  compile: grid => ({ children: [lowerGrid(grid)] }),
+} satisfies CompositeDefinition<IRGrid, typeof STANDARD_NAMESPACE, 'grid'>);
 
 /** 组装持久化的 Standard Grid composite */
 export const createGrid = (input: GridInput): IRGrid => ({

@@ -22,7 +22,7 @@ describe('Vanilla processing', () => {
         namespace: literal('fixture'),
         type: literal('box'),
       }),
-      expand: () => ({ children: [] }),
+      compile: () => ({ children: [] }),
     });
     const makeDefinition = vi.fn(() => definition);
     const adapter: InputEmbedAdapter<Record<string, never>> = {
@@ -154,7 +154,7 @@ describe('Vanilla processing', () => {
         namespace: literal('fixture'),
         type: literal('box'),
       }),
-      expand: () => ({ children: [] }),
+      compile: () => ({ children: [] }),
     });
     const adapter: InputEmbedAdapter<Record<string, never>> = {
       kind: 'fixture-box',
@@ -201,7 +201,7 @@ describe('Vanilla processing', () => {
         namespace: literal('fixture'),
         type: literal('broken'),
       }),
-      expand: () => {
+      compile: () => {
         throw failure;
       },
     });

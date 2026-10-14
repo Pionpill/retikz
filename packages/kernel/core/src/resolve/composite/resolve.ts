@@ -1,24 +1,14 @@
 import type { JsonValue } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
-import type {
-  CompositeExpandContext,
-  CompositeExpandResult,
-  LayoutCompositeCompileContext,
-  LayoutCompositeCompileResult,
-} from '../../contract';
+import type { CompositeCompileContext, CompositeCompileResult } from '../../contract';
 import type { IRComposite } from '../../schemas';
 import { parseProviderPayload } from '../provider-payload';
 import type { CompositeBinding, CompositeRegistry, CompositeResolution, RegisteredCompositeBinding } from './types';
 
-type CallableExpandComposite = Readonly<{
+type CallableComposite = Readonly<{
   schema: ZodType;
-  expand: (node: unknown, context: CompositeExpandContext) => CompositeExpandResult;
-}>;
-
-type CallableLayoutComposite = Readonly<{
-  schema: ZodType;
-  compile: (node: unknown, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<JsonValue>;
+  compile: (node: unknown, context: CompositeCompileContext) => CompositeCompileResult<JsonValue>;
   artifactSchema?: ZodType<JsonValue>;
 }>;
 
@@ -27,20 +17,7 @@ export const bindComposite = (source: IRComposite, composites: CompositeRegistry
   const key = `${source.namespace}.${source.type}`;
   const definition = composites.get(key);
   if (definition === undefined) return { kind: 'unregistered', key };
-  if (definition.expand !== undefined) {
-    const callable = definition as unknown as CallableExpandComposite;
-    return {
-      kind: 'expand',
-      key,
-      namespace: definition.namespace,
-      type: definition.type,
-      source,
-      schema: callable.schema,
-      expand: callable.expand,
-    };
-  }
-
-  const callable = definition as unknown as CallableLayoutComposite;
+  const callable = definition as unknown as CallableComposite;
 
   return {
     kind: 'compile',

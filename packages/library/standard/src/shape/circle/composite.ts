@@ -11,7 +11,7 @@ export const CircleDefinition = defineComposite({
   namespace: 'standard',
   type: 'circle',
   schema: CircleSchema,
-  expand: (source: IRCircle) => ({ children: [lowerCircle(source)] }),
+  compile: (source: IRCircle) => ({ children: [lowerCircle(source)] }),
 });
 
 /** 创建保留几何意图的 Circle Source */

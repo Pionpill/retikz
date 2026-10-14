@@ -1,4 +1,4 @@
-import type { LayoutCompositeCompileContext } from '@retikz/core';
+import type { CompositeCompileContext } from '@retikz/core';
 import { intrinsicLayoutProposal, requiredLayoutProbe } from '@retikz/layout/compose';
 import type { BoundsInsets, BoundsRect } from '@retikz/math';
 import { resolveSurface } from '@retikz/standard/presentation';
@@ -22,7 +22,7 @@ export type GroupShellMetrics = Readonly<{
 /** Graph Group compile 与跨包测量共享的 shell 组合结果 */
 export const composeGroupShell = (
   group: CanonicalGroup,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
 ): Readonly<{ surface: ReturnType<typeof lowerGroupSurface>; metrics: GroupShellMetrics }> => {
   const surface = lowerGroupSurface(group);
   const { padding } = resolveSurface(surface);
@@ -55,14 +55,14 @@ export const composeGroupShell = (
 /** 使用已解析 Graph registries 测量 Group shell */
 export const measureResolvedGroupShell = (
   source: IRGroup,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   options: ResolvedGraphDefinitionOptions,
 ): GroupShellMetrics => composeGroupShell(resolveGroup(source, options, context.theme), context).metrics;
 
 /** 使用 Group 自身 caption、padding 与 Surface 真源测量 shell */
 export const measureGroupShell = (
   source: IRGroup,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   options: GraphDefinitionOptions = {},
 ): GroupShellMetrics => measureResolvedGroupShell(source, context, resolveGraphDefinitionOptions(options));
 

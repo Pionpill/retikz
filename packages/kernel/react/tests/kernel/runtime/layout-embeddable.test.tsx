@@ -27,7 +27,7 @@ const definitionOf = (key: CompositeCoreProviderKey): AnyCompositeDefinition => 
     namespace: key.namespace,
     type: key.type,
     schema,
-    expand: node => ({
+    compile: node => ({
       children: [{ type: 'node', id: `${key.namespace}-${node.panelId}`, position: [0, 0], text: node.panelId }],
     }),
   });

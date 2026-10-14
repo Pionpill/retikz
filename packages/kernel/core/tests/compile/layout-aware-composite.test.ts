@@ -6,7 +6,7 @@ import type {
   IRChild,
   IRScene,
   LayoutChildResult,
-  LayoutCompositeCompileContext,
+  CompositeCompileContext,
   LayoutProposal,
   ScenePrimitive,
   TextMeasurer,
@@ -20,7 +20,6 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
-  lowerIRToKernel,
   NaturalLayoutProposal,
 } from '../../src';
 
@@ -32,7 +31,7 @@ const fixedMeasurer: TextMeasurer = text => ({
 });
 
 const resolvedResultOf = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   child: IRChild,
   proposal: LayoutProposal = NaturalLayoutProposal,
 ): LayoutChildResult => {
@@ -94,7 +93,7 @@ describe('layout-aware composite', () => {
       namespace: 'test',
       type: 'themed-child',
       schema: strictObject({ namespace: literal('test'), type: literal('themed-child') }),
-      expand: (_source, context) => ({
+      compile: (_source, context) => ({
         children: [
           {
             type: 'node',
@@ -343,25 +342,5 @@ describe('layout-aware composite', () => {
         { composites: [definition] },
       ),
     ).toThrow(/Composite 'test\.duplicateReplay' at children\[0\].*already replayed/i);
-  });
-
-  it('makes lowerIRToKernel fail loudly before invoking a layout-aware definition', () => {
-    const compile = vi.fn(() => ({ children: [] }));
-    const definition = defineComposite({
-      namespace: 'test',
-      type: 'layoutOnly',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('layoutOnly'),
-      }),
-      compile,
-    });
-
-    expect(() =>
-      lowerIRToKernel(sceneOf({ namespace: 'test', type: 'layoutOnly' }), {
-        composites: [definition],
-      }),
-    ).toThrow(/test\.layoutOnly.*children\[0\].*full compile environment/i);
-    expect(compile).not.toHaveBeenCalled();
   });
 });

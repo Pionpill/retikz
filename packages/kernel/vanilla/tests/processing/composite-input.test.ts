@@ -19,7 +19,7 @@ const leafDefinition = defineComposite({
   namespace: 'fixture',
   type: 'prepared',
   schema: CompositeBaseSchema.extend({ namespace: literal('fixture'), type: literal('prepared') }),
-  expand: (_node, context) => ({ children: [{ type: 'node', position: [0, 0], text: String(context.runtimeInput) }] }),
+  compile: (_node, context) => ({ children: [{ type: 'node', position: [0, 0], text: String(context.runtimeInput) }] }),
 });
 
 const makeContribution = (text: string): InputEmbedContribution => ({

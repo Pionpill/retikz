@@ -1,4 +1,4 @@
-import type { LayoutCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
+import type { CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
 import { PathClipProvider } from '@retikz/extension';
 
@@ -7,7 +7,7 @@ import { MapSchema } from './schema';
 import type { IRMap } from './schema';
 
 /** Standard Map 的布局感知 Definition */
-export const MapDefinition: LayoutCompositeDefinition<IRMap, 'standard', 'map'> = defineComposite({
+export const MapDefinition: CompositeDefinition<IRMap, 'standard', 'map'> = defineComposite({
   namespace: 'standard',
   type: 'map',
   schema: MapSchema,

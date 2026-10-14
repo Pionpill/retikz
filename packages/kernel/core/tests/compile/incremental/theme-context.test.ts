@@ -26,7 +26,7 @@ const themedComposite = defineComposite({
     namespace: literal('theme-test'),
     type: literal('box'),
   }),
-  expand: (_node, context) => ({
+  compile: (_node, context) => ({
     children: [
       {
         type: 'node',

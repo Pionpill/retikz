@@ -67,7 +67,7 @@ const boxComposite = defineComposite({
     type: literal('box'),
     text: string(),
   }),
-  expand: composite => ({
+  compile: composite => ({
     children: [
       {
         type: 'node',

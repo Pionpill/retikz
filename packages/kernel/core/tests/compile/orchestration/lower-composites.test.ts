@@ -24,7 +24,7 @@ const labeledBox = defineComposite({
   namespace: 'example',
   type: 'labeledBox',
   schema: LabeledBoxSchema,
-  expand: node => ({
+  compile: node => ({
     children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: node.text }],
   }),
 });
@@ -34,7 +34,7 @@ const vanishing = defineComposite({
   namespace: 'example',
   type: 'vanishing',
   schema: CompositeBaseSchema.extend({ namespace: literal('example'), type: literal('vanishing') }),
-  expand: () => ({ children: [] }),
+  compile: () => ({ children: [] }),
 });
 
 /** panel → 展开出另一个 composite（labeledBox），验证嵌套 fixpoint */
@@ -42,7 +42,7 @@ const panel = defineComposite({
   namespace: 'example',
   type: 'panel',
   schema: CompositeBaseSchema.extend({ namespace: literal('example'), type: literal('panel') }),
-  expand: () => ({ children: [{ namespace: 'example', type: 'labeledBox', text: 'inner' }] }),
+  compile: () => ({ children: [{ namespace: 'example', type: 'labeledBox', text: 'inner' }] }),
 });
 
 /** loop → 展开出自身，验证环守卫 */
@@ -50,7 +50,7 @@ const loop = defineComposite({
   namespace: 'example',
   type: 'loop',
   schema: CompositeBaseSchema.extend({ namespace: literal('example'), type: literal('loop') }),
-  expand: () => ({ children: [{ namespace: 'example', type: 'loop' }] }),
+  compile: () => ({ children: [{ namespace: 'example', type: 'loop' }] }),
 });
 
 /** zbox → 展开出带 zIndex 的 node */
@@ -58,7 +58,7 @@ const zbox = defineComposite({
   namespace: 'example',
   type: 'zbox',
   schema: CompositeBaseSchema.extend({ namespace: literal('example'), type: literal('zbox') }),
-  expand: () => ({
+  compile: () => ({
     children: [{ type: 'node', id: 'z', position: [0, 0], shape: 'rectangle', text: 'z', zIndex: 10 }],
   }),
 });
@@ -68,13 +68,13 @@ const boxWithId = defineComposite({
   namespace: 'example',
   type: 'boxWithId',
   schema: CompositeBaseSchema.extend({ namespace: literal('example'), type: literal('boxWithId') }),
-  expand: () => ({
+  compile: () => ({
     children: [{ type: 'node', id: 'panel', position: [50, 50], shape: 'rectangle', text: 'P' }],
   }),
 });
 
 describe('lowerComposites — happy path', () => {
-  it('register-and-expand: tier2 节点经注册 expand 展开成 tier1 → Scene 含 rect', () => {
+  it('register-and-compile: tier2 节点经注册 compile 回调生成成 tier1 → Scene 含 rect', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -84,7 +84,7 @@ describe('lowerComposites — happy path', () => {
     expect(findByType(compileToScene(ir, { composites: [labeledBox] }).scene.primitives, 'rect')).toBeDefined();
   });
 
-  it('expand-is-ir-to-ir: 展开后与手写等价 tier1 IR 同 Scene', () => {
+  it('compile-output-equivalence: 展开后与手写等价 tier1 IR 同 Scene', () => {
     const irComposite: IRScene = {
       version: 1,
       type: 'scene',
@@ -118,7 +118,7 @@ describe('lowerComposites — happy path', () => {
       namespace: 'example',
       type: 'variantBox',
       schema,
-      expand: node => ({ children: [{ type: 'node', position: [0, 0], text: String(node.value) }] }),
+      compile: node => ({ children: [{ type: 'node', position: [0, 0], text: String(node.value) }] }),
     });
     const ir: IRScene = {
       version: 1,
@@ -145,7 +145,7 @@ describe('lowerComposites — 边界', () => {
     expect(compileToScene(ir, { composites: [panel, labeledBox] }).scene).toEqual(compileToScene(irDirect).scene);
   });
 
-  it('empty-expand: expand 返回空 children → 节点消失、不抛、与无该节点等价', () => {
+  it('empty-compile: compile 返回空 children → 节点消失、不抛、与无该节点等价', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

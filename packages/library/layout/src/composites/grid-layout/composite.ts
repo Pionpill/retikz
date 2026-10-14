@@ -1,4 +1,4 @@
-import type { CompositeArtifactOf, LayoutCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
+import type { CompositeArtifactOf, CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
 
 import { LAYOUT_NAMESPACE } from '../../shared';
@@ -7,7 +7,7 @@ import { GridLayoutArtifactSchema, GridLayoutSchema } from './schema';
 import type { GridLayoutArtifact, IRGridLayout, GridLayoutInput } from './types';
 
 /** Layout GridLayout 的官方 Core layout-aware composite definition */
-export const GridLayoutDefinition: LayoutCompositeDefinition<
+export const GridLayoutDefinition: CompositeDefinition<
   IRGridLayout,
   typeof LAYOUT_NAMESPACE,
   'gridLayout',

@@ -2,8 +2,8 @@ import type {
   LayoutAlignmentGuide,
   LayoutAxisProposal,
   LayoutChildResult,
-  LayoutCompositeCompileContext,
-  LayoutCompositeCompileResult,
+  CompositeCompileContext,
+  CompositeCompileResult,
   LayoutProposal,
 } from '@retikz/core';
 import {
@@ -101,7 +101,7 @@ const boundedProposal = (max: number): LayoutAxisProposal => ({
 
 /** 执行一次必需的 child probe，并在失败时保留 Core occurrence 提升错误 */
 const requiredProbe = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   sourceIndex: number,
   proposal: LayoutProposal,
 ): LayoutChildResult => {
@@ -227,8 +227,8 @@ const outgoingRowGuide = (name: 'first-baseline' | 'last-baseline', items: Reado
 /** 编译 Layout GridLayout 的 placement、双轴 probe、track 求解与 replay 流程 */
 export const compileGridLayout = (
   sourceLayout: IRGridLayout,
-  context: LayoutCompositeCompileContext,
-): LayoutCompositeCompileResult<GridLayoutArtifact> => {
+  context: CompositeCompileContext,
+): CompositeCompileResult<GridLayoutArtifact> => {
   const node = resolveGridLayout(sourceLayout);
   const padding = node.padding;
   const authoredItems = createEffectiveLayoutItems(node.children);

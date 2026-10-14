@@ -1,4 +1,4 @@
-import type { LayoutCompositeCompileContext } from '@retikz/core';
+import type { CompositeCompileContext } from '@retikz/core';
 import { createGroupBodyAllocation } from '@retikz/graph';
 import {
   createFlexLayout,
@@ -134,7 +134,7 @@ const projectPlacementBounds = (
 
 /** 使用公开 Flex/Grid compiler 执行一个无绘制 Flow Layout placement */
 export const createFlowLayoutExecutionContext = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   flow: FlowLayoutInput,
 ): Pick<FlowLayoutExecutionContext, 'placeLayout'> => ({
   placeLayout: input => {
@@ -186,7 +186,7 @@ export const createFlowLayoutExecutionContext = (
         });
 
         const children = grid.children?.map(item => context.bindChild(item.child, [])) ?? [];
-        const compileContext: LayoutCompositeCompileContext = {
+        const compileContext: CompositeCompileContext = {
           ...context,
           proposal: intrinsicLayoutProposal('natural'),
           sourceChild: path => children[path[1] as number],

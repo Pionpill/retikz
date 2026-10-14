@@ -5,7 +5,7 @@ import { resolveSpatialHandle, selectSpatialHandles } from '../../../src';
 
 const occurrence = (sourcePath: string, index = 0) => ({
   sourcePath,
-  expansionPath: [{ kind: 'expand' as const, index }],
+  expansionPath: [{ kind: 'output' as const, index }],
 });
 
 const entry = (

@@ -1,8 +1,8 @@
 import type {
   CompositeCompileScopeProps,
   LayoutChildResult,
-  LayoutCompositeCompileContext,
-  LayoutCompositeCompileResult,
+  CompositeCompileContext,
+  CompositeCompileResult,
 } from '@retikz/core';
 import { LayoutAxisProposalKind } from '@retikz/core';
 import type {
@@ -172,7 +172,7 @@ const rootProfile = (
 /** 通过共享 Box size policy 解析 Legend 单轴 allocation */
 const resolveAxis = (
   node: CanonicalLegend,
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   axis: 'x' | 'y',
   profile: Readonly<{ minimum: number; natural: number }>,
 ): number =>
@@ -221,7 +221,7 @@ const pairedFlowPlanOf = (
 
 /** 在最终 content width 下取得 title 的 range / natural probe */
 const finalTitleProbe = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   handle: LayoutChildHandle | undefined,
   contentWidth: number,
 ): LayoutChildResult | undefined =>
@@ -260,7 +260,7 @@ const stripPlacedArtifact = (artifact: LayoutArtifactItemBase): LegendPlacedChil
 
 /** 完成 child exact probe、平移与可观察 placement artifact */
 const placeFinalChild = (
-  context: LayoutCompositeCompileContext,
+  context: CompositeCompileContext,
   handle: LayoutChildHandle,
   slotBounds: LayoutRect,
   key: string,
@@ -303,8 +303,8 @@ const geometryOf = (children: ReadonlyArray<FinalPlacedChild>): LegendArtifactGe
 /** 编译 Standard Legend ramp form 的 normalization、placement、replay 与 typed artifact */
 const compileLegendRamp = (
   node: CanonicalLegend,
-  context: LayoutCompositeCompileContext,
-): LayoutCompositeCompileResult<LegendRampArtifact> => {
+  context: CompositeCompileContext,
+): CompositeCompileResult<LegendRampArtifact> => {
   if (node.content.kind !== LegendContentKind.Ramp) {
     throw new RetikzStandardError({
       code: RetikzStandardErrorCode.PipelineInvariant,
@@ -445,8 +445,8 @@ const compileLegendRamp = (
 /** 编译 Standard Legend items form 的 probe、布局、placement、replay 与 typed artifact */
 export const compileLegend = (
   sourceLegend: IRLegend,
-  context: LayoutCompositeCompileContext,
-): LayoutCompositeCompileResult<LegendArtifact> => {
+  context: CompositeCompileContext,
+): CompositeCompileResult<LegendArtifact> => {
   const node = resolveLegend(sourceLegend);
   if (node.content.kind === LegendContentKind.Ramp) return compileLegendRamp(node, context);
 
