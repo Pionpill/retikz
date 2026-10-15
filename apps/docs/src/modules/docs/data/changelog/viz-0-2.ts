@@ -107,6 +107,16 @@ export const vizV02: Release = {
       highlights: [
         {
           label: {
+            zh: '待发布：BREAKING 坐标局部方向',
+            en: 'Unreleased: BREAKING coordinate-relative orientation',
+          },
+          content: {
+            zh: 'PointMark 新增 orientation，可沿坐标角色的切向或正法向旋转，并叠加 rotate。方向使用角色位置调整后的参数；屏幕偏移不重新定向，奇点明确报错。坐标扩展将 frameAlong 替换为 tangentAt(role, mappedRoles)，需同时提供 mapRoles 与 projectMappedRoles；Guide 同步使用新接口。默认屏幕方向保持不变。',
+            en: 'PointMark adds orientation for coordinate-role tangent or positive-normal alignment, composed with rotate. Direction uses adjusted role parameters; screen offsets do not reorient nodes, and singularities fail explicitly. Coordinate extensions replace frameAlong with tangentAt(role, mappedRoles), together with mapRoles and projectMappedRoles; Guides consume the new contract. Screen orientation remains the default.',
+          },
+        },
+        {
+          label: {
             zh: '待发布：BREAKING PointMark 默认边缘留白',
             en: 'Unreleased: BREAKING PointMark automatic edge padding',
           },

@@ -26,6 +26,7 @@ import type {
   IRPlotLayer,
   IRPlotMarkLabelContent,
   IRPlotMarkPlacement,
+  IRPlotMarkOrientation,
   IRPlotNodeAxisScaleStyle,
   IRPlotNodeBooleanStyle,
   IRPlotNodeBoundaryStyle,
@@ -277,6 +278,8 @@ export type InputPlotPathMark = InputPlotMarkTransform &
 
 /** <PointMark> props：散点 / 文本图层，每行一个 glyph（给 text → 无边框文本 Node） */
 export type InputPlotPointMark = {
+  /** 节点方向参考；默认屏幕方向，坐标方向与 rotate 偏移组合 */
+  orientation?: IRPlotMarkOrientation;
   /** 自动边缘留白，默认 max-radius；false 关闭当前图元贡献
    * @default 'max-radius'
    */

@@ -101,6 +101,7 @@ export const apiReferenceMemberGroups: Readonly<Partial<Record<string, ApiRefere
       shape: 'Geometry',
       boundary: 'Geometry',
       cornerRadius: 'Geometry',
+      orientation: 'Geometry',
       rotate: 'Geometry',
       scale: 'Geometry',
       dx: 'Geometry',

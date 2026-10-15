@@ -203,31 +203,6 @@ Keep the position fields fixed while comparing constant points with population b
   defaultSourceFile="point-position.preview.tsx"
 />
 
-### Edge padding
-
-A node's position is its center. At the edge of the plotting area, its radius can extend beyond the boundary. `PointMark` therefore defaults to `max-radius`, reserving the largest node radius on continuous position scales. Data and node sizes stay unchanged; the scale mapping changes.
-
-| Property                  | Meaning                  | Description                                                                                                                                                                                       |
-| ------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `autoPadding`             | Automatic padding policy | Defaults to `max-radius`; `point-aware` uses actual positions and radii; `false` disables this mark's automatic contribution. Accepts a policy directly, without field-channel binding            |
-| `autoPadding.clearance`   | Edge clearance           | Nonnegative drawing units in `{ kind, clearance }`, default 0. Accepts a number or box-spacing object; explicit sides require Cartesian coordinates                                               |
-| `PlotScale.domainPadding` | Scale override           | A number, including 0, fixes both ends. `range` fixes specified ends and fills omitted ends automatically; omitted `ratio` ends are 0. Explicit `mark` padding selects participants independently |
-
-The example keeps a large central point and two small edge points unchanged. Switch policies to see whether the central point needs extra space, then increase clearance or set the x scale's start padding to zero to compare precedence.
-
-<ComponentPreview
-  mode="showcase"
-  files={['point-auto-padding', 'point-auto-padding.preview.tsx', 'point-auto-padding.data.ts']}
-  controls={{ name: 'point-auto-padding' }}
-  defaultSourceFile="point-auto-padding.preview.tsx"
-  size="lg"
-  caption="The default size scale maps the numeric field to radii 2, 20, and 2. The scale override affects x only. Other marks may still contribute padding when this mark's policy is disabled."
-/>
-
-Maximum-radius padding does not scan data rows: constant sizes use `size`, while field sizes use the maximum output of the size scale. Categorical position scales retain their own padding. Point-aware padding uses valid data and positions after placement adjustments, allowing a central point's existing edge distance to satisfy its constraint. It supports continuous, categorical, and polar mappings with the required capabilities.
-
-Both policies protect the radius expressed by `size`, without measuring text, strokes, shadows, shape scaling, or `minimumSize` bounds. Shared scales take the maximum demand at each end; mixed policies and shared facets satisfy their constraints in one final mapping. Unknown size bounds, missing capabilities, or an infeasible plotting area produce errors.
-
 ### Appearance
 
 Fill, stroke and opacity change how points look. This example offers three color sources and shows only the controls relevant to the selected mode.
@@ -259,17 +234,22 @@ The example overlaps nodes in pairs to expose blending and drawing order. Disabl
 
 ### Shape
 
+Nodes keep their screen orientation by default. `orientation={{ kind: 'coordinate', role: 'x', align: 'tangent' }}` aligns a node with the local x coordinate curve; `normal` selects its positive normal. The role names a coordinate parameter, not a visible axis ID. In polar coordinates, x is angular and y is radial. Custom curved coordinates use the same contract.
+
+In the demo below, select polar coordinates and a rectangle, then change Orientation. `rotate` adds an angular offset to that alignment; rotating a circle has no visible effect. Orientation follows role-space position adjustments. Screen offsets move the node without recomputing its direction.
+
 `shape` can select a constant shape or map a categorical field to shapes. This example compares constant shapes: choose a circle, rectangle or diamond, or use a parameterized reference to set the number of star points or polygon sides. Rotation and size apply to the selected shape.
 
-| Property       | Meaning             | Description                                                                                                                 |
-| -------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `shape`        | Node shape          | A registered name or `{ type, params }` reference; field bindings require categorical data, not continuous or temporal data |
-| `rotate`       | Rotation angle      | Rotates around the node position in degrees; rotating a circle has no visible effect                                        |
-| `scale`        | Node scale          | A uniform factor or `{ x, y, default }` axis configuration; does not change the data position                               |
-| `cornerRadius` | Corner radius       | A nonnegative value; the effect depends on shape support. Select a rectangle to observe it                                  |
-| `padding`      | Inner spacing       | Spacing from content to border; a number or a directional spacing object                                                    |
-| `margin`       | Connection margin   | An offset outside the connection boundary; affects connections without changing the visible fill shape                      |
-| `boundary`     | Connection boundary | The connection contour: `shape`, `circle`, or a shape reference; independent of the visible `shape`                         |
+| Property       | Meaning               | Description                                                                                                                                    |
+| -------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shape`        | Node shape            | A registered name or `{ type, params }` reference; field bindings require categorical data, not continuous or temporal data                    |
+| `orientation`  | Orientation reference | Mark-level configuration: `{ kind: 'screen' }` by default, or `{ kind: 'coordinate', role, align: 'tangent' / 'normal' }`; not a field channel |
+| `rotate`       | Rotation angle        | Adds a constant or field-bound angle to the orientation in degrees; rotating a circle has no visible effect                                    |
+| `scale`        | Node scale            | A uniform factor or `{ x, y, default }` axis configuration; does not change the data position                                                  |
+| `cornerRadius` | Corner radius         | A nonnegative value; the effect depends on shape support. Select a rectangle to observe it                                                     |
+| `padding`      | Inner spacing         | Spacing from content to border; a number or a directional spacing object                                                                       |
+| `margin`       | Connection margin     | An offset outside the connection boundary; affects connections without changing the visible fill shape                                         |
+| `boundary`     | Connection boundary   | The connection contour: `shape`, `circle`, or a shape reference; independent of the visible `shape`                                            |
 
 The star shape is provided by `StarShapeDefinition` from `@retikz/extension`; this example registers it explicitly through Layout’s `extensions.shapes`.
 
@@ -316,9 +296,34 @@ Select Text points and Multiline text to compare alignment, line height, and wra
 
 ## Extended usage
 
-Use `placement.adjustments` to spread observations that overlap at the same position. The following demo uses built-in `jitter`, which adjusts positions after scale mapping without changing data rows or field values. The Data transform named `jitter` instead derives a field before scale mapping.
+### Edge padding
+
+A node's position is its center. At the edge of the plotting area, its radius can extend beyond the boundary. `PointMark` therefore defaults to `max-radius`, reserving the largest node radius on continuous position scales. Data and node sizes stay unchanged; the scale mapping changes.
+
+| Property                  | Meaning                  | Description                                                                                                                                                                                       |
+| ------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `autoPadding`             | Automatic padding policy | Defaults to `max-radius`; `point-aware` uses actual positions and radii; `false` disables this mark's automatic contribution. Accepts a policy directly, without field-channel binding            |
+| `autoPadding.clearance`   | Edge clearance           | Nonnegative drawing units in `{ kind, clearance }`, default 0. Accepts a number or box-spacing object; explicit sides require Cartesian coordinates                                               |
+| `PlotScale.domainPadding` | Scale override           | A number, including 0, fixes both ends. `range` fixes specified ends and fills omitted ends automatically; omitted `ratio` ends are 0. Explicit `mark` padding selects participants independently |
+
+The example keeps a large central point and two small edge points unchanged. Switch policies to see whether the central point needs extra space, then increase clearance or set the x scale's start padding to zero to compare precedence.
+
+<ComponentPreview
+  mode="showcase"
+  files={['point-auto-padding', 'point-auto-padding.preview.tsx', 'point-auto-padding.data.ts']}
+  controls={{ name: 'point-auto-padding' }}
+  defaultSourceFile="point-auto-padding.preview.tsx"
+  size="lg"
+  caption="The default size scale maps the numeric field to radii 2, 20, and 2. The scale override affects x only. Other marks may still contribute padding when this mark's policy is disabled."
+/>
+
+Maximum-radius padding does not scan data rows: constant sizes use `size`, while field sizes use the maximum output of the size scale. Categorical position scales retain their own padding. Point-aware padding uses valid data and positions after placement adjustments, allowing a central point's existing edge distance to satisfy its constraint. It supports continuous, categorical, and polar mappings with the required capabilities.
+
+Both policies protect the radius expressed by `size`, without measuring text, strokes, shadows, shape scaling, or `minimumSize` bounds. Shared scales take the maximum demand at each end; mixed policies and shared facets satisfy their constraints in one final mapping. Unknown size bounds, missing capabilities, or an infeasible plotting area produce errors.
 
 ### Jitter
+
+Use `placement.adjustments` to spread observations that overlap at the same position. The following demo uses built-in `jitter`, which adjusts positions after scale mapping without changing data rows or field values. The Data transform named `jitter` instead derives a field before scale mapping.
 
 Switch between Cartesian and polar coordinates using the coordinate selector. In Cartesian coordinates, a step ratio spreads nodes within category intervals; output units specify the total post-scale width. Plot reserves the jitter half-span and node extent at both ends. Axis lines stay at the plot boundaries while category ticks follow the mapped node positions. In polar coordinates, step ratio uses discrete category angles, while output units use continuous numeric angles.
 
@@ -353,7 +358,9 @@ The x role is an angle in polar coordinates. Discrete angles use a tick-step rat
 
 ### Resolving a point
 
-A point mark represents a point in a coordinate system and uses that system to determine its position. The coordinate system maps a data position to a drawing position, where the mark creates a Node. The node may appear as a circle, star, or text; its own properties determine its shape and appearance, without deforming it to follow the geometry of the coordinate space.
+By default, a point mark only reads its position from the coordinate system. Explicit coordinate orientation also reads the local tangent at the adjusted role parameters, derives the selected tangent or normal angle, and adds `rotate`. Core Node receives one numeric rotation angle. This neither flips text upright nor bends the node along the curve. An angular direction at the polar center or a corner without a unique tangent raises an error.
+
+A point mark represents a point in a coordinate system and, by default, uses that system only to determine its position. The coordinate system maps a data position to a drawing position, where the mark creates a Node. The node may appear as a circle, star, or text; its own properties determine its shape and appearance, without deforming it to follow the geometry of the coordinate space. Explicit orientation additionally changes only the node's rotation angle.
 
 Unlike [PathMark](/viz/plot/mark/path), which connects vertices, a point mark establishes no connections or ordering between data rows. Unlike [IntervalMark](/viz/plot/mark/interval), which interprets start and end bounds, it does not expand a coordinate-space range into a geometric region. Each valid row produces an independent node. Data transforms, shared scales, padding solvers, and placement adjustments may still consider multiple rows; this does not change how the point mark generates nodes row by row.
 

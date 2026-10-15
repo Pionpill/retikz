@@ -663,8 +663,19 @@ const corePathStyle = {
   ),
 };
 
+/** 校验节点相对屏幕或坐标角色的方向意图 */
+export const MarkOrientationSchema = union([
+  strictObject({ kind: literal('screen') }),
+  strictObject({
+    kind: literal('coordinate'),
+    role: NonBlankStringSchema.describe('Coordinate role whose mapped parameter defines the local curve'),
+    align: zodEnum(['tangent', 'normal']).describe('Align local positive x with the tangent or its positive normal'),
+  }),
+]).describe('Node orientation reference; omitted means screen orientation');
+
 /** 校验逐记录生成点图形或文本节点的点标记 */
 export const PointMarkSchema = strictObject({
+  orientation: MarkOrientationSchema.optional(),
   autoPadding: PointAutoPaddingSchema.default('max-radius').optional(),
   type: literal(BuiltinPlotMark.Point).describe('Discriminator: one glyph or text label per record'),
   color: PointColorStyleSchema.optional().describe(

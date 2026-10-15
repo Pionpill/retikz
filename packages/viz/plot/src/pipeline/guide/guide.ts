@@ -1685,16 +1685,22 @@ export const lowerCustomAxis = (
 
   const axisLinePath = polylinePath(linePoints);
 
-  // 刻度 + 标签：沿局部切向的法线摆。切向优先取工厂回传的解析 frameAlong，缺则邻近采样数值差分回落
+  // 刻度与标签优先使用映射后参数的解析切向，缺省使用邻近投影差分
   const epsilon = span === 0 ? 1 : span * 1e-3;
   const valuesAt = (value: number): Array<unknown> =>
     frame.roles.map(role => (role === guide.dimension ? value : anchorFor(role)));
 
-  // 该刻度点的 [屏幕点, 切向]：有 frameAlong 用解析切向，否则中心差分；非有限 → null
+  // 该刻度点的位置与切向共享映射后参数
   const pointAndTangent = (value: number): [[number, number], [number, number]] | null => {
-    if (frame.frameAlong) {
-      const local = frame.frameAlong(guide.dimension, valuesAt(value));
-      return local ? [local.origin, local.tangent] : null;
+    if (frame.tangentAt) {
+      if (!frame.mapRoles || !frame.projectMappedRoles) {
+        throw new RetikzPlotError('Coordinate tangentAt requires mapRoles and projectMappedRoles');
+      }
+      const mapped = frame.mapRoles(valuesAt(value));
+      if (mapped === null) return null;
+      const origin = frame.projectMappedRoles(mapped);
+      const tangent = frame.tangentAt(guide.dimension, mapped);
+      return origin && tangent ? [origin, tangent] : null;
     }
 
     const point = projectAt(value);

@@ -266,6 +266,7 @@ export const applyDeclaration = (
 
     into.marks.push({
       type: BuiltinPlotMark.Point,
+      ...(props.orientation === undefined ? {} : { orientation: props.orientation }),
       ...(props.autoPadding === undefined ? {} : { autoPadding: props.autoPadding }),
       ...(id !== undefined ? { id } : {}),
       ...(coordinateView !== undefined ? { coordinateView } : {}),

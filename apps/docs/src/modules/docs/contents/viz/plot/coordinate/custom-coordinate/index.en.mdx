@@ -87,7 +87,11 @@ The definition with `roles: ['u', 'v']` must still be injected through `<Plot co
 
 `roleRangeOverrides` specifies the final data-mapping ranges; `guideRoleRangeOverrides` separately specifies axis-line and grid boundaries. An empty object uses layout ranges; omitting it uses the final mapping ranges. Jitter containment narrows data mapping without narrowing axis boundaries, while track layouts retain their own boundaries. Tick positions always use the final scales.
 
-`createCoordinateFrame` can receive `roleScales`, `mapRoles`, `projectMappedRoles`, `placementBoundary`, `frameAlong`, and `projectCell`. Position Adjustment uses the split-projection capabilities, automatic containment adds boundary measurement, and `projectCell` projects a logical Cell into rect, sector, contour, or related geometry.
+`createCoordinateFrame` can receive `roleScales`, `mapRoles`, `projectMappedRoles`, `placementBoundary`, `tangentAt`, and `projectCell`. Position Adjustment uses the split-projection capabilities, automatic containment adds boundary measurement, and `projectCell` projects a logical Cell into rect, sector, contour, or related geometry.
+
+`tangentAt(role, mappedRoles)` returns the screen tangent when the selected mapped parameter increases and the others stay fixed. Guides and PointMark share this capability. Provide matching `mapRoles` and `projectMappedRoles` functions. For `projectMappedRoles: ([u, v]) => [u + v, v]`, the x tangent is `[1, 0]` and the y tangent is `[1, 1]`; the positive x normal is `[0, 1]`, not the y tangent.
+
+Tangents need not be normalized, but must be finite and nonzero. Return `null` at singularities or nondifferentiable corners. Explicit PointMark coordinate orientation fails when this capability is missing or its direction is invalid. Guides retain numerical differentiation when the capability is absent.
 
 <SourceLinks
   sources={[

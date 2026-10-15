@@ -189,6 +189,8 @@ export type CartesianCoordinateFrame = {
   projectMappedRoles: (values: ReadonlyArray<number>) => Position | null;
   /** 笛卡尔 role-space containment 边界度量 */
   placementBoundary: NonNullable<CoordinateFrame['placementBoundary']>;
+  /** 映射后角色递增时的屏幕切向 */
+  tangentAt?: CoordinateFrame['tangentAt'];
   /** 正交 cell → 轴对齐矩形（闭式快路）：position = 两区间中点、width/height = 区间跨度 */
   projectCell: (cell: Cell) => CellGeometry;
 };
@@ -229,6 +231,7 @@ export const createCartesianCoordinate = (
     projectRoles: values => project(values[0], values[1]),
     mapRoles,
     projectMappedRoles,
+    tangentAt: role => (role === 'x' ? [1, 0] : role === 'y' ? [0, 1] : null),
     placementBoundary: {
       isCyclic: () => false,
       unitNormal: role => (role === 'x' ? [1, 0] : role === 'y' ? [0, 1] : null),
@@ -279,6 +282,8 @@ export type Cartesian1DCoordinateFrame = {
   projectMappedRoles: (values: ReadonlyArray<number>) => Position | null;
   /** 一维笛卡尔 role-space containment 边界度量 */
   placementBoundary: NonNullable<CoordinateFrame['placementBoundary']>;
+  /** 映射后角色递增时的屏幕切向 */
+  tangentAt?: CoordinateFrame['tangentAt'];
 };
 
 /**
@@ -319,6 +324,7 @@ export const createCartesian1DCoordinate = (
     projectRoles,
     mapRoles,
     projectMappedRoles,
+    tangentAt: role => (role !== 'x' ? null : orientation === Cartesian1DOrientation.Horizontal ? [1, 0] : [0, 1]),
     placementBoundary: {
       isCyclic: () => false,
       unitNormal: role => (role !== 'x' ? null : orientation === Cartesian1DOrientation.Horizontal ? [1, 0] : [0, 1]),

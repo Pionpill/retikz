@@ -3,6 +3,12 @@ import type { Lang } from '@/i18n';
 /** 散点试验场的双语可见文案 */
 export const pointNodeShapeI18n = {
   zh: {
+    orientation: '方向对齐',
+    screen: '屏幕方向',
+    xTangent: 'x 切向',
+    xNormal: 'x 法向',
+    yTangent: 'y 切向',
+    yNormal: 'y 法向',
     showRelations: '显示连线',
     cornerRadius: '圆角半径',
     scale: '节点缩放',
@@ -25,6 +31,7 @@ export const pointNodeShapeI18n = {
     shape: '形状',
     circle: '圆形',
     rectangle: '矩形',
+    wideRectangle: '长方形（2:1）',
     diamond: '菱形',
     star: '星形',
     polygon: '多边形',
@@ -36,6 +43,12 @@ export const pointNodeShapeI18n = {
     parametricShape: '参数形状',
   },
   en: {
+    orientation: 'Orientation',
+    screen: 'Screen',
+    xTangent: 'x tangent',
+    xNormal: 'x normal',
+    yTangent: 'y tangent',
+    yNormal: 'y normal',
     showRelations: 'Show connections',
     cornerRadius: 'Corner radius',
     scale: 'Node scale',
@@ -58,6 +71,7 @@ export const pointNodeShapeI18n = {
     shape: 'Shape',
     circle: 'Circle',
     rectangle: 'Rectangle',
+    wideRectangle: 'Wide rectangle (2:1)',
     diamond: 'Diamond',
     star: 'Star',
     polygon: 'Polygon',

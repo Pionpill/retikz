@@ -87,7 +87,11 @@ const spec = {
 
 `roleRangeOverrides` 指定数据映射的最终范围；`guideRoleRangeOverrides` 单独指定轴线与网格的边界范围。后者为空对象时使用布局范围，省略时沿用最终映射范围。抖动留白会收窄数据映射范围，但不应同时收窄轴线边界；分轨布局则仍需使用所属轨道的边界。刻度位置始终由最终比例尺计算。
 
-`createCoordinateFrame` 可以接收 `roleScales`、`mapRoles`、`projectMappedRoles`、`placementBoundary`、`frameAlong` 和 `projectCell`。位置调整依赖前三项拆分 scale 映射与投影，自动 containment 再使用边界度量；`projectCell` 把逻辑 Cell 投影成 rect、sector 或 contour 等几何。
+`createCoordinateFrame` 可以接收 `roleScales`、`mapRoles`、`projectMappedRoles`、`placementBoundary`、`tangentAt` 和 `projectCell`。位置调整依赖前三项拆分 scale 映射与投影，自动 containment 再使用边界度量；`projectCell` 把逻辑 Cell 投影成 rect、sector 或 contour 等几何。
+
+`tangentAt(role, mappedRoles)` 返回固定其他参数、所选映射后参数递增时的屏幕切向，供 Guide 和 PointMark 方向对齐共用。必须同时提供同源的 `mapRoles` 与 `projectMappedRoles`。例如映射 `projectMappedRoles: ([u, v]) => [u + v, v]` 的 x 切向是 `[1, 0]`，y 切向是 `[1, 1]`；x 的正法向是 `[0, 1]`，并不等于 y 切向。
+
+返回切向不要求单位化，但必须有限且非零；奇点或不可微尖点返回 `null`。PointMark 显式请求坐标方向时，缺少能力或返回无效方向都会报错。Guide 在未提供此能力时仍可用投影差分求切向。
 
 <SourceLinks
   sources={[

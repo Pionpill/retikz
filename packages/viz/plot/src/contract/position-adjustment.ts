@@ -268,6 +268,8 @@ export type MarkPositionResolution = {
   targets: ReadonlyArray<ProjectedMarkPlacementTarget>;
   /** 按稳定 target key 读取最终屏幕位置 */
   positionFor: (key: string) => Position | null;
+  /** 按同一稳定 key 读取目标事实源，包含角色调整后的参数 */
+  targetFor: (key: string) => ProjectedMarkPlacementTarget | undefined;
 };
 
 /** Position Adjustment 执行时的公共上下文 */

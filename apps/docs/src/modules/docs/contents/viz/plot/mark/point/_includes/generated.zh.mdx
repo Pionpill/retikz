@@ -23,6 +23,7 @@
 |      | `cornerRadius?`   | `InputPlotMarkValueProp<number> \| IRPlotPointNonnegativeNumberStyle`           | —              | 节点圆角半径                                                                                                                                                |
 |      | `dx?`             | `number`                                                                        | —              | 文本相对锚点水平微调（user units，正 = 右）；仅文本 point 有意义                                                                                            |
 |      | `dy?`             | `number`                                                                        | —              | 文本相对锚点垂直微调（user units，正 = 屏幕下）；仅文本 point 有意义                                                                                        |
+|      | `orientation?`    | `IRPlotMarkOrientation`                                                         | —              | 节点方向参考；默认屏幕方向，坐标方向与 rotate 偏移组合                                                                                                      |
 |      | `placement?`      | `IRPlotMarkPlacement`                                                           | —              | position scale 后、mark geometry 前执行的有序位置调整                                                                                                       |
 |      | `rotate?`         | `InputPlotMarkValueProp<number> \| IRPlotPointNumberStyle`                      | —              | 旋转角度：字符串按字段解析，数字为常量糖                                                                                                                    |
 |      | `scale?`          | `InputPlotMarkValueProp<number \| IRAxisScale> \| IRPlotNodeAxisScaleStyle`     | —              | 节点缩放值或轴向缩放配置                                                                                                                                    |
@@ -73,7 +74,7 @@ export type PointMarkProps = InputPlotPointMark;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRPlotPointMark"} path={"packages/viz/plot/src/schemas/mark/types.ts"} startLine={60}>IRPlotPointMark</ApiSourceLink> / <ApiSourceLink label={"PointMarkSchema"} path={"packages/viz/plot/src/schemas/mark/schema.ts"} startLine={667}>PointMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPlotPointMark"} path={"packages/viz/plot/src/schemas/mark/types.ts"} startLine={61}>IRPlotPointMark</ApiSourceLink> / <ApiSourceLink label={"PointMarkSchema"} path={"packages/viz/plot/src/schemas/mark/schema.ts"} startLine={677}>PointMarkSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -104,7 +105,8 @@ export type IRPlotPointMark = ZodInfer<typeof PointMarkSchema>;
     'opacity.fill': 'glyph 填充不透明度。',
     'opacity.stroke': 'glyph 描边不透明度。',
     opacity: 'glyph 整体不透明度。',
-    rotate: 'glyph 旋转角度。',
+    orientation: '节点方向参考：screen 或 coordinate role 的 tangent / normal；默认屏幕方向。',
+    rotate: '叠加到方向基准角的常量或字段旋转偏移，单位为度。',
     minimumSize: '最小可视尺寸，会被每数据 size 覆盖。',
     zIndex: '每数据 Node 的绘制顺序提示。',
     align: 'Core Node 多行文本对齐。',

@@ -11,6 +11,7 @@ import type {
   IntervalBoundsSchema,
   IntervalMarkSchema,
   MarkOperationSchema,
+  MarkOrientationSchema,
   MarkSchema,
   MarkTransformSchema,
   NodeAxisScaleStyleSchema,
@@ -58,6 +59,8 @@ export type { IRBoxSpacing };
 
 /** point mark（散点 + 文本标签） */
 export type IRPlotPointMark = ZodInfer<typeof PointMarkSchema>;
+
+export type IRPlotMarkOrientation = ZodInfer<typeof MarkOrientationSchema>;
 
 /** PointMark 颜色样式值（field / constant） */
 export type IRPlotPointColorStyle = ZodInfer<typeof PointColorStyleSchema>;

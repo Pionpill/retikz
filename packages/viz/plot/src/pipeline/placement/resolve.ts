@@ -173,7 +173,11 @@ export const resolveMarkPlacement = (
     projectedTargets = projectedTargets.map((target, index) => ({ ...target, position: output[index].position }));
   }
 
-  const positionByKey = new Map(projectedTargets.map(target => [target.key, target.position] as const));
+  const targetByKey = new Map(projectedTargets.map(target => [target.key, target] as const));
 
-  return { targets: projectedTargets, positionFor: key => positionByKey.get(key) ?? null };
+  return {
+    targets: projectedTargets,
+    positionFor: key => targetByKey.get(key)?.position ?? null,
+    targetFor: key => targetByKey.get(key),
+  };
 };

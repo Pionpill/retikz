@@ -1,5 +1,7 @@
 /** 散点公开属性的人工审阅英文说明 */
 const translations: Partial<Record<string, string>> = {
+  '节点方向参考；默认屏幕方向，坐标方向与 rotate 偏移组合':
+    'Node orientation reference; defaults to screen orientation, with coordinate alignment composed with the rotate offset',
   '自动边缘留白，默认 max-radius；false 关闭当前图元贡献':
     'Automatic edge padding; defaults to max-radius. false disables this mark contribution',
   'point mark（散点 + 文本标签）': 'Point mark for points and text labels',

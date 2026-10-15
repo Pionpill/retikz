@@ -24,7 +24,9 @@ export type PointNodeShapePreviewValues = {
   coordinate: 'cartesian2D' | 'polar2D';
   size: number;
   rotate: number;
-  shape: 'circle' | 'rectangle' | 'diamond' | 'star' | 'polygon';
+  /** 沿坐标角色切向或法向旋转 */
+  orientation: 'screen' | 'x-tangent' | 'x-normal' | 'y-tangent' | 'y-normal';
+  shape: 'circle' | 'rectangle' | 'wide-rectangle' | 'diamond' | 'star' | 'polygon';
   starPoints: number;
   polygonSides: number;
 };
@@ -43,8 +45,18 @@ export const PointNodeShapePreview = (values: PointNodeShapePreviewValues) => (
         x="x"
         y="y"
         color="region"
-        size={values.size}
+        size={values.shape === 'wide-rectangle' ? undefined : values.size}
+        minimumSize={values.shape === 'wide-rectangle' ? { width: values.size * 2, height: values.size } : undefined}
         rotate={values.rotate}
+        orientation={
+          values.orientation === 'screen'
+            ? { kind: 'screen' }
+            : {
+                kind: 'coordinate',
+                role: values.orientation.startsWith('x') ? 'x' : 'y',
+                align: values.orientation.endsWith('tangent') ? 'tangent' : 'normal',
+              }
+        }
         cornerRadius={values.cornerRadius}
         scale={values.scale}
         padding={values.padding}

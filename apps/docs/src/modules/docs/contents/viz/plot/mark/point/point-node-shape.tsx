@@ -16,6 +16,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     coordinate: values[POINT_NODE_SHAPE_CONTROL_IDS.coordinate],
     size: values[POINT_NODE_SHAPE_CONTROL_IDS.size],
     rotate: values[POINT_NODE_SHAPE_CONTROL_IDS.rotate],
+    orientation: values[POINT_NODE_SHAPE_CONTROL_IDS.orientation],
     shape: values[POINT_NODE_SHAPE_CONTROL_IDS.shape],
     starPoints: values[POINT_NODE_SHAPE_CONTROL_IDS.starPoints],
     polygonSides: values[POINT_NODE_SHAPE_CONTROL_IDS.polygonSides],

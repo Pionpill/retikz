@@ -23,6 +23,7 @@
 |           | `cornerRadius?`   | `InputPlotMarkValueProp<number> \| IRPlotPointNonnegativeNumberStyle`           | —              | Node corner radius                                                                                                                                                                   |
 |           | `dx?`             | `number`                                                                        | —              | Horizontal text offset in user units; positive moves right; applies only to text points                                                                                              |
 |           | `dy?`             | `number`                                                                        | —              | Vertical text offset in user units; positive moves down; applies only to text points                                                                                                 |
+|           | `orientation?`    | `IRPlotMarkOrientation`                                                         | —              | Node orientation reference; defaults to screen orientation, with coordinate alignment composed with the rotate offset                                                                |
 |           | `placement?`      | `IRPlotMarkPlacement`                                                           | —              | Ordered position adjustments applied after position scales and before mark geometry                                                                                                  |
 |           | `rotate?`         | `InputPlotMarkValueProp<number> \| IRPlotPointNumberStyle`                      | —              | Rotation angle: strings denote fields and numbers are constant shorthand                                                                                                             |
 |           | `scale?`          | `InputPlotMarkValueProp<number \| IRAxisScale> \| IRPlotNodeAxisScaleStyle`     | —              | Uniform or per-axis node scale                                                                                                                                                       |
@@ -73,7 +74,7 @@ export type PointMarkProps = InputPlotPointMark;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRPlotPointMark"} path={"packages/viz/plot/src/schemas/mark/types.ts"} startLine={60}>IRPlotPointMark</ApiSourceLink> / <ApiSourceLink label={"PointMarkSchema"} path={"packages/viz/plot/src/schemas/mark/schema.ts"} startLine={667}>PointMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPlotPointMark"} path={"packages/viz/plot/src/schemas/mark/types.ts"} startLine={61}>IRPlotPointMark</ApiSourceLink> / <ApiSourceLink label={"PointMarkSchema"} path={"packages/viz/plot/src/schemas/mark/schema.ts"} startLine={677}>PointMarkSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -90,9 +91,13 @@ export type IRPlotPointMark = ZodInfer<typeof PointMarkSchema>;
 <ZodSchema
   name="PointMarkSchema"
   descriptions={{
+      orientation: 'Node orientation reference: screen or a coordinate-role tangent / normal; defaults to screen.',
+      rotate: 'Constant or field-bound rotation offset added to the orientation angle, in degrees.',
+
     autoPadding:
       'Automatic edge padding, default max-radius; point-aware uses actual positions and radii, false disables this mark contribution.',
-  }}
+
+}}
 />
 
 </DocTab>

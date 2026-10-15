@@ -14,6 +14,28 @@ const compilePlot = (spec: IRPlot, datasets: Parameters<typeof lowerPlots>[0]) =
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) });
 
 describe('React 与 framework-neutral authoring parity', () => {
+  it('点方向与旋转偏移在 React 与 Vanilla 入口等价', () => {
+    const orientation = { kind: 'coordinate', role: 'x', align: 'normal' } as const;
+    const react = buildPlotIR(<PointMark x="x" y="y" orientation={orientation} rotate={15} />, 'points');
+    const plain = normalizePlot({
+      data: { reference: 'points' },
+      scales: [
+        { type: 'linear', name: '__x' },
+        { type: 'linear', name: '__y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
+      marks: [
+        {
+          type: 'point',
+          orientation,
+          rotate: { kind: 'constant', value: 15 },
+          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        },
+      ],
+    });
+    expect(react).toEqual(plain);
+    expect(react.marks[0]).toMatchObject({ orientation });
+  });
   it('Point placement 产出完全一致的 IRPlot', () => {
     const placement = {
       adjustments: [

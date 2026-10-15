@@ -20,6 +20,7 @@ export const POINT_NODE_SHAPE_CONTROL_IDS = {
   shape: 'point-node-shape',
   size: 'point-node-size',
   rotate: 'point-node-rotate',
+  orientation: 'point-node-orientation',
   starPoints: 'point-node-star-points',
   polygonSides: 'point-node-polygon-sides',
 } as const;
@@ -36,6 +37,7 @@ export type PointNodeShapeValues = {
 export const pointNodeShapeOf = (values: PointNodeShapeValues): NonNullable<PointMarkProps['shape']> => {
   switch (values.shape) {
     case 'rectangle':
+    case 'wide-rectangle':
       return 'rectangle';
     case 'diamond':
       return 'diamond';
@@ -79,7 +81,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
             kind: 'range',
             id: POINT_NODE_SHAPE_CONTROL_IDS.cornerRadius,
             label: i18n.cornerRadius,
-            visibleWhen: { controlId: POINT_NODE_SHAPE_CONTROL_IDS.shape, oneOf: ['rectangle'] },
+            visibleWhen: { controlId: POINT_NODE_SHAPE_CONTROL_IDS.shape, oneOf: ['rectangle', 'wide-rectangle'] },
             defaultValue: 0,
             min: 0,
             max: 12,
@@ -100,7 +102,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
             label: i18n.padding,
             visibleWhen: {
               controlId: POINT_NODE_SHAPE_CONTROL_IDS.shape,
-              oneOf: ['circle', 'rectangle', 'diamond', 'polygon'],
+              oneOf: ['circle', 'rectangle', 'wide-rectangle', 'diamond', 'polygon'],
             },
             defaultValue: 0,
             min: 0,
@@ -148,12 +150,26 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
         controls: [
           {
             kind: 'select',
+            id: POINT_NODE_SHAPE_CONTROL_IDS.orientation,
+            label: i18n.orientation,
+            defaultValue: 'screen',
+            options: [
+              { value: 'screen', label: i18n.screen },
+              { value: 'x-tangent', label: i18n.xTangent },
+              { value: 'x-normal', label: i18n.xNormal },
+              { value: 'y-tangent', label: i18n.yTangent },
+              { value: 'y-normal', label: i18n.yNormal },
+            ],
+          },
+          {
+            kind: 'select',
             id: POINT_NODE_SHAPE_CONTROL_IDS.shape,
             label: i18n.shape,
             defaultValue: 'circle',
             options: [
               { value: 'circle', label: i18n.circle },
               { value: 'rectangle', label: i18n.rectangle },
+              { value: 'wide-rectangle', label: i18n.wideRectangle },
               { value: 'diamond', label: i18n.diamond },
               { value: 'star', label: i18n.star },
               { value: 'polygon', label: i18n.polygon },
@@ -178,7 +194,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
             step: 5,
             visibleWhen: {
               controlId: POINT_NODE_SHAPE_CONTROL_IDS.shape,
-              oneOf: ['rectangle', 'diamond', 'star', 'polygon'],
+              oneOf: ['rectangle', 'wide-rectangle', 'diamond', 'star', 'polygon'],
             },
           },
           {
@@ -220,6 +236,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
 
       [POINT_NODE_SHAPE_CONTROL_IDS.shape]: 'circle',
       [POINT_NODE_SHAPE_CONTROL_IDS.size]: 18,
+      [POINT_NODE_SHAPE_CONTROL_IDS.orientation]: 'screen',
       [POINT_NODE_SHAPE_CONTROL_IDS.rotate]: 0,
       [POINT_NODE_SHAPE_CONTROL_IDS.starPoints]: 5,
       [POINT_NODE_SHAPE_CONTROL_IDS.polygonSides]: 6,
@@ -240,6 +257,26 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
 
           [POINT_NODE_SHAPE_CONTROL_IDS.shape]: 'circle',
           [POINT_NODE_SHAPE_CONTROL_IDS.size]: 18,
+          [POINT_NODE_SHAPE_CONTROL_IDS.orientation]: 'screen',
+          [POINT_NODE_SHAPE_CONTROL_IDS.rotate]: 0,
+          [POINT_NODE_SHAPE_CONTROL_IDS.starPoints]: 5,
+          [POINT_NODE_SHAPE_CONTROL_IDS.polygonSides]: 6,
+        },
+      },
+      {
+        id: 'orientation',
+        label: i18n.orientation,
+        values: {
+          [POINT_NODE_SHAPE_CONTROL_IDS.coordinate]: 'polar2D',
+          [POINT_NODE_SHAPE_CONTROL_IDS.showRelations]: true,
+          [POINT_NODE_SHAPE_CONTROL_IDS.cornerRadius]: 0,
+          [POINT_NODE_SHAPE_CONTROL_IDS.scale]: 1,
+          [POINT_NODE_SHAPE_CONTROL_IDS.padding]: 0,
+          [POINT_NODE_SHAPE_CONTROL_IDS.margin]: 0,
+          [POINT_NODE_SHAPE_CONTROL_IDS.boundary]: 'shape',
+          [POINT_NODE_SHAPE_CONTROL_IDS.shape]: 'wide-rectangle',
+          [POINT_NODE_SHAPE_CONTROL_IDS.size]: 18,
+          [POINT_NODE_SHAPE_CONTROL_IDS.orientation]: 'x-tangent',
           [POINT_NODE_SHAPE_CONTROL_IDS.rotate]: 0,
           [POINT_NODE_SHAPE_CONTROL_IDS.starPoints]: 5,
           [POINT_NODE_SHAPE_CONTROL_IDS.polygonSides]: 6,
@@ -259,6 +296,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
 
           [POINT_NODE_SHAPE_CONTROL_IDS.shape]: 'star',
           [POINT_NODE_SHAPE_CONTROL_IDS.size]: 28,
+          [POINT_NODE_SHAPE_CONTROL_IDS.orientation]: 'screen',
           [POINT_NODE_SHAPE_CONTROL_IDS.rotate]: 18,
           [POINT_NODE_SHAPE_CONTROL_IDS.starPoints]: 7,
           [POINT_NODE_SHAPE_CONTROL_IDS.polygonSides]: 6,
@@ -266,6 +304,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       },
     ],
     relatedApis: [
+      'PointMark.orientation',
       'PointMark.cornerRadius',
       'PointMark.scale',
       'PointMark.padding',

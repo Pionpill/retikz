@@ -12,6 +12,22 @@ const gradientPaint = {
 };
 
 describe('MarkSchema (contract)', () => {
+  it('点方向契约可 JSON round-trip，非法方向声明被拒绝', () => {
+    const mark = {
+      type: 'point',
+      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+      orientation: { kind: 'coordinate', role: 'x', align: 'normal' },
+    };
+    const parsed = MarkSchema.parse(mark);
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
+    for (const orientation of [
+      { kind: 'coordinate', role: '', align: 'normal' },
+      { kind: 'coordinate', role: 'x' },
+      { kind: 'screen', role: 'x' },
+    ]) {
+      expect(MarkSchema.safeParse({ ...mark, orientation }).success).toBe(false);
+    }
+  });
   // Happy path
   it('mark_point_valid', () => {
     const m = { type: 'point', autoPadding: 'max-radius', encoding: { x: { field: 'x' }, y: { field: 'y' } } };
