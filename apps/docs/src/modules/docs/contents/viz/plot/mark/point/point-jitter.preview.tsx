@@ -22,8 +22,8 @@ export const PointJitterPreview = (values: PointJitterPreviewValues) => {
   const polar = values['point-jitter-coordinate'] === 'polar2D';
   const continuous = polar && values['point-jitter-span-kind'] === 'range';
   return (
-    <Layout viewBox={{ x: -40, y: -40, width: 480, height: 440 }}>
-      <Plot data={jitterPoints} width={400} height={360} coordinate={polar ? 'polar2D' : undefined}>
+    <Layout viewBox={{ x: -40, y: -40, width: 480, height: 360 }}>
+      <Plot data={jitterPoints} width={400} height={280} coordinate={polar ? 'polar2D' : undefined}>
         <PointMark
           x={continuous ? 'angle' : 'group'}
           y="value"
