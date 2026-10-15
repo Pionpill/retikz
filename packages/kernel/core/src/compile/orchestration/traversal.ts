@@ -2345,6 +2345,12 @@ export const compileChildrenToPrimitives = (
           );
     let callbackResult: unknown;
     let layoutProbeIndex = 0;
+    // 回调内只保留查询事实，不持有可消费的 replay 或目标解析游标
+    const queryEnvironments = new Map<
+      string,
+      Readonly<{ namespaceStack: NamespaceStack; scopeChain: ReadonlyArray<Transform> }>
+    >();
+    let queryNamespaceIdentity = runtime.state.namespaceStack.measurementIdentity;
 
     const evaluateLayoutChild = (
       clonedChild: IRChild,
@@ -2621,24 +2627,42 @@ export const compileChildrenToPrimitives = (
         },
         resolvePathTargets: query => {
           const queryChild = snapshotCompositeLayoutChild(owner.label, query.child, layoutProbeIndex++);
-          let queryNamespace: NamespaceStack | undefined;
-          let queryChain = frame.scopeChain;
-          const probe = probeLayoutChild(
-            queryChild,
-            NaturalLayoutProposal,
-            occurrence,
-            frame.scopeChain,
-            frame.scopeDefaults,
-            theme,
-            false,
-            undefined,
-            (scope, namespace, chain) => {
-              if (scope !== queryChild) return;
-              queryNamespace = namespace.fork();
-              queryChain = chain;
-            },
-          );
-          const targetNamespace = queryNamespace ?? probe.namespaceStack;
+          const namespaceIdentity = runtime.state.namespaceStack.measurementIdentity;
+          if (queryNamespaceIdentity !== namespaceIdentity) {
+            queryEnvironments.clear();
+            queryNamespaceIdentity = namespaceIdentity;
+          }
+          // Definition、测量器、绑定所有者与递归预算在当前回调内固定；派生 theme 按值区分
+          const queryKey = JSON.stringify([queryChild, theme, frame.scopeDefaults, frame.scopeChain]);
+          let environment = queryEnvironments.get(queryKey);
+          if (environment === undefined) {
+            let queryNamespace: NamespaceStack | undefined;
+            let queryChain = frame.scopeChain;
+            const probe = probeLayoutChild(
+              queryChild,
+              NaturalLayoutProposal,
+              occurrence,
+              frame.scopeChain,
+              frame.scopeDefaults,
+              theme,
+              false,
+              undefined,
+              (scope, namespace, chain) => {
+                if (scope !== queryChild) return;
+                queryNamespace = namespace.fork();
+                queryChain = chain;
+              },
+            );
+            environment = { namespaceStack: queryNamespace ?? probe.namespaceStack, scopeChain: queryChain };
+            queryEnvironments.set(queryKey, environment);
+            if (queryEnvironments.size > 64) queryEnvironments.delete(queryEnvironments.keys().next().value!);
+          } else {
+            queryEnvironments.delete(queryKey);
+            queryEnvironments.set(queryKey, environment);
+          }
+          // fork 隔离 resolving phase 与引用解析状态，缓存快照始终只读
+          const targetNamespace = environment.namespaceStack.fork();
+          const queryChain = environment.scopeChain;
           const positionContext = createPositionResolveContext({
             geometryContext: runtime.context.nodeGeometry,
             namespaceStack: targetNamespace,
@@ -2802,6 +2826,8 @@ export const compileChildrenToPrimitives = (
         providerKey: key,
         occurrence,
       });
+    } finally {
+      queryEnvironments.clear();
     }
 
     const handledContribution = withProviderOutputValidationBoundary(owner.label, () => {

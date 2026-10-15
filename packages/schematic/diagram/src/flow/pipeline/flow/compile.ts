@@ -5,6 +5,7 @@ import type { Position } from '@retikz/math';
 
 import { composeDiagramFoundation, resolveDiagramFoundation } from '../../../_diagram';
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
+import type { FlowLayoutElementOutput } from '../../contract';
 import type { ResolvedFlowDiagramDefinitionOptions } from '../../providers';
 import {
   evaluateFlowBezierConflicts,
@@ -121,17 +122,28 @@ export const createCompileFlowDiagram =
     assertFlowLayoutCapabilities(definition, diagram);
 
     const measurement = measureFlowDiagram(diagram, context, definition, options.graph);
+    // measurement 与 source 在回调内固定，完整 elements 快照决定查询投影是否仍然有效
+    let queryElementsKey: string | undefined;
+    let queryScope: IRScope | undefined;
+    const materializeQueryScope = (elements: ReadonlyArray<FlowLayoutElementOutput>): IRScope => {
+      const elementsKey = JSON.stringify(elements);
+      if (queryScope === undefined || queryElementsKey !== elementsKey) {
+        queryScope = {
+          type: 'scope',
+          localNamespace: true,
+          ...(source.transforms === undefined ? {} : { transforms: source.transforms }),
+          children: [materializeFlowElements(measurement, elements)],
+        };
+        queryElementsKey = elementsKey;
+      }
+      return queryScope;
+    };
     const output = executeFlowLayout(definition, measurement.input, {
       ...createFlowLayoutExecutionContext(context, measurement.input),
       resolveEndpoint: query => {
         try {
           return context.resolvePathTargets({
-            child: {
-              type: 'scope',
-              localNamespace: true,
-              ...(source.transforms === undefined ? {} : { transforms: source.transforms }),
-              children: [materializeFlowElements(measurement, query.elements)],
-            },
+            child: materializeQueryScope(query.elements),
             source: query.target,
             points: [],
           }).source;
@@ -153,12 +165,7 @@ export const createCompileFlowDiagram =
       resolveRoutePoints: query => {
         try {
           const resolved = context.resolvePathTargets({
-            child: {
-              type: 'scope',
-              ...(source.transforms === undefined ? {} : { transforms: source.transforms }),
-              localNamespace: true,
-              children: [materializeFlowElements(measurement, query.elements)],
-            },
+            child: materializeQueryScope(query.elements),
             source: query.source,
             points: [...query.points, query.target],
           });

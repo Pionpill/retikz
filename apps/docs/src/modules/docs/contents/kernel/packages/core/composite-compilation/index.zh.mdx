@@ -347,11 +347,18 @@ export type LayoutMeasurementProbe =
 
 文字测量也在同次编译内按完整文字和字体参数共享成功度量。宽度改变后仍重新决定换行、行高和基线。贡献缓存和文字缓存都不携带可提交事务：丢弃候选的资源、诊断与 artifact 不会随缓存命中进入最终 Scene。
 
+除了尺寸，父项还可能需要子图中某个锚点的坐标。`context.resolvePathTargets({ child, source, points })` 在真实子图中解析起点与有序目标，返回坐标，不返回可重放候选。例如 Flow 为多条关系生成路线，并在验证路线时再次查询端点；这些目标不同，但依赖的节点布局可能完全相同。
+
+同一个 `compile` 回调内，Core 会复用相同输入与有效环境下成功准备的几何和引用快照。缓存命中后只解析本次目标；未命中时先隔离编译子图。Flow 也会复用当前完整布局的 Graph 投影，元素位置或尺寸等内容变化后重新生成。主题、样式、变换或可见引用变化时不能沿用旧环境；每次查询仍有独立的相对坐标游标，失败不会进入缓存，也不影响后续合法目标查询。
+
+这层缓存随回调结束释放，不跨回调或编译共享，也不会向最终 Scene 提交图元、资源或节点。它与尺寸贡献缓存的范围不同：尺寸贡献可以在同次编译的多次试算间共享，几何查询只复用当前回调的只读环境；两者都不能替代完整候选的 replay。
+
 <SourceLinks
   sources={[
     { label: '贡献与完整输出契约', path: 'packages/kernel/core/src/contract/composite/types.ts' },
     { label: '隔离求值与贡献复用', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
     { label: '编译内文字度量共享', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: 'Flow 路线与端点查询复用', path: 'packages/schematic/diagram/src/flow/pipeline/flow/compile.ts' },
   ]}
 />
 
@@ -460,7 +467,7 @@ const definition = defineComposite({
 
 ## 完整实现流程
 
-下图从上到下展示总体调度。上半部分是回调可按需使用的路径：直接组合、尺寸查询与完整试算，可以组合或重复调用；尺寸结果用于父项决策，不能直接重放。下半部分按返回的子项类型处理，普通子项、重放句柄与 Scope 可以混合嵌套。图中展示成功提交主线；试算失败可舍弃或提升，致命错误则终止编译。
+下图从上到下展示总体调度。上半部分是回调可按需使用的路径：直接组合、尺寸查询、完整试算与几何查询，可以组合或重复调用。尺寸和坐标用于父项决策，只有完整候选能重放；几何查询分支返回坐标后回到回调，不把查询快照放进输出树。下半部分按返回的子项类型处理，普通子项、重放句柄与 Scope 可以混合嵌套。图中展示成功提交主线；试算失败可舍弃或提升，致命错误则终止编译。
 
 <ComponentPreview
   files="composite-implementation"

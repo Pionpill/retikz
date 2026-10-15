@@ -367,6 +367,12 @@ Within one compilation, Core reuses successful contributions for the same logica
 
 Text measurement also shares successful metrics for identical text and font parameters within the compilation. Changed width still triggers wrapping, line-height, and baseline calculations. Neither cache contains a committable transaction: discarded candidates' resources, diagnostics, and artifacts do not enter the final Scene through a cache hit.
 
+A parent may also need the coordinates of an anchor inside a child drawing. `context.resolvePathTargets({ child, source, points })` resolves a source and an ordered sequence of targets against real child geometry. It returns coordinates, not a replayable candidate. For example, Flow queries endpoints while routing multiple relations and again when validating the routes. Different targets may depend on exactly the same node layout.
+
+Within one `compile` callback, Core reuses successfully prepared geometry and reference snapshots for the same input and effective environment. A cache hit only resolves the current targets; a miss first compiles the child in isolation. Flow also reuses the Graph projection of its current complete layout, rebuilding it when element positions, dimensions, or other layout content change. Theme, style, transform, or visible-reference changes invalidate the old environment. Each query keeps its own relative-coordinate cursor. Failures are not cached and do not prevent later queries for valid targets.
+
+This cache is released when the callback ends and is not shared across callbacks or compilations. It publishes no primitives, resources, or nodes to the final Scene. Its scope differs from the dimension-contribution cache: contributions can be shared across probes within one compilation, whereas geometry queries reuse a read-only environment within the current callback. Neither replaces replay of a full candidate.
+
 <SourceLinks
   sources={[
     { label: 'Contribution and full-output contracts', path: 'packages/kernel/core/src/contract/composite/types.ts' },
@@ -375,6 +381,10 @@ Text measurement also shares successful metrics for identical text and font para
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
     },
     { label: 'Compile-local text metrics', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    {
+      label: 'Flow route and endpoint query reuse',
+      path: 'packages/schematic/diagram/src/flow/pipeline/flow/compile.ts',
+    },
   ]}
 />
 
@@ -509,7 +519,7 @@ If `layoutChild` fails, `raise` propagates the error to Core. On success, `repla
 
 ## Complete implementation flow
 
-Read this overview from top to bottom. The upper branches are optional callback operations: direct composition, dimension queries, and full probes can be combined or repeated. Dimensions inform parent decisions and cannot be replayed. The lower branches process returned child types; ordinary children, replay handles, and Scopes can be mixed and nested. The diagram follows successful commits; failed probes may be discarded or raised, while fatal errors stop compilation.
+Read this overview from top to bottom. The upper branches are optional callback operations: direct composition, dimension queries, full probes, and geometry queries can be combined or repeated. Dimensions and coordinates inform parent decisions; only full candidates can be replayed. The geometry branch returns coordinates to the callback without adding its query snapshot to the output tree. The lower branches process returned child types; ordinary children, replay handles, and Scopes can be mixed and nested. The diagram follows successful commits; failed probes may be discarded or raised, while fatal errors stop compilation.
 
 <ComponentPreview
   files="composite-implementation"

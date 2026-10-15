@@ -17,7 +17,7 @@ const Figure: FC<CompositeImplementationProps> = props => {
     ids.map(id => ({
       id: `s${id}`,
       role: 'activity' as const,
-      ...([3, 5, 8, 12].includes(id) ? { kind: 'docs.logic.important' } : {}),
+      ...([3, 5, 8, 12, 16].includes(id) ? { kind: 'docs.logic.important' } : {}),
       text: labels[id]
         .split('\n')
         .map((text, line) => ({ text, ...(line ? { font: { size: 12 }, fill: 'gray' } : {}) })),
@@ -36,6 +36,7 @@ const Figure: FC<CompositeImplementationProps> = props => {
             [1, 2],
             [3, 4],
             [5, 6],
+            [16, 17],
           ].map((ids, index) => (
             <FlowLayout
               key={index}
@@ -74,11 +75,12 @@ const Figure: FC<CompositeImplementationProps> = props => {
       </FlowLayout>
       <FlowRelations
         items={[
-          ...[1, 3, 5].map(id => edge(0, id)),
+          ...[1, 3, 5, 16].map(id => edge(0, id)),
           edge(1, 2),
           edge(3, 4),
           edge(5, 6),
-          ...[2, 4, 6].map(id => edge(id, 7)),
+          edge(16, 17),
+          ...[2, 4, 6, 17].map(id => edge(id, 7)),
           { source: 's7', target: 's8' },
           ...[9, 11, 13].map(id => edge(8, id)),
           edge(9, 10),

@@ -19,6 +19,8 @@ export const compositeImplementationI18n: Record<Lang, Array<string>> = {
     'Scope 输出\n建立样式、变换与裁剪环境',
     '遍历内部子项\n递归处理普通项与重放句柄',
     '汇入当前 Scene 输出\n合并图元、资源、引用与诊断',
+    'resolvePathTargets\n几何查询：起点与有序目标',
+    '解析并返回坐标\n命中：复用几何；未命中：隔离准备\n独立游标，不产生可重放候选',
   ],
   en: [
     'Bind definition and parse input\nEnter the compile callback',
@@ -37,5 +39,7 @@ export const compositeImplementationI18n: Record<Lang, Array<string>> = {
     'Scope output\nStyle, transform and clip context',
     'Traverse nested children\nProcess ordinary and replay items',
     'Merge into current Scene output\nPrimitives, resources, references, diagnostics',
+    'resolvePathTargets\nGeometry: source and ordered targets',
+    'Resolve and return coordinates\nHit: reuse geometry; miss: prepare in isolation\nIndependent cursor; no replay candidate',
   ],
 };
