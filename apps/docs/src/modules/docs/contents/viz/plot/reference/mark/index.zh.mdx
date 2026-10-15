@@ -21,6 +21,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
   name="PointMarkSchema"
   description="每条数据生成一个 glyph，或在 encoding.text 存在时生成无边框文本 Node。"
   descriptions={{
+    autoPadding: '自动边缘留白，默认 max-radius；point-aware 按实际位置与半径求解，false 关闭图元贡献。',
     defaultColorIndex: '默认分类色索引；省略时按默认颜色分组分配',
     type: '点图元判别值。',
     color: '数据绑定或常量 glyph 主颜色，优先于常量 fill。',
@@ -281,6 +282,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
   name="RelationMarkSchema"
   description="把 source 与 target 目标通过 Core Path 连接，kind 选择描边或 ribbon 语义。"
   descriptions={{
+    autoPadding: '端点节点的自动边缘留白，默认 false；只保护实际 endpoints，不包含连线路径。',
     defaultColorIndex: '默认分类色索引；省略时按默认颜色分组分配',
     type: '关系图元判别值。',
     kind: '关系几何类型，省略时为 path。',

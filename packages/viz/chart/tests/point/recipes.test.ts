@@ -1,7 +1,8 @@
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
+import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation, IRPlotScaleOperation } from '@retikz/plot';
-import { defineScale, PathMarkSchema, PositionScaleContinuity } from '@retikz/plot';
+import { defineScale, PathMarkSchema, PositionScaleContinuity, lowerPlotWithLineage } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
@@ -361,12 +362,12 @@ describe('Point Chart recipe Definitions', () => {
       {
         type: 'linear',
         name: 'value',
-        domainPadding: { kind: 'range', lower: 12, upper: 12 },
+        domainPadding: 12,
       },
     ]);
   });
 
-  it('all Point chart types reserve continuous position ranges by their maximum final point radius', () => {
+  it('Point charts forward recipe defaults without derived scale padding', () => {
     const scatter = resolveChart(
       ScatterChartSchema.parse({
         namespace: 'chart',
@@ -421,46 +422,14 @@ describe('Point Chart recipe Definitions', () => {
       rangedDotRuntime,
     );
 
-    expect(scatter.plot.scales).toEqual([
-      {
-        type: 'linear',
-        name: '__chart.scatter.scale.x',
-        domainPadding: { kind: 'range', lower: 5, upper: 5 },
-      },
-      {
-        type: 'linear',
-        name: '__chart.scatter.scale.y',
-        domainPadding: { kind: 'range', lower: 5, upper: 5 },
-      },
-    ]);
-    expect(bubble.plot.scales).toEqual([
-      {
-        type: 'linear',
-        name: '__chart.bubble.scale.x',
-        domainPadding: { kind: 'mark', marks: ['__chart.mark.0'], clearance: 0 },
-      },
-      {
-        type: 'linear',
-        name: '__chart.bubble.scale.y',
-        domainPadding: { kind: 'mark', marks: ['__chart.mark.0'], clearance: 0 },
-      },
-    ]);
-    expect(regression.plot.scales.slice(0, 2)).toEqual([
-      expect.objectContaining({ domainPadding: { kind: 'range', lower: 5, upper: 5 } }),
-      expect.objectContaining({ domainPadding: { kind: 'range', lower: 5, upper: 5 } }),
-    ]);
-    expect(connectedScatter.plot.scales.slice(0, 2)).toEqual([
-      expect.objectContaining({ domainPadding: { kind: 'range', lower: 5, upper: 5 } }),
-      expect.objectContaining({ domainPadding: { kind: 'range', lower: 5, upper: 5 } }),
-    ]);
-    expect(rangedDot.plot.scales).toEqual([
-      {
-        type: 'linear',
-        name: '__chart.ranged-dot.scale.x',
-        domainPadding: { kind: 'range', lower: 5, upper: 5 },
-      },
-      { type: 'point', name: '__chart.ranged-dot.scale.y' },
-    ]);
+    for (const chart of [scatter, regression, connectedScatter, rangedDot]) {
+      expect(chart.plot.marks.find(mark => mark.type === 'point' || mark.type === 'relation')).toMatchObject({
+        autoPadding: 'max-radius',
+      });
+      expect(chart.plot.scales.every(scale => !Object.hasOwn(scale, 'domainPadding'))).toBe(true);
+    }
+    expect(bubble.plot.marks[0]).toMatchObject({ autoPadding: 'point-aware' });
+    expect(bubble.plot.scales.every(scale => !Object.hasOwn(scale, 'domainPadding'))).toBe(true);
   });
 
   it.each([
@@ -489,7 +458,7 @@ describe('Point Chart recipe Definitions', () => {
       },
       18,
     ],
-  ])('uses the maximum final radius for %s', (_name, recipeOptions, radius) => {
+  ])('forwards the size source for %s', (_name, recipeOptions, radius) => {
     const options = recipeOptions as {
       properties?: JsonObject;
       encodings?: JsonObject;
@@ -507,13 +476,18 @@ describe('Point Chart recipe Definitions', () => {
 
     const result = resolveChart(source, ScatterChartDefinition, runtime);
 
-    expect(result.plot.scales.slice(0, 2)).toEqual([
-      expect.objectContaining({ domainPadding: { kind: 'range', lower: radius, upper: radius } }),
-      expect.objectContaining({ domainPadding: { kind: 'range', lower: radius, upper: radius } }),
-    ]);
+    expect(result.plot.marks[0]).toMatchObject({ autoPadding: 'max-radius' });
+    if (options.properties !== undefined) {
+      expect(result.plot.marks[0]).toMatchObject({ size: { kind: 'constant', value: radius } });
+    } else {
+      expect(result.plot.marks[0]).toMatchObject({ size: { kind: 'field', value: 'size', scale: 'sizeScale' } });
+      expect(result.plot.scales).toContainEqual(
+        expect.objectContaining({ name: 'sizeScale', range: expect.arrayContaining([radius]) }),
+      );
+    }
   });
 
-  it('computes the maximum after authored additions and atomic override, excluding Plot extension marks', () => {
+  it('preserves additions and atomic overrides while extensions keep Plot defaults', () => {
     const addition = ScatterChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -549,12 +523,13 @@ describe('Point Chart recipe Definitions', () => {
     const additionResult = resolveChart(addition, ScatterChartDefinition, runtime);
     const overrideResult = resolveChart(override, ScatterChartDefinition, runtime);
 
-    expect(additionResult.plot.scales[0]).toMatchObject({
-      domainPadding: { kind: 'range', lower: 12, upper: 12 },
-    });
-    expect(overrideResult.plot.scales[0]).toMatchObject({
-      domainPadding: { kind: 'range', lower: 4, upper: 4 },
-    });
+    expect(additionResult.plot.marks).toMatchObject([
+      { size: { value: 3 }, autoPadding: 'max-radius' },
+      { size: { value: 12 }, autoPadding: 'max-radius' },
+      { size: { value: 99 }, autoPadding: 'max-radius' },
+    ]);
+    expect(overrideResult.plot.marks).toMatchObject([{ size: { value: 4 }, autoPadding: 'max-radius' }]);
+    expect(overrideResult.plot.marks).toHaveLength(1);
   });
 
   it('uses a referenced Plot extension sqrt scale to determine the maximum Point radius', () => {
@@ -577,59 +552,14 @@ describe('Point Chart recipe Definitions', () => {
 
     const result = resolveChart(source, ScatterChartDefinition, runtime);
 
-    expect(result.plot.scales.slice(0, 2)).toEqual([
-      expect.objectContaining({ domainPadding: { kind: 'range', lower: 17, upper: 17 } }),
-      expect.objectContaining({ domainPadding: { kind: 'range', lower: 17, upper: 17 } }),
-    ]);
+    expect(result.plot.marks[0]).toMatchObject({
+      autoPadding: 'max-radius',
+      size: { kind: 'field', value: 'size', scale: 'sizeScale' },
+    });
     expect(result.plot.scales).toContainEqual({ type: 'sqrt', name: 'sizeScale', range: [3, 17] });
   });
 
-  it('fails at the Chart owner boundary when a custom Point mark exposes an invalid effective radius', () => {
-    const source = ScatterChartSchema.parse({
-      namespace: 'chart',
-      type: 'point',
-      data: { reference: 'rows' },
-      recipe: { chartType: 'scatter', encodings: { x: 'x', y: 'y' } },
-    });
-    const positionScales = [
-      { type: 'linear', name: '__chart.scatter.scale.x' },
-      { type: 'linear', name: '__chart.scatter.scale.y' },
-    ] as const;
-
-    expect(() =>
-      resolvePointScaleDefaults(
-        scaleDefaultsContextOf(
-          source,
-          [
-            {
-              type: 'point',
-              encoding: { x: { field: 'x' }, y: { field: 'y' } },
-              size: { kind: 'constant', value: -1 },
-            },
-          ],
-          positionScales,
-        ),
-      ),
-    ).toThrowError(/finite nonnegative/);
-
-    expect(() =>
-      resolvePointScaleDefaults(
-        scaleDefaultsContextOf(
-          source,
-          [
-            {
-              type: 'point',
-              encoding: { x: { field: 'x' }, y: { field: 'y' } },
-              size: { kind: 'field', value: 'size', scale: 'sizeScale' },
-            },
-          ],
-          [...positionScales, { type: 'sqrt', name: 'sizeScale', range: [5, Number.POSITIVE_INFINITY] }],
-        ),
-      ),
-    ).toThrowError(/finite nonnegative/);
-  });
-
-  it('uses the largest Point in regression, connected-scatter, and both Ranged Dot endpoints', () => {
+  it('forwards the sizes of compound chart points and both Ranged Dot endpoints', () => {
     const regression = resolveChart(
       RegressionChartSchema.parse({
         namespace: 'chart',
@@ -673,14 +603,14 @@ describe('Point Chart recipe Definitions', () => {
       rangedDotRuntime,
     );
 
-    expect(regression.plot.scales[0]).toMatchObject({
-      domainPadding: { kind: 'range', lower: 11, upper: 11 },
+    expect(regression.plot.marks[0]).toMatchObject({ autoPadding: 'max-radius', size: { value: 11 } });
+    expect(connected.plot.marks.find(mark => mark.type === 'point')).toMatchObject({
+      autoPadding: 'max-radius',
+      size: { value: 14 },
     });
-    expect(connected.plot.scales[0]).toMatchObject({
-      domainPadding: { kind: 'range', lower: 14, upper: 14 },
-    });
-    expect(ranged.plot.scales[0]).toMatchObject({
-      domainPadding: { kind: 'range', lower: 15, upper: 15 },
+    expect(ranged.plot.marks[0]).toMatchObject({
+      autoPadding: 'max-radius',
+      endpoints: { source: { size: { value: 8 } }, target: { size: { value: 15 } } },
     });
   });
 
@@ -841,7 +771,7 @@ describe('Point Chart recipe Definitions', () => {
     );
   });
 
-  it('regular Point charts carry their position padding into authored continuous scales', () => {
+  it('regular Point charts preserve authored continuous scales and forward the strategy', () => {
     const source = ScatterChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -868,7 +798,6 @@ describe('Point Chart recipe Definitions', () => {
     expect(result.plot.scales).toContainEqual({
       type: 'log',
       name: 'amountScale',
-      domainPadding: { kind: 'range', lower: 5, upper: 5 },
     });
   });
 
@@ -1678,6 +1607,37 @@ describe('Point Chart marks', () => {
 });
 
 describe('Point autoPadding strategies', () => {
+  it('compiles the forwarded policy through the public Plot entry point', () => {
+    const positions = (children: Array<IRChild>): Array<IRNode['position']> =>
+      children.flatMap(child => {
+        if (child.type === 'scope') return positions((child as IRScope).children);
+        if (child.type === 'node') return [(child as IRNode).position];
+        return [];
+      });
+    const data = [
+      { x: 0, y: 0 },
+      { x: 10, y: 10 },
+    ];
+    for (const autoPadding of [false, 'max-radius', 'point-aware'] as const) {
+      const source = ScatterChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: { chartType: 'scatter', encodings: { x: 'x', y: 'y' }, properties: { size: 10, autoPadding } },
+      });
+      const plot = resolveChart(source, ScatterChartDefinition, runtime).plot;
+      const result = lowerPlotWithLineage(
+        { ...plot, width: 200, height: 200, guides: [] },
+        { rows: data },
+        { environment: {} },
+      );
+      const points = positions(result.children);
+      const radius = autoPadding === false ? 0 : 10;
+      expect(points).toHaveLength(2);
+      expect(points[0]).toEqual([expect.closeTo(radius), expect.closeTo(200 - radius)]);
+      expect(points[1]).toEqual([expect.closeTo(200 - radius), expect.closeTo(radius)]);
+    }
+  });
   it('keeps the existing default and emits mark constraints only when selected', () => {
     const source = {
       namespace: 'chart',
@@ -1706,8 +1666,9 @@ describe('Point autoPadding strategies', () => {
       runtime,
     ).plot;
 
-    expect(aware.scales[0]).toMatchObject({ domainPadding: { kind: 'mark', marks: ['__chart.mark.0'], lower: 0 } });
-    expect(aware.marks[0].id).toBe('__chart.mark.0');
+    expect(aware.scales[0]).toMatchObject({ domainPadding: { kind: 'range', lower: 0 } });
+    expect(aware.marks[0]).toMatchObject({ autoPadding: 'point-aware' });
+    expect(aware.marks[0].id).toBeUndefined();
   });
 
   it('does not identify or scan marks when explicit padding covers every end', () => {
@@ -1724,9 +1685,7 @@ describe('Point autoPadding strategies', () => {
     const result = resolveChart(source, ScatterChartDefinition, runtime).plot;
 
     expect(result.marks[0].id).toBeUndefined();
-    expect(result.scales).toEqual(
-      expect.arrayContaining([expect.objectContaining({ domainPadding: { kind: 'range', lower: 0, upper: 0 } })]),
-    );
+    expect(result.scales).toEqual(expect.arrayContaining([expect.objectContaining({ domainPadding: 0 })]));
   });
 });
 
@@ -1759,7 +1718,7 @@ describe('Point recipe autoPadding exposure', () => {
 });
 
 describe('point-aware final mark selection', () => {
-  it('references appended and replacement marks but excludes extension marks and avoids identity collisions', () => {
+  it('forwards strategies to appended and replacement marks without changing extension identities', () => {
     const source = ScatterChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -1787,8 +1746,13 @@ describe('point-aware final mark selection', () => {
     const result = resolveChart(source, ScatterChartDefinition, runtime).plot;
     const ids = result.marks.map(mark => mark.id);
 
-    expect(new Set(ids).size).toBe(3);
-    expect(result.scales[0]).toMatchObject({ domainPadding: { kind: 'mark', marks: ids.slice(0, 2) } });
+    expect(ids).toEqual([undefined, undefined, '__chart.mark.0']);
+    expect(result.marks).toMatchObject([
+      { autoPadding: 'point-aware' },
+      { autoPadding: 'point-aware' },
+      { autoPadding: 'max-radius' },
+    ]);
+    expect(result.scales.every(scale => !Object.hasOwn(scale, 'domainPadding'))).toBe(true);
     expect(result.marks[0]).toMatchObject({ size: { kind: 'constant', value: 2 } });
   });
 });
@@ -1809,65 +1773,22 @@ describe('Point autoPadding clearance', () => {
       ScatterChartDefinition,
       runtime,
     ).plot;
-  it.each(['max-radius', 'point-aware'])('preserves %s shorthand semantics with zero clearance', kind => {
-    expect(resolvePadding({ kind })).toEqual(resolvePadding(kind));
+  it.each(['max-radius', 'point-aware'])('forwards %s shorthand and object strategies', kind => {
+    expect(resolvePadding(kind).marks[0]).toMatchObject({ autoPadding: kind });
+    expect(resolvePadding({ kind }).marks[0]).toMatchObject({ autoPadding: { kind } });
   });
 
-  it('adds clearance only to automatic range ends', () => {
-    expect(resolvePadding({ kind: 'max-radius', clearance: 8 }, { left: 0 }).scales[0]).toMatchObject({
-      domainPadding: { kind: 'range', lower: 0, upper: 18 },
-    });
-    expect(resolvePadding({ kind: 'point-aware', clearance: 8 }, { left: 0 }).scales[0]).toMatchObject({
-      domainPadding: { kind: 'mark', lower: 0, clearance: 8 },
-    });
-    expect(resolvePadding({ kind: 'point-aware', clearance: 8 }, 0)).toEqual(resolvePadding('point-aware', 0));
-    expect(resolvePadding({ kind: 'max-radius', clearance: 8 }, { kind: 'ratio', left: 0.1 })).toEqual(
-      resolvePadding('max-radius', { kind: 'ratio', left: 0.1 }),
-    );
-  });
-
-  it('resolves side, axis, default and explicit zero for both policies', () => {
+  it('preserves clearance and explicit range/ratio overrides for Plot', () => {
     const clearance = { default: 8, x: 12, top: 20, left: 0 };
-    const maximum = resolvePadding({ kind: 'max-radius', clearance });
-
-    expect(maximum.scales[0]).toMatchObject({ domainPadding: { lower: 10, upper: 22 } });
-    expect(maximum.scales[1]).toMatchObject({ domainPadding: { lower: 18, upper: 30 } });
-
-    const aware = resolvePadding({ kind: 'point-aware', clearance });
-
-    expect(aware.scales[0]).toMatchObject({ domainPadding: { clearance: { lower: 0, upper: 12 } } });
-    expect(aware.scales[1]).toMatchObject({ domainPadding: { clearance: { lower: 8, upper: 20 } } });
-    expect(resolvePadding({ kind: 'point-aware', clearance: {} })).toEqual(resolvePadding('point-aware'));
-    expect(resolvePadding({ kind: 'point-aware', clearance: { default: 8 } })).toEqual(
-      resolvePadding({ kind: 'point-aware', clearance: 8 }),
-    );
-  });
-
-  it('maps visual clearance to reversed position ranges', () => {
-    const plot = resolveChart(
-      ScatterChartSchema.parse({
-        namespace: 'chart',
-        type: 'point',
-        data: { reference: 'rows' },
-        recipe: {
-          chartType: 'scatter',
-          encodings: {
-            x: { field: 'x', scale: { operation: { type: 'linear', name: 'xScale', range: [100, 0] } } },
-            y: { field: 'y', scale: { operation: { type: 'linear', name: 'yScale', range: [0, 100] } } },
-          },
-          properties: { autoPadding: { kind: 'point-aware', clearance: { left: 2, right: 8, top: 3, bottom: 9 } } },
-        },
-      }),
-      ScatterChartDefinition,
-      runtime,
-    ).plot;
-
-    expect(plot.scales.find(scale => scale.name === 'xScale')).toMatchObject({
-      domainPadding: { clearance: { lower: 8, upper: 2 } },
-    });
-    expect(plot.scales.find(scale => scale.name === 'yScale')).toMatchObject({
-      domainPadding: { clearance: { lower: 3, upper: 9 } },
-    });
+    for (const kind of ['max-radius', 'point-aware']) {
+      const plot = resolvePadding({ kind, clearance }, { left: 0 });
+      expect(plot.marks[0]).toMatchObject({ autoPadding: { kind, clearance } });
+      expect(plot.scales[0]).toMatchObject({ domainPadding: { kind: 'range', lower: 0 } });
+      expect(resolvePadding({ kind, clearance }, 0).scales[0]).toMatchObject({ domainPadding: 0 });
+      expect(resolvePadding({ kind, clearance }, { kind: 'ratio', left: 0.1 }).scales[0]).toMatchObject({
+        domainPadding: { kind: 'ratio', lower: 0.1, upper: 0 },
+      });
+    }
   });
 
   it('rejects missing strategy and invalid clearance at the Source boundary', () => {

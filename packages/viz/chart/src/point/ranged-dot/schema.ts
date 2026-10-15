@@ -47,6 +47,7 @@ export const RangedDotRangePropertiesSchema = strictObject({
 
 /** 范围点标记的作者侧成员属性 */
 const RangedDotMarkPropertiesSchema = strictObject({
+  autoPadding: PointAutoPaddingSchema.optional(),
   point: RangedDotPointPropertiesSchema.optional(),
   startPoint: RangedDotPointPropertiesSchema.optional(),
   endPoint: RangedDotPointPropertiesSchema.optional(),

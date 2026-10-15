@@ -450,14 +450,24 @@ describe('mark padding capabilities', () => {
     expect(scale.coordinate(0) - scale.range()[0]).toBeGreaterThanOrEqual(2);
   });
 
-  it.each([4, { kind: 'ratio', value: 1 }])('protects actual jittered positions for span %j', span => {
+  it.each([
+    { span: 4, automatic: false },
+    { span: { kind: 'ratio', value: 1 }, automatic: false },
+    { span: 4, automatic: true },
+    { span: { kind: 'ratio', value: 1 }, automatic: true },
+  ])('protects actual jittered positions for %j', ({ span, automatic }) => {
     const base = plotOf();
     const spec = PlotSchema.parse({
       ...base,
       width: 180,
-      scales: base.scales.map(scale => (scale.name === 'x' ? { ...scale, type: 'point', padding: 0 } : scale)),
+      scales: base.scales.map(scale => ({
+        ...scale,
+        ...(scale.name === 'x' ? { type: 'point', padding: 0 } : {}),
+        ...(automatic ? { domainPadding: undefined } : {}),
+      })),
       marks: base.marks.map(mark => ({
         ...mark,
+        ...(automatic ? { id: undefined, autoPadding: 'point-aware' } : {}),
         placement: { adjustments: [{ kind: 'jitter', role: 'x', span, seed: 1 }] },
       })),
     });

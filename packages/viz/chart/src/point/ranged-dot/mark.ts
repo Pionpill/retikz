@@ -79,6 +79,7 @@ export const resolveRangedDotMark = (
 
   return RelationMarkSchema.parse({
     type: BuiltinPlotMark.Relation,
+    autoPadding: properties.autoPadding ?? 'max-radius',
     source: { project: { x: start, y: category } },
     target: { project: { x: end, y: category } },
     style,

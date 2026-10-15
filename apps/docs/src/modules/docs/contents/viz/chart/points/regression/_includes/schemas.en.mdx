@@ -24,6 +24,6 @@ Each entry requires a fitting method and inherits sampling and appearance settin
 
 #### RegressionChartMarkSchema
 
-`encodings` accepts only optional field-name strings for x, y, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties.
+`encodings` accepts only optional field-name strings for x, y, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `domainPadding`; `autoPadding` can override the chart policy. Omitted settings inherit the applicable chart mappings and properties.
 
 <ZodSchema name="RegressionChartMarkSchema" shallow />

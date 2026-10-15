@@ -17,6 +17,7 @@ import type {
 } from '@retikz/core';
 import type { ExternalRow, IRDataTransformDeclaration } from '@retikz/data';
 import type { JsonValue } from '@retikz/foundation';
+import type { IRPlotPointAutoPadding } from '@retikz/plot';
 import type {
   IRPlotAnchorId,
   IRPlotBlendModeStyle,
@@ -275,7 +276,12 @@ export type InputPlotPathMark = InputPlotMarkTransform &
   };
 
 /** <PointMark> props：散点 / 文本图层，每行一个 glyph（给 text → 无边框文本 Node） */
-export type InputPlotPointMark = InputPlotMarkTransform &
+export type InputPlotPointMark = {
+  /** 自动边缘留白，默认 max-radius；false 关闭当前图元贡献
+   * @default 'max-radius'
+   */
+  autoPadding?: IRPlotPointAutoPadding;
+} & InputPlotMarkTransform &
   InputPlotCoordinateScope &
   InputPlotDatumLabel &
   InputPlotCoreNodeChannels & {
@@ -396,7 +402,12 @@ export type InputPlotIntervalMark = InputPlotMarkTransform &
   };
 
 /** <RelationMark> props：连接两个目标的路径或 ribbon 关系图层 */
-export type InputPlotRelationMark = InputPlotMarkTransform &
+export type InputPlotRelationMark = {
+  /** 端点自动留白，默认关闭
+   * @default false
+   */
+  autoPadding?: IRPlotPointAutoPadding;
+} & InputPlotMarkTransform &
   InputPlotCoordinateScope & {
     /** 可选 mark 句柄，用于生成稳定的关系图层 id */
     id?: string;

@@ -28,7 +28,7 @@ Corresponds to `RegressionProperties`, Vanilla `properties` and IR `recipe.prope
 | Appearance | `point`         | `IRRegressionPointProperties`                            | Sets observation point appearance                                                                       |
 | Trend      | `trend.curve`   | `IRRegressionTrendProperties['curve']`                   | Default `catmullRom`; inherited by extra trends unless overridden                                       |
 |            | `trend`         | `IRRegressionTrendProperties`                            | Sets trend appearance without changing the fit                                                          |
-| Padding    | `autoPadding`   | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance |
+| Padding    | `autoPadding`   | `false`, `'max-radius'`, `'point-aware'`, `object`       | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance |
 |            | `domainPadding` | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                |
 
 See the [properties schema](#regressionproperties--irregressionchartproperties--regressionchartpropertiesschema) for the full structure; shared appearance configuration is not expanded here.

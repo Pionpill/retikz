@@ -21,6 +21,7 @@ import {
 import type {
   IRPlot,
   IRPlotAxisGuide,
+  IRPlotDomainPadding,
   IRPlotChannel,
   IRPlotCoordinateOperation,
   IRPlotIntervalMark,
@@ -44,7 +45,9 @@ import {
   resolveScaleDefinition,
   resolveBuiltinPositionOperation,
   markDomainPaddingOf,
+  resolvePointPadding,
 } from '../scale';
+import type { PointPaddingResolution } from '../scale';
 import type { CoordinateFrameResolution, CoordinateResolveContext, MarkDataView } from './types';
 
 /** 查找当前 coordinate operation 对应的 definition，并集中报告未注册坐标系 */
@@ -511,19 +514,86 @@ export const resolveCoordinateFrame = (
     return def.pickWithOptions();
   };
 
+  const automaticPadding = new Map<string, PointPaddingResolution>();
+  const roleByScale = new WeakMap<IRPlotScaleOperation, DimensionRole>();
+  const resolveScaleWithPadding = (
+    role: DimensionRole,
+    scaleName: string | undefined,
+    values: Array<unknown>,
+  ): IRPlotScaleOperation => {
+    const operation = resolveScaleForRole(role, scaleName, roleChannelOf(role), values);
+    const explicit = ('domainPadding' in operation ? operation.domainPadding : undefined) as
+      | IRPlotDomainPadding
+      | undefined;
+    if (
+      typeof explicit === 'number' ||
+      (explicit !== undefined &&
+        (explicit.kind === 'ratio' ||
+          explicit.kind === 'mark' ||
+          (explicit.lower !== undefined && explicit.upper !== undefined)))
+    )
+      return operation;
+    const rawRange = 'range' in operation ? operation.range : undefined;
+    const cartesian = coordinateOperation.type === 'cartesian2D' || coordinateOperation.type === 'cartesian1D';
+    const increasing =
+      Array.isArray(rawRange) && typeof rawRange[0] === 'number' && typeof rawRange[1] === 'number'
+        ? rawRange[1] >= rawRange[0]
+        : !(cartesian && role === 'y');
+    const automatic = resolvePointPadding(
+      markDataViewsForRole(role),
+      node.scales,
+      role,
+      cartesian,
+      increasing,
+      resolvePositionScaleContinuity(operation, { registry: scaleRegistry }) === 'continuous',
+    );
+    automaticPadding.set(role, automatic);
+    const scaleDefinition = resolveScaleDefinition(operation, { registry: scaleRegistry });
+    if (
+      automatic.points.length > 0 ||
+      ((automatic.minimum.lower > 0 || automatic.minimum.upper > 0) &&
+        coordinateDefinition.domainPadding?.roles.includes(role) &&
+        scaleDefinition.family === 'position' &&
+        scaleDefinition.domainPadding !== undefined)
+    )
+      return {
+        ...operation,
+        domainPadding: {
+          kind: 'mark',
+          marks: [],
+          ...(explicit?.lower === undefined ? {} : { lower: explicit.lower }),
+          ...(explicit?.upper === undefined ? {} : { upper: explicit.upper }),
+        },
+      };
+    if (automatic.minimum.lower === 0 && automatic.minimum.upper === 0) return operation;
+    return {
+      ...operation,
+      domainPadding: {
+        kind: 'range',
+        lower: explicit?.lower ?? automatic.minimum.lower,
+        upper: explicit?.upper ?? automatic.minimum.upper,
+      },
+    };
+  };
+
   const resolveScaleForDefinitionRole = (
     role: DimensionRole,
     scaleName: string | undefined,
     values: Array<unknown>,
-  ): IRPlotScaleOperation => resolveScaleForRole(role, scaleName, roleChannelOf(role), values);
+  ): IRPlotScaleOperation => {
+    // 同一 Source 尺度可用于多个角色，各角色拥有独立的输出方向和范围
+    const operation = { ...resolveScaleWithPadding(role, scaleName, values) };
+    roleByScale.set(operation, role);
+    return operation;
+  };
 
   const paddedScales = new Map<string, PositionScale>();
   const coordinateScaleNames = readCoordinateScaleNames(coordinateDefinition, coordinateOperation);
-  const hasMarkPadding = Object.values(coordinateScaleNames).some(name => {
-    const scale = name === undefined ? undefined : scaleByName.get(name);
-    return scale !== undefined && markDomainPaddingOf(scale) !== undefined;
+  const hasMarkPadding = roles.some(role => {
+    const values = collectValues(role, undefined, roleChannelOf(role), role === 'y');
+    const scale = resolveScaleForDefinitionRole(role, coordinateScaleNames[role], values);
+    return markDomainPaddingOf(scale) !== undefined;
   });
-  const operationsByRole = new Map<string, IRPlotScaleOperation>();
   const mappingsByRole = new Map<string, DomainPaddingScale>();
   if (hasMarkPadding) {
     if (context.markPadding === undefined || coordinateDefinition.domainPadding === undefined) {
@@ -541,7 +611,6 @@ export const resolveCoordinateFrame = (
         typeof scaleName === 'string' ? scaleName : undefined,
         values,
       );
-      operationsByRole.set(role, operation);
       const definition = resolveScaleDefinition(operation, { registry: scaleRegistry });
       if (definition.family !== 'position' || definition.domainPadding === undefined) {
         throw new RetikzPlotError(`scale "${operation.name}" does not support mark domainPadding`);
@@ -567,10 +636,10 @@ export const resolveCoordinateFrame = (
     const padding = markDomainPaddingOf(operation);
     if (padding === undefined) return resolvePositionScale(operation, values, range, { registry: scaleRegistry });
 
-    const existing = paddedScales.get(operation.name);
+    const role = roleByScale.get(operation);
+    const existing = role === undefined ? undefined : paddedScales.get(role);
     if (existing !== undefined) return existing;
 
-    const role = roles.find(candidate => operationsByRole.get(candidate)?.name === operation.name);
     const mapping = role === undefined ? undefined : mappingsByRole.get(role);
     if (role === undefined || mapping === undefined || context.markPadding === undefined)
       throw new RetikzPlotError(`scale "${operation.name}" has no padding role`);
@@ -578,6 +647,7 @@ export const resolveCoordinateFrame = (
     const roleIndex = roles.indexOf(role);
     const localViews = context.paddingMarkDataViews ?? markDataViews;
     const paddingContext = context.markPadding;
+    const automatic = automaticPadding.get(role);
     const group = context.markPadding.groupOf(operation.name, role, markDataViewsForRole(role));
 
     const samples = () => {
@@ -587,11 +657,19 @@ export const resolveCoordinateFrame = (
         upper: (typeof padding.clearance === 'object' ? padding.clearance.upper : padding.clearance) ?? 0,
       };
 
-      for (const id of padding.marks) {
-        const view = localViews.find(candidate => candidate.mark.id === id);
+      const participants =
+        automatic === undefined
+          ? padding.marks.map(id => ({ id, participant: undefined }))
+          : automatic.points.map(participant => ({ id: participant.view.mark.id, participant }));
+      for (const { id, participant } of participants) {
+        const view =
+          participant === undefined
+            ? localViews.find(candidate => candidate.mark.id === id)
+            : localViews.find(candidate => candidate.markIndex === participant.view.markIndex);
         if (view === undefined) {
           // 共享域可引用其它消费视图的图元；由该图元所在视图提交其实际 range 约束
-          if (markDataViewsForRole(role).some(candidate => candidate.mark.id === id)) continue;
+          if (participant !== undefined || markDataViewsForRole(role).some(candidate => candidate.mark.id === id))
+            continue;
 
           throw new RetikzPlotError(
             `scale "${operation.name}" references unknown padding mark "${id}" or a mark that does not consume this scale`,
@@ -600,6 +678,7 @@ export const resolveCoordinateFrame = (
 
         const placed = paddingContext.placedTargetsOf(view, paddingFrame);
         const placedByKey = new Map(placed?.targets.map(target => [target.key, target]));
+        const targetClearance = participant?.clearance ?? clearance;
 
         for (const target of paddingContext.targetsOf(view, roles)) {
           const positions = roles.map(
@@ -641,11 +720,11 @@ export const resolveCoordinateFrame = (
                   role,
                   mappedRoles: effectiveMapped,
                   extent: target.extent[roleIndex],
-                  clearance,
+                  clearance: targetClearance,
                 })
               : {
-                  lower: target.extent[roleIndex] + clearance.lower,
-                  upper: target.extent[roleIndex] + clearance.upper,
+                  lower: target.extent[roleIndex] + targetClearance.lower,
+                  upper: target.extent[roleIndex] + targetClearance.upper,
                 };
           if (measured === null) continue;
           if (
@@ -683,8 +762,10 @@ export const resolveCoordinateFrame = (
       samples,
       mapping,
       'range' in operation && Array.isArray(operation.range) ? (operation.range as [number, number]) : range,
+      automatic?.minimum,
+      automatic?.points.map(({ view }) => view.mark),
     );
-    paddedScales.set(operation.name, scale);
+    paddedScales.set(role, scale);
 
     return scale;
   };

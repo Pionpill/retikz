@@ -26,7 +26,7 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
 |        | `startPoint`    | `IRRangedDotPointProperties`                             | 覆盖起点外观                                                     |
 |        | `endPoint`      | `IRRangedDotPointProperties`                             | 覆盖终点外观                                                     |
 | 连接线 | `range`         | `IRRangedDotRangeProperties`                             | 设置区间连接线外观                                               |
-| 留白   | `autoPadding`   | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
+| 留白   | `autoPadding`   | `false`、`'max-radius'`、`'point-aware'`、`object`       | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
 |        | `domainPadding` | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                   |
 
 完整属性结构见 [属性 Schema](#rangeddotproperties--irrangeddotchartproperties--rangeddotchartpropertiesschema)；公共外观配置不在这里展开。

@@ -30,7 +30,7 @@ export const ScatterChartEncodingSlots = [
   'facet',
 ] as const;
 
-const scatterPropertySlots = [...pointPropertySlots, 'domainPadding', 'autoPadding'] as const;
+const scatterPropertySlots = [...pointPropertySlots, 'domainPadding'] as const;
 
 /** Scatter Chart 的内建 semantic recipe Definition */
 export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = defineChartRecipe({
@@ -46,7 +46,7 @@ export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = def
       definition: ScatterMarkDefinition,
       inherit: {
         encodings: ['x', 'y', 'color', 'size', 'opacity', 'shape'],
-        properties: ['color', 'size', 'opacity', 'shape'],
+        properties: ['autoPadding', 'color', 'size', 'opacity', 'shape'],
       },
     },
   ],

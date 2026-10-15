@@ -94,7 +94,7 @@ export const RangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
   marks: [
     {
       definition: RangedDotMarkDefinition,
-      inherit: { encodings: ['category', 'start', 'end', 'color'], properties: markPropertySlots },
+      inherit: { encodings: ['category', 'start', 'end', 'color'], properties: [...markPropertySlots, 'autoPadding'] },
     },
   ],
   resolveEncodings: context => {

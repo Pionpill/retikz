@@ -203,6 +203,31 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
   defaultSourceFile="point-position.preview.tsx"
 />
 
+### 边缘留白
+
+节点的位置表示中心。极值点落在绘图区边缘时，半径会伸出边界，因此 `PointMark` 默认采用 `max-radius`，为连续位置尺度预留最大节点半径。位置、数据和节点尺寸保持不变，变化的是尺度映射。
+
+| 属性                      | 含义         | 说明                                                                                                                      |
+| ------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `autoPadding`             | 自动留白策略 | `max-radius` 为默认值；`point-aware` 按实际位置与半径求解；`false` 关闭当前图元的自动贡献。直接传策略，不通过字段通道绑定 |
+| `autoPadding.clearance`   | 外缘净空     | 对象形式 `{ kind, clearance }` 中的非负绘图单位，默认 0；支持数字或四边间距对象，明确四边仅适用于笛卡尔坐标               |
+| `PlotScale.domainPadding` | 尺度覆盖     | 数字（包括 0）固定两端；`range` 只固定已写的端，省略端自动补齐；`ratio` 省略端为 0；显式 `mark` 分支独立指定参与图元      |
+
+示例保持中央大点与边缘小点的大小不变。切换策略，观察中央大点是否需要额外边缘空间；再增加净空，或将 x 尺度起点设为零，比较显式配置的优先级。
+
+<ComponentPreview
+  mode="showcase"
+  files={['point-auto-padding', 'point-auto-padding.preview.tsx', 'point-auto-padding.data.ts']}
+  controls={{ name: 'point-auto-padding' }}
+  defaultSourceFile="point-auto-padding.preview.tsx"
+  size="lg"
+  caption="数值字段经默认尺寸尺度映射为半径 2、20、2。尺度覆盖仅调整 x；关闭当前图元策略仍允许其它图元为共享尺度贡献留白。"
+/>
+
+最大半径策略不扫描数据行：固定尺寸使用 `size`，字段尺寸使用尺寸尺度输出范围的最大值；分类位置尺度保留自身 padding。逐点策略使用有效数据及位置调整后的实际位置，利用中央大点已有的边缘空间，并支持具有对应能力的连续、分类和极坐标尺度。
+
+两种策略只保护 `size` 表达的半径，不测量文字、描边、阴影、形状缩放或 `minimumSize` 的包围盒。多个图元共享尺度时，各端取最大需求；混合策略和共享分面在同一最终映射上满足约束。未知尺寸上界、缺少所需能力或无可行绘图区时会报错。
+
 ### 外观
 
 填充、描边和透明度改变点的外观。示例把颜色来源分为三种，切换来源后只显示当前模式可操作的字段。
@@ -330,8 +355,24 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 普通点与文本点在几何生成时分支：普通点消费尺寸和形状，再附加标签；配置了文本通道时，生成无形状边框的文字对象，并应用 `dx`、`dy`。无效位置或缺失文字会跳过对应行。最后按颜色组织图层，并应用图元的图层设置。
 
+### 留白计算
+
+下图用相同的数据、半径与绘图区，对比显式零留白和自动留白。自动留白把极值点中心向内移动，画布与节点大小保持不变。
+
+<ComponentPreview files="point-padding-figure" hideCode type="illustration" size="lg" />
+
+下面四幅图使用相同的数据、尺寸映射和绘图区，分别比较两种策略在零净空和方向净空（默认 8、上 20、左 0）下的结果。
+
+<ComponentPreview files="point-padding-strategies-figure" hideCode type="illustration" size="lg" />
+
+最大半径策略在各侧预留最大节点半径，再加上该方向的净空；逐点策略利用中央大点已有的边缘距离，只补足每个点所需的空间。四幅图中的节点大小保持一致，变化的是位置尺度映射。
+
+Plot 按图元实际使用的位置尺度汇总需求。最大半径加净空构成每端的最低留白；逐点策略将位置与半径转换成同一映射下的约束。共享分面统一求解一个域，最终坐标轴、网格和图元消费同一映射。求解发生在渲染之前，不读取 SVG 或 Canvas 的测量结果。
+
 <SourceLinks
   sources={[
+    { label: '最大半径与策略需求', path: 'packages/viz/plot/src/resolve/scale/point-padding.ts' },
+    { label: '共享尺度约束求解', path: 'packages/viz/plot/src/resolve/scale/mark-domain.ts' },
     { label: '组件输入与标签归一化', path: 'packages/viz/plot-vanilla/src/normalize/plot/mark-normalizers.ts' },
     { label: '位置调整的执行阶段', path: 'packages/viz/plot/src/pipeline/placement/resolve.ts' },
     { label: '普通点与文本点的生成分支', path: 'packages/viz/plot/src/providers/mark/features/point.ts' },

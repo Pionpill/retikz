@@ -266,6 +266,7 @@ export const applyDeclaration = (
 
     into.marks.push({
       type: BuiltinPlotMark.Point,
+      ...(props.autoPadding === undefined ? {} : { autoPadding: props.autoPadding }),
       ...(id !== undefined ? { id } : {}),
       ...(coordinateView !== undefined ? { coordinateView } : {}),
       ...(xAxisId !== undefined ? { xAxisId } : {}),
@@ -631,12 +632,27 @@ export const applyDeclaration = (
   } else if (declaration.kind === 'reference-mark') {
     collectReference(child.props as InputPlotReferenceMark, into, styleContext);
   } else if (declaration.kind === 'relation-mark') {
-    const { id, kind, coordinateView, transform, layer, source, target, label, style, path, ribbon, color, channels } =
-      child.props as InputPlotRelationMark;
+    const {
+      id,
+      kind,
+      coordinateView,
+      transform,
+      layer,
+      source,
+      target,
+      label,
+      style,
+      path,
+      ribbon,
+      color,
+      channels,
+      autoPadding,
+    } = child.props as InputPlotRelationMark;
     const colorEnc = colorChannel(color, undefined);
     const encoding = { ...colorEnc, ...extensionChannelEncoding(channels) };
     into.marks.push({
       type: BuiltinPlotMark.Relation,
+      ...(autoPadding === undefined ? {} : { autoPadding }),
       ...(id !== undefined ? { id } : {}),
       ...(kind !== undefined ? { kind } : {}),
       ...(coordinateView !== undefined ? { coordinateView } : {}),

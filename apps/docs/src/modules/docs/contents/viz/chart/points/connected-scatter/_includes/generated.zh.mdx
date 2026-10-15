@@ -8,7 +8,7 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
 
 **图形配置**
 
-#### <ApiSourceLink label={"ConnectedScatterEncodings"} path={"packages/viz/chart-react/src/point/connected-scatter/ConnectedScatterEncodings.tsx"} startLine={8}>ConnectedScatterEncodings</ApiSourceLink> / <ApiSourceLink label={"IRConnectedScatterChartEncodings"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={100}>IRConnectedScatterChartEncodings</ApiSourceLink> / <ApiSourceLink label={"ConnectedScatterChartEncodingsSchema"} path={"packages/viz/chart/src/point/connected-scatter/encoding-schema.ts"} startLine={13}>ConnectedScatterChartEncodingsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ConnectedScatterEncodings"} path={"packages/viz/chart-react/src/point/connected-scatter/ConnectedScatterEncodings.tsx"} startLine={8}>ConnectedScatterEncodings</ApiSourceLink> / <ApiSourceLink label={"IRConnectedScatterChartEncodings"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={101}>IRConnectedScatterChartEncodings</ApiSourceLink> / <ApiSourceLink label={"ConnectedScatterChartEncodingsSchema"} path={"packages/viz/chart/src/point/connected-scatter/encoding-schema.ts"} startLine={13}>ConnectedScatterChartEncodingsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -57,7 +57,7 @@ export type IRConnectedScatterChartEncodings = ZodInfer<typeof ConnectedScatterC
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ConnectedScatterProperties"} path={"packages/viz/chart-react/src/point/connected-scatter/ConnectedScatterProperties.tsx"} startLine={8}>ConnectedScatterProperties</ApiSourceLink> / <ApiSourceLink label={"IRConnectedScatterChartProperties"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={109}>IRConnectedScatterChartProperties</ApiSourceLink> / <ApiSourceLink label={"ConnectedScatterChartPropertiesSchema"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={54}>ConnectedScatterChartPropertiesSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ConnectedScatterProperties"} path={"packages/viz/chart-react/src/point/connected-scatter/ConnectedScatterProperties.tsx"} startLine={8}>ConnectedScatterProperties</ApiSourceLink> / <ApiSourceLink label={"IRConnectedScatterChartProperties"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={110}>IRConnectedScatterChartProperties</ApiSourceLink> / <ApiSourceLink label={"ConnectedScatterChartPropertiesSchema"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={55}>ConnectedScatterChartPropertiesSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -72,7 +72,7 @@ export type IRConnectedScatterChartEncodings = ZodInfer<typeof ConnectedScatterC
 |      | `colorMode`         | `'series'`、`'mark'`、`'muted'`                          | 默认 `series`：同一序列的点线同色；`mark`：每个序列的点线依次使用色板中相邻的两色，`muted` 同色且连线默认透明度 60%；显式颜色与透明度优先  |
 | 连接 | `path.curve`        | `PathCurve`                                              | 默认 `linear`；支持 linear、step、stepBefore、stepAfter、basis、cardinal、catmullRom、monotoneX、monotoneY、natural                        |
 | 连接 | `path.connectNulls` | boolean 或描边对象                                       | 默认断开；`true` 或 `{}` 用虚线连接缺口两侧有效点。对象支持 stroke、strokeWidth、strokeOpacity、dashPattern、dashOffset、lineCap、lineJoin |
-| 留白 | `autoPadding`       | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空                                                                           |
+| 留白 | `autoPadding`       | `false`、`'max-radius'`、`'point-aware'`、`object`       | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空                                                                           |
 |      | `domainPadding`     | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                                                                                             |
 
 完整属性结构见 [属性 Schema](#connectedscatterproperties--irconnectedscatterchartproperties--connectedscatterchartpropertiesschema)；公共外观配置不在这里展开。
@@ -106,7 +106,7 @@ export type IRConnectedScatterChartProperties = ZodInfer<typeof ConnectedScatter
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ConnectedScatterMark"} path={"packages/viz/chart-react/src/point/connected-scatter/ConnectedScatterMark.tsx"} startLine={13}>ConnectedScatterMark</ApiSourceLink> / <ApiSourceLink label={"IRConnectedScatterMark"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={112}>IRConnectedScatterMark</ApiSourceLink> / <ApiSourceLink label={"ConnectedScatterChartMarkSchema"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={74}>ConnectedScatterChartMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ConnectedScatterMark"} path={"packages/viz/chart-react/src/point/connected-scatter/ConnectedScatterMark.tsx"} startLine={13}>ConnectedScatterMark</ApiSourceLink> / <ApiSourceLink label={"IRConnectedScatterMark"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={113}>IRConnectedScatterMark</ApiSourceLink> / <ApiSourceLink label={"ConnectedScatterChartMarkSchema"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={75}>ConnectedScatterChartMarkSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -132,7 +132,7 @@ export type IRConnectedScatterMark = ZodInfer<typeof ConnectedScatterChartMarkSc
 
 <DocTab value="schema" label="Schema">
 
-`encodings` 只允许 x、y、order，各项均可省略且仅接受字段名字符串，不接受 recipe 的完整映射对象。`properties` 复用上方属性的含义与成员结构，但不包含 `colorMode`、`autoPadding`、`domainPadding`；省略的配置沿用当前图形可继承的映射与属性。
+`encodings` 只允许 x、y、order，各项均可省略且仅接受字段名字符串，不接受 recipe 的完整映射对象。`properties` 复用上方属性的含义与成员结构，但不包含 `colorMode`、`domainPadding`；`autoPadding` 可覆盖图表策略；省略的配置沿用当前图形可继承的映射与属性。
 
 <ZodSchema
   name="ConnectedScatterChartMarkSchema"
@@ -142,7 +142,7 @@ export type IRConnectedScatterMark = ZodInfer<typeof ConnectedScatterChartMarkSc
     kind: '固定为 connected-scatter',
     override: '为 true 时替换内置同类图元；省略时追加',
     encodings: '参照上方映射说明；仅接受上述可选字段名覆盖',
-    properties: '参照上方属性说明；不包含 colorMode、autoPadding 与 domainPadding',
+    properties: '参照上方属性说明；不包含 colorMode 与 domainPadding；autoPadding 可覆盖图表策略',
   }}
 />
 
@@ -150,7 +150,7 @@ export type IRConnectedScatterMark = ZodInfer<typeof ConnectedScatterChartMarkSc
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRConnectedScatterChart"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={97}>IRConnectedScatterChart</ApiSourceLink> / <ApiSourceLink label={"ConnectedScatterChartSchema"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={91}>ConnectedScatterChartSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRConnectedScatterChart"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={98}>IRConnectedScatterChart</ApiSourceLink> / <ApiSourceLink label={"ConnectedScatterChartSchema"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={92}>ConnectedScatterChartSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -189,7 +189,7 @@ export type IRConnectedScatterChart = ZodInfer<typeof ConnectedScatterChartSchem
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ConnectedScatterChartRecipeSchema"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={82}>ConnectedScatterChartRecipeSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ConnectedScatterChartRecipeSchema"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={83}>ConnectedScatterChartRecipeSchema</ApiSourceLink>
 
 <ZodSchema
   name="ConnectedScatterChartRecipeSchema"

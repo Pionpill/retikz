@@ -1,5 +1,7 @@
 /** 散点公开属性的人工审阅英文说明 */
 const translations: Partial<Record<string, string>> = {
+  '自动边缘留白，默认 max-radius；false 关闭当前图元贡献':
+    'Automatic edge padding; defaults to max-radius. false disables this mark contribution',
   'point mark（散点 + 文本标签）': 'Point mark for points and text labels',
   文本水平对齐方式: 'Horizontal text alignment',
   为点图元数据目标生成可引用锚点的命名规则: 'Naming rule for addressable point anchors',

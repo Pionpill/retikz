@@ -85,6 +85,7 @@ export const apiReferenceMemberGroups: Readonly<Partial<Record<string, ApiRefere
   '@retikz/plot-react#PointMarkProps': {
     order: ['Main', 'Data', 'Geometry', 'Layout', 'Style', 'Callbacks'],
     members: {
+      autoPadding: 'Layout',
       id: 'Main',
       anchorId: 'Main',
       text: 'Main',

@@ -62,6 +62,7 @@ import {
 } from '../encoding';
 import { PlotLayerSchema } from '../layer';
 import { MarkPlacementSchema } from '../position-adjustment';
+import { PointAutoPaddingSchema } from './auto-padding';
 import {
   BUILTIN_MARK_TYPES,
   IntervalBoundKind,
@@ -664,6 +665,7 @@ const corePathStyle = {
 
 /** 校验逐记录生成点图形或文本节点的点标记 */
 export const PointMarkSchema = strictObject({
+  autoPadding: PointAutoPaddingSchema.default('max-radius').optional(),
   type: literal(BuiltinPlotMark.Point).describe('Discriminator: one glyph or text label per record'),
   color: PointColorStyleSchema.optional().describe(
     'Glyph color: field-bound datum channel or constant color; overrides constant fill',
@@ -1052,6 +1054,7 @@ export const RelationRibbonOptionsSchema = strictObject({
 
 /** 校验连接源与目标的关系标记，kind 决定普通描边或带状路径语义 */
 export const RelationMarkSchema = strictObject({
+  autoPadding: PointAutoPaddingSchema.default(false).optional(),
   type: literal(BuiltinPlotMark.Relation).describe('Discriminator: source-target relation lowered to a core Path'),
   kind: zodEnum(RelationGeometryKind).optional().describe('Relation geometry kind; omitted means path'),
   source: PlotTargetRefSchema.describe('Relation source target'),

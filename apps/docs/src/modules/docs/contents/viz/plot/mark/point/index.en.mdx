@@ -203,6 +203,31 @@ Keep the position fields fixed while comparing constant points with population b
   defaultSourceFile="point-position.preview.tsx"
 />
 
+### Edge padding
+
+A node's position is its center. At the edge of the plotting area, its radius can extend beyond the boundary. `PointMark` therefore defaults to `max-radius`, reserving the largest node radius on continuous position scales. Data and node sizes stay unchanged; the scale mapping changes.
+
+| Property                  | Meaning                  | Description                                                                                                                                                                                       |
+| ------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `autoPadding`             | Automatic padding policy | Defaults to `max-radius`; `point-aware` uses actual positions and radii; `false` disables this mark's automatic contribution. Accepts a policy directly, without field-channel binding            |
+| `autoPadding.clearance`   | Edge clearance           | Nonnegative drawing units in `{ kind, clearance }`, default 0. Accepts a number or box-spacing object; explicit sides require Cartesian coordinates                                               |
+| `PlotScale.domainPadding` | Scale override           | A number, including 0, fixes both ends. `range` fixes specified ends and fills omitted ends automatically; omitted `ratio` ends are 0. Explicit `mark` padding selects participants independently |
+
+The example keeps a large central point and two small edge points unchanged. Switch policies to see whether the central point needs extra space, then increase clearance or set the x scale's start padding to zero to compare precedence.
+
+<ComponentPreview
+  mode="showcase"
+  files={['point-auto-padding', 'point-auto-padding.preview.tsx', 'point-auto-padding.data.ts']}
+  controls={{ name: 'point-auto-padding' }}
+  defaultSourceFile="point-auto-padding.preview.tsx"
+  size="lg"
+  caption="The default size scale maps the numeric field to radii 2, 20, and 2. The scale override affects x only. Other marks may still contribute padding when this mark's policy is disabled."
+/>
+
+Maximum-radius padding does not scan data rows: constant sizes use `size`, while field sizes use the maximum output of the size scale. Categorical position scales retain their own padding. Point-aware padding uses valid data and positions after placement adjustments, allowing a central point's existing edge distance to satisfy its constraint. It supports continuous, categorical, and polar mappings with the required capabilities.
+
+Both policies protect the radius expressed by `size`, without measuring text, strokes, shadows, shape scaling, or `minimumSize` bounds. Shared scales take the maximum demand at each end; mixed policies and shared facets satisfy their constraints in one final mapping. Unknown size bounds, missing capabilities, or an infeasible plotting area produce errors.
+
 ### Appearance
 
 Fill, stroke and opacity change how points look. This example offers three color sources and shows only the controls relevant to the selected mode.
@@ -330,8 +355,24 @@ The component normalizes shorthand properties into a Plot configuration with `ty
 
 Geometry generation branches between ordinary points and text points. Ordinary points consume size and shape, then attach labels. A text channel instead produces borderless text and applies `dx` and `dy`. Invalid positions or missing text skip the corresponding rows. Finally, points are organized by color and receive the mark layer configuration.
 
+### Padding calculation
+
+The figure compares explicit zero padding with automatic padding using the same data, radii, and plotting area. Automatic padding moves extreme point centers inward without changing the canvas or node sizes.
+
+<ComponentPreview files="point-padding-figure" hideCode type="illustration" size="lg" />
+
+The following four panels use the same data, size mapping, and plotting area. They compare both policies with zero clearance and directional clearance (default 8, top 20, left 0).
+
+<ComponentPreview files="point-padding-strategies-figure" hideCode type="illustration" size="lg" />
+
+Maximum-radius padding reserves the largest node radius plus the clearance for each side. Point-aware padding uses the central point's existing distance from the edges and adds only the space each point needs. Node sizes stay the same across all four panels; the position-scale mapping changes.
+
+Plot collects demands by each mark's actual position-scale binding. Maximum radius plus clearance sets a minimum at each end; point-aware padding adds constraints from positions and radii in the same mapping. Shared facets solve one domain, which is then used by axes, grids, and marks. This happens before rendering, without measuring SVG or Canvas output.
+
 <SourceLinks
   sources={[
+    { label: 'Maximum radius and policy demands', path: 'packages/viz/plot/src/resolve/scale/point-padding.ts' },
+    { label: 'Shared scale constraints', path: 'packages/viz/plot/src/resolve/scale/mark-domain.ts' },
     {
       label: 'Component inputs and label normalization',
       path: 'packages/viz/plot-vanilla/src/normalize/plot/mark-normalizers.ts',

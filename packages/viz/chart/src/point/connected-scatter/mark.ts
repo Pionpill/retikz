@@ -53,7 +53,10 @@ export const resolveConnectedScatterMarkGroup = (
   const series = seriesOf(encodings);
 
   const pointEncodings: JsonObject = { x, y };
-  const pointProperties: JsonObject = { ...(properties.point ?? {}) };
+  const pointProperties: JsonObject = {
+    ...(properties.autoPadding === undefined ? {} : { autoPadding: properties.autoPadding }),
+    ...(properties.point ?? {}),
+  };
   const separateColors = properties.colorMode === 'mark';
   const path: JsonObject = {
     type: BuiltinPlotMark.Path,

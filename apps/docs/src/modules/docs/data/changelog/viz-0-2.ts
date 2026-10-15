@@ -106,6 +106,16 @@ export const vizV02: Release = {
       },
       highlights: [
         {
+          label: {
+            zh: '待发布：BREAKING PointMark 默认边缘留白',
+            en: 'Unreleased: BREAKING PointMark automatic edge padding',
+          },
+          content: {
+            zh: 'PointMark 新增 autoPadding，默认 max-radius；point-aware 按实际位置求解，false 关闭图元贡献。Relation 默认关闭，仅端点参与。Chart 下传策略，Bubble 保持 point-aware，其余点图保持 max-radius。未显式设置留白的 Plot 点层、Chart extension 点层及 range 缺省端现在自动补齐；需要保持零留白时显式设置尺度 domainPadding: 0。用法与原理统一迁入 PointMark 文档。',
+            en: 'PointMark adds autoPadding with max-radius as its default; point-aware uses actual positions and false disables the mark contribution. Relation defaults to off and protects endpoints only. Chart forwards policies: Bubble retains point-aware and other point charts retain max-radius. Plot point layers, Chart extension points, and omitted range-padding ends now receive automatic padding. Set scale domainPadding: 0 explicitly to retain zero padding. Usage and implementation documentation now live under PointMark.',
+          },
+        },
+        {
           label: { zh: '待发布：BREAKING 渐进式视觉属性', en: 'Unreleased: BREAKING progressive visual properties' },
           content: {
             zh: "opacity 支持简单值或 overall/fill/stroke 分组，各成员独立绑定字段、常量和比例尺。标签使用 label: 'name' 或 { field/value, position, distance, ... }，支持数组；删除平级 label 配置。Source 标签继续使用 content 分组，Core 标签字符串仍是文字。",
