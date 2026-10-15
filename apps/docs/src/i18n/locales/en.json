@@ -145,6 +145,7 @@
     "pkgCoreCoordinates": "Coordinate resolution",
     "pkgCoreNodeCompilation": "Node Compilation",
     "pkgCorePathCompilation": "Path Compilation",
+    "pkgCoreCompositeCompilation": "Composite Compilation",
     "pkgOverview": "Overview",
     "pkgFoundationUtilities": "Utilities",
     "pkgFoundationTypesSchemas": "Types & Schemas",

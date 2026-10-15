@@ -7,13 +7,14 @@ description: Browse @retikz/core IR, Definitions, compilation, and Scene semanti
 
 ## Responsibilities
 
-| Document                 | Responsibility                                      | Reach for it when                                                           |
-| ------------------------ | --------------------------------------------------- | --------------------------------------------------------------------------- |
-| Compilation Flow         | Full compilation from IR to Scene                   | Understanding node layout, deferred paths, and result assembly              |
-| Configuration resolution | From sparse declarations to layout input            | Understanding inheritance, colors, and Definition binding                   |
-| Coordinate resolution    | From position expressions to local and world points | Understanding references, anchors, namespaces, and Scope placement          |
-| Node Compilation         | From text metrics to shape and text layout          | Understanding node dimensions, baselines, labels, and connection boundaries |
-| Path Compilation         | From targets and steps to path primitives           | Understanding cursors, boundary intersections, arrows, and labels           |
+| Document                 | Responsibility                                       | Reach for it when                                                           |
+| ------------------------ | ---------------------------------------------------- | --------------------------------------------------------------------------- |
+| Compilation Flow         | Full compilation from IR to Scene                    | Understanding node layout, deferred paths, and result assembly              |
+| Configuration resolution | From sparse declarations to layout input             | Understanding inheritance, colors, and Definition binding                   |
+| Coordinate resolution    | From position expressions to local and world points  | Understanding references, anchors, namespaces, and Scope placement          |
+| Node Compilation         | From text metrics to shape and text layout           | Understanding node dimensions, baselines, labels, and connection boundaries |
+| Path Compilation         | From targets and steps to path primitives            | Understanding cursors, boundary intersections, arrows, and labels           |
+| Composite Compilation    | From composite declarations to selected child output | Understanding proposals, isolated probes, and replay                        |
 
 ## Contents
 
@@ -43,6 +44,11 @@ description: Browse @retikz/core IR, Definitions, compilation, and Scene semanti
       title: 'Path Compilation',
       description: 'Trace targets, segments, boundary intersections, arrows, and label output',
       url: '/kernel/packages/core/path-compilation',
+    },
+    {
+      title: 'Composite Compilation',
+      description: 'Follow Definition assembly, isolated child probes, and replay',
+      url: '/kernel/packages/core/composite-compilation',
     },
   ]}
 />

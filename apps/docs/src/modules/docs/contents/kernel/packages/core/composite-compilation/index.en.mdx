@@ -1,0 +1,555 @@
+---
+title: Composite Compilation
+description: Follow how Core binds composites, probes child layouts, and commits selected results with their references and resources to Scene.
+---
+
+[Node Compilation](/kernel/packages/core/node-compilation) and [Path Compilation](/kernel/packages/core/path-compilation) explain individual primitives. This page follows composites: how one component produces several children, measures them, and chooses their final positions. Start with [Compilation Flow](/kernel/packages/core/compilation) and [Coordinate resolution](/kernel/packages/core/coordinates).
+
+The scope is expansion, probing, and replay within one compilation. Inputs are composite declarations and registered Definitions; the endpoint is child primitives, references, and resources entering the current Scene. Incremental computation across updates is a separate topic.
+
+## Overall flow
+
+A composite selects a Definition through `namespace` and `type`. Core validates the input, invokes the callback, and passes its output children back to traversal. A component that needs layout information can compile candidate children first, read their dimensions, and output only the selected results.
+
+Every Definition provides `compile(node, context)`. `node` is the schema-parsed input; `context` provides theme, runtime input binding, and layout capabilities. Simple compositions return `children` directly. Components needing size feedback call `layoutChild` and return selected results through `replay`. No probe runs unless the callback requests one.
+
+The diagram shows a path that uses probing. The grouped work is optional; simple compositions generate children directly, which Core then compiles and commits.
+
+<ComponentPreview files="composite-overview" size="sm" hideCode type="flow" />
+
+The example throughout this page uses a parent container and a child path. The path runs from `[0, 0]` to `[100, 0]`. The parent probes it at natural width and at an exact width of 60, selects the latter, then translates the child path to `[20, 30]`. This separates the space allocated by the parent from the actual geometry of its child.
+
+<SourceLinks
+  sources={[
+    { label: 'Composite callback and context contracts', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: 'Composite dispatch in traversal', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+  ]}
+/>
+
+## Compilation entry
+
+Core prepares the available Definitions before invoking the shared callback. Children that need extra data receive runtime input bindings at this stage.
+
+### Definitions and dependencies
+
+Before traversal, compile options provide Definitions for shapes, arrows, composites, and other capabilities. Core builds registries. When it encounters the parent, `bindComposite` looks up `namespace.type`, and `resolveComposite` parses the complete input with that Definition's schema before invoking its callback.
+
+Higher-level components may contribute dependency providers. Three objects are involved:
+
+- Provider: describes how to create a Definition and which dependencies it needs first.
+- Root dependency: a capability required by the current input.
+- Definition: the executable definition passed to Core after assembly.
+
+Consider a scatter chart titled “Monthly sales”. Chart uses the `chart.point` composite capability, creates a text Node for the title, and arranges the title and Plot vertically through `layout.flexLayout`.
+
+| Object          | Meaning in this example                                                                                                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Root dependency | `chart.point`, contributed by the scatter chart provider, requests the Point chart capability                                                                                        |
+| Provider        | Chart's provider declares a dependency on `FlexLayoutProvider` and supplies a factory for the Chart Definition; the factory on `FlexLayoutProvider` returns `FlexLayoutDefinition`   |
+| Definition      | The Chart Definition validates chart input with its schema and runs its compile callback; `FlexLayoutDefinition` uses its layout schema and callback to measure and arrange children |
+
+Assembly prepares the FlexLayout Definition before the Chart Definition. During chart compilation, Chart creates a text node from the title configuration and places it before Plot in a column FlexLayout. Layout compilation measures and positions those children; Core draws the text node. Chart also depends on Surface and Plot; the diagram shows only the FlexLayout dependency.
+
+`resolveCoreProviderDependencies` merges provider declarations and datasets, checks the graph reachable from the roots, then calls `makeDefinition` in dependency order. It returns collections of Definitions and rejects missing dependencies, cycles, and conflicts. Vanilla calls this capability during preparation; direct Core callers can also supply Definitions that are already assembled.
+
+The diagram follows root `chart.point` to `layout.flexLayout`. Once the registry is ready, traversal finds the Chart Definition using `namespace: chart` and `type: point` from the chart declaration.
+
+<ComponentPreview files="composite-dependencies" size="xl" hideCode type="illustration" />
+
+**Dependency assembly precedes instance compilation.** It prepares the capabilities needed for this compile; the title and plot positions and dimensions are determined by later compile callbacks.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Dependency checks and Definition assembly',
+      path: 'packages/kernel/core/src/contract/provider/resolve-dependencies.ts',
+    },
+    { label: 'Vanilla preparation entry', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
+    { label: 'Chart layout dependency', path: 'packages/viz/chart/src/_chart/providers/provider.ts' },
+    { label: 'Chart title and plot column layout', path: 'packages/viz/chart/src/_chart/resolve/presentation.ts' },
+    { label: 'Registries in the compile context', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: 'Definition binding and input parsing', path: 'packages/kernel/core/src/resolve/composite/resolve.ts' },
+  ]}
+/>
+
+### One compile callback
+
+`CompositeDefinition` provides a `compile` callback that returns `CompositeCompileResult`. The callback can generate child declarations directly. When placement depends on child dimensions, it can first call the layout methods on `CompositeCompileContext`, then output the selected results. The table distinguishes these uses; the example starts with direct composition.
+
+| Usage              | Callback responsibility                                     | Core continuation                                               |
+| ------------------ | ----------------------------------------------------------- | --------------------------------------------------------------- |
+| Direct composition | Generate children from parsed input and theme               | Validate the output tree and compile ordinary children in order |
+| Layout probing     | Measure children, then choose allocated space and placement | Validate the output tree and commit selected probe results      |
+
+Here the parent wraps a JSON-only child declaration, `child`. Start with the case that needs no measurement.
+
+`compile` receives the schema-parsed `node` and returns children directly. This example omits the unused `context` parameter. Core then compiles `children`.
+
+```ts
+import { ChildSchema, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { literal } from 'zod';
+
+const definition = defineComposite({
+  namespace: 'demo',
+  type: 'container',
+  schema: CompositeBaseSchema.extend({
+    namespace: literal('demo'),
+    type: literal('container'),
+    child: ChildSchema,
+  }),
+  compile: node => ({
+    children: [node.child],
+  }),
+});
+```
+
+Combining the child path and a text node needs no probe; use layout methods when their positions depend on actual occupancy. Compile input containing composites with `compileToScene`. React’s `convertIRToReactNode` only converts an `IRKernelScene` recursively containing Kernel nodes, without compiling composites.
+
+<SourceLinks
+  sources={[
+    { label: 'Unified compile and context contracts', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    {
+      label: 'Output children and runtime handles',
+      path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
+    },
+  ]}
+/>
+
+### Runtime input
+
+The earlier examples pass only JSON child declarations. Some components also need extra data to compile. For example, after Chart generates a Plot declaration, it needs to pass prepared drawing data, `PreparedPlotData`, to Plot. This data is stored separately from the JSON declaration and read through `runtimeInput` on the compile context.
+
+A binding associates a child location with input data. A property path identifies that location: strings select object fields and numbers select array indices. The path is relative to the subtree being passed on and identifies the exact component instance that receives the data.
+
+Binding happens before measurement. Chart first generates a Surface subtree containing Plot: Surface hosts the plotting area, while Plot receives the drawing data. Chart calls `bindChild` to associate the data with Plot's location, then passes the returned bound child to `layoutChild`. When compilation reaches Plot, Core supplies the corresponding data through its `context.runtimeInput`.
+
+Intermediate Surface or layout components also forward children. They must preserve existing data associations when doing so; otherwise, downstream components receive their declarations without the data needed to compile them.
+
+The context provides two methods for existing and generated children:
+
+| Method                       | When to use it                                                                   | Association preserved or created                                                                           |
+| ---------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `sourceChild(path)`          | Forward a child declared by the user in the current component's input            | Select the child by its property path and preserve existing runtime input bindings throughout that subtree |
+| `bindChild(child, bindings)` | Pass data to components inside a new child declaration generated by the callback | Each binding identifies a recipient using a property path relative to `child` and supplies its input       |
+
+Both methods return a bound child handle that can be passed to a layout probe or included in the output children. Handles are used within the current compile callback and are not saved in persistent JSON IR. Children without extra runtime input can be passed directly as declarations.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Child and runtime input binding contracts',
+      path: 'packages/kernel/core/src/contract/composite/input.ts',
+    },
+    {
+      label: 'Chart binding drawing data to its generated Plot',
+      path: 'packages/viz/chart/src/_chart/providers/composite.ts',
+    },
+  ]}
+/>
+
+## Layout queries
+
+The parent describes available space through a proposal, then requests either a full layout or dimensions on selected axes.
+
+### Size proposals
+
+To place another child to the right of the child path, the parent first needs to know how much width to reserve for the child path. A child's dimensions may also depend on available space: text wraps into more lines in a narrower area, increasing its height. Measurement therefore needs a description of the space being offered.
+
+Two concepts are involved:
+
+- Size proposal (`LayoutProposal`): the parent's measurement conditions for each axis, requesting natural dimensions or space within a range or at a fixed size.
+- Slot: the rectangular space the parent allocates to a child. Its dimensions guide placement; the child's drawing may extend outside it.
+
+The parent receives `context.proposal` from its own parent. To measure a child, the parent passes a complete two-axis proposal to `layoutChild(child, proposal)`. It can forward the incoming proposal or supply one based on its own layout rules. Each call produces a candidate result; the parent can compare results from several calls before selecting one.
+
+For the child path, the first measurement requests natural width and the second requests a slot width of 60. Both request natural height:
+
+```ts
+const naturalProposal = {
+  x: { kind: 'intrinsic', mode: 'natural' },
+  y: { kind: 'intrinsic', mode: 'natural' },
+} as const;
+
+const narrowProposal = {
+  x: { kind: 'exact', value: 60 },
+  y: { kind: 'intrinsic', mode: 'natural' },
+} as const;
+```
+
+Each axis independently selects one of these conditions. The child's layout capabilities determine what its minimum and natural contributions are:
+
+| Axis proposal         | Meaning                                                                          |
+| --------------------- | -------------------------------------------------------------------------------- |
+| `intrinsic / natural` | Query the child's natural contribution                                           |
+| `intrinsic / minimum` | Query its supported minimum contribution, such as the widest breakable text unit |
+| `range`               | Allocate a slot between `min` and an optional `max`                              |
+| `exact`               | Require a fixed slot size                                                        |
+
+Both probes below use the same 100-unit child path and a natural y proposal. Blue preserves the path geometry; orange marks the allocated width. They share an origin and scale.
+
+<ComponentPreview files="composite-proposal" size="lg" hideCode type="illustration" />
+
+On the right, the slot is 60 units wide while the child path's geometry remains 100 units wide. A proposal does not automatically scale or clip fixed paths. Text nodes can reflow within a width budget. Ordinary Scopes retain their own occupancy and do not automatically forward proposals to every descendant. The container reads the measurements and decides how to handle overflow.
+
+Core resolves the slot from actual occupancy: `intrinsic` uses the actual size, `range` clamps it to the interval, and `exact` uses the requested value. Whether the child can change its geometry depends on its own layout capability.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Proposal validation and slot calculation',
+      path: 'packages/kernel/core/src/compile/orchestration/layout-proposal.ts',
+    },
+    { label: 'Proposal, result, and guide contracts', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    {
+      label: 'Node, Path, and Scope proposal behavior',
+      path: 'packages/kernel/core/tests/compile/layout-proposal-builtins.test.ts',
+    },
+  ]}
+/>
+
+### Full layout queries
+
+This is the function type on the compile context; call it as `context.layoutChild(child, proposal)`.
+
+```ts
+layoutChild: (child: IRChild | CompositeBoundChild, proposal: LayoutProposal) => LayoutChildProbe;
+```
+
+The return type, `LayoutChildProbe`, distinguishes success from failure. With `kind: 'resolved'`, its `result` is a `LayoutChildResult`; with `kind: 'failed'`, its `failure` can be passed to `raise`. Separate fields answer how much space to reserve and where the content is:
+
+<DocTabs defaultValue="table">
+<DocTab value="table" label="Table">
+
+| Field                     | Question it answers                                                                                                                   |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `resolved.result`         | The full layout result on success, typed as `LayoutChildResult`                                                                       |
+| `failed.failure`          | A callback-owned failure that can be passed to `raise`                                                                                |
+| `result.slotSize`         | How wide and tall is the slot allocated under this proposal? It has dimensions but no origin                                          |
+| `result.allocationBounds` | Where is the child's declared layout occupancy in its own local coordinates, and how large is it? It includes position and dimensions |
+| `result.visualBounds`     | Where might the generated static primitives draw? This conservative visual envelope can include strokes beyond layout occupancy       |
+
+</DocTab>
+<DocTab value="source" label="Source">
+
+The return type `LayoutChildProbe` and its successful `LayoutChildResult` are shown below. Alignment guides and the replay token are explained later.
+
+```ts
+export type LayoutChildProbe =
+  | Readonly<{ kind: typeof LayoutChildProbeKind.Resolved; result: LayoutChildResult }>
+  | Readonly<{ kind: typeof LayoutChildProbeKind.Failed; failure: LayoutChildFailure }>;
+
+export type LayoutChildResult = Readonly<{
+  /** Slot dimensions allocated under the proposal */
+  slotSize: Readonly<{
+    width: number;
+    height: number;
+  }>;
+  /** Layout occupancy in child-local coordinates */
+  allocationBounds: Readonly<BoundsRect>;
+  /** Conservative visual envelope of static primitives */
+  visualBounds: Readonly<BoundsRect>;
+  /** Optional alignment positions */
+  alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
+  /** Replay token associated with this probe result */
+  replay: CompositeReplay;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+The child path's second result has `slotSize.width = 60` and `allocationBounds.width = 100`. The parent can place its next child after the 60-unit slot or adjust spacing based on actual occupancy. The parent owns that choice. The visual envelope describes the drawing's extent; it does not replace the slot for space allocation.
+
+A result may also include `alignmentGuides`: named alignment positions in the child's local coordinates. A text baseline, for example, lets the parent align different text elements along one line. A parent without such alignment needs can leave these guides unused.
+
+These measurements let the parent compare candidates. Core also needs to retain the child drawing that produced them so it can output the selected candidate. “Isolated probes” below explains where that drawing waits before selection.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Measurement result and alignment guide contracts',
+      path: 'packages/kernel/core/src/contract/composite/types.ts',
+    },
+    {
+      label: 'Slot calculation from layout occupancy',
+      path: 'packages/kernel/core/src/compile/orchestration/layout-proposal.ts',
+    },
+  ]}
+/>
+
+### On-demand size queries
+
+A parent may need only its child's width, for example while sizing Grid columns. It does not yet need primitives, actual bounds, or a replay token. `measureChild` takes the same complete two-axis proposal as full layout and specifies whether the caller needs width, height, or both. A height query retains the width constraint because wrapping can change height.
+
+This is the function type on the compile context. `child` may be a declaration or a bound child returned by `sourceChild` or `bindChild`.
+
+```ts
+measureChild: (child: IRChild | CompositeBoundChild, proposal: LayoutProposal, axis: LayoutMeasurementAxis) =>
+  LayoutMeasurementProbe;
+```
+
+<DocTabs defaultValue="table">
+<DocTab value="table" label="Table">
+
+| Parameter / result | Meaning                                                                            |
+| ------------------ | ---------------------------------------------------------------------------------- |
+| `proposal`         | Complete two-axis proposal; natural, range, and exact are not assumed equivalent   |
+| `axis`             | `x` requests width, `y` requests height, and `both` requests both                  |
+| `resolved.result`  | A contribution discriminated by `axis`, with only the requested `width` / `height` |
+| `failed.failure`   | A callback-owned failure accepted by `raise`; failures are not cached              |
+
+</DocTab>
+<DocTab value="source" label="Source">
+
+The query axis, size contribution, and result types are shown below. A successful result contains only the requested dimensions, with no replay token.
+
+```ts
+export type LayoutMeasurementAxis = 'x' | 'y' | 'both';
+
+export type LayoutContribution =
+  | Readonly<{ axis: 'x'; width: number }>
+  | Readonly<{ axis: 'y'; height: number }>
+  | Readonly<{ axis: 'both'; width: number; height: number }>;
+
+export type LayoutMeasurementProbe =
+  | Readonly<{ kind: 'resolved'; result: LayoutContribution }>
+  | Readonly<{ kind: 'failed'; failure: LayoutChildFailure }>;
+```
+
+</DocTab>
+</DocTabs>
+
+The query returns slot dimensions allocated under the proposal, without actual bounds, baselines, or a replay token. Use `layoutChild` when those are needed; an existing full result that satisfies the final constraints can be replayed directly. A successful size query does not validate the entire subtree. Evaluation, caching, and commit are explained under “Probing and commit” below.
+
+<SourceLinks
+  sources={[{ label: 'Size query and result contracts', path: 'packages/kernel/core/src/contract/composite/types.ts' }]}
+/>
+
+<ComponentAlert
+  type="tip"
+  title="Choosing a query method"
+  description={
+    <>
+      <p>
+        Use measureChild when only dimensions are needed to allocate space. It can reuse cached dimensions, and children
+        supporting lightweight evaluation can skip unnecessary layout work. A cache miss still requires full compilation
+        if the child returns full output.
+      </p>
+      <p className="mt-2!">
+        Use layoutChild when final constraints are known or actual bounds, baselines, or a replayable result are needed.
+        Replay the selected result directly; calling measureChild first is not a required step.
+      </p>
+      <p className="mt-2!">
+        If a full candidate already satisfies the final constraints and effective environment, replay it without another
+        query. Cached dimensions alone cannot be replayed.
+      </p>
+    </>
+  }
+/>
+
+## Probing and commit
+
+Candidates produced by full layout queries remain isolated until the parent selects and replays them into the final output.
+
+The flow connects size queries, full layout queries, and placement. Read left to right: start on the left when dimensions are needed, or directly in the middle when final constraints are known. The size cache stores dimensions; a full candidate retains a committable drawing. They are not interchangeable.
+
+<ComponentPreview files="composite-query-flow" size="xxl" hideCode type="flow" />
+
+Reuse a full candidate only when it satisfies the final constraints. Cached dimensions alone still require a full candidate. A replay handle commits only when included in returned `children`, and each candidate can commit once. Unselected candidates produce no output. The diagram shows successful paths; recoverable failures and fatal errors are described below.
+
+### Query evaluation and caching
+
+The left side starts with the size cache. A hit returns dimensions directly. On a miss, if the queried child is a composite, Core invokes its `compile` callback with `kind: 'contribution'` and the requested `axis` in `context.evaluation`. The child can stop its existing solver once those dimensions are known. For example, a width-only Grid query can skip row sizing and placement.
+
+The lightweight path returns a `CompositeContributionResult`. Its `contribution` reports layout occupancy dimensions, which Core converts into slot dimensions under the proposal. If the child instead returns a full `CompositeCompileResult`, Core compiles the subtree and extracts dimensions, so the initial query still performs full compilation. In the middle of the diagram, `layoutChild` passes `kind: 'layout'` and requires full output to retain a replayable candidate.
+
+Within one compilation, Core reuses successful contributions for the same logical child, input, request, complete proposal, and effective environment. `sourceChild` preserves source identity across ancestor probes; children regenerated in separate callbacks are not merged merely because their content matches. Changes to style, theme, bindings, transforms, or visible references require reevaluation. The cache is bounded; eviction affects work only. Each compilation starts a new cache.
+
+Text measurement also shares successful metrics for identical text and font parameters within the compilation. Changed width still triggers wrapping, line-height, and baseline calculations. Neither cache contains a committable transaction: discarded candidates' resources, diagnostics, and artifacts do not enter the final Scene through a cache hit.
+
+<SourceLinks
+  sources={[
+    { label: 'Contribution and full-output contracts', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    {
+      label: 'Isolated evaluation and contribution reuse',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+    { label: 'Compile-local text metrics', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+  ]}
+/>
+
+### Isolated probes
+
+A parent may probe the same child under different constraints. The primitives, nodes, and resources produced by each probe stay in a separate candidate. Only the selected candidate is committed to the final Scene, preventing duplicate output and leftovers from unused candidates.
+
+For example, Grid uses full probes for baseline-aligned children in rows whose heights are not fixed. It first probes those children with minimum and natural height proposals, using their dimensions and baselines to calculate row heights. Once row and column sizes are known, it produces the final layout for each slot. The earlier candidates only contribute to solving the layout; only the final candidates are committed to Scene, so repeated probes do not draw the same text multiple times.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Grid row probes and final placement',
+      path: 'packages/library/layout/src/composites/grid-layout/pipeline.ts',
+    },
+  ]}
+/>
+
+Core therefore runs each full layout query as an isolated probe. It can read currently known nodes, while new node records, primitives, resources, and warnings stay with that candidate. The namespace is the compiler's environment for looking up nodes by name. Each probe forks the current environment, withholding new records from the parent. Separate paint and clip registries hold the probe's drawing and clipping resources.
+
+A successful probe retains two parts:
+
+- Callback-visible results: dimensions, bounds, and alignment guides, used by the parent to make its decision.
+- The complete internal candidate: generated primitives and their node, resource, and other records, retained by Core for commit after selection.
+
+`result.replay` connects these parts. It is an opaque token issued by Core to locate the candidate. The component keeps the result and passes it to `replay()` without inspecting the token.
+
+The diagram shows the parent's two successful probes. On the left are excerpts of callback-visible results. On the right, the compile session's internal `replayTransactions` WeakMap associates each token with the full result. T0 and T1 are diagram names for opaque tokens; table order does not imply WeakMap iteration order.
+
+<ComponentPreview files="composite-probe" size="xxl" hideCode type="illustration" />
+
+Both results contain the child path's local geometry, but the parent primitive array does not yet contain that path. The parent can compare results and ignore unused candidates. Their namespace changes, resources, and warnings are also withheld from final output. A direct callback call to `warn()` emits at the current composite occurrence and is outside the discardable candidate.
+
+A probe returns `resolved` or `failed`. Recoverable errors become callback-owned failures: the component can discard that candidate or call `raise(failure)` to propagate the error. Fatal errors such as contract violations throw directly. Probe references must resolve at probe time; they cannot depend on other uncommitted candidates or later nodes not yet registered in the parent.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Probe environment and captured results',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+    {
+      label: 'Contributions held by replay transactions',
+      path: 'packages/kernel/core/src/compile/orchestration/types.ts',
+    },
+    {
+      label: 'Probe failure classification and propagation',
+      path: 'packages/kernel/core/src/compile/probe-failure.ts',
+    },
+  ]}
+/>
+
+### Replaying results
+
+The parent has selected its second probe. The next step is replay: the component identifies the chosen result and its placement, and Core commits the corresponding child drawing to parent output.
+
+`replay(result, wrapper)` returns an output handle, an object representing that pending child drawing. `result` identifies the candidate; the optional `wrapper` specifies numeric placement transforms and clipping. Here the parent requests translation by `[20, 30]` and includes the handle in its returned `children`.
+
+The left side below shows only returned children; the right shows the primitive structure committed to the parent. Translation lives on an outer group. The child path retains local endpoints `[0, 0]` and `[100, 0]`, which appear at `[20, 30]` and `[120, 30]` in the final drawing.
+
+<ComponentPreview files="composite-replay" size="xl" hideCode type="illustration" />
+
+Before committing, Core recursively preflights handles, ownership, repeated use, and resource references. **A probe result can be placed once, within its creating callback and compile.** A handle created but omitted from the final tree does not commit. Ordinary IR children follow normal compilation; runtime Scopes created by `scope()` can contain both ordinary children and replay handles.
+
+Committing a selected result processes these contributions together:
+
+| Probe contribution                            | Commit action                                                                           |
+| --------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Primitives and drawing order                  | Append to parent output with placement transforms and optional clipping                 |
+| Paint and clip resources                      | Import into parent registries, map old IDs to new IDs, and rewrite primitive references |
+| Namespace changes                             | Commit with final transforms so later references see placed node geometry               |
+| Layout, warnings, artifacts, and observations | Merge into final output and map provenance to the final expansion location              |
+
+The style environment must also agree between measurement and final drawing. `scope()` can declare defaults and a theme for a group of output children. If its final effective defaults or theme differ from those used during probing, Core generates the child again in the final environment. For a local theme, measure through a context created with `withTheme`, then declare the same theme boundary with `scope()` in the output.
+
+The parent may itself be a child of an outer container, so it also reports layout occupancy outward. It can return explicit `allocationBounds` from its compile callback; otherwise, Core merges the final children's occupancy. These bounds and a probe's `slotSize` belong to different levels: selecting a 60-unit slot does not itself declare the parent's occupancy as 60 units wide. Declaring layout bounds does not clip overflow either; hiding the excess part of the child path still requires explicit clipping.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Replay handles and Scope output creation',
+      path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
+    },
+    {
+      label: 'Preflight, resource import, and replay commit',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+    {
+      label: 'Placement wrapper and container output contracts',
+      path: 'packages/kernel/core/src/contract/composite/types.ts',
+    },
+  ]}
+/>
+
+### Connecting measurement and output
+
+The steps can now be put back into `compile`. This minimal example forwards the parent proposal, measures once, and adopts the successful result without added translation or clipping. It shows how the methods connect; the parent that compares two candidates earlier in the page can insert selection logic between measurement and replay.
+
+```ts
+import { ChildSchema, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { literal } from 'zod';
+
+const definition = defineComposite({
+  namespace: 'demo',
+  type: 'container',
+  schema: CompositeBaseSchema.extend({
+    namespace: literal('demo'),
+    type: literal('container'),
+    child: ChildSchema,
+  }),
+  compile: (node, context) => {
+    const probe = context.layoutChild(node.child, context.proposal);
+    if (probe.kind === 'failed') return context.raise(probe.failure);
+
+    return {
+      children: [context.replay(probe.result)],
+    };
+  },
+});
+```
+
+If `layoutChild` fails, `raise` propagates the error to Core. On success, `replay` turns the result into a pending output child, and `children` passes it to Core for commit. This connects the measured slot, bounds, and retained child drawing.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Unified compile, probe, and replay contracts',
+      path: 'packages/kernel/core/src/contract/composite/types.ts',
+    },
+  ]}
+/>
+
+## Complete implementation flow
+
+Read this overview from top to bottom. The upper branches are optional callback operations: direct composition, dimension queries, and full probes can be combined or repeated. Dimensions inform parent decisions and cannot be replayed. The lower branches process returned child types; ordinary children, replay handles, and Scopes can be mixed and nested. The diagram follows successful commits; failed probes may be discarded or raised, while fatal errors stop compilation.
+
+<ComponentPreview
+  files="composite-implementation"
+  size="xxxl"
+  align="start"
+  previewClassName="overflow-y-auto"
+  hideCode
+  type="flow"
+/>
+
+Once the layout is settled, Core checks the final output tree returned by the callback, then commits the selected candidates' primitives, references, and resources to the parent traversal. Composite output thus rejoins ordinary Scene compilation.
+
+<SourceLinks
+  sources={[
+    { label: 'Composite dispatch and commit', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    {
+      label: 'Probe sessions and result associations',
+      path: 'packages/kernel/core/src/compile/orchestration/types.ts',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Compilation Flow',
+      description: 'Return to the overall IR-to-Scene pipeline',
+      url: '/kernel/packages/core/compilation',
+    },
+    {
+      title: 'Node Compilation',
+      description: 'Read about child dimensions, baselines, and connection geometry',
+      url: '/kernel/packages/core/node-compilation',
+    },
+    {
+      title: 'Path Compilation',
+      description: 'Follow child target binding and primitive output',
+      url: '/kernel/packages/core/path-compilation',
+    },
+  ]}
+/>
