@@ -298,3 +298,24 @@ describe('shared scaffold tracks lowering', () => {
     expect(() => expandOf(spec, true)).toThrow(/shared role|theta/i);
   });
 });
+
+describe('track placement containment', () => {
+  it('keeps track axis boundaries while jitter narrows mapped positions', () => {
+    const baseline = expandOf(cartesianScaffoldSpec, true);
+    const jittered = expandOf(
+      {
+        ...cartesianScaffoldSpec,
+        marks: cartesianScaffoldSpec.marks.map(mark => ({
+          ...mark,
+          placement: { adjustments: [{ kind: 'jitter', role: 'y', span: 20, seed: 7 }] },
+        })),
+      },
+      true,
+    );
+    const axisLines = (scope: IRScope) =>
+      axisLayersOf(scope).map(layer => layer.children.find(child => child.type === 'path'));
+    expect(axisLines(baseline)).toHaveLength(2);
+    expect(axisLines(jittered)).toEqual(axisLines(baseline));
+    expect(markLayersOf(jittered).map(yValuesOf)).not.toEqual(markLayersOf(baseline).map(yValuesOf));
+  });
+});

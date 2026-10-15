@@ -88,6 +88,8 @@ export type CoordinateDefinitionResolveContext = {
   plotAreaOverride?: CoordinatePlotArea;
   /** 指定 role 的最终 range；用于 scaffold track 把局部 role 映射进 track band */
   roleRangeOverrides?: Partial<Record<DimensionRole, readonly [number, number]>>;
+  /** 坐标轴与网格的 role 边界覆盖；空对象使用布局范围，省略时沿用最终 role range，刻度仍使用映射比例尺 */
+  guideRoleRangeOverrides?: Partial<Record<DimensionRole, readonly [number, number]>>;
   /** provenance 上下文，透传给 guide 下沉以保留诊断来源 */
   provenance?: ProvenanceContext;
   /** 按定位角色收集 mark 通道原始值；includeBaseline 用于需要把 baseline 纳入连续域的值轴 */

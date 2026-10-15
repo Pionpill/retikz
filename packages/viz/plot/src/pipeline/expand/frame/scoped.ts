@@ -445,6 +445,8 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
       roleRangeOverrides[track.band.role] = bandRangeOf(baseBandRange, track, scaffold);
     }
 
+    const guideRoleRangeOverrides = { ...roleRangeOverrides };
+
     for (const [role, placementRange] of Object.entries(placementRoleRangeOverridesByScope?.get(scope.id) ?? {})) {
       if (placementRange === undefined) continue;
 
@@ -499,7 +501,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
         ...(scaffoldFrame !== undefined && (scaffold?.frame ?? ScaffoldFrameMode.Shared) === ScaffoldFrameMode.Shared
           ? { plotAreaOverride: scaffoldFrame.plotArea }
           : {}),
-        ...(Object.keys(roleRangeOverrides).length > 0 ? { roleRangeOverrides } : {}),
+        ...(Object.keys(roleRangeOverrides).length > 0 ? { roleRangeOverrides, guideRoleRangeOverrides } : {}),
         domainPaddingScope: scope.id,
         paddingMarkDataViews: scopedMarkDataViews,
         markDataViews: scopedMarkDataViews,
@@ -515,7 +517,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
               margin: mergeCompositionMargin(scopedLayout?.padding, options.layout?.margin),
               labelGap: scopedLayout?.labelGap,
               plotAreaOverride: rawResolution.plotArea,
-              ...(Object.keys(roleRangeOverrides).length > 0 ? { roleRangeOverrides } : {}),
+              ...(Object.keys(roleRangeOverrides).length > 0 ? { roleRangeOverrides, guideRoleRangeOverrides } : {}),
               domainPaddingScope: scope.id,
               paddingMarkDataViews: scopedMarkDataViews,
               markDataViews: scopedMarkDataViews,

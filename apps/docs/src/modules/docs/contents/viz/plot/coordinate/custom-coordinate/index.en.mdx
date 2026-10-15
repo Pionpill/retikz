@@ -85,6 +85,8 @@ The definition with `roles: ['u', 'v']` must still be injected through `<Plot co
 5. `resolve` builds a frame with `createCoordinateFrame`, then returns the `plotArea`, axis layers, and grid layers.
 6. Marks project through `frame.projectRoles` or optional `frame.projectCell`; placement uses the same model split into `mapRoles` and `projectMappedRoles`.
 
+`roleRangeOverrides` specifies the final data-mapping ranges; `guideRoleRangeOverrides` separately specifies axis-line and grid boundaries. An empty object uses layout ranges; omitting it uses the final mapping ranges. Jitter containment narrows data mapping without narrowing axis boundaries, while track layouts retain their own boundaries. Tick positions always use the final scales.
+
 `createCoordinateFrame` can receive `roleScales`, `mapRoles`, `projectMappedRoles`, `placementBoundary`, `frameAlong`, and `projectCell`. Position Adjustment uses the split-projection capabilities, automatic containment adds boundary measurement, and `projectCell` projects a logical Cell into rect, sector, contour, or related geometry.
 
 <SourceLinks

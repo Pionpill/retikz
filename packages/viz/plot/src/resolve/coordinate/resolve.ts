@@ -272,6 +272,7 @@ export const resolveCoordinateFrame = (
     layoutReserve,
     plotAreaOverride,
     roleRangeOverrides,
+    guideRoleRangeOverrides,
     scaleRegistry,
     provenance,
     coordinateRegistry,
@@ -701,6 +702,7 @@ export const resolveCoordinateFrame = (
     textMeasurer: context.textMeasurer,
     ...(plotAreaOverride !== undefined ? { plotAreaOverride } : {}),
     ...(roleRangeOverrides !== undefined ? { roleRangeOverrides } : {}),
+    ...(guideRoleRangeOverrides !== undefined ? { guideRoleRangeOverrides } : {}),
     ...(provenance !== undefined ? { provenance } : {}),
     collectRoleValues: (role, opts) =>
       collectValues(role, undefined, roleChannelOf(role), opts?.includeBaseline ?? false),

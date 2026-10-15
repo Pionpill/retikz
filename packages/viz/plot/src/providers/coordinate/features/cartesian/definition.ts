@@ -373,6 +373,8 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
 
       if (!hasExplicitContinuousRange(xScaleDef)) xScale.setRange([plotArea.x, plotArea.x + plotArea.width]);
       if (!hasExplicitContinuousRange(yScaleDef)) yScale.setRange([plotArea.y + plotArea.height, plotArea.y]);
+      const layoutXRange = xScale.range();
+      const layoutYRange = yScale.range();
       const xRangeOverride = ctx.roleRangeOverrides?.x;
       const yRangeOverride = ctx.roleRangeOverrides?.y;
       if (xRangeOverride !== undefined) xScale.setRange([xRangeOverride[0], xRangeOverride[1]]);
@@ -385,8 +387,10 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
         ? ctx.resolveVisibleGuideTicks(yTicks ?? EMPTY_TICKS, yAxis.ticks, value => yScale.coordinate(value))
         : undefined;
 
-      const [xRangeStart, xRangeEnd] = xScale.range();
-      const [yRangeStart, yRangeEnd] = yScale.range();
+      const [xRangeStart, xRangeEnd] =
+        ctx.guideRoleRangeOverrides === undefined ? xScale.range() : (ctx.guideRoleRangeOverrides.x ?? layoutXRange);
+      const [yRangeStart, yRangeEnd] =
+        ctx.guideRoleRangeOverrides === undefined ? yScale.range() : (ctx.guideRoleRangeOverrides.y ?? layoutYRange);
       const guideFrame: BoundsRect = {
         x: Math.min(xRangeStart, xRangeEnd),
         y: Math.min(yRangeStart, yRangeEnd),

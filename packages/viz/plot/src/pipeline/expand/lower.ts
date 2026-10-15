@@ -1108,7 +1108,7 @@ export const lowerPlotWithDataArtifact = (
           domainPaddingScope: panel.id,
           paddingMarkDataViews: panelMarkDataViews,
           roleMarkDataViews,
-          ...(roleRangeOverrides === undefined ? {} : { roleRangeOverrides }),
+          ...(roleRangeOverrides === undefined ? {} : { roleRangeOverrides, guideRoleRangeOverrides: {} }),
         });
       let resolution = resolveCoordinateFrame(panelNode, frameContext());
       const boundaryRanges = Object.fromEntries(

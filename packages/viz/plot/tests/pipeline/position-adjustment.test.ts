@@ -319,6 +319,49 @@ describe('Mark Placement pipeline', () => {
     expect(withNull[1]).toEqual(withPlaceholder[2]);
   });
 
+  it('keeps Cartesian axis boundaries fixed while containing numeric jitter', () => {
+    const makeSpec = (span: number) =>
+      PlotSchema.parse({
+        ...specOf([{ kind: 'jitter', role: 'x', span, seed: 7 }]),
+        guides: [
+          { type: 'axis', dimension: 'x' },
+          { type: 'axis', dimension: 'y', grid: true },
+        ],
+      });
+    const axisLinesOf = (scope: IRScope): Array<unknown> =>
+      scope.children.flatMap(child => {
+        if (!isScopeChild(child)) return [];
+        if (child.meta?.layer === 'axis') {
+          const path = child.children.find(item => item.type === 'path');
+          return path === undefined ? [] : [path];
+        }
+        return axisLinesOf(child);
+      });
+    const jitterRows = Array.from({ length: 18 }, (_, index) => ({
+      category: String.fromCharCode(65 + Math.floor(index / 3)),
+      value: index + 1,
+    }));
+    const baseline = loweredOf(makeSpec(0), { layout: { width: 400, height: 360 }, provenance: true }, jitterRows);
+    const jittered = loweredOf(makeSpec(120), { layout: { width: 400, height: 360 }, provenance: true }, jitterRows);
+    const baselineAxes = axisLinesOf(baseline.child as IRScope);
+    expect(baselineAxes).toHaveLength(2);
+    expect(axisLinesOf(jittered.child as IRScope)).toEqual(baselineAxes);
+    const boundary = [...baseline.dataArtifact.frameByCoordinateScopeId.values()][0].roleScales?.x?.range();
+    expect(boundary).toBeDefined();
+    const markNodesOf = (scope: IRScope): Array<IRNode> =>
+      scope.children.flatMap(child => {
+        if (!isScopeChild(child)) return [];
+        return child.meta?.layer === 'mark' ? child.children.filter(isNodeChild) : markNodesOf(child);
+      });
+    const nodes = markNodesOf(jittered.child as IRScope);
+    expect(nodes).toHaveLength(jitterRows.length);
+    for (const node of nodes) {
+      const [x] = node.position as [number, number];
+      expect(x - 5).toBeGreaterThanOrEqual(Math.min(...boundary!));
+      expect(x + 5).toBeLessThanOrEqual(Math.max(...boundary!));
+    }
+  });
+
   it('reserves discrete jitter half-step plus glyph and stroke extent at Cartesian edges', () => {
     const spec = PlotSchema.parse({
       ...specOf([{ kind: 'jitter', role: 'x', span: { kind: 'ratio', value: 1 }, seed: 3 }]),
