@@ -129,7 +129,7 @@ const spec = plot({
   ],
 });
 
-document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width: 360, height: 220 });
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
 ```
 
 </DocTab>
@@ -170,7 +170,7 @@ const spec: IRPlot = {
   ],
 };
 
-document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width: 360, height: 220 });
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
 ```
 
 </DocTab>

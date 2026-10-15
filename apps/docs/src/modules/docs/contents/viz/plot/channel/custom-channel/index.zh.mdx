@@ -1,6 +1,6 @@
 ---
 title: 自定义通道
-description: 用 ChannelDefinition 把字段或常量解析为既有 Core 属性，并通过 channelDefinitions 注入 Plot 的统一通道注册表。
+description: 用 ChannelDefinition 把字段或常量解析为既有 Core 属性，并通过 definitions.channels 注入 Plot 的统一通道注册表。
 ---
 
 在学会[字段与常量绑定](/viz/plot/channel/binding)后，可以定义自己的通道名和取值规则。本页用 `intensity` 将 `score` 映射为点的透明度：分数越高，点越不透明；切换为常量后，所有点使用同一透明度。
@@ -126,7 +126,7 @@ React 和 Vanilla 共用前面的 definition，选择与你的项目一致的宿
 在 `Plot` 上注入 definition，在子图元的 `channels` 中按注册名引用：
 
 ```tsx
-<Plot data={customChannelPoints} channelDefinitions={[intensityChannel]}>
+<Plot data={customChannelPoints} definitions={{ channels: [intensityChannel] }}>
   <PointMark x="x" y="y" channels={{ intensity: 'score' }} />
 </Plot>
 ```
@@ -144,13 +144,7 @@ React DSL 的字符串值表示字段名，常量使用 `{ kind: 'constant', val
 在 `renderPlot` 的第三个参数中注入。这里的 `spec` 是预览 Vanilla 源码中的 Plot 配置，已经通过 `encoding.channels.intensity` 绑定 score：
 
 ```ts
-const svg = renderPlot(
-  spec,
-  { points: customChannelPoints },
-  {
-    channelDefinitions: [intensityChannel],
-  },
-);
+const svg = renderPlot(spec, { points: customChannelPoints }, { definitions: { channels: [intensityChannel] } });
 ```
 
 Vanilla 示例直接使用 Plot IR：字段绑定写为 `{ field }`，常量绑定写为 `{ value }`：
@@ -204,7 +198,7 @@ encoding: {
         '本例的定义类型。resolve 同时接收数据上下文与当前图元，产出逐行 resolver 和可选 descriptor；deliver 接收节点、解析值与交付上下文。legend 支持 swatch、ramp、size、symbol，本例用 ramp 展示连续透明度。',
     },
     {
-      name: 'channelDefinitions',
+      name: 'definitions.channels',
       kind: 'property',
       type: 'Array<AnyChannelDefinition>',
       description:

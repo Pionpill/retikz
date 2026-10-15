@@ -50,15 +50,15 @@ A role-space Definition that requires Plot to reserve boundary clearance can dec
 
 ## Inject into a Host
 
-React injects the Definition with `<Plot positionAdjustmentDefinitions={[screenNudge]}>`, while Point references its `kind` from `placement.adjustments`:
+React injects the Definition with `<Plot definitions={{ positionAdjustments: [screenNudge] }}>`, while Point references its `kind` from `placement.adjustments`:
 
 ```tsx
-<Plot data={rows} positionAdjustmentDefinitions={[screenNudge]}>
+<Plot data={rows} definitions={{ positionAdjustments: [screenNudge] }}>
   <PointMark x="category" y="value" placement={{ adjustments: [{ kind: 'screen-nudge', dx: 12, dy: -8 }] }} />
 </Plot>
 ```
 
-Vanilla `renderPlot`, `embedPlot`, and direct `lowerPlots` forward the same array through `LowerPlotsOptions.positionAdjustmentDefinitions`. Definitions do not enter `IRPlot`, so the spec remains JSON-round-trippable.
+Vanilla `renderPlot`, `embedPlot`, and direct `lowerPlots` forward the same array through `LowerPlotsOptions.definitions.positionAdjustments`. Definitions do not enter `IRPlot`, so the spec remains JSON-round-trippable.
 
 ## Execution
 
@@ -122,11 +122,11 @@ Public exports:
 
 Host injection:
 
-| Host                                | Public contract     | Injection field                 |
-| ----------------------------------- | ------------------- | ------------------------------- |
-| `@retikz/plot-react` `<Plot>`       | `PlotProps`         | `positionAdjustmentDefinitions` |
-| `@retikz/plot-vanilla` `renderPlot` | `RenderPlotOptions` | `positionAdjustmentDefinitions` |
-| `@retikz/plot` `lowerPlots`         | `LowerPlotsOptions` | `positionAdjustmentDefinitions` |
+| Host                                | Public contract     | Injection field                   |
+| ----------------------------------- | ------------------- | --------------------------------- |
+| `@retikz/plot-react` `<Plot>`       | `PlotProps`         | `definitions.positionAdjustments` |
+| `@retikz/plot-vanilla` `renderPlot` | `RenderPlotOptions` | `definitions.positionAdjustments` |
+| `@retikz/plot` `lowerPlots`         | `LowerPlotsOptions` | `definitions.positionAdjustments` |
 
 ## Related
 

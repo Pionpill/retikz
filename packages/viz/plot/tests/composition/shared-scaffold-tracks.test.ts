@@ -80,7 +80,7 @@ const expandOf = (spec: unknown, provenance = false): IRScope => {
   return lowerPlot(
     parsePlotIR(spec),
     { d: rows },
-    { textMeasurer: measureLabel, width: 480, height: 300, provenance },
+    { layout: { width: 480, height: 300 }, textMeasurer: measureLabel, provenance },
   ) as IRScope;
 };
 

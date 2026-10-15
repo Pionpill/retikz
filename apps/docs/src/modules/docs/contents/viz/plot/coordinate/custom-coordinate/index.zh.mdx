@@ -56,10 +56,10 @@ scaleBinding: {
 
 ## 注入宿主
 
-通过 `<Plot coordinates={[bridgeCoordinate]}>` 注入 definition，并在 coordinate operation 中引用它：
+通过 `<Plot definitions={{ coordinates: [bridgeCoordinate] }}>` 注入 definition，并在 coordinate operation 中引用它：
 
 ```tsx
-<Plot coordinate={{ type: 'bridge', archHeight: 60 }} coordinates={[bridgeCoordinate]}>
+<Plot coordinate={{ type: 'bridge', archHeight: 60 }} definitions={{ coordinates: [bridgeCoordinate] }}>
   <PointMark x="x" y="y" />
 </Plot>
 ```
@@ -149,10 +149,10 @@ coordinate: { type: 'bridge', archHeigth: 60 }
 
 宿主注入：
 
-| 宿主                                   | 公开契约            | 注入字段                             |
-| -------------------------------------- | ------------------- | ------------------------------------ |
-| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `coordinates`                        |
-| `@retikz/plot-vanilla` 的 `renderPlot` | `RenderPlotOptions` | 继承 `LowerPlotsOptions.coordinates` |
+| 宿主                                   | 公开契约            | 注入字段                                         |
+| -------------------------------------- | ------------------- | ------------------------------------------------ |
+| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `definitions.coordinates`                        |
+| `@retikz/plot-vanilla` 的 `renderPlot` | `RenderPlotOptions` | 继承 `LowerPlotsOptions.definitions.coordinates` |
 
 ## 相关
 

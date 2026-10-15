@@ -205,7 +205,7 @@ describe('prepareRows — resolveField 集成（contract）', () => {
       spec,
       { d: rows },
       {
-        fieldMaps: { d: { x: 'when' } },
+        datasetFieldMaps: { d: { x: 'when' } },
         resolveField: (field, context) => {
           if (field === 'x') {
             seenPath = context.physicalPath;

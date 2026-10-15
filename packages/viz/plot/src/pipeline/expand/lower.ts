@@ -333,8 +333,8 @@ export const lowerPlotWithDataArtifact = (
   preparedData?: PreparedPlotData,
 ): PlotDataArtifactLowerResult => {
   // 自描述尺寸：节点自带 width/height 优先（组合时各面板本性尺寸），缺省回退全局选项、再回退默认
-  const width = node.width ?? options.width ?? DEFAULT_PLOT_WIDTH;
-  const height = node.height ?? options.height ?? DEFAULT_PLOT_HEIGHT;
+  const width = node.width ?? options.layout?.width ?? DEFAULT_PLOT_WIDTH;
+  const height = node.height ?? options.layout?.height ?? DEFAULT_PLOT_HEIGHT;
 
   // 绘图区尺寸是 scale range / 投影的单一来源；非有限或非正数会一路污染出 cx="NaN" 等坏坐标——入口抛清晰错误
   if (!Number.isFinite(width) || width <= 0) {
@@ -380,7 +380,7 @@ export const lowerPlotWithDataArtifact = (
     preparedData?.root.rows ??
     (provenance ? tagSourceIndex(datasets[node.data.reference]) : datasets[node.data.reference]);
 
-  // fieldMaps 校验 + 用户源字段类型解析（strict）+ ingest 恒归一化。与 locator 共用 prepareRows 保 parity。
+  // datasetFieldMaps 校验 + 用户源字段类型解析（strict）+ ingest 恒归一化。与 locator 共用 prepareRows 保 parity。
   // 接入类型 Map 用于 coercion，规范视图以完整 model 为事实源；归一化置于 transform 前、无论有无 model 都跑（恒 canonical）。
   const preparedRootView =
     preparedData === undefined ? undefined : createDataView(preparedData.root.rows, preparedData.root.model);
@@ -466,7 +466,10 @@ export const lowerPlotWithDataArtifact = (
         markDataView: {
           markIndex,
           mark,
-          dataView: applyMarkTransforms(mark, inputDataView, transformRegistry, transformContext),
+          dataView: applyMarkTransforms(mark, inputDataView, {
+            registry: transformRegistry,
+            context: transformContext,
+          }),
         } satisfies MarkDataView,
         ...(lineageOptions !== undefined ? { lineage: { events: [] } satisfies DataLineageRun } : {}),
       };
@@ -497,7 +500,7 @@ export const lowerPlotWithDataArtifact = (
       defaultPlot: node.defaultPlot,
       plotRules: node.plotRules,
     },
-    options.plotThemeStyles,
+    options.definitions?.plotThemeStyles,
   );
   const resolvedTheme = resolvePlotGuideTheme(themeResolution);
   const defaultColorPaletteIndices = defaultColorPaletteIndicesOf(node.marks);
@@ -509,7 +512,7 @@ export const lowerPlotWithDataArtifact = (
   const allGuidesWithCompositionGap = withAxisGapOffsets(allGuides, compositionLayout?.axisGap);
 
   assertFieldOrders(rootDataView.model, fieldOrderRegistry);
-  const coordinateRegistry = resolveCoordinateRegistry(options.coordinates);
+  const coordinateRegistry = resolveCoordinateRegistry(options.definitions?.coordinates);
   const coordinateResolveContextOf = (
     source: IRPlot,
     frameDataView: DataView,
@@ -522,8 +525,8 @@ export const lowerPlotWithDataArtifact = (
     model: frameDataView.model,
     width,
     height,
-    fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-    margin: options.margin,
+    fontSize: options.layout?.fontSize ?? DEFAULT_FONT_SIZE,
+    margin: options.layout?.margin,
     textMeasurer: options.textMeasurer,
     provenance,
     coordinateRegistry,
@@ -541,7 +544,7 @@ export const lowerPlotWithDataArtifact = (
 
   // 通道 registry：内置 definition 先注册，自定义 definition 再合并；mark / node / path 通道统一解析。
   const channelRegistry = resolveChannelRegistry({
-    custom: options.channelDefinitions,
+    custom: options.definitions?.channels,
     resolveLabel: options.resolveLabel,
   });
   const channelCtx: ChannelResolveContext = {
@@ -865,7 +868,7 @@ export const lowerPlotWithDataArtifact = (
 
     const facetLabelBandSize =
       facetLabelsEnabled && (rowFacetLevelCount > 0 || columnFacetLevelCount > 0)
-        ? Math.max((options.fontSize ?? DEFAULT_FONT_SIZE) + 10, 22)
+        ? Math.max((options.layout?.fontSize ?? DEFAULT_FONT_SIZE) + 10, 22)
         : 0;
     const facetLabelGap = facetLabelsEnabled ? (facetLayout?.labelGap ?? facetLabelBandSize) : 0;
     const rowLabelGap = rowFacetLevelCount > 0 ? facetLabelGap : 0;
@@ -1099,7 +1102,7 @@ export const lowerPlotWithDataArtifact = (
         coordinateResolveContextOf(panelNode, panelDataView, panelFrameGuides, {
           width: panelWidth,
           height: panelHeight,
-          margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
+          margin: mergeCompositionMargin(panelLayout?.padding, options.layout?.margin),
           labelGap: panelLayout?.labelGap,
           markDataViews: sharedFacetMarkDataViews,
           domainPaddingScope: panel.id,
@@ -1265,7 +1268,7 @@ export const lowerPlotWithDataArtifact = (
                 coordinateResolveContextOf({ ...panelNode, guides: panelAxisGuides }, panelDataView, panelAxisGuides, {
                   width: panelWidth,
                   height: panelHeight,
-                  margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
+                  margin: mergeCompositionMargin(panelLayout?.padding, options.layout?.margin),
                   labelGap: panelLayout?.labelGap,
                   plotAreaOverride: frameResolution.plotArea,
                   markDataViews: sharedFacetMarkDataViews,
@@ -1283,7 +1286,7 @@ export const lowerPlotWithDataArtifact = (
                 coordinateResolveContextOf({ ...panelNode, guides: panelGridGuides }, panelDataView, panelGridGuides, {
                   width: panelWidth,
                   height: panelHeight,
-                  margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
+                  margin: mergeCompositionMargin(panelLayout?.padding, options.layout?.margin),
                   labelGap: panelLayout?.labelGap,
                   plotAreaOverride: frameResolution.plotArea,
                   markDataViews: sharedFacetMarkDataViews,
@@ -1486,7 +1489,7 @@ export const lowerPlotWithDataArtifact = (
         node,
         channelDescriptors,
         legendGuides,
-        options.fontSize ?? DEFAULT_FONT_SIZE,
+        options.layout?.fontSize ?? DEFAULT_FONT_SIZE,
         bands,
         channelRegistry,
         scaleRegistry,
@@ -1561,8 +1564,8 @@ export const lowerPlots = (
     type: 'plot',
     schema: PlotSchema,
     compile: (node: IRPlot, context) => {
-      const intrinsicWidth = node.width ?? options.width ?? DEFAULT_PLOT_WIDTH;
-      const intrinsicHeight = node.height ?? options.height ?? DEFAULT_PLOT_HEIGHT;
+      const intrinsicWidth = node.width ?? options.layout?.width ?? DEFAULT_PLOT_WIDTH;
+      const intrinsicHeight = node.height ?? options.layout?.height ?? DEFAULT_PLOT_HEIGHT;
       const width = resolvePlotAxisSize(intrinsicWidth, context.proposal.x);
       const height = resolvePlotAxisSize(intrinsicHeight, context.proposal.y);
       const loweredNode: IRPlot = { ...node, width, height };

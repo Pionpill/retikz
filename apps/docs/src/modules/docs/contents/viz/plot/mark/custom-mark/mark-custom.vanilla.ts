@@ -30,9 +30,5 @@ const spec: IRPlot = {
 export const svg = renderPlot(
   spec,
   { glyphs: glyphRows },
-  {
-    width: 420,
-    height: 260,
-    markDefinitions: [diamondMark],
-  },
+  { layout: { width: 420, height: 260 }, definitions: { marks: [diamondMark] } },
 );

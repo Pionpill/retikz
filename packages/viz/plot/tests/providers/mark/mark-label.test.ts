@@ -7,7 +7,7 @@ import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const opts: LowerPlotsOptions = { width: 200, height: 100 };
+const opts: LowerPlotsOptions = { layout: { width: 200, height: 100 } };
 
 const expandOf = (
   spec: IRPlot,

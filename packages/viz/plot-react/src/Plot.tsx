@@ -1,4 +1,5 @@
 import type {
+  DataFieldMap,
   DataInputBindings,
   DataTransformExecutor,
   ExternalDatasets,
@@ -69,6 +70,7 @@ void plotStandalonePropKeysCheck;
  */
 export type PlotCommonProps<TSource = never> = PlotStandaloneProps &
   PlotPanelProps &
+  Pick<IRPlot, 'width' | 'height'> &
   LowerPlotsOptions & {
     /** 通用执行器的最低优先级配置 */
     dataTransformExecutor?: DataTransformExecutor<TSource>;
@@ -131,7 +133,7 @@ export type PlotDslProps<TSource = never> = PlotCommonProps<TSource> &
     /** 字段名与字段类型模型 */
     model?: IRDataModel;
     /** 逻辑字段到物理数据路径的映射 */
-    fieldMap?: Record<string, string>;
+    fieldMap?: DataFieldMap;
     /** 坐标系输入 */
     coordinate?: InputPlotCoordinate;
     /** Plot composition 输入 */
@@ -238,8 +240,14 @@ const PlotComponent: FC<PlotProps<unknown>> = props => {
   const lineageDriver = useMemo(() => createPlotLineageCompileDriver(), []);
   const effectiveProps = useMemo(() => {
     if (ambientPlotThemeStyles === undefined) return props;
-    if (props.plotThemeStyles === undefined) return { ...props, plotThemeStyles: ambientPlotThemeStyles };
-    return { ...props, plotThemeStyles: [...ambientPlotThemeStyles, ...props.plotThemeStyles] };
+    const explicit = props.definitions?.plotThemeStyles;
+    return {
+      ...props,
+      definitions: {
+        ...props.definitions,
+        plotThemeStyles: explicit === undefined ? ambientPlotThemeStyles : [...ambientPlotThemeStyles, ...explicit],
+      },
+    };
   }, [ambientPlotThemeStyles, props]);
   const contentProps = plotContentPropsOf(effectiveProps);
   const authored = resolvePlotAuthoring(contentProps);

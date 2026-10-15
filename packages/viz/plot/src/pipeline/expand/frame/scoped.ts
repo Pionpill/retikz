@@ -135,7 +135,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     placementRoleRangeOverridesByScope,
   } = context;
 
-  const coordinateRegistry = resolveCoordinateRegistry(options.coordinates);
+  const coordinateRegistry = resolveCoordinateRegistry(options.definitions?.coordinates);
   const scopeById = new Map(coordinateScopes.scopes.map(scope => [scope.id, scope] as const));
   const coordinateResolveContextOf = (
     source: IRPlot,
@@ -148,8 +148,8 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     model: dataView.model,
     width,
     height,
-    fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-    margin: options.margin,
+    fontSize: options.layout?.fontSize ?? DEFAULT_FONT_SIZE,
+    margin: options.layout?.margin,
     textMeasurer: options.textMeasurer,
     provenance,
     coordinateRegistry,
@@ -396,7 +396,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     const resolved = resolveCoordinateFrame(
       scaffoldNode,
       coordinateResolveContextOf(scaffoldNode, [], {
-        margin: mergeCompositionMargin(scaffoldLayout?.padding, options.margin),
+        margin: mergeCompositionMargin(scaffoldLayout?.padding, options.layout?.margin),
         labelGap: scaffoldLayout?.labelGap,
         markDataViews: scaffoldMarkDataViews,
       }),
@@ -493,7 +493,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     const rawResolution = resolveCoordinateFrame(
       scopedNode,
       coordinateResolveContextOf(scopedNode, scopedGuides, {
-        margin: mergeCompositionMargin(scopedLayout?.padding, options.margin),
+        margin: mergeCompositionMargin(scopedLayout?.padding, options.layout?.margin),
         labelGap: scopedLayout?.labelGap,
         ...(targetPlotArea !== undefined ? { plotAreaOverride: targetPlotArea } : {}),
         ...(scaffoldFrame !== undefined && (scaffold?.frame ?? ScaffoldFrameMode.Shared) === ScaffoldFrameMode.Shared
@@ -512,7 +512,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
         ? resolveCoordinateFrame(
             { ...scopedNode, guides: scopedGridGuides },
             coordinateResolveContextOf({ ...scopedNode, guides: scopedGridGuides }, scopedGridGuides, {
-              margin: mergeCompositionMargin(scopedLayout?.padding, options.margin),
+              margin: mergeCompositionMargin(scopedLayout?.padding, options.layout?.margin),
               labelGap: scopedLayout?.labelGap,
               plotAreaOverride: rawResolution.plotArea,
               ...(Object.keys(roleRangeOverrides).length > 0 ? { roleRangeOverrides } : {}),

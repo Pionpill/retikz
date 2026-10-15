@@ -11,7 +11,7 @@ import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema, PolarInterpolation } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const opts: LowerPlotsOptions = { width: 200, height: 100 };
+const opts: LowerPlotsOptions = { layout: { width: 200, height: 100 } };
 
 const markRegistry = resolveMarkRegistry();
 
@@ -926,7 +926,7 @@ describe('RelationMark and anchorId lowering', () => {
           { x: 10, value: 18 },
         ],
       },
-      { width: 50, height: 200 },
+      { layout: { width: 50, height: 200 } },
     );
     const [path] = collectPaths(markLayer(root, 0));
 
@@ -1026,10 +1026,7 @@ describe('RelationMark and anchorId lowering', () => {
       {
         d: [{ sourceX: 0, sourceY: 0, targetX: 1, targetY: 1, width: 12, lineWeight: 5 }],
       },
-      {
-        ...opts,
-        channelDefinitions: [lineWeightChannel],
-      },
+      { definitions: { channels: [lineWeightChannel] }, ...opts },
     );
     const [ribbon] = collectRibbons(markLayer(root, 0));
 

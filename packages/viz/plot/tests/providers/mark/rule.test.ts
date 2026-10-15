@@ -47,7 +47,7 @@ const WIDTH = 400;
 
 const HEIGHT = 400;
 
-const cartOpts: LowerPlotsOptions = { width: WIDTH, height: HEIGHT };
+const cartOpts: LowerPlotsOptions = { layout: { width: WIDTH, height: HEIGHT } };
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
   return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
@@ -669,7 +669,7 @@ describe('rule polar', () => {
           { tier: 'high', threshold: 90 },
         ],
       },
-      { width: 400, height: 280 },
+      { layout: { width: 400, height: 280 } },
     );
     const scene = compileToScene({ version: 1, type: 'scene', children: [layer] }).scene;
     const rings = flattenPrimitives(scene.primitives)
@@ -756,44 +756,45 @@ describe('rule region projectCell 坐标系', () => {
       marks: [{ type: 'reference', kind: 'region', xTo: 6, yTo: 8, encoding: { x: { value: 2 }, y: { value: 3 } } }],
     });
     const options: LowerPlotsOptions = {
-      width: WIDTH,
-      height: HEIGHT,
-      coordinates: [
-        defineCoordinate({
-          schema: object({
-            type: literal('curved-reference').describe('Discriminator: reference region custom coordinate operation'),
-          }),
-          roles: ['x', 'y'],
-          resolve: (_operation, ctx) => {
-            const xScale = linearStub([0, 10], [0, ctx.width]);
-            const yScale = linearStub([0, 10], [ctx.height, 0]);
+      layout: { width: WIDTH, height: HEIGHT },
+      definitions: {
+        coordinates: [
+          defineCoordinate({
+            schema: object({
+              type: literal('curved-reference').describe('Discriminator: reference region custom coordinate operation'),
+            }),
+            roles: ['x', 'y'],
+            resolve: (_operation, ctx) => {
+              const xScale = linearStub([0, 10], [0, ctx.width]);
+              const yScale = linearStub([0, 10], [ctx.height, 0]);
 
-            const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
-              const x = xScale.coordinate(values[0]);
-              const y = yScale.coordinate(values[1]);
+              const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
+                const x = xScale.coordinate(values[0]);
+                const y = yScale.coordinate(values[1]);
 
-              return Number.isFinite(x) && Number.isFinite(y)
-                ? [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)]
-                : null;
-            };
+                return Number.isFinite(x) && Number.isFinite(y)
+                  ? [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)]
+                  : null;
+              };
 
-            return {
-              frame: createCoordinateFrame('curved-reference', ['x', 'y'], projectRoles, {
-                roleScales: { x: xScale, y: yScale },
-                projectCell: (cell: Cell) => ({
-                  kind: 'contour',
-                  points: densifyCellContour(cell, (x, y) => [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)], {
-                    curvedPrimary: true,
+              return {
+                frame: createCoordinateFrame('curved-reference', ['x', 'y'], projectRoles, {
+                  roleScales: { x: xScale, y: yScale },
+                  projectCell: (cell: Cell) => ({
+                    kind: 'contour',
+                    points: densifyCellContour(cell, (x, y) => [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)], {
+                      curvedPrimary: true,
+                    }),
                   }),
                 }),
-              }),
-              plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
-              gridLayers: [],
-              axisLayers: [],
-            };
-          },
-        }),
-      ],
+                plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
+                gridLayers: [],
+                axisLayers: [],
+              };
+            },
+          }),
+        ],
+      },
     };
     const layer = expandOf(spec, { d: [{}] }, options).children[0] as IRScope;
     const node = nodesOf(layer)[0];

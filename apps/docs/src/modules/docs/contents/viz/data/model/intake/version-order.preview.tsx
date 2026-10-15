@@ -21,10 +21,11 @@ export const VersionOrderPreview: FC<VersionOrderPreviewProps> = props => {
         { name: 'version', type: 'categorical', order },
         { name: 'value', type: 'continuous' },
       ]}
-      fieldOrderDefinitions={[labelLength]}
+
       width={410}
       height={250}
       style={{ maxWidth: '100%', height: 'auto' }}
+      definitions={{ fieldOrders: [labelLength] }}
     >
       <IntervalMark x="version" y="value" color="version" />
       <PlotScale dimension="y" type="linear" domainPadding={0} />

@@ -1172,7 +1172,7 @@ const CustomMarkObjectSchema = looseObject({
   type: NonBlankStringSchema.refine(type => !BUILTIN_MARK_TYPES.has(type), {
     message: 'custom mark type must not collide with a built-in mark type',
   }).describe(
-    'Discriminator: custom mark type; must be a non-blank, non-built-in identifier registered through options.markDefinitions',
+    'Discriminator: custom mark type; must be a non-blank, non-built-in identifier registered through options.definitions.marks',
   ),
   defaultColorIndex: markBase.defaultColorIndex,
   defaultColorGroup: NonBlankStringSchema.optional().describe(
@@ -1194,7 +1194,7 @@ const CustomMarkObjectSchema = looseObject({
 
 /** 校验自定义标记的开放配置，具体结构由运行时标记定义校验 */
 export const CustomMarkSchema = CustomMarkObjectSchema.catchall(JsonValueSchema).describe(
-  'Custom mark operation: type is any non-built-in identifier; its config is validated at lowering time against the matching MarkDefinition supplied via options.markDefinitions',
+  'Custom mark operation: type is any non-built-in identifier; its config is validated at lowering time against the matching MarkDefinition supplied via options.definitions.marks',
 );
 
 /** 校验内置或自定义标记操作 */

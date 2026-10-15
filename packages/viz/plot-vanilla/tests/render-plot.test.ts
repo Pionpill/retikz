@@ -86,7 +86,7 @@ const findSceneGroup = (primitives: Array<ScenePrimLike>, id: string): ScenePrim
 
 describe('renderPlot 薄包装（SSR SVG 串）', () => {
   it('返回含 <svg / <path / <ellipse（散点 glyph）的字符串', () => {
-    const svg = renderPlot(spec, data, { width: 480, height: 300 });
+    const svg = renderPlot(spec, data, { layout: { width: 480, height: 300 } });
 
     expect(typeof svg).toBe('string');
     expect(svg).toContain('<svg');
@@ -101,20 +101,20 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
   });
 
   it('Plot local defaults override 生效', () => {
-    const svg = renderPlot({ ...spec, defaultPlot }, data, { width: 480, height: 300 });
+    const svg = renderPlot({ ...spec, defaultPlot }, data, { layout: { width: 480, height: 300 } });
 
     expect(svg).toContain('fill="#123456"');
   });
 
   it('data 缺 spec 引用的数据集 → 调用期抛错', () => {
-    expect(() => renderPlot(spec, {}, { width: 480, height: 300 })).toThrow();
+    expect(() => renderPlot(spec, {}, { layout: { width: 480, height: 300 } })).toThrow();
   });
 
   it('与手写 compileToScene + renderToSvgString 等价（证明薄包装不引入额外语义）', () => {
-    const viaRenderPlot = renderPlot(spec, data, { width: 480, height: 300 });
+    const viaRenderPlot = renderPlot(spec, data, { layout: { width: 480, height: 300 } });
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
-      { composites: lowerPlots(data, { width: 480, height: 300 }) },
+      { composites: lowerPlots(data, { layout: { width: 480, height: 300 } }) },
     ).scene;
 
     expect(viaRenderPlot).toBe(renderToSvgString(scene, { output: { width: 480, height: 300 } }));
@@ -131,7 +131,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         },
       ],
     };
-    const options = { width: 480, height: 300, positionAdjustmentDefinitions: [screenShift] };
+    const options = { layout: { width: 480, height: 300 }, definitions: { positionAdjustments: [screenShift] } };
     const viaRenderPlot = renderPlot(placementSpec, data, options);
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [placementSpec] },
@@ -142,7 +142,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
   });
 
   it('注入 width/height 到 <svg>（产物有显示尺寸，与 React <Plot> 对齐）', () => {
-    const svg = renderPlot(spec, data, { width: 360, height: 200 });
+    const svg = renderPlot(spec, data, { layout: { width: 360, height: 200 } });
 
     expect(svg).toMatch(/<svg[^>]*\swidth="360"/);
     expect(svg).toMatch(/<svg[^>]*\sheight="200"/);
@@ -175,7 +175,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     const datasets = { layered: [{ x: 0, y: 1, series: 'A' }] };
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [layeredSpec] },
-      { composites: lowerPlots(datasets, { width: 480, height: 300, provenance: true }) },
+      { composites: lowerPlots(datasets, { layout: { width: 480, height: 300 }, provenance: true }) },
     ).scene;
     const semanticIds = ['audit.points', 'audit.x-axis.grid', 'audit.x-axis', 'audit.legend.color'];
 
@@ -234,7 +234,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
           },
         ],
       },
-      { composites: lowerPlots(datasets, { width: 300, height: 220, provenance: true }) },
+      { composites: lowerPlots(datasets, { layout: { width: 300, height: 220 }, provenance: true }) },
     ).scene;
 
     expect(scene.primitives.map(primitive => primitive.type)).toEqual(['group']);
@@ -257,8 +257,8 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
 
   it('传入 lineage 配置时返回 SVG 与运行时图元链路', () => {
     const result = renderPlot(spec, data, {
-      width: 480,
-      height: 300,
+      layout: { width: 480, height: 300 },
+
       lineage: {
         scaleMappings: true,
         layoutContext: true,
@@ -277,7 +277,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
   });
 
   it('lineage=false 时保持原有 SVG 字符串返回值', () => {
-    const svg = renderPlot(spec, data, { width: 480, height: 300, lineage: false });
+    const svg = renderPlot(spec, data, { layout: { width: 480, height: 300 }, lineage: false });
 
     expect(typeof svg).toBe('string');
     expect(svg).toContain('<svg');
@@ -297,11 +297,11 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       marks: [{ type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     };
 
-    expect(renderPlot(barSpec, data, { width: 480, height: 300 })).toMatch(/<rect/);
+    expect(renderPlot(barSpec, data, { layout: { width: 480, height: 300 } })).toMatch(/<rect/);
   });
 
   it('polar 饼图 spec → SVG 含扇形 path（arc 命令 A/a）', () => {
-    const svg = renderPlot(createPolarPieSpec(), polarShareData, { width: 360, height: 360 });
+    const svg = renderPlot(createPolarPieSpec(), polarShareData, { layout: { width: 360, height: 360 } });
 
     expect(svg).toContain('<svg');
     expect(svg).toContain('<path');
@@ -312,7 +312,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
 
   it('polar 环图 spec（innerRadius）→ SVG 含 path（透传不崩）', () => {
     expect(
-      renderPlot(createPolarPieSpec('share', undefined, 0.5), polarShareData, { width: 360, height: 360 }),
+      renderPlot(createPolarPieSpec('share', undefined, 0.5), polarShareData, { layout: { width: 360, height: 360 } }),
     ).toContain('<path');
   });
 
@@ -320,7 +320,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     const svg = renderPlot(
       createPolarPulledSpec(),
       { share: polarShareData.share.map((row, index) => ({ ...row, offset: index === 1 ? 16 : 0 })) },
-      { width: 360, height: 360 },
+      { layout: { width: 360, height: 360 } },
     );
 
     expect(svg).toContain('<svg');
@@ -328,7 +328,9 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
   });
 
   it('polar 径向柱 spec（interval + band 角向）→ SVG 含 path', () => {
-    expect(renderPlot(createPolarRadialBarSpec(), polarShareData, { width: 360, height: 360 })).toContain('<path');
+    expect(renderPlot(createPolarRadialBarSpec(), polarShareData, { layout: { width: 360, height: 360 } })).toContain(
+      '<path',
+    );
   });
 
   // 1D 坐标系 IRPlot → renderPlot 透传（vanilla 直接消费 core IR，与 react 对等）
@@ -345,7 +347,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       coordinate: { type: 'cartesian1D', x: 'x' },
       marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
     };
-    const svg = renderPlot(rugSpec, samples, { width: 480, height: 120 });
+    const svg = renderPlot(rugSpec, samples, { layout: { width: 480, height: 120 } });
 
     expect(svg).toContain('<svg');
     expect(svg).toContain('<ellipse');
@@ -364,7 +366,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     const svg = renderPlot(
       ringSpec,
       { hours: [{ h: 0 }, { h: 90 }, { h: 180 }, { h: 270 }] },
-      { width: 320, height: 320 },
+      { layout: { width: 320, height: 320 } },
     );
 
     expect(svg).toContain('<ellipse');
@@ -405,7 +407,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         },
       ],
     };
-    const svg = renderPlot(heatmapSpec, heatmap, { width: 360, height: 360 });
+    const svg = renderPlot(heatmapSpec, heatmap, { layout: { width: 360, height: 360 } });
 
     expect(svg).toContain('<svg');
 
@@ -440,7 +442,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       ],
     };
 
-    expect(renderPlot(gridSpec, grid, { width: 320, height: 320 })).toMatch(/<rect/);
+    expect(renderPlot(gridSpec, grid, { layout: { width: 320, height: 320 } })).toMatch(/<rect/);
   });
 
   // rule mark（参考线 + 参考带）SSR，纯 spec 驱动端到端产出
@@ -469,7 +471,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { type: 'reference', encoding: { y: { value: 60 }, color: { value: 'crimson' } } },
       ],
     };
-    const svg = renderPlot(ruleSpec, scores, { width: 480, height: 300 });
+    const svg = renderPlot(ruleSpec, scores, { layout: { width: 480, height: 300 } });
 
     expect(svg).toContain('<svg');
 
@@ -503,7 +505,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       coordinate: { type: 'cartesian2D', y: 'y' },
       marks: [{ type: 'reference', encoding: { y: { field: 'threshold' }, color: { field: 'category', scale: 'c' } } }],
     };
-    const svg = renderPlot(perDatumSpec, limits, { width: 480, height: 300 });
+    const svg = renderPlot(perDatumSpec, limits, { layout: { width: 480, height: 300 } });
 
     // 3 行 → 3 条参考线（per-datum field）
     expect((svg.match(/<path/g) ?? []).length).toBeGreaterThanOrEqual(3);
@@ -528,7 +530,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         },
       ],
     };
-    const svg = renderPlot(labelSpec, data, { width: 480, height: 300 });
+    const svg = renderPlot(labelSpec, data, { layout: { width: 480, height: 300 } });
 
     expect(svg).toMatch(/<rect/);
     expect(svg).toContain('<text');
@@ -556,7 +558,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { px: 3, py: 4, label: 'beta' },
       ],
     };
-    const svg = renderPlot(textSpec, labels, { width: 480, height: 300 });
+    const svg = renderPlot(textSpec, labels, { layout: { width: 480, height: 300 } });
 
     expect(svg).toContain('<text');
     expect(svg).toContain('alpha');
@@ -565,7 +567,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
 
   // histogram（bin transform + interval x0/x1 连续 x 区间柱）SSR
   it('histogram bin + interval x0/x1 → SSR 出连续 x 直方柱（<path）', () => {
-    const svg = renderPlot(createHistogramSpec(), histogramData, { width: 480, height: 300 });
+    const svg = renderPlot(createHistogramSpec(), histogramData, { layout: { width: 480, height: 300 } });
 
     expect(svg).toContain('<svg');
 
@@ -607,7 +609,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     };
 
     // 聚合柱（band 矩形 Node）→ <rect>；两组（N/S）两根柱
-    const svg = renderPlot(aggSpec, orders, { width: 480, height: 300 });
+    const svg = renderPlot(aggSpec, orders, { layout: { width: 480, height: 300 } });
 
     expect(svg).toContain('<rect');
     expect((svg.match(/<rect/g) ?? []).length).toBe(2);
@@ -635,8 +637,8 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', encoding: { x: { field: 'dose' }, y: { field: 'response' } } }],
     };
-    const a = renderPlot(jitterSpec, scatterPts, { width: 480, height: 300 });
-    const b = renderPlot(jitterSpec, scatterPts, { width: 480, height: 300 });
+    const a = renderPlot(jitterSpec, scatterPts, { layout: { width: 480, height: 300 } });
+    const b = renderPlot(jitterSpec, scatterPts, { layout: { width: 480, height: 300 } });
 
     expect(a).toBe(b);
     expect(a).toContain('<ellipse');
@@ -646,7 +648,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     const svg = renderPlot(
       createDensityAreaSpec('samples', { bandwidth: { kind: 'value', value: 2 }, fillOpacity: 0.28 }),
       densityData,
-      { width: 480, height: 300 },
+      { layout: { width: 480, height: 300 } },
     );
 
     expect(svg).toContain('<svg');
@@ -655,7 +657,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
   });
 
   it('smooth transform + PathMark spec → SSR 出趋势线 path', () => {
-    const svg = renderPlot(createSmoothTrendSpec(), smoothData, { width: 480, height: 300 });
+    const svg = renderPlot(createSmoothTrendSpec(), smoothData, { layout: { width: 480, height: 300 } });
 
     expect(svg).toContain('<svg');
     expect(svg).toContain('<path');
@@ -663,7 +665,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
   });
 
   it('stat-geom boxplot composition spec → SSR 复用 interval / reference / point', () => {
-    const svg = renderPlot(createBoxplotComposition(), boxplotData, { width: 480, height: 300 });
+    const svg = renderPlot(createBoxplotComposition(), boxplotData, { layout: { width: 480, height: 300 } });
 
     expect(svg).toContain('<svg');
     expect(svg).toContain('<rect');
@@ -704,5 +706,5 @@ it('renders a registered category order identically to its explicit domain', () 
       ],
     },
   };
-  expect(renderPlot(ordered, rows, { fieldOrderDefinitions: [definition] })).toEqual(renderPlot(expected, rows));
+  expect(renderPlot(ordered, rows, { definitions: { fieldOrders: [definition] } })).toEqual(renderPlot(expected, rows));
 });

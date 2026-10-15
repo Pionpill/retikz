@@ -69,10 +69,12 @@ export const preparePlotData = async <TSource = never>(
   } else {
     if (
       spec.data.model?.some(field => field.format !== undefined) ||
-      options.fieldMaps !== undefined ||
+      options.datasetFieldMaps !== undefined ||
       options.resolveField !== undefined
     )
-      throw new RetikzPlotError('Plot canonical result/source bindings cannot use source format, fieldMaps or parsers');
+      throw new RetikzPlotError(
+        'Plot canonical result/source bindings cannot use source format, datasetFieldMaps or parsers',
+      );
 
     if (binding.kind === 'source') {
       if (spec.data.model === undefined)
@@ -118,10 +120,10 @@ export const preparePlotData = async <TSource = never>(
   const executor =
     request.dataTransformExecutor ??
     createDataTransformExecutor<TSource>({
-      transformImplementations: options.transformImplementations,
-      statisticsReducerImplementations: options.statisticsReducerImplementations,
-      rowSelectorImplementations: options.rowSelectorImplementations,
-      regressionImplementations: options.regressionImplementations,
+      transformImplementations: options.implementations?.transforms,
+      statisticsReducerImplementations: options.implementations?.statisticsReducers,
+      rowSelectorImplementations: options.implementations?.rowSelectors,
+      regressionImplementations: options.implementations?.regressions,
     });
   const semantic = { transformRegistry: registries.transformRegistry, ...registries.transformContext };
   const descriptor = describeDataTransformInput(input);

@@ -73,7 +73,7 @@ const collectSceneMeta = (
   return out;
 };
 
-const opts: LowerPlotsOptions = { width: 480, height: 300 };
+const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
 
 const SALES = [
   { month: 0, revenue: 10 },

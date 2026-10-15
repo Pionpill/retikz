@@ -22,7 +22,7 @@ const ROWS = [
 ];
 
 const expandOf = (spec: IRPlot): IRScope =>
-  lowerPlot(spec, { d: ROWS }, { textMeasurer: measureLabel, width: 480, height: 300 }) as IRScope;
+  lowerPlot(spec, { d: ROWS }, { layout: { width: 480, height: 300 }, textMeasurer: measureLabel }) as IRScope;
 
 const baseSpec = (override: Partial<IRPlot> = {}): IRPlot =>
   PlotSchema.parse({
@@ -233,7 +233,7 @@ describe('Plot Source defaults and guide lowering', () => {
           },
         ],
       },
-      { composites: lowerPlots({ d: ROWS }, { width: 480, height: 300 }) },
+      { composites: lowerPlots({ d: ROWS }, { layout: { width: 480, height: 300 } }) },
     ).scene;
     const fills = primitiveFillsOf(scene.primitives);
 

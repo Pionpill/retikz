@@ -71,7 +71,7 @@ const renderPlotImpl = (
     },
     { ...providerDefinitions, themeStyles: options.themeStyles },
   ).scene;
-  const svg = renderToSvgString(scene, { output: { width: options.width, height: options.height } });
+  const svg = renderToSvgString(scene, { output: { width: options.layout?.width, height: options.layout?.height } });
   if (!isLineageOptions(options)) return svg;
 
   const { lineage } = lowerPlotWithLineage(spec, data, {
@@ -84,7 +84,7 @@ const renderPlotImpl = (
 
 /**
  * 把 IRPlot 与外部数据渲染为 SVG 字符串或带 lineage 的 runtime 结果
- * @description 该入口不依赖 DOM；直接用已类型化的 IRPlot 与外部 datasets 下沉并渲染。`width` / `height` 同时控制 Plot 绘图区与 SVG 输出尺寸；传入 lineage 配置时返回 `{ svg, lineage }`，否则返回 SVG 字符串
+ * @description 该入口不依赖 DOM；直接用已类型化的 IRPlot 与外部 datasets 下沉并渲染。`layout.width` / `layout.height` 提供运行时尺寸与 SVG 输出尺寸；传入 lineage 配置时返回 `{ svg, lineage }`，否则返回 SVG 字符串
  * @throws 缺少引用的数据集或 lowering 失败时透传对应错误
  */
 export const renderPlot = renderPlotImpl as RenderPlot;

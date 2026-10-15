@@ -2,8 +2,11 @@ export * from './contract';
 export * from './error';
 export type {
   LowerPlotsOptions,
-  PlotLineageLowerOptions,
   PlotCompileEnvironment,
+  PlotDefinitions,
+  PlotImplementations,
+  PlotLayoutOverrides,
+  PlotLineageLowerOptions,
   PlotStandaloneOptions,
 } from './pipeline';
 export {

@@ -37,9 +37,8 @@ const WIDTH = 480;
 const HEIGHT = 240;
 
 const opts = (coordinates: Array<AnyCoordinateDefinition>): LowerPlotsOptions => ({
-  width: WIDTH,
-  height: HEIGHT,
-  coordinates,
+  layout: { width: WIDTH, height: HEIGHT },
+  definitions: { coordinates },
 });
 
 const MID_Y = HEIGHT / 2;

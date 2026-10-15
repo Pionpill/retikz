@@ -21,7 +21,7 @@ React mark props are assembled into `IRPlot`, a serializable drawing configurati
 
 <ComponentPreview files="channel-flow" size="lg" hideCode type="flow" />
 
-`IRPlot` stores field or constant bindings, not functions. Built-ins and custom channels injected through `channelDefinitions` share the same registration, resolution, and delivery path, so extending channels does not require another configuration format.
+`IRPlot` stores field or constant bindings, not functions. Built-ins and custom channels injected through `definitions.channels` share the same registration, resolution, and delivery path, so extending channels does not require another configuration format.
 
 <SourceLinks
   sources={[

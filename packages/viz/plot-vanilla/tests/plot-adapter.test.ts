@@ -86,8 +86,8 @@ describe('Plot Vanilla Tier2 adapter', () => {
 
   it('exposes one Plot-owned contribution builder for complete IRPlot inputs', () => {
     const spec = salesSpec('sales');
-    const result = resolvePlotContribution({ spec, datasets, lowerOptions: { width: 360, height: 200 } });
-    const provider = createPlotProvider({ datasets, lowerOptions: { width: 360, height: 200 } });
+    const result = resolvePlotContribution({ spec, datasets, lowerOptions: { layout: { width: 360, height: 200 } } });
+    const provider = createPlotProvider({ datasets, lowerOptions: { layout: { width: 360, height: 200 } } });
 
     expect(result.spec).toEqual(spec);
     expect(result.contribution.roots).toEqual([
@@ -115,7 +115,9 @@ describe('Plot Vanilla Tier2 adapter', () => {
     const spec = salesSpec('sales');
     const input = structuredClone(spec);
     const inputScene = scene({
-      layers: [layer({ id: 'chart', children: [embedPlot({ spec }, datasets, { width: 360, height: 200 })] })],
+      layers: [
+        layer({ id: 'chart', children: [embedPlot({ spec }, datasets, { layout: { width: 360, height: 200 } })] }),
+      ],
     });
     const svg = renderToSvgString(inputScene, {
       adapters: [PlotInputEmbedAdapter],

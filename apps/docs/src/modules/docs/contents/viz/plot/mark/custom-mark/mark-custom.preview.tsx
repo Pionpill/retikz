@@ -39,7 +39,7 @@ export const MarkCustomPreview = (values: MarkCustomPreviewValues) => {
 
   return (
     <Layout viewBox={{ x: -15, y: -15, width: 450, height: 290 }}>
-      <Plot spec={spec} data={{ glyphs: glyphRows }} width={420} height={260} markDefinitions={[diamondMark]} />
+      <Plot spec={spec} data={{ glyphs: glyphRows }} width={420} height={260} definitions={{ marks: [diamondMark] }} />
     </Layout>
   );
 };

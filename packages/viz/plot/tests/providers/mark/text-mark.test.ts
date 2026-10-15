@@ -23,7 +23,7 @@ const HEIGHT = 300;
 const expandOf = (
   spec: IRPlot,
   datasets: Datasets,
-  options: LowerPlotsOptions = { width: WIDTH, height: HEIGHT },
+  options: LowerPlotsOptions = { layout: { width: WIDTH, height: HEIGHT } },
 ): IRScope => {
   return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
@@ -145,8 +145,8 @@ describe('contract priority-1 宿主 label（填 datum Node.label）', () => {
   it('label-resolve-runtime：resolveLabel(row) 覆盖 field/displayFormat，且 IR 内不含函数', () => {
     const spec = intervalSpec({ content: { field: 'revenue', displayFormat: ',.0f' } }, 'bars');
     const layer = expandOf(spec, BAR_ROWS, {
-      width: WIDTH,
-      height: HEIGHT,
+      layout: { width: WIDTH, height: HEIGHT },
+
       resolveLabel: { bars: row => `${row.month}=${row.revenue}` },
     });
     const nodes = nodesOf(layer);
@@ -316,8 +316,8 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
   it('text-resolve-runtime：resolveLabel(row) 覆盖 text.field（按 mark id 注入）', () => {
     const nodes = nodesOf(
       expandOf(textSpec({ text: { field: 'label' } }, { id: 't1' }), POINT_ROWS, {
-        width: WIDTH,
-        height: HEIGHT,
+        layout: { width: WIDTH, height: HEIGHT },
+
         resolveLabel: { t1: row => `<${row.label}>` },
       }),
     );

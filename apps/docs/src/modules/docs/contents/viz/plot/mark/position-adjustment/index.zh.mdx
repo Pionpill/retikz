@@ -50,15 +50,15 @@ const screenNudge = definePositionAdjustment<ScreenNudge>({
 
 ## 注入宿主
 
-React 通过 `<Plot positionAdjustmentDefinitions={[screenNudge]}>` 注入，Point 的 `placement.adjustments` 按 `kind` 引用：
+React 通过 `<Plot definitions={{ positionAdjustments: [screenNudge] }}>` 注入，Point 的 `placement.adjustments` 按 `kind` 引用：
 
 ```tsx
-<Plot data={rows} positionAdjustmentDefinitions={[screenNudge]}>
+<Plot data={rows} definitions={{ positionAdjustments: [screenNudge] }}>
   <PointMark x="category" y="value" placement={{ adjustments: [{ kind: 'screen-nudge', dx: 12, dy: -8 }] }} />
 </Plot>
 ```
 
-Vanilla 的 `renderPlot`、`embedPlot` 与直接 `lowerPlots` 都通过 `LowerPlotsOptions.positionAdjustmentDefinitions` 转发同一数组。Definition 不进入 `IRPlot`，因此 spec 仍可 JSON round-trip。
+Vanilla 的 `renderPlot`、`embedPlot` 与直接 `lowerPlots` 都通过 `LowerPlotsOptions.definitions.positionAdjustments` 转发同一数组。Definition 不进入 `IRPlot`，因此 spec 仍可 JSON round-trip。
 
 ## 执行机制
 
@@ -122,11 +122,11 @@ position scale
 
 宿主注入：
 
-| 宿主                                   | 公开契约            | 注入字段                        |
-| -------------------------------------- | ------------------- | ------------------------------- |
-| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `positionAdjustmentDefinitions` |
-| `@retikz/plot-vanilla` 的 `renderPlot` | `RenderPlotOptions` | `positionAdjustmentDefinitions` |
-| `@retikz/plot` 的 `lowerPlots`         | `LowerPlotsOptions` | `positionAdjustmentDefinitions` |
+| 宿主                                   | 公开契约            | 注入字段                          |
+| -------------------------------------- | ------------------- | --------------------------------- |
+| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `definitions.positionAdjustments` |
+| `@retikz/plot-vanilla` 的 `renderPlot` | `RenderPlotOptions` | `definitions.positionAdjustments` |
+| `@retikz/plot` 的 `lowerPlots`         | `LowerPlotsOptions` | `definitions.positionAdjustments` |
 
 ## 相关
 

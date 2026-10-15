@@ -86,7 +86,11 @@ const spec = plot({
   ],
 });
 
-document.getElementById('plot')!.innerHTML = renderPlot(spec, { measurements }, { width: 400, height: 220 });
+document.getElementById('plot')!.innerHTML = renderPlot(
+  spec,
+  { measurements },
+  { layout: { width: 400, height: 220 } },
+);
 ```
 
 The value of `data.reference` must match the dataset name passed to `renderPlot()`. `scales` defines two linear scales, and `coordinate` assigns them to a two-dimensional Cartesian coordinate system. `marks` describes the line field bindings and `order` connects measurements in time order; `guides` describes the axes. Supplying data separately lets you reuse the graphic description with different rows.

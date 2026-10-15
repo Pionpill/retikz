@@ -277,7 +277,7 @@ describe('Point Chart recipe Definitions', () => {
         family: 'point',
         recipe: StripChartDefinition,
         themeDefinitions: [],
-        runtimeDefinitions: { scaleDefinitions: [customDiscreteScale] },
+        runtimeDefinitions: { scales: [customDiscreteScale] },
       },
     ]).runtime;
     const source = StripChartSchema.parse({

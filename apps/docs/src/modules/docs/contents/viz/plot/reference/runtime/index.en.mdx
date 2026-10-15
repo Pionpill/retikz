@@ -1,4 +1,4 @@
----
+﻿---
 title: Runtime Overview
 description: Query how React, Vanilla, and direct Plot IR converge on one lowering path that produces Scene, rendered output, and separate runtime artifacts through Core.
 ---
@@ -44,7 +44,17 @@ For a Vanilla runtime source, `{ input }` runs `normalizePlot` exactly once. `{ 
 | Vanilla              | `plot(InputPlot)`, `{ input: InputPlot }`, or `{ spec: IRPlot }` | InputPlot forms normalize once; `spec` enters directly; unknown JSON requires Plot schema/parser first |
 | Runtime dependencies | datasets, field maps, resolvers, and Definitions                 | No                                                                                                     |
 
-`LowerPlotsOptions.positionAdjustmentDefinitions` is the shared injection point for placement logic. React `<Plot>` and Vanilla runtimes forward the array unchanged; adapters do not compute step, randomness, coordinate projection, initializers, or glyph containment.
+Runtime options are grouped by responsibility. The corresponding `PlotLayoutOverrides`, `PlotDefinitions`, and `PlotImplementations` types are exported from `@retikz/plot` for independent declaration and reuse:
+
+| Group             | Fields                                                                                                                                                                              |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `layout`          | `width`, `height`, `fontSize`, `margin`                                                                                                                                             |
+| `definitions`     | `coordinates`, `transforms`, `statisticsReducers`, `rowSelectors`, `regressions`, `scales`, `channels`, `marks`, `positionAdjustments`, `formats`, `fieldOrders`, `plotThemeStyles` |
+| `implementations` | `transforms`, `statisticsReducers`, `rowSelectors`, `regressions`                                                                                                                   |
+
+For example, `renderPlot(spec, data, { layout: { width: 480, height: 300 } })`. React `width` / `height` still declare Plot IR dimensions; `layout` supplies runtime layout defaults. IR dimensions take precedence.
+
+`LowerPlotsOptions.definitions.positionAdjustments` is the shared injection point for placement logic. React `<Plot>` and Vanilla runtimes forward the array unchanged; adapters do not compute step, randomness, coordinate projection, initializers, or glyph containment.
 
 ## Lowering and Outputs
 
@@ -76,8 +86,8 @@ Axis and legend measurement uses Node layout in the current Core compile context
     {
       label: 'React props are collected and dispatched to Plot Vanilla authoring',
       path: 'packages/viz/plot-react/src/plot-runtime.ts',
-      startLine: 151,
-      endLine: 230,
+      startLine: 153,
+      endLine: 203,
     },
     {
       label: 'React Plot creates Plot Vanilla embed input',

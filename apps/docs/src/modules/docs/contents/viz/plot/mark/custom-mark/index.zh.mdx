@@ -1,6 +1,6 @@
 ---
 title: 自定义图元
-description: 用 MarkDefinition 登记源字段、声明通道消费并把数据行下沉为 Core IR，再通过 markDefinitions 注入 Plot 图元注册表。
+description: 用 MarkDefinition 登记源字段、声明通道消费并把数据行下沉为 Core IR，再通过 definitions.marks 注入 Plot 图元注册表。
 ---
 
 自定义图元把数据行下沉成自己的 Core IR 组合。Plot IR 只保存自定义 `type`、`encoding`、`transform` 和其它 JSON 配置；字段收集、通道消费与几何生成留在运行时 `MarkDefinition` 中。
@@ -37,7 +37,7 @@ description: 用 MarkDefinition 登记源字段、声明通道消费并把数据
 
 ## 注入宿主
 
-通过 `<Plot markDefinitions={[diamondMark]}>` 注入 definition；Vanilla 源码通过 `renderPlot` options 注入同一 definition。
+通过 `<Plot definitions={{ marks: [diamondMark] }}>` 注入 definition；Vanilla 源码通过 `renderPlot` options 注入同一 definition。
 
 自定义图元没有专属 React 组件，使用完整 spec 入口创作：
 
@@ -63,7 +63,7 @@ const spec: IRPlot = {
   ],
 };
 
-<Plot spec={spec} data={{ glyphs: glyphRows }} markDefinitions={[diamondMark]} />;
+<Plot spec={spec} data={{ glyphs: glyphRows }} definitions={{ marks: [diamondMark] }} />;
 ```
 
 definition 不进入 spec，因此 spec 仍可 JSON round-trip。
@@ -148,10 +148,10 @@ marks: [{ type: 'diamond', renderer: () => 'svg' }];
 
 宿主注入：
 
-| 宿主                                   | 公开契约            | 注入字段                                 |
-| -------------------------------------- | ------------------- | ---------------------------------------- |
-| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `markDefinitions`                        |
-| `@retikz/plot-vanilla` 的 `renderPlot` | `RenderPlotOptions` | 继承 `LowerPlotsOptions.markDefinitions` |
+| 宿主                                   | 公开契约            | 注入字段                                   |
+| -------------------------------------- | ------------------- | ------------------------------------------ |
+| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `definitions.marks`                        |
+| `@retikz/plot-vanilla` 的 `renderPlot` | `RenderPlotOptions` | 继承 `LowerPlotsOptions.definitions.marks` |
 
 ## 相关
 

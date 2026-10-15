@@ -1167,7 +1167,7 @@ const buildChartCode = (
       ...(options.theme === undefined ? {} : { theme: options.theme }),
       themeStyles: '__CORE_THEME_STYLES__',
       themeDefinitions: '__CHART_THEME_STYLES__',
-      lowerOptions: { plotThemeStyles: '__PLOT_THEME_STYLES__' },
+      lowerOptions: { definitions: { plotThemeStyles: '__PLOT_THEME_STYLES__' } },
     })
       .replace("'__DATASET__'", dataExpression)
       .replace("'__CORE_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.core')
@@ -1202,7 +1202,7 @@ const buildChartPreview = (
     ...(options.theme === undefined ? {} : { theme: options.theme }),
     themeStyles: PreviewThemeDefinitionBundle.core,
     themeDefinitions: PreviewThemeDefinitionBundle.chart,
-    lowerOptions: { plotThemeStyles: PreviewThemeDefinitionBundle.plot },
+    lowerOptions: { definitions: { plotThemeStyles: PreviewThemeDefinitionBundle.plot } },
   };
 
   const runtime = (() => {

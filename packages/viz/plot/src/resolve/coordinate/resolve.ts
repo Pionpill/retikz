@@ -55,7 +55,7 @@ export const resolveCoordinateDefinition = (
   const definition = context.coordinateRegistry.get(operation.type);
   if (definition === undefined) {
     throw new RetikzPlotError(
-      `lowerPlots: coordinate type "${operation.type}" is not registered; pass a CoordinateDefinition via options.coordinates`,
+      `lowerPlots: coordinate type "${operation.type}" is not registered; pass a CoordinateDefinition via options.definitions.coordinates`,
     );
   }
 

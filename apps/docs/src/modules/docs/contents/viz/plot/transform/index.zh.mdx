@@ -115,7 +115,7 @@ const spec = plot({
   ],
 });
 
-document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width: 360, height: 220 });
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
 ```
 
 </DocTab>
@@ -152,7 +152,7 @@ const spec: IRPlot = {
   ],
 };
 
-document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width: 360, height: 220 });
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
 ```
 
 </DocTab>
@@ -260,7 +260,7 @@ const localConfig = {
 
 ## 自定义变换
 
-自定义 Definition 和 Implementation 从 `@retikz/data` 定义，Plot 通过 `transformDefinitions` 与 `transformImplementations` 接收它们，声明仍使用同一 `operation` 结构。完整定义过程见 [Data 扩展机制](/viz/data/transform/extensions)。
+自定义 Definition 和 Implementation 从 `@retikz/data` 定义，Plot 通过 `definitions.transforms` 与 `implementations.transforms` 接收它们，声明仍使用同一 `operation` 结构。完整定义过程见 [Data 扩展机制](/viz/data/transform/extensions)。
 
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
@@ -268,7 +268,7 @@ const localConfig = {
 下面仅展示注入位置；`definition`、`implementation` 和匹配的 `operation` 来自已有的 Data 扩展。
 
 ```tsx
-<Plot data={rows} transformDefinitions={[definition]} transformImplementations={[implementation]}>
+<Plot data={rows} definitions={{ transforms: [definition] }} implementations={{ transforms: [implementation] }}>
   <PlotTransform operation={operation} />
   {/* 图元绑定该变换声明的输出字段 */}
 </Plot>
@@ -283,10 +283,7 @@ IR 中保存变换声明；运行时依赖放在 `renderPlot` 的 options 中。
 renderPlot(
   spec,
   { rows },
-  {
-    transformDefinitions: [definition],
-    transformImplementations: [implementation],
-  },
+  { definitions: { transforms: [definition] }, implementations: { transforms: [implementation] } },
 );
 ```
 

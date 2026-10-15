@@ -1,6 +1,6 @@
 ---
 title: Custom Channels
-description: Use a ChannelDefinition to resolve fields or constants into existing Core properties, then inject it into Plot's shared channel registry through channelDefinitions.
+description: Use a ChannelDefinition to resolve fields or constants into existing Core properties, then inject it into Plot's shared channel registry through definitions.channels.
 ---
 
 After learning [field and constant bindings](/viz/plot/channel/binding), you can define your own channel names and value mappings. This page maps `score` to point opacity through `intensity`: higher scores produce more opaque points, while a constant gives every point the same opacity.
@@ -126,7 +126,7 @@ React and Vanilla share the definition above; choose the host used by your proje
 Inject the definition on `Plot`, then reference its registered name in the child mark’s `channels`:
 
 ```tsx
-<Plot data={customChannelPoints} channelDefinitions={[intensityChannel]}>
+<Plot data={customChannelPoints} definitions={{ channels: [intensityChannel] }}>
   <PointMark x="x" y="y" channels={{ intensity: 'score' }} />
 </Plot>
 ```
@@ -144,13 +144,7 @@ A string in the React DSL means a field name; use `{ kind: 'constant', value }` 
 Inject through the third argument of `renderPlot`. Here, `spec` is the Plot configuration in the preview’s Vanilla source, where `encoding.channels.intensity` already binds score:
 
 ```ts
-const svg = renderPlot(
-  spec,
-  { points: customChannelPoints },
-  {
-    channelDefinitions: [intensityChannel],
-  },
-);
+const svg = renderPlot(spec, { points: customChannelPoints }, { definitions: { channels: [intensityChannel] } });
 ```
 
 The Vanilla example uses Plot IR directly: bind a field with `{ field }` or a constant with `{ value }`:
@@ -204,7 +198,7 @@ These are the entries used by this example. See the [encoding reference](/viz/pl
         'The definition type used here. resolve takes the data context and current mark together and produces a per-row resolver and optional descriptor. deliver receives the node, resolved value, and delivery context. legend supports swatch, ramp, size, and symbol; this example uses ramp for continuous opacity.',
     },
     {
-      name: 'channelDefinitions',
+      name: 'definitions.channels',
       kind: 'property',
       type: 'Array<AnyChannelDefinition>',
       description:

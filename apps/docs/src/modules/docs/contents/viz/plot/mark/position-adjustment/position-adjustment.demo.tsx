@@ -6,7 +6,7 @@ import { screenNudge } from './position-adjustment.definition';
 
 /** 自定义 screen-space initializer 的定义、注入与引用闭环 */
 const Demo: FC = () => (
-  <Plot data={positionAdjustmentRows} width={420} height={260} positionAdjustmentDefinitions={[screenNudge]}>
+  <Plot data={positionAdjustmentRows} width={420} height={260} definitions={{ positionAdjustments: [screenNudge] }}>
     <PointMark
       x="category"
       y="value"

@@ -442,7 +442,7 @@ describe('mark padding capabilities', () => {
     const result = lowerPlotWithDataArtifact(
       spec,
       { rows },
-      { textMeasurer: measureLabel, scaleDefinitions: [customScale], markDefinitions: [customMark] },
+      { definitions: { scales: [customScale], marks: [customMark] }, textMeasurer: measureLabel },
     );
     const frame = [...result.dataArtifact.frameByCoordinateScopeId.values()][0];
     const scale = frame.roleScales!.x!;

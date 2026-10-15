@@ -8,7 +8,7 @@ import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const opts: LowerPlotsOptions = { width: 480, height: 300 };
+const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
 
 const expandOf = (
   spec: IRPlot,
@@ -152,9 +152,9 @@ describe('smooth path composition (contract)', () => {
         ],
       },
       {
+        layout: { width: 480, height: 300 },
         environment: {},
-        width: 480,
-        height: 300,
+
         lineage: { rowValues: { maxRows: 10, fields: ['trendX', 'trendY'] } },
       },
     );
