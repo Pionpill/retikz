@@ -48,6 +48,8 @@
 
 关系文字使用 Path / Draw 的 label，不额外手写文字 Node。边标签统一 12px gray；position、side、sloped、distance 与默认一致时省略，仅为真实布局需要覆盖。竖向连线按需指定 right / left；斜标签按旋转后的 bounds 留空间，先调整结构位置与路径，不盲目增大 distance。
 
+- 示意图连线优先横平竖直；通过稳定 id 或语义锚点连接，直连用 `horizontalTo` / `verticalTo`，折角用 `|-` / `-|`，多段正交路由用 `-|-` / `|-|`。由组件计算端点与转折点，不手算坐标拼接连线；仅展示真实几何方向时使用斜线。
+
 ## 布局与几何
 
 - Layout 输出响应式限制为 `maxWidth: '100%', height: 'auto'`；width/height 决定输出尺寸，viewBox 决定坐标范围，不能混为一谈。
