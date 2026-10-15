@@ -252,7 +252,9 @@ const sizeElement = (
     width:
       input.allocatedWidth ??
       Math.max(input.minimumSize.width, input.contentInsets.left + children.width + input.contentInsets.right),
-    height: Math.max(input.minimumSize.height, input.contentInsets.top + children.height + input.contentInsets.bottom),
+    height:
+      input.allocatedHeight ??
+      Math.max(input.minimumSize.height, input.contentInsets.top + children.height + input.contentInsets.bottom),
     margin: ZERO_INSETS,
     children,
   };
@@ -438,7 +440,14 @@ const flattenElements = (
       }
 
       const contentWidth = bounds.width - element.input.contentInsets.left - element.input.contentInsets.right;
-      const contentHeight = bounds.height - element.input.contentInsets.top - element.input.contentInsets.bottom;
+      const naturalHeight = Math.max(
+        element.input.minimumSize.height,
+        element.input.contentInsets.top + element.children.height + element.input.contentInsets.bottom,
+      );
+      const contentHeight =
+        (element.input.allocatedHeight === undefined ? bounds.height : naturalHeight) -
+        element.input.contentInsets.top -
+        element.input.contentInsets.bottom;
       const horizontalOffset =
         element.input.layout.direction === 'down' || element.input.layout.direction === 'up'
           ? (contentWidth - element.children.width) / 2
