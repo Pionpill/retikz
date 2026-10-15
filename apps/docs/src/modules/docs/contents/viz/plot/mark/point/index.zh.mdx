@@ -351,9 +351,35 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
   description="本节解释内部实现，仅使用组件时可跳过，直接查阅后面的 API 参考。"
 />
 
-组件先将便捷属性归一化为 `type: 'point'` 的 Plot 配置。位置比例尺把字段值转换成坐标系可用的数值，placement 执行位置调整；图元再使用最终位置生成 Node。这里的 Node 是后续渲染使用的内部绘图对象。
+### 点的解析
 
-普通点与文本点在几何生成时分支：普通点消费尺寸和形状，再附加标签；配置了文本通道时，生成无形状边框的文字对象，并应用 `dx`、`dy`。无效位置或缺失文字会跳过对应行。最后按颜色组织图层，并应用图元的图层设置。
+点图元对应坐标系中的一个点，与坐标系的关联在于位置定位：坐标系将数据位置映射为绘图位置，点图元再在该位置生成一个 Node 节点。节点可以呈现为圆、星形或文字，其形状和外观由 Node 自身的属性决定，不随坐标空间的几何形式发生变形。
+
+与需要连接多个顶点的 [PathMark](/viz/plot/mark/path) 不同，点图元不建立数据行之间的连接或顺序关系；与需要解释起止范围的 [IntervalMark](/viz/plot/mark/interval) 不同，它也不把坐标空间中的一段范围展开成几何区域。每条有效数据独立产生一个节点。数据变换、共享比例尺、留白求解或位置调整仍可以综合多行数据，但这些处理不改变点图元逐行生成节点的方式。
+
+坐标系负责确定节点中心的位置，节点自身的形状随后在绘图空间中解析。例如，相同大小的圆点从直角坐标切换到极坐标后，中心按角度和半径重新定位，圆形不会随坐标网格弯曲成扇形。这里的独立性指投影完成后的节点形状；切换坐标系仍会影响位置、留白和投影前的位置调整。
+
+点图元最终 lower（下沉转换）为 [Node](/kernel/components/node)。目前点图元的可见内容都由 Node 能力完成，Plot 负责把数据和视觉通道转换为节点的位置与属性。解析链路如下：
+
+<ComponentPreview files="point-resolution-flow" hideCode type="flow" size="lg" />
+
+图中上排完成数据和位置解析，下排从生成 Node 开始，进入节点编译与渲染。各阶段的职责如下：
+
+1. **统一输入**：React 组件复用 Vanilla 的归一化能力，将字段名、常量和便捷属性转换为 `type: 'point'` 的 Plot 配置；直接使用 Source IR 时从这份配置进入后续处理。
+2. **准备数据与通道**：Plot 取得数据视图并执行相应变换，解析位置字段和尺寸、颜色、形状、文字等视觉通道。字段通道通过对应比例尺得到逐行属性值，常量通道提供固定值。
+3. **确定最终位置**：位置比例尺先映射字段值，坐标系再将它们投影到绘图空间。配置 placement 时，role 阶段调整在投影前执行，screen 阶段调整在投影后执行；留白与布局协调提供最终使用的尺度和坐标帧。
+4. **逐行生成 Node**：普通点使用最终位置创建 `type: 'node'`，将尺寸、形状、绘制样式等通道结果写入节点，并附加标签和锚点。配置文字通道时，生成带文字、无可见形状边框的 Node，并应用文本位置偏移 `dx`、`dy`。无效位置或缺失文字会跳过相应行；普通点的尺寸字段缺失或非有限时跳过，负尺寸则报错。
+5. **交给节点编译与渲染**：Plot 将节点组织进带有默认样式和图层设置的 Scope。后续 Node 编译负责形状、文字、标签及样式的解析，生成 Scene，再由 SVG 或 Canvas 后端绘制；点图元不另外维护一套形状或文字绘制逻辑。
+
+<SourceLinks
+  sources={[
+    { label: '组件输入与标签归一化', path: 'packages/viz/plot-vanilla/src/normalize/plot/mark-normalizers.ts' },
+    { label: 'Plot 通道、位置与下沉调度', path: 'packages/viz/plot/src/pipeline/expand/lower.ts' },
+    { label: '投影前后的阶段调整', path: 'packages/viz/plot/src/pipeline/placement/resolve.ts' },
+    { label: '逐行生成 Node 与文本分支', path: 'packages/viz/plot/src/providers/mark/features/point.ts' },
+    { label: '节点通道解析与属性传递', path: 'packages/viz/plot/src/providers/channel/features/node.ts' },
+  ]}
+/>
 
 ### 留白计算
 
@@ -373,10 +399,6 @@ Plot 按图元实际使用的位置尺度汇总需求。最大半径加净空构
   sources={[
     { label: '最大半径与策略需求', path: 'packages/viz/plot/src/resolve/scale/point-padding.ts' },
     { label: '共享尺度约束求解', path: 'packages/viz/plot/src/resolve/scale/mark-domain.ts' },
-    { label: '组件输入与标签归一化', path: 'packages/viz/plot-vanilla/src/normalize/plot/mark-normalizers.ts' },
-    { label: '位置调整的执行阶段', path: 'packages/viz/plot/src/pipeline/placement/resolve.ts' },
-    { label: '普通点与文本点的生成分支', path: 'packages/viz/plot/src/providers/mark/features/point.ts' },
-    { label: '尺寸字段解析与过滤', path: 'packages/viz/plot/src/providers/channel/features/node.ts' },
   ]}
 />
 

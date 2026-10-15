@@ -351,9 +351,47 @@ The x role is an angle in polar coordinates. Discrete angles use a tick-step rat
   description="This section explains internal implementation. Skip to API Reference if you only need to use the component."
 />
 
-The component normalizes shorthand properties into a Plot configuration with `type: 'point'`. Position scales convert field values into values understood by the coordinate system, and placement applies position adjustments. The mark uses the resulting positions to create Node objects for rendering.
+### Resolving a point
 
-Geometry generation branches between ordinary points and text points. Ordinary points consume size and shape, then attach labels. A text channel instead produces borderless text and applies `dx` and `dy`. Invalid positions or missing text skip the corresponding rows. Finally, points are organized by color and receive the mark layer configuration.
+A point mark represents a point in a coordinate system and uses that system to determine its position. The coordinate system maps a data position to a drawing position, where the mark creates a Node. The node may appear as a circle, star, or text; its own properties determine its shape and appearance, without deforming it to follow the geometry of the coordinate space.
+
+Unlike [PathMark](/viz/plot/mark/path), which connects vertices, a point mark establishes no connections or ordering between data rows. Unlike [IntervalMark](/viz/plot/mark/interval), which interprets start and end bounds, it does not expand a coordinate-space range into a geometric region. Each valid row produces an independent node. Data transforms, shared scales, padding solvers, and placement adjustments may still consider multiple rows; this does not change how the point mark generates nodes row by row.
+
+The coordinate system determines the node's center; its shape is then resolved in drawing space. For example, switching a circle of a fixed size from Cartesian to polar coordinates relocates its center by angle and radius, without bending the circle into a sector along the coordinate grid. This independence concerns the shape after projection. Coordinates still affect position, padding, and adjustments performed before projection.
+
+A point mark ultimately lowers into a [Node](/kernel/components/node). All visible point-mark content currently uses Node capabilities; Plot translates data and visual channels into node positions and properties. The resolution chain is:
+
+<ComponentPreview files="point-resolution-flow" hideCode type="flow" size="lg" />
+
+The upper row resolves data and positions. The lower row starts with Node generation and continues through node compilation and rendering. Each stage has the following responsibilities:
+
+1. **Normalize inputs**: React components reuse Vanilla normalization to turn field names, constants, and shorthand properties into a Plot configuration with `type: 'point'`. Direct Source IR enters the remaining stages from this configuration.
+2. **Prepare data and channels**: Plot obtains data views, applies the relevant transforms, and resolves position fields and visual channels such as size, color, shape, and text. Field channels use their scales to produce per-row values; constant channels supply fixed values.
+3. **Determine final positions**: Position scales map field values before the coordinate system projects them into drawing space. With placement configured, role-stage adjustments run before projection and screen-stage adjustments run afterward. Padding and layout coordination supply the final scales and coordinate frames.
+4. **Generate a Node for each row**: Ordinary points create `type: 'node'` at the final position, deliver size, shape, and drawing-style channel values to the node, and attach labels and anchors. A text channel creates a Node with text and no visible shape border, applying `dx` and `dy` as text-position offsets. Invalid positions or missing text skip the corresponding rows. Ordinary points also skip missing or non-finite size fields; negative sizes raise an error.
+5. **Compile and render nodes**: Plot groups the nodes into Scopes with default styles and layer settings. Node compilation resolves shapes, text, labels, and styles into a Scene, which SVG or Canvas renders. The point mark maintains no separate shape or text drawing implementation.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Component inputs and label normalization',
+      path: 'packages/viz/plot-vanilla/src/normalize/plot/mark-normalizers.ts',
+    },
+    {
+      label: 'Plot channel, placement, and lowering orchestration',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
+    },
+    { label: 'Adjustments before and after projection', path: 'packages/viz/plot/src/pipeline/placement/resolve.ts' },
+    {
+      label: 'Per-row Node generation and text branch',
+      path: 'packages/viz/plot/src/providers/mark/features/point.ts',
+    },
+    {
+      label: 'Node channel resolution and property delivery',
+      path: 'packages/viz/plot/src/providers/channel/features/node.ts',
+    },
+  ]}
+/>
 
 ### Padding calculation
 
@@ -373,13 +411,6 @@ Plot collects demands by each mark's actual position-scale binding. Maximum radi
   sources={[
     { label: 'Maximum radius and policy demands', path: 'packages/viz/plot/src/resolve/scale/point-padding.ts' },
     { label: 'Shared scale constraints', path: 'packages/viz/plot/src/resolve/scale/mark-domain.ts' },
-    {
-      label: 'Component inputs and label normalization',
-      path: 'packages/viz/plot-vanilla/src/normalize/plot/mark-normalizers.ts',
-    },
-    { label: 'Position adjustment stages', path: 'packages/viz/plot/src/pipeline/placement/resolve.ts' },
-    { label: 'Point and text generation branches', path: 'packages/viz/plot/src/providers/mark/features/point.ts' },
-    { label: 'Size field resolution and filtering', path: 'packages/viz/plot/src/providers/channel/features/node.ts' },
   ]}
 />
 
