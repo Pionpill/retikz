@@ -358,8 +358,6 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 ### 点的解析
 
-默认情况下，点图元只从坐标系读取位置。显式配置坐标方向对齐时，还会读取当前位置的局部切向，推导所选切向或法向的角度，再叠加 `rotate`，最终向 Node 传递一个数值旋转角。方向查询使用角色空间位置调整后的参数；不会自动翻正文字，也不会使节点沿曲线变形。极坐标圆心的角向、折线尖点等没有唯一方向的位置会报错。
-
 点图元对应坐标系中的一个点，默认只依赖坐标系定位：坐标系将数据位置映射为绘图位置，点图元再在该位置生成一个 Node 节点。节点可以呈现为圆、星形或文字，其形状和外观由 Node 自身的属性决定，不随坐标空间的几何形式发生变形；显式方向对齐只额外改变节点的旋转角。
 
 与需要连接多个顶点的 [PathMark](/viz/plot/mark/path) 不同，点图元不建立数据行之间的连接或顺序关系；与需要解释起止范围的 [IntervalMark](/viz/plot/mark/interval) 不同，它也不把坐标空间中的一段范围展开成几何区域。每条有效数据独立产生一个节点。数据变换、共享比例尺、留白求解或位置调整仍可以综合多行数据，但这些处理不改变点图元逐行生成节点的方式。
@@ -368,7 +366,7 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 点图元最终 lower（下沉转换）为 [Node](/kernel/components/node)。目前点图元的可见内容都由 Node 能力完成，Plot 负责把数据和视觉通道转换为节点的位置与属性。解析链路如下：
 
-<ComponentPreview files="point-resolution-flow" hideCode type="flow" size="lg" />
+<ComponentPreview files="point-resolution-flow" hideCode type="flow" size="md" />
 
 图中上排完成数据和位置解析，下排从生成 Node 开始，进入节点编译与渲染。各阶段的职责如下：
 
@@ -385,6 +383,43 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
     { label: '投影前后的阶段调整', path: 'packages/viz/plot/src/pipeline/placement/resolve.ts' },
     { label: '逐行生成 Node 与文本分支', path: 'packages/viz/plot/src/providers/mark/features/point.ts' },
     { label: '节点通道解析与属性传递', path: 'packages/viz/plot/src/providers/channel/features/node.ts' },
+  ]}
+/>
+
+### 方向对齐
+
+坐标系除了能回答“这个点画在哪里”，还可以回答“从这里沿某个坐标方向走，应该朝哪边”。方向对齐就是利用这个信息，让节点跟着坐标方向旋转。
+
+下面是启用坐标方向对齐后的整体流程：坐标系提供查询能力，PointMark 取得方向并合成角度，最后交给 Node 应用。
+
+<ComponentPreview files="point-orientation-flow" hideCode type="flow" size="md" />
+
+**1. 坐标系给出当前位置的方向**
+
+以极坐标为例：保持半径不变、增加角度，点会沿着圆周移动。它在当前位置沿圆周前进的方向，就是角向的**切向**；与切向垂直的方向，就是**法向**。如果保持角度不变、增加半径，点则沿着从圆心向外的方向移动，这就是径向的切向。
+
+因此，同一个位置可以查询不同坐标方向：内置极坐标用 `x` 表示角向、`y` 表示径向。坐标系通过 `tangentAt(role, mappedRoles)` 提供查询：传入要沿着哪个坐标方向，以及点当前的坐标参数，返回屏幕上的切向。法向由这个切向顺时针旋转 90° 得到，无需坐标系再提供一份。直角坐标的方向固定；极坐标和其他曲线坐标的方向可以随位置变化。
+
+**2. 点图元查询自己所在位置的方向**
+
+点图元先确定每条数据在坐标系中的位置，再根据 `orientation` 查询方向。例如 `role: 'x'`、`align: 'tangent'` 表示“取我当前位置的 x 切向”；改成 `align: 'normal'`，就使用对应的法向。
+
+如果角向抖动改变了节点的角度，查询时会使用抖动后的角度，所以节点会跟着新位置转向。屏幕偏移只是在绘图结果上挪动节点，不改变它在坐标系中的方向参考。
+
+**3. 把方向应用到 Node**
+
+点图元将查询到的方向换算成旋转角，让节点原本朝右的方向与它对齐，然后加上用户设置的 `rotate`。最终位置和角度一起交给 Node；Node 负责旋转形状、文字及其连接边界。
+
+可以在[形状示例](#形状)中选择“方向对齐”预设观察：长方形沿圆周切向摆放，改为 x 法向后，中心位置不变，长边转过 90°。再调整 `rotate`，就是在这个朝向上继续旋转。
+
+默认的屏幕方向跳过上述查询，只使用 `rotate`。如果坐标系不支持方向查询，或当前位置没有唯一方向（例如圆心的角向、折线的尖点），显式请求方向对齐会报错。文字与形状使用同一规则，不会自动把倒置文字翻正。
+
+<SourceLinks
+  sources={[
+    { label: '坐标局部切向契约', path: 'packages/viz/plot/src/contract/coordinate/types.ts' },
+    { label: '调整后参数与稳定目标对应', path: 'packages/viz/plot/src/pipeline/placement/resolve.ts' },
+    { label: '极坐标切向与奇点处理', path: 'packages/viz/plot/src/providers/coordinate/features/polar/definition.ts' },
+    { label: '方向与旋转通道合成', path: 'packages/viz/plot/src/providers/mark/features/point.ts' },
   ]}
 />
 

@@ -358,8 +358,6 @@ The x role is an angle in polar coordinates. Discrete angles use a tick-step rat
 
 ### Resolving a point
 
-By default, a point mark only reads its position from the coordinate system. Explicit coordinate orientation also reads the local tangent at the adjusted role parameters, derives the selected tangent or normal angle, and adds `rotate`. Core Node receives one numeric rotation angle. This neither flips text upright nor bends the node along the curve. An angular direction at the polar center or a corner without a unique tangent raises an error.
-
 A point mark represents a point in a coordinate system and, by default, uses that system only to determine its position. The coordinate system maps a data position to a drawing position, where the mark creates a Node. The node may appear as a circle, star, or text; its own properties determine its shape and appearance, without deforming it to follow the geometry of the coordinate space. Explicit orientation additionally changes only the node's rotation angle.
 
 Unlike [PathMark](/viz/plot/mark/path), which connects vertices, a point mark establishes no connections or ordering between data rows. Unlike [IntervalMark](/viz/plot/mark/interval), which interprets start and end bounds, it does not expand a coordinate-space range into a geometric region. Each valid row produces an independent node. Data transforms, shared scales, padding solvers, and placement adjustments may still consider multiple rows; this does not change how the point mark generates nodes row by row.
@@ -368,7 +366,7 @@ The coordinate system determines the node's center; its shape is then resolved i
 
 A point mark ultimately lowers into a [Node](/kernel/components/node). All visible point-mark content currently uses Node capabilities; Plot translates data and visual channels into node positions and properties. The resolution chain is:
 
-<ComponentPreview files="point-resolution-flow" hideCode type="flow" size="lg" />
+<ComponentPreview files="point-resolution-flow" hideCode type="flow" size="md" />
 
 The upper row resolves data and positions. The lower row starts with Node generation and continues through node compilation and rendering. Each stage has the following responsibilities:
 
@@ -396,6 +394,52 @@ The upper row resolves data and positions. The lower row starts with Node genera
     {
       label: 'Node channel resolution and property delivery',
       path: 'packages/viz/plot/src/providers/channel/features/node.ts',
+    },
+  ]}
+/>
+
+### Orientation alignment
+
+A coordinate system can answer both “where should this point be drawn?” and “which way would it move from here along a coordinate direction?” Orientation alignment uses the second answer to rotate a node.
+
+The flow below shows explicit coordinate alignment: the coordinate system provides the query, PointMark obtains a direction and composes an angle, and Node applies the result.
+
+<ComponentPreview files="point-orientation-flow" hideCode type="flow" size="md" />
+
+**1. The coordinate system supplies a direction at the point**
+
+In polar coordinates, increasing the angle while keeping the radius fixed moves a point around a circle. Its direction of travel at the current position is the angular **tangent**. A direction perpendicular to that tangent is a **normal**. Increasing the radius while keeping the angle fixed instead moves the point away from the center: that is the radial tangent.
+
+The same position therefore has different coordinate directions to query. Built-in polar coordinates use `x` for angle and `y` for radius. The coordinate system exposes `tangentAt(role, mappedRoles)`: given the chosen coordinate direction and the point's current coordinate parameters, it returns a tangent on screen. Rotating that tangent clockwise by 90° gives the normal, so the coordinate system need not supply it separately. Cartesian directions are fixed; polar and other curved-coordinate directions can vary with position.
+
+**2. The point mark queries the direction at its own position**
+
+The point mark first determines each row's position in the coordinate system, then uses `orientation` to request a direction. For example, `role: 'x'` with `align: 'tangent'` means “use the x tangent at my current position.” Setting `align: 'normal'` selects the corresponding normal.
+
+If angular jitter changes the node's angle, the query uses that adjusted angle, so the node turns with its new position. A screen offset only moves the drawn node; it keeps the same coordinate reference for direction.
+
+**3. Apply the direction to Node**
+
+The point mark converts the direction into a rotation angle, aligning the node's original rightward direction with it, then adds the user's `rotate` value. It passes the final position and angle to Node, which rotates the shape, text, and connection boundary.
+
+Select the Orientation preset in the [shape demo](#shape): the wide rectangles lie along the circular tangent. Switching to x normal keeps their centers fixed and turns their long edges by 90°. Changing `rotate` adds further rotation to that alignment.
+
+Default screen orientation skips this query and uses only `rotate`. Explicit coordinate alignment raises an error if the coordinate system lacks direction support or the position has no unique direction, such as the angular direction at the center or a sharp corner. Text follows the same rule as shapes; upside-down text is not automatically flipped upright.
+
+<SourceLinks
+  sources={[
+    { label: 'Local coordinate tangent contract', path: 'packages/viz/plot/src/contract/coordinate/types.ts' },
+    {
+      label: 'Adjusted parameters and stable target identity',
+      path: 'packages/viz/plot/src/pipeline/placement/resolve.ts',
+    },
+    {
+      label: 'Polar tangents and singularities',
+      path: 'packages/viz/plot/src/providers/coordinate/features/polar/definition.ts',
+    },
+    {
+      label: 'Orientation and rotation channel composition',
+      path: 'packages/viz/plot/src/providers/mark/features/point.ts',
     },
   ]}
 />
