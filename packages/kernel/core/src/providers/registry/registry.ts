@@ -94,7 +94,7 @@ const assertProviderKey = (capability: string, key: string): void => {
   assertNonEmptyString(
     key,
     `${capability} provider key`,
-    new RetikzCoreError(RetikzCoreErrorCode.Provider, `${capability} provider key must be a non-empty string.`),
+    () => new RetikzCoreError(RetikzCoreErrorCode.Provider, `${capability} provider key must be a non-empty string.`),
   );
 };
 

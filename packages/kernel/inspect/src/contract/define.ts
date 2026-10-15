@@ -21,7 +21,7 @@ const inspectorContractError = (label: string): RetikzInspectError =>
 const assertValidOwner = (owner: AnyInspectorDefinition['owner']): void => {
   switch (owner.kind) {
     case 'path':
-      assertNonEmptyString(owner.name, 'Inspector owner name', inspectorContractError('Inspector owner name'));
+      assertNonEmptyString(owner.name, 'Inspector owner name', () => inspectorContractError('Inspector owner name'));
       return;
     case 'node':
     case 'scope':
@@ -29,12 +29,10 @@ const assertValidOwner = (owner: AnyInspectorDefinition['owner']): void => {
     case 'clip':
       return;
     case 'composite':
-      assertNonEmptyString(
-        owner.namespace,
-        'Inspector owner namespace',
+      assertNonEmptyString(owner.namespace, 'Inspector owner namespace', () =>
         inspectorContractError('Inspector owner namespace'),
       );
-      assertNonEmptyString(owner.type, 'Inspector owner type', inspectorContractError('Inspector owner type'));
+      assertNonEmptyString(owner.type, 'Inspector owner type', () => inspectorContractError('Inspector owner type'));
 
       return;
   }
@@ -44,8 +42,10 @@ const assertValidOwner = (owner: AnyInspectorDefinition['owner']): void => {
 export const sealInspectorDefinition = (definition: AnyInspectorDefinitionInput): AnyInspectorDefinition => {
   if (sealedInspectorDefinitions.has(definition)) return definition as AnyInspectorDefinition;
 
-  assertNonEmptyString(definition.namespace, 'Inspector namespace', inspectorContractError('Inspector namespace'));
-  assertNonEmptyString(definition.type, 'Inspector type', inspectorContractError('Inspector type'));
+  assertNonEmptyString(definition.namespace, 'Inspector namespace', () =>
+    inspectorContractError('Inspector namespace'),
+  );
+  assertNonEmptyString(definition.type, 'Inspector type', () => inspectorContractError('Inspector type'));
   assertValidOwner(definition.owner);
   const sealedDefinition = Object.freeze({
     ...definition,

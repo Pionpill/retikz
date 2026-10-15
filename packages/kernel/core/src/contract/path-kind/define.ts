@@ -38,7 +38,7 @@ const definePathKindImplementation = (input: unknown): unknown => {
   assertNonEmptyString(
     definition.name,
     'definePathKind: name',
-    new RetikzCoreError(RetikzCoreErrorCode.Contract, 'definePathKind: name must be a non-empty string.'),
+    () => new RetikzCoreError(RetikzCoreErrorCode.Contract, 'definePathKind: name must be a non-empty string.'),
   );
   const record = definition as unknown as Readonly<Record<string, unknown>>;
   const schema = record.schema;

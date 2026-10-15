@@ -519,13 +519,13 @@ export type MergePropertiesOptions<T extends object> = Readonly<{
 
 <ApiTable variant="parameters">
 
-| Category   | Name          | Type / signature           | Description                                                                         |
-| ---------- | ------------- | -------------------------- | ----------------------------------------------------------------------------------- |
-| Parameters | `value`       | `string`                   | String to validate                                                                  |
-|            | `label`       | `string`                   | Field name used in error messages                                                   |
-|            | `ownerError?` | `RetikzError \| undefined` | Domain error thrown unchanged on validation failure; defaults to a Foundation error |
-| Returns    | —             | `void`                     | —                                                                                   |
-| Throws     | —             | —                          | Throws ownerError or RetikzFoundationError on validation failure                    |
+| Category   | Name                | Type / signature    | Description                                                                                                                                 |
+| ---------- | ------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parameters | `value`             | `string`            | String to validate                                                                                                                          |
+|            | `label`             | `string`            | Field name used in error messages                                                                                                           |
+|            | `createOwnerError?` | `() => RetikzError` | Domain error factory called exactly once on validation failure; its result is thrown unchanged. Defaults to a Foundation error when omitted |
+| Returns    | —                   | `void`              | —                                                                                                                                           |
+| Throws     | —                   | —                   | Throws the factory result or RetikzFoundationError on validation failure; exceptions thrown by the factory propagate unchanged              |
 
 </ApiTable>
 
@@ -534,14 +534,14 @@ export type MergePropertiesOptions<T extends object> = Readonly<{
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const assertNonEmptyString: (value: string, label: string, ownerError?: RetikzError | undefined) => void;
+export declare const assertNonEmptyString: (value: string, label: string, createOwnerError?: () => RetikzError) => void;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"assertPositiveNumber"} path={"packages/kernel/foundation/src/assert.ts"} startLine={36}>assertPositiveNumber</ApiSourceLink>
+#### <ApiSourceLink label={"assertPositiveNumber"} path={"packages/kernel/foundation/src/assert.ts"} startLine={32}>assertPositiveNumber</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -549,13 +549,13 @@ export declare const assertNonEmptyString: (value: string, label: string, ownerE
 
 <ApiTable variant="parameters">
 
-| Category   | Name          | Type / signature           | Description                                                                         |
-| ---------- | ------------- | -------------------------- | ----------------------------------------------------------------------------------- |
-| Parameters | `value`       | `number`                   | Number to validate                                                                  |
-|            | `label`       | `string`                   | Field name used in error messages                                                   |
-|            | `ownerError?` | `RetikzError \| undefined` | Domain error thrown unchanged on validation failure; defaults to a Foundation error |
-| Returns    | —             | `void`                     | —                                                                                   |
-| Throws     | —             | —                          | Throws ownerError or RetikzFoundationError on validation failure                    |
+| Category   | Name                | Type / signature    | Description                                                                                                                                 |
+| ---------- | ------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parameters | `value`             | `number`            | Number to validate                                                                                                                          |
+|            | `label`             | `string`            | Field name used in error messages                                                                                                           |
+|            | `createOwnerError?` | `() => RetikzError` | Domain error factory called exactly once on validation failure; its result is thrown unchanged. Defaults to a Foundation error when omitted |
+| Returns    | —                   | `void`              | —                                                                                                                                           |
+| Throws     | —                   | —                   | Throws the factory result or RetikzFoundationError on validation failure; exceptions thrown by the factory propagate unchanged              |
 
 </ApiTable>
 
@@ -564,7 +564,7 @@ export declare const assertNonEmptyString: (value: string, label: string, ownerE
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const assertPositiveNumber: (value: number, label: string, ownerError?: RetikzError | undefined) => void;
+export declare const assertPositiveNumber: (value: number, label: string, createOwnerError?: () => RetikzError) => void;
 ```
 
 </DocTab>
