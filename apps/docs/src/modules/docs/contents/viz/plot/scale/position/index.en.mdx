@@ -104,7 +104,7 @@ Categorical fields have no continuous numeric order. The default `band` scale gi
   defaultSourceFile="scale-band.preview.tsx"
 />
 
-Both discrete position scales expose a positive `step` for the final range. Point ratio [jitter](/viz/plot/mark/point#position-spread) uses that tick interval as its total-span basis; it does not use a point scale's always-zero `bandwidth` or infer spacing from data-value differences.
+Both discrete position scales expose a positive `step` for the final range. Point ratio [jitter](/viz/plot/mark/point#extended-usage) uses that tick interval as its total-span basis; it does not use a point scale's always-zero `bandwidth` or infer spacing from data-value differences.
 
 A categorical line can opt into point positions:
 

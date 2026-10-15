@@ -17,6 +17,10 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     size: values[POINT_STYLE_CONTROL_IDS.size],
     dashed: values[POINT_STYLE_CONTROL_IDS.dashed],
     shadow: values[POINT_STYLE_CONTROL_IDS.shadow],
+    dotted: values[POINT_STYLE_CONTROL_IDS.dotted],
+    dashPattern: values[POINT_STYLE_CONTROL_IDS.dashPattern],
+    blendMode: values[POINT_STYLE_CONTROL_IDS.blendMode],
+    zIndex: values[POINT_STYLE_CONTROL_IDS.zIndex],
     coordinate: values[POINT_STYLE_CONTROL_IDS.coordinate],
   }),
 );

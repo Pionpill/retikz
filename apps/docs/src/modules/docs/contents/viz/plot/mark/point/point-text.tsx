@@ -16,6 +16,12 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     labelPin: values[POINT_TEXT_CONTROL_IDS.labelPin],
     dx: values[POINT_TEXT_CONTROL_IDS.dx],
     dy: values[POINT_TEXT_CONTROL_IDS.dy],
+    align: values[POINT_TEXT_CONTROL_IDS.align],
+    lineHeight: values[POINT_TEXT_CONTROL_IDS.lineHeight],
+    maxTextWidth: values[POINT_TEXT_CONTROL_IDS.maxTextWidth],
+    textField: values[POINT_TEXT_CONTROL_IDS.textField],
+    displayFormat: values[POINT_TEXT_CONTROL_IDS.displayFormat],
+    resolveLabel: values[POINT_TEXT_CONTROL_IDS.resolveLabel],
     coordinate: values[POINT_TEXT_CONTROL_IDS.coordinate],
   }),
 );

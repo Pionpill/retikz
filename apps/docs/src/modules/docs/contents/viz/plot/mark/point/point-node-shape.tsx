@@ -7,6 +7,12 @@ import { PointNodeShapePreview } from './point-node-shape.preview';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values =>
   PointNodeShapePreview({
+    showRelations: values[POINT_NODE_SHAPE_CONTROL_IDS.showRelations],
+    cornerRadius: values[POINT_NODE_SHAPE_CONTROL_IDS.cornerRadius],
+    scale: values[POINT_NODE_SHAPE_CONTROL_IDS.scale],
+    padding: values[POINT_NODE_SHAPE_CONTROL_IDS.padding],
+    margin: values[POINT_NODE_SHAPE_CONTROL_IDS.margin],
+    boundary: values[POINT_NODE_SHAPE_CONTROL_IDS.boundary],
     coordinate: values[POINT_NODE_SHAPE_CONTROL_IDS.coordinate],
     size: values[POINT_NODE_SHAPE_CONTROL_IDS.size],
     rotate: values[POINT_NODE_SHAPE_CONTROL_IDS.rotate],

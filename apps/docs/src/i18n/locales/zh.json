@@ -390,7 +390,7 @@
     "grammarGuide": "辅助",
     "compMark": "图元",
     "compPathMark": "路径",
-    "compPointMark": "散点",
+    "compPointMark": "PointMark · 点图元",
     "compIntervalMark": "区间",
     "compReferenceMark": "参考",
     "compRelationMark": "关系",

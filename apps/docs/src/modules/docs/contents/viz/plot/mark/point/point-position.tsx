@@ -7,6 +7,7 @@ import { PointPositionPreview } from './point-position.preview';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values =>
   PointPositionPreview({
+    minimumSize: values[POINT_POSITION_CONTROL_IDS.minimumSize],
     coordinate: values[POINT_POSITION_CONTROL_IDS.coordinate],
     xField: values[POINT_POSITION_CONTROL_IDS.xField],
     yField: values[POINT_POSITION_CONTROL_IDS.yField],

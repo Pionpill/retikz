@@ -1,4 +1,8 @@
-import { Plot, PlotAxis, PointMark } from '@retikz/plot-react';
+import { PlotAxis, PointMark } from '@retikz/plot-react';
+import type { PointMarkProps } from '@retikz/plot-react';
+import { Layout } from '@retikz/react';
+
+import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
 
 import { points } from './point-api.data';
 
@@ -22,6 +26,18 @@ export type PointTextPreviewValues = {
   labelPin: boolean;
   dx: number;
   dy: number;
+  /** 文字对齐 */
+  align: 'start' | 'middle' | 'end';
+  /** 行高 */
+  lineHeight: number;
+  /** 文字宽度上限 */
+  maxTextWidth: number;
+  /** 内容字段 */
+  textField: 'label' | 'pop' | 'description';
+  /** 数值格式 */
+  displayFormat: '' | '.1f' | ',';
+  /** 回调标签 */
+  resolveLabel: boolean;
   coordinate: 'cartesian2D' | 'polar2D';
 };
 
@@ -32,19 +48,26 @@ export const PointTextPreview = (values: PointTextPreviewValues) => {
     size: values.fontSize,
     weight: values.fontBold ? ('bold' as const) : ('normal' as const),
   };
-  const textProps =
+  const textProps: PointMarkProps =
     values.mode === 'label'
       ? {
           color: 'region',
-          label: 'label',
-          labelPosition: values.labelPosition,
-          labelDistance: values.labelDistance,
-          labelPin: values.labelPin,
-          labelTextColor: textColor,
-          labelFont: font,
+          label: {
+            field: values.textField,
+            ...(values.textField === 'pop' && values.displayFormat ? { displayFormat: values.displayFormat } : {}),
+            position: values.labelPosition,
+            distance: values.labelDistance,
+            pin: values.labelPin,
+            textColor,
+            font,
+          },
         }
       : {
-          text: 'label',
+          text: values.textField,
+          ...(values.textField === 'pop' && values.displayFormat ? { displayFormat: values.displayFormat } : {}),
+          align: values.align,
+          lineHeight: values.lineHeight,
+          maxTextWidth: values.maxTextWidth,
           textColor,
           font,
           dx: values.dx,
@@ -52,10 +75,18 @@ export const PointTextPreview = (values: PointTextPreviewValues) => {
         };
 
   return (
-    <Plot data={points} width={400} height={280} coordinate={values.coordinate === 'polar2D' ? 'polar2D' : undefined}>
-      <PointMark x="x" y="y" {...textProps} />
-      <PlotAxis dimension="x" />
-      <PlotAxis dimension="y" grid />
-    </Plot>
+    <Layout viewBox={{ x: -100, y: -70, width: 600, height: 408 }}>
+      <Plot data={points} width={400} height={280} coordinate={values.coordinate === 'polar2D' ? 'polar2D' : undefined}>
+        <PointMark
+          id="text-demo"
+          x="x"
+          y="y"
+          {...textProps}
+          resolveLabel={values.resolveLabel && values.mode === 'label' ? row => `${row.label}: ${row.pop}` : undefined}
+        />
+        <PlotAxis dimension="x" />
+        <PlotAxis dimension="y" grid />
+      </Plot>
+    </Layout>
   );
 };
