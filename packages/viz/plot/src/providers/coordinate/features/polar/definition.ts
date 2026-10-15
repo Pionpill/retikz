@@ -471,6 +471,8 @@ const polarAngularLayoutLabelsOf = (
 export type Polar1DCoordinateFrame = {
   /** 判别字段：1D 极坐标圆周 */
   type: typeof BuiltinPlotCoordinate.Polar1D;
+  /** 一维坐标帧不提供绘图区背景、边框和区域锚点 */
+  supportsPlotArea: false;
   /** 位置角色序（[angle]，单通道；x→angle 别名取值） */
   roles: ReadonlyArray<DimensionRole>;
   /** 圆心（屏幕坐标） */
@@ -540,6 +542,7 @@ export const createPolar1DCoordinate = (input: Polar1DCoordinateInput): Polar1DC
 
   return {
     type: BuiltinPlotCoordinate.Polar1D,
+    supportsPlotArea: false,
     roles: ['x'],
     center: input.center,
     radius: input.radius,

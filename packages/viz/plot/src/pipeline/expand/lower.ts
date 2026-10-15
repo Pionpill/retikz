@@ -119,7 +119,7 @@ import type { LowerPlotsOptions, PlotLayoutOptions, MarkDataView } from './types
 
 /** 判断坐标帧是否具有可承载背景与区域锚点的二维绘图区 */
 const supportsPlotArea = (frame: CoordinateFrame | undefined): boolean =>
-  frame?.type !== BuiltinPlotCoordinate.Cartesian1D && frame?.type !== BuiltinPlotCoordinate.Polar1D;
+  frame !== undefined && frame.supportsPlotArea !== false;
 
 const coordinateScaleNameOf = (coordinate: IRPlotCoordinateOperation, role: DimensionRole): string | undefined => {
   const field =

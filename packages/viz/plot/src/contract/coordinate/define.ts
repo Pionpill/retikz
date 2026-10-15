@@ -233,6 +233,10 @@ export const defineCoordinate = <TCoordinateOperation extends IRPlotCoordinateOp
 
 /** createCoordinateFrame 的可选运行时能力 */
 export type CreateCoordinateFrameOptions = {
+  /** 是否支持绘图区背景、边框和区域锚点
+   * @default true
+   */
+  supportsPlotArea?: boolean;
   /** 各角色位置 scale；供 guide 画轴。省略 → 该坐标系无轴 */
   roleScales?: Partial<Record<DimensionRole, PositionScale>>;
   /** 某角色轴曲线局部标架；曲线轴优先用其切向，省略 → guide 数值差分回落 */
@@ -250,10 +254,10 @@ export type CreateCoordinateFrameOptions = {
 /**
  * 建通用坐标帧
  * @description 把 definition 注册 type、roles 与 projectRoles 包成 CoordinateFrame。`type` 会保留调用方注册的真实判别值，
- *   不会压成 `custom`；point/path/region 等按 `projectRoles` 投影。第三参 options 逐项声明额外能力：
+ *   不会压成 `custom`；point/path/region 等按 `projectRoles` 投影。第四参 options 逐项声明额外能力：
  *   roleScales 允许 guide / interval 构造读取 scale，mapRoles / projectMappedRoles 开启两段 position projection，
  *   placementBoundary 开启 role-space containment，frameAlong 提供曲线轴精确切向，projectCell 开启 cell 类 mark。
- *   未声明的能力保持不可用并由消费方 fail-loud
+ *   supportsPlotArea 默认开启，可显式设为 false；其它未声明的能力保持不可用并由消费方 fail-loud
  */
 export const createCoordinateFrame = (
   type: string,
@@ -265,6 +269,7 @@ export const createCoordinateFrame = (
   roles,
   project: () => null,
   projectRoles,
+  ...(options?.supportsPlotArea !== undefined ? { supportsPlotArea: options.supportsPlotArea } : {}),
   ...(options?.roleScales !== undefined ? { roleScales: options.roleScales } : {}),
   ...(options?.mapRoles !== undefined ? { mapRoles: options.mapRoles } : {}),
   ...(options?.projectMappedRoles !== undefined ? { projectMappedRoles: options.projectMappedRoles } : {}),

@@ -124,6 +124,8 @@ The definition with `roles: ['u', 'v']` must still be injected through `<Plot co
 - Missing required roles, encoding keys unsupported by the coordinate, or schema validation failures all fail immediately.
 - A `scaleBinding.bind` result that does not match the schema fails immediately; custom field mappings must preserve unrelated operation config.
 - The example uses `z.strictObject`; an unknown key such as `archHeigth` is not silently stripped or replaced by a default.
+- Coordinate frames support plot-area backgrounds, borders, and area anchors by default. Set `supportsPlotArea: false` in the fourth argument of `createCoordinateFrame`, or on a directly constructed frame, to disable them. The number of input roles does not affect this default.
+
 - Ordinary point-like marks only require `projectRoles`. Point placement requires `roleScales`, `mapRoles`, and `projectMappedRoles`; containment additionally requires `placementBoundary`.
 - Interval-like marks require matching `roleScales` and `projectCell`.
 - A custom coordinate uses the `plotArea` returned by its definition and does not automatically inherit cartesian margin and legend reservation.

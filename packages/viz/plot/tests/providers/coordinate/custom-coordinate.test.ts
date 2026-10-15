@@ -206,6 +206,24 @@ const uvCoordinate = defineCoordinate({
 });
 
 describe('custom coordinate — 一维曲线（projectRoles 沿正弦）', () => {
+  it.each([undefined, true, false])('自定义一维帧的绘图区由显式能力控制：%s', supportsPlotArea => {
+    const coordinate = defineCoordinate({
+      ...sineCoordinate,
+      resolve: (operation, context) => {
+        const resolution = sineCoordinate.resolve(operation, context);
+        return {
+          ...resolution,
+          frame: createCoordinateFrame('sine', ['x'], resolution.frame.projectRoles, { supportsPlotArea }),
+        };
+      },
+    });
+    const scope = expandOf({ ...sineSpec(), id: 'custom' }, { d: [{ v: 0 }, { v: 1 }] }, opts([coordinate]));
+    expect(scope.children.some(child => child.id === 'custom.plotArea')).toBe(supportsPlotArea !== false);
+    const content = scope.children.find((child): child is IRScope => child.type === 'scope');
+    expect(content).toBeDefined();
+    expect(content!.children.length).toBeGreaterThan(0);
+  });
+
   it('点落在正弦曲线上（一维坐标系不止直线）', () => {
     const rows = Array.from({ length: 13 }, (_unused, i) => ({ v: i }));
     const scaleAt = (v: number): number => (v / 12) * WIDTH;

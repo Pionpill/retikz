@@ -124,6 +124,8 @@ const spec = {
 - 缺少必填 role、出现坐标系不支持的 encoding key，或 schema 校验失败时都会直接报错。
 - `scaleBinding.bind` 返回不符合 schema 的 operation 时会直接失败；自定义字段映射必须保留其它 operation 配置。
 - 示例使用 `z.strictObject`；`archHeigth` 之类未知键不会被静默剥离或回退默认值。
+- 坐标帧默认支持绘图区背景、边框和区域锚点。自定义坐标系可在 `createCoordinateFrame` 的第四个参数中设置 `supportsPlotArea: false` 关闭这些能力；直接构造坐标帧时设置同名字段。输入角色数量不影响这一默认值。
+
 - 普通点类图元只需要 `projectRoles`；Point placement 需要 `roleScales`、`mapRoles` 与 `projectMappedRoles`，要求 containment 时还需要 `placementBoundary`。
 - 区间类图元需要匹配的 `roleScales` 与 `projectCell`。
 - 自定义坐标系使用 definition 返回的 `plotArea`，不会自动继承 cartesian 的 margin 与 legend 预留逻辑。

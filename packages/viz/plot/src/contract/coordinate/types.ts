@@ -20,6 +20,10 @@ export type DimensionRole = string;
  *   `type` 保持 definition 注册的真实判别串；非有限值返回 null（跳过该点）
  */
 export type CoordinateFrame = {
+  /** 是否支持绘图区背景、边框和区域锚点
+   * @default true
+   */
+  supportsPlotArea?: boolean;
   /** 坐标系注册 type；内置用其判别串（如 `cartesian2D`），自定义用自己的 type（如 `bridge` / `sine`） */
   type: string;
   /** 位置角色序（消费哪些 mark 通道，按序喂 projectRoles） */

@@ -257,6 +257,8 @@ export const createCartesianCoordinate = (
 export type Cartesian1DCoordinateFrame = {
   /** 判别字段：1D 笛卡尔直线 */
   type: typeof BuiltinPlotCoordinate.Cartesian1D;
+  /** 一维坐标帧不提供绘图区背景、边框和区域锚点 */
+  supportsPlotArea: false;
   /** 位置角色序（[x]，单通道） */
   roles: ReadonlyArray<DimensionRole>;
   /** 轴向（horizontal 沿 x、vertical 沿 y） */
@@ -307,6 +309,7 @@ export const createCartesian1DCoordinate = (
 
   return {
     type: BuiltinPlotCoordinate.Cartesian1D,
+    supportsPlotArea: false,
     roles: ['x'],
     orientation,
     baseline,
