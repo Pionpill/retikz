@@ -146,6 +146,7 @@
     "pkgCoreNodeCompilation": "Node Compilation",
     "pkgCorePathCompilation": "Path Compilation",
     "pkgCoreCompositeCompilation": "Composite Compilation",
+    "pkgCoreCompilationOutput": "Compilation Output",
     "pkgOverview": "Overview",
     "pkgFoundationUtilities": "Utilities",
     "pkgFoundationTypesSchemas": "Types & Schemas",
