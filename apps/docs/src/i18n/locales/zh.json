@@ -48,6 +48,8 @@
     "moduleNavigationLabel": "文档模块"
   },
   "kernel": {
+    "runtimeMechanics": "运行机制",
+    "renderingPipeline": "渲染链路",
     "compilationMechanisms": "编译机制",
     "internals": "进阶",
     "label": "内核",

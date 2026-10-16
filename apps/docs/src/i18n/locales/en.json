@@ -48,6 +48,8 @@
     "moduleNavigationLabel": "Documentation modules"
   },
   "kernel": {
+    "runtimeMechanics": "Runtime Mechanics",
+    "renderingPipeline": "Rendering Pipeline",
     "compilationMechanisms": "Compilation mechanisms",
     "internals": "Internals",
     "label": "Kernel",

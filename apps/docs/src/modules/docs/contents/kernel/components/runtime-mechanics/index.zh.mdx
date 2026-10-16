@@ -1,0 +1,47 @@
+---
+title: 运行机制
+description: 沿一张图的执行过程，理解 React、Vanilla、Core、Runtime 与 Render 的职责和交接。
+---
+
+一段声明变成画面，要经过输入整理、几何编译和后端渲染。运行机制以完整绘图任务为主线，说明各包在什么时候接手、传递什么数据，以及结果怎样回到应用。适合已经能绘制节点和路径、准备理解跨包执行过程的读者。
+
+## 职责一览
+
+| 包      | 职责                                                  | 何时关注                         |
+| ------- | ----------------------------------------------------- | -------------------------------- |
+| React   | 收集 JSX 声明，将处理结果接回 React 宿主              | 追踪组件输入与 SVG / Canvas 显示 |
+| Vanilla | 归一化作者输入，组织处理流程，并提供非 React 挂载入口 | 追踪输入准备与宿主执行           |
+| Core    | 计算位置、尺寸、连接与绘制资源，输出 Scene            | 分析图形几何如何确定             |
+| Runtime | 在保留式执行中管理数据源、计算和结果提交              | 理解后续输入变化如何触发更新     |
+| Render  | 将 Scene 转成 SVG 描述或 Canvas 绘制操作              | 分析同一编译结果如何交给不同后端 |
+
+## 一张图的执行
+
+以两个节点和一条连线为例：作者指定节点的位置与名称，路径引用名称；Core 算出连线端点，Render 才能把它画出来。图中的主线追踪一次结果的产生，Runtime 管理的跨次更新不展开在这里。
+
+<ComponentPreview
+  files="/kernel/components/runtime-mechanics/rendering-pipeline/pipeline-overview"
+  size="md"
+  hideCode
+  type="flow"
+/>
+
+React 会复用 Vanilla 的输入处理能力。应用也可以直接提交 IR，或把已经编译好的 Scene 交给渲染入口；这些入口从链路的不同位置开始，不要求每次都从 JSX 出发。
+
+## 阅读边界
+
+从“渲染链路”开始，先理解声明、IR 与 Scene 的区别。需要继续追踪 Core 内部的解析、测量、路径或复合展开时，进入旁边的[编译机制](/kernel/packages/core)系列。
+
+本组面向多个包之间的协作。Runtime 的事务与调度算法、Core 的几何算法、Render 的具体后端实现，分别由开发包文档解释；这里只展开理解交接所需的部分。
+
+## 章节内容
+
+<LinkedSections
+  items={[
+    {
+      title: '渲染链路',
+      description: '追踪同一张图从作者声明到 SVG / Canvas 输出的过程',
+      url: '/kernel/components/runtime-mechanics/rendering-pipeline',
+    },
+  ]}
+/>

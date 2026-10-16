@@ -368,6 +368,19 @@ export const kernelSection: Array<Section> = [
         ],
       },
       {
+        id: 'runtime-mechanics',
+        label: 'kernel.runtimeMechanics',
+        sidebarGroup: 'kernel.internals',
+        children: [
+          {
+            id: 'rendering-pipeline',
+            label: 'kernel.renderingPipeline',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'architecture', audience: 'integrator', sourceOfTruth: 'runtime' },
+          },
+        ],
+      },
+      {
         id: 'compilation-mechanisms',
         label: 'kernel.compilationMechanisms',
         sidebarGroup: 'kernel.internals',
