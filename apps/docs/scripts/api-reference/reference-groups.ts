@@ -9,6 +9,13 @@ export type ReferenceGroup = {
 
 /** 显式分组清单，生成时拒绝成员遗漏、未知或重复 */
 export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<ReferenceGroup>>>> = {
+  'viz/plot/mark/interval': [
+    {
+      title: { zh: '组件属性', en: 'Component properties' },
+      members: ['IntervalMarkProps', 'IRPlotIntervalMark'],
+      schemas: ['IntervalMarkSchema'],
+    },
+  ],
   'viz/plot/mark/path': [
     {
       title: { zh: '组件属性', en: 'Component properties' },

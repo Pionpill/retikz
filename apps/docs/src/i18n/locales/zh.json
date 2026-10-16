@@ -391,7 +391,7 @@
     "compMark": "图元",
     "compPathMark": "PathMark · 路径图元",
     "compPointMark": "PointMark · 点图元",
-    "compIntervalMark": "区间",
+    "compIntervalMark": "IntervalMark · 区间图元",
     "compReferenceMark": "参考",
     "compRelationMark": "关系",
     "compAxis": "坐标轴",
