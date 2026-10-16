@@ -184,7 +184,7 @@ Scope 的 `defaults.reset` 可以切断选定的样式通道。设为 `['node']`
 
 例如，纯色填充不需要查找注册表；图案填充则需要先确定用哪个 Definition 生成图案，以及使用什么尺寸和样式。`resolvePaint` 对填充与描边采用同一套规则，不为两者维护独立的解析机制。
 
-这些结果仍是编译输入。渐变、图案资源的生成、去重和登记，以及 Scene 图元如何引用它们，属于后续资源编译，留到“Scene、资源与编译产物”专题展开。
+这些结果仍是编译输入。渐变、图案资源的生成、去重和登记，以及 Scene 图元如何引用它们，属于后续资源编译，见[编译产物中的资源](/kernel/packages/core/compilation-output#资源)。
 
 <SourceLinks
   sources={[
@@ -294,7 +294,7 @@ Label 的默认外观来自 Label 通道，标签位置等静态配置在路径�
   </DocTab>
 </DocTabs>
 
-阅读时先看 `createCompileContext` 的注册表与根主题。Node 从遍历中的 `emitNodeChild` 进入 `resolveNode`；Path 从延迟任务处理进入 `resolvePath`，再按输出类型继续绑定次级能力。Path 图将颜色解析的两次调用合在同一说明中，目标绑定只标出交接点。本页重点到配置结果为止，测量、裁剪和最终图元分别见 Node 与 Path 实现原理。
+阅读时先看 `createCompileContext` 的注册表与根主题。Node 从遍历中的 `emitNodeChild` 进入 `resolveNode`；Path 从延迟任务处理进入 `resolvePath`，再按输出类型继续绑定次级能力。Path 图将颜色解析的两次调用合在同一说明中，目标绑定只标出交接点。本页重点到配置结果为止，测量、边界求交和最终图元分别见[节点编译](/kernel/packages/core/node-compilation)与[路径编译](/kernel/packages/core/path-compilation)。
 
 <SourceLinks
   sources={[
@@ -307,17 +307,22 @@ Label 的默认外观来自 Label 通道，标签位置等静态配置在路径�
 
 <LinkedSections
   items={[
+    {
+      title: '坐标解析',
+      description: '追踪引用可见性、坐标转换与 Scope 定位',
+      url: '/kernel/packages/core/coordinates',
+    },
+    {
+      title: '节点编译',
+      description: '追踪文字测量、节点尺寸与连接边界',
+      url: '/kernel/packages/core/node-compilation',
+    },
+    {
+      title: '路径编译',
+      description: '追踪路径目标、几何步骤与图元输出',
+      url: '/kernel/packages/core/path-compilation',
+    },
     { title: '编译流程', description: '把解析放回从 IR 到 Scene 的完整过程', url: '/kernel/packages/core/compilation' },
-    {
-      title: 'Node 实现原理',
-      description: '继续追踪文字测量、节点布局与连接边界',
-      url: '/kernel/components/node/mechanism',
-    },
-    {
-      title: 'Path 实现原理',
-      description: '继续追踪路径步骤、目标引用与图元生成',
-      url: '/kernel/components/path/mechanism',
-    },
     { title: '主题解析', description: '查看主题环境的跨组件传递与消费', url: '/kernel/components/internals/theme' },
   ]}
 />

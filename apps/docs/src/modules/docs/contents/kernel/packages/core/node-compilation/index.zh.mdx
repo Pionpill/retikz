@@ -35,7 +35,7 @@ Core 通过注入的 `measureText` 取得度量，不直接读取 DOM。测量�
 
 公式或显式 `runs` 混排则逐片段测量，再把同一行的片段对齐到共同基线。行宽累加，基线上下分别取所需的最大空间，行槽高度至少容纳这些片段。**公式与普通文本混排时，不使用普通文本的自动折行算法**，不能假定设置宽度后公式也会自动换行。
 
-同一次普通正文排版会复用相同文字与字体的测量结果，避免折行试算反复请求度量。这是局部复用，不表示跨编译或字体变化后仍沿用旧尺寸。
+同一次普通正文排版会复用相同文字与字体的测量结果，避免折行试算反复请求度量。这一层缓存只属于当前节点排版；外层编译上下文还会按文字与字体参数共享成功度量，使不同节点和多次试算也能复用测量。两层缓存均不跨编译保留，宽度变化后仍需重新排版，详见[复合编译的查询求值与缓存](/kernel/packages/core/composite-compilation#查询求值与缓存)。
 
 <SourceLinks
   sources={[
@@ -71,7 +71,7 @@ Core 通过注入的 `measureText` 取得度量，不直接读取 DOM。测量�
 | `width`        | 固定视觉外框宽度；普通正文可尝试重新折行，仍放不下时编译失败 |
 | 父级宽度提案   | 约束布局占位；计算会考虑形状、margin 与旋转                  |
 
-固定 `width` 决定最终视觉宽度，水平的 `minimumSize` 不再把它扩大；高度仍按内容与最小高度确定。父级提案与固定宽度不是同一份契约：提案不能保证每个不可断文本都能缩进目标范围，父级仍需处理实际返回的占位。提案与重放的完整过程由后续复合布局主题承接。
+固定 `width` 决定最终视觉宽度，水平的 `minimumSize` 不再把它扩大；高度仍按内容与最小高度确定。父级提案与固定宽度不是同一份契约：提案不能保证每个不可断文本都能缩进目标范围，父级仍需处理实际返回的占位。提案与重放的完整过程见[复合编译](/kernel/packages/core/composite-compilation)。
 
 不对称 padding 还会让视觉外框中心与正文中心不同。布局分别保存两者，避免绘制正文时误用外框中心。
 
@@ -145,6 +145,16 @@ Core 通过注入的 `measureText` 取得度量，不直接读取 DOM。测量�
 
 <LinkedSections
   items={[
+    {
+      title: '路径编译',
+      description: '追踪路径目标、几何步骤与图元输出',
+      url: '/kernel/packages/core/path-compilation',
+    },
+    {
+      title: '复合编译',
+      description: '追踪子项查询、隔离试算与结果重放',
+      url: '/kernel/packages/core/composite-compilation',
+    },
     { title: 'Node 基础用法', description: '操作节点尺寸、文字宽度与样式', url: '/kernel/components/node/usage' },
     { title: 'Node 文字', description: '查看正文、混排和标签的输入写法', url: '/kernel/components/node/text' },
     { title: 'Node 实现原理', description: '查阅形状与连接面的局部规则', url: '/kernel/components/node/mechanism' },

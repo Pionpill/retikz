@@ -496,16 +496,26 @@ export type SpatialHandleOwner = Readonly<{
 
 <LinkedSections
   items={[
+    { title: '配置解析', description: '追踪默认值、样式和能力绑定', url: '/kernel/packages/core/resolution' },
     {
-      title: 'Node 实现原理',
-      description: '深入正文测量、节点尺寸与连接边界',
-      url: '/kernel/components/node/mechanism',
+      title: '坐标解析',
+      description: '追踪引用可见性、坐标转换与 Scope 定位',
+      url: '/kernel/packages/core/coordinates',
     },
-    { title: 'Path 实现原理', description: '深入游标、路径段与端点处理', url: '/kernel/components/path/mechanism' },
     {
-      title: '复合组件实现原理',
-      description: '了解子布局试算与结果重放',
-      url: '/kernel/components/composite/mechanism',
+      title: '节点编译',
+      description: '追踪文字测量、节点尺寸与连接边界',
+      url: '/kernel/packages/core/node-compilation',
+    },
+    {
+      title: '路径编译',
+      description: '追踪路径目标、几何步骤与图元输出',
+      url: '/kernel/packages/core/path-compilation',
+    },
+    {
+      title: '复合编译',
+      description: '追踪子项查询、隔离试算与结果重放',
+      url: '/kernel/packages/core/composite-compilation',
     },
   ]}
 />

@@ -74,7 +74,7 @@ The diagram follows root `chart.point` to `layout.flexLayout`. Once the registry
 
 ### One compile callback
 
-`CompositeDefinition` provides a `compile` callback that returns `CompositeCompileResult`. The callback can generate child declarations directly. When placement depends on child dimensions, it can first call the layout methods on `CompositeCompileContext`, then output the selected results. The table distinguishes these uses; the example starts with direct composition.
+For full layout evaluation, `CompositeDefinition` provides a `compile` callback that returns `CompositeCompileResult`. The callback can generate child declarations directly. When placement depends on child dimensions, it can first call the layout methods on `CompositeCompileContext`, then output the selected results. The table distinguishes these uses; the example starts with direct composition.
 
 | Usage              | Callback responsibility                                     | Core continuation                                               |
 | ------------------ | ----------------------------------------------------------- | --------------------------------------------------------------- |
@@ -546,6 +546,11 @@ Once the layout is settled, Core checks the final output tree returned by the ca
 
 <LinkedSections
   items={[
+    {
+      title: 'Compilation Output',
+      description: 'Continue to Scene, artifacts and other compilation outputs',
+      url: '/kernel/packages/core/compilation-output',
+    },
     {
       title: 'Compilation Flow',
       description: 'Return to the overall IR-to-Scene pipeline',

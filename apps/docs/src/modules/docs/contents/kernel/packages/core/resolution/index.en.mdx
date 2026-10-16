@@ -184,7 +184,7 @@ Color resolution determines a concrete color. Paint resolution prepares the draw
 
 For example, a solid fill requires no registry lookup. A pattern fill must determine which Definition generates the pattern and which size and styles it uses. `resolvePaint` applies the same rules to fill and stroke.
 
-These results are still compilation inputs. Generating, deduplicating, and registering gradient and pattern resources, and referencing them from Scene primitives, belong to later resource compilation. The “Scene, resources, and compilation artifacts” topic will cover those steps.
+These results are still compilation inputs. Generating, deduplicating, and registering gradient and pattern resources, and referencing them from Scene primitives, belong to later resource compilation. See [Resources in Compilation Output](/kernel/packages/core/compilation-output#resources) for those steps.
 
 <SourceLinks
   sources={[
@@ -297,7 +297,7 @@ The tabs show the Node and Path call chains. The Node diagram follows environmen
   </DocTab>
 </DocTabs>
 
-Start with the registries and root theme in `createCompileContext`. Node enters `resolveNode` through traversal's `emitNodeChild`. Deferred path processing enters `resolvePath`, then binds secondary capabilities according to the emitter. The Path diagram groups the two color-resolution calls in one note and marks target binding only as a handoff. This page focuses on configuration results; the Node and Path implementation pages cover measurement, clipping, and final primitives.
+Start with the registries and root theme in `createCompileContext`. Node enters `resolveNode` through traversal's `emitNodeChild`. Deferred path processing enters `resolvePath`, then binds secondary capabilities according to the emitter. The Path diagram groups the two color-resolution calls in one note and marks target binding only as a handoff. This page focuses on configuration results; [Node Compilation](/kernel/packages/core/node-compilation) and [Path Compilation](/kernel/packages/core/path-compilation) cover measurement, boundary intersections and final primitives.
 
 <SourceLinks
   sources={[
@@ -314,14 +314,24 @@ Start with the registries and root theme in `createCompileContext`. Node enters 
 <LinkedSections
   items={[
     {
+      title: 'Coordinate resolution',
+      description: 'Follow reference visibility, coordinate conversion and Scope placement',
+      url: '/kernel/packages/core/coordinates',
+    },
+    {
+      title: 'Node Compilation',
+      description: 'Follow text measurement, node dimensions and connection boundaries',
+      url: '/kernel/packages/core/node-compilation',
+    },
+    {
+      title: 'Path Compilation',
+      description: 'Follow path targets, geometry steps and primitive output',
+      url: '/kernel/packages/core/path-compilation',
+    },
+    {
       title: 'Compilation flow',
       description: 'Place resolution within the full IR-to-Scene process',
       url: '/kernel/packages/core/compilation',
-    },
-    {
-      title: 'Node implementation',
-      description: 'Continue into text measurement, node layout, and boundaries',
-      url: '/kernel/components/node/mechanism',
     },
     {
       title: 'Theme resolution',

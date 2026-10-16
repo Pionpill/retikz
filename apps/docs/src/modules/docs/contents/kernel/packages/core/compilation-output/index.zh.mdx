@@ -5,7 +5,7 @@ description: 追踪 Core 如何汇总 Scene、资源与画布，并交付领域�
 
 [节点编译](/kernel/packages/core/node-compilation)、[路径编译](/kernel/packages/core/path-compilation)和[复合编译](/kernel/packages/core/composite-compilation)解释了图元怎样产生。本页从这些局部结果出发，追踪一次完整编译怎样收尾，以及调用方最终拿到什么。阅读前需要了解[编译流程](/kernel/packages/core/compilation)中的遍历与延迟路径回填。
 
-本文只讨论单次完整编译。渲染器怎样创建 SVG 或绘制 Canvas，以及 Runtime 怎样比较前后两次结果，属于后续消费阶段。
+本文只讨论单次完整编译。渲染器怎样创建 SVG 或绘制 Canvas，以及 Core 与 Runtime 怎样协作处理后续更新，属于后续专题。Core 负责绘图数据的变化比较与增量编译策略，Runtime 负责状态、结果生命周期与一致发布。
 
 ## 整体流程
 
@@ -533,9 +533,79 @@ type QualifiedSpatialHandle = Readonly<{
 
 最终条目还保留从外到内的 `ownerPath`，以及首次声明和最终提交的 `originOccurrence`、`finalOccurrence`。读取时应结合 owner 与 id 理解身份，不能假定所有组件的局部 `body` 都是同一个区域。没有声明时返回 `{ entries: [] }`；Core 不会自动把每个 Node 的边界变成空间句柄。
 
+下面用一个最小卡片复合组件实现图中的平移：回调返回可见节点，并在同一局部坐标系声明 `body` 区域；外层 Scope 将两者一起平移。空间声明通过返回值的 `spatialHandles` 交给 Core，无需开启节点产物或观测。
+
+```ts
+import {
+  compileToScene,
+  CompositeBaseSchema,
+  defineComposite,
+  resolveSpatialHandle,
+  selectSpatialHandles,
+} from '@retikz/core';
+import { literal } from 'zod';
+
+const CardDefinition = defineComposite({
+  namespace: 'demo',
+  type: 'card',
+  schema: CompositeBaseSchema.extend({ namespace: literal('demo'), type: literal('card') }),
+  compile: () => ({
+    children: [
+      {
+        type: 'node',
+        position: [50, 10],
+        layout: { minimumSize: { width: 100, height: 20 }, padding: 0, margin: 0 },
+      },
+    ],
+    spatialHandles: [
+      {
+        id: 'body',
+        role: 'card-body',
+        bounds: { x: 0, y: 0, width: 100, height: 20 },
+      },
+    ],
+  }),
+});
+
+const result = compileToScene(
+  {
+    type: 'scene',
+    version: 1,
+    children: [
+      {
+        type: 'scope',
+        position: [20, 30],
+        children: [{ namespace: 'demo', type: 'card' }],
+      },
+    ],
+  },
+  { composites: [CardDefinition] },
+);
+
+const bodies = selectSpatialHandles(result.spatialHandles, { role: 'card-body' });
+const body = resolveSpatialHandle(result.spatialHandles, {
+  owner: { namespace: 'demo', type: 'card' },
+  id: 'body',
+});
+console.log(bodies.length); // 1
+console.log(body.geometry.bounds); // { x: 20, y: 30, width: 100, height: 20 }
+```
+
+`selectSpatialHandles` 返回所有匹配条目，没有匹配时返回空数组；`resolveSpatialHandle` 要求恰好一个匹配，没有匹配或匹配多个都会抛错。例子中只有一张卡片，所以 owner 类型与局部 id 足以唯一定位；存在多张同类卡片时，还需用 owner 的 `instanceId`、`occurrence` 或祖先条件 `within` 缩小范围。`instanceId` 来自组件声明并由其 schema 接受的 `id`，不能仅靠 Definition 类型区分实例。
+
+这里的矩形由组件主动声明，Core 不会从节点图元自动推导它。若区域属于回调生成的带变换 Scope，应通过 `context.scope(props, children, spatialHandles)` 将声明附着到该 Scope 的局部坐标，而不是把 Scope 内的局部矩形直接放到复合结果顶层。
+
+实际消费可参考 [Flow 的边界示例](/schematic/diagram/flow/extended)：示例从编译结果中读取元素的空间边界，用于显示边界辅助信息。应用同样可以用查询结果放置选中框或定位浮层，无需扫描 Scene 图元反推组件区域。
+
 <SourceLinks
   sources={[
     { label: '空间索引与条目', path: 'packages/kernel/core/src/contract/spatial-handle/types.ts' },
+    { label: '空间声明与 Scope 归属', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: '筛选与唯一查询', path: 'packages/kernel/core/src/contract/spatial-handle/query.ts' },
+    {
+      label: 'Flow 边界的实际消费',
+      path: 'apps/docs/src/modules/docs/contents/schematic/diagram/flow/extended/flow-bounds.tsx',
+    },
     { label: '空间声明的最终投影', path: 'packages/kernel/core/src/compile/orchestration/spatial-handle.ts' },
     { label: '嵌套 owner、Scope 与重放测试', path: 'packages/kernel/core/tests/compile/spatial-handle.test.ts' },
   ]}
