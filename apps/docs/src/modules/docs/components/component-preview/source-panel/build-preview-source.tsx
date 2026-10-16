@@ -221,7 +221,11 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
             render:
               previewIr !== null && !hasComposite
                 ? (mode: RendererMode) => (
-                    <Layout ir={previewIr.ir} renderer={mode} extensions={{ pathKinds: previewIr.pathKinds }} />
+                    <Layout
+                      ir={previewIr.ir}
+                      renderer={mode}
+                      extensions={{ pathKinds: previewIr.pathKinds, shapes: previewIr.shapes }}
+                    />
                   )
                 : undefined,
           },
