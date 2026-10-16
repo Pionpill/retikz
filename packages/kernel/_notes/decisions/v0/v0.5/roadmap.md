@@ -64,6 +64,7 @@
 
 - 建立 identity、事务、增量编译和 Scene patch 的共同底座。
 - 明确执行策略与 retained renderer 的协作边界。
+- 后续统一设计首帧初始化、交互与动画更新中的跨编译结果复用：由 Core 判断依赖失效，Runtime 管理结果生命周期与 candidate 隔离、原子提交，并区分呈现层直接更新与需要增量编译的变化。首帧与 retained controller 的重复编译纳入同一方案，暂不单独处理。
 - 将 trace 领域阶段与计数单位交由 owner 声明并注入，保持 Runtime 领域中立：[050](./050-runtime-trace-owner-declarations.md)。
 
 预期效果：
