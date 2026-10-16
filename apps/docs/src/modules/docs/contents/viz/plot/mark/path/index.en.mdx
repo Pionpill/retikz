@@ -313,16 +313,13 @@ Points, paths, and intervals relate to the coordinate system through the geometr
 
 A path mark therefore needs the connections between several positions. Series grouping, sorting, and missing-value segmentation determine where each path starts, which positions it visits, and where it ends. Once the coordinate system and interpolation strategy determine the route, PathMark converts it into steps for the underlying [Path](/kernel/components/path/step), which handles compilation and rendering.
 
-The flow starts with data rows and follows the main path-generation stages:
+Follow the same ordered positions through three stages: Cartesian coordinates appear above, continuous polar coordinates below. Orange dots and numbers identify original data positions, gray dotted lines help locate them, and blue lines show the connection route. Small gray dots in stages 2 and 3 represent samples inserted between original data positions.
 
-<ComponentPreview files="path-resolution-flow" hideCode type="flow" size="md" />
+<ComponentPreview files="path-projection" hideCode type="illustration" size="xxl" />
 
-1. **Group and sort**: group by `series` or implicit color, then sort each group by `order`; preserve row order when no sorting field is set.
-2. **Check positions and split runs**: check whether each row can project. Depending on `connectNulls`, break, bridge, or skip missing positions. Baseline closure also requires valid lower-boundary positions.
-3. **Generate path points**: Cartesian and chord connections use projected points directly. Polar interpolation samples between angles and radii, including the closing segment when needed.
-4. **Connect and close**: `curve` converts screen points to straight or curved steps; `closure` supplies the chosen return boundary.
-5. **Create Paths**: create Paths for runs and gap bridges, then apply style and labels. Series keep separate groups. With `anchorId`, valid data vertices also produce addressable Coordinates.
-6. **Compile and render**: the underlying Path resolves steps into Scene geometry for SVG or Canvas output.
+1. **Position**: group by `series` or implicit color, then sort each group by `order`, preserving row order when no sorting field is set. Check whether positions can project, then use `connectNulls` to break, bridge, or skip missing values; baseline closure also requires valid lower bounds. Scales and coordinates determine each valid data vertex's screen position.
+2. **Draw**: Cartesian and `chord` interpolation use projected points directly; the upper row connects them with straight segments. Continuous polar `polar` interpolation samples between angles and radii before projecting and connecting, including the closing segment when needed. `curve` determines how screen points connect; `closure` supplies the return boundary. The lower row inserts three illustrative samples between each pair of original positions and connects them with short straight segments to approximate a constant-radius arc. This sample count does not represent the actual sampling density; the next section explains sampling in detail.
+3. **Handle details**: create underlying Paths for continuous runs and gap bridges, apply strokes and path labels, then compile to a Scene for SVG or Canvas. The figure shows a thicker stroke, round caps and joins, and a sloped label. These details do not move the original data vertices. Series keep separate groups; with `anchorId`, valid data vertices also produce addressable Coordinates.
 
 <SourceLinks
   sources={[

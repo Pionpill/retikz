@@ -364,17 +364,13 @@ Unlike [PathMark](/viz/plot/mark/path), which connects vertices, a point mark es
 
 The coordinate system determines the node's center; its shape is then resolved in drawing space. For example, switching a circle of a fixed size from Cartesian to polar coordinates relocates its center by angle and radius, without bending the circle into a sector along the coordinate grid. This independence concerns the shape after projection. Coordinates still affect position, padding, and adjustments performed before projection.
 
-A point mark ultimately lowers into a [Node](/kernel/components/node). All visible point-mark content currently uses Node capabilities; Plot translates data and visual channels into node positions and properties. The resolution chain is:
+A point mark ultimately lowers into a [Node](/kernel/components/node). Follow the same point through positioning, drawing, and detail handling: Cartesian coordinates appear above, polar coordinates below. Orange dots mark projected centers; gray dotted lines are positioning guides.
 
-<ComponentPreview files="point-resolution-flow" hideCode type="flow" size="md" />
+<ComponentPreview files="point-projection" hideCode type="illustration" size="xxl" />
 
-The upper row resolves data and positions. The lower row starts with Node generation and continues through node compilation and rendering. Each stage has the following responsibilities:
-
-1. **Normalize inputs**: React components reuse Vanilla normalization to turn field names, constants, and shorthand properties into a Plot configuration with `type: 'point'`. Direct Source IR enters the remaining stages from this configuration.
-2. **Prepare data and channels**: Plot obtains data views, applies the relevant transforms, and resolves position fields and visual channels such as size, color, shape, and text. Field channels use their scales to produce per-row values; constant channels supply fixed values.
-3. **Determine final positions**: Position scales map field values before the coordinate system projects them into drawing space. With placement configured, role-stage adjustments run before projection and screen-stage adjustments run afterward. Padding and layout coordination supply the final scales and coordinate frames.
-4. **Generate a Node for each row**: Ordinary points create `type: 'node'` at the final position, deliver size, shape, and drawing-style channel values to the node, and attach labels and anchors. A text channel creates a Node with text and no visible shape border, applying `dx` and `dy` as text-position offsets. Invalid positions or missing text skip the corresponding rows. Ordinary points also skip missing or non-finite size fields; negative sizes raise an error.
-5. **Compile and render nodes**: Plot groups the nodes into Scopes with default styles and layer settings. Node compilation resolves shapes, text, labels, and styles into a Scene, which SVG or Canvas renders. The point mark maintains no separate shape or text drawing implementation.
+1. **Position**: after input normalization, Plot obtains data views, applies transforms, and resolves channels. Position fields pass through scales and then coordinate projection: Cartesian components locate the center, while polar coordinates use angle and radius. With placement configured, role-stage adjustments run before projection and screen-stage adjustments afterward. Padding and layout solving supply the final scales and coordinate frames.
+2. **Draw**: each valid row creates a Node at its final position, supplying size, shape, color, and other channel values. The rectangle keeps its 48 × 28 screen dimensions in both coordinate systems; it does not become a sector. A text channel instead creates a text node and applies the `dx` and `dy` offsets.
+3. **Handle details**: Node handles strokes, text, labels, and anchors, then compiles to a Scene for SVG or Canvas. The figure adds a thicker stroke and a label without moving the center. Explicit orientation can also rotate the node, as explained next. Invalid positions or missing text skip the corresponding rows; ordinary points also skip missing or non-finite size fields, while negative sizes raise an error.
 
 <SourceLinks
   sources={[
