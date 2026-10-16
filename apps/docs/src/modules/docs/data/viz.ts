@@ -520,18 +520,6 @@ export const vizSection: Array<Section> = [
           { id: 'path', label: 'viz.compPathMark', difficulty: DocDifficulty.Beginner },
           { id: 'interval', label: 'viz.compIntervalMark', difficulty: DocDifficulty.Beginner },
           { id: 'relation', label: 'viz.compRelationMark', difficulty: DocDifficulty.Beginner },
-          {
-            id: 'position-adjustment',
-            label: 'viz.grammarPositionAdjustment',
-            difficulty: DocDifficulty.Advanced,
-            meta: extensionGuide('plot.mark.position-adjustment'),
-          },
-          {
-            id: 'custom-mark',
-            label: 'viz.grammarMarkCustom',
-            difficulty: DocDifficulty.Internals,
-            meta: extensionGuide('plot.mark.extensions'),
-          },
         ],
       },
       {

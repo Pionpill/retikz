@@ -1,5 +1,5 @@
 ---
-title: 图元
+title: mark · 图元
 description: 图元声明数据要生成的几何类型；比例尺、坐标系与渲染器继续决定数值解释、空间投影和最终输出。
 ---
 
@@ -30,7 +30,7 @@ Mark 是图形语法里的几何层。它回答“每行或每组数据要生成
 - [Guide](/viz/plot/guide)负责轴、图例等阅读辅助
 - renderer 负责把 lowering 后的 core 几何输出为 SVG、Canvas 等目标
 
-内置图元最终会下沉为 [@retikz/core](/kernel/components/introduction) 的 Node、Path 等 Kernel IR，但使用内置图元时不需要手动处理这些底层对象。需要注册新的图元类型时，从[自定义图元](/viz/plot/mark/custom-mark)开始。
+内置图元最终会下沉为 [@retikz/core](/kernel/components/introduction) 的 Node、Path 等 Kernel IR，但使用内置图元时不需要手动处理这些底层对象。
 
 ## 章节内容
 
@@ -55,11 +55,6 @@ Mark 是图形语法里的几何层。它回答“每行或每组数据要生成
       title: 'RelationMark',
       description: '连接点、路径或区间目标，学习普通路径与 ribbon 关系。',
       url: '/viz/plot/mark/relation',
-    },
-    {
-      title: '自定义图元',
-      description: '定义、注册并下沉自定义 mark，让内置和扩展图元复用同一条编译路径。',
-      url: '/viz/plot/mark/custom-mark',
     },
   ]}
 />
