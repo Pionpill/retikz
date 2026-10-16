@@ -49,13 +49,7 @@
   },
   "kernel": {
     "compilationMechanisms": "Compilation mechanisms",
-    "internalMechanisms": "Internal mechanisms",
-    "compositeComponents": "Composite components",
-    "compositeCustom": "Custom usage",
-    "compositeMechanism": "Implementation",
     "internals": "Internals",
-    "compilation": "Compilation flow",
-    "themeResolution": "Theme resolution",
     "label": "Kernel",
     "navigationLabel": "Kernel",
     "navigationDescription": "Build diagrams from core nodes, paths, layout, and rendering primitives",

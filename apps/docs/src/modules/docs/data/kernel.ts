@@ -379,49 +379,6 @@ export const kernelSection: Array<Section> = [
           linkTo: `/kernel/packages/core/${page.id}`,
         })),
       },
-      {
-        id: 'internals',
-        label: 'kernel.internalMechanisms',
-        sidebarGroup: 'kernel.internals',
-        children: [
-          {
-            id: 'compilation',
-            label: 'kernel.compilation',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime', capability: 'kernel.compile' },
-          },
-          {
-            id: 'theme',
-            label: 'kernel.themeResolution',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime', capability: 'kernel.theme' },
-          },
-        ],
-      },
-      {
-        id: 'composite',
-        label: 'kernel.compositeComponents',
-        sidebarGroup: 'kernel.internals',
-        children: [
-          {
-            id: 'custom',
-            label: 'kernel.compositeCustom',
-            difficulty: DocDifficulty.Advanced,
-            meta: extensionGuide('kernel.composite'),
-          },
-          {
-            id: 'mechanism',
-            label: 'kernel.compositeMechanism',
-            difficulty: DocDifficulty.Internals,
-            meta: {
-              pageType: 'guide',
-              audience: 'maintainer',
-              sourceOfTruth: 'runtime',
-              capability: 'kernel.composite',
-            },
-          },
-        ],
-      },
     ],
   },
   {
