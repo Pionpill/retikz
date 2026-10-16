@@ -39,7 +39,6 @@ import type {
   PointSizeStyleSchema,
   PointStrokeStyleSchema,
   PointZIndexStyleSchema,
-  ReferenceMarkSchema,
   RelationEndpointGlyphSchema,
   RelationEndpointGlyphsSchema,
   RelationMarkSchema,
@@ -148,9 +147,6 @@ export type IRPlotIntervalBounds = ZodInfer<typeof IntervalBoundsSchema>;
 
 /** interval mark（柱 / histogram / heatmap / 径向柱 / 饼环） */
 export type IRPlotIntervalMark = ZodInfer<typeof IntervalMarkSchema>;
-
-/** reference mark（参考线 / 阈值线 / 容差带） */
-export type IRPlotReferenceMark = ZodInfer<typeof ReferenceMarkSchema>;
 
 /** mark 锚点 id 声明 */
 export type IRPlotAnchorId = ZodInfer<typeof AnchorIdSchema>;

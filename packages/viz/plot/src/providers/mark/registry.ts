@@ -12,13 +12,7 @@ import { extractMarkType } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import type { IRPlotMarkOperation } from '../../schemas';
 import { BuiltinPlotMark } from '../../schemas';
-import {
-  intervalMarkDefinition,
-  pathMarkDefinition,
-  pointMarkDefinition,
-  referenceMarkDefinition,
-  relationMarkDefinition,
-} from './features';
+import { intervalMarkDefinition, pathMarkDefinition, pointMarkDefinition, relationMarkDefinition } from './features';
 
 const asAnyMarkDefinition = <T extends IRPlotMarkOperation>(def: MarkDefinition<T>): AnyMarkDefinition => def;
 
@@ -31,7 +25,6 @@ export const MARK_REGISTRY: Record<BuiltinPlotMark, AnyMarkDefinition> = {
   [BuiltinPlotMark.Point]: asAnyMarkDefinition(pointMarkDefinition),
   [BuiltinPlotMark.Path]: asAnyMarkDefinition(pathMarkDefinition),
   [BuiltinPlotMark.Interval]: asAnyMarkDefinition(intervalMarkDefinition),
-  [BuiltinPlotMark.Reference]: asAnyMarkDefinition(referenceMarkDefinition),
   [BuiltinPlotMark.Relation]: asAnyMarkDefinition(relationMarkDefinition),
 };
 

@@ -224,8 +224,8 @@ const assertRequiredPositionChannels = (
     // 自定义 mark：必填位置通道由其 MarkDefinition.lower 自行 fail-loud，不在通用校验内强制
     if (!isBuiltinMark(mark)) continue;
 
-    // reference 取向由 encoding.x XOR y 决定（绑一个、缺一个）；其取向校验在 lowerReference fail-loud
-    if (mark.type === BuiltinPlotMark.Reference || mark.type === BuiltinPlotMark.Relation) continue;
+    // relation 通过 source / target 定位，不要求 encoding 位置通道
+    if (mark.type === BuiltinPlotMark.Relation) continue;
 
     // interval：band / span bounds 需对应 encoding 位置通道；extent（字段区间）/ full（满域）从字段 / 坐标系取位置，豁免该角色
     if (mark.type === BuiltinPlotMark.Interval) {

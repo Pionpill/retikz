@@ -26,7 +26,6 @@ import type {
   InputPlotIntervalMark,
   InputPlotPathMark,
   InputPlotPointMark,
-  InputPlotReferenceMark,
   InputPlotRelationMark,
 } from './input-marks';
 import type { InputPlotScale } from './input-scales';
@@ -34,7 +33,6 @@ import {
   buildMarkLabel,
   canonicalGeometryLabel,
   canonicalRelationPath,
-  collectReference,
   positionEncoding,
   recordColor,
   recordMarkColor,
@@ -630,8 +628,6 @@ export const applyDeclaration = (
     if (direction === 'horizontal') into.hasHorizontalBar = true;
     recordColor(into, colorEnc);
     recordResolveLabel(into, id, props.resolveLabel);
-  } else if (declaration.kind === 'reference-mark') {
-    collectReference(child.props as InputPlotReferenceMark, into, styleContext);
   } else if (declaration.kind === 'relation-mark') {
     const {
       id,

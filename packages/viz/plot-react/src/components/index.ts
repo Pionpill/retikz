@@ -10,10 +10,9 @@ export type {
   IntervalMarkProps,
   PathMarkProps,
   PointMarkProps,
-  ReferenceMarkProps,
   RelationMarkProps,
 } from './marks';
-export { IntervalMark, PathMark, PointMark, ReferenceMark, RelationMark } from './marks';
+export { IntervalMark, PathMark, PointMark, RelationMark } from './marks';
 export type { PlotScaleProps } from './scales';
 export { PlotScale } from './scales';
 export type { PlotTransformProps } from './transform';

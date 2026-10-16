@@ -2,7 +2,7 @@ import type { IRPaint } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
-import { IntervalMark, PathMark, PointMark, ReferenceMark } from '../../../src/components/marks';
+import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks';
 
 const gradientPaint: IRPaint = {
   kind: 'linearGradient',
@@ -60,16 +60,6 @@ describe('buildPlotIR paint props', () => {
 
     expect(spec.marks[0]).toMatchObject({
       type: 'interval',
-      fill: { kind: 'constant', value: gradientPaint },
-      stroke: { kind: 'constant', value: gradientPaint },
-    });
-  });
-
-  it('reference paint props pass through to mark IR', () => {
-    const spec = buildPlotIR(<ReferenceMark y={8} yTo={12} fill={gradientPaint} stroke={gradientPaint} />, '__plot');
-
-    expect(spec.marks[0]).toMatchObject({
-      type: 'reference',
       fill: { kind: 'constant', value: gradientPaint },
       stroke: { kind: 'constant', value: gradientPaint },
     });

@@ -2369,11 +2369,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'IntervalBounds',
     url: '/viz/plot/reference/mark#intervalboundsschema',
   },
-  ReferenceMarkSchema: {
-    schema: IRPlot.ReferenceMarkSchema,
-    label: 'ReferenceMark',
-    url: '/viz/plot/reference/mark#referencemarkschema',
-  },
   RelationMarkSchema: {
     schema: IRPlot.RelationMarkSchema,
     label: 'RelationMark',

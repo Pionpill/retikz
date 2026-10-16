@@ -70,7 +70,6 @@ import {
   PathClosureKind,
   PathCurve,
   BuiltinPlotMark,
-  ReferenceMarkKind,
   RelationGeometryKind,
   RelationOrthogonalLabelStep,
   RelationRouteStepKind,
@@ -929,70 +928,6 @@ export const IntervalMarkSchema = object({
   'Interval mark: orthogonal interval product realized per bounds × coordinate (bar / histogram / heatmap cell / radial bar / pie-donut sector)',
 );
 
-/** 校验常量或逐记录参考线、单轴带与多角色区域约束 */
-export const ReferenceMarkSchema = strictObject({
-  type: literal(BuiltinPlotMark.Reference).describe(
-    'Discriminator: a constant-position reference mark (line for a single value, band for a [lo,hi] interval, or region for a bounded coordinate cell)',
-  ),
-  kind: literal(ReferenceMarkKind.Region)
-    .optional()
-    .describe(
-      'Reference form override. Set to region to require lower/upper bounds for every consumed coordinate role and fill the bounded reference cell; omit to infer line or one-axis band',
-    ),
-  interpolation: zodEnum(PolarInterpolation)
-    .optional()
-    .describe('Polar2D band or region boundary override; fixed-angle reference lines remain straight'),
-  yTo: union([number(), NonBlankStringSchema])
-    .optional()
-    .describe(
-      'Upper bound along y: number → constant, string → per-datum field. With encoding.y alone it creates a horizontal band y∈[y,yTo]; with kind=region it is the region y upper bound',
-    ),
-  xTo: union([number(), NonBlankStringSchema])
-    .optional()
-    .describe(
-      'Upper bound along x: number → constant, string → per-datum field. With encoding.x alone it creates a vertical band x∈[x,xTo]; with kind=region it is the region x upper bound',
-    ),
-  extentField: NonBlankStringSchema.optional().describe(
-    'Per-datum partial-length reference/band: field giving the span start along the opposite axis (omit → span the full opposite domain). Pairs with extentToField',
-  ),
-  extentToField: NonBlankStringSchema.optional().describe(
-    'Per-datum partial-length reference/band: field giving the span end along the opposite axis (omit → span the full opposite domain). Pairs with extentField',
-  ),
-  strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
-    'Reference line stroke width: field-bound datum channel or constant core Path stroke width',
-  ),
-  opacity: MarkOpacityStyleSchema.optional(),
-  label: union([MarkNodeLabelListSchema, MarkGeometryLabelListSchema])
-    .optional()
-    .describe(
-      'Host label for the generated reference primitive: line uses geometry label, band / region use node label',
-    ),
-  ...coreNodeStyle,
-  ...corePathStyle,
-  ...markBase,
-  ...positionalEncoding,
-})
-  .superRefine((mark, ctx) => {
-    if (mark.label === undefined) return;
-
-    const usesNodeHost = mark.kind === ReferenceMarkKind.Region || mark.xTo !== undefined || mark.yTo !== undefined;
-    const result = usesNodeHost
-      ? MarkNodeLabelListSchema.safeParse(mark.label)
-      : MarkGeometryLabelListSchema.safeParse(mark.label);
-    if (!result.success) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['label'],
-        message: usesNodeHost
-          ? 'reference band / region expects node label fields'
-          : 'reference line expects geometry label fields',
-      });
-    }
-  })
-  .describe(
-    'Reference mark: a constant-position reference constraint. Bind x (vertical) or y (horizontal) for a line or one-axis band; set kind=region with lower/upper bounds for the active coordinate roles. Field → per-datum, value → constant. Use extentField / extentToField for partial-length one-axis spans',
-  );
-
 /** 校验普通路径关系的插值、路由、标签与路径选项 */
 export const RelationPathGeometrySchema = strictObject({
   interpolation: zodEnum(PolarInterpolation)
@@ -1171,16 +1106,13 @@ export const RelationMarkSchema = strictObject({
     'Relation mark: connects source and target targets through a core Path; kind selects stroke or ribbon path semantics',
   );
 
-/** 校验内置点、路径、区间、参考与关系标记 */
+/** 校验内置点、路径、区间与关系标记 */
 export const MarkSchema = discriminatedUnion('type', [
   PointMarkSchema,
   PathMarkSchema,
   IntervalMarkSchema,
-  ReferenceMarkSchema,
   RelationMarkSchema,
-]).describe(
-  'Mark union: dimensional marks (point / path / interval), reference marks, and source-target relation marks',
-);
+]).describe('Mark union: dimensional marks (point / path / interval) and source-target relation marks');
 
 const CustomMarkObjectSchema = looseObject({
   type: NonBlankStringSchema.refine(type => !BUILTIN_MARK_TYPES.has(type), {

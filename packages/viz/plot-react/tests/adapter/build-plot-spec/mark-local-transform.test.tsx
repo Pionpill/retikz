@@ -2,7 +2,7 @@ import type { IRDataTransform, IRDataTransformDeclaration } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
-import { IntervalMark, PathMark, PointMark, ReferenceMark } from '../../../src/components/marks';
+import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks';
 
 describe('buildPlotIR mark-local transform', () => {
   const markTransform: Array<IRDataTransformDeclaration> = [
@@ -25,12 +25,6 @@ describe('buildPlotIR mark-local transform', () => {
     const spec = buildPlotIR(<IntervalMark x="x" y="score" transform={markTransform} />, '__plot');
 
     expect(spec.marks[0]).toMatchObject({ type: 'interval', transform: markTransform });
-  });
-
-  it('reference_mark_forwards_local_transform', () => {
-    const spec = buildPlotIR(<ReferenceMark y={80} transform={markTransform} />, '__plot');
-
-    expect(spec.marks[0]).toMatchObject({ type: 'reference', transform: markTransform });
   });
 
   it('mark_transform_shortcut_definitions_append_plot_transforms_without_consuming_mark_local_transform', () => {

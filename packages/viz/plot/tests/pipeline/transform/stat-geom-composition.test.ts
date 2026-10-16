@@ -71,7 +71,7 @@ describe('stat-geom composition surface (contract)', () => {
     },
   } as const;
 
-  it('boxplot composition uses interval, reference, and point layers without a boxplot mark type', () => {
+  it('boxplot composition uses interval, relation, and point layers without a boxplot mark type', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -93,18 +93,16 @@ describe('stat-geom composition surface (contract)', () => {
           opacity: { fill: { kind: 'constant', value: 0.28 } },
         },
         {
-          type: 'reference',
+          type: 'relation',
           transform: [{ operation: boxSummary }],
-          extentField: 'boxX0',
-          extentToField: 'boxX1',
-          encoding: { y: { field: 'median' } },
+          source: { project: { x: 'boxX0', y: 'median' } },
+          target: { project: { x: 'boxX1', y: 'median' } },
         },
         {
-          type: 'reference',
+          type: 'relation',
           transform: [{ operation: boxSummary }],
-          extentField: 'whiskerMin',
-          extentToField: 'whiskerMax',
-          encoding: { x: { field: 'boxX' } },
+          source: { project: { x: 'boxX', y: 'whiskerMin' } },
+          target: { project: { x: 'boxX', y: 'whiskerMax' } },
         },
         {
           type: 'point',
@@ -120,8 +118,8 @@ describe('stat-geom composition surface (contract)', () => {
     const outsideLayer = layerOf(spec, { boxRows }, 3);
 
     expect(boxLayer.children).toHaveLength(2);
-    expect(medianLayer.children).toHaveLength(2);
-    expect(whiskerLayer.children).toHaveLength(2);
+    expect(medianLayer.children.filter(child => child.type === 'path')).toHaveLength(2);
+    expect(whiskerLayer.children.filter(child => child.type === 'path')).toHaveLength(2);
     expect(outsideLayer.children).toHaveLength(2);
     expect(JSON.stringify(spec)).not.toMatch(/boxplot|densityMark|regression/i);
   });

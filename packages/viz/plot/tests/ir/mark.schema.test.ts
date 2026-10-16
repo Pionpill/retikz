@@ -654,115 +654,8 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
-  // contract：reference(参考线 / 阈值带) mark
-  it('mark_reference_horizontal_constant_valid', () => {
-    const m = { type: 'reference', encoding: { y: { value: 80 }, color: { value: 'crimson' } } };
-
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
-
-  it('mark_reference_vertical_field_valid', () => {
-    const m = { type: 'reference', encoding: { x: { field: 'date' } } };
-
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
-
-  it('mark_reference_per_datum_field_color_valid', () => {
-    const m = { type: 'reference', encoding: { y: { field: 'threshold' }, color: { field: 'category', scale: 'c' } } };
-
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
-
-  it('mark_reference_extent_pair_valid', () => {
-    const m = { type: 'reference', extentField: 'rowLo', extentToField: 'rowHi', encoding: { x: { field: 'date' } } };
-
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
-
-  it('mark_reference_band_constant_yTo_valid', () => {
-    const m = { type: 'reference', yTo: 90, encoding: { y: { value: 70 }, color: { value: 'amber' } } };
-
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
-
-  it('mark_reference_band_field_yTo_valid', () => {
-    const m = { type: 'reference', yTo: 'hi', encoding: { y: { field: 'lo' } } };
-
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
-
-  it('mark_reference_band_xTo_valid', () => {
-    const m = { type: 'reference', xTo: 5, encoding: { x: { value: 2 } } };
-
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
-
-  it('mark_reference_region_valid', () => {
-    const m = { type: 'reference', kind: 'region', xTo: 5, yTo: 90, encoding: { x: { value: 2 }, y: { value: 70 } } };
-
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
-
-  it('mark_reference_minimal_omits_optionals', () => {
-    // xTo / yTo / extent 省略：schema 不写入默认值，仅解析通过（line 形态由 lowering 判别）
-    const m = { type: 'reference', encoding: { y: { value: 50 } } };
-    const parsed = MarkSchema.parse(m);
-
-    expect(parsed).not.toHaveProperty('kind');
-    expect(parsed).not.toHaveProperty('yTo');
-    expect(parsed).not.toHaveProperty('xTo');
-    expect(parsed).not.toHaveProperty('extentField');
-  });
-
-  it('mark_reference_with_id_valid', () => {
-    const m = { type: 'reference', id: 'avg', encoding: { y: { value: 80 } } };
-
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
-
-  it('mark_reference_union_discriminates', () => {
-    const parsed = MarkSchema.parse({ type: 'reference', yTo: 90, encoding: { y: { value: 70 } } });
-
-    expect(parsed.type).toBe('reference');
-    expect((parsed as { yTo?: number }).yTo).toBe(90);
-  });
-
-  it('mark_reference_empty_extent_field_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'reference', extentField: '', encoding: { x: { value: 5 } } })).toThrow();
-  });
-
-  it.each(['', '   '])('mark_reference_blank_string_yTo_%j_rejected', yTo => {
-    expect(() => MarkSchema.parse({ type: 'reference', yTo, encoding: { y: { value: 70 } } })).toThrow();
-  });
-
-  it('mark_reference_unknown_kind_rejected', () => {
-    expect(() =>
-      MarkSchema.parse({ type: 'reference', kind: 'band', yTo: 90, encoding: { y: { value: 70 } } }),
-    ).toThrow();
-  });
-
-  it('mark_reference_typo_type_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'rul', encoding: { y: { value: 80 } } })).toThrow();
-  });
-
-  it('mark_reference_preserves_unknown_role_key_size', () => {
-    // 未知 encoding key 在 schema 层保留；lowering 按坐标系 roles fail-loud
-    const parsed = MarkSchema.parse({ type: 'reference', encoding: { y: { value: 80 }, size: { field: 'p' } } });
-
-    expect((parsed.encoding as { size?: unknown }).size).toEqual({ field: 'p' });
-  });
-
-  it('mark_reference_json_round_trip', () => {
-    const m = {
-      type: 'reference',
-      id: 'tol',
-      kind: 'region',
-      xTo: 'x1',
-      yTo: 'hi',
-      encoding: { x: { field: 'x0' }, y: { field: 'lo' }, color: { field: 'cat', scale: 'c' } },
-    };
-
-    expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
+  it('rejects unsupported built-in mark discriminators', () => {
+    expect(MarkSchema.safeParse({ type: 'reference', encoding: { y: { value: 70 } } }).success).toBe(false);
   });
 
   // contract：text → point (encoding.text) + 位置 mark label
@@ -895,17 +788,6 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_reference_accepts_paint_fill_and_stroke', () => {
-    const m = {
-      type: 'reference',
-      fill: { kind: 'constant', value: gradientPaint },
-      stroke: { kind: 'constant', value: gradientPaint },
-      encoding: { y: { value: 80 } },
-    };
-
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
-
   it('mark_style_colors_reject_whitespace_only_strings', () => {
     expect(
       MarkSchema.safeParse({
@@ -958,30 +840,6 @@ describe('MarkSchema (contract)', () => {
         type: 'path',
         label: { content: { value: 'trend' }, pin: true },
         encoding: { x: { field: 'x' }, y: { field: 'y' } },
-      }),
-    ).toThrow();
-  });
-
-  it('mark_reference_line_label_valid', () => {
-    const m = {
-      type: 'reference',
-      label: { content: { value: 'target' }, position: 'near-end', side: 'top' },
-      encoding: { y: { value: 80 } },
-    };
-
-    expect(MarkSchema.parse(m)).toEqual({
-      ...m,
-      label: { ...m.label, side: 'top' },
-    });
-  });
-
-  it('mark_reference_band_rejects_geometry_only_side', () => {
-    expect(() =>
-      MarkSchema.parse({
-        type: 'reference',
-        label: { content: { value: 'band' }, side: 'top' },
-        yTo: 90,
-        encoding: { y: { value: 80 } },
       }),
     ).toThrow();
   });
@@ -1107,16 +965,6 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_reference_accepts_local_transform', () => {
-    const m = {
-      type: 'reference',
-      transform: [{ operation: { kind: 'derive-interval', params: { startFrom: 'low', endFrom: 'high' } } }],
-      encoding: { y: { field: 'intervalEnd' } },
-    };
-
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
-
   it('custom_mark_accepts_local_transform', () => {
     const m = {
       type: 'dot',
@@ -1142,12 +990,6 @@ describe('Polar interpolation mark contract', () => {
         encoding: { x: { field: 'angle' }, y: { field: 'radius' } },
       },
       {
-        type: 'reference',
-        interpolation,
-        yTo: 2,
-        encoding: { y: { value: 1 } },
-      },
-      {
         type: 'relation',
         autoPadding: false,
         source: { project: { x: 'sourceAngle', y: 'sourceRadius' } },
@@ -1161,8 +1003,8 @@ describe('Polar interpolation mark contract', () => {
     }
   });
 
-  it.each(['path', 'interval', 'reference'] as const)('rejects unknown %s interpolation', type => {
-    const encoding = type === 'reference' ? { y: { value: 1 } } : { x: { field: 'x' }, y: { field: 'y' } };
+  it.each(['path', 'interval'] as const)('rejects unknown %s interpolation', type => {
+    const encoding = { x: { field: 'x' }, y: { field: 'y' } };
 
     expect(() => MarkSchema.parse({ type, interpolation: 'spline', encoding })).toThrow();
   });

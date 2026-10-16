@@ -87,7 +87,6 @@ describe('normalizePlot', () => {
         declarations: [
           { kind: 'path-mark', props: { x: 'angle', y: 'radius', interpolation: 'polar' }, path: [0] },
           { kind: 'interval-mark', props: { x: 'angle', y: 'radius', interpolation: 'chord' }, path: [1] },
-          { kind: 'reference-mark', props: { y: 1, yTo: 2, interpolation: 'polar' }, path: [2] },
           {
             kind: 'relation-mark',
             props: {
@@ -107,7 +106,6 @@ describe('normalizePlot', () => {
     expect(declaration.fragment.marks).toMatchObject([
       { type: 'path', interpolation: 'polar' },
       { type: 'interval', interpolation: 'chord' },
-      { type: 'reference', interpolation: 'polar' },
       { type: 'relation', path: { interpolation: 'chord' } },
     ]);
   });

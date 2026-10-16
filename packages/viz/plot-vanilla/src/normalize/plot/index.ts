@@ -42,7 +42,6 @@ export type {
   InputPlotMarkNodeLabel,
   InputPlotPathMark,
   InputPlotPointMark,
-  InputPlotReferenceMark,
   InputPlotRelationMark,
   InputPlotRelationPathGeometry,
   InputPlotRelationRouteStep,

@@ -1105,7 +1105,7 @@ describe('lowerPlots mark paint', () => {
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
-  it('reference_band_constant_paint_lowers_to_node_default_and_compiles', () => {
+  it('interval_constant_paint_lowers_to_node_default_and_compiles', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -1117,11 +1117,11 @@ describe('lowerPlots mark paint', () => {
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [
         {
-          type: 'reference',
-          yTo: 12,
+          type: 'interval',
+          bounds: { x: { kind: 'full' }, y: { kind: 'span', baseline: 8 } },
           fill: { kind: 'constant', value: paintGradient },
           stroke: { kind: 'constant', value: paintGradient },
-          encoding: { y: { value: 8 } },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
         },
       ],
     });
