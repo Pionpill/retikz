@@ -422,9 +422,12 @@
     "roadmap": "Roadmap"
   },
   "toc": {
+    "fixedHeader": "Fixed header",
+    "scrollingHeader": "Scrolling header",
     "copyLink": "Copy link",
     "outline": "Outline",
     "linkCopied": "Link copied",
+    "linkCopyFailed": "Copy failed. Copy the link from the address bar.",
     "showOutline": "Show outline",
     "hideOutline": "Hide outline"
   },

@@ -87,7 +87,7 @@ export const mdxComponents: MDXComponents = {
   h1: ({ className, ...props }) => (
     <h1
       className={cn(
-        'mt-2 scroll-mt-[calc(var(--spacing)*14+25px)] font-heading text-3xl font-bold tracking-tight',
+        'mt-2 scroll-mt-[var(--doc-heading-offset,calc(var(--spacing)*14+25px))] font-heading text-3xl font-bold tracking-tight',
         className,
       )}
       {...props}
@@ -96,7 +96,7 @@ export const mdxComponents: MDXComponents = {
   h2: ({ className, ...props }) => (
     <h2
       className={cn(
-        'mt-10 scroll-mt-[calc(var(--spacing)*14+25px)] font-heading text-xl font-medium tracking-tight first:mt-0 lg:mt-12 [&+h3]:mt-6! [&+p]:mt-4! *:[code]:text-xl',
+        'mt-10 scroll-mt-[var(--doc-heading-offset,calc(var(--spacing)*14+25px))] font-heading text-xl font-medium tracking-tight first:mt-0 lg:mt-12 [&+h3]:mt-6! [&+p]:mt-4! *:[code]:text-xl',
         className,
       )}
       {...props}
@@ -105,7 +105,7 @@ export const mdxComponents: MDXComponents = {
   h3: ({ className, ...props }) => (
     <h3
       className={cn(
-        'mt-12 scroll-mt-[calc(var(--spacing)*14+25px)] font-heading text-lg font-medium tracking-tight [&+p]:mt-4! *:[code]:text-xl',
+        'mt-12 scroll-mt-[var(--doc-heading-offset,calc(var(--spacing)*14+25px))] font-heading text-lg font-medium tracking-tight [&+p]:mt-4! *:[code]:text-xl',
         className,
       )}
       {...props}
@@ -114,7 +114,7 @@ export const mdxComponents: MDXComponents = {
   h4: ({ className, ...props }) => (
     <h4
       className={cn(
-        'mt-8 scroll-mt-[calc(var(--spacing)*14+25px)] font-heading text-base font-medium tracking-tight',
+        'mt-8 scroll-mt-[var(--doc-heading-offset,calc(var(--spacing)*14+25px))] font-heading text-base font-medium tracking-tight',
         className,
       )}
       {...props}
@@ -122,13 +122,19 @@ export const mdxComponents: MDXComponents = {
   ),
   h5: ({ className, ...props }) => (
     <h5
-      className={cn('mt-8 scroll-mt-[calc(var(--spacing)*14+25px)] text-base font-medium tracking-tight', className)}
+      className={cn(
+        'mt-8 scroll-mt-[var(--doc-heading-offset,calc(var(--spacing)*14+25px))] text-base font-medium tracking-tight',
+        className,
+      )}
       {...props}
     />
   ),
   h6: ({ className, ...props }) => (
     <h6
-      className={cn('mt-8 scroll-mt-[calc(var(--spacing)*14+25px)] text-base font-medium tracking-tight', className)}
+      className={cn(
+        'mt-8 scroll-mt-[var(--doc-heading-offset,calc(var(--spacing)*14+25px))] text-base font-medium tracking-tight',
+        className,
+      )}
       {...props}
     />
   ),
