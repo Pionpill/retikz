@@ -38,19 +38,19 @@ Use `ScatterProperties` in React, `properties` in the Vanilla API, and `recipe.p
 | Opacity        | `opacity`        | `number`                                                 | Overall opacity, from 0 to 1                                                                            |
 |                | `opacity.fill`   | `number`                                                 | Fill opacity, from 0 to 1                                                                               |
 |                | `opacity.stroke` | `number`                                                 | Stroke opacity, from 0 to 1                                                                             |
-| Padding        | `autoPadding`    | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance |
+| Padding        | `autoPadding`    | `false`, `'max-radius'`, `'point-aware'`, `object`       | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance |
 |                | `domainPadding`  | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                |
 
-Shared font, label, transform, and shadow options are not explained individually here; see the [properties schema](#scatterproperties--irscatterchartproperties--scatterchartpropertiesschema) for all fields. See [shared point-chart padding](/viz/chart/points#automatic-edge-padding) for padding behavior and limitations.
+Shared font, label, transform, and shadow options are not explained individually here; see the [properties schema](#scatterproperties--irscatterchartproperties--scatterchartpropertiesschema) for all fields. See [shared point-chart padding](/viz/plot/mark/point#edge-padding) for padding behavior and limitations.
 
 #### ScatterMark
 
 Use `ScatterMark` in React, `marks` in the Vanilla API, and `recipe.marks` in direct IR. React marks must be direct children of `ScatterChart`; Vanilla / IR marks declare `kind: 'scatter'`.
 
-| Property     | Type                             | Description                                                                                      |
-| ------------ | -------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `override`   | `boolean`                        | Appends when omitted; `true` replaces the default Scatter mark in place                          |
-| `encodings`  | `ScatterChartMark['encodings']`  | Supports `x`, `y`, `color`, `size`, `opacity`, and `shape`; does not accept full mapping objects |
-| `properties` | `ScatterChartMark['properties']` | Follows the properties above, excluding `autoPadding` and `domainPadding`                        |
+| Property     | Type                             | Description                                                                                          |
+| ------------ | -------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `override`   | `boolean`                        | Appends when omitted; `true` replaces the default Scatter mark in place                              |
+| `encodings`  | `ScatterChartMark['encodings']`  | Supports `x`, `y`, `color`, `size`, `opacity`, and `shape`; does not accept full mapping objects     |
+| `properties` | `ScatterChartMark['properties']` | Follows the properties above, excluding `domainPadding`; `autoPadding` can override the chart policy |
 
 Omitted mappings and properties inherit applicable chart settings. If replacement finds no target, the mark is appended and `onWarn` reports `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND`. See the [mark schema](#scattermark--scatterchartmarkschema) for the full structure.

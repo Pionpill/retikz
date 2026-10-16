@@ -1,19 +1,88 @@
 ---
 title: Compilation Core · core
-description: Browse @retikz/core IR, Definitions, compilation, and Scene semantics
+description: Compile drawing declarations into a Scene with resolved geometry and styles using @retikz/core, and understand its contracts, pipeline and package boundaries
 ---
 
-`@retikz/core` compiles authored input into deterministic Scenes and owns Core IR and extension contracts.
+A drawing declaration can say “connect A to B”, while a renderer needs the exact start and end points. `@retikz/core` resolves these declarations, computes node layout, coordinates and paths, and assembles a renderer-independent Scene.
 
-## Responsibilities
+This package is for developers building domain components, extending drawing capabilities or integrating the compiler. Most drawing applications start with React or Vanilla, whose adapters prepare Core input and pass compiled results to a renderer.
 
-| Document                 | Responsibility                                      | Reach for it when                                                           |
-| ------------------------ | --------------------------------------------------- | --------------------------------------------------------------------------- |
-| Compilation Flow         | Full compilation from IR to Scene                   | Understanding node layout, deferred paths, and result assembly              |
-| Configuration resolution | From sparse declarations to layout input            | Understanding inheritance, colors, and Definition binding                   |
-| Coordinate resolution    | From position expressions to local and world points | Understanding references, anchors, namespaces, and Scope placement          |
-| Node Compilation         | From text metrics to shape and text layout          | Understanding node dimensions, baselines, labels, and connection boundaries |
-| Path Compilation         | From targets and steps to path primitives           | Understanding cursors, boundary intersections, arrows, and labels           |
+## Responsibilities at a glance
+
+Consider two nodes, A and B, joined by a line. The input records their positions, text and connection targets. Core computes node boundaries and connection endpoints, then emits drawable primitives.
+
+| Object                | Responsibility                                                             | Two-node example                                                |
+| --------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| IR                    | Store serializable drawing declarations                                    | Declare A, B and a path referencing them                        |
+| Definition / registry | Define and bind shapes, path kinds, composites and other capabilities      | Look up the node shape and path processing capabilities         |
+| Compiler              | Resolve configuration, layout, coordinates and paths                       | Determine endpoints from node boundaries                        |
+| Scene                 | Store resolved primitives, resources, canvas and other drawing information | Drawing data for rectangles, text and the connecting line       |
+| CompileResult         | Collect the Scene, artifacts and spatial handles                           | Deliver the Scene to a renderer and other data to its consumers |
+
+IR describes what the author wants to draw; Scene records how to draw the compiled result. A Definition describes a capability, and a registry looks up definitions by name. Built-in and custom capabilities participate in compilation through their respective contracts.
+
+## From declarations to drawing data
+
+The two nodes below have centers at `[0, 0]` and `[180, 0]`. The line references A and B. Core uses their shapes and connection boundaries to calculate endpoints on the facing edges.
+
+<ComponentPreview
+  files={[
+    '/kernel/packages/core/compilation/compilation-example',
+    '/kernel/packages/core/compilation/compilation-example.data',
+  ]}
+  size="xs"
+  hideCode
+  type="illustration"
+/>
+
+Core resolves each node's style and shape, uses text metrics to determine its size, then resolves paths referencing the nodes. A path declared before its target nodes can have its endpoints filled in after node layout. SVG and Canvas renderers consume the same Scene contract.
+
+The figure specifies minimum node sizes to make the connection boundaries clear. See [Compilation](/kernel/packages/core/compilation) for its full input and processing order.
+
+## Installation and usage
+
+<PackageManagerInstall packages="@retikz/core" />
+
+Core provides a framework-independent TypeScript compilation API. This example uses the same A-to-B connection with default node layout:
+
+```ts
+import { compileToScene, type IRScene } from '@retikz/core';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'A' } },
+        { type: 'step', kind: 'line', to: { id: 'B' } },
+      ],
+    },
+    { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+    { type: 'node', id: 'B', position: [180, 0], text: 'B' },
+  ],
+};
+
+const result = compileToScene(ir);
+console.log(result.scene);
+```
+
+`compileToScene` synchronously returns a `CompileResult`. Its `scene` can be passed to a renderer; `artifacts` and `spatialHandles` carry additional artifacts and spatial handles. See [Compilation Output](/kernel/packages/core/compilation-output) for details. This call compiles the drawing; Render or an adapter handles its display.
+
+The entry accepts typed IR. External input such as JSON should first pass through the appropriate schema validation. Compile options can supply text measurement, formula handling and extension definitions.
+
+## Package boundaries
+
+| Core owns                                                          | Collaborators own                                                                        |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Core IR, Definitions and extension contracts                       | React / Vanilla provide authoring APIs and prepare input                                 |
+| Configuration resolution, node layout, coordinate and path solving | Math provides basic computation; the host supplies capabilities such as text measurement |
+| Scene compilation, resource and output assembly                    | Render draws the Scene through SVG, Canvas and other backends                            |
+| Drawing-state dependencies and incremental computation rules       | Runtime manages state, result lifetimes and consistent publication                       |
+| Compilation observation outputs                                    | Inspect consumes observations and creates inspection helpers                             |
+
+This series follows one compilation from input to final outputs. Subsequent updates across Runtime, Core and Render belong to the cross-package dynamic update topic. See [Incremental Execution](/kernel/packages/runtime) for Runtime state and transaction mechanisms.
 
 ## Contents
 
@@ -43,6 +112,16 @@ description: Browse @retikz/core IR, Definitions, compilation, and Scene semanti
       title: 'Path Compilation',
       description: 'Trace targets, segments, boundary intersections, arrows, and label output',
       url: '/kernel/packages/core/path-compilation',
+    },
+    {
+      title: 'Composite Compilation',
+      description: 'Follow Definition assembly, isolated child probes, and replay',
+      url: '/kernel/packages/core/composite-compilation',
+    },
+    {
+      title: 'Compilation Output',
+      description: 'Follow Scene, resources, canvas and additional results',
+      url: '/kernel/packages/core/compilation-output',
     },
   ]}
 />

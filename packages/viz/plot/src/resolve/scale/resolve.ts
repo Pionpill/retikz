@@ -27,7 +27,7 @@ export const resolveScaleDefinition = (
   const def = context.registry.get(operation.type);
   if (def === undefined) {
     throw new RetikzPlotError(
-      `lowerPlots: scale type "${operation.type}" is not registered; pass a ScaleDefinition via options.scaleDefinitions`,
+      `lowerPlots: scale type "${operation.type}" is not registered; pass a ScaleDefinition via options.definitions.scales`,
     );
   }
 

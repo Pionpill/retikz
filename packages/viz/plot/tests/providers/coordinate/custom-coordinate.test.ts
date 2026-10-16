@@ -3,7 +3,7 @@ import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal, number, object } from 'zod';
 
-import type { AnyCoordinateDefinition, AxisFrame, CoordinateFrame, DimensionRole } from '../../../src/contract';
+import type { AnyCoordinateDefinition, CoordinateFrame, DimensionRole } from '../../../src/contract';
 import { createCoordinateFrame, defineCoordinate } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
@@ -37,9 +37,8 @@ const WIDTH = 480;
 const HEIGHT = 240;
 
 const opts = (coordinates: Array<AnyCoordinateDefinition>): LowerPlotsOptions => ({
-  width: WIDTH,
-  height: HEIGHT,
-  coordinates,
+  layout: { width: WIDTH, height: HEIGHT },
+  definitions: { coordinates },
 });
 
 const MID_Y = HEIGHT / 2;
@@ -78,7 +77,7 @@ const sineCoordinate = defineCoordinate({
 
 const ARCH_HEIGHT = 70;
 
-/** 示例工厂：二维桥坐标系——x 沿拱、y 竖直偏移（加性可分离）；回传解析 frameAlong 让曲线轴精确 */
+/** 示例工厂：二维桥坐标系——x 沿拱、y 竖直偏移（加性可分离）；回传解析 tangentAt 让曲线轴精确 */
 const bridgeCoordinate = defineCoordinate({
   schema: object({
     type: literal('bridge').describe('Discriminator: bridge custom coordinate operation'),
@@ -108,23 +107,21 @@ const bridgeCoordinate = defineCoordinate({
       return [screenX, yOffset - archHeight * (1 - (2 * t - 1) ** 2)];
     };
 
-    const xSlope = xScale.coordinate(1) - xScale.coordinate(0);
-    const ySlope = yScale.coordinate(1) - yScale.coordinate(0);
-
-    const frameAlong = (role: DimensionRole, values: ReadonlyArray<unknown>): AxisFrame | null => {
-      const origin = projectRoles(values);
-      if (!origin) return null;
-      if (role === 'y') return { origin, tangent: [0, ySlope] };
-
-      const screenX = xScale.coordinate(values[0]);
-      const u = (2 * screenX) / context.width - 1;
-
-      return { origin, tangent: [xSlope, (4 * archHeight * u * xSlope) / context.width] };
+    const mapRoles = (values: ReadonlyArray<unknown>) => {
+      const mapped = [xScale.coordinate(values[0]), yScale.coordinate(values[1])];
+      return mapped.every(Number.isFinite) ? mapped : null;
     };
-
+    const projectMappedRoles = (values: ReadonlyArray<number>): [number, number] => {
+      const t = values[0] / context.width;
+      return [values[0], values[1] - archHeight * (1 - (2 * t - 1) ** 2)];
+    };
+    const tangentAt = (role: DimensionRole, values: ReadonlyArray<number>): [number, number] =>
+      role === 'y' ? [0, 1] : [1, (4 * archHeight * ((2 * values[0]) / context.width - 1)) / context.width];
     const frame = createCoordinateFrame('bridge', ['x', 'y'], projectRoles, {
       roleScales: { x: xScale, y: yScale },
-      frameAlong,
+      mapRoles,
+      projectMappedRoles,
+      tangentAt,
     });
     const gridLayers: Array<IRScope> = [];
     const axisLayers: Array<IRScope> = [];
@@ -151,7 +148,7 @@ const sineSpec = (): IRPlot =>
     data: { reference: 'd' },
     scales: [],
     coordinate: { type: 'sine' },
-    marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
+    marks: [{ type: 'point', autoPadding: false, encoding: { x: { field: 'v' } } }],
   });
 
 const bridgeSpec = (): IRPlot =>
@@ -161,7 +158,7 @@ const bridgeSpec = (): IRPlot =>
     data: { reference: 'd' },
     scales: [],
     coordinate: { type: 'bridge', archHeight: ARCH_HEIGHT },
-    marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+    marks: [{ type: 'point', autoPadding: false, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
   });
 
 const uvCoordinate = defineCoordinate({
@@ -207,6 +204,24 @@ const uvCoordinate = defineCoordinate({
 });
 
 describe('custom coordinate — 一维曲线（projectRoles 沿正弦）', () => {
+  it.each([undefined, true, false])('自定义一维帧的绘图区由显式能力控制：%s', supportsPlotArea => {
+    const coordinate = defineCoordinate({
+      ...sineCoordinate,
+      resolve: (operation, context) => {
+        const resolution = sineCoordinate.resolve(operation, context);
+        return {
+          ...resolution,
+          frame: createCoordinateFrame('sine', ['x'], resolution.frame.projectRoles, { supportsPlotArea }),
+        };
+      },
+    });
+    const scope = expandOf({ ...sineSpec(), id: 'custom' }, { d: [{ v: 0 }, { v: 1 }] }, opts([coordinate]));
+    expect(scope.children.some(child => child.id === 'custom.plotArea')).toBe(supportsPlotArea !== false);
+    const content = scope.children.find((child): child is IRScope => child.type === 'scope');
+    expect(content).toBeDefined();
+    expect(content!.children.length).toBeGreaterThan(0);
+  });
+
   it('点落在正弦曲线上（一维坐标系不止直线）', () => {
     const rows = Array.from({ length: 13 }, (_unused, i) => ({ v: i }));
     const scaleAt = (v: number): number => (v / 12) * WIDTH;
@@ -296,7 +311,7 @@ describe('custom coordinate — 二维桥（x 沿拱、y 竖直）', () => {
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'uv' },
-      marks: [{ type: 'point', encoding: { u: { field: 'u' }, v: { field: 'v' } } }],
+      marks: [{ type: 'point', autoPadding: false, encoding: { u: { field: 'u' }, v: { field: 'v' } } }],
       guides: [{ type: 'axis', dimension: 'u' }],
     });
     const root = expandOf(
@@ -340,7 +355,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'bridge' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' } } }],
+      marks: [{ type: 'point', autoPadding: false, encoding: { x: { field: 'x' } } }],
     });
 
     expect(() => expandOf(spec, { d: [{ x: 1 }] }, opts([bridgeCoordinate]))).toThrow(
@@ -356,7 +371,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'bridge' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [{ type: 'point', autoPadding: false, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
       guides: [{ type: 'axis', dimension: 'angle' }],
     });
 
@@ -442,7 +457,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'bridge', archHeight: ARCH_HEIGHT },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [{ type: 'point', autoPadding: false, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
       guides: [
         { type: 'axis', dimension: 'x' },
         { type: 'axis', dimension: 'y' },
@@ -497,9 +512,9 @@ describe('custom coordinate — 契约 / fail-loud', () => {
   });
 });
 
-// ── contract：frameAlong 单 role 轴标架契约 ───────────────────────────────────────────────
-// 坐标系可选报某角色轴曲线在某点的局部标架（origin + 切向，屏幕空间）；曲线轴优先吃它、缺则数值差分回落
-// 法向 = 切向逆时针转 90°，由 guide 导出。维度无关：轴曲线永远 1D、永远有切向法向（2D custom 的单 role 轴亦然）
+// ── contract：tangentAt 单 role 轴标架契约 ───────────────────────────────────────────────
+// 坐标系可选提供映射后参数处的屏幕切向；Guide 缺少该能力时沿用数值差分
+// 法向由消费者按 Core 正旋转 90° 推导，不作为坐标独立事实保存
 
 /** 线性对角坐标系（projectRoles=[10x,10x]）：解析切向为常量 [10,10]，frame 级断言用（不依赖 context） */
 const DIAGONAL_K = 10;
@@ -510,19 +525,23 @@ const diagonalFrame = (): CoordinateFrame => {
     return Number.isFinite(x) ? [x * DIAGONAL_K, x * DIAGONAL_K] : null;
   };
 
-  const frameAlong = (_role: DimensionRole, values: ReadonlyArray<unknown>): AxisFrame | null => {
+  const tangentAt = (_role: DimensionRole, values: ReadonlyArray<unknown>): [number, number] | null => {
     const origin = project(values);
-    return origin ? { origin, tangent: [DIAGONAL_K, DIAGONAL_K] } : null;
+    return origin ? [DIAGONAL_K, DIAGONAL_K] : null;
   };
 
-  return createCoordinateFrame('diagonal', ['x'], project, { frameAlong });
+  return createCoordinateFrame('diagonal', ['x'], project, {
+    tangentAt,
+    mapRoles: values => (Number.isFinite(Number(values[0])) ? [Number(values[0])] : null),
+    projectMappedRoles: project,
+  });
 };
 
 const defineSineCoordinate = (
   type: string,
-  frameAlongOf?: (
-    projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null,
-  ) => (role: DimensionRole, values: ReadonlyArray<unknown>) => AxisFrame | null,
+  tangentAtOf?: (
+    projectRoles: (values: ReadonlyArray<number>) => [number, number] | null,
+  ) => (role: DimensionRole, values: ReadonlyArray<number>) => [number, number] | null,
   flat = false,
 ): AnyCoordinateDefinition =>
   defineCoordinate({
@@ -541,10 +560,20 @@ const defineSineCoordinate = (
         return flat ? [sx, MID_Y] : [sx, MID_Y - AMPLITUDE * Math.sin((sx / context.width) * 2 * Math.PI * CYCLES)];
       };
 
-      const frameAlong = frameAlongOf?.(projectRoles);
+      const mapRoles = (roleValues: ReadonlyArray<unknown>) => {
+        const sx = scale.coordinate(roleValues[0]);
+        return Number.isFinite(sx) ? [sx] : null;
+      };
+      const projectMappedRoles = (mappedValues: ReadonlyArray<number>): [number, number] => {
+        const sx = mappedValues[0];
+        return flat ? [sx, MID_Y] : [sx, MID_Y - AMPLITUDE * Math.sin((sx / context.width) * 2 * Math.PI * CYCLES)];
+      };
+      const tangentAt = tangentAtOf?.(projectMappedRoles);
       const frame = createCoordinateFrame(type, ['x'], projectRoles, {
         roleScales: { x: scale },
-        ...(frameAlong !== undefined ? { frameAlong } : {}),
+        mapRoles,
+        projectMappedRoles,
+        ...(tangentAt !== undefined ? { tangentAt } : {}),
       });
       const gridLayers: Array<IRScope> = [];
       const axisLayers: Array<IRScope> = [];
@@ -564,21 +593,21 @@ const defineSineCoordinate = (
     },
   });
 
-/** 一维正弦坐标系 + roleScales；frameAlong 回传常量切向 [1,0]（法向恒 [0,1]，刻度短线竖直，证明被消费） */
+/** 一维正弦坐标系 + roleScales；tangentAt 回传常量切向 [1,0]（法向恒 [0,1]，刻度短线竖直，证明被消费） */
 const sineFramedTangentX = defineSineCoordinate('sineFramed', projectRoles => (_role, values) => {
   const origin = projectRoles(values);
-  return origin ? { origin, tangent: [1, 0] } : null;
+  return origin ? [1, 0] : null;
 });
 
-/** 同上但不回传 frameAlong → 曲线轴走数值差分回落 */
+/** 同上但不回传 tangentAt → 曲线轴走数值差分回落 */
 const sineNumeric = defineSineCoordinate('sineNumeric');
 
-/** 退化坐标系：frameAlong 回传零切向 [0,0]，验证法向导出 guard 不产生 NaN */
+/** 退化坐标系：tangentAt 回传零切向 [0,0]，验证法向导出 guard 不产生 NaN */
 const degenerateFramed = defineSineCoordinate(
   'degenerate',
   projectRoles => (_role, values) => {
     const origin = projectRoles(values);
-    return origin ? { origin, tangent: [0, 0] } : null;
+    return origin ? [0, 0] : null;
   },
   true,
 );
@@ -590,7 +619,7 @@ const sineAxisSpec = (type = 'sineFramed'): IRPlot =>
     data: { reference: 'd' },
     scales: [],
     coordinate: { type },
-    marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
+    marks: [{ type: 'point', autoPadding: false, encoding: { x: { field: 'v' } } }],
     guides: [{ type: 'axis', dimension: 'x' }],
   });
 
@@ -634,33 +663,33 @@ const tickSegmentsOf = (layer: IRScope): Array<[number, number]> => {
 const labelNodesOf = (layer: IRScope): Array<IRNode> =>
   (layer.children as Array<IRNode>).filter(child => (child as { type?: string }).type === 'node');
 
-describe('custom coordinate — frameAlong 局部标架契约（contract）', () => {
-  it('framealong_origin_matches_project_roles', () => {
-    // frameAlong(role,p).origin 与 projectRoles(p) 逐分量近似相等；projectRoles 为 null 时同返 null（非引用相等）
+describe('custom coordinate — tangentAt 局部标架契约（contract）', () => {
+  it('tangent_at_uses_mapped_parameters_and_rejects_nonfinite_values', () => {
+    // 投影有效时方向有限；不可映射输入不制造有效切向
     const frame = diagonalFrame();
 
     for (const x of [0, 1, 3.5, 7]) {
-      const local = frame.frameAlong!('x', [x]);
+      const local = frame.tangentAt!('x', [x]);
       const projected = frame.projectRoles([x]);
 
       expect(local).not.toBeNull();
       expect(projected).not.toBeNull();
-      expect(local!.origin[0]).toBeCloseTo(projected![0], 6);
-      expect(local!.origin[1]).toBeCloseTo(projected![1], 6);
+      expect(local![0]).toBeCloseTo(DIAGONAL_K, 6);
+      expect(local![1]).toBeCloseTo(DIAGONAL_K, 6);
     }
 
     expect(frame.projectRoles(['oops'])).toBeNull();
-    expect(frame.frameAlong!('x', ['oops'])).toBeNull();
+    expect(frame.tangentAt!('x', [NaN])).toBeNull();
   });
 
-  it('framealong_tangent_along_axis_curve', () => {
+  it('tangent_at_tangent_along_axis_curve', () => {
     // 解析切向方向 ≈ 中心差分方向（归一化后 dot ≈ 1）
     const frame = diagonalFrame();
     const h = 1e-4;
     const before = frame.projectRoles([4 - h])!;
     const after = frame.projectRoles([4 + h])!;
     const numeric: [number, number] = [after[0] - before[0], after[1] - before[1]];
-    const analytic = frame.frameAlong!('x', [4])!.tangent;
+    const analytic = frame.tangentAt!('x', [4])!;
 
     const unit = (vector: [number, number]): [number, number] => {
       const length = Math.hypot(vector[0], vector[1]);
@@ -673,8 +702,8 @@ describe('custom coordinate — frameAlong 局部标架契约（contract）', ()
     expect(a[0] * b[0] + a[1] * b[1]).toBeCloseTo(1, 6);
   });
 
-  it('curved_axis_consumes_framealong_tangent', () => {
-    // frameAlong 回传常量切向 [1,0] → 法向恒 [0,1] → 所有刻度短线竖直（Δx≈0）；数值差分在正弦上做不到
+  it('curved_axis_consumes_tangent_at_tangent', () => {
+    // tangentAt 回传常量切向 [1,0] → 法向恒 [0,1] → 所有刻度短线竖直（Δx≈0）；数值差分在正弦上做不到
     const rows = Array.from({ length: 13 }, (_unused, i) => ({ v: i }));
     const root = expandOf(sineAxisSpec('sineFramed'), { d: rows }, opts([sineFramedTangentX]));
     const axisLayer = axisLayersOf(root)[0];
@@ -685,8 +714,8 @@ describe('custom coordinate — frameAlong 局部标架契约（contract）', ()
     for (const [dx] of segments) expect(Math.abs(dx)).toBeLessThan(1e-6);
   });
 
-  it('framealong_absent_falls_back_to_numeric_sampling', () => {
-    // 不回传 frameAlong → 仍画弯曲轴线（polyline ≥ 4 步）；法向随正弦斜率变化、刻度短线非全竖直
+  it('tangent_at_absent_falls_back_to_numeric_sampling', () => {
+    // 不回传 tangentAt → 仍画弯曲轴线（polyline ≥ 4 步）；法向随正弦斜率变化、刻度短线非全竖直
     const rows = Array.from({ length: 13 }, (_unused, i) => ({ v: i }));
     const root = expandOf(sineAxisSpec('sineNumeric'), { d: rows }, opts([sineNumeric]));
     const axisLayer = axisLayersOf(root)[0];
@@ -722,7 +751,7 @@ describe('custom coordinate — frameAlong 局部标架契约（contract）', ()
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'bridge', archHeight: ARCH_HEIGHT },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [{ type: 'point', autoPadding: false, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
     });
     const rows: Array<Record<string, number>> = [];

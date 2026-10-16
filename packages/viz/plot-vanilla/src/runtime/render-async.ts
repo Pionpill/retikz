@@ -89,7 +89,9 @@ const renderPlotAsyncImpl = async <TSource = never>(
     },
   );
 
-  const svg = renderToSvgString(result.scene, { output: { width: options.width, height: options.height } });
+  const svg = renderToSvgString(result.scene, {
+    output: { width: options.layout?.width, height: options.layout?.height },
+  });
   if (options.lineage === undefined || options.lineage === false) return svg;
   if (preparedData === undefined) throw new RetikzPlotVanillaError('Plot async result is missing its prepared data');
 

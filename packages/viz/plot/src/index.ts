@@ -2,8 +2,11 @@ export * from './contract';
 export * from './error';
 export type {
   LowerPlotsOptions,
-  PlotLineageLowerOptions,
   PlotCompileEnvironment,
+  PlotDefinitions,
+  PlotImplementations,
+  PlotLayoutOverrides,
+  PlotLineageLowerOptions,
   PlotStandaloneOptions,
 } from './pipeline';
 export {
@@ -108,7 +111,6 @@ export {
   lowerMark,
   lowerPathLayer,
   lowerPoint,
-  lowerReferenceLayer,
   lowerRelation,
   makeColorChannelDefinition,
   makeColorSchemeResolver,
@@ -125,8 +127,6 @@ export {
   pointsToSteps,
   polarFixedRadiusSteps,
   proportionalIntervalDomainValues,
-  referenceCell,
-  referenceMarkDefinition,
   relationMarkDefinition,
   resolveBandScale,
   resolveCoordinateRegistry,

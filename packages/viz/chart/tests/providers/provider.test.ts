@@ -22,7 +22,7 @@ describe('concrete Chart provider contributions', () => {
   });
 
   it('accepts Plot lowering runtime Definitions as the second factory argument', () => {
-    expect(() => createScatterChartProviderContribution([], { transformDefinitions: [] })).not.toThrow();
+    expect(() => createScatterChartProviderContribution([], { definitions: { transforms: [] } })).not.toThrow();
   });
 
   it('contributes Bubble through the same Point provider key', () => {

@@ -53,6 +53,8 @@ export type PreviewIR = {
   width?: number | string;
   height?: number | string;
   pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
+  /** 宿主注册的形状定义，不进入 JSON IR */
+  shapes?: NonNullable<LayoutProps['extensions']>['shapes'];
 };
 
 /** 从 React demo 派生 preview IR。 */
@@ -115,6 +117,7 @@ export const buildPreviewIR = (Component: ComponentPreviewDemoComponent, lang: L
     contributions: [...normalized.contributions],
     ...hostDimensions,
     pathKinds,
+    shapes: isLayout ? props.extensions?.shapes : undefined,
   };
 };
 

@@ -8,7 +8,7 @@ These schemas are exported from `@retikz/chart/point` and describe persistable J
 
 **Chart configuration**
 
-#### <ApiSourceLink label={"ConnectedScatterEncodings"} path={"packages/viz/chart-react/src/point/connected-scatter/ConnectedScatterEncodings.tsx"} startLine={8}>ConnectedScatterEncodings</ApiSourceLink> / <ApiSourceLink label={"IRConnectedScatterChartEncodings"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={100}>IRConnectedScatterChartEncodings</ApiSourceLink> / <ApiSourceLink label={"ConnectedScatterChartEncodingsSchema"} path={"packages/viz/chart/src/point/connected-scatter/encoding-schema.ts"} startLine={13}>ConnectedScatterChartEncodingsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ConnectedScatterEncodings"} path={"packages/viz/chart-react/src/point/connected-scatter/ConnectedScatterEncodings.tsx"} startLine={8}>ConnectedScatterEncodings</ApiSourceLink> / <ApiSourceLink label={"IRConnectedScatterChartEncodings"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={101}>IRConnectedScatterChartEncodings</ApiSourceLink> / <ApiSourceLink label={"ConnectedScatterChartEncodingsSchema"} path={"packages/viz/chart/src/point/connected-scatter/encoding-schema.ts"} startLine={13}>ConnectedScatterChartEncodingsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -44,7 +44,7 @@ export type IRConnectedScatterChartEncodings = ZodInfer<typeof ConnectedScatterC
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ConnectedScatterProperties"} path={"packages/viz/chart-react/src/point/connected-scatter/ConnectedScatterProperties.tsx"} startLine={8}>ConnectedScatterProperties</ApiSourceLink> / <ApiSourceLink label={"IRConnectedScatterChartProperties"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={109}>IRConnectedScatterChartProperties</ApiSourceLink> / <ApiSourceLink label={"ConnectedScatterChartPropertiesSchema"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={54}>ConnectedScatterChartPropertiesSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ConnectedScatterProperties"} path={"packages/viz/chart-react/src/point/connected-scatter/ConnectedScatterProperties.tsx"} startLine={8}>ConnectedScatterProperties</ApiSourceLink> / <ApiSourceLink label={"IRConnectedScatterChartProperties"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={110}>IRConnectedScatterChartProperties</ApiSourceLink> / <ApiSourceLink label={"ConnectedScatterChartPropertiesSchema"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={55}>ConnectedScatterChartPropertiesSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -59,7 +59,7 @@ Corresponds to `ConnectedScatterProperties`, Vanilla `properties` and IR `recipe
 |            | `colorMode`         | `'series'`, `'mark'`, `'muted'`                          | Defaults to `series` (shared point/path color); `mark` assigns adjacent palette colors to each series point/path. `muted` shares colors with 60% default path opacity. Explicit paints and opacity take precedence |
 | Connection | `path.curve`        | `PathCurve`                                              | Defaults to `linear`; supports linear, step, stepBefore, stepAfter, basis, cardinal, catmullRom, monotoneX, monotoneY, natural                                                                                     |
 | Connection | `path.connectNulls` | boolean or stroke object                                 | Break by default; `true` or `{}` bridges gaps with a dashed stroke. Supports stroke, strokeWidth, strokeOpacity, dashPattern, dashOffset, lineCap, and lineJoin                                                    |
-| Padding    | `autoPadding`       | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance                                                                                                            |
+| Padding    | `autoPadding`       | `false`, `'max-radius'`, `'point-aware'`, `object`       | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance                                                                                                            |
 |            | `domainPadding`     | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                                                                                                                           |
 
 See the [properties schema](#connectedscatterproperties--irconnectedscatterchartproperties--connectedscatterchartpropertiesschema) for the full structure; shared appearance configuration is not expanded here.
@@ -82,7 +82,7 @@ export type IRConnectedScatterChartProperties = ZodInfer<typeof ConnectedScatter
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ConnectedScatterMark"} path={"packages/viz/chart-react/src/point/connected-scatter/ConnectedScatterMark.tsx"} startLine={13}>ConnectedScatterMark</ApiSourceLink> / <ApiSourceLink label={"IRConnectedScatterMark"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={112}>IRConnectedScatterMark</ApiSourceLink> / <ApiSourceLink label={"ConnectedScatterChartMarkSchema"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={74}>ConnectedScatterChartMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ConnectedScatterMark"} path={"packages/viz/chart-react/src/point/connected-scatter/ConnectedScatterMark.tsx"} startLine={13}>ConnectedScatterMark</ApiSourceLink> / <ApiSourceLink label={"IRConnectedScatterMark"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={113}>IRConnectedScatterMark</ApiSourceLink> / <ApiSourceLink label={"ConnectedScatterChartMarkSchema"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={75}>ConnectedScatterChartMarkSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -108,7 +108,7 @@ export type IRConnectedScatterMark = ZodInfer<typeof ConnectedScatterChartMarkSc
 
 <DocTab value="schema" label="Schema">
 
-`encodings` accepts only optional field-name strings for x, y, order, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `colorMode`, `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties.
+`encodings` accepts only optional field-name strings for x, y, order, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `colorMode` and `domainPadding`; `autoPadding` can override the chart policy. Omitted settings inherit the applicable chart mappings and properties.
 
 <ZodSchema name="ConnectedScatterChartMarkSchema" shallow />
 
@@ -116,7 +116,7 @@ export type IRConnectedScatterMark = ZodInfer<typeof ConnectedScatterChartMarkSc
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRConnectedScatterChart"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={97}>IRConnectedScatterChart</ApiSourceLink> / <ApiSourceLink label={"ConnectedScatterChartSchema"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={91}>ConnectedScatterChartSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRConnectedScatterChart"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={98}>IRConnectedScatterChart</ApiSourceLink> / <ApiSourceLink label={"ConnectedScatterChartSchema"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={92}>ConnectedScatterChartSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -136,6 +136,6 @@ export type IRConnectedScatterChart = ZodInfer<typeof ConnectedScatterChartSchem
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ConnectedScatterChartRecipeSchema"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={82}>ConnectedScatterChartRecipeSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ConnectedScatterChartRecipeSchema"} path={"packages/viz/chart/src/point/connected-scatter/schema.ts"} startLine={83}>ConnectedScatterChartRecipeSchema</ApiSourceLink>
 
 <ZodSchema name="ConnectedScatterChartRecipeSchema" shallow />

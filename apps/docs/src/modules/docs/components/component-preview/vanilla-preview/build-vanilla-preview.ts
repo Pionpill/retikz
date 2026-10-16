@@ -278,13 +278,13 @@ const buildCorePreview = (preview: PreviewIR, options: BuildVanillaPreviewOption
   });
   const svg = renderToSvgString(input, {
     output: outputSize(preview),
-    ...(preview.pathKinds === undefined && options.measureText === undefined
+    ...(preview.pathKinds === undefined && preview.shapes === undefined && options.measureText === undefined
       ? {}
-      : { compile: { pathKinds: preview.pathKinds, measureText: options.measureText } }),
+      : { compile: { pathKinds: preview.pathKinds, shapes: preview.shapes, measureText: options.measureText } }),
   });
 
   try {
-    return { code: irToVanillaCode(preview.sourceIr, { pathKinds: preview.pathKinds }), svg };
+    return { code: irToVanillaCode(preview.sourceIr, { pathKinds: preview.pathKinds, shapes: preview.shapes }), svg };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return { ...diagnostic(message), svg };
@@ -1167,7 +1167,7 @@ const buildChartCode = (
       ...(options.theme === undefined ? {} : { theme: options.theme }),
       themeStyles: '__CORE_THEME_STYLES__',
       themeDefinitions: '__CHART_THEME_STYLES__',
-      lowerOptions: { plotThemeStyles: '__PLOT_THEME_STYLES__' },
+      lowerOptions: { definitions: { plotThemeStyles: '__PLOT_THEME_STYLES__' } },
     })
       .replace("'__DATASET__'", dataExpression)
       .replace("'__CORE_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.core')
@@ -1202,7 +1202,7 @@ const buildChartPreview = (
     ...(options.theme === undefined ? {} : { theme: options.theme }),
     themeStyles: PreviewThemeDefinitionBundle.core,
     themeDefinitions: PreviewThemeDefinitionBundle.chart,
-    lowerOptions: { plotThemeStyles: PreviewThemeDefinitionBundle.plot },
+    lowerOptions: { definitions: { plotThemeStyles: PreviewThemeDefinitionBundle.plot } },
   };
 
   const runtime = (() => {

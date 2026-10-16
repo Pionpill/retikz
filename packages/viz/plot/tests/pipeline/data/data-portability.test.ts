@@ -213,52 +213,60 @@ describe('数据字典 own-key 语义（contract 集成）', () => {
     expect(createPlotLocator(specNoModel(reference), datasets, { environment: {} }).datum(0)).not.toBeNull();
   });
 
-  it.each(['constructor', 'toString', '__proto__'])('inherited fieldMaps key %s is ignored', reference => {
+  it.each(['constructor', 'toString', '__proto__'])('inherited datasetFieldMaps key %s is ignored', reference => {
     const datasets = ownRecord(reference, [{ month: '2024-01-01', revenue: 1 }]);
-    const fieldMaps = inheritedRecord(reference, { month: 'missingMonth', revenue: 'missingRevenue' });
+    const datasetFieldMaps = inheritedRecord(reference, { month: 'missingMonth', revenue: 'missingRevenue' });
 
-    expect(() => compile(specWithModel(reference), datasets, { fieldMaps })).not.toThrow();
+    expect(() => compile(specWithModel(reference), datasets, { datasetFieldMaps })).not.toThrow();
     expect(
-      createPlotLocator(specWithModel(reference), datasets, { environment: {}, fieldMaps }).datum(0),
+      createPlotLocator(specWithModel(reference), datasets, { environment: {}, datasetFieldMaps }).datum(0),
     ).not.toBeNull();
   });
 
   it.each(['constructor', 'toString', '__proto__'])(
-    'own fieldMaps key %s cannot target an inherited dataset',
+    'own datasetFieldMaps key %s cannot target an inherited dataset',
     reference => {
-      const fieldMaps = ownRecord(reference, { month: 'period' });
+      const datasetFieldMaps = ownRecord(reference, { month: 'period' });
 
-      expect(() => compile(specWithModel(), { d: [{ month: '2024-01-01', revenue: 1 }] }, { fieldMaps })).toThrow(
-        `lowerPlots: fieldMaps references unknown dataset "${reference}"`,
-      );
+      expect(() =>
+        compile(specWithModel(), { d: [{ month: '2024-01-01', revenue: 1 }] }, { datasetFieldMaps }),
+      ).toThrow(`lowerPlots: datasetFieldMaps references unknown dataset "${reference}"`);
     },
   );
 
-  it.each(['constructor', 'toString', '__proto__'])('own fieldMaps key %s remains usable', reference => {
+  it.each(['constructor', 'toString', '__proto__'])('own datasetFieldMaps key %s remains usable', reference => {
     const datasets = ownRecord(reference, [{ period: '2024-01-01', amount: 1 }]);
-    const fieldMaps = ownRecord(reference, { month: 'period', revenue: 'amount' });
+    const datasetFieldMaps = ownRecord(reference, { month: 'period', revenue: 'amount' });
 
-    expect(() => compile(specWithModel(reference), datasets, { fieldMaps })).not.toThrow();
+    expect(() => compile(specWithModel(reference), datasets, { datasetFieldMaps })).not.toThrow();
     expect(
-      createPlotLocator(specWithModel(reference), datasets, { environment: {}, fieldMaps }).datum(0),
+      createPlotLocator(specWithModel(reference), datasets, { environment: {}, datasetFieldMaps }).datum(0),
     ).not.toBeNull();
   });
 
   it('fieldmap_without_model_throws', () => {
-    expect(() => compile(specNoModel(), { d: [{ a: 1, b: 2 }] }, { fieldMaps: { d: { a: 'x' } } })).toThrow(
+    expect(() => compile(specNoModel(), { d: [{ a: 1, b: 2 }] }, { datasetFieldMaps: { d: { a: 'x' } } })).toThrow(
       /requires data\.model/i,
     );
   });
 
   it('fieldmap_unknown_logical_throws', () => {
     expect(() =>
-      compile(specWithModel(), { d: [{ month: '2024-01-01', revenue: 1 }] }, { fieldMaps: { d: { nope: 'x' } } }),
+      compile(
+        specWithModel(),
+        { d: [{ month: '2024-01-01', revenue: 1 }] },
+        { datasetFieldMaps: { d: { nope: 'x' } } },
+      ),
     ).toThrow(/unknown logical field/i);
   });
 
   it('fieldmap_unknown_dataset_throws', () => {
     expect(() =>
-      compile(specWithModel(), { d: [{ month: '2024-01-01', revenue: 1 }] }, { fieldMaps: { other: { month: 'x' } } }),
+      compile(
+        specWithModel(),
+        { d: [{ month: '2024-01-01', revenue: 1 }] },
+        { datasetFieldMaps: { other: { month: 'x' } } },
+      ),
     ).toThrow(/unknown dataset/i);
   });
 
@@ -278,7 +286,7 @@ describe('数据字典 own-key 语义（contract 集成）', () => {
     const renamed = compile(
       specWithModel(),
       { d: [{ period: '2024-01-01', amount: 10 }] },
-      { fieldMaps: { d: { month: 'period', revenue: 'amount' } } },
+      { datasetFieldMaps: { d: { month: 'period', revenue: 'amount' } } },
     );
 
     expect(renamed).toBeTruthy();
@@ -296,21 +304,25 @@ describe('validateData（contract）', () => {
   });
 });
 
-describe('locator fieldMaps parity', () => {
+describe('locator datasetFieldMaps parity', () => {
   it('locator_build_throws_like_render', () => {
     // 同 spec+options：render 抛 unknown logical field → locator build 也抛（不再静默返回结果）
     expect(() =>
       createPlotLocator(
         specWithModel(),
         { d: [{ month: '2024-01-01', revenue: 1 }] },
-        { environment: {}, fieldMaps: { d: { nope: 'x' } } },
+        { environment: {}, datasetFieldMaps: { d: { nope: 'x' } } },
       ),
     ).toThrow(/unknown logical field/i);
   });
 
   it('locator_build_throws_fieldmap_without_model', () => {
     expect(() =>
-      createPlotLocator(specNoModel(), { d: [{ a: 1, b: 2 }] }, { environment: {}, fieldMaps: { d: { a: 'x' } } }),
+      createPlotLocator(
+        specNoModel(),
+        { d: [{ a: 1, b: 2 }] },
+        { environment: {}, datasetFieldMaps: { d: { a: 'x' } } },
+      ),
     ).toThrow(/requires data\.model/i);
   });
 });
@@ -341,7 +353,10 @@ describe('custom transform data portability（contract）', () => {
       compile(
         customSpec(),
         { d: [{ x: 2, y: 5 }] },
-        { transformDefinitions: [doubleDefinition], transformImplementations: [doubleDefinitionImplementation] },
+        {
+          definitions: { transforms: [doubleDefinition] },
+          implementations: { transforms: [doubleDefinitionImplementation] },
+        },
       ),
     ).not.toThrow();
   });
@@ -363,8 +378,8 @@ describe('custom transform data portability（contract）', () => {
         customSpec(),
         { d: [{ x: 2, y: 5 }] },
         {
-          transformDefinitions: [missingOutputDefinition],
-          transformImplementations: [missingOutputDefinitionImplementation],
+          definitions: { transforms: [missingOutputDefinition] },
+          implementations: { transforms: [missingOutputDefinitionImplementation] },
         },
       ),
     ).toThrow(/x2/);

@@ -35,7 +35,8 @@ const normalizeDocPath = (value: string): string => {
  * @description 叶子点击导航；分组点击主体导航到分组文档、点击右侧 chevron 仅展开/收起（命中自身或子项时高亮，命中子项时初始展开）；子项容器不带装饰竖线
  */
 export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
-  const { item, path, onNavigate } = props;
+  const { item, path: sourcePath, onNavigate } = props;
+  const path = item.linkTo ?? sourcePath;
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const navigate = useNavigate();

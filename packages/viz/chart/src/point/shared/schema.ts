@@ -12,21 +12,12 @@ import {
   NonNegativeNumberSchema,
   PositiveNumberSchema,
 } from '@retikz/foundation';
-import { DomainPaddingClearanceSchema, MarkNodeLabelListSchema, PlotDomainPaddingKind } from '@retikz/plot';
+import { MarkNodeLabelListSchema, PlotDomainPaddingKind, PointAutoPaddingSchema } from '@retikz/plot';
 import type { infer as ZodInfer } from 'zod';
 import type { ZodType } from 'zod';
 import { boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
-const PointAutoPaddingKindSchema = zodEnum(['max-radius', 'point-aware']);
-
-/** Point Chart 自动留白策略及外缘净空 */
-export const PointAutoPaddingSchema = union([
-  PointAutoPaddingKindSchema,
-  strictObject({
-    kind: PointAutoPaddingKindSchema.describe('Automatic padding strategy'),
-    clearance: union([DomainPaddingClearanceSchema, BoxSpacingSchema]).optional(),
-  }),
-]).describe('Automatic padding strategy or strategy with minimum edge clearance; omitted means max-radius');
+export { PointAutoPaddingSchema } from '@retikz/plot';
 
 export type IRPointAutoPadding = ZodInfer<typeof PointAutoPaddingSchema>;
 
@@ -100,6 +91,7 @@ export const PointMarkEncodingWithoutSizeSchema = PointMarkEncodingSchema.omit({
  * 这些字段在 Source 中使用最终常量值；字段绑定必须放在 `encodings` 中
  */
 export const PointPropertiesSchema = strictObject({
+  autoPadding: PointAutoPaddingSchema.optional(),
   color: CssColorSchema.optional().describe('Constant point color'),
   textColor: CssColorSchema.optional().describe('Constant point text color'),
   size: NonNegativeNumberSchema.optional().describe('Constant point radius'),

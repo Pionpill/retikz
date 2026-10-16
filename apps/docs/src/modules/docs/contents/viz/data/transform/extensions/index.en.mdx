@@ -117,8 +117,8 @@ export const CustomTransformExample: FC = () => (
     model={model}
     width={420}
     height={260}
-    transformDefinitions={[scaleField]}
-    transformImplementations={[scaleFieldImplementation]}
+    definitions={{ transforms: [scaleField] }}
+    implementations={{ transforms: [scaleFieldImplementation] }}
   >
     <PlotTransform operation={{ kind: 'scale-field', params: { field: 'x', as: 'scaledX', factor: 2 } }} />
     <PointMark x="scaledX" y="y" />
@@ -220,8 +220,8 @@ export const CustomSelectorExample: FC = () => (
     model={model}
     width={420}
     height={260}
-    rowSelectorDefinitions={[closestToMean]}
-    rowSelectorImplementations={[closestToMeanImplementation]}
+    definitions={{ rowSelectors: [closestToMean] }}
+    implementations={{ rowSelectors: [closestToMeanImplementation] }}
   >
     <PlotTransform
       operation={{
@@ -312,8 +312,8 @@ export const CustomReducerExample: FC = () => (
     model={model}
     width={420}
     height={260}
-    statisticsReducerDefinitions={[midpoint]}
-    statisticsReducerImplementations={[midpointImplementation]}
+    definitions={{ statisticsReducers: [midpoint] }}
+    implementations={{ statisticsReducers: [midpointImplementation] }}
   >
     <PlotTransform
       operation={{
@@ -425,7 +425,7 @@ const trend = applyTransforms(
 ).rows;
 ```
 
-Plot accepts the same registrations through `regressionDefinitions` and `regressionImplementations`; see the demo source for rendering. Method names and parameters can be stored in JSON, while prediction functions exist only at runtime. Predictions must be finite; failures stop the current transform. Promise implementations require an asynchronous execution entry and cannot be passed to `applyTransforms`.
+Plot accepts the same registrations through `definitions.regressions` and `implementations.regressions`; see the demo source for rendering. Method names and parameters can be stored in JSON, while prediction functions exist only at runtime. Predictions must be finite; failures stop the current transform. Promise implementations require an asynchronous execution entry and cannot be passed to `applyTransforms`.
 
 </DocStep>
 </DocSteps>

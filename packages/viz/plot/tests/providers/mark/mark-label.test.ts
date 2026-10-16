@@ -1,4 +1,4 @@
-import type { IRNode, IRPath, IRScope } from '@retikz/core';
+import type { IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
@@ -7,7 +7,7 @@ import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const opts: LowerPlotsOptions = { width: 200, height: 100 };
+const opts: LowerPlotsOptions = { layout: { width: 200, height: 100 } };
 
 const expandOf = (
   spec: IRPlot,
@@ -26,22 +26,6 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
       if (node.type === 'path') out.push(node as IRPath);
-      else if (node.type === 'scope' && node.children) walk(node.children);
-    }
-  };
-
-  walk(layer.children);
-
-  return out;
-};
-
-const collectNodes = (layer: IRScope): Array<IRNode> => {
-  const out: Array<IRNode> = [];
-
-  const walk = (children: ReadonlyArray<unknown>): void => {
-    for (const child of children) {
-      const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'node') out.push(node as IRNode);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -131,45 +115,6 @@ describe('contract mark host label lowering', () => {
     const [path] = collectPaths(markLayer(root, 0));
 
     expect(path.label).toEqual({ text: [{ runs: [{ text: 'trend ' }, { tex: 'x' }] }], position: 'midway' });
-  });
-
-  it('reference-line-geometry-label：ReferenceMark line 使用 geometry label', () => {
-    const root = expandOf(
-      baseSpec([
-        {
-          type: 'reference',
-          label: { content: { field: 'name' }, position: 'near-end', side: 'bottom' },
-          encoding: { y: { value: 5 } },
-        },
-      ]),
-      { d: [{ name: 'target' }] },
-    );
-
-    const [path] = collectPaths(markLayer(root, 0));
-
-    expect(path.label).toEqual({ text: 'target', position: 'near-end', side: 'bottom' });
-  });
-
-  it('reference-band-node-label：ReferenceMark band 使用 node label', () => {
-    const root = expandOf(
-      baseSpec([
-        {
-          type: 'reference',
-          label: { content: { value: 'safe zone' }, position: { boundary: 'top', fraction: 0.5 }, placement: 'inside' },
-          yTo: 7,
-          encoding: { y: { value: 3 } },
-        },
-      ]),
-      { d: [{}] },
-    );
-
-    const [node] = collectNodes(markLayer(root, 0));
-
-    expect(node.label).toEqual({
-      text: 'safe zone',
-      position: { boundary: 'top', fraction: 0.5 },
-      placement: 'inside',
-    });
   });
 
   it('relation-path-host-label：RelationMark 顶层 label lowering 到 core Path.label', () => {

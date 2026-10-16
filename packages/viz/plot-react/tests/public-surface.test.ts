@@ -26,7 +26,7 @@ describe('@retikz/plot-react public surface', () => {
   it('keeps the Plot root and Mark declaration names unchanged', () => {
     const publicSurface = plotReact as Record<string, unknown>;
 
-    for (const name of ['Plot', 'PathMark', 'PointMark', 'IntervalMark', 'ReferenceMark', 'RelationMark']) {
+    for (const name of ['Plot', 'PathMark', 'PointMark', 'IntervalMark', 'RelationMark']) {
       expect(publicSurface[name], `${name} must remain exported`).toBeTypeOf('function');
     }
   });

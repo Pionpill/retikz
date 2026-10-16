@@ -3,6 +3,7 @@ import type {
   LayoutAxisProposal,
   LayoutChildResult,
   CompositeCompileContext,
+  CompositeEvaluationResult,
   CompositeCompileResult,
   LayoutProposal,
 } from '@retikz/core';
@@ -27,10 +28,20 @@ import {
   createLayoutArtifactItem,
   layoutClipOf,
   resolveLayoutAxisSize,
+  resolveKnownLayoutContribution,
+  resolveKnownLayoutAxisSize,
+  createLayoutContributionResult,
+  measureLayoutAxis,
 } from '../internal';
 import { LayoutAlignment, LayoutAxisSizeKind, LayoutOverflow } from '../shared';
 import { LayoutSizeParticipation, OverlayPlacementKind } from './constants';
-import { overlayStructuralGuideOffset, placeOverlayItem, resolveOverlayProfile, sortOverlayPaintOrder } from './solve';
+import {
+  overlayStructuralGuideOffset,
+  placeOverlayItem,
+  resolveOverlayProfile,
+  resolveOverlayWidth,
+  sortOverlayPaintOrder,
+} from './solve';
 import type { OverlayLayoutArtifact } from './types';
 import type { IROverlayLayout } from './types';
 
@@ -43,8 +54,8 @@ type MeasuredOverlayItem = Readonly<{
 }>;
 
 type OverlayProfileResults = Readonly<{
-  xResult: LayoutChildResult;
-  yResult: LayoutChildResult;
+  xResult: Readonly<{ slotSize: Readonly<{ width: number }> }>;
+  yResult: LayoutChildResult | Readonly<{ slotSize: Readonly<{ height: number }> }>;
 }>;
 
 type PlacedOverlayItem = Readonly<{
@@ -126,15 +137,14 @@ const finiteContentLimitOf = (
   return allocation === undefined ? undefined : Math.max(0, allocation - paddingSize);
 };
 
-/** 求一个 Overlay item 在指定 intrinsic profile 下的物理 x→y probe 链 */
-const probeOverlayProfile = (
+/** 同一 profile 的水平测量阶段，不访问垂直贡献 */
+const probeOverlayWidth = (
   context: CompositeCompileContext,
   node: CanonicalOverlayLayout,
   item: MeasuredOverlayItem,
   mode: IntrinsicMode,
-  finiteXLimit: number | undefined,
   finiteYLimit: number | undefined,
-): OverlayProfileResults => {
+): OverlayProfileResults['xResult'] => {
   const placement = item.authored.placement;
   const xProposal =
     placement.kind === OverlayPlacementKind.Positioned && placement.width !== undefined
@@ -148,7 +158,22 @@ const probeOverlayProfile = (
       : finiteYLimit === undefined
         ? intrinsicProposal('natural')
         : boundedProposal(Math.max(0, finiteYLimit - item.margin.top - item.margin.bottom));
-  const xResult = requiredProbe(context, item.sourceIndex, { x: xProposal, y: yBasis });
+  return {
+    slotSize: { width: measureLayoutAxis(context, item.sourceIndex, { x: xProposal, y: yBasis }, 'x') },
+  };
+};
+
+/** 求一个 Overlay item 在指定 intrinsic profile 下的物理 x→y probe 链 */
+const probeOverlayProfile = (
+  context: CompositeCompileContext,
+  node: CanonicalOverlayLayout,
+  item: MeasuredOverlayItem,
+  mode: IntrinsicMode,
+  finiteXLimit: number | undefined,
+  finiteYLimit: number | undefined,
+): OverlayProfileResults => {
+  const placement = item.authored.placement;
+  const xResult = probeOverlayWidth(context, node, item, mode, finiteYLimit);
 
   let contextualX: LayoutAxisProposal;
   if (placement.kind === OverlayPlacementKind.Positioned) {
@@ -165,7 +190,11 @@ const probeOverlayProfile = (
     placement.kind === OverlayPlacementKind.Positioned && placement.height !== undefined
       ? exactProposal(placement.height)
       : intrinsicProposal(mode);
-  const yResult = requiredProbe(context, item.sourceIndex, { x: contextualX, y: yProposal });
+  const alignment = item.authored.alignSelf ?? node.alignItems;
+  const yResult =
+    alignment === LayoutAlignment.FirstBaseline || alignment === LayoutAlignment.LastBaseline
+      ? requiredProbe(context, item.sourceIndex, { x: contextualX, y: yProposal })
+      : { slotSize: { height: measureLayoutAxis(context, item.sourceIndex, { x: contextualX, y: yProposal }, 'y') } };
 
   return Object.freeze({ xResult, yResult });
 };
@@ -209,11 +238,22 @@ const outgoingOverlayGuide = (
 };
 
 /** 编译 Layout OverlayLayout 的双 profile probe、placement、stacking 与 replay 流程 */
-export const compileOverlayLayout = (
+export function compileOverlayLayout(
+  sourceLayout: IROverlayLayout,
+  context: CompositeCompileContext & { evaluation: Readonly<{ kind: 'layout' }> },
+): CompositeCompileResult<OverlayLayoutArtifact>;
+/** 根据统一求值需求返回完整布局或指定轴贡献 */
+export function compileOverlayLayout(
   sourceLayout: IROverlayLayout,
   context: CompositeCompileContext,
-): CompositeCompileResult<OverlayLayoutArtifact> => {
+): CompositeEvaluationResult<OverlayLayoutArtifact>;
+export function compileOverlayLayout(
+  sourceLayout: IROverlayLayout,
+  context: CompositeCompileContext,
+): CompositeEvaluationResult<OverlayLayoutArtifact> {
   const node = resolveOverlayLayout(sourceLayout);
+  const knownContribution = resolveKnownLayoutContribution(context, node.size);
+  if (knownContribution !== undefined) return knownContribution;
   const padding = node.padding;
   const finiteXLimit = finiteContentLimitOf(node, 'x', context.proposal.x, padding);
   const finiteYLimit = finiteContentLimitOf(node, 'y', context.proposal.y, padding);
@@ -221,54 +261,68 @@ export const compileOverlayLayout = (
     (authored, sourceIndex) => Object.freeze({ authored, sourceIndex, margin: authored.margin }),
   );
 
-  const minimumResults = measured.map(item =>
-    probeOverlayProfile(context, node, item, 'minimum', finiteXLimit, finiteYLimit),
-  );
-  const naturalResults = measured.map(item =>
-    probeOverlayProfile(context, node, item, 'natural', finiteXLimit, finiteYLimit),
-  );
-  const profileOf = (results: ReadonlyArray<OverlayProfileResults>) =>
-    resolveOverlayProfile(
-      measured.map((item, sourceIndex) => ({
-        sourceIndex,
-        placement: item.authored.placement,
-        margin: item.margin,
-        offset: item.authored.offset,
-        alignment: item.authored.alignSelf ?? node.alignItems,
-        sizeParticipation: item.authored.sizeParticipation,
-        xResult: results[sourceIndex].xResult,
-        yResult: results[sourceIndex].yResult,
+  const profileInputs = (item: MeasuredOverlayItem) => ({
+    sourceIndex: item.sourceIndex,
+    placement: item.authored.placement,
+    margin: item.margin,
+    offset: item.authored.offset,
+    alignment: item.authored.alignSelf ?? node.alignItems,
+    sizeParticipation: item.authored.sizeParticipation,
+  });
+  const profiles = new Map<IntrinsicMode, ReadonlyArray<OverlayProfileResults>>();
+  const resultsOf = (mode: IntrinsicMode) => {
+    const cached = profiles.get(mode);
+    if (cached !== undefined) return cached;
+    const results = measured.map(item => probeOverlayProfile(context, node, item, mode, finiteXLimit, finiteYLimit));
+    profiles.set(mode, results);
+    return results;
+  };
+  const widthOf = (mode: IntrinsicMode) =>
+    resolveOverlayWidth(
+      measured.map(item => ({
+        ...profileInputs(item),
+        xResult: probeOverlayWidth(context, node, item, mode, finiteYLimit),
       })),
     );
-
-  const minimumProfile = profileOf(minimumResults);
-  const naturalProfile = profileOf(naturalResults);
-
-  const width = resolveLayoutAxisSize({
-    axis: 'x',
-    policy: node.size.x,
-    proposal: context.proposal.x,
-    minimumContribution: containerContribution(minimumProfile.contentSize.width, padding.left, padding.right),
-    naturalContribution: containerContribution(naturalProfile.contentSize.width, padding.left, padding.right),
-  }).allocationSize;
-  const height = resolveLayoutAxisSize({
-    axis: 'y',
-    policy: node.size.y,
-    proposal: context.proposal.y,
-    minimumContribution: containerContribution(minimumProfile.contentSize.height, padding.top, padding.bottom),
-    naturalContribution: containerContribution(naturalProfile.contentSize.height, padding.top, padding.bottom),
-  }).allocationSize;
+  const profileOf = (mode: IntrinsicMode) => {
+    const results = resultsOf(mode);
+    return resolveOverlayProfile(measured.map((item, index) => ({ ...profileInputs(item), ...results[index] })));
+  };
+  const width =
+    resolveKnownLayoutAxisSize({ axis: 'x', policy: node.size.x, proposal: context.proposal.x }) ??
+    resolveLayoutAxisSize({
+      axis: 'x',
+      policy: node.size.x,
+      proposal: context.proposal.x,
+      minimumContribution: containerContribution(widthOf('minimum'), padding.left, padding.right),
+      naturalContribution: containerContribution(widthOf('natural'), padding.left, padding.right),
+    }).allocationSize;
+  if (context.evaluation.kind === 'contribution' && context.evaluation.axis === 'x')
+    return { kind: 'contribution', contribution: { axis: 'x', width } };
+  const height =
+    resolveKnownLayoutAxisSize({ axis: 'y', policy: node.size.y, proposal: context.proposal.y }) ??
+    resolveLayoutAxisSize({
+      axis: 'y',
+      policy: node.size.y,
+      proposal: context.proposal.y,
+      minimumContribution: containerContribution(profileOf('minimum').contentSize.height, padding.top, padding.bottom),
+      naturalContribution: containerContribution(profileOf('natural').contentSize.height, padding.top, padding.bottom),
+    }).allocationSize;
+  if (context.evaluation.kind === 'contribution') return createLayoutContributionResult(context, width, height);
 
   const allocation: LayoutRect = Object.freeze({ x: 0, y: 0, width, height });
   const content = contentRectOf(allocation, padding);
 
-  const finalResults = measured.map((item, sourceIndex) => {
+  const finalResults = measured.map(item => {
     const placement = item.authored.placement;
     if (placement.kind === OverlayPlacementKind.Positioned) {
-      const natural = naturalResults[sourceIndex];
+      const natural =
+        placement.width === undefined || placement.height === undefined
+          ? probeOverlayProfile(context, node, item, 'natural', finiteXLimit, finiteYLimit)
+          : undefined;
       return requiredProbe(context, item.sourceIndex, {
-        x: exactProposal(placement.width ?? natural.xResult.slotSize.width),
-        y: exactProposal(placement.height ?? natural.yResult.slotSize.height),
+        x: exactProposal(placement.width ?? natural!.xResult.slotSize.width),
+        y: exactProposal(placement.height ?? natural!.yResult.slotSize.height),
       });
     }
 
@@ -466,4 +520,4 @@ export const compileOverlayLayout = (
       paintOrder: paintOrder.map(sourceIndex => placedBySource[sourceIndex].authored.key),
     }),
   };
-};
+}

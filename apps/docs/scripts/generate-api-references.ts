@@ -18,6 +18,9 @@ import { writeManualReferences } from './api-reference/manual-reference';
 import { writeMathApiReferenceMdx } from './api-reference/math';
 import { writeNodeApiReferenceMdx } from './api-reference/node';
 import { writePlotChannelApiReferenceMdx } from './api-reference/plot-channel';
+import { writePlotIntervalApiReferenceMdx } from './api-reference/plot-interval';
+import { writePlotPathApiReferenceMdx } from './api-reference/plot-path';
+import { writePlotPointApiReferenceMdx } from './api-reference/plot-point';
 import { writeRelationApiReferenceMdx } from './api-reference/relation';
 import { writeRibbonApiReferenceMdx } from './api-reference/ribbon';
 import { writeRuntimeApiReferenceMdx } from './api-reference/runtime';
@@ -110,3 +113,8 @@ await writeDataProvenanceApiReferenceMdx();
 writeContextualReferences(path.resolve(docsRoot, 'src/modules/docs/contents'));
 
 await writePlotChannelApiReferenceMdx();
+
+await writePlotPointApiReferenceMdx();
+await writePlotPathApiReferenceMdx();
+
+await writePlotIntervalApiReferenceMdx();

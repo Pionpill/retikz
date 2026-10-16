@@ -118,6 +118,7 @@ export const previewControlContract = {
     [PATH_CURVE_CONTROL_IDS.dashed]: false,
     [PATH_CURVE_CONTROL_IDS.opacity]: 0.9,
   },
+  presetSelector: { label: 'Preset', customLabel: 'Custom' },
   presets: [
     {
       id: 'linear',

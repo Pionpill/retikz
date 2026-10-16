@@ -4,6 +4,12 @@ import { buildSearchEntries } from '../src/modules/docs/components/docs-search/s
 import { loadSearchIndex } from '../src/modules/docs/components/docs-search/search-index';
 
 describe('docs search index frontmatter', () => {
+  it('链接导航不重复收录原文或生成不存在的正文路径', () => {
+    const entries = buildSearchEntries(key => key, {}, 'zh');
+    expect(entries.some(entry => entry.path.includes('/compilation-mechanisms'))).toBe(false);
+    expect(entries.filter(entry => entry.path === '/kernel/packages/core/compilation-output')).toHaveLength(1);
+  });
+
   it('解析带 BOM 的页面，并去除 YAML 标量引号', async () => {
     const index = await loadSearchIndex();
 

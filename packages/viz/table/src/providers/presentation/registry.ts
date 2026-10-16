@@ -14,7 +14,7 @@ export const resolveCellPresentationRegistry = (
     assertNonEmptyString(
       definition.name,
       'cell presentation provider key',
-      new RetikzTableError('cell presentation provider key must be a non-empty string.'),
+      () => new RetikzTableError('cell presentation provider key must be a non-empty string.'),
     );
     if (registry.has(definition.name)) {
       throw new RetikzTableError(`duplicate cell presentation registration: "${definition.name}"`);

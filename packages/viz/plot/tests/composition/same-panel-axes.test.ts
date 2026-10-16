@@ -93,7 +93,7 @@ const expandOf = (spec: IRPlot): IRScope => {
   return lowerPlot(
     spec,
     { weather: rows },
-    { textMeasurer: measureLabel, width: 480, height: 300, provenance: true },
+    { layout: { width: 480, height: 300 }, textMeasurer: measureLabel, provenance: true },
   ) as IRScope;
 };
 

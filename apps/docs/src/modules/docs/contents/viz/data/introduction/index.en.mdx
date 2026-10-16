@@ -33,7 +33,7 @@ The pipeline first collects fields a consumer actually uses, then turns external
 | ------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------- |
 | Data reference      | Select the external dataset for this view; rows themselves stay out of IR                                   | `data` / `data.reference`              |
 | Field contract      | Define logical field names, types, category order, and declarative formats; infer from samples when omitted | `model`                                |
-| Source mapping      | Map logical fields to real data paths, including renamed fields and nested paths                            | `fieldMap` / `fieldMaps`               |
+| Source mapping      | Map logical fields to real data paths, including renamed fields and nested paths                            | `fieldMap` / `datasetFieldMaps`        |
 | Parse / normalize   | Parse values from field contracts and formats, then write results under logical field names                 | `model` / `format` / field type        |
 | Validation          | Sample-check or fully check participating fields, and decide whether invalid values skip or throw           | `validateData` / `invalid`             |
 | Transform / handoff | Data transforms rewrite canonical rows, then hand the result to a consumer module                           | `sort` / `summarize` / consumer config |

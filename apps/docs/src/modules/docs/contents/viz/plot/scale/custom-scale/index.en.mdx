@@ -1,6 +1,6 @@
 ---
 title: Custom Scales
-description: Use a ScaleDefinition to extend value-to-coordinate or value-to-color mapping, then inject it into Plot runtime through scaleDefinitions or colorSchemes.
+description: Use a ScaleDefinition to extend value-to-coordinate or value-to-color mapping, then inject it into Plot runtime through definitions.scales or colorSchemes.
 ---
 
 When built-in scales cannot express a domain mapping, special position distribution, or brand ramp, register a runtime `ScaleDefinition`. Plot IR stores only the JSON operation `{ type, name, ...config }`; evaluation functions and field compatibility stay in the definition.
@@ -32,7 +32,7 @@ The demo registers both `ease-position` and `brand`: the first redistributes x c
 
 ## Inject into the host
 
-Inject definitions with `<Plot scaleDefinitions={[easePositionScale, brandColorScale]}>`; the Vanilla source injects the same array through `renderPlot` options. Custom types can only be referenced explicitly from full `spec.scales`:
+Inject definitions with `<Plot definitions={{ scales: [easePositionScale, brandColorScale] }}>`; the Vanilla source injects the same array through `renderPlot` options. Custom types can only be referenced explicitly from full `spec.scales`:
 
 ```ts
 scales: [
@@ -148,10 +148,10 @@ Public exports:
 
 Host injection:
 
-| Host                                     | Public contract     | Injection field                                                   |
-| ---------------------------------------- | ------------------- | ----------------------------------------------------------------- |
-| `<Plot>` from `@retikz/plot-react`       | `PlotProps`         | `scaleDefinitions`, `colorSchemes`                                |
-| `renderPlot` from `@retikz/plot-vanilla` | `RenderPlotOptions` | Inherited `LowerPlotsOptions.scaleDefinitions` and `colorSchemes` |
+| Host                                     | Public contract     | Injection field                                                     |
+| ---------------------------------------- | ------------------- | ------------------------------------------------------------------- |
+| `<Plot>` from `@retikz/plot-react`       | `PlotProps`         | `definitions.scales`, `colorSchemes`                                |
+| `renderPlot` from `@retikz/plot-vanilla` | `RenderPlotOptions` | Inherited `LowerPlotsOptions.definitions.scales` and `colorSchemes` |
 
 ## Related
 

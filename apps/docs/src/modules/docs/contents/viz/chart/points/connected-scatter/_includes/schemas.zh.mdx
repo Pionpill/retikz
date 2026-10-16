@@ -72,7 +72,7 @@
 
 #### ConnectedScatterChartMarkSchema
 
-`encodings` 只允许 x、y、order，各项均可省略且仅接受字段名字符串，不接受 recipe 的完整映射对象。`properties` 复用上方属性的含义与成员结构，但不包含 `colorMode`、`autoPadding`、`domainPadding`；省略的配置沿用当前图形可继承的映射与属性。
+`encodings` 只允许 x、y、order，各项均可省略且仅接受字段名字符串，不接受 recipe 的完整映射对象。`properties` 复用上方属性的含义与成员结构，但不包含 `colorMode`、`domainPadding`；`autoPadding` 可覆盖图表策略；省略的配置沿用当前图形可继承的映射与属性。
 
 <ZodSchema
   name="ConnectedScatterChartMarkSchema"
@@ -82,6 +82,6 @@
     kind: '固定为 connected-scatter',
     override: '为 true 时替换内置同类图元；省略时追加',
     encodings: '参照上方映射说明；仅接受上述可选字段名覆盖',
-    properties: '参照上方属性说明；不包含 colorMode、autoPadding 与 domainPadding',
+    properties: '参照上方属性说明；不包含 colorMode 与 domainPadding；autoPadding 可覆盖图表策略',
   }}
 />

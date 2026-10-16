@@ -10,7 +10,7 @@ import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
 /**
- * 自定义 `intensity`（→ node.opacity）经 options.channelDefinitions 注册，
+ * 自定义 `intensity`（→ node.opacity）经 options.definitions.channels 注册，
  * 与内置通道共享 channel registry / delivery
  */
 
@@ -156,9 +156,8 @@ const lineWeightChannel = definePathChannel<number>({
 });
 
 const opts = (defs?: Array<AnyChannelDefinition>): LowerPlotsOptions => ({
-  width: 480,
-  height: 300,
-  channelDefinitions: defs,
+  layout: { width: 480, height: 300 },
+  definitions: { channels: defs },
 });
 
 const scatterSpec = (channels?: Record<string, unknown>): IRPlot =>

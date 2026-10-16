@@ -66,15 +66,19 @@ describe('runtime identity', () => {
     expect(failure).toMatchObject({
       name: 'RetikzRuntimeError',
       code: RetikzRuntimeErrorCode.IdentityInvalid,
+      phase: 'identity',
+      owner: input.owner,
+      cause: input.owner.trim().length === 0 ? input.owner : input.path,
     });
   });
 
   it('rejects a Unicode-whitespace path segment as a Runtime identity error', () => {
     const rejectedValue = '\u00a0';
+    const path = ['group', rejectedValue];
     let failure: unknown;
 
     try {
-      createRuntimeIdentity('owner', ['group', rejectedValue]);
+      createRuntimeIdentity('owner', path);
     } catch (error) {
       failure = error;
     }
@@ -83,7 +87,11 @@ describe('runtime identity', () => {
     expect(failure).toMatchObject({
       name: 'RetikzRuntimeError',
       code: RetikzRuntimeErrorCode.IdentityInvalid,
+      phase: 'identity',
+      owner: 'owner',
+      message: `${RetikzRuntimeErrorCode.IdentityInvalid}: invalid runtime identity for owner "owner"`,
     });
+    expect(failure).toHaveProperty('cause', path);
   });
 
   it('按 segment 精确比较，不规范化 Unicode 或特殊字符', () => {

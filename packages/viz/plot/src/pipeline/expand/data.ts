@@ -1,11 +1,11 @@
 import type {
   AnyTransformDefinition,
+  ApplyTransformsOptions,
   DataFieldTypeMap,
   DataView,
   ExternalDatasets,
   ExternalRow,
   TransformContext,
-  IRDataTransformDeclaration,
 } from '@retikz/data';
 import {
   applyFieldResolver,
@@ -40,41 +40,40 @@ import type { LowerPlotsOptions } from './types';
 export const applyMarkTransforms = (
   mark: IRPlotMarkOperation,
   dataView: DataView,
-  transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,
-  transformContext: TransformContext,
+  options: ApplyTransformsOptions,
 ): DataView => {
-  const transform = (mark as { transform?: Array<IRDataTransformDeclaration> }).transform;
-  if (transform === undefined) return dataView;
+  const transformDeclarations = mark.transform;
+  if (transformDeclarations === undefined) return dataView;
 
   return applyTransformsToDataView(
     dataView,
-    transform.map(declaration => declaration.operation),
-    { registry: transformRegistry, context: transformContext },
+    transformDeclarations.map(declaration => declaration.operation),
+    options,
   ).dataView;
 };
 
 /**
- * 校验 fieldMaps 中的数据集与逻辑字段引用
+ * 校验 datasetFieldMaps 中的数据集与逻辑字段引用
  * @description 供 lowering 与 locator 共用，保证两条入口采用相同的 fail-loud 契约
  */
-export const validateFieldMaps = (
+export const assertDatasetFieldMaps = (
   spec: IRPlot,
   datasets: ExternalDatasets,
-  fieldMaps: LowerPlotsOptions['fieldMaps'],
+  datasetFieldMaps: LowerPlotsOptions['datasetFieldMaps'],
 ): void => {
-  if (fieldMaps === undefined) return;
+  if (datasetFieldMaps === undefined) return;
 
-  for (const ref of Object.keys(fieldMaps)) {
+  for (const ref of Object.keys(datasetFieldMaps)) {
     if (!Object.hasOwn(datasets, ref))
-      throw new RetikzPlotError(`lowerPlots: fieldMaps references unknown dataset "${ref}"`);
+      throw new RetikzPlotError(`lowerPlots: datasetFieldMaps references unknown dataset "${ref}"`);
   }
 
-  if (!Object.hasOwn(fieldMaps, spec.data.reference)) return;
+  if (!Object.hasOwn(datasetFieldMaps, spec.data.reference)) return;
 
-  const fieldMap = fieldMaps[spec.data.reference];
+  const fieldMap = datasetFieldMaps[spec.data.reference];
   if (spec.data.model === undefined) {
     throw new RetikzPlotError(
-      `lowerPlots: fieldMaps for "${spec.data.reference}" requires data.model (no logical field contract without a model)`,
+      `lowerPlots: datasetFieldMaps for "${spec.data.reference}" requires data.model (no logical field contract without a model)`,
     );
   }
 
@@ -83,7 +82,7 @@ export const validateFieldMaps = (
   for (const logical of Object.keys(fieldMap)) {
     if (!declared.has(logical)) {
       throw new RetikzPlotError(
-        `lowerPlots: fieldMaps["${spec.data.reference}"] maps unknown logical field "${logical}" (not in data.model)`,
+        `lowerPlots: datasetFieldMaps["${spec.data.reference}"] maps unknown logical field "${logical}" (not in data.model)`,
       );
     }
   }
@@ -91,7 +90,7 @@ export const validateFieldMaps = (
 
 /**
  * 准备绑定数据、字段类型及 lowering 所需 registry
- * @description 先校验 fieldMaps，再解析 model / format / resolver 并恒归一化；transform 由调用方在本函数之后执行
+ * @description 先校验 datasetFieldMaps，再解析 model / format / resolver 并恒归一化；transform 由调用方在本函数之后执行
  */
 export const prepareRows = (
   spec: IRPlot,
@@ -111,7 +110,7 @@ export const prepareRows = (
   positionAdjustmentRegistry: Map<string, AnyPositionAdjustmentDefinition>;
   fieldOrderRegistry: ReturnType<typeof resolveFieldOrderRegistry>;
 } => {
-  validateFieldMaps(spec, datasets, options.fieldMaps);
+  assertDatasetFieldMaps(spec, datasets, options.datasetFieldMaps);
   assertFieldOrders(spec.data.model, registries.fieldOrderRegistry);
   const {
     transformRegistry,
@@ -126,11 +125,11 @@ export const prepareRows = (
   for (const field of spec.data.model ?? []) userSourceFields.add(field.name);
   const baseTypes = resolveFieldTypes(spec.data.model, ingested, userSourceFields);
   const fieldMap =
-    options.fieldMaps !== undefined && Object.hasOwn(options.fieldMaps, spec.data.reference)
-      ? options.fieldMaps[spec.data.reference]
+    options.datasetFieldMaps !== undefined && Object.hasOwn(options.datasetFieldMaps, spec.data.reference)
+      ? options.datasetFieldMaps[spec.data.reference]
       : undefined;
 
-  const formatRegistry = resolveFormatRegistry(options.formatDefinitions);
+  const formatRegistry = resolveFormatRegistry(options.definitions?.formats);
   const { fieldTypeMap: formatTypes, parsers: formatParsers } = collectFormatFields(
     spec.data.model,
     baseTypes,
@@ -194,32 +193,32 @@ export const prepareRows = (
 
 /** 为同步 lowering 和异步数据准备建立同一领域注册表 */
 export const preparePlotRegistries = (options: LowerPlotsOptions) => {
-  const transformRegistry = resolveTransformRegistry(options.transformDefinitions);
+  const transformRegistry = resolveTransformRegistry(options.definitions?.transforms);
   const transformContext: TransformContext = {
     ...DEFAULT_TRANSFORM_CONTEXT,
-    regressionRegistry: resolveRegressionRegistry(options.regressionDefinitions),
-    statisticsReducerRegistry: resolveStatisticsReducerRegistry(options.statisticsReducerDefinitions),
-    rowSelectorRegistry: resolveRowSelectorRegistry(options.rowSelectorDefinitions),
+    regressionRegistry: resolveRegressionRegistry(options.definitions?.regressions),
+    statisticsReducerRegistry: resolveStatisticsReducerRegistry(options.definitions?.statisticsReducers),
+    rowSelectorRegistry: resolveRowSelectorRegistry(options.definitions?.rowSelectors),
   };
   transformContext.transformImplementationRegistry = resolveTransformImplementationRegistry(
     transformRegistry,
-    options.transformImplementations,
+    options.implementations?.transforms,
   );
   transformContext.statisticsReducerImplementationRegistry = resolveStatisticsReducerImplementationRegistry(
     transformContext.statisticsReducerRegistry,
-    options.statisticsReducerImplementations,
+    options.implementations?.statisticsReducers,
   );
   transformContext.rowSelectorImplementationRegistry = resolveRowSelectorImplementationRegistry(
     transformContext.rowSelectorRegistry,
-    options.rowSelectorImplementations,
+    options.implementations?.rowSelectors,
   );
   transformContext.regressionImplementationRegistry = resolveRegressionImplementationRegistry(
     transformContext.regressionRegistry,
-    options.regressionImplementations,
+    options.implementations?.regressions,
   );
-  const scaleRegistry = resolveScaleRegistry(options.scaleDefinitions);
-  const markRegistry = resolveMarkRegistry(options.markDefinitions);
-  const positionAdjustmentRegistry = resolvePositionAdjustmentRegistry(options.positionAdjustmentDefinitions);
+  const scaleRegistry = resolveScaleRegistry(options.definitions?.scales);
+  const markRegistry = resolveMarkRegistry(options.definitions?.marks);
+  const positionAdjustmentRegistry = resolvePositionAdjustmentRegistry(options.definitions?.positionAdjustments);
 
   return {
     transformRegistry,
@@ -227,6 +226,6 @@ export const preparePlotRegistries = (options: LowerPlotsOptions) => {
     scaleRegistry,
     markRegistry,
     positionAdjustmentRegistry,
-    fieldOrderRegistry: resolveFieldOrderRegistry(options.fieldOrderDefinitions),
+    fieldOrderRegistry: resolveFieldOrderRegistry(options.definitions?.fieldOrders),
   };
 };

@@ -11,7 +11,7 @@ const PlotRuntimeOptions = Symbol('retikz.plot.runtimeOptions');
 
 const PlotRuntimeReferencePrefix = '@@retikz/plot/runtime/';
 
-const LocalLowerOptionKeys = new Set(['width', 'height', 'fieldMaps', 'resolveLabel']);
+const LocalLowerOptionKeys = new Set(['layout', 'definitions', 'implementations', 'datasetFieldMaps', 'resolveLabel']);
 
 type PlotRuntimeEnvelope = {
   [PlotRuntimeOptions]: LowerPlotsOptions;
@@ -33,17 +33,17 @@ const runtimeOptionsOf = (value: unknown): LowerPlotsOptions | undefined => {
 };
 
 /** 合并多个 Plot contribution 的 field map */
-const mergeFieldMaps = (optionSets: Array<LowerPlotsOptions>): LowerPlotsOptions['fieldMaps'] => {
-  const merged: NonNullable<LowerPlotsOptions['fieldMaps']> = {};
+const mergeDatasetFieldMaps = (optionSets: Array<LowerPlotsOptions>): LowerPlotsOptions['datasetFieldMaps'] => {
+  const merged: NonNullable<LowerPlotsOptions['datasetFieldMaps']> = {};
 
   for (const options of optionSets) {
-    for (const [reference, fieldMap] of Object.entries(options.fieldMaps ?? {})) {
+    for (const [reference, fieldMap] of Object.entries(options.datasetFieldMaps ?? {})) {
       const current = merged[reference] ?? {};
 
       for (const [field, path] of Object.entries(fieldMap)) {
         if (Object.hasOwn(current, field) && current[field] !== path) {
           throw new RetikzPlotError(
-            `[retikz] Plot provider: fieldMaps["${reference}"].${field} resolves to both "${current[field]}" and "${path}".`,
+            `[retikz] Plot provider: datasetFieldMaps["${reference}"].${field} resolves to both "${current[field]}" and "${path}".`,
           );
         }
 
@@ -91,12 +91,28 @@ const mergeLowerOptions = (optionSets: Array<LowerPlotsOptions>): LowerPlotsOpti
     }
   }
 
-  const fieldMaps = mergeFieldMaps(optionSets);
+  for (const group of ['layout', 'definitions', 'implementations'] as const) {
+    const merged: Record<string, unknown> = {};
+    for (const options of optionSets) {
+      for (const [key, value] of Object.entries(options[group] ?? {})) {
+        if (value === undefined || (group === 'layout' && (key === 'width' || key === 'height'))) continue;
+        if (Object.hasOwn(merged, key) && !Object.is(merged[key], value)) {
+          throw new RetikzPlotError(
+            `[retikz] Plot provider: plots in one compile assembly must share lower option "${group}.${key}".`,
+          );
+        }
+        merged[key] = value;
+      }
+    }
+    if (Object.keys(merged).length > 0) shared[group] = merged;
+  }
+
+  const datasetFieldMaps = mergeDatasetFieldMaps(optionSets);
   const resolveLabel = mergeResolveLabels(optionSets);
 
   return {
     ...(shared as LowerPlotsOptions),
-    ...(fieldMaps === undefined ? {} : { fieldMaps }),
+    ...(datasetFieldMaps === undefined ? {} : { datasetFieldMaps }),
     ...(resolveLabel === undefined ? {} : { resolveLabel }),
   };
 };

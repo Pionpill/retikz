@@ -11,9 +11,9 @@ import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
 /** 笛卡尔使用默认画布；极坐标使用正方形画布，因此 outerRadius = 200、center = [200, 200] */
-const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
+const cartOpts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
 
-const polarOpts: LowerPlotsOptions = { width: 400, height: 400 };
+const polarOpts: LowerPlotsOptions = { layout: { width: 400, height: 400 } };
 
 const expandOf = (
   spec: IRPlot,

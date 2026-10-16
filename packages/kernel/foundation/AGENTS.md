@@ -29,7 +29,7 @@
 - `z.number()` 已拒绝非有限数；不得增加无行为差异的 finite schema 或 `.finite()`
 - `NonBlankStringSchema` 与 `assertNonEmptyString` 使用同一空白定义，均不 trim 或改写合法输入
 - `assertNonEmptyString` 只接受 `string`，拒绝空串与全空白内容；未知值的收窄和 owner 错误语义由调用方负责
-- `assertNonEmptyString` 与 `assertPositiveNumber` 可选接收已构造的 owner `RetikzError`；提供时直接抛该错误，不提供时抛 `RetikzFoundationError`。Foundation 不读取或改写 owner 错误的 code、message、details 与 cause
+- `assertNonEmptyString` 与 `assertPositiveNumber` 可选接收 `() => RetikzError` 工厂；成功时不调用，失败时调用一次并原样抛出返回的错误，不提供时抛 `RetikzFoundationError`。Foundation 不读取或改写 owner 错误的 code、message、details 与 cause
 - `cloneAndFreezeJson` 只处理 JSON-safe plain data，返回脱离原输入的深冻结副本；JSON 结构无效时抛出 `RetikzFoundationError`，调用方可在自己的错误边界转换错误类型
 - `assertPlainDataContainers` 只校验 plain object / array 容器、属性描述符与循环引用，不读取 accessor，也不代替 owner schema 校验叶子值域
 - `RetikzError` 只保留 code、message、details 与 own cause；不自动生成 JSON、Diagnostic 或全仓错误码

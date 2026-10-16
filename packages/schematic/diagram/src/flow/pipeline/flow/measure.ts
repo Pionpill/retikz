@@ -14,6 +14,7 @@ import type { FlowLayoutDefinition, FlowLayoutElementInput, FlowLayoutRelationIn
 import type { CanonicalFlowDiagram, CanonicalFlowElement, CanonicalFlowRelation } from '../../resolve';
 import { mergeFlowLayoutIntent, resolveEffectiveFlowLayout, resolveEffectiveFlowPlacement } from '../../resolve';
 import type { IRFlowLayoutIntent } from '../../schemas';
+import { allocateFlowGroupHeights } from './container-height';
 import { allocateFlowContainerWidths } from './container-width';
 import type { FlowElementMeasurement, FlowMeasurement } from './types';
 
@@ -294,40 +295,44 @@ export const measureFlowDiagram = (
 
   return {
     diagram,
-    input: allocateFlowContainerWidths(
+    input: allocateFlowGroupHeights(
       diagram,
-      {
-        layout: rootLayout,
-        elements,
-        relations: relationInputs(diagram, context, graphOptions, definition, rootLayout, state),
-      },
-      context,
-      (element, width) => {
-        try {
-          const graph = { ...element.graph, layout: { ...element.graph.layout, width } };
-          const first = measureEntity(element, graph, context, state);
-          const correction = width - first.size.width;
-          const result =
-            Math.abs(correction) <= Number.EPSILON * 64 * Math.max(1, width, first.size.width)
-              ? first
-              : measureEntity(
-                  element,
-                  { ...graph, layout: { ...graph.layout, width: width + correction } },
-                  context,
-                  state,
-                );
-          if (Math.abs(result.size.width - width) > Number.EPSILON * 64 * Math.max(1, width, result.size.width))
-            throw new RetikzDiagramError({
-              code: RetikzDiagramErrorCode.FlowConstraintUnsatisfiable,
-              message: `Entity '${element.id}' cannot satisfy its allocated width.`,
-              details: { path: element.path, relatedIds: [element.id] },
-            });
+      allocateFlowContainerWidths(
+        diagram,
+        {
+          layout: rootLayout,
+          elements,
+          relations: relationInputs(diagram, context, graphOptions, definition, rootLayout, state),
+        },
+        context,
+        (element, width) => {
+          try {
+            const graph = { ...element.graph, layout: { ...element.graph.layout, width } };
+            const first = measureEntity(element, graph, context, state);
+            const correction = width - first.size.width;
+            const result =
+              Math.abs(correction) <= Number.EPSILON * 64 * Math.max(1, width, first.size.width)
+                ? first
+                : measureEntity(
+                    element,
+                    { ...graph, layout: { ...graph.layout, width: width + correction } },
+                    context,
+                    state,
+                  );
+            if (Math.abs(result.size.width - width) > Number.EPSILON * 64 * Math.max(1, width, result.size.width))
+              throw new RetikzDiagramError({
+                code: RetikzDiagramErrorCode.FlowConstraintUnsatisfiable,
+                message: `Entity '${element.id}' cannot satisfy its allocated width.`,
+                details: { path: element.path, relatedIds: [element.id] },
+              });
 
-          return result;
-        } catch (cause) {
-          return measureFailure(element, cause);
-        }
-      },
+            return result;
+          } catch (cause) {
+            return measureFailure(element, cause);
+          }
+        },
+      ),
+      context,
     ),
     elementMeasurements: state.elementMeasurements,
     effectiveLayouts: state.effectiveLayouts,

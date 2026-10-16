@@ -1,5 +1,5 @@
 import type { FC, HTMLAttributes } from 'react';
-import { useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib';
@@ -43,6 +43,32 @@ export const DocPage: FC<DocPageProps> = props => {
 
   const { source, segments: sourceSegments, notFound, resolvedLang, error } = useMdxSource();
   const tocOpen = useTocStore(state => state.tocOpen);
+  const headerPinned = useTocStore(state => state.headerPinned);
+  const pageRef = useRef<HTMLElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+
+  /** 跟随标题换行、语言和容器宽度更新锚点避让距离 */
+  useLayoutEffect(() => {
+    const page = pageRef.current;
+    const header = headerRef.current;
+    if (!page || !header) return;
+    if (!headerPinned) {
+      page.style.removeProperty('--doc-heading-offset');
+      return;
+    }
+
+    const update = () => {
+      const top = Number.parseFloat(getComputedStyle(header).top);
+      page.style.setProperty('--doc-heading-offset', `${top + header.getBoundingClientRect().height + 24}px`);
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(header);
+    return () => {
+      observer.disconnect();
+      page.style.removeProperty('--doc-heading-offset');
+    };
+  }, [headerPinned, target]);
 
   /** changelog 页走数据驱动渲染，不走 mdx 管线。 */
   const isChangelog = isChangelogLocation(loc);
@@ -116,10 +142,16 @@ export const DocPage: FC<DocPageProps> = props => {
       : null;
 
   return (
-    <main className={cn('@container flex min-w-0 flex-1 w-full', className)} {...resProps}>
+    <main ref={pageRef} className={cn('@container flex min-w-0 flex-1 w-full', className)} {...resProps}>
       <div className="flex min-w-0 flex-1 justify-center px-8 py-6">
         <div className={cn('flex min-w-0 flex-1 flex-col gap-6', contentClassName)}>
-          <header className="flex flex-col items-start w-full justify-between gap-2">
+          <header
+            ref={headerRef}
+            className={cn(
+              'flex flex-col items-start w-full justify-between gap-2',
+              headerPinned && 'sticky top-14 z-30 -my-6 bg-background py-6',
+            )}
+          >
             <div className="flex w-full flex-wrap items-start gap-x-3 gap-y-2">
               <h1 className="scroll-m-24 w-fit max-w-full shrink-0 text-2xl @[40rem]:text-3xl font-semibold tracking-tight">
                 {title}

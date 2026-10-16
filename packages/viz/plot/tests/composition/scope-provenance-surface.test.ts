@@ -101,7 +101,7 @@ const expandOf = (spec: IRPlot): IRScope => {
   return lowerPlot(
     spec,
     { weather: weatherRows },
-    { textMeasurer: measureLabel, width: 480, height: 300, provenance: true, datumProvenance: true },
+    { layout: { width: 480, height: 300 }, textMeasurer: measureLabel, provenance: true, datumProvenance: true },
   ) as IRScope;
 };
 
@@ -191,7 +191,7 @@ describe('scope provenance surface locator', () => {
     const locator = createPlotLocator(
       parsePlotIR(overlaySpec),
       { weather: weatherRows },
-      { environment: {}, width: 480, height: 300 },
+      { layout: { width: 480, height: 300 }, environment: {} },
     );
     const temp = locator.datum(0, { coordinateView: 'temp' });
     const rain = locator.datum(0, { coordinateView: 'rain' });
@@ -205,7 +205,7 @@ describe('scope provenance surface locator', () => {
     const locator = createPlotLocator(
       parsePlotIR(facetSpec),
       { weather: weatherRows },
-      { environment: {}, width: 480, height: 300 },
+      { layout: { width: 480, height: 300 }, environment: {} },
     );
     const north = locator.datum(0, { facet: { id: 'region', column: 'north' } });
     const south = locator.datum(0, { facet: { id: 'region', column: 'south' } });
@@ -219,7 +219,7 @@ describe('scope provenance surface locator', () => {
     const locator = createPlotLocator(
       parsePlotIR(trackSpec),
       { weather: weatherRows },
-      { environment: {}, width: 480, height: 300 },
+      { layout: { width: 480, height: 300 }, environment: {} },
     );
     const rain = locator.datum(0, { track: 'rain' });
 
@@ -230,7 +230,7 @@ describe('scope provenance surface locator', () => {
     const locator = createPlotLocator(
       parsePlotIR(overlaySpec),
       { weather: weatherRows },
-      { environment: {}, width: 480, height: 300 },
+      { layout: { width: 480, height: 300 }, environment: {} },
     );
 
     expect(locator.resolve('weather.datum.0')?.meta.transformedIndex).toBe(0);
@@ -242,7 +242,7 @@ describe('scope provenance surface locator', () => {
     const locator = createPlotLocator(
       parsePlotIR(facetSpec),
       { weather: weatherRows },
-      { environment: {}, width: 480, height: 300 },
+      { layout: { width: 480, height: 300 }, environment: {} },
     );
 
     expect(locator.datum(0, { coordinateView: 'missing' })).toBeNull();

@@ -105,6 +105,7 @@ const appendSearchEntries = (
 
     const walk = (pages: Array<Page>, parent: { id: string; label: string } | null): void => {
       for (const page of pages) {
+        if (page.linkTo) continue;
         const pageLabel = String(t(page.label));
         if (page.children) {
           walk(page.children, { id: page.id, label: pageLabel });

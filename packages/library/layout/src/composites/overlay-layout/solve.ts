@@ -1,6 +1,7 @@
 import type { LayoutChildResult } from '@retikz/core';
 import { LayoutAlignmentGuideDimension, BuiltinLayoutAlignmentGuideName } from '@retikz/core';
 
+import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import type { CanonicalOverlayPlacement } from '../../resolve/overlay-layout';
 import type { LayoutInsets, LayoutRect } from '../internal';
 import { alignAllocationInSlot, compensatedLayoutSum, positionedLayoutSlotOf } from '../internal';
@@ -27,9 +28,9 @@ export type OverlayProfileItem = Readonly<{
   /** 该子项是否贡献容器的固有尺寸 */
   sizeParticipation: LayoutSizeParticipation;
   /** 用于水平尺寸贡献计算的测量结果 */
-  xResult: LayoutChildResult;
+  xResult: Readonly<{ slotSize: Readonly<{ width: number }> }>;
   /** 用于垂直尺寸及基线计算的测量结果 */
-  yResult: LayoutChildResult;
+  yResult: LayoutChildResult | Readonly<{ slotSize: Readonly<{ height: number }> }>;
 }>;
 
 /** Overlay baseline group 的结构 ascent/descent */
@@ -127,6 +128,12 @@ const baselineMetricOf = (
   let descent = 0;
 
   for (const item of participants) {
+    if (!('allocationBounds' in item.yResult))
+      throw new RetikzLayoutError({
+        code: RetikzLayoutErrorCode.GeometryInvalid,
+        message: 'Baseline profile requires full layout evidence',
+        details: {},
+      });
     const guide = overlayStructuralGuideOffset(item.yResult, name);
     ascent = Math.max(ascent, item.margin.top + guide.offset);
     descent = Math.max(descent, item.yResult.slotSize.height - guide.offset + item.margin.bottom);
@@ -135,15 +142,29 @@ const baselineMetricOf = (
   return Object.freeze({ ascent, descent });
 };
 
+/** 水平贡献与垂直测量无关，供完整求解和单轴请求共用 */
+export const resolveOverlayWidth = (items: ReadonlyArray<Omit<OverlayProfileItem, 'yResult'>>): number => {
+  let width = 0;
+  for (const item of items) {
+    if (item.sizeParticipation !== LayoutSizeParticipation.Include) continue;
+    const slotWidth = item.xResult.slotSize.width;
+    const extent =
+      item.placement.kind === OverlayPlacementKind.Aligned
+        ? compensatedLayoutSum([item.margin.left, slotWidth, item.margin.right])
+        : item.placement.at.x + item.offset.x - item.placement.anchor.x * slotWidth + slotWidth + item.margin.right;
+    width = Math.max(width, extent, 0);
+  }
+  return width;
+};
+
 /** 求解 Overlay 单个 minimum/natural profile 的有限 content contribution */
 export const resolveOverlayProfile = (items: ReadonlyArray<OverlayProfileItem>): OverlayProfile => {
   const included = items.filter(item => item.sizeParticipation === LayoutSizeParticipation.Include);
-  let width = 0;
+  const width = resolveOverlayWidth(items);
   let height = 0;
 
   for (const item of included) {
     if (item.placement.kind === OverlayPlacementKind.Aligned) {
-      width = Math.max(width, compensatedLayoutSum([item.margin.left, item.xResult.slotSize.width, item.margin.right]));
       height = Math.max(
         height,
         compensatedLayoutSum([item.margin.top, item.yResult.slotSize.height, item.margin.bottom]),
@@ -151,11 +172,8 @@ export const resolveOverlayProfile = (items: ReadonlyArray<OverlayProfileItem>):
       continue;
     }
 
-    const slotWidth = item.xResult.slotSize.width;
     const slotHeight = item.yResult.slotSize.height;
-    const slotX = item.placement.at.x + item.offset.x - item.placement.anchor.x * slotWidth;
     const slotY = item.placement.at.y + item.offset.y - item.placement.anchor.y * slotHeight;
-    width = Math.max(width, slotX + slotWidth + item.margin.right, 0);
     height = Math.max(height, slotY + slotHeight + item.margin.bottom, 0);
   }
 

@@ -76,11 +76,10 @@ const draw = (degree: number, scale = 'linear', clamp = false, curve = 'catmullR
         ],
       },
       {
+        layout: { width: 480, height: 300 },
+        definitions: { regressions: [definition] },
+        implementations: { regressions: [implementation] },
         textMeasurer: measureLabel,
-        width: 480,
-        height: 300,
-        regressionDefinitions: [definition],
-        regressionImplementations: [implementation],
       },
     ),
   )[0];

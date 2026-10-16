@@ -49,7 +49,7 @@ export const MarkChannelEncodingSchema = object({
   channels: record(NonBlankStringSchema, ChannelSchema)
     .optional()
     .describe(
-      'Extension channel bindings: a map of registered channel name to field / constant binding, resolved by a ChannelDefinition supplied via options.channelDefinitions. A key colliding with a built-in channel name fails loud at lowering',
+      'Extension channel bindings: a map of registered channel name to field / constant binding, resolved by a ChannelDefinition supplied via options.definitions.channels. A key colliding with a built-in channel name fails loud at lowering',
     ),
 }).describe('Non-positional mark / extension channel bindings fed to mark lowering');
 

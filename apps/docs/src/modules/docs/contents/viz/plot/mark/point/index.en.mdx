@@ -1,47 +1,201 @@
 ---
 title: PointMark
-description: 'PointMark is the simplest mark: it positions each row in a coordinate system, then draws a Node that can become a scatter point, bubble, shape marker, or text point.'
+description: Draw one node per data row, encode position, size and shape, add text, and spread overlapping observations.
 ---
 
-`<PointMark>` is the simplest mark: it first positions each data row in the active coordinate system, then draws one core `Node` at that position. That Node can be a default dot, shape marker, bubble, text, or a dot with a label; scatter plots, bubble plots, and text points are presentation-level wrappers around the same base mark.
+`PointMark` draws a [node (Node)](/kernel/components/node) at the position of each data row. Two numeric fields (corresponding to `x` and `y`) determine the position, while other visual channels of the node convey additional information.
 
-Which position channels you bind depends on the [coordinate system](/viz/plot/coordinate): built-in 1D coordinates use `x`, built-in 2D coordinates use `x` / `y`, and custom coordinates may declare additional roles. The props are optional at the component level; the active coordinate validates the required dimensions at compile time.
+A node here is not limited to a conventional scatter point: it corresponds to the underlying Kernel Node component and can appear as a scatter point, text, a shape, or other forms. This page starts with three points, then covers appearance, labels and spreading overlapping observations. See [channel binding](/viz/plot/channel/binding) for fields and constants, and [Quick start](/viz/plot/get-start) for installation.
 
-## Usage
+## Using this topic
 
-```tsx
-import { Plot, PointMark } from '@retikz/plot-react';
-```
-
-```tsx
-<Plot data={cities}>
-  <PointMark x="lng" y="lat" />
-</Plot>
-```
-
-PointMark often overlays PathMark — draw `<PathMark>` first, then layer `<PointMark>` on the same data to mark each observation.
-
-### When to Use
-
-PointMark is a low-level point mark: it only projects each data row into one coordinate position, then writes style and text channels onto the Node for that position. What the presentation layer calls a scatter plot, bubble plot, or text point is not a different low-level mark; it is the same PointMark with different channels configured.
-
-This is why PointMark usually does not need coordinate-specific adapters. The coordinate system projects position roles into a screen point, and the presentation layer decides how that point is drawn.
-
-| Presentation form | Key props            | Behavior                                                                                       |
-| ----------------- | -------------------- | ---------------------------------------------------------------------------------------------- |
-| Scatter point     | `x` / `y`            | The default form: one point per data row; `color` / `shape` continue to decorate the point set |
-| Bubble plot       | `size`               | A numeric field drives point radius without changing position                                  |
-| Text point        | `text` / `dx` / `dy` | With `text` alone, draws a text Node; conceptually a presentation-level TextMark               |
-
-## Examples
-
-The first four general examples can switch between Cartesian and polar coordinates from the Coordinate section. The PointMark configuration stays unchanged; in polar coordinates, `x` is angular position and `y` is radial position.
-
-### Basic Usage
-
-`x` / `y` define the anchor for each row, and PointMark creates one default circular node at every anchor. You can then map a categorical field to color or a numeric field to size to move from plain scatter points to bubbles.
+The example binds GDP to the horizontal axis and life expectancy to the vertical axis. Each record becomes a circle with radius 6. Both scales add 15% domain padding so the edge points remain visible. These are example settings, not PointMark defaults.
 
 <ComponentPreview
+  mode="showcase"
+  files={['point-entry', 'point-entry.data.ts']}
+  controls={{ name: 'point-entry' }}
+  responsive
+  hideCode
+  size="md"
+/>
+
+Prepare `<div id="plot"></div>` in your HTML and choose one entry below. In React JSX, marks, scales and axes are children of Plot:
+
+```text
+Plot
+├── PointMark
+├── PlotScale
+└── PlotAxis
+```
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+Import components from `@retikz/plot-react` and declare point positions on `PointMark`.
+
+```tsx
+import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A', population: 8 },
+  { gdp: 900, life: 81, region: 'B', population: 16 },
+  { gdp: 1600, life: 84, region: 'A', population: 28 },
+];
+
+createRoot(document.getElementById('plot')!).render(
+  <Plot data={rows} width={360} height={220}>
+    <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+    <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+    <PointMark x="gdp" y="life" size={6} />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" />
+  </Plot>,
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+Import the configuration type from `@retikz/plot` and pass the IR to the React `Plot` through `spec`.
+
+```tsx
+import { Plot } from '@retikz/plot-react';
+import type { IRPlot } from '@retikz/plot';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A', population: 8 },
+  { gdp: 900, life: 81, region: 'B', population: 16 },
+  { gdp: 1600, life: 84, region: 'A', population: 28 },
+];
+
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+    { type: 'linear', name: 'y', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'point',
+      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
+      size: { kind: 'constant', value: 6 },
+    },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
+
+createRoot(document.getElementById('plot')!).render(<Plot spec={spec} data={{ rows }} width={360} height={220} />);
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+Import `plot` from `@retikz/plot-vanilla` to create the configuration, then render SVG with `renderPlot`.
+
+```ts
+import { plot, renderPlot } from '@retikz/plot-vanilla';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A', population: 8 },
+  { gdp: 900, life: 81, region: 'B', population: 16 },
+  { gdp: 1600, life: 84, region: 'A', population: 28 },
+];
+
+const spec = plot({
+  data: { reference: 'rows' },
+  scales: [
+    { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+    { type: 'linear', name: 'y', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'point',
+      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
+      size: { kind: 'constant', value: 6 },
+    },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+});
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+Declare an `IRPlot` directly and render it with `renderPlot` and named datasets.
+
+```ts
+import type { IRPlot } from '@retikz/plot';
+import { renderPlot } from '@retikz/plot-vanilla';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A', population: 8 },
+  { gdp: 900, life: 81, region: 'B', population: 16 },
+  { gdp: 1600, life: 84, region: 'A', population: 28 },
+];
+
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+    { type: 'linear', name: 'y', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'point',
+      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
+      size: { kind: 'constant', value: 6 },
+    },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
+```
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
+
+Unless noted otherwise, the visual properties below support constant and field channels. Numbers, booleans, and objects can use constant shorthand; use explicit constant bindings for ambiguous strings such as colors. See [channel binding](/viz/plot/channel/binding) for field rules. Tables group properties by responsibility, and each demo combines properties from that group.
+
+### Position and size
+
+`x` and `y` select the fields to read. Cartesian coordinates interpret them as horizontal and vertical positions; polar coordinates interpret `x` as angle and `y` as radius. Each row still produces one point.
+
+| Property      | Meaning              | Description                                                                                                                                                                    |
+| ------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `x`, `y`      | Position fields      | Component props accept field names or paths only: horizontal/vertical in Cartesian coordinates and angle/radius in polar coordinates. One-dimensional coordinates use only `x` |
+| `z`           | Third position field | For custom coordinates consuming a third position role; unused by built-in coordinates                                                                                         |
+| `size`        | Node radius          | Constants specify the radius directly; numeric fields use a square-root scale by default for area comparison. Negative values raise an error                                   |
+| `minimumSize` | Minimum visual size  | A number or an object with `width`, `height`, and `default`; `size` takes precedence for ordinary points. The Minimum size mode omits `size`                                   |
+| `color`       | Overall color        | This example colors regions categorically; see Appearance for the full set of paint properties                                                                                 |
+
+Keep the position fields fixed while comparing constant points with population bubbles, then change the fields to observe the positions.
+
+<ComponentPreview
+  mode="showcase"
   files={['point-position', 'point-position.preview.tsx', 'point-api.data.ts']}
   controls={{ name: 'point-position' }}
   size="lg"
@@ -49,55 +203,90 @@ The first four general examples can switch between Cartesian and polar coordinat
   defaultSourceFile="point-position.preview.tsx"
 />
 
-### Position Spread
+### Appearance
 
-`placement.adjustments` changes positions after position scales and before Point geometry. Built-in ratio jitter uses the discrete scale's live step, while a numeric span uses the current role's output units directly.
+Fill, stroke and opacity change how points look. This example offers three color sources and shows only the controls relevant to the selected mode.
 
-#### Cartesian
+| Property      | Meaning             | Description                                                                                                                                                                                |
+| ------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `color`       | Overall color       | Categorical fields map through a color scale; use an explicit constant binding for a fixed color. Explicit `fill` can override the node fill                                               |
+| `fill`        | Fill                | Supports fields, constant colors, and Paint kinds `linearGradient`, `radialGradient`, `conicGradient`, `pattern`, and `image`; strings are interpreted as field names                      |
+| `stroke`      | Stroke color        | Supports fields, constant colors, and Paint objects like `fill`; use an explicit constant binding for a solid color                                                                        |
+| `strokeWidth` | Stroke width        | A nonnegative value in output units; 0 hides the stroke                                                                                                                                    |
+| `opacity`     | Opacity             | A single value sets overall opacity; an object sets `overall`, `fill`, and `stroke` independently. Each accepts constant or field bindings; overall multiplies the fill and stroke factors |
+| `dashed`      | Dashed stroke       | A boolean channel enabling the dashed preset                                                                                                                                               |
+| `dotted`      | Dotted stroke       | A boolean channel enabling the dotted preset; `dashed` takes precedence when both are enabled                                                                                              |
+| `dashPattern` | Custom dash pattern | An array alternating dash and gap lengths; overrides `dashed` and `dotted`                                                                                                                 |
+| `shadow`      | Shadow              | A shadow preset or custom shadow object, optionally mapped per node through a field                                                                                                        |
+| `blendMode`   | Blend mode          | Controls color compositing with graphics below, including `normal`, `multiply`, and `screen`                                                                                               |
+| `zIndex`      | Node drawing order  | Controls the drawing order of generated nodes, distinct from the mark-level semantic `layer`                                                                                               |
 
-Ratio jitter on a categorical x axis spreads observations within one tick interval. Switching to output units makes `span` the total post-scale width. Plot reserves the jitter half-span plus the Point extent at both ends in either mode so glyphs stay inside the coordinate extent.
-
-`distribution` defaults to `{ kind: 'uniform' }`, spreading offsets across the full range. `{ kind: 'normal', sigma }` uses a zero-mean normal distribution truncated to normalized `[-1, 1]`, so points concentrate near the category center while staying inside the `span` envelope. `sigma` is relative to the jitter half-span: it defaults to `0.5`; smaller values concentrate more points, while larger values approach the full allowed range.
-
-This is placement jitter: it changes positions after scale mapping without rewriting rows or fields. The `jitter` Data transform derives a field before scales, so the two mechanisms serve different purposes and are not interchangeable.
-
-<ComponentPreview
-  files={['point-jitter-cartesian', 'point-jitter-cartesian.preview.tsx', 'point-jitter.data.ts']}
-  controls={{ name: 'point-jitter-cartesian' }}
-  size="lg"
-  caption="Switch the width unit and adjust span and seed while each category center stays fixed."
-  defaultSourceFile="point-jitter-cartesian.preview.tsx"
-/>
-
-#### Polar
-
-The x role is an angle in polar coordinates. Discrete angles use a tick-step ratio: the default `chord` mode moves jittered points along the straight edge between adjacent polygon vertices. Continuous angles use numeric output units and move along circular arcs. Both modes compose the angle before projecting with each row's y radius, so outer points travel farther on screen instead of receiving a uniform `dx` / `dy`. The demo uses radial `domainPadding` to reserve the spread space and Point radius at the outer edge.
+The example overlaps nodes in pairs to expose blending and drawing order. Disable custom dashes and dashed strokes before comparing dotted strokes. Switch between forward and reverse order to inspect overlapping edges.
 
 <ComponentPreview
-  files={['point-jitter-polar', 'point-jitter-polar.preview.tsx', 'point-jitter.data.ts']}
-  controls={{ name: 'point-jitter-polar' }}
-  size="lg"
-  caption="Switch between discrete categories and continuous numeric angles, then adjust spread width and seed to compare angular jitter in polygon and circular grids."
-  defaultSourceFile="point-jitter-polar.preview.tsx"
-/>
-
-### Style Variations
-
-Node styles such as `fill`, `stroke`, and `opacity` change only the scatter appearance, not the projected positions established above. Compare gradients, opacity, dashed strokes, and shadows directly here.
-
-<ComponentPreview
+  mode="showcase"
   files={['point-style', 'point-style.preview.tsx', 'point-api.data.ts']}
   controls={{ name: 'point-style' }}
   size="lg"
-  caption="Keep x / y fixed while combining paint, opacity, stroke, size, and shadow changes."
+  caption="Compare paint, opacity, stroke patterns, shadows, blending, and drawing order on overlapping pairs of nodes."
   defaultSourceFile="point-style.preview.tsx"
 />
 
-### Labels and Text Points
+### Shape
 
-PointMark has two text modes. `label` preserves the scatter glyph and attaches text through `Node.label`; `text` replaces the glyph itself with a borderless text Node, so a scatter layer can contain text only.
+Nodes keep their screen orientation by default. `orientation={{ kind: 'coordinate', role: 'x', align: 'tangent' }}` aligns a node with the local x coordinate curve; `normal` selects its positive normal. The role names a coordinate parameter, not a visible axis ID. In polar coordinates, x is angular and y is radial. Custom curved coordinates use the same contract.
+
+In the demo below, select polar coordinates and a rectangle, then change Orientation. `rotate` adds an angular offset to that alignment; rotating a circle has no visible effect. Orientation follows role-space position adjustments. Screen offsets move the node without recomputing its direction.
+
+`shape` can select a constant shape or map a categorical field to shapes. This example compares constant shapes: choose a circle, rectangle or diamond, or use a parameterized reference to set the number of star points or polygon sides. Rotation and size apply to the selected shape.
+
+| Property       | Meaning               | Description                                                                                                                                    |
+| -------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shape`        | Node shape            | A registered name or `{ type, params }` reference; field bindings require categorical data, not continuous or temporal data                    |
+| `orientation`  | Orientation reference | Mark-level configuration: `{ kind: 'screen' }` by default, or `{ kind: 'coordinate', role, align: 'tangent' / 'normal' }`; not a field channel |
+| `rotate`       | Rotation angle        | Adds a constant or field-bound angle to the orientation in degrees; rotating a circle has no visible effect                                    |
+| `scale`        | Node scale            | A uniform factor or `{ x, y, default }` axis configuration; does not change the data position                                                  |
+| `cornerRadius` | Corner radius         | A nonnegative value; the effect depends on shape support. Select a rectangle to observe it                                                     |
+| `padding`      | Inner spacing         | Spacing from content to border; a number or a directional spacing object                                                                       |
+| `margin`       | Connection margin     | An offset outside the connection boundary; affects connections without changing the visible fill shape                                         |
+| `boundary`     | Connection boundary   | The connection contour: `shape`, `circle`, or a shape reference; independent of the visible `shape`                                            |
+
+The star shape is provided by `StarShapeDefinition` from `@retikz/extension`; this example registers it explicitly through Layout’s `extensions.shapes`.
+
+The example starts at size 18. Gray guide lines drawn by RelationMark show how node margins (`margin`) affect connection endpoints. Turn off Show connections to hide these lines. Select a rectangle to compare corners, padding, and connection margins. Circle uses `fit: 'bounds'`, changing connection endpoints without changing the visible shape.
 
 <ComponentPreview
+  mode="showcase"
+  files={['point-node-shape', 'point-node-shape.preview.tsx', 'point-api.data.ts']}
+  controls={{ name: 'point-node-shape' }}
+  size="lg"
+  caption="Compare shape, scale, and spacing, and use guide lines to inspect connection boundaries."
+  defaultSourceFile="point-node-shape.preview.tsx"
+/>
+
+### Text and labels
+
+Choose whether text should accompany the point or replace it.
+
+| Property        | Meaning                | Description                                                                                                                                                                              |
+| --------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `text`          | Text node content      | The component prop binds a field only; renders borderless text instead of an ordinary shape                                                                                              |
+| `displayFormat` | Text format            | A numeric or time format string used with `text`; a direct setting, not a channel binding                                                                                                |
+| `textColor`     | Text color             | A constant or field channel for text nodes; attached labels use their own color in `label`                                                                                               |
+| `font`          | Font                   | A font configuration or field channel, including size, weight, and family; attached labels use `label.font`                                                                              |
+| `align`         | Multiline alignment    | `start`, `middle`, or `end` within the multiline text block                                                                                                                              |
+| `lineHeight`    | Line height            | A positive value in output units for multiline text nodes                                                                                                                                |
+| `maxTextWidth`  | Maximum text width     | A positive width limit that wraps text; combine with line height and alignment                                                                                                           |
+| `dx`, `dy`      | Text offsets           | Direct numeric values, not field channels; positive values move right and down. Applies only to text nodes                                                                               |
+| `label`         | Attached labels        | A field name, label object, or ordered array of labels. Objects configure content, position, distance, pins, and style; use `value` for fixed content and `displayFormat` for formatting |
+| `resolveLabel`  | Runtime label callback | Receives a row and returns text, taking precedence over label content. Requires a mark `id`; callbacks are not serialized into IR                                                        |
+
+Label position, distance, pins and font belong in the `label` object. Source IR stores the text binding in `label.content`. Text points use `textColor` and `font` for appearance. Their `dx` and `dy` offsets move right and down for positive values; these offsets do not move ordinary point shapes.
+
+Select Text points and Multiline text to compare alignment, line height, and wrapping. Choose Population to compare number formats. Callback labels combine the letter and population value from the same row.
+
+<ComponentPreview
+  mode="showcase"
   files={['point-text', 'point-text.preview.tsx', 'point-api.data.ts']}
   controls={{ name: 'point-text' }}
   size="lg"
@@ -105,117 +294,193 @@ PointMark has two text modes. `label` preserves the scatter glyph and attaches t
   defaultSourceFile="point-text.preview.tsx"
 />
 
-### Node Shapes
+## Extended usage
 
-PointMark creates a core Node at every position rather than a fixed circle. `shape` can be a simple name such as circle, rectangle, or diamond, or a full shape reference with `params` for stars, polygons, and registered custom shapes; parameterized shapes can further vary their point or side count.
+### Edge padding
+
+A node's position is its center. At the edge of the plotting area, its radius can extend beyond the boundary. `PointMark` therefore defaults to `max-radius`, reserving the largest node radius on continuous position scales. Data and node sizes stay unchanged; the scale mapping changes.
+
+| Property                  | Meaning                  | Description                                                                                                                                                                                       |
+| ------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `autoPadding`             | Automatic padding policy | Defaults to `max-radius`; `point-aware` uses actual positions and radii; `false` disables this mark's automatic contribution. Accepts a policy directly, without field-channel binding            |
+| `autoPadding.clearance`   | Edge clearance           | Nonnegative drawing units in `{ kind, clearance }`, default 0. Accepts a number or box-spacing object; explicit sides require Cartesian coordinates                                               |
+| `PlotScale.domainPadding` | Scale override           | A number, including 0, fixes both ends. `range` fixes specified ends and fills omitted ends automatically; omitted `ratio` ends are 0. Explicit `mark` padding selects participants independently |
+
+The example keeps a large central point and two small edge points unchanged. Switch policies to see whether the central point needs extra space, then increase clearance or set the x scale's start padding to zero to compare precedence.
 
 <ComponentPreview
-  files={['point-node-shape', 'point-node-shape.preview.tsx', 'point-api.data.ts']}
-  controls={{ name: 'point-node-shape' }}
+  mode="showcase"
+  files={['point-auto-padding', 'point-auto-padding.preview.tsx', 'point-auto-padding.data.ts']}
+  controls={{ name: 'point-auto-padding' }}
+  defaultSourceFile="point-auto-padding.preview.tsx"
   size="lg"
-  caption="Keep data and positions fixed while changing shape, size, rotation, star points, or polygon sides."
-  defaultSourceFile="point-node-shape.preview.tsx"
+  caption="The default size scale maps the numeric field to radii 2, 20, and 2. The scale override affects x only. Other marks may still contribute padding when this mark's policy is disabled."
 />
 
-## How it works
+Maximum-radius padding does not scan data rows: constant sizes use `size`, while field sizes use the maximum output of the size scale. Categorical position scales retain their own padding. Point-aware padding uses valid data and positions after placement adjustments, allowing a central point's existing edge distance to satisfy its constraint. It supports continuous, categorical, and polar mappings with the required capabilities.
+
+Both policies protect the radius expressed by `size`, without measuring text, strokes, shadows, shape scaling, or `minimumSize` bounds. Shared scales take the maximum demand at each end; mixed policies and shared facets satisfy their constraints in one final mapping. Unknown size bounds, missing capabilities, or an infeasible plotting area produce errors.
+
+### Jitter
+
+Use `placement.adjustments` to spread observations that overlap at the same position. The following demo uses built-in `jitter`, which adjusts positions after scale mapping without changing data rows or field values. The Data transform named `jitter` instead derives a field before scale mapping.
+
+Switch between Cartesian and polar coordinates using the coordinate selector. In Cartesian coordinates, a step ratio spreads nodes within category intervals; output units specify the total post-scale width. Plot reserves the jitter half-span and node extent at both ends. Axis lines stay at the plot boundaries while category ticks follow the mapped node positions. In polar coordinates, step ratio uses discrete category angles, while output units use continuous numeric angles.
+
+`distribution` defaults to `{ kind: 'uniform' }`, spreading offsets across the full range. `{ kind: 'normal', sigma }` uses a zero-mean normal distribution truncated to normalized `[-1, 1]`, so points concentrate near the category center while staying inside the `span` envelope. `sigma` is relative to the jitter half-span: it defaults to `0.5`; smaller values concentrate more points, while larger values approach the full allowed range.
+
+The x role is an angle in polar coordinates. Discrete angles use a tick-step ratio: the default `chord` mode moves jittered points along the straight edge between adjacent polygon vertices. Continuous angles use numeric output units and move along circular arcs. Both modes compose the angle before projecting with each row's y radius, so outer points travel farther on screen instead of receiving a uniform `dx` / `dy`. The demo uses radial `domainPadding` to reserve the spread space and Point radius at the outer edge.
+
+<ComponentPreview
+  mode="showcase"
+  files={['point-jitter', 'point-jitter.preview.tsx', 'point-jitter.data.ts']}
+  controls={{ name: 'point-jitter' }}
+  size="lg"
+  caption="Switch coordinates and width units, then adjust spread, distribution, and seed to observe node positions."
+  defaultSourceFile="point-jitter.preview.tsx"
+/>
+
+## Errors and limitations
+
+- Position bindings must satisfy the coordinate system: built-in one-dimensional coordinates use `x`, and two-dimensional coordinates use `x` and `y`. Optional component properties do not remove these requirements.
+- Ordinary points skip rows whose size field is missing, `null` or non-finite. Negative sizes raise an error. Text points use the text path and do not apply this size filter.
+- Field-based `shape` mappings require categorical data. Continuous and temporal fields are rejected. Constant shapes use registered names or parameterized references.
+- `resolveLabel` is a runtime callback and requires a mark `id`. The callback is not stored in serializable IR.
+- Adjustments preserve declaration order within each stage. All role adjustments precede coordinate projection; screen adjustments follow it. Built-in jitter reproduces positions only when seed, effective row order, role, span and discrete scale step are unchanged.
+
+## Implementation
 
 <ComponentAlert
   type="tip"
-  title="You can skip this section at first"
-  description="Return when debugging skipped invalid rows, text points replacing glyphs, or how color groups lower into core IR."
+  title="Reading note"
+  description="This section explains internal implementation. Skip to API Reference if you only need to use the component."
 />
 
-`<PointMark>` declares a data-to-point mapping; it does not render DOM. Once collected into `IRPlot`, the mark registry dispatches it to point lowering, which reuses the active coordinate frame and core `Node`.
+### Resolving a point
 
-| Stage    | Observable behavior                                                                                                              |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Place    | Position scales map roles, role-space adjustments run, then projection and screen-space initializers produce the final position  |
-| Generate | Ordinary mode creates one core `Node` per row; setting `text` creates a text Node instead and applies `dx` / `dy`                |
-| Decorate | `size`, `shape`, color, and Node styles decorate the datum Node; `label` preserves the point and attaches `Node.label`           |
-| Layer    | Rows share `defaults.node` without a color channel; field-driven colors form color groups before mark layer metadata is attached |
+A point mark represents a point in a coordinate system and, by default, uses that system only to determine its position. The coordinate system maps a data position to a drawing position, where the mark creates a Node. The node may appear as a circle, star, or text; its own properties determine its shape and appearance, without deforming it to follow the geometry of the coordinate space. Explicit orientation additionally changes only the node's rotation angle.
 
-In ordinary glyph mode, a row whose field-bound size is missing, `null`, `NaN`, or infinite produces no Point glyph. The size field descriptor, scale identity, and optional legend are dataset-level information and remain available. A negative size raises an error instead of being skipped or clamped. Setting `text` keeps the existing text-Node path and is not filtered by this glyph-only size gate.
+Unlike [PathMark](/viz/plot/mark/path), which connects vertices, a point mark establishes no connections or ordering between data rows. Unlike [IntervalMark](/viz/plot/mark/interval), which interprets start and end bounds, it does not expand a coordinate-space range into a geometric region. Each valid row produces an independent node. Data transforms, shared scales, padding solvers, and placement adjustments may still consider multiple rows; this does not change how the point mark generates nodes row by row.
 
-Adjustments preserve declaration order within a stage, but every role-space adjustment runs before coordinate projection and every screen-space initializer runs afterward. Built-in jitter is reproducible when `seed`, effective row order, role, span, and final discrete step match; invalid positions still retain their random-sequence slots. See [Position Adjustment](/viz/plot/mark/position-adjustment) for custom algorithms that need the whole projected group.
+The coordinate system determines the node's center; its shape is then resolved in drawing space. For example, switching a circle of a fixed size from Cartesian to polar coordinates relocates its center by angle and radius, without bending the circle into a sector along the coordinate grid. This independence concerns the shape after projection. Coordinates still affect position, padding, and adjustments performed before projection.
 
-The coordinate frame decides where the point is, PointMark decides which Node is generated per row, and shape, text, and visual styling reuse [Node](/kernel/components/node/usage). Each mark lowers into its own layer. Use `layer={{ zIndex }}` to move the whole mark relative to axes and legends; the `zIndex` prop orders datum Nodes only inside this mark.
+A point mark ultimately lowers into a [Node](/kernel/components/node). Follow the same point through positioning, drawing, and detail handling: Cartesian coordinates appear above, polar coordinates below. Orange dots mark projected centers; gray dotted lines are positioning guides.
+
+<ComponentPreview files="point-projection" hideCode type="illustration" size="xxl" />
+
+1. **Position**: after input normalization, Plot obtains data views, applies transforms, and resolves channels. Position fields pass through scales and then coordinate projection: Cartesian components locate the center, while polar coordinates use angle and radius. With placement configured, role-stage adjustments run before projection and screen-stage adjustments afterward. Padding and layout solving supply the final scales and coordinate frames.
+2. **Draw**: each valid row creates a Node at its final position, supplying size, shape, color, and other channel values. The rectangle keeps its 48 × 28 screen dimensions in both coordinate systems; it does not become a sector. A text channel instead creates a text node and applies the `dx` and `dy` offsets.
+3. **Handle details**: Node handles strokes, text, labels, and anchors, then compiles to a Scene for SVG or Canvas. The figure adds a thicker stroke and a label without moving the center. Explicit orientation can also rotate the node, as explained next. Invalid positions or missing text skip the corresponding rows; ordinary points also skip missing or non-finite size fields, while negative sizes raise an error.
 
 <SourceLinks
   sources={[
     {
-      label: 'Register built-in mark definitions',
-      path: 'packages/viz/plot/src/providers/mark/registry.ts',
-      startLine: 29,
-      endLine: 40,
+      label: 'Component inputs and label normalization',
+      path: 'packages/viz/plot-vanilla/src/normalize/plot/mark-normalizers.ts',
     },
     {
-      label: 'Resolve the definition by mark type',
-      path: 'packages/viz/plot/src/resolve/mark/resolve.ts',
-      startLine: 10,
-      endLine: 28,
+      label: 'Plot channel, placement, and lowering orchestration',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
     },
+    { label: 'Adjustments before and after projection', path: 'packages/viz/plot/src/pipeline/placement/resolve.ts' },
     {
-      label: 'Point projection, Node creation, and color grouping',
+      label: 'Per-row Node generation and text branch',
       path: 'packages/viz/plot/src/providers/mark/features/point.ts',
-      startLine: 41,
-      endLine: 158,
     },
     {
-      label: 'Shared placement stages and output guards',
+      label: 'Node channel resolution and property delivery',
+      path: 'packages/viz/plot/src/providers/channel/features/node.ts',
+    },
+  ]}
+/>
+
+### Orientation alignment
+
+A coordinate system can answer both “where should this point be drawn?” and “which way would it move from here along a coordinate direction?” Orientation alignment uses the second answer to rotate a node.
+
+The flow below shows explicit coordinate alignment: the coordinate system provides the query, PointMark obtains a direction and composes an angle, and Node applies the result.
+
+<ComponentPreview files="point-orientation-flow" hideCode type="flow" size="md" />
+
+**1. The coordinate system supplies a direction at the point**
+
+In polar coordinates, increasing the angle while keeping the radius fixed moves a point around a circle. Its direction of travel at the current position is the angular **tangent**. A direction perpendicular to that tangent is a **normal**. Increasing the radius while keeping the angle fixed instead moves the point away from the center: that is the radial tangent.
+
+The same position therefore has different coordinate directions to query. Built-in polar coordinates use `x` for angle and `y` for radius. The coordinate system exposes `tangentAt(role, mappedRoles)`: given the chosen coordinate direction and the point's current coordinate parameters, it returns a tangent on screen. Rotating that tangent clockwise by 90° gives the normal, so the coordinate system need not supply it separately. Cartesian directions are fixed; polar and other curved-coordinate directions can vary with position.
+
+**2. The point mark queries the direction at its own position**
+
+The point mark first determines each row's position in the coordinate system, then uses `orientation` to request a direction. For example, `role: 'x'` with `align: 'tangent'` means “use the x tangent at my current position.” Setting `align: 'normal'` selects the corresponding normal.
+
+If angular jitter changes the node's angle, the query uses that adjusted angle, so the node turns with its new position. A screen offset only moves the drawn node; it keeps the same coordinate reference for direction.
+
+**3. Apply the direction to Node**
+
+The point mark converts the direction into a rotation angle, aligning the node's original rightward direction with it, then adds the user's `rotate` value. It passes the final position and angle to Node, which rotates the shape, text, and connection boundary.
+
+Select the Orientation preset in the [shape demo](#shape): the wide rectangles lie along the circular tangent. Switching to x normal keeps their centers fixed and turns their long edges by 90°. Changing `rotate` adds further rotation to that alignment.
+
+Default screen orientation skips this query and uses only `rotate`. Explicit coordinate alignment raises an error if the coordinate system lacks direction support or the position has no unique direction, such as the angular direction at the center or a sharp corner. Text follows the same rule as shapes; upside-down text is not automatically flipped upright.
+
+<SourceLinks
+  sources={[
+    { label: 'Local coordinate tangent contract', path: 'packages/viz/plot/src/contract/coordinate/types.ts' },
+    {
+      label: 'Adjusted parameters and stable target identity',
       path: 'packages/viz/plot/src/pipeline/placement/resolve.ts',
     },
     {
-      label: 'Size-field validation, resolver, and descriptor',
-      path: 'packages/viz/plot/src/providers/channel/features/node.ts',
-      startLine: 231,
-      endLine: 323,
+      label: 'Polar tangents and singularities',
+      path: 'packages/viz/plot/src/providers/coordinate/features/polar/definition.ts',
     },
+    {
+      label: 'Orientation and rotation channel composition',
+      path: 'packages/viz/plot/src/providers/mark/features/point.ts',
+    },
+  ]}
+/>
+
+### Padding calculation
+
+The figure compares explicit zero padding with automatic padding using the same data, radii, and plotting area. Automatic padding moves extreme point centers inward without changing the canvas or node sizes.
+
+<ComponentPreview files="point-padding-figure" hideCode type="illustration" size="lg" />
+
+The following four panels use the same data, size mapping, and plotting area. They compare both policies with zero clearance and directional clearance (default 8, top 20, left 0).
+
+<ComponentPreview files="point-padding-strategies-figure" hideCode type="illustration" size="lg" />
+
+Maximum-radius padding reserves the largest node radius plus the clearance for each side. Point-aware padding uses the central point's existing distance from the edges and adds only the space each point needs. Node sizes stay the same across all four panels; the position-scale mapping changes.
+
+Plot collects demands by each mark's actual position-scale binding. Maximum radius plus clearance sets a minimum at each end; point-aware padding adds constraints from positions and radii in the same mapping. Shared facets solve one domain, which is then used by axes, grids, and marks. This happens before rendering, without measuring SVG or Canvas output.
+
+<SourceLinks
+  sources={[
+    { label: 'Maximum radius and policy demands', path: 'packages/viz/plot/src/resolve/scale/point-padding.ts' },
+    { label: 'Shared scale constraints', path: 'packages/viz/plot/src/resolve/scale/mark-domain.ts' },
   ]}
 />
 
 ## API Reference
 
-This table keeps only PointMark-specific props and props whose meaning is redefined here. See [channel bindings](/viz/plot/channel/binding) for field and explicit field / constant inputs, [transforms](/viz/plot/transform) for `transform` and `layer`, and [coordinates](/viz/plot/coordinate) for coordinate-view props. Shared `fill`, `stroke`, opacity, corner, font, shadow, and related visual props follow [Node styling](/kernel/components/node/reference#irnodestyle--nodestyleschema) and are not duplicated here.
+`PointMarkProps` is exported by `@retikz/plot-react` and reuses `InputPlotPointMark` from `@retikz/plot-vanilla`. The table is generated from public declarations. `—` means the declaration has no field-level default annotation, not that rendering has no fallback. `PointMarkSchema` shows Source IR fields and constraints using the same descriptions as the [mark contract reference](/viz/plot/reference/mark).
 
-| Prop                                          | Type                                                                                                                                                       | Default                                                     | Description                                                                             |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `id?`                                         | `string`                                                                                                                                                   | —                                                           | Mark handle; required with `resolveLabel`                                               |
-| `x?` / `y?` / `z?`                            | `PointMarkProps['x']`                                                                                                                                      | —                                                           | Position-role fields; the coordinate frame decides which roles are required             |
-| `placement?`                                  | `IRPlotMarkPlacement`                                                                                                                                      | —                                                           | Ordered position adjustments; Point is currently the only built-in Mark with support    |
-| `placement.adjustments`                       | `Array<IRPlotPositionAdjustmentOperation>`                                                                                                                 | Required                                                    | Role-space operations precede screen-space operations; order is stable within a stage   |
-| `placement.adjustments[].distribution?`       | `IRPlotRandomDistribution`                                                                                                                                 | `{ kind: 'uniform' }`                                       | Jitter distribution; normal is zero-mean and truncated, as described in Position Spread |
-| `placement.adjustments[].distribution.kind`   | `'uniform' \| 'normal'`                                                                                                                                    | `uniform`                                                   | Choose even spread or center-concentrated normal spread                                 |
-| `placement.adjustments[].distribution.sigma?` | `number`                                                                                                                                                   | `0.5`                                                       | Normal only; standard deviation relative to the jitter half-span, must be positive      |
-| `color?`                                      | `PointMarkProps['color']`                                                                                                                                  | —                                                           | Semantic point color; a field binding creates a color channel and scale                 |
-| `size?`                                       | `PointMarkProps['size']`                                                                                                                                   | —                                                           | Point-glyph size; numeric fields use a sqrt scale and invalid values omit that glyph    |
-| `shape?`                                      | `PointMarkProps['shape']`                                                                                                                                  | —                                                           | Point-glyph shape; categorical fields map through the shape palette                     |
-| `text?`                                       | `PointMarkProps['text']`                                                                                                                                   | —                                                           | Replace the point glyph with a borderless text Node                                     |
-| `displayFormat?`                              | `string`                                                                                                                                                   | —                                                           | d3 numeric or time format for `text`                                                    |
-| `textColor?`                                  | `PointMarkProps['textColor']`                                                                                                                              | —                                                           | Text color for text points                                                              |
-| `dx?` / `dy?`                                 | `number`                                                                                                                                                   | `0`                                                         | Screen-direction offset from the projected anchor for text points                       |
-| `label?`                                      | `PointMarkProps['label']`                                                                                                                                  | —                                                           | Keep the point glyph and attach field content through `Node.label`                      |
-| `label.displayFormat?`                        | `string`                                                                                                                                                   | —                                                           | d3 numeric or time format for `label`                                                   |
-| `label.position?`                             | `InputPlotNodeLabel`                                                                                                                                       | `top`                                                       | Center, four sides, four corners, angle, or a boundary-position object                  |
-| `label.position.boundary`                     | `'top' \| 'right' \| 'bottom' \| 'left'`                                                                                                                   | Required in object form                                     | Select the box boundary in `{ boundary, fraction? }`                                    |
-| `label.position.fraction?`                    | `number`                                                                                                                                                   | `0.5`                                                       | Normalized position from `0` to `1` along the selected boundary                         |
-| `label.distance?`                             | `number`                                                                                                                                                   | `12`                                                        | Gap from the host boundary; unused by centered labels                                   |
-| `label.pin?`                                  | `boolean \| { stroke?, strokeWidth?, dashPattern? }`                                                                                                       | `false`                                                     | Outside-label leader line; `true` uses default styling                                  |
-| `label.pin.stroke?`                           | `string`                                                                                                                                                   | Label color                                                 | Leader-line color                                                                       |
-| `label.pin.strokeWidth?`                      | `number`                                                                                                                                                   | `1`                                                         | Positive leader-line width                                                              |
-| `label.pin.dashPattern?`                      | `Array<number>`                                                                                                                                            | Solid                                                       | Leader-line dash segment lengths                                                        |
-| `label.textColor?` / `label.opacity?`         | `string` / `number`                                                                                                                                        | Inherit / Inherit                                           | Label text color and opacity                                                            |
-| `label.font?`                                 | `IRFont`<br />- `family?: string`<br />- `size?: number`<br />- `weight?: 'normal' \| 'bold' \| number`<br />- `style?: 'normal' \| 'italic' \| 'oblique'` | Inherit<br />Inherit<br />Inherit<br />Inherit<br />Inherit | Label font overrides<br />Font family<br />Size<br />Weight<br />Style                  |
-| `label.rotate?` / `label.keepUpright?`        | `'none' \| 'radial' \| 'tangent' \| number` / `boolean`                                                                                                    | `none` / `false`                                            | Label rotation mode or angle, plus automatic upright correction                         |
-| `resolveLabel?`                               | `(row: ExternalRow) => string`                                                                                                                             | —                                                           | Runtime label resolver; excluded from IR and requires `id`                              |
-| `anchorId?`                                   | `IRPlotAnchorId`                                                                                                                                           | —                                                           | Generate a stable core Node id; choose exactly one source below                         |
-| `anchorId.prefix?`                            | `string`                                                                                                                                                   | Mark id or `mark.<index>`                                   | Id namespace inside the current Plot                                                    |
-| `anchorId.field?`                             | `IRPlotAnchorId['field']`                                                                                                                                  | —                                                           | Slug a field value; mutually exclusive with `template` and `generator`                  |
-| `anchorId.template?`                          | `string`                                                                                                                                                   | —                                                           | JSON-safe id template with plot, mark, index, and field placeholders                    |
-| `anchorId.generator?`                         | `string`                                                                                                                                                   | —                                                           | Runtime generator key resolved from `LowerPlotsOptions.anchorIdGenerators`              |
+{/* @include viz/plot/mark/point/generated */}
 
-## Related
+## Further reading
 
-- [PathMark](/viz/plot/mark/path) — connect observations into a trend line
-- [Coordinates](/viz/plot/coordinate) — how 1D, 2D, and polar frames interpret position roles
-- [Scales](/viz/plot/scale) — sqrt size scales and continuous scale families
-- [Position Adjustment](/viz/plot/mark/position-adjustment) — register custom role- or screen-space placement logic
+<LinkedSections
+  items={[
+    {
+      title: 'Channel binding',
+      description: 'Choose fields, constants and explicit bindings.',
+      url: '/viz/plot/channel/binding',
+    },
+    { title: 'PathMark', description: 'Connect the same observations into a path.', url: '/viz/plot/mark/path' },
+    {
+      title: 'Coordinates',
+      description: 'Choose one-dimensional, two-dimensional or polar positions.',
+      url: '/viz/plot/coordinate',
+    },
+  ]}
+/>

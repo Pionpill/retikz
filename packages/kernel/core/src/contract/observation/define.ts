@@ -16,7 +16,7 @@ export const defineCompileObserver = <TOutput>(
   assertNonEmptyString(
     definition.key,
     'defineCompileObserver: key',
-    new RetikzCoreError(RetikzCoreErrorCode.Contract, 'defineCompileObserver: key must be a non-empty string.'),
+    () => new RetikzCoreError(RetikzCoreErrorCode.Contract, 'defineCompileObserver: key must be a non-empty string.'),
   );
   if (typeof definition.createSession !== 'function') {
     throw new RetikzCoreError(RetikzCoreErrorCode.Contract, 'defineCompileObserver: createSession must be a function.');

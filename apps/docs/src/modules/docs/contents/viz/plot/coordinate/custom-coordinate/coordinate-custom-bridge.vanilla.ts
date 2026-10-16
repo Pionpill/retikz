@@ -20,4 +20,8 @@ const spec: IRPlot = {
   ],
 };
 
-export const svg = renderPlot(spec, { grid }, { width: 420, height: 220, coordinates: [bridgeCoordinate] });
+export const svg = renderPlot(
+  spec,
+  { grid },
+  { layout: { width: 420, height: 220 }, definitions: { coordinates: [bridgeCoordinate] } },
+);

@@ -176,6 +176,37 @@ it('不支持端点能力的 provider 在回调前拒绝请求', () => {
   expect(called).toBe(false);
 });
 
+it('自定义布局重复查询与原数组内位置更新都使用当前真实几何', () => {
+  const definition: FlowLayoutDefinition = {
+    ...LayeredFlowLayoutDefinition,
+    name: 'query-layout-changes',
+    layout: (input, context) => {
+      const output = LayeredFlowLayoutDefinition.layout(input, context);
+      const elements = output.elements.map(element => ({ ...element, bounds: { ...element.bounds } }));
+      const original = context.resolveEndpoint({ elements, target: { id: 'a', anchor: 'right' } });
+      expect(
+        context.resolveEndpoint({ elements: structuredClone(elements), target: { id: 'a', anchor: 'right' } }),
+      ).toEqual(original);
+      const element = elements.find(item => item.id === 'a')!;
+      element.bounds.x += 35;
+      const moved = context.resolveEndpoint({ elements, target: { id: 'a', anchor: 'right' } });
+      expect(moved[0]).toBeCloseTo(original[0] + 35);
+      expect(moved[1]).toBeCloseTo(original[1]);
+      expect(context.resolveEndpoint({ elements: output.elements, target: { id: 'a', anchor: 'right' } })).toEqual(
+        original,
+      );
+      return output;
+    },
+  };
+  const artifact = compileRelations(
+    [{ source: { id: 'a', anchor: 'right' }, target: { id: 'c', anchor: 'left' } }],
+    {},
+    definition,
+  );
+  const bounds = artifact.elements.find(element => element.id === 'a')!.bounds;
+  expect(artifact.relations[0].route.points[0][0]).toBeCloseTo(bounds.x + bounds.width);
+});
+
 it('校验 provider 必须保持指定侧', () => {
   const definition: FlowLayoutDefinition = {
     ...LayeredFlowLayoutDefinition,

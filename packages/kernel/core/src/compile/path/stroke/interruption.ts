@@ -378,7 +378,8 @@ export const createStrokeInterruptionIntervals = (
     }
 
     const tangent = sample.sample.tangent;
-    let halfProjection = 0;
+    let minimumProjection = Infinity;
+    let maximumProjection = -Infinity;
 
     for (const point of visualBoundsPoints) {
       if (!isFinitePoint(point)) {
@@ -388,15 +389,18 @@ export const createStrokeInterruptionIntervals = (
         );
       }
 
-      const projection = Math.abs(
-        (point[0] - sample.sample.point[0]) * tangent[0] + (point[1] - sample.sample.point[1]) * tangent[1],
-      );
-      halfProjection = Math.max(halfProjection, projection);
+      const projection =
+        (point[0] - sample.sample.point[0]) * tangent[0] + (point[1] - sample.sample.point[1]) * tangent[1];
+      minimumProjection = Math.min(minimumProjection, projection);
+      maximumProjection = Math.max(maximumProjection, projection);
     }
 
     const clearance = Math.max(0, strokeWidth) / 2 + gap;
-    const start = Math.max(sample.occurrence.subPathLogicalStart, sample.logicalDistance - halfProjection - clearance);
-    const end = Math.min(sample.occurrence.subPathLogicalEnd, sample.logicalDistance + halfProjection + clearance);
+    const start = Math.max(
+      sample.occurrence.subPathLogicalStart,
+      sample.logicalDistance + minimumProjection - clearance,
+    );
+    const end = Math.min(sample.occurrence.subPathLogicalEnd, sample.logicalDistance + maximumProjection + clearance);
     let intervalParts: Array<{ start: number; end: number }> = [{ start, end }];
 
     for (const protectedRange of protectedRanges) {

@@ -331,7 +331,7 @@ export const boxplotOutside: IRDataTransform = {
   },
 };
 
-/** 组合区间、参考线与离群散点，生成箱线图测试输入 */
+/** 组合区间、端点连线与离群散点，生成箱线图测试输入 */
 export const createBoxplotComposition = (
   reference = 'samples',
   scales: CartesianScaleNames = { x: 'x', y: 'y' },
@@ -357,18 +357,16 @@ export const createBoxplotComposition = (
       opacity: { fill: { kind: 'constant', value: 0.32 } },
     },
     {
-      type: 'reference',
+      type: 'relation',
       transform: [{ operation: boxplotSummary }],
-      extentField: 'boxX0',
-      extentToField: 'boxX1',
-      encoding: { y: { field: 'median' } },
+      source: { project: { x: 'boxX0', y: 'median' } },
+      target: { project: { x: 'boxX1', y: 'median' } },
     },
     {
-      type: 'reference',
+      type: 'relation',
       transform: [{ operation: boxplotSummary }],
-      extentField: 'whiskerMin',
-      extentToField: 'whiskerMax',
-      encoding: { x: { field: 'boxX' } },
+      source: { project: { x: 'boxX', y: 'whiskerMin' } },
+      target: { project: { x: 'boxX', y: 'whiskerMax' } },
     },
     {
       type: 'point',

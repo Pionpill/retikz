@@ -25,7 +25,7 @@ const DotMarkSchema = looseObject({
 
 type DotMark = ZodInfer<typeof DotMarkSchema>;
 
-const opts: LowerPlotsOptions = { width: 480, height: 300 };
+const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
@@ -129,9 +129,9 @@ describe('mark-local transform', () => {
       spec,
       { rows: [] },
       {
+        definitions: { transforms: [doubleTransform] },
+        implementations: { transforms: [doubleTransformImplementation] },
         textMeasurer: measureLabel,
-        transformDefinitions: [doubleTransform],
-        transformImplementations: [doubleTransformImplementation],
       },
     );
     const expectedModel = [
@@ -227,7 +227,7 @@ describe('mark-local transform', () => {
           { category: 'B', value: 3 },
         ],
       },
-      { ...opts, markDefinitions: [recorderMark(record)] },
+      { definitions: { marks: [recorderMark(record)] }, ...opts },
     );
 
     expect(record.rows).toEqual([
@@ -261,7 +261,11 @@ describe('mark-local transform', () => {
           { x: 1, value: 5 },
         ],
       },
-      { ...opts, transformDefinitions: [doubleTransform], transformImplementations: [doubleTransformImplementation] },
+      {
+        definitions: { transforms: [doubleTransform] },
+        implementations: { transforms: [doubleTransformImplementation] },
+        ...opts,
+      },
     );
 
     expect(layer.children).toHaveLength(2);

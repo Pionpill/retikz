@@ -284,7 +284,7 @@ describe('scale registry（contract spec）', () => {
           { x: 1, y: 1 },
         ],
       },
-      { width: 200, height: 200, scaleDefinitions: [unitScale] },
+      { layout: { width: 200, height: 200 }, definitions: { scales: [unitScale] } },
     ).children[0] as IRScope;
     const nodes = collectNodes(layer);
 
@@ -324,7 +324,7 @@ describe('scale registry（contract spec）', () => {
           { x: 1, y: 1, g: 'b' },
         ],
       },
-      { width: 200, height: 200, scaleDefinitions: [monoScale] },
+      { layout: { width: 200, height: 200 }, definitions: { scales: [monoScale] } },
     ).children[0] as IRScope;
     const json = JSON.stringify(layer);
 

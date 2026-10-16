@@ -83,7 +83,7 @@ const render = (properties: Record<string, unknown> = {}, series = true, extras:
       lowerPlotWithLineage(
         { ...plot, defaultPlot: { ...plot.defaultPlot, palette: { categorical: palette, series: palette } } },
         { rows },
-        { environment: {}, width: 480, height: 320 },
+        { layout: { width: 480, height: 320 }, environment: {} },
       ).children,
     ),
   );

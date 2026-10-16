@@ -1,4 +1,4 @@
----
+﻿---
 title: 运行时总览
 description: 查询 React、Vanilla 与直接 Plot IR 如何汇入同一 lowering，在 Core 编译后输出 Scene、渲染结果与独立运行时产物。
 ---
@@ -9,7 +9,7 @@ Plot 运行时把“怎样声明图”和“怎样执行图”分开：React、V
 
 ## 异步数据准备与 SSR
 
-Plot 根和图元局部 `transform` 保存 `{ operation, dataExecution? }` 声明。根 `dataExecution` 设置本图策略，单条声明优先级最高；执行器默认配置优先级更低，缺省为 builtin。详见 [Data 执行契约](/viz/data/transform/extensions)。
+Plot 根和图元局部 `transform` 保存 `{ operation, dataExecution? }` 声明。根 `dataExecution` 可统一设置策略，也可用 `{ root, marks }` 分别设置整体与所有图元的默认策略，两组互不继承，facet 使用 marks 策略。单条声明覆盖所属作用域，优先级最高；执行器默认配置优先级更低，缺省为 builtin。详见 [Data 执行契约](/viz/data/transform/extensions)。
 
 独立 React Plot 客户端自动异步准备；嵌入时在外层 Layout 设置 `runtime={{ preparation: 'async' }}`。共享宿主先预检完整作者树及 Plot 根、图元和 facet 模板，再执行并提交。失败保留旧帧，取消或过期结果不发布；布局 probes 消费已准备结果，不再次计算。
 
@@ -44,7 +44,17 @@ React DSL 只收集 JSX / props 并调度 Plot Vanilla；Vanilla 的 `plot()` �
 | Vanilla    | `plot(InputPlot)`、`{ input: InputPlot }` 或 `{ spec: IRPlot }` | InputPlot 形式单次 normalize；`spec` 直接进入；unknown JSON 须先经 Plot schema/parser |
 | 运行时依赖 | datasets、field maps、resolver、各类 Definitions                | 不进入                                                                                |
 
-`LowerPlotsOptions.positionAdjustmentDefinitions` 是统一的位置调整注入入口。React `<Plot>` 与 Vanilla runtime 原样转发该数组；adapter 不计算 step、随机数、coordinate projection、initializer 或 glyph containment。
+运行时选项按职责分为三组；对应的 `PlotLayoutOverrides`、`PlotDefinitions`、`PlotImplementations` 类型均从 `@retikz/plot` 导出，可独立声明并复用：
+
+| 分组              | 字段                                                                                                                                                                                |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `layout`          | `width`、`height`、`fontSize`、`margin`                                                                                                                                             |
+| `definitions`     | `coordinates`、`transforms`、`statisticsReducers`、`rowSelectors`、`regressions`、`scales`、`channels`、`marks`、`positionAdjustments`、`formats`、`fieldOrders`、`plotThemeStyles` |
+| `implementations` | `transforms`、`statisticsReducers`、`rowSelectors`、`regressions`                                                                                                                   |
+
+例如 `renderPlot(spec, data, { layout: { width: 480, height: 300 } })`。React 的 `width` / `height` 仍声明 Plot IR 尺寸，`layout` 则提供运行时布局默认值；IR 尺寸优先。
+
+`LowerPlotsOptions.definitions.positionAdjustments` 是统一的位置调整注入入口。React `<Plot>` 与 Vanilla runtime 原样转发该数组；adapter 不计算 step、随机数、coordinate projection、initializer 或 glyph containment。
 
 ## Lowering 与产物
 
@@ -76,8 +86,8 @@ React DSL 只收集 JSX / props 并调度 Plot Vanilla；Vanilla 的 `plot()` �
     {
       label: 'React props 收集并调度 Plot Vanilla authoring',
       path: 'packages/viz/plot-react/src/plot-runtime.ts',
-      startLine: 151,
-      endLine: 230,
+      startLine: 153,
+      endLine: 203,
     },
     {
       label: 'React Plot 生成 Plot Vanilla 嵌入输入',

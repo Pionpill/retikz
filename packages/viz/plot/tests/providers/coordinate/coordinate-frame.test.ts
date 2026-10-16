@@ -27,7 +27,7 @@ const firstLayer = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOption
 const positionsOf = (layer: IRScope): Array<[number, number]> =>
   layer.children.map(child => (child as IRNode).position as [number, number]);
 
-const opts: LowerPlotsOptions = { width: 480, height: 300 };
+const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
 
 describe('coordinate frame N 通道泛化回归 (contract)', () => {
   // Happy path：cartesian point 投影逐字不变（projectRoles=[x,y] 包装既有 project）

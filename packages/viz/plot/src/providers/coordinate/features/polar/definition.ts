@@ -125,6 +125,7 @@ export const createPolarCoordinate = (input: PolarCoordinateInput): PolarCoordin
     projectRoles: values => project(values[0], values[1]),
     mapRoles,
     projectMappedRoles,
+    tangentAt: (role, values) => polarTangentAt(input, role, values),
     placementBoundary: {
       isCyclic: role => role === 'x' && isClosedPolarSweep(input.startAngle, input.endAngle),
       unitNormal: (role, mappedRoles) => {
@@ -291,6 +292,43 @@ const polarChordTangent = (
   const numericDirection = Math.sign(segment.endAngle - segment.startAngle);
 
   return normalizedVector([(end[0] - start[0]) * numericDirection, (end[1] - start[1]) * numericDirection]);
+};
+
+/** 极坐标投影在映射后参数处的局部切向，尖点不选择任意一侧 */
+const polarTangentAt = (
+  input: PolarCoordinateInput,
+  role: DimensionRole,
+  values: ReadonlyArray<number>,
+): Position | null => {
+  const [theta, radius] = values;
+  if (!Number.isFinite(theta) || !Number.isFinite(radius)) return null;
+  if (role === 'x' && Math.abs(radius) <= DEFAULT_EPSILON) return null;
+  if (input.interpolation === PolarInterpolation.Chord && input.primary.step > 0) {
+    const segment = polarChordSegmentOf(input, theta);
+    if (segment) {
+      if (role === 'y') {
+        const start = pointAtArcAngle([0, 0], 1, segment.startAngle);
+        const end = pointAtArcAngle([0, 0], 1, segment.endAngle);
+        return [start[0] + (end[0] - start[0]) * segment.ratio, start[1] + (end[1] - start[1]) * segment.ratio];
+      }
+      if (role !== 'x') return null;
+      const tangent = polarChordTangent(input, segment);
+      if (!tangent) return null;
+      if (Math.abs(segment.ratio) <= DEFAULT_EPSILON || Math.abs(segment.ratio - 1) <= DEFAULT_EPSILON) {
+        const delta = Math.abs(segment.endAngle - segment.startAngle) * 1e-5;
+        const before = polarChordSegmentOf(input, theta - delta);
+        const after = polarChordSegmentOf(input, theta + delta);
+        const left = before && polarChordTangent(input, before);
+        const right = after && polarChordTangent(input, after);
+        if (!left || !right || Math.hypot(left[0] - right[0], left[1] - right[1]) > DEFAULT_EPSILON) return null;
+      }
+      return [tangent[0] * Math.sign(radius), tangent[1] * Math.sign(radius)];
+    }
+  }
+  const radians = (theta * Math.PI) / 180;
+  if (role === 'x') return [-radius * Math.sin(radians), radius * Math.cos(radians)];
+  if (role === 'y') return [Math.cos(radians), Math.sin(radians)];
+  return null;
 };
 
 /** 直弦段背离圆心的屏幕单位法向 */
@@ -471,6 +509,8 @@ const polarAngularLayoutLabelsOf = (
 export type Polar1DCoordinateFrame = {
   /** 判别字段：1D 极坐标圆周 */
   type: typeof BuiltinPlotCoordinate.Polar1D;
+  /** 一维坐标帧不提供绘图区背景、边框和区域锚点 */
+  supportsPlotArea: false;
   /** 位置角色序（[angle]，单通道；x→angle 别名取值） */
   roles: ReadonlyArray<DimensionRole>;
   /** 圆心（屏幕坐标） */
@@ -499,6 +539,8 @@ export type Polar1DCoordinateFrame = {
   projectMappedRoles: (values: ReadonlyArray<number>) => Position | null;
   /** 一维极坐标 role-space containment 边界度量 */
   placementBoundary: NonNullable<CoordinateFrame['placementBoundary']>;
+  /** 映射后角色递增时的屏幕切向 */
+  tangentAt?: CoordinateFrame['tangentAt'];
 };
 
 /** 创建一维极坐标运行时坐标帧所需的已解析参数 */
@@ -540,6 +582,7 @@ export const createPolar1DCoordinate = (input: Polar1DCoordinateInput): Polar1DC
 
   return {
     type: BuiltinPlotCoordinate.Polar1D,
+    supportsPlotArea: false,
     roles: ['x'],
     center: input.center,
     radius: input.radius,
@@ -553,6 +596,11 @@ export const createPolar1DCoordinate = (input: Polar1DCoordinateInput): Polar1DC
     projectRoles,
     mapRoles,
     projectMappedRoles,
+    tangentAt: (role, values) => {
+      if (role !== 'x' || !Number.isFinite(values[0]) || Math.abs(input.radius) <= DEFAULT_EPSILON) return null;
+      const radians = (values[0] * Math.PI) / 180;
+      return [-input.radius * Math.sin(radians), input.radius * Math.cos(radians)];
+    },
     placementBoundary: {
       isCyclic: role => role === 'x' && isClosedPolarSweep(input.startAngle, input.endAngle),
       unitNormal: (role, mappedRoles) => {

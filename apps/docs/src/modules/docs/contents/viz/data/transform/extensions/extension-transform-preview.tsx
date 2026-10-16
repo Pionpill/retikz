@@ -69,9 +69,10 @@ export const renderExtensionTransformPreview = (values: ExtensionTransformValues
     model={model}
     width={420}
     height={260}
-    transformDefinitions={[scaleField]}
-    transformImplementations={[scaleFieldImplementation]}
+
     style={{ maxWidth: '100%', height: 'auto' }}
+    definitions={{ transforms: [scaleField] }}
+    implementations={{ transforms: [scaleFieldImplementation] }}
   >
     <PlotTransform operation={{ ...scaleFieldOperationOf(values) }} />
     <PlotScale dimension="x" type="linear" domain={[0, 16]} />

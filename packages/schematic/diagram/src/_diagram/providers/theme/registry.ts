@@ -13,11 +13,12 @@ export const resolveDiagramThemeStyleRegistry = (
     assertNonEmptyString(
       definition.name,
       'Diagram theme style',
-      new RetikzDiagramError({
-        code: RetikzDiagramErrorCode.DefinitionInvalid,
-        message: 'Diagram theme style name must be a non-empty string.',
-        details: { capability: 'diagram-theme-style', key: definition.name },
-      }),
+      () =>
+        new RetikzDiagramError({
+          code: RetikzDiagramErrorCode.DefinitionInvalid,
+          message: 'Diagram theme style name must be a non-empty string.',
+          details: { capability: 'diagram-theme-style', key: definition.name },
+        }),
     );
     if (registry.has(definition.name)) {
       throw new RetikzDiagramError({

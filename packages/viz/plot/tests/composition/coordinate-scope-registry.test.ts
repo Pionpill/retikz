@@ -63,7 +63,11 @@ const parsePlotIR = (spec: unknown): IRPlot => PlotSchema.parse(spec);
 const parsedComposition = (): IRPlot => parsePlotIR(compositionSpec);
 
 const expandOf = (spec: IRPlot): IRScope => {
-  return lowerPlot(spec, { sales: rows }, { textMeasurer: measureLabel, width: 480, height: 300 }) as IRScope;
+  return lowerPlot(
+    spec,
+    { sales: rows },
+    { layout: { width: 480, height: 300 }, textMeasurer: measureLabel },
+  ) as IRScope;
 };
 
 describe('coordinate composition registry schema', () => {

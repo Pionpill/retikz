@@ -11,6 +11,7 @@ import type {
   IntervalBoundsSchema,
   IntervalMarkSchema,
   MarkOperationSchema,
+  MarkOrientationSchema,
   MarkSchema,
   MarkTransformSchema,
   NodeAxisScaleStyleSchema,
@@ -38,7 +39,6 @@ import type {
   PointSizeStyleSchema,
   PointStrokeStyleSchema,
   PointZIndexStyleSchema,
-  ReferenceMarkSchema,
   RelationEndpointGlyphSchema,
   RelationEndpointGlyphsSchema,
   RelationMarkSchema,
@@ -58,6 +58,8 @@ export type { IRBoxSpacing };
 
 /** point mark（散点 + 文本标签） */
 export type IRPlotPointMark = ZodInfer<typeof PointMarkSchema>;
+
+export type IRPlotMarkOrientation = ZodInfer<typeof MarkOrientationSchema>;
 
 /** PointMark 颜色样式值（field / constant） */
 export type IRPlotPointColorStyle = ZodInfer<typeof PointColorStyleSchema>;
@@ -145,9 +147,6 @@ export type IRPlotIntervalBounds = ZodInfer<typeof IntervalBoundsSchema>;
 
 /** interval mark（柱 / histogram / heatmap / 径向柱 / 饼环） */
 export type IRPlotIntervalMark = ZodInfer<typeof IntervalMarkSchema>;
-
-/** reference mark（参考线 / 阈值线 / 容差带） */
-export type IRPlotReferenceMark = ZodInfer<typeof ReferenceMarkSchema>;
 
 /** mark 锚点 id 声明 */
 export type IRPlotAnchorId = ZodInfer<typeof AnchorIdSchema>;

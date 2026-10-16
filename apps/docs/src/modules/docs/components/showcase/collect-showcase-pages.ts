@@ -15,6 +15,7 @@ export const collectShowcasePages = (moduleId: string, sections: Array<Section>)
   const entries: Array<ShowcasePageEntry> = [];
 
   const visit = (node: SubPage, segments: Array<string>): void => {
+    if (node.linkTo) return;
     const path = `/${segments.join('/')}`;
     const layout = node.meta?.layout;
     const metadata = node.meta?.showcase;

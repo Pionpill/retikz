@@ -62,7 +62,7 @@ RoleSchema.parse('custom.role');
 
 `createReadonlyMap(entries)` copies entries into a frozen shallow snapshot that preserves native Map lookup and iteration semantics without exposing `set`, `delete`, or `clear`. It preserves value identity and does not deep-freeze values.
 
-The typed assertions accept values already narrowed to their scalar types. `assertNonEmptyString(value, label, ownerError?)` rejects empty or whitespace-only strings, while `assertPositiveNumber(value, label, ownerError?)` rejects zero, negative, and non-finite numbers. Both return `void` on success. Without `ownerError`, they throw `RetikzFoundationError` with the original value in `details` and `cause`; with an owner error, they throw that exact error unchanged.
+The typed assertions accept values already narrowed to their scalar types. `assertNonEmptyString(value, label, createOwnerError?)` rejects empty or whitespace-only strings, while `assertPositiveNumber(value, label, createOwnerError?)` rejects zero, negative, and non-finite numbers. Both return `void` on success. Without `createOwnerError`, they throw `RetikzFoundationError` with the original value in `details` and `cause`; with `createOwnerError: () => RetikzError`, they call the factory exactly once on failure and throw its result unchanged. Successful validation never calls the factory. Construct the error inside the factory, not before passing it.
 
 `cloneAndFreezeJson(value, path)` accepts only JSON-safe plain data, rejects cycles, accessors, symbol keys, sparse arrays, extra array properties, non-finite numbers, and class instances, then returns a detached deeply frozen snapshot. Invalid data throws `RetikzFoundationError` with `RetikzFoundationErrorCode.Json`.
 

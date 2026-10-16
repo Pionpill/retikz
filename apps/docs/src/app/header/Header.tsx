@@ -19,10 +19,10 @@ export const Header: FC = () => {
   const navigation = resolveDocNavigationContext(pathname);
 
   return (
-    <header className="sticky top-0 z-40 shrink-0 border-b bg-background/95 backdrop-blur">
+    <header className="sticky top-0 z-40 h-14 shrink-0 border-b bg-background/95 backdrop-blur">
       <div
         className={cn(
-          'flex h-14 w-full items-center gap-2 px-4 lg:gap-2 lg:px-6',
+          'flex h-full w-full items-center gap-2 px-4 lg:gap-2 lg:px-6',
           layout === 'centered' && 'mx-auto max-w-360',
         )}
       >

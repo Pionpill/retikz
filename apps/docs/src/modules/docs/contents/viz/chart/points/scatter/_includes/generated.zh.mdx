@@ -85,10 +85,10 @@ React 使用 `ScatterProperties`，Vanilla API 使用 `properties`，直接 IR �
 | 透明度     | `opacity`        | `number`                                                 | 整体透明度，范围 0–1                                             |
 |            | `opacity.fill`   | `number`                                                 | 填充透明度，范围 0–1                                             |
 |            | `opacity.stroke` | `number`                                                 | 描边透明度，范围 0–1                                             |
-| 留白       | `autoPadding`    | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
+| 留白       | `autoPadding`    | `false`、`'max-radius'`、`'point-aware'`、`object`       | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
 |            | `domainPadding`  | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                   |
 
-其余字体、标签、变换与阴影等公共外观不在这里逐项解释，完整字段见 [属性 Schema](#scatterproperties--irscatterchartproperties--scatterchartpropertiesschema)。留白策略的触发条件和边界见[点图公共留白原理](/viz/chart/points#自动补齐边缘留白)。
+其余字体、标签、变换与阴影等公共外观不在这里逐项解释，完整字段见 [属性 Schema](#scatterproperties--irscatterchartproperties--scatterchartpropertiesschema)。留白策略的触发条件和边界见[PointMark 边缘留白](/viz/plot/mark/point#边缘留白)。
 
 </DocTab>
 
@@ -154,11 +154,11 @@ export type IRScatterChartProperties = ZodInfer<typeof ScatterChartPropertiesSch
 
 React 使用 `ScatterMark`，Vanilla API 使用 `marks`，直接 IR 使用 `recipe.marks`。React 中须作为 `ScatterChart` 的直接子组件；Vanilla / IR 图元需声明 `kind: 'scatter'`。
 
-| 属性         | 类型                             | 说明                                                                   |
-| ------------ | -------------------------------- | ---------------------------------------------------------------------- |
-| `override`   | `boolean`                        | 省略时追加；为 `true` 时原位替换默认散点图元                           |
-| `encodings`  | `ScatterChartMark['encodings']`  | 支持 `x`、`y`、`color`、`size`、`opacity`、`shape`，不接受完整映射对象 |
-| `properties` | `ScatterChartMark['properties']` | 沿用上方属性含义，但不接受 `autoPadding`、`domainPadding`              |
+| 属性         | 类型                             | 说明                                                                     |
+| ------------ | -------------------------------- | ------------------------------------------------------------------------ |
+| `override`   | `boolean`                        | 省略时追加；为 `true` 时原位替换默认散点图元                             |
+| `encodings`  | `ScatterChartMark['encodings']`  | 支持 `x`、`y`、`color`、`size`、`opacity`、`shape`，不接受完整映射对象   |
+| `properties` | `ScatterChartMark['properties']` | 沿用上方属性含义，但不接受 `domainPadding`；`autoPadding` 可覆盖图表策略 |
 
 未指定的映射与属性沿用当前图形可继承的配置。替换未命中时仍追加，并通过 `onWarn` 报告 `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND`。完整结构见 [图元 Schema](#scattermark--scatterchartmarkschema)。
 
@@ -166,7 +166,7 @@ React 使用 `ScatterMark`，Vanilla API 使用 `marks`，直接 IR 使用 `reci
 
 <DocTab value="schema" label="Schema">
 
-`encodings` 只允许 x、y、color、size、opacity、shape，各项均可省略且仅接受字段名字符串，不接受 recipe 的完整映射对象。`properties` 复用上方属性的含义与成员结构，但不包含 `autoPadding`、`domainPadding`；省略的配置沿用当前图形可继承的映射与属性。
+`encodings` 只允许 x、y、color、size、opacity、shape，各项均可省略且仅接受字段名字符串，不接受 recipe 的完整映射对象。`properties` 复用上方属性的含义与成员结构，但不包含 `domainPadding`；`autoPadding` 可覆盖图表策略；省略的配置沿用当前图形可继承的映射与属性。
 
 <ZodSchema
   name="ScatterChartMarkSchema"
@@ -176,7 +176,7 @@ React 使用 `ScatterMark`，Vanilla API 使用 `marks`，直接 IR 使用 `reci
     kind: '固定为 scatter',
     override: '为 true 时替换内置同类图元；省略时追加',
     encodings: '参照上方映射说明；仅接受上述可选字段名覆盖',
-    properties: '参照上方属性说明；不包含 autoPadding 与 domainPadding',
+    properties: '参照上方属性说明；不包含 domainPadding；autoPadding 可覆盖图表策略',
   }}
 />
 

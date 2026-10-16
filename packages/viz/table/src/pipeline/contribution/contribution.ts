@@ -51,7 +51,7 @@ export const createTableRuntimeContribution = (input: TableRuntimeContributionIn
   assertNonEmptyString(
     input.reference,
     'table runtime contribution reference',
-    new RetikzTableError('table runtime contribution reference must be a non-empty string.'),
+    () => new RetikzTableError('table runtime contribution reference must be a non-empty string.'),
   );
   const runtimeReference = `@@retikz/table/runtime/${encodeRuntimeReference(input.reference)}`;
   const data = input.data ?? {};

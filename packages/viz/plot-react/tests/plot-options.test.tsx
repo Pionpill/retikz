@@ -36,6 +36,33 @@ const data: ExternalDatasets = {
 };
 
 describe('<Plot> lowerPlots option 转发', () => {
+  it('根属性传递分组策略并保持同步作用域检查', () => {
+    const transformed: IRPlot = {
+      ...spec,
+      marks: spec.marks.map(mark => ({
+        ...mark,
+        transform: [{ operation: { kind: 'sort', params: { field: 'revenue' } } }],
+      })),
+    };
+    const expected = renderToStaticMarkup(<Plot spec={transformed} data={data} />);
+    const actual = renderToStaticMarkup(
+      <Plot
+        spec={transformed}
+        data={data}
+        dataExecution={{ root: { mode: 'external', external: 'unused' }, marks: { mode: 'builtin' } }}
+      />,
+    );
+    expect(actual).toBe(expected);
+    expect(() =>
+      renderToStaticMarkup(
+        <Plot
+          spec={transformed}
+          data={data}
+          dataExecution={{ root: { mode: 'builtin' }, marks: { mode: 'external', external: 'missing' } }}
+        />,
+      ),
+    ).toThrow(/async preparation/);
+  });
   it('react_options_forwarded — provenance reaches lowerPlots', () => {
     // provenance:true + root id → 合成 scope id 'sales.mark.0' → SVG data-retikz-id
     const svg = renderToStaticMarkup(<Plot spec={spec} data={data} width={480} height={300} provenance />);

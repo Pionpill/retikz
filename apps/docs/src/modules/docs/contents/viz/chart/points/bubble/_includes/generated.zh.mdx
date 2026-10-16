@@ -85,7 +85,7 @@ export type IRBubbleChartEncodings = ZodInfer<typeof BubbleChartEncodingsSchema>
 | 变换       | `rotate`         | `number`                                                 | 旋转角度                                                                           |
 |            | `dx`             | `number`                                                 | 水平偏移                                                                           |
 |            | `dy`             | `number`                                                 | 垂直偏移                                                                           |
-| 留白       | `autoPadding`    | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略，默认 point-aware；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
+| 留白       | `autoPadding`    | `false`、`'max-radius'`、`'point-aware'`、`object`       | 自动留白策略，默认 point-aware；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
 |            | `domainPadding`  | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                                     |
 
 完整属性结构见 [属性 Schema](#bubbleproperties--irbubblechartproperties--bubblechartpropertiesschema)；公共外观配置不在这里展开。
@@ -163,7 +163,7 @@ export type IRBubbleChartProperties = ZodInfer<typeof BubbleChartPropertiesSchem
 
 <DocTab value="schema" label="Schema">
 
-`encodings` 只允许 x、y、color、opacity、shape，各项均可省略且仅接受字段名字符串，不接受 recipe 的完整映射对象。`properties` 复用上方属性的含义与成员结构，但不包含 `autoPadding`、`domainPadding`；省略的配置沿用当前图形可继承的映射与属性。 Bubble 的尺寸来自 recipe.encodings.size 映射，图元不能单独覆盖 size。
+`encodings` 只允许 x、y、color、opacity、shape，各项均可省略且仅接受字段名字符串，不接受 recipe 的完整映射对象。`properties` 复用上方属性的含义与成员结构，但不包含 `domainPadding`；`autoPadding` 可覆盖图表策略；省略的配置沿用当前图形可继承的映射与属性。 Bubble 的尺寸来自 recipe.encodings.size 映射，图元不能单独覆盖 size。
 
 <ZodSchema
   name="BubbleChartMarkSchema"
@@ -173,7 +173,7 @@ export type IRBubbleChartProperties = ZodInfer<typeof BubbleChartPropertiesSchem
     kind: '固定为 bubble',
     override: '为 true 时替换内置同类图元；省略时追加',
     encodings: '参照上方映射说明；仅接受上述可选字段名覆盖',
-    properties: '参照上方属性说明；不包含 autoPadding 与 domainPadding',
+    properties: '参照上方属性说明；不包含 domainPadding；autoPadding 可覆盖图表策略',
   }}
 />
 

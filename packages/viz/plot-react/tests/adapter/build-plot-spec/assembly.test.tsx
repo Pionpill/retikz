@@ -463,7 +463,7 @@ describe('buildPlotIR 装配', () => {
 
     expect(spec.guides).toEqual([{ type: 'axis', dimension: 'q' }]);
     expect(() => PlotSchema.parse(spec)).not.toThrow();
-    expect(() => compilePlot(spec, { __plot: [{ m: 1, r: 2 }] }, { width: 320, height: 200 })).toThrow(
+    expect(() => compilePlot(spec, { __plot: [{ m: 1, r: 2 }] }, { layout: { width: 320, height: 200 } })).toThrow(
       /does not support axis dimension "q"/,
     );
   });

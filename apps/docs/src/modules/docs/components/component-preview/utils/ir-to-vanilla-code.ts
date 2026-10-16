@@ -14,7 +14,18 @@ import type {
 } from '@retikz/core';
 import type { IRFlowDiagram } from '@retikz/diagram/flow';
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
-import { RibbonPathKindDefinition } from '@retikz/extension';
+import {
+  RibbonPathKindDefinition,
+  ContourShapeDefinition,
+  CrossShapeDefinition,
+  CylinderShapeDefinition,
+  EllipticCapsuleShapeDefinition,
+  HexagonShapeDefinition,
+  ParallelogramShapeDefinition,
+  SectorShapeDefinition,
+  StarShapeDefinition,
+  TrapezoidShapeDefinition,
+} from '@retikz/extension';
 import type { IRBlock, IRBlockHeader, IRBlockRow, IRBlockSection, IRGraph, IRGroup } from '@retikz/graph';
 import {
   BlockHeaderSchema,
@@ -27,6 +38,7 @@ import {
   RelationSchema,
 } from '@retikz/graph';
 import type { InputGraphChild } from '@retikz/graph-vanilla';
+import type { LayoutProps } from '@retikz/react';
 import type { IRQueue, IRStack } from '@retikz/standard/collection';
 import type { IRChain, IRChainItem } from '@retikz/standard/collection';
 import type { IRCell, IRMatrix, IRArray, IRArrayCell, IRMap } from '@retikz/standard/collection';
@@ -136,6 +148,8 @@ export type IrToVanillaCodeOptions = Readonly<{
   theme?: IRScene['theme'];
   /** 当前图显式装配的 Path kind Definition */
   pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
+  /** 当前图显式装配的形状定义 */
+  shapes?: NonNullable<LayoutProps['extensions']>['shapes'];
 }>;
 
 type WayFrag = { text: string; comment?: boolean };
@@ -1021,6 +1035,19 @@ const childListCode = (children: ReadonlyArray<IRChild>, indent: number, ctx: Ct
   return `[\n${lines.join('\n')}\n${pad(indent)}]`;
 };
 
+/** 可生成公开导入的官方形状；按 Definition 身份匹配，避免同名自定义实现误配 */
+const shapeDefinitionImports = {
+  ContourShapeDefinition,
+  CrossShapeDefinition,
+  CylinderShapeDefinition,
+  EllipticCapsuleShapeDefinition,
+  HexagonShapeDefinition,
+  ParallelogramShapeDefinition,
+  SectorShapeDefinition,
+  StarShapeDefinition,
+  TrapezoidShapeDefinition,
+};
+
 const HELPER_ORDER: ReadonlyArray<string> = ['scene', 'node', 'path', 'coordinate', 'scope'];
 
 /** 从纯 IR 生成不含运行时 authoring sidecar 的 Vanilla 示例代码 */
@@ -1032,6 +1059,18 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     );
   }
 
+  const shapeImports = [
+    ...new Set(
+      (options.shapes ?? []).map(definition => {
+        const entry = Object.entries(shapeDefinitionImports).find(([, candidate]) => candidate === definition);
+        if (!entry)
+          throw new Error(
+            `Cannot generate Vanilla source for shape "${definition.name}" without its Definition source.`,
+          );
+        return entry[0];
+      }),
+    ),
+  ];
   const usesRibbon = options.pathKinds?.includes(RibbonPathKindDefinition) ?? false;
   const ctx: Ctx = {
     used: new Set(['scene']),
@@ -1076,7 +1115,8 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     ...(hasStandaloneGraphMembers ? ['resolveCoreProviderDependencies'] : []),
   ];
   if (coreImports.length > 0) imports.push(`import { ${coreImports.join(', ')} } from '@retikz/core';`);
-  if (usesRibbon) imports.push("import { RibbonPathKindDefinition } from '@retikz/extension';");
+  const extensionImports = [...shapeImports, ...(usesRibbon ? ['RibbonPathKindDefinition'] : [])];
+  if (extensionImports.length > 0) imports.push(`import { ${extensionImports.join(', ')} } from '@retikz/extension';`);
 
   const definitions = collectPreviewDefinitions(
     ir.children,
@@ -1186,6 +1226,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     ? `\nconst definitions = resolveCoreProviderDependencies({ contributions: [{ roots: [GraphProviderKey], providers: createGraphProviders({ entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds, graphThemeStyles: PreviewThemeDefinitionBundle.graph }) }], definitions: { composites: [${definitionNames.join(', ')}] } });\n`
     : '';
   const compileEntries = [
+    ...(shapeImports.length ? [`shapes: [${shapeImports.join(', ')}]`] : []),
     ...(usesRibbon ? ['pathKinds: [RibbonPathKindDefinition]'] : []),
     ...(graphHelpers.length > 0 || ctx.flowCount > 0 ? ['themeStyles: PreviewThemeDefinitionBundle.core'] : []),
     ...(hasStandaloneGraphMembers

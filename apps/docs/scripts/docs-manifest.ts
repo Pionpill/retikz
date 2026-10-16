@@ -64,6 +64,7 @@ const collectRouteDocuments = (moduleId: string, sections: Array<Section>): Arra
   const documents: Array<RouteDocument> = [];
 
   const visit = (node: SubPage, prefix: Array<string>, sectionId: string | undefined) => {
+    if (node.linkTo) return;
     const parts = [...prefix, node.id];
     documents.push({
       parts,

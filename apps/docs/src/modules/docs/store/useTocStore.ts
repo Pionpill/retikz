@@ -7,6 +7,10 @@ export type TocState = {
   tocOpen: boolean;
   /** 设置 TOC 展开 / 折叠 */
   setTocOpen: (open: boolean) => void;
+  /** 文档头部是否吸顶；跨页面持久化 */
+  headerPinned: boolean;
+  /** 设置文档头部固定 / 随正文滚动 */
+  setHeaderPinned: (pinned: boolean) => void;
   /** 当前页是否有 TOC 内容（无内容时右栏不渲染 / 不占位，开关隐藏）；不持久化 */
   hasToc: boolean;
   /** 设置当前页是否有 TOC 内容 */
@@ -18,9 +22,14 @@ export const useTocStore = create<TocState>()(
     set => ({
       tocOpen: true,
       setTocOpen: open => set({ tocOpen: open }),
+      headerPinned: true,
+      setHeaderPinned: headerPinned => set({ headerPinned }),
       hasToc: false,
       setHasToc: has => set({ hasToc: has }),
     }),
-    { name: 'retikz-toc', partialize: state => ({ tocOpen: state.tocOpen }) },
+    {
+      name: 'retikz-toc',
+      partialize: state => ({ tocOpen: state.tocOpen, headerPinned: state.headerPinned }),
+    },
   ),
 );

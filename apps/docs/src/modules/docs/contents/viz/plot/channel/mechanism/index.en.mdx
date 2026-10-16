@@ -51,7 +51,7 @@ Once registration is complete, mark resolution traverses applicable definitions.
 <ComponentAlert
   type="tip"
   title="Custom channels share this pipeline"
-  description="Host-supplied channelDefinitions are merged after built-in definitions. Custom names must be nonempty, cannot override built-in names, and cannot be registered twice. Unregistered extension bindings fail. Resolution and delivery use the same pipeline as built-ins; see Custom Channels for authoring details."
+  description="Host-supplied definitions.channels are merged after built-in definitions. Custom names must be nonempty, cannot override built-in names, and cannot be registered twice. Unregistered extension bindings fail. Resolution and delivery use the same pipeline as built-ins; see Custom Channels for authoring details."
 />
 
 <SourceLinks
@@ -185,8 +185,8 @@ Paths need not correspond one-to-one with data rows. A line path can contain mul
     {
       label: 'Scope delivery after layer generation',
       path: 'packages/viz/plot/src/providers/mark/registry.ts',
-      startLine: 67,
-      endLine: 102,
+      startLine: 59,
+      endLine: 95,
     },
   ]}
 />
@@ -272,11 +272,6 @@ Start with `resolveChannelRegistry` to see definitions combined, then follow `re
       title: 'Custom channels',
       description: 'Define and inject a working channel.',
       url: '/viz/plot/channel/custom-channel',
-    },
-    {
-      title: 'Custom marks',
-      description: 'Learn how marks declare and consume channels.',
-      url: '/viz/plot/mark/custom-mark',
     },
     {
       title: 'API Reference',

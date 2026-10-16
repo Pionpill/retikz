@@ -82,6 +82,13 @@ const resolve = (input = source) => {
 };
 
 describe('Chart resolve', () => {
+  it('向 Plot 透明传递分组执行策略', () => {
+    const input = sourceSchema.parse({
+      ...source,
+      dataExecution: { root: { mode: 'hybrid', external: 'sql' }, marks: { mode: 'builtin' } },
+    });
+    expect(resolve(input).plot.dataExecution).toEqual(input.dataExecution);
+  });
   it('applies Definition and Source defaults only to existing presentation slots', () => {
     const result = resolve();
 

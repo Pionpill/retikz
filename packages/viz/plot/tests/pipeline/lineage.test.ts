@@ -163,7 +163,7 @@ const scopeChildrenOf = (child: IRChild): Array<IRScope> => {
 describe('plot lineage runtime', () => {
   it('keeps lowerPlots shape unchanged when lineage API is not used', () => {
     const result = {
-      children: [lowerPlot(pointSpec(), datasets, { textMeasurer: measureLabel, width: 480, height: 300 })],
+      children: [lowerPlot(pointSpec(), datasets, { layout: { width: 480, height: 300 }, textMeasurer: measureLabel })],
     };
 
     expect(result.children).toHaveLength(1);
@@ -294,10 +294,10 @@ describe('plot lineage runtime', () => {
     spec.marks[0].transform = [{ operation: { kind: 'count-lineage-apply', params: { scope: 'mark' } } }];
 
     lowerPlotWithLineage(spec, datasets, {
+      definitions: { transforms: [countingTransform] },
+      implementations: { transforms: [countingTransformImplementation] },
       environment: {},
       lineage: {},
-      transformDefinitions: [countingTransform],
-      transformImplementations: [countingTransformImplementation],
     });
 
     expect(applyCounts).toEqual({ root: 1, mark: 1 });
@@ -322,10 +322,10 @@ describe('plot lineage runtime', () => {
     spec.marks[0].transform = [{ operation: { kind: 'count-lineage-locator-apply', params: { scope: 'mark' } } }];
 
     createPlotLineageLocator(spec, datasets, {
+      definitions: { transforms: [countingTransform] },
+      implementations: { transforms: [countingTransformImplementation] },
       environment: {},
       lineage: {},
-      transformDefinitions: [countingTransform],
-      transformImplementations: [countingTransformImplementation],
     });
 
     expect(applyCounts).toEqual({ root: 1, mark: 1 });
@@ -350,8 +350,8 @@ describe('plot lineage runtime', () => {
     spec.marks[0].transform = [{ operation: { kind: 'count-independent-lineage-apply', params: { scope: 'mark' } } }];
     const options = {
       lineage: {},
-      transformDefinitions: [countingTransform],
-      transformImplementations: [countingTransformImplementation],
+      definitions: { transforms: [countingTransform] },
+      implementations: { transforms: [countingTransformImplementation] },
     };
 
     lowerPlotWithLineage(spec, datasets, { ...options, environment: {} });
@@ -372,8 +372,9 @@ describe('plot lineage runtime', () => {
 
   it('records extension channel field and declared scale binding', () => {
     const { lineage } = lowerPlotWithLineage(extensionChannelSpec(), datasets, {
+      definitions: { channels: [intensityChannel] },
       environment: {},
-      channelDefinitions: [intensityChannel],
+
       lineage: { scaleMappings: true },
     });
 
@@ -428,9 +429,9 @@ describe('plot lineage runtime', () => {
 
   it('returns locator lineage aligned with anchor meta', () => {
     const locator = createPlotLineageLocator(pointSpec(), datasets, {
+      layout: { width: 480, height: 300 },
       environment: {},
-      width: 480,
-      height: 300,
+
       lineage: { locatorAnchors: true },
     });
     const hit = locator.datum(2);
@@ -454,9 +455,9 @@ describe('plot lineage runtime', () => {
 
   it('does not fabricate datum lineage for series anchors', () => {
     const locator = createPlotLineageLocator(seriesSpec(), datasets, {
+      layout: { width: 480, height: 300 },
       environment: {},
-      width: 480,
-      height: 300,
+
       lineage: { locatorAnchors: true },
     });
     const hit = locator.series('Jan');
