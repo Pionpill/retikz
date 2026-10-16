@@ -48,6 +48,7 @@
     "moduleNavigationLabel": "文档模块"
   },
   "kernel": {
+    "compilationMechanisms": "编译机制",
     "internalMechanisms": "内部机制",
     "compositeComponents": "复合组件",
     "compositeCustom": "自定义用法",

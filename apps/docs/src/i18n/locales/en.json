@@ -48,6 +48,7 @@
     "moduleNavigationLabel": "Documentation modules"
   },
   "kernel": {
+    "compilationMechanisms": "Compilation mechanisms",
     "internalMechanisms": "Internal mechanisms",
     "compositeComponents": "Composite components",
     "compositeCustom": "Custom usage",

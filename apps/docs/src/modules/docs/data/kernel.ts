@@ -1,4 +1,4 @@
-import type { DocPageMetadataOverride, Section } from './types';
+import type { DocPageMetadataOverride, Page, Section } from './types';
 import { DocDifficulty } from './types';
 
 /** 标记以 Definition / registry 为主线的扩展指南。 */
@@ -8,6 +8,57 @@ const extensionGuide = (capability: string): DocPageMetadataOverride => ({
   capability,
   sourceOfTruth: 'runtime',
 });
+
+/** Core 原文目录，同时提供组件进阶区的链接入口标题与顺序 */
+const corePage: Page = {
+  id: 'core',
+  label: 'kernel.pkgCore',
+  sidebarGroup: 'kernel.pkgGroupCore',
+  children: [
+    {
+      id: 'compilation',
+      label: 'kernel.pkgCoreCompilation',
+      difficulty: DocDifficulty.Internals,
+      meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+    },
+    {
+      id: 'resolution',
+      label: 'kernel.pkgCoreResolution',
+      difficulty: DocDifficulty.Internals,
+      meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+    },
+    {
+      id: 'coordinates',
+      label: 'kernel.pkgCoreCoordinates',
+      difficulty: DocDifficulty.Internals,
+      meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+    },
+    {
+      id: 'node-compilation',
+      label: 'kernel.pkgCoreNodeCompilation',
+      difficulty: DocDifficulty.Internals,
+      meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+    },
+    {
+      id: 'path-compilation',
+      label: 'kernel.pkgCorePathCompilation',
+      difficulty: DocDifficulty.Internals,
+      meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+    },
+    {
+      id: 'composite-compilation',
+      label: 'kernel.pkgCoreCompositeCompilation',
+      difficulty: DocDifficulty.Internals,
+      meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+    },
+    {
+      id: 'compilation-output',
+      label: 'kernel.pkgCoreCompilationOutput',
+      difficulty: DocDifficulty.Internals,
+      meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+    },
+  ],
+};
 
 export const kernelSection: Array<Section> = [
   {
@@ -317,6 +368,18 @@ export const kernelSection: Array<Section> = [
         ],
       },
       {
+        id: 'compilation-mechanisms',
+        label: 'kernel.compilationMechanisms',
+        sidebarGroup: 'kernel.internals',
+        linkTo: '/kernel/packages/core',
+        children: corePage.children.map(page => ({
+          id: page.id,
+          label: page.label,
+          difficulty: page.difficulty,
+          linkTo: `/kernel/packages/core/${page.id}`,
+        })),
+      },
+      {
         id: 'internals',
         label: 'kernel.internalMechanisms',
         sidebarGroup: 'kernel.internals',
@@ -591,55 +654,7 @@ export const kernelSection: Array<Section> = [
           },
         ],
       },
-      {
-        id: 'core',
-        label: 'kernel.pkgCore',
-        sidebarGroup: 'kernel.pkgGroupCore',
-        children: [
-          {
-            id: 'compilation',
-            label: 'kernel.pkgCoreCompilation',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'resolution',
-            label: 'kernel.pkgCoreResolution',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'coordinates',
-            label: 'kernel.pkgCoreCoordinates',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'node-compilation',
-            label: 'kernel.pkgCoreNodeCompilation',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'path-compilation',
-            label: 'kernel.pkgCorePathCompilation',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'composite-compilation',
-            label: 'kernel.pkgCoreCompositeCompilation',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'compilation-output',
-            label: 'kernel.pkgCoreCompilationOutput',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
-          },
-        ],
-      },
+      corePage,
       {
         id: 'tex',
         label: 'kernel.pkgTex',

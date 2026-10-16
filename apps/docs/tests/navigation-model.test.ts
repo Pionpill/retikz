@@ -2,7 +2,7 @@ import type { TFunction } from 'i18next';
 import { describe, expect, it } from 'vitest';
 
 import type { Section } from '@/modules/docs/data';
-import { DocDifficulty, vizSection } from '@/modules/docs/data';
+import { DocDifficulty, kernelSection, vizSection } from '@/modules/docs/data';
 import {
   buildSidebarCategories,
   flattenLeaves,
@@ -30,6 +30,21 @@ const sections: Array<Section> = [
 ];
 
 describe('layout utils', () => {
+  it('编译机制入口指向原文，且不进入本地阅读顺序', () => {
+    const t = ((key: string) => key) as TFunction;
+    const categories = buildSidebarCategories(t, 'kernel', kernelSection);
+    const link = categories
+      .find(item => item.value === 'components')
+      ?.modules.find(item => item.value === 'compilation-mechanisms');
+    expect(link?.linkTo).toBe('/kernel/packages/core');
+    expect(link?.Icon).toBeDefined();
+    expect(link?.children).toHaveLength(7);
+    expect(link?.children?.every(item => item.linkTo?.startsWith('/kernel/packages/core/') && item.Icon)).toBe(true);
+    const paths = flattenLeaves('kernel', kernelSection).map(item => item.path);
+    expect(paths.some(path => path.includes('/compilation-mechanisms'))).toBe(false);
+    expect(paths.filter(path => path === '/kernel/packages/core/compilation-output')).toHaveLength(1);
+  });
+
   it('按 sidebar 顺序拍平叶子页', () => {
     expect(flattenLeaves('kernel', sections).map(node => node.path)).toEqual([
       '/kernel/intro',
