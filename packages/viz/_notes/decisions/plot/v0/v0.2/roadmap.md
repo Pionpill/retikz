@@ -15,8 +15,25 @@
 | PointMark 扩展 | 支持常量通道精确添加独立图元，并支持由复合图元拥有绘制与属性解析 | —                                                                                                                                                                                                                                                                                                                                                |
 | 性能           | 基于 Kernel 增量底座建立领域失效与增量 lowering                  | —                                                                                                                                                                                                                                                                                                                                                |
 | 交互           | 基于 Kernel Headless Interaction 建立数据、系列与视图交互语义    | —                                                                                                                                                                                                                                                                                                                                                |
+| 图元 lowering  | 补全 PointMark、PathMark、IntervalMark 对底层图元能力的接入      | —                                                                                                                                                                                                                                                                                                                                                |
 
 ## 功能规划
+
+### 三类图元 lowering 能力补全
+
+主要场景：
+
+- PointMark、PathMark、IntervalMark 已使用底层图元绘制，但尚未完整开放适用于各自语义的底层能力。
+
+规划内容：
+
+- 梳理三类图元与其 lower 目标的能力差异，补齐公开输入、数据通道到下沉结果的传递，并同步 React / Vanilla / IR 与文档。
+- PointMark 保留数据定位职责，完善节点内容、布局与外观能力的接入；PathMark、IntervalMark 保留数据关系和几何生成职责，完善生成图元的附加能力。
+- 复用底层公开契约与编译能力，明确由 Plot 生成的字段与可由作者配置的字段，避免重复实现或无约束透传；具体能力清单与边界由后续 ADR 明确。
+
+预期效果：
+
+三类图元能够一致地复用适用的底层能力，作者无需为使用已有绘图能力而绕开 Plot 数据映射。
 
 ### 主题所有权
 
@@ -46,6 +63,7 @@
 - 完善绘图区、Axis 规则、网格端点与 domain padding。
 - 将语义策略留在 Plot，不下放为 renderer 或 Chart 补丁。
 - 将点图自动留白统一归入 Plot：PointMark 默认按最大半径留白，Chart 保留图表策略选择；原理与示例统一由 PointMark 文档承载。
+- 支持 PathMark 基于 `strokeWidth` 的自动边缘留白，复用公共尺度留白机制，减少粗描边超出绘图区或压住坐标轴的问题；区分留白与防裁切，默认策略及端帽、连接角、平滑曲线的边界由后续 ADR 明确。
 
 预期效果：
 
