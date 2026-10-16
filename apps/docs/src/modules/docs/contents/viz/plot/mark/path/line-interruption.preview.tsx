@@ -7,7 +7,6 @@ export type LineInterruptionPreviewValues = {
   coordinate: 'cartesian2D' | 'polar2D';
   showFill: boolean;
   connectNulls: boolean;
-  closed: boolean;
 };
 
 /** 绘制示例图形 */
@@ -44,7 +43,7 @@ export const LineInterruptionPreview = (values: LineInterruptionPreviewValues) =
         order="year"
         series="name"
         color="name"
-        closed={coordinate === 'polar2D' && values.closed}
+        closed={false}
         connectNulls={values.connectNulls}
         strokeWidth={2.4}
       />

@@ -1,48 +1,161 @@
 ---
 title: PathMark
-description: 'PathMark is a one-dimensional trajectory made from ordered points; lines, closed paths, multi-series lines, and radar outlines are presentation forms of the same mark.'
+description: Connect data positions in order with PathMark to draw lines, multiple series, polar outlines, and closed regions.
 ---
 
-`<PathMark>` produces one 1D trajectory from a set of data rows. It projects each row into a point, sorts the points by `order`, and lowers the result into a core `Path`. Under cartesian2D it is usually a line; under polar2D it can become a polar path or a radar outline.
+`PathMark` connects the positions of multiple data rows into paths. `x` and `y` locate each point, `order` determines the connection order, and `series` separates independent paths. The same mark can draw a line, radar outline, or closed region.
 
-`x` / `y` bind position channels, `order` decides connection order, `series` decides whether to split into multiple paths, `curve` decides how adjacent points connect, and `closure` decides whether the path closes by baseline or by cycle. PathMark currently supports cartesian2D and polar2D.
+Start with one line, then explore grouping, curves, closure, and missing values. See [channel bindings](/viz/plot/channel/binding) for field bindings and [Quick start](/viz/plot/get-start) for installation and host setup.
 
-## Usage
+## Using this topic
 
-```tsx
-import { PathMark, Plot } from '@retikz/plot-react';
+The example connects three revenue records by month. With `order="month"`, rearranging the input rows preserves the monthly connection order.
+
+<ComponentPreview mode="showcase" files={['path-entry', 'path-entry.data.ts']} hideCode size="md" />
+
+Prepare `<div id="plot"></div>` in HTML and choose one entry point below. React JSX uses this component hierarchy:
+
+```text
+Plot
+├── PathMark
+└── PlotAxis
 ```
 
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
 ```tsx
-<Plot data={revenue}>
-  <PathMark x="month" y="revenue" order="month" />
-</Plot>
+import { PathMark, Plot, PlotAxis } from '@retikz/plot-react';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { month: 1, revenue: 30 },
+  { month: 2, revenue: 50 },
+  { month: 3, revenue: 40 },
+];
+
+createRoot(document.getElementById('plot')!).render(
+  <Plot data={rows} width={360} height={220}>
+    <PathMark x="month" y="revenue" order="month" />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" />
+  </Plot>,
+);
 ```
 
-Set `order` explicitly. Otherwise PathMark follows data array order, so a different row order changes the path shape.
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
-### When to Use
+```tsx
+import type { IRPlot } from '@retikz/plot';
+import { Plot } from '@retikz/plot-react';
+import { createRoot } from 'react-dom/client';
 
-PathMark is a low-level line mark: it only connects a set of ordered anchors into one 1D trajectory. It does not care whether the presentation layer calls that trajectory a line chart, trend line, outline, or radar outline; those are interpretations of the same PathMark.
+const rows = [
+  { month: 1, revenue: 30 },
+  { month: 2, revenue: 50 },
+  { month: 3, revenue: 40 },
+];
 
-The presentation form mainly changes through three groups of props: position channels decide where points come from, series channels decide how many paths are produced, and geometry props decide whether the path closes as a line or as a fillable area.
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { name: 'x', type: 'linear' },
+    { name: 'y', type: 'linear' },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' }],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
 
-| Presentation form | Key props           | Behavior                                                                                                          |
-| ----------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Line              | `x` / `y` / `order` | Project each row into a point, then connect the points in order                                                   |
-| Multi-series line | `series` / `color`  | Split rows by series first, then produce one path per group                                                       |
-| Radar outline     | `polar2D`           | Polar paths close by default; set `closed={false}` for an open path                                               |
-| Path area         | `closure` / `fill`  | Close the path by cycle, constant baseline, or per-row stacked baseline; set `fill` explicitly to fill the result |
+createRoot(document.getElementById('plot')!).render(<Plot spec={spec} data={{ rows }} width={360} height={220} />);
+```
 
-## Examples
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-The examples cover ordering, series, connection, closure, and missing values. In playgrounds that switch coordinates, polar still uses `x` for angle and `y` for radius. `closed` only decides whether the last point reconnects to the first; it does not choose arcs versus straight chords between adjacent positions.
+```ts
+import { plot, renderPlot } from '@retikz/plot-vanilla';
 
-### Basic Usage
+const rows = [
+  { month: 1, revenue: 30 },
+  { month: 2, revenue: 50 },
+  { month: 3, revenue: 40 },
+];
 
-`x` / `y` decide which points the path visits, while `order` decides their connection order. The rows are deliberately shuffled so “Connection order” can compare explicit sorting with data-array order.
+const spec = plot({
+  data: { reference: 'rows' },
+  scales: [
+    { name: 'x', type: 'linear' },
+    { name: 'y', type: 'linear' },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' }],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+});
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRPlot } from '@retikz/plot';
+import { renderPlot } from '@retikz/plot-vanilla';
+
+const rows = [
+  { month: 1, revenue: 30 },
+  { month: 2, revenue: 50 },
+  { month: 3, revenue: 40 },
+];
+
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { name: 'x', type: 'linear' },
+    { name: 'y', type: 'linear' },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' }],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
+```
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
+
+### Position and order
+
+`x` and `y` name position fields; `order` names the sorting field. For example, `x="month"`, `y="revenue"`, and `order="month"` connect revenue positions by month. Without `order`, PathMark follows array order; it does not automatically sort by x.
+
+The example deliberately shuffles the rows. Switch connection order to compare a path that doubles back with monthly ordering. In polar coordinates, x represents angle and y represents radius.
+
+| Property          | Purpose           | Notes                                                                                                         |
+| ----------------- | ----------------- | ------------------------------------------------------------------------------------------------------------- |
+| `x`, `y`          | Position fields   | Field names or paths; horizontal and vertical in Cartesian coordinates, angle and radius in polar coordinates |
+| `order`           | Connection order  | Sort by this field before connecting; omit to preserve data array order                                       |
+| `Plot.coordinate` | Coordinate system | Determines position semantics; the example switches between `cartesian2D` and `polar2D`                       |
 
 <ComponentPreview
+  mode="showcase"
   files={['line-basic', 'line-basic.preview.tsx', 'line-basic.data.ts']}
   controls={{ name: 'line-basic' }}
   size="lg"
@@ -50,11 +163,23 @@ The examples cover ordering, series, connection, closure, and missing values. In
   defaultSourceFile="line-basic.preview.tsx"
 />
 
-### Series and Labels
+### Series and labels
 
-`series` splits rows into groups before each group sorts and connects independently. Without `series`, a categorical `color` field can trigger the same implicit path split. Series labels attach directly to each path geometry instead of requiring a separate text layer.
+When rows contain several stores, bind `series` to the store field so each store sorts and connects independently. Bind `color` to a categorical field to distinguish colors. Without `series`, that color field also splits paths; without `color`, color follows `series`.
+
+`label` places labels along path geometry. Compare a single path, explicit series, and color-based grouping, then toggle series labels.
+
+| Property       | Purpose           | Notes                                                                                               |
+| -------------- | ----------------- | --------------------------------------------------------------------------------------------------- |
+| `series`       | Series field      | Split independent paths by field value and sort within each series                                  |
+| `color`        | Categorical color | Color by category; also splits paths when `series` is absent, and defaults to `series` when omitted |
+| `label`        | Path labels       | One or more labels placed along path geometry                                                       |
+| `resolveLabel` | Label callback    | Generate text at runtime; requires a mark `id` and is not stored in IR                              |
+
+Label position uses a fraction from `0` to `1` along the path. With Side set to Auto, a horizontal label sits above the path; enabling Follow path tangent centers it along the tangent. Toggle Interrupt path in that state to see a gap beneath the text. Interruption cuts the stroke, not the text. An explicit side and offset distance move the label beside the path.
 
 <ComponentPreview
+  mode="showcase"
   files={['line-series', 'line-series.preview.tsx', 'line-series.data.ts']}
   controls={{ name: 'line-series' }}
   size="lg"
@@ -62,11 +187,23 @@ The examples cover ordering, series, connection, closure, and missing values. In
   defaultSourceFile="line-series.preview.tsx"
 />
 
-### Connection and Style
+### Connection and style
 
-`curve` controls how neighboring points connect. Stroke color, width, dash, and opacity only change the path appearance. Gray points remain fixed references for checking whether a curve passes through the observations; `monotoneX` / `monotoneY` fall back to `linear` under polar2D.
+`curve` chooses how neighboring points connect. Straight and step lines emphasize changes between observations; smooth curves change the route between points. Not every curve passes through every observation. The gray points are references for comparing the curve with its input positions.
+
+Stroke color, width, dashes, and opacity control appearance. In polar coordinates, `monotoneX` and `monotoneY` use `linear`.
+
+| Property      | Purpose             | Notes                                                                                                              |
+| ------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `curve`       | Connection shape    | Defaults to `linear`; choose step or smooth curves. Polar coordinates use `linear` for `monotoneX` and `monotoneY` |
+| `stroke`      | Stroke color        | Field or constant; use `{ kind: 'constant', value }` to force a constant                                           |
+| `strokeWidth` | Stroke width        | Nonnegative constant or field mapping                                                                              |
+| `dashPattern` | Dash pattern        | Array alternating dash and gap lengths; the example dash switch controls this property                             |
+| `opacity`     | Opacity             | Control overall, fill, or stroke opacity                                                                           |
+| `closed`      | Endpoint connection | Connect the last point to the first; does not select the curve between points                                      |
 
 <ComponentPreview
+  mode="showcase"
   files={['line-curve', 'line-curve.preview.tsx', 'line-curve.data.ts']}
   controls={{ name: 'line-curve' }}
   size="lg"
@@ -74,22 +211,30 @@ The examples cover ordering, series, connection, closure, and missing values. In
   defaultSourceFile="line-curve.preview.tsx"
 />
 
-### Polar Interpolation
+## Extended usage
 
-`polar2D` infers its coordinate interpolation from angular-scale continuity: continuous values use `polar`, while discrete values use `chord`. Here each plot inherits its own coordinate: the left plot defaults to `chord` and the right plot to `polar`, so each path and its grid always share one connection space.
+### Closure and fill
+
+`closed` connects the last point to the first. Cartesian paths default to open, while polar paths default to closed. Use `closure` to specify a region boundary and `fill` to give the region a fill color.
+
+| Closure           | Configuration                                         | Result                                  |
+| ----------------- | ----------------------------------------------------- | --------------------------------------- |
+| Cycle             | `closure={{ kind: 'cycle' }}`                         | Return from the last point to the first |
+| Constant baseline | `closure={{ kind: 'baseline', baseline: 0 }}`         | Return along a fixed value              |
+| Per-row baseline  | `closure={{ kind: 'stack', baselineField: 'lower' }}` | Read the lower boundary from each row   |
+
+Compare open paths, cycle closure, and a constant baseline below. If `baseline` is omitted, it uses 0 when the value domain includes 0, otherwise the domain edge nearest 0.
+
+| Property                | Purpose                | Notes                                                                                                    |
+| ----------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------- |
+| `closed`                | Endpoint connection    | Defaults to `false` in Cartesian coordinates and `true` in polar coordinates                             |
+| `closure`               | Return boundary        | `cycle` returns to the first point, `baseline` to a fixed baseline, and `stack` along a per-row baseline |
+| `closure.baseline`      | Fixed baseline value   | Only used by `baseline`; defaults to 0 or the domain edge nearest 0                                      |
+| `closure.baselineField` | Per-row baseline field | Required for `stack`; names the lower-boundary field in each row                                         |
+| `fill`                  | Region fill            | Color or Paint for the closed region; `none` hides the fill                                              |
 
 <ComponentPreview
-  files={['line-radar', 'line-radar.preview.tsx', 'line-radar.data.ts']}
-  size="lg"
-  caption="Switch each plot's coordinate interpolation independently to see its path and grid change together between polar curves and straight chords."
-  defaultSourceFile="line-radar.preview.tsx"
-/>
-
-### Closure and Fill
-
-An open path only traces the trajectory. `cycle` joins the last point back to the first, while `baseline` returns the path to a fixed lower boundary. `closure` only constructs a fillable boundary; `fill` must still be set explicitly to reveal the area.
-
-<ComponentPreview
+  mode="showcase"
   files={['line-closure', 'line-closure.preview.tsx', 'line-closure.data.ts']}
   controls={{ name: 'line-closure' }}
   size="lg"
@@ -97,13 +242,22 @@ An open path only traces the trajectory. `cycle` joins the last point back to th
   defaultSourceFile="line-closure.preview.tsx"
 />
 
-When `baseline` is omitted, it follows the value axis: use 0 when 0 is inside the domain, otherwise use the domain edge nearest 0. Per-row stacked lower bounds use `closure={{ kind: 'stack', baselineField: ... }}`.
+### Missing values
 
-### Missing Values
+A row that cannot project to a valid position breaks the path by default. For an open, unfilled path, `connectNulls` bridges valid points on either side of a gap with a dashed stroke while leaving ordinary segments unchanged.
 
-When a row cannot project into a valid point, PathMark breaks there and lowers the surrounding runs into separate core `Path` elements. For open unfilled paths, `connectNulls: true` or `{}` bridges only the missing span with default dashes `[6, 4]`; normal runs keep their style. An object overrides bridge `stroke`, `strokeWidth`, `strokeOpacity`, `dashPattern`, `dashOffset`, `lineCap`, and `lineJoin`. Consecutive missing rows form one bridge; leading and trailing gaps are not extrapolated. Closed paths, closure paths, and filled paths accept only boolean and retain their existing continuous connection behavior.
+Both `connectNulls={true}` and `connectNulls={{}}` use the default dash pattern `[6, 4]`. An object can override the bridge stroke. Consecutive missing rows produce one bridge; leading and trailing gaps do not extend the path.
+
+Closed paths, paths with `closure`, and filled paths accept only a boolean. Here, `true` joins valid points into one run without a separate dashed bridge. The fill switch below adds a baseline-closed layer: the area joins valid positions as a whole, while the original open stroke still marks gaps with dashed bridges.
+
+| Property                     | Purpose               | Notes                                                                                                                                       |
+| ---------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `connectNulls`               | Gap connection        | Defaults to `false`. For open unfilled paths, `true` or `{}` bridges gaps with the default dash pattern `[6, 4]`                            |
+| `connectNulls` stroke object | Bridge style          | Accepts `stroke`, `strokeWidth`, `strokeOpacity`, `dashPattern`, `dashOffset`, `lineCap`, and `lineJoin`; only for open unfilled paths      |
+| `closed`, `closure`, `fill`  | Connection conditions | Closed paths, paths with closure, or filled paths accept only boolean `connectNulls`, joining valid points without separate bridge segments |
 
 <ComponentPreview
+  mode="showcase"
   files={['line-interruption', 'line-interruption.preview.tsx', 'line-interruption.data.ts']}
   controls={{ name: 'line-interruption' }}
   size="lg"
@@ -111,86 +265,119 @@ When a row cannot project into a valid point, PathMark breaks there and lowers t
   defaultSourceFile="line-interruption.preview.tsx"
 />
 
-## How it works
+### Polar interpolation
+
+Polar coordinates map x to angle and y to radius. Even with the same endpoints, two connections can follow different routes:
+
+The coordinate system defaults to `polar` for a continuous angular scale and `chord` for a discrete one. PathMark can override `interpolation` for its own path; the grid still uses the coordinate setting. The two plots below explicitly choose different coordinate interpolation, so their paths and grids change together.
+
+| Property                        | Purpose                  | Notes                                                                                                                                                               |
+| ------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Plot.coordinate.interpolation` | Coordinate interpolation | `chord` joins projected points; `polar` samples angles and radii before projection. Defaults to `polar` for continuous angular scales and `chord` for discrete ones |
+| `interpolation`                 | Path override            | Only valid in `polar2D`; inherits the coordinate setting when omitted, otherwise affects only this path                                                             |
+| `closed`                        | Endpoint connection      | Connect the last point to the first, independently of interpolation                                                                                                 |
+
+<ComponentPreview
+  mode="showcase"
+  files={['line-radar', 'line-radar.preview.tsx', 'line-radar.data.ts']}
+  controls={{ name: 'line-radar' }}
+  size="lg"
+  caption="Switch each plot's coordinate interpolation independently to see its path and grid change together between polar curves and straight chords."
+  defaultSourceFile="line-radar.preview.tsx"
+/>
+
+## Errors and limitations
+
+- Built-in Cartesian 2D and polar 2D coordinates support paths and closed regions. Generic coordinate frames support open paths with no `closure` and `closed` other than `true`.
+- Explicit `interpolation` is only valid in polar coordinates. Other coordinate systems reject it.
+- `color` requires a categorical field; continuous and temporal fields are rejected.
+- Closed or filled paths reject stroke objects in `connectNulls`; use a boolean.
+- A path segment needs at least two valid positions. Use [PointMark](/viz/plot/mark/point) for isolated points.
+- The runtime callback `resolveLabel` requires a mark `id` and is not stored in Source IR.
+
+## Implementation
 
 <ComponentAlert
   type="tip"
-  title="You can skip this section at first"
-  description="Return when debugging series splitting, missing-value breaks, polar closure defaults, or anchorId output."
+  title="Reading guide"
+  description="This section explains internal behavior. If you only need to use the component, continue to API Reference."
 />
 
-`<PathMark>` is dispatched from `IRPlot` through the mark registry to path lowering. It accepts cartesian2D and polar2D only because those frames provide an ordered trajectory for the required position roles; unsupported frames fail loudly.
+### Resolving a path
 
-| Stage               | Observable behavior                                                                                                                                    |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Order and group     | Rows split by `series` and then sort by `order`; without `series`, a categorical `color` field can split implicit series                               |
-| Project and segment | Each row projects to a point; invalid points break the trajectory unless `connectNulls` is enabled                                                     |
-| Connect and close   | polar2D `interpolation` chooses connection space first, `curve` then processes projected points, and `closed` only decides end-to-start topology       |
-| Lower               | Every continuous segment becomes a core `Path`; series form child layers, and `anchorId` additionally creates referenceable core `Coordinate` vertices |
+Points, paths, and intervals relate to the coordinate system through the geometry they represent:
 
-Series child layers preserve the same semantic grouping across renderers; missing values can further split each series into one or more continuous Path segments.
+- **A point mark represents a position**: the coordinate system places the point, while its circle, rectangle, or text keeps its own shape without bending under the coordinate mapping. Orientation alignment can additionally use coordinate directions to rotate the node.
+- **A path mark represents a line**: the coordinate system can determine both the positions and the route between them. In continuous polar coordinates, `polar` interpolation between two positions with the same radius and different angles follows the circle through intermediate angles. With `chord` interpolation, the projected endpoints are connected directly by a chord.
+- **An interval mark represents an area**: the coordinate system affects the boundary and shape of the whole region. A rectangular interval in Cartesian coordinates can become a sector or annular sector in polar coordinates. Both interval and path marks map geometry into coordinate space: a path describes the course of a line, while an interval describes the extent of an area. A path can also be closed and filled, but its boundary still comes from the connection route.
 
-`fill` only paints an existing closed boundary; it does not close an open path. When missing values create multiple continuous segments, each segment closes and fills independently instead of spanning the gap.
+A path mark therefore needs the connections between several positions. Series grouping, sorting, and missing-value segmentation determine where each path starts, which positions it visits, and where it ends. Once the coordinate system and interpolation strategy determine the route, PathMark converts it into steps for the underlying [Path](/kernel/components/path/step), which handles compilation and rendering.
 
-`polar` samples neighboring points in angular / radial output space before projecting those samples to the screen. `chord` keeps only the projected vertices. `curve` then processes the screen points, so polar interpolation, topology closure, and the screen-space curve remain three separate choices. An explicit `interpolation` outside polar2D fails loudly.
+The flow starts with data rows and follows the main path-generation stages:
+
+<ComponentPreview files="path-resolution-flow" hideCode type="flow" size="md" />
+
+1. **Group and sort**: group by `series` or implicit color, then sort each group by `order`; preserve row order when no sorting field is set.
+2. **Check positions and split runs**: check whether each row can project. Depending on `connectNulls`, break, bridge, or skip missing positions. Baseline closure also requires valid lower-boundary positions.
+3. **Generate path points**: Cartesian and chord connections use projected points directly. Polar interpolation samples between angles and radii, including the closing segment when needed.
+4. **Connect and close**: `curve` converts screen points to straight or curved steps; `closure` supplies the chosen return boundary.
+5. **Create Paths**: create Paths for runs and gap bridges, then apply style and labels. Series keep separate groups. With `anchorId`, valid data vertices also produce addressable Coordinates.
+6. **Compile and render**: the underlying Path resolves steps into Scene geometry for SVG or Canvas output.
 
 <SourceLinks
   sources={[
     {
-      label: 'polar2D Path inheritance, override, and closed-seam sampling',
+      label: 'Ordering, segmentation, and Path generation',
       path: 'packages/viz/plot/src/providers/mark/features/path.ts',
-      startLine: 327,
-      endLine: 359,
     },
-    {
-      label: 'Order rows, detect missing values, and split continuous segments',
-      path: 'packages/viz/plot/src/providers/mark/features/path.ts',
-      startLine: 409,
-      endLine: 449,
-    },
-    {
-      label: 'Build cycle, baseline, and stack closures',
-      path: 'packages/viz/plot/src/providers/mark/features/path.ts',
-      startLine: 480,
-      endLine: 606,
-    },
-    {
-      label: 'Path series, continuous segments, and core Path creation',
-      path: 'packages/viz/plot/src/providers/mark/features/path.ts',
-      startLine: 738,
-      endLine: 828,
-    },
-    {
-      label: 'Coordinate validation and anchor Coordinate creation',
-      path: 'packages/viz/plot/src/providers/mark/features/path.ts',
-      startLine: 830,
-      endLine: 909,
-    },
+    { label: 'Polar interpolation', path: 'packages/viz/plot/src/providers/coordinate/features/polar/definition.ts' },
   ]}
 />
 
+### Path sampling
+
+In polar coordinates, projecting two data positions and connecting them directly produces a straight line. To follow changes in angle and radius, the path first adds intermediate positions and then projects each one.
+
+Consider two positions whose scale outputs are “0°, radius 100” and “90°, radius 100”. With `polar` interpolation, path generation proceeds as follows:
+
+1. **Read angle and radius**: apply the scales to obtain each endpoint's angle and drawing radius. Sampling operates on these mapped values.
+2. **Add intermediate positions**: divide the segment evenly and interpolate angle and radius linearly at each subdivision. Here the radius stays at 100 while the angle increases from 0° to 90°. When endpoint radii differ, the radius changes as well.
+3. **Project into drawing space**: convert each intermediate position to screen coordinates. In this example, all points lie on the same quarter circle.
+4. **Connect the samples**: the default `curve="linear"` approximates the arc with short straight segments. Other `curve` settings generate steps using their respective connection algorithms. Polar sampling and smoothing through points are therefore two successive stages.
+
+The straight-connection branch needs no intermediate coordinate samples: Cartesian coordinates and polar `chord` interpolation project the original positions directly, producing straight segments when `curve="linear"`. Categorical angle scales default to chord connections; continuous angle scales default to polar sampling. For closed paths, polar sampling also covers the segment from the last position back to the first.
+
+The following figure compares a direct chord with sampled connections between the same endpoints:
+
+<ComponentPreview files="path-sampling" hideCode type="illustration" size="lg" />
+
+Orange dots are the original endpoints, blue dots are added samples, and the gray dotted line is the reference arc. The right panel uses few samples to make the short straight segments visible; this illustrative count does not represent the runtime sample count.
+
+The current `polar` branch uses a fixed sample count. It does not detect straight segments individually or adapt sample density to curvature. For example, endpoints with the same angle and different radii form a radial straight line, but this branch still generates intermediate samples.
+
+The default polar connection depends on what the angle axis represents:
+
+- **Discrete angles default to straight connections**: each angle represents a separate category, such as “speed, strength, endurance” in a radar chart. There is no intermediate category to interpolate between adjacent categories. Connecting the projected data positions directly emphasizes their values and comparisons, producing the familiar polygonal radar outline.
+- **Continuous angles default to sampled connections**: intermediate positions on the angle axis are meaningful. For example, angles vary continuously between 0° and 90°. Interpolating angle and radius before projection follows that angular progression; two positions with the same radius follow the circle instead of taking a straight shortcut.
+
+These are defaults chosen from the angle scale, not restrictions imposed by the coordinate system. Set `interpolation` explicitly to choose `chord` or `polar`. The `curve` option still determines how the resulting samples are connected.
+
 ## API Reference
 
-This table keeps only PathMark-specific props and props whose meaning is redefined here. See [channel bindings](/viz/plot/channel/binding) for field and constant inputs, [transforms](/viz/plot/transform) for local `transform` and layer props, and [coordinates](/viz/plot/coordinate) for coordinate-view props. Shared stroke, fill, marks, dash, corner, and shadow props follow [Path styling](/kernel/components/path/step#styling) and are not duplicated here.
+`PathMarkProps` is exported by `@retikz/plot-react` and reuses `InputPlotPathMark` from `@retikz/plot-vanilla`. Members are grouped by purpose. `—` means the declaration has no field-level default; runtime defaults are explained above. Source IR fields and constraints reuse `PathMarkSchema` from the [mark contract reference](/viz/plot/reference/mark).
 
-| Prop             | Type                                                                                                                                      | Default                                                                       | Description                                                                                                                                                                                  |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id?`            | `string`                                                                                                                                  | —                                                                             | Mark handle; required with `resolveLabel`                                                                                                                                                    |
-| `x` / `y`        | `PathMarkProps['x']`                                                                                                                      | Required                                                                      | Trajectory position roles; cartesian2D uses planar positions and polar2D uses angular / radial positions                                                                                     |
-| `order?`         | `PathMarkProps['order']`                                                                                                                  | Data order                                                                    | Connection order within each series                                                                                                                                                          |
-| `series?`        | `PathMarkProps['series']`                                                                                                                 | —                                                                             | Split rows into independent paths                                                                                                                                                            |
-| `color?`         | `PathMarkProps['color']`                                                                                                                  | `series`                                                                      | Path color field; a categorical color field can also split series when `series` is absent                                                                                                    |
-| `curve?`         | <ApiValues name="PathCurve" />                                                                                                            | `linear`                                                                      | Connection between adjacent points; `monotoneX` / `monotoneY` fall back to `linear` under polar2D                                                                                            |
-| `interpolation?` | <ApiValues name="PolarInterpolation" />                                                                                                   | Coordinate default                                                            | polar2D connection space: `polar` interpolates angle / radius before projection, while `chord` connects projected vertices directly                                                          |
-| `connectNulls?`  | boolean or stroke object                                                                                                                  | `false`                                                                       | Open unfilled paths use configurable dashed bridges; closed or filled paths accept boolean only                                                                                              |
-| `closed?`        | `boolean`                                                                                                                                 | cartesian2D: `false`<br />polar2D: `true`                                     | Join the last point back to the first                                                                                                                                                        |
-| `closure?`       | `IRPlotPathClosure`<br />- `kind: 'cycle' \| 'baseline' \| 'stack'`<br />- `baseline?: number`<br />- `baselineField: PathMarkProps['x']` | —<br />Required<br />0 or the domain edge nearest 0<br />Required for `stack` | Build a fillable boundary<br />Choose cycle, constant baseline, or per-row baseline<br />Constant lower boundary used only by `baseline`<br />Per-row lower-bound field used only by `stack` |
-| `label?`         | `PathMarkProps['label']`                                                                                                                  | —                                                                             | Path or segment labels; content and placement fields follow the TypeScript `PathMarkProps['label']` contract                                                                                 |
-| `resolveLabel?`  | `(row: ExternalRow) => string`                                                                                                            | —                                                                             | Runtime label resolver; excluded from IR and requires `id`                                                                                                                                   |
-| `anchorId?`      | `IRPlotAnchorId`                                                                                                                          | —                                                                             | Generate a stable core Coordinate id for each valid path vertex                                                                                                                              |
+{/* @include viz/plot/mark/path/generated */}
 
-## Related
+## Further reading
 
-- [PointMark](/viz/plot/mark/point) — overlay a marker at every observation
-- [Coordinates](/viz/plot/coordinate) — how cartesian2D / polar2D interpret position roles
-- [Path](/kernel/components/path/step) — styling, steps, and endpoint marks after lowering
+<LinkedSections
+  items={[
+    { title: 'PointMark', description: 'Add nodes at the data positions of a path.', url: '/viz/plot/mark/point' },
+    {
+      title: 'Coordinates',
+      description: 'Understand projection and polar interpolation.',
+      url: '/viz/plot/coordinate',
+    },
+    { title: 'Path', description: 'Look up path steps, styles, and arrows.', url: '/kernel/components/path/step' },
+  ]}
+/>

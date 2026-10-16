@@ -1,3 +1,4 @@
+import type { Side } from '@retikz/core';
 import { PathMark, Plot, PlotAxis } from '@retikz/plot-react';
 
 import { climate } from './line-series.data';
@@ -8,6 +9,11 @@ export type LineSeriesPreviewValues = {
   grouping: 'color' | 'series' | 'none';
   showLabels: boolean;
   closed: boolean;
+  position: number;
+  side: Side | 'auto';
+  sloped: boolean;
+  interrupt: boolean;
+  distance: number;
 };
 
 /** 绘制示例图形 */
@@ -26,7 +32,16 @@ export const LineSeriesPreview = (values: LineSeriesPreviewValues) => {
         series={grouping === 'series' ? 'city' : undefined}
         color={grouping === 'color' ? 'city' : undefined}
         label={
-          grouped && values.showLabels ? { field: 'city', position: 'near-end', side: 'top', distance: 6 } : undefined
+          grouped && values.showLabels
+            ? {
+                field: 'city',
+                position: values.position,
+                ...(values.side === 'auto' ? {} : { side: values.side }),
+                sloped: values.sloped,
+                interrupt: values.interrupt,
+                distance: values.distance,
+              }
+            : undefined
         }
         closed={coordinate === 'polar2D' && values.closed}
       />

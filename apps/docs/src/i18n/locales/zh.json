@@ -389,7 +389,7 @@
     "grammarPositionAdjustment": "位置调整",
     "grammarGuide": "辅助",
     "compMark": "图元",
-    "compPathMark": "路径",
+    "compPathMark": "PathMark · 路径图元",
     "compPointMark": "PointMark · 点图元",
     "compIntervalMark": "区间",
     "compReferenceMark": "参考",

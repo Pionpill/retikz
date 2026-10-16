@@ -1,48 +1,161 @@
 ---
-title: PathMark
-description: PathMark 是有序点形成的一维轨迹；折线、闭合路径、多系列线和雷达线框都是它在不同配置下的表现形态。
+title: PathMark · 路径图元
+description: 用 PathMark 按顺序连接数据位置，绘制折线、多系列路径、极坐标轮廓和闭合区域。
 ---
 
-`<PathMark>` 为一组数据行生成一条 1D 轨迹。它先把每行数据投影成点，再按 `order` 排序并连接成 core `Path`；在 cartesian2D 下常表现为折线，在 polar2D 下可以表现为极坐标路径或雷达线框。
+`PathMark` 把多行数据的位置按顺序连成路径。`x`、`y` 决定路径经过哪里，`order` 决定先连哪个点，`series` 可以把数据拆成多条独立路径。折线、雷达轮廓和闭合区域都可以用它表达。
 
-`x` / `y` 绑定位置通道，`order` 决定连接顺序，`series` 决定是否拆成多条路径，`curve` 决定相邻点的连接方式，`closure` 决定路径是否按 baseline 或首尾闭合。当前 PathMark 支持二维笛卡尔坐标系和二维极坐标系。
+本页从一条折线开始，再介绍分组、曲线、闭合和缺失值。字段绑定见[通道绑定](/viz/plot/channel/binding)，安装和宿主接入见[快速开始](/viz/plot/get-start)。
 
-## 用法
+## 接入方式
 
-```tsx
-import { PathMark, Plot } from '@retikz/plot-react';
+下面按月份连接三条营收记录。显式设置 `order="month"` 后，即使交换数据行的位置，连线仍按月份前进。
+
+<ComponentPreview mode="showcase" files={['path-entry', 'path-entry.data.ts']} hideCode size="md" />
+
+在 HTML 中准备 `<div id="plot"></div>`，选择以下任一入口。React JSX 中的组件层级为：
+
+```text
+Plot
+├── PathMark
+└── PlotAxis
 ```
 
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
 ```tsx
-<Plot data={revenue}>
-  <PathMark x="month" y="revenue" order="month" />
-</Plot>
+import { PathMark, Plot, PlotAxis } from '@retikz/plot-react';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { month: 1, revenue: 30 },
+  { month: 2, revenue: 50 },
+  { month: 3, revenue: 40 },
+];
+
+createRoot(document.getElementById('plot')!).render(
+  <Plot data={rows} width={360} height={220}>
+    <PathMark x="month" y="revenue" order="month" />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" />
+  </Plot>,
+);
 ```
 
-`order` 推荐显式写。否则 PathMark 会按数据数组顺序连点，只要数据排序变化，路径形状也会变化。
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
-### 何时使用
+```tsx
+import type { IRPlot } from '@retikz/plot';
+import { Plot } from '@retikz/plot-react';
+import { createRoot } from 'react-dom/client';
 
-PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D 轨迹。它不关心这条轨迹最终被命名为折线图、趋势线、轮廓线还是雷达线框；这些都是表现层对同一个 PathMark 的解释。
+const rows = [
+  { month: 1, revenue: 30 },
+  { month: 2, revenue: 50 },
+  { month: 3, revenue: 40 },
+];
 
-表现层的差异主要来自三类配置：位置通道决定点从哪里来，系列通道决定拆成几条线，几何属性决定路径只是闭合线框，还是闭合成可填充区域。
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { name: 'x', type: 'linear' },
+    { name: 'y', type: 'linear' },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' }],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
 
-| 表现形态 | 关键属性            | 说明                                                                             |
-| -------- | ------------------- | -------------------------------------------------------------------------------- |
-| 折线     | `x` / `y` / `order` | 每行投影成点，按顺序连接成一条轨迹                                               |
-| 多系列线 | `series` / `color`  | 先按系列拆分数据，再分别生成多条路径                                             |
-| 雷达线框 | `polar2D`           | 极坐标下默认首尾相接；需要开放路径时写 `closed={false}`                          |
-| 路径区域 | `closure` / `fill`  | 按首尾、常量 baseline 或逐行 stack baseline 闭合路径；显式设置 `fill` 后填充结果 |
+createRoot(document.getElementById('plot')!).render(<Plot spec={spec} data={{ rows }} width={360} height={220} />);
+```
 
-## 例子
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-以下示例从排序、系列、连接、闭合与缺失值分别展示 PathMark。支持坐标切换的试验场中，极坐标仍以 `x` 表示角向位置、`y` 表示径向位置；`closed` 只决定是否首尾连接，不决定相邻位置使用圆弧还是直线弦。
+```ts
+import { plot, renderPlot } from '@retikz/plot-vanilla';
 
-### 基础用法
+const rows = [
+  { month: 1, revenue: 30 },
+  { month: 2, revenue: 50 },
+  { month: 3, revenue: 40 },
+];
 
-`x` / `y` 决定路径经过哪些点，`order` 决定连接顺序。示例数据刻意打乱了月份行；切换“连接顺序”可以比较显式排序与数据数组顺序。
+const spec = plot({
+  data: { reference: 'rows' },
+  scales: [
+    { name: 'x', type: 'linear' },
+    { name: 'y', type: 'linear' },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' }],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+});
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRPlot } from '@retikz/plot';
+import { renderPlot } from '@retikz/plot-vanilla';
+
+const rows = [
+  { month: 1, revenue: 30 },
+  { month: 2, revenue: 50 },
+  { month: 3, revenue: 40 },
+];
+
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { name: 'x', type: 'linear' },
+    { name: 'y', type: 'linear' },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' }],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
+
+### 位置与顺序
+
+`x`、`y` 是位置字段，`order` 是排序字段。例如 `x="month"`、`y="revenue"`、`order="month"` 表示按月份连接营收位置。省略 `order` 时沿用数据数组顺序，PathMark 不会自动按横坐标排序。
+
+示例故意打乱月份行。切换“连接顺序”，比较折返的路径与按月排列的路径；坐标切换后，极坐标中的 `x` 表示角向、`y` 表示径向。
+
+| 属性              | 含义     | 说明                                                                 |
+| ----------------- | -------- | -------------------------------------------------------------------- |
+| `x`、`y`          | 位置字段 | 指定字段名或字段路径；笛卡尔坐标对应横向和纵向，极坐标对应角向和径向 |
+| `order`           | 连接顺序 | 按字段排序后连线；省略时保留数据数组顺序                             |
+| `Plot.coordinate` | 坐标系   | 决定位置含义；示例在 `cartesian2D` 与 `polar2D` 之间切换             |
 
 <ComponentPreview
+  mode="showcase"
   files={['line-basic', 'line-basic.preview.tsx', 'line-basic.data.ts']}
   controls={{ name: 'line-basic' }}
   size="lg"
@@ -52,9 +165,21 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 ### 系列与标签
 
-`series` 会先把数据拆成多组，再让每组独立排序和连接；不写 `series`、只给 `color` 一个分类字段时，也会按颜色字段隐式拆分路径。系列标签直接挂在各自的路径几何上，不需要额外创建文本图层。
+多家门店的数据混在一起时，用 `series` 指定门店字段，每家门店分别排序、连线。`color` 绑定分类字段可以区分颜色；省略 `series` 时，分类颜色字段也会拆分路径。未指定 `color` 时，颜色跟随 `series`。
+
+`label` 沿路径几何放置标签。示例可切换单条路径、显式系列和按颜色拆分，并开关系列标签。
+
+| 属性           | 含义     | 说明                                                                    |
+| -------------- | -------- | ----------------------------------------------------------------------- |
+| `series`       | 系列字段 | 按字段值拆分独立路径，各系列内部单独排序                                |
+| `color`        | 分类颜色 | 按分类字段着色；没有 `series` 时也按此字段拆分路径，省略时跟随 `series` |
+| `label`        | 路径标签 | 支持单个或多个标签，沿路径几何放置                                      |
+| `resolveLabel` | 标签回调 | 运行时生成标签文字，需同时提供图元 `id`；不存入 IR                      |
+
+标签位置用 `0–1` 表示沿路径的比例。所在侧选“自动”时，不旋转的标签位于上方；开启“沿路径旋转”后，标签居中沿切向摆放，此时切换“截断路径”可以观察文字下方的路径缺口。截断影响描边，不会截短文字。显式选择所在侧后，可用偏移距离把标签移到路径旁。
 
 <ComponentPreview
+  mode="showcase"
   files={['line-series', 'line-series.preview.tsx', 'line-series.data.ts']}
   controls={{ name: 'line-series' }}
   size="lg"
@@ -64,9 +189,21 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 ### 连接与样式
 
-`curve` 决定相邻点如何连接，描边色、线宽、虚线和透明度只改变路径外观。灰色数据点是固定参照，可以帮助判断曲线是否穿过原始位置；`monotoneX` / `monotoneY` 在 polar2D 下会降级为 `linear`。
+`curve` 决定相邻点如何连接。直线和阶梯线强调观测间的变化，平滑曲线改变点之间的走向；不同曲线不一定都穿过原始点。灰色数据点仅用于比较曲线和原始位置。
+
+描边色、线宽、虚线和透明度控制路径外观。极坐标下 `monotoneX`、`monotoneY` 按 `linear` 处理。
+
+| 属性          | 含义     | 说明                                                                                      |
+| ------------- | -------- | ----------------------------------------------------------------------------------------- |
+| `curve`       | 连接方式 | 默认 `linear`；可选择阶梯或平滑曲线。极坐标中的 `monotoneX`、`monotoneY` 按 `linear` 处理 |
+| `stroke`      | 描边颜色 | 支持字段或常量；需要强制常量时使用 `{ kind: 'constant', value }`                          |
+| `strokeWidth` | 描边宽度 | 支持常量或字段映射，值非负                                                                |
+| `dashPattern` | 虚线间隔 | 数值数组交替指定实线段与间隔长度；示例的虚线开关控制此属性                                |
+| `opacity`     | 透明度   | 控制整体或填充、描边的不透明度                                                            |
+| `closed`      | 首尾连接 | 是否把末点连回首点；不决定两点之间采用哪种曲线                                            |
 
 <ComponentPreview
+  mode="showcase"
   files={['line-curve', 'line-curve.preview.tsx', 'line-curve.data.ts']}
   controls={{ name: 'line-curve' }}
   size="lg"
@@ -74,22 +211,24 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
   defaultSourceFile="line-curve.preview.tsx"
 />
 
-### 极坐标插值
-
-`polar2D` 根据角向比例尺连续性推断 coordinate 默认插值：连续值使用 `polar`，离散值使用 `chord`。此处左右图各自继承自己的 coordinate：左图默认 `chord`，右图默认 `polar`，因此路径和网格始终使用同一连接空间。
-
-<ComponentPreview
-  files={['line-radar', 'line-radar.preview.tsx', 'line-radar.data.ts']}
-  size="lg"
-  caption="分别切换左右图的坐标插值，观察路径和网格如何一起在圆弧与直线弦之间切换。"
-  defaultSourceFile="line-radar.preview.tsx"
-/>
+## 扩展用法
 
 ### 闭合与填充
 
-开放路径只描绘轨迹；`cycle` 让末点回连首点，`baseline` 再把路径返回到固定基线。`closure` 只构造可填充边界，仍需显式设置 `fill` 才能看到区域。
+`closed` 决定是否把末点连回首点：笛卡尔坐标默认开放，极坐标默认闭合。需要指定区域的下边界时使用 `closure`，再用 `fill` 设置填充颜色。
+
+下面比较开放路径、首尾闭合和固定基线。`baseline` 省略时，值轴 domain 包含 0 就使用 0，否则使用离 0 最近的边界。
+
+| 属性                    | 含义         | 说明                                                            |
+| ----------------------- | ------------ | --------------------------------------------------------------- |
+| `closed`                | 首尾连接     | 笛卡尔坐标默认 `false`，极坐标默认 `true`                       |
+| `closure`               | 闭合边界     | `cycle` 回到首点，`baseline` 回到固定基线，`stack` 回到逐行基线 |
+| `closure.baseline`      | 固定基线值   | 仅 `baseline` 使用；省略时取 0 或离 0 最近的值域边界            |
+| `closure.baselineField` | 逐行基线字段 | `stack` 必填，指定每行下边界的字段                              |
+| `fill`                  | 区域填充     | 设置闭合区域的颜色或 Paint；`none` 隐藏填充                     |
 
 <ComponentPreview
+  mode="showcase"
   files={['line-closure', 'line-closure.preview.tsx', 'line-closure.data.ts']}
   controls={{ name: 'line-closure' }}
   size="lg"
@@ -97,13 +236,22 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
   defaultSourceFile="line-closure.preview.tsx"
 />
 
-`baseline` 省略时会跟随值轴：0 在 domain 内时使用 0，否则使用离 0 最近的 domain 边界。逐行堆叠下边界则使用 `closure={{ kind: 'stack', baselineField: ... }}`。
-
 ### 缺失值处理
 
-某一行无法投影成有效点时，PathMark 默认在这里断开，并把前后连续数据分别生成 core `Path`。开放且无填充的路径中，`connectNulls: true` 或 `{}` 仅用默认虚线 `[6, 4]` 连接缺口两侧有效点，正常段保持原样式。对象可覆盖缺值段的 `stroke`、`strokeWidth`、`strokeOpacity`、`dashPattern`、`dashOffset`、`lineCap`、`lineJoin`。连续缺值只生成一个桥接，首尾缺值不外推。闭合、closure 与填充路径仅接受 boolean，保留整体跨空连接的行为。
+数据行无法投影成有效位置时，默认在这里断开。开放且无填充的路径设置 `connectNulls` 后，用虚线连接缺口两侧的有效点，正常段保持原来的样式。
+
+`connectNulls={true}` 和 `connectNulls={{}}` 都使用默认虚线 `[6, 4]`；对象可以单独设置缺口的描边属性。连续多个缺值只桥接一次，首尾缺值不外推。
+
+闭合、设置了 `closure` 或带填充的路径只接受 boolean，此时 `true` 将有效点连成整体，不另画虚线桥接。下面的填充开关叠加了一个基线闭合图层：填充区域按整体连接，原来的开放描边仍用虚线标记缺口。
+
+| 属性                        | 含义           | 说明                                                                                                                          |
+| --------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `connectNulls`              | 跨缺值连接     | 默认 `false`。开放无填充路径中，`true` 或 `{}` 使用默认虚线 `[6, 4]` 桥接缺口                                                 |
+| `connectNulls` 描边对象     | 缺口样式       | 可设置 `stroke`、`strokeWidth`、`strokeOpacity`、`dashPattern`、`dashOffset`、`lineCap`、`lineJoin`；仅用于开放且无填充的路径 |
+| `closed`、`closure`、`fill` | 连接行为的条件 | 闭合、配置闭合边界或带填充时，`connectNulls` 只接受 boolean，连接全部有效点而不另画桥接段                                     |
 
 <ComponentPreview
+  mode="showcase"
   files={['line-interruption', 'line-interruption.preview.tsx', 'line-interruption.data.ts']}
   controls={{ name: 'line-interruption' }}
   size="lg"
@@ -111,86 +259,117 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
   defaultSourceFile="line-interruption.preview.tsx"
 />
 
-## 技术原理
+### 极坐标插值
+
+极坐标将 `x` 映射为角度、`y` 映射为半径。两个端点位置相同，连接它们的路线仍可能不同：
+
+| 插值    | 两点之间如何连接                                       |
+| ------- | ------------------------------------------------------ |
+| `chord` | 直接连接屏幕上的两个投影点                             |
+| `polar` | 在角度与半径之间补充位置，再逐个投影；同半径时形成圆弧 |
+
+默认插值由坐标系决定：连续角轴使用 `polar`，离散角轴使用 `chord`。PathMark 的 `interpolation` 可覆盖本条路径的选择；网格仍使用坐标系设置。下面两图显式设置不同的坐标插值，因此切换时路径与网格一起变化。
+
+| 属性                            | 含义         | 说明                                                                                               |
+| ------------------------------- | ------------ | -------------------------------------------------------------------------------------------------- |
+| `Plot.coordinate.interpolation` | 坐标插值     | `chord` 直连投影点；`polar` 在角度和半径之间采样后投影。连续角轴默认 `polar`，离散角轴默认 `chord` |
+| `interpolation`                 | 路径插值覆盖 | 仅适用于 `polar2D`；省略时继承坐标系，显式值只影响当前路径                                         |
+| `closed`                        | 首尾连接     | 控制是否补上末点到首点的连接；与插值方式独立                                                       |
+
+<ComponentPreview
+  mode="showcase"
+  files={['line-radar', 'line-radar.preview.tsx', 'line-radar.data.ts']}
+  controls={{ name: 'line-radar' }}
+  size="lg"
+  caption="分别切换左右图的坐标插值，观察路径和网格如何一起在圆弧与直线弦之间切换。"
+  defaultSourceFile="line-radar.preview.tsx"
+/>
+
+## 错误与限制
+
+- 内置二维笛卡尔与极坐标支持路径及闭合区域；通用坐标帧只支持未设置 `closure` 且 `closed` 不为 `true` 的开放路径。
+- `interpolation` 只能用于极坐标；其他坐标系下显式设置会报错。
+- `color` 用于分类颜色，不接受连续或时间字段。
+- 闭合或填充路径不能给 `connectNulls` 传描边对象；改用 boolean。
+- 一段路径需要至少两个有效位置；孤立点应使用 [PointMark](/viz/plot/mark/point) 展示。
+- `resolveLabel` 是运行时回调，必须同时提供图元 `id`，不会存入 Source IR。
+
+## 实现原理
 
 <ComponentAlert
   type="tip"
-  title="上手阶段可跳过本节"
-  description="需要排查系列拆分、缺失值中断、极坐标默认闭合或 anchorId 产物时再回来读。"
+  title="阅读提示"
+  description="本节解释路径如何生成，仅使用组件时可跳过，直接查阅后面的 API 参考。"
 />
 
-`<PathMark>` 进入 `IRPlot` 后由 mark registry 分派给 path lowering。它只接受 cartesian2D 与 polar2D，因为这两类坐标帧能为有序位置角色提供路径轨迹；不支持的坐标系会直接报错。
+### 路径解析
 
-| 阶段       | 可观察行为                                                                                                   |
-| ---------- | ------------------------------------------------------------------------------------------------------------ |
-| 排序与分组 | 先按 `series` 拆路径，再按 `order` 排序；没有 `series` 时，分类 `color` 可隐式拆成多条路径                   |
-| 投影与分段 | 每行投影成一个点；无效点默认切断连续段，`connectNulls` 才会跨过缺口                                          |
-| 连接与闭合 | polar2D 的 `interpolation` 先决定连接空间，`curve` 再作用于投影点；`closed` 只决定首尾是否相接               |
-| 下沉       | 每个连续段生成 core `Path`，系列形成独立子层；设置 `anchorId` 时，有效顶点另外生成可引用的 core `Coordinate` |
+点、路径和区间图元与坐标系的关系，可以从它们各自表达的几何理解：
 
-系列子层在不同 renderer 中保持同一语义分组；缺失值还会把每个系列进一步拆成一个或多个连续 Path 段。
+- **点图元表达一个位置**：坐标系负责把点放到对应位置，点上的圆、矩形或文字保持自身形状，不会随坐标映射弯曲。方向对齐可以额外借用坐标系方向旋转节点。
+- **路径图元表达一条线**：坐标系不仅决定各个点的位置，还可能决定点之间的连接路线。例如在连续极坐标中，采用 `polar` 插值连接两个半径相同、角度不同的位置时，路径沿圆周经过中间角度；采用 `chord` 插值时，则直接连接投影后的端点，形成弦。
+- **区间图元表达一块面**：坐标系影响整个区域的边界和形状，例如直角坐标中的矩形区间，在极坐标中可以成为扇区或环形扇区。它与路径图元都需要将几何映射到坐标空间，区别在于路径描述线的走向，区间描述面的范围。路径也可以闭合并填充，但仍由连接路线生成边界。
 
-`fill` 只决定已经闭合的路径是否可见填充，不会自动创建闭合边界。缺失值产生多个连续段时，每段分别闭合和填充，不会跨过空档。
+因此，路径图元需要知道多个位置之间的连接关系。一组数据经过分系列、排序和缺值分段后，才能确定从哪里起笔、经过哪些位置、在哪里结束。坐标系与插值策略确定连接路线后，PathMark 将结果转换为底层 [Path](/kernel/components/path/step) 的路径步骤，由 Path 编译并渲染。
 
-`polar` 会在角度 / 半径输出空间采样相邻点，再把采样结果投影到屏幕；`chord` 直接保留投影顶点。`curve` 随后处理屏幕点，因此它与极坐标插值、拓扑闭合是三个独立选择。显式 `interpolation` 只能用于 polar2D，否则会直接报错。
+下面从一组行数据开始，展示路径生成的主要过程：
+
+<ComponentPreview files="path-resolution-flow" hideCode type="flow" size="md" />
+
+1. **分系列、排序**：按 `series` 或隐式颜色分组，各组再按 `order` 排序；没有排序字段时保留行顺序。
+2. **检查位置、拆段**：判断每行能否投影，按 `connectNulls` 决定断开、桥接或跳过缺值；基线闭合还需要下边界有效。
+3. **生成路径点**：笛卡尔和弦插值直接使用投影点；极坐标 `polar` 在相邻角度与半径之间采样，包括需要闭合的最后一段。
+4. **连接、闭合**：`curve` 把屏幕点转换为直线或曲线步骤，`closure` 按选择补齐返回边界。
+5. **生成 Path**：为连续段与缺口桥接生成 Path，应用样式和标签。系列保留各自的分组；配置 `anchorId` 时，有效数据顶点还生成可引用的 Coordinate。
+6. **编译与渲染**：底层 Path 将步骤解析为 Scene，再由 SVG 或 Canvas 输出。
 
 <SourceLinks
   sources={[
-    {
-      label: 'polar2D Path 继承或覆盖插值并在闭合边上采样',
-      path: 'packages/viz/plot/src/providers/mark/features/path.ts',
-      startLine: 327,
-      endLine: 359,
-    },
-    {
-      label: '排序、缺失值判断与连续段拆分',
-      path: 'packages/viz/plot/src/providers/mark/features/path.ts',
-      startLine: 409,
-      endLine: 449,
-    },
-    {
-      label: 'cycle、baseline 与 stack 闭合路径构造',
-      path: 'packages/viz/plot/src/providers/mark/features/path.ts',
-      startLine: 480,
-      endLine: 606,
-    },
-    {
-      label: 'PathMark 系列拆分、连续段与 core Path 生成',
-      path: 'packages/viz/plot/src/providers/mark/features/path.ts',
-      startLine: 738,
-      endLine: 828,
-    },
-    {
-      label: '坐标系校验与 anchor Coordinate 生成',
-      path: 'packages/viz/plot/src/providers/mark/features/path.ts',
-      startLine: 830,
-      endLine: 909,
-    },
+    { label: '排序、分段与 Path 生成', path: 'packages/viz/plot/src/providers/mark/features/path.ts' },
+    { label: '极坐标插值', path: 'packages/viz/plot/src/providers/coordinate/features/polar/definition.ts' },
   ]}
 />
 
+### 路径采样
+
+在极坐标中，只把两个数据位置投影到屏幕再连线，得到的是一条直线。要让路径沿着角度和半径的变化弯曲，需要先在两个位置之间补充中间点，再逐个投影。
+
+例如，两个位置经过尺度映射后分别为“0°、半径 100”和“90°、半径 100”。采用 `polar` 插值时，生成路径的过程如下：
+
+1. **取得角度与半径**：先经过尺度映射，得到两个端点的角度和绘图半径，采样在这些映射后的值之间进行。
+2. **补充中间位置**：将这一段等分，在每个分点分别对角度和半径做线性插值。本例半径始终为 100，角度从 0° 逐步增加到 90°；如果两端半径不同，半径也随之变化。
+3. **投影到绘图空间**：把每个中间位置转换为屏幕坐标。本例得到的点都落在同一个四分之一圆周上。
+4. **连接采样点**：默认 `curve="linear"` 用多条短直线逼近圆弧；选择其他 `curve` 时，再按对应连接算法生成路径步骤。因此，极坐标采样与过点平滑是先后两个阶段。
+
+对于走直线连接分支的情况，不需要补充这些中间点：笛卡尔坐标或极坐标 `chord` 插值直接投影原始位置，在 `curve="linear"` 时绘制为直线段。分类角轴默认使用弦连接，连续角轴默认使用极坐标采样；需要闭合时，极坐标采样也覆盖末点返回首点的一段。
+
+下图使用相同的两个端点，对比直接连弦与补点后的连接结果：
+
+<ComponentPreview files="path-sampling" hideCode type="illustration" size="lg" />
+
+橙点是原始端点，蓝点是补充的采样点，灰色点线是圆弧参考。右图用少量采样点突出短直线的连接方式，点数仅为教学示意，不代表实际采样数量。
+
+目前 `polar` 分支按固定数量采样，没有逐段检测是否退化为直线，也不会根据曲率自适应调整采样密度。例如两端角度相同、只有半径变化时，虽然结果是一条径向直线，当前仍会生成中间采样点。
+
+极坐标的默认连接方式取决于角度轴表达的含义：
+
+- **离散角度默认直线连接**：每个角度代表一个独立类别，例如雷达图中的“速度、力量、耐力”。相邻类别之间没有可插值的中间类别，直接连接投影后的数据位置，可以突出各类别的数值及其对比，形成雷达图常见的折线轮廓。
+- **连续角度默认采样连接**：角度轴上的中间位置也有意义，例如从 0° 到 90° 之间存在连续的角度。对角度和半径插值后再投影，才能表现沿角度变化的路径；同半径的两个位置由此沿圆周连接，而不会被一条直线抄近路。
+
+这是根据角度尺度选择的默认策略，不是坐标系的强制限制。可以通过 `interpolation` 显式选择 `chord` 或 `polar`；采样后的点如何连接，仍由 `curve` 决定。
+
 ## API 参考
 
-下面只列 PathMark 特有或在本页重新定义语义的属性。字段与常量绑定见[通道绑定](/viz/plot/channel/binding)，局部 `transform` 与图层属性见[变换](/viz/plot/transform)，坐标视图相关属性见[坐标系](/viz/plot/coordinate)。描边、填充、箭头、虚线、圆角、阴影等共享属性沿用 [Path 样式](/kernel/components/path/step#样式)，不在这里重复。
+`PathMarkProps` 从 `@retikz/plot-react` 导出，复用 `@retikz/plot-vanilla` 的 `InputPlotPathMark`。下表按用途分组；`—` 表示声明没有字段级默认值，实际缺省行为见上文。Source IR 的字段与约束复用[图元契约参考](/viz/plot/reference/mark)中的 `PathMarkSchema`。
 
-| 属性             | 类型                                                                                                                                      | 默认值                                                     | 描述                                                                                                                          |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `id?`            | `string`                                                                                                                                  | —                                                          | mark 句柄；使用 `resolveLabel` 时必填                                                                                         |
-| `x` / `y`        | `PathMarkProps['x']`                                                                                                                      | 必填                                                       | 轨迹的位置角色字段；cartesian2D 解释为平面位置，polar2D 解释为角向与径向                                                      |
-| `order?`         | `PathMarkProps['order']`                                                                                                                  | 数据顺序                                                   | 每个系列内部的连接顺序字段                                                                                                    |
-| `series?`        | `PathMarkProps['series']`                                                                                                                 | —                                                          | 把数据拆成多条独立路径                                                                                                        |
-| `color?`         | `PathMarkProps['color']`                                                                                                                  | `series`                                                   | 路径颜色字段；没有显式 `series` 时，分类颜色字段也可拆系列                                                                    |
-| `curve?`         | <ApiValues name="PathCurve" />                                                                                                            | `linear`                                                   | 相邻点的连接方式；polar2D 下 `monotoneX` / `monotoneY` 回退为 `linear`                                                        |
-| `interpolation?` | <ApiValues name="PolarInterpolation" />                                                                                                   | coordinate 默认                                            | polar2D 相邻位置的连接空间；`polar` 先在角度 / 半径空间插值，`chord` 直连投影顶点                                             |
-| `connectNulls?`  | boolean 或描边对象                                                                                                                        | `false`                                                    | 开放无填充路径的缺值段默认虚线桥接，可独立配置；闭合或填充路径仅支持 boolean                                                  |
-| `closed?`        | `boolean`                                                                                                                                 | cartesian2D: `false`<br />polar2D: `true`                  | 是否把最后一个点连回第一个点                                                                                                  |
-| `closure?`       | `IRPlotPathClosure`<br />- `kind: 'cycle' \| 'baseline' \| 'stack'`<br />- `baseline?: number`<br />- `baselineField: PathMarkProps['x']` | —<br />必填<br />0 或离 0 最近的值域边界<br />`stack` 必填 | 构造可填充边界<br />选择首尾闭合、常量基线或逐行基线<br />仅 `baseline` 使用的常量下边界<br />仅 `stack` 使用的逐行下边界字段 |
-| `label?`         | `PathMarkProps['label']`                                                                                                                  | —                                                          | 路径或路径段标签；内容与位置字段由 `PathMarkProps['label']` 的 TypeScript 输入契约定义                                        |
-| `resolveLabel?`  | `(row: ExternalRow) => string`                                                                                                            | —                                                          | 运行时标签函数；不进入 IR，必须同时提供 `id`                                                                                  |
-| `anchorId?`      | `IRPlotAnchorId`                                                                                                                          | —                                                          | 为每个有效路径顶点生成稳定的 core Coordinate id                                                                               |
+{/* @include viz/plot/mark/path/generated */}
 
-## 相关
+## 延伸阅读
 
-- [PointMark](/viz/plot/mark/point) —— 在每个观测位置叠加点
-- [坐标系](/viz/plot/coordinate) —— cartesian2D / polar2D 如何解释位置角色
-- [Path](/kernel/components/path/step) —— lowering 后的路径样式、step 与箭头
+<LinkedSections
+  items={[
+    { title: 'PointMark · 点图元', description: '在路径的数据位置叠加节点。', url: '/viz/plot/mark/point' },
+    { title: '坐标系', description: '理解位置投影与极坐标插值。', url: '/viz/plot/coordinate' },
+    { title: 'Path', description: '查阅路径步骤、样式和箭头。', url: '/kernel/components/path/step' },
+  ]}
+/>
