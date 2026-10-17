@@ -14,6 +14,8 @@ import type {
   CompositeReplayWrapper,
   LayoutAlignmentGuide,
   LayoutProposal,
+  LayoutContribution,
+  LayoutMeasurementAxis,
   ScenePrimitive,
   SceneResource,
   SpatialHandleDeclaration,
@@ -75,6 +77,8 @@ export type PendingPathEmission = {
 
 /** child 遍历编译后的 primitive 与自动 layout bbox */
 export type TraversalResult = {
+  /** 根组件按需产生的 allocation 贡献 */
+  contribution?: LayoutContribution;
   /** 已完成排序和占位回填的 Scene primitive */
   primitives: Array<ScenePrimitive>;
   /** 与 primitives 对齐的父层 zIndex，仅供同一次 compile 内 replay 复用 */
@@ -218,6 +222,14 @@ export type CompositeLayoutResultEntry = Readonly<{
 
 /** 同一次 compile 独占的 replay 与 runtime output handle 表 */
 export type CompositeCompileSession = {
+  /** 有界的编译内成功贡献缓存 */
+  measurements: Map<string, LayoutContribution>;
+  /** 对象依赖的编译内身份 */
+  measurementIdentities: WeakMap<object, number>;
+  /** 不可 JSON 编码的原始运行时输入也按值身份区分 */
+  measurementPrimitiveIdentities: Map<unknown, number>;
+  /** 下一个局部身份序号 */
+  nextMeasurementIdentity: number;
   /** token → 隔离 probe 结果；不跨 compile 共享 */
   replayTransactions: WeakMap<object, CompositeReplayTransaction>;
   /** LayoutChildResult identity → replay token；拒绝复制或伪造 result */
@@ -230,6 +242,8 @@ export type CompositeCompileSession = {
 
 /** 单次 traversal 的可选隔离输入 */
 export type TraversalCompileOptions = {
+  /** 仅作用于本次 traversal 根组件的需求 */
+  measurementAxis?: LayoutMeasurementAxis;
   /** 查询 probe 在 Scope 出栈前读取最终引用环境，不向公共 context 暴露可变状态 */
   captureScopeTargets?: (child: ScopeChild, namespace: NamespaceStack, chain: ReadonlyArray<Transform>) => void;
   /** probe 或显式绑定子项的局部运行时输入 */

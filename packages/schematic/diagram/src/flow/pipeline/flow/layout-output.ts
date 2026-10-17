@@ -159,6 +159,15 @@ const validateElementGeometry = (
 
     if (
       element.kind === 'group' &&
+      element.allocatedHeight !== undefined &&
+      Math.abs(bounds.height - element.allocatedHeight) >
+        Number.EPSILON * 64 * Math.max(1, bounds.height, element.allocatedHeight)
+    ) {
+      invalidOutput(definition, ['elements'], 'Group bounds must preserve allocated height.', [element.id]);
+    }
+
+    if (
+      element.kind === 'group' &&
       (bounds.width < element.minimumSize.width || bounds.height < element.minimumSize.height)
     ) {
       invalidOutput(definition, ['elements'], 'Group bounds are smaller than the measured shell minimum.', [

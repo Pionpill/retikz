@@ -14,7 +14,7 @@ export const resolveCellFormatterRegistry = (
     assertNonEmptyString(
       definition.name,
       'cell formatter provider key',
-      new RetikzTableError('cell formatter provider key must be a non-empty string.'),
+      () => new RetikzTableError('cell formatter provider key must be a non-empty string.'),
     );
     if (registry.has(definition.name)) {
       throw new RetikzTableError(`duplicate cell formatter registration: "${definition.name}"`);

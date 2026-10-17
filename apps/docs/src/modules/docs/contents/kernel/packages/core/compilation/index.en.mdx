@@ -329,7 +329,7 @@ Pending paths inside the Scope are resolved before the local frame is popped, so
 
 Scene output can retain local geometry and Group transforms. Named queries use the coordinate projection they need; the output does not require every point to be expanded into world coordinates.
 
-Composite entries join compilation through registered Definitions, and the basic IR they produce follows the same processing steps; see [Composite implementation](/kernel/components/composite/mechanism).
+Composite entries join compilation through registered Definitions, and the basic IR they produce follows the same processing steps; see [Composite implementation](/kernel/packages/core/composite-compilation).
 
 <SourceLinks
   sources={[
@@ -514,19 +514,29 @@ Start in `compileCoreSnapshot` to see context creation, traversal, and assembly 
 <LinkedSections
   items={[
     {
-      title: 'Node implementation',
-      description: 'Explore text measurement, node size, and connection boundaries',
-      url: '/kernel/components/node/mechanism',
+      title: 'Configuration resolution',
+      description: 'Follow defaults, styles and capability binding',
+      url: '/kernel/packages/core/resolution',
     },
     {
-      title: 'Path implementation',
-      description: 'Explore cursor state, path segments, and endpoint processing',
-      url: '/kernel/components/path/mechanism',
+      title: 'Coordinate resolution',
+      description: 'Follow reference visibility, coordinate conversion and Scope placement',
+      url: '/kernel/packages/core/coordinates',
     },
     {
-      title: 'Composite implementation',
-      description: 'Understand child layout probes and result replay',
-      url: '/kernel/components/composite/mechanism',
+      title: 'Node Compilation',
+      description: 'Follow text measurement, node dimensions and connection boundaries',
+      url: '/kernel/packages/core/node-compilation',
+    },
+    {
+      title: 'Path Compilation',
+      description: 'Follow path targets, geometry steps and primitive output',
+      url: '/kernel/packages/core/path-compilation',
+    },
+    {
+      title: 'Composite Compilation',
+      description: 'Follow child queries, isolated probes and replay',
+      url: '/kernel/packages/core/composite-compilation',
     },
   ]}
 />

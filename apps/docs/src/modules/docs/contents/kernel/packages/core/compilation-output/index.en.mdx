@@ -1,0 +1,796 @@
+---
+title: Compilation Output
+description: Follow how Core assembles Scene, resources and canvas bounds, then delivers artifacts, spatial handles, observer outputs and diagnostics.
+---
+
+[Node Compilation](/kernel/packages/core/node-compilation), [Path Compilation](/kernel/packages/core/path-compilation) and [Composite Compilation](/kernel/packages/core/composite-compilation) explain how primitives are produced. This page follows those local results through the end of a full compile and explains what the caller receives. Read the traversal and deferred path emission sections of [Compilation](/kernel/packages/core/compilation) first.
+
+The scope is one full compile. Creating SVG elements, drawing Canvas, and handling later updates through Core and Runtime belong to subsequent topics. Core owns drawing-data comparisons and incremental compilation strategies; Runtime owns state, result lifetimes and consistent publication.
+
+## Overall flow
+
+The ordinary `compileToScene` entry returns three kinds of data:
+
+- Scene (`scene`): primitives, canvas bounds and drawing resources for a renderer.
+- Artifacts (`artifacts`): domain results for applications, or explicitly requested node layout summaries.
+- Spatial handles (`spatialHandles`): queryable regions declared by composites, expressed in world coordinates in the final result.
+
+Two other kinds of data use separate outlets:
+
+- Observer outputs (`observerOutputs`): separate results produced by observers that consume selected compilation outputs when using `observeCompileToScene`.
+- Diagnostic callback (`onWarn`): receives warnings dispatched by this compilation.
+
+The ordinary result has the following structure, with composite artifact generics simplified to their default types. The following sections expand each field.
+
+```ts
+type CompileResult = Readonly<{
+  scene: Scene;
+  artifacts: ReadonlyArray<CompileArtifact>;
+  spatialHandles: SpatialHandleIndex;
+}>;
+```
+
+The diagram follows traversal, Scene assembly and delivery of the three ordinary result fields. Resources are registered during traversal and collected during assembly.
+
+<ComponentPreview files="output-overview" size="xs" hideCode type="flow" />
+
+Consider two rectangular cards with the same gradient, inside a Scope translated down and to the right. A renderer needs their primitives and gradient resource. An application may need their text layout summaries. If a composite produces the cards, it can also declare a spatial handle for the entire card region. Each consumer reads the data it needs.
+
+<SourceLinks
+  sources={[
+    { label: 'Full compile and public results', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: 'CompileResult and artifact variants', path: 'packages/kernel/core/src/compile/types.ts' },
+  ]}
+/>
+
+## Scene
+
+`Scene` groups the primitives, canvas bounds, resources and root animation tracks needed for rendering. Its complete structure is:
+
+```ts
+type Scene = {
+  primitives: Array<ScenePrimitive>;
+  layout: BoundsRect;
+  resources?: Array<SceneResource>;
+  animations?: Array<IRAnimationTrack>;
+};
+```
+
+`layout` uses a `BoundsRect` with `x`, `y`, `width` and `height` to describe the canvas. `resources` and `animations` hold optional resources and root animation tracks.
+
+### Primitives
+
+`Scene.primitives` is an array in drawing order. Rectangles, ellipses, text and paths describe resolved geometry. Group primitives retain children and can carry shared transforms, clip references and other properties.
+
+```ts
+type ScenePrimitive = RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim;
+```
+
+These types fall into three categories by responsibility:
+
+- Geometric primitives (`RectPrim`, `EllipsePrim`, `PathPrim`): describe rectangles, ellipses and paths.
+- Text primitives (`TextPrim`): describe text, its layout and styling.
+- Group primitives (`GroupPrim`): organize child primitives and apply shared transforms and clipping.
+
+<ComponentAlert
+  type="tip"
+  title="Primitives and rendering backends"
+  description={
+    <>
+      However complex the higher-level components are, expansion, resolution and compilation reduce their drawing output
+      to these five primitive types. At the primitive layer, Render only needs to support these types, together with the
+      scene's canvas, resource and animation information. It does not need to understand higher-level charts, layouts or
+      business components.
+      <table>
+        <thead>
+          <tr>
+            <th>Scene primitive</th>
+            <th>SVG</th>
+            <th>Canvas 2D</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>RectPrim</code>
+            </td>
+            <td>
+              <code>{'<rect>'}</code>
+            </td>
+            <td>
+              <code>rect()</code>, <code>arc()</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>EllipsePrim</code>
+            </td>
+            <td>
+              <code>{'<ellipse>'}</code>
+            </td>
+            <td>
+              <code>ellipse()</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>TextPrim</code>
+            </td>
+            <td>
+              <code>{'<text>'}</code>, <code>{'<tspan>'}</code>
+            </td>
+            <td>
+              <code>fillText()</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>PathPrim</code>
+            </td>
+            <td>
+              <code>{'<path>'}</code>
+            </td>
+            <td>
+              <code>moveTo()</code>, <code>lineTo()</code>, <code>bezierCurveTo()</code>,{' '}
+              <code>quadraticCurveTo()</code>, <code>ellipse()</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>GroupPrim</code>
+            </td>
+            <td>
+              <code>{'<g>'}</code>
+            </td>
+            <td>
+              <code>save()</code>, <code>translate()</code>, <code>rotate()</code>, <code>scale()</code>,{' '}
+              <code>clip()</code>, <code>restore()</code>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </>
+  }
+/>
+
+Geometric and text primitives describe the content; group primitives organize it. A scene therefore starts with a primitive array but can contain nested structures. The following Scene excerpt shows a translated group containing two rectangles, with styles and other fields omitted.
+
+```json
+{
+  "type": "group",
+  "transforms": [{ "kind": "translate", "x": 20, "y": 30 }],
+  "children": [
+    { "type": "rect", "x": 0, "y": 0, "width": 40, "height": 20 },
+    { "type": "rect", "x": 60, "y": 0, "width": 40, "height": 20 }
+  ]
+}
+```
+
+The first rectangle has a local top-left corner at `[0, 0]`, which becomes `[20, 30]` after the group translation. The second starts at `[60, 0]` and becomes `[80, 30]` under the same transform. Child primitives retain their local coordinates; the renderer applies transforms along the group hierarchy to determine their final drawing positions.
+
+<SourceLinks
+  sources={[
+    { label: 'SVG primitive materialization', path: 'packages/kernel/render/src/svg/builders/prim.ts' },
+    { label: 'Canvas primitive drawing', path: 'packages/kernel/render/src/canvas/draw-scene.ts' },
+    { label: 'Canvas path construction', path: 'packages/kernel/render/src/canvas/path-geometry.ts' },
+    { label: 'Scene and primitive union', path: 'packages/kernel/core/src/contract/scene/scene.ts' },
+    { label: 'Groups, transforms and clip references', path: 'packages/kernel/core/src/contract/scene/group.ts' },
+  ]}
+/>
+
+### Resources
+
+`Scene.resources` stores paint and clip resources, distinguished by `kind`:
+
+```ts
+type SceneResource = PaintResource | ClipResource;
+
+type PaintResource = {
+  kind: 'paint';
+  id: string;
+  spec: IRPaint;
+  tile?: ResolvedPatternTile;
+};
+
+type ClipResource = {
+  kind: 'clip';
+  id: string;
+  path: SceneClipPath;
+};
+```
+
+Core supports custom node shapes and other extension points. Many are consumed during compilation and converted into basic primitives, so the renderer does not need to understand the original custom definitions. Gradients, patterns and clips are still needed during rendering: Core resolves and assembles their resource data, and Render uses that data to draw or clip. These resources therefore accompany the returned Scene in `Scene.resources`, with primitives holding references to them.
+
+Two objects are involved:
+
+- A resource: the complete drawing or clipping description, with an id within this Scene.
+- A reference: a small value on a primitive that identifies the resource by id.
+
+When both cards use the same gradient, the paint registry derives a content key from the resolved paint specification. The first registration creates a resource; later equivalent specifications reuse it. Plain color strings remain inline and need no resource.
+
+The diagram shows only the relevant fill and resource fields. The key/value blocks illustrate object fields. `Scene.resources` itself is an array, with its first entry expanded here.
+
+<ComponentPreview files="output-resources" size="lg" hideCode type="illustration" />
+
+Both `fill.id` values point to `paint-1`. This id is allocated by the current registry; applications should not treat it as a stable business identity across compilations. Pattern resources also retain tile geometry produced by their Definition, so the renderer does not need to invoke that Definition again.
+
+Clips use their own registry: the clipping capability produces a shape, which is lowered to a Scene clip path and referenced through a group's `clipRef`. At the end of compilation, paint and clip resources are combined. The `resources` field is omitted when none exist. Composite replay imports resources from the selected result and remaps references; see [Composite Compilation](/kernel/packages/core/composite-compilation) for isolation during probing.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Paint registration, deduplication and import',
+      path: 'packages/kernel/core/src/compile/resource/paint.ts',
+    },
+    { label: 'Clip lowering and registration', path: 'packages/kernel/core/src/compile/resource/clip.ts' },
+    { label: 'Resource and reference contracts', path: 'packages/kernel/core/src/contract/scene/paint.ts' },
+    { label: 'Clip resource structure', path: 'packages/kernel/core/src/contract/scene/clip.ts' },
+  ]}
+/>
+
+### Canvas
+
+Primitives determine what to draw. `Scene.layout` defines the scene's viewing rectangle through `x`, `y`, `width` and `height`, all in scene coordinates. The host element's CSS dimensions are a separate rendering concern.
+
+```ts
+type BoundsRect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+```
+
+Automatic canvas calculation starts with traversal's `layoutBounds`. Layout contributions are combined, shadow overflow expands the relevant contributions, compile padding is added, and output precision is applied. An explicit root `viewBox` directly determines `Scene.layout`, bypassing automatic bounds and padding. Changing this viewing rectangle does not reposition primitives.
+
+Return to the translated cards. To isolate the canvas calculation, assume their final aggregate bounds are `{ x: 20, y: 30, width: 100, height: 20 }`, with no other contributions. Padding 10 produces `{ x: 10, y: 20, width: 120, height: 40 }`. The diagram keeps the cards fixed and compares that automatic margin with a wider explicit view.
+
+<ComponentPreview files="output-canvas" size="lg" hideCode type="illustration" />
+
+The blue solid lines are card geometry. Gray dotted lines are teaching guides for the viewing rectangle. On the left, bounds plus padding determine the view. On the right, the view is explicitly `{ x: 0, y: 10, width: 150, height: 60 }`. These guide frames are not part of the cards' compiled output.
+
+Three different bounds answer different questions:
+
+| Data                            | Question                                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------------------------ |
+| Aggregated layout contributions | Which regions participate in automatic canvas calculation?                                 |
+| Visual bounds                   | How much space do the final primitives occupy, including strokes, transforms and clipping? |
+| `Scene.layout`                  | Which final viewing rectangle is passed to the renderer?                                   |
+
+Composite layout can query allocated, layout and visual extents separately. A single scan of primitive bounds cannot replace all of those layout semantics. Full compilation uses traversal's layout aggregate for the automatic canvas; visual bounds have a separate primitive traversal.
+
+With no layout bounds, the automatic canvas is `{ x: 0, y: 0, width: 100, height: 100 }`. An explicit `viewBox` requires finite coordinates and positive dimensions, and its rounded output is checked too. If a valid canvas cannot be produced, compilation throws.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Layout contributions and shadow overflow',
+      path: 'packages/kernel/core/src/compile/orchestration/bounds.ts',
+    },
+    { label: 'Canvas rectangle structure', path: 'packages/kernel/math/src/primitives/bounds.ts' },
+    { label: 'Automatic canvas and empty scenes', path: 'packages/kernel/core/src/compile/scene/layout.ts' },
+    { label: 'Explicit viewBox', path: 'packages/kernel/core/src/compile/scene/view-box.ts' },
+    { label: 'Primitive visual bounds', path: 'packages/kernel/core/src/compile/orchestration/visual-bounds.ts' },
+  ]}
+/>
+
+### Animation
+
+`Scene.animations` stores scene-root animation tracks. Each primitive stores its own tracks in its `animations` field. Both use the same track structure. The excerpt below shows properties, keyframes and timing, with some playback options omitted:
+
+```ts
+type IRAnimationTrack = {
+  property: string;
+  keyframes: Array<{
+    at: number;
+    value: JsonValue;
+    easing?: string | [number, number, number, number];
+  }>;
+  duration: number;
+  delay?: number;
+  easing?: string | [number, number, number, number];
+  iterations?: number | 'infinite';
+  // direction, fill, trigger and origin omitted
+};
+```
+
+Each track describes how one property changes over time. `at` is normalized time from 0 to 1, and keyframes are sorted by it. `value` is the absolute property value at that time. `duration` and `delay` are in milliseconds; `easing` controls transitions between keyframes.
+
+- Scene animation: the root retains only tracks with `property: 'viewBox'`. Their keyframe values are `[x, y, width, height]`, changing the viewing rectangle for the whole scene.
+- Primitive animation: tracks stay on individual primitives, describing changes such as opacity, fill color, translation or path drawing progress. They are not collected into `Scene.animations`.
+
+Core filters tracks by their target level during compilation. Non-`viewBox` tracks on the root and `viewBox` tracks on elements are dropped with warnings. When no tracks remain, the corresponding `animations` field is omitted. The compiled output retains serializable animation declarations; Render's runtime integration handles playback clocks, triggers and frame updates.
+
+`Scene.layout` still describes the static canvas, while root animation describes changes to the viewing rectangle over time. See [Render](/kernel/packages/render) for playback APIs and backend support.
+
+<SourceLinks
+  sources={[
+    { label: 'Animation tracks and keyframes', path: 'packages/kernel/core/src/schemas/animation/schema.ts' },
+    { label: 'Root and element track filtering', path: 'packages/kernel/core/src/compile/orchestration/animation.ts' },
+    { label: 'Scene animation assembly', path: 'packages/kernel/core/src/compile/compile.ts' },
+  ]}
+/>
+
+## Additional results
+
+`artifacts` contains composite artifacts and explicitly requested node artifacts. It is a top-level result field alongside `scene` and `spatialHandles`. With no artifacts, the result still includes `artifacts: []`.
+
+```ts
+type CompileArtifact = CompositeCompileArtifact | NodeLayoutCompileArtifact;
+```
+
+Both composite and node artifacts carry an `occurrence` field identifying the final compilation occurrence of the object that produced the record. They share the following locator structure, with expansion kinds written as a value union:
+
+```ts
+type CompileOccurrenceLocator = Readonly<{
+  // Nearest original input IR occurrence
+  sourcePath: string;
+  // Structured index chain from the original occurrence to the output
+  expansionPath: ReadonlyArray<CompileExpansionSegment>;
+}>;
+
+type CompileExpansionSegment = Readonly<{
+  // Expansion stage
+  kind: CompileExpansionKind;
+  // Stable index among outputs of the same kind
+  index: number;
+}>;
+
+type CompileExpansionKind = 'output' | 'probe' | 'replay' | 'scopeChild' | 'clip';
+```
+
+`kind` identifies the origin of one expansion step; `index` is its local, zero-based position:
+
+| `kind`       | Meaning                                                | What `index` identifies                                                  |
+| ------------ | ------------------------------------------------------ | ------------------------------------------------------------------------ |
+| `output`     | A child returned directly by a composite               | Its position in the returned `children`                                  |
+| `probe`      | A child layout probe during compilation                | The probe number within the current composite compile callback           |
+| `replay`     | A selected probe result replayed into the final output | The replay item's position in the returned `children`                    |
+| `scopeChild` | Compilation entering a generated Scope                 | A child position within that Scope's `children`                          |
+| `clip`       | Compilation of a logical clip application              | A stable index for that application; the current implementation uses `0` |
+
+These values mark different expansion steps; a path need not contain every kind. For example, `{ kind: 'output', index: 1 }` identifies the second composite output. A following `{ kind: 'scopeChild', index: 0 }` selects the first child of the Scope generated by that output. Replaying a selected probe gives it a final `replay` path; discarded probes do not become final artifacts.
+
+An `occurrence` identifies an appearance in this compilation through a Source path and an expansion path. Expansion or replay can place the same declaration at different sites, which a user id alone cannot describe. Artifacts record the final occurrence so consumers can associate results with committed objects.
+
+### Composite artifacts
+
+A composite declares its domain result through `artifactSchema`. Core validates the value and wraps it in the following record, with generics simplified to their default types:
+
+```ts
+type CompositeCompileArtifact = Readonly<{
+  kind: 'composite';
+  namespace: string;
+  type: string;
+  occurrence: CompileOccurrenceLocator;
+  value: JsonValue;
+}>;
+```
+
+FlexLayout in the Layout package declares its layout artifact through `artifactSchema`.
+
+```ts
+const FlexLayoutDefinition = defineComposite({
+  namespace: LAYOUT_NAMESPACE,
+  type: 'flexLayout',
+  schema: FlexLayoutSchema,
+  compile: compileFlexLayout,
+  artifactSchema: FlexLayoutArtifactSchema,
+});
+```
+
+After solving the layout, `compileFlexLayout` returns both children to compile and a layout artifact. This is its final return structure; the variables come from the preceding layout calculation:
+
+```ts
+return {
+  children: [scope],
+  allocationBounds: allocation,
+  ...(alignmentGuides === undefined ? {} : { alignmentGuides }),
+  artifact: Object.freeze({
+    kind: 'flex',
+    container: createLayoutArtifactContainer(allocation, content, items),
+    items,
+    lines,
+    spacing: sortLayoutSpacing(spacing),
+  }),
+};
+```
+
+Core continues compiling `children`, while `artifact` retains container bounds, child layouts and translations, lines and spacing. Core wraps it in a `kind: 'composite'` record with namespace `layout` and type `flexLayout`. The inner `value.kind: 'flex'` is the Layout package's own artifact discriminator.
+
+The following example compiles a FlexLayout containing two nodes and reads its artifact from the returned array. Registering the Definition also preserves the specific artifact type in the result:
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { createFlexLayout, FlexLayoutDefinition } from '@retikz/layout';
+
+const layout = createFlexLayout({
+  gap: 12,
+  children: [
+    { kind: 'flex', child: { type: 'node', id: 'first', text: 'A' } },
+    { kind: 'flex', child: { type: 'node', id: 'second', text: 'B' } },
+  ],
+});
+
+const result = compileToScene(
+  { type: 'scene', version: 1, children: [layout] },
+  { composites: [FlexLayoutDefinition] },
+);
+
+for (const artifact of result.artifacts) {
+  if (artifact.kind !== 'composite' || artifact.type !== 'flexLayout') continue;
+  console.log(artifact.namespace); // 'layout'
+  console.log(artifact.occurrence); // { sourcePath: 'children[0]', expansionPath: [] }
+  console.log(artifact.value.kind); // 'flex'
+  console.log(artifact.value.items.length); // 2
+  console.log(artifact.value.lines.length); // 1
+  console.log(artifact.value.container, artifact.value.items, artifact.value.spacing);
+}
+```
+
+This example returns two items and one layout line. `container` describes allocation, content and visual bounds; `items` holds child bounds, translations and overflow information; `lines` relates lines to their items; and `spacing` describes spacing regions. Geometry depends on node measurements and layout configuration. Applications can read these results directly instead of reconstructing layout from Scene primitives.
+
+Composite artifacts do not require `nodeLayouts`. Selected candidates commit artifacts with final placement during replay; discarded candidates contribute none.
+
+### Node artifacts
+
+<ComponentAlert
+  type="warn"
+  title="Artifact contracts are unstable"
+  description="Node artifacts and the artifact contents exposed by Core are not yet stable. Fields, structures and access methods may change. Avoid relying on them as stable production contracts. For experimental use, pin the version and review contract changes when upgrading."
+/>
+
+A node artifact uses `kind: 'nodeLayout'`. Its `value` holds the layout summary of a real Node:
+
+```ts
+type NodeLayoutCompileArtifact = Readonly<{
+  kind: 'nodeLayout';
+  occurrence: CompileOccurrenceLocator;
+  value: CompiledNodeLayout;
+}>;
+```
+
+```ts
+type CompiledNodeLayout = {
+  kind: 'node';
+  id?: string;
+  content: {
+    center: [number, number];
+    size: { width: number; height: number };
+    bounds: { x: number; y: number; width: number; height: number };
+  };
+  rect: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    rotate: number;
+  };
+  text: {
+    hasInlineTex: boolean;
+    lineCount: number;
+  };
+};
+```
+
+`content.center` and `content.bounds` include the current Scope transform. `bounds` is the global axis-aligned box of the transformed content corners, while `content.size` retains dimensions along the node's layout axes. `rect.x` and `rect.y` specify the frame center; `rotate` is in radians. `text` reports whether TeX glyphs were produced and the number of content lines.
+
+Ordinary compilation does not collect node artifacts by default. Pass `artifacts: { nodeLayouts: true }` to request them. Since the returned array can also contain composite artifacts, filter by `kind` first:
+
+```ts
+import { compileToScene } from '@retikz/core';
+
+const result = compileToScene(
+  {
+    type: 'scene',
+    version: 1,
+    children: [{ type: 'node', id: 'card', position: [0, 0], text: 'Card' }],
+  },
+  { artifacts: { nodeLayouts: true } },
+);
+
+for (const artifact of result.artifacts) {
+  if (artifact.kind !== 'nodeLayout') continue;
+  const { id, content, rect, text } = artifact.value;
+  console.log(id, content, rect, text, artifact.occurrence);
+}
+```
+
+The node's `id` is optional; `occurrence` identifies its final compilation appearance. An id alone cannot distinguish multiple expansions or replays of the same declaration.
+
+<SourceLinks
+  sources={[
+    { label: 'Artifact and node layout types', path: 'packages/kernel/core/src/compile/types.ts' },
+    { label: 'Occurrence locators', path: 'packages/kernel/core/src/contract/occurrence/types.ts' },
+    {
+      label: 'FlexLayout artifact declaration',
+      path: 'packages/library/layout/src/composites/flex-layout/composite.ts',
+    },
+    { label: 'FlexLayout artifact return', path: 'packages/library/layout/src/composites/flex-layout/pipeline.ts' },
+    { label: 'FlexLayout artifact structure', path: 'packages/library/layout/src/composites/flex-layout/schema.ts' },
+  ]}
+/>
+
+## Spatial handles
+
+A spatial handle is a semantic region explicitly declared by a component, such as a card body, plotting area or layout slot. The declaration includes an id, role and local rectangle, with optional tags and payload. It does not require a matching visible rectangle primitive.
+
+The index and entry fields are shown below; aliases, tags and payload are omitted from this excerpt.
+
+```ts
+type SpatialHandleIndex = Readonly<{
+  entries: ReadonlyArray<QualifiedSpatialHandle>;
+}>;
+
+type QualifiedSpatialHandle = Readonly<{
+  ownerPath: ReadonlyArray<SpatialHandleOwner>;
+  id: string;
+  role: string;
+  geometry: Readonly<{
+    kind: 'rect';
+    bounds: Readonly<BoundsRect>;
+  }>;
+  finalOccurrence: CompileOccurrenceLocator;
+  originOccurrence: CompileOccurrenceLocator;
+  // aliasIds, tags and payload omitted
+}>;
+```
+
+Suppose the card component declares `{ x: 0, y: 0, width: 100, height: 20 }`. The declaration carries its final transform chain through Scope and replay. Full compilation projects it to world space at the end. The diagram tracks the coordinates of the same region.
+
+<ComponentPreview files="output-spatial" size="lg" hideCode type="illustration" />
+
+Translation by `[20, 30]` produces world bounds `{ x: 20, y: 30, width: 100, height: 20 }`. For rotation or scaling, Core transforms all four corners and takes their axis-aligned bounding box. The result remains a rectangle and may cover more area than the rotated region itself.
+
+Each final entry also retains the outer-to-inner `ownerPath`, plus `originOccurrence` and `finalOccurrence` for the original declaration and final placement. Interpret identity using both owner and id; local `body` ids from different components need not identify the same region. Without declarations, the index is `{ entries: [] }`. Core does not automatically turn every Node boundary into a spatial handle.
+
+This minimal card composite implements the translation in the diagram. Its callback returns a visible node and declares a `body` region in the same local space; the outer Scope translates both. The callback passes declarations to Core through `spatialHandles`, without enabling node artifacts or observation.
+
+```ts
+import {
+  compileToScene,
+  CompositeBaseSchema,
+  defineComposite,
+  resolveSpatialHandle,
+  selectSpatialHandles,
+} from '@retikz/core';
+import { literal } from 'zod';
+
+const CardDefinition = defineComposite({
+  namespace: 'demo',
+  type: 'card',
+  schema: CompositeBaseSchema.extend({ namespace: literal('demo'), type: literal('card') }),
+  compile: () => ({
+    children: [
+      {
+        type: 'node',
+        position: [50, 10],
+        layout: { minimumSize: { width: 100, height: 20 }, padding: 0, margin: 0 },
+      },
+    ],
+    spatialHandles: [
+      {
+        id: 'body',
+        role: 'card-body',
+        bounds: { x: 0, y: 0, width: 100, height: 20 },
+      },
+    ],
+  }),
+});
+
+const result = compileToScene(
+  {
+    type: 'scene',
+    version: 1,
+    children: [
+      {
+        type: 'scope',
+        position: [20, 30],
+        children: [{ namespace: 'demo', type: 'card' }],
+      },
+    ],
+  },
+  { composites: [CardDefinition] },
+);
+
+const bodies = selectSpatialHandles(result.spatialHandles, { role: 'card-body' });
+const body = resolveSpatialHandle(result.spatialHandles, {
+  owner: { namespace: 'demo', type: 'card' },
+  id: 'body',
+});
+console.log(bodies.length); // 1
+console.log(body.geometry.bounds); // { x: 20, y: 30, width: 100, height: 20 }
+```
+
+`selectSpatialHandles` returns every matching entry, or an empty array when none match. `resolveSpatialHandle` requires exactly one match and throws for either no match or multiple matches. This example contains one card, so the owner type and local id identify it uniquely. With multiple cards of the same type, narrow the query using the owner’s `instanceId`, `occurrence`, or ancestor conditions in `within`. An `instanceId` comes from an authored `id` accepted by the component’s schema; a Definition type alone does not distinguish instances.
+
+The component explicitly declares this rectangle; Core does not derive it from node primitives. If a region belongs to a transformed Scope generated by the callback, attach it to that Scope’s local space with `context.scope(props, children, spatialHandles)` rather than placing its local rectangle at the top level of the composite result.
+
+For an actual consumer, see [Flow’s bounds example](/schematic/diagram/flow/extended). It reads element bounds from the compiled spatial index to display boundary helpers. Applications can likewise use queried bounds to position selection outlines or overlays without reconstructing component regions from Scene primitives.
+
+<SourceLinks
+  sources={[
+    { label: 'Spatial index and entries', path: 'packages/kernel/core/src/contract/spatial-handle/types.ts' },
+    { label: 'Declarations and Scope ownership', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: 'Filtering and unique lookup', path: 'packages/kernel/core/src/contract/spatial-handle/query.ts' },
+    {
+      label: 'Flow bounds consumer',
+      path: 'apps/docs/src/modules/docs/contents/schematic/diagram/flow/extended/flow-bounds.tsx',
+    },
+    {
+      label: 'Final projection of spatial declarations',
+      path: 'packages/kernel/core/src/compile/orchestration/spatial-handle.ts',
+    },
+    {
+      label: 'Nested owner, Scope and replay tests',
+      path: 'packages/kernel/core/tests/compile/spatial-handle.test.ts',
+    },
+  ]}
+/>
+
+## Observation
+
+<ComponentAlert
+  type="warn"
+  title="Experimental feature"
+  description="Core observation APIs and output contracts are unstable. Interfaces, data structures and behavior may change. Avoid relying on them as stable production contracts."
+/>
+
+The observed entry stores the ordinary result in `primary` and keeps observer outputs separately.
+
+```ts
+type ObservedCompileResult<TOutput = unknown> = Readonly<{
+  primary: CompileResult;
+  observerOutputs: ReadonlyArray<CompileObserverOutput<TOutput>>;
+}>;
+
+type CompileObserverOutput<TOutput = unknown> = Readonly<{
+  key: string;
+  value: TOutput;
+}>;
+```
+
+Consider inspecting a node whose text is `Hello`. Enabling the node inspector's `box` and `content` options overlays a node layout box and a text content box. Both use geometry already computed by Core.
+
+At the Core level, enable observation with `observeCompileToScene(ir, options, observers)`. Pass observer definitions as the third argument; this example uses `undefined` for the second argument because it needs no extra compile options. It reads node geometry without drawing inspection boxes.
+
+```ts
+import { NodeOwnerOutputSchema, observeCompileToScene } from '@retikz/core';
+import type { CompileObservation, CompileObserverDefinition } from '@retikz/core';
+
+const nodeObserver: CompileObserverDefinition<ReadonlyArray<CompileObservation>> = {
+  key: 'example/node-geometry',
+  createSession: () => {
+    const observations: Array<CompileObservation> = [];
+    return {
+      select: site => site.owner.kind === 'node',
+      observe: observation => {
+        const node = NodeOwnerOutputSchema.parse(observation.value);
+        console.log(node.rect, node.content?.corners);
+        observations.push(observation);
+      },
+      complete: () => observations,
+    };
+  },
+};
+
+const result = observeCompileToScene(
+  {
+    type: 'scene',
+    version: 1,
+    children: [{ type: 'node', id: 'card', position: [0, 0], text: 'Hello' }],
+  },
+  undefined,
+  [nodeObserver],
+);
+
+console.log(result.primary.scene);
+console.log(result.observerOutputs[0]);
+```
+
+`select` chooses all nodes. `observe` receives each final node output and parses its geometry with `NodeOwnerOutputSchema`. The array inside `createSession` belongs to this compilation, and `complete` returns it as the observer result. Thus `observerOutputs[0]` has the key `example/node-geometry` and a `value` containing the collected observation events; the original drawing is in `primary.scene`.
+
+Inspect builds on this Core API to generate inspection boxes:
+
+1. **Select the node**: Inspect registers an observer and uses `select` to choose the nodes to inspect.
+2. **Receive compiled data**: Core measures and lays out the node. Once its final occurrence is known, Core delivers the node output through `observe`. The output's `rect` describes the layout box, and `content.corners` gives the four corners of the content region. The event also carries the node's transform and source information.
+3. **Build the inspection boxes**: Inspect collects these outputs and invokes the node inspector during `complete`. The inspector turns the geometry into two sets of dashed paths, then compiles them into helper Scenes through the observation context's `compileFragment`.
+4. **Display the overlay**: The original drawing remains in `primary.scene`. The helper Scenes enter `observerOutputs` as part of Inspect's observer result. Inspect assembles them with their transforms into read-only render layers over the original drawing.
+
+In this example, the observer receives the node's computed layout box and content region, and produces helper graphics that mark those regions. Inspect currently reads this information from observations rather than the node artifacts described earlier.
+
+Observers read selected compiled objects and produce a separate result. `observeCompileToScene` creates a session per call: `select` chooses objects, `observe` consumes their final outputs, and `complete` returns the aggregate. Ordinary `compileToScene` creates no observation session.
+
+Events are sorted and dispatched after final occurrences have been determined. They carry owner, ancestors, output value, transform and provenance. An observer can therefore relate a card's local geometry to its final placement. Discarded probes are not published as final objects. Observer return values appear in `observerOutputs` in Definition input order; the main compilation result appears in `primary`.
+
+<SourceLinks
+  sources={[
+    { label: 'Node inspector', path: 'packages/kernel/inspect/src/providers/node.ts' },
+    { label: 'Inspection helper compilation', path: 'packages/kernel/inspect/src/compile/driver.ts' },
+    { label: 'Observer output', path: 'packages/kernel/core/src/contract/observation/types.ts' },
+    {
+      label: 'Observer session creation, selection and completion',
+      path: 'packages/kernel/core/src/compile/orchestration/observation.ts',
+    },
+    {
+      label: 'Final event ordering and dispatch',
+      path: 'packages/kernel/core/src/compile/orchestration/observation-output.ts',
+    },
+  ]}
+/>
+
+## Diagnostics
+
+`onWarn` is a compile option callback. Its warning argument is shown below; other host options are omitted.
+
+```ts
+type CompileHostOptions = {
+  onWarn?: (warning: CompileWarning) => void;
+  // measureText and lowerTex omitted
+};
+
+type CompileWarning = {
+  code: CompileWarningCode;
+  message: string;
+  path: string;
+  origin: CompileWarningOrigin;
+};
+```
+
+Warnings use a separate outlet. Compilation collects diagnostics internally, orders them after a complete snapshot succeeds, and dispatches them through the public entry's `onWarn`. Without a callback, the default outlet uses `console.warn` outside production. A warning reports a branch that continues or degrades according to its rules. A thrown error terminates the call without returning a partially completed `CompileResult` marked as erroneous.
+
+| Where the caller reads                       | Contents                                 |
+| -------------------------------------------- | ---------------------------------------- |
+| Return value of `compileToScene(...)`        | `scene`, `artifacts`, `spatialHandles`   |
+| Return value of `observeCompileToScene(...)` | `primary` and `observerOutputs`          |
+| `onWarn` callback                            | Warnings dispatched by this full compile |
+
+These outlets deliver drawing results, observation results and compilation warnings separately.
+
+<SourceLinks
+  sources={[
+    { label: 'Warning structure', path: 'packages/kernel/core/src/compile/warning.ts' },
+    { label: 'Public entries and warning dispatch timing', path: 'packages/kernel/core/src/compile/compile.ts' },
+  ]}
+/>
+
+## Implementation flow
+
+Use the member names below to connect the output categories to the implementation order. The diagram starts after context creation. Observer dispatch follows Scene assembly, spatial handles are then materialized, and the public entry dispatches warnings before returning.
+
+Before Scene assembly, traversal finishes deferred path emission, checks for unresolved placeholders, then stably sorts by `zIndex`. Equal values at the same level retain their existing order. The renderer receives a Scene that no longer requires Node reference lookup or connection endpoint solving.
+
+<ComponentPreview files="output-implementation" size="xl" hideCode type="flow" />
+
+The first three stages run top to bottom, then continue right to complete the snapshot and branch into its outputs: `scene`, `artifacts` and `spatialHandles` belong to the ordinary compile result; observed compilation also produces `observerOutputs`, while warnings are dispatched through `onWarn`. The observations and spatial index stage dispatches final observations first, then materializes spatial handles.
+
+Start with `compileCoreSnapshot` to see result assembly. Then read the end of `compileChildrenToPrimitives` for path emission, bounds aggregation, node artifacts and sorting. Follow the resource, spatial projection and observation links in their respective sections. `compileToScene` and `observeCompileToScene` determine which result wrapper reaches the caller.
+
+<SourceLinks
+  sources={[
+    { label: 'Final assembly', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: 'Traversal results', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Coordinates',
+      description: 'Understand local and world coordinates and final Scope placement',
+      url: '/kernel/packages/core/coordinates',
+    },
+    {
+      title: 'Inspection · inspect',
+      description: 'See how inspection tools consume observation results',
+      url: '/kernel/packages/inspect',
+    },
+    {
+      title: 'Renderer · render',
+      description: 'Explore rendering entries and backend responsibilities after Scene delivery',
+      url: '/kernel/packages/render',
+    },
+  ]}
+/>

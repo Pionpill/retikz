@@ -515,13 +515,13 @@ export type MergePropertiesOptions<T extends object> = Readonly<{
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称          | 类型 / 签名                | 说明                                                   |
-| ------ | ------------- | -------------------------- | ------------------------------------------------------ |
-| 参数   | `value`       | `string`                   | 待检查的字符串                                         |
-|        | `label`       | `string`                   | 错误消息中的字段名称                                   |
-|        | `ownerError?` | `RetikzError \| undefined` | 校验失败时原样抛出的领域错误；默认使用 Foundation 错误 |
-| 返回值 | —             | `void`                     | —                                                      |
-| 错误   | —             | —                          | 校验失败时抛出 ownerError 或 RetikzFoundationError     |
+| 类别   | 名称                | 类型 / 签名         | 说明                                                                                 |
+| ------ | ------------------- | ------------------- | ------------------------------------------------------------------------------------ |
+| 参数   | `value`             | `string`            | 待检查的字符串                                                                       |
+|        | `label`             | `string`            | 错误消息中的字段名称                                                                 |
+|        | `createOwnerError?` | `() => RetikzError` | 仅在校验失败时调用一次的领域错误工厂；返回的错误原样抛出，省略时使用 Foundation 错误 |
+| 返回值 | —                   | `void`              | —                                                                                    |
+| 错误   | —                   | —                   | 校验失败时抛出工厂返回的领域错误或 RetikzFoundationError；工厂自身抛出的异常原样传播 |
 
 </ApiTable>
 
@@ -530,14 +530,14 @@ export type MergePropertiesOptions<T extends object> = Readonly<{
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const assertNonEmptyString: (value: string, label: string, ownerError?: RetikzError | undefined) => void;
+export declare const assertNonEmptyString: (value: string, label: string, createOwnerError?: () => RetikzError) => void;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"assertPositiveNumber"} path={"packages/kernel/foundation/src/assert.ts"} startLine={36}>assertPositiveNumber</ApiSourceLink>
+#### <ApiSourceLink label={"assertPositiveNumber"} path={"packages/kernel/foundation/src/assert.ts"} startLine={32}>assertPositiveNumber</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -545,13 +545,13 @@ export declare const assertNonEmptyString: (value: string, label: string, ownerE
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称          | 类型 / 签名                | 说明                                                   |
-| ------ | ------------- | -------------------------- | ------------------------------------------------------ |
-| 参数   | `value`       | `number`                   | 待检查的数值                                           |
-|        | `label`       | `string`                   | 错误消息中的字段名称                                   |
-|        | `ownerError?` | `RetikzError \| undefined` | 校验失败时原样抛出的领域错误；默认使用 Foundation 错误 |
-| 返回值 | —             | `void`                     | —                                                      |
-| 错误   | —             | —                          | 校验失败时抛出 ownerError 或 RetikzFoundationError     |
+| 类别   | 名称                | 类型 / 签名         | 说明                                                                                 |
+| ------ | ------------------- | ------------------- | ------------------------------------------------------------------------------------ |
+| 参数   | `value`             | `number`            | 待检查的数值                                                                         |
+|        | `label`             | `string`            | 错误消息中的字段名称                                                                 |
+|        | `createOwnerError?` | `() => RetikzError` | 仅在校验失败时调用一次的领域错误工厂；返回的错误原样抛出，省略时使用 Foundation 错误 |
+| 返回值 | —                   | `void`              | —                                                                                    |
+| 错误   | —                   | —                   | 校验失败时抛出工厂返回的领域错误或 RetikzFoundationError；工厂自身抛出的异常原样传播 |
 
 </ApiTable>
 
@@ -560,7 +560,7 @@ export declare const assertNonEmptyString: (value: string, label: string, ownerE
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const assertPositiveNumber: (value: number, label: string, ownerError?: RetikzError | undefined) => void;
+export declare const assertPositiveNumber: (value: number, label: string, createOwnerError?: () => RetikzError) => void;
 ```
 
 </DocTab>

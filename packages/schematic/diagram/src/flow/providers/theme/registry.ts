@@ -13,11 +13,12 @@ export const resolveFlowThemeStyleRegistry = (
     assertNonEmptyString(
       definition.name,
       'Flow theme style',
-      new RetikzDiagramError({
-        code: RetikzDiagramErrorCode.DefinitionInvalid,
-        message: 'Flow theme style name must be a non-empty string.',
-        details: { capability: 'flow-theme-style', key: definition.name },
-      }),
+      () =>
+        new RetikzDiagramError({
+          code: RetikzDiagramErrorCode.DefinitionInvalid,
+          message: 'Flow theme style name must be a non-empty string.',
+          details: { capability: 'flow-theme-style', key: definition.name },
+        }),
     );
     const existing = registry.get(definition.name);
     if (existing === definition) continue;

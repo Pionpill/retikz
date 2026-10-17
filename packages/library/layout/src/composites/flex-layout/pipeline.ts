@@ -3,6 +3,7 @@ import type {
   LayoutAxisProposal,
   LayoutChildResult,
   CompositeCompileContext,
+  CompositeEvaluationResult,
   CompositeCompileResult,
   LayoutProposal,
 } from '@retikz/core';
@@ -37,6 +38,9 @@ import {
   resolveFlexLineMainSizes,
   resolveFlexSpaceDistribution,
   resolveLayoutAxisSize,
+  resolveKnownLayoutContribution,
+  createLayoutContributionResult,
+  measureLayoutAxis,
   sortLayoutSpacing,
 } from '../internal';
 import type { LayoutSpacingArtifact } from '../shared';
@@ -322,11 +326,22 @@ const outgoingLineGuide = (
 };
 
 /** 编译 Layout FlexLayout 的完整 probe、求解、placement 与 replay 流程 */
-export const compileFlexLayout = (
+export function compileFlexLayout(
+  sourceLayout: IRFlexLayout,
+  context: CompositeCompileContext & { evaluation: Readonly<{ kind: 'layout' }> },
+): CompositeCompileResult<FlexLayoutArtifact>;
+/** 根据统一求值需求返回完整布局或指定轴贡献 */
+export function compileFlexLayout(
   sourceLayout: IRFlexLayout,
   context: CompositeCompileContext,
-): CompositeCompileResult<FlexLayoutArtifact> => {
+): CompositeEvaluationResult<FlexLayoutArtifact>;
+export function compileFlexLayout(
+  sourceLayout: IRFlexLayout,
+  context: CompositeCompileContext,
+): CompositeEvaluationResult<FlexLayoutArtifact> {
   const node = resolveFlexLayout(sourceLayout);
+  const knownContribution = resolveKnownLayoutContribution(context, node.size);
+  if (knownContribution !== undefined) return knownContribution;
   const axes = axesOf(node.direction);
   const padding = node.padding;
   const proposalByAxis = context.proposal;
@@ -344,16 +359,20 @@ export const compileFlexLayout = (
         ? Math.max(0, definiteCrossSize - crossMargins.start - crossMargins.end)
         : undefined;
     const crossBasis = basisCrossProposal(finiteCrossLimit, stretchedCrossSize);
-    const minimumResult = requiredProbe(
-      context,
-      sourceIndex,
-      physicalProposal(axes.main, intrinsicProposal('minimum'), crossBasis),
-    );
-    const childMinimum = slotSizeOn(minimumResult, axes.main);
+    const childMinimum =
+      authored.min ??
+      measureLayoutAxis(
+        context,
+        sourceIndex,
+        physicalProposal(axes.main, intrinsicProposal('minimum'), crossBasis),
+        axes.main,
+      );
     const flexBaseSlot =
       authored.basis === 'content'
-        ? slotSizeOn(
-            requiredProbe(context, sourceIndex, physicalProposal(axes.main, intrinsicProposal('natural'), crossBasis)),
+        ? measureLayoutAxis(
+            context,
+            sourceIndex,
+            physicalProposal(axes.main, intrinsicProposal('natural'), crossBasis),
             axes.main,
           )
         : authored.basis;
@@ -411,6 +430,12 @@ export const compileFlexLayout = (
     naturalContribution: mainNaturalContent,
   }).allocationSize;
 
+  if (context.evaluation.kind === 'contribution' && context.evaluation.axis === axes.main)
+    return {
+      kind: 'contribution',
+      contribution: axes.main === 'x' ? { axis: 'x', width: mainAllocation } : { axis: 'y', height: mainAllocation },
+    };
+
   const preliminaryAllocation: LayoutRect =
     axes.main === 'x'
       ? { x: 0, y: 0, width: mainAllocation, height: 0 }
@@ -449,19 +474,25 @@ export const compileFlexLayout = (
     line.itemIndexes.forEach((sourceIndex, index) => (mainSlotBySource[sourceIndex] = line.mainSlots[index])),
   );
 
-  const crossResults = measured.map((item, sourceIndex) =>
-    requiredProbe(
-      context,
-      item.sourceIndex,
-      physicalProposal(
-        axes.main,
-        exactProposal(mainSlotBySource[sourceIndex]),
-        finiteCrossLimit === undefined
-          ? intrinsicProposal('natural')
-          : { kind: LayoutAxisProposalKind.Range, min: 0, max: finiteCrossLimit },
-      ),
-    ),
-  );
+  const crossProposalFor = (sourceIndex: number): LayoutProposal =>
+    physicalProposal(
+      axes.main,
+      exactProposal(mainSlotBySource[sourceIndex]),
+      finiteCrossLimit === undefined
+        ? intrinsicProposal('natural')
+        : { kind: LayoutAxisProposalKind.Range, min: 0, max: finiteCrossLimit },
+    );
+  const crossResults = measured.map((item, sourceIndex) => {
+    const alignment = item.authored.alignSelf ?? node.alignItems;
+    if (alignment === LayoutAlignment.FirstBaseline || alignment === LayoutAlignment.LastBaseline) {
+      const full = requiredProbe(context, item.sourceIndex, crossProposalFor(sourceIndex));
+      return { size: slotSizeOn(full, axes.cross), full };
+    }
+    return {
+      size: measureLayoutAxis(context, item.sourceIndex, crossProposalFor(sourceIndex), axes.cross),
+      full: undefined,
+    };
+  });
 
   lineStates.forEach(line => {
     const metrics = resolveFlexLineCrossMetrics(
@@ -472,14 +503,18 @@ export const compileFlexLayout = (
         const alignment = item.authored.alignSelf ?? node.alignItems;
 
         return {
-          slotSize: slotSizeOn(result, axes.cross),
+          slotSize: result.size,
           marginStart: margins.start,
           marginEnd: margins.end,
           alignment,
-          firstBaselineOffset: structuralGuideOffset(result, axes.cross, BuiltinLayoutAlignmentGuideName.FirstBaseline)
-            .offset,
-          lastBaselineOffset: structuralGuideOffset(result, axes.cross, BuiltinLayoutAlignmentGuideName.LastBaseline)
-            .offset,
+          firstBaselineOffset:
+            result.full === undefined
+              ? undefined
+              : structuralGuideOffset(result.full, axes.cross, BuiltinLayoutAlignmentGuideName.FirstBaseline).offset,
+          lastBaselineOffset:
+            result.full === undefined
+              ? undefined
+              : structuralGuideOffset(result.full, axes.cross, BuiltinLayoutAlignmentGuideName.LastBaseline).offset,
         };
       }),
     );
@@ -501,6 +536,13 @@ export const compileFlexLayout = (
     minimumContribution: crossContribution,
     naturalContribution: crossContribution,
   }).allocationSize;
+
+  if (context.evaluation.kind === 'contribution')
+    return createLayoutContributionResult(
+      context,
+      axes.main === 'x' ? mainAllocation : crossAllocation,
+      axes.main === 'y' ? mainAllocation : crossAllocation,
+    );
 
   const allocation: LayoutRect =
     axes.main === 'x'
@@ -574,7 +616,7 @@ export const compileFlexLayout = (
       }
 
       const alignment = item.authored.alignSelf ?? node.alignItems;
-      let finalResult = crossResults[sourceIndex];
+      let finalResult: LayoutChildResult;
       if (alignment === LayoutAlignment.Stretch) {
         const itemCrossSlot = Math.max(0, line.finalCrossSize - crossMargins.start - crossMargins.end);
         finalResult = requiredProbe(
@@ -582,6 +624,9 @@ export const compileFlexLayout = (
           item.sourceIndex,
           physicalProposal(axes.main, exactProposal(mainSlot), exactProposal(itemCrossSlot)),
         );
+      } else {
+        finalResult =
+          crossResults[sourceIndex].full ?? requiredProbe(context, item.sourceIndex, crossProposalFor(sourceIndex));
       }
 
       const crossSlotSize = slotSizeOn(finalResult, axes.cross);
@@ -809,4 +854,4 @@ export const compileFlexLayout = (
       spacing: sortLayoutSpacing(spacing),
     }),
   };
-};
+}

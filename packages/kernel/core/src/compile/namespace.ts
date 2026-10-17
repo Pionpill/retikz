@@ -79,6 +79,14 @@ export class NamespaceStack {
   private readonly onDuplicate?: (info: DuplicateRegisterInfo) => void;
   private readonly onRegister?: (info: NamespaceRegisterInfo) => void;
 
+  /** 引用环境的不可变快照身份，fork 未写入时保持一致 */
+  private snapshotIdentity: object = {};
+
+  /** 供同次编译尺寸查询区分可见引用状态 */
+  get measurementIdentity(): object {
+    return this.snapshotIdentity;
+  }
+
   /** 当前阶段；registering 允许写入，resolving 只允许 lookup */
   private currentPhase: NamespacePhase = 'registering';
 
@@ -99,6 +107,7 @@ export class NamespaceStack {
     fork.firstIrPaths.splice(0, fork.firstIrPaths.length, ...this.firstIrPaths.map(paths => new Map(paths)));
     fork.forkBaselineFrames = this.frames.map(frame => new Map(frame));
     fork.currentPhase = this.currentPhase;
+    fork.snapshotIdentity = this.snapshotIdentity;
 
     return fork;
   }
@@ -144,6 +153,7 @@ export class NamespaceStack {
 
     const topFrame = this.frames[this.frames.length - 1];
     if (change.overwroteBaseline && topFrame.get(change.id) === change.baselineEntry) {
+      this.snapshotIdentity = {};
       topFrame.set(change.id, change.entry);
       return true;
     }
@@ -165,6 +175,7 @@ export class NamespaceStack {
 
   /** 推入新 frame；通常对应 `<Scope localNamespace>` 入场 */
   pushFrame(): void {
+    this.snapshotIdentity = {};
     this.frames.push(new Map());
     this.firstIrPaths.push(new Map());
     this.forkBaselineFrames?.push(new Map());
@@ -178,6 +189,7 @@ export class NamespaceStack {
       );
     }
 
+    this.snapshotIdentity = {};
     this.frames.pop();
     this.firstIrPaths.pop();
     this.forkBaselineFrames?.pop();
@@ -185,11 +197,13 @@ export class NamespaceStack {
 
   /** 切换到 resolving 阶段；切换后 register / replaceLayout 一律抛 internal error */
   enterResolvingPhase(): void {
+    this.snapshotIdentity = {};
     this.currentPhase = 'resolving';
   }
 
   /** 切回 registering 阶段；用于 pending path 解析完成后继续处理上层 scope 子树 */
   exitResolvingPhase(): void {
+    this.snapshotIdentity = {};
     this.currentPhase = 'registering';
   }
 
@@ -217,6 +231,7 @@ export class NamespaceStack {
       topFirstPaths.set(id, irPath);
     }
 
+    this.snapshotIdentity = {};
     topFrame.set(id, { layout, state });
     this.onRegister?.({
       id,
@@ -252,6 +267,7 @@ export class NamespaceStack {
     const current = targetFrame.get(id);
     if (expectedCurrent !== undefined && current?.layout !== expectedCurrent) return false;
 
+    this.snapshotIdentity = {};
     targetFrame.set(id, { layout, state: 'resolved' });
 
     return true;

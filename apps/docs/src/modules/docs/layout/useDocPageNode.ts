@@ -29,8 +29,8 @@ export const resolveDocPageNode = (loc: DocLocation | null): DocPageNode => {
     return { sections, section, target };
   }
 
-  const page = section?.pages.find(item => item.id === loc.pageId);
-  const subPage = loc.subPageId ? page?.children?.find(item => item.id === loc.subPageId) : undefined;
+  const page = section?.pages.find(item => !item.linkTo && item.id === loc.pageId);
+  const subPage = loc.subPageId ? page?.children?.find(item => !item.linkTo && item.id === loc.subPageId) : undefined;
 
   return { sections, section, page, subPage, target: loc.subPageId ? subPage : page };
 };

@@ -17,11 +17,12 @@ export const defineRibbonCap = <TParams extends JsonObject>(
   assertNonEmptyString(
     definition.name,
     'Ribbon cap name',
-    new RetikzExtensionError({
-      code: RetikzExtensionErrorCode.AuthoringInvalid,
-      message: 'Ribbon cap name must be a non-empty string.',
-      details: { name: definition.name },
-    }),
+    () =>
+      new RetikzExtensionError({
+        code: RetikzExtensionErrorCode.AuthoringInvalid,
+        message: 'Ribbon cap name must be a non-empty string.',
+        details: { name: definition.name },
+      }),
   );
   return definition as unknown as RibbonCapDefinition;
 };

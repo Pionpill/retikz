@@ -1,0 +1,154 @@
+---
+title: 渲染链路
+description: 用两个节点和一条连线，理解 React / Vanilla 输入如何经过 Core 编译和 Render 后端成为画面。
+---
+
+本文是 Kernel 模块的总览，介绍各个核心包的职责与协作关系，帮助理解从声明到画面的整体流程。具体机制与实现细节将在后续文档中展开。
+
+阅读前建议先完成[快速开始](/kernel/components/get-start)，并了解[分层](/kernel/components/design/layers)中的包职责。
+
+## 整体流程
+
+作者描述节点与连接关系，Core 计算绘制几何，Render 将结果交给 SVG 或 Canvas 显示。途中有两种重要数据：**IR** 是统一的图形声明，**Scene** 是已经完成几何计算的绘制结果。
+
+<ComponentPreview files="pipeline-overview" size="md" hideCode type="flow" />
+
+本例包含两个矩形节点 A、B，中心分别为 `[0, 0]`、`[180, 0]`，尺寸都是 `60 × 40`。路径通过节点名称连接，最终画面中的线段恰好连接两个矩形的边缘。
+
+<ComponentPreview files="pipeline-example" size="xs" />
+
+预览源码可切换 React、Vanilla 与 IR。本例使用 static 模式，便于观察一次完整处理。
+
+## 声明与输入
+
+**Vanilla 是上层绘图 API 的最终汇合入口，React API 是它之上的声明与宿主适配薄壳。** 两种写法都将图形配置交给 Vanilla 处理。
+
+React 中的 `Node`、`Path`、`Step` 只做声明。`Layout` 收集整棵声明树，将节点属性、子文本和路径步骤转换为 `InputScene` 配置，再连同处理选项交给 Vanilla。直接使用 Vanilla 时，应用自行提供配置。
+
+<ComponentPreview files="pipeline-input" size="sm" hideCode type="flow" />
+
+在本例中，两条入口交付的都是节点 A、B 和连接它们的路径。节点名称、位置、尺寸以及路径中的 `{ id: 'A' }`、`{ id: 'B' }` 都保留在配置中。使用 `<Layout ir={ir} />` 时，Layout 直接将已有 IR 交给同一处理入口。
+
+<SourceLinks
+  sources={[
+    { label: 'Layout 收集声明并调用 Vanilla', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
+    { label: 'JSX 转换为 InputScene', path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts' },
+  ]}
+/>
+
+## Vanilla 处理
+
+Vanilla 在输入层统一处理配置：将 `InputScene` 归一化为 `IRScene`，整理编译选项，再安排 Core 执行。已有 IR 也从这里接入。本例经过输入准备后，IR 中仍保留 A、B 的名称引用，等待 Core 计算连接位置。
+
+Vanilla 还负责处理模式的装配。**static** 完成单次处理；默认的 **retained** 模式构建 Runtime，将数据源、Core 计算与结果提交连接起来，持续接收输入更新。
+
+<ComponentPreview files="pipeline-processing" size="sm" hideCode type="flow" />
+
+React 的 Layout 调用 Vanilla 提供的处理能力，将控制器的创建、更新和释放接入 React 生命周期。应用采用哪种声明方式，都复用这套输入准备与处理流程。
+
+<SourceLinks
+  sources={[
+    { label: '输入准备', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
+    { label: '单次处理', path: 'packages/kernel/vanilla/src/processing/static.ts' },
+    { label: 'Runtime 与处理控制器装配', path: 'packages/kernel/vanilla/src/processing/internal/controller.ts' },
+  ]}
+/>
+
+## Core 编译
+
+Core 接收 IR 与编译选项，确定节点尺寸、位置、文字布局和连接边界，输出 Scene。此时，“连接 A 与 B”已经变成可以直接绘制的数值几何。
+
+本例中，A 的中心是 `[0, 0]`，宽度为 60，右边界位于 `x = 30`；B 的中心是 `[180, 0]`，左边界位于 `x = 150`。因此，同一条路径在编译前后发生了这样的变化：
+
+<DocTabs defaultValue="ir">
+<DocTab value="ir" label="IR：名称引用">
+
+```ts
+{
+  type: 'path',
+  children: [
+    { type: 'step', kind: 'move', to: { id: 'A' } },
+    { type: 'step', kind: 'line', to: { id: 'B' } },
+  ],
+}
+```
+
+</DocTab>
+<DocTab value="scene" label="Scene：绘制几何">
+
+```ts
+{
+  type: 'path',
+  commands: [
+    { kind: 'move', to: [30, 0] },
+    { kind: 'line', to: [150, 0] },
+  ],
+}
+```
+
+</DocTab>
+</DocTabs>
+
+上面只摘录路径结构。完整 Scene 还包含两个节点的矩形、文字及画布信息。Core 将它与附加产物、空间句柄一起交付，Vanilla 再整理为宿主消费的 `ProcessingResult`。普通绘图从中取出 Scene，应用按需读取其他结果。
+
+<SourceLinks
+  sources={[
+    { label: 'Core 编译与结果装配', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: '节点连接边界', path: 'packages/kernel/core/src/compile/node/boundary.ts' },
+  ]}
+/>
+
+## Render 与宿主
+
+Render 消费 Scene 中已经确定的几何。选择 SVG 时，它生成描述元素与属性的 `SvgNode` 树，由 React 或 Vanilla DOM 宿主提交为 SVG 元素；选择 Canvas 时，它执行绘制操作，由 Canvas 宿主管理画布。
+
+<ComponentPreview files="pipeline-output" size="sm" hideCode type="flow" />
+
+这两条分支消费相同的节点位置和路径端点。本例中的连线在两种后端下都是 `[30, 0] → [150, 0]`。宿主负责挂载、更新和释放显示资源，并接入应用需要的事件与动画。
+
+静态导出可以将 SVG 描述树序列化为字符串。应用已有 Scene 时，也可以直接从后端接入；需要修改声明时，则由 Vanilla 处理更新后的输入，再把新结果交给宿主。
+
+<SourceLinks
+  sources={[
+    { label: 'SVG 描述树构建', path: 'packages/kernel/render/src/svg/builders/document.ts' },
+    { label: 'React 宿主显示处理结果', path: 'packages/kernel/react/src/render/processing-result.tsx' },
+    { label: 'Vanilla SVG 宿主', path: 'packages/kernel/vanilla/src/dom/mount-svg.ts' },
+    { label: 'Canvas 绘制', path: 'packages/kernel/render/src/canvas/render-to-canvas.ts' },
+  ]}
+/>
+
+## 完整实现流程
+
+沿本例的 React JSX、static、SVG 分支阅读源码，可以依次追踪下面的入口。箭头表示执行阅读顺序；输入准备与编译驱动内部的调用也展开在图中。
+
+<ComponentPreview files="pipeline-implementation" size="lg" hideCode type="flow" />
+
+从 Layout 的 `createInputScene` 开始，进入 Vanilla 的 `prepareStaticProcessing`。其中，`prepareProcessingInput` 负责输入准备，默认驱动通过 `compileToScene` 调用 Core。结果返回 React 的 `ProcessingResultHost` 后，经 `buildSvgFrameDocument` 与 `svgToReact` 转成 React 元素，最终由 React 提交到页面。
+
+<SourceLinks
+  sources={[
+    { label: 'React 场景入口', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
+    { label: 'Vanilla 同步处理', path: 'packages/kernel/vanilla/src/processing/static.ts' },
+    { label: '默认编译驱动', path: 'packages/kernel/vanilla/src/runtime/compile-driver.ts' },
+    { label: 'SvgNode 转换为 React 元素', path: 'packages/kernel/react/src/render/svg/svg-to-react.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: '编译流程',
+      description: '进入 Core 内部追踪上下文、遍历和结果装配',
+      url: '/kernel/packages/core/compilation',
+    },
+    {
+      title: '编译产物',
+      description: '区分 Scene、附加产物、空间句柄与诊断出口',
+      url: '/kernel/packages/core/compilation-output',
+    },
+    { title: '增量执行 · runtime', description: '了解数据源、计算和事务的职责', url: '/kernel/packages/runtime' },
+    { title: '渲染后端 · render', description: '继续阅读 SVG 与 Canvas 的后端实现', url: '/kernel/packages/render' },
+  ]}
+/>

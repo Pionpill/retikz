@@ -152,11 +152,51 @@ export type PathTargetQueryResult = Readonly<{
   points: ReadonlyArray<Readonly<IRPosition>>;
 }>;
 
+/** 当前查询需要的尺寸轴 */
+export type LayoutMeasurementAxis = 'x' | 'y' | 'both';
+
+/** 仅包含已请求轴的尺寸贡献，不携带几何或提交状态 */
+export type LayoutContribution =
+  | Readonly<{ axis: 'x'; width: number }>
+  | Readonly<{ axis: 'y'; height: number }>
+  | Readonly<{ axis: 'both'; width: number; height: number }>;
+
+/** 统一组件求值的需求 */
+export type CompositeEvaluation =
+  | Readonly<{ kind: 'layout' }>
+  | Readonly<{ kind: 'contribution'; axis: LayoutMeasurementAxis }>;
+
+/** 组件按需返回的真实 allocation 尺寸，由 Core 投影成提案槽位 */
+export type CompositeContributionResult = Readonly<{
+  /** 仅用于尺寸贡献求值 */
+  kind: 'contribution';
+  /** 与当前请求轴完全对应的 allocation 尺寸 */
+  contribution: LayoutContribution;
+}>;
+
+/** 尺寸查询的成功贡献或当前回调拥有的失败 */
+export type LayoutMeasurementProbe =
+  | Readonly<{ kind: 'resolved'; result: LayoutContribution }>
+  | Readonly<{ kind: 'failed'; failure: LayoutChildFailure }>;
+
+/** 同一 Definition 的完整输出或按需贡献 */
+export type CompositeEvaluationResult<TArtifact extends JsonValue = never> =
+  | CompositeCompileResult<TArtifact>
+  | CompositeContributionResult;
+
 /** 复合组件可见的受限编译上下文 */
 export type CompositeCompileContext = CompositeRuntimeInputContext &
   Readonly<{
     /** 当前 composite 位置完整、只读的有效 Theme */
     theme: ResolvedTheme;
+    /** 当前求值需要完整布局或指定轴的 allocation 贡献 */
+    evaluation: CompositeEvaluation;
+    /** 隔离查询尺寸贡献；结果不可重放 */
+    measureChild: (
+      child: IRChild | CompositeBoundChild,
+      proposal: LayoutProposal,
+      axis: LayoutMeasurementAxis,
+    ) => LayoutMeasurementProbe;
     /** 当前 composite occurrence 从父级收到的完整双轴 proposal */
     proposal: LayoutProposal;
     /**
@@ -233,7 +273,7 @@ export type CompositeDefinition<
   /** 完整组件声明的 schema */
   schema: ZodType<TNode>;
   /** 在完整编译上下文中生成子项，布局能力按需调用 */
-  compile: (node: TNode, context: CompositeCompileContext) => CompositeCompileResult<TArtifact>;
+  compile: (node: TNode, context: CompositeCompileContext) => CompositeEvaluationResult<TArtifact>;
 } & ([TArtifact] extends [never] ? { artifactSchema?: never } : { artifactSchema: ZodType<TArtifact> });
 
 /** registry 与 adapter 使用的异构复合定义，调用前恢复节点类型关联 */
@@ -247,12 +287,12 @@ export type AnyCompositeDefinition = {
 } & (
   | {
       /** 生成当前组件的编译输出 */
-      compile: (node: never, context: CompositeCompileContext) => CompositeCompileResult<never>;
+      compile: (node: never, context: CompositeCompileContext) => CompositeEvaluationResult<never>;
       artifactSchema?: never;
     }
   | {
       /** 生成当前组件的编译输出与可选产物 */
-      compile: (node: never, context: CompositeCompileContext) => CompositeCompileResult<JsonValue>;
+      compile: (node: never, context: CompositeCompileContext) => CompositeEvaluationResult<JsonValue>;
       /** JSON 产物校验契约 */
       artifactSchema: ZodType<JsonValue>;
     }

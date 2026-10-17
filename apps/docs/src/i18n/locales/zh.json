@@ -48,13 +48,10 @@
     "moduleNavigationLabel": "文档模块"
   },
   "kernel": {
-    "internalMechanisms": "内部机制",
-    "compositeComponents": "复合组件",
-    "compositeCustom": "自定义用法",
-    "compositeMechanism": "实现原理",
+    "runtimeMechanics": "运行机制",
+    "renderingPipeline": "渲染链路",
+    "compilationMechanisms": "编译机制",
     "internals": "进阶",
-    "compilation": "编译流程",
-    "themeResolution": "主题解析",
     "label": "内核",
     "navigationLabel": "内核",
     "navigationDescription": "提供节点、路径、布局与渲染所需的基础绘图能力",
@@ -145,6 +142,8 @@
     "pkgCoreCoordinates": "坐标解析",
     "pkgCoreNodeCompilation": "节点编译",
     "pkgCorePathCompilation": "路径编译",
+    "pkgCoreCompositeCompilation": "复合编译",
+    "pkgCoreCompilationOutput": "编译产物",
     "pkgOverview": "概览",
     "pkgFoundationUtilities": "通用工具",
     "pkgFoundationTypesSchemas": "类型与契约",
@@ -417,9 +416,12 @@
     "roadmap": "路线图"
   },
   "toc": {
+    "fixedHeader": "固定头部",
+    "scrollingHeader": "滚动头部",
     "copyLink": "复制链接",
     "outline": "文章目录",
     "linkCopied": "成功复制网页链接",
+    "linkCopyFailed": "复制失败，请从地址栏复制链接",
     "showOutline": "显示文章目录",
     "hideOutline": "隐藏文章目录"
   },

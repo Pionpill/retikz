@@ -14,7 +14,7 @@ export const resolveCellVisualScaleRegistry = (
     assertNonEmptyString(
       definition.name,
       'cell visual scale provider key',
-      new RetikzTableError('cell visual scale provider key must be a non-empty string.'),
+      () => new RetikzTableError('cell visual scale provider key must be a non-empty string.'),
     );
     if (registry.has(definition.name)) {
       throw new RetikzTableError(`duplicate cell visual scale registration: "${definition.name}"`);

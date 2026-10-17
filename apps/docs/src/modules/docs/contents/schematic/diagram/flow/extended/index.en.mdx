@@ -138,6 +138,20 @@ Set `itemWidth="fill"` on a receiving row to share additional space equally amon
 
 This does not align columns across rows or scale fonts and shapes. Fill requires a parent allocation. Grid, multi-root Groups, excluded participating children, or positive free space with only fixed nodes fail explicitly. Omit fill to align container shells while retaining natural content sizes.
 
+### Equal-height sibling groups
+
+Set `containerHeight="match-largest"` on a horizontal `FlowLayout` to give its direct `FlowGroup` children the largest natural shell height. Captions, padding, internal layouts, and relation-label reservations contribute to that height. Node sizes stay unchanged. When a group contains one vertical linear content layout, spare height is shared equally between its children, preserving authored gaps and relation-label reservations as minimum spacing. With matching captions and padding, the first-node tops and last-node bottoms align.
+
+The example enables equal heights initially. Turn off “Equal group heights” to compare the bottom edges and node gaps. Enabling it adds spacing to the shorter flow without stretching nodes.
+
+<ComponentPreview
+  files="flow-container-height"
+  size="md"
+  caption="Toggle equal group heights and watch the shorter flow increase its node gaps to align the last nodes."
+/>
+
+This option requires a left/right linear layout containing only Groups, with no nonempty `excludeFromBounds` on the parent. Single-child transparent linear containers pass spare height inward. A single node keeps its natural position. Multiple content roots, horizontal multi-child layouts, Grid, and content layouts with nonempty excludeFromBounds retain their natural placement; only their group shells are equalized. Nested equal-height layouts are resolved from the inside out, and wrapping caused by existing width strategies contributes to natural height. This option does not equalize or stretch Entity heights.
+
 ### Grid alignment
 
 Use Grid when nodes in different rows must align in pairs. The recommended `placements` form is a matrix: the outer index is the zero-based row, the inner index is the column, each cell contains a direct child id, and `null` leaves a cell empty. An id-keyed `{ childId: { row, column } }` mapping is also supported. React and Vanilla use the same `placements`; Vanilla `children` controls only containment and paint order. Every direct child needs one cell; overlaps, spans, and references to descendants in other containers are invalid. Empty tracks create no placeholder elements. Columns share center x, rows share center y, and nodes retain their measured sizes.

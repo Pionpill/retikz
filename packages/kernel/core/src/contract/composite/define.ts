@@ -42,7 +42,7 @@ const isNonEmptyLiteralString = (value: unknown, label: string): value is string
   assertNonEmptyString(
     value,
     label,
-    new RetikzCoreError(RetikzCoreErrorCode.CompositeContractViolation, `${label} must be a non-empty string.`),
+    () => new RetikzCoreError(RetikzCoreErrorCode.CompositeContractViolation, `${label} must be a non-empty string.`),
   );
 
   return true;

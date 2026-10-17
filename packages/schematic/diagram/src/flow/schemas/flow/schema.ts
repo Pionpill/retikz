@@ -360,6 +360,11 @@ const FlowLayoutBaseSchema = strictObject({
 });
 
 const FlowLinearLayoutSchema = strictObject({
+  containerHeight: literal('match-largest')
+    .optional()
+    .describe(
+      'Equalize direct Group shell heights to their natural maximum in a left/right linear Layout. Shares spare height between children of a single vertical linear content layout while preserving Entity sizes; other content keeps natural placement.',
+    ),
   containerWidth: literal('match-largest')
     .optional()
     .describe(

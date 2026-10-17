@@ -1,14 +1,14 @@
 import type { JsonValue } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
-import type { CompositeCompileContext, CompositeCompileResult } from '../../contract';
+import type { CompositeCompileContext, CompositeEvaluationResult } from '../../contract';
 import type { IRComposite } from '../../schemas';
 import { parseProviderPayload } from '../provider-payload';
 import type { CompositeBinding, CompositeRegistry, CompositeResolution, RegisteredCompositeBinding } from './types';
 
 type CallableComposite = Readonly<{
   schema: ZodType;
-  compile: (node: unknown, context: CompositeCompileContext) => CompositeCompileResult<JsonValue>;
+  compile: (node: unknown, context: CompositeCompileContext) => CompositeEvaluationResult<JsonValue>;
   artifactSchema?: ZodType<JsonValue>;
 }>;
 

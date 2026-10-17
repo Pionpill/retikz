@@ -252,6 +252,8 @@ export type FlowLayoutLeafInput = Readonly<{
 export type FlowLayoutGroupInput = Readonly<{
   /** 带可见外壳分组的输入判别字段 */
   kind: 'group';
+  /** 本次编排已确定的分组外壳物理高度，纵向线性内容的间隙已按剩余高度分配 */
+  allocatedHeight?: number;
   /** 本次编排已确定的物理宽度约束 */
   allocatedWidth?: number;
   /** 作者指定的分组 id，与输出 id 对应 */
