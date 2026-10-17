@@ -9,6 +9,7 @@ import {
 } from '@retikz/chart-react/point';
 import type { IRScene } from '@retikz/core';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
+import { SectorShapeDefinition } from '@retikz/extension';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { createInputScene, Layout, Node, Scope } from '@retikz/react';
@@ -177,6 +178,36 @@ const createInput = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe('buildPreviewSource', () => {
+  it('形状扩展贯穿 IR 预览、Vanilla 渲染与生成源码，Definition 不进入 JSON', () => {
+    const Demo: FC = () => (
+      <Layout extensions={{ shapes: [SectorShapeDefinition] }}>
+        <Node
+          position={[0, 0]}
+          shape={{
+            type: 'sector',
+            params: {
+              innerRadius: 20,
+              outerRadius: 50,
+              startAngle: 0,
+              endAngle: 90,
+              cornerRadius: 4,
+            },
+          }}
+        />
+      </Layout>
+    );
+    const result = buildPreviewSource(createInput({ Component: Demo }));
+    const code = result.source?.vanilla?.files[0]?.code;
+    expect(code).toContain("import { SectorShapeDefinition } from '@retikz/extension'");
+    expect(code).toContain('shapes: [SectorShapeDefinition]');
+    expect(result.source?.ir?.files[0]?.code).toContain('"sector"');
+    expect(result.source?.ir?.files[0]?.code).not.toContain('SectorShapeDefinition');
+    for (const source of [result.source?.ir, result.source?.vanilla]) {
+      const svg = renderToStaticMarkup(source?.render?.('svg'));
+      expect(svg).toContain('<path');
+      expect(svg).not.toContain('Unknown shape');
+    }
+  });
   it('preserves a positioned Scope and its children in authoring Source', () => {
     const PositionedScopeDemo: FC = () => (
       <Layout>

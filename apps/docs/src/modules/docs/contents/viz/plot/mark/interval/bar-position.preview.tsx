@@ -21,7 +21,6 @@ export type BarPositionPreviewValues = {
 export const BarPositionPreview = (values: BarPositionPreviewValues) => {
   const isPolar = values.coordinate === 'polar2D';
   const isHorizontal = !isPolar && values.direction === 'horizontal';
-  const label = values.showLabels ? 'value' : undefined;
   const shadow = values.shadow ? { preset: 'sm' as const, color: '#0f172a', opacity: 0.24 } : undefined;
 
   return (
@@ -37,12 +36,16 @@ export const BarPositionPreview = (values: BarPositionPreviewValues) => {
           stroke="#ffffff"
           strokeWidth={values.strokeWidth}
           shadow={shadow}
-          label={{
-            field: label,
-            position: isHorizontal ? 'right' : 'top',
-            distance: 6,
-            font: { size: 10, weight: 'bold' },
-          }}
+          label={
+            values.showLabels
+              ? {
+                  field: 'value',
+                  position: isHorizontal ? 'right' : 'top',
+                  distance: 6,
+                  font: { size: 10, weight: 'bold' },
+                }
+              : undefined
+          }
         />
         <PlotScale
           dimension={isHorizontal ? 'y' : 'x'}

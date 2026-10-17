@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { boxplotOutside, boxplotSummary } from '../../../../plot/tests/helpers/plot-spec-fixtures';
 import { buildPlotIR } from '../../../src/adapter';
-import { IntervalMark, PointMark, ReferenceMark } from '../../../src/components/marks';
+import { IntervalMark, PointMark, RelationMark } from '../../../src/components/marks';
 
 describe('buildPlotIR stat-geom 结构组合', () => {
   it('boxplot composition uses existing marks and mark-local transforms', () => {
@@ -18,17 +18,15 @@ describe('buildPlotIR stat-geom 结构组合', () => {
           x="boxX"
           y="boxHigh"
         />
-        <ReferenceMark
-          extentField="boxX0"
-          extentToField="boxX1"
+        <RelationMark
+          source={{ project: { x: 'boxX0', y: 'median' } }}
+          target={{ project: { x: 'boxX1', y: 'median' } }}
           transform={[{ operation: boxplotSummary }]}
-          y="median"
         />
-        <ReferenceMark
-          extentField="whiskerMin"
-          extentToField="whiskerMax"
+        <RelationMark
+          source={{ project: { x: 'boxX', y: 'whiskerMin' } }}
+          target={{ project: { x: 'boxX', y: 'whiskerMax' } }}
           transform={[{ operation: boxplotSummary }]}
-          x="boxX"
         />
         <PointMark transform={[{ operation: boxplotOutside }]} x="boxX" y="value" />
       </>,
@@ -38,8 +36,8 @@ describe('buildPlotIR stat-geom 结构组合', () => {
 
     expect(spec.marks.map(mark => (isBuiltinMark(mark) ? mark.type : 'custom'))).toEqual([
       'interval',
-      'reference',
-      'reference',
+      'relation',
+      'relation',
       'point',
     ]);
     expect(spec.marks[0]).toMatchObject({ type: 'interval', transform: [{ operation: boxplotSummary }] });

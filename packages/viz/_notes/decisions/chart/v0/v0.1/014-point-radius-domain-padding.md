@@ -5,11 +5,13 @@ keywords: 'Point、family、domain、range、domainPadding、size、right、plot
 
 # ADR-014：Point family 按最大点半径预留 domain range
 
-- 状态：Accepted（2026-09-01 人工确认 Point 最大半径 range 留白契约）
+- 状态：Superseded（由 [Plot ADR-016](../../../plot/v0/v0.2/016-point-mark-auto-padding.md) 替代）
 - 决策日期：2026-09-01
 - 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-004 Scatter](./004-scatter.md) · [ADR-013 Bubble](./013-bubble.md) · [Plot ADR-008 Domain padding 单位](../../../plot/v0/v0.2/008-domain-padding-units.md) · [Chart 封装完备设计](../../../../architecture/chart-encapsulation-complete.md)
 
 ## 背景与目标
+
+当前策略归属、默认值、覆盖规则及 extension 行为以 Plot ADR-016 为准。以下保留原决策依据；Chart 不再承担半径计算或生成派生自动留白。
 
 Point family 当前用固定 domain 比例为位置 scale 留白：Bubble 使用 `0.04`，其余 Point chartType 使用 `0.02`。比例值既随 plot area 宽高产生不同的视觉距离，也无法随 Point size 字段、常量半径或 authored Chart mark 的最终配置变化。小点可能得到过多空间，大点仍可能贴近边界或被裁切
 

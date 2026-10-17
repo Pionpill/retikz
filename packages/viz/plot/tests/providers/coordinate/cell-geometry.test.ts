@@ -316,7 +316,7 @@ const WIDTH = 400;
 
 const HEIGHT = 400;
 
-const cartOpts: LowerPlotsOptions = { width: WIDTH, height: HEIGHT };
+const cartOpts: LowerPlotsOptions = { layout: { width: WIDTH, height: HEIGHT } };
 
 const cartesianBarSpec = (arrangement?: 'stack', series?: string): IRPlot =>
   PlotSchema.parse({
@@ -856,39 +856,40 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
 
     // custom 工厂返回无 projectCell 的 frame → interval fail-loud（指明缺 projectCell）
     const options: LowerPlotsOptions = {
-      width: WIDTH,
-      height: HEIGHT,
-      coordinates: [
-        defineCoordinate({
-          schema: object({
-            type: literal('noproj').describe('Discriminator: no-project-cell custom coordinate operation'),
-          }),
-          roles: ['x', 'y'],
-          resolve: (_operation, ctx) => {
-            const xValues = ctx.collectRoleValues('x');
-            const yValues = ctx.collectRoleValues('y');
-            const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [
-              0,
-              ctx.width,
-            ]);
-            const yScale = ctx.buildPositionScale(ctx.resolveScaleForRole('y', undefined, yValues), yValues, [
-              ctx.height,
-              0,
-            ]);
+      layout: { width: WIDTH, height: HEIGHT },
+      definitions: {
+        coordinates: [
+          defineCoordinate({
+            schema: object({
+              type: literal('noproj').describe('Discriminator: no-project-cell custom coordinate operation'),
+            }),
+            roles: ['x', 'y'],
+            resolve: (_operation, ctx) => {
+              const xValues = ctx.collectRoleValues('x');
+              const yValues = ctx.collectRoleValues('y');
+              const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [
+                0,
+                ctx.width,
+              ]);
+              const yScale = ctx.buildPositionScale(ctx.resolveScaleForRole('y', undefined, yValues), yValues, [
+                ctx.height,
+                0,
+              ]);
 
-            return {
-              frame: createCoordinateFrame('noproj', ['x', 'y'], values => {
-                const x = xScale.coordinate(values[0]);
-                const y = yScale.coordinate(values[1]);
-                return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
-              }),
-              plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
-              gridLayers: [],
-              axisLayers: [],
-            };
-          },
-        }),
-      ],
+              return {
+                frame: createCoordinateFrame('noproj', ['x', 'y'], values => {
+                  const x = xScale.coordinate(values[0]);
+                  const y = yScale.coordinate(values[1]);
+                  return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
+                }),
+                plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
+                gridLayers: [],
+                axisLayers: [],
+              };
+            },
+          }),
+        ],
+      },
     };
 
     expect(() => expandOf(spec, { d: [{ m: 1, v: 3 }] }, options)).toThrow(/noproj|projectCell|not supported/i);
@@ -904,52 +905,53 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       marks: [{ type: 'interval', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     });
     const options: LowerPlotsOptions = {
-      width: WIDTH,
-      height: HEIGHT,
-      coordinates: [
-        defineCoordinate({
-          schema: object({
-            type: literal('curved-cell').describe('Discriminator: project-cell custom coordinate operation'),
-          }),
-          roles: ['x', 'y'],
-          resolve: (_operation, ctx) => {
-            const xValues = ctx.collectRoleValues('x');
-            const yValues = ctx.collectRoleValues('y');
-            const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [
-              0,
-              ctx.width,
-            ]);
-            const yScale = ctx.buildPositionScale(ctx.resolveScaleForRole('y', undefined, yValues), yValues, [
-              ctx.height,
-              0,
-            ]);
+      layout: { width: WIDTH, height: HEIGHT },
+      definitions: {
+        coordinates: [
+          defineCoordinate({
+            schema: object({
+              type: literal('curved-cell').describe('Discriminator: project-cell custom coordinate operation'),
+            }),
+            roles: ['x', 'y'],
+            resolve: (_operation, ctx) => {
+              const xValues = ctx.collectRoleValues('x');
+              const yValues = ctx.collectRoleValues('y');
+              const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [
+                0,
+                ctx.width,
+              ]);
+              const yScale = ctx.buildPositionScale(ctx.resolveScaleForRole('y', undefined, yValues), yValues, [
+                ctx.height,
+                0,
+              ]);
 
-            const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
-              const x = xScale.coordinate(values[0]);
-              const y = yScale.coordinate(values[1]);
+              const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
+                const x = xScale.coordinate(values[0]);
+                const y = yScale.coordinate(values[1]);
 
-              return Number.isFinite(x) && Number.isFinite(y)
-                ? [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)]
-                : null;
-            };
+                return Number.isFinite(x) && Number.isFinite(y)
+                  ? [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)]
+                  : null;
+              };
 
-            return {
-              frame: createCoordinateFrame('curved-cell', ['x', 'y'], projectRoles, {
-                roleScales: { x: xScale, y: yScale },
-                projectCell: cell => ({
-                  kind: 'contour',
-                  points: densifyCellContour(cell, (x, y) => [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)], {
-                    curvedPrimary: true,
+              return {
+                frame: createCoordinateFrame('curved-cell', ['x', 'y'], projectRoles, {
+                  roleScales: { x: xScale, y: yScale },
+                  projectCell: cell => ({
+                    kind: 'contour',
+                    points: densifyCellContour(cell, (x, y) => [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)], {
+                      curvedPrimary: true,
+                    }),
                   }),
                 }),
-              }),
-              plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
-              gridLayers: [],
-              axisLayers: [],
-            };
-          },
-        }),
-      ],
+                plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
+                gridLayers: [],
+                axisLayers: [],
+              };
+            },
+          }),
+        ],
+      },
     };
     const layer = firstLayer(spec, { d: [{ x: 3, y: 4 }] }, options);
     const node = nodesOf(layer)[0];
@@ -976,44 +978,45 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       ],
     });
     const options: LowerPlotsOptions = {
-      width: WIDTH,
-      height: HEIGHT,
-      coordinates: [
-        defineCoordinate({
-          schema: object({
-            type: literal('curved-cell').describe('Discriminator: project-cell custom coordinate operation'),
+      layout: { width: WIDTH, height: HEIGHT },
+      definitions: {
+        coordinates: [
+          defineCoordinate({
+            schema: object({
+              type: literal('curved-cell').describe('Discriminator: project-cell custom coordinate operation'),
+            }),
+            roles: ['x', 'y'],
+            resolve: (_operation, ctx) => {
+              const xValues = ctx.collectRoleValues('x');
+              const yValues = ctx.collectRoleValues('y');
+              const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [
+                0,
+                ctx.width,
+              ]);
+              const yScale = ctx.buildPositionScale(ctx.resolveScaleForRole('y', undefined, yValues), yValues, [
+                ctx.height,
+                0,
+              ]);
+
+              const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
+                const x = xScale.coordinate(values[0]);
+                const y = yScale.coordinate(values[1]);
+                return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
+              };
+
+              return {
+                frame: createCoordinateFrame('curved-cell', ['x', 'y'], projectRoles, {
+                  roleScales: { x: xScale, y: yScale },
+                  projectCell: cell => ({ kind: 'contour', points: densifyCellContour(cell, (x, y) => [x, y]) }),
+                }),
+                plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
+                gridLayers: [],
+                axisLayers: [],
+              };
+            },
           }),
-          roles: ['x', 'y'],
-          resolve: (_operation, ctx) => {
-            const xValues = ctx.collectRoleValues('x');
-            const yValues = ctx.collectRoleValues('y');
-            const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [
-              0,
-              ctx.width,
-            ]);
-            const yScale = ctx.buildPositionScale(ctx.resolveScaleForRole('y', undefined, yValues), yValues, [
-              ctx.height,
-              0,
-            ]);
-
-            const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
-              const x = xScale.coordinate(values[0]);
-              const y = yScale.coordinate(values[1]);
-              return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
-            };
-
-            return {
-              frame: createCoordinateFrame('curved-cell', ['x', 'y'], projectRoles, {
-                roleScales: { x: xScale, y: yScale },
-                projectCell: cell => ({ kind: 'contour', points: densifyCellContour(cell, (x, y) => [x, y]) }),
-              }),
-              plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
-              gridLayers: [],
-              axisLayers: [],
-            };
-          },
-        }),
-      ],
+        ],
+      },
     };
     const rows = [
       { x: 'A', y: 4, series: 'left' },

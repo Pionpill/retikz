@@ -483,11 +483,7 @@ describe('Scatter Chart encoding resolution', () => {
         family: 'point',
         recipe: ScatterChartDefinition,
         themeDefinitions: [],
-        runtimeDefinitions: {
-          transformDefinitions: [copyField],
-          statisticsReducerDefinitions: [range],
-          scaleDefinitions: [mono],
-        },
+        runtimeDefinitions: { transforms: [copyField], statisticsReducers: [range], scales: [mono] },
       },
     ]);
 
@@ -574,7 +570,7 @@ describe('Scatter Chart encoding resolution', () => {
         family: 'point',
         recipe: ScatterChartDefinition,
         themeDefinitions: [],
-        runtimeDefinitions: { scaleDefinitions: [renamed] },
+        runtimeDefinitions: { scales: [renamed] },
       },
     ]);
 

@@ -93,7 +93,7 @@ const dotSpec = (overrides?: Partial<IRPlot>): IRPlot =>
     ...overrides,
   });
 
-const opts: LowerPlotsOptions = { width: 400, height: 300 };
+const opts: LowerPlotsOptions = { layout: { width: 400, height: 300 } };
 
 describe('mark registry（contract：自定义 mark）', () => {
   it('mark_operation_schema_accepts_builtin_and_custom', () => {
@@ -153,7 +153,7 @@ describe('mark registry（contract：自定义 mark）', () => {
       { cat: 'B', val: 6 },
       { cat: 'C', val: 9 },
     ];
-    expandOf(dotSpec(), { d: rows }, { ...opts, markDefinitions: [makeDotMark(record)] });
+    expandOf(dotSpec(), { d: rows }, { definitions: { marks: [makeDotMark(record)] }, ...opts });
 
     expect(record.calls).toBe(1);
     expect(record.rows).toBe(rows.length);
@@ -173,7 +173,7 @@ describe('mark registry（contract：自定义 mark）', () => {
     });
 
     expect(() =>
-      expandOf(spec, { d: [{ cat: 'A', val: 3 }] }, { ...opts, markDefinitions: [makeDotMark(record)] }),
+      expandOf(spec, { d: [{ cat: 'A', val: 3 }] }, { definitions: { marks: [makeDotMark(record)] }, ...opts }),
     ).not.toThrow();
     expect(record.calls).toBe(1);
   });
@@ -185,7 +185,7 @@ describe('mark registry（contract：自定义 mark）', () => {
     });
 
     expect(() =>
-      expandOf(spec, { d: [{ cat: 'A', val: 3 }] }, { ...opts, markDefinitions: [makeDotMark(record)] }),
+      expandOf(spec, { d: [{ cat: 'A', val: 3 }] }, { definitions: { marks: [makeDotMark(record)] }, ...opts }),
     ).toThrow();
     expect(record.calls).toBe(0);
   });
@@ -203,9 +203,9 @@ describe('mark registry（contract：自定义 mark）', () => {
       marks: [{ type: 'bare', encoding: { channels: { ghost: { value: 1 } } } }],
     });
 
-    expect(() => expandOf(spec, { d: [{ cat: 'A', val: 3 }] }, { ...opts, markDefinitions: [makeBareMark()] })).toThrow(
-      /channel "ghost" is not registered/,
-    );
+    expect(() =>
+      expandOf(spec, { d: [{ cat: 'A', val: 3 }] }, { definitions: { marks: [makeBareMark()] }, ...opts }),
+    ).toThrow(/channel "ghost" is not registered/);
   });
 
   it('registered_extension_channel_reads_source_mark_after_custom_schema_strips_it', () => {
@@ -224,11 +224,7 @@ describe('mark registry（contract：自定义 mark）', () => {
     expandOf(
       spec,
       { d: [{ cat: 'A', val: 3 }] },
-      {
-        ...opts,
-        markDefinitions: [makeBareMark()],
-        channelDefinitions: [makeBareIntensityChannel(delivered)],
-      },
+      { definitions: { marks: [makeBareMark()], channels: [makeBareIntensityChannel(delivered)] }, ...opts },
     );
 
     expect(delivered.value).toBe(0.75);
@@ -259,7 +255,7 @@ describe('mark registry（contract：自定义 mark）', () => {
     });
 
     expect(() =>
-      expandOf(spec, { d: rows }, { ...opts, markDefinitions: [makeDotMark(record)], validateData: true }),
+      expandOf(spec, { d: rows }, { definitions: { marks: [makeDotMark(record)] }, ...opts, validateData: true }),
     ).not.toThrow();
     expect(record.calls).toBe(1);
   });
@@ -278,7 +274,7 @@ describe('mark registry（contract：自定义 mark）', () => {
         { type: 'point', encoding: { x: { field: 'cat' }, y: { field: 'val' } } },
       ],
     });
-    const scope = expandOf(spec, { d: rows }, { ...opts, markDefinitions: [makeDotMark(record)] });
+    const scope = expandOf(spec, { d: rows }, { definitions: { marks: [makeDotMark(record)] }, ...opts });
 
     expect(record.calls).toBe(1);
     expect(scope.children.length).toBeGreaterThanOrEqual(2);

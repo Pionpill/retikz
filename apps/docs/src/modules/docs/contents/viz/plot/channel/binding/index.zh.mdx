@@ -129,7 +129,7 @@ const spec = plot({
   ],
 });
 
-document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width: 360, height: 220 });
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
 ```
 
 </DocTab>
@@ -170,7 +170,7 @@ const spec: IRPlot = {
   ],
 };
 
-document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width: 360, height: 220 });
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
 ```
 
 </DocTab>
@@ -216,9 +216,9 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width:
 
 - **字符串先匹配字段。** React 的内置扁平样式 prop（如 `color`）先匹配当前数据集和模型中的同名字段，再尝试合法常量；两者都不接受时会警告并跳过该 prop。这不是逐行缺值时的回退规则。
 - **固定样式要消除歧义。** 数据中存在 `crimson` 字段时，`color="crimson"` 会读字段。统一深红色应写 `color={{ kind: 'constant', value: 'crimson' }}`。显式 IR 则写 `color: { kind: 'constant', value: 'crimson' }`。
-- **位置与样式的对象形式不同。** IR 的位置放在 `encoding` 中，使用 `{ field }` 或 `{ value }`；点的颜色与大小在图元顶层，使用 `{ kind, value }`。例如参考线常量为 `encoding: { y: { value: 80 }, color: { value: 'crimson' } }`，React 对应 `<ReferenceMark y={80} color="crimson" />`（需从 `@retikz/plot-react` 导入）。
+- **位置与样式的对象形式不同。** IR 的位置放在 `encoding` 中，使用 `{ field }` 或 `{ value }`；点的颜色与大小在图元顶层，使用 `{ kind, value }`。
 - **字段名按完整键优先。** 若同时存在直接属性 `"metrics.gdp"` 和嵌套对象 `metrics.gdp`，优先读取直接属性；没有完整键时才按点号逐层查找。请确保绑定字段在数据中有有效值。
-- **通道支持范围由图元决定。** 不要将参考线支持的数值位置直接套到 `PointMark` 的 `x` / `y` props；这里要求字段名。自定义 `channels` 中的字符串也是字段名，常量使用显式 `{ kind: 'constant', value }`。
+- **通道支持范围由图元决定。** `PointMark` 的 `x` / `y` props 要求字段名。自定义 `channels` 中的字符串也是字段名，常量使用显式 `{ kind: 'constant', value }`。
 - **留白由比例尺负责。** `domainPadding` 扩展数据域；点半径或标签尺寸增加后需要相应调整留白，通道绑定本身不会自动防止溢出。
 
 ## 相关属性

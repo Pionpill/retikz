@@ -143,9 +143,9 @@ const lanesSpec = {
 
 const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
   return lowerPlot(spec, datasets, {
+    layout: { width: 480, height: 300 },
     textMeasurer: measureLabel,
-    width: 480,
-    height: 300,
+
     provenance: true,
   }) as IRScope;
 };

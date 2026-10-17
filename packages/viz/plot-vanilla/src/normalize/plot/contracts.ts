@@ -1,6 +1,5 @@
 import type {
   ExternalRow,
-  IRDataExecution,
   IRDataModel,
   IRDataReference,
   IRDataTransform,
@@ -113,7 +112,7 @@ export type BuildPlotOptions = {
   /** 直传的根级数据变换，装配在 `<PlotTransform>` 收集结果与自动 mark shortcut 之前 */
   transforms?: Array<IRDataTransformDeclaration>;
   /** 宿主拥有的全部数据变换的稀疏执行默认值 */
-  dataExecution?: IRDataExecution;
+  dataExecution?: IRPlot['dataExecution'];
   /** 把 mark 形态转换为普通 Plot-level transforms 的作者侧简写 */
   markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
   /** Plot-owned Source-shaped visual defaults 稀疏覆盖 */
@@ -283,7 +282,6 @@ export type PlotDeclarationKind =
   | 'path-mark'
   | 'point-mark'
   | 'interval-mark'
-  | 'reference-mark'
   | 'relation-mark'
   | 'axis'
   | 'legend'

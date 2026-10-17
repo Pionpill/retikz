@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   CompositeCoreProviderKey,
   CoreDependencyProvider,
   CoreProviderContribution,
@@ -81,22 +81,24 @@ export const createChartProviderContribution = <TSource extends IRChartSource>(
     recipe: eraseChartRecipeDefinition(input.recipe),
     themeDefinitions: Object.freeze([...(input.themeDefinitions ?? [])]),
     runtimeDefinitions: Object.freeze({
-      ...(input.lowerOptions?.coordinates === undefined ? {} : { coordinates: input.lowerOptions.coordinates }),
-      ...(input.lowerOptions?.transformDefinitions === undefined
+      ...(input.lowerOptions?.definitions?.coordinates === undefined
         ? {}
-        : { transformDefinitions: input.lowerOptions.transformDefinitions }),
-      ...(input.lowerOptions?.statisticsReducerDefinitions === undefined
+        : { coordinates: input.lowerOptions.definitions.coordinates }),
+      ...(input.lowerOptions?.definitions?.transforms === undefined
         ? {}
-        : { statisticsReducerDefinitions: input.lowerOptions.statisticsReducerDefinitions }),
-      ...(input.lowerOptions?.regressionDefinitions === undefined
+        : { transforms: input.lowerOptions.definitions.transforms }),
+      ...(input.lowerOptions?.definitions?.statisticsReducers === undefined
         ? {}
-        : { regressionDefinitions: input.lowerOptions.regressionDefinitions }),
-      ...(input.lowerOptions?.rowSelectorDefinitions === undefined
+        : { statisticsReducers: input.lowerOptions.definitions.statisticsReducers }),
+      ...(input.lowerOptions?.definitions?.regressions === undefined
         ? {}
-        : { rowSelectorDefinitions: input.lowerOptions.rowSelectorDefinitions }),
-      ...(input.lowerOptions?.scaleDefinitions === undefined
+        : { regressions: input.lowerOptions.definitions.regressions }),
+      ...(input.lowerOptions?.definitions?.rowSelectors === undefined
         ? {}
-        : { scaleDefinitions: input.lowerOptions.scaleDefinitions }),
+        : { rowSelectors: input.lowerOptions.definitions.rowSelectors }),
+      ...(input.lowerOptions?.definitions?.scales === undefined
+        ? {}
+        : { scales: input.lowerOptions.definitions.scales }),
     }),
   });
 

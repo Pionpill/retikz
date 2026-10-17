@@ -50,9 +50,8 @@ const expandOf = (
   datasets: { sales: Array<Record<string, string | number>> } = { sales: salesRows },
 ): IRScope => {
   return lowerPlot(spec, datasets, {
+    layout: { width: options.width ?? 480, height: options.height ?? 300 },
     textMeasurer: measureLabel,
-    width: options.width ?? 480,
-    height: options.height ?? 300,
   }) as IRScope;
 };
 

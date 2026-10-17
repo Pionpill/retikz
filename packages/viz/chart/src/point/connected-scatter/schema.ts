@@ -46,6 +46,7 @@ export const ConnectedScatterPathPropertiesSchema = strictObject({
 
 /** 连接散点标记的作者侧成员属性 */
 const ConnectedScatterMarkPropertiesSchema = strictObject({
+  autoPadding: PointAutoPaddingSchema.optional(),
   point: ConnectedScatterPointPropertiesSchema.optional(),
   path: ConnectedScatterPathPropertiesSchema.optional(),
 }).describe('Connected Scatter member properties');

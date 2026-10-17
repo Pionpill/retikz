@@ -6,6 +6,9 @@ import type { IRDataModel } from './types';
 /** 逻辑字段名到字段测量类型的运行时映射；由 data.model、自动推断和 resolver 合成，不进入 IR */
 export type DataFieldTypeMap = Map<string, DataFieldType>;
 
+/** 逻辑字段名到物理数据路径的映射；未声明的字段沿用逻辑字段名，不进入 IR */
+export type DataFieldMap = Record<string, string>;
+
 /** 一次数据处理阶段的完整逻辑模型与规范行 */
 export type DataView = Readonly<{
   /** 当前阶段实际输出的行 */

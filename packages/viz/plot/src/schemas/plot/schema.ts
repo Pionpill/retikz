@@ -29,6 +29,15 @@ import {
 } from './constants';
 import { PlotPartitionDimensionsSchema } from './partition';
 
+export const PlotScopedDataExecutionSchema = strictObject({
+  root: DataExecutionSchema.describe('Execution defaults for the plot root transform pipeline'),
+  marks: DataExecutionSchema.describe('Independent execution defaults for all mark-local pipelines, including facets'),
+}).describe('Separate root and mark transform execution defaults; neither scope inherits from the other');
+
+export const PlotDataExecutionSchema = union([DataExecutionSchema, PlotScopedDataExecutionSchema]).describe(
+  'Shared execution defaults or independent root and marks defaults; individual declarations override their scope',
+);
+
 /** 校验绘图组合中面板、轨道、坐标轴、标签及外缘间距 */
 export const CompositionSpacingSchema = strictObject({
   panelGap: NonNegativeNumberSchema.optional().describe('Gap between generated facet panels in user units'),
@@ -423,8 +432,8 @@ export const PlotSchema = CompositeBaseSchema.extend({
   data: DataReferenceSchema.describe(
     'Data binding: a named reference to an externally-supplied dataset plus an optional data model. The dataset values never enter the IR; they are injected at compile time via lowerPlots(datasets).',
   ),
-  dataExecution: DataExecutionSchema.optional().describe(
-    'Execution defaults for all data transform scopes owned by this plot',
+  dataExecution: PlotDataExecutionSchema.optional().describe(
+    'Shared or scope-specific execution defaults for data transforms owned by this plot',
   ),
   transform: array(DataTransformDeclarationSchema)
     .optional()

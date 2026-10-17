@@ -4,8 +4,8 @@ import { fixedSlopeFit, fixedSlopeFitImplementation } from './regression-custom-
 import { fixedSlopeRows } from './regression-custom.data';
 
 const lowerOptions = {
-  regressionDefinitions: [fixedSlopeFit],
-  regressionImplementations: [fixedSlopeFitImplementation],
+  definitions: { regressions: [fixedSlopeFit] },
+  implementations: { regressions: [fixedSlopeFitImplementation] },
 };
 
 /** 自定义固定斜率拟合的图形参数 */

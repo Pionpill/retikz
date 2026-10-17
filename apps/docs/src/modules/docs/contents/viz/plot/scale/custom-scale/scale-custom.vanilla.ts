@@ -32,9 +32,5 @@ const spec: IRPlot = {
 export const svg = renderPlot(
   spec,
   { points: scaleCustomRows },
-  {
-    width: 420,
-    height: 260,
-    scaleDefinitions: [easePositionScale, brandColorScale],
-  },
+  { layout: { width: 420, height: 260 }, definitions: { scales: [easePositionScale, brandColorScale] } },
 );

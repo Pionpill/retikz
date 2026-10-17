@@ -146,7 +146,7 @@ describe('Chart Vanilla authoring', () => {
 
   it('forwards named Theme definitions and Plot lowering options without putting them in Source', () => {
     const themeDefinitions = [defineChartTheme({ name: 'scatter-theme', defaults: { layout: { gap: 8 } } })];
-    const lowerOptions = { fieldMaps: { rows: { x: 'x' } } } as const;
+    const lowerOptions = { datasetFieldMaps: { rows: { x: 'x' } } } as const;
     const result = scatterChart({
       data: rows,
       encodings: { x: 'x', y: 'y' },
@@ -176,7 +176,7 @@ describe('Chart Vanilla authoring', () => {
         }),
       ],
       lowerOptions: {
-        plotThemeStyles: [definePlotThemeStyle({ name: 'host-style', resolve: () => ({}) })],
+        definitions: { plotThemeStyles: [definePlotThemeStyle({ name: 'host-style', resolve: () => ({}) })] },
       },
     });
 
@@ -280,7 +280,10 @@ describe('Chart Vanilla authoring', () => {
         },
         y: 'y',
       },
-      lowerOptions: { transformDefinitions: [copyField], transformImplementations: [copyFieldImplementation] },
+      lowerOptions: {
+        definitions: { transforms: [copyField] },
+        implementations: { transforms: [copyFieldImplementation] },
+      },
     });
 
     expect(() => renderChart(chart, { adapters })).not.toThrow();
@@ -356,7 +359,10 @@ describe('custom regression SSR', () => {
       data: regressionRows,
       encodings: { x: 'x', y: 'y' },
       properties: { method: { kind: 'identity-fit' }, trend: { curve: 'catmullRom' } },
-      lowerOptions: { regressionDefinitions: [definition], regressionImplementations: [definitionImplementation] },
+      lowerOptions: {
+        definitions: { regressions: [definition] },
+        implementations: { regressions: [definitionImplementation] },
+      },
     });
     const rendered = renderChart(chart, { adapters });
 

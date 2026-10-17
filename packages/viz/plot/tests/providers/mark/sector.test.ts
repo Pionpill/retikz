@@ -10,7 +10,7 @@ import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
 /** 正方形画布 → outerRadius = min(w,h)/2 = 200、center = [200,200]（无角向轴 → margin 0） */
-const opts: LowerPlotsOptions = { width: 400, height: 400 };
+const opts: LowerPlotsOptions = { layout: { width: 400, height: 400 } };
 
 const expandOf = (
   spec: IRPlot,

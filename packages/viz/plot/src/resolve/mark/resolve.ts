@@ -14,7 +14,7 @@ export const resolveMarkDefinition = (mark: IRPlotMarkOperation, context: MarkRe
   const definition = context.registry.get(mark.type);
   if (definition === undefined) {
     throw new RetikzPlotError(
-      `lowerPlots: mark type "${mark.type}" is not registered; pass a MarkDefinition via options.markDefinitions`,
+      `lowerPlots: mark type "${mark.type}" is not registered; pass a MarkDefinition via options.definitions.marks`,
     );
   }
 

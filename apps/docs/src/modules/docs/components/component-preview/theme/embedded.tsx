@@ -18,10 +18,13 @@ import { PreviewTableThemeStyles } from './presets/table';
 /** 只为绕过 React context 的 Layout-embedded adapter 补齐 docs Plot definitions */
 const withPlotThemeStyles = (props: PlotProps): PlotProps => ({
   ...props,
-  plotThemeStyles:
-    props.plotThemeStyles === undefined
-      ? PreviewPlotThemeStyles
-      : [...PreviewPlotThemeStyles, ...props.plotThemeStyles],
+  definitions: {
+    ...props.definitions,
+    plotThemeStyles:
+      props.definitions?.plotThemeStyles === undefined
+        ? PreviewPlotThemeStyles
+        : [...PreviewPlotThemeStyles, ...props.definitions.plotThemeStyles],
+  },
 });
 
 const runtimePlotAdapter = RuntimePlot.inputEmbedAdapter;

@@ -82,8 +82,8 @@ const compile = (
     { version: 1, type: 'scene', children: [spec] },
     {
       composites: lowerPlots(datasets, {
-        transformDefinitions: definitions,
-        transformImplementations: definitions.includes(doubleDefinition) ? [doubleDefinitionImplementation] : [],
+        definitions: { transforms: definitions },
+        implementations: { transforms: definitions.includes(doubleDefinition) ? [doubleDefinitionImplementation] : [] },
       }),
     },
   ).scene;

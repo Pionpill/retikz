@@ -34,7 +34,7 @@ Choose the preset comparing orders and sales, then change the horizontal and ver
   caption="The selected fields determine positions for the same rows."
 />
 
-Point position props accept field names; use reference marks for fixed thresholds.
+Point position props accept field names.
 
 ## Visual encoding
 
@@ -223,7 +223,7 @@ order and series live at the top level of mark configuration, outside encoding. 
 
 ## Errors and limitations
 
-- **Check mark support first.** Point, path, and reference mark properties do not all have the same shape. Do not copy configurations between mark types without checking.
+- **Check mark support first.** Point, path, and interval mark properties do not all have the same shape. Do not copy configurations between mark types without checking.
 - **Strings match fields first.** React style shorthand may interpret a color or shape name as an existing field. Use `{ kind: 'constant', value: '#2563eb' }` for a fixed color. See [channel binding](/viz/plot/channel/binding#errors-and-limitations) for position and field lookup rules.
 - **Distinguish mappings from direct values.** A point size field uses a square-root scale by default; a constant size is a radius. Shape fields must be categorical. Opacity ranges from 0 to 1; radii and stroke widths cannot be negative.
 - **Target the intended paint.** Use fill and stroke to control them independently. textColor affects node text; label.textColor affects external labels.

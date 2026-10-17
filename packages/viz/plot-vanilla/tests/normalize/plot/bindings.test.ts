@@ -369,7 +369,6 @@ describe('normalizePlotBindings', () => {
   });
 
   it.each([
-    { type: 'reference', encoding: { y: { value: 0 } }, xAxisId: undefined },
     {
       type: 'relation',
       source: { markId: 'source' },

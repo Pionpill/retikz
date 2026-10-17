@@ -21,7 +21,7 @@ React 图元属性会被整理成 `IRPlot`（一份可以序列化和保存的�
 
 <ComponentPreview files="channel-flow" size="lg" hideCode type="flow" />
 
-`IRPlot` 只保存字段或常量绑定，不保存函数。内置通道与通过 `channelDefinitions` 注入的自定义通道共用同一套注册、解析和交付流程，因此扩展通道不需要增加另一套配置格式。
+`IRPlot` 只保存字段或常量绑定，不保存函数。内置通道与通过 `definitions.channels` 注入的自定义通道共用同一套注册、解析和交付流程，因此扩展通道不需要增加另一套配置格式。
 
 <SourceLinks
   sources={[

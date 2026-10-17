@@ -30,13 +30,6 @@ export const lineInterruptionControls = definePreviewControls({
             { value: 'polar2D', label: 'Polar' },
           ],
         },
-        {
-          kind: 'switch',
-          id: LINE_INTERRUPTION_CONTROL_IDS.closed,
-          label: 'Close path',
-          defaultValue: false,
-          visibleWhen: { controlId: LINE_INTERRUPTION_CONTROL_IDS.coordinate, oneOf: ['polar2D'] },
-        },
       ],
     },
     {
@@ -64,16 +57,8 @@ export const previewControlContract = {
   controls: lineInterruptionControls,
   canonicalValues: {
     [LINE_INTERRUPTION_CONTROL_IDS.coordinate]: 'cartesian2D',
-    [LINE_INTERRUPTION_CONTROL_IDS.closed]: false,
     [LINE_INTERRUPTION_CONNECT_NULLS_ID]: false,
     [LINE_INTERRUPTION_CONTROL_IDS.showFill]: true,
   },
-  relatedApis: [
-    'Plot.coordinate',
-    'PathMark.closed',
-    'PathMark.connectNulls',
-    'PathMark.closure',
-    'PathMark.fill',
-    'PathMark.order',
-  ],
+  relatedApis: ['Plot.coordinate', 'PathMark.connectNulls', 'PathMark.closure', 'PathMark.fill', 'PathMark.order'],
 } satisfies PreviewControlContract;

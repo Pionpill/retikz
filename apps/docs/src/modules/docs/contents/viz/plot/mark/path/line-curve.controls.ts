@@ -68,7 +68,7 @@ export const lineCurveControls = definePreviewControls({
             { value: PathCurve.StepAfter, label: '后置阶梯' },
             { value: PathCurve.Basis, label: '平滑样条' },
             { value: PathCurve.Cardinal, label: '基数样条' },
-            { value: PathCurve.CatmullRom, label: '穿点平滑' },
+            { value: PathCurve.CatmullRom, label: '过点平滑' },
             { value: PathCurve.MonotoneX, label: '横向单调' },
             { value: PathCurve.MonotoneY, label: '纵向单调' },
             { value: PathCurve.Natural, label: '自然样条' },
@@ -133,6 +133,7 @@ export const previewControlContract = {
     [PATH_CURVE_CONTROL_IDS.dashed]: false,
     [PATH_CURVE_CONTROL_IDS.opacity]: 0.9,
   },
+  presetSelector: { label: '预设', customLabel: '自定义' },
   presets: [
     {
       id: 'linear',
@@ -150,7 +151,7 @@ export const previewControlContract = {
     },
     {
       id: 'smooth',
-      label: '穿点平滑',
+      label: '过点平滑',
       values: {
         [PATH_CURVE_CONTROL_IDS.coordinate]: 'cartesian2D',
         [PATH_CURVE_CONTROL_IDS.closed]: false,

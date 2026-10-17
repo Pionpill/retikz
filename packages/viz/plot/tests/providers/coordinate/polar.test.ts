@@ -38,7 +38,7 @@ const isNode = (child: IRChild): child is IRNode => child.type === 'node';
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
 
-const opts: LowerPlotsOptions = { width: 480, height: 300 };
+const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
 
 const FrameProbeSchema = strictObject({ type: literal('polar-frame-probe') });
 
@@ -60,7 +60,8 @@ const resolvedInterpolationOf = (spec: IRPlot, datasets: Datasets, options?: Low
   expandOf(withProbe, datasets, {
     ...opts,
     ...options,
-    markDefinitions: [...(options?.markDefinitions ?? []), probe],
+    layout: { ...opts.layout, ...options?.layout },
+    definitions: { ...options?.definitions, marks: [...(options?.definitions?.marks ?? []), probe] },
   });
 
   return captured;
@@ -153,9 +154,9 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'angle' }, y: { field: 'value' } } }],
     });
 
-    expect(resolvedInterpolationOf(spec, { d: [{ angle: 0, value: 1 }] }, { scaleDefinitions: [customScale] })).toBe(
-      expected,
-    );
+    expect(
+      resolvedInterpolationOf(spec, { d: [{ angle: 0, value: 1 }] }, { definitions: { scales: [customScale] } }),
+    ).toBe(expected);
   });
 
   it('polar_full_circle_centers_in_a_wide_canvas', () => {
@@ -196,7 +197,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       guides: [{ type: 'axis', dimension: 'x' }],
     });
 
-    const outer = expandOf(spec, { d: rows }, { width: 368, height: 362, fontSize: 11 });
+    const outer = expandOf(spec, { d: rows }, { layout: { width: 368, height: 362, fontSize: 11 } });
     const markLayer = outer.children
       .filter(isScope)
       .find(child => child.children.filter(isNode).some(node => node.text === undefined)) as IRScope;

@@ -74,6 +74,8 @@ export type CoordinateResolveContext = {
   plotAreaOverride?: BoundsRect;
   /** 指定 role 的最终 range */
   roleRangeOverrides?: Partial<Record<DimensionRole, readonly [number, number]>>;
+  /** 坐标轴与网格的 role 边界覆盖；空对象使用布局范围，省略时沿用最终 role range，刻度仍使用映射比例尺 */
+  guideRoleRangeOverrides?: Partial<Record<DimensionRole, readonly [number, number]>>;
   /** provenance 上下文 */
   provenance?: ProvenanceContext;
   /** 已合并的 coordinate definitions */

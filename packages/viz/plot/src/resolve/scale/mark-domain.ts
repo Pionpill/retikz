@@ -9,7 +9,7 @@ import type {
 } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { DomainPaddingClearanceSchema } from '../../schemas';
-import type { IRPlotMarkDomainPadding, IRPlotScaleOperation } from '../../schemas';
+import type { IRPlotMarkDomainPadding, IRPlotScaleOperation, IRPlotMarkOperation } from '../../schemas';
 import { resolveMarkChannels } from '../channel';
 import type { ChannelResolveContext } from '../channel';
 import type { MarkDataView } from '../coordinate';
@@ -28,6 +28,7 @@ type DomainPaddingObservation = {
   length: number;
   clearance: MarkPaddingResolution;
   fixed: Partial<MarkPaddingResolution>;
+  minimum: MarkPaddingResolution;
 };
 
 /** 一次 lowering 内共享的数据与求解状态，不写入 Source */
@@ -43,7 +44,7 @@ export const createMarkPaddingContext = (
   let revision = 0;
   const targets = new WeakMap<object, WeakMap<Array<ExternalRow>, Map<string, Array<DomainPaddingTarget>>>>();
   const mappings = new Map<string, DomainPaddingScale>();
-  const protectedMarks = new WeakMap<PositionScale, ReadonlyArray<string>>();
+  const protectedMarks = new WeakMap<PositionScale, ReadonlyArray<string | IRPlotMarkOperation>>();
   const groups = new Map<
     string,
     { observations: Map<string, DomainPaddingObservation>; padding?: MarkPaddingResolution }
@@ -77,6 +78,7 @@ export const createMarkPaddingContext = (
 
         const constraints: Array<MarkPaddingSample> = [];
         const fixed: Partial<MarkPaddingResolution> = {};
+        const minimum = { lower: 0, upper: 0 };
         let maximumLength = 1;
         const observations = [...group.observations].map(
           ([scope, observation]) => [scope, { ...observation, samples: observation.samples() }] as const,
@@ -87,6 +89,14 @@ export const createMarkPaddingContext = (
           const [start, end] = observation.range;
           const parameter = observation.mapping.parameter ?? ((position: number) => (position - start) / (end - start));
           const direction = Math.sign(end - start);
+          minimum.lower = Math.max(
+            minimum.lower,
+            parameter(start + direction * observation.minimum.lower, observation.range),
+          );
+          minimum.upper = Math.max(
+            minimum.upper,
+            1 - parameter(end - direction * observation.minimum.upper, observation.range),
+          );
 
           for (const sample of observation.samples)
             constraints.push({
@@ -114,7 +124,7 @@ export const createMarkPaddingContext = (
         let padding: MarkPaddingResolution;
 
         try {
-          padding = solveMarkPadding(constraints, fixed, 0.01 / maximumLength);
+          padding = solveMarkPadding(constraints, fixed, 0.01 / maximumLength, minimum);
         } catch (cause) {
           throw new RetikzPlotError(
             `scale ${groupKey}, scopes [${[...group.observations.keys()].join(', ')}]: mark domainPadding has no feasible positive range`,
@@ -125,6 +135,8 @@ export const createMarkPaddingContext = (
         const previous = group.padding;
         if (
           previous !== undefined &&
+          (fixed.lower !== undefined || previous.lower >= minimum.lower) &&
+          (fixed.upper !== undefined || previous.upper >= minimum.upper) &&
           Math.abs(previous.lower - padding.lower) + Math.abs(previous.upper - padding.upper) < 0.01 / maximumLength &&
           constraints.every(sample => {
             const position = previous.lower + sample.position * (1 - previous.lower - previous.upper);
@@ -196,8 +208,12 @@ export const createMarkPaddingContext = (
     },
     placedTargetsOf: (view: MarkDataView, frame: CoordinateFrame): MarkPositionResolution | undefined =>
       place?.(view, frame),
-    protects: (scale: PositionScale | undefined, mark: unknown): boolean =>
-      scale !== undefined && typeof mark === 'string' && (protectedMarks.get(scale)?.includes(mark) ?? false),
+    protects: (scale: PositionScale | undefined, mark: IRPlotMarkOperation): boolean =>
+      scale !== undefined &&
+      (protectedMarks
+        .get(scale)
+        ?.some(reference => (typeof reference === 'string' ? reference === mark.id : reference === mark)) ??
+        false),
     targetsOf: (view: MarkDataView, roles: ReadonlyArray<string>): Array<DomainPaddingTarget> => {
       let byRows = targets.get(view.mark);
       if (byRows === undefined) {
@@ -248,6 +264,8 @@ export const createMarkPaddingContext = (
       samples: () => Array<MarkDomainSample>,
       mapping: DomainPaddingScale,
       initialRange: readonly [number, number],
+      minimum: MarkPaddingResolution = { lower: 0, upper: 0 },
+      participants?: ReadonlyArray<IRPlotMarkOperation>,
     ): PositionScale => {
       let group = groups.get(groupKey);
       if (group === undefined) {
@@ -276,6 +294,7 @@ export const createMarkPaddingContext = (
               DomainPaddingClearanceSchema.parse(undefined),
           },
           fixed: { lower: source.lower, upper: source.upper },
+          minimum,
         });
 
         return mapping.createScale(activeGroup.padding ?? { lower: 0, upper: 0 }, range);
@@ -312,7 +331,7 @@ export const createMarkPaddingContext = (
           current = resolveRange(range);
         },
       };
-      protectedMarks.set(result, source.marks);
+      protectedMarks.set(result, participants ?? source.marks);
 
       return result;
     },

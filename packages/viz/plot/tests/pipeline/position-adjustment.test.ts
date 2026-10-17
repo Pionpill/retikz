@@ -46,7 +46,12 @@ const loweredOf = (
   spec: IRPlot,
   options: Omit<Parameters<typeof lowerPlotWithDataArtifact>[2], 'textMeasurer'> = {},
   data: Array<ExternalRow> = rows,
-) => lowerPlotWithDataArtifact(spec, { d: data }, { textMeasurer: measureLabel, width: 200, height: 100, ...options });
+) =>
+  lowerPlotWithDataArtifact(
+    spec,
+    { d: data },
+    { ...options, layout: { width: 200, height: 100, ...options.layout }, textMeasurer: measureLabel },
+  );
 
 const positionsOf = (
   spec: IRPlot,
@@ -207,7 +212,7 @@ describe('Mark Placement pipeline', () => {
     };
     const base = positionsOf(specOf());
     const shifted = positionsOf(specOf([{ kind: 'screen-nudge', dx: 7 }]), {
-      positionAdjustmentDefinitions: [definition],
+      definitions: { positionAdjustments: [definition] },
     });
 
     expect(shifted).toEqual(base.map(([x, y]) => [x + 7, y]));
@@ -233,11 +238,11 @@ describe('Mark Placement pipeline', () => {
     };
 
     expect(() =>
-      positionsOf(specOf([{ kind: 'screen-reorder' }]), { positionAdjustmentDefinitions: [reorder] }),
+      positionsOf(specOf([{ kind: 'screen-reorder' }]), { definitions: { positionAdjustments: [reorder] } }),
     ).toThrow(/preserve placement target order and keys/);
-    expect(() => positionsOf(specOf([{ kind: 'screen-rekey' }]), { positionAdjustmentDefinitions: [rekey] })).toThrow(
-      /preserve placement target order and keys/,
-    );
+    expect(() =>
+      positionsOf(specOf([{ kind: 'screen-rekey' }]), { definitions: { positionAdjustments: [rekey] } }),
+    ).toThrow(/preserve placement target order and keys/);
   });
 
   it('rejects null changes, non-finite positions, and non-2D screen results', () => {
@@ -281,16 +286,16 @@ describe('Mark Placement pipeline', () => {
     expect(() =>
       positionsOf(
         specOf([{ kind: 'screen-fill-null' }]),
-        { positionAdjustmentDefinitions: [fillNull] },
+        { definitions: { positionAdjustments: [fillNull] } },
         rowsWithNullTarget,
       ),
     ).toThrow(/preserve null placement targets/);
-    expect(() => positionsOf(specOf([{ kind: 'screen-nan' }]), { positionAdjustmentDefinitions: [nan] })).toThrow(
-      /finite values with stable dimensions/,
-    );
+    expect(() =>
+      positionsOf(specOf([{ kind: 'screen-nan' }]), { definitions: { positionAdjustments: [nan] } }),
+    ).toThrow(/finite values with stable dimensions/);
     expect(() =>
       positionsOf(specOf([{ kind: 'screen-three-dimensions' }]), {
-        positionAdjustmentDefinitions: [threeDimensions],
+        definitions: { positionAdjustments: [threeDimensions] },
       }),
     ).toThrow(/finite values with stable dimensions/);
   });
@@ -312,6 +317,49 @@ describe('Mark Placement pipeline', () => {
 
     expect(withNull).toHaveLength(2);
     expect(withNull[1]).toEqual(withPlaceholder[2]);
+  });
+
+  it('keeps Cartesian axis boundaries fixed while containing numeric jitter', () => {
+    const makeSpec = (span: number) =>
+      PlotSchema.parse({
+        ...specOf([{ kind: 'jitter', role: 'x', span, seed: 7 }]),
+        guides: [
+          { type: 'axis', dimension: 'x' },
+          { type: 'axis', dimension: 'y', grid: true },
+        ],
+      });
+    const axisLinesOf = (scope: IRScope): Array<unknown> =>
+      scope.children.flatMap(child => {
+        if (!isScopeChild(child)) return [];
+        if (child.meta?.layer === 'axis') {
+          const path = child.children.find(item => item.type === 'path');
+          return path === undefined ? [] : [path];
+        }
+        return axisLinesOf(child);
+      });
+    const jitterRows = Array.from({ length: 18 }, (_, index) => ({
+      category: String.fromCharCode(65 + Math.floor(index / 3)),
+      value: index + 1,
+    }));
+    const baseline = loweredOf(makeSpec(0), { layout: { width: 400, height: 360 }, provenance: true }, jitterRows);
+    const jittered = loweredOf(makeSpec(120), { layout: { width: 400, height: 360 }, provenance: true }, jitterRows);
+    const baselineAxes = axisLinesOf(baseline.child as IRScope);
+    expect(baselineAxes).toHaveLength(2);
+    expect(axisLinesOf(jittered.child as IRScope)).toEqual(baselineAxes);
+    const boundary = [...baseline.dataArtifact.frameByCoordinateScopeId.values()][0].roleScales?.x?.range();
+    expect(boundary).toBeDefined();
+    const markNodesOf = (scope: IRScope): Array<IRNode> =>
+      scope.children.flatMap(child => {
+        if (!isScopeChild(child)) return [];
+        return child.meta?.layer === 'mark' ? child.children.filter(isNodeChild) : markNodesOf(child);
+      });
+    const nodes = markNodesOf(jittered.child as IRScope);
+    expect(nodes).toHaveLength(jitterRows.length);
+    for (const node of nodes) {
+      const [x] = node.position as [number, number];
+      expect(x - 5).toBeGreaterThanOrEqual(Math.min(...boundary!));
+      expect(x + 5).toBeLessThanOrEqual(Math.max(...boundary!));
+    }
   });
 
   it('reserves discrete jitter half-step plus glyph and stroke extent at Cartesian edges', () => {
@@ -386,9 +434,7 @@ describe('Mark Placement pipeline', () => {
     };
 
     expect(() =>
-      positionsOf(specOf([{ kind: 'measure-failure' }]), {
-        positionAdjustmentDefinitions: [measureFailure],
-      }),
+      positionsOf(specOf([{ kind: 'measure-failure' }]), { definitions: { positionAdjustments: [measureFailure] } }),
     ).toThrow('lowerPlots: position adjustment "measure-failure" containment failed');
   });
 
@@ -435,12 +481,12 @@ describe('Mark Placement pipeline', () => {
         ...polarSpec,
         marks: [{ type: 'point', encoding: { x: { field: 'category' }, y: { field: 'value' } } }],
       }),
-      { width: 200, height: 200 },
+      { layout: { width: 200, height: 200 } },
       polarRows,
     );
     const shifted = positionsOf(
       polarSpec,
-      { width: 200, height: 200, positionAdjustmentDefinitions: [fixedAngle] },
+      { layout: { width: 200, height: 200 }, definitions: { positionAdjustments: [fixedAngle] } },
       polarRows,
     );
 
@@ -492,12 +538,12 @@ describe('Mark Placement pipeline', () => {
         ...polarSpec,
         marks: [{ type: 'point', encoding: { x: { field: 'category' }, y: { field: 'value' } } }],
       }),
-      { width: 200, height: 200 },
+      { layout: { width: 200, height: 200 } },
       polarRows,
     );
     const shifted = positionsOf(
       polarSpec,
-      { width: 200, height: 200, positionAdjustmentDefinitions: [fixedPolarAngle] },
+      { layout: { width: 200, height: 200 }, definitions: { positionAdjustments: [fixedPolarAngle] } },
       polarRows,
     );
     const displacement = (index: number): number =>
@@ -547,12 +593,12 @@ describe('Mark Placement pipeline', () => {
         ...continuousSpec,
         marks: [{ type: 'point', encoding: { x: { field: 'angle' }, y: { field: 'value' } } }],
       }),
-      { width: 200, height: 200 },
+      { layout: { width: 200, height: 200 } },
       continuousRows,
     );
     const shifted = positionsOf(
       continuousSpec,
-      { width: 200, height: 200, positionAdjustmentDefinitions: [fixedContinuousAngle] },
+      { layout: { width: 200, height: 200 }, definitions: { positionAdjustments: [fixedContinuousAngle] } },
       continuousRows,
     );
     const distanceFromCenter = (position: [number, number]): number =>
@@ -642,9 +688,11 @@ describe('Mark Placement pipeline', () => {
       ],
     });
 
-    expect(positionsOf(customSpec, { coordinates: [customCoordinate] }).some(position => position[1] === 20)).toBe(
-      true,
-    );
+    expect(
+      positionsOf(customSpec, { definitions: { coordinates: [customCoordinate] } }).some(
+        position => position[1] === 20,
+      ),
+    ).toBe(true);
   });
 
   it('keeps projectRoles equivalent to the explicit map-then-project stages', () => {
@@ -732,7 +780,7 @@ describe('Mark Placement pipeline', () => {
     });
 
     expect(() =>
-      positionsOf(customSpec, { coordinates: [legacyCoordinate], positionAdjustmentDefinitions: [noop] }),
+      positionsOf(customSpec, { definitions: { coordinates: [legacyCoordinate], positionAdjustments: [noop] } }),
     ).toThrow(/does not expose mapped-role projection/);
   });
 
@@ -793,7 +841,7 @@ describe('Mark Placement pipeline', () => {
     const locator = createPlotLocator(
       adjustedSpec,
       { d: rows },
-      { environment: {}, width: 200, height: 100, positionAdjustmentDefinitions: [countedNudge] },
+      { layout: { width: 200, height: 100 }, definitions: { positionAdjustments: [countedNudge] }, environment: {} },
     );
 
     expect(locator.datum(0)?.position).toEqual([base[0][0] + 6, base[0][1]]);
@@ -815,9 +863,9 @@ describe('Mark Placement pipeline', () => {
       initialize: () => [],
     };
 
-    expect(() => positionsOf(specOf([{ kind: 'bad-output' }]), { positionAdjustmentDefinitions: [bad] })).toThrow(
-      /preserve placement target count/,
-    );
+    expect(() =>
+      positionsOf(specOf([{ kind: 'bad-output' }]), { definitions: { positionAdjustments: [bad] } }),
+    ).toThrow(/preserve placement target count/);
   });
 
   it('rejects sparse or undefined initializer entries with a diagnostic Plot error', () => {
@@ -834,11 +882,11 @@ describe('Mark Placement pipeline', () => {
       initialize: (_operation, context) => new Array(context.targets.length).fill(undefined),
     };
 
-    expect(() => positionsOf(specOf([{ kind: 'sparse-screen' }]), { positionAdjustmentDefinitions: [sparse] })).toThrow(
-      /initializer must preserve placement target order and keys/,
-    );
     expect(() =>
-      positionsOf(specOf([{ kind: 'undefined-screen' }]), { positionAdjustmentDefinitions: [undefinedEntry] }),
+      positionsOf(specOf([{ kind: 'sparse-screen' }]), { definitions: { positionAdjustments: [sparse] } }),
+    ).toThrow(/initializer must preserve placement target order and keys/);
+    expect(() =>
+      positionsOf(specOf([{ kind: 'undefined-screen' }]), { definitions: { positionAdjustments: [undefinedEntry] } }),
     ).toThrow(/initializer must preserve placement target order and keys/);
   });
 });

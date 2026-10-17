@@ -129,7 +129,7 @@ const spec = plot({
   ],
 });
 
-document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width: 360, height: 220 });
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
 ```
 
 </DocTab>
@@ -170,7 +170,7 @@ const spec: IRPlot = {
   ],
 };
 
-document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width: 360, height: 220 });
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
 ```
 
 </DocTab>
@@ -216,9 +216,9 @@ One row can bind to several channels at once: `gdp` and `life` determine positio
 
 - **Strings match fields first.** React built-in flat style props such as `color` first match a field in the current dataset or model, then try a valid constant. If neither accepts the string, the prop is skipped with a warning. This is not a fallback for missing values in individual rows.
 - **Make fixed styles unambiguous.** If a `crimson` field exists, `color="crimson"` reads it. Use `color={{ kind: 'constant', value: 'crimson' }}` for one fixed color. Explicit IR uses `color: { kind: 'constant', value: 'crimson' }`.
-- **Position and style objects differ.** IR position bindings live in `encoding` and use `{ field }` or `{ value }`. Point color and size live on the mark and use `{ kind, value }`. A constant reference line uses `encoding: { y: { value: 80 }, color: { value: 'crimson' } }`; its React equivalent is `<ReferenceMark y={80} color="crimson" />` (import it from `@retikz/plot-react`).
+- **Position and style objects differ.** IR position bindings live in `encoding` and use `{ field }` or `{ value }`. Point color and size live on the mark and use `{ kind, value }`.
 - **Exact field keys take precedence.** If both a direct `"metrics.gdp"` property and nested `metrics.gdp` exist, the direct property wins. Dotted traversal only applies when the complete key is absent. Ensure bound fields contain valid values.
-- **Each mark defines supported channels.** Numeric positions accepted by reference lines cannot be used directly as `PointMark` `x` / `y` props, which require field names. Strings in custom `channels` also mean fields; constants use explicit `{ kind: 'constant', value }`.
+- **Each mark defines supported channels.** `PointMark` `x` / `y` props require field names. Strings in custom `channels` also mean fields; constants use explicit `{ kind: 'constant', value }`.
 - **Scales provide padding.** `domainPadding` expands the data domain. Larger points or labels may require more padding; channel binding does not automatically prevent overflow.
 
 ## Related props

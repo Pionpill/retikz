@@ -4,17 +4,50 @@ import { BUILTIN_RIBBON_WIDTH_PROFILES, RibbonPathKindDefinition } from '@retikz
 import { describe, expect, it } from 'vitest';
 
 import * as expand from '../../src/pipeline/expand';
+import type { LowerPlotsOptions, PlotDefinitions, PlotImplementations } from '../../src/pipeline/expand';
 import { createPlotProviderContribution } from '../../src/pipeline/expand';
 import { coordinateScopeIdOf, resolveCoordinateScopeRegistry } from '../../src/resolve/composition';
 import { resolveCoordinateFrame } from '../../src/resolve/coordinate';
 
 describe('expand pipeline stable surface', () => {
+  it('合并不同分组对象中的相同共享字段，允许各 Plot 使用不同尺寸', () => {
+    const marks: PlotDefinitions['marks'] = [];
+    const transforms: PlotImplementations['transforms'] = [];
+    const contributions = [200, 400].map(width =>
+      createPlotProviderContribution(
+        {},
+        {
+          layout: { width, height: width / 2, fontSize: 12 },
+          definitions: { marks },
+          implementations: { transforms },
+        },
+      ),
+    );
+
+    const definitions = resolveCoreProviderDependencies({ contributions });
+    expect(() =>
+      compileToScene({ version: CURRENT_IR_VERSION, type: 'scene', children: [] }, definitions),
+    ).not.toThrow();
+  });
+
+  it.each<[LowerPlotsOptions, LowerPlotsOptions, string]>([
+    [{ layout: { fontSize: 12 } }, { layout: { fontSize: 16 } }, 'layout.fontSize'],
+    [{ definitions: { marks: [] } }, { definitions: { marks: [] } }, 'definitions.marks'],
+    [{ implementations: { transforms: [] } }, { implementations: { transforms: [] } }, 'implementations.transforms'],
+  ])('拒绝冲突的共享字段：%j / %j', (first, second, field) => {
+    expect(() =>
+      resolveCoreProviderDependencies({
+        contributions: [createPlotProviderContribution({}, first), createPlotProviderContribution({}, second)],
+      }),
+    ).toThrow(field);
+  });
+
   it('keeps the established runtime exports available', () => {
     expect(
       [
         expand.lowerPlots,
         expand.prepareRows,
-        expand.validateFieldMaps,
+        expand.assertDatasetFieldMaps,
         resolveCoordinateFrame,
         coordinateScopeIdOf,
         resolveCoordinateScopeRegistry,

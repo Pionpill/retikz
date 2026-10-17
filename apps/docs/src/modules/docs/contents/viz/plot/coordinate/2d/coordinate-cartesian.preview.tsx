@@ -18,11 +18,13 @@ export const renderCoordinateCartesian = (values: CoordinateCartesianValues) => 
     data={coordinate2DRows}
     width={380}
     height={280}
-    margin={{
-      top: values.marginTop,
-      right: values.marginRight,
-      bottom: values.marginBottom,
-      left: values.marginLeft,
+    layout={{
+      margin: {
+        top: values.marginTop,
+        right: values.marginRight,
+        bottom: values.marginBottom,
+        left: values.marginLeft,
+      },
     }}
   >
     <PlotScale dimension="y" type="linear" domainPadding={0} />

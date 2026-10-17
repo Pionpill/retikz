@@ -1,83 +1,208 @@
 ---
 title: IntervalMark
-description: 'IntervalMark expresses interval products across position roles; bars, histograms, heatmaps, radial bars, pies, and donuts are different projections of it.'
+description: Define data intervals with IntervalMark and project them into bars, histograms, heatmaps, pie charts, and donut charts.
 ---
 
-`<IntervalMark>` is not a "bar mark"; it is the interval mark. It builds intervals across one or more position roles for each datum, then lets the coordinate system project them: rectangles under cartesian coordinates, radial bars or sectors under polar coordinates.
+`IntervalMark` turns each row into a region. It determines the start and end of each dimension, then lets the coordinate system project that region. A category interval and a value interval form a bar; two category intervals form a heatmap cell; angular and radial intervals form a sector.
 
-With plain `x` / `y`, `x` is a band interval and `y` spans from baseline `0` to the value. With explicit `bounds`, each role can be declared as `band` / `span` / `extent` / `proportional` / `full`. The fields below use the React `IntervalMarkProps` contract; field values are data field names or paths such as `quarter` / `sales.revenue`.
+This page starts with bars, then covers series arrangements, continuous intervals, and polar sectors. See [channel binding](/viz/plot/channel/binding) for field syntax and [getting started](/viz/plot/get-start) for installation and host setup.
 
-## Usage
+## Integration
 
-```tsx
-import { IntervalMark, Plot } from '@retikz/plot-react';
+The example plots revenue for three quarters. `x` binds the quarter and `y` binds revenue; each bar extends from a baseline of 0 to its value.
+
+<ComponentPreview mode="showcase" files={['interval-entry', 'interval-entry.data.ts']} hideCode size="md" />
+
+Add `<div id="plot"></div>` to the HTML and choose an entry point below. The React JSX hierarchy is:
+
+```text
+Plot
+├── IntervalMark
+└── PlotAxis
 ```
 
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
 ```tsx
-<Plot data={revenue}>
-  <IntervalMark x="quarter" y="value" />
-</Plot>
+import { IntervalMark, Plot, PlotAxis } from '@retikz/plot-react';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { quarter: 'Q1', revenue: 30 },
+  { quarter: 'Q2', revenue: 50 },
+  { quarter: 'Q3', revenue: 40 },
+];
+
+createRoot(document.getElementById('plot')!).render(
+  <Plot data={rows} width={360} height={220}>
+    <IntervalMark x="quarter" y="revenue" />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" />
+  </Plot>,
+);
 ```
 
-A basic bar only needs `x` / `y`. Variable-width bars use `width` for proportional intervals; histograms use `x0` / `x1` for continuous intervals; heatmaps use `bounds` for double-band cells; pies and donuts use `angle` so the React DSL can accumulate angular extents.
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
-### When to Use
+```tsx
+import type { IRPlot } from '@retikz/plot';
+import { Plot } from '@retikz/plot-react';
+import { createRoot } from 'react-dom/client';
 
-IntervalMark is the low-level cell mark: it turns each data row into an orthogonal interval cell, then the coordinate system projects that cell into a rectangle, sector, or contour. Bars, histograms, heatmaps, radial bars, pies, and donuts are not separate low-level marks; they are presentation forms of the same IntervalMark under different `bounds`, `series`, `stack`, and `coordinate` settings.
+const rows = [
+  { quarter: 'Q1', revenue: 30 },
+  { quarter: 'Q2', revenue: 50 },
+  { quarter: 'Q3', revenue: 40 },
+];
 
-| Form                   | Key props                                 | Meaning                                                                         |
-| ---------------------- | ----------------------------------------- | ------------------------------------------------------------------------------- |
-| Bar                    | `x` / `y`                                 | `x` provides the category slot; `y` spans from `0` to the value                 |
-| Horizontal bar         | `direction="horizontal"`                  | `x` becomes the numeric length; `y` becomes the categorical band                |
-| Variable-width bar     | `x` / `width`                             | `width` accumulates contiguous proportional intervals; `x` supplies axis labels |
-| Grouped bar            | `arrangement="dodge"` / `group`           | Split one category slot into sub-bands by group                                 |
-| Stacked bar            | `arrangement="stack"` / `group`           | A stack transform produces `y0` / `y1`; the value role becomes an extent        |
-| Normalized stacked bar | `arrangement="normalize-stack"` / `group` | Normalize each category to percentages, then stack                              |
-| Histogram              | `x0` / `x1` / `y`                         | `x0` / `x1` provide a continuous x interval; `y` provides the height            |
-| Heatmap / grid         | `bounds`                                  | Both `bounds.x` and `bounds.y` are declared as `band`                           |
-| Pie / donut            | `angle` / `coordinate`                    | `angle` accumulates into angular extents; the radial role uses full             |
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { name: 'x', type: 'band' },
+    { name: 'y', type: 'linear' },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [{ type: 'interval', encoding: { x: { field: 'quarter' }, y: { field: 'revenue' } } }],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
 
-## Examples
+createRoot(document.getElementById('plot')!).render(<Plot spec={spec} data={{ rows }} width={360} height={220} />);
+```
 
-The first four examples can all switch between Cartesian and polar coordinates. The IntervalMark configuration stays the same: Cartesian coordinates usually project a cell as a rectangle, while polar coordinates project the same cell as a sector or annular grid.
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-### Basic Usage
+```ts
+import { plot, renderPlot } from '@retikz/plot-vanilla';
 
-`x` / `y` are the smallest bar form: `x` binds a categorical field, and `y` binds a numeric field. The coordinate system interprets the categorical field as a band and the numeric field as a span from `0` to the value.
+const rows = [
+  { quarter: 'Q1', revenue: 30 },
+  { quarter: 'Q2', revenue: 50 },
+  { quarter: 'Q3', revenue: 40 },
+];
 
-Under Cartesian coordinates, `direction="horizontal"` swaps the category and value roles. Polar coordinates have no horizontal-bar semantics, so the polar branch keeps `x` as the angular band and `y` as the radial span.
+const spec = plot({
+  data: { reference: 'rows' },
+  scales: [
+    { name: 'x', type: 'band' },
+    { name: 'y', type: 'linear' },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [{ type: 'interval', encoding: { x: { field: 'quarter' }, y: { field: 'revenue' } } }],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+});
 
-The same playground also exposes gap, corner radius, opacity, stroke, labels, and shadow. These controls decorate the resulting core `Node` without changing the interval source.
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRPlot } from '@retikz/plot';
+import { renderPlot } from '@retikz/plot-vanilla';
+
+const rows = [
+  { quarter: 'Q1', revenue: 30 },
+  { quarter: 'Q2', revenue: 50 },
+  { quarter: 'Q3', revenue: 40 },
+];
+
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { name: 'x', type: 'band' },
+    { name: 'y', type: 'linear' },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [{ type: 'interval', encoding: { x: { field: 'quarter' }, y: { field: 'revenue' } } }],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
+```
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
+
+### Position and direction
+
+By default, `x` supplies a category band and `y` supplies an interval from 0 to the value. The band scale determines bar width; its `paddingInner` controls the gap between bars.
+
+For horizontal bars, set `direction="horizontal"`, bind the numeric field to `x`, and bind the category field to `y`. In polar mode, the example uses angular categories and radial values, so the horizontal option is unavailable. Adjust corners, stroke, opacity, and labels to inspect the resulting appearance.
+
+| Property                           | Meaning            | Details                                                             |
+| ---------------------------------- | ------------------ | ------------------------------------------------------------------- |
+| `x`, `y`                           | Position fields    | Field names or paths; angle and radius in polar coordinates         |
+| `direction`                        | Bar direction      | Defaults to `vertical`; `horizontal` swaps category and value roles |
+| `color`, `fill`                    | Region color       | `color` binds a field; `fill` accepts a field or constant           |
+| `cornerRadius`                     | Rounded corners    | Decorates the projected region without changing the data interval   |
+| `stroke`, `strokeWidth`, `opacity` | Stroke and opacity | Style the resulting region                                          |
+| `label`                            | Data labels        | A field name, node label configuration, or ordered array            |
 
 <ComponentPreview
+  mode="showcase"
   files={['bar-position', 'bar-position.preview.tsx', 'bar-basic.data.ts']}
   controls={{ name: 'bar-basic' }}
   size="lg"
-  caption="Switch coordinates to project the same x / y intervals as rectangular or radial bars."
   defaultSourceFile="bar-position.preview.tsx"
 />
 
-### Series Arrangement
+### Series arrangement
 
-`arrangement` controls how multiple series share a categorical band: `dodge` creates adjacent sub-bands, `stack` accumulates continuous extents, and `normalize-stack` normalizes each category before stacking. `group` selects the arrangement groups, while `color` controls visual encoding.
+When a category contains multiple series, `group` identifies the arrangement groups and `color` controls coloring. `series` can also supply the groups and is used for color when `color` is omitted.
 
-Switching coordinates changes only the projection direction; dodge, stack, and normalized-stack relationships stay intact. `stackOffset` appears only for a regular stack and offers zero, normalized, diverging, centered, and overlapping baselines.
+`dodge` divides the category band into adjacent sub-bands; `stack` accumulates values into adjoining intervals; `normalize-stack` converts each category to percentages before stacking. Changing coordinates changes the geometry while preserving these grouping and accumulation relationships.
+
+| Property           | Meaning              | Details                                                                                   |
+| ------------------ | -------------------- | ----------------------------------------------------------------------------------------- |
+| `group`, `series`  | Series fields        | Identify series within each category; `group` takes precedence for arrangement            |
+| `arrangement`      | Arrangement strategy | `dodge`, `stack`, or `normalize-stack`                                                    |
+| `stackOffset`      | Stack baseline       | Ordinary stacks support `zero`, `normalize`, `diverging`, `center`, and `overlap`         |
+| `stack`, `percent` | Shorthand            | Select stacking or percentage stacking; prefer `arrangement` to state the intent directly |
 
 <ComponentPreview
+  mode="showcase"
   files={['bar-series', 'bar-series.preview.tsx', 'bar-grouped.data.ts']}
   controls={{ name: 'bar-grouped' }}
   size="lg"
-  caption="Compare the same series arrangement as rectangular and radial bars."
   defaultSourceFile="bar-series.preview.tsx"
 />
 
-### Continuous Intervals
+## Extended usage
 
-`x0` / `x1` define a continuous extent. Histogram mode first produces `binStart` / `binEnd` through a bin transform, then IntervalMark uses them as x intervals. Proportional mode uses `width` to allocate contiguous interval widths by GDP.
+### Continuous intervals
 
-Under polar coordinates, the continuous x interval becomes a continuous angular interval while y remains the radial length. Switch the interval source in the controls; bin count appears only for the histogram branch, and horizontal / vertical padding still applies to the corresponding continuous scales.
+A histogram first uses a bin transform to produce bin starts, ends, and counts, then binds them with `x0`, `x1`, and `y`. IntervalMark draws the resulting intervals; the transform performs the binning.
+
+When width represents data, `width` accumulates nonnegative weights in row order. For example, width can represent GDP while height represents cost, assigning adjacent continuous intervals to the rows. Switch the interval source to compare explicit endpoints with proportional widths. Both become angular intervals in polar coordinates.
+
+| Property    | Meaning            | Details                                                                                     |
+| ----------- | ------------------ | ------------------------------------------------------------------------------------------- |
+| `x0`, `x1`  | Interval endpoints | Must be supplied together; expand to an `extent` in `bounds.x`                              |
+| `y`         | Interval height    | Usually a count or aggregate value in a histogram                                           |
+| `width`     | Proportional width | Accumulates in row order; negative values are rejected; cannot be combined with `x0` / `x1` |
+| `transform` | Data preparation   | Applies transforms locally to the mark; this example uses PlotTransform before the layer    |
 
 <ComponentPreview
+  mode="showcase"
   files={[
     'interval-histogram',
     'interval-histogram.preview.tsx',
@@ -85,130 +210,118 @@ Under polar coordinates, the continuous x interval becomes a continuous angular 
     'bar-variable-width.data.ts',
   ]}
   size="lg"
-  caption="Compare extent and proportional modes, then switch coordinates to map continuous intervals onto the angular role."
   defaultSourceFile="interval-histogram.preview.tsx"
 />
 
-### 2D Cells
+### Two-dimensional intervals
 
-`bounds` overrides the default inference. A heatmap needs both directions to be bands, so it writes `bounds={{ x: { kind: 'band' }, y: { kind: 'band' } }}` explicitly. Changing y to `full` makes every x band occupy the complete other dimension.
+`bounds` specifies how each position dimension produces its interval. Five forms describe the boundary source:
 
-The same two-dimensional intervals form a rectangular grid under Cartesian coordinates and annular cells under polar coordinates. Disabling color mapping changes only the fill, not the cell boundaries.
+| `kind`         | Meaning             | Details                                                                |
+| -------------- | ------------------- | ---------------------------------------------------------------------- |
+| `band`         | Category band       | Uses the full category bandwidth; `group` can divide it into sub-bands |
+| `span`         | Baseline to value   | Extends from `baseline` (default 0) to the position field value        |
+| `extent`       | Explicit endpoints  | Uses `from` / `to` fields for the two endpoints                        |
+| `proportional` | Accumulated weights | Uses the nonnegative width `field` and accumulates in row order        |
+| `full`         | Full range          | Covers the mapped range of the dimension                               |
+
+A heatmap uses `bounds={{ x: { kind: 'band' }, y: { kind: 'band' } }}` to form a category grid. Changing the second dimension to `full` makes each region fill that dimension; rows sharing the first dimension then overlap. Switch to polar coordinates to turn the rectangular grid into a ring grid.
+
+| Property | Meaning                        | Details                                                           |
+| -------- | ------------------------------ | ----------------------------------------------------------------- |
+| `bounds` | Per-dimension interval sources | Overrides the default x band / y span inference                   |
+| `x`, `y` | Position fields                | Both bind category fields for a heatmap                           |
+| `color`  | Value coloring                 | Maps each cell value to a color; disabling it uses a uniform fill |
 
 <ComponentPreview
+  mode="showcase"
   files={['rect-bounds', 'rect-bounds.preview.tsx', 'rect-heatmap.data.ts']}
   size="lg"
-  caption="Switch coordinates to project band × band cells as a rectangular or annular grid."
   defaultSourceFile="rect-bounds.preview.tsx"
 />
 
-### Pie and Donut
+### Pie and donut charts
 
-`angle` is the shortcut for pies and donuts: it accumulates a share field into angular extents, and the radial role uses full. A donut is not a new mark; it is a polar coordinate with `innerRadius`.
+`angle` binds a share field and accumulates angular intervals in row order, using the full radial range. Set `innerRadius` on the polar coordinate system to create a donut; it is a coordinate option, not an IntervalMark property.
 
-This shortcut is valid only in polar coordinates, so it does not expose an invalid coordinate switch. `padAngle` creates a real angular gap, while `pull` offsets a sector along its midline. The Pie, Donut, and Exploded presets below share one scene.
+`padAngle` leaves an angular gap between sectors, and `pull` moves a sector outward along its middle angle. The example includes pie, donut, and highlighted-sector presets, with controls for individual parameters.
+
+| Property   | Meaning        | Details                                                    |
+| ---------- | -------------- | ---------------------------------------------------------- |
+| `angle`    | Share field    | Pie / donut shorthand for polar coordinates                |
+| `padAngle` | Angular gap    | In degrees; shrinks the angular interval before projection |
+| `pull`     | Outward offset | Nonnegative drawing units; accepts a field or constant     |
+| `label`    | Sector labels  | Node label configuration with a field or explicit content  |
 
 <ComponentPreview
+  mode="showcase"
   files={['interval-sector', 'interval-sector.preview.tsx', 'interval-sector.data.ts']}
   size="lg"
-  caption="angle stays in polar coordinates; adjust inner radius to move between pie and donut forms."
   defaultSourceFile="interval-sector.preview.tsx"
 />
 
-## How it works
+## Errors and limitations
 
-<ComponentAlert
-  type="tip"
-  title="You can skip this section at first"
-  description="Return when debugging how convenience props become bounds, group and stack ordering, or how coordinate frames create cell geometry."
-/>
+- `x0` / `x1` must be paired and cannot be combined with horizontal direction or series arrangements.
+- `width` cannot be combined with explicit `bounds`, `x0` / `x1`, or series arrangement settings. For custom layouts, precompute endpoints and use `extent`.
+- `angle` cannot be combined with `x` / `y`, `x0` / `x1`, `width`, `direction`, stacking, or `bounds`.
+- Explicit `bounds` cannot be combined with `direction`; express orientation through the bounds. Stacking requires `group` or `series` to identify segments, and `normalize-stack` rejects an additional `stackOffset`.
+- Explicit `interpolation` and `pull` are only supported in polar2D. A custom coordinate system must implement `projectCell` to draw intervals.
+- Invalid mapped positions and unrenderable projected geometry are skipped. The endpoint fields of an `extent` must be finite numbers or an error is raised. Negative proportional widths, accumulation overflow, and negative or non-finite outward offsets are also errors.
+- `resolveLabel` is a runtime callback requiring a mark `id`; it is not serialized into IR. Projection generates the region shape, so Node geometry capabilities are not all exposed as IntervalMark properties.
 
-`<IntervalMark>` is not a bar-chart-only component. It describes intervals on each position role, then asks the active coordinate frame to project those intervals through `projectCell` into a rectangle, sector, or contour. Frames without cell projection support fail loudly.
+## Implementation
 
-The main path below stops at the IntervalMark boundary: convenience props or explicit `bounds` first normalize into intervals for each role, then position-scale outputs build a logical Cell. The active coordinate frame owns the resulting geometry.
+### Interval resolution
 
-<ComponentPreview files="interval-cell-flow" hideCode size="sm" />
+The three marks use coordinates at different levels. PointMark primarily projects position while expressing shape and size in drawing space; orientation can be aligned separately. PathMark projects a connecting route, which can curve along continuous polar angles. IntervalMark projects the whole region, including its boundary and interior: a rectangular interval can become a sector. PathMark describes connecting lines and IntervalMark describes interval regions. A closed path can also be filled, but its region still follows its closure rule.
 
-`series` / `group` and `arrangement` prepare the fields and bounds needed for dodge, stack, or normalized stack before this path begins. After `projectCell`, cartesian coordinates commonly produce rects, polar coordinates produce sectors, and custom frames reuse the same Cell projection contract; only then does the geometry become a core `Node` layer.
+<ComponentPreview files="interval-resolution-flow" hideCode type="flow" size="md" />
 
-Under polar2D, cell boundaries inherit coordinate `interpolation`: `polar` produces curved sectors, while `chord` produces straight-edged contours. An explicit IntervalMark override affects only that mark, not the grid or sibling marks; setting it outside polar2D fails loudly.
+Shorthand inputs are normalized first. Ordinary bars produce a category `band` and a value `span`; `x0` / `x1` become an `extent`; `angle` produces cumulative angular endpoints and a `full` radial interval. Series arrangements prepare grouped sub-bands or stack transforms. Scales then map each row's boundaries into a Cell: a logical region with a start and end for each position role.
 
-`padAngle` first shrinks the logical Cell's angular interval, `pull` then shifts the local projection center along the bisector, and the effective interpolation finally produces a sector or contour. Neither rewrites source data.
+The coordinate frame's `projectCell` takes that Cell and returns rectangle, sector, or contour geometry. IntervalMark builds a Node from it, attaches styles, data labels, and addressable anchors, then passes it to compilation and rendering.
+
+The following snapshots follow the same interval through three geometric stages. The top row uses Cartesian coordinates and the bottom row uses polar coordinates. All columns retain the same interval endpoints.
+
+<ComponentPreview files="interval-projection" hideCode type="illustration" size="xxl" />
+
+1. **Find the axis normals**: at each interval endpoint, find the local direction perpendicular to the axis tangent. Orange arrows show normals to the x / angular axis; blue arrows show normals to the y / radial axis.
+2. **Bound the projected region**: Cartesian construction lines are horizontal and vertical, enclosing a rectangle. In polar coordinates, angular endpoints define radial rays and radial endpoints define concentric arcs, enclosing an annular sector. The normal to the radial axis gives only the local tangent of that arc; extending it as a straight line would produce the wrong boundary.
+3. **Paint the region**: apply fill, stroke, and rounded corners to the projected region. The original construction lines remain visible to show how rounding changes corners without changing the interval endpoints. Stroke is centered on the boundary, so a thick stroke can extend outside the region.
+
+These construction lines explain the geometry. The implementation calculates rectangles or sectors directly from Cell interval endpoints; it does not construct normals or intersect helper lines. The generated shape handles rounded corners after projection. The bottom row uses curved `polar` boundaries.
 
 <SourceLinks
   sources={[
     {
-      label: 'Accumulate angle values into polar intervals',
+      label: 'Normalize shorthand and series arrangements',
       path: 'packages/viz/plot-vanilla/src/normalize/plot/member-normalizer.ts',
     },
     {
-      label: 'Resolve role constraints for continuous intervals and proportional widths',
-      path: 'packages/viz/plot-vanilla/src/normalize/plot/member-normalizer.ts',
-    },
-    {
-      label: 'Expand dodge or stack settings into transforms and bounds',
-      path: 'packages/viz/plot-vanilla/src/normalize/plot/member-normalizer.ts',
-    },
-    {
-      label: 'Resolve effective bounds for each role',
+      label: 'Resolve intervals, project cells, and lower Nodes',
       path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
-      startLine: 48,
-      endLine: 52,
-    },
-    {
-      label: 'Build a logical Cell from role intervals',
-      path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
-      startLine: 289,
-      endLine: 312,
-    },
-    {
-      label: 'Build generic Cells from custom-coordinate role scales',
-      path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
-      startLine: 324,
-      endLine: 424,
-    },
-    {
-      label: 'Project Cell geometry through projectCell',
-      path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
-      startLine: 486,
-      endLine: 510,
-    },
-    {
-      label: 'Assemble Cell geometry into a Core Node layer',
-      path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
-      startLine: 530,
-      endLine: 591,
     },
   ]}
 />
 
-## API Reference
+## API reference
 
-This table keeps only IntervalMark-specific props and props whose meaning is redefined here. See [channel bindings](/viz/plot/channel/binding) for field and constant inputs, [transforms](/viz/plot/transform) for local `transform` and layer props, and [coordinates](/viz/plot/coordinate) for coordinate-view props. Shared fill, stroke, opacity, corner, font, and shadow appearance follows the [Node visual style API](/kernel/components/node/reference#irnodestyle--nodestyleschema); label position, distance, leader lines, and rotation follow [Node labels](/kernel/components/node/labels). They are not duplicated here.
+`IntervalMarkProps` is exported by `@retikz/plot-react` and reuses `InputPlotIntervalMark` from `@retikz/plot-vanilla`. Properties are grouped by purpose. `—` means the declaration has no field-level default; effective defaults are explained above. Source IR fields and constraints reuse `IntervalMarkSchema` from the [mark contract reference](/viz/plot/reference/mark).
 
-| Prop                  | Type                                                                | Default                                                                                                                                                | Description                                                                                                                                                               |
-| --------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id?`                 | `string`                                                            | —                                                                                                                                                      | Mark handle; required with `resolveLabel`                                                                                                                                 |
-| `x?` / `y?`           | `IntervalMarkProps['x']`                                            | —                                                                                                                                                      | Category and numeric position roles; `direction` selects the value role                                                                                                   |
-| `direction?`          | `'vertical'` / `'horizontal'`                                       | `vertical`                                                                                                                                             | Bar direction; horizontal mode treats `x` as numeric and `y` as categorical                                                                                               |
-| `x0?` / `x1?`         | `IntervalMarkProps['x0']`                                           | —                                                                                                                                                      | Lower and upper fields for a continuous x interval; set them together                                                                                                     |
-| `angle?`              | `IntervalMarkProps['angle']`                                        | —                                                                                                                                                      | Share field for polar pie / donut geometry, accumulated into angular intervals                                                                                            |
-| `width?`              | `IntervalMarkProps['width']`                                        | —                                                                                                                                                      | Proportional interval width derived in row order                                                                                                                          |
-| `color?`              | `IntervalMarkProps['color']`                                        | `series`                                                                                                                                               | Cell color field; reuses the series field when omitted                                                                                                                    |
-| `series?` / `group?`  | `IntervalMarkProps['series']`                                       | —                                                                                                                                                      | Series and multi-series arrangement fields                                                                                                                                |
-| `arrangement?`        | `'dodge'` / `'stack'` / `'normalize-stack'`                         | —                                                                                                                                                      | Dodge, stack, or normalized-stack strategy                                                                                                                                |
-| `stackOffset?`        | `'zero'` / `'normalize'` / `'diverging'` / `'center'` / `'overlap'` | `zero`                                                                                                                                                 | Stack baseline strategy                                                                                                                                                   |
-| `stack?` / `percent?` | `boolean`                                                           | `false`                                                                                                                                                | Convenience forms for stack and normalized stack                                                                                                                          |
-| `bounds?`             | `IntervalMarkProps['bounds']`                                       | —<br />Inferred by role<br />Required per bound<br />—<br />`0`<br />Required for `extent`<br />Required for `extent`<br />Required for `proportional` | Explicit bound source for each position role; the complete `IRPlotIntervalBounds` is an IR type from `@retikz/plot`, while React input uses `IntervalMarkProps['bounds']` |
-| `interpolation?`      | <ApiValues name="PolarInterpolation" />                             | Coordinate default                                                                                                                                     | Local polar2D cell-boundary override; `polar` produces curved edges and `chord` produces a straight contour                                                               |
-| `padAngle?`           | `number`                                                            | `0`                                                                                                                                                    | Angular gap applied before polar cell projection as a sector or chord contour                                                                                             |
-| `pull?`               | `IntervalMarkProps['pull']`                                         | `0`                                                                                                                                                    | Non-negative polar-cell offset along the bisector; supported by sectors and chord contours and driven by a field or constant                                              |
-| `label?`              | `IntervalMarkProps['label']`                                        | —                                                                                                                                                      | Attach field content to each cell through `Node.label`                                                                                                                    |
-| `resolveLabel?`       | `(row: ExternalRow) => string`                                      | —                                                                                                                                                      | Runtime label resolver; excluded from IR and requires `id`                                                                                                                |
-| `anchorId?`           | `IRPlotAnchorId`                                                    | —                                                                                                                                                      | Generate a stable id for every valid cell Node                                                                                                                            |
+{/* @include viz/plot/mark/interval/generated */}
 
-## Related
+## Further reading
 
-- [PathMark](/viz/plot/mark/path) — draw an interval edge or area boundary
-- [Transforms](/viz/plot/transform) — bin, stack, and other data-preparation flows
-- [Coordinates](/viz/plot/coordinate) — how cartesian, polar, and custom frames project cells
+<LinkedSections
+  items={[
+    { title: 'PointMark', description: 'Place nodes on intervals or data positions.', url: '/viz/plot/mark/point' },
+    { title: 'PathMark', description: 'Connect data positions into lines and outlines.', url: '/viz/plot/mark/path' },
+    {
+      title: 'Transforms',
+      description: 'Prepare data with binning, aggregation, and stacking.',
+      url: '/viz/plot/transform',
+    },
+    { title: 'Coordinates', description: 'Configure Cartesian and polar projection.', url: '/viz/plot/coordinate' },
+  ]}
+/>

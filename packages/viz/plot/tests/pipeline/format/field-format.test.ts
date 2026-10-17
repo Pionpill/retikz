@@ -134,9 +134,11 @@ describe('IRDataFieldDefinition.format 自定义格式', () => {
   });
 
   it('custom_format_parses_via_options', () => {
-    // data.model 写自定义 format 名；options.formatDefinitions 注入 definition → 按 parse 解析
+    // data.model 写自定义 format 名；options.definitions.formats 注入 definition → 按 parse 解析
     const spec = specWithField({ name: 'v', type: 'continuous', format: 'currency' });
-    const value = parseFirst(spec, { d: [{ v: '1.234,56', y: 1 }] }, 'v', { formatDefinitions: [currencyFormat] });
+    const value = parseFirst(spec, { d: [{ v: '1.234,56', y: 1 }] }, 'v', {
+      definitions: { formats: [currencyFormat] },
+    });
 
     expect(value).toBe(1234.56);
   });
@@ -144,7 +146,9 @@ describe('IRDataFieldDefinition.format 自定义格式', () => {
   it('custom_format_implies_type_when_omitted', () => {
     // 省略 type → 由 definition.impliedType 覆盖推断（continuous），不被推断成 categorical
     const spec = specWithField({ name: 'v', format: 'currency' });
-    const value = parseFirst(spec, { d: [{ v: '2.000,00', y: 1 }] }, 'v', { formatDefinitions: [currencyFormat] });
+    const value = parseFirst(spec, { d: [{ v: '2.000,00', y: 1 }] }, 'v', {
+      definitions: { formats: [currencyFormat] },
+    });
 
     expect(value).toBe(2000);
   });
@@ -154,7 +158,7 @@ describe('IRDataFieldDefinition.format 自定义格式', () => {
     const spec = specWithField({ name: 'v', type: 'temporal', format: 'currency' });
 
     expect(() =>
-      parseFirst(spec, { d: [{ v: '1.234,56', y: 1 }] }, 'v', { formatDefinitions: [currencyFormat] }),
+      parseFirst(spec, { d: [{ v: '1.234,56', y: 1 }] }, 'v', { definitions: { formats: [currencyFormat] } }),
     ).toThrow(/incompatible/);
   });
 
@@ -181,7 +185,7 @@ describe('IRDataFieldDefinition.format 自定义格式', () => {
     const { normalized } = prepareRows(
       spec,
       { d: [{ v: '50%', y: '1.000,50' }] },
-      { formatDefinitions: [currencyFormat] },
+      { definitions: { formats: [currencyFormat] } },
       ingested,
     );
 
@@ -232,7 +236,7 @@ describe('IRDataFieldDefinition.format — 交互', () => {
   });
 
   it('format_with_fieldmaps', () => {
-    // format + fieldMaps：先按物理路径取值，再按 format 解析
+    // format + datasetFieldMaps：先按物理路径取值，再按 format 解析
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -250,7 +254,7 @@ describe('IRDataFieldDefinition.format — 交互', () => {
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', encoding: { x: { field: 'v' }, y: { field: 'y' } } }],
     });
-    const value = parseFirst(spec, { d: [{ ratio: '50%', y: 1 }] }, 'v', { fieldMaps: { d: { v: 'ratio' } } });
+    const value = parseFirst(spec, { d: [{ ratio: '50%', y: 1 }] }, 'v', { datasetFieldMaps: { d: { v: 'ratio' } } });
 
     expect(value).toBe(0.5);
   });

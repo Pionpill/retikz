@@ -1,21 +1,5 @@
-/** 分类点抖动示例数据 */
+/** 节点抖动示例数据 */
 export const jitterPoints = [
-  { group: 'A', angle: 30, value: 18 },
-  { group: 'A', angle: 30, value: 31 },
-  { group: 'A', angle: 30, value: 44 },
-  { group: 'A', angle: 30, value: 59 },
-  { group: 'B', angle: 150, value: 14 },
-  { group: 'B', angle: 150, value: 29 },
-  { group: 'B', angle: 150, value: 47 },
-  { group: 'B', angle: 150, value: 63 },
-  { group: 'C', angle: 270, value: 21 },
-  { group: 'C', angle: 270, value: 36 },
-  { group: 'C', angle: 270, value: 52 },
-  { group: 'C', angle: 270, value: 68 },
-];
-
-/** 六边形极坐标网格中的点抖动示例数据 */
-export const polarJitterPoints = [
   { group: 'A', angle: 30, value: 18 },
   { group: 'A', angle: 30, value: 31 },
   { group: 'A', angle: 30, value: 44 },

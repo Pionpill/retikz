@@ -169,12 +169,20 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     expect(fields.has('note')).toBe(true);
   });
 
-  it('collect_rule_band_and_extent_fields_alpha11', () => {
-    // rule band 上界 string（field）+ extent 字段进用户源集；数字常量上界不作字段
+  it('collect_interval_extent_fields_without_constant_baseline', () => {
+    // 各维区间端点字段进入用户源集，常量基线不作为字段
     const spec = buildSpec({
       marks: [
-        { type: 'reference', encoding: { y: { field: 'lo' } }, yTo: 'hi', extentField: 'a', extentToField: 'b' },
-        { type: 'reference', encoding: { y: { value: 70 } }, yTo: 90 },
+        {
+          type: 'interval',
+          encoding: { x: { field: 'a' }, y: { field: 'lo' } },
+          bounds: { x: { kind: 'extent', from: 'a', to: 'b' }, y: { kind: 'extent', from: 'lo', to: 'hi' } },
+        },
+        {
+          type: 'interval',
+          encoding: { x: { field: 'a' }, y: { field: 'lo' } },
+          bounds: { x: { kind: 'full' }, y: { kind: 'span', baseline: 90 } },
+        },
       ],
     });
     const fields = collectSourceFields(spec);

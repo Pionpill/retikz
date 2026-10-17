@@ -496,7 +496,7 @@ $$
 
 <ComponentPreview files="regression-fitting-flow" size="lg" hideCode type="flow" />
 
-用 `defineRegression` 声明方法语义，再用 `defineRegressionImplementation` 提供计算，分别通过 `lowerOptions.regressionDefinitions` 与 `lowerOptions.regressionImplementations` 注入。JSON 只保存方法名和参数；外接引擎接入见 [Data 扩展机制](/viz/data/transform/extensions)。
+用 `defineRegression` 声明方法语义，再用 `defineRegressionImplementation` 提供计算，分别通过 `lowerOptions.definitions.regressions` 与 `lowerOptions.implementations.regressions` 注入。JSON 只保存方法名和参数；外接引擎接入见 [Data 扩展机制](/viz/data/transform/extensions)。
 
 下面实现一个**固定斜率拟合算法**：调用方给定斜率，算法根据观测数据自动求解截距，使残差平方和最小。它适合斜率已由先验关系确定、只需估计整体偏移的情况。
 
@@ -531,8 +531,8 @@ export const fixedSlopeFitImplementation = defineRegressionImplementation({
 });
 
 export const lowerOptions = {
-  regressionDefinitions: [fixedSlopeFit],
-  regressionImplementations: [fixedSlopeFitImplementation],
+  definitions: { regressions: [fixedSlopeFit] },
+  implementations: { regressions: [fixedSlopeFitImplementation] },
 };
 export const rows = [
   { x: 0, y: 1 },

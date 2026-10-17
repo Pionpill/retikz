@@ -17,6 +17,7 @@ import type {
 } from '@retikz/core';
 import type { ExternalRow, IRDataTransformDeclaration } from '@retikz/data';
 import type { JsonValue } from '@retikz/foundation';
+import type { IRPlotPointAutoPadding } from '@retikz/plot';
 import type {
   IRPlotAnchorId,
   IRPlotBlendModeStyle,
@@ -25,6 +26,7 @@ import type {
   IRPlotLayer,
   IRPlotMarkLabelContent,
   IRPlotMarkPlacement,
+  IRPlotMarkOrientation,
   IRPlotNodeAxisScaleStyle,
   IRPlotNodeBooleanStyle,
   IRPlotNodeBoundaryStyle,
@@ -275,7 +277,14 @@ export type InputPlotPathMark = InputPlotMarkTransform &
   };
 
 /** <PointMark> props：散点 / 文本图层，每行一个 glyph（给 text → 无边框文本 Node） */
-export type InputPlotPointMark = InputPlotMarkTransform &
+export type InputPlotPointMark = {
+  /** 节点方向参考；默认屏幕方向，坐标方向与 rotate 偏移组合 */
+  orientation?: IRPlotMarkOrientation;
+  /** 自动边缘留白，默认 max-radius；false 关闭当前图元贡献
+   * @default 'max-radius'
+   */
+  autoPadding?: IRPlotPointAutoPadding;
+} & InputPlotMarkTransform &
   InputPlotCoordinateScope &
   InputPlotDatumLabel &
   InputPlotCoreNodeChannels & {
@@ -396,7 +405,12 @@ export type InputPlotIntervalMark = InputPlotMarkTransform &
   };
 
 /** <RelationMark> props：连接两个目标的路径或 ribbon 关系图层 */
-export type InputPlotRelationMark = InputPlotMarkTransform &
+export type InputPlotRelationMark = {
+  /** 端点自动留白，默认关闭
+   * @default false
+   */
+  autoPadding?: IRPlotPointAutoPadding;
+} & InputPlotMarkTransform &
   InputPlotCoordinateScope & {
     /** 可选 mark 句柄，用于生成稳定的关系图层 id */
     id?: string;
@@ -418,49 +432,4 @@ export type InputPlotRelationMark = InputPlotMarkTransform &
     color?: InputPlotFieldName;
     /** 扩展通道绑定；字符串值按字段名处理 */
     channels?: Record<string, InputPlotExtensionChannel>;
-  };
-
-type InputPlotReferenceMarkLabel =
-  | InputPlotNodeLabel
-  | InputPlotGeometryLabel
-  | Array<InputPlotNodeLabel | InputPlotGeometryLabel>;
-
-/**
- * <ReferenceMark> props：参考标注图层（阈值线 / 容差带 / 参考区域）
- * @description 扁平 props：数字 → IR 常量 value、字符串 → IR field（per-datum）。只给下界（x / y）→ line；
- *   配上界（xTo 与 x 配对 / yTo 与 y 配对）→ band [lo,hi]。kind="region" 时 x/xTo/y/yTo 围出二维区域。
- *   extent 给对侧维起止字段截成部分长度
- */
-export type InputPlotReferenceMark = InputPlotMarkTransform &
-  InputPlotCoordinateScope &
-  Omit<InputPlotCoreNodeChannels, 'scale' | 'dashPattern' | 'shadow' | 'blendMode'> &
-  InputPlotCorePathChannels & {
-    /** 参考形态覆写；设为 region 时 x/xTo/y/yTo 四个边界共同围出二维区域 */
-    kind?: 'region';
-    /** Polar2D band / region 边界局部覆盖；line 保持直线 */
-    interpolation?: PolarInterpolation;
-    /** 竖直参考的常量轴绑定（x=const 跨满 y 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */
-    x?: number | InputPlotFieldName;
-    /** 水平参考的常量轴绑定（y=const 跨满 x 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */
-    y?: number | InputPlotFieldName;
-    /** 竖直 band 上界（与 x 配对 → x∈[x,xTo] 填充带）：数字 → 常量、字符串 → 字段；缺 → line */
-    xTo?: number | InputPlotFieldName;
-    /** 水平 band 上界（与 y 配对 → y∈[y,yTo] 填充带）：数字 → 常量、字符串 → 字段；缺 → line */
-    yTo?: number | InputPlotFieldName;
-    /** 对侧维部分长度起点字段（与 extentToField 成对）；缺 → 满铺对侧轴域 */
-    extentField?: InputPlotFieldName;
-    /** 对侧维部分长度终点字段（与 extentField 成对）；缺 → 满铺对侧轴域 */
-    extentToField?: InputPlotFieldName;
-    /** 颜色：数字 / 颜色串常量 → value（line→stroke / band→fill）；字段名 → field（per-datum 按色分组） */
-    color?: string;
-    /** 参考线或参考区域的标签配置 */
-    label?: InputPlotReferenceMarkLabel;
-    /** 参考图元描边宽度的常量或数据映射 */
-    strokeWidth?: InputPlotMarkValueProp<number> | IRPlotPointStrokeWidthStyle;
-    /** 参考图元整体透明度的常量或数据映射 */
-    opacity?: InputPlotOpacity;
-    /** 转发到 `encoding.channels` 的扩展通道绑定；字符串值按字段名处理 */
-    channels?: Record<string, InputPlotExtensionChannel>;
-    /** 可选 mark 句柄（预留 scope/anchor） */
-    id?: string;
   };

@@ -18,6 +18,6 @@ These schemas are exported from `@retikz/chart/point` and describe persistable J
 
 #### BubbleChartMarkSchema
 
-`encodings` accepts only optional field-name strings for x, y, color, opacity, shape, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties. Bubble size comes from the recipe size mapping and cannot be overridden by a mark.
+`encodings` accepts only optional field-name strings for x, y, color, opacity, shape, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `domainPadding`; `autoPadding` can override the chart policy. Omitted settings inherit the applicable chart mappings and properties. Bubble size comes from the recipe size mapping and cannot be overridden by a mark.
 
 <ZodSchema name="BubbleChartMarkSchema" shallow />

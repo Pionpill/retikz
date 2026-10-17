@@ -43,7 +43,9 @@ describe('Plot React InputEmbed routing', () => {
   it('standalone Plot passes an InputEmbed to Layout without resolving Core composites', () => {
     capturedLayouts.length = 0;
 
-    renderToStaticMarkup(<Plot spec={spec} data={data} themeStyles={[]} plotThemeStyles={[plotThemeStyle]} />);
+    renderToStaticMarkup(
+      <Plot spec={spec} data={data} themeStyles={[]} definitions={{ plotThemeStyles: [plotThemeStyle] }} />,
+    );
 
     const layout = capturedLayouts.at(-1);
 
@@ -68,8 +70,8 @@ describe('Plot React InputEmbed routing', () => {
     const layout = capturedLayouts.at(-1);
 
     expect(
-      (layout!.children as { props?: { lowerOptions?: { plotThemeStyles?: unknown } } }).props?.lowerOptions
-        ?.plotThemeStyles,
+      (layout!.children as { props?: { lowerOptions?: { definitions?: { plotThemeStyles?: unknown } } } }).props
+        ?.lowerOptions?.definitions?.plotThemeStyles,
     ).toEqual([plotThemeStyle]);
   });
 

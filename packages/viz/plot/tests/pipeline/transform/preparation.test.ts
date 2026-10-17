@@ -36,6 +36,76 @@ const rows = [
 ];
 
 describe('Plot whole-scope data preparation', () => {
+  it('为根变换使用 hybrid，为普通及 facet 图元使用独立 builtin 策略', async () => {
+    const spec = specOf();
+    spec.dataExecution = { root: { mode: 'hybrid', external: 'fixture' }, marks: { mode: 'builtin' } };
+    spec.composition = {
+      defaultView: 'main',
+      views: [{ id: 'main', coordinate: { type: 'cartesian2D' } }],
+      arrangements: [{ kind: 'facet', id: 'groups', view: 'main', column: { field: 'group' } }],
+    };
+    delete spec.coordinate;
+    const provider: DataTransformImplementationProvider<never> = {
+      resolve: stage => ({
+        kind: 'supported',
+        implementation: {
+          definition: stage.definition,
+          execute: input => {
+            if (input.kind !== 'result') throw new Error('fixture requires result');
+            return {
+              rows: input.result.rows.map(row => ({ ...row, root: Number(row.value) + 10 })),
+              model: stage.outputModel,
+            };
+          },
+        },
+      }),
+    };
+    const preparation = await preparePlotData(spec, {
+      dataBindings: { rows: { kind: 'rows', rows } },
+      dataTransformExecutor: createDataTransformExecutor({ externalProviders: [{ name: 'fixture', provider }] }),
+    });
+    const prepared = await preparation.execute();
+    expect(prepared.root.rows.map(row => row.root)).toEqual([11, 12]);
+    expect(prepared.marks[0].rows.map(row => row.local)).toEqual([11 / 23, 12 / 23]);
+    expect(prepared.panels.map(panel => panel[0].rows.map(row => row.local))).toEqual([[1], [1]]);
+
+    // marks 的 mode 可来自执行器默认值，但不得取得 root 的 provider 名称
+    spec.dataExecution = { root: { mode: 'hybrid', external: 'fixture' }, marks: {} };
+    await expect(
+      preparePlotData(spec, {
+        dataBindings: { rows: { kind: 'rows', rows } },
+        dataTransformExecutor: createDataTransformExecutor({
+          dataExecution: { mode: 'external' },
+          externalProviders: [{ name: 'fixture', provider }],
+        }),
+      }),
+    ).rejects.toThrow(/mark/);
+  });
+
+  it('稀疏 marks 策略不继承 root 的 external，并允许单条声明覆盖两个作用域', async () => {
+    const spec = specOf();
+    spec.dataExecution = { root: { mode: 'external', external: 'missing' }, marks: {} };
+    spec.transform![0].dataExecution = { mode: 'builtin' };
+    const prepared = await (await preparePlotData(spec, { dataBindings: { rows: { kind: 'rows', rows } } })).execute();
+    expect(prepared.root.rows.map(row => row.root)).toEqual([1 / 3, 2 / 3]);
+    expect(prepared.marks[0].rows.map(row => row.local)).toEqual([1 / 3, 2 / 3]);
+
+    spec.marks[0].transform![0].dataExecution = { mode: 'external', external: 'missing' };
+    await expect(preparePlotData(spec, { dataBindings: { rows: { kind: 'rows', rows } } })).rejects.toThrow(/mark/);
+  });
+
+  it('同步入口按实际作用域检查策略，并尊重单条 builtin 覆盖', () => {
+    const spec = specOf();
+    const compile = () =>
+      compileToScene({ type: 'scene', version: 1, children: [spec] }, { composites: lowerPlots({ rows }) });
+    spec.dataExecution = { root: { mode: 'builtin' }, marks: { mode: 'external', external: 'fixture' } };
+    expect(compile).toThrow(/async preparation/);
+    spec.marks[0].transform![0].dataExecution = { mode: 'builtin' };
+    expect(compile().scene.primitives.length).toBeGreaterThan(0);
+    spec.dataExecution = { root: { mode: 'hybrid', external: 'fixture' }, marks: { mode: 'builtin' } };
+    expect(compile).toThrow(/async preparation/);
+  });
+
   it('consumes nonzero seeded jitter once across repeated compilation', async () => {
     const spec = specOf();
     spec.dataExecution = { mode: 'builtin' };

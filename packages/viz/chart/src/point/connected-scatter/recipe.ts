@@ -51,7 +51,7 @@ export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
   marks: [
     {
       definition: ConnectedScatterMarkDefinition,
-      inherit: { encodings: ['x', 'y', 'order', 'series'], properties: markPropertySlots },
+      inherit: { encodings: ['x', 'y', 'order', 'series'], properties: [...markPropertySlots, 'autoPadding'] },
     },
   ],
   resolveEncodings: context => {

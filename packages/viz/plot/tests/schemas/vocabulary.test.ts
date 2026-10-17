@@ -20,7 +20,6 @@ import {
   CoordinateViewPlacementKind,
   PolarInterpolation,
   PositionScaleContinuity,
-  ReferenceMarkKind,
   RelationOrthogonalLabelStep,
   RelationRouteStepKind,
   RelationRoutingKind,
@@ -81,7 +80,6 @@ describe('schema vocabulary constants', () => {
     expect(Object.values(RelationRouteStepKind).sort()).toEqual(['bend', 'cubic', 'curve', 'fold', 'line', 'move']);
     expect(Object.values(RelationRoutingKind).sort()).toEqual(['bend', 'line', 'orthogonal']);
     expect(Object.values(RelationOrthogonalLabelStep).sort()).toEqual(['last', 'main']);
-    expect(Object.values(ReferenceMarkKind)).toEqual(['region']);
     expect(Object.values(PolarInterpolation).sort()).toEqual(['chord', 'polar']);
     expect(Object.values(PositionScaleContinuity).sort()).toEqual(['continuous', 'discrete']);
   });

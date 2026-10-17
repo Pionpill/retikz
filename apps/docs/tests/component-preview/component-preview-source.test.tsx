@@ -298,7 +298,6 @@ describe('ComponentPreview Vanilla source', () => {
   it.each([
     [['viz', 'plot', 'channel', 'custom-channel'], 'custom-channel'],
     [['viz', 'plot', 'coordinate', 'custom-coordinate'], 'coordinate-custom-bridge'],
-    [['viz', 'plot', 'mark', 'custom-mark'], 'mark-custom'],
     [['viz', 'plot', 'scale', 'custom-scale'], 'scale-custom'],
     [['viz', 'plot', 'transform', 'custom-transform'], 'waterfall'],
   ] as const)('%s 的运行时 Definition 生成可执行 Vanilla 预览', async (segments, name) => {

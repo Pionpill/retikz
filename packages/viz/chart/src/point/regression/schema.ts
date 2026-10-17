@@ -72,6 +72,7 @@ export const RegressionExtraMethodSchema = strictObject({
   .describe('Additional regression fit sharing observations with inherited sampling and trend properties');
 
 const RegressionPropertiesBaseSchema = strictObject({
+  autoPadding: PointAutoPaddingSchema.optional(),
   method: SmoothParamsSchema.shape.method,
   sampleCount: SmoothParamsSchema.shape.sampleCount,
   extent: SmoothParamsSchema.shape.extent,

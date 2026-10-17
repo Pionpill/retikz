@@ -163,7 +163,11 @@ export const PreviewTableControl: FC<PreviewTableControlProps> = props => {
               </thead>
               <tbody>
                 {visibleRows.map((row, rowIndex) => (
-                  <tr key={rowIndex} data-slot="preview-table-row" className="last:[&>td]:border-b-0">
+                  <tr
+                    key={rowIndex}
+                    data-slot="preview-table-row"
+                    className={cn(!fillAvailableHeight && 'last:[&>td]:border-b-0')}
+                  >
                     {columns.map(column => {
                       const cell = formatPreviewTableCell(Reflect.get(row, column.key));
                       return (

@@ -7,7 +7,7 @@ The root fields of Chart Source describe the complete graphic. They identify its
 
 ## Data transforms and runtime entry points
 
-Every Chart root supports `transform: Array<IRDataTransformDeclaration>` and `dataExecution`. Each declaration is `{ operation, dataExecution? }`; derived encodings also wrap their operation and can configure that stage. Stages run root transforms, then derived encodings, then recipe/mark-local transforms. Priority is declaration > Chart root > executor defaults > builtin.
+Every Chart root supports `transform: Array<IRDataTransformDeclaration>` and `dataExecution`. Each declaration is `{ operation, dataExecution? }`; derived encodings also wrap their operation and can configure that stage. Stages run root transforms, then derived encodings, then recipe/mark-local transforms. dataExecution reuses the Plot shared policy or independent `{ root, marks }` policies. Declarations override their selected scope, followed by executor defaults and finally builtin. See [Plot execution policies](/viz/plot/reference/plot#plotdataexecutionschema).
 
 All six React Chart families accept dataBindings, dataTransformExecutor and signal. Raw rows and dataBindings are exclusive; lowerOptions injects separate Data Definitions and Implementations. Standalone clients prepare automatically; embedded Charts enable async runtime.preparation on the outer Layout.
 
