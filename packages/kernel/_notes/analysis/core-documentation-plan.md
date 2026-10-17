@@ -1,7 +1,7 @@
 # Core 源码阅读与 Kernel 进阶文档长期计划
 
 - 建立日期：2026-10-11
-- 状态：C1「编译流程」、C2「配置解析」、C3「坐标解析」均已通过用户阅读 review；C4「节点编译」已完成，用户阅读 review 通过；C5「路径编译」已完成，待用户阅读；其余正文待开始
+- 状态：C1「编译流程」、C2「配置解析」、C3「坐标解析」均已通过用户阅读 review；C4「节点编译」已完成，用户阅读 review 通过；C5「路径编译」、C6「复合编译」已完成；C7「编译产物」已通过用户阅读 review 并提交；Core 正文到 C7 收尾，原 C8 并入 K2；C0 待整理，K 系列待开始
 - 目标：边阅读实现边编写独立系列文档，逐步理解 Core 编译机制及其跨包协作
 - 推进方式：按篇分批推进，不一次性铺开全部页面
 - 初始授权：保存主题规划；2026-10-12 获准编写 C1、删除旧 Core 概览子页、同步双语导航与引用并验证，不含源码重构、暂存、提交或发布
@@ -23,50 +23,51 @@ Core 页面可以介绍它如何消费 Runtime、Math 等依赖，但不展开�
 
 ## 二、组件／进阶：五个专题
 
-目标位置：[组件内部机制](../../../../apps/docs/src/modules/docs/contents/kernel/components/internals)。标题为内容规划，路由和最终目录在对应批次确定。
+目标位置：[运行机制](../../../../apps/docs/src/modules/docs/contents/kernel/components/runtime-mechanics)。K1 使用 rendering-pipeline 路由，其余专题的路由在对应批次确定。
 
-| 编号 | 专题               | 主线与边界                                                                  | 涉及模块                                   | 状态   |
-| ---- | ------------------ | --------------------------------------------------------------------------- | ------------------------------------------ | ------ |
-| K1   | 从声明到渲染       | 声明进入 IR、编译为 Scene、执行为画面；交代各层职责，不展开每个包的完整算法 | React、Vanilla、Core、Render               | 待开始 |
-| K2   | 动态更新与增量执行 | 输入变化、Runtime 调度、Core 计算、Render 提交，以及失败时当前结果如何处理  | Adapter、Runtime、Core、Render             | 待开始 |
-| K3   | 文字测量与布局协作 | 谁提供度量、Core 怎样消费，字体或公式度量变化如何传递到布局和画面           | 度量提供方、Adapter、Core、Tex、Render     | 待开始 |
-| K4   | 高层组件与布局组合 | 上层领域组件怎样通过定义、输入、布局约束和编译产物与 Core 协作              | Standard／Plot 等实际消费方、Adapter、Core | 待开始 |
-| K5   | 编译观测与空间查询 | 编译布局和空间信息如何交给检查工具及应用使用，明确输出与消费方边界          | Core、Inspect、Adapter、应用               | 待开始 |
+| 编号 | 专题               | 主线与边界                                                                                              | 涉及模块                                   | 状态           |
+| ---- | ------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------ | -------------- |
+| K1   | 渲染链路           | 声明进入 IR、编译为 Scene、执行为画面；交代各层职责，不展开每个包的完整算法                             | React、Vanilla、Core、Render               | 已编写，待验收 |
+| K2   | 动态更新与增量执行 | 输入变化、Runtime 调度、Core 增量接入与结果复用、Scene Patch 和 Render 提交，以及全量回退与失败结果处理 | Adapter、Runtime、Core、Render             | 待开始         |
+| K3   | 文字测量与布局协作 | 谁提供度量、Core 怎样消费，字体或公式度量变化如何传递到布局和画面                                       | 度量提供方、Adapter、Core、Tex、Render     | 待开始         |
+| K4   | 高层组件与布局组合 | 上层领域组件怎样通过定义、输入、布局约束和编译产物与 Core 协作                                          | Standard／Plot 等实际消费方、Adapter、Core | 待开始         |
+| K5   | 编译观测与空间查询 | 编译布局和空间信息如何交给检查工具及应用使用，明确输出与消费方边界                                      | Core、Inspect、Adapter、应用               | 待开始         |
 
 每篇采用一个贯穿案例，例如修改节点颜色、文字变长后节点和连线变化。涉及字体更新、交互接线等行为时，先核对现有实现；未实现能力不能写成已有能力。
 
+K2 用“修改一个节点后发生什么”贯穿跨包链路，承接原 C8 的 Core Source／Computation、快照与 ChangeSet、身份与拓扑、增量快路径、Scene Patch 和全量回退。Runtime 自身的调度与事务内部机制归 Runtime 包文档，K2 按需链接；Core 的单次编译细节链接 C1–C7。
+
 暂不单列“性能优化”：跨更新增量、同次编译重放和局部缓存分别放回所属机制，避免以性能为名混合不同生命周期。
 
-## 三、开发包 Core：入口与八篇正文
+## 三、开发包 Core：入口与七篇正文
 
 目标位置：[Core 开发包文档](../../../../apps/docs/src/modules/docs/contents/kernel/packages/core)。入口仅保留包职责、输入输出、最小调用与系列阅读地图；正文按以下顺序组织。
 
-| 编号 | 文档                   | 主要内容                                                                                           | 状态                     |
-| ---- | ---------------------- | -------------------------------------------------------------------------------------------------- | ------------------------ |
-| C0   | Core 入口              | 包边界、最小接入、输出概览、阅读前提及系列索引                                                     | 待开始                   |
-| C1   | 编译流程               | Source IR、Canonical、Layout、Scene；上下文建立、遍历、延迟任务与输出汇总；resolve 和 compile 分工 | 已完成，阅读 review 通过 |
-| C2   | 配置解析               | Definition／registry 绑定、默认值、样式级联、主题环境与确定化结果                                  | 已完成，阅读 review 通过 |
-| C3   | 坐标解析               | 位置表达解析、命名空间、锚点、局部／世界坐标、Scope 占位及最终定位                                 | 已完成，阅读 review 通过 |
-| C4   | 节点编译               | 度量契约、正文排版、节点尺寸、基线、标签、连接边界及相关局部缓存                                   | 已完成，阅读 review 通过 |
-| C5   | 路径编译               | target 绑定、游标、相对位置、路径段、端点裁剪、箭头和路径标签，直到结构化输出                      | 已完成，待用户阅读       |
-| C6   | 复合组件编译与布局重放 | Composite 展开、依赖装配、尺寸提案、子布局试算、结果隔离、重放与资源合并                           | 待开始                   |
-| C7   | Scene、资源与编译产物  | 图元、分组变换、资源、布局／视觉边界、画布，以及 artifact、空间句柄、observer 和诊断的输出关系     | 待开始                   |
-| C8   | Runtime 接入与增量编译 | Core Source／Computation、快照与 ChangeSet、身份与拓扑、快路径、Scene Patch 和全量回退             | 待开始                   |
+| 编号 | 文档      | 主要内容                                                                                           | 状态                           |
+| ---- | --------- | -------------------------------------------------------------------------------------------------- | ------------------------------ |
+| C0   | Core 入口 | 包边界、最小接入、输出概览、阅读前提及系列索引                                                     | 待开始                         |
+| C1   | 编译流程  | Source IR、Canonical、Layout、Scene；上下文建立、遍历、延迟任务与输出汇总；resolve 和 compile 分工 | 已完成，阅读 review 通过       |
+| C2   | 配置解析  | Definition／registry 绑定、默认值、样式级联、主题环境与确定化结果                                  | 已完成，阅读 review 通过       |
+| C3   | 坐标解析  | 位置表达解析、命名空间、锚点、局部／世界坐标、Scope 占位及最终定位                                 | 已完成，阅读 review 通过       |
+| C4   | 节点编译  | 度量契约、正文排版、节点尺寸、基线、标签、连接边界及相关局部缓存                                   | 已完成，阅读 review 通过       |
+| C5   | 路径编译  | target 绑定、游标、相对位置、路径段、端点裁剪、箭头和路径标签，直到结构化输出                      | 已完成                         |
+| C6   | 复合编译  | Composite 展开、依赖装配、尺寸提案、子布局试算、结果隔离、重放与资源合并                           | 已完成                         |
+| C7   | 编译产物  | 图元、分组变换、资源、布局／视觉边界、画布，以及 artifact、空间句柄、observer 和诊断的输出关系     | 已完成，阅读 review 通过并提交 |
 
-C7 初期围绕“编译最终交付什么”展开。如果观测与空间产物足以形成独立阅读任务，再讨论拆成“Scene 生成”和“编译产物与观测”，不预先创建空页面。
+Core 系列以 C7 收尾，覆盖一次编译从输入到产物的完整过程。跨次更新统一放入 K2，不再单列 C8，避免重复解释 Runtime 与 Core 的交接。
 
 ### 源码阅读入口
 
-| 正文 | 优先阅读                                                                                                                                                                                                                               |
-| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| C1   | [compile](../../core/src/compile/compile.ts)、[context](../../core/src/compile/orchestration/context.ts)、[traversal](../../core/src/compile/orchestration/traversal.ts)                                                               |
-| C2   | [resolve](../../core/src/resolve)、[contract](../../core/src/contract)、[providers](../../core/src/providers)                                                                                                                          |
-| C3   | [position](../../core/src/resolve/position)、[namespace](../../core/src/compile/namespace.ts)、[position-context](../../core/src/compile/orchestration/position-context.ts)                                                            |
-| C4   | [text](../../core/src/compile/text)、[node](../../core/src/compile/node)、[anchor-cache](../../core/src/compile/reference/anchor-cache.ts)                                                                                             |
-| C5   | [路径解析](../../core/src/resolve/path)、[路径编译](../../core/src/compile/path)                                                                                                                                                       |
-| C6   | [Composite 契约](../../core/src/contract/composite)、[layout-proposal](../../core/src/compile/orchestration/layout-proposal.ts)、[traversal](../../core/src/compile/orchestration/traversal.ts)                                        |
-| C7   | [Scene 契约](../../core/src/contract/scene)、[resource](../../core/src/compile/resource)、[observation](../../core/src/compile/orchestration/observation.ts)、[spatial-handle](../../core/src/compile/orchestration/spatial-handle.ts) |
-| C8   | [Runtime 契约](../../core/src/contract/runtime)、[incremental](../../core/src/compile/incremental)、[runtime-topology](../../core/src/compile/orchestration/runtime-topology.ts)                                                       |
+| 正文              | 优先阅读                                                                                                                                                                                                                               |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C1                | [compile](../../core/src/compile/compile.ts)、[context](../../core/src/compile/orchestration/context.ts)、[traversal](../../core/src/compile/orchestration/traversal.ts)                                                               |
+| C2                | [resolve](../../core/src/resolve)、[contract](../../core/src/contract)、[providers](../../core/src/providers)                                                                                                                          |
+| C3                | [position](../../core/src/resolve/position)、[namespace](../../core/src/compile/namespace.ts)、[position-context](../../core/src/compile/orchestration/position-context.ts)                                                            |
+| C4                | [text](../../core/src/compile/text)、[node](../../core/src/compile/node)、[anchor-cache](../../core/src/compile/reference/anchor-cache.ts)                                                                                             |
+| C5                | [路径解析](../../core/src/resolve/path)、[路径编译](../../core/src/compile/path)                                                                                                                                                       |
+| C6                | [Composite 契约](../../core/src/contract/composite)、[layout-proposal](../../core/src/compile/orchestration/layout-proposal.ts)、[traversal](../../core/src/compile/orchestration/traversal.ts)                                        |
+| C7                | [Scene 契约](../../core/src/contract/scene)、[resource](../../core/src/compile/resource)、[observation](../../core/src/compile/orchestration/observation.ts)、[spatial-handle](../../core/src/compile/orchestration/spatial-handle.ts) |
+| K2（Core 侧入口） | [Runtime 契约](../../core/src/contract/runtime)、[incremental](../../core/src/compile/incremental)、[runtime-topology](../../core/src/compile/orchestration/runtime-topology.ts)                                                       |
 
 以上是阅读起点，不是完整调用链或审计完成证明。各篇开工时重新核对实现与功能测试。
 
@@ -82,7 +83,7 @@ C7 初期围绕“编译最终交付什么”展开。如果观测与空间产�
 
 ## 五、推进顺序与每批完成条件
 
-建议顺序：C1 → C2 → C3 → C4 → C5 → C6 → C7 → C8；C0 随已完成正文整理。之后按 K1 → K2 → K3 → K4 → K5 串联跨包过程。可根据实际阅读问题调整下一篇，不并行铺开全部文章。
+建议顺序：C1 → C2 → C3 → C4 → C5 → C6 → C7；C0 随已完成正文整理。之后按 K1 → K2 → K3 → K4 → K5 串联跨包过程。可根据实际阅读问题调整下一篇，不并行铺开全部文章。
 
 每批默认一篇或一个边界明确的主题，开始前确认：
 
@@ -105,7 +106,7 @@ C7 初期围绕“编译最终交付什么”展开。如果观测与空间产�
 
 - 测量不等于读取 DOM：Core 消费注入的度量能力；具体提供方和更新接线需沿消费链核实
 - 同次编译的子布局重放、单次布局的局部缓存、跨更新的增量计算必须分开解释
-- 2026-10-11 阅读时，Core 增量快路径主要覆盖严格条件下单个根 Node 的无资源 fill 字符串变化；其他情况可能全量回退。写 C8 时必须重新核对，不把该快路径泛化成通用局部重算
+- 2026-10-11 阅读时，Core 增量快路径主要覆盖严格条件下单个根 Node 的无资源 fill 字符串变化；其他情况可能全量回退。写 K2 时必须重新核对，不把该快路径泛化成通用局部重算
 - 笛卡尔几何不意味着所有点都展开成世界坐标：Scene 可保留局部几何与结构化分组变换
 - 本计划不授权源码重构；阅读中发现问题时先单独记录和讨论，避免文档任务扩展为实现改造
 
@@ -125,3 +126,9 @@ C7 初期围绕“编译最终交付什么”展开。如果观测与空间产�
 2026-10-13：C1–C3 均获用户阅读通过。完成 C4「节点编译 / Node Compilation」双语正文、六张示意图及导航与 Core 入口。Oxfmt、受影响范围 Oxlint、314 页静态检查通过；双语、明暗、桌面与窄屏共 48 次图示渲染无错误或裁切。Docs 类型检查仅剩 C3 的 namespace-stack 与 scope-lifecycle 共 5 处上游 API 变更遗留错误，未扩展修复范围。同一 Sol 只读读者 reviewer 完成两轮复核，无阻塞。用户阅读 review 已通过，并授权提交；未执行生产构建。下一步讨论 C5 范围。
 
 2026-10-13：C4 改名为「节点编译 / Node Compilation」，目录、路由、导航与引用同步改为 node-compilation。完成 C5「路径编译 / Path Compilation」双语正文与六张图，覆盖目标绑定、游标、路径段、端点裁剪、标签留白、箭头和图元回填；主 agent 自审，无独立 reviewer。Oxfmt、受影响范围 Oxlint 与 315 页静态检查通过；C4 新路由和 C5 页面共 88 次双语、明暗、桌面与窄屏图示渲染无错误或裁切。Docs 类型检查仍被 C3 既有 5 处错误阻塞，本轮无新增错误。未暂存或提交，待用户阅读反馈。
+
+2026-10-13：完成 C6「复合编译 / Composite Compilation」双语正文与五张示意图，覆盖定义及依赖装配、两种执行分支、尺寸提案、隔离试算与结果重放。主 agent 自审并完成两轮图示修订；无 subagent。Oxfmt、受影响范围 Oxlint、316 页静态检查通过；提案及复合布局功能测试 22 项通过，双语、明暗、桌面与窄屏共 40 次渲染检查无页面错误、文字重叠或裁切。类型检查仍仅有 C3 既有 5 处错误。未运行生产构建、性能测试，未暂存或提交，待用户阅读。
+
+2026-10-15：完成 C7「编译产物 / Compilation Output」双语正文与五张示意图，覆盖 Scene 组织、资源引用、自动与显式画布、artifact、空间句柄、observer 和诊断出口。同步 Core 入口、导航与双语标签。主 agent 自审并修订预览高度和资源引用线，无 subagent。Oxfmt、受影响范围 Oxlint、Docs tsc --noEmit、静态检查及 36 项既有 Core 功能测试通过；双语、明暗、桌面与窄屏共 40 次最终图示检查无页面错误、文字重叠或裁切。未运行生产构建、生产运行时巡检或性能测试，未暂存或提交。下一步用户阅读 C7 并反馈，之后讨论 C8。
+
+2026-10-15：C7 用户阅读 review 通过，双语正文、示意图和导航已提交（`042d27911`）。用户确认取消独立 C8，将 Runtime 接入与增量编译范围并入 K2；Core 系列保留 C1–C7，先整理 C0，再按 K 系列顺序讨论跨包专题。本次仅调整计划，未开始 K2 正文。

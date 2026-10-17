@@ -242,7 +242,10 @@ describe('custom Regression adapter parity', () => {
       definition,
       fit: () => ({ predict: x => x }),
     });
-    const lowerOptions = { regressionDefinitions: [definition], regressionImplementations: [definitionImplementation] };
+    const lowerOptions = {
+      definitions: { regressions: [definition] },
+      implementations: { regressions: [definitionImplementation] },
+    };
     const rows = [
       { x: 1, y: 1 },
       { x: 2, y: 2 },
@@ -261,6 +264,6 @@ describe('custom Regression adapter parity', () => {
     const vanilla = regressionChart({ data: rows, encodings: { x: 'x', y: 'y' }, properties, lowerOptions }).props;
 
     expect(react).toEqual(vanilla);
-    expect(react.lowerOptions?.regressionDefinitions?.[0]).toBe(definition);
+    expect(react.lowerOptions?.definitions?.regressions?.[0]).toBe(definition);
   });
 });

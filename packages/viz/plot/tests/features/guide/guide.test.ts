@@ -1349,7 +1349,11 @@ const guidedSpec = (guides: Array<unknown>): IRPlot =>
   });
 
 const expandOf = (spec: IRPlot): IRScope => {
-  return lowerPlot(spec, { sales: SALES }, { textMeasurer: measureLabel, width: 480, height: 300 }) as IRScope;
+  return lowerPlot(
+    spec,
+    { sales: SALES },
+    { layout: { width: 480, height: 300 }, textMeasurer: measureLabel },
+  ) as IRScope;
 };
 
 describe('lowerPlots guide orchestration (contract)', () => {
@@ -1379,7 +1383,7 @@ describe('lowerPlots guide orchestration (contract)', () => {
     ]);
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
-      { composites: lowerPlots({ sales: SALES }, { width: 480, height: 300 }) },
+      { composites: lowerPlots({ sales: SALES }, { layout: { width: 480, height: 300 } }) },
     ).scene;
 
     expect(scene.primitives.length).toBeGreaterThan(0);

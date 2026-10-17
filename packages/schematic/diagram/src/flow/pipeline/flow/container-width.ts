@@ -104,6 +104,7 @@ export const allocateFlowContainerWidths = (
     const children = (flex.children ?? []).map(item => context.bindChild(item.child, []));
     const artifact = compileFlexLayout(flex, {
       ...context,
+      evaluation: { kind: 'layout' },
       proposal: intrinsicLayoutProposal('natural'),
       sourceChild: path => children[path[1] as number],
     }).artifact;

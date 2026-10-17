@@ -19,8 +19,8 @@ export const ExtensionRegressionPreview: FC<ExtensionRegressionPreviewProps> = p
       data={originSamplesOf(offset)}
       width={420}
       height={260}
-      regressionDefinitions={[throughOrigin]}
-      regressionImplementations={[throughOriginImplementation]}
+      definitions={{ regressions: [throughOrigin] }}
+      implementations={{ regressions: [throughOriginImplementation] }}
     >
       <PlotScale dimension="x" type="linear" domain={[-0.5, 6.5]} />
       <PlotScale dimension="y" type="linear" domain={[-3, 19]} />

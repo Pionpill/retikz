@@ -14,7 +14,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     coordinate: values[LINE_INTERRUPTION_CONTROL_IDS.coordinate],
     showFill: values[LINE_INTERRUPTION_CONTROL_IDS.showFill],
     connectNulls: values[LINE_INTERRUPTION_CONNECT_NULLS_ID],
-    closed: values[LINE_INTERRUPTION_CONTROL_IDS.closed],
   }),
 );
 

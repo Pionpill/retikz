@@ -10,6 +10,13 @@ const diagramMilestones: Array<SubVersion> = [
     },
     items: [
       {
+        label: { zh: '待发布 · 分组等高', en: 'Unreleased · Equal-height groups' },
+        content: {
+          zh: '横向 FlowLayout 支持 containerHeight: match-largest，按直接子 Group 的最大自然高度统一外框，保留节点尺寸，并将单一纵向线性内容的剩余高度均分到节点间隙。IR、Vanilla、React 共用同一契约，自定义布局须保持分配高度。',
+          en: 'Horizontal FlowLayout supports containerHeight: match-largest to equalize direct Group shells to their largest natural height while preserving node sizes and distributing spare height between children of a single vertical linear content layout. IR, Vanilla, and React share the contract; custom layouts must preserve the allocated height.',
+        },
+      },
+      {
         label: { zh: '待发布 · Branch 分支图', en: 'Unreleased · Branch diagrams' },
         content: {
           zh: '新增 BranchDiagram、BranchNode 与 Branch，以有序节点路径表达主线、分叉和汇合。共享节点和同外观相邻段只绘制一次，支持外侧标签、四向轨道布局、展示区域和参考路由 artifact；IR、Vanilla、React 对称提供 /branch 入口，并补充路线图、提交历史与阅读路线示例。',

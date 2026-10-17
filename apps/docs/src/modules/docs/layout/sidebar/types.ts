@@ -11,6 +11,8 @@ import type { DocDifficultyValue } from '@/modules/docs/data';
 export type SidebarSubModuleData = {
   /** URL 路径段 */
   value: string;
+  /** 链接入口的实际目标路由 */
+  linkTo?: string;
   /** 显示文字（已通过 t()） */
   label: string;
   /** 显示图标，可选 */

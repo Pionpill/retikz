@@ -197,7 +197,7 @@ export const buildPlotLocatorFromDataArtifact = (
   const renderEntries = collectRenderDatumEntries(lowered.child);
   const renderSeriesEntries = collectRenderSeriesEntries(lowered.child);
   const { compositionResolution, frameByCoordinateScopeId, markDataViews, rootMarkDataViews } = lowered.dataArtifact;
-  const markRegistry = resolveMarkRegistry(options.markDefinitions);
+  const markRegistry = resolveMarkRegistry(options.definitions?.marks);
 
   // path datum没有独立Node；仅在实际lowering只有一个结构scope时，复用artifact的DataView与frame计算结构锚点
   const structuralMarkDataViewOf = (markIndex: number): MarkDataView | undefined => {
@@ -441,8 +441,8 @@ export const createPlotLocator = (
   datasets: ExternalDatasets,
   options: PlotStandaloneOptions,
 ): PlotLocator => {
-  const width = options.width ?? DEFAULT_PLOT_WIDTH;
-  const height = options.height ?? DEFAULT_PLOT_HEIGHT;
+  const width = options.layout?.width ?? DEFAULT_PLOT_WIDTH;
+  const height = options.layout?.height ?? DEFAULT_PLOT_HEIGHT;
 
   // 数据集缺失 / 尺寸非法时给出空 locator（解析全 null），而非抛——保 resolve 永不 throw 的契约
   const dataset = Object.hasOwn(datasets, spec.data.reference) ? datasets[spec.data.reference] : undefined;
@@ -457,8 +457,8 @@ export const createPlotLocator = (
 
   const lowered = lowerStandalonePlot(spec, datasets, {
     ...options,
-    width,
-    height,
+    layout: { ...options.layout, width, height },
+
     provenance: true,
     datumProvenance: true,
   });

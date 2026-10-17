@@ -11,7 +11,7 @@ export const resolvePositionAdjustmentOperation = (
   const definition = registry.get(operation.kind);
   if (definition === undefined) {
     throw new RetikzPlotError(
-      `lowerPlots: position adjustment kind "${operation.kind}" is not registered; pass a PositionAdjustmentDefinition via options.positionAdjustmentDefinitions`,
+      `lowerPlots: position adjustment kind "${operation.kind}" is not registered; pass a PositionAdjustmentDefinition via options.definitions.positionAdjustments`,
     );
   }
 

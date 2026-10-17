@@ -1,5 +1,5 @@
 import type { IRPlot } from '@retikz/plot';
-import { resolveLabelOf } from '@retikz/plot-vanilla';
+import { resolveLabelOf, normalizePlotDeclarations } from '@retikz/plot-vanilla';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -11,6 +11,21 @@ import { PlotTransform } from '../../../src/components/transform';
 import { resolvePlotAuthoring } from '../../../src/plot-runtime';
 
 describe('Plot member extraction characterization', () => {
+  it.each([false, 'max-radius', { kind: 'point-aware', clearance: { left: 0, default: 8 } }] as const)(
+    'preserves autoPadding %j identically through React and Vanilla',
+    autoPadding => {
+      const react = buildPlotIR(<PointMark x="x" y="y" autoPadding={autoPadding} />, 'rows');
+      const vanilla = normalizePlotDeclarations(
+        {
+          declarations: [{ kind: 'point-mark', props: { x: 'x', y: 'y', autoPadding }, path: [0] }],
+          runtimeSources: [],
+        },
+        { data: { reference: 'rows' }, mode: 'plot-root' },
+      );
+      expect(react.marks[0]).toEqual(vanilla.fragment.marks?.[0]);
+      expect(react.marks[0]).toMatchObject({ autoPadding });
+    },
+  );
   it('preserves mixed members, automatic bindings, shortcuts, and runtime callbacks', () => {
     const resolvePointLabel = (row: Record<string, unknown>): string => String(row.category);
     const spec = buildPlotIR(

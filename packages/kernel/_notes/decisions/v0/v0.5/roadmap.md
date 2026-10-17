@@ -46,6 +46,8 @@
 
 - 统一上下文布局、proposal / probe 和完整 Scope 输出；作者主位置由 `position` 承担，局部变换保持辅助职责：[049](./049-scope-position-contract.md)。
 - 支持空间引用与跨组合装配，保留真实布局边界及公开职责。
+- 支持按需尺寸贡献查询与同次编译跨试算缓存，减少嵌套布局重复求值：[053](./053-layout-measurement-reuse.md)。
+- 复用同次回调中的真实几何查询环境，减少端点与路线验证的重复编译：[054](./054-geometry-query-reuse.md)。
 
 预期效果：
 
@@ -62,6 +64,7 @@
 
 - 建立 identity、事务、增量编译和 Scene patch 的共同底座。
 - 明确执行策略与 retained renderer 的协作边界。
+- 后续统一设计首帧初始化、交互与动画更新中的跨编译结果复用：由 Core 判断依赖失效，Runtime 管理结果生命周期与 candidate 隔离、原子提交，并区分呈现层直接更新与需要增量编译的变化。首帧与 retained controller 的重复编译纳入同一方案，暂不单独处理。
 - 将 trace 领域阶段与计数单位交由 owner 声明并注入，保持 Runtime 领域中立：[050](./050-runtime-trace-owner-declarations.md)。
 
 预期效果：
@@ -128,6 +131,7 @@
 规划内容：
 
 - 保留 Headless Interaction、Concurrent、渐进物化与生成会话候选。
+- 编译产物与 Inspect 数据来源统一（待研究）：评估丰富节点等附加产物，让 Inspect 消费统一产物契约，减少布局摘要与观察输出的重叠。需明确按需收集、主题与坐标上下文、辅助图形编译及增量结果一致性；是否保留观察通道、调整节点产物命名，留待后续设计决定。
 - 候选不作为必交项；设计接受、实现授权与实际交付分别判断。
 
 预期效果：

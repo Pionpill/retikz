@@ -61,14 +61,13 @@ const embeddedDataRefFor = (rows: Array<ExternalRow>): string => {
 
 const lowerPlotOptionsOf = <TSource>(
   props: PlotProps<TSource>,
-  effectiveFieldMaps: LowerPlotsOptions['fieldMaps'],
+  effectiveDatasetFieldMaps: LowerPlotsOptions['datasetFieldMaps'],
   collectedResolveLabel: ResolveLabelMap | undefined,
 ): LowerPlotsOptions => {
   const {
-    width,
-    height,
-    fontSize,
-    margin,
+    layout,
+    definitions,
+    implementations,
     provenance,
     datumProvenance,
     datumIdField,
@@ -76,61 +75,28 @@ const lowerPlotOptionsOf = <TSource>(
     resolveField,
     resolveLabel,
     invalid,
-    coordinates,
-    transformDefinitions,
-    transformImplementations,
-    statisticsReducerImplementations,
-    rowSelectorImplementations,
-    regressionImplementations,
-    statisticsReducerDefinitions,
-    regressionDefinitions,
-    rowSelectorDefinitions,
-    scaleDefinitions,
-    channelDefinitions,
     colorSchemes,
-    markDefinitions,
-    positionAdjustmentDefinitions,
-    formatDefinitions,
-    fieldOrderDefinitions,
-    plotThemeStyles,
   } = props;
 
-  // DSL 入口 <PointMark resolveLabel> / <IntervalMark resolveLabel> 收集的 per-mark 函数，与显式 props.resolveLabel 合并（显式优先）
+  // 显式 resolver 覆盖从 mark children 收集的同名 resolver
   const mergedResolveLabel =
     collectedResolveLabel !== undefined || resolveLabel !== undefined
       ? { ...collectedResolveLabel, ...resolveLabel }
       : undefined;
 
   return {
-    width,
-    height,
-    fontSize,
-    margin,
+    layout,
+    definitions,
+    implementations,
     provenance,
     datumProvenance,
     datumIdField,
-    fieldMaps: effectiveFieldMaps,
+    datasetFieldMaps: effectiveDatasetFieldMaps,
     validateData,
     resolveField,
     resolveLabel: mergedResolveLabel,
     invalid,
-    coordinates,
-    transformDefinitions,
-    transformImplementations,
-    statisticsReducerImplementations,
-    rowSelectorImplementations,
-    regressionImplementations,
-    statisticsReducerDefinitions,
-    regressionDefinitions,
-    rowSelectorDefinitions,
-    scaleDefinitions,
-    channelDefinitions,
     colorSchemes,
-    markDefinitions,
-    positionAdjustmentDefinitions,
-    formatDefinitions,
-    fieldOrderDefinitions,
-    plotThemeStyles,
   };
 };
 
@@ -199,7 +165,7 @@ export const resolvePlotAuthoring = <TSource = never>(
     : DSL_DATA_REF;
   let spec: IRPlot;
   let datasets: ExternalDatasets;
-  let effectiveFieldMaps = props.fieldMaps;
+  let effectiveDatasetFieldMaps = props.datasetFieldMaps;
 
   // DSL 入口 buildPlotIR 旁路收集的 per-mark resolveLabel（运行时函数、不进 IR）；spec 入口由 props.resolveLabel 直接给
   let collectedResolveLabel: ResolveLabelMap | undefined;
@@ -226,13 +192,13 @@ export const resolvePlotAuthoring = <TSource = never>(
     });
     collectedResolveLabel = resolveLabelOf(spec);
     datasets = { [dataRef]: props.data };
-    if (props.fieldMap) effectiveFieldMaps = { [dataRef]: props.fieldMap };
+    if (props.fieldMap) effectiveDatasetFieldMaps = { [dataRef]: props.fieldMap };
   }
 
   return {
     spec,
     ...(props.dataBindings === undefined ? { datasets } : { dataBindings: props.dataBindings }),
-    lowerOptions: lowerPlotOptionsOf(props, effectiveFieldMaps, collectedResolveLabel),
+    lowerOptions: lowerPlotOptionsOf(props, effectiveDatasetFieldMaps, collectedResolveLabel),
   };
 };
 

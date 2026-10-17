@@ -41,24 +41,22 @@ Foundation includes a small set of scalar assertions for basic contract failures
 
 ### Built-in assertions
 
-| Method                                            | Purpose                                               | Default error code                     |
-| ------------------------------------------------- | ----------------------------------------------------- | -------------------------------------- |
-| `assertNonEmptyString(value, label, ownerError?)` | Reject an empty or runtime-standard whitespace string | `FOUNDATION_NON_EMPTY_STRING_REQUIRED` |
-| `assertPositiveNumber(value, label, ownerError?)` | Reject `0`, negative, and non-finite numbers          | `FOUNDATION_POSITIVE_NUMBER_REQUIRED`  |
+| Method                                                  | Purpose                                               | Default error code                     |
+| ------------------------------------------------------- | ----------------------------------------------------- | -------------------------------------- |
+| `assertNonEmptyString(value, label, createOwnerError?)` | Reject an empty or runtime-standard whitespace string | `FOUNDATION_NON_EMPTY_STRING_REQUIRED` |
+| `assertPositiveNumber(value, label, createOwnerError?)` | Reject `0`, negative, and non-finite numbers          | `FOUNDATION_POSITIVE_NUMBER_REQUIRED`  |
 
 ### Supplying an owner error
 
-The third parameter, `ownerError`, accepts an already constructed owner `RetikzError`. When supplied, a failed assertion throws that exact error; Foundation does not alter its `code`, `message`, `details`, or `cause`.
+The third parameter, `createOwnerError`, accepts a `() => RetikzError` factory. Successful validation never calls it. Failed validation calls it exactly once and throws its result unchanged, preserving `code`, `message`, `details`, and `cause`. Construct the error inside the factory to avoid paying its construction cost on successful calls. Exceptions thrown by the factory also propagate unchanged.
 
 ```ts
 const fontSize = 0;
-const error = new RetikzDomainError({ source: 'svg' });
-
-assertPositiveNumber(fontSize, 'SVG font size', error);
+assertPositiveNumber(fontSize, 'SVG font size', () => new RetikzDomainError({ source: 'svg' }));
 // Throws RetikzDomainError rather than RetikzFoundationError.
 ```
 
-Without `ownerError`, assertions continue to throw `RetikzFoundationError`. The string assertion uses `FOUNDATION_NON_EMPTY_STRING_REQUIRED`; the positive-number assertion uses `FOUNDATION_POSITIVE_NUMBER_REQUIRED`. Both retain atomic failure information in `details` and `cause`.
+Without `createOwnerError`, assertions continue to throw `RetikzFoundationError`. The string assertion uses `FOUNDATION_NON_EMPTY_STRING_REQUIRED`; the positive-number assertion uses `FOUNDATION_POSITIVE_NUMBER_REQUIRED`. Both retain atomic failure information in `details` and `cause`.
 
 <SourceLinks
   sources={[
@@ -66,7 +64,7 @@ Without `ownerError`, assertions continue to throw `RetikzFoundationError`. The 
       label: 'Scalar assertion implementation',
       path: 'packages/kernel/foundation/src/assert.ts',
       startLine: 12,
-      endLine: 51,
+      endLine: 43,
     },
     {
       label: 'Structured error implementation',
@@ -78,7 +76,7 @@ Without `ownerError`, assertions continue to throw `RetikzFoundationError`. The 
       label: 'Scalar assertion tests',
       path: 'packages/kernel/foundation/tests/assert.test.ts',
       startLine: 1,
-      endLine: 99,
+      endLine: 146,
     },
     {
       label: 'Structured error tests',

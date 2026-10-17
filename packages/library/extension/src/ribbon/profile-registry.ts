@@ -14,11 +14,12 @@ export const resolveRibbonWidthProfileRegistry = (
     assertNonEmptyString(
       definition.name,
       'Ribbon width profile name',
-      new RetikzExtensionError({
-        code: RetikzExtensionErrorCode.AuthoringInvalid,
-        message: 'Ribbon width profile name must be a non-empty string.',
-        details: { name: definition.name },
-      }),
+      () =>
+        new RetikzExtensionError({
+          code: RetikzExtensionErrorCode.AuthoringInvalid,
+          message: 'Ribbon width profile name must be a non-empty string.',
+          details: { name: definition.name },
+        }),
     );
     const previous = registry.get(definition.name);
     if (previous !== undefined && previous !== definition) {

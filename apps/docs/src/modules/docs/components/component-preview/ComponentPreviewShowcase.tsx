@@ -235,7 +235,7 @@ export const ComponentPreviewShowcase: FC<ComponentPreviewShowcaseProps> = props
           />
         </div>
         {tableFields.length > 0 ? (
-          <TabsContent value="data" className="col-start-1 row-start-1 h-0 min-h-full min-w-0 overflow-auto rounded-xl">
+          <TabsContent value="data" className="col-start-1 row-start-1 h-0 min-h-full min-w-0 overflow-auto">
             <div data-slot="showcase-data" className={cn('min-h-full min-w-0', tableFields.length === 1 && 'h-full')}>
               {tableFields.map(field => (
                 <PreviewTableControl

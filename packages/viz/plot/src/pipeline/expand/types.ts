@@ -4,6 +4,7 @@ import type {
   AnyStatisticsReducerDefinition,
   AnyTransformDefinition,
   ApplyTransformsOptions,
+  DataFieldMap,
   FieldFormatDefinition,
   FieldOrderDefinition,
   ResolveField,
@@ -24,12 +25,8 @@ import type { PlotLabelMeasure } from '../../shared';
 
 export type { CoordinateFrameResolution, MarkDataView } from '../../resolve/coordinate';
 
-/** lowerPlots 运行时选项；尺寸、registry 与 runtime resolver 均不进入 Plot IR */
-export type LowerPlotsOptions = {
-  /** 当前请求注入的分类顺序定义 */
-  fieldOrderDefinitions?: ReadonlyArray<FieldOrderDefinition>;
-  /** 运行时注入的 Plot Theme style definitions */
-  plotThemeStyles?: ReadonlyArray<PlotThemeStyleDefinition>;
+/** Plot 运行时布局覆盖；未声明的字段沿用下沉阶段的默认值 */
+export type PlotLayoutOverrides = {
   /** 整图宽（user units），默认 480 */
   width?: number;
   /** 整图高（user units），默认 300 */
@@ -38,6 +35,59 @@ export type LowerPlotsOptions = {
   fontSize?: number;
   /** 逐边覆盖自动测量的 margin */
   margin?: Partial<BoundsInsets>;
+};
+
+/** Plot 运行时扩展定义集合；内置与注入定义共用注册与解析流程 */
+export type PlotDefinitions = {
+  /** 当前请求注入的分类顺序定义 */
+  fieldOrders?: ReadonlyArray<FieldOrderDefinition>;
+  /** 运行时注入的 Plot Theme style definitions */
+  plotThemeStyles?: ReadonlyArray<PlotThemeStyleDefinition>;
+  /**
+   * 自定义坐标系 definition 数组（运行时函数，不进 IR）：spec 的 `coordinate: {type:<customType>, ...config}` 据此解析投影
+   * @description 让用户插入任意坐标系几何（曲线一维 / 拱形 x 轴等），无需给坐标系枚举塞成员、也不破坏 IR JSON 化。未注册 type → fail-loud
+   */
+  coordinates?: Array<AnyCoordinateDefinition>;
+  /** 自定义 transform definitions；内置项与自定义项通过同一个 registry 解析 */
+  transforms?: Array<AnyTransformDefinition>;
+  /** 当前运行注入的拟合 Definition */
+  regressions?: Array<AnyRegressionDefinition>;
+  /** 自定义 statistics reducer definitions；内置项与自定义项通过同一个 registry 解析 */
+  statisticsReducers?: Array<AnyStatisticsReducerDefinition>;
+  /** 自定义 row selector definitions；内置项与自定义项通过同一个 registry 解析 */
+  rowSelectors?: Array<AnyRowSelectorDefinition>;
+  /** 自定义 scale definitions；position 与 channel scale 共用解析后的 registry */
+  scales?: Array<AnyScaleDefinition>;
+  /** 自定义 channel definitions；position、mark、node 与 path channel 共用 registry */
+  channels?: Array<AnyChannelDefinition>;
+  /** 自定义 mark definitions；未注册或冲突的 type 会 fail-loud */
+  marks?: Array<AnyMarkDefinition>;
+  /** 自定义 Position Adjustment definitions；内置与自定义按 kind 共用 registry */
+  positionAdjustments?: ReadonlyArray<AnyPositionAdjustmentDefinition>;
+  /** 自定义字段格式 definitions；definition 提供蕴含类型与 canonical parser */
+  formats?: Array<FieldFormatDefinition>;
+};
+
+/** Plot 使用的本地同步数据计算实现集合 */
+export type PlotImplementations = {
+  /** 本地同步 transform 实现；通用 Promise 执行器经异步作者准备接入 */
+  transforms?: ApplyTransformsOptions['transformImplementations'];
+  /** 本地同步 reducer 实现 */
+  statisticsReducers?: ApplyTransformsOptions['statisticsReducerImplementations'];
+  /** 本地同步 selector 实现 */
+  rowSelectors?: ApplyTransformsOptions['rowSelectorImplementations'];
+  /** 本地同步 regression 实现 */
+  regressions?: ApplyTransformsOptions['regressionImplementations'];
+};
+
+/** lowerPlots 运行时选项；尺寸、registry 与 runtime resolver 均不进入 Plot IR */
+export type LowerPlotsOptions = {
+  /** 布局尺寸、字号与边距覆盖 */
+  layout?: PlotLayoutOverrides;
+  /** 本次运行注入的扩展定义 */
+  definitions?: PlotDefinitions;
+  /** 本地同步数据计算实现 */
+  implementations?: PlotImplementations;
   /** 总开关：开启才写 layer/series meta + 合成 `<plotId>.` 内部 id；默认 false 时不写 provenance id/meta */
   provenance?: boolean;
   /** 每个 datum Node 写 per-datum 来源 meta（hit-test；O(rows) 增量，蕴含需 provenance 开），默认 false */
@@ -47,7 +97,7 @@ export type LowerPlotsOptions = {
   /** 供 AnchorId.generator 引用的运行时函数；IRPlot 只保存生成器键 */
   anchorIdGenerators?: Record<string, AnchorIdGenerator>;
   /** 逻辑字段 → 物理数据路径映射（按数据集 reference 键，不进 IR）；需 data.model；缺省恒等 */
-  fieldMaps?: Record<string, Record<string, string>>;
+  datasetFieldMaps?: Record<string, DataFieldMap>;
   /** 抽样校验绑定数据（字段缺失 / 不可强制 → fail-loud）；默认关、不 warn */
   validateData?:
     | boolean
@@ -72,39 +122,8 @@ export type LowerPlotsOptions = {
    *   不进 IRPlot，故不破坏 IR JSON 可序列化
    */
   resolveLabel?: Record<string, ResolveLabel>;
-  /**
-   * 自定义坐标系 definition 数组（运行时函数，不进 IR）：spec 的 `coordinate: {type:<customType>, ...config}` 据此解析投影
-   * @description 让用户插入任意坐标系几何（曲线一维 / 拱形 x 轴等），无需给坐标系枚举塞成员、也不破坏 IR JSON 化。未注册 type → fail-loud
-   */
-  coordinates?: Array<AnyCoordinateDefinition>;
-  /** 自定义 transform definitions；内置项与自定义项通过同一个 registry 解析 */
-  transformDefinitions?: Array<AnyTransformDefinition>;
-  /** 本地同步 transform 实现；通用 Promise 执行器经异步作者准备接入 */
-  transformImplementations?: ApplyTransformsOptions['transformImplementations'];
-  /** 本地同步 reducer 实现 */
-  statisticsReducerImplementations?: ApplyTransformsOptions['statisticsReducerImplementations'];
-  /** 本地同步 selector 实现 */
-  rowSelectorImplementations?: ApplyTransformsOptions['rowSelectorImplementations'];
-  /** 本地同步 regression 实现 */
-  regressionImplementations?: ApplyTransformsOptions['regressionImplementations'];
-  /** 当前运行注入的拟合 Definition */
-  regressionDefinitions?: Array<AnyRegressionDefinition>;
-  /** 自定义 statistics reducer definitions；内置项与自定义项通过同一个 registry 解析 */
-  statisticsReducerDefinitions?: Array<AnyStatisticsReducerDefinition>;
-  /** 自定义 row selector definitions；内置项与自定义项通过同一个 registry 解析 */
-  rowSelectorDefinitions?: Array<AnyRowSelectorDefinition>;
-  /** 自定义 scale definitions；position 与 channel scale 共用解析后的 registry */
-  scaleDefinitions?: Array<AnyScaleDefinition>;
-  /** 自定义 channel definitions；position、mark、node 与 path channel 共用 registry */
-  channelDefinitions?: Array<AnyChannelDefinition>;
   /** 自定义命名配色 scheme；IR 只保存 scheme 名，runtime 解析为插值函数 */
   colorSchemes?: Record<string, (t: number) => string>;
-  /** 自定义 mark definitions；未注册或冲突的 type 会 fail-loud */
-  markDefinitions?: Array<AnyMarkDefinition>;
-  /** 自定义 Position Adjustment definitions；内置与自定义按 kind 共用 registry */
-  positionAdjustmentDefinitions?: ReadonlyArray<AnyPositionAdjustmentDefinition>;
-  /** 自定义字段格式 definitions；definition 提供蕴含类型与 canonical parser */
-  formatDefinitions?: Array<FieldFormatDefinition>;
 };
 
 /** 本次下沉使用的布局环境，不写入 Plot IR */

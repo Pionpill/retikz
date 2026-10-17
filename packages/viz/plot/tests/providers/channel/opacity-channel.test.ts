@@ -9,7 +9,7 @@ import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
+const cartOpts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
 
 const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
   return lowerPlot(spec, datasets, { ...cartOpts, textMeasurer: measureLabel }) as IRScope;

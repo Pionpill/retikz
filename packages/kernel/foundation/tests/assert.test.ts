@@ -48,7 +48,7 @@ describe('assertNonEmptyString', () => {
       details: { field: 'name' },
     });
 
-    expect(() => assertNonEmptyString('', 'Owner name', ownerError)).toThrowError(ownerError);
+    expect(() => assertNonEmptyString('', 'Owner name', () => ownerError)).toThrowError(ownerError);
   });
 });
 
@@ -94,6 +94,53 @@ describe('assertPositiveNumber', () => {
       details: { field: 'size' },
     });
 
-    expect(() => assertPositiveNumber(0, 'Owner size', ownerError)).toThrowError(ownerError);
+    expect(() => assertPositiveNumber(0, 'Owner size', () => ownerError)).toThrowError(ownerError);
+  });
+});
+
+describe('领域错误工厂', () => {
+  const cases = [
+    {
+      name: '字符串',
+      valid: (factory: () => RetikzError) => assertNonEmptyString('valid', 'name', factory),
+      invalid: (factory: () => RetikzError) => assertNonEmptyString(' ', 'name', factory),
+    },
+    {
+      name: '正数',
+      valid: (factory: () => RetikzError) => assertPositiveNumber(1, 'size', factory),
+      invalid: (factory: () => RetikzError) => assertPositiveNumber(0, 'size', factory),
+    },
+  ];
+
+  it.each(cases)('$name 成功时不调用工厂，失败时调用一次并抛出原错误', ({ valid, invalid }) => {
+    let calls = 0;
+    const ownerError = new RetikzError({ code: 'OWNER_INVALID', message: 'Invalid owner value', details: {} });
+    const factory = () => {
+      calls += 1;
+      return ownerError;
+    };
+    expect(valid(factory)).toBeUndefined();
+    expect(calls).toBe(0);
+    let thrown: unknown;
+    try {
+      invalid(factory);
+    } catch (error) {
+      thrown = error;
+    }
+    expect(calls).toBe(1);
+    expect(thrown).toBe(ownerError);
+  });
+
+  it.each(cases)('$name 原样传播工厂自身的异常', ({ invalid }) => {
+    const failure = new Error('factory failed');
+    let thrown: unknown;
+    try {
+      invalid(() => {
+        throw failure;
+      });
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBe(failure);
   });
 });

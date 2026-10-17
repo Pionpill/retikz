@@ -1,0 +1,507 @@
+---
+title: 复合编译
+description: 追踪 Core 如何绑定复合组件、试算子布局，并把选中的结果连同引用和资源提交到 Scene。
+---
+
+[节点编译](/kernel/packages/core/node-compilation)与[路径编译](/kernel/packages/core/path-compilation)解释单个图元如何生成。本页接着追踪复合组件：一个组件如何生成多个子声明，如何先知道子图尺寸，再决定它们的最终位置。阅读前可先了解[编译流程](/kernel/packages/core/compilation)与[坐标解析](/kernel/packages/core/coordinates)。
+
+本页只讨论一次编译内的展开、试算与重放。输入是复合组件声明及注册的 Definition，终点是子图元、引用和资源进入当前 Scene；跨更新的增量计算另行讨论。
+
+## 整体流程
+
+复合组件通过 `namespace` 与 `type` 选择 Definition。Core 校验输入后调用组件回调，再把返回的子项交回遍历器。需要布局信息的组件可以先编译候选子图，读取尺寸，最后只输出选中的结果。
+
+Definition 统一提供 `compile(node, context)`。`node` 是 schema 解析后的输入，`context` 提供主题、运行时输入绑定和布局能力。只需组合子声明时直接返回 `children`；需要尺寸反馈时，再调用 `layoutChild` 试算并用 `replay` 返回选中的结果。未调用布局方法时不会产生试算。
+
+下图展示按需试算的一条路径。分组内是可选的布局工作；简单组合直接生成子项，随后同样交由 Core 编译并提交。
+
+<ComponentPreview files="composite-overview" size="sm" hideCode type="flow" />
+
+本文用一个父项容器和它的子路径贯穿说明。子路径从 `[0, 0]` 延伸到 `[100, 0]`，父项分别用自然宽度与固定宽度 60 试算，选择后者，并把子路径平移到 `[20, 30]`。这个例子可以清楚区分“父级分配多少空间”和“子图实际画了多大”。
+
+<SourceLinks
+  sources={[
+    { label: '复合组件回调与上下文契约', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: '遍历器中的复合组件调度', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+  ]}
+/>
+
+## 编译入口
+
+先准备可用的定义，再进入统一回调；需要额外数据的子项在这里建立运行时输入绑定。
+
+### 定义与依赖
+
+进入遍历前，编译选项已提供可用的形状、箭头、复合组件等 Definition。Core 建立注册表；遇到父项时，`bindComposite` 按 `namespace.type` 查找定义，`resolveComposite` 使用该定义的 schema 解析完整输入，再进入对应回调。
+
+上层组件还可能贡献一组依赖提供者。这里涉及三个对象：
+
+- 提供者：说明如何创建某项 Definition，以及创建前需要哪些依赖。
+- 根依赖：本次输入实际需要的能力入口。
+- Definition：装配完成后交给 Core 的可执行定义。
+
+以带标题“月度销量”的散点图为例：Chart 使用 `chart.point` 复合能力，把标题生成文字 Node，再通过 `layout.flexLayout` 将标题与 Plot 纵向排布。
+
+| 对象       | 在这个例子中是什么                                                                                                                      |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| 根依赖     | 散点图提供者贡献的 `chart.point`，表示本次需要 Point 图表能力                                                                           |
+| 提供者     | Chart 的提供者声明依赖 `FlexLayoutProvider`，并提供创建 Chart Definition 的工厂；`FlexLayoutProvider` 的工厂返回 `FlexLayoutDefinition` |
+| Definition | Chart Definition 用自己的 schema 校验图表输入，执行编译回调；`FlexLayoutDefinition` 则用布局 schema 与编译回调处理子项测量和排布        |
+
+装配时先准备 FlexLayout Definition，再准备 Chart Definition。编译图表时，Chart 根据标题配置生成文字节点，将它放在纵向 FlexLayout 的 Plot 前面；布局编译负责测量并放置这些子项，文字节点的绘制由 Core 完成。Chart 还依赖 Surface 和 Plot，下图只节选 FlexLayout 这一支。
+
+`resolveCoreProviderDependencies` 合并提供者声明及数据集，从根依赖检查可达依赖图，再按依赖在先的顺序调用 `makeDefinition`，输出各类 Definition 集合。缺失依赖、循环依赖或冲突会报错。Vanilla 的准备阶段调用这项能力；直接调用 Core 时，也可以直接传入已经备好的定义。
+
+下图从根依赖 `chart.point` 追踪到 `layout.flexLayout`。右侧注册表准备好后，遍历器按图表声明的 `namespace: chart` 与 `type: point` 找到 Chart Definition。
+
+<ComponentPreview files="composite-dependencies" size="xl" hideCode type="illustration" />
+
+**依赖装配先于实例编译**。它准备的是本次编译需要的能力；标题和绘图区的位置与尺寸在后续编译回调中确定。
+
+<SourceLinks
+  sources={[
+    {
+      label: '依赖图检查与 Definition 装配',
+      path: 'packages/kernel/core/src/contract/provider/resolve-dependencies.ts',
+    },
+    { label: 'Vanilla 编译准备入口', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
+    { label: 'Chart 的布局依赖', path: 'packages/viz/chart/src/_chart/providers/provider.ts' },
+    { label: 'Chart 标题与绘图区的纵向排布', path: 'packages/viz/chart/src/_chart/resolve/presentation.ts' },
+    { label: '注册表进入编译上下文', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: '定义绑定与输入解析', path: 'packages/kernel/core/src/resolve/composite/resolve.ts' },
+  ]}
+/>
+
+### 统一编译回调
+
+完整布局时，`CompositeDefinition` 通过 `compile` 回调返回 `CompositeCompileResult`。回调可以直接生成子声明；如果需要根据子图尺寸决定如何排布，也可以先调用 `CompositeCompileContext` 中的布局方法，再输出选中的结果。下面先说明两种用法的区别，再从直接组合开始。
+
+| 用法     | 回调做什么                           | Core 如何继续                  |
+| -------- | ------------------------------------ | ------------------------------ |
+| 直接组合 | 根据已解析输入与主题生成子声明       | 校验输出树，按顺序编译普通子项 |
+| 布局试算 | 先测量子图，再决定空间分配与放置方式 | 校验输出树，提交选中的试算结果 |
+
+下面以父项包装一个纯 JSON 子声明 `child` 为例，先看不需要测量的写法。
+
+`compile` 接收 schema 解析后的 `node`，直接返回子声明。本例不使用 `context`，可以省略第二个形参。Core 随后编译 `children`。
+
+```ts
+import { ChildSchema, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { literal } from 'zod';
+
+const definition = defineComposite({
+  namespace: 'demo',
+  type: 'container',
+  schema: CompositeBaseSchema.extend({
+    namespace: literal('demo'),
+    type: literal('container'),
+    child: ChildSchema,
+  }),
+  compile: node => ({
+    children: [node.child],
+  }),
+});
+```
+
+只组合子路径与文字节点时无需试算；要根据子路径的真实占用决定位置时再使用布局方法。包含 Composite 的输入统一交给 `compileToScene`。React 的 `convertIRToReactNode` 只转换递归不含 Composite 的 `IRKernelScene`，不执行复合编译。
+
+<SourceLinks
+  sources={[
+    { label: '统一 compile 与上下文契约', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: '输出子项与运行时句柄', path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts' },
+  ]}
+/>
+
+### 运行时输入
+
+前面的例子只传递 JSON 子声明。有些组件还需要额外的数据才能编译：例如 Chart 生成 Plot 声明后，需要把已准备好的绘图数据 `PreparedPlotData` 交给 Plot。这份数据独立于 JSON 声明保存，通过编译上下文的 `runtimeInput` 读取。
+
+这里的绑定是一条“子项位置 → 输入数据”的关联。位置用属性路径表示：字符串表示对象字段，数字表示数组下标。路径相对当前交出的子树，用来精确找到接收数据的组件实例。
+
+这个过程发生在测量之前。Chart 先生成包含 Plot 的 Surface 子树，其中 Surface 承载绘图区，Plot 接收绘图数据。Chart 调用 `bindChild` 将数据与子树中的 Plot 位置关联，再把返回的带绑定子项交给 `layoutChild`。编译到 Plot 时，Core 把相应数据放入它的 `context.runtimeInput`。
+
+中间的 Surface 或布局组件还会继续转交子项。转交时需要一起保留已有的数据关联，否则下游虽然收到了声明，却收不到编译所需的数据。
+
+上下文提供两个方法，分别处理已有子项和新生成的子项：
+
+| 方法                         | 何时使用                                       | 保留或建立的关联                                              |
+| ---------------------------- | ---------------------------------------------- | ------------------------------------------------------------- |
+| `sourceChild(path)`          | 转交用户在当前组件输入中声明的子项             | 按属性路径取出子项，同时保留该子树已有的运行时输入绑定        |
+| `bindChild(child, bindings)` | 编译回调生成了新子声明，需要向其中的组件传数据 | 每条绑定用相对 `child` 的属性路径指定接收组件，并附上对应输入 |
+
+两个方法都返回带绑定的子项句柄，可交给布局试算或放进输出子项。句柄只在当前编译回调内使用，不写入可持久化的 JSON IR。普通子项没有额外运行时输入时，直接传递声明即可。
+
+<SourceLinks
+  sources={[
+    { label: '子项与运行时输入的绑定契约', path: 'packages/kernel/core/src/contract/composite/input.ts' },
+    { label: 'Chart 向生成的 Plot 绑定绘图数据', path: 'packages/viz/chart/src/_chart/providers/composite.ts' },
+  ]}
+/>
+
+## 布局查询
+
+父项通过尺寸提案说明可用空间，再按需要查询完整布局或指定轴的尺寸。
+
+### 尺寸提案
+
+父项如果要把另一个子项排在子路径右边，就需要先知道该为子路径留出多宽的空间。子项尺寸有时还受可用空间影响：文字在较窄区域内会换成更多行，高度随之变化。因此，测量时需要同时告诉子项这次可用空间的要求。
+
+这里先区分两个概念：
+
+- 尺寸提案（`LayoutProposal`）：父级发给子项的测量条件，分别说明 x、y 轴要查询自然尺寸，还是按范围或固定尺寸分配空间。
+- 槽位：父级为子项安排的矩形空间。它的宽高用于排布，子项实际绘制的内容可能超出这个空间。
+
+当前父项收到的 `context.proposal` 来自更外层的父项。父项测量自己的子项时，再通过 `layoutChild(child, proposal)` 传入完整的双轴提案；可以沿用收到的提案，也可以根据自己的布局规则另行指定。每次调用得到一个候选结果，父项可以比较多次调用的结果，再决定采用哪一个。
+
+对子路径的两次测量，第一次查询自然宽度，第二次要求宽度为 60 的槽位；两次都查询自然高度。对应的提案写法如下：
+
+```ts
+const naturalProposal = {
+  x: { kind: 'intrinsic', mode: 'natural' },
+  y: { kind: 'intrinsic', mode: 'natural' },
+} as const;
+
+const narrowProposal = {
+  x: { kind: 'exact', value: 60 },
+  y: { kind: 'intrinsic', mode: 'natural' },
+} as const;
+```
+
+每个轴可以独立选择下列条件。“最小”和“自然”由子项自身的布局能力决定：
+
+| 单轴提案              | 含义                                             |
+| --------------------- | ------------------------------------------------ |
+| `intrinsic / natural` | 查询子图的自然占用                               |
+| `intrinsic / minimum` | 查询子图支持的最小占用，例如文字最宽的可断行单元 |
+| `range`               | 在 `min` 与可选 `max` 之间分配槽位               |
+| `exact`               | 要求固定大小的槽位                               |
+
+下面两次试算使用同一条长 100 的子路径，y 轴都取自然尺寸。蓝线保持原几何；橙线标出父布局获得的槽宽，两者共用原点和比例。
+
+<ComponentPreview files="composite-proposal" size="lg" hideCode type="illustration" />
+
+右侧槽位宽度是 60，子路径的几何宽度仍是 100。提案不会自动缩放或裁掉固定路径。文字节点可以根据宽度预算重新断行，普通 Scope 则保留自身占用，不把收到的提案自动转发给所有后代。容器需要读取测量结果，再决定如何处理超出的内容。
+
+Core 根据真实占用解析槽位：`intrinsic` 取实际尺寸，`range` 将实际尺寸限制到区间内，`exact` 取指定值。子图是否能改变几何，取决于它自己的布局能力。
+
+<SourceLinks
+  sources={[
+    { label: '提案校验与槽位尺寸计算', path: 'packages/kernel/core/src/compile/orchestration/layout-proposal.ts' },
+    { label: '提案、布局结果与对齐线契约', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    {
+      label: 'Node、Path 与 Scope 的提案行为验证',
+      path: 'packages/kernel/core/tests/compile/layout-proposal-builtins.test.ts',
+    },
+  ]}
+/>
+
+### 完整布局查询
+
+下面是编译上下文中的函数类型声明；调用方式为 `context.layoutChild(child, proposal)`。
+
+```ts
+layoutChild: (child: IRChild | CompositeBoundChild, proposal: LayoutProposal) => LayoutChildProbe;
+```
+
+返回值 `LayoutChildProbe` 区分成功与失败：成功时为 `kind: 'resolved'`，其中的 `result` 才是 `LayoutChildResult`；失败时为 `kind: 'failed'`，携带可交给 `raise` 的 `failure`。父级需要知道的“留多大空间”和“内容在哪里”分别由不同字段回答：
+
+<DocTabs defaultValue="table">
+<DocTab value="table" label="表格">
+
+| 字段                      | 回答的问题                                                                     |
+| ------------------------- | ------------------------------------------------------------------------------ |
+| `resolved.result`         | 成功分支的完整布局结果，类型为 `LayoutChildResult`                             |
+| `failed.failure`          | 失败分支的当前回调拥有的失败句柄，可交给 `raise`                               |
+| `result.slotSize`         | 这次按提案分配的槽位有多宽、多高？只有宽高，没有坐标原点                       |
+| `result.allocationBounds` | 子图在自己的局部坐标中声明了多大的布局占用，位于哪里？包含位置和宽高           |
+| `result.visualBounds`     | 实际生成的静态图元可能画到哪里？这是保守视觉包络，可能比布局占用多出描边等范围 |
+
+</DocTab>
+<DocTab value="source" label="源码">
+
+下面依次展示返回值 `LayoutChildProbe` 和成功分支中的 `LayoutChildResult`；对齐线与重放令牌在后文继续解释。
+
+```ts
+export type LayoutChildProbe =
+  | Readonly<{ kind: typeof LayoutChildProbeKind.Resolved; result: LayoutChildResult }>
+  | Readonly<{ kind: typeof LayoutChildProbeKind.Failed; failure: LayoutChildFailure }>;
+
+export type LayoutChildResult = Readonly<{
+  /** 按提案分配的槽位宽高 */
+  slotSize: Readonly<{
+    width: number;
+    height: number;
+  }>;
+  /** 子项局部坐标中的布局占用 */
+  allocationBounds: Readonly<BoundsRect>;
+  /** 静态图元的保守视觉包络 */
+  visualBounds: Readonly<BoundsRect>;
+  /** 可选的对齐位置 */
+  alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
+  /** 关联本次试算结果的重放令牌 */
+  replay: CompositeReplay;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+子路径的第二次结果中，`slotSize.width` 为 60，`allocationBounds.width` 仍为 100。父项可以按槽位把下一个子项放在 60 之后，也可以根据实际占用调整间距；采用哪种规则由父项决定。视觉包络用于了解最终图形范围，不替代槽位参与空间分配。
+
+结果还可以带有 `alignmentGuides`，即子项局部坐标中的命名对齐位置。例如，文字提供的基线可以让父级把不同文字沿同一条线排齐；没有这类对齐要求时不需要读取它。
+
+尺寸信息已经足够让父项比较候选，但 Core 还需要保存生成这些尺寸的子图，供选中后输出。后面的“隔离试算”说明这份子图在选择之前存放在哪里。
+
+<SourceLinks
+  sources={[
+    { label: '测量结果与对齐线契约', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: '从布局占用计算槽位', path: 'packages/kernel/core/src/compile/orchestration/layout-proposal.ts' },
+  ]}
+/>
+
+### 按需尺寸查询
+
+父项有时只需要知道子项占多宽，例如先确定 Grid 的列宽；此时不需要子图元、真实边界或重放令牌。`measureChild` 接收与完整布局相同的双轴尺寸提案，再额外指定需要宽度、高度还是两者。高度查询仍保留宽度约束，因为换行会改变高度。
+
+下面是编译上下文中的函数类型声明；`child` 可以是普通声明，也可以是 `sourceChild` 或 `bindChild` 返回的绑定子项。
+
+```ts
+measureChild: (child: IRChild | CompositeBoundChild, proposal: LayoutProposal, axis: LayoutMeasurementAxis) =>
+  LayoutMeasurementProbe;
+```
+
+<DocTabs defaultValue="table">
+<DocTab value="table" label="表格">
+
+| 参数 / 结果       | 含义                                                    |
+| ----------------- | ------------------------------------------------------- |
+| `proposal`        | 完整双轴提案；不同 natural、range、exact 不自动视为等价 |
+| `axis`            | `x` 查询宽度，`y` 查询高度，`both` 查询两者             |
+| `resolved.result` | 带 `axis` 的尺寸贡献；仅包含所请求的 `width` / `height` |
+| `failed.failure`  | 当前回调拥有的失败，可交给 `raise`；失败不进入缓存      |
+
+</DocTab>
+<DocTab value="source" label="源码">
+
+对应的查询轴、尺寸贡献与返回结果类型如下。成功结果只包含请求的尺寸，不携带重放令牌。
+
+```ts
+export type LayoutMeasurementAxis = 'x' | 'y' | 'both';
+
+export type LayoutContribution =
+  | Readonly<{ axis: 'x'; width: number }>
+  | Readonly<{ axis: 'y'; height: number }>
+  | Readonly<{ axis: 'both'; width: number; height: number }>;
+
+export type LayoutMeasurementProbe =
+  | Readonly<{ kind: 'resolved'; result: LayoutContribution }>
+  | Readonly<{ kind: 'failed'; failure: LayoutChildFailure }>;
+```
+
+</DocTab>
+</DocTabs>
+
+查询返回的是按提案分配的槽位尺寸，不含真实边界、基线或重放令牌。需要这些信息时使用 `layoutChild`；已有符合最终约束的完整结果则可直接重放。尺寸查询成功不代表整棵子树已通过完整编译校验。具体求值、缓存与提交过程见下文“试算与提交”。
+
+<SourceLinks
+  sources={[{ label: '尺寸查询与返回值契约', path: 'packages/kernel/core/src/contract/composite/types.ts' }]}
+/>
+
+<ComponentAlert
+  type="tip"
+  title="如何选择查询方法"
+  description={
+    <>
+      <p>
+        只需宽高来决定空间分配时，用
+        measureChild：它可复用尺寸缓存，支持轻量求值的子项还可省去不需要的布局工作；缓存未命中且子项返回完整输出时，仍需完整编译。
+      </p>
+      <p className="mt-2!">
+        最终约束已确定，或需要真实边界、基线、可重放结果时，用 layoutChild，选中后直接 replay；不必固定先 measureChild
+        再 layoutChild。
+      </p>
+      <p className="mt-2!">
+        已有符合最终约束与有效环境的完整候选时，直接重放，无需再次查询。尺寸缓存只有宽高，不能用于重放。
+      </p>
+    </>
+  }
+/>
+
+## 试算与提交
+
+完整布局查询产生的候选先隔离保存，父项选定后再通过重放提交到最终输出。
+
+下图把尺寸查询、完整布局查询和实际放置放在一起。从左到右阅读：只需尺寸时从左侧开始；最终约束已经明确时，可以直接从中间开始。尺寸缓存只保存查询结果，完整候选则保留可提交的子图，两者不能互相替代。
+
+<ComponentPreview files="composite-query-flow" size="xxl" hideCode type="flow" />
+
+已有完整候选只有在符合最终约束时才能直接采用；只拿到尺寸缓存结果时，仍需生成完整候选。重放句柄必须进入返回的 `children` 才会提交，同一候选只能提交一次；未选中的候选不会输出。图中展示成功路径，可恢复失败与致命错误的处理见下文。
+
+### 查询求值与缓存
+
+图左侧从尺寸缓存开始。命中时直接返回尺寸；未命中且被查询的子项是复合组件时，Core 调用它的 `compile`，通过 `context.evaluation` 传入 `kind: 'contribution'` 和请求的 `axis`。子项可在同一求解器中算出所需尺寸后提前结束，例如 Grid 只求宽度时省去行高计算与放置。
+
+轻量路径返回 `CompositeContributionResult`，其中 `contribution` 声明子项的布局占用尺寸；Core 再按提案转换成父项收到的槽位尺寸。若子项仍返回完整 `CompositeCompileResult`，Core 就完成子树编译后提取尺寸，首次查询不会因此省去完整编译。图中间的 `layoutChild` 则传入 `kind: 'layout'`，要求完整输出，用于保存可重放候选。
+
+同一次编译内，Core 会复用相同逻辑子项在相同输入、需求、双轴提案和有效环境下的成功贡献。`sourceChild` 保留来源身份，能跨祖先的多次试算命中；不同回调重新生成的子项不会只因内容相同而共享。样式、主题、绑定输入、变换或可见引用状态变化时重新求值。缓存有容量上限，淘汰只影响工作量；下一次编译重新建立缓存。
+
+文字测量也在同次编译内按完整文字和字体参数共享成功度量。宽度改变后仍重新决定换行、行高和基线。贡献缓存和文字缓存都不携带可提交事务：丢弃候选的资源、诊断与 artifact 不会随缓存命中进入最终 Scene。
+
+除了尺寸，父项还可能需要子图中某个锚点的坐标。`context.resolvePathTargets({ child, source, points })` 在真实子图中解析起点与有序目标，返回坐标，不返回可重放候选。例如 Flow 为多条关系生成路线，并在验证路线时再次查询端点；这些目标不同，但依赖的节点布局可能完全相同。
+
+同一个 `compile` 回调内，Core 会复用相同输入与有效环境下成功准备的几何和引用快照。缓存命中后只解析本次目标；未命中时先隔离编译子图。Flow 也会复用当前完整布局的 Graph 投影，元素位置或尺寸等内容变化后重新生成。主题、样式、变换或可见引用变化时不能沿用旧环境；每次查询仍有独立的相对坐标游标，失败不会进入缓存，也不影响后续合法目标查询。
+
+这层缓存随回调结束释放，不跨回调或编译共享，也不会向最终 Scene 提交图元、资源或节点。它与尺寸贡献缓存的范围不同：尺寸贡献可以在同次编译的多次试算间共享，几何查询只复用当前回调的只读环境；两者都不能替代完整候选的 replay。
+
+<SourceLinks
+  sources={[
+    { label: '贡献与完整输出契约', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: '隔离求值与贡献复用', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: '编译内文字度量共享', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: 'Flow 路线与端点查询复用', path: 'packages/schematic/diagram/src/flow/pipeline/flow/compile.ts' },
+  ]}
+/>
+
+### 隔离试算
+
+父项可能在不同约束下多次试算同一子项。每次试算生成的图元、节点和资源都先保存在独立候选中，只有选中的候选才会提交到最终 Scene，避免重复输出或残留未采用的结果。
+
+以 Grid 中非固定行高的基线对齐为例：布局先分别按最小高度和自然高度提案对参与基线对齐的子项做完整试算，取得尺寸与基线，用于计算行高；行列尺寸确定后，再按最终槽位生成布局。前面的候选只参与求解，最终候选才提交到 Scene，因此同一文本不会因多次试算而重复绘制。
+
+<SourceLinks
+  sources={[
+    { label: 'Grid 行高试算与最终放置', path: 'packages/library/layout/src/composites/grid-layout/pipeline.ts' },
+  ]}
+/>
+
+Core 因此把每次完整布局查询作为一次隔离试算：它可以读取当前已知的节点，但新增的节点记录、图元、资源和警告先保存在本次候选中。这里的命名空间是编译器按名称查找节点的环境；试算从当前环境分叉，新增记录暂不写回父级。paint 与 clip 注册表分别保存本次试算的绘制资源与裁剪资源。
+
+一次成功试算留下两部分信息：
+
+- 回调可读的结果：尺寸、边界与对齐线，供父项决策。
+- Core 内部保存的完整候选：生成的图元及其节点、资源等记录，供选中后提交。
+
+两部分通过 `result.replay` 关联。它是 Core 发出的不透明令牌，用来找到对应候选；组件只需保留结果并传给 `replay()`，无需读取令牌内部内容。
+
+下图展示父项的两次成功试算。左侧是回调可见结果的字段摘录；右侧是编译会话内部的 `replayTransactions` WeakMap，按令牌关联完整结果。T0、T1 只是图中对两个不透明令牌的代称，表格不表示 WeakMap 的枚举顺序。
+
+<ComponentPreview files="composite-probe" size="xxl" hideCode type="illustration" />
+
+两次结果都有子路径的局部几何，但父图元数组尚未加入子路径。父级可以比较结果，忽略未选中的候选；候选携带的命名空间变化、资源与警告也不会因此进入最终输出。回调直接调用 `warn()` 则是在当前组件位置发出警告，不属于可丢弃候选。
+
+试算返回 `resolved` 或 `failed`。可恢复失败被包装成当前回调拥有的 failure，组件可以舍弃候选或调用 `raise(failure)` 向外提升错误；契约违规等致命错误直接抛出。试算输入的引用必须在当时可解析，不能依赖尚未提交的其它候选或父级尚未注册的后续节点。
+
+<SourceLinks
+  sources={[
+    { label: '试算环境与结果捕获', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: '重放事务保存的贡献', path: 'packages/kernel/core/src/compile/orchestration/types.ts' },
+    { label: '试算失败分类与提升', path: 'packages/kernel/core/src/compile/probe-failure.ts' },
+  ]}
+/>
+
+### 结果重放
+
+父项现在已选中第二次试算，下一步是让这份候选进入最终 Scene。这一步称为重放：组件指出采用哪份结果、放在什么位置，Core 再将对应子图提交到父输出。
+
+`replay(result, wrapper)` 返回一个输出句柄，即代表这份待提交子图的对象。`result` 指定候选；可选的 `wrapper` 指定放置时使用的数值变换和裁剪。父项在这里指定平移 `[20, 30]`，再把句柄放入回调返回的 `children`。
+
+下图左侧只画最终返回的子项，右侧画重放进入父级的图元结构。平移放在外层 group，子路径的局部起终点仍是 `[0, 0]`、`[100, 0]`；最终画面中的位置变为 `[20, 30]`、`[120, 30]`。
+
+<ComponentPreview files="composite-replay" size="xl" hideCode type="illustration" />
+
+提交前，Core 递归预检输出树，检查句柄所有权、重复使用和资源引用。**一个试算结果只能在创建它的回调、同一次编译中放置一次**；只创建句柄但未放进最终树的候选不会提交。普通 IR 子项仍走正常编译；`scope()` 创建的运行时 Scope 可以承载普通子项与重放句柄。
+
+提交选中的结果时，Core 同时处理以下贡献：
+
+| 试算中的贡献           | 提交动作                                             |
+| ---------------------- | ---------------------------------------------------- |
+| 图元与绘制顺序         | 追加到父输出，并应用放置变换与可选裁剪               |
+| paint / clip 资源      | 导入父注册表，建立旧 ID 到新 ID 的映射并改写图元引用 |
+| 命名空间变化           | 按最终变换提交，使后续引用得到放置后的节点几何       |
+| 布局、警告、产物与观测 | 合并到最终输出，并将来源位置映射到最终展开位置       |
+
+这里还需保持测量与最终绘制的样式环境一致。`scope()` 可以为一组输出子项声明默认样式和主题；若最终 Scope 的有效默认样式或主题与试算时不同，Core 会在最终环境中重新生成子图。需要局部主题时，先通过 `withTheme` 创建使用该主题的上下文来测量，再用 `scope()` 在输出中声明相同主题边界。
+
+父项自己也可能是更外层容器的子项，因此还需要向外报告布局占用。它可以在编译结果中显式返回 `allocationBounds`；省略时，Core 合并最终子项的布局占用。这个边界与单次测量的 `slotSize` 分属不同位置：选择了 60 宽槽位，不代表父项已经向外声明 60 宽的占用。声明布局边界也不会裁掉越界图元；若要隐藏子路径超出的部分，仍需显式裁剪。
+
+<SourceLinks
+  sources={[
+    { label: '重放句柄与 Scope 输出创建', path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts' },
+    { label: '输出预检、资源导入与重放提交', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: '放置外壳与容器输出契约', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+  ]}
+/>
+
+### 串起测量与输出
+
+现在可以把前面的步骤放回 `compile` 回调中。下面保留最小写法：父项将收到的提案传给子项，只测量一次，成功后直接采用结果，不另加平移或裁剪。它展示的是方法之间如何衔接；前文比较两个候选的父项可以在测量与重放之间加入选择逻辑。
+
+```ts
+import { ChildSchema, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { literal } from 'zod';
+
+const definition = defineComposite({
+  namespace: 'demo',
+  type: 'container',
+  schema: CompositeBaseSchema.extend({
+    namespace: literal('demo'),
+    type: literal('container'),
+    child: ChildSchema,
+  }),
+  compile: (node, context) => {
+    const probe = context.layoutChild(node.child, context.proposal);
+    if (probe.kind === 'failed') return context.raise(probe.failure);
+
+    return {
+      children: [context.replay(probe.result)],
+    };
+  },
+});
+```
+
+`layoutChild` 返回失败时，`raise` 将错误交回 Core；成功时，`replay` 把结果转成待输出子项，最后由 `children` 交给 Core 提交。测量得到的槽位、边界和候选子图至此连接起来。
+
+<SourceLinks
+  sources={[{ label: 'compile、试算与重放的统一契约', path: 'packages/kernel/core/src/contract/composite/types.ts' }]}
+/>
+
+## 完整实现流程
+
+下图从上到下展示总体调度。上半部分是回调可按需使用的路径：直接组合、尺寸查询、完整试算与几何查询，可以组合或重复调用。尺寸和坐标用于父项决策，只有完整候选能重放；几何查询分支返回坐标后回到回调，不把查询快照放进输出树。下半部分按返回的子项类型处理，普通子项、重放句柄与 Scope 可以混合嵌套。图中展示成功提交主线；试算失败可舍弃或提升，致命错误则终止编译。
+
+<ComponentPreview
+  files="composite-implementation"
+  size="xxxl"
+  align="start"
+  previewClassName="overflow-y-auto"
+  hideCode
+  type="flow"
+/>
+
+布局确定后，Core 先检查回调返回的最终输出树，再将选中候选的图元、引用和资源提交到父级遍历环境。复合组件的输出由此重新汇入普通 Scene 编译主线。
+
+<SourceLinks
+  sources={[
+    { label: '复合实例的完整调度与提交', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: '试算会话与结果关联', path: 'packages/kernel/core/src/compile/orchestration/types.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: '编译产物',
+      description: '继续查看 Scene、附加产物与其他编译输出',
+      url: '/kernel/packages/core/compilation-output',
+    },
+    { title: '编译流程', description: '回到从 IR 到 Scene 的整体主线', url: '/kernel/packages/core/compilation' },
+    {
+      title: '节点编译',
+      description: '了解子节点的尺寸、基线与连接几何',
+      url: '/kernel/packages/core/node-compilation',
+    },
+    { title: '路径编译', description: '了解子路径的目标绑定与图元输出', url: '/kernel/packages/core/path-compilation' },
+  ]}
+/>

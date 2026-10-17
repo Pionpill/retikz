@@ -4,7 +4,7 @@ import { RetikzDataError } from '../error';
 import type { ExternalRow } from '../shared';
 import { coerceValue } from './coerce';
 import { DataFieldType } from './constants';
-import type { DataFieldTypeMap, ParsedFieldValue } from './contract';
+import type { DataFieldMap, DataFieldTypeMap, ParsedFieldValue } from './contract';
 import { resolveFieldPath } from './field';
 
 /** 按最终字段类型把自定义 parser 输出收窄到 canonical 值域 */
@@ -31,7 +31,7 @@ const isCoercedValid = (value: unknown, type: DataFieldType): boolean => {
 export const normalizeRows = (
   rows: Array<ExternalRow>,
   fieldTypeMap: DataFieldTypeMap,
-  fieldMap?: Record<string, string>,
+  fieldMap?: DataFieldMap,
   parsers?: Map<string, (raw: unknown) => ParsedFieldValue>,
 ): Array<ExternalRow> =>
   rows.map(row => {
@@ -80,7 +80,7 @@ export const validateBoundData = (
 
     if (!valid) {
       throw new RetikzDataError(
-        `data: field "${logical}" has no valid values in the sampled data: ${invalidCount}/${limit} invalid, ${missingCount}/${limit} missing (check fieldMaps / dataset)`,
+        `data: field "${logical}" has no valid values in the sampled data: ${invalidCount}/${limit} invalid, ${missingCount}/${limit} missing (check fieldMap / dataset)`,
       );
     }
   }

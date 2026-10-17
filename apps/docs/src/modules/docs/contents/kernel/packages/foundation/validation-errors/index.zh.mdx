@@ -41,24 +41,22 @@ Foundation 内置少量用于基础契约失败的标量断言。它们只接收
 
 ### 内置断言
 
-| 方法                                              | 作用                                   | 默认错误码                             |
-| ------------------------------------------------- | -------------------------------------- | -------------------------------------- |
-| `assertNonEmptyString(value, label, ownerError?)` | 拒绝空串和只包含运行时标准空白的字符串 | `FOUNDATION_NON_EMPTY_STRING_REQUIRED` |
-| `assertPositiveNumber(value, label, ownerError?)` | 拒绝 `0`、负数和非有限数               | `FOUNDATION_POSITIVE_NUMBER_REQUIRED`  |
+| 方法                                                    | 作用                                   | 默认错误码                             |
+| ------------------------------------------------------- | -------------------------------------- | -------------------------------------- |
+| `assertNonEmptyString(value, label, createOwnerError?)` | 拒绝空串和只包含运行时标准空白的字符串 | `FOUNDATION_NON_EMPTY_STRING_REQUIRED` |
+| `assertPositiveNumber(value, label, createOwnerError?)` | 拒绝 `0`、负数和非有限数               | `FOUNDATION_POSITIVE_NUMBER_REQUIRED`  |
 
 ### 指定 owner 错误
 
-第三个参数 `ownerError` 接收已构造的上层 `RetikzError`。传入后，断言失败时直接原样抛出它；Foundation 不改写其 `code`、`message`、`details` 或 `cause`。
+第三个参数 `createOwnerError` 接收 `() => RetikzError` 工厂。校验成功时不调用；失败时调用一次并原样抛出返回的错误，保留其 `code`、`message`、`details` 与 `cause`。错误对象应在工厂内部创建，避免成功路径也承担构造成本。工厂自身抛出的异常也会原样传播。
 
 ```ts
 const fontSize = 0;
-const error = new RetikzDomainError({ source: 'svg' });
-
-assertPositiveNumber(fontSize, 'SVG font size', error);
+assertPositiveNumber(fontSize, 'SVG font size', () => new RetikzDomainError({ source: 'svg' }));
 // 抛出 RetikzDomainError，而不是 RetikzFoundationError
 ```
 
-没有传入 `ownerError` 时，断言仍抛 `RetikzFoundationError`。字符串断言使用 `FOUNDATION_NON_EMPTY_STRING_REQUIRED`，正数断言使用 `FOUNDATION_POSITIVE_NUMBER_REQUIRED`，并在 `details` 与 `cause` 中保留原子失败信息。
+没有传入 `createOwnerError` 时，断言仍抛 `RetikzFoundationError`。字符串断言使用 `FOUNDATION_NON_EMPTY_STRING_REQUIRED`，正数断言使用 `FOUNDATION_POSITIVE_NUMBER_REQUIRED`，并在 `details` 与 `cause` 中保留原子失败信息。
 
 <SourceLinks
   sources={[
@@ -66,7 +64,7 @@ assertPositiveNumber(fontSize, 'SVG font size', error);
       label: '标量断言实现',
       path: 'packages/kernel/foundation/src/assert.ts',
       startLine: 12,
-      endLine: 51,
+      endLine: 43,
     },
     {
       label: '结构化错误实现',
@@ -78,7 +76,7 @@ assertPositiveNumber(fontSize, 'SVG font size', error);
       label: '标量断言测试',
       path: 'packages/kernel/foundation/tests/assert.test.ts',
       startLine: 1,
-      endLine: 99,
+      endLine: 146,
     },
     {
       label: '结构化错误测试',

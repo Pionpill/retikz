@@ -15,7 +15,7 @@ Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`。Plot �
 
 ## 命名 style
 
-用 definePlotThemeStyle 及其 name、resolve callback 注册运行时 style。callback 接收 effective Core Theme，返回稀疏 defaults 与有序 Axis rules。Definition 可通过 Plot、lowerPlots 或 renderPlot 的 plotThemeStyles 注入，也可使用 PlotThemeProvider。
+用 definePlotThemeStyle 及其 name、resolve callback 注册运行时 style。callback 接收 effective Core Theme，返回稀疏 defaults 与有序 Axis rules。Definition 可通过 Plot、lowerPlots 或 renderPlot 的 definitions.plotThemeStyles 注入，也可使用 PlotThemeProvider。
 
 Core 的 theme prop 选择宿主 style 与 mode。Plot defaults 是持久化的 Plot Source 字段，在 IRPlot、InputPlot 与 runtime 输入中使用相同的嵌套路径。
 

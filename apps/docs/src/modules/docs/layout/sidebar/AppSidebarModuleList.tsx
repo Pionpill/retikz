@@ -37,7 +37,9 @@ export const AppSidebarModuleList: FC<AppSidebarModuleListProps> = props => {
     <ul className="flex flex-col gap-0.5">
       {modules.map((module, index) => {
         const ModuleIcon = module.Icon;
-        const modulePath = ungrouped ? `/${moduleId}/${module.value}` : `/${moduleId}/${categoryValue}/${module.value}`;
+        const modulePath =
+          module.linkTo ??
+          (ungrouped ? `/${moduleId}/${module.value}` : `/${moduleId}/${categoryValue}/${module.value}`);
         const hasChildren = Boolean(module.children?.length);
         const isSidebarGroupStart =
           module.sidebarGroup !== undefined && module.sidebarGroup !== modules[index - 1]?.sidebarGroup;
@@ -84,6 +86,7 @@ export const AppSidebarModuleList: FC<AppSidebarModuleListProps> = props => {
             <AppSidebarMenuItem
               item={{
                 value: module.value,
+                linkTo: module.linkTo,
                 label: module.label,
                 Icon: module.Icon,
                 children: module.children,

@@ -1,83 +1,208 @@
 ---
-title: IntervalMark
-description: IntervalMark 表达各位置维度上的区间积；柱、直方、热图、径向柱、饼图和环图都是它的不同投影。
+title: IntervalMark · 区间图元
+description: 用 IntervalMark 定义数据区间，通过坐标投影绘制柱、直方图、热图、饼图与环图。
 ---
 
-`<IntervalMark>` 不是“柱图元”，而是区间图元。它为每条数据构造一个或多个位置维度上的区间，再交给坐标系投影：cartesian 下常是矩形，polar 下可以是径向柱或扇区。
+`IntervalMark` 把每行数据变成一个区域：先确定各维度的起止边界，再由坐标系决定区域的形状。分类区间与数值区间可以组成柱，两个分类区间可以组成热图单元，角度区间与半径区间可以组成扇区。
 
-默认写 `x` / `y` 时，`x` 走 band 区间、`y` 从 baseline `0` 延伸到数值；显式写 `bounds` 时，可以把任一维声明为 `band` / `span` / `extent` / `proportional` / `full`。下表的字段属性类型沿用 React `IntervalMarkProps`，字段值是数据字段名或字段路径，例如 `quarter` / `sales.revenue`。
+本页从普通柱开始，再介绍系列排列、连续区间和极坐标扇区。字段写法见[通道绑定](/viz/plot/channel/binding)，安装与宿主接入见[快速开始](/viz/plot/get-start)。
 
-## 用法
+## 接入方式
 
-```tsx
-import { IntervalMark, Plot } from '@retikz/plot-react';
+下面用三个季度的营收绘制柱。`x` 绑定季度，`y` 绑定营收，柱从数值基线 0 延伸到对应值。
+
+<ComponentPreview mode="showcase" files={['interval-entry', 'interval-entry.data.ts']} hideCode size="md" />
+
+在 HTML 中准备 `<div id="plot"></div>`，选择以下任一入口。React JSX 的组件层级为：
+
+```text
+Plot
+├── IntervalMark
+└── PlotAxis
 ```
 
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
 ```tsx
-<Plot data={revenue}>
-  <IntervalMark x="quarter" y="value" />
-</Plot>
+import { IntervalMark, Plot, PlotAxis } from '@retikz/plot-react';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { quarter: 'Q1', revenue: 30 },
+  { quarter: 'Q2', revenue: 50 },
+  { quarter: 'Q3', revenue: 40 },
+];
+
+createRoot(document.getElementById('plot')!).render(
+  <Plot data={rows} width={360} height={220}>
+    <IntervalMark x="quarter" y="revenue" />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" />
+  </Plot>,
+);
 ```
 
-普通柱只需要 `x` / `y`。可变宽柱使用 `width` 表达比例宽度区间；直方图使用 `x0` / `x1` 表达连续区间；热图用 `bounds` 声明双 band；饼图 / 环图用 `angle` 让 React DSL 自动累积角区间。
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
-### 何时使用
+```tsx
+import type { IRPlot } from '@retikz/plot';
+import { Plot } from '@retikz/plot-react';
+import { createRoot } from 'react-dom/client';
 
-IntervalMark 是底层 cell mark：它只负责把每行数据变成一个正交区间 cell，再由坐标系把 cell 投影成矩形、扇区或轮廓。柱、直方、热图、径向柱、饼图和环图不是不同的底层 mark，而是同一个 IntervalMark 在不同 `bounds`、`series`、`stack` 和 `coordinate` 下的表现形态。
+const rows = [
+  { quarter: 'Q1', revenue: 30 },
+  { quarter: 'Q2', revenue: 50 },
+  { quarter: 'Q3', revenue: 40 },
+];
 
-| 表现形态     | 关键属性                                  | 说明                                                    |
-| ------------ | ----------------------------------------- | ------------------------------------------------------- |
-| 柱           | `x` / `y`                                 | `x` 分类槽给宽度，`y` 从 `0` 延伸到数值                 |
-| 横向柱       | `direction="horizontal"`                  | `x` 改为数值长度，`y` 改为分类 band                     |
-| 可变宽柱     | `x` / `width`                             | `width` 按数据顺序累加成连续比例区间，`x` 提供轴标签    |
-| 分组柱       | `arrangement="dodge"` / `group`           | 同一分类槽内按分组字段切子带                            |
-| 堆叠柱       | `arrangement="stack"` / `group`           | stack transform 产出 `y0` / `y1`，数值 role 改为 extent |
-| 百分比堆叠柱 | `arrangement="normalize-stack"` / `group` | 先按分类归一化为百分比，再堆叠                          |
-| 直方         | `x0` / `x1` / `y`                         | `x0` / `x1` 提供连续 x 区间，`y` 提供高度               |
-| 热图 / 网格  | `bounds`                                  | `bounds.x` 和 `bounds.y` 都声明为 `band`                |
-| 饼 / 环      | `angle` / `coordinate`                    | `angle` 累积成角向 extent，半径方向使用 full            |
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { name: 'x', type: 'band' },
+    { name: 'y', type: 'linear' },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [{ type: 'interval', encoding: { x: { field: 'quarter' }, y: { field: 'revenue' } } }],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
 
-## 例子
+createRoot(document.getElementById('plot')!).render(<Plot spec={spec} data={{ rows }} width={360} height={220} />);
+```
 
-下面前四个示例都可以在“坐标系”中切换笛卡尔与极坐标。IntervalMark 的区间配置保持不变：笛卡尔坐标通常把 cell 投影成矩形，极坐标通常把同一个 cell 投影成扇区或环形网格。
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-### 基础用法
+```ts
+import { plot, renderPlot } from '@retikz/plot-vanilla';
 
-`x` / `y` 是最小柱形写法：`x` 绑定分类字段，`y` 绑定数值字段。坐标系会把分类字段解释为 band，把数值字段解释为从 `0` 到值的 span。
+const rows = [
+  { quarter: 'Q1', revenue: 30 },
+  { quarter: 'Q2', revenue: 50 },
+  { quarter: 'Q3', revenue: 40 },
+];
 
-在笛卡尔坐标中，`direction="horizontal"` 会交换分类与数值角色；极坐标没有横向柱语义，因此切换到极坐标后仍使用 `x` 作为角向 band、`y` 作为径向 span。
+const spec = plot({
+  data: { reference: 'rows' },
+  scales: [
+    { name: 'x', type: 'band' },
+    { name: 'y', type: 'linear' },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [{ type: 'interval', encoding: { x: { field: 'quarter' }, y: { field: 'revenue' } } }],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+});
 
-同一个 playground 继续提供柱间距、圆角、透明度、描边、标签和阴影。它们只装饰最终生成的 core `Node`，不会改变区间来源。
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRPlot } from '@retikz/plot';
+import { renderPlot } from '@retikz/plot-vanilla';
+
+const rows = [
+  { quarter: 'Q1', revenue: 30 },
+  { quarter: 'Q2', revenue: 50 },
+  { quarter: 'Q3', revenue: 40 },
+];
+
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { name: 'x', type: 'band' },
+    { name: 'y', type: 'linear' },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [{ type: 'interval', encoding: { x: { field: 'quarter' }, y: { field: 'revenue' } } }],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
+
+### 位置与方向
+
+默认的 `x` 提供分类槽，`y` 提供从 0 到值的区间。分类槽的宽度由 band 比例尺决定；可以通过比例尺的 `paddingInner` 调整柱间距。
+
+横向柱使用 `direction="horizontal"`，同时把数值字段放在 `x`、分类字段放在 `y`。示例切换到极坐标后使用角向分类和径向数值，不提供横向柱选项。调整圆角、描边、透明度与标签，可以观察区域外观的变化。
+
+| 属性                               | 含义         | 说明                                             |
+| ---------------------------------- | ------------ | ------------------------------------------------ |
+| `x`、`y`                           | 位置字段     | 字段名或字段路径；极坐标中分别对应角向与径向     |
+| `direction`                        | 柱方向       | 默认 `vertical`；`horizontal` 交换分类与数值角色 |
+| `color`、`fill`                    | 区域颜色     | `color` 绑定颜色字段；`fill` 支持字段或常量      |
+| `cornerRadius`                     | 圆角         | 装饰投影后的区域，不改变数据区间                 |
+| `stroke`、`strokeWidth`、`opacity` | 描边与透明度 | 控制最终区域的外观                               |
+| `label`                            | 数据标签     | 字符串绑定字段，也可传节点标签配置或有序数组     |
 
 <ComponentPreview
+  mode="showcase"
   files={['bar-position', 'bar-position.preview.tsx', 'bar-basic.data.ts']}
   controls={{ name: 'bar-basic' }}
   size="lg"
-  caption="切换坐标系观察同一组 x / y 区间如何从矩形柱投影为径向柱。"
   defaultSourceFile="bar-position.preview.tsx"
 />
 
 ### 系列排列
 
-`arrangement` 控制多个系列如何共享一个分类 band：`dodge` 切成并排子带，`stack` 累积为连续 extent，`normalize-stack` 先按分类归一化再堆叠。`group` 决定编排分组，`color` 决定视觉着色。
+同一分类下有多个系列时，`group` 指定排列分组，`color` 指定着色字段。`series` 也可作为分组来源，省略 `color` 时会用于颜色绑定。
 
-切换坐标系只改变这些区间的投影方向：并排、堆叠和百分比堆叠的编排关系保持不变。`stackOffset` 只在普通堆叠下显示，可切换从零、归一化、正负分离、居中或重叠基线。
+`dodge` 把分类槽切成并排子带；`stack` 把数值累积为相接的区间；`normalize-stack` 先按分类归一化为百分比再堆叠。坐标切换改变区域形状，分组和累积关系保持不变。
+
+| 属性               | 含义     | 说明                                                               |
+| ------------------ | -------- | ------------------------------------------------------------------ |
+| `group`、`series`  | 系列字段 | 标识同一分类中的不同系列；`group` 优先用于排列                     |
+| `arrangement`      | 排列策略 | `dodge`、`stack`、`normalize-stack`                                |
+| `stackOffset`      | 堆叠基线 | 普通堆叠可选 `zero`、`normalize`、`diverging`、`center`、`overlap` |
+| `stack`、`percent` | 便捷写法 | 分别选择堆叠、百分比堆叠；建议直接用 `arrangement` 表达意图        |
 
 <ComponentPreview
+  mode="showcase"
   files={['bar-series', 'bar-series.preview.tsx', 'bar-grouped.data.ts']}
   controls={{ name: 'bar-grouped' }}
   size="lg"
-  caption="对比同一系列排列在笛卡尔与极坐标中的矩形柱和径向柱。"
   defaultSourceFile="bar-series.preview.tsx"
 />
 
+## 扩展用法
+
 ### 连续区间
 
-`x0` / `x1` 是连续 extent 写法。直方图先用 bin transform 产出 `binStart` / `binEnd`，IntervalMark 再把它们作为 x 区间；比例宽度模式则用 `width` 按 GDP 分配连续区间宽度。
+直方图先通过 bin 变换生成箱的起点、终点和计数，再用 `x0`、`x1`、`y` 绑定这些字段。IntervalMark 绘制已有区间，分箱工作由变换完成。
 
-在极坐标中，连续 x 区间成为连续角区间，y 仍表达径向长度。通过 control 切换区间来源，箱数只在直方图模式下显示；左右、上下留白继续作用于对应的连续比例尺。
+如果宽度本身代表数据，可用 `width` 按行顺序累加非负权重。例如宽度对应 GDP、高度对应成本，各行会占据相邻的连续区间。切换示例的区间来源，可以比较显式端点与比例宽度；极坐标中它们都映射为角区间。
+
+| 属性        | 含义     | 说明                                                      |
+| ----------- | -------- | --------------------------------------------------------- |
+| `x0`、`x1`  | 区间端点 | 必须成对提供，展开为 `bounds.x` 的 `extent`               |
+| `y`         | 区间高度 | 直方图中通常绑定计数或聚合结果                            |
+| `width`     | 比例宽度 | 按行累积；负值报错，不与 `x0` / `x1` 混用                 |
+| `transform` | 数据准备 | 可在图元局部执行变换；示例用 PlotTransform 在图层之前分箱 |
 
 <ComponentPreview
+  mode="showcase"
   files={[
     'interval-histogram',
     'interval-histogram.preview.tsx',
@@ -85,130 +210,108 @@ IntervalMark 是底层 cell mark：它只负责把每行数据变成一个正交
     'bar-variable-width.data.ts',
   ]}
   size="lg"
-  caption="切换模式比较 extent 与 proportional，再切换坐标系观察连续区间如何映射到角向。"
   defaultSourceFile="interval-histogram.preview.tsx"
 />
 
-### 二维 cell
+### 二维区间
 
-`bounds` 用来覆盖默认推断。热图需要两个方向都是 band，因此显式写 `bounds={{ x: { kind: 'band' }, y: { kind: 'band' } }}`；把 y 改为 `full` 时，每个 x band 会占满另一维。
+`bounds` 显式指定每个位置维度如何产生区间。以下五种形式描述边界来源：
 
-同一套二维区间在笛卡尔坐标中形成矩形网格，在极坐标中形成环形 cell。关闭颜色映射只会改成统一填充，不会改变 cell 边界。
+| `kind`         | 含义     | 说明                                      |
+| -------------- | -------- | ----------------------------------------- |
+| `band`         | 分类槽   | 取该类别的完整带宽，可用 `group` 分成子带 |
+| `span`         | 基线到值 | 从 `baseline`（默认 0）延伸到位置字段值   |
+| `extent`       | 显式端点 | 用 `from` / `to` 字段指定上下界           |
+| `proportional` | 累计权重 | 用 `field` 指定非负宽度字段，按行累积     |
+| `full`         | 完整范围 | 覆盖该位置维度的映射范围                  |
+
+热图用 `bounds={{ x: { kind: 'band' }, y: { kind: 'band' } }}` 构成二维分类网格。示例把第二维改为 `full` 后，每个区间占满另一维；多行具有相同第一维时，这些区域会重叠。切换极坐标，可观察矩形网格变成环形网格。
+
+| 属性     | 含义         | 说明                                         |
+| -------- | ------------ | -------------------------------------------- |
+| `bounds` | 各维区间来源 | 显式覆盖默认的 x band / y span 推断          |
+| `x`、`y` | 位置字段     | 热图中都绑定分类字段                         |
+| `color`  | 数值着色     | 将单元格的数值映射为颜色；关闭后使用统一填充 |
 
 <ComponentPreview
+  mode="showcase"
   files={['rect-bounds', 'rect-bounds.preview.tsx', 'rect-heatmap.data.ts']}
   size="lg"
-  caption="切换坐标系观察 band × band 如何从矩形网格投影为环形网格。"
   defaultSourceFile="rect-bounds.preview.tsx"
 />
 
 ### 饼图与环图
 
-`angle` 是饼图 / 环图的便捷入口：它会把份额字段累积成角向 extent，半径方向使用 full。环图不是新的 mark，只是 polar 坐标系配置了 `innerRadius`。
+`angle` 绑定份额字段，按行累积为角区间，半径方向占满范围。在极坐标上设置 `innerRadius` 即可形成环图；它是坐标配置，不是 IntervalMark 属性。
 
-这个入口只在极坐标下有效，因此不提供无效的坐标切换。`padAngle` 留出真实角向间隔；`pull` 沿扇区中线静态外移。下面用饼图、环图和突出扇区三个 preset 共享同一个场景。
+`padAngle` 在相邻扇区之间留出角度间隔，`pull` 沿扇区中线向外平移。示例提供饼图、环图和突出扇区预设，也可以直接调整各项参数。
+
+| 属性       | 含义     | 说明                                     |
+| ---------- | -------- | ---------------------------------------- |
+| `angle`    | 份额字段 | 饼图 / 环图便捷入口，使用极坐标          |
+| `padAngle` | 角向间隔 | 单位为度；在区域投影之前收缩角区间       |
+| `pull`     | 外拉距离 | 非负绘图单位，可绑定字段或常量           |
+| `label`    | 扇区标签 | 使用节点标签配置，绑定来源字段或指定内容 |
 
 <ComponentPreview
+  mode="showcase"
   files={['interval-sector', 'interval-sector.preview.tsx', 'interval-sector.data.ts']}
   size="lg"
-  caption="angle 固定使用极坐标；调整内半径即可在饼图与环图之间切换。"
   defaultSourceFile="interval-sector.preview.tsx"
 />
 
-## 技术原理
+## 错误与限制
 
-<ComponentAlert
-  type="tip"
-  title="上手阶段可跳过本节"
-  description="需要排查便捷属性如何变成 bounds、分组与堆叠顺序，或不同坐标系如何生成 cell 几何时再回来读。"
-/>
+- `x0` / `x1` 必须配对，且不能与横向柱或系列排列混用。
+- `width` 不能与显式 `bounds`、`x0` / `x1` 或系列排列配置混用。复杂排布可以预计算端点，再使用 `extent`。
+- `angle` 不能与 `x` / `y`、`x0` / `x1`、`width`、`direction`、堆叠或 `bounds` 混用。
+- 显式 `bounds` 不与 `direction` 混用；直接通过各维边界表达方向。堆叠需要 `group` 或 `series` 标识各段，`normalize-stack` 不接受额外 `stackOffset`。
+- `interpolation` 和 `pull` 的显式配置仅支持 polar2D。自定义坐标系必须提供 `projectCell` 才能绘制区间。
+- 位置映射无效或投影几何不可渲染时会跳过；`extent` 的端点字段必须是有限数值，否则报错。比例宽度为负、累计溢出或外拉距离为负 / 非有限数也会报错。
+- `resolveLabel` 是运行时回调，需要图元 `id`，不会序列化到 IR。区域形状由投影生成，不能把 Node 的全部几何能力当作 IntervalMark 属性使用。
 
-`<IntervalMark>` 不是“柱图专用组件”。它把每行数据描述成各位置角色上的区间，再要求当前坐标帧通过 `projectCell` 把这些区间投影成矩形、扇区或 contour；不提供 cell 投影能力的坐标系会直接报错。
+## 实现原理
 
-下面这条主链只关注 IntervalMark 的职责边界：便捷属性或显式 `bounds` 先归一为各 role 的区间，再按比例尺输出构造逻辑 Cell。真正的几何形态由当前坐标帧决定。
+### 区间解析
 
-<ComponentPreview files="interval-cell-flow" hideCode size="sm" />
+三种图元对坐标系的使用范围不同。PointMark 主要投影定位，点的形状和尺寸仍在绘图空间中表达；方向可另行对齐坐标系。PathMark 投影连接路径，连续角度下的线可以沿极坐标弯曲。IntervalMark 投影整个区域，包括它的边界和内部：矩形区间可以变成扇区。PathMark 表达连接线，IntervalMark 表达区间面；闭合路径也可以填充，但区域来源仍由路径的闭合方式决定。
 
-`series` / `group` 与 `arrangement` 会在进入这条主链前准备并排、堆叠或百分比堆叠所需的字段与 bounds。进入 `projectCell` 后，cartesian 通常得到 rect，polar 通常得到 sector，自定义坐标帧也复用同一个 Cell 投影契约；最终几何才装配成 core `Node` 图层。
+<ComponentPreview files="interval-resolution-flow" hideCode type="flow" size="md" />
 
-在 polar2D 下，cell 边界默认继承 coordinate 的 `interpolation`：`polar` 生成弧形 sector，`chord` 生成直边 contour。IntervalMark 的显式覆盖只改变当前图元，不会改动网格或兄弟图元；非 polar2D 下显式配置会直接报错。
+便捷输入先归一化：普通柱得到分类 `band` 与数值 `span`；`x0` / `x1` 变成 `extent`；`angle` 生成累计角度端点与另一维的 `full`。系列排列会准备分组子带或堆叠变换。随后按比例尺把每行各维的边界组成 Cell，即“每个位置角色对应一对起止值”的逻辑区域。
 
-`padAngle` 先收缩逻辑 Cell 的角向区间，`pull` 再沿中角平移局部投影中心，最后才按有效 interpolation 生成 sector 或 contour；二者不会改写原始数据。
+坐标帧的 `projectCell` 接收 Cell，返回矩形、扇区或轮廓几何。IntervalMark 再把几何装配成 Node，附加样式、数据标签和可引用锚点，交给后续编译与渲染。
+
+下面跟踪同一个区间，按三个几何阶段理解投影。上排是笛卡尔坐标的矩形，下排是极坐标的环形扇区；各列的区间端点保持不变。
+
+<ComponentPreview files="interval-projection" hideCode type="illustration" size="xxl" />
+
+1. **确认坐标轴法向**：在各区间端点处，确定垂直于轴切线的局部方向。橙色箭头表示 x / 角度轴的法向，蓝色箭头表示 y / 半径轴的法向。
+2. **沿辅助边界确定区域**：笛卡尔坐标的辅助边界是水平线和竖直线，围出矩形。极坐标的角度端点对应径向射线，半径端点对应同心圆弧，围出环形扇区。半径轴的法向只给出圆弧在该处的切向，不能一直沿直线延伸。
+3. **在区域内绘制**：确定区域后应用填充、描边与圆角。图中保留原始辅助边界，便于比较圆角如何修饰转角；区间端点没有改变。描边以边界为中心，因此较粗描边仍可能伸到区域外。
+
+这些辅助线用于解释几何关系。当前实现直接用 Cell 的区间端点计算矩形或扇区，并不实际构造法向或求辅助线交点；圆角由投影后生成的形状处理。下排采用 `polar` 弧形边界。
 
 <SourceLinks
   sources={[
-    {
-      label: '把 angle 累积为极坐标区间',
-      path: 'packages/viz/plot-vanilla/src/normalize/plot/member-normalizer.ts',
-    },
-    {
-      label: '解析连续区间与比例宽度的角色约束',
-      path: 'packages/viz/plot-vanilla/src/normalize/plot/member-normalizer.ts',
-    },
-    {
-      label: '把并排或堆叠配置展开为 transform 与 bounds',
-      path: 'packages/viz/plot-vanilla/src/normalize/plot/member-normalizer.ts',
-    },
-    {
-      label: '解析各 role 的有效区间来源',
-      path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
-      startLine: 48,
-      endLine: 52,
-    },
-    {
-      label: '把 role 区间构造成逻辑 Cell',
-      path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
-      startLine: 289,
-      endLine: 312,
-    },
-    {
-      label: '自定义坐标按 role scale 构造通用 Cell',
-      path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
-      startLine: 324,
-      endLine: 424,
-    },
-    {
-      label: '通过 projectCell 得到 Cell 几何',
-      path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
-      startLine: 486,
-      endLine: 510,
-    },
-    {
-      label: '把 Cell 几何装配为 Core Node 图层',
-      path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
-      startLine: 530,
-      endLine: 591,
-    },
+    { label: '便捷属性与系列排列归一化', path: 'packages/viz/plot-vanilla/src/normalize/plot/member-normalizer.ts' },
+    { label: '区间解析、投影与 Node 下沉', path: 'packages/viz/plot/src/providers/mark/features/interval.ts' },
   ]}
 />
 
 ## API 参考
 
-下面只列 IntervalMark 特有或在本页重新定义语义的属性。字段与常量绑定见[通道绑定](/viz/plot/channel/binding)，局部 `transform` 与图层属性见[变换](/viz/plot/transform)，坐标视图相关属性见[坐标系](/viz/plot/coordinate)。填充、描边、透明度、圆角、字体和阴影等共享外观沿用 [Node 视觉样式 API](/kernel/components/node/reference#irnodestyle--nodestyleschema)，标签的位置、距离、引线与旋转沿用[节点标签](/kernel/components/node/labels)；这里不重复。
+`IntervalMarkProps` 从 `@retikz/plot-react` 导出，复用 `@retikz/plot-vanilla` 的 `InputPlotIntervalMark`。下表按用途分组；`—` 表示声明没有字段级默认值，缺省行为见上文。Source IR 的字段与约束复用[图元契约参考](/viz/plot/reference/mark)中的 `IntervalMarkSchema`。
 
-| 属性                  | 类型                                                                | 默认值                                                                                                                  | 描述                                                                                                                                     |
-| --------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `id?`                 | `string`                                                            | —                                                                                                                       | mark 句柄；使用 `resolveLabel` 时必填                                                                                                    |
-| `x?` / `y?`           | `IntervalMarkProps['x']`                                            | —                                                                                                                       | 类别与数值位置角色；`direction` 决定哪个角色作为值轴                                                                                     |
-| `direction?`          | `'vertical'` / `'horizontal'`                                       | `vertical`                                                                                                              | 柱方向；水平模式把 `x` 作为数值、`y` 作为类别                                                                                            |
-| `x0?` / `x1?`         | `IntervalMarkProps['x0']`                                           | —                                                                                                                       | 连续 x 区间的下界与上界，必须成对使用                                                                                                    |
-| `angle?`              | `IntervalMarkProps['angle']`                                        | —                                                                                                                       | polar 饼 / 环的份额字段，按行累计为角向区间                                                                                              |
-| `width?`              | `IntervalMarkProps['width']`                                        | —                                                                                                                       | 按行顺序推导连续比例区间的宽度字段                                                                                                       |
-| `color?`              | `IntervalMarkProps['color']`                                        | `series`                                                                                                                | cell 颜色字段；省略时复用系列字段                                                                                                        |
-| `series?` / `group?`  | `IntervalMarkProps['series']`                                       | —                                                                                                                       | 系列字段与多系列排布字段                                                                                                                 |
-| `arrangement?`        | `'dodge'` / `'stack'` / `'normalize-stack'`                         | —                                                                                                                       | 多系列并排、堆叠或百分比堆叠策略                                                                                                         |
-| `stackOffset?`        | `'zero'` / `'normalize'` / `'diverging'` / `'center'` / `'overlap'` | `zero`                                                                                                                  | 堆叠基线策略                                                                                                                             |
-| `stack?` / `percent?` | `boolean`                                                           | `false`                                                                                                                 | 堆叠和百分比堆叠便捷写法                                                                                                                 |
-| `bounds?`             | `IntervalMarkProps['bounds']`                                       | —<br />按 role 推断<br />每个 bound 必填<br />—<br />`0`<br />`extent` 必填<br />`extent` 必填<br />`proportional` 必填 | 显式声明各位置 role 的区间来源；完整的 `IRPlotIntervalBounds` 是 `@retikz/plot` 的 IR 类型，React 输入使用 `IntervalMarkProps['bounds']` |
-| `interpolation?`      | <ApiValues name="PolarInterpolation" />                             | coordinate 默认                                                                                                         | polar2D cell 边界的局部覆盖；`polar` 生成弧边，`chord` 生成直边 contour                                                                  |
-| `padAngle?`           | `number`                                                            | `0`                                                                                                                     | 极坐标 cell 在 sector 或 chord contour 投影前应用的角向间隔                                                                              |
-| `pull?`               | `IntervalMarkProps['pull']`                                         | `0`                                                                                                                     | 极坐标 cell 沿中角方向的非负偏移；sector 与 chord contour 均支持，可按字段或常量驱动                                                     |
-| `label?`              | `IntervalMarkProps['label']`                                        | —                                                                                                                       | 把字段内容挂到每个 cell 的 `Node.label`                                                                                                  |
-| `resolveLabel?`       | `(row: ExternalRow) => string`                                      | —                                                                                                                       | 运行时标签函数；不进入 IR，必须同时提供 `id`                                                                                             |
-| `anchorId?`           | `IRPlotAnchorId`                                                    | —                                                                                                                       | 为每个有效 cell Node 生成稳定 id                                                                                                         |
+{/* @include viz/plot/mark/interval/generated */}
 
-## 相关
+## 延伸阅读
 
-- [PathMark](/viz/plot/mark/path) —— 绘制区间上沿或面积边界
-- [变换](/viz/plot/transform) —— bin、stack 与其它数据准备流程
-- [坐标系](/viz/plot/coordinate) —— cartesian、polar 与自定义 frame 如何投影 cell
+<LinkedSections
+  items={[
+    { title: 'PointMark · 点图元', description: '在区间或数据位置叠加节点。', url: '/viz/plot/mark/point' },
+    { title: 'PathMark · 路径图元', description: '连接数据位置，绘制折线和轮廓。', url: '/viz/plot/mark/path' },
+    { title: '变换', description: '了解分箱、聚合与堆叠的数据准备。', url: '/viz/plot/transform' },
+    { title: '坐标系', description: '配置笛卡尔与极坐标的投影。', url: '/viz/plot/coordinate' },
+  ]}
+/>

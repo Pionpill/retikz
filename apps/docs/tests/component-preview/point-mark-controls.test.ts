@@ -4,22 +4,26 @@ import {
   getPreviewControlFields,
   resolveVisiblePreviewControlSections,
 } from '@/modules/docs/components/component-preview/controls';
-import { previewControlContract as cartesianJitterContract } from '@/modules/docs/contents/viz/plot/mark/point/point-jitter-cartesian.controls';
-import { previewControlContract as cartesianJitterEnglishContract } from '@/modules/docs/contents/viz/plot/mark/point/point-jitter-cartesian.en.controls';
-import { previewControlContract as polarJitterContract } from '@/modules/docs/contents/viz/plot/mark/point/point-jitter-polar.controls';
-import { previewControlContract as polarJitterEnglishContract } from '@/modules/docs/contents/viz/plot/mark/point/point-jitter-polar.en.controls';
+import { previewControlContract as cartesianJitterContract } from '@/modules/docs/contents/viz/plot/mark/point/point-jitter.controls';
+import { createPreviewControlContract as cartesianJitterEnglishContractFactory } from '@/modules/docs/contents/viz/plot/mark/point/point-jitter.controls';
 import {
   pointNodeShapeOf,
   previewControlContract as nodeShapeContract,
 } from '@/modules/docs/contents/viz/plot/mark/point/point-node-shape.controls';
-import { previewControlContract as nodeShapeEnglishContract } from '@/modules/docs/contents/viz/plot/mark/point/point-node-shape.en.controls';
+import { createPreviewControlContract as nodeShapeEnglishContractFactory } from '@/modules/docs/contents/viz/plot/mark/point/point-node-shape.controls';
 import { previewControlContract as positionContract } from '@/modules/docs/contents/viz/plot/mark/point/point-position.controls';
-import { previewControlContract as positionEnglishContract } from '@/modules/docs/contents/viz/plot/mark/point/point-position.en.controls';
+import { createPreviewControlContract as positionEnglishContractFactory } from '@/modules/docs/contents/viz/plot/mark/point/point-position.controls';
 import { previewControlContract as styleContract } from '@/modules/docs/contents/viz/plot/mark/point/point-style.controls';
-import { previewControlContract as styleEnglishContract } from '@/modules/docs/contents/viz/plot/mark/point/point-style.en.controls';
+import { createPreviewControlContract as styleEnglishContractFactory } from '@/modules/docs/contents/viz/plot/mark/point/point-style.controls';
 import { previewControlContract as textContract } from '@/modules/docs/contents/viz/plot/mark/point/point-text.controls';
-import { previewControlContract as textEnglishContract } from '@/modules/docs/contents/viz/plot/mark/point/point-text.en.controls';
+import { createPreviewControlContract as textEnglishContractFactory } from '@/modules/docs/contents/viz/plot/mark/point/point-text.controls';
 import type { PreviewControlContract } from '@/modules/docs/preview';
+
+const cartesianJitterEnglishContract = cartesianJitterEnglishContractFactory('en');
+const nodeShapeEnglishContract = nodeShapeEnglishContractFactory('en');
+const positionEnglishContract = positionEnglishContractFactory('en');
+const styleEnglishContract = styleEnglishContractFactory('en');
+const textEnglishContract = textEnglishContractFactory('en');
 
 const controlIdsOf = (contract: PreviewControlContract): Array<string> =>
   getPreviewControlFields(contract.controls).map(field => field.id);
@@ -40,11 +44,10 @@ const presetShapeOf = (contract: PreviewControlContract) =>
   contract.presets?.map(preset => ({ id: preset.id, values: preset.values }));
 
 describe('PointMark controls 渐进试验场', () => {
-  it('六个 playground 的数据区默认收起', () => {
+  it('五个 playground 的数据区默认收起', () => {
     for (const contract of [
       positionContract,
       cartesianJitterContract,
-      polarJitterContract,
       styleContract,
       textContract,
       nodeShapeContract,
@@ -53,8 +56,10 @@ describe('PointMark controls 渐进试验场', () => {
     }
   });
 
-  it('六个 playground 分别暴露足以形成明显差异的公开能力', () => {
+  it('五个 playground 分别暴露足以形成明显差异的公开能力', () => {
     expect(controlIdsOf(positionContract)).toEqual([
+      'point-position-minimumSize',
+
       'point-position-coordinate',
       'point-position-x-field',
       'point-position-y-field',
@@ -62,6 +67,11 @@ describe('PointMark controls 渐进试验场', () => {
       'point-position-size-mode',
     ]);
     expect(controlIdsOf(styleContract)).toEqual([
+      'point-style-dotted',
+      'point-style-dashPattern',
+      'point-style-blendMode',
+      'point-style-zIndex',
+
       'point-style-coordinate',
       'point-paint-mode',
       'point-fill',
@@ -75,22 +85,22 @@ describe('PointMark controls 渐进试验场', () => {
       'point-shadow',
     ]);
     expect(controlIdsOf(cartesianJitterContract)).toEqual([
-      'point-jitter-cartesian-span-kind',
-      'point-jitter-cartesian-ratio',
-      'point-jitter-cartesian-range',
-      'point-jitter-cartesian-distribution',
-      'point-jitter-cartesian-sigma',
-      'point-jitter-cartesian-seed',
-    ]);
-    expect(controlIdsOf(polarJitterContract)).toEqual([
-      'point-jitter-polar-scale',
-      'point-jitter-polar-ratio',
-      'point-jitter-polar-range',
-      'point-jitter-polar-distribution',
-      'point-jitter-polar-sigma',
-      'point-jitter-polar-seed',
+      'point-jitter-coordinate',
+      'point-jitter-span-kind',
+      'point-jitter-ratio',
+      'point-jitter-range',
+      'point-jitter-distribution',
+      'point-jitter-sigma',
+      'point-jitter-seed',
     ]);
     expect(controlIdsOf(textContract)).toEqual([
+      'point-text-align',
+      'point-text-lineHeight',
+      'point-text-maxTextWidth',
+      'point-text-textField',
+      'point-text-displayFormat',
+      'point-text-resolveLabel',
+
       'point-text-coordinate',
       'point-text-mode',
       'point-text-color',
@@ -103,6 +113,13 @@ describe('PointMark controls 渐进试验场', () => {
       'point-text-dy',
     ]);
     expect(controlIdsOf(nodeShapeContract)).toEqual([
+      'point-node-show-relations',
+      'point-node-shape-cornerRadius',
+      'point-node-shape-scale',
+      'point-node-shape-padding',
+      'point-node-shape-margin',
+      'point-node-shape-boundary',
+
       'point-node-coordinate',
       'point-node-shape',
       'point-node-size',
@@ -116,7 +133,6 @@ describe('PointMark controls 渐进试验场', () => {
     for (const [chinese, english] of [
       [positionContract, positionEnglishContract],
       [cartesianJitterContract, cartesianJitterEnglishContract],
-      [polarJitterContract, polarJitterEnglishContract],
       [styleContract, styleEnglishContract],
       [textContract, textEnglishContract],
       [nodeShapeContract, nodeShapeEnglishContract],
@@ -131,37 +147,23 @@ describe('PointMark controls 渐进试验场', () => {
   it('直角坐标只显示当前宽度单位对应的 span 控件', () => {
     const visibleIds = (spanKind: string) =>
       resolveVisiblePreviewControlSections(cartesianJitterContract.controls.sections, {
-        'point-jitter-cartesian-span-kind': spanKind,
+        'point-jitter-span-kind': spanKind,
       }).flatMap(section => section.controls.map(control => control.id));
 
-    expect(visibleIds('ratio')).toContain('point-jitter-cartesian-ratio');
-    expect(visibleIds('ratio')).not.toContain('point-jitter-cartesian-range');
-    expect(visibleIds('range')).toContain('point-jitter-cartesian-range');
-    expect(visibleIds('range')).not.toContain('point-jitter-cartesian-ratio');
-  });
-
-  it('极坐标只显示当前角度类型对应的散布宽度控件', () => {
-    const visibleIds = (scale: string) =>
-      resolveVisiblePreviewControlSections(polarJitterContract.controls.sections, {
-        'point-jitter-polar-scale': scale,
-      }).flatMap(section => section.controls.map(control => control.id));
-
-    expect(visibleIds('discrete')).toContain('point-jitter-polar-ratio');
-    expect(visibleIds('discrete')).not.toContain('point-jitter-polar-range');
-    expect(visibleIds('continuous')).toContain('point-jitter-polar-range');
-    expect(visibleIds('continuous')).not.toContain('point-jitter-polar-ratio');
-    expect(visibleIds('discrete')).toContain('point-jitter-polar-seed');
-    expect(visibleIds('continuous')).toContain('point-jitter-polar-seed');
+    expect(visibleIds('ratio')).toContain('point-jitter-ratio');
+    expect(visibleIds('ratio')).not.toContain('point-jitter-range');
+    expect(visibleIds('range')).toContain('point-jitter-range');
+    expect(visibleIds('range')).not.toContain('point-jitter-ratio');
   });
 
   it('normal 分布才显示 sigma 控件', () => {
     const visibleIds = (distribution: string) =>
       resolveVisiblePreviewControlSections(cartesianJitterContract.controls.sections, {
-        'point-jitter-cartesian-distribution': distribution,
+        'point-jitter-distribution': distribution,
       }).flatMap(section => section.controls.map(control => control.id));
 
-    expect(visibleIds('uniform')).not.toContain('point-jitter-cartesian-sigma');
-    expect(visibleIds('normal')).toContain('point-jitter-cartesian-sigma');
+    expect(visibleIds('uniform')).not.toContain('point-jitter-sigma');
+    expect(visibleIds('normal')).toContain('point-jitter-sigma');
   });
 
   it('Node 参数只在对应形状下显示，并生成真实参数化边界', () => {

@@ -473,13 +473,13 @@ export const CustomScaleSchema = looseObject({
   type: PlotScaleTypeSchema.refine(type => !BUILTIN_SCALE_TYPES.has(type), {
     message: 'custom scale type must not collide with a built-in scale type',
   }).describe(
-    'Discriminator: custom scale op type; any non-blank, non-built-in identifier registered through options.scaleDefinitions',
+    'Discriminator: custom scale op type; any non-blank, non-built-in identifier registered through options.definitions.scales',
   ),
   name: NonBlankStringSchema.describe(
     'Scale name; referenced by a coordinate role or a non-positional channel scale ref',
   ),
 }).describe(
-  'Custom scale op: type is any non-built-in identifier plus a name; its config is validated at lowering time against the matching ScaleDefinition supplied via options.scaleDefinitions',
+  'Custom scale op: type is any non-built-in identifier plus a name; its config is validated at lowering time against the matching ScaleDefinition supplied via options.definitions.scales',
 );
 
 /** 校验内置或自定义比例尺操作 */

@@ -3,8 +3,8 @@ import type { ValueOf } from '@retikz/foundation';
 /**
  * mark 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'point'` 同样可用）
  * @description discriminated union 判别字段，成员里写 z.literal(BuiltinPlotMark.x)（不用 z.enum）。
- *   5 个抽象 mark = 3 个维度 mark（point / path / interval，描述数据在坐标空间的 k 维几何）
- *   + 1 个特殊 mark（reference，复用维度 mark 投影但语义不等同）
+ *   4 个抽象 mark = 3 个维度 mark（point / path / interval，描述数据在坐标空间的 k 维几何）
+ *   + 1 个关系 mark（relation，连接 source / target）
  */
 export const BuiltinPlotMark = {
   /** 维度 mark / 0D：坐标元组上的实体 / glyph / 文本 anchor（散点 + 文本标签） */
@@ -16,8 +16,6 @@ export const BuiltinPlotMark = {
   Interval: 'interval',
   /** 特殊 mark / relation：source→target 关系路径，降低为 core Path */
   Relation: 'relation',
-  /** 特殊 mark / reference：固定位置 / 区间的参考约束（阈值线 / 容差带） */
-  Reference: 'reference',
 } as const;
 
 /**
@@ -100,12 +98,6 @@ export const RelationOrthogonalLabelStep = {
   Last: 'last',
 } as const;
 
-/** reference mark 显式形态 */
-export const ReferenceMarkKind = {
-  /** 使用所有坐标 role 的上下界生成区域 */
-  Region: 'region',
-} as const;
-
 /**
  * interval 单维区间来源关键字（暴露给用户；裸 `'band'` 等同样可用）
  * @description interval 各位置 role 的区间 [lo,hi] 怎么来：band（band 宽）/ span（baseline→值）/ extent（两字段区间）/ full（满域）
@@ -160,6 +152,3 @@ export type RelationRoutingKind = ValueOf<typeof RelationRoutingKind>;
 
 /** relation 正交路由标签落点策略取值 */
 export type RelationOrthogonalLabelStep = ValueOf<typeof RelationOrthogonalLabelStep>;
-
-/** reference mark 显式形态取值 */
-export type ReferenceMarkKind = ValueOf<typeof ReferenceMarkKind>;

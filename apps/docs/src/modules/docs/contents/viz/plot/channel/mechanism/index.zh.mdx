@@ -51,7 +51,7 @@ Plot 下沉时先建立通道注册表，收集内置的颜色、大小、形状
 <ComponentAlert
   type="tip"
   title="自定义通道复用同一处理链"
-  description="宿主传入的 channelDefinitions 会在内置定义后合并。自定义名称不能为空、不能覆盖内置名，也不能重复；未注册的扩展绑定会报错。其余解析和交付步骤与内置通道共用，具体写法见自定义通道文档。"
+  description="宿主传入的 definitions.channels 会在内置定义后合并。自定义名称不能为空、不能覆盖内置名，也不能重复；未注册的扩展绑定会报错。其余解析和交付步骤与内置通道共用，具体写法见自定义通道文档。"
 />
 
 <SourceLinks
@@ -180,8 +180,8 @@ Plot 下沉时先建立通道注册表，收集内置的颜色、大小、形状
     {
       label: '图层生成后的 Scope 交付',
       path: 'packages/viz/plot/src/providers/mark/registry.ts',
-      startLine: 67,
-      endLine: 102,
+      startLine: 59,
+      endLine: 95,
     },
   ]}
 />
@@ -247,7 +247,6 @@ Plot 的位置编码使用 `x / y / z`；极坐标改变这些角色的解释方
   items={[
     { title: '通道绑定', description: '回查字段与常量的输入形式。', url: '/viz/plot/channel/binding' },
     { title: '自定义通道', description: '定义并注入一个可运行的通道。', url: '/viz/plot/channel/custom-channel' },
-    { title: '自定义图元', description: '了解图元如何声明和消费通道。', url: '/viz/plot/mark/custom-mark' },
     { title: 'API 参考', description: '查询通道定义、注册与解析交付的公开契约', url: '/viz/plot/channel/reference' },
   ]}
 />

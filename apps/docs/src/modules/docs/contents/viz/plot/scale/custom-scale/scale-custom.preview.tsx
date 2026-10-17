@@ -41,9 +41,10 @@ export const ScaleCustomPreview = (values: ScaleCustomPreviewValues) => {
     <Plot
       spec={spec}
       data={{ pts: scaleCustomRows }}
-      scaleDefinitions={[easePositionScale, brandColorScale]}
+
       width={420}
       height={220}
+      definitions={{ scales: [easePositionScale, brandColorScale] }}
     />
   );
 };

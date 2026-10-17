@@ -20,6 +20,10 @@ export type DimensionRole = string;
  *   `type` 保持 definition 注册的真实判别串；非有限值返回 null（跳过该点）
  */
 export type CoordinateFrame = {
+  /** 是否支持绘图区背景、边框和区域锚点
+   * @default true
+   */
+  supportsPlotArea?: boolean;
   /** 坐标系注册 type；内置用其判别串（如 `cartesian2D`），自定义用自己的 type（如 `bridge` / `sine`） */
   type: string;
   /** 位置角色序（消费哪些 mark 通道，按序喂 projectRoles） */
@@ -51,10 +55,10 @@ export type CoordinateFrame = {
    */
   roleScales?: Partial<Record<DimensionRole, PositionScale>>;
   /**
-   * 某角色轴曲线在某点的局部标架（可选）：origin + 切向 ∂γ/∂role。
-   * 曲线轴优先用它取精确切向；不回传 → guide 对 projectRoles 数值差分回落（现状行为）
+   * 映射后角色参数递增时的屏幕切向；与 mapRoles / projectMappedRoles 同源
+   * @description 返回有限非零向量；奇点或尖点返回 null。显式节点定向要求提供此能力，Guide 缺省仍可数值求切向
    */
-  frameAlong?: (role: DimensionRole, values: ReadonlyArray<unknown>) => AxisFrame | null;
+  tangentAt?: (role: DimensionRole, mappedRoles: ReadonlyArray<number>) => Position | null;
   /**
    * 正交 cell → CellGeometry（可选）：实现了才支持 cell 类 mark（interval / sector / rect）
    * @description 曲线 / 自定义 frame 自行把 cell 四边经自身几何投影密采样成 contour（用引擎 helper densifyCellContour）；
@@ -103,6 +107,8 @@ export type PolarCoordinateFrame = {
   projectMappedRoles: (values: ReadonlyArray<number>) => Position | null;
   /** 极坐标 role-space containment 边界度量 */
   placementBoundary: NonNullable<CoordinateFrame['placementBoundary']>;
+  /** 映射后角色递增时的屏幕切向 */
+  tangentAt?: CoordinateFrame['tangentAt'];
   /** 把已映射的极坐标对（theta 度, radius user units）换算成屏幕点 */
   projectPolar: (thetaDeg: number, radius: number) => Position | null;
   /** 正交 cell -> 环扇或直弦 contour；options 只覆盖本次投影，不修改共享 frame */
@@ -113,16 +119,4 @@ export type PolarCoordinateFrame = {
 export type CellProjectableCoordinate = CoordinateFrame & {
   /** 将各角色的尺度输出区间投影为可绘制单元几何 */
   projectCell: (cell: Cell) => CellGeometry;
-};
-
-/**
- * 某角色轴曲线在某参数点的局部标架：原点 + 切向，均在屏幕空间
- * @description 固定其余角色、只让某 role 变化得到一条 1D 轴曲线；`tangent`
- *   是屏幕空间原始幅值，消费方需要方向时自行归一化
- */
-export type AxisFrame = {
-  /** 该点屏幕坐标 */
-  origin: Position;
-  /** 沿该角色轴曲线的切向 */
-  tangent: [number, number];
 };

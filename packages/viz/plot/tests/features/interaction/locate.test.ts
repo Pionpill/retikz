@@ -21,7 +21,7 @@ import { measureLabel } from '../../helpers/text-measurement';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const opts: LowerPlotsOptions = { width: 480, height: 300 };
+const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
 
 const doubleDefinition = defineTransform({
   kind: 'double',
@@ -178,7 +178,7 @@ const PIE_ROWS = [
 ];
 
 /** 正方形画布（sector parity 用，对齐 sector.test.ts：center=[200,200] outerRadius=200） */
-const squareOpts: LowerPlotsOptions = { width: 400, height: 400 };
+const squareOpts: LowerPlotsOptions = { layout: { width: 400, height: 400 } };
 
 // =====================================================================
 // Happy path
@@ -350,9 +350,9 @@ describe('datum locator — happy path', () => {
     expect(right?.meta).toMatchObject({ markIndex: 0, series: 'A', facet: { id: 'panel', column: 'right' } });
     expect(left?.position).not.toEqual(right?.position);
     expect(left?.position[1]).toBeGreaterThanOrEqual(0);
-    expect(left?.position[1]).toBeLessThanOrEqual(opts.height ?? 300);
+    expect(left?.position[1]).toBeLessThanOrEqual(opts.layout?.height ?? 300);
     expect(right?.position[1]).toBeGreaterThanOrEqual(0);
-    expect(right?.position[1]).toBeLessThanOrEqual(opts.height ?? 300);
+    expect(right?.position[1]).toBeLessThanOrEqual(opts.layout?.height ?? 300);
   });
 });
 
@@ -689,9 +689,9 @@ describe('datum locator transform registry parity', () => {
       ],
     };
     const options: LowerPlotsOptions = {
+      definitions: { transforms: [doubleDefinition] },
+      implementations: { transforms: [doubleDefinitionImplementation] },
       ...opts,
-      transformDefinitions: [doubleDefinition],
-      transformImplementations: [doubleDefinitionImplementation],
     };
     const nodes = datumNodes(firstLayer(spec, datasets, options));
     const locator = createPlotLocator(spec, datasets, { ...options, environment: {} });
@@ -764,10 +764,10 @@ describe('datum locator transform registry parity', () => {
       ],
     };
     const locator = createPlotLocator(spec, datasets, {
+      definitions: { transforms: [groupSumDefinition] },
+      implementations: { transforms: [groupSumDefinitionImplementation] },
       environment: {},
       ...opts,
-      transformDefinitions: [groupSumDefinition],
-      transformImplementations: [groupSumDefinitionImplementation],
     });
 
     expect((locator.datum(0)!.meta as { sourceIndices?: Array<number> }).sourceIndices).toEqual([0, 1]);

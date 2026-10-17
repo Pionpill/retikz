@@ -6,6 +6,7 @@ import { mergeMarkProperties, markSlotsOf, resolvePointMark } from '../shared';
 import { BubbleChartMarkSchema } from './schema';
 
 const bubbleDefaultProperties: JsonObject = {
+  autoPadding: 'point-aware',
   opacity: { fill: 0.7 },
   strokeWidth: 1,
 };

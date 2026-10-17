@@ -9,7 +9,6 @@ export const LINE_INTERRUPTION_CONNECT_NULLS_ID = 'line-interruption-connect-nul
 /** 缺失值 playground 的其它稳定控件 id */
 export const LINE_INTERRUPTION_CONTROL_IDS = {
   coordinate: 'path-interruption-coordinate',
-  closed: 'path-interruption-closed',
   showFill: 'line-interruption-show-fill',
 } as const;
 
@@ -35,13 +34,6 @@ export const lineInterruptionControls = definePreviewControls({
             { value: 'cartesian2D', label: '笛卡尔坐标' },
             { value: 'polar2D', label: '极坐标' },
           ],
-        },
-        {
-          kind: 'switch',
-          id: LINE_INTERRUPTION_CONTROL_IDS.closed,
-          label: '是否闭合',
-          defaultValue: false,
-          visibleWhen: { controlId: LINE_INTERRUPTION_CONTROL_IDS.coordinate, oneOf: ['polar2D'] },
         },
       ],
     },
@@ -70,16 +62,8 @@ export const previewControlContract = {
   controls: lineInterruptionControls,
   canonicalValues: {
     [LINE_INTERRUPTION_CONTROL_IDS.coordinate]: 'cartesian2D',
-    [LINE_INTERRUPTION_CONTROL_IDS.closed]: false,
     [LINE_INTERRUPTION_CONNECT_NULLS_ID]: false,
     [LINE_INTERRUPTION_CONTROL_IDS.showFill]: true,
   },
-  relatedApis: [
-    'Plot.coordinate',
-    'PathMark.closed',
-    'PathMark.connectNulls',
-    'PathMark.closure',
-    'PathMark.fill',
-    'PathMark.order',
-  ],
+  relatedApis: ['Plot.coordinate', 'PathMark.connectNulls', 'PathMark.closure', 'PathMark.fill', 'PathMark.order'],
 } satisfies PreviewControlContract;

@@ -11,8 +11,7 @@ import { previewSource as flowSource } from '../../src/modules/docs/contents/sch
 import { previewSource as connectedSource } from '../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-basic.zh.demo';
 import { previewSource as gapsSource } from '../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-gaps';
 import DataTransformShape from '../../src/modules/docs/contents/viz/data/transform/data-transform-shape.zh.demo';
-import { previewSource as cartesianSource } from '../../src/modules/docs/contents/viz/plot/mark/point/point-jitter-cartesian.demo';
-import { previewSource as polarSource } from '../../src/modules/docs/contents/viz/plot/mark/point/point-jitter-polar.demo';
+import { previewSource as cartesianSource } from '../../src/modules/docs/contents/viz/plot/mark/point/point-jitter';
 
 /** 从作者的 canonical 配置执行真实的预览编译链 */
 const cases: Array<{ name: string; Component: FC }> = [
@@ -22,7 +21,6 @@ const cases: Array<{ name: string; Component: FC }> = [
   { name: 'Connected Scatter 路径', Component: () => connectedSource.canonicalRender?.() ?? null },
   { name: 'Connected Scatter 缺口连接', Component: () => gapsSource.canonicalRender() },
   { name: '直角坐标 jitter', Component: () => cartesianSource.canonicalRender?.() ?? null },
-  { name: '极坐标 jitter', Component: () => polarSource.canonicalRender?.() ?? null },
 ];
 
 describe('Docs canonical demo 渲染契约', () => {

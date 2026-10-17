@@ -70,7 +70,7 @@ Corresponds to `BubbleProperties`, Vanilla `properties` and IR `recipe.propertie
 | Transform      | `rotate`         | `number`                                                 | Rotation angle                                                                                                               |
 |                | `dx`             | `number`                                                 | Horizontal offset                                                                                                            |
 |                | `dy`             | `number`                                                 | Vertical offset                                                                                                              |
-| Padding        | `autoPadding`    | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy, default point-aware; the object form uses kind for the strategy and clearance for edge clearance |
+| Padding        | `autoPadding`    | `false`, `'max-radius'`, `'point-aware'`, `object`       | Automatic padding strategy, default point-aware; the object form uses kind for the strategy and clearance for edge clearance |
 |                | `domainPadding`  | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                                     |
 
 See the [properties schema](#bubbleproperties--irbubblechartproperties--bubblechartpropertiesschema) for the full structure; shared appearance configuration is not expanded here.
@@ -111,7 +111,7 @@ Corresponds to `BubbleMark`, Vanilla `marks` and IR `recipe.marks`.
 
 <DocTab value="schema" label="Schema">
 
-`encodings` accepts only optional field-name strings for x, y, color, opacity, shape, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties. Bubble size comes from the recipe size mapping and cannot be overridden by a mark.
+`encodings` accepts only optional field-name strings for x, y, color, opacity, shape, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `domainPadding`; `autoPadding` can override the chart policy. Omitted settings inherit the applicable chart mappings and properties. Bubble size comes from the recipe size mapping and cannot be overridden by a mark.
 
 <ZodSchema name="BubbleChartMarkSchema" shallow />
 

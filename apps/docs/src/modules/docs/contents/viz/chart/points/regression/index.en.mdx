@@ -502,7 +502,7 @@ The flow below follows one regression chart through the capabilities provided by
 
 <ComponentPreview files="regression-fitting-flow" size="lg" hideCode type="flow" />
 
-Declare semantics with `defineRegression`, supply computation with `defineRegressionImplementation`, and register them separately through `lowerOptions.regressionDefinitions` and `lowerOptions.regressionImplementations`. JSON stores only method names and parameters. See [Data extensions](/viz/data/transform/extensions) for external engines.
+Declare semantics with `defineRegression`, supply computation with `defineRegressionImplementation`, and register them separately through `lowerOptions.definitions.regressions` and `lowerOptions.implementations.regressions`. JSON stores only method names and parameters. See [Data extensions](/viz/data/transform/extensions) for external engines.
 
 This example implements a **fixed-slope fitting algorithm**: the caller supplies the slope, and the algorithm estimates the intercept that minimizes squared residuals. Use it when a prior relationship determines the slope and only an overall offset needs to be estimated.
 
@@ -537,8 +537,8 @@ export const fixedSlopeFitImplementation = defineRegressionImplementation({
 });
 
 export const lowerOptions = {
-  regressionDefinitions: [fixedSlopeFit],
-  regressionImplementations: [fixedSlopeFitImplementation],
+  definitions: { regressions: [fixedSlopeFit] },
+  implementations: { regressions: [fixedSlopeFitImplementation] },
 };
 export const rows = [
   { x: 0, y: 1 },

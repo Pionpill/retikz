@@ -35,8 +35,18 @@ const cartesianScaffoldSpec = {
     ],
   },
   marks: [
-    { type: 'point', coordinateView: 'events', encoding: { x: { field: 'eventX' }, y: { field: 'eventY' } } },
-    { type: 'point', coordinateView: 'volume', encoding: { x: { field: 'volumeX' }, y: { field: 'volumeY' } } },
+    {
+      type: 'point',
+      autoPadding: 'max-radius',
+      coordinateView: 'events',
+      encoding: { x: { field: 'eventX' }, y: { field: 'eventY' } },
+    },
+    {
+      type: 'point',
+      autoPadding: 'max-radius',
+      coordinateView: 'volume',
+      encoding: { x: { field: 'volumeX' }, y: { field: 'volumeY' } },
+    },
   ],
   guides: [
     { type: 'axis', dimension: 'x', coordinateView: 'events' },
@@ -69,8 +79,18 @@ const polarScaffoldSpec = {
     ],
   },
   marks: [
-    { type: 'point', coordinateView: 'inner', encoding: { x: { field: 'angleA' }, y: { field: 'radiusA' } } },
-    { type: 'point', coordinateView: 'outer', encoding: { x: { field: 'angleB' }, y: { field: 'radiusB' } } },
+    {
+      type: 'point',
+      autoPadding: 'max-radius',
+      coordinateView: 'inner',
+      encoding: { x: { field: 'angleA' }, y: { field: 'radiusA' } },
+    },
+    {
+      type: 'point',
+      autoPadding: 'max-radius',
+      coordinateView: 'outer',
+      encoding: { x: { field: 'angleB' }, y: { field: 'radiusB' } },
+    },
   ],
 };
 
@@ -80,7 +100,7 @@ const expandOf = (spec: unknown, provenance = false): IRScope => {
   return lowerPlot(
     parsePlotIR(spec),
     { d: rows },
-    { textMeasurer: measureLabel, width: 480, height: 300, provenance },
+    { layout: { width: 480, height: 300 }, textMeasurer: measureLabel, provenance },
   ) as IRScope;
 };
 
@@ -296,5 +316,26 @@ describe('shared scaffold tracks lowering', () => {
     };
 
     expect(() => expandOf(spec, true)).toThrow(/shared role|theta/i);
+  });
+});
+
+describe('track placement containment', () => {
+  it('keeps track axis boundaries while jitter narrows mapped positions', () => {
+    const baseline = expandOf(cartesianScaffoldSpec, true);
+    const jittered = expandOf(
+      {
+        ...cartesianScaffoldSpec,
+        marks: cartesianScaffoldSpec.marks.map(mark => ({
+          ...mark,
+          placement: { adjustments: [{ kind: 'jitter', role: 'y', span: 20, seed: 7 }] },
+        })),
+      },
+      true,
+    );
+    const axisLines = (scope: IRScope) =>
+      axisLayersOf(scope).map(layer => layer.children.find(child => child.type === 'path'));
+    expect(axisLines(baseline)).toHaveLength(2);
+    expect(axisLines(jittered)).toEqual(axisLines(baseline));
+    expect(markLayersOf(jittered).map(yValuesOf)).not.toEqual(markLayersOf(baseline).map(yValuesOf));
   });
 });

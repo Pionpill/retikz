@@ -1,25 +1,5 @@
-import { resolveBoxSpacing } from '@retikz/core';
-import type {
-  IRPlot,
-  IRPlotDomainPadding,
-  IRPlotGuide,
-  IRPlotMarkOperation,
-  IRPlotPointMark,
-  IRPlotScaleOperation,
-} from '@retikz/plot';
-import {
-  DomainPaddingClearanceSchema,
-  isBuiltinMark,
-  isBuiltinScaleOperation,
-  MarkValueKind,
-  BuiltinPlotCoordinate,
-  PlotDomainPaddingKind,
-  PlotGuide,
-  BuiltinPlotMark,
-  BuiltinPlotScale,
-  POINT_DEFAULT_RADIUS,
-  SIZE_MAX_RADIUS,
-} from '@retikz/plot';
+import type { IRPlot, IRPlotDomainPadding, IRPlotGuide, IRPlotScaleOperation } from '@retikz/plot';
+import { BuiltinPlotCoordinate, BuiltinPlotScale, PlotGuide } from '@retikz/plot';
 
 import type { ChartScaleDefaultsResolveContext } from '../../_chart/contract';
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
@@ -35,247 +15,66 @@ const pointContinuousPositionScaleTypes = new Set<string>([
   BuiltinPlotScale.Radial,
 ]);
 
-type PointPositionRole = 'x' | 'y';
-
-type PointVisualSide = 'left' | 'right' | 'top' | 'bottom';
-
-type PointSizeSource = Readonly<{ size?: IRPlotPointMark['size'] }>;
-
-const invalidPointScaleDefaults = (message: string, path: ReadonlyArray<string | number>): RetikzChartError =>
-  new RetikzChartError({
-    code: RetikzChartErrorCode.InvalidResolvedPlot,
-    message,
-    details: { path },
-  });
-
-const assertRadius = (value: number, path: ReadonlyArray<string | number>): number => {
-  if (Number.isFinite(value) && value >= 0) return value;
-  throw invalidPointScaleDefaults('Point radius must be a finite nonnegative number', path);
-};
-
-const pointRadiusOf = (
-  source: PointSizeSource,
-  scalesByName: ReadonlyMap<string, IRPlotScaleOperation>,
-  path: ReadonlyArray<string | number>,
-): number => {
-  const size = source.size;
-  if (size === undefined) return POINT_DEFAULT_RADIUS;
-  if (size.kind === MarkValueKind.Constant) return assertRadius(size.value, [...path, 'size', 'value']);
-  if (size.scale === undefined) return SIZE_MAX_RADIUS;
-
-  const scale = scalesByName.get(size.scale);
-  if (scale === undefined) {
-    throw invalidPointScaleDefaults(`Point size scale "${size.scale}" is not available`, [...path, 'size', 'scale']);
-  }
-
-  if (!isBuiltinScaleOperation(scale) || scale.type !== BuiltinPlotScale.Sqrt) {
-    throw invalidPointScaleDefaults(`Point size scale "${size.scale}" must be a sqrt scale`, [
-      ...path,
-      'size',
-      'scale',
-    ]);
-  }
-
-  return assertRadius(Math.max(...(scale.range ?? [SIZE_MAX_RADIUS])), [...path, 'size', 'scale']);
-};
-
-const maximumPointRadiusOf = (
-  marks: ReadonlyArray<IRPlotMarkOperation>,
-  scales: ReadonlyArray<IRPlotScaleOperation>,
-): number => {
-  const scalesByName = new Map(scales.map(scale => [scale.name, scale]));
-  const radii: Array<number> = [];
-
-  for (const [markIndex, mark] of marks.entries()) {
-    if (!isBuiltinMark(mark)) continue;
-    if (mark.type === BuiltinPlotMark.Point) {
-      radii.push(pointRadiusOf(mark, scalesByName, ['recipe', 'marks', markIndex]));
-      continue;
-    }
-
-    if (mark.type !== BuiltinPlotMark.Relation || mark.endpoints === undefined) continue;
-
-    for (const endpoint of ['source', 'target'] as const) {
-      const glyph = mark.endpoints[endpoint];
-      if (glyph !== undefined) {
-        radii.push(pointRadiusOf(glyph, scalesByName, ['recipe', 'marks', markIndex, 'endpoints', endpoint]));
-      }
-    }
-  }
-
-  return radii.length === 0 ? 0 : Math.max(...radii);
-};
-
-const hasSpecificSide = (padding: IRPointPositionDomainPadding | undefined): boolean =>
-  typeof padding === 'object' &&
-  (padding.left !== undefined ||
-    padding.right !== undefined ||
-    padding.top !== undefined ||
-    padding.bottom !== undefined);
-
-const assertSpecificSidesSupport = (
-  padding: IRPointPositionDomainPadding | undefined,
-  spatial: Pick<IRPlot, 'coordinate' | 'composition'>,
-  propertyPath: ReadonlyArray<string> = ['domainPadding'],
-): void => {
-  if (!hasSpecificSide(padding)) return;
-
-  const coordinates =
-    spatial.coordinate === undefined
-      ? (spatial.composition?.views?.map(view => view.coordinate) ?? [])
-      : [spatial.coordinate];
-  if (coordinates.length > 0 && coordinates.every(coordinate => coordinate.type === BuiltinPlotCoordinate.Cartesian2D))
-    return;
-
-  const side = (['left', 'right', 'top', 'bottom'] as const).find(
-    name => typeof padding === 'object' && padding[name] !== undefined,
-  );
-  throw invalidPointScaleDefaults('Specific Point domain padding sides require a Cartesian coordinate', [
-    'recipe',
-    'properties',
-    ...propertyPath,
-    side ?? 'default',
-  ]);
-};
-
-const visualPaddingOf = (
-  padding: IRPointPositionDomainPadding | undefined,
-  role: PointPositionRole,
-  side: PointVisualSide,
-  fallback: number,
-): number => {
-  if (typeof padding === 'number') return padding;
-  return padding?.[side] ?? padding?.[role] ?? padding?.default ?? fallback;
-};
-
-const domainPaddingOf = (
-  padding: IRPointPositionDomainPadding | undefined,
-  role: PointPositionRole,
-  scale: IRPlotScaleOperation,
-  radius: number,
-  clearance: ReturnType<typeof resolveBoxSpacing>,
-  marks?: () => Array<string>,
-): IRPlotDomainPadding => {
-  const kind =
-    typeof padding === 'object' ? (padding.kind ?? PlotDomainPaddingKind.Range) : PlotDomainPaddingKind.Range;
-  const startSide: PointVisualSide = role === 'x' ? 'left' : 'top';
-  const endSide: PointVisualSide = role === 'x' ? 'right' : 'bottom';
-  const start = visualPaddingOf(
-    padding,
-    role,
-    startSide,
-    kind === PlotDomainPaddingKind.Ratio ? 0 : radius + clearance[startSide],
-  );
-  const end = visualPaddingOf(
-    padding,
-    role,
-    endSide,
-    kind === PlotDomainPaddingKind.Ratio ? 0 : radius + clearance[endSide],
-  );
-
-  const rawRange = 'range' in scale ? scale.range : undefined;
-  const range =
-    Array.isArray(rawRange) &&
-    rawRange.length === 2 &&
-    typeof rawRange[0] === 'number' &&
-    typeof rawRange[1] === 'number'
-      ? rawRange
-      : undefined;
-
-  const increasing = range === undefined ? role === 'x' : range[1] >= range[0];
-  if (marks !== undefined && kind === PlotDomainPaddingKind.Range) {
-    const explicitStart = visualPaddingOf(padding, role, startSide, NaN);
-    const explicitEnd = visualPaddingOf(padding, role, endSide, NaN);
-    if (Number.isNaN(explicitStart) || Number.isNaN(explicitEnd)) {
-      const references = marks();
-      if (references.length > 0) {
-        const lowerClearance = clearance[increasing ? startSide : endSide];
-        const upperClearance = clearance[increasing ? endSide : startSide];
-
-        return {
-          kind: 'mark',
-          marks: references,
-          ...(lowerClearance === 0 && upperClearance === 0
-            ? {}
-            : {
-                clearance:
-                  lowerClearance === upperClearance ? lowerClearance : { lower: lowerClearance, upper: upperClearance },
-              }),
-          ...(!Number.isNaN(increasing ? explicitStart : explicitEnd)
-            ? { lower: increasing ? explicitStart : explicitEnd }
-            : {}),
-          ...(!Number.isNaN(increasing ? explicitEnd : explicitStart)
-            ? { upper: increasing ? explicitEnd : explicitStart }
-            : {}),
-        };
-      }
-
-      return {
-        kind: 'range',
-        lower: increasing ? start : end,
-        upper: increasing ? end : start,
-      };
-    }
-  }
-
-  return {
-    kind,
-    lower: increasing ? start : end,
-    upper: increasing ? end : start,
-  };
-};
-
-/** 按最终 Point semantic marks 为未显式配置的连续位置 scale 补齐 range padding */
+/** 只转换作者明确声明的四边留白，自动策略由最终图元交给 Plot */
 export const resolvePointScaleDefaults = (
   context: ChartScaleDefaultsResolveContext,
 ): ReadonlyArray<IRPlotScaleOperation> => {
   const padding = context.source.recipe.properties?.domainPadding as IRPointPositionDomainPadding | undefined;
-  assertSpecificSidesSupport(padding, context.spatial);
-  const autoPadding = context.source.recipe.properties?.autoPadding as IRPointAutoPadding | undefined;
-  const kind = typeof autoPadding === 'object' ? autoPadding.kind : autoPadding;
-  const authoredClearance = typeof autoPadding === 'object' ? autoPadding.clearance : undefined;
-  assertSpecificSidesSupport(authoredClearance, context.spatial, ['autoPadding', 'clearance']);
-  const clearance = resolveBoxSpacing(authoredClearance, DomainPaddingClearanceSchema.parse(undefined));
-  const pointAware = kind === 'point-aware';
-  const radius = pointAware ? 0 : maximumPointRadiusOf(context.chartMarks, context.scales);
-  const marks = pointAware
-    ? () =>
-        context.chartMarks.flatMap((mark, index) =>
-          isBuiltinMark(mark) &&
-          (mark.type === BuiltinPlotMark.Point ||
-            (mark.type === BuiltinPlotMark.Relation && mark.endpoints !== undefined))
-            ? [context.identifyMark(index)]
-            : [],
-        )
-    : undefined;
-  const roleByScaleName = new Map<string, PointPositionRole>([
+  if (padding === undefined) return context.scales;
+  const strategy = context.source.recipe.properties?.autoPadding as IRPointAutoPadding | undefined;
+  const pointAware = (typeof strategy === 'object' ? strategy.kind : strategy) === 'point-aware';
+  const coordinates =
+    context.spatial.coordinate === undefined
+      ? (context.spatial.composition?.views?.map(view => view.coordinate) ?? [])
+      : [context.spatial.coordinate];
+  const specificSide =
+    typeof padding === 'object'
+      ? ['left', 'right', 'top', 'bottom'].find(side => Object.hasOwn(padding, side))
+      : undefined;
+  if (
+    specificSide !== undefined &&
+    !coordinates.every(coordinate => coordinate.type === BuiltinPlotCoordinate.Cartesian2D)
+  ) {
+    throw new RetikzChartError({
+      code: RetikzChartErrorCode.InvalidResolvedPlot,
+      message: 'Specific Point domain padding sides require a Cartesian coordinate',
+      details: { path: ['recipe', 'properties', 'domainPadding', specificSide] },
+    });
+  }
+  const roles = new Map<string, 'x' | 'y'>([
     [pointRecipeId(context.source.recipe.chartType, 'scale.x'), 'x'],
     [pointRecipeId(context.source.recipe.chartType, 'scale.y'), 'y'],
   ]);
-
-  for (const [role, scaleName] of Object.entries(context.encodings.positionScales)) {
-    if (role === 'x' || role === 'y') roleByScaleName.set(scaleName, role);
+  for (const [role, name] of Object.entries(context.encodings.positionScales)) {
+    if (role === 'x' || role === 'y') roles.set(name, role);
   }
-
-  const extensionScaleNames = new Set(
+  const extensions = new Set(
     (context.encodings.extensionScales ?? context.source.plotExtension?.scales ?? []).map(scale => scale.name),
   );
-
   return context.scales.map(scale => {
-    const role = roleByScaleName.get(scale.name);
-    if (
-      role === undefined ||
-      extensionScaleNames.has(scale.name) ||
-      Object.hasOwn(scale, 'domainPadding') ||
-      (!pointAware && (!isBuiltinScaleOperation(scale) || !pointContinuousPositionScaleTypes.has(scale.type)))
-    ) {
-      return scale;
-    }
-
-    return { ...scale, domainPadding: domainPaddingOf(padding, role, scale, radius, clearance, marks) };
+    const role = roles.get(scale.name);
+    if (role === undefined || extensions.has(scale.name) || Object.hasOwn(scale, 'domainPadding')) return scale;
+    if (!pointAware && !pointContinuousPositionScaleTypes.has(scale.type)) return scale;
+    if (typeof padding === 'number') return { ...scale, domainPadding: padding };
+    const start = padding[role === 'x' ? 'left' : 'top'] ?? padding[role] ?? padding.default;
+    const end = padding[role === 'x' ? 'right' : 'bottom'] ?? padding[role] ?? padding.default;
+    const kind = padding.kind ?? 'range';
+    if (start === undefined && end === undefined && kind === 'range') return scale;
+    const range = 'range' in scale ? scale.range : undefined;
+    const increasing =
+      Array.isArray(range) && typeof range[0] === 'number' && typeof range[1] === 'number'
+        ? range[1] >= range[0]
+        : role === 'x';
+    const lower = increasing ? start : end;
+    const upper = increasing ? end : start;
+    const domainPadding: IRPlotDomainPadding = {
+      kind,
+      ...(lower === undefined ? (kind === 'ratio' ? { lower: 0 } : {}) : { lower }),
+      ...(upper === undefined ? (kind === 'ratio' ? { upper: 0 } : {}) : { upper }),
+    };
+    return { ...scale, domainPadding };
   });
 };
-
 /** 生成 Point recipe 使用的稳定 Plot member identity */
 export const pointRecipeId = (chartType: string, target: string): string => `__chart.${chartType}.${target}`;
 

@@ -53,10 +53,8 @@ export const resolveEntityRoleRegistry = (
   const registry = new Map<string, EntityRoleDefinition>();
 
   for (const definition of [...BUILTIN_ENTITY_ROLE_DEFINITIONS, ...(custom ?? [])]) {
-    assertNonEmptyString(definition.role, 'Entity role', invalidDefinition('Entity role', definition.role));
-    assertNonEmptyString(
-      definition.description,
-      `Entity role '${definition.role}' description`,
+    assertNonEmptyString(definition.role, 'Entity role', () => invalidDefinition('Entity role', definition.role));
+    assertNonEmptyString(definition.description, `Entity role '${definition.role}' description`, () =>
       invalidDefinition(`Entity role '${definition.role}' description`, definition.description),
     );
     if (registry.has(definition.role)) throw duplicateDefinition('entity-role', definition.role);
@@ -75,15 +73,11 @@ export const resolveEntityKindRegistry = (
   const registry = new Map<string, Map<string, EntityKindDefinition>>();
 
   for (const definition of custom ?? []) {
-    assertNonEmptyString(definition.kind, 'Entity kind', invalidDefinition('Entity kind', definition.kind));
-    assertNonEmptyString(
-      definition.role,
-      `Entity kind '${definition.kind}' role`,
+    assertNonEmptyString(definition.kind, 'Entity kind', () => invalidDefinition('Entity kind', definition.kind));
+    assertNonEmptyString(definition.role, `Entity kind '${definition.kind}' role`, () =>
       invalidDefinition(`Entity kind '${definition.kind}' role`, definition.role),
     );
-    assertNonEmptyString(
-      definition.description,
-      `Entity kind '${definition.kind}' description`,
+    assertNonEmptyString(definition.description, `Entity kind '${definition.kind}' description`, () =>
       invalidDefinition(`Entity kind '${definition.kind}' description`, definition.description),
     );
     if (!roles.has(definition.role)) {
@@ -115,15 +109,13 @@ export const resolveEntityPredicateRegistry = (
   const registry = new Map<string, EntityPredicateDefinition>();
 
   for (const definition of custom ?? []) {
-    assertNonEmptyString(definition.name, 'Entity predicate', invalidDefinition('Entity predicate', definition.name));
-    assertNonEmptyString(
-      definition.role,
-      `Entity predicate '${definition.name}' role`,
+    assertNonEmptyString(definition.name, 'Entity predicate', () =>
+      invalidDefinition('Entity predicate', definition.name),
+    );
+    assertNonEmptyString(definition.role, `Entity predicate '${definition.name}' role`, () =>
       invalidDefinition(`Entity predicate '${definition.name}' role`, definition.role),
     );
-    assertNonEmptyString(
-      definition.description,
-      `Entity predicate '${definition.name}' description`,
+    assertNonEmptyString(definition.description, `Entity predicate '${definition.name}' description`, () =>
       invalidDefinition(`Entity predicate '${definition.name}' description`, definition.description),
     );
     if (!roles.has(definition.role)) {

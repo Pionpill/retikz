@@ -17,7 +17,17 @@ Every mark can use `defaultColorGroup` to declare a shared fallback color. A nam
 
 ## PointMarkSchema
 
-<ZodSchema name="PointMarkSchema" />
+<ZodSchema
+  name="PointMarkSchema"
+  descriptions={{
+      orientation: 'Node orientation reference: screen or a coordinate-role tangent / normal; defaults to screen.',
+      rotate: 'Constant or field-bound rotation offset added to the orientation angle, in degrees.',
+
+    autoPadding:
+      'Automatic edge padding, default max-radius; point-aware uses actual positions and radii, false disables this mark contribution.',
+
+}}
+/>
 
 ### MarkPlacementSchema
 
@@ -70,13 +80,14 @@ Every mark can use `defaultColorGroup` to declare a shared fallback color. A nam
 
 <ZodSchema name="IntervalBoundSchema" />
 
-## ReferenceMarkSchema
-
-<ZodSchema name="ReferenceMarkSchema" />
-
 ## RelationMarkSchema
 
-<ZodSchema name="RelationMarkSchema" />
+<ZodSchema
+  name="RelationMarkSchema"
+  descriptions={{
+    autoPadding: 'Endpoint node padding, default false; protects existing endpoints, excluding the connecting path.',
+  }}
+/>
 
 ### PlotTargetRefSchema
 

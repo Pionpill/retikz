@@ -11,10 +11,10 @@ const translations: Readonly<Record<string, string>> = {
   待检查的字符串: 'String to validate',
   待检查的数值: 'Number to validate',
   错误消息中的字段名称: 'Field name used in error messages',
-  '校验失败时原样抛出的领域错误；默认使用 Foundation 错误':
-    'Domain error thrown unchanged on validation failure; defaults to a Foundation error',
-  '校验失败时抛出 ownerError 或 RetikzFoundationError':
-    'Throws ownerError or RetikzFoundationError on validation failure',
+  '仅在校验失败时调用一次的领域错误工厂；返回的错误原样抛出，省略时使用 Foundation 错误':
+    'Domain error factory called exactly once on validation failure; its result is thrown unchanged. Defaults to a Foundation error when omitted',
+  '校验失败时抛出工厂返回的领域错误或 RetikzFoundationError；工厂自身抛出的异常原样传播':
+    'Throws the factory result or RetikzFoundationError on validation failure; exceptions thrown by the factory propagate unchanged',
   拒绝非有限数值以及小于等于零的数值: 'Rejects non-finite numbers and numbers less than or equal to zero',
   用于创建快照的键值对: 'Key-value entries used to create the snapshot',
   '独立的只读 Map 包装；键和值仍共享原引用，不进行深冻结':

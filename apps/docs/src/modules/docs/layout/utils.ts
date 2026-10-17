@@ -1,4 +1,5 @@
 import type { TFunction } from 'i18next';
+import { ArrowUpRight } from 'lucide-react';
 import type { ComponentType } from 'react';
 
 import {
@@ -71,6 +72,7 @@ const collectFromSubPage = (
   subPage: SubPage,
   acc: Array<LeafNode>,
 ): void => {
+  if (subPage.linkTo) return;
   if (subPage.children) {
     for (const child of subPage.children) {
       collectFromSubPage(moduleId, sectionId, pageId, child, acc);
@@ -94,6 +96,7 @@ const collectFromPage = (
   page: Page,
   acc: Array<LeafNode>,
 ): void => {
+  if (page.linkTo) return;
   if (page.children) {
     for (const child of page.children) {
       collectFromSubPage(moduleId, sectionId, page.id, child, acc);
@@ -136,17 +139,23 @@ export const flattenLeaves = (moduleId: DocNavigationAreaId, sections: Array<Sec
 const mapSidebarChildren = (t: TFunction, children?: Array<SubPage>): Array<SidebarSubModuleData> | undefined =>
   children?.map(child => ({
     value: child.id,
+    linkTo: child.linkTo,
     label: t(child.label),
-    ...(child.icon === undefined ? {} : { Icon: DOC_SIDEBAR_ICONS[child.icon] }),
+    ...(child.linkTo
+      ? { Icon: ArrowUpRight }
+      : child.icon === undefined
+        ? {}
+        : { Icon: DOC_SIDEBAR_ICONS[child.icon] }),
     ...(child.difficulty === undefined ? {} : { difficulty: child.difficulty }),
     children: mapSidebarChildren(t, child.children),
   }));
 
 const mapSidebarPage = (t: TFunction, page: Page): SidebarModuleData => ({
   value: page.id,
+  linkTo: page.linkTo,
   label: t(page.label),
   ...(page.difficulty === undefined ? {} : { difficulty: page.difficulty }),
-  ...(page.icon === undefined ? {} : { Icon: DOC_SIDEBAR_ICONS[page.icon] }),
+  ...(page.linkTo ? { Icon: ArrowUpRight } : page.icon === undefined ? {} : { Icon: DOC_SIDEBAR_ICONS[page.icon] }),
   ...(page.sidebarGroup === undefined ? {} : { sidebarGroup: t(page.sidebarGroup) }),
   children: mapSidebarChildren(t, page.children),
 });

@@ -189,6 +189,8 @@ export type CartesianCoordinateFrame = {
   projectMappedRoles: (values: ReadonlyArray<number>) => Position | null;
   /** 笛卡尔 role-space containment 边界度量 */
   placementBoundary: NonNullable<CoordinateFrame['placementBoundary']>;
+  /** 映射后角色递增时的屏幕切向 */
+  tangentAt?: CoordinateFrame['tangentAt'];
   /** 正交 cell → 轴对齐矩形（闭式快路）：position = 两区间中点、width/height = 区间跨度 */
   projectCell: (cell: Cell) => CellGeometry;
 };
@@ -229,6 +231,7 @@ export const createCartesianCoordinate = (
     projectRoles: values => project(values[0], values[1]),
     mapRoles,
     projectMappedRoles,
+    tangentAt: role => (role === 'x' ? [1, 0] : role === 'y' ? [0, 1] : null),
     placementBoundary: {
       isCyclic: () => false,
       unitNormal: role => (role === 'x' ? [1, 0] : role === 'y' ? [0, 1] : null),
@@ -257,6 +260,8 @@ export const createCartesianCoordinate = (
 export type Cartesian1DCoordinateFrame = {
   /** 判别字段：1D 笛卡尔直线 */
   type: typeof BuiltinPlotCoordinate.Cartesian1D;
+  /** 一维坐标帧不提供绘图区背景、边框和区域锚点 */
+  supportsPlotArea: false;
   /** 位置角色序（[x]，单通道） */
   roles: ReadonlyArray<DimensionRole>;
   /** 轴向（horizontal 沿 x、vertical 沿 y） */
@@ -277,6 +282,8 @@ export type Cartesian1DCoordinateFrame = {
   projectMappedRoles: (values: ReadonlyArray<number>) => Position | null;
   /** 一维笛卡尔 role-space containment 边界度量 */
   placementBoundary: NonNullable<CoordinateFrame['placementBoundary']>;
+  /** 映射后角色递增时的屏幕切向 */
+  tangentAt?: CoordinateFrame['tangentAt'];
 };
 
 /**
@@ -307,6 +314,7 @@ export const createCartesian1DCoordinate = (
 
   return {
     type: BuiltinPlotCoordinate.Cartesian1D,
+    supportsPlotArea: false,
     roles: ['x'],
     orientation,
     baseline,
@@ -316,6 +324,7 @@ export const createCartesian1DCoordinate = (
     projectRoles,
     mapRoles,
     projectMappedRoles,
+    tangentAt: role => (role !== 'x' ? null : orientation === Cartesian1DOrientation.Horizontal ? [1, 0] : [0, 1]),
     placementBoundary: {
       isCyclic: () => false,
       unitNormal: role => (role !== 'x' ? null : orientation === Cartesian1DOrientation.Horizontal ? [1, 0] : [0, 1]),
@@ -373,6 +382,8 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
 
       if (!hasExplicitContinuousRange(xScaleDef)) xScale.setRange([plotArea.x, plotArea.x + plotArea.width]);
       if (!hasExplicitContinuousRange(yScaleDef)) yScale.setRange([plotArea.y + plotArea.height, plotArea.y]);
+      const layoutXRange = xScale.range();
+      const layoutYRange = yScale.range();
       const xRangeOverride = ctx.roleRangeOverrides?.x;
       const yRangeOverride = ctx.roleRangeOverrides?.y;
       if (xRangeOverride !== undefined) xScale.setRange([xRangeOverride[0], xRangeOverride[1]]);
@@ -385,8 +396,10 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
         ? ctx.resolveVisibleGuideTicks(yTicks ?? EMPTY_TICKS, yAxis.ticks, value => yScale.coordinate(value))
         : undefined;
 
-      const [xRangeStart, xRangeEnd] = xScale.range();
-      const [yRangeStart, yRangeEnd] = yScale.range();
+      const [xRangeStart, xRangeEnd] =
+        ctx.guideRoleRangeOverrides === undefined ? xScale.range() : (ctx.guideRoleRangeOverrides.x ?? layoutXRange);
+      const [yRangeStart, yRangeEnd] =
+        ctx.guideRoleRangeOverrides === undefined ? yScale.range() : (ctx.guideRoleRangeOverrides.y ?? layoutYRange);
       const guideFrame: BoundsRect = {
         x: Math.min(xRangeStart, xRangeEnd),
         y: Math.min(yRangeStart, yRangeEnd),

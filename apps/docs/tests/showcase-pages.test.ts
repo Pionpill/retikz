@@ -83,7 +83,7 @@ describe('collectShowcasePages', () => {
     const compiled = String(await compile(readFileSync(compositeConceptPath(lang), 'utf8'), compileOptions));
 
     expect(compiled).toContain('composite-pipeline');
-    expect(compiled).toContain('/kernel/components/composite');
+    expect(compiled).toContain('/kernel/packages/core/composite-compilation');
   });
 
   it('按 family 与 order 提供稳定的 Showcase 页面关系', () => {

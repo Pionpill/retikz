@@ -21,7 +21,7 @@ type Datasets = Record<string, Array<Record<string, unknown>>>;
 const expandOf = (
   spec: IRPlot,
   datasets: Datasets,
-  options: LowerPlotsOptions = { width: 480, height: 300 },
+  options: LowerPlotsOptions = { layout: { width: 480, height: 300 } },
 ): IRScope => {
   return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
@@ -207,7 +207,7 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
           { lon: 1, lat: 1, t: 20 },
         ],
       },
-      { width: 480, height: 300 },
+      { layout: { width: 480, height: 300 } },
     );
 
     expect(() => compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites }).scene).not.toThrow();
@@ -245,7 +245,7 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
     let threw = false;
 
     try {
-      outer = expandOf(spec, { d: ORDINAL_ROWS }, { width: 90, height: 60 });
+      outer = expandOf(spec, { d: ORDINAL_ROWS }, { layout: { width: 90, height: 60 } });
     } catch {
       threw = true;
     }

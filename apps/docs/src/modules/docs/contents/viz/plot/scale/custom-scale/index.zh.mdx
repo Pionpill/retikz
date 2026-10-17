@@ -1,6 +1,6 @@
 ---
 title: 自定义比例尺
-description: 用 ScaleDefinition 扩展值到坐标或颜色的映射，并通过 scaleDefinitions 或 colorSchemes 注入 Plot runtime。
+description: 用 ScaleDefinition 扩展值到坐标或颜色的映射，并通过 definitions.scales 或 colorSchemes 注入 Plot runtime。
 ---
 
 当内置比例尺无法表达领域映射、特殊位置分布或品牌色阶时，可以注册运行时 `ScaleDefinition`。Plot IR 只保存 `{ type, name, ...config }` 的 JSON operation；求值函数和字段兼容规则留在 definition 中。
@@ -32,7 +32,7 @@ description: 用 ScaleDefinition 扩展值到坐标或颜色的映射，并通�
 
 ## 注入宿主
 
-通过 `<Plot scaleDefinitions={[easePositionScale, brandColorScale]}>` 注入 definitions；Vanilla 源码通过 `renderPlot` options 注入同一数组。自定义 type 只能在完整 `spec.scales` 中显式引用：
+通过 `<Plot definitions={{ scales: [easePositionScale, brandColorScale] }}>` 注入 definitions；Vanilla 源码通过 `renderPlot` options 注入同一数组。自定义 type 只能在完整 `spec.scales` 中显式引用：
 
 ```ts
 scales: [
@@ -148,10 +148,10 @@ scales: [{ type: 'ease-position', name: 'x', exponnent: 1.8 }];
 
 宿主注入：
 
-| 宿主                                   | 公开契约            | 注入字段                                                    |
-| -------------------------------------- | ------------------- | ----------------------------------------------------------- |
-| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `scaleDefinitions`、`colorSchemes`                          |
-| `@retikz/plot-vanilla` 的 `renderPlot` | `RenderPlotOptions` | 继承 `LowerPlotsOptions.scaleDefinitions` 与 `colorSchemes` |
+| 宿主                                   | 公开契约            | 注入字段                                                      |
+| -------------------------------------- | ------------------- | ------------------------------------------------------------- |
+| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `definitions.scales`、`colorSchemes`                          |
+| `@retikz/plot-vanilla` 的 `renderPlot` | `RenderPlotOptions` | 继承 `LowerPlotsOptions.definitions.scales` 与 `colorSchemes` |
 
 ## 相关
 

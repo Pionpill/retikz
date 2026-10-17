@@ -23,10 +23,11 @@ export const solveMarkPadding = (
   samples: ReadonlyArray<MarkPaddingSample>,
   fixed: Partial<MarkPaddingResolution>,
   tolerance: number,
+  minimumPadding: MarkPaddingResolution = { lower: 0, upper: 0 },
 ): MarkPaddingResolution => {
   const feasible = (sum: number): MarkPaddingResolution | undefined => {
-    let lowerMinimum = fixed.lower ?? 0;
-    let lowerMaximum = fixed.lower ?? sum;
+    let lowerMinimum = fixed.lower ?? minimumPadding.lower;
+    let lowerMaximum = fixed.lower ?? sum - (fixed.upper ?? minimumPadding.upper);
     if (fixed.upper !== undefined) {
       lowerMinimum = Math.max(lowerMinimum, sum - fixed.upper);
       lowerMaximum = Math.min(lowerMaximum, sum - fixed.upper);
@@ -57,7 +58,7 @@ export const solveMarkPadding = (
     return result;
   };
 
-  let minimum = (fixed.lower ?? 0) + (fixed.upper ?? 0);
+  let minimum = (fixed.lower ?? minimumPadding.lower) + (fixed.upper ?? minimumPadding.upper);
   if (minimum >= 1) throw new RetikzPlotError('mark domainPadding has no feasible positive range');
 
   const initial = feasible(minimum);

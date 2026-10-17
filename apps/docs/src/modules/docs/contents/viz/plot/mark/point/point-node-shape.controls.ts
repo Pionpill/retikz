@@ -1,16 +1,26 @@
 import type { PointMarkProps } from '@retikz/plot-react';
 
+import type { Lang } from '@/i18n';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { points } from './point-api.data';
+import { shapePoints } from './point-api.data';
+import { pointNodeShapeI18n } from './point-node-shape.i18n';
 
 /** 节点形态 playground 的稳定控件 id */
 export const POINT_NODE_SHAPE_CONTROL_IDS = {
+  showRelations: 'point-node-show-relations',
+  cornerRadius: 'point-node-shape-cornerRadius',
+  scale: 'point-node-shape-scale',
+  padding: 'point-node-shape-padding',
+  margin: 'point-node-shape-margin',
+  boundary: 'point-node-shape-boundary',
+
   coordinate: 'point-node-coordinate',
   shape: 'point-node-shape',
   size: 'point-node-size',
   rotate: 'point-node-rotate',
+  orientation: 'point-node-orientation',
   starPoints: 'point-node-star-points',
   polygonSides: 'point-node-polygon-sides',
 } as const;
@@ -27,6 +37,7 @@ export type PointNodeShapeValues = {
 export const pointNodeShapeOf = (values: PointNodeShapeValues): NonNullable<PointMarkProps['shape']> => {
   switch (values.shape) {
     case 'rectangle':
+    case 'wide-rectangle':
       return 'rectangle';
     case 'diamond':
       return 'diamond';
@@ -47,129 +58,265 @@ export const pointNodeShapeOf = (values: PointNodeShapeValues): NonNullable<Poin
 };
 
 /** PointMark 节点形态的中文属性面板 */
-export const pointNodeShapeControls = definePreviewControls({
-  presentation: 'panel',
-  title: '节点形态',
-  sections: [
-    {
-      label: '数据',
-      defaultCollapsed: true,
-      controls: [{ kind: 'table', id: 'points', label: '点数据', rows: points }],
-    },
-    {
-      label: '坐标系',
-      controls: [
-        {
-          kind: 'select',
-          id: POINT_NODE_SHAPE_CONTROL_IDS.coordinate,
-          label: '投影',
-          defaultValue: 'cartesian2D',
-          options: [
-            { value: 'cartesian2D', label: '笛卡尔坐标' },
-            { value: 'polar2D', label: '极坐标' },
-          ],
-        },
-      ],
-    },
-    {
-      label: '节点边界',
-      controls: [
-        {
-          kind: 'select',
-          id: POINT_NODE_SHAPE_CONTROL_IDS.shape,
-          label: '形状',
-          defaultValue: 'circle',
-          options: [
-            { value: 'circle', label: '圆形' },
-            { value: 'rectangle', label: '矩形' },
-            { value: 'diamond', label: '菱形' },
-            { value: 'star', label: '星形' },
-            { value: 'polygon', label: '多边形' },
-          ],
-        },
-        {
-          kind: 'range',
-          id: POINT_NODE_SHAPE_CONTROL_IDS.size,
-          label: '节点尺寸',
-          defaultValue: 18,
-          min: 10,
-          max: 36,
-          step: 1,
-        },
-        {
-          kind: 'range',
-          id: POINT_NODE_SHAPE_CONTROL_IDS.rotate,
-          label: '旋转角度',
-          defaultValue: 0,
-          min: -90,
-          max: 90,
-          step: 5,
-          visibleWhen: {
-            controlId: POINT_NODE_SHAPE_CONTROL_IDS.shape,
-            oneOf: ['rectangle', 'diamond', 'star', 'polygon'],
+export const createPreviewControlContract = (lang: Lang = 'zh') => {
+  const i18n = pointNodeShapeI18n[lang];
+  const pointNodeShapeControls = definePreviewControls({
+    presentation: 'panel',
+    title: i18n.nodeShapes,
+    sections: [
+      {
+        label: i18n.data,
+        defaultCollapsed: true,
+        controls: [{ kind: 'table', id: 'points', label: i18n.pointRows, rows: shapePoints }],
+      },
+      {
+        controls: [
+          {
+            kind: 'switch',
+            id: POINT_NODE_SHAPE_CONTROL_IDS.showRelations,
+            label: i18n.showRelations,
+            defaultValue: true,
           },
-        },
-        {
-          kind: 'range',
-          id: POINT_NODE_SHAPE_CONTROL_IDS.starPoints,
-          label: '星形角数',
-          defaultValue: 5,
-          min: 3,
-          max: 9,
-          step: 1,
-          visibleWhen: { controlId: POINT_NODE_SHAPE_CONTROL_IDS.shape, oneOf: ['star'] },
-        },
-        {
-          kind: 'range',
-          id: POINT_NODE_SHAPE_CONTROL_IDS.polygonSides,
-          label: '多边形边数',
-          defaultValue: 6,
-          min: 3,
-          max: 10,
-          step: 1,
-          visibleWhen: { controlId: POINT_NODE_SHAPE_CONTROL_IDS.shape, oneOf: ['polygon'] },
-        },
-      ],
-    },
-  ],
-});
+          {
+            kind: 'range',
+            id: POINT_NODE_SHAPE_CONTROL_IDS.cornerRadius,
+            label: i18n.cornerRadius,
+            visibleWhen: { controlId: POINT_NODE_SHAPE_CONTROL_IDS.shape, oneOf: ['rectangle', 'wide-rectangle'] },
+            defaultValue: 0,
+            min: 0,
+            max: 12,
+            step: 1,
+          },
+          {
+            kind: 'range',
+            id: POINT_NODE_SHAPE_CONTROL_IDS.scale,
+            label: i18n.scale,
+            defaultValue: 1,
+            min: 0.5,
+            max: 1.3,
+            step: 0.1,
+          },
+          {
+            kind: 'range',
+            id: POINT_NODE_SHAPE_CONTROL_IDS.padding,
+            label: i18n.padding,
+            visibleWhen: {
+              controlId: POINT_NODE_SHAPE_CONTROL_IDS.shape,
+              oneOf: ['circle', 'rectangle', 'wide-rectangle', 'diamond', 'polygon'],
+            },
+            defaultValue: 0,
+            min: 0,
+            max: 24,
+            step: 1,
+          },
+          {
+            kind: 'range',
+            id: POINT_NODE_SHAPE_CONTROL_IDS.margin,
+            label: i18n.margin,
+            defaultValue: 0,
+            min: 0,
+            max: 12,
+            step: 1,
+          },
+          {
+            kind: 'select',
+            id: POINT_NODE_SHAPE_CONTROL_IDS.boundary,
+            label: i18n.boundary,
+            defaultValue: 'shape',
+            options: [
+              { value: 'shape', label: i18n.boundary0 },
+              { value: 'circle', label: i18n.boundary1 },
+            ],
+          },
+        ],
+      },
+      {
+        label: i18n.coordinate,
+        controls: [
+          {
+            kind: 'select',
+            id: POINT_NODE_SHAPE_CONTROL_IDS.coordinate,
+            label: i18n.projection,
+            defaultValue: 'cartesian2D',
+            options: [
+              { value: 'cartesian2D', label: i18n.cartesian },
+              { value: 'polar2D', label: i18n.polar },
+            ],
+          },
+        ],
+      },
+      {
+        label: i18n.nodeBoundary,
+        controls: [
+          {
+            kind: 'select',
+            id: POINT_NODE_SHAPE_CONTROL_IDS.orientation,
+            label: i18n.orientation,
+            defaultValue: 'screen',
+            options: [
+              { value: 'screen', label: i18n.screen },
+              { value: 'x-tangent', label: i18n.xTangent },
+              { value: 'x-normal', label: i18n.xNormal },
+              { value: 'y-tangent', label: i18n.yTangent },
+              { value: 'y-normal', label: i18n.yNormal },
+            ],
+          },
+          {
+            kind: 'select',
+            id: POINT_NODE_SHAPE_CONTROL_IDS.shape,
+            label: i18n.shape,
+            defaultValue: 'circle',
+            options: [
+              { value: 'circle', label: i18n.circle },
+              { value: 'rectangle', label: i18n.rectangle },
+              { value: 'wide-rectangle', label: i18n.wideRectangle },
+              { value: 'diamond', label: i18n.diamond },
+              { value: 'star', label: i18n.star },
+              { value: 'polygon', label: i18n.polygon },
+            ],
+          },
+          {
+            kind: 'range',
+            id: POINT_NODE_SHAPE_CONTROL_IDS.size,
+            label: i18n.nodeSize,
+            defaultValue: 18,
+            min: 10,
+            max: 36,
+            step: 1,
+          },
+          {
+            kind: 'range',
+            id: POINT_NODE_SHAPE_CONTROL_IDS.rotate,
+            label: i18n.rotation,
+            defaultValue: 0,
+            min: -90,
+            max: 90,
+            step: 5,
+            visibleWhen: {
+              controlId: POINT_NODE_SHAPE_CONTROL_IDS.shape,
+              oneOf: ['rectangle', 'wide-rectangle', 'diamond', 'star', 'polygon'],
+            },
+          },
+          {
+            kind: 'range',
+            id: POINT_NODE_SHAPE_CONTROL_IDS.starPoints,
+            label: i18n.starPoints,
+            defaultValue: 5,
+            min: 3,
+            max: 9,
+            step: 1,
+            visibleWhen: { controlId: POINT_NODE_SHAPE_CONTROL_IDS.shape, oneOf: ['star'] },
+          },
+          {
+            kind: 'range',
+            id: POINT_NODE_SHAPE_CONTROL_IDS.polygonSides,
+            label: i18n.polygonSides,
+            defaultValue: 6,
+            min: 3,
+            max: 10,
+            step: 1,
+            visibleWhen: { controlId: POINT_NODE_SHAPE_CONTROL_IDS.shape, oneOf: ['polygon'] },
+          },
+        ],
+      },
+    ],
+  });
 
-/** PointMark 节点形态的稳定文档契约 */
-export const previewControlContract = {
-  controls: pointNodeShapeControls,
-  canonicalValues: {
-    [POINT_NODE_SHAPE_CONTROL_IDS.coordinate]: 'cartesian2D',
-    [POINT_NODE_SHAPE_CONTROL_IDS.shape]: 'circle',
-    [POINT_NODE_SHAPE_CONTROL_IDS.size]: 18,
-    [POINT_NODE_SHAPE_CONTROL_IDS.rotate]: 0,
-    [POINT_NODE_SHAPE_CONTROL_IDS.starPoints]: 5,
-    [POINT_NODE_SHAPE_CONTROL_IDS.polygonSides]: 6,
-  },
-  presets: [
-    {
-      id: 'circle',
-      label: '基础圆点',
-      values: {
-        [POINT_NODE_SHAPE_CONTROL_IDS.coordinate]: 'cartesian2D',
-        [POINT_NODE_SHAPE_CONTROL_IDS.shape]: 'circle',
-        [POINT_NODE_SHAPE_CONTROL_IDS.size]: 18,
-        [POINT_NODE_SHAPE_CONTROL_IDS.rotate]: 0,
-        [POINT_NODE_SHAPE_CONTROL_IDS.starPoints]: 5,
-        [POINT_NODE_SHAPE_CONTROL_IDS.polygonSides]: 6,
-      },
+  /** PointMark 节点形态的稳定文档契约 */
+  return {
+    controls: pointNodeShapeControls,
+    canonicalValues: {
+      [POINT_NODE_SHAPE_CONTROL_IDS.coordinate]: 'cartesian2D',
+      [POINT_NODE_SHAPE_CONTROL_IDS.showRelations]: true,
+      [POINT_NODE_SHAPE_CONTROL_IDS.cornerRadius]: 0,
+      [POINT_NODE_SHAPE_CONTROL_IDS.scale]: 1,
+      [POINT_NODE_SHAPE_CONTROL_IDS.padding]: 0,
+      [POINT_NODE_SHAPE_CONTROL_IDS.margin]: 0,
+      [POINT_NODE_SHAPE_CONTROL_IDS.boundary]: 'shape',
+
+      [POINT_NODE_SHAPE_CONTROL_IDS.shape]: 'circle',
+      [POINT_NODE_SHAPE_CONTROL_IDS.size]: 18,
+      [POINT_NODE_SHAPE_CONTROL_IDS.orientation]: 'screen',
+      [POINT_NODE_SHAPE_CONTROL_IDS.rotate]: 0,
+      [POINT_NODE_SHAPE_CONTROL_IDS.starPoints]: 5,
+      [POINT_NODE_SHAPE_CONTROL_IDS.polygonSides]: 6,
     },
-    {
-      id: 'parametric',
-      label: '参数形状',
-      values: {
-        [POINT_NODE_SHAPE_CONTROL_IDS.coordinate]: 'cartesian2D',
-        [POINT_NODE_SHAPE_CONTROL_IDS.shape]: 'star',
-        [POINT_NODE_SHAPE_CONTROL_IDS.size]: 28,
-        [POINT_NODE_SHAPE_CONTROL_IDS.rotate]: 18,
-        [POINT_NODE_SHAPE_CONTROL_IDS.starPoints]: 7,
-        [POINT_NODE_SHAPE_CONTROL_IDS.polygonSides]: 6,
+    presetSelector: { label: i18n.preset, customLabel: i18n.custom },
+    presets: [
+      {
+        id: 'circle',
+        label: i18n.basicCircles,
+        values: {
+          [POINT_NODE_SHAPE_CONTROL_IDS.coordinate]: 'cartesian2D',
+          [POINT_NODE_SHAPE_CONTROL_IDS.showRelations]: true,
+          [POINT_NODE_SHAPE_CONTROL_IDS.cornerRadius]: 0,
+          [POINT_NODE_SHAPE_CONTROL_IDS.scale]: 1,
+          [POINT_NODE_SHAPE_CONTROL_IDS.padding]: 0,
+          [POINT_NODE_SHAPE_CONTROL_IDS.margin]: 0,
+          [POINT_NODE_SHAPE_CONTROL_IDS.boundary]: 'shape',
+
+          [POINT_NODE_SHAPE_CONTROL_IDS.shape]: 'circle',
+          [POINT_NODE_SHAPE_CONTROL_IDS.size]: 18,
+          [POINT_NODE_SHAPE_CONTROL_IDS.orientation]: 'screen',
+          [POINT_NODE_SHAPE_CONTROL_IDS.rotate]: 0,
+          [POINT_NODE_SHAPE_CONTROL_IDS.starPoints]: 5,
+          [POINT_NODE_SHAPE_CONTROL_IDS.polygonSides]: 6,
+        },
       },
-    },
-  ],
-  relatedApis: ['Plot.coordinate', 'PointMark.shape', 'PointMark.size', 'PointMark.rotate'],
-} satisfies PreviewControlContract;
+      {
+        id: 'orientation',
+        label: i18n.orientation,
+        values: {
+          [POINT_NODE_SHAPE_CONTROL_IDS.coordinate]: 'polar2D',
+          [POINT_NODE_SHAPE_CONTROL_IDS.showRelations]: true,
+          [POINT_NODE_SHAPE_CONTROL_IDS.cornerRadius]: 0,
+          [POINT_NODE_SHAPE_CONTROL_IDS.scale]: 1,
+          [POINT_NODE_SHAPE_CONTROL_IDS.padding]: 0,
+          [POINT_NODE_SHAPE_CONTROL_IDS.margin]: 0,
+          [POINT_NODE_SHAPE_CONTROL_IDS.boundary]: 'shape',
+          [POINT_NODE_SHAPE_CONTROL_IDS.shape]: 'wide-rectangle',
+          [POINT_NODE_SHAPE_CONTROL_IDS.size]: 18,
+          [POINT_NODE_SHAPE_CONTROL_IDS.orientation]: 'x-tangent',
+          [POINT_NODE_SHAPE_CONTROL_IDS.rotate]: 0,
+          [POINT_NODE_SHAPE_CONTROL_IDS.starPoints]: 5,
+          [POINT_NODE_SHAPE_CONTROL_IDS.polygonSides]: 6,
+        },
+      },
+      {
+        id: 'parametric',
+        label: i18n.parametricShape,
+        values: {
+          [POINT_NODE_SHAPE_CONTROL_IDS.coordinate]: 'cartesian2D',
+          [POINT_NODE_SHAPE_CONTROL_IDS.showRelations]: true,
+          [POINT_NODE_SHAPE_CONTROL_IDS.cornerRadius]: 0,
+          [POINT_NODE_SHAPE_CONTROL_IDS.scale]: 1,
+          [POINT_NODE_SHAPE_CONTROL_IDS.padding]: 0,
+          [POINT_NODE_SHAPE_CONTROL_IDS.margin]: 0,
+          [POINT_NODE_SHAPE_CONTROL_IDS.boundary]: 'shape',
+
+          [POINT_NODE_SHAPE_CONTROL_IDS.shape]: 'star',
+          [POINT_NODE_SHAPE_CONTROL_IDS.size]: 28,
+          [POINT_NODE_SHAPE_CONTROL_IDS.orientation]: 'screen',
+          [POINT_NODE_SHAPE_CONTROL_IDS.rotate]: 18,
+          [POINT_NODE_SHAPE_CONTROL_IDS.starPoints]: 7,
+          [POINT_NODE_SHAPE_CONTROL_IDS.polygonSides]: 6,
+        },
+      },
+    ],
+    relatedApis: [
+      'PointMark.orientation',
+      'PointMark.cornerRadius',
+      'PointMark.scale',
+      'PointMark.padding',
+      'PointMark.margin',
+      'PointMark.boundary',
+      'Plot.coordinate',
+      'PointMark.shape',
+      'PointMark.size',
+      'PointMark.rotate',
+    ],
+  } satisfies PreviewControlContract;
+};
+
+/** 默认中文预览契约 */
+export const previewControlContract = createPreviewControlContract();

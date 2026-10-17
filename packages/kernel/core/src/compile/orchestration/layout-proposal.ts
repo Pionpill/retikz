@@ -145,18 +145,19 @@ export const resolveLayoutSlotSize = (
   allocationBounds: Readonly<BoundsRect>,
   proposal: LayoutProposal,
 ): Readonly<{ width: number; height: number }> => {
-  const resolveAxis = (actual: number, axis: LayoutAxisProposal): number => {
-    if (axis.kind === LayoutAxisProposalKind.Exact) return axis.value;
-    if (axis.kind === LayoutAxisProposalKind.Range) {
-      const upperBounded = axis.max === undefined ? actual : Math.min(axis.max, actual);
-      return canonicalizeZero(Math.max(axis.min, upperBounded));
-    }
-
-    return canonicalizeZero(actual);
-  };
-
   return Object.freeze({
-    width: resolveAxis(allocationBounds.width, proposal.x),
-    height: resolveAxis(allocationBounds.height, proposal.y),
+    width: resolveLayoutAxisSlotSize(allocationBounds.width, proposal.x),
+    height: resolveLayoutAxisSlotSize(allocationBounds.height, proposal.y),
   });
+};
+
+/** 按真实单轴 allocation 贡献解析提案槽位 */
+export const resolveLayoutAxisSlotSize = (actual: number, axis: LayoutAxisProposal): number => {
+  if (axis.kind === LayoutAxisProposalKind.Exact) return axis.value;
+  if (axis.kind === LayoutAxisProposalKind.Range) {
+    const upperBounded = axis.max === undefined ? actual : Math.min(axis.max, actual);
+    return canonicalizeZero(Math.max(axis.min, upperBounded));
+  }
+
+  return canonicalizeZero(actual);
 };

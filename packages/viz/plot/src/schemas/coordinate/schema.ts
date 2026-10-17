@@ -102,13 +102,13 @@ const CustomCoordinateObjectSchema = looseObject({
   type: NonBlankStringSchema.refine(type => !RESERVED_CUSTOM_COORDINATE_TYPES.has(type), {
     message: 'custom coordinate type must not collide with a built-in or reserved coordinate type',
   }).describe(
-    'Discriminator: custom coordinate operation type; must be a non-blank, non-built-in identifier registered through options.coordinates',
+    'Discriminator: custom coordinate operation type; must be a non-blank, non-built-in identifier registered through options.definitions.coordinates',
   ),
 });
 
 /** 校验自定义坐标操作的开放配置，具体约束由匹配的运行时定义处理 */
 export const CustomCoordinateSchema = CustomCoordinateObjectSchema.catchall(JsonValueSchema).describe(
-  'Custom coordinate operation: type is any non-built-in identifier; its config is validated at lowering time against the matching CoordinateDefinition supplied via options.coordinates. Position roles come from the definition, not the operation.',
+  'Custom coordinate operation: type is any non-built-in identifier; its config is validated at lowering time against the matching CoordinateDefinition supplied via options.definitions.coordinates. Position roles come from the definition, not the operation.',
 );
 
 /** 校验内置一维、二维笛卡尔或极坐标配置 */

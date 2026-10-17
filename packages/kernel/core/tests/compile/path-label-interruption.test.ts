@@ -116,6 +116,36 @@ describe('Stroke Path label interruption', () => {
     expect(firstMove(explicitGapFragments[1])[0]).toBe(68.5);
   });
 
+  it.each([
+    { side: 'top', reversed: false },
+    { side: 'bottom', reversed: false },
+    { side: 'top', reversed: true },
+    { side: 'bottom', reversed: true },
+  ] as const)('竖直路径断口跟随偏移标签：$side，反向=$reversed', ({ side, reversed }) => {
+    const scene = compile({
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          style: { stroke: STROKE },
+          label: { text: 'offset', side, distance: 12, interrupt: true, gap: 4 },
+          children: [
+            { type: 'step', kind: 'move', to: [0, reversed ? 100 : 0] },
+            { type: 'step', kind: 'line', to: [0, reversed ? 0 : 100] },
+          ],
+        },
+      ],
+    });
+    const fragments = strokeFragments(scene.primitives);
+    expect(fragments).toHaveLength(2);
+    const boundaries = [lastLine(fragments[0])[1], firstMove(fragments[1])[1]].sort((a, b) => a - b);
+    // 断口只覆盖实际标签高度和两端留白，不能把偏移量镜像到采样点另一侧
+    expect(boundaries[1] - boundaries[0]).toBeCloseTo(10 + 2 * (4 + 0.5));
+    if (side === 'top') expect(boundaries[1]).toBeLessThan(50);
+    else expect(boundaries[0]).toBeGreaterThan(50);
+  });
+
   it('keeps fragments under one logical path owner with id, meta, and animations', () => {
     const animation = {
       property: 'opacity' as const,

@@ -26,7 +26,6 @@ import type {
   InputPlotIntervalMark,
   InputPlotPathMark,
   InputPlotPointMark,
-  InputPlotReferenceMark,
   InputPlotRelationMark,
 } from './input-marks';
 import type { InputPlotScale } from './input-scales';
@@ -34,7 +33,6 @@ import {
   buildMarkLabel,
   canonicalGeometryLabel,
   canonicalRelationPath,
-  collectReference,
   positionEncoding,
   recordColor,
   recordMarkColor,
@@ -266,6 +264,8 @@ export const applyDeclaration = (
 
     into.marks.push({
       type: BuiltinPlotMark.Point,
+      ...(props.orientation === undefined ? {} : { orientation: props.orientation }),
+      ...(props.autoPadding === undefined ? {} : { autoPadding: props.autoPadding }),
       ...(id !== undefined ? { id } : {}),
       ...(coordinateView !== undefined ? { coordinateView } : {}),
       ...(xAxisId !== undefined ? { xAxisId } : {}),
@@ -628,15 +628,28 @@ export const applyDeclaration = (
     if (direction === 'horizontal') into.hasHorizontalBar = true;
     recordColor(into, colorEnc);
     recordResolveLabel(into, id, props.resolveLabel);
-  } else if (declaration.kind === 'reference-mark') {
-    collectReference(child.props as InputPlotReferenceMark, into, styleContext);
   } else if (declaration.kind === 'relation-mark') {
-    const { id, kind, coordinateView, transform, layer, source, target, label, style, path, ribbon, color, channels } =
-      child.props as InputPlotRelationMark;
+    const {
+      id,
+      kind,
+      coordinateView,
+      transform,
+      layer,
+      source,
+      target,
+      label,
+      style,
+      path,
+      ribbon,
+      color,
+      channels,
+      autoPadding,
+    } = child.props as InputPlotRelationMark;
     const colorEnc = colorChannel(color, undefined);
     const encoding = { ...colorEnc, ...extensionChannelEncoding(channels) };
     into.marks.push({
       type: BuiltinPlotMark.Relation,
+      ...(autoPadding === undefined ? {} : { autoPadding }),
       ...(id !== undefined ? { id } : {}),
       ...(kind !== undefined ? { kind } : {}),
       ...(coordinateView !== undefined ? { coordinateView } : {}),

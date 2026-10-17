@@ -91,7 +91,7 @@ describe('Plot layout proposal contract', () => {
         y: naturalY,
       },
       PlotSchema.parse({ ...plot(), width: 640, height: 420 }),
-      { width: 520, height: 360 },
+      { layout: { width: 520, height: 360 } },
     );
 
     expect(result.allocationBounds).toEqual({ x: 0, y: 0, width: 240, height: 420 });
@@ -105,7 +105,7 @@ describe('Plot layout proposal contract', () => {
         y: { kind: LayoutAxisProposalKind.Exact, value: 180 },
       },
       PlotSchema.parse({ ...plot(), width: 640, height: 420 }),
-      { width: 520, height: 360 },
+      { layout: { width: 520, height: 360 } },
     );
 
     expect(result.allocationBounds).toEqual({ x: 0, y: 0, width: 640, height: 180 });
@@ -130,7 +130,7 @@ describe('Plot layout proposal contract', () => {
   });
 
   it('uses lower options when intrinsic node dimensions are omitted', () => {
-    const result = compileWithProposal(NaturalLayoutProposal, plot(), { width: 360, height: 220 });
+    const result = compileWithProposal(NaturalLayoutProposal, plot(), { layout: { width: 360, height: 220 } });
 
     expect(result.allocationBounds).toEqual({ x: 0, y: 0, width: 360, height: 220 });
     expect(result.slotSize).toEqual({ width: 360, height: 220 });
@@ -140,7 +140,7 @@ describe('Plot layout proposal contract', () => {
     const result = compileWithProposal(
       NaturalLayoutProposal,
       PlotSchema.parse({ ...plot(), width: 420, height: 260 }),
-      { width: 360, height: 220 },
+      { layout: { width: 360, height: 220 } },
     );
 
     expect(result.allocationBounds).toEqual({ x: 0, y: 0, width: 420, height: 260 });

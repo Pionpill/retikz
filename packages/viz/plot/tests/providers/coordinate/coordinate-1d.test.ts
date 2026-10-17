@@ -35,7 +35,7 @@ const gridLayersOf = (scope: IRScope): Array<IRScope> =>
     return child.meta?.source === 'plot' && child.meta.layer === 'grid' ? [child, ...nested] : nested;
   });
 
-const opts: LowerPlotsOptions = { width: 480, height: 300 };
+const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
 
 const dist = (a: [number, number], b: [number, number]): number => Math.hypot(a[0] - b[0], a[1] - b[1]);
 

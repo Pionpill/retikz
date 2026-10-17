@@ -13,7 +13,12 @@ export type CustomChannelPreviewValues = {
 
 /** 绘制示例图形 */
 export const CustomChannelPreview = (values: CustomChannelPreviewValues) => (
-  <Plot data={customChannelPoints} channelDefinitions={[intensityChannel]} width={values.width ?? 440} height={220}>
+  <Plot
+    data={customChannelPoints}
+    width={values.width ?? 440}
+    height={220}
+    definitions={{ channels: [intensityChannel] }}
+  >
     <PlotScale dimension="x" type="linear" domainPadding={16} />
     <PlotScale dimension="y" type="linear" domainPadding={16} />
     <PointMark

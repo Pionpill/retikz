@@ -411,7 +411,7 @@ export const lowerMathJaxSvg = (svg: string, fontSize: number, texSource = ''): 
     assertPositiveNumber(
       fontSize,
       'SVG font size',
-      new RetikzTexError(RetikzTexErrorCode.SvgMalformed, 'SVG font size must be a positive finite number.'),
+      () => new RetikzTexError(RetikzTexErrorCode.SvgMalformed, 'SVG font size must be a positive finite number.'),
     );
     const document = parseXml(svg);
     const rootSvg = findRootSvg(document);

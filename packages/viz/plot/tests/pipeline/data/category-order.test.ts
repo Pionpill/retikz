@@ -10,7 +10,7 @@ import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const opts: LowerPlotsOptions = { width: 480, height: 300 };
+const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
 
 const sharedCategorical = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical;
 
@@ -465,7 +465,7 @@ describe('registered category orders', () => {
     const definition = defineFieldOrder({ name: 'length', compare: (a, b) => String(a).length - String(b).length });
     expect(
       bandCategorySequence(
-        firstLayer(specOf('length'), { d: rows }, { ...opts, fieldOrderDefinitions: [definition] }),
+        firstLayer(specOf('length'), { d: rows }, { definitions: { fieldOrders: [definition] }, ...opts }),
         rows,
       ),
     ).toEqual(['2.0', '10.2', '10.18']);
@@ -485,11 +485,12 @@ describe('registered category orders', () => {
     spec.scales.push({ type: 'band', name: 'cx', domain: ['10.18', '10.2', '2.0'] });
     expect(() => firstLayer(spec, { d: rows })).toThrow(/unknown order/);
     const fieldOrderDefinitions = [defineFieldOrder({ name: 'missing', compare: () => 0 })];
-    expect(bandCategorySequence(firstLayer(spec, { d: rows }, { ...opts, fieldOrderDefinitions }), rows)).toEqual([
-      '10.18',
-      '10.2',
-      '2.0',
-    ]);
+    expect(
+      bandCategorySequence(
+        firstLayer(spec, { d: rows }, { definitions: { fieldOrders: fieldOrderDefinitions }, ...opts }),
+        rows,
+      ),
+    ).toEqual(['10.18', '10.2', '2.0']);
   });
 });
 
@@ -541,9 +542,7 @@ it('checks async result and native source models before execution', async () => 
   const prepared = await preparePlotData(
     spec,
     { dataBindings: { d: { kind: 'result', result: { rows: [], model } } } },
-    {
-      fieldOrderDefinitions: [defineFieldOrder({ name: 'business', compare: () => 0 })],
-    },
+    { definitions: { fieldOrders: [defineFieldOrder({ name: 'business', compare: () => 0 })] } },
   );
   expect((await prepared.execute()).root.model).toEqual(model);
 });

@@ -1,0 +1,165 @@
+---
+title: Rendering Pipeline
+description: Follow two nodes and a connecting line from React / Vanilla input through Core compilation and Render to the screen.
+---
+
+This article provides an overview of the Kernel module, explaining the responsibilities of its core packages and how they work together to turn declarations into a drawing. Subsequent articles explore the mechanisms and implementation details.
+
+Before reading, complete [Getting Started](/kernel/components/get-start) and review package responsibilities in [Layers](/kernel/components/design/layers).
+
+## Overview
+
+The author describes nodes and connections, Core calculates drawing geometry, and Render delivers it to SVG or Canvas. Two data formats connect these stages: **IR** is the common drawing declaration, and **Scene** is the drawing result with geometry already calculated.
+
+<ComponentPreview files="pipeline-overview" size="md" hideCode type="flow" />
+
+Our example has rectangular nodes A and B centered at `[0, 0]` and `[180, 0]`, each measuring `60 × 40`. A path connects them by name. In the final drawing, the line joins their rectangle edges.
+
+<ComponentPreview files="pipeline-example" size="xs" />
+
+The preview source offers React, Vanilla and IR views. The example uses static mode to follow one complete processing pass.
+
+## Declarations and input
+
+**Vanilla is the common processing entry behind the high-level drawing APIs; React is a thin declaration and host adapter over it.** Both forms send drawing configuration to Vanilla.
+
+React's `Node`, `Path` and `Step` components declare content. `Layout` collects the declaration tree, converts node attributes, child text and path steps into `InputScene`, and passes it to Vanilla with processing options. Direct Vanilla users supply that configuration themselves.
+
+<ComponentPreview files="pipeline-input" size="sm" hideCode type="flow" />
+
+Both entries deliver nodes A and B and their connecting path. Names, positions, dimensions and the path references `{ id: 'A' }` and `{ id: 'B' }` remain in the input. With `<Layout ir={ir} />`, Layout passes existing IR to the same processing entry.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Layout collects declarations and calls Vanilla',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+    },
+    { label: 'JSX to InputScene', path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts' },
+  ]}
+/>
+
+## Vanilla processing
+
+Vanilla handles configuration at the input layer: it normalizes `InputScene` into `IRScene`, assembles compile options and arranges Core execution. Existing IR enters here too. The prepared IR still contains references to A and B, ready for Core to calculate their connection points.
+
+Vanilla also assembles the processing mode. **static** performs a single pass. The default **retained** mode constructs Runtime, connects sources, the Core computation and result commits, and continues receiving input updates.
+
+<ComponentPreview files="pipeline-processing" size="sm" hideCode type="flow" />
+
+React Layout calls Vanilla's processing APIs and connects controller creation, updates and disposal to the React lifecycle. Both declaration styles share this preparation and processing flow.
+
+<SourceLinks
+  sources={[
+    { label: 'Input preparation', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
+    { label: 'Single-pass processing', path: 'packages/kernel/vanilla/src/processing/static.ts' },
+    { label: 'Runtime and controller assembly', path: 'packages/kernel/vanilla/src/processing/internal/controller.ts' },
+  ]}
+/>
+
+## Core compilation
+
+Core receives IR and compile options, determines node dimensions, positions, text layout and connection boundaries, then produces Scene. The instruction to connect A and B becomes numeric drawing geometry.
+
+A is centered at `[0, 0]` and has width 60, putting its right edge at `x = 30`. B is centered at `[180, 0]`, putting its left edge at `x = 150`. The same path changes as follows:
+
+<DocTabs defaultValue="ir">
+<DocTab value="ir" label="IR: named references">
+
+```ts
+{
+  type: 'path',
+  children: [
+    { type: 'step', kind: 'move', to: { id: 'A' } },
+    { type: 'step', kind: 'line', to: { id: 'B' } },
+  ],
+}
+```
+
+</DocTab>
+<DocTab value="scene" label="Scene: drawing geometry">
+
+```ts
+{
+  type: 'path',
+  commands: [
+    { kind: 'move', to: [30, 0] },
+    { kind: 'line', to: [150, 0] },
+  ],
+}
+```
+
+</DocTab>
+</DocTabs>
+
+These excerpts show the path structure. The complete Scene also contains rectangles, text and canvas information. Core delivers Scene alongside artifacts and spatial handles; Vanilla organizes the result into `ProcessingResult` for the host. Drawing uses Scene, while applications can read other outputs as needed.
+
+<SourceLinks
+  sources={[
+    { label: 'Core compilation and result assembly', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: 'Node connection boundaries', path: 'packages/kernel/core/src/compile/node/boundary.ts' },
+  ]}
+/>
+
+## Render and hosts
+
+Render consumes the geometry in Scene. The SVG backend builds a `SvgNode` tree of elements and attributes, which React or Vanilla's DOM host commits as SVG elements. The Canvas backend executes drawing operations on a canvas managed by its host.
+
+<ComponentPreview files="pipeline-output" size="sm" hideCode type="flow" />
+
+Both branches consume the same node positions and path endpoints. The example line runs from `[30, 0]` to `[150, 0]` in either backend. Hosts mount, update and release display resources, and connect events and animation when the application needs them.
+
+Static export can serialize the SVG tree into a string. Applications with an existing Scene can enter directly at the backend. To change declarations, they pass updated input through Vanilla and send the new result to the host.
+
+<SourceLinks
+  sources={[
+    { label: 'SVG description tree', path: 'packages/kernel/render/src/svg/builders/document.ts' },
+    { label: 'React displays processing results', path: 'packages/kernel/react/src/render/processing-result.tsx' },
+    { label: 'Vanilla SVG host', path: 'packages/kernel/vanilla/src/dom/mount-svg.ts' },
+    { label: 'Canvas drawing', path: 'packages/kernel/render/src/canvas/render-to-canvas.ts' },
+  ]}
+/>
+
+## Implementation sequence
+
+Follow the example's React JSX, static, SVG branch through these entries. Arrows show the reading order of execution, including calls inside input preparation and the compile driver.
+
+<ComponentPreview files="pipeline-implementation" size="lg" hideCode type="flow" />
+
+Start at Layout's `createInputScene`, then follow Vanilla's `prepareStaticProcessing`. Inside it, `prepareProcessingInput` prepares the input and the default driver calls Core through `compileToScene`. The result returns to React's `ProcessingResultHost`; `buildSvgFrameDocument` and `svgToReact` produce React elements for React to commit to the page.
+
+<SourceLinks
+  sources={[
+    { label: 'React scene entry', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
+    { label: 'Vanilla synchronous processing', path: 'packages/kernel/vanilla/src/processing/static.ts' },
+    { label: 'Default compile driver', path: 'packages/kernel/vanilla/src/runtime/compile-driver.ts' },
+    { label: 'SvgNode to React elements', path: 'packages/kernel/react/src/render/svg/svg-to-react.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Compilation Pipeline',
+      description: 'Trace context, traversal and result assembly inside Core',
+      url: '/kernel/packages/core/compilation',
+    },
+    {
+      title: 'Compilation Output',
+      description: 'Distinguish Scene, artifacts, spatial handles and diagnostics',
+      url: '/kernel/packages/core/compilation-output',
+    },
+    {
+      title: 'Incremental Execution · runtime',
+      description: 'Understand sources, computations and transactions',
+      url: '/kernel/packages/runtime',
+    },
+    {
+      title: 'Rendering Backends · render',
+      description: 'Continue with SVG and Canvas backend implementations',
+      url: '/kernel/packages/render',
+    },
+  ]}
+/>

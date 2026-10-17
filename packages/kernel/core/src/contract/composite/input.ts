@@ -103,7 +103,7 @@ export const resolveCompositeInputScope = (
   source: IRScene,
   inputs: CompositeInputBindings | undefined,
 ): CompositeRuntimeInputScope => {
-  if (inputs === undefined) return { source, bindings: [] };
+  if (inputs === undefined) return captureCompositeInputScope(source, []);
 
   const snapshot = snapshots.get(inputs);
   if (snapshot === undefined || !jsonStructuralEquals(snapshot.source, source))

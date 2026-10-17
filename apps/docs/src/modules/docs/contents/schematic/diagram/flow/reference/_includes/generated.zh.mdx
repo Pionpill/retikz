@@ -506,14 +506,15 @@ export type FlowGroupProps = FlowGroupMarkerProps &
 
 <ApiTable>
 
-| 成员              | 类型                                  | 默认值 | 说明                                                           |
-| ----------------- | ------------------------------------- | ------ | -------------------------------------------------------------- |
-| `align?`          | `"center" \| "start" \| "end"`        | —      | 交叉轴对齐，省略时居中                                         |
-| `containerWidth?` | `"match-largest"`                     | —      | 纵向容器为直接子容器分配最大自然宽度                           |
-| `direction`       | `"right" \| "left" \| "up" \| "down"` | —      | 直接子项的必填排列方向                                         |
-| `gap?`            | `number`                              | —      | 相邻直接子项的间距                                             |
-| `itemWidth?`      | `number \| "fill" \| "match-largest"` | —      | 直接 Entity 固定宽度、match-largest 等宽，或 fill 均分新增宽度 |
-| `kind`            | `"linear"`                            | —      | 沿一个方向固定排列直接子项                                     |
+| 成员               | 类型                                  | 默认值 | 说明                                                                                                          |
+| ------------------ | ------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------- |
+| `align?`           | `"center" \| "start" \| "end"`        | —      | 交叉轴对齐，省略时居中                                                                                        |
+| `containerHeight?` | `"match-largest"`                     | —      | 横向 linear 布局按直接子 Group 的最大自然高度统一外框，节点保持自然尺寸，单一纵向线性内容的剩余高度均分到间隙 |
+| `containerWidth?`  | `"match-largest"`                     | —      | 纵向容器为直接子容器分配最大自然宽度                                                                          |
+| `direction`        | `"right" \| "left" \| "up" \| "down"` | —      | 直接子项的必填排列方向                                                                                        |
+| `gap?`             | `number`                              | —      | 相邻直接子项的间距                                                                                            |
+| `itemWidth?`       | `number \| "fill" \| "match-largest"` | —      | 直接 Entity 固定宽度、match-largest 等宽，或 fill 均分新增宽度                                                |
+| `kind`             | `"linear"`                            | —      | 沿一个方向固定排列直接子项                                                                                    |
 
 </ApiTable>
 

@@ -1,7 +1,7 @@
 import type { JsonValue } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
-import type { AnyCompositeDefinition, CompositeCompileContext, CompositeCompileResult } from '../../contract';
+import type { AnyCompositeDefinition, CompositeCompileContext, CompositeEvaluationResult } from '../../contract';
 import type { IRComposite } from '../../schemas';
 
 /** 已完成 composite key 与 provider lookup 的绑定结果 */
@@ -26,7 +26,7 @@ export type CompositeBinding =
       /** provider 声明的完整节点 schema */
       schema: ZodType;
       /** schema 解析后可执行的编译 callback */
-      compile: (node: unknown, context: CompositeCompileContext) => CompositeCompileResult<JsonValue>;
+      compile: (node: unknown, context: CompositeCompileContext) => CompositeEvaluationResult<JsonValue>;
       /** 可选的 artifact schema */
       artifactSchema?: ZodType<JsonValue>;
     }>;
