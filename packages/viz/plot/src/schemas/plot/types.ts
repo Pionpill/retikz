@@ -1,7 +1,14 @@
 import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
 import type { PlotPartitionDimensionSchema, PlotPartitionScalarSchema } from './partition';
-import type { PlotFacetConfigurationSchema, PlotFacetOptionsSchema, PlotSchema } from './schema';
+import type {
+  PlotDataExecutionSchema,
+  PlotFacetConfigurationSchema,
+  PlotFacetOptionsSchema,
+  PlotSchema,
+} from './schema';
+
+export type IRPlotDataExecution = ZodInfer<typeof PlotDataExecutionSchema>;
 
 /** Plot IR 根节点（plot composite 节点） */
 export type IRPlot = Omit<ZodInfer<typeof PlotSchema>, 'coordinate' | 'composition'> &

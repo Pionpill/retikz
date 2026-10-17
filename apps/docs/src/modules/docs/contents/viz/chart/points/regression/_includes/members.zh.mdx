@@ -28,7 +28,7 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
 | 外观 | `point`         | `IRRegressionPointProperties`                            | 设置观测点外观                                                   |
 | 趋势 | `trend.curve`   | `IRRegressionTrendProperties['curve']`                   | 默认 `catmullRom`，额外趋势继承并可覆盖                          |
 |      | `trend`         | `IRRegressionTrendProperties`                            | 设置趋势线外观，不改变拟合方法                                   |
-| 留白 | `autoPadding`   | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
+| 留白 | `autoPadding`   | `false`、`'max-radius'`、`'point-aware'`、`object`       | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
 |      | `domainPadding` | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                   |
 
 完整属性结构见 [属性 Schema](#regressionproperties--irregressionchartproperties--regressionchartpropertiesschema)；公共外观配置不在这里展开。

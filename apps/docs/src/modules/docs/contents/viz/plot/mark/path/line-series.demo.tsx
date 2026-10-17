@@ -12,6 +12,11 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     grouping: values[LINE_SERIES_CONTROL_IDS.grouping],
     showLabels: values[LINE_SERIES_CONTROL_IDS.showLabels],
     closed: values[LINE_SERIES_CONTROL_IDS.closed],
+    position: values[LINE_SERIES_CONTROL_IDS.position],
+    side: values[LINE_SERIES_CONTROL_IDS.side],
+    sloped: values[LINE_SERIES_CONTROL_IDS.sloped],
+    interrupt: values[LINE_SERIES_CONTROL_IDS.interrupt],
+    distance: values[LINE_SERIES_CONTROL_IDS.distance],
   }),
 );
 

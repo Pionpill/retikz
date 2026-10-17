@@ -30,7 +30,8 @@ import { createNodeGeometryContext } from '../node';
 import type { NodeGeometryContext } from '../node';
 import { createClipRegistry, createPaintRegistry, DEFAULT_MAX_CLIP_DEPTH } from '../resource';
 import { createRound, DEFAULT_PRECISION } from '../scene';
-import { fallbackMeasurer } from '../text';
+import { fallbackMeasurer, normalizeTextMetrics } from '../text';
+import type { NormalizedTextMetrics } from '../text';
 import type { CompileOptions } from '../types';
 import type { CompileWarningInput } from '../warning';
 import { formatCompileWarning } from '../warning';
@@ -114,6 +115,21 @@ type CreateCompileContextOptions = Omit<CompileOptions, 'onWarn'> & {
 
 /** 创建 compile 编排所需的不可变依赖上下文 */
 export const createCompileContext = (ir: IRScene, options: CreateCompileContextOptions): CompileContext => {
+  const measuredText = new Map<string, Readonly<NormalizedTextMetrics>>();
+  const measurer = options.measureText ?? fallbackMeasurer;
+  const measureText: CompileContext['measureText'] = (text, font) => {
+    const key = JSON.stringify([text, font.family, font.size, font.weight, font.style]);
+    const cached = measuredText.get(key);
+    if (cached !== undefined) {
+      measuredText.delete(key);
+      measuredText.set(key, cached);
+      return cached;
+    }
+    const result = Object.freeze(normalizeTextMetrics(measurer(text, font)));
+    measuredText.set(key, result);
+    if (measuredText.size > 4096) measuredText.delete(measuredText.keys().next().value!);
+    return result;
+  };
   const round = createRound(options.precision ?? DEFAULT_PRECISION);
   const labelDistance = options.labelDistance ?? DEFAULT_LABEL_DISTANCE;
   if (!Number.isFinite(labelDistance) || labelDistance < 0) {
@@ -149,7 +165,7 @@ export const createCompileContext = (ir: IRScene, options: CreateCompileContextO
     loweredIr: ir,
     theme: resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme', themeStyles),
     themeStyles,
-    measureText: options.measureText ?? fallbackMeasurer,
+    measureText,
     lowerTex: options.lowerTex,
     onWarn,
     composites,

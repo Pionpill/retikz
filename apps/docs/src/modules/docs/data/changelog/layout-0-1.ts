@@ -13,6 +13,13 @@ export const layoutV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '按需布局测量', en: 'On-demand layout measurement' },
+          content: {
+            zh: 'Flex、Grid、Overlay 按实际依赖查询尺寸，跳过无关贡献，并复用同次编译的嵌套查询结果；最终几何、对齐和产物保持原有语义。',
+            en: 'Flex, Grid, and Overlay query dimensions according to actual dependencies, skip irrelevant contributions, and reuse nested queries within a compilation while preserving final geometry, alignment, and artifacts.',
+          },
+        },
+        {
           label: { zh: '独立能力边界', en: 'Independent capability boundary' },
           content: {
             zh: 'Layout 只拥有容器排版、约束求解、placement、artifact 与 inspection；Core 继续拥有 proposal / probe / replay 和 Scene，算法布局仍在本包边界之外。',

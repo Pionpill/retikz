@@ -17,6 +17,8 @@ Point Chart 当前读取最终 semantic marks 的常量 size 或 size scale rang
 
 ## 决策：Plot 求解逐点约束，Chart 选择自动策略
 
+[ADR-016](./016-point-mark-auto-padding.md) 修订本决策的策略入口、默认值与需求归集：Point / Relation 可直接声明 autoPadding，Plot 负责最大半径和逐点计算，Chart 仅下传默认策略。下文逐点 capability、有效数据、坐标度量与求解不变量继续有效；涉及 Chart 生成 mark 引用、extension 排除及四边换算归属的原描述由 ADR-016 替代。
+
 Plot 拥有转换后的 data view、位置与尺寸映射、coordinate scope 和绘图区尺寸，负责逐点边缘约束及最终比例尺。Chart 只声明参与自动留白的 semantic marks 和显式覆盖；React、Vanilla 与 renderer 不计算留白。
 
 所有 Point chartType 的 properties 统一增加 `autoPadding`，Bubble 默认 `point-aware`，按各气泡实际半径求解；其它图类型默认 `max-radius`，保留最大半径策略。两种策略均可显式选择。包括 Scatter、Bubble、Regression、Connected Scatter、Ranged Dot 和 Strip，不按图类型另起策略字段。

@@ -1,47 +1,201 @@
 ---
-title: PointMark
-description: PointMark 是最简单的图元：它在坐标系定位后绘制一个 Node，可作为散点、气泡、形状标记或文本点的底层能力。
+title: PointMark · 点图元
+description: 用 PointMark 将每行数据画成一个节点，按字段控制位置、大小与形状，并添加文字或散布重叠的观测。
 ---
 
-`<PointMark>` 是最简单的图元：它先让每行数据在当前坐标系里得到一个位置，再在这个位置绘制一个 core `Node`。这个 Node 可以是默认圆点、形状标记、气泡、文本，或带标签的组合形态；散点图、气泡图和文本点都可以看作它的上层封装。
+一行数据对应一个位置，`PointMark` 在这个位置画一个[节点（Node）](/kernel/components/node)。通过两个数值字段（对应 `x`、`y`）确定位置，再通过节点的其他视觉通道展示相应的信息。
 
-绑哪些位置通道由[坐标系](/viz/plot/coordinate)决定：内置一维坐标使用 `x`，内置二维坐标使用 `x` / `y`；自定义坐标可以声明额外 role。这些属性在组件层都是可选的；当前坐标系会在编译期校验需要哪些维度。
+这里的节点并不局限于传统意义上的散点，而是对应底层 Kernel 的 Node 组件，因此可以展现为散点、文本、图形等多种形式。本页先用三个点完成接入，再介绍外观、标签和重叠点的散布。字段与常量的区别见[通道绑定](/viz/plot/channel/binding)，安装和宿主接入见[快速开始](/viz/plot/get-start)。
 
-## 用法
+## 接入方式
 
-```tsx
-import { Plot, PointMark } from '@retikz/plot-react';
-```
-
-```tsx
-<Plot data={cities}>
-  <PointMark x="lng" y="lat" />
-</Plot>
-```
-
-PointMark 常和 PathMark 叠加——同一份数据先画 `<PathMark>` 再叠 `<PointMark>` 标出每个观测点。
-
-### 何时使用
-
-PointMark 是底层点 mark：它只负责把每行数据投影成一个坐标位置，并把样式、文本等通道写到这个位置对应的 Node 上。表现层看到的“散点图”“气泡图”“文本点”不是不同的底层 mark，而是同一个 PointMark 在不同通道配置下的显示形态。
-
-这也是 PointMark 通常不需要按坐标系单独适配的原因：坐标系只负责把位置角色投影成屏幕点，表现层再决定这个点画成什么。
-
-| 表现形态 | 关键属性             | 说明                                                           |
-| -------- | -------------------- | -------------------------------------------------------------- |
-| 散点     | `x` / `y`            | 默认形态，每行数据绘制一个点；`color` / `shape` 继续装饰这组点 |
-| 气泡图   | `size`               | 点半径由数值字段驱动，位置投影不变                             |
-| 文本点   | `text` / `dx` / `dy` | 单独使用 `text` 时绘制文本 Node，可理解为表现层的 TextMark     |
-
-## 例子
-
-前四个通用示例可以在“坐标系”中切换笛卡尔与极坐标。PointMark 配置保持不变；在极坐标中，`x` 是角向位置，`y` 是径向位置。
-
-### 基础用法
-
-`x` / `y` 决定每行数据的锚点，PointMark 再在每个锚点生成一个默认圆点。可以继续把分类字段映射为颜色，或把数值字段映射为尺寸，从普通散点切换成气泡。
+下面将 GDP 绑定到横轴、预期寿命绑定到纵轴，每条记录画一个半径为 6 的圆点。两条比例尺各留出 15% 的数据域空间，便于看清边缘的点。这些是示例设置，不是 PointMark 的默认值。
 
 <ComponentPreview
+  mode="showcase"
+  files={['point-entry', 'point-entry.data.ts']}
+  controls={{ name: 'point-entry' }}
+  responsive
+  hideCode
+  size="md"
+/>
+
+在 HTML 中准备 `<div id="plot"></div>`，选择以下任一入口。React JSX 中，图元、比例尺和轴都是 Plot 的子组件：
+
+```text
+Plot
+├── PointMark
+├── PlotScale
+└── PlotAxis
+```
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+从 `@retikz/plot-react` 导入组件，用 `PointMark` 的 props 声明点的位置。
+
+```tsx
+import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A', population: 8 },
+  { gdp: 900, life: 81, region: 'B', population: 16 },
+  { gdp: 1600, life: 84, region: 'A', population: 28 },
+];
+
+createRoot(document.getElementById('plot')!).render(
+  <Plot data={rows} width={360} height={220}>
+    <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+    <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+    <PointMark x="gdp" y="life" size={6} />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" />
+  </Plot>,
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+从 `@retikz/plot` 导入配置类型，将完整 IR 传给 React `Plot` 的 `spec`。
+
+```tsx
+import { Plot } from '@retikz/plot-react';
+import type { IRPlot } from '@retikz/plot';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A', population: 8 },
+  { gdp: 900, life: 81, region: 'B', population: 16 },
+  { gdp: 1600, life: 84, region: 'A', population: 28 },
+];
+
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+    { type: 'linear', name: 'y', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'point',
+      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
+      size: { kind: 'constant', value: 6 },
+    },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
+
+createRoot(document.getElementById('plot')!).render(<Plot spec={spec} data={{ rows }} width={360} height={220} />);
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+从 `@retikz/plot-vanilla` 导入 `plot` 创建配置，再用 `renderPlot` 输出 SVG。
+
+```ts
+import { plot, renderPlot } from '@retikz/plot-vanilla';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A', population: 8 },
+  { gdp: 900, life: 81, region: 'B', population: 16 },
+  { gdp: 1600, life: 84, region: 'A', population: 28 },
+];
+
+const spec = plot({
+  data: { reference: 'rows' },
+  scales: [
+    { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+    { type: 'linear', name: 'y', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'point',
+      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
+      size: { kind: 'constant', value: 6 },
+    },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+});
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+直接声明 `IRPlot`，交给 `renderPlot` 和命名数据集渲染。
+
+```ts
+import type { IRPlot } from '@retikz/plot';
+import { renderPlot } from '@retikz/plot-vanilla';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A', population: 8 },
+  { gdp: 900, life: 81, region: 'B', population: 16 },
+  { gdp: 1600, life: 84, region: 'A', population: 28 },
+];
+
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+    { type: 'linear', name: 'y', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'point',
+      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
+      size: { kind: 'constant', value: 6 },
+    },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
+
+以下视觉属性除特别注明外，均支持常量通道和字段通道。数字、布尔或对象可作为常量简写；颜色等有歧义的字符串使用显式常量绑定，字段绑定规则见[通道绑定](/viz/plot/channel/binding)。表格按属性职责分组，demo 展示同组属性的组合效果。
+
+### 位置与大小
+
+`x`、`y` 指定读取哪个字段。默认直角坐标系将它们解释为横向和纵向位置；切换到极坐标后，`x` 表示角向位置，`y` 表示径向位置。两种坐标下仍是一行数据一个点。
+
+| 属性          | 含义         | 说明                                                                                                        |
+| ------------- | ------------ | ----------------------------------------------------------------------------------------------------------- |
+| `x`、`y`      | 位置字段     | 组件属性只接受字段名或字段路径；直角坐标下对应横向和纵向，极坐标下对应角向和径向。一维坐标只使用 `x`        |
+| `z`           | 第三位置字段 | 仅供消费第三位置 role 的自定义坐标系使用，内置坐标系不使用                                                  |
+| `size`        | 节点半径     | 常量直接指定半径；数值字段默认通过平方根比例尺映射，便于比较面积。负值报错                                  |
+| `minimumSize` | 最小视觉尺寸 | 支持数字或包含 `width`、`height`、`default` 的对象；普通点的 `size` 优先。示例切换到“最小尺寸”后省略 `size` |
+| `color`       | 整体颜色     | 本例按地区分类着色；完整颜色与绘制样式见下节                                                                |
+
+先保持位置字段不变，比较固定散点与人口气泡，再切换字段观察位置变化。
+
+<ComponentPreview
+  mode="showcase"
   files={['point-position', 'point-position.preview.tsx', 'point-api.data.ts']}
   controls={{ name: 'point-position' }}
   size="lg"
@@ -49,55 +203,90 @@ PointMark 是底层点 mark：它只负责把每行数据投影成一个坐标�
   defaultSourceFile="point-position.preview.tsx"
 />
 
-### 位置散布
+### 外观
 
-`placement.adjustments` 在位置比例尺之后、Point 几何之前调整位置。内置 `jitter` 的 ratio 写法使用离散比例尺的实时刻度间距；数值写法则直接使用当前 role 的输出单位。
+填充、描边和透明度改变点的外观。示例把颜色来源分为三种，切换来源后只显示当前模式可操作的字段。
 
-#### 直角坐标
+| 属性          | 含义         | 说明                                                                                                                               |
+| ------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `color`       | 整体颜色     | 分类字段通过颜色比例尺映射；常量颜色使用显式常量绑定。显式 `fill` 可覆盖节点填充                                                   |
+| `fill`        | 填充         | 支持字段、常量色，以及 `linearGradient`、`radialGradient`、`conicGradient`、`pattern`、`image` 等 Paint `kind`；字符串按字段名解析 |
+| `stroke`      | 描边颜色     | 与 `fill` 一样支持字段、常量色和 Paint 对象；需要纯色时使用显式常量绑定                                                            |
+| `strokeWidth` | 描边宽度     | 非负数，输出单位；设为 0 可隐藏描边                                                                                                |
+| `opacity`     | 透明度       | 单值设置整体不透明度，也可分别设置 `overall`、`fill`、`stroke`；各分量支持常量与字段绑定，整体因子与填充、描边因子相乘             |
+| `dashed`      | 虚线描边     | 布尔通道，启用预设虚线                                                                                                             |
+| `dotted`      | 点线描边     | 布尔通道，启用预设点线；同时启用 `dashed` 时后者优先                                                                               |
+| `dashPattern` | 自定义虚线   | 数值数组，交替指定实线段与间隔长度；优先于 `dashed` 和 `dotted`                                                                    |
+| `shadow`      | 阴影         | 支持阴影预设或自定义阴影对象，可通过字段逐节点设置                                                                                 |
+| `blendMode`   | 混合模式     | 控制与下方图形的颜色合成，例如 `normal`、`multiply`、`screen`                                                                      |
+| `zIndex`      | 节点绘制顺序 | 控制生成节点的绘制顺序；不等同于整个图元的语义 `layer`                                                                             |
 
-分类 x 轴上的 ratio jitter 会把同组观测散布在一个刻度间距内。切换为输出单位后，`span` 直接表示 scale 映射后的总宽；Plot 都会为两端预留 jitter 半宽与 Point 外延，避免散点越出坐标范围。
-
-`distribution` 默认为 `{ kind: 'uniform' }`，让偏移在整个范围内均匀散布。`{ kind: 'normal', sigma }` 使用零均值、截断在归一化 `[-1, 1]` 内的正态分布，因此点主要靠近类别中心，仍不会超出 `span` 的边界。`sigma` 相对于散布半宽表达：默认 `0.5`，值越小越集中，值越大越接近整个允许范围。
-
-这里的 jitter 是 placement 阶段的位置调整：它不改写数据行或字段值。Data transform 中的 `jitter` 会在比例尺之前派生字段，两者用途不同，不能互换。
-
-<ComponentPreview
-  files={['point-jitter-cartesian', 'point-jitter-cartesian.preview.tsx', 'point-jitter.data.ts']}
-  controls={{ name: 'point-jitter-cartesian' }}
-  size="lg"
-  caption="切换宽度单位并调整 span 与 seed；每个分类中心保持不变。"
-  defaultSourceFile="point-jitter-cartesian.preview.tsx"
-/>
-
-#### 极坐标
-
-极坐标中的 x role 是角度。离散角度使用刻度间距比例：默认 `chord` 模式让抖动点沿相邻多边形顶点之间的直线边移动；连续角度使用数值输出单位并沿圆弧移动。两种模式都先合成角度，再按每条数据的 y 半径投影，所以外圈的屏幕位移更长，而不是统一的 `dx` / `dy`。示例通过径向 `domainPadding` 为散布空间和 Point 半径预留外侧距离。
+示例将节点成对重叠，便于观察混合模式与绘制顺序。先关闭自定义虚线和虚线，再开启点线比较描边；切换正序、倒序，观察重叠边缘的遮挡变化。
 
 <ComponentPreview
-  files={['point-jitter-polar', 'point-jitter-polar.preview.tsx', 'point-jitter.data.ts']}
-  controls={{ name: 'point-jitter-polar' }}
-  size="lg"
-  caption="切换离散分类与连续数值角度，再调整散布宽度与随机种子，观察多边形和圆形网格中的角度散布。"
-  defaultSourceFile="point-jitter-polar.preview.tsx"
-/>
-
-### 样式变换
-
-`fill` / `stroke` / `opacity` 等 Node 样式只改变散点的视觉外观，不改变上一例建立的投影位置。这里可以直接比较渐变、透明度、虚线描边与阴影。
-
-<ComponentPreview
+  mode="showcase"
   files={['point-style', 'point-style.preview.tsx', 'point-api.data.ts']}
   controls={{ name: 'point-style' }}
   size="lg"
-  caption="保持 x / y 不变，组合调整颜色填充、透明度、描边、尺寸和阴影。"
+  caption="在成对重叠的节点上比较填充、透明度、线型、阴影、混合模式与绘制顺序。"
   defaultSourceFile="point-style.preview.tsx"
 />
 
-### 文本标签
+### 形状
 
-PointMark 有两种文字用法：`label` 保留散点图形，再把文字挂到对应的 `Node.label`；`text` 则把散点本身替换成无边框文本 Node，因此散点也可以只有文字内容。
+节点默认保持屏幕方向。`orientation={{ kind: 'coordinate', role: 'x', align: 'tangent' }}` 让节点沿当前位置的 x 坐标曲线定向；`normal` 改为其正法向。`role` 是坐标角色，不是可见坐标轴的 ID。极坐标中 x 表示角向、y 表示径向，自定义曲线坐标沿用同一规则。
+
+在下方示例中选择极坐标和矩形，再切换“方向对齐”。`rotate` 是在对齐角度上追加的旋转偏移；圆形自身旋转没有可见差异。方向跟随角色空间的位置调整，屏幕偏移只移动节点，不重新计算方向。
+
+`shape` 可以指定固定形状，也可以按分类字段选择形状。此处比较固定形状：选择圆、矩形或菱形，或者用带参数的形状引用设置星形角数和多边形边数。旋转与尺寸都作用于当前形状。
+
+| 属性           | 含义       | 说明                                                                                                              |
+| -------------- | ---------- | ----------------------------------------------------------------------------------------------------------------- |
+| `shape`        | 节点形状   | 支持已注册的形状名或 `{ type, params }` 引用；字段绑定要求分类字段，连续和时间字段不支持                          |
+| `orientation`  | 方向参考   | 图元级配置；默认 `{ kind: 'screen' }`，或 `{ kind: 'coordinate', role, align: 'tangent' / 'normal' }`；不绑定字段 |
+| `rotate`       | 旋转角度   | 以度为单位叠加到方向对齐角；支持常量与字段通道，圆形旋转没有可见差异                                              |
+| `scale`        | 节点缩放   | 支持统一倍数或 `{ x, y, default }` 轴向配置，不改变数据位置                                                       |
+| `cornerRadius` | 圆角半径   | 非负数；效果取决于所选形状是否支持圆角，本例切换到矩形观察                                                        |
+| `padding`      | 内边距     | 从内容到边框的间距；支持数字或按方向设置的间距对象                                                                |
+| `margin`       | 连接外边距 | 连接边界外的偏移，影响连接位置，不改变可见填充形状                                                                |
+| `boundary`     | 连接边界   | 指定连接使用的轮廓，支持 `shape`、`circle` 或形状引用；与可见 `shape` 分开设置                                    |
+
+星形由 `@retikz/extension` 的 `StarShapeDefinition` 提供；本例通过 Layout 的 `extensions.shapes` 显式注册。
+
+示例的起始尺寸为 18，灰色辅助连线由 RelationMark 绘制，用于观察节点外边距（`margin`）对连线接入位置的影响，可通过“显示连线”开关关闭。切换到矩形后比较圆角、内边距与连接外边距；“圆形包络”使用 `fit: 'bounds'`，改变连线接入的位置，不改变可见形状。
 
 <ComponentPreview
+  mode="showcase"
+  files={['point-node-shape', 'point-node-shape.preview.tsx', 'point-api.data.ts']}
+  controls={{ name: 'point-node-shape' }}
+  size="lg"
+  caption="比较形状、缩放与间距，并通过辅助连线观察连接边界。"
+  defaultSourceFile="point-node-shape.preview.tsx"
+/>
+
+### 文字与标签
+
+文字有两种用途，先选择需要的结果，再设置样式。
+
+| 属性            | 含义           | 说明                                                                                                                     |
+| --------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `text`          | 文本节点内容   | 组件属性只绑定字段；设置后以无边框文字代替普通形状                                                                       |
+| `displayFormat` | 文本格式       | 仅与 `text` 字段同用，直接指定数值或时间格式串，不是通道绑定                                                             |
+| `textColor`     | 文字颜色       | 支持常量或字段通道，作用于文本节点；附属标签的颜色在 `label` 中设置                                                      |
+| `font`          | 字体           | 支持字体配置对象或字段通道，可设置字号、字重、字体族等；附属标签使用 `label.font`                                        |
+| `align`         | 多行文字对齐   | 支持 `start`、`middle`、`end`，作用于多行文本块内部                                                                      |
+| `lineHeight`    | 文字行高       | 正数，输出单位；作用于多行文本节点                                                                                       |
+| `maxTextWidth`  | 文字宽度上限   | 正数，超过宽度时换行；与行高、对齐结合使用                                                                               |
+| `dx`、`dy`      | 文本位置偏移   | 直接指定数值，不支持字段通道；正值分别向右和屏幕下方移动，仅作用于文本节点                                               |
+| `label`         | 附属标签       | 支持字段名、标签对象或有序标签数组；对象指定内容、位置、距离、引线与样式。固定内容使用 `value`，格式使用 `displayFormat` |
+| `resolveLabel`  | 运行时标签回调 | 接收数据行并返回文字，优先于标签内容；必须设置图元 `id`，回调不进入可序列化 IR                                           |
+
+标签的位置、距离、引线与字体写在 `label` 对象中；Source IR 的文字绑定写在 `label.content`。文本点通过 `textColor`、`font` 设置文字外观，`dx`、`dy` 调整相对位置，正值分别向右、向屏幕下方移动。它们不会平移普通散点。
+
+切换“文本点”与“多行文字”后比较对齐、行高和宽度；选择人口字段后比较数值格式。“回调标签”展示由同一行的字母和人口数值组合生成的内容。
+
+<ComponentPreview
+  mode="showcase"
   files={['point-text', 'point-text.preview.tsx', 'point-api.data.ts']}
   controls={{ name: 'point-text' }}
   size="lg"
@@ -105,117 +294,164 @@ PointMark 有两种文字用法：`label` 保留散点图形，再把文字挂�
   defaultSourceFile="point-text.preview.tsx"
 />
 
-### 节点形态
+## 扩展用法
 
-PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape` 既可以是圆、矩形、菱形等简单形状名，也可以是带 `params` 的星形、多边形或已注册的自定义形状引用；参数化形状还能继续调整角数或边数。
+### 边缘留白
+
+节点的位置表示中心。极值点落在绘图区边缘时，半径会伸出边界，因此 `PointMark` 默认采用 `max-radius`，为连续位置尺度预留最大节点半径。位置、数据和节点尺寸保持不变，变化的是尺度映射。
+
+| 属性                      | 含义         | 说明                                                                                                                      |
+| ------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `autoPadding`             | 自动留白策略 | `max-radius` 为默认值；`point-aware` 按实际位置与半径求解；`false` 关闭当前图元的自动贡献。直接传策略，不通过字段通道绑定 |
+| `autoPadding.clearance`   | 外缘净空     | 对象形式 `{ kind, clearance }` 中的非负绘图单位，默认 0；支持数字或四边间距对象，明确四边仅适用于笛卡尔坐标               |
+| `PlotScale.domainPadding` | 尺度覆盖     | 数字（包括 0）固定两端；`range` 只固定已写的端，省略端自动补齐；`ratio` 省略端为 0；显式 `mark` 分支独立指定参与图元      |
+
+示例保持中央大点与边缘小点的大小不变。切换策略，观察中央大点是否需要额外边缘空间；再增加净空，或将 x 尺度起点设为零，比较显式配置的优先级。
 
 <ComponentPreview
-  files={['point-node-shape', 'point-node-shape.preview.tsx', 'point-api.data.ts']}
-  controls={{ name: 'point-node-shape' }}
+  mode="showcase"
+  files={['point-auto-padding', 'point-auto-padding.preview.tsx', 'point-auto-padding.data.ts']}
+  controls={{ name: 'point-auto-padding' }}
+  defaultSourceFile="point-auto-padding.preview.tsx"
   size="lg"
-  caption="保持数据和位置不变，切换形状并调整尺寸、旋转、星形角数或多边形边数。"
-  defaultSourceFile="point-node-shape.preview.tsx"
+  caption="数值字段经默认尺寸尺度映射为半径 2、20、2。尺度覆盖仅调整 x；关闭当前图元策略仍允许其它图元为共享尺度贡献留白。"
 />
 
-## 技术原理
+最大半径策略不扫描数据行：固定尺寸使用 `size`，字段尺寸使用尺寸尺度输出范围的最大值；分类位置尺度保留自身 padding。逐点策略使用有效数据及位置调整后的实际位置，利用中央大点已有的边缘空间，并支持具有对应能力的连续、分类和极坐标尺度。
+
+两种策略只保护 `size` 表达的半径，不测量文字、描边、阴影、形状缩放或 `minimumSize` 的包围盒。多个图元共享尺度时，各端取最大需求；混合策略和共享分面在同一最终映射上满足约束。未知尺寸上界、缺少所需能力或无可行绘图区时会报错。
+
+### 抖动
+
+当同类观测挤在同一位置时，可以用 `placement.adjustments` 将点略微散开。下面的示例使用内置 `jitter`：它调整已经过比例尺映射的位置，原始数据和字段值保持不变。Data transform 中的 `jitter` 则派生数据字段，再由比例尺映射。
+
+通过坐标系下拉框切换直角坐标与极坐标。直角坐标下，刻度间距比例将同组节点散布在分类间距内；输出单位直接指定比例尺映射后的总宽度。Plot 会为两端预留抖动半宽与节点外延，轴线保持绘图区边界，分类刻度随节点映射位置调整。极坐标下，刻度间距比例使用离散分类角度，输出单位使用连续数值角度。
+
+`distribution` 默认为 `{ kind: 'uniform' }`，让偏移在整个范围内均匀散布。`{ kind: 'normal', sigma }` 使用零均值、截断在归一化 `[-1, 1]` 内的正态分布，因此点主要靠近类别中心，仍不会超出 `span` 的边界。`sigma` 相对于散布半宽表达：默认 `0.5`，值越小越集中，值越大越接近整个允许范围。
+
+极坐标中的 x role 是角度。离散角度使用刻度间距比例：默认 `chord` 模式让抖动点沿相邻多边形顶点之间的直线边移动；连续角度使用数值输出单位并沿圆弧移动。两种模式都先合成角度，再按每条数据的 y 半径投影，所以外圈的屏幕位移更长，而不是统一的 `dx` / `dy`。示例通过径向 `domainPadding` 为散布空间和 Point 半径预留外侧距离。
+
+<ComponentPreview
+  mode="showcase"
+  files={['point-jitter', 'point-jitter.preview.tsx', 'point-jitter.data.ts']}
+  controls={{ name: 'point-jitter' }}
+  size="lg"
+  caption="切换坐标系和宽度单位，调整散布宽度、分布与随机种子，观察节点位置的变化。"
+  defaultSourceFile="point-jitter.preview.tsx"
+/>
+
+## 错误与限制
+
+- 位置通道须满足当前坐标系：内置一维坐标使用 `x`，二维使用 `x` 和 `y`。不能因为组件类型中属性可选，就省略坐标系需要的字段。
+- 普通点的尺寸字段缺失、为 `null` 或不是有限数值时，该行不绘制点；负尺寸会报错。文本点走文字路径，不使用这条尺寸过滤规则。
+- `shape` 的字段映射要求分类字段，连续或时间字段会报错。固定形状使用已注册的名称或参数化引用。
+- `resolveLabel` 是运行时回调，使用时必须指定图元 `id`；回调不进入可序列化 IR。
+- 同阶段的位置调整保持声明顺序；所有 role 阶段调整都在坐标投影前，screen 阶段都在投影后。内置 jitter 在 seed、有效行顺序、角色、宽度和离散刻度间距相同时才重现相同位置。
+
+## 实现原理
 
 <ComponentAlert
   type="tip"
-  title="上手阶段可跳过本节"
-  description="需要排查无效数据为何被跳过、文本点为何替换圆点，或颜色分组如何下沉时再回来读。"
+  title="阅读提示"
+  description="本节解释内部实现，仅使用组件时可跳过，直接查阅后面的 API 参考。"
 />
 
-`<PointMark>` 只声明数据到点几何的映射，不直接渲染 DOM。它进入 `IRPlot` 后由 mark registry 分派给 point lowering，并复用当前坐标系与 core `Node`。
+### 点的解析
 
-| 阶段 | 可观察行为                                                                               |
-| ---- | ---------------------------------------------------------------------------------------- |
-| 定位 | 位置 scale 映射后先执行 role-space adjustment，再投影并执行 screen-space initializer     |
-| 生成 | 普通模式每行生成一个 core `Node`；设置 `text` 后改为文本 Node，并用 `dx` / `dy` 微调位置 |
-| 装饰 | `size`、`shape`、颜色与 Node 样式写入 datum Node；`label` 保留点本身并挂到 `Node.label`  |
-| 分层 | 没有颜色通道时共享 `defaults.node`；按字段着色时按颜色组织子层，最后附加 mark 图层信息   |
+点图元对应坐标系中的一个点，默认只依赖坐标系定位：坐标系将数据位置映射为绘图位置，点图元再在该位置生成一个 Node 节点。节点可以呈现为圆、星形或文字，其形状和外观由 Node 自身的属性决定，不随坐标空间的几何形式发生变形；显式方向对齐只额外改变节点的旋转角。
 
-普通 glyph 模式下，字段尺寸为缺失值、`null`、`NaN` 或无穷值时，该行不会生成 Point glyph；尺寸字段 descriptor、scale identity 与可选 legend 是数据集级信息，仍会保留。负数尺寸会直接报错，不会被跳过或截断。设置 `text` 后使用既有文本 Node 路径，不受这条仅针对 glyph 的尺寸守门影响。
+与需要连接多个顶点的 [PathMark](/viz/plot/mark/path) 不同，点图元不建立数据行之间的连接或顺序关系；与需要解释起止范围的 [IntervalMark](/viz/plot/mark/interval) 不同，它也不把坐标空间中的一段范围展开成几何区域。每条有效数据独立产生一个节点。数据变换、共享比例尺、留白求解或位置调整仍可以综合多行数据，但这些处理不改变点图元逐行生成节点的方式。
 
-同一阶段的 adjustments 保持声明顺序，但所有 role-space adjustment 都早于 coordinate projection，所有 screen-space initializer 都在投影之后。`seed`、有效行顺序、role、span 与最终离散 step 相同时，内置 jitter 会生成相同位置；无效位置仍保留随机序列槽位。需要整组屏幕位置的自定义算法见 [Position Adjustment](/viz/plot/mark/position-adjustment)。
+坐标系负责确定节点中心的位置，节点自身的形状随后在绘图空间中解析。例如，相同大小的圆点从直角坐标切换到极坐标后，中心按角度和半径重新定位，圆形不会随坐标网格弯曲成扇形。这里的独立性指投影完成后的节点形状；切换坐标系仍会影响位置、留白和投影前的位置调整。
 
-因此坐标系只决定“点在哪里”，PointMark 决定“每行生成什么 Node”，而具体形状、文字与视觉样式仍复用 [Node](/kernel/components/node/usage) 的能力。每个 mark 默认处于独立图层；调整整个 mark 与轴、图例的前后关系时使用 `layer={{ zIndex }}`，`zIndex` prop 只控制当前 mark 内 datum Node 的顺序。
+点图元最终 lower（下沉转换）为 [Node](/kernel/components/node)。下面用同一个点展示定位、绘制和细节处理：上排为直角坐标，下排为极坐标；橙色点始终标记投影后的中心，灰色点线是定位辅助线。
+
+<ComponentPreview files="point-projection" hideCode type="illustration" size="xxl" />
+
+1. **定位**：输入归一化后，Plot 取得数据视图、执行变换并解析通道。位置字段先经过比例尺，再由坐标系投影到屏幕：直角坐标中由两个坐标分量确定位置，极坐标中由角度和半径确定位置。配置 placement 时，role 阶段在投影前调整，screen 阶段在投影后调整；留白与布局求解提供最终尺度和坐标帧。
+2. **绘制**：每条有效数据在最终位置生成一个 Node，将尺寸、形状和颜色等通道结果交给节点。图中的矩形在两种坐标系下都保持 48 × 28 的屏幕尺寸，不会变成扇区。文字通道则生成文字节点，并应用 `dx`、`dy` 偏移。
+3. **细节处理**：节点处理描边、文字、标签和锚点，最后编译为 Scene，由 SVG 或 Canvas 绘制。图中加粗描边并添加标签，中心不变；显式配置方向对齐时还会旋转节点，具体见下一节。无效位置或缺失文字会跳过相应行；普通点的尺寸字段缺失或非有限时跳过，负尺寸则报错。
 
 <SourceLinks
   sources={[
-    {
-      label: '内置 mark definition 注册',
-      path: 'packages/viz/plot/src/providers/mark/registry.ts',
-      startLine: 29,
-      endLine: 40,
-    },
-    {
-      label: '按 mark type 解析 definition',
-      path: 'packages/viz/plot/src/resolve/mark/resolve.ts',
-      startLine: 10,
-      endLine: 28,
-    },
-    {
-      label: 'PointMark 投影、Node 生成与颜色分层',
-      path: 'packages/viz/plot/src/providers/mark/features/point.ts',
-      startLine: 41,
-      endLine: 158,
-    },
-    {
-      label: '统一 placement 阶段与输出守门',
-      path: 'packages/viz/plot/src/pipeline/placement/resolve.ts',
-    },
-    {
-      label: '尺寸字段校验、resolver 与 descriptor',
-      path: 'packages/viz/plot/src/providers/channel/features/node.ts',
-      startLine: 231,
-      endLine: 323,
-    },
+    { label: '组件输入与标签归一化', path: 'packages/viz/plot-vanilla/src/normalize/plot/mark-normalizers.ts' },
+    { label: 'Plot 通道、位置与下沉调度', path: 'packages/viz/plot/src/pipeline/expand/lower.ts' },
+    { label: '投影前后的阶段调整', path: 'packages/viz/plot/src/pipeline/placement/resolve.ts' },
+    { label: '逐行生成 Node 与文本分支', path: 'packages/viz/plot/src/providers/mark/features/point.ts' },
+    { label: '节点通道解析与属性传递', path: 'packages/viz/plot/src/providers/channel/features/node.ts' },
+  ]}
+/>
+
+### 方向对齐
+
+坐标系除了能回答“这个点画在哪里”，还可以回答“从这里沿某个坐标方向走，应该朝哪边”。方向对齐就是利用这个信息，让节点跟着坐标方向旋转。
+
+下面是启用坐标方向对齐后的整体流程：坐标系提供查询能力，PointMark 取得方向并合成角度，最后交给 Node 应用。
+
+<ComponentPreview files="point-orientation-flow" hideCode type="flow" size="md" />
+
+**1. 坐标系给出当前位置的方向**
+
+以极坐标为例：保持半径不变、增加角度，点会沿着圆周移动。它在当前位置沿圆周前进的方向，就是角向的**切向**；与切向垂直的方向，就是**法向**。如果保持角度不变、增加半径，点则沿着从圆心向外的方向移动，这就是径向的切向。
+
+因此，同一个位置可以查询不同坐标方向：内置极坐标用 `x` 表示角向、`y` 表示径向。坐标系通过 `tangentAt(role, mappedRoles)` 提供查询：传入要沿着哪个坐标方向，以及点当前的坐标参数，返回屏幕上的切向。法向由这个切向顺时针旋转 90° 得到，无需坐标系再提供一份。直角坐标的方向固定；极坐标和其他曲线坐标的方向可以随位置变化。
+
+**2. 点图元查询自己所在位置的方向**
+
+点图元先确定每条数据在坐标系中的位置，再根据 `orientation` 查询方向。例如 `role: 'x'`、`align: 'tangent'` 表示“取我当前位置的 x 切向”；改成 `align: 'normal'`，就使用对应的法向。
+
+如果角向抖动改变了节点的角度，查询时会使用抖动后的角度，所以节点会跟着新位置转向。屏幕偏移只是在绘图结果上挪动节点，不改变它在坐标系中的方向参考。
+
+**3. 把方向应用到 Node**
+
+点图元将查询到的方向换算成旋转角，让节点原本朝右的方向与它对齐，然后加上用户设置的 `rotate`。最终位置和角度一起交给 Node；Node 负责旋转形状、文字及其连接边界。
+
+可以在[形状示例](#形状)中选择“方向对齐”预设观察：长方形沿圆周切向摆放，改为 x 法向后，中心位置不变，长边转过 90°。再调整 `rotate`，就是在这个朝向上继续旋转。
+
+默认的屏幕方向跳过上述查询，只使用 `rotate`。如果坐标系不支持方向查询，或当前位置没有唯一方向（例如圆心的角向、折线的尖点），显式请求方向对齐会报错。文字与形状使用同一规则，不会自动把倒置文字翻正。
+
+<SourceLinks
+  sources={[
+    { label: '坐标局部切向契约', path: 'packages/viz/plot/src/contract/coordinate/types.ts' },
+    { label: '调整后参数与稳定目标对应', path: 'packages/viz/plot/src/pipeline/placement/resolve.ts' },
+    { label: '极坐标切向与奇点处理', path: 'packages/viz/plot/src/providers/coordinate/features/polar/definition.ts' },
+    { label: '方向与旋转通道合成', path: 'packages/viz/plot/src/providers/mark/features/point.ts' },
+  ]}
+/>
+
+### 留白计算
+
+下图用相同的数据、半径与绘图区，对比显式零留白和自动留白。自动留白把极值点中心向内移动，画布与节点大小保持不变。
+
+<ComponentPreview files="point-padding-figure" hideCode type="illustration" size="lg" />
+
+下面四幅图使用相同的数据、尺寸映射和绘图区，分别比较两种策略在零净空和方向净空（默认 8、上 20、左 0）下的结果。
+
+<ComponentPreview files="point-padding-strategies-figure" hideCode type="illustration" size="lg" />
+
+最大半径策略在各侧预留最大节点半径，再加上该方向的净空；逐点策略利用中央大点已有的边缘距离，只补足每个点所需的空间。四幅图中的节点大小保持一致，变化的是位置尺度映射。
+
+Plot 按图元实际使用的位置尺度汇总需求。最大半径加净空构成每端的最低留白；逐点策略将位置与半径转换成同一映射下的约束。共享分面统一求解一个域，最终坐标轴、网格和图元消费同一映射。求解发生在渲染之前，不读取 SVG 或 Canvas 的测量结果。
+
+<SourceLinks
+  sources={[
+    { label: '最大半径与策略需求', path: 'packages/viz/plot/src/resolve/scale/point-padding.ts' },
+    { label: '共享尺度约束求解', path: 'packages/viz/plot/src/resolve/scale/mark-domain.ts' },
   ]}
 />
 
 ## API 参考
 
-下面只列 PointMark 特有或在本页重新定义语义的属性。字段名与显式 field / constant 绑定规则见[通道绑定](/viz/plot/channel/binding)；`transform`、`layer` 见[变换](/viz/plot/transform)；坐标视图相关属性见[坐标系](/viz/plot/coordinate)。`fill`、`stroke`、透明度、圆角、字体、阴影等共享视觉属性与 [Node 样式](/kernel/components/node/reference#irnodestyle--nodestyleschema)一致，不在这里重复。
+`PointMarkProps` 从 `@retikz/plot-react` 导出，实际属性复用 `@retikz/plot-vanilla` 的 `InputPlotPointMark`。下表来自公开声明；`—` 表示声明未提供字段级默认值，不表示渲染时没有缺省行为。Source IR 的字段和约束由 `PointMarkSchema` 展示，沿用[图元契约参考](/viz/plot/reference/mark)的同一份说明。
 
-| 属性                                          | 类型                                                                                                                                                       | 默认值                                       | 描述                                                                 |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------- |
-| `id?`                                         | `string`                                                                                                                                                   | —                                            | mark 句柄；使用 `resolveLabel` 时必填                                |
-| `x?` / `y?` / `z?`                            | `PointMarkProps['x']`                                                                                                                                      | —                                            | 位置角色字段；内置坐标使用 `x` 或 `x` / `y`，`z` 留给自定义坐标 role |
-| `placement?`                                  | `IRPlotMarkPlacement`                                                                                                                                      | —                                            | 有序位置调整；Point 当前是唯一支持该契约的内置 Mark                  |
-| `placement.adjustments`                       | `Array<IRPlotPositionAdjustmentOperation>`                                                                                                                 | 必填                                         | role-space 操作整体先于 screen-space 操作，同阶段保持声明顺序        |
-| `placement.adjustments[].distribution?`       | `IRPlotRandomDistribution`                                                                                                                                 | `{ kind: 'uniform' }`                        | jitter 的随机分布；normal 为零均值截断正态，详见“位置散布”           |
-| `placement.adjustments[].distribution.kind`   | `'uniform' \| 'normal'`                                                                                                                                    | `uniform`                                    | 选择均匀散布或集中于中心的正态散布                                   |
-| `placement.adjustments[].distribution.sigma?` | `number`                                                                                                                                                   | `0.5`                                        | 仅 normal 使用；相对于 jitter 半宽的标准差，必须大于 `0`             |
-| `color?`                                      | `PointMarkProps['color']`                                                                                                                                  | —                                            | 点的语义颜色；字段绑定会建立颜色通道与比例尺                         |
-| `size?`                                       | `PointMarkProps['size']`                                                                                                                                   | —                                            | 普通点的尺寸；数值字段经 sqrt scale 映射为半径，无效值跳过该 glyph   |
-| `shape?`                                      | `PointMarkProps['shape']`                                                                                                                                  | —                                            | 普通点的形状；分类字段映射到 shape 调色板                            |
-| `text?`                                       | `PointMarkProps['text']`                                                                                                                                   | —                                            | 把点本身替换为无边框文本 Node                                        |
-| `displayFormat?`                              | `string`                                                                                                                                                   | —                                            | `text` 的 d3 数值或时间格式                                          |
-| `textColor?`                                  | `PointMarkProps['textColor']`                                                                                                                              | —                                            | 文本点的文字颜色                                                     |
-| `dx?` / `dy?`                                 | `number`                                                                                                                                                   | `0`                                          | 文本点相对投影锚点的屏幕方向微调                                     |
-| `label?`                                      | `PointMarkProps['label']`                                                                                                                                  | —                                            | 在保留点 glyph 的同时，把字段内容挂到 `Node.label`                   |
-| `label.displayFormat?`                        | `string`                                                                                                                                                   | —                                            | `label` 的 d3 数值或时间格式                                         |
-| `label.position?`                             | `InputPlotNodeLabel`                                                                                                                                       | `top`                                        | 中心、四边、四角、角度或边界位置对象                                 |
-| `label.position.boundary`                     | `'top' \| 'right' \| 'bottom' \| 'left'`                                                                                                                   | 对象写法必填                                 | 选择矩形边界；与 `fraction` 组成 `{ boundary, fraction? }`           |
-| `label.position.fraction?`                    | `number`                                                                                                                                                   | `0.5`                                        | 沿所选边界的归一化位置，范围 `0` 到 `1`                              |
-| `label.distance?`                             | `number`                                                                                                                                                   | `12`                                         | 标签与宿主边界之间的距离；居中标签不使用                             |
-| `label.pin?`                                  | `boolean \| { stroke?, strokeWidth?, dashPattern? }`                                                                                                       | `false`                                      | 外置标签引线；`true` 使用默认样式                                    |
-| `label.pin.stroke?`                           | `string`                                                                                                                                                   | 标签颜色                                     | 引线颜色                                                             |
-| `label.pin.strokeWidth?`                      | `number`                                                                                                                                                   | `1`                                          | 引线宽度，必须大于 `0`                                               |
-| `label.pin.dashPattern?`                      | `Array<number>`                                                                                                                                            | 实线                                         | 引线虚线段长度数组                                                   |
-| `label.textColor?` / `label.opacity?`         | `string` / `number`                                                                                                                                        | 继承 / 继承                                  | 标签文字颜色与透明度                                                 |
-| `label.font?`                                 | `IRFont`<br />- `family?: string`<br />- `size?: number`<br />- `weight?: 'normal' \| 'bold' \| number`<br />- `style?: 'normal' \| 'italic' \| 'oblique'` | 继承<br />继承<br />继承<br />继承<br />继承 | 标签字体覆盖<br />字体族<br />字号<br />字重<br />字形               |
-| `label.rotate?` / `label.keepUpright?`        | `'none' \| 'radial' \| 'tangent' \| number` / `boolean`                                                                                                    | `none` / `false`                             | 标签旋转模式或角度，以及是否自动保持文字正立                         |
-| `resolveLabel?`                               | `(row: ExternalRow) => string`                                                                                                                             | —                                            | 运行时标签函数；不进入 IR，必须同时提供 `id`                         |
-| `anchorId?`                                   | `IRPlotAnchorId`                                                                                                                                           | —                                            | 为每个有效点生成稳定的 core Node id；以下三种来源必须恰选一种        |
-| `anchorId.prefix?`                            | `string`                                                                                                                                                   | mark id 或 `mark.<index>`                    | 当前 Plot 内的 id 命名空间                                           |
-| `anchorId.field?`                             | `IRPlotAnchorId['field']`                                                                                                                                  | —                                            | 把字段值转为 id；与 `template`、`generator` 恰选一个                 |
-| `anchorId.template?`                          | `string`                                                                                                                                                   | —                                            | JSON-safe id 模板；支持 plot、mark、index 与字段占位符               |
-| `anchorId.generator?`                         | `string`                                                                                                                                                   | —                                            | 从 `LowerPlotsOptions.anchorIdGenerators` 解析的运行时生成器 key     |
+{/* @include viz/plot/mark/point/generated */}
 
-## 相关
+## 延伸阅读
 
-- [PathMark](/viz/plot/mark/path) —— 叠在散点下连成趋势线
-- [坐标系](/viz/plot/coordinate) —— 一维、二维与极坐标如何解释位置角色
-- [比例尺](/viz/plot/scale) —— size 使用的平方根 scale 与连续 scale 家族
-- [Position Adjustment](/viz/plot/mark/position-adjustment) —— 注册自定义 role / screen 位置调整
+<LinkedSections
+  items={[
+    { title: '通道绑定', description: '选择字段、固定值和显式绑定。', url: '/viz/plot/channel/binding' },
+    { title: 'PathMark', description: '把同一组观测点连成路径。', url: '/viz/plot/mark/path' },
+    { title: '坐标系', description: '选择一维、二维或极坐标的位置含义。', url: '/viz/plot/coordinate' },
+  ]}
+/>

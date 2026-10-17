@@ -46,7 +46,7 @@ const nodeHeight = (node: IRNode): number => {
   return size?.height ?? size?.default ?? 0;
 };
 
-const opts: LowerPlotsOptions = { width: 480, height: 300 };
+const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
 
 describe('contract L1-a · IRPlot 自描述尺寸', () => {
   it('node_width_overrides_global', () => {

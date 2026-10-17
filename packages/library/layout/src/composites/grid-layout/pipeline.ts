@@ -3,6 +3,7 @@ import type {
   LayoutAxisProposal,
   LayoutChildResult,
   CompositeCompileContext,
+  CompositeEvaluationResult,
   CompositeCompileResult,
   LayoutProposal,
 } from '@retikz/core';
@@ -32,6 +33,9 @@ import {
   layoutClipOf,
   layoutEpsilon,
   resolveLayoutAxisSize,
+  resolveKnownLayoutContribution,
+  createLayoutContributionResult,
+  measureLayoutAxis,
   sortLayoutSpacing,
 } from '../internal';
 import type { LayoutSpacingArtifact } from '../shared';
@@ -150,13 +154,7 @@ const finiteYLimitOf = (
 };
 
 /** 把 slot 与 margin 转为扣除 span 内部 gaps 后的 track target */
-const trackTargetOf = (
-  result: LayoutChildResult,
-  axis: 'x' | 'y',
-  margin: LayoutInsets,
-  internalGap: number,
-): number => {
-  const slot = axis === 'x' ? result.slotSize.width : result.slotSize.height;
+const trackTargetOf = (slot: number, axis: 'x' | 'y', margin: LayoutInsets, internalGap: number): number => {
   const marginSize = axis === 'x' ? margin.left + margin.right : margin.top + margin.bottom;
   return Math.max(0, compensatedLayoutSum([slot, marginSize, -internalGap]));
 };
@@ -225,11 +223,22 @@ const outgoingRowGuide = (name: 'first-baseline' | 'last-baseline', items: Reado
 };
 
 /** 编译 Layout GridLayout 的 placement、双轴 probe、track 求解与 replay 流程 */
-export const compileGridLayout = (
+export function compileGridLayout(
+  sourceLayout: IRGridLayout,
+  context: CompositeCompileContext & { evaluation: Readonly<{ kind: 'layout' }> },
+): CompositeCompileResult<GridLayoutArtifact>;
+/** 根据统一求值需求返回完整布局或指定轴贡献 */
+export function compileGridLayout(
   sourceLayout: IRGridLayout,
   context: CompositeCompileContext,
-): CompositeCompileResult<GridLayoutArtifact> => {
+): CompositeEvaluationResult<GridLayoutArtifact>;
+export function compileGridLayout(
+  sourceLayout: IRGridLayout,
+  context: CompositeCompileContext,
+): CompositeEvaluationResult<GridLayoutArtifact> {
   const node = resolveGridLayout(sourceLayout);
+  const knownContribution = resolveKnownLayoutContribution(context, node.size);
+  if (knownContribution !== undefined) return knownContribution;
   const padding = node.padding;
   const authoredItems = createEffectiveLayoutItems(node.children);
   const placements = resolveGridPlacements(
@@ -264,14 +273,15 @@ export const compileGridLayout = (
 
   const finiteYLimit = finiteYLimitOf(node, context.proposal.y, padding);
   const xCrossProposal = finiteYLimit === undefined ? intrinsicProposal('natural') : boundedProposal(finiteYLimit);
-  const xMinimum = measured.map(item =>
-    requiredProbe(context, item.sourceIndex, { x: intrinsicProposal('minimum'), y: xCrossProposal }),
+  const columnItems = columns.every(track => track.kind === 'fixed') ? [] : measured;
+  const xMinimum = columnItems.map(item =>
+    measureLayoutAxis(context, item.sourceIndex, { x: intrinsicProposal('minimum'), y: xCrossProposal }, 'x'),
   );
-  const xNatural = measured.map(item =>
-    requiredProbe(context, item.sourceIndex, { x: intrinsicProposal('natural'), y: xCrossProposal }),
+  const xNatural = columnItems.map(item =>
+    measureLayoutAxis(context, item.sourceIndex, { x: intrinsicProposal('natural'), y: xCrossProposal }, 'x'),
   );
 
-  const columnConstraints: ReadonlyArray<GridTrackConstraint> = measured.map((item, index) => ({
+  const columnConstraints: ReadonlyArray<GridTrackConstraint> = columnItems.map((item, index) => ({
     start: item.columnStart,
     span: item.columnSpan,
     minimum: trackTargetOf(xMinimum[index], 'x', item.margin, node.columnGap * (item.columnSpan - 1)),
@@ -290,6 +300,9 @@ export const compileGridLayout = (
     naturalContribution: axisContribution(intrinsicColumns.naturalProfile, node.columnGap, padding.left, padding.right),
   }).allocationSize;
 
+  if (context.evaluation.kind === 'contribution' && context.evaluation.axis === 'x')
+    return { kind: 'contribution', contribution: { axis: 'x', width } };
+
   const preliminary = contentRectOf({ x: 0, y: 0, width, height: 0 }, padding);
   const solvedColumns = solveGridTracks(columns, columnConstraints, {
     gap: node.columnGap,
@@ -303,58 +316,51 @@ export const compileGridLayout = (
     solvedColumns.between,
   );
 
-  const yMinimum = measured.map(item => {
+  const rowItems = rows.every(track => track.kind === 'fixed') ? [] : measured;
+  const rowProposal = (item: MeasuredGridItem, mode: 'minimum' | 'natural'): LayoutProposal => {
     const column = gridSpanRange(positionedColumns, item.columnStart, item.columnSpan);
     const innerWidth = Math.max(0, column.size - item.margin.left - item.margin.right);
-    const justify = item.authored.justifySelf ?? node.justifyItems;
-
-    return requiredProbe(context, item.sourceIndex, {
-      x: itemAxisProposal(justify, innerWidth),
-      y: intrinsicProposal('minimum'),
-    });
-  });
-  const yNatural = measured.map(item => {
-    const column = gridSpanRange(positionedColumns, item.columnStart, item.columnSpan);
-    const innerWidth = Math.max(0, column.size - item.margin.left - item.margin.right);
-    const justify = item.authored.justifySelf ?? node.justifyItems;
-
-    return requiredProbe(context, item.sourceIndex, {
-      x: itemAxisProposal(justify, innerWidth),
-      y: intrinsicProposal('natural'),
-    });
-  });
-  const rowConstraints: Array<GridTrackConstraint> = measured.map((item, index) => ({
+    return {
+      x: itemAxisProposal(item.authored.justifySelf ?? node.justifyItems, innerWidth),
+      y: intrinsicProposal(mode),
+    };
+  };
+  const yMinimum = rowItems.map(item =>
+    measureLayoutAxis(context, item.sourceIndex, rowProposal(item, 'minimum'), 'y'),
+  );
+  const yNatural = rowItems.map(item =>
+    measureLayoutAxis(context, item.sourceIndex, rowProposal(item, 'natural'), 'y'),
+  );
+  const rowConstraints: Array<GridTrackConstraint> = rowItems.map((item, index) => ({
     start: item.rowStart,
     span: item.rowSpan,
     minimum: trackTargetOf(yMinimum[index], 'y', item.margin, node.rowGap * (item.rowSpan - 1)),
     natural: trackTargetOf(yNatural[index], 'y', item.margin, node.rowGap * (item.rowSpan - 1)),
   }));
-
-  for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
-    const singleRow = measured.filter(item => item.rowStart === rowIndex && item.rowSpan === 1);
-    if (singleRow.length === 0) continue;
-
-    const minimumMetrics = resolveGridRowMetrics(
-      singleRow.map(item => ({
-        sourceIndex: item.sourceIndex,
-        alignment: item.authored.alignSelf ?? node.alignItems,
-        margin: item.margin,
-        result: yMinimum[item.sourceIndex],
-      })),
+  for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+    const participants = rowItems.filter(
+      item =>
+        item.rowStart === rowIndex &&
+        item.rowSpan === 1 &&
+        [LayoutAlignment.FirstBaseline, LayoutAlignment.LastBaseline].some(
+          alignment => alignment === (item.authored.alignSelf ?? node.alignItems),
+        ),
     );
-    const naturalMetrics = resolveGridRowMetrics(
-      singleRow.map(item => ({
-        sourceIndex: item.sourceIndex,
-        alignment: item.authored.alignSelf ?? node.alignItems,
-        margin: item.margin,
-        result: yNatural[item.sourceIndex],
-      })),
-    );
+    if (participants.length === 0) continue;
+    const metrics = (mode: 'minimum' | 'natural') =>
+      resolveGridRowMetrics(
+        participants.map(item => ({
+          sourceIndex: item.sourceIndex,
+          alignment: item.authored.alignSelf ?? node.alignItems,
+          margin: item.margin,
+          result: requiredProbe(context, item.sourceIndex, rowProposal(item, mode)),
+        })),
+      );
     rowConstraints.push({
       start: rowIndex,
       span: 1,
-      minimum: minimumMetrics.size,
-      natural: naturalMetrics.size,
+      minimum: metrics('minimum').size,
+      natural: metrics('natural').size,
     });
   }
 
@@ -369,6 +375,7 @@ export const compileGridLayout = (
     minimumContribution: axisContribution(intrinsicRows.minimumProfile, node.rowGap, padding.top, padding.bottom),
     naturalContribution: axisContribution(intrinsicRows.naturalProfile, node.rowGap, padding.top, padding.bottom),
   }).allocationSize;
+  if (context.evaluation.kind === 'contribution') return createLayoutContributionResult(context, width, height);
   const allocation: LayoutRect = Object.freeze({ x: 0, y: 0, width, height });
   const content = contentRectOf(allocation, padding);
   const solvedRows = solveGridTracks(rows, rowConstraints, {
@@ -610,4 +617,4 @@ export const compileGridLayout = (
       spacing: sortLayoutSpacing(spacing),
     }),
   };
-};
+}

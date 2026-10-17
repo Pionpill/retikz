@@ -109,7 +109,7 @@ const nodeHeight = (node: IRNode): number => {
   return size?.height ?? size?.default ?? 0;
 };
 
-const opts: LowerPlotsOptions = { width: 480, height: 300 };
+const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
 
 const sharedCategorical = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical;
 
@@ -145,7 +145,7 @@ describe('lowerPlots (contract)', () => {
           { x: 900000, y: 1 },
         ],
       },
-      { width, height },
+      { layout: { width, height } },
     );
     const rotatedLabels = collectNodes(lowered).filter(
       node => tickValues.includes(Number(node.text)) && node.rotate === -90,
@@ -536,15 +536,15 @@ describe('lowerPlots (contract)', () => {
 
   it('non_finite_size_throws', () => {
     // 非有限的绘图区尺寸会一路污染出 cx="NaN" 坏坐标——入口抛清晰错误而非静默出坏图
-    expect(() => expandOf(lineSpec, { sales: SALES }, { width: Number.NaN, height: 300 })).toThrow(/width/);
-    expect(() => expandOf(lineSpec, { sales: SALES }, { width: 480, height: Number.POSITIVE_INFINITY })).toThrow(
-      /height/,
-    );
+    expect(() => expandOf(lineSpec, { sales: SALES }, { layout: { width: Number.NaN, height: 300 } })).toThrow(/width/);
+    expect(() =>
+      expandOf(lineSpec, { sales: SALES }, { layout: { width: 480, height: Number.POSITIVE_INFINITY } }),
+    ).toThrow(/height/);
   });
 
   it('non_positive_size_throws', () => {
-    expect(() => expandOf(lineSpec, { sales: SALES }, { width: 0, height: 300 })).toThrow(/width/);
-    expect(() => expandOf(lineSpec, { sales: SALES }, { width: 480, height: -10 })).toThrow(/height/);
+    expect(() => expandOf(lineSpec, { sales: SALES }, { layout: { width: 0, height: 300 } })).toThrow(/width/);
+    expect(() => expandOf(lineSpec, { sales: SALES }, { layout: { width: 480, height: -10 } })).toThrow(/height/);
   });
 
   // 交互
@@ -1105,7 +1105,7 @@ describe('lowerPlots mark paint', () => {
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
-  it('reference_band_constant_paint_lowers_to_node_default_and_compiles', () => {
+  it('interval_constant_paint_lowers_to_node_default_and_compiles', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -1117,11 +1117,11 @@ describe('lowerPlots mark paint', () => {
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [
         {
-          type: 'reference',
-          yTo: 12,
+          type: 'interval',
+          bounds: { x: { kind: 'full' }, y: { kind: 'span', baseline: 8 } },
           fill: { kind: 'constant', value: paintGradient },
           stroke: { kind: 'constant', value: paintGradient },
-          encoding: { y: { value: 8 } },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
         },
       ],
     });

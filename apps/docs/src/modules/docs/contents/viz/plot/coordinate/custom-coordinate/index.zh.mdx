@@ -9,7 +9,7 @@ description: 用 CoordinateDefinition 声明位置 role、比例尺和投影 fra
 
 - 需要新的位置 role、投影函数、曲线轴或特殊空间时，定义自定义 coordinate。
 - React `<PointMark>` 当前直接暴露 `x` / `y` / `z`；任意 `u` / `v` role 通过完整 `spec` 或 Vanilla 的 `encoding` 表达。
-- 只改变值域映射而不改变空间投影时，使用[自定义比例尺](/viz/plot/scale/custom-scale)；只改变图元几何时，使用[自定义图元](/viz/plot/mark/custom-mark)。
+- 只改变值域映射而不改变空间投影时，使用[自定义比例尺](/viz/plot/scale/custom-scale)。
 - 坐标 definition 负责 frame 与 guides，不应直接生成业务图元或包含 renderer 专属对象。
 
 ## 定义能力
@@ -56,10 +56,10 @@ scaleBinding: {
 
 ## 注入宿主
 
-通过 `<Plot coordinates={[bridgeCoordinate]}>` 注入 definition，并在 coordinate operation 中引用它：
+通过 `<Plot definitions={{ coordinates: [bridgeCoordinate] }}>` 注入 definition，并在 coordinate operation 中引用它：
 
 ```tsx
-<Plot coordinate={{ type: 'bridge', archHeight: 60 }} coordinates={[bridgeCoordinate]}>
+<Plot coordinate={{ type: 'bridge', archHeight: 60 }} definitions={{ coordinates: [bridgeCoordinate] }}>
   <PointMark x="x" y="y" />
 </Plot>
 ```
@@ -85,7 +85,13 @@ const spec = {
 5. `resolve` 用 `createCoordinateFrame` 构造 frame，再返回 `plotArea`、轴和网格层。
 6. mark 通过 `frame.projectRoles` 或可选的 `frame.projectCell` 投影；声明 placement 时则使用同源的 `mapRoles` / `projectMappedRoles` 两段能力。
 
-`createCoordinateFrame` 可以接收 `roleScales`、`mapRoles`、`projectMappedRoles`、`placementBoundary`、`frameAlong` 和 `projectCell`。位置调整依赖前三项拆分 scale 映射与投影，自动 containment 再使用边界度量；`projectCell` 把逻辑 Cell 投影成 rect、sector 或 contour 等几何。
+`roleRangeOverrides` 指定数据映射的最终范围；`guideRoleRangeOverrides` 单独指定轴线与网格的边界范围。后者为空对象时使用布局范围，省略时沿用最终映射范围。抖动留白会收窄数据映射范围，但不应同时收窄轴线边界；分轨布局则仍需使用所属轨道的边界。刻度位置始终由最终比例尺计算。
+
+`createCoordinateFrame` 可以接收 `roleScales`、`mapRoles`、`projectMappedRoles`、`placementBoundary`、`tangentAt` 和 `projectCell`。位置调整依赖前三项拆分 scale 映射与投影，自动 containment 再使用边界度量；`projectCell` 把逻辑 Cell 投影成 rect、sector 或 contour 等几何。
+
+`tangentAt(role, mappedRoles)` 返回固定其他参数、所选映射后参数递增时的屏幕切向，供 Guide 和 PointMark 方向对齐共用。必须同时提供同源的 `mapRoles` 与 `projectMappedRoles`。例如映射 `projectMappedRoles: ([u, v]) => [u + v, v]` 的 x 切向是 `[1, 0]`，y 切向是 `[1, 1]`；x 的正法向是 `[0, 1]`，并不等于 y 切向。
+
+返回切向不要求单位化，但必须有限且非零；奇点或不可微尖点返回 `null`。PointMark 显式请求坐标方向时，缺少能力或返回无效方向都会报错。Guide 在未提供此能力时仍可用投影差分求切向。
 
 <SourceLinks
   sources={[
@@ -122,6 +128,8 @@ const spec = {
 - 缺少必填 role、出现坐标系不支持的 encoding key，或 schema 校验失败时都会直接报错。
 - `scaleBinding.bind` 返回不符合 schema 的 operation 时会直接失败；自定义字段映射必须保留其它 operation 配置。
 - 示例使用 `z.strictObject`；`archHeigth` 之类未知键不会被静默剥离或回退默认值。
+- 坐标帧默认支持绘图区背景、边框和区域锚点。自定义坐标系可在 `createCoordinateFrame` 的第四个参数中设置 `supportsPlotArea: false` 关闭这些能力；直接构造坐标帧时设置同名字段。输入角色数量不影响这一默认值。
+
 - 普通点类图元只需要 `projectRoles`；Point placement 需要 `roleScales`、`mapRoles` 与 `projectMappedRoles`，要求 containment 时还需要 `placementBoundary`。
 - 区间类图元需要匹配的 `roleScales` 与 `projectCell`。
 - 自定义坐标系使用 definition 返回的 `plotArea`，不会自动继承 cartesian 的 margin 与 legend 预留逻辑。
@@ -149,14 +157,12 @@ coordinate: { type: 'bridge', archHeigth: 60 }
 
 宿主注入：
 
-| 宿主                                   | 公开契约            | 注入字段                             |
-| -------------------------------------- | ------------------- | ------------------------------------ |
-| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `coordinates`                        |
-| `@retikz/plot-vanilla` 的 `renderPlot` | `RenderPlotOptions` | 继承 `LowerPlotsOptions.coordinates` |
+| 宿主                                   | 公开契约            | 注入字段                                         |
+| -------------------------------------- | ------------------- | ------------------------------------------------ |
+| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `definitions.coordinates`                        |
+| `@retikz/plot-vanilla` 的 `renderPlot` | `RenderPlotOptions` | 继承 `LowerPlotsOptions.definitions.coordinates` |
 
 ## 相关
 
 - [坐标系](/viz/plot/coordinate) —— 内置投影与 frame 的共同模型
 - [坐标组合](/viz/plot/coordinate/composition) —— 多 panel / track 的坐标域边界
-- [自定义图元](/viz/plot/mark/custom-mark) —— mark 如何消费 coordinate frame
-- [Position Adjustment](/viz/plot/mark/position-adjustment) —— 两段投影与边界度量怎样服务位置调整

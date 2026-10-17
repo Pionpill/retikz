@@ -115,7 +115,7 @@ const spec = plot({
   ],
 });
 
-document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width: 360, height: 220 });
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
 ```
 
 </DocTab>
@@ -152,7 +152,7 @@ const spec: IRPlot = {
   ],
 };
 
-document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width: 360, height: 220 });
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
 ```
 
 </DocTab>
@@ -260,7 +260,7 @@ The demo has two fixed layers: gray circles for A and blue diamonds for B. Switc
 
 ## Custom transforms
 
-Define custom Definitions and Implementations with `@retikz/data`. Plot accepts them through `transformDefinitions` and `transformImplementations`; declarations retain the same `operation` structure. See [Data extensions](/viz/data/transform/extensions) for the full definition process.
+Define custom Definitions and Implementations with `@retikz/data`. Plot accepts them through `definitions.transforms` and `implementations.transforms`; declarations retain the same `operation` structure. See [Data extensions](/viz/data/transform/extensions) for the full definition process.
 
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
@@ -268,7 +268,7 @@ Define custom Definitions and Implementations with `@retikz/data`. Plot accepts 
 This snippet shows only injection points. `definition`, `implementation`, and the matching `operation` come from an existing Data extension.
 
 ```tsx
-<Plot data={rows} transformDefinitions={[definition]} transformImplementations={[implementation]}>
+<Plot data={rows} definitions={{ transforms: [definition] }} implementations={{ transforms: [implementation] }}>
   <PlotTransform operation={operation} />
   {/* Marks bind the outputs declared by this transform */}
 </Plot>
@@ -283,10 +283,7 @@ Store declarations in IR and pass runtime dependencies in `renderPlot` options.
 renderPlot(
   spec,
   { rows },
-  {
-    transformDefinitions: [definition],
-    transformImplementations: [implementation],
-  },
+  { definitions: { transforms: [definition] }, implementations: { transforms: [implementation] } },
 );
 ```
 

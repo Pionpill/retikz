@@ -31,9 +31,5 @@ const spec = PlotSchema.parse({
 export const svg = renderPlot(
   spec,
   { points: customChannelPoints },
-  {
-    width: 440,
-    height: 260,
-    channelDefinitions: [intensityChannel],
-  },
+  { layout: { width: 440, height: 260 }, definitions: { channels: [intensityChannel] } },
 );

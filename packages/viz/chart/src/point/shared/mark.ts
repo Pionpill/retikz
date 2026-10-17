@@ -75,7 +75,7 @@ const pointConstantPropertySlots: ReadonlyArray<keyof IRPointProperties> = [
   'blendMode',
 ];
 
-const pointRawPropertySlots: ReadonlyArray<keyof IRPointProperties> = ['dx', 'dy', 'label'];
+const pointRawPropertySlots: ReadonlyArray<keyof IRPointProperties> = ['dx', 'dy', 'label', 'autoPadding'];
 
 const isJsonObject = (value: JsonValue): value is JsonObject =>
   value !== null && typeof value === 'object' && !Array.isArray(value);

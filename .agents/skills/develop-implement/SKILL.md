@@ -65,6 +65,11 @@ Alpha 按 reviewed `PLAN.md` 的文件 scope 使用 [alpha](../flow-development/
 - 用户可见改动同步 docs。
 - React / Vanilla 或 plot-react / plot-vanilla authoring 面对等检查；只做一套时说明原因。
 
+## 按需执行
+
+- 仅供失败、回退或缓存未命中分支使用的错误对象、诊断序列化和昂贵计算，放进对应分支；函数实参会提前求值，`assert(valid, makeError())` 不会延迟创建错误。只有被调契约支持时才传 factory；React 昂贵初始状态使用惰性 initializer。
+- 调整执行顺序必须保留必要校验、异常语义、副作用顺序和资源 / 事务所有权；缓存键与输入快照是否可跳过须先核实失效契约，不机械包装所有函数或引入缓存。
+
 ## 集合遍历
 
 - 可合并的筛选、映射与聚合优先使用一次 `reduce` 或循环完成，避免连续 `filter().map()` 等操作造成多次遍历和中间数组分配；单独的 `filter` / `map` 按语义使用。

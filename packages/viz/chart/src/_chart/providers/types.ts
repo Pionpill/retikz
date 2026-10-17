@@ -1,5 +1,5 @@
 import type { CoreProviderContribution, ResolvedTheme } from '@retikz/core';
-import type { LowerPlotsOptions } from '@retikz/plot';
+import type { PlotDefinitions } from '@retikz/plot';
 import type { ZodType } from 'zod';
 
 import type {
@@ -37,15 +37,7 @@ export type ChartRecipeProviderContributionInput<TSource extends IRChartSource> 
 
 /** Chart encoding resolve需要与Plot共享的runtime Definition输入 */
 export type ChartRuntimeDefinitionOptions = Readonly<
-  Pick<
-    LowerPlotsOptions,
-    | 'coordinates'
-    | 'transformDefinitions'
-    | 'statisticsReducerDefinitions'
-    | 'regressionDefinitions'
-    | 'rowSelectorDefinitions'
-    | 'scaleDefinitions'
-  >
+  Pick<PlotDefinitions, 'coordinates' | 'transforms' | 'statisticsReducers' | 'regressions' | 'rowSelectors' | 'scales'>
 >;
 
 /** 当前 Core compile 边界实际安装的 Chart recipe registry */

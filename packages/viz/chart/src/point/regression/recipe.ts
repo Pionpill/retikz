@@ -65,7 +65,7 @@ export const RegressionChartDefinition: ChartRecipeDefinition<IRRegressionChart>
   marks: [
     {
       definition: RegressionMarkDefinition,
-      inherit: { encodings: ['x', 'y', 'series'], properties: regressionMarkPropertySlots },
+      inherit: { encodings: ['x', 'y', 'series'], properties: [...regressionMarkPropertySlots, 'autoPadding'] },
     },
   ],
   resolveEncodings: context => {

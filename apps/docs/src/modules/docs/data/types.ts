@@ -83,6 +83,8 @@ export type I18nKey = {
 }[keyof I18nResources];
 
 type SubPageBase = {
+  /** 引用已有文档的绝对站内路由；仅作导航入口，不拥有正文或索引条目 */
+  linkTo?: string;
   id: string;
   /** i18n 完整 key，调用方直接 t(label) */
   label: I18nKey;

@@ -32,8 +32,9 @@ export const renderExtensionFormatPreview = () => (
     model={model}
     width={410}
     height={250}
-    formatDefinitions={[thousands]}
+
     style={{ maxWidth: '100%', height: 'auto' }}
+    definitions={{ formats: [thousands] }}
   >
     <PathMark x="month" y="revenue" order="month" />
     <PointMark x="month" y="revenue" />

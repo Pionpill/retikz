@@ -191,11 +191,11 @@ const validateRecipe = (recipe: AnyChartRecipeDefinition, family: string, index:
 
 const runtimeDefinitionKeys = [
   'coordinates',
-  'transformDefinitions',
-  'statisticsReducerDefinitions',
-  'regressionDefinitions',
-  'rowSelectorDefinitions',
-  'scaleDefinitions',
+  'transforms',
+  'statisticsReducers',
+  'regressions',
+  'rowSelectors',
+  'scales',
 ] as const satisfies ReadonlyArray<keyof ChartRuntimeDefinitionOptions>;
 
 /** 确保同一Chart provider中的recipe共享同一组Plot lowering runtime Definition */
@@ -224,11 +224,11 @@ const sharedRuntimeDefinitionsOf = (
 const resolveEncodingRuntime = (definitions: ChartRuntimeDefinitionOptions): ChartEncodingRuntime => {
   try {
     return Object.freeze({
-      transforms: createReadonlyMap(resolveTransformRegistry(definitions.transformDefinitions)),
-      regressions: createReadonlyMap(resolveRegressionRegistry(definitions.regressionDefinitions)),
-      reducers: createReadonlyMap(resolveStatisticsReducerRegistry(definitions.statisticsReducerDefinitions)),
-      selectors: createReadonlyMap(resolveRowSelectorRegistry(definitions.rowSelectorDefinitions)),
-      scales: createReadonlyMap(resolveScaleRegistry(definitions.scaleDefinitions)),
+      transforms: createReadonlyMap(resolveTransformRegistry(definitions.transforms)),
+      regressions: createReadonlyMap(resolveRegressionRegistry(definitions.regressions)),
+      reducers: createReadonlyMap(resolveStatisticsReducerRegistry(definitions.statisticsReducers)),
+      selectors: createReadonlyMap(resolveRowSelectorRegistry(definitions.rowSelectors)),
+      scales: createReadonlyMap(resolveScaleRegistry(definitions.scales)),
       coordinates: createReadonlyMap(resolveCoordinateRegistry(definitions.coordinates)),
     });
   } catch (error) {

@@ -69,6 +69,19 @@ export const lowerPoint = (
   if (mark.type !== BuiltinPlotMark.Point) return null;
 
   const markProvenance = ctx?.provenance;
+  const orientation = mark.orientation;
+  if (orientation?.kind === 'coordinate') {
+    if (!frame.roles.includes(orientation.role)) {
+      throw new RetikzPlotError(
+        `PointMark orientation role "${orientation.role}" is not supported by coordinate "${frame.type}"`,
+      );
+    }
+    if (!frame.tangentAt || !frame.mapRoles || !frame.projectMappedRoles) {
+      throw new RetikzPlotError(
+        `PointMark orientation role "${orientation.role}" requires tangentAt and mapped-role projection on coordinate "${frame.type}"`,
+      );
+    }
+  }
   const colorOf = channelValueOf<string>(channels, 'color');
   const fillOf = mark.fill?.kind === 'field' && !colorOf ? channelValueOf<MarkPaint>(channels, 'fill') : undefined;
   const strokeOf = mark.stroke?.kind === 'field' ? channelValueOf<MarkPaint>(channels, 'stroke') : undefined;
@@ -97,12 +110,35 @@ export const lowerPoint = (
       for (const { entry, value } of deliveries) {
         if (value !== undefined) entry.deliver(node, value, { mark, row, nodeKind });
       }
+      if (orientation?.kind === 'coordinate') {
+        const key = String(transformedIndex);
+        const mapped = ctx?.positions
+          ? ctx.positions.targetFor(key)?.mappedRoles
+          : frame.mapRoles?.(roleValues(mark, row, frame));
+        let tangent;
+        try {
+          tangent = mapped ? frame.tangentAt?.(orientation.role, mapped) : null;
+        } catch (cause) {
+          throw new RetikzPlotError(`PointMark orientation role "${orientation.role}" failed for target "${key}"`, {
+            cause,
+          });
+        }
+        if (!tangent || !tangent.every(Number.isFinite) || Math.hypot(tangent[0], tangent[1]) === 0) {
+          throw new RetikzPlotError(
+            `PointMark orientation role "${orientation.role}" is undefined for target "${key}"`,
+          );
+        }
+        const offset = node.rotate ?? (mark.rotate?.kind === 'constant' ? mark.rotate.value : 0);
+        node.rotate =
+          (Math.atan2(tangent[1], tangent[0]) * 180) / Math.PI + (orientation.align === 'normal' ? 90 : 0) + offset;
+      }
     };
 
     if (isText) {
       // 文本 glyph：投影同 point（roleValues + projectRoles，坐标系无关）；内容缺失跳过；dx/dy 锚点像素微调
-      const point =
-        ctx?.positions?.positionFor(String(transformedIndex)) ?? frame.projectRoles(roleValues(mark, row, frame));
+      const point = ctx?.positions
+        ? ctx.positions.positionFor(String(transformedIndex))
+        : frame.projectRoles(roleValues(mark, row, frame));
       if (!point) continue;
 
       const text = textOf?.(row);
@@ -126,7 +162,7 @@ export const lowerPoint = (
     }
 
     // 散点 glyph：锚点与 locator 共享同一 role 投影（point → frame.projectRoles），杜绝两套投影漂移
-    const point = ctx?.positions?.positionFor(String(transformedIndex)) ?? roleAnchor(mark, row, frame);
+    const point = ctx?.positions ? ctx.positions.positionFor(String(transformedIndex)) : roleAnchor(mark, row, frame);
     if (!point) continue;
 
     const deliveries = resolveChannelDeliveries();

@@ -69,7 +69,7 @@ Corresponds to `StripProperties`, Vanilla `properties` and IR `recipe.properties
 | Jitter         | `jitter.span`         | `IRStripChartJitter['span']`                             | Total spread; a number uses role output units, ratio uses 0–1 of tick spacing                           |
 |                | `jitter.distribution` | `IRStripChartJitter['distribution']`                     | Uniform or truncated normal; positive sigma is relative to half the spread                              |
 |                | `jitter.seed`         | `number`                                                 | Repeatable placement for identical ordered data and settings; default 0                                 |
-| Padding        | `autoPadding`         | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance |
+| Padding        | `autoPadding`         | `false`, `'max-radius'`, `'point-aware'`, `object`       | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance |
 |                | `domainPadding`       | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                |
 
 See the [properties schema](#stripproperties--irstripchartproperties--stripchartpropertiesschema) for the full structure; shared appearance configuration is not expanded here.
@@ -100,17 +100,17 @@ export type IRStripChartProperties = ZodInfer<typeof StripChartPropertiesSchema>
 
 Corresponds to `StripMark`, Vanilla `marks` and IR `recipe.marks`.
 
-| Property     | Type                           | Description                                                                       |
-| ------------ | ------------------------------ | --------------------------------------------------------------------------------- |
-| `override`   | `boolean`                      | Replace the complete strip point mark, otherwise append                           |
-| `encodings`  | `StripChartMark['encodings']`  | x, y, color, size, opacity and shape use field name strings; no mark-local scales |
-| `properties` | `StripChartMark['properties']` | Override placement and appearance; excludes domainPadding / autoPadding           |
+| Property     | Type                           | Description                                                                                       |
+| ------------ | ------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `override`   | `boolean`                      | Replace the complete strip point mark, otherwise append                                           |
+| `encodings`  | `StripChartMark['encodings']`  | x, y, color, size, opacity and shape use field name strings; no mark-local scales                 |
+| `properties` | `StripChartMark['properties']` | Override placement and appearance; excludes domainPadding; autoPadding overrides the chart policy |
 
 </DocTab>
 
 <DocTab value="schema" label="Schema">
 
-`encodings` accepts only optional field-name strings for x, y, color, size, opacity, shape, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties.
+`encodings` accepts only optional field-name strings for x, y, color, size, opacity, shape, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `domainPadding`; `autoPadding` can override the chart policy. Omitted settings inherit the applicable chart mappings and properties.
 
 <ZodSchema name="StripChartMarkSchema" shallow />
 

@@ -61,7 +61,7 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
 
     if (!context.channelRegistry.has(channel)) {
       throw new RetikzPlotError(
-        `lowerPlots: channel "${channel}" is not registered; pass a ChannelDefinition via options.channelDefinitions`,
+        `lowerPlots: channel "${channel}" is not registered; pass a ChannelDefinition via options.definitions.channels`,
       );
     }
   }

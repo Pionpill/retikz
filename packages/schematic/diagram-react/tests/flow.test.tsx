@@ -995,3 +995,32 @@ it('容器等宽与行内填充在 React 和 Vanilla 中保留相同 Source', ()
 
   expect(FlowDiagramSchema.parse(normalized.ir.children[0])).toEqual(FlowDiagramSchema.parse(vanilla));
 });
+
+it('分组等高在 React、Vanilla 和直接 IR 中保持同一 Source', () => {
+  const input = createInputScene(
+    <FlowReact.FlowDiagram>
+      <FlowReact.FlowLayout id="row" kind="linear" direction="right" containerHeight="match-largest">
+        <FlowReact.FlowGroup id="g">
+          <FlowReact.FlowEntity id="a" text="A" />
+        </FlowReact.FlowGroup>
+      </FlowReact.FlowLayout>
+    </FlowReact.FlowDiagram>,
+  );
+  const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+  const vanilla = normalizeFlowDiagram({
+    entities: [{ id: 'a', text: 'A' }],
+    groups: [{ id: 'g', children: ['a'] }],
+    layouts: [{ id: 'row', kind: 'linear', direction: 'right', containerHeight: 'match-largest', children: ['g'] }],
+    children: ['row'],
+  });
+  const direct = FlowDiagramSchema.parse({
+    namespace: 'diagram',
+    type: 'flow',
+    entities: [{ id: 'a', text: 'A' }],
+    groups: [{ id: 'g', children: ['a'] }],
+    layouts: [{ id: 'row', kind: 'linear', direction: 'right', containerHeight: 'match-largest', children: ['g'] }],
+    children: ['row'],
+  });
+  expect(FlowDiagramSchema.parse(normalized.ir.children[0])).toEqual(direct);
+  expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
+});

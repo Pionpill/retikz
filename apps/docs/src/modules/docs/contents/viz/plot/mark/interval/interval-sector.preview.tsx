@@ -13,7 +13,6 @@ export type IntervalSectorPreviewValues = {
 /** 绘制示例图形 */
 export const IntervalSectorPreview = (values: IntervalSectorPreviewValues) => {
   const data = traffic.map(row => (row.source === 'Search' ? { ...row, pull: values.pullDistance } : row));
-  const label = values.showLabels ? 'source' : undefined;
 
   return (
     <Plot data={data} width={340} height={270} coordinate={{ type: 'polar2D', innerRadius: values.innerRadius }}>
@@ -24,7 +23,11 @@ export const IntervalSectorPreview = (values: IntervalSectorPreviewValues) => {
         pull="pull"
         stroke="#ffffff"
         strokeWidth={1.5}
-        label={{ field: label, position: 'right', distance: 8, font: { size: 10, weight: 'bold' } }}
+        label={
+          values.showLabels
+            ? { field: 'source', position: 'right', distance: 8, font: { size: 10, weight: 'bold' } }
+            : undefined
+        }
       />
     </Plot>
   );

@@ -12,7 +12,6 @@ export type {
   PlotTrackProps,
   PlotTransformProps,
   PointMarkProps,
-  ReferenceMarkProps,
   RelationMarkProps,
 } from './components';
 export {
@@ -26,7 +25,6 @@ export {
   PlotTrack,
   PlotTransform,
   PointMark,
-  ReferenceMark,
   RelationMark,
 } from './components';
 export * from './error';

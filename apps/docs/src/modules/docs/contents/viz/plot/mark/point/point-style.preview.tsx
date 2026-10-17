@@ -1,7 +1,11 @@
 import type { IRPaint } from '@retikz/core';
-import { Plot, PlotAxis, PointMark } from '@retikz/plot-react';
+import { PlotAxis, PointMark } from '@retikz/plot-react';
+import type { PointMarkProps } from '@retikz/plot-react';
+import { Layout } from '@retikz/react';
 
-import { points } from './point-api.data';
+import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
+
+import { stylePoints } from './point-api.data';
 
 const gradientFill: IRPaint = {
   kind: 'linearGradient',
@@ -24,6 +28,14 @@ export type PointStylePreviewValues = {
   size: number;
   dashed: boolean;
   shadow: 'none' | 'md' | 'xl';
+  /** 点线描边 */
+  dotted: boolean;
+  /** 自定义虚线 */
+  dashPattern: boolean;
+  /** 混合模式 */
+  blendMode: 'normal' | 'multiply' | 'screen';
+  /** 绘制顺序 */
+  zIndex: 'order' | 'reverseOrder';
   coordinate: 'cartesian2D' | 'polar2D';
 };
 
@@ -36,26 +48,39 @@ export const PointStylePreview = (values: PointStylePreviewValues) => {
       : values.paintMode === 'solid'
         ? { kind: 'constant' as const, value: values.fill }
         : undefined;
-  const pointProps = {
+  const pointProps: PointMarkProps = {
     x: 'x',
     y: 'y',
     color: usesFieldColor ? 'region' : undefined,
     fill,
     stroke: { kind: 'constant' as const, value: values.stroke },
     strokeWidth: values.strokeWidth,
-    fillOpacity: values.fillOpacity,
-    strokeOpacity: values.strokeOpacity,
-    opacity: values.opacity,
+    opacity: {
+      overall: values.opacity,
+      fill: values.fillOpacity,
+      stroke: values.strokeOpacity,
+    },
     size: values.size,
     dashed: values.dashed,
+    dotted: values.dotted,
+    dashPattern: values.dashPattern ? [8, 3, 2, 3] : undefined,
+    blendMode: values.blendMode,
+    zIndex: values.zIndex,
     shadow: values.shadow,
   };
 
   return (
-    <Plot data={points} width={400} height={280} coordinate={values.coordinate === 'polar2D' ? 'polar2D' : undefined}>
-      <PointMark {...pointProps} />
-      <PlotAxis dimension="x" />
-      <PlotAxis dimension="y" grid />
-    </Plot>
+    <Layout viewBox={{ x: -40, y: -40, width: 480, height: 360 }}>
+      <Plot
+        data={stylePoints}
+        width={400}
+        height={280}
+        coordinate={values.coordinate === 'polar2D' ? 'polar2D' : undefined}
+      >
+        <PointMark {...pointProps} />
+        <PlotAxis dimension="x" />
+        <PlotAxis dimension="y" grid />
+      </Plot>
+    </Layout>
   );
 };

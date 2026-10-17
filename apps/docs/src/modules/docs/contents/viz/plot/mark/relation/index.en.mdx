@@ -165,11 +165,14 @@ The following flow stops at the RelationMark boundary: path and ribbon relations
 
 ## API Reference
 
+Source IR endpoint nodes can contribute edge padding through `autoPadding`, which defaults to `false`. The policy protects existing endpoint nodes, excluding the connecting path; Ranged Dot Chart supplies a policy explicitly. See [PointMark edge padding](/viz/plot/mark/point#edge-padding) for shared rules and an example.
+
 This table keeps only RelationMark-specific props and props whose meaning is redefined here. React users can import `RelationMarkProps` from `@retikz/plot-react`; the `IRPlot*` types in the table come from `@retikz/plot`, while Vanilla authoring uses `InputPlotRelationPathGeometry` from `@retikz/plot-vanilla`. See [transforms](/viz/plot/transform) for local `transform` and `relate`, [channel bindings](/viz/plot/channel/binding) for extension channels, and [coordinates](/viz/plot/coordinate) for projected targets. Put color, stroke, opacity, shadow, and other shared path / ribbon styles in `style`; put ordinary-path-only marks, dashes, and corners in `path.options`.
 
 | Prop                  | Type                                                | Default             | Description                                                                                                         |
 | --------------------- | --------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `source` / `target`   | `RelationMarkProps['source']`                       | Required            | Start and end targets: direct id, row-generated anchor id, or projected coordinate                                  |
+| `autoPadding?`        | `IRPlotPointAutoPadding`                            | `false`             | Endpoint node padding policy; applies when Source IR defines endpoints. See PointMark padding                       |
 | `kind?`               | <ApiValues name="RelationGeometryKind" />           | `path`              | Create an ordinary Path or ribbon Path for each row                                                                 |
 | `label?`              | `RelationMarkProps['label']`                        | —                   | Geometry label for the whole relation                                                                               |
 | `path.via?`           | `NonNullable<RelationMarkProps['path']>['via']`     | —                   | Intermediate targets for default or algorithmic routing; Vanilla input is `InputPlotRelationPathGeometry['via']`    |

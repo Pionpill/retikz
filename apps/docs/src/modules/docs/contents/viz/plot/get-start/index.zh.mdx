@@ -86,7 +86,11 @@ const spec = plot({
   ],
 });
 
-document.getElementById('plot')!.innerHTML = renderPlot(spec, { measurements }, { width: 400, height: 220 });
+document.getElementById('plot')!.innerHTML = renderPlot(
+  spec,
+  { measurements },
+  { layout: { width: 400, height: 220 } },
+);
 ```
 
 `data.reference` 的值要与传给 `renderPlot()` 的数据集名称一致。`scales` 定义两个线性比例尺，`coordinate` 将它们用于二维直角坐标系；`marks` 描述折线的字段绑定，`order` 指定按时间连接，`guides` 描述坐标轴。数据行与配置分开传入，可以在复用图形描述时替换数据。

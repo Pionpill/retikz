@@ -12,7 +12,7 @@ import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
+const cartOpts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
 
 /** size channel 集成测试使用的派生字段 transform 判别值 */
 const SizeChannelTestTransform = {
@@ -403,9 +403,9 @@ describe('size channel 错误输入', () => {
         derivedSizePointSpec(value),
         { d: [{ x: 0, y: 0 }] },
         {
+          definitions: { transforms: [deriveSizeValueTransform] },
+          implementations: { transforms: [deriveSizeValueTransformImplementation] },
           ...cartOpts,
-          transformDefinitions: [deriveSizeValueTransform],
-          transformImplementations: [deriveSizeValueTransformImplementation],
         },
       ),
     ).toThrow(/size requires a continuous field/);

@@ -57,7 +57,9 @@ describe('Plot Vanilla runtime style options', () => {
   it('SSR renderPlot passes Core style definitions and keeps Plot style definitions in lowering', () => {
     compileCalls.length = 0;
 
-    expect(renderPlot(spec, data, { themeStyles: [], plotThemeStyles: [plotThemeStyle] })).toBe('<svg />');
+    expect(renderPlot(spec, data, { definitions: { plotThemeStyles: [plotThemeStyle] }, themeStyles: [] })).toBe(
+      '<svg />',
+    );
 
     const options = compileCalls.at(-1)?.[1] as { themeStyles?: Array<unknown> } | undefined;
 

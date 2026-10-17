@@ -23,7 +23,7 @@ const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions)
   return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
-const opts: LowerPlotsOptions = { width: 480, height: 300 };
+const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
 
 /** 是否为 path 子节点 */
 const isPath = (child: IRChild): child is IRPath => child.type === 'path';

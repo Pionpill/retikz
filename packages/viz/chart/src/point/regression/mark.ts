@@ -74,7 +74,10 @@ export const resolveRegressionMarkGroup = (
   const x = requiredFieldOf(encodings, 'x', ['recipe', 'encodings', 'x']);
   const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
   const series = seriesMappingOf(encodings);
-  const pointProperties: JsonObject = { ...(properties.point ?? {}) };
+  const pointProperties: JsonObject = {
+    ...(properties.autoPadding === undefined ? {} : { autoPadding: properties.autoPadding }),
+    ...(properties.point ?? {}),
+  };
   const pointEncodings: JsonObject = { x, y };
 
   if (series !== undefined) {

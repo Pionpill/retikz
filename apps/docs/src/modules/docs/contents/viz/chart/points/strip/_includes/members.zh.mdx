@@ -37,7 +37,7 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
 | 散布       | `jitter.span`         | `IRStripChartJitter['span']`                             | 总散布宽度；数字使用角色输出单位，ratio 使用刻度间距的 0–1 比例  |
 |            | `jitter.distribution` | `IRStripChartJitter['distribution']`                     | 均匀、截断正态分布；sigma 大于 0，相对散布半宽                   |
 |            | `jitter.seed`         | `number`                                                 | 相同有序数据与配置下稳定复现散布；省略为 0                       |
-| 留白       | `autoPadding`         | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
+| 留白       | `autoPadding`         | `false`、`'max-radius'`、`'point-aware'`、`object`       | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
 |            | `domainPadding`       | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                   |
 
 完整属性结构见 [属性 Schema](#stripproperties--irstripchartproperties--stripchartpropertiesschema)；公共外观配置不在这里展开。
@@ -50,4 +50,4 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
 | ------------ | ------------------------------ | -------------------------------------------------------------------------- |
 | `override`   | `boolean`                      | 替换完整条带点图元，否则追加                                               |
 | `encodings`  | `StripChartMark['encodings']`  | x、y、color、size、opacity、shape 各项使用字段名字符串，不声明图元局部尺度 |
-| `properties` | `StripChartMark['properties']` | 覆盖散布与外观；不接受 domainPadding / autoPadding                         |
+| `properties` | `StripChartMark['properties']` | 覆盖散布与外观；不接受 domainPadding；autoPadding 可覆盖图表策略           |

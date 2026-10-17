@@ -9,7 +9,7 @@ import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const opts: LowerPlotsOptions = { width: 400, height: 400 };
+const opts: LowerPlotsOptions = { layout: { width: 400, height: 400 } };
 
 const share = [
   { label: 'A', value: 25, offset: 0 },

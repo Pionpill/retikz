@@ -14,7 +14,7 @@ export const definePathGenerator = (def: PathGeneratorDefinition): PathGenerator
   assertNonEmptyString(
     def.name,
     'definePathGenerator: name',
-    new RetikzCoreError(RetikzCoreErrorCode.Contract, 'definePathGenerator: name must be a non-empty string.'),
+    () => new RetikzCoreError(RetikzCoreErrorCode.Contract, 'definePathGenerator: name must be a non-empty string.'),
   );
   return def;
 };

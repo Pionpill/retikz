@@ -13,15 +13,16 @@ export const resolveGraphThemeStyleRegistry = (
     assertNonEmptyString(
       definition.name,
       'Graph theme style',
-      new RetikzGraphError({
-        code: RetikzGraphErrorCode.DefinitionConflict,
-        message: 'Graph theme style name must be a non-empty string.',
-        details: {
-          capability: 'graph-theme-style',
-          key: definition.name,
-          reason: 'Graph theme style name must be a non-empty string.',
-        },
-      }),
+      () =>
+        new RetikzGraphError({
+          code: RetikzGraphErrorCode.DefinitionConflict,
+          message: 'Graph theme style name must be a non-empty string.',
+          details: {
+            capability: 'graph-theme-style',
+            key: definition.name,
+            reason: 'Graph theme style name must be a non-empty string.',
+          },
+        }),
     );
     if (registry.has(definition.name)) {
       throw new RetikzGraphError({

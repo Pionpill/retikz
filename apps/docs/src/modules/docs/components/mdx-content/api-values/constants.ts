@@ -56,7 +56,6 @@ import {
   PathCurve,
   PolarInterpolation,
   PositionScaleContinuity,
-  ReferenceMarkKind,
   RelationGeometryKind,
 } from '@retikz/plot';
 import { ArrayIndexPosition } from '@retikz/standard/collection';
@@ -255,9 +254,6 @@ export const API_VALUE_REGISTRY = {
   },
   BuiltinPatternShape: {
     values: Object.values(BuiltinPatternShape),
-  },
-  ReferenceMarkKind: {
-    values: Object.values(ReferenceMarkKind),
   },
   RelationGeometryKind: {
     values: Object.values(RelationGeometryKind),

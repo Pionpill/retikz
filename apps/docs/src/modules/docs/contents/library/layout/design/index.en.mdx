@@ -33,6 +33,12 @@ Each container can hold ordinary primitives or another layout container, so you 
 
 Layout positions content from its size and the author's arrangement constraints. It does not decide what the primitives represent or automatically lay out a whole flowchart from node relationships. Use a Node's `position` when a location is fixed; use an appropriate diagram capability for relationship-driven automatic layout.
 
+## Reducing repeated work in nested layouts
+
+Layouts query dimensions as needed. Explicit Flex minimum sizes and basis can remove corresponding content queries. Fixed Grid tracks do not need content to determine their sizes. Overlay performs final layout directly when the container size and child constraints are known. Content-driven sizing and baseline alignment retain their necessary measurements.
+
+When only one axis is needed, nested containers can return early from the same solver. Successful contributions with matching inputs, proposals, and effective environments are shared within the compilation, avoiding repeated subtree traversal across ancestor probes. Full layout still produces final primitives and actual bounds. Changing constraints or environments can reduce cache reuse, so there is no fixed speedup guarantee.
+
 ## Further reading
 
 <LinkedSections

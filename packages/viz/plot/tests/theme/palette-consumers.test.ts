@@ -6,7 +6,7 @@ import { lowerPlot } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
 
-const options: LowerPlotsOptions = { width: 480, height: 300 };
+const options: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
 
 const rows = [
   { x: 0, y: 1, category: 'A', value: 0 },

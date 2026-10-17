@@ -48,13 +48,10 @@
     "moduleNavigationLabel": "Documentation modules"
   },
   "kernel": {
-    "internalMechanisms": "Internal mechanisms",
-    "compositeComponents": "Composite components",
-    "compositeCustom": "Custom usage",
-    "compositeMechanism": "Implementation",
+    "runtimeMechanics": "Runtime Mechanics",
+    "renderingPipeline": "Rendering Pipeline",
+    "compilationMechanisms": "Compilation mechanisms",
     "internals": "Internals",
-    "compilation": "Compilation flow",
-    "themeResolution": "Theme resolution",
     "label": "Kernel",
     "navigationLabel": "Kernel",
     "navigationDescription": "Build diagrams from core nodes, paths, layout, and rendering primitives",
@@ -145,6 +142,8 @@
     "pkgCoreCoordinates": "Coordinate resolution",
     "pkgCoreNodeCompilation": "Node Compilation",
     "pkgCorePathCompilation": "Path Compilation",
+    "pkgCoreCompositeCompilation": "Composite Compilation",
+    "pkgCoreCompilationOutput": "Compilation Output",
     "pkgOverview": "Overview",
     "pkgFoundationUtilities": "Utilities",
     "pkgFoundationTypesSchemas": "Types & Schemas",
@@ -385,14 +384,11 @@
     "grammarCoordinateComposition": "Coordinate Composition",
     "grammarCoordinateCustom": "Custom Coordinates",
     "grammarMark": "Marks",
-    "grammarMarkCustom": "Custom Marks",
-    "grammarPositionAdjustment": "Position Adjustment",
     "grammarGuide": "Guides",
     "compMark": "Marks",
     "compPathMark": "PathMark",
     "compPointMark": "PointMark",
     "compIntervalMark": "IntervalMark",
-    "compReferenceMark": "ReferenceMark",
     "compRelationMark": "RelationMark",
     "compAxis": "Axis",
     "compLegend": "Legend"
@@ -420,9 +416,12 @@
     "roadmap": "Roadmap"
   },
   "toc": {
+    "fixedHeader": "Fixed header",
+    "scrollingHeader": "Scrolling header",
     "copyLink": "Copy link",
     "outline": "Outline",
     "linkCopied": "Link copied",
+    "linkCopyFailed": "Copy failed. Copy the link from the address bar.",
     "showOutline": "Show outline",
     "hideOutline": "Hide outline"
   },

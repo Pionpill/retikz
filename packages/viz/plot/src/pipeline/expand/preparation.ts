@@ -4,6 +4,7 @@ import type {
   DataTransformResult,
   DataTransformStageInput,
   IRDataTransformDeclaration,
+  IRDataExecution,
 } from '@retikz/data';
 import {
   assertAllValuesValid,
@@ -24,6 +25,7 @@ import {
 
 import type { PlotDataPreparation, PlotDataPreparationOptions, PreparedPlotData } from '../../contract';
 import { RetikzPlotError } from '../../error';
+import { resolvePlotDataExecution } from '../../resolve';
 import { resolveComposition, resolveFacetPanels } from '../../resolve/composition';
 import type { IRPlot, IRPlotMarkOperation } from '../../schemas';
 import { preparePlotRegistries, prepareRows } from './data';
@@ -67,10 +69,12 @@ export const preparePlotData = async <TSource = never>(
   } else {
     if (
       spec.data.model?.some(field => field.format !== undefined) ||
-      options.fieldMaps !== undefined ||
+      options.datasetFieldMaps !== undefined ||
       options.resolveField !== undefined
     )
-      throw new RetikzPlotError('Plot canonical result/source bindings cannot use source format, fieldMaps or parsers');
+      throw new RetikzPlotError(
+        'Plot canonical result/source bindings cannot use source format, datasetFieldMaps or parsers',
+      );
 
     if (binding.kind === 'source') {
       if (spec.data.model === undefined)
@@ -116,10 +120,10 @@ export const preparePlotData = async <TSource = never>(
   const executor =
     request.dataTransformExecutor ??
     createDataTransformExecutor<TSource>({
-      transformImplementations: options.transformImplementations,
-      statisticsReducerImplementations: options.statisticsReducerImplementations,
-      rowSelectorImplementations: options.rowSelectorImplementations,
-      regressionImplementations: options.regressionImplementations,
+      transformImplementations: options.implementations?.transforms,
+      statisticsReducerImplementations: options.implementations?.statisticsReducers,
+      rowSelectorImplementations: options.implementations?.rowSelectors,
+      regressionImplementations: options.implementations?.regressions,
     });
   const semantic = { transformRegistry: registries.transformRegistry, ...registries.transformContext };
   const descriptor = describeDataTransformInput(input);
@@ -128,11 +132,16 @@ export const preparePlotData = async <TSource = never>(
   const model = rootResolution.stages.at(-1)?.outputModel ?? rootResolution.inputModel;
   const markResolutions = spec.marks.map(mark => resolveDataTransforms(plotMarkTransformsOf(mark), model, semantic));
 
-  const prepareScope = async (scope: string, scopeDescriptor: typeof descriptor, resolution: typeof rootResolution) => {
+  const prepareScope = async (
+    scope: string,
+    scopeDescriptor: typeof descriptor,
+    resolution: typeof rootResolution,
+    dataExecution: IRDataExecution | undefined,
+  ) => {
     for (const stage of resolution.stages) assertFieldOrders(stage.outputModel, registries.fieldOrderRegistry);
     try {
       const prepared = await executor.prepare(scopeDescriptor, resolution, {
-        dataExecution: spec.dataExecution,
+        dataExecution,
         provenance: preserveProvenance,
         lineage: request.lineage,
         signal: request.signal,
@@ -151,11 +160,23 @@ export const preparePlotData = async <TSource = never>(
     }
   };
 
-  const root = await prepareScope('root', descriptor, rootResolution);
+  const root = await prepareScope(
+    'root',
+    descriptor,
+    rootResolution,
+    resolvePlotDataExecution(spec.dataExecution, 'root'),
+  );
   const marks: Array<Extract<DataTransformPreparation<TSource>, { kind: 'ready' }>> = [];
 
   for (const [index, resolution] of markResolutions.entries())
-    marks.push(await prepareScope(`mark[${index}]`, { kind: 'result', model }, resolution));
+    marks.push(
+      await prepareScope(
+        `mark[${index}]`,
+        { kind: 'result', model },
+        resolution,
+        resolvePlotDataExecution(spec.dataExecution, 'marks'),
+      ),
+    );
   const composition = resolveComposition(spec);
   let consumed = false;
 

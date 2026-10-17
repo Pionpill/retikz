@@ -21,7 +21,7 @@ const defineClipImplementation = (
   assertNonEmptyString(
     definition.kind,
     'clip provider key',
-    new RetikzCoreError(RetikzCoreErrorCode.Contract, 'clip provider key must be a non-empty string.'),
+    () => new RetikzCoreError(RetikzCoreErrorCode.Contract, 'clip provider key must be a non-empty string.'),
   );
   if (definition.resolve === undefined) {
     return {

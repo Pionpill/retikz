@@ -2129,6 +2129,16 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'Plot',
     url: '/viz/plot/reference/plot#plotschema',
   },
+  PlotDataExecutionSchema: {
+    schema: IRPlot.PlotDataExecutionSchema,
+    label: 'PlotDataExecution',
+    url: '/viz/plot/reference/plot#plotdataexecutionschema',
+  },
+  PlotScopedDataExecutionSchema: {
+    schema: IRPlot.PlotScopedDataExecutionSchema,
+    label: 'PlotScopedDataExecution',
+    url: '/viz/plot/reference/plot#plotdataexecutionschema',
+  },
   CoordinateCompositionSchema: {
     schema: IRPlot.CoordinateCompositionSchema,
     label: 'CoordinateComposition',
@@ -2358,11 +2368,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IRPlot.IntervalBoundsSchema,
     label: 'IntervalBounds',
     url: '/viz/plot/reference/mark#intervalboundsschema',
-  },
-  ReferenceMarkSchema: {
-    schema: IRPlot.ReferenceMarkSchema,
-    label: 'ReferenceMark',
-    url: '/viz/plot/reference/mark#referencemarkschema',
   },
   RelationMarkSchema: {
     schema: IRPlot.RelationMarkSchema,

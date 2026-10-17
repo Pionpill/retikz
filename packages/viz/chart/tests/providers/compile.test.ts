@@ -216,9 +216,7 @@ describe('Chart providers through Core compile', () => {
     expect(() =>
       compileToScene(
         sceneOf(source),
-        compileDefinitionsOf([createScatterChartProviderContribution()], {
-          positionAdjustmentDefinitions: [],
-        }),
+        compileDefinitionsOf([createScatterChartProviderContribution()], { definitions: { positionAdjustments: [] } }),
       ),
     ).toThrow(/strip|recipe|provider/i);
   });
@@ -890,8 +888,8 @@ describe('Chart providers through Core compile', () => {
         inputRows.map(row => ({ ...row, [operation.params.as]: row[operation.params.field] })),
     });
     const lowerOptions: LowerPlotsOptions = {
-      transformDefinitions: [copyField],
-      transformImplementations: [copyFieldImplementation],
+      definitions: { transforms: [copyField] },
+      implementations: { transforms: [copyFieldImplementation] },
     };
     const source = ScatterChartSchema.parse({
       namespace: 'chart',
@@ -1060,7 +1058,10 @@ describe('registered regression compilation', () => {
     definition,
     fit: (_pairs, operation) => ({ predict: x => x ** operation.degree }),
   });
-  const lowerOptions = { regressionDefinitions: [definition], regressionImplementations: [definitionImplementation] };
+  const lowerOptions = {
+    definitions: { regressions: [definition] },
+    implementations: { regressions: [definitionImplementation] },
+  };
 
   const compile = (properties: JsonObject) => {
     const source = RegressionChartSchema.parse({

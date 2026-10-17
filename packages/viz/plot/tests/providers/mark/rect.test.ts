@@ -35,7 +35,7 @@ const WIDTH = 400;
 
 const HEIGHT = 400;
 
-const cartOpts: LowerPlotsOptions = { width: WIDTH, height: HEIGHT };
+const cartOpts: LowerPlotsOptions = { layout: { width: WIDTH, height: HEIGHT } };
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
   return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;

@@ -8,7 +8,7 @@ These schemas are exported from `@retikz/chart/point` and describe persistable J
 
 **Chart configuration**
 
-#### <ApiSourceLink label={"RegressionEncodings"} path={"packages/viz/chart-react/src/point/regression/RegressionEncodings.tsx"} startLine={8}>RegressionEncodings</ApiSourceLink> / <ApiSourceLink label={"IRRegressionChartEncodings"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={138}>IRRegressionChartEncodings</ApiSourceLink> / <ApiSourceLink label={"RegressionChartEncodingsSchema"} path={"packages/viz/chart/src/point/regression/encoding-schema.ts"} startLine={26}>RegressionChartEncodingsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RegressionEncodings"} path={"packages/viz/chart-react/src/point/regression/RegressionEncodings.tsx"} startLine={8}>RegressionEncodings</ApiSourceLink> / <ApiSourceLink label={"IRRegressionChartEncodings"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={139}>IRRegressionChartEncodings</ApiSourceLink> / <ApiSourceLink label={"RegressionChartEncodingsSchema"} path={"packages/viz/chart/src/point/regression/encoding-schema.ts"} startLine={26}>RegressionChartEncodingsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -43,7 +43,7 @@ export type IRRegressionChartEncodings = ZodInfer<typeof RegressionChartEncoding
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RegressionProperties"} path={"packages/viz/chart-react/src/point/regression/RegressionProperties.tsx"} startLine={8}>RegressionProperties</ApiSourceLink> / <ApiSourceLink label={"IRRegressionChartProperties"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={141}>IRRegressionChartProperties</ApiSourceLink> / <ApiSourceLink label={"RegressionChartPropertiesSchema"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={91}>RegressionChartPropertiesSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RegressionProperties"} path={"packages/viz/chart-react/src/point/regression/RegressionProperties.tsx"} startLine={8}>RegressionProperties</ApiSourceLink> / <ApiSourceLink label={"IRRegressionChartProperties"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={142}>IRRegressionChartProperties</ApiSourceLink> / <ApiSourceLink label={"RegressionChartPropertiesSchema"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={92}>RegressionChartPropertiesSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -60,7 +60,7 @@ Corresponds to `RegressionProperties`, Vanilla `properties` and IR `recipe.prope
 | Appearance | `point`         | `IRRegressionPointProperties`                            | Sets observation point appearance                                                                       |
 | Trend      | `trend.curve`   | `IRRegressionTrendProperties['curve']`                   | Default `catmullRom`; inherited by extra trends unless overridden                                       |
 |            | `trend`         | `IRRegressionTrendProperties`                            | Sets trend appearance without changing the fit                                                          |
-| Padding    | `autoPadding`   | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance |
+| Padding    | `autoPadding`   | `false`, `'max-radius'`, `'point-aware'`, `object`       | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance |
 |            | `domainPadding` | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                |
 
 See the [properties schema](#regressionproperties--irregressionchartproperties--regressionchartpropertiesschema) for the full structure; shared appearance configuration is not expanded here.
@@ -83,7 +83,7 @@ export type IRRegressionChartProperties = ZodInfer<typeof RegressionChartPropert
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RegressionMark"} path={"packages/viz/chart-react/src/point/regression/RegressionMark.tsx"} startLine={13}>RegressionMark</ApiSourceLink> / <ApiSourceLink label={"IRRegressionMark"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={150}>IRRegressionMark</ApiSourceLink> / <ApiSourceLink label={"RegressionChartMarkSchema"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={105}>RegressionChartMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RegressionMark"} path={"packages/viz/chart-react/src/point/regression/RegressionMark.tsx"} startLine={13}>RegressionMark</ApiSourceLink> / <ApiSourceLink label={"IRRegressionMark"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={151}>IRRegressionMark</ApiSourceLink> / <ApiSourceLink label={"RegressionChartMarkSchema"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={106}>RegressionChartMarkSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -110,7 +110,7 @@ export type IRRegressionMark = ZodInfer<typeof RegressionChartMarkSchema>;
 
 <DocTab value="schema" label="Schema">
 
-`encodings` accepts only optional field-name strings for x, y, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties.
+`encodings` accepts only optional field-name strings for x, y, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `domainPadding`; `autoPadding` can override the chart policy. Omitted settings inherit the applicable chart mappings and properties.
 
 <ZodSchema name="RegressionChartMarkSchema" shallow />
 
@@ -118,7 +118,7 @@ export type IRRegressionMark = ZodInfer<typeof RegressionChartMarkSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRRegressionChart"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={132}>IRRegressionChart</ApiSourceLink> / <ApiSourceLink label={"RegressionChartSchema"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={127}>RegressionChartSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRRegressionChart"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={133}>IRRegressionChart</ApiSourceLink> / <ApiSourceLink label={"RegressionChartSchema"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={128}>RegressionChartSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -138,7 +138,7 @@ export type IRRegressionChart = ZodInfer<typeof RegressionChartSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRRegressionChartRecipe"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={135}>IRRegressionChartRecipe</ApiSourceLink> / <ApiSourceLink label={"RegressionChartRecipeSchema"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={118}>RegressionChartRecipeSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRRegressionChartRecipe"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={136}>IRRegressionChartRecipe</ApiSourceLink> / <ApiSourceLink label={"RegressionChartRecipeSchema"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={119}>RegressionChartRecipeSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -158,7 +158,7 @@ export type IRRegressionChartRecipe = ZodInfer<typeof RegressionChartRecipeSchem
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRRegressionExtraMethod"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={153}>IRRegressionExtraMethod</ApiSourceLink> / <ApiSourceLink label={"RegressionExtraMethodSchema"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={65}>RegressionExtraMethodSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRRegressionExtraMethod"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={154}>IRRegressionExtraMethod</ApiSourceLink> / <ApiSourceLink label={"RegressionExtraMethodSchema"} path={"packages/viz/chart/src/point/regression/schema.ts"} startLine={65}>RegressionExtraMethodSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 

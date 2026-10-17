@@ -102,20 +102,22 @@ export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): 
   assertNonEmptyString(
     definition.name,
     'Flow Layout Definition',
-    new RetikzDiagramError({
-      code: RetikzDiagramErrorCode.DefinitionInvalid,
-      message: `Flow Layout Definition '${definition.name}' is invalid: name must be a non-empty string.`,
-      details: { capability: 'flow-layout', key: definition.name, reason: 'name must be a non-empty string.' },
-    }),
+    () =>
+      new RetikzDiagramError({
+        code: RetikzDiagramErrorCode.DefinitionInvalid,
+        message: `Flow Layout Definition '${definition.name}' is invalid: name must be a non-empty string.`,
+        details: { capability: 'flow-layout', key: definition.name, reason: 'name must be a non-empty string.' },
+      }),
   );
   assertNonEmptyString(
     definition.description,
     'Flow Layout Definition description',
-    new RetikzDiagramError({
-      code: RetikzDiagramErrorCode.DefinitionInvalid,
-      message: `Flow Layout Definition '${definition.name}' is invalid: description must be a non-empty string.`,
-      details: { capability: 'flow-layout', key: definition.name, reason: 'description must be a non-empty string.' },
-    }),
+    () =>
+      new RetikzDiagramError({
+        code: RetikzDiagramErrorCode.DefinitionInvalid,
+        message: `Flow Layout Definition '${definition.name}' is invalid: description must be a non-empty string.`,
+        details: { capability: 'flow-layout', key: definition.name, reason: 'description must be a non-empty string.' },
+      }),
   );
   const capabilities = definition.capabilities;
   const defaults = definition.defaults;

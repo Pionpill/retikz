@@ -37,6 +37,8 @@ describe('Plot regression runtime injection', () => {
     });
     const result = resolvePlotAuthoring(
       {
+        definitions: { regressions: [definition] },
+        implementations: { regressions: [implementation] },
         spec,
         data: {
           rows: [
@@ -44,13 +46,11 @@ describe('Plot regression runtime injection', () => {
             { x: 2, y: 3 },
           ],
         },
-        regressionDefinitions: [definition],
-        regressionImplementations: [implementation],
       },
       { embedded },
     );
 
-    expect(result.lowerOptions.regressionDefinitions?.[0]).toBe(definition);
+    expect(result.lowerOptions.definitions?.regressions?.[0]).toBe(definition);
     expect(() =>
       lowerPlotWithLineage(result.spec, result.datasets ?? {}, { ...result.lowerOptions, environment: {} }),
     ).not.toThrow();
@@ -80,12 +80,15 @@ it.each([false, true])('injects field orders into React runtime with embedded=%s
       { x: 'a', y: 2 },
     ],
   };
-  const result = resolvePlotAuthoring({ spec, data, fieldOrderDefinitions: [definition] }, { embedded });
+  const result = resolvePlotAuthoring({ definitions: { fieldOrders: [definition] }, spec, data }, { embedded });
   expect(
     lowerPlotWithLineage(result.spec, result.datasets ?? {}, { ...result.lowerOptions, environment: {} }).children,
   ).toEqual(
-    lowerPlotWithLineage(spec, data, { environment: {}, ...result.lowerOptions, fieldOrderDefinitions: [definition] })
-      .children,
+    lowerPlotWithLineage(spec, data, {
+      ...result.lowerOptions,
+      definitions: { ...result.lowerOptions.definitions, fieldOrders: [definition] },
+      environment: {},
+    }).children,
   );
   expect(() => lowerPlotWithLineage(spec, data, { environment: {} })).toThrow(/unknown order/);
 });

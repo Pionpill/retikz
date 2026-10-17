@@ -61,6 +61,7 @@ export {
   validateBoundData,
 } from './model';
 export type {
+  DataFieldMap,
   DataFieldTypeMap,
   DataTransformModel,
   DataTransformResult,

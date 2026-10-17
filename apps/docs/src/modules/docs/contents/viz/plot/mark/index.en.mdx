@@ -3,7 +3,7 @@ title: Marks
 description: Marks declare the geometry produced from data; scales, coordinates, and renderers continue to own value mapping, projection, and final output.
 ---
 
-Marks are the geometry layer of the graphic grammar. They answer “what geometry should each row or group of rows produce?”—a point, path, interval, reference constraint, or relation path between two targets.
+Marks are the geometry layer of the graphic grammar. They answer “what geometry should each row or group of rows produce?”—a point, path, interval, or relation path between two targets.
 
 Choose a mark from the geometric relationship in the data, not from the final chart name. The same `IntervalMark` can form bars, heatmaps, or pies, while the same `PointMark` can appear as scatter points, bubbles, or text.
 
@@ -11,17 +11,16 @@ For a mark without an authored color, `defaultColorIndex` selects a zero-based, 
 
 ## Responsibilities
 
-| Category   | Mark            | What it expresses                          | Common uses                              |
-| ---------- | --------------- | ------------------------------------------ | ---------------------------------------- |
-| Primary    | `PointMark`     | One position or node per row               | Scatter, bubbles, shape marks, text      |
-|            | `PathMark`      | A one-dimensional trajectory from a group  | Lines, area boundaries, radar outlines   |
-|            | `IntervalMark`  | Products of intervals on position roles    | Bars, histograms, heatmaps, radial forms |
-| Supporting | `ReferenceMark` | Reference positions outside the main shape | Thresholds, rings, bands, regions        |
-| Relational | `RelationMark`  | Connections between two locatable targets  | Arrows, dependencies, ribbons            |
+| Category   | Mark           | What it expresses                         | Common uses                              |
+| ---------- | -------------- | ----------------------------------------- | ---------------------------------------- |
+| Primary    | `PointMark`    | One position or node per row              | Scatter, bubbles, shape marks, text      |
+|            | `PathMark`     | A one-dimensional trajectory from a group | Lines, area boundaries, radar outlines   |
+|            | `IntervalMark` | Products of intervals on position roles   | Bars, histograms, heatmaps, radial forms |
+| Relational | `RelationMark` | Connections between two locatable targets | Arrows, dependencies, ribbons            |
 
 <ComponentAlert
-  title="Why only five built-in marks?"
-  description="Charts have many names, but marks are classified by basic geometric responsibility rather than by finished chart type. The three primary marks can be understood as the basic point, line, and area structures; familiar scatterplots, lines, areas, bars, pies, and heatmaps are derived from them by combining channel bindings, data transforms, coordinate projection, and layer composition as needed. The other two marks add reference and relational semantics."
+  title="Why only four built-in marks?"
+  description="Charts have many names, but marks are classified by basic geometric responsibility rather than by finished chart type. The three primary marks can be understood as the basic point, line, and area structures; familiar scatterplots, lines, areas, bars, pies, and heatmaps are derived from them by combining channel bindings, data transforms, coordinate projection, and layer composition as needed. The relational mark adds connections between two targets."
 />
 
 A mark owns only the contract that turns data into geometry:
@@ -31,7 +30,7 @@ A mark owns only the contract that turns data into geometry:
 - [Guides](/viz/plot/guide) provide axes, legends, and other reading aids
 - Renderers output the lowered core geometry as SVG, Canvas, or another target
 
-Built-in marks eventually lower into [@retikz/core](/kernel/components/introduction) Node, Path, and other Kernel IR, but using them does not require handling those objects directly. To register a new mark type, start with [Custom Marks](/viz/plot/mark/custom-mark).
+Built-in marks eventually lower into [@retikz/core](/kernel/components/introduction) Node, Path, and other Kernel IR, but using them does not require handling those objects directly.
 
 ## In This Section
 
@@ -53,19 +52,9 @@ Built-in marks eventually lower into [@retikz/core](/kernel/components/introduct
       url: '/viz/plot/mark/interval',
     },
     {
-      title: 'ReferenceMark',
-      description: 'Add thresholds, ranges, and reference regions from constants or row-level values.',
-      url: '/viz/plot/mark/reference',
-    },
-    {
       title: 'RelationMark',
       description: 'Connect point, path, or interval targets with ordinary paths or ribbons.',
       url: '/viz/plot/mark/relation',
-    },
-    {
-      title: 'Custom Marks',
-      description: 'Define, register, and lower custom marks through the same compilation path as built-ins.',
-      url: '/viz/plot/mark/custom-mark',
     },
   ]}
 />

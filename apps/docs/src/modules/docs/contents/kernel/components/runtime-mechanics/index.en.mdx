@@ -1,0 +1,47 @@
+---
+title: Runtime Mechanics
+description: Follow a drawing through React, Vanilla, Core, Runtime and Render, tracing responsibilities and data handoffs.
+---
+
+A drawing reaches the screen through input preparation, geometry compilation and backend rendering. This group follows complete drawing tasks: when each package takes over, what it receives and how the result reaches the application. It is intended for readers who can already draw nodes and paths and want to understand execution across packages.
+
+## Responsibilities at a glance
+
+| Package | Responsibility                                                                        | When to read about it                                       |
+| ------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| React   | Collect JSX declarations and connect processing results to a React host               | Tracing component input and SVG / Canvas display            |
+| Vanilla | Normalize authored input, organize processing and provide non-React mounting          | Tracing preparation and host execution                      |
+| Core    | Calculate positions, dimensions, connections and drawing resources, producing a Scene | Understanding how geometry is determined                    |
+| Runtime | Manage sources, computations and result commits during retained execution             | Following changes across updates                            |
+| Render  | Convert a Scene into SVG descriptions or Canvas drawing operations                    | Understanding how backends consume the same compiled result |
+
+## Following a drawing
+
+Consider two nodes and a connecting line. The author supplies node positions and names; the path refers to those names. Core resolves the endpoints before Render draws the line. The diagram follows one result; it does not expand Runtime's work across updates.
+
+<ComponentPreview
+  files="/kernel/components/runtime-mechanics/rendering-pipeline/pipeline-overview"
+  size="md"
+  hideCode
+  type="flow"
+/>
+
+React reuses Vanilla's input processing. An application may also provide IR directly or send a precompiled Scene to a rendering entry point. These entries start at different points in the chain; JSX is not required for every drawing.
+
+## Reading boundaries
+
+Start with Rendering Pipeline to distinguish authored declarations, IR and Scene. For Core's resolution, measurement, paths and composite expansion, continue to the [compilation mechanisms](/kernel/packages/core) series.
+
+This group explains cooperation across packages. Runtime transaction and scheduling algorithms, Core geometry algorithms and backend implementation details belong to their package documentation. Here, the focus is the information needed to understand each handoff.
+
+## Contents
+
+<LinkedSections
+  items={[
+    {
+      title: 'Rendering Pipeline',
+      description: 'Follow one drawing from authored declarations to SVG / Canvas output',
+      url: '/kernel/components/runtime-mechanics/rendering-pipeline',
+    },
+  ]}
+/>

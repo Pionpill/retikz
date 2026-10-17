@@ -736,36 +736,6 @@ describe('preview controls registry', () => {
     }
   });
 
-  it('ReferenceMark 每个 demo 都提供与示例职责对应的可写控件并消费实时值', () => {
-    const segments = ['viz', 'plot', 'mark', 'reference'];
-    const cases = [
-      { name: 'rule-threshold', writableIds: ['rule-threshold-value'] },
-      { name: 'rule-band', writableIds: ['rule-band-start', 'rule-band-end'] },
-      { name: 'rule-region', writableIds: ['rule-region-x-start', 'rule-region-x-end'] },
-      { name: 'rule-per-datum', writableIds: ['rule-per-datum-offset'] },
-      { name: 'rule-extent', writableIds: ['rule-extent-inset'] },
-    ];
-
-    for (const { name, writableIds } of cases) {
-      for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
-        const controls = resolvePreviewControls(controlModules[key]);
-
-        expect(controls?.presentation, key).toBe('panel');
-
-        if (!controls || controls.presentation !== 'panel') continue;
-
-        const actualIds = controls.sections
-          .flatMap(section => section.controls)
-          .filter(control => control.kind !== 'table')
-          .map(control => control.id);
-
-        expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
-      }
-
-      expect(demoSources[buildKey(segments, name)], name).toContain('defineControlledPreview(previewControlContract');
-    }
-  });
-
   it('RelationMark 每个 demo 都提供与示例职责对应的可写控件并消费实时值', () => {
     const segments = ['viz', 'plot', 'mark', 'relation'];
     const cases = [

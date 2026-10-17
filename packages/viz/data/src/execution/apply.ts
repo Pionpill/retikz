@@ -210,19 +210,19 @@ const applyToView = (
 /**
  * 按声明顺序同步推进规范 DataView
  * @param view 已规范化的输入数据视图
- * @param operations 按顺序执行的变换操作；省略时为空列表
+ * @param transforms 按顺序执行的变换操作；省略时为空列表
  * @param options 语义注册表、同步计算实现与可选来源/事件记录
  * @returns 完整数据视图及可选执行事件
  * @throws {RetikzDataError} 语义解析、计算或结果校验失败
  */
 export const applyTransformsToDataView = (
   view: DataView,
-  operations: Array<IRDataTransform> = [],
+  transforms: Array<IRDataTransform> = [],
   options: ApplyTransformsOptions = {},
 ): ApplyTransformsToDataViewResult =>
-  operations.length === 0 && options.provenance !== true && !options.lineage
+  transforms.length === 0 && options.provenance !== true && !options.lineage
     ? { dataView: view }
-    : applyToView(view, operations, options);
+    : applyToView(view, transforms, options);
 
 /**
  * 同步行数据便捷入口；全计划预检后只执行一次
