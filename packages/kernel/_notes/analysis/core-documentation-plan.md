@@ -1,7 +1,7 @@
 # Core 源码阅读与 Kernel 进阶文档长期计划
 
 - 建立日期：2026-10-11
-- 状态：C1「编译流程」、C2「配置解析」、C3「坐标解析」均已通过用户阅读 review；C4「节点编译」已完成，用户阅读 review 通过；C5「路径编译」、C6「复合编译」已完成；C7「编译产物」已通过用户阅读 review 并提交；Core 正文到 C7 收尾，原 C8 并入 K2；C0 待整理，K 系列待开始
+- 状态：C1「编译流程」、C2「配置解析」、C3「坐标解析」均已通过用户阅读 review；C4「节点编译」已完成，用户阅读 review 通过；C5「路径编译」、C6「复合编译」已完成；C7「编译产物」已通过用户阅读 review 并提交；Core 正文到 C7 收尾，原 C8 并入 K2；C0 待整理；K1、K2 已编写，待验收
 - 目标：边阅读实现边编写独立系列文档，逐步理解 Core 编译机制及其跨包协作
 - 推进方式：按篇分批推进，不一次性铺开全部页面
 - 初始授权：保存主题规划；2026-10-12 获准编写 C1、删除旧 Core 概览子页、同步双语导航与引用并验证，不含源码重构、暂存、提交或发布
@@ -23,12 +23,12 @@ Core 页面可以介绍它如何消费 Runtime、Math 等依赖，但不展开�
 
 ## 二、组件／进阶：五个专题
 
-目标位置：[运行机制](../../../../apps/docs/src/modules/docs/contents/kernel/components/runtime-mechanics)。K1 使用 rendering-pipeline 路由，其余专题的路由在对应批次确定。
+目标位置：[运行机制](../../../../apps/docs/src/modules/docs/contents/kernel/components/runtime-mechanics)。K1 使用 rendering-pipeline 路由，K2 使用 incremental-updates 路由，其余专题的路由在对应批次确定。
 
 | 编号 | 专题               | 主线与边界                                                                                              | 涉及模块                                   | 状态           |
 | ---- | ------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------ | -------------- |
 | K1   | 渲染链路           | 声明进入 IR、编译为 Scene、执行为画面；交代各层职责，不展开每个包的完整算法                             | React、Vanilla、Core、Render               | 已编写，待验收 |
-| K2   | 动态更新与增量执行 | 输入变化、Runtime 调度、Core 增量接入与结果复用、Scene Patch 和 Render 提交，以及全量回退与失败结果处理 | Adapter、Runtime、Core、Render             | 待开始         |
+| K2   | 增量更新           | 输入变化、Runtime 调度、Core 增量接入与结果复用、Scene Patch 和 Render 提交，以及全量回退与失败结果处理 | Adapter、Runtime、Core、Render             | 已编写，待验收 |
 | K3   | 文字测量与布局协作 | 谁提供度量、Core 怎样消费，字体或公式度量变化如何传递到布局和画面                                       | 度量提供方、Adapter、Core、Tex、Render     | 待开始         |
 | K4   | 高层组件与布局组合 | 上层领域组件怎样通过定义、输入、布局约束和编译产物与 Core 协作                                          | Standard／Plot 等实际消费方、Adapter、Core | 待开始         |
 | K5   | 编译观测与空间查询 | 编译布局和空间信息如何交给检查工具及应用使用，明确输出与消费方边界                                      | Core、Inspect、Adapter、应用               | 待开始         |
@@ -132,3 +132,5 @@ Core 系列以 C7 收尾，覆盖一次编译从输入到产物的完整过程�
 2026-10-15：完成 C7「编译产物 / Compilation Output」双语正文与五张示意图，覆盖 Scene 组织、资源引用、自动与显式画布、artifact、空间句柄、observer 和诊断出口。同步 Core 入口、导航与双语标签。主 agent 自审并修订预览高度和资源引用线，无 subagent。Oxfmt、受影响范围 Oxlint、Docs tsc --noEmit、静态检查及 36 项既有 Core 功能测试通过；双语、明暗、桌面与窄屏共 40 次最终图示检查无页面错误、文字重叠或裁切。未运行生产构建、生产运行时巡检或性能测试，未暂存或提交。下一步用户阅读 C7 并反馈，之后讨论 C8。
 
 2026-10-15：C7 用户阅读 review 通过，双语正文、示意图和导航已提交（`042d27911`）。用户确认取消独立 C8，将 Runtime 接入与增量编译范围并入 K2；Core 系列保留 C1–C7，先整理 C0，再按 K 系列顺序讨论跨包专题。本次仅调整计划，未开始 K2 正文。
+
+2026-10-17：按用户确认的名称完成 K2「增量更新 / Incremental Updates」双语正文与五张示意图，同步运行机制入口、导航及双语标签。以两个无连线根节点的单节点改色为例，核实 Source / Snapshot / ChangeSet、Runtime 调度、Core 快路径限制、身份与拓扑、全量回退、Scene Patch 和提交失败边界；明确 React 订阅结果与 Vanilla DOM Render Participant 的宿主差异。主 agent 完成两轮自审与图示修订，无 subagent。Oxfmt、受影响范围 Oxlint、Docs tsc --noEmit、308 页静态检查及 git diff --check 通过；开发服务中完成双语、明暗、桌面与窄屏共 40 次最终图示检查，无页面错误或 SVG 裁切。尺寸脚本仅采样前两图，其余通过滚动挂载后补测。未运行功能测试、生产构建或生产运行时巡检，未暂存或提交。下一步由用户阅读 K2 并反馈。

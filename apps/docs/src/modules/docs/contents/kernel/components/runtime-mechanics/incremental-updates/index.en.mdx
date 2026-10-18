@@ -1,0 +1,251 @@
+---
+title: Incremental Updates
+description: Follow a node color change through input snapshots, Runtime scheduling, Core reuse and Render commits, including full fallback and failure boundaries.
+---
+
+<ComponentAlert
+  type="warn"
+  title="Experimental feature"
+  description="Incremental updates are currently experimental, and the update strategy will change. This page describes the current implementation, not the final design."
+/>
+
+Once a drawing is visible, which work must run again when node A changes from orange to blue? This page follows a retained update across packages: the adapter submits new input, Runtime schedules computation, Core tries to reuse previous output, and the host displays the committed result. Eligible changes can compile locally; other changes use a full compilation to produce the complete result.
+
+Start with [Rendering Pipeline](/kernel/components/runtime-mechanics/rendering-pipeline) for IR, Scene and package responsibilities. This page covers state passed between compilations. See [Core compilation](/kernel/packages/core/compilation) for geometry within one pass, and [Runtime](/kernel/packages/runtime) for the general transaction machinery.
+
+## Overall flow
+
+The example contains two root nodes, A and B, with unique ids and direct coordinates. There are no paths or drawing resources. The first frame compiles both nodes. The next input changes only A's `style.fill`; positions, text and B stay the same. The figure compares the two outputs. Its arrow represents an input edit, and the arrangement is only for comparison.
+
+<ComponentPreview files="update-example" size="md" hideCode type="illustration" />
+
+A retained controller keeps previous input and output so they can be compared with the next state. Packages cooperate on the update, but there are two host paths: Vanilla DOM can join the Runtime transaction; React subscribes to the processing result after it commits.
+
+<ComponentPreview files="update-overview" size="md" hideCode type="flow" />
+
+Core always returns a complete result. A Patch describes how consecutive Scenes connect; it does not replace the next complete snapshot.
+
+## Input updates
+
+React components, Vanilla DSL and existing IR all converge at Vanilla's processing entry point. They reach a complete `IRScene` in different ways:
+
+| Input form       | How it reaches complete IR                                                              |
+| ---------------- | --------------------------------------------------------------------------------------- |
+| React components | Layout collects declarations into `InputScene`, which Vanilla normalizes into `IRScene` |
+| Vanilla DSL      | The caller supplies `InputScene`, which Vanilla normalizes into `IRScene`               |
+| Existing IR      | The complete `IRScene` is used directly, without input normalization                    |
+
+In the retained mode discussed here, Vanilla submits the complete IR to Runtime. The packages then cooperate with these responsibilities:
+
+| Package | Responsibility during an update                                                                                                                                                                                                                              |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Vanilla | Coordinates input preparation and pipeline assembly: normalizes authoring input, prepares IR, compile options and Composite inputs, wires Runtime and Core computations, manages controller lifecycles and submits subsequent input                          |
+| Runtime | Provides general update scheduling and transactions: manages snapshots and revisions, selects computations by dependency, invokes incremental or full entry points, and coordinates commits and rollback                                                     |
+| Core    | Compiles and reuses output: converts `IRScene` and compile context into Scene and other [compilation output](/kernel/packages/core/compilation-output), determines reusable results, compiles locally or requests full fallback, and generates Scene Patches |
+
+Runtime determines when to invoke which computations; Core determines how to compile and reuse drawing output. Compile options, Composite inputs and related information travel through their own contracts rather than all being placed inside IR. In static mode, Vanilla arranges one complete compilation without this Runtime incremental transaction.
+
+Even when only A's fill changes, an ordinary input update still delivers the complete IR containing A and B. Later stages decide which output can be reused. This discussion follows a later update with stable controller configuration and compile options. Changing controller configuration involves its lifecycle.
+
+Three objects matter here:
+
+- Source: the owner of an input category, defining how to capture, read and compare values. Core documents use `CoreSourceDefinition`.
+- Snapshot: the input held by a Source at a revision. A revision identifies a committed version.
+- ChangeSet: optional hints identifying changes. The complete next snapshot still provides the actual values.
+
+The Core Source copies and freezes JSON on capture and compares its structure. Creating a new JavaScript object with identical content therefore does not, by itself, trigger Core compilation. Vanilla's ordinary input update currently submits complete Sources without automatically generating a Core ChangeSet for every edit.
+
+In the color example, the next snapshot still contains A and B, with only A's `style.fill` changed. Callers integrating with Runtime directly can also provide a ChangeSet. Core checks those hints against the previous and next snapshots. Missing hints are normal; inconsistent hints produce a diagnostic and trigger full fallback.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'React controller reuse and subsequent input',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+    },
+    { label: 'Vanilla input preparation', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
+    { label: 'Source capture and structural equality', path: 'packages/kernel/core/src/contract/runtime/source.ts' },
+    { label: 'Checking ChangeSets against snapshots', path: 'packages/kernel/core/src/compile/incremental/diff.ts' },
+  ]}
+/>
+
+<ComponentAlert
+  type="tip"
+  title="Current scope of incremental updates"
+  description="Ordinary input updates currently submit complete IR snapshots, after which Core determines whether any output can be reused. Runtime already schedules work through Source / Computation dependencies, and Core has a restricted node color fast path. A general mechanism that starts from any changed drawing node, propagates invalidation through node, path and layout dependencies, and recomputes only affected output is planned but not yet implemented. This page describes the current update flow."
+/>
+
+## Scheduling computation
+
+Runtime receives an update with `baseRevision`, checks that it targets the current version, and prepares candidate Sources. A candidate is new state that has not been published; the committed state remains available while calculations run. If no Source actually changes, Runtime skips computations and participants and keeps its own revision.
+
+Otherwise, Runtime selects computations through declared dependencies. A **Computation** reads Sources and produces a result; Core integrates through `createCoreComputation`. Runtime knows which inputs affect it, while Core decides how to compile the drawing again.
+
+The initial computation executes the full `run` path. On later updates, the default incremental strategy allows `update` to inspect the previous result and candidate snapshots. It can return incremental output or request full fallback. A forced full strategy invokes `run` directly. General Runtime computations can also return bailout to retain their result; Core currently requests fallback when its fast path does not apply.
+
+Vanilla also wires Composite input and invalidation Sources into Core. Changes to these dependencies can require compilation even when the IR is unchanged. If Composite definition topology becomes incompatible, Vanilla prepares a new retained state and replaces the old state only after success. This definition topology describes the registered capabilities; it is distinct from the Scene primitive hierarchy discussed below.
+
+<SourceLinks
+  sources={[
+    { label: 'Source equality and dependency propagation', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+    { label: 'Choosing update, fallback and run', path: 'packages/kernel/runtime/src/runtime/computation.ts' },
+    { label: 'Core Computation integration', path: 'packages/kernel/core/src/compile/incremental/computation.ts' },
+    { label: 'Vanilla Sources and lifecycle', path: 'packages/kernel/vanilla/src/processing/internal/controller.ts' },
+  ]}
+/>
+
+This section outlines the scheduling and computation flow. For details on dependency scheduling, execution strategies and transaction lifecycles, see the [Runtime package documentation](/kernel/packages/runtime).
+
+## Reusing output
+
+Core must identify the previous drawing output belonging to A before replacing it and retaining B. Three kinds of information connect them:
+
+- Semantic identity identifies the IR object that produced primitives. A's identity path includes `root / node / A`.
+- Primitive identity identifies a particular emission from that object. A Node with text can produce a group containing a shape and text, so Node ids and primitives do not have a simple one-to-one relationship.
+- Scene topology records primitive identity, semantic owner, parent, order and location in the primitive tree, allowing outputs to be matched across versions.
+
+Core generates these identities during compilation using Runtime's identity construction API. An author-supplied `id` is retained in IR and contributes to identity generation. The complete runtime identity consists of a domain identifier, `owner`, and an array of path segments, `path`. For a Core document, `owner` is `@retikz/core/document`.
+
+For node A in this example, identity is built in successive layers: author id → semantic identity → primitive identity. One declaration can produce several primitives, so a single semantic identity can lead to multiple distinct primitive identities. Slashes in the table separate the segments of the `path` array.
+
+| Level              | How it is generated                                                                                                                                                    |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Author id          | The example declares the node with `id: 'A'`                                                                                                                           |
+| Semantic identity  | Core appends the node type and a valid unique id to the parent's identity path; root node A receives `root / node / A`                                                 |
+| Primitive identity | Core appends `emission`, the output role and its emission ordinal to the semantic identity path; A's first node group is `root / node / A / emission / node:group / 0` |
+
+For anonymous, duplicate-id or compiler-generated objects, among other cases, Core builds a semantic identity from a path containing the candidate revision, object kind and position index, then derives primitive identities from it. These identities apply only to the current candidate version and do not promise reuse across updates. Duplicate ids are detected within the compilation namespace.
+
+For a node with stable identity such as A, Core can still match its primitives across versions when its fill changes, provided that the parent identity, object type, id and other identity components remain stable. Stable identity establishes correspondence; reuse also depends on the local compilation conditions described below.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Semantic owners and primitive identities',
+      path: 'packages/kernel/core/src/compile/orchestration/runtime-topology.ts',
+    },
+    { label: 'Complete Scene Runtime snapshots', path: 'packages/kernel/core/src/compile/incremental/snapshot.ts' },
+  ]}
+/>
+
+### Color fast path
+
+This example changes only A's fill color. If the conditions for local compilation are met, Core compiles A in isolation, checks that the new result can replace the old one, and puts A's new primitives back in their original positions while reusing the compiled results for unchanged parts such as B. Otherwise, Core performs a full compilation.
+
+The main conditions for the current fast path are:
+
+- Every root-level child is a Node positioned using an explicit coordinate array, with a unique id that remains unchanged across updates.
+- Scene configuration, node count and order stay unchanged. Only one node's fill color changes; all other properties remain the same.
+- The fill is a plain color value or is unset. No custom shapes, resources, additional compilation artifacts or diagnostics are involved.
+- The locally compiled primitives still match the previous identities. Compilation observers or invalidated dependencies can also send the update back to full compilation.
+
+<ComponentPreview files="update-reuse" size="xl" hideCode type="flow" />
+
+This saves compilation work for the unchanged parts. Core still compares the previous and current inputs and checks the result, so changing only a color does not guarantee that the fast path applies.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Guards, isolated compilation and primitive replacement',
+      path: 'packages/kernel/core/src/compile/incremental/root-node-style.ts',
+    },
+    {
+      label: 'Functional tests comparing color updates with full output',
+      path: 'packages/kernel/core/tests/compile/incremental/core-computation.test.ts',
+    },
+  ]}
+/>
+
+### Full fallback
+
+Making A's text longer can change its dimensions. Adding a path that depends on node boundaries also requires its endpoints to be resolved again. The current fast path returns fallback for these cases, letting full compilation regenerate the Scene, layout and artifacts rather than deriving a general local recomputation plan.
+
+| Input change                                                                 | Current Core behavior                                     |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Only A's fill changes and every guard passes                                 | Compile A in isolation and reuse B                        |
+| Text, position or other styles change                                        | Full fallback                                             |
+| Nodes are inserted, removed or reordered, or the scene contains Path / Scope | Full fallback                                             |
+| ChangeSet disagrees with snapshots                                           | Record a mismatch diagnostic and attempt full compilation |
+
+Full fallback is a normal execution choice. A candidate fails to commit only if compilation throws or a later transaction step fails. Full compilation during an update produces one exclusive `replaceScene` operation, so the presence of a Scene Patch does not prove that Core compiled locally.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Fallback conditions and replaceScene output',
+      path: 'packages/kernel/core/src/compile/incremental/computation.ts',
+    },
+  ]}
+/>
+
+## Display commits
+
+Core's **SceneRuntimeSnapshot** contains the complete Scene, revision and topology. A **ScenePatch** contains `baseRevision`, `nextRevision` and operations. Fast-path operations identify primitive subtrees to replace; full compilation carries a complete replacement snapshot. Consumers must pair the Patch with its correct previous version.
+
+In Vanilla DOM retained mounting, Render receives the compilation result and Patch for the update, applies local updates or full replacement according to backend capabilities, and coordinates with Runtime as a **Participant** to commit or roll back the rendering work. When preparing rendering operations, Render validates revisions and consistency between the Patch and target snapshot. An unsupported local operation can become `replaceScene`; an invalid Patch is rejected.
+
+Whether Core avoids geometry work and whether a backend updates locally are separate decisions. SVG and Canvas consume the same Scene contract, while each backend determines how to perform DOM changes or Canvas drawing.
+
+React Layout follows another path. The Vanilla controller commits a `ProcessingResult`, then React subscribes to it. The SVG host builds a description tree from the complete result, while the Canvas host consumes a frame. Render Participant rollback guarantees do not extend directly to React's own commit cycle.
+
+<SourceLinks
+  sources={[
+    { label: 'Vanilla DOM wiring for Render Participants', path: 'packages/kernel/vanilla/src/dom/retained.ts' },
+    {
+      label: 'Patch validation, capabilities and commit tokens',
+      path: 'packages/kernel/render/src/runtime/participant.ts',
+    },
+    {
+      label: 'React host output from ProcessingResult',
+      path: 'packages/kernel/react/src/render/processing-result.tsx',
+    },
+  ]}
+/>
+
+## Failure handling
+
+Consider the Vanilla DOM transaction path. Finishing computation does not publish the next version. Participants first prepare, then commit and provide candidate reads. Runtime publishes Sources, computation results and the revision together only after those steps succeed.
+
+<ComponentPreview files="update-commit" size="lg" hideCode type="flow" />
+
+A failure before publication cleans up candidates and rolls back prepared participants in reverse order. Successful rollback preserves the previous committed state. If rollback itself fails, Runtime becomes broken and blocks normal reads and writes; the host can no longer be assumed to have recovered. Initialization has no previous successful frame, so failure throws from creation.
+
+Observer or cleanup failures after publication become diagnostics and do not revoke the published version. Vanilla subscriber exceptions likewise do not roll back completed updates. React Layout retains its last successful result when a subsequent controller update fails and forwards diagnostics. A compilation failure therefore does not replace its current display input with an incomplete result.
+
+<SourceLinks
+  sources={[
+    { label: 'Publication, rollback and broken state', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+    { label: 'Participant prepare, commit and rollback', path: 'packages/kernel/runtime/src/runtime/participant.ts' },
+    {
+      label: 'Controller results and subscriber notification',
+      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
+    },
+    { label: 'React retention after update failure', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
+  ]}
+/>
+
+## Complete implementation flow
+
+This diagram follows Vanilla DOM retained execution. Function names locate implementation code, including internal members; applications do not need to invoke them individually.
+
+<ComponentPreview files="update-implementation" size="lg" hideCode type="flow" />
+
+Start at the controller input update and follow `RuntimeManager.update`, then the `update` and `run` branches of `createCoreComputation`. An eligible color edit produces a candidate Patch through `tryCompileRootNodeStyleUpdate`; other changes reach `compileCoreSnapshot`. Finally, follow Render Participant preparation and Runtime publication to see when the candidate becomes current state. For React display, return to Layout's subscription and `ProcessingResultHost`.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Runtime',
+      description: 'Explore Sources, dependency scheduling and transaction lifecycles',
+      url: '/kernel/packages/runtime',
+    },
+    {
+      title: 'Compilation Output',
+      description: 'Understand Scene, artifacts, spatial handles and diagnostics',
+      url: '/kernel/packages/core/compilation-output',
+    },
+    { title: 'Render', description: 'Explore consumption by SVG and Canvas backends', url: '/kernel/packages/render' },
+  ]}
+/>

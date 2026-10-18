@@ -1,0 +1,229 @@
+---
+title: 增量更新
+description: 沿一次节点改色，追踪输入快照、Runtime 调度、Core 结果复用和 Render 提交，并理解全量回退与失败边界。
+---
+
+<ComponentAlert
+  type="warn"
+  title="实验性功能"
+  description="增量更新目前为实验性功能，具体更新方案后续会调整。本文说明当前实现，不代表最终方案。"
+/>
+
+一张图已经显示后，把节点 A 的填充色从橙色改成蓝色，哪些工作需要重做？本文沿这次修改追踪 retained 模式下的跨包更新：Adapter 提交新输入，Runtime 安排计算，Core 尝试复用上一轮产物，宿主显示成功提交的结果。满足条件时可以局部重编；其余情况通过全量编译得到完整结果。
+
+阅读前先了解[渲染链路](/kernel/components/runtime-mechanics/rendering-pipeline)中的 IR、Scene 与包职责。本文关注两次编译之间的状态交接；单次几何计算见 [Core 编译流程](/kernel/packages/core/compilation)，Runtime 的通用事务算法见 [Runtime](/kernel/packages/runtime)。
+
+## 整体流程
+
+本例只有两个根节点 A、B，使用唯一 id 和直接坐标，没有连线或绘制资源。第一次显示时完整编译两个节点；第二次只改变 A 的 `style.fill`，位置、文字和 B 的配置保持不变。下面是两次输入对应的画面，箭头表示输入修改，图中的布局仅用于并列比较。
+
+<ComponentPreview files="update-example" size="md" hideCode type="illustration" />
+
+retained 控制器保留上一轮输入与结果，因此能够比较前后状态。各包围绕同一次更新交接，但显示结果有两条宿主路径：Vanilla DOM 可以参与 Runtime 事务；React 在处理结果提交后订阅并显示它。
+
+<ComponentPreview files="update-overview" size="md" hideCode type="flow" />
+
+图中 Core 的输出始终包含完整结果。局部更新附带的 Patch 用来说明前后 Scene 如何衔接，并不替代下一份完整快照。
+
+## 输入更新
+
+React 组件、Vanilla DSL 和已有 IR 三种输入，最终都汇合到 Vanilla 的处理入口。它们到达完整 `IRScene` 的过程有所不同：
+
+| 输入形式    | 如何得到完整 IR                                                           |
+| ----------- | ------------------------------------------------------------------------- |
+| React 组件  | Layout 收集组件声明，转换为 `InputScene`，再由 Vanilla 归一化为 `IRScene` |
+| Vanilla DSL | 调用方提供 `InputScene`，由 Vanilla 归一化为 `IRScene`                    |
+| 已有 IR     | 直接使用完整的 `IRScene`，不再经过输入归一化                              |
+
+在本文的 retained 模式下，Vanilla 将完整 IR 提交给 Runtime，后续更新由各包按以下职责协作：
+
+| 包      | 更新中的职责                                                                                                                                                                           |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Vanilla | 统筹输入准备与流程装配：归一化作者输入，准备 IR、编译选项与 Composite 输入，装配 Runtime 和 Core 计算，管理控制器生命周期并提交后续输入                                                |
+| Runtime | 负责通用更新调度与事务：管理快照和版本，按依赖选择计算，调用增量或全量入口，协调结果提交与回滚                                                                                         |
+| Core    | 负责具体编译与结果复用：将 `IRScene` 和编译上下文转换为 Scene 等[编译产物](/kernel/packages/core/compilation-output)，判断可复用的结果，执行局部重编或请求全量回退，并生成 Scene Patch |
+
+Runtime 决定何时调用哪些计算，Core 决定具体怎样编译和复用图形产物。编译选项、Composite 输入等配套信息按各自契约传递，并非全部放进 IR。static 模式则由 Vanilla 安排一次完整编译，不经过这套 Runtime 增量事务。
+
+因此，即使只改 A 的填充色，普通输入更新交付的仍是包含 A、B 的完整 IR，后续再判断哪些结果可以复用。这里追踪控制器与编译选项保持稳定的一次后续更新；切换控制器配置涉及生命周期重建。
+
+此时需要区分三个对象：
+
+- Source：一类输入的持有者，定义怎样捕获、读取和比较数据；Core 文档使用 `CoreSourceDefinition`。
+- Snapshot：该 Source 在某个 revision 下的输入快照。revision 是已提交状态的版本编号。
+- ChangeSet：可选的变化提示，说明哪些身份发生了变化；新的完整快照仍提供实际数据。
+
+Core Source 捕获输入时复制并冻结 JSON，用结构比较判断内容是否变化。因此，新建一个内容相同的 JavaScript 对象，不会单凭对象引用变化触发 Core 重编。Vanilla 当前的普通输入更新提交完整 Source，没有为每次修改自动生成 Core ChangeSet。
+
+在改色例子中，新快照仍包含 A 和 B，只是 A 的 `style.fill` 变了。直接接入 Runtime 的调用方可以额外提供 ChangeSet；Core 会拿它核对前后快照。提示缺失是正常情况，提示与实际变化不一致则产生诊断并回退全量编译。
+
+<SourceLinks
+  sources={[
+    { label: 'React 复用控制器并提交后续输入', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
+    { label: 'Vanilla 输入准备', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
+    { label: 'Source 的捕获与结构比较', path: 'packages/kernel/core/src/contract/runtime/source.ts' },
+    { label: 'ChangeSet 与快照核对', path: 'packages/kernel/core/src/compile/incremental/diff.ts' },
+  ]}
+/>
+
+<ComponentAlert
+  type="tip"
+  title="当前增量更新的范围"
+  description="当前普通输入更新提交的是完整 IR 快照，Core 再判断能否复用部分结果。Runtime 已支持按 Source / Computation 依赖调度，Core 也有受限的节点改色快路径；从任意绘图节点出发，沿节点、连线与布局依赖传播失效并局部重算的通用机制尚未建立，已列入后续规划。本文按当前实现说明更新流程。"
+/>
+
+## 调度与计算
+
+Runtime 收到带 `baseRevision` 的更新后，先确认调用方基于当前版本，再准备候选 Source。候选是尚未发布的新状态，计算期间原来的已提交状态仍然保留。如果整批 Source 都没有实际变化，Runtime 跳过计算和提交参与者，并保持自己的 revision。
+
+有变化时，Runtime 按已声明的依赖关系选择计算。这里的 **Computation** 是读取 Source 并产出结果的计算定义，Core 通过 `createCoreComputation` 接入。Runtime 知道哪些输入影响它；怎样重新编译节点，由 Core 决定。
+
+第一次计算执行完整 `run`。后续默认增量策略允许进入 `update`，它读取上次结果和这次候选快照，返回局部结果或请求全量回退。强制 full 策略直接执行 `run`。通用 Runtime 还支持计算返回 bailout 来保留结果；当前 Core 的快路径未命中时使用 fallback。
+
+Vanilla 装配的不只有 Core IR，还包括 Composite 输入与失效来源。即使 IR 相同，关联的 Composite 输入或外部失效来源变化也可以要求 Core 重编。Composite 定义拓扑不兼容时，Vanilla 会准备新的 retained state，成功后才替换原状态。这里的定义拓扑指注册的能力组合，与下一节 Scene 中图元的父子关系是两种结构。
+
+<SourceLinks
+  sources={[
+    { label: 'Source 比较与依赖传播', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+    { label: 'update、fallback 与 run 的选择', path: 'packages/kernel/runtime/src/runtime/computation.ts' },
+    { label: 'Core Computation 接入', path: 'packages/kernel/core/src/compile/incremental/computation.ts' },
+    { label: 'Vanilla 的来源和生命周期装配', path: 'packages/kernel/vanilla/src/processing/internal/controller.ts' },
+  ]}
+/>
+
+本节仅简要说明调度与计算的大体流程；依赖调度、执行策略及事务生命周期的详细说明，见 [Runtime 开发包文档](/kernel/packages/runtime)。
+
+## 结果复用
+
+Core 需要先找到“上一轮 A 对应的绘制产物”，才能替换 A 而保留 B。这里有三层信息：
+
+- 语义身份：标识产生图元的 IR 对象；本例 A 的身份路径包含 `root / node / A`。
+- 图元身份：标识该对象的一次具体输出。一个带文字的 Node 可以产生包含形状和文字的 group，不能把 Node id 与每个图元简单视为一一对应。
+- Scene topology：记录图元身份、语义 owner、父级、顺序和在图元树中的位置，供前后产物匹配。
+
+这些身份由 Core 在编译时使用 Runtime 的身份构造能力生成。作者在声明中提供的 `id` 会保留到 IR，成为生成身份的依据。完整运行时身份由领域标识 `owner` 和路径段数组 `path` 组成，其中 Core 文档的 `owner` 为 `@retikz/core/document`。
+
+以本例的节点 A 为例，身份按“作者 id → 语义身份 → 图元身份”逐层生成。一个声明可以产生多个图元，因此同一个语义身份下还会派生出不同的图元身份。表中的斜线表示 `path` 数组中路径段的分隔。
+
+| 层次     | 生成依据                                                                                                                           |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| 作者 id  | 本例在节点声明中指定 `id: 'A'`                                                                                                     |
+| 语义身份 | Core 在父级身份路径后追加节点类型与有效且唯一的 id；根节点 A 得到 `root / node / A`                                                |
+| 图元身份 | 在语义身份路径后追加 `emission`、输出角色与该角色的输出序号；例如 A 的首个节点分组为 `root / node / A / emission / node:group / 0` |
+
+对于匿名、重复 id 或编译生成的对象等，Core 使用包含候选 revision、对象种类与位置索引的路径来建立语义身份，再从中派生图元身份。这类身份仅用于当前候选版本，不能据此承诺跨次复用；重复 id 的判断遵循编译时所在的命名空间。
+
+对于 A 这样具有稳定身份的节点，只要父级身份、对象类型和 id 等身份组成部分保持稳定，即使填充色改变，Core 仍能匹配前后属于 A 的图元。身份稳定只解决“对应谁”，是否能够复用还取决于下面的局部编译条件。
+
+<SourceLinks
+  sources={[
+    { label: '语义 owner 与图元身份', path: 'packages/kernel/core/src/compile/orchestration/runtime-topology.ts' },
+    { label: '完整 Scene Runtime 快照', path: 'packages/kernel/core/src/compile/incremental/snapshot.ts' },
+  ]}
+/>
+
+### 改色快路径
+
+本例只改变 A 的填充色。若满足局部编译条件，Core 就单独编译 A，确认新结果能够替换旧结果后，将 A 的新图元放回原位置，复用 B 等未变化部分的编译结果；否则执行完整编译。
+
+当前快路径的主要条件是：
+
+- 根级子项均为使用显式坐标数组定位的 Node，且各自具有唯一、前后不变的 id。
+- 场景配置、节点数量和顺序不变，只有一个节点的填充颜色改变，其他属性保持不变。
+- 使用普通颜色值或不设置填充，不涉及自定义形状、资源或附加编译产物，也没有编译诊断。
+- 局部编译后的图元身份仍能与原结果对应；编译观察器或相关依赖失效等情况也可能使本次更新回到完整编译。
+
+<ComponentPreview files="update-reuse" size="xl" hideCode type="flow" />
+
+这里节省的是未变化部分的编译工作。Core 仍会比较前后输入并检查结果，因此仅仅改变颜色并不保证一定进入快路径。
+
+<SourceLinks
+  sources={[
+    {
+      label: '快路径前提、隔离编译与图元替换',
+      path: 'packages/kernel/core/src/compile/incremental/root-node-style.ts',
+    },
+    {
+      label: '改色结果与全量结果等价的功能测试',
+      path: 'packages/kernel/core/tests/compile/incremental/core-computation.test.ts',
+    },
+  ]}
+/>
+
+### 全量回退
+
+如果把 A 的文字改长，节点尺寸可能重新计算；再加一条依赖节点边界的连线，路径端点也需要重新确定。当前快路径不会为这些场景推导一套通用局部重算计划，而是返回 fallback，由完整编译重新得到 Scene、布局与附加产物。
+
+| 输入变化                                      | 当前 Core 的处理             |
+| --------------------------------------------- | ---------------------------- |
+| 本例只改 A 的填充，且通过全部检查             | 单独编译 A，复用 B           |
+| 改文字、位置，或同时改变其他样式              | 全量回退                     |
+| 新增、删除、重排节点，或场景包含 Path / Scope | 全量回退                     |
+| ChangeSet 与快照不符                          | 记录不匹配诊断，尝试全量编译 |
+
+全量回退是一次正常执行选择。只有编译本身抛错或后续事务失败，候选结果才无法提交。Core 在更新阶段全量编译后，会生成一个独占的 `replaceScene` 操作，因此“存在 Scene Patch”不能用来判断是否发生了局部重编。
+
+<SourceLinks
+  sources={[
+    { label: '回退条件与 replaceScene 输出', path: 'packages/kernel/core/src/compile/incremental/computation.ts' },
+  ]}
+/>
+
+## 画面提交
+
+Core 交出的 **SceneRuntimeSnapshot** 包含完整 Scene、版本与拓扑；**ScenePatch** 包含 `baseRevision`、`nextRevision` 和操作列表。快路径的操作定位要替换的图元子树，全量路径则携带整份替换快照。接收方必须把 Patch 与正确的上一版本配对。
+
+在 Vanilla 的 DOM retained 挂载中，Render 接收本次编译结果与 Patch，根据后端能力执行局部更新或整幅替换，并作为 **Participant**（提交参与者）配合 Runtime 完成提交或回滚。准备渲染操作时，Render 会验证版本、Patch 与目标快照的一致性；不支持某种局部操作可以转成 `replaceScene`，无效 Patch 则会被拒绝。
+
+因此，Core 是否少做几何计算，与后端是否局部更新是两个判断。SVG 与 Canvas 消费相同的 Scene 契约，具体怎样组织 DOM 修改或 Canvas 绘制由各自后端负责。
+
+React Layout 的路径不同：Vanilla 控制器先提交 `ProcessingResult`，React 订阅该结果；SVG 宿主由完整结果构建描述树，Canvas 宿主消费 frame。这里不能把 Render Participant 的回滚保证直接套到 React 自身的提交周期。
+
+<SourceLinks
+  sources={[
+    { label: 'Vanilla DOM 装配 Render Participant', path: 'packages/kernel/vanilla/src/dom/retained.ts' },
+    { label: 'Patch 验证、后端能力与提交 token', path: 'packages/kernel/render/src/runtime/participant.ts' },
+    { label: 'React 从 ProcessingResult 构建宿主输出', path: 'packages/kernel/react/src/render/processing-result.tsx' },
+  ]}
+/>
+
+## 失败处理
+
+以 Vanilla DOM 的事务路径为例，计算完成还不代表新版本已经发布。所有参与者先 prepare，再依次 commit、读取候选结果；这些步骤成功后，Runtime 才同步发布 Source、计算结果和 revision。
+
+<ComponentPreview files="update-commit" size="lg" hideCode type="flow" />
+
+发布前失败时，Runtime 清理候选结果，并逆序回滚已准备的参与者；回滚成功后保留上一份已提交状态。若回滚本身失败，Runtime 进入 broken 状态并阻止继续正常读写，此时不能再保证宿主已经恢复。初始化没有上一份成功画面，失败会直接使创建过程抛错。
+
+发布后的观察通知或资源清理异常记录为诊断，不撤销已发布版本。Vanilla 订阅者抛错同样不会回滚完成的更新。React Layout 对后续控制器更新失败保留最后一次成功结果，并转交诊断；这保证了编译失败不会用一个不完整结果替换当前显示输入。
+
+<SourceLinks
+  sources={[
+    { label: '发布、回滚与 broken 边界', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+    { label: '参与者 prepare / commit / rollback', path: 'packages/kernel/runtime/src/runtime/participant.ts' },
+    { label: '控制器成功结果与订阅通知', path: 'packages/kernel/vanilla/src/processing/internal/controller.ts' },
+    { label: 'React 更新失败保留结果', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
+  ]}
+/>
+
+## 完整实现流程
+
+下面沿 Vanilla DOM retained 分支定位实现。图中函数名是源码阅读锚点，包含内部成员；它们不是需要应用逐个调用的接入步骤。
+
+<ComponentPreview files="update-implementation" size="lg" hideCode type="flow" />
+
+先从控制器的输入更新进入 `RuntimeManager.update`，再看 `createCoreComputation` 的 `update` 与 `run` 分支。改色通过 `tryCompileRootNodeStyleUpdate` 产出候选 Patch；其余变化进入 `compileCoreSnapshot`。最后沿 Render Participant 的 prepare 与 Runtime 的发布边界，确认结果何时成为当前状态。React 入口可回到 Layout 的订阅与 `ProcessingResultHost` 阅读显示部分。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'Runtime', description: '深入了解数据源、依赖调度与事务生命周期', url: '/kernel/packages/runtime' },
+    {
+      title: '编译产物',
+      description: '理解 Scene、附加产物、空间句柄与诊断',
+      url: '/kernel/packages/core/compilation-output',
+    },
+    { title: 'Render', description: '了解 SVG 与 Canvas 后端的消费边界', url: '/kernel/packages/render' },
+  ]}
+/>
