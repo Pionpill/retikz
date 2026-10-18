@@ -49,3 +49,4 @@ export type {
 } from './input-marks';
 export type { InputPlotPositionScaleType, InputPlotScale, InputPlotScaleDimension } from './input-scales';
 export { normalizePlot, normalizePlotDeclarations } from './normalize';
+export * from './annotations';

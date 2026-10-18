@@ -7,7 +7,7 @@ import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { createPolarCoordinate, lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
 import { resolveMarkOperation } from '../../../src/resolve/mark';
-import type { IRPlot } from '../../../src/schemas';
+import type { IRPlot, IRPlotMarkOperation } from '../../../src/schemas';
 import { PlotSchema, PolarInterpolation } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
@@ -28,9 +28,10 @@ const linearScale = (domain: [number, number], range: [number, number]): Positio
   setRange: () => undefined,
 });
 
-const extensionChannelsOf = (mark: {
-  encoding?: { channels?: Partial<Record<string, { field?: string; value?: unknown }>> };
-}): Partial<Record<string, { field?: string; value?: unknown }>> => mark.encoding?.channels ?? {};
+const extensionChannelsOf = (
+  mark: IRPlotMarkOperation,
+): Partial<Record<string, { field?: string; value?: unknown }>> =>
+  'encoding' in mark ? (mark.encoding?.channels ?? {}) : {};
 
 const lineWeightChannel = definePathChannel<number>({
   channel: 'lineWeight',

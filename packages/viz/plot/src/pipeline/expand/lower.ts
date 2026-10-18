@@ -88,6 +88,7 @@ import {
   resolvePlotGuideTheme,
   resolvePlotTheme,
 } from '../../resolve/theme';
+import { isAnnotation } from '../../schemas';
 import type {
   IRPlot,
   IRPlotAreaDefaults,
@@ -450,6 +451,8 @@ export const lowerPlotWithDataArtifact = (
     inputDataView: DataView,
     prepared?: DataTransformResult,
   ) => {
+    if (isAnnotation(mark))
+      return { markDataView: { markIndex, mark, dataView: inputDataView } satisfies MarkDataView, lineage: undefined };
     if (prepared !== undefined)
       return {
         markDataView: {

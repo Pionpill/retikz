@@ -1,4 +1,9 @@
 import {
+  NodeSchema,
+  NodeStyleSchema,
+  NodeLayoutSchema,
+  PathStyleSchema,
+  PathTransformSchema,
   BendDirection,
   BoxSpacingSchema,
   FoldStepVia,
@@ -52,7 +57,7 @@ import {
   unknown,
 } from 'zod';
 
-import { PolarInterpolation } from '../coordinate';
+import { CoordinateConnection, PolarInterpolation } from '../coordinate';
 import {
   EncodingSchema,
   MarkChannelEncodingSchema,
@@ -674,6 +679,7 @@ export const MarkOrientationSchema = union([
 
 /** 校验逐记录生成点图形或文本节点的点标记 */
 export const PointMarkSchema = strictObject({
+  kind: literal('data').optional(),
   orientation: MarkOrientationSchema.optional(),
   autoPadding: PointAutoPaddingSchema.default('max-radius').optional(),
   type: literal(BuiltinPlotMark.Point).describe('Discriminator: one glyph or text label per record'),
@@ -778,7 +784,8 @@ export const PlotPathConnectNullsStyleSchema = PathStrokeSchema.extend({
 }).describe('Stroke overrides for bridges across missing projected points in an open unfilled path');
 
 /** 校验按记录顺序连接为一维轨迹的路径标记 */
-export const PathMarkSchema = object({
+export const PathMarkSchema = strictObject({
+  kind: literal('data').optional(),
   type: literal(BuiltinPlotMark.Path).describe('Discriminator: ordered points connected into a 1D path'),
   order: NonBlankStringSchema.optional().describe(
     'Data field driving connection order; omit for data array order (minimal relation)',
@@ -888,7 +895,8 @@ export const IntervalBoundsSchema = record(NonBlankStringSchema, unknown())
   );
 
 /** 校验由各角色区间与坐标系共同确定几何的区间标记 */
-export const IntervalMarkSchema = object({
+export const IntervalMarkSchema = strictObject({
+  kind: literal('data').optional(),
   type: literal(BuiltinPlotMark.Interval).describe(
     'Discriminator: an orthogonal interval product projected to a segment / rectangle / sector / cell by the coordinate system',
   ),
@@ -1143,7 +1151,98 @@ export const CustomMarkSchema = CustomMarkObjectSchema.catchall(JsonValueSchema)
   'Custom mark operation: type is any non-built-in identifier; its config is validated at lowering time against the matching MarkDefinition supplied via options.definitions.marks',
 );
 
+/** 独立标注的数据空间位置或最终视图边缘 */
+export const AnnotationPositionValueSchema = union([
+  number().finite(),
+  NonBlankStringSchema,
+  strictObject({ edge: zodEnum(['start', 'end']) }),
+]).describe('Literal scale value or final coordinate role range edge');
+
+/** 独立标注在坐标角色中的完整位置 */
+export const AnnotationPositionSchema = record(NonBlankStringSchema, AnnotationPositionValueSchema).describe(
+  'Complete coordinate role mapping of constant positions',
+);
+
+/** 独立标注在各坐标角色中的显式边界 */
+export const AnnotationBoundsSchema = record(
+  NonBlankStringSchema,
+  strictObject({
+    from: AnnotationPositionValueSchema,
+    to: AnnotationPositionValueSchema,
+  }),
+);
+
+const annotationBase = {
+  kind: literal('annotation'),
+  id: markBase.id,
+  coordinateView: markBase.coordinateView,
+  layer: markBase.layer,
+  defaultColorGroup: markBase.defaultColorGroup,
+  defaultColorIndex: markBase.defaultColorIndex,
+  contributeToDomain: boolean()
+    .default(false)
+    .optional()
+    .describe('Include literal positions in inferred scale domains'),
+};
+const annotationNode = {
+  ...NodeStyleSchema.shape,
+  rotate: NodeSchema.shape.rotate,
+  scale: NodeSchema.shape.scale,
+  boundary: NodeSchema.shape.boundary,
+  cornerRadius: NodeSchema.shape.cornerRadius,
+  label: NodeSchema.shape.label,
+  zIndex: NodeSchema.shape.zIndex,
+};
+
+/** 单个独立点或文本，位置与样式均为常量 */
+export const PointAnnotationSchema = strictObject({
+  ...annotationNode,
+  ...NodeLayoutSchema.shape,
+  ...annotationBase,
+  type: literal(BuiltinPlotMark.Point),
+  position: AnnotationPositionSchema,
+  shape: NodeSchema.shape.shape,
+  text: NodeSchema.shape.text,
+  size: PositiveNumberSchema.optional().describe('Final glyph radius in user units'),
+  dx: number().finite().optional().describe('Horizontal offset after coordinate projection, in user units'),
+  dy: number().finite().optional().describe('Vertical offset after coordinate projection, in user units'),
+  orientation: MarkOrientationSchema.optional().describe(
+    'Screen orientation or alignment with a local coordinate direction',
+  ),
+});
+
+/** 显式起止位置之间的一条独立路径 */
+export const PathAnnotationSchema = strictObject({
+  ...PathStyleSchema.shape,
+  ...PathTransformSchema.shape,
+  ...PathDecorationSchema.shape,
+  ...annotationBase,
+  type: literal(BuiltinPlotMark.Path),
+  from: AnnotationPositionSchema.describe('Complete coordinate role mapping for the start position'),
+  to: AnnotationPositionSchema.describe('Complete coordinate role mapping for the end position'),
+  connection: zodEnum(CoordinateConnection)
+    .default(CoordinateConnection.Coordinate)
+    .describe('Follow coordinate geometry or connect projected endpoints with straight segments'),
+  zIndex: NodeSchema.shape.zIndex,
+});
+
+/** 独立区间，由坐标投影决定区域形状 */
+export const IntervalAnnotationSchema = strictObject({
+  ...annotationNode,
+  ...annotationBase,
+  type: literal(BuiltinPlotMark.Interval),
+  bounds: AnnotationBoundsSchema,
+  connection: PathAnnotationSchema.shape.connection,
+});
+
+/** 三种独立几何标注 */
+export const AnnotationSchema = discriminatedUnion('type', [
+  PointAnnotationSchema,
+  PathAnnotationSchema,
+  IntervalAnnotationSchema,
+]);
+
 /** 校验内置或自定义标记操作 */
-export const MarkOperationSchema = union([MarkSchema, CustomMarkSchema]).describe(
-  'Mark operation union: built-in mark configs plus custom type open config operations validated by a runtime MarkDefinition',
+export const MarkOperationSchema = union([AnnotationSchema, MarkSchema, CustomMarkSchema]).describe(
+  'Mark operation union: data marks, independent annotations, and registered custom mark configurations',
 );

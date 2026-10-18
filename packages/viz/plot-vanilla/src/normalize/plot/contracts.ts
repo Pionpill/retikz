@@ -6,6 +6,7 @@ import type {
   IRDataTransformDeclaration,
 } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
+import type { IRPlotAnnotation } from '@retikz/plot';
 import type {
   IRPlot,
   IRPlotCoordinateOperation,
@@ -82,7 +83,7 @@ export type MarkTransformShortcutContext = {
   /** 当前 mark 索引 */
   markIndex: number;
   /** Plot 内全部 marks */
-  marks: ReadonlyArray<IRPlotMark>;
+  marks: ReadonlyArray<IRPlotMarkOperation>;
 };
 
 /** 把特定 mark 转换为 Plot-level transforms 的作者侧扩展 */
@@ -196,7 +197,7 @@ export type PlotAuthoringRuntime = {
 };
 
 /** 绑定 composition 作用域的 mark */
-export type AxisBoundMark = Extract<InputPlotMark, IRPlotMark>;
+export type AxisBoundMark = Extract<InputPlotMark, IRPlotMark | IRPlotAnnotation>;
 
 /** 绑定 composition 作用域的 guide */
 export type AxisBoundGuide = IRPlotGuide & {
@@ -276,6 +277,9 @@ export type CollectionContext = {
 
 /** collector 可识别的 React declaration kind */
 export type PlotDeclarationKind =
+  | 'point-annotation'
+  | 'path-annotation'
+  | 'interval-annotation'
   | 'facet'
   | 'scaffold'
   | 'track'

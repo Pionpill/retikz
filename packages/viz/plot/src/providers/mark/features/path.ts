@@ -14,6 +14,7 @@ import type {
 } from '../../../contract';
 import { seriesPathMeta, slug } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
+import { PathAnnotationSchema } from '../../../schemas';
 import type { IRPlotMark, IRPlotPathClosure, IRPlotPathMark } from '../../../schemas';
 import {
   PathClosureKind,
@@ -31,6 +32,7 @@ import {
   isPolarCoordinateFrame,
   toPolarVertex,
 } from '../../coordinate';
+import { pointsToSteps } from '../shared';
 import type { MarkPaint } from '../shared';
 import {
   applyPathChannelDeliveries,
@@ -46,6 +48,7 @@ import {
   resolveGeometryMarkLabels,
   roleAnchor,
 } from '../shared';
+import { lowerAnnotation } from './annotation';
 
 /**
  * 取一行的位置通道值 → [xValue, yValue]（坐标系无关；投影交给 frame.project，frame 把 x/y 重解释为对应角色）
@@ -55,19 +58,6 @@ export const resolveRolePosition = (mark: IRPlotPathMark, row: ExternalRow): [un
   channelValue(mark.encoding.x, row),
   channelValue(mark.encoding.y, row),
 ];
-
-/** 把若干屏幕点连成 move + line steps（按需尾部加 cycle 闭合）；点数 < 2 返回 null */
-export const pointsToSteps = (points: ReadonlyArray<[number, number]>, closed: boolean): Array<IRStep> | null => {
-  if (points.length < 2) return null;
-
-  const steps: Array<IRStep> = [
-    { type: 'step', kind: 'move', to: points[0] },
-    ...points.slice(1).map((point): IRStep => ({ type: 'step', kind: 'line', to: point })),
-  ];
-  if (closed) steps.push({ type: 'step', kind: 'cycle' });
-
-  return steps;
-};
 
 // PathMark 的 curve 是图表层连接方式；这里统一下沉为 core Path 已支持的 step 序列
 const cubicStep = (
@@ -941,6 +931,7 @@ const collectPathMarkChannelFields = (mark: IRPlotPathMark, fields: FieldCollect
 /** 内置 path mark definition */
 export const pathMarkDefinition: MarkDefinition<IRPlotPathMark> = {
   schema: PathMarkSchema,
+  annotation: { schema: PathAnnotationSchema, lower: lowerAnnotation },
   channelKinds: pathChannelKinds,
   collectFields: (mark, fields: FieldCollector) => {
     collectCommonEncodingFields(mark, fields);

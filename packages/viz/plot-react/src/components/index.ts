@@ -17,3 +17,4 @@ export type { PlotScaleProps } from './scales';
 export { PlotScale } from './scales';
 export type { PlotTransformProps } from './transform';
 export { PlotTransform } from './transform';
+export * from './annotations';

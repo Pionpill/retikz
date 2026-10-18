@@ -9,6 +9,7 @@ import type {
   MarkLoweringContext,
 } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
+import { PointAnnotationSchema } from '../../../schemas';
 import type { IRPlotMark, IRPlotPointMark } from '../../../schemas';
 import { BuiltinPlotMark, PointMarkSchema } from '../../../schemas';
 import { channelValue } from '../../channel';
@@ -29,6 +30,7 @@ import {
   roleAnchor,
   roleValues,
 } from '../shared';
+import { lowerAnnotation } from './annotation';
 import { pointGlyphStyle } from './point-glyph';
 import { POINT_DEFAULT_RADIUS } from './point-glyph';
 
@@ -238,6 +240,7 @@ const maximumScaleOf = (scale: number | IRAxisScale | undefined): number => {
 /** 内置 point mark definition */
 export const pointMarkDefinition: MarkDefinition<IRPlotPointMark> = {
   schema: PointMarkSchema,
+  annotation: { schema: PointAnnotationSchema, lower: lowerAnnotation },
   domainPadding: (mark, rows, roles, channels) => {
     if (mark.encoding.text !== undefined)
       throw new RetikzPlotError('Text points do not provide size-only domain padding');

@@ -165,3 +165,21 @@ export {
 export type { PlotFacetCompositionResolveContext } from './resolve';
 export { mergePlotDefaults, resolvePlotFacetComposition, resolvePlotTheme } from './resolve';
 export * from './schemas';
+export {
+  AnnotationSchema,
+  PointAnnotationSchema,
+  PathAnnotationSchema,
+  IntervalAnnotationSchema,
+  AnnotationPositionSchema,
+  AnnotationPositionValueSchema,
+  AnnotationBoundsSchema,
+  isAnnotation,
+} from './schemas';
+export type {
+  IRPlotAnnotation,
+  IRPlotAnnotationPosition,
+  IRPlotAnnotationPositionValue,
+  IRPlotPointAnnotation,
+  IRPlotPathAnnotation,
+  IRPlotIntervalAnnotation,
+} from './schemas';

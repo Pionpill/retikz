@@ -313,7 +313,7 @@ export const applyPathChannelDeliveries = (
 /** 给图层外层 Scope 挂显式 mark id，并在 provenance 开启时补齐合成 id 与来源 meta */
 export const attachMarkLayer = (
   layer: IRScope,
-  mark: IRPlotMark,
+  mark: Pick<IRPlotMark, 'id' | 'type'>,
   layerContext: MarkProvenance | MarkLoweringContext | undefined,
 ): IRScope => {
   const markContext = layerContext !== undefined && 'context' in layerContext ? undefined : layerContext;

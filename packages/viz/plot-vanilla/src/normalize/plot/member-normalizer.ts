@@ -12,6 +12,8 @@ import type {
 import { IntervalBoundKind, PlotGuide, BuiltinPlotMark } from '@retikz/plot';
 
 import { RetikzPlotVanillaError } from '../../error';
+import { pointAnnotation, pathAnnotation, intervalAnnotation } from './annotations';
+import type { InputPlotPointAnnotation, InputPlotPathAnnotation, InputPlotIntervalAnnotation } from './annotations';
 import type {
   NormalizationState,
   PlotAuthoringDeclaration,
@@ -85,6 +87,20 @@ export const applyDeclaration = (
 ): void => {
   const context = declaration.context ?? {};
   const child: { props: unknown } = { props: declaration.props };
+  if (
+    declaration.kind === 'point-annotation' ||
+    declaration.kind === 'path-annotation' ||
+    declaration.kind === 'interval-annotation'
+  ) {
+    const annotation =
+      declaration.kind === 'point-annotation'
+        ? pointAnnotation(child.props as InputPlotPointAnnotation)
+        : declaration.kind === 'path-annotation'
+          ? pathAnnotation(child.props as InputPlotPathAnnotation)
+          : intervalAnnotation(child.props as InputPlotIntervalAnnotation);
+    into.marks.push({ ...context, ...annotation });
+    return;
+  }
   if (declaration.kind === 'facet') {
     const { row, column, ...facet } = child.props as InputPlotFacet;
     into.facets.push({

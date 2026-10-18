@@ -28,6 +28,7 @@ import { RetikzPlotError } from '../../error';
 import { resolvePlotDataExecution } from '../../resolve';
 import { resolveComposition, resolveFacetPanels } from '../../resolve/composition';
 import type { IRPlot, IRPlotMarkOperation } from '../../schemas';
+import { isAnnotation } from '../../schemas';
 import { preparePlotRegistries, prepareRows } from './data';
 import type { LowerPlotsOptions } from './types';
 
@@ -130,7 +131,9 @@ export const preparePlotData = async <TSource = never>(
   assertFieldOrders(descriptor.model, registries.fieldOrderRegistry);
   const rootResolution = resolveDataTransforms(spec.transform ?? [], descriptor.model, semantic);
   const model = rootResolution.stages.at(-1)?.outputModel ?? rootResolution.inputModel;
-  const markResolutions = spec.marks.map(mark => resolveDataTransforms(plotMarkTransformsOf(mark), model, semantic));
+  const markResolutions = spec.marks.map(mark =>
+    isAnnotation(mark) ? undefined : resolveDataTransforms(plotMarkTransformsOf(mark), model, semantic),
+  );
 
   const prepareScope = async (
     scope: string,
@@ -166,16 +169,18 @@ export const preparePlotData = async <TSource = never>(
     rootResolution,
     resolvePlotDataExecution(spec.dataExecution, 'root'),
   );
-  const marks: Array<Extract<DataTransformPreparation<TSource>, { kind: 'ready' }>> = [];
+  const marks: Array<Extract<DataTransformPreparation<TSource>, { kind: 'ready' }> | undefined> = [];
 
   for (const [index, resolution] of markResolutions.entries())
     marks.push(
-      await prepareScope(
-        `mark[${index}]`,
-        { kind: 'result', model },
-        resolution,
-        resolvePlotDataExecution(spec.dataExecution, 'marks'),
-      ),
+      resolution === undefined
+        ? undefined
+        : await prepareScope(
+            `mark[${index}]`,
+            { kind: 'result', model },
+            resolution,
+            resolvePlotDataExecution(spec.dataExecution, 'marks'),
+          ),
     );
   const composition = resolveComposition(spec);
   let consumed = false;
@@ -201,29 +206,33 @@ export const preparePlotData = async <TSource = never>(
       };
 
       const rootResult = await run('root', root, input);
-      const markResults: Array<DataTransformResult> = [];
+      const markResults: Array<DataTransformResult | undefined> = [];
 
       for (const [index, prepared] of marks.entries())
         markResults.push(
-          await run(`mark[${index}]`, prepared, {
-            kind: 'result',
-            result: { rows: rootResult.rows, model: rootResult.model },
-          }),
+          prepared === undefined
+            ? undefined
+            : await run(`mark[${index}]`, prepared, {
+                kind: 'result',
+                result: { rows: rootResult.rows, model: rootResult.model },
+              }),
         );
 
       const scopeIds = new Set(composition.coordinateScopes.scopes.map(scope => scope.id));
       const panels = composition.facets.flatMap(facet => resolveFacetPanels(facet, rootResult.rows, scopeIds));
-      const panelResults: Array<Array<DataTransformResult>> = [];
+      const panelResults: Array<Array<DataTransformResult | undefined>> = [];
 
       for (const [panelIndex, panel] of panels.entries()) {
-        const results: Array<DataTransformResult> = [];
+        const results: Array<DataTransformResult | undefined> = [];
 
         for (const [markIndex, prepared] of marks.entries())
           results.push(
-            await run(`facet[${panelIndex}].mark[${markIndex}]`, prepared, {
-              kind: 'result',
-              result: { rows: panel.rows, model: rootResult.model },
-            }),
+            prepared === undefined
+              ? undefined
+              : await run(`facet[${panelIndex}].mark[${markIndex}]`, prepared, {
+                  kind: 'result',
+                  result: { rows: panel.rows, model: rootResult.model },
+                }),
           );
 
         panelResults.push(results);

@@ -1,10 +1,10 @@
 import { defineNodeChannel } from '@retikz/plot';
+import type { IRPlotMarkOperation } from '@retikz/plot';
 
 type ExtensionChannelBinding = { field?: string; value?: unknown };
 
-const extensionChannelsOf = (mark: {
-  encoding?: { channels?: Partial<Record<string, ExtensionChannelBinding>> };
-}): Partial<Record<string, ExtensionChannelBinding>> => mark.encoding?.channels ?? {};
+const extensionChannelsOf = (mark: IRPlotMarkOperation): Partial<Record<string, ExtensionChannelBinding>> =>
+  'encoding' in mark ? (mark.encoding?.channels ?? {}) : {};
 
 const clampIntensity = (value: number): number => Math.min(1, Math.max(0.3, value));
 

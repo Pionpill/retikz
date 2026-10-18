@@ -6,7 +6,7 @@ import { cellGeometryAnchor } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { cellAnchor, intervalCellGeometry, roleAnchor } from '../../providers';
 import type { IRPlotMark, IRPlotMarkOperation } from '../../schemas';
-import { isBuiltinMark, BuiltinPlotMark } from '../../schemas';
+import { isAnnotation, isBuiltinMark, BuiltinPlotMark } from '../../schemas';
 import type { MarkOperationResolution, MarkResolveContext } from './types';
 
 /** 查找 mark definition；未注册 type 会给出上下文明确的 fail-loud 诊断 */
@@ -28,7 +28,9 @@ export const resolveMarkOperation = (
 ): MarkOperationResolution => {
   const definition = resolveMarkDefinition(mark, context);
   const { defaultColorGroup, ...definitionOperation } = mark;
-  const resolved = definition.schema.parse(definitionOperation) as IRPlotMarkOperation;
+  const schema = isAnnotation(mark) ? definition.annotation?.schema : definition.schema;
+  if (!schema) throw new RetikzPlotError(`Mark "${mark.type}" does not support annotations`);
+  const resolved = schema.parse(definitionOperation) as IRPlotMarkOperation;
   const operation =
     defaultColorGroup === undefined
       ? resolved
@@ -44,6 +46,7 @@ export const collectMarkFields = (
   context: MarkResolveContext,
 ): void => {
   const { definition, operation } = resolveMarkOperation(mark, context);
+  if (isAnnotation(operation)) return;
   definition.collectFields?.(operation as never, fields);
 };
 
@@ -53,6 +56,7 @@ export const channelKindsForMark = (
   context: MarkResolveContext,
 ): ReturnType<NonNullable<AnyMarkDefinition['channelKinds']>> | undefined => {
   const { definition, operation } = resolveMarkOperation(mark, context);
+  if (isAnnotation(operation)) return new Set();
   return definition.channelKinds?.(operation as never);
 };
 

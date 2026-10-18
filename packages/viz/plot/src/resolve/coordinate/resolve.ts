@@ -18,6 +18,7 @@ import {
   proportionalIntervalDomainValues,
   resolveIntervalBound,
 } from '../../providers';
+import { isAnnotation } from '../../schemas';
 import type {
   IRPlot,
   IRPlotAxisGuide,
@@ -306,6 +307,18 @@ export const resolveCoordinateFrame = (
   assertKnownPositionEncodingRoles(coordinateOperation.type, roles, node.marks);
   assertRequiredPositionChannels(coordinateOperation.type, roles, node.marks);
 
+  /** 独立标注显式贡献的域值；视图边缘不作为数据值参与推导 */
+  const annotationDomainValues = (mark: IRPlotMarkOperation, role: DimensionRole): Array<string | number> => {
+    if (!isAnnotation(mark) || !mark.contributeToDomain) return [];
+    const values =
+      mark.type === 'point'
+        ? [mark.position[role]]
+        : mark.type === 'path'
+          ? [mark.from[role], mark.to[role]]
+          : [mark.bounds[role]?.from, mark.bounds[role]?.to];
+    return values.filter((value): value is string | number => typeof value === 'number' || typeof value === 'string');
+  };
+
   // 收集某角色（位置 scale 名 + 通道角色）下所有 mark 的通道原始值（不预过滤）：
   //   连续 scale 内部过滤为有限数求 extent、分类 scale 按数据序去重推断 domain。
   // role 决定从哪个通道取值：cartesian 用 x/y；polar 用 angle??x / radius??y（mark 不写死笛卡尔）。
@@ -319,6 +332,10 @@ export const resolveCoordinateFrame = (
     const sourceViews = markDataViewsForRole(role);
 
     for (const { mark, dataView } of sourceViews) {
+      if (isAnnotation(mark)) {
+        out.push(...annotationDomainValues(mark, role));
+        continue;
+      }
       const markRows = dataView.rows;
       out.push(...relationTargetRoleValues(mark, role, markRows));
 
@@ -399,6 +416,11 @@ export const resolveCoordinateFrame = (
     const types: Array<DataFieldType> = [];
 
     for (const { mark, dataView } of markDataViewsForRole(role)) {
+      if (isAnnotation(mark)) {
+        for (const value of annotationDomainValues(mark, role))
+          types.push(typeof value === 'string' ? 'categorical' : 'continuous');
+        continue;
+      }
       if (
         isBuiltinMark(mark) &&
         mark.type === BuiltinPlotMark.Interval &&

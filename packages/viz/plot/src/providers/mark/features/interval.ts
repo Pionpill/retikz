@@ -19,6 +19,7 @@ import type {
 import type { PolarCoordinateFrame } from '../../../contract';
 import { hasProjectCell, isRenderableCellGeometry } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
+import { IntervalAnnotationSchema } from '../../../schemas';
 import type { IRPlotIntervalBound, IRPlotIntervalMark, IRPlotMark } from '../../../schemas';
 import { IntervalBoundKind, IntervalMarkSchema, BuiltinPlotCoordinate, BuiltinPlotMark } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
@@ -40,6 +41,7 @@ import {
   failLoudMessage,
   nodeChannelKinds,
 } from '../shared';
+import { lowerAnnotation } from './annotation';
 
 type IntervalRoleContext = NonNullable<IntervalContext['byRole'][string]>;
 
@@ -637,6 +639,7 @@ const collectIntervalChannelFields = (mark: IRPlotIntervalMark, fields: FieldCol
 /** 内置 interval mark definition */
 export const intervalMarkDefinition: MarkDefinition<IRPlotIntervalMark> = {
   schema: IntervalMarkSchema,
+  annotation: { schema: IntervalAnnotationSchema, lower: lowerAnnotation },
   channelKinds: nodeChannelKinds,
   collectFields: (mark, fields: FieldCollector) => {
     collectCommonEncodingFields(mark, fields);

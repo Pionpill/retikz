@@ -4,7 +4,7 @@ import type { ZodType } from 'zod';
 import { ZodLiteral, ZodObject } from 'zod';
 
 import { RetikzPlotError } from '../error';
-import type { IRPlotMark, IRPlotMarkOperation } from '../schemas';
+import type { IRPlotAnnotation, IRPlotMark, IRPlotMarkOperation } from '../schemas';
 import type { MarkLoweringContext } from './anchor';
 import type { ChannelDefinitionKind, FieldCollector, MarkChannels } from './channel';
 import type { Cell, CoordinateFrame } from './coordinate';
@@ -44,6 +44,8 @@ export type IntervalContext = {
  * @template T schema 校验并交给字段收集、通道选择与下沉回调的 mark 类型
  */
 export type MarkDefinition<T extends IRPlotMarkOperation = IRPlotMark> = {
+  /** 同一几何的独立实例能力，不接收行或数据通道 */
+  annotation?: MarkAnnotationCapability;
   /** 完整 mark operation schema；必须含非空 `z.literal('type')` 供 registry 提取注册键 */
   schema: ZodType<T>;
   /** 收集该 mark 额外引用的用户源字段；通用 encoding / label 字段由 data 层统一处理 */
@@ -111,6 +113,8 @@ export const extractMarkType = (schema: ZodType): string => {
  * @description registry 需要存放不同 mark 子类型的 definition；真正调用前由 lowerMark 按 type 取出，行为函数入参用 never 防误调
  */
 export type AnyMarkDefinition = {
+  /** 同一几何的独立实例能力 */
+  annotation?: MarkAnnotationCapability;
   /** 注册后按具体 operation 调用的域留白能力 */
   domainPadding?: MarkDomainPaddingCapability<never>;
   /** 不同 definition 的 schema 泛型不同，registry 只关心 type 提取与运行时 parse */
@@ -140,5 +144,18 @@ export type AnyMarkDefinition = {
     frame: CoordinateFrame,
     channels: MarkChannels,
     ctx?: MarkLoweringContext,
+  ) => IRChild | null;
+};
+
+/** 独立实例的解析及绘图契约，沿用 mark registry */
+export type MarkAnnotationCapability = {
+  /** 独立实例的严格 Source schema */
+  schema: ZodType;
+  /** 绘制已解析的独立实例，无数据行输入 */
+  lower: (
+    mark: IRPlotAnnotation,
+    frame: CoordinateFrame,
+    color: string | undefined,
+    context?: MarkLoweringContext,
   ) => IRChild | null;
 };

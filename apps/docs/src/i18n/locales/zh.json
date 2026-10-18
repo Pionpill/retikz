@@ -387,6 +387,7 @@
     "grammarGuide": "辅助",
     "compMark": "图元",
     "compPathMark": "PathMark · 路径图元",
+    "compAnnotation": "Annotation · 标注",
     "compPointMark": "PointMark · 点图元",
     "compIntervalMark": "IntervalMark · 区间图元",
     "compRelationMark": "关系",

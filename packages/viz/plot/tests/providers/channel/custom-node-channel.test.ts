@@ -5,7 +5,7 @@ import type { AnyChannelDefinition } from '../../../src/contract';
 import { ChannelDefinitionKind, defineNodeChannel, definePathChannel, defineScopeChannel } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
-import type { IRPlot } from '../../../src/schemas';
+import type { IRPlot, IRPlotMarkOperation } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
@@ -14,9 +14,10 @@ import { measureLabel } from '../../helpers/text-measurement';
  * 与内置通道共享 channel registry / delivery
  */
 
-const extensionChannelsOf = (mark: {
-  encoding?: { channels?: Partial<Record<string, { field?: string; value?: unknown }>> };
-}): Partial<Record<string, { field?: string; value?: unknown }>> => mark.encoding?.channels ?? {};
+const extensionChannelsOf = (
+  mark: IRPlotMarkOperation,
+): Partial<Record<string, { field?: string; value?: unknown }>> =>
+  'encoding' in mark ? (mark.encoding?.channels ?? {}) : {};
 
 /** 自定义 intensity 通道：score 字段线性映射到 [0.3, 1]，落到 node.opacity */
 const intensityChannel = defineNodeChannel<number>({

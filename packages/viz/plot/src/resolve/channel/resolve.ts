@@ -11,6 +11,7 @@ import { ChannelDefinitionKind } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { BUILTIN_CHANNEL_NAMES } from '../../providers';
 import type { IRPlotMarkOperation } from '../../schemas';
+import { isAnnotation } from '../../schemas';
 import { resolveMarkOperation } from '../mark';
 import type { ChannelResolveContext } from './types';
 
@@ -48,6 +49,7 @@ export const resolveChannelDefinition = (
 
 /** 解析当前 mark 可消费的 channel definition，并组装 values/default/delivery/descriptor */
 export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelResolveContext): MarkChannels => {
+  if (isAnnotation(mark)) return { defaults: { color: context.defaultColor } };
   const operationResolution = resolveMarkOperation(mark, { registry: context.markRegistry });
   const operation = operationResolution.operation;
   const channelKinds = operationResolution.definition.channelKinds?.(operation as never);

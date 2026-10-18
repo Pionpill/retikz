@@ -106,6 +106,13 @@ export const vizV02: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：独立几何标注', en: 'Unreleased: independent geometric annotations' },
+          content: {
+            zh: '新增 PointAnnotation、PathAnnotation 与 IntervalAnnotation，以及对应 Vanilla 工厂。常量位置与视图边缘复用现有比例尺、坐标投影和绘图能力，不按数据行重复，不执行 mark 局部数据处理。路径与区间的 connection 默认沿坐标系连接，离散极坐标经过中间类别，也可选择 straight 直连；自定义坐标通过统一的线段与区域投影能力接入。默认不贡献尺度域；Plot 根数据声明与绑定仍必需。',
+            en: 'Adds PointAnnotation, PathAnnotation, IntervalAnnotation, and matching Vanilla factories. Literal positions and view edges share existing scales, projections, and drawing capabilities without row repetition or mark-local data execution. Path and interval connection defaults to coordinate geometry, traversing intermediate discrete polar categories; straight connects projected endpoints or corners. Custom coordinates use the same segment and cell projection capabilities. Domain contribution is opt-in; root Plot data and bindings remain required.',
+          },
+        },
+        {
           label: {
             zh: '待发布：BREAKING 坐标局部方向',
             en: 'Unreleased: BREAKING coordinate-relative orientation',

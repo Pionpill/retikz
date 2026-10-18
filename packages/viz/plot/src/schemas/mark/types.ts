@@ -4,6 +4,12 @@ import type { infer as ZodInfer } from 'zod';
 import { BUILTIN_MARK_TYPES } from './constants';
 import type { MarkOpacityStyleSchema } from './schema';
 import type {
+  AnnotationSchema,
+  AnnotationPositionSchema,
+  AnnotationPositionValueSchema,
+  PointAnnotationSchema,
+  PathAnnotationSchema,
+  IntervalAnnotationSchema,
   AnchorIdSchema,
   BlendModeStyleSchema,
   CustomMarkSchema,
@@ -193,17 +199,29 @@ export type IRPlotRelationRibbonOptions = ZodInfer<typeof RelationRibbonOptionsS
 /** relation mark 声明 */
 export type IRPlotRelationMark = ZodInfer<typeof RelationMarkSchema>;
 
-/** 内置 mark 声明 */
+/** 内置数据图元声明 */
 export type IRPlotMark = ZodInfer<typeof MarkSchema>;
 
 /** custom mark operation（自定义 type 开放配置，由 runtime MarkDefinition 解释） */
 export type IRPlotCustomMark = ZodInfer<typeof CustomMarkSchema>;
 
-/** mark operation（内置 ∪ 自定义 type 开放配置） */
+/** 图元声明：内置数据图元、独立标注与自定义配置 */
 export type IRPlotMarkOperation = ZodInfer<typeof MarkOperationSchema>;
 
-/** mark operation 是否内置；把放宽后的 union 收窄回精确内置 Mark，供 lowering 内置专属几何分支门控 */
-export const isBuiltinMark = (mark: IRPlotMarkOperation): mark is IRPlotMark => BUILTIN_MARK_TYPES.has(mark.type);
+/** 判断是否为内置数据图元，独立标注使用独立实例分支 */
+export const isBuiltinMark = (mark: IRPlotMarkOperation): mark is IRPlotMark =>
+  BUILTIN_MARK_TYPES.has(mark.type) && !isAnnotation(mark);
+
+export type IRPlotAnnotation = ZodInfer<typeof AnnotationSchema>;
+export type IRPlotAnnotationPosition = ZodInfer<typeof AnnotationPositionSchema>;
+export type IRPlotAnnotationPositionValue = ZodInfer<typeof AnnotationPositionValueSchema>;
+export type IRPlotPointAnnotation = ZodInfer<typeof PointAnnotationSchema>;
+export type IRPlotPathAnnotation = ZodInfer<typeof PathAnnotationSchema>;
+export type IRPlotIntervalAnnotation = ZodInfer<typeof IntervalAnnotationSchema>;
+
+/** 判断声明是否采用独立实例来源 */
+export const isAnnotation = (mark: IRPlotMarkOperation): mark is IRPlotAnnotation =>
+  BUILTIN_MARK_TYPES.has(mark.type) && 'kind' in mark && mark.kind === 'annotation';
 
 /** 分组后的透明度通道绑定 */
 export type IRPlotMarkOpacityStyle = ZodInfer<typeof MarkOpacityStyleSchema>;

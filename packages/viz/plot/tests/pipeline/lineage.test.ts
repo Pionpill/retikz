@@ -5,7 +5,7 @@ import { defineTransform } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { literal, object, union } from 'zod';
 
-import type { IRPlot } from '../../src';
+import type { IRPlot, IRPlotMarkOperation } from '../../src';
 import { createPlotLineageLocator, defineNodeChannel, lowerPlotWithLineage, PlotSchema } from '../../src';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
 import { measureLabel } from '../helpers/text-measurement';
@@ -19,9 +19,10 @@ const SALES = [
 
 const datasets: ExternalDatasets = { sales: SALES };
 
-const extensionChannelsOf = (mark: {
-  encoding?: { channels?: Partial<Record<string, { field?: string; value?: unknown }>> };
-}): Partial<Record<string, { field?: string; value?: unknown }>> => mark.encoding?.channels ?? {};
+const extensionChannelsOf = (
+  mark: IRPlotMarkOperation,
+): Partial<Record<string, { field?: string; value?: unknown }>> =>
+  'encoding' in mark ? (mark.encoding?.channels ?? {}) : {};
 
 const intensityChannel = defineNodeChannel<number>({
   channel: 'intensity',
@@ -221,6 +222,7 @@ describe('plot lineage runtime', () => {
   it('keeps original source identities after root reorder and mark-local transforms', () => {
     const spec = pointSpec();
     spec.transform = [{ operation: { kind: 'sort', params: { field: 'revenue', order: 'descending' } } }];
+    if (!('transform' in spec.marks[0]) && !('encoding' in spec.marks[0])) throw new Error('Expected a data mark');
     spec.marks[0].transform = [{ operation: { kind: 'sort', params: { field: 'revenue', order: 'ascending' } } }];
 
     const { lineage } = lowerPlotWithLineage(spec, datasets, { environment: {}, lineage: {} });
@@ -291,6 +293,7 @@ describe('plot lineage runtime', () => {
     });
     const spec = pointSpec();
     spec.transform = [{ operation: { kind: 'count-lineage-apply', params: { scope: 'root' } } }];
+    if (!('transform' in spec.marks[0]) && !('encoding' in spec.marks[0])) throw new Error('Expected a data mark');
     spec.marks[0].transform = [{ operation: { kind: 'count-lineage-apply', params: { scope: 'mark' } } }];
 
     lowerPlotWithLineage(spec, datasets, {
@@ -319,6 +322,7 @@ describe('plot lineage runtime', () => {
     });
     const spec = pointSpec();
     spec.transform = [{ operation: { kind: 'count-lineage-locator-apply', params: { scope: 'root' } } }];
+    if (!('transform' in spec.marks[0]) && !('encoding' in spec.marks[0])) throw new Error('Expected a data mark');
     spec.marks[0].transform = [{ operation: { kind: 'count-lineage-locator-apply', params: { scope: 'mark' } } }];
 
     createPlotLineageLocator(spec, datasets, {
@@ -347,6 +351,7 @@ describe('plot lineage runtime', () => {
     });
     const spec = pointSpec();
     spec.transform = [{ operation: { kind: 'count-independent-lineage-apply', params: { scope: 'root' } } }];
+    if (!('transform' in spec.marks[0]) && !('encoding' in spec.marks[0])) throw new Error('Expected a data mark');
     spec.marks[0].transform = [{ operation: { kind: 'count-independent-lineage-apply', params: { scope: 'mark' } } }];
     const options = {
       lineage: {},

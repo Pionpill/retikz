@@ -1,13 +1,13 @@
 ---
 title: 契约 - 图元
-description: 查询 Plot 点、路径、区间、参考、关系与自定义图元 schema。
+description: 查询 Plot 点、路径、区间、独立标注、关系与自定义图元 schema。
 ---
 
 图元是图形语法的几何输出层。内置图元使用精确判别联合，自定义图元则保留 JSON-safe 开放配置，并在 lowering 时由对应 `MarkDefinition` 校验。
 
 ## MarkSchema
 
-<ZodSchema name="MarkSchema" description="Point、Path、Interval、Reference 与 Relation 内置图元的判别联合。" />
+<ZodSchema name="MarkSchema" description="Point、Path、Interval 与 Relation 内置图元的判别联合。" />
 
 ## MarkOperationSchema
 
@@ -426,3 +426,19 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
 />
 
 `field`、`template` 与 `generator` 必须且只能出现一个。
+
+## AnnotationSchema
+
+<ZodSchema name="AnnotationSchema" />
+
+## PointAnnotationSchema
+
+<ZodSchema name="PointAnnotationSchema" />
+
+## PathAnnotationSchema
+
+<ZodSchema name="PathAnnotationSchema" />
+
+## IntervalAnnotationSchema
+
+<ZodSchema name="IntervalAnnotationSchema" />

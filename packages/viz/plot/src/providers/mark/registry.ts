@@ -11,7 +11,7 @@ import type {
 import { extractMarkType } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import type { IRPlotMarkOperation } from '../../schemas';
-import { BuiltinPlotMark } from '../../schemas';
+import { isAnnotation, BuiltinPlotMark } from '../../schemas';
 import { intervalMarkDefinition, pathMarkDefinition, pointMarkDefinition, relationMarkDefinition } from './features';
 
 const asAnyMarkDefinition = <T extends IRPlotMarkOperation>(def: MarkDefinition<T>): AnyMarkDefinition => def;
@@ -86,6 +86,17 @@ export const lowerMark = (
   channels: MarkChannels = {},
   markContext?: MarkLoweringContext,
 ): IRChild | null => {
+  if (isAnnotation(resolution.operation)) {
+    const capability = resolution.definition.annotation;
+    if (!capability) throw new RetikzPlotError(`Mark "${resolution.operation.type}" does not support annotations`);
+    const color = channels.defaults?.color;
+    try {
+      return capability.lower(resolution.operation, frame, typeof color === 'string' ? color : undefined, markContext);
+    } catch (cause) {
+      if (cause instanceof RetikzPlotError) throw cause;
+      throw new RetikzPlotError(`Annotation "${resolution.operation.type}" projection failed`, { cause });
+    }
+  }
   return applyScopeChannelDeliveries(
     resolution.definition.lower(resolution.operation as never, rows, frame, channels, markContext),
     resolution.operation,

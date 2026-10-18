@@ -14,6 +14,14 @@ export const apiReferenceBranchLabels: Readonly<
     >
   >
 > = {
+  '@retikz/plot-react#PointAnnotationProps': [
+    { value: 'position', field: 'position', required: true, label: { zh: '角色位置', en: 'Role positions' } },
+    { value: 'xy', field: 'x', required: true, label: { zh: 'x / y 简写', en: 'x / y shorthand' } },
+  ],
+  '@retikz/plot-react#IntervalAnnotationProps': [
+    { value: 'bounds', field: 'bounds', required: true, label: { zh: '角色范围', en: 'Role bounds' } },
+    { value: 'xy', field: 'x', required: true, label: { zh: 'x / y 简写', en: 'x / y shorthand' } },
+  ],
   '@retikz/plot#ChannelDefinition': [
     { value: 'position', field: 'kind', type: '"position"', label: { zh: '位置', en: 'Position' } },
     { value: 'mark', field: 'kind', type: '"mark"', label: { zh: '图元', en: 'Mark' } },

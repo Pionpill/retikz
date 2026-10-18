@@ -35,3 +35,5 @@ export { resolvePlotAuthoring, resolvePlotLineage } from './plot-runtime';
 export { usePlotThemeStyles } from './theme-context';
 export type { PlotThemeProviderProps } from './theme-provider';
 export { PlotThemeProvider } from './theme-provider';
+export { PointAnnotation, PathAnnotation, IntervalAnnotation } from './components';
+export type { PointAnnotationProps, PathAnnotationProps, IntervalAnnotationProps } from './components';

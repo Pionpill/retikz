@@ -387,6 +387,7 @@
     "grammarGuide": "Guides",
     "compMark": "Marks",
     "compPathMark": "PathMark",
+    "compAnnotation": "Annotations",
     "compPointMark": "PointMark",
     "compIntervalMark": "IntervalMark",
     "compRelationMark": "RelationMark",

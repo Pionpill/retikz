@@ -19,7 +19,7 @@ import type {
 import { RetikzPlotError } from '../error';
 import { resolvePlotLineageOptions } from '../resolve/lineage';
 import type { IRPlot, IRPlotMarkOperation, IRPlotScaleOperation } from '../schemas';
-import { CoordinateArrangementKind } from '../schemas';
+import { isAnnotation, CoordinateArrangementKind } from '../schemas';
 import type { PlotDataArtifact } from './expand/lower';
 import type { PlotStandaloneOptions } from './expand/standalone';
 import { lowerStandalonePlot } from './expand/standalone';
@@ -243,6 +243,14 @@ const buildPlotLineage = (
       : hostMetadataOf(lineageOptions.hostMetadata, options.hostLineageMetadata);
 
   spec.marks.forEach((mark, markIndex) => {
+    if (isAnnotation(mark)) {
+      marks.push({
+        markIndex,
+        markType: mark.type,
+        ...(lineageOptions.markIdentity && mark.id !== undefined ? { markId: mark.id } : {}),
+      });
+      return;
+    }
     const transform = (mark as { transform?: Array<IRDataTransformDeclaration> }).transform;
     markData.push({ markIndex, events: markLineages[markIndex]?.events ?? [] });
 
