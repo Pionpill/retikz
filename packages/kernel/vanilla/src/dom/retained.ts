@@ -154,6 +154,7 @@ const toProcessingOptions = (
 
   return {
     compile,
+    defaultFontFamily: options.defaultFontFamily,
     adapters: options.adapters,
     compileDriver: options.compileDriver,
     updateStrategy,

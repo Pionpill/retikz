@@ -5,6 +5,7 @@ import type { RetainedRendererFactory } from '@retikz/render/runtime';
 import type { RuntimeDiagnostic, RuntimeUpdateStrategy } from '@retikz/runtime';
 
 import type { SynchronousInputEmbedAdapter, InputRuntimeMeta, InputScene } from '../normalize';
+import type { ProcessingOptions } from '../processing';
 import type { VanillaCompileDriver } from './compile-driver';
 import type { VanillaViewMode } from './constants';
 
@@ -112,7 +113,7 @@ export type VanillaRuntimeOptions = VanillaRetainedRuntimeOptions | VanillaStati
  *   Core 编译；`compileDriver` 提供领域中立扩展接线；`animation` 控制 SVG / Canvas runtime 动画；
  *   `adapters` 只参与 InputScene normalization
  */
-export type CommonOptions = {
+export type CommonOptions = Pick<ProcessingOptions, 'defaultFontFamily'> & {
   /** 输出资源与显示尺寸选项 */
   output?: VanillaOutputOptions;
   /** core compile 选项；输入已是 Scene 时忽略 */

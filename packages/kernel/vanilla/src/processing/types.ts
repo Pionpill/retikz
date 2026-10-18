@@ -18,6 +18,8 @@ export type ProcessingSource = InputScene | IRScene;
 
 /** 创建 processing controller 时固定的框架无关配置 */
 export type ProcessingOptions = Readonly<{
+  /** 文字未指定字体族时的宿主默认字体，同时用于测量与宿主显示 */
+  defaultFontFamily?: string;
   /** Core 编译配置 */
   compile?: CompileOptions;
   /** 作者侧 Tier 2 adapter */

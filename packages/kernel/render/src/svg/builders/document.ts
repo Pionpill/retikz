@@ -29,6 +29,8 @@ export type BuildDocumentOptions = {
    *   caller 注入（React 用剥冒号的 `useId()`；SSR / Vanilla 显式给）
    */
   idPrefix: string;
+  /** 根 SVG 的默认字体族；文字自身指定的字体族优先 */
+  defaultFontFamily?: string;
   /**
    * 是否产出动画（缺省 true）；`false` → 不 emit `<style>` / WAAPI 描述，渲染 base 静态图（settled 不变量）
    * @description runtime 据 `{animate:false}` / `prefers-reduced-motion` 走静态路径时传 false
@@ -177,7 +179,10 @@ export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: BuildDo
   const layers = validateReadonlyLayers(frame.layers);
   const document: SvgNode = {
     tag: 'svg',
-    attrs: { viewBox: formatViewBox(scene.layout) },
+    attrs: {
+      viewBox: formatViewBox(scene.layout),
+      ...(options.defaultFontFamily ? { 'font-family': options.defaultFontFamily } : {}),
+    },
     children: [
       ...buildSvgFragment(scene, options),
       ...layers.map(layer =>

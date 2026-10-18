@@ -27,7 +27,8 @@ describe('browserMeasurer 浏览器端字体与指标适配', () => {
       );
 
     try {
-      const { browserMeasurer } = await import('../../../src/render/text');
+      const { createDefaultTextMeasurer } = await import('../../src/processing/text-measurement');
+      const browserMeasurer = createDefaultTextMeasurer();
       browserMeasurer('abc', { size: 14 });
 
       expect(context.font).toBe('normal normal 14px Inter, sans-serif');
@@ -58,7 +59,8 @@ describe('browserMeasurer 浏览器端字体与指标适配', () => {
       );
 
     try {
-      const { browserMeasurer } = await import('../../../src/render/text');
+      const { createDefaultTextMeasurer } = await import('../../src/processing/text-measurement');
+      const browserMeasurer = createDefaultTextMeasurer();
       browserMeasurer('abc', { size: 14, family: 'monospace' });
 
       expect(context.font).toBe('normal normal 14px monospace');
@@ -85,7 +87,8 @@ describe('browserMeasurer 浏览器端字体与指标适配', () => {
       );
 
     try {
-      const { browserMeasurer } = await import('../../../src/render/text');
+      const { createDefaultTextMeasurer } = await import('../../src/processing/text-measurement');
+      const browserMeasurer = createDefaultTextMeasurer();
 
       expect(browserMeasurer('一', { size: 16 })).toEqual({
         width: 16,
@@ -116,7 +119,8 @@ describe('browserMeasurer 浏览器端字体与指标适配', () => {
       );
 
     try {
-      const { browserMeasurer } = await import('../../../src/render/text');
+      const { createDefaultTextMeasurer } = await import('../../src/processing/text-measurement');
+      const browserMeasurer = createDefaultTextMeasurer();
 
       expect(browserMeasurer('_', { size: 16 })).toEqual({
         width: 16,

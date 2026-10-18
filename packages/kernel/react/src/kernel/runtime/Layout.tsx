@@ -41,7 +41,6 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExtern
 import { RetikzReactError, RetikzReactErrorCode } from '../../error';
 import { usePrefersReducedMotion } from '../../render/animation';
 import { ProcessingResultHost } from '../../render/processing-result';
-import { browserMeasurer } from '../../render/text';
 import { pickScopeStyle, wrapRootScope } from '../adapter';
 import { createInputScene } from '../adapter/input-scene';
 import { useAnimationMode } from './animation-context';
@@ -175,17 +174,6 @@ const canonicalizeDefinitionArray = <TDefinition extends object>(
   return current.value as ReadonlyArray<TDefinition>;
 };
 
-/** 将浏览器 text measurer 叠加 Layout style 的默认字体 */
-const withDefaultFontFamily = (measureText: TextMeasurer, defaultFontFamily: string | undefined): TextMeasurer => {
-  if (defaultFontFamily === undefined) return measureText;
-
-  return (text, font) =>
-    measureText(text, {
-      ...font,
-      family: typeof font.family === 'string' && font.family.trim().length > 0 ? font.family : defaultFontFamily,
-    });
-};
-
 /**
  * 为 Layout 注册自定义形状、箭头、裁剪及其他绘图扩展
  * @description 通过 Layout 的 extensions 属性传入，各字段接收对应的定义数组；这些运行时定义不写入可持久化的场景数据
@@ -240,6 +228,8 @@ export type LayoutExtensions = Readonly<{
 
 /** React Layout 的公开属性 */
 export type LayoutProps = {
+  /** 自定义文字测量；省略时使用 Vanilla 的环境测量与估算降级 */
+  measureText?: TextMeasurer;
   /** JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效 */
   rootScope?: Pick<InputScope, 'defaults'>;
   /** 直接传入持久化 Source IR，与 children 二选一 */
@@ -422,6 +412,7 @@ const RetainedLayoutContent: FC<{
  */
 export const Layout: FC<LayoutProps> = props => {
   const {
+    measureText,
     ir: irFromProp,
     theme,
     children,
@@ -525,7 +516,6 @@ export const Layout: FC<LayoutProps> = props => {
   }, [ambientTheme, irFromProp, reactInput, rootAnimations, theme, viewBox]);
 
   const defaultFontFamily = styleFontFamily(style);
-  const measureText = useMemo(() => withDefaultFontFamily(browserMeasurer, defaultFontFamily), [defaultFontFamily]);
   const compileArtifacts = useMemo<CompileArtifactOptions | undefined>(
     () => (artifacts?.nodeLayouts === true ? { nodeLayouts: true } : undefined),
     [artifacts?.nodeLayouts],
@@ -533,6 +523,7 @@ export const Layout: FC<LayoutProps> = props => {
 
   const processingOptions = useMemo<ProcessingOptions | AsyncProcessingOptions>(
     () => ({
+      defaultFontFamily,
       compileDriver,
       ...inputAdapterOptions(stableInputAdapters, prepareAsync),
       ...(prepareAsync ? { signal: resolvedRuntime.signal } : {}),
@@ -555,6 +546,7 @@ export const Layout: FC<LayoutProps> = props => {
       } satisfies CompileOptions,
     }),
     [
+      defaultFontFamily,
       compileDriver,
       prepareAsync,
       resolvedRuntime.signal,
