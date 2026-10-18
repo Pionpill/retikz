@@ -1,0 +1,79 @@
+{
+  "name": "@retikz/reconciler",
+  "version": "0.5.0-alpha.7",
+  "retikz": {
+    "domain": "kernel",
+    "releaseGroup": "kernel",
+    "layer": "kernel",
+    "publishable": true
+  },
+  "description": "Optional incremental Core compilation and Runtime integration for retikz.",
+  "type": "module",
+  "engines": {
+    "node": "\u003e=22.12.0"
+  },
+  "author": "Pionpill",
+  "homepage": "https://pionpill.github.io/retikz/",
+  "keywords": [
+    "tikz",
+    "reconciler",
+    "incremental"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pionpill/retikz.git",
+    "directory": "packages/kernel/reconciler"
+  },
+  "bugs": {
+    "url": "https://github.com/Pionpill/retikz/issues"
+  },
+  "sideEffects": false,
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "publishConfig": {
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/types/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/types/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist/**/*"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "oxlint .",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:changed": "vitest run --changed --passWithNoTests"
+  },
+  "dependencies": {
+    "@retikz/core": "workspace:*",
+    "@retikz/foundation": "workspace:*",
+    "@retikz/runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
+    "vitest": "catalog:"
+  }
+}
