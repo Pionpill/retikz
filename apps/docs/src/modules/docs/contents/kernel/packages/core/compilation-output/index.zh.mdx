@@ -731,6 +731,22 @@ type CompileWarning = {
   ]}
 />
 
+## 编译准备与来源
+
+需要延后派发警告或关联图元来源时，可从 `@retikz/core` 调用 `prepareSceneCompilation(ir, options, execution)`。它执行一次静态编译，返回 `result`、`diagnostics` 与 `observerOutputs`，不调用 `onWarn` 或默认警告出口；`options` 不包含 `onWarn`，`execution.observers` 可提供编译观察器。
+
+默认不收集来源。设置 `execution.captureProvenance: true` 后，返回的 `provenance` 记录本次编译中的实体来源、命名空间注册和最终图元发射关系。其不透明键只在本次结果内有效。Reconciler 用这些事实建立跨版本身份和 Scene Patch，Core 本身不持有增量状态。
+
+与此配套，`validateCompositeInputBindings(ir, bindings)` 只检查 Composite 输入绑定与完整 IR 是否配对，不执行编译。未提供绑定时直接通过；不匹配时抛出 Core 的 `CompositeContractViolation` 错误。
+
+<SourceLinks
+  sources={[
+    { label: '编译准备入口', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: '来源信息契约', path: 'packages/kernel/core/src/compile/provenance.ts' },
+    { label: 'Composite 绑定校验', path: 'packages/kernel/core/src/contract/composite/input.ts' },
+  ]}
+/>
+
 ## 完整实现流程
 
 沿下面的成员名阅读，可以把前面的数据分类对应到实际收尾顺序。图从上下文准备好之后开始；观察派发在 Scene 装配后执行，空间句柄随后物化，最后由公开入口派发警告并返回结果。
@@ -741,7 +757,7 @@ type CompileWarning = {
 
 前三个阶段自上而下执行，再向右形成完整快照，末端分列交付内容：`scene`、`artifacts` 与 `spatialHandles` 属于普通编译结果；开启观测时另有 `observerOutputs`，警告通过 `onWarn` 回调派发。图中的“观测与空间索引”依次包含最终观测派发和空间句柄物化。
 
-先读 `compileCoreSnapshot` 看各项输出怎样组装，再到 `compileChildrenToPrimitives` 的末尾查看路径回填、布局汇总、节点产物与排序。资源、空间投影和观察派发只需沿本页对应入口继续追踪。`compileToScene` 与 `observeCompileToScene` 决定最终向调用方暴露哪一层结果。
+先读 `prepareSceneCompilation` 看各项输出怎样组装，再到 `compileChildrenToPrimitives` 的末尾查看路径回填、布局汇总、节点产物与排序。资源、空间投影和观察派发只需沿本页对应入口继续追踪。`compileToScene` 与 `observeCompileToScene` 决定最终向调用方暴露哪一层结果。
 
 <SourceLinks
   sources={[

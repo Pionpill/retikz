@@ -1,3 +1,4 @@
+import { PathCommandSchema } from '@retikz/core';
 import type {
   RuntimeScene,
   RuntimeScenePrimitive,
@@ -7,8 +8,7 @@ import type {
   SceneRuntimeSnapshot,
   SceneRuntimeSubtree,
   SceneRuntimeSubtreeNode,
-} from '@retikz/core';
-import { PathCommandSchema } from '@retikz/core';
+} from '@retikz/reconciler';
 import type { RuntimeIdentity } from '@retikz/runtime';
 import { createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runtime';
 

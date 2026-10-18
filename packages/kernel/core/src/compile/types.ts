@@ -1,5 +1,4 @@
 import type { JsonValue } from '@retikz/foundation';
-import type { RuntimeTraceReporter } from '@retikz/runtime';
 import type { ZodType } from 'zod';
 
 import type {
@@ -11,6 +10,7 @@ import type {
   SpatialHandleIndex,
 } from '../contract';
 import type { CoreProviderDefinitions, ThemeStyleDefinition } from '../contract';
+import type { CoreCompileTraceReporter } from '../shared';
 import type { LowerTex, TextMeasurer } from './text';
 import type { CompileWarning } from './warning';
 
@@ -243,5 +243,5 @@ export type CompileOptions<
     /** 本次 compile 请求的 opt-in artifacts */
     artifacts?: CompileArtifactOptions;
     /** 记录本次 full compile 的确定性 IRChild dispatch 工作量 */
-    trace?: RuntimeTraceReporter<'@retikz/core'>;
+    trace?: CoreCompileTraceReporter;
   };

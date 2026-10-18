@@ -1,4 +1,5 @@
 import { CoreTracePhase, CoreTraceUnit } from '@retikz/core';
+import { ReconcilerTracePhase, ReconcilerTraceUnit } from '@retikz/reconciler';
 import type { PerformanceTraceRecord } from '@retikz/runtime';
 import { createRuntimeTraceReporter, PerformanceTraceOutcome } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
@@ -74,8 +75,8 @@ describe('full trace assertion', () => {
 describe('single trace assertion', () => {
   const incremental: PerformanceTraceRecord = Object.freeze({
     owner: '@retikz/render:svg',
-    phase: CoreTracePhase.Update,
-    unit: CoreTraceUnit.SceneChange,
+    phase: ReconcilerTracePhase.Update,
+    unit: ReconcilerTraceUnit.SceneChange,
     outcome: PerformanceTraceOutcome.Incremental,
     visited: 1,
     reused: 0,

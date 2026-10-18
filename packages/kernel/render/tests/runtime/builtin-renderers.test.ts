@@ -1,7 +1,8 @@
 ﻿// @vitest-environment jsdom
 import type { Canvas as NapiCanvas } from '@napi-rs/canvas';
-import type { IRScene, RuntimeScenePrimitive, Scene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
+import type { IRScene, Scene } from '@retikz/core';
+import type { RuntimeScenePrimitive, ScenePatch, SceneRuntimeSnapshot } from '@retikz/reconciler';
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
 import type { RuntimeCommitParticipantToken } from '@retikz/runtime';
 import {
   createRuntimeIdentity,

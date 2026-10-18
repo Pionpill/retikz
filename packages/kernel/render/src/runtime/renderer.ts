@@ -1,5 +1,5 @@
-import type { ScenePatch } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
+import type { ScenePatch } from '@retikz/reconciler';
 import type { RuntimePreparedCommit } from '@retikz/runtime';
 
 import type { AnimationControls } from '../animation';

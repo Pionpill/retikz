@@ -1,4 +1,5 @@
-import type { RuntimeScenePrimitive, Scene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
+import type { Scene } from '@retikz/core';
+import type { RuntimeScenePrimitive, ScenePatch, SceneRuntimeSnapshot } from '@retikz/reconciler';
 import type { RuntimeIdentity, RuntimePreparedCommit } from '@retikz/runtime';
 import { runtimeIdentityEquals } from '@retikz/runtime';
 

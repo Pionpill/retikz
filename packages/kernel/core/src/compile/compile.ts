@@ -1,20 +1,17 @@
-import type { RuntimeRevision } from '@retikz/runtime';
-import { PerformanceTraceOutcome } from '@retikz/runtime';
-
 import type { AnyCompositeDefinition, CompileObserverDefinition, CompileObserverOutput, Scene } from '../contract';
 import type { IRScene } from '../schemas';
 import { CoreTracePhase, CoreTraceUnit } from '../shared';
-import type { RuntimePrimitiveMetadataTable } from './orchestration';
 import {
   compileChildrenToPrimitives,
   createCompileContext,
   createCompileObservationRuntime,
-  createRuntimeTopologyTracker,
+  createCompileProvenanceTracker,
   dispatchCompileObservations,
   filterAnimations,
   orderCompileWarnings,
 } from './orchestration';
 import { materializeSpatialHandleIndex } from './orchestration/spatial-handle';
+import type { CompileProvenance } from './provenance';
 import { assertFiniteLayout, computeLayoutFromBounds, viewBoxToLayout } from './scene';
 import type { CompileOptions, CompileResult, CompositeArtifactOf, ObservedCompileResult } from './types';
 import type { CompileWarning, CompileWarningInput } from './warning';
@@ -48,24 +45,24 @@ const dispatchCompileDiagnostics = (
 };
 
 /**
- * Core full compile 的内部输出，供同步入口与 Runtime Computation 共享
+ * 单次静态编译的产物、诊断与可选来源信息
  * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
  */
-export type CoreCompileSnapshot<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
+export type PreparedSceneCompilation<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
   /** 完整 compile result */
   result: CompileResult<CompositeArtifactOf<TComposites[number]>>;
   /** 仅在完整 compile 成功后可提交的 canonical warnings */
   diagnostics: ReadonlyArray<CompileWarning>;
-  /** Runtime Computation 路径产生的 primitive identity metadata */
-  primitiveMetadata?: RuntimePrimitiveMetadataTable;
+  /** 按需收集的编译来源信息 */
+  provenance?: CompileProvenance;
   /** 显式 observed compile 的冻结 observer outputs */
   observerOutputs: ReadonlyArray<CompileObserverOutput>;
 }>;
 
-/** Core full compile 的内部执行选项 */
-export type CoreCompileExecutionOptions = Readonly<{
-  /** 需要 Runtime topology 时绑定 candidate revision */
-  candidateRevision?: RuntimeRevision;
+/** 单次静态编译的观测选项 */
+export type SceneCompilationPreparationOptions = Readonly<{
+  /** 是否收集编译来源信息，默认不收集 */
+  captureProvenance?: boolean;
   /** 仅显式 observed compile 使用的 observer definitions */
   observers?: ReadonlyArray<CompileObserverDefinition>;
 }>;
@@ -74,11 +71,11 @@ export type CoreCompileExecutionOptions = Readonly<{
  * 执行一次不派发 warning 的完整 Core compile
  * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
  */
-export const compileCoreSnapshot = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
+export const prepareSceneCompilation = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
   ir: IRScene,
-  options?: CompileOptions<TComposites>,
-  execution: CoreCompileExecutionOptions = {},
-): CoreCompileSnapshot<TComposites> => {
+  options?: Omit<CompileOptions<TComposites>, 'onWarn'>,
+  execution: SceneCompilationPreparationOptions = {},
+): PreparedSceneCompilation<TComposites> => {
   const diagnostics: Array<CompileWarningInput> = [];
   const observation =
     execution.observers === undefined ? undefined : createCompileObservationRuntime(execution.observers);
@@ -88,13 +85,12 @@ export const compileCoreSnapshot = <const TComposites extends ReadonlyArray<AnyC
     onWarn: warning => diagnostics.push(warning),
   });
   const { loweredIr, layoutPadding, round, onWarn, paint, clip } = context;
-  const identityTracker =
-    execution.candidateRevision === undefined ? undefined : createRuntimeTopologyTracker(execution.candidateRevision);
+  const provenanceTracker = execution.captureProvenance === true ? createCompileProvenanceTracker() : undefined;
   const { primitives, layoutBounds, artifacts, compileObservations, spatialHandles } = compileChildrenToPrimitives(
     loweredIr.children,
     context,
     {
-      ...(identityTracker === undefined ? {} : { identityTracker }),
+      ...(provenanceTracker === undefined ? {} : { provenanceTracker }),
     },
   );
 
@@ -112,14 +108,18 @@ export const compileCoreSnapshot = <const TComposites extends ReadonlyArray<AnyC
   const observerOutputs = dispatchCompileObservations(compileObservations, observation, context);
   const spatialHandleIndex = materializeSpatialHandleIndex(spatialHandles, round);
   if (context.trace !== undefined) {
-    context.trace.reporter.report({
-      phase: CoreTracePhase.Compile,
-      unit: CoreTraceUnit.IrChild,
-      outcome: PerformanceTraceOutcome.Full,
-      visited: context.trace.visited,
-      reused: 0,
-      changed: context.trace.visited,
-    });
+    try {
+      context.trace.reporter.report({
+        phase: CoreTracePhase.Compile,
+        unit: CoreTraceUnit.IrChild,
+        outcome: 'full',
+        visited: context.trace.visited,
+        reused: 0,
+        changed: context.trace.visited,
+      });
+    } catch {
+      /* 观测失败不影响编译产物 */
+    }
   }
 
   return Object.freeze({
@@ -130,7 +130,7 @@ export const compileCoreSnapshot = <const TComposites extends ReadonlyArray<AnyC
     }) as CompileResult<CompositeArtifactOf<TComposites[number]>>,
     diagnostics: Object.freeze(orderCompileWarnings(diagnostics)),
     observerOutputs,
-    ...(identityTracker === undefined ? {} : { primitiveMetadata: identityTracker.metadata }),
+    ...(provenanceTracker === undefined ? {} : { provenance: provenanceTracker.capture(primitives) }),
   });
 };
 
@@ -142,7 +142,7 @@ export const compileToScene = <const TComposites extends ReadonlyArray<AnyCompos
   ir: IRScene,
   options?: CompileOptions<TComposites>,
 ): CompileResult<CompositeArtifactOf<TComposites[number]>> => {
-  const snapshot = compileCoreSnapshot(ir, options);
+  const snapshot = prepareSceneCompilation(ir, options);
   dispatchCompileDiagnostics(snapshot.diagnostics, options?.onWarn);
   return snapshot.result;
 };
@@ -156,7 +156,7 @@ export const observeCompileToScene = <const TComposites extends ReadonlyArray<An
   options: CompileOptions<TComposites> | undefined,
   observers: ReadonlyArray<CompileObserverDefinition>,
 ): ObservedCompileResult => {
-  const snapshot = compileCoreSnapshot(ir, options, { observers });
+  const snapshot = prepareSceneCompilation(ir, options, { observers });
   dispatchCompileDiagnostics(snapshot.diagnostics, options?.onWarn);
 
   return Object.freeze({

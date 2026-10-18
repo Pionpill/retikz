@@ -1,13 +1,12 @@
+import type { IRAnimationTrack, Scene } from '@retikz/core';
 import type {
-  IRAnimationTrack,
   RuntimeScenePrimitive,
-  Scene,
   ScenePatch,
   ScenePatchOperation,
   SceneRuntimeNode,
   SceneRuntimeSnapshot,
   SceneRuntimeSubtree,
-} from '@retikz/core';
+} from '@retikz/reconciler';
 import type { RuntimeIdentity } from '@retikz/runtime';
 import type { RuntimePreparedCommit } from '@retikz/runtime';
 

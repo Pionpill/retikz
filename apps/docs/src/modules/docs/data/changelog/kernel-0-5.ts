@@ -373,8 +373,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/core',
       version: 'v0.5',
       description: {
-        zh: '节点与分组更容易对齐，连线和标签获得更精细的控制；新增安全的局部增量编译，暂不支持局部处理的变化仍完整编译。',
-        en: 'Makes nodes and groups easier to align and adds finer path and label control. Safe local incremental compilation is available; changes outside its supported cases still compile fully.',
+        zh: '节点与分组更容易对齐，连线和标签获得更精细的控制；Core 专注静态编译，增量复用由 Reconciler 承担。',
+        en: 'Makes nodes and groups easier to align and adds finer path and label control. Core focuses on static compilation; Reconciler owns incremental reuse.',
       },
       highlights: [
         {
@@ -382,6 +382,16 @@ export const kernelV05: Release = {
           content: {
             zh: '复合组件新增按轴 measureChild 贡献查询；同次编译复用等价尺寸贡献与纯文字度量，完整布局和一次 replay 仍保持独立。',
             en: 'Composite components gain axis-specific measureChild queries. Equivalent size contributions and text metrics are reused within a compilation, while full layout and one-use replay remain separate.',
+          },
+        },
+        {
+          label: {
+            zh: '待发布：BREAKING 增量能力迁入 Reconciler',
+            en: 'Unreleased: BREAKING incremental APIs move to Reconciler',
+          },
+          content: {
+            zh: 'CoreSourceDefinition、CoreCompositeInputSourceDefinition、createCoreComputation、CoreChange、SceneRuntimeSnapshot、ScenePatch 及相关类型改从 @retikz/reconciler 导入，Core 不保留转发。Core 新增 prepareSceneCompilation 与 validateCompositeInputBindings，不再依赖 Runtime。增量输入捕获与装配错误改为 RetikzReconcilerError；更新 trace 常量改为 ReconcilerTracePhase / ReconcilerTraceUnit，ChangeSetMismatch 改由 CoreComputationDiagnosticCode 提供，原诊断码字符串与身份 owner 值保持不变。',
+            en: 'Import CoreSourceDefinition, CoreCompositeInputSourceDefinition, createCoreComputation, CoreChange, SceneRuntimeSnapshot, ScenePatch and related types from @retikz/reconciler; Core no longer forwards them. Core adds prepareSceneCompilation and validateCompositeInputBindings and drops its Runtime dependency. Incremental capture and assembly failures use RetikzReconcilerError. Update trace constants move to ReconcilerTracePhase / ReconcilerTraceUnit, and CoreComputationDiagnosticCode provides ChangeSetMismatch. Diagnostic strings and identity owner values remain unchanged.',
           },
         },
         {

@@ -3,10 +3,10 @@ import type {
   CompileObserverDefinition,
   CompileObserverOutput,
   CompileOptions,
-  CoreComputationOutput,
   IRScene,
 } from '@retikz/core';
 import { compileToScene, observeCompileToScene } from '@retikz/core';
+import type { CoreComputationOutput } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '@retikz/render/runtime';
 

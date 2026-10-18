@@ -153,7 +153,7 @@ import {
   sealSink,
   stableSortByZIndex,
 } from './primitive';
-import { createRuntimeTopologyTracker } from './runtime-topology';
+import { createCompileProvenanceTracker } from './provenance';
 import { replayPendingSpatialHandle } from './spatial-handle';
 import type {
   CompositeCompileOwner,
@@ -165,7 +165,7 @@ import type {
   NodeChild,
   PathChild,
   PendingPathEmission,
-  RuntimeSemanticOwner,
+  CompileSemanticOwner,
   ScopeChild,
   ScopeLayoutPlaceholder,
   ScopeLayoutPlaceholderContext,
@@ -278,7 +278,7 @@ export const compileChildrenToPrimitives = (
         }),
       zIndexOf: new WeakMap(),
       placeholderBalance: 0,
-      ...(options.identityTracker === undefined ? {} : { identityTracker: options.identityTracker }),
+      ...(options.provenanceTracker === undefined ? {} : { provenanceTracker: options.provenanceTracker }),
     },
   };
 
@@ -764,7 +764,7 @@ export const compileChildrenToPrimitives = (
             emitPathKindPrimitive(pendingPath, resolution, targetResolver),
           );
           const rawPrimitives = result?.primitives ?? [];
-          const primitives = runtime.state.identityTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
+          const primitives = runtime.state.provenanceTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
           const idx = pendingPath.placeholderSlot.primitiveSink.indexOf(pendingPath.placeholderSlot.placeholder);
           if (idx === -1) {
             throw createCompileInvariantError('internal: path placeholder missing from its sink');
@@ -772,7 +772,7 @@ export const compileChildrenToPrimitives = (
 
           pendingPath.placeholderSlot.primitiveSink.splice(idx, 1, ...primitives);
           if (pendingPath.semanticOwner !== undefined) {
-            runtime.state.identityTracker?.recordPrimitives(primitives, pendingPath.semanticOwner, 'path');
+            runtime.state.provenanceTracker?.recordPrimitives(primitives, pendingPath.semanticOwner, 'path');
           }
 
           runtime.state.placeholderBalance--;
@@ -801,7 +801,7 @@ export const compileChildrenToPrimitives = (
     index: number,
     frame: TraversalFrame,
     occurrence?: CompileOccurrenceLocator,
-    semanticOwner?: RuntimeSemanticOwner,
+    semanticOwner?: CompileSemanticOwner,
   ): void => {
     const { scopeChain, primitiveSink, locatorPrefix, layoutSink, scopeDefaults } = frame;
     const nodeIrPath = `${locatorPrefix}children[${index}].node`;
@@ -873,9 +873,9 @@ export const compileChildrenToPrimitives = (
         }),
     });
     const rawPrimitives = emitNodePrimitives(layout, runtime.context.round, runtime.context.paint.register);
-    const emittedPrimitives = runtime.state.identityTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
+    const emittedPrimitives = runtime.state.provenanceTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
     if (semanticOwner !== undefined) {
-      runtime.state.identityTracker?.recordPrimitives(emittedPrimitives, semanticOwner, 'node');
+      runtime.state.provenanceTracker?.recordPrimitives(emittedPrimitives, semanticOwner, 'node');
     }
 
     for (const prim of emittedPrimitives) {
@@ -942,7 +942,7 @@ export const compileChildrenToPrimitives = (
     index: number,
     frame: TraversalFrame,
     occurrence: CompileOccurrenceLocator,
-    semanticOwner?: RuntimeSemanticOwner,
+    semanticOwner?: CompileSemanticOwner,
   ): void => {
     const { scopeChain, primitiveSink, locatorPrefix, pathSink, scopeDefaults } = frame;
     const pathIrPath = `${locatorPrefix}children[${index}].path`;
@@ -1270,7 +1270,7 @@ export const compileChildrenToPrimitives = (
     }
 
     primitiveSink.push(group);
-    if (semanticOwner !== undefined) runtime.state.identityTracker?.recordPrimitives([group], semanticOwner, 'scope');
+    if (semanticOwner !== undefined) runtime.state.provenanceTracker?.recordPrimitives([group], semanticOwner, 'scope');
     recordPrimitiveZIndex(runtime.state.zIndexOf, group, child.zIndex);
 
     return group.clipRef;
@@ -1283,7 +1283,7 @@ export const compileChildrenToPrimitives = (
     frame: TraversalFrame,
     generatedOccurrence?: CompileOccurrenceLocator,
     compositeDepth = options.compositeDepth ?? 0,
-    semanticOwner?: RuntimeSemanticOwner,
+    semanticOwner?: CompileSemanticOwner,
     compileNested?: (scopeFrame: TraversalFrame, preliminaryTransforms: ReadonlyArray<Transform> | undefined) => void,
     preResolvedClipShape?: ClipShape,
   ): void => {
@@ -1315,7 +1315,7 @@ export const compileChildrenToPrimitives = (
     const didPushNamespaceFrame = child.localNamespace === true;
     if (didPushNamespaceFrame) {
       runtime.state.namespaceStack.pushFrame();
-      runtime.state.identityTracker?.pushNamespaceFrame();
+      runtime.state.provenanceTracker?.pushNamespaceFrame();
     }
 
     const scopePrimitiveSink: Array<InternalScenePrimitive> = [];
@@ -1388,7 +1388,7 @@ export const compileChildrenToPrimitives = (
           hitTest: false,
         }));
         if (semanticOwner !== undefined)
-          runtime.state.identityTracker?.recordPrimitives(framePrimitives, semanticOwner, 'scope-frame');
+          runtime.state.provenanceTracker?.recordPrimitives(framePrimitives, semanticOwner, 'scope-frame');
       }
 
       scopeTransforms = resolveFinalScopeTransforms(
@@ -1510,7 +1510,7 @@ export const compileChildrenToPrimitives = (
     } finally {
       if (didPushNamespaceFrame) {
         runtime.state.namespaceStack.popFrame();
-        runtime.state.identityTracker?.popNamespaceFrame();
+        runtime.state.provenanceTracker?.popNamespaceFrame();
       }
     }
 
@@ -1734,7 +1734,7 @@ export const compileChildrenToPrimitives = (
     occurrence: CompileOccurrenceLocator,
     outputIndex: number,
     preparedReplays: ReadonlyMap<CompositeReplay, PreparedReplay>,
-    semanticOwner?: RuntimeSemanticOwner,
+    semanticOwner?: CompileSemanticOwner,
     authoredPreliminaryTransforms?: ReadonlyArray<Transform>,
   ): void => {
     const prepared = preparedReplays.get(token);
@@ -1802,9 +1802,9 @@ export const compileChildrenToPrimitives = (
     }
 
     if (semanticOwner !== undefined) {
-      runtime.state.identityTracker?.recordPrimitives(committedPrimitives, semanticOwner, 'composite-replay');
+      runtime.state.provenanceTracker?.recordPrimitives(committedPrimitives, semanticOwner, 'composite-replay');
       transaction.topologyIdentityIds.forEach(id =>
-        runtime.state.identityTracker?.registerGeneratedIdentity(id, semanticOwner),
+        runtime.state.provenanceTracker?.registerGeneratedIdentity(id, semanticOwner),
       );
     }
 
@@ -2146,7 +2146,7 @@ export const compileChildrenToPrimitives = (
     compositeDepth: number,
     owner: CompositeCompileOwner,
     prepared: PreparedCompositeOutputs,
-    semanticOwner?: RuntimeSemanticOwner,
+    semanticOwner?: CompileSemanticOwner,
     preparedScopeClipShape?: ClipShape,
     authoredPreliminaryTransforms?: ReadonlyArray<Transform>,
   ): void => {
@@ -2164,7 +2164,7 @@ export const compileChildrenToPrimitives = (
         true,
         semanticOwner === undefined
           ? undefined
-          : runtime.state.identityTracker?.createGeneratedOwner(output.child, index, semanticOwner),
+          : runtime.state.provenanceTracker?.createGeneratedOwner(output.child, index, semanticOwner),
       );
 
       return;
@@ -2188,7 +2188,7 @@ export const compileChildrenToPrimitives = (
     const scopeSemanticOwner =
       semanticOwner === undefined
         ? undefined
-        : runtime.state.identityTracker?.createGeneratedOwner(runtimeScopeChild, index, semanticOwner);
+        : runtime.state.provenanceTracker?.createGeneratedOwner(runtimeScopeChild, index, semanticOwner);
     const scopeOccurrence: CompileOccurrenceLocator = {
       sourcePath: parentOccurrence.sourcePath,
       expansionPath: [...parentOccurrence.expansionPath, { kind: scopeSegment, index }],
@@ -2229,7 +2229,7 @@ export const compileChildrenToPrimitives = (
               true,
               scopeSemanticOwner === undefined
                 ? undefined
-                : runtime.state.identityTracker?.createGeneratedOwner(child, childIndex, scopeSemanticOwner),
+                : runtime.state.provenanceTracker?.createGeneratedOwner(child, childIndex, scopeSemanticOwner),
             );
             continue;
           }
@@ -2265,7 +2265,7 @@ export const compileChildrenToPrimitives = (
     frame: TraversalFrame,
     occurrence: CompileOccurrenceLocator,
     compositeDepth: number,
-    semanticOwner?: RuntimeSemanticOwner,
+    semanticOwner?: CompileSemanticOwner,
   ): void => {
     const compositeIrPath = `${frame.locatorPrefix}children[${index}]`;
     const binding = bindComposite(child, runtime.context.composites);
@@ -2385,10 +2385,8 @@ export const compileChildrenToPrimitives = (
 
       const paint = createPaintRegistry(context.round);
       const clip = createClipRegistry(context.round, context.clips, context.maxClipDepth);
-      const probeIdentityTracker =
-        runtime.state.identityTracker === undefined
-          ? undefined
-          : createRuntimeTopologyTracker(runtime.state.identityTracker.revision);
+      const probeProvenanceTracker =
+        runtime.state.provenanceTracker === undefined ? undefined : createCompileProvenanceTracker();
       let probeWarningOccurrence = probeOccurrence;
       const registrationOccurrences = new Map<string, CompileOccurrenceLocator>();
       const registrationKey = (frameDepth: number, id: string): string => `${frameDepth}\u0000${id}`;
@@ -2429,7 +2427,7 @@ export const compileChildrenToPrimitives = (
         runtimeInputs: probeInputs ?? { source: clonedChild, bindings: [] },
         ...(captureScopeTargets === undefined ? {} : { captureScopeTargets }),
         spatialOwnerPath,
-        ...(probeIdentityTracker === undefined ? {} : { identityTracker: probeIdentityTracker }),
+        ...(probeProvenanceTracker === undefined ? {} : { provenanceTracker: probeProvenanceTracker }),
         observeWarningOccurrence: current => {
           probeWarningOccurrence = current ?? probeOccurrence;
         },
@@ -2446,7 +2444,7 @@ export const compileChildrenToPrimitives = (
         probeOccurrence,
         namespaceBaselineWarnings,
         warnings,
-        probeIdentityTracker,
+        probeProvenanceTracker,
       };
     };
 
@@ -2475,7 +2473,7 @@ export const compileChildrenToPrimitives = (
         registrationKey,
         namespaceBaselineWarnings,
         warnings,
-        probeIdentityTracker,
+        probeProvenanceTracker,
       } = evaluateLayoutChild(
         clonedChild,
         clonedProposal,
@@ -2514,7 +2512,7 @@ export const compileChildrenToPrimitives = (
         namespaceChangeOccurrences: namespaceChanges.map(
           change => registrationOccurrences.get(registrationKey(probeFrameDepth, change.id)) ?? probeOccurrence,
         ),
-        topologyIdentityIds: [...(probeIdentityTracker?.rootIdentityRegistrations() ?? [])],
+        topologyIdentityIds: [...(probeProvenanceTracker?.rootIdentityRegistrations() ?? [])],
         namespaceBaselineWarnings,
         resources,
         warnings,
@@ -3003,7 +3001,7 @@ export const compileChildrenToPrimitives = (
           true,
           semanticOwner === undefined
             ? undefined
-            : runtime.state.identityTracker?.createGeneratedOwner(output, outputIndex, semanticOwner),
+            : runtime.state.provenanceTracker?.createGeneratedOwner(output, outputIndex, semanticOwner),
         );
         continue;
       }
@@ -3040,7 +3038,7 @@ export const compileChildrenToPrimitives = (
     occurrence: CompileOccurrenceLocator,
     compositeDepth: number,
     generated: boolean,
-    semanticOwner?: RuntimeSemanticOwner,
+    semanticOwner?: CompileSemanticOwner,
   ): void => {
     try {
       withWarningOccurrence(occurrence, () => {
@@ -3092,9 +3090,9 @@ export const compileChildrenToPrimitives = (
     const generated =
       generatedScopeOccurrence !== undefined || (useProvidedOccurrence ? (options.generated ?? false) : false);
     const semanticOwners =
-      runtime.state.identityTracker === undefined || frame.semanticOwner === undefined
+      runtime.state.provenanceTracker === undefined || frame.semanticOwner === undefined
         ? undefined
-        : runtime.state.identityTracker.createChildOwners(children, frame.semanticOwner, generated);
+        : runtime.state.provenanceTracker.createChildOwners(children, frame.semanticOwner, generated);
 
     for (const [i, child] of children.entries()) {
       const entityPath = `${frame.locatorPrefix}children[${i}]`;
@@ -3154,9 +3152,9 @@ export const compileChildrenToPrimitives = (
       compileObservationSink: rootCompileObservations,
       spatialHandleSink: rootSpatialHandles,
       spatialOwnerPath: options.spatialOwnerPath ?? [],
-      ...(options.semanticOwner === undefined && runtime.state.identityTracker === undefined
+      ...(options.semanticOwner === undefined && runtime.state.provenanceTracker === undefined
         ? {}
-        : { semanticOwner: options.semanticOwner ?? runtime.state.identityTracker?.root }),
+        : { semanticOwner: options.semanticOwner ?? runtime.state.provenanceTracker?.root }),
     },
     true,
   );

@@ -1,5 +1,6 @@
-import type { CoreComputationOutput, IRScene, Scene } from '@retikz/core';
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
+import type { IRScene, Scene } from '@retikz/core';
+import type { CoreComputationOutput } from '@retikz/reconciler';
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
 import {
   createRuntimeSourceInput,
   createRuntimeSourceRegistry,

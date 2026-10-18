@@ -1,5 +1,5 @@
-import type { RuntimeScenePrimitive, SceneRuntimeSnapshot } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
+import type { RuntimeScenePrimitive, SceneRuntimeSnapshot } from '@retikz/reconciler';
 import type { RuntimeIdentity } from '@retikz/runtime';
 
 import type { EasingRegistry } from '../animation';

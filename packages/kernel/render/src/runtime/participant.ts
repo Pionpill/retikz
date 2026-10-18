@@ -1,14 +1,14 @@
 import { CoreTraceUnit } from '@retikz/core';
+import type { AnyCompositeDefinition, Scene } from '@retikz/core';
+import { ReconcilerTraceUnit } from '@retikz/reconciler';
 import type {
-  AnyCompositeDefinition,
   CoreComputationDefinition,
   CoreComputationOutput,
   RuntimeScenePrimitive,
-  Scene,
   ScenePatch,
   ScenePatchOperation,
   SceneRuntimeSnapshot,
-} from '@retikz/core';
+} from '@retikz/reconciler';
 import type { RuntimeCommitParticipant, RuntimePreparedCommit, Runtime } from '@retikz/runtime';
 import {
   createRuntimeRevision,
@@ -622,7 +622,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
       },
       {
         phase: RenderTracePhase.Update,
-        unit: CoreTraceUnit.SceneChange,
+        unit: ReconcilerTraceUnit.SceneChange,
         outcomes: [PerformanceTraceOutcome.Full, PerformanceTraceOutcome.Incremental, PerformanceTraceOutcome.Fallback],
       },
     ],
@@ -728,7 +728,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
           committedFrame = nextFrame;
           context.trace.report({
             phase: RenderTracePhase.Update,
-            unit: CoreTraceUnit.SceneChange,
+            unit: ReconcilerTraceUnit.SceneChange,
             outcome: fallback
               ? PerformanceTraceOutcome.Fallback
               : directReplace

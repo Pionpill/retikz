@@ -1,5 +1,5 @@
 import type { IRScene } from '@retikz/core';
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
 import type { RenderRuntimeConfigInput, RetainedRendererFactory } from '@retikz/render/runtime';
 import {
   builtinRetainedRendererFactory,

@@ -1,7 +1,6 @@
 import type { JsonValue } from '@retikz/foundation';
 import { NonBlankStringSchema, RetikzError } from '@retikz/foundation';
 import { JsonObjectSchema } from '@retikz/foundation';
-import type { RuntimeRevision } from '@retikz/runtime';
 import { describe, expect, it, vi } from 'vitest';
 import { array, boolean, custom, enum as zodEnum, intersection, literal, number, object, strictObject } from 'zod';
 
@@ -42,7 +41,7 @@ import {
 } from '../../src';
 import { NamespaceStack } from '../../src/compile/namespace';
 import { createCompileContext } from '../../src/compile/orchestration/context';
-import * as runtimeTopology from '../../src/compile/orchestration/runtime-topology';
+import * as compileProvenance from '../../src/compile/orchestration/provenance';
 import { compileChildrenToPrimitives } from '../../src/compile/orchestration/traversal';
 import { createCompileInvariantError, normalizeLayoutProbeError } from '../../src/compile/probe-failure';
 import { snapshotProviderPosition } from '../../src/compile/scene-primitive';
@@ -1034,19 +1033,19 @@ describe('layout-aware composite constraints and bounds', () => {
   it('reaches a branded Runtime topology invariant through the real layoutChild catch boundary', () => {
     const parent = defineComposite({
       namespace: 'test',
-      type: 'runtimeTopologyInvariantParent',
+      type: 'compileProvenanceInvariantParent',
       schema: CompositeBaseSchema.extend({
         namespace: literal('test'),
-        type: literal('runtimeTopologyInvariantParent'),
+        type: literal('compileProvenanceInvariantParent'),
       }),
       compile: (_, context) => {
         context.layoutChild({ type: 'scope', localNamespace: true, children: [] }, NaturalLayoutProposal);
         return { children: [] };
       },
     });
-    const ir = sceneOf({ namespace: 'test', type: 'runtimeTopologyInvariantParent' });
-    const outer = runtimeTopology.createRuntimeTopologyTracker(1 as RuntimeRevision);
-    const actual = runtimeTopology.createRuntimeTopologyTracker(1 as RuntimeRevision);
+    const ir = sceneOf({ namespace: 'test', type: 'compileProvenanceInvariantParent' });
+    const outer = compileProvenance.createCompileProvenanceTracker();
+    const actual = compileProvenance.createCompileProvenanceTracker();
     const broken = Object.freeze({
       ...actual,
       popNamespaceFrame: () => {
@@ -1054,10 +1053,10 @@ describe('layout-aware composite constraints and bounds', () => {
         actual.popNamespaceFrame();
       },
     });
-    const createProbeTracker = vi.spyOn(runtimeTopology, 'createRuntimeTopologyTracker').mockReturnValue(broken);
+    const createProbeTracker = vi.spyOn(compileProvenance, 'createCompileProvenanceTracker').mockReturnValue(broken);
     const context = createCompileContext(ir, { composites: [parent] });
 
-    expect(() => compileChildrenToPrimitives(ir.children, context, { identityTracker: outer })).toThrow(
+    expect(() => compileChildrenToPrimitives(ir.children, context, { provenanceTracker: outer })).toThrow(
       RetikzCoreError,
     );
 

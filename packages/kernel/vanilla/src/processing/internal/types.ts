@@ -1,4 +1,5 @@
-import type { AnyCompositeDefinition, CoreComputationDefinition, CoreComputationOutput } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
+import type { CoreComputationDefinition, CoreComputationOutput } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import type {
   RuntimeCommitParticipantToken,

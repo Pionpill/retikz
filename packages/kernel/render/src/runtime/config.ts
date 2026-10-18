@@ -1,5 +1,5 @@
-import type { RuntimeDeepReadonly } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
+import type { RuntimeDeepReadonly } from '@retikz/reconciler';
 import type { RuntimeSourceDefinition } from '@retikz/runtime';
 import { defineRuntimeSource } from '@retikz/runtime';
 

@@ -1,4 +1,5 @@
-import { CoreTracePhase, CoreTraceUnit } from '@retikz/core';
+import { CoreTraceUnit } from '@retikz/core';
+import { ReconcilerTracePhase } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { LabLifecycleAvailability, LabOutcome, LabPolicyId } from '../src/playground/modules/kernel';
@@ -20,7 +21,7 @@ describe('browser Kernel Lab 结果映射', () => {
       trace: [
         {
           owner: '@retikz/core',
-          phase: CoreTracePhase.Update,
+          phase: ReconcilerTracePhase.Update,
           unit: CoreTraceUnit.IrChild,
           outcome: LabOutcome.Incremental,
           visited: 5_000,
@@ -46,7 +47,7 @@ describe('browser Kernel Lab 结果映射', () => {
       trace: [
         {
           owner: '@retikz/core',
-          phase: CoreTracePhase.Update,
+          phase: ReconcilerTracePhase.Update,
           unit: CoreTraceUnit.IrChild,
           outcome: LabOutcome.Fallback,
           visited: 5_000,

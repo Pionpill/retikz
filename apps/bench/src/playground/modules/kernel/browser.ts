@@ -1,5 +1,7 @@
 import type { IRScene } from '@retikz/core';
-import { CORE_SOURCE_KEY, CoreSourceDefinition, CoreTracePhase, CoreTraceUnit } from '@retikz/core';
+import { CoreTracePhase, CoreTraceUnit } from '@retikz/core';
+import { ReconcilerTracePhase } from '@retikz/reconciler';
+import { CORE_SOURCE_KEY, CoreSourceDefinition } from '@retikz/reconciler';
 import type { PerformanceTraceRecord } from '@retikz/runtime';
 import {
   createRuntimeSourceUpdate,
@@ -76,7 +78,7 @@ const resolveLabOutcome = (record: PerformanceTraceRecord): LabOutcomeValue => {
 /** 把公共 trace、Patch 与 timing 样本整理为 UI 稳定结果 */
 export const createLabPolicyResult = (input: CreateLabPolicyResultInput): LabPolicyResult => {
   const work =
-    input.trace.find(record => record.owner === CORE_SOURCE_KEY && record.phase === CoreTracePhase.Update) ??
+    input.trace.find(record => record.owner === CORE_SOURCE_KEY && record.phase === ReconcilerTracePhase.Update) ??
     input.trace.find(record => record.owner === '@retikz/core' && record.phase === CoreTracePhase.Compile) ??
     input.trace.at(0);
   if (work === undefined) throw new Error(`${input.policyId}: Kernel Lab trace is unavailable`);

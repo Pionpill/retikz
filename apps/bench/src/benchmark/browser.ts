@@ -1,5 +1,8 @@
-import type { IRScene, Scene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
-import { compileToScene, CORE_SOURCE_KEY, CoreSourceDefinition, CoreTracePhase, CoreTraceUnit } from '@retikz/core';
+import type { IRScene, Scene } from '@retikz/core';
+import { compileToScene, CoreTracePhase, CoreTraceUnit } from '@retikz/core';
+import { ReconcilerTracePhase, ReconcilerTraceUnit } from '@retikz/reconciler';
+import type { ScenePatch, SceneRuntimeSnapshot } from '@retikz/reconciler';
+import { CORE_SOURCE_KEY, CoreSourceDefinition } from '@retikz/reconciler';
 import { drawScene, renderToCanvas } from '@retikz/render/canvas';
 import type {
   RenderFrameSnapshot,
@@ -244,7 +247,7 @@ const readRetainedUpdateRecord = (
   return assertSingleTraceRecord(id, records, {
     owner: `@retikz/render:${backend}`,
     phase: RenderTracePhase.Update,
-    unit: CoreTraceUnit.SceneChange,
+    unit: ReconcilerTraceUnit.SceneChange,
     outcome,
     visited: 1,
     reused: 0,
@@ -698,7 +701,7 @@ const runPolicyDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchmar
         const outcome = updateStrategy === 'full' ? PerformanceTraceOutcome.Full : PerformanceTraceOutcome.Incremental;
         const work = assertSingleTraceRecord(id, records, {
           owner: CORE_SOURCE_KEY,
-          phase: CoreTracePhase.Update,
+          phase: ReconcilerTracePhase.Update,
           unit: CoreTraceUnit.IrChild,
           outcome,
           visited: 5_000,

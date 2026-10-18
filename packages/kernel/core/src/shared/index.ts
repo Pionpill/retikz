@@ -4,3 +4,4 @@ export * from './path-thickness';
 export * from './position';
 export * from './theme';
 export * from './trace';
+export { jsonStructuralEquals } from './json';

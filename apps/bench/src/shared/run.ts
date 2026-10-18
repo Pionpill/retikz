@@ -1,11 +1,6 @@
-import {
-  compileToScene,
-  CORE_SOURCE_KEY,
-  CoreSourceDefinition,
-  createCoreComputation,
-  CoreTracePhase,
-  CoreTraceUnit,
-} from '@retikz/core';
+import { compileToScene, CoreTracePhase, CoreTraceUnit } from '@retikz/core';
+import { ReconcilerTracePhase, ReconcilerTraceUnit } from '@retikz/reconciler';
+import { CORE_SOURCE_KEY, CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
 import type { PerformanceTraceRecord } from '@retikz/runtime';
 import {
   createRuntimeSourceInput,
@@ -92,7 +87,7 @@ export const runCoreDeterministicBenchmarks = (): ReadonlyArray<DeterministicBen
     const result = session.result(program).value;
     const record = assertSingleTraceRecord('core-single-entity-update-5000', records, {
       owner: CORE_SOURCE_KEY,
-      phase: CoreTracePhase.Update,
+      phase: ReconcilerTracePhase.Update,
       unit: CoreTraceUnit.IrChild,
       outcome: PerformanceTraceOutcome.Incremental,
       visited: 5_000,
@@ -101,8 +96,8 @@ export const runCoreDeterministicBenchmarks = (): ReadonlyArray<DeterministicBen
     });
     assertSingleTraceRecord('core-single-entity-update-5000', records, {
       owner: CORE_SOURCE_KEY,
-      phase: CoreTracePhase.Update,
-      unit: CoreTraceUnit.SceneChange,
+      phase: ReconcilerTracePhase.Update,
+      unit: ReconcilerTraceUnit.SceneChange,
       outcome: PerformanceTraceOutcome.Incremental,
       visited: 1,
       reused: 0,

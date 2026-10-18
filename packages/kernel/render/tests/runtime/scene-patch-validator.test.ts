@@ -1,5 +1,6 @@
-import type { IRScene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
+import type { ScenePatch, SceneRuntimeSnapshot } from '@retikz/reconciler';
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
 import {
   createRuntimeIdentity,
   createRuntimeSourceInput,

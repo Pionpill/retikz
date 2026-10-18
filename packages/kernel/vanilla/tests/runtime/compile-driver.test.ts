@@ -1,6 +1,7 @@
-import type { AnyCompositeDefinition, CompileObserverDefinition, CoreComputationOutput, IRScene } from '@retikz/core';
+import type { AnyCompositeDefinition, CompileObserverDefinition, IRScene } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
+import type { CoreComputationOutput } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { describe, expect, it, vi } from 'vitest';
 

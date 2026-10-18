@@ -74,15 +74,15 @@ The entry accepts typed IR. External input such as JSON should first pass throug
 
 ## Package boundaries
 
-| Core owns                                                          | Collaborators own                                                                        |
-| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| Core IR, Definitions and extension contracts                       | React / Vanilla provide authoring APIs and prepare input                                 |
-| Configuration resolution, node layout, coordinate and path solving | Math provides basic computation; the host supplies capabilities such as text measurement |
-| Scene compilation, resource and output assembly                    | Render draws the Scene through SVG, Canvas and other backends                            |
-| Drawing-state dependencies and incremental computation rules       | Runtime manages state, result lifetimes and consistent publication                       |
-| Compilation observation outputs                                    | Inspect consumes observations and creates inspection helpers                             |
+| Core owns                                                          | Collaborators own                                                                             |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| Core IR, Definitions and extension contracts                       | React / Vanilla provide authoring APIs and prepare input                                      |
+| Configuration resolution, node layout, coordinate and path solving | Math provides basic computation; the host supplies capabilities such as text measurement      |
+| Scene compilation, resource and output assembly                    | Render draws the Scene through SVG, Canvas and other backends                                 |
+| Single-compilation output and optional provenance                  | Reconciler handles incremental reuse; Runtime manages transactions and consistent publication |
+| Compilation observation outputs                                    | Inspect consumes observations and creates inspection helpers                                  |
 
-This series follows one compilation from input to final outputs. Subsequent updates across Runtime, Core and Render belong to the cross-package dynamic update topic. See [Incremental Execution](/kernel/packages/runtime) for Runtime state and transaction mechanisms.
+This series follows one compilation from input to final outputs. Subsequent updates across Runtime, Reconciler, Core and Render belong to the cross-package dynamic update topic. See [Incremental Execution](/kernel/packages/runtime) for Runtime state and transaction mechanisms.
 
 ## Contents
 

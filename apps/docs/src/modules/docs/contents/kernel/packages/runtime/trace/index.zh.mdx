@@ -345,7 +345,7 @@ Source 的捕获、比较和释放故障由 Runtime 转换为结构化错误或�
 Core 的编译计算已经声明并报告 Trace，调用方只需把接收函数接到 Runtime。以下示例沿用前文的 Runtime 导入，使用一份空 Scene IR 完成初始化：
 
 ```ts
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
 
 const coreRecords: Array<PerformanceTraceRecord> = [];
 const compile = createCoreComputation({});
@@ -387,7 +387,7 @@ Core 的领域诊断保存在编译输出的 `output.diagnostics`；Runtime 的�
   sources={[
     {
       label: 'Core 的阶段声明、报告与 fallback 诊断',
-      path: 'packages/kernel/core/src/compile/incremental/computation.ts',
+      path: 'packages/kernel/reconciler/src/runtime/computation.ts',
     },
   ]}
 />

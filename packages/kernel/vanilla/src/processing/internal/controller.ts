@@ -1,5 +1,6 @@
-import type { AnyCompositeDefinition, CoreComputationOutput } from '@retikz/core';
-import { CoreSourceDefinition, CoreCompositeInputSourceDefinition, createCoreComputation } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
+import type { CoreComputationOutput } from '@retikz/reconciler';
+import { CoreSourceDefinition, CoreCompositeInputSourceDefinition, createCoreComputation } from '@retikz/reconciler';
 import {
   createRuntimeSourceInput,
   createRuntimeSourceRegistry,

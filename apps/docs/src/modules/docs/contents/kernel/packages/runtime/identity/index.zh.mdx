@@ -235,7 +235,7 @@ const nodeA = createRuntimeIdentity('@retikz/core/document', [...root.path, 'nod
 这里的 `owner` 是 Core 文档来源的注册键，`path` 区分文档内部的实体。节点只改颜色时身份不变；父路径改变时，身份也随之改变。Core 在比较前后文档、核对变更提示时使用这些身份。当前文档来源没有配置 `collectIdentities`，这份索引由 Core 的增量计算逻辑建立。
 
 <SourceLinks
-  sources={[{ label: 'Core 文档身份与变更核对', path: 'packages/kernel/core/src/compile/incremental/diff.ts' }]}
+  sources={[{ label: 'Core 文档身份与变更核对', path: 'packages/kernel/reconciler/src/reconcile/diff.ts' }]}
 />
 
 ## 相关属性

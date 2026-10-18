@@ -357,7 +357,7 @@ Runtime converts Source capture, comparison and disposal failures into structure
 Core's compilation computation already declares and emits Trace records. Connect a receiver to Runtime to consume them. This example reuses the Runtime imports above and initializes an empty Scene IR:
 
 ```ts
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
 
 const coreRecords: Array<PerformanceTraceRecord> = [];
 const compile = createCoreComputation({});
@@ -399,7 +399,7 @@ Core domain diagnostics reside in compilation `output.diagnostics`. Runtime tran
   sources={[
     {
       label: 'Core phase declarations, reporting and fallback diagnostics',
-      path: 'packages/kernel/core/src/compile/incremental/computation.ts',
+      path: 'packages/kernel/reconciler/src/runtime/computation.ts',
     },
   ]}
 />

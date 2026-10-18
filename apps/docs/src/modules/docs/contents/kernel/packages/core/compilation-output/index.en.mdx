@@ -754,6 +754,22 @@ These outlets deliver drawing results, observation results and compilation warni
   ]}
 />
 
+## Compilation preparation and provenance
+
+Call `prepareSceneCompilation(ir, options, execution)` from `@retikz/core` when warnings must be dispatched later or output provenance is needed. It performs one static compilation and returns `result`, `diagnostics` and `observerOutputs` without invoking `onWarn` or the default warning outlet. The options exclude `onWarn`; `execution.observers` can supply compilation observers.
+
+Provenance collection is off by default. With `execution.captureProvenance: true`, the returned `provenance` records entity origins, namespace registrations and final primitive emissions. Its opaque keys are valid only within that result. Reconciler uses these facts to construct cross-revision identities and Scene Patches; Core retains no incremental state.
+
+The companion `validateCompositeInputBindings(ir, bindings)` checks that Composite input bindings belong to the complete IR without compiling it. Missing bindings pass; mismatched bindings throw Core's `CompositeContractViolation` error.
+
+<SourceLinks
+  sources={[
+    { label: 'Compilation preparation', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: 'Provenance contract', path: 'packages/kernel/core/src/compile/provenance.ts' },
+    { label: 'Composite binding validation', path: 'packages/kernel/core/src/contract/composite/input.ts' },
+  ]}
+/>
+
 ## Implementation flow
 
 Use the member names below to connect the output categories to the implementation order. The diagram starts after context creation. Observer dispatch follows Scene assembly, spatial handles are then materialized, and the public entry dispatches warnings before returning.
@@ -764,7 +780,7 @@ Before Scene assembly, traversal finishes deferred path emission, checks for unr
 
 The first three stages run top to bottom, then continue right to complete the snapshot and branch into its outputs: `scene`, `artifacts` and `spatialHandles` belong to the ordinary compile result; observed compilation also produces `observerOutputs`, while warnings are dispatched through `onWarn`. The observations and spatial index stage dispatches final observations first, then materializes spatial handles.
 
-Start with `compileCoreSnapshot` to see result assembly. Then read the end of `compileChildrenToPrimitives` for path emission, bounds aggregation, node artifacts and sorting. Follow the resource, spatial projection and observation links in their respective sections. `compileToScene` and `observeCompileToScene` determine which result wrapper reaches the caller.
+Start with `prepareSceneCompilation` to see result assembly. Then read the end of `compileChildrenToPrimitives` for path emission, bounds aggregation, node artifacts and sorting. Follow the resource, spatial projection and observation links in their respective sections. `compileToScene` and `observeCompileToScene` determine which result wrapper reaches the caller.
 
 <SourceLinks
   sources={[

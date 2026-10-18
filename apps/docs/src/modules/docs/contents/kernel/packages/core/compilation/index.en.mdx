@@ -343,7 +343,7 @@ Composite entries join compilation through registered Definitions, and the basic
 
 ## Assemble the result
 
-After child compilation, `compileCoreSnapshot` collects ordered primitives, paint and clip resources, and supported root animation configuration. An explicit `viewBox` determines the canvas bounds directly. Otherwise, Core computes them from accumulated layout bounds and `padding`.
+After child compilation, `prepareSceneCompilation` collects ordered primitives, paint and clip resources, and supported root animation configuration. An explicit `viewBox` determines the canvas bounds directly. Otherwise, Core computes them from accumulated layout bounds and `padding`.
 
 The example's content spans `[-30, -20]` to `[210, 20]`. Adding 10 units on all sides produces this `result.scene.layout`:
 
@@ -493,11 +493,11 @@ Warnings and fatal errors have different outcomes. Recoverable cases follow the 
 
 ## Complete implementation flow
 
-This diagram maps the earlier stages to actual implementation members. The synchronous `compileToScene` entry calls `compileCoreSnapshot`. Path emission and sorting happen inside traversal, which returns to the outer function for `CompileResult` assembly.
+This diagram maps the earlier stages to actual implementation members. The synchronous `compileToScene` entry calls `prepareSceneCompilation`. Path emission and sorting happen inside traversal, which returns to the outer function for `CompileResult` assembly.
 
 <ComponentPreview files="compilation-implementation" size="xxl" hideCode type="flow" />
 
-Start in `compileCoreSnapshot` to see context creation, traversal, and assembly together. Then enter `compileChildrenToPrimitives`: begin with the root `compileChildren` call near its end, follow dispatch in `compileChild`, trace a Node through resolve, layout, and emit, and finally follow Path queuing and emission. Scope and Composite are recursive branches to explore after this example.
+Start in `prepareSceneCompilation` to see context creation, traversal, and assembly together. Then enter `compileChildrenToPrimitives`: begin with the root `compileChildren` call near its end, follow dispatch in `compileChild`, trace a Node through resolve, layout, and emit, and finally follow Path queuing and emission. Scope and Composite are recursive branches to explore after this example.
 
 <SourceLinks
   sources={[

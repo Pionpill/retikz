@@ -6,6 +6,6 @@ export * from './observation';
 export * from './observation-fragment';
 export * from './observation-output';
 export * from './primitive';
-export * from './runtime-topology';
+export * from './provenance';
 export * from './traversal';
 export * from './types';

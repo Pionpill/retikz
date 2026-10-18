@@ -1,4 +1,5 @@
-import { compileToScene, CoreSourceDefinition, createCoreComputation } from '@retikz/core';
+import { compileToScene } from '@retikz/core';
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
 import {
   createRuntimeSourceInput,
   createRuntimeSourceRegistry,

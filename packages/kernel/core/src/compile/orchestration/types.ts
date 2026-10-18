@@ -1,6 +1,5 @@
 import type { JsonValue } from '@retikz/foundation';
 import type { AxisAlignedBounds } from '@retikz/math';
-import type { RuntimeIdentity, RuntimeRevision } from '@retikz/runtime';
 
 import type {
   ClipShape,
@@ -29,6 +28,7 @@ import type { ResolvedTheme } from '../../shared';
 import type { NamespaceFrameChange, NamespaceStack } from '../namespace';
 import type { NodeLayout } from '../node';
 import type { LayoutProbeFailureEntry } from '../probe-failure';
+import type { CompileOwnerKey, CompileProvenance } from '../provenance';
 import type { CompositeCompileArtifact, NodeLayoutCompileArtifact } from '../types';
 import type { CompileWarningInput } from '../warning';
 import type { CompileContext } from './context';
@@ -70,7 +70,7 @@ export type PendingPathEmission = {
   /** Path occurrence 捕获的有效默认配置 */
   scopeDefaults: EffectiveScopeDefaults;
   /** 产生 path primitive 的语义 owner */
-  semanticOwner?: RuntimeSemanticOwner;
+  semanticOwner?: CompileSemanticOwner;
   /** 编译期排序用 zIndex，不写入 Scene primitive */
   zIndex?: number;
 };
@@ -270,10 +270,10 @@ export type TraversalCompileOptions = {
   proposal?: LayoutProposal;
   /** 根 compile 共享 session */
   session?: CompositeCompileSession;
-  /** Runtime Computation full compile 使用的 identity tracker */
-  identityTracker?: RuntimeTopologyTracker;
+  /** 按需收集同次编译来源 */
+  provenanceTracker?: CompileProvenanceTracker;
   /** 隔离 traversal 继承的 semantic owner */
-  semanticOwner?: RuntimeSemanticOwner;
+  semanticOwner?: CompileSemanticOwner;
   /** 当前 traversal 根的 composite owner path */
   spatialOwnerPath?: ReadonlyArray<SpatialHandleOwner>;
   /** 向隔离 namespace callback 暴露当前 warning occurrence */
@@ -294,8 +294,8 @@ export type TraversalState = {
   zIndexOf: PrimitiveZIndexTable;
   /** 尚未回填的 path 占位数量 */
   placeholderBalance: number;
-  /** 可选 Runtime topology identity tracker */
-  identityTracker?: RuntimeTopologyTracker;
+  /** 可选编译来源收集器 */
+  provenanceTracker?: CompileProvenanceTracker;
 };
 
 /** child 遍历期间使用的 compile 依赖 */
@@ -379,47 +379,27 @@ export type TraversalFrame = {
   spatialHandleSink: Array<PendingSpatialHandle>;
   /** 当前 child 所在的外层 composite owner path */
   spatialOwnerPath: ReadonlyArray<SpatialHandleOwner>;
-  /** 当前 frame 的稳定或 candidate-local semantic owner */
-  semanticOwner?: RuntimeSemanticOwner;
+  /** 当前 frame 的编译来源 */
+  semanticOwner?: CompileSemanticOwner;
 };
 
-declare const runtimeSemanticOwnerBrand: unique symbol;
+/** 同次编译的逻辑来源句柄 */
+export type CompileSemanticOwner = CompileOwnerKey;
 
-/** traversal 内延迟解析的 semantic owner handle */
-export type RuntimeSemanticOwner = Readonly<{
-  [runtimeSemanticOwnerBrand]: never;
-}>;
-
-/** canonical compile 为一个 primitive occurrence 分配的 Runtime identity 元数据 */
-export type RuntimePrimitiveMetadata = Readonly<{
-  /** 图元在逻辑树中当前出现位置的身份 */
-  identity: RuntimeIdentity;
-  /** 产生 primitive 的语义 owner */
-  semanticOwner: RuntimeIdentity;
-}>;
-
-/** primitive 对象到 Runtime identity 元数据的只读索引 */
-export type RuntimePrimitiveMetadataTable = Readonly<{
-  /** 读取一个 canonical primitive occurrence 的 identity 元数据 */
-  get: (primitive: ScenePrimitive) => RuntimePrimitiveMetadata | undefined;
-}>;
-
-/** canonical traversal 使用的 Runtime topology identity tracker */
-export type RuntimeTopologyTracker = Readonly<{
+/** canonical traversal 使用的编译来源收集器 */
+export type CompileProvenanceTracker = Readonly<{
   /** 文档根身份 */
-  root: RuntimeSemanticOwner;
-  /** 当前 candidate revision */
-  revision: RuntimeRevision;
+  root: CompileSemanticOwner;
   /** 为同一 parent boundary 的 children 分配 semantic owners */
   createChildOwners: (
     children: ReadonlyArray<IRChild>,
-    parent: RuntimeSemanticOwner,
+    parent: CompileSemanticOwner,
     generated: boolean,
-  ) => ReadonlyArray<RuntimeSemanticOwner>;
-  /** 为 Composite 直接产出的单个 child 分配 candidate-local owner */
-  createGeneratedOwner: (child: IRChild, index: number, parent: RuntimeSemanticOwner) => RuntimeSemanticOwner;
+  ) => ReadonlyArray<CompileSemanticOwner>;
+  /** 为 Composite 直接产出的单个 child 记录生成来源 */
+  createGeneratedOwner: (child: IRChild, index: number, parent: CompileSemanticOwner) => CompileSemanticOwner;
   /** 把选中 replay 引入的 id 登记到当前 namespace frame */
-  registerGeneratedIdentity: (id: string, owner: RuntimeSemanticOwner) => void;
+  registerGeneratedIdentity: (id: string, owner: CompileSemanticOwner) => void;
   /** 与 NamespaceStack 同步推入 local namespace frame */
   pushNamespaceFrame: () => void;
   /** 与 NamespaceStack 同步弹出 local namespace frame */
@@ -429,9 +409,9 @@ export type RuntimeTopologyTracker = Readonly<{
   /** 把 provider 输出物化为对象引用互不复用的 primitive occurrences */
   materializePrimitives: (primitives: ReadonlyArray<ScenePrimitive>) => Array<ScenePrimitive>;
   /** 记录 owner 产生的 primitive tree，不覆盖已登记的 descendant owner */
-  recordPrimitives: (primitives: ReadonlyArray<ScenePrimitive>, owner: RuntimeSemanticOwner, role: string) => void;
-  /** 完整 compile 后读取 primitive identity 元数据 */
-  metadata: RuntimePrimitiveMetadataTable;
+  recordPrimitives: (primitives: ReadonlyArray<ScenePrimitive>, owner: CompileSemanticOwner, role: string) => void;
+  /** 完整编译后关联最终图元位置并捕获来源结果 */
+  capture: (primitives: ReadonlyArray<ScenePrimitive>) => CompileProvenance;
 }>;
 
 export type NodeChild = Extract<IRChild, { type: 'node' }>;
@@ -473,7 +453,7 @@ export type EmitScopeGroupContext = {
   /** runtime Scope 预检阶段已解析且尚未登记的 clip */
   resolvedClipShape?: ClipShape;
   /** Scope child 的 semantic owner */
-  semanticOwner?: RuntimeSemanticOwner;
+  semanticOwner?: CompileSemanticOwner;
 };
 
 /** 自动 viewBox 的当前 frame 几何贡献 */

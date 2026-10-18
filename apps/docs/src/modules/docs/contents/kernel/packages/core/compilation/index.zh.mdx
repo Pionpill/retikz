@@ -329,7 +329,7 @@ Scene 输出可以保留局部几何和 Group 变换。命名查询使用所需�
 
 ## 汇总编译结果
 
-子项编译完成后，`compileCoreSnapshot` 收集有序图元、paint 与 clip 资源，以及可用于根场景的动画配置。画布范围分两种情况：指定 `viewBox` 时直接使用该范围；否则根据累计布局边界加上 `padding` 计算。
+子项编译完成后，`prepareSceneCompilation` 收集有序图元、paint 与 clip 资源，以及可用于根场景的动画配置。画布范围分两种情况：指定 `viewBox` 时直接使用该范围；否则根据累计布局边界加上 `padding` 计算。
 
 本例的内容范围从 `[-30, -20]` 到 `[210, 20]`。四周增加 10 后，`result.scene.layout` 为：
 
@@ -479,11 +479,11 @@ export type SpatialHandleOwner = Readonly<{
 
 ## 完整实现流程
 
-下面用实际成员名对照前面的阶段。同步入口 `compileToScene` 调用 `compileCoreSnapshot`；图中路径回填和排序位于遍历内部，最后回到外层汇总 `CompileResult`。
+下面用实际成员名对照前面的阶段。同步入口 `compileToScene` 调用 `prepareSceneCompilation`；图中路径回填和排序位于遍历内部，最后回到外层汇总 `CompileResult`。
 
 <ComponentPreview files="compilation-implementation" size="xxl" hideCode type="flow" />
 
-阅读源码时，先在 `compileCoreSnapshot` 看清上下文、遍历与汇总的调用关系，再进入 `compileChildrenToPrimitives`：从末尾的根层 `compileChildren` 调用出发，回查 `compileChild` 的分派，沿 Node 的 resolve、layout、emit 三步读下去，最后追踪 Path 的入队与回填。Scope 和 Composite 是这条主线上的递归分支，可以在理解本例后继续深入。
+阅读源码时，先在 `prepareSceneCompilation` 看清上下文、遍历与汇总的调用关系，再进入 `compileChildrenToPrimitives`：从末尾的根层 `compileChildren` 调用出发，回查 `compileChild` 的分派，沿 Node 的 resolve、layout、emit 三步读下去，最后追踪 Path 的入队与回填。Scope 和 Composite 是这条主线上的递归分支，可以在理解本例后继续深入。
 
 <SourceLinks
   sources={[

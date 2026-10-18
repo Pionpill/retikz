@@ -34,7 +34,8 @@
     "react-i18next": "catalog:",
     "react-router": "catalog:",
     "tailwind-merge": "catalog:",
-    "zustand": "catalog:"
+    "zustand": "catalog:",
+    "@retikz/reconciler": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",

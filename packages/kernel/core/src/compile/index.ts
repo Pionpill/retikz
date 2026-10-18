@@ -1,7 +1,6 @@
 export { formatCompileOccurrence, isNodeLayoutCompileArtifact } from './artifact';
-export { compileToScene, observeCompileToScene } from './compile';
+export { compileToScene, observeCompileToScene, prepareSceneCompilation } from './compile';
 export { CompileWarningCode } from './constants';
-export * from './incremental';
 export { samplePathRoute } from './path';
 export { computeLayout } from './scene';
 export type {
@@ -32,3 +31,6 @@ export type {
 export type { CompileWarning } from './warning';
 
 export { formatCompileWarning } from './warning';
+
+export type { PreparedSceneCompilation, SceneCompilationPreparationOptions } from './compile';
+export * from './provenance';

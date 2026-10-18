@@ -549,10 +549,10 @@ const observedDistance = defineRuntimeComputation<number>({
 
 ## Core 应用
 
-Core 将图文档编译包装成一项 Computation。公开工厂 `createCoreComputation(options)` 创建编译计算 Token；它消费文档来源，内部保存增量编译需要的状态，并向外提供编译结果和 Scene 快照。
+Reconciler 将 Core 图文档编译包装成一项 Computation。公开工厂 `createCoreComputation(options)` 创建编译计算 Token；它消费文档来源，内部保存增量编译需要的状态，并向外提供编译结果和 Scene 快照。
 
 ```ts
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
 import { createRuntimeSourceRegistry, createRuntimeComputationRegistry } from '@retikz/runtime';
 
 const compile = createCoreComputation({});
@@ -566,8 +566,8 @@ const computations = createRuntimeComputationRegistry({ sources, computations: [
 
 <SourceLinks
   sources={[
-    { label: 'Core 计算定义与增量分支', path: 'packages/kernel/core/src/compile/incremental/computation.ts' },
-    { label: 'Core 公开结果视图', path: 'packages/kernel/core/src/compile/incremental/public.ts' },
+    { label: 'Core 计算定义与增量分支', path: 'packages/kernel/reconciler/src/runtime/computation.ts' },
+    { label: 'Core 公开结果视图', path: 'packages/kernel/reconciler/src/runtime/public.ts' },
   ]}
 />
 
