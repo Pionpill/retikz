@@ -281,6 +281,7 @@ export const apiReferenceMemberGroups: Readonly<Partial<Record<string, ApiRefere
   '@retikz/react#LayoutProps': {
     order: ['Main', 'Layout', 'Style', 'Rendering', 'Callbacks', 'Animation', 'Runtime', 'Output', 'Extensions'],
     members: {
+      measureText: 'Extensions',
       children: 'Main',
       ir: 'Main',
       nodeDistance: 'Layout',

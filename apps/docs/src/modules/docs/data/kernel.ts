@@ -396,6 +396,12 @@ export const kernelSection: Array<Section> = [
             difficulty: DocDifficulty.Internals,
             meta: { pageType: 'architecture', audience: 'integrator', sourceOfTruth: 'runtime' },
           },
+          {
+            id: 'text-metrics',
+            label: 'kernel.textMetrics',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'architecture', audience: 'integrator', sourceOfTruth: 'runtime' },
+          },
         ],
       },
     ],

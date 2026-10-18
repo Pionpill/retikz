@@ -13,6 +13,8 @@ SVG 是 retikz 的默认渲染器。它把编译好的图画成一棵真实的 `
 
 SVG 字符串输出默认使用 Scene.layout 的宽高作为显示尺寸。通常省略输出 width / height；只指定一个数值轴时，另一轴按内容比例推导。
 
+`@retikz/render/svg` 的文档构建与字符串输出接受 `defaultFontFamily`，将它写入根 SVG 的 `font-family`，文字自身的字体族仍优先。该选项只影响显示，不重新计算 Scene；使用 Vanilla 时，同名选项同时用于编译测量与宿主显示。
+
 ## 怎么用
 
 **React**——`<Layout>` 默认就是 SVG，`renderer` 可省：
@@ -36,7 +38,7 @@ const view = mountSvg(container, ir);
 // view.root 是 <svg>；view.update(next) 走所选 static 或 retained processing；view.dispose() 卸载
 ```
 
-**Vanilla（SSR / 构建期）**——`renderToSvgString` 直接产 HTML 字符串，不碰 DOM，可在 Node 里跑：
+**Vanilla（SSR / 构建期）**——`renderToSvgString` 直接产 SVG 字符串，可在 Node 里跑；没有 Canvas 时默认估算文字尺寸：
 
 ```ts
 import { renderToSvgString } from '@retikz/vanilla';
