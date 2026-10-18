@@ -4,6 +4,7 @@ import type {
   Scene,
   ScenePatch,
   ScenePatchOperation,
+  SceneRuntimeNode,
   SceneRuntimeSnapshot,
   SceneRuntimeSubtree,
 } from '@retikz/core';
@@ -298,7 +299,7 @@ const elementKey = (element: Element): string | undefined => {
 /** 在 parent 后缀 children 中定位与 descriptor tag/key 匹配的复用候选 */
 const findElementCandidate = (parent: SVGElement, start: number, node: SvgNode): SVGElement | undefined => {
   const key = descriptorKey(node);
-  const children = Array.from(parent.childNodes);
+  const children = parent.childNodes;
 
   for (let index = start; index < children.length; index += 1) {
     const candidate = children[index];
@@ -815,20 +816,22 @@ const indexSubtreeElements = (
   visit(subtree.primitive, root, []);
 };
 
-/** 从完整 snapshot 提取一个顶层 occurrence 的相对 subtree */
-const subtreeAtRootIndex = (snapshot: SceneRuntimeSnapshot, index: number): SceneRuntimeSubtree => {
-  const topology = snapshot.topology
-    .filter(node => node.primitivePath[0] === index)
-    .map(node =>
-      Object.freeze({
-        identity: node.identity,
-        semanticOwner: node.semanticOwner,
-        ...(node.primitivePath.length === 1 ? {} : { parent: node.parent }),
-        order: node.order,
-        primitivePath: Object.freeze(node.primitivePath.slice(1)),
-        ...(node.publicId === undefined ? {} : { publicId: node.publicId }),
-      }),
-    );
+/** 从已按顶层 occurrence 分组的 topology 构建相对 subtree */
+const buildRootSubtree = (
+  snapshot: SceneRuntimeSnapshot,
+  index: number,
+  rootTopology: ReadonlyArray<SceneRuntimeNode>,
+): SceneRuntimeSubtree => {
+  const topology = rootTopology.map(node =>
+    Object.freeze({
+      identity: node.identity,
+      semanticOwner: node.semanticOwner,
+      ...(node.primitivePath.length === 1 ? {} : { parent: node.parent }),
+      order: node.order,
+      primitivePath: Object.freeze(node.primitivePath.slice(1)),
+      ...(node.publicId === undefined ? {} : { publicId: node.publicId }),
+    }),
+  );
   const root = topology.find(node => node.primitivePath.length === 0);
   const primitive: unknown = Reflect.get(snapshot.scene.primitives, index);
   if (root === undefined || primitive === undefined)
@@ -858,6 +861,13 @@ const reconcileFullIdentityDocument = (
 ): void => {
   reconcileElement(host, descriptor, journal, true, previouslyOwnedAttributes, previouslyOwnedStyles, false);
   const plan = buildRootDescriptorPlan(snapshot, descriptor, config);
+  const topologyByRoot = new Map<number, Array<SceneRuntimeNode>>();
+  for (const node of snapshot.topology) {
+    const rootIndex = node.primitivePath[0];
+    const topology = topologyByRoot.get(rootIndex);
+    if (topology === undefined) topologyByRoot.set(rootIndex, [node]);
+    else topology.push(node);
+  }
   const indexedElements = new Set(
     snapshot.topology.flatMap(node => {
       const element = currentElements.get(node.identity);
@@ -918,7 +928,7 @@ const reconcileFullIdentityDocument = (
 
   snapshot.scene.primitives.forEach((primitive, index) => {
     const descriptorNode: unknown = Reflect.get(plan.primitives, index);
-    const subtree = subtreeAtRootIndex(snapshot, index);
+    const subtree = buildRootSubtree(snapshot, index, topologyByRoot.get(index) ?? []);
     if (typeof descriptorNode !== 'object' || descriptorNode === null) {
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG primitive descriptor is invalid');
     }

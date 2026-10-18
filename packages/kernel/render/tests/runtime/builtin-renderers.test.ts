@@ -3891,7 +3891,7 @@ describe('builtin retained renderers', () => {
     expect(() => handle.read(session)).toThrow();
   });
 
-  it('SVG duplicate public id 的 full/resource reconcile 仍按 RuntimeIdentity 保留 occurrence node', () => {
+  it('SVG full/resource reconcile 在 topology 乱序和 public id 重复时保留 occurrence，回滚恢复原顺序', () => {
     const sourceScene = (reversed: boolean, gradient: boolean, rootAnimated = false): IRScene => {
       const children: IRScene['children'] = [
         {
@@ -3948,9 +3948,9 @@ describe('builtin retained renderers', () => {
           primitives: Object.freeze(snapshot.scene.primitives.map(duplicatePrimitiveIds)),
         }),
         topology: Object.freeze(
-          snapshot.topology.map(node =>
-            Object.freeze({ ...node, ...(node.publicId === undefined ? {} : { publicId: 'duplicate' }) }),
-          ),
+          snapshot.topology
+            .toReversed()
+            .map(node => Object.freeze({ ...node, ...(node.publicId === undefined ? {} : { publicId: 'duplicate' }) })),
         ),
       });
 
@@ -3987,6 +3987,7 @@ describe('builtin retained renderers', () => {
     mount.commit();
     mount.dispose();
     const occurrences = Array.from(host.querySelectorAll('[data-retikz-id="duplicate"]'));
+    const originalMarkup = host.innerHTML;
     const nodeA = occurrences.find(element => element.textContent === 'A');
     const nodeB = occurrences.find(element => element.textContent === 'B');
 
@@ -4006,12 +4007,17 @@ describe('builtin retained renderers', () => {
     });
     const prepared = executor.prepare(replacePatch, frameOf(next), runtimeConfig);
     prepared.commit();
-    prepared.dispose();
     const nextOccurrences = Array.from(host.querySelectorAll('[data-retikz-id="duplicate"]'));
 
     expect(nextOccurrences.find(element => element.textContent === 'A')).toBe(nodeA);
     expect(nextOccurrences.find(element => element.textContent === 'B')).toBe(nodeB);
     expect(nextOccurrences[0]).toBe(nodeB);
+
+    prepared.rollback();
+    expect(host.innerHTML).toBe(originalMarkup);
+    expect(Array.from(host.querySelectorAll('[data-retikz-id="duplicate"]'))).toEqual(occurrences);
+    expect(host.querySelector('[data-retikz-id="duplicate"]')).toBe(nodeA);
+    prepared.dispose();
 
     executor.dispose();
   });
