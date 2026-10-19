@@ -402,6 +402,12 @@ export const kernelSection: Array<Section> = [
             difficulty: DocDifficulty.Internals,
             meta: { pageType: 'architecture', audience: 'integrator', sourceOfTruth: 'runtime' },
           },
+          {
+            id: 'component-composition',
+            label: 'kernel.componentComposition',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'architecture', audience: 'integrator', sourceOfTruth: 'runtime' },
+          },
         ],
       },
     ],

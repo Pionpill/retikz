@@ -52,6 +52,7 @@
     "renderingPipeline": "Rendering Pipeline",
     "incrementalUpdates": "Incremental Updates",
     "textMetrics": "Text Metrics",
+    "componentComposition": "Component Composition",
     "compilationMechanisms": "Compilation mechanisms",
     "internals": "Internals",
     "label": "Kernel",
