@@ -1311,6 +1311,9 @@ export const compileChildrenToPrimitives = (
         ? frame.scopeChain
         : scopeTransformsContext.append(frame.scopeChain, preliminaryTransforms);
     const layoutPlaceholder = registerScopeLayoutPlaceholder(child, { index, frame });
+    if (layoutPlaceholder.placeholderLayout !== undefined) {
+      runtime.state.namespaceStack.enterScope(layoutPlaceholder.placeholderLayout);
+    }
 
     const didPushNamespaceFrame = child.localNamespace === true;
     if (didPushNamespaceFrame) {
@@ -1508,6 +1511,7 @@ export const compileChildrenToPrimitives = (
       const transformedGuides = transformAlignmentGuides(structuralGuides, scopeTransforms);
       if (transformedGuides !== undefined) frame.alignmentGuideSink.push(...transformedGuides);
     } finally {
+      if (layoutPlaceholder.placeholderLayout !== undefined) runtime.state.namespaceStack.leaveScope();
       if (didPushNamespaceFrame) {
         runtime.state.namespaceStack.popFrame();
         runtime.state.provenanceTracker?.popNamespaceFrame();
@@ -2648,6 +2652,8 @@ export const compileChildrenToPrimitives = (
               (scope, namespace, chain) => {
                 if (scope !== queryChild) return;
                 queryNamespace = namespace.fork();
+                // 查询者位于被测子项之外；保留真正的祖先，但不把子项自身视为查询者的祖先
+                if (scope.id !== undefined) queryNamespace.leaveScope();
                 queryChain = chain;
               },
             );
@@ -2675,6 +2681,7 @@ export const compileChildrenToPrimitives = (
               try {
                 return bindPathTarget(target, positionContext);
               } catch (cause) {
+                if (isFatalProbeError(cause)) throw cause;
                 const pointIndex = query.points.indexOf(target);
                 const field = target === query.source ? 'source' : `points[${pointIndex}]`;
                 throw new RetikzCoreError({

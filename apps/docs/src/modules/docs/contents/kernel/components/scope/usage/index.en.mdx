@@ -155,6 +155,7 @@ Call `view.dispose()` before removing the container to release mounted resources
 
 </DocTab>
 </DocTabs>
+Descendants cannot use named references to the center, anchors, or boundary of any ancestor Scope. This applies to nested Nodes, Coordinates, Scopes, and Paths, including Paths evaluated after the envelope is complete, and throws an error. External Paths can still connect to the Scope; the Scope can still position itself relative to a valid external Node and use its own envelope for pivot or selfAnchor. Namespace shadowing remains valid: a local node is not forbidden merely because it shares an ancestor Scope name.
 
 ## When to use Scope
 

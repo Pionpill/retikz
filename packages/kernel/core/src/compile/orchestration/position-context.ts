@@ -65,7 +65,7 @@ export const createPositionResolveContext = (
   const transform = input.effectiveTransform ?? composeScopeTransform(scopeChain);
 
   const lookupReference = (id: string): PositionReferenceView | undefined => {
-    const entry = namespaceStack.lookupEntry(id);
+    const entry = namespaceStack.lookupReference(id);
     return entry === undefined
       ? undefined
       : { state: entry.state, node: nodeReferenceViewOf(entry.layout, input.geometryContext) };

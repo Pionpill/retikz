@@ -425,7 +425,7 @@ describe('Node anchor-to-anchor position fail-loud', () => {
             },
           ]),
         ).scene,
-    ).toThrow(/anchor position target 'open'.*Scope.*still being laid out/i);
+    ).toThrow(/ancestor Scope 'open'/i);
   });
 
   it('拒绝当前 Scope chain 中的零缩放轴', () => {

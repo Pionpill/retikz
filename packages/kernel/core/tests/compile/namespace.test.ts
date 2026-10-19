@@ -232,10 +232,10 @@ describe('NamespaceStack Scope placeholder 生命周期', () => {
 
     stack.register('scope', placeholder, undefined, 'scope-placeholder');
 
-    expect(stack.lookupEntry('scope')).toEqual({ layout: placeholder, state: 'scope-placeholder' });
+    expect(stack.lookupEntry('scope')).toMatchObject({ layout: placeholder, state: 'scope-placeholder' });
 
     expect(stack.replaceLayout('scope', resolved, 0, placeholder)).toBe(true);
-    expect(stack.lookupEntry('scope')).toEqual({ layout: resolved, state: 'resolved' });
+    expect(stack.lookupEntry('scope')).toMatchObject({ layout: resolved, state: 'resolved' });
   });
 
   it('placeholder 被同 frame 的合法同名 layout 覆盖后不再回填旧 Scope', () => {

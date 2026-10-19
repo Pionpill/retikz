@@ -844,35 +844,26 @@ describe('scope.id bbox 交互', () => {
     expect(eRot![0]).toBeGreaterThan(eBase![0] + 1);
   });
 
-  it('scope_id_self_reference_in_inner_path：scope 内 path 端点用本 scope.id 取真 bbox（不是 placeholder 0×0 中心）', () => {
-    // 回归测试：bug 修复前，scope 内 path 引用本 scope.id 时 lookup 命中 placeholder（0×0 落在 chain 原点），
-    // 端点 ≈ 原点；修复后端点应取真 bbox（A、B 横跨 [0, 100] → right x 应 ≥ 100）
-    const ir = scene([
-      {
-        type: 'scope',
-        id: 'g',
-        children: [
-          { type: 'node', id: 'A', position: [0, 0], text: 'A' },
-          { type: 'node', id: 'B', position: [100, 0], text: 'B' },
+  it('rejects an inner Path targeting its ancestor Scope envelope', () => {
+    expect(() =>
+      compileToScene(
+        scene([
           {
-            type: 'path',
+            type: 'scope',
+            id: 'g',
             children: [
-              { type: 'step', kind: 'move', to: [0, 200] },
-              { type: 'step', kind: 'line', to: { id: 'g', anchor: 'right' } },
+              { type: 'node', id: 'A', position: [0, 0] },
+              {
+                type: 'path',
+                children: [
+                  { type: 'step', kind: 'move', to: [0, 200] },
+                  { type: 'step', kind: 'line', to: { id: 'g', anchor: 'right' } },
+                ],
+              },
             ],
           },
-        ],
-      },
-    ]);
-    const compiled = compileToScene(ir).scene;
-
-    // scope id='g' 无 transform：其内部 path 回填到该 scope 的 group.children（不再 hoist 到顶层）
-    const group = compiled.primitives.find(p => p.type === 'group');
-    const end = lineTo(group?.type === 'group' ? topPath(group.children) : undefined);
-
-    expect(end).toBeDefined();
-
-    // 真 bbox.right x ≥ B 中心 100；placeholder 0×0 right x ≈ 0；断 > 80 足以区分两种实现
-    expect(end![0]).toBeGreaterThan(80);
+        ]),
+      ),
+    ).toThrow(/ancestor Scope.*g/);
   });
 });
