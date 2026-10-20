@@ -52,6 +52,10 @@ pnpm --filter <pkg> exec vitest run [test-file]
 
 纯文档或 notes 改动至少跑 `git diff --check`。用户可见行为变化必须补 docs 或转对应 docs skill。
 
+### Learnings
+
+- 启用 Vitest `fsModuleCache` 的 workspace 在移动或重命名源码后，验证时加 `--no-fsModuleCache`，避免旧模块解析缓存导致误报；例如 `pnpm --filter <pkg> exec vitest run <test-file> --no-fsModuleCache`。若测试仍指向旧路径，先禁用缓存复现，再判断是否为代码回归。
+
 ## 完成标志
 
 - 中大型 plan 已写入忽略目录并完成主 agent 自审或计划内单 reviewer 循环；小型任务已记录直接执行依据。
