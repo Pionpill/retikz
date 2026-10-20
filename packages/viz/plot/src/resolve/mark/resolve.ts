@@ -2,7 +2,7 @@ import type { ExternalRow } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 
 import type { AnyMarkDefinition, CoordinateFrame, FieldCollector, IntervalContext } from '../../contract';
-import { cellGeometryAnchor } from '../../contract';
+import { annotationPositionsOf, cellGeometryAnchor } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { cellAnchor, intervalCellGeometry, roleAnchor } from '../../providers';
 import type { IRPlotMark, IRPlotMarkOperation } from '../../schemas';
@@ -46,7 +46,12 @@ export const collectMarkFields = (
   context: MarkResolveContext,
 ): void => {
   const { definition, operation } = resolveMarkOperation(mark, context);
-  if (isAnnotation(operation)) return;
+  if (isAnnotation(operation)) {
+    for (const position of annotationPositionsOf(operation))
+      for (const value of Object.values(position))
+        if (typeof value === 'object' && 'field' in value) fields.addChannel(value);
+    return;
+  }
   definition.collectFields?.(operation as never, fields);
 };
 

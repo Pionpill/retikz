@@ -6,6 +6,7 @@ keywords: Annotation、PointAnnotation、PathAnnotation、IntervalAnnotation、�
 # ADR-018：独立 Annotation 与数据图元共用几何能力
 
 - 状态：Accepted
+- 后续修订：[019](./019-data-bound-annotations.md) 已解除字段绑定、局部变换及数据来源追踪限制；其它显式几何与坐标连接契约保持有效
 - 决策日期：2026-10-17
 - 关联：[版本规划](./roadmap.md)、[可视化能力边界](../../../../architecture/plot-visualization-complete.md)、[渐进式属性](./014-progressive-mark-properties.md)、[数据执行作用域](./015-scoped-data-execution.md)、[坐标方向](./017-coordinate-relative-orientation.md)
 

@@ -29,6 +29,7 @@ import type {
   PreparedPlotData,
 } from '../../contract';
 import { PositionScaleContinuity, rootMeta, slug } from '../../contract';
+import { isIndependentAnnotation } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import {
   isPolarCoordinateFrame,
@@ -88,7 +89,6 @@ import {
   resolvePlotGuideTheme,
   resolvePlotTheme,
 } from '../../resolve/theme';
-import { isAnnotation } from '../../schemas';
 import type {
   IRPlot,
   IRPlotAreaDefaults,
@@ -451,7 +451,7 @@ export const lowerPlotWithDataArtifact = (
     inputDataView: DataView,
     prepared?: DataTransformResult,
   ) => {
-    if (isAnnotation(mark))
+    if (isIndependentAnnotation(mark))
       return { markDataView: { markIndex, mark, dataView: inputDataView } satisfies MarkDataView, lineage: undefined };
     if (prepared !== undefined)
       return {

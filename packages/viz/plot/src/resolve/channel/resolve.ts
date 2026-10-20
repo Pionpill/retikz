@@ -8,6 +8,7 @@ import type {
   ScopeChannelDelivery,
 } from '../../contract';
 import { ChannelDefinitionKind } from '../../contract';
+import { annotationPositionsOf } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { BUILTIN_CHANNEL_NAMES } from '../../providers';
 import type { IRPlotMarkOperation } from '../../schemas';
@@ -49,7 +50,15 @@ export const resolveChannelDefinition = (
 
 /** 解析当前 mark 可消费的 channel definition，并组装 values/default/delivery/descriptor */
 export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelResolveContext): MarkChannels => {
-  if (isAnnotation(mark)) return { defaults: { color: context.defaultColor } };
+  if (isAnnotation(mark)) {
+    for (const position of annotationPositionsOf(mark))
+      for (const value of Object.values(position))
+        if (typeof value === 'object' && 'field' in value && !context.model.some(field => field.name === value.field))
+          throw new RetikzPlotError(
+            `Annotation references unknown field "${value.field}" in its transformed data model`,
+          );
+    return { defaults: { color: context.defaultColor } };
+  }
   const operationResolution = resolveMarkOperation(mark, { registry: context.markRegistry });
   const operation = operationResolution.operation;
   const channelKinds = operationResolution.definition.channelKinds?.(operation as never);

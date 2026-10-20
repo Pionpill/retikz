@@ -16,6 +16,7 @@ import type {
   PlotSeriesLineage,
   PreparedPlotData,
 } from '../contract';
+import { isIndependentAnnotation } from '../contract';
 import { RetikzPlotError } from '../error';
 import { resolvePlotLineageOptions } from '../resolve/lineage';
 import type { IRPlot, IRPlotMarkOperation, IRPlotScaleOperation } from '../schemas';
@@ -243,7 +244,7 @@ const buildPlotLineage = (
       : hostMetadataOf(lineageOptions.hostMetadata, options.hostLineageMetadata);
 
   spec.marks.forEach((mark, markIndex) => {
-    if (isAnnotation(mark)) {
+    if (isAnnotation(mark) && isIndependentAnnotation(mark)) {
       marks.push({
         markIndex,
         markType: mark.type,

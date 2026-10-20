@@ -8,11 +8,12 @@ import type {
   MarkDefinition,
   MarkLoweringContext,
 } from '../../contract';
-import { extractMarkType } from '../../contract';
+import { extractMarkType, isIndependentAnnotation } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import type { IRPlotMarkOperation } from '../../schemas';
 import { isAnnotation, BuiltinPlotMark } from '../../schemas';
 import { intervalMarkDefinition, pathMarkDefinition, pointMarkDefinition, relationMarkDefinition } from './features';
+import { attachMarkLayer } from './shared';
 
 const asAnyMarkDefinition = <T extends IRPlotMarkOperation>(def: MarkDefinition<T>): AnyMarkDefinition => def;
 
@@ -87,10 +88,23 @@ export const lowerMark = (
   markContext?: MarkLoweringContext,
 ): IRChild | null => {
   if (isAnnotation(resolution.operation)) {
+    const operation = resolution.operation;
     const capability = resolution.definition.annotation;
     if (!capability) throw new RetikzPlotError(`Mark "${resolution.operation.type}" does not support annotations`);
     const color = channels.defaults?.color;
     try {
+      if (!isIndependentAnnotation(resolution.operation)) {
+        const children = rows.flatMap((row, transformedIndex) => {
+          const child = capability.lower(operation, frame, typeof color === 'string' ? color : undefined, markContext, {
+            row,
+            transformedIndex,
+          });
+          return child === null ? [] : [child];
+        });
+        return children.length === 0
+          ? null
+          : attachMarkLayer({ type: 'scope', children }, resolution.operation, markContext);
+      }
       return capability.lower(resolution.operation, frame, typeof color === 'string' ? color : undefined, markContext);
     } catch (cause) {
       if (cause instanceof RetikzPlotError) throw cause;

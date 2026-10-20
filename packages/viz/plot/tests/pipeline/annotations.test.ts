@@ -201,8 +201,8 @@ describe('independent annotations', () => {
     expect(MarkOperationSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
-  it.each(['encoding', 'transform', 'field', 'dataset', 'series', 'order'])('rejects data property %s', key => {
-    expect(MarkOperationSchema.safeParse({ ...point, [key]: key === 'transform' ? [] : 'value' }).success).toBe(false);
+  it.each(['encoding', 'field', 'dataset', 'series', 'order'])('rejects unsupported property %s', key => {
+    expect(MarkOperationSchema.safeParse({ ...point, [key]: 'value' }).success).toBe(false);
   });
 
   it.each([

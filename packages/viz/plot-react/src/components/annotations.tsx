@@ -9,9 +9,9 @@ export type PointAnnotationProps = InputPlotPointAnnotation;
 export type PathAnnotationProps = InputPlotPathAnnotation;
 export type IntervalAnnotationProps = InputPlotIntervalAnnotation;
 
-/** 独立常量点或文本声明 */
+/** 显式点或文本声明，位置可绑定数据 */
 export const PointAnnotation: FC<PointAnnotationProps> = () => null;
-/** 独立常量路径声明 */
+/** 显式端点路径声明，位置可绑定数据 */
 export const PathAnnotation: FC<PathAnnotationProps> = () => null;
-/** 独立常量区间声明 */
+/** 显式区间声明，边界可绑定数据 */
 export const IntervalAnnotation: FC<IntervalAnnotationProps> = () => null;

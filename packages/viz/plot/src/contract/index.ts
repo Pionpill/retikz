@@ -1,4 +1,5 @@
 export * from './anchor';
+export * from './annotation';
 export * from './channel';
 export * from './coordinate';
 export * from './domain-padding';

@@ -5,6 +5,33 @@ import { describe, expect, it } from 'vitest';
 import { buildPlotIR, PointAnnotation, PathAnnotation, IntervalAnnotation } from '../../src';
 
 describe('annotation authoring parity', () => {
+  it('shares field bindings, constant normalization and explicit empty transforms with Vanilla', () => {
+    const source = buildPlotIR(
+      <>
+        <PointAnnotation x={{ field: 'x' }} y={{ value: 2 }} transform={[]} />
+        <PathAnnotation
+          from={{ x: { edge: 'start' }, y: { field: 'y' } }}
+          to={{ x: { value: 10 }, y: { field: 'y' } }}
+        />
+        <IntervalAnnotation x={{ from: { value: 1 }, to: { field: 'x' } }} y={{ from: 0, to: { field: 'y' } }} />
+      </>,
+      'data',
+    );
+    const vanilla = [
+      pointAnnotation({ x: { field: 'x' }, y: { value: 2 }, transform: [] }),
+      pathAnnotation({
+        from: { x: { edge: 'start' }, y: { field: 'y' } },
+        to: { x: { value: 10 }, y: { field: 'y' } },
+      }),
+      intervalAnnotation({ x: { from: { value: 1 }, to: { field: 'x' } }, y: { from: 0, to: { field: 'y' } } }),
+    ];
+    expect(source.marks.map(mark => AnnotationSchema.parse(mark))).toEqual(
+      vanilla.map(mark => AnnotationSchema.parse(mark)),
+    );
+    expect(vanilla[0]).toMatchObject({ position: { x: { field: 'x' }, y: 2 }, transform: [] });
+    expect(vanilla[1]).toMatchObject({ to: { x: 10 } });
+    expect(vanilla[2]).toMatchObject({ bounds: { x: { from: 1 } } });
+  });
   it('normalizes React and Vanilla constants to identical Source declarations', () => {
     const source = buildPlotIR(
       <>

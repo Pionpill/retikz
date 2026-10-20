@@ -1,11 +1,12 @@
-import type { IRChild, IRNode, IRScope } from '@retikz/core';
+import type { IRNode, IRPath, IRScope } from '@retikz/core';
+import type { ExternalRow } from '@retikz/data';
 import type { Position } from '@retikz/math';
 
 import type { CoordinateFrame, MarkAnnotationCapability } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import type { IRPlotAnnotationPosition } from '../../../schemas';
 import { cellGeometryNode } from '../private/cell';
-import { attachMarkLayer, DEFAULT_FILL, LINE_STROKE_WIDTH } from '../shared';
+import { annotationValue, decorateDatum, attachMarkLayer, DEFAULT_FILL, LINE_STROKE_WIDTH } from '../shared';
 import { pointsToSteps } from '../shared';
 import { pointGlyphStyle, POINT_DEFAULT_RADIUS } from './point-glyph';
 
@@ -14,7 +15,7 @@ const definedProperties = <T extends object>(source: T): T =>
   Object.fromEntries(Object.entries(source).filter(([, value]) => value !== undefined)) as T;
 
 /** 将显式角色值映射到坐标参数空间，edge 使用最终角色范围 */
-const mappedPosition = (source: IRPlotAnnotationPosition, frame: CoordinateFrame): Array<number> => {
+const mappedPosition = (source: IRPlotAnnotationPosition, frame: CoordinateFrame, row?: ExternalRow): Array<number> => {
   for (const role of Object.keys(source)) {
     if (!frame.roles.includes(role)) throw new RetikzPlotError(`Annotation position has unknown role "${role}"`);
   }
@@ -23,7 +24,10 @@ const mappedPosition = (source: IRPlotAnnotationPosition, frame: CoordinateFrame
     const scale = frame.roleScales?.[role];
     if (!Object.hasOwn(source, role) || scale === undefined)
       throw new RetikzPlotError(`Annotation position requires role "${role}" and its scale`);
-    const mapped = typeof value === 'object' ? scale.range()[value.edge === 'start' ? 0 : 1] : scale.coordinate(value);
+    const mapped =
+      typeof value === 'object' && 'edge' in value
+        ? scale.range()[value.edge === 'start' ? 0 : 1]
+        : scale.coordinate(annotationValue(value, row));
     if (!Number.isFinite(mapped)) throw new RetikzPlotError(`Annotation position cannot map role "${role}"`);
     return mapped;
   });
@@ -38,9 +42,10 @@ const projectPosition = (mapped: Array<number>, frame: CoordinateFrame): Positio
 };
 
 /** 三种独立几何通过既有坐标能力生成 Kernel 宿主 */
-export const lowerAnnotation: MarkAnnotationCapability['lower'] = (mark, frame, color, context) => {
+export const lowerAnnotation: MarkAnnotationCapability['lower'] = (mark, frame, color, context, datum) => {
   const {
     kind: _kind,
+    transform: _transform,
     id,
     coordinateView: _view,
     layer: _layer,
@@ -50,7 +55,7 @@ export const lowerAnnotation: MarkAnnotationCapability['lower'] = (mark, frame, 
     ...geometry
   } = mark;
   const fill = color ?? DEFAULT_FILL;
-  let child: IRChild | null;
+  let child: IRNode | IRPath;
   if (geometry.type === 'point') {
     const {
       type: _type,
@@ -76,7 +81,7 @@ export const lowerAnnotation: MarkAnnotationCapability['lower'] = (mark, frame, 
       maxTextWidth,
       ...style
     } = geometry;
-    const mapped = mappedPosition(position, frame);
+    const mapped = mappedPosition(position, frame, datum?.row);
     const projected = projectPosition(mapped, frame);
     let angle = rotate;
     if (orientation?.kind === 'coordinate') {
@@ -136,8 +141,8 @@ export const lowerAnnotation: MarkAnnotationCapability['lower'] = (mark, frame, 
       zIndex,
       ...style
     } = geometry;
-    const start = mappedPosition(from, frame);
-    const end = mappedPosition(to, frame);
+    const start = mappedPosition(from, frame, datum?.row);
+    const end = mappedPosition(to, frame, datum?.row);
     if (connection !== 'straight' && !frame.projectSegment)
       throw new RetikzPlotError(
         `Annotation coordinate connection requires projectSegment on coordinate "${frame.type}"`,
@@ -160,7 +165,7 @@ export const lowerAnnotation: MarkAnnotationCapability['lower'] = (mark, frame, 
       marks,
       zIndex,
       style: { stroke: fill, strokeWidth: LINE_STROKE_WIDTH, ...style },
-      children: pointsToSteps(points, false) ?? undefined,
+      children: pointsToSteps(points, false) ?? [],
     };
   } else {
     const {
@@ -178,10 +183,12 @@ export const lowerAnnotation: MarkAnnotationCapability['lower'] = (mark, frame, 
     const from = mappedPosition(
       Object.fromEntries(Object.entries(bounds).map(([role, bound]) => [role, bound.from])),
       frame,
+      datum?.row,
     );
     const to = mappedPosition(
       Object.fromEntries(Object.entries(bounds).map(([role, bound]) => [role, bound.to])),
       frame,
+      datum?.row,
     );
     if (!frame.projectCell)
       throw new RetikzPlotError(`Annotation interval requires projectCell on coordinate "${frame.type}"`);
@@ -206,6 +213,10 @@ export const lowerAnnotation: MarkAnnotationCapability['lower'] = (mark, frame, 
       layout: { padding: 0, ...node.layout },
       style: { fill, strokeWidth: 0, ...style },
     };
+  }
+  if (datum !== undefined) {
+    const { id: _id, ...geometryChild } = definedProperties(child);
+    return decorateDatum(geometryChild, datum.row, datum.transformedIndex, mark.type, context?.provenance, undefined);
   }
   return attachMarkLayer({ type: 'scope', children: [definedProperties(child)] } satisfies IRScope, mark, context);
 };

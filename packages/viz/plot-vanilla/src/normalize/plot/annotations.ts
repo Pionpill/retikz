@@ -8,7 +8,7 @@ import type {
 import { PathAnnotationSchema, IntervalAnnotationSchema } from '@retikz/plot';
 import type { input as ZodInput } from 'zod';
 
-/** 点标注的常量输入，位置只能使用角色映射或 x/y 简写之一 */
+/** 点标注的位置绑定输入，位置只能使用角色映射或 x/y 简写之一 */
 export type InputPlotPointAnnotation = Omit<IRPlotPointAnnotation, 'type' | 'kind' | 'position'> &
   (
     | { position: IRPlotAnnotationPosition; x?: never; y?: never }
@@ -16,10 +16,10 @@ export type InputPlotPointAnnotation = Omit<IRPlotPointAnnotation, 'type' | 'kin
   ) &
   AnnotationBindings;
 
-/** 路径标注的常量输入 */
+/** 路径标注的位置绑定输入 */
 export type InputPlotPathAnnotation = Omit<ZodInput<typeof PathAnnotationSchema>, 'type' | 'kind'> & AnnotationBindings;
 
-/** 区间标注的常量输入 */
+/** 区间标注的位置绑定输入 */
 export type InputPlotIntervalAnnotation = Omit<ZodInput<typeof IntervalAnnotationSchema>, 'type' | 'kind' | 'bounds'> &
   (
     | { bounds: IRPlotIntervalAnnotation['bounds']; x?: never; y?: never }
@@ -35,15 +35,26 @@ type AnnotationBindings = {
   trackId?: string;
 };
 
-/** 规范化单个独立点，字符串始终为常量 */
+/** 归一化位置常量绑定，字段与边界引用保持原样 */
+const normalizeAnnotationPosition = (position: IRPlotAnnotationPosition): IRPlotAnnotationPosition =>
+  Object.fromEntries(
+    Object.entries(position).map(([role, value]) => [
+      role,
+      typeof value === 'object' && 'value' in value ? value.value : value,
+    ]),
+  );
+
+/** 规范化显式点，字符串始终为常量 */
 export const pointAnnotation = (input: InputPlotPointAnnotation): IRPlotPointAnnotation & AnnotationBindings => {
   const { x, y, position, ...rest } = input;
-  return { ...rest, type: 'point', kind: 'annotation', position: position ?? { x, y } };
+  return { ...rest, type: 'point', kind: 'annotation', position: normalizeAnnotationPosition(position ?? { x, y }) };
 };
 
 /** 规范化单条独立路径 */
 export const pathAnnotation = (input: InputPlotPathAnnotation): IRPlotPathAnnotation & AnnotationBindings => ({
   ...input,
+  from: normalizeAnnotationPosition(input.from),
+  to: normalizeAnnotationPosition(input.to),
   type: 'path',
   kind: 'annotation',
   connection: PathAnnotationSchema.shape.connection.parse(input.connection),
@@ -59,6 +70,11 @@ export const intervalAnnotation = (
     type: 'interval',
     kind: 'annotation',
     connection: IntervalAnnotationSchema.shape.connection.parse(input.connection),
-    bounds: bounds ?? { x, y },
+    bounds: Object.fromEntries(
+      Object.entries(bounds ?? { x, y }).map(([role, bound]) => {
+        const position = normalizeAnnotationPosition(bound);
+        return [role, { from: position.from, to: position.to }];
+      }),
+    ),
   };
 };

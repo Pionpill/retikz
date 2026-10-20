@@ -10,6 +10,7 @@ import {
 import type { CoordinateFrame, DomainPaddingScale, PositionScale } from '../../contract';
 import type { AnyCoordinateDefinition, DimensionRole, TickSet } from '../../contract';
 import { isBuiltinScaleOperation, readCoordinateScaleNames } from '../../contract';
+import { annotationPositionsOf, isIndependentAnnotation } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import {
   buildProportionalIntervals,
@@ -18,6 +19,7 @@ import {
   proportionalIntervalDomainValues,
   resolveIntervalBound,
 } from '../../providers';
+import { annotationValue } from '../../providers';
 import { isAnnotation } from '../../schemas';
 import type {
   IRPlot,
@@ -308,15 +310,23 @@ export const resolveCoordinateFrame = (
   assertRequiredPositionChannels(coordinateOperation.type, roles, node.marks);
 
   /** 独立标注显式贡献的域值；视图边缘不作为数据值参与推导 */
-  const annotationDomainValues = (mark: IRPlotMarkOperation, role: DimensionRole): Array<string | number> => {
+  const annotationDomainValues = (
+    mark: IRPlotMarkOperation,
+    role: DimensionRole,
+    annotationRows: Array<ExternalRow>,
+  ): Array<string | number> => {
     if (!isAnnotation(mark) || !mark.contributeToDomain) return [];
-    const values =
-      mark.type === 'point'
-        ? [mark.position[role]]
-        : mark.type === 'path'
-          ? [mark.from[role], mark.to[role]]
-          : [mark.bounds[role]?.from, mark.bounds[role]?.to];
-    return values.filter((value): value is string | number => typeof value === 'number' || typeof value === 'string');
+    const values: Array<string | number> = [];
+    const inputs = isIndependentAnnotation(mark) ? [undefined] : annotationRows;
+    for (const position of annotationPositionsOf(mark)) {
+      if (!Object.hasOwn(position, role)) continue;
+      const binding = position[role];
+      for (const row of inputs) {
+        const value = annotationValue(binding, row);
+        if (value !== undefined) values.push(value);
+      }
+    }
+    return values;
   };
 
   // 收集某角色（位置 scale 名 + 通道角色）下所有 mark 的通道原始值（不预过滤）：
@@ -333,7 +343,7 @@ export const resolveCoordinateFrame = (
 
     for (const { mark, dataView } of sourceViews) {
       if (isAnnotation(mark)) {
-        out.push(...annotationDomainValues(mark, role));
+        out.push(...annotationDomainValues(mark, role, dataView.rows));
         continue;
       }
       const markRows = dataView.rows;
@@ -417,8 +427,18 @@ export const resolveCoordinateFrame = (
 
     for (const { mark, dataView } of markDataViewsForRole(role)) {
       if (isAnnotation(mark)) {
-        for (const value of annotationDomainValues(mark, role))
-          types.push(typeof value === 'string' ? 'categorical' : 'continuous');
+        if (!mark.contributeToDomain) continue;
+        for (const position of annotationPositionsOf(mark)) {
+          if (!Object.hasOwn(position, role)) continue;
+          const binding = position[role];
+          if (typeof binding === 'object' && 'field' in binding) {
+            const type = dataView.model.find(field => field.name === binding.field)?.type;
+            if (type !== undefined) types.push(type);
+          } else {
+            const value = annotationValue(binding);
+            if (value !== undefined) types.push(typeof value === 'string' ? 'categorical' : 'continuous');
+          }
+        }
         continue;
       }
       if (
@@ -450,6 +470,16 @@ export const resolveCoordinateFrame = (
     const found: Array<NonNullable<IRDataFieldDefinition['order']>> = [];
 
     for (const { mark, dataView } of markDataViewsForRole(role)) {
+      if (isAnnotation(mark)) {
+        if (!mark.contributeToDomain) continue;
+        for (const position of annotationPositionsOf(mark)) {
+          const binding = position[role];
+          if (typeof binding !== 'object' || !('field' in binding)) continue;
+          const order = dataView.model.find(field => field.name === binding.field)?.order;
+          if (order !== undefined && order !== BuiltinFieldOrderMode.Appearance) found.push(order);
+        }
+        continue;
+      }
       if (
         isBuiltinMark(mark) &&
         mark.type === BuiltinPlotMark.Interval &&

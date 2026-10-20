@@ -1,6 +1,6 @@
 ---
 title: 契约 - 图元
-description: 查询 Plot 点、路径、区间、独立标注、关系与自定义图元 schema。
+description: 查询 Plot 点、路径、区间、标注、关系与自定义图元 schema。
 ---
 
 图元是图形语法的几何输出层。内置图元使用精确判别联合，自定义图元则保留 JSON-safe 开放配置，并在 lowering 时由对应 `MarkDefinition` 校验。
@@ -11,7 +11,7 @@ description: 查询 Plot 点、路径、区间、独立标注、关系与自定�
 
 ## MarkOperationSchema
 
-<ZodSchema name="MarkOperationSchema" description="内置图元或运行时注册自定义图元的联合。" />
+<ZodSchema name="MarkOperationSchema" description="内置数据图元、显式标注或运行时注册自定义图元的联合。" />
 
 所有图元都可用 `defaultColorGroup` 声明默认颜色共享关系。同名组只按首次出现位置消费一个 `palette.series` 槽位；未分组图元各自按声明顺序消费。显式颜色编码或常量 paint 仍然优先。
 
@@ -433,12 +433,174 @@ description: 查询 Plot 点、路径、区间、独立标注、关系与自定�
 
 ## PointAnnotationSchema
 
-<ZodSchema name="PointAnnotationSchema" />
+<ZodSchema name="PointAnnotationSchema" descriptions={{
+  align: '文字水平对齐方式',
+  blendMode: '混合模式',
+  boundary: '节点边界策略',
+  color: '主要几何的主色；未单独覆盖的描边、填充、标签和箭头可继承此颜色',
+  contributeToDomain: '是否让常量和变换后的数据位置参与比例尺域推导；edge 不参与',
+  coordinateView: '目标坐标视图标识',
+  cornerRadius: '节点圆角半径',
+  dashed: '使用虚线描边',
+  dashOffset: '虚线起始偏移',
+  dashPattern: '自定义虚线间隔',
+  defaultColorGroup: '默认颜色所属分组',
+  defaultColorIndex: '默认颜色在分组中的索引',
+  dotted: '使用点线描边',
+  dx: '投影后的横向偏移',
+  dy: '投影后的纵向偏移',
+  fill: '填充颜色或绘制配置',
+  fillRule: '填充规则',
+  font: '字体配置',
+  from: '起点的完整角色位置映射，可使用常量、field 或 edge',
+  to: '终点的完整角色位置映射，可使用常量、field 或 edge',
+  transform: '当前标注的局部数据变换；显式空数组也按数据行生成实例',
+  id: '标注声明及生成图形的标识',
+  connection: '坐标几何或直线连接方式',
+  label: '附着于几何对象的常量标签',
+  layer: '标注外层的绘制层级',
+  lineCap: '描边端点形状',
+  lineJoin: '描边转角形状',
+  lineHeight: '文字行高',
+  margin: '节点外边距',
+  marks: '路径上的装饰标记',
+  maxTextWidth: '文字最大宽度',
+  minimumSize: '节点最小尺寸',
+  opacity: '整体或填充、描边透明度',
+  orientation: '屏幕方向或坐标局部方向对齐',
+  padding: '节点内边距',
+  rotate: '几何对象旋转角度',
+  roundedCorners: '路径转角圆滑半径',
+  scale: '几何对象缩放',
+  shadow: '阴影预设或配置',
+  shape: '点的形状',
+  size: '点的尺寸',
+  stroke: '描边颜色或绘制配置',
+  strokeWidth: '描边宽度',
+  text: '作为点主体绘制的常量文字',
+  textColor: '文字颜色',
+  width: '文字布局宽度',
+  zIndex: '生成几何对象的绘制层级',
+
+kind: '固定为 annotation，表示标注',
+position: '各坐标角色的完整位置，可使用常量、字段绑定或视图边界',
+bounds: '各坐标角色的起止范围，可使用常量、字段绑定或视图边界',
+'layer.zIndex': '标注外层的绘制层级',
+type: '固定为 point',
+}} />
 
 ## PathAnnotationSchema
 
-<ZodSchema name="PathAnnotationSchema" />
+<ZodSchema name="PathAnnotationSchema" descriptions={{
+  align: '文字水平对齐方式',
+  blendMode: '混合模式',
+  boundary: '节点边界策略',
+  color: '主要几何的主色；未单独覆盖的描边、填充、标签和箭头可继承此颜色',
+  contributeToDomain: '是否让常量和变换后的数据位置参与比例尺域推导；edge 不参与',
+  coordinateView: '目标坐标视图标识',
+  cornerRadius: '节点圆角半径',
+  dashed: '使用虚线描边',
+  dashOffset: '虚线起始偏移',
+  dashPattern: '自定义虚线间隔',
+  defaultColorGroup: '默认颜色所属分组',
+  defaultColorIndex: '默认颜色在分组中的索引',
+  dotted: '使用点线描边',
+  dx: '投影后的横向偏移',
+  dy: '投影后的纵向偏移',
+  fill: '填充颜色或绘制配置',
+  fillRule: '填充规则',
+  font: '字体配置',
+  from: '起点的完整角色位置映射，可使用常量、field 或 edge',
+  to: '终点的完整角色位置映射，可使用常量、field 或 edge',
+  transform: '当前标注的局部数据变换；显式空数组也按数据行生成实例',
+  id: '标注声明及生成图形的标识',
+  connection: '坐标几何或直线连接方式',
+  label: '附着于几何对象的常量标签',
+  layer: '标注外层的绘制层级',
+  lineCap: '描边端点形状',
+  lineJoin: '描边转角形状',
+  lineHeight: '文字行高',
+  margin: '节点外边距',
+  marks: '路径上的装饰标记',
+  maxTextWidth: '文字最大宽度',
+  minimumSize: '节点最小尺寸',
+  opacity: '整体或填充、描边透明度',
+  orientation: '屏幕方向或坐标局部方向对齐',
+  padding: '节点内边距',
+  rotate: '几何对象旋转角度',
+  roundedCorners: '路径转角圆滑半径',
+  scale: '几何对象缩放',
+  shadow: '阴影预设或配置',
+  shape: '点的形状',
+  size: '点的尺寸',
+  stroke: '描边颜色或绘制配置',
+  strokeWidth: '描边宽度',
+  text: '作为点主体绘制的常量文字',
+  textColor: '文字颜色',
+  width: '文字布局宽度',
+  zIndex: '生成几何对象的绘制层级',
+
+kind: '固定为 annotation，表示标注',
+position: '各坐标角色的完整位置，可使用常量、字段绑定或视图边界',
+bounds: '各坐标角色的起止范围，可使用常量、字段绑定或视图边界',
+'layer.zIndex': '标注外层的绘制层级',
+type: '固定为 path',
+}} />
 
 ## IntervalAnnotationSchema
 
-<ZodSchema name="IntervalAnnotationSchema" />
+<ZodSchema name="IntervalAnnotationSchema" descriptions={{
+  align: '文字水平对齐方式',
+  blendMode: '混合模式',
+  boundary: '节点边界策略',
+  color: '主要几何的主色；未单独覆盖的描边、填充、标签和箭头可继承此颜色',
+  contributeToDomain: '是否让常量和变换后的数据位置参与比例尺域推导；edge 不参与',
+  coordinateView: '目标坐标视图标识',
+  cornerRadius: '节点圆角半径',
+  dashed: '使用虚线描边',
+  dashOffset: '虚线起始偏移',
+  dashPattern: '自定义虚线间隔',
+  defaultColorGroup: '默认颜色所属分组',
+  defaultColorIndex: '默认颜色在分组中的索引',
+  dotted: '使用点线描边',
+  dx: '投影后的横向偏移',
+  dy: '投影后的纵向偏移',
+  fill: '填充颜色或绘制配置',
+  fillRule: '填充规则',
+  font: '字体配置',
+  from: '起点的完整角色位置映射，可使用常量、field 或 edge',
+  to: '终点的完整角色位置映射，可使用常量、field 或 edge',
+  transform: '当前标注的局部数据变换；显式空数组也按数据行生成实例',
+  id: '标注声明及生成图形的标识',
+  connection: '坐标几何或直线连接方式',
+  label: '附着于几何对象的常量标签',
+  layer: '标注外层的绘制层级',
+  lineCap: '描边端点形状',
+  lineJoin: '描边转角形状',
+  lineHeight: '文字行高',
+  margin: '节点外边距',
+  marks: '路径上的装饰标记',
+  maxTextWidth: '文字最大宽度',
+  minimumSize: '节点最小尺寸',
+  opacity: '整体或填充、描边透明度',
+  orientation: '屏幕方向或坐标局部方向对齐',
+  padding: '节点内边距',
+  rotate: '几何对象旋转角度',
+  roundedCorners: '路径转角圆滑半径',
+  scale: '几何对象缩放',
+  shadow: '阴影预设或配置',
+  shape: '点的形状',
+  size: '点的尺寸',
+  stroke: '描边颜色或绘制配置',
+  strokeWidth: '描边宽度',
+  text: '作为点主体绘制的常量文字',
+  textColor: '文字颜色',
+  width: '文字布局宽度',
+  zIndex: '生成几何对象的绘制层级',
+
+kind: '固定为 annotation，表示标注',
+position: '各坐标角色的完整位置，可使用常量、字段绑定或视图边界',
+bounds: '各坐标角色的起止范围，可使用常量、字段绑定或视图边界',
+'layer.zIndex': '标注外层的绘制层级',
+type: '固定为 interval',
+}} />

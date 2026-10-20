@@ -59,6 +59,7 @@ import {
 
 import { CoordinateConnection, PolarInterpolation } from '../coordinate';
 import {
+  ChannelSchema,
   EncodingSchema,
   MarkChannelEncodingSchema,
   MarkGeometryLabelListSchema,
@@ -1151,19 +1152,21 @@ export const CustomMarkSchema = CustomMarkObjectSchema.catchall(JsonValueSchema)
   'Custom mark operation: type is any non-built-in identifier; its config is validated at lowering time against the matching MarkDefinition supplied via options.definitions.marks',
 );
 
-/** 独立标注的数据空间位置或最终视图边缘 */
+/** 标注的数据空间位置绑定或最终视图边缘 */
 export const AnnotationPositionValueSchema = union([
   number().finite(),
   NonBlankStringSchema,
+  strictObject({ field: ChannelSchema.shape.field.unwrap() }),
+  strictObject({ value: union([number().finite(), NonBlankStringSchema]) }),
   strictObject({ edge: zodEnum(['start', 'end']) }),
-]).describe('Literal scale value or final coordinate role range edge');
+]).describe('Literal scale value, field or constant binding, or final coordinate role range edge');
 
-/** 独立标注在坐标角色中的完整位置 */
+/** 标注在坐标角色中的完整位置 */
 export const AnnotationPositionSchema = record(NonBlankStringSchema, AnnotationPositionValueSchema).describe(
-  'Complete coordinate role mapping of constant positions',
+  'Complete coordinate role mapping of literal positions, field bindings, or view edges',
 );
 
-/** 独立标注在各坐标角色中的显式边界 */
+/** 标注在各坐标角色中的显式边界 */
 export const AnnotationBoundsSchema = record(
   NonBlankStringSchema,
   strictObject({
@@ -1174,6 +1177,7 @@ export const AnnotationBoundsSchema = record(
 
 const annotationBase = {
   kind: literal('annotation'),
+  transform: markBase.transform,
   id: markBase.id,
   coordinateView: markBase.coordinateView,
   layer: markBase.layer,
@@ -1182,7 +1186,7 @@ const annotationBase = {
   contributeToDomain: boolean()
     .default(false)
     .optional()
-    .describe('Include literal positions in inferred scale domains'),
+    .describe('Include literal and transformed row positions in inferred scale domains; edges never contribute'),
 };
 const annotationNode = {
   ...NodeStyleSchema.shape,
@@ -1194,7 +1198,7 @@ const annotationNode = {
   zIndex: NodeSchema.shape.zIndex,
 };
 
-/** 单个独立点或文本，位置与样式均为常量 */
+/** 显式点或文本，位置可绑定数据，样式保持常量 */
 export const PointAnnotationSchema = strictObject({
   ...annotationNode,
   ...NodeLayoutSchema.shape,
@@ -1211,7 +1215,7 @@ export const PointAnnotationSchema = strictObject({
   ),
 });
 
-/** 显式起止位置之间的一条独立路径 */
+/** 显式起止位置之间的路径，位置可绑定数据 */
 export const PathAnnotationSchema = strictObject({
   ...PathStyleSchema.shape,
   ...PathTransformSchema.shape,
@@ -1226,7 +1230,7 @@ export const PathAnnotationSchema = strictObject({
   zIndex: NodeSchema.shape.zIndex,
 });
 
-/** 独立区间，由坐标投影决定区域形状 */
+/** 显式区间，边界可绑定数据，由坐标投影决定区域形状 */
 export const IntervalAnnotationSchema = strictObject({
   ...annotationNode,
   ...annotationBase,
@@ -1235,7 +1239,7 @@ export const IntervalAnnotationSchema = strictObject({
   connection: PathAnnotationSchema.shape.connection,
 });
 
-/** 三种独立几何标注 */
+/** 三种显式几何标注 */
 export const AnnotationSchema = discriminatedUnion('type', [
   PointAnnotationSchema,
   PathAnnotationSchema,
@@ -1244,5 +1248,5 @@ export const AnnotationSchema = discriminatedUnion('type', [
 
 /** 校验内置或自定义标记操作 */
 export const MarkOperationSchema = union([AnnotationSchema, MarkSchema, CustomMarkSchema]).describe(
-  'Mark operation union: data marks, independent annotations, and registered custom mark configurations',
+  'Mark operation union: data marks, explicit annotations, and registered custom mark configurations',
 );

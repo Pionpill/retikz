@@ -44,7 +44,7 @@ export type IntervalContext = {
  * @template T schema 校验并交给字段收集、通道选择与下沉回调的 mark 类型
  */
 export type MarkDefinition<T extends IRPlotMarkOperation = IRPlotMark> = {
-  /** 同一几何的独立实例能力，不接收行或数据通道 */
+  /** 同一显式几何的独立或逐行实例能力 */
   annotation?: MarkAnnotationCapability;
   /** 完整 mark operation schema；必须含非空 `z.literal('type')` 供 registry 提取注册键 */
   schema: ZodType<T>;
@@ -113,7 +113,7 @@ export const extractMarkType = (schema: ZodType): string => {
  * @description registry 需要存放不同 mark 子类型的 definition；真正调用前由 lowerMark 按 type 取出，行为函数入参用 never 防误调
  */
 export type AnyMarkDefinition = {
-  /** 同一几何的独立实例能力 */
+  /** 同一显式几何的独立或逐行实例能力 */
   annotation?: MarkAnnotationCapability;
   /** 注册后按具体 operation 调用的域留白能力 */
   domainPadding?: MarkDomainPaddingCapability<never>;
@@ -147,15 +147,16 @@ export type AnyMarkDefinition = {
   ) => IRChild | null;
 };
 
-/** 独立实例的解析及绘图契约，沿用 mark registry */
+/** 显式几何的解析及绘图契约，沿用 mark registry */
 export type MarkAnnotationCapability = {
-  /** 独立实例的严格 Source schema */
+  /** 显式几何的严格 Source schema */
   schema: ZodType;
-  /** 绘制已解析的独立实例，无数据行输入 */
+  /** 绘制显式几何；datum 存在时输出单行图元，由调用方统一组织图层 */
   lower: (
     mark: IRPlotAnnotation,
     frame: CoordinateFrame,
     color: string | undefined,
     context?: MarkLoweringContext,
+    datum?: { row: ExternalRow; transformedIndex: number },
   ) => IRChild | null;
 };

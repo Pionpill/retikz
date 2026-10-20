@@ -85,14 +85,19 @@ const collectRenderDatumEntries = (
   parentMeta: JsonObject = {},
   offset: [number, number] = [0, 0],
 ): Array<RenderDatumEntry> => {
-  if (isNode(child)) {
+  if (isNode(child) || isPath(child)) {
     const meta = mergeMeta(parentMeta, child.meta);
     const transformedIndex = meta.transformedIndex;
     const markIndex = meta.markIndex;
     if (typeof transformedIndex !== 'number' || !Number.isInteger(transformedIndex)) return [];
     if (typeof markIndex !== 'number' || !Number.isInteger(markIndex)) return [];
 
-    const position = renderDatumPositionOf(child, offset);
+    const start = isPath(child) ? child.children.find(step => step.kind === 'move') : undefined;
+    const position: [number, number] | null = isNode(child)
+      ? renderDatumPositionOf(child, offset)
+      : start !== undefined && Array.isArray(start.to)
+        ? [start.to[0] + offset[0], start.to[1] + offset[1]]
+        : null;
     if (position === null) return [];
 
     const entry: RenderDatumEntry = {

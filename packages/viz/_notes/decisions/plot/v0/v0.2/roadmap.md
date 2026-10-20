@@ -124,7 +124,7 @@
 
 ### 几何图元与上层组件（长期方向）
 
-相关 ADR：[018](./018-independent-annotations.md)。
+相关 ADR：[018](./018-independent-annotations.md)、[019](./019-data-bound-annotations.md)。
 
 主要场景：
 
@@ -135,7 +135,7 @@
 
 - 由 PointMark、PathMark、IntervalMark 分别承担节点、连接路径与区间区域的几何构造，统一支持位置及区间边界的常量输入。
 - 区分通道取值与实例来源，明确独立数据源或单实例的表达，不通过“通道全部为常量”隐式推断实例数量。
-- 为独立几何提供 PointAnnotation、PathAnnotation、IntervalAnnotation 入口，禁止字段绑定，保留数据图元常用 API；两类入口共用坐标投影与 Kernel 绘图能力。
+- 为显式几何提供 PointAnnotation、PathAnnotation、IntervalAnnotation 入口，保留常量单实例；扩展位置字段绑定与 Mark 同形局部 transform，以结果行生成参考点、路径和区域，保持既有 Mark API；两类入口共用数据解析、坐标投影与 Kernel 绘图能力。
 - 在共用位置与边界机制中支持当前坐标视图边缘引用，并明确参考几何是否参与比例尺 domain 推导及视图变化后的更新语义。
 - 移除独立的 ReferenceMark 类型及专属文档，后续以三类几何图元组合提供参考线、带、区域、标签和极坐标行为；替代能力未就绪前不保留兼容入口，具体契约由后续 ADR 明确。
 - 参考线、参考区域、四象限等用途由上层组件库封装，复用 Plot 公开能力；交互层提供选中等状态，不另建投影或绘制逻辑。

@@ -106,10 +106,10 @@ export const vizV02: Release = {
       },
       highlights: [
         {
-          label: { zh: '待发布：独立几何标注', en: 'Unreleased: independent geometric annotations' },
+          label: { zh: '待发布：几何标注与数据绑定', en: 'Unreleased: geometric annotations and data bindings' },
           content: {
-            zh: '新增 PointAnnotation、PathAnnotation 与 IntervalAnnotation，以及对应 Vanilla 工厂。常量位置与视图边缘复用现有比例尺、坐标投影和绘图能力，不按数据行重复，不执行 mark 局部数据处理。路径与区间的 connection 默认沿坐标系连接，离散极坐标经过中间类别，也可选择 straight 直连；自定义坐标通过统一的线段与区域投影能力接入。默认不贡献尺度域；Plot 根数据声明与绑定仍必需。',
-            en: 'Adds PointAnnotation, PathAnnotation, IntervalAnnotation, and matching Vanilla factories. Literal positions and view edges share existing scales, projections, and drawing capabilities without row repetition or mark-local data execution. Path and interval connection defaults to coordinate geometry, traversing intermediate discrete polar categories; straight connects projected endpoints or corners. Custom coordinates use the same segment and cell projection capabilities. Domain contribution is opt-in; root Plot data and bindings remain required.',
+            zh: '新增 PointAnnotation、PathAnnotation 与 IntervalAnnotation，以及对应 Vanilla 工厂。位置支持常量、field/value 绑定和视图边缘，复用现有比例尺、坐标投影及 Mark 局部 transform。字段绑定或显式 transform 按结果行生成；纯常量且省略 transform 保持单实例。三类标注文档分别提供聚合参考点、统计参考线和数据范围区域的交互示例。路径与区间的 connection 默认沿坐标系连接，离散极坐标经过中间类别，也可选择 straight 直连；自定义坐标通过统一的线段与区域投影能力接入。默认不贡献尺度域；Plot 根数据声明与绑定仍必需。',
+            en: 'Adds PointAnnotation, PathAnnotation, IntervalAnnotation, and matching Vanilla factories. Positions accept constants, field/value bindings, and view edges, reusing scales, coordinate projection, and Mark-local transforms. Field bindings or explicit transforms produce one instance per result row; constants with transform omitted remain independent. The docs include interactive aggregate-point, reference-line, and extent-region examples. Path and interval connection defaults to coordinate geometry, traversing intermediate discrete polar categories; straight connects projected endpoints or corners. Custom coordinates use the same segment and cell projection capabilities. Domain contribution is opt-in; root Plot data and bindings remain required.',
           },
         },
         {

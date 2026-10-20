@@ -119,18 +119,18 @@ export const constantNodeStyleOverrides = (mark: IRPlotMark): Partial<IRNodeDefa
  * datum node 装饰器：provenance 开时给 node 挂 per-datum meta（datumProvenance）+ datum id（datumIdField）
  * @description 关 provenance / 无 markProvenance → 原样返回，不写 id/meta
  */
-export const decorateDatum = (
-  node: IRNode,
+export const decorateDatum = <T extends IRNode | IRPath>(
+  node: T,
   row: ExternalRow,
   transformedIndex: number,
   markType: string,
   markProvenance: MarkProvenance | undefined,
   seriesValue: unknown,
-): IRNode => {
+): T => {
   if (!markProvenance) return node;
 
   const { context, markIndex, registerDatumId } = markProvenance;
-  const decorated: IRNode = { ...node };
+  const decorated = { ...node };
   if (context.datumProvenance) {
     decorated.meta = datumMeta(
       context,

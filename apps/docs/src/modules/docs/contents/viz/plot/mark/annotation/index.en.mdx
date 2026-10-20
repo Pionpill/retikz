@@ -1,11 +1,11 @@
 ---
 title: Annotations
-description: Annotations mark information in the plotting area with geometric elements. They share the drawing capabilities of geometric marks and use constants without data mappings.
+description: Mark information with explicit points, paths, and intervals using constants, data fields, view edges, and local transforms.
 ---
 
 Annotations use geometric elements to mark information in the plotting area, such as target points, reference lines, and background regions. They share the geometric drawing capabilities of marks and come in the same three types: point, path, and interval.
 
-Geometric marks use data channel mappings to determine position and appearance. Annotations use constants directly, without binding data fields or generating repeated instances for data rows. Constant positions still pass through Plot scales and [coordinate projection](/viz/plot/coordinate). Each annotation declaration generates one instance per coordinate view. The three annotation types have the following entry points:
+Annotation positions pass through Plot scales and [coordinates](/viz/plot/coordinate). Constants without `transform` produce one instance in the current view. A field binding or explicit `transform` produces one complete geometry per result row. The three entry points are:
 
 | Geometry               | React                | Vanilla              | Source IR                              |
 | ---------------------- | -------------------- | -------------------- | -------------------------------------- |
@@ -14,6 +14,24 @@ Geometric marks use data channel mappings to determine position and appearance. 
 | Bounded region         | `IntervalAnnotation` | `intervalAnnotation` | `type: 'interval', kind: 'annotation'` |
 
 ## Using annotations
+
+All three Annotation types support the following position inputs, which can be mixed within one geometry:
+
+| Input      | Syntax                                 | Meaning                                                                                                          |
+| ---------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Constant   | `50`, `'A'`, or `{ value: 50 }`        | A fixed data-space position; strings are always literal values                                                   |
+| Data field | `{ field: 'name' }`                    | Reads a field from the current result row                                                                        |
+| View edge  | `{ edge: 'start' }`, `{ edge: 'end' }` | The endpoints of the coordinate role's final mapped range; they follow range reversal, not data minima or maxima |
+
+Local `transform` uses the same declarations as Mark. It consumes root-transformed data, or the current partition inside a facet. Use an [aggregation transform](/viz/data/transforms/aggregation-annotation) to calculate statistics, then bind the output fields to positions. The local chain does not change sibling data views.
+
+| Declaration                                  | Instance count                                   |
+| -------------------------------------------- | ------------------------------------------------ |
+| Constants or edges, with `transform` omitted | One per current view                             |
+| Any position contains `{ field }`            | One per result row                               |
+| Explicit `transform`, including `[]`         | One per result row, even with constant positions |
+
+An empty result produces no data-bound annotations. Styles, text, and labels remain constant; fields bind positions.
 
 This example binds an empty array and specifies both scale domains. It still draws one reference line, one background region, and one text point: row count does not determine annotation count.
 
@@ -230,17 +248,15 @@ document.getElementById('plot')!.innerHTML = renderPlot(
 
 ## Point annotations
 
-A point annotation draws a shape or text at a specified position. It uses the shape, appearance, and label capabilities of point marks, with constant positions and content. With `text`, the text itself is the point annotation. With `label`, text attaches to the shape with a configurable direction and gap.
+A point annotation draws a shape or text at a specified position. It uses the shape, appearance, and label capabilities of point marks, with data-bindable positions and constant text content. With `text`, the text itself is the point annotation. With `label`, text attaches to the shape with a configurable direction and gap.
+
+Annotation-specific properties include:
 
 | Property   | Purpose                                                                                        |
 | ---------- | ---------------------------------------------------------------------------------------------- |
-| `x`        | Constant position for the first coordinate role                                                |
-| `y`        | Constant position for the second coordinate role                                               |
+| `x`        | Position binding for the first coordinate role                                                 |
+| `y`        | Position binding for the second coordinate role                                                |
 | `position` | Complete role mapping, mutually exclusive with the `x` and `y` shorthand; use for custom roles |
-| `shape`    | Point shape                                                                                    |
-| `size`     | Point size                                                                                     |
-| `text`     | Constant text drawn as the point itself                                                        |
-| `label`    | Constant label attached to the shape, with position, gap, and leader line options              |
 
 Use the preset selector to switch between geometry and text only. Geometry supports size and attached labels; text supports font size. All demos start in Cartesian coordinates and also offer polar coordinates with continuous or discrete angles. Continuous mode maps the horizontal position from 0–100 to 0–360°; discrete mode uses categories A–F.
 
@@ -252,19 +268,27 @@ Use the preset selector to switch between geometry and text only. Geometry suppo
   size="md"
 />
 
-`label.text` is literal content, not a field name. See [point marks](/viz/plot/mark/point) for orientation, text layout, and shape details.
+Small points show the input observations, while larger `PointAnnotation` reference points bind the computed `centerX` and `centerY` fields. Switch between mean and median to compare the centers. With grouping enabled, groups A and B use blue and orange respectively. Observations and reference points share their group color and differ in size. In polar coordinates, x maps to angle and y to radius.
+
+<ComponentPreview
+  mode="showcase"
+  files={['annotation-data-point', 'annotation-data.preview.tsx', 'annotation-data.data.ts']}
+  defaultSourceFile="annotation-data.preview.tsx"
+  controls={{ name: 'annotation-data-point' }}
+  size="md"
+/>
 
 ## Path annotations
 
 A path annotation specifies two complete positions with `from` and `to`, for reference lines and connections between points. Both endpoints pass through scales and coordinate projection. Strokes and labels use the existing path drawing capabilities.
+
+Annotation-specific properties include:
 
 | Property     | Purpose                                                                                                   |
 | ------------ | --------------------------------------------------------------------------------------------------------- |
 | `from`       | Complete role mapping for the start                                                                       |
 | `to`         | Complete role mapping for the end                                                                         |
 | `connection` | Defaults to `coordinate`, following coordinate geometry; `straight` connects projected endpoints directly |
-| `stroke`     | Path stroke color                                                                                         |
-| `label`      | Constant label along the path, with position, distance, and rotation options                              |
 
 The default view shows a horizontal connection in Cartesian coordinates. Switch to continuous-angle polar coordinates, then change the connection mode to turn the blue arc into a chord while the orange endpoints stay in place. With discrete angles, coordinate connections pass through intermediate categories: A→C passes through B. Straight connections join only the endpoints. Move the label to see it follow the current path.
 
@@ -280,9 +304,23 @@ The default view shows a horizontal connection in Cartesian coordinates. Switch 
 
 To span the plotting area, use `{ edge: 'start' }` and `{ edge: 'end' }` for the corresponding endpoint role, as in the horizontal reference line in the entry example. These follow the endpoints of the role's final mapped range, including reversal; they do not mean the data minimum and maximum.
 
+`PathAnnotation` binds both endpoints to the same result row. The example uses `summarize` to calculate a y statistic and the minimum and maximum x values. Grouping produces two rows and two independent reference lines; endpoints from separate groups are never joined. Blue and orange distinguish the groups, with each reference line matching its observations. In polar coordinates, each reference line follows an arc at a fixed radius.
+
+Enable “Span the full horizontal view” to replace the x fields with edges while keeping y bound to the statistic. Data extents and full-view spans are expressed explicitly by different position inputs.
+
+<ComponentPreview
+  mode="showcase"
+  files={['annotation-data-path', 'annotation-data.preview.tsx', 'annotation-data.data.ts']}
+  defaultSourceFile="annotation-data.preview.tsx"
+  controls={{ name: 'annotation-data-path' }}
+  size="md"
+/>
+
 ## Interval annotations
 
 An interval annotation specifies a start and end for each coordinate role and projects that region into the plotting area. It forms a rectangle in Cartesian coordinates and can form a sector or annular sector in polar coordinates. Fill, stroke, and labels use the interval mark drawing capabilities.
+
+Annotation-specific properties include:
 
 | Property     | Purpose                                                                                       |
 | ------------ | --------------------------------------------------------------------------------------------- |
@@ -290,9 +328,6 @@ An interval annotation specifies a start and end for each coordinate role and pr
 | `y`          | Second role's `{ from, to }` range                                                            |
 | `bounds`     | Complete role bounds, mutually exclusive with the `x` and `y` shorthand                       |
 | `connection` | Defaults to `coordinate`, following coordinate boundaries; `straight` joins projected corners |
-| `fill`       | Region fill color                                                                             |
-| `opacity`    | Overall annotation opacity                                                                    |
-| `label`      | Constant label attached to the region                                                         |
 
 Adjust the horizontal endpoints to change the region's width. Enable “Full vertical range” to use `edge` for the vertical bounds. Place the label above, at the center, or below the region.
 
@@ -308,11 +343,21 @@ Every role needs a range; omitting a role does not span it automatically. See [i
 
 With discrete angles, the default B–E interval follows C and D along both boundaries, forming a polygon. In `straight` mode, only the four projected corners are connected; opposite angles can make them collinear and collapse the region. Paths and intervals follow mapped endpoint order without selecting a shortest route across the seam.
 
+Each `IntervalAnnotation` boundary can bind a field. The example computes minimum and maximum values for x and y to draw the observed extent. Grouping creates one region per group, using blue and orange to match the observations, with a fill opacity of 0.2. Switching x to edges spans the full view width while preserving each region’s data-driven y extent. In polar coordinates, regions follow their angular and radial extents.
+
+<ComponentPreview
+  mode="showcase"
+  files={['annotation-data-interval', 'annotation-data.preview.tsx', 'annotation-data.data.ts']}
+  defaultSourceFile="annotation-data.preview.tsx"
+  controls={{ name: 'annotation-data-interval' }}
+  size="md"
+/>
+
 ## Additional notes
 
 - Root Plot `data` and its actual binding are required, even with only annotations. An explicit empty array is valid, but scales still need usable domains.
-- Annotations accept no data fields, per-row callbacks, or local data transforms. Root data preparation and faceting still apply, with one annotation instance per generated view.
-- `contributeToDomain` defaults to `false`. When enabled, literal position values contribute to scale domains; `edge` values never do.
+- Data-bound annotations use the Mark `dataExecution.marks` policy. Transforms requiring an external executor use asynchronous preparation. Independent annotations execute no local data chain and produce no datum lineage; data-bound annotations support result-row and aggregate-source queries.
+- `contributeToDomain` defaults to `false`. When enabled, constants and final result-row positions contribute to scale domains; `edge` values never do.
 - Missing or unknown roles, unmappable positions, and unsupported coordinate projections produce errors. Demo colors, opacity, and explicit domains are presentation settings.
 
 ## API reference
