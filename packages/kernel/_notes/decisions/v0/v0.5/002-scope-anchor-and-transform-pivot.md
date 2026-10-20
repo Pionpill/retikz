@@ -11,7 +11,7 @@ keywords: 'Scope、placement.selfAnchor、scale.y、IRScope.placement、ScopePro
 
 > 后续演进：[ADR-049](./049-scope-position-contract.md) 将公开 `placement` 替换为 `position` 的 `kind: 'anchor'` 分支，并增加原点坐标形式。本文的包络、pivot、锚点对齐与引用生命周期语义仍有效；下文旧字段仅记录原决策。
 
-> 引用约束补充：[ADR-058](./058-scope-acyclic-geometry-references.md) 保留本文几何能力，并禁止后代命名引用祖先 Scope 的几何结果
+> 引用约束补充：[ADR-057](./057-scope-acyclic-geometry-references.md) 保留本文几何能力，并禁止后代命名引用祖先 Scope 的几何结果
 
 ## 背景
 

@@ -3,7 +3,7 @@ description: 保留 Scope 包络、整体变换与外部空间引用，禁止后
 keywords: Scope、祖先引用、包络、循环依赖、position、Path、Weave
 ---
 
-# ADR-058：Scope 分阶段计算与无环几何引用
+# ADR-057：Scope 分阶段计算与无环几何引用
 
 - 状态：Accepted
 - 决策日期：2026-10-19

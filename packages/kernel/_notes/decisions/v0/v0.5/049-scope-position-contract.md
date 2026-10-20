@@ -10,7 +10,7 @@ keywords: Scope、position、placement、transform、Composite、Chart、Plot
 - 关联：[版本目标](./roadmap.md)、[Node 锚点定位](./001-node-anchor-position.md)、[Scope 锚点与 pivot](./002-scope-anchor-and-transform-pivot.md)、[完整 Scope 输出](./020-layout-aware-scope-output.md)、[Source 字段分组](./036-source-ir-semantic-grouping.md)
 - 生效关系：获批并实施后替代 ADR-002 中 `placement` 的公开字段形态；保留其锚点、包络、pivot、引用生命周期与失败语义。ADR-020 的完整 authored Scope 与数值 replay 分工继续有效
 
-> 引用约束补充：[ADR-058](./058-scope-acyclic-geometry-references.md) 保留本文几何能力，并禁止后代命名引用祖先 Scope 的几何结果
+> 引用约束补充：[ADR-057](./057-scope-acyclic-geometry-references.md) 保留本文几何能力，并禁止后代命名引用祖先 Scope 的几何结果
 
 ## 背景与目标
 
