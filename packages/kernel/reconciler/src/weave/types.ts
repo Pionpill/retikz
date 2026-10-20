@@ -1,5 +1,7 @@
 import type { IRCoordinate, IRNode, IRPathBase, IRScope } from '@retikz/core';
 
+import type { WeaveChangeKind, WeaveChangeSource } from './constants';
+
 /** 节点自身输入与有效继承上下文，不重复保存合并后的输入 */
 export type WeaveInput<TInput, TContext> = {
   /** Core 定义的自身输入 */
@@ -10,102 +12,184 @@ export type WeaveInput<TInput, TContext> = {
 
 /**
  * 节点的基础逻辑状态
- * @remarks 关联与集合描述模型，不提供候选隔离或原地修改已提交版本的许可
+ * @remarks 每个节点对象属于一个树版本，候选计算不得修改已提交版本的可达状态
  */
-type WeaveNodeBase<TInput, TContext, TUsage, TPending extends object> = {
+type WeaveNodeBase<TInput, TContext, TUsage> = {
   /** 所属声明容器 */
-  parent: WeaveRoot<TContext, TUsage, TPending> | WeaveScopeNode<TContext, TUsage, TPending>;
-  /** 已提交的组合输入 */
+  parent: WeaveRoot<TContext, TUsage> | WeaveScopeNode<TContext, TUsage>;
+  /** 当前组合输入 */
   input: WeaveInput<TInput, TContext>;
   /** Core 编译状态的暂定不透明类型，只允许持有与传递 */
   compiled: unknown;
-  /** 待处理对象记录，条目语义与消费规则由更新机制确定 */
-  pendingInputs: Array<TPending>;
+  /** 归集自身、上下文与依赖变化，不重复保存完整输入 */
+  pendingInputs: Array<WeavePendingInput<TContext, TUsage>>;
   /** 依赖节点与本节点对其结果的读取需求 */
-  dependencies: Map<WeaveNode<TContext, TUsage, TPending>, TUsage>;
+  dependencies: Map<WeaveNode<TContext, TUsage>, TUsage>;
   /** 消费本节点结果的节点，不重复保存读取需求 */
-  consumers: Set<WeaveNode<TContext, TUsage, TPending>>;
+  consumers: Set<WeaveNode<TContext, TUsage>>;
 };
 
 /** 普通图元的 Weave 节点 */
-export type WeaveShapeNode<TContext, TUsage, TPending extends object> = WeaveNodeBase<
-  IRNode,
-  TContext,
-  TUsage,
-  TPending
-> & {
+export type WeaveShapeNode<TContext, TUsage> = WeaveNodeBase<IRNode, TContext, TUsage> & {
   /** 普通图元类别 */
   type: 'node';
 };
 
 /** 坐标的 Weave 节点 */
-export type WeaveCoordinateNode<TContext, TUsage, TPending extends object> = WeaveNodeBase<
-  IRCoordinate,
-  TContext,
-  TUsage,
-  TPending
-> & {
+export type WeaveCoordinateNode<TContext, TUsage> = WeaveNodeBase<IRCoordinate, TContext, TUsage> & {
   /** 坐标类别 */
   type: 'coordinate';
 };
 
 /** 路径的 Weave 节点，路径步骤保留在自身输入中 */
-export type WeavePathNode<TContext, TUsage, TPending extends object> = WeaveNodeBase<
-  IRPathBase,
-  TContext,
-  TUsage,
-  TPending
-> & {
+export type WeavePathNode<TContext, TUsage> = WeaveNodeBase<IRPathBase, TContext, TUsage> & {
   /** 路径类别 */
   type: 'path';
 };
 
 /** Scope 的 Weave 节点，递归声明只由 children 保存 */
-export type WeaveScopeNode<TContext, TUsage, TPending extends object> = WeaveNodeBase<
-  Omit<IRScope, 'children'>,
-  TContext,
-  TUsage,
-  TPending
-> & {
+export type WeaveScopeNode<TContext, TUsage> = WeaveNodeBase<Omit<IRScope, 'children'>, TContext, TUsage> & {
   /** Scope 类别 */
   type: 'scope';
   /** 按声明顺序排列的子节点 */
-  children: Array<WeaveNode<TContext, TUsage, TPending>>;
+  children: Array<WeaveNode<TContext, TUsage>>;
   /** 仅局部命名空间持有，key 为用户 id；普通 Scope 使用所属命名空间 */
-  ids?: Map<string, WeaveNode<TContext, TUsage, TPending>>;
+  ids?: Map<string, WeaveNode<TContext, TUsage>>;
 };
 
 /**
  * 展开后的基础元素联合，不包含声明根与 Composite
  * @template TContext 有效继承上下文
  * @template TUsage 消费者记录的依赖读取需求
- * @template TPending 待处理的对象记录
  */
-export type WeaveNode<TContext, TUsage, TPending extends object> =
-  | WeaveCoordinateNode<TContext, TUsage, TPending>
-  | WeavePathNode<TContext, TUsage, TPending>
-  | WeaveScopeNode<TContext, TUsage, TPending>
-  | WeaveShapeNode<TContext, TUsage, TPending>;
+export type WeaveNode<TContext, TUsage> =
+  | WeaveCoordinateNode<TContext, TUsage>
+  | WeavePathNode<TContext, TUsage>
+  | WeaveScopeNode<TContext, TUsage>
+  | WeaveShapeNode<TContext, TUsage>;
 
 /** 声明根容器，不承担 Layout 计算职责 */
-export type WeaveRoot<TContext, TUsage, TPending extends object> = {
+export type WeaveRoot<TContext, TUsage> = {
   /** 根容器类别 */
   type: 'root';
   /** 根没有父节点 */
   parent: null;
   /** 按声明顺序排列的顶层节点 */
-  children: Array<WeaveNode<TContext, TUsage, TPending>>;
+  children: Array<WeaveNode<TContext, TUsage>>;
   /** 根命名空间的用户 id 索引 */
-  ids: Map<string, WeaveNode<TContext, TUsage, TPending>>;
+  ids: Map<string, WeaveNode<TContext, TUsage>>;
 };
 
-/**
- * Weave 编译树的双版本逻辑入口
- * @remarks 两个引用本身不保证隔离；候选存储、发布与丢弃由更新机制实现
- */
-export type WeaveTree<TContext, TUsage, TPending extends object> = {
-  /** 已提交版本 */
-  current: WeaveRoot<TContext, TUsage, TPending>;
-  /** 本次候选版本，无更新时为空 */
-  candidate: WeaveRoot<TContext, TUsage, TPending> | null;
+/** Weave 编译树的已提交与候选版本入口 */
+export type WeaveTree<TContext, TUsage> = {
+  /** 已提交版本的声明根，候选计算期间保持只读 */
+  current: WeaveRoot<TContext, TUsage>;
+  /** 候选版本的声明根，无候选计算时为 null */
+  candidate: WeaveRoot<TContext, TUsage> | null;
 };
+
+/** 基础元素的完整自身输入，Scope 不包含声明子树 */
+export type WeaveOwnInput = IRNode | IRCoordinate | IRPathBase | Omit<IRScope, 'children'>;
+
+/** 可插入的基础元素声明，递归子树不包含 Composite */
+export type WeaveElementInput =
+  | IRNode
+  | IRCoordinate
+  | IRPathBase
+  | (Omit<IRScope, 'children'> & {
+      /** 按声明顺序排列的基础元素 */
+      children: Array<WeaveElementInput>;
+    });
+
+/** 通过树内唯一 id 定位 Scope 自身 */
+export type WeaveScopeTarget = {
+  /** Scope 自身定位 */
+  kind: 'scope';
+  /** Scope 定位 id */
+  scopeId: string;
+};
+
+/** 在指定容器的命名空间上下文中查找用户 id */
+export type WeaveIdTarget = {
+  /** 用户 id 定位 */
+  kind: 'id';
+  /** Scope 或 root 的容器定位 id */
+  scopeId: string;
+  /** 用户绘图 id */
+  id: string;
+};
+
+/** 按容器直接 children 中的位置定位 */
+export type WeaveChildTarget = {
+  /** 直接子元素定位 */
+  kind: 'child';
+  /** Scope 或 root 的容器定位 id */
+  scopeId: string;
+  /** 候选结构中的直接子元素下标，不是跨版本稳定身份 */
+  index: number;
+};
+
+/** 更新目标地址，位置地址按前序操作形成的候选结构解释 */
+export type WeaveTarget = WeaveScopeTarget | WeaveIdTarget | WeaveChildTarget;
+
+/** 在候选容器中按数组顺序连续插入基础元素或 Scope 子树 */
+export type WeaveInsertOperation = {
+  /** 插入操作 */
+  kind: 'insert';
+  /** Scope 或 root 的容器定位 id */
+  parentId: string;
+  /** 插入前的位置，等于 children 长度时追加 */
+  index: number;
+  /** 按顺序插入的完整声明，空数组不产生修改 */
+  elements: Array<WeaveElementInput>;
+};
+
+/** 完整替换已有元素自身输入，不改变类别或 Scope children */
+export type WeaveUpdateOperation = {
+  /** 修改操作 */
+  kind: 'update';
+  /** 已有元素的地址 */
+  target: WeaveTarget;
+  /** 类别必须与目标一致，省略旧覆盖字段表示移除覆盖 */
+  input: WeaveOwnInput;
+};
+
+/** 删除元素；Scope 连同其声明子树删除 */
+export type WeaveRemoveOperation = {
+  /** 删除操作 */
+  kind: 'remove';
+  /** 待删除元素的地址 */
+  target: WeaveTarget;
+};
+
+/** 显式声明的基础增删改操作 */
+export type WeaveOperation = WeaveInsertOperation | WeaveUpdateOperation | WeaveRemoveOperation;
+
+/** 顺序应用输入、统一计算与提交的一批操作 */
+export type WeaveBatch = {
+  /** 后续操作读取前序操作形成的候选结构 */
+  operations: Array<WeaveOperation>;
+};
+
+/** 节点待处理变化，影响范围去重不代表依赖已就绪 */
+export type WeavePendingInput<TContext, TUsage> =
+  | {
+      /** 自身输入变化 */
+      source: typeof WeaveChangeSource.Own;
+      /** 可能受影响的计算范围 */
+      changes: ReadonlySet<WeaveChangeKind>;
+    }
+  | {
+      /** 有效继承上下文变化 */
+      source: typeof WeaveChangeSource.Context;
+      /** 可能受影响的计算范围 */
+      changes: ReadonlySet<WeaveChangeKind>;
+    }
+  | {
+      /** 读取的依赖结果变化 */
+      source: typeof WeaveChangeSource.Dependency;
+      /** 与消费者按相同候选版本解析的生产节点 */
+      producer: WeaveNode<TContext, TUsage>;
+      /** 依赖结果变化可能影响的计算范围 */
+      changes: ReadonlySet<WeaveChangeKind>;
+    };

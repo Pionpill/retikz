@@ -1,5 +1,5 @@
 ---
-description: 定义 WeaveNode 的组合输入、编译状态、声明结构与计算关联，以及 WeaveTree 的双版本语义
+description: 定义 WeaveNode 的组合输入、编译状态、声明结构与计算关联，以及 WeaveTree 的已提交与候选根状态模型
 keywords: Weave、WeaveNode、WeaveTree、compiled、pendingInputs、依赖、命名空间
 ---
 
@@ -23,7 +23,7 @@ Scope、Node、Coordinate、Path 组成按 `type` 区分的联合，复用 Core 
 | --------------- | ------------------------------------------------------------ |
 | `type`          | 节点类别的字符串字面量                                       |
 | `parent`        | 所属 Root 或 Scope                                           |
-| `input`         | `{ own, scope }`：已提交的自身输入与有效继承上下文           |
+| `input`         | `{ own, scope }`：当前自身输入与有效继承上下文               |
 | `compiled`      | `unknown`：Core 编译状态的类型占位                           |
 | `pendingInputs` | `Array<{ ... }>`：自身修改、上下文变化与依赖通知的待处理记录 |
 | `dependencies`  | `Map<WeaveNode, DependencyUsage>`：依赖节点及读取需求        |
@@ -31,7 +31,7 @@ Scope、Node、Coordinate、Path 组成按 `type` 区分的联合，复用 Core 
 
 `input` 不重复保存合并后的输入，默认与覆盖语义由 Core 决定；Scope 的 own 不携带递归 children。输入相同不能掩盖依赖变化。`compiled` 仅持有和传递，不强转或探测内部结构；接入时由 Core 提供与 NodeLayout 同等职责、按元素区分的明确类型，并保证可达状态只读。
 
-`pendingInputs` 不是完整 props 数组：自身修改保持命令顺序，通知按来源与影响范围合并，不统一采用后来者覆盖，也不入队即编译。有效上下文、读取需求和待处理条目的具体类型尚未冻结。
+`pendingInputs` 不是完整 props 数组：自身修改保持命令顺序，通知按来源与影响范围合并，不统一采用后来者覆盖，也不入队即编译。有效上下文与读取需求类型留待 Core 接入和依赖契约确定；待处理条目由 [059](./059-weave-batch-operations.md) 定义为固定来源与影响范围的联合，不再保留任意条目的泛型参数。
 
 ## 声明结构与索引
 
@@ -55,22 +55,23 @@ B 依赖 A 时，B.dependencies 记录 A 及读取需求，A.consumers 包含 B�
 
 ```ts
 type WeaveTree = {
-  /** 已提交的声明根 */
+  /** 已提交版本的声明根 */
   current: WeaveRoot;
-  /** 候选声明根，无更新时为空 */
+  /** 候选版本的声明根，无候选计算时为 null */
   candidate: WeaveRoot | null;
 };
 ```
 
-双版本直接关联 Root，不增加版本包装类型，不要求完整复制两棵树。优先采用稳定节点关联与版本化状态，允许共享未变化且不会被修改的状态，具体存储机制留给 ADR-059。
+WeaveTree 直接持有两份 Root 入口，不增加版本包装对象。每个节点对象表示一个树版本中的状态，不在节点内部再拆 current / candidate state。候选计算期间 current 的可达状态保持只读；整批成功后切换 current，失败或取消时放弃 candidate，保留已提交版本。
 
-- 候选不得污染 current 的输入、compiled、父子结构、计算关联或 ids；成功一起发布，失败或中止丢弃候选
-- 读取须对应正确版本，不允许消费者混读新旧状态；两个 Root 引用本身不保证隔离
-- WeaveTree 管理自身版本，Runtime 协调跨参与方提交，不代替节点内部隔离
-- 不重复建立全量节点注册表、全局 id 索引或独立图；待处理集合与就绪队列属于更新工作状态
+- 不可变输入与 Core 编译产物可以共享；可变的声明关系、依赖与消费者集合、待处理记录和索引必须隔离，不得通过共享引用污染 current
+- 节点引用与索引必须按所属版本一致解析；复制范围、跨版本引用及复用算法由后续更新契约确定，不预设仅复制变化节点即可满足隔离
+- 失效或尚未完成的节点不能将旧 compiled 当作本批已就绪结果；只有完整候选结果才能发布给 Render，已发布输出不得被后续计算修改
+- 放弃候选不等于丢弃更新请求；未提交请求的保留、重试与合并由后续更新机制确定
+- 不重复建立独立依赖图；Scope 定位注册表随 Core 接入设计，并遵守版本隔离
 
 ## 后续契约与兼容性
 
-ADR-059 负责版本存储、首次未编译状态、pendingInputs 条目与生命周期、依赖读取分类、传播、就绪判断、环检测、计算调度和优化。本模型不预先承诺可原地修改的对象实现。
+ADR-059 负责首次未编译状态、pendingInputs 条目与生命周期、依赖读取分类、传播、就绪判断、失败恢复、环检测、计算调度和优化。候选构建、提交与丢弃算法及 Runtime 输出发布衔接由后续契约确定；双根结构不代表已实现 Worker、异步或可抢占并发计算。
 
-本决策不改变静态编译、React 或 Vanilla 的公开行为，不新增 authoring API，不对外暴露可变节点。Accepted 表示基础模型获批，不表示增量计算、候选隔离或事务接入已经实现。
+本决策不改变现有静态编译、React、Vanilla 或 Runtime 的公开行为，不新增 authoring API，不对外暴露可变节点。Accepted 表示基础模型获批，不表示增量计算或运行时接入已经实现。
