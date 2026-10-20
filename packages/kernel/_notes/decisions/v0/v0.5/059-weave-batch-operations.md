@@ -110,7 +110,7 @@ type WeaveInput<TInput, TContext> = {
   scope: TContext;
 };
 
-type WeavePendingInput<TContext, TUsage> =
+type WeavePendingInput =
   | {
       source: 'own';
       changes: ReadonlySet<WeaveChangeKind>;
@@ -121,12 +121,12 @@ type WeavePendingInput<TContext, TUsage> =
     }
   | {
       source: 'dependency';
-      producer: WeaveNode<TContext, TUsage>;
+      producer: WeaveNode;
       changes: ReadonlySet<WeaveChangeKind>;
     };
 ```
 
-WeaveNode 的 pendingInputs 固定为上述记录数组，移除任意待处理条目的泛型参数。input.own 保存操作应用后的自身输入，input.scope 保存解析后的有效上下文，待处理记录不重复保存完整输入。dependency 必须保留 producer 以匹配读取需求，引用遵守候选版本一致性；own 与 context 不重复记录可从节点自身及声明父容器确定的来源对象。TContext 与 TUsage 分别保留给 Core 上下文和依赖读取契约，不由调用方任意扩展语义。
+WeaveNode 的 pendingInputs 固定为上述记录数组，移除任意待处理条目的泛型参数。input.own 保存操作应用后的自身输入，input.context 保存解析后的有效上下文，待处理记录不重复保存完整输入。dependency 必须保留 producer 以匹配读取需求，引用遵守候选版本一致性；own 与 context 不重复记录可从节点自身及声明父容器确定的来源对象。上下文直接使用 Core 契约，依赖分类直接使用 WeaveDependencyKind，不由调用方通过泛型扩展语义。
 
 同一节点的多种变化先归集合并，重复影响按集合语义去重，不因收到多次通知而立即重复编译。pendingInputs 保留必要的来源与顺序信息；输入阶段的“可能受影响”与计算后的“结果实际变化”分别表达，结果未变时可停止相应传播。
 

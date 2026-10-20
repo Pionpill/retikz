@@ -1,12 +1,15 @@
 import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 
 import type { CoreSnapshotIndexRead } from '../reconcile';
+import type { WeaveTree } from '../weave';
 import type { CoreComputationPublicRead } from './public';
 
 /** 只供同一 Core Computation 下一次 update 使用的状态 */
 export type CoreComputationStateRead = Readonly<{
   /** 当前 result 对应的 immutable Core IR Snapshot */
   source: Readonly<IRScene>;
+  /** 与公开输出同版本的基础元素树，Composite 由完整准备路径持有 */
+  weave?: WeaveTree;
   /** 当前 Snapshot 的 conservative stable identity index */
   index: CoreSnapshotIndexRead;
 }>;

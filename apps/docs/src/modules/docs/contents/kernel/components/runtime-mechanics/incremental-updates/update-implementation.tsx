@@ -76,12 +76,6 @@ const UpdateImplementation: FC<UpdateImplementationProps> = props => {
             label: { text: t.edge0[0], font: { size: 12 }, textColor: 'gray' },
             routing: { kind: 'orthogonal', cornerRadius: 0 },
           },
-          {
-            source: 'update',
-            target: 'render',
-            label: { text: t.edge1[0], side: 'left', font: { size: 12 }, textColor: 'gray' },
-            routing: { kind: 'orthogonal', cornerRadius: 0 },
-          },
           { source: 'full', target: 'render', routing: { kind: 'orthogonal', turnPosition: 0.75, cornerRadius: 0 } },
           { source: 'render', target: 'publish', routing: { kind: 'orthogonal', cornerRadius: 0 } },
         ]}

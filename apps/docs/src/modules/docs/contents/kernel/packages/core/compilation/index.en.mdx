@@ -1,4 +1,4 @@
-﻿---
+---
 title: Compilation Flow
 description: Follow IR, node layout, and deferred paths through one full Core compilation to Scene, resources, and associated outputs.
 ---
@@ -562,7 +562,7 @@ const result = compileNode(
   { type: 'node', id: 'A', position: [0, 0], text: 'A' },
   {
     environment,
-    scope: resolveScopeContext({}, environment),
+    context: resolveScopeContext({}, environment),
     irPath: 'children[0].node',
   },
 );
@@ -589,5 +589,25 @@ These entries provide Core's scheduling primitives. Reconciler owns name mapping
     { label: 'Stable compilation environment', path: 'packages/kernel/core/src/compile/environment.ts' },
     { label: 'Local output assembly', path: 'packages/kernel/core/src/compile/element/output.ts' },
     { label: 'Scene and metadata assembly', path: 'packages/kernel/core/src/compile/output.ts' },
+  ]}
+/>
+
+## Weave integration
+
+Core and Weave share `formatCompileChildPath(prefix, index, type?)` to construct declaration source paths. The prefix is empty or ends with a dot; basic elements supply a type suffix, while Composite declarations omit it. These paths identify source locations for provenance and diagnostics, not identities across versions.
+
+Weave is the compilation tree retained by Reconciler. Each node holds its own input, effective context and Core compilation state. The root holds the environment, Scene configuration, container index and version-specific read records. Automatically assigned Scope addresses stay outside the IR and do not affect drawing envelopes.
+
+Basic elements create nodes and bindings in declaration order. Node and Coordinate consume references visible at their declaration site. Scope prepares context, compiles its children and envelope, then completes its deferred paths. A top-level Path can wait for nodes in both Scopes to be published. `createCompileNamespaceRegistry` preserves same-frame replacement diagnostics; `projectScopeCompileLayouts` and `projectPublishedCompileLayout` reuse Core's envelope-contribution and final reference-projection rules.
+
+Reconciler then asks Core to assemble the complete output. `createCompileProvenanceTracker` retains primitive ownership through resource remapping and Scope wrapping, pairing final provenance paths with the sorted Scene without another full compilation. Runtime retains the previous result if preparation fails and publishes the matching tree and output only after success.
+
+The public input remains a complete IR snapshot. Replacing it rebuilds the basic-element tree and publishes `replaceScene`. The previous root-node fill special case has been removed; WeaveBatch execution and fine-grained dependency propagation are not connected yet. Input containing Composite elements retains Core full preparation, including probes, instance inputs, artifacts and spatial handles. This path does not fabricate an expanded tree that claims to support local updates.
+
+<SourceLinks
+  sources={[
+    { label: 'Weave construction and Core calls', path: 'packages/kernel/reconciler/src/weave/reconcile.ts' },
+    { label: 'Weave state ownership', path: 'packages/kernel/reconciler/src/weave/types.ts' },
+    { label: 'Runtime publication boundary', path: 'packages/kernel/reconciler/src/runtime/computation.ts' },
   ]}
 />

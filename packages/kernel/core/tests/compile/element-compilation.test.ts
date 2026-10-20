@@ -21,7 +21,7 @@ import { assembleSceneCompilation, assembleScopeOutput, compileScope, prepareSco
 describe('独立元素编译', () => {
   it('顶层 Path 等待两个 Scope 的节点投影后编译，保持声明绘制顺序', () => {
     const environment = createCompileEnvironment();
-    const context = { environment, scope: resolveScopeContext({}, environment), irPath: 'root' };
+    const context = { environment, context: resolveScopeContext({}, environment), irPath: 'root' };
     const bindings = new Map<string, CompileBinding>();
     const outputs: Array<CompileOutput> = [];
     const scopes: Array<IRScope> = [];
@@ -33,7 +33,7 @@ describe('独立元素编译', () => {
       if (prepared.status !== 'compiled') throw new Error('expected scope');
       const node = compileNode(input, {
         ...context,
-        scope: prepared.compiled.scope,
+        context: prepared.compiled.scope,
         transforms: prepared.compiled.preliminaryTransforms,
       });
       if (node.status !== 'compiled') throw new Error('expected node');
@@ -108,7 +108,7 @@ describe('独立元素编译', () => {
       {
         environment,
         observation,
-        scope: resolveScopeContext({}, environment),
+        context: resolveScopeContext({}, environment),
         irPath: 'children[0].path',
       },
     );
@@ -156,7 +156,7 @@ describe('独立元素编译', () => {
       { type: 'node', position: [2, 3], shape: 'counted' },
       {
         environment,
-        scope: resolveScopeContext({}, environment),
+        context: resolveScopeContext({}, environment),
         irPath: 'children[0].node',
       },
     );
@@ -175,7 +175,7 @@ describe('独立元素编译', () => {
 
   it('嵌套外框经过祖先裁剪时保持全量可见边界和资源语义', () => {
     const environment = createCompileEnvironment();
-    const context = { environment, scope: resolveScopeContext({}, environment), irPath: 'children[0].scope' };
+    const context = { environment, context: resolveScopeContext({}, environment), irPath: 'children[0].scope' };
     const outer: Omit<IRScope, 'children'> = {
       type: 'scope',
       id: 'outer',
@@ -186,10 +186,10 @@ describe('独立元素编译', () => {
     const input: IRNode = { type: 'node', position: [0, 0], text: 'A' };
     const a = prepareScopeCompilation(outer, context);
     if (a.status !== 'compiled') throw new Error('expected outer');
-    const innerContext = { ...context, scope: a.compiled.scope, irPath: 'children[0].scope.children[0].scope' };
+    const innerContext = { ...context, context: a.compiled.scope, irPath: 'children[0].scope.children[0].scope' };
     const b = prepareScopeCompilation(inner, innerContext);
     if (b.status !== 'compiled') throw new Error('expected inner');
-    const node = compileNode(input, { ...innerContext, scope: b.compiled.scope });
+    const node = compileNode(input, { ...innerContext, context: b.compiled.scope });
     if (node.status !== 'compiled') throw new Error('expected node');
     const child = compileScope(inner, b.compiled, [node.compiled.layout], innerContext);
     if (child.status !== 'compiled') throw new Error('expected inner compiled');
@@ -215,7 +215,7 @@ describe('独立元素编译', () => {
 
   it('引用跟踪保留未命中命名空间，pending 就绪后可重算且禁止祖先包络引用', () => {
     const environment = createCompileEnvironment();
-    const context = { environment, scope: resolveScopeContext({}, environment), irPath: 'a' };
+    const context = { environment, context: resolveScopeContext({}, environment), irPath: 'a' };
     const input: IRCoordinate = { type: 'coordinate', id: 'c', position: { direction: 'right', of: 'a' } };
     const binding = {};
     const outer: CompileNamespace = { bindings: new Map([['a', { state: 'pending', binding }]]) };
@@ -248,7 +248,7 @@ describe('独立元素编译', () => {
 
   it('同层 zIndex 排序与删除资源不重算旧状态', () => {
     const environment = createCompileEnvironment();
-    const context = { environment, scope: resolveScopeContext({}, environment), irPath: 'a' };
+    const context = { environment, context: resolveScopeContext({}, environment), irPath: 'a' };
     const a: IRNode = { type: 'node', id: 'a', position: [0, 0], zIndex: 3 };
     const b: IRNode = { type: 'node', id: 'b', position: [40, 0], zIndex: -1 };
     const first = compileNode(a, context);
@@ -280,7 +280,7 @@ describe('独立元素编译', () => {
     const context = {
       environment,
       observation,
-      scope: resolveScopeContext({}, environment),
+      context: resolveScopeContext({}, environment),
       irPath: occurrence.sourcePath,
       occurrence,
     };
@@ -288,7 +288,7 @@ describe('独立元素编译', () => {
     if (prepared.status !== 'compiled') throw new Error('expected preparation');
     const node = compileNode(input, {
       ...context,
-      scope: prepared.compiled.scope,
+      context: prepared.compiled.scope,
       irPath: 'children[0].scope.children[0].node',
       occurrence: { sourcePath: 'children[0].scope.children[0].node', expansionPath: [] },
       ancestors: [{ owner: { kind: 'scope' }, occurrence }],
@@ -317,13 +317,13 @@ describe('独立元素编译', () => {
     const environment = createCompileEnvironment();
     const parent = resolveScopeContext({}, environment);
     const scopeInput = { type: 'scope' as const, position: [30, 40] as [number, number], frame: { padding: 4 } };
-    const context = { environment, scope: parent, irPath: 'scene.children[0].scope' };
+    const context = { environment, context: parent, irPath: 'scene.children[0].scope' };
     const prepared = prepareScopeCompilation(scopeInput, context);
     if (prepared.status !== 'compiled') throw new Error('expected scope preparation');
     const input: IRNode = { type: 'node', id: 'a', position: [12, 24], text: 'hello' };
     const node = compileNode(input, {
       ...context,
-      scope: prepared.compiled.scope,
+      context: prepared.compiled.scope,
       irPath: `${context.irPath}.children[0].node`,
     });
     if (node.status !== 'compiled') throw new Error('expected node');
@@ -337,7 +337,7 @@ describe('独立元素编译', () => {
 
   it('资源局部编号在组装时重映射，旧片段保持不变', () => {
     const environment = createCompileEnvironment();
-    const context = { environment, scope: resolveScopeContext({}, environment), irPath: 'node' };
+    const context = { environment, context: resolveScopeContext({}, environment), irPath: 'node' };
     const first = compileNode(
       {
         type: 'node',
@@ -388,7 +388,7 @@ describe('独立元素编译', () => {
       { type: 'coordinate', id: 'b', position: { direction: 'right', of: 'a' } },
       {
         environment,
-        scope: resolveScopeContext({}, environment),
+        context: resolveScopeContext({}, environment),
         irPath: 'b',
         namespace: { bindings: new Map([['a', { state: 'pending', binding }]]) },
       },
@@ -403,7 +403,7 @@ describe('独立元素编译', () => {
       },
       {
         environment,
-        scope: resolveScopeContext({}, environment),
+        context: resolveScopeContext({}, environment),
         irPath: 'path',
         namespace: { bindings: new Map([['a', { state: 'pending', binding }]]) },
       },
@@ -427,7 +427,7 @@ describe('独立元素编译', () => {
     };
     const result = compilePath(input, {
       environment,
-      scope: resolveScopeContext({}, environment),
+      context: resolveScopeContext({}, environment),
       irPath: 'scene.children[0].path',
     });
     if (result.status !== 'compiled') throw new Error('expected compiled');
@@ -444,7 +444,7 @@ describe('独立元素编译', () => {
     const environment = createCompileEnvironment();
     const result = compileNode(input, {
       environment,
-      scope: resolveScopeContext({}, environment),
+      context: resolveScopeContext({}, environment),
       irPath: 'scene.children[0].node',
     });
     expect(result.status).toBe('compiled');
@@ -463,7 +463,7 @@ describe('独立元素编译', () => {
     const input: IRNode = { type: 'node', position: [0, 0] };
     const result = compileNode(input, {
       environment,
-      scope: resolveScopeContext(scope, environment),
+      context: resolveScopeContext(scope, environment),
       irPath: 'scene.children[0].scope.children[0].node',
     });
     if (result.status !== 'compiled') throw new Error('expected compiled');

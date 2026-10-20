@@ -15,6 +15,7 @@ import type { CompileOutput } from './element';
 import { assembleCompileOutputs } from './element';
 import type { CompileEnvironment } from './environment';
 import { projectNodeLayoutObservation } from './node';
+import type { CompileProvenanceTracker } from './orchestration';
 import {
   createCompileContext,
   dispatchCompileObservations,
@@ -45,6 +46,8 @@ export type SceneCompilationMetadata = Readonly<{
   spatialHandles?: SpatialHandleIndex;
   /** 与输出顺序配对的来源信息 */
   provenance?: CompileProvenance;
+  /** 本次来源记录，组装时随图元复制同步转移 */
+  provenanceTracker?: CompileProvenanceTracker;
 }>;
 
 /** 完成 Scene 组装的共同底层，不执行元素编译 */
@@ -86,13 +89,13 @@ export const assemblePreparedScene = <const TComposites extends ReadonlyArray<An
 };
 
 /** 按声明顺序组装局部输出与同版本附属贡献，不重算任何元素 */
-export const assembleSceneCompilation = (
+export const assembleSceneCompilation = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
   root: Pick<IRScene, 'viewBox' | 'animations'>,
   outputs: ReadonlyArray<CompileOutput>,
   environment: CompileEnvironment,
   metadata: SceneCompilationMetadata = {},
-): PreparedSceneCompilation<ReadonlyArray<AnyCompositeDefinition>> => {
-  const output = assembleCompileOutputs(outputs, environment);
+): PreparedSceneCompilation<TComposites> => {
+  const output = assembleCompileOutputs(outputs, environment, metadata.provenanceTracker);
   let bounds: AxisAlignedBounds | undefined;
   for (const contribution of output.bounds) {
     bounds = collectLayoutBounds(bounds, contribution.points, contribution.shadow);
@@ -124,8 +127,9 @@ export const assembleSceneCompilation = (
             environment,
           ),
         );
-  return assemblePreparedScene(root, output.primitives, output.resources, bounds, environment, {
+  return assemblePreparedScene<TComposites>(root, output.primitives, output.resources, bounds, environment, {
     ...metadata,
+    provenance: metadata.provenanceTracker?.capture(output.primitives) ?? metadata.provenance,
     artifacts: orderCompileArtifacts(artifacts),
     diagnostics: orderCompileWarnings(diagnostics),
     observerOutputs,

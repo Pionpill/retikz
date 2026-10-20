@@ -378,6 +378,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: 'Weave 编译接入', en: 'Weave compilation integration' },
+          content: {
+            zh: '基础元素输入通过 Weave 构建声明树，持有 Core 编译环境、状态与名称读取关系，并生成同版本的 Scene 和来源信息。完整输入替换重新准备候选树，失败保留已发布结果。Composite 保留 Core 完整准备路径；原根 Node 填充色特例移除，当前更新发布 replaceScene，批次局部调度尚未接入。',
+            en: 'Basic-element input now builds a Weave declaration tree with Core compilation state, environment and name-read relations, producing a matching Scene and provenance. Full input replacement prepares a candidate tree; failure preserves the published result. Composite input retains Core full preparation. The root-node fill special case is removed; updates currently publish replaceScene, while batch-local scheduling remains unconnected.',
+          },
+        },
+        {
           label: { zh: '单元素编译与可复用状态', en: 'Element compilation and reusable state' },
           content: {
             zh: 'Core 新增 compileNode / compileCoordinate / compilePath / compileScope 与对应 CompiledXxx 状态、显式 CompileEnvironment、引用读取和输出组装能力，供 Reconciler 持有与调度。Scope 保留准备与包络完成两个阶段；本次不实现 Weave 调度算法。',

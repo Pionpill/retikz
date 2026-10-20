@@ -16,8 +16,8 @@ export const compileNode = (input: IRNode, context: NodeCompileContext): Element
     const layout = compileNodeLayout(input, context.irPath, {
       ...context.environment,
       ...workspace,
-      scopeDefaults: context.scope.defaults,
-      mode: context.scope.theme.mode,
+      scopeDefaults: context.context.defaults,
+      mode: context.context.theme.mode,
       childProposal: context.proposal,
     });
     const primitives = emitNodePrimitives(layout, context.environment.round, workspace.paint.register);

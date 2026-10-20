@@ -204,8 +204,10 @@ describe('Core Runtime Computation initial full run', () => {
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
     });
 
-    expect(result.outcome).toBe(RuntimeComputationKind.Incremental);
-    expect(session.result(program).value.patch?.operations).toEqual([expect.objectContaining({ kind: 'update' })]);
+    expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
+    expect(session.result(program).value.patch?.operations).toEqual([
+      expect.objectContaining({ kind: 'replaceScene' }),
+    ]);
   });
 
   it('保留固定 Computation id，并与 compileToScene 的完整结果等价', () => {
@@ -582,7 +584,7 @@ describe('Core Runtime Computation observed output', () => {
     expect(session.result(program).value).toBe(before);
   });
 
-  it('keeps the existing incremental path when observers are empty', () => {
+  it('prepares a consistent replacement when observers are empty', () => {
     const program = createCoreComputation({ onWarn: () => {} }, { observers: [] });
     const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
@@ -599,7 +601,7 @@ describe('Core Runtime Computation observed output', () => {
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
     });
 
-    expect(result.outcome).toBe(RuntimeComputationKind.Incremental);
+    expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
     expect(session.result(program).value.output.observerOutputs).toEqual([]);
   });
 });
@@ -960,7 +962,7 @@ describe('Core Runtime Computation full fallback update', () => {
   });
 });
 
-describe('Core Runtime Computation incremental style update', () => {
+describe('Core Runtime Computation replacement style update', () => {
   it('填充与其它样式同时变化时保留完整输出', () => {
     const initial: IRScene = {
       version: 1,
@@ -987,7 +989,7 @@ describe('Core Runtime Computation incremental style update', () => {
     expect(session.result(program).value.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
   });
 
-  it('只重编单个 stable root Node，并发布原子 primitive update Patch', () => {
+  it('完整输入替换发布配对的新树结果与原子 replaceScene Patch', () => {
     const records: Array<PerformanceTraceRecord> = [];
     const initial: IRScene = {
       version: 1,
@@ -1041,35 +1043,30 @@ describe('Core Runtime Computation incremental style update', () => {
     });
     const after = session.result(program).value;
 
-    expect(result.outcome).toBe(RuntimeComputationKind.Incremental);
+    expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
     expect(after.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
     expect(after.patch?.operations).toHaveLength(1);
 
     const operation = after.patch?.operations[0];
 
-    expect(operation).toMatchObject({ kind: 'update' });
-
-    if (operation?.kind !== 'update') throw new Error('expected one update operation');
-
-    expect(operation.identity.path).toEqual(['root', 'node', 'a', 'emission', 'node:group', '0']);
-    expect(operation.subtree.root).toEqual(operation.identity);
-    expect(operation.subtree.topology.map(node => node.primitivePath)).toEqual([[], [0], [1]]);
-    expect(after.snapshot.scene.primitives[1]).toBe(before.scene.primitives[1]);
+    expect(operation).toMatchObject({ kind: 'replaceScene' });
+    expect(after.snapshot.scene.primitives[1]).toEqual(before.scene.primitives[1]);
+    expect(before.scene.primitives).toEqual(compileToScene(initial, { onWarn: () => {} }).scene.primitives);
     expect(records).toEqual([
       {
         owner: CORE_SOURCE_KEY,
         phase: ReconcilerTracePhase.Update,
         unit: CoreTraceUnit.IrChild,
-        outcome: PerformanceTraceOutcome.Incremental,
+        outcome: PerformanceTraceOutcome.Fallback,
         visited: 2,
-        reused: 1,
-        changed: 1,
+        reused: 0,
+        changed: 2,
       },
       {
         owner: CORE_SOURCE_KEY,
         phase: ReconcilerTracePhase.Update,
         unit: ReconcilerTraceUnit.SceneChange,
-        outcome: PerformanceTraceOutcome.Incremental,
+        outcome: PerformanceTraceOutcome.Fallback,
         visited: 1,
         reused: 0,
         changed: 1,

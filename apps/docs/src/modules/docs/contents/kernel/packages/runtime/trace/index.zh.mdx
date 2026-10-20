@@ -362,7 +362,7 @@ console.log(coreRecords.map(record => [record.owner, record.phase, record.unit, 
 coreRuntime.dispose();
 ```
 
-Core 的全量路径报告 `ir-child` 工作量；更新时还可报告 `scene-change`。受支持的根节点样式增量路径报告 `incremental` 及访问、复用和变化计数；不能增量处理时回退全量路径，记录 `fallback`。这说明算法采用了什么路径，不表示 Runtime 替 Core 推断了计数。
+Core 的全量路径报告 `ir-child` 工作量；更新时还可报告 `scene-change`。当前 Reconciler 对完整输入替换重新准备 Weave 或 Core 完整结果，记录 `fallback`；强制完整执行记录 `full`。原根节点填充色特例已移除，批次局部调度尚未接入，不报告虚构的复用计数。这说明算法采用了什么路径，不表示 Runtime 替 Core 推断了计数。
 
 独立调用 `compileToScene` 时，可用 Core 的公开阶段与单位创建 reporter。`CoreTracePhase` 描述编译阶段，`CoreTraceUnit` 描述被计数的 IR / Scene 实体；传入 reporter 的 `phases` 才是这次执行允许报告的组合。下面沿用前文的 `PerformanceTraceOutcome` 导入：
 

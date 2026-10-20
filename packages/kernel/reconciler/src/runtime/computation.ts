@@ -15,9 +15,10 @@ import {
 import type { RuntimeTraceReporter } from '@retikz/runtime';
 
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
-import { coreChangeSetMatchesSnapshots, createCoreSnapshotIndex, tryCompileRootNodeStyleUpdate } from '../reconcile';
+import { coreChangeSetMatchesSnapshots, createCoreSnapshotIndex } from '../reconcile';
 import { createFullSceneRuntimeSnapshot, freezeComputationOutput } from '../scene';
 import { ReconcilerTracePhase, ReconcilerTraceUnit } from '../trace';
+import { isWeaveScene, prepareWeaveCompilation } from '../weave';
 import { copyCoreComputationOptions } from './options';
 import { CORE_COMPUTATION_ID, CoreComputationDiagnosticCode } from './public';
 import type {
@@ -97,15 +98,16 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
         },
         diagnostics: () => Object.freeze([]),
       });
-      const compiled = prepareSceneCompilation(
-        source,
-        {
-          ...fixedOptions,
-          ...(compositeInputSource === undefined ? {} : { compositeInputs: view.snapshot(compositeInputSource).value }),
-          trace: counter,
-        },
-        { captureProvenance: true, observers },
-      );
+      const compileOptions = {
+        ...fixedOptions,
+        ...(compositeInputSource === undefined ? {} : { compositeInputs: view.snapshot(compositeInputSource).value }),
+        trace: counter,
+      };
+      validateCompositeInputBindings(source, compileOptions.compositeInputs);
+      const weave = isWeaveScene(source) ? prepareWeaveCompilation(source, compileOptions, { observers }) : undefined;
+      const compiled =
+        weave?.compilation ?? prepareSceneCompilation(source, compileOptions, { captureProvenance: true, observers });
+      if (weave !== undefined) visited = weave.visited;
       freezeComputationOutput(compiled.result);
       freezeComputationOutput(compiled.diagnostics);
       if (compiled.provenance === undefined) {
@@ -162,11 +164,15 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
         kind: RuntimeComputationKind.Full,
         result: Object.freeze({
           publicRead,
-          state: Object.freeze({ source, index: createCoreSnapshotIndex(source) }),
+          state: Object.freeze({
+            source,
+            index: createCoreSnapshotIndex(source),
+            ...(weave === undefined ? {} : { weave: { current: weave.root, candidate: null } }),
+          }),
         }),
       };
     },
-    update: (previous, view, context) => {
+    update: (previous, view) => {
       if (view.phase !== RuntimeComputationPhase.Update) return { kind: RuntimeComputationKind.Fallback };
       if (compositeInputSource !== undefined && view.isChanged(compositeInputSource))
         return { kind: RuntimeComputationKind.Fallback };
@@ -196,34 +202,8 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
         };
       }
 
-      const incremental = tryCompileRootNodeStyleUpdate(
-        previous,
-        nextSource,
-        nextIndex,
-        fixedOptions,
-        view.baseRevision,
-        view.candidateRevision,
-      );
-      if (incremental === undefined) return { kind: RuntimeComputationKind.Fallback };
-
-      context.trace.report({
-        phase: ReconcilerTracePhase.Update,
-        unit: CoreTraceUnit.IrChild,
-        outcome: PerformanceTraceOutcome.Incremental,
-        visited: incremental.reused + 1,
-        reused: incremental.reused,
-        changed: 1,
-      });
-      context.trace.report({
-        phase: ReconcilerTracePhase.Update,
-        unit: ReconcilerTraceUnit.SceneChange,
-        outcome: PerformanceTraceOutcome.Incremental,
-        visited: incremental.operationCount,
-        reused: 0,
-        changed: incremental.operationCount,
-      });
-
-      return { kind: RuntimeComputationKind.Incremental, result: incremental.result };
+      // 批次调度接入前，完整替换统一准备新树，避免只更新 Scene 而保留旧节点缓存
+      return { kind: RuntimeComputationKind.Fallback };
     },
     observeCommit: event => {
       event.result.value.output.diagnostics.forEach(warningSink);

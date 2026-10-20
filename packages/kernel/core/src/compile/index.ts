@@ -1,4 +1,4 @@
-export { formatCompileOccurrence, isNodeLayoutCompileArtifact } from './artifact';
+export { formatCompileChildPath, formatCompileOccurrence, isNodeLayoutCompileArtifact } from './artifact';
 export { compileToScene, observeCompileToScene, prepareSceneCompilation } from './compile';
 export { CompileWarningCode } from './constants';
 export { samplePathRoute } from './path';
@@ -39,5 +39,6 @@ export * from './environment';
 export { assembleSceneCompilation } from './output';
 export type { SceneCompilationMetadata } from './output';
 
-export { createCompileObservationRuntime } from './orchestration';
-export type { CompileObservationRuntime } from './orchestration';
+export { createCompileObservationRuntime, createCompileProvenanceTracker } from './orchestration';
+export type { CompileObservationRuntime, CompileProvenanceTracker } from './orchestration';
+export type { NodeLayout } from './node';

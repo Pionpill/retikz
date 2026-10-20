@@ -62,8 +62,9 @@ import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect as rectOps } from '../../shared/geometry';
 import { cloneAndFreezeJson } from '../../shared/json';
-import { formatCompileOccurrence } from '../artifact';
+import { formatCompileChildPath, formatCompileOccurrence } from '../artifact';
 import { CompileWarningCode } from '../constants';
+import { projectPublishedCompileLayout, projectScopeCompileLayouts } from '../element';
 import { NamespaceStack } from '../namespace';
 import type { NodeLayout } from '../node';
 import {
@@ -443,7 +444,7 @@ export const compileChildrenToPrimitives = (
     semanticOwner?: CompileSemanticOwner,
   ): void => {
     const { scopeChain, primitiveSink, locatorPrefix, layoutSink, scopeDefaults } = frame;
-    const nodeIrPath = `${locatorPrefix}children[${index}].node`;
+    const nodeIrPath = formatCompileChildPath(locatorPrefix, index, 'node');
 
     const layout = compileNodeLayout(child, nodeIrPath, {
       ...runtime.context,
@@ -518,7 +519,7 @@ export const compileChildrenToPrimitives = (
     occurrence: CompileOccurrenceLocator,
   ): void => {
     const { scopeChain, locatorPrefix, layoutSink } = frame;
-    const coordinateIrPath = `${locatorPrefix}children[${index}].coordinate`;
+    const coordinateIrPath = formatCompileChildPath(locatorPrefix, index, 'coordinate');
     const localCenter = resolvePosition(child.position, positionContextOf(scopeChain))?.localPoint;
     if (localCenter === undefined) {
       throw createLayoutProbeRecoverableError(
@@ -554,7 +555,7 @@ export const compileChildrenToPrimitives = (
     semanticOwner?: CompileSemanticOwner,
   ): void => {
     const { scopeChain, primitiveSink, locatorPrefix, pathSink, scopeDefaults } = frame;
-    const pathIrPath = `${locatorPrefix}children[${index}].path`;
+    const pathIrPath = formatCompileChildPath(locatorPrefix, index, 'path');
     const placeholder = makePathPlaceholder();
     primitiveSink.push(placeholder);
     const pending: PendingPathEmission = {
@@ -584,53 +585,6 @@ export const compileChildrenToPrimitives = (
     pathSink.push(pending);
   };
 
-  /** 将已按 parent ancestor chain 发布的 layout 投影并返回新布局，不修改已发布对象当前 Scope own chain */
-  const projectPublishedLayout = (
-    layout: NodeLayout,
-    parentChain: ReadonlyArray<Transform>,
-    ownChain: ReadonlyArray<Transform>,
-  ): NodeLayout => {
-    if (ownChain.length === 0) return layout;
-
-    const projectAcrossParent = (point: IRPosition): IRPosition => {
-      const parentPoint = parentChain.length === 0 ? point : scopeTransformsContext.inverse(point, parentChain);
-      const transformedParent = scopeTransformsContext.apply(parentPoint, ownChain);
-      return parentChain.length === 0
-        ? transformedParent
-        : scopeTransformsContext.apply(transformedParent, parentChain);
-    };
-
-    const [x, y] = projectAcrossParent([layout.geometry.rect.x, layout.geometry.rect.y]);
-    const [contentX, contentY] = projectAcrossParent(layout.geometry.contentCenter);
-    let rotateDegrees = 0;
-    let scaleX = 1;
-    let scaleY = 1;
-
-    for (const transform of ownChain) {
-      if (transform.kind === 'rotate') rotateDegrees += transform.degrees;
-      if (transform.kind === 'scale') {
-        scaleX *= transform.x;
-        scaleY *= transform.y ?? transform.x;
-      }
-    }
-
-    const rect = {
-      ...layout.geometry.rect,
-      x,
-      y,
-      rotate: (layout.geometry.rect.rotate ?? 0) + (rotateDegrees * Math.PI) / 180,
-      width: layout.geometry.rect.width * Math.abs(scaleX),
-      height: layout.geometry.rect.height * Math.abs(scaleY),
-    };
-    const margin = {
-      top: layout.geometry.margin.top * Math.abs(scaleY),
-      right: layout.geometry.margin.right * Math.abs(scaleX),
-      bottom: layout.geometry.margin.bottom * Math.abs(scaleY),
-      left: layout.geometry.margin.left * Math.abs(scaleX),
-    };
-    return { ...layout, geometry: { ...layout.geometry, rect, margin, contentCenter: [contentX, contentY] } };
-  };
-
   /** 有 scope.id 时先注册占位 layout，等子树 bbox 算出后再替换 */
   const registerScopeLayoutPlaceholder = (
     child: ScopeChild,
@@ -638,7 +592,7 @@ export const compileChildrenToPrimitives = (
   ): ScopeLayoutPlaceholder => {
     const { index, frame } = input;
     const { locatorPrefix } = frame;
-    const scopeIrPath = `${locatorPrefix}children[${index}].scope`;
+    const scopeIrPath = formatCompileChildPath(locatorPrefix, index, 'scope');
     const parentFrameDepth = runtime.state.namespaceStack.depth - 1;
     if (child.id === undefined) {
       return { parentFrameDepth };
@@ -657,7 +611,7 @@ export const compileChildrenToPrimitives = (
   const emitScopeGroup = (child: ScopeChild, input: EmitScopeGroupContext): string | undefined => {
     const { index, scopeTransforms, scopePrimitiveSink, frame, resolvedClipShape, semanticOwner } = input;
     const { primitiveSink, locatorPrefix } = frame;
-    const scopeIrPath = `${locatorPrefix}children[${index}].scope`;
+    const scopeIrPath = formatCompileChildPath(locatorPrefix, index, 'scope');
     const hasScopeTransforms = scopeTransforms.length > 0;
     const isPrunable =
       (input.framePrimitives?.length ?? 0) === 0 &&
@@ -711,7 +665,7 @@ export const compileChildrenToPrimitives = (
   ): void => {
     const { locatorPrefix, scopeDefaults } = frame;
     const scopeOccurrence = generatedOccurrence ?? {
-      sourcePath: `${locatorPrefix}children[${index}].scope`,
+      sourcePath: formatCompileChildPath(locatorPrefix, index, 'scope'),
       expansionPath: [],
     };
     const scopeAncestors: TraversalFrame['ancestors'] = [
@@ -720,12 +674,12 @@ export const compileChildrenToPrimitives = (
     ];
     const themePath =
       generatedOccurrence === undefined
-        ? `${locatorPrefix}children[${index}].scope.theme`
+        ? `${formatCompileChildPath(locatorPrefix, index, 'scope')}.theme`
         : `${formatCompileOccurrence(generatedOccurrence)}.scope.theme`;
     const theme = resolveTheme(frame.theme, child.theme, themePath, context.themeStyles);
     const scopeGeometryContext = {
       positionContext: positionContextOf(frame.scopeChain),
-      irPath: `${locatorPrefix}children[${index}].scope`,
+      irPath: formatCompileChildPath(locatorPrefix, index, 'scope'),
       onWarn: runtime.context.onWarn,
     };
     const positionTarget = resolveScopePositionTarget(child, scopeGeometryContext);
@@ -769,7 +723,7 @@ export const compileChildrenToPrimitives = (
         childProposal: frame.childProposal,
         scopeChain: preliminaryScopeChain,
         primitiveSink: scopePrimitiveSink,
-        locatorPrefix: `${locatorPrefix}children[${index}].scope.`,
+        locatorPrefix: `${formatCompileChildPath(locatorPrefix, index, 'scope')}.`,
         layoutSink: scopeLayouts,
         pathSink: scopePendingPaths,
         scopeDefaults: resolveScopeDefaults(child, scopeDefaults),
@@ -841,7 +795,7 @@ export const compileChildrenToPrimitives = (
           : scopeTransforms.slice(0, scopeTransforms.length - preliminaryTransforms.length);
 
       for (const layout of scopePublications) {
-        const projected = projectPublishedLayout(layout, frame.scopeChain, postTransforms);
+        const projected = projectPublishedCompileLayout(layout, frame.scopeChain, postTransforms);
         runtime.state.namespaceStack.replacePublishedLayout(layout, projected);
         frame.publicationSink.push(projected);
       }
@@ -886,13 +840,8 @@ export const compileChildrenToPrimitives = (
         scopeTransforms.length === 0
           ? intrinsicLayout
           : scopeTransformsContext.project(intrinsicLayout, scopeTransforms);
-      if (child.id === undefined) {
-        for (const scopeLayout of scopeLayouts) {
-          frame.layoutSink.push(
-            scopeTransforms.length === 0 ? scopeLayout : scopeTransformsContext.project(scopeLayout, scopeTransforms),
-          );
-        }
-      } else {
+      frame.layoutSink.push(...projectScopeCompileLayouts(child, intrinsicLayout, scopeLayouts, scopeTransforms));
+      if (child.id !== undefined) {
         const globalEnvelope = scopeTransformsContext.project(finalEnvelope, frame.scopeChain);
         runtime.state.namespaceStack.replaceLayout(
           child.id,
@@ -900,7 +849,6 @@ export const compileChildrenToPrimitives = (
           layoutPlaceholder.parentFrameDepth,
           layoutPlaceholder.placeholderLayout,
         );
-        frame.layoutSink.push(finalEnvelope);
         frame.publicationSink.push(globalEnvelope);
       }
 
@@ -1204,7 +1152,7 @@ export const compileChildrenToPrimitives = (
       const previousLayout = change.entry.layout;
       const alreadyPublished = publishedLayouts.get(previousLayout);
       const projectedLayout =
-        alreadyPublished ?? projectPublishedLayout(previousLayout, namespaceParentChain, namespaceTransforms);
+        alreadyPublished ?? projectPublishedCompileLayout(previousLayout, namespaceParentChain, namespaceTransforms);
       const projectedChange = { ...change, entry: { ...change.entry, layout: projectedLayout } };
 
       const changeOccurrence = transaction.namespaceChangeOccurrences[changeIndex] ?? occurrence;
@@ -1653,7 +1601,7 @@ export const compileChildrenToPrimitives = (
     compositeDepth: number,
     semanticOwner?: CompileSemanticOwner,
   ): void => {
-    const compositeIrPath = `${frame.locatorPrefix}children[${index}]`;
+    const compositeIrPath = formatCompileChildPath(frame.locatorPrefix, index);
     const binding = bindComposite(child, runtime.context.composites);
     const { key } = binding;
     if (binding.kind === 'unregistered') {
@@ -2452,7 +2400,7 @@ export const compileChildrenToPrimitives = (
         }
       });
     } catch (thrown) {
-      const entityPath = `${frame.locatorPrefix}children[${index}]`;
+      const entityPath = formatCompileChildPath(frame.locatorPrefix, index);
       options.observeFailurePath?.('namespace' in child ? entityPath : `${entityPath}.${child.type}`);
       if (isFatalProbeError(thrown)) throw thrown;
 
@@ -2484,7 +2432,7 @@ export const compileChildrenToPrimitives = (
         : runtime.state.provenanceTracker.createChildOwners(children, frame.semanticOwner, generated);
 
     for (const [i, child] of children.entries()) {
-      const entityPath = `${frame.locatorPrefix}children[${i}]`;
+      const entityPath = formatCompileChildPath(frame.locatorPrefix, i);
       const occurrence = generatedScopeOccurrence
         ? {
             sourcePath: generatedScopeOccurrence.sourcePath,

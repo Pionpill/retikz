@@ -84,6 +84,22 @@ export const createCompileProvenanceTracker = (): CompileProvenanceTracker => {
       };
       primitives.forEach(visit);
     },
+    transferPrimitives: (original, copied) => {
+      const transfer = (source: ScenePrimitive, target: ScenePrimitive): void => {
+        const record = records.get(source);
+        if (record !== undefined) records.set(target, record);
+        if (source.type === 'group' && target.type === 'group') {
+          source.children.forEach((child, index) => {
+            const copy = target.children[index];
+            transfer(child, copy);
+          });
+        }
+      };
+      original.forEach((source, index) => {
+        const target = copied[index];
+        transfer(source, target);
+      });
+    },
     capture: primitives => {
       const emissions: Array<CompileProvenanceEmission> = [];
       const visit = (items: ReadonlyArray<ScenePrimitive>, prefix: ReadonlyArray<number>): void => {

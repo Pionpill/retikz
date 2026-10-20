@@ -31,8 +31,8 @@ export const compilePath = (input: IRPathBase, context: PathCompileContext): Ele
     };
     const resolution = resolvePath(path, {
       ...context.environment,
-      scopeDefaults: context.scope.defaults,
-      mode: context.scope.theme.mode,
+      scopeDefaults: context.context.defaults,
+      mode: context.context.theme.mode,
       scopeChain: workspace.scopeChain,
       targetResolver,
       irPath: context.irPath,
@@ -43,8 +43,8 @@ export const compilePath = (input: IRPathBase, context: PathCompileContext): Ele
         path,
         irPath: context.irPath,
         scopeChain: workspace.scopeChain,
-        scopeDefaults: context.scope.defaults,
-        theme: context.scope.theme,
+        scopeDefaults: context.context.defaults,
+        theme: context.context.theme,
         occurrence: context.occurrence ?? { sourcePath: context.irPath, expansionPath: [] },
         ancestors: context.ancestors ?? [],
         observationSink: observations,

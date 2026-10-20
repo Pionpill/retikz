@@ -57,7 +57,7 @@ export type ElementCompileOptions = Readonly<{
   /** 稳定编译配置、能力定义与服务 */
   environment: CompileEnvironment;
   /** 父级有效上下文 */
-  scope: ElementCompileContext;
+  context: ElementCompileContext;
   /** 诊断位置，不作为元素身份 */
   irPath: string;
   /** 当前声明位置可见的名称空间 */

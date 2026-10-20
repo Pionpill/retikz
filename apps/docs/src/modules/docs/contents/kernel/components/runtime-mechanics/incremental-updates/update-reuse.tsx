@@ -81,12 +81,6 @@ const UpdateReuse: FC<UpdateReuseProps> = props => {
             label: { text: t.edge2[0], font: { size: 12 }, textColor: 'gray' },
             routing: { kind: 'orthogonal', cornerRadius: 0 },
           },
-          {
-            source: 'local',
-            target: 'full',
-            label: { text: t.edge3[0], font: { size: 12 }, textColor: 'gray' },
-            routing: { kind: 'orthogonal', cornerRadius: 0 },
-          },
           { source: 'full', target: 'replace', routing: { kind: 'orthogonal', cornerRadius: 0 } },
         ]}
       />

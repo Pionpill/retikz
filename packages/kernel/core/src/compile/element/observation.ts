@@ -27,8 +27,8 @@ export const collectElementObservation = (
       scopeChain: [],
       value,
       observerKeys: output.keys,
-      theme: context.scope.theme,
-      scopeDefaults: context.scope.defaults,
+      theme: context.context.theme,
+      scopeDefaults: context.context.defaults,
     },
   ];
 };

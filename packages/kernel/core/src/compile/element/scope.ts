@@ -27,7 +27,7 @@ export const prepareScopeCompilation = (
   runElementCompilation(context, workspace => {
     const geometry = { ...workspace, irPath: context.irPath };
     return Object.freeze({
-      scope: resolveScopeContext(input, context.environment, context.scope, context.irPath),
+      scope: resolveScopeContext(input, context.environment, context.context, context.irPath),
       positionTarget: resolveScopePositionTarget(input, geometry),
       preliminaryTransforms: resolvePreliminaryScopeTransforms(input, geometry),
     });
@@ -87,7 +87,7 @@ export const compileScope = (
         : collectElementObservation(
             {
               ...context,
-              scope: preparation.scope,
+              context: preparation.scope,
               occurrence: {
                 ...occurrence,
                 expansionPath: [...occurrence.expansionPath, { kind: CompileExpansionKind.Clip, index: 0 }],
@@ -109,7 +109,7 @@ export const compileScope = (
         observations: [
           ...clipObservations,
           ...collectElementObservation(
-            { ...context, scope: preparation.scope },
+            { ...context, context: preparation.scope },
             { kind: 'scope' },
             ScopeOwnerOutputSchema,
             () => ({

@@ -2,6 +2,7 @@ import { boundsToRect } from '@retikz/math';
 
 import type { ScenePrimitive } from '../../contract';
 import type { CompileEnvironment } from '../environment';
+import type { CompileProvenanceTracker, CompileSemanticOwner } from '../orchestration';
 import { collectLayoutBounds } from '../orchestration';
 import { optionalVisualBoundsOfPrimitives } from '../orchestration';
 import { createClipRegistry, createPaintRegistry, remapPrimitiveResources } from '../resource';
@@ -12,6 +13,7 @@ import type { CompiledScope, CompileOutput } from './types';
 export const assembleCompileOutputs = (
   outputs: ReadonlyArray<CompileOutput>,
   environment: CompileEnvironment,
+  provenance?: CompileProvenanceTracker,
 ): CompileOutput => {
   const paint = createPaintRegistry(environment.round);
   const clip = createClipRegistry(environment.round, environment.clips, environment.maxClipDepth);
@@ -29,9 +31,11 @@ export const assembleCompileOutputs = (
         ids.set(resource.id, clip.importPath(resource.path));
       }
     }
+    const primitives = output.primitives.map(primitive => remapPrimitiveResources(primitive, ids));
+    provenance?.transferPrimitives(output.primitives, primitives);
     fragments.push({
       zIndex: output.zIndex ?? 0,
-      primitives: output.primitives.map(primitive => remapPrimitiveResources(primitive, ids)),
+      primitives,
     });
     bounds.push(...output.bounds);
     nodeLayouts.push(...(output.nodeLayouts ?? []));
@@ -51,12 +55,15 @@ export const assembleScopeOutput = (
   scope: CompiledScope,
   children: ReadonlyArray<CompileOutput>,
   environment: CompileEnvironment,
+  provenance?: CompileProvenanceTracker,
+  owner?: CompileSemanticOwner,
 ): CompileOutput => {
   const ownGroup = { ...scope.group, children: scope.output.primitives };
-  const childOutput = assembleCompileOutputs(children, environment);
+  const childOutput = assembleCompileOutputs(children, environment, provenance);
   const merged = assembleCompileOutputs(
     [childOutput, { ...scope.output, zIndex: undefined, primitives: [ownGroup] }],
     environment,
+    provenance,
   );
   const group = merged.primitives[merged.primitives.length - 1] as typeof ownGroup;
   const frame = group.children;
@@ -69,6 +76,7 @@ export const assembleScopeOutput = (
     group.id === undefined &&
     group.clipRef === undefined;
   const primitives: Array<ScenePrimitive> = prunable ? [] : [{ ...group, children: [...frame, ...nested] }];
+  if (owner !== undefined) provenance?.recordPrimitives(primitives, owner, 'scope');
   const bounds: Array<CompileOutput['bounds'][number]> = [];
   for (const child of children) {
     for (const contribution of child.bounds) {

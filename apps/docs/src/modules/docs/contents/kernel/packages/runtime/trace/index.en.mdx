@@ -374,7 +374,7 @@ console.log(coreRecords.map(record => [record.owner, record.phase, record.unit, 
 coreRuntime.dispose();
 ```
 
-Core's full path reports `ir-child` work; updates can additionally report `scene-change`. Its supported root-node style incremental path reports `incremental` with visited, reused and changed counts. Unsupported incremental work falls back to the full path and reports `fallback`. These describe the algorithm's chosen path; Runtime does not infer Core's counts.
+Core's full path reports `ir-child` work; updates can additionally report `scene-change`. Reconciler currently prepares a new Weave or full Core result for complete input replacement and reports `fallback`; forced full execution reports `full`. The previous root-node fill special case has been removed. Batch-local scheduling is not connected yet, so reuse is not reported. These describe the algorithm's chosen path; Runtime does not infer Core's counts.
 
 When calling `compileToScene` independently, create a reporter with Core's public phases and units. `CoreTracePhase` names compilation stages, while `CoreTraceUnit` names the IR / Scene entities being counted. The reporter's `phases` declares the combinations allowed for this execution. This example reuses the `PerformanceTraceOutcome` import above:
 

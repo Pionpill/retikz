@@ -410,6 +410,8 @@ export type CompileProvenanceTracker = Readonly<{
   materializePrimitives: (primitives: ReadonlyArray<ScenePrimitive>) => Array<ScenePrimitive>;
   /** 记录 owner 产生的 primitive tree，不覆盖已登记的 descendant owner */
   recordPrimitives: (primitives: ReadonlyArray<ScenePrimitive>, owner: CompileSemanticOwner, role: string) => void;
+  /** 将同构复制的来源转移到新图元 */
+  transferPrimitives: (original: ReadonlyArray<ScenePrimitive>, copied: ReadonlyArray<ScenePrimitive>) => void;
   /** 完整编译后关联最终图元位置并捕获来源结果 */
   capture: (primitives: ReadonlyArray<ScenePrimitive>) => CompileProvenance;
 }>;
