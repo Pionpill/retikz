@@ -96,3 +96,9 @@ Weave 按声明组织已完成贡献，调用 `assembleCompileOutputs`、`assemb
 现有完整准备链路是 Composite 的有效计算边界；当前单元素接口不等于已提供可重建全部 Composite 展开树与绑定的协议。在 Core 提供与产物同版本的展开声明和必要来源交接契约之前，含 Composite 的输入继续走已有完整准备路径，不伪造一棵声称可局部更新的 WeaveTree。替换现有完整输入链路前必须补齐该交接或明确保留该完整计算边界；不能以直接编译基础元素为由缩减既有输入能力。
 
 新增的连接能力先验证基础元素树、单元素计算与完整结果的闭环，再接入批次调度。本文不宣称已实现结构更新算法、属性级失效、Worker 或 Render Patch 优化。React / Vanilla 的 authoring 与静态 compileToScene 行为保持不变，后续共享 Reconciler 接入同一契约，不建立 adapter 专用编译分支。
+
+## 完整输入与批次入口边界
+
+完整 IR 输入继续通过 Source 捕获并进行内容相等判断，变化后完整准备新树与输出。移除旧 CoreChange 变化提示、前后快照索引比对及 ChangeSetMismatch 诊断，不保留兼容出口。该决定替代 [013](./013-incremental-core-compile.md) 与 [055](./055-reconciler-extraction.md) 中有关 Core 变化提示及其私有索引的约定；Runtime 的通用 ChangeSet 契约不受影响。
+
+后续增量修改采用 [059](./059-weave-batch-operations.md) 的显式批次契约，批次不是完整输入的附加提示。图元来源身份、Scene 快照、原子提交与完整替换能力继续保留；删除输入 diff 不改变 Render 和水合的图元定位契约。

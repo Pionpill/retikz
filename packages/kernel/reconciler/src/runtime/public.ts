@@ -7,24 +7,15 @@ import type {
   CompileWarning,
   CompositeArtifactOf,
 } from '@retikz/core';
-import type { ValueOf } from '@retikz/foundation';
 import type { RuntimeComputationDefinition, RuntimeSourceToken } from '@retikz/runtime';
 
-import { CORE_SOURCE_KEY } from '../reconcile';
+import { CORE_SOURCE_KEY } from '../constants';
 import type { ScenePatch, SceneRuntimeSnapshot } from '../scene';
 import type { CoreCompositeInputSourceDefinition } from './composite-input';
 import type { CoreComputationRead, CoreComputationResult, CoreComputationResultInput } from './types';
 
 /** Core compile Computation 的固定 identity */
 export const CORE_COMPUTATION_ID = Object.freeze({ owner: CORE_SOURCE_KEY, key: 'compile' } as const);
-
-/** 增量计算返回给 Runtime 的诊断码 */
-export const CoreComputationDiagnosticCode = {
-  /** 变化提示与完整快照不一致 */
-  ChangeSetMismatch: 'CORE_CHANGESET_MISMATCH',
-} as const;
-
-export type CoreComputationDiagnosticCode = ValueOf<typeof CoreComputationDiagnosticCode>;
 
 /** Computation 生命周期内固定的 Core compile options */
 export type CoreComputationOptions<

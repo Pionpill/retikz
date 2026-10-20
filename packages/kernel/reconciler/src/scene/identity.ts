@@ -2,7 +2,7 @@ import type { CompileNamespaceKey, CompileOwnerKey, CompileProvenance } from '@r
 import { createRuntimeIdentity } from '@retikz/runtime';
 import type { RuntimeIdentity, RuntimeRevision } from '@retikz/runtime';
 
-import { CORE_SOURCE_KEY } from './change';
+import { CORE_SOURCE_KEY } from '../constants';
 
 /** 从单次编译来源计算当前候选版本的图元身份 */
 export const createPrimitiveIdentityIndex = (

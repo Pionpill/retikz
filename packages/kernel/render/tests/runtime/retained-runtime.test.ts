@@ -3,7 +3,7 @@ import { isRetikzError } from '@retikz/foundation';
 import { ReconcilerTraceUnit } from '@retikz/reconciler';
 import type { CoreComputationDefinition, ScenePatch, SceneRuntimeSnapshot } from '@retikz/reconciler';
 import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
-import type { PerformanceTraceRecord, RuntimePreparedCommit } from '@retikz/runtime';
+import type { PerformanceTraceRecord, RuntimePreparedCommit, RuntimeComputationDefinition } from '@retikz/runtime';
 import {
   createRuntimeSourceInput,
   createRuntimeSourceRegistry,
@@ -99,16 +99,82 @@ const createRendererHarness = (capability: 'none' | 'group' | 'entity' = 'entity
   return { renderer, prepareMount, prepare, read, patches };
 };
 
+type CoreFixtureTypes =
+  CoreComputationDefinition<readonly []> extends RuntimeComputationDefinition<
+    infer TInput,
+    infer TValue,
+    infer TRead,
+    infer TPublicRead
+  >
+    ? [TInput, TValue, TRead, TPublicRead]
+    : never;
+
+/** 为 renderer capability 测试提供明确的 Group update，不依赖 Core 的增量优化策略 */
+const createGroupPatchComputation = (
+  core: CoreComputationDefinition<readonly []>,
+): CoreComputationDefinition<readonly []> =>
+  defineRuntimeComputation<CoreFixtureTypes[0], CoreFixtureTypes[1], CoreFixtureTypes[2], CoreFixtureTypes[3]>({
+    id: { owner: core.id.owner, key: 'group-patch' },
+    sources: [],
+    computations: [core],
+    tracePhases: [],
+    result: {
+      capture: input => input,
+      readForComputation: result => ({ ...result.publicRead, state: result.state }),
+      read: result => result.publicRead,
+    },
+    run: view => {
+      const next = view.result(core).value;
+      if (next.patch === undefined)
+        return { kind: RuntimeComputationKind.Full, result: { publicRead: next, state: {} } };
+      const root = next.snapshot.topology[0];
+      const primitive = next.snapshot.scene.primitives[0];
+      if (primitive.type !== 'group') throw new Error('expected group update');
+      return {
+        kind: RuntimeComputationKind.Full,
+        result: {
+          state: {},
+          publicRead: {
+            ...next,
+            patch: {
+              baseRevision: next.patch.baseRevision,
+              nextRevision: next.patch.nextRevision,
+              operations: [
+                {
+                  kind: 'update',
+                  identity: root.identity,
+                  subtree: {
+                    root: root.identity,
+                    primitive,
+                    topology: next.snapshot.topology.map((node, index) => ({
+                      ...node,
+                      parent: index === 0 ? undefined : node.parent,
+                      primitivePath: node.primitivePath.slice(1),
+                    })),
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+    },
+    update: () => ({ kind: RuntimeComputationKind.Fallback }),
+  });
+
 const createHarness = (
   capability: 'none' | 'group' | 'entity' = 'entity',
   initialScene: IRScene = scene('A'),
   runtimeOptions: Readonly<{
     updateStrategy?: 'auto' | 'full';
+    groupPatch?: boolean;
     trace?: (record: PerformanceTraceRecord) => void;
   }> = {},
 ) => {
   const renderer = createRendererHarness(capability);
-  const coreComputation = createCoreComputation({ onWarn: () => undefined });
+  const fullComputation = createCoreComputation({ onWarn: () => undefined });
+  const { groupPatch, ...sessionOptions } = runtimeOptions;
+  const coreComputation = groupPatch ? createGroupPatchComputation(fullComputation) : fullComputation;
   const factory = vi.fn(() => renderer.renderer) as unknown as RetainedRendererFactory;
   const handle = createRetainedRenderParticipant({
     backend: 'svg',
@@ -118,11 +184,14 @@ const createHarness = (
     coreComputation,
   });
   const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-  const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
+  const computations = createRuntimeComputationRegistry({
+    sources,
+    computations: groupPatch ? [fullComputation, coreComputation] : [coreComputation],
+  });
   const session = createRuntime({
     sources,
     computations,
-    ...runtimeOptions,
+    ...sessionOptions,
     participants: [handle.participant],
     initialSnapshots: [
       createRuntimeSourceInput(CoreSourceDefinition, initialScene),
@@ -446,7 +515,7 @@ describe('createRetainedRenderParticipant', () => {
     expect(renderer.prepare).toHaveBeenCalledTimes(1);
     expect(renderer.read).toHaveBeenCalledTimes(2);
     expect(renderer.patches[0]).toMatchObject({ baseRevision: 0, nextRevision: 1 });
-    expect(renderer.patches[0]?.operations[0]?.kind).toBe('update');
+    expect(renderer.patches[0]?.operations[0]?.kind).toBe('replaceScene');
     expect(
       records.filter(
         record => record.owner === '@retikz/render:svg' && record.unit === ReconcilerTraceUnit.SceneChange,
@@ -454,7 +523,7 @@ describe('createRetainedRenderParticipant', () => {
     ).toEqual([
       expect.objectContaining({
         phase: RenderTracePhase.Update,
-        outcome: PerformanceTraceOutcome.Incremental,
+        outcome: PerformanceTraceOutcome.Full,
       }),
     ]);
   });
@@ -518,6 +587,7 @@ describe('createRetainedRenderParticipant', () => {
     const initial = { ...scene('A'), children: [{ ...scene('A').children[0], style: { fill: '#ef4444' } }] };
     const records: Array<PerformanceTraceRecord> = [];
     const { renderer, coreComputation, session } = createHarness('none', initial, {
+      groupPatch: true,
       trace: record => records.push(record),
     });
     session.diagnostics();
@@ -558,7 +628,7 @@ describe('createRetainedRenderParticipant', () => {
 
   it('group capability 保留 stable Group subtree update，不产生 fallback warning', () => {
     const initial = { ...scene('A'), children: [{ ...scene('A').children[0], style: { fill: '#ef4444' } }] };
-    const { renderer, coreComputation, session } = createHarness('group', initial);
+    const { renderer, coreComputation, session } = createHarness('group', initial, { groupPatch: true });
     session.diagnostics();
 
     session.update({

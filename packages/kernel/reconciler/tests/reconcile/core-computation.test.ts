@@ -7,14 +7,11 @@ import {
   defineShape,
   CoreTraceUnit,
 } from '@retikz/core';
-import { CoreComputationDiagnosticCode } from '@retikz/reconciler';
 import { ReconcilerTracePhase, ReconcilerTraceUnit } from '@retikz/reconciler';
 import type { RuntimeScenePrimitive } from '@retikz/reconciler';
 import { CORE_SOURCE_KEY, CORE_COMPUTATION_ID, CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
 import type { PerformanceTraceRecord } from '@retikz/runtime';
 import {
-  createRuntimeChangeSet,
-  createRuntimeIdentity,
   createRuntimeSourceInput,
   createRuntimeSourceRegistry,
   createRuntimeSourceUpdate,
@@ -24,7 +21,6 @@ import {
   PerformanceTraceOutcome,
   RetikzRuntimeErrorCode,
   RuntimeComputationKind,
-  RuntimeComputationPhase,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
@@ -698,7 +694,7 @@ describe('Core Runtime Computation full fallback update', () => {
     expect(ownersAtRevision0.some(identity => identity.path.join('/') === 'root/node/duplicate')).toBe(false);
   });
 
-  it('接受与前后 Snapshot 一致的 update hint，且缺少 hint 时不误报 mismatch', () => {
+  it('完整输入替换同时更新根配置与子元素', () => {
     const program = createCoreComputation({ onWarn: () => {} });
     const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
@@ -707,222 +703,33 @@ describe('Core Runtime Computation full fallback update', () => {
       computations,
       initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, sceneWithText('A'))],
     });
-    const nodeIdentity = createRuntimeIdentity(CORE_SOURCE_KEY, ['root', 'node', 'node-a']);
-    const baseRevision = session.revision();
-
-    const hinted = session.update({
-      baseRevision,
-      sources: [
-        createRuntimeSourceUpdate(
-          CoreSourceDefinition,
-          sceneWithText('B'),
-          createRuntimeChangeSet(baseRevision, [{ kind: 'update', identity: nodeIdentity }]),
-        ),
-      ],
-    });
-    const snapshotOnly = session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, sceneWithText('C'))],
-    });
-
-    expect(hinted.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(hinted.diagnostics).toEqual([]);
-    expect(snapshotOnly.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(snapshotOnly.diagnostics).toEqual([]);
-  });
-
-  it('hint 指向错误 identity 或漏掉真实变化时只提交一条 mismatch diagnostic', () => {
-    const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const initial: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        { type: 'node', id: 'node-a', position: [0, 0], text: 'A' },
-        { type: 'node', id: 'node-b', position: [80, 0], text: 'B' },
-      ],
-    };
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
-    });
     const next: IRScene = {
-      ...initial,
-      children: [
-        { type: 'node', id: 'node-a', position: [0, 0], text: 'A2' },
-        { type: 'node', id: 'node-b', position: [80, 0], text: 'B2' },
+      ...sceneWithText('B'),
+      viewBox: { x: 0, y: 0, width: 160, height: 90 },
+      animations: [
+        {
+          property: 'viewBox',
+          keyframes: [
+            { at: 0, value: [0, 0, 160, 90] },
+            { at: 1, value: [10, 10, 120, 70] },
+          ],
+          duration: 400,
+        },
       ],
     };
-    const baseRevision = session.revision();
     const result = session.update({
-      baseRevision,
-      sources: [
-        createRuntimeSourceUpdate(
-          CoreSourceDefinition,
-          next,
-          createRuntimeChangeSet(baseRevision, [
-            {
-              kind: 'update',
-              identity: createRuntimeIdentity(CORE_SOURCE_KEY, ['root', 'node', 'node-a']),
-            },
-          ]),
-        ),
-      ],
+      baseRevision: session.revision(),
+      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
     });
-
     expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(result.diagnostics).toEqual([
-      {
-        code: CoreComputationDiagnosticCode.ChangeSetMismatch,
-        phase: RuntimeComputationPhase.Update,
-        severity: 'warning',
-        message: 'Core ChangeSet does not match the previous and next canonical Snapshots; using full fallback',
-        owner: CORE_SOURCE_KEY,
-        computation: CORE_COMPUTATION_ID,
-      },
-    ]);
-    expect(session.diagnostics()).toEqual(result.diagnostics);
-  });
-
-  it('实体同时重排与更新时不把 update hints 误判为完整 change set', () => {
-    const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const initial: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        { type: 'node', id: 'node-a', position: [0, 0], text: 'A' },
-        { type: 'node', id: 'node-b', position: [80, 0], text: 'B' },
-      ],
-    };
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
-    });
-    const baseRevision = session.revision();
-    const result = session.update({
-      baseRevision,
-      sources: [
-        createRuntimeSourceUpdate(
-          CoreSourceDefinition,
-          {
-            ...initial,
-            children: [
-              { type: 'node', id: 'node-b', position: [80, 0], text: 'B2' },
-              { type: 'node', id: 'node-a', position: [0, 0], text: 'A2' },
-            ],
-          },
-          createRuntimeChangeSet(baseRevision, [
-            {
-              kind: 'update',
-              identity: createRuntimeIdentity(CORE_SOURCE_KEY, ['root', 'node', 'node-a']),
-            },
-            {
-              kind: 'update',
-              identity: createRuntimeIdentity(CORE_SOURCE_KEY, ['root', 'node', 'node-b']),
-            },
-          ]),
-        ),
-      ],
-    });
-
-    expect(result.diagnostics).toEqual([
-      expect.objectContaining({ code: CoreComputationDiagnosticCode.ChangeSetMismatch }),
+    expect(result.diagnostics).toEqual([]);
+    expect(session.result(program).value.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
+    expect(session.result(program).value.patch?.operations).toEqual([
+      expect.objectContaining({ kind: 'replaceScene' }),
     ]);
   });
 
-  it.each([
-    {
-      name: 'viewBox',
-      rootChange: { viewBox: { x: 0, y: 0, width: 160, height: 90 } },
-    },
-    {
-      name: 'animations',
-      rootChange: {
-        animations: [
-          {
-            property: 'viewBox',
-            keyframes: [
-              { at: 0, value: [0, 0, 160, 90] },
-              { at: 1, value: [10, 10, 120, 70] },
-            ],
-            duration: 400,
-          },
-        ],
-      },
-    },
-  ] satisfies Array<{ name: string; rootChange: Partial<IRScene> }>)(
-    '仅修改 Scene 根 $name 时拒绝空 change hint',
-    ({ rootChange }) => {
-      const program = createCoreComputation({ onWarn: () => {} });
-      const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-      const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-      const initial = sceneWithText('A');
-      const session = createRuntime({
-        sources,
-        computations,
-        initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
-      });
-      const baseRevision = session.revision();
-
-      const result = session.update({
-        baseRevision,
-        sources: [
-          createRuntimeSourceUpdate(
-            CoreSourceDefinition,
-            { ...initial, ...rootChange },
-            createRuntimeChangeSet(baseRevision, []),
-          ),
-        ],
-      });
-
-      expect(result.diagnostics).toEqual([
-        expect.objectContaining({ code: CoreComputationDiagnosticCode.ChangeSetMismatch }),
-      ]);
-    },
-  );
-
-  it('Scene 根与 child 同时变化时拒绝只覆盖 child 的 update hint', () => {
-    const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const initial = sceneWithText('A');
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
-    });
-    const baseRevision = session.revision();
-
-    const result = session.update({
-      baseRevision,
-      sources: [
-        createRuntimeSourceUpdate(
-          CoreSourceDefinition,
-          {
-            ...sceneWithText('B'),
-            viewBox: { x: 0, y: 0, width: 160, height: 90 },
-          },
-          createRuntimeChangeSet(baseRevision, [
-            {
-              kind: 'update',
-              identity: createRuntimeIdentity(CORE_SOURCE_KEY, ['root', 'node', 'node-a']),
-            },
-          ]),
-        ),
-      ],
-    });
-
-    expect(result.diagnostics).toEqual([
-      expect.objectContaining({ code: CoreComputationDiagnosticCode.ChangeSetMismatch }),
-    ]);
-  });
-
-  it('mismatch 后 full fallback 失败时不发布 diagnostic 或替换 committed artifact', () => {
+  it('完整输入编译失败时不发布诊断或替换已提交结果', () => {
     const program = createCoreComputation({ onWarn: () => {} });
     const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
@@ -942,18 +749,7 @@ describe('Core Runtime Computation full fallback update', () => {
     expect(() =>
       session.update({
         baseRevision,
-        sources: [
-          createRuntimeSourceUpdate(
-            CoreSourceDefinition,
-            broken,
-            createRuntimeChangeSet(baseRevision, [
-              {
-                kind: 'update',
-                identity: createRuntimeIdentity(CORE_SOURCE_KEY, ['root', 'node', 'missing']),
-              },
-            ]),
-          ),
-        ],
+        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, broken)],
       }),
     ).toThrow();
     expect(session.revision()).toBe(baseRevision);

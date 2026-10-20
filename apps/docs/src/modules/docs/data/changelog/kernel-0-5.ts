@@ -378,6 +378,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '移除旧输入 diff 协议', en: 'Remove the old input diff protocol' },
+          content: {
+            zh: '移除 CoreChange 及其增删改移动类型、CoreComputationDiagnosticCode 和旧快照 diff 校验。完整输入继续重建并提交 replaceScene；Weave 批次执行尚未接入。Runtime 通用 ChangeSet 与图元身份契约保持不变。',
+            en: 'Removed CoreChange and its add/update/remove/move types, CoreComputationDiagnosticCode, and old snapshot diff validation. Full inputs still rebuild and publish replaceScene; Weave batch execution is not connected yet. Generic Runtime ChangeSets and primitive identity contracts remain unchanged.',
+          },
+        },
+        {
           label: { zh: 'Weave 编译接入', en: 'Weave compilation integration' },
           content: {
             zh: '基础元素输入通过 Weave 构建声明树，持有 Core 编译环境、状态与名称读取关系，并生成同版本的 Scene 和来源信息。完整输入替换重新准备候选树，失败保留已发布结果。Composite 保留 Core 完整准备路径；原根 Node 填充色特例移除，当前更新发布 replaceScene，批次局部调度尚未接入。',

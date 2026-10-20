@@ -11,3 +11,7 @@ import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler'
 Core 的 `prepareSceneCompilation` 提供不派发 warning 的单次编译结果，以及按需收集的来源信息；Reconciler 负责跨版本身份、复用与更新产物，不复制绘图语义。
 
 Incremental Core compilation and Runtime integration. This package owns the document Source and Computation, cross-revision identity and reuse, SceneRuntimeSnapshot, and ScenePatch. It accepts full IR snapshots. Basic elements are compiled through Weave; Composite input retains Core full preparation. Snapshot replacement prepares a new tree and publishes replaceScene. The previous node-fill special case is removed; WeaveBatch execution and fine-grained incremental scheduling are not yet connected.
+
+旧 CoreChange 提示、快照 diff 索引及 ChangeSetMismatch 诊断已移除；完整输入更新不再携带领域变化提示。
+
+The old CoreChange hints, snapshot diff index, and ChangeSetMismatch diagnostic are removed. Full input updates no longer carry domain change hints.

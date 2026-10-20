@@ -4,16 +4,15 @@ import { cloneAndFreezeJson } from '@retikz/foundation';
 import { defineRuntimeSource } from '@retikz/runtime';
 import type { RuntimeSourceDefinition } from '@retikz/runtime';
 
+import { CORE_SOURCE_KEY } from '../constants';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
-import { CORE_SOURCE_KEY } from '../reconcile';
-import type { CoreChange } from '../reconcile';
 
 /** Core document 的 Runtime owner Definition */
 export const CoreSourceDefinition: RuntimeSourceDefinition<
   IRScene,
   Readonly<IRScene>,
   Readonly<IRScene>,
-  CoreChange
+  never
 > = defineRuntimeSource({
   key: CORE_SOURCE_KEY,
   value: {

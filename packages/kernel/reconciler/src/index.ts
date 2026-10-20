@@ -1,10 +1,8 @@
 export * from './error';
-export { CORE_SOURCE_KEY } from './reconcile';
-export type { CoreAddChange, CoreChange, CoreMoveChange, CoreRemoveChange, CoreUpdateChange } from './reconcile';
+export { CORE_SOURCE_KEY } from './constants';
 export {
   CORE_COMPUTATION_ID,
   CoreCompositeInputSourceDefinition,
-  CoreComputationDiagnosticCode,
   CoreSourceDefinition,
   createCoreComputation,
 } from './runtime';

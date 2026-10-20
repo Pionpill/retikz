@@ -15,12 +15,11 @@ import {
 import type { RuntimeTraceReporter } from '@retikz/runtime';
 
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
-import { coreChangeSetMatchesSnapshots, createCoreSnapshotIndex } from '../reconcile';
 import { createFullSceneRuntimeSnapshot, freezeComputationOutput } from '../scene';
 import { ReconcilerTracePhase, ReconcilerTraceUnit } from '../trace';
 import { isWeaveScene, prepareWeaveCompilation } from '../weave';
 import { copyCoreComputationOptions } from './options';
-import { CORE_COMPUTATION_ID, CoreComputationDiagnosticCode } from './public';
+import { CORE_COMPUTATION_ID } from './public';
 import type {
   CoreComputationDefinition,
   CoreComputationOptions,
@@ -165,46 +164,13 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
         result: Object.freeze({
           publicRead,
           state: Object.freeze({
-            source,
-            index: createCoreSnapshotIndex(source),
             ...(weave === undefined ? {} : { weave: { current: weave.root, candidate: null } }),
           }),
         }),
       };
     },
-    update: (previous, view) => {
-      if (view.phase !== RuntimeComputationPhase.Update) return { kind: RuntimeComputationKind.Fallback };
-      if (compositeInputSource !== undefined && view.isChanged(compositeInputSource))
-        return { kind: RuntimeComputationKind.Fallback };
-      if (invalidationSources.some(owner => view.isChanged(owner))) {
-        return { kind: RuntimeComputationKind.Fallback };
-      }
-
-      if (observers.length > 0) return { kind: RuntimeComputationKind.Fallback };
-
-      const changeSet = view.changeSet(CoreSourceDefinition);
-      const nextSource = view.snapshot(CoreSourceDefinition).value;
-      validateCompositeInputBindings(
-        nextSource,
-        compositeInputSource === undefined ? fixedOptions.compositeInputs : view.snapshot(compositeInputSource).value,
-      );
-      const nextIndex = createCoreSnapshotIndex(nextSource);
-      if (changeSet !== undefined && !coreChangeSetMatchesSnapshots(previous.state.index, nextIndex, changeSet)) {
-        return {
-          kind: RuntimeComputationKind.Fallback,
-          diagnostics: [
-            {
-              code: CoreComputationDiagnosticCode.ChangeSetMismatch,
-              phase: RuntimeComputationPhase.Update,
-              message: 'Core ChangeSet does not match the previous and next canonical Snapshots; using full fallback',
-            },
-          ],
-        };
-      }
-
-      // 批次调度接入前，完整替换统一准备新树，避免只更新 Scene 而保留旧节点缓存
-      return { kind: RuntimeComputationKind.Fallback };
-    },
+    // 完整输入更新重新准备树与输出，批次调度由 Weave 接入
+    update: () => ({ kind: RuntimeComputationKind.Fallback }),
     observeCommit: event => {
       event.result.value.output.diagnostics.forEach(warningSink);
     },

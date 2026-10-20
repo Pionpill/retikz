@@ -2,9 +2,10 @@ import type { CompileProvenance, Scene } from '@retikz/core';
 import { createRuntimeIdentity } from '@retikz/runtime';
 import type { RuntimeRevision } from '@retikz/runtime';
 
+import { CORE_SOURCE_KEY } from '../constants';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
-import { CORE_SOURCE_KEY, createPrimitiveIdentityIndex } from '../reconcile';
 import type { RuntimeScene, RuntimeScenePrimitive, SceneRuntimeNode, SceneRuntimeSnapshot } from '../scene';
+import { createPrimitiveIdentityIndex } from './identity';
 
 /**
  * 递归冻结 Computation 新创建且尚未对外暴露的 plain output

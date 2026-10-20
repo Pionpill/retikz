@@ -48,22 +48,20 @@ Runtime 决定何时调用哪些计算，Reconciler 决定哪些产物需要重�
 
 因此，即使只改 A 的填充色，普通输入更新交付的仍是包含 A、B 的完整 IR，后续准备一棵新的基础元素树或 Composite 完整结果。这里追踪控制器与编译选项保持稳定的一次后续更新；切换控制器配置涉及生命周期重建。
 
-此时需要区分三个对象：
+此时需要区分两个对象：
 
 - Source：一类输入的持有者，定义怎样捕获、读取和比较数据；Core 文档使用 `CoreSourceDefinition`。
 - Snapshot：该 Source 在某个 revision 下的输入快照。revision 是已提交状态的版本编号。
-- ChangeSet：可选的变化提示，说明哪些身份发生了变化；新的完整快照仍提供实际数据。
 
-Reconciler Source 捕获输入时复制并冻结 JSON，用结构比较判断内容是否变化。因此，新建一个内容相同的 JavaScript 对象，不会单凭对象引用变化触发 Reconciler 重编。Vanilla 当前的普通输入更新提交完整 Source，没有为每次修改自动生成 Reconciler ChangeSet。
+Reconciler Source 捕获输入时复制并冻结 JSON，用结构比较判断内容是否变化。因此，新建一个内容相同的 JavaScript 对象，不会单凭对象引用变化触发 Reconciler 重编。Vanilla 当前的普通输入更新提交完整 Source。
 
-在改色例子中，新快照仍包含 A 和 B，只是 A 的 `style.fill` 变了。直接接入 Runtime 的调用方可以额外提供 ChangeSet；Reconciler 会拿它核对前后快照。提示缺失是正常情况，提示与实际变化不一致则产生诊断并回退全量编译。
+在改色例子中，新快照仍包含 A 和 B，只是 A 的 `style.fill` 变了。Reconciler 根据完整输入准备新树与输出，不再接受或核对旧的变化提示。
 
 <SourceLinks
   sources={[
     { label: 'React 复用控制器并提交后续输入', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
     { label: 'Vanilla 输入准备', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
     { label: 'Source 的捕获与结构比较', path: 'packages/kernel/reconciler/src/runtime/source.ts' },
-    { label: 'ChangeSet 与快照核对', path: 'packages/kernel/reconciler/src/reconcile/diff.ts' },
   ]}
 />
 
@@ -118,7 +116,7 @@ Core 在单次编译中记录声明、命名空间与输出图元的来源关系
 
 <SourceLinks
   sources={[
-    { label: '语义 owner 与图元身份', path: 'packages/kernel/reconciler/src/reconcile/identity.ts' },
+    { label: '语义 owner 与图元身份', path: 'packages/kernel/reconciler/src/scene/identity.ts' },
     { label: '完整 Scene Runtime 快照', path: 'packages/kernel/reconciler/src/scene/snapshot.ts' },
   ]}
 />
@@ -133,7 +131,6 @@ Core 在单次编译中记录声明、命名空间与输出图元的来源关系
 | ----------------------------- | ---------------------------------------------- |
 | Node、Coordinate、Path、Scope | 构建 Weave，调用 Core 单元素编译并组装完整输出 |
 | 含 Composite                  | Core 完整准备，保留 probe、实例输入和附属产物  |
-| ChangeSet 与快照不符          | 记录诊断，再按实际完整输入准备结果             |
 
 即使本例只改 A 的颜色，当前也会重新准备包含 A、B 的候选树。失败时保留旧结果；成功更新生成独占的 `replaceScene`，不能从存在 Patch 推断发生了局部计算。
 

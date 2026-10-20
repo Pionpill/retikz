@@ -10,6 +10,8 @@ keywords: 'Core、Runtime、Computation、replaceScene、update、CompileResult�
 - 接受日期：2026-07-28
 - 关联：[ADR-012](./012-computation-transaction-lifecycle.md) · [ADR-014](./014-scene-patch-retained-renderer.md)
 
+> 后续调整：[061](./061-weave-core-integration.md) 已替代本文的 CoreChange 提示、快照 diff 索引与 mismatch 诊断约定；完整输入和 Scene 提交边界继续保留。
+
 ## 背景
 
 `compileToScene()` 是无状态完整编译入口。调用方持续更新完整 IR Scene 时，Core 过去只能重新创建编译上下文并遍历全部 child；Runtime 也没有 Core 领域知识，不能代替 Core 判断 Node、Scope、Path、Composite、资源或引用的安全失效边界。

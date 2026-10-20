@@ -48,15 +48,14 @@ Runtime determines when to invoke which computations; Reconciler chooses what to
 
 Even when only A's fill changes, an ordinary input update still delivers the complete IR containing A and B. Later stages prepare a new basic-element tree or a complete Composite result. This discussion follows a later update with stable controller configuration and compile options. Changing controller configuration involves its lifecycle.
 
-Three objects matter here:
+Two objects matter here:
 
 - Source: the owner of an input category, defining how to capture, read and compare values. Core documents use `CoreSourceDefinition`.
 - Snapshot: the input held by a Source at a revision. A revision identifies a committed version.
-- ChangeSet: optional hints identifying changes. The complete next snapshot still provides the actual values.
 
-The Reconciler Source copies and freezes JSON on capture and compares its structure. Creating a new JavaScript object with identical content therefore does not, by itself, trigger Reconciler compilation. Vanilla's ordinary input update currently submits complete Sources without automatically generating a Reconciler ChangeSet for every edit.
+The Reconciler Source copies and freezes JSON on capture and compares its structure. Creating a new JavaScript object with identical content therefore does not, by itself, trigger Reconciler compilation. Vanilla's ordinary input update currently submits complete Sources.
 
-In the color example, the next snapshot still contains A and B, with only A's `style.fill` changed. Callers integrating with Runtime directly can also provide a ChangeSet. Reconciler checks those hints against the previous and next snapshots. Missing hints are normal; inconsistent hints produce a diagnostic and trigger full fallback.
+In the color example, the next snapshot still contains A and B, with only A's `style.fill` changed. Reconciler prepares a new tree and output from the complete input; it no longer accepts or checks the old change hints.
 
 <SourceLinks
   sources={[
@@ -66,7 +65,6 @@ In the color example, the next snapshot still contains A and B, with only A's `s
     },
     { label: 'Vanilla input preparation', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
     { label: 'Source capture and structural equality', path: 'packages/kernel/reconciler/src/runtime/source.ts' },
-    { label: 'Checking ChangeSets against snapshots', path: 'packages/kernel/reconciler/src/reconcile/diff.ts' },
   ]}
 />
 
@@ -123,7 +121,7 @@ For a node with stable identity such as A, Reconciler can still match its primit
   sources={[
     {
       label: 'Semantic owners and primitive identities',
-      path: 'packages/kernel/reconciler/src/reconcile/identity.ts',
+      path: 'packages/kernel/reconciler/src/scene/identity.ts',
     },
     { label: 'Complete Scene Runtime snapshots', path: 'packages/kernel/reconciler/src/scene/snapshot.ts' },
   ]}
@@ -135,11 +133,10 @@ For basic-element input, Weave builds a declaration tree. The root owns the envi
 
 <ComponentPreview files="update-reuse" size="xl" hideCode type="flow" />
 
-| Input                              | Current preparation path                                                     |
-| ---------------------------------- | ---------------------------------------------------------------------------- |
-| Node, Coordinate, Path and Scope   | Build Weave, call Core element compilation and assemble complete output      |
-| Contains Composite                 | Core full preparation, retaining probes, instance inputs and attached output |
-| ChangeSet disagrees with snapshots | Record a diagnostic, then prepare from the actual complete input             |
+| Input                            | Current preparation path                                                     |
+| -------------------------------- | ---------------------------------------------------------------------------- |
+| Node, Coordinate, Path and Scope | Build Weave, call Core element compilation and assemble complete output      |
+| Contains Composite               | Core full preparation, retaining probes, instance inputs and attached output |
 
 Even when only A changes color, the current update prepares a new tree containing both A and B. Failure retains the previous result. Successful updates produce one exclusive `replaceScene`; the presence of a Patch does not imply local computation.
 
