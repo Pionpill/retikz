@@ -18,7 +18,7 @@ keywords: 'Node、layout、measurement、surface、NodeLayout、compileToScene�
 `compileToScene` 增加同步 `onNodeLayout` observer，使用独立纯数据 DTO：
 
 ```ts
-type CompiledNodeLayout = {
+type NodeLayoutObservation = {
   kind: 'node';
   id?: string;
   irPath: string;
@@ -31,7 +31,7 @@ type CompiledNodeLayout = {
   text: { hasInlineTex: boolean; lineCount: number };
 };
 
-type CompileLayoutObserver = (layout: CompiledNodeLayout) => void;
+type CompileLayoutObserver = (layout: NodeLayoutObservation) => void;
 type CompileHostOptions = { onNodeLayout?: CompileLayoutObserver };
 ```
 

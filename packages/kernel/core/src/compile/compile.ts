@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition, CompileObserverDefinition, CompileObserverOutput, Scene } from '../contract';
+import type { AnyCompositeDefinition, CompileObserverDefinition, CompileObserverOutput } from '../contract';
 import type { IRScene } from '../schemas';
 import { CoreTracePhase, CoreTraceUnit } from '../shared';
 import {
@@ -7,12 +7,11 @@ import {
   createCompileObservationRuntime,
   createCompileProvenanceTracker,
   dispatchCompileObservations,
-  filterAnimations,
   orderCompileWarnings,
 } from './orchestration';
 import { materializeSpatialHandleIndex } from './orchestration/spatial-handle';
+import { assemblePreparedScene } from './output';
 import type { CompileProvenance } from './provenance';
-import { assertFiniteLayout, computeLayoutFromBounds, viewBoxToLayout } from './scene';
 import type { CompileOptions, CompileResult, CompositeArtifactOf, ObservedCompileResult } from './types';
 import type { CompileWarning, CompileWarningInput } from './warning';
 import { formatCompileWarning } from './warning';
@@ -84,7 +83,7 @@ export const prepareSceneCompilation = <const TComposites extends ReadonlyArray<
     ...(observation === undefined ? {} : { observation }),
     onWarn: warning => diagnostics.push(warning),
   });
-  const { loweredIr, layoutPadding, round, onWarn, paint, clip } = context;
+  const { loweredIr, round, paint, clip } = context;
   const provenanceTracker = execution.captureProvenance === true ? createCompileProvenanceTracker() : undefined;
   const { primitives, layoutBounds, artifacts, compileObservations, spatialHandles } = compileChildrenToPrimitives(
     loweredIr.children,
@@ -95,18 +94,15 @@ export const prepareSceneCompilation = <const TComposites extends ReadonlyArray<
   );
 
   const resources = [...paint.resources(), ...clip.resources()];
-  const rootAnimations = filterAnimations(loweredIr.animations, { target: 'root', onWarn, irPath: 'scene' });
-  const scene: Scene = {
-    primitives,
-    layout:
-      loweredIr.viewBox !== undefined
-        ? viewBoxToLayout(loweredIr.viewBox, round)
-        : assertFiniteLayout(computeLayoutFromBounds(layoutBounds, layoutPadding, round)),
-    ...(resources.length > 0 ? { resources } : {}),
-    ...(rootAnimations !== undefined ? { animations: rootAnimations } : {}),
-  };
   const observerOutputs = dispatchCompileObservations(compileObservations, observation, context);
   const spatialHandleIndex = materializeSpatialHandleIndex(spatialHandles, round);
+  const prepared = assemblePreparedScene<TComposites>(loweredIr, primitives, resources, layoutBounds, context, {
+    artifacts,
+    diagnostics: orderCompileWarnings(diagnostics),
+    spatialHandles: spatialHandleIndex,
+    observerOutputs,
+    ...(provenanceTracker === undefined ? {} : { provenance: provenanceTracker.capture(primitives) }),
+  });
   if (context.trace !== undefined) {
     try {
       context.trace.reporter.report({
@@ -122,16 +118,7 @@ export const prepareSceneCompilation = <const TComposites extends ReadonlyArray<
     }
   }
 
-  return Object.freeze({
-    result: Object.freeze({
-      scene,
-      artifacts: Object.freeze(artifacts),
-      spatialHandles: spatialHandleIndex,
-    }) as CompileResult<CompositeArtifactOf<TComposites[number]>>,
-    diagnostics: Object.freeze(orderCompileWarnings(diagnostics)),
-    observerOutputs,
-    ...(provenanceTracker === undefined ? {} : { provenance: provenanceTracker.capture(primitives) }),
-  });
+  return prepared;
 };
 
 /**

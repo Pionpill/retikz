@@ -80,11 +80,17 @@ export const orderCompileWarnings = (warnings: ReadonlyArray<CompileWarningInput
       (left, right) =>
         compareCompileOccurrences(left.occurrence, right.occurrence) || left.emissionOrder - right.emissionOrder,
     )
-    .map(({ warning }) =>
-      Object.freeze({
-        code: warning.code,
-        message: warning.message,
-        path: warning.path,
-        origin: warning.origin ?? ({ kind: 'primary' } as const),
-      }),
+    .map(
+      ({ warning, occurrence }) =>
+        Object.freeze(
+          replaceCompileWarningOccurrence(
+            {
+              code: warning.code,
+              message: warning.message,
+              path: warning.path,
+              origin: warning.origin ?? ({ kind: 'primary' } as const),
+            },
+            occurrence,
+          ),
+        ) as CompileWarning,
     );

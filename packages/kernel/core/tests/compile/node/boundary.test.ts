@@ -82,7 +82,7 @@ const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
 
     return layoutNode(resolution, {
       measureText,
-      positionContext: createPositionResolveContext({ namespaceStack, nodeDistance: 24 }),
+      positionContext: createPositionResolveContext({ lookupReference: id => namespaceStack.lookupReference(id), nodeDistance: 24 }),
     });
   })();
 

@@ -1,192 +1,70 @@
-import type {
-  AnyCompositeDefinition,
-  AnyPathKindDefinition,
-  ArrowDefinition,
-  BoundaryDefinition,
-  ClipDefinition,
-  PathGeneratorDefinition,
-  PatternDefinition,
-  ShapeDefinition,
-  ThemeStyleDefinition,
-} from '../../contract';
 import type { CompositeRuntimeInputScope } from '../../contract/composite';
 import { resolveCompositeInputScope } from '../../contract/composite';
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { resolveArrowRegistry } from '../../providers/arrow';
-import { resolveBoundaryRegistry } from '../../providers/boundary';
-import { resolveClipRegistry } from '../../providers/clip';
-import { resolveCompositeRegistry } from '../../providers/composite';
-import { resolvePathGeneratorRegistry } from '../../providers/path-generator';
-import { resolvePathKindRegistry } from '../../providers/path-kind';
-import { resolvePatternRegistry } from '../../providers/pattern';
-import { resolveShapeRegistry } from '../../providers/shape';
-import { resolveThemeStyleRegistry } from '../../providers/theme';
 import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../resolve';
 import type { IRScene } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
-import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE, DEFAULT_LAYOUT_PADDING, DEFAULT_NODE_DISTANCE } from '../constants';
-import { DEFAULT_MAX_COMPOSITE_DEPTH } from '../constants';
+import { createCompileEnvironment } from '../environment';
+import type { CompileEnvironment } from '../environment';
 import { createNodeGeometryContext } from '../node';
 import type { NodeGeometryContext } from '../node';
-import { createClipRegistry, createPaintRegistry, DEFAULT_MAX_CLIP_DEPTH } from '../resource';
-import { createRound, DEFAULT_PRECISION } from '../scene';
-import { fallbackMeasurer, normalizeTextMetrics } from '../text';
-import type { NormalizedTextMetrics } from '../text';
+import { createClipRegistry, createPaintRegistry } from '../resource';
+import { createTextMeasurement } from '../text';
 import type { CompileOptions } from '../types';
 import type { CompileWarningInput } from '../warning';
 import { formatCompileWarning } from '../warning';
 import type { CompileObservationRuntime } from './observation';
 
-/**
- * 标准化后的 compile 依赖上下文
- * @description compileToScene 入口把选项、内置 provider、自定义 provider、资源表和 rounding 规则集中解析到这里；
- */
-export type CompileContext = {
-  /** 本次编译的节点几何缓存与诊断状态 */
+/** 本次全量编译的独占工作区，稳定能力来自环境 */
+export type CompileContext = CompileEnvironment & {
+  /** 本次几何缓存与诊断去重 */
   nodeGeometry: NodeGeometryContext;
-  /** 与本次 Source 配对的实例运行时输入 */
+  /** 与本次输入配对的 Composite 实例输入 */
   runtimeInputs: CompositeRuntimeInputScope;
-  /** canonical 输入 IR；composite 分支在 traversal 中保留 occurrence provenance 后处理 */
+  /** 本次完整输入 */
   loweredIr: IRScene;
-  /** Scene 根解析后的完整 Theme */
+  /** Scene 根有效主题 */
   theme: ResolvedTheme;
-  /** Core 主题风格注册表 */
-  themeStyles: ReadonlyMap<string, ThemeStyleDefinition>;
-  /** 文字度量函数 */
-  measureText: NonNullable<CompileOptions['measureText']>;
-  /** 运行时注入的 TeX lowering 钩子 */
-  lowerTex: CompileOptions['lowerTex'];
-  /** 编译 warning dispatcher */
+  /** 本次诊断收集器 */
   onWarn: (warning: CompileWarningInput) => void;
-  /** layout-aware composite 注册表 */
-  composites: ReadonlyMap<string, AnyCompositeDefinition>;
-  /** 复合编译的嵌套深度上限 */
-  maxCompositeDepth: number;
-  /** 本次请求的 artifact 开关 */
-  artifacts: CompileOptions['artifacts'];
-  /** 显式 observed compile 的本次 session */
+  /** 本次观察会话 */
   observation: CompileObservationRuntime | undefined;
-  /** 本次 full compile 共享的可选 trace 计数器 */
-  trace:
-    | {
-        /** 接收编译跟踪事件的回调 */
-        reporter: NonNullable<CompileOptions['trace']>;
-        /** 当前编译已访问的子项数量 */
-        visited: number;
-      }
-    | undefined;
-  /** Scene 输出 rounder */
-  round: (n: number) => number;
-  /** 自动 layout padding */
-  layoutPadding: number;
-  /** 相对定位距离 */
-  nodeDistance: number;
-  /** 节点 label 默认距离 */
-  labelDistance: number;
-  /** preset 与 rem 字号解析的根字号 */
-  rootFontSize: number;
-  /** shape provider 注册表 */
-  shapes: ReadonlyMap<string, ShapeDefinition>;
-  /** boundary provider 注册表 */
-  boundaries: ReadonlyMap<string, BoundaryDefinition>;
-  /** clip provider 注册表 */
-  clips: ReadonlyMap<string, ClipDefinition>;
-  /** operation resolve 与 shape lower 共用的最大遍历边数 */
-  maxClipDepth: number;
-  /** arrow provider 注册表 */
-  arrows: ReadonlyMap<string, ArrowDefinition>;
-  /** pattern provider 注册表 */
-  patterns: ReadonlyMap<string, PatternDefinition>;
-  /** path generator provider 注册表 */
-  pathGenerators: ReadonlyMap<string, PathGeneratorDefinition>;
-  /** path kind provider 注册表 */
-  pathKinds: ReadonlyMap<string, AnyPathKindDefinition>;
-  /** paint 资源注册表 */
+  /** 本次编译跟踪计数 */
+  trace: { reporter: NonNullable<CompileOptions['trace']>; visited: number } | undefined;
+  /** 本次绘制资源注册表 */
   paint: ReturnType<typeof createPaintRegistry>;
-  /** clip 资源注册表 */
+  /** 本次裁剪资源注册表 */
   clip: ReturnType<typeof createClipRegistry>;
 };
 
-/** 创建内部编译上下文时允许接收尚未补全 origin 的 warning */
 type CreateCompileContextOptions = Omit<CompileOptions, 'onWarn'> & {
   onWarn?: (warning: CompileWarningInput) => void;
   observation?: CompileObservationRuntime;
 };
 
-/** 创建 compile 编排所需的不可变依赖上下文 */
-export const createCompileContext = (ir: IRScene, options: CreateCompileContextOptions): CompileContext => {
-  const measuredText = new Map<string, Readonly<NormalizedTextMetrics>>();
-  const measurer = options.measureText ?? fallbackMeasurer;
-  const measureText: CompileContext['measureText'] = (text, font) => {
-    const key = JSON.stringify([text, font.family, font.size, font.weight, font.style]);
-    const cached = measuredText.get(key);
-    if (cached !== undefined) {
-      measuredText.delete(key);
-      measuredText.set(key, cached);
-      return cached;
-    }
-    const result = Object.freeze(normalizeTextMetrics(measurer(text, font)));
-    measuredText.set(key, result);
-    if (measuredText.size > 4096) measuredText.delete(measuredText.keys().next().value!);
-    return result;
-  };
-  const round = createRound(options.precision ?? DEFAULT_PRECISION);
-  const labelDistance = options.labelDistance ?? DEFAULT_LABEL_DISTANCE;
-  if (!Number.isFinite(labelDistance) || labelDistance < 0) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Compile,
-      `CompileOptions.labelDistance '${labelDistance}' must be a non-negative finite number`,
-    );
-  }
-
-  const defaultWarnDispatcher = (warning: CompileWarningInput): void => {
-    if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') return;
-    console.warn(formatCompileWarning({ ...warning, origin: warning.origin ?? { kind: 'primary' } }));
-  };
-
-  const onWarn = options.onWarn ?? defaultWarnDispatcher;
-
-  const clips = resolveClipRegistry(options.clips);
-  const maxClipDepth = options.maxClipDepth ?? DEFAULT_MAX_CLIP_DEPTH;
-  if (!Number.isSafeInteger(maxClipDepth) || maxClipDepth < 0) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Compile,
-      `CompileOptions.maxClipDepth '${maxClipDepth}' must be a non-negative safe integer`,
-    );
-  }
-
-  const patterns = resolvePatternRegistry(options.patterns);
-  const composites = resolveCompositeRegistry(options.composites);
-  const themeStyles = resolveThemeStyleRegistry(options.themeStyles);
-
+/** 从稳定环境创建独占编译工作区，文本缓存不跨次共享 */
+export const createCompileContext = (
+  ir: IRScene,
+  options: CreateCompileContextOptions,
+  environment = createCompileEnvironment(options),
+): CompileContext => {
+  const measureText = createTextMeasurement(environment.measureText);
+  const onWarn =
+    options.onWarn ??
+    ((warning: CompileWarningInput): void => {
+      if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') return;
+      console.warn(formatCompileWarning({ ...warning, origin: warning.origin ?? { kind: 'primary' } }));
+    });
   return {
+    ...environment,
     nodeGeometry: createNodeGeometryContext(),
     runtimeInputs: resolveCompositeInputScope(ir, options.compositeInputs),
     loweredIr: ir,
-    theme: resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme', themeStyles),
-    themeStyles,
+    theme: resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme', environment.themeStyles),
     measureText,
-    lowerTex: options.lowerTex,
     onWarn,
-    composites,
-    maxCompositeDepth: options.maxCompositeDepth ?? DEFAULT_MAX_COMPOSITE_DEPTH,
-    artifacts: options.artifacts,
     observation: options.observation,
     trace: options.trace === undefined ? undefined : { reporter: options.trace, visited: 0 },
-    round,
-    layoutPadding: options.padding ?? DEFAULT_LAYOUT_PADDING,
-    nodeDistance: options.nodeDistance ?? DEFAULT_NODE_DISTANCE,
-    labelDistance,
-    rootFontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-    shapes: resolveShapeRegistry(options.shapes),
-    boundaries: resolveBoundaryRegistry(options.boundaries),
-    clips,
-    maxClipDepth,
-    arrows: resolveArrowRegistry(options.arrows),
-    patterns,
-    pathGenerators: resolvePathGeneratorRegistry(options.pathGenerators),
-    pathKinds: resolvePathKindRegistry(options.pathKinds),
-    paint: createPaintRegistry(round),
-    clip: createClipRegistry(round, clips, maxClipDepth),
+    paint: createPaintRegistry(environment.round),
+    clip: createClipRegistry(environment.round, environment.clips, environment.maxClipDepth),
   };
 };

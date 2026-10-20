@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import { NamespaceStack } from '../../src/compile/namespace';
 import { boundaryPointOf, layoutNode } from '../../src/compile/node';
 import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
 import { resolveBoundaryRegistry } from '../../src/providers/boundary';
@@ -34,7 +33,7 @@ const layoutSquare = (node: IRNode) => {
 
   return layoutNode(resolution, {
     measureText,
-    positionContext: createPositionResolveContext({ namespaceStack: new NamespaceStack(), nodeDistance: 24 }),
+    positionContext: createPositionResolveContext({ lookupReference: () => undefined, nodeDistance: 24 }),
   });
 };
 

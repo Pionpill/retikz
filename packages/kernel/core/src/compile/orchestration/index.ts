@@ -9,3 +9,8 @@ export * from './primitive';
 export * from './provenance';
 export * from './traversal';
 export * from './types';
+export * from './artifact';
+export * from './position-context';
+export * from './visual-bounds';
+export * from './path-target';
+export * from './owner-output';

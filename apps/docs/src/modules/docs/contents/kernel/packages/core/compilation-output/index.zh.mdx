@@ -5,7 +5,7 @@ description: 追踪 Core 如何汇总 Scene、资源与画布，并交付领域�
 
 [节点编译](/kernel/packages/core/node-compilation)、[路径编译](/kernel/packages/core/path-compilation)和[复合编译](/kernel/packages/core/composite-compilation)解释了图元怎样产生。本页从这些局部结果出发，追踪一次完整编译怎样收尾，以及调用方最终拿到什么。阅读前需要了解[编译流程](/kernel/packages/core/compilation)中的遍历与延迟路径回填。
 
-本文只讨论单次完整编译。渲染器怎样创建 SVG 或绘制 Canvas，以及 Core 与 Runtime 怎样协作处理后续更新，属于后续专题。Core 负责绘图数据的变化比较与增量编译策略，Runtime 负责状态、结果生命周期与一致发布。
+本文追踪单次完整编译的输出。Core 负责绘图语义与单元素计算，Reconciler 负责缓存复用和增量调度，Runtime 提供事务与执行基础。局部缓存怎样组装为完整输出见[独立编译与可复用状态](/kernel/packages/core/compilation#独立编译与可复用状态)。SVG / Canvas 的具体更新策略由渲染层处理。
 
 ## 整体流程
 
@@ -438,12 +438,12 @@ for (const artifact of result.artifacts) {
 type NodeLayoutCompileArtifact = Readonly<{
   kind: 'nodeLayout';
   occurrence: CompileOccurrenceLocator;
-  value: CompiledNodeLayout;
+  value: NodeLayoutObservation;
 }>;
 ```
 
 ```ts
-type CompiledNodeLayout = {
+type NodeLayoutObservation = {
   kind: 'node';
   id?: string;
   content: {

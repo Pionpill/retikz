@@ -16,14 +16,26 @@ describe('compile source structure', () => {
   it('compile barrel exposes only stable runtime entries', () => {
     expect(Object.keys(compile).sort()).toEqual([
       'CompileWarningCode',
+      'assembleCompileOutputs',
+      'assembleSceneCompilation',
+      'assembleScopeOutput',
+      'compileCoordinate',
+      'compileNode',
+      'compilePath',
+      'compileScope',
       'compileToScene',
       'computeLayout',
+      'createCompileEnvironment',
+      'createCompileObservationRuntime',
       'fallbackMeasurer',
       'formatCompileOccurrence',
       'formatCompileWarning',
       'isNodeLayoutCompileArtifact',
       'observeCompileToScene',
       'prepareSceneCompilation',
+      'prepareScopeCompilation',
+      'projectCompileReference',
+      'resolveScopeContext',
       'samplePathRoute',
     ]);
   });

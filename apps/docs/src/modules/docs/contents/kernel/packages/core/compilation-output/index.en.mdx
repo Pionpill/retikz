@@ -5,7 +5,7 @@ description: Follow how Core assembles Scene, resources and canvas bounds, then 
 
 [Node Compilation](/kernel/packages/core/node-compilation), [Path Compilation](/kernel/packages/core/path-compilation) and [Composite Compilation](/kernel/packages/core/composite-compilation) explain how primitives are produced. This page follows those local results through the end of a full compile and explains what the caller receives. Read the traversal and deferred path emission sections of [Compilation](/kernel/packages/core/compilation) first.
 
-The scope is one full compile. Creating SVG elements, drawing Canvas, and handling later updates through Core and Runtime belong to subsequent topics. Core owns drawing-data comparisons and incremental compilation strategies; Runtime owns state, result lifetimes and consistent publication.
+This page follows the output of one full compile. Core owns drawing semantics and element computation, Reconciler owns reuse and incremental scheduling, and Runtime supplies transaction and execution primitives. See [Independent compilation and reusable state](/kernel/packages/core/compilation#independent-compilation-and-reusable-state) for cached output assembly. SVG / Canvas update strategies belong to rendering.
 
 ## Overall flow
 
@@ -446,12 +446,12 @@ A node artifact uses `kind: 'nodeLayout'`. Its `value` holds the layout summary 
 type NodeLayoutCompileArtifact = Readonly<{
   kind: 'nodeLayout';
   occurrence: CompileOccurrenceLocator;
-  value: CompiledNodeLayout;
+  value: NodeLayoutObservation;
 }>;
 ```
 
 ```ts
-type CompiledNodeLayout = {
+type NodeLayoutObservation = {
   kind: 'node';
   id?: string;
   content: {

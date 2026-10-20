@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
-import type { CompiledNodeLayout, CompileOptions } from '../../src/compile';
+import type { NodeLayoutObservation, CompileOptions } from '../../src/compile';
 import { compileToScene, isNodeLayoutCompileArtifact } from '../../src/compile';
 import type { RectPrim } from '../../src/contract';
 import { defineBoundary } from '../../src/contract';
@@ -12,8 +12,8 @@ import { flattenPrims } from '../helpers/flatten';
 
 const scene = (children: IRScene['children']): IRScene => ({ type: 'scene', version: 1, children });
 
-const compileLayouts = (ir: IRScene, options: CompileOptions = {}): Map<string, CompiledNodeLayout> => {
-  const layouts = new Map<string, CompiledNodeLayout>();
+const compileLayouts = (ir: IRScene, options: CompileOptions = {}): Map<string, NodeLayoutObservation> => {
+  const layouts = new Map<string, NodeLayoutObservation>();
   const result = compileToScene(ir, {
     ...options,
     artifacts: { nodeLayouts: true },
@@ -26,7 +26,7 @@ const compileLayouts = (ir: IRScene, options: CompileOptions = {}): Map<string, 
   return layouts;
 };
 
-const inflatedRect = (layout: CompiledNodeLayout, marginX: number, marginY = marginX): Rect => ({
+const inflatedRect = (layout: NodeLayoutObservation, marginX: number, marginY = marginX): Rect => ({
   ...layout.rect,
   width: layout.rect.width + marginX * 2,
   height: layout.rect.height + marginY * 2,

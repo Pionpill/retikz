@@ -6,14 +6,12 @@ import type {
   ClipShape,
   CompileObservationOwner,
   CompileOccurrenceLocator,
-  CompileOwnerOutputPublisher,
   CompositeCompileChild,
   CompositeBoundChild,
   CompositeRuntimeInputContext,
   CompositeCompileScopeProps,
   CompositeReplay,
   CompositeReplayWrapper,
-  EmitStrokeOwnerOutputOptions,
   GroupPrim,
   LayoutChildResult,
   LayoutContribution,
@@ -22,13 +20,6 @@ import type {
   CompositeContributionResult,
   CompositeCompileContext,
   LayoutProposal,
-  PaintValue,
-  PathKindCompileContext,
-  PathKindCompileResult,
-  PathKindLabelInput,
-  PathKindBoundaryLabelInput,
-  PathPrim,
-  ResolvedPathKindAppearance,
   ScenePrimitive,
   SceneResource,
   SpatialHandleOwner,
@@ -46,19 +37,14 @@ import {
 import type { CompositeRuntimeInputScope } from '../../contract/composite';
 import { captureCompositeInputScope, selectCompositeInputScope } from '../../contract/composite';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { BoundaryReferenceResolver, PathResolution, PathTargetResolver, TargetResolution } from '../../resolve';
+import type { BoundaryReferenceResolver, PathTargetResolver, TargetResolution } from '../../resolve';
 import {
   bindComposite,
   resolveScopeDefaults,
   resolveBoundaryReference,
   resolveComposite,
-  resolveNode,
-  resolveScopeFrame,
   resolvePath as resolvePathValue,
-  resolveStrokePathProviders,
   resolveTheme,
-  resolveGeometryLabel,
-  resolveGeometryLabelColors,
 } from '../../resolve';
 import {
   createCompositeContractError,
@@ -69,18 +55,9 @@ import {
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import type { PositionTargetResolveContext } from '../../resolve/position';
-import { resolvePosition, resolvePositionTargetWorld } from '../../resolve/position';
+import { resolvePosition } from '../../resolve/position';
 import { resolveClip as resolveClipValue } from '../../resolve/resource';
-import type {
-  IRChild,
-  IRPathBase,
-  IRPosition,
-  IRScopePositionTarget,
-  IRScopeSelfPoint,
-  IRStep,
-  IRTarget,
-  IRTransform,
-} from '../../schemas';
+import type { IRChild, IRPosition, IRTarget } from '../../schemas';
 import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect as rectOps } from '../../shared/geometry';
@@ -91,19 +68,16 @@ import { NamespaceStack } from '../namespace';
 import type { NodeLayout } from '../node';
 import {
   alignmentGuidesOfNode,
-  computeCompiledNodeLayout,
-  createScopeCircleLayout,
+  projectNodeLayoutObservation,
+  compileNodeLayout,
   createScopePlaceholderLayout,
-  createScopeRectangleLayout,
   createSyntheticRectangleLayout,
   emitNodePrimitives,
   labelExtentPoints,
-  layoutNode,
   outerRectOf,
   projectNodeOwnerOutput,
 } from '../node';
-import { emitPathPrimitive } from '../path';
-import { emitBoundaryLabelPrimitive, emitLabelPrimitive, wrapPathPrimitiveOutput } from '../path';
+import { emitPathKindPrimitive } from '../path';
 import {
   createCompileInvariantError,
   createLayoutChildFailure,
@@ -111,14 +85,15 @@ import {
   normalizeLayoutProbeError,
   raiseLayoutChildFailure,
 } from '../probe-failure';
-import { resolveAnchorRefUncached } from '../reference';
-import { createClipRegistry, createPaintRegistry, validateMarkerPrimitives } from '../resource';
+import { createClipRegistry, createPaintRegistry, remapPrimitiveResources } from '../resource';
+import { withProviderOutputValidationBoundary } from '../scene-primitive';
 import {
-  snapshotProviderPosition,
-  validateScenePrimitives,
-  withProviderOutputValidationBoundary,
-} from '../scene-primitive';
-import { collectScopeCornerPoints, computeScopeBoundingBox, lowerScopeTransforms } from '../scope';
+  emitScopeFrame,
+  createIntrinsicScopeLayout,
+  resolveScopePositionTarget,
+  resolveFinalScopeTransforms,
+  resolvePreliminaryScopeTransforms,
+} from '../scope';
 import { createScopeTransformContext } from '../transform';
 import type { CompositeCompileArtifact } from '../types';
 import type { CompileWarningInput } from '../warning';
@@ -139,11 +114,11 @@ import {
   compileWarningOccurrenceOf,
   createDuplicateWarning,
   replaceCompileWarningOccurrence,
-  transformWarnCode,
   withCompileWarningOccurrence,
 } from './diagnostics';
 import { cloneLayoutProposal, resolveLayoutAxisSlotSize, resolveLayoutSlotSize } from './layout-proposal';
-import { bindPathTarget, pathTargetViewOf, targetKeyOf } from './path-target';
+import { createOwnerOutputPublisher } from './owner-output';
+import { bindPathTarget, targetKeyOf } from './path-target';
 import { createPositionResolveContext } from './position-context';
 import type { InternalScenePrimitive } from './primitive';
 import {
@@ -295,7 +270,7 @@ export const compileChildrenToPrimitives = (
   const positionContextOf = (scopeChain: ReadonlyArray<Transform>): PositionTargetResolveContext =>
     createPositionResolveContext({
       geometryContext: runtime.context.nodeGeometry,
-      namespaceStack: runtime.state.namespaceStack,
+      lookupReference: id => runtime.state.namespaceStack.lookupReference(id),
       nodeDistance: runtime.context.nodeDistance,
       scopeChain,
       resolveExplicitBoundary,
@@ -329,87 +304,6 @@ export const compileChildrenToPrimitives = (
     };
   };
 
-  /** 校验并脱离 BuiltinPathKind provider 返回的 primitive 与 bounds point */
-  const validatePathKindCompileResult = (
-    kind: string,
-    value: unknown,
-  ): Readonly<{
-    result: PathKindCompileResult;
-    source: Record<string, unknown>;
-  }> | null =>
-    withProviderOutputValidationBoundary(`Path kind '${kind}'`, () => {
-      if (value === null) return null;
-      if (typeof value !== 'object') {
-        throw createCompositeContractError(`Path kind '${kind}' must return a compile result object or null.`);
-      }
-
-      const result = value as Record<string, unknown>;
-      const primitives = validateScenePrimitives(`Path kind '${kind}'`, result.primitives, validateMarkerPrimitives);
-      const rawBoundsPoints = result.boundsPoints;
-      if (!Array.isArray(rawBoundsPoints)) {
-        throw createCompositeContractError(`Path kind '${kind}' must return boundsPoints as an array.`);
-      }
-
-      const boundsPoints = Array.from(rawBoundsPoints, (point, index): IRPosition =>
-        snapshotProviderPosition(`Path kind '${kind}' bounds point at index ${index}`, point),
-      );
-
-      return {
-        result: { primitives, boundsPoints },
-        source: result,
-      };
-    });
-
-  /** 为一个 owner site 创建按需产物 publisher，并记录被选中的 observer keys */
-  const createOwnerOutputPublisher = (
-    owner: CompileObservationOwner,
-    sourcePath: string,
-    definition: { schema: { parse: (value: unknown) => unknown } } | undefined,
-  ): Readonly<{
-    keys: ReadonlyArray<string>;
-    publisher: CompileOwnerOutputPublisher<JsonValue>;
-    hasPublished: () => boolean;
-    value: () => JsonValue | undefined;
-  }> => {
-    const keys =
-      definition === undefined || runtime.context.observation === undefined
-        ? []
-        : runtime.context.observation.select(Object.freeze({ owner, sourcePath }));
-    let hasPublished = false;
-    let published: JsonValue | undefined;
-    const publisher: CompileOwnerOutputPublisher<JsonValue> = Object.freeze({
-      requested: keys.length > 0,
-      publish: value => {
-        if (keys.length === 0) return;
-        if (hasPublished) {
-          throw createCompositeContractError(`Owner '${sourcePath}' published its compile output more than once.`);
-        }
-
-        if (definition === undefined) {
-          throw createCompileInvariantError('internal: selected owner output has no definition');
-        }
-
-        let parsed: unknown;
-
-        try {
-          parsed = definition.schema.parse(value);
-        } catch (cause) {
-          throw createCompositeContractError(`Owner '${sourcePath}' returned an invalid owner output.`, { cause });
-        }
-
-        try {
-          published = cloneAndFreezeJson(parsed, `Owner '${sourcePath}' output`) as JsonValue;
-        } catch (cause) {
-          throw createCompositeContractError(`Owner '${sourcePath}' returned a non-JSON owner output.`, { cause });
-        }
-
-        hasPublished = true;
-      },
-    });
-
-    return { keys, publisher, hasPublished: () => hasPublished, value: () => published };
-  };
-
   /** 仅在选中时投影 Kernel 的同次编译事实并加入最终提交队列 */
   const publishKernelObservation = (
     owner: CompileObservationOwner,
@@ -418,7 +312,12 @@ export const compileChildrenToPrimitives = (
     schema: { parse: (value: unknown) => unknown },
     project: () => unknown,
   ): void => {
-    const output = createOwnerOutputPublisher(Object.freeze(owner), occurrence.sourcePath, { schema });
+    const output = createOwnerOutputPublisher(
+      Object.freeze(owner),
+      occurrence.sourcePath,
+      { schema },
+      runtime.context.observation,
+    );
     if (!output.publisher.requested) return;
 
     output.publisher.publish(project() as JsonValue);
@@ -462,269 +361,6 @@ export const compileChildrenToPrimitives = (
     );
   };
 
-  /** 消费 resolve/path 已绑定的 path kind，并提供内置 stroke emit 回调 */
-  const emitPathKindPrimitive = (
-    pendingPath: PendingPathEmission,
-    resolution: PathResolution,
-    targetResolver: PathTargetResolver,
-  ): PathKindCompileResult | null => {
-    const { path, scopeChain } = pendingPath;
-    const { irPath } = resolution;
-    const targetWarn = (code: string, message: string, node?: { irPath?: string }): void =>
-      runtime.context.onWarn({ code, message, path: node?.irPath ?? irPath });
-    const targetView = pathTargetViewOf(
-      resolution.targets,
-      targetWarn,
-      runtime.context.nodeGeometry,
-      scopeTransformsContext.resolve,
-    );
-    const { name: kind, definition } = resolution.kind;
-    const observationOwner = Object.freeze({ kind: 'path' as const, name: kind });
-    const ownerOutput = createOwnerOutputPublisher(
-      observationOwner,
-      pendingPath.occurrence.sourcePath,
-      definition.ownerOutput,
-    );
-
-    const emitOptions = {
-      onWarn: runtime.context.onWarn,
-      scopeChain,
-      resolvePaint: runtime.context.paint.register,
-      targetView,
-      lowerTex: runtime.context.lowerTex,
-      rootFontSize: runtime.context.rootFontSize,
-    };
-    const resolutionOf = (nextPath: IRPathBase): PathResolution =>
-      nextPath === path
-        ? resolution
-        : resolvePathValue(nextPath, {
-            scopeDefaults: pendingPath.scopeDefaults,
-            mode: pendingPath.theme.mode,
-            scopeChain,
-            targetResolver,
-            pathKinds: runtime.context.pathKinds,
-            pathGenerators: runtime.context.pathGenerators,
-            arrows: runtime.context.arrows,
-            patterns: runtime.context.patterns,
-            round: runtime.context.round,
-            irPath,
-          });
-
-    const emitStroke = (nextPath?: IRPathBase, request?: EmitStrokeOwnerOutputOptions) => {
-      const source = nextPath ?? path;
-      const sourceResolution = resolutionOf(source);
-      const strokeColor = sourceResolution.path.color;
-      const strokeSource = {
-        ...sourceResolution,
-        path: {
-          ...sourceResolution.path,
-          ...(sourceResolution.path.stroke === undefined && strokeColor !== undefined ? { stroke: strokeColor } : {}),
-        },
-      };
-      const strokeResolution = resolveStrokePathProviders(strokeSource, {
-        mode: pendingPath.theme.mode,
-        pathKinds: runtime.context.pathKinds,
-        pathGenerators: runtime.context.pathGenerators,
-        arrows: runtime.context.arrows,
-        patterns: runtime.context.patterns,
-        round: runtime.context.round,
-        irPath,
-      });
-      const emittedTargetView = pathTargetViewOf(
-        strokeResolution.targets,
-        targetWarn,
-        runtime.context.nodeGeometry,
-        scopeTransformsContext.resolve,
-      );
-      const emitted = emitPathPrimitive(strokeResolution, {
-        targetView: emittedTargetView,
-        round: runtime.context.round,
-        measureText: runtime.context.measureText,
-        options: {
-          ...emitOptions,
-          ...(request === undefined ? {} : { captureOwnerOutput: request.captureOwnerOutput }),
-        },
-      });
-
-      return emitted;
-    };
-
-    const materializePath = (input?: Readonly<{ children?: ReadonlyArray<IRStep> }>) => {
-      const pathWithoutKindOptions = { ...path };
-      delete pathWithoutKindOptions.kindOptions;
-      const source: IRPathBase = {
-        ...pathWithoutKindOptions,
-        kind: 'stroke',
-        ...(input?.children === undefined ? {} : { children: [...input.children] }),
-        label: undefined,
-        marks: undefined,
-        style: { ...path.style, color: undefined, fill: undefined, stroke: undefined, strokeWidth: undefined },
-        rotate: undefined,
-        scale: undefined,
-      };
-      const emittedResolution = resolveStrokePathProviders(resolutionOf(source), {
-        mode: pendingPath.theme.mode,
-        pathKinds: runtime.context.pathKinds,
-        pathGenerators: runtime.context.pathGenerators,
-        arrows: runtime.context.arrows,
-        patterns: runtime.context.patterns,
-        round: runtime.context.round,
-        irPath,
-      });
-      const emitted = emitPathPrimitive(emittedResolution, {
-        targetView: pathTargetViewOf(
-          emittedResolution.targets,
-          targetWarn,
-          runtime.context.nodeGeometry,
-          scopeTransformsContext.resolve,
-        ),
-        round: runtime.context.round,
-        measureText: runtime.context.measureText,
-        options: emitOptions,
-      });
-
-      const findPath = (primitives: ReadonlyArray<ScenePrimitive>): PathPrim | undefined => {
-        for (const primitive of primitives) {
-          if (primitive.type === 'path') return primitive;
-          if (primitive.type === 'group') {
-            const nested = findPath(primitive.children);
-            if (nested !== undefined) return nested;
-          }
-        }
-
-        return undefined;
-      };
-
-      const primitive = emitted === null ? undefined : findPath(emitted.primitives);
-
-      return {
-        commands: primitive?.commands ?? [],
-        boundsPoints: emitted?.boundsPoints ?? [],
-      };
-    };
-
-    const resolvedFill =
-      resolution.path.fill === undefined ? undefined : emitOptions.resolvePaint(resolution.path.fill);
-    const resolvedStroke =
-      resolution.path.stroke === undefined ? undefined : emitOptions.resolvePaint(resolution.path.stroke);
-    const appearance: ResolvedPathKindAppearance = Object.freeze({
-      ...(resolution.path.color === undefined ? {} : { color: resolution.path.color }),
-      ...(resolvedFill === undefined ? {} : { fill: resolvedFill }),
-      ...(resolvedStroke === undefined ? {} : { stroke: resolvedStroke }),
-      ...(resolution.path.fillRule === undefined ? {} : { fillRule: resolution.path.fillRule }),
-      strokeWidth: resolution.path.strokeWidth,
-      ...(resolution.path.dashPattern === undefined ? {} : { dashPattern: resolution.path.dashPattern }),
-      ...(resolution.path.dashOffset === undefined ? {} : { dashOffset: resolution.path.dashOffset }),
-      ...(resolution.path.lineCap === undefined ? {} : { strokeLinecap: resolution.path.lineCap }),
-      ...(resolution.path.lineJoin === undefined ? {} : { strokeLinejoin: resolution.path.lineJoin }),
-      ...(resolution.path.opacity === undefined ? {} : { opacity: resolution.path.opacity }),
-      ...(resolution.path.fillOpacity === undefined ? {} : { fillOpacity: resolution.path.fillOpacity }),
-      ...(resolution.path.strokeOpacity === undefined ? {} : { strokeOpacity: resolution.path.strokeOpacity }),
-      ...(resolution.path.shadow === undefined ? {} : { shadow: resolution.path.shadow }),
-      ...(resolution.path.blendMode === undefined ? {} : { blendMode: resolution.path.blendMode }),
-    });
-
-    const hostLabelBoundsPoints: Array<IRPosition> = [];
-    const emitHostLabels = (input: PathKindLabelInput): ReadonlyArray<ScenePrimitive> =>
-      input.labels.flatMap((label, index) => {
-        const sample = input.samples[index];
-        const emittedLabel = emitLabelPrimitive({ ...label, interrupt: false, gap: label.gap ?? 4 }, sample, {
-          measureText: runtime.context.measureText,
-          round: runtime.context.round,
-          rootFontSize: runtime.context.rootFontSize,
-          hostOpacity: resolution.path.opacity,
-          placement: { boundaryOffset: sample.boundaryOffset },
-        });
-        hostLabelBoundsPoints.push(...emittedLabel.boundsPoints);
-
-        return [emittedLabel.primitive];
-      });
-    const emitBoundaryLabels = (input: ReadonlyArray<PathKindBoundaryLabelInput>): ReadonlyArray<ScenePrimitive> =>
-      input.map(request => {
-        const labelDefault = pendingPath.scopeDefaults.label ?? {};
-        const styled = resolveGeometryLabelColors(
-          resolveGeometryLabel(request.label, labelDefault, resolution.path.color),
-          labelDefault.color ?? resolution.path.color,
-          { mode: pendingPath.theme.mode },
-          `${irPath}.${request.sourcePath}`,
-        );
-        const emitted = emitBoundaryLabelPrimitive(request, styled, {
-          measureText: runtime.context.measureText,
-          round: runtime.context.round,
-          rootFontSize: runtime.context.rootFontSize,
-          hostOpacity: resolution.path.opacity,
-          tex: {
-            lowerTex: runtime.context.lowerTex,
-            gatingOn: runtime.context.lowerTex !== undefined,
-            warn: (code, message) => targetWarn(code, message, { irPath: `${irPath}.${request.sourcePath}` }),
-          },
-        });
-        hostLabelBoundsPoints.push(...emitted.boundsPoints);
-        if (path.meta !== undefined) emitted.primitive.meta = path.meta;
-
-        return emitted.primitive;
-      });
-
-    const compilePathKind = definition.compile as unknown as (context: PathKindCompileContext) => unknown;
-    const produced = compilePathKind({
-      path: resolution.kind.path,
-      ownerOutput: ownerOutput.publisher,
-      materializePath,
-      emitStroke,
-      emitHostLabels,
-      emitBoundaryLabels,
-      wrapOutput: output => {
-        const boundsPoints = [...output.boundsPoints, ...hostLabelBoundsPoints];
-        const primitive = output.primitives.at(0);
-        if (primitive === undefined) return { ...output, boundsPoints };
-
-        return wrapPathPrimitiveOutput({
-          path: resolution.path,
-          primitive,
-          bodyPrims: output.primitives,
-          boundsPoints,
-          round: runtime.context.round,
-        });
-      },
-      appearance,
-      round: runtime.context.round,
-    });
-
-    const validated = validatePathKindCompileResult(kind, produced);
-    if (validated === null) {
-      if (ownerOutput.publisher.requested && ownerOutput.hasPublished()) {
-        throw createCompositeContractError(
-          `Path kind '${kind}' at ${formatCompileOccurrence(pendingPath.occurrence)} must not publish owner output when it returns null.`,
-        );
-      }
-
-      return null;
-    }
-
-    const value = ownerOutput.value();
-    if (ownerOutput.publisher.requested && value === undefined) {
-      throw createCompositeContractError(
-        `Path kind '${kind}' at ${formatCompileOccurrence(pendingPath.occurrence)} must publish its owner output exactly once.`,
-      );
-    }
-
-    if (value !== undefined) {
-      pendingPath.observationSink.push({
-        owner: observationOwner,
-        ancestors: pendingPath.ancestors,
-        occurrence: freezeOccurrence(pendingPath.occurrence),
-        origin: freezeOccurrence(pendingPath.occurrence),
-        scopeChain,
-        value,
-        observerKeys: ownerOutput.keys,
-        theme: pendingPath.theme,
-        scopeDefaults: pendingPath.scopeDefaults,
-      });
-    }
-
-    return validated.result;
-  };
-
   /** 把 allocation contribution 绑定到最近的显式 composite allocation boundary */
   const pushAllocation = (
     sink: TraversalFrame['allocationSink'],
@@ -761,7 +397,10 @@ export const compileChildrenToPrimitives = (
             irPath: pendingPath.irPath,
           });
           const result = withWarningOccurrence(pendingPath.occurrence, () =>
-            emitPathKindPrimitive(pendingPath, resolution, targetResolver),
+            emitPathKindPrimitive(pendingPath, resolution, targetResolver, {
+              ...runtime.context,
+              resolveTransform: scopeTransformsContext.resolve,
+            }),
           );
           const rawPrimitives = result?.primitives ?? [];
           const primitives = runtime.state.provenanceTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
@@ -805,46 +444,16 @@ export const compileChildrenToPrimitives = (
   ): void => {
     const { scopeChain, primitiveSink, locatorPrefix, layoutSink, scopeDefaults } = frame;
     const nodeIrPath = `${locatorPrefix}children[${index}].node`;
-    const warn = (code: CompileWarningCode, message: string): void =>
-      runtime.context.onWarn({ code, message, path: nodeIrPath });
 
-    const resolvedNode = resolveNode(child, {
+    const layout = compileNodeLayout(child, nodeIrPath, {
+      ...runtime.context,
       scopeDefaults,
       mode: frame.theme.mode,
-      shapes: runtime.context.shapes,
-      boundaries: runtime.context.boundaries,
-      patterns: runtime.context.patterns,
-      round: runtime.context.round,
-      irPath: nodeIrPath,
-      warn,
-      labelDistance: runtime.context.labelDistance,
+      scopeChain,
+      positionContext: positionContextOf(scopeChain),
+      effectiveTransform: scopeTransformsContext.resolve(scopeChain),
+      childProposal: frame.childProposal,
     });
-    const canonicalNode = {
-      ...resolvedNode.node,
-      animations: filterAnimations(resolvedNode.node.animations, {
-        target: 'element',
-        onWarn: runtime.context.onWarn,
-        irPath: nodeIrPath,
-      }),
-    };
-
-    const layout = layoutNode(
-      { ...resolvedNode, node: canonicalNode },
-      {
-        measureText: runtime.context.measureText,
-        geometryContext: runtime.context.nodeGeometry,
-        positionContext: positionContextOf(scopeChain),
-        effectiveTransform: scopeTransformsContext.resolve(scopeChain),
-        rootFontSize: runtime.context.rootFontSize,
-        scopeChain,
-        warn,
-        ...(frame.childProposal?.x === undefined ? {} : { allocationWidthProposal: frame.childProposal.x }),
-        texLowering: {
-          lowerTex: runtime.context.lowerTex,
-          warn: (code, message) => runtime.context.onWarn({ code, message, path: nodeIrPath }),
-        },
-      },
-    );
 
     const globalLayout = scopeTransformsContext.project(layout, scopeChain);
     publishKernelObservation(
@@ -975,79 +584,13 @@ export const compileChildrenToPrimitives = (
     pathSink.push(pending);
   };
 
-  /** 拒绝非 finite 的 Scope position 中间结果 */
-  const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition => {
-    if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) {
-      throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `${label} must resolve to a finite point`);
-    }
-
-    return point;
-  };
-
-  /**
-   * 在 children 编译前冻结 Scope position target
-   * @description 只允许父 frame 显式坐标或此前已完成的 namespace entry，避免 descendant / self / placeholder cycle
-   */
-  const resolveScopePositionTarget = (
-    child: ScopeChild,
-    index: number,
-    frame: TraversalFrame,
-  ): IRPosition | undefined => {
-    const target: IRScopePositionTarget | undefined = Array.isArray(child.position)
-      ? undefined
-      : child.position?.target;
-    if (target === undefined) return undefined;
-    if (Array.isArray(target)) {
-      return assertFiniteScopePoint([target[0], target[1]], 'scope position target');
-    }
-
-    const scopeIrPath = `${frame.locatorPrefix}children[${index}].scope`;
-    if (target.id === child.id) {
-      throw createLayoutProbeRecoverableError(
-        `Cannot resolve scope position target '${target.id}' at ${scopeIrPath}: self target is not allowed`,
-      );
-    }
-
-    const positionContext = positionContextOf(frame.scopeChain);
-    const reference = positionContext.lookupReference(target.id);
-    if (reference === undefined || reference.state !== 'resolved') {
-      throw createLayoutProbeRecoverableError(
-        `Cannot resolve scope position target '${target.id}' at ${scopeIrPath}: target must be defined and fully resolved before this Scope`,
-      );
-    }
-
-    const resolution = resolvePositionTargetWorld(target, positionContext);
-    if (resolution.referencePoint === null) {
-      throw new RetikzCoreError(
-        RetikzCoreErrorCode.Compile,
-        `Cannot resolve scope position target '${target.id}' at ${scopeIrPath}`,
-      );
-    }
-
-    return assertFiniteScopePoint(positionContext.toLocal(resolution.referencePoint), 'scope position target');
-  };
-
-  /** 从当前 Scope 的固有 child layouts 创建 rectangle / circle synthetic envelope */
-  const createIntrinsicScopeLayout = (child: ScopeChild, scopeLayouts: ReadonlyArray<NodeLayout>): NodeLayout => {
-    const id = child.id ?? '__anonymous_scope__';
-    return child.boundingShape === ScopeBoundingShape.Circle
-      ? createScopeCircleLayout(
-          { id, cornerPoints: collectScopeCornerPoints(scopeLayouts), fallbackOrigin: [0, 0] },
-          { shapes: runtime.context.shapes, boundaries: runtime.context.boundaries },
-        )
-      : createScopeRectangleLayout(
-          { id, bbox: computeScopeBoundingBox(scopeLayouts), fallbackOrigin: [0, 0] },
-          { shapes: runtime.context.shapes, boundaries: runtime.context.boundaries },
-        );
-  };
-
-  /** 将已按 parent ancestor chain 发布的 layout 原位插入当前 Scope own chain */
-  const applyOwnTransformsToPublishedLayout = (
+  /** 将已按 parent ancestor chain 发布的 layout 投影并返回新布局，不修改已发布对象当前 Scope own chain */
+  const projectPublishedLayout = (
     layout: NodeLayout,
     parentChain: ReadonlyArray<Transform>,
     ownChain: ReadonlyArray<Transform>,
-  ): void => {
-    if (ownChain.length === 0) return;
+  ): NodeLayout => {
+    if (ownChain.length === 0) return layout;
 
     const projectAcrossParent = (point: IRPosition): IRPosition => {
       const parentPoint = parentChain.length === 0 ? point : scopeTransformsContext.inverse(point, parentChain);
@@ -1071,7 +614,7 @@ export const compileChildrenToPrimitives = (
       }
     }
 
-    layout.geometry.rect = {
+    const rect = {
       ...layout.geometry.rect,
       x,
       y,
@@ -1079,134 +622,13 @@ export const compileChildrenToPrimitives = (
       width: layout.geometry.rect.width * Math.abs(scaleX),
       height: layout.geometry.rect.height * Math.abs(scaleY),
     };
-    layout.geometry.contentCenter = [contentX, contentY];
-    layout.geometry.margin = {
+    const margin = {
       top: layout.geometry.margin.top * Math.abs(scaleY),
       right: layout.geometry.margin.right * Math.abs(scaleX),
       bottom: layout.geometry.margin.bottom * Math.abs(scaleY),
       left: layout.geometry.margin.left * Math.abs(scaleX),
     };
-  };
-
-  /** anchor position self point：anchor 在 transformed envelope 上解析；origin / 显式点先按 own chain 投影 */
-  const resolveTransformedSelfPoint = (
-    point: IRScopeSelfPoint,
-    intrinsicLayout: NodeLayout,
-    transformedLayout: NodeLayout,
-    scopeTransforms: ReadonlyArray<Transform>,
-  ): IRPosition => {
-    if (typeof point === 'string') {
-      if (point !== 'origin') {
-        return assertFiniteScopePoint(resolveAnchorRefUncached(transformedLayout, point), 'scope position selfAnchor');
-      }
-
-      return assertFiniteScopePoint(scopeTransformsContext.apply([0, 0], scopeTransforms), 'scope position selfAnchor');
-    }
-
-    if (Array.isArray(point)) {
-      return assertFiniteScopePoint(
-        scopeTransformsContext.apply([point[0], point[1]], scopeTransforms),
-        'scope position selfAnchor',
-      );
-    }
-
-    return assertFiniteScopePoint(resolveAnchorRefUncached(transformedLayout, point), 'scope position selfAnchor');
-  };
-
-  /** children intrinsic layout 完成后解析 pivot，并生成最终 own chain */
-  const resolveFinalScopeTransforms = (
-    child: ScopeChild,
-    index: number,
-    frame: TraversalFrame,
-    intrinsicLayout: NodeLayout,
-    positionTarget: IRPosition | undefined,
-    preliminaryTransforms: Array<Transform> | undefined,
-  ): Array<Transform> => {
-    const scopeIrPath = `${frame.locatorPrefix}children[${index}].scope`;
-    let failedTransform: IRTransform | undefined;
-    const loweredOwn =
-      preliminaryTransforms ??
-      lowerScopeTransforms(child.transforms ?? [], {
-        positionContext: positionContextOf(frame.scopeChain),
-        intrinsicLayout,
-        onUnresolved: transform => {
-          failedTransform = transform;
-        },
-      });
-    if (loweredOwn === null) {
-      runtime.context.onWarn({
-        code: transformWarnCode(failedTransform),
-        message: `Cannot resolve one of scope.transforms; referent (at.of / offset.of / polar.origin / between endpoints) is undefined or defined later in the IR`,
-        path: `${scopeIrPath}.transforms`,
-      });
-    }
-
-    const scopeTransforms = loweredOwn ?? [];
-    if (Array.isArray(child.position)) {
-      if (preliminaryTransforms !== undefined) return scopeTransforms;
-      const [x, y] = child.position;
-      return x === 0 && y === 0 ? scopeTransforms : [{ kind: 'translate', x, y }, ...scopeTransforms];
-    }
-    if (positionTarget === undefined) return scopeTransforms;
-
-    const transformedLayout =
-      scopeTransforms.length === 0 ? intrinsicLayout : scopeTransformsContext.project(intrinsicLayout, scopeTransforms);
-    const selfPoint = resolveTransformedSelfPoint(
-      (!Array.isArray(child.position) ? child.position?.selfAnchor : undefined) ?? 'center',
-      intrinsicLayout,
-      transformedLayout,
-      scopeTransforms,
-    );
-    const alignment: Transform = {
-      kind: 'translate',
-      x: positionTarget[0] - selfPoint[0],
-      y: positionTarget[1] - selfPoint[1],
-    };
-    assertFiniteScopePoint([alignment.x, alignment.y], 'scope position');
-
-    return [alignment, ...scopeTransforms];
-  };
-
-  /**
-   * 不依赖 intrinsic envelope 的既有 transform 可在 children 前冻结
-   * @description 保持 v0.4 Scope transform 下跨 frame relative 定位语义；anchor pivot 才进入完整两阶段收尾
-   */
-  const resolvePreliminaryScopeTransforms = (
-    child: ScopeChild,
-    index: number,
-    frame: TraversalFrame,
-  ): Array<Transform> | undefined => {
-    const needsIntrinsicEnvelope = (child.transforms ?? []).some(transform => {
-      if (transform.kind !== 'rotate' && transform.kind !== 'scale') return false;
-      const pivot = transform.pivot;
-      return pivot !== undefined && pivot !== 'origin' && !Array.isArray(pivot);
-    });
-    if (needsIntrinsicEnvelope) return undefined;
-
-    let failedTransform: IRTransform | undefined;
-    const transforms = lowerScopeTransforms(child.transforms ?? [], {
-      positionContext: positionContextOf(frame.scopeChain),
-      onUnresolved: transform => {
-        failedTransform = transform;
-      },
-    });
-    if (transforms !== null) {
-      if (Array.isArray(child.position)) {
-        const [x, y] = child.position;
-        if (x !== 0 || y !== 0) return [{ kind: 'translate', x, y }, ...transforms];
-      }
-      return transforms;
-    }
-
-    runtime.context.onWarn({
-      code: transformWarnCode(failedTransform),
-      message: `Cannot resolve one of scope.transforms; referent (at.of / offset.of / polar.origin / between endpoints) is undefined or defined later in the IR`,
-      path: `${frame.locatorPrefix}children[${index}].scope.transforms`,
-    });
-
-    return Array.isArray(child.position) && (child.position[0] !== 0 || child.position[1] !== 0)
-      ? [{ kind: 'translate', x: child.position[0], y: child.position[1] }]
-      : [];
+    return { ...layout, geometry: { ...layout.geometry, rect, margin, contentCenter: [contentX, contentY] } };
   };
 
   /** 有 scope.id 时先注册占位 layout，等子树 bbox 算出后再替换 */
@@ -1301,11 +723,16 @@ export const compileChildrenToPrimitives = (
         ? `${locatorPrefix}children[${index}].scope.theme`
         : `${formatCompileOccurrence(generatedOccurrence)}.scope.theme`;
     const theme = resolveTheme(frame.theme, child.theme, themePath, context.themeStyles);
-    const positionTarget = resolveScopePositionTarget(child, index, frame);
+    const scopeGeometryContext = {
+      positionContext: positionContextOf(frame.scopeChain),
+      irPath: `${locatorPrefix}children[${index}].scope`,
+      onWarn: runtime.context.onWarn,
+    };
+    const positionTarget = resolveScopePositionTarget(child, scopeGeometryContext);
 
     // runtime Scope 可能包住在当前 frame 外完成的 replay probe，因此它的数值 transform
     // 必须在 Scope 收尾时统一投影到普通 child 与 replay 导入的 publication/observation
-    const preliminaryTransforms = resolvePreliminaryScopeTransforms(child, index, frame);
+    const preliminaryTransforms = resolvePreliminaryScopeTransforms(child, scopeGeometryContext);
     const preliminaryScopeChain =
       preliminaryTransforms === undefined
         ? frame.scopeChain
@@ -1365,39 +792,24 @@ export const compileChildrenToPrimitives = (
         compileNested(scopeFrame, preliminaryTransforms);
       }
 
-      const intrinsicLayout = createIntrinsicScopeLayout(child, scopeLayouts);
+      const intrinsicLayout = createIntrinsicScopeLayout(child, scopeLayouts, runtime.context);
       if (child.frame !== undefined && scopeLayouts.length > 0) {
-        const appearance = resolveScopeFrame(child.frame, scopeFrame.scopeDefaults, {
-          mode: theme.mode,
-          patterns: context.patterns,
-          round: context.round,
-          irPath: `${scopeFrame.locatorPrefix}frame`,
-        });
-        const { padding, fill, stroke, ...style } = appearance;
-        const frameLayout: NodeLayout = {
-          ...intrinsicLayout,
-          node: { ...intrinsicLayout.node, ...style, id: undefined, fill, stroke },
-          geometry: {
-            ...intrinsicLayout.geometry,
-            rect: {
-              ...intrinsicLayout.geometry.rect,
-              width: intrinsicLayout.geometry.rect.width + 2 * padding,
-              height: intrinsicLayout.geometry.rect.height + 2 * padding,
-            },
-          },
-        };
-        framePrimitives = emitNodePrimitives(frameLayout, context.round, context.paint.register).map(primitive => ({
-          ...primitive,
-          hitTest: false,
-        }));
+        framePrimitives = emitScopeFrame(
+          child,
+          intrinsicLayout,
+          scopeFrame.scopeDefaults,
+          theme.mode,
+          context,
+          context.paint.register,
+          scopeOccurrence.sourcePath,
+        );
         if (semanticOwner !== undefined)
           runtime.state.provenanceTracker?.recordPrimitives(framePrimitives, semanticOwner, 'scope-frame');
       }
 
       scopeTransforms = resolveFinalScopeTransforms(
         child,
-        index,
-        frame,
+        scopeGeometryContext,
         intrinsicLayout,
         positionTarget,
         preliminaryTransforms,
@@ -1429,8 +841,9 @@ export const compileChildrenToPrimitives = (
           : scopeTransforms.slice(0, scopeTransforms.length - preliminaryTransforms.length);
 
       for (const layout of scopePublications) {
-        applyOwnTransformsToPublishedLayout(layout, frame.scopeChain, postTransforms);
-        frame.publicationSink.push(layout);
+        const projected = projectPublishedLayout(layout, frame.scopeChain, postTransforms);
+        runtime.state.namespaceStack.replacePublishedLayout(layout, projected);
+        frame.publicationSink.push(projected);
       }
 
       for (const observation of scopeObservations) {
@@ -1650,39 +1063,6 @@ export const compileChildrenToPrimitives = (
     });
   };
 
-  const remapPaint = (paint: PaintValue | undefined, ids: ReadonlyMap<string, string>): PaintValue | undefined => {
-    if (paint === undefined || typeof paint === 'string' || paint.kind === 'contextStroke') return paint;
-
-    const id = ids.get(paint.id);
-    if (id === undefined)
-      throw createCompileInvariantError(`internal: replay paint resource '${paint.id}' was not imported`);
-
-    return { kind: 'resourceRef', id };
-  };
-
-  const remapPrimitiveResources = (primitive: ScenePrimitive, ids: ReadonlyMap<string, string>): ScenePrimitive => {
-    if (primitive.type === 'group') {
-      const clipRef = primitive.clipRef === undefined ? undefined : ids.get(primitive.clipRef);
-      if (primitive.clipRef !== undefined && clipRef === undefined) {
-        throw createCompileInvariantError(`internal: replay clip resource '${primitive.clipRef}' was not imported`);
-      }
-
-      return {
-        ...primitive,
-        ...(clipRef !== undefined ? { clipRef } : {}),
-        children: primitive.children.map(child => remapPrimitiveResources(child, ids)),
-      };
-    }
-
-    if (primitive.type === 'text') return { ...primitive };
-
-    return {
-      ...primitive,
-      fill: remapPaint(primitive.fill, ids),
-      stroke: remapPaint(primitive.stroke, ids),
-    };
-  };
-
   const replayOccurrence = (
     parent: CompileOccurrenceLocator,
     index: number,
@@ -1818,25 +1198,27 @@ export const compileChildrenToPrimitives = (
         ? frame.scopeChain
         : frame.scopeChain.slice(0, frame.scopeChain.length - authoredPreliminary.length);
     const namespaceTransforms = [...(authoredPreliminary ?? []), ...(transforms ?? [])];
-    const publishedLayouts = new Set<NodeLayout>();
+    const publishedLayouts = new Map<NodeLayout, NodeLayout>();
 
     for (const [changeIndex, change] of transaction.namespaceChanges.entries()) {
-      if (namespaceTransforms.length > 0 && !publishedLayouts.has(change.entry.layout)) {
-        applyOwnTransformsToPublishedLayout(change.entry.layout, namespaceParentChain, namespaceTransforms);
-      }
+      const previousLayout = change.entry.layout;
+      const alreadyPublished = publishedLayouts.get(previousLayout);
+      const projectedLayout =
+        alreadyPublished ?? projectPublishedLayout(previousLayout, namespaceParentChain, namespaceTransforms);
+      const projectedChange = { ...change, entry: { ...change.entry, layout: projectedLayout } };
 
       const changeOccurrence = transaction.namespaceChangeOccurrences[changeIndex] ?? occurrence;
       const committedAgainstBaseline = withWarningOccurrence(
         replayOccurrence(occurrence, outputIndex, transaction.originOccurrence, changeOccurrence),
-        () => runtime.state.namespaceStack.commitForkChange(change),
+        () => runtime.state.namespaceStack.commitForkChange(projectedChange),
       );
       if (change.overwroteBaseline && !committedAgainstBaseline) {
         const baselineWarning = transaction.namespaceBaselineWarnings.find(candidate => candidate.id === change.id);
         if (baselineWarning !== undefined) suppressedNamespaceWarnings.add(baselineWarning.warning);
       }
 
-      if (!publishedLayouts.has(change.entry.layout)) frame.publicationSink.push(change.entry.layout);
-      publishedLayouts.add(change.entry.layout);
+      if (alreadyPublished === undefined) frame.publicationSink.push(projectedLayout);
+      publishedLayouts.set(previousLayout, projectedLayout);
     }
 
     for (const layout of transaction.layouts) {
@@ -2669,7 +2051,7 @@ export const compileChildrenToPrimitives = (
           const queryChain = environment.scopeChain;
           const positionContext = createPositionResolveContext({
             geometryContext: runtime.context.nodeGeometry,
-            namespaceStack: targetNamespace,
+            lookupReference: id => targetNamespace.lookupReference(id),
             nodeDistance: context.nodeDistance,
             scopeChain: queryChain,
             resolveExplicitBoundary,
@@ -3183,7 +2565,7 @@ export const compileChildrenToPrimitives = (
           kind: 'nodeLayout',
           occurrence: observation.occurrence,
           value: cloneAndFreezeJson(
-            computeCompiledNodeLayout(
+            projectNodeLayoutObservation(
               observation.layout,
               observation.scopeChain,
               scopeTransformsContext.resolve(observation.scopeChain),

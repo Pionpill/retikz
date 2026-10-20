@@ -17,7 +17,7 @@ export type {
   CompileArtifact,
   CompileArtifactOptions,
   CompileCompositeOptions,
-  CompiledNodeLayout,
+  NodeLayoutObservation,
   CompileHostOptions,
   CompileLayoutOptions,
   CompileOptions,
@@ -34,3 +34,10 @@ export { formatCompileWarning } from './warning';
 
 export type { PreparedSceneCompilation, SceneCompilationPreparationOptions } from './compile';
 export * from './provenance';
+export * from './element';
+export * from './environment';
+export { assembleSceneCompilation } from './output';
+export type { SceneCompilationMetadata } from './output';
+
+export { createCompileObservationRuntime } from './orchestration';
+export type { CompileObservationRuntime } from './orchestration';

@@ -70,7 +70,7 @@ const lower = (
   options: LowerOptions = {},
 ) => {
   const { nodeDistance = 24, scopeChain, resolveBetweenGlobal, ...rest } = options;
-  const base = createPositionResolveContext({ namespaceStack, nodeDistance, scopeChain });
+  const base = createPositionResolveContext({ lookupReference: id => namespaceStack.lookupReference(id), nodeDistance, scopeChain });
   const positionContext = { ...base, resolveBetweenWorld: resolveBetweenGlobal };
 
   return lowerScopeTransforms(transforms, { positionContext, ...rest });

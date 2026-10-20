@@ -295,7 +295,10 @@ The target is determined before entering children. Scope anchor placement theref
 
 <SourceLinks
   sources={[
-    { label: 'Envelope collection and self-pivot resolution', path: 'packages/kernel/core/src/compile/scope.ts' },
+    {
+      label: 'Envelope collection and self-pivot resolution',
+      path: 'packages/kernel/core/src/compile/scope/layout.ts',
+    },
     {
       label: 'Scope target restrictions, placeholder registration, and replacement',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
@@ -322,7 +325,7 @@ During finalization, Core adds only transforms that have not already been applie
   sources={[
     {
       label: 'lowerScopeTransforms: referenced translation and envelope pivots',
-      path: 'packages/kernel/core/src/compile/scope.ts',
+      path: 'packages/kernel/core/src/compile/scope/layout.ts',
     },
     {
       label: 'Preliminary transforms, final alignment, and geometry publication',

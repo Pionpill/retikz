@@ -92,7 +92,7 @@ Core needs a way to measure text, resolve shapes, and collect shared drawing res
 - Definition: an implementation of a shape, path, or composite capability.
 - Registry: a lookup table used to find a Definition by name during this compilation.
 
-`createCompileContext` assembles built-in and caller-provided definitions into their registries, resolves the root theme, and prepares measurement, output precision, resource tables, and warning collection. Without injected text measurement, it uses an approximate built-in measurer. Core itself does not read the DOM.
+`createCompileEnvironment` assembles built-in and caller-provided definitions into read-only registries and retains measurement services and numeric settings. The internal `createCompileContext` uses that environment to create a per-call workspace: the root theme, an isolated text measurement cache, paint / clip resources, and warning collection. Without injected text measurement, it uses an approximate built-in measurer. Core itself does not read the DOM.
 
 Built-in definitions and external definitions from CompileOptions are registered by capability in the context's registries for lookup and invocation during compilation, while generated paint and clip resources are collected by the context's `paint` and `clip` and written to the Scene resource table.
 
@@ -410,10 +410,10 @@ export type CompositeCompileArtifact<
 export type NodeLayoutCompileArtifact = Readonly<{
   kind: 'nodeLayout';
   occurrence: CompileOccurrenceLocator;
-  value: CompiledNodeLayout;
+  value: NodeLayoutObservation;
 }>;
 
-export type CompiledNodeLayout = {
+export type NodeLayoutObservation = {
   kind: 'node';
   id?: string;
   content: {
@@ -538,5 +538,56 @@ Start in `prepareSceneCompilation` to see context creation, traversal, and assem
       description: 'Follow child queries, isolated probes and replay',
       url: '/kernel/packages/core/composite-compilation',
     },
+  ]}
+/>
+
+## Independent compilation and reusable state
+
+A caller that schedules elements itself can retain a `CompileEnvironment` and compile one basic element through these entries. They share resolve, layout and emit logic with full compilation, do not recursively compile other elements, and do not register names automatically.
+
+| Entry               | Completed state      | Retained data                                                                    |
+| ------------------- | -------------------- | -------------------------------------------------------------------------------- |
+| `compileNode`       | `CompiledNode`       | NodeLayout in `layout`; drawing, resources and selected observations in `output` |
+| `compileCoordinate` | `CompiledCoordinate` | `id` and local `position`; `output` only when observation is selected            |
+| `compilePath`       | `CompiledPath`       | Complete `output`, including host processing for custom kinds                    |
+| `compileScope`      | `CompiledScope`      | `envelope`, `group` without children, and its own `output`                       |
+
+`NodeLayoutObservation`, previously named `CompiledNodeLayout`, is a public observation projection. It lacks the complete state required for drawing reuse; cache `CompiledNode` instead.
+
+```ts
+import { assembleSceneCompilation, compileNode, createCompileEnvironment, resolveScopeContext } from '@retikz/core';
+
+const environment = createCompileEnvironment();
+const result = compileNode(
+  { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+  {
+    environment,
+    scope: resolveScopeContext({}, environment),
+    irPath: 'children[0].node',
+  },
+);
+
+if (result.status === 'compiled') {
+  const prepared = assembleSceneCompilation({}, [result.compiled.output], environment, {
+    diagnostics: result.diagnostics,
+  });
+  // prepared.result.scene is ready for a renderer; diagnostics are not dispatched
+}
+```
+
+An element call returns `compiled` or `pending`. The former includes complete state, `reads` and diagnostics; the latter includes reads only and publishes no partial result. Names are searched inside-out along a `CompileNamespace` parent chain; reads include both missing and matched bindings. Supply an explicit empty namespace to track names that may be added later. Omitting namespace means there are no queryable bindings for this call. Register only names visible at the declaration site: pending must not enable forward references for Node / Scope. Path can still wait for its references. `projectCompileReference` projects completed state into registerable reference geometry.
+
+Scope calculation has two stages. `prepareScopeCompilation` resolves inherited context and preliminary transforms; `compileScope` consumes completed child layouts to determine the envelope and final transforms. Pass the established ancestor transforms when compiling children. Envelope-dependent placement is projected after Scope completion. `assembleScopeOutput` combines the Scope's own output with child outputs without running providers again or storing a duplicate subtree in cached state.
+
+Resource IDs are local to each output fragment. `assembleScopeOutput` / `assembleSceneCompilation` import and remap resources, stably order sibling zIndex values, apply final transforms, and assemble Scene. Selected node layout artifacts and owner observations travel with the fragments. Create an observation session with `createCompileObservationRuntime`, pass it to element calls and final assembly, and do not reuse it across batches after completion. Other completed Composite artifacts, spatial handles and provenance are supplied through metadata from the same version; assembly does not infer this orchestration data.
+
+These entries provide Core's scheduling primitives. Reconciler owns name mapping, dependency invalidation, version isolation and publication; the interface does not construct or update WeaveTree automatically. Callers must not mutate data reachable from published compiled state. Changes to environment definitions or measurement services invalidate affected caches. Compiled state containing Definitions and text emit functions cannot be serialized directly into Worker messages.
+
+<SourceLinks
+  sources={[
+    { label: 'Element types and context', path: 'packages/kernel/core/src/compile/element/types.ts' },
+    { label: 'Stable compilation environment', path: 'packages/kernel/core/src/compile/environment.ts' },
+    { label: 'Local output assembly', path: 'packages/kernel/core/src/compile/element/output.ts' },
+    { label: 'Scene and metadata assembly', path: 'packages/kernel/core/src/compile/output.ts' },
   ]}
 />

@@ -93,7 +93,7 @@ type CompositeCompileArtifact<
 type NodeLayoutCompileArtifact = Readonly<{
   kind: 'nodeLayout';
   occurrence: CompileOccurrenceLocator;
-  value: CompiledNodeLayout;
+  value: NodeLayoutObservation;
 }>;
 
 type CompileResult = Readonly<{

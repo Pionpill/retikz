@@ -378,6 +378,20 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '单元素编译与可复用状态', en: 'Element compilation and reusable state' },
+          content: {
+            zh: 'Core 新增 compileNode / compileCoordinate / compilePath / compileScope 与对应 CompiledXxx 状态、显式 CompileEnvironment、引用读取和输出组装能力，供 Reconciler 持有与调度。Scope 保留准备与包络完成两个阶段；本次不实现 Weave 调度算法。',
+            en: 'Core adds compileNode / compileCoordinate / compilePath / compileScope, matching CompiledXxx states, explicit CompileEnvironment, reference reads and output assembly for Reconciler. Scope retains separate preparation and envelope completion phases; Weave scheduling is not implemented in this change.',
+          },
+        },
+        {
+          label: { zh: 'BREAKING：节点布局观察类型更名', en: 'BREAKING: node layout observation type renamed' },
+          content: {
+            zh: '公开类型 CompiledNodeLayout 更名为 NodeLayoutObservation，请更新类型导入。完整可缓存节点状态使用 CompiledNode，观察 DTO 的字段语义保持不变。',
+            en: 'The public CompiledNodeLayout type is renamed to NodeLayoutObservation; update type imports. Use CompiledNode for complete cacheable state. Observation DTO field semantics are unchanged.',
+          },
+        },
+        {
           label: { zh: '按需布局测量', en: 'On-demand layout measurement' },
           content: {
             zh: '复合组件新增按轴 measureChild 贡献查询；同次编译复用等价尺寸贡献与纯文字度量，完整布局和一次 replay 仍保持独立。',

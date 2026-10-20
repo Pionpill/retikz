@@ -1,4 +1,4 @@
-import type { CompiledNodeLayout, GroupPrim, PathPrim, ScenePrimitive } from '@retikz/core';
+import type { NodeLayoutObservation, GroupPrim, PathPrim, ScenePrimitive } from '@retikz/core';
 import { compileToScene, isNodeLayoutCompileArtifact, rect as rectOps } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -24,8 +24,8 @@ const compileFrameScene = (input: FrameInput, nodeLayouts = false) =>
     },
   );
 
-const nodeLayoutsById = (result: ReturnType<typeof compileFrameScene>): Map<string, CompiledNodeLayout> => {
-  const layouts = new Map<string, CompiledNodeLayout>();
+const nodeLayoutsById = (result: ReturnType<typeof compileFrameScene>): Map<string, NodeLayoutObservation> => {
+  const layouts = new Map<string, NodeLayoutObservation>();
 
   for (const artifact of result.artifacts) {
     if (isNodeLayoutCompileArtifact(artifact) && artifact.value.id !== undefined) {

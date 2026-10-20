@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompiledNodeLayout, LowerTex, TextMeasurer } from '../../src/compile';
+import type { NodeLayoutObservation, LowerTex, TextMeasurer } from '../../src/compile';
 import { compileToScene, CompileWarningCode, isNodeLayoutCompileArtifact } from '../../src/compile';
 import type { CompileWarning } from '../../src/compile/warning';
 import type { TextPrim } from '../../src/contract';
@@ -52,7 +52,7 @@ const collectLayouts = (
     measurer?: TextMeasurer;
     precision?: number;
   } = {},
-): { layouts: Array<CompiledNodeLayout>; warnings: Array<CompileWarning>; textPrims: Array<TextPrim> } => {
+): { layouts: Array<NodeLayoutObservation>; warnings: Array<CompileWarning>; textPrims: Array<TextPrim> } => {
   const warnings: Array<CompileWarning> = [];
   const result = compileToScene(ir, {
     measureText: options.measurer ?? measureText,

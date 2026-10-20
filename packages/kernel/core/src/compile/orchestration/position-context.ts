@@ -4,7 +4,7 @@ import { boundaryKey } from '../../resolve';
 import type { PositionReferenceView, PositionTargetResolveContext } from '../../resolve/position';
 import { resolvePositionTarget } from '../../resolve/position';
 import type { IRBetweenPosition, IRNodeTarget, IRPosition } from '../../schemas';
-import type { NamespaceStack } from '../namespace';
+import type { NamespaceEntry } from '../namespace';
 import { nodeReferenceViewOf } from '../node';
 import type { NodeGeometryContext } from '../node';
 import { resolveAnchorRef } from '../reference';
@@ -40,7 +40,7 @@ const targetBoundaryResolutionOf = (
 /** 创建 position resolver context 所需的 compile 状态投影 */
 export type CreatePositionResolveContextInput = Readonly<{
   /** 当前命名空间 */
-  namespaceStack: NamespaceStack;
+  lookupReference: (id: string) => NamespaceEntry | undefined;
   /** 与节点布局及路径裁剪共享的几何消费状态 */
   geometryContext?: NodeGeometryContext;
   /** 相对定位默认距离 */
@@ -60,12 +60,12 @@ export type CreatePositionResolveContextInput = Readonly<{
 export const createPositionResolveContext = (
   input: CreatePositionResolveContextInput,
 ): PositionTargetResolveContext => {
-  const { namespaceStack, nodeDistance, scopeChain = [], resolveExplicitBoundary } = input;
+  const { nodeDistance, scopeChain = [], resolveExplicitBoundary } = input;
 
   const transform = input.effectiveTransform ?? composeScopeTransform(scopeChain);
 
   const lookupReference = (id: string): PositionReferenceView | undefined => {
-    const entry = namespaceStack.lookupReference(id);
+    const entry = input.lookupReference(id);
     return entry === undefined
       ? undefined
       : { state: entry.state, node: nodeReferenceViewOf(entry.layout, input.geometryContext) };

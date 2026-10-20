@@ -15,7 +15,7 @@ import type { LowerTex, TextMeasurer } from './text';
 import type { CompileWarning } from './warning';
 
 /** 编译期节点布局观测结果 */
-export type CompiledNodeLayout = {
+export type NodeLayoutObservation = {
   /** 布局对象类型 */
   kind: 'node';
   /** 节点 id */
@@ -95,7 +95,7 @@ export type NodeLayoutCompileArtifact = Readonly<{
   /** 被观测节点的最终编译出现位置 */
   occurrence: CompileOccurrenceLocator;
   /** 节点的正文测量、视觉外框及文本布局结果 */
-  value: CompiledNodeLayout;
+  value: NodeLayoutObservation;
 }>;
 
 /** compile 返回的通用 artifact envelope */

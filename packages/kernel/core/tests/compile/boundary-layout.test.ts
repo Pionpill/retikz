@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { NamespaceStack } from '../../src/compile/namespace';
 import { boundaryPointOf, createNodeGeometryContext, layoutNode, nodeReferenceViewOf } from '../../src/compile/node';
 import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
 import { resolveAnchor } from '../../src/compile/reference';
@@ -32,7 +31,7 @@ const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveSha
 
   return layoutNode(resolution, {
     measureText,
-    positionContext: createPositionResolveContext({ namespaceStack: new NamespaceStack(), nodeDistance: 24 }),
+    positionContext: createPositionResolveContext({ lookupReference: () => undefined, nodeDistance: 24 }),
   });
 };
 

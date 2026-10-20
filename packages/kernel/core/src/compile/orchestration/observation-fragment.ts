@@ -9,7 +9,7 @@ import { assertFiniteLayout, computeLayoutFromBounds } from '../scene';
 import type { CompileContext } from './context';
 import { orderCompileWarnings } from './diagnostics';
 import { compileChildrenToPrimitives } from './traversal';
-import type { PendingCompileObservation } from './types';
+import type { CompileObservationContribution } from './types';
 
 /** 辅助片段中必须提升为隔离编译失败的引用与 provider warning */
 const fatalFragmentWarningCodes = new Set<string>([
@@ -22,7 +22,7 @@ const fatalFragmentWarningCodes = new Set<string>([
 
 /** 编译一个不回写 primary 的 occurrence-local IR 片段 */
 export const compileObservedFragment = (
-  entry: PendingCompileObservation,
+  entry: CompileObservationContribution,
   children: IRChild | ReadonlyArray<IRChild>,
   context: CompileContext,
 ): CompiledSceneFragment => {

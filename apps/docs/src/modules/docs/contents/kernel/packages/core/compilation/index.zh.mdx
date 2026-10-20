@@ -90,7 +90,7 @@ const result = compileToScene(ir, { padding: 10 });
 - Definition：一种形状、路径或复合组件的具体能力定义。
 - registry：本次编译按名称查找 Definition 的注册表。
 
-`createCompileContext` 把内置能力与调用方注入的定义整理到相应注册表，解析根主题，并准备测量函数、输出精度、资源表和警告收集入口。没有注入文字测量时，使用内置近似度量；Core 自身不读取 DOM。
+`createCompileEnvironment` 把内置能力与调用方注入的定义整理到只读注册表，并保存测量服务和数值配置。内部的 `createCompileContext` 基于这个环境准备单次工作区，解析根主题，建立独占的文本测量缓存、paint / clip 资源表和警告收集入口。没有注入文字测量时，使用内置近似度量；Core 自身不读取 DOM。
 
 内置定义与 CompileOptions 中的外部定义按能力注册到 context 对应的 registry，供编译时按名称查找和调用，而生成的 paint / clip 资源由上下文的 `paint`、`clip` 收集并写入 Scene 的资源表。
 
@@ -396,10 +396,10 @@ export type CompositeCompileArtifact<
 export type NodeLayoutCompileArtifact = Readonly<{
   kind: 'nodeLayout';
   occurrence: CompileOccurrenceLocator;
-  value: CompiledNodeLayout;
+  value: NodeLayoutObservation;
 }>;
 
-export type CompiledNodeLayout = {
+export type NodeLayoutObservation = {
   kind: 'node';
   id?: string;
   content: {
@@ -517,5 +517,56 @@ export type SpatialHandleOwner = Readonly<{
       description: '追踪子项查询、隔离试算与结果重放',
       url: '/kernel/packages/core/composite-compilation',
     },
+  ]}
+/>
+
+## 独立编译与可复用状态
+
+需要自行调度元素时，调用方可持有 `CompileEnvironment`，并通过以下入口计算一个基础元素。它们复用全量编译的 resolve、layout 和 emit 实现，不递归编译其他元素，也不自动注册名称。
+
+| 入口                | 完成状态             | 保存的内容                                                      |
+| ------------------- | -------------------- | --------------------------------------------------------------- |
+| `compileNode`       | `CompiledNode`       | `layout` 保存 NodeLayout，`output` 保存绘制、资源和必要观察贡献 |
+| `compileCoordinate` | `CompiledCoordinate` | `id` 与局部 `position`；选中观察时才有 `output`                 |
+| `compilePath`       | `CompiledPath`       | `output` 保存完整路径输出，包括定制 kind 的宿主处理             |
+| `compileScope`      | `CompiledScope`      | `envelope`、不含 children 的 `group` 和自身 `output`            |
+
+`NodeLayoutObservation` 是面向调用方的节点布局观察投影，原名为 `CompiledNodeLayout`。它不包含重新绘制所需的完整编译状态；缓存应使用 `CompiledNode`。
+
+```ts
+import { assembleSceneCompilation, compileNode, createCompileEnvironment, resolveScopeContext } from '@retikz/core';
+
+const environment = createCompileEnvironment();
+const result = compileNode(
+  { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+  {
+    environment,
+    scope: resolveScopeContext({}, environment),
+    irPath: 'children[0].node',
+  },
+);
+
+if (result.status === 'compiled') {
+  const prepared = assembleSceneCompilation({}, [result.compiled.output], environment, {
+    diagnostics: result.diagnostics,
+  });
+  // prepared.result.scene 可交给 renderer，diagnostics 尚未派发
+}
+```
+
+单元素调用返回 `compiled` 或 `pending`。前者包含完整状态、`reads` 与诊断；后者只包含读取事实，不发布半成品。名称由 `CompileNamespace` 的父链从内向外查找，`reads` 同时记录未命中和命中的绑定。需要跟踪后续新增名称时，必须提供显式的空命名空间；省略 namespace 表示本次没有可查询的绑定。调用方只登记声明位置可见的名称，不能用 pending 放宽 Node / Scope 的前向引用限制；Path 仍可等到引用就绪后编译。`projectCompileReference` 负责将完成状态投影为可登记的引用几何。
+
+Scope 分两步计算：先 `prepareScopeCompilation` 得到有效继承上下文与初步变换，再以已完成的子布局调用 `compileScope`，确定包络与最终变换。子元素编译必须接收所属层级已确定的变换；最终包络相关的放置由 Scope 完成后投影。`assembleScopeOutput` 将 Scope 自身输出与子输出组装，不重新运行 provider，也不把重复子树写入缓存。
+
+输出中的资源编号属于局部片段。`assembleScopeOutput` / `assembleSceneCompilation` 会导入并重映射资源、稳定排序同层 zIndex、应用最终变换，再组装 Scene。选中的节点布局产物和 owner 观察贡献随片段一起传递；观察会话由 `createCompileObservationRuntime` 创建，并传给元素调用及最终组装，一次组装完成后不可跨批次复用。其他已完成的 Composite artifacts、空间句柄和 provenance 通过同版本 metadata 传入，组装函数不会推断这些编排信息。
+
+这些入口是 Core 提供的调度基础。Reconciler 负责名称映射、依赖失效、版本隔离和提交；本接口不自动构建或更新 WeaveTree。调用方不得修改已发布的 compiled 可达数据，环境定义或测量服务改变时也必须使相关缓存失效。包含 Definition 与文本 emit 函数的编译状态不能直接作为 Worker 消息序列化。
+
+<SourceLinks
+  sources={[
+    { label: '单元素类型与上下文', path: 'packages/kernel/core/src/compile/element/types.ts' },
+    { label: '稳定编译环境', path: 'packages/kernel/core/src/compile/environment.ts' },
+    { label: '局部输出组装', path: 'packages/kernel/core/src/compile/element/output.ts' },
+    { label: 'Scene 与附属产物组装', path: 'packages/kernel/core/src/compile/output.ts' },
   ]}
 />

@@ -281,6 +281,18 @@ export class NamespaceStack {
     return true;
   }
 
+  /** 用新的投影替换本次名称绑定，不原位修改布局或 fork 共享的 entry */
+  replacePublishedLayout(previous: NodeLayout, next: NodeLayout): void {
+    if (previous === next) return;
+    for (const frame of this.frames) {
+      for (const [id, entry] of frame) {
+        if (entry.layout !== previous) continue;
+        frame.set(id, { ...entry, layout: next });
+        this.snapshotIdentity = {};
+      }
+    }
+  }
+
   /** 进入命名 Scope 的后代求值区间 */
   enterScope(owner: NodeLayout): void {
     this.scopeAncestors.push(owner);

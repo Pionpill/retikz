@@ -89,7 +89,7 @@ describe('resolve source structure', () => {
   });
 
   it('keeps Scope translate Source IR determination in position resolve', () => {
-    const scope = source('src/compile/scope.ts');
+    const scope = source('src/compile/scope/layout.ts');
 
     expect(scope).toContain('resolveTransformTranslation');
     expect(scope).not.toContain('resolvePosition(');

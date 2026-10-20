@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import { NamespaceStack } from '../../src/compile/namespace';
 import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
 import { applyTransformChain, inverseTransformChain, createScopeTransformContext } from '../../src/compile/transform';
 import type { Transform } from '../../src/contract';
@@ -53,7 +52,7 @@ describe('坐标变换的数值与可逆边界', () => {
       { kind: 'scale', x: -2, y: 3 },
     ];
     const context = createPositionResolveContext({
-      namespaceStack: new NamespaceStack(),
+      lookupReference: () => undefined,
       nodeDistance: 24,
       scopeChain: chain,
     });
@@ -67,7 +66,7 @@ describe('坐标变换的数值与可逆边界', () => {
 
   it('零缩放允许正向投影，仅反投影报错', () => {
     const context = createPositionResolveContext({
-      namespaceStack: new NamespaceStack(),
+      lookupReference: () => undefined,
       nodeDistance: 24,
       scopeChain: [{ kind: 'scale', x: 0, y: 2 }],
     });
@@ -77,7 +76,7 @@ describe('坐标变换的数值与可逆边界', () => {
 
   it.each([1e-14, 1e-200, 1e-320])('非零缩放 %s 不被行列式阈值拒绝', scale => {
     const context = createPositionResolveContext({
-      namespaceStack: new NamespaceStack(),
+      lookupReference: () => undefined,
       nodeDistance: 24,
       scopeChain: [{ kind: 'scale', x: scale, y: scale }],
     });
@@ -88,7 +87,7 @@ describe('坐标变换的数值与可逆边界', () => {
   it('独立上下文和重复创建不会复用其他链的变换', () => {
     for (const x of [10, -30, 10]) {
       const context = createPositionResolveContext({
-        namespaceStack: new NamespaceStack(),
+        lookupReference: () => undefined,
         nodeDistance: 24,
         scopeChain: [{ kind: 'translate', x, y: 4 }],
       });
@@ -112,7 +111,7 @@ describe('坐标变换的数值与可逆边界', () => {
       { kind: 'scale', x: 1e200 },
     ];
     const context = createPositionResolveContext({
-      namespaceStack: new NamespaceStack(),
+      lookupReference: () => undefined,
       nodeDistance: 24,
       scopeChain: chain,
     });

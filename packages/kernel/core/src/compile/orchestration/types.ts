@@ -62,7 +62,7 @@ export type PendingPathEmission = {
   /** path 的完整 canonical occurrence */
   occurrence: CompileOccurrenceLocator;
   /** Path owner output observation 的最终输出容器 */
-  observationSink: Array<PendingCompileObservation>;
+  observationSink: Array<CompileObservationContribution>;
   /** 当前 authored Path site 选中的 observer keys */
   observerKeys?: ReadonlyArray<string>;
   /** Path occurrence 捕获的有效 Theme */
@@ -96,7 +96,7 @@ export type TraversalResult = {
   /** 本次 traversal 最终逻辑树的 artifacts */
   artifacts: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
   /** 本次 traversal 最终逻辑树的 compile observation entries */
-  compileObservations: Array<PendingCompileObservation>;
+  compileObservations: Array<CompileObservationContribution>;
   /** world-space 物化前的 qualified spatial handle records */
   spatialHandles: Array<PendingSpatialHandle>;
   /** 顶层 child 向父布局暴露的无歧义 alignment guides */
@@ -153,7 +153,7 @@ export type CompositeReplayTransaction = {
   /** 仅在 replay 时发布的 artifacts */
   artifacts: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
   /** 仅在 replay 时发布的 compile observation entries */
-  compileObservations: Array<PendingCompileObservation>;
+  compileObservations: Array<CompileObservationContribution>;
   /** probe 内仅在 replay commit 时发布的 spatial handle records */
   spatialHandles: Array<PendingSpatialHandle>;
   /** probe 时的有效样式语义指纹，用于判断 replay 是否需要在新 Scope 中重新物化 */
@@ -374,7 +374,7 @@ export type TraversalFrame = {
   /** 最终逻辑树 artifact 输出容器 */
   artifactSink: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
   /** 最终逻辑树 compile observation 输出容器 */
-  compileObservationSink: Array<PendingCompileObservation>;
+  compileObservationSink: Array<CompileObservationContribution>;
   /** 最终 traversal 的 spatial handle 输出容器 */
   spatialHandleSink: Array<PendingSpatialHandle>;
   /** 当前 child 所在的外层 composite owner path */
@@ -479,7 +479,7 @@ export type PendingNodeLayoutObservation = {
 };
 
 /** 等最终 Scope/replay transform 与 occurrence remap 完成后发布的 observation entry */
-export type PendingCompileObservation = {
+export type CompileObservationContribution = {
   /** 与 occurrence 同步提交的最终逻辑容器祖先 */
   ancestors: ReadonlyArray<CompileObservationAncestor>;
   /** 产生辅助内容的语义 owner */
