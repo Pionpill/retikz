@@ -3,7 +3,7 @@ import { curve } from '@retikz/math';
 import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../scripts/benchmarks/scenario';
-import { benchmarkBatch, formatCount, pointCounts } from './_workloads';
+import { formatCount, pointCounts } from './_workloads';
 
 const fixtures: Array<{
   name: string;
@@ -113,65 +113,78 @@ for (const count of pointCounts) {
   }
 }
 
-for (const { name, displayName, segment } of fixtures) {
+for (const { name, displayName, segment, sampleCounts } of fixtures) {
   const { sampleAt, slice, projectedRange, parameterAtDistance, approximateLength } = curve;
-  const parameters = Array.from({ length: 256 }, (_, index) => index / 255);
-  const samples = parameters.map(parameter => sampleAt(segment, parameter));
-  benchmarkBatch(
-    { id: `curve.sampleAt/${name}`, dimensions: [`曲线采样`, `${displayName}`] },
-    index => sampleAt(segment, parameters[index % 256]),
-    (result, index) => {
-      expect(result.point).toEqual(samples[index % 256].point);
-      expect(Math.hypot(...result.tangent)).toBeCloseTo(1, 8);
+  for (const parameter of [0.25, 0.75]) {
+    defineBenchmark(
+      { id: `curve.sampleAt/${name}/t=${parameter}`, dimensions: ['曲线采样', displayName, `t=${parameter}`] },
+      () => ({
+        run: () => sampleAt(segment, parameter),
+        verify: result => {
+          expect(result.point.every(Number.isFinite)).toBe(true);
+          expect(Math.hypot(...result.tangent)).toBeCloseTo(1, 8);
+        },
+      }),
+    );
+  }
+  defineBenchmark(
+    { id: `curve.slice/${name}/interior`, dimensions: ['曲线裁剪', displayName, '区间0.25–0.75'] },
+    () => {
+      const start = sampleAt(segment, 0.25).point;
+      const end = sampleAt(segment, 0.75).point;
+      return {
+        run: () => slice(segment, 0.25, 0.75),
+        verify: result => {
+          const actualStart = sampleAt(result, 0).point;
+          const actualEnd = sampleAt(result, 1).point;
+          for (const axis of [0, 1]) {
+            expect(actualStart[axis]).toBeCloseTo(start[axis], 8);
+            expect(actualEnd[axis]).toBeCloseTo(end[axis], 8);
+          }
+        },
+      };
     },
   );
-  benchmarkBatch(
-    { id: `curve.slice/${name}`, dimensions: [`曲线裁剪`, `${displayName}`] },
-    index => slice(segment, 0, parameters[index % 256]),
-    (result, index) => {
-      const endpoint = sampleAt(result, 1).point;
-      expect(endpoint[0]).toBeCloseTo(samples[index % 256].point[0], 8);
-      expect(endpoint[1]).toBeCloseTo(samples[index % 256].point[1], 8);
-    },
-  );
-  const axes: Array<Position> = [
+  for (const axis of [
     [1, 0],
-    [0, 1],
     [1, 1],
-    [-1, 0.5],
-  ];
-  benchmarkBatch(
-    { id: `curve.projectedRange/${name}`, dimensions: [`曲线投影`, `${displayName}`] },
-    index => projectedRange(segment, axes[index % 4]),
-    (result, index) => {
-      for (const { point } of samples) {
-        const axis = axes[index % 4];
-        const projection = point[0] * axis[0] + point[1] * axis[1];
-        expect(projection).toBeGreaterThanOrEqual(result.min - 1e-8);
-        expect(projection).toBeLessThanOrEqual(result.max + 1e-8);
-      }
-    },
-  );
-  // 弧长反解是路径裁剪/端点接触负载，不对每个 Plot 数据点做一次反解
-  for (const cached of [true, false]) {
-    const totalLength = approximateLength(segment);
-    const options = cached ? { totalLength } : {};
-    for (const count of [10, 100, 1_000]) {
-      // 各规模均匀覆盖完整距离区间，避免把查询位置分布变化混入扩容成本
-      const distances = Array.from({ length: count }, (_, index) => (index / (count - 1)) * totalLength);
-      benchmarkBatch(
-        {
-          id: `curve.parameterAtDistance/${name}/${cached ? 'cached' : 'uncached'}`,
-          dimensions: [`弧长反解`, `${displayName} · ${cached ? '缓存总长' : '现算总长'}`],
-        },
-        index => parameterAtDistance(segment, distances[index], options),
-        (result, index) => {
-          expect(result).toBeGreaterThanOrEqual(0);
-          expect(result).toBeLessThanOrEqual(1);
-          expect(approximateLength(slice(segment, 0, result))).toBeCloseTo(distances[index], 2);
-        },
-        [count],
-      );
-    }
+  ] satisfies Array<Position>) {
+    defineBenchmark(
+      {
+        id: `curve.projectedRange/${name}/axis=${axis.join(',')}`,
+        dimensions: ['曲线投影', displayName, `轴(${axis.join(',')})`],
+      },
+      () => {
+        const samples = Array.from({ length: 33 }, (_, index) => sampleAt(segment, index / 32).point);
+        return {
+          run: () => projectedRange(segment, axis),
+          verify: result => {
+            expect(Number.isFinite(result.min) && Number.isFinite(result.max)).toBe(true);
+            for (const point of samples) {
+              const projection = point[0] * axis[0] + point[1] * axis[1];
+              expect(projection).toBeGreaterThanOrEqual(result.min - 1e-8);
+              expect(projection).toBeLessThanOrEqual(result.max + 1e-8);
+            }
+          },
+        };
+      },
+    );
+  }
+  // 只扩容单次反解的采样精度；重复查询和跨调用缓存由消费方衡量
+  for (const sampleCount of sampleCounts) {
+    defineBenchmark(
+      {
+        id: `curve.parameterAtDistance/${name}/samples=${sampleCount}`,
+        dimensions: ['弧长反解', displayName, `精度${sampleCount}`],
+      },
+      () => {
+        const options = { sampleCount };
+        const distance = approximateLength(slice(segment, 0, 0.375), options);
+        return {
+          run: () => parameterAtDistance(segment, distance, options),
+          verify: result => expect(result).toBeCloseTo(0.375, 3),
+        };
+      },
+    );
   }
 }

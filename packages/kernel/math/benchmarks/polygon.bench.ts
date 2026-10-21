@@ -3,9 +3,9 @@ import { polygon } from '@retikz/math';
 import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../scripts/benchmarks/scenario';
-import { benchmarkBatch, createRing, formatCount, pointCounts } from './_workloads';
+import { createRing, formatCount, pointCounts } from './_workloads';
 
-// 单次复杂边界查询与简单边界批量命中分别扩容，避免 vertices × queries 的失真负载
+// 单次命中查询仅按多边形顶点数扩容
 for (const count of pointCounts) {
   for (const inside of [true, false]) {
     defineBenchmark(
@@ -23,13 +23,25 @@ for (const count of pointCounts) {
     );
   }
 }
-const vertices = createRing(16);
-const queries: Array<Position> = Array.from({ length: 256 }, (_, index) =>
-  index % 2 ? [2, index / 1024] : [0, index / 1024],
-);
-const containsPoint = polygon.containsPoint;
-benchmarkBatch(
-  { id: 'polygon.containsPoint/vertices=16/mixed', dimensions: ['多边形命中', '16顶点 · 内外混合'] },
-  index => containsPoint(vertices, queries[index % 256]),
-  (result, index) => expect(result).toBe(index % 2 === 0),
-);
+
+// 凹边界让水平射线多次穿过边，避免只验证圆周上少量交点的快路径
+for (const count of [10_000, 100_000]) {
+  for (const inside of [true, false]) {
+    defineBenchmark(
+      {
+        id: `polygon.containsPoint/comb-${inside ? 'inside' : 'outside'}/vertices=${count}`,
+        dimensions: ['多边形命中', `锯齿凹边界 · ${inside ? '内部' : '外部'}`, `${formatCount(count)}顶点`],
+      },
+      () => {
+        const vertices: Array<Position> = [
+          [0, -2],
+          [count - 3, -2],
+        ];
+        for (let x = count - 3; x >= 0; x--) vertices.push([x, x % 2]);
+        const query: Position = inside ? [1.25, 0.5] : [1.75, 0.5];
+        const compute = polygon.containsPoint;
+        return { run: () => compute(vertices, query), verify: result => expect(result).toBe(inside) };
+      },
+    );
+  }
+}

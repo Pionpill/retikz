@@ -63,6 +63,60 @@ for (const count of pointCounts) {
   );
 }
 
+// 检查旋转奇数圆周、支撑点不在开头及轴向候选不足的输入
+for (const shape of ['rotated-ring', 'reordered-cloud', 'off-axis'] as const) {
+  for (const count of shape === 'rotated-ring' ? [17, 101, 1_001] : [16, 100, 1_000, 10_000]) {
+    defineBenchmark(
+      {
+        id: `circle.minimalEnclosing/${shape}/points=${count}`,
+        dimensions: [
+          '最小外接圆',
+          { 'rotated-ring': '旋转奇数圆周', 'reordered-cloud': '重排散点', 'off-axis': '斜向外点' }[shape],
+          `${formatCount(count)}点`,
+        ],
+      },
+      () => {
+        let points: Array<Position>;
+        if (shape === 'rotated-ring') {
+          points = Array.from({ length: count }, (_, index): Position => {
+            const angle = (index * 2 * Math.PI) / count + 0.137;
+            return [3 + 2 * Math.cos(angle), -4 + 2 * Math.sin(angle)];
+          });
+        } else if (shape === 'reordered-cloud') {
+          points = createCloud(count);
+          let seed = 0x9e3779b9;
+          for (let index = count - 1; index > 0; index--) {
+            seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+            const other = seed % (index + 1);
+            [points[index], points[other]] = [points[other], points[index]];
+          }
+        } else {
+          points = [
+            [-2, 0],
+            [2, 0],
+            [0, -1],
+            [0, 1],
+          ];
+          for (let index = 4; index < count - 1; index++) points.push([Math.sin(index) * 0.5, Math.cos(index) * 0.5]);
+          points.push([1.9, 0.9]);
+        }
+        const expectedCenter: Position =
+          shape === 'rotated-ring' ? [3, -4] : shape === 'off-axis' ? [0, 7 / 30] : [0, 0];
+        const expectedRadius = shape === 'rotated-ring' ? 2 : shape === 'off-axis' ? Math.hypot(2, 7 / 30) : Math.SQRT2;
+        const compute = circle.minimalEnclosing;
+        return {
+          run: () => compute(points),
+          verify: result => {
+            expect(result?.center[0]).toBeCloseTo(expectedCenter[0], 8);
+            expect(result?.center[1]).toBeCloseTo(expectedCenter[1], 8);
+            expect(result?.radius).toBeCloseTo(expectedRadius, 8);
+          },
+        };
+      },
+    );
+  }
+}
+
 // 有序边界会放大增量最小圆的嵌套循环，按节点包围场景单独限制规模
 for (const shape of ['cloud', 'ordered-ring'] as const) {
   for (const count of shape === 'cloud' ? [16, 100, 1_000, 10_000] : [16, 100, 1_000]) {

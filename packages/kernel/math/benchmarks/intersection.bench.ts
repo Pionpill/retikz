@@ -11,53 +11,48 @@ import {
 } from '@retikz/math';
 import { expect } from 'vitest';
 
-import { benchmarkBatch } from './_workloads';
+import { defineBenchmark } from '../../../../scripts/benchmarks/scenario';
 
-const centers: Array<Position> = Array.from({ length: 256 }, (_, index) => [index, index / 2]);
+const centers: Array<Position> = [[2, 1]];
 const arcs = centers.map(center => ({ center, radius: 5, startAngleDeg: 0, endAngleDeg: 180 }));
 const ellipses = centers.map(center => ({ center, radiusX: 5, radiusY: 3, startAngleDeg: 0, endAngleDeg: 180 }));
-const angles = Array.from({ length: 256 }, (_, index) => (index * 360) / 256);
-benchmarkBatch(
-  { id: 'pointAtArcAngle', dimensions: ['圆弧取点', ''] },
-  index => pointAtArcAngle(centers[index % 256], 5, angles[index % 256]),
-  (result, index) =>
-    expect(Math.hypot(result[0] - centers[index % 256][0], result[1] - centers[index % 256][1])).toBeCloseTo(5, 8),
-);
+const angles = [45, 225];
+defineBenchmark({ id: 'pointAtArcAngle', dimensions: ['圆弧取点', '', '单次'] }, () => ({
+  run: () => pointAtArcAngle(centers[0], 5, angles[0]),
+  verify: result => expect(Math.hypot(result[0] - centers[0][0], result[1] - centers[0][1])).toBeCloseTo(5, 8),
+}));
 const ellipseAngles = ellipses.map((e, index) => ({ ...e, angleDeg: angles[index] }));
-benchmarkBatch(
-  { id: 'pointAtEllipseArcAngle', dimensions: ['椭圆弧取点', ''] },
-  index => pointAtEllipseArcAngle(ellipseAngles[index % 256]),
-  (result, index) => {
-    const center = centers[index % 256];
+defineBenchmark({ id: 'pointAtEllipseArcAngle', dimensions: ['椭圆弧取点', '', '单次'] }, () => ({
+  run: () => pointAtEllipseArcAngle(ellipseAngles[0]),
+  verify: result => {
+    const center = centers[0];
     expect(((result[0] - center[0]) / 5) ** 2 + ((result[1] - center[1]) / 3) ** 2).toBeCloseTo(1, 8);
   },
-);
-benchmarkBatch(
-  { id: 'collectArcBoundingCandidates', dimensions: ['圆弧边界', ''] },
-  index => collectArcBoundingCandidates(arcs[index % 256]),
-  (result, index) => {
-    const [x, y] = centers[index % 256];
+}));
+defineBenchmark({ id: 'collectArcBoundingCandidates', dimensions: ['圆弧边界', '', '单次'] }, () => ({
+  run: () => collectArcBoundingCandidates(arcs[0]),
+  verify: result => {
+    const [x, y] = centers[0];
     expect(Math.min(...result.map(p => p[0]))).toBeCloseTo(x - 5, 8);
     expect(Math.max(...result.map(p => p[0]))).toBeCloseTo(x + 5, 8);
     expect(Math.max(...result.map(p => p[1]))).toBeCloseTo(y + 5, 8);
   },
-);
-benchmarkBatch(
-  { id: 'collectEllipseArcBoundingCandidates', dimensions: ['椭圆弧边界', ''] },
-  index => collectEllipseArcBoundingCandidates(ellipses[index % 256]),
-  (result, index) => {
-    const [x, y] = centers[index % 256];
+}));
+defineBenchmark({ id: 'collectEllipseArcBoundingCandidates', dimensions: ['椭圆弧边界', '', '单次'] }, () => ({
+  run: () => collectEllipseArcBoundingCandidates(ellipses[0]),
+  verify: result => {
+    const [x, y] = centers[0];
     expect(Math.min(...result.map(p => p[0]))).toBeCloseTo(x - 5, 8);
     expect(Math.max(...result.map(p => p[0]))).toBeCloseTo(x + 5, 8);
     expect(Math.max(...result.map(p => p[1]))).toBeCloseTo(y + 3, 8);
   },
-);
+}));
 const sweeps = angles.map(angleDeg => ({ angleDeg, startAngleDeg: 0, endAngleDeg: 180 }));
-benchmarkBatch(
-  { id: 'isAngleWithinArcSweep/mixed', dimensions: ['弧内角判定', '混合'] },
-  index => isAngleWithinArcSweep(sweeps[index % 256]),
-  (result, index) => expect(result).toBe(angles[index % 256] <= 180),
-);
+for (const [index, label] of ['弧内', '弧外'].entries())
+  defineBenchmark({ id: `isAngleWithinArcSweep/input=${index}`, dimensions: ['弧内角判定', label, '单次'] }, () => ({
+    run: () => isAngleWithinArcSweep(sweeps[index]),
+    verify: result => expect(result).toBe(angles[index] <= 180),
+  }));
 
 const { lineLine, segmentSegment, lineCircle, circleCircle } = intersect;
 for (const hit of [true, false]) {
@@ -71,14 +66,15 @@ for (const hit of [true, false]) {
     ['lineLine', lineLine],
     ['segmentSegment', segmentSegment],
   ] as const) {
-    benchmarkBatch(
+    defineBenchmark(
       {
         id: `intersect.${name}/${hit ? 'crossing' : 'parallel'}`,
-        dimensions: [`${name === 'lineLine' ? '直线求交' : '线段求交'}`, `${hit ? '相交' : '平行'}`],
+        dimensions: [`${name === 'lineLine' ? '直线求交' : '线段求交'}`, `${hit ? '相交' : '平行'}`, '单次'],
       },
-      index => compute(lines[index % 256]),
-      (result, index) =>
-        expect(result).toEqual(hit ? [centers[index % 256][0] + 1, centers[index % 256][1] + 1] : null),
+      () => ({
+        run: () => compute(lines[0]),
+        verify: result => expect(result).toEqual(hit ? [centers[0][0] + 1, centers[0][1] + 1] : null),
+      }),
     );
   }
   const rays = centers.map(([x, y]) => ({
@@ -87,20 +83,29 @@ for (const hit of [true, false]) {
     center: [x, y] as Position,
     radius: 5,
   }));
-  benchmarkBatch(
-    { id: `intersect.lineCircle/${hit ? 'hit' : 'miss'}`, dimensions: [`直线圆求交`, `${hit ? '命中' : '未命中'}`] },
-    index => lineCircle(rays[index % 256]),
-    (result, index) => {
-      expect(result).toHaveLength(hit ? 2 : 0);
-      for (const p of result)
-        expect(Math.hypot(p[0] - centers[index % 256][0], p[1] - centers[index % 256][1])).toBeCloseTo(5, 8);
+  defineBenchmark(
+    {
+      id: `intersect.lineCircle/${hit ? 'hit' : 'miss'}`,
+      dimensions: [`直线圆求交`, `${hit ? '命中' : '未命中'}`, '单次'],
     },
+    () => ({
+      run: () => lineCircle(rays[0]),
+      verify: result => {
+        expect(result).toHaveLength(hit ? 2 : 0);
+        for (const p of result) expect(Math.hypot(p[0] - centers[0][0], p[1] - centers[0][1])).toBeCloseTo(5, 8);
+      },
+    }),
   );
   const arcRays = rays.map(ray => ({ ...ray, startAngleDeg: 0, endAngleDeg: 180 }));
-  benchmarkBatch(
-    { id: `intersectRayWithArc/${hit ? 'hit' : 'miss'}`, dimensions: [`射线圆弧求交`, `${hit ? '命中' : '未命中'}`] },
-    index => intersectRayWithArc(arcRays[index % 256]),
-    result => expect(result).toEqual(hit ? [5, 15] : []),
+  defineBenchmark(
+    {
+      id: `intersectRayWithArc/${hit ? 'hit' : 'miss'}`,
+      dimensions: [`射线圆弧求交`, `${hit ? '命中' : '未命中'}`, '单次'],
+    },
+    () => ({
+      run: () => intersectRayWithArc(arcRays[0]),
+      verify: result => expect(result).toEqual(hit ? [5, 15] : []),
+    }),
   );
   const circles = centers.map(([x, y]) => ({
     centerA: [x, y] as Position,
@@ -108,16 +113,21 @@ for (const hit of [true, false]) {
     centerB: [x + (hit ? 6 : 20), y] as Position,
     radiusB: 5,
   }));
-  benchmarkBatch(
-    { id: `intersect.circleCircle/${hit ? 'hit' : 'miss'}`, dimensions: [`圆圆求交`, `${hit ? '命中' : '未命中'}`] },
-    index => circleCircle(circles[index % 256]),
-    (result, index) => {
-      expect(result).toHaveLength(hit ? 2 : 0);
-      for (const p of result) {
-        expect(p[0]).toBeCloseTo(centers[index % 256][0] + 3, 8);
-        expect(Math.abs(p[1] - centers[index % 256][1])).toBeCloseTo(4, 8);
-      }
+  defineBenchmark(
+    {
+      id: `intersect.circleCircle/${hit ? 'hit' : 'miss'}`,
+      dimensions: [`圆圆求交`, `${hit ? '命中' : '未命中'}`, '单次'],
     },
+    () => ({
+      run: () => circleCircle(circles[0]),
+      verify: result => {
+        expect(result).toHaveLength(hit ? 2 : 0);
+        for (const p of result) {
+          expect(p[0]).toBeCloseTo(centers[0][0] + 3, 8);
+          expect(Math.abs(p[1] - centers[0][1])).toBeCloseTo(4, 8);
+        }
+      },
+    }),
   );
 }
 const { circumCircle, incircle } = triangle;
@@ -131,21 +141,27 @@ for (const degenerate of [false, true]) {
     ['circumCircle', circumCircle, 5, [3, 4]],
     ['incircle', incircle, 2, [2, 2]],
   ] as const)
-    benchmarkBatch(
+    defineBenchmark(
       {
         id: `triangle.${name}/${degenerate ? 'degenerate' : 'right'}`,
-        dimensions: [`三角形${name === 'circumCircle' ? '外接圆' : '内切圆'}`, `${degenerate ? '退化' : '直角'}`],
+        dimensions: [
+          `三角形${name === 'circumCircle' ? '外接圆' : '内切圆'}`,
+          `${degenerate ? '退化' : '直角'}`,
+          '单次',
+        ],
       },
-      index => {
-        const { a, b, c } = triangles[index % 256];
-        return compute(a, b, c);
-      },
-      (result, index) => {
-        if (degenerate) expect(result).toBeNull();
-        else {
-          expect(result?.radius).toBeCloseTo(radius, 8);
-          expect(result?.center).toEqual([centers[index % 256][0] + offset[0], centers[index % 256][1] + offset[1]]);
-        }
-      },
+      () => ({
+        run: () => {
+          const { a, b, c } = triangles[0];
+          return compute(a, b, c);
+        },
+        verify: result => {
+          if (degenerate) expect(result).toBeNull();
+          else {
+            expect(result?.radius).toBeCloseTo(radius, 8);
+            expect(result?.center).toEqual([centers[0][0] + offset[0], centers[0][1] + offset[1]]);
+          }
+        },
+      }),
     );
 }
