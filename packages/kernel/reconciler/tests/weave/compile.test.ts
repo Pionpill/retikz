@@ -5,7 +5,7 @@ import type { IRScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { prepareWeaveCompilation } from '../../src/weave';
+import { readWeaveCurrent, prepareWeaveCompilation } from '../../src/weave';
 
 const scene: IRScene = {
   type: 'scene',
@@ -27,22 +27,24 @@ describe('Weave 编译构建', () => {
   it('保留跨 Scope 延后路径、声明结构和完整来源', () => {
     const prepared = prepareWeaveCompilation(scene);
     expect(prepared.compilation.result).toEqual(compileToScene(scene));
-    expect(prepared.root.children.map(node => node.type)).toEqual(['path', 'scope', 'scope']);
-    expect(prepared.root.scopeIds.size).toBe(3);
-    expect(prepared.root.children.every(node => node.compiled !== null)).toBe(true);
+    expect(prepared.root.pending).toBeNull();
+    expect(readWeaveCurrent(prepared.root).children.every(node => node.pending === null)).toBe(true);
+    expect(readWeaveCurrent(prepared.root).children.map(node => node.type)).toEqual(['path', 'scope', 'scope']);
+    expect(readWeaveCurrent(prepared.root).scopeIds.size).toBe(3);
+    expect(readWeaveCurrent(prepared.root).children.every(node => readWeaveCurrent(node).compiled !== null)).toBe(true);
     expect(prepared.compilation.provenance?.emissions.map(entry => entry.primitivePath)).toEqual(
       prepareSceneCompilation(scene, {}, { captureProvenance: true }).provenance?.emissions.map(
         entry => entry.primitivePath,
       ),
     );
-    expect(prepared.root.children[0]?.dependencies.size).toBe(2);
+    expect(readWeaveCurrent(readWeaveCurrent(prepared.root).children[0]).dependencies.size).toBe(2);
     expect(scene.children[1]).not.toHaveProperty('id');
   });
 
   it('失败的新候选不改变此前树、索引和已完成输出', () => {
     const previous = prepareWeaveCompilation(scene);
     const output = JSON.stringify(previous.compilation.result);
-    const nodes = [...previous.root.scopeIds.values()];
+    const nodes = [...readWeaveCurrent(previous.root).scopeIds.values()];
     expect(() =>
       prepareWeaveCompilation({
         ...scene,
@@ -50,7 +52,7 @@ describe('Weave 编译构建', () => {
       }),
     ).toThrow();
     expect(JSON.stringify(previous.compilation.result)).toBe(output);
-    expect([...previous.root.scopeIds.values()]).toEqual(nodes);
+    expect([...readWeaveCurrent(previous.root).scopeIds.values()]).toEqual(nodes);
   });
 
   it('Scope 局部名称与匿名包络使用 Core 规则', () => {
@@ -278,9 +280,9 @@ it('新环境的测量服务生效，空树不携带旧资源或读取记录', (
   expect(second.compilation.result.scene.layout.width).toBeGreaterThan(first.compilation.result.scene.layout.width);
   expect(second.root.scopeId).not.toBe(first.root.scopeId);
   const empty = prepareWeaveCompilation({ ...input, children: [] });
-  expect(empty.root.records.size).toBe(0);
-  expect(empty.root.ids.size).toBe(0);
-  expect(empty.root.scopeIds.size).toBe(1);
+  expect(readWeaveCurrent(empty.root).records.size).toBe(0);
+  expect(readWeaveCurrent(empty.root).ids.size).toBe(0);
+  expect(readWeaveCurrent(empty.root).scopeIds.size).toBe(1);
   expect(empty.compilation.result.scene.resources).toBeUndefined();
 });
 

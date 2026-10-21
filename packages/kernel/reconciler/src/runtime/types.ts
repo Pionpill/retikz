@@ -1,12 +1,12 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
 
-import type { WeaveTree } from '../weave';
+import type { WeaveRoot } from '../weave';
 import type { CoreComputationPublicRead } from './public';
 
 /** 只供同一 Core Computation 下一次 update 使用的状态 */
 export type CoreComputationStateRead = Readonly<{
   /** 与公开输出同版本的基础元素树，Composite 由完整准备路径持有 */
-  weave?: WeaveTree;
+  weave?: WeaveRoot;
 }>;
 
 /**

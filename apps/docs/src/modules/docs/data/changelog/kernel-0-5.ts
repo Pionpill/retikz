@@ -385,6 +385,13 @@ export const kernelV05: Release = {
           },
         },
         {
+          label: { zh: 'Weave 节点状态隔离', en: 'Weave node state isolation' },
+          content: {
+            zh: 'Weave 改为稳定节点引用与 current / pending 双状态，集合写入时隔离，提交保留恢复依据。首次编译与完整输入替换沿用原有输出语义；批次 update 与依赖调度尚未接入。',
+            en: 'Weave now uses stable node references with current / pending states, isolates collections on write, and retains recovery references during commit. Initial compilation and full input replacement preserve existing output semantics; batch update and dependency scheduling are not connected yet.',
+          },
+        },
+        {
           label: { zh: 'Weave 编译接入', en: 'Weave compilation integration' },
           content: {
             zh: '基础元素输入通过 Weave 构建声明树，持有 Core 编译环境、状态与名称读取关系，并生成同版本的 Scene 和来源信息。完整输入替换重新准备候选树，失败保留已发布结果。Composite 保留 Core 完整准备路径；原根 Node 填充色特例移除，当前更新发布 replaceScene，批次局部调度尚未接入。',

@@ -581,7 +581,7 @@ Scope calculation has two stages. `prepareScopeCompilation` resolves inherited c
 
 Resource IDs are local to each output fragment. `assembleScopeOutput` / `assembleSceneCompilation` import and remap resources, stably order sibling zIndex values, apply final transforms, and assemble Scene. Selected node layout artifacts and owner observations travel with the fragments. Create an observation session with `createCompileObservationRuntime`, pass it to element calls and final assembly, and do not reuse it across batches after completion. Other completed Composite artifacts, spatial handles and provenance are supplied through metadata from the same version; assembly does not infer this orchestration data.
 
-These entries provide Core's scheduling primitives. Reconciler owns name mapping, dependency invalidation, version isolation and publication; the interface does not construct or update WeaveTree automatically. Callers must not mutate data reachable from published compiled state. Changes to environment definitions or measurement services invalidate affected caches. Compiled state containing Definitions and text emit functions cannot be serialized directly into Worker messages.
+These entries provide Core's scheduling primitives. Reconciler owns name mapping, dependency invalidation, version isolation and publication; the interface does not construct or update the Weave tree automatically. Callers must not mutate data reachable from published compiled state. Changes to environment definitions or measurement services invalidate affected caches. Compiled state containing Definitions and text emit functions cannot be serialized directly into Worker messages.
 
 <SourceLinks
   sources={[
@@ -598,6 +598,8 @@ Core and Weave share `formatCompileChildPath(prefix, index, type?)` to construct
 
 Weave is the compilation tree retained by Reconciler. Each node holds its own input, effective context and Core compilation state. The root holds the environment, Scene configuration, container index and version-specific read records. Automatically assigned Scope addresses stay outside the IR and do not affect drawing envelopes.
 
+Runtime holds a stable WeaveRoot directly as the tree entry. Nodes and Root each retain committed current and candidate pending states; parent-child links, dependencies and indexes reference stable node objects. Candidate writes isolate the affected state and mutable collections while sharing unchanged Core products read-only. Changing a child’s properties does not copy its Scope’s children array; changing membership does. Commit switches the states touched by the batch and retains recovery references until confirmation. A node reference does not provide a historical snapshot.
+
 Basic elements create nodes and bindings in declaration order. Node and Coordinate consume references visible at their declaration site. Scope prepares context, compiles its children and envelope, then completes its deferred paths. A top-level Path can wait for nodes in both Scopes to be published. `createCompileNamespaceRegistry` preserves same-frame replacement diagnostics; `projectScopeCompileLayouts` and `projectPublishedCompileLayout` reuse Core's envelope-contribution and final reference-projection rules.
 
 Reconciler then asks Core to assemble the complete output. `createCompileProvenanceTracker` retains primitive ownership through resource remapping and Scope wrapping, pairing final provenance paths with the sorted Scene without another full compilation. Runtime retains the previous result if preparation fails and publishes the matching tree and output only after success.
@@ -608,6 +610,7 @@ The public input remains a complete IR snapshot. Replacing it rebuilds the basic
   sources={[
     { label: 'Weave construction and Core calls', path: 'packages/kernel/reconciler/src/weave/reconcile.ts' },
     { label: 'Weave state ownership', path: 'packages/kernel/reconciler/src/weave/types.ts' },
+    { label: 'Candidate isolation and recovery', path: 'packages/kernel/reconciler/src/weave/state.ts' },
     { label: 'Runtime publication boundary', path: 'packages/kernel/reconciler/src/runtime/computation.ts' },
   ]}
 />

@@ -164,7 +164,7 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
         result: Object.freeze({
           publicRead,
           state: Object.freeze({
-            ...(weave === undefined ? {} : { weave: { current: weave.root, candidate: null } }),
+            ...(weave === undefined ? {} : { weave: weave.root }),
           }),
         }),
       };

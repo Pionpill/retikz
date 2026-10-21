@@ -18,6 +18,7 @@ import {
   createRuntimeComputationRegistry,
   createRuntime,
   defineRuntimeSource,
+  defineRuntimeCommitParticipant,
   PerformanceTraceOutcome,
   RetikzRuntimeErrorCode,
   RuntimeComputationKind,
@@ -1083,4 +1084,46 @@ it('Scope 外框更新、资源撤销和匿名组删除与全量编译等价', (
 
     expect(session.result(program).value.output.result.scene).toEqual(compileToScene(ir).scene);
   }
+});
+
+it('后续提交参与者失败时保留旧编译结果，重试可以发布完整新树', () => {
+  const program = createCoreComputation({ onWarn: () => {} });
+  const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+  const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
+  let failing = false;
+  const participant = defineRuntimeCommitParticipant({
+    key: 'fixture:weave-publication',
+    sources: [CoreSourceDefinition],
+    computations: [program],
+    revisionPolicy: 'affected',
+    tracePhases: [],
+    prepare: () => ({
+      commit: () => {
+        if (failing) throw new Error('publication failed');
+      },
+      rollback: () => undefined,
+      dispose: () => undefined,
+    }),
+    read: () => null,
+    dispose: () => undefined,
+  });
+  const session = createRuntime({
+    sources,
+    computations,
+    participants: [participant],
+    initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, sceneWithText('before'))],
+  });
+  const previous = session.result(program);
+  const revision = session.revision();
+  const next = sceneWithText('after');
+  failing = true;
+  expect(() =>
+    session.update({ baseRevision: revision, sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)] }),
+  ).toThrow();
+  expect(session.revision()).toBe(revision);
+  expect(session.result(program).value).toBe(previous.value);
+  failing = false;
+  session.update({ baseRevision: revision, sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)] });
+  expect(session.result(program).value.output.result).toEqual(compileToScene(next));
+  session.dispose();
 });

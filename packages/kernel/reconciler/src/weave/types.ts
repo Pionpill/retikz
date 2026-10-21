@@ -31,94 +31,115 @@ export type WeaveInput<TInput> = {
   context: ElementCompileContext;
 };
 
-/**
- * 节点的基础逻辑状态
- * @remarks 每个节点对象属于一个树版本，候选计算不得修改已提交版本的可达状态
- */
-type WeaveNodeBase<TInput> = {
-  /** 所属声明容器 */
+/** 节点的可替换逻辑状态，集合写入由候选工作区隔离 */
+type WeaveNodeStateBase<TInput> = {
+  /** 所属声明容器，引用稳定对象 */
   parent: WeaveRoot | WeaveScopeNode;
-  /** 当前组合输入 */
-  input: WeaveInput<TInput>;
-  /** 归集自身、上下文与依赖变化，不重复保存完整输入 */
-  pendingInputs: Array<WeavePendingInput>;
-  /** 依赖节点与本节点对其结果的读取需求 */
-  dependencies: Map<WeaveNode, Array<WeaveDependencyKind>>;
-  /** 消费本节点结果的节点，不重复保存读取需求 */
-  consumers: Set<WeaveNode>;
+  /** 自身输入与有效上下文，替换对象而非修改共享内容 */
+  input: Readonly<WeaveInput<TInput>>;
+  /** 本批待处理变化 */
+  pendingInputs: ReadonlyArray<Readonly<WeavePendingInput>>;
+  /** 依赖与读取粒度，值也保持只读 */
+  dependencies: ReadonlyMap<WeaveNode, ReadonlyArray<WeaveDependencyKind>>;
+  /** 反向消费者 */
+  consumers: ReadonlySet<WeaveNode>;
 };
 
-/** 普通图元的 Weave 节点 */
-export type WeaveShapeNode = WeaveNodeBase<IRNode> & {
-  /** 普通图元类别 */
-  type: 'node';
-  /** Core 定义的完整编译状态，候选计算只读消费旧状态 */
+/** 普通图元状态 */
+export type WeaveShapeState = WeaveNodeStateBase<IRNode> & {
+  /** Core 完整编译产物，只读复用 */
   compiled: CompiledNode | null;
 };
 
-/** 坐标的 Weave 节点 */
-export type WeaveCoordinateNode = WeaveNodeBase<IRCoordinate> & {
-  /** 坐标类别 */
-  type: 'coordinate';
-  /** Core 定义的完整编译状态，候选计算只读消费旧状态 */
+/** 坐标状态 */
+export type WeaveCoordinateState = WeaveNodeStateBase<IRCoordinate> & {
+  /** Core 完整编译产物，只读复用 */
   compiled: CompiledCoordinate | null;
 };
 
-/** 路径的 Weave 节点，路径步骤保留在自身输入中 */
-export type WeavePathNode = WeaveNodeBase<IRPathBase> & {
-  /** 路径类别 */
-  type: 'path';
-  /** Core 定义的完整编译状态，候选计算只读消费旧状态 */
+/** 路径状态 */
+export type WeavePathState = WeaveNodeStateBase<IRPathBase> & {
+  /** Core 完整编译产物，只读复用 */
   compiled: CompiledPath | null;
 };
 
-/** Scope 的 Weave 节点，递归声明只由 children 保存 */
-export type WeaveScopeNode = WeaveNodeBase<Omit<IRScope, 'children'>> & {
-  /** Scope 类别 */
-  type: 'scope';
-  /** 仅用于增量定位的容器地址，不写回输入 */
-  scopeId: string;
-  /** Core 定义的完整编译状态，候选计算只读消费旧状态 */
+/** Scope 状态，自身输入不重复保存 children */
+export type WeaveScopeState = WeaveNodeStateBase<Omit<IRScope, 'children'>> & {
+  /** Core 完整编译产物，只读复用 */
   compiled: CompiledScope | null;
-  /** 按声明顺序排列的子节点 */
-  children: Array<WeaveNode>;
-  /** 仅局部命名空间持有，key 为用户 id；普通 Scope 使用所属命名空间 */
-  ids?: Map<string, WeaveNode>;
+  /** 有序子节点，子节点状态变化不改变此数组 */
+  children: ReadonlyArray<WeaveNode>;
+  /** 仅局部命名空间持有的用户 id 索引 */
+  ids?: ReadonlyMap<string, WeaveNode>;
 };
 
-/**
- * 展开后的基础元素联合，不包含声明根与 Composite
- */
+/** 稳定对象上的两个状态槽，首次提交前 current 为 null */
+type WeaveNodeVersions<TState> = {
+  /** 已提交状态，不得原地修改 */
+  current: TState | null;
+  /** 候选状态，无候选时为 null */
+  pending: TState | null;
+};
+
+/** 稳定普通图元引用 */
+export type WeaveShapeNode = WeaveNodeVersions<WeaveShapeState> & {
+  /** 不随状态变化的类别 */
+  readonly type: 'node';
+};
+
+/** 稳定坐标引用 */
+export type WeaveCoordinateNode = WeaveNodeVersions<WeaveCoordinateState> & {
+  /** 不随状态变化的类别 */
+  readonly type: 'coordinate';
+};
+
+/** 稳定路径引用 */
+export type WeavePathNode = WeaveNodeVersions<WeavePathState> & {
+  /** 不随状态变化的类别 */
+  readonly type: 'path';
+};
+
+/** 稳定 Scope 引用 */
+export type WeaveScopeNode = WeaveNodeVersions<WeaveScopeState> & {
+  /** 不随状态变化的类别 */
+  readonly type: 'scope';
+  /** 树内唯一且在容器生命周期内稳定的定位地址 */
+  readonly scopeId: string;
+};
+
+/** 基础元素联合，不包含 Composite 或声明根 */
 export type WeaveNode = WeaveCoordinateNode | WeavePathNode | WeaveScopeNode | WeaveShapeNode;
 
-/** 声明根容器，不承担 Layout 计算职责 */
-export type WeaveRoot = {
-  /** 根容器类别 */
-  type: 'root';
-  /** 根容器定位地址 */
-  scopeId: string;
-  /** Scene 自身配置，声明子树由 children 单独持有 */
-  input: Omit<IRScene, 'children'>;
-  /** 本版本全部容器，包括根自身 */
-  scopeIds: Map<string, WeaveRoot | WeaveScopeNode>;
+/** 根状态，集合、记录与输入随候选隔离 */
+export type WeaveRootState = {
   /** 根没有父节点 */
   parent: null;
-  /** 按声明顺序排列的顶层节点 */
-  children: Array<WeaveNode>;
-  /** 本版本持有的稳定编译环境 */
+  /** Scene 自身输入 */
+  input: Omit<IRScene, 'children'>;
+  /** 有序顶层节点 */
+  children: ReadonlyArray<WeaveNode>;
+  /** Core 只读环境 */
   environment: CompileEnvironment;
-  /** 与本版本节点配对的读取事实与诊断 */
-  records: Map<WeaveNode, { reads: ReadonlyArray<CompileRead>; diagnostics: ReadonlyArray<CompileWarning> }>;
-  /** 根命名空间的用户 id 索引 */
-  ids: Map<string, WeaveNode>;
+  /** 用户 id 索引 */
+  ids: ReadonlyMap<string, WeaveNode>;
+  /** 根自身及所有 Scope 的定位索引 */
+  scopeIds: ReadonlyMap<string, WeaveRoot | WeaveScopeNode>;
+  /** 元素读取事实及诊断，替换记录而非修改共享值 */
+  records: ReadonlyMap<
+    WeaveNode,
+    Readonly<{
+      reads: ReadonlyArray<CompileRead>;
+      diagnostics: ReadonlyArray<CompileWarning>;
+    }>
+  >;
 };
 
-/** Weave 编译树的已提交与候选版本入口 */
-export type WeaveTree = {
-  /** 已提交版本的声明根，候选计算期间保持只读 */
-  current: WeaveRoot;
-  /** 候选版本的声明根，无候选计算时为 null */
-  candidate: WeaveRoot | null;
+/** 稳定声明根，不承担 Layout 计算 */
+export type WeaveRoot = WeaveNodeVersions<WeaveRootState> & {
+  /** 根类别 */
+  readonly type: 'root';
+  /** 根定位地址 */
+  readonly scopeId: string;
 };
 
 /** 基础元素的完整自身输入，Scope 不包含声明子树 */

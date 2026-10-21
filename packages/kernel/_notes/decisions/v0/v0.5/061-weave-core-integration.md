@@ -34,13 +34,13 @@ Core 的 `ElementCompileResult` 区分 compiled 与 pending。pending 只记录�
 
 | 内容                                                      | 持有位置与生命周期                                                                                          |
 | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Core 编译配置、有效 Definition 注册表、文字测量与公式服务 | 每个版本的 Root.environment 持有 `CompileEnvironment`；配置稳定时可共享只读环境                             |
+| Core 编译配置、有效 Definition 注册表、文字测量与公式服务 | Root 状态的 environment 持有 `CompileEnvironment`；配置稳定时可共享只读环境                                 |
 | Scene 自身配置                                            | Root 持有排除 children 的 Scene 输入；保留默认上下文、viewBox、animations 等最终编译所需事实                |
 | 元素自身输入、有效父级继承上下文                          | 节点 input.own 与 input.context；Scope own 不含 children                                                    |
 | Scope 子上下文与前置准备结果                              | 候选计算工作区持有 `ScopeCompilationPreparation`；子节点 input.context 接收其有效上下文，不再造一套合并配置 |
 | 编译结果                                                  | 对应节点 compiled；局部资源与输出一起保留                                                                   |
 | 名称索引与绑定关联                                        | 所属版本的 Root / 局部命名空间 Scope 及编译工作区；不得跨版本混用                                           |
-| Scope 定位索引                                            | 每个 Root 持有该版本的 Scope / root 容器索引，与用户名称索引分离                                            |
+| Scope 定位索引                                            | Root 状态持有对应视图的 Scope / root 容器索引，与用户名称索引分离                                           |
 | 元素读取事实与已完成诊断                                  | 归属对应版本、对应元素的编译记录；复用、失效或删除时一同处理                                                |
 | 资源导入、观察会话、输出收集与等待队列                    | 本次候选工作区；成功或失败后结束，不作为跨批可变缓存复用                                                    |
 
@@ -50,7 +50,7 @@ input.context 表示元素消费的有效继承上下文，Scope 为其 children
 
 ## 声明结构与定位
 
-Weave 保留一套 Root / Scope / 基础元素声明结构；children 有序，parent 与索引均指向所属版本，不额外维护同构 DocumentTree。完整输入建立新树；批次操作按 [059](./059-weave-batch-operations.md) 修改候选声明结构，再消费最终输入进行计算。
+Weave 保留一套 Root / Scope / 基础元素声明结构；children 有序，parent 与索引指向稳定对象，并在同一状态视图内读取，不额外维护同构 DocumentTree。完整输入建立新树；批次操作按 [059](./059-weave-batch-operations.md) 修改候选声明结构，再消费最终输入进行计算。
 
 所有 Scope 与 root 均有树内唯一的容器定位 id。该 id 由 Reconciler 分配并在容器存续期间保持稳定，不回写 IR，也不改变 Core 包络与名称规则；用户绘图 id 仍从自身输入读取。容器定位 id 与用户 id 属于不同地址空间，不因用户 id 同名而碰撞。删除后重建产生新容器身份，完整输入重建不推断旧 Scope 与新 Scope 的对应关系。
 
@@ -81,19 +81,19 @@ Scope 引用包络、可见边界与布局 allocation 不混为同一对象。Pa
 
 ## 候选隔离与输出
 
-沿用 current / candidate 双根。不可变输入、稳定环境和仍有效的 Core 产物可共享；可变 parent / children、索引、依赖集合、绑定与待处理记录必须隔离，候选内引用统一指向候选节点。具体复制算法不改变这一不变量，不预设只复制脏节点即可安全。
+按 [062](./062-weave-node-state-isolation.md)，使用稳定 Root 与节点的 current / pending 状态。不可变输入、稳定环境和仍有效的 Core 产物可共享；声明关系、索引、依赖集合与待处理记录按需隔离。关联指向稳定节点，候选计算统一读取 pending 或未变 current；可变绑定和观察等工作区由本次计算独占。
 
 Weave 按声明组织已完成贡献，调用 `assembleCompileOutputs`、`assembleScopeOutput` 和 `assembleSceneCompilation` 准备完整结果。资源重映射、zIndex、裁剪、Scene 布局与输出语义继续由 Core 处理；输出组装允许遍历整树，不把单元素计算误报为整次更新已经是局部成本。
 
 同一候选的诊断、观察、artifacts、provenance、空间句柄与 Scene 必须一致。启用观察时使用本次独占的 `createCompileObservationRuntime`；不能把旧会话生成的延迟观察内容直接并入新会话。缺少安全复用契约的附属产物必须重新准备，不能省略或拼接其它版本的 metadata。
 
-候选树与完整输出准备都成功后，才由 Reconciler 与 Runtime 的现有提交边界一起发布；不得先切换 current 再执行可能失败的编译组装。失败丢弃候选，保留 current 与已发布输出。诊断在成功提交后派发，不能保证撤销用户服务已产生的外部副作用。未提交输入由调用方保留，本契约不引入自动无限重试。
+候选树与完整输出准备都成功后，才由 Reconciler 与 Runtime 的现有提交边界一起发布；不得先发布状态再执行可能失败的编译组装。失败丢弃候选，保留 current 与已发布输出。首次编译在未发布的新树内完成状态提交，Runtime 再发布树与输出；未来在已发布树上的状态更新遵守 062 的触及集合提交及恢复边界。诊断在成功提交后派发，不能保证撤销用户服务已产生的外部副作用。未提交输入由调用方保留，本契约不引入自动无限重试。
 
 ## 完整输入与扩展能力
 
 基础元素树直接使用上述能力构建和编译。Composite 的 probe、展开、实例输入与来源语义仍属于 Core，Weave 不运行另一套 lowering，也不从 Scene 反推基础声明。
 
-现有完整准备链路是 Composite 的有效计算边界；当前单元素接口不等于已提供可重建全部 Composite 展开树与绑定的协议。在 Core 提供与产物同版本的展开声明和必要来源交接契约之前，含 Composite 的输入继续走已有完整准备路径，不伪造一棵声称可局部更新的 WeaveTree。替换现有完整输入链路前必须补齐该交接或明确保留该完整计算边界；不能以直接编译基础元素为由缩减既有输入能力。
+现有完整准备链路是 Composite 的有效计算边界；当前单元素接口不等于已提供可重建全部 Composite 展开树与绑定的协议。在 Core 提供与产物同版本的展开声明和必要来源交接契约之前，含 Composite 的输入继续走已有完整准备路径，不伪造一棵声称可局部更新的 Weave 树。替换现有完整输入链路前必须补齐该交接或明确保留该完整计算边界；不能以直接编译基础元素为由缩减既有输入能力。
 
 新增的连接能力先验证基础元素树、单元素计算与完整结果的闭环，再接入批次调度。本文不宣称已实现结构更新算法、属性级失效、Worker 或 Render Patch 优化。React / Vanilla 的 authoring 与静态 compileToScene 行为保持不变，后续共享 Reconciler 接入同一契约，不建立 adapter 专用编译分支。
 
