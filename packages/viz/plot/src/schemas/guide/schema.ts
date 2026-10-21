@@ -38,7 +38,7 @@ import {
   union,
 } from 'zod';
 
-import { PlotLayerSchema } from '../layer';
+import { PlotLayerSchema } from '../plot/layer';
 import {
   AxisCardinalSide,
   AxisCrossingCorner,

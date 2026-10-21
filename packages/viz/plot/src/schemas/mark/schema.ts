@@ -66,7 +66,7 @@ import {
   MarkNodeLabelListSchema,
   PointEncodingSchema,
 } from '../encoding';
-import { PlotLayerSchema } from '../layer';
+import { PlotLayerSchema } from '../plot/layer';
 import { MarkPlacementSchema } from '../position-adjustment';
 import { PointAutoPaddingSchema } from './auto-padding';
 import {
