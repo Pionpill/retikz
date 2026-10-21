@@ -1,7 +1,7 @@
 import type { IRScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { prepareWeaveCompilation, readWeaveCurrent, WeaveStateTransaction } from '../../src/weave';
+import { prepareWeaveCompilation, readWeaveCurrent, WeaveTransaction } from '../../src/weave';
 
 const input: IRScene = {
   type: 'scene',
@@ -34,7 +34,7 @@ describe('Weave 候选状态隔离', () => {
     const { root, scope, a } = fixture();
     const before = readWeaveCurrent(a);
     const children = readWeaveCurrent(scope).children;
-    const work = new WeaveStateTransaction(root);
+    const work = new WeaveTransaction(root);
     const pending = work.editNode(a);
     pending.input = { ...pending.input, own: { ...pending.input.own, text: 'changed' } };
     expect(work.readNode(a).input.own.text).toBe('changed');
@@ -51,7 +51,7 @@ describe('Weave 候选状态隔离', () => {
   it('结构与局部索引按需隔离，同批多次写入复用副本', () => {
     const { root, scope, a, b } = fixture();
     const original = readWeaveCurrent(scope);
-    const work = new WeaveStateTransaction(root);
+    const work = new WeaveTransaction(root);
     const children = work.editNodeAttribute(scope, 'children');
     children.splice(0, 1);
     work.editNodeAttribute(scope, 'ids').delete('a');
@@ -69,7 +69,7 @@ describe('Weave 候选状态隔离', () => {
     const original = readWeaveCurrent(b);
     const kinds = original.dependencies.get(a);
     const records = readWeaveCurrent(root).records;
-    const work = new WeaveStateTransaction(root);
+    const work = new WeaveTransaction(root);
     const dependencies = work.editNodeAttribute(b, 'dependencies');
     dependencies.delete(a);
     expect(work.editNodeAttribute(b, 'dependencies')).toBe(dependencies);
@@ -97,7 +97,7 @@ describe('Weave 候选状态隔离', () => {
     const beforeRoot = readWeaveCurrent(root);
     const beforeScope = readWeaveCurrent(scope);
     const beforeNode = readWeaveCurrent(a);
-    const work = new WeaveStateTransaction(root);
+    const work = new WeaveTransaction(root);
     work.editNodeAttribute(root, 'children').length = 0;
     work.editNodeAttribute(root, 'scopeIds').delete(scope.scopeId);
     work.editNodeAttribute(scope, 'ids').delete('a');
@@ -114,7 +114,7 @@ describe('Weave 候选状态隔离', () => {
 
   it('新节点仅存在于候选结构，丢弃后没有已提交状态或索引残留', () => {
     const { root, scope, a } = fixture();
-    const work = new WeaveStateTransaction(root);
+    const work = new WeaveTransaction(root);
     const added = { type: 'node' as const, current: null, pending: { ...readWeaveCurrent(a) } };
     work.editNode(added);
     work.editNodeAttribute(scope, 'children').push(added);
@@ -129,13 +129,13 @@ describe('Weave 候选状态隔离', () => {
 
   it('同树候选互斥，最终确认或丢弃后释放占用', () => {
     const { root, a } = fixture();
-    const work = new WeaveStateTransaction(root);
-    expect(() => new WeaveStateTransaction(root)).toThrow(/already has a candidate/);
+    const work = new WeaveTransaction(root);
+    expect(() => new WeaveTransaction(root)).toThrow(/already has a candidate/);
     work.editNode(a);
     work.commit();
-    expect(() => new WeaveStateTransaction(root)).toThrow(/already has a candidate/);
+    expect(() => new WeaveTransaction(root)).toThrow(/already has a candidate/);
     work.finish();
-    const next = new WeaveStateTransaction(root);
+    const next = new WeaveTransaction(root);
     next.editNode(a);
     next.rollback();
     expect(() => work.editNode(a)).toThrow(/not preparing/);
@@ -146,7 +146,7 @@ describe('Weave 候选状态隔离', () => {
 it('未完成状态阻止整批提交，不切换此前已检查的节点', () => {
   const { root, a, b } = fixture();
   const before = readWeaveCurrent(a);
-  const work = new WeaveStateTransaction(root);
+  const work = new WeaveTransaction(root);
   work.editNode(a);
   work.editNode(b).compiled = null;
   expect(() => work.commit()).toThrow(/unfinished Weave state/);
@@ -163,7 +163,7 @@ it('普通 Scope 缺少局部 ids 时不隐式创建命名空间', () => {
   });
   const scope = readWeaveCurrent(root).children[0];
   if (scope.type !== 'scope') throw new Error('Expected scope fixture');
-  const work = new WeaveStateTransaction(root);
+  const work = new WeaveTransaction(root);
   expect(() => work.editNodeAttribute(scope, 'ids')).toThrow(/attribute is absent/);
   expect(work.readNode(scope).ids).toBeUndefined();
   expect(readWeaveCurrent(scope).ids).toBeUndefined();

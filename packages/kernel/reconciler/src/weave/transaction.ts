@@ -46,7 +46,7 @@ export const readWeaveCurrent = <TNode extends WeaveStateOwner>(node: TNode): Re
 const activeRoots = new WeakSet<WeaveRoot>();
 
 /** 单批状态隔离与提交恢复，不负责输入操作或计算调度 */
-export class WeaveStateTransaction {
+export class WeaveTransaction {
   /** key 为本事务修改的节点或根，value 为修改前的 current 引用；新节点为 null，用于提交与回滚 */
   private readonly previous = new Map<WeaveStateOwner, WeaveStateOwner['current']>();
   /** 本事务拥有的外层 Map、Set、Array 副本，避免重复浅拷贝；不表示拥有集合内部成员 */
@@ -131,7 +131,7 @@ export class WeaveStateTransaction {
   finish(): void {
     if (this.phase !== 'committed')
       throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave transaction is not committed');
-    this.close();
+    this.closeTransaction();
   }
 
   /** 放弃候选，或恢复已切换但尚未确认的状态 */
@@ -141,7 +141,7 @@ export class WeaveStateTransaction {
       node.current = previous;
       node.pending = null;
     }
-    this.close();
+    this.closeTransaction();
   }
 
   /** 准备状态检测 */
@@ -150,7 +150,8 @@ export class WeaveStateTransaction {
       throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave transaction is not preparing');
   }
 
-  private close(): void {
+  /** 清除恢复引用并释放本树的事务占用 */
+  private closeTransaction(): void {
     this.previous.clear();
     this.phase = 'closed';
     activeRoots.delete(this.root);

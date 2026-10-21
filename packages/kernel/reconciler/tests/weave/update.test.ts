@@ -23,6 +23,45 @@ const scene: IRScene = {
 };
 
 describe('Weave 批次更新', () => {
+  it('删除已编译子树不发布其新状态，提交后回滚恢复原结构与依赖', () => {
+    const input: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [
+        {
+          type: 'scope',
+          children: [
+            { type: 'scope', children: [{ type: 'node', id: 'nested' }] },
+            { type: 'node', id: 'sibling' },
+          ],
+        },
+        { type: 'node', id: 'retained' },
+      ],
+    };
+    const session = new WeaveReconciler(input);
+    const { root } = session.mount();
+    const originalRoot = readWeaveCurrent(root);
+    const scope = originalRoot.children[0];
+    if (scope.type !== 'scope') throw new Error('Expected scope');
+    const originalScope = readWeaveCurrent(scope);
+    const nestedScope = originalScope.children[0];
+    const originalNestedScope = readWeaveCurrent(nestedScope);
+    const prepared = session.update({
+      operations: [{ kind: 'remove', target: { kind: 'scope', scopeId: scope.scopeId } }],
+    });
+    expect(prepared.compilation.result).toEqual(compileToScene({ ...input, children: [input.children[1]] }));
+    prepared.commit();
+    expect(readWeaveCurrent(root).scopeIds.has(scope.scopeId)).toBe(false);
+    expect(readWeaveCurrent(scope)).toBe(originalScope);
+    expect(readWeaveCurrent(nestedScope)).toBe(originalNestedScope);
+    expect(scope.pending).toBeNull();
+    expect(nestedScope.pending).toBeNull();
+    prepared.rollback();
+    expect(readWeaveCurrent(root)).toBe(originalRoot);
+    expect(readWeaveCurrent(scope).dependencies.has(nestedScope)).toBe(true);
+    expect(readWeaveCurrent(nestedScope).consumers.has(scope)).toBe(true);
+  });
+
   it('结构变化后的来源、布局产物与新观察会话和全量编译一致', () => {
     const events: Array<CompileObservation> = [];
     const observer: CompileObserverDefinition = {
