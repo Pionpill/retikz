@@ -32,6 +32,36 @@ const paths = (child: IRChild): Array<IRPath> =>
   child.type === 'path' ? [child as IRPath] : child.type === 'scope' ? (child as IRScope).children.flatMap(paths) : [];
 
 describe('independent annotations', () => {
+  it.each([
+    { name: 'label only', properties: {}, encodings: undefined, expected: undefined },
+    { name: 'fixed body text', properties: { text: 'Body' }, encodings: undefined, expected: 'Body' },
+    { name: 'encoded body text', properties: {}, encodings: { text: 'title' }, expected: 'Bound body' },
+    {
+      name: 'missing encoded text',
+      properties: { text: 'Fallback' },
+      encodings: { text: 'missing' },
+      expected: undefined,
+    },
+  ])('keeps point annotation body and attached label separate: $name', ({ properties, encodings, expected }) => {
+    const source = plot([
+      {
+        type: 'point',
+        kind: 'annotation',
+        encodings,
+        properties: {
+          ...properties,
+          position: { x: 5, y: 5 },
+          shape: 'circle',
+          label: { content: 'A', position: 'top', distance: 8 },
+        },
+      },
+    ]);
+    const output = nodes(lowerPlot(source, { data: [{ title: 'Bound body' }] }, { textMeasurer: measureLabel }));
+    expect(output).toHaveLength(1);
+    expect(output[0].text).toBe(expected);
+    expect(output[0].label).toMatchObject({ text: 'A', position: 'top', distance: 8 });
+  });
+
   it('uses coordinate connections by default and preserves explicit straight connections in JSON', () => {
     const path = { type: 'path', kind: 'annotation', properties: { from: { x: 0, y: 5 }, to: { x: 5, y: 5 } } };
     expect(MarkOperationSchema.parse(path)).toHaveProperty('properties.connection', 'coordinate');

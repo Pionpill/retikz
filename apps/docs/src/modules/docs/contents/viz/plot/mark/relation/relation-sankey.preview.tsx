@@ -3,7 +3,7 @@ import { Layout } from '@retikz/react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
 
-import { sankeyData } from './relation-sankey.data';
+import { sankeyNodes, sankeyRelations } from './relation-sankey.data';
 
 /** 图形参数 */
 export type RelationSankeyPreviewValues = {
@@ -17,7 +17,7 @@ export type RelationSankeyPreviewValues = {
 /** 绘制示例图形 */
 export const RelationSankeyPreview = (values: RelationSankeyPreviewValues) => (
   <Layout viewBox={{ x: 0, y: 0, width: 620, height: 360 }}>
-    <Plot data={sankeyData} width={620} height={320} position={[0, 42]}>
+    <Plot data={sankeyRelations} width={620} height={320} position={[0, 42]}>
       <RelationMark
         encodings={{
           source: { position: { x: 'sourceX', y: 'sourceY' } },
@@ -34,6 +34,10 @@ export const RelationSankeyPreview = (values: RelationSankeyPreviewValues) => (
           },
         }}
       />
+      <PlotScale dimension="x" type="linear" domain={[0, 3]} domainPadding={0} />
+      <PlotScale dimension="y" type="linear" domain={[0, 100]} domainPadding={0} />
+    </Plot>
+    <Plot data={sankeyNodes} width={620} height={320} position={[0, 42]}>
       <IntervalMark
         encodings={{
           bounds: { x: { from: 'nodeX0', to: 'nodeX1' }, y: { from: 'nodeY0', to: 'nodeY1' } },

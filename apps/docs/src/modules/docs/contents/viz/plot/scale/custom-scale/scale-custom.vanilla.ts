@@ -19,7 +19,7 @@ const spec: IRPlot = {
       type: 'point',
       kind: 'data',
       encodings: { color: { field: 'tier', scale: 'tier-color' }, position: { x: 'x', y: 'y' } },
-      properties: { size: 7 },
+      properties: { size: 7, autoPadding: false },
     },
   ],
   guides: [

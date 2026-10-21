@@ -14,6 +14,34 @@ const gradientPaint: IRPaint = {
 };
 
 describe('buildPlotIR paint props', () => {
+  it('omits nested optional props while preserving explicit values and label array positions', () => {
+    const spec = buildPlotIR(
+      <PointMark
+        encodings={{ position: { x: 'x', y: 'y' } }}
+        properties={{
+          fill: undefined,
+          dashed: false,
+          opacity: { overall: 0, fill: undefined },
+          label: [
+            { content: 'A', distance: undefined },
+            { content: 'B', distance: 0 },
+          ],
+        }}
+      />,
+      '__plot',
+    );
+    const properties = spec.marks[0].properties;
+    expect(properties).not.toHaveProperty('fill');
+    expect(properties).toMatchObject({
+      dashed: false,
+      opacity: { overall: 0 },
+      label: [{ content: 'A' }, { content: 'B', distance: 0 }],
+    });
+    expect(properties?.opacity).not.toHaveProperty('fill');
+    expect(properties?.label).toHaveLength(2);
+    expect(JSON.parse(JSON.stringify(properties))).toEqual(properties);
+  });
+
   it('point paint props pass through to mark IR', () => {
     const spec = buildPlotIR(
       <PointMark

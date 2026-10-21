@@ -89,9 +89,11 @@ export const lowerAnnotation: MarkAnnotationCapability['lower'] = (mark, frame, 
       ...style
     } = unencodedMarkProperties(mark) ?? {};
     const mapped = mappedPosition(positions[0], frame, row);
-    const text =
-      channelValueOf<NonNullable<IRNode['text']>>(channels, 'label')?.(row) ??
-      (mark.encodings?.text === undefined ? _text : undefined);
+    const hasBodyText = mark.encodings?.text !== undefined || _text !== undefined;
+    const text = hasBodyText
+      ? (channelValueOf<NonNullable<IRNode['text']>>(channels, 'label')?.(row) ??
+        (mark.encodings?.text === undefined ? _text : undefined))
+      : undefined;
     const label = resolveNodeMarkLabels(_label, row, undefined, mark.encodings?.label);
     const projected = projectPosition(mapped, frame);
     const defaults = pointGlyphStyle(fill, {});

@@ -49,13 +49,27 @@ const declarationKindOf = (element: ReactElement): PlotDeclarationKind | undefin
   return undefined;
 };
 
+/** 清理嵌套对象中的可选属性，保留数组位置及其它值交由 JSON 边界校验 */
+const omitOptionalProperties = (value: unknown): unknown => {
+  if (Array.isArray(value)) return value.map(omitOptionalProperties);
+  if (value === null || typeof value !== 'object') return value;
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== Object.prototype && prototype !== null) return value;
+
+  const result: Record<string, unknown> = {};
+  for (const [key, member] of Object.entries(value)) {
+    if (member !== undefined) result[key] = omitOptionalProperties(member);
+  }
+  return result;
+};
+
 const plainPropsOf = (props: Record<string, unknown>, overrides: Record<string, unknown> = {}): JsonObject => {
   const plain: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries({ ...props, ...overrides })) {
     if (key === 'resolveLabel' || (key === 'children' && !Object.hasOwn(overrides, 'children')) || value === undefined)
       continue;
-    plain[key] = value;
+    plain[key] = omitOptionalProperties(value);
   }
 
   return JsonObjectSchema.parse(plain);

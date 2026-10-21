@@ -65,7 +65,7 @@ RelationMark 是底层关系路径 mark：它不重新发明箭头、标签或�
 
 #### 桑基带状关系
 
-桑基关系通过 `encodings.source` / `encodings.target` 绑定端点，将 `properties.geometry.kind` 设为 `ribbon`，并用 `encodings.geometry.width` 绑定带宽字段。填充字段放在 `encodings.fill`，固定透明度放在 `properties.opacity`。
+桑基关系通过 `encodings.source` / `encodings.target` 绑定端点，将 `properties.geometry.kind` 设为 `ribbon`，并用 `encodings.geometry.width` 绑定带宽字段。填充字段放在 `encodings.fill`，固定透明度放在 `properties.opacity`。示例将流线与节点分到两个使用相同坐标范围的 Plot 图层，各自只消费对应的数据行。
 
 <ComponentPreview
   files={['relation-sankey', 'relation-sankey.preview.tsx', 'relation-sankey.data.ts']}

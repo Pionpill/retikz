@@ -23,6 +23,8 @@ When built-in scales cannot express a domain mapping, special position distribut
 
 The demo registers both `ease-position` and `brand`: the first redistributes x coordinates with an exponent, while the second maps categorical `tier` values to a brand palette. Drag the exponent to compare position mapping while color mapping stays fixed; switch source files to inspect both definitions, data, and host injection:
 
+This custom position scale does not implement domain padding, so the example disables point auto-padding with `properties.autoPadding: false`.
+
 <ComponentPreview
   files={['scale-custom', 'scale-custom.preview.tsx', 'scale-custom.definition.ts', 'scale-custom.data.ts']}
   size="lg"

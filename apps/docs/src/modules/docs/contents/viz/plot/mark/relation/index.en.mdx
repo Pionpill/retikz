@@ -65,7 +65,7 @@ Each scatter row declares both `id` and `target`. Because the relationship alrea
 
 #### Sankey Ribbon
 
-Sankey relations bind endpoints through `encodings.source` and `encodings.target`, set `properties.geometry.kind` to `ribbon`, and bind the width field through `encodings.geometry.width`. The fill field belongs in `encodings.fill`, while fixed opacity belongs in `properties.opacity`.
+Sankey relations bind endpoints through `encodings.source` and `encodings.target`, set `properties.geometry.kind` to `ribbon`, and bind the width field through `encodings.geometry.width`. The fill field belongs in `encodings.fill`, while fixed opacity belongs in `properties.opacity`. The example separates flows and nodes into two Plot layers with matching coordinate domains, each consuming only its own rows.
 
 <ComponentPreview
   files={['relation-sankey', 'relation-sankey.preview.tsx', 'relation-sankey.data.ts']}
