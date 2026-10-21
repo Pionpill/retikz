@@ -25,7 +25,7 @@ export const OpacityEncodingSchema = strictObject({
 }).describe('Independent opacity factor field encodings');
 
 /** 校验共享绘图外观的字段编码 */
-export const MarkChannelEncodingSchema = strictObject({
+export const VisualEncodingSchema = strictObject({
   color: ChannelSchema.optional(),
   fill: ChannelSchema.optional(),
   stroke: ChannelSchema.optional(),
@@ -44,7 +44,7 @@ export const LabelEncodingSchema = strictObject({
 }).describe('Field content of a label at the same index as its fixed host properties');
 
 /** 校验节点宿主允许的字段编码目标 */
-export const NodeEncodingSchema = MarkChannelEncodingSchema.extend({
+export const NodeEncodingSchema = VisualEncodingSchema.extend({
   align: ChannelSchema.optional(),
   lineHeight: ChannelSchema.optional(),
   maxTextWidth: ChannelSchema.optional(),
@@ -61,7 +61,7 @@ export const NodeEncodingSchema = MarkChannelEncodingSchema.extend({
 }).describe('Declared node-host visual field targets');
 
 /** 校验路径宿主允许的字段编码目标 */
-export const PathEncodingSchema = MarkChannelEncodingSchema.extend({
+export const PathEncodingSchema = VisualEncodingSchema.extend({
   rotate: ChannelSchema.optional(),
   scale: ChannelSchema.optional(),
   fillRule: ChannelSchema.optional(),
@@ -74,7 +74,7 @@ export const PathEncodingSchema = MarkChannelEncodingSchema.extend({
 }).describe('Declared path-host visual field targets');
 
 /** 校验位置与共享视觉字段编码 */
-export const EncodingSchema = MarkChannelEncodingSchema.extend({
+export const EncodingSchema = VisualEncodingSchema.extend({
   position: PositionEncodingSchema.optional(),
 }).describe('Position role bindings and declared shared visual encodings');
 

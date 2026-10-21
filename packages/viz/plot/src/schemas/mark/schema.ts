@@ -58,7 +58,7 @@ import {
 import { CoordinateConnection, PolarInterpolation } from '../coordinate';
 import {
   ChannelSchema,
-  MarkChannelEncodingSchema,
+  VisualEncodingSchema,
   NodeEncodingSchema,
   PathEncodingSchema,
   PositionEncodingSchema,
@@ -842,7 +842,7 @@ export const RelationPropertiesSchema = RelationPrimitiveStyleSchema.extend({
 });
 
 /** 校验关系几何与目标中的字段依赖 */
-export const RelationEncodingSchema = MarkChannelEncodingSchema.extend({
+export const RelationEncodingSchema = VisualEncodingSchema.extend({
   source: PlotTargetEncodingSchema.optional(),
   target: PlotTargetEncodingSchema.optional(),
   label: PathEncodingSchema.shape.label,
@@ -997,14 +997,17 @@ const annotationBase = {
 export const PointAnnotationSchema = strictObject({
   ...annotationBase,
   type: literal(BuiltinPlotMark.Point),
-  encodings: PointEncodingSchema.omit({ anchorId: true }).optional().describe('Point annotation field bindings for positions and supported visual targets'),
+  encodings: PointEncodingSchema.omit({ anchorId: true })
+    .optional()
+    .describe('Point annotation field bindings for positions and supported visual targets'),
   properties: PointPropertiesSchema.omit({
     anchorId: true,
     autoPadding: true,
     placement: true,
   })
     .extend({ width: NodeLayoutSchema.shape.width, size: PositiveNumberSchema.optional() })
-    .optional().describe('Fixed point annotation positions, appearance, and construction settings'),
+    .optional()
+    .describe('Fixed point annotation positions, appearance, and construction settings'),
 });
 
 /** 校验显式路径固定端点与连接规则 */
@@ -1029,8 +1032,11 @@ export const PathAnnotationSchema = strictObject({
       from: PositionEncodingSchema.optional(),
       to: PositionEncodingSchema.optional(),
     })
-    .optional().describe('Path annotation endpoint and visual field bindings'),
-  properties: PathAnnotationPropertiesSchema.optional().describe('Fixed path annotation endpoints, connection, and appearance'),
+    .optional()
+    .describe('Path annotation endpoint and visual field bindings'),
+  properties: PathAnnotationPropertiesSchema.optional().describe(
+    'Fixed path annotation endpoints, connection, and appearance',
+  ),
 });
 
 /** 校验显式区间的固定端点与外观 */
@@ -1059,8 +1065,12 @@ export const IntervalAnnotationSchema = strictObject({
         to: NonBlankStringSchema.optional(),
       }),
     ).optional(),
-  }).optional().describe('Interval annotation bounds and visual field bindings'),
-  properties: IntervalAnnotationPropertiesSchema.optional().describe('Fixed interval annotation bounds, connection, and appearance'),
+  })
+    .optional()
+    .describe('Interval annotation bounds and visual field bindings'),
+  properties: IntervalAnnotationPropertiesSchema.optional().describe(
+    'Fixed interval annotation bounds, connection, and appearance',
+  ),
 });
 
 /** 三种显式几何标注 */

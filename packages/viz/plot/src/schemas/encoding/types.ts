@@ -3,7 +3,7 @@ import type { infer as ZodInfer } from 'zod';
 import type {
   ChannelSchema,
   EncodingSchema,
-  MarkChannelEncodingSchema,
+  VisualEncodingSchema,
   MarkGeometryLabelListSchema,
   MarkGeometryLabelSchema,
   MarkLabelContentSchema,
@@ -20,8 +20,8 @@ export type IRPlotChannel = ZodInfer<typeof ChannelSchema>;
 /** 位置通道绑定；内置坐标系使用 x、y、z，自定义坐标系可扩展角色键 */
 export type IRPlotPositionEncoding = ZodInfer<typeof PositionEncodingSchema>;
 
-/** 标记的非位置通道绑定 */
-export type IRPlotMarkChannelEncoding = ZodInfer<typeof MarkChannelEncodingSchema>;
+/** 共享绘图外观的字段编码 */
+export type IRPlotVisualEncoding = ZodInfer<typeof VisualEncodingSchema>;
 
 /** 标记的位置通道与共享通道绑定 */
 export type IRPlotEncoding = ZodInfer<typeof EncodingSchema>;

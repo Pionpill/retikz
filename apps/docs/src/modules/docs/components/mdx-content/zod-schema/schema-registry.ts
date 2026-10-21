@@ -2179,10 +2179,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PositionEncoding',
     url: '/viz/plot/reference/encoding#positionencodingschema',
   },
-  MarkChannelEncodingSchema: {
-    schema: IRPlot.MarkChannelEncodingSchema,
-    label: 'MarkChannelEncoding',
-    url: '/viz/plot/reference/encoding#markchannelencodingschema',
+  VisualEncodingSchema: {
+    schema: IRPlot.VisualEncodingSchema,
+    label: 'VisualEncoding',
+    url: '/viz/plot/reference/encoding#visualencodingschema',
   },
   LabelEncodingSchema: {
     schema: IRPlot.LabelEncodingSchema,
