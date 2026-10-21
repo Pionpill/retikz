@@ -21,7 +21,7 @@ type WeaveAttributeKey<TState> = TState extends object
     }[keyof TState]
   : never;
 
-/** 内部属性访问视图；具体字段与返回类型由 editAttribute 的调用签名约束 */
+/** 内部属性访问视图；具体字段与返回类型由 editNodeAttribute 的调用签名约束 */
 type WeaveAttributeState = Partial<Record<WeaveAttributeKey<WeaveStateOf<WeaveStateOwner>>, WeaveAttribute>>;
 
 /** 保留属性成员类型，仅将外层容器转为可写 */
@@ -47,10 +47,11 @@ const activeRoots = new WeakSet<WeaveRoot>();
 
 /** 单批状态隔离与提交恢复，不负责输入操作或计算调度 */
 export class WeaveStateTransaction {
-  // 本轮需要修改的节点状态映射
+  /** key 为本事务修改的节点或根，value 为修改前的 current 引用；新节点为 null，用于提交与回滚 */
   private readonly previous = new Map<WeaveStateOwner, WeaveStateOwner['current']>();
-  // 本事务已复制/可以安全修改的集合，用于防止重复创建对象
+  /** 本事务拥有的外层 Map、Set、Array 副本，避免重复浅拷贝；不表示拥有集合内部成员 */
   private readonly ownedCollections = new WeakSet<object>();
+  /** preparing 允许编辑，committed 保留回滚依据，closed 表示事务已结束 */
   private phase: 'preparing' | 'committed' | 'closed' = 'preparing';
 
   constructor(private readonly root: WeaveRoot) {
@@ -60,7 +61,7 @@ export class WeaveStateTransaction {
   }
 
   /** 获取某个节点的状态 (pending 或 current) */
-  read<TNode extends WeaveStateOwner>(node: TNode): Readonly<WeaveStateOf<TNode>> {
+  readNode<TNode extends WeaveStateOwner>(node: TNode): Readonly<WeaveStateOf<TNode>> {
     this.assertPreparing();
     const state = node.pending ?? node.current;
     if (state === null)
@@ -69,7 +70,7 @@ export class WeaveStateTransaction {
   }
 
   /** 首次写入仅复制状态壳；共享字段仍保持只读 */
-  edit<TNode extends WeaveStateOwner>(node: TNode): WeaveStateOf<TNode> {
+  editNode<TNode extends WeaveStateOwner>(node: TNode): WeaveStateOf<TNode> {
     this.assertPreparing();
     if (!this.previous.has(node)) this.previous.set(node, node.current);
     if (node.pending === null) {
@@ -84,12 +85,12 @@ export class WeaveStateTransaction {
    * 获取候选状态中可安全修改的属性；同批首次写入浅拷贝，之后复用副本
    * @remarks 仅支持 Map、Set、Array；内部成员仍只读共享，可选属性不存在时不自动创建
    */
-  editAttribute<
+  editNodeAttribute<
     TNode extends WeaveStateOwner,
     TKey extends keyof WeaveStateOf<TNode> & WeaveAttributeKey<WeaveStateOf<TNode>>,
   >(node: TNode, key: TKey): EditableWeaveAttribute<NonNullable<WeaveStateOf<TNode>[TKey]>>;
-  editAttribute(node: WeaveStateOwner, key: keyof WeaveAttributeState): WeaveAttribute {
-    const state: WeaveAttributeState = this.edit(node);
+  editNodeAttribute(node: WeaveStateOwner, key: keyof WeaveAttributeState): WeaveAttribute {
+    const state: WeaveAttributeState = this.editNode(node);
     const source = state[key];
     if (source === undefined)
       throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave state attribute is absent', {
@@ -100,6 +101,15 @@ export class WeaveStateTransaction {
     // 拷贝保持原属性的容器种类和成员类型，只写回同一字段
     state[key] = attribute;
     return attribute;
+  }
+
+  /** 删除成员不再提交其候选状态；已提交对象留给回滚结构引用 */
+  discardNode(node: WeaveNode): void {
+    this.assertPreparing();
+    if (this.previous.has(node)) {
+      node.pending = null;
+      this.previous.delete(node);
+    }
   }
 
   /** 同步提交触及状态，保留恢复指针直到事务最终确认 */

@@ -604,7 +604,11 @@ Basic elements create nodes and bindings in declaration order. Node and Coordina
 
 Reconciler then asks Core to assemble the complete output. `createCompileProvenanceTracker` retains primitive ownership through resource remapping and Scope wrapping, pairing final provenance paths with the sorted Scene without another full compilation. Runtime retains the previous result if preparation fails and publishes the matching tree and output only after success.
 
-The public input remains a complete IR snapshot. Replacing it rebuilds the basic-element tree and publishes `replaceScene`. The previous root-node fill special case has been removed; WeaveBatch execution and fine-grained dependency propagation are not connected yet. Input containing Composite elements retains Core full preparation, including probes, instance inputs, artifacts and spatial handles. This path does not fabricate an expanded tree that claims to support local updates.
+The internal Weave reconciler accepts WeaveBatch on a mounted Root: it applies insert, update and remove operations in order, then computes from the final inputs. Context follows declaration links and dependency invalidation follows consumers. Scope preparation, child layout, envelopes and final projections follow Core's evaluation order, preserving deferred Path references. Unaffected compiled products can be reused while their inputs, declaration positions and name bindings remain valid. Active observation sessions or diagnostics that require regeneration cause the relevant elements to be recomputed. Invalidation is conservative: a Scope change may recompute its entire subtree, without style/layout filtering.
+
+Updates return complete output with commit, finish and rollback operations. Preparation preserves committed state; rollback remains available after commit until final confirmation releases recovery references. Rebuilding name indexes, provenance and output may still traverse the whole tree, so local compilation does not imply local total update cost.
+
+The public Runtime input remains a complete IR snapshot. Replacing it rebuilds the basic-element tree and publishes `replaceScene`; the internal batch entry is not connected to public Runtime, React or Vanilla APIs. Input containing Composite elements retains Core full preparation, including probes, instance inputs, artifacts and spatial handles. This path does not fabricate an expanded tree that claims to support local updates.
 
 <SourceLinks
   sources={[

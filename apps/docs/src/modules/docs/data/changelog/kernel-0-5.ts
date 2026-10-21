@@ -385,10 +385,10 @@ export const kernelV05: Release = {
           },
         },
         {
-          label: { zh: 'Weave 节点状态隔离', en: 'Weave node state isolation' },
+          label: { zh: 'Weave 批次计算与状态隔离', en: 'Weave batch computation and state isolation' },
           content: {
-            zh: 'Weave 改为稳定节点引用与 current / pending 双状态，集合写入时隔离，提交保留恢复依据。首次编译与完整输入替换沿用原有输出语义；批次 update 与依赖调度尚未接入。',
-            en: 'Weave now uses stable node references with current / pending states, isolates collections on write, and retains recovery references during commit. Initial compilation and full input replacement preserve existing output semantics; batch update and dependency scheduling are not connected yet.',
+            zh: 'Weave 使用稳定节点引用与 current / pending 双状态，内部批次入口支持增删改、保守依赖失效和编译缓存复用，完整输出准备后可提交或回滚。公开 Runtime 输入仍为完整 IR，尚未接入批次 API 或局部 Render Patch。',
+            en: 'Weave uses stable node references with current / pending states. Its internal batch entry supports insertion, updates, removal, conservative dependency invalidation and compiled cache reuse, with commit or rollback after complete output preparation. Public Runtime inputs remain full IR; batch APIs and local Render patches are not connected.',
           },
         },
         {
