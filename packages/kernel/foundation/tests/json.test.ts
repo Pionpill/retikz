@@ -27,13 +27,32 @@ describe('cloneAndFreezeJson', () => {
   });
 
   it('accepts null-prototype objects and shared references by cloning each branch', () => {
-    const shared = { value: 'shared' };
+    const shared = { nested: { value: 'shared' } };
     const input = Object.assign(Object.create(null), { first: shared, second: shared });
 
     const output = cloneAndFreezeJson(input);
 
-    expect(output.first).toEqual({ value: 'shared' });
+    expect(output.first).toEqual({ nested: { value: 'shared' } });
     expect(output.first).not.toBe(output.second);
+    expect(output.first.nested).not.toBe(output.second.nested);
+  });
+
+  it('copies prototype-related property names as frozen own data without changing the output prototype', () => {
+    const input = JSON.parse('{"__proto__":{"value":1},"constructor":"data","toString":2}');
+    const output = cloneAndFreezeJson(input);
+    expect(Object.getPrototypeOf(output)).toBeNull();
+    expect(Object.keys(output)).toEqual(['__proto__', 'constructor', 'toString']);
+    expect(Object.getOwnPropertyDescriptor(output, '__proto__')).toMatchObject({
+      enumerable: true,
+      writable: false,
+      configurable: false,
+      value: { value: 1 },
+    });
+    expect(output.constructor).toBe('data');
+    expect(output.toString).toBe(2);
+    expect(Object.getPrototypeOf(output.__proto__)).toBeNull();
+    expect(Object.isFrozen(output.__proto__)).toBe(true);
+    expect(output.__proto__).not.toBe(input.__proto__);
   });
 
   it.each([
@@ -76,6 +95,51 @@ describe('cloneAndFreezeJson', () => {
       cause: Number.POSITIVE_INFINITY,
     });
     expect((failure as RetikzFoundationError).message).toBe('payload.nested must contain only finite JSON numbers');
+  });
+
+  it('keeps nested error paths after visiting valid sibling branches', () => {
+    const input = { items: [{ value: 1 }, { value: Infinity }] };
+    let failure: unknown;
+    try {
+      cloneAndFreezeJson(input, 'payload');
+    } catch (error) {
+      failure = error;
+    }
+    expect(failure).toMatchObject({
+      code: RetikzFoundationErrorCode.Json,
+      details: { path: 'payload.items[1].value' },
+      message: 'payload.items[1].value must contain only finite JSON numbers',
+      cause: Infinity,
+    });
+    expect(cloneAndFreezeJson({ items: [null, true, 'text', 0] })).toEqual({ items: [null, true, 'text', 0] });
+  });
+
+  it.each([undefined, () => true, BigInt(1), Symbol('value'), NaN])(
+    'rejects invalid nested leaves in arrays and objects',
+    value => {
+      for (const input of [[value], { value }]) {
+        expect(() => cloneAndFreezeJson(input, 'payload')).toThrowError(RetikzFoundationError);
+      }
+    },
+  );
+
+  it('rejects nested accessors without evaluating them and preserves descriptor error paths', () => {
+    let reads = 0;
+    const item = Object.defineProperty({}, 'secret', { enumerable: true, get: () => ++reads });
+    const input = { items: [{ value: 1 }, item] };
+    for (const inspect of [cloneAndFreezeJson, assertPlainDataContainers]) {
+      let failure: unknown;
+      try {
+        inspect(input, 'payload');
+      } catch (error) {
+        failure = error;
+      }
+      if (!(failure instanceof RetikzFoundationError)) throw new Error('Expected Foundation error');
+      expect(failure.details).toEqual({ path: 'payload.items[1].secret' });
+      expect(failure.message).toBe('payload.items[1].secret must be an enumerable JSON data property');
+      expect(failure.cause).toBe(item);
+    }
+    expect(reads).toBe(0);
   });
 });
 

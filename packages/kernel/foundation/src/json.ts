@@ -1,45 +1,52 @@
 import { RetikzFoundationError, RetikzFoundationErrorCode } from './error';
 
+/** 在一次调用内校验容器并按需复制，错误路径只在失败时组装 */
 const inspectPlainData = (value: unknown, path: string, shouldCloneJson: boolean): unknown => {
   const ancestors = new Set<object>();
+  const pathSegments: Array<string | number> = [];
 
-  const fail = (currentPath: string, message: string, cause?: unknown): never => {
+  const fail = (reason: string, cause?: unknown): never => {
+    let currentPath = path;
+    for (const segment of pathSegments) {
+      currentPath += typeof segment === 'number' ? `[${segment}]` : `.${segment}`;
+    }
     throw new RetikzFoundationError({
       code: RetikzFoundationErrorCode.Json,
-      message,
+      message: `${currentPath} ${reason}`,
       details: Object.freeze({ path: currentPath }),
       cause,
     });
   };
 
-  const inspect = (input: unknown, currentPath: string): unknown => {
+  const inspect = (input: unknown): unknown => {
     if (!shouldCloneJson && (input === null || typeof input !== 'object')) return input;
     if (input === null || typeof input === 'string' || typeof input === 'boolean') return input;
     if (typeof input === 'number') {
       if (!Number.isFinite(input)) {
-        return fail(currentPath, `${currentPath} must contain only finite JSON numbers`, input);
+        return fail('must contain only finite JSON numbers', input);
       }
 
       return input;
     }
 
-    if (typeof input !== 'object') return fail(currentPath, `${currentPath} must be JSON-safe plain data`, input);
-    if (ancestors.has(input)) return fail(currentPath, `${currentPath} must not contain cyclic references`, input);
+    if (typeof input !== 'object') return fail('must be JSON-safe plain data', input);
+    if (ancestors.has(input)) return fail('must not contain cyclic references', input);
     if (Object.getOwnPropertySymbols(input).length > 0) {
-      return fail(currentPath, `${currentPath} must not contain symbol keys`, input);
+      return fail('must not contain symbol keys', input);
     }
 
-    ancestors.add(input);
+    // 只有继续进入子容器时，当前节点才需要参与后代的循环检测
+    let tracksChildren = false;
 
     try {
       if (Array.isArray(input)) {
         if (Object.getPrototypeOf(input) !== Array.prototype) {
-          return fail(currentPath, `${currentPath} must contain only plain objects and arrays`, input);
+          return fail('must contain only plain objects and arrays', input);
         }
 
         const propertyNames = Object.getOwnPropertyNames(input);
         if (propertyNames.length !== input.length + 1) {
-          return fail(currentPath, `${currentPath} must not contain sparse items or extra array properties`, input);
+          return fail('must not contain sparse items or extra array properties', input);
         }
 
         const output: Array<unknown> | undefined = shouldCloneJson ? [] : undefined;
@@ -47,14 +54,28 @@ const inspectPlainData = (value: unknown, path: string, shouldCloneJson: boolean
         for (let index = 0; index < input.length; index += 1) {
           const descriptor = Object.getOwnPropertyDescriptor(input, String(index));
           if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
-            return fail(
-              `${currentPath}[${index}]`,
-              `${currentPath}[${index}] must be an enumerable JSON data item`,
-              input,
-            );
+            pathSegments.push(index);
+            return fail('must be an enumerable JSON data item', input);
           }
 
-          const inspected = inspect(descriptor.value, `${currentPath}[${index}]`);
+          let inspected: unknown = descriptor.value;
+          // 合法标量直接复制；容器或非法叶子才需要路径与递归检查
+          if (
+            inspected !== null &&
+            (typeof inspected === 'object' ||
+              (shouldCloneJson &&
+                typeof inspected !== 'string' &&
+                typeof inspected !== 'boolean' &&
+                !(typeof inspected === 'number' && Number.isFinite(inspected))))
+          ) {
+            pathSegments.push(index);
+            if (typeof inspected === 'object' && !tracksChildren) {
+              ancestors.add(input);
+              tracksChildren = true;
+            }
+            inspected = inspect(inspected);
+            pathSegments.pop();
+          }
           output?.push(inspected);
         }
 
@@ -63,28 +84,46 @@ const inspectPlainData = (value: unknown, path: string, shouldCloneJson: boolean
 
       const prototype = Object.getPrototypeOf(input);
       if (prototype !== Object.prototype && prototype !== null) {
-        return fail(currentPath, `${currentPath} must contain only plain objects and arrays`, input);
+        return fail('must contain only plain objects and arrays', input);
       }
 
-      const output = shouldCloneJson ? (Object.create(null) as Record<string, unknown>) : undefined;
+      // 写入前移除原型，保留 null 原型语义，同时允许 V8 使用快速属性存储
+      const output = shouldCloneJson ? (Object.setPrototypeOf({}, null) as Record<string, unknown>) : undefined;
 
       for (const key of Object.getOwnPropertyNames(input)) {
         const descriptor = Object.getOwnPropertyDescriptor(input, key);
         if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
-          return fail(`${currentPath}.${key}`, `${currentPath}.${key} must be an enumerable JSON data property`, input);
+          pathSegments.push(key);
+          return fail('must be an enumerable JSON data property', input);
         }
 
-        const inspected = inspect(descriptor.value, `${currentPath}.${key}`);
+        let inspected: unknown = descriptor.value;
+        if (
+          inspected !== null &&
+          (typeof inspected === 'object' ||
+            (shouldCloneJson &&
+              typeof inspected !== 'string' &&
+              typeof inspected !== 'boolean' &&
+              !(typeof inspected === 'number' && Number.isFinite(inspected))))
+        ) {
+          pathSegments.push(key);
+          if (typeof inspected === 'object' && !tracksChildren) {
+            ancestors.add(input);
+            tracksChildren = true;
+          }
+          inspected = inspect(inspected);
+          pathSegments.pop();
+        }
         if (output !== undefined) output[key] = inspected;
       }
 
       return output === undefined ? input : Object.freeze(output);
     } finally {
-      ancestors.delete(input);
+      if (tracksChildren) ancestors.delete(input);
     }
   };
 
-  return inspect(value, path);
+  return inspect(value);
 };
 
 /**
