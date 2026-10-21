@@ -110,7 +110,6 @@
     "@retikz/core": "workspace:*",
     "@retikz/foundation": "workspace:*",
     "@retikz/math": "workspace:*",
-    "@retikz/runtime": "workspace:*",
     "csstype": "catalog:",
     "@retikz/reconciler": "workspace:*"
   },

@@ -634,12 +634,12 @@ importers:
       '@retikz/foundation':
         specifier: workspace:*
         version: link:../foundation
+      '@retikz/reconciler':
+        specifier: workspace:*
+        version: link:../reconciler
       '@retikz/render':
         specifier: workspace:*
         version: link:../render
-      '@retikz/runtime':
-        specifier: workspace:*
-        version: link:../runtime
       '@retikz/vanilla':
         specifier: workspace:*
         version: link:../vanilla
@@ -686,9 +686,6 @@ importers:
       '@retikz/foundation':
         specifier: workspace:*
         version: link:../foundation
-      '@retikz/runtime':
-        specifier: workspace:*
-        version: link:../runtime
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -726,9 +723,6 @@ importers:
       '@retikz/reconciler':
         specifier: workspace:*
         version: link:../reconciler
-      '@retikz/runtime':
-        specifier: workspace:*
-        version: link:../runtime
       csstype:
         specifier: 'catalog:'
         version: 3.2.3
@@ -831,9 +825,6 @@ importers:
       '@retikz/render':
         specifier: workspace:*
         version: link:../render
-      '@retikz/runtime':
-        specifier: workspace:*
-        version: link:../runtime
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

@@ -7,7 +7,7 @@
     "layer": "kernel",
     "publishable": true
   },
-  "description": "Optional incremental Core compilation and Runtime integration for retikz.",
+  "description": "Incremental Core compilation and transactional output coordination for retikz.",
   "type": "module",
   "engines": {
     "node": ">=22.12.0"
@@ -67,7 +67,6 @@
   "dependencies": {
     "@retikz/core": "workspace:*",
     "@retikz/foundation": "workspace:*",
-    "@retikz/runtime": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

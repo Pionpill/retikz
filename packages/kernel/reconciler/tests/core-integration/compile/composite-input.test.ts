@@ -9,14 +9,7 @@ import {
   NaturalLayoutProposal,
   RetikzCoreError,
 } from '@retikz/core';
-import { createCoreComputation, CoreSourceDefinition, CoreCompositeInputSourceDefinition } from '@retikz/reconciler';
-import {
-  createRuntimeSourceInput,
-  createRuntimeSourceUpdate,
-  createRuntimeSourceRegistry,
-  createRuntimeComputationRegistry,
-  createRuntime,
-} from '@retikz/runtime';
+import { ReconcilerSession } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
@@ -233,45 +226,21 @@ describe('composite instance runtime input', () => {
 
   it('recompiles changed inputs for identical JSON and rolls back a mismatched candidate', () => {
     const source = sceneOf([leaf()]);
-    const program = createCoreComputation(
-      { composites: [prepared] },
-      { compositeInputSource: CoreCompositeInputSourceDefinition },
-    );
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, CoreCompositeInputSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const inputs = (text: string) => createCompositeInputBindings(source, [{ path: ['children', 0], input: text }]);
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [
-        createRuntimeSourceInput(CoreSourceDefinition, source),
-        createRuntimeSourceInput(CoreCompositeInputSourceDefinition, inputs('initial-ready')),
-      ],
-    });
-    session.update({
-      baseRevision: session.revision(),
-      sources: [
-        createRuntimeSourceUpdate(CoreSourceDefinition, source),
-        createRuntimeSourceUpdate(CoreCompositeInputSourceDefinition, inputs('updated-ready')),
-      ],
-    });
+    const session = new ReconcilerSession({ composites: [prepared], compositeInputs: inputs('initial-ready') });
+    session.mount(source);
+    session.replace(source, { composites: [prepared], compositeInputs: inputs('updated-ready') });
 
-    expect(JSON.stringify(session.result(program).value.output.result.scene)).toContain('updated-ready');
+    expect(JSON.stringify(session.read().compilation.result.scene)).toContain('updated-ready');
 
-    const committed = session.result(program).value.output.result;
-    const revision = session.revision();
+    const committed = session.read().compilation.result;
+    const revision = session.read().revision;
 
     expect(() =>
-      session.update({
-        baseRevision: revision,
-        sources: [
-          createRuntimeSourceUpdate(CoreSourceDefinition, sceneOf([leaf(), leaf()])),
-          createRuntimeSourceUpdate(CoreCompositeInputSourceDefinition, inputs('mismatched')),
-        ],
-      }),
-    ).toThrow(/RUNTIME_COMPUTATION_RUN_FAILED/i);
-    expect(session.revision()).toBe(revision);
-    expect(session.result(program).value.output.result).toBe(committed);
+      session.replace(sceneOf([leaf(), leaf()]), { composites: [prepared], compositeInputs: inputs('mismatched') }),
+    ).toThrow();
+    expect(session.read().revision).toBe(revision);
+    expect(session.read().compilation.result).toBe(committed);
 
     session.dispose();
   });

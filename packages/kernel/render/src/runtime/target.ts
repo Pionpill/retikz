@@ -1,3 +1,4 @@
+import type { PerformanceTraceSink } from '@retikz/foundation';
 import { createFullSceneRuntimeSnapshot } from '@retikz/reconciler';
 import type { ReconcilerCommitTarget, ReconcilerResult, ScenePatch } from '@retikz/reconciler';
 
@@ -8,7 +9,7 @@ import type { RenderRuntimeConfigInput } from './config';
 import type { RenderFrameSnapshot, StaticRenderFrame } from './frame';
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from './readonly-layer';
 import type { RenderReadonlyLayer } from './readonly-layer';
-import { getRetainedRendererExecutor, isRetainedRenderer } from './renderer';
+import { getRetainedRendererExecutor, isRetainedRenderer, isSvgHost, isCanvasHost } from './renderer';
 import type {
   RetainedRenderer,
   RetainedRendererFactory,
@@ -24,10 +25,17 @@ export type RetainedRenderLease = Readonly<{ renderer: RetainedRenderer }>;
 const leaseOwners = new WeakMap<RetainedRenderLease, object>();
 /** 编译结果到保留式宿主的接线配置 */
 export type RetainedRenderTargetOptions = Readonly<{
+  /** 宿主提交的可选观测出口 */
+  trace?: PerformanceTraceSink;
+  /** 创建当前宿主的后端实例 */
   rendererFactory: RetainedRendererFactory;
+  /** 重建会话时可接管的现有后端 */
   rendererLease?: RetainedRenderLease;
+  /** 每次准备读取本次输出配置 */
   configuration: () => RenderRuntimeConfigInput;
+  /** 从同一编译结果解析只读图层 */
   resolveReadonlyLayers?: (output: ReconcilerResult['compilation']) => ReadonlyArray<RenderReadonlyLayer>;
+  /** 首次建立新宿主或接管已有宿主 */
   mountMode?: 'create' | 'adopt';
 }> &
   (
@@ -41,25 +49,51 @@ export type RetainedRenderTargetOptions = Readonly<{
   );
 /** Render 对外的读取及单目标提交能力 */
 export type RetainedRenderTarget = Readonly<{
+  /** 供会话调度的单目标提交协议 */
   target: ReconcilerCommitTarget;
+  /** 仅返回最近成功提交的宿主状态 */
   read: () => RetainedRendererRead;
+  /** 会话之间交接后端所有权的稳定句柄 */
   lease: RetainedRenderLease;
 }>;
 
 /** 创建与计算会话解耦的宿主提交目标 */
-export const createRetainedRenderTarget = (options: RetainedRenderTargetOptions): RetainedRenderTarget => {
+export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): RetainedRenderTarget => {
+  let options: RetainedRenderTargetOptions;
+  try {
+    if (input.backend === 'svg') options = { ...input };
+    else options = { ...input };
+  } catch (cause) {
+    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRenderParticipantInputInvalid, cause });
+  }
+  if (!(options.backend === 'svg' ? isSvgHost(options.host) : isCanvasHost(options.host)))
+    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRenderParticipantInputInvalid, cause: options });
   const owner = {};
   const renderer =
     options.rendererLease?.renderer ??
     (options.backend === 'svg'
       ? options.rendererFactory({ backend: 'svg', host: options.host, immutableOptions: options.immutableOptions })
       : options.rendererFactory({ backend: 'canvas', host: options.host, immutableOptions: options.immutableOptions }));
-  if (!isRetikzRendererForHost(renderer, options))
-    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererInvalid });
+  if (!isRetikzRendererForHost(renderer, options)) {
+    let disposeFailure: unknown;
+    if (options.rendererLease === undefined) {
+      try {
+        getRetainedRendererExecutor(renderer)?.dispose();
+      } catch (cause) {
+        disposeFailure = cause;
+      }
+    }
+    throw new RetikzRenderError({
+      code: RetikzRenderErrorCode.RetainedRendererInvalid,
+      cause: { renderer, disposeFailure },
+    });
+  }
   const executor = getRetainedRendererExecutor(renderer);
   if (executor === undefined) throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererInvalid });
   const lease = options.rendererLease ?? Object.freeze({ renderer });
   if (options.rendererLease === undefined) leaseOwners.set(lease, owner);
+  let committedRead: RetainedRendererRead | undefined;
+  let disposed = false;
   let currentFrame = options.rendererLease === undefined ? undefined : executor.read().frame;
   const offset = currentFrame === undefined ? 0 : currentFrame.primary.revision + 1;
   const animationControlsCache = new WeakMap<object, AnimationControls>();
@@ -67,6 +101,7 @@ export const createRetainedRenderTarget = (options: RetainedRenderTargetOptions)
     prepare: (candidate, previous) => {
       try {
         const prior = currentFrame;
+        const priorRead = committedRead;
         const priorOwner = leaseOwners.get(lease);
         const revision = candidate.revision + offset;
         const sameCompilation = previous !== undefined && candidate.compilation === previous.compilation;
@@ -112,20 +147,44 @@ export const createRetainedRenderTarget = (options: RetainedRenderTargetOptions)
           patch === undefined
             ? executor.prepareMount(frame, config, options.mountMode ?? 'create')
             : executor.prepare(patch, frame, config);
+        let committed = false;
         return {
           commit: () => {
             token.commit();
-            normalizeRendererRead(executor.read(), frame, animationControlsCache);
+            committedRead = normalizeRendererRead(executor.read(), frame, animationControlsCache);
             currentFrame = frame;
             leaseOwners.set(lease, owner);
+            committed = true;
           },
           rollback: () => {
+            committed = false;
             token.rollback();
             currentFrame = prior;
+            committedRead = priorRead;
             if (priorOwner === undefined) leaseOwners.delete(lease);
             else leaseOwners.set(lease, priorOwner);
           },
-          dispose: () => token.dispose(),
+          dispose: () => {
+            try {
+              token.dispose();
+            } finally {
+              if (committed) {
+                try {
+                  options.trace?.({
+                    owner: `@retikz/render:${options.backend}`,
+                    phase: prior === undefined ? 'commit' : 'update',
+                    unit: 'scene-change',
+                    outcome: 'full',
+                    visited: sameCompilation ? 0 : 1,
+                    reused: 0,
+                    changed: sameCompilation ? 0 : 1,
+                  });
+                } catch {
+                  /* 观测失败不撤销宿主提交 */
+                }
+              }
+            }
+          },
         };
       } catch (cause) {
         if (isRetikzRenderError(cause)) throw cause;
@@ -133,14 +192,27 @@ export const createRetainedRenderTarget = (options: RetainedRenderTargetOptions)
       }
     },
     dispose: () => {
-      if (leaseOwners.get(lease) === owner) {
+      disposed = true;
+      committedRead = undefined;
+      if (
+        leaseOwners.get(lease) === owner ||
+        (leaseOwners.get(lease) === undefined && options.rendererLease === undefined)
+      ) {
         executor.dispose();
         leaseOwners.delete(lease);
       }
       currentFrame = undefined;
     },
   };
-  return { target, lease, read: () => normalizeRendererRead(executor.read(), currentFrame, animationControlsCache) };
+  return {
+    target,
+    lease,
+    read: () => {
+      if (disposed || committedRead === undefined)
+        throw new RetikzRenderError({ code: RetikzRenderErrorCode.ScenePatchSnapshotMismatch });
+      return committedRead;
+    },
+  };
 };
 
 /** 验证 renderer 的宿主归属，不允许把别的宿主接入本目标 */

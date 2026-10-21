@@ -1,14 +1,6 @@
 import type { IRScene } from '@retikz/core';
 import { compileToScene, CompositeBaseSchema, defineComposite, ThemeMode } from '@retikz/core';
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
-import {
-  createRuntimeSourceInput,
-  createRuntimeSourceRegistry,
-  createRuntimeSourceUpdate,
-  createRuntimeComputationRegistry,
-  createRuntime,
-  RuntimeComputationKind,
-} from '@retikz/runtime';
+import { ReconcilerSession } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
@@ -33,20 +25,11 @@ const themedComposite = defineComposite({
 
 const runUpdate = (initial: IRScene, next: IRScene) => {
   const options = { composites: [themedComposite], onWarn: () => {} } as const;
-  const program = createCoreComputation(options);
-  const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-  const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-  const session = createRuntime({
-    sources,
-    computations,
-    initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
-  });
-  const result = session.update({
-    baseRevision: session.revision(),
-    sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
-  });
+  const session = new ReconcilerSession(options);
+  session.mount(initial);
+  const result = session.replace(next);
 
-  return { result, actual: session.result(program).value.output.result, expected: compileToScene(next, options) };
+  return { result, actual: session.read().compilation.result, expected: compileToScene(next, options) };
 };
 
 describe('Theme retained invalidation', () => {
@@ -61,7 +44,6 @@ describe('Theme retained invalidation', () => {
 
     const update = runUpdate(initial, next);
 
-    expect(update.result.outcome).toBe(RuntimeComputationKind.Fallback);
     expect(update.actual).toEqual(update.expected);
   });
 
@@ -85,7 +67,6 @@ describe('Theme retained invalidation', () => {
 
     const update = runUpdate(initial, next);
 
-    expect(update.result.outcome).toBe(RuntimeComputationKind.Fallback);
     expect(update.actual).toEqual(update.expected);
   });
 });

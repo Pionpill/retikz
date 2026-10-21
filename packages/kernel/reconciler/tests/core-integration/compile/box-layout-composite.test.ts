@@ -18,15 +18,7 @@ import {
   LayoutIntrinsicMode,
   NaturalLayoutProposal,
 } from '@retikz/core';
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
-import {
-  createRuntimeSourceInput,
-  createRuntimeSourceRegistry,
-  createRuntimeSourceUpdate,
-  createRuntimeComputationRegistry,
-  createRuntime,
-  RuntimeComputationKind,
-} from '@retikz/runtime';
+import { ReconcilerSession } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject, string } from 'zod';
 
@@ -818,33 +810,23 @@ describe('Box Layout Composite contract', () => {
     const initial = sceneOf({ namespace: 'test', type: 'runtimeBox', x: 0 });
     const next = sceneOf({ namespace: 'test', type: 'runtimeBox', x: 30 });
     const options = { composites: [definition], onWarn: () => {} };
-    const program = createCoreComputation(options);
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
-    });
+    const session = new ReconcilerSession(options);
+    session.mount(initial);
 
-    const result = session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
-    });
-    const artifact = session.result(program).value;
+    const result = session.replace(next);
+    const artifact = session.read();
     const freshDiagnostics: Array<CompileWarning> = [];
     const freshResult = compileToScene(next, {
       composites: [definition],
       onWarn: warning => freshDiagnostics.push(warning),
     });
 
-    expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(artifact.patch).toEqual({
-      baseRevision: 0,
-      nextRevision: 1,
-      operations: [{ kind: 'replaceScene', snapshot: artifact.snapshot }],
+    expect(result.revision).toBe(1);
+    expect(artifact.compilation).toMatchObject({
+      result: freshResult,
+      diagnostics: freshDiagnostics,
+      observerOutputs: [],
     });
-    expect(artifact.output).toEqual({ result: freshResult, diagnostics: freshDiagnostics, observerOutputs: [] });
-    expect(artifact.output.diagnostics.map(warning => warning.code)).toContain(CompileWarningCode.DuplicateNodeId);
+    expect(artifact.compilation.diagnostics.map(warning => warning.code)).toContain(CompileWarningCode.DuplicateNodeId);
   });
 });

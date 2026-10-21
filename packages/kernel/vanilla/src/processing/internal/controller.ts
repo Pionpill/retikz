@@ -103,9 +103,7 @@ const createRetainedProcessingState = (
   initial: PreparedProcessingInput,
   initialDriverInput: VanillaCompileDriverInput,
   initialRevision: number,
-  fixedOptions: ProcessingOptions,
   compileDriver: NonNullable<ProcessingOptions['compileDriver']>,
-  hasCustomCompileDriver: boolean,
   compileSession: VanillaCompileDriverSession,
   assertCurrent: () => void,
   transactionParticipantFactory?: ProcessingTransactionParticipantFactory,
@@ -150,8 +148,13 @@ const createRetainedProcessingState = (
     captureProvenance: participant !== undefined,
     target,
   });
-  session.mount(initial.source);
-  participant?.connect?.();
+  try {
+    session.mount(initial.source);
+    participant?.connect?.();
+  } catch (cause) {
+    session.dispose();
+    throw cause;
+  }
   const read = (): ProcessingResult => {
     session.read();
     if (current === undefined)
@@ -161,14 +164,13 @@ const createRetainedProcessingState = (
   const commitDriver = (): void =>
     commitVanillaCompileOutput(compileSession, resolveVanillaCompileOutput(compileSession, session.read().compilation));
   // 完整输入入口不推断局部操作；局部更新由 Reconciler 的 WeaveBatch 入口承接
-  void fixedOptions;
-  void hasCustomCompileDriver;
   return {
     compositeDefinitions,
     driverInput: () => driverInput,
     read,
     update: (next, nextDriverInput, revision) => {
       const previousDriverInput = driverInput;
+      const previousRevision = participantRevision;
       try {
         const nextSession = createVanillaCompileDriverSession(compileDriver, nextDriverInput);
         assertCurrent();
@@ -184,8 +186,17 @@ const createRetainedProcessingState = (
         return read();
       } catch (cause) {
         participantPrepared = prepared;
-        participantRevision = read().revision;
-        restoreVanillaCompileDriverSession(compileDriver, previousDriverInput, compileSession);
+        participantRevision = previousRevision;
+        try {
+          restoreVanillaCompileDriverSession(compileDriver, previousDriverInput, compileSession);
+        } catch (recoveryError) {
+          throw new RetikzVanillaError({
+            code: RetikzVanillaErrorCode.Processing,
+            message: 'Failed to restore compile driver',
+            cause,
+            details: { recoveryError },
+          });
+        }
         throw cause;
       }
     },
@@ -216,7 +227,6 @@ const createProcessingController = (
   const fixedOptions = captureProcessingOptions(options);
   const initial = initialPrepared ?? prepareProcessingInput(source, fixedOptions);
   const compileDriver = fixedOptions.compileDriver ?? defaultVanillaCompileDriver;
-  const hasCustomCompileDriver = fixedOptions.compileDriver !== undefined;
   const instance = Object.freeze({});
 
   const driverInput = (prepared: PreparedProcessingInput): VanillaCompileDriverInput =>
@@ -240,9 +250,7 @@ const createProcessingController = (
       prepared,
       input,
       revision,
-      fixedOptions,
       compileDriver,
-      hasCustomCompileDriver,
       compileSession,
       () => assertCurrent(),
       participantFactory,

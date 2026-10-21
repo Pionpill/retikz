@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 import type {
   RenderFrameSnapshot,
   RenderRuntimeConfig,
@@ -8,8 +9,6 @@ import type {
   RetainedRendererFactoryInput,
 } from '@retikz/render/runtime';
 import { defineRetainedRenderer, RetikzRenderErrorCode } from '@retikz/render/runtime';
-import type { RuntimePreparedCommit } from '@retikz/runtime';
-import { RetikzRuntimeErrorCode } from '@retikz/runtime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { enum as zodEnum, literal, strictObject, string } from 'zod';
 
@@ -84,7 +83,7 @@ const createMemoryRendererFactory = (
     onCreate?.();
     let current: RenderFrameSnapshot | undefined;
 
-    const prepare = (frame: RenderFrameSnapshot): RuntimePreparedCommit => {
+    const prepare = (frame: RenderFrameSnapshot): ReconcilerPreparedCommit => {
       if (current !== undefined) {
         const shouldFail = typeof failUpdate === 'function' ? failUpdate() : failUpdate;
         if (shouldFail) throw new Error('expected update failure');
@@ -299,7 +298,9 @@ describe('@retikz/vanilla retained mount', () => {
     const runtimeMeta = view.runtimeMeta;
     const committedFrame = frames.at(-1);
 
-    expect(() => view.update(layerScene('fail'))).toThrow(/Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/);
+    expect(() => view.update(layerScene('fail'))).toThrow(
+      /Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
+    );
     expect(frames.at(-1)).toBe(committedFrame);
     expect(view.artifacts).toBe(artifacts);
     expect(view.runtimeMeta).toBe(runtimeMeta);
@@ -432,7 +433,9 @@ describe('@retikz/vanilla retained mount', () => {
       runtime: { rendererFactory },
     });
 
-    expect(() => view.update(cachedDatasetScene('#22c55e'))).toThrow(/Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/);
+    expect(() => view.update(cachedDatasetScene('#22c55e'))).toThrow(
+      /Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
+    );
     expect(greenCompile).toHaveBeenCalledTimes(1);
 
     view.update(cachedDatasetScene('#ef4444'));
@@ -934,7 +937,9 @@ describe('@retikz/vanilla retained mount', () => {
 
     rejectNextUpdate = true;
 
-    expect(() => hydration.dispose()).toThrow(/Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/);
+    expect(() => hydration.dispose()).toThrow(
+      /Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
+    );
 
     hydration.dispose();
 
@@ -1003,7 +1008,9 @@ describe('@retikz/vanilla retained mount', () => {
     const compileResult = view.compileResult;
     const committedHtml = view.root.innerHTML;
 
-    expect(() => view.update(source('#22c55e'))).toThrow(/Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/);
+    expect(() => view.update(source('#22c55e'))).toThrow(
+      /Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
+    );
     expect(view.artifacts).toBe(artifacts);
     expect(view.runtimeMeta).toBe(runtimeMeta);
     expect(view.compileResult).toBe(compileResult);

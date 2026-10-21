@@ -19,27 +19,17 @@ import {
 } from '@retikz/core';
 import { prepareSceneCompilation } from '@retikz/core';
 import type { CompileOptions, AnyCompositeDefinition } from '@retikz/core';
-import { CoreSourceDefinition } from '@retikz/reconciler';
-import {
-  createRuntimeSourceInput,
-  createRuntimeSourceRegistry,
-  createRuntimeComputationRegistry,
-  createRuntime,
-} from '@retikz/runtime';
-import type { RuntimeIdentity, RuntimeRevision } from '@retikz/runtime';
+import type { SceneIdentity, SceneRevision } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { createFullSceneRuntimeSnapshot } from '../../src/scene';
 
-type PrimitiveRecords = WeakMap<
-  ScenePrimitive,
-  Readonly<{ identity: RuntimeIdentity; semanticOwner: RuntimeIdentity }>
->;
+type PrimitiveRecords = WeakMap<ScenePrimitive, Readonly<{ identity: SceneIdentity; semanticOwner: SceneIdentity }>>;
 const compileWithTopology = <const T extends ReadonlyArray<AnyCompositeDefinition>>(
   ir: IRScene,
   options: CompileOptions<T>,
-  execution: { candidateRevision: RuntimeRevision },
+  execution: { candidateRevision: SceneRevision },
 ) => {
   const compiled = prepareSceneCompilation(ir, options, { captureProvenance: true });
   if (compiled.provenance === undefined) throw new Error('Missing provenance');
@@ -88,16 +78,7 @@ const resolvedResultOf = (
   return probe.result;
 };
 
-const runtimeRevision = (() => {
-  const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-  const computations = createRuntimeComputationRegistry({ sources, computations: [] });
-
-  return createRuntime({
-    sources,
-    computations,
-    initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, { version: 1, type: 'scene', children: [] })],
-  }).revision();
-})();
+const runtimeRevision = 0;
 
 const recordsOf = (ir: IRScene) => {
   const compiled = compileWithTopology(ir, { onWarn: () => {} }, { candidateRevision: runtimeRevision });

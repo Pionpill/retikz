@@ -1,4 +1,4 @@
-import { prepareSceneCompilation } from '@retikz/core';
+import { formatCompileWarning, prepareSceneCompilation } from '@retikz/core';
 import type {
   AnyCompositeDefinition,
   CompileOptions,
@@ -7,6 +7,7 @@ import type {
   SceneCompilationPreparationOptions,
 } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
+import type { PerformanceTraceSink } from '@retikz/foundation';
 
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from './error';
 import { isWeaveScene, WeaveReconciler } from './weave';
@@ -45,6 +46,10 @@ export type ReconcilerSessionOptions = SceneCompilationPreparationOptions &
   Readonly<{
     /** 可选宿主目标；省略时仅提交计算状态 */
     target?: ReconcilerCommitTarget;
+    /** 基础批次是否强制重算全部元素，完整输入替换始终完整编译 */
+    updateStrategy?: ReconcilerUpdateStrategy;
+    /** 已提交编译的实际元素编译次数；不代表树遍历或图元修改次数 */
+    trace?: PerformanceTraceSink;
   }>;
 
 /** 同步协调编译与一个输出目标，不依赖 DOM 或 Runtime 注册图 */
@@ -75,15 +80,37 @@ export class ReconcilerSession {
     try {
       const weave = isWeaveScene(source) ? new WeaveReconciler(source, options, this.execution) : undefined;
       const prepared = weave?.mount();
-      const compilation = prepared?.compilation ?? prepareSceneCompilation(source, options, this.execution);
+      let compilationCount = 0;
+      const compilation =
+        prepared?.compilation ??
+        prepareSceneCompilation(
+          source,
+          {
+            ...options,
+            trace: {
+              report: record => {
+                compilationCount = record.visited;
+              },
+            },
+          },
+          this.execution,
+        );
       const candidate: ReconcilerResult = {
         revision: this.nextRevision(),
         compilation,
         ...(prepared === undefined ? {} : { root: prepared.root }),
       };
-      const published = this.publish(candidate, weave);
+      const published = this.publish(candidate, weave, undefined, options);
       this.options = options;
+      this.reportTrace('full', prepared?.visited ?? compilationCount);
       return published;
+    } catch (cause) {
+      if (cause instanceof RetikzError) throw cause;
+      throw new RetikzReconcilerError({
+        code: RetikzReconcilerErrorCode.Compile,
+        message: 'Failed to prepare the compilation',
+        cause,
+      });
     } finally {
       this.endUpdate();
     }
@@ -97,12 +124,14 @@ export class ReconcilerSession {
     if (batch.operations.length === 0) return expected;
     this.status = 'preparing';
     try {
-      const prepared = this.weave.update(batch);
-      return this.publish(
+      const prepared = this.weave.update(batch, this.execution.updateStrategy === 'full');
+      const published = this.publish(
         { revision: this.nextRevision(), compilation: prepared.compilation, root: prepared.root },
         this.weave,
         prepared,
       );
+      this.reportTrace(this.execution.updateStrategy === 'full' ? 'full' : 'incremental', prepared.visited);
+      return published;
     } finally {
       this.endUpdate();
     }
@@ -160,6 +189,7 @@ export class ReconcilerSession {
     candidate: ReconcilerResult,
     weave: WeaveReconciler | undefined,
     prepared?: WeavePreparedUpdate,
+    options = this.options,
   ): ReconcilerResult {
     let target: ReconcilerPreparedCommit | undefined;
     try {
@@ -204,13 +234,38 @@ export class ReconcilerSession {
     if (previous?.compilation !== candidate.compilation) {
       for (const warning of candidate.compilation.diagnostics) {
         try {
-          this.options.onWarn?.(warning);
+          if (options.onWarn !== undefined) options.onWarn(warning);
+          else if (typeof process === 'undefined' || process.env.NODE_ENV !== 'production')
+            console.warn(formatCompileWarning(warning));
         } catch (cause) {
           this.diagnosticQueue.push(cause);
         }
       }
     }
     return candidate;
+  }
+
+  /** 观测失败不能改变已经发布的编译结果 */
+  private reportTrace(outcome: 'full' | 'incremental', visited: number): void {
+    try {
+      this.execution.trace?.({
+        owner: '@retikz/reconciler',
+        phase: 'update',
+        unit: 'element-compile',
+        outcome,
+        visited,
+        reused: 0,
+        changed: visited,
+      });
+    } catch (cause) {
+      this.diagnosticQueue.push({
+        code: 'RECONCILER_TRACE_FAILED',
+        phase: 'trace',
+        severity: 'warning',
+        message: 'Trace callback failed',
+        cause,
+      });
+    }
   }
 
   /** 清理失败不撤销已提交结果 */

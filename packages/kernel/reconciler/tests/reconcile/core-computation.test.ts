@@ -1,28 +1,8 @@
-import type { CompileObserverDefinition, CompileWarning, IRScene, ShapeDefinition } from '@retikz/core';
-import {
-  BUILTIN_SHAPES,
-  compileToScene,
-  CompositeBaseSchema,
-  defineComposite,
-  defineShape,
-  CoreTraceUnit,
-} from '@retikz/core';
-import { ReconcilerTracePhase, ReconcilerTraceUnit } from '@retikz/reconciler';
+import type { CompileObserverDefinition, CompileWarning, IRScene } from '@retikz/core';
+import { BUILTIN_SHAPES, compileToScene, CompositeBaseSchema, defineComposite, defineShape } from '@retikz/core';
 import type { RuntimeScenePrimitive } from '@retikz/reconciler';
-import { CORE_SOURCE_KEY, CORE_COMPUTATION_ID, CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
-import type { PerformanceTraceRecord } from '@retikz/runtime';
-import {
-  createRuntimeSourceInput,
-  createRuntimeSourceRegistry,
-  createRuntimeSourceUpdate,
-  createRuntimeComputationRegistry,
-  createRuntime,
-  defineRuntimeSource,
-  defineRuntimeCommitParticipant,
-  PerformanceTraceOutcome,
-  RetikzRuntimeErrorCode,
-  RuntimeComputationKind,
-} from '@retikz/runtime';
+import { ReconcilerSession, createFullSceneRuntimeSnapshot } from '@retikz/reconciler';
+import type { ReconcilerResult } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
@@ -31,12 +11,6 @@ const sceneWithText = (text: string): IRScene => ({
   type: 'scene',
   children: [{ type: 'node', id: 'node-a', position: [0, 0], text }],
 });
-
-const primitiveCount = (primitives: ReadonlyArray<RuntimeScenePrimitive>): number =>
-  primitives.reduce(
-    (count, primitive) => count + 1 + (primitive.type === 'group' ? primitiveCount(primitive.children) : 0),
-    0,
-  );
 
 const identityKey = (identity: { owner: string; path: ReadonlyArray<string> }): string =>
   `${identity.owner}:${identity.path.join('/')}`;
@@ -56,198 +30,6 @@ const primitivePaths = (
 };
 
 describe('Core Runtime Computation initial full run', () => {
-  it('外部失效 owner 变化时即使 Core IR 等价也重新编译', () => {
-    const invalidationOwner = defineRuntimeSource<number, number, number, never>({
-      key: 'fixture:core-invalidation',
-      value: {
-        capture: value => value,
-        read: value => value,
-        equals: Object.is,
-      },
-    });
-    let measuredWidth = 10;
-    const ir = sceneWithText('stable');
-    const program = createCoreComputation(
-      { measureText: () => ({ width: measuredWidth, height: 10 }) },
-      { invalidationSources: [invalidationOwner] },
-    );
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, invalidationOwner]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [
-        createRuntimeSourceInput(CoreSourceDefinition, ir),
-        createRuntimeSourceInput(invalidationOwner, 0),
-      ],
-    });
-    const initialWidth = session.result(program).value.output.result.scene.layout.width;
-
-    measuredWidth = 100;
-    session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(invalidationOwner, 1)],
-    });
-
-    expect(session.result(program).value.output.result.scene.layout.width).toBeGreaterThan(initialWidth);
-  });
-
-  it('外部失效 owner 与 Core IR 同 revision 变化时强制 full fallback', () => {
-    const invalidationOwner = defineRuntimeSource<number, number, number, never>({
-      key: 'fixture:core-invalidation-with-ir-change',
-      value: {
-        capture: value => value,
-        read: value => value,
-        equals: Object.is,
-      },
-    });
-    let measuredWidth = 10;
-    const initial: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'node',
-          id: 'changed',
-          position: [0, 0],
-          text: 'A',
-          style: { fill: '#ef4444' },
-        },
-        {
-          type: 'node',
-          id: 'stable',
-          position: [80, 0],
-          text: 'B',
-          style: { fill: '#ffffff' },
-        },
-      ],
-    };
-    const next: IRScene = {
-      ...initial,
-      children: [{ ...initial.children[0], style: { fill: '#22c55e' } }, initial.children[1]],
-    };
-    const measureText = () => ({ width: measuredWidth, height: 10 });
-    const program = createCoreComputation({ measureText }, { invalidationSources: [invalidationOwner] });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, invalidationOwner]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [
-        createRuntimeSourceInput(CoreSourceDefinition, initial),
-        createRuntimeSourceInput(invalidationOwner, 0),
-      ],
-    });
-
-    measuredWidth = 100;
-    session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next), createRuntimeSourceUpdate(invalidationOwner, 1)],
-    });
-
-    const artifact = session.result(program).value;
-
-    expect(artifact.output.result.scene).toEqual(compileToScene(next, { measureText }).scene);
-    expect(artifact.patch?.operations).toEqual([expect.objectContaining({ kind: 'replaceScene' })]);
-  });
-
-  it('只修改 Core IR 时不会把未变化的外部失效 owner 误判为 invalidation', () => {
-    const invalidationOwner = defineRuntimeSource<number, number, number, never>({
-      key: 'fixture:core-stable-invalidation',
-      value: {
-        capture: value => value,
-        read: value => value,
-        equals: Object.is,
-      },
-    });
-    const initial: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'node',
-          id: 'changed',
-          position: [0, 0],
-          text: 'A',
-          style: { fill: '#ef4444' },
-        },
-        {
-          type: 'node',
-          id: 'stable',
-          position: [80, 0],
-          text: 'B',
-          style: { fill: '#ffffff' },
-        },
-      ],
-    };
-    const next: IRScene = {
-      ...initial,
-      children: [{ ...initial.children[0], style: { fill: '#22c55e' } }, initial.children[1]],
-    };
-    const program = createCoreComputation({}, { invalidationSources: [invalidationOwner] });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, invalidationOwner]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [
-        createRuntimeSourceInput(CoreSourceDefinition, initial),
-        createRuntimeSourceInput(invalidationOwner, 0),
-      ],
-    });
-
-    const result = session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
-    });
-
-    expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(session.result(program).value.patch?.operations).toEqual([
-      expect.objectContaining({ kind: 'replaceScene' }),
-    ]);
-  });
-
-  it('保留固定 Computation id，并与 compileToScene 的完整结果等价', () => {
-    const ir: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        { type: 'node', id: 'a', position: [0, 0], text: 'A' },
-        { type: 'node', id: 'b', position: [80, 0], text: 'B' },
-      ],
-    };
-    const program = createCoreComputation({ padding: 16, onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, ir)],
-    });
-
-    const artifact = session.result(program);
-    const expected = compileToScene(ir, { padding: 16, onWarn: () => {} });
-
-    expect(program.id).toEqual(CORE_COMPUTATION_ID);
-    expect(CORE_COMPUTATION_ID).toEqual({ owner: CORE_SOURCE_KEY, key: 'compile' });
-    expect(artifact.revision).toBe(0);
-    expect(artifact.value.output.result).toEqual(expected);
-    expect(artifact.value.output.diagnostics).toEqual([]);
-    expect(Object.isFrozen(artifact.value.output.result.scene)).toBe(true);
-    expect(Object.isFrozen(artifact.value.output.result.scene.primitives)).toBe(true);
-    expect(artifact.value.snapshot).toMatchObject({
-      revision: 0,
-      root: { owner: CORE_SOURCE_KEY, path: ['root'] },
-      scene: {
-        ...expected.scene,
-        resources: expected.scene.resources ?? [],
-        animations: expected.scene.animations ?? [],
-      },
-    });
-    expect(artifact.value.snapshot.topology).toHaveLength(primitiveCount(artifact.value.snapshot.scene.primitives));
-    expect(artifact.value.patch).toBeUndefined();
-  });
-
   it('为 topology 建立 primitive 双射、真实 semantic owner 与稳定 emission identity', () => {
     const ir: IRScene = {
       version: 1,
@@ -269,15 +51,10 @@ describe('Core Runtime Computation initial full run', () => {
         },
       ],
     };
-    const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, ir)],
-    });
-    const snapshot = session.result(program).value.snapshot;
+    const session = new ReconcilerSession({ onWarn: () => {} }, { captureProvenance: true });
+
+    session.mount(ir);
+    const snapshot = snapshotOf(session.read());
     const topologyIdentityKeys = snapshot.topology.map(node => identityKey(node.identity));
     const topologyByPath = new Map(snapshot.topology.map(node => [node.primitivePath.join('.'), node]));
     const topologyPaths = snapshot.topology.map(node => node.primitivePath.join('.')).sort();
@@ -311,83 +88,6 @@ describe('Core Runtime Computation initial full run', () => {
     }
   });
 
-  it('创建后修改 options、registry array 与 Definition record 不改变 Computation', () => {
-    const customShape = defineShape({
-      ...BUILTIN_SHAPES.rectangle,
-      name: 'isolated-rectangle',
-    });
-    const shapes: Array<ShapeDefinition> = [customShape];
-    const options = { padding: 12, shapes, onWarn: () => {} };
-    const ir: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'node',
-          id: 'a',
-          position: [0, 0],
-          text: 'A',
-          shape: 'isolated-rectangle',
-        },
-      ],
-    };
-    const expected = compileToScene(ir, options);
-    const program = createCoreComputation(options);
-
-    options.padding = 99;
-    shapes.length = 0;
-    customShape.emit = () => {
-      throw new Error('mutated Definition must not be observed');
-    };
-
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, ir)],
-    });
-
-    expect(session.result(program).value.output.result).toEqual(expected);
-  });
-
-  it('隔离带自定义 prototype 的 Definition record 后续修改', () => {
-    const customPrototype = Object.freeze({ source: 'custom-prototype' });
-    const customShape = Object.assign(Object.create(customPrototype) as ShapeDefinition, {
-      ...BUILTIN_SHAPES.rectangle,
-      name: 'prototype-rectangle',
-    });
-    const ir: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'node',
-          id: 'a',
-          position: [0, 0],
-          text: 'A',
-          shape: 'prototype-rectangle',
-        },
-      ],
-    };
-    const expected = compileToScene(ir, { shapes: [customShape], onWarn: () => {} });
-    const program = createCoreComputation({ shapes: [customShape], onWarn: () => {} });
-
-    customShape.emit = () => {
-      throw new Error('mutated prototype Definition must not be observed');
-    };
-
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, ir)],
-    });
-
-    expect(session.result(program).value.output.result).toEqual(expected);
-  });
-
   it('在 initial commit 后按 canonical 顺序派发 warning，并保存等价 diagnostics', () => {
     const ir: IRScene = {
       version: 1,
@@ -397,17 +97,12 @@ describe('Core Runtime Computation initial full run', () => {
     const expectedWarnings: Array<CompileWarning> = [];
     const expected = compileToScene(ir, { onWarn: warning => expectedWarnings.push(warning) });
     const observedWarnings: Array<CompileWarning> = [];
-    const program = createCoreComputation({ onWarn: warning => observedWarnings.push(warning) });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, ir)],
-    });
+    const session = new ReconcilerSession({ onWarn: warning => observedWarnings.push(warning) });
 
-    expect(session.result(program).value.output.result).toEqual(expected);
-    expect(session.result(program).value.output.diagnostics).toEqual(expectedWarnings);
+    session.mount(ir);
+
+    expect(session.read().compilation.result).toEqual(expected);
+    expect(session.read().compilation.diagnostics).toEqual(expectedWarnings);
     expect(observedWarnings).toEqual(expectedWarnings);
   });
 
@@ -422,51 +117,10 @@ describe('Core Runtime Computation initial full run', () => {
       ],
     };
     const observedWarnings: Array<CompileWarning> = [];
-    const program = createCoreComputation({ onWarn: warning => observedWarnings.push(warning) });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
+    const session = new ReconcilerSession({ onWarn: warning => observedWarnings.push(warning) });
 
-    expect(() =>
-      createRuntime({
-        sources,
-        computations,
-        initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, ir)],
-      }),
-    ).toThrow();
+    expect(() => session.mount(ir)).toThrow();
     expect(observedWarnings).toEqual([]);
-  });
-
-  it('initial full run 只报告一条 Computation owner 的 ir-child trace', () => {
-    const records: Array<PerformanceTraceRecord> = [];
-    const ir: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        { type: 'node', id: 'a', position: [0, 0], text: 'A' },
-        { type: 'node', id: 'b', position: [80, 0], text: 'B' },
-      ],
-    };
-    const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, ir)],
-      trace: record => records.push(record),
-    });
-
-    expect(records).toEqual([
-      {
-        owner: CORE_SOURCE_KEY,
-        phase: ReconcilerTracePhase.Update,
-        unit: CoreTraceUnit.IrChild,
-        outcome: PerformanceTraceOutcome.Full,
-        visited: 2,
-        reused: 0,
-        changed: 2,
-      },
-    ]);
   });
 });
 
@@ -508,34 +162,23 @@ describe('Core Runtime Computation observed output', () => {
   };
 
   it('commits primary and observer outputs from one full candidate revision', () => {
-    const program = createCoreComputation(
+    const session = new ReconcilerSession(
       { composites: [observedComposite], onWarn: () => {} },
       { observers: [observer] },
     );
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, sourceWithLabel('A'))],
-    });
-    const before = session.result(program).value;
-    const baseRevision = session.revision();
 
-    const update = session.update({
-      baseRevision,
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, sourceWithLabel('B'))],
-    });
-    const after = session.result(program).value;
+    session.mount(sourceWithLabel('A'));
+    const before = session.read();
+    session.replace(sourceWithLabel('B'));
+    const after = session.read();
 
-    expect(update.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(after.output.observerOutputs).toEqual([{ key: 'program-observer', value: ['B'] }]);
-    expect(after.output.result.scene).toEqual(
+    expect(after.compilation.observerOutputs).toEqual([{ key: 'program-observer', value: ['B'] }]);
+    expect(after.compilation.result.scene).toEqual(
       compileToScene(sourceWithLabel('B'), { composites: [observedComposite], onWarn: () => {} }).scene,
     );
-    expect(after.snapshot.revision).toBe(session.revision());
-    expect(after.patch?.nextRevision).toBe(after.snapshot.revision);
-    expect(after.output.result).not.toBe(before.output.result);
+    expect(after.revision).toBe(session.read().revision);
+
+    expect(after.compilation.result).not.toBe(before.compilation.result);
   });
 
   it('rolls back the whole candidate when observer completion fails', () => {
@@ -551,159 +194,43 @@ describe('Core Runtime Computation observed output', () => {
         },
       }),
     };
-    const program = createCoreComputation(
+    const session = new ReconcilerSession(
       { composites: [observedComposite], onWarn: () => {} },
       { observers: [failingObserver] },
     );
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, sourceWithLabel('A'))],
-    });
-    const before = session.result(program).value;
-    const baseRevision = session.revision();
+
+    session.mount(sourceWithLabel('A'));
+    const before = session.read();
+    const baseRevision = session.read().revision;
     shouldFail = true;
 
-    expect(() =>
-      session.update({
-        baseRevision,
-        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, sourceWithLabel('B'))],
-      }),
-    ).toThrowError(
+    expect(() => session.replace(sourceWithLabel('B'))).toThrowError(
       expect.objectContaining({
-        code: RetikzRuntimeErrorCode.ComputationRunFailed,
         cause: expect.objectContaining({ message: 'observer completion failed' }),
       }),
     );
-    expect(session.revision()).toBe(baseRevision);
-    expect(session.result(program).value).toBe(before);
+    expect(session.read().revision).toBe(baseRevision);
+    expect(session.read()).toBe(before);
   });
 
   it('prepares a consistent replacement when observers are empty', () => {
-    const program = createCoreComputation({ onWarn: () => {} }, { observers: [] });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
+    const session = new ReconcilerSession({ onWarn: () => {} }, { observers: [] });
+
     const initial = sceneWithText('A');
     const next: IRScene = { ...initial, children: [{ ...initial.children[0], style: { fill: '#22c55e' } }] };
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
-    });
+    session.mount(initial);
 
-    const result = session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
-    });
+    session.replace(next);
 
-    expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(session.result(program).value.output.observerOutputs).toEqual([]);
+    expect(session.read().compilation.observerOutputs).toEqual([]);
   });
 });
 
 describe('Core Runtime Computation full fallback update', () => {
-  it('unique id 前插与 reorder 后保持 owner 和 primitive identity，并发布独占 replaceScene Patch', () => {
-    const records: Array<PerformanceTraceRecord> = [];
-    const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const initial = sceneWithText('A');
-    initial.children.push({ type: 'node', id: 'node-b', position: [80, 0], text: 'B' });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
-      trace: record => records.push(record),
-    });
-    const before = session.result(program).value.snapshot.topology;
-    records.length = 0;
-
-    const next: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        { type: 'node', id: 'node-c', position: [160, 0], text: 'C' },
-        { type: 'node', id: 'node-b', position: [80, 0], text: 'B' },
-        { type: 'node', id: 'node-a', position: [0, 0], text: 'A' },
-      ],
-    };
-    const result = session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
-    });
-    const after = session.result(program).value;
-    const stableIdentityKeys = (topology: typeof before, publicId: string): Array<string> =>
-      topology
-        .filter(node => node.semanticOwner.path.at(-1) === publicId)
-        .map(node => identityKey(node.identity))
-        .sort();
-
-    expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(after.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
-    expect(stableIdentityKeys(after.snapshot.topology, 'node-a')).toEqual(stableIdentityKeys(before, 'node-a'));
-    expect(stableIdentityKeys(after.snapshot.topology, 'node-b')).toEqual(stableIdentityKeys(before, 'node-b'));
-    expect(after.patch).toEqual({
-      baseRevision: 0,
-      nextRevision: 1,
-      operations: [{ kind: 'replaceScene', snapshot: after.snapshot }],
-    });
-    expect(records).toEqual([
-      {
-        owner: CORE_SOURCE_KEY,
-        phase: ReconcilerTracePhase.Update,
-        unit: CoreTraceUnit.IrChild,
-        outcome: PerformanceTraceOutcome.Fallback,
-        visited: 3,
-        reused: 0,
-        changed: 3,
-      },
-      {
-        owner: CORE_SOURCE_KEY,
-        phase: ReconcilerTracePhase.Update,
-        unit: ReconcilerTraceUnit.SceneChange,
-        outcome: PerformanceTraceOutcome.Fallback,
-        visited: 1,
-        reused: 0,
-        changed: 1,
-      },
-    ]);
-  });
-
-  it('anonymous 与 duplicate id 只获得 candidate-local owner identity', () => {
-    const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const source: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        { type: 'node', id: 'duplicate', position: [0, 0], text: 'A' },
-        { type: 'node', id: 'duplicate', position: [80, 0], text: 'B' },
-        { type: 'node', position: [160, 0], text: 'C' },
-      ],
-    };
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, source)],
-    });
-    const ownersAtRevision0 = session.result(program).value.snapshot.topology.map(node => node.semanticOwner);
-
-    expect(ownersAtRevision0.every(identity => identity.path.includes('candidate'))).toBe(true);
-    expect(ownersAtRevision0.some(identity => identity.path.join('/') === 'root/node/duplicate')).toBe(false);
-  });
-
   it('完整输入替换同时更新根配置与子元素', () => {
-    const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, sceneWithText('A'))],
-    });
+    const session = new ReconcilerSession({ onWarn: () => {} }, { captureProvenance: true });
+
+    session.mount(sceneWithText('A'));
     const next: IRScene = {
       ...sceneWithText('B'),
       viewBox: { x: 0, y: 0, width: 160, height: 90 },
@@ -718,43 +245,27 @@ describe('Core Runtime Computation full fallback update', () => {
         },
       ],
     };
-    const result = session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
-    });
-    expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(result.diagnostics).toEqual([]);
-    expect(session.result(program).value.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
-    expect(session.result(program).value.patch?.operations).toEqual([
-      expect.objectContaining({ kind: 'replaceScene' }),
-    ]);
+    session.replace(next);
+
+    expect(session.read().compilation.diagnostics).toEqual([]);
+    expect(session.read().compilation.result).toEqual(compileToScene(next, { onWarn: () => {} }));
   });
 
   it('完整输入编译失败时不发布诊断或替换已提交结果', () => {
-    const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, sceneWithText('A'))],
-    });
-    const before = session.result(program);
-    const baseRevision = session.revision();
+    const session = new ReconcilerSession({ onWarn: () => {} }, { captureProvenance: true });
+
+    session.mount(sceneWithText('A'));
+    const before = session.read();
+    const baseRevision = session.read().revision;
     const broken: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'node-a', position: [0, 0], text: 'B', shape: 'missing-shape' }],
     };
 
-    expect(() =>
-      session.update({
-        baseRevision,
-        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, broken)],
-      }),
-    ).toThrow();
-    expect(session.revision()).toBe(baseRevision);
-    expect(session.result(program).value).toBe(before.value);
+    expect(() => session.replace(broken)).toThrow();
+    expect(session.read().revision).toBe(baseRevision);
+    expect(session.read()).toBe(before);
     expect(session.diagnostics()).toEqual([]);
   });
 });
@@ -770,176 +281,12 @@ describe('Core Runtime Computation replacement style update', () => {
       ...initial,
       children: [{ type: 'node', id: 'a', position: [0, 0], style: { fill: 'blue', stroke: 'green', strokeWidth: 4 } }],
     };
-    const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
-    });
-    session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
-    });
+    const session = new ReconcilerSession({ onWarn: () => {} }, { captureProvenance: true });
 
-    expect(session.result(program).value.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
-  });
+    session.mount(initial);
+    session.replace(next);
 
-  it('完整输入替换发布配对的新树结果与原子 replaceScene Patch', () => {
-    const records: Array<PerformanceTraceRecord> = [];
-    const initial: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'node',
-          id: 'a',
-          position: [0, 0],
-          text: 'A',
-          style: { fill: '#ef4444' },
-        },
-        {
-          type: 'node',
-          id: 'b',
-          position: [80, 0],
-          text: 'B',
-          style: { fill: '#3b82f6' },
-        },
-      ],
-    };
-    const next: IRScene = {
-      ...initial,
-      children: [
-        {
-          type: 'node',
-          id: 'a',
-          position: [0, 0],
-          text: 'A',
-          style: { fill: '#22c55e' },
-        },
-        initial.children[1],
-      ],
-    };
-    const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
-      trace: record => records.push(record),
-    });
-    const before = session.result(program).value.snapshot;
-    const baseRevision = session.revision();
-    records.length = 0;
-
-    const result = session.update({
-      baseRevision,
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
-    });
-    const after = session.result(program).value;
-
-    expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(after.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
-    expect(after.patch?.operations).toHaveLength(1);
-
-    const operation = after.patch?.operations[0];
-
-    expect(operation).toMatchObject({ kind: 'replaceScene' });
-    expect(after.snapshot.scene.primitives[1]).toEqual(before.scene.primitives[1]);
-    expect(before.scene.primitives).toEqual(compileToScene(initial, { onWarn: () => {} }).scene.primitives);
-    expect(records).toEqual([
-      {
-        owner: CORE_SOURCE_KEY,
-        phase: ReconcilerTracePhase.Update,
-        unit: CoreTraceUnit.IrChild,
-        outcome: PerformanceTraceOutcome.Fallback,
-        visited: 2,
-        reused: 0,
-        changed: 2,
-      },
-      {
-        owner: CORE_SOURCE_KEY,
-        phase: ReconcilerTracePhase.Update,
-        unit: ReconcilerTraceUnit.SceneChange,
-        outcome: PerformanceTraceOutcome.Fallback,
-        visited: 1,
-        reused: 0,
-        changed: 1,
-      },
-    ]);
-  });
-
-  it('forced full 跳过局部编译并发布独占 replaceScene Patch 与 full trace', () => {
-    const records: Array<PerformanceTraceRecord> = [];
-    const initial: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'node',
-          id: 'a',
-          position: [0, 0],
-          text: 'A',
-          style: { fill: '#ef4444' },
-        },
-        {
-          type: 'node',
-          id: 'b',
-          position: [80, 0],
-          text: 'B',
-          style: { fill: '#3b82f6' },
-        },
-      ],
-    };
-    const next: IRScene = {
-      ...initial,
-      children: [{ ...initial.children[0], style: { fill: '#22c55e' } }, initial.children[1]],
-    };
-    const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      updateStrategy: 'full',
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
-      trace: record => records.push(record),
-    });
-    records.length = 0;
-
-    const result = session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
-    });
-    const after = session.result(program).value;
-
-    expect(result.outcome).toBe(RuntimeComputationKind.Full);
-    expect(after.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
-    expect(after.patch?.operations).toEqual([
-      expect.objectContaining({ kind: 'replaceScene', snapshot: after.snapshot }),
-    ]);
-    expect(records).toEqual([
-      {
-        owner: CORE_SOURCE_KEY,
-        phase: ReconcilerTracePhase.Update,
-        unit: CoreTraceUnit.IrChild,
-        outcome: PerformanceTraceOutcome.Full,
-        visited: 2,
-        reused: 0,
-        changed: 2,
-      },
-      {
-        owner: CORE_SOURCE_KEY,
-        phase: ReconcilerTracePhase.Update,
-        unit: ReconcilerTraceUnit.SceneChange,
-        outcome: PerformanceTraceOutcome.Full,
-        visited: 1,
-        reused: 0,
-        changed: 1,
-      },
-    ]);
+    expect(session.read().compilation.result).toEqual(compileToScene(next, { onWarn: () => {} }));
   });
 
   it('root Node 存在引用 position 时保守 full fallback', () => {
@@ -961,36 +308,21 @@ describe('Core Runtime Computation replacement style update', () => {
       ...initial,
       children: [{ ...initial.children[0], style: { fill: '#22c55e' } }, initial.children[1]],
     };
-    const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
-    });
+    const session = new ReconcilerSession({ onWarn: () => {} }, { captureProvenance: true });
 
-    const result = session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
-    });
+    session.mount(initial);
 
-    expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(session.result(program).value.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
+    session.replace(next);
+
+    expect(session.read().compilation.result).toEqual(compileToScene(next, { onWarn: () => {} }));
 
     const changedReferenceNode: IRScene = {
       ...next,
       children: [next.children[0], { ...next.children[1], fill: '#22c55e' }],
     };
-    const changedReferenceResult = session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, changedReferenceNode)],
-    });
+    session.replace(changedReferenceNode);
 
-    expect(changedReferenceResult.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(session.result(program).value.output.result).toEqual(
-      compileToScene(changedReferenceNode, { onWarn: () => {} }),
-    );
+    expect(session.read().compilation.result).toEqual(compileToScene(changedReferenceNode, { onWarn: () => {} }));
   });
 
   it('自定义 ShapeDefinition 可读取 fill 时保守 full fallback', () => {
@@ -1022,35 +354,21 @@ describe('Core Runtime Computation replacement style update', () => {
     };
     const next: IRScene = { ...initial, children: [{ ...initial.children[0], style: { fill: '#22c55e' } }] };
     const options = { shapes: [fillSensitiveShape], onWarn: () => {} } as const;
-    const program = createCoreComputation(options);
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
-    });
+    const session = new ReconcilerSession(options, { captureProvenance: true });
 
-    const result = session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
-    });
+    session.mount(initial);
 
-    expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(session.result(program).value.output.result).toEqual(compileToScene(next, options));
+    session.replace(next);
+
+    expect(session.read().compilation.result).toEqual(compileToScene(next, options));
   });
 });
 
 it('Scope 外框更新、资源撤销和匿名组删除与全量编译等价', () => {
-  const program = createCoreComputation({});
-  const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-  const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
+  const session = new ReconcilerSession({});
+
   const initial: IRScene = { version: 1, type: 'scene', children: [] };
-  const session = createRuntime({
-    sources,
-    computations,
-    initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
-  });
+  session.mount(initial);
   const states: Array<IRScene> = [
     {
       ...initial,
@@ -1077,53 +395,37 @@ it('Scope 外框更新、资源撤销和匿名组删除与全量编译等价', (
   ];
 
   for (const ir of states) {
-    session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, ir)],
-    });
+    session.replace(ir);
 
-    expect(session.result(program).value.output.result.scene).toEqual(compileToScene(ir).scene);
+    expect(session.read().compilation.result.scene).toEqual(compileToScene(ir).scene);
   }
 });
 
-it('后续提交参与者失败时保留旧编译结果，重试可以发布完整新树', () => {
-  const program = createCoreComputation({ onWarn: () => {} });
-  const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-  const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
+it('宿主提交失败保留旧编译结果，重试发布完整新树', () => {
   let failing = false;
-  const participant = defineRuntimeCommitParticipant({
-    key: 'fixture:weave-publication',
-    sources: [CoreSourceDefinition],
-    computations: [program],
-    revisionPolicy: 'affected',
-    tracePhases: [],
-    prepare: () => ({
-      commit: () => {
-        if (failing) throw new Error('publication failed');
+  const session = new ReconcilerSession(
+    { onWarn: () => {} },
+    {
+      target: {
+        prepare: () => ({
+          commit: () => {
+            if (failing) throw new Error('publication failed');
+          },
+          rollback: () => undefined,
+          dispose: () => undefined,
+        }),
       },
-      rollback: () => undefined,
-      dispose: () => undefined,
-    }),
-    read: () => null,
-    dispose: () => undefined,
-  });
-  const session = createRuntime({
-    sources,
-    computations,
-    participants: [participant],
-    initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, sceneWithText('before'))],
-  });
-  const previous = session.result(program);
-  const revision = session.revision();
-  const next = sceneWithText('after');
+    },
+  );
+  const previous = session.mount(sceneWithText('before'));
   failing = true;
-  expect(() =>
-    session.update({ baseRevision: revision, sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)] }),
-  ).toThrow();
-  expect(session.revision()).toBe(revision);
-  expect(session.result(program).value).toBe(previous.value);
+  expect(() => session.replace(sceneWithText('after'))).toThrow();
+  expect(session.read()).toBe(previous);
   failing = false;
-  session.update({ baseRevision: revision, sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)] });
-  expect(session.result(program).value.output.result).toEqual(compileToScene(next));
+  expect(session.replace(sceneWithText('after')).compilation.result).toEqual(compileToScene(sceneWithText('after')));
   session.dispose();
 });
+
+/** 从本次已捕获的编译来源生成渲染快照，计算会话不默认持有此投影 */
+const snapshotOf = (result: ReconcilerResult) =>
+  createFullSceneRuntimeSnapshot(result.compilation.result.scene, result.revision, result.compilation.provenance!);

@@ -1,22 +1,8 @@
 import type { IRScene } from '@retikz/core';
 import { isRetikzError } from '@retikz/foundation';
-import { ReconcilerTraceUnit } from '@retikz/reconciler';
-import type { CoreComputationDefinition, ScenePatch, SceneRuntimeSnapshot } from '@retikz/reconciler';
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
-import type { PerformanceTraceRecord, RuntimePreparedCommit, RuntimeComputationDefinition } from '@retikz/runtime';
-import {
-  createRuntimeSourceInput,
-  createRuntimeSourceRegistry,
-  createRuntimeSourceUpdate,
-  createRuntimeComputationRegistry,
-  createRuntime,
-  defineRuntimeSource,
-  defineRuntimeComputation,
-  PerformanceTraceOutcome,
-  RetikzRuntimeError,
-  RetikzRuntimeErrorCode,
-  RuntimeComputationKind,
-} from '@retikz/runtime';
+import type { ScenePatch } from '@retikz/reconciler';
+import { ReconcilerSession } from '@retikz/reconciler';
+import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
 import type {
@@ -26,14 +12,13 @@ import type {
   RetainedRendererRead,
 } from '../../src/runtime';
 import {
-  createRetainedRenderParticipant,
+  createRetainedRenderTarget,
   defineRetainedRenderer,
   isRetikzRenderError,
-  RenderRuntimeSourceDefinition,
+  captureRuntimeConfig,
   RetainedRendererCapability,
   RetikzRenderError,
   RetikzRenderErrorCode,
-  RenderTracePhase,
 } from '../../src/runtime';
 
 const scene = (text: string): IRScene => ({
@@ -46,7 +31,7 @@ const svgHost = Object.freeze({ tagName: 'svg', namespaceURI: 'http://www.w3.org
 
 const canvasHost = Object.freeze({ tagName: 'canvas' }) as HTMLCanvasElement;
 
-const noopToken = (): RuntimePreparedCommit =>
+const noopToken = (): ReconcilerPreparedCommit =>
   Object.freeze({
     commit: () => undefined,
     rollback: () => undefined,
@@ -99,107 +84,34 @@ const createRendererHarness = (capability: 'none' | 'group' | 'entity' = 'entity
   return { renderer, prepareMount, prepare, read, patches };
 };
 
-type CoreFixtureTypes =
-  CoreComputationDefinition<readonly []> extends RuntimeComputationDefinition<
-    infer TInput,
-    infer TValue,
-    infer TRead,
-    infer TPublicRead
-  >
-    ? [TInput, TValue, TRead, TPublicRead]
-    : never;
-
-/** 为 renderer capability 测试提供明确的 Group update，不依赖 Core 的增量优化策略 */
-const createGroupPatchComputation = (
-  core: CoreComputationDefinition<readonly []>,
-): CoreComputationDefinition<readonly []> =>
-  defineRuntimeComputation<CoreFixtureTypes[0], CoreFixtureTypes[1], CoreFixtureTypes[2], CoreFixtureTypes[3]>({
-    id: { owner: core.id.owner, key: 'group-patch' },
-    sources: [],
-    computations: [core],
-    tracePhases: [],
-    result: {
-      capture: input => input,
-      readForComputation: result => ({ ...result.publicRead, state: result.state }),
-      read: result => result.publicRead,
-    },
-    run: view => {
-      const next = view.result(core).value;
-      if (next.patch === undefined)
-        return { kind: RuntimeComputationKind.Full, result: { publicRead: next, state: {} } };
-      const root = next.snapshot.topology[0];
-      const primitive = next.snapshot.scene.primitives[0];
-      if (primitive.type !== 'group') throw new Error('expected group update');
-      return {
-        kind: RuntimeComputationKind.Full,
-        result: {
-          state: {},
-          publicRead: {
-            ...next,
-            patch: {
-              baseRevision: next.patch.baseRevision,
-              nextRevision: next.patch.nextRevision,
-              operations: [
-                {
-                  kind: 'update',
-                  identity: root.identity,
-                  subtree: {
-                    root: root.identity,
-                    primitive,
-                    topology: next.snapshot.topology.map((node, index) => ({
-                      ...node,
-                      parent: index === 0 ? undefined : node.parent,
-                      primitivePath: node.primitivePath.slice(1),
-                    })),
-                  },
-                },
-              ],
-            },
-          },
-        },
-      };
-    },
-    update: () => ({ kind: RuntimeComputationKind.Fallback }),
-  });
-
-const createHarness = (
-  capability: 'none' | 'group' | 'entity' = 'entity',
-  initialScene: IRScene = scene('A'),
-  runtimeOptions: Readonly<{
-    updateStrategy?: 'auto' | 'full';
-    groupPatch?: boolean;
-    trace?: (record: PerformanceTraceRecord) => void;
-  }> = {},
-) => {
+const createHarness = (capability: 'none' | 'group' | 'entity' = 'entity', initialScene: IRScene = scene('A')) => {
   const renderer = createRendererHarness(capability);
-  const fullComputation = createCoreComputation({ onWarn: () => undefined });
-  const { groupPatch, ...sessionOptions } = runtimeOptions;
-  const coreComputation = groupPatch ? createGroupPatchComputation(fullComputation) : fullComputation;
+  let config: RenderRuntimeConfigInput = {};
   const factory = vi.fn(() => renderer.renderer) as unknown as RetainedRendererFactory;
-  const handle = createRetainedRenderParticipant({
+  const handle = createRetainedRenderTarget({
     backend: 'svg',
     host: svgHost,
     rendererFactory: factory,
     immutableOptions: { backend: 'svg', idPrefix: 'test' },
-    coreComputation,
+    configuration: () => config,
   });
-  const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-  const computations = createRuntimeComputationRegistry({
-    sources,
-    computations: groupPatch ? [fullComputation, coreComputation] : [coreComputation],
-  });
-  const session = createRuntime({
-    sources,
-    computations,
-    ...sessionOptions,
-    participants: [handle.participant],
-    initialSnapshots: [
-      createRuntimeSourceInput(CoreSourceDefinition, initialScene),
-      createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
-    ],
-  });
-
-  return { renderer, coreComputation, handle, session, factory };
+  const session = Object.assign(
+    new ReconcilerSession({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }),
+    {
+      updateConfig: (next: RenderRuntimeConfigInput) => {
+        const previous = config;
+        config = next;
+        try {
+          return session.updateTarget();
+        } catch (cause) {
+          config = previous;
+          throw cause;
+        }
+      },
+    },
+  );
+  session.mount(initialScene);
+  return { renderer, handle, session, factory };
 };
 
 describe('@retikz/render/runtime public contract', () => {
@@ -299,7 +211,7 @@ describe('@retikz/render/runtime public contract', () => {
   });
 });
 
-describe('RenderRuntimeSourceDefinition', () => {
+describe('captureRuntimeConfig', () => {
   it('复制并递归冻结 config 容器，同时保留 callback identity', () => {
     const click = vi.fn();
     const protoClick = vi.fn();
@@ -314,14 +226,9 @@ describe('RenderRuntimeSourceDefinition', () => {
       canvas: { width: 320, height: 180 },
       cachePolicy: 'static' as const,
     };
-    const sources = createRuntimeSourceRegistry([RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(RenderRuntimeSourceDefinition, input)],
-    });
-    const config = session.snapshot(RenderRuntimeSourceDefinition).value;
+
+    const session = captureRuntimeConfig(input);
+    const config = session;
 
     input.handlerContributions.length = 0;
     input.animation.enabled = false;
@@ -338,24 +245,14 @@ describe('RenderRuntimeSourceDefinition', () => {
   });
 
   it('按 registration 排序，并拒绝重复 registration 与非法动态字段', () => {
-    const sources = createRuntimeSourceRegistry([RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [] });
-    const sorted = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [
-        createRuntimeSourceInput(RenderRuntimeSourceDefinition, {
-          handlerContributions: [
-            { registration: 2, handlers: {} },
-            { registration: 0, handlers: {} },
-          ],
-        }),
+    const sorted = captureRuntimeConfig({
+      handlerContributions: [
+        { registration: 2, handlers: {} },
+        { registration: 0, handlers: {} },
       ],
     });
 
-    expect(
-      sorted.snapshot(RenderRuntimeSourceDefinition).value.handlerContributions?.map(item => item.registration),
-    ).toEqual([0, 2]);
+    expect(sorted.handlerContributions?.map(item => item.registration)).toEqual([0, 2]);
 
     for (const input of [
       {
@@ -372,18 +269,12 @@ describe('RenderRuntimeSourceDefinition', () => {
       { handlerContributions: [{ registration: 0, handlers: new Date() }] },
     ]) {
       try {
-        createRuntime({
-          sources,
-          computations,
-          initialSnapshots: [
-            createRuntimeSourceInput(RenderRuntimeSourceDefinition, input as unknown as RenderRuntimeConfigInput),
-          ],
-        });
+        captureRuntimeConfig(input as unknown as RenderRuntimeConfigInput);
         throw new Error('expected invalid config to fail');
       } catch (error) {
         expect(error).toEqual(
           expect.objectContaining({
-            cause: expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
+            code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid,
           }),
         );
       }
@@ -391,23 +282,15 @@ describe('RenderRuntimeSourceDefinition', () => {
   });
 
   it('在读取前递归拒绝 config accessor 与非标准数组属性', () => {
-    const sources = createRuntimeSourceRegistry([RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [] });
     const getter = vi.fn(() => [0, 0, 1, 1]);
     const easings = Object.defineProperty({}, 'custom', {
       enumerable: true,
       get: getter,
     });
 
-    expect(() =>
-      createRuntime({
-        sources,
-        computations,
-        initialSnapshots: [createRuntimeSourceInput(RenderRuntimeSourceDefinition, { animation: { easings } })],
-      }),
-    ).toThrow(
+    expect(() => captureRuntimeConfig({ animation: { easings } })).toThrow(
       expect.objectContaining({
-        cause: expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
+        code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid,
       }),
     );
     expect(getter).not.toHaveBeenCalled();
@@ -416,18 +299,12 @@ describe('RenderRuntimeSourceDefinition', () => {
     Object.defineProperty(tuple, Symbol('hidden'), { enumerable: true, value: true });
 
     expect(() =>
-      createRuntime({
-        sources,
-        computations,
-        initialSnapshots: [
-          createRuntimeSourceInput(RenderRuntimeSourceDefinition, {
-            animation: { easings: { custom: tuple } },
-          } as never),
-        ],
-      }),
+      captureRuntimeConfig({
+        animation: { easings: { custom: tuple } },
+      } as never),
     ).toThrow(
       expect.objectContaining({
-        cause: expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
+        code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid,
       }),
     );
 
@@ -438,14 +315,8 @@ describe('RenderRuntimeSourceDefinition', () => {
     Object.setPrototypeOf(inheritedTuple, tuplePrototype);
 
     expect(() =>
-      createRuntime({
-        sources,
-        computations,
-        initialSnapshots: [
-          createRuntimeSourceInput(RenderRuntimeSourceDefinition, {
-            animation: { easings: { custom: inheritedTuple } },
-          }),
-        ],
+      captureRuntimeConfig({
+        animation: { easings: { custom: inheritedTuple } },
       }),
     ).not.toThrow();
     expect(everyGetter).not.toHaveBeenCalled();
@@ -457,58 +328,73 @@ describe('RenderRuntimeSourceDefinition', () => {
     Object.setPrototypeOf(inheritedContributions, contributionPrototype);
 
     expect(() =>
-      createRuntime({
-        sources,
-        computations,
-        initialSnapshots: [
-          createRuntimeSourceInput(RenderRuntimeSourceDefinition, {
-            handlerContributions: inheritedContributions,
-          }),
-        ],
+      captureRuntimeConfig({
+        handlerContributions: inheritedContributions,
       }),
     ).not.toThrow();
     expect(mapGetter).not.toHaveBeenCalled();
   });
 });
 
-describe('createRetainedRenderParticipant', () => {
+describe('createRetainedRenderTarget', () => {
+  it('首次准备失败后释放尚未取得 lease ownership 的 renderer', () => {
+    const dispose = vi.fn();
+    const renderer = defineRetainedRenderer({
+      backend: 'svg',
+      host: svgHost,
+      capability: 'none',
+      readonlyLayerCapability: 'supported',
+      prepareMount: () => {
+        throw new Error('prepare failed');
+      },
+      prepare: () => noopToken(),
+      read: () => {
+        throw new Error('not mounted');
+      },
+      dispose,
+    });
+    const handle = createRetainedRenderTarget({
+      backend: 'svg',
+      host: svgHost,
+      rendererFactory: vi.fn(() => renderer) as unknown as RetainedRendererFactory,
+      immutableOptions: { backend: 'svg', idPrefix: 'failed' },
+      configuration: () => ({}),
+    });
+    const session = new ReconcilerSession({}, { target: handle.target, captureProvenance: true });
+    expect(() => session.mount(scene('A'))).toThrow();
+    session.dispose();
+    session.dispose();
+    expect(dispose).toHaveBeenCalledTimes(1);
+  });
+
   it('initial mount 后只经 session committed cache 暴露 renderer read', () => {
-    const { renderer, handle, session, factory } = createHarness();
+    const { renderer, handle, factory } = createHarness();
 
     expect(factory).toHaveBeenCalledTimes(1);
     expect(renderer.prepareMount).toHaveBeenCalledTimes(1);
     expect(renderer.read).toHaveBeenCalledTimes(1);
 
-    const first = handle.read(session);
+    const first = handle.read();
 
     expect(first.frame.primary.revision).toBe(0);
-    expect(handle.read(session)).toBe(first);
+    expect(handle.read()).toBe(first);
     expect(renderer.read).toHaveBeenCalledTimes(1);
   });
 
   it('Core update 原子提交 Patch 与 next snapshot', () => {
-    const records: Array<PerformanceTraceRecord> = [];
     const initial = {
       ...scene('A'),
       children: [{ ...scene('A').children[0], style: { fill: '#ef4444' } }],
     };
-    const { renderer, handle, session } = createHarness('entity', initial, {
-      trace: record => records.push(record),
-    });
-    const previous = handle.read(session);
-    records.length = 0;
+    const { renderer, handle, session } = createHarness('entity', initial);
+    const previous = handle.read();
 
-    session.update({
-      baseRevision: session.revision(),
-      sources: [
-        createRuntimeSourceUpdate(CoreSourceDefinition, {
-          ...initial,
-          children: [{ ...initial.children[0], style: { fill: '#22c55e' } }],
-        }),
-      ],
+    session.replace({
+      ...initial,
+      children: [{ ...initial.children[0], style: { fill: '#22c55e' } }],
     });
 
-    const next = handle.read(session);
+    const next = handle.read();
 
     expect(next).not.toBe(previous);
     expect(next.frame.primary.revision).toBe(1);
@@ -516,62 +402,15 @@ describe('createRetainedRenderParticipant', () => {
     expect(renderer.read).toHaveBeenCalledTimes(2);
     expect(renderer.patches[0]).toMatchObject({ baseRevision: 0, nextRevision: 1 });
     expect(renderer.patches[0]?.operations[0]?.kind).toBe('replaceScene');
-    expect(
-      records.filter(
-        record => record.owner === '@retikz/render:svg' && record.unit === ReconcilerTraceUnit.SceneChange,
-      ),
-    ).toEqual([
-      expect.objectContaining({
-        phase: RenderTracePhase.Update,
-        outcome: PerformanceTraceOutcome.Full,
-      }),
-    ]);
-  });
-
-  it('直接 replaceScene 物化记录为 full，不伪报 incremental 或 fallback', () => {
-    const records: Array<PerformanceTraceRecord> = [];
-    const { renderer, coreComputation, session } = createHarness('entity', scene('A'), {
-      updateStrategy: 'full',
-      trace: record => records.push(record),
-    });
-    records.length = 0;
-
-    session.update({
-      baseRevision: session.revision(),
-      sources: [
-        createRuntimeSourceUpdate(CoreSourceDefinition, {
-          ...scene('A'),
-          children: [{ ...scene('A').children[0], style: { fill: '#22c55e' } }],
-        }),
-      ],
-    });
-
-    expect(session.result(coreComputation).value.patch?.operations[0]?.kind).toBe('replaceScene');
-    expect(renderer.patches[0]?.operations[0]?.kind).toBe('replaceScene');
-    expect(
-      records.filter(
-        record => record.owner === '@retikz/render:svg' && record.unit === ReconcilerTraceUnit.SceneChange,
-      ),
-    ).toEqual([
-      expect.objectContaining({
-        phase: RenderTracePhase.Update,
-        outcome: PerformanceTraceOutcome.Full,
-      }),
-    ]);
   });
 
   it('config-only update 以 empty Patch 连续推进 lineage，prepare 前不调用 read', () => {
     const { renderer, handle, session } = createHarness();
     const callsBefore = renderer.read.mock.calls.length;
 
-    session.update({
-      baseRevision: session.revision(),
-      sources: [
-        createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, {
-          animation: { enabled: false },
-          cachePolicy: 'dynamic',
-        }),
-      ],
+    session.updateConfig({
+      animation: { enabled: false },
+      cachePolicy: 'dynamic',
     });
 
     expect(renderer.prepare).toHaveBeenCalledTimes(1);
@@ -580,162 +419,14 @@ describe('createRetainedRenderParticipant', () => {
     );
     expect(renderer.read).toHaveBeenCalledTimes(callsBefore + 1);
     expect(renderer.patches[0]).toEqual({ baseRevision: 0, nextRevision: 1, operations: [] });
-    expect(handle.read(session).frame.primary.revision).toBe(1);
-  });
-
-  it('合法但 capability 不支持的 Patch 在 renderer 调用前转换为独占 replace 并报告 warning', () => {
-    const initial = { ...scene('A'), children: [{ ...scene('A').children[0], style: { fill: '#ef4444' } }] };
-    const records: Array<PerformanceTraceRecord> = [];
-    const { renderer, coreComputation, session } = createHarness('none', initial, {
-      groupPatch: true,
-      trace: record => records.push(record),
-    });
-    session.diagnostics();
-    records.length = 0;
-
-    session.update({
-      baseRevision: session.revision(),
-      sources: [
-        createRuntimeSourceUpdate(CoreSourceDefinition, {
-          ...initial,
-          children: [{ ...initial.children[0], style: { fill: '#22c55e' } }],
-        }),
-      ],
-    });
-
-    expect(session.result(coreComputation).value.patch?.operations[0]?.kind).toBe('update');
-    expect(renderer.patches[0]?.operations).toEqual([
-      expect.objectContaining({ kind: 'replaceScene', snapshot: expect.objectContaining({ revision: 1 }) }),
-    ]);
-    expect(session.diagnostics()).toEqual([
-      expect.objectContaining({
-        owner: '@retikz/render:svg',
-        code: 'RETAINED_RENDERER_CAPABILITY_FALLBACK',
-        phase: 'prepare',
-      }),
-    ]);
-    expect(
-      records.filter(
-        record => record.owner === '@retikz/render:svg' && record.unit === ReconcilerTraceUnit.SceneChange,
-      ),
-    ).toEqual([
-      expect.objectContaining({
-        phase: RenderTracePhase.Update,
-        outcome: PerformanceTraceOutcome.Fallback,
-      }),
-    ]);
-  });
-
-  it('group capability 保留 stable Group subtree update，不产生 fallback warning', () => {
-    const initial = { ...scene('A'), children: [{ ...scene('A').children[0], style: { fill: '#ef4444' } }] };
-    const { renderer, coreComputation, session } = createHarness('group', initial, { groupPatch: true });
-    session.diagnostics();
-
-    session.update({
-      baseRevision: session.revision(),
-      sources: [
-        createRuntimeSourceUpdate(CoreSourceDefinition, {
-          ...initial,
-          children: [{ ...initial.children[0], style: { fill: '#22c55e' } }],
-        }),
-      ],
-    });
-
-    expect(session.result(coreComputation).value.patch?.operations[0]?.kind).toBe('update');
-    expect(renderer.patches[0]?.operations[0]?.kind).toBe('update');
-    expect(session.diagnostics()).toEqual([]);
-  });
-
-  it('validator failure 发生在 renderer prepare 与 fallback trace/warning 之前', () => {
-    const sourceOwner = defineRuntimeSource<boolean, boolean, boolean, never>({
-      key: '@test/render-validator-source',
-      value: { capture: value => value, read: value => value, equals: (left, right) => left === right },
-    });
-    const root = Object.freeze({ owner: '@test/render-validator', path: Object.freeze(['root']) });
-    const snapshot = (revision: number, invalid: boolean): SceneRuntimeSnapshot =>
-      Object.freeze({
-        revision: revision as SceneRuntimeSnapshot['revision'],
-        root: invalid ? { owner: '@test/render-validator', path: [] } : root,
-        scene: Object.freeze({
-          layout: Object.freeze({ x: 0, y: 0, width: 10, height: 10 }),
-          primitives: Object.freeze([]),
-          resources: Object.freeze([]),
-          animations: Object.freeze([]),
-        }),
-        topology: Object.freeze([]),
-      });
-    const result = (current: SceneRuntimeSnapshot, patch?: ScenePatch) =>
-      Object.freeze({
-        snapshot: current,
-        output: Object.freeze({
-          result: Object.freeze({ scene: current.scene, artifacts: Object.freeze([]) }),
-          diagnostics: Object.freeze([]),
-        }),
-        ...(patch === undefined ? {} : { patch }),
-      });
-    const program = defineRuntimeComputation({
-      id: Object.freeze({ owner: sourceOwner.key, key: 'compile' }),
-      sources: [sourceOwner],
-      computations: [],
-      tracePhases: [],
-      result: { capture: value => value, readForComputation: value => value, read: value => value },
-      run: view => ({ kind: RuntimeComputationKind.Full, result: result(snapshot(view.candidateRevision, false)) }),
-      update: (_previous, view) => {
-        const next = snapshot(view.candidateRevision, view.snapshot(sourceOwner).value);
-        if (view.baseRevision === undefined) throw new Error('expected update base revision');
-
-        return {
-          kind: RuntimeComputationKind.Incremental,
-          result: result(
-            next,
-            Object.freeze({
-              baseRevision: view.baseRevision,
-              nextRevision: view.candidateRevision,
-              operations: Object.freeze([]),
-            }),
-          ),
-        };
-      },
-    }) as unknown as CoreComputationDefinition<readonly []>;
-    const renderer = createRendererHarness('none');
-    const handle = createRetainedRenderParticipant({
-      backend: 'svg',
-      host: svgHost,
-      rendererFactory: (() => renderer.renderer) as unknown as RetainedRendererFactory,
-      immutableOptions: { backend: 'svg', idPrefix: 'validator-first' },
-      coreComputation: program,
-    });
-    const sources = createRuntimeSourceRegistry([sourceOwner, RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const records: Array<PerformanceTraceRecord> = [];
-    const session = createRuntime({
-      sources,
-      computations,
-      trace: record => records.push(record),
-      participants: [handle.participant],
-      initialSnapshots: [
-        createRuntimeSourceInput(sourceOwner, false),
-        createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
-      ],
-    });
-    records.length = 0;
-
-    expect(() =>
-      session.update({
-        baseRevision: session.revision(),
-        sources: [createRuntimeSourceUpdate(sourceOwner, true)],
-      }),
-    ).toThrowError(RetikzRuntimeError);
-    expect(renderer.prepare).not.toHaveBeenCalled();
-    expect(records).toEqual([]);
-    expect(session.diagnostics()).toEqual([]);
+    expect(handle.read().frame.primary.revision).toBe(1);
   });
 
   it('renderer read 与 committed lineage 不一致时回滚并保留旧 public read', () => {
     const renderer = createRendererHarness();
     const originalRead = renderer.renderer;
     void originalRead;
-    const coreComputation = createCoreComputation({ onWarn: () => undefined });
+
     let stale: RenderFrameSnapshot | undefined;
     const mismatching = defineRetainedRenderer({
       backend: 'svg',
@@ -753,38 +444,27 @@ describe('createRetainedRenderParticipant', () => {
       },
       dispose: () => undefined,
     });
-    const handle = createRetainedRenderParticipant({
+    const handle = createRetainedRenderTarget({
       backend: 'svg',
       host: svgHost,
       rendererFactory: (() => mismatching) as unknown as RetainedRendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'stale' },
-      coreComputation,
+      configuration: () => ({}),
     });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
-    const session = createRuntime({
-      sources,
-      computations,
-      participants: [handle.participant],
-      initialSnapshots: [
-        createRuntimeSourceInput(CoreSourceDefinition, scene('A')),
-        createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
-      ],
-    });
-    const before = handle.read(session);
 
-    expect(() =>
-      session.update({
-        baseRevision: session.revision(),
-        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('B'))],
-      }),
-    ).toThrowError(RetikzRuntimeError);
-    expect(session.revision()).toBe(0);
-    expect(handle.read(session)).toBe(before);
+    const session = new ReconcilerSession(
+      { onWarn: () => undefined },
+      { target: handle.target, captureProvenance: true },
+    );
+    session.mount(scene('A'));
+    const before = handle.read();
+
+    expect(() => session.replace(scene('B'))).toThrowError(RetikzRenderError);
+    expect(session.read().revision).toBe(0);
+    expect(handle.read()).toBe(before);
   });
 
   it('结构等价但可变的第三方 snapshot 不会泄漏到 committed public read', () => {
-    const coreComputation = createCoreComputation({ onWarn: () => undefined });
     let committed: RenderFrameSnapshot | undefined;
     let exposedClone: RenderFrameSnapshot | undefined;
     const renderer = defineRetainedRenderer({
@@ -807,25 +487,20 @@ describe('createRetainedRenderParticipant', () => {
       },
       dispose: () => undefined,
     });
-    const handle = createRetainedRenderParticipant({
+    const handle = createRetainedRenderTarget({
       backend: 'svg',
       host: svgHost,
       rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'mutable-read' },
-      coreComputation,
+      configuration: () => ({}),
     });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
-    const session = createRuntime({
-      sources,
-      computations,
-      participants: [handle.participant],
-      initialSnapshots: [
-        createRuntimeSourceInput(CoreSourceDefinition, scene('A')),
-        createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
-      ],
-    });
-    const read = handle.read(session);
+
+    const session = new ReconcilerSession(
+      { onWarn: () => undefined },
+      { target: handle.target, captureProvenance: true },
+    );
+    session.mount(scene('A'));
+    const read = handle.read();
     if (exposedClone === undefined) throw new Error('expected renderer clone');
 
     (exposedClone as unknown as { primary: { scene: { layout: { width: number } } } }).primary.scene.layout.width = 999;
@@ -853,12 +528,12 @@ describe('createRetainedRenderParticipant', () => {
     });
 
     try {
-      createRetainedRenderParticipant({
+      createRetainedRenderTarget({
         backend: 'svg',
         host: svgHost,
         rendererFactory: (() => mismatching) as unknown as RetainedRendererFactory,
         immutableOptions: { backend: 'svg', idPrefix: 'mismatch' },
-        coreComputation: createCoreComputation({ onWarn: () => undefined }),
+        configuration: () => ({}),
       });
       throw new Error('expected renderer mismatch');
     } catch (error) {
@@ -882,7 +557,7 @@ describe('createRetainedRenderParticipant', () => {
     });
     let current: RenderFrameSnapshot | undefined;
 
-    const prepare = (frame: RenderFrameSnapshot): RuntimePreparedCommit => {
+    const prepare = (frame: RenderFrameSnapshot): ReconcilerPreparedCommit => {
       const previous = current;
       return Object.freeze({
         commit: () => {
@@ -908,33 +583,29 @@ describe('createRetainedRenderParticipant', () => {
       },
       dispose,
     });
-    const coreComputation = createCoreComputation({ onWarn: () => undefined });
-    const handle = createRetainedRenderParticipant({
+
+    const handle = createRetainedRenderTarget({
       backend: 'svg',
       host: svgHost,
       rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'dispose-retry' },
-      coreComputation,
-    });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
-    const session = createRuntime({
-      sources,
-      computations,
-      participants: [handle.participant],
-      initialSnapshots: [
-        createRuntimeSourceInput(CoreSourceDefinition, scene('dispose')),
-        createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
-      ],
+      configuration: () => ({}),
     });
 
+    const session = new ReconcilerSession(
+      { onWarn: () => undefined },
+      { target: handle.target, captureProvenance: true },
+    );
+    session.mount(scene('dispose'));
+
     expect(() => session.dispose()).not.toThrow();
-    expect(dispose).toHaveBeenCalledTimes(2);
+    expect(dispose).toHaveBeenCalledTimes(1);
     expect(session.diagnostics()).toEqual([
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDisposeFailed, cause: disposeFailure }),
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDisposeFailed, cause: disposeFailure }),
+      expect.objectContaining({ code: 'RECONCILER_CLEANUP_FAILED', cause: disposeFailure }),
     ]);
-    expect(() => handle.read(session)).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.Disposed }));
+    expect(() => handle.read()).toThrowError(
+      expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchSnapshotMismatch }),
+    );
 
     expect(() => session.dispose()).not.toThrow();
     expect(() => session.dispose()).not.toThrow();
@@ -945,12 +616,12 @@ describe('createRetainedRenderParticipant', () => {
     const factory = vi.fn();
 
     expect(() =>
-      createRetainedRenderParticipant({
+      createRetainedRenderTarget({
         backend: 'svg',
         host: Object.freeze({ tagName: 'canvas' }) as unknown as SVGSVGElement,
         rendererFactory: factory as RetainedRendererFactory,
         immutableOptions: { backend: 'svg', idPrefix: 'invalid' },
-        coreComputation: createCoreComputation({ onWarn: () => undefined }),
+        configuration: () => ({}),
       }),
     ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRenderParticipantInputInvalid }));
     expect(factory).not.toHaveBeenCalled();
@@ -958,13 +629,13 @@ describe('createRetainedRenderParticipant', () => {
 
   it('把 participant options getter throw 收敛为稳定 input error', () => {
     const getterFailure = new Error('options getter failed');
-    const options = new Proxy({} as Parameters<typeof createRetainedRenderParticipant>[0], {
+    const options = new Proxy({} as Parameters<typeof createRetainedRenderTarget>[0], {
       get: () => {
         throw getterFailure;
       },
     });
 
-    expect(() => createRetainedRenderParticipant(options)).toThrowError(
+    expect(() => createRetainedRenderTarget(options)).toThrowError(
       expect.objectContaining({
         code: RetikzRenderErrorCode.RetainedRenderParticipantInputInvalid,
         cause: getterFailure,
@@ -972,32 +643,7 @@ describe('createRetainedRenderParticipant', () => {
     );
   });
 
-  it('一次捕获 participant options，校验后不重新读取动态输入', () => {
-    const renderer = createRendererHarness();
-    const target = {
-      backend: 'svg' as const,
-      host: svgHost,
-      rendererFactory: (() => renderer.renderer) as unknown as RetainedRendererFactory,
-      immutableOptions: { backend: 'svg' as const, idPrefix: 'capture-once' },
-      coreComputation: createCoreComputation({ onWarn: () => undefined }),
-    };
-    const reads = new Map<PropertyKey, number>();
-    const options = new Proxy(target, {
-      get: (value, key, receiver) => {
-        const count = (reads.get(key) ?? 0) + 1;
-        reads.set(key, count);
-        if (count > 1) throw new Error(`property ${String(key)} was read twice`);
-
-        return Reflect.get(value, key, receiver);
-      },
-    });
-
-    expect(() => createRetainedRenderParticipant(options)).not.toThrow();
-    expect([...reads.values()].every(count => count === 1)).toBe(true);
-  });
-
   it('把 renderer 未知 prepare throw 包装为稳定 RetikzRenderError cause', () => {
-    const coreComputation = createCoreComputation({ onWarn: () => undefined });
     const renderer = defineRetainedRenderer({
       backend: 'svg',
       host: svgHost,
@@ -1012,35 +658,26 @@ describe('createRetainedRenderParticipant', () => {
       },
       dispose: () => undefined,
     });
-    const handle = createRetainedRenderParticipant({
+    const handle = createRetainedRenderTarget({
       backend: 'svg',
       host: svgHost,
       rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'throw' },
-      coreComputation,
+      configuration: () => ({}),
     });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
 
     try {
-      createRuntime({
-        sources,
-        computations,
-        participants: [handle.participant],
-        initialSnapshots: [
-          createRuntimeSourceInput(CoreSourceDefinition, scene('A')),
-          createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
-        ],
-      });
+      new ReconcilerSession({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
+        scene('A'),
+      );
       throw new Error('expected create to fail');
     } catch (error) {
-      expect(error).toBeInstanceOf(RetikzRuntimeError);
+      expect(error).toBeInstanceOf(RetikzRenderError);
 
-      const runtime = error as RetikzRuntimeError;
+      const runtime = error as RetikzRenderError;
 
-      expect(runtime.code).toBe(RetikzRuntimeErrorCode.ParticipantPrepareFailed);
-      expect(isRetikzRenderError(runtime.cause)).toBe(true);
-      expect((runtime.cause as RetikzRenderError).code).toBe(RetikzRenderErrorCode.RetainedRendererPrepareFailed);
+      expect(runtime.code).toBe(RetikzRenderErrorCode.RetainedRendererPrepareFailed);
+      expect(runtime.cause).toEqual(expect.objectContaining({ message: 'renderer failed' }));
     }
   });
 
@@ -1049,7 +686,7 @@ describe('createRetainedRenderParticipant', () => {
       code: RetikzRenderErrorCode.ScenePatchInvalid,
       cause: Object.freeze({ fixture: true }),
     });
-    const coreComputation = createCoreComputation({ onWarn: () => undefined });
+
     const renderer = defineRetainedRenderer({
       backend: 'svg',
       host: svgHost,
@@ -1064,40 +701,28 @@ describe('createRetainedRenderParticipant', () => {
       },
       dispose: () => undefined,
     });
-    const handle = createRetainedRenderParticipant({
+    const handle = createRetainedRenderTarget({
       backend: 'svg',
       host: svgHost,
       rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'retained-error' },
-      coreComputation,
+      configuration: () => ({}),
     });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
 
     try {
-      createRuntime({
-        sources,
-        computations,
-        participants: [handle.participant],
-        initialSnapshots: [
-          createRuntimeSourceInput(CoreSourceDefinition, scene('A')),
-          createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
-        ],
-      });
+      new ReconcilerSession({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
+        scene('A'),
+      );
       throw new Error('expected create to fail');
     } catch (error) {
-      expect(error).toBeInstanceOf(RetikzRuntimeError);
-      expect((error as RetikzRuntimeError).code).toBe(RetikzRuntimeErrorCode.ParticipantPrepareFailed);
-      expect((error as RetikzRuntimeError).cause).toBe(expected);
-      expect(((error as RetikzRuntimeError).cause as RetikzRenderError).code).toBe(
-        RetikzRenderErrorCode.ScenePatchInvalid,
-      );
+      expect(error).toBeInstanceOf(RetikzRenderError);
+      expect(error).toBe(expected);
     }
   });
 
   it('把 renderer read getter throw 包装为稳定 snapshot mismatch cause', () => {
     const getterFailure = new Error('read getter failed');
-    const coreComputation = createCoreComputation({ onWarn: () => undefined });
+
     const renderer = defineRetainedRenderer({
       backend: 'svg',
       host: svgHost,
@@ -1113,44 +738,30 @@ describe('createRetainedRenderParticipant', () => {
         }),
       dispose: () => undefined,
     });
-    const handle = createRetainedRenderParticipant({
+    const handle = createRetainedRenderTarget({
       backend: 'svg',
       host: svgHost,
       rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'read-getter' },
-      coreComputation,
+      configuration: () => ({}),
     });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
 
     try {
-      createRuntime({
-        sources,
-        computations,
-        participants: [handle.participant],
-        initialSnapshots: [
-          createRuntimeSourceInput(CoreSourceDefinition, scene('A')),
-          createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
-        ],
-      });
+      new ReconcilerSession({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
+        scene('A'),
+      );
       throw new Error('expected create to fail');
     } catch (error) {
-      expect(error).toBeInstanceOf(RetikzRuntimeError);
+      expect(error).toBeInstanceOf(RetikzRenderError);
 
-      const runtime = error as RetikzRuntimeError;
+      const runtime = error as RetikzRenderError;
 
-      expect(runtime.code).toBe(RetikzRuntimeErrorCode.ParticipantReadFailed);
-      expect(runtime.cause).toEqual(
-        expect.objectContaining({
-          code: RetikzRenderErrorCode.ScenePatchSnapshotMismatch,
-          cause: getterFailure,
-        }),
-      );
+      expect(runtime.code).toBe(RetikzRenderErrorCode.ScenePatchSnapshotMismatch);
+      expect(runtime.cause).toBe(getterFailure);
     }
   });
 
   it('在 publish 前拒绝 malformed AnimationControls', () => {
-    const coreComputation = createCoreComputation({ onWarn: () => undefined });
     let committed: RenderFrameSnapshot | undefined;
     const renderer = defineRetainedRenderer({
       backend: 'svg',
@@ -1168,36 +779,26 @@ describe('createRetainedRenderParticipant', () => {
       },
       dispose: () => undefined,
     });
-    const handle = createRetainedRenderParticipant({
+    const handle = createRetainedRenderTarget({
       backend: 'svg',
       host: svgHost,
       rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'malformed-animation' },
-      coreComputation,
+      configuration: () => ({}),
     });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
 
     expect(() =>
-      createRuntime({
-        sources,
-        computations,
-        participants: [handle.participant],
-        initialSnapshots: [
-          createRuntimeSourceInput(CoreSourceDefinition, scene('A')),
-          createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
-        ],
-      }),
+      new ReconcilerSession({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
+        scene('A'),
+      ),
     ).toThrowError(
       expect.objectContaining({
-        code: RetikzRuntimeErrorCode.ParticipantReadFailed,
-        cause: expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRendererInvalid }),
+        code: RetikzRenderErrorCode.RetainedRendererInvalid,
       }),
     );
   });
 
   it('固定捕获 AnimationControls callback 与 data state，不保留可变容器 alias', () => {
-    const coreComputation = createCoreComputation({ onWarn: () => undefined });
     let committed: RenderFrameSnapshot | undefined;
     const originalPlay = vi.fn();
     const replacementPlay = vi.fn();
@@ -1225,25 +826,20 @@ describe('createRetainedRenderParticipant', () => {
       },
       dispose: () => undefined,
     });
-    const handle = createRetainedRenderParticipant({
+    const handle = createRetainedRenderTarget({
       backend: 'svg',
       host: svgHost,
       rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'animation-capture' },
-      coreComputation,
+      configuration: () => ({}),
     });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
-    const session = createRuntime({
-      sources,
-      computations,
-      participants: [handle.participant],
-      initialSnapshots: [
-        createRuntimeSourceInput(CoreSourceDefinition, scene('A')),
-        createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
-      ],
-    });
-    const animation = handle.read(session).animation;
+
+    const session = new ReconcilerSession(
+      { onWarn: () => undefined },
+      { target: handle.target, captureProvenance: true },
+    );
+    session.mount(scene('A'));
+    const animation = handle.read().animation;
     if (animation === undefined) throw new Error('expected animation controls');
 
     controls.play = replacementPlay;

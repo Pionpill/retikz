@@ -1,13 +1,6 @@
 import type { IRScene } from '@retikz/core';
 import { CompositeBaseSchema, compileToScene, defineComposite, selectSpatialHandles } from '@retikz/core';
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
-import {
-  createRuntimeSourceInput,
-  createRuntimeSourceRegistry,
-  createRuntimeSourceUpdate,
-  createRuntimeComputationRegistry,
-  createRuntime,
-} from '@retikz/runtime';
+import { ReconcilerSession } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { array, literal, number, string } from 'zod';
 
@@ -48,20 +41,11 @@ describe('incremental spatial handle atomicity', () => {
         },
       ],
     });
-    const program = createCoreComputation({ composites: [card] });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const runtime = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, source(0))],
-    });
+    const runtime = new ReconcilerSession({ composites: [card] });
+    runtime.mount(source(0));
     for (const x of [40, -10, 0]) {
-      runtime.update({
-        baseRevision: runtime.revision(),
-        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, source(x))],
-      });
-      const result = runtime.result(program).value.output.result;
+      runtime.replace(source(x));
+      const result = runtime.read().compilation.result;
       const fresh = compileToScene(source(x), { composites: [card] });
       expect(result.scene).toEqual(fresh.scene);
       expect(result.spatialHandles).toEqual(fresh.spatialHandles);
@@ -85,63 +69,37 @@ describe('incremental spatial handle atomicity', () => {
         },
       ],
     });
-    const program = createCoreComputation({ onWarn: () => undefined });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, source(['alternate']))],
-    });
+    const session = new ReconcilerSession({ onWarn: () => undefined });
+    session.mount(source(['alternate']));
 
     for (const aliasIds of [[], ['alternate']]) {
-      session.update({
-        baseRevision: session.revision(),
-        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, source(aliasIds))],
-      });
+      session.replace(source(aliasIds));
 
-      expect(session.result(program).value.output.result.scene).toEqual(
+      expect(session.read().compilation.result.scene).toEqual(
         compileToScene(source(aliasIds), { onWarn: () => undefined }).scene,
       );
     }
   });
 
   it('commits Scene, artifacts, and spatial index together and preserves the previous revision on failure', () => {
-    const program = createCoreComputation({ composites: [card] });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, scene(10))],
-    });
+    const session = new ReconcilerSession({ composites: [card] });
+    session.mount(scene(10));
 
-    session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene(20, ['alternate']))],
-    });
-    const committed = session.result(program).value.output.result;
+    session.replace(scene(20, ['alternate']));
+    const committed = session.read().compilation.result;
 
     expect(committed.spatialHandles.entries[0]?.geometry.bounds.width).toBe(20);
     expect(selectSpatialHandles(committed.spatialHandles, { id: 'alternate' })).toEqual(
       committed.spatialHandles.entries,
     );
 
-    expect(() =>
-      session.update({
-        baseRevision: session.revision(),
-        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene(-1))],
-      }),
-    ).toThrow(/RUNTIME_COMPUTATION_RUN_FAILED/);
+    expect(() => session.replace(scene(-1))).toThrow();
 
-    expect(session.result(program).value.output.result).toBe(committed);
-    expect(session.result(program).value.output.result.spatialHandles.entries[0]?.geometry.bounds.width).toBe(20);
+    expect(session.read().compilation.result).toBe(committed);
+    expect(session.read().compilation.result.spatialHandles.entries[0]?.geometry.bounds.width).toBe(20);
 
-    session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene(20, ['new']))],
-    });
-    const updated = session.result(program).value.output.result;
+    session.replace(scene(20, ['new']));
+    const updated = session.read().compilation.result;
 
     expect(selectSpatialHandles(updated.spatialHandles, { id: 'alternate' })).toEqual([]);
     expect(selectSpatialHandles(updated.spatialHandles, { id: 'new' })).toHaveLength(1);

@@ -8,8 +8,7 @@ import {
   CoreTracePhase,
   CoreTraceUnit,
 } from '@retikz/core';
-import type { PerformanceTraceRecord } from '@retikz/runtime';
-import { createRuntimeTraceReporter, PerformanceTraceOutcome } from '@retikz/runtime';
+import type { CoreCompileTraceRecord } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
@@ -17,18 +16,8 @@ const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: '
 
 describe('compileToScene performance trace', () => {
   it('每次成功 full compile 只报告一条精确 IRChild dispatch 计数', () => {
-    const records: Array<PerformanceTraceRecord> = [];
-    const trace = createRuntimeTraceReporter({
-      owner: '@retikz/core',
-      phases: [
-        {
-          phase: CoreTracePhase.Compile,
-          unit: CoreTraceUnit.IrChild,
-          outcomes: [PerformanceTraceOutcome.Full],
-        },
-      ],
-      sink: record => records.push(record),
-    });
+    const records: Array<CoreCompileTraceRecord> = [];
+    const trace = { report: (record: CoreCompileTraceRecord) => records.push(record) };
 
     compileToScene(
       scene([
@@ -43,10 +32,9 @@ describe('compileToScene performance trace', () => {
 
     expect(records).toEqual([
       {
-        owner: '@retikz/core',
         phase: CoreTracePhase.Compile,
         unit: CoreTraceUnit.IrChild,
-        outcome: PerformanceTraceOutcome.Full,
+        outcome: 'full',
         visited: 3,
         reused: 0,
         changed: 3,
@@ -55,18 +43,8 @@ describe('compileToScene performance trace', () => {
   });
 
   it('空 Scene 仍报告一次零计数，未注入 trace 时输出保持等价', () => {
-    const records: Array<PerformanceTraceRecord> = [];
-    const trace = createRuntimeTraceReporter({
-      owner: '@retikz/core',
-      phases: [
-        {
-          phase: CoreTracePhase.Compile,
-          unit: CoreTraceUnit.IrChild,
-          outcomes: [PerformanceTraceOutcome.Full],
-        },
-      ],
-      sink: record => records.push(record),
-    });
+    const records: Array<CoreCompileTraceRecord> = [];
+    const trace = { report: (record: CoreCompileTraceRecord) => records.push(record) };
     const input = scene([]);
 
     const traced = compileToScene(input, { trace });
@@ -75,10 +53,9 @@ describe('compileToScene performance trace', () => {
     expect(traced).toEqual(plain);
     expect(records).toEqual([
       {
-        owner: '@retikz/core',
         phase: CoreTracePhase.Compile,
         unit: CoreTraceUnit.IrChild,
-        outcome: PerformanceTraceOutcome.Full,
+        outcome: 'full',
         visited: 0,
         reused: 0,
         changed: 0,
@@ -87,18 +64,8 @@ describe('compileToScene performance trace', () => {
   });
 
   it('layoutChild sandbox dispatch 计数，replay 不重复计数', () => {
-    const records: Array<PerformanceTraceRecord> = [];
-    const trace = createRuntimeTraceReporter({
-      owner: '@retikz/core',
-      phases: [
-        {
-          phase: CoreTracePhase.Compile,
-          unit: CoreTraceUnit.IrChild,
-          outcomes: [PerformanceTraceOutcome.Full],
-        },
-      ],
-      sink: record => records.push(record),
-    });
+    const records: Array<CoreCompileTraceRecord> = [];
+    const trace = { report: (record: CoreCompileTraceRecord) => records.push(record) };
     const composite = defineComposite({
       namespace: 'trace',
       type: 'replay',

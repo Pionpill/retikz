@@ -1,14 +1,7 @@
 import type { IRScene } from '@retikz/core';
+import { prepareSceneCompilation } from '@retikz/core';
 import type { ScenePatch, SceneRuntimeSnapshot } from '@retikz/reconciler';
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
-import {
-  createRuntimeIdentity,
-  createRuntimeSourceInput,
-  createRuntimeSourceRegistry,
-  createRuntimeSourceUpdate,
-  createRuntimeComputationRegistry,
-  createRuntime,
-} from '@retikz/runtime';
+import { createFullSceneRuntimeSnapshot, createSceneIdentity } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { RetikzRenderErrorCode } from '../../src/runtime';
@@ -37,29 +30,23 @@ const source = (fill: string): IRScene => ({
 });
 
 const createIncrementalPair = () => {
-  const program = createCoreComputation({ onWarn: () => undefined });
-  const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-  const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-  const session = createRuntime({
-    sources,
-    computations,
-    initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, source('#ef4444'))],
+  const snapshots = ['#ef4444', '#22c55e'].map((fill, revision) => {
+    const compiled = prepareSceneCompilation(source(fill), {}, { captureProvenance: true });
+    return createFullSceneRuntimeSnapshot(compiled.result.scene, revision, compiled.provenance!);
   });
-  const current = session.result(program).value.snapshot;
-  session.update({
-    baseRevision: session.revision(),
-    sources: [createRuntimeSourceUpdate(CoreSourceDefinition, source('#22c55e'))],
-  });
-  const result = session.result(program).value;
-  if (result.patch === undefined) throw new Error('expected incremental patch');
-
-  return { current, next: result.snapshot, patch: result.patch };
+  const [current, next] = snapshots;
+  const patch: ScenePatch = {
+    baseRevision: current.revision,
+    nextRevision: next.revision,
+    operations: [{ kind: 'replaceScene', snapshot: next }],
+  };
+  return { current, next, patch };
 };
 
 const createRectSnapshot = (revision: number, identifiers: ReadonlyArray<string>): SceneRuntimeSnapshot => {
-  const root = createRuntimeIdentity('validator', ['root']);
+  const root = createSceneIdentity('validator', ['root']);
   return {
-    revision: revision as SceneRuntimeSnapshot['revision'],
+    revision,
     root,
     scene: {
       layout: { x: 0, y: 0, width: 100, height: 100 },
@@ -75,7 +62,7 @@ const createRectSnapshot = (revision: number, identifiers: ReadonlyArray<string>
       })),
     },
     topology: identifiers.map((identifier, index) => {
-      const identity = createRuntimeIdentity('validator', ['entity', identifier]);
+      const identity = createSceneIdentity('validator', ['entity', identifier]);
       return {
         identity,
         semanticOwner: identity,
@@ -174,7 +161,7 @@ describe('Scene Patch validator', () => {
     expect(() => validateScenePatch(current, patch, next)).not.toThrow();
 
     const configOnly: SceneRuntimeSnapshot = Object.freeze({
-      revision: (current.revision + 1) as SceneRuntimeSnapshot['revision'],
+      revision: current.revision + 1,
       scene: current.scene,
       root: current.root,
       topology: current.topology,
@@ -208,9 +195,9 @@ describe('Scene Patch validator', () => {
   it('拒绝 revision gap、未知 operation 与非独占 replace', () => {
     const { current, next, patch } = createIncrementalPair();
 
-    expect(() =>
-      validateScenePatch(current, { ...patch, nextRevision: (next.revision + 1) as typeof next.revision }, next),
-    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchRevisionMismatch }));
+    expect(() => validateScenePatch(current, { ...patch, nextRevision: next.revision + 1 }, next)).toThrowError(
+      expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchRevisionMismatch }),
+    );
 
     expect(() =>
       validateScenePatch(current, { ...patch, operations: [{ kind: 'unknown' }] } as unknown as ScenePatch, next),

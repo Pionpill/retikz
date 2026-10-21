@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import type { IRScene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '@retikz/core';
-import { RetikzRuntimeErrorCode } from '@retikz/runtime';
 import { describe, expect, it, vi } from 'vitest';
 import { literal } from 'zod';
 
@@ -381,9 +380,7 @@ describe('Vanilla processing', () => {
 
     expect(controller.read()).toBe(stable);
     expect(listener).not.toHaveBeenCalled();
-    expect(controller.diagnostics()).toEqual([
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantPrepareFailed }),
-    ]);
+    expect(controller.diagnostics()).toEqual([expect.objectContaining({ code: 'VANILLA_COMPILE_DRIVER_FAILED' })]);
 
     controller.update({ children: [{ id: 'recovered', position: [40, 0] }] });
 

@@ -134,6 +134,8 @@ export class WeaveReconciler {
   private readonly tracker: WeaveTracker;
   /** 是否已进入更新模式；此后遍历复用既有子节点，不再按首次挂载方式创建 */
   private updating = false;
+  /** 本批强制重算元素，但保留稳定声明节点与操作校验 */
+  private forceFull = false;
   /** key 为稳定节点，value 为批次操作前的声明 irPath；路径变化时禁止复用旧位置的编译缓存 */
   private previousNodeIrPaths = new Map<WeaveNode, string>();
   /** 最近一次挂载或 finish 后的完整结果，供空批次复用；准备与 commit 不替换此值 */
@@ -193,7 +195,7 @@ export class WeaveReconciler {
   }
 
   /** 在既有树上准备一批更新；返回值与当前树在提交前互相隔离 */
-  update(batch: WeaveBatch): WeavePreparedUpdate {
+  update(batch: WeaveBatch, forceFull = false): WeavePreparedUpdate {
     const completed = this.completed;
     if (completed === undefined)
       throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Mount Weave before updating');
@@ -203,6 +205,7 @@ export class WeaveReconciler {
 
     try {
       this.updating = true;
+      this.forceFull = forceFull;
       this.editor.useTransaction(transaction);
       this.tracker.beginBatch(transaction);
       this.previousNodeIrPaths = this.editor.captureNodeIrPaths();
@@ -277,7 +280,13 @@ export class WeaveReconciler {
 
   /** 校验当前位置的缓存输入及实际名称绑定，不用旧索引推断新引用 */
   private canNodeReuse(node: WeaveNode, compileOptions: ElementCompileOptions): boolean {
-    if (!this.updating || node.current === null || this.tracker.isNodeDirty(node) || this.observation !== undefined)
+    if (
+      this.forceFull ||
+      !this.updating ||
+      node.current === null ||
+      this.tracker.isNodeDirty(node) ||
+      this.observation !== undefined
+    )
       return false;
     if (
       this.previousNodeIrPaths.get(node) !== compileOptions.irPath ||

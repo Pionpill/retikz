@@ -1,17 +1,5 @@
 export * from './error';
 export { CORE_SOURCE_KEY } from './constants';
-export {
-  CORE_COMPUTATION_ID,
-  CoreCompositeInputSourceDefinition,
-  CoreSourceDefinition,
-  createCoreComputation,
-} from './runtime';
-export type {
-  CoreComputationDefinition,
-  CoreComputationOptions,
-  CoreComputationPublicRead,
-  CoreComputationRuntimeOptions,
-} from './runtime';
 export type {
   RuntimeDeepReadonly,
   RuntimeScene,
@@ -27,6 +15,7 @@ export type {
 export * from './trace';
 
 export * from './session';
-export * from './scene/identity-value';
+export { createSceneIdentity, createSceneIdentityLookup, sceneIdentityEquals, createSceneRevision } from './scene';
+export type { SceneIdentity, SceneIdentityLookup, SceneRevision } from './scene';
 export type { WeaveBatch, WeaveOperation, WeaveTarget } from './weave';
 export { createFullSceneRuntimeSnapshot } from './scene';

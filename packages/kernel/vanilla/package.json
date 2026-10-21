@@ -79,7 +79,6 @@
     "@retikz/core": "workspace:*",
     "@retikz/foundation": "workspace:*",
     "@retikz/render": "workspace:*",
-    "@retikz/runtime": "workspace:*",
     "@retikz/reconciler": "workspace:*"
   },
   "devDependencies": {
