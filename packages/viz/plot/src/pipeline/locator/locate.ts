@@ -29,7 +29,7 @@ type PlotFacetLocatorValue = Exclude<PlotFacetLocatorOptions['row'], undefined>;
 
 /** 取某 mark 的 series 字段名（无则 undefined）；只有 path / interval 含 series */
 const seriesFieldOf = (mark: IRPlotMark): string | undefined =>
-  mark.type === BuiltinPlotMark.Path || mark.type === BuiltinPlotMark.Interval ? mark.series : undefined;
+  mark.type === BuiltinPlotMark.Path || mark.type === BuiltinPlotMark.Interval ? mark.encodings?.series : undefined;
 
 type RenderDatumEntry = PlotAnchorResolution & {
   transformedIndex: number;

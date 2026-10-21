@@ -29,11 +29,14 @@ export const renderCoordinateCartesian = (values: CoordinateCartesianValues) => 
   >
     <PlotScale dimension="y" type="linear" domainPadding={0} />
     {values.markType === 'point' ? (
-      <PointMark x="category" y="value" />
+      <PointMark encodings={{ position: { x: 'category', y: 'value' } }} />
     ) : values.markType === 'line' ? (
-      <PathMark x="category" y="value" order="order" closed={false} />
+      <PathMark
+        encodings={{ order: 'order', position: { x: 'category', y: 'value' } }}
+        properties={{ closed: false }}
+      />
     ) : (
-      <IntervalMark x="category" y="value" />
+      <IntervalMark encodings={{ position: { x: 'category', y: 'value' } }} />
     )}
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid={values.showGrid} />

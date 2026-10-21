@@ -74,11 +74,7 @@ const pointSpec = (colorScale: Record<string, unknown>): IRPlot =>
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [
-      {
-        type: 'point',
-        color: { kind: 'field', value: 'v', scale: 'col' },
-        encoding: { x: { field: 'x' }, y: { field: 'y' } },
-      },
+      { type: 'point', kind: 'data', encodings: { color: { field: 'v', scale: 'col' }, position: { x: 'x', y: 'y' } } },
     ],
   });
 
@@ -315,8 +311,8 @@ describe('离散色 · fail-loud 守卫（contract）', () => {
       marks: [
         {
           type: markType,
-          order: 'x',
-          encoding: { x: { field: 'x' }, y: { field: 'y' }, color: { field: 'v', scale: 'col' } },
+          kind: 'data',
+          encodings: { order: 'x', color: { field: 'v', scale: 'col' }, position: { x: 'x', y: 'y' } },
         },
       ],
     });

@@ -42,31 +42,25 @@ export type PointStylePreviewValues = {
 /** 绘制示例图形 */
 export const PointStylePreview = (values: PointStylePreviewValues) => {
   const usesFieldColor = values.paintMode === 'field';
-  const fill =
-    values.paintMode === 'gradient'
-      ? gradientFill
-      : values.paintMode === 'solid'
-        ? { kind: 'constant' as const, value: values.fill }
-        : undefined;
+  const fill = values.paintMode === 'gradient' ? gradientFill : values.paintMode === 'solid' ? values.fill : undefined;
   const pointProps: PointMarkProps = {
-    x: 'x',
-    y: 'y',
-    color: usesFieldColor ? 'region' : undefined,
-    fill,
-    stroke: { kind: 'constant' as const, value: values.stroke },
-    strokeWidth: values.strokeWidth,
-    opacity: {
-      overall: values.opacity,
-      fill: values.fillOpacity,
-      stroke: values.strokeOpacity,
+    encodings: { position: { x: 'x', y: 'y' }, zIndex: values.zIndex, ...(usesFieldColor ? { color: 'region' } : {}) },
+    properties: {
+      fill,
+      stroke: values.stroke,
+      strokeWidth: values.strokeWidth,
+      opacity: {
+        overall: values.opacity,
+        fill: values.fillOpacity,
+        stroke: values.strokeOpacity,
+      },
+      size: values.size,
+      dashed: values.dashed,
+      dotted: values.dotted,
+      dashPattern: values.dashPattern ? [8, 3, 2, 3] : undefined,
+      blendMode: values.blendMode,
+      shadow: values.shadow,
     },
-    size: values.size,
-    dashed: values.dashed,
-    dotted: values.dotted,
-    dashPattern: values.dashPattern ? [8, 3, 2, 3] : undefined,
-    blendMode: values.blendMode,
-    zIndex: values.zIndex,
-    shadow: values.shadow,
   };
 
   return (

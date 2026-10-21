@@ -29,7 +29,7 @@ const spec: IRPlot = {
     { type: 'linear', name: 'y' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+  marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } }],
 };
 
 const data: ExternalDatasets = { sales: [{ x: 0, y: 1 }] };

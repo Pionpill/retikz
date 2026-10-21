@@ -49,10 +49,8 @@ export const PlotLineagePreview: FC<PlotLineagePreviewProps> = props => {
         >
           <IntervalMark
             id="revenueBars"
-            x="region"
-            y="revenue"
-            color="month"
-            transform={transforms.mark.map(operation => ({ operation }))}
+            transforms={transforms.mark.map(operation => ({ operation }))}
+            encodings={{ color: 'month', position: { x: 'region', y: 'revenue' } }}
           />
           <PlotScale dimension="y" type="linear" domainPadding={0} />
           <PlotAxis dimension="x" />

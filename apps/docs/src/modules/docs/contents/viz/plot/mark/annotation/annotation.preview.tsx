@@ -21,17 +21,25 @@ export const AnnotationPreview: FC<AnnotationPreviewProps> = props => {
         <PlotScale dimension="x" {...annotationXScale(coordinate)} />
         <PlotScale dimension="y" type="linear" domain={[0, 100]} domainPadding={0} />
         <IntervalAnnotation
-          x={{ from: annotationX(coordinate, 20, 'B'), to: annotationX(coordinate, 40, 'C') }}
-          y={{ from: { edge: 'start' }, to: { edge: 'end' } }}
-          fill="#dbeafe"
+          properties={{
+            fill: '#dbeafe',
+            bounds: {
+              x: { from: annotationX(coordinate, 20, 'B'), to: annotationX(coordinate, 40, 'C') },
+              y: { from: { edge: 'start' }, to: { edge: 'end' } },
+            },
+          }}
         />
         <PathAnnotation
-          from={{ x: { edge: 'start' }, y: threshold }}
-          to={{ x: { edge: 'end' }, y: threshold }}
-          stroke="#dc2626"
-          dashPattern={[4, 3]}
+          properties={{
+            from: { x: { edge: 'start' }, y: threshold },
+            to: { x: { edge: 'end' }, y: threshold },
+            stroke: '#dc2626',
+            dashPattern: [4, 3],
+          }}
         />
-        <PointAnnotation x={annotationX(coordinate, 80, 'E')} y={80} text="80" textColor="darkorange" />
+        <PointAnnotation
+          properties={{ text: '80', textColor: 'darkorange', position: { x: annotationX(coordinate, 80, 'E'), y: 80 } }}
+        />
         <PlotAxis dimension="x" />
         <PlotAxis dimension="y" />
       </Plot>

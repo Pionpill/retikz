@@ -91,11 +91,10 @@ export const lowerMark = (
     const operation = resolution.operation;
     const capability = resolution.definition.annotation;
     if (!capability) throw new RetikzPlotError(`Mark "${resolution.operation.type}" does not support annotations`);
-    const color = channels.defaults?.color;
     try {
       if (!isIndependentAnnotation(resolution.operation)) {
         const children = rows.flatMap((row, transformedIndex) => {
-          const child = capability.lower(operation, frame, typeof color === 'string' ? color : undefined, markContext, {
+          const child = capability.lower(operation, frame, channels, markContext, {
             row,
             transformedIndex,
           });
@@ -105,7 +104,7 @@ export const lowerMark = (
           ? null
           : attachMarkLayer({ type: 'scope', children }, resolution.operation, markContext);
       }
-      return capability.lower(resolution.operation, frame, typeof color === 'string' ? color : undefined, markContext);
+      return capability.lower(resolution.operation, frame, channels, markContext);
     } catch (cause) {
       if (cause instanceof RetikzPlotError) throw cause;
       throw new RetikzPlotError(`Annotation "${resolution.operation.type}" projection failed`, { cause });

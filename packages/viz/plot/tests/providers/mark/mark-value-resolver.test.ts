@@ -2,22 +2,15 @@
 import { describe, expect, it } from 'vitest';
 
 import { makeMarkValueResolver } from '../../../src/providers';
-import type { IRPlotPointNumberStyle } from '../../../src/schemas';
+import type { IRPlotChannel } from '../../../src/schemas';
 
 describe('makeMarkValueResolver', () => {
-  it('resolves_constant_mark_value', () => {
-    const value: IRPlotPointNumberStyle = { kind: 'constant', value: 3 };
-    const resolver = makeMarkValueResolver<number>(value, [], {
-      channelName: 'weight',
-      parse: raw => (typeof raw === 'number' ? raw : undefined),
-    });
-
-    expect(resolver?.field).toBeUndefined();
-    expect(resolver?.resolver({ weight: 9 })).toBe(3);
+  it('does not create a field resolver when no encoding is declared', () => {
+    expect(makeMarkValueResolver(undefined, [], { channelName: 'weight', parse: value => value })).toBeUndefined();
   });
 
   it('resolves_field_mark_value_per_row', () => {
-    const value: IRPlotPointNumberStyle = { kind: 'field', value: 'weight' };
+    const value: IRPlotChannel = 'weight';
     const resolver = makeMarkValueResolver<number>(value, [{ name: 'weight', type: DataFieldType.Continuous }], {
       channelName: 'weight',
       expectedFieldType: DataFieldType.Continuous,
@@ -31,7 +24,7 @@ describe('makeMarkValueResolver', () => {
   });
 
   it('rejects_unexpected_field_type', () => {
-    const value: IRPlotPointNumberStyle = { kind: 'field', value: 'group' };
+    const value: IRPlotChannel = 'group';
 
     expect(() =>
       makeMarkValueResolver<number>(value, [{ name: 'group', type: DataFieldType.Categorical }], {

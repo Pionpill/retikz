@@ -13,7 +13,7 @@ import { PointAnnotationSchema } from '../../src/schemas';
 import { MarkOperationSchema, PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
 
-const point = { type: 'point', kind: 'annotation', position: { x: 5, y: 5 }, text: 'target' };
+const point = { type: 'point', kind: 'annotation', properties: { position: { x: 5, y: 5 }, text: 'target' } };
 const plot = (marks: Array<unknown> = [point]) =>
   PlotSchema.parse({
     namespace: 'plot',
@@ -33,18 +33,26 @@ const paths = (child: IRChild): Array<IRPath> =>
 
 describe('independent annotations', () => {
   it('uses coordinate connections by default and preserves explicit straight connections in JSON', () => {
-    const path = { type: 'path', kind: 'annotation', from: { x: 0, y: 5 }, to: { x: 5, y: 5 } };
-    expect(MarkOperationSchema.parse(path)).toHaveProperty('connection', 'coordinate');
-    const straight = MarkOperationSchema.parse({ ...path, connection: 'straight' });
+    const path = { type: 'path', kind: 'annotation', properties: { from: { x: 0, y: 5 }, to: { x: 5, y: 5 } } };
+    expect(MarkOperationSchema.parse(path)).toHaveProperty('properties.connection', 'coordinate');
+    const straight = MarkOperationSchema.parse({
+      ...path,
+      kind: 'annotation',
+      properties: { ...path.properties, connection: 'straight' },
+    });
     expect(MarkOperationSchema.parse(JSON.parse(JSON.stringify(straight)))).toEqual(straight);
     expect(MarkOperationSchema.safeParse({ ...path, connection: 'invalid' }).success).toBe(false);
   });
 
   it('passes through intermediate categories for paths and includes both interval boundaries', () => {
     const source = plot([
-      { type: 'path', kind: 'annotation', from: { x: 'A', y: 5 }, to: { x: 'C', y: 5 } },
-      { type: 'point', kind: 'annotation', position: { x: 'B', y: 5 } },
-      { type: 'interval', kind: 'annotation', bounds: { x: { from: 'B', to: 'E' }, y: { from: 2, to: 8 } } },
+      { type: 'path', kind: 'annotation', properties: { from: { x: 'A', y: 5 }, to: { x: 'C', y: 5 } } },
+      { type: 'point', kind: 'annotation', properties: { position: { x: 'B', y: 5 } } },
+      {
+        type: 'interval',
+        kind: 'annotation',
+        properties: { bounds: { x: { from: 'B', to: 'E' }, y: { from: 2, to: 8 } } },
+      },
     ]);
     source.coordinate = { type: 'polar2D', angle: 'x', radius: 'y' };
     source.scales[0] = {
@@ -63,7 +71,11 @@ describe('independent annotations', () => {
     if (typeof region.shape === 'object' && region.shape.type === 'contour') {
       expect(region.shape.params?.points).toHaveLength(8);
     }
-    source.marks[0] = MarkOperationSchema.parse({ ...source.marks[0], connection: 'straight' });
+    source.marks[0] = MarkOperationSchema.parse({
+      ...source.marks[0],
+      kind: 'annotation',
+      properties: { ...source.marks[0].properties, connection: 'straight' },
+    });
     expect(
       paths(lowerPlot(PlotSchema.parse(source), { data: [] }, { textMeasurer: measureLabel }))[0].children,
     ).toHaveLength(2);
@@ -84,16 +96,24 @@ describe('independent annotations', () => {
     const mark = PointAnnotationSchema.parse({
       type: 'point',
       kind: 'annotation',
-      position: { u: { edge: 'end' }, v: 2 },
+      properties: { position: { u: { edge: 'end' }, v: 2 } },
     });
-    expect(nodes(lowerAnnotation(mark, frame, undefined)!)[0].position).toEqual([-20, 20]);
+    expect(nodes(lowerAnnotation(mark, frame, {})!)[0].position).toEqual([-20, 20]);
     const { projectMappedRoles: _project, ...unsupported } = frame;
-    expect(() => lowerAnnotation(mark, unsupported, undefined)).toThrow(/projection/i);
+    expect(() => lowerAnnotation(mark, unsupported, {})).toThrow(/projection/i);
   });
 
   it('does not let a reference constant expand the data domain unless opted in', () => {
-    const dataMark = { type: 'point', autoPadding: false, encoding: { x: { field: 'x' }, y: { field: 'y' } } };
-    const source = plot([dataMark, { ...point, position: { x: 5, y: 100 } }]);
+    const dataMark = {
+      type: 'point',
+      kind: 'data',
+      encodings: { position: { x: 'x', y: 'y' } },
+      properties: { autoPadding: false },
+    };
+    const source = plot([
+      dataMark,
+      { ...point, kind: 'annotation', properties: { ...point.properties, position: { x: 5, y: 100 } } },
+    ]);
     source.scales = [
       { type: 'linear', name: 'x', domainPadding: 0 },
       { type: 'linear', name: 'y', domainPadding: 0 },
@@ -105,12 +125,17 @@ describe('independent annotations', () => {
       ],
     };
     const without = nodes(lowerPlot(source, data, { textMeasurer: measureLabel }));
-    source.marks[1] = PointAnnotationSchema.parse({ ...point, position: { x: 5, y: 100 }, contributeToDomain: true });
+    source.marks[1] = PointAnnotationSchema.parse({
+      ...point,
+      contributeToDomain: true,
+      kind: 'annotation',
+      properties: { ...point.properties, position: { x: 5, y: 100 } },
+    });
     const withContribution = nodes(lowerPlot(source, data, { textMeasurer: measureLabel }));
     expect(without[1].position).not.toEqual(withContribution[1].position);
   });
   it('retains declaration identity without claiming row values or transform lineage', () => {
-    const source = plot([{ ...point, id: 'reference' }]);
+    const source = plot([{ ...point, id: 'reference', kind: 'annotation', properties: { ...point.properties } }]);
     const result = lowerPlotWithLineage(
       source,
       { data: [{ privateValue: 17 }] },
@@ -126,7 +151,7 @@ describe('independent annotations', () => {
   });
 
   it('draws once per actual facet without fabricating missing partitions', () => {
-    const source = plot([{ ...point, id: 'reference' }]);
+    const source = plot([{ ...point, id: 'reference', kind: 'annotation', properties: { ...point.properties } }]);
     delete source.coordinate;
     source.composition = {
       defaultView: 'main',
@@ -163,11 +188,13 @@ describe('independent annotations', () => {
       {
         type: 'path',
         kind: 'annotation',
-        from: { x: { edge: 'start' }, y: 5 },
-        to: { x: { edge: 'end' }, y: 5 },
-        stroke: 'red',
+        properties: { from: { x: { edge: 'start' }, y: 5 }, to: { x: { edge: 'end' }, y: 5 }, stroke: 'red' },
       },
-      { type: 'interval', kind: 'annotation', bounds: { x: { from: 2, to: 8 }, y: { from: 2, to: 8 } }, fill: 'blue' },
+      {
+        type: 'interval',
+        kind: 'annotation',
+        properties: { bounds: { x: { from: 2, to: 8 }, y: { from: 2, to: 8 } }, fill: 'blue' },
+      },
     ]);
     const output = lowerPlot(source, { data: [] }, { textMeasurer: measureLabel });
     expect(paths(output)).toHaveLength(1);
@@ -179,8 +206,12 @@ describe('independent annotations', () => {
 
   it('preserves polar interpolation and projects intervals as sectors', () => {
     const source = plot([
-      { type: 'path', kind: 'annotation', from: { x: 0, y: 5 }, to: { x: 5, y: 5 } },
-      { type: 'interval', kind: 'annotation', bounds: { x: { from: 0, to: 5 }, y: { from: 2, to: 8 } } },
+      { type: 'path', kind: 'annotation', properties: { from: { x: 0, y: 5 }, to: { x: 5, y: 5 } } },
+      {
+        type: 'interval',
+        kind: 'annotation',
+        properties: { bounds: { x: { from: 0, to: 5 }, y: { from: 2, to: 8 } } },
+      },
     ]);
     source.coordinate = { type: 'polar2D', angle: 'x', radius: 'y' };
     const output = lowerPlot(source, { data: [] }, { textMeasurer: measureLabel });
@@ -189,7 +220,9 @@ describe('independent annotations', () => {
   });
 
   it('uses explicit literal domain contributions without requiring rows', () => {
-    const source = plot([{ ...point, contributeToDomain: true }]);
+    const source = plot([
+      { ...point, contributeToDomain: true, kind: 'annotation', properties: { ...point.properties } },
+    ]);
     source.scales = [
       { type: 'linear', name: 'x', domainPadding: 0 },
       { type: 'linear', name: 'y', domainPadding: 0 },
@@ -232,7 +265,14 @@ describe('independent annotations', () => {
   it('maps point constants through the same coordinate frame as data marks', () => {
     const annotation = lowerPlot(plot(), { data: [] }, { textMeasurer: measureLabel });
     const data = lowerPlot(
-      plot([{ type: 'point', autoPadding: false, encoding: { x: { field: 'x' }, y: { field: 'y' } } }]),
+      plot([
+        {
+          type: 'point',
+          kind: 'data',
+          encodings: { position: { x: 'x', y: 'y' } },
+          properties: { autoPadding: false },
+        },
+      ]),
       { data: [{ x: 5, y: 5 }] },
       { textMeasurer: measureLabel },
     );
@@ -241,9 +281,13 @@ describe('independent annotations', () => {
 
   it('rejects missing and unknown coordinate roles', () => {
     for (const position of [{ x: 5 }, { x: 5, y: 5, z: 1 }]) {
-      expect(() => lowerPlot(plot([{ ...point, position }]), { data: [] }, { textMeasurer: measureLabel })).toThrow(
-        /role|position/i,
-      );
+      expect(() =>
+        lowerPlot(
+          plot([{ ...point, position, kind: 'annotation', properties: { ...point.properties } }]),
+          { data: [] },
+          { textMeasurer: measureLabel },
+        ),
+      ).toThrow(/role|position/i);
     }
   });
 });

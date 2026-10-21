@@ -36,8 +36,8 @@ const overlaySpec = {
     ],
   },
   marks: [
-    { type: 'point', encoding: { x: { field: 'day' }, y: { field: 'temperature' } } },
-    { type: 'point', coordinateView: 'rain', encoding: { x: { field: 'day' }, y: { field: 'rainfall' } } },
+    { type: 'point', kind: 'data', encodings: { position: { x: 'day', y: 'temperature' } } },
+    { type: 'point', coordinateView: 'rain', kind: 'data', encodings: { position: { x: 'day', y: 'rainfall' } } },
   ],
   guides: [
     { type: 'axis', dimension: 'y', coordinateView: 'temp', placement: { kind: 'side', side: 'left' } },
@@ -61,7 +61,7 @@ const facetSpec = {
       { kind: 'facet', id: 'region', view: 'root', column: { field: 'region', order: ['north', 'south'] } },
     ],
   },
-  marks: [{ type: 'point', encoding: { x: { field: 'day' }, y: { field: 'temperature' } } }],
+  marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'day', y: 'temperature' } } }],
 };
 
 const trackSpec = {
@@ -89,8 +89,8 @@ const trackSpec = {
     ],
   },
   marks: [
-    { type: 'point', coordinateView: 'temp', encoding: { x: { field: 'day' }, y: { field: 'temperature' } } },
-    { type: 'point', coordinateView: 'rain', encoding: { x: { field: 'day' }, y: { field: 'rainfall' } } },
+    { type: 'point', coordinateView: 'temp', kind: 'data', encodings: { position: { x: 'day', y: 'temperature' } } },
+    { type: 'point', coordinateView: 'rain', kind: 'data', encodings: { position: { x: 'day', y: 'rainfall' } } },
   ],
   guides: [{ type: 'axis', dimension: 'x', coordinateView: 'rain', grid: true }],
 };

@@ -12,9 +12,11 @@ describe('annotation rendering', () => {
         { type: 'linear', name: 'y', domain: [0, 10], domainPadding: 0 },
       ],
       marks: [
-        intervalAnnotation({ x: { from: 2, to: 4 }, y: { from: 2, to: 8 }, fill: 'blue' }),
-        pathAnnotation({ from: { x: { edge: 'start' }, y: 5 }, to: { x: { edge: 'end' }, y: 5 }, stroke: 'red' }),
-        pointAnnotation({ x: 6, y: 6, text: 'target' }),
+        intervalAnnotation({ properties: { bounds: { x: { from: 2, to: 4 }, y: { from: 2, to: 8 } }, fill: 'blue' } }),
+        pathAnnotation({
+          properties: { from: { x: { edge: 'start' }, y: 5 }, to: { x: { edge: 'end' }, y: 5 }, stroke: 'red' },
+        }),
+        pointAnnotation({ properties: { position: { x: 6, y: 6 }, text: 'target' } }),
       ],
     });
     const svg = renderPlot(source, { rows: [] });

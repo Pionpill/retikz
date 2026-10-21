@@ -18,7 +18,7 @@ export const ChannelDefinitionKind = {
 export type ChannelDefinitionKind = ValueOf<typeof ChannelDefinitionKind>;
 ```
 
-#### <ApiSourceLink label={"defineChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={418}>defineChannel</ApiSourceLink>
+#### <ApiSourceLink label={"defineChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={461}>defineChannel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -46,7 +46,7 @@ export declare const defineChannel: <T extends ChannelDefinition>(def: T) => T;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineNodeChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={436}>defineNodeChannel</ApiSourceLink>
+#### <ApiSourceLink label={"defineNodeChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={479}>defineNodeChannel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -76,7 +76,7 @@ export declare const defineNodeChannel: <T extends ChannelValue>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"definePathChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={446}>definePathChannel</ApiSourceLink>
+#### <ApiSourceLink label={"definePathChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={489}>definePathChannel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -106,7 +106,7 @@ export declare const definePathChannel: <T extends ChannelValue>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineScopeChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={426}>defineScopeChannel</ApiSourceLink>
+#### <ApiSourceLink label={"defineScopeChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={469}>defineScopeChannel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -136,7 +136,7 @@ export declare const defineScopeChannel: <T extends ChannelValue>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PositionChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={321}>PositionChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PositionChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={364}>PositionChannelDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -168,7 +168,7 @@ export type PositionChannelDefinition = BaseChannelDefinition<typeof ChannelDefi
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MarkChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={332}>MarkChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"MarkChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={375}>MarkChannelDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -201,7 +201,7 @@ export type MarkChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
 
 </DocTabs>
 
-#### <ApiSourceLink label={"NodeChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={344}>NodeChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"NodeChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={387}>NodeChannelDefinition</ApiSourceLink>
 
 Resolves channel values directly into existing core IRNode properties, including point properties such as `size`, `shape`, and `opacity`
 
@@ -242,7 +242,7 @@ export type NodeChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={388}>PathChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PathChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={431}>PathChannelDefinition</ApiSourceLink>
 
 Channels mapped directly to existing scalar core IRPath properties, such as strokeWidth and opacity. Channels such as `color`, whose target varies between node fill, path stroke, and path fill, remain MarkChannelDefinition.
 
@@ -283,7 +283,7 @@ export type PathChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScopeChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={366}>ScopeChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={409}>ScopeChannelDefinition</ApiSourceLink>
 
 Maps directly to existing core IRScope properties or `nodeDefault`, `pathDefault`, `labelDefault`, and `arrowDefault`. It represents shared layer defaults; per-datum properties use NodeChannelDefinition or PathChannelDefinition.
 
@@ -327,7 +327,7 @@ export type ScopeChannelDefinition<T extends ChannelValue = ChannelValue> = Base
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={405}>ChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={448}>ChannelDefinition</ApiSourceLink>
 
 **Common members**
 
@@ -434,7 +434,7 @@ export type ChannelDefinition<T extends ChannelValue = ChannelValue> =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={451}>AnyChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"AnyChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={494}>AnyChannelDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="position">
 
@@ -570,7 +570,7 @@ export type AnyChannelDefinition =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ChannelOutputSpace"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={208}>ChannelOutputSpace</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelOutputSpace"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={251}>ChannelOutputSpace</ApiSourceLink>
 
 A discriminated union for ranges and palettes that prevents invalid combinations such as a symbol palette on a numeric channel
 
@@ -699,7 +699,7 @@ export type ChannelOutputSpace =
 
 ## Resolution context and results
 
-#### <ApiSourceLink label={"ChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={245}>ChannelDefinitionResolveContext</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={288}>ChannelDefinitionResolveContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -746,7 +746,7 @@ export type ChannelDefinitionResolveContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"NodeChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={270}>NodeChannelDefinitionResolveContext</ApiSourceLink>
+#### <ApiSourceLink label={"NodeChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={313}>NodeChannelDefinitionResolveContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -778,7 +778,7 @@ export type NodeChannelDefinitionResolveContext = ChannelDefinitionResolveContex
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={273}>PathChannelDefinitionResolveContext</ApiSourceLink>
+#### <ApiSourceLink label={"PathChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={316}>PathChannelDefinitionResolveContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -810,7 +810,7 @@ export type PathChannelDefinitionResolveContext = ChannelDefinitionResolveContex
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScopeChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={276}>ScopeChannelDefinitionResolveContext</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={319}>ScopeChannelDefinitionResolveContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -914,7 +914,7 @@ export type ChannelValueResolver<T extends ChannelValue = ChannelValue> = (row: 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ChannelBindingResolver"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={307}>ChannelBindingResolver</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelBindingResolver"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={350}>ChannelBindingResolver</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -968,7 +968,7 @@ export type ResolveLabel = (row: ExternalRow) => string;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={197}>ChannelResolution</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={240}>ChannelResolution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -999,7 +999,7 @@ export type ChannelResolution<T> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MarkChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={282}>MarkChannelResolution</ApiSourceLink>
+#### <ApiSourceLink label={"MarkChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={325}>MarkChannelResolution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1032,7 +1032,7 @@ export type MarkChannelResolution<T extends ChannelValue = ChannelValue> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScopeChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={295}>ScopeChannelResolution</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={338}>ScopeChannelResolution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1063,7 +1063,7 @@ export type ScopeChannelResolution<T extends ChannelValue = ChannelValue> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScaleDescriptor"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={172}>ScaleDescriptor</ApiSourceLink>
+#### <ApiSourceLink label={"ScaleDescriptor"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={215}>ScaleDescriptor</ApiSourceLink>
 
 Internal lowering type, outside IR. Resolvers and legends share the same descriptor to keep legends consistent with rendering.
 
@@ -1341,7 +1341,7 @@ export type ScopeChannelDelivery = {
 
 ## Shared defaults
 
-#### <ApiSourceLink label={"SIZE_MAX_RADIUS"} path={"packages/viz/plot/src/providers/channel/features/node.ts"} startLine={52}>SIZE_MAX_RADIUS</ApiSourceLink>
+#### <ApiSourceLink label={"SIZE_MAX_RADIUS"} path={"packages/viz/plot/src/providers/channel/features/node.ts"} startLine={50}>SIZE_MAX_RADIUS</ApiSourceLink>
 
 ```ts
 export const SIZE_MAX_RADIUS = 20;
@@ -1349,7 +1349,7 @@ export const SIZE_MAX_RADIUS = 20;
 
 ## Definition factories
 
-#### <ApiSourceLink label={"ColorChannelDefinitionOptions"} path={"packages/viz/plot/src/providers/channel/features/paint.ts"} startLine={15}>ColorChannelDefinitionOptions</ApiSourceLink>
+#### <ApiSourceLink label={"ColorChannelDefinitionOptions"} path={"packages/viz/plot/src/providers/channel/features/paint.ts"} startLine={21}>ColorChannelDefinitionOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1357,11 +1357,11 @@ export const SIZE_MAX_RADIUS = 20;
 
 <ApiTable>
 
-| Member           | Type                                                        | Default | Description                                                         |
-| ---------------- | ----------------------------------------------------------- | ------- | ------------------------------------------------------------------- |
-| `channel`        | `string`                                                    | —       | Name of the color channel to create                                 |
-| `constantPaint?` | `boolean`                                                   | `false` | Whether constant branches may accept paint inputs other than colors |
-| `pick`           | `(mark: IRPlotMarkOperation) => IRPlotChannel \| undefined` | —       | Reads this channel's binding from a mark                            |
+| Member      | Type                                                        | Default | Description                                                       |
+| ----------- | ----------------------------------------------------------- | ------- | ----------------------------------------------------------------- |
+| `channel`   | `string`                                                    | —       | Name of the color channel to create                               |
+| `pick`      | `(mark: IRPlotMarkOperation) => IRPlotChannel \| undefined` | —       | Reads this channel's binding from a mark                          |
+| `property?` | `(mark: IRPlotMarkOperation) => PlotPaint \| undefined`     | —       | Fixed paint property used when no effective field encoding exists |
 
 </ApiTable>
 
@@ -1373,7 +1373,7 @@ export const SIZE_MAX_RADIUS = 20;
 export type ColorChannelDefinitionOptions = {
   channel: string;
   pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined;
-  constantPaint?: boolean;
+  property?: (mark: IRPlotMarkOperation) => PlotPaint | undefined;
 };
 ```
 
@@ -1381,13 +1381,13 @@ export type ColorChannelDefinitionOptions = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PlotPaint"} path={"packages/viz/plot/src/providers/channel/features/paint.ts"} startLine={28}>PlotPaint</ApiSourceLink>
+#### <ApiSourceLink label={"PlotPaint"} path={"packages/viz/plot/src/providers/channel/features/paint.ts"} startLine={31}>PlotPaint</ApiSourceLink>
 
 ```ts
 export type PlotPaint = string | IRPaint;
 ```
 
-#### <ApiSourceLink label={"makeColorChannelDefinition"} path={"packages/viz/plot/src/providers/channel/features/paint.ts"} startLine={48}>makeColorChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"makeColorChannelDefinition"} path={"packages/viz/plot/src/providers/channel/features/paint.ts"} startLine={39}>makeColorChannelDefinition</ApiSourceLink>
 
 Constants are returned directly; fields obtain colors through the channel scale registry. Continuous and temporal fields must explicitly reference a color scale.
 
@@ -1420,32 +1420,18 @@ export declare const makeColorChannelDefinition: (
 
 ## Fields and values
 
-#### <ApiSourceLink label={"FieldChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={149}>FieldChannel</ApiSourceLink>
+#### <ApiSourceLink label={"channelField"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={149}>channelField</ApiSourceLink>
 
-<DocTabs defaultValue="binding">
+<DocTabs defaultValue="members">
 
-<DocTab value="binding" label="Members · Encoding binding">
+<DocTab value="members" label="Members">
 
-<ApiTable>
+<ApiTable variant="parameters">
 
-| Member   | Type                                                                                                     | Default | Description                                                                                                                                                            |
-| -------- | -------------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `field?` | `string`                                                                                                 | —       | Path accessor into a data row bound to this channel (e.g. "month" or "user.age"); resolved against the externally-supplied dataset at lowering and must yield a scalar |
-| `scale?` | `string`                                                                                                 | —       | Scale name driving this channel (required for non-positional channels like color; positional x / y derive their scale from the coordinate system and omit this)        |
-| `value?` | `null \| string \| number \| false \| true \| ReadonlyArray<JsonValue> \| { [key: string]: JsonValue; }` | —       | —                                                                                                                                                                      |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="style" label="Members · Style value">
-
-<ApiTable>
-
-| Member  | Type                    | Default | Description                                                           |
-| ------- | ----------------------- | ------- | --------------------------------------------------------------------- |
-| `kind`  | `'field' \| 'constant'` | —       | Distinguishes a data field reference from a data-independent constant |
-| `value` | `unknown`               | —       | Field name or constant value, interpreted according to kind           |
+| Category   | Name      | Type / signature | Description |
+| ---------- | --------- | ---------------- | ----------- |
+| Parameters | `channel` | `IRPlotChannel`  | —           |
+| Returns    | —         | `string`         | —           |
 
 </ApiTable>
 
@@ -1454,19 +1440,69 @@ export declare const makeColorChannelDefinition: (
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type FieldChannel =
-  | IRPlotChannel
-  | {
-      kind: 'field' | 'constant';
-      value: unknown;
-    };
+export declare const channelField: (channel: IRPlotChannel) => string;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FieldCollector"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={159}>FieldCollector</ApiSourceLink>
+#### <ApiSourceLink label={"channelScale"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={152}>channelScale</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name      | Type / signature      | Description |
+| ---------- | --------- | --------------------- | ----------- |
+| Parameters | `channel` | `IRPlotChannel`       | —           |
+| Returns    | —         | `string \| undefined` | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const channelScale: (channel: IRPlotChannel) => string | undefined;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"markChannelEncoding"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={156}>markChannelEncoding</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name     | Type / signature             | Description |
+| ---------- | -------- | ---------------------------- | ----------- |
+| Parameters | `mark`   | `IRPlotMarkOperation`        | —           |
+|            | `target` | `string`                     | —           |
+| Returns    | —        | `IRPlotChannel \| undefined` | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const markChannelEncoding: (mark: IRPlotMarkOperation, target: string) => IRPlotChannel | undefined;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"FieldCollector"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={202}>FieldCollector</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1476,7 +1512,7 @@ export type FieldChannel =
 
 | Member       | Type                                              | Default | Description                                                                                   |
 | ------------ | ------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------- |
-| `addChannel` | `(channel?: FieldChannel) => void`                | —       | Adds a regular channel or mark style field reference; constants do not reference data sources |
+| `addChannel` | `(channel?: IRPlotChannel) => void`               | —       | Adds the field path referenced by an encoding; fixed properties do not enter field collection |
 | `addField`   | `(field?: string) => void`                        | —       | Adds a field name; undefined means there is no field reference at this position               |
 | `addFields`  | `(...fields: Array<string \| undefined>) => void` | —       | Adds multiple field names, skipping undefined entries                                         |
 
@@ -1490,7 +1526,7 @@ export type FieldChannel =
 export type FieldCollector = {
   addField: (field?: string) => void;
   addFields: (...fields: Array<string | undefined>) => void;
-  addChannel: (channel?: FieldChannel) => void;
+  addChannel: (channel?: IRPlotChannel) => void;
 };
 ```
 
@@ -1498,7 +1534,7 @@ export type FieldCollector = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"channelValue"} path={"packages/viz/plot/src/providers/channel/shared/field.ts"} startLine={17}>channelValue</ApiSourceLink>
+#### <ApiSourceLink label={"channelValue"} path={"packages/viz/plot/src/providers/channel/shared/field.ts"} startLine={18}>channelValue</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1506,11 +1542,11 @@ export type FieldCollector = {
 
 <ApiTable variant="parameters">
 
-| Category   | Name      | Type / signature             | Description                                                             |
-| ---------- | --------- | ---------------------------- | ----------------------------------------------------------------------- |
-| Parameters | `channel` | `IRPlotChannel \| undefined` | Field or constant binding; omitted when unbound                         |
-|            | `row`     | `ExternalRow`                | Data row used by the current mark                                       |
-| Returns    | —         | `unknown`                    | Constant or field value; undefined when the binding or field is missing |
+| Category   | Name      | Type / signature             | Description                                                 |
+| ---------- | --------- | ---------------------------- | ----------------------------------------------------------- |
+| Parameters | `channel` | `IRPlotChannel \| undefined` | Field binding; omitted when unbound                         |
+|            | `row`     | `ExternalRow`                | Data row used by the current mark                           |
+| Returns    | —         | `unknown`                    | Field value; undefined when the binding or field is missing |
 
 </ApiTable>
 
@@ -1526,9 +1562,9 @@ export declare const channelValue: (channel: IRPlotChannel | undefined, row: Ext
 
 </DocTabs>
 
-#### <ApiSourceLink label={"labelOf"} path={"packages/viz/plot/src/providers/channel/shared/field.ts"} startLine={53}>labelOf</ApiSourceLink>
+#### <ApiSourceLink label={"labelOf"} path={"packages/viz/plot/src/providers/channel/shared/field.ts"} startLine={52}>labelOf</ApiSourceLink>
 
-resolveLabel takes precedence, followed by the resolved field value, then the value constant
+resolveLabel takes precedence; reads the encoded field when present, otherwise uses fixed content
 
 <DocTabs defaultValue="members">
 
@@ -1536,13 +1572,15 @@ resolveLabel takes precedence, followed by the resolved field value, then the va
 
 <ApiTable variant="parameters">
 
-| Category   | Name            | Type / signature                                         | Description                                                                             |
-| ---------- | --------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Parameters | `content`       | `IRPlotTextChannel \| IRPlotMarkLabelContent`            | Field or constant text content with an optional display format                          |
-|            | `row`           | `ExternalRow`                                            | Data row used by the current mark                                                       |
-|            | `fieldType?`    | `DataFieldType`                                          | Field type; temporal fields use UTC date formatting, others use numeric formatting      |
-|            | `resolveLabel?` | `ResolveLabel`                                           | Runtime label callback taking precedence over declared content; omitted to read content |
-| Returns    | —               | `IRPlotMarkLabelContent['value'] \| string \| undefined` | Formatted text or constant content; undefined for an empty field or absent content      |
+| Category   | Name             | Type / signature                                | Description                                                                             |
+| ---------- | ---------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Parameters | `content`        | `IRPlotMarkLabelContent \| undefined`           | Fixed text content                                                                      |
+|            | `row`            | `ExternalRow`                                   | Data row used by the current mark                                                       |
+|            | `fieldType?`     | `DataFieldType`                                 | Field type; temporal fields use UTC date formatting, others use numeric formatting      |
+|            | `resolveLabel?`  | `ResolveLabel`                                  | Runtime label callback taking precedence over declared content; omitted to read content |
+|            | `field?`         | `string`                                        | Optional field encoding; invalid values do not fall back to fixed content               |
+|            | `displayFormat?` | `string`                                        | Display format for field values                                                         |
+| Returns    | —                | `IRPlotMarkLabelContent \| string \| undefined` | Formatted text or constant content; undefined for an empty field or absent content      |
 
 </ApiTable>
 
@@ -1552,18 +1590,20 @@ resolveLabel takes precedence, followed by the resolved field value, then the va
 
 ```ts
 export declare const labelOf: (
-  content: IRPlotTextChannel | IRPlotMarkLabelContent,
+  content: IRPlotMarkLabelContent | undefined,
   row: ExternalRow,
   fieldType?: DataFieldType,
   resolveLabel?: ResolveLabel,
-) => IRPlotMarkLabelContent['value'] | string | undefined;
+  field?: string,
+  displayFormat?: string,
+) => IRPlotMarkLabelContent | string | undefined;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MarkValueResolverOptions"} path={"packages/viz/plot/src/providers/channel/shared/common.ts"} startLine={29}>MarkValueResolverOptions</ApiSourceLink>
+#### <ApiSourceLink label={"MarkValueResolverOptions"} path={"packages/viz/plot/src/providers/channel/shared/common.ts"} startLine={26}>MarkValueResolverOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1571,13 +1611,12 @@ export declare const labelOf: (
 
 <ApiTable>
 
-| Member               | Type                                 | Default     | Description                                                                                                            |
-| -------------------- | ------------------------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `T` (Type parameter) | `—`                                  | —           | Visual value type returned after successfully parsing a raw field                                                      |
-| `channelName`        | `string`                             | —           | Property or channel name used in errors                                                                                |
-| `constants?`         | `'resolve' \| 'skip'`                | `'resolve'` | Whether constant variants also produce a resolver; explicitly skip them when promoting constants to default properties |
-| `expectedFieldType?` | `DataFieldType`                      | —           | Allowed field types for field variants; omitted to allow any field type                                                |
-| `parse`              | `(value: unknown) => T \| undefined` | —           | Converts a raw row field into a property value; undefined skips the property for that row                              |
+| Member               | Type                                 | Default | Description                                                                               |
+| -------------------- | ------------------------------------ | ------- | ----------------------------------------------------------------------------------------- |
+| `T` (Type parameter) | `—`                                  | —       | Visual value type returned after successfully parsing a raw field                         |
+| `channelName`        | `string`                             | —       | Property or channel name used in errors                                                   |
+| `expectedFieldType?` | `DataFieldType`                      | —       | Allowed field types for field variants; omitted to allow any field type                   |
+| `parse`              | `(value: unknown) => T \| undefined` | —       | Converts a raw row field into a property value; undefined skips the property for that row |
 
 </ApiTable>
 
@@ -1590,7 +1629,6 @@ export type MarkValueResolverOptions<T> = {
   channelName: string;
   expectedFieldType?: DataFieldType;
   parse: (value: unknown) => T | undefined;
-  constants?: 'resolve' | 'skip';
 };
 ```
 
@@ -1598,7 +1636,7 @@ export type MarkValueResolverOptions<T> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MarkValueResolution"} path={"packages/viz/plot/src/providers/channel/shared/common.ts"} startLine={18}>MarkValueResolution</ApiSourceLink>
+#### <ApiSourceLink label={"MarkValueResolution"} path={"packages/viz/plot/src/providers/channel/shared/common.ts"} startLine={15}>MarkValueResolution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1631,7 +1669,7 @@ export type MarkValueResolution<T> = ChannelResolution<T> & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"makeMarkValueResolver"} path={"packages/viz/plot/src/providers/channel/shared/common.ts"} startLine={52}>makeMarkValueResolver</ApiSourceLink>
+#### <ApiSourceLink label={"makeMarkValueResolver"} path={"packages/viz/plot/src/providers/channel/shared/common.ts"} startLine={44}>makeMarkValueResolver</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1639,14 +1677,14 @@ export type MarkValueResolution<T> = ChannelResolution<T> & {
 
 <ApiTable variant="parameters">
 
-| Category        | Name      | Type / signature                      | Description                                                                           |
-| --------------- | --------- | ------------------------------------- | ------------------------------------------------------------------------------------- |
-| Type parameters | `T`       | —                                     | Visual value type produced by a constant or field resolver                            |
-| Parameters      | `value`   | `MarkStyleValue<T> \| undefined`      | Field or constant style value; omitted to produce no resolution                       |
-|                 | `model`   | `DataTransformModel`                  | Complete field model for the current data                                             |
-|                 | `options` | `MarkValueResolverOptions<T>`         | Field type constraints, value parsing, and constant handling policy                   |
-| Returns         | —         | `MarkValueResolution<T> \| undefined` | Row resolver and field metadata; undefined when unbound or when constants are skipped |
-| Throws          | —         | —                                     | Known field type does not match expectedFieldType                                     |
+| Category        | Name       | Type / signature                      | Description                                             |
+| --------------- | ---------- | ------------------------------------- | ------------------------------------------------------- |
+| Type parameters | `T`        | —                                     | Visual value type produced by the field resolver        |
+| Parameters      | `encoding` | `IRPlotChannel \| undefined`          | Field encoding; omitted to produce no resolution        |
+|                 | `model`    | `DataTransformModel`                  | Complete field model for the current data               |
+|                 | `options`  | `MarkValueResolverOptions<T>`         | Field type constraints and value parsing policy         |
+| Returns         | —          | `MarkValueResolution<T> \| undefined` | Row resolver and field metadata; undefined when unbound |
+| Throws          | —          | —                                     | Known field type does not match expectedFieldType       |
 
 </ApiTable>
 
@@ -1656,7 +1694,7 @@ export type MarkValueResolution<T> = ChannelResolution<T> & {
 
 ```ts
 export declare const makeMarkValueResolver: <T>(
-  value: MarkStyleValue<T> | undefined,
+  encoding: IRPlotChannel | undefined,
   model: DataTransformModel,
   options: MarkValueResolverOptions<T>,
 ) => MarkValueResolution<T> | undefined;

@@ -21,12 +21,10 @@ export const BarSeriesPreview = (values: BarSeriesPreviewValues) => {
     <Layout viewBox={{ x: -16, y: -16, width: 432, height: 312 }}>
       <Plot data={sales} width={400} height={280} coordinate={isPolar ? 'polar2D' : undefined}>
         <IntervalMark
-          x="quarter"
-          y="revenue"
           group="product"
-          color="product"
           arrangement={values.mode}
           stackOffset={values.mode === 'stack' ? values.stackOffset : undefined}
+          encodings={{ color: 'product', position: { x: 'quarter', y: 'revenue' } }}
         />
         <PlotScale dimension="x" type="band" paddingInner={values.gap} paddingOuter={isPolar ? values.gap / 2 : 0.15} />
         <PlotScale dimension="y" type="linear" domainPadding={0} />

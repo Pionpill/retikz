@@ -41,7 +41,7 @@ export type AnchorOwner = {
 /** 图元下沉期间注册、解析并校验锚点引用的运行时接口 */
 export type AnchorRegistry = {
   /** 按常量、字段或生成规则计算当前数据目标的锚点标识 */
-  makeId: (spec: IRPlotAnchorId, row: ExternalRow, owner: AnchorOwner) => string;
+  makeId: (spec: IRPlotAnchorId, row: ExternalRow, owner: AnchorOwner, field?: string) => string;
   /** 登记锚点归属，并拒绝重复标识 */
   register: (id: string, owner: AnchorOwner) => void;
   /** 记录待校验的锚点引用及引用者 */

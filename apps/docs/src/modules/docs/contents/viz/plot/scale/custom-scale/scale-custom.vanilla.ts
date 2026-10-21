@@ -17,9 +17,9 @@ const spec: IRPlot = {
   marks: [
     {
       type: 'point',
-      size: { kind: 'constant', value: 7 },
-      color: { kind: 'field', value: 'tier', scale: 'tier-color' },
-      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+      kind: 'data',
+      encodings: { color: { field: 'tier', scale: 'tier-color' }, position: { x: 'x', y: 'y' } },
+      properties: { size: 7 },
     },
   ],
   guides: [

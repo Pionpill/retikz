@@ -21,6 +21,7 @@ import type {
   MarkLoweringContext,
   PolarCoordinateFrame,
 } from '../../../contract';
+import { markProperty } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import type {
   IRPlotRelationEndpointGlyph,
@@ -32,7 +33,6 @@ import type {
   IRPlotTargetRef,
 } from '../../../schemas';
 import {
-  MarkValueKind,
   PolarInterpolation,
   RelationGeometryKind,
   RelationMarkSchema,
@@ -50,6 +50,8 @@ import {
   channelValueOf,
   collectAnchorIdFields,
   collectMarkLabelFields,
+  collectPathChannelFields,
+  annotationValue,
   decorateDatum,
   DEFAULT_FILL,
   pathChannelKinds,
@@ -83,7 +85,7 @@ const relationGeneratedCoordinateId = (
   return ctx.plotId === undefined ? base : `${ctx.plotId}.${base}`;
 };
 
-const targetExtras = (ref: IRPlotTargetRef): Omit<IRNodeTarget, 'id'> => {
+const targetExtras = (ref: IRPlotTargetRef = { position: {} }): Omit<IRNodeTarget, 'id'> => {
   const boundary = ref.boundary === true ? 'shape' : ref.boundary === false ? undefined : ref.boundary;
   return {
     ...(ref.anchor !== undefined ? { anchor: ref.anchor } : {}),
@@ -95,9 +97,19 @@ const targetExtras = (ref: IRPlotTargetRef): Omit<IRNodeTarget, 'id'> => {
 const shiftedPoint = (position: [number, number], offset: [number, number] | undefined): [number, number] =>
   offset === undefined ? position : [position[0] + offset[0], position[1] + offset[1]];
 
+type TargetEncoding = NonNullable<IRPlotRelationMark['encodings']>['source'];
+
+const targetEncodingOf = (mark: IRPlotRelationMark, role: string): TargetEncoding => {
+  if (role === 'source' || role === 'target') return mark.encodings?.[role];
+  const [group, index] = role.split('.');
+  return group === 'via'
+    ? mark.encodings?.geometry?.via?.[Number(index)]
+    : mark.encodings?.geometry?.route?.[Number(index)]?.to;
+};
+
 const resolveProjectedTarget = (
   mark: IRPlotRelationMark,
-  ref: Extract<IRPlotTargetRef, { project: Record<string, string> }>,
+  ref: IRPlotTargetRef | undefined,
   row: ExternalRow,
   frame: CoordinateFrame,
   ctx: MarkLoweringContext | undefined,
@@ -105,31 +117,46 @@ const resolveProjectedTarget = (
   role: string,
   forceCoordinate: boolean,
 ): TargetResolution | null => {
-  const values: Array<unknown> = [];
-
-  for (const frameRole of frame.roles) {
-    const field = (ref.project as Partial<Record<string, string>>)[frameRole];
-    if (field === undefined) {
-      throw new RetikzPlotError(
-        `lowerPlots: relation projected ${role} target is missing field mapping for coordinate role "${frameRole}"`,
-      );
-    }
-
-    values.push(resolveFieldPath(row, field));
-  }
-
-  const position = frame.projectRoles(values);
+  const encoding = targetEncodingOf(mark, role);
+  const fixed = ref !== undefined && 'position' in ref ? ref.position : {};
+  const values = frame.roles.map(frameRole => {
+    const field = encoding?.position?.[frameRole];
+    return field === undefined ? annotationValue(fixed[frameRole]) : resolveFieldPath(row, field);
+  });
+  const hasFixedEdge = frame.roles.some(
+    frameRole => encoding?.position?.[frameRole] === undefined && typeof fixed[frameRole] === 'object',
+  );
+  const mapped = hasFixedEdge
+    ? frame.roles.map((frameRole, index) => {
+        const scale = frame.roleScales?.[frameRole];
+        const value = fixed[frameRole];
+        return encoding?.position?.[frameRole] === undefined && typeof value === 'object'
+          ? (scale?.range()[value.edge === 'start' ? 0 : 1] ?? NaN)
+          : (scale?.coordinate(values[index]) ?? NaN);
+      })
+    : undefined;
+  if (mapped !== undefined && !mapped.every(Number.isFinite)) return null;
+  const position = mapped === undefined ? frame.projectRoles(values) : (frame.projectMappedRoles?.(mapped) ?? null);
   if (position === null) return null;
 
-  const polarVertex = isPolarCoordinateFrame(frame) ? toPolarVertex(frame, values[0], values[1]) : null;
+  const polarVertex = isPolarCoordinateFrame(frame)
+    ? mapped === undefined
+      ? toPolarVertex(frame, values[0], values[1])
+      : { theta: mapped[0], radius: mapped[1] }
+    : null;
   const polarTarget = polarVertex === null ? {} : { polarVertex };
-  if (ref.anchorId !== undefined) {
+  if ((ref !== undefined && 'anchorId' in ref && ref.anchorId !== undefined) || encoding?.anchorId !== undefined) {
     if (ctx?.anchors === undefined) {
-      return { target: shiftedPoint(position, ref.offset), coordinates: [], ...polarTarget };
+      return { target: shiftedPoint(position, ref?.offset), coordinates: [], ...polarTarget };
     }
 
     const owner = targetOwner(mark, ctx, transformedIndex, role);
-    const id = ctx.anchors.makeId(ref.anchorId, row, owner);
+    const id = ctx.anchors.makeId(
+      ref !== undefined && 'anchorId' in ref ? (ref.anchorId ?? {}) : {},
+      row,
+      owner,
+      targetEncodingOf(mark, role)?.anchorId,
+    );
 
     return {
       target: { id, ...targetExtras(ref) },
@@ -151,20 +178,20 @@ const resolveProjectedTarget = (
     };
   }
 
-  if (ref.anchor !== undefined || ref.boundary !== undefined) {
+  if (ref?.anchor !== undefined || ref?.boundary !== undefined) {
     throw new RetikzPlotError(
       `lowerPlots: relation projected ${role} target requires anchorId when anchor or boundary is set`,
     );
   }
 
-  const shifted = shiftedPoint(position, ref.offset);
+  const shifted = shiftedPoint(position, ref?.offset);
 
   return { target: shifted, coordinates: [], position: shifted, ...polarTarget };
 };
 
 const resolveTarget = (
   mark: IRPlotRelationMark,
-  ref: IRPlotTargetRef,
+  ref: IRPlotTargetRef | undefined,
   row: ExternalRow,
   frame: CoordinateFrame,
   ctx: MarkLoweringContext | undefined,
@@ -172,9 +199,9 @@ const resolveTarget = (
   role: string,
   forceCoordinate = false,
 ): TargetResolution | null => {
-  if ('id' in ref) return { target: { id: ref.id, ...targetExtras(ref) }, coordinates: [] };
-  if ('project' in ref)
+  if (targetEncodingOf(mark, role)?.position !== undefined || (ref !== undefined && 'position' in ref))
     return resolveProjectedTarget(mark, ref, row, frame, ctx, transformedIndex, role, forceCoordinate);
+  if (ref !== undefined && 'id' in ref) return { target: { id: ref.id, ...targetExtras(ref) }, coordinates: [] };
   if (ctx?.anchors === undefined) {
     throw new RetikzPlotError(
       `lowerPlots: relation ${role} target uses generated anchorId but no AnchorRegistry is available`,
@@ -182,16 +209,21 @@ const resolveTarget = (
   }
 
   const owner = targetOwner(mark, ctx, transformedIndex, role);
-  const id = ctx.anchors.makeId(ref.anchorId, row, owner);
+  const id = ctx.anchors.makeId(
+    ref !== undefined && 'anchorId' in ref ? ref.anchorId : {},
+    row,
+    owner,
+    targetEncodingOf(mark, role)?.anchorId,
+  );
   ctx.anchors.reference(id, owner);
 
   return { target: { id, ...targetExtras(ref) }, coordinates: [] };
 };
 
-const anchorInputMissing = (ref: IRPlotTargetRef, row: ExternalRow): boolean => {
-  const anchorId = 'anchorId' in ref ? ref.anchorId : undefined;
+const anchorInputMissing = (ref: IRPlotTargetRef | undefined, row: ExternalRow, encoding?: TargetEncoding): boolean => {
+  const anchorId = ref !== undefined && 'anchorId' in ref ? ref.anchorId : undefined;
+  if (encoding?.anchorId !== undefined) return resolveFieldPath(row, encoding.anchorId) === undefined;
   if (anchorId === undefined) return false;
-  if (anchorId.field !== undefined) return resolveFieldPath(row, anchorId.field) === undefined;
   if (anchorId.template !== undefined) {
     for (const match of anchorId.template.matchAll(/\{field:([^}]+)\}/g)) {
       if (resolveFieldPath(row, match[1]) === undefined) return true;
@@ -210,10 +242,9 @@ type MarkStyleValue =
   | NonNullable<IRPlotRelationPrimitiveStyle[Exclude<keyof IRPlotRelationPrimitiveStyle, 'opacity'>]>
   | NonNullable<IRPlotRelationEndpointGlyph[Exclude<keyof IRPlotRelationEndpointGlyph, 'opacity'>]>;
 
-const resolveMarkValue = <T>(value: MarkStyleValue | undefined, row: ExternalRow): T | undefined => {
+const resolveMarkValue = <T>(value: MarkStyleValue | undefined, _row: ExternalRow): T | undefined => {
   if (value === undefined) return undefined;
-  if (value.kind === MarkValueKind.Constant) return value.value as T;
-  return resolveFieldPath(row, value.value) as T | undefined;
+  return value as T;
 };
 
 const endpointGlyphNode = (
@@ -246,53 +277,28 @@ const endpointGlyphNode = (
   return decorateDatum(node, row, transformedIndex, mark.type, provenance, undefined);
 };
 
-const relationStyleValue = (
-  style: IRPlotRelationPrimitiveStyle | undefined,
-  key: Exclude<keyof IRPlotRelationPrimitiveStyle, 'opacity'>,
-  row: ExternalRow,
-): unknown =>
-  resolveMarkValue(
-    (style as Partial<Record<keyof IRPlotRelationPrimitiveStyle, MarkStyleValue>> | undefined)?.[key],
-    row,
-  );
-
-const relationPrimitiveStyle = (
-  mark: IRPlotRelationMark,
-  row: ExternalRow,
-  colorOf: ((row: ExternalRow) => string | undefined) | undefined,
-  defaultColor: string | undefined,
-): Record<string, unknown> => {
-  const out: Record<string, unknown> = {};
-  const color = relationStyleValue(mark.style, 'color', row) ?? colorOf?.(row) ?? defaultColor;
-  if (color !== undefined) out.color = color;
-
-  for (const key of ['fill', 'stroke', 'strokeWidth', 'shadow', 'blendMode'] as const) {
-    const value = relationStyleValue(mark.style, key, row);
-    if (value !== undefined) out[key] = value;
-  }
-
-  if (mark.style?.opacity !== undefined) {
-    const opacity: Record<string, number> = {};
-    for (const key of ['overall', 'fill', 'stroke'] as const) {
-      const value = resolveMarkValue<number>(mark.style.opacity[key], row);
-      if (value !== undefined) opacity[key] = value;
-    }
-    out.opacity = opacity;
-  }
-  return out;
+const relationPrimitiveStyle = (row: ExternalRow, channels: MarkChannels): NonNullable<IRPath['style']> => {
+  const color = channelValueOf<string>(channels, 'color')?.(row) ?? channelDefaultOf<string>(channels, 'color');
+  const fill = channelValueOf<MarkPaint>(channels, 'fill')?.(row) ?? channelDefaultOf<MarkPaint>(channels, 'fill');
+  const stroke =
+    channelValueOf<MarkPaint>(channels, 'stroke')?.(row) ?? channelDefaultOf<MarkPaint>(channels, 'stroke');
+  return {
+    ...(color === undefined ? {} : { color }),
+    ...(fill === undefined ? {} : { fill }),
+    ...(stroke === undefined ? {} : { stroke }),
+  };
 };
 
-const resolveLabel = (label: IRPlotRelationStepLabel | undefined, row: ExternalRow): IRStepLabel | undefined => {
-  if (label === undefined) return undefined;
+const resolveLabel = (
+  label: IRPlotRelationStepLabel | undefined,
+  row: ExternalRow,
+  field?: string,
+): IRStepLabel | undefined => {
+  if (label === undefined && field === undefined) return undefined;
 
-  const text = label.text;
-  if (typeof text === 'object' && 'field' in text) {
-    const value = resolveFieldPath(row, text.field);
-    if (value === undefined) return undefined;
-    return withDefaultLabelSide({ ...label, text: String(value) });
-  }
-
-  return withDefaultLabelSide(label as IRStepLabel);
+  const value = field === undefined ? label?.text : resolveFieldPath(row, field);
+  if (value === undefined) return undefined;
+  return withDefaultLabelSide({ ...label, text: field === undefined ? (value as IRStepLabel['text']) : String(value) });
 };
 
 const applyStepLabel = (steps: Array<IRStep>, label: IRStepLabel | undefined): Array<IRStep> => {
@@ -330,8 +336,9 @@ const defaultRoute = (
  * @description 仅默认 path 且 source、target、全部 via 都由 coordinate projection 提供时继承；显式覆盖落到排除形态时 fail-loud
  */
 const relationInterpolationOf = (mark: IRPlotRelationMark, frame: CoordinateFrame): PolarInterpolation | undefined => {
-  const interpolation = mark.path?.interpolation;
-  const kind = mark.kind ?? RelationGeometryKind.Path;
+  const interpolation = (mark.properties.geometry.kind === 'path' ? mark.properties.geometry : undefined)
+    ?.interpolation;
+  const kind = mark.properties.geometry.kind;
   if (interpolation !== undefined && !isPolarCoordinateFrame(frame)) {
     throw new RetikzPlotError('lowerPlots: relation interpolation override is only supported under polar2D');
   }
@@ -340,16 +347,35 @@ const relationInterpolationOf = (mark: IRPlotRelationMark, frame: CoordinateFram
     throw new RetikzPlotError('lowerPlots: relation interpolation override is not supported for ribbon geometry');
   }
 
-  if (interpolation !== undefined && mark.path?.route !== undefined) {
+  if (
+    interpolation !== undefined &&
+    mark.properties.geometry.kind === 'path' &&
+    mark.properties.geometry.route !== undefined
+  ) {
     throw new RetikzPlotError('lowerPlots: relation interpolation override cannot be combined with an explicit route');
   }
 
-  if (interpolation !== undefined && mark.path?.routing !== undefined) {
+  if (
+    interpolation !== undefined &&
+    mark.properties.geometry.kind === 'path' &&
+    mark.properties.geometry.routing !== undefined
+  ) {
     throw new RetikzPlotError('lowerPlots: relation interpolation override cannot be combined with routing');
   }
 
-  const projectedRefs = [mark.source, ...(mark.path?.via ?? []), mark.target];
-  const hasOnlyProjectedRefs = projectedRefs.every(ref => 'project' in ref);
+  const projectedRefs = [
+    mark.properties.source,
+    ...((mark.properties.geometry.kind === 'path' ? mark.properties.geometry : undefined)?.via ?? []),
+    mark.properties.target,
+  ];
+  const hasOnlyProjectedRefs = projectedRefs.every(
+    (ref, index) =>
+      (ref !== undefined && 'position' in ref) ||
+      targetEncodingOf(
+        mark,
+        index === 0 ? 'source' : index === projectedRefs.length - 1 ? 'target' : `via.${index - 1}`,
+      )?.position !== undefined,
+  );
   if (interpolation !== undefined && !hasOnlyProjectedRefs) {
     throw new RetikzPlotError(
       'lowerPlots: relation interpolation override requires projected source, target, and via refs',
@@ -359,8 +385,8 @@ const relationInterpolationOf = (mark: IRPlotRelationMark, frame: CoordinateFram
   if (
     !isPolarCoordinateFrame(frame) ||
     kind !== RelationGeometryKind.Path ||
-    mark.path?.route !== undefined ||
-    mark.path?.routing !== undefined ||
+    mark.properties.geometry.route !== undefined ||
+    mark.properties.geometry.routing !== undefined ||
     !hasOnlyProjectedRefs
   ) {
     return undefined;
@@ -530,8 +556,8 @@ const routedSteps = (
   return orthogonalRoute(routing, targets, label);
 };
 
-const routeStepToIr = (step: IRPlotRelationRouteStep, target: IRTarget, row: ExternalRow): IRStep => {
-  const label = resolveLabel(step.label, row);
+const routeStepToIr = (step: IRPlotRelationRouteStep, target: IRTarget, row: ExternalRow, field?: string): IRStep => {
+  const label = resolveLabel(step.label, row, field);
 
   switch (step.kind) {
     case RelationRouteStepKind.Move:
@@ -595,30 +621,41 @@ const explicitRoute = (
   source: IRTarget,
   target: IRTarget,
 ): { steps: Array<IRStep>; coordinates: Array<IRCoordinate> } => {
-  const route = mark.path?.route ?? [];
+  const route = (mark.properties.geometry.kind === 'path' ? mark.properties.geometry : undefined)?.route ?? [];
   const coordinates: Array<IRCoordinate> = [];
   const steps: Array<IRStep> = [{ type: 'step', kind: RelationRouteStepKind.Move, to: source }];
 
   for (let index = 0; index < route.length; index += 1) {
     const step = route[index];
     const stepTargetRef = step.to;
-    if (stepTargetRef === undefined && index !== route.length - 1) {
+    const encodedTarget = mark.encodings?.geometry?.route?.[index]?.to;
+    if (stepTargetRef === undefined && encodedTarget === undefined && index !== route.length - 1) {
       throw new RetikzPlotError(
         `lowerPlots: relation route step ${index} requires to; only the last explicit route step may omit to and default to target`,
       );
     }
 
     const resolved =
-      stepTargetRef === undefined
+      stepTargetRef === undefined && encodedTarget === undefined
         ? { target, coordinates: [] }
         : resolveTarget(mark, stepTargetRef, row, frame, ctx, transformedIndex, `route.${index}`, true);
     if (resolved === null) return { steps: [], coordinates: [] };
 
     coordinates.push(...resolved.coordinates);
-    steps.push(routeStepToIr(step, resolved.target, row));
+    steps.push(routeStepToIr(step, resolved.target, row, mark.encodings?.geometry?.route?.[index]?.label?.text));
   }
 
-  return { steps: applyStepLabel(steps, resolveLabel(mark.path?.label, row)), coordinates };
+  return {
+    steps: applyStepLabel(
+      steps,
+      resolveLabel(
+        (mark.properties.geometry.kind === 'path' ? mark.properties.geometry : undefined)?.label,
+        row,
+        mark.encodings?.geometry?.label?.text,
+      ),
+    ),
+    coordinates,
+  };
 };
 
 /** 把 relation mark 下沉为 path 或 ribbon core IR */
@@ -638,22 +675,25 @@ export const lowerRelation = (
 
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex += 1) {
     const row = rows[transformedIndex];
-    if (anchorInputMissing(mark.source, row) || anchorInputMissing(mark.target, row)) continue;
+    if (
+      anchorInputMissing(mark.properties.source, row, mark.encodings?.source) ||
+      anchorInputMissing(mark.properties.target, row, mark.encodings?.target)
+    )
+      continue;
 
-    const source = resolveTarget(mark, mark.source, row, frame, ctx, transformedIndex, 'source');
-    const target = resolveTarget(mark, mark.target, row, frame, ctx, transformedIndex, 'target');
+    const source = resolveTarget(mark, mark.properties.source, row, frame, ctx, transformedIndex, 'source');
+    const target = resolveTarget(mark, mark.properties.target, row, frame, ctx, transformedIndex, 'target');
     if (source === null || target === null) continue;
 
     const coordinates: Array<IRCoordinate> = [...source.coordinates, ...target.coordinates];
-    const style = relationPrimitiveStyle(mark, row, colorOf, defaultColor);
-    const zIndex = resolveMarkValue<number>(mark.style?.zIndex, row);
-    if ((mark.kind ?? RelationGeometryKind.Path) === RelationGeometryKind.Ribbon) {
-      const width = resolveMarkValue<number>(mark.ribbon?.width, row);
+    const style = relationPrimitiveStyle(row, channels);
+    const zIndex = markProperty<number>(mark, 'zIndex');
+    if (mark.properties.geometry.kind === RelationGeometryKind.Ribbon) {
+      const width = channelValueOf<number>(channels, 'geometry.width')?.(row);
       if (width === undefined) continue;
-
-      const endWidth = resolveMarkValue<number>(mark.ribbon?.endWidth, row);
-      const { interpolation, ...ribbonOptions } = mark.ribbon?.options ?? {};
-      const label = resolveGeometryMarkLabels(mark.label, row, labelOf);
+      const endWidth = channelValueOf<number>(channels, 'geometry.endWidth')?.(row);
+      const { interpolation, ...ribbonOptions } = mark.properties.geometry.options ?? {};
+      const label = resolveGeometryMarkLabels(mark.properties.label, row, labelOf, mark.encodings?.label);
       const ribbon: IRPath = applyPathChannelDeliveries(
         {
           type: 'path',
@@ -684,7 +724,7 @@ export const lowerRelation = (
     }
 
     let steps: Array<IRStep>;
-    if (mark.path?.route !== undefined) {
+    if (mark.properties.geometry.route !== undefined) {
       const routed = explicitRoute(mark, row, frame, ctx, transformedIndex, source.target, target.target);
       if (routed.steps.length === 0) continue;
 
@@ -693,10 +733,14 @@ export const lowerRelation = (
     } else {
       const viaResolutions: Array<TargetResolution> = [];
 
-      for (let index = 0; index < (mark.path?.via?.length ?? 0); index += 1) {
+      for (
+        let index = 0;
+        index < Math.max(mark.properties.geometry.via?.length ?? 0, mark.encodings?.geometry?.via?.length ?? 0);
+        index += 1
+      ) {
         const via = resolveTarget(
           mark,
-          mark.path?.via?.[index] as IRPlotTargetRef,
+          mark.properties.geometry.via?.[index],
           row,
           frame,
           ctx,
@@ -711,17 +755,17 @@ export const lowerRelation = (
       }
 
       const viaTargets = viaResolutions.map(resolution => resolution.target);
-      const pathLabel = resolveLabel(mark.path?.label, row);
+      const pathLabel = resolveLabel(mark.properties.geometry.label, row, mark.encodings?.geometry?.label?.text);
       steps =
         relationInterpolation === PolarInterpolation.Polar && isPolarCoordinateFrame(frame)
           ? interpolatedPolarRoute(frame, [source, ...viaResolutions, target], pathLabel)
-          : mark.path?.routing === undefined
+          : mark.properties.geometry.routing === undefined
             ? defaultRoute(source.target, viaTargets, target.target, pathLabel)
-            : routedSteps(mark.path.routing, source.target, viaTargets, target.target, pathLabel);
+            : routedSteps(mark.properties.geometry.routing, source.target, viaTargets, target.target, pathLabel);
     }
 
-    const pathOptions = (mark.path?.options ?? {}) as Partial<IRPath>;
-    const label = resolveGeometryMarkLabels(mark.label, row, labelOf);
+    const pathOptions = (mark.properties.geometry.options ?? {}) as Partial<IRPath>;
+    const label = resolveGeometryMarkLabels(mark.properties.label, row, labelOf, mark.encodings?.label);
     const path: IRPath = applyPathChannelDeliveries(
       {
         type: 'path',
@@ -737,15 +781,31 @@ export const lowerRelation = (
     );
     children.push(...coordinates, path);
     const sharedColor = colorOf?.(row) ?? defaultColor;
-    if (mark.endpoints?.source !== undefined && source.position !== undefined) {
+    if (mark.properties.endpoints?.source !== undefined && source.position !== undefined) {
       endpointChildren.push(
-        endpointGlyphNode(mark.endpoints.source, source.position, row, transformedIndex, mark, sharedColor, ctx),
+        endpointGlyphNode(
+          mark.properties.endpoints.source,
+          source.position,
+          row,
+          transformedIndex,
+          mark,
+          sharedColor,
+          ctx,
+        ),
       );
     }
 
-    if (mark.endpoints?.target !== undefined && target.position !== undefined) {
+    if (mark.properties.endpoints?.target !== undefined && target.position !== undefined) {
       endpointChildren.push(
-        endpointGlyphNode(mark.endpoints.target, target.position, row, transformedIndex, mark, sharedColor, ctx),
+        endpointGlyphNode(
+          mark.properties.endpoints.target,
+          target.position,
+          row,
+          transformedIndex,
+          mark,
+          sharedColor,
+          ctx,
+        ),
       );
     }
   }
@@ -755,20 +815,14 @@ export const lowerRelation = (
   return attachMarkLayer({ type: 'scope', children: [...children, ...endpointChildren] }, mark, ctx);
 };
 
-const collectTargetFields = (ref: IRPlotTargetRef, fields: FieldCollector): void => {
-  const anchorId = 'anchorId' in ref ? ref.anchorId : undefined;
-  collectAnchorIdFields(anchorId, fields);
-  if ('project' in ref) Object.values(ref.project).forEach(field => fields.addField(field));
-};
-
-const collectLabelFields = (label: IRPlotRelationStepLabel | undefined, fields: FieldCollector): void => {
-  if (label !== undefined && typeof label.text === 'object' && 'field' in label.text) fields.addField(label.text.field);
-};
-
-const collectRelationStyleFields = (style: IRPlotRelationPrimitiveStyle | undefined, fields: FieldCollector): void => {
-  const { opacity, ...visual } = style ?? {};
-  for (const value of Object.values(visual)) fields.addChannel(value);
-  for (const value of Object.values(opacity ?? {})) fields.addChannel(value);
+const collectTargetFields = (
+  ref: IRPlotTargetRef | undefined,
+  encoding: TargetEncoding,
+  fields: FieldCollector,
+): void => {
+  collectAnchorIdFields(ref !== undefined && 'anchorId' in ref ? ref.anchorId : undefined, fields);
+  fields.addField(encoding?.anchorId);
+  for (const field of Object.values(encoding?.position ?? {})) fields.addField(field);
 };
 
 /** 内置 relation mark definition */
@@ -777,36 +831,55 @@ export const relationMarkDefinition: MarkDefinition<IRPlotRelationMark> = {
   domainPadding: (mark, rows, roles) =>
     rows.flatMap(row =>
       (['source', 'target'] as const).flatMap(side => {
-        const glyph = mark.endpoints?.[side];
+        const glyph = mark.properties.endpoints?.[side];
         if (glyph === undefined) return [];
 
-        const target = mark[side];
-        if (!('project' in target)) throw new RetikzPlotError('Relation domain padding requires projected endpoints');
+        const target = mark.properties[side];
+        const encoding = mark.encodings?.[side];
+        if (encoding?.position === undefined && !(target !== undefined && 'position' in target))
+          throw new RetikzPlotError('Relation domain padding requires projected endpoints');
 
         const radius = resolveMarkValue<number>(glyph.size, row) ?? POINT_DEFAULT_RADIUS;
 
         return [
-          { values: roles.map(role => resolveFieldPath(row, target.project[role])), extent: roles.map(() => radius) },
+          {
+            values: roles.map(role =>
+              annotationValue(
+                target !== undefined && 'position' in target ? target.position[role] : undefined,
+                encoding?.position?.[role],
+                row,
+              ),
+            ),
+            extent: roles.map(() => radius),
+          },
         ];
       }),
     ),
   channelKinds: pathChannelKinds,
   collectFields: (mark, fields) => {
-    collectTargetFields(mark.source, fields);
-    collectTargetFields(mark.target, fields);
-    collectRelationStyleFields(mark.style, fields);
-    mark.path?.via?.forEach(ref => collectTargetFields(ref, fields));
-    mark.path?.route?.forEach(step => {
-      if (step.to !== undefined) collectTargetFields(step.to, fields);
-      collectLabelFields(step.label, fields);
-    });
-    collectLabelFields(mark.path?.label, fields);
-    collectMarkLabelFields(mark.label, fields);
-    fields.addChannel(mark.ribbon?.width);
-    fields.addChannel(mark.ribbon?.endWidth);
-    fields.addChannel(mark.encoding?.color);
-
-    for (const channel of Object.values(mark.encoding?.channels ?? {})) fields.addChannel(channel);
+    collectTargetFields(mark.properties.source, mark.encodings?.source, fields);
+    collectTargetFields(mark.properties.target, mark.encodings?.target, fields);
+    collectPathChannelFields(mark, fields);
+    const geometry = mark.properties.geometry;
+    if (geometry.kind === 'path') {
+      for (
+        let index = 0;
+        index < Math.max(geometry.via?.length ?? 0, mark.encodings?.geometry?.via?.length ?? 0);
+        index++
+      )
+        collectTargetFields(geometry.via?.[index], mark.encodings?.geometry?.via?.[index], fields);
+      geometry.route?.forEach((step, index) => {
+        collectTargetFields(step.to, mark.encodings?.geometry?.route?.[index]?.to, fields);
+        fields.addField(mark.encodings?.geometry?.route?.[index]?.label?.text);
+      });
+      fields.addField(mark.encodings?.geometry?.label?.text);
+    }
+    collectMarkLabelFields(mark.encodings?.label, fields);
+    fields.addChannel(mark.encodings?.geometry?.width);
+    fields.addChannel(mark.encodings?.geometry?.endWidth);
+    fields.addChannel(mark.encodings?.color);
+    fields.addChannel(mark.encodings?.fill);
+    fields.addChannel(mark.encodings?.stroke);
   },
   lower: lowerRelation,
 };

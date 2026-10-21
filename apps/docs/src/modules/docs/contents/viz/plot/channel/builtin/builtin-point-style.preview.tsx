@@ -41,28 +41,16 @@ export const BuiltinPointStylePreview = (
       <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
       <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
       <PointMark
-        x="x"
-        y="y"
-        color={usesColor ? { kind: 'constant', value: values.paint } : undefined}
-        fill={
-          usesFill
-            ? { kind: 'constant', value: values.paint }
-            : usesStroke
-              ? { kind: 'constant', value: '#dbeafe' }
-              : undefined
-        }
-        stroke={
-          usesStroke
-            ? { kind: 'constant', value: values.paint }
-            : usesFill
-              ? { kind: 'constant', value: '#1e3a8a' }
-              : undefined
-        }
-        strokeWidth={values.strokeWidth}
-        opacity={{ overall: values.opacity, fill: values.fillOpacity, stroke: values.strokeOpacity }}
-
-        size={values.size}
-        shape={{ kind: 'constant', value: values.shape }}
+        encodings={{ position: { x: 'x', y: 'y' } }}
+        properties={{
+          color: usesColor ? values.paint : undefined,
+          fill: usesFill ? values.paint : usesStroke ? '#dbeafe' : undefined,
+          stroke: usesStroke ? values.paint : usesFill ? '#1e3a8a' : undefined,
+          strokeWidth: values.strokeWidth,
+          opacity: { overall: values.opacity, fill: values.fillOpacity, stroke: values.strokeOpacity },
+          size: values.size,
+          shape: values.shape,
+        }}
       />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />

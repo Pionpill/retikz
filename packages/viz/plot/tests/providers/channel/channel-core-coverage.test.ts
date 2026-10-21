@@ -80,14 +80,9 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'point',
-          strokeWidth: { kind: 'constant', value: 2 },
-          zIndex: { kind: 'constant', value: 3 },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
-          opacity: {
-            overall: { kind: 'constant', value: 0.7 },
-            fill: { kind: 'constant', value: 0.5 },
-            stroke: { kind: 'constant', value: 0.4 },
-          },
+          kind: 'data',
+          encodings: { position: { x: 'x', y: 'y' } },
+          properties: { strokeWidth: 2, zIndex: 3, opacity: { overall: 0.7, fill: 0.5, stroke: 0.4 } },
         },
       ],
     });
@@ -117,12 +112,15 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'path',
-          roundedCorners: { kind: 'constant', value: 4 },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
-          strokeWidth: { kind: 'constant', value: 3 },
-          lineCap: { kind: 'constant', value: 'round' },
-          lineJoin: { kind: 'constant', value: 'bevel' },
-          opacity: { overall: { kind: 'constant', value: 0.6 } },
+          kind: 'data',
+          encodings: { position: { x: 'x', y: 'y' } },
+          properties: {
+            roundedCorners: 4,
+            strokeWidth: 3,
+            lineCap: 'round',
+            lineJoin: 'bevel',
+            opacity: { overall: 0.6 },
+          },
         },
       ],
     });
@@ -154,9 +152,9 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'interval',
-          strokeWidth: { kind: 'field', value: 'weight' },
-          encoding: { x: { field: 'cat' }, y: { field: 'value' } },
-          opacity: { fill: { kind: 'field', value: 'alpha' }, overall: { kind: 'constant', value: 0.9 } },
+          kind: 'data',
+          encodings: { strokeWidth: 'weight', position: { x: 'cat', y: 'value' }, opacity: { fill: 'alpha' } },
+          properties: { opacity: { overall: 0.9 } },
         },
       ],
     });
@@ -191,18 +189,20 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'interval',
-          label: {
-            content: { field: 'label' },
-            position: 'top',
-            distance: 6,
-            textColor: '#334155',
-            opacity: 0.75,
-            font: { family: 'serif', size: 12, weight: 'bold' },
-            rotate: 'tangent',
-            keepUpright: true,
-            pin: { stroke: '#64748b', strokeWidth: 1.5, dashPattern: [2, 2] },
+          kind: 'data',
+          encodings: { label: { content: 'label' }, position: { x: 'cat', y: 'value' } },
+          properties: {
+            label: {
+              position: 'top',
+              distance: 6,
+              textColor: '#334155',
+              opacity: 0.75,
+              font: { family: 'serif', size: 12, weight: 'bold' },
+              rotate: 'tangent',
+              keepUpright: true,
+              pin: { stroke: '#64748b', strokeWidth: 1.5, dashPattern: [2, 2] },
+            },
           },
-          encoding: { x: { field: 'cat' }, y: { field: 'value' } },
         },
       ],
     });
@@ -232,11 +232,7 @@ describe('channel core coverage (contract)', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        {
-          type: 'point',
-          textColor: { kind: 'field', value: 'tone' },
-          encoding: { x: { field: 'x' }, y: { field: 'y' }, text: { field: 'label' } },
-        },
+        { type: 'point', kind: 'data', encodings: { textColor: 'tone', text: 'label', position: { x: 'x', y: 'y' } } },
       ],
     });
     const nodes = collectNodes(
@@ -264,17 +260,19 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'point',
-          align: { kind: 'field', value: 'align' },
-          lineHeight: { kind: 'constant', value: 18 },
-          maxTextWidth: { kind: 'constant', value: 72 },
-          cornerRadius: { kind: 'constant', value: 4 },
-          scale: { kind: 'constant', value: { default: 1.1, x: 1.2, y: 0.9 } },
-          minimumSize: { kind: 'constant', value: { default: 14, width: 16 } },
-          padding: { kind: 'constant', value: { x: 3, y: 5 } },
-          margin: { kind: 'constant', value: { default: 1, right: 2 } },
-          shadow: { kind: 'constant', value: 'md' },
-          blendMode: { kind: 'constant', value: 'multiply' },
-          encoding: { x: { field: 'x' }, y: { field: 'y' }, text: { field: 'label' } },
+          kind: 'data',
+          encodings: { align: 'align', text: 'label', position: { x: 'x', y: 'y' } },
+          properties: {
+            lineHeight: 18,
+            maxTextWidth: 72,
+            cornerRadius: 4,
+            scale: { default: 1.1, x: 1.2, y: 0.9 },
+            minimumSize: { default: 14, width: 16 },
+            padding: { x: 3, y: 5 },
+            margin: { default: 1, right: 2 },
+            shadow: 'md',
+            blendMode: 'multiply',
+          },
         },
       ],
     });
@@ -309,8 +307,8 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'group', scale: 'tone' },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          kind: 'data',
+          encodings: { color: { field: 'group', scale: 'tone' }, position: { x: 'x', y: 'y' } },
         },
       ],
     });
@@ -344,14 +342,16 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'point',
-          dashed: { kind: 'field', value: 'dashed' },
-          dotted: { kind: 'constant', value: false },
-          dashPattern: { kind: 'constant', value: [6, 2] },
-          font: { kind: 'constant', value: { family: 'serif', size: 14, weight: 'bold' } },
-          boundary: { kind: 'constant', value: 'shape' },
-          shape: { kind: 'constant', value: { type: 'rectangle', params: { cornerRadius: 8 } } },
-          shadow: { kind: 'constant', value: { preset: 'sm', offsetX: 2, offsetY: 3 } },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          kind: 'data',
+          encodings: { dashed: 'dashed', position: { x: 'x', y: 'y' } },
+          properties: {
+            dotted: false,
+            dashPattern: [6, 2],
+            font: { family: 'serif', size: 14, weight: 'bold' },
+            boundary: 'shape',
+            shape: { type: 'rectangle', params: { cornerRadius: 8 } },
+            shadow: { preset: 'sm', offsetX: 2, offsetY: 3 },
+          },
         },
       ],
     });
@@ -383,16 +383,19 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'path',
-          zIndex: { kind: 'constant', value: 7 },
-          rotate: { kind: 'constant', value: 15 },
-          scale: { kind: 'constant', value: { x: 1.2, y: 0.8 } },
-          thickness: { kind: 'constant', value: 'thick' },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
-          fillRule: { kind: 'constant', value: 'evenodd' },
-          dashPattern: { kind: 'constant', value: [4, 2] },
-          shadow: { kind: 'constant', value: { preset: 'md', offsetX: 1, offsetY: 2 } },
-          blendMode: { kind: 'constant', value: 'screen' },
-          opacity: { stroke: { kind: 'constant', value: 0.45 } },
+          kind: 'data',
+          encodings: { position: { x: 'x', y: 'y' } },
+          properties: {
+            zIndex: 7,
+            rotate: 15,
+            scale: { x: 1.2, y: 0.8 },
+            thickness: 'thick',
+            fillRule: 'evenodd',
+            dashPattern: [4, 2],
+            shadow: { preset: 'md', offsetX: 1, offsetY: 2 },
+            blendMode: 'screen',
+            opacity: { stroke: 0.45 },
+          },
         },
       ],
     });

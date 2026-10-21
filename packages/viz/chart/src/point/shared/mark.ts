@@ -8,29 +8,17 @@ import type { ChartMarkResolveContext } from '../../_chart/contract/mark';
 import { pointFieldMappingOf, requiredFieldOf } from './encoding';
 import type { IRPointEncoding, IRPointProperties } from './schema';
 
-/** 将 Chart 字段 / 常量 slot 转为 Plot mark style value */
-export const markValueOf = (encodings: JsonObject, properties: JsonObject, name: string): JsonObject | undefined => {
-  if (Object.hasOwn(encodings, name)) {
-    const mapping = pointFieldMappingOf(encodings[name], ['recipe', 'encodings', name]);
-    return { kind: 'field', value: mapping.field, ...(mapping.scale === undefined ? {} : { scale: mapping.scale }) };
-  }
-
-  if (Object.hasOwn(properties, name)) return { kind: 'constant', value: properties[name] };
-
-  return undefined;
+/** 将 Chart 字段映射下沉为 Plot 字段简写或具名尺度绑定 */
+export const markEncodingOf = (encodings: JsonObject, name: string): string | JsonObject | undefined => {
+  if (!Object.hasOwn(encodings, name)) return undefined;
+  const mapping = pointFieldMappingOf(encodings[name], ['recipe', 'encodings', name]);
+  return mapping.scale === undefined ? mapping.field : { field: mapping.field, scale: mapping.scale };
 };
 
-/** 将常量 opacity 成员与 overall 字段映射下沉到 Plot */
-export const markOpacityOf = (encodings: JsonObject, properties: JsonObject): JsonObject | undefined => {
+/** 将 Chart 固定透明度统一为 Plot 的独立因子 */
+export const markOpacityOf = (properties: JsonObject): JsonObject | undefined => {
   const opacity = properties.opacity as IRGraphicStyle['opacity'];
-  const factors = typeof opacity === 'number' ? { overall: opacity } : opacity;
-  const result: JsonObject = {};
-  for (const name of ['overall', 'fill', 'stroke'] as const) {
-    if (factors?.[name] !== undefined) result[name] = { kind: 'constant', value: factors[name] };
-  }
-  const overall = markValueOf(encodings, {}, 'opacity');
-  if (overall !== undefined) result.overall = overall;
-  return Object.keys(result).length === 0 ? undefined : result;
+  return typeof opacity === 'number' ? { overall: opacity } : opacity;
 };
 
 /** 保留非样式 slot 的覆盖规则，同时逐成员继承 opacity */
@@ -42,7 +30,7 @@ export const mergeMarkProperties = <T extends { opacity?: IRGraphicStyle['opacit
 });
 
 const copyConstantProperty = (target: JsonObject, properties: JsonObject, name: string): void => {
-  if (Object.hasOwn(properties, name)) target[name] = { kind: 'constant', value: properties[name] };
+  if (Object.hasOwn(properties, name)) target[name] = properties[name];
 };
 
 const copyRawProperty = (target: JsonObject, properties: JsonObject, name: string): void => {
@@ -101,24 +89,22 @@ export const resolvePointMark = (
 ): IRPlotMarkOperation => {
   const x = requiredFieldOf(encodings, 'x', ['recipe', 'encodings', 'x']);
   const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
-  const mark: JsonObject = {
-    type: BuiltinPlotMark.Point,
-    encoding: { x: { field: x }, y: { field: y } },
-  };
+  const bindings: JsonObject = { position: { x, y } };
+  const fixed: JsonObject = {};
+  const mark: JsonObject = { type: BuiltinPlotMark.Point, kind: 'data', encodings: bindings, properties: fixed };
   if (options.coordinateView !== undefined) mark.coordinateView = options.coordinateView;
-
   for (const name of pointVisualSlots) {
     if (name === 'opacity') continue;
-    const value = markValueOf(encodings, properties, name);
-    if (value !== undefined) mark[name] = value;
+    const binding = markEncodingOf(encodings, name);
+    if (binding !== undefined) bindings[name] = binding;
+    if (Object.hasOwn(properties, name)) fixed[name] = properties[name];
   }
-
-  const opacity = markOpacityOf(encodings, properties);
-  if (opacity !== undefined) mark.opacity = opacity;
-
-  for (const name of pointConstantPropertySlots) copyConstantProperty(mark, properties, name);
-
-  for (const name of pointRawPropertySlots) copyRawProperty(mark, properties, name);
+  const opacity = markOpacityOf(properties);
+  if (opacity !== undefined) fixed.opacity = opacity;
+  const overall = markEncodingOf(encodings, 'opacity');
+  if (overall !== undefined) bindings.opacity = { overall };
+  for (const name of pointConstantPropertySlots) copyConstantProperty(fixed, properties, name);
+  for (const name of pointRawPropertySlots) copyRawProperty(fixed, properties, name);
 
   return PointMarkSchema.parse(mark);
 };

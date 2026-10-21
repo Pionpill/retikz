@@ -78,7 +78,7 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
         { type: 'band', name: 'cat' },
         { type: 'linear', name: 'val', domainPadding: 0 },
       ],
-      marks: [{ type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'amount' } } }],
+      marks: [{ type: 'interval', kind: 'data', encodings: { position: { x: 'month', y: 'amount' } } }],
     });
 
   it('rose_each_row_one_sector_node', () => {
@@ -171,7 +171,8 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
       marks: [
         {
           type: 'interval',
-          encoding: { x: { field: 'month' }, y: { field: 'amount' }, color: { field: 'month', scale: 'col' } },
+          kind: 'data',
+          encodings: { color: { field: 'month', scale: 'col' }, position: { x: 'month', y: 'amount' } },
         },
       ],
     });
@@ -196,9 +197,9 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
       marks: [
         {
           type: 'interval',
-          cornerRadius: { kind: 'constant', value: 8 },
-          padAngle: 6,
-          encoding: { x: { field: 'month' }, y: { field: 'amount' } },
+          kind: 'data',
+          encodings: { position: { x: 'month', y: 'amount' } },
+          properties: { cornerRadius: 8, padAngle: 6 },
         },
       ],
     });
@@ -214,8 +215,9 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
       marks: [
         {
           type: 'interval',
-          cornerRadius: { kind: 'constant', value: 8 },
-          encoding: { x: { field: 'month' }, y: { field: 'amount' } },
+          kind: 'data',
+          encodings: { position: { x: 'month', y: 'amount' } },
+          properties: { cornerRadius: 8 },
         },
       ],
     });
@@ -270,8 +272,9 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
       marks: [
         {
           type: 'interval',
-          encoding: { color: { field: 'label' } },
-          bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+          kind: 'data',
+          encodings: { color: 'label', bounds: { x: { from: 'y0', to: 'y1' } } },
+          properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } } },
         },
       ],
     });
@@ -351,8 +354,9 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
       marks: [
         {
           type: 'interval',
-          encoding: { color: { field: 'label', scale: 'col' } },
-          bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+          kind: 'data',
+          encodings: { color: { field: 'label', scale: 'col' }, bounds: { x: { from: 'y0', to: 'y1' } } },
+          properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } } },
         },
       ],
     });
@@ -389,8 +393,9 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
       marks: [
         {
           type: 'interval',
-          encoding: { color: { field: 'label' } },
-          bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+          kind: 'data',
+          encodings: { color: 'label', bounds: { x: { from: 'y0', to: 'y1' } } },
+          properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } } },
         },
       ],
     });
@@ -414,8 +419,9 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
       marks: [
         {
           type: 'interval',
-          encoding: { color: { field: 'label' } },
-          bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+          kind: 'data',
+          encodings: { color: 'label', bounds: { x: { from: 'y0', to: 'y1' } } },
+          properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } } },
         },
       ],
     });

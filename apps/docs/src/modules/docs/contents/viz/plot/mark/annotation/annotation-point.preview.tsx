@@ -23,7 +23,7 @@ export type AnnotationPointValues = {
 };
 /** 常量几何及其标签的可交互预览 */
 export const AnnotationPointPreview: FC<AnnotationPointValues> = values => {
-  const orientation: PointAnnotationProps['orientation'] =
+  const orientation: NonNullable<PointAnnotationProps['properties']>['orientation'] =
     values.coordinate === 'cartesian' || values.orientation === 'screen'
       ? { kind: 'screen' }
       : {
@@ -38,24 +38,26 @@ export const AnnotationPointPreview: FC<AnnotationPointValues> = values => {
         <PlotScale dimension="y" type="linear" domain={[0, 100]} domainPadding={0} />
         {values.preset === 'text' ? (
           <PointAnnotation
-            x={annotationX(values.coordinate, values.x, values.category)}
-            y={values.y}
-            text="A"
-            orientation={orientation}
-            textColor="darkorange"
-            font={{ size: values.fontSize }}
+            properties={{
+              text: 'A',
+              orientation,
+              textColor: 'darkorange',
+              font: { size: values.fontSize },
+              position: { x: annotationX(values.coordinate, values.x, values.category), y: values.y },
+            }}
           />
         ) : (
           <PointAnnotation
-            x={annotationX(values.coordinate, values.x, values.category)}
-            y={values.y}
-            shape={values.shape}
-            orientation={orientation}
-            size={values.size}
-            fill="darkorange"
-            label={
-              values.showLabel ? { text: 'A', position: values.labelPosition, distance: values.distance } : undefined
-            }
+            properties={{
+              shape: values.shape,
+              orientation,
+              size: values.size,
+              fill: 'darkorange',
+              label: values.showLabel
+                ? { content: 'A', position: values.labelPosition, distance: values.distance }
+                : undefined,
+              position: { x: annotationX(values.coordinate, values.x, values.category), y: values.y },
+            }}
           />
         )}
         <PlotAxis dimension="x" />

@@ -42,7 +42,7 @@ export const applyMarkTransforms = (
   dataView: DataView,
   options: ApplyTransformsOptions,
 ): DataView => {
-  const transformDeclarations = 'transform' in mark ? mark.transform : undefined;
+  const transformDeclarations = mark.transforms;
   if (transformDeclarations === undefined) return dataView;
 
   return applyTransformsToDataView(

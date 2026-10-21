@@ -21,11 +21,15 @@ export const PointPositionPreview = (values: PointPositionPreviewValues) => (
   <Layout viewBox={{ x: -40, y: -40, width: 480, height: 360 }}>
     <Plot data={points} width={400} height={280} coordinate={values.coordinate === 'polar2D' ? 'polar2D' : undefined}>
       <PointMark
-        x={values.xField}
-        y={values.yField}
-        color={values.colorMode === 'region' ? 'region' : undefined}
-        size={values.sizeMode === 'minimum' ? undefined : values.sizeMode === 'population' ? 'pop' : 10}
-        minimumSize={values.sizeMode === 'minimum' ? values.minimumSize : undefined}
+        encodings={{
+          ...(values.colorMode === 'region' ? { color: 'region' } : {}),
+          ...(values.sizeMode === 'minimum' ? {} : { size: values.sizeMode === 'population' ? 'pop' : undefined }),
+          position: { x: values.xField, y: values.yField },
+        }}
+        properties={{
+          size: values.sizeMode === 'minimum' ? undefined : values.sizeMode === 'population' ? undefined : 10,
+          minimumSize: values.sizeMode === 'minimum' ? values.minimumSize : undefined,
+        }}
       />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />

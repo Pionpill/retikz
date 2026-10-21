@@ -22,8 +22,8 @@ export const renderExtensionResolverPreview = () => (
     height={250}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <PathMark x="quarter" y="revenue" order="quarter" />
-    <PointMark x="quarter" y="revenue" />
+    <PathMark encodings={{ order: 'quarter', position: { x: 'quarter', y: 'revenue' } }} />
+    <PointMark encodings={{ position: { x: 'quarter', y: 'revenue' } }} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />
   </Plot>

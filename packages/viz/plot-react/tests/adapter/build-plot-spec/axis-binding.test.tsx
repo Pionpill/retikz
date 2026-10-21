@@ -12,8 +12,8 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
         <PlotAxis dimension="x" title="day" />
         <PlotAxis id="temperature" dimension="y" placement={{ kind: 'side', side: 'left' }} title="Temperature" />
         <PlotAxis id="rainfall" dimension="y" placement={{ kind: 'side', side: 'right' }} title="Rainfall" grid />
-        <PathMark x="day" y="temperature" yAxisId="temperature" />
-        <PathMark x="day" y="rainfall" yAxisId="rainfall" />
+        <PathMark yAxisId="temperature" encodings={{ position: { x: 'day', y: 'temperature' } }} />
+        <PathMark yAxisId="rainfall" encodings={{ position: { x: 'day', y: 'rainfall' } }} />
       </>,
       'weather',
     );
@@ -60,8 +60,8 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
         <PlotAxis dimension="x" title="day" />
         <PlotAxis id="temperature" dimension="y" title="temperature" />
         <PlotAxis id="rainfall" dimension="y" title="rainfall" />
-        <PathMark x="day" y="temperature" yAxisId="temperature" />
-        <PathMark x="day" y="rainfall" yAxisId="rainfall" />
+        <PathMark yAxisId="temperature" encodings={{ position: { x: 'day', y: 'temperature' } }} />
+        <PathMark yAxisId="rainfall" encodings={{ position: { x: 'day', y: 'rainfall' } }} />
       </>,
       'weather',
       { deferPositionScaleInference: true },
@@ -82,8 +82,8 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
         <PlotAxis id="elapsed" dimension="x" placement={{ kind: 'side', side: 'bottom' }} title="elapsed day" />
         <PlotAxis id="date" dimension="x" placement={{ kind: 'side', side: 'top' }} title="date" />
         <PlotAxis dimension="y" title="revenue" />
-        <PathMark x="elapsedDay" y="revenue" xAxisId="elapsed" />
-        <PointMark x="dateIndex" y="revenue" xAxisId="date" />
+        <PathMark xAxisId="elapsed" encodings={{ position: { x: 'elapsedDay', y: 'revenue' } }} />
+        <PointMark xAxisId="date" encodings={{ position: { x: 'dateIndex', y: 'revenue' } }} />
       </>,
       'schedule',
     );
@@ -129,7 +129,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
       <>
         <PlotAxis dimension="x" />
         <PlotAxis id="temperature" dimension="y" />
-        <PathMark x="day" y="temperature" />
+        <PathMark encodings={{ position: { x: 'day', y: 'temperature' } }} />
       </>,
       'weather',
     );
@@ -143,8 +143,8 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
       <>
         <PlotAxis id="temperature" dimension="y" />
         <PlotAxis id="rainfall" dimension="y" />
-        <PathMark x="day" y="temperature" yAxisId="temperature" />
-        <PointMark x="day" y="label" />
+        <PathMark yAxisId="temperature" encodings={{ position: { x: 'day', y: 'temperature' } }} />
+        <PointMark encodings={{ position: { x: 'day', y: 'label' } }} />
       </>,
       'weather',
     );
@@ -159,8 +159,8 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
     const spec = buildPlotIR(
       <>
         <PlotAxis id="rainfall" dimension="y" />
-        <PathMark x="day" y="temperature" yAxisId="default" />
-        <PathMark x="day" y="rainfall" yAxisId="rainfall" />
+        <PathMark yAxisId="default" encodings={{ position: { x: 'day', y: 'temperature' } }} />
+        <PathMark yAxisId="rainfall" encodings={{ position: { x: 'day', y: 'rainfall' } }} />
       </>,
       'weather',
     );
@@ -183,8 +183,8 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
       <>
         <PlotAxis id="temperature" dimension="y" />
         <PlotAxis id="rainfall" dimension="y" />
-        <PathMark x="day" y="temperature" yAxisId="temperature" />
-        <PathMark x="day" y="rainfall" yAxisId="rainfall" />
+        <PathMark yAxisId="temperature" encodings={{ position: { x: 'day', y: 'temperature' } }} />
+        <PathMark yAxisId="rainfall" encodings={{ position: { x: 'day', y: 'rainfall' } }} />
       </>,
       'weather',
       {
@@ -220,7 +220,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
       buildPlotIR(
         <>
           <PlotAxis id="left" dimension="y" />
-          <PathMark x="day" y="temperature" yAxisId="missing" />
+          <PathMark yAxisId="missing" encodings={{ position: { x: 'day', y: 'temperature' } }} />
         </>,
         'weather',
       ),
@@ -230,7 +230,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
       buildPlotIR(
         <>
           <PlotAxis id="left" dimension="x" />
-          <PathMark x="day" y="temperature" yAxisId="left" />
+          <PathMark yAxisId="left" encodings={{ position: { x: 'day', y: 'temperature' } }} />
         </>,
         'weather',
       ),
@@ -241,7 +241,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
         <>
           <PlotAxis id="left" dimension="y" />
           <PlotAxis id="left" dimension="y" />
-          <PathMark x="day" y="temperature" yAxisId="left" />
+          <PathMark yAxisId="left" encodings={{ position: { x: 'day', y: 'temperature' } }} />
         </>,
         'weather',
       ),
@@ -251,7 +251,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
       buildPlotIR(
         <>
           <PlotAxis id="left" dimension="y" />
-          <PathMark coordinateView="left" x="day" y="temperature" yAxisId="left" />
+          <PathMark coordinateView="left" yAxisId="left" encodings={{ position: { x: 'day', y: 'temperature' } }} />
         </>,
         'weather',
       ),
@@ -263,7 +263,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
       buildPlotIR(
         <>
           <PlotAxis id="left" dimension="y" />
-          <PathMark x="day" y="temperature" yAxisId="left" />
+          <PathMark yAxisId="left" encodings={{ position: { x: 'day', y: 'temperature' } }} />
         </>,
         'weather',
         { coordinate: 'polar2D' },
@@ -274,7 +274,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
       buildPlotIR(
         <>
           <PlotAxis id="left" dimension="y" />
-          <PathMark x="day" y="temperature" yAxisId="left" />
+          <PathMark yAxisId="left" encodings={{ position: { x: 'day', y: 'temperature' } }} />
         </>,
         'weather',
         { composition: { defaultView: 'default', views: [{ id: 'default', coordinate: { type: 'cartesian2D' } }] } },

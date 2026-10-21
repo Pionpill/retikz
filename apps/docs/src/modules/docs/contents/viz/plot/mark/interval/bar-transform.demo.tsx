@@ -8,13 +8,19 @@ import { storeRevenue } from './bar-transform.data';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Plot data={storeRevenue} width={620} height={280}>
-    <PointMark x="segment" y="revenue" fill="#94a3b8" opacity={0.45} minimumSize={6} />
+    <PointMark
+      encodings={{ position: { x: 'segment', y: 'revenue' } }}
+      properties={{ fill: '#94a3b8', opacity: { overall: 0.45 }, minimumSize: 6 }}
+    />
     <IntervalMark
-      x="segment"
-      bounds={{ y: { kind: 'extent', from: 'y0', to: 'y1' } }}
-      color="segment"
-      label="store"
-      transform={[{ operation: barTransformOperationOf(values) }]}
+      transforms={[{ operation: barTransformOperationOf(values) }]}
+      encodings={{
+        bounds: { y: { from: 'y0', to: 'y1' } },
+        color: 'segment',
+        label: { content: 'store' },
+        position: { x: 'segment' },
+      }}
+      properties={{ bounds: { y: { kind: 'extent' } } }}
     />
     <PlotScale dimension="x" type="band" paddingInner={values[BAR_TRANSFORM_GAP_ID]} paddingOuter={0.15} />
     <PlotScale dimension="y" type="linear" domainPadding={0} />

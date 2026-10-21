@@ -32,29 +32,19 @@ export const CoordinateCompositionXAxisPreview = (values: CoordinateCompositionX
       />
       <PlotAxis dimension="y" grid={yGridVisible} title="%" />
       <PathMark
-        x="elapsedDay"
-        y="completed"
-        order="elapsedDay"
-        stroke="darkorange"
-        strokeWidth={values.completedLineWidth}
+        encodings={{ order: 'elapsedDay', position: { x: 'elapsedDay', y: 'completed' } }}
+        properties={{ stroke: 'darkorange', strokeWidth: values.completedLineWidth }}
       />
       <PathMark
-        x="calendarDay"
-        y="forecast"
-        order="calendarDay"
         xAxisId={forecastAxisId}
-        stroke="steelblue"
-        strokeWidth={values.forecastLineWidth}
+        encodings={{ order: 'calendarDay', position: { x: 'calendarDay', y: 'forecast' } }}
+        properties={{ stroke: 'steelblue', strokeWidth: values.forecastLineWidth }}
       />
       {values.forecastPointsVisible ? (
         <PointMark
-          x="calendarDay"
-          y="forecast"
           xAxisId={forecastAxisId}
-          fill="lightblue"
-          stroke="steelblue"
-          strokeWidth={1}
-          size={values.forecastPointSize}
+          encodings={{ position: { x: 'calendarDay', y: 'forecast' } }}
+          properties={{ fill: 'lightblue', stroke: 'steelblue', strokeWidth: 1, size: values.forecastPointSize }}
         />
       ) : null}
     </Plot>

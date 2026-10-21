@@ -15,7 +15,7 @@ import { PlotAxis, PathMark, Plot } from '@retikz/plot-react';
 
 ```tsx
 <Plot data={rows}>
-  <PathMark x="month" y="revenue" order="month" />
+  <PathMark encodings={{ order: "month", position: { x: "month", y: "revenue" } }} />
   <PlotAxis dimension="x" />
   <PlotAxis dimension="y" grid />
 </Plot>

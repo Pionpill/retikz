@@ -50,7 +50,7 @@ createRoot(document.getElementById('plot')!).render(
   <Plot data={rows} width={360} height={220}>
     <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
     <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
-    <PointMark x="gdp" y="life" size={6} />
+    <PointMark encodings={{ position: { x: "gdp", y: "life" } }} properties={{ size: 6 }} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" />
   </Plot>,
@@ -83,11 +83,7 @@ const spec: IRPlot = {
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [
-    {
-      type: 'point',
-      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
-      size: { kind: 'constant', value: 6 },
-    },
+    { type: 'point', kind: "data", encodings: { position: { x: 'gdp', y: 'life' } }, properties: { size: 6 } },
   ],
   guides: [
     { type: 'axis', dimension: 'x' },
@@ -120,11 +116,7 @@ const spec = plot({
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [
-    {
-      type: 'point',
-      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
-      size: { kind: 'constant', value: 6 },
-    },
+    { type: 'point', kind: "data", encodings: { position: { x: 'gdp', y: 'life' } }, properties: { size: 6 } },
   ],
   guides: [
     { type: 'axis', dimension: 'x' },
@@ -160,11 +152,7 @@ const spec: IRPlot = {
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [
-    {
-      type: 'point',
-      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
-      size: { kind: 'constant', value: 6 },
-    },
+    { type: 'point', kind: "data", encodings: { position: { x: 'gdp', y: 'life' } }, properties: { size: 6 } },
   ],
   guides: [
     { type: 'axis', dimension: 'x' },

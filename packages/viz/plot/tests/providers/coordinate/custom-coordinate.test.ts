@@ -148,7 +148,7 @@ const sineSpec = (): IRPlot =>
     data: { reference: 'd' },
     scales: [],
     coordinate: { type: 'sine' },
-    marks: [{ type: 'point', autoPadding: false, encoding: { x: { field: 'v' } } }],
+    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'v' } }, properties: { autoPadding: false } }],
   });
 
 const bridgeSpec = (): IRPlot =>
@@ -158,7 +158,9 @@ const bridgeSpec = (): IRPlot =>
     data: { reference: 'd' },
     scales: [],
     coordinate: { type: 'bridge', archHeight: ARCH_HEIGHT },
-    marks: [{ type: 'point', autoPadding: false, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+    marks: [
+      { type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } }, properties: { autoPadding: false } },
+    ],
   });
 
 const uvCoordinate = defineCoordinate({
@@ -311,7 +313,14 @@ describe('custom coordinate — 二维桥（x 沿拱、y 竖直）', () => {
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'uv' },
-      marks: [{ type: 'point', autoPadding: false, encoding: { u: { field: 'u' }, v: { field: 'v' } } }],
+      marks: [
+        {
+          type: 'point',
+          kind: 'data',
+          encodings: { position: { u: 'u', v: 'v' } },
+          properties: { autoPadding: false },
+        },
+      ],
       guides: [{ type: 'axis', dimension: 'u' }],
     });
     const root = expandOf(
@@ -355,7 +364,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'bridge' },
-      marks: [{ type: 'point', autoPadding: false, encoding: { x: { field: 'x' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x' } }, properties: { autoPadding: false } }],
     });
 
     expect(() => expandOf(spec, { d: [{ x: 1 }] }, opts([bridgeCoordinate]))).toThrow(
@@ -371,7 +380,14 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'bridge' },
-      marks: [{ type: 'point', autoPadding: false, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [
+        {
+          type: 'point',
+          kind: 'data',
+          encodings: { position: { x: 'x', y: 'y' } },
+          properties: { autoPadding: false },
+        },
+      ],
       guides: [{ type: 'axis', dimension: 'angle' }],
     });
 
@@ -387,7 +403,14 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'bridge', archHeight: ARCH_HEIGHT },
-      marks: [{ type: 'path', order: 'x', closed: false, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [
+        {
+          type: 'path',
+          kind: 'data',
+          encodings: { order: 'x', position: { x: 'x', y: 'y' } },
+          properties: { closed: false },
+        },
+      ],
     });
     const rows = [
       { x: 0, y: 0 },
@@ -418,7 +441,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
     ['closed cycle', { closed: true }],
     ['cycle closure', { closure: { kind: 'cycle' } }],
     ['baseline closure', { closure: { kind: 'baseline' } }],
-    ['stack closure', { closure: { kind: 'stack', baselineField: 'baseline' } }],
+    ['stack closure', { closure: { kind: 'stack' } }],
   ])('custom_path_%s_remains_fail_loud', (_label, pathShape) => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -429,8 +452,9 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       marks: [
         {
           type: 'path',
-          ...pathShape,
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          properties: pathShape,
+          kind: 'data',
+          encodings: { position: { x: 'x', y: 'y' }, closure: { baseline: 'baseline' } },
         },
       ],
     });
@@ -457,7 +481,14 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'bridge', archHeight: ARCH_HEIGHT },
-      marks: [{ type: 'point', autoPadding: false, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [
+        {
+          type: 'point',
+          kind: 'data',
+          encodings: { position: { x: 'x', y: 'y' } },
+          properties: { autoPadding: false },
+        },
+      ],
       guides: [
         { type: 'axis', dimension: 'x' },
         { type: 'axis', dimension: 'y' },
@@ -495,7 +526,9 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       data: { reference: 'd' },
       scales: [{ type: 'ordinal', name: 'col', range: ['#aa', '#bb'] }],
       coordinate: { type: 'sine' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'g', scale: 'col' }, encoding: { x: { field: 'v' } } }],
+      marks: [
+        { type: 'point', kind: 'data', encodings: { color: { field: 'g', scale: 'col' }, position: { x: 'v' } } },
+      ],
     });
     const layer = firstLayer(
       spec,
@@ -619,7 +652,7 @@ const sineAxisSpec = (type = 'sineFramed'): IRPlot =>
     data: { reference: 'd' },
     scales: [],
     coordinate: { type },
-    marks: [{ type: 'point', autoPadding: false, encoding: { x: { field: 'v' } } }],
+    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'v' } }, properties: { autoPadding: false } }],
     guides: [{ type: 'axis', dimension: 'x' }],
   });
 
@@ -751,7 +784,14 @@ describe('custom coordinate — tangentAt 局部标架契约（contract）', () 
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'bridge', archHeight: ARCH_HEIGHT },
-      marks: [{ type: 'point', autoPadding: false, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [
+        {
+          type: 'point',
+          kind: 'data',
+          encodings: { position: { x: 'x', y: 'y' } },
+          properties: { autoPadding: false },
+        },
+      ],
       guides: [{ type: 'axis', dimension: 'x' }],
     });
     const rows: Array<Record<string, number>> = [];

@@ -57,10 +57,10 @@ const constantPathPropertiesOf = (properties: IRRegressionChartProperties): Json
   const result: JsonObject = {};
 
   for (const name of ['strokeWidth', 'lineCap', 'lineJoin', 'zIndex', 'dashPattern', 'shadow', 'blendMode'] as const) {
-    if (trend[name] !== undefined) result[name] = { kind: 'constant', value: trend[name] };
+    if (trend[name] !== undefined) result[name] = trend[name];
   }
 
-  const opacity = markOpacityOf({}, trend);
+  const opacity = markOpacityOf(trend);
   if (opacity !== undefined) result.opacity = opacity;
   return result;
 };
@@ -104,18 +104,20 @@ export const resolveRegressionMarkGroup = (
     const trend = settings.trend ?? {};
     const path: JsonObject = {
       type: BuiltinPlotMark.Path,
-      order: trendXField,
-      closed: false,
-      curve: RegressionTrendCurveSchema.parse(trend.curve),
-      ...(series === undefined ? {} : { series: series.field }),
-      transform: [{ operation: smooth }],
-      encoding: { x: { field: trendXField }, y: { field: trendYField } },
-      ...constantPathPropertiesOf(settings),
-      ...(series === undefined || explicitStroke
-        ? trend.stroke === undefined
-          ? {}
-          : { stroke: { kind: 'constant', value: trend.stroke } }
-        : { stroke: { kind: 'field', value: series.field, scale: series.scale } }),
+      kind: 'data',
+      transforms: [{ operation: smooth }],
+      encodings: {
+        position: { x: trendXField, y: trendYField },
+        order: trendXField,
+        ...(series === undefined ? {} : { series: series.field }),
+        ...(series === undefined || explicitStroke ? {} : { stroke: { field: series.field, scale: series.scale } }),
+      },
+      properties: {
+        closed: false,
+        curve: RegressionTrendCurveSchema.parse(trend.curve),
+        ...constantPathPropertiesOf(settings),
+        ...(trend.stroke === undefined ? {} : { stroke: trend.stroke }),
+      },
     };
 
     const resolved = PathMarkSchema.parse(path);

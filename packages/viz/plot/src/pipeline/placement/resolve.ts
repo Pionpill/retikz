@@ -12,6 +12,7 @@ import type {
   ScreenPositionAdjustmentResultTarget,
 } from '../../contract';
 import { RetikzPlotError } from '../../error';
+import { mapMarkRoles } from '../../providers';
 import { resolvePositionAdjustmentOperation } from '../../resolve/position-adjustment';
 import type { IRPlotMarkOperation, IRPlotMarkPlacement } from '../../schemas';
 
@@ -80,7 +81,7 @@ export const resolveMarkPlacement = (
   dimensions: { width: number; height: number },
   registry: ReadonlyMap<string, AnyPositionAdjustmentDefinition>,
 ): MarkPositionResolution | undefined => {
-  const placement = (resolution.operation as { placement?: IRPlotMarkPlacement }).placement;
+  const placement = (resolution.operation.properties as { placement?: IRPlotMarkPlacement } | undefined)?.placement;
   if (placement === undefined) return undefined;
 
   const capability = resolution.definition.placement;
@@ -108,7 +109,7 @@ export const resolveMarkPlacement = (
       throw new RetikzPlotError('lowerPlots: mark placement target role count must match coordinate frame roles');
     }
 
-    return { ...target, mappedRoles: frame.mapRoles?.(target.roleValues) ?? null };
+    return { ...target, mappedRoles: mapMarkRoles(resolution.operation, target.roleValues, frame) };
   });
   const operations = placement.adjustments.map(operation => resolvePositionAdjustmentOperation(operation, registry));
 

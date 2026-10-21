@@ -37,15 +37,17 @@ const cartesianScaffoldSpec = {
   marks: [
     {
       type: 'point',
-      autoPadding: 'max-radius',
       coordinateView: 'events',
-      encoding: { x: { field: 'eventX' }, y: { field: 'eventY' } },
+      kind: 'data',
+      encodings: { position: { x: 'eventX', y: 'eventY' } },
+      properties: { autoPadding: 'max-radius' },
     },
     {
       type: 'point',
-      autoPadding: 'max-radius',
       coordinateView: 'volume',
-      encoding: { x: { field: 'volumeX' }, y: { field: 'volumeY' } },
+      kind: 'data',
+      encodings: { position: { x: 'volumeX', y: 'volumeY' } },
+      properties: { autoPadding: 'max-radius' },
     },
   ],
   guides: [
@@ -81,15 +83,17 @@ const polarScaffoldSpec = {
   marks: [
     {
       type: 'point',
-      autoPadding: 'max-radius',
       coordinateView: 'inner',
-      encoding: { x: { field: 'angleA' }, y: { field: 'radiusA' } },
+      kind: 'data',
+      encodings: { position: { x: 'angleA', y: 'radiusA' } },
+      properties: { autoPadding: 'max-radius' },
     },
     {
       type: 'point',
-      autoPadding: 'max-radius',
       coordinateView: 'outer',
-      encoding: { x: { field: 'angleB' }, y: { field: 'radiusB' } },
+      kind: 'data',
+      encodings: { position: { x: 'angleB', y: 'radiusB' } },
+      properties: { autoPadding: 'max-radius' },
     },
   ],
 };
@@ -327,7 +331,10 @@ describe('track placement containment', () => {
         ...cartesianScaffoldSpec,
         marks: cartesianScaffoldSpec.marks.map(mark => ({
           ...mark,
-          placement: { adjustments: [{ kind: 'jitter', role: 'y', span: 20, seed: 7 }] },
+          properties: {
+            ...mark.properties,
+            placement: { adjustments: [{ kind: 'jitter', role: 'y', span: 20, seed: 7 }] },
+          },
         })),
       },
       true,

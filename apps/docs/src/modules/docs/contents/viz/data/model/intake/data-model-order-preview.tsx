@@ -24,7 +24,7 @@ export const renderDataModelOrderPreview = (values: DataModelOrderValues) => (
     height={250}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <IntervalMark x="size" y="value" color="size" />
+    <IntervalMark encodings={{ color: 'size', position: { x: 'size', y: 'value' } }} />
     <PlotScale dimension="y" type="linear" domainPadding={0} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />

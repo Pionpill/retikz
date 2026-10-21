@@ -57,7 +57,7 @@ const facetSpec = {
     spacing: { panelGap: 24, axisGap: 8, labelGap: 6 },
     resolve: { axis: { x: 'outer', y: 'outer' }, grid: { x: 'local', y: 'local' } },
   },
-  marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+  marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
   guides: [
     { type: 'axis', dimension: 'x', placement: { kind: 'side', side: 'bottom' }, grid: true, title: 'Month' },
     { type: 'axis', dimension: 'y', placement: { kind: 'side', side: 'left' }, grid: true, title: 'Revenue' },
@@ -87,8 +87,8 @@ const overlaySpec = {
     spacing: { axisGap: 12, labelGap: 5 },
   },
   marks: [
-    { type: 'path', order: 'day', encoding: { x: { field: 'day' }, y: { field: 'temperature' } } },
-    { type: 'interval', coordinateView: 'rain', encoding: { x: { field: 'day' }, y: { field: 'rainfall' } } },
+    { type: 'path', kind: 'data', encodings: { order: 'day', position: { x: 'day', y: 'temperature' } } },
+    { type: 'interval', coordinateView: 'rain', kind: 'data', encodings: { position: { x: 'day', y: 'rainfall' } } },
   ],
   guides: [
     {
@@ -135,8 +135,8 @@ const lanesSpec = {
     resolve: { grid: { x: 'all', y: 'all' } },
   },
   marks: [
-    { type: 'point', coordinateView: 'events', encoding: { x: { field: 'eventX' }, y: { field: 'eventY' } } },
-    { type: 'point', coordinateView: 'volume', encoding: { x: { field: 'volumeX' }, y: { field: 'volumeY' } } },
+    { type: 'point', coordinateView: 'events', kind: 'data', encodings: { position: { x: 'eventX', y: 'eventY' } } },
+    { type: 'point', coordinateView: 'volume', kind: 'data', encodings: { position: { x: 'volumeX', y: 'volumeY' } } },
   ],
   guides: [{ type: 'axis', dimension: 'x', coordinateView: 'events', grid: true }],
 };
@@ -470,7 +470,7 @@ describe('composition guides layout lowering', () => {
           },
         ],
       },
-      marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
       guides: [{ type: 'axis', dimension: 'y', grid: true }],
     });
     const outer = expandOf(spec, { sales: salesRows });
@@ -502,7 +502,7 @@ describe('composition guides layout lowering', () => {
           },
         ],
       },
-      marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
       guides: [
         { type: 'axis', dimension: 'x' },
         { type: 'axis', dimension: 'y' },
@@ -599,8 +599,18 @@ describe('composition guides layout lowering', () => {
         ],
       },
       marks: [
-        { type: 'point', coordinateView: 'events', encoding: { x: { field: 'eventX' }, y: { field: 'eventY' } } },
-        { type: 'point', coordinateView: 'volume', encoding: { x: { field: 'volumeX' }, y: { field: 'volumeY' } } },
+        {
+          type: 'point',
+          coordinateView: 'events',
+          kind: 'data',
+          encodings: { position: { x: 'eventX', y: 'eventY' } },
+        },
+        {
+          type: 'point',
+          coordinateView: 'volume',
+          kind: 'data',
+          encodings: { position: { x: 'volumeX', y: 'volumeY' } },
+        },
       ],
       guides: [],
     };

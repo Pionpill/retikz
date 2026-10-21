@@ -25,12 +25,11 @@ describe('Plot atomic path fragment consumption', () => {
 
     const relation = RelationMarkSchema.parse({
       type: 'relation',
-      source: { id: 'source' },
-      target: { id: 'target' },
-      path: { options },
+      kind: 'data',
+      properties: { source: { id: 'source' }, target: { id: 'target' }, geometry: { kind: 'path', options } },
     });
 
-    expect(relation.path?.options).toEqual(options);
+    expect(relation.properties.geometry.options).toEqual(options);
   });
 
   it('keeps relation path fragment input JSON round-trippable', () => {

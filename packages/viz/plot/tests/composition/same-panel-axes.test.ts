@@ -38,12 +38,8 @@ const dualAxisSpec = {
     ],
   },
   marks: [
-    { type: 'path', order: 'day', encoding: { x: { field: 'day' }, y: { field: 'temperature' } } },
-    {
-      type: 'interval',
-      coordinateView: 'rain',
-      encoding: { x: { field: 'day' }, y: { field: 'rainfall' } },
-    },
+    { type: 'path', kind: 'data', encodings: { order: 'day', position: { x: 'day', y: 'temperature' } } },
+    { type: 'interval', coordinateView: 'rain', kind: 'data', encodings: { position: { x: 'day', y: 'rainfall' } } },
   ],
   guides: [
     { type: 'axis', dimension: 'y', coordinateView: 'temp', placement: { kind: 'side', side: 'left' } },
@@ -77,12 +73,12 @@ const sharedYOverlaySpec = {
     ],
   },
   marks: [
-    { type: 'path', order: 'day', encoding: { x: { field: 'day' }, y: { field: 'temperature' } } },
+    { type: 'path', kind: 'data', encodings: { order: 'day', position: { x: 'day', y: 'temperature' } } },
     {
       type: 'path',
-      order: 'rainfall',
       coordinateView: 'calendar',
-      encoding: { x: { field: 'rainfall' }, y: { field: 'rainfall' } },
+      kind: 'data',
+      encodings: { order: 'rainfall', position: { x: 'rainfall', y: 'rainfall' } },
     },
   ],
 };
@@ -191,9 +187,9 @@ describe('same-panel multi-axis overlay schema', () => {
       marks: [
         {
           type: 'path',
-          order: 'day',
           coordinateView: 'a',
-          encoding: { x: { field: 'day' }, y: { field: 'temperature' } },
+          kind: 'data',
+          encodings: { order: 'day', position: { x: 'day', y: 'temperature' } },
         },
       ],
       guides: [

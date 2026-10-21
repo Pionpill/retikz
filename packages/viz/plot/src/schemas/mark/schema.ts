@@ -41,14 +41,12 @@ import {
   NonNegativeNumberSchema,
   PositiveNumberSchema,
 } from '@retikz/foundation';
-import type { ZodLiteral, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
 import {
   array,
   boolean,
   discriminatedUnion,
   enum as zodEnum,
   literal,
-  looseObject,
   number,
   object,
   record,
@@ -60,8 +58,10 @@ import {
 import { CoordinateConnection, PolarInterpolation } from '../coordinate';
 import {
   ChannelSchema,
-  EncodingSchema,
   MarkChannelEncodingSchema,
+  NodeEncodingSchema,
+  PathEncodingSchema,
+  PositionEncodingSchema,
   MarkGeometryLabelListSchema,
   MarkNodeLabelListSchema,
   PointEncodingSchema,
@@ -72,7 +72,6 @@ import { PointAutoPaddingSchema } from './auto-padding';
 import {
   BUILTIN_MARK_TYPES,
   IntervalBoundKind,
-  MarkValueKind,
   PathClosureKind,
   PathCurve,
   BuiltinPlotMark,
@@ -106,17 +105,37 @@ const markBase = {
   coordinateView: NonBlankStringSchema.optional().describe(
     'Coordinate view id this mark is projected through; omit to use the plot composition default view',
   ),
-  transform: MarkTransformSchema.optional().describe(
+  transforms: MarkTransformSchema.optional().describe(
     'Optional mark-local transform pipeline applied after the plot root transform',
   ),
 };
+
+/** 校验数据空间固定位置或最终视图边缘 */
+export const AnnotationPositionValueSchema = union([
+  number(),
+  NonBlankStringSchema,
+  strictObject({ edge: zodEnum(['start', 'end']) }),
+]).describe('Fixed data-space position or final coordinate range edge');
+
+/** 校验固定位置角色，编码可补齐其它角色 */
+export const AnnotationPositionSchema = record(NonBlankStringSchema, AnnotationPositionValueSchema).describe(
+  'Fixed coordinate role values; field encodings may supply remaining roles',
+);
+
+/** 校验固定区间端点，编码可补齐其它端点 */
+export const AnnotationBoundsSchema = record(
+  NonBlankStringSchema,
+  strictObject({
+    from: AnnotationPositionValueSchema.optional(),
+    to: AnnotationPositionValueSchema.optional(),
+  }),
+);
 
 /** 校验生成 Core 节点或坐标标识的标记局部稳定锚点规则 */
 export const AnchorIdSchema = strictObject({
   prefix: NonBlankStringSchema.optional().describe(
     'Optional id namespace under the current plot; defaults to the mark id, or mark.<index> when the mark has no id',
   ),
-  field: NonBlankStringSchema.optional().describe('Data field path whose value is slugged into the anchor id'),
   template: NonBlankStringSchema.optional().describe(
     'JSON-safe id template supporting {plotId}, {markId}, {markIndex}, {index}, and {field:name} placeholders',
   ),
@@ -125,15 +144,26 @@ export const AnchorIdSchema = strictObject({
   ),
 })
   .superRefine((spec, ctx) => {
-    const count = [spec.field, spec.template, spec.generator].filter(value => value !== undefined).length;
-    if (count !== 1) {
+    const count = [spec.template, spec.generator].filter(value => value !== undefined).length;
+    if (count > 1) {
       ctx.addIssue({
         code: 'custom',
-        message: 'anchorId requires exactly one of field, template, or generator',
+        message: 'anchorId template and generator are mutually exclusive',
       });
     }
   })
   .describe('Mark-scoped stable anchor id rule for generated core Node / Coordinate ids');
+
+/** 锚点的字段、模板和运行时生成器共同构成唯一标识来源 */
+const hasValidAnchorSource = (mark: {
+  properties?: { anchorId?: { template?: string; generator?: string } };
+  encodings?: { anchorId?: string };
+}): boolean => {
+  const rule = mark.properties?.anchorId;
+  const field = mark.encodings?.anchorId;
+  if (rule === undefined && field === undefined) return true;
+  return [field, rule?.template, rule?.generator].filter(value => value !== undefined).length === 1;
+};
 
 const anchorTargetFields = {
   anchor: AnchorRefSchema.optional().describe('Optional core anchor ref on the resolved target id'),
@@ -154,9 +184,7 @@ const GeneratedAnchorPlotTargetRefSchema = strictObject({
 }).describe('Generated anchor target reference evaluated from the current relation row');
 
 const ProjectedPlotTargetRefSchema = strictObject({
-  project: record(NonBlankStringSchema, NonBlankStringSchema).describe(
-    'Coordinate-role to data-field map projected in the relation mark coordinate frame',
-  ),
+  position: AnnotationPositionSchema.describe('Fixed coordinate roles projected in the relation frame'),
   anchorId: AnchorIdSchema.optional().describe('Optional id rule for the generated projected Coordinate'),
   ...anchorTargetFields,
 }).describe('Projected coordinate target from the current relation row');
@@ -168,19 +196,16 @@ export const PlotTargetRefSchema = union([
   ProjectedPlotTargetRefSchema,
 ]).describe('Relation/annotation target reference: direct core id, generated mark anchor id, or projected coordinate');
 
-const relationLabelTextSchema = union([
-  StepLabelSchema.shape.text,
-  strictObject({
-    field: NonBlankStringSchema.describe(
-      'Data field path resolved from the current relation row and stringified into StepLabel.text',
-    ),
-  }),
-]);
+/** 校验关系目标的字段依赖，固定引用与构造仍由 properties 表达 */
+export const PlotTargetEncodingSchema = strictObject({
+  position: PositionEncodingSchema.optional(),
+  anchorId: NonBlankStringSchema.optional(),
+}).describe('Relation target position or generated anchor field dependencies');
 
-/** 校验完成字段绑定后降低为 Core 步骤标签的关系标签 */
+/** 校验关系路径步骤标签的固定配置 */
 export const RelationStepLabelSchema = StepLabelSchema.extend({
-  text: relationLabelTextSchema.describe('Constant core step label text, mixed text, or a data-field binding'),
-}).describe('Relation path step label; lowered to core StepLabelSchema after field bindings are resolved');
+  text: StepLabelSchema.shape.text.optional(),
+}).describe('Fixed step label properties; field text is supplied by the corresponding encoding');
 
 /** 校验仅供普通路径关系使用的 Core Path 选项 */
 export const RelationPathSpecificOptionsSchema = strictObject({
@@ -268,8 +293,6 @@ export const RelationRoutingSchema = discriminatedUnion('kind', [
   RelationOrthogonalRoutingSchema,
 ]).describe('Relation route strategy lowered to core Path steps after source and target refs are resolved');
 
-const positionalEncoding = { encoding: EncodingSchema };
-
 const nodeHostLabel = {
   label: MarkNodeLabelListSchema.optional().describe(
     'Node-host label: lowered onto each datum Node.label (core border-relative placement)',
@@ -281,29 +304,6 @@ const geometryHostLabel = {
     'Geometry-host label: lowered onto the generated core Path.label',
   ),
 };
-
-const markValueFieldVariant = (
-  description: string,
-): ZodObject<{ kind: ZodLiteral<'field'>; value: ZodString; scale: ZodOptional<ZodString> }> =>
-  object({
-    kind: literal(MarkValueKind.Field).describe('Field binding variant'),
-    value: NonBlankStringSchema.describe(description),
-    scale: NonBlankStringSchema.optional().describe('Optional scale name for this field-bound style value'),
-  });
-
-const markValueSchema = <T extends ZodType>(
-  constantValue: T,
-  fieldDescription: string,
-  constantDescription: string,
-  schemaDescription: string,
-) =>
-  discriminatedUnion('kind', [
-    markValueFieldVariant(fieldDescription).describe(`Field-bound ${schemaDescription}`),
-    object({
-      kind: literal(MarkValueKind.Constant).describe('Constant value variant'),
-      value: constantValue.describe(constantDescription),
-    }).describe(`Constant ${schemaDescription}`),
-  ]).describe(`${schemaDescription}: field-bound datum value or constant value`);
 
 const StylePaintSchema = union([CssColorSchema, PaintSchema]);
 
@@ -319,215 +319,87 @@ const StyleAxisScaleSchema = union([PositiveNumberSchema, AxisScaleSchema]);
 
 const StyleBoxSizeSchema = union([NonNegativeNumberSchema, BoxSizeSchema]);
 
-/** 校验点填充的字段绑定或固定颜色、结构化填充 */
-export const PointFillStyleSchema = markValueSchema(
-  StylePaintSchema,
-  'Data field path bound to point fill paint',
-  'Constant core Node fill paint',
-  'point fill style value',
-);
+/** 校验点填充的固定颜色、结构化填充 */
+export const PointFillStyleSchema = StylePaintSchema.describe('point fill style value');
 
-/** 校验点主色的字段绑定或固定 CSS 颜色 */
-export const PointColorStyleSchema = markValueSchema(
-  CssColorSchema,
-  'Data field path bound to point color',
-  'Constant point color',
-  'point color value',
-);
+/** 校验点主色的固定 CSS 颜色 */
+export const PointColorStyleSchema = CssColorSchema.describe('point color value');
 
-/** 校验点尺寸的字段绑定或非负常量半径 */
-export const PointSizeStyleSchema = markValueSchema(
-  NonNegativeNumberSchema,
-  'Data field path bound to point size',
-  'Constant final glyph radius',
-  'point size value',
-);
+/** 校验点尺寸的非负常量半径 */
+export const PointSizeStyleSchema = NonNegativeNumberSchema.describe('point size value');
 
-/** 校验点形状的字段绑定或固定 Core 形状引用 */
-export const PointShapeStyleSchema = markValueSchema(
-  ShapeValueSchema,
-  'Data field path bound to point shape',
-  'Constant core Node shape name or shape ref',
-  'point shape value',
-);
+/** 校验点形状的固定 Core 形状引用 */
+export const PointShapeStyleSchema = ShapeValueSchema.describe('point shape value');
 
-/** 校验点描边的字段绑定或固定颜色、结构化填充 */
-export const PointStrokeStyleSchema = markValueSchema(
-  StylePaintSchema,
-  'Data field path bound to point stroke paint',
-  'Constant core Node stroke paint',
-  'point stroke style value',
-);
+/** 校验点描边的固定颜色、结构化填充 */
+export const PointStrokeStyleSchema = StylePaintSchema.describe('point stroke style value');
 
-/** 校验数值样式的字段绑定或有限常量 */
-export const PointNumberStyleSchema = markValueSchema(
-  StyleNumberSchema,
-  'Data field path bound to a numeric point style value',
-  'Constant numeric style value',
-  'point numeric style value',
-);
+/** 校验数值样式的有限常量 */
+export const PointNumberStyleSchema = StyleNumberSchema.describe('point numeric style value');
 
-/** 校验非负数值样式的字段绑定或常量 */
-export const PointNonnegativeNumberStyleSchema = markValueSchema(
-  NonNegativeNumberSchema,
-  'Data field path bound to a non-negative point style value',
-  'Constant non-negative style value',
+/** 校验非负数值样式的常量 */
+export const PointNonnegativeNumberStyleSchema = NonNegativeNumberSchema.describe(
   'point non-negative numeric style value',
 );
 
-/** 校验透明度样式的字段绑定或 0 到 1 常量 */
-export const PointOpacityStyleSchema = markValueSchema(
-  OpacitySchema,
-  'Data field path bound to an opacity style value',
-  'Constant opacity value 0..1',
-  'point opacity style value',
-);
+/** 校验透明度样式的0 到 1 常量 */
+export const PointOpacityStyleSchema = OpacitySchema.describe('point opacity style value');
 
-/** 校验堆叠次序的字段绑定或整数常量 */
-export const PointZIndexStyleSchema = markValueSchema(
-  number().int(),
-  'Data field path bound to zIndex',
-  'Constant integer zIndex value',
-  'point zIndex style value',
-);
+/** 校验堆叠次序的整数常量 */
+export const PointZIndexStyleSchema = number().int().describe('point zIndex style value');
 
-/** 校验节点正数样式的字段绑定或常量 */
-export const NodePositiveNumberStyleSchema = markValueSchema(
-  PositiveNumberSchema,
-  'Data field path bound to a positive node style value',
-  'Constant positive node style value',
-  'node positive numeric style value',
-);
+/** 校验节点正数样式的常量 */
+export const NodePositiveNumberStyleSchema = PositiveNumberSchema.describe('node positive numeric style value');
 
-/** 校验节点文本对齐的字段绑定或固定关键字 */
-export const NodeTextAlignStyleSchema = markValueSchema(
-  zodEnum(NodeTextAlign),
-  'Data field path bound to node text align',
-  'Constant core Node align',
-  'node text align style value',
-);
+/** 校验节点文本对齐的固定关键字 */
+export const NodeTextAlignStyleSchema = zodEnum(NodeTextAlign).describe('node text align style value');
 
-/** 校验节点布尔样式的字段绑定或常量 */
-export const NodeBooleanStyleSchema = markValueSchema(
-  boolean(),
-  'Data field path bound to a boolean node style value',
-  'Constant boolean node style value',
-  'node boolean style value',
-);
+/** 校验节点布尔样式的常量 */
+export const NodeBooleanStyleSchema = boolean().describe('node boolean style value');
 
-/** 校验节点虚线样式的字段绑定或固定长度序列 */
-export const NodeDashPatternStyleSchema = markValueSchema(
-  StrokeDashPatternSchema,
-  'Data field path bound to node dashPattern',
-  'Constant core Node dashPattern',
-  'node dashPattern style value',
-);
+/** 校验节点虚线样式的固定长度序列 */
+export const NodeDashPatternStyleSchema = StrokeDashPatternSchema.describe('node dashPattern style value');
 
-/** 校验节点字体的字段绑定或固定字体对象 */
-export const NodeFontStyleSchema = markValueSchema(
-  FontSchema,
-  'Data field path bound to node font',
-  'Constant core Node font',
-  'node font style value',
-);
+/** 校验节点字体的固定字体对象 */
+export const NodeFontStyleSchema = FontSchema.describe('node font style value');
 
-/** 校验节点连接面的字段绑定或固定连接面引用 */
-export const NodeBoundaryStyleSchema = markValueSchema(
-  BoundarySchema,
-  'Data field path bound to node boundary',
-  'Constant core Node boundary',
-  'node boundary style value',
-);
+/** 校验节点连接面的固定连接面引用 */
+export const NodeBoundaryStyleSchema = BoundarySchema.describe('node boundary style value');
 
-/** 校验节点盒间距的字段绑定或固定数值与四边覆盖 */
-export const NodeBoxSpacingStyleSchema = markValueSchema(
-  StyleBoxSpacingSchema,
-  'Data field path bound to node box spacing',
-  'Constant core Node box spacing',
-  'node box spacing style value',
-);
+/** 校验节点盒间距的固定数值与四边覆盖 */
+export const NodeBoxSpacingStyleSchema = StyleBoxSpacingSchema.describe('node box spacing style value');
 
-/** 校验节点缩放的字段绑定或固定统一与双轴倍率 */
-export const NodeAxisScaleStyleSchema = markValueSchema(
-  StyleAxisScaleSchema,
-  'Data field path bound to node scale',
-  'Constant core Node scale',
-  'node scale style value',
-);
+/** 校验节点缩放的固定统一与双轴倍率 */
+export const NodeAxisScaleStyleSchema = StyleAxisScaleSchema.describe('node scale style value');
 
-/** 校验节点盒尺寸的字段绑定或固定统一与宽高覆盖 */
-export const NodeBoxSizeStyleSchema = markValueSchema(
-  StyleBoxSizeSchema,
-  'Data field path bound to node box size',
-  'Constant core Node box size',
-  'node box size style value',
-);
+/** 校验节点盒尺寸的固定统一与宽高覆盖 */
+export const NodeBoxSizeStyleSchema = StyleBoxSizeSchema.describe('node box size style value');
 
-/** 校验投影样式的字段绑定或固定预设与对象 */
-export const ShadowStyleSchema = markValueSchema(
-  StyleShadowSchema,
-  'Data field path bound to shadow',
-  'Constant core shadow preset or object',
-  'shadow style value',
-);
+/** 校验投影样式的固定预设与对象 */
+export const ShadowStyleSchema = StyleShadowSchema.describe('shadow style value');
 
-/** 校验混合模式的字段绑定或固定关键字 */
-export const BlendModeStyleSchema = markValueSchema(
-  StyleBlendModeSchema,
-  'Data field path bound to blendMode',
-  'Constant core blendMode',
-  'blendMode style value',
-);
+/** 校验混合模式的固定关键字 */
+export const BlendModeStyleSchema = StyleBlendModeSchema.describe('blendMode style value');
 
-/** 校验路径线帽的字段绑定或固定形状 */
-export const PathLineCapStyleSchema = markValueSchema(
-  PathLineCapSchema,
-  'Data field path bound to a path lineCap value',
-  'Constant core Path lineCap',
-  'path lineCap style value',
-);
+/** 校验路径线帽的固定形状 */
+export const PathLineCapStyleSchema = PathLineCapSchema.describe('path lineCap style value');
 
-/** 校验路径拐角连接的字段绑定或固定形状 */
-export const PathLineJoinStyleSchema = markValueSchema(
-  PathLineJoinSchema,
-  'Data field path bound to a path lineJoin value',
-  'Constant core Path lineJoin',
-  'path lineJoin style value',
-);
+/** 校验路径拐角连接的固定形状 */
+export const PathLineJoinStyleSchema = PathLineJoinSchema.describe('path lineJoin style value');
 
-/** 校验路径圆角的字段绑定或固定非负半径 */
-export const PathRoundedCornersStyleSchema = markValueSchema(
-  NonNegativeNumberSchema,
-  'Data field path bound to path roundedCorners',
-  'Constant core Path roundedCorners radius',
-  'path roundedCorners style value',
-);
+/** 校验路径圆角的固定非负半径 */
+export const PathRoundedCornersStyleSchema = NonNegativeNumberSchema.describe('path roundedCorners style value');
 
-/** 校验路径填充规则的字段绑定或固定环绕规则 */
-export const PathFillRuleStyleSchema = markValueSchema(
-  PathFillRuleSchema,
-  'Data field path bound to path fillRule',
-  'Constant core Path fillRule',
-  'path fillRule style value',
-);
+/** 校验路径填充规则的固定环绕规则 */
+export const PathFillRuleStyleSchema = PathFillRuleSchema.describe('path fillRule style value');
 
-/** 校验路径粗细的字段绑定或固定预设 */
-export const PathThicknessStyleSchema = markValueSchema(
-  zodEnum(PathThickness),
-  'Data field path bound to path thickness',
-  'Constant core Path thickness preset',
-  'path thickness style value',
-);
+/** 校验路径粗细的固定预设 */
+export const PathThicknessStyleSchema = zodEnum(PathThickness).describe('path thickness style value');
 
-/** 校验路径缩放的字段绑定或固定统一与双轴倍率 */
-export const PathScaleStyleSchema = markValueSchema(
-  PathScaleSchema,
-  'Data field path bound to path scale',
-  'Constant core Path scale',
-  'path scale style value',
-);
+/** 校验路径缩放的固定统一与双轴倍率 */
+export const PathScaleStyleSchema = PathScaleSchema.describe('path scale style value');
 
-/** 校验整体、填充与描边各自的字段或常量绑定 */
+/** 校验整体、填充与描边各自的固定透明度 */
 export const MarkOpacityStyleSchema = strictObject({
   overall: PointOpacityStyleSchema.optional().describe(
     'Overall opacity binding, multiplied by fill and stroke factors.',
@@ -538,35 +410,23 @@ export const MarkOpacityStyleSchema = strictObject({
 
 /** 校验各关系路径种类共用的图元视觉样式 */
 export const RelationPrimitiveStyleSchema = strictObject({
-  color: PointColorStyleSchema.optional().describe(
-    'Shared relation master color: field-bound datum channel or constant color',
-  ),
-  fill: PointFillStyleSchema.optional().describe(
-    'Shared relation fill paint: field-bound datum channel or constant CSS color / IRPaint',
-  ),
-  stroke: PointStrokeStyleSchema.optional().describe(
-    'Shared relation stroke paint: field-bound datum channel or constant CSS color / IRPaint',
-  ),
+  color: PointColorStyleSchema.optional().describe('Shared relation master color: fixed color'),
+  fill: PointFillStyleSchema.optional().describe('Shared relation fill paint: fixed CSS color / IRPaint'),
+  stroke: PointStrokeStyleSchema.optional().describe('Shared relation stroke paint: fixed CSS color / IRPaint'),
   strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
-    'Shared relation stroke width: field-bound datum channel or constant non-negative value',
+    'Shared relation stroke width: fixed non-negative value',
   ),
   opacity: MarkOpacityStyleSchema.optional(),
-  shadow: ShadowStyleSchema.optional().describe(
-    'Shared relation shadow: field-bound datum channel or constant preset / object',
-  ),
-  blendMode: BlendModeStyleSchema.optional().describe(
-    'Shared relation blendMode: field-bound datum channel or constant blend mode',
-  ),
-  zIndex: PointZIndexStyleSchema.optional().describe(
-    'Shared relation zIndex: field-bound datum channel or constant integer',
-  ),
+  shadow: ShadowStyleSchema.optional().describe('Shared relation shadow: fixed preset / object'),
+  blendMode: BlendModeStyleSchema.optional().describe('Shared relation blendMode: fixed blend mode'),
+  zIndex: PointZIndexStyleSchema.optional().describe('Shared relation zIndex: fixed integer'),
 }).describe('Style fields shared by RelationMark path kinds');
 
-const PathCycleClosureSchema = object({
+const PathCycleClosureSchema = strictObject({
   kind: literal(PathClosureKind.Cycle).describe('Cycle closure: connect the final point back to the first point'),
 }).describe('Path cycle closure: closes the path as a polygon; set fill to render an area');
 
-const PathBaselineClosureSchema = object({
+const PathBaselineClosureSchema = strictObject({
   kind: literal(PathClosureKind.Baseline).describe(
     'Baseline closure: return from the upper outline to a baseline value',
   ),
@@ -577,12 +437,9 @@ const PathBaselineClosureSchema = object({
     ),
 }).describe('Path baseline closure: closes the upper outline down to a baseline; set fill to render an area');
 
-const PathStackClosureSchema = object({
+const PathStackClosureSchema = strictObject({
   kind: literal(PathClosureKind.Stack).describe(
     'Stack closure: return from the upper outline to a per-row baseline field',
-  ),
-  baselineField: NonBlankStringSchema.describe(
-    'Data field path for the lower boundary value, such as y0 from a stack transform; the upper boundary still comes from encoding.y',
   ),
 }).describe(
   'Path stack closure: closes the upper outline against a per-row lower-bound field; set fill to render an area',
@@ -598,74 +455,38 @@ export const PathClosureSchema = discriminatedUnion('kind', [
 );
 
 const coreNodeStyle = {
-  align: NodeTextAlignStyleSchema.optional().describe(
-    'Core Node text alignment: field-bound datum channel or constant start / middle / end',
-  ),
-  lineHeight: NodePositiveNumberStyleSchema.optional().describe(
-    'Core Node lineHeight: field-bound datum channel or constant positive value',
-  ),
-  maxTextWidth: NodePositiveNumberStyleSchema.optional().describe(
-    'Core Node maxTextWidth: field-bound datum channel or constant positive value',
-  ),
+  align: NodeTextAlignStyleSchema.optional().describe('Core Node text alignment: fixed start / middle / end'),
+  lineHeight: NodePositiveNumberStyleSchema.optional().describe('Core Node lineHeight: fixed positive value'),
+  maxTextWidth: NodePositiveNumberStyleSchema.optional().describe('Core Node maxTextWidth: fixed positive value'),
   cornerRadius: PointNonnegativeNumberStyleSchema.optional().describe(
-    'Core Node cornerRadius: field-bound datum channel or constant non-negative value',
+    'Core Node cornerRadius: fixed non-negative value',
   ),
-  scale: NodeAxisScaleStyleSchema.optional().describe(
-    'Core Node scale: field-bound datum channel or constant number / {default,x,y}',
-  ),
-  padding: NodeBoxSpacingStyleSchema.optional().describe(
-    'Core Node padding: field-bound datum channel or constant box spacing',
-  ),
-  margin: NodeBoxSpacingStyleSchema.optional().describe(
-    'Core Node margin: field-bound datum channel or constant box spacing',
-  ),
-  dashed: NodeBooleanStyleSchema.optional().describe('Core Node dashed: field-bound datum channel or constant boolean'),
-  dotted: NodeBooleanStyleSchema.optional().describe('Core Node dotted: field-bound datum channel or constant boolean'),
-  dashPattern: NodeDashPatternStyleSchema.optional().describe(
-    'Core Node dashPattern: field-bound datum channel or constant number array',
-  ),
-  font: NodeFontStyleSchema.optional().describe('Core Node font: field-bound datum channel or constant font object'),
-  boundary: NodeBoundaryStyleSchema.optional().describe(
-    'Core Node boundary: field-bound datum channel or constant boundary value',
-  ),
-  shadow: ShadowStyleSchema.optional().describe(
-    'Core Node shadow: field-bound datum channel or constant preset / object',
-  ),
-  blendMode: BlendModeStyleSchema.optional().describe(
-    'Core Node blendMode: field-bound datum channel or constant blend mode',
-  ),
+  scale: NodeAxisScaleStyleSchema.optional().describe('Core Node scale: fixed number / {default,x,y}'),
+  padding: NodeBoxSpacingStyleSchema.optional().describe('Core Node padding: fixed box spacing'),
+  margin: NodeBoxSpacingStyleSchema.optional().describe('Core Node margin: fixed box spacing'),
+  dashed: NodeBooleanStyleSchema.optional().describe('Core Node dashed: fixed boolean'),
+  dotted: NodeBooleanStyleSchema.optional().describe('Core Node dotted: fixed boolean'),
+  dashPattern: NodeDashPatternStyleSchema.optional().describe('Core Node dashPattern: fixed number array'),
+  font: NodeFontStyleSchema.optional().describe('Core Node font: fixed font object'),
+  boundary: NodeBoundaryStyleSchema.optional().describe('Core Node boundary: fixed boundary value'),
+  shadow: ShadowStyleSchema.optional().describe('Core Node shadow: fixed preset / object'),
+  blendMode: BlendModeStyleSchema.optional().describe('Core Node blendMode: fixed blend mode'),
 };
 
 const corePathStyle = {
-  fill: PointFillStyleSchema.optional().describe(
-    'Core Path fill paint: field-bound datum channel or constant CSS color / IRPaint',
-  ),
-  stroke: PointStrokeStyleSchema.optional().describe(
-    'Core Path stroke paint: field-bound datum channel or constant CSS color / IRPaint',
-  ),
-  zIndex: PointZIndexStyleSchema.optional().describe('Core Path zIndex: field-bound datum channel or constant integer'),
-  rotate: PointNumberStyleSchema.optional().describe('Core Path rotate: field-bound datum channel or constant angle'),
-  scale: PathScaleStyleSchema.optional().describe(
-    'Core Path scale: field-bound datum channel or constant number / {x,y}',
-  ),
-  fillRule: PathFillRuleStyleSchema.optional().describe(
-    'Core Path fillRule: field-bound datum channel or constant nonzero / evenodd',
-  ),
-  thickness: PathThicknessStyleSchema.optional().describe(
-    'Core Path thickness: field-bound datum channel or constant preset',
-  ),
+  fill: PointFillStyleSchema.optional().describe('Core Path fill paint: fixed CSS color / IRPaint'),
+  stroke: PointStrokeStyleSchema.optional().describe('Core Path stroke paint: fixed CSS color / IRPaint'),
+  zIndex: PointZIndexStyleSchema.optional().describe('Core Path zIndex: fixed integer'),
+  rotate: PointNumberStyleSchema.optional().describe('Core Path rotate: fixed angle'),
+  scale: PathScaleStyleSchema.optional().describe('Core Path scale: fixed number / {x,y}'),
+  fillRule: PathFillRuleStyleSchema.optional().describe('Core Path fillRule: fixed nonzero / evenodd'),
+  thickness: PathThicknessStyleSchema.optional().describe('Core Path thickness: fixed preset'),
   marks: PathDecorationSchema.shape.marks
     .optional()
     .describe('Static core Path marks placed along the lowered path; use endpoint marks for arrows'),
-  dashPattern: NodeDashPatternStyleSchema.optional().describe(
-    'Core Path dashPattern: field-bound datum channel or constant number array',
-  ),
-  shadow: ShadowStyleSchema.optional().describe(
-    'Core Path shadow: field-bound datum channel or constant preset / object',
-  ),
-  blendMode: BlendModeStyleSchema.optional().describe(
-    'Core Path blendMode: field-bound datum channel or constant blend mode',
-  ),
+  dashPattern: NodeDashPatternStyleSchema.optional().describe('Core Path dashPattern: fixed number array'),
+  shadow: ShadowStyleSchema.optional().describe('Core Path shadow: fixed preset / object'),
+  blendMode: BlendModeStyleSchema.optional().describe('Core Path blendMode: fixed blend mode'),
 };
 
 /** 校验节点相对屏幕或坐标角色的方向意图 */
@@ -679,16 +500,12 @@ export const MarkOrientationSchema = union([
 ]).describe('Node orientation reference; omitted means screen orientation');
 
 /** 校验逐记录生成点图形或文本节点的点标记 */
-export const PointMarkSchema = strictObject({
-  kind: literal('data').optional(),
+export const PointPropertiesSchema = strictObject({
   orientation: MarkOrientationSchema.optional(),
   autoPadding: PointAutoPaddingSchema.default('max-radius').optional(),
-  type: literal(BuiltinPlotMark.Point).describe('Discriminator: one glyph or text label per record'),
-  color: PointColorStyleSchema.optional().describe(
-    'Glyph color: field-bound datum channel or constant color; overrides constant fill',
-  ),
+  color: PointColorStyleSchema.optional().describe('Glyph color: fixed color; overrides constant fill'),
   textColor: PointColorStyleSchema.optional().describe(
-    'Text point color: field-bound datum channel or constant core Node textColor; only applied when encoding.text is set',
+    'Text point color: fixed core Node textColor; only applied when encoding.text is set',
   ),
   size: PointSizeStyleSchema.optional().describe(
     'Glyph size: field-bound datum channel via a sqrt radius scale or constant final radius',
@@ -696,25 +513,17 @@ export const PointMarkSchema = strictObject({
   shape: PointShapeStyleSchema.optional().describe(
     'Glyph shape: field-bound categorical channel or constant core Node shape name',
   ),
-  fill: PointFillStyleSchema.optional().describe(
-    'Glyph fill: field-bound datum channel or constant core Node fill paint',
-  ),
-  stroke: PointStrokeStyleSchema.optional().describe(
-    'Glyph stroke paint: field-bound datum channel or constant core Node stroke paint',
-  ),
+  fill: PointFillStyleSchema.optional().describe('Glyph fill: fixed core Node fill paint'),
+  stroke: PointStrokeStyleSchema.optional().describe('Glyph stroke paint: fixed core Node stroke paint'),
   strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
-    'Glyph stroke width: field-bound datum channel or constant core Node stroke width',
+    'Glyph stroke width: fixed core Node stroke width',
   ),
   opacity: MarkOpacityStyleSchema.optional(),
-  rotate: PointNumberStyleSchema.optional().describe(
-    'Glyph rotation in degrees: field-bound datum channel or constant angle',
-  ),
+  rotate: PointNumberStyleSchema.optional().describe('Glyph rotation in degrees: fixed angle'),
   minimumSize: NodeBoxSizeStyleSchema.optional().describe(
-    'Minimum visual size: field-bound datum channel or constant number / {default,width,height}; overridden per datum by size',
+    'Minimum visual size: fixed number / {default,width,height}; overridden per datum by size',
   ),
-  zIndex: PointZIndexStyleSchema.optional().describe(
-    'Drawing order hint: field-bound datum channel or constant zIndex',
-  ),
+  zIndex: PointZIndexStyleSchema.optional().describe('Drawing order hint: fixed zIndex'),
   ...coreNodeStyle,
   dx: number()
     .optional()
@@ -732,16 +541,29 @@ export const PointMarkSchema = strictObject({
   placement: MarkPlacementSchema.optional().describe(
     'Position adjustments applied after position scale mapping and before mark geometry',
   ),
-  ...markBase,
   ...nodeHostLabel,
-  encoding: PointEncodingSchema,
-}).describe(
-  'Point mark: scatter glyph or borderless text label (encoding.text set → text Node); supports optional size / opacity / shape glyph channels',
-);
+  position: AnnotationPositionSchema.optional(),
+  text: NodeSchema.shape.text,
+  displayFormat: NonBlankStringSchema.optional(),
+}).describe('Fixed point properties and construction parameters');
+
+/** 校验逐记录点的身份、字段编码与固定属性 */
+export const PointMarkSchema = strictObject({
+  ...markBase,
+  type: literal(BuiltinPlotMark.Point),
+  kind: literal('data'),
+  encodings: PointEncodingSchema.optional(),
+  properties: PointPropertiesSchema.optional(),
+})
+  .refine(hasValidAnchorSource, {
+    path: ['properties', 'anchorId'],
+    message: 'anchorId requires exactly one of field, template, or generator',
+  })
+  .describe('Data point mark');
 
 /** Relation projected target 可选端点 glyph 的封闭 Point 表现字段 */
 export const RelationEndpointGlyphSchema = strictObject({
-  ...PointMarkSchema.pick({
+  ...PointPropertiesSchema.pick({
     color: true,
     size: true,
     shape: true,
@@ -752,20 +574,7 @@ export const RelationEndpointGlyphSchema = strictObject({
     rotate: true,
     minimumSize: true,
   }).shape,
-})
-  .superRefine((glyph, ctx) => {
-    for (const [name, value] of Object.entries(glyph)) {
-      const bindings = name === 'opacity' ? Object.values(value) : [value];
-      if (bindings.some(binding => binding.kind !== MarkValueKind.Constant)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: [name],
-          message: 'relation endpoint glyph styles must use constant values',
-        });
-      }
-    }
-  })
-  .describe('Constant Point glyph appearance emitted at a projected Relation endpoint');
+}).describe('Constant Point glyph appearance emitted at a projected Relation endpoint');
 
 /** Relation source / target 的可选端点 glyph 配置 */
 export const RelationEndpointGlyphsSchema = strictObject({
@@ -785,15 +594,8 @@ export const PlotPathConnectNullsStyleSchema = PathStrokeSchema.extend({
 }).describe('Stroke overrides for bridges across missing projected points in an open unfilled path');
 
 /** 校验按记录顺序连接为一维轨迹的路径标记 */
-export const PathMarkSchema = strictObject({
-  kind: literal('data').optional(),
-  type: literal(BuiltinPlotMark.Path).describe('Discriminator: ordered points connected into a 1D path'),
-  order: NonBlankStringSchema.optional().describe(
-    'Data field driving connection order; omit for data array order (minimal relation)',
-  ),
-  series: NonBlankStringSchema.optional().describe(
-    'Series field: split records into one path per distinct value (multi-series); each series gets its own color via the color scale',
-  ),
+export const PathPropertiesSchema = strictObject({
+  color: CssColorSchema.optional(),
   closed: boolean()
     .optional()
     .describe(
@@ -811,62 +613,70 @@ export const PathMarkSchema = strictObject({
   interpolation: zodEnum(PolarInterpolation)
     .optional()
     .describe('Polar2D connection-space override; omit to inherit the resolved coordinate interpolation'),
-  strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
-    'Path stroke width: field-bound datum channel or constant core Path stroke width',
-  ),
+  strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe('Path stroke width: fixed core Path stroke width'),
   opacity: MarkOpacityStyleSchema.optional(),
-  lineCap: PathLineCapStyleSchema.optional().describe(
-    'Path stroke endpoint style: field-bound datum channel or constant core Path lineCap',
-  ),
-  lineJoin: PathLineJoinStyleSchema.optional().describe(
-    'Path stroke join style: field-bound datum channel or constant core Path lineJoin',
-  ),
+  lineCap: PathLineCapStyleSchema.optional().describe('Path stroke endpoint style: fixed core Path lineCap'),
+  lineJoin: PathLineJoinStyleSchema.optional().describe('Path stroke join style: fixed core Path lineJoin'),
   roundedCorners: PathRoundedCornersStyleSchema.optional().describe(
-    'Path geometric corner radius: field-bound datum channel or constant core Path roundedCorners',
+    'Path geometric corner radius: fixed core Path roundedCorners',
   ),
   ...corePathStyle,
   anchorId: AnchorIdSchema.optional().describe(
     'Stable id rule for generated per-datum core Coordinates along this path',
   ),
-  ...markBase,
   ...geometryHostLabel,
-  ...positionalEncoding,
-}).describe('Path mark: connects records in order into a 1D trajectory (line / radar outline)');
+  position: AnnotationPositionSchema.optional(),
+}).describe('Fixed data path properties and construction rules');
 
-const BandBoundSchema = object({
+/** 校验路径顶点、分组与排序字段 */
+export const PathMarkEncodingSchema = PathEncodingSchema.extend({
+  anchorId: NonBlankStringSchema.optional(),
+  position: PositionEncodingSchema.optional(),
+  series: NonBlankStringSchema.optional(),
+  order: NonBlankStringSchema.optional(),
+  closure: strictObject({ baseline: NonBlankStringSchema }).optional(),
+});
+
+/** 校验按系列与顺序连接数据顶点的路径 */
+export const PathMarkSchema = strictObject({
+  ...markBase,
+  type: literal(BuiltinPlotMark.Path),
+  kind: literal('data'),
+  encodings: PathMarkEncodingSchema.optional(),
+  properties: PathPropertiesSchema.optional(),
+})
+  .refine(hasValidAnchorSource, {
+    path: ['properties', 'anchorId'],
+    message: 'anchorId requires exactly one of field, template, or generator',
+  })
+  .describe('Data path mark; segment appearance uses its first row');
+
+const BandBoundSchema = strictObject({
   kind: literal(IntervalBoundKind.Band).describe(
     'Band bound: center from the role position channel, width from the band scale bandwidth',
-  ),
-  group: NonBlankStringSchema.optional().describe(
-    'Series field that subdivides the band into equal sub-bands (grouped / dodge); omit for a full-width band',
   ),
 }).describe(
   'Band bound: a category band on this role (bar primary, heatmap axis, polar angle band); optional group → dodge sub-bands',
 );
 
-const SpanBoundSchema = object({
+const SpanBoundSchema = strictObject({
   kind: literal(IntervalBoundKind.Span).describe('Span bound: from a baseline to the role position channel value'),
   baseline: number()
     .optional()
     .describe('Baseline the span starts from; the interval runs baseline→channel value. Default 0'),
 }).describe('Span bound: baseline→value interval (bar height, radial-bar radius)');
 
-const ExtentBoundSchema = object({
+const ExtentBoundSchema = strictObject({
   kind: literal(IntervalBoundKind.Extent).describe('Extent bound: an explicit interval read from two fields'),
-  from: NonBlankStringSchema.describe('Lower-bound field (e.g. stack y0 / bin start / cumulative start angle)'),
-  to: NonBlankStringSchema.describe('Upper-bound field (e.g. stack y1 / bin end / cumulative end angle)'),
 }).describe('Extent bound: explicit [from, to] field interval (histogram bin / stacked bar / cumulative pie angle)');
 
-const ProportionalBoundSchema = object({
+const ProportionalBoundSchema = strictObject({
   kind: literal(IntervalBoundKind.Proportional).describe(
     'Proportional bound: contiguous intervals whose widths are driven by a numeric field',
   ),
-  field: NonBlankStringSchema.describe(
-    'Non-negative numeric field used to build contiguous proportional intervals along this role',
-  ),
 }).describe('Proportional bound: contiguous variable-width intervals along this role (variable-width bar / mosaic)');
 
-const FullBoundSchema = object({
+const FullBoundSchema = strictObject({
   kind: literal(IntervalBoundKind.Full).describe('Full bound: span the whole coordinate domain of this role'),
 }).describe('Full bound: spans the role coordinate domain (pie / donut radius, inner→outer)');
 
@@ -896,14 +706,8 @@ export const IntervalBoundsSchema = record(NonBlankStringSchema, unknown())
   );
 
 /** 校验由各角色区间与坐标系共同确定几何的区间标记 */
-export const IntervalMarkSchema = strictObject({
-  kind: literal('data').optional(),
-  type: literal(BuiltinPlotMark.Interval).describe(
-    'Discriminator: an orthogonal interval product projected to a segment / rectangle / sector / cell by the coordinate system',
-  ),
-  series: NonBlankStringSchema.optional().describe(
-    'Series field: split records into multiple interval series (color grouping; sub-band grouping when bounds.x is a band with group)',
-  ),
+export const IntervalPropertiesSchema = strictObject({
+  color: CssColorSchema.optional(),
   bounds: IntervalBoundsSchema.optional().describe(
     'Per-role interval bounds keyed by coordinate role; omit to infer from the coordinate role',
   ),
@@ -911,14 +715,10 @@ export const IntervalMarkSchema = strictObject({
     .optional()
     .describe('Polar2D cell-boundary override; omit to inherit the resolved coordinate interpolation'),
   strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
-    'Interval cell stroke width: field-bound datum channel or constant core Node stroke width',
+    'Interval cell stroke width: fixed core Node stroke width',
   ),
-  fill: PointFillStyleSchema.optional().describe(
-    'Interval cell fill paint: field-bound datum channel or constant CSS color / IRPaint',
-  ),
-  stroke: PointStrokeStyleSchema.optional().describe(
-    'Interval cell stroke paint: field-bound datum channel or constant CSS color / IRPaint',
-  ),
+  fill: PointFillStyleSchema.optional().describe('Interval cell fill paint: fixed CSS color / IRPaint'),
+  stroke: PointStrokeStyleSchema.optional().describe('Interval cell stroke paint: fixed CSS color / IRPaint'),
   opacity: MarkOpacityStyleSchema.optional(),
   padAngle: NonNegativeNumberSchema.optional().describe(
     'Angular gap in degrees applied to polar cells; each cell shrinks by half this angle on both sides before sector or chord-contour projection. Cartesian cells ignore it',
@@ -930,12 +730,40 @@ export const IntervalMarkSchema = strictObject({
     'Stable id rule written to each generated core interval Node; takes precedence over datumIdField for the node id',
   ),
   ...coreNodeStyle,
-  ...markBase,
   ...nodeHostLabel,
-  ...positionalEncoding,
-}).describe(
-  'Interval mark: orthogonal interval product realized per bounds × coordinate (bar / histogram / heatmap cell / radial bar / pie-donut sector)',
-);
+  position: AnnotationPositionSchema.optional(),
+}).describe('Fixed interval construction rules and appearance');
+
+/** 校验区间角色的字段来源 */
+export const IntervalBoundEncodingSchema = strictObject({
+  group: NonBlankStringSchema.optional(),
+  from: NonBlankStringSchema.optional(),
+  to: NonBlankStringSchema.optional(),
+  weight: NonBlankStringSchema.optional(),
+});
+
+/** 校验数据区间的位置、分组与边界编码 */
+export const IntervalEncodingSchema = NodeEncodingSchema.extend({
+  anchorId: NonBlankStringSchema.optional(),
+  position: PositionEncodingSchema.optional(),
+  series: NonBlankStringSchema.optional(),
+  bounds: record(NonBlankStringSchema, IntervalBoundEncodingSchema).optional(),
+  pull: ChannelSchema.optional(),
+});
+
+/** 校验按坐标角色区间生成的数据图元 */
+export const IntervalMarkSchema = strictObject({
+  ...markBase,
+  type: literal(BuiltinPlotMark.Interval),
+  kind: literal('data'),
+  encodings: IntervalEncodingSchema.optional(),
+  properties: IntervalPropertiesSchema.optional(),
+})
+  .refine(hasValidAnchorSource, {
+    path: ['properties', 'anchorId'],
+    message: 'anchorId requires exactly one of field, template, or generator',
+  })
+  .describe('Data interval mark');
 
 /** 校验普通路径关系的插值、路由、标签与路径选项 */
 export const RelationPathGeometrySchema = strictObject({
@@ -986,7 +814,7 @@ export const RelationRibbonSpecificOptionsSchema = strictObject({
 
 /** 校验带状关系的起止宽度及专属几何选项 */
 export const RelationRibbonOptionsSchema = strictObject({
-  width: PointNonnegativeNumberStyleSchema.describe(
+  width: PointNonnegativeNumberStyleSchema.optional().describe(
     'Ribbon width at the source side, or the whole width when endWidth is omitted',
   ),
   endWidth: PointNonnegativeNumberStyleSchema.optional().describe(
@@ -995,125 +823,143 @@ export const RelationRibbonOptionsSchema = strictObject({
   options: RelationRibbonSpecificOptionsSchema.optional().describe(
     'Core Path kind=ribbon options used only by ribbon relations',
   ),
-})
-  .superRefine((ribbon, ctx) => {
-    if (ribbon.options?.interpolation !== undefined && ribbon.endWidth === undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['options', 'interpolation'],
-        message: 'ribbon interpolation only applies when endWidth is set',
-      });
-    }
-  })
-  .describe('Ribbon geometry configuration for RelationMark');
+}).describe('Ribbon geometry configuration for RelationMark');
 
 /** 校验连接源与目标的关系标记，kind 决定普通描边或带状路径语义 */
-export const RelationMarkSchema = strictObject({
+export const RelationGeometrySchema = discriminatedUnion('kind', [
+  RelationPathGeometrySchema.safeExtend({ kind: literal(RelationGeometryKind.Path) }),
+  RelationRibbonOptionsSchema.safeExtend({ kind: literal(RelationGeometryKind.Ribbon) }),
+]).describe('Relation path or ribbon construction');
+
+/** 校验关系固定目标与几何属性 */
+export const RelationPropertiesSchema = RelationPrimitiveStyleSchema.extend({
+  source: PlotTargetRefSchema.optional(),
+  target: PlotTargetRefSchema.optional(),
+  geometry: RelationGeometrySchema,
+  endpoints: RelationEndpointGlyphsSchema.optional(),
   autoPadding: PointAutoPaddingSchema.default(false).optional(),
-  type: literal(BuiltinPlotMark.Relation).describe('Discriminator: source-target relation lowered to a core Path'),
-  kind: zodEnum(RelationGeometryKind).optional().describe('Relation geometry kind; omitted means path'),
-  source: PlotTargetRefSchema.describe('Relation source target'),
-  target: PlotTargetRefSchema.describe('Relation target target'),
-  style: RelationPrimitiveStyleSchema.optional().describe(
-    'Style fields shared by stroke and ribbon relation path kinds',
-  ),
-  path: RelationPathGeometrySchema.optional().describe('Path-specific relation geometry and core Path options'),
-  ribbon: RelationRibbonOptionsSchema.optional().describe(
-    'Ribbon-specific relation geometry and core Path kind=ribbon options',
-  ),
-  endpoints: RelationEndpointGlyphsSchema.optional().describe(
-    'Optional Point glyphs emitted at plain projected source and target positions',
-  ),
   ...geometryHostLabel,
+});
+
+/** 校验关系几何与目标中的字段依赖 */
+export const RelationEncodingSchema = MarkChannelEncodingSchema.extend({
+  source: PlotTargetEncodingSchema.optional(),
+  target: PlotTargetEncodingSchema.optional(),
+  label: PathEncodingSchema.shape.label,
+  geometry: strictObject({
+    width: ChannelSchema.optional(),
+    endWidth: ChannelSchema.optional(),
+    via: array(PlotTargetEncodingSchema).optional(),
+    route: array(
+      strictObject({
+        to: PlotTargetEncodingSchema.optional(),
+        label: strictObject({ text: NonBlankStringSchema.optional() }).optional(),
+      }),
+    ).optional(),
+    label: strictObject({ text: NonBlankStringSchema.optional() }).optional(),
+  }).optional(),
+});
+
+/** 校验按记录连接目标的关系标记 */
+export const RelationMarkSchema = strictObject({
   ...markBase,
-  encoding: object({
-    color: MarkChannelEncodingSchema.shape.color
-      .optional()
-      .describe('Optional relation color channel; delivered as core Path color'),
-    channels: MarkChannelEncodingSchema.shape.channels
-      .optional()
-      .describe('Custom channel bindings consumed by mark / scope / path definitions'),
-  })
-    .optional()
-    .describe('Optional non-position relation channels; source/target carry relation geometry'),
+  type: literal(BuiltinPlotMark.Relation),
+  kind: literal('data'),
+  encodings: RelationEncodingSchema.optional(),
+  properties: RelationPropertiesSchema,
 })
   .superRefine((mark, ctx) => {
-    const kind = mark.kind ?? RelationGeometryKind.Path;
-    if (kind === RelationGeometryKind.Path && mark.ribbon !== undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['ribbon'],
-        message: 'path relation marks cannot use ribbon options',
-      });
+    const { properties, encodings } = mark;
+    const geometry = properties.geometry;
+    for (const role of ['source', 'target'] as const) {
+      if (properties[role] === undefined && encodings?.[role] === undefined) {
+        ctx.addIssue({ code: 'custom', path: ['properties', role], message: 'Relation requires both targets' });
+      }
     }
-
-    if (kind === RelationGeometryKind.Ribbon && mark.path !== undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['path'],
-        message:
-          mark.path.interpolation === undefined
-            ? 'ribbon relation marks cannot use path options'
-            : 'relation interpolation override is not supported for ribbon geometry',
-      });
-    }
-
-    if (kind === RelationGeometryKind.Ribbon && mark.ribbon === undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['ribbon'],
-        message: 'ribbon relation marks require ribbon options',
-      });
-    }
-
-    if (mark.endpoints !== undefined) {
-      if (kind !== RelationGeometryKind.Path) {
+    if (geometry.kind === 'ribbon') {
+      if (geometry.width === undefined && encodings?.geometry?.width === undefined) {
+        ctx.addIssue({ code: 'custom', path: ['properties', 'geometry', 'width'], message: 'Ribbon requires a width' });
+      }
+      if (
+        geometry.options?.interpolation !== undefined &&
+        geometry.endWidth === undefined &&
+        encodings?.geometry?.endWidth === undefined
+      ) {
         ctx.addIssue({
           code: 'custom',
-          path: ['endpoints'],
-          message: 'relation endpoint glyphs require a path relation',
+          path: ['properties', 'geometry', 'options', 'interpolation'],
+          message: 'Ribbon interpolation requires endWidth',
         });
       }
-
-      if (!('project' in mark.source) || !('project' in mark.target)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['endpoints'],
-          message: 'relation endpoint glyphs require projected source and target refs',
-        });
-      }
-
-      for (const [role, ref] of [
-        ['source', mark.source],
-        ['target', mark.target],
-      ] as const) {
-        if (
-          'project' in ref &&
-          (ref.anchorId !== undefined ||
-            ref.anchor !== undefined ||
-            ref.offset !== undefined ||
-            ref.boundary !== undefined)
-        ) {
+      for (const name of ['via', 'route', 'label'] as const) {
+        if (encodings?.geometry?.[name] !== undefined) {
           ctx.addIssue({
             code: 'custom',
-            path: [role],
-            message: 'relation endpoint glyph projected refs cannot use anchor, offset, boundary, or anchorId',
+            path: ['encodings', 'geometry', name],
+            message: 'Ribbon does not support path route encodings',
           });
         }
       }
-
-      if (mark.path?.via !== undefined || mark.path?.route !== undefined) {
+    } else {
+      for (const name of ['width', 'endWidth'] as const) {
+        if (encodings?.geometry?.[name] !== undefined) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['encodings', 'geometry', name],
+            message: 'Path does not support ribbon width encodings',
+          });
+        }
+      }
+    }
+    if (properties.endpoints === undefined) return;
+    if (geometry.kind !== 'path') {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['properties', 'endpoints'],
+        message: 'Endpoint glyphs require path geometry',
+      });
+      return;
+    }
+    if (
+      geometry.via !== undefined ||
+      geometry.route !== undefined ||
+      encodings?.geometry?.via !== undefined ||
+      encodings?.geometry?.route !== undefined
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['properties', 'endpoints'],
+        message: 'Endpoint glyphs cannot use via or route',
+      });
+    }
+    for (const role of ['source', 'target'] as const) {
+      const target = properties[role];
+      const encoding = encodings?.[role];
+      if ((target === undefined || !('position' in target)) && encoding?.position === undefined) {
         ctx.addIssue({
           code: 'custom',
-          path: ['path'],
-          message: 'relation endpoint glyphs cannot use via or route',
+          path: ['properties', role],
+          message: 'Endpoint glyphs require projected targets',
+        });
+      }
+      if (
+        (target !== undefined &&
+          ('id' in target ||
+            ('anchorId' in target && target.anchorId !== undefined) ||
+            target.anchor !== undefined ||
+            target.offset !== undefined ||
+            target.boundary !== undefined)) ||
+        encoding?.anchorId !== undefined
+      ) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['properties', role],
+          message: 'Endpoint glyph targets cannot use anchor, offset, boundary, id or anchorId',
         });
       }
     }
   })
-  .describe(
-    'Relation mark: connects source and target targets through a core Path; kind selects stroke or ribbon path semantics',
-  );
+  .describe('Data relation mark');
 
 /** 校验内置点、路径、区间与关系标记 */
 export const MarkSchema = discriminatedUnion('type', [
@@ -1123,120 +969,98 @@ export const MarkSchema = discriminatedUnion('type', [
   RelationMarkSchema,
 ]).describe('Mark union: dimensional marks (point / path / interval) and source-target relation marks');
 
-const CustomMarkObjectSchema = looseObject({
+const CustomMarkObjectSchema = strictObject({
+  ...markBase,
   type: NonBlankStringSchema.refine(type => !BUILTIN_MARK_TYPES.has(type), {
     message: 'custom mark type must not collide with a built-in mark type',
-  }).describe(
-    'Discriminator: custom mark type; must be a non-blank, non-built-in identifier registered through options.definitions.marks',
-  ),
-  defaultColorIndex: markBase.defaultColorIndex,
-  defaultColorGroup: NonBlankStringSchema.optional().describe(
-    'Optional semantic group whose marks share one sequential palette.series slot when no explicit color is authored',
-  ),
-  transform: MarkTransformSchema.optional().describe(
-    'Optional mark-local transform pipeline applied after the plot root transform',
-  ),
-  layer: PlotLayerSchema.optional().describe(
-    'Semantic plot layer override applied to the outer custom mark output scope',
-  ),
-  coordinateView: NonBlankStringSchema.optional().describe(
-    'Coordinate view id this custom mark is projected through; omit to use the plot composition default view',
-  ),
-  encoding: EncodingSchema.optional().describe(
-    'Position / non-position channels; reuses the shared encoding so a custom mark contributes to scale inference like built-in marks',
-  ),
+  }),
+  kind: zodEnum(['data', 'annotation']),
+  encodings: record(NonBlankStringSchema, JsonValueSchema).optional(),
+  properties: record(NonBlankStringSchema, JsonValueSchema).optional(),
 });
 
-/** 校验自定义标记的开放配置，具体结构由运行时标记定义校验 */
-export const CustomMarkSchema = CustomMarkObjectSchema.catchall(JsonValueSchema).describe(
-  'Custom mark operation: type is any non-built-in identifier; its config is validated at lowering time against the matching MarkDefinition supplied via options.definitions.marks',
-);
-
-/** 标注的数据空间位置绑定或最终视图边缘 */
-export const AnnotationPositionValueSchema = union([
-  number().finite(),
-  NonBlankStringSchema,
-  strictObject({ field: ChannelSchema.shape.field.unwrap() }),
-  strictObject({ value: union([number().finite(), NonBlankStringSchema]) }),
-  strictObject({ edge: zodEnum(['start', 'end']) }),
-]).describe('Literal scale value, field or constant binding, or final coordinate role range edge');
-
-/** 标注在坐标角色中的完整位置 */
-export const AnnotationPositionSchema = record(NonBlankStringSchema, AnnotationPositionValueSchema).describe(
-  'Complete coordinate role mapping of literal positions, field bindings, or view edges',
-);
-
-/** 标注在各坐标角色中的显式边界 */
-export const AnnotationBoundsSchema = record(
-  NonBlankStringSchema,
-  strictObject({
-    from: AnnotationPositionValueSchema,
-    to: AnnotationPositionValueSchema,
-  }),
+/** 校验自定义标记外壳，精确目标由注册定义校验 */
+export const CustomMarkSchema = CustomMarkObjectSchema.describe(
+  'Custom mark Source; registered definition validates its targets',
 );
 
 const annotationBase = {
+  ...markBase,
   kind: literal('annotation'),
-  transform: markBase.transform,
-  id: markBase.id,
-  coordinateView: markBase.coordinateView,
-  layer: markBase.layer,
-  defaultColorGroup: markBase.defaultColorGroup,
-  defaultColorIndex: markBase.defaultColorIndex,
   contributeToDomain: boolean()
     .default(false)
     .optional()
-    .describe('Include literal and transformed row positions in inferred scale domains; edges never contribute'),
+    .describe('Include effective data-space positions in inferred domains; edges never contribute'),
 };
-const annotationNode = {
+
+/** 校验显式点的位置与获准字段目标 */
+export const PointAnnotationSchema = strictObject({
+  ...annotationBase,
+  type: literal(BuiltinPlotMark.Point),
+  encodings: PointEncodingSchema.omit({ anchorId: true }).optional().describe('Point annotation field bindings for positions and supported visual targets'),
+  properties: PointPropertiesSchema.omit({
+    anchorId: true,
+    autoPadding: true,
+    placement: true,
+  })
+    .extend({ width: NodeLayoutSchema.shape.width, size: PositiveNumberSchema.optional() })
+    .optional().describe('Fixed point annotation positions, appearance, and construction settings'),
+});
+
+/** 校验显式路径固定端点与连接规则 */
+export const PathAnnotationPropertiesSchema = strictObject({
+  ...PathStyleSchema.shape,
+  ...PathTransformSchema.shape,
+  ...PathDecorationSchema.shape,
+  opacity: MarkOpacityStyleSchema.optional(),
+  label: MarkGeometryLabelListSchema.optional(),
+  from: AnnotationPositionSchema.optional(),
+  to: AnnotationPositionSchema.optional(),
+  connection: zodEnum(CoordinateConnection).default(CoordinateConnection.Coordinate),
+  zIndex: NodeSchema.shape.zIndex,
+});
+
+/** 校验逐结果行生成的完整显式路径 */
+export const PathAnnotationSchema = strictObject({
+  ...annotationBase,
+  type: literal(BuiltinPlotMark.Path),
+  encodings: PathEncodingSchema.omit({ roundedCorners: true })
+    .extend({
+      from: PositionEncodingSchema.optional(),
+      to: PositionEncodingSchema.optional(),
+    })
+    .optional().describe('Path annotation endpoint and visual field bindings'),
+  properties: PathAnnotationPropertiesSchema.optional().describe('Fixed path annotation endpoints, connection, and appearance'),
+});
+
+/** 校验显式区间的固定端点与外观 */
+export const IntervalAnnotationPropertiesSchema = strictObject({
   ...NodeStyleSchema.shape,
   rotate: NodeSchema.shape.rotate,
   scale: NodeSchema.shape.scale,
   boundary: NodeSchema.shape.boundary,
   cornerRadius: NodeSchema.shape.cornerRadius,
-  label: NodeSchema.shape.label,
+  label: MarkNodeLabelListSchema.optional(),
   zIndex: NodeSchema.shape.zIndex,
-};
-
-/** 显式点或文本，位置可绑定数据，样式保持常量 */
-export const PointAnnotationSchema = strictObject({
-  ...annotationNode,
-  ...NodeLayoutSchema.shape,
-  ...annotationBase,
-  type: literal(BuiltinPlotMark.Point),
-  position: AnnotationPositionSchema,
-  shape: NodeSchema.shape.shape,
-  text: NodeSchema.shape.text,
-  size: PositiveNumberSchema.optional().describe('Final glyph radius in user units'),
-  dx: number().finite().optional().describe('Horizontal offset after coordinate projection, in user units'),
-  dy: number().finite().optional().describe('Vertical offset after coordinate projection, in user units'),
-  orientation: MarkOrientationSchema.optional().describe(
-    'Screen orientation or alignment with a local coordinate direction',
-  ),
+  opacity: MarkOpacityStyleSchema.optional(),
+  bounds: AnnotationBoundsSchema.optional(),
+  connection: PathAnnotationPropertiesSchema.shape.connection,
 });
 
-/** 显式起止位置之间的路径，位置可绑定数据 */
-export const PathAnnotationSchema = strictObject({
-  ...PathStyleSchema.shape,
-  ...PathTransformSchema.shape,
-  ...PathDecorationSchema.shape,
-  ...annotationBase,
-  type: literal(BuiltinPlotMark.Path),
-  from: AnnotationPositionSchema.describe('Complete coordinate role mapping for the start position'),
-  to: AnnotationPositionSchema.describe('Complete coordinate role mapping for the end position'),
-  connection: zodEnum(CoordinateConnection)
-    .default(CoordinateConnection.Coordinate)
-    .describe('Follow coordinate geometry or connect projected endpoints with straight segments'),
-  zIndex: NodeSchema.shape.zIndex,
-});
-
-/** 显式区间，边界可绑定数据，由坐标投影决定区域形状 */
+/** 校验逐结果行生成的完整显式区间 */
 export const IntervalAnnotationSchema = strictObject({
-  ...annotationNode,
   ...annotationBase,
   type: literal(BuiltinPlotMark.Interval),
-  bounds: AnnotationBoundsSchema,
-  connection: PathAnnotationSchema.shape.connection,
+  encodings: NodeEncodingSchema.extend({
+    bounds: record(
+      NonBlankStringSchema,
+      strictObject({
+        from: NonBlankStringSchema.optional(),
+        to: NonBlankStringSchema.optional(),
+      }),
+    ).optional(),
+  }).optional().describe('Interval annotation bounds and visual field bindings'),
+  properties: IntervalAnnotationPropertiesSchema.optional().describe('Fixed interval annotation bounds, connection, and appearance'),
 });
 
 /** 三种显式几何标注 */

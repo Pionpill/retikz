@@ -10,7 +10,7 @@ describe('buildPlotIR legend 装配（ADR-03 alpha.8）', () => {
   it('legend_only_no_default_axes：只声明 <PlotLegend> → 仅 legend（薄 Plot 无默认轴）', () => {
     const spec = buildPlotIR(
       <>
-        <PointMark x="lon" y="lat" color="kind" />
+        <PointMark encodings={{ color: 'kind', position: { x: 'lon', y: 'lat' } }} />
         <PlotLegend channel="color" />
       </>,
       '__plot',
@@ -22,7 +22,7 @@ describe('buildPlotIR legend 装配（ADR-03 alpha.8）', () => {
   it('explicit_axis_and_legend_coexist：显式 <PlotAxis> + <PlotLegend> → 该轴覆盖默认、legend 保留', () => {
     const spec = buildPlotIR(
       <>
-        <PointMark x="lon" y="lat" color="kind" />
+        <PointMark encodings={{ color: 'kind', position: { x: 'lon', y: 'lat' } }} />
         <PlotAxis dimension="x" grid />
         <PlotLegend channel="color" position="bottom" />
       </>,
@@ -38,7 +38,7 @@ describe('buildPlotIR legend 装配（ADR-03 alpha.8）', () => {
   it('legend_fields：<PlotLegend> 字段逐一落位', () => {
     const spec = buildPlotIR(
       <>
-        <PointMark x="lon" y="lat" size="pop" />
+        <PointMark encodings={{ size: 'pop', position: { x: 'lon', y: 'lat' } }} />
         <PlotLegend
           channel="size"
           scale="__size"
@@ -68,7 +68,7 @@ describe('buildPlotIR legend 装配（ADR-03 alpha.8）', () => {
   it('legend_built_pass_schema：legend 装配产物过 PlotSchema', () => {
     const spec = buildPlotIR(
       <>
-        <PointMark x="lon" y="lat" color="kind" />
+        <PointMark encodings={{ color: 'kind', position: { x: 'lon', y: 'lat' } }} />
         <PlotLegend channel="color" />
       </>,
       '__plot',

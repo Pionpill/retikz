@@ -47,55 +47,36 @@ export const CoordinateCompositionTracksPreview = (values: CoordinateComposition
         <PlotTrack id="trend" band={{ role: 'y', ...bands.trend }}>
           {localAxesVisible ? <PlotAxis dimension="y" grid={yGridVisible} title="A" /> : null}
           <PathMark
-            x="day"
-            y="trend"
-            order="day"
-            stroke="#f97316"
-            strokeWidth={lineWidth}
-            lineCap="round"
-            lineJoin="round"
+            encodings={{ order: 'day', position: { x: 'day', y: 'trend' } }}
+            properties={{ lineCap: 'round', lineJoin: 'round', stroke: '#f97316', strokeWidth: lineWidth }}
           />
         </PlotTrack>
         <PlotTrack id="drawdown" band={{ role: 'y', ...bands.drawdown }}>
           {localAxesVisible ? <PlotAxis dimension="y" grid={yGridVisible} title="B" /> : null}
           {values.drawdownAreaVisible ? (
             <PathMark
-              x="day"
-              y="drawdown"
-              order="day"
-              closure={{ kind: 'baseline', baseline: 0 }}
-              fill="rgba(148, 163, 184, 0.32)"
-              stroke="none"
+              encodings={{ order: 'day', position: { x: 'day', y: 'drawdown' } }}
+              properties={{
+                closure: { kind: 'baseline', baseline: 0 },
+                fill: 'rgba(148, 163, 184, 0.32)',
+                stroke: 'none',
+              }}
             />
           ) : null}
           <PathMark
-            x="day"
-            y="drawdown"
-            order="day"
-            stroke="#64748b"
-            strokeWidth={lineWidth}
-            lineCap="round"
-            lineJoin="round"
+            encodings={{ order: 'day', position: { x: 'day', y: 'drawdown' } }}
+            properties={{ lineCap: 'round', lineJoin: 'round', stroke: '#64748b', strokeWidth: lineWidth }}
           />
         </PlotTrack>
         <PlotTrack id="signal" band={{ role: 'y', ...bands.signal }}>
           {localAxesVisible ? <PlotAxis dimension="y" grid={yGridVisible} title="C" /> : null}
           <PathMark
-            x="day"
-            y="signal"
-            order="day"
-            stroke="#0891b2"
-            strokeWidth={lineWidth}
-            lineCap="round"
-            lineJoin="round"
+            encodings={{ order: 'day', position: { x: 'day', y: 'signal' } }}
+            properties={{ lineCap: 'round', lineJoin: 'round', stroke: '#0891b2', strokeWidth: lineWidth }}
           />
           <PointMark
-            x="day"
-            y="signal"
-            fill="#ecfeff"
-            stroke="#0891b2"
-            strokeWidth={1.5}
-            size={values.signalPointSize}
+            encodings={{ position: { x: 'day', y: 'signal' } }}
+            properties={{ fill: '#ecfeff', stroke: '#0891b2', strokeWidth: 1.5, size: values.signalPointSize }}
           />
         </PlotTrack>
       </PlotScaffold>

@@ -1,9 +1,9 @@
 ---
 title: 契约 - 编码
-description: 查询 Plot 字段、常量、位置、视觉通道与图元标签编码 schema。
+description: 查询 Plot 字段编码、位置角色、视觉目标与固定标签 schema。
 ---
 
-编码把数据行映射到位置角色或视觉变量。通用 `ChannelSchema` 必须且只能指定 `field` 或 `value` 中的一个；位置通道的比例尺由坐标系拥有，非位置通道通常显式引用 scale。
+`encodings` 将数据字段映射到位置角色或视觉目标，固定值位于 `properties`。绑定使用字段名字符串；显式选择比例尺时使用 `{ field, scale }`，两个成员都必填。位置比例尺由坐标角色拥有，位置绑定只接受字段名。
 
 ## EncodingSchema
 
@@ -11,22 +11,20 @@ description: 查询 Plot 字段、常量、位置、视觉通道与图元标签�
   name="EncodingSchema"
   description="图元的位置、共享视觉和扩展通道绑定。"
   descriptions={{
-    x: '第一位置角色；二维直角中是水平位置，二维极坐标中是角度。',
-    y: '第二位置角色；二维直角中是垂直位置，二维极坐标中是半径。',
+    position: '坐标角色到字段名的映射；坐标系决定角色和比例尺。',
     color: '通过序数或颜色比例尺映射到图元 fill / stroke 的颜色通道。',
-    channels: '由运行时 ChannelDefinition 解析的扩展通道映射。',
-  }}
+
+}}
 />
 
 ## ChannelSchema
 
 <ZodSchema
   name="ChannelSchema"
-  description="数据字段或 JSON 常量的通用通道绑定。"
+  description="字段名字符串，或带显式比例尺的字段对象。"
   descriptions={{
     field: '从数据行读取标量值的路径，例如 month 或 user.age。',
-    value: '绕过字段读取的 JSON 常量。',
-    scale: '驱动该通道的比例尺名；位置通道通常省略。',
+    scale: '已声明的比例尺名；使用对象绑定时必填。',
   }}
 />
 
@@ -45,8 +43,8 @@ description: 查询 Plot 字段、常量、位置、视觉通道与图元标签�
   description="图元 lowering 消费的非位置通道。"
   descriptions={{
     color: '图元 fill / stroke 的颜色通道。',
-    channels: '注册通道名到绑定的扩展映射；不得与内置通道名冲突。',
-  }}
+
+}}
 />
 
 ## PointEncodingSchema
@@ -55,58 +53,27 @@ description: 查询 Plot 字段、常量、位置、视觉通道与图元标签�
   name="PointEncodingSchema"
   description="PointMark 的位置、文本和扩展通道编码。"
   descriptions={{
-    x: '第一位置角色。',
-    y: '第二位置角色。',
+    position: '坐标角色到字段名的映射。',
     text: '存在时把点 lowering 为承载文本的无边框 Node，而非 glyph。',
     color: '图元 fill / stroke 颜色通道。',
-    channels: '自定义 ChannelDefinition 绑定。',
-  }}
+
+}}
 />
 
-## 点图元专用通道
-
-### SizeChannelSchema
+## OpacityEncodingSchema
 
 <ZodSchema
-  name="SizeChannelSchema"
-  description="数据字段映射的 glyph 半径，或绕过比例尺的常量半径。"
-  descriptions={{
-    field: '映射到 sqrt 半径比例尺的数值字段。',
-    value: '绕过比例尺的最终半径常量。',
-    scale: '可选 sqrt 比例尺名；省略时自动合成。',
-  }}
+  name="OpacityEncodingSchema"
+  description="透明度的 overall、fill、stroke 因子独立绑定字段。"
+  descriptions={{ overall: '整体透明度字段。', fill: '填充透明度字段。', stroke: '描边透明度字段。' }}
 />
 
-### OpacityChannelSchema
+## LabelEncodingSchema
 
 <ZodSchema
-  name="OpacityChannelSchema"
-  description="数据字段映射的不透明度，或绕过比例尺的常量。"
-  descriptions={{
-    field: '经线性比例尺映射到不透明度的数值字段。',
-    value: '0..1 范围的常量不透明度。',
-    scale: '可选线性比例尺名；省略时自动合成。',
-  }}
-/>
-
-### ShapeChannelSchema
-
-<ZodSchema
-  name="ShapeChannelSchema"
-  description="数据驱动的 glyph 形状，或固定 Core / 注册形状名。"
-  descriptions={{ field: '映射到内置 glyph palette 的分类字段。', value: '固定 glyph 形状名。' }}
-/>
-
-### TextChannelSchema
-
-<ZodSchema
-  name="TextChannelSchema"
-  description="每条数据或全部数据共用的文本内容通道。"
-  descriptions={{
-    field: '其值成为标签文本的数据路径。',
-    value: '所有数据共用的非空标签常量。',
-    displayFormat: '数值或时间字段的 JSON-safe 显示格式字符串。',
-  }}
+  name="LabelEncodingSchema"
+  description="标签内容字段，与 properties.label 按相同索引组合。"
+  descriptions={{ content: '当前数据行中的标签内容字段。' }}
 />
 
 ## 图元标签
@@ -117,15 +84,7 @@ description: 查询 Plot 字段、常量、位置、视觉通道与图元标签�
 
 ### MarkLabelContentSchema
 
-<ZodSchema
-  name="MarkLabelContentSchema"
-  description="图元标签的数据字段或常量文本绑定。"
-  descriptions={{
-    field: '其值成为标签文本的数据路径。',
-    value: '所有数据共用的 Core 文本块。',
-    displayFormat: '仅与 field 同时使用的 JSON-safe 显示格式。',
-  }}
-/>
+<ZodSchema name="MarkLabelContentSchema" description="图元标签的固定 Core 文本内容。" />
 
 ### MarkNodeLabelSchema
 
@@ -143,10 +102,8 @@ description: 查询 Plot 字段、常量、位置、视觉通道与图元标签�
     rotate: '无旋转、径向、切向或显式角度。',
     keepUpright: '旋转文本倒置时是否翻转 180 度保持正立。',
     pin: '外侧标签的引导线开关或样式。',
-    content: '标签的 field / value / displayFormat 内容绑定。',
-    'content.field': '其值成为标签文本的数据路径；不得与 value 同时使用。',
-    'content.value': '所有数据共用的字符串或混合文本内容；不得与 field 同时使用。',
-    'content.displayFormat': '在字段值字符串化前应用的 JSON-safe 显示格式；仅与 field 同时生效。',
+    content: '固定标签文本；编码内容写入 encodings.label 的相同索引。',
+    displayFormat: '字段内容的显示格式。',
   }}
 />
 
@@ -166,10 +123,8 @@ description: 查询 Plot 字段、常量、位置、视觉通道与图元标签�
     gap: '断口两侧的额外留白，单位为用户单位，默认 4。',
     placement: '外侧偏移或区域 host 内部放置。',
     distance: '标签侧向偏移距离。',
-    content: '标签的 field / value / displayFormat 内容绑定。',
-    'content.field': '其值成为标签文本的数据路径；不得与 value 同时使用。',
-    'content.value': '所有数据共用的字符串或混合文本内容；不得与 field 同时使用。',
-    'content.displayFormat': '在字段值字符串化前应用的 JSON-safe 显示格式；仅与 field 同时生效。',
+    content: '固定标签文本；编码内容写入 encodings.label 的相同索引。',
+    displayFormat: '字段内容的显示格式。',
   }}
 />
 

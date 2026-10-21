@@ -155,7 +155,7 @@ export type MarkAnnotationCapability = {
   lower: (
     mark: IRPlotAnnotation,
     frame: CoordinateFrame,
-    color: string | undefined,
+    channels: MarkChannels,
     context?: MarkLoweringContext,
     datum?: { row: ExternalRow; transformedIndex: number },
   ) => IRChild | null;

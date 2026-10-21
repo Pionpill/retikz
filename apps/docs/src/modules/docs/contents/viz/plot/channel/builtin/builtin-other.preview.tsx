@@ -40,14 +40,18 @@ export const BuiltinOtherPreview = (
     >
       <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
       <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
-      <PointMark x="step" y="value" fill="fill" size={18} zIndex="zIndex" />
+      <PointMark
+        encodings={{ fill: 'fill', zIndex: 'zIndex', position: { x: 'step', y: 'value' } }}
+        properties={{ size: 18 }}
+      />
       <PathMark
-        x="step"
-        y="value"
-        order={values.orderEnabled ? 'step' : undefined}
-        series={values.seriesEnabled ? 'series' : undefined}
-        color={values.seriesEnabled ? 'series' : undefined}
-        strokeWidth={3}
+        encodings={{
+          ...(values.orderEnabled ? { order: 'step' } : {}),
+          ...(values.seriesEnabled ? { series: 'series' } : {}),
+          ...(values.seriesEnabled ? { color: 'series' } : {}),
+          position: { x: 'step', y: 'value' },
+        }}
+        properties={{ strokeWidth: 3 }}
       />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />

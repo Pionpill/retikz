@@ -21,7 +21,7 @@ const coordinateShorthandSpec = {
     { type: 'linear', name: 'yValue' },
   ],
   coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yValue' },
-  marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'value' } } }],
+  marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'value' } } }],
   guides: [{ type: 'axis', dimension: 'x' }],
 };
 
@@ -49,8 +49,8 @@ const compositionSpec = {
     ],
   },
   marks: [
-    { type: 'point', encoding: { x: { field: 'month' } } },
-    { type: 'point', coordinateView: 'xy', encoding: { x: { field: 'month' }, y: { field: 'value' } } },
+    { type: 'point', kind: 'data', encodings: { position: { x: 'month' } } },
+    { type: 'point', coordinateView: 'xy', kind: 'data', encodings: { position: { x: 'month', y: 'value' } } },
   ],
   guides: [
     { type: 'axis', dimension: 'x' },
@@ -99,7 +99,7 @@ describe('coordinate composition registry schema', () => {
         defaultView: 'main',
         views: [{ id: 'main', coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yValue' } }],
       },
-      marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'value' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'value' } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
     };
 
@@ -113,7 +113,7 @@ describe('coordinate composition registry schema', () => {
         defaultView: 'arch',
         views: [{ id: 'arch', coordinate: { type: 'arch', x: 'xMonth', archHeight: 30 } }],
       },
-      marks: [{ type: 'point', encoding: { x: { field: 'month' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month' } } }],
       guides: [],
     };
 
@@ -156,7 +156,7 @@ describe('coordinate composition registry schema', () => {
   it('missing_mark_coordinate_scope_rejected', () => {
     const spec = {
       ...compositionSpec,
-      marks: [{ type: 'point', coordinateView: 'missing', encoding: { x: { field: 'month' } } }],
+      marks: [{ type: 'point', coordinateView: 'missing', kind: 'data', encodings: { position: { x: 'month' } } }],
     };
 
     expect(() => parsePlotIR(spec)).toThrow(/coordinateView/);
@@ -174,7 +174,9 @@ describe('coordinate composition registry schema', () => {
   it('compat_mark_coordinate_scope_must_reference_implicit_default_scope', () => {
     const spec = {
       ...coordinateShorthandSpec,
-      marks: [{ type: 'point', coordinateView: 'missing', encoding: { x: { field: 'month' }, y: { field: 'value' } } }],
+      marks: [
+        { type: 'point', coordinateView: 'missing', kind: 'data', encodings: { position: { x: 'month', y: 'value' } } },
+      ],
     };
 
     expect(() => parsePlotIR(spec)).toThrow(/coordinateView/);
@@ -209,7 +211,7 @@ describe('coordinate composition registry schema', () => {
           },
         ],
       },
-      marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'value' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'value' } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
     };
 
@@ -277,8 +279,8 @@ describe('coordinate composition registry lowering', () => {
         ],
       },
       marks: [
-        { type: 'point', encoding: { x: { field: 'month' } } },
-        { type: 'point', coordinateView: 'plane', encoding: { x: { field: 'month' }, y: { field: 'value' } } },
+        { type: 'point', kind: 'data', encodings: { position: { x: 'month' } } },
+        { type: 'point', coordinateView: 'plane', kind: 'data', encodings: { position: { x: 'month', y: 'value' } } },
       ],
       guides: [{ type: 'axis', dimension: 'y', coordinateView: 'plane' }],
     };

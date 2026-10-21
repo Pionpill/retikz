@@ -34,14 +34,11 @@ export const TransformScopePreview = (
     >
       <PlotScale dimension="x" type="linear" domain={[0, 4]} />
       <PlotScale dimension="y" type="linear" domain={[0, 3]} />
-      <PointMark x="x" y="layerA" fill="gray" size={7} />
+      <PointMark encodings={{ position: { x: 'x', y: 'layerA' } }} properties={{ fill: 'gray', size: 7 }} />
       <PointMark
-        x="x"
-        y="layerB"
-        fill="dodgerblue"
-        size={8}
-        shape={{ kind: 'constant', value: 'diamond' }}
-        transform={values.scope === 'local' ? declarations : undefined}
+        transforms={values.scope === 'local' ? declarations : undefined}
+        encodings={{ position: { x: 'x', y: 'layerB' } }}
+        properties={{ fill: 'dodgerblue', size: 8, shape: 'diamond' }}
       />
       <PlotAxis dimension="x" title={i18n.axis} grid />
     </Plot>

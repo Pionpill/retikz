@@ -24,17 +24,20 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         <PlotScale dimension="x" type="point" padding={0} />
         <PlotScale dimension="y" type="linear" domainPadding={0} />
         <PathMark
-          x="month"
-          y="y1"
-          order="order"
-          series="segment"
-          color="segment"
-          fill="segment"
-          curve={curve}
-          closure={{ kind: 'stack', baselineField: 'y0' }}
-          stroke="none"
+          encodings={{
+            order: 'order',
+            series: 'segment',
+            color: 'segment',
+            fill: 'segment',
+            closure: { baseline: 'y0' },
+            position: { x: 'month', y: 'y1' },
+          }}
+          properties={{ curve, closure: { kind: 'stack' }, stroke: 'none' }}
         />
-        <PathMark x="month" y="y1" order="order" series="segment" color="segment" curve={curve} strokeWidth={2} />
+        <PathMark
+          encodings={{ order: 'order', series: 'segment', color: 'segment', position: { x: 'month', y: 'y1' } }}
+          properties={{ curve, strokeWidth: 2 }}
+        />
         <PlotAxis dimension="x" />
         <PlotAxis dimension="y" grid />
         <PlotLegend channel="color" />
@@ -50,17 +53,20 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       >
         <PlotScale dimension="y" type="linear" domainPadding={0} />
         <PathMark
-          x="month"
-          y="y1"
-          order="order"
-          series="segment"
-          color="segment"
-          fill="segment"
-          curve={curve}
-          closure={{ kind: 'stack', baselineField: 'y0' }}
-          stroke="none"
+          encodings={{
+            order: 'order',
+            series: 'segment',
+            color: 'segment',
+            fill: 'segment',
+            closure: { baseline: 'y0' },
+            position: { x: 'month', y: 'y1' },
+          }}
+          properties={{ curve, closure: { kind: 'stack' }, stroke: 'none' }}
         />
-        <PathMark x="month" y="y1" order="order" series="segment" color="segment" curve={curve} strokeWidth={2} />
+        <PathMark
+          encodings={{ order: 'order', series: 'segment', color: 'segment', position: { x: 'month', y: 'y1' } }}
+          properties={{ curve, strokeWidth: 2 }}
+        />
         <PlotAxis dimension="x" />
         <PlotAxis dimension="y" grid />
       </Plot>

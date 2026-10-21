@@ -19,7 +19,7 @@ export const ChannelDefinitionKind = {
 export type ChannelDefinitionKind = ValueOf<typeof ChannelDefinitionKind>;
 ```
 
-#### <ApiSourceLink label={"defineChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={418}>defineChannel</ApiSourceLink>
+#### <ApiSourceLink label={"defineChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={461}>defineChannel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -47,7 +47,7 @@ export declare const defineChannel: <T extends ChannelDefinition>(def: T) => T;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineNodeChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={436}>defineNodeChannel</ApiSourceLink>
+#### <ApiSourceLink label={"defineNodeChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={479}>defineNodeChannel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -77,7 +77,7 @@ export declare const defineNodeChannel: <T extends ChannelValue>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"definePathChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={446}>definePathChannel</ApiSourceLink>
+#### <ApiSourceLink label={"definePathChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={489}>definePathChannel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -107,7 +107,7 @@ export declare const definePathChannel: <T extends ChannelValue>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineScopeChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={426}>defineScopeChannel</ApiSourceLink>
+#### <ApiSourceLink label={"defineScopeChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={469}>defineScopeChannel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -137,7 +137,7 @@ export declare const defineScopeChannel: <T extends ChannelValue>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PositionChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={321}>PositionChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PositionChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={364}>PositionChannelDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -169,7 +169,7 @@ export type PositionChannelDefinition = BaseChannelDefinition<typeof ChannelDefi
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MarkChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={332}>MarkChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"MarkChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={375}>MarkChannelDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -202,7 +202,7 @@ export type MarkChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
 
 </DocTabs>
 
-#### <ApiSourceLink label={"NodeChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={344}>NodeChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"NodeChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={387}>NodeChannelDefinition</ApiSourceLink>
 
 解析通道值后直接落到 core IRNode 既有属性。`size`、`shape`、`opacity` 这类点图元属性属于这一类
 
@@ -243,7 +243,7 @@ export type NodeChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={388}>PathChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PathChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={431}>PathChannelDefinition</ApiSourceLink>
 
 用于一一落到 core IRPath 既有标量属性的通道，例如 strokeWidth / opacity 这类路径级属性。
 `color` 这种不同 mark 会映射到 node fill、path stroke 或 path fill 的通道应保持为 MarkChannelDefinition
@@ -285,7 +285,7 @@ export type PathChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScopeChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={366}>ScopeChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={409}>ScopeChannelDefinition</ApiSourceLink>
 
 用于一一落到 core IRScope 既有属性，或写入 `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`。
 它表达“这一层共享默认值”；逐 datum 的属性应使用 NodeChannelDefinition / PathChannelDefinition
@@ -330,7 +330,7 @@ export type ScopeChannelDefinition<T extends ChannelValue = ChannelValue> = Base
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={405}>ChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={448}>ChannelDefinition</ApiSourceLink>
 
 **公共属性**
 
@@ -437,7 +437,7 @@ export type ChannelDefinition<T extends ChannelValue = ChannelValue> =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={451}>AnyChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"AnyChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={494}>AnyChannelDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="position">
 
@@ -573,7 +573,7 @@ export type AnyChannelDefinition =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ChannelOutputSpace"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={208}>ChannelOutputSpace</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelOutputSpace"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={251}>ChannelOutputSpace</ApiSourceLink>
 
 用判别 union 描述 range / palette，避免 number 通道配 symbol 调色板这类非法组合
 
@@ -702,7 +702,7 @@ export type ChannelOutputSpace =
 
 ## 解析上下文与结果
 
-#### <ApiSourceLink label={"ChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={245}>ChannelDefinitionResolveContext</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={288}>ChannelDefinitionResolveContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -749,7 +749,7 @@ export type ChannelDefinitionResolveContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"NodeChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={270}>NodeChannelDefinitionResolveContext</ApiSourceLink>
+#### <ApiSourceLink label={"NodeChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={313}>NodeChannelDefinitionResolveContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -781,7 +781,7 @@ export type NodeChannelDefinitionResolveContext = ChannelDefinitionResolveContex
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={273}>PathChannelDefinitionResolveContext</ApiSourceLink>
+#### <ApiSourceLink label={"PathChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={316}>PathChannelDefinitionResolveContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -813,7 +813,7 @@ export type PathChannelDefinitionResolveContext = ChannelDefinitionResolveContex
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScopeChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={276}>ScopeChannelDefinitionResolveContext</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={319}>ScopeChannelDefinitionResolveContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -917,7 +917,7 @@ export type ChannelValueResolver<T extends ChannelValue = ChannelValue> = (row: 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ChannelBindingResolver"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={307}>ChannelBindingResolver</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelBindingResolver"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={350}>ChannelBindingResolver</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -971,7 +971,7 @@ export type ResolveLabel = (row: ExternalRow) => string;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={197}>ChannelResolution</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={240}>ChannelResolution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1002,7 +1002,7 @@ export type ChannelResolution<T> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MarkChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={282}>MarkChannelResolution</ApiSourceLink>
+#### <ApiSourceLink label={"MarkChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={325}>MarkChannelResolution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1035,7 +1035,7 @@ export type MarkChannelResolution<T extends ChannelValue = ChannelValue> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScopeChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={295}>ScopeChannelResolution</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={338}>ScopeChannelResolution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1066,7 +1066,7 @@ export type ScopeChannelResolution<T extends ChannelValue = ChannelValue> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScaleDescriptor"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={172}>ScaleDescriptor</ApiSourceLink>
+#### <ApiSourceLink label={"ScaleDescriptor"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={215}>ScaleDescriptor</ApiSourceLink>
 
 lowering 内部类型，不进 IR。resolver 与 legend 共读同一 descriptor，保证图例与实绘同源
 
@@ -1346,7 +1346,7 @@ export type ScopeChannelDelivery = {
 
 ## 共享默认值
 
-#### <ApiSourceLink label={"SIZE_MAX_RADIUS"} path={"packages/viz/plot/src/providers/channel/features/node.ts"} startLine={52}>SIZE_MAX_RADIUS</ApiSourceLink>
+#### <ApiSourceLink label={"SIZE_MAX_RADIUS"} path={"packages/viz/plot/src/providers/channel/features/node.ts"} startLine={50}>SIZE_MAX_RADIUS</ApiSourceLink>
 
 ```ts
 export const SIZE_MAX_RADIUS = 20;
@@ -1354,7 +1354,7 @@ export const SIZE_MAX_RADIUS = 20;
 
 ## 定义构造
 
-#### <ApiSourceLink label={"ColorChannelDefinitionOptions"} path={"packages/viz/plot/src/providers/channel/features/paint.ts"} startLine={15}>ColorChannelDefinitionOptions</ApiSourceLink>
+#### <ApiSourceLink label={"ColorChannelDefinitionOptions"} path={"packages/viz/plot/src/providers/channel/features/paint.ts"} startLine={21}>ColorChannelDefinitionOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1362,11 +1362,11 @@ export const SIZE_MAX_RADIUS = 20;
 
 <ApiTable>
 
-| 成员             | 类型                                                        | 默认值  | 说明                                      |
-| ---------------- | ----------------------------------------------------------- | ------- | ----------------------------------------- |
-| `channel`        | `string`                                                    | —       | 创建的颜色类通道名称                      |
-| `constantPaint?` | `boolean`                                                   | `false` | 是否允许常量分支使用颜色以外的 paint 输入 |
-| `pick`           | `(mark: IRPlotMarkOperation) => IRPlotChannel \| undefined` | —       | 从 mark 中读取该通道的绑定                |
+| 成员        | 类型                                                        | 默认值 | 说明                                  |
+| ----------- | ----------------------------------------------------------- | ------ | ------------------------------------- |
+| `channel`   | `string`                                                    | —      | 创建的颜色类通道名称                  |
+| `pick`      | `(mark: IRPlotMarkOperation) => IRPlotChannel \| undefined` | —      | 从 mark 中读取该通道的绑定            |
+| `property?` | `(mark: IRPlotMarkOperation) => PlotPaint \| undefined`     | —      | 无有效字段编码时使用的固定 paint 属性 |
 
 </ApiTable>
 
@@ -1378,7 +1378,7 @@ export const SIZE_MAX_RADIUS = 20;
 export type ColorChannelDefinitionOptions = {
   channel: string;
   pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined;
-  constantPaint?: boolean;
+  property?: (mark: IRPlotMarkOperation) => PlotPaint | undefined;
 };
 ```
 
@@ -1386,13 +1386,13 @@ export type ColorChannelDefinitionOptions = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PlotPaint"} path={"packages/viz/plot/src/providers/channel/features/paint.ts"} startLine={28}>PlotPaint</ApiSourceLink>
+#### <ApiSourceLink label={"PlotPaint"} path={"packages/viz/plot/src/providers/channel/features/paint.ts"} startLine={31}>PlotPaint</ApiSourceLink>
 
 ```ts
 export type PlotPaint = string | IRPaint;
 ```
 
-#### <ApiSourceLink label={"makeColorChannelDefinition"} path={"packages/viz/plot/src/providers/channel/features/paint.ts"} startLine={48}>makeColorChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"makeColorChannelDefinition"} path={"packages/viz/plot/src/providers/channel/features/paint.ts"} startLine={39}>makeColorChannelDefinition</ApiSourceLink>
 
 常量 value 直返；字段值经 channel scale registry 取色。连续 / temporal 字段必须显式引用 color scale
 
@@ -1425,32 +1425,18 @@ export declare const makeColorChannelDefinition: (
 
 ## 字段与取值
 
-#### <ApiSourceLink label={"FieldChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={149}>FieldChannel</ApiSourceLink>
+#### <ApiSourceLink label={"channelField"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={149}>channelField</ApiSourceLink>
 
-<DocTabs defaultValue="binding">
+<DocTabs defaultValue="members">
 
-<DocTab value="binding" label="属性 · 编码绑定">
+<DocTab value="members" label="属性">
 
-<ApiTable>
+<ApiTable variant="parameters">
 
-| 成员     | 类型                                                                                                     | 默认值 | 说明                                                                    |
-| -------- | -------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------- |
-| `field?` | `string`                                                                                                 | —      | 从外部数据行读取标量值的字段路径，例如 month 或 user.age；与 value 互斥 |
-| `scale?` | `string`                                                                                                 | —      | 驱动通道的比例尺名称；位置通道由坐标系提供比例尺，通常省略              |
-| `value?` | `null \| string \| number \| false \| true \| ReadonlyArray<JsonValue> \| { [key: string]: JsonValue; }` | —      | —                                                                       |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="style" label="属性 · 样式取值">
-
-<ApiTable>
-
-| 成员    | 类型                    | 默认值 | 说明                                   |
-| ------- | ----------------------- | ------ | -------------------------------------- |
-| `kind`  | `'field' \| 'constant'` | —      | 区分数据字段引用与不依赖数据的常量     |
-| `value` | `unknown`               | —      | 字段名称或常量值，由 kind 决定解释方式 |
+| 类别   | 名称      | 类型 / 签名     | 说明 |
+| ------ | --------- | --------------- | ---- |
+| 参数   | `channel` | `IRPlotChannel` | —    |
+| 返回值 | —         | `string`        | —    |
 
 </ApiTable>
 
@@ -1459,19 +1445,69 @@ export declare const makeColorChannelDefinition: (
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type FieldChannel =
-  | IRPlotChannel
-  | {
-      kind: 'field' | 'constant';
-      value: unknown;
-    };
+export declare const channelField: (channel: IRPlotChannel) => string;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FieldCollector"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={159}>FieldCollector</ApiSourceLink>
+#### <ApiSourceLink label={"channelScale"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={152}>channelScale</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称      | 类型 / 签名           | 说明 |
+| ------ | --------- | --------------------- | ---- |
+| 参数   | `channel` | `IRPlotChannel`       | —    |
+| 返回值 | —         | `string \| undefined` | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const channelScale: (channel: IRPlotChannel) => string | undefined;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"markChannelEncoding"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={156}>markChannelEncoding</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称     | 类型 / 签名                  | 说明 |
+| ------ | -------- | ---------------------------- | ---- |
+| 参数   | `mark`   | `IRPlotMarkOperation`        | —    |
+|        | `target` | `string`                     | —    |
+| 返回值 | —        | `IRPlotChannel \| undefined` | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const markChannelEncoding: (mark: IRPlotMarkOperation, target: string) => IRPlotChannel | undefined;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"FieldCollector"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={202}>FieldCollector</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1479,11 +1515,11 @@ export type FieldChannel =
 
 <ApiTable>
 
-| 成员         | 类型                                              | 默认值 | 说明                                                      |
-| ------------ | ------------------------------------------------- | ------ | --------------------------------------------------------- |
-| `addChannel` | `(channel?: FieldChannel) => void`                | —      | 加入普通 channel 或 mark 样式字段引用；常量值不引用数据源 |
-| `addField`   | `(field?: string) => void`                        | —      | 加入一个字段名；undefined 表示该位置没有字段引用          |
-| `addFields`  | `(...fields: Array<string \| undefined>) => void` | —      | 一次加入多个字段名；undefined 会被跳过                    |
+| 成员         | 类型                                              | 默认值 | 说明                                             |
+| ------------ | ------------------------------------------------- | ------ | ------------------------------------------------ |
+| `addChannel` | `(channel?: IRPlotChannel) => void`               | —      | 加入编码引用的字段路径，固定属性不经过字段收集器 |
+| `addField`   | `(field?: string) => void`                        | —      | 加入一个字段名；undefined 表示该位置没有字段引用 |
+| `addFields`  | `(...fields: Array<string \| undefined>) => void` | —      | 一次加入多个字段名；undefined 会被跳过           |
 
 </ApiTable>
 
@@ -1495,7 +1531,7 @@ export type FieldChannel =
 export type FieldCollector = {
   addField: (field?: string) => void;
   addFields: (...fields: Array<string | undefined>) => void;
-  addChannel: (channel?: FieldChannel) => void;
+  addChannel: (channel?: IRPlotChannel) => void;
 };
 ```
 
@@ -1503,7 +1539,7 @@ export type FieldCollector = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"channelValue"} path={"packages/viz/plot/src/providers/channel/shared/field.ts"} startLine={17}>channelValue</ApiSourceLink>
+#### <ApiSourceLink label={"channelValue"} path={"packages/viz/plot/src/providers/channel/shared/field.ts"} startLine={18}>channelValue</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1511,11 +1547,11 @@ export type FieldCollector = {
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称      | 类型 / 签名                  | 说明                                         |
-| ------ | --------- | ---------------------------- | -------------------------------------------- |
-| 参数   | `channel` | `IRPlotChannel \| undefined` | 字段或常量绑定；省略表示未绑定               |
-|        | `row`     | `ExternalRow`                | 当前图元使用的数据行                         |
-| 返回值 | —         | `unknown`                    | 常量或字段值；绑定或字段缺失时返回 undefined |
+| 类别   | 名称      | 类型 / 签名                  | 说明                                   |
+| ------ | --------- | ---------------------------- | -------------------------------------- |
+| 参数   | `channel` | `IRPlotChannel \| undefined` | 字段绑定；省略表示未绑定               |
+|        | `row`     | `ExternalRow`                | 当前图元使用的数据行                   |
+| 返回值 | —         | `unknown`                    | 字段值；绑定或字段缺失时返回 undefined |
 
 </ApiTable>
 
@@ -1531,9 +1567,9 @@ export declare const channelValue: (channel: IRPlotChannel | undefined, row: Ext
 
 </DocTabs>
 
-#### <ApiSourceLink label={"labelOf"} path={"packages/viz/plot/src/providers/channel/shared/field.ts"} startLine={53}>labelOf</ApiSourceLink>
+#### <ApiSourceLink label={"labelOf"} path={"packages/viz/plot/src/providers/channel/shared/field.ts"} startLine={52}>labelOf</ApiSourceLink>
 
-resolveLabel 最高优先；其次 field 解析值；再次 value 常量
+resolveLabel 最高优先；有字段编码时读取字段，否则使用固定内容
 
 <DocTabs defaultValue="members">
 
@@ -1541,13 +1577,15 @@ resolveLabel 最高优先；其次 field 解析值；再次 value 常量
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称            | 类型 / 签名                                              | 说明                                                     |
-| ------ | --------------- | -------------------------------------------------------- | -------------------------------------------------------- |
-| 参数   | `content`       | `IRPlotTextChannel \| IRPlotMarkLabelContent`            | 字段或常量文本内容及可选展示格式                         |
-|        | `row`           | `ExternalRow`                                            | 当前图元使用的数据行                                     |
-|        | `fieldType?`    | `DataFieldType`                                          | 字段类型；temporal 使用 UTC 时间格式，其余使用数值格式   |
-|        | `resolveLabel?` | `ResolveLabel`                                           | 优先于声明内容的运行时标签回调；省略时读取 content       |
-| 返回值 | —               | `IRPlotMarkLabelContent['value'] \| string \| undefined` | 格式化文本或常量内容；字段为空或没有内容时返回 undefined |
+| 类别   | 名称             | 类型 / 签名                                     | 说明                                                     |
+| ------ | ---------------- | ----------------------------------------------- | -------------------------------------------------------- |
+| 参数   | `content`        | `IRPlotMarkLabelContent \| undefined`           | 固定文本内容                                             |
+|        | `row`            | `ExternalRow`                                   | 当前图元使用的数据行                                     |
+|        | `fieldType?`     | `DataFieldType`                                 | 字段类型；temporal 使用 UTC 时间格式，其余使用数值格式   |
+|        | `resolveLabel?`  | `ResolveLabel`                                  | 优先于声明内容的运行时标签回调；省略时读取 content       |
+|        | `field?`         | `string`                                        | 可选的字段编码；无效值不回退到固定内容                   |
+|        | `displayFormat?` | `string`                                        | 字段值的显示格式                                         |
+| 返回值 | —                | `IRPlotMarkLabelContent \| string \| undefined` | 格式化文本或常量内容；字段为空或没有内容时返回 undefined |
 
 </ApiTable>
 
@@ -1557,18 +1595,20 @@ resolveLabel 最高优先；其次 field 解析值；再次 value 常量
 
 ```ts
 export declare const labelOf: (
-  content: IRPlotTextChannel | IRPlotMarkLabelContent,
+  content: IRPlotMarkLabelContent | undefined,
   row: ExternalRow,
   fieldType?: DataFieldType,
   resolveLabel?: ResolveLabel,
-) => IRPlotMarkLabelContent['value'] | string | undefined;
+  field?: string,
+  displayFormat?: string,
+) => IRPlotMarkLabelContent | string | undefined;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MarkValueResolverOptions"} path={"packages/viz/plot/src/providers/channel/shared/common.ts"} startLine={29}>MarkValueResolverOptions</ApiSourceLink>
+#### <ApiSourceLink label={"MarkValueResolverOptions"} path={"packages/viz/plot/src/providers/channel/shared/common.ts"} startLine={26}>MarkValueResolverOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1576,13 +1616,12 @@ export declare const labelOf: (
 
 <ApiTable>
 
-| 成员                 | 类型                                 | 默认值      | 说明                                                                  |
-| -------------------- | ------------------------------------ | ----------- | --------------------------------------------------------------------- |
-| `T` (泛型)           | `—`                                  | —           | 原始字段解析成功时返回的视觉值类型                                    |
-| `channelName`        | `string`                             | —           | 用于错误信息的属性 / 通道名                                           |
-| `constants?`         | `'resolve' \| 'skip'`                | `'resolve'` | 常量变体是否也产出 resolver；需要把常量收敛进默认属性时可显式跳过     |
-| `expectedFieldType?` | `DataFieldType`                      | —           | 字段变体允许的字段类型；省略表示不做类型限制                          |
-| `parse`              | `(value: unknown) => T \| undefined` | —           | 把数据行中的原始字段值转换为属性值；返回 undefined 表示该行跳过该属性 |
+| 成员                 | 类型                                 | 默认值 | 说明                                                                  |
+| -------------------- | ------------------------------------ | ------ | --------------------------------------------------------------------- |
+| `T` (泛型)           | `—`                                  | —      | 原始字段解析成功时返回的视觉值类型                                    |
+| `channelName`        | `string`                             | —      | 用于错误信息的属性 / 通道名                                           |
+| `expectedFieldType?` | `DataFieldType`                      | —      | 字段变体允许的字段类型；省略表示不做类型限制                          |
+| `parse`              | `(value: unknown) => T \| undefined` | —      | 把数据行中的原始字段值转换为属性值；返回 undefined 表示该行跳过该属性 |
 
 </ApiTable>
 
@@ -1595,7 +1634,6 @@ export type MarkValueResolverOptions<T> = {
   channelName: string;
   expectedFieldType?: DataFieldType;
   parse: (value: unknown) => T | undefined;
-  constants?: 'resolve' | 'skip';
 };
 ```
 
@@ -1603,7 +1641,7 @@ export type MarkValueResolverOptions<T> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MarkValueResolution"} path={"packages/viz/plot/src/providers/channel/shared/common.ts"} startLine={18}>MarkValueResolution</ApiSourceLink>
+#### <ApiSourceLink label={"MarkValueResolution"} path={"packages/viz/plot/src/providers/channel/shared/common.ts"} startLine={15}>MarkValueResolution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1636,7 +1674,7 @@ export type MarkValueResolution<T> = ChannelResolution<T> & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"makeMarkValueResolver"} path={"packages/viz/plot/src/providers/channel/shared/common.ts"} startLine={52}>makeMarkValueResolver</ApiSourceLink>
+#### <ApiSourceLink label={"makeMarkValueResolver"} path={"packages/viz/plot/src/providers/channel/shared/common.ts"} startLine={44}>makeMarkValueResolver</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1644,14 +1682,14 @@ export type MarkValueResolution<T> = ChannelResolution<T> & {
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称      | 类型 / 签名                           | 说明                                                     |
-| ------ | --------- | ------------------------------------- | -------------------------------------------------------- |
-| 泛型   | `T`       | —                                     | 常量或字段解析器产出的视觉值类型                         |
-| 参数   | `value`   | `MarkStyleValue<T> \| undefined`      | 字段或常量样式值；省略时不产生解析结果                   |
-|        | `model`   | `DataTransformModel`                  | 当前数据的完整字段模型                                   |
-|        | `options` | `MarkValueResolverOptions<T>`         | 字段类型限制、值解析与常量处理策略                       |
-| 返回值 | —         | `MarkValueResolution<T> \| undefined` | 逐行解析器与字段元数据；未绑定或跳过常量时返回 undefined |
-| 错误   | —         | —                                     | 已知字段类型与 expectedFieldType 不一致                  |
+| 类别   | 名称       | 类型 / 签名                           | 说明                                           |
+| ------ | ---------- | ------------------------------------- | ---------------------------------------------- |
+| 泛型   | `T`        | —                                     | 字段解析器产出的视觉值类型                     |
+| 参数   | `encoding` | `IRPlotChannel \| undefined`          | 字段编码；省略时不产生解析结果                 |
+|        | `model`    | `DataTransformModel`                  | 当前数据的完整字段模型                         |
+|        | `options`  | `MarkValueResolverOptions<T>`         | 字段类型限制与值解析策略                       |
+| 返回值 | —          | `MarkValueResolution<T> \| undefined` | 逐行解析器与字段元数据；未绑定时返回 undefined |
+| 错误   | —          | —                                     | 已知字段类型与 expectedFieldType 不一致        |
 
 </ApiTable>
 
@@ -1661,7 +1699,7 @@ export type MarkValueResolution<T> = ChannelResolution<T> & {
 
 ```ts
 export declare const makeMarkValueResolver: <T>(
-  value: MarkStyleValue<T> | undefined,
+  encoding: IRPlotChannel | undefined,
   model: DataTransformModel,
   options: MarkValueResolverOptions<T>,
 ) => MarkValueResolution<T> | undefined;

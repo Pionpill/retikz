@@ -1,5 +1,7 @@
 /** 标注 Schema 字段的中文说明；英文与默认值仍来自运行时 Schema */
 export const annotationDescriptions: Readonly<Partial<Record<string, string>>> = {
+  encodings: '字段到标注位置与外观目标的映射',
+  properties: '固定位置、外观和构造参数',
   align: '文字水平对齐方式',
   blendMode: '混合模式',
   boundary: '节点边界策略',
@@ -18,9 +20,9 @@ export const annotationDescriptions: Readonly<Partial<Record<string, string>>> =
   fill: '填充颜色或绘制配置',
   fillRule: '填充规则',
   font: '字体配置',
-  from: '起点的完整角色位置映射，可使用常量、field 或 edge',
-  to: '终点的完整角色位置映射，可使用常量、field 或 edge',
-  transform: '当前标注的局部数据变换；显式空数组也按数据行生成实例',
+  from: '起点的完整角色位置映射，使用数据空间常量或 edge；字段来源写入 encodings',
+  to: '终点的完整角色位置映射，使用数据空间常量或 edge；字段来源写入 encodings',
+  transforms: '当前标注的局部数据变换；显式空数组也按数据行生成实例',
   id: '标注声明及生成图形的标识',
   connection: '坐标几何或直线连接方式',
   label: '附着于几何对象的常量标签',

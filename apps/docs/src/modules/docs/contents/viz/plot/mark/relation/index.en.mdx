@@ -15,8 +15,14 @@ import { Plot, PointMark, RelationMark } from '@retikz/plot-react';
 
 ```tsx
 <Plot data={edges}>
-  <PointMark x="sourceX" y="sourceY" anchorId={{ prefix: 'node', field: 'sourceId' }} />
-  <PointMark x="targetX" y="targetY" anchorId={{ prefix: 'node', field: 'targetId' }} />
+  <PointMark
+    encodings={{ anchorId: 'sourceId', position: { x: 'sourceX', y: 'sourceY' } }}
+    properties={{ anchorId: { prefix: 'node' } }}
+  />
+  <PointMark
+    encodings={{ anchorId: 'targetId', position: { x: 'targetX', y: 'targetY' } }}
+    properties={{ anchorId: { prefix: 'node' } }}
+  />
   <RelationMark
     source={{ anchorId: { prefix: 'node', field: 'sourceId' } }}
     target={{ anchorId: { prefix: 'node', field: 'targetId' } }}
@@ -59,7 +65,7 @@ Each scatter row declares both `id` and `target`. Because the relationship alrea
 
 #### Sankey Ribbon
 
-Sankey relations use the same `source` and `target` refs, but set `kind="ribbon"` and provide `ribbon.width`. Fill and opacity remain in the shared `style` contract used by both path and ribbon relations.
+Sankey relations bind endpoints through `encodings.source` and `encodings.target`, set `properties.geometry.kind` to `ribbon`, and bind the width field through `encodings.geometry.width`. The fill field belongs in `encodings.fill`, while fixed opacity belongs in `properties.opacity`.
 
 <ComponentPreview
   files={['relation-sankey', 'relation-sankey.preview.tsx', 'relation-sankey.data.ts']}

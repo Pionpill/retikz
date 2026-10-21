@@ -41,7 +41,7 @@ const specWithModel = (reference = 'd'): IRPlot =>
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    marks: [{ type: 'path', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
   });
 
 const specNoModel = (reference = 'd'): IRPlot =>
@@ -54,7 +54,7 @@ const specNoModel = (reference = 'd'): IRPlot =>
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
+    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'a', y: 'b' } } }],
   });
 
 /** 构造仅含指定自有键的字典，避免 `__proto__` 对对象字面量的特殊语义 */
@@ -345,7 +345,7 @@ describe('custom transform data portability（contract）', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x2' }, y: { field: 'y' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x2', y: 'y' } } }],
     });
 
   it('strict_model_accepts_registered_custom_output_field', () => {

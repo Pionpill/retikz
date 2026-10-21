@@ -1,9 +1,9 @@
 ---
 title: 通道绑定
-description: 通道绑定说明如何用字段或固定值控制位置、颜色、大小、形状和文本等视觉结果。
+description: 用 encodings 绑定数据字段，用 properties 指定固定位置与外观。
 ---
 
-一份数据可以画成很多种图，因为数据本身没有规定每个字段该怎样呈现。通道是图形语法中连接**数据与视觉属性**的环节：位置、颜色、大小、形状和文字都是图形可以承载信息的方式，通道绑定则指定每一种方式使用哪个字段或固定值。
+一份数据可以画成很多种图，因为数据本身没有规定每个字段该怎样呈现。通道是图形语法中连接**数据与视觉属性**的环节：位置、颜色、大小、形状和文字都是图形可以承载信息的方式，通道绑定指定使用哪个数据字段；固定外观由属性配置。
 
 例如，一行数据记录了某个地区的 GDP、预期寿命和人口。选择用点表示这条记录后，可以把 GDP 绑定到 `x`、预期寿命绑定到 `y`、人口绑定到 `size`。读者便能通过点的位置和大小比较这些数据，而不必逐行读取数字。同一个字段也可以用于多个通道，例如同时用颜色和形状区分地区。
 
@@ -45,7 +45,7 @@ createRoot(document.getElementById('plot')!).render(
   <Plot data={rows} width={360} height={220}>
     <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
     <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
-    <PointMark x="gdp" y="life" color="region" size="population" />
+    <PointMark encodings={{ position: { x: 'gdp', y: 'life' }, color: 'region', size: 'population' }} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" />
   </Plot>,
@@ -80,9 +80,8 @@ const spec: IRPlot = {
   marks: [
     {
       type: 'point',
-      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
-      color: { kind: 'field', value: 'region' },
-      size: { kind: 'field', value: 'population' },
+      kind: 'data',
+      encodings: { position: { x: 'gdp', y: 'life' }, color: 'region', size: 'population' },
     },
   ],
   guides: [
@@ -118,9 +117,8 @@ const spec = plot({
   marks: [
     {
       type: 'point',
-      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
-      color: { kind: 'field', value: 'region' },
-      size: { kind: 'field', value: 'population' },
+      kind: 'data',
+      encodings: { position: { x: 'gdp', y: 'life' }, color: 'region', size: 'population' },
     },
   ],
   guides: [
@@ -159,9 +157,8 @@ const spec: IRPlot = {
   marks: [
     {
       type: 'point',
-      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
-      color: { kind: 'field', value: 'region' },
-      size: { kind: 'field', value: 'population' },
+      kind: 'data',
+      encodings: { position: { x: 'gdp', y: 'life' }, color: 'region', size: 'population' },
     },
   ],
   guides: [
@@ -178,33 +175,31 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 显式配置的 `data.reference` 必须与数据集名称 `rows` 一致。四种入口表达相同绑定；React 的尺寸指定绘图区，Vanilla 渲染选项还指定 SVG 输出尺寸，因此外框尺寸可能不同。
 
-## 字段与常量
+## 字段编码与固定属性
 
-通道有两种绑定形式：**字段通道**从每行数据中读取指定字段，**常量通道**直接使用配置中的固定值。选择哪一种，取决于这个视觉属性是否需要随数据变化。
+`encodings` 指定读取哪些字段，`properties` 指定固定值。React、Vanilla 和 JSON 使用相同分组；具名组件与工厂补齐 `type`、`kind`，直接 JSON Mark 则显式声明这两个字段。
 
-| 形式     | 取值方式与效果                                                                 | 何时使用                                       | 绑定写法                                                                |
-| -------- | ------------------------------------------------------------------------------ | ---------------------------------------------- | ----------------------------------------------------------------------- |
-| 字段通道 | 逐行读取字段，再按通道与比例尺规则生成视觉结果；不同记录可以有不同的位置或样式 | 用位置比较数值、用颜色区分类别、用大小表达数量 | 位置：`{ field: 'gdp' }`；点颜色：`{ kind: 'field', value: 'region' }`  |
-| 常量通道 | 始终读取同一个配置值，不从数据行取值；对应位置或样式保持一致                   | 绘制固定阈值参考线，或为所有点指定统一颜色     | 位置：`{ value: 80 }`；点颜色：`{ kind: 'constant', value: 'crimson' }` |
+| 目标     | 字段编码                               | 固定属性                                              |
+| -------- | -------------------------------------- | ----------------------------------------------------- |
+| 横向位置 | `encodings.position.x: 'gdp'`          | `properties.position.x: 400`                          |
+| 颜色     | `encodings.color: 'region'`            | `properties.color: 'crimson'`                         |
+| 大小     | `encodings.size: 'population'`         | `properties.size: 12`                                 |
+| 形状     | `encodings.shape: 'region'`            | `properties.shape: 'circle'`                          |
+| 标签内容 | `encodings.label: { content: 'abbr' }` | `properties.label: { content: 'A', position: 'top' }` |
 
-表中展示 Vanilla / IR 的显式绑定形式，完整图元配置及 React 简写见上方接入页签。常量位置仍由比例尺和坐标系转换：例如参考线的 `y` 绑定为 `80`，表示数据值 80，而不是距画布顶部 80 像素。每种图元只接受其支持的通道和绑定形式。
+普通绑定直接写字段名。需要指定已声明的比例尺时写 `{ field: 'population', scale: 'populationSize' }`。位置的比例尺由坐标角色决定，因此 `position.x`、`position.y` 只接受字段名；`{ field: 'gdp' }` 不是合法简写。
 
-| 属性    | 示例取值                  | 作用与约束                                   |
-| ------- | ------------------------- | -------------------------------------------- |
-| `x`     | `"gdp"`                   | 点的横向位置字段                             |
-| `y`     | `"life"`                  | 点的纵向位置字段                             |
-| `color` | `"region"` 或显式常量     | 按类别分色，或统一颜色                       |
-| `size`  | `"population"` 或 `12`    | 按数值映射点半径，或使用固定半径；不接受负值 |
-| `shape` | `"region"` 或显式圆形常量 | 按类别分配形状，字段必须为分类类型           |
-| `label` | `"abbr"`                  | 为点添加字段文字标注                         |
+固定位置仍属于数据空间：`properties.position.y: 80` 表示数据值 80，随后经过比例尺与坐标投影。`{ edge: 'start' }` 和 `{ edge: 'end' }` 指向最终视图范围的边缘，详见[标注](/viz/plot/mark/annotation)。
 
-在面板中切换 `x` / `y` 字段，并把颜色、大小或形状从字段驱动改成固定值。图形结构保持不变，因此每次操作只展示当前通道绑定带来的差异。
+同一目标同时出现时，编码优先。字段不存在或尺度映射失败会报错，不使用固定属性作为回退。不同目标独立组合，例如编码 `opacity.overall` 时仍保留固定的 `opacity.fill` 与 `opacity.stroke`。
+
+在面板中切换位置字段，并将颜色、大小、形状分别切换为字段编码或固定属性。
 
 <ComponentPreview
   files={['channel-binding', 'channel-binding.preview.tsx', 'channel-binding.data.ts']}
   mode="showcase"
   size="lg"
-  caption="位置通道改变数据在坐标系中的落点；样式通道可以读取字段，也可以使用固定值。"
+  caption="位置通道改变数据在坐标系中的落点；外观由字段编码或固定属性决定。"
   defaultSourceFile="channel-binding.preview.tsx"
 />
 
@@ -214,44 +209,34 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 ## 错误与限制
 
-- **字符串先匹配字段。** React 的内置扁平样式 prop（如 `color`）先匹配当前数据集和模型中的同名字段，再尝试合法常量；两者都不接受时会警告并跳过该 prop。这不是逐行缺值时的回退规则。
-- **固定样式要消除歧义。** 数据中存在 `crimson` 字段时，`color="crimson"` 会读字段。统一深红色应写 `color={{ kind: 'constant', value: 'crimson' }}`。显式 IR 则写 `color: { kind: 'constant', value: 'crimson' }`。
-- **位置与样式的对象形式不同。** IR 的位置放在 `encoding` 中，使用 `{ field }` 或 `{ value }`；点的颜色与大小在图元顶层，使用 `{ kind, value }`。
-- **字段名按完整键优先。** 若同时存在直接属性 `"metrics.gdp"` 和嵌套对象 `metrics.gdp`，优先读取直接属性；没有完整键时才按点号逐层查找。请确保绑定字段在数据中有有效值。
-- **通道支持范围由图元决定。** `PointMark` 的 `x` / `y` props 要求字段名。自定义 `channels` 中的字符串也是字段名，常量使用显式 `{ kind: 'constant', value }`。
-- **留白由比例尺负责。** `domainPadding` 扩展数据域；点半径或标签尺寸增加后需要相应调整留白，通道绑定本身不会自动防止溢出。
+- `encodings` 中的字符串始终是字段名，`properties` 中的字符串始终是固定值，不根据数据猜测含义。
+- 字段名按完整键优先：同时存在直接属性 `"metrics.gdp"` 和嵌套对象时优先读取完整键，没有完整键才按点号查找。
+- 每种图元只接受已声明的编码目标。自定义通道也注册到 `encodings`，没有额外的 `channels` 字典。
+- `transforms` 是当前 Mark 的局部数据变换；Plot 根级变换仍使用 `transform`。字段必须存在于局部变换结果中。
 
 ## 相关属性
 
-这里收录接入示例中的点绑定属性；完整契约见[图元参考](/viz/plot/reference/mark)与[通道参考](/viz/plot/reference/encoding)。
+完整字段见[图元参考](/viz/plot/reference/mark)与[通道参考](/viz/plot/reference/encoding)。
 
 <ComponentProps
   items={[
     {
-      name: 'PointMark.x',
+      name: 'PointMark.encodings.position',
       kind: 'property',
-      type: 'string',
-      description: '横向位置字段；本页二维直角坐标例子需要此字段。',
+      type: 'Record<string, string>',
+      description: '坐标角色到字段名的映射。',
     },
     {
-      name: 'PointMark.y',
+      name: 'PointMark.encodings.color',
       kind: 'property',
-      type: 'string',
-      description: '纵向位置字段；本页二维直角坐标例子需要此字段。',
+      type: 'string | { field: string; scale: string }',
+      description: '颜色字段，可显式选择已声明的比例尺。',
     },
     {
-      name: 'PointMark.color',
+      name: 'PointMark.properties',
       kind: 'property',
-      type: "string | { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: string }",
-      description:
-        "字符串先匹配字段。显式字段形态为 `{ kind: 'field', value: string, scale?: string }`；常量为 `{ kind: 'constant', value: string }`。",
-    },
-    {
-      name: 'PointMark.size',
-      kind: 'property',
-      type: "string | number | { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: number }",
-      description:
-        "字符串读取数值字段，数字指定固定半径。显式形态为 `{ kind: 'field', value: string, scale?: string }` 或 `{ kind: 'constant', value: number }`；不接受负值。",
+      type: 'PointProperties',
+      description: '固定位置、外观与构造参数；具体字段由 Point 契约约束。',
     },
   ]}
 />

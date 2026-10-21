@@ -49,7 +49,7 @@ describe('Connected Scatter connection curves', () => {
     const path = plot.marks[0];
     if (path.type !== 'path') throw new Error('Expected path mark');
 
-    path.series = 'group';
+    path.encodings = { ...path.encodings, series: 'group' };
     const datasets = {
       rows: [
         { x: 3, y: 2, order: 3, group: 'a' },
@@ -76,10 +76,11 @@ describe('Connected Scatter connection curves', () => {
   });
 
   it('preserves the linear default and inherits or overrides the recipe curve', () => {
-    expect(plotOf().marks[0]).not.toHaveProperty('curve');
+    expect(plotOf().marks[0]).not.toHaveProperty('properties.curve');
     expect(plotOf({ curve: 'catmullRom' }, [{ kind: 'connected-scatter', override: true }]).marks[0]).toMatchObject({
       type: 'path',
-      curve: 'catmullRom',
+      kind: 'data',
+      properties: { curve: 'catmullRom' },
     });
     expect(
       plotOf({ curve: 'catmullRom' }, [
@@ -89,7 +90,7 @@ describe('Connected Scatter connection curves', () => {
           properties: { path: { curve: 'step' } },
         },
       ]).marks[0],
-    ).toMatchObject({ type: 'path', curve: 'step' });
+    ).toMatchObject({ type: 'path', kind: 'data', properties: { curve: 'step' } });
     expect(() => plotOf({ curve: 'unsupported' })).toThrow();
   });
 

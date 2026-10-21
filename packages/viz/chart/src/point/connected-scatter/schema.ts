@@ -10,7 +10,7 @@ import {
   StrokeWidthSchema,
 } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
-import { PathMarkSchema } from '@retikz/plot';
+import { PathPropertiesSchema } from '@retikz/plot';
 import type { infer as ZodInfer } from 'zod';
 import { array, boolean, enum as zodEnum, literal, strictObject, union } from 'zod';
 
@@ -32,7 +32,7 @@ export const ConnectedScatterPointPropertiesSchema = PointPropertiesSchema.omit(
 /** 连接散点中的路径成员常量 */
 export const ConnectedScatterPathPropertiesSchema = strictObject({
   /** 相邻观测点的连接方式，省略时使用直线 */
-  curve: PathMarkSchema.shape.curve,
+  curve: PathPropertiesSchema.shape.curve,
   stroke: CssColorSchema.optional(),
   strokeWidth: StrokeWidthSchema.optional(),
   opacity: GraphicOpacityValueSchema.optional(),
@@ -41,7 +41,7 @@ export const ConnectedScatterPathPropertiesSchema = strictObject({
   dashPattern: StrokeDashPatternSchema.optional(),
   shadow: union([zodEnum(ShadowPreset), DropShadowSchema]).optional(),
   blendMode: zodEnum(BlendMode).optional(),
-  connectNulls: PathMarkSchema.shape.connectNulls,
+  connectNulls: PathPropertiesSchema.shape.connectNulls,
 }).describe('Connected Scatter open Path constant properties');
 
 /** 连接散点标记的作者侧成员属性 */

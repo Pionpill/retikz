@@ -5,7 +5,7 @@ description: Mark information with explicit points, paths, and intervals using c
 
 Annotations use geometric elements to mark information in the plotting area, such as target points, reference lines, and background regions. They share the geometric drawing capabilities of marks and come in the same three types: point, path, and interval.
 
-Annotation positions pass through Plot scales and [coordinates](/viz/plot/coordinate). Constants without `transform` produce one instance in the current view. A field binding or explicit `transform` produces one complete geometry per result row. The three entry points are:
+Annotation positions pass through Plot scales and [coordinates](/viz/plot/coordinate). Constants without `transforms` produce one instance in the current view. A field binding or explicit `transforms` produces one complete geometry per result row. The three entry points are:
 
 | Geometry               | React                | Vanilla              | Source IR                              |
 | ---------------------- | -------------------- | -------------------- | -------------------------------------- |
@@ -19,17 +19,17 @@ All three Annotation types support the following position inputs, which can be m
 
 | Input      | Syntax                                 | Meaning                                                                                                          |
 | ---------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Constant   | `50`, `'A'`, or `{ value: 50 }`        | A fixed data-space position; strings are always literal values                                                   |
+| Constant   | `properties.position.x: 50` or `'A'`        | A fixed data-space position; strings are always literal values                                                   |
 | Data field | `{ field: 'name' }`                    | Reads a field from the current result row                                                                        |
 | View edge  | `{ edge: 'start' }`, `{ edge: 'end' }` | The endpoints of the coordinate role's final mapped range; they follow range reversal, not data minima or maxima |
 
-Local `transform` uses the same declarations as Mark. It consumes root-transformed data, or the current partition inside a facet. Use an [aggregation transform](/viz/data/transforms/aggregation-annotation) to calculate statistics, then bind the output fields to positions. The local chain does not change sibling data views.
+Local `transforms` uses the same declarations as Mark. It consumes root-transformed data, or the current partition inside a facet. Use an [aggregation transform](/viz/data/transforms/aggregation-annotation) to calculate statistics, then bind the output fields to positions. The local chain does not change sibling data views.
 
 | Declaration                                  | Instance count                                   |
 | -------------------------------------------- | ------------------------------------------------ |
-| Constants or edges, with `transform` omitted | One per current view                             |
-| Any position contains `{ field }`            | One per result row                               |
-| Explicit `transform`, including `[]`         | One per result row, even with constant positions |
+| Constants or edges, with `transforms` omitted | One per current view                             |
+| Any field encoding is present            | One per result row                               |
+| Explicit `transforms`, including `[]`         | One per result row, even with constant positions |
 
 An empty result produces no data-bound annotations. Styles, text, and labels remain constant; fields bind positions.
 
@@ -68,18 +68,9 @@ createRoot(document.getElementById('plot')!).render(
     <Plot data={[]} width={320} height={220}>
       <PlotScale dimension="x" type="linear" domain={[0, 100]} domainPadding={0} />
       <PlotScale dimension="y" type="linear" domain={[0, 100]} domainPadding={0} />
-      <IntervalAnnotation
-        x={{ from: 20, to: 40 }}
-        y={{ from: { edge: 'start' }, to: { edge: 'end' } }}
-        fill="#dbeafe"
-      />
-      <PathAnnotation
-        from={{ x: { edge: 'start' }, y: 50 }}
-        to={{ x: { edge: 'end' }, y: 50 }}
-        stroke="#dc2626"
-        dashPattern={[4, 3]}
-      />
-      <PointAnnotation x={80} y={80} text="80" textColor="darkorange" />
+      <IntervalAnnotation properties={{ fill: "#dbeafe", bounds: { x: { from: 20, to: 40 }, y: { from: { edge: 'start' }, to: { edge: 'end' } } } }} />
+      <PathAnnotation properties={{ from: { x: { edge: 'start' }, y: 50 }, to: { x: { edge: 'end' }, y: 50 }, stroke: "#dc2626", dashPattern: [4, 3] }} />
+      <PointAnnotation properties={{ text: "80", textColor: "darkorange", position: { x: 80, y: 80 } }} />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" />
     </Plot>
@@ -106,30 +97,12 @@ const spec: IRPlot = {
     { type: 'linear', name: 'y', domain: [0, 100], domainPadding: 0 },
   ],
   marks: [
-    {
-      type: 'interval',
-      kind: 'annotation',
-      bounds: {
+    { type: 'interval', kind: 'annotation', properties: { bounds: {
         x: { from: 20, to: 40 },
         y: { from: { edge: 'start' }, to: { edge: 'end' } },
-      },
-      fill: '#dbeafe',
-    },
-    {
-      type: 'path',
-      kind: 'annotation',
-      from: { x: { edge: 'start' }, y: 50 },
-      to: { x: { edge: 'end' }, y: 50 },
-      stroke: '#dc2626',
-      dashPattern: [4, 3],
-    },
-    {
-      type: 'point',
-      kind: 'annotation',
-      position: { x: 80, y: 80 },
-      text: '80',
-      textColor: 'darkorange',
-    },
+      }, fill: '#dbeafe' } },
+    { type: 'path', kind: 'annotation', properties: { from: { x: { edge: 'start' }, y: 50 }, to: { x: { edge: 'end' }, y: 50 }, stroke: '#dc2626', dashPattern: [4, 3] } },
+    { type: 'point', kind: 'annotation', properties: { position: { x: 80, y: 80 }, text: '80', textColor: 'darkorange' } },
   ],
   guides: [
     { type: 'axis', dimension: 'x' },
@@ -158,18 +131,9 @@ const source = plot({
     { type: 'linear', name: 'y', domain: [0, 100], domainPadding: 0 },
   ],
   marks: [
-    intervalAnnotation({
-      x: { from: 20, to: 40 },
-      y: { from: { edge: 'start' }, to: { edge: 'end' } },
-      fill: '#dbeafe',
-    }),
-    pathAnnotation({
-      from: { x: { edge: 'start' }, y: 50 },
-      to: { x: { edge: 'end' }, y: 50 },
-      stroke: '#dc2626',
-      dashPattern: [4, 3],
-    }),
-    pointAnnotation({ x: 80, y: 80, text: '80', textColor: 'darkorange' }),
+    intervalAnnotation({ properties: { fill: '#dbeafe', bounds: { x: { from: 20, to: 40 }, y: { from: { edge: 'start' }, to: { edge: 'end' } } } } }),
+    pathAnnotation({ properties: { from: { x: { edge: 'start' }, y: 50 }, to: { x: { edge: 'end' }, y: 50 }, stroke: '#dc2626', dashPattern: [4, 3] } }),
+    pointAnnotation({ properties: { text: '80', textColor: 'darkorange', position: { x: 80, y: 80 } } }),
   ],
   guides: [
     { type: 'axis', dimension: 'x' },
@@ -203,30 +167,12 @@ const spec: IRPlot = {
     { type: 'linear', name: 'y', domain: [0, 100], domainPadding: 0 },
   ],
   marks: [
-    {
-      type: 'interval',
-      kind: 'annotation',
-      bounds: {
+    { type: 'interval', kind: 'annotation', properties: { bounds: {
         x: { from: 20, to: 40 },
         y: { from: { edge: 'start' }, to: { edge: 'end' } },
-      },
-      fill: '#dbeafe',
-    },
-    {
-      type: 'path',
-      kind: 'annotation',
-      from: { x: { edge: 'start' }, y: 50 },
-      to: { x: { edge: 'end' }, y: 50 },
-      stroke: '#dc2626',
-      dashPattern: [4, 3],
-    },
-    {
-      type: 'point',
-      kind: 'annotation',
-      position: { x: 80, y: 80 },
-      text: '80',
-      textColor: 'darkorange',
-    },
+      }, fill: '#dbeafe' } },
+    { type: 'path', kind: 'annotation', properties: { from: { x: { edge: 'start' }, y: 50 }, to: { x: { edge: 'end' }, y: 50 }, stroke: '#dc2626', dashPattern: [4, 3] } },
+    { type: 'point', kind: 'annotation', properties: { position: { x: 80, y: 80 }, text: '80', textColor: 'darkorange' } },
   ],
   guides: [
     { type: 'axis', dimension: 'x' },

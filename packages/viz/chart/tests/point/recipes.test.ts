@@ -126,7 +126,8 @@ describe('Point Chart recipe Definitions', () => {
     expect(result.plot.marks).toEqual([
       expect.objectContaining({
         type: 'point',
-        placement: { adjustments: [{ kind: 'jitter' }] },
+        kind: 'data',
+        properties: expect.objectContaining({ placement: { adjustments: [{ kind: 'jitter' }] } }),
       }),
     ]);
     expect(result.plot.guides).toEqual([
@@ -331,14 +332,16 @@ describe('Point Chart recipe Definitions', () => {
 
     expect(result.plot.marks).toHaveLength(2);
     expect(result.plot.marks[0]).toMatchObject({
-      encoding: { x: { field: 'alternateCategory' }, y: { field: 'value' } },
-      size: { kind: 'constant', value: 7 },
-      placement: { adjustments: [{ kind: 'jitter', span: 0, seed: 0 }] },
+      kind: 'data',
+      encodings: { position: { x: 'alternateCategory', y: 'value' } },
+      properties: { size: 7, placement: { adjustments: [{ kind: 'jitter', span: 0, seed: 0 }] } },
     });
     expect(result.plot.marks[1]).toMatchObject({
-      size: { kind: 'constant', value: 7 },
-      placement: { adjustments: [{ kind: 'jitter', span: { kind: 'ratio', value: 0.5 }, seed: 3 }] },
-      opacity: { overall: { kind: 'constant', value: 0.4 } },
+      properties: {
+        size: 7,
+        placement: { adjustments: [{ kind: 'jitter', span: { kind: 'ratio', value: 0.5 }, seed: 3 }] },
+        opacity: { overall: 0.4 },
+      },
     });
   });
 
@@ -424,11 +427,11 @@ describe('Point Chart recipe Definitions', () => {
 
     for (const chart of [scatter, regression, connectedScatter, rangedDot]) {
       expect(chart.plot.marks.find(mark => mark.type === 'point' || mark.type === 'relation')).toMatchObject({
-        autoPadding: 'max-radius',
+        properties: { autoPadding: 'max-radius' },
       });
       expect(chart.plot.scales.every(scale => !Object.hasOwn(scale, 'domainPadding'))).toBe(true);
     }
-    expect(bubble.plot.marks[0]).toMatchObject({ autoPadding: 'point-aware' });
+    expect(bubble.plot.marks[0]).toMatchObject({ properties: { autoPadding: 'point-aware' } });
     expect(bubble.plot.scales.every(scale => !Object.hasOwn(scale, 'domainPadding'))).toBe(true);
   });
 
@@ -476,11 +479,11 @@ describe('Point Chart recipe Definitions', () => {
 
     const result = resolveChart(source, ScatterChartDefinition, runtime);
 
-    expect(result.plot.marks[0]).toMatchObject({ autoPadding: 'max-radius' });
+    expect(result.plot.marks[0]).toMatchObject({ properties: { autoPadding: 'max-radius' } });
     if (options.properties !== undefined) {
-      expect(result.plot.marks[0]).toMatchObject({ size: { kind: 'constant', value: radius } });
+      expect(result.plot.marks[0]).toMatchObject({ properties: { size: radius } });
     } else {
-      expect(result.plot.marks[0]).toMatchObject({ size: { kind: 'field', value: 'size', scale: 'sizeScale' } });
+      expect(result.plot.marks[0]).toMatchObject({ encodings: { size: { field: 'size', scale: 'sizeScale' } } });
       expect(result.plot.scales).toContainEqual(
         expect.objectContaining({ name: 'sizeScale', range: expect.arrayContaining([radius]) }),
       );
@@ -499,13 +502,7 @@ describe('Point Chart recipe Definitions', () => {
         marks: [{ kind: 'scatter', properties: { size: 12 } }],
       },
       plotExtension: {
-        marks: [
-          {
-            type: 'point',
-            encoding: { x: { field: 'x' }, y: { field: 'y' } },
-            size: { kind: 'constant', value: 99 },
-          },
-        ],
+        marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } }, properties: { size: 99 } }],
       },
     });
     const override = ScatterChartSchema.parse({
@@ -524,11 +521,11 @@ describe('Point Chart recipe Definitions', () => {
     const overrideResult = resolveChart(override, ScatterChartDefinition, runtime);
 
     expect(additionResult.plot.marks).toMatchObject([
-      { size: { value: 3 }, autoPadding: 'max-radius' },
-      { size: { value: 12 }, autoPadding: 'max-radius' },
-      { size: { value: 99 }, autoPadding: 'max-radius' },
+      { properties: { size: 3, autoPadding: 'max-radius' } },
+      { properties: { size: 12, autoPadding: 'max-radius' } },
+      { properties: { size: 99, autoPadding: 'max-radius' } },
     ]);
-    expect(overrideResult.plot.marks).toMatchObject([{ size: { value: 4 }, autoPadding: 'max-radius' }]);
+    expect(overrideResult.plot.marks).toMatchObject([{ properties: { size: 4, autoPadding: 'max-radius' } }]);
     expect(overrideResult.plot.marks).toHaveLength(1);
   });
 
@@ -553,8 +550,8 @@ describe('Point Chart recipe Definitions', () => {
     const result = resolveChart(source, ScatterChartDefinition, runtime);
 
     expect(result.plot.marks[0]).toMatchObject({
-      autoPadding: 'max-radius',
-      size: { kind: 'field', value: 'size', scale: 'sizeScale' },
+      encodings: { size: { field: 'size', scale: 'sizeScale' } },
+      properties: { autoPadding: 'max-radius' },
     });
     expect(result.plot.scales).toContainEqual({ type: 'sqrt', name: 'sizeScale', range: [3, 17] });
   });
@@ -603,14 +600,15 @@ describe('Point Chart recipe Definitions', () => {
       rangedDotRuntime,
     );
 
-    expect(regression.plot.marks[0]).toMatchObject({ autoPadding: 'max-radius', size: { value: 11 } });
+    expect(regression.plot.marks[0]).toMatchObject({ properties: { autoPadding: 'max-radius', size: 11 } });
     expect(connected.plot.marks.find(mark => mark.type === 'point')).toMatchObject({
-      autoPadding: 'max-radius',
-      size: { value: 14 },
+      properties: { autoPadding: 'max-radius', size: 14 },
     });
     expect(ranged.plot.marks[0]).toMatchObject({
-      autoPadding: 'max-radius',
-      endpoints: { source: { size: { value: 8 } }, target: { size: { value: 15 } } },
+      properties: {
+        autoPadding: 'max-radius',
+        endpoints: { source: { size: 8 }, target: { size: 15 } },
+      },
     });
   });
 
@@ -747,12 +745,7 @@ describe('Point Chart recipe Definitions', () => {
     });
     const context = scaleDefaultsContextOf(
       source,
-      [
-        {
-          type: 'point',
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
-        },
-      ],
+      [{ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } }],
       [
         { type: 'linear', name: '__chart.scatter.scale.x' },
         { type: 'linear', name: '__chart.scatter.scale.y' },
@@ -814,12 +807,11 @@ describe('Point Chart recipe Definitions', () => {
         plotMarks: [
           expect.objectContaining({
             type: 'path',
-            order: 'year',
-            closed: false,
-            connectNulls: true,
-            dashPattern: { kind: 'constant', value: [4, 2] },
+            kind: 'data',
+            encodings: expect.objectContaining({ order: 'year' }),
+            properties: expect.objectContaining({ closed: false, connectNulls: true, dashPattern: [4, 2] }),
           }),
-          expect.objectContaining({ type: 'point', size: { kind: 'constant', value: 4 } }),
+          expect.objectContaining({ type: 'point', kind: 'data', properties: expect.objectContaining({ size: 4 }) }),
         ],
       },
     ]);
@@ -831,11 +823,10 @@ describe('Point Chart recipe Definitions', () => {
 
     expect(result.scaffold.guides?.value).toContainEqual({ type: 'legend', channel: 'color' });
     expect(path).toMatchObject({
-      series: 'country',
-      stroke: { kind: 'field', value: 'country', scale: '__chart.connected-scatter.scale.series' },
+      encodings: { series: 'country', stroke: { field: 'country', scale: '__chart.connected-scatter.scale.series' } },
     });
     expect(point).toMatchObject({
-      color: { kind: 'field', value: 'country', scale: '__chart.connected-scatter.scale.series' },
+      encodings: { color: { field: 'country', scale: '__chart.connected-scatter.scale.series' } },
     });
   });
 
@@ -847,8 +838,8 @@ describe('Point Chart recipe Definitions', () => {
     );
     const [path, point] = result.semanticMarks[0].plotMarks;
 
-    expect(path).toMatchObject({ stroke: { kind: 'constant', value: '#16a34a' } });
-    expect(point).toMatchObject({ color: { kind: 'constant', value: '#dc2626' } });
+    expect(path).toMatchObject({ properties: { stroke: '#16a34a' } });
+    expect(point).toMatchObject({ properties: { color: '#dc2626' } });
   });
 
   it('Ranged Dot emits one projected Relation with endpoint glyphs and shared authored roles', () => {
@@ -869,24 +860,25 @@ describe('Point Chart recipe Definitions', () => {
         plotMarks: [
           expect.objectContaining({
             type: 'relation',
-            source: { project: { x: 'before', y: 'country' } },
-            target: { project: { x: 'after', y: 'country' } },
-            style: expect.objectContaining({
-              stroke: { kind: 'constant', value: '#64748b' },
-              strokeWidth: { kind: 'constant', value: 2 },
+            kind: 'data',
+            encodings: expect.objectContaining({
+              source: { position: { x: 'before', y: 'country' } },
+              target: { position: { x: 'after', y: 'country' } },
             }),
-            path: { options: { style: { dashPattern: [4, 2] } } },
-            endpoints: {
-              source: expect.objectContaining({
-                color: { kind: 'constant', value: '#2563eb' },
-                size: { kind: 'constant', value: 4 },
-              }),
-              target: expect.objectContaining({
-                color: { kind: 'constant', value: '#dc2626' },
-                shape: { kind: 'constant', value: 'diamond' },
-                size: { kind: 'constant', value: 4 },
-              }),
-            },
+            properties: expect.objectContaining({
+              endpoints: {
+                source: expect.objectContaining({
+                  color: '#2563eb',
+                  size: 4,
+                }),
+                target: expect.objectContaining({
+                  color: '#dc2626',
+                  shape: 'diamond',
+                  size: 4,
+                }),
+              },
+              geometry: { kind: 'path', options: { style: { dashPattern: [4, 2] } } },
+            }),
           }),
         ],
       },
@@ -908,8 +900,9 @@ describe('Point Chart recipe Definitions', () => {
     });
     expect(result.scaffold.guides?.value).toContainEqual({ type: 'legend', channel: 'color' });
     expect(relation).toMatchObject({
-      encoding: { color: { field: 'region', scale: '__chart.ranged-dot.scale.color' } },
-      endpoints: { source: {}, target: {} },
+      kind: 'data',
+      encodings: { color: { field: 'region', scale: '__chart.ranged-dot.scale.color' } },
+      properties: { endpoints: { source: {}, target: {} } },
     });
   });
 
@@ -931,7 +924,7 @@ describe('Point Chart recipe Definitions', () => {
     });
 
     expect(result.plot.marks).toEqual([
-      expect.objectContaining({ type: 'relation', defaultColorGroup: '__chart.default-color.0', style: {} }),
+      expect.objectContaining({ type: 'relation', defaultColorGroup: '__chart.default-color.0' }),
     ]);
     expect(JSON.stringify(result.plot.marks)).not.toContain('currentColor');
   });
@@ -987,8 +980,10 @@ describe('Point Chart recipe Definitions', () => {
 
     expect(result.plot.marks).toHaveLength(1);
     expect(result.plot.marks[0]).toMatchObject({
-      source: { project: { x: 'later', y: 'category' } },
-      target: { project: { x: 'earlier', y: 'category' } },
+      encodings: {
+        source: { position: { x: 'later', y: 'category' } },
+        target: { position: { x: 'earlier', y: 'category' } },
+      },
     });
   });
 
@@ -1006,18 +1001,10 @@ describe('Point Chart recipe Definitions', () => {
   });
 
   it('forwards Point offsets and labels as raw mark properties exactly once', () => {
-    const result = resolve(
-      ScatterChartDefinition,
-      { x: 'x', y: 'y' },
-      { dx: 3, dy: -2, label: { content: { value: 'A' } } },
-    );
+    const result = resolve(ScatterChartDefinition, { x: 'x', y: 'y' }, { dx: 3, dy: -2, label: { content: 'A' } });
     const [mark] = result.semanticMarks[0].plotMarks;
 
-    expect(mark).toMatchObject({
-      dx: 3,
-      dy: -2,
-      label: { content: { value: 'A' } },
-    });
+    expect(mark).toMatchObject({ properties: { dx: 3, dy: -2, label: { content: 'A' } } });
   });
 
   it('Regression adds ordered fits without duplicating observations and inherits sampling and style', () => {
@@ -1038,26 +1025,24 @@ describe('Point Chart recipe Definitions', () => {
 
     expect(marks.map(mark => mark.type)).toEqual(['point', 'path', 'path', 'path']);
     expect(marks[2]).toMatchObject({
-      strokeWidth: { value: 3 },
-      opacity: { overall: { value: 0.6 } },
-      transform: [
+      transforms: [
         {
           operation: expect.objectContaining({
             params: expect.objectContaining({ method: { kind: 'quadratic' }, sampleCount: 12, extent: [1, 8] }),
           }),
         },
       ],
+      properties: { strokeWidth: 3, opacity: { overall: 0.6 } },
     });
     expect(marks[3]).toMatchObject({
-      strokeWidth: { value: 3 },
-      opacity: { overall: { value: 0.9 } },
-      transform: [
+      transforms: [
         {
           operation: expect.objectContaining({
             params: expect.objectContaining({ method: { kind: 'power' }, sampleCount: 20, extent: [2, 6] }),
           }),
         },
       ],
+      properties: { strokeWidth: 3, opacity: { overall: 0.9 } },
     });
   });
 
@@ -1074,15 +1059,19 @@ describe('Point Chart recipe Definitions', () => {
 
     for (const mark of marks.slice(1))
       expect(mark).toMatchObject({
-        series: 'species',
-        transform: [
+        transforms: [
           { operation: expect.objectContaining({ params: expect.objectContaining({ groupBy: ['species'] }) }) },
         ],
+        encodings: { series: 'species' },
       });
 
-    expect(marks[1]).toMatchObject({ stroke: { kind: 'field', value: 'species' } });
-    expect(marks[2]).toMatchObject({ stroke: { kind: 'field', value: 'species' } });
-    expect(marks[3]).toMatchObject({ stroke: { kind: 'constant', value: '#00f' } });
+    expect(marks[1]).toMatchObject({
+      encodings: { stroke: { field: 'species', scale: '__chart.regression.scale.series' } },
+    });
+    expect(marks[2]).toMatchObject({
+      encodings: { stroke: { field: 'species', scale: '__chart.regression.scale.series' } },
+    });
+    expect(marks[3]).toMatchObject({ properties: { stroke: '#00f' } });
   });
 
   it.each([{ extraMethods: undefined }, { extraMethods: [] }, { extraMethods: [{ method: { kind: 'power' } }] }])(
@@ -1113,15 +1102,14 @@ describe('Point Chart recipe Definitions', () => {
 
       if (extraMethods?.length !== 0)
         expect(result.plot.marks[2]).toMatchObject({
-          strokeWidth: { value: 2 },
-          opacity: { overall: { value: 0.8 } },
-          transform: [
+          transforms: [
             {
               operation: expect.objectContaining({
                 params: expect.objectContaining({ method: extraMethods?.[0].method ?? { kind: 'quadratic' } }),
               }),
             },
           ],
+          properties: { strokeWidth: 2, opacity: { overall: 0.8 } },
         });
     },
   );
@@ -1145,18 +1133,13 @@ describe('Point Chart recipe Definitions', () => {
         plotMarks: [
           expect.objectContaining({
             type: 'point',
-            encoding: { x: { field: 'sepalLength' }, y: { field: 'petalLength' } },
-            size: { kind: 'constant', value: 4 },
+            kind: 'data',
+            encodings: expect.objectContaining({ position: { x: 'sepalLength', y: 'petalLength' } }),
+            properties: expect.objectContaining({ size: 4 }),
           }),
           expect.objectContaining({
             type: 'path',
-            order: '__chart.regression.trend.x',
-            closed: false,
-            encoding: {
-              x: { field: '__chart.regression.trend.x' },
-              y: { field: '__chart.regression.trend.y' },
-            },
-            transform: [
+            transforms: [
               {
                 operation: {
                   kind: 'smooth',
@@ -1172,7 +1155,12 @@ describe('Point Chart recipe Definitions', () => {
                 },
               },
             ],
-            strokeWidth: { kind: 'constant', value: 2 },
+            kind: 'data',
+            encodings: expect.objectContaining({
+              order: '__chart.regression.trend.x',
+              position: { x: '__chart.regression.trend.x', y: '__chart.regression.trend.y' },
+            }),
+            properties: expect.objectContaining({ closed: false, strokeWidth: 2 }),
           }),
         ],
       },
@@ -1222,10 +1210,10 @@ describe('Point Chart recipe Definitions', () => {
       '__chart.default-color.0',
     ]);
     expect(point).toMatchObject({
-      color: { kind: 'field', value: 'species', scale: '__chart.regression.scale.series' },
+      encodings: { color: { field: 'species', scale: '__chart.regression.scale.series' } },
     });
     expect(path).toMatchObject({
-      stroke: { kind: 'field', value: 'species', scale: '__chart.regression.scale.series' },
+      encodings: { stroke: { field: 'species', scale: '__chart.regression.scale.series' } },
     });
   });
 
@@ -1265,11 +1253,11 @@ describe('Point Chart recipe Definitions', () => {
 
     expect(result.scaffold.scales).toContainEqual({ value: { type: 'ordinal', name: scale }, replaceable: true });
     expect(result.scaffold.guides?.value).toContainEqual({ type: 'legend', channel: 'color' });
-    expect(point).toMatchObject({ color: { kind: 'field', value: 'species', scale } });
+    expect(point).toMatchObject({
+      encodings: { color: { field: 'species', scale: '__chart.regression.scale.series' } },
+    });
     expect(path).toMatchObject({
-      series: 'species',
-      stroke: { kind: 'field', value: 'species', scale },
-      transform: [
+      transforms: [
         {
           operation: expect.objectContaining({
             kind: 'smooth',
@@ -1277,6 +1265,7 @@ describe('Point Chart recipe Definitions', () => {
           }),
         },
       ],
+      encodings: { series: 'species', stroke: { field: 'species', scale: '__chart.regression.scale.series' } },
     });
   });
 
@@ -1314,14 +1303,15 @@ describe('Point Chart recipe Definitions', () => {
 
     expect(result.plot.marks).toHaveLength(4);
     expect(result.plot.marks[0]).toMatchObject({
-      encoding: { x: { field: 'x2' }, y: { field: 'y' } },
-      size: { kind: 'constant', value: 5 },
-      color: { kind: 'field', value: 'series', scale: '__chart.regression.scale.series' },
-      opacity: { overall: { kind: 'constant', value: 0.4 } },
+      kind: 'data',
+      encodings: {
+        position: { x: 'x2', y: 'y' },
+        color: { field: 'series', scale: '__chart.regression.scale.series' },
+      },
+      properties: { size: 5, opacity: { overall: 0.4 } },
     });
     expect(result.plot.marks[1]).toMatchObject({
-      strokeWidth: { kind: 'constant', value: 4 },
-      transform: [
+      transforms: [
         {
           operation: expect.objectContaining({
             params: expect.objectContaining({
@@ -1334,16 +1324,10 @@ describe('Point Chart recipe Definitions', () => {
           }),
         },
       ],
-      opacity: { overall: { kind: 'constant', value: 0.6 } },
+      properties: { strokeWidth: 4, opacity: { overall: 0.6 } },
     });
-    expect(result.plot.marks[2]).toMatchObject({
-      size: { kind: 'constant', value: 3 },
-      opacity: { overall: { kind: 'constant', value: 0.4 } },
-    });
-    expect(result.plot.marks[3]).toMatchObject({
-      strokeWidth: { kind: 'constant', value: 2 },
-      opacity: { overall: { kind: 'constant', value: 0.8 } },
-    });
+    expect(result.plot.marks[2]).toMatchObject({ properties: { size: 3, opacity: { overall: 0.4 } } });
+    expect(result.plot.marks[3]).toMatchObject({ properties: { strokeWidth: 2, opacity: { overall: 0.8 } } });
   });
 
   it('Regression replaces only its series fallback with an authored ordinal scale', () => {
@@ -1372,12 +1356,8 @@ describe('Point Chart recipe Definitions', () => {
       '__chart.regression.scale.y',
       'authoredSeries',
     ]);
-    expect(result.plot.marks[0]).toMatchObject({
-      color: { kind: 'field', value: 'series', scale: 'authoredSeries' },
-    });
-    expect(result.plot.marks[1]).toMatchObject({
-      stroke: { kind: 'field', value: 'series', scale: 'authoredSeries' },
-    });
+    expect(result.plot.marks[0]).toMatchObject({ encodings: { color: { field: 'series', scale: 'authoredSeries' } } });
+    expect(result.plot.marks[1]).toMatchObject({ encodings: { stroke: { field: 'series', scale: 'authoredSeries' } } });
   });
 
   it('Bubble creates a Point semantic mark with inherited size and a default size legend', () => {
@@ -1394,10 +1374,9 @@ describe('Point Chart recipe Definitions', () => {
         plotMarks: [
           expect.objectContaining({
             type: 'point',
-            encoding: { x: { field: 'income' }, y: { field: 'lifeExpectancy' } },
-            size: { kind: 'field', value: 'population' },
-            strokeWidth: { kind: 'constant', value: 1 },
-            opacity: { fill: { kind: 'constant', value: 0.7 } },
+            kind: 'data',
+            encodings: expect.objectContaining({ position: { x: 'income', y: 'lifeExpectancy' }, size: 'population' }),
+            properties: expect.objectContaining({ strokeWidth: 1, opacity: { fill: 0.7 } }),
           }),
         ],
       }),
@@ -1474,14 +1453,12 @@ describe('Point Chart recipe Definitions', () => {
 
     expect(result.plot.marks).toHaveLength(2);
     expect(result.plot.marks[0]).toMatchObject({
-      size: { kind: 'field', value: 'population' },
-      strokeWidth: { kind: 'constant', value: 1 },
-      opacity: { fill: { kind: 'constant', value: 0.7 } },
+      encodings: { size: 'population' },
+      properties: { strokeWidth: 1, opacity: { fill: 0.7 } },
     });
     expect(result.plot.marks[1]).toMatchObject({
-      size: { kind: 'field', value: 'population' },
-      strokeWidth: { kind: 'constant', value: 1 },
-      opacity: { fill: { kind: 'constant', value: 0.7 } },
+      encodings: { size: 'population' },
+      properties: { strokeWidth: 1, opacity: { fill: 0.7 } },
     });
   });
 
@@ -1492,11 +1469,7 @@ describe('Point Chart recipe Definitions', () => {
     expect(result.semanticMarks[0]).toMatchObject({
       kind: 'scatter',
       plotMarks: [
-        {
-          type: 'point',
-          encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
-          size: { kind: 'field', value: 'weight' },
-        },
+        { type: 'point', kind: 'data', encodings: { position: { x: 'amount', y: 'margin' }, size: 'weight' } },
       ],
     });
     expect(result.scaffold.spatial).toMatchObject({ coordinate: { type: 'cartesian2D' } });
@@ -1505,9 +1478,9 @@ describe('Point Chart recipe Definitions', () => {
   it('keeps an explicit Plot Path independent from Scatter slots', () => {
     const path = PathMarkSchema.parse({
       type: 'path',
-      order: 'path-order',
-      encoding: { x: { field: 'path-x' }, y: { field: 'path-y' } },
-      stroke: { kind: 'constant', value: '#2563eb' },
+      kind: 'data',
+      encodings: { order: 'path-order', position: { x: 'path-x', y: 'path-y' } },
+      properties: { stroke: '#2563eb' },
     });
     const source = ScatterChartSchema.parse({
       namespace: 'chart',
@@ -1545,9 +1518,8 @@ describe('Point Chart marks', () => {
     });
 
     expect(result.marks[0]).toMatchObject({
-      size: { kind: 'field', value: 'population' },
-      strokeWidth: { kind: 'constant', value: 1 },
-      opacity: { overall: { kind: 'constant', value: 0.5 }, fill: { kind: 'constant', value: 0.7 } },
+      encodings: { size: 'population' },
+      properties: { strokeWidth: 1, opacity: { overall: 0.5, fill: 0.7 } },
     });
   });
 
@@ -1565,9 +1537,7 @@ describe('Point Chart marks', () => {
     });
 
     expect(result.marks[0]).toMatchObject({
-      stroke: { kind: 'constant', value: '#0f172a' },
-      strokeWidth: { kind: 'constant', value: 2 },
-      opacity: { fill: { kind: 'constant', value: 0.9 } },
+      properties: { stroke: '#0f172a', strokeWidth: 2, opacity: { fill: 0.9 } },
     });
   });
 
@@ -1583,8 +1553,9 @@ describe('Point Chart marks', () => {
 
     expect(result.marks[0]).toMatchObject({
       type: 'point',
-      encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
-      opacity: { overall: { kind: 'constant', value: 0 } },
+      kind: 'data',
+      encodings: { position: { x: 'amount', y: 'margin' } },
+      properties: { opacity: { overall: 0 } },
     });
   });
 
@@ -1602,7 +1573,7 @@ describe('Point Chart marks', () => {
       },
     });
 
-    expect(result.marks[0]).toMatchObject({ opacity: { overall: { kind: 'field', value: 'explicitOpacity' } } });
+    expect(result.marks[0]).toMatchObject({ encodings: { opacity: { overall: 'explicitOpacity' } } });
   });
 });
 
@@ -1667,7 +1638,7 @@ describe('Point autoPadding strategies', () => {
     ).plot;
 
     expect(aware.scales[0]).toMatchObject({ domainPadding: { kind: 'range', lower: 0 } });
-    expect(aware.marks[0]).toMatchObject({ autoPadding: 'point-aware' });
+    expect(aware.marks[0]).toMatchObject({ properties: { autoPadding: 'point-aware' } });
     expect(aware.marks[0].id).toBeUndefined();
   });
 
@@ -1737,8 +1708,9 @@ describe('point-aware final mark selection', () => {
           {
             id: '__chart.mark.0',
             type: 'point',
-            encoding: { x: { field: 'x' }, y: { field: 'y' } },
-            size: { kind: 'constant', value: 90 },
+            kind: 'data',
+            encodings: { position: { x: 'x', y: 'y' } },
+            properties: { size: 90 },
           },
         ],
       },
@@ -1748,12 +1720,12 @@ describe('point-aware final mark selection', () => {
 
     expect(ids).toEqual([undefined, undefined, '__chart.mark.0']);
     expect(result.marks).toMatchObject([
-      { autoPadding: 'point-aware' },
-      { autoPadding: 'point-aware' },
-      { autoPadding: 'max-radius' },
+      { properties: { autoPadding: 'point-aware' } },
+      { properties: { autoPadding: 'point-aware' } },
+      { properties: { autoPadding: 'max-radius' } },
     ]);
     expect(result.scales.every(scale => !Object.hasOwn(scale, 'domainPadding'))).toBe(true);
-    expect(result.marks[0]).toMatchObject({ size: { kind: 'constant', value: 2 } });
+    expect(result.marks[0]).toMatchObject({ properties: { size: 2 } });
   });
 });
 
@@ -1774,15 +1746,15 @@ describe('Point autoPadding clearance', () => {
       runtime,
     ).plot;
   it.each(['max-radius', 'point-aware'])('forwards %s shorthand and object strategies', kind => {
-    expect(resolvePadding(kind).marks[0]).toMatchObject({ autoPadding: kind });
-    expect(resolvePadding({ kind }).marks[0]).toMatchObject({ autoPadding: { kind } });
+    expect(resolvePadding(kind).marks[0]).toMatchObject({ properties: { autoPadding: kind } });
+    expect(resolvePadding({ kind }).marks[0]).toMatchObject({ properties: { autoPadding: { kind } } });
   });
 
   it('preserves clearance and explicit range/ratio overrides for Plot', () => {
     const clearance = { default: 8, x: 12, top: 20, left: 0 };
     for (const kind of ['max-radius', 'point-aware']) {
       const plot = resolvePadding({ kind, clearance }, { left: 0 });
-      expect(plot.marks[0]).toMatchObject({ autoPadding: { kind, clearance } });
+      expect(plot.marks[0]).toMatchObject({ properties: { autoPadding: { kind, clearance } } });
       expect(plot.scales[0]).toMatchObject({ domainPadding: { kind: 'range', lower: 0 } });
       expect(resolvePadding({ kind, clearance }, 0).scales[0]).toMatchObject({ domainPadding: 0 });
       expect(resolvePadding({ kind, clearance }, { kind: 'ratio', left: 0.1 }).scales[0]).toMatchObject({
@@ -1836,7 +1808,7 @@ describe('Regression hidden observations', () => {
     expect(plot.marks.map(mark => mark.type)).toEqual(['path', 'path']);
 
     for (const mark of plot.marks)
-      expect(mark.transform).toEqual([
+      expect(mark.transforms).toEqual([
         { operation: expect.objectContaining({ kind: 'smooth', params: expect.objectContaining({ x: 'x', y: 'y' }) }) },
       ]);
 
@@ -1854,10 +1826,7 @@ it('a fill-only mark override preserves the inherited overall field', () => {
     },
   });
   expect(result.marks[0]).toMatchObject({
-    opacity: {
-      overall: { kind: 'field', value: 'alpha' },
-      fill: { kind: 'constant', value: 0 },
-      stroke: { kind: 'constant', value: 0.8 },
-    },
+    encodings: { opacity: { overall: 'alpha' } },
+    properties: { opacity: { fill: 0, stroke: 0.8 } },
   });
 });

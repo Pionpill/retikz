@@ -9,14 +9,9 @@ describe('buildPlotIR smooth transform forwarding', () => {
   it('smooth_declared_to_ir', () => {
     const spec = buildPlotIR(
       <>
-        <PointMark x="time" y="value" color="series" />
+        <PointMark encodings={{ color: 'series', position: { x: 'time', y: 'value' } }} />
         <PathMark
-          x="trendX"
-          y="trendY"
-          series="series"
-          color="series"
-          order="trendX"
-          transform={[
+          transforms={[
             {
               operation: {
                 kind: 'smooth',
@@ -32,6 +27,7 @@ describe('buildPlotIR smooth transform forwarding', () => {
               },
             },
           ]}
+          encodings={{ series: 'series', color: 'series', order: 'trendX', position: { x: 'trendX', y: 'trendY' } }}
         />
       </>,
       '__plot',

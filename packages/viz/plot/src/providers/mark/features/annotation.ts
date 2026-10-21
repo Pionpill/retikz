@@ -3,11 +3,20 @@ import type { ExternalRow } from '@retikz/data';
 import type { Position } from '@retikz/math';
 
 import type { CoordinateFrame, MarkAnnotationCapability } from '../../../contract';
+import { annotationPositionsOf, unencodedMarkProperties } from '../../../contract';
+import type { AnnotationPositionSources } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
-import type { IRPlotAnnotationPosition } from '../../../schemas';
 import { cellGeometryNode } from '../private/cell';
 import { annotationValue, decorateDatum, attachMarkLayer, DEFAULT_FILL, LINE_STROKE_WIDTH } from '../shared';
-import { pointsToSteps } from '../shared';
+import {
+  pointsToSteps,
+  channelValueOf,
+  channelDefaultOf,
+  applyNodeChannelDeliveries,
+  applyPathChannelDeliveries,
+  resolveNodeMarkLabels,
+  resolveGeometryMarkLabels,
+} from '../shared';
 import { pointGlyphStyle, POINT_DEFAULT_RADIUS } from './point-glyph';
 
 /** 组装宿主时仅写入有值的可选字段，保持产物可 JSON 序列化 */
@@ -15,19 +24,24 @@ const definedProperties = <T extends object>(source: T): T =>
   Object.fromEntries(Object.entries(source).filter(([, value]) => value !== undefined)) as T;
 
 /** 将显式角色值映射到坐标参数空间，edge 使用最终角色范围 */
-const mappedPosition = (source: IRPlotAnnotationPosition, frame: CoordinateFrame, row?: ExternalRow): Array<number> => {
-  for (const role of Object.keys(source)) {
+const mappedPosition = (
+  source: AnnotationPositionSources,
+  frame: CoordinateFrame,
+  row?: ExternalRow,
+): Array<number> => {
+  for (const role of new Set([...Object.keys(source.properties), ...Object.keys(source.encodings)])) {
     if (!frame.roles.includes(role)) throw new RetikzPlotError(`Annotation position has unknown role "${role}"`);
   }
   return frame.roles.map(role => {
-    const value = source[role];
+    const value = source.properties[role];
+    const field = source.encodings[role];
     const scale = frame.roleScales?.[role];
-    if (!Object.hasOwn(source, role) || scale === undefined)
+    if ((value === undefined && field === undefined) || scale === undefined)
       throw new RetikzPlotError(`Annotation position requires role "${role}" and its scale`);
     const mapped =
-      typeof value === 'object' && 'edge' in value
+      field === undefined && typeof value === 'object' && 'edge' in value
         ? scale.range()[value.edge === 'start' ? 0 : 1]
-        : scale.coordinate(annotationValue(value, row));
+        : scale.coordinate(annotationValue(value, field, row));
     if (!Number.isFinite(mapped)) throw new RetikzPlotError(`Annotation position cannot map role "${role}"`);
     return mapped;
   });
@@ -42,35 +56,28 @@ const projectPosition = (mapped: Array<number>, frame: CoordinateFrame): Positio
 };
 
 /** 三种独立几何通过既有坐标能力生成 Kernel 宿主 */
-export const lowerAnnotation: MarkAnnotationCapability['lower'] = (mark, frame, color, context, datum) => {
-  const {
-    kind: _kind,
-    transform: _transform,
-    id,
-    coordinateView: _view,
-    layer: _layer,
-    defaultColorGroup: _group,
-    defaultColorIndex: _colorIndex,
-    contributeToDomain: _contribute,
-    ...geometry
-  } = mark;
-  const fill = color ?? DEFAULT_FILL;
+export const lowerAnnotation: MarkAnnotationCapability['lower'] = (mark, frame, channels, context, datum) => {
+  const id = mark.id;
+  const row = datum?.row ?? {};
+  const positions = annotationPositionsOf(mark);
+  const fill =
+    channelValueOf<string>(channels, 'color')?.(row) ?? channelDefaultOf<string>(channels, 'color') ?? DEFAULT_FILL;
   let child: IRNode | IRPath;
-  if (geometry.type === 'point') {
+  if (mark.type === 'point') {
     const {
-      type: _type,
-      position,
-      text,
+      position: _position,
+      displayFormat: _displayFormat,
+      text: _text,
       shape,
       size,
       dx = 0,
       dy = 0,
-      orientation,
+      orientation: _orientation,
       rotate,
       scale,
       boundary,
       cornerRadius,
-      label,
+      label: _label,
       zIndex,
       width,
       minimumSize,
@@ -80,21 +87,13 @@ export const lowerAnnotation: MarkAnnotationCapability['lower'] = (mark, frame, 
       lineHeight,
       maxTextWidth,
       ...style
-    } = geometry;
-    const mapped = mappedPosition(position, frame, datum?.row);
+    } = unencodedMarkProperties(mark) ?? {};
+    const mapped = mappedPosition(positions[0], frame, row);
+    const text =
+      channelValueOf<NonNullable<IRNode['text']>>(channels, 'label')?.(row) ??
+      (mark.encodings?.text === undefined ? _text : undefined);
+    const label = resolveNodeMarkLabels(_label, row, undefined, mark.encodings?.label);
     const projected = projectPosition(mapped, frame);
-    let angle = rotate;
-    if (orientation?.kind === 'coordinate') {
-      if (!frame.roles.includes(orientation.role))
-        throw new RetikzPlotError(`Annotation orientation has unknown role "${orientation.role}"`);
-      const tangent = frame.tangentAt?.(orientation.role, mapped);
-      if (!tangent || !tangent.every(Number.isFinite) || Math.hypot(...tangent) === 0)
-        throw new RetikzPlotError(`Annotation orientation is undefined for role "${orientation.role}"`);
-      angle =
-        (Math.atan2(tangent[1], tangent[0]) * 180) / Math.PI +
-        (orientation.align === 'normal' ? 90 : 0) +
-        (rotate ?? 0);
-    }
     const defaults = pointGlyphStyle(fill, {});
     const node: IRNode = {
       type: 'node',
@@ -102,7 +101,7 @@ export const lowerAnnotation: MarkAnnotationCapability['lower'] = (mark, frame, 
       position: [projected[0] + dx, projected[1] + dy],
       text,
       shape: shape ?? (text === undefined ? defaults.shape : undefined),
-      rotate: angle,
+      rotate,
       scale,
       boundary,
       cornerRadius,
@@ -127,22 +126,22 @@ export const lowerAnnotation: MarkAnnotationCapability['lower'] = (mark, frame, 
     node.style = definedProperties(node.style!);
     node.layout = definedProperties(node.layout!);
     child = definedProperties(node);
-  } else if (geometry.type === 'path') {
+  } else if (mark.type === 'path') {
     const {
-      type: _type,
-      from,
-      to,
+      from: _from,
+      to: _to,
       connection,
       rotate,
       scale,
       roundedCorners,
-      label,
+      label: _label,
       marks,
       zIndex,
       ...style
-    } = geometry;
-    const start = mappedPosition(from, frame, datum?.row);
-    const end = mappedPosition(to, frame, datum?.row);
+    } = unencodedMarkProperties(mark) ?? {};
+    const label = resolveGeometryMarkLabels(_label, row, undefined, mark.encodings?.label);
+    const start = mappedPosition(positions[0], frame, row);
+    const end = mappedPosition(positions[1], frame, row);
     if (connection !== 'straight' && !frame.projectSegment)
       throw new RetikzPlotError(
         `Annotation coordinate connection requires projectSegment on coordinate "${frame.type}"`,
@@ -169,27 +168,19 @@ export const lowerAnnotation: MarkAnnotationCapability['lower'] = (mark, frame, 
     };
   } else {
     const {
-      type: _type,
-      bounds,
+      bounds: _bounds,
       connection,
       rotate,
       scale,
       boundary,
       cornerRadius,
-      label,
+      label: _label,
       zIndex,
       ...style
-    } = geometry;
-    const from = mappedPosition(
-      Object.fromEntries(Object.entries(bounds).map(([role, bound]) => [role, bound.from])),
-      frame,
-      datum?.row,
-    );
-    const to = mappedPosition(
-      Object.fromEntries(Object.entries(bounds).map(([role, bound]) => [role, bound.to])),
-      frame,
-      datum?.row,
-    );
+    } = unencodedMarkProperties(mark) ?? {};
+    const from = mappedPosition(positions[0], frame, row);
+    const to = mappedPosition(positions[1], frame, row);
+    const label = resolveNodeMarkLabels(_label, row, undefined, mark.encodings?.label);
     if (!frame.projectCell)
       throw new RetikzPlotError(`Annotation interval requires projectCell on coordinate "${frame.type}"`);
     const cell = {
@@ -213,6 +204,31 @@ export const lowerAnnotation: MarkAnnotationCapability['lower'] = (mark, frame, 
       layout: { padding: 0, ...node.layout },
       style: { fill, strokeWidth: 0, ...style },
     };
+  }
+  if (child.type === 'node')
+    applyNodeChannelDeliveries(
+      child,
+      mark,
+      row,
+      channels,
+      mark.type === 'point' && (mark.properties?.text !== undefined || mark.encodings?.text !== undefined)
+        ? 'pointText'
+        : mark.type === 'point'
+          ? 'pointGlyph'
+          : 'cell',
+    );
+  else applyPathChannelDeliveries(child, mark, row, channels);
+  if (mark.type === 'point' && child.type === 'node' && mark.properties?.orientation?.kind === 'coordinate') {
+    const orientation = mark.properties.orientation;
+    if (!frame.roles.includes(orientation.role))
+      throw new RetikzPlotError(`Annotation orientation has unknown role "${orientation.role}"`);
+    const tangent = frame.tangentAt?.(orientation.role, mappedPosition(positions[0], frame, row));
+    if (!tangent || !tangent.every(Number.isFinite) || Math.hypot(...tangent) === 0)
+      throw new RetikzPlotError(`Annotation orientation is undefined for role "${orientation.role}"`);
+    child.rotate =
+      (Math.atan2(tangent[1], tangent[0]) * 180) / Math.PI +
+      (orientation.align === 'normal' ? 90 : 0) +
+      (child.rotate ?? 0);
   }
   if (datum !== undefined) {
     const { id: _id, ...geometryChild } = definedProperties(child);

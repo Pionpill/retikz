@@ -25,17 +25,21 @@ export const AnnotationIntervalPreview: FC<AnnotationIntervalValues> = values =>
       <PlotScale dimension="x" {...annotationXScale(values.coordinate)} />
       <PlotScale dimension="y" type="linear" domain={[0, 100]} domainPadding={0} />
       <IntervalAnnotation
-        connection={values.connection}
-        x={{
-          from: annotationX(values.coordinate, values.from, values.startCategory),
-          to: annotationX(values.coordinate, values.to, values.endCategory),
+        properties={{
+          connection: values.connection,
+          fill: 'dodgerblue',
+          opacity: { overall: values.opacity },
+          stroke: 'dodgerblue',
+          strokeWidth: 1,
+          label: values.showLabel ? { content: 'A', position: values.labelPosition, distance: 8 } : undefined,
+          bounds: {
+            x: {
+              from: annotationX(values.coordinate, values.from, values.startCategory),
+              to: annotationX(values.coordinate, values.to, values.endCategory),
+            },
+            y: values.fullHeight ? { from: { edge: 'start' }, to: { edge: 'end' } } : { from: 25, to: 75 },
+          },
         }}
-        y={values.fullHeight ? { from: { edge: 'start' }, to: { edge: 'end' } } : { from: 25, to: 75 }}
-        fill="dodgerblue"
-        opacity={values.opacity}
-        stroke="dodgerblue"
-        strokeWidth={1}
-        label={values.showLabel ? { text: 'A', position: values.labelPosition, distance: 8 } : undefined}
       />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" />

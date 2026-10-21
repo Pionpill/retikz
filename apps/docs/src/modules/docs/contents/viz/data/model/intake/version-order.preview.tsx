@@ -27,7 +27,7 @@ export const VersionOrderPreview: FC<VersionOrderPreviewProps> = props => {
       style={{ maxWidth: '100%', height: 'auto' }}
       definitions={{ fieldOrders: [labelLength] }}
     >
-      <IntervalMark x="version" y="value" color="version" />
+      <IntervalMark encodings={{ color: 'version', position: { x: 'version', y: 'value' } }} />
       <PlotScale dimension="y" type="linear" domainPadding={0} />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />

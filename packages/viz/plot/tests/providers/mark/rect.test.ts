@@ -120,8 +120,9 @@ const linearStub = (domain: [number, number], range: [number, number]): Position
 
 const rectMark = (color?: string): IRPlotIntervalMark => ({
   type: 'interval',
-  encoding: { x: { field: 'rk' }, y: { field: 'ck' }, ...(color ? { color: { field: color, scale: 'heat' } } : {}) },
-  bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
+  kind: 'data',
+  encodings: { position: { x: 'rk', y: 'ck' }, ...(color ? { color: { field: color, scale: 'heat' } } : {}) },
+  properties: { bounds: { x: { kind: 'band' }, y: { kind: 'band' } } },
 });
 
 const heatmapSpec = (color?: string): IRPlot =>
@@ -247,8 +248,9 @@ describe('rect 值 → color', () => {
       marks: [
         {
           type: 'interval',
-          encoding: { x: { field: 'rk' }, y: { field: 'ck' }, color: { field: 'v', scale: 'heat' } },
-          bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
+          kind: 'data',
+          encodings: { color: { field: 'v', scale: 'heat' }, position: { x: 'rk', y: 'ck' } },
+          properties: { bounds: { x: { kind: 'band' }, y: { kind: 'band' } } },
         },
       ],
     });
@@ -288,8 +290,9 @@ describe('rect 值 → color', () => {
       marks: [
         {
           type: 'interval',
-          encoding: { x: { field: 'rk' }, y: { field: 'ck' }, color: { field: 'v', scale: 'heat' } },
-          bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
+          kind: 'data',
+          encodings: { color: { field: 'v', scale: 'heat' }, position: { x: 'rk', y: 'ck' } },
+          properties: { bounds: { x: { kind: 'band' }, y: { kind: 'band' } } },
         },
       ],
     });
@@ -366,8 +369,9 @@ describe('rect fail-loud', () => {
       marks: [
         {
           type: 'interval',
-          encoding: { x: { field: 'rk' }, y: { field: 'ck' } },
-          bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
+          kind: 'data',
+          encodings: { position: { x: 'rk', y: 'ck' } },
+          properties: { bounds: { x: { kind: 'band' }, y: { kind: 'band' } } },
         },
       ],
     });
@@ -402,8 +406,9 @@ describe('rect fail-loud', () => {
       marks: [
         {
           type: 'interval',
-          encoding: { x: { field: 'rk' }, y: { field: 'ck' } },
-          bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
+          kind: 'data',
+          encodings: { position: { x: 'rk', y: 'ck' } },
+          properties: { bounds: { x: { kind: 'band' }, y: { kind: 'band' } } },
         },
       ],
     });
@@ -427,11 +432,12 @@ describe('rect + interval 共存', () => {
       marks: [
         {
           type: 'interval',
-          encoding: { x: { field: 'rk' }, y: { field: 'ck' } },
-          bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
+          kind: 'data',
+          encodings: { position: { x: 'rk', y: 'ck' } },
+          properties: { bounds: { x: { kind: 'band' }, y: { kind: 'band' } } },
         },
         // interval（柱）：x band（rk）、y 连续读 v；同 plot 双 mark 各自 cell 算法
-        { type: 'interval', encoding: { x: { field: 'rk' }, y: { field: 'v' } } },
+        { type: 'interval', kind: 'data', encodings: { position: { x: 'rk', y: 'v' } } },
       ],
     });
     const expanded = expandOf(

@@ -109,23 +109,23 @@ describe('coordinate connection geometry', () => {
     const path = PathAnnotationSchema.parse({
       type: 'path',
       kind: 'annotation',
-      from: { u: 0, v: 0 },
-      to: { u: 100, v: 0 },
+      properties: { from: { u: 0, v: 0 }, to: { u: 100, v: 0 } },
     });
-    const output = lowerAnnotation(path, frame, undefined);
+    const output = lowerAnnotation(path, frame, {});
     expect(output).toMatchObject({ children: [{ children: [{ to: [0, 0] }, { to: [50, 90] }, { to: [100, 0] }] }] });
     const { projectSegment: _segment, ...unsupported } = frame;
-    expect(() => lowerAnnotation(path, unsupported, undefined)).toThrow(/projectSegment/);
-    expect(lowerAnnotation({ ...path, connection: 'straight' }, unsupported, undefined)).toMatchObject({
+    expect(() => lowerAnnotation(path, unsupported, {})).toThrow(/projectSegment/);
+    expect(
+      lowerAnnotation({ ...path, properties: { ...path.properties, connection: 'straight' } }, unsupported, {}),
+    ).toMatchObject({
       children: [{ children: [{ to: [0, 0] }, { to: [100, 0] }] }],
     });
     const interval = IntervalAnnotationSchema.parse({
       type: 'interval',
       kind: 'annotation',
-      connection: 'straight',
-      bounds: { u: { from: 0, to: 100 }, v: { from: 0, to: 100 } },
+      properties: { connection: 'straight', bounds: { u: { from: 0, to: 100 }, v: { from: 0, to: 100 } } },
     });
-    expect(lowerAnnotation(interval, frame, undefined)).toMatchObject({
+    expect(lowerAnnotation(interval, frame, {})).toMatchObject({
       children: [
         {
           shape: {

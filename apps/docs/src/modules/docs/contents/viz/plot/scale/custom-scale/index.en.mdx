@@ -64,8 +64,8 @@ const spec: IRPlot = {
   marks: [
     {
       type: 'point',
-      color: { kind: 'field', value: 'score', scale: 'brand-color' },
-      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+      kind: 'data',
+      encodings: { color: { field: 'score', scale: 'brand-color' }, position: { x: 'x', y: 'y' } },
     },
   ],
 };

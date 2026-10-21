@@ -41,7 +41,7 @@ const baseFacetSpec = {
       }),
     ],
   },
-  marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+  marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
 };
 
 const expandOf = (
@@ -656,7 +656,7 @@ describe('facet grid data routing lowering', () => {
           },
         ],
       },
-      marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
     };
     const outer = expandOf(PlotSchema.parse(spec));
     const [south, north] = facetPanelsOf(outer);

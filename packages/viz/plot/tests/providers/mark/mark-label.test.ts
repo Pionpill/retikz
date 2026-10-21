@@ -55,8 +55,9 @@ describe('contract mark host label lowering', () => {
       baseSpec([
         {
           type: 'path',
-          label: { content: { value: 'trend' }, position: 'midway', side: 'top', sloped: true },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          kind: 'data',
+          encodings: { position: { x: 'x', y: 'y' } },
+          properties: { label: { content: 'trend', position: 'midway', side: 'top', sloped: true } },
         },
       ]),
       {
@@ -78,8 +79,9 @@ describe('contract mark host label lowering', () => {
       baseSpec([
         {
           type: 'path',
-          label: { content: { value: 'trend' }, position: 'midway', side: 'top' },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          kind: 'data',
+          encodings: { position: { x: 'x', y: 'y' } },
+          properties: { label: { content: 'trend', position: 'midway', side: 'top' } },
         },
       ]),
       {
@@ -100,8 +102,9 @@ describe('contract mark host label lowering', () => {
       baseSpec([
         {
           type: 'path',
-          label: { content: { value: { runs: [{ text: 'trend ' }, { tex: 'x' }] } }, position: 'midway' },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          kind: 'data',
+          encodings: { position: { x: 'x', y: 'y' } },
+          properties: { label: { content: { runs: [{ text: 'trend ' }, { tex: 'x' }] }, position: 'midway' } },
         },
       ]),
       {
@@ -122,9 +125,13 @@ describe('contract mark host label lowering', () => {
       baseSpec([
         {
           type: 'relation',
-          source: { project: { x: 'sourceX', y: 'sourceY' } },
-          target: { project: { x: 'targetX', y: 'targetY' } },
-          label: { content: { field: 'label' }, position: 0.5, side: 'top' },
+          kind: 'data',
+          encodings: {
+            source: { position: { x: 'sourceX', y: 'sourceY' } },
+            target: { position: { x: 'targetX', y: 'targetY' } },
+            label: { content: 'label' },
+          },
+          properties: { label: { position: 0.5, side: 'top' }, geometry: { kind: 'path' } },
         },
       ]),
       {
@@ -143,11 +150,15 @@ describe('contract mark host label lowering', () => {
       baseSpec([
         {
           type: 'relation',
-          kind: 'ribbon',
-          source: { project: { x: 'sourceX', y: 'sourceY' } },
-          target: { project: { x: 'targetX', y: 'targetY' } },
-          ribbon: { width: { kind: 'constant', value: 12 } },
-          label: { content: { value: 'flow' }, position: 'midway', placement: 'inside', sloped: true },
+          kind: 'data',
+          encodings: {
+            source: { position: { x: 'sourceX', y: 'sourceY' } },
+            target: { position: { x: 'targetX', y: 'targetY' } },
+          },
+          properties: {
+            label: { content: 'flow', position: 'midway', placement: 'inside', sloped: true },
+            geometry: { kind: 'ribbon', width: 12 },
+          },
         },
       ]),
       {

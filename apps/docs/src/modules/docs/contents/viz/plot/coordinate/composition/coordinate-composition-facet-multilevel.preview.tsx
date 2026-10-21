@@ -56,8 +56,14 @@ export const CoordinateCompositionFacetMultilevelPreview = (
       >
         <PlotAxis dimension="x" grid={values.xGridVisible} />
         <PlotAxis dimension="y" grid={values.yGridVisible} />
-        <PathMark x="month" y="value" order="month" stroke="darkorange" strokeWidth={values.lineWidth} />
-        <PointMark x="month" y="value" fill="white" stroke="darkorange" strokeWidth={1.25} size={values.pointSize} />
+        <PathMark
+          encodings={{ order: 'month', position: { x: 'month', y: 'value' } }}
+          properties={{ stroke: 'darkorange', strokeWidth: values.lineWidth }}
+        />
+        <PointMark
+          encodings={{ position: { x: 'month', y: 'value' } }}
+          properties={{ fill: 'white', stroke: 'darkorange', strokeWidth: 1.25, size: values.pointSize }}
+        />
       </PlotFacet>
     </Plot>
   );

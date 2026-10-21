@@ -1,9 +1,11 @@
 import { resolveBoxSpacing } from '@retikz/core';
 
+import { channelScale } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { POINT_DEFAULT_RADIUS, SIZE_MAX_RADIUS } from '../../providers';
-import type { IRPlotPointAutoPadding, IRPlotPointMark, IRPlotScaleOperation } from '../../schemas';
-import { isBuiltinMark, PointMarkSchema, RelationMarkSchema } from '../../schemas';
+import type { IRPlotChannel } from '../../schemas';
+import type { IRPlotPointAutoPadding, IRPlotScaleOperation } from '../../schemas';
+import { isBuiltinMark, PointPropertiesSchema, RelationPropertiesSchema } from '../../schemas';
 import type { MarkDataView } from '../coordinate';
 
 /** 一个坐标角色的图元留白需求 */
@@ -18,26 +20,33 @@ export type PointPaddingResolution = {
 export const pointAutoPaddingOf = (view: MarkDataView): IRPlotPointAutoPadding => {
   const mark = view.mark;
   if (!isBuiltinMark(mark)) return false;
-  if (mark.type === 'point') return mark.autoPadding ?? PointMarkSchema.shape.autoPadding.unwrap().parse(undefined);
-  if (mark.type === 'relation' && mark.endpoints !== undefined)
-    return mark.autoPadding ?? RelationMarkSchema.shape.autoPadding.unwrap().parse(undefined);
+  if (mark.type === 'point')
+    return mark.properties?.autoPadding ?? PointPropertiesSchema.shape.autoPadding.unwrap().parse(undefined);
+  if (mark.type === 'relation' && mark.properties.endpoints !== undefined)
+    return mark.properties.autoPadding ?? RelationPropertiesSchema.shape.autoPadding.unwrap().parse(undefined);
   return false;
 };
 
 /** 从常量或尺寸尺度输出上界解析半径，不遍历数据行 */
-const maximumRadiusOf = (size: IRPlotPointMark['size'], scales: ReadonlyArray<IRPlotScaleOperation>): number => {
+const maximumRadiusOf = (
+  size: IRPlotChannel | number | undefined,
+  scales: ReadonlyArray<IRPlotScaleOperation>,
+): number => {
   if (size === undefined) return POINT_DEFAULT_RADIUS;
-  if (size.kind === 'constant') return size.value;
-  if (size.scale === undefined) return SIZE_MAX_RADIUS;
-  const scale = scales.find(candidate => candidate.name === size.scale);
-  const range = scale !== undefined && 'range' in scale ? scale.range : undefined;
-  if (range === undefined && scale?.type === 'sqrt') return SIZE_MAX_RADIUS;
+  if (typeof size === 'number') return size;
+  const scaleName = channelScale(size);
+  if (scaleName === undefined) return SIZE_MAX_RADIUS;
+  const scale = scales.find(candidate => candidate.name === scaleName);
+  if (scale === undefined) throw new RetikzPlotError(`size channel references unknown scale "${scaleName}"`);
+  if (scale.type !== 'sqrt') throw new RetikzPlotError(`size channel scale "${scaleName}" must be a sqrt scale`);
+  const range = 'range' in scale ? scale.range : undefined;
+  if (range === undefined) return SIZE_MAX_RADIUS;
   if (
     !Array.isArray(range) ||
     range.length === 0 ||
     range.some(value => typeof value !== 'number' || !Number.isFinite(value) || value < 0)
   ) {
-    throw new RetikzPlotError(`size scale "${size.scale}" has no finite nonnegative radius upper bound`);
+    throw new RetikzPlotError(`size scale "${scaleName}" has no finite nonnegative radius upper bound`);
   }
   let maximum = 0;
   for (const radius of range) maximum = Math.max(maximum, radius);
@@ -80,9 +89,9 @@ export const resolvePointPadding = (
     const mark = view.mark;
     if (!isBuiltinMark(mark)) continue;
     let radius = 0;
-    if (mark.type === 'point') radius = maximumRadiusOf(mark.size, scales);
+    if (mark.type === 'point') radius = maximumRadiusOf(mark.encodings?.size ?? mark.properties?.size, scales);
     else if (mark.type === 'relation') {
-      for (const glyph of [mark.endpoints?.source, mark.endpoints?.target]) {
+      for (const glyph of [mark.properties.endpoints?.source, mark.properties.endpoints?.target]) {
         if (glyph !== undefined) radius = Math.max(radius, maximumRadiusOf(glyph.size, scales));
       }
     }

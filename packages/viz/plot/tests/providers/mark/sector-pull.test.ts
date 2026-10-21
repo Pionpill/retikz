@@ -67,7 +67,7 @@ const vectorPosition = (node: IRNode): [number, number] => {
   return [position[0], position[1]];
 };
 
-const pieSpec = (pull?: unknown, extraMark: Record<string, unknown> = {}, innerRadius = 0): IRPlot =>
+const pieSpec = (extraMark: Record<string, unknown> = {}, innerRadius = 0): IRPlot =>
   PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -81,17 +81,18 @@ const pieSpec = (pull?: unknown, extraMark: Record<string, unknown> = {}, innerR
     marks: [
       {
         type: 'interval',
-        bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
-        ...(pull !== undefined ? { pull } : {}),
+
+        kind: 'data',
+        encodings: { bounds: { x: { from: 'y0', to: 'y1' } }, color: 'label' },
+        properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } } },
         ...extraMark,
-        encoding: { color: { field: 'label' } },
       },
     ],
   });
 
 describe('IntervalMark.pull sector geometry', () => {
   it('constant pull moves sector node center along the final mid angle', () => {
-    const spec = pieSpec({ kind: 'constant', value: 20 });
+    const spec = pieSpec({ properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } }, pull: 20 } });
     const nodes = sectorNodes(firstLayer(spec, { share }));
 
     expect(nodes).toHaveLength(2);
@@ -104,14 +105,45 @@ describe('IntervalMark.pull sector geometry', () => {
   });
 
   it('field-bound pull only moves rows with a non-zero field value', () => {
-    const nodes = sectorNodes(firstLayer(pieSpec({ kind: 'field', value: 'offset' }), { share }));
+    const nodes = sectorNodes(
+      firstLayer(pieSpec({ encodings: { bounds: { x: { from: 'y0', to: 'y1' } }, color: 'label', pull: 'offset' } }), {
+        share,
+      }),
+    );
 
     expect(nodes[0].position).toEqual([200, 200]);
     expect(nodes[1].position).toEqual(pointAtArcAngle([200, 200], 18, 225));
   });
 
+  it('maps pull through a named scale and exposes the same displaced locator anchor', () => {
+    const spec = pieSpec({
+      encodings: {
+        bounds: { x: { from: 'y0', to: 'y1' } },
+        color: 'label',
+        pull: { field: 'offset', scale: 'pull' },
+        series: 'label',
+      },
+      properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } }, pull: 99 },
+    });
+    spec.scales.push({ type: 'linear', name: 'pull', domain: [0, 18], range: [0, 36] });
+    const nodes = sectorNodes(firstLayer(spec, { share }));
+    expect(nodes[0].position).toEqual([200, 200]);
+    expect(nodes[1].position).toEqual(pointAtArcAngle([200, 200], 36, 225));
+    const locator = createPlotLocator(spec, { share }, { ...opts, environment: {} });
+    expect(locator.series('B')?.position).toEqual(locator.datum(1)?.position);
+    expect(locator.datum(1)?.position).toEqual(pointAtArcAngle(vectorPosition(nodes[1]), 100, 225));
+  });
+
   it('padAngle and pull use the padded sector mid angle without rewriting radii', () => {
-    const nodes = sectorNodes(firstLayer(pieSpec({ kind: 'constant', value: 12 }, { padAngle: 10 }, 0.5), { share }));
+    const nodes = sectorNodes(
+      firstLayer(
+        pieSpec(
+          { properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } }, pull: 12, padAngle: 10 } },
+          0.5,
+        ),
+        { share },
+      ),
+    );
     const params = sectorParams(nodes[0]);
 
     expect(params.startAngle).toBeCloseTo(5, 6);
@@ -122,7 +154,11 @@ describe('IntervalMark.pull sector geometry', () => {
   });
 
   it('pull zero matches an omitted pull', () => {
-    const pulled = sectorNodes(firstLayer(pieSpec({ kind: 'constant', value: 0 }), { share }));
+    const pulled = sectorNodes(
+      firstLayer(pieSpec({ properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } }, pull: 0 } }), {
+        share,
+      }),
+    );
     const plain = sectorNodes(firstLayer(pieSpec(), { share }));
 
     expect(pulled.map(node => node.position)).toEqual(plain.map(node => node.position));
@@ -130,7 +166,11 @@ describe('IntervalMark.pull sector geometry', () => {
   });
 
   it('large finite pull keeps sector radii and angles unchanged', () => {
-    const nodes = sectorNodes(firstLayer(pieSpec({ kind: 'constant', value: 260 }), { share }));
+    const nodes = sectorNodes(
+      firstLayer(pieSpec({ properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } }, pull: 260 } }), {
+        share,
+      }),
+    );
     const params = sectorParams(nodes[0]);
 
     expect(params.innerRadius).toBeCloseTo(0, 6);
@@ -153,8 +193,9 @@ describe('IntervalMark.pull sector geometry', () => {
       marks: [
         {
           type: 'interval',
-          pull: { kind: 'constant', value: 8 },
-          encoding: { x: { field: 'label' }, y: { field: 'value' } },
+          kind: 'data',
+          encodings: { position: { x: 'label', y: 'value' } },
+          properties: { pull: 8 },
         },
       ],
     });
@@ -163,14 +204,14 @@ describe('IntervalMark.pull sector geometry', () => {
   });
 
   it('invalid field-bound pull fails loud', () => {
-    const spec = pieSpec({ kind: 'field', value: 'offset' });
+    const spec = pieSpec({ encodings: { bounds: { x: { from: 'y0', to: 'y1' } }, color: 'label', pull: 'offset' } });
 
     expect(() => expandOf(spec, { share: [{ label: 'A', value: 1, offset: -1 }] })).toThrow(/pull|non-negative/i);
     expect(() => expandOf(spec, { share: [{ label: 'A', value: 1, offset: 'far' }] })).toThrow(/pull|numeric/i);
   });
 
   it('locator datum anchor follows pulled sector geometry', () => {
-    const spec = pieSpec({ kind: 'constant', value: 20 });
+    const spec = pieSpec({ properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } }, pull: 20 } });
     const locator = createPlotLocator(spec, { share }, { ...opts, environment: {} });
     const node = sectorNodes(firstLayer(spec, { share }))[0];
     const params = sectorParams(node);
@@ -181,14 +222,23 @@ describe('IntervalMark.pull sector geometry', () => {
   });
 
   it('locator series centroid uses pulled datum anchors', () => {
-    const spec = pieSpec({ kind: 'field', value: 'offset' }, { series: 'label' });
+    const spec = pieSpec({
+      encodings: { bounds: { x: { from: 'y0', to: 'y1' } }, color: 'label', pull: 'offset', series: 'label' },
+    });
     const locator = createPlotLocator(spec, { share }, { ...opts, environment: {} });
 
     expect(locator.series('B')?.position).toEqual(locator.datum(1)?.position);
   });
 
   it('chord interpolation applies padAngle and pull before contour projection', () => {
-    const spec = pieSpec({ kind: 'constant', value: 20 }, { interpolation: 'chord', padAngle: 10 });
+    const spec = pieSpec({
+      properties: {
+        bounds: { x: { kind: 'extent' }, y: { kind: 'full' } },
+        pull: 20,
+        interpolation: 'chord',
+        padAngle: 10,
+      },
+    });
     const node = sectorNodes(firstLayer(spec, { share }))[0];
 
     expect((node.shape as { type?: string } | undefined)?.type).toBe('contour');

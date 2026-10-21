@@ -569,7 +569,10 @@ export const lowerPlotWithDataArtifact = (
     node.marks.some(
       mark =>
         mark.type === 'point' ||
-        ('autoPadding' in mark && mark.autoPadding !== false && mark.autoPadding !== undefined),
+        (mark.properties !== undefined &&
+          'autoPadding' in mark.properties &&
+          mark.properties.autoPadding !== false &&
+          mark.properties.autoPadding !== undefined),
     )
       ? createMarkPaddingContext(channelCtx, (view, frame) =>
           resolveMarkPlacement(

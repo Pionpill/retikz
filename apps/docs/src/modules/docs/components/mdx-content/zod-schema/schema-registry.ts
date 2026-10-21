@@ -2184,25 +2184,25 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'MarkChannelEncoding',
     url: '/viz/plot/reference/encoding#markchannelencodingschema',
   },
-  SizeChannelSchema: {
-    schema: IRPlot.SizeChannelSchema,
-    label: 'SizeChannel',
-    url: '/viz/plot/reference/encoding#sizechannelschema',
+  LabelEncodingSchema: {
+    schema: IRPlot.LabelEncodingSchema,
+    label: 'LabelEncoding',
+    url: '/viz/plot/reference/encoding#labelencodingschema',
   },
-  OpacityChannelSchema: {
-    schema: IRPlot.OpacityChannelSchema,
-    label: 'OpacityChannel',
-    url: '/viz/plot/reference/encoding#opacitychannelschema',
+  OpacityEncodingSchema: {
+    schema: IRPlot.OpacityEncodingSchema,
+    label: 'OpacityEncoding',
+    url: '/viz/plot/reference/encoding#opacityencodingschema',
   },
-  ShapeChannelSchema: {
-    schema: IRPlot.ShapeChannelSchema,
-    label: 'ShapeChannel',
-    url: '/viz/plot/reference/encoding#shapechannelschema',
+  NodeEncodingSchema: {
+    schema: IRPlot.NodeEncodingSchema,
+    label: 'NodeEncoding',
+    url: '/viz/plot/reference/encoding#nodeencodingschema',
   },
-  TextChannelSchema: {
-    schema: IRPlot.TextChannelSchema,
-    label: 'TextChannel',
-    url: '/viz/plot/reference/encoding#textchannelschema',
+  PathEncodingSchema: {
+    schema: IRPlot.PathEncodingSchema,
+    label: 'PathEncoding',
+    url: '/viz/plot/reference/encoding#pathencodingschema',
   },
   LabelPinStyleSchema: {
     schema: IRPlot.LabelPinStyleSchema,

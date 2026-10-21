@@ -28,8 +28,8 @@ export const renderSourceBindingPreview = (values: SourceBindingValues) => {
       height={250}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
-      <PathMark x="month" y="revenue" order="month" />
-      <PointMark x="month" y="revenue" />
+      <PathMark encodings={{ order: 'month', position: { x: 'month', y: 'revenue' } }} />
+      <PointMark encodings={{ position: { x: 'month', y: 'revenue' } }} />
       <PlotAxis dimension="x" tickLabels={{ format: '%b', layout: { rotate: false } }} />
       <PlotAxis dimension="y" grid />
     </Plot>

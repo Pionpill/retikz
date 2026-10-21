@@ -107,7 +107,9 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
     {
       title: { zh: '字段与取值', en: 'Fields and values' },
       members: [
-        'FieldChannel',
+        'channelField',
+        'channelScale',
+        'markChannelEncoding',
         'FieldCollector',
         'channelValue',
         'labelOf',

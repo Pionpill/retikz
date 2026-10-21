@@ -38,7 +38,7 @@ const measurements = [
 
 createRoot(document.getElementById('plot')!).render(
   <Plot data={measurements} width={400} height={220}>
-    <PathMark x="time" y="value" order="time" />
+    <PathMark encodings={{ order: "time", position: { x: "time", y: "value" } }} />
     <PlotAxis dimension="x" title="时间" />
     <PlotAxis dimension="y" title="测量值" />
   </Plot>,
@@ -74,11 +74,7 @@ const spec = plot({
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [
-    {
-      type: 'path',
-      order: 'time',
-      encoding: { x: { field: 'time' }, y: { field: 'value' } },
-    },
+    { type: 'path', kind: "data", encodings: { order: 'time', position: { x: 'time', y: 'value' } } },
   ],
   guides: [
     { type: 'axis', dimension: 'x', title: '时间' },

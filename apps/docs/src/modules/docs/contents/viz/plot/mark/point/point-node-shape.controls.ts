@@ -34,7 +34,9 @@ export type PointNodeShapeValues = {
 };
 
 /** 把面板选项映射为 PointMark 可消费的 core Node shape */
-export const pointNodeShapeOf = (values: PointNodeShapeValues): NonNullable<PointMarkProps['shape']> => {
+export const pointNodeShapeOf = (
+  values: PointNodeShapeValues,
+): NonNullable<NonNullable<PointMarkProps['properties']>['shape']> => {
   switch (values.shape) {
     case 'rectangle':
     case 'wide-rectangle':

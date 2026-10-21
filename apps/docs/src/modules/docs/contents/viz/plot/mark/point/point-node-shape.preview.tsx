@@ -41,39 +41,43 @@ export const PointNodeShapePreview = (values: PointNodeShapePreviewValues) => (
       coordinate={values.coordinate === 'polar2D' ? 'polar2D' : undefined}
     >
       <PointMark
-        anchorId={{ prefix: 'shape-demo', field: 'label' }}
-        x="x"
-        y="y"
-        color="region"
-        size={values.shape === 'wide-rectangle' ? undefined : values.size}
-        minimumSize={values.shape === 'wide-rectangle' ? { width: values.size * 2, height: values.size } : undefined}
-        rotate={values.rotate}
-        orientation={
-          values.orientation === 'screen'
-            ? { kind: 'screen' }
-            : {
-                kind: 'coordinate',
-                role: values.orientation.startsWith('x') ? 'x' : 'y',
-                align: values.orientation.endsWith('tangent') ? 'tangent' : 'normal',
-              }
-        }
-        cornerRadius={values.cornerRadius}
-        scale={values.scale}
-        padding={values.padding}
-        margin={values.margin}
-        boundary={values.boundary === 'circle' ? { type: 'circle', params: { fit: 'bounds' } } : 'shape'}
-        shape={pointNodeShapeOf({
-          shape: values.shape,
-          size: values.size,
-          starPoints: values.starPoints,
-          polygonSides: values.polygonSides,
-        })}
+        encodings={{ anchorId: 'label', color: 'region', position: { x: 'x', y: 'y' } }}
+        properties={{
+          anchorId: { prefix: 'shape-demo' },
+          size: values.shape === 'wide-rectangle' ? undefined : values.size,
+          minimumSize: values.shape === 'wide-rectangle' ? { width: values.size * 2, height: values.size } : undefined,
+          rotate: values.rotate,
+          orientation:
+            values.orientation === 'screen'
+              ? { kind: 'screen' }
+              : {
+                  kind: 'coordinate',
+                  role: values.orientation.startsWith('x') ? 'x' : 'y',
+                  align: values.orientation.endsWith('tangent') ? 'tangent' : 'normal',
+                },
+          cornerRadius: values.cornerRadius,
+          scale: values.scale,
+          padding: values.padding,
+          margin: values.margin,
+          boundary: values.boundary === 'circle' ? { type: 'circle', params: { fit: 'bounds' } } : 'shape',
+          shape: pointNodeShapeOf({
+            shape: values.shape,
+            size: values.size,
+            starPoints: values.starPoints,
+            polygonSides: values.polygonSides,
+          }),
+        }}
       />
       {values.showRelations && (
         <RelationMark
-          source={{ anchorId: { prefix: 'shape-demo', field: 'label' } }}
-          target={{ anchorId: { prefix: 'shape-demo', field: 'nextLabel' } }}
-          style={{ color: { kind: 'constant', value: '#94a3b8' }, strokeWidth: { kind: 'constant', value: 1 } }}
+          encodings={{ source: { anchorId: 'label' }, target: { anchorId: 'nextLabel' } }}
+          properties={{
+            geometry: { kind: 'path' },
+            source: { anchorId: { prefix: 'shape-demo' } },
+            target: { anchorId: { prefix: 'shape-demo' } },
+            color: '#94a3b8',
+            strokeWidth: 1,
+          }}
         />
       )}
       <PlotAxis dimension="x" />

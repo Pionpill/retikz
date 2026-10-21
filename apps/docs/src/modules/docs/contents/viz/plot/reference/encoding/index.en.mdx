@@ -1,9 +1,9 @@
 ---
 title: Contract - Encoding
-description: Query the Plot schemas for fields, constants, positional and visual channels, and mark-label encoding.
+description: Query Plot field bindings, position roles, visual targets, and fixed label schemas.
 ---
 
-Encoding maps data rows to positional roles or visual variables. A generic `ChannelSchema` must set exactly one of `field` and `value`. Coordinates own positional scales; non-positional channels usually reference a scale explicitly.
+`encodings` maps data fields to position roles or visual targets. Fixed values belong to `properties`. A binding is a field name or an explicit `{ field, scale }` pair. Coordinates own position scales, so position bindings accept field names only.
 
 ## EncodingSchema
 
@@ -25,23 +25,13 @@ Encoding maps data rows to positional roles or visual variables. A generic `Chan
 
 <ZodSchema name="PointEncodingSchema" />
 
-## Point-specific channels
+## OpacityEncodingSchema
 
-### SizeChannelSchema
+<ZodSchema name="OpacityEncodingSchema" />
 
-<ZodSchema name="SizeChannelSchema" />
+## LabelEncodingSchema
 
-### OpacityChannelSchema
-
-<ZodSchema name="OpacityChannelSchema" />
-
-### ShapeChannelSchema
-
-<ZodSchema name="ShapeChannelSchema" />
-
-### TextChannelSchema
-
-<ZodSchema name="TextChannelSchema" />
+<ZodSchema name="LabelEncodingSchema" />
 
 ## Mark labels
 

@@ -39,19 +39,24 @@ export const LineCurvePreview = (values: LineCurvePreviewValues) => {
     <Layout viewBox={{ x: -12, y: 0, width: 420, height: 292 }}>
       <Plot data={curveSamples} width={400} height={280} coordinate={coordinate === 'polar2D' ? 'polar2D' : undefined}>
         <PathMark
-          x={x}
-          y="value"
-          order="index"
-          curve={curve}
-          closed={coordinate === 'polar2D' && values.closed}
-          stroke={{ kind: 'constant', value: values.stroke }}
-          strokeWidth={values.strokeWidth}
-          dashPattern={values.dashed ? [8, 6] : undefined}
-          opacity={values.opacity}
-          lineCap="round"
-          lineJoin="round"
+          encodings={{ order: 'index', position: { x, y: 'value' } }}
+          properties={{
+            lineCap: 'round',
+            lineJoin: 'round',
+            curve,
+            closed: coordinate === 'polar2D' && values.closed,
+            stroke: values.stroke,
+            strokeWidth: values.strokeWidth,
+            dashPattern: values.dashed ? [8, 6] : undefined,
+            opacity: { overall: values.opacity },
+          }}
         />
-        {showPoints ? <PointMark x={x} y="value" fill="#64748b" opacity={0.72} minimumSize={5} /> : null}
+        {showPoints ? (
+          <PointMark
+            encodings={{ position: { x, y: 'value' } }}
+            properties={{ fill: '#64748b', opacity: { overall: 0.72 }, minimumSize: 5 }}
+          />
+        ) : null}
         <PlotAxis dimension="x" />
         <PlotAxis dimension="y" grid />
       </Plot>

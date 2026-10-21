@@ -59,7 +59,10 @@ const AnnotationDataPlot: FC<{
         <PlotScale dimension="x" type="linear" domain={[0, 10]} domainPadding={0} />
         <PlotScale dimension="y" type="linear" domain={[0, 10]} domainPadding={0} />
         {children}
-        <PointMark x="x" y="y" fill={grouped ? { kind: 'field', value: 'group' } : 'gray'} stroke="none" size={4} />
+        <PointMark
+          encodings={{ ...(grouped ? { fill: 'group' } : {}), position: { x: 'x', y: 'y' } }}
+          properties={{ fill: grouped ? undefined : 'gray', stroke: 'none', size: 4 }}
+        />
         <PlotAxis dimension="x" />
         <PlotAxis dimension="y" />
       </Plot>
@@ -90,13 +93,10 @@ export const AnnotationDataPointPreview: FC<AnnotationDataValues> = props => {
       {colors.map((color, index) => (
         <PointAnnotation
           key={color}
-          transform={selectAnnotationGroup(transform, grouped, index)}
-          x={{ field: 'centerX' }}
-          y={{ field: 'centerY' }}
-          size={9}
-          fill={grouped ? undefined : color}
+          transforms={selectAnnotationGroup(transform, grouped, index)}
           defaultColorIndex={index}
-          stroke="none"
+          encodings={{ position: { x: 'centerX', y: 'centerY' } }}
+          properties={{ size: 9, fill: grouped ? undefined : color, stroke: 'none' }}
         />
       ))}
     </AnnotationDataPlot>
@@ -111,7 +111,7 @@ export const AnnotationDataPathPreview: FC<AnnotationDataValues> = props => {
       {groups.map(index => (
         <PathAnnotation
           key={index}
-          transform={selectAnnotationGroup(
+          transforms={selectAnnotationGroup(
             [
               {
                 operation: {
@@ -130,11 +130,16 @@ export const AnnotationDataPathPreview: FC<AnnotationDataValues> = props => {
             grouped,
             index,
           )}
-          from={{ x: fullX ? { edge: 'start' } : { field: 'xMin' }, y: { field: 'reference' } }}
-          to={{ x: fullX ? { edge: 'end' } : { field: 'xMax' }, y: { field: 'reference' } }}
-          stroke={grouped ? undefined : 'dodgerblue'}
           defaultColorIndex={index}
-          strokeWidth={3}
+          encodings={{
+            from: { ...(fullX ? {} : { x: 'xMin' }), y: 'reference' },
+            to: { ...(fullX ? {} : { x: 'xMax' }), y: 'reference' },
+          }}
+          properties={{
+            ...(fullX ? { from: { x: { edge: 'start' as const } }, to: { x: { edge: 'end' as const } } } : {}),
+            stroke: grouped ? undefined : 'dodgerblue',
+            strokeWidth: 3,
+          }}
         />
       ))}
     </AnnotationDataPlot>
@@ -150,7 +155,7 @@ export const AnnotationDataIntervalPreview: FC<AnnotationDataValues> = props => 
       {groups.map(index => (
         <IntervalAnnotation
           key={index}
-          transform={selectAnnotationGroup(
+          transforms={selectAnnotationGroup(
             [
               {
                 operation: {
@@ -170,12 +175,19 @@ export const AnnotationDataIntervalPreview: FC<AnnotationDataValues> = props => 
             grouped,
             index,
           )}
-          x={{ from: fullX ? { edge: 'start' } : { field: 'xMin' }, to: fullX ? { edge: 'end' } : { field: 'xMax' } }}
-          y={{ from: { field: 'yMin' }, to: { field: 'yMax' } }}
-          fill={grouped ? undefined : 'dodgerblue'}
           defaultColorIndex={index}
-          opacity={0.2}
-          stroke="none"
+          encodings={{
+            bounds: {
+              x: { ...(fullX ? {} : { from: 'xMin' }), ...(fullX ? {} : { to: 'xMax' }) },
+              y: { from: 'yMin', to: 'yMax' },
+            },
+          }}
+          properties={{
+            fill: grouped ? undefined : 'dodgerblue',
+            opacity: { overall: 0.2 },
+            stroke: 'none',
+            bounds: { x: { from: fullX ? { edge: 'start' } : undefined, to: fullX ? { edge: 'end' } : undefined } },
+          }}
         />
       ))}
     </AnnotationDataPlot>

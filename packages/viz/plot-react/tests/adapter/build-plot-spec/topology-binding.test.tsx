@@ -19,8 +19,8 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
           <PlotTrack id="incidents" band={{ role: 'y', start: 0, end: 0.42 }} />
           <PlotTrack id="load" band={{ role: 'y', start: 0.58, end: 1 }} />
         </PlotScaffold>
-        <PathMark trackId="incidents" x="week" y="incidents" order="week" />
-        <PathMark trackId="load" x="week" y="load" order="week" />
+        <PathMark trackId="incidents" encodings={{ order: 'week', position: { x: 'week', y: 'incidents' } }} />
+        <PathMark trackId="load" encodings={{ order: 'week', position: { x: 'week', y: 'load' } }} />
         <PlotAxis scaffoldId="ops" dimension="x" grid title="week" />
         <PlotAxis trackId="load" dimension="y" title="load" />
       </>,
@@ -63,8 +63,8 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
           <PlotTrack id="signal" band={{ role: 'y', start: 0.12, end: 0.48 }} />
           <PlotTrack id="capacity" band={{ role: 'y', start: 0.58, end: 0.96 }} />
         </PlotScaffold>
-        <PathMark trackId="signal" x="area" y="signal" order="order" />
-        <PathMark trackId="capacity" x="area" y="capacity" order="order" />
+        <PathMark trackId="signal" encodings={{ order: 'order', position: { x: 'area', y: 'signal' } }} />
+        <PathMark trackId="capacity" encodings={{ order: 'order', position: { x: 'area', y: 'capacity' } }} />
         <PlotAxis scaffoldId="radar" dimension="x" grid title="area" />
       </>,
       'radar',
@@ -88,11 +88,11 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
         <PlotAxis dimension="x" grid title="week" />
         <PlotTrack id="incidents" band={{ role: 'y', start: 0, end: 0.42 }}>
           <PlotAxis dimension="y" title="incidents" />
-          <PathMark x="week" y="incidents" order="week" />
+          <PathMark encodings={{ order: 'week', position: { x: 'week', y: 'incidents' } }} />
         </PlotTrack>
         <PlotTrack id="load" band={{ role: 'y', start: 0.58, end: 1 }}>
           <PlotAxis dimension="y" title="load" />
-          <PointMark x="week" y="load" />
+          <PointMark encodings={{ position: { x: 'week', y: 'load' } }} />
         </PlotTrack>
       </PlotScaffold>,
       'ops',
@@ -135,8 +135,8 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
           header={{ row: true, column: true }}
           spacing={{ panelGap: 24, axisGap: 8, labelGap: 6 }}
         />
-        <PathMark facetId="sales" x="month" y="revenue" order="month" />
-        <PointMark facetId="sales" x="month" y="revenue" />
+        <PathMark facetId="sales" encodings={{ order: 'month', position: { x: 'month', y: 'revenue' } }} />
+        <PointMark facetId="sales" encodings={{ position: { x: 'month', y: 'revenue' } }} />
         <PlotAxis facetId="sales" dimension="x" title="month" />
         <PlotAxis facetId="sales" dimension="y" grid title="revenue" />
       </>,
@@ -176,8 +176,8 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
       <PlotFacet id="sales" column="region">
         <PlotAxis dimension="x" title="month" />
         <PlotAxis dimension="y" grid title="revenue" />
-        <PathMark x="month" y="revenue" order="month" />
-        <PointMark x="month" y="revenue" />
+        <PathMark encodings={{ order: 'month', position: { x: 'month', y: 'revenue' } }} />
+        <PointMark encodings={{ position: { x: 'month', y: 'revenue' } }} />
       </PlotFacet>,
       'sales',
     );
@@ -210,7 +210,7 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
       >
         <PlotAxis dimension="x" title="month" />
         <PlotAxis dimension="y" grid title="revenue" />
-        <PathMark x="month" y="revenue" order="month" />
+        <PathMark encodings={{ order: 'month', position: { x: 'month', y: 'revenue' } }} />
       </PlotFacet>,
       'sales',
     );
@@ -242,7 +242,7 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
           <PlotScaffold id="ops" sharedRoles={['x']}>
             <PlotTrack id="load" band={{ role: 'y', start: 0, end: 1 }} />
           </PlotScaffold>
-          <PathMark trackId="missing" x="week" y="load" />
+          <PathMark trackId="missing" encodings={{ position: { x: 'week', y: 'load' } }} />
         </>,
         'ops',
       ),
@@ -252,7 +252,7 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
       buildPlotIR(
         <>
           <PlotFacet id="sales" column="region" />
-          <PathMark facetId="missing" x="month" y="revenue" />
+          <PathMark facetId="missing" encodings={{ position: { x: 'month', y: 'revenue' } }} />
         </>,
         'sales',
       ),
@@ -262,7 +262,11 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
       buildPlotIR(
         <>
           <PlotFacet id="sales" column="region" />
-          <PathMark facetId="sales" coordinateView="salesPanel" x="month" y="revenue" />
+          <PathMark
+            facetId="sales"
+            coordinateView="salesPanel"
+            encodings={{ position: { x: 'month', y: 'revenue' } }}
+          />
         </>,
         'sales',
       ),
@@ -274,7 +278,7 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
           <PlotScaffold id="ops" sharedRoles={['x']}>
             <PlotTrack id="load" band={{ role: 'y', start: 0, end: 1 }} />
           </PlotScaffold>
-          <PathMark facetId="sales" trackId="load" x="week" y="load" />
+          <PathMark facetId="sales" trackId="load" encodings={{ position: { x: 'week', y: 'load' } }} />
         </>,
         'ops',
       ),

@@ -32,7 +32,7 @@ const spec = (
     data: { reference: 'd', model },
     scales,
     coordinate: { type: 'cartesian2D', ...coordinate },
-    marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
+    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'a', y: 'b' } } }],
   });
 
 describe('derivePositionScale — 按 DataFieldType 派生默认 scale', () => {
@@ -170,8 +170,8 @@ describe('type-driven scale 集成', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'xs', y: 'ys' },
       marks: [
-        { type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } },
-        { type: 'point', encoding: { x: { field: 'c' }, y: { field: 'b' } } },
+        { type: 'point', kind: 'data', encodings: { position: { x: 'a', y: 'b' } } },
+        { type: 'point', kind: 'data', encodings: { position: { x: 'c', y: 'b' } } },
       ],
     });
 
@@ -194,8 +194,8 @@ describe('type-driven scale 集成', () => {
       scales: [],
       coordinate: { type: 'cartesian2D' },
       marks: [
-        { type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } },
-        { type: 'point', encoding: { x: { field: 'c' }, y: { field: 'b' } } },
+        { type: 'point', kind: 'data', encodings: { position: { x: 'a', y: 'b' } } },
+        { type: 'point', kind: 'data', encodings: { position: { x: 'c', y: 'b' } } },
       ],
     });
 

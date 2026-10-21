@@ -1,35 +1,6 @@
 import type { AnyChannelDefinition, ScopeChannelDefinition } from '../../../contract';
-import { defineScopeChannel } from '../../../contract';
-import type { IRPlotMarkOpacityStyle } from '../../../schemas';
-import type { IRPlotMarkOperation, IRPlotPointNumberStyle } from '../../../schemas';
-import { MarkValueKind } from '../../../schemas';
+import { defineScopeChannel, markProperty } from '../../../contract';
 import { OPACITY_MIN, STROKE_WIDTH_MAX, STROKE_WIDTH_MIN } from './node';
-
-type MarkStyleValue<T> =
-  | Extract<IRPlotPointNumberStyle, { kind: typeof MarkValueKind.Field }>
-  | (Omit<Extract<IRPlotPointNumberStyle, { kind: typeof MarkValueKind.Constant }>, 'value'> & { value: T });
-
-const isMarkStyleValue = <T>(value: unknown): value is MarkStyleValue<T> =>
-  value !== null &&
-  typeof value === 'object' &&
-  ((value as { kind?: unknown }).kind === MarkValueKind.Field ||
-    (value as { kind?: unknown }).kind === MarkValueKind.Constant) &&
-  'value' in value;
-
-const pickConstantStyleChannel = <T>(mark: IRPlotMarkOperation, channel: string): T | undefined => {
-  const source = mark as Record<string, unknown>;
-  const opacity = source.opacity as IRPlotMarkOpacityStyle | undefined;
-  const value =
-    channel === 'opacity'
-      ? opacity?.overall
-      : channel === 'fillOpacity'
-        ? opacity?.fill
-        : channel === 'strokeOpacity'
-          ? opacity?.stroke
-          : source[channel];
-  if (!isMarkStyleValue<T>(value) || value.kind !== MarkValueKind.Constant) return undefined;
-  return value.value;
-};
 
 const numericScopeChannel = (
   channel: 'strokeWidth' | 'opacity' | 'fillOpacity' | 'strokeOpacity',
@@ -42,7 +13,7 @@ const numericScopeChannel = (
     output,
     ...(legend !== undefined ? { legend } : {}),
     resolve: (_ctx, mark) => {
-      const value = pickConstantStyleChannel<number>(mark, channel);
+      const value = markProperty<number>(mark, channel);
       return value === undefined ? undefined : { value };
     },
     deliver,

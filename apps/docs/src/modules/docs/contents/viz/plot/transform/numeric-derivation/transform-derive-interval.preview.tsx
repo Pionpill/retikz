@@ -32,7 +32,10 @@ export const TransformDeriveIntervalPreview = (
     >
       <PlotTransform operation={{ ...deriveIntervalOperationOf(values) }} />
       <PlotScale dimension="y" type="linear" domain={[0, 12]} />
-      <IntervalMark x="task" color="phase" bounds={{ y: { kind: 'extent', from: 'y0', to: 'y1' } }} />
+      <IntervalMark
+        encodings={{ color: 'phase', bounds: { y: { from: 'y0', to: 'y1' } }, position: { x: 'task' } }}
+        properties={{ bounds: { y: { kind: 'extent' } } }}
+      />
       <PlotAxis dimension="x" title={i18n.task} />
       <PlotAxis dimension="y" title={i18n.progress} grid />
     </Plot>

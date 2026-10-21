@@ -16,9 +16,9 @@ const spec = PlotSchema.parse({
   marks: [
     {
       type: 'point',
-      size: { kind: 'constant', value: 8 },
-      color: { kind: 'constant', value: '#2563eb' },
-      encoding: { x: { field: 'x' }, y: { field: 'y' }, channels: { intensity: { field: 'score' } } },
+      kind: 'data',
+      encodings: { intensity: 'score', position: { x: 'x', y: 'y' } },
+      properties: { size: 8, color: '#2563eb' },
     },
   ],
   guides: [

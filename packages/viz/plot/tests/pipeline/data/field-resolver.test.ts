@@ -17,7 +17,7 @@ const pointSpec = (model?: Array<{ name: string; type?: string }>): IRPlot =>
     data: { reference: 'd', ...(model ? { model } : {}) },
     scales: [],
     coordinate: { type: 'cartesian2D' },
-    marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } }],
   });
 
 const parseSlashDate = (raw: unknown): ParsedFieldValue => Date.parse(String(raw).replaceAll('/', '-'));
@@ -194,7 +194,10 @@ describe('prepareRows — resolveField 集成（contract）', () => {
     const withoutResolver = prepareRows(spec, { d: rows }, {}, rows);
     const withUndefinedResolver = prepareRows(spec, { d: rows }, { resolveField: () => undefined }, rows);
 
-    expect(withUndefinedResolver).toEqual(withoutResolver);
+    expect(withUndefinedResolver.normalized).toEqual(withoutResolver.normalized);
+    expect(withUndefinedResolver.fieldTypeMap).toEqual(withoutResolver.fieldTypeMap);
+    expect(withUndefinedResolver.dataView.rows).toEqual(withoutResolver.dataView.rows);
+    expect(withUndefinedResolver.dataView.model).toEqual(withoutResolver.dataView.model);
   });
 
   it('resolver_receives_physical_path_from_fieldmaps', () => {
@@ -262,7 +265,7 @@ describe('render ⟺ locator parity + scale 兼容', () => {
         { type: 'linear', name: 'ys' },
       ],
       coordinate: { type: 'cartesian2D', x: 'xs', y: 'ys' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } }],
     });
 
     expect(

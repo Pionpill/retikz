@@ -1,142 +1,94 @@
 import { CssColorSchema, GeometryLabelSchema, NodeLabelSchema } from '@retikz/core';
-import { ShapeNameSchema } from '@retikz/core';
-import {
-  JsonValueSchema,
+import type { JsonValue } from '@retikz/foundation';
+import { NonBlankStringSchema, PositiveNumberSchema } from '@retikz/foundation';
+import { array, number, object, record, strictObject, union } from 'zod';
+
+/** 校验字段名简写或显式指定比例尺的字段绑定 */
+export const ChannelSchema = union([
   NonBlankStringSchema,
-  NonNegativeNumberSchema,
-  PositiveNumberSchema,
-} from '@retikz/foundation';
-import { array, number, object, record, strictObject, union, unknown } from 'zod';
+  strictObject({
+    field: NonBlankStringSchema.describe('Data field path in the current mark data view'),
+    scale: NonBlankStringSchema.describe('Explicit named scale used by this target'),
+  }),
+]).describe('Field encoding: a non-blank field name, or a field and explicit scale pair');
 
-/** 校验字段驱动与常量二选一的通道绑定及可选比例尺引用 */
-export const ChannelSchema = object({
-  field: NonBlankStringSchema.optional().describe(
-    'Path accessor into a data row bound to this channel (e.g. "month" or "user.age"); resolved against the externally-supplied dataset at lowering and must yield a scalar',
-  ),
-  value: JsonValueSchema.optional().describe('Constant JSON literal for this channel (mutually exclusive with field)'),
-  scale: NonBlankStringSchema.optional().describe(
-    'Scale name driving this channel (required for non-positional channels like color; positional x / y derive their scale from the coordinate system and omit this)',
-  ),
-})
-  .refine(c => (c.field === undefined) !== (c.value === undefined), {
-    message: 'channel must set exactly one of `field` or `value`',
-  })
-  .describe(
-    'A channel binding: exactly one of field (data-driven) / value (constant), plus an optional scale reference',
-  );
-
-const NonBlankRecordKeySchema = record(NonBlankStringSchema, unknown());
-
-const PositionEncodingObjectSchema = object({
-  x: ChannelSchema.optional().describe(
-    'Primary position role channel; optional at the schema level. Whether it is required is decided per coordinate system (cartesian2D / polar2D need x, cartesian1D needs its single dimension), validated fail-loud during lowering. The coordinate maps it to its first role: cartesian2D horizontal, polar2D angle. Its scale comes from the coordinate system',
-  ),
-  y: ChannelSchema.optional().describe(
-    'Secondary position role channel; optional at the schema level. Required by cartesian2D / polar2D, omitted by 1D coordinates, validated during lowering. The coordinate maps it to its second role: cartesian2D vertical, polar2D radius. Its scale comes from the coordinate system',
-  ),
-}).catchall(ChannelSchema);
-
-/** 校验按坐标角色命名的位置通道，必需角色由坐标定义在降低阶段判断 */
-export const PositionEncodingSchema = NonBlankRecordKeySchema.pipe(PositionEncodingObjectSchema).describe(
-  'Positional channel bindings. Built-ins use x for 1D and x / y for 2D; custom CoordinateDefinition roles may add arbitrary non-blank role keys. All are optional at the schema level, and the coordinate system decides which roles are required during lowering',
+/** 校验由坐标定义拥有比例尺的位置角色字段映射 */
+export const PositionEncodingSchema = record(NonBlankStringSchema, NonBlankStringSchema).describe(
+  'Coordinate role to field name map; coordinate roles own their position scales',
 );
 
-/** 校验交给标记降低逻辑的非位置通道绑定 */
-export const MarkChannelEncodingSchema = object({
-  color: ChannelSchema.optional().describe(
-    'Color channel (non-positional): maps a field through an ordinal / color scale to the mark fill / stroke',
-  ),
-  channels: record(NonBlankStringSchema, ChannelSchema)
-    .optional()
-    .describe(
-      'Extension channel bindings: a map of registered channel name to field / constant binding, resolved by a ChannelDefinition supplied via options.definitions.channels. A key colliding with a built-in channel name fails loud at lowering',
-    ),
-}).describe('Non-positional mark / extension channel bindings fed to mark lowering');
+/** 校验独立透明度因子的字段编码 */
+export const OpacityEncodingSchema = strictObject({
+  overall: ChannelSchema.optional(),
+  fill: ChannelSchema.optional(),
+  stroke: ChannelSchema.optional(),
+}).describe('Independent opacity factor field encodings');
 
-const EncodingObjectSchema = object({
-  ...PositionEncodingObjectSchema.shape,
-  ...MarkChannelEncodingSchema.shape,
-}).catchall(ChannelSchema);
-
-/** 校验标记的位置角色与共享视觉通道绑定 */
-export const EncodingSchema = NonBlankRecordKeySchema.pipe(EncodingObjectSchema).describe(
-  'Channel bindings for a mark: built-in keys cover x / y and shared mark channels; unknown non-blank keys are treated as custom coordinate position roles',
-);
-
-/** 校验尺寸通道的字段映射或直接使用的常量半径 */
-export const SizeChannelSchema = object({
-  field: NonBlankStringSchema.optional().describe(
-    'Data path bound to the size channel; resolves to a numeric magnitude mapped through a radius (sqrt) scale',
-  ),
-  value: NonNegativeNumberSchema.optional().describe(
-    'Constant final radius in px, bypassing the scale entirely (mutually exclusive with field)',
-  ),
-  scale: NonBlankStringSchema.optional().describe(
-    'Optional sqrt-scale name (only meaningful with field); omitted means a default radius (sqrt) scale is synthesized',
-  ),
+/** 校验共享绘图外观的字段编码 */
+export const MarkChannelEncodingSchema = strictObject({
+  color: ChannelSchema.optional(),
+  fill: ChannelSchema.optional(),
+  stroke: ChannelSchema.optional(),
+  strokeWidth: ChannelSchema.optional(),
+  opacity: OpacityEncodingSchema.optional(),
+  shadow: ChannelSchema.optional(),
+  blendMode: ChannelSchema.optional(),
+  zIndex: ChannelSchema.optional(),
 })
-  .refine(c => (c.field === undefined) !== (c.value === undefined), {
-    message: 'size channel must set exactly one of `field` or `value`',
-  })
-  .describe(
-    'Size channel (PointMark): field maps glyph radius via a sqrt scale; value is a constant final radius (px) that bypasses the scale',
-  );
+  .catchall(ChannelSchema.transform((binding): JsonValue => binding))
+  .describe('Declared shared visual field targets; additional field targets require registered channel definitions');
 
-/** 校验透明度通道的字段映射或绕过比例尺的常量值 */
-export const OpacityChannelSchema = object({
-  field: NonBlankStringSchema.optional().describe(
-    'Data path bound to opacity; continuous, mapped through a clamped linear scale to [minOpacity, 1]',
-  ),
-  value: number()
-    .min(0)
-    .max(1)
-    .optional()
-    .describe('Constant opacity 0..1, bypassing the scale (mutually exclusive with field)'),
-  scale: NonBlankStringSchema.optional().describe(
-    'Optional linear-scale name (only meaningful with field); omitted means a default opacity scale is synthesized',
-  ),
-})
-  .refine(c => (c.field === undefined) !== (c.value === undefined), {
-    message: 'opacity channel must set exactly one of `field` or `value`',
-  })
-  .describe(
-    'Opacity channel (PointMark): field maps glyph opacity via a clamped linear scale; value is a constant opacity that bypasses the scale',
-  );
+/** 校验对应索引标签的内容字段编码 */
+export const LabelEncodingSchema = strictObject({
+  content: NonBlankStringSchema.optional(),
+}).describe('Field content of a label at the same index as its fixed host properties');
 
-/** 校验形状通道的字段映射或固定 Core 形状名称 */
-export const ShapeChannelSchema = object({
-  field: NonBlankStringSchema.optional().describe(
-    'Data path bound to shape; categorical, mapped to a built-in glyph palette',
-  ),
-  value: ShapeNameSchema.optional().describe(
-    'Constant glyph shape name: a core / registered node shape (mutually exclusive with field)',
-  ),
-})
-  .refine(c => (c.field === undefined) !== (c.value === undefined), {
-    message: 'shape channel must set exactly one of `field` or `value`',
-  })
-  .describe(
-    'Shape channel (PointMark): field maps glyph shape via the built-in shape palette; value is a constant core shape name',
-  );
+/** 校验节点宿主允许的字段编码目标 */
+export const NodeEncodingSchema = MarkChannelEncodingSchema.extend({
+  align: ChannelSchema.optional(),
+  lineHeight: ChannelSchema.optional(),
+  maxTextWidth: ChannelSchema.optional(),
+  cornerRadius: ChannelSchema.optional(),
+  scale: ChannelSchema.optional(),
+  padding: ChannelSchema.optional(),
+  margin: ChannelSchema.optional(),
+  dashed: ChannelSchema.optional(),
+  dotted: ChannelSchema.optional(),
+  dashPattern: ChannelSchema.optional(),
+  font: ChannelSchema.optional(),
+  boundary: ChannelSchema.optional(),
+  label: union([LabelEncodingSchema, array(LabelEncodingSchema).min(1)]).optional(),
+}).describe('Declared node-host visual field targets');
 
-/** 校验逐数据项或常量文本内容及可选显示格式 */
-export const TextChannelSchema = strictObject({
-  field: NonBlankStringSchema.optional().describe(
-    'Data path whose row value becomes the label string; mutually exclusive with value',
-  ),
-  value: NonBlankStringSchema.optional().describe(
-    'Constant label string for every datum (mutually exclusive with field)',
-  ),
-  displayFormat: NonBlankStringSchema.optional().describe(
-    'Optional JSON-safe display format string (d3-format for numeric fields / d3-time-format for temporal fields) applied to the field value before stringification; only meaningful together with field. A runtime resolveLabel(row) escape hatch (injected via options, never in the IR) overrides this for fully custom templates',
-  ),
-})
-  .refine(c => (c.field === undefined) !== (c.value === undefined), {
-    message: 'text channel must set exactly one of `field` or `value`',
-  })
-  .describe(
-    'Text content channel: field is a per-datum label string, value is a constant label, displayFormat is a display format string for a numeric or temporal field',
-  );
+/** 校验路径宿主允许的字段编码目标 */
+export const PathEncodingSchema = MarkChannelEncodingSchema.extend({
+  rotate: ChannelSchema.optional(),
+  scale: ChannelSchema.optional(),
+  fillRule: ChannelSchema.optional(),
+  thickness: ChannelSchema.optional(),
+  dashPattern: ChannelSchema.optional(),
+  lineCap: ChannelSchema.optional(),
+  lineJoin: ChannelSchema.optional(),
+  roundedCorners: ChannelSchema.optional(),
+  label: union([LabelEncodingSchema, array(LabelEncodingSchema).min(1)]).optional(),
+}).describe('Declared path-host visual field targets');
+
+/** 校验位置与共享视觉字段编码 */
+export const EncodingSchema = MarkChannelEncodingSchema.extend({
+  position: PositionEncodingSchema.optional(),
+}).describe('Position role bindings and declared shared visual encodings');
+
+/** 校验点的位置、内容及节点外观字段编码 */
+export const PointEncodingSchema = NodeEncodingSchema.extend({
+  anchorId: NonBlankStringSchema.optional(),
+  position: PositionEncodingSchema.optional(),
+  text: NonBlankStringSchema.optional(),
+  textColor: ChannelSchema.optional(),
+  size: ChannelSchema.optional(),
+  shape: ChannelSchema.optional(),
+  rotate: ChannelSchema.optional(),
+  minimumSize: ChannelSchema.optional(),
+}).describe('Point field encodings; fixed values belong to properties');
 
 /** 校验与 Core 节点标签对齐的引线样式 */
 export const LabelPinStyleSchema = object({
@@ -145,36 +97,8 @@ export const LabelPinStyleSchema = object({
   dashPattern: array(number()).optional().describe('Leader dash pattern, e.g. [2, 2]'),
 }).describe('Styled label leader line options aligned with core NodeLabelSchema.pin');
 
-const PointEncodingObjectSchema = PositionEncodingObjectSchema.extend({
-  text: TextChannelSchema.optional().describe(
-    'Optional text content channel: when set the point lowers to a borderless core Node carrying text (free-text / datum label) instead of a glyph; field is a per-datum string, value is constant, displayFormat handles numeric / temporal display formatting',
-  ),
-  ...MarkChannelEncodingSchema.shape,
-});
-
-/** 校验点标记的位置、文本及扩展通道，内置节点外观由标记样式字段承载 */
-export const PointEncodingSchema = NonBlankRecordKeySchema.pipe(PointEncodingObjectSchema).describe(
-  'PointMark encoding: positional channels plus optional text and extension channel bindings; built-in node properties live on the mark as schema-defined style fields',
-);
-
-/** 校验标签内容的字段或常量互斥绑定及可选显示格式 */
-export const MarkLabelContentSchema = strictObject({
-  field: NonBlankStringSchema.optional().describe(
-    'Data path whose row value becomes the label text; mutually exclusive with value',
-  ),
-  value: NodeLabelSchema.shape.text
-    .optional()
-    .describe('Constant label text for every datum; mutually exclusive with field'),
-  displayFormat: NonBlankStringSchema.optional().describe(
-    'Optional JSON-safe display format string applied to a field value before stringification; only meaningful together with field',
-  ),
-})
-  .refine(c => (c.field === undefined) !== (c.value === undefined), {
-    message: 'label content must set exactly one of `field` or `value`',
-  })
-  .describe(
-    'Plot label content binding: exactly one of field (data-driven) or value (constant), plus optional displayFormat',
-  );
+/** 校验标签的固定文本内容 */
+export const MarkLabelContentSchema = NodeLabelSchema.shape.text.describe('Fixed label text');
 
 const omitText = <T extends Record<string, unknown>>(shape: T): Omit<T, 'text'> =>
   Object.fromEntries(Object.entries(shape).filter(([key]) => key !== 'text')) as Omit<T, 'text'>;
@@ -186,7 +110,8 @@ const geometryLabelShape = omitText(GeometryLabelSchema.shape);
 /** 校验附着于 Core 节点宿主的标签，几何字段复用节点标签契约 */
 export const MarkNodeLabelSchema = strictObject({
   ...nodeLabelShape,
-  content: MarkLabelContentSchema.describe('Node label content binding (field / value / displayFormat)'),
+  content: MarkLabelContentSchema.optional(),
+  displayFormat: NonBlankStringSchema.optional(),
 })
   .superRefine((label, ctx) => {
     if (label.placement === 'inside' && label.pin) {
@@ -204,7 +129,8 @@ export const MarkNodeLabelSchema = strictObject({
 /** 校验附着于路径类几何宿主的标签，几何字段复用 Core 几何标签契约 */
 export const MarkGeometryLabelSchema = strictObject({
   ...geometryLabelShape,
-  content: MarkLabelContentSchema.describe('Geometry label content binding (field / value / displayFormat)'),
+  content: MarkLabelContentSchema.optional(),
+  displayFormat: NonBlankStringSchema.optional(),
 }).describe(
   'Plot label attached to a path-like GeometryLabel host; all geometry fields are inherited from core GeometryLabelSchema',
 );

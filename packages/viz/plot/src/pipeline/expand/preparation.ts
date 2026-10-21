@@ -34,7 +34,7 @@ import type { LowerPlotsOptions } from './types';
 
 /** 每个 mark 的 Data 声明；开放 mark 扩展仍遵守相同包装 */
 export const plotMarkTransformsOf = (mark: IRPlotMarkOperation): Array<IRDataTransformDeclaration> =>
-  (mark as { transform?: Array<IRDataTransformDeclaration> }).transform ?? [];
+  mark.transforms ?? [];
 
 /**
  * 全部作用域先固定实现，再绑定本次根与实际分区进行单次计算

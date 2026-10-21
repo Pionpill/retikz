@@ -17,7 +17,7 @@ import { PlotLegend, Plot, PointMark } from '@retikz/plot-react';
 
 ```tsx
 <Plot data={cities}>
-  <PointMark x="lng" y="lat" color="region" size="pop" />
+  <PointMark encodings={{ color: "region", size: "pop", position: { x: "lng", y: "lat" } }} />
   <PlotLegend channel="color" />
   <PlotLegend channel="size" position="bottom" />
 </Plot>

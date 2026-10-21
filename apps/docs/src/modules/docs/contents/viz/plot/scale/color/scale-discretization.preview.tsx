@@ -58,9 +58,9 @@ export const ScaleDiscretizationPreview = (values: ScaleDiscretizationPreviewVal
     marks: [
       {
         type: 'point',
-        color: { kind: 'field', value: 'value', scale: 'color' },
-        size: { kind: 'constant', value: 7 },
-        encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        kind: 'data',
+        encodings: { color: { field: 'value', scale: 'color' }, position: { x: 'x', y: 'y' } },
+        properties: { size: 7 },
       },
     ],
     guides: [

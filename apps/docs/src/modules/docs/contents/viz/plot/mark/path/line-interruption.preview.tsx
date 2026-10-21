@@ -24,28 +24,25 @@ export const LineInterruptionPreview = (values: LineInterruptionPreviewValues) =
       <PlotScale dimension="y" type="linear" domainPadding={0} />
       {values.showFill ? (
         <PathMark
-          x="year"
-          y="amount"
-          order="year"
-          series="name"
-          color="name"
-          fill="name"
-          closure={{ kind: 'baseline' }}
-          closed={false}
-          connectNulls={values.connectNulls}
-          stroke="none"
-          opacity={0.38}
+          encodings={{
+            order: 'year',
+            series: 'name',
+            color: 'name',
+            fill: 'name',
+            position: { x: 'year', y: 'amount' },
+          }}
+          properties={{
+            closure: { kind: 'baseline' },
+            closed: false,
+            connectNulls: values.connectNulls,
+            stroke: 'none',
+            opacity: { overall: 0.38 },
+          }}
         />
       ) : null}
       <PathMark
-        x="year"
-        y="amount"
-        order="year"
-        series="name"
-        color="name"
-        closed={false}
-        connectNulls={values.connectNulls}
-        strokeWidth={2.4}
+        encodings={{ order: 'year', series: 'name', color: 'name', position: { x: 'year', y: 'amount' } }}
+        properties={{ closed: false, connectNulls: values.connectNulls, strokeWidth: 2.4 }}
       />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />

@@ -5,8 +5,9 @@ import { defineTransform } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { literal, object, union } from 'zod';
 
-import type { IRPlot, IRPlotMarkOperation } from '../../src';
+import type { IRPlot } from '../../src';
 import { createPlotLineageLocator, defineNodeChannel, lowerPlotWithLineage, PlotSchema } from '../../src';
+import { markChannelEncoding, channelField } from '../../src/contract';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
 import { measureLabel } from '../helpers/text-measurement';
 
@@ -19,19 +20,14 @@ const SALES = [
 
 const datasets: ExternalDatasets = { sales: SALES };
 
-const extensionChannelsOf = (
-  mark: IRPlotMarkOperation,
-): Partial<Record<string, { field?: string; value?: unknown }>> =>
-  'encoding' in mark ? (mark.encoding?.channels ?? {}) : {};
-
 const intensityChannel = defineNodeChannel<number>({
   channel: 'intensity',
   output: { outputKind: 'number', range: [0.2, 1] },
   resolve: (_ctx, mark) => {
-    const binding = extensionChannelsOf(mark).intensity;
-    if (binding?.field === undefined) return undefined;
+    const binding = markChannelEncoding(mark, 'intensity');
+    if (binding === undefined) return undefined;
 
-    const field = binding.field;
+    const field = channelField(binding);
 
     return {
       resolver: row => {
@@ -67,7 +63,8 @@ const pointSpec = (): IRPlot =>
       {
         id: 'points',
         type: 'point',
-        encoding: { x: { field: 'region' }, y: { field: 'revenue' }, color: { field: 'month' } },
+        kind: 'data',
+        encodings: { color: 'month', position: { x: 'region', y: 'revenue' } },
       },
     ],
   });
@@ -98,8 +95,9 @@ const summarySpec = (): IRPlot =>
       {
         id: 'bars',
         type: 'interval',
-        transform: [{ operation: { kind: 'sort', params: { field: 'totalRevenue', order: 'descending' } } }],
-        encoding: { x: { field: 'region' }, y: { field: 'totalRevenue' } },
+        transforms: [{ operation: { kind: 'sort', params: { field: 'totalRevenue', order: 'descending' } } }],
+        kind: 'data',
+        encodings: { position: { x: 'region', y: 'totalRevenue' } },
       },
     ],
   });
@@ -119,8 +117,8 @@ const seriesSpec = (): IRPlot =>
       {
         id: 'bars',
         type: 'interval',
-        series: 'month',
-        encoding: { x: { field: 'region' }, y: { field: 'revenue' }, color: { field: 'month' } },
+        kind: 'data',
+        encodings: { series: 'month', color: 'month', position: { x: 'region', y: 'revenue' } },
       },
     ],
   });
@@ -141,10 +139,10 @@ const extensionChannelSpec = (): IRPlot =>
       {
         id: 'points',
         type: 'point',
-        encoding: {
-          x: { field: 'region' },
-          y: { field: 'revenue' },
-          channels: { intensity: { field: 'revenue', scale: 'intensityScale' } },
+        kind: 'data',
+        encodings: {
+          intensity: { field: 'revenue', scale: 'intensityScale' },
+          position: { x: 'region', y: 'revenue' },
         },
       },
     ],
@@ -182,11 +180,6 @@ describe('plot lineage runtime', () => {
         markIndex: 0,
         markId: 'points',
         markType: 'point',
-        encoding: [
-          { channel: 'x', field: 'region' },
-          { channel: 'y', field: 'revenue' },
-          { channel: 'color', field: 'month' },
-        ],
         transformScope: { root: [], mark: [] },
       }),
     ]);
@@ -222,8 +215,7 @@ describe('plot lineage runtime', () => {
   it('keeps original source identities after root reorder and mark-local transforms', () => {
     const spec = pointSpec();
     spec.transform = [{ operation: { kind: 'sort', params: { field: 'revenue', order: 'descending' } } }];
-    if (!('transform' in spec.marks[0]) && !('encoding' in spec.marks[0])) throw new Error('Expected a data mark');
-    spec.marks[0].transform = [{ operation: { kind: 'sort', params: { field: 'revenue', order: 'ascending' } } }];
+    spec.marks[0].transforms = [{ operation: { kind: 'sort', params: { field: 'revenue', order: 'ascending' } } }];
 
     const { lineage } = lowerPlotWithLineage(spec, datasets, { environment: {}, lineage: {} });
     const markSource = lineage.data.marks[0]?.events.find(event => event.kind === 'source');
@@ -262,12 +254,12 @@ describe('plot lineage runtime', () => {
       expect.objectContaining({
         name: 'xRegion',
         type: 'band',
-        channels: [{ markIndex: 0, channel: 'x', field: 'region' }],
+        channels: [{ markIndex: 0, channel: 'position.x', field: 'region' }],
       }),
       expect.objectContaining({
         name: 'yRevenue',
         type: 'linear',
-        channels: [{ markIndex: 0, channel: 'y', field: 'revenue' }],
+        channels: [{ markIndex: 0, channel: 'position.y', field: 'revenue' }],
       }),
     ]);
     expect(lineage.scales?.flatMap(scale => scale.channels ?? []).some(channel => channel.channel === 'color')).toBe(
@@ -293,8 +285,7 @@ describe('plot lineage runtime', () => {
     });
     const spec = pointSpec();
     spec.transform = [{ operation: { kind: 'count-lineage-apply', params: { scope: 'root' } } }];
-    if (!('transform' in spec.marks[0]) && !('encoding' in spec.marks[0])) throw new Error('Expected a data mark');
-    spec.marks[0].transform = [{ operation: { kind: 'count-lineage-apply', params: { scope: 'mark' } } }];
+    spec.marks[0].transforms = [{ operation: { kind: 'count-lineage-apply', params: { scope: 'mark' } } }];
 
     lowerPlotWithLineage(spec, datasets, {
       definitions: { transforms: [countingTransform] },
@@ -322,8 +313,7 @@ describe('plot lineage runtime', () => {
     });
     const spec = pointSpec();
     spec.transform = [{ operation: { kind: 'count-lineage-locator-apply', params: { scope: 'root' } } }];
-    if (!('transform' in spec.marks[0]) && !('encoding' in spec.marks[0])) throw new Error('Expected a data mark');
-    spec.marks[0].transform = [{ operation: { kind: 'count-lineage-locator-apply', params: { scope: 'mark' } } }];
+    spec.marks[0].transforms = [{ operation: { kind: 'count-lineage-locator-apply', params: { scope: 'mark' } } }];
 
     createPlotLineageLocator(spec, datasets, {
       definitions: { transforms: [countingTransform] },
@@ -351,8 +341,7 @@ describe('plot lineage runtime', () => {
     });
     const spec = pointSpec();
     spec.transform = [{ operation: { kind: 'count-independent-lineage-apply', params: { scope: 'root' } } }];
-    if (!('transform' in spec.marks[0]) && !('encoding' in spec.marks[0])) throw new Error('Expected a data mark');
-    spec.marks[0].transform = [{ operation: { kind: 'count-independent-lineage-apply', params: { scope: 'mark' } } }];
+    spec.marks[0].transforms = [{ operation: { kind: 'count-independent-lineage-apply', params: { scope: 'mark' } } }];
     const options = {
       lineage: {},
       definitions: { transforms: [countingTransform] },

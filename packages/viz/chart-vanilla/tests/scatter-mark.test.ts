@@ -15,8 +15,8 @@ describe('Chart mark Vanilla authoring', () => {
         marks: [
           {
             type: 'path',
-            order: 'x',
-            encoding: { x: { field: 'x' }, y: { field: 'y' } },
+            kind: 'data',
+            encodings: { order: 'x', position: { x: 'x', y: 'y' } },
           },
         ],
       },
@@ -29,8 +29,8 @@ describe('Chart mark Vanilla authoring', () => {
     expect(source.plotExtension?.marks).toEqual([
       {
         type: 'path',
-        order: 'x',
-        encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        kind: 'data',
+        encodings: { order: 'x', position: { x: 'x', y: 'y' } },
       },
     ]);
   });

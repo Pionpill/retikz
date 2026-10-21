@@ -34,7 +34,7 @@ export const TransformNormalizePreview = (
         <PlotTransform key={index} operation={{ ...operation }} />
       ))}
       <PlotScale dimension="y" type="linear" domain={values.basis === 'percent' ? [0, 100] : [0, 1]} />
-      <IntervalMark x="quarter" y="share" series="product" stack />
+      <IntervalMark stack encodings={{ series: 'product', position: { x: 'quarter', y: 'share' } }} />
       <PlotAxis dimension="x" title={i18n.quarter} />
       <PlotAxis dimension="y" title={values.basis === 'percent' ? i18n.share : i18n.share2} grid />
     </Plot>

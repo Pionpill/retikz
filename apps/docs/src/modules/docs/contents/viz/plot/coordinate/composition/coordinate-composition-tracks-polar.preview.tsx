@@ -42,23 +42,35 @@ export const CoordinateCompositionTracksPolarPreview = (values: CoordinateCompos
         <PlotAxis dimension="x" grid={xGridVisible} title="area" />
         <PlotTrack id="signal" band={{ role: 'y', start: 0.1, end: 0.4 }}>
           {localAxesVisible ? <PlotAxis dimension="y" grid={yGridVisible} title="signal" /> : null}
-          <PathMark x="area" y="signal" order="order" stroke="darkorange" strokeWidth={lineWidth} />
-          <PointMark x="area" y="signal" fill="moccasin" stroke="darkorange" strokeWidth={1} size={pointSize} />
+          <PathMark
+            encodings={{ order: 'order', position: { x: 'area', y: 'signal' } }}
+            properties={{ stroke: 'darkorange', strokeWidth: lineWidth }}
+          />
+          <PointMark
+            encodings={{ position: { x: 'area', y: 'signal' } }}
+            properties={{ fill: 'moccasin', stroke: 'darkorange', strokeWidth: 1, size: pointSize }}
+          />
         </PlotTrack>
         <PlotTrack id="capacity" band={{ role: 'y', start: 0.5, end: 0.76 }}>
           {localAxesVisible ? <PlotAxis dimension="y" grid={yGridVisible} title="capacity" /> : null}
-          <PathMark x="area" y="capacity" order="order" stroke="steelblue" strokeWidth={lineWidth} />
-          <PointMark x="area" y="capacity" fill="lightblue" stroke="steelblue" strokeWidth={1} size={pointSize} />
+          <PathMark
+            encodings={{ order: 'order', position: { x: 'area', y: 'capacity' } }}
+            properties={{ stroke: 'steelblue', strokeWidth: lineWidth }}
+          />
+          <PointMark
+            encodings={{ position: { x: 'area', y: 'capacity' } }}
+            properties={{ fill: 'lightblue', stroke: 'steelblue', strokeWidth: 1, size: pointSize }}
+          />
         </PlotTrack>
         <PlotTrack id="sector" band={{ role: 'y', start: 0.86, end: 1 }}>
           <IntervalMark
-            x="area"
-            y="outer"
-            color="area"
-            padAngle={values.sectorPadAngle}
-            stroke="#ffffff"
-            strokeWidth={1}
-            opacity={{ fill: values.sectorOpacity }}
+            encodings={{ color: 'area', position: { x: 'area', y: 'outer' } }}
+            properties={{
+              padAngle: values.sectorPadAngle,
+              stroke: '#ffffff',
+              strokeWidth: 1,
+              opacity: { fill: values.sectorOpacity },
+            }}
           />
         </PlotTrack>
       </PlotScaffold>

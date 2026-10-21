@@ -16,11 +16,7 @@ describe('plot', () => {
         views: [{ id: 'main', coordinate: { type: 'cartesian2D', x: 'x', y: 'y' } }],
       },
       marks: [
-        {
-          type: 'point',
-          coordinateView: 'main',
-          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
-        },
+        { type: 'point', coordinateView: 'main', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } },
       ],
       guides: [{ type: 'axis', dimension: 'y', coordinateView: 'main', title: 'Revenue' }],
     });
@@ -45,11 +41,7 @@ describe('plot', () => {
         views: [{ id: 'main', coordinate: { type: 'cartesian2D', x: 'x', y: 'y' } }],
       },
       marks: [
-        {
-          type: 'point',
-          coordinateView: 'main',
-          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
-        },
+        { type: 'point', coordinateView: 'main', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } },
       ],
       guides: [
         {
@@ -77,7 +69,7 @@ describe('plot', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
       guides: [{ type: 'axis', dimension: 'x', grid: { includeDomain: true } }],
     });
 
@@ -102,12 +94,7 @@ describe('plot', () => {
         palette: { categorical: ['#2563eb', '#dc2626'], sequential: 'magma' },
         legend: { swatchSize: 12, label: { textColor: '#475569' } },
       },
-      marks: [
-        {
-          type: 'point',
-          encoding: { x: { field: 'lng' }, y: { field: 'lat' }, color: { field: 'region' } },
-        },
-      ],
+      marks: [{ type: 'point', kind: 'data', encodings: { color: 'region', position: { x: 'lng', y: 'lat' } } }],
       guides: [
         {
           type: 'legend',
@@ -141,7 +128,7 @@ describe('plot', () => {
       scales: [],
       coordinate: { type: 'cartesian2D' },
       defaultPlot: { palette: { series: ['#2563eb'] } },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } }],
     });
 
     expect(spec.defaultPlot).toEqual({ palette: { series: ['#2563eb'] } });
@@ -157,7 +144,7 @@ describe('plot', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
       plotRules: [
         {
@@ -180,16 +167,8 @@ describe('plot', () => {
       data: { reference: 'weather' },
       scales: [],
       marks: [
-        {
-          type: 'path',
-          yAxisId: 'temperature',
-          encoding: { x: { field: 'day' }, y: { field: 'temperature' } },
-        },
-        {
-          type: 'path',
-          yAxisId: 'rainfall',
-          encoding: { x: { field: 'day' }, y: { field: 'rainfall' } },
-        },
+        { type: 'path', yAxisId: 'temperature', kind: 'data', encodings: { position: { x: 'day', y: 'temperature' } } },
+        { type: 'path', yAxisId: 'rainfall', kind: 'data', encodings: { position: { x: 'day', y: 'rainfall' } } },
       ],
       guides: [
         { type: 'axis', dimension: 'x', title: 'day' },
@@ -234,16 +213,8 @@ describe('plot', () => {
       data: { reference: 'schedule' },
       scales: [],
       marks: [
-        {
-          type: 'path',
-          xAxisId: 'elapsed',
-          encoding: { x: { field: 'elapsedDay' }, y: { field: 'revenue' } },
-        },
-        {
-          type: 'point',
-          xAxisId: 'date',
-          encoding: { x: { field: 'dateIndex' }, y: { field: 'revenue' } },
-        },
+        { type: 'path', xAxisId: 'elapsed', kind: 'data', encodings: { position: { x: 'elapsedDay', y: 'revenue' } } },
+        { type: 'point', xAxisId: 'date', kind: 'data', encodings: { position: { x: 'dateIndex', y: 'revenue' } } },
       ],
       guides: [
         { type: 'axis', id: 'elapsed', dimension: 'x', placement: { kind: 'side', side: 'bottom' } },
@@ -288,17 +259,9 @@ describe('plot', () => {
       data: { reference: 'weather' },
       scales: [],
       marks: [
-        {
-          type: 'path',
-          yAxisId: 'default',
-          encoding: { x: { field: 'day' }, y: { field: 'temperature' } },
-        },
-        { type: 'point', encoding: { x: { field: 'day' }, y: { field: 'label' } } },
-        {
-          type: 'path',
-          yAxisId: 'rainfall',
-          encoding: { x: { field: 'day' }, y: { field: 'rainfall' } },
-        },
+        { type: 'path', yAxisId: 'default', kind: 'data', encodings: { position: { x: 'day', y: 'temperature' } } },
+        { type: 'point', kind: 'data', encodings: { position: { x: 'day', y: 'label' } } },
+        { type: 'path', yAxisId: 'rainfall', kind: 'data', encodings: { position: { x: 'day', y: 'rainfall' } } },
       ],
       guides: [{ type: 'axis', id: 'rainfall', dimension: 'y' }],
     });
@@ -324,11 +287,7 @@ describe('plot', () => {
         data: { reference: 'weather' },
         scales: [],
         marks: [
-          {
-            type: 'path',
-            yAxisId: 'rainfall',
-            encoding: { x: { field: 'day' }, y: { field: 'rainfall' } },
-          },
+          { type: 'path', yAxisId: 'rainfall', kind: 'data', encodings: { position: { x: 'day', y: 'rainfall' } } },
         ],
         guides: [{ type: 'axis', id: 'temperature', dimension: 'y' }],
       }),
@@ -352,16 +311,8 @@ describe('plot', () => {
         },
       ],
       marks: [
-        {
-          type: 'path',
-          trackId: 'incidents',
-          encoding: { x: { field: 'week' }, y: { field: 'incidents' } },
-        },
-        {
-          type: 'path',
-          trackId: 'load',
-          encoding: { x: { field: 'week' }, y: { field: 'load' } },
-        },
+        { type: 'path', trackId: 'incidents', kind: 'data', encodings: { position: { x: 'week', y: 'incidents' } } },
+        { type: 'path', trackId: 'load', kind: 'data', encodings: { position: { x: 'week', y: 'load' } } },
       ],
       guides: [
         { type: 'axis', scaffoldId: 'ops', dimension: 'x', grid: true },
@@ -416,13 +367,7 @@ describe('plot', () => {
           spacing: { panelGap: 24, axisGap: 8, labelGap: 6 },
         },
       ],
-      marks: [
-        {
-          type: 'path',
-          facetId: 'sales',
-          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
-        },
-      ],
+      marks: [{ type: 'path', facetId: 'sales', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
       guides: [{ type: 'axis', facetId: 'sales', dimension: 'y', grid: true }],
     });
 

@@ -5,7 +5,7 @@ description: 用显式点、路径和区间标记信息，位置可使用常量�
 
 标注用于在绘图区域中用几何元素标记信息，例如目标点、参考线和背景区间。标注的几何绘制能力与几何图元相同，也分为 point、path、interval 三类。
 
-标注的位置经过 Plot 的比例尺与[坐标系](/viz/plot/coordinate)投影。仅使用常量、且省略 `transform` 时，每个声明在当前视图中生成一个实例；位置绑定字段或显式提供 `transform` 时，每个结果行生成一个完整几何对象。三类入口如下：
+标注的位置经过 Plot 的比例尺与[坐标系](/viz/plot/coordinate)投影。仅使用常量、且省略 `transforms` 时，每个声明在当前视图中生成一个实例；任意目标绑定字段或显式提供 `transforms` 时，每个结果行生成一个完整几何对象。三类入口如下：
 
 | 几何         | React                | Vanilla              | Source IR                              |
 | ------------ | -------------------- | -------------------- | -------------------------------------- |
@@ -19,17 +19,17 @@ description: 用显式点、路径和区间标记信息，位置可使用常量�
 
 | 输入方式 | 写法                                   | 含义                                                                 |
 | -------- | -------------------------------------- | -------------------------------------------------------------------- |
-| 常量     | `50`、`'A'` 或 `{ value: 50 }`         | 数据空间中的固定位置，字符串始终是字面值                             |
-| 数据字段 | `{ field: '字段名' }`                  | 读取当前结果行的字段                                                 |
+| 常量     | `properties.position.x: 50` 或 `'A'`         | 数据空间中的固定位置，字符串始终是字面值                             |
+| 数据字段 | `encodings.position.x: '字段名'`                  | 读取当前结果行的字段                                                 |
 | 视图边界 | `{ edge: 'start' }`、`{ edge: 'end' }` | 当前坐标角色最终映射范围的两端，跟随范围反转，不是数据最小值和最大值 |
 
-局部 `transform` 与 Mark 使用相同声明，消费根级变换后的数据；在分面中消费当前分区。统计计算使用[聚合变换](/viz/data/transforms/aggregation-annotation)，输出字段再绑定到几何位置。局部变换不会改变兄弟图元的数据。
+局部 `transforms` 与 Mark 使用相同声明，消费根级变换后的数据；在分面中消费当前分区。统计计算使用[聚合变换](/viz/data/transforms/aggregation-annotation)，输出字段再绑定到几何位置。局部变换不会改变兄弟图元的数据。
 
 | 声明                          | 实例数量                             |
 | ----------------------------- | ------------------------------------ |
-| 常量或 edge，省略 `transform` | 当前视图中一个实例                   |
-| 任意位置包含 `{ field }`      | 每个结果行一个实例                   |
-| 显式 `transform`，包括 `[]`   | 每个结果行一个实例，即使位置都是常量 |
+| 常量或 edge，省略 `transforms` | 当前视图中一个实例                   |
+| 存在任意字段编码      | 每个结果行一个实例                   |
+| 显式 `transforms`，包括 `[]`   | 每个结果行一个实例，即使位置都是常量 |
 
 结果为空时，数据驱动的标注不生成图形。样式、文字和标签仍使用常量；字段只绑定位置。
 
@@ -68,18 +68,9 @@ createRoot(document.getElementById('plot')!).render(
     <Plot data={[]} width={320} height={220}>
       <PlotScale dimension="x" type="linear" domain={[0, 100]} domainPadding={0} />
       <PlotScale dimension="y" type="linear" domain={[0, 100]} domainPadding={0} />
-      <IntervalAnnotation
-        x={{ from: 20, to: 40 }}
-        y={{ from: { edge: 'start' }, to: { edge: 'end' } }}
-        fill="#dbeafe"
-      />
-      <PathAnnotation
-        from={{ x: { edge: 'start' }, y: 50 }}
-        to={{ x: { edge: 'end' }, y: 50 }}
-        stroke="#dc2626"
-        dashPattern={[4, 3]}
-      />
-      <PointAnnotation x={80} y={80} text="80" textColor="darkorange" />
+      <IntervalAnnotation properties={{ fill: "#dbeafe", bounds: { x: { from: 20, to: 40 }, y: { from: { edge: 'start' }, to: { edge: 'end' } } } }} />
+      <PathAnnotation properties={{ from: { x: { edge: 'start' }, y: 50 }, to: { x: { edge: 'end' }, y: 50 }, stroke: "#dc2626", dashPattern: [4, 3] }} />
+      <PointAnnotation properties={{ text: "80", textColor: "darkorange", position: { x: 80, y: 80 } }} />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" />
     </Plot>
@@ -106,30 +97,12 @@ const spec: IRPlot = {
     { type: 'linear', name: 'y', domain: [0, 100], domainPadding: 0 },
   ],
   marks: [
-    {
-      type: 'interval',
-      kind: 'annotation',
-      bounds: {
+    { type: 'interval', kind: 'annotation', properties: { bounds: {
         x: { from: 20, to: 40 },
         y: { from: { edge: 'start' }, to: { edge: 'end' } },
-      },
-      fill: '#dbeafe',
-    },
-    {
-      type: 'path',
-      kind: 'annotation',
-      from: { x: { edge: 'start' }, y: 50 },
-      to: { x: { edge: 'end' }, y: 50 },
-      stroke: '#dc2626',
-      dashPattern: [4, 3],
-    },
-    {
-      type: 'point',
-      kind: 'annotation',
-      position: { x: 80, y: 80 },
-      text: '80',
-      textColor: 'darkorange',
-    },
+      }, fill: '#dbeafe' } },
+    { type: 'path', kind: 'annotation', properties: { from: { x: { edge: 'start' }, y: 50 }, to: { x: { edge: 'end' }, y: 50 }, stroke: '#dc2626', dashPattern: [4, 3] } },
+    { type: 'point', kind: 'annotation', properties: { position: { x: 80, y: 80 }, text: '80', textColor: 'darkorange' } },
   ],
   guides: [
     { type: 'axis', dimension: 'x' },
@@ -158,18 +131,9 @@ const source = plot({
     { type: 'linear', name: 'y', domain: [0, 100], domainPadding: 0 },
   ],
   marks: [
-    intervalAnnotation({
-      x: { from: 20, to: 40 },
-      y: { from: { edge: 'start' }, to: { edge: 'end' } },
-      fill: '#dbeafe',
-    }),
-    pathAnnotation({
-      from: { x: { edge: 'start' }, y: 50 },
-      to: { x: { edge: 'end' }, y: 50 },
-      stroke: '#dc2626',
-      dashPattern: [4, 3],
-    }),
-    pointAnnotation({ x: 80, y: 80, text: '80', textColor: 'darkorange' }),
+    intervalAnnotation({ properties: { fill: '#dbeafe', bounds: { x: { from: 20, to: 40 }, y: { from: { edge: 'start' }, to: { edge: 'end' } } } } }),
+    pathAnnotation({ properties: { from: { x: { edge: 'start' }, y: 50 }, to: { x: { edge: 'end' }, y: 50 }, stroke: '#dc2626', dashPattern: [4, 3] } }),
+    pointAnnotation({ properties: { text: '80', textColor: 'darkorange', position: { x: 80, y: 80 } } }),
   ],
   guides: [
     { type: 'axis', dimension: 'x' },
@@ -203,30 +167,12 @@ const spec: IRPlot = {
     { type: 'linear', name: 'y', domain: [0, 100], domainPadding: 0 },
   ],
   marks: [
-    {
-      type: 'interval',
-      kind: 'annotation',
-      bounds: {
+    { type: 'interval', kind: 'annotation', properties: { bounds: {
         x: { from: 20, to: 40 },
         y: { from: { edge: 'start' }, to: { edge: 'end' } },
-      },
-      fill: '#dbeafe',
-    },
-    {
-      type: 'path',
-      kind: 'annotation',
-      from: { x: { edge: 'start' }, y: 50 },
-      to: { x: { edge: 'end' }, y: 50 },
-      stroke: '#dc2626',
-      dashPattern: [4, 3],
-    },
-    {
-      type: 'point',
-      kind: 'annotation',
-      position: { x: 80, y: 80 },
-      text: '80',
-      textColor: 'darkorange',
-    },
+      }, fill: '#dbeafe' } },
+    { type: 'path', kind: 'annotation', properties: { from: { x: { edge: 'start' }, y: 50 }, to: { x: { edge: 'end' }, y: 50 }, stroke: '#dc2626', dashPattern: [4, 3] } },
+    { type: 'point', kind: 'annotation', properties: { position: { x: 80, y: 80 }, text: '80', textColor: 'darkorange' } },
   ],
   guides: [
     { type: 'axis', dimension: 'x' },

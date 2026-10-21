@@ -9,7 +9,7 @@ export type BuiltinPositionChannelDefinition = PositionChannelDefinition & {
 };
 
 const markEncoding = (mark: unknown): Record<string, IRPlotChannel | undefined> | undefined =>
-  (mark as { encoding?: Record<string, IRPlotChannel | undefined> }).encoding;
+  (mark as { encodings?: { position?: Record<string, string | undefined> } }).encodings?.position;
 
 const positionChannelDefinitionOf = (role: string): BuiltinPositionChannelDefinition => ({
   channel: role,

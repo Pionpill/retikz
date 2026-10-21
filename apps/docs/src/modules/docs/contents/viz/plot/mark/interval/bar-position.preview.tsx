@@ -27,25 +27,22 @@ export const BarPositionPreview = (values: BarPositionPreviewValues) => {
     <Layout viewBox={{ x: -16, y: -16, width: 412, height: 312 }}>
       <Plot data={revenue} width={380} height={280} coordinate={isPolar ? 'polar2D' : undefined}>
         <IntervalMark
-          x={isHorizontal ? 'value' : 'quarter'}
-          y={isHorizontal ? 'quarter' : 'value'}
           direction={isPolar ? undefined : values.direction}
-          color="quarter"
-          cornerRadius={values.cornerRadius}
-          opacity={{ fill: values.fillOpacity }}
-          stroke="#ffffff"
-          strokeWidth={values.strokeWidth}
-          shadow={shadow}
-          label={
-            values.showLabels
-              ? {
-                  field: 'value',
-                  position: isHorizontal ? 'right' : 'top',
-                  distance: 6,
-                  font: { size: 10, weight: 'bold' },
-                }
-              : undefined
-          }
+          encodings={{
+            color: 'quarter',
+            ...(values.showLabels ? { label: { content: 'value' } } : {}),
+            position: { x: isHorizontal ? 'value' : 'quarter', y: isHorizontal ? 'quarter' : 'value' },
+          }}
+          properties={{
+            cornerRadius: values.cornerRadius,
+            opacity: { fill: values.fillOpacity },
+            stroke: '#ffffff',
+            strokeWidth: values.strokeWidth,
+            shadow,
+            label: values.showLabels
+              ? { position: isHorizontal ? 'right' : 'top', distance: 6, font: { size: 10, weight: 'bold' } }
+              : undefined,
+          }}
         />
         <PlotScale
           dimension={isHorizontal ? 'y' : 'x'}

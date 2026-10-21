@@ -16,7 +16,10 @@ const compilePlot = (spec: IRPlot, datasets: Parameters<typeof lowerPlots>[0]) =
 describe('React 与 framework-neutral authoring parity', () => {
   it('点方向与旋转偏移在 React 与 Vanilla 入口等价', () => {
     const orientation = { kind: 'coordinate', role: 'x', align: 'normal' } as const;
-    const react = buildPlotIR(<PointMark x="x" y="y" orientation={orientation} rotate={15} />, 'points');
+    const react = buildPlotIR(
+      <PointMark encodings={{ position: { x: 'x', y: 'y' } }} properties={{ orientation, rotate: 15 }} />,
+      'points',
+    );
     const plain = normalizePlot({
       data: { reference: 'points' },
       scales: [
@@ -27,14 +30,14 @@ describe('React 与 framework-neutral authoring parity', () => {
       marks: [
         {
           type: 'point',
-          orientation,
-          rotate: { kind: 'constant', value: 15 },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          kind: 'data',
+          encodings: { position: { x: 'x', y: 'y' } },
+          properties: { orientation, rotate: 15 },
         },
       ],
     });
     expect(react).toEqual(plain);
-    expect(react.marks[0]).toMatchObject({ orientation });
+    expect(react.marks[0]).toMatchObject({ properties: { orientation } });
   });
   it('Point placement 产出完全一致的 IRPlot', () => {
     const placement = {
@@ -42,7 +45,10 @@ describe('React 与 framework-neutral authoring parity', () => {
         { kind: 'jitter' as const, params: { role: 'x', span: { kind: 'ratio' as const, value: 0.6 }, seed: 7 } },
       ],
     };
-    const react = buildPlotIR(<PointMark x="category" y="value" placement={placement} />, 'points');
+    const react = buildPlotIR(
+      <PointMark encodings={{ position: { x: 'category', y: 'value' } }} properties={{ placement }} />,
+      'points',
+    );
     const plain = normalizePlot({
       data: { reference: 'points' },
       scales: [
@@ -53,8 +59,9 @@ describe('React 与 framework-neutral authoring parity', () => {
       marks: [
         {
           type: 'point',
-          placement,
-          encoding: { x: { field: 'category' }, y: { field: 'value' } },
+          properties: { placement },
+          kind: 'data',
+          encodings: { position: { x: 'category', y: 'value' } },
         },
       ],
     });
@@ -66,7 +73,7 @@ describe('React 与 framework-neutral authoring parity', () => {
     const react = buildPlotIR(
       <>
         <PlotFacet id="sales" row="channel" column="region" />
-        <PathMark facetId="sales" x="month" y="revenue" order="month" />
+        <PathMark facetId="sales" encodings={{ order: 'month', position: { x: 'month', y: 'revenue' } }} />
         <PlotAxis facetId="sales" dimension="y" grid />
       </>,
       'sales',
@@ -83,8 +90,8 @@ describe('React 与 framework-neutral authoring parity', () => {
         {
           type: 'path',
           facetId: 'sales',
-          order: 'month',
-          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+          kind: 'data',
+          encodings: { order: 'month', position: { x: 'month', y: 'revenue' } },
         },
       ],
       guides: [{ type: 'axis', facetId: 'sales', dimension: 'y', grid: true }],
@@ -100,8 +107,8 @@ describe('React 与 framework-neutral authoring parity', () => {
           <PlotTrack id="incidents" band={{ role: 'y', start: 0, end: 0.42 }} />
           <PlotTrack id="load" band={{ role: 'y', start: 0.58, end: 1 }} />
         </PlotScaffold>
-        <PathMark trackId="incidents" x="week" y="incidents" order="week" />
-        <PathMark trackId="load" x="week" y="load" order="week" />
+        <PathMark trackId="incidents" encodings={{ order: 'week', position: { x: 'week', y: 'incidents' } }} />
+        <PathMark trackId="load" encodings={{ order: 'week', position: { x: 'week', y: 'load' } }} />
         <PlotAxis scaffoldId="ops" dimension="x" grid />
       </>,
       'ops',
@@ -127,14 +134,14 @@ describe('React 与 framework-neutral authoring parity', () => {
         {
           type: 'path',
           trackId: 'incidents',
-          order: 'week',
-          encoding: { x: { field: 'week' }, y: { field: 'incidents' } },
+          kind: 'data',
+          encodings: { order: 'week', position: { x: 'week', y: 'incidents' } },
         },
         {
           type: 'path',
           trackId: 'load',
-          order: 'week',
-          encoding: { x: { field: 'week' }, y: { field: 'load' } },
+          kind: 'data',
+          encodings: { order: 'week', position: { x: 'week', y: 'load' } },
         },
       ],
       guides: [{ type: 'axis', scaffoldId: 'ops', dimension: 'x', grid: true }],
@@ -147,7 +154,7 @@ describe('React 与 framework-neutral authoring parity', () => {
     const spec = buildPlotIR(
       <>
         <PlotFacet id="sales" column="region" />
-        <PointMark facetId="sales" x="month" y="revenue" />
+        <PointMark facetId="sales" encodings={{ position: { x: 'month', y: 'revenue' } }} />
       </>,
       'sales',
       {
@@ -169,7 +176,7 @@ describe('React 与 framework-neutral authoring parity', () => {
       <>
         <PlotFacet id="sales" column="region" />
         <PlotScale dimension="x" type="time" />
-        <PointMark facetId="sales" x="month" y="revenue" />
+        <PointMark facetId="sales" encodings={{ position: { x: 'month', y: 'revenue' } }} />
       </>,
       'sales',
       {
@@ -200,8 +207,8 @@ describe('React 与 framework-neutral authoring parity', () => {
           <PlotTrack id="incidents" band={{ role: 'y', start: 0, end: 0.42 }} />
           <PlotTrack id="load" band={{ role: 'y', start: 0.58, end: 1 }} />
         </PlotScaffold>
-        <PointMark trackId="incidents" x="week" y="incidents" />
-        <PointMark trackId="load" x="week" y="load" />
+        <PointMark trackId="incidents" encodings={{ position: { x: 'week', y: 'incidents' } }} />
+        <PointMark trackId="load" encodings={{ position: { x: 'week', y: 'load' } }} />
       </>,
       'ops',
       { deferPositionScaleInference: true },
@@ -222,7 +229,7 @@ describe('React 与 framework-neutral authoring parity', () => {
           <PlotTrack id="load" band={{ role: 'y', start: 0, end: 0.42 }} />
           <PlotTrack id="incidents" view="manual.incidents" band={{ role: 'y', start: 0.58, end: 1 }} />
         </PlotScaffold>
-        <PathMark trackId="load" x="week" y="load" order="week" />
+        <PathMark trackId="load" encodings={{ order: 'week', position: { x: 'week', y: 'load' } }} />
         <PlotAxis trackId="incidents" dimension="y" />
         <PlotAxis scaffoldId="ops" dimension="x" />
       </>,
@@ -250,8 +257,8 @@ describe('React 与 framework-neutral authoring parity', () => {
         {
           type: 'path',
           trackId: 'load',
-          order: 'week',
-          encoding: { x: { field: 'week' }, y: { field: 'load' } },
+          kind: 'data',
+          encodings: { order: 'week', position: { x: 'week', y: 'load' } },
         },
       ],
       guides: [
@@ -269,8 +276,8 @@ describe('React 与 framework-neutral authoring parity', () => {
         <PlotAxis dimension="x" />
         <PlotAxis id="temperature" dimension="y" />
         <PlotAxis id="rainfall" dimension="y" grid />
-        <PathMark x="day" y="temperature" yAxisId="temperature" />
-        <PointMark x="day" y="rainfall" yAxisId="rainfall" />
+        <PathMark yAxisId="temperature" encodings={{ position: { x: 'day', y: 'temperature' } }} />
+        <PointMark yAxisId="rainfall" encodings={{ position: { x: 'day', y: 'rainfall' } }} />
       </>,
       'weather',
     );
@@ -282,16 +289,8 @@ describe('React 与 framework-neutral authoring parity', () => {
       ],
       coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
       marks: [
-        {
-          type: 'path',
-          yAxisId: 'temperature',
-          encoding: { x: { field: 'day' }, y: { field: 'temperature' } },
-        },
-        {
-          type: 'point',
-          yAxisId: 'rainfall',
-          encoding: { x: { field: 'day' }, y: { field: 'rainfall' } },
-        },
+        { type: 'path', yAxisId: 'temperature', kind: 'data', encodings: { position: { x: 'day', y: 'temperature' } } },
+        { type: 'point', yAxisId: 'rainfall', kind: 'data', encodings: { position: { x: 'day', y: 'rainfall' } } },
       ],
       guides: [
         { type: 'axis', dimension: 'x' },
@@ -319,7 +318,7 @@ describe('React 与 framework-neutral authoring parity', () => {
       <>
         <PlotScale dimension="x" type="linear" />
         <PlotScale dimension="y" type="linear" />
-        <PointMark x="day" y="temperature" />
+        <PointMark encodings={{ position: { x: 'day', y: 'temperature' } }} />
       </>,
       'weather',
       { composition },
@@ -332,12 +331,7 @@ describe('React 与 framework-neutral authoring parity', () => {
       ],
       coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
       composition,
-      marks: [
-        {
-          type: 'point',
-          encoding: { x: { field: 'day' }, y: { field: 'temperature' } },
-        },
-      ],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'day', y: 'temperature' } } }],
     });
 
     expect(react).toEqual(plain);
@@ -354,7 +348,8 @@ describe('React 与 framework-neutral authoring parity', () => {
             type: 'point',
             facetId: 'sales',
             yAxisId: 'right',
-            encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+            kind: 'data',
+            encodings: { position: { x: 'month', y: 'revenue' } },
           },
         ],
         guides: [{ type: 'axis', id: 'right', dimension: 'y' }],
@@ -364,7 +359,7 @@ describe('React 与 framework-neutral authoring parity', () => {
         <>
           <PlotFacet id="sales" row="region" />
           <PlotAxis id="right" dimension="y" />
-          <PointMark facetId="sales" yAxisId="right" x="month" y="revenue" />
+          <PointMark facetId="sales" yAxisId="right" encodings={{ position: { x: 'month', y: 'revenue' } }} />
         </>,
         'sales',
       );

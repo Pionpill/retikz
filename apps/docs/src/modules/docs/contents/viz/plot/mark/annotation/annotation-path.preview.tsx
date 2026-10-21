@@ -23,28 +23,31 @@ export const AnnotationPathPreview: FC<AnnotationPathValues> = values => (
       <PlotScale dimension="x" {...annotationXScale(values.coordinate)} />
       <PlotScale dimension="y" type="linear" domain={[0, 100]} domainPadding={0} />
       <PathAnnotation
-        from={{ x: annotationX(values.coordinate, 10, 'A'), y: 70 }}
-        to={{ x: annotationX(values.coordinate, values.end, values.category), y: 70 }}
-        connection={values.connection}
-        stroke="dodgerblue"
-        strokeWidth={3}
-        label={
-          values.showLabel
+        properties={{
+          from: { x: annotationX(values.coordinate, 10, 'A'), y: 70 },
+          to: { x: annotationX(values.coordinate, values.end, values.category), y: 70 },
+          connection: values.connection,
+          stroke: 'dodgerblue',
+          strokeWidth: 3,
+          label: values.showLabel
             ? {
-                text: values.coordinate === 'polar-discrete' ? `A → ${values.category}` : 'A → B',
+                content: values.coordinate === 'polar-discrete' ? `A → ${values.category}` : 'A → B',
                 position: values.labelPosition,
                 sloped: values.sloped,
                 distance: values.distance,
               }
-            : undefined
-        }
+            : undefined,
+        }}
       />
-      <PointAnnotation x={annotationX(values.coordinate, 10, 'A')} y={70} size={4} fill="darkorange" />
       <PointAnnotation
-        x={annotationX(values.coordinate, values.end, values.category)}
-        y={70}
-        size={4}
-        fill="darkorange"
+        properties={{ size: 4, fill: 'darkorange', position: { x: annotationX(values.coordinate, 10, 'A'), y: 70 } }}
+      />
+      <PointAnnotation
+        properties={{
+          size: 4,
+          fill: 'darkorange',
+          position: { x: annotationX(values.coordinate, values.end, values.category), y: 70 },
+        }}
       />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" />

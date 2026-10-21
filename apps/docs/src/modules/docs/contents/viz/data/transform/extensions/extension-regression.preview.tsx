@@ -24,14 +24,11 @@ export const ExtensionRegressionPreview: FC<ExtensionRegressionPreviewProps> = p
     >
       <PlotScale dimension="x" type="linear" domain={[-0.5, 6.5]} />
       <PlotScale dimension="y" type="linear" domain={[-3, 19]} />
-      <PointMark x="x" y="y" fill="#94a3b8" size={5} />
+      <PointMark encodings={{ position: { x: 'x', y: 'y' } }} properties={{ fill: '#94a3b8', size: 5 }} />
       <PathMark
-        transform={[{ operation: originOperation }]}
-        x="trendX"
-        y="trendY"
-        order="trendX"
-        stroke="#2563eb"
-        strokeWidth={2}
+        transforms={[{ operation: originOperation }]}
+        encodings={{ order: 'trendX', position: { x: 'trendX', y: 'trendY' } }}
+        properties={{ stroke: '#2563eb', strokeWidth: 2 }}
       />
       <PlotAxis dimension="x" title={i18n.x} />
       <PlotAxis dimension="y" title={i18n.y} grid />

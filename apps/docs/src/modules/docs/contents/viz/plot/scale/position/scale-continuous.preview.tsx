@@ -43,8 +43,8 @@ export const ScaleContinuousPreview = (values: ScaleContinuousPreviewValues) => 
 
   return (
     <Plot data={continuousValues} width={400} height={260}>
-      <PathMark x="period" y={yField} order="period" />
-      <PointMark x="period" y={yField} />
+      <PathMark encodings={{ order: 'period', position: { x: 'period', y: yField } }} />
+      <PointMark encodings={{ position: { x: 'period', y: yField } }} />
       {renderScale(values)}
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />

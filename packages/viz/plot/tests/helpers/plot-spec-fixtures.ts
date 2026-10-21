@@ -48,8 +48,9 @@ export const createPolarPieSpec = (
   marks: [
     {
       type: 'interval',
-      bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
-      encoding: { color: { field: 'label', scale: scales.color } },
+      kind: 'data',
+      encodings: { bounds: { x: { from: 'y0', to: 'y1' } }, color: { field: 'label', scale: scales.color } },
+      properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } } },
     },
   ],
   guides: [],
@@ -61,9 +62,9 @@ export const createPolarPulledSpec = (): IRPlot => ({
   marks: [
     {
       type: 'interval',
-      bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
-      pull: { kind: 'field', value: 'offset' },
-      encoding: { color: { field: 'label', scale: 'color' } },
+      kind: 'data',
+      encodings: { bounds: { x: { from: 'y0', to: 'y1' } }, pull: 'offset', color: { field: 'label', scale: 'color' } },
+      properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } } },
     },
   ],
 });
@@ -82,7 +83,8 @@ export const createPolarRadialBarSpec = (): IRPlot => ({
   marks: [
     {
       type: 'interval',
-      encoding: { x: { field: 'label' }, y: { field: 'value' }, color: { field: 'label', scale: 'color' } },
+      kind: 'data',
+      encodings: { color: { field: 'label', scale: 'color' }, position: { x: 'label', y: 'value' } },
     },
   ],
   guides: [],
@@ -111,8 +113,9 @@ export const createHistogramSpec = (
   marks: [
     {
       type: 'interval',
-      bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } },
-      encoding: { y: { field: 'binCount' } },
+      kind: 'data',
+      encodings: { bounds: { x: { from: 'binStart', to: 'binEnd' } }, position: { y: 'binCount' } },
+      properties: { bounds: { x: { kind: 'extent' } } },
     },
   ],
   guides: [],
@@ -182,18 +185,13 @@ export const createDensityAreaSpec = (reference = 'samples', options: DensityOpt
     marks: [
       {
         type: 'path',
-        series: 'species',
-        order: 'densityX',
-        closure: { kind: 'baseline', baseline: 0 },
-        ...(options.fillOpacity == null
-          ? {}
-          : { opacity: { fill: { kind: 'constant' as const, value: options.fillOpacity } } }),
-        encoding: {
-          x: { field: 'densityX' },
-          y: { field: 'density' },
-          ...(scales.color ? { color: { field: 'species', scale: scales.color } } : {}),
+        kind: 'data',
+        encodings: { series: 'species', order: 'densityX', position: { x: 'densityX', y: 'density' } },
+        properties: {
+          closure: { kind: 'baseline', baseline: 0 },
+          fill: '#60a5fa',
+          ...(options.fillOpacity == null ? {} : { opacity: { fill: options.fillOpacity } }),
         },
-        fill: { kind: 'constant', value: '#60a5fa' },
       },
     ],
     guides: [],
@@ -247,11 +245,12 @@ export const createSmoothTrendSpec = (reference = 'samples', options: SmoothOpti
     marks: [
       {
         type: 'point',
-        encoding: { x: { field: 'time' }, y: { field: 'value' }, color: { field: 'series', scale: scales.color } },
+        kind: 'data',
+        encodings: { color: { field: 'series', scale: scales.color }, position: { x: 'time', y: 'value' } },
       },
       {
         type: 'path',
-        transform: [
+        transforms: [
           {
             operation: {
               kind: 'smooth',
@@ -267,9 +266,13 @@ export const createSmoothTrendSpec = (reference = 'samples', options: SmoothOpti
             },
           },
         ],
-        series: 'series',
-        order: 'trendX',
-        encoding: { x: { field: 'trendX' }, y: { field: 'trendY' }, color: { field: 'series', scale: scales.color } },
+        kind: 'data',
+        encodings: {
+          series: 'series',
+          order: 'trendX',
+          color: { field: 'series', scale: scales.color },
+          position: { x: 'trendX', y: 'trendY' },
+        },
       },
     ],
     guides: [],
@@ -347,31 +350,43 @@ export const createBoxplotComposition = (
   marks: [
     {
       type: 'interval',
-      transform: [{ operation: boxplotSummary }],
-      bounds: {
-        x: { kind: 'extent', from: 'boxX0', to: 'boxX1' },
-        y: { kind: 'extent', from: 'boxLow', to: 'boxHigh' },
+      transforms: [{ operation: boxplotSummary }],
+      kind: 'data',
+      encodings: {
+        bounds: { x: { from: 'boxX0', to: 'boxX1' }, y: { from: 'boxLow', to: 'boxHigh' } },
+        position: { x: 'boxX', y: 'boxHigh' },
       },
-      fill: { kind: 'constant', value: '#93c5fd' },
-      encoding: { x: { field: 'boxX' }, y: { field: 'boxHigh' } },
-      opacity: { fill: { kind: 'constant', value: 0.32 } },
+      properties: {
+        bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } },
+        fill: '#93c5fd',
+        opacity: { fill: 0.32 },
+      },
     },
     {
       type: 'relation',
-      transform: [{ operation: boxplotSummary }],
-      source: { project: { x: 'boxX0', y: 'median' } },
-      target: { project: { x: 'boxX1', y: 'median' } },
+      transforms: [{ operation: boxplotSummary }],
+      kind: 'data',
+      encodings: {
+        source: { position: { x: 'boxX0', y: 'median' } },
+        target: { position: { x: 'boxX1', y: 'median' } },
+      },
+      properties: { geometry: { kind: 'path' } },
     },
     {
       type: 'relation',
-      transform: [{ operation: boxplotSummary }],
-      source: { project: { x: 'boxX', y: 'whiskerMin' } },
-      target: { project: { x: 'boxX', y: 'whiskerMax' } },
+      transforms: [{ operation: boxplotSummary }],
+      kind: 'data',
+      encodings: {
+        source: { position: { x: 'boxX', y: 'whiskerMin' } },
+        target: { position: { x: 'boxX', y: 'whiskerMax' } },
+      },
+      properties: { geometry: { kind: 'path' } },
     },
     {
       type: 'point',
-      transform: [{ operation: boxplotOutside }],
-      encoding: { x: { field: 'boxX' }, y: { field: 'value' } },
+      transforms: [{ operation: boxplotOutside }],
+      kind: 'data',
+      encodings: { position: { x: 'boxX', y: 'value' } },
     },
   ],
   guides: [],

@@ -40,7 +40,7 @@ const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
 
 const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
 
-const FrameProbeSchema = strictObject({ type: literal('polar-frame-probe') });
+const FrameProbeSchema = strictObject({ type: literal('polar-frame-probe'), kind: literal('data') });
 
 const resolvedInterpolationOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): string | undefined => {
   let captured: string | undefined;
@@ -54,7 +54,7 @@ const resolvedInterpolationOf = (spec: IRPlot, datasets: Datasets, options?: Low
   });
   const withProbe = PlotSchema.parse({
     ...spec,
-    marks: [...spec.marks, { type: 'polar-frame-probe' }],
+    marks: [...spec.marks, { type: 'polar-frame-probe', kind: 'data' }],
   });
 
   expandOf(withProbe, datasets, {
@@ -78,12 +78,12 @@ const polarPointSpec = (encoding: Record<string, unknown>, extra: Partial<Record
       { type: 'linear', name: 'r', domainPadding: 0 },
     ],
     coordinate: { type: 'polar2D', angle: 'a', radius: 'r', ...extra },
-    marks: [{ type: 'point', encoding }],
+    marks: [{ type: 'point', encodings: { position: encoding }, kind: 'data' }],
   });
 
 describe('lowerPlots polar 投影几何 (contract)', () => {
   it('infers polar interpolation for a continuous angular scale', () => {
-    const spec = polarPointSpec({ x: { field: 'theta' }, y: { field: 'value' } });
+    const spec = polarPointSpec({ x: 'theta', y: 'value' });
 
     expect(resolvedInterpolationOf(spec, { d: [{ theta: 0, value: 1 }] })).toBe(PolarInterpolation.Polar);
   });
@@ -98,7 +98,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'point', encoding: { x: { field: 'category' }, y: { field: 'value' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'category', y: 'value' } } }],
     });
 
     expect(resolvedInterpolationOf(spec, { d: [{ category: 'A', value: 1 }] })).toBe(PolarInterpolation.Chord);
@@ -117,7 +117,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r', interpolation },
-      marks: [{ type: 'point', encoding: { x: { field: 'angle' }, y: { field: 'value' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'angle', y: 'value' } } }],
     });
 
     expect(resolvedInterpolationOf(spec, { d: [{ angle: type === 'point' ? 'A' : 0, value: 1 }] })).toBe(interpolation);
@@ -151,7 +151,14 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'point', encoding: { x: { field: 'angle' }, y: { field: 'value' } } }],
+      marks: [
+        {
+          type: 'point',
+          kind: 'data',
+          properties: { autoPadding: false },
+          encodings: { position: { x: 'angle', y: 'value' } },
+        },
+      ],
     });
 
     expect(
@@ -169,7 +176,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
         { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'theta', y: 'value' } } }],
     });
 
     const [leftmost] = positionsOf(firstLayer(spec, { d: [{ theta: 180, value: 10 }] }, opts));
@@ -193,7 +200,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
         { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'point', encoding: { x: { field: 'category' }, y: { field: 'value' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'category', y: 'value' } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
     });
 
@@ -237,12 +244,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
         { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [
-        {
-          type: 'point',
-          encoding: { x: { field: 'theta' }, y: { field: 'value' } },
-        },
-      ],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'theta', y: 'value' } } }],
     });
 
     // 两行：一行落圆心（r=0），一行 angle=0 / r=max
@@ -270,7 +272,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
         { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'theta', y: 'value' } } }],
     });
     const rows = [
       { theta: 0, value: 0 }, // 圆心
@@ -288,9 +290,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       { theta: 45, value: 7 },
       { theta: 200, value: 3 },
     ];
-    const positions = positionsOf(
-      firstLayer(polarPointSpec({ x: { field: 'theta' }, y: { field: 'value' } }), { d: rows }, opts),
-    );
+    const positions = positionsOf(firstLayer(polarPointSpec({ x: 'theta', y: 'value' }), { d: rows }, opts));
 
     expect(positions).toHaveLength(2);
 
@@ -316,7 +316,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
         { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' }, // endAngle=360
-      marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'theta', y: 'value' } } }],
     });
     const halfSpec = PlotSchema.parse({
       namespace: 'plot',
@@ -327,7 +327,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
         { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r', endAngle: 180 },
-      marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'theta', y: 'value' } } }],
     });
     const [fullCenter, fullMid] = positionsOf(firstLayer(fullSpec, { d: rows }, opts));
     const [halfCenter, halfMid] = positionsOf(firstLayer(halfSpec, { d: rows }, opts));
@@ -355,7 +355,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
         { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'theta', y: 'value' } } }],
     });
     const [solidMin] = positionsOf(firstLayer(solidSpec, { d: rows }, opts)); // = 圆心
 
@@ -369,7 +369,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
         { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r', innerRadius: 0.5 },
-      marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'theta', y: 'value' } } }],
     });
     const [donutMin, donutMax] = positionsOf(firstLayer(donutSpec, { d: rows }, opts));
 
@@ -390,7 +390,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
         { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'point', encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'cat', y: 'value' } } }],
     });
     const rows = [
       { cat: 'A', value: 10 },
@@ -416,9 +416,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       { theta: 2, value: 9 },
     ];
 
-    expect(
-      positionsOf(firstLayer(polarPointSpec({ x: { field: 'theta' }, y: { field: 'value' } }), { d: rows }, opts)),
-    ).toHaveLength(2);
+    expect(positionsOf(firstLayer(polarPointSpec({ x: 'theta', y: 'value' }), { d: rows }, opts))).toHaveLength(2);
   });
 
   // 端到端：多行 point 各落对应极坐标点（结构完整）
@@ -429,10 +427,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       { theta: 180, value: 8 },
     ];
     const layer = firstLayer(
-      polarPointSpec(
-        { x: { field: 'theta' }, y: { field: 'value' } },
-        { angle: 'a', radius: 'r', startAngle: 0, endAngle: 360 },
-      ),
+      polarPointSpec({ x: 'theta', y: 'value' }, { angle: 'a', radius: 'r', startAngle: 0, endAngle: 360 }),
       { d: rows },
       opts,
     );
@@ -457,8 +452,8 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'g', scale: 'col' },
-          encoding: { x: { field: 'theta' }, y: { field: 'value' } },
+          kind: 'data',
+          encodings: { color: { field: 'g', scale: 'col' }, position: { x: 'theta', y: 'value' } },
         },
       ],
     });
@@ -485,7 +480,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
         { type: 'linear', name: 'r', domainPadding: 0 },
       ],
       coordinate: { type: 'polar2D', angle: 'missing', radius: 'r' },
-      marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'theta', y: 'value' } } }],
     });
 
     expect(() => expandOf(spec, { d: [{ theta: 0, value: 1 }] }, opts)).toThrow(/missing|unknown scale/);
@@ -502,7 +497,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
         { type: 'linear', name: 'r', domainPadding: 0 },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'point', encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'cat', y: 'value' } } }],
     });
 
     expect(() => expandOf(spec, { d: [{ cat: 'A', value: 1 }] }, opts)).toThrow(/ordinal/);
@@ -520,7 +515,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
         { type: 'linear', name: 'r', domainPadding: 0 },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'point', encoding: { x: { field: 'theta' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'theta' } } }],
     });
 
     expect(() => expandOf(spec, { d: [{ theta: 0 }] }, opts)).toThrow(/polar2D|requires|y/i);
@@ -533,7 +528,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x', domainPadding: 0 }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'x' },
-      marks: [{ type: 'point', encoding: { y: { field: 'value' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { y: 'value' } } }],
     });
 
     expect(() => expandOf(spec, { d: [{ value: 1 }] }, opts)).toThrow(/cartesian2D|requires|x/i);
@@ -556,7 +551,7 @@ describe('lowerPlots cartesian 回归 (contract)', () => {
       { type: 'linear', name: 'yRevenue', domainPadding: 0 },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-    marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
   });
 
   it('cartesian_point_positions_unchanged', () => {

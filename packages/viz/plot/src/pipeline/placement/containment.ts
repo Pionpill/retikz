@@ -37,7 +37,7 @@ export const resolveMarkPlacementRangeOverrides = (
   boundaryRanges?: Partial<Record<DimensionRole, readonly [number, number]>>,
   protectedRoles: ReadonlyArray<DimensionRole> = [],
 ): MarkPlacementRangeOverrides | undefined => {
-  const placement = (resolution.operation as { placement?: IRPlotMarkPlacement }).placement;
+  const placement = (resolution.operation.properties as { placement?: IRPlotMarkPlacement } | undefined)?.placement;
   if (placement === undefined) return undefined;
 
   const definitions = placement.adjustments.map(operation => resolvePositionAdjustmentOperation(operation, registry));

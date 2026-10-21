@@ -10,12 +10,14 @@ describe('normalizePlotBindings', () => {
         {
           type: 'path',
           yAxisId: 'temperature',
-          encoding: { x: { field: 'day' }, y: { field: 'temperature' } },
+          kind: 'data' as const,
+          encodings: { position: { x: 'day', y: 'temperature' } },
         },
         {
           type: 'path',
           yAxisId: 'rainfall',
-          encoding: { x: { field: 'day' }, y: { field: 'rainfall' } },
+          kind: 'data' as const,
+          encodings: { position: { x: 'day', y: 'rainfall' } },
         },
       ],
       guides: [
@@ -64,12 +66,14 @@ describe('normalizePlotBindings', () => {
         {
           type: 'path',
           xAxisId: 'elapsed',
-          encoding: { x: { field: 'elapsedDay' }, y: { field: 'revenue' } },
+          kind: 'data' as const,
+          encodings: { position: { x: 'elapsedDay', y: 'revenue' } },
         },
         {
           type: 'point',
           xAxisId: 'date',
-          encoding: { x: { field: 'dateIndex' }, y: { field: 'revenue' } },
+          kind: 'data' as const,
+          encodings: { position: { x: 'dateIndex', y: 'revenue' } },
         },
       ],
       guides: [
@@ -117,12 +121,14 @@ describe('normalizePlotBindings', () => {
         {
           type: 'point',
           xAxisId: 'elapsed',
-          encoding: { x: { field: 'elapsedAt' }, y: { field: 'value' } },
+          kind: 'data' as const,
+          encodings: { position: { x: 'elapsedAt', y: 'value' } },
         },
         {
           type: 'path',
           yAxisId: 'rainfall',
-          encoding: { x: { field: 'recordedAt' }, y: { field: 'rainfall' } },
+          kind: 'data' as const,
+          encodings: { position: { x: 'recordedAt', y: 'rainfall' } },
         },
       ],
       guides: [
@@ -165,8 +171,8 @@ describe('normalizePlotBindings', () => {
   it('在 x/y 共用显式 scale 时只生成一个默认轴 scale', () => {
     const normalized = normalizePlotBindings({
       marks: [
-        { type: 'point', xAxisId: 'top', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
-        { type: 'path', yAxisId: 'right', encoding: { x: { field: 'x' }, y: { field: 'value' } } },
+        { type: 'point', xAxisId: 'top', kind: 'data' as const, encodings: { position: { x: 'x', y: 'y' } } },
+        { type: 'path', yAxisId: 'right', kind: 'data' as const, encodings: { position: { x: 'x', y: 'value' } } },
       ],
       guides: [
         { type: 'axis', id: 'top', dimension: 'x' },
@@ -207,13 +213,15 @@ describe('normalizePlotBindings', () => {
         {
           type: 'path',
           yAxisId: 'default',
-          encoding: { x: { field: 'day' }, y: { field: 'temperature' } },
+          kind: 'data' as const,
+          encodings: { position: { x: 'day', y: 'temperature' } },
         },
-        { type: 'point', encoding: { x: { field: 'day' }, y: { field: 'label' } } },
+        { type: 'point', kind: 'data' as const, encodings: { position: { x: 'day', y: 'label' } } },
         {
           type: 'path',
           yAxisId: 'rainfall',
-          encoding: { x: { field: 'day' }, y: { field: 'rainfall' } },
+          kind: 'data' as const,
+          encodings: { position: { x: 'day', y: 'rainfall' } },
         },
       ],
       guides: [{ type: 'axis', id: 'rainfall', dimension: 'y' }],
@@ -236,13 +244,10 @@ describe('normalizePlotBindings', () => {
         {
           type: 'path',
           trackId: 'incidents',
-          encoding: { x: { field: 'week' }, y: { field: 'incidents' } },
+          kind: 'data' as const,
+          encodings: { position: { x: 'week', y: 'incidents' } },
         },
-        {
-          type: 'path',
-          trackId: 'load',
-          encoding: { x: { field: 'week' }, y: { field: 'load' } },
-        },
+        { type: 'path', trackId: 'load', kind: 'data' as const, encodings: { position: { x: 'week', y: 'load' } } },
       ],
       guides: [
         { type: 'axis', scaffoldId: 'ops', dimension: 'x', grid: true },
@@ -286,12 +291,14 @@ describe('normalizePlotBindings', () => {
       {
         type: 'path',
         coordinateView: 'incidents',
-        encoding: { x: { field: 'week' }, y: { field: 'incidents' } },
+        kind: 'data' as const,
+        encodings: { position: { x: 'week', y: 'incidents' } },
       },
       {
         type: 'path',
         coordinateView: 'load',
-        encoding: { x: { field: 'week' }, y: { field: 'load' } },
+        kind: 'data' as const,
+        encodings: { position: { x: 'week', y: 'load' } },
       },
     ]);
     expect(JSON.stringify(normalized)).not.toMatch(/scaffoldId|trackId/);
@@ -300,11 +307,7 @@ describe('normalizePlotBindings', () => {
   it('按 scaffold viewIdTemplate 派生 mark 与 guide 的 coordinate view', () => {
     const normalized = normalizePlotBindings({
       marks: [
-        {
-          type: 'path',
-          trackId: 'load',
-          encoding: { x: { field: 'week' }, y: { field: 'load' } },
-        },
+        { type: 'path', trackId: 'load', kind: 'data' as const, encodings: { position: { x: 'week', y: 'load' } } },
       ],
       guides: [
         { type: 'axis', trackId: 'incidents', dimension: 'y' },
@@ -352,7 +355,7 @@ describe('normalizePlotBindings', () => {
   it('拒绝同时声明 facet 与 scaffold', () => {
     expect(() =>
       normalizePlotBindings({
-        marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+        marks: [{ type: 'point', kind: 'data' as const, encodings: { position: { x: 'x', y: 'y' } } }],
         guides: [],
         scales: [],
         coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
@@ -397,7 +400,8 @@ describe('normalizePlotBindings', () => {
             type: 'point',
             yAxisId: 'right',
             facetId: 'sales',
-            encoding: { x: { field: 'x' }, y: { field: 'y' } },
+            kind: 'data' as const,
+            encodings: { position: { x: 'x', y: 'y' } },
           },
         ],
         guides: [{ type: 'axis', id: 'right', dimension: 'y' }],
@@ -416,7 +420,8 @@ describe('normalizePlotBindings', () => {
           {
             type: 'path',
             yAxisId: 'rainfall',
-            encoding: { x: { field: 'day' }, y: { field: 'rainfall' } },
+            kind: 'data' as const,
+            encodings: { position: { x: 'day', y: 'rainfall' } },
           },
         ],
         guides: [{ type: 'axis', id: 'rainfall', dimension: 'x' }],
@@ -432,8 +437,8 @@ describe('normalizePlotBindings', () => {
     expect(() =>
       normalizePlotBindings({
         marks: [
-          { type: 'point', yAxisId: 'right', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
-          { type: 'point', facetId: 'sales', encoding: { x: { field: 'x' }, y: { field: 'value' } } },
+          { type: 'point', yAxisId: 'right', kind: 'data' as const, encodings: { position: { x: 'x', y: 'y' } } },
+          { type: 'point', facetId: 'sales', kind: 'data' as const, encodings: { position: { x: 'x', y: 'value' } } },
         ],
         guides: [{ type: 'axis', id: 'right', dimension: 'y' }],
         scales: [],
@@ -446,7 +451,7 @@ describe('normalizePlotBindings', () => {
 
   it('拒绝重复的 facet、scaffold 与跨 scaffold track id', () => {
     const base = {
-      marks: [{ type: 'point' as const, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [{ type: 'point' as const, kind: 'data' as const, encodings: { position: { x: 'x', y: 'y' } } }],
       guides: [],
       scales: [],
       coordinate: { type: 'cartesian2D' as const, x: '__x', y: '__y' },

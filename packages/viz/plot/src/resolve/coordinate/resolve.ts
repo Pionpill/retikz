@@ -18,6 +18,9 @@ import {
   createPositionChannelDefinitions,
   proportionalIntervalDomainValues,
   resolveIntervalBound,
+  intervalBoundField,
+  pathBaselineField,
+  fixedRoleValue,
 } from '../../providers';
 import { annotationValue } from '../../providers';
 import { isAnnotation } from '../../schemas';
@@ -81,8 +84,12 @@ const intervalRoleValues = (
 ): Array<unknown> => {
   const bound = resolveIntervalBound(mark, axis === 'primary' ? 'x' : 'y');
   if (bound.kind === IntervalBoundKind.Extent)
-    return rows.flatMap(row => [resolveFieldPath(row, bound.from), resolveFieldPath(row, bound.to)]);
-  if (bound.kind === IntervalBoundKind.Proportional) return proportionalIntervalDomainValues(bound.field, rows);
+    return rows.flatMap(row => [
+      resolveFieldPath(row, intervalBoundField(mark, axis === 'primary' ? 'x' : 'y', 'from')),
+      resolveFieldPath(row, intervalBoundField(mark, axis === 'primary' ? 'x' : 'y', 'to')),
+    ]);
+  if (bound.kind === IntervalBoundKind.Proportional)
+    return proportionalIntervalDomainValues(intervalBoundField(mark, axis === 'primary' ? 'x' : 'y', 'weight'), rows);
   if (bound.kind === IntervalBoundKind.Full) return [];
 
   const channel = pick(mark);
@@ -114,10 +121,10 @@ const intervalProportionalAxisTicks = (
   const bound = resolveIntervalBound(mark, role);
   if (bound.kind !== IntervalBoundKind.Proportional) return undefined;
 
-  const channel = (mark.encoding as Record<string, IRPlotChannel | undefined>)[role];
-  if (channel?.field === undefined) return undefined;
+  const channel = mark.encodings?.position?.[role];
+  if (channel === undefined) return undefined;
 
-  const intervals = buildProportionalIntervals(bound.field, rows);
+  const intervals = buildProportionalIntervals(intervalBoundField(mark, role, 'weight'), rows);
   const values: TickSet['values'] = [];
   const labels: TickSet['labels'] = [];
 
@@ -143,25 +150,39 @@ const relationTargetRoleValues = (
 ): Array<unknown> => {
   if (!isBuiltinMark(mark) || mark.type !== BuiltinPlotMark.Relation) return [];
 
+  const geometry = mark.properties.geometry;
   const refs = [
-    mark.source,
-    mark.target,
-    ...(mark.path?.via ?? []),
-    ...(mark.path?.route ?? []).flatMap(step => (step.to === undefined ? [] : [step.to])),
+    { property: mark.properties.source, encoding: mark.encodings?.source },
+    { property: mark.properties.target, encoding: mark.encodings?.target },
+    ...(geometry.kind !== 'path'
+      ? []
+      : [
+          ...Array.from(
+            { length: Math.max(geometry.via?.length ?? 0, mark.encodings?.geometry?.via?.length ?? 0) },
+            (_, index) => ({ property: geometry.via?.[index], encoding: mark.encodings?.geometry?.via?.[index] }),
+          ),
+          ...(geometry.route ?? []).map((step, index) => ({
+            property: step.to,
+            encoding: mark.encodings?.geometry?.route?.[index]?.to,
+          })),
+        ]),
   ];
-  const fields = refs.flatMap(ref =>
-    'project' in ref && Object.prototype.hasOwnProperty.call(ref.project, role) ? [ref.project[role]] : [],
-  );
-
-  return fields.flatMap(field => rows.map(row => resolveFieldPath(row, field)));
+  return refs.flatMap(({ property, encoding }) => {
+    const fixed = property !== undefined && 'position' in property ? property.position[role] : undefined;
+    const field = encoding?.position?.[role];
+    if (fixed === undefined && field === undefined) return [];
+    return rows.flatMap(row => {
+      const value = field === undefined ? annotationValue(fixed) : resolveFieldPath(row, field);
+      return value === undefined ? [] : [value];
+    });
+  });
 };
 
 /** 读 mark 的 encoding（内置与自定义共享 EncodingSchema 形态）；自定义 mark 缺 encoding 时 undefined */
 const markEncoding = (mark: IRPlotMarkOperation): Record<string, IRPlotChannel | undefined> | undefined =>
-  (mark as { encoding?: Record<string, IRPlotChannel | undefined> }).encoding;
+  (mark as { encodings?: { position?: Record<string, string | undefined> } }).encodings?.position;
 
 /** 非位置 encoding key：这些键有专属语义，不参与 CoordinateDefinition.roles 校验 */
-const NON_POSITION_ENCODING_KEYS = new Set<string>(['color', 'text', 'channels']);
 
 /**
  * 校验内置 mark 的 encoding key 是否属于当前坐标系角色
@@ -179,10 +200,10 @@ const assertKnownPositionEncodingRoles = (
     if (!isBuiltinMark(mark)) continue;
 
     const encoding = markEncoding(mark);
-    if (encoding === undefined) continue;
+    const properties =
+      mark.properties !== undefined && 'position' in mark.properties ? (mark.properties.position ?? {}) : {};
 
-    for (const key of Object.keys(encoding)) {
-      if (NON_POSITION_ENCODING_KEYS.has(key)) continue;
+    for (const key of new Set([...Object.keys(encoding ?? {}), ...Object.keys(properties)])) {
       if (!roleSet.has(key)) {
         throw new RetikzPlotError(
           `lowerPlots: ${coordinateType} coordinate system does not support encoding role "${key}" on ${mark.type} marks (valid roles: ${roles.join(', ')})`,
@@ -232,11 +253,11 @@ const assertRequiredPositionChannels = (
 
     // interval：band / span bounds 需对应 encoding 位置通道；extent（字段区间）/ full（满域）从字段 / 坐标系取位置，豁免该角色
     if (mark.type === BuiltinPlotMark.Interval) {
-      const encoding = mark.encoding as Record<string, IRPlotChannel | undefined>;
+      const encoding = (mark.encodings?.position ?? {}) as Record<string, string | undefined>;
 
       for (const channel of required) {
         if (!intervalBoundConsumesRoleChannel(mark, channel)) continue;
-        if (encoding[channel] === undefined) {
+        if (encoding[channel] === undefined && fixedRoleValue(mark, channel) === undefined) {
           throw new RetikzPlotError(
             `lowerPlots: ${coordinateType} coordinate system requires the "${channel}" position channel on ${mark.type} marks, but it is missing`,
           );
@@ -246,10 +267,10 @@ const assertRequiredPositionChannels = (
     }
 
     // point / path：所有必填位置角色都要对应 encoding 通道
-    const encoding = mark.encoding as Record<string, IRPlotChannel | undefined>;
+    const encoding = (mark.encodings?.position ?? {}) as Record<string, string | undefined>;
 
     for (const channel of required) {
-      if (encoding[channel] === undefined) {
+      if (encoding[channel] === undefined && fixedRoleValue(mark, channel) === undefined) {
         throw new RetikzPlotError(
           `lowerPlots: ${coordinateType} coordinate system requires the "${channel}" position channel on ${mark.type} marks, but it is missing`,
         );
@@ -319,10 +340,10 @@ export const resolveCoordinateFrame = (
     const values: Array<string | number> = [];
     const inputs = isIndependentAnnotation(mark) ? [undefined] : annotationRows;
     for (const position of annotationPositionsOf(mark)) {
-      if (!Object.hasOwn(position, role)) continue;
-      const binding = position[role];
+      const property = position.properties[role];
+      const field = position.encodings[role];
       for (const row of inputs) {
-        const value = annotationValue(binding, row);
+        const value = annotationValue(property, field, row);
         if (value !== undefined) values.push(value);
       }
     }
@@ -356,7 +377,11 @@ export const resolveCoordinateFrame = (
       }
 
       const channel = pick(mark);
-      if (channel === undefined) continue;
+      if (channel === undefined) {
+        const fixed = fixedRoleValue(mark, role);
+        if (fixed !== undefined && typeof fixed !== 'object' && markRows.length > 0) out.push(fixed);
+        continue;
+      }
 
       for (const row of markRows) {
         out.push(channelValue(channel, row));
@@ -376,11 +401,11 @@ export const resolveCoordinateFrame = (
     if (includeBaseline) {
       for (const mark of node.marks) {
         if (isBuiltinMark(mark) && mark.type === BuiltinPlotMark.Path) {
-          if (mark.closure?.kind === PathClosureKind.Baseline) {
-            out.push(mark.closure.baseline ?? 0);
-          } else if (mark.closure?.kind === PathClosureKind.Stack) {
+          if (mark.properties?.closure?.kind === PathClosureKind.Baseline) {
+            out.push(mark.properties.closure.baseline ?? 0);
+          } else if (mark.properties?.closure?.kind === PathClosureKind.Stack) {
             const markRows = sourceViews.find(view => view.mark === mark)?.dataView.rows ?? rows;
-            for (const row of markRows) out.push(resolveFieldPath(row, mark.closure.baselineField));
+            for (const row of markRows) out.push(resolveFieldPath(row, pathBaselineField(mark)));
           }
         }
       }
@@ -429,13 +454,12 @@ export const resolveCoordinateFrame = (
       if (isAnnotation(mark)) {
         if (!mark.contributeToDomain) continue;
         for (const position of annotationPositionsOf(mark)) {
-          if (!Object.hasOwn(position, role)) continue;
-          const binding = position[role];
-          if (typeof binding === 'object' && 'field' in binding) {
-            const type = dataView.model.find(field => field.name === binding.field)?.type;
+          const field = position.encodings[role];
+          if (field !== undefined) {
+            const type = dataView.model.find(definition => definition.name === field)?.type;
             if (type !== undefined) types.push(type);
           } else {
-            const value = annotationValue(binding);
+            const value = annotationValue(position.properties[role]);
             if (value !== undefined) types.push(typeof value === 'string' ? 'categorical' : 'continuous');
           }
         }
@@ -449,9 +473,14 @@ export const resolveCoordinateFrame = (
         continue;
 
       const channel = pick(mark);
-      if (channel?.field === undefined) continue;
+      if (channel === undefined) {
+        const fixed = fixedRoleValue(mark, role);
+        if (fixed !== undefined && typeof fixed !== 'object')
+          types.push(typeof fixed === 'string' ? 'categorical' : 'continuous');
+        continue;
+      }
 
-      const type = dataView.model.find(field => field.name === channel.field)?.type;
+      const type = dataView.model.find(field => field.name === channel)?.type;
       if (type !== undefined) types.push(type);
     }
 
@@ -473,9 +502,9 @@ export const resolveCoordinateFrame = (
       if (isAnnotation(mark)) {
         if (!mark.contributeToDomain) continue;
         for (const position of annotationPositionsOf(mark)) {
-          const binding = position[role];
-          if (typeof binding !== 'object' || !('field' in binding)) continue;
-          const order = dataView.model.find(field => field.name === binding.field)?.order;
+          const field = position.encodings[role];
+          if (field === undefined) continue;
+          const order = dataView.model.find(definition => definition.name === field)?.order;
           if (order !== undefined && order !== BuiltinFieldOrderMode.Appearance) found.push(order);
         }
         continue;
@@ -488,9 +517,9 @@ export const resolveCoordinateFrame = (
         continue;
 
       const channel = pick(mark);
-      if (channel?.field === undefined) continue;
+      if (channel === undefined) continue;
 
-      const definition = dataView.model.find(field => field.name === channel.field);
+      const definition = dataView.model.find(field => field.name === channel);
       const order = definition?.order;
       if (order === undefined || order === BuiltinFieldOrderMode.Appearance) continue;
 

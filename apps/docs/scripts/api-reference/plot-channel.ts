@@ -18,9 +18,8 @@ const config: ApiReferencePackageConfig = {
   schemaLocalizations: {
     ChannelSchema: {
       descriptions: {
-        field: '从外部数据行读取标量值的字段路径，例如 month 或 user.age；与 value 互斥',
-        value: '通道的 JSON 常量值；与 field 互斥',
-        scale: '驱动通道的比例尺名称；位置通道由坐标系提供比例尺，通常省略',
+        field: '当前图元数据视图中的字段路径',
+        scale: '该目标显式使用的具名比例尺；不指定比例尺时直接使用字段名字符串',
       },
     },
   },

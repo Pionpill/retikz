@@ -29,37 +29,41 @@ export const RelationScatterPreview = (values: RelationScatterPreviewValues) => 
     <Plot data={scatterRelations} width={620} height={320}>
       <PointMark
         id="scatter-nodes"
-        x="x"
-        y="y"
-        anchorId={{ prefix: 'node', field: 'id' }}
-        color="group"
-        label={{ field: 'label', position: values.nodeLabelPosition, textColor: 'currentColor' }}
-
-        fill="#f8fafc"
-        stroke="#334155"
-        strokeWidth={1}
-        size={7}
-        zIndex={2}
+        encodings={{ anchorId: 'id', color: 'group', label: { content: 'label' }, position: { x: 'x', y: 'y' } }}
+        properties={{
+          anchorId: { prefix: 'node' },
+          label: { position: values.nodeLabelPosition, textColor: 'currentColor' },
+          fill: '#f8fafc',
+          stroke: '#334155',
+          strokeWidth: 1,
+          size: 7,
+          zIndex: 2,
+        }}
       />
       <RelationMark
-        source={{ anchorId: { prefix: 'node', field: 'id' } }}
-        target={{ anchorId: { prefix: 'node', field: 'target' } }}
-        style={{
-          color: { kind: 'constant', value: values.color },
-          strokeWidth: { kind: 'constant', value: values.strokeWidth },
-          zIndex: { kind: 'constant', value: 1 },
-          opacity: { overall: { kind: 'constant', value: values.opacity } },
+        encodings={{
+          source: { anchorId: 'id' },
+          target: { anchorId: 'target' },
+          geometry: { label: { text: 'relation' } },
         }}
-        path={{
-          label: {
-            text: { field: 'relation' },
-            position: values.labelPosition,
-            ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
-            sloped: values.labelSloped,
-            textColor: 'currentColor',
+        properties={{
+          source: { anchorId: { prefix: 'node' } },
+          target: { anchorId: { prefix: 'node' } },
+          color: values.color,
+          strokeWidth: values.strokeWidth,
+          zIndex: 1,
+          opacity: { overall: values.opacity },
+          geometry: {
+            kind: 'path',
+            label: {
+              position: values.labelPosition,
+              ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
+              sloped: values.labelSloped,
+              textColor: 'currentColor',
+            },
+            routing,
+            options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
           },
-          routing,
-          options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
         }}
       />
     </Plot>

@@ -8,43 +8,69 @@ describe('annotation authoring parity', () => {
   it('shares field bindings, constant normalization and explicit empty transforms with Vanilla', () => {
     const source = buildPlotIR(
       <>
-        <PointAnnotation x={{ field: 'x' }} y={{ value: 2 }} transform={[]} />
+        <PointAnnotation encodings={{ position: { x: 'x' } }} properties={{ position: { y: 2 } }} transforms={[]} />
         <PathAnnotation
-          from={{ x: { edge: 'start' }, y: { field: 'y' } }}
-          to={{ x: { value: 10 }, y: { field: 'y' } }}
+          encodings={{ from: { y: 'y' }, to: { y: 'y' } }}
+          properties={{ from: { x: { edge: 'start' } }, to: { x: 10 } }}
         />
-        <IntervalAnnotation x={{ from: { value: 1 }, to: { field: 'x' } }} y={{ from: 0, to: { field: 'y' } }} />
+        <IntervalAnnotation
+          encodings={{ bounds: { x: { to: 'x' }, y: { to: 'y' } } }}
+          properties={{ bounds: { x: { from: 1 }, y: { from: 0 } } }}
+        />
       </>,
       'data',
     );
     const vanilla = [
-      pointAnnotation({ x: { field: 'x' }, y: { value: 2 }, transform: [] }),
+      pointAnnotation({ encodings: { position: { x: 'x' } }, properties: { position: { y: 2 } }, transforms: [] }),
       pathAnnotation({
-        from: { x: { edge: 'start' }, y: { field: 'y' } },
-        to: { x: { value: 10 }, y: { field: 'y' } },
+        encodings: { from: { y: 'y' }, to: { y: 'y' } },
+        properties: { from: { x: { edge: 'start' } }, to: { x: 10 } },
       }),
-      intervalAnnotation({ x: { from: { value: 1 }, to: { field: 'x' } }, y: { from: 0, to: { field: 'y' } } }),
+      intervalAnnotation({
+        encodings: { bounds: { x: { to: 'x' }, y: { to: 'y' } } },
+        properties: { bounds: { x: { from: 1 }, y: { from: 0 } } },
+      }),
     ];
     expect(source.marks.map(mark => AnnotationSchema.parse(mark))).toEqual(
       vanilla.map(mark => AnnotationSchema.parse(mark)),
     );
-    expect(vanilla[0]).toMatchObject({ position: { x: { field: 'x' }, y: 2 }, transform: [] });
-    expect(vanilla[1]).toMatchObject({ to: { x: 10 } });
-    expect(vanilla[2]).toMatchObject({ bounds: { x: { from: 1 } } });
+    expect(vanilla[0]).toMatchObject({
+      encodings: { position: { x: 'x' } },
+      properties: { position: { y: 2 } },
+      transforms: [],
+    });
+    expect(vanilla[1]).toMatchObject({ properties: { to: { x: 10 } } });
+    expect(vanilla[2]).toMatchObject({ properties: { bounds: { x: { from: 1 } } } });
   });
   it('normalizes React and Vanilla constants to identical Source declarations', () => {
     const source = buildPlotIR(
       <>
-        <PointAnnotation x={5} y={6} text="target" fill="red" />
-        <PathAnnotation from={{ x: 0, y: 5 }} to={{ x: 10, y: 5 }} stroke="blue" connection="straight" />
-        <IntervalAnnotation x={{ from: 2, to: 4 }} y={{ from: 3, to: 7 }} fill="green" connection="coordinate" />
+        <PointAnnotation properties={{ position: { x: 5, y: 6 }, text: 'target', fill: 'red' }} />
+        <PathAnnotation
+          properties={{ from: { x: 0, y: 5 }, to: { x: 10, y: 5 }, stroke: 'blue', connection: 'straight' }}
+        />
+        <IntervalAnnotation
+          properties={{
+            bounds: { x: { from: 2, to: 4 }, y: { from: 3, to: 7 } },
+            fill: 'green',
+            connection: 'coordinate',
+          }}
+        />
       </>,
       'data',
     );
     const vanilla = [
-      pointAnnotation({ x: 5, y: 6, text: 'target', fill: 'red' }),
-      pathAnnotation({ from: { x: 0, y: 5 }, to: { x: 10, y: 5 }, stroke: 'blue', connection: 'straight' }),
-      intervalAnnotation({ x: { from: 2, to: 4 }, y: { from: 3, to: 7 }, fill: 'green', connection: 'coordinate' }),
+      pointAnnotation({ properties: { position: { x: 5, y: 6 }, text: 'target', fill: 'red' } }),
+      pathAnnotation({
+        properties: { from: { x: 0, y: 5 }, to: { x: 10, y: 5 }, stroke: 'blue', connection: 'straight' },
+      }),
+      intervalAnnotation({
+        properties: {
+          bounds: { x: { from: 2, to: 4 }, y: { from: 3, to: 7 } },
+          fill: 'green',
+          connection: 'coordinate',
+        },
+      }),
     ];
     expect(source.data.reference).toBe('data');
     expect(source.marks.map(mark => AnnotationSchema.parse(mark))).toEqual(

@@ -48,30 +48,34 @@ export const PointTextPreview = (values: PointTextPreviewValues) => {
     size: values.fontSize,
     weight: values.fontBold ? ('bold' as const) : ('normal' as const),
   };
+  const displayFormat = values.textField === 'pop' && values.displayFormat ? values.displayFormat : undefined;
   const textProps: PointMarkProps =
     values.mode === 'label'
       ? {
-          color: 'region',
-          label: {
-            field: values.textField,
-            ...(values.textField === 'pop' && values.displayFormat ? { displayFormat: values.displayFormat } : {}),
-            position: values.labelPosition,
-            distance: values.labelDistance,
-            pin: values.labelPin,
-            textColor,
-            font,
+          encodings: { color: 'region', label: { content: values.textField }, position: { x: 'x', y: 'y' } },
+          properties: {
+            label: {
+              displayFormat,
+              position: values.labelPosition,
+              distance: values.labelDistance,
+              pin: values.labelPin,
+              textColor,
+              font,
+            },
           },
         }
       : {
-          text: values.textField,
-          ...(values.textField === 'pop' && values.displayFormat ? { displayFormat: values.displayFormat } : {}),
-          align: values.align,
-          lineHeight: values.lineHeight,
-          maxTextWidth: values.maxTextWidth,
-          textColor,
-          font,
-          dx: values.dx,
-          dy: values.dy,
+          encodings: { text: values.textField, position: { x: 'x', y: 'y' } },
+          properties: {
+            displayFormat,
+            align: values.align,
+            lineHeight: values.lineHeight,
+            maxTextWidth: values.maxTextWidth,
+            textColor,
+            font,
+            dx: values.dx,
+            dy: values.dy,
+          },
         };
 
   return (
@@ -79,8 +83,6 @@ export const PointTextPreview = (values: PointTextPreviewValues) => {
       <Plot data={points} width={400} height={280} coordinate={values.coordinate === 'polar2D' ? 'polar2D' : undefined}>
         <PointMark
           id="text-demo"
-          x="x"
-          y="y"
           {...textProps}
           resolveLabel={values.resolveLabel && values.mode === 'label' ? row => `${row.label}: ${row.pop}` : undefined}
         />

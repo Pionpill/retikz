@@ -17,7 +17,9 @@ const compilePlot = (
 describe('buildPlotIR 装配', () => {
   it('透传 Plot defaultPlot 到 canonical IRPlot', () => {
     const defaultPlot: NonNullable<IRPlot['defaultPlot']> = { palette: { series: ['#2563eb'] } };
-    const spec = buildPlotIR(<PathMark x="month" y="revenue" />, '__plot', { defaultPlot });
+    const spec = buildPlotIR(<PathMark encodings={{ position: { x: 'month', y: 'revenue' } }} />, '__plot', {
+      defaultPlot,
+    });
 
     expect(spec.defaultPlot).toEqual(defaultPlot);
   });
@@ -29,13 +31,18 @@ describe('buildPlotIR 装配', () => {
         axis: { grid: { includeDomain: true } },
       },
     ];
-    const spec = buildPlotIR(<PathMark x="month" y="revenue" />, '__plot', { plotRules });
+    const spec = buildPlotIR(<PathMark encodings={{ position: { x: 'month', y: 'revenue' } }} />, '__plot', {
+      plotRules,
+    });
 
     expect(spec.plotRules).toEqual(plotRules);
   });
 
   it('单 line：装配出等价手写 IRPlot（薄 Plot：无默认 guides）', () => {
-    const spec = buildPlotIR(<PathMark x="month" y="revenue" order="month" />, '__plot');
+    const spec = buildPlotIR(
+      <PathMark encodings={{ order: 'month', position: { x: 'month', y: 'revenue' } }} />,
+      '__plot',
+    );
     const expected: IRPlot = {
       namespace: 'plot',
       type: 'plot',
@@ -45,7 +52,7 @@ describe('buildPlotIR 装配', () => {
         { type: 'linear', name: '__y' },
       ],
       coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
-      marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      marks: [{ type: 'path', kind: 'data', encodings: { order: 'month', position: { x: 'month', y: 'revenue' } } }],
       guides: [],
     };
 
@@ -53,58 +60,58 @@ describe('buildPlotIR 装配', () => {
   });
 
   it('单 point：marks 等价手写', () => {
-    const spec = buildPlotIR(<PointMark x="month" y="revenue" />, '__plot');
+    const spec = buildPlotIR(<PointMark encodings={{ position: { x: 'month', y: 'revenue' } }} />, '__plot');
 
-    expect(spec.marks).toEqual([{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }]);
+    expect(spec.marks).toEqual([
+      { type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } },
+    ]);
   });
 
   it('point size 字段 → size 通道', () => {
-    const spec = buildPlotIR(<PointMark x="lng" y="lat" size="pop" />, '__plot', {
+    const spec = buildPlotIR(<PointMark encodings={{ size: 'pop', position: { x: 'lng', y: 'lat' } }} />, '__plot', {
       dataFieldNames: new Set(['pop']),
     });
 
     expect(spec.marks[0]).toEqual({
       type: 'point',
-      size: { kind: 'field', value: 'pop' },
-      encoding: { x: { field: 'lng' }, y: { field: 'lat' } },
+      kind: 'data',
+      encodings: { size: 'pop', position: { x: 'lng', y: 'lat' } },
     });
   });
 
   it('point opacity 字段 → opacity 通道', () => {
-    const spec = buildPlotIR(<PointMark x="x" y="y" opacity="density" />, '__plot', {
-      dataFieldNames: new Set(['density']),
-    });
+    const spec = buildPlotIR(
+      <PointMark encodings={{ opacity: { overall: 'density' }, position: { x: 'x', y: 'y' } }} />,
+      '__plot',
+      {
+        dataFieldNames: new Set(['density']),
+      },
+    );
 
     expect(spec.marks[0]).toEqual({
       type: 'point',
-      encoding: { x: { field: 'x' }, y: { field: 'y' } },
-      opacity: { overall: { kind: 'field', value: 'density' } },
+      kind: 'data',
+      encodings: { position: { x: 'x', y: 'y' }, opacity: { overall: 'density' } },
     });
   });
 
-  it('point extension channels -> encoding.channels', () => {
+  it('point extension fields remain in encodings', () => {
     const spec = buildPlotIR(
-      <PointMark x="x" y="y" channels={{ intensity: 'score', threshold: { kind: 'constant', value: 0.8 } }} />,
+      <PointMark encodings={{ intensity: 'score', threshold: 'limit', position: { x: 'x', y: 'y' } }} />,
       '__plot',
     );
 
     expect(spec.marks[0]).toEqual({
       type: 'point',
-      encoding: {
-        x: { field: 'x' },
-        y: { field: 'y' },
-        channels: {
-          intensity: { field: 'score' },
-          threshold: { value: 0.8 },
-        },
-      },
+      kind: 'data',
+      encodings: { intensity: 'score', threshold: 'limit', position: { x: 'x', y: 'y' } },
     });
   });
 
   it('layer prop forwards to marks and guides', () => {
     const spec = buildPlotIR(
       <>
-        <PointMark x="x" y="y" layer={{ zIndex: 120 }} color="kind" />
+        <PointMark layer={{ zIndex: 120 }} encodings={{ color: 'kind', position: { x: 'x', y: 'y' } }} />
         <PlotAxis dimension="x" layer={{ zIndex: 240 }} />
         <PlotLegend channel="color" layer={{ zIndex: 520 }} />
       </>,
@@ -120,65 +127,64 @@ describe('buildPlotIR 装配', () => {
   });
 
   it('point shape 字段 → shape 通道', () => {
-    const spec = buildPlotIR(<PointMark x="x" y="y" shape="category" />, '__plot', {
+    const spec = buildPlotIR(<PointMark encodings={{ shape: 'category', position: { x: 'x', y: 'y' } }} />, '__plot', {
       dataFieldNames: new Set(['category']),
     });
 
     expect(spec.marks[0]).toEqual({
       type: 'point',
-      shape: { kind: 'field', value: 'category' },
-      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+      kind: 'data',
+      encodings: { shape: 'category', position: { x: 'x', y: 'y' } },
     });
   });
 
   it('point stroke 字段 → stroke / strokeWidth 通道', () => {
-    const spec = buildPlotIR(<PointMark x="x" y="y" stroke="region" strokeWidth="density" />, '__plot', {
-      dataFieldNames: new Set(['region', 'density']),
-    });
+    const spec = buildPlotIR(
+      <PointMark encodings={{ stroke: 'region', strokeWidth: 'density', position: { x: 'x', y: 'y' } }} />,
+      '__plot',
+      {
+        dataFieldNames: new Set(['region', 'density']),
+      },
+    );
 
     expect(spec.marks[0]).toEqual({
       type: 'point',
-      stroke: { kind: 'field', value: 'region' },
-      strokeWidth: { kind: 'field', value: 'density' },
-      encoding: {
-        x: { field: 'x' },
-        y: { field: 'y' },
-      },
+      kind: 'data',
+      encodings: { stroke: 'region', strokeWidth: 'density', position: { x: 'x', y: 'y' } },
     });
   });
 
   it('point node style props pass through to mark IR', () => {
     const spec = buildPlotIR(
       <PointMark
-        x="x"
-        y="y"
-        fill="#f8fafc"
-        stroke="#0f172a"
-        strokeWidth={1.5}
-        opacity={{ fill: 0.7, stroke: 0.9, overall: 0.8 }}
-
-        rotate={45}
-        padding={2}
-        minimumSize={{ default: 14, width: 16, height: 12 }}
-        zIndex={3}
+        encodings={{ position: { x: 'x', y: 'y' } }}
+        properties={{
+          fill: '#f8fafc',
+          stroke: '#0f172a',
+          strokeWidth: 1.5,
+          opacity: { fill: 0.7, stroke: 0.9, overall: 0.8 },
+          rotate: 45,
+          padding: 2,
+          minimumSize: { default: 14, width: 16, height: 12 },
+          zIndex: 3,
+        }}
       />,
       '__plot',
     );
 
     expect(spec.marks[0]).toEqual({
       type: 'point',
-      fill: { kind: 'constant', value: '#f8fafc' },
-      stroke: { kind: 'constant', value: '#0f172a' },
-      strokeWidth: { kind: 'constant', value: 1.5 },
-      rotate: { kind: 'constant', value: 45 },
-      padding: { kind: 'constant', value: 2 },
-      minimumSize: { kind: 'constant', value: { default: 14, width: 16, height: 12 } },
-      zIndex: { kind: 'constant', value: 3 },
-      encoding: { x: { field: 'x' }, y: { field: 'y' } },
-      opacity: {
-        fill: { kind: 'constant', value: 0.7 },
-        stroke: { kind: 'constant', value: 0.9 },
-        overall: { kind: 'constant', value: 0.8 },
+      kind: 'data',
+      encodings: { position: { x: 'x', y: 'y' } },
+      properties: {
+        fill: '#f8fafc',
+        stroke: '#0f172a',
+        strokeWidth: 1.5,
+        rotate: 45,
+        padding: 2,
+        minimumSize: { default: 14, width: 16, height: 12 },
+        zIndex: 3,
+        opacity: { fill: 0.7, stroke: 0.9, overall: 0.8 },
       },
     });
   });
@@ -186,79 +192,94 @@ describe('buildPlotIR 装配', () => {
   it('path core style props pass through to mark IR', () => {
     const spec = buildPlotIR(
       <PathMark
-        x="x"
-        y="y"
-        strokeWidth={3}
-        opacity={0.6}
-        lineCap="round"
-        lineJoin="bevel"
-        roundedCorners={4}
-        marks={[{ pos: 1, mark: { kind: 'arrow' } }]}
+        encodings={{ position: { x: 'x', y: 'y' } }}
+        properties={{
+          strokeWidth: 3,
+          opacity: { overall: 0.6 },
+          lineCap: 'round',
+          lineJoin: 'bevel',
+          roundedCorners: 4,
+          marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+        }}
       />,
       '__plot',
     );
 
     expect(spec.marks[0]).toEqual({
       type: 'path',
-      strokeWidth: { kind: 'constant', value: 3 },
-      lineCap: { kind: 'constant', value: 'round' },
-      lineJoin: { kind: 'constant', value: 'bevel' },
-      roundedCorners: { kind: 'constant', value: 4 },
-      marks: [{ pos: 1, mark: { kind: 'arrow' } }],
-      encoding: { x: { field: 'x' }, y: { field: 'y' } },
-      opacity: { overall: { kind: 'constant', value: 0.6 } },
+      kind: 'data',
+      encodings: { position: { x: 'x', y: 'y' } },
+      properties: {
+        strokeWidth: 3,
+        lineCap: 'round',
+        lineJoin: 'bevel',
+        roundedCorners: 4,
+        marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+        opacity: { overall: 0.6 },
+      },
     });
   });
 
   it('interval core node style props pass through to mark IR', () => {
     const spec = buildPlotIR(
-      <IntervalMark x="month" y="revenue" strokeWidth="weight" opacity={{ fill: 0.5, overall: 0.9 }} />,
+      <IntervalMark
+        encodings={{ strokeWidth: 'weight', position: { x: 'month', y: 'revenue' } }}
+        properties={{ opacity: { fill: 0.5, overall: 0.9 } }}
+      />,
       '__plot',
       { dataFieldNames: new Set(['weight']) },
     );
 
     expect(spec.marks[0]).toMatchObject({
       type: 'interval',
-      strokeWidth: { kind: 'field', value: 'weight' },
-      opacity: { fill: { kind: 'constant', value: 0.5 }, overall: { kind: 'constant', value: 0.9 } },
+      kind: 'data',
+      encodings: { strokeWidth: 'weight' },
+      properties: { opacity: { fill: 0.5, overall: 0.9 } },
     });
   });
 
   it('interval padAngle forwards to interval mark', () => {
-    const spec = buildPlotIR(<IntervalMark angle="value" padAngle={4} />, '__plot', { coordinate: 'polar2D' });
-
-    expect(spec.marks[0]).toMatchObject({
-      type: 'interval',
-      padAngle: 4,
+    const spec = buildPlotIR(<IntervalMark angle="value" properties={{ padAngle: 4 }} />, '__plot', {
+      coordinate: 'polar2D',
     });
+
+    expect(spec.marks[0]).toMatchObject({ type: 'interval', kind: 'data', properties: { padAngle: 4 } });
   });
 
   it('interval pull forwards numeric and field values to interval mark', () => {
-    const numeric = buildPlotIR(<IntervalMark angle="value" pull={12} />, '__plot', { coordinate: 'polar2D' });
-
-    expect(numeric.marks[0]).toMatchObject({
-      type: 'interval',
-      pull: { kind: 'constant', value: 12 },
+    const numeric = buildPlotIR(<IntervalMark angle="value" properties={{ pull: 12 }} />, '__plot', {
+      coordinate: 'polar2D',
     });
 
-    const field = buildPlotIR(<IntervalMark angle="value" pull="offset" />, '__plot', { coordinate: 'polar2D' });
+    expect(numeric.marks[0]).toMatchObject({ type: 'interval', kind: 'data', properties: { pull: 12 } });
 
-    expect(field.marks[0]).toMatchObject({
-      type: 'interval',
-      pull: { kind: 'field', value: 'offset' },
+    const field = buildPlotIR(<IntervalMark angle="value" encodings={{ pull: 'offset' }} />, '__plot', {
+      coordinate: 'polar2D',
     });
+
+    expect(field.marks[0]).toMatchObject({ type: 'interval', kind: 'data', encodings: { pull: 'offset' } });
   });
 
   it('relation mark assembles source-target refs, top-level label, path config, and color channel', () => {
     const spec = buildPlotIR(
       <>
-        <PointMark x="x" y="y" anchorId={{ prefix: 'pt', field: 'id' }} />
+        <PointMark
+          encodings={{ anchorId: 'id', position: { x: 'x', y: 'y' } }}
+          properties={{ anchorId: { prefix: 'pt' } }}
+        />
         <RelationMark
-          source={{ anchorId: { prefix: 'pt', field: 'from' } }}
-          target={{ anchorId: { prefix: 'pt', field: 'to' } }}
-          label={{ field: 'label', position: 'midway' }}
-          path={{ options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], roundedCorners: 6 } }}
-          color="kind"
+          encodings={{
+            source: { anchorId: 'from' },
+            target: { anchorId: 'to' },
+            color: 'kind',
+            label: { content: 'label' },
+          }}
+          properties={{
+            source: { anchorId: { prefix: 'pt' } },
+            target: { anchorId: { prefix: 'pt' } },
+            label: { position: 'midway' },
+            geometry: { kind: 'path', options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], roundedCorners: 6 } },
+          }}
         />
       </>,
       '__plot',
@@ -267,15 +288,25 @@ describe('buildPlotIR 装配', () => {
 
     expect(spec.marks[0]).toMatchObject({
       type: 'point',
-      anchorId: { prefix: 'pt', field: 'id' },
+      kind: 'data',
+      encodings: { anchorId: 'id' },
+      properties: { anchorId: { prefix: 'pt' } },
     });
     expect(spec.marks[1]).toEqual({
       type: 'relation',
-      source: { anchorId: { prefix: 'pt', field: 'from' } },
-      target: { anchorId: { prefix: 'pt', field: 'to' } },
-      label: { content: { field: 'label' }, position: 'midway' },
-      path: { options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], roundedCorners: 6 } },
-      encoding: { color: { field: 'kind', scale: '__color' } },
+      kind: 'data',
+      encodings: {
+        source: { anchorId: 'from' },
+        target: { anchorId: 'to' },
+        label: { content: 'label' },
+        color: { field: 'kind', scale: '__color' },
+      },
+      properties: {
+        source: { anchorId: { prefix: 'pt' } },
+        target: { anchorId: { prefix: 'pt' } },
+        label: { position: 'midway' },
+        geometry: { kind: 'path', options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], roundedCorners: 6 } },
+      },
     });
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
@@ -296,37 +327,17 @@ describe('buildPlotIR 装配', () => {
     const routing: IRPlotRelationRouting = { kind: 'bend', bendDirection: 'left', bendAngle: 20 };
     const spec = buildPlotIR(
       <RelationMark
-        transform={transform}
-        source={{ anchorId: { prefix: 'trend', field: 'sourceId' } }}
-        target={{ anchorId: { prefix: 'trend', field: 'targetId' } }}
-        label={{ field: 'deltaLabel', position: 0.5 }}
-        path={{ routing }}
-      />,
-      '__plot',
-    );
-
-    expect(spec.marks[0]).toEqual({
-      type: 'relation',
-      transform,
-      source: { anchorId: { prefix: 'trend', field: 'sourceId' } },
-      target: { anchorId: { prefix: 'trend', field: 'targetId' } },
-      label: { content: { field: 'deltaLabel' }, position: 0.5 },
-      path: { routing },
-    });
-    expect(() => PlotSchema.parse(spec)).not.toThrow();
-  });
-
-  it('relation mark assembles ribbon kind, shared style, and ribbon options', () => {
-    const spec = buildPlotIR(
-      <RelationMark
-        kind="ribbon"
-        source={{ project: { x: 'sourceX', y: 'sourceY' } }}
-        target={{ project: { x: 'targetX', y: 'targetY' } }}
-        style={{ fill: { kind: 'field', value: 'fill' }, opacity: { overall: { kind: 'constant', value: 0.8 } } }}
-        ribbon={{
-          width: { kind: 'field', value: 'width' },
-          endWidth: { kind: 'constant', value: 4 },
-          options: { interpolation: 'smooth' },
+        transforms={transform}
+        encodings={{
+          source: { anchorId: 'sourceId' },
+          target: { anchorId: 'targetId' },
+          label: { content: 'deltaLabel' },
+        }}
+        properties={{
+          source: { anchorId: { prefix: 'trend' } },
+          target: { anchorId: { prefix: 'trend' } },
+          label: { position: 0.5 },
+          geometry: { kind: 'path', routing },
         }}
       />,
       '__plot',
@@ -334,14 +345,56 @@ describe('buildPlotIR 装配', () => {
 
     expect(spec.marks[0]).toEqual({
       type: 'relation',
-      kind: 'ribbon',
-      source: { project: { x: 'sourceX', y: 'sourceY' } },
-      target: { project: { x: 'targetX', y: 'targetY' } },
-      style: { fill: { kind: 'field', value: 'fill' }, opacity: { overall: { kind: 'constant', value: 0.8 } } },
-      ribbon: {
-        width: { kind: 'field', value: 'width' },
-        endWidth: { kind: 'constant', value: 4 },
-        options: { interpolation: 'smooth' },
+      transforms: transform,
+      kind: 'data',
+      encodings: {
+        source: { anchorId: 'sourceId' },
+        target: { anchorId: 'targetId' },
+        label: { content: 'deltaLabel' },
+      },
+      properties: {
+        source: { anchorId: { prefix: 'trend' } },
+        target: { anchorId: { prefix: 'trend' } },
+        label: { position: 0.5 },
+        geometry: { kind: 'path', routing },
+      },
+    });
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
+  });
+
+  it('relation mark assembles ribbon kind, shared style, and ribbon options', () => {
+    const spec = buildPlotIR(
+      <RelationMark
+        encodings={{
+          source: { position: { x: 'sourceX', y: 'sourceY' } },
+          target: { position: { x: 'targetX', y: 'targetY' } },
+          fill: 'fill',
+          geometry: { width: 'width' },
+        }}
+        properties={{
+          opacity: { overall: 0.8 },
+          geometry: {
+            kind: 'ribbon',
+            endWidth: 4,
+            options: { interpolation: 'smooth' },
+          },
+        }}
+      />,
+      '__plot',
+    );
+
+    expect(spec.marks[0]).toEqual({
+      type: 'relation',
+      kind: 'data',
+      encodings: {
+        source: { position: { x: 'sourceX', y: 'sourceY' } },
+        target: { position: { x: 'targetX', y: 'targetY' } },
+        fill: 'fill',
+        geometry: { width: 'width' },
+      },
+      properties: {
+        opacity: { overall: 0.8 },
+        geometry: { kind: 'ribbon', endWidth: 4, options: { interpolation: 'smooth' } },
       },
     });
     expect(() => PlotSchema.parse(spec)).not.toThrow();
@@ -350,8 +403,8 @@ describe('buildPlotIR 装配', () => {
   it('line + point 叠加：marks 两项、共享 scales/coordinate', () => {
     const spec = buildPlotIR(
       <>
-        <PathMark x="m" y="r" />
-        <PointMark x="m" y="r" />
+        <PathMark encodings={{ position: { x: 'm', y: 'r' } }} />
+        <PointMark encodings={{ position: { x: 'm', y: 'r' } }} />
       </>,
       '__plot',
     );
@@ -363,7 +416,7 @@ describe('buildPlotIR 装配', () => {
   });
 
   it('装配产物是合法 IR（过 PlotSchema）', () => {
-    const spec = buildPlotIR(<PathMark x="m" y="r" />, '__plot');
+    const spec = buildPlotIR(<PathMark encodings={{ position: { x: 'm', y: 'r' } }} />, '__plot');
 
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
@@ -372,7 +425,7 @@ describe('buildPlotIR 装配', () => {
     const spec = buildPlotIR(
       <>
         hello
-        <PathMark x="m" y="r" />
+        <PathMark encodings={{ position: { x: 'm', y: 'r' } }} />
       </>,
       '__plot',
     );
@@ -382,7 +435,7 @@ describe('buildPlotIR 装配', () => {
 
   // 薄 Plot guide 装配（无默认 / 显式）
   it('dsl_no_axis_no_guides：无 <PlotAxis> → guides 为空（薄 Plot 不补默认轴）', () => {
-    const spec = buildPlotIR(<PathMark x="m" y="r" />, '__plot');
+    const spec = buildPlotIR(<PathMark encodings={{ position: { x: 'm', y: 'r' } }} />, '__plot');
 
     expect(spec.guides).toEqual([]);
   });
@@ -390,7 +443,7 @@ describe('buildPlotIR 装配', () => {
   it('dsl_explicit_axis_only：写 <PlotAxis dimension="x"/> → 仅该轴（显式所得、无默认）', () => {
     const spec = buildPlotIR(
       <>
-        <PathMark x="m" y="r" />
+        <PathMark encodings={{ position: { x: 'm', y: 'r' } }} />
         <PlotAxis dimension="x" />
       </>,
       '__plot',
@@ -402,7 +455,7 @@ describe('buildPlotIR 装配', () => {
   it('dsl_axis_fields：<PlotAxis> 字段逐一落位（含 grid）', () => {
     const spec = buildPlotIR(
       <>
-        <PathMark x="m" y="r" />
+        <PathMark encodings={{ position: { x: 'm', y: 'r' } }} />
         <PlotAxis
           dimension="y"
           ticks={{ count: 5 }}
@@ -431,7 +484,7 @@ describe('buildPlotIR 装配', () => {
   it('dsl_axis_with_grid：<PlotAxis dimension="y" grid/> → grid:true', () => {
     const spec = buildPlotIR(
       <>
-        <PathMark x="m" y="r" />
+        <PathMark encodings={{ position: { x: 'm', y: 'r' } }} />
         <PlotAxis dimension="y" grid />
       </>,
       '__plot',
@@ -443,7 +496,7 @@ describe('buildPlotIR 装配', () => {
   it('dsl_axis_grid_domain_endpoints：端点策略原样进入 canonical guide', () => {
     const spec = buildPlotIR(
       <>
-        <PathMark x="m" y="r" />
+        <PathMark encodings={{ position: { x: 'm', y: 'r' } }} />
         <PlotAxis dimension="x" grid={{ includeDomain: true }} />
       </>,
       '__plot',
@@ -455,7 +508,7 @@ describe('buildPlotIR 装配', () => {
   it('dsl_axis_bad_dim_type：非法 dimension 经 lowering 按坐标系角色拒绝', () => {
     const spec = buildPlotIR(
       <>
-        <PathMark x="m" y="r" />
+        <PathMark encodings={{ position: { x: 'm', y: 'r' } }} />
         <PlotAxis dimension="q" />
       </>,
       '__plot',

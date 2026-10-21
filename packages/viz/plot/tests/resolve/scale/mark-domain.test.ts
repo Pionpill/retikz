@@ -1,6 +1,6 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { literal } from 'zod';
+import { literal, strictObject } from 'zod';
 
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { pointMarkDefinition } from '../../../src/providers/mark';
@@ -42,8 +42,8 @@ const plotOf = (padding: unknown = { kind: 'mark', marks: ['dots'] }, guides: Ar
       {
         id: 'dots',
         type: 'point',
-        encoding: { x: { field: 'x' }, y: { field: 'y' } },
-        size: { kind: 'field', value: 'r', scale: 'size' },
+        kind: 'data',
+        encodings: { position: { x: 'x', y: 'y' }, size: { field: 'r', scale: 'size' } },
       },
     ],
   });
@@ -401,11 +401,14 @@ describe('mark padding final geometry', () => {
         {
           id: 'dots',
           type: 'relation',
-          source: { project: { x: 'x', y: 'y' } },
-          target: { project: { x: 'x', y: 'y' } },
-          endpoints: {
-            source: { size: { kind: 'constant', value: 8 } },
-            target: { size: { kind: 'constant', value: 12 } },
+          kind: 'data',
+          encodings: { source: { position: { x: 'x', y: 'y' } }, target: { position: { x: 'x', y: 'y' } } },
+          properties: {
+            endpoints: {
+              source: { size: 8 },
+              target: { size: 12 },
+            },
+            geometry: { kind: 'path' },
           },
         },
       ],
@@ -423,10 +426,10 @@ describe('mark padding capabilities', () => {
     const customScale = { ...linear, schema: LinearScaleSchema.extend({ type: literal('custom-affine') }) };
     const customMark = {
       ...pointMarkDefinition,
-      schema: PointMarkSchema.extend({ type: literal('custom-dot') }),
+      schema: strictObject({ ...PointMarkSchema.shape, type: literal('custom-dot') }),
       lower: ((mark, data, frame, channels, context) =>
         pointMarkDefinition.lower(
-          { ...mark, type: 'point' },
+          { ...mark, type: 'point', kind: 'data' },
           data,
           frame,
           channels,
@@ -467,8 +470,11 @@ describe('mark padding capabilities', () => {
       })),
       marks: base.marks.map(mark => ({
         ...mark,
-        ...(automatic ? { id: undefined, autoPadding: 'point-aware' } : {}),
-        placement: { adjustments: [{ kind: 'jitter', role: 'x', span, seed: 1 }] },
+        ...(automatic ? { id: undefined } : {}),
+        properties: {
+          ...(automatic ? { autoPadding: 'point-aware' } : {}),
+          placement: { adjustments: [{ kind: 'jitter', role: 'x', span, seed: 1 }] },
+        },
       })),
     });
     const result = lowerPlotWithDataArtifact(spec, { rows }, { textMeasurer: measureLabel });
@@ -492,7 +498,7 @@ describe('mark padding effective observations', () => {
       ...base,
       marks: base.marks.map(mark => ({
         ...mark,
-        transform: [
+        transforms: [
           {
             operation: {
               kind: 'summarize',
@@ -556,7 +562,13 @@ describe('mark padding shared coordinate views', () => {
       },
       marks: [
         ...base.marks,
-        { ...base.marks[0], id: 'overlay-dots', coordinateView: 'overlay', size: { kind: 'constant', value: 8 } },
+        {
+          ...base.marks[0],
+          id: 'overlay-dots',
+          coordinateView: 'overlay',
+          encodings: { position: { x: 'x', y: 'y' } },
+          properties: { size: 8 },
+        },
       ],
     });
     const result = lowerPlotWithDataArtifact(spec, { rows }, { textMeasurer: measureLabel });

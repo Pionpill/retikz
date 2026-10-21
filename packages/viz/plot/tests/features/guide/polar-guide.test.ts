@@ -88,7 +88,9 @@ const polarSpec = (guides: Array<Record<string, unknown>>, extra: Record<string,
       { type: 'linear', name: 'r', domain: [0, 10] },
     ],
     coordinate: { type: 'polar2D', angle: 'a', radius: 'r', ...extra },
-    marks: [{ type: 'path', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
+    marks: [
+      { type: 'path', kind: 'data', encodings: { position: { x: 'cat', y: 'value' } }, properties: { closed: true } },
+    ],
     guides,
   });
 
@@ -244,7 +246,7 @@ describe('lowerPlots polar guide — radial axis (contract)', () => {
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'theta', y: 'value' } } }],
       guides,
     });
   const radialRows = [
@@ -335,7 +337,7 @@ describe('lowerPlots polar guide — grid (contract)', () => {
       { type: 'linear', name: 'r', domain: [0, 10] },
     ],
     coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-    marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
+    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'theta', y: 'value' } } }],
     guides: [{ type: 'axis', dimension: 'y', grid: true }],
   });
 
@@ -392,7 +394,9 @@ describe('lowerPlots polar guide — grid (contract)', () => {
       { type: 'linear', name: 'r', domain: [0, 10] },
     ],
     coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-    marks: [{ type: 'path', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
+    marks: [
+      { type: 'path', kind: 'data', encodings: { position: { x: 'cat', y: 'value' } }, properties: { closed: true } },
+    ],
     guides: [{ type: 'axis', dimension: 'x', grid: true }],
   });
 
@@ -434,7 +438,9 @@ describe('lowerPlots polar guide — z-order (contract)', () => {
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'path', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
+      marks: [
+        { type: 'path', kind: 'data', encodings: { position: { x: 'cat', y: 'value' } }, properties: { closed: true } },
+      ],
       guides: [
         { type: 'axis', dimension: 'x' },
         { type: 'axis', dimension: 'y', grid: true },
@@ -466,7 +472,9 @@ describe('lowerPlots polar guide — 错误路径 (contract)', () => {
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'path', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
+      marks: [
+        { type: 'path', kind: 'data', encodings: { position: { x: 'cat', y: 'value' } }, properties: { closed: true } },
+      ],
       guides: [
         { type: 'axis', dimension: 'x' },
         { type: 'axis', dimension: 'x' },
@@ -487,7 +495,9 @@ describe('lowerPlots polar guide — 错误路径 (contract)', () => {
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'path', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
+      marks: [
+        { type: 'path', kind: 'data', encodings: { position: { x: 'cat', y: 'value' } }, properties: { closed: true } },
+      ],
       guides: [
         { type: 'axis', dimension: 'x' },
         { type: 'axis', dimension: 'x' },
@@ -509,7 +519,7 @@ describe('lowerPlots cartesian guide 回归 (contract)', () => {
       { type: 'linear', name: 'yRevenue' },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-    marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    marks: [{ type: 'path', kind: 'data', encodings: { order: 'month', position: { x: 'month', y: 'revenue' } } }],
     guides: [
       { type: 'axis', dimension: 'x' },
       { type: 'axis', dimension: 'y', grid: true },

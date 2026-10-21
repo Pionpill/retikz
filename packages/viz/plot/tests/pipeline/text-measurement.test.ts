@@ -32,8 +32,8 @@ const compile = (
     marks: [
       {
         type: 'point',
-        encoding: { x: { field: 'x' }, y: { field: 'y' } },
-        color: { kind: 'field', value: 'group', scale: 'color' },
+        kind: 'data',
+        encodings: { position: { x: 'x', y: 'y' }, color: { field: 'group', scale: 'color' } },
       },
     ],
     guides: [
@@ -72,7 +72,7 @@ describe('Plot 使用 Core 文字测量参与布局', () => {
         { name: 'y', type: 'linear', domain: [0, 1], domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } }],
       guides: [
         { type: 'axis', dimension: 'x', tickLabels: { font: { size: '1.5em' } } },
         { type: 'axis', dimension: 'y', tickLabels: { font: { size: '1.5em' } } },
@@ -111,7 +111,7 @@ describe('Plot 使用 Core 文字测量参与布局', () => {
   it('一维直角坐标的留白也使用宿主测量', () => {
     const extra = {
       coordinate: { type: 'cartesian1D', x: 'x' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x' } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
     };
     const narrow = compile(text => ({ width: text.length * 4, height: 10 }), extra).filter(p => p.type === 'ellipse');

@@ -38,8 +38,8 @@ const baseSpec = (override: Partial<IRPlot> = {}): IRPlot =>
     marks: [
       {
         type: 'point',
-        color: { kind: 'field', value: 'city', scale: 'color' },
-        encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        kind: 'data',
+        encodings: { color: { field: 'city', scale: 'color' }, position: { x: 'x', y: 'y' } },
       },
     ],
     ...override,
@@ -207,8 +207,12 @@ describe('Plot Source defaults and guide lowering', () => {
   });
 
   it.each([
-    ['cartesian1D', { type: 'cartesian1D', x: 'x' }, { type: 'point', encoding: { x: { field: 'x' } } }],
-    ['polar1D', { type: 'polar1D', angle: 'x' }, { type: 'point', encoding: { x: { field: 'x' } } }],
+    [
+      'cartesian1D',
+      { type: 'cartesian1D', x: 'x' },
+      { type: 'point', kind: 'data', encodings: { position: { x: 'x' } } },
+    ],
+    ['polar1D', { type: 'polar1D', angle: 'x' }, { type: 'point', kind: 'data', encodings: { position: { x: 'x' } } }],
   ] as const)('%s does not emit a plot area', (_name, coordinate, mark) => {
     const fill = '#f8fafc';
     const root = expandOf(baseSpec({ coordinate, marks: [mark], defaultPlot: { plotArea: { fill, border: {} } } }));
@@ -266,7 +270,7 @@ describe('Plot Source defaults and guide lowering', () => {
           spacing: { panelGap: 24 },
           resolve: { axis: { x: 'local', y: 'local' }, grid: { x: 'local', y: 'local' } },
         },
-        marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+        marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } }],
         guides: [
           { type: 'axis', dimension: 'x', placement: { kind: 'side', side: 'bottom' }, grid: true },
           { type: 'axis', dimension: 'y', placement: { kind: 'side', side: 'left' }, grid: true },
@@ -315,8 +319,8 @@ describe('Plot Source defaults and guide lowering', () => {
     const root = expandOf(
       baseSpec({
         marks: [
-          { type: 'path', order: 'x', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
-          { type: 'interval', encoding: { x: { field: 'x' }, y: { field: 'value' } } },
+          { type: 'path', kind: 'data', encodings: { order: 'x', position: { x: 'x', y: 'y' } } },
+          { type: 'interval', kind: 'data', encodings: { position: { x: 'x', y: 'value' } } },
         ],
         defaultPlot: { palette: { series: ['#0f766e', '#f97316'] } },
       }),

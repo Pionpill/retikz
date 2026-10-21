@@ -6,6 +6,7 @@ import type { CoordinateFrame, ScreenPositionAdjustmentDefinition } from '../../
 import { createCoordinateFrame, defineCoordinate } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import type { IRPlotPointMark } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
@@ -16,7 +17,7 @@ const nodesOf = (child: IRChild): Array<IRNode> => {
 };
 
 const render = (
-  extra: Record<string, unknown> = {},
+  extra: Partial<IRPlotPointMark> = {},
   coordinate: Record<string, unknown> = { type: 'polar2D', angle: 'x', radius: 'y', startAngle: 0, endAngle: 360 },
   options: LowerPlotsOptions = {},
   rows = [{ angle: 90, radius: 50, rotation: 15, text: 'A' }],
@@ -31,7 +32,13 @@ const render = (
       { type: 'linear', name: 'y', domain: [0, 100], range: [0, 100] },
     ],
     marks: [
-      { type: 'point', autoPadding: false, encoding: { x: { field: 'angle' }, y: { field: 'radius' } }, ...extra },
+      {
+        type: 'point',
+        ...extra,
+        kind: 'data',
+        encodings: { position: { x: 'angle', y: 'radius' }, ...extra.encodings },
+        properties: { autoPadding: false, ...extra.properties },
+      },
     ],
     guides: [],
   });
@@ -51,44 +58,47 @@ const render = (
 describe('PointMark coordinate orientation', () => {
   it('沿角向切线及正法向旋转，并叠加常量角', () => {
     expect(
-      render({
-        orientation: { kind: 'coordinate', role: 'x', align: 'tangent' },
-        rotate: { kind: 'constant', value: 15 },
-      })[0].rotate,
+      render({ properties: { orientation: { kind: 'coordinate', role: 'x', align: 'tangent' }, rotate: 15 } })[0]
+        .rotate,
     ).toBeCloseTo(195);
-    expect(render({ orientation: { kind: 'coordinate', role: 'x', align: 'normal' } })[0].rotate).toBeCloseTo(270);
-    expect(render({ orientation: { kind: 'coordinate', role: 'y', align: 'tangent' } })[0].rotate).toBeCloseTo(90);
+    expect(
+      render({ properties: { orientation: { kind: 'coordinate', role: 'x', align: 'normal' } } })[0].rotate,
+    ).toBeCloseTo(270);
+    expect(
+      render({ properties: { orientation: { kind: 'coordinate', role: 'y', align: 'tangent' } } })[0].rotate,
+    ).toBeCloseTo(90);
   });
 
   it('文本使用同一方向与字段旋转通道', () => {
     expect(
       render({
-        encoding: { x: { field: 'angle' }, y: { field: 'radius' }, text: { field: 'text' } },
-        orientation: { kind: 'coordinate', role: 'x', align: 'tangent' },
-        rotate: { kind: 'field', value: 'rotation' },
+        kind: 'data',
+        encodings: { text: 'text', position: { x: 'angle', y: 'radius' }, rotate: 'rotation' },
+        properties: { orientation: { kind: 'coordinate', role: 'x', align: 'tangent' } },
       })[0].rotate,
     ).toBeCloseTo(195);
   });
 
   it('默认与显式屏幕方向等价，不额外旋转', () => {
-    expect(render()).toEqual(render({ orientation: { kind: 'screen' } }));
+    expect(render()).toEqual(render({ properties: { orientation: { kind: 'screen' } } }));
   });
 
   it('屏幕偏移只移动文本，不改变方向', () => {
-    const extra = {
-      encoding: { x: { field: 'angle' }, y: { field: 'radius' }, text: { field: 'text' } },
-      orientation: { kind: 'coordinate', role: 'x', align: 'tangent' },
+    const extra: Partial<IRPlotPointMark> = {
+      kind: 'data',
+      encodings: { text: 'text', position: { x: 'angle', y: 'radius' } },
+      properties: { orientation: { kind: 'coordinate', role: 'x', align: 'tangent' } },
     };
     const original = render(extra)[0];
-    const offset = render({ ...extra, dx: 20, dy: 10 })[0];
+    const offset = render({ ...extra, properties: { ...extra.properties, dx: 20, dy: 10 } })[0];
     expect(offset.rotate).toEqual(original.rotate);
     expect(offset.position).not.toEqual(original.position);
   });
 
   it('未知角色明确失败', () => {
-    expect(() => render({ orientation: { kind: 'coordinate', role: 'missing', align: 'tangent' } })).toThrow(
-      /orientation.*missing/i,
-    );
+    expect(() =>
+      render({ properties: { orientation: { kind: 'coordinate', role: 'missing', align: 'tangent' } } }),
+    ).toThrow(/orientation.*missing/i);
   });
 
   it('屏幕空间调整移动节点但保留方向参考参数', () => {
@@ -101,11 +111,15 @@ describe('PointMark coordinate orientation', () => {
           position: target.position && [target.position[0] + 80, target.position[1] - 25],
         })),
     };
-    const orientation = { kind: 'coordinate', role: 'y', align: 'tangent' };
-    const base = render({ orientation })[0];
-    const shifted = render({ orientation, placement: { adjustments: [{ kind: 'nudge' }] } }, undefined, {
-      definitions: { positionAdjustments: [nudge] },
-    })[0];
+    const orientation = { kind: 'coordinate', role: 'y', align: 'tangent' } as const;
+    const base = render({ properties: { orientation } })[0];
+    const shifted = render(
+      { properties: { orientation, placement: { adjustments: [{ kind: 'nudge' }] } } },
+      undefined,
+      {
+        definitions: { positionAdjustments: [nudge] },
+      },
+    )[0];
     const position = base.position as [number, number];
     expect(shifted.position).toEqual([position[0] + 80, position[1] - 25]);
     expect(shifted.rotate).toEqual(base.rotate);
@@ -114,9 +128,11 @@ describe('PointMark coordinate orientation', () => {
   it('不可投影行跳过后仍使用对应目标的方向与字段角', () => {
     const nodes = render(
       {
-        orientation: { kind: 'coordinate', role: 'y', align: 'tangent' },
-        rotate: { kind: 'field', value: 'rotation' },
-        placement: { adjustments: [{ kind: 'jitter', role: 'x', span: 0, seed: 1 }] },
+        encodings: { rotate: 'rotation' },
+        properties: {
+          orientation: { kind: 'coordinate', role: 'y', align: 'tangent' },
+          placement: { adjustments: [{ kind: 'jitter', role: 'x', span: 0, seed: 1 }] },
+        },
       },
       undefined,
       {},
@@ -133,8 +149,10 @@ describe('PointMark coordinate orientation', () => {
 
   it('角色抖动后的朝向与实际圆周位置一致', () => {
     const node = render({
-      orientation: { kind: 'coordinate', role: 'y', align: 'tangent' },
-      placement: { adjustments: [{ kind: 'jitter', role: 'x', span: 80, seed: 3 }] },
+      properties: {
+        orientation: { kind: 'coordinate', role: 'y', align: 'tangent' },
+        placement: { adjustments: [{ kind: 'jitter', role: 'x', span: 80, seed: 3 }] },
+      },
     })[0];
     const original = render()[0].position as [number, number];
     const position = node.position as [number, number];
@@ -147,10 +165,20 @@ describe('PointMark coordinate orientation', () => {
     const rows = [{ angle: 90, radius: 0, rotation: 0, text: 'A' }];
     const coordinate = { type: 'polar2D', angle: 'x', radius: 'y', startAngle: 0, endAngle: 360, innerRadius: 0 };
     expect(() =>
-      render({ orientation: { kind: 'coordinate', role: 'x', align: 'tangent' } }, coordinate, {}, rows),
+      render(
+        { properties: { orientation: { kind: 'coordinate', role: 'x', align: 'tangent' } } },
+        coordinate,
+        {},
+        rows,
+      ),
     ).toThrow(/orientation.*target/);
     expect(
-      render({ orientation: { kind: 'coordinate', role: 'y', align: 'tangent' } }, coordinate, {}, rows)[0].rotate,
+      render(
+        { properties: { orientation: { kind: 'coordinate', role: 'y', align: 'tangent' } } },
+        coordinate,
+        {},
+        rows,
+      )[0].rotate,
     ).toBeCloseTo(90);
   });
 
@@ -178,12 +206,12 @@ describe('PointMark coordinate orientation', () => {
   it('自定义斜交坐标的正法向不等于另一角色切向', () => {
     const options = { definitions: { coordinates: [custom(role => (role === 'x' ? [1, 0] : [1, 1]))] } };
     const normal = render(
-      { orientation: { kind: 'coordinate', role: 'x', align: 'normal' } },
+      { properties: { orientation: { kind: 'coordinate', role: 'x', align: 'normal' } } },
       { type: 'skew' },
       options,
     )[0];
     const other = render(
-      { orientation: { kind: 'coordinate', role: 'y', align: 'tangent' } },
+      { properties: { orientation: { kind: 'coordinate', role: 'y', align: 'tangent' } } },
       { type: 'skew' },
       options,
     )[0];
@@ -195,7 +223,11 @@ describe('PointMark coordinate orientation', () => {
     const options = { definitions: { coordinates: [custom()] } };
     expect(render({}, { type: 'skew' }, options)).toHaveLength(1);
     expect(() =>
-      render({ orientation: { kind: 'coordinate', role: 'x', align: 'tangent' } }, { type: 'skew' }, options),
+      render(
+        { properties: { orientation: { kind: 'coordinate', role: 'x', align: 'tangent' } } },
+        { type: 'skew' },
+        options,
+      ),
     ).toThrow(/tangentAt/);
   });
 
@@ -211,7 +243,11 @@ describe('PointMark coordinate orientation', () => {
       },
     };
     expect(() =>
-      render({ orientation: { kind: 'coordinate', role: 'x', align: 'tangent' } }, { type: 'skew' }, options),
+      render(
+        { properties: { orientation: { kind: 'coordinate', role: 'x', align: 'tangent' } } },
+        { type: 'skew' },
+        options,
+      ),
     ).toThrow(expect.objectContaining({ cause, message: expect.stringContaining('target "0"') }));
   });
 
@@ -220,7 +256,11 @@ describe('PointMark coordinate orientation', () => {
       definitions: { coordinates: [custom(() => (tangent === null ? null : [tangent[0], tangent[1]]))] },
     };
     expect(() =>
-      render({ orientation: { kind: 'coordinate', role: 'x', align: 'normal' } }, { type: 'skew' }, options),
+      render(
+        { properties: { orientation: { kind: 'coordinate', role: 'x', align: 'normal' } } },
+        { type: 'skew' },
+        options,
+      ),
     ).toThrow(/orientation.*target/);
   });
 });

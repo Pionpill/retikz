@@ -60,7 +60,7 @@ scaleBinding: {
 
 ```tsx
 <Plot coordinate={{ type: 'bridge', archHeight: 60 }} definitions={{ coordinates: [bridgeCoordinate] }}>
-  <PointMark x="x" y="y" />
+  <PointMark encodings={{ position: { x: "x", y: "y" } }} />
 </Plot>
 ```
 
@@ -70,7 +70,7 @@ scaleBinding: {
 const spec = {
   // ...
   coordinate: { type: 'uv' },
-  marks: [{ type: 'point', encoding: { u: { field: 'u' }, v: { field: 'v' } } }],
+  marks: [{ type: 'point', kind: "data", encodings: { position: { u: 'u', v: 'v' } } }],
 };
 ```
 

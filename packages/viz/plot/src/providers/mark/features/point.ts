@@ -8,12 +8,11 @@ import type {
   MarkDefinition,
   MarkLoweringContext,
 } from '../../../contract';
+import { markProperty, unencodedMarkProperties } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import { PointAnnotationSchema } from '../../../schemas';
 import type { IRPlotMark, IRPlotPointMark } from '../../../schemas';
 import { BuiltinPlotMark, PointMarkSchema } from '../../../schemas';
-import { channelValue } from '../../channel';
-import { constantMarkOpacity } from '../shared';
 import type { MarkPaint } from '../shared';
 import {
   attachDatumAnchor,
@@ -29,6 +28,8 @@ import {
   nodeChannelKinds,
   roleAnchor,
   roleValues,
+  mapMarkRoles,
+  roleValue,
 } from '../shared';
 import { lowerAnnotation } from './annotation';
 import { pointGlyphStyle } from './point-glyph';
@@ -36,9 +37,14 @@ import { POINT_DEFAULT_RADIUS } from './point-glyph';
 
 /** 自由文本 node 样式（无 shape 边框：padding0 + 无描边 + textColor 上提到子 Scope；色走文本而非 fill） */
 const textStyle = (textColor: string, mark: IRPlotPointMark): IRNodeDefault => {
-  const padding = mark.padding?.kind === 'constant' ? mark.padding.value : undefined;
-  const opacity = constantMarkOpacity(mark.opacity);
-  const rotate = mark.rotate?.kind === 'constant' ? mark.rotate.value : undefined;
+  const padding = markProperty<NonNullable<IRNodeDefault['layout']>['padding']>(mark, 'padding');
+  const opacity = Object.fromEntries(
+    (['opacity', 'fillOpacity', 'strokeOpacity'] as const).flatMap((target, index) => {
+      const value = markProperty<number>(mark, target);
+      return value === undefined ? [] : [[['overall', 'fill', 'stroke'][index], value]];
+    }),
+  );
+  const rotate = markProperty<number>(mark, 'rotate');
 
   return {
     ...(rotate !== undefined ? { rotate } : {}),
@@ -48,7 +54,7 @@ const textStyle = (textColor: string, mark: IRPlotPointMark): IRNodeDefault => {
       strokeWidth: 0,
       color: textColor,
       textColor,
-      ...(opacity !== undefined ? { opacity } : {}),
+      ...(Object.keys(opacity).length === 0 ? {} : { opacity }),
     },
     layout: {
       padding: padding ?? 0,
@@ -71,7 +77,7 @@ export const lowerPoint = (
   if (mark.type !== BuiltinPlotMark.Point) return null;
 
   const markProvenance = ctx?.provenance;
-  const orientation = mark.orientation;
+  const orientation = mark.properties?.orientation;
   if (orientation?.kind === 'coordinate') {
     if (!frame.roles.includes(orientation.role)) {
       throw new RetikzPlotError(
@@ -85,16 +91,17 @@ export const lowerPoint = (
     }
   }
   const colorOf = channelValueOf<string>(channels, 'color');
-  const fillOf = mark.fill?.kind === 'field' && !colorOf ? channelValueOf<MarkPaint>(channels, 'fill') : undefined;
-  const strokeOf = mark.stroke?.kind === 'field' ? channelValueOf<MarkPaint>(channels, 'stroke') : undefined;
+  const fillOf =
+    mark.encodings?.fill !== undefined && !colorOf ? channelValueOf<MarkPaint>(channels, 'fill') : undefined;
+  const strokeOf = mark.encodings?.stroke !== undefined ? channelValueOf<MarkPaint>(channels, 'stroke') : undefined;
   const defaultColor = channelDefaultOf<string>(channels, 'color') ?? DEFAULT_FILL;
-  const isText = mark.encoding.text !== undefined;
+  const isText = mark.encodings?.text !== undefined || mark.properties?.text !== undefined;
   const textOf = isText ? channelValueOf<NonNullable<IRNode['text']>>(channels, 'label') : undefined;
   const labelOf = !isText ? channelValueOf<IRNodeLabel['text']>(channels, 'label') : undefined;
-  const textColorConstant = mark.textColor?.kind === 'constant' ? mark.textColor.value : undefined;
-  const dx = mark.dx ?? 0;
-  const dy = mark.dy ?? 0;
-  const constantZIndex = mark.zIndex?.kind === 'constant' ? mark.zIndex.value : undefined;
+  const textColorConstant = markProperty<string>(mark, 'textColor');
+  const dx = mark.properties?.dx ?? 0;
+  const dy = mark.properties?.dy ?? 0;
+  const constantZIndex = markProperty<number>(mark, 'zIndex');
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
 
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
@@ -116,7 +123,7 @@ export const lowerPoint = (
         const key = String(transformedIndex);
         const mapped = ctx?.positions
           ? ctx.positions.targetFor(key)?.mappedRoles
-          : frame.mapRoles?.(roleValues(mark, row, frame));
+          : mapMarkRoles(mark, roleValues(mark, row, frame), frame);
         let tangent;
         try {
           tangent = mapped ? frame.tangentAt?.(orientation.role, mapped) : null;
@@ -130,7 +137,7 @@ export const lowerPoint = (
             `PointMark orientation role "${orientation.role}" is undefined for target "${key}"`,
           );
         }
-        const offset = node.rotate ?? (mark.rotate?.kind === 'constant' ? mark.rotate.value : 0);
+        const offset = node.rotate ?? markProperty<number>(mark, 'rotate') ?? 0;
         node.rotate =
           (Math.atan2(tangent[1], tangent[0]) * 180) / Math.PI + (orientation.align === 'normal' ? 90 : 0) + offset;
       }
@@ -138,9 +145,7 @@ export const lowerPoint = (
 
     if (isText) {
       // 文本 glyph：投影同 point（roleValues + projectRoles，坐标系无关）；内容缺失跳过；dx/dy 锚点像素微调
-      const point = ctx?.positions
-        ? ctx.positions.positionFor(String(transformedIndex))
-        : frame.projectRoles(roleValues(mark, row, frame));
+      const point = ctx?.positions ? ctx.positions.positionFor(String(transformedIndex)) : roleAnchor(mark, row, frame);
       if (!point) continue;
 
       const text = textOf?.(row);
@@ -193,8 +198,7 @@ export const lowerPoint = (
 
   if (placed.length === 0) return null;
 
-  const fillConstant =
-    channelDefaultOf<MarkPaint>(channels, 'fill') ?? (mark.fill?.kind === 'constant' ? mark.fill.value : undefined);
+  const fillConstant = channelDefaultOf<MarkPaint>(channels, 'fill') ?? markProperty<MarkPaint>(mark, 'fill');
   const layer: IRScope = !colorOf
     ? {
         type: 'scope',
@@ -202,11 +206,13 @@ export const lowerPoint = (
         defaults: {
           node: isText
             ? textStyle(textColorConstant ?? (typeof fillConstant === 'string' ? fillConstant : defaultColor), mark)
-            : pointGlyphStyle(fillConstant ?? defaultColor, mark),
+            : pointGlyphStyle(fillConstant ?? defaultColor, unencodedMarkProperties(mark) ?? {}),
         },
       }
     : colorGroupedScope(placed, fill =>
-        isText ? textStyle(textColorConstant ?? fill, mark) : pointGlyphStyle(fillConstant ?? fill, mark),
+        isText
+          ? textStyle(textColorConstant ?? fill, mark)
+          : pointGlyphStyle(fillConstant ?? fill, unencodedMarkProperties(mark) ?? {}),
       );
 
   return attachMarkLayer(layer, mark, ctx);
@@ -214,10 +220,10 @@ export const lowerPoint = (
 
 /** 收集 point mark 独有的 mark-level 通道字段 */
 const collectPointChannelFields = (mark: IRPlotPointMark, fields: FieldCollector): void => {
-  fields.addChannel(mark.color);
-  fields.addChannel(mark.fill);
-  fields.addChannel(mark.stroke);
-  fields.addChannel(mark.encoding.text);
+  fields.addChannel(mark.encodings?.color);
+  fields.addChannel(mark.encodings?.fill);
+  fields.addChannel(mark.encodings?.stroke);
+  fields.addChannel(mark.encodings?.text);
 };
 
 /** Core minimumSize 在任意法向上的保守半径；旋转不会扩大其外接圆 */
@@ -242,7 +248,7 @@ export const pointMarkDefinition: MarkDefinition<IRPlotPointMark> = {
   schema: PointMarkSchema,
   annotation: { schema: PointAnnotationSchema, lower: lowerAnnotation },
   domainPadding: (mark, rows, roles, channels) => {
-    if (mark.encoding.text !== undefined)
+    if (mark.encodings?.text !== undefined || mark.properties?.text !== undefined)
       throw new RetikzPlotError('Text points do not provide size-only domain padding');
 
     const size = channels.nodeDeliveries?.find(delivery => delivery.channel === 'size');
@@ -250,16 +256,14 @@ export const pointMarkDefinition: MarkDefinition<IRPlotPointMark> = {
     return rows.flatMap((row, index) => {
       const radius =
         size === undefined
-          ? mark.size?.kind === 'constant'
-            ? mark.size.value
-            : POINT_DEFAULT_RADIUS
+          ? (mark.properties?.size ?? POINT_DEFAULT_RADIUS)
           : (size.resolver(row) as number | undefined);
       if (radius === undefined) return [];
 
       return [
         {
           key: String(index),
-          values: roles.map(role => channelValue(mark.encoding[role], row)),
+          values: roles.map(role => roleValue(mark, role, row)),
           extent: roles.map(() => radius),
         },
       ];
@@ -275,25 +279,22 @@ export const pointMarkDefinition: MarkDefinition<IRPlotPointMark> = {
     targets: (mark, rows, frame) =>
       rows.map((row, index) => ({ key: String(index), row, roleValues: roleValues(mark, row, frame) })),
     normalExtent: (mark, target, _unitNormal, channels) => {
-      if (mark.encoding.text !== undefined) return undefined;
+      if (mark.encodings?.text !== undefined || mark.properties?.text !== undefined) return undefined;
 
       const sizeDelivery = channels.nodeDeliveries?.find(delivery => delivery.channel === 'size');
       const minimumSizeDelivery = channels.nodeDeliveries?.find(delivery => delivery.channel === 'minimumSize');
       const scaleDelivery = channels.nodeDeliveries?.find(delivery => delivery.channel === 'scale');
       const strokeDelivery = channels.nodeDeliveries?.find(delivery => delivery.channel === 'strokeWidth');
-      const size =
-        (sizeDelivery?.resolver(target.row) as number | undefined) ??
-        (mark.size?.kind === 'constant' ? mark.size.value : undefined);
+      const size = (sizeDelivery?.resolver(target.row) as number | undefined) ?? markProperty<number>(mark, 'size');
       const minimumSize =
         (minimumSizeDelivery?.resolver(target.row) as number | IRBoxSize | undefined) ??
-        (mark.minimumSize?.kind === 'constant' ? mark.minimumSize.value : undefined);
+        markProperty<number | IRBoxSize>(mark, 'minimumSize');
       const radius = size ?? (minimumSize === undefined ? POINT_DEFAULT_RADIUS : minimumSizeRadiusOf(minimumSize));
       const scale =
         (scaleDelivery?.resolver(target.row) as number | IRAxisScale | undefined) ??
-        (mark.scale?.kind === 'constant' ? mark.scale.value : undefined);
+        markProperty<number | IRAxisScale>(mark, 'scale');
       const strokeWidth =
-        (strokeDelivery?.resolver(target.row) as number | undefined) ??
-        (mark.strokeWidth?.kind === 'constant' ? mark.strokeWidth.value : 0);
+        (strokeDelivery?.resolver(target.row) as number | undefined) ?? markProperty<number>(mark, 'strokeWidth') ?? 0;
 
       return radius * maximumScaleOf(scale) + strokeWidth / 2;
     },

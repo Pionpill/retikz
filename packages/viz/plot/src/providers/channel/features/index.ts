@@ -1,4 +1,5 @@
 import type { AnyChannelDefinition } from '../../../contract';
+import { intervalPullChannel } from './geometry';
 import { NODE_CHANNELS } from './node';
 import { PATH_CHANNELS } from './path';
 import { SCOPE_CHANNELS } from './scope';
@@ -20,6 +21,7 @@ export * from './text';
 
 /** 汇集向 Core 节点、路径与作用域交付属性的内置通道定义 */
 export const DELIVERY_CHANNELS: ReadonlyArray<AnyChannelDefinition> = [
+  intervalPullChannel,
   ...NODE_CHANNELS,
   ...PATH_CHANNELS,
   ...SCOPE_CHANNELS,

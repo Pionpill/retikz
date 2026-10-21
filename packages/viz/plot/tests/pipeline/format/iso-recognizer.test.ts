@@ -26,7 +26,7 @@ const specWithField = (field: { name: string } & Record<string, unknown>): IRPlo
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', encoding: { x: { field: field.name }, y: { field: 'y' } } }],
+    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: field.name, y: 'y' } } }],
   });
 
 const parseFirst = (

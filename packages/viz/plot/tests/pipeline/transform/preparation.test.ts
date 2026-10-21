@@ -24,8 +24,9 @@ const specOf = () => {
     marks: [
       {
         type: 'point',
-        transform: [{ operation: { kind: 'normalize', params: { field: 'root', as: 'local' } } }],
-        encoding: { x: { field: 'local' }, y: { field: 'value' } },
+        transforms: [{ operation: { kind: 'normalize', params: { field: 'root', as: 'local' } } }],
+        kind: 'data',
+        encodings: { position: { x: 'local', y: 'value' } },
       },
     ],
   });
@@ -93,7 +94,7 @@ describe('Plot whole-scope data preparation', () => {
     expect(prepared.root.rows.map(row => row.root)).toEqual([1 / 3, 2 / 3]);
     expect(prepared.marks[0]!.rows.map(row => row.local)).toEqual([1 / 3, 2 / 3]);
 
-    spec.marks[0].transform![0].dataExecution = { mode: 'external', external: 'missing' };
+    spec.marks[0].transforms![0].dataExecution = { mode: 'external', external: 'missing' };
     await expect(preparePlotData(spec, { dataBindings: { rows: { kind: 'rows', rows } } })).rejects.toThrow(/mark/);
   });
 
@@ -103,7 +104,7 @@ describe('Plot whole-scope data preparation', () => {
       compileToScene({ type: 'scene', version: 1, children: [spec] }, { composites: lowerPlots({ rows }) });
     spec.dataExecution = { root: { mode: 'builtin' }, marks: { mode: 'external', external: 'fixture' } };
     expect(compile).toThrow(/async preparation/);
-    spec.marks[0].transform![0].dataExecution = { mode: 'builtin' };
+    spec.marks[0].transforms![0].dataExecution = { mode: 'builtin' };
     expect(compile().scene.primitives.length).toBeGreaterThan(0);
     spec.dataExecution = { root: { mode: 'hybrid', external: 'fixture' }, marks: { mode: 'builtin' } };
     expect(compile).toThrow(/async preparation/);
@@ -113,8 +114,8 @@ describe('Plot whole-scope data preparation', () => {
     const spec = specOf();
     spec.dataExecution = { mode: 'builtin' };
     spec.transform = [{ operation: { kind: 'jitter', params: { xField: 'value', amount: 0.5, seed: 31 } } }];
-    spec.marks[0].transform = [];
-    spec.marks[0].encoding = { x: { field: 'value' }, y: { field: 'value' } };
+    spec.marks[0].transforms = [];
+    spec.marks[0].encodings = { position: { x: 'value', y: 'value' } };
     const plan = await preparePlotData(spec, { dataBindings: { rows: { kind: 'rows', rows } } });
     const prepared = await plan.execute();
 
@@ -148,8 +149,8 @@ describe('Plot whole-scope data preparation', () => {
     const spec = specOf();
     spec.dataExecution = { mode: 'builtin' };
     spec.transform = [];
-    spec.marks[0].transform = [];
-    spec.marks[0].encoding = { x: { field: 'value' }, y: { field: 'value' } };
+    spec.marks[0].transforms = [];
+    spec.marks[0].encodings = { position: { x: 'value', y: 'value' } };
     const plan = await preparePlotData(
       spec,
       {
@@ -242,8 +243,8 @@ describe('Plot whole-scope data preparation', () => {
             },
     };
     const spec = specOf();
-    spec.marks[0].transform = [{ operation: { kind: 'sort', params: { field: 'root' } } }];
-    spec.marks[0].encoding = { x: { field: 'root' }, y: { field: 'value' } };
+    spec.marks[0].transforms = [{ operation: { kind: 'sort', params: { field: 'root' } } }];
+    spec.marks[0].encodings = { position: { x: 'root', y: 'value' } };
 
     await expect(
       preparePlotData(spec, {

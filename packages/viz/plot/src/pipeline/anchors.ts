@@ -46,12 +46,12 @@ export const createAnchorRegistry = (options: {
     return options.plotId === undefined ? scoped : `${options.plotId}.${scoped}`;
   };
 
-  const makeId = (spec: IRPlotAnchorId, row: ExternalRow, owner: AnchorOwner): string => {
+  const makeId = (spec: IRPlotAnchorId, row: ExternalRow, owner: AnchorOwner, field?: string): string => {
     const prefix = spec.prefix ?? defaultPrefix(owner);
-    if (spec.field !== undefined) {
-      const raw = resolveFieldPath(row, spec.field);
+    if (field !== undefined) {
+      const raw = resolveFieldPath(row, field);
       if (raw === undefined) {
-        throw new RetikzPlotError(`lowerPlots: anchorId field "${spec.field}" missing for ${ownerText(owner)}`);
+        throw new RetikzPlotError(`lowerPlots: anchorId field "${field}" missing for ${ownerText(owner)}`);
       }
 
       return makeScopedId(prefix, raw);

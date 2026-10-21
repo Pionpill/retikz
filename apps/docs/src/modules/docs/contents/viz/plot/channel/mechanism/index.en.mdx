@@ -9,7 +9,7 @@ Start with [Channel Binding](/viz/plot/channel/binding) and [Built-in Channels](
 
 Three objects participate:
 
-- **Binding**: where a value comes from, such as the size field binding `{ kind: 'field', value: 'amount' }`; it lives in Plot IR.
+- **Binding**: where a value comes from, such as the size field binding `'amount'`; it lives in Plot IR.
 - **Definition**: a runtime object that explains how to resolve and use values; Plot supplies the built-in `size` definition.
 - **Resolution**: value functions, delivery entries, and optional legend descriptors prepared for a mark and its data.
 
@@ -46,7 +46,7 @@ Point marks select the node definition, while path marks select the path definit
   caption="Top: lookup by channel name. Bottom: select delivery kinds. Both opacity entries remain in the full list."
 />
 
-Once registration is complete, mark resolution traverses applicable definitions. The `size` definition reads the mark's named property, not `encoding.channels.size`; putting a built-in name in the extension binding area fails.
+After registration, mark resolution traverses applicable definitions and reads the size binding from `encodings.size`. Built-in and custom targets share `encodings`; unregistered or unconsumed targets fail. Fixed size comes from `properties.size`.
 
 <ComponentAlert
   type="tip"
@@ -103,7 +103,7 @@ Field mode returns both a per-row resolver and a legend descriptor containing th
 
 | Object being traced | Current contents                           | Consumer        |
 | ------------------- | ------------------------------------------ | --------------- |
-| Input binding       | `size: { kind: 'field', value: 'amount' }` | Size definition |
+| Input binding       | `encodings.size: 'amount'` | Size definition |
 | Value function      | `amount = 25 → radius = 11`                | Node delivery   |
 | Mapping descriptor  | `domain: [0, 100]`, `range: [2, 20]`       | Size legend     |
 | Node property       | `layout.minimumSize: 11 × √2`              | Circle layout   |

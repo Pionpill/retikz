@@ -44,14 +44,14 @@ export const BuiltinTextPreview = (
       <PlotScale dimension="x" type="linear" domain={[0, 4]} domainPadding={0} />
       <PlotScale dimension="y" type="linear" domain={[8, 16]} domainPadding={0} />
       <PointMark
-        x="x"
-        y="y"
-        text="word"
-        textColor={{ kind: 'constant', value: values.textColor }}
-        align={values.align}
-        font={{ size: values.fontSize, weight: 'bold' }}
-        lineHeight={values.lineHeight}
-        maxTextWidth={values.maxTextWidth}
+        encodings={{ text: 'word', position: { x: 'x', y: 'y' } }}
+        properties={{
+          textColor: values.textColor,
+          align: values.align,
+          font: { size: values.fontSize, weight: 'bold' },
+          lineHeight: values.lineHeight,
+          maxTextWidth: values.maxTextWidth,
+        }}
       />
     </Plot>
   </Layout>

@@ -38,7 +38,7 @@ const baseLine = {
     { type: 'linear', name: 'yRevenue', nice: true },
   ],
   coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-  marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+  marks: [{ type: 'path', kind: 'data', encodings: { order: 'month', position: { x: 'month', y: 'revenue' } } }],
 };
 
 describe('PlotSchema (contract)', () => {
@@ -64,7 +64,7 @@ describe('PlotSchema (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'xs' }],
       coordinate: { type: 'cartesian2D', x: 'xs', y: 'xs' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } }],
     };
 
     expect(PlotSchema.parse(spec)).toEqual(spec);
@@ -130,8 +130,8 @@ describe('PlotSchema (contract)', () => {
     const spec = {
       ...baseLine,
       marks: [
-        { type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
-        { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        { type: 'path', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } },
+        { type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } },
       ],
     };
 
@@ -204,8 +204,8 @@ describe('PlotSchema (contract)', () => {
     const spec = {
       ...baseLine,
       marks: [
-        { type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
-        { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        { type: 'path', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } },
+        { type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } },
       ],
       guides: [{ type: 'axis', dimension: 'x' }],
     };

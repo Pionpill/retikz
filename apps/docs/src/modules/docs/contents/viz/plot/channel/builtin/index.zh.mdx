@@ -34,7 +34,7 @@ description: 选择 Plot 内置的位置、颜色、大小、形状和文本通�
   caption="同一批记录的位置随所选字段变化。"
 />
 
-点图元的位置 props 接受字段名。
+位置字段写入 `encodings.position`；固定数据位置写入 `properties.position`。
 
 ## 视觉编码
 
@@ -152,7 +152,7 @@ label 在图元旁附加说明文字，保留节点主体的形状。它适合�
 | `label.pin`       | 布尔值                        | 是否显示标签引线。                     |
 | `label.textColor` | 颜色                          | 标签文字颜色配置。                     |
 
-常见标签只需 `label: 'name'`，为每条记录显示 name 字段。需要细调时写成 `label: { field: 'name', position: 'top', distance: 12, pin: true }`；固定文字使用 value 替代 field，多条标签使用数组。
+字段标签写作 `encodings.label: { content: 'name' }`，布局写作 `properties.label: { position: 'top', distance: 12, pin: true }`。固定文字写入 `properties.label.content`；多条标签的编码与属性按数组索引对应。
 
 示例使用 tag 字段标注三个节点。切换标签位置、调整距离或关闭引线，观察标签变化；节点主体和数据位置保持不变。
 
@@ -224,7 +224,7 @@ order 和 series 位于图元配置顶层，不在 encoding 中。它们组织�
 ## 错误与限制
 
 - **先确认图元支持范围。** 点、路径和区间图元的属性形态并不完全相同；不要直接把一个图元的配置复制到另一个图元。
-- **字符串先匹配字段。** React 内置样式简写可能将颜色名或形状名识别为同名字段。固定颜色使用 `{ kind: 'constant', value: '#2563eb' }`；位置与字段查找规则见[通道绑定](/viz/plot/channel/binding#错误与限制)。
+- **按来源分组。** `encodings` 只读字段，`properties` 只保存固定值；同一目标由编码优先，无效编码不回退。
 - **区分数据映射与直接值。** 点的 size 字段默认经过平方根比例尺，常量 size 是半径；shape 字段应为分类类型。透明度范围为 0–1，半径和描边宽度不能为负。
 - **明确颜色的作用位置。** 需要独立控制填充和描边时，用 fill 和 stroke。textColor 控制节点文字，label.textColor 控制外侧标签。
 - **给大尺寸与标签留空间。** domainPadding 扩展位置比例尺的数据域；较大的半径、旋转或标签可能还需要更多留白，超出画面时先检查尺寸与坐标域。
@@ -235,23 +235,23 @@ order 和 series 位于图元配置顶层，不在 encoding 中。它们组织�
 
 <ComponentProps
   items={[
-    { name: 'PointMark.x', kind: 'property', type: 'string', description: '位置字段；二维直角坐标下决定横坐标。' },
-    { name: 'PointMark.y', kind: 'property', type: 'string', description: '位置字段；二维直角坐标下决定纵坐标。' },
+    { name: 'PointMark.encodings.position.x', kind: 'property', type: 'string', description: '位置字段；二维直角坐标下决定横坐标。' },
+    { name: 'PointMark.encodings.position.y', kind: 'property', type: 'string', description: '位置字段；二维直角坐标下决定纵坐标。' },
     {
-      name: 'PointMark.color',
+      name: 'PointMark.encodings.color',
       kind: 'property',
-      type: "string | { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: string }",
+      type: "string | { field: string; scale: string }",
       description:
         '字段名简写或显式绑定。字段形式读取 value 指定的字段，可用 scale 引用比例尺；常量形式使用固定 CSS 颜色。',
     },
     {
-      name: 'PointMark.size',
+      name: 'PointMark.encodings.size',
       kind: 'property',
-      type: "string | number | { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: number }",
+      type: "string | { field: string; scale: string }",
       description: '字段映射点半径，非负数字直接指定半径；显式绑定中的 scale 可引用命名比例尺。',
     },
     {
-      name: 'PointMark.text',
+      name: 'PointMark.encodings.text',
       kind: 'property',
       type: 'string',
       description: '节点内显示的文字字段；会改变点图元的显示形式。',
@@ -263,13 +263,13 @@ order 和 series 位于图元配置顶层，不在 encoding 中。它们组织�
       description: '字段名或包含 field/value、位置和样式的对象；支持数组，省略时不生成标签。',
     },
     {
-      name: 'PathMark.order',
+      name: 'PathMark.encodings.order',
       kind: 'property',
       type: 'string',
       description: '连接前按指定字段排序；不放在 encoding 中。',
     },
     {
-      name: 'PathMark.series',
+      name: 'PathMark.encodings.series',
       kind: 'property',
       type: 'string',
       description: '按指定字段拆分路径系列；不放在 encoding 中。',

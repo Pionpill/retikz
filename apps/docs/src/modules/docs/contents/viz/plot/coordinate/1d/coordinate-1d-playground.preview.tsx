@@ -39,18 +39,14 @@ export const Coordinate1dPlaygroundPreview = (values: Coordinate1dPlaygroundPrev
     <Plot data={oneDimensionalEvents} coordinate={coordinate} width={270} height={270}>
       <PlotScale dimension="x" type="linear" domain={[0, 24]} />
       <PointMark
-        x="hour"
-        size={values.pointSize}
-        fill={{
-          kind: 'constant',
-          value: values.pointFill,
+        encodings={{ position: { x: 'hour' } }}
+        properties={{
+          size: values.pointSize,
+          fill: values.pointFill,
+          stroke: values.pointStroke,
+          strokeWidth: values.pointStrokeWidth,
+          opacity: { overall: values.pointOpacity },
         }}
-        stroke={{
-          kind: 'constant',
-          value: values.pointStroke,
-        }}
-        strokeWidth={values.pointStrokeWidth}
-        opacity={values.pointOpacity}
       />
       {values.axisVisible ? (
         <PlotAxis

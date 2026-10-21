@@ -10,21 +10,30 @@ describe('buildPlotIR mark-local transform', () => {
   ];
 
   it('point_mark_forwards_local_transform', () => {
-    const spec = buildPlotIR(<PointMark x="x" y="score" transform={markTransform} />, '__plot');
+    const spec = buildPlotIR(
+      <PointMark transforms={markTransform} encodings={{ position: { x: 'x', y: 'score' } }} />,
+      '__plot',
+    );
 
-    expect(spec.marks[0]).toMatchObject({ type: 'point', transform: markTransform });
+    expect(spec.marks[0]).toMatchObject({ type: 'point', transforms: markTransform, kind: 'data' });
   });
 
   it('path_mark_forwards_local_transform', () => {
-    const spec = buildPlotIR(<PathMark x="x" y="score" order="x" transform={markTransform} />, '__plot');
+    const spec = buildPlotIR(
+      <PathMark transforms={markTransform} encodings={{ order: 'x', position: { x: 'x', y: 'score' } }} />,
+      '__plot',
+    );
 
-    expect(spec.marks[0]).toMatchObject({ type: 'path', transform: markTransform });
+    expect(spec.marks[0]).toMatchObject({ type: 'path', transforms: markTransform, kind: 'data' });
   });
 
   it('interval_mark_forwards_local_transform', () => {
-    const spec = buildPlotIR(<IntervalMark x="x" y="score" transform={markTransform} />, '__plot');
+    const spec = buildPlotIR(
+      <IntervalMark transforms={markTransform} encodings={{ position: { x: 'x', y: 'score' } }} />,
+      '__plot',
+    );
 
-    expect(spec.marks[0]).toMatchObject({ type: 'interval', transform: markTransform });
+    expect(spec.marks[0]).toMatchObject({ type: 'interval', transforms: markTransform, kind: 'data' });
   });
 
   it('mark_transform_shortcut_definitions_append_plot_transforms_without_consuming_mark_local_transform', () => {
@@ -32,16 +41,20 @@ describe('buildPlotIR mark-local transform', () => {
       kind: 'jitter',
       params: { axis: 'x', xField: 'x', amount: 0.2, seed: 9 },
     };
-    const spec = buildPlotIR(<PointMark x="x" y="score" transform={markTransform} />, '__plot', {
-      markTransformShortcuts: [
-        {
-          markType: 'point',
-          build: ({ mark }) => (mark.type === 'point' ? [shortcutTransform] : []),
-        },
-      ],
-    });
+    const spec = buildPlotIR(
+      <PointMark transforms={markTransform} encodings={{ position: { x: 'x', y: 'score' } }} />,
+      '__plot',
+      {
+        markTransformShortcuts: [
+          {
+            markType: 'point',
+            build: ({ mark }) => (mark.type === 'point' ? [shortcutTransform] : []),
+          },
+        ],
+      },
+    );
 
     expect(spec.transform).toEqual([{ operation: shortcutTransform }]);
-    expect(spec.marks[0]).toMatchObject({ type: 'point', transform: markTransform });
+    expect(spec.marks[0]).toMatchObject({ type: 'point', transforms: markTransform, kind: 'data' });
   });
 });

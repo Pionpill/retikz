@@ -1,9 +1,9 @@
 ---
 title: Channel Binding
-description: Channel binding explains how fields or fixed values control visual results such as position, color, size, shape, and text.
+description: Bind data fields with encodings and set fixed positions and appearance with properties.
 ---
 
-A dataset can produce many different graphics because the data itself does not specify how each field should appear. Channels connect **data to visual properties** in the grammar of graphics. Position, color, size, shape, and text are ways a graphic can carry information; a channel binding assigns a field or fixed value to one of those properties.
+A dataset can produce many different graphics because the data itself does not specify how each field should appear. Channels connect **data to visual properties** in the grammar of graphics. Position, color, size, shape, and text are ways a graphic can carry information; a channel binding assigns a data field to one of those properties. Fixed appearance is configured separately.
 
 For example, a row might describe a region's GDP, life expectancy, and population. After choosing a point to represent the row, you can bind GDP to `x`, life expectancy to `y`, and population to `size`. Readers can then compare the data through point positions and sizes instead of reading every number. One field can also drive several channels, such as using both color and shape to distinguish regions.
 
@@ -45,7 +45,7 @@ createRoot(document.getElementById('plot')!).render(
   <Plot data={rows} width={360} height={220}>
     <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
     <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
-    <PointMark x="gdp" y="life" color="region" size="population" />
+    <PointMark encodings={{ position: { x: 'gdp', y: 'life' }, color: 'region', size: 'population' }} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" />
   </Plot>,
@@ -80,9 +80,8 @@ const spec: IRPlot = {
   marks: [
     {
       type: 'point',
-      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
-      color: { kind: 'field', value: 'region' },
-      size: { kind: 'field', value: 'population' },
+      kind: 'data',
+      encodings: { position: { x: 'gdp', y: 'life' }, color: 'region', size: 'population' },
     },
   ],
   guides: [
@@ -118,9 +117,8 @@ const spec = plot({
   marks: [
     {
       type: 'point',
-      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
-      color: { kind: 'field', value: 'region' },
-      size: { kind: 'field', value: 'population' },
+      kind: 'data',
+      encodings: { position: { x: 'gdp', y: 'life' }, color: 'region', size: 'population' },
     },
   ],
   guides: [
@@ -159,9 +157,8 @@ const spec: IRPlot = {
   marks: [
     {
       type: 'point',
-      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
-      color: { kind: 'field', value: 'region' },
-      size: { kind: 'field', value: 'population' },
+      kind: 'data',
+      encodings: { position: { x: 'gdp', y: 'life' }, color: 'region', size: 'population' },
     },
   ],
   guides: [
@@ -178,33 +175,31 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 The explicit `data.reference` must match the dataset name `rows`. All four entries express the same bindings. React dimensions specify the drawing area; Vanilla render options also specify SVG output dimensions, so outer bounds may differ.
 
-## Fields and constants
+## Encodings and fixed properties
 
-Channels have two binding forms: a **field channel** reads a named field from each data row, while a **constant channel** uses a fixed value from the configuration. Choose between them based on whether the visual property should vary with the data.
+`encodings` selects fields to read; `properties` supplies fixed values. React, Vanilla, and JSON use the same groups. Named components and factories supply `type` and `kind`; JSON marks declare both explicitly.
 
-| Form             | Value source and effect                                                                                                   | When to use it                                                                                  | Binding syntax                                                                   |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Field channel    | Reads a field from each row, then applies the channel and scale rules; records can have different positions or styles     | Compare values by position, distinguish categories by color, or express quantities through size | Position: `{ field: 'gdp' }`; point color: `{ kind: 'field', value: 'region' }`  |
-| Constant channel | Always reads the same configured value without reading a data field; the corresponding position or style stays consistent | Draw a fixed threshold line or give every point the same color                                  | Position: `{ value: 80 }`; point color: `{ kind: 'constant', value: 'crimson' }` |
+| Target              | Field encoding                         | Fixed property                                        |
+| ------------------- | -------------------------------------- | ----------------------------------------------------- |
+| Horizontal position | `encodings.position.x: 'gdp'`          | `properties.position.x: 400`                          |
+| Color               | `encodings.color: 'region'`            | `properties.color: 'crimson'`                         |
+| Size                | `encodings.size: 'population'`         | `properties.size: 12`                                 |
+| Shape               | `encodings.shape: 'region'`            | `properties.shape: 'circle'`                          |
+| Label content       | `encodings.label: { content: 'abbr' }` | `properties.label: { content: 'A', position: 'top' }` |
 
-The table shows explicit Vanilla / IR bindings. The entry tabs above provide complete mark configurations and React shorthand. Constant positions still pass through scales and coordinates: binding a reference line’s `y` to `80` means the data value 80, not 80 pixels from the top of the canvas. Each mark accepts only the channels and binding forms it supports.
+Write a field name for an ordinary binding. To select a declared scale, use `{ field: 'population', scale: 'populationSize' }`. Coordinates own position scales, so `position.x` and `position.y` accept field names only. An object such as `{ field: 'gdp' }` is not a valid shorthand.
 
-| Property | Example                                   | Effect and constraint                                                           |
-| -------- | ----------------------------------------- | ------------------------------------------------------------------------------- |
-| `x`      | `"gdp"`                                   | Field for horizontal point position                                             |
-| `y`      | `"life"`                                  | Field for vertical point position                                               |
-| `color`  | `"region"` or an explicit constant        | Color by category or use one color                                              |
-| `size`   | `"population"` or `12`                    | Map numeric values to radii or use a fixed radius; negative values are rejected |
-| `shape`  | `"region"` or an explicit circle constant | Assign shapes by category; the field must be categorical                        |
-| `label`  | `"abbr"`                                  | Add field-based labels to points                                                |
+Fixed positions remain in data space: `properties.position.y: 80` means the data value 80, which passes through scale and coordinate projection. `{ edge: 'start' }` and `{ edge: 'end' }` refer to the final view range edges; see [annotations](/viz/plot/mark/annotation).
 
-Use the panel to switch the `x` / `y` fields and change color, size, or shape from field-driven values to constants. The chart structure stays fixed, so each action isolates the effect of the selected binding.
+An encoding wins over a fixed property at the same target. Missing fields or failed scale mappings raise errors instead of falling back to the fixed property. Other targets remain independent: encoding `opacity.overall` preserves fixed `opacity.fill` and `opacity.stroke` factors.
+
+Use the panel to switch position fields and choose field encodings or fixed properties for color, size, and shape.
 
 <ComponentPreview
   files={['channel-binding', 'channel-binding.preview.tsx', 'channel-binding.data.ts']}
   mode="showcase"
   size="lg"
-  caption="Position channels move data through the coordinate system; style channels can read fields or use fixed values."
+  caption="Position channels move data through the coordinate system; appearance comes from field encodings or fixed properties."
   defaultSourceFile="channel-binding.preview.tsx"
 />
 
@@ -214,44 +209,34 @@ One row can bind to several channels at once: `gdp` and `life` determine positio
 
 ## Errors and limitations
 
-- **Strings match fields first.** React built-in flat style props such as `color` first match a field in the current dataset or model, then try a valid constant. If neither accepts the string, the prop is skipped with a warning. This is not a fallback for missing values in individual rows.
-- **Make fixed styles unambiguous.** If a `crimson` field exists, `color="crimson"` reads it. Use `color={{ kind: 'constant', value: 'crimson' }}` for one fixed color. Explicit IR uses `color: { kind: 'constant', value: 'crimson' }`.
-- **Position and style objects differ.** IR position bindings live in `encoding` and use `{ field }` or `{ value }`. Point color and size live on the mark and use `{ kind, value }`.
-- **Exact field keys take precedence.** If both a direct `"metrics.gdp"` property and nested `metrics.gdp` exist, the direct property wins. Dotted traversal only applies when the complete key is absent. Ensure bound fields contain valid values.
-- **Each mark defines supported channels.** `PointMark` `x` / `y` props require field names. Strings in custom `channels` also mean fields; constants use explicit `{ kind: 'constant', value }`.
-- **Scales provide padding.** `domainPadding` expands the data domain. Larger points or labels may require more padding; channel binding does not automatically prevent overflow.
+- Strings in `encodings` always name fields; strings in `properties` always supply fixed values. Their meaning does not depend on the dataset.
+- Exact field keys take precedence: a direct `"metrics.gdp"` property wins over a nested object. Dotted traversal applies only when the complete key is absent.
+- Each mark accepts its declared encoding targets. Custom channels also register under `encodings`, without a separate `channels` dictionary.
+- `transforms` runs local data operations for this mark. Plot root operations still use `transform`. Bound fields must exist in the local result.
 
 ## Related props
 
-These are the point binding props used in the entry example. See the [mark reference](/viz/plot/reference/mark) and [encoding reference](/viz/plot/reference/encoding) for complete contracts.
+See the [mark reference](/viz/plot/reference/mark) and [encoding reference](/viz/plot/reference/encoding) for complete contracts.
 
 <ComponentProps
   items={[
     {
-      name: 'PointMark.x',
+      name: 'PointMark.encodings.position',
       kind: 'property',
-      type: 'string',
-      description: 'Horizontal position field; needed by this page’s 2D Cartesian example.',
+      type: 'Record<string, string>',
+      description: 'Maps coordinate roles to field names.',
     },
     {
-      name: 'PointMark.y',
+      name: 'PointMark.encodings.color',
       kind: 'property',
-      type: 'string',
-      description: 'Vertical position field; needed by this page’s 2D Cartesian example.',
+      type: 'string | { field: string; scale: string }',
+      description: 'Color field with an optional explicit choice of a declared scale.',
     },
     {
-      name: 'PointMark.color',
+      name: 'PointMark.properties',
       kind: 'property',
-      type: "string | { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: string }",
-      description:
-        "Strings match fields first. Explicit fields use `{ kind: 'field', value: string, scale?: string }`; constants use `{ kind: 'constant', value: string }`.",
-    },
-    {
-      name: 'PointMark.size',
-      kind: 'property',
-      type: "string | number | { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: number }",
-      description:
-        "Strings read numeric fields; numbers specify a fixed radius. Explicit forms are `{ kind: 'field', value: string, scale?: string }` or `{ kind: 'constant', value: number }`; negative values are rejected.",
+      type: 'PointProperties',
+      description: 'Fixed positions, appearance, and construction settings defined by the Point contract.',
     },
   ]}
 />

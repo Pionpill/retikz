@@ -37,22 +37,15 @@ export const LineClosurePreview = (values: LineClosurePreviewValues) => {
         }}
       />
       <PathMark
-        x="month"
-        y="value"
-        order="order"
-        closure={closure}
-        closed={coordinate === 'polar2D' && values.closed}
-        fill={
-          closure === undefined
-            ? 'none'
-            : {
-                kind: 'constant',
-                value: `rgba(56, 189, 248, ${values.fillOpacity})`,
-              }
-        }
-        stroke="#0284c7"
-        strokeWidth={3}
-        lineJoin="round"
+        encodings={{ order: 'order', position: { x: 'month', y: 'value' } }}
+        properties={{
+          lineJoin: 'round',
+          closure,
+          closed: coordinate === 'polar2D' && values.closed,
+          fill: closure === undefined ? 'none' : `rgba(56, 189, 248, ${values.fillOpacity})`,
+          stroke: '#0284c7',
+          strokeWidth: 3,
+        }}
       />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />

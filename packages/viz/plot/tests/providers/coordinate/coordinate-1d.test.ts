@@ -47,7 +47,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'xs', domain: [0, 10] }],
       coordinate: { type: 'cartesian1D', x: 'xs', ...extra },
-      marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
+      marks: [{ type: 'point', kind: 'data', properties: { autoPadding: false }, encodings: { position: { x: 'v' } } }],
     });
 
   // Happy path：水平 rug — 各点落底边基线轴、x 随值展开
@@ -87,7 +87,14 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
         { type: 'ordinal', name: 'col', range: ['#aa', '#bb'] },
       ],
       coordinate: { type: 'cartesian1D', x: 'xs' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'g', scale: 'col' }, encoding: { x: { field: 'v' } } }],
+      marks: [
+        {
+          type: 'point',
+          kind: 'data',
+          properties: { autoPadding: false },
+          encodings: { color: { field: 'g', scale: 'col' }, position: { x: 'v' } },
+        },
+      ],
     });
     const layer = firstLayer(
       spec,
@@ -111,7 +118,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'band', name: 'xs' }],
       coordinate: { type: 'cartesian1D', x: 'xs' },
-      marks: [{ type: 'interval', encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
+      marks: [{ type: 'interval', kind: 'data', encodings: { position: { x: 'cat', y: 'v' } } }],
     });
 
     expect(() => expandOf(spec, { d: [{ cat: 'A', v: 3 }] }, opts)).toThrow(/cartesian1D|not supported|interval/i);
@@ -125,7 +132,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'xs' }],
       coordinate: { type: 'cartesian1D', x: 'xs' },
-      marks: [{ type: 'point', color: { kind: 'constant', value: '#333' }, encoding: {} }],
+      marks: [{ type: 'point', kind: 'data', properties: { color: '#333' } }],
     });
 
     expect(() => expandOf(spec, { d: [{ v: 1 }] }, opts)).toThrow(/cartesian1D|requires|x/i);
@@ -139,7 +146,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'xs', domain: [0, 10] }],
       coordinate: { type: 'cartesian1D', x: 'xs' },
-      marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
+      marks: [{ type: 'point', kind: 'data', properties: { autoPadding: false }, encodings: { position: { x: 'v' } } }],
       guides: [{ type: 'axis', dimension: 'angle' }],
     });
 
@@ -154,7 +161,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'xs', domain: [0, 10] }],
       coordinate: { type: 'cartesian1D', x: 'xs' },
-      marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
+      marks: [{ type: 'point', kind: 'data', properties: { autoPadding: false }, encodings: { position: { x: 'v' } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
     });
     const root = expandOf(spec, { d: [{ v: 1 }, { v: 9 }] }, opts);
@@ -170,7 +177,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'xs', domain: [0, 10] }],
       coordinate: { type: 'cartesian1D', x: 'xs' },
-      marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
+      marks: [{ type: 'point', kind: 'data', properties: { autoPadding: false }, encodings: { position: { x: 'v' } } }],
       guides: [{ type: 'axis', dimension: 'x', grid: true }],
     });
 
@@ -189,7 +196,9 @@ describe('polar1D 圆周坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'a', domain: [0, 360] }],
       coordinate: { type: 'polar1D', angle: 'a', ...extra },
-      marks: [{ type: 'point', encoding: { x: { field: 'deg' } } }],
+      marks: [
+        { type: 'point', kind: 'data', properties: { autoPadding: false }, encodings: { position: { x: 'deg' } } },
+      ],
     });
 
   // Happy path：角向投影落半径 R=150 圆周（angle 0 → 圆心右、angle 90 → 圆心下）
@@ -230,7 +239,9 @@ describe('polar1D 圆周坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'a', domain: [0, 360] }],
       coordinate: { type: 'polar1D', angle: 'a' },
-      marks: [{ type: 'point', encoding: { x: { field: 'deg' } } }],
+      marks: [
+        { type: 'point', kind: 'data', properties: { autoPadding: false }, encodings: { position: { x: 'deg' } } },
+      ],
       guides: [{ type: 'axis', dimension: 'x' }],
     });
     const root = expandOf(spec, { d: [{ deg: 0 }, { deg: 120 }, { deg: 240 }] }, opts);
@@ -245,7 +256,9 @@ describe('polar1D 圆周坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'a', domain: [0, 360] }],
       coordinate: { type: 'polar1D', angle: 'a' },
-      marks: [{ type: 'point', encoding: { x: { field: 'deg' } } }],
+      marks: [
+        { type: 'point', kind: 'data', properties: { autoPadding: false }, encodings: { position: { x: 'deg' } } },
+      ],
       guides: [{ type: 'axis', dimension: 'x', grid: true }],
     });
 
@@ -265,8 +278,9 @@ describe('polar1D 圆周坐标系 (contract)', () => {
       marks: [
         {
           type: 'interval',
-          bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
-          encoding: { color: { field: 'label' } },
+          kind: 'data',
+          encodings: { bounds: { x: { from: 'y0', to: 'y1' } }, color: 'label' },
+          properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } } },
         },
       ],
     });
@@ -282,7 +296,9 @@ describe('polar1D 圆周坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'a', domain: [0, 360] }],
       coordinate: { type: 'polar1D', angle: 'a' },
-      marks: [{ type: 'point', encoding: { x: { field: 'deg' } } }],
+      marks: [
+        { type: 'point', kind: 'data', properties: { autoPadding: false }, encodings: { position: { x: 'deg' } } },
+      ],
       guides: [{ type: 'axis', dimension: 'radius' }],
     });
 

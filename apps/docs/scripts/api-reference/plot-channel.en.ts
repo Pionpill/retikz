@@ -1,5 +1,24 @@
 /** 已审阅的通道公开契约英文说明 */
 const translations: Partial<Record<string, string>> = {
+  '无有效字段编码时使用的固定 paint 属性': 'Fixed paint property used when no effective field encoding exists',
+  读取字段编码在当前行中的原始值: 'Reads the raw value of a field encoding in the current row',
+  '字段绑定；省略表示未绑定': 'Field binding; omitted when unbound',
+  '字段值；绑定或字段缺失时返回 undefined': 'Field value; undefined when the binding or field is missing',
+  'resolveLabel 最高优先；有字段编码时读取字段，否则使用固定内容':
+    'resolveLabel takes precedence; reads the encoded field when present, otherwise uses fixed content',
+  固定文本内容: 'Fixed text content',
+  '可选的字段编码；无效值不回退到固定内容': 'Optional field encoding; invalid values do not fall back to fixed content',
+  字段值的显示格式: 'Display format for field values',
+  '获取字段绑定的字段路径，不解释固定属性': 'Reads the field path of a binding without interpreting fixed properties',
+  获取字段绑定显式指定的比例尺名称: 'Reads the scale name explicitly specified by a field binding',
+  '读取内置视觉目标的编码，透明度因子使用其声明成员':
+    'Reads a visual target encoding, using the declared member for each opacity factor',
+  '加入编码引用的字段路径，固定属性不经过字段收集器':
+    'Adds the field path referenced by an encoding; fixed properties do not enter field collection',
+  字段解析器产出的视觉值类型: 'Visual value type produced by the field resolver',
+  '字段编码；省略时不产生解析结果': 'Field encoding; omitted to produce no resolution',
+  字段类型限制与值解析策略: 'Field type constraints and value parsing policy',
+  '逐行解析器与字段元数据；未绑定时返回 undefined': 'Row resolver and field metadata; undefined when unbound',
   'registry / options 注入用的通用宽类型': 'Wide type for injecting definitions through a registry or options',
   通道注册键: 'Channel registration key',
   '通道类型：position / mark / scope / node / path': 'Channel kind: position / mark / scope / node / path',
