@@ -146,7 +146,9 @@ try {
   console.log(`Docs runtime check passed (${checks.length} route-language checks, ${elapsedSeconds}s).`);
 } catch (error) {
   if (error instanceof Error && /Executable doesn't exist|browserType\.launch/.test(error.message)) {
-    throw new Error('Chromium is not installed; run pnpm bench:install-browser', { cause: error });
+    throw new Error('Chromium is not installed; run pnpm --filter @retikz/docs exec playwright install chromium', {
+      cause: error,
+    });
   }
 
   throw error;

@@ -2,8 +2,6 @@ const DEFAULT_DEV_SLOT = '01';
 
 const DOCS_DEV_PORT_BASE = 7100;
 
-const BENCH_DEV_PORT_BASE = 7200;
-
 /** 校验显式服务端口并保留原始配置值用于诊断 */
 const parseExplicitPort = (envName: string, rawPort: string): number => {
   const port = Number(rawPort);
@@ -31,7 +29,3 @@ const resolveDevPort = (envName: string, basePort: number, rawPort?: string, raw
 /** 解析 Docs 开发服务端口 */
 export const resolveDocsPort = (rawPort?: string, rawSlot?: string): number =>
   resolveDevPort('RETIKZ_DOCS_PORT', DOCS_DEV_PORT_BASE, rawPort, rawSlot);
-
-/** 解析 Bench 开发服务端口 */
-export const resolveBenchPort = (rawPort?: string, rawSlot?: string): number =>
-  resolveDevPort('RETIKZ_BENCH_PORT', BENCH_DEV_PORT_BASE, rawPort, rawSlot);
