@@ -12,12 +12,22 @@ export const polygon = {
     if (n < 3) return false;
 
     let inside = false;
+    const [px, py] = p;
+    let previous = vertices[n - 1];
+    let previousY = previous[1];
+    let previousAbove = previousY > py;
 
-    for (let i = 0, j = n - 1; i < n; j = i++) {
-      const [xi, yi] = vertices[i];
-      const [xj, yj] = vertices[j];
-      const intersects = yi > p[1] !== yj > p[1] && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi;
-      if (intersects) inside = !inside;
+    for (let i = 0; i < n; i++) {
+      const current = vertices[i];
+      const y = current[1];
+      const above = y > py;
+      if (above !== previousAbove) {
+        const x = current[0];
+        if (px < ((previous[0] - x) * (py - y)) / (previousY - y) + x) inside = !inside;
+      }
+      previous = current;
+      previousY = y;
+      previousAbove = above;
     }
 
     return inside;

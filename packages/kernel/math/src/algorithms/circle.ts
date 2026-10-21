@@ -42,7 +42,32 @@ const createCircleFromThreePoints = (a: Position, b: Position, c: Position): Cir
  * @description 使用 epsilon 扩张半径，抵消浮点误差对边界点的影响
  */
 const isPointWithinCircle = (circle: Circle, point: Position, epsilon: number): boolean =>
-  vector2.length([point[0] - circle.center[0], point[1] - circle.center[1]]) <= circle.radius + epsilon;
+  Math.hypot(point[0] - circle.center[0], point[1] - circle.center[1]) <= circle.radius + epsilon;
+
+/** 对非空点集执行增量最小圆求解，不修改输入点或顺序 */
+const solveMinimumCircle = (points: Array<Position>, epsilon: number): Circle => {
+  const n = points.length;
+  let c: Circle = { center: [points[0][0], points[0][1]], radius: 0 };
+
+  for (let i = 1; i < n; i++) {
+    if (isPointWithinCircle(c, points[i], epsilon)) continue;
+
+    c = { center: [points[i][0], points[i][1]], radius: 0 };
+
+    for (let j = 0; j < i; j++) {
+      if (isPointWithinCircle(c, points[j], epsilon)) continue;
+
+      c = createCircleFromDiameterPoints(points[i], points[j]);
+
+      for (let k = 0; k < j; k++) {
+        if (isPointWithinCircle(c, points[k], epsilon)) continue;
+        c = createCircleFromThreePoints(points[i], points[j], points[k]);
+      }
+    }
+  }
+
+  return c;
+};
 
 /** 圆相关几何算法 */
 export const circle = {
@@ -55,25 +80,28 @@ export const circle = {
     const n = points.length;
     if (n === 0) return null;
 
-    let c: Circle = { center: [points[0][0], points[0][1]], radius: 0 };
+    if (n <= 4) return solveMinimumCircle(points, epsilon);
 
-    for (let i = 1; i < n; i++) {
-      if (isPointWithinCircle(c, points[i], epsilon)) continue;
-
-      c = { center: [points[i][0], points[i][1]], radius: 0 };
-
-      for (let j = 0; j < i; j++) {
-        if (isPointWithinCircle(c, points[j], epsilon)) continue;
-
-        c = createCircleFromDiameterPoints(points[i], points[j]);
-
-        for (let k = 0; k < j; k++) {
-          if (isPointWithinCircle(c, points[k], epsilon)) continue;
-          c = createCircleFromThreePoints(points[i], points[j], points[k]);
-        }
-      }
+    let left = points[0];
+    let right = points[0];
+    let bottom = points[0];
+    let top = points[0];
+    for (let index = 1; index < n; index++) {
+      const point = points[index];
+      if (point[0] < left[0]) left = point;
+      if (point[0] > right[0]) right = point;
+      if (point[1] < bottom[1]) bottom = point;
+      if (point[1] > top[1]) top = point;
     }
-
-    return c;
+    const extremes = [left];
+    for (const point of [right, bottom, top]) {
+      if (!extremes.includes(point)) extremes.push(point);
+    }
+    // 子集的最小圆若覆盖全集，也是全集的最小圆；验证沿用相同的浮点容差
+    const candidate = solveMinimumCircle(extremes, epsilon);
+    for (const point of points) {
+      if (!isPointWithinCircle(candidate, point, epsilon)) return solveMinimumCircle(points, epsilon);
+    }
+    return candidate;
   },
 };

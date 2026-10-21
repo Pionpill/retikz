@@ -50,3 +50,23 @@ it('finds rotated ellipse extrema in reverse sweeps', () => {
   expect(range.min).toBeCloseTo(3 - Math.sqrt(250));
   expect(range.max).toBeCloseTo(3 + Math.sqrt(250));
 });
+
+it('preserves a constant projection for degenerate geometry', () => {
+  const segments: Array<CurveSegment> = [
+    { kind: 'line', from: [3, 4], to: [3, 4] },
+    { kind: 'quadraticBezier', from: [3, 4], control: [3, 4], to: [3, 4] },
+    { kind: 'cubicBezier', from: [3, 4], control1: [3, 4], control2: [3, 4], to: [3, 4] },
+    {
+      kind: 'ellipseArc',
+      center: [3, 4],
+      radiusX: 0,
+      radiusY: 0,
+      rotationDeg: 37,
+      startAngleDeg: 0,
+      endAngleDeg: -360,
+    },
+  ];
+  for (const segment of segments) {
+    expect(curve.projectedRange(segment, [-2, 3])).toEqual({ min: 6, max: 6 });
+  }
+});
