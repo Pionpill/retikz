@@ -8,35 +8,35 @@
 
 ## 重点功能
 
-| 重点能力           | 目标                                                          | 相关 ADR                                                                                                                                                                                                                                                                                                                                         |
-| ------------------ | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 主题所有权         | 统一 Plot 主题、共享颜色投影与 Source 默认片段                | [001](./001-chart-layering.md)、[002](./002-inherited-theme-token-scope.md)、[011](./011-theme-source-fragments.md)                                                                                                                                                                                                                              |
-| 绘图区与 Guide     | 完善绘图区、Axis 规则、网格端点与域边距                       | [003](./003-plot-presentation-boundary.md)、[004](./004-plot-area-background.md)、[005](./005-axis-theme-token-rules.md)、[006](./006-axis-grid-domain-endpoints.md)、[007](./007-axis-grid-theme-domain-endpoints.md)、[008](./008-domain-padding-units.md)、[012](./012-mark-aware-domain-padding.md)、[016](./016-point-mark-auto-padding.md) |
-| 空间映射           | 发展结构化映射、内容端口、局部坐标与开放坐标扩展              | [009](./009-polar-interpolation.md)、[017](./017-coordinate-relative-orientation.md)                                                                                                                                                                                                                                                             |
-| Mark Placement     | 统一位置调整、坐标投影与屏幕空间初始化                        | [010](./010-position-jitter.md)                                                                                                                                                                                                                                                                                                                  |
-| 复合图元           | 独立定义复合内容，由几何图元提供定位或几何约束                | —                                                                                                                                                                                                                                                                                                                                                |
-| 性能               | 基于 Kernel 增量底座建立领域失效与增量 lowering               | —                                                                                                                                                                                                                                                                                                                                                |
-| 交互               | 基于 Kernel Headless Interaction 建立数据、系列与视图交互语义 | —                                                                                                                                                                                                                                                                                                                                                |
-| 图元 lowering      | 补全 PointMark、PathMark、IntervalMark 对底层图元能力的接入   | —                                                                                                                                                                                                                                                                                                                                                |
-| 几何图元与上层组件 | 统一几何输入与绘制能力，由上层组合参考与关系组件              | —                                                                                                                                                                                                                                                                                                                                                |
+| 重点能力           | 目标                                                                    | 相关 ADR                                                                                                                                                                                                                                                                                                                                         |
+| ------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 主题所有权         | 统一 Plot 主题、共享颜色投影与 Source 默认片段                          | [001](./001-chart-layering.md)、[002](./002-inherited-theme-token-scope.md)、[011](./011-theme-source-fragments.md)                                                                                                                                                                                                                              |
+| 绘图区与 Guide     | 完善绘图区、Axis 规则、网格端点与域边距                                 | [003](./003-plot-presentation-boundary.md)、[004](./004-plot-area-background.md)、[005](./005-axis-theme-token-rules.md)、[006](./006-axis-grid-domain-endpoints.md)、[007](./007-axis-grid-theme-domain-endpoints.md)、[008](./008-domain-padding-units.md)、[012](./012-mark-aware-domain-padding.md)、[016](./016-point-mark-auto-padding.md) |
+| 空间映射           | 发展结构化映射、内容端口、局部坐标与开放坐标扩展                        | [009](./009-polar-interpolation.md)、[017](./017-coordinate-relative-orientation.md)                                                                                                                                                                                                                                                             |
+| Mark Placement     | 梳理 Plot 生成流程，统一绘图布局后的位置调整                            | [010](./010-position-jitter.md)                                                                                                                                                                                                                                                                                                                  |
+| 复合图元           | 独立定义复合内容，由几何图元提供定位或几何约束                          | —                                                                                                                                                                                                                                                                                                                                                |
+| 性能               | 基于 Kernel 增量底座建立领域失效与增量 lowering                         | —                                                                                                                                                                                                                                                                                                                                                |
+| 交互               | 基于 Kernel Headless Interaction 建立数据、系列与视图交互语义           | —                                                                                                                                                                                                                                                                                                                                                |
+| 图元 lowering      | 统一 Point / Path / Interval 的 Mark、Annotation 与 Kernel 几何能力对接 | —                                                                                                                                                                                                                                                                                                                                                |
+| 几何图元与上层组件 | 统一几何输入与绘制能力，由上层组合参考与关系组件                        | —                                                                                                                                                                                                                                                                                                                                                |
 
 ## 功能规划
 
-### 三类图元 lowering 能力补全
+### 三类 Mark / Annotation 的 Kernel 几何能力对接（待设计）
 
 主要场景：
 
-- PointMark、PathMark、IntervalMark 已使用底层图元绘制，但尚未完整开放适用于各自语义的底层能力。
+- Point、Path、Interval 的 Mark / Annotation 已使用底层图元绘制，但尚未完整对接适用于各自语义的 Kernel 几何能力；统一检查六类入口，不只补齐 Path。
 
 规划内容：
 
-- 梳理三类图元与其 lower 目标的能力差异，补齐公开输入、数据通道到下沉结果的传递，并同步 React / Vanilla / IR 与文档。
-- PointMark 保留数据定位职责，完善节点内容、布局与外观能力的接入；PathMark、IntervalMark 保留数据关系和几何生成职责，完善生成图元的附加能力。
+- 先审阅三类 Mark / Annotation 及 Kernel 对应能力的源码，梳理公开输入、字段编码、坐标投影与 lowering 的差异；演进方案待源码审阅后决定，本规划不预先确定 API 或实现路径。
+- Point 方向检查节点形状、内容、布局与定位能力；Path 方向检查自定义折线、曲线、偏移连接及 ribbon 路径类型；Interval 方向检查区域几何、边界与生成图元能力。Mark / Annotation 保留各自的数据组织与实例语义。
 - 复用底层公开契约与编译能力，明确由 Plot 生成的字段与可由作者配置的字段，避免重复实现或无约束透传；具体能力清单与边界由后续 ADR 明确。
 
 预期效果：
 
-三类图元能够一致地复用适用的底层能力，作者无需为使用已有绘图能力而绕开 Plot 数据映射。
+三类 Mark / Annotation 能够一致地复用适用的底层能力，作者无需为使用已有绘图能力而绕开 Plot 数据映射；以现有 RelationMark demos 和 Chart 消费场景核对替代范围，为移除 RelationMark 提供前置能力。
 
 ### 主题所有权
 
@@ -89,7 +89,7 @@
 
 更复杂的可视化组织拥有统一扩展方向，而不是逐类特例布局。
 
-### Mark Placement
+### Plot 生成流程与 Mark Placement（待设计）
 
 主要场景：
 
@@ -98,12 +98,14 @@
 
 规划内容：
 
-- 统一 role-space adjustment、coordinate projection 与 screen-space initializer。
+- 梳理整个 Plot 生成流程，明确数据变换、通道与尺度解析、绘图布局、坐标投影、位置调整及几何下沉的阶段职责、输入输出与依赖。
+- 将 position-adjustment 作为专属于绘图布局后的位置调整流程纳入统一设计；结合现有 role-space adjustment、coordinate projection 与 screen-space initializer，明确“布局后”的边界及执行顺序，不将该规划视为当前实现已完成阶段划分。
+- 一并核对 dx/dy、rotate/scale、区间 pull 等现有绘图属性与位置调整的职责关系，后续统一处理；具体归属和契约待源码审阅后确定，不预先要求所有变换共用同一入口。
 - 保留原始数据含义，避免单个 mark 拥有私有位置处理链。
 
 预期效果：
 
-展示位置可以调整而不污染数据事实，不同 mark 共用位置处理能力。
+Plot 生成流程具有清晰的阶段边界，布局后的位置调整与数据变换、几何构造各有明确职责；展示位置可以调整而不污染数据事实。具体演进方案留待整体流程整理时统一确定。
 
 ### 复合图元（长期方向）
 
@@ -146,23 +148,21 @@
 
 底层按几何构造划分能力，上层按使用场景组合组件；常量参考与数据驱动图形共享同一套通道、坐标投影与绘制机制。上层参考组件与通用几何能力作为后续规划，移除 ReferenceMark 不表示替代能力已实现。
 
-### 关系组件复用 PathMark（长期方向）
+### RelationMark 的替代与移除（待设计）
 
 主要场景：
 
-- 点到点连接、依赖线、带标签的连接线和桑基带状关系共享路径几何，但具有不同的数据配对与关系语义。
+- 点到点连接、带标签的连接线、曲线与偏移连接、带状关系及端点图形需要由现有 Mark / Annotation 组合承接。
 
 规划内容：
 
-- 上层关系组件负责 source / target 查询、配对及关系数据组织，将每条关系转换为独立路径输入；PathMark 不承担关系查询或业务语义。
-- 补齐 PathMark 的通用路径输入与逐条路径生成能力，明确“多行顶点组成一条路径”和“每行关系生成一条路径”的分组、实例数量及身份传递。
-- 共用目标定位机制支持投影坐标、常量位置和节点 / 锚点引用，保留节点边界连接语义，不将引用目标简单降为中心坐标。
-- 通过 PathMark 接入适用的中间目标、显式路径步骤、路由、箭头、标签与 ribbon 能力，复用底层 Path 公开契约；需要端点图形时由上层组合 PointMark。
-- 完整覆盖 RelationMark 的路径、带状关系、端点、极坐标及交互身份行为后，再移除独立的 RelationMark 类型；具体能力归属与公开契约由后续 ADR 明确。
+- 以前述三类 Mark / Annotation 与 Kernel 几何能力统一对接为前置，核对 RelationMark demos 与 Chart RangedDot 等消费场景的能力差距。
+- 保持 PathMark 的多行顶点组织与 PathAnnotation 的显式路径实例语义，具体连接、目标引用、路径类型与端点组合方案待源码审阅后确定，不预先将全部关系能力归入 PathMark。
+- 复用底层公开契约，核对路径、ribbon、节点边界与锚点、端点图形、极坐标、domain / 留白及交互身份的承接范围；完成替代与消费方迁移后移除 RelationMark，不保留旧入口兼容层。
 
 预期效果：
 
-关系与参考用途均由上层组件封装，底层保持几何构造职责；PathMark 的通用能力补齐后可被不同关系组件复用，不把现有 RelationMark 的全部逻辑整体搬入 PathMark。作为长期规划记录，不承诺在当前版本立即移除 RelationMark。
+关系用途通过现有几何图元与标注组合表达，不再由 RelationMark 独立维护绘图能力。当前仅记录演进目标，具体能力归属与公开契约由源码审阅及后续 ADR 确定，不承诺当前版本立即移除。
 
 ### 性能
 
