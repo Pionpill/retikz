@@ -1,5 +1,6 @@
 import type { Scene, ScenePrimitive, SceneResource } from '@retikz/core';
-import type { RuntimeIdentity, RuntimeRevision } from '@retikz/runtime';
+
+import type { SceneIdentity, SceneRevision } from './identity-value';
 
 /**
  * 把 Runtime 公开 DTO 递归收窄为只读结构，同时保留 callback identity
@@ -31,11 +32,11 @@ export type RuntimeSceneResource = RuntimeDeepReadonly<SceneResource>;
 /** 完整 Scene 中一个 primitive occurrence 的 Runtime topology */
 export type SceneRuntimeNode = Readonly<{
   /** primitive occurrence 的稳定 identity */
-  identity: RuntimeIdentity;
+  identity: SceneIdentity;
   /** 产生该 primitive 的语义 owner */
-  semanticOwner: RuntimeIdentity;
+  semanticOwner: SceneIdentity;
   /** document root 或父 Group occurrence */
-  parent: RuntimeIdentity;
+  parent: SceneIdentity;
   /** 在同一 parent 内的 canonical 顺序 */
   order: number;
   /** 从 Scene primitives 根数组开始的 zero-based occurrence path */
@@ -47,11 +48,11 @@ export type SceneRuntimeNode = Readonly<{
 /** Patch subtree 中一个相对 primitive occurrence 的 Runtime topology */
 export type SceneRuntimeSubtreeNode = Readonly<{
   /** subtree 内稳定 identity */
-  identity: RuntimeIdentity;
+  identity: SceneIdentity;
   /** 产生该 primitive 的语义 owner */
-  semanticOwner: RuntimeIdentity;
+  semanticOwner: SceneIdentity;
   /** subtree 内父 occurrence，root 缺省 */
-  parent?: RuntimeIdentity;
+  parent?: SceneIdentity;
   /** 在同一 parent 内的 canonical 顺序 */
   order: number;
   /** 从 subtree root primitive 开始的相对 occurrence path */
@@ -63,11 +64,11 @@ export type SceneRuntimeSubtreeNode = Readonly<{
 /** Runtime participant 消费的完整 Scene 与 identity topology */
 export type SceneRuntimeSnapshot = Readonly<{
   /** snapshot 所属 session revision */
-  revision: RuntimeRevision;
+  revision: SceneRevision;
   /** deeply immutable 完整 Scene */
   scene: RuntimeScene;
   /** 不对应 Scene primitive 的 document root identity */
-  root: RuntimeIdentity;
+  root: SceneIdentity;
   /** 与 Scene primitive occurrences 严格双射的 topology */
   topology: ReadonlyArray<SceneRuntimeNode>;
 }>;
@@ -75,7 +76,7 @@ export type SceneRuntimeSnapshot = Readonly<{
 /** insert/update operation 携带的相对 Scene subtree */
 export type SceneRuntimeSubtree = Readonly<{
   /** 对应 subtree primitive 的 root identity */
-  root: RuntimeIdentity;
+  root: SceneIdentity;
   /** 子树根图元 */
   primitive: RuntimeScenePrimitive;
   /** 以 subtree root 为原点的相对 topology */
@@ -88,9 +89,9 @@ export type ScenePatchOperation =
       /** operation 判别符 */
       kind: 'insert';
       /** 接收 subtree root 的 next parent identity */
-      parent: RuntimeIdentity;
+      parent: SceneIdentity;
       /** next topology 中同 parent 的后继 sibling，缺省时追加到末尾 */
-      before?: RuntimeIdentity;
+      before?: SceneIdentity;
       /** 待插入的完整相对 Scene subtree */
       subtree: SceneRuntimeSubtree;
     }>
@@ -98,7 +99,7 @@ export type ScenePatchOperation =
       /** operation 判别符 */
       kind: 'update';
       /** 被替换的现有 subtree root identity，必须等于 subtree.root */
-      identity: RuntimeIdentity;
+      identity: SceneIdentity;
       /** 替换 primitive 与 descendants 的完整相对 Scene subtree */
       subtree: SceneRuntimeSubtree;
     }>
@@ -106,17 +107,17 @@ export type ScenePatchOperation =
       /** operation 判别符 */
       kind: 'remove';
       /** 被移除的现有 subtree root identity */
-      identity: RuntimeIdentity;
+      identity: SceneIdentity;
     }>
   | Readonly<{
       /** operation 判别符 */
       kind: 'move';
       /** 保持自身与 descendants identity 不变的现有 subtree root */
-      identity: RuntimeIdentity;
+      identity: SceneIdentity;
       /** subtree root 的 next parent identity */
-      parent: RuntimeIdentity;
+      parent: SceneIdentity;
       /** next topology 中同 parent 的后继 sibling，缺省时移动到末尾 */
-      before?: RuntimeIdentity;
+      before?: SceneIdentity;
     }>
   | Readonly<{
       /** operation 判别符 */
@@ -146,9 +147,9 @@ export type ScenePatchOperation =
 /** 从 current revision 原子转换到 candidate revision 的 Scene Patch */
 export type ScenePatch = Readonly<{
   /** Patch 所基于的 current revision */
-  baseRevision: RuntimeRevision;
+  baseRevision: SceneRevision;
   /** Patch 应发布的 candidate revision */
-  nextRevision: RuntimeRevision;
+  nextRevision: SceneRevision;
   /** 按规范化顺序执行的 operations */
   operations: ReadonlyArray<ScenePatchOperation>;
 }>;

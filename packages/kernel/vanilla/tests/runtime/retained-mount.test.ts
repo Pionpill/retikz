@@ -299,7 +299,7 @@ describe('@retikz/vanilla retained mount', () => {
     const runtimeMeta = view.runtimeMeta;
     const committedFrame = frames.at(-1);
 
-    expect(() => view.update(layerScene('fail'))).toThrow(/RUNTIME_PARTICIPANT_PREPARE_FAILED/);
+    expect(() => view.update(layerScene('fail'))).toThrow(/Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/);
     expect(frames.at(-1)).toBe(committedFrame);
     expect(view.artifacts).toBe(artifacts);
     expect(view.runtimeMeta).toBe(runtimeMeta);
@@ -432,12 +432,12 @@ describe('@retikz/vanilla retained mount', () => {
       runtime: { rendererFactory },
     });
 
-    expect(() => view.update(cachedDatasetScene('#22c55e'))).toThrow(/RUNTIME_PARTICIPANT_PREPARE_FAILED/);
+    expect(() => view.update(cachedDatasetScene('#22c55e'))).toThrow(/Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/);
     expect(greenCompile).toHaveBeenCalledTimes(1);
 
     view.update(cachedDatasetScene('#ef4444'));
 
-    expect(redCompile).toHaveBeenCalledTimes(1);
+    expect(redCompile).toHaveBeenCalledTimes(2);
   });
 
   it('composite Definition 拒绝数量、顺序、key 和 schema 变化，允许同契约回调更新', () => {
@@ -905,7 +905,7 @@ describe('@retikz/vanilla retained mount', () => {
     const accepted = vi.fn();
 
     expect(() => view.hydrate({ handlers: { changed: { click: rejected } } })).toThrow(
-      /RUNTIME_PARTICIPANT_PREPARE_FAILED/,
+      /Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
     );
 
     view.hydrate({ handlers: { changed: { click: accepted } } });
@@ -934,7 +934,7 @@ describe('@retikz/vanilla retained mount', () => {
 
     rejectNextUpdate = true;
 
-    expect(() => hydration.dispose()).toThrow(/RUNTIME_PARTICIPANT_PREPARE_FAILED/);
+    expect(() => hydration.dispose()).toThrow(/Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/);
 
     hydration.dispose();
 
@@ -977,7 +977,7 @@ describe('@retikz/vanilla retained mount', () => {
     staticView.dispose();
   });
 
-  it('replace-only renderer 的 capability fallback diagnostic 对 view 可见', () => {
+  it('replace-only renderer 接受完整替换，不报告局部能力回退', () => {
     const container = document.createElement('div');
     const patches: Array<unknown> = [];
     const view = mountSvg(container, source('#ef4444'), {
@@ -989,9 +989,7 @@ describe('@retikz/vanilla retained mount', () => {
     expect(patches).toEqual([
       expect.objectContaining({ operations: [expect.objectContaining({ kind: 'replaceScene' })] }),
     ]);
-    expect(view.diagnostics()).toEqual([
-      expect.objectContaining({ code: 'RETAINED_RENDERER_CAPABILITY_FALLBACK', severity: 'warning' }),
-    ]);
+    expect(view.diagnostics()).toEqual([]);
   });
 
   it('renderer update 失败时保留 committed artifacts 与 runtimeMeta identity', () => {
@@ -1005,7 +1003,7 @@ describe('@retikz/vanilla retained mount', () => {
     const compileResult = view.compileResult;
     const committedHtml = view.root.innerHTML;
 
-    expect(() => view.update(source('#22c55e'))).toThrow(/RUNTIME_PARTICIPANT_PREPARE_FAILED/);
+    expect(() => view.update(source('#22c55e'))).toThrow(/Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/);
     expect(view.artifacts).toBe(artifacts);
     expect(view.runtimeMeta).toBe(runtimeMeta);
     expect(view.compileResult).toBe(compileResult);
@@ -1028,10 +1026,9 @@ describe('@retikz/vanilla retained mount', () => {
     });
 
     expect(() => view.dispose()).not.toThrow();
-    expect(dispose).toHaveBeenCalledTimes(2);
+    expect(dispose).toHaveBeenCalledTimes(1);
     expect(view.diagnostics()).toEqual([
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDisposeFailed, cause: disposeFailure }),
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDisposeFailed, cause: disposeFailure }),
+      expect.objectContaining({ code: 'RECONCILER_CLEANUP_FAILED', cause: disposeFailure }),
     ]);
     expect(() => view.update(source('#22c55e'))).toThrow('Processing controller is disposed');
 

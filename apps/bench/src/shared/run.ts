@@ -1,21 +1,20 @@
 import { compileToScene, CoreTracePhase, CoreTraceUnit } from '@retikz/core';
+import type { PerformanceTraceRecord } from '@retikz/foundation';
 import { ReconcilerTracePhase, ReconcilerTraceUnit } from '@retikz/reconciler';
 import { CORE_SOURCE_KEY, CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
-import type { PerformanceTraceRecord } from '@retikz/runtime';
 import {
   createRuntimeSourceInput,
   createRuntimeSourceRegistry,
   createRuntimeSourceUpdate,
   createRuntimeComputationRegistry,
   createRuntime,
-  createRuntimeTraceReporter,
-  PerformanceTraceOutcome,
-} from '@retikz/runtime';
+} from '@retikz/reconciler';
 
 import type { BenchmarkExecution, DeterministicBenchmarkResult } from './budget';
 import { createSimpleNodeScene, updateSimpleNodeFill } from './fixtures';
 import { stableHash } from './hash';
 import { assertFullTrace, assertSingleTraceRecord } from './trace';
+import { createPerformanceTraceReporter, PerformanceTraceOutcome } from './trace-reporter';
 
 /** ADR-01 固定的 full baseline 规模 */
 export const fullBaselineSizes = Object.freeze([100, 1_000, 5_000] as const);
@@ -44,7 +43,7 @@ export const runCoreDeterministicBenchmarks = (): ReadonlyArray<DeterministicBen
 
   for (const size of fullBaselineSizes) {
     const coreRecords: Array<PerformanceTraceRecord> = [];
-    const reporter = createRuntimeTraceReporter({
+    const reporter = createPerformanceTraceReporter({
       owner: '@retikz/core',
       phases: [
         {

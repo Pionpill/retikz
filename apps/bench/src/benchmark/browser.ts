@@ -1,8 +1,10 @@
 import type { IRScene, Scene } from '@retikz/core';
 import { compileToScene, CoreTracePhase, CoreTraceUnit } from '@retikz/core';
+import type { PerformanceTraceRecord } from '@retikz/foundation';
 import { ReconcilerTracePhase, ReconcilerTraceUnit } from '@retikz/reconciler';
 import type { ScenePatch, SceneRuntimeSnapshot } from '@retikz/reconciler';
 import { CORE_SOURCE_KEY, CoreSourceDefinition } from '@retikz/reconciler';
+import { createRuntimeSourceUpdate } from '@retikz/reconciler';
 import { drawScene, renderToCanvas } from '@retikz/render/canvas';
 import type {
   RenderFrameSnapshot,
@@ -15,8 +17,6 @@ import type {
 } from '@retikz/render/runtime';
 import { builtinRetainedRendererFactory, defineRetainedRenderer, RenderTracePhase } from '@retikz/render/runtime';
 import { buildSvgDocument, renderToSvgString } from '@retikz/render/svg';
-import type { PerformanceTraceRecord } from '@retikz/runtime';
-import { createRuntimeSourceUpdate, createRuntimeTraceReporter, PerformanceTraceOutcome } from '@retikz/runtime';
 import { mountCanvas, mountSvg } from '@retikz/vanilla/dom';
 
 import type {
@@ -40,6 +40,7 @@ import {
   updateSimpleNodeFill,
   updateStableGroupFill,
 } from '../shared';
+import { createPerformanceTraceReporter, PerformanceTraceOutcome } from '../shared/trace-reporter';
 import type { BrowserBenchmarkOptions, BrowserBenchmarkResult, RetikzBenchWindow } from './browser-contract';
 
 /** 对真实 Canvas 像素生成 FNV-1a 32-bit 功能摘要 */
@@ -420,7 +421,7 @@ const runDeterministicBrowserBenchmarks = (): ReadonlyArray<DeterministicBenchma
     const scene = compileToScene(createSimpleNodeScene(size)).scene;
 
     const svgRecords: Array<PerformanceTraceRecord> = [];
-    const svgReporter = createRuntimeTraceReporter({
+    const svgReporter = createPerformanceTraceReporter({
       owner: '@retikz/render:svg',
       phases: [
         {
@@ -445,7 +446,7 @@ const runDeterministicBrowserBenchmarks = (): ReadonlyArray<DeterministicBenchma
 
     const { context } = createBenchmarkCanvas();
     const canvasRecords: Array<PerformanceTraceRecord> = [];
-    const canvasReporter = createRuntimeTraceReporter({
+    const canvasReporter = createPerformanceTraceReporter({
       owner: '@retikz/render:canvas',
       phases: [
         {
@@ -624,7 +625,7 @@ const runPolicyDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchmar
   for (const backend of ['svg', 'canvas'] as const) {
     const staticId = `${backend}-policy-static-full-5000`;
     const staticRecords: Array<PerformanceTraceRecord> = [];
-    const staticReporter = createRuntimeTraceReporter({
+    const staticReporter = createPerformanceTraceReporter({
       owner: '@retikz/core',
       phases: [
         {

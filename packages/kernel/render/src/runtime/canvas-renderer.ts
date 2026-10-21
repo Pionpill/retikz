@@ -1,7 +1,7 @@
 import type { Scene } from '@retikz/core';
 import type { RuntimeScenePrimitive, ScenePatch, SceneRuntimeSnapshot } from '@retikz/reconciler';
-import type { RuntimeIdentity, RuntimePreparedCommit } from '@retikz/runtime';
-import { runtimeIdentityEquals } from '@retikz/runtime';
+import type { SceneIdentity, ReconcilerPreparedCommit } from '@retikz/reconciler';
+import { sceneIdentityEquals } from '@retikz/reconciler';
 
 import type { AnimationControls, IdClockRegistry } from '../animation';
 import {
@@ -38,11 +38,11 @@ import {
   materializeEasingRegistry,
   SceneAnimationOccurrenceChangeKind,
 } from './runtime-options';
-import type { RuntimeIdentityMap } from './shared';
+import type { SceneIdentityMap } from './shared';
 import {
   createHydrationCleanupQueue,
   createPublicIdPrimitivePathMap,
-  createRuntimeIdentityMap,
+  createSceneIdentityMap,
   createSemanticOwnerPublicIdMap,
   recoverHydrationSetupFailure,
   runBestEffortCleanup,
@@ -96,7 +96,7 @@ type CanvasBounds = Readonly<{ x: number; y: number; width: number; height: numb
 /** 顶层稳定 occurrence 与其保守绘制范围 */
 type CanvasDisplayItem = Readonly<{
   /** 顶层 occurrence 的稳定 Runtime identity */
-  identity: RuntimeIdentity;
+  identity: SceneIdentity;
   /** 当前 lineage 中的顶层 primitive */
   primitive: RuntimeScenePrimitive;
   /** 覆盖 stroke、shadow 与 transform 的保守失效范围 */
@@ -120,12 +120,12 @@ type CanvasAnimationCandidate = CanvasAnimationFrame &
     commit: () => () => void;
   }>;
 
-/** Canvas animation Scene 的 RuntimeIdentity 与 public id 索引 */
+/** Canvas animation Scene 的 SceneIdentity 与 public id 索引 */
 type CanvasAnimationOccurrenceIndex = Readonly<{
   /** 用 renderer 私有 occurrence token 替换 primitive id 的 Scene */
   scene: Scene;
-  /** RuntimeIdentity 到私有 occurrence token */
-  tokenByIdentity: RuntimeIdentityMap<string>;
+  /** SceneIdentity 到私有 occurrence token */
+  tokenByIdentity: SceneIdentityMap<string>;
   /** public id 到全部 occurrence token，供显式 hydration id 控制 */
   tokensByPublicId: ReadonlyMap<string, ReadonlyArray<string>>;
 }>;
@@ -134,7 +134,7 @@ type CanvasAnimationOccurrenceIndex = Readonly<{
 type CanvasAnimationState = Readonly<{
   /** 全场景共享 coarse clock */
   controls: AnimationControls;
-  /** 创建绑定命中 RuntimeIdentity 的 hydration 控制器 */
+  /** 创建绑定命中 SceneIdentity 的 hydration 控制器 */
   makeHydrationControls: (target: HydrationTarget) => HydrationAnimationControls;
   /** 按已确定的 public id 创建控制器，供合成 enter/leave context 保持 previous target 语义 */
   makeHydrationControlsForPublicId: (publicId: string) => HydrationAnimationControls;
@@ -558,7 +558,7 @@ const prepareDisplayListUpdate = (
   if (current === undefined || patch === undefined || patch.operations.length === 0) return undefined;
   if (!patch.operations.every(operation => operation.kind === 'update')) return undefined;
 
-  const byIdentity = createRuntimeIdentityMap(current.map((item, index) => [item.identity, index] as const));
+  const byIdentity = createSceneIdentityMap(current.map((item, index) => [item.identity, index] as const));
   const candidate = [...current];
   let dirty: CanvasBounds | undefined;
 
@@ -941,7 +941,7 @@ const createCanvasAnimationOccurrenceIndex = (
   previous: CanvasAnimationOccurrenceIndex | undefined,
   allocateToken: () => string,
 ): CanvasAnimationOccurrenceIndex => {
-  const tokenByIdentity = createRuntimeIdentityMap<string>([]);
+  const tokenByIdentity = createSceneIdentityMap<string>([]);
   const tokenByPath = new Map<string, string>();
   const tokensByPublicId = new Map<string, Array<string>>();
   const publicIdByOwner = createSemanticOwnerPublicIdMap(snapshot.topology);
@@ -1376,7 +1376,7 @@ const createCanvasAnimation = (
           nextToken !== undefined
         ) {
           candidateRegistry.restartTimeline(nextToken, candidateTime);
-          const node = nextSnapshot.topology.find(item => runtimeIdentityEquals(item.identity, change.identity));
+          const node = nextSnapshot.topology.find(item => sceneIdentityEquals(item.identity, change.identity));
           const primitive = node === undefined ? undefined : primitiveAtPath(nextSnapshot, node.primitivePath);
           if (primitive === undefined)
             throw new RetikzRenderError(
@@ -1554,7 +1554,7 @@ export const createBuiltinCanvasRetainedRenderer = (
     patch: ScenePatch | undefined,
     frame: RenderFrameSnapshot,
     config: RenderRuntimeConfig,
-  ): RuntimePreparedCommit => {
+  ): ReconcilerPreparedCommit => {
     const snapshot = frame.primary;
     const layers = validateReadonlyLayers(frame.layers);
     const imageStage = imageLoader.stage(collectCanvasImageHrefs(snapshot, layers));

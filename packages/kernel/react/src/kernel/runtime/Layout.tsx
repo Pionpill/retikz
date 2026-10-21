@@ -21,7 +21,7 @@ import type {
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import { resolveAnimationEnabled } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
-import type { RuntimeDiagnostic } from '@retikz/runtime';
+import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import type {
   InputScene,
   InputScope,
@@ -115,7 +115,7 @@ const createProcessingControllerKey = (): number => {
 };
 
 /** 判断 processing diagnostics 中的值是否为 Runtime 的结构化诊断 */
-const isRuntimeDiagnostic = (diagnostic: unknown): diagnostic is RuntimeDiagnostic => {
+const isReconcilerDiagnostic = (diagnostic: unknown): diagnostic is ReconcilerDiagnostic => {
   if (typeof diagnostic !== 'object' || diagnostic === null) return false;
 
   const candidate = diagnostic as Record<string, unknown>;
@@ -131,10 +131,10 @@ const isRuntimeDiagnostic = (diagnostic: unknown): diagnostic is RuntimeDiagnost
 /** 逐条隔离通知 Runtime 结构化诊断，避免回调异常影响已提交 processing result */
 const deliverProcessingDiagnostics = (
   controller: Pick<ProcessingController | AsyncProcessingController, 'diagnostics'>,
-  callback: ((diagnostic: RuntimeDiagnostic) => void) | undefined,
+  callback: ((diagnostic: ReconcilerDiagnostic) => void) | undefined,
 ): void => {
   for (const diagnostic of controller.diagnostics()) {
-    if (!isRuntimeDiagnostic(diagnostic) || callback === undefined) continue;
+    if (!isReconcilerDiagnostic(diagnostic) || callback === undefined) continue;
 
     try {
       callback(diagnostic);
@@ -348,7 +348,7 @@ const StaticLayoutContent: FC<{
 const RetainedLayoutContent: FC<{
   source: ProcessingSource;
   options: ProcessingOptions;
-  onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
+  onDiagnostic?: (diagnostic: ReconcilerDiagnostic) => void;
   hostKey: string;
   hostProps: LayoutResultHostProps;
 }> = ({ source, options, onDiagnostic, hostKey, hostProps }) => {

@@ -1,11 +1,11 @@
 import type { CompileProvenance, Scene } from '@retikz/core';
-import { createRuntimeIdentity } from '@retikz/runtime';
-import type { RuntimeRevision } from '@retikz/runtime';
 
 import { CORE_SOURCE_KEY } from '../constants';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
 import type { RuntimeScene, RuntimeScenePrimitive, SceneRuntimeNode, SceneRuntimeSnapshot } from '../scene';
 import { createPrimitiveIdentityIndex } from './identity';
+import { createSceneIdentity } from './identity-value';
+import type { SceneRevision } from './identity-value';
 
 /**
  * 递归冻结 Computation 新创建且尚未对外暴露的 plain output
@@ -22,7 +22,7 @@ export const freezeComputationOutput = <T>(value: T): T => {
   return Object.isFrozen(value) ? value : Object.freeze(value);
 };
 
-const rootIdentity = createRuntimeIdentity(CORE_SOURCE_KEY, ['root']);
+const rootIdentity = createSceneIdentity(CORE_SOURCE_KEY, ['root']);
 
 /** 为 full mount 创建 primitive occurrence topology */
 const createFullTopology = (
@@ -68,7 +68,7 @@ const createFullTopology = (
 /** 把 full compile Scene 规范化为 Runtime snapshot */
 export const createFullSceneRuntimeSnapshot = (
   scene: Scene,
-  revision: RuntimeRevision,
+  revision: SceneRevision,
   provenance: CompileProvenance,
 ): SceneRuntimeSnapshot => {
   const runtimeScene = freezeComputationOutput({

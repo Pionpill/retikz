@@ -1,31 +1,21 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
-import type { CoreComputationDefinition, CoreComputationOutput } from '@retikz/reconciler';
+import type { ReconcilerOutput } from '@retikz/reconciler';
+import type { ReconcilerCommitTarget } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
-import type {
-  RuntimeCommitParticipantToken,
-  RuntimeSourceInput,
-  RuntimeSourceToken,
-  RuntimeSourceUpdate,
-  Runtime,
-} from '@retikz/runtime';
 
 import type { PreparedProcessingInput } from '../types';
 import type { ProcessingController } from '../types';
 
 /** processing 与 DOM materializer 间固定的内部事务 participant */
 export type ProcessingTransactionParticipant = Readonly<{
-  /** participant 需要追加到 processing Runtime 的 owner 定义 */
-  sources: ReadonlyArray<RuntimeSourceToken>;
-  /** runtime 初始 transaction 需要的 participant snapshot */
-  initialSnapshots: ReadonlyArray<RuntimeSourceInput>;
-  /** 与 Core/result participant 同次提交的 Runtime participant */
-  participant: RuntimeCommitParticipantToken;
-  /** 每次 source update 生成的 participant owner 更新 */
-  update: (input: ProcessingParticipantUpdateInput) => ReadonlyArray<RuntimeSourceUpdate>;
-  /** runtime 创建完成后连接用于读取 committed participant 的 runtime */
-  connect?: (runtime: Runtime) => void;
-  /** 仅更新 participant 自身配置时生成 owner 更新 */
-  updateParticipant?: (revision: number) => ReadonlyArray<RuntimeSourceUpdate>;
+  /** 随编译输出准备的宿主目标 */
+  target: ReconcilerCommitTarget;
+  /** 设置本次候选宿主配置 */
+  update: (input: ProcessingParticipantUpdateInput) => void;
+  /** 首次发布完成后连接宿主读取 */
+  connect?: () => void;
+  /** 设置独立的候选渲染配置 */
+  updateParticipant?: (revision: number) => void;
 }>;
 
 /** 生成 transaction participant update 时可读取的 processing 候选状态 */
@@ -43,11 +33,9 @@ export type ProcessingTransactionParticipantFactory = (
   context: Readonly<{
     /** runtime 创建时的初始 processing 输入 */
     initial: PreparedProcessingInput;
-    /** 该 runtime 唯一的 Core Computation */
-    coreComputation: CoreComputationDefinition<ReadonlyArray<AnyCompositeDefinition>>;
     /** 从同一 Core candidate 读取 compile-driver readonly layers */
     resolveReadonlyLayers: (
-      output: CoreComputationOutput<ReadonlyArray<AnyCompositeDefinition>>,
+      output: ReconcilerOutput<ReadonlyArray<AnyCompositeDefinition>>,
     ) => ReadonlyArray<RenderReadonlyLayer>;
   }>,
 ) => ProcessingTransactionParticipant;

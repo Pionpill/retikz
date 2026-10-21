@@ -7,7 +7,7 @@ import type {
   Scene,
 } from '@retikz/core';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
-import type { RuntimeUpdateStrategy } from '@retikz/runtime';
+import type { ReconcilerUpdateStrategy } from '@retikz/reconciler';
 
 import type { InputAuthoringSite, InputNormalizeOptions, InputRuntimeMeta, InputScene } from '../normalize';
 import type { AnyInputEmbedAdapter } from '../normalize';
@@ -27,7 +27,7 @@ export type ProcessingOptions = Readonly<{
   /** 领域中立的同 revision compile observer driver */
   compileDriver?: VanillaCompileDriver;
   /** Core Computation 的 retained 更新策略 */
-  updateStrategy?: RuntimeUpdateStrategy;
+  updateStrategy?: ReconcilerUpdateStrategy;
 }>;
 
 /** 已完成作者侧归一与 Composite dependency 解析的 processing 输入 */

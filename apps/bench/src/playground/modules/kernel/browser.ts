@@ -1,17 +1,13 @@
 import type { IRScene } from '@retikz/core';
 import { CoreTracePhase, CoreTraceUnit } from '@retikz/core';
+import type { PerformanceTraceRecord } from '@retikz/foundation';
 import { ReconcilerTracePhase } from '@retikz/reconciler';
 import { CORE_SOURCE_KEY, CoreSourceDefinition } from '@retikz/reconciler';
-import type { PerformanceTraceRecord } from '@retikz/runtime';
-import {
-  createRuntimeSourceUpdate,
-  createRuntimeTraceReporter,
-  PerformanceTraceOutcome,
-  RuntimeUpdateStrategy,
-} from '@retikz/runtime';
+import { createRuntimeSourceUpdate, ReconcilerUpdateStrategy } from '@retikz/reconciler';
 import { mountCanvas, mountSvg, VanillaViewMode } from '@retikz/vanilla/dom';
 
 import { createBackendHost, createRetainedBenchmarkSession, summarizeSamples } from '../../../shared';
+import { createPerformanceTraceReporter, PerformanceTraceOutcome } from '../../../shared/trace-reporter';
 import { createKernelLabScenePair } from './kernel-scenario-fixtures';
 import { getKernelLabScenario } from './kernel-scenarios';
 import type { LabOutcomeValue, LabPolicyIdValue, LabPolicyResult } from './model';
@@ -183,7 +179,7 @@ const renderPreview = (input: KernelLabPolicyInput, first: IRScene, second: IRSc
     const runtime = {
       mode: VanillaViewMode.Retained,
       updateStrategy:
-        input.policyId === LabPolicyId.RetainedFull ? RuntimeUpdateStrategy.Full : RuntimeUpdateStrategy.Auto,
+        input.policyId === LabPolicyId.RetainedFull ? ReconcilerUpdateStrategy.Full : ReconcilerUpdateStrategy.Auto,
     } as const;
     if (input.backend === LabBackend.Svg) {
       const view = mountSvg(host, first, { runtime, output, animation });
@@ -203,7 +199,7 @@ const renderPreview = (input: KernelLabPolicyInput, first: IRScene, second: IRSc
 /** 执行 static view 完整更新策略并整理可观察结果 */
 const executeStaticPolicy = (input: KernelLabPolicyInput, first: IRScene, second: IRScene): LabPolicyResult => {
   const records: Array<PerformanceTraceRecord> = [];
-  const reporter = createRuntimeTraceReporter({
+  const reporter = createPerformanceTraceReporter({
     owner: '@retikz/core',
     phases: [
       {
@@ -260,7 +256,7 @@ const executeRetainedPolicy = (input: KernelLabPolicyInput, first: IRScene, seco
     records,
     undefined,
     {},
-    input.policyId === LabPolicyId.RetainedFull ? RuntimeUpdateStrategy.Full : RuntimeUpdateStrategy.Auto,
+    input.policyId === LabPolicyId.RetainedFull ? ReconcilerUpdateStrategy.Full : ReconcilerUpdateStrategy.Auto,
   );
   const samples = runSamples(first, second, input.warmupRuns, input.sampleRuns, next => {
     records.length = 0;

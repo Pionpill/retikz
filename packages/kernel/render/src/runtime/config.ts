@@ -1,7 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
 import type { RuntimeDeepReadonly } from '@retikz/reconciler';
-import type { RuntimeSourceDefinition } from '@retikz/runtime';
-import { defineRuntimeSource } from '@retikz/runtime';
 
 import type { AnimationPropertyRegistry, EasingRegistry } from '../animation';
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
@@ -228,7 +226,7 @@ const normalizeContributions = (value: unknown): ReadonlyArray<RenderHandlerCont
   return contributions.sort((left, right) => left.registration - right.registration);
 };
 
-const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRuntimeConfig => {
+export const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRuntimeConfig => {
   try {
     const candidate: unknown = input;
     assertPlainRecord(candidate);
@@ -311,17 +309,3 @@ const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRuntimeCon
   }
 };
 
-/** Render runtime config 的 Runtime owner Definition */
-export const RenderRuntimeSourceDefinition: RuntimeSourceDefinition<
-  RenderRuntimeConfigInput,
-  RenderRuntimeConfig,
-  RenderRuntimeConfig,
-  never
-> = defineRuntimeSource<RenderRuntimeConfigInput, RenderRuntimeConfig, RenderRuntimeConfig, never>({
-  key: RENDER_RUNTIME_SOURCE_KEY,
-  value: {
-    capture: captureRuntimeConfig,
-    read: value => value,
-    equals: runtimeStructuralEquals,
-  },
-});

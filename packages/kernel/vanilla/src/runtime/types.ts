@@ -2,7 +2,7 @@ import type { CompileArtifact, CompileOptions, CompileResult, IRScene, Scene } f
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { RetainedRendererFactory } from '@retikz/render/runtime';
-import type { RuntimeDiagnostic, RuntimeUpdateStrategy } from '@retikz/runtime';
+import type { ReconcilerDiagnostic, ReconcilerUpdateStrategy } from '@retikz/reconciler';
 
 import type { SynchronousInputEmbedAdapter, InputRuntimeMeta, InputScene } from '../normalize';
 import type { ProcessingOptions } from '../processing';
@@ -87,9 +87,9 @@ export type VanillaRetainedRuntimeOptions = Readonly<{
   mode?: typeof VanillaViewMode.Retained;
   /**
    * Computation 更新策略
-   * @default RuntimeUpdateStrategy.Auto
+   * @default ReconcilerUpdateStrategy.Auto
    */
-  updateStrategy?: RuntimeUpdateStrategy;
+  updateStrategy?: ReconcilerUpdateStrategy;
   /** 可选第三方 retained renderer factory；缺省使用内置实现 */
   rendererFactory?: RetainedRendererFactory;
 }>;
@@ -183,7 +183,7 @@ export type RetainedSvgView = VanillaViewState<SVGSVGElement> &
     /** 原子提交下一份未编译输入与可变 renderer config */
     update: (next: RetainedRenderInput, options?: RetainedSvgUpdateOptions) => void;
     /** 返回并清空 Runtime diagnostics */
-    diagnostics: () => ReadonlyArray<RuntimeDiagnostic>;
+    diagnostics: () => ReadonlyArray<ReconcilerDiagnostic>;
   }>;
 
 /** 预编译 Scene SVG static view */
@@ -257,7 +257,7 @@ export type RetainedCanvasView = CanvasViewState &
     /** 原子提交下一份未编译输入与可变 renderer config */
     update: (next: RetainedRenderInput, options?: RetainedCanvasUpdateOptions) => void;
     /** 返回并清空 Runtime diagnostics */
-    diagnostics: () => ReadonlyArray<RuntimeDiagnostic>;
+    diagnostics: () => ReadonlyArray<ReconcilerDiagnostic>;
   }>;
 
 /** 预编译 Scene Canvas static view */

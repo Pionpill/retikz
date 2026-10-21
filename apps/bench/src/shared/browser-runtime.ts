@@ -1,18 +1,19 @@
 import type { IRScene } from '@retikz/core';
+import type { PerformanceTraceRecord } from '@retikz/foundation';
 import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
+import type { Runtime } from '@retikz/reconciler';
+import {
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeComputationRegistry,
+  createRuntime,
+} from '@retikz/reconciler';
 import type { RenderRuntimeConfigInput, RetainedRendererFactory } from '@retikz/render/runtime';
 import {
   builtinRetainedRendererFactory,
   createRetainedRenderParticipant,
   RenderRuntimeSourceDefinition,
 } from '@retikz/render/runtime';
-import type { PerformanceTraceRecord, Runtime } from '@retikz/runtime';
-import {
-  createRuntimeSourceInput,
-  createRuntimeSourceRegistry,
-  createRuntimeComputationRegistry,
-  createRuntime,
-} from '@retikz/runtime';
 
 /** 创建固定尺寸的真实 browser Canvas */
 export const createBenchmarkCanvas = (): Readonly<{

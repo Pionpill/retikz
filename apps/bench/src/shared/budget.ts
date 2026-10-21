@@ -1,4 +1,4 @@
-import type { PerformanceTraceOutcome } from '@retikz/runtime';
+import type { PerformanceTraceOutcome } from './trace-reporter';
 
 /** Benchmark execution 允许展示的 trace 结果取值类型 */
 export type BenchmarkExecutionOutcomeValue = Extract<

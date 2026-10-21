@@ -1,10 +1,10 @@
 import { CoreTracePhase, CoreTraceUnit } from '@retikz/core';
+import type { PerformanceTraceRecord } from '@retikz/foundation';
 import { ReconcilerTracePhase, ReconcilerTraceUnit } from '@retikz/reconciler';
-import type { PerformanceTraceRecord } from '@retikz/runtime';
-import { createRuntimeTraceReporter, PerformanceTraceOutcome } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 
 import { assertFullTrace, assertSingleTraceRecord } from '../src/shared';
+import { createPerformanceTraceReporter, PerformanceTraceOutcome } from '../src/shared/trace-reporter';
 
 const expected = Object.freeze({
   phase: CoreTracePhase.Compile,
@@ -15,7 +15,7 @@ const expected = Object.freeze({
 describe('full trace assertion', () => {
   it('接受恰好一条无诊断且满足 full 不变量的记录', () => {
     const records: Array<PerformanceTraceRecord> = [];
-    const reporter = createRuntimeTraceReporter({
+    const reporter = createPerformanceTraceReporter({
       owner: '@retikz/core',
       phases: [
         {
@@ -40,7 +40,7 @@ describe('full trace assertion', () => {
 
   it('即使同时收到合法记录，也拒绝 reporter 中的非法记录诊断', () => {
     const records: Array<PerformanceTraceRecord> = [];
-    const reporter = createRuntimeTraceReporter({
+    const reporter = createPerformanceTraceReporter({
       owner: '@retikz/core',
       phases: [
         {

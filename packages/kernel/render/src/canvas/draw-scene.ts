@@ -14,7 +14,6 @@ import type {
   SceneResource,
   TextPrim,
 } from '@retikz/core';
-import { PerformanceTraceOutcome } from '@retikz/runtime';
 
 import {
   commandArcStart,
@@ -912,13 +911,17 @@ export const drawScene = (ctx: CanvasRenderingContext2D, scene: Scene, options: 
   if (hasCamera) ctx.restore();
   if (options.trace !== undefined) {
     const visited = countScenePrimitiveOccurrences(scene.primitives);
-    options.trace.report({
-      phase: RenderTracePhase.Commit,
-      unit: CoreTraceUnit.ScenePrimitive,
-      outcome: PerformanceTraceOutcome.Full,
-      visited,
-      reused: 0,
-      changed: visited,
-    });
+    try {
+      options.trace.report({
+        phase: RenderTracePhase.Commit,
+        unit: CoreTraceUnit.ScenePrimitive,
+        outcome: 'full',
+        visited,
+        reused: 0,
+        changed: visited,
+      });
+    } catch {
+      /* 观测失败不影响绘制结果 */
+    }
   }
 };

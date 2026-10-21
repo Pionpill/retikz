@@ -1,6 +1,6 @@
 import type { ValueOf } from '@retikz/foundation';
 import type { ScenePatch } from '@retikz/reconciler';
-import type { RuntimePreparedCommit } from '@retikz/runtime';
+import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 
 import type { AnimationControls } from '../animation';
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
@@ -71,9 +71,9 @@ export type RetainedRendererDefinitionBase = Readonly<{
     frame: RenderFrameSnapshot,
     config: RenderRuntimeConfig,
     mode: 'create' | 'adopt',
-  ) => RuntimePreparedCommit;
+  ) => ReconcilerPreparedCommit;
   /** staging 一次 Patch 与 config 原子更新 */
-  prepare: (patch: ScenePatch, frame: RenderFrameSnapshot, config: RenderRuntimeConfig) => RuntimePreparedCommit;
+  prepare: (patch: ScenePatch, frame: RenderFrameSnapshot, config: RenderRuntimeConfig) => ReconcilerPreparedCommit;
   /** 读取已 commit 的 renderer state */
   read: () => RetainedRendererRead;
   /** 释放 renderer 与 host 资源 */

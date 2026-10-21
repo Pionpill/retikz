@@ -1,14 +1,14 @@
 import type { CompileNamespaceKey, CompileOwnerKey, CompileProvenance } from '@retikz/core';
-import { createRuntimeIdentity } from '@retikz/runtime';
-import type { RuntimeIdentity, RuntimeRevision } from '@retikz/runtime';
 
 import { CORE_SOURCE_KEY } from '../constants';
+import { createSceneIdentity } from './identity-value';
+import type { SceneIdentity, SceneRevision } from './identity-value';
 
 /** 从单次编译来源计算当前候选版本的图元身份 */
 export const createPrimitiveIdentityIndex = (
   provenance: CompileProvenance,
-  revision: RuntimeRevision,
-): ReadonlyMap<string, Readonly<{ identity: RuntimeIdentity; semanticOwner: RuntimeIdentity }>> => {
+  revision: SceneRevision,
+): ReadonlyMap<string, Readonly<{ identity: SceneIdentity; semanticOwner: SceneIdentity }>> => {
   const candidates = new Set<CompileOwnerKey>();
   const namespaces = new Map<CompileNamespaceKey, Map<string, Array<CompileOwnerKey>>>();
   for (const binding of provenance.bindings) {
@@ -26,9 +26,9 @@ export const createPrimitiveIdentityIndex = (
       if (occurrences.length > 1) occurrences.forEach(owner => candidates.add(owner));
     }
   }
-  const identities = new Map<CompileOwnerKey, RuntimeIdentity>();
+  const identities = new Map<CompileOwnerKey, SceneIdentity>();
   const owners = new Map(provenance.owners.map(owner => [owner.key, owner]));
-  const identityOf = (key: CompileOwnerKey): RuntimeIdentity => {
+  const identityOf = (key: CompileOwnerKey): SceneIdentity => {
     const cached = identities.get(key);
     if (cached !== undefined) return cached;
     const owner = owners.get(key)!;
@@ -39,16 +39,16 @@ export const createPrimitiveIdentityIndex = (
         : owner.generated || owner.id === undefined || candidates.has(owner.key)
           ? [...parent.path, 'candidate', String(revision), owner.kind, String(owner.index)]
           : [...parent.path, owner.kind, owner.id];
-    const identity = createRuntimeIdentity(CORE_SOURCE_KEY, path);
+    const identity = createSceneIdentity(CORE_SOURCE_KEY, path);
     identities.set(key, identity);
     return identity;
   };
-  const result = new Map<string, Readonly<{ identity: RuntimeIdentity; semanticOwner: RuntimeIdentity }>>();
+  const result = new Map<string, Readonly<{ identity: SceneIdentity; semanticOwner: SceneIdentity }>>();
   for (const emission of provenance.emissions) {
     const semanticOwner = identityOf(emission.owner);
     result.set(emission.primitivePath.join('.'), {
       semanticOwner,
-      identity: createRuntimeIdentity(CORE_SOURCE_KEY, [
+      identity: createSceneIdentity(CORE_SOURCE_KEY, [
         ...semanticOwner.path,
         'emission',
         emission.role,

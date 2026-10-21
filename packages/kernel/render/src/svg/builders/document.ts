@@ -1,12 +1,11 @@
 import { CoreTraceUnit } from '@retikz/core';
 import type { IRDropShadow, ResolvedArrowEnd, Scene, ScenePrimitive } from '@retikz/core';
-import type { RuntimeTraceReporter } from '@retikz/runtime';
-import { PerformanceTraceOutcome } from '@retikz/runtime';
 
 import type { EasingRegistry } from '../../animation';
 import type { StaticRenderFrame } from '../../runtime';
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '../../runtime';
 import { countScenePrimitiveOccurrences } from '../../shared';
+import type { RenderTraceReporter } from '../../trace';
 import { RenderTracePhase } from '../../trace';
 import { createSvgAnimationCollector } from '../animation';
 import { toSafeSvgToken } from '../safe-token';
@@ -46,7 +45,7 @@ export type BuildDocumentOptions = {
    */
   snapshotAt?: number;
   /** 记录完整 SVG document build 消费的 Scene primitive occurrence */
-  trace?: RuntimeTraceReporter<'@retikz/render:svg'>;
+  trace?: RenderTraceReporter;
 };
 
 /** 按 idPrefix 派生确定性的资源 id / 引用回调，并组装 builder context */
@@ -200,14 +199,18 @@ export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: BuildDo
   };
   if (options.trace !== undefined) {
     const visited = countScenePrimitiveOccurrences(scene.primitives);
-    options.trace.report({
-      phase: RenderTracePhase.Commit,
-      unit: CoreTraceUnit.ScenePrimitive,
-      outcome: PerformanceTraceOutcome.Full,
-      visited,
-      reused: 0,
-      changed: visited,
-    });
+    try {
+      options.trace.report({
+        phase: RenderTracePhase.Commit,
+        unit: CoreTraceUnit.ScenePrimitive,
+        outcome: 'full',
+        visited,
+        reused: 0,
+        changed: visited,
+      });
+    } catch {
+      /* 观测失败不影响绘制结果 */
+    }
   }
 
   return document;

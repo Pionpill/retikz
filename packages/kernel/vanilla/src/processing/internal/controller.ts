@@ -1,16 +1,7 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
-import type { CoreComputationOutput } from '@retikz/reconciler';
-import { CoreSourceDefinition, CoreCompositeInputSourceDefinition, createCoreComputation } from '@retikz/reconciler';
-import {
-  createRuntimeSourceInput,
-  createRuntimeSourceRegistry,
-  createRuntimeSourceUpdate,
-  createRuntimeComputationRegistry,
-  createRuntime,
-  defineRuntimeCommitParticipant,
-  defineRuntimeSource,
-  RetikzRuntimeError,
-} from '@retikz/runtime';
+import type { ReconcilerOutput } from '@retikz/reconciler';
+import { ReconcilerSession } from '@retikz/reconciler';
+import type { ReconcilerCommitTarget } from '@retikz/reconciler';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type {
@@ -24,7 +15,7 @@ import {
   defaultVanillaCompileDriver,
   resolveVanillaCompileOutput,
 } from '../../runtime/compile-driver';
-import { createRetainedCompositeDefinitions, VanillaCompositeRevisionSourceDefinition } from '../composites';
+import { createRetainedCompositeDefinitions } from '../composites';
 import { prepareProcessingInput } from '../prepare';
 import type { PreparedProcessingInput, ProcessingOptions, ProcessingResult, ProcessingSource } from '../types';
 import type {
@@ -32,35 +23,6 @@ import type {
   ProcessingTransactionParticipantFactory,
   PreparedInputProcessingController,
 } from './types';
-
-/** 自定义编译驱动下一 revision 的领域中立失效标识 */
-const VanillaCompileDriverRevisionSourceDefinition = defineRuntimeSource<number, number, number, never>({
-  key: '@retikz/vanilla:compile-driver-revision',
-  value: {
-    capture: value => {
-      if (!Number.isSafeInteger(value) || value < 0) {
-        throw new RetikzVanillaError(
-          RetikzVanillaErrorCode.Processing,
-          'Vanilla compile driver revision must be a non-negative safe integer',
-        );
-      }
-
-      return value;
-    },
-    read: value => value,
-    equals: Object.is,
-  },
-});
-
-/** 根 processing result participant 的稳定 Runtime key */
-const PROCESSING_RESULT_PARTICIPANT_KEY = '@retikz/vanilla:processing-result' as const;
-
-/** 返回 Runtime 包装错误中最接近 Core 编译诊断的根因 */
-const processingCause = (cause: unknown): unknown => {
-  let current = cause;
-  while (current instanceof RetikzRuntimeError && current.cause !== undefined) current = current.cause;
-  return current;
-};
 
 /** 复制 retained 生命周期内继续读取的处理配置 */
 const captureProcessingOptions = (options: ProcessingOptions): ProcessingOptions => {
@@ -97,7 +59,7 @@ const restoreVanillaCompileDriverSession = (
 const createProcessingResult = (
   revision: number,
   prepared: PreparedProcessingInput,
-  output: CoreComputationOutput<ReadonlyArray<AnyCompositeDefinition>>,
+  output: ReconcilerOutput<ReadonlyArray<AnyCompositeDefinition>>,
   compileSession: VanillaCompileDriverSession,
 ): ProcessingResult => {
   const resolved = resolveVanillaCompileOutput(compileSession, output);
@@ -150,202 +112,96 @@ const createRetainedProcessingState = (
 ): RetainedProcessingState => {
   const compositeDefinitions = createRetainedCompositeDefinitions(initial.coreOptions.composites);
   let driverInput = initialDriverInput;
-  const coreComputation = createCoreComputation(
-    { ...initial.coreOptions, compositeInputs: undefined, composites: compositeDefinitions.definitions },
-    {
-      compositeInputSource: CoreCompositeInputSourceDefinition,
-      invalidationSources: [
-        VanillaCompositeRevisionSourceDefinition,
-        ...(hasCustomCompileDriver ? [VanillaCompileDriverRevisionSourceDefinition] : []),
-      ],
-      observers: compileSession.observers,
-    },
-  );
-
-  const resolveReadonlyLayers = (output: CoreComputationOutput<ReadonlyArray<AnyCompositeDefinition>>) =>
-    resolveVanillaCompileOutput(compileSession, output).layers;
-  const transactionParticipant = transactionParticipantFactory?.({
-    initial,
-    coreComputation,
-    resolveReadonlyLayers,
-  });
-
-  const sources = createRuntimeSourceRegistry([
-    CoreSourceDefinition,
-    CoreCompositeInputSourceDefinition,
-    VanillaCompositeRevisionSourceDefinition,
-    VanillaCompileDriverRevisionSourceDefinition,
-    ...(transactionParticipant?.sources ?? []),
-  ]);
-  const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
-
-  let participantResult: ProcessingResult | undefined;
+  let prepared = initial;
   let participantPrepared = initial;
   let participantRevision = initialRevision;
-  const resultParticipant = defineRuntimeCommitParticipant<ProcessingResult>({
-    key: PROCESSING_RESULT_PARTICIPANT_KEY,
-    sources: [],
-    computations: [coreComputation],
-    revisionPolicy: 'continuous',
-    tracePhases: [],
-    prepare: candidate => {
-      const output = candidate.result(coreComputation).value.output;
-      const next = createProcessingResult(participantRevision, participantPrepared, output, compileSession);
+  let current: ProcessingResult | undefined;
+  const resolveReadonlyLayers = (output: ReconcilerOutput<ReadonlyArray<AnyCompositeDefinition>>) =>
+    resolveVanillaCompileOutput(compileSession, output).layers;
+  const participant = transactionParticipantFactory?.({ initial, resolveReadonlyLayers });
+  const target: ReconcilerCommitTarget = {
+    prepare: (candidate, previous) => {
+      const next = createProcessingResult(
+        participantRevision,
+        participantPrepared,
+        candidate.compilation,
+        compileSession,
+      );
       assertCurrent();
-      const previous = participantResult;
-
-      return Object.freeze({
+      const token = participant?.target.prepare(candidate, previous);
+      const before = current;
+      return {
         commit: () => {
           assertCurrent();
-          participantResult = next;
+          token?.commit();
+          current = next;
         },
         rollback: () => {
-          participantResult = previous;
+          token?.rollback();
+          current = before;
         },
-        dispose: () => undefined,
-      });
+        dispose: () => token?.dispose(),
+      };
     },
-    read: () => {
-      if (participantResult === undefined)
-        throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Vanilla processing result is unavailable');
-      return participantResult;
-    },
-    dispose: () => {
-      participantResult = undefined;
-    },
-  });
-
-  let runtime: ReturnType<typeof createRuntime>;
-
-  try {
-    runtime = createRuntime({
-      sources,
-      computations,
-      updateStrategy: fixedOptions.updateStrategy,
-      participants: [
-        resultParticipant,
-        ...(transactionParticipant === undefined ? [] : [transactionParticipant.participant]),
-      ],
-      initialSnapshots: [
-        createRuntimeSourceInput(CoreSourceDefinition, initial.source),
-        createRuntimeSourceInput(CoreCompositeInputSourceDefinition, initial.coreOptions.compositeInputs),
-        createRuntimeSourceInput(VanillaCompositeRevisionSourceDefinition, 0),
-        createRuntimeSourceInput(VanillaCompileDriverRevisionSourceDefinition, 0),
-        ...(transactionParticipant?.initialSnapshots ?? []),
-      ],
-    });
-  } catch (cause) {
-    throw processingCause(cause);
-  }
-
-  transactionParticipant?.connect?.(runtime);
-  let prepared = initial;
-  let compositeRevision = 0;
-  let compileDriverRevision = 0;
-  let current = runtime.participant(resultParticipant);
-
-  /** 在本 session 的当前 Core 输出上提交 compile driver 通知 */
-  const commitDriver = (): void => {
-    commitVanillaCompileOutput(
-      compileSession,
-      resolveVanillaCompileOutput(compileSession, runtime.result(coreComputation).value.output),
-    );
+    dispose: () => participant?.target.dispose?.(),
   };
-
-  return Object.freeze({
+  const session = new ReconcilerSession(initial.coreOptions, {
+    observers: compileSession.observers,
+    captureProvenance: participant !== undefined,
+    target,
+  });
+  session.mount(initial.source);
+  participant?.connect?.();
+  const read = (): ProcessingResult => {
+    session.read();
+    if (current === undefined)
+      throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Processing output unavailable');
+    return current;
+  };
+  const commitDriver = (): void =>
+    commitVanillaCompileOutput(compileSession, resolveVanillaCompileOutput(compileSession, session.read().compilation));
+  // 完整输入入口不推断局部操作；局部更新由 Reconciler 的 WeaveBatch 入口承接
+  void fixedOptions;
+  void hasCustomCompileDriver;
+  return {
     compositeDefinitions,
     driverInput: () => driverInput,
-    read: () => current,
+    read,
     update: (next, nextDriverInput, revision) => {
-      const definitions = compositeDefinitions.prepare(next.coreOptions.composites);
       const previousDriverInput = driverInput;
-
       try {
-        const nextCompileSession = createVanillaCompileDriverSession(compileDriver, nextDriverInput);
+        const nextSession = createVanillaCompileDriverSession(compileDriver, nextDriverInput);
         assertCurrent();
-        if (nextCompileSession !== compileSession) {
-          throw new RetikzVanillaError(
-            RetikzVanillaErrorCode.Processing,
-            'Vanilla compile driver must preserve its session for a retained processing controller',
-          );
-        }
-
-        const nextCompositeRevision = definitions.changed ? compositeRevision + 1 : compositeRevision;
-        const nextCompileDriverRevision = hasCustomCompileDriver ? compileDriverRevision + 1 : compileDriverRevision;
+        if (nextSession !== compileSession)
+          throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Compile driver changed session identity');
         participantPrepared = next;
         participantRevision = revision;
-        runtime.update({
-          baseRevision: runtime.revision(),
-          sources: [
-            createRuntimeSourceUpdate(CoreSourceDefinition, next.source),
-            createRuntimeSourceUpdate(CoreCompositeInputSourceDefinition, next.coreOptions.compositeInputs),
-            ...(definitions.changed
-              ? [createRuntimeSourceUpdate(VanillaCompositeRevisionSourceDefinition, nextCompositeRevision)]
-              : []),
-            ...(hasCustomCompileDriver
-              ? [createRuntimeSourceUpdate(VanillaCompileDriverRevisionSourceDefinition, nextCompileDriverRevision)]
-              : []),
-            ...(transactionParticipant?.update({ prepared: next, revision, kind: 'source' }) ?? []),
-          ],
-        });
-        definitions.commit();
-        compositeRevision = nextCompositeRevision;
-        compileDriverRevision = nextCompileDriverRevision;
-        driverInput = nextDriverInput;
+        participant?.update({ prepared: next, revision, kind: 'source' });
+        session.replace(next.source, next.coreOptions);
         prepared = next;
-        current = runtime.participant(resultParticipant);
+        driverInput = nextDriverInput;
         commitDriver();
-
-        return current;
+        return read();
       } catch (cause) {
         participantPrepared = prepared;
-        participantRevision = current.revision;
-        definitions.rollback();
-
-        try {
-          restoreVanillaCompileDriverSession(compileDriver, previousDriverInput, compileSession);
-        } catch (restoreCause) {
-          throw new RetikzVanillaError(
-            RetikzVanillaErrorCode.Processing,
-            'Vanilla compile driver input rollback failed',
-            {
-              cause: restoreCause,
-            },
-          );
-        }
-
+        participantRevision = read().revision;
+        restoreVanillaCompileDriverSession(compileDriver, previousDriverInput, compileSession);
         throw cause;
       }
     },
     updateParticipant: revision => {
-      if (transactionParticipant?.updateParticipant === undefined) {
-        throw new RetikzVanillaError(
-          RetikzVanillaErrorCode.Processing,
-          'createProcessingController: participant configuration is unavailable',
-        );
-      }
-
-      participantPrepared = prepared;
+      if (participant?.updateParticipant === undefined)
+        throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Renderer configuration is unavailable');
       participantRevision = revision;
-
-      try {
-        runtime.update({
-          baseRevision: runtime.revision(),
-          sources: transactionParticipant.updateParticipant(revision),
-        });
-        current = runtime.participant(resultParticipant);
-        commitDriver();
-
-        return current;
-      } catch (cause) {
-        participantRevision = current.revision;
-        throw cause;
-      }
+      participant.updateParticipant(revision);
+      session.updateTarget();
+      commitDriver();
+      return read();
     },
     commitDriver,
-    diagnostics: runtime.diagnostics,
-    dispose: () => runtime.dispose(),
-  });
+    diagnostics: () => session.diagnostics(),
+    dispose: () => session.dispose(),
+  };
 };
 
 /** 创建带可选固定内部 participant 的 processing controller */

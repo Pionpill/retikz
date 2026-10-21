@@ -1,12 +1,6 @@
 import { compileToScene } from '@retikz/core';
 import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
-import {
-  createRuntimeSourceInput,
-  createRuntimeSourceRegistry,
-  createRuntimeSourceUpdate,
-  createRuntimeComputationRegistry,
-  createRuntime,
-} from '@retikz/runtime';
+import { createRuntimeSourceInput, createRuntimeSourceRegistry, createRuntimeSourceUpdate, createRuntimeComputationRegistry, createRuntime } from '@retikz/reconciler';
 
 import { createSimpleNodeScene, updateSimpleNodeFill } from './fixtures';
 import type { SampleSummary } from './stats';

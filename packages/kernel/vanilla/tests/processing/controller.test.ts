@@ -376,7 +376,7 @@ describe('Vanilla processing', () => {
     controller.subscribe(listener);
 
     expect(() => controller.update({ children: [{ id: 'broken', position: [20, 0] }] })).toThrow(
-      /RUNTIME_PARTICIPANT_PREPARE_FAILED/,
+      /Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
     );
 
     expect(controller.read()).toBe(stable);

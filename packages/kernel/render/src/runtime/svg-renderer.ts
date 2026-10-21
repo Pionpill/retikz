@@ -7,8 +7,8 @@ import type {
   SceneRuntimeSnapshot,
   SceneRuntimeSubtree,
 } from '@retikz/reconciler';
-import type { RuntimeIdentity } from '@retikz/runtime';
-import type { RuntimePreparedCommit } from '@retikz/runtime';
+import type { SceneIdentity } from '@retikz/reconciler';
+import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 
 import type { AnimationControls } from '../animation';
 import { classifyProperty, evaluateTrack, isAutoplayTrigger, sceneHasAnimations } from '../animation';
@@ -40,11 +40,11 @@ import {
   materializeEasingRegistry,
   SceneAnimationOccurrenceChangeKind,
 } from './runtime-options';
-import type { RuntimeIdentityMap } from './shared';
+import type { SceneIdentityMap } from './shared';
 import {
   createHydrationCleanupQueue,
   createPublicIdPrimitivePathMap,
-  createRuntimeIdentityMap,
+  createSceneIdentityMap,
   createSemanticOwnerPublicIdMap,
   recoverHydrationSetupFailure,
   runBestEffortCleanup,
@@ -69,7 +69,7 @@ type SvgAnimationControl = Readonly<{
 type SvgAnimationBinding = SvgAnimationControl &
   Readonly<{
     /** occurrence 的稳定 Runtime identity */
-    identity: RuntimeIdentity;
+    identity: SceneIdentity;
   }>;
 
 /** 一次 committed SVG 动画的分 identity controls 集合 */
@@ -647,14 +647,14 @@ const buildSubtreeDescriptor = (
   return child;
 };
 
-/** 从完整 descriptor、DOM 与 topology 建立 RuntimeIdentity 元素索引 */
+/** 从完整 descriptor、DOM 与 topology 建立 SceneIdentity 元素索引 */
 const buildFullElementIndex = (
   host: SVGSVGElement,
   descriptor: SvgNode,
   snapshot: SceneRuntimeSnapshot,
   config: RenderRuntimeConfig,
-): RuntimeIdentityMap<SVGElement> => {
-  const entries: Array<readonly [RuntimeIdentity, SVGElement]> = [[snapshot.root, host]];
+): SceneIdentityMap<SVGElement> => {
+  const entries: Array<readonly [SceneIdentity, SVGElement]> = [[snapshot.root, host]];
   const topologyByPath = new Map(snapshot.topology.map(node => [topologyPathKey(node.primitivePath), node]));
   const plan = buildRootDescriptorPlan(snapshot, descriptor, config);
   let contentElement: SVGElement = host;
@@ -720,7 +720,7 @@ const buildFullElementIndex = (
     visit(primitive, primitiveDescriptor as SvgNode, element, [index]);
   });
 
-  return createRuntimeIdentityMap(entries);
+  return createSceneIdentityMap(entries);
 };
 
 /** 按 subtree identity 复用 occurrence 元素并递归 reconcile group descendants */
@@ -730,7 +730,7 @@ const reconcilePrimitiveSubtree = (
   primitive: RuntimeScenePrimitive,
   subtree: SceneRuntimeSubtree,
   config: RenderRuntimeConfig,
-  currentElements: RuntimeIdentityMap<SVGElement>,
+  currentElements: SceneIdentityMap<SVGElement>,
   journal: MutationJournal,
   path: ReadonlyArray<number> = [],
 ): void => {
@@ -786,11 +786,11 @@ const reconcilePrimitiveSubtree = (
   }
 };
 
-/** 把已 materialize 的无动画 subtree 写入候选 RuntimeIdentity 索引 */
+/** 把已 materialize 的无动画 subtree 写入候选 SceneIdentity 索引 */
 const indexSubtreeElements = (
   root: SVGElement,
   subtree: SceneRuntimeSubtree,
-  target: RuntimeIdentityMap<SVGElement>,
+  target: SceneIdentityMap<SVGElement>,
 ): void => {
   const topologyByPath = new Map(subtree.topology.map(node => [topologyPathKey(node.primitivePath), node]));
 
@@ -844,7 +844,7 @@ const buildRootSubtree = (
 };
 
 /**
- * 在 resource/layout/full reconcile 中按 RuntimeIdentity 保留稳定 primitive occurrence
+ * 在 resource/layout/full reconcile 中按 SceneIdentity 保留稳定 primitive occurrence
  * @description resource head 先按 canonical descriptor key 创建或更新，随后切换 primitive consumer，最后才移除多余旧 head；
  *   稳定 key 原地更新时没有 handle 释放，任一后续失败由同一 journal 逆序恢复 resource 与 consumer
  */
@@ -853,7 +853,7 @@ const reconcileFullIdentityDocument = (
   descriptor: SvgNode,
   snapshot: SceneRuntimeSnapshot,
   config: RenderRuntimeConfig,
-  currentElements: RuntimeIdentityMap<SVGElement>,
+  currentElements: SceneIdentityMap<SVGElement>,
   journal: MutationJournal,
   previouslyOwnedAttributes: ReadonlySet<string>,
   previouslyOwnedStyles: ReadonlySet<string>,
@@ -993,24 +993,24 @@ const reconcileFullIdentityDocument = (
   }
 };
 
-/** 按 RuntimeIdentity 归并当前 DOM 中的 WAAPI descriptor elements */
+/** 按 SceneIdentity 归并当前 DOM 中的 WAAPI descriptor elements */
 const groupSvgWaapiElements = (
   host: SVGSVGElement,
   snapshot: SceneRuntimeSnapshot,
-  elements: RuntimeIdentityMap<SVGElement>,
+  elements: SceneIdentityMap<SVGElement>,
 ): Readonly<{
   root: ReadonlyArray<Element>;
-  occurrences: ReadonlyArray<Readonly<{ identity: RuntimeIdentity; elements: ReadonlyArray<Element> }>>;
+  occurrences: ReadonlyArray<Readonly<{ identity: SceneIdentity; elements: ReadonlyArray<Element> }>>;
 }> => {
   const descriptors = [
     ...(host.matches('[data-retikz-anim]') ? [host] : []),
     ...host.querySelectorAll('[data-retikz-anim]'),
   ];
-  const grouped = createRuntimeIdentityMap<Array<Element>>([]);
+  const grouped = createSceneIdentityMap<Array<Element>>([]);
   const root: Array<Element> = [];
 
   for (const descriptor of descriptors) {
-    let owner: Readonly<{ identity: RuntimeIdentity; element: SVGElement }> | undefined;
+    let owner: Readonly<{ identity: SceneIdentity; element: SVGElement }> | undefined;
 
     for (const node of snapshot.topology) {
       const occurrence = elements.get(node.identity);
@@ -1040,11 +1040,11 @@ const groupSvgWaapiElements = (
   });
 };
 
-/** 创建按 RuntimeIdentity 增量复用的 SVG WAAPI state，并返回事务清理集合 */
+/** 创建按 SceneIdentity 增量复用的 SVG WAAPI state，并返回事务清理集合 */
 const createSvgAnimationState = (
   host: SVGSVGElement,
   snapshot: SceneRuntimeSnapshot,
-  elements: RuntimeIdentityMap<SVGElement>,
+  elements: SceneIdentityMap<SVGElement>,
   diff: SceneAnimationDescriptorDiff,
   previous: SvgAnimationState | undefined,
   preserve: boolean,
@@ -1055,10 +1055,10 @@ const createSvgAnimationState = (
   retired: ReadonlyArray<SvgAnimationControl>;
 }> => {
   const grouped = groupSvgWaapiElements(host, snapshot, elements);
-  const previousByIdentity = createRuntimeIdentityMap(
+  const previousByIdentity = createSceneIdentityMap(
     previous?.bindings.map(binding => [binding.identity, binding]) ?? [],
   );
-  const changeByIdentity = createRuntimeIdentityMap(
+  const changeByIdentity = createSceneIdentityMap(
     diff.occurrences.map(change => [change.identity, change.kind] as const),
   );
   const created: Array<SvgAnimationControl> = [];
@@ -1178,7 +1178,7 @@ const createSvgHydration = (
   host: SVGSVGElement,
   snapshot: SceneRuntimeSnapshot,
   config: RenderRuntimeConfig,
-  elements: RuntimeIdentityMap<SVGElement>,
+  elements: SceneIdentityMap<SVGElement>,
 ): HydrationController | undefined => {
   const handlers = mergeRenderHandlers(config);
   if (Object.keys(handlers).length === 0) return undefined;
@@ -1187,7 +1187,7 @@ const createSvgHydration = (
   const targets = new WeakMap<Element, HydrationTarget>();
   const publicIdByOwner = createSemanticOwnerPublicIdMap(snapshot.topology);
   const primitivePathsByPublicId = createPublicIdPrimitivePathMap(snapshot.topology);
-  const animationElementsByIdentity = createRuntimeIdentityMap(
+  const animationElementsByIdentity = createSceneIdentityMap(
     groupSvgWaapiElements(host, snapshot, elements).occurrences.map(group => [group.identity, group.elements] as const),
   );
   const animationElementsByPublicId = new Map<string, Set<Element>>();
@@ -1272,7 +1272,7 @@ export const createBuiltinSvgRetainedRenderer = (
   let currentHydration: HydrationController | undefined;
   let currentOwnedAttributes = new Set<string>();
   let currentOwnedStyles = new Set<string>();
-  let currentElements = createRuntimeIdentityMap<SVGElement>([]);
+  let currentElements = createSceneIdentityMap<SVGElement>([]);
   let currentAnimationConfig: RenderRuntimeConfig['animation'];
   let currentConfig: RenderRuntimeConfig | undefined;
   const candidateHydrationCleanup = createHydrationCleanupQueue();
@@ -1283,7 +1283,7 @@ export const createBuiltinSvgRetainedRenderer = (
     snapshot: SceneRuntimeSnapshot,
     config: RenderRuntimeConfig,
     mode: 'create' | 'adopt' = 'create',
-  ): RuntimePreparedCommit => {
+  ): ReconcilerPreparedCommit => {
     const entityPatch = canApplyEntityPatch(currentSnapshot, patch, snapshot) ? patch : undefined;
     const descriptor = entityPatch === undefined ? buildDescriptor(snapshot, config, options) : undefined;
     if (descriptor !== undefined) {
@@ -1309,14 +1309,14 @@ export const createBuiltinSvgRetainedRenderer = (
     const nextOwnedAttributes =
       descriptor === undefined ? currentOwnedAttributes : descriptorOwnedAttributes(descriptor);
     const nextOwnedStyles = descriptor === undefined ? currentOwnedStyles : descriptorOwnedStyles(descriptor);
-    const targeted = createRuntimeIdentityMap<true>(
+    const targeted = createSceneIdentityMap<true>(
       (entityPatch?.operations ?? []).flatMap(operation =>
         operation.kind === 'insert' || operation.kind === 'update'
           ? operation.subtree.topology.map(node => [node.identity, true] as const)
           : [],
       ),
     );
-    const candidateElements = createRuntimeIdentityMap<SVGElement>([
+    const candidateElements = createSceneIdentityMap<SVGElement>([
       [snapshot.root, host],
       ...snapshot.topology.flatMap(node => {
         if (targeted.has(node.identity)) return [];
@@ -1687,7 +1687,7 @@ export const createBuiltinSvgRetainedRenderer = (
     frame: RenderFrameSnapshot,
     config: RenderRuntimeConfig,
     mode: 'create' | 'adopt' = 'create',
-  ): RuntimePreparedCommit => {
+  ): ReconcilerPreparedCommit => {
     const layers = validateReadonlyLayers(frame.layers);
     const primaryToken = prepare(scenePatch, frame.primary, config, mode);
     const previousLayers = currentLayers;
@@ -1793,7 +1793,7 @@ export const createBuiltinSvgRetainedRenderer = (
           currentLayerElements = Object.freeze([]);
           currentOwnedAttributes = new Set();
           currentOwnedStyles = new Set();
-          currentElements = createRuntimeIdentityMap([]);
+          currentElements = createSceneIdentityMap([]);
           currentAnimationConfig = undefined;
           currentConfig = undefined;
         },

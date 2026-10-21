@@ -9,16 +9,16 @@ import type {
   SceneRuntimeSubtree,
   SceneRuntimeSubtreeNode,
 } from '@retikz/reconciler';
-import type { RuntimeIdentity } from '@retikz/runtime';
-import { createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runtime';
+import type { SceneIdentity } from '@retikz/reconciler';
+import { createSceneIdentityLookup, sceneIdentityEquals } from '@retikz/reconciler';
 
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
-import type { RuntimeIdentityMap } from './shared';
-import { createRuntimeIdentityMap, runtimeStructuralEquals } from './shared';
+import type { SceneIdentityMap } from './shared';
+import { createSceneIdentityMap, runtimeStructuralEquals } from './shared';
 
 type MutableSceneNode = {
-  identity: RuntimeIdentity;
-  semanticOwner: RuntimeIdentity;
+  identity: SceneIdentity;
+  semanticOwner: SceneIdentity;
   publicId?: string;
   basePrimitive: Record<string, unknown>;
   parent: MutableSceneNode | MutableSceneRoot;
@@ -29,7 +29,7 @@ type MutableSceneNode = {
 };
 
 type MutableSceneRoot = {
-  identity: RuntimeIdentity;
+  identity: SceneIdentity;
   firstChild?: MutableSceneNode;
   lastChild?: MutableSceneNode;
 };
@@ -140,7 +140,7 @@ const validateSceneResources = (resources: unknown, fail: (cause: unknown) => ne
   }
 };
 
-const isRuntimeIdentity = (value: unknown): value is RuntimeIdentity => {
+const isSceneIdentity = (value: unknown): value is SceneIdentity => {
   if (typeof value !== 'object' || value === null) return false;
 
   const owner = Reflect.get(value, 'owner');
@@ -155,14 +155,14 @@ const isRuntimeIdentity = (value: unknown): value is RuntimeIdentity => {
   }
 
   try {
-    return runtimeIdentityEquals(value as RuntimeIdentity, value as RuntimeIdentity);
+    return sceneIdentityEquals(value as SceneIdentity, value as SceneIdentity);
   } catch {
     return false;
   }
 };
 
-const validateUniqueIdentities = (identities: ReadonlyArray<RuntimeIdentity>): void => {
-  const byOwner = new Map<string, Array<RuntimeIdentity>>();
+const validateUniqueIdentities = (identities: ReadonlyArray<SceneIdentity>): void => {
+  const byOwner = new Map<string, Array<SceneIdentity>>();
 
   for (const identity of identities) {
     const values = byOwner.get(identity.owner) ?? [];
@@ -170,7 +170,7 @@ const validateUniqueIdentities = (identities: ReadonlyArray<RuntimeIdentity>): v
     byOwner.set(identity.owner, values);
   }
 
-  for (const [owner, values] of byOwner) createRuntimeIdentityLookup(owner, values);
+  for (const [owner, values] of byOwner) createSceneIdentityLookup(owner, values);
 };
 
 const primitiveKinds = new Set(['rect', 'ellipse', 'text', 'path', 'group']);
@@ -231,23 +231,23 @@ const primitivePaths = (
 
 const validateTopology = (
   primitives: ReadonlyArray<RuntimeScenePrimitive>,
-  root: RuntimeIdentity,
+  root: SceneIdentity,
   topology: ReadonlyArray<SceneRuntimeNode>,
 ): void => {
-  if (!isRuntimeIdentity(root) || !Array.isArray(topology)) topologyError({ root, topology });
+  if (!isSceneIdentity(root) || !Array.isArray(topology)) topologyError({ root, topology });
   const expectedPaths = primitivePaths(primitives);
   if (expectedPaths.length !== topology.length) topologyError({ reason: 'primitive-topology-cardinality' });
   const byPath = new Map<string, SceneRuntimeNode>();
-  const identities = createRuntimeIdentityMap<true>([]);
+  const identities = createSceneIdentityMap<true>([]);
 
   for (const node of topology) {
     const candidate: unknown = node;
     if (
       typeof candidate !== 'object' ||
       candidate === null ||
-      !isRuntimeIdentity(node.identity) ||
-      !isRuntimeIdentity(node.semanticOwner) ||
-      !isRuntimeIdentity(node.parent) ||
+      !isSceneIdentity(node.identity) ||
+      !isSceneIdentity(node.semanticOwner) ||
+      !isSceneIdentity(node.parent) ||
       !Number.isSafeInteger(node.order) ||
       node.order < 0 ||
       !isDenseArray(
@@ -260,7 +260,7 @@ const validateTopology = (
     }
 
     const path = node.primitivePath.join('.');
-    if (runtimeIdentityEquals(node.identity, root) || !identities.set(node.identity, true) || byPath.has(path)) {
+    if (sceneIdentityEquals(node.identity, root) || !identities.set(node.identity, true) || byPath.has(path)) {
       topologyError({ reason: 'duplicate-node', node });
     }
 
@@ -276,7 +276,7 @@ const validateTopology = (
 
     const parentPath = path.slice(0, -1);
     const parent = parentPath.length === 0 ? root : byPath.get(parentPath.join('.'))?.identity;
-    if (parent === undefined || !runtimeIdentityEquals(node.parent, parent) || node.order !== path.at(-1)) {
+    if (parent === undefined || !sceneIdentityEquals(node.parent, parent) || node.order !== path.at(-1)) {
       topologyError({ reason: 'parent-order-mismatch', node });
     }
   }
@@ -287,7 +287,7 @@ const validateSubtree = (subtree: SceneRuntimeSubtree): void => {
   if (
     typeof candidate !== 'object' ||
     candidate === null ||
-    !isRuntimeIdentity(Reflect.get(candidate, 'root')) ||
+    !isSceneIdentity(Reflect.get(candidate, 'root')) ||
     !Array.isArray(Reflect.get(candidate, 'topology'))
   ) {
     topologyError(subtree);
@@ -297,16 +297,16 @@ const validateSubtree = (subtree: SceneRuntimeSubtree): void => {
   const paths = primitivePaths([subtree.primitive]).map(path => path.slice(1));
   if (paths.length !== subtree.topology.length) topologyError({ reason: 'subtree-cardinality', subtree });
   const byPath = new Map<string, SceneRuntimeSubtreeNode>();
-  const identities = createRuntimeIdentityMap<true>([]);
+  const identities = createSceneIdentityMap<true>([]);
 
   for (const node of subtree.topology) {
     const nodeCandidate: unknown = node;
     if (
       typeof nodeCandidate !== 'object' ||
       nodeCandidate === null ||
-      !isRuntimeIdentity(node.identity) ||
-      !isRuntimeIdentity(node.semanticOwner) ||
-      (node.parent !== undefined && !isRuntimeIdentity(node.parent)) ||
+      !isSceneIdentity(node.identity) ||
+      !isSceneIdentity(node.semanticOwner) ||
+      (node.parent !== undefined && !isSceneIdentity(node.parent)) ||
       !Number.isSafeInteger(node.order) ||
       node.order < 0 ||
       !isDenseArray(node.primitivePath, index => typeof index === 'number' && Number.isSafeInteger(index) && index >= 0)
@@ -333,7 +333,7 @@ const validateSubtree = (subtree: SceneRuntimeSubtree): void => {
     if (
       (node.parent === undefined
         ? parent !== undefined
-        : parent === undefined || !runtimeIdentityEquals(node.parent, parent)) ||
+        : parent === undefined || !sceneIdentityEquals(node.parent, parent)) ||
       node.order !== (path.length === 0 ? 0 : path.at(-1))
     ) {
       topologyError({ reason: 'subtree-parent-order-mismatch', node });
@@ -343,7 +343,7 @@ const validateSubtree = (subtree: SceneRuntimeSubtree): void => {
   const rootNode = byPath.get('');
   if (
     rootNode === undefined ||
-    !runtimeIdentityEquals(rootNode.identity, subtree.root) ||
+    !sceneIdentityEquals(rootNode.identity, subtree.root) ||
     rootNode.parent !== undefined ||
     rootNode.order !== 0
   ) {
@@ -466,8 +466,8 @@ const buildMutableSubtree = (
   return rootNode;
 };
 
-const indexMutableTree = (root: MutableSceneRoot): RuntimeIdentityMap<MutableSceneNode> => {
-  const entries: Array<readonly [RuntimeIdentity, MutableSceneNode]> = [];
+const indexMutableTree = (root: MutableSceneRoot): SceneIdentityMap<MutableSceneNode> => {
+  const entries: Array<readonly [SceneIdentity, MutableSceneNode]> = [];
 
   const visit = (node: MutableSceneNode): void => {
     entries.push([node.identity, node]);
@@ -476,15 +476,15 @@ const indexMutableTree = (root: MutableSceneRoot): RuntimeIdentityMap<MutableSce
 
   forEachChild(root, visit);
 
-  return createRuntimeIdentityMap(entries);
+  return createSceneIdentityMap(entries);
 };
 
-const addMutableSubtreeToIndex = (node: MutableSceneNode, index: RuntimeIdentityMap<MutableSceneNode>): void => {
+const addMutableSubtreeToIndex = (node: MutableSceneNode, index: SceneIdentityMap<MutableSceneNode>): void => {
   if (!index.set(node.identity, node)) patchError({ reason: 'subtree-identity-collision', identity: node.identity });
   forEachChild(node, child => addMutableSubtreeToIndex(child, index));
 };
 
-const removeMutableSubtreeFromIndex = (node: MutableSceneNode, index: RuntimeIdentityMap<MutableSceneNode>): void => {
+const removeMutableSubtreeFromIndex = (node: MutableSceneNode, index: SceneIdentityMap<MutableSceneNode>): void => {
   index.delete(node.identity);
   forEachChild(node, child => removeMutableSubtreeFromIndex(child, index));
 };
@@ -537,7 +537,7 @@ const operationRank = (operation: ScenePatchOperation): number => {
   return 5;
 };
 
-const operationTarget = (operation: ScenePatchOperation): RuntimeIdentity | undefined => {
+const operationTarget = (operation: ScenePatchOperation): SceneIdentity | undefined => {
   if (operation.kind === 'insert') return operation.subtree.root;
   if (operation.kind === 'update' || operation.kind === 'remove' || operation.kind === 'move')
     return operation.identity;
@@ -570,7 +570,7 @@ const validateOperationShape = (operation: ScenePatchOperation): void => {
     const parent = Reflect.get(candidate, 'parent');
     const before = Reflect.get(candidate, 'before');
     const subtree = Reflect.get(candidate, 'subtree');
-    if (!isRuntimeIdentity(parent) || (before !== undefined && !isRuntimeIdentity(before))) {
+    if (!isSceneIdentity(parent) || (before !== undefined && !isSceneIdentity(before))) {
       return patchError(operation);
     }
 
@@ -582,7 +582,7 @@ const validateOperationShape = (operation: ScenePatchOperation): void => {
   if (kind === 'update') {
     const identity = Reflect.get(candidate, 'identity');
     const subtree = Reflect.get(candidate, 'subtree');
-    if (!isRuntimeIdentity(identity)) return patchError(operation);
+    if (!isSceneIdentity(identity)) return patchError(operation);
 
     validateSubtree(subtree as SceneRuntimeSubtree);
 
@@ -590,7 +590,7 @@ const validateOperationShape = (operation: ScenePatchOperation): void => {
   }
 
   if (kind === 'remove') {
-    if (!isRuntimeIdentity(Reflect.get(candidate, 'identity'))) return patchError(operation);
+    if (!isSceneIdentity(Reflect.get(candidate, 'identity'))) return patchError(operation);
     return;
   }
 
@@ -599,9 +599,9 @@ const validateOperationShape = (operation: ScenePatchOperation): void => {
     const parent = Reflect.get(candidate, 'parent');
     const before = Reflect.get(candidate, 'before');
     if (
-      !isRuntimeIdentity(identity) ||
-      !isRuntimeIdentity(parent) ||
-      (before !== undefined && !isRuntimeIdentity(before))
+      !isSceneIdentity(identity) ||
+      !isSceneIdentity(parent) ||
+      (before !== undefined && !isSceneIdentity(before))
     ) {
       return patchError(operation);
     }
@@ -631,7 +631,7 @@ const comparePrimitivePaths = (left: ReadonlyArray<number>, right: ReadonlyArray
 const pathContains = (ancestor: ReadonlyArray<number>, descendant: ReadonlyArray<number>): boolean =>
   ancestor.length < descendant.length && ancestor.every((segment, index) => segment === descendant[index]);
 
-const validateSnapshotTargetOverlap = (snapshot: SceneRuntimeSnapshot, targets: RuntimeIdentityMap<true>): void => {
+const validateSnapshotTargetOverlap = (snapshot: SceneRuntimeSnapshot, targets: SceneIdentityMap<true>): void => {
   const paths = snapshot.topology
     .filter(node => targets.has(node.identity))
     .map(node => node.primitivePath)
@@ -651,7 +651,7 @@ const validateNonOverlappingTargets = (
   current: SceneRuntimeSnapshot,
   next: SceneRuntimeSnapshot,
 ): void => {
-  const targets = createRuntimeIdentityMap<true>(
+  const targets = createSceneIdentityMap<true>(
     operations
       .map(operationTarget)
       .filter(identity => identity !== undefined)
@@ -664,7 +664,7 @@ const validateNonOverlappingTargets = (
 const validateOperationOrder = (operations: ReadonlyArray<ScenePatchOperation>): void => {
   let rank = -1;
   const singletonKinds = new Set<string>();
-  const targets = createRuntimeIdentityMap<true>([]);
+  const targets = createSceneIdentityMap<true>([]);
 
   for (const operation of operations) {
     const nextRank = operationRank(operation);
@@ -683,12 +683,12 @@ const validateOperationOrder = (operations: ReadonlyArray<ScenePatchOperation>):
 };
 
 type NextPlacement = Readonly<{
-  parent: RuntimeIdentity;
-  before?: RuntimeIdentity;
+  parent: SceneIdentity;
+  before?: SceneIdentity;
 }>;
 
-const createNextPlacementIndex = (next: SceneRuntimeSnapshot): RuntimeIdentityMap<NextPlacement> => {
-  const siblingsByParent = createRuntimeIdentityMap<Array<SceneRuntimeNode>>([]);
+const createNextPlacementIndex = (next: SceneRuntimeSnapshot): SceneIdentityMap<NextPlacement> => {
+  const siblingsByParent = createSceneIdentityMap<Array<SceneRuntimeNode>>([]);
 
   for (const node of next.topology) {
     const siblings = siblingsByParent.get(node.parent) ?? [];
@@ -696,7 +696,7 @@ const createNextPlacementIndex = (next: SceneRuntimeSnapshot): RuntimeIdentityMa
     if (!siblingsByParent.has(node.parent)) siblingsByParent.set(node.parent, siblings);
   }
 
-  const placements = createRuntimeIdentityMap<NextPlacement>([]);
+  const placements = createSceneIdentityMap<NextPlacement>([]);
 
   for (const parent of [next.root, ...next.topology.map(node => node.identity)]) {
     const siblings = siblingsByParent.get(parent);
@@ -716,34 +716,34 @@ const createNextPlacementIndex = (next: SceneRuntimeSnapshot): RuntimeIdentityMa
 };
 
 const validateBeforeAgainstNext = (
-  placements: RuntimeIdentityMap<NextPlacement>,
-  target: RuntimeIdentity,
-  parent: RuntimeIdentity,
-  before: RuntimeIdentity | undefined,
+  placements: SceneIdentityMap<NextPlacement>,
+  target: SceneIdentity,
+  parent: SceneIdentity,
+  before: SceneIdentity | undefined,
 ): void => {
   const placement = placements.get(target);
-  if (placement === undefined || !runtimeIdentityEquals(placement.parent, parent)) {
+  if (placement === undefined || !sceneIdentityEquals(placement.parent, parent)) {
     return patchError({ reason: 'target-missing-from-next-parent', target, parent });
   }
 
   const expected = placement.before;
   const matches =
-    before === undefined ? expected === undefined : expected !== undefined && runtimeIdentityEquals(before, expected);
+    before === undefined ? expected === undefined : expected !== undefined && sceneIdentityEquals(before, expected);
   if (!matches) patchError({ reason: 'before-mismatch', before, expected });
 };
 
 /** 按 Runtime identity 语义比较两个完整 Scene snapshots */
 export const sceneRuntimeSnapshotEquals = (left: SceneRuntimeSnapshot, right: SceneRuntimeSnapshot): boolean =>
   left.revision === right.revision &&
-  runtimeIdentityEquals(left.root, right.root) &&
+  sceneIdentityEquals(left.root, right.root) &&
   runtimeStructuralEquals(left.scene, right.scene) &&
   left.topology.length === right.topology.length &&
   left.topology.every((node, index) => {
     const other = right.topology[index];
     return (
-      runtimeIdentityEquals(node.identity, other.identity) &&
-      runtimeIdentityEquals(node.semanticOwner, other.semanticOwner) &&
-      runtimeIdentityEquals(node.parent, other.parent) &&
+      sceneIdentityEquals(node.identity, other.identity) &&
+      sceneIdentityEquals(node.semanticOwner, other.semanticOwner) &&
+      sceneIdentityEquals(node.parent, other.parent) &&
       node.order === other.order &&
       node.publicId === other.publicId &&
       runtimeStructuralEquals(node.primitivePath, other.primitivePath)
@@ -803,7 +803,7 @@ const validateScenePatchInternal = (
     revisionError({ current: current.revision, patch, next: next.revision });
   }
 
-  if (!runtimeIdentityEquals(current.root, next.root) || !Array.isArray(patch.operations)) {
+  if (!sceneIdentityEquals(current.root, next.root) || !Array.isArray(patch.operations)) {
     patchError({ reason: 'root-or-operations', patch });
   }
 
@@ -852,7 +852,7 @@ const validateScenePatchInternal = (
     if (operation.kind === 'insert') {
       validateSubtree(operation.subtree);
       if (index.has(operation.subtree.root)) patchError({ reason: 'insert-existing', operation });
-      const parent = runtimeIdentityEquals(operation.parent, tree.identity) ? tree : index.get(operation.parent);
+      const parent = sceneIdentityEquals(operation.parent, tree.identity) ? tree : index.get(operation.parent);
       if (parent === undefined) return patchError({ reason: 'insert-parent', operation });
       if (isMutableSceneNode(parent) && parent.basePrimitive.type !== 'group') {
         return patchError({ reason: 'insert-parent', operation });
@@ -872,7 +872,7 @@ const validateScenePatchInternal = (
 
     if (operation.kind === 'update') {
       validateSubtree(operation.subtree);
-      if (!runtimeIdentityEquals(operation.identity, operation.subtree.root)) patchError(operation);
+      if (!sceneIdentityEquals(operation.identity, operation.subtree.root)) patchError(operation);
       const previous = index.get(operation.identity);
       if (previous === undefined) return patchError({ reason: 'update-missing', operation });
 
@@ -897,7 +897,7 @@ const validateScenePatchInternal = (
 
     if (operation.kind === 'move') {
       const node = index.get(operation.identity);
-      const parent = runtimeIdentityEquals(operation.parent, tree.identity) ? tree : index.get(operation.parent);
+      const parent = sceneIdentityEquals(operation.parent, tree.identity) ? tree : index.get(operation.parent);
       if (node === undefined || parent === undefined) return patchError({ reason: 'move-target-parent', operation });
       if (isMutableSceneNode(parent) && parent.basePrimitive.type !== 'group') {
         return patchError({ reason: 'move-target-parent', operation });

@@ -9,7 +9,6 @@ export {
 export type {
   CoreComputationDefinition,
   CoreComputationOptions,
-  CoreComputationOutput,
   CoreComputationPublicRead,
   CoreComputationRuntimeOptions,
 } from './runtime';
@@ -26,3 +25,8 @@ export type {
   SceneRuntimeSubtreeNode,
 } from './scene';
 export * from './trace';
+
+export * from './session';
+export * from './scene/identity-value';
+export type { WeaveBatch, WeaveOperation, WeaveTarget } from './weave';
+export { createFullSceneRuntimeSnapshot } from './scene';
