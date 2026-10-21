@@ -26,6 +26,8 @@ export const evaluateBudget = (
   budget?: BenchmarkBudget,
   baseline?: BenchmarkReport,
 ): BudgetAssessment => {
+  const severity = budget?.kind === 'workload' ? undefined : budget?.severity;
+  const blocking = budget?.blocking ?? (budget?.kind !== 'workload' && severity === 'error');
   if (scenario.execution === 'failed' || scenario.errors.length > 0) {
     return { status: 'execution-failed', reason: scenario.errors.join('; ') || 'Scenario failed' };
   }
@@ -33,15 +35,38 @@ export const evaluateBudget = (
     return {
       status: 'not-comparable',
       reason: 'Scenario did not produce a complete measurement',
-      severity: budget?.severity,
+      severity,
+      blocking,
     };
   }
   if (!budget) return { status: 'report-only' };
   const unavailable = (reason: string): BudgetAssessment => ({
     status: 'not-comparable',
-    severity: budget.severity,
+    severity,
+    blocking,
     reason,
   });
+  if (budget.kind === 'workload') {
+    const { warningMs, errorMs, rationale } = budget;
+    if (scenario.measurement?.mode === 'reference') {
+      return { status: 'report-only', reason: '参考档仅观察，不按三个样本作稳定分位数验收', rationale };
+    }
+    if (!Number.isFinite(warningMs) || !Number.isFinite(errorMs) || warningMs <= 0 || errorMs <= warningMs) {
+      return { ...unavailable('Invalid duration limit'), severity: 'error', blocking: true };
+    }
+    const actualMs = scenario.statistics[budget.metric];
+    const level = actualMs > errorMs ? 'error' : actualMs > warningMs ? 'warn' : undefined;
+    return {
+      status: level ? 'exceeded' : 'passed',
+      severity: level,
+      metric: budget.metric,
+      actualMs,
+      warningMs,
+      errorMs,
+      rationale,
+      blocking,
+    };
+  }
   let limitMs: number;
   if (budget.kind === 'absolute') {
     if (!environmentsMatch(environment, budget.environment)) return unavailable('Environment mismatch');
@@ -67,6 +92,7 @@ export const evaluateBudget = (
     metric: budget.metric,
     actualMs,
     limitMs,
+    blocking,
   };
 };
 
@@ -76,5 +102,7 @@ export const shouldFailReport = (report: BenchmarkReport): boolean =>
   report.scenarios.some(
     ({ assessment }) =>
       assessment.status === 'execution-failed' ||
-      (assessment.severity === 'error' && (assessment.status === 'exceeded' || assessment.status === 'not-comparable')),
+      (assessment.blocking === true &&
+        (assessment.status === 'not-comparable' ||
+          (assessment.status === 'exceeded' && assessment.severity === 'error'))),
   );

@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 import { BenchmarkReporter } from '../../../scripts/benchmarks/reporter';
+import { resolveMathBudget } from './benchmarks/_budgets';
 
 /** 基准只加载当前构建的公开入口，类型检查仍使用包的公开类型 */
 const mathEntry = fileURLToPath(new URL('./dist/index.js', import.meta.url));
@@ -16,7 +17,8 @@ export default defineConfig({
       'verbose',
       new BenchmarkReporter({
         title: 'Math 单元性能测试报告',
-        budgets: {},
+        dimensionLabels: ['算法', '场景', '规模'],
+        budgets: resolveMathBudget,
         baselinePath: process.env.RETIKZ_MATH_BENCH_BASELINE,
         runnerId: process.env.RETIKZ_MATH_BENCH_RUNNER_ID,
         sourceDirectory: 'src',

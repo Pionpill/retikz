@@ -20,7 +20,8 @@ const assertNumber: (value: unknown) => asserts value is number = value => {
 /** 验证当前报告版本及预算消费的完整事实 */
 const assertBaseline: (value: unknown) => asserts value is BenchmarkReport = value => {
   assertRecord(value);
-  assert(value.version === 1 && typeof value.createdAt === 'string', 'Unsupported baseline version');
+  assert(value.version === 2 && typeof value.createdAt === 'string', 'Unsupported baseline version');
+  assertStrings(value.dimensionLabels);
   assertRecord(value.environment);
   const environment = value.environment;
   for (const field of ['runnerId', 'node', 'platform', 'architecture', 'vitest', 'lockHash', 'fixtureHash']) {
@@ -53,6 +54,7 @@ const assertBaseline: (value: unknown) => asserts value is BenchmarkReport = val
       'Invalid or duplicate scenario',
     );
     ids.add(scenario.id);
+    if (scenario.dimensions !== undefined) assertStrings(scenario.dimensions);
     assert(
       typeof scenario.execution === 'string' && ['passed', 'failed', 'skipped', 'pending'].includes(scenario.execution),
       'Invalid execution',
@@ -71,9 +73,11 @@ const assertBaseline: (value: unknown) => asserts value is BenchmarkReport = val
           scenario.assessment.status,
         ),
     );
-    for (const field of ['actualMs', 'limitMs']) {
+    for (const field of ['actualMs', 'limitMs', 'warningMs', 'errorMs']) {
       if (scenario.assessment[field] !== undefined) assertNumber(scenario.assessment[field]);
     }
+    if (scenario.assessment.blocking !== undefined) assert(typeof scenario.assessment.blocking === 'boolean');
+    if (scenario.assessment.rationale !== undefined) assert(typeof scenario.assessment.rationale === 'string');
     if (scenario.assessment.reason !== undefined) assert(typeof scenario.assessment.reason === 'string');
     if (scenario.assessment.metric !== undefined) {
       assert(

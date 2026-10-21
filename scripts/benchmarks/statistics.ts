@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 
 import type { LatencySummary } from './types';
 
-/** 从单次调用耗时计算中位数与 nearest-rank 尾部分位数 */
+/** 从单次工作负载耗时计算中位数与 nearest-rank 尾部分位数 */
 export const summarizeLatency = (samples: ReadonlyArray<number>): LatencySummary => {
   assert(
     samples.length > 0 && samples.every(sample => Number.isFinite(sample) && sample >= 0),

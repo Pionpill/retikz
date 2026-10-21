@@ -30,9 +30,15 @@ export class BenchmarkReporter implements Reporter {
     const result = test.result();
     const scenario: BenchmarkScenario = {
       id: `${basename(test.module.moduleId)} > ${test.fullName}`,
+      dimensions: test.meta().benchmarkDimensions,
       execution: result.state,
       errors: (result.errors ?? []).map(error => error.message),
+      measurement: test.meta().measurement,
     };
+    if (scenario.dimensions && scenario.dimensions.length !== this.options.dimensionLabels.length) {
+      scenario.execution = 'failed';
+      scenario.errors.push('Scenario dimension count does not match module dimension labels');
+    }
     const tasks = test.benchmarks().flatMap(group => group.tasks);
     if (tasks.length === 1 && tasks[0].latency.samples?.length) {
       scenario.statistics = summarizeLatency(tasks[0].latency.samples);
@@ -75,19 +81,27 @@ export class BenchmarkReporter implements Reporter {
       }
     }
     const scenarios = [...this.scenarios.values()].sort((left, right) => left.id.localeCompare(right.id, 'en'));
-    for (const id of Object.keys(this.options.budgets)) {
+    for (const id of Object.keys(typeof this.options.budgets === 'function' ? {} : this.options.budgets)) {
       if (!this.scenarios.has(id)) {
         scenarios.push({ id, execution: 'pending', errors: [] });
       }
     }
     const report: BenchmarkReport = {
-      version: 1,
+      version: 2,
+      dimensionLabels: this.options.dimensionLabels,
       createdAt: new Date().toISOString(),
       ...context,
       errors,
       scenarios: scenarios.map(scenario => ({
         ...scenario,
-        assessment: evaluateBudget(scenario, context.environment, this.options.budgets[scenario.id], baseline),
+        assessment: evaluateBudget(
+          scenario,
+          context.environment,
+          typeof this.options.budgets === 'function'
+            ? this.options.budgets(scenario)
+            : this.options.budgets[scenario.id],
+          baseline,
+        ),
       })),
     };
     const directory = await writeReport(join(this.root, '_notes', 'reports', 'benchmarks'), report, this.options.title);

@@ -1,7 +1,17 @@
-/** 各模块共用的默认采样预算，时间单位为毫秒；不代表性能验收上限 */
+/** 常规档固定预热十轮、正式测量一百轮；关闭按时间持续采样 */
 export const sampling = {
-  time: 300,
-  iterations: 32,
-  warmupTime: 100,
-  warmupIterations: 16,
+  time: 0,
+  iterations: 100,
+  warmup: true,
+  warmupTime: 0,
+  warmupIterations: 10,
+};
+
+/** 大规模参考档只测三次，不预热；注册时还须显式指定 async: false */
+export const referenceSampling = {
+  time: 0,
+  iterations: 3,
+  warmup: false,
+  warmupTime: 0,
+  warmupIterations: 0,
 };
