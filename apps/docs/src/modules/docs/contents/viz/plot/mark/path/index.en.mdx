@@ -393,6 +393,8 @@ The following example binds fields produced by a local `summarize` transform to 
 
 ## API Reference
 
+Use `encodings.label: 'name'` for a content field or `properties.label: 'Highlight'` for fixed text. Object labels support field bindings for `font.size`, `font.weight`, `textColor` and other targets. Label arrays match by index; unencoded font leaves retain inheritance. See [label encodings](/viz/plot/reference/encoding#labelencodingschema).
+
 `PathMarkProps` is exported by `@retikz/plot-react` and reuses `InputPlotPathMark` from `@retikz/plot-vanilla`. Members are grouped by purpose. `—` means the declaration has no field-level default; runtime defaults are explained above. Source IR fields and constraints reuse `PathMarkSchema` from the [mark contract reference](/viz/plot/reference/mark).
 
 {/* @include viz/plot/mark/path/generated */}

@@ -171,6 +171,8 @@ The following flow stops at the RelationMark boundary: path and ribbon relations
 
 ## API Reference
 
+Use `encodings.label: 'name'` for a content field or `properties.label: 'Highlight'` for fixed text. Object labels support field bindings for `font.size`, `font.weight`, `textColor` and other targets. Label arrays match by index; unencoded font leaves retain inheritance. See [label encodings](/viz/plot/reference/encoding#labelencodingschema).
+
 Source IR endpoint nodes can contribute edge padding through `autoPadding`, which defaults to `false`. The policy protects existing endpoint nodes, excluding the connecting path; Ranged Dot Chart supplies a policy explicitly. See [PointMark edge padding](/viz/plot/mark/point#edge-padding) for shared rules and an example.
 
 This table keeps only RelationMark-specific props and props whose meaning is redefined here. React users can import `RelationMarkProps` from `@retikz/plot-react`; the `IRPlot*` types in the table come from `@retikz/plot`, while Vanilla authoring uses `InputPlotRelationPathGeometry` from `@retikz/plot-vanilla`. See [transforms](/viz/plot/transform) for local `transform` and `relate`, [channel bindings](/viz/plot/channel/binding) for extension channels, and [coordinates](/viz/plot/coordinate) for projected targets. Put color, stroke, opacity, shadow, and other shared path / ribbon styles in `style`; put ordinary-path-only marks, dashes, and corners in `path.options`.

@@ -1,7 +1,7 @@
 import { CssColorSchema, GeometryLabelSchema, NodeLabelSchema } from '@retikz/core';
 import type { JsonValue } from '@retikz/foundation';
 import { NonBlankStringSchema, PositiveNumberSchema } from '@retikz/foundation';
-import { array, enum as zodEnum, never, number, object, strictObject, union } from 'zod';
+import { array, enum as zodEnum, never, number, object, strictObject, string, union } from 'zod';
 
 import { PositionEdge } from './constants';
 
@@ -70,10 +70,45 @@ export const VisualEncodingSchema = strictObject({
   .catchall(ChannelSchema.transform((binding): JsonValue => binding))
   .describe('Declared shared visual field targets; additional field targets require registered channel definitions');
 
-/** 校验对应索引标签的内容字段编码 */
+/** 校验标签字体各叶子的独立字段绑定 */
+export const LabelFontEncodingSchema = strictObject({
+  size: ChannelSchema.optional(),
+  weight: ChannelSchema.optional(),
+  family: NonBlankStringSchema.optional(),
+  style: NonBlankStringSchema.optional(),
+});
+
+/** 校验标签内容、共同外观与已注册扩展目标的字段绑定 */
 export const LabelEncodingSchema = strictObject({
   content: NonBlankStringSchema.optional(),
-}).describe('Field content of a label at the same index as its fixed host properties');
+  font: LabelFontEncodingSchema.optional(),
+  textColor: ChannelSchema.optional(),
+  opacity: ChannelSchema.optional(),
+  position: NonBlankStringSchema.optional(),
+  placement: NonBlankStringSchema.optional(),
+  distance: NonBlankStringSchema.optional(),
+}).catchall(ChannelSchema.transform((binding): JsonValue => binding));
+
+/** 校验节点标签附着属性的字段绑定 */
+export const NodeLabelEncodingSchema = LabelEncodingSchema.extend({
+  align: NonBlankStringSchema.optional(),
+  rotate: NonBlankStringSchema.optional(),
+  keepUpright: NonBlankStringSchema.optional(),
+  side: never().optional(),
+  sloped: never().optional(),
+});
+
+/** 校验几何标签附着属性的字段绑定 */
+export const GeometryLabelEncodingSchema = LabelEncodingSchema.extend({
+  side: NonBlankStringSchema.optional(),
+  sloped: NonBlankStringSchema.optional(),
+  align: never().optional(),
+  rotate: never().optional(),
+  keepUpright: never().optional(),
+});
+
+const nodeLabelEncoding = union([NonBlankStringSchema, NodeLabelEncodingSchema]);
+const geometryLabelEncoding = union([NonBlankStringSchema, GeometryLabelEncodingSchema]);
 
 /** 校验节点宿主允许的字段编码目标 */
 export const NodeEncodingSchema = VisualEncodingSchema.extend({
@@ -89,7 +124,7 @@ export const NodeEncodingSchema = VisualEncodingSchema.extend({
   dashPattern: ChannelSchema.optional(),
   font: ChannelSchema.optional(),
   boundary: ChannelSchema.optional(),
-  label: union([LabelEncodingSchema, array(LabelEncodingSchema).min(1)]).optional(),
+  label: union([nodeLabelEncoding, array(nodeLabelEncoding).min(1)]).optional(),
 }).describe('Declared node-host visual field targets');
 
 /** 校验路径宿主允许的字段编码目标 */
@@ -102,7 +137,7 @@ export const PathEncodingSchema = VisualEncodingSchema.extend({
   lineCap: ChannelSchema.optional(),
   lineJoin: ChannelSchema.optional(),
   roundedCorners: ChannelSchema.optional(),
-  label: union([LabelEncodingSchema, array(LabelEncodingSchema).min(1)]).optional(),
+  label: union([geometryLabelEncoding, array(geometryLabelEncoding).min(1)]).optional(),
 }).describe('Declared path-host visual field targets');
 
 /** 校验位置与共享视觉字段编码 */
@@ -168,18 +203,21 @@ export const MarkGeometryLabelSchema = strictObject({
 );
 
 /** 校验单个或按声明顺序排列的节点宿主标签 */
-export const MarkNodeLabelListSchema = union([MarkNodeLabelSchema, array(MarkNodeLabelSchema).min(1)]).describe(
-  'Single or multiple node-host labels; array order is preserved',
-);
+export const MarkNodeLabelListSchema = union([
+  string(),
+  MarkNodeLabelSchema,
+  array(union([string(), MarkNodeLabelSchema])).min(1),
+]).describe('Single or multiple node-host labels; array order is preserved');
 
 /** 校验单个或按声明顺序排列的几何宿主标签 */
 export const MarkGeometryLabelListSchema = union([
+  string(),
   MarkGeometryLabelSchema,
-  array(MarkGeometryLabelSchema).min(1),
+  array(union([string(), MarkGeometryLabelSchema])).min(1),
 ]).describe('Single or multiple geometry-host labels; array order is preserved');
 
 /** 校验由标记定义决定节点或几何宿主的标签输入 */
-export const MarkLabelSchema = union([MarkNodeLabelSchema, MarkGeometryLabelSchema]).describe(
+export const MarkLabelSchema = union([string(), MarkNodeLabelSchema, MarkGeometryLabelSchema]).describe(
   'Host-inferred plot label input; mark definitions choose node or geometry host schema',
 );
 

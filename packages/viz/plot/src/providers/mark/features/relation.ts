@@ -714,7 +714,7 @@ export const lowerRelation = (
           ? mark.properties.geometry.endWidth
           : channelValueOf<number>(channels, 'geometry.endWidth')?.(row);
       const { interpolation, ...ribbonOptions } = mark.properties.geometry.options ?? {};
-      const label = resolveGeometryMarkLabels(mark.properties.label, row, labelOf, mark.encodings?.label);
+      const label = resolveGeometryMarkLabels(mark.properties.label, row, labelOf, mark.encodings?.label, channels);
       const ribbon: IRPath = applyPathChannelDeliveries(
         {
           type: 'path',
@@ -786,7 +786,7 @@ export const lowerRelation = (
     }
 
     const pathOptions = (mark.properties.geometry.options ?? {}) as Partial<IRPath>;
-    const label = resolveGeometryMarkLabels(mark.properties.label, row, labelOf, mark.encodings?.label);
+    const label = resolveGeometryMarkLabels(mark.properties.label, row, labelOf, mark.encodings?.label, channels);
     const path: IRPath = applyPathChannelDeliveries(
       {
         type: 'path',
@@ -866,6 +866,7 @@ export const relationMarkDefinition: MarkDefinition<IRPlotRelationMark> = {
         ];
       });
     }),
+  labelHost: 'geometry',
   channelKinds: pathChannelKinds,
   collectFields: (mark, fields) => {
     collectTargetFields(mark.properties.source, mark.encodings?.source, fields);

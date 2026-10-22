@@ -153,7 +153,13 @@ export const lowerPoint = (
       }
 
       const text = row === undefined ? mark.properties?.text : textOf?.(row);
-      const attachedLabel = resolveNodeMarkLabels(mark.properties?.label, row, undefined, mark.encodings.label);
+      const attachedLabel = resolveNodeMarkLabels(
+        mark.properties?.label,
+        row,
+        undefined,
+        mark.encodings.label,
+        channels,
+      );
       if (text === undefined && attachedLabel === undefined) continue;
 
       const deliveries = resolveChannelDeliveries();
@@ -216,6 +222,7 @@ export const lowerPoint = (
             mark,
             row,
             labelOf,
+            channels,
           );
     placed.push({ color: row === undefined ? undefined : colorOf?.(row), node });
   }
@@ -295,6 +302,7 @@ export const pointMarkDefinition: MarkDefinition<IRPlotPointMark> = {
       ];
     });
   },
+  labelHost: 'node',
   channelKinds: nodeChannelKinds,
   collectFields: (mark, fields: FieldCollector) => {
     collectCommonEncodingFields(mark, fields);

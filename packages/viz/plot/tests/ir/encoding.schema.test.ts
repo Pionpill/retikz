@@ -159,3 +159,18 @@ describe('Mark position geometry inputs', () => {
     ).toBe(false);
   });
 });
+
+it('round-trips shorthand labels and rejects cross-host or invalid font bindings', () => {
+  const point = {
+    type: 'point',
+    encodings: { label: ['name', { font: { family: 'family', size: 'size' } }] },
+    properties: { label: ['fixed', { content: 'other' }] },
+  };
+  expect(PointMarkSchema.parse(JSON.parse(JSON.stringify(point)))).toMatchObject(point);
+  expect(PointMarkSchema.safeParse({ type: 'point', encodings: { label: { sloped: 's' } } }).success).toBe(false);
+  expect(PathMarkSchema.safeParse({ type: 'path', encodings: { label: { rotate: 'r' } } }).success).toBe(false);
+  expect(
+    PointMarkSchema.safeParse({ type: 'point', encodings: { label: { font: { family: { field: 'f', scale: 's' } } } } })
+      .success,
+  ).toBe(false);
+});

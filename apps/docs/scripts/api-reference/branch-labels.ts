@@ -15,6 +15,7 @@ export const apiReferenceBranchLabels: Readonly<
   >
 > = {
   '@retikz/plot#ChannelDefinition': [
+    { value: 'label', field: 'kind', type: '"label"', label: { zh: '标签', en: 'Label' } },
     { value: 'position', field: 'kind', type: '"position"', label: { zh: '位置', en: 'Position' } },
     { value: 'mark', field: 'kind', type: '"mark"', label: { zh: '图元', en: 'Mark' } },
     { value: 'node', field: 'kind', type: '"node"', label: { zh: '节点', en: 'Node' } },
@@ -22,6 +23,7 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'scope', field: 'kind', type: '"scope"', label: { zh: '作用域', en: 'Scope' } },
   ],
   '@retikz/plot#AnyChannelDefinition': [
+    { value: 'label', field: 'kind', type: '"label"', label: { zh: '标签', en: 'Label' } },
     { value: 'position', field: 'kind', type: '"position"', label: { zh: '位置', en: 'Position' } },
     { value: 'mark', field: 'kind', type: 'typeof ChannelDefinitionKind.Mark', label: { zh: '图元', en: 'Mark' } },
     { value: 'node', field: 'kind', type: 'typeof ChannelDefinitionKind.Node', label: { zh: '节点', en: 'Node' } },

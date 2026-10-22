@@ -441,3 +441,28 @@ describe('plot', () => {
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 });
+
+it('preserves label shorthand and nested font field bindings', () => {
+  const spec = plot({
+    data: { reference: 'labels' },
+    scales: [
+      { type: 'linear', name: 'x' },
+      { type: 'linear', name: 'y' },
+    ],
+    coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+    marks: [
+      {
+        type: 'point',
+        encodings: {
+          position: { x: { field: 'x' }, y: { field: 'y' } },
+          label: ['name', { font: { size: 'size' } }],
+        },
+        properties: { label: ['fallback', 'fixed'] },
+      },
+    ],
+  });
+  expect(PlotSchema.parse(JSON.parse(JSON.stringify(spec))).marks[0]).toMatchObject({
+    encodings: { label: ['name', { font: { size: 'size' } }] },
+    properties: { label: ['fallback', 'fixed'] },
+  });
+});

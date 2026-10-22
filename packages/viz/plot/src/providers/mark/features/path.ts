@@ -658,6 +658,7 @@ export const buildSeriesPathScopes = (
         row,
         channelValueOf<IRNodeLabel['text']>(channels, 'label'),
         mark.encodings.label,
+        channels,
       );
       const path: IRPathChild = applyPathChannelDeliveries(
         {
@@ -832,6 +833,7 @@ const lowerPath = (
         row,
         channelValueOf<IRNodeLabel['text']>(channels, 'label'),
         mark.encodings.label,
+        channels,
       );
 
       return applyNullConnectionStyle(
@@ -955,6 +957,7 @@ const collectPathMarkChannelFields = (mark: IRPlotPathMark, fields: FieldCollect
 /** 内置 path mark definition */
 export const pathMarkDefinition: MarkDefinition<IRPlotPathMark> = {
   schema: PathMarkSchema,
+  labelHost: 'geometry',
   channelKinds: pathChannelKinds,
   collectFields: (mark, fields: FieldCollector) => {
     collectCommonEncodingFields(mark, fields);

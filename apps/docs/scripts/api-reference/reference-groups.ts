@@ -37,6 +37,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         'ChannelDefinitionKind',
         'defineChannel',
         'defineNodeChannel',
+        'defineLabelChannel',
         'definePathChannel',
         'defineScopeChannel',
         'PositionChannelDefinition',
@@ -66,6 +67,10 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         'ScopeChannelResolution',
         'ScaleDescriptor',
         'MarkChannels',
+        'LabelChannelDefinition',
+        'LabelChannelDelivery',
+        'LabelChannelTarget',
+        'LabelHost',
       ],
     },
     {

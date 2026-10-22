@@ -1,7 +1,7 @@
 import type { IRNodeLabel } from '@retikz/core';
 
 import type { MarkChannelDefinition, ResolveLabel } from '../../../contract';
-import { ChannelDefinitionKind } from '../../../contract';
+import { ChannelDefinitionKind, labelEntries } from '../../../contract';
 import type { IRPlotMarkLabelContent, IRPlotMarkOperation } from '../../../schemas';
 import { labelOf } from '../shared';
 
@@ -26,13 +26,14 @@ type LabelContentSources = {
 
 const labelContentSources = (mark: IRPlotMarkOperation): LabelContentSources => {
   const source = mark as {
-    encodings?: { text?: string; label?: { content?: string } | Array<{ content?: string }> };
+    encodings?: { text?: string; label?: string | { content?: string } | Array<string | { content?: string }> };
     properties?: {
       text?: IRPlotMarkLabelContent;
       displayFormat?: string;
       label?:
+        | string
         | { content?: IRPlotMarkLabelContent; displayFormat?: string }
-        | Array<{ content?: IRPlotMarkLabelContent; displayFormat?: string }>;
+        | Array<string | { content?: IRPlotMarkLabelContent; displayFormat?: string }>;
     };
   };
   if (source.encodings?.text !== undefined || source.properties?.text !== undefined) {
@@ -43,10 +44,14 @@ const labelContentSources = (mark: IRPlotMarkOperation): LabelContentSources => 
     };
   }
   const labels = source.properties?.label;
-  const label = Array.isArray(labels) ? labels[0] : labels;
+  const label = labelEntries(labels).at(0);
   const encodings = source.encodings?.label;
-  const encoding = Array.isArray(encodings) ? encodings[0] : encodings;
-  return { field: encoding?.content, content: label?.content, displayFormat: label?.displayFormat };
+  const encoding = labelEntries(encodings).at(0);
+  return {
+    field: encoding?.content,
+    content: label?.content,
+    displayFormat: label && 'displayFormat' in label ? label.displayFormat : undefined,
+  };
 };
 
 /**

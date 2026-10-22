@@ -389,6 +389,8 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 ## API 参考
 
+标签内容可简写为 `encodings.label: 'name'`，固定文字写 `properties.label: '重点'`。对象形式支持 `font.size`、`font.weight`、`textColor` 等字段编码，多标签数组按索引配对；未编码的字体叶子继续继承。详见[标签编码](/viz/plot/reference/encoding#labelencodingschema)。
+
 `PathMarkProps` 从 `@retikz/plot-react` 导出，复用 `@retikz/plot-vanilla` 的 `InputPlotPathMark`。下表按用途分组；`—` 表示声明没有字段级默认值，实际缺省行为见上文。Source IR 的字段与约束复用[图元契约参考](/viz/plot/reference/mark)中的 `PathMarkSchema`。
 
 {/* @include viz/plot/mark/path/generated */}

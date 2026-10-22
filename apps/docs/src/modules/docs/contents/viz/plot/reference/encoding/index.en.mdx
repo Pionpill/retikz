@@ -53,6 +53,36 @@ Requires x, y, and z.
 
 <ZodSchema name="LabelEncodingSchema" />
 
+`encodings.label: 'name'` is shorthand for `{ content: 'name' }`, a field binding; `properties.label: 'Highlight'` is fixed text. Use an object for additional settings. Non-empty arrays can mix strings and objects, with one label per entry.
+
+| Target                      | Encoding                                                     |
+| --------------------------- | ------------------------------------------------------------ |
+| `content`                   | Field name; fixed `displayFormat` controls formatting        |
+| `font.size`, `font.weight`  | Field name or numeric `{ field, scale }` mapping             |
+| `font.family`, `font.style` | Field name; reads the font family or style directly          |
+| `textColor`, `opacity`      | Field name or explicit scale; opacity is a label-only scalar |
+| Host attachment properties  | Field names with separate Node and Geometry constraints      |
+
+Unencoded font leaves retain fixed settings and inheritance. Failed bindings do not fall back to fixed values. A style-only binding still creates data-driven Mark instances. Path labels use the first row of each actual segment, not one label per vertex.
+
+### LabelFontEncodingSchema
+
+<ZodSchema name="LabelFontEncodingSchema" description="Independent size, weight, family and style field bindings." />
+
+### NodeLabelEncodingSchema
+
+<ZodSchema
+  name="NodeLabelEncodingSchema"
+  description="Node labels add align, rotate and keepUpright to the shared position, placement and distance targets."
+/>
+
+### GeometryLabelEncodingSchema
+
+<ZodSchema
+  name="GeometryLabelEncodingSchema"
+  description="Geometry labels add side and sloped; position describes placement along the path."
+/>
+
 ## Mark labels
 
 ### MarkLabelSchema

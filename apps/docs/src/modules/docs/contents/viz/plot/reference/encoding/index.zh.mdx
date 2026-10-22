@@ -88,8 +88,38 @@ x、y、z 全部必填。
 
 <ZodSchema
   name="LabelEncodingSchema"
-  description="标签内容字段，与 properties.label 按相同索引组合。"
+  description="标签内容与外观字段，与 properties.label 按相同索引组合。"
   descriptions={{ content: '当前数据行中的标签内容字段。' }}
+/>
+
+`encodings.label: 'name'` 等价于 `{ content: 'name' }`，表示字段绑定；`properties.label: '重点'` 表示固定文字。需要细化时改用对象，非空数组可混合字符串与对象，每一项对应一个标签。
+
+| 目标                        | 编码形式                                    |
+| --------------------------- | ------------------------------------------- |
+| `content`                   | 字段名，格式由固定属性 `displayFormat` 控制 |
+| `font.size`、`font.weight`  | 字段名，或 `{ field, scale }` 数值映射      |
+| `font.family`、`font.style` | 字段名，直接读取字体族或字形                |
+| `textColor`、`opacity`      | 字段名或显式尺度；透明度为标签自身的标量    |
+| 宿主附着属性                | 字段名；Node 与 Geometry 各自限制可用属性   |
+
+未编码的字体叶子保留固定配置及继承；编码失败不会回退固定值。只有样式绑定字段时，也按数据行生成 Mark。Path 标签使用实际线段首行，不为每个顶点生成标签。
+
+### LabelFontEncodingSchema
+
+<ZodSchema name="LabelFontEncodingSchema" description="字号、字重、字体族和字形的独立字段编码。" />
+
+### NodeLabelEncodingSchema
+
+<ZodSchema
+  name="NodeLabelEncodingSchema"
+  description="节点标签额外支持 align、rotate、keepUpright，与共同的 position、placement、distance 字段。"
+/>
+
+### GeometryLabelEncodingSchema
+
+<ZodSchema
+  name="GeometryLabelEncodingSchema"
+  description="几何标签额外支持 side、sloped；position 表示沿路径的位置。"
 />
 
 ## 图元标签

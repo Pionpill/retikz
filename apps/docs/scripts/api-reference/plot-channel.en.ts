@@ -1,5 +1,20 @@
 /** 已审阅的通道公开契约英文说明 */
 const translations: Partial<Record<string, string>> = {
+  附属标签的字段外观通道: 'Field-driven visual channel for an attached label',
+  按原始标签索引投递的字段样式: 'Field styles delivered by the original label index',
+  '标签几何宿主，沿用 Core 的两个标签消费面': 'Label geometry host using the two Core label surfaces',
+  '标签通道共用的 Core 投递目标': 'Core delivery target shared by label channels',
+  '标签字段通道定义，内置与自定义共用注册、解析和投递入口':
+    'Label field channel definition with shared registration, resolution and delivery for built-ins and extensions',
+  允许消费本通道的标签宿主: 'Label hosts allowed to consume this channel',
+  根据字段绑定与宿主解析逐行值: 'Resolves row values from a field binding and host',
+  '将确定值写入 Core 标签': 'Writes a resolved value to a Core label',
+  '定义标签通道，不创建独立 registry': 'Defines a label channel using the shared registry',
+  保留声明索引的标签样式投递: 'Label style delivery retaining its declaration index',
+  原始标签索引: 'Original label index',
+  已绑定宿主与诊断上下文的逐行投递: 'Row delivery bound to its host and diagnostic context',
+  '附属标签的 Core 宿主；有标签编码时必须声明': 'Core host of attached labels; required for label style encodings',
+
   '无有效字段编码时使用的固定 paint 属性': 'Fixed paint property used when no effective field encoding exists',
   读取字段编码在当前行中的原始值: 'Reads the raw value of a field encoding in the current row',
   '字段绑定；省略表示未绑定': 'Field binding; omitted when unbound',

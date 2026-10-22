@@ -614,6 +614,7 @@ const lowerCells = (
             mark,
             row,
             labelOf,
+            channels,
           );
     placed.push({ color: row === undefined ? undefined : colorOf?.(row), node });
   }
@@ -668,6 +669,7 @@ const collectIntervalChannelFields = (mark: IRPlotIntervalMark, fields: FieldCol
 /** 内置 interval mark definition */
 export const intervalMarkDefinition: MarkDefinition<IRPlotIntervalMark> = {
   schema: IntervalMarkSchema,
+  labelHost: 'node',
   channelKinds: nodeChannelKinds,
   collectFields: (mark, fields: FieldCollector) => {
     collectCommonEncodingFields(mark, fields);

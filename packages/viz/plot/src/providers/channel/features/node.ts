@@ -32,7 +32,7 @@ import type { IRPlot, IRPlotLinearScale, IRPlotMarkOperation, IRPlotChannel, IRP
 import { BuiltinPlotScale } from '../../../schemas';
 import { resolveLinearScale, resolveSqrtScale } from '../../scale';
 import { PLOT_SHAPE_PALETTE } from '../../theme';
-import { makeMarkValueResolver } from '../shared';
+import { makeMarkValueResolver, booleanChannelValue } from '../shared';
 
 /** opacity 通道连续映射的最小不透明度（range 下界，避免最小值全透明不可见）；契约常量，测试 import 断言 */
 export const OPACITY_MIN = 0.2;
@@ -83,14 +83,6 @@ const boxSizeValue = (value: unknown): number | IRBoxSize | undefined => {
   if (isFiniteNumber(value) && value >= 0) return value;
   const result = BoxSizeSchema.safeParse(value);
   return result.success ? result.data : undefined;
-};
-
-const booleanValue = (value: unknown): boolean | undefined => {
-  if (typeof value === 'boolean') return value;
-  if (value === 'true') return true;
-  if (value === 'false') return false;
-
-  return undefined;
 };
 
 const dashPatternValue = (value: unknown): Array<number> | undefined =>
@@ -527,10 +519,10 @@ const directNodeChannels = {
       node.layout = { ...node.layout, margin: value as number | IRBoxSpacing };
     },
   ),
-  dashed: defineSimpleNodeChannel<boolean>('dashed', { outputKind: 'boolean' }, booleanValue, (node, value) => {
+  dashed: defineSimpleNodeChannel<boolean>('dashed', { outputKind: 'boolean' }, booleanChannelValue, (node, value) => {
     node.style = { ...node.style, dashed: value };
   }),
-  dotted: defineSimpleNodeChannel<boolean>('dotted', { outputKind: 'boolean' }, booleanValue, (node, value) => {
+  dotted: defineSimpleNodeChannel<boolean>('dotted', { outputKind: 'boolean' }, booleanChannelValue, (node, value) => {
     node.style = { ...node.style, dotted: value };
   }),
   dashPattern: defineSimpleNodeChannel<Array<number>>(

@@ -28,6 +28,7 @@ const config: ApiReferencePackageConfig = {
       source: path.join(root, 'packages/viz/plot/src/index.ts'),
       title: { zh: '通道', en: 'Channels' },
       symbols: referenceGroups['viz/plot/channel']!.flatMap(group => group.members),
+      declarationOnlySymbols: ['LabelChannelTarget'],
     },
   ],
 };

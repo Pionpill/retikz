@@ -3,13 +3,13 @@ export * from './channel';
 export * from './coordinate';
 export * from './domain-padding';
 export * from './guide';
+export * from './label';
 export * from './lineage';
 export * from './locator';
 export * from './mark';
+export * from './position';
 export * from './position-adjustment';
 export * from './preparation';
 export * from './provenance';
 export * from './scale';
 export * from './theme';
-
-export * from './position';

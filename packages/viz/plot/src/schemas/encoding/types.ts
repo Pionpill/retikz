@@ -1,6 +1,7 @@
 import type { infer as ZodInfer } from 'zod';
 
 import type {
+  LabelEncodingSchema,
   ChannelSchema,
   EncodingSchema,
   VisualEncodingSchema,
@@ -57,3 +58,6 @@ export type IRPlotMarkGeometryLabelList = ZodInfer<typeof MarkGeometryLabelListS
 
 /** 由宿主推导的标记标签配置 */
 export type IRPlotMarkLabel = ZodInfer<typeof MarkLabelSchema>;
+
+/** 单个标签的详细字段编码 */
+export type IRPlotLabelEncoding = ZodInfer<typeof LabelEncodingSchema>;

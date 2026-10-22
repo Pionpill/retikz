@@ -1,4 +1,4 @@
-import type { IRNode, IRPath, IRScope, IRShapeValue } from '@retikz/core';
+import type { IRNode, IRPath, IRScope, IRShapeValue, IRNodeLabel, IRGeometryLabel } from '@retikz/core';
 import type {
   DataTransformModel,
   DataFieldType,
@@ -55,6 +55,8 @@ export type ResolveLabel = (row: ExternalRow) => string;
 export const ChannelDefinitionKind = {
   /** 位置通道：由坐标系 role 消费 */
   Position: 'position',
+  /** 附属标签的字段外观通道 */
+  Label: 'label',
   /** Mark 通道：解析后交给 mark definition 按图元语义消费 */
   Mark: 'mark',
   /** Scope 通道：解析后直接交付到 core IRScope 级联属性或 every-X 默认 */
@@ -131,6 +133,8 @@ export type ScopeChannelDelivery = {
  *   存放直接落到 core IRScope / IRNode / IRPath 的通道交付项
  */
 export type MarkChannels = {
+  /** 按原始标签索引投递的字段样式 */
+  labelDeliveries?: ReadonlyArray<LabelChannelDelivery>;
   /** 按通道名称索引的逐行视觉值解析函数 */
   values?: Readonly<Record<string, ChannelValueResolver>>;
   /** 未应用逐行编码时由 mark 消费的通道默认值 */
@@ -181,7 +185,7 @@ export const unencodedMarkProperties = <T extends IRPlotMarkOperation>(mark: T):
   if (mark.properties === undefined) return undefined;
   const properties: Record<string, unknown> = { ...mark.properties };
   for (const [target, binding] of Object.entries(mark.encodings ?? {})) {
-    if (target === 'anchorId') continue;
+    if (target === 'anchorId' || target === 'label') continue;
     if (typeof binding === 'string' || (binding !== null && typeof binding === 'object' && 'field' in binding))
       delete properties[target];
   }
@@ -446,6 +450,7 @@ export type PathChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
  * @template T 通道解析、传递或整层共享的视觉值类型
  */
 export type ChannelDefinition<T extends ChannelValue = ChannelValue> =
+  | LabelChannelDefinition
   | PositionChannelDefinition
   | MarkChannelDefinition<T>
   | ScopeChannelDefinition<T>
@@ -492,6 +497,7 @@ export const definePathChannel = <T extends ChannelValue>(
 
 /** registry / options 注入用的通用宽类型 */
 export type AnyChannelDefinition =
+  | LabelChannelDefinition
   | PositionChannelDefinition
   | {
       /** 在通道注册表中唯一的名称 */
@@ -555,3 +561,37 @@ export type AnyChannelDefinition =
       /** 把已解析的视觉值写入对应 Core 宿主的已有属性 */
       deliver: (path: IRPath, value: never, context: PathChannelDeliveryContext) => void;
     };
+
+/** 标签几何宿主，沿用 Core 的两个标签消费面 */
+export type LabelHost = 'node' | 'geometry';
+
+/** 标签通道共用的 Core 投递目标 */
+export type LabelChannelTarget = IRNodeLabel | IRGeometryLabel;
+
+/** 标签字段通道定义，内置与自定义共用注册、解析和投递入口 */
+export type LabelChannelDefinition = BaseChannelDefinition<typeof ChannelDefinitionKind.Label> & {
+  /** 允许消费本通道的标签宿主 */
+  hosts: ReadonlyArray<LabelHost>;
+  /** 根据字段绑定与宿主解析逐行值 */
+  resolve: (
+    context: ChannelDefinitionResolveContext,
+    binding: IRPlotChannel,
+    host: LabelHost,
+    mark: IRPlotMarkOperation,
+  ) => ChannelResolution<ChannelValue>;
+  /** 将确定值写入 Core 标签 */
+  deliver: (label: LabelChannelTarget, value: ChannelValue, host: LabelHost) => void;
+};
+
+/** 定义标签通道，不创建独立 registry */
+export const defineLabelChannel = (
+  definition: WithOptionalProperties<LabelChannelDefinition, 'kind'>,
+): LabelChannelDefinition => ({ ...definition, kind: ChannelDefinitionKind.Label });
+
+/** 保留声明索引的标签样式投递 */
+export type LabelChannelDelivery = {
+  /** 原始标签索引 */
+  index: number;
+  /** 已绑定宿主与诊断上下文的逐行投递 */
+  apply: (label: LabelChannelTarget, row: ExternalRow) => void;
+};

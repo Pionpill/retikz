@@ -52,7 +52,11 @@ export const PointTextPreview = (values: PointTextPreviewValues) => {
   const textProps: PointMarkProps =
     values.mode === 'label'
       ? {
-          encodings: { color: 'region', label: { content: values.textField }, position: { x: { field: 'x' }, y: { field: 'y' } } },
+          encodings: {
+            color: 'region',
+            label: { content: values.textField, font: { size: 'labelSize', weight: 'labelWeight' } },
+            position: { x: { field: 'x' }, y: { field: 'y' } },
+          },
           properties: {
             label: {
               displayFormat,
@@ -78,9 +82,20 @@ export const PointTextPreview = (values: PointTextPreviewValues) => {
           },
         };
 
+  const labelRows = points.map((row, index) => ({
+    ...row,
+    labelSize: values.fontSize * (0.8 + (index % 3) * 0.2),
+    labelWeight: values.fontBold ? 700 : 400,
+  }));
+
   return (
     <Layout viewBox={{ x: -100, y: -70, width: 600, height: 408 }}>
-      <Plot data={points} width={400} height={280} coordinate={values.coordinate === 'polar2D' ? 'polar2D' : undefined}>
+      <Plot
+        data={labelRows}
+        width={400}
+        height={280}
+        coordinate={values.coordinate === 'polar2D' ? 'polar2D' : undefined}
+      >
         <PointMark
           id="text-demo"
           {...textProps}

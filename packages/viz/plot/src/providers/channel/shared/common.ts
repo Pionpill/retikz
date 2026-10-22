@@ -61,3 +61,11 @@ export const makeMarkValueResolver = <T>(
     resolver: row => options.parse(resolveFieldPath(row, field)),
   };
 };
+
+/** 将数据层的布尔分类值还原为绘图布尔属性 */
+export const booleanChannelValue = (value: unknown): boolean | undefined => {
+  if (typeof value === 'boolean') return value;
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  return undefined;
+};

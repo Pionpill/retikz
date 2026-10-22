@@ -23,6 +23,8 @@ import type {
   MarkProvenance,
 } from '../../../contract';
 import {
+  labelEntries,
+  labelEncodingBindings,
   ChannelDefinitionKind,
   datumMeta,
   markLayerId,
@@ -32,8 +34,10 @@ import {
   markPositionInputs,
   markChannelEncoding,
 } from '../../../contract';
+import { RetikzPlotError } from '../../../error';
 import type { IRPlotMarkOpacityStyle } from '../../../schemas';
 import type {
+  IRPlotLabelEncoding,
   IRPlotAnchorId,
   IRPlotChannel,
   IRPlotIntervalMark,
@@ -160,37 +164,7 @@ export const decorateDatum = <T extends IRNode | IRPath>(
 
 type LabelText = IRNodeLabel['text'];
 
-type MarkLabelFieldSource =
-  | IRPlotMarkNodeLabel
-  | IRPlotMarkGeometryLabel
-  | ReadonlyArray<IRPlotMarkNodeLabel>
-  | ReadonlyArray<IRPlotMarkGeometryLabel>
-  | ReadonlyArray<IRPlotMarkNodeLabel | IRPlotMarkGeometryLabel>
-  | undefined;
-
-type MarkLabelFieldEntry = IRPlotMarkNodeLabel | IRPlotMarkGeometryLabel;
-
-const normalizeNodeLabels = (
-  labels: IRPlotMarkNodeLabel | ReadonlyArray<IRPlotMarkNodeLabel> | undefined,
-): Array<IRPlotMarkNodeLabel> => {
-  if (labels === undefined) return [];
-  return Array.isArray(labels) ? [...(labels as ReadonlyArray<IRPlotMarkNodeLabel>)] : [labels as IRPlotMarkNodeLabel];
-};
-
-const normalizeGeometryLabels = (
-  labels: IRPlotMarkGeometryLabel | ReadonlyArray<IRPlotMarkGeometryLabel> | undefined,
-): Array<IRPlotMarkGeometryLabel> => {
-  if (labels === undefined) return [];
-
-  return Array.isArray(labels)
-    ? [...(labels as ReadonlyArray<IRPlotMarkGeometryLabel>)]
-    : [labels as IRPlotMarkGeometryLabel];
-};
-
-const normalizeLabelFieldEntries = (labels: MarkLabelFieldSource): Array<MarkLabelFieldEntry> => {
-  if (labels === undefined) return [];
-  return Array.isArray(labels) ? [...(labels as ReadonlyArray<MarkLabelFieldEntry>)] : [labels as MarkLabelFieldEntry];
-};
+type MarkLabelFieldSource = string | IRPlotLabelEncoding | ReadonlyArray<string | IRPlotLabelEncoding> | undefined;
 
 const omitContent = <T extends { content?: unknown; displayFormat?: unknown }>(
   label: T,
@@ -217,75 +191,53 @@ const collapseResolvedLabels = <T>(labels: Array<T>): T | Array<T> | undefined =
   return labels.length === 1 ? labels[0] : labels;
 };
 
-const normalizeNodeLabelPosition = (position: IRNodeLabel['position']): IRNodeLabel['position'] => {
-  if (position === undefined) return undefined;
-  if (typeof position !== 'string') {
-    return position;
-  }
-
-  if (position === 'center') return position;
-
-  return position;
-};
-
-const normalizeNodeLabel = (label: IRNodeLabel): IRNodeLabel => {
-  const position = normalizeNodeLabelPosition(label.position);
-  if (position === label.position) return label;
-
-  const next: IRNodeLabel = { ...label };
-  if (position === undefined) {
-    delete next.position;
-  } else {
-    next.position = position;
-  }
-
-  return next;
-};
-
-const normalizeGeometryLabel = (label: IRGeometryLabel): IRGeometryLabel => {
-  if (label.side === undefined) return label;
-  const side = label.side;
-  return side === label.side ? label : { ...label, side };
-};
-
 /** 把 plot Node label 配置解析为 core Node label */
 export const resolveNodeMarkLabels = (
-  labels: IRPlotMarkNodeLabel | ReadonlyArray<IRPlotMarkNodeLabel> | undefined,
+  labels: string | IRPlotMarkNodeLabel | ReadonlyArray<string | IRPlotMarkNodeLabel> | undefined,
   row: ExternalRow | undefined,
   labelResolver: ChannelValueResolver<LabelText> | undefined,
-  encodings?: { content?: string } | ReadonlyArray<{ content?: string }>,
+  encodings?: MarkLabelFieldSource,
+  channels?: MarkChannels,
 ): IRNode['label'] | undefined => {
-  const bindings: ReadonlyArray<{ content?: string }> =
-    encodings === undefined ? [] : Array.isArray(encodings) ? encodings : [encodings as { content?: string }];
-  const hosts = normalizeNodeLabels(labels);
+  const bindings = labelEntries(encodings);
+  const hosts = labelEntries(labels);
   const resolved = Array.from(
     { length: Math.max(hosts.length, bindings.length) },
     (_, index) => hosts[index] ?? {},
   ).flatMap((label, index): Array<IRNodeLabel> => {
     const text = textForLabel(label, row, labelResolver, index, bindings[index]?.content);
     if (text === undefined) return [];
-    return [normalizeNodeLabel({ ...omitContent(label), text })];
+    const output: IRNodeLabel = { ...omitContent(label), text };
+    if (row !== undefined)
+      for (const delivery of channels?.labelDeliveries ?? []) if (delivery.index === index) delivery.apply(output, row);
+    if (output.placement === 'inside' && output.pin)
+      throw new RetikzPlotError(`Node label[${index}] violates host constraints: pin requires outside placement`);
+    return [output];
   });
   return collapseResolvedLabels(resolved);
 };
 
 /** 把 plot geometry label 配置解析为 core Path label */
 export const resolveGeometryMarkLabels = (
-  labels: IRPlotMarkGeometryLabel | ReadonlyArray<IRPlotMarkGeometryLabel> | undefined,
+  labels: string | IRPlotMarkGeometryLabel | ReadonlyArray<string | IRPlotMarkGeometryLabel> | undefined,
   row: ExternalRow | undefined,
   labelResolver: ChannelValueResolver<LabelText> | undefined,
-  encodings?: { content?: string } | ReadonlyArray<{ content?: string }>,
+  encodings?: MarkLabelFieldSource,
+  channels?: MarkChannels,
 ): IRPath['label'] | undefined => {
-  const bindings: ReadonlyArray<{ content?: string }> =
-    encodings === undefined ? [] : Array.isArray(encodings) ? encodings : [encodings as { content?: string }];
-  const hosts = normalizeGeometryLabels(labels);
+  const bindings = labelEntries(encodings);
+  const hosts = labelEntries(labels);
   const resolved = Array.from(
     { length: Math.max(hosts.length, bindings.length) },
     (_, index) => hosts[index] ?? {},
   ).flatMap((label, index): Array<IRGeometryLabel> => {
     const text = textForLabel(label, row, labelResolver, index, bindings[index]?.content);
     if (text === undefined) return [];
-    return [normalizeGeometryLabel({ ...omitContent(label), text: typeof text === 'string' ? text : [text] })];
+    const output: IRGeometryLabel = { ...omitContent(label), text: typeof text === 'string' ? text : [text] };
+    if (row !== undefined)
+      for (const delivery of channels?.labelDeliveries ?? []) if (delivery.index === index) delivery.apply(output, row);
+
+    return [output];
   });
   return collapseResolvedLabels(resolved);
 };
@@ -299,14 +251,16 @@ export const attachDatumLabel = (
   mark: PositionEncodedMark,
   row: ExternalRow,
   labelResolver: ChannelValueResolver<LabelText> | undefined,
+  channels?: MarkChannels,
 ): IRNode => {
   if (mark.properties?.label === undefined && mark.encodings?.label === undefined) return node;
 
   const label = resolveNodeMarkLabels(
-    mark.properties?.label as IRPlotMarkNodeLabel | ReadonlyArray<IRPlotMarkNodeLabel> | undefined,
+    mark.properties?.label as string | IRPlotMarkNodeLabel | ReadonlyArray<string | IRPlotMarkNodeLabel> | undefined,
     row,
     labelResolver,
     mark.encodings?.label,
+    channels,
   );
 
   return label === undefined ? node : { ...node, label };
@@ -416,13 +370,15 @@ export const collectEncodingChannelFields = (mark: PositionEncodedMark, fields: 
  * @description label 挂在 mark 顶层，但内容仍可能绑定数据字段；它不是位置 role，也不是 channel delivery
  */
 export const collectDatumLabelFields = (mark: PositionEncodedMark, fields: FieldCollector): void => {
-  for (const label of normalizeLabelFieldEntries(mark.encodings?.label))
-    fields.addField(label.content as string | undefined);
+  collectMarkLabelFields(mark.encodings?.label, fields);
 };
 
-/** 收集 plot label 内容绑定引用的源字段 */
+/** 收集标签内容及已声明叶子编码的字段依赖 */
 export const collectMarkLabelFields = (label: MarkLabelFieldSource, fields: FieldCollector): void => {
-  for (const entry of normalizeLabelFieldEntries(label)) fields.addField(entry.content as string | undefined);
+  for (const entry of labelEntries(label)) {
+    fields.addField(entry.content);
+    for (const [, binding] of labelEncodingBindings(entry)) fields.addChannel(binding);
+  }
 };
 
 /** 收集锚点 id 配置引用的源字段 */
@@ -470,8 +426,18 @@ export const collectPathChannelFields = (mark: IRPlotMarkOperation, fields: Fiel
 
 /** Node 类 mark 默认可消费的通道类型集合 */
 export const nodeChannelKinds = (): ReturnType<NonNullable<MarkDefinition['channelKinds']>> =>
-  new Set([ChannelDefinitionKind.Mark, ChannelDefinitionKind.Scope, ChannelDefinitionKind.Node]);
+  new Set([
+    ChannelDefinitionKind.Mark,
+    ChannelDefinitionKind.Scope,
+    ChannelDefinitionKind.Node,
+    ChannelDefinitionKind.Label,
+  ]);
 
 /** Path 类 mark 默认可消费的通道类型集合 */
 export const pathChannelKinds = (): ReturnType<NonNullable<MarkDefinition['channelKinds']>> =>
-  new Set([ChannelDefinitionKind.Mark, ChannelDefinitionKind.Scope, ChannelDefinitionKind.Path]);
+  new Set([
+    ChannelDefinitionKind.Mark,
+    ChannelDefinitionKind.Scope,
+    ChannelDefinitionKind.Path,
+    ChannelDefinitionKind.Label,
+  ]);

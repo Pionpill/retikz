@@ -463,3 +463,24 @@ describe('<Plot spec data> 薄包装', () => {
     expect(svg.match(/<ellipse/g)).toHaveLength(4);
   });
 });
+
+it('keeps label shorthand and nested styles equivalent to Vanilla', async () => {
+  const { plot } = await import('@retikz/plot-vanilla');
+  const rows = [{ x: 1, y: 2, name: 'A', size: 18 }];
+  const encodings = { position: { x: { field: 'x' }, y: { field: 'y' } }, label: ['name', { font: { size: 'size' } }] };
+  const properties = { label: ['fallback', 'fixed'] };
+  const vanilla = plot({
+    data: { reference: 'labels' },
+    scales: [
+      { type: 'linear', name: 'x' },
+      { type: 'linear', name: 'y' },
+    ],
+    coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+    marks: [{ type: 'point', encodings, properties }],
+  });
+  const react = resolvePlotAuthoring({
+    data: rows,
+    children: <PointMark encodings={encodings} properties={properties} />,
+  });
+  expect(react.spec.marks).toEqual(vanilla.marks);
+});

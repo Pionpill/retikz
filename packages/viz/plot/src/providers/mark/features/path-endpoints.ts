@@ -70,7 +70,7 @@ export const lowerPathEndpoints = (
       (row === undefined ? undefined : channelValueOf<string>(channels, 'color')?.(row)) ??
       channelDefaultOf<string>(channels, 'color') ??
       DEFAULT_FILL;
-    const resolvedLabels = resolveGeometryMarkLabels(label, row, undefined, mark.encodings.label);
+    const resolvedLabels = resolveGeometryMarkLabels(label, row, undefined, mark.encodings.label, channels);
     let child: IRPath = {
       type: 'path',
       ...(rotate === undefined ? {} : { rotate }),

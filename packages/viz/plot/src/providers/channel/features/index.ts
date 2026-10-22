@@ -4,6 +4,7 @@ import { NODE_CHANNELS } from './node';
 import { PATH_CHANNELS } from './path';
 import { SCOPE_CHANNELS } from './scope';
 
+export * from './label';
 export {
   BUILTIN_NODE_CHANNELS,
   NODE_CHANNELS,

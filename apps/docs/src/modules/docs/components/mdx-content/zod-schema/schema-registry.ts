@@ -2199,6 +2199,21 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'VisualEncoding',
     url: '/viz/plot/reference/encoding#visualencodingschema',
   },
+  LabelFontEncodingSchema: {
+    schema: IRPlot.LabelFontEncodingSchema,
+    label: 'LabelFontEncoding',
+    url: '/viz/plot/reference/encoding#labelfontencodingschema',
+  },
+  NodeLabelEncodingSchema: {
+    schema: IRPlot.NodeLabelEncodingSchema,
+    label: 'NodeLabelEncoding',
+    url: '/viz/plot/reference/encoding#nodelabelencodingschema',
+  },
+  GeometryLabelEncodingSchema: {
+    schema: IRPlot.GeometryLabelEncodingSchema,
+    label: 'GeometryLabelEncoding',
+    url: '/viz/plot/reference/encoding#geometrylabelencodingschema',
+  },
   LabelEncodingSchema: {
     schema: IRPlot.LabelEncodingSchema,
     label: 'LabelEncoding',
