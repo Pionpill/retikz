@@ -110,13 +110,11 @@ const Demo: FC = () => {
       {/* sin α / cos α（边标注用 `$...$` 行内公式） */}
       <Draw
         way={[{ angle: -30, radius: 100 }, { label: { text: '$\\sin\\alpha$', side: 'left' } }, [COS30 * 100, 0]]}
-        thickness="thick"
-        style={{ stroke: 'red' }}
+        style={{ strokeWidth: 2, stroke: 'red' }}
       />
       <Draw
         way={[[COS30 * 100, 0], { label: { text: '$\\cos\\alpha$', side: 'bottom' } }, [0, 0]]}
-        thickness="thick"
-        style={{ stroke: 'dodgerblue' }}
+        style={{ strokeWidth: 2, stroke: 'dodgerblue' }}
       />
 
       {/* tan α 橙色竖线 + 辅助射线
@@ -129,8 +127,7 @@ const Demo: FC = () => {
           { label: { text: '$\\tan\\alpha = \\frac{\\sin\\alpha}{\\cos\\alpha}$', side: 'right' } },
           [100, -TAN30 * 100],
         ]}
-        thickness="thick"
-        style={{ stroke: 'darkorange' }}
+        style={{ strokeWidth: 2, stroke: 'darkorange' }}
       />
       <Coordinate id="t" position={[100, -TAN30 * 100]} />
       {/* 原点 → t 的辅助射线 */}

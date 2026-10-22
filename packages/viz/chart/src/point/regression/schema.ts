@@ -12,7 +12,7 @@ import {
 } from '@retikz/core';
 import { RegressionMethodSchema, SmoothParamsSchema } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
-import { PathCurve, PathMarkSchema } from '@retikz/plot';
+import { PathCurve, PathPropertiesSchema } from '@retikz/plot';
 import type { infer as ZodInfer, RefinementCtx } from 'zod';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
@@ -32,7 +32,7 @@ export const RegressionPointPropertiesSchema = PointPropertiesSchema.describe(
 );
 
 /** Regression 趋势默认连接策略；继承合并后才物化 */
-export const RegressionTrendCurveSchema = PathMarkSchema.shape.curve.unwrap().default(PathCurve.CatmullRom);
+export const RegressionTrendCurveSchema = PathPropertiesSchema.shape.curve.unwrap().default(PathCurve.CatmullRom);
 
 /** Regression 趋势 Path 允许的精确常量 properties */
 export const RegressionTrendPropertiesSchema = strictObject({

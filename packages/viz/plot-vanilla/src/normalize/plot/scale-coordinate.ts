@@ -1,6 +1,8 @@
 import type { IRDataModel, IRDataTransform } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
-import type { IRPlotMark, IRPlotScale } from '@retikz/plot';
+import { isBuiltinMark } from '@retikz/plot';
+import type { IRPlotMarkOperation } from '@retikz/plot';
+import type { IRPlotScale } from '@retikz/plot';
 import { BuiltinPlotScale } from '@retikz/plot';
 
 import { RetikzPlotVanillaError } from '../../error';
@@ -225,15 +227,17 @@ export const collectExplicitScales = (
 
 /** 按 mark type 执行作者侧 transform shortcuts 并保持定义顺序 */
 export const buildShortcutTransforms = (
-  marks: ReadonlyArray<IRPlotMark>,
+  marks: ReadonlyArray<IRPlotMarkOperation>,
   definitions: ReadonlyArray<MarkTransformShortcutDefinition> | undefined,
 ): Array<IRDataTransform> => {
   if (definitions === undefined || definitions.length === 0) return [];
 
   return marks.flatMap((mark, markIndex) =>
-    definitions
-      .filter(definition => definition.markType === mark.type)
-      .flatMap(definition => definition.build({ mark, markIndex, marks }) ?? []),
+    !isBuiltinMark(mark)
+      ? []
+      : definitions
+          .filter(definition => definition.markType === mark.type)
+          .flatMap(definition => definition.build({ mark, markIndex, marks }) ?? []),
   );
 };
 

@@ -17,7 +17,7 @@ const buildSpec = (overrides: Record<string, unknown>): IRPlot =>
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    marks: [{ type: 'path', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
     ...overrides,
   });
 
@@ -95,9 +95,12 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       marks: [
         {
           type: 'path',
-          order: 'idx',
-          series: 'cat',
-          encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'cat' } },
+          encodings: {
+            order: 'idx',
+            series: 'cat',
+            color: 'cat',
+            position: { x: { field: 'month' }, y: { field: 'revenue' } },
+          },
         },
       ],
     });
@@ -132,8 +135,11 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       marks: [
         {
           type: 'interval',
-          bounds: { y: { kind: 'extent', from: 'lo', to: 'hi' } },
-          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+          encodings: {
+            bounds: { y: { from: { field: 'lo' }, to: { field: 'hi' } } },
+            position: { x: { field: 'month' }, y: { field: 'revenue' } },
+          },
+          properties: { bounds: { y: { kind: 'extent' } } },
         },
       ],
     });
@@ -145,7 +151,13 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
 
   it('constant_value_channel_not_collected', () => {
     const spec = buildSpec({
-      marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { value: 'red' } } }],
+      marks: [
+        {
+          type: 'path',
+          properties: { color: 'red' },
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        },
+      ],
     });
 
     expect(collectSourceFields(spec).has('red')).toBe(false);
@@ -157,10 +169,10 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       marks: [
         {
           type: 'interval',
-          label: { content: { field: 'lbl' } },
-          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+          encodings: { label: { content: 'lbl' }, position: { x: { field: 'month' }, y: { field: 'revenue' } } },
+          properties: { label: {} },
         },
-        { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, text: { field: 'note' } } },
+        { type: 'point', encodings: { text: 'note', position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
       ],
     });
     const fields = collectSourceFields(spec);
@@ -175,13 +187,19 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       marks: [
         {
           type: 'interval',
-          encoding: { x: { field: 'a' }, y: { field: 'lo' } },
-          bounds: { x: { kind: 'extent', from: 'a', to: 'b' }, y: { kind: 'extent', from: 'lo', to: 'hi' } },
+          encodings: {
+            position: { x: { field: 'a' }, y: { field: 'lo' } },
+            bounds: {
+              x: { from: { field: 'a' }, to: { field: 'b' } },
+              y: { from: { field: 'lo' }, to: { field: 'hi' } },
+            },
+          },
+          properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } } },
         },
         {
           type: 'interval',
-          encoding: { x: { field: 'a' }, y: { field: 'lo' } },
-          bounds: { x: { kind: 'full' }, y: { kind: 'span', baseline: 90 } },
+          encodings: { position: { x: { field: 'a' }, y: { field: 'lo' } } },
+          properties: { bounds: { x: { kind: 'full' }, y: { kind: 'span', baseline: 90 } } },
         },
       ],
     });
@@ -197,7 +215,9 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
   it('text_field_enters_strict_model_alpha11', () => {
     // 声明 model 时，TextMark text 引用的字段必须列入 model，否则 fail-loud（P1：之前被绕过、静默空文本）
     const spec = buildSpec({
-      marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, text: { field: 'note' } } }],
+      marks: [
+        { type: 'point', encodings: { text: 'note', position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
+      ],
     });
     const userFields = collectSourceFields(spec);
 
@@ -223,8 +243,11 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       marks: [
         {
           type: 'interval',
-          bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } },
-          encoding: { y: { field: 'totalWeight' } },
+          encodings: {
+            bounds: { x: { from: { field: 'binStart' }, to: { field: 'binEnd' } } },
+            position: { y: { field: 'totalWeight' } },
+          },
+          properties: { bounds: { x: { kind: 'extent' } } },
         },
       ],
     });
@@ -256,7 +279,11 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
         },
       ],
       marks: [
-        { type: 'interval', bounds: { x: { kind: 'extent', from: 'lo', to: 'hi' } }, encoding: { y: { field: 'n' } } },
+        {
+          type: 'interval',
+          encodings: { bounds: { x: { from: { field: 'lo' }, to: { field: 'hi' } } }, position: { y: { field: 'n' } } },
+          properties: { bounds: { x: { kind: 'extent' } } },
+        },
       ],
     });
     const fields = collectSourceFields(spec);
@@ -280,7 +307,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
           },
         },
       ],
-      marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'total' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'region' }, y: { field: 'total' } } } }],
     });
     const fields = collectSourceFields(spec);
 
@@ -299,7 +326,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
           operation: { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'count', as: 'count' }] } },
         },
       ],
-      marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'count' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'region' }, y: { field: 'count' } } } }],
     });
     const fields = collectSourceFields(spec);
 
@@ -317,7 +344,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
           },
         },
       ],
-      marks: [{ type: 'interval', encoding: { x: { field: 'quarter' }, y: { field: 'share' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'quarter' }, y: { field: 'share' } } } }],
     });
     const fields = collectSourceFields(spec);
 
@@ -330,7 +357,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     // as 缺省（原位覆盖）→ field 仍是用户源字段（被读取）
     const spec = buildSpec({
       transform: [{ operation: { kind: 'normalize', params: { field: 'amount', groupBy: ['quarter'] } } }],
-      marks: [{ type: 'interval', encoding: { x: { field: 'quarter' }, y: { field: 'amount' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'quarter' }, y: { field: 'amount' } } } }],
     });
 
     expect(collectSourceFields(spec).has('amount')).toBe(true);
@@ -339,7 +366,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
   it('normalize_explicit_same_name_output_keeps_source_field', () => {
     const spec = buildSpec({
       transform: [{ operation: { kind: 'normalize', params: { field: 'amount', as: 'amount' } } }],
-      marks: [{ type: 'point', encoding: { x: { field: 'amount' }, y: { field: 'amount' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'amount' }, y: { field: 'amount' } } } }],
     });
 
     expect(collectSourceFields(spec).has('amount')).toBe(true);
@@ -351,7 +378,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
         { operation: { kind: 'normalize', params: { field: 'amount', as: 'share' } } },
         { operation: { kind: 'normalize', params: { field: 'share', as: 'finalShare' } } },
       ],
-      marks: [{ type: 'point', encoding: { x: { field: 'finalShare' }, y: { field: 'finalShare' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'finalShare' }, y: { field: 'finalShare' } } } }],
     });
 
     expect([...collectSourceFields(spec)]).toEqual(['amount']);
@@ -362,10 +389,10 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       marks: [
         {
           type: 'point',
-          transform: [{ operation: { kind: 'normalize', params: { field: 'value', as: 'derived' } } }],
-          encoding: { x: { field: 'derived' }, y: { field: 'derived' } },
+          transforms: [{ operation: { kind: 'normalize', params: { field: 'value', as: 'derived' } } }],
+          encodings: { position: { x: { field: 'derived' }, y: { field: 'derived' } } },
         },
-        { type: 'point', encoding: { x: { field: 'derived' }, y: { field: 'derived' } } },
+        { type: 'point', encodings: { position: { x: { field: 'derived' }, y: { field: 'derived' } } } },
       ],
     });
 
@@ -385,8 +412,11 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       marks: [
         {
           type: 'interval',
-          bounds: { y: { kind: 'extent', from: 'lo', to: 'hi' } },
-          encoding: { x: { field: 'task' }, y: { field: 'end' } },
+          encodings: {
+            bounds: { y: { from: { field: 'lo' }, to: { field: 'hi' } } },
+            position: { x: { field: 'task' }, y: { field: 'end' } },
+          },
+          properties: { bounds: { y: { kind: 'extent' } } },
         },
       ],
     });
@@ -402,7 +432,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     // jitter 原位覆盖被抖连续数值字段（读+写同字段）→ 是用户源字段，须进 strict 集
     const spec = buildSpec({
       transform: [{ operation: { kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 0.3, seed: 1 } } }],
-      marks: [{ type: 'point', encoding: { x: { field: 'dose' }, y: { field: 'response' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'dose' }, y: { field: 'response' } } } }],
     });
 
     expect(collectSourceFields(spec).has('dose')).toBe(true);

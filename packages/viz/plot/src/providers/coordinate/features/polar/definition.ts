@@ -78,6 +78,15 @@ export type PolarCoordinateInput = {
   secondary: PositionScale;
 };
 
+/** 截取映射范围内的骨架并保留端点；按参数方向遍历，不推断最短跨缝路径 */
+const polarSegmentAngles = (skeleton: ReadonlyArray<number>, start: number, end: number): Array<number> => {
+  const low = Math.min(start, end);
+  const high = Math.max(start, end);
+  const middle = [...new Set(skeleton)].filter(angle => angle > low && angle < high);
+  middle.sort((a, b) => (start <= end ? a - b : b - a));
+  return [start, ...middle, end];
+};
+
 /**
  * 建二维极坐标运行时坐标帧
  * @description θ=primary.coordinate(angleValue)（度）、r=secondary.coordinate(radiusValue)；
@@ -125,6 +134,28 @@ export const createPolarCoordinate = (input: PolarCoordinateInput): PolarCoordin
     projectRoles: values => project(values[0], values[1]),
     mapRoles,
     projectMappedRoles,
+    projectSegment: (from, to) => {
+      if (from[0] === to[0]) {
+        const start = projectMappedRoles(from);
+        const end = projectMappedRoles(to);
+        return start && end ? [start, end] : null;
+      }
+      const angles =
+        input.interpolation === PolarInterpolation.Polar
+          ? Array.from(
+              { length: RETIKZ_POLAR_SEGMENT_SAMPLES + 2 },
+              (_, index) => from[0] + ((to[0] - from[0]) * index) / (RETIKZ_POLAR_SEGMENT_SAMPLES + 1),
+            )
+          : polarSegmentAngles(input.angularSkeleton, from[0], to[0]);
+      const points: Array<Position> = [];
+      for (const angle of angles) {
+        const ratio = (angle - from[0]) / (to[0] - from[0]);
+        const point = projectMappedRoles([angle, from[1] + (to[1] - from[1]) * ratio]);
+        if (!point) return null;
+        points.push(point);
+      }
+      return points;
+    },
     tangentAt: (role, values) => polarTangentAt(input, role, values),
     placementBoundary: {
       isCyclic: role => role === 'x' && isClosedPolarSweep(input.startAngle, input.endAngle),
@@ -168,25 +199,34 @@ export const createPolarCoordinate = (input: PolarCoordinateInput): PolarCoordin
       const pull = options?.pull ?? 0;
       const center = pull === 0 ? input.center : pointAtArcAngle(input.center, pull, (startAngle + endAngle) / 2);
       const interpolation = options?.interpolation ?? input.interpolation;
-      if (interpolation === PolarInterpolation.Polar) {
+      if (options?.connection !== 'straight' && interpolation === PolarInterpolation.Polar) {
         return { kind: 'sector', center, innerRadius, outerRadius, startAngle, endAngle };
       }
 
-      const fullSweep = isClosedPolarSweep(startAngle, endAngle);
-      const angles = fullSweep ? input.angularSkeleton : [startAngle, endAngle];
+      const fullSweep = options?.connection !== 'straight' && isClosedPolarSweep(startAngle, endAngle);
+      const angles =
+        options?.connection === 'straight'
+          ? [startAngle, endAngle]
+          : fullSweep
+            ? [...input.angularSkeleton].sort((a, b) => (startAngle <= endAngle ? a - b : b - a))
+            : polarSegmentAngles(input.angularSkeleton, startAngle, endAngle);
       if ((fullSweep && angles.length < 3) || (!fullSweep && angles.length < 2)) {
         return { kind: 'contour', points: [] };
       }
 
       const collapsedInnerBoundary = Math.abs(innerRadius) <= DEFAULT_EPSILON;
+      const projectBoundary = (angle: number, radius: number): Position | null => {
+        const point = projectMappedRoles([angle, radius]);
+        return point ? [point[0] + center[0] - input.center[0], point[1] + center[1] - input.center[1]] : null;
+      };
       const innerPoints = collapsedInnerBoundary
         ? fullSweep
           ? []
           : [center]
-        : angles.map(angle => polarPoint(center, angle, innerRadius));
+        : angles.map(angle => projectBoundary(angle, innerRadius));
       const points = [
         ...innerPoints,
-        ...[...angles].reverse().map(angle => polarPoint(center, angle, outerRadius)),
+        ...[...angles].reverse().map(angle => projectBoundary(angle, outerRadius)),
       ].filter((point): point is Position => point !== null);
 
       return { kind: 'contour', points };
@@ -541,6 +581,8 @@ export type Polar1DCoordinateFrame = {
   placementBoundary: NonNullable<CoordinateFrame['placementBoundary']>;
   /** 映射后角色递增时的屏幕切向 */
   tangentAt?: CoordinateFrame['tangentAt'];
+  /** 沿坐标几何连接映射位置 */
+  projectSegment: NonNullable<CoordinateFrame['projectSegment']>;
 };
 
 /** 创建一维极坐标运行时坐标帧所需的已解析参数 */
@@ -596,6 +638,25 @@ export const createPolar1DCoordinate = (input: Polar1DCoordinateInput): Polar1DC
     projectRoles,
     mapRoles,
     projectMappedRoles,
+    projectSegment: (from, to) => {
+      const angles = input.continuousAngle
+        ? Array.from(
+            { length: RETIKZ_POLAR_SEGMENT_SAMPLES + 2 },
+            (_, index) => from[0] + ((to[0] - from[0]) * index) / (RETIKZ_POLAR_SEGMENT_SAMPLES + 1),
+          )
+        : polarSegmentAngles(
+            input.primary.domain().map(value => input.primary.coordinate(value)),
+            from[0],
+            to[0],
+          );
+      const points: Array<Position> = [];
+      for (const angle of angles) {
+        const point = projectMappedRoles([angle]);
+        if (!point) return null;
+        points.push(point);
+      }
+      return points;
+    },
     tangentAt: (role, values) => {
       if (role !== 'x' || !Number.isFinite(values[0]) || Math.abs(input.radius) <= DEFAULT_EPSILON) return null;
       const radians = (values[0] * Math.PI) / 180;

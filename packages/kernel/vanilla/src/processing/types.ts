@@ -7,7 +7,7 @@ import type {
   Scene,
 } from '@retikz/core';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
-import type { RuntimeUpdateStrategy } from '@retikz/runtime';
+import type { ReconcilerUpdateStrategy } from '@retikz/reconciler';
 
 import type { InputAuthoringSite, InputNormalizeOptions, InputRuntimeMeta, InputScene } from '../normalize';
 import type { AnyInputEmbedAdapter } from '../normalize';
@@ -18,6 +18,8 @@ export type ProcessingSource = InputScene | IRScene;
 
 /** 创建 processing controller 时固定的框架无关配置 */
 export type ProcessingOptions = Readonly<{
+  /** 文字未指定字体族时的宿主默认字体，同时用于测量与宿主显示 */
+  defaultFontFamily?: string;
   /** Core 编译配置 */
   compile?: CompileOptions;
   /** 作者侧 Tier 2 adapter */
@@ -25,7 +27,7 @@ export type ProcessingOptions = Readonly<{
   /** 领域中立的同 revision compile observer driver */
   compileDriver?: VanillaCompileDriver;
   /** Core Computation 的 retained 更新策略 */
-  updateStrategy?: RuntimeUpdateStrategy;
+  updateStrategy?: ReconcilerUpdateStrategy;
 }>;
 
 /** 已完成作者侧归一与 Composite dependency 解析的 processing 输入 */

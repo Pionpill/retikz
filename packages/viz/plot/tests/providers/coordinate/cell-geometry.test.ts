@@ -35,10 +35,10 @@ type Datasets = Record<string, Array<Record<string, unknown>>>;
 const markRegistry = resolveMarkRegistry();
 
 const lowerMark = (mark: IRPlotIntervalMark, rows: Array<ExternalRow>, frame: CoordinateFrame) =>
-  lowerMarkDefinition(resolveMarkOperation(mark, { registry: markRegistry }), rows, frame);
+  lowerMarkDefinition(resolveMarkOperation(mark, { registry: markRegistry }), { kind: 'rows', rows }, frame);
 
 const datumAnchor = (mark: IRPlotIntervalMark, row: ExternalRow, frame: CoordinateFrame, context?: IntervalContext) =>
-  resolveDatumAnchor(mark, row, frame, { registry: markRegistry }, context);
+  resolveDatumAnchor(mark, { kind: 'row', row, transformedIndex: 0 }, frame, { registry: markRegistry }, context);
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
   return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
@@ -331,16 +331,20 @@ const cartesianBarSpec = (arrangement?: 'stack', series?: string): IRPlot =>
     marks: [
       {
         type: 'interval',
-        encoding: { x: { field: 'm' }, y: { field: 'v' } },
-        ...(arrangement === 'stack' || series
-          ? {
-              bounds: {
-                ...(series ? { x: { kind: 'band', group: series } } : {}),
-                ...(arrangement === 'stack' ? { y: { kind: 'extent', from: 'y0', to: 'y1' } } : {}),
-              },
-            }
-          : {}),
-        ...(series ? { series } : {}),
+        encodings: {
+          position: { x: { field: 'm' }, y: { field: 'v' } },
+          ...(series ? { series } : {}),
+          bounds: {
+            ...(series ? { x: { group: series } } : {}),
+            ...(arrangement === 'stack' ? { y: { from: 'y0', to: 'y1' } } : {}),
+          },
+        },
+        properties: {
+          bounds: {
+            ...(series ? { x: { kind: 'band' } } : {}),
+            ...(arrangement === 'stack' ? { y: { kind: 'extent' } } : {}),
+          },
+        },
       },
     ],
   });
@@ -412,8 +416,8 @@ const polarBarSpec = (interpolation?: 'polar' | 'chord', markInterpolation?: 'po
     marks: [
       {
         type: 'interval',
-        ...(markInterpolation ? { interpolation: markInterpolation } : {}),
-        encoding: { x: { field: 'm' }, y: { field: 'v' } },
+        ...(markInterpolation ? { properties: { interpolation: markInterpolation } } : {}),
+        encodings: { position: { x: { field: 'm' }, y: { field: 'v' } } },
       },
     ],
   });
@@ -432,8 +436,8 @@ const pieSpec = (): IRPlot =>
     marks: [
       {
         type: 'interval',
-        bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
-        encoding: { color: { field: 'label' } },
+        encodings: { bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } }, color: 'label' },
+        properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } } },
       },
     ],
   });
@@ -488,8 +492,8 @@ describe('polar interval / sector → sector 产物（byte-equal 回归基线）
       marks: [
         {
           type: 'interval',
-          interpolation: 'chord',
-          encoding: { x: { field: 'm' }, y: { field: 'v' } },
+          encodings: { position: { x: { field: 'm' }, y: { field: 'v' } } },
+          properties: { interpolation: 'chord' },
         },
       ],
     });
@@ -542,7 +546,7 @@ const intervalMarkSpec = (): IRPlot =>
       { type: 'band', name: 'cat' },
       { type: 'linear', name: 'val' },
     ],
-    marks: [{ type: 'interval', encoding: { x: { field: 'm' }, y: { field: 'v' } } }],
+    marks: [{ type: 'interval', encodings: { position: { x: { field: 'm' }, y: { field: 'v' } } } }],
   });
 
 /** 取首个 interval mark（窄化为 IRPlotIntervalMark，供需 IRPlotIntervalMark 的 buildIntervalContext 用） */
@@ -757,8 +761,11 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
 describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () => {
   const histogramMark = (): IRPlotIntervalMark => ({
     type: 'interval',
-    bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } },
-    encoding: { y: { field: 'binCount' } },
+    encodings: {
+      bounds: { x: { from: { field: 'binStart' }, to: { field: 'binEnd' } } },
+      position: { y: { field: 'binCount' } },
+    },
+    properties: { bounds: { x: { kind: 'extent' } } },
   });
 
   it('x0x1_primary_is_continuous_interval_not_band', () => {
@@ -814,8 +821,11 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
       marks: [
         {
           type: 'interval',
-          bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } },
-          encoding: { y: { field: 'binCount' } },
+          encodings: {
+            bounds: { x: { from: { field: 'binStart' }, to: { field: 'binEnd' } } },
+            position: { y: { field: 'binCount' } },
+          },
+          properties: { bounds: { x: { kind: 'extent' } } },
         },
       ],
     });
@@ -838,7 +848,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       data: { reference: 'd' },
       coordinate: { type: 'cartesian1D', x: 'cat' },
       scales: [{ type: 'band', name: 'cat' }],
-      marks: [{ type: 'interval', encoding: { x: { field: 'm' }, y: { field: 'v' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'm' }, y: { field: 'v' } } } }],
     });
 
     expect(() => expandOf(spec, { d: [{ m: 'A', v: 3 }] }, cartOpts)).toThrow(/cartesian1D|not supported|interval/i);
@@ -851,7 +861,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'noproj' },
-      marks: [{ type: 'interval', encoding: { x: { field: 'm' }, y: { field: 'v' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'm' }, y: { field: 'v' } } } }],
     });
 
     // custom 工厂返回无 projectCell 的 frame → interval fail-loud（指明缺 projectCell）
@@ -902,7 +912,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'curved-cell' },
-      marks: [{ type: 'interval', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
     });
     const options: LowerPlotsOptions = {
       layout: { width: WIDTH, height: HEIGHT },
@@ -971,9 +981,12 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       marks: [
         {
           type: 'interval',
-          series: 'series',
-          bounds: { x: { kind: 'band', group: 'series' } },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          encodings: {
+            series: 'series',
+            bounds: { x: { group: 'series' } },
+            position: { x: { field: 'x' }, y: { field: 'y' } },
+          },
+          properties: { bounds: { x: { kind: 'band' } } },
         },
       ],
     });

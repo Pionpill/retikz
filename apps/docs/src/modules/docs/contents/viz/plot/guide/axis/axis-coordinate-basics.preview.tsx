@@ -21,7 +21,10 @@ export const renderCoordinateBasics = (values: AxisCoordinateBasicsValues) => {
   return (
     <Layout viewBox={{ x: 0, y: 0, width: 340, height: 260 }}>
       <Plot data={axisCoordinateBasicsRows} width={340} height={260} coordinate={isPolar ? 'polar2D' : undefined}>
-        <PathMark x="dimension" y="value" order="order" closed={isPolar} stroke="#2563eb" />
+        <PathMark
+          encodings={{ order: 'order', position: { x: { field: 'dimension' }, y: { field: 'value' } } }}
+          properties={{ closed: isPolar, stroke: '#2563eb' }}
+        />
         {values.showX ? <PlotAxis dimension="x" /> : null}
         {values.showY ? <PlotAxis dimension="y" grid={values.showGrid} ticks={{ count: values.tickCount }} /> : null}
       </Plot>

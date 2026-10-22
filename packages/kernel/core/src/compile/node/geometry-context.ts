@@ -4,12 +4,12 @@ import type { BoundaryGeometryResolveContext, NodeLayout } from './types';
 /** 连接面消费过程中的缓存和诊断状态 */
 export type NodeGeometryState = Pick<
   BoundaryGeometryResolveContext,
-  'connectionEnvelopeCache' | 'connectionEnvelopeWarnings' | 'warn'
+  'connectionEnvelopeCache' | 'connectionEnvelopeWarnings' | 'warn' | 'irPath'
 >;
 
 /** 编译调用持有的节点几何消费上下文，不进入布局结果 */
 export type NodeGeometryContext = {
-  /** 读取节点消费状态；布局投影按共享的 node 属性对象关联 */
+  /** 读取节点消费状态；布局投影按共享的 shape 解析对象关联 */
   get: (layout: NodeLayout | NodeReferenceView) => NodeGeometryState;
   /** 将 resolver 引用视图关联到原节点的消费状态 */
   bind: (layout: NodeLayout, reference: NodeReferenceView) => void;
@@ -19,7 +19,7 @@ export type NodeGeometryContext = {
 export const createNodeGeometryContext = (): NodeGeometryContext => {
   const states = new WeakMap<object, NodeGeometryState>();
   const get = (layout: NodeLayout | NodeReferenceView): NodeGeometryState => {
-    const key = 'node' in layout ? layout.node : layout;
+    const key = 'geometry' in layout ? layout.shape : layout;
     let state = states.get(key);
     if (state === undefined) {
       state = { connectionEnvelopeCache: new Map(), connectionEnvelopeWarnings: new Set() };

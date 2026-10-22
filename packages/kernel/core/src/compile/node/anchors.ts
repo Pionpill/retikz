@@ -1,10 +1,9 @@
-import type { BoundsInsets, Position } from '@retikz/math';
-import { point } from '@retikz/math';
+import { DEG_TO_RAD, point } from '@retikz/math';
+import type { BoundsInsets, CenteredBox, Position } from '@retikz/math';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../../resolve';
 import type { IRBoundary } from '../../schemas';
-import type { Rect } from '../../shared/geometry';
 import type { NodeGeometryState } from './geometry-context';
 import { nodeReferenceViewOf } from './reference';
 import type { NodeLayout } from './types';
@@ -13,7 +12,6 @@ type NodeAnchorLayout = NodeLayout | NodeReferenceView;
 
 import { boundaryKey } from '../../resolve';
 import { CenterAnchor, isAnchor } from '../../shared';
-import { DEG_TO_RAD } from '../../shared/geometry';
 import { snapshotProviderPosition } from '../scene-primitive';
 import { fallbackBoundaryAnchor, resolveBoundary as resolveBoundaryGeometry } from './boundary';
 
@@ -24,7 +22,7 @@ const snapshotOptionalProviderPosition = (owner: string, value: unknown): Positi
 const isZeroInsets = (m: BoundsInsets): boolean => m.top === 0 && m.right === 0 && m.bottom === 0 && m.left === 0;
 
 /** 按 rect 局部坐标系四边外扩，非对称外扩会移动外边界中心 */
-const inflateRect = (r: Rect, m: BoundsInsets): Rect => {
+const inflateRect = (r: CenteredBox, m: BoundsInsets): CenteredBox => {
   if (isZeroInsets(m)) return r;
 
   const dx = (m.right - m.left) / 2;
@@ -43,7 +41,8 @@ const inflateRect = (r: Rect, m: BoundsInsets): Rect => {
 };
 
 /** 取节点视觉 rect 外扩 margin 后的外边界 */
-export const outerRectOf = (layout: NodeLayout): Rect => inflateRect(layout.geometry.rect, layout.geometry.margin);
+export const outerRectOf = (layout: NodeLayout): CenteredBox =>
+  inflateRect(layout.geometry.rect, layout.geometry.margin);
 
 const shapeBoundaryResolutionOf = (layout: NodeReferenceView): BoundaryReferenceResolution => ({
   name: layout.shapeName,
@@ -59,7 +58,7 @@ const resolveBoundaryOf = (
   warn?: (code: string, message: string) => void,
   state?: NodeGeometryState,
 ) => {
-  const layout = 'node' in input ? nodeReferenceViewOf(input) : input;
+  const layout = 'geometry' in input ? nodeReferenceViewOf(input) : input;
   const resolution =
     boundaryResolution ??
     (boundary === undefined || boundary === 'shape'
@@ -93,7 +92,7 @@ export const boundaryPointOf = (
   warn?: (code: string, message: string) => void,
   state?: NodeGeometryState,
 ): Position => {
-  const layout = 'node' in input ? nodeReferenceViewOf(input) : input;
+  const layout = 'geometry' in input ? nodeReferenceViewOf(input) : input;
   const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, warn, state);
   const raw = def.boundaryPoint(inflateRect(rect, layout.margin), toward, params);
   return snapshotProviderPosition(`Boundary '${boundaryKey(boundary)}' boundaryPoint`, raw);
@@ -108,7 +107,7 @@ export const clipNodePolyline = (
   warn?: (code: string, message: string) => void,
   state?: NodeGeometryState,
 ): Array<Position> => {
-  const layout = 'node' in input ? nodeReferenceViewOf(input) : input;
+  const layout = 'geometry' in input ? nodeReferenceViewOf(input) : input;
   const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, warn, state);
   const outer = inflateRect(rect, layout.margin);
   const center: Position = [outer.x, outer.y];
@@ -149,7 +148,7 @@ export const anchorOf = (
   boundaryResolution?: BoundaryReferenceResolution,
   state?: NodeGeometryState,
 ): Position => {
-  const layout = 'node' in input ? nodeReferenceViewOf(input) : input;
+  const layout = 'geometry' in input ? nodeReferenceViewOf(input) : input;
   if (isAnchor(name)) {
     if (name === CenterAnchor.Center) {
       const own = snapshotOptionalProviderPosition(
@@ -215,7 +214,7 @@ export const angleBoundaryOf = (
   boundaryResolution?: BoundaryReferenceResolution,
   state?: NodeGeometryState,
 ): Position => {
-  const layout = 'node' in input ? nodeReferenceViewOf(input) : input;
+  const layout = 'geometry' in input ? nodeReferenceViewOf(input) : input;
   const rad = angleDeg * DEG_TO_RAD;
   const lx = Math.cos(rad);
   const ly = Math.sin(rad);

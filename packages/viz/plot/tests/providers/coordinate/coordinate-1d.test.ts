@@ -47,7 +47,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'xs', domain: [0, 10] }],
       coordinate: { type: 'cartesian1D', x: 'xs', ...extra },
-      marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
+      marks: [{ type: 'point', properties: { autoPadding: false }, encodings: { position: { x: { field: 'v' } } } }],
     });
 
   // Happy path：水平 rug — 各点落底边基线轴、x 随值展开
@@ -87,7 +87,13 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
         { type: 'ordinal', name: 'col', range: ['#aa', '#bb'] },
       ],
       coordinate: { type: 'cartesian1D', x: 'xs' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'g', scale: 'col' }, encoding: { x: { field: 'v' } } }],
+      marks: [
+        {
+          type: 'point',
+          properties: { autoPadding: false },
+          encodings: { color: { field: 'g', scale: 'col' }, position: { x: { field: 'v' } } },
+        },
+      ],
     });
     const layer = firstLayer(
       spec,
@@ -111,7 +117,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'band', name: 'xs' }],
       coordinate: { type: 'cartesian1D', x: 'xs' },
-      marks: [{ type: 'interval', encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'cat' }, y: { field: 'v' } } } }],
     });
 
     expect(() => expandOf(spec, { d: [{ cat: 'A', v: 3 }] }, opts)).toThrow(/cartesian1D|not supported|interval/i);
@@ -119,16 +125,16 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
 
   // 错误路径：缺单维通道 → fail-loud（contract 必填角色校验）
   it('cartesian1d_missing_x_fails_loud', () => {
-    const spec = PlotSchema.parse({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'xs' }],
-      coordinate: { type: 'cartesian1D', x: 'xs' },
-      marks: [{ type: 'point', color: { kind: 'constant', value: '#333' }, encoding: {} }],
-    });
-
-    expect(() => expandOf(spec, { d: [{ v: 1 }] }, opts)).toThrow(/cartesian1D|requires|x/i);
+    expect(() =>
+      PlotSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [{ type: 'linear', name: 'xs' }],
+        coordinate: { type: 'cartesian1D', x: 'xs' },
+        marks: [{ type: 'point', properties: { color: '#333' } }],
+      }),
+    ).toThrow();
   });
 
   // 错误路径：非法维度（cartesian1D 合法集 {x}）→ fail-loud
@@ -139,7 +145,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'xs', domain: [0, 10] }],
       coordinate: { type: 'cartesian1D', x: 'xs' },
-      marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
+      marks: [{ type: 'point', properties: { autoPadding: false }, encodings: { position: { x: { field: 'v' } } } }],
       guides: [{ type: 'axis', dimension: 'angle' }],
     });
 
@@ -154,7 +160,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'xs', domain: [0, 10] }],
       coordinate: { type: 'cartesian1D', x: 'xs' },
-      marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
+      marks: [{ type: 'point', properties: { autoPadding: false }, encodings: { position: { x: { field: 'v' } } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
     });
     const root = expandOf(spec, { d: [{ v: 1 }, { v: 9 }] }, opts);
@@ -170,7 +176,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'xs', domain: [0, 10] }],
       coordinate: { type: 'cartesian1D', x: 'xs' },
-      marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
+      marks: [{ type: 'point', properties: { autoPadding: false }, encodings: { position: { x: { field: 'v' } } } }],
       guides: [{ type: 'axis', dimension: 'x', grid: true }],
     });
 
@@ -189,7 +195,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'a', domain: [0, 360] }],
       coordinate: { type: 'polar1D', angle: 'a', ...extra },
-      marks: [{ type: 'point', encoding: { x: { field: 'deg' } } }],
+      marks: [{ type: 'point', properties: { autoPadding: false }, encodings: { position: { x: { field: 'deg' } } } }],
     });
 
   // Happy path：角向投影落半径 R=150 圆周（angle 0 → 圆心右、angle 90 → 圆心下）
@@ -230,7 +236,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'a', domain: [0, 360] }],
       coordinate: { type: 'polar1D', angle: 'a' },
-      marks: [{ type: 'point', encoding: { x: { field: 'deg' } } }],
+      marks: [{ type: 'point', properties: { autoPadding: false }, encodings: { position: { x: { field: 'deg' } } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
     });
     const root = expandOf(spec, { d: [{ deg: 0 }, { deg: 120 }, { deg: 240 }] }, opts);
@@ -245,7 +251,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'a', domain: [0, 360] }],
       coordinate: { type: 'polar1D', angle: 'a' },
-      marks: [{ type: 'point', encoding: { x: { field: 'deg' } } }],
+      marks: [{ type: 'point', properties: { autoPadding: false }, encodings: { position: { x: { field: 'deg' } } } }],
       guides: [{ type: 'axis', dimension: 'x', grid: true }],
     });
 
@@ -265,13 +271,15 @@ describe('polar1D 圆周坐标系 (contract)', () => {
       marks: [
         {
           type: 'interval',
-          bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
-          encoding: { color: { field: 'label' } },
+          encodings: { bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } }, color: 'label' },
+          properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } } },
         },
       ],
     });
 
-    expect(() => expandOf(spec, { d: [{ label: 'A', v: 1 }] }, opts)).toThrow(/polar1D|not supported|interval/i);
+    expect(() => expandOf(spec, { d: [{ label: 'A', v: 1, y0: 0, y1: 1 }] }, opts)).toThrow(
+      /polar1D|not supported|interval/i,
+    );
   });
 
   // 错误路径：非法维度（polar1D 合法集 {angle, x}）→ fail-loud
@@ -282,7 +290,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'a', domain: [0, 360] }],
       coordinate: { type: 'polar1D', angle: 'a' },
-      marks: [{ type: 'point', encoding: { x: { field: 'deg' } } }],
+      marks: [{ type: 'point', properties: { autoPadding: false }, encodings: { position: { x: { field: 'deg' } } } }],
       guides: [{ type: 'axis', dimension: 'radius' }],
     });
 

@@ -1,4 +1,4 @@
----
+﻿---
 description: 将 point.toPolar / equalPolar 迁入 polar；背景：PolarPosition 可能携带节点 id，是 IR 类型，不能进入零 IR 的 math.point
 keywords: 'point、toPolar、equalPolar、polar'
 ---
@@ -15,14 +15,10 @@ PolarPosition 可能携带节点 id，是 IR 类型，不能进入零 IR 的 mat
 
 ## 决策
 
-- polar.fromPosition 直接实现 atan2/hypot 计算，替代 point.toPolar
-- polar.equal 直接实现 precision 取整比较，替代 point.equalPolar
-- 从 core.point 删除 toPolar 和 equalPolar，不保留别名、包装层或 fallback；调用方统一使用 polar 的公开方法
+- 纯点与向量运算由 Math 提供，Core 不重复导出
+- Core 的 polar 仅保留有实际消费者的 toPosition：将带递归 origin 的极坐标输入转换为笛卡尔位置；节点 id 的解析由编译上下文负责
+- 无实际消费者的 fromPosition、equal 与 offsetFrom 删除，不保留别名或包装层
 
-## 兼容性与实现结果
+## 边界
 
-这是 0.x 明确接受的 breaking 公开面修正；向量运算仍由 math/core 的 point 提供，polar 语义集中在 polar。文档和调用方已迁移。
-
-## 遗留风险
-
-依赖旧方法的外部 0.x 消费者必须迁移，不能通过兼容别名隐藏 point 与 math.point 的身份边界。
+PolarPosition 的 IR 语义属于 Core；Math 只消费纯数学数据，不接受节点 id 或编译上下文。

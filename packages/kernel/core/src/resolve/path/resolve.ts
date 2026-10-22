@@ -4,7 +4,7 @@ import type { Transform } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type {
   IRArrowMark,
-  IRGeometryLabel,
+  IRPathLabel,
   IRLine,
   IRMathRun,
   IRPaintValue,
@@ -32,16 +32,16 @@ import { resolveDropShadow } from '../style';
 import type { ResolvedInlineSourceRun, ResolvedLabelTextBlock, ResolvedTextLine } from '../text';
 import { resolvePathKind } from './provider';
 import type {
-  CanonicalGeometryLabel,
-  CanonicalGeometryLabelPlacement,
-  GeometryLabelGeometryOptions,
+  CanonicalPathLabel,
+  CanonicalPathLabelPlacement,
+  PathLabelGeometryOptions,
   CanonicalPath,
   CanonicalStep,
   PathResolution,
   PathResolveContext,
   PathTargetResolver,
   ResolvedArrowMark,
-  ResolvedGeometryLabel,
+  ResolvedPathLabel,
   ResolvedPathSource,
   ResolvedStepSource,
   TargetResolution,
@@ -66,11 +66,7 @@ const hasNoEffectivePathFill = (path: ResolvedPathSource): boolean =>
   path.style?.fill === undefined || path.style.fill === 'none';
 
 /** 验证显式 label interruption 是否可以由当前 Path 承载 */
-const assertGeometryLabelInterruption = (
-  label: ResolvedGeometryLabel,
-  path: ResolvedPathSource,
-  labelPath: string,
-): void => {
+const assertPathLabelInterruption = (label: ResolvedPathLabel, path: ResolvedPathSource, labelPath: string): void => {
   if (label.interrupt === undefined) return;
   if (!isBuiltinStrokePath(path)) {
     throw new RetikzCoreError(
@@ -92,16 +88,16 @@ const assertPathLabelInterruptionPolicy = (path: ResolvedPathSource, irPath: str
   if (path.label !== undefined) {
     if (Array.isArray(path.label)) {
       for (const [index, label] of path.label.entries()) {
-        assertGeometryLabelInterruption(label, path, `${irPath}.label[${index}]`);
+        assertPathLabelInterruption(label, path, `${irPath}.label[${index}]`);
       }
     } else {
-      assertGeometryLabelInterruption(path.label, path, `${irPath}.label`);
+      assertPathLabelInterruption(path.label, path, `${irPath}.label`);
     }
   }
 
   for (const [index, step] of (path.children ?? []).entries()) {
     if ('label' in step && step.label !== undefined) {
-      assertGeometryLabelInterruption(step.label, path, `${irPath}.children[${index}].label`);
+      assertPathLabelInterruption(step.label, path, `${irPath}.children[${index}].label`);
     }
   }
 };
@@ -121,10 +117,10 @@ const assertPathEndpointOverlapHost = (path: ResolvedPathSource, irPath: string)
 };
 
 /** 展开位置、方向、距离、interruption 与断口留白的默认值 */
-export const resolveGeometryLabelPlacement = (
-  label: GeometryLabelGeometryOptions,
+export const resolvePathLabelPlacement = (
+  label: PathLabelGeometryOptions,
   canAutomaticallyInterrupt: boolean,
-): CanonicalGeometryLabelPlacement => {
+): CanonicalPathLabelPlacement => {
   const side = label.side ?? (label.sloped === true || label.placement === 'inside' ? 'center' : 'top');
   return {
     ...label,
@@ -142,12 +138,9 @@ export const resolveGeometryLabelPlacement = (
 };
 
 /** 在已确定文本外观上应用统一的标签几何默认 */
-const canonicalizeLabel = (
-  label: ResolvedGeometryLabel,
-  canAutomaticallyInterrupt: boolean,
-): CanonicalGeometryLabel => ({
+const canonicalizeLabel = (label: ResolvedPathLabel, canAutomaticallyInterrupt: boolean): CanonicalPathLabel => ({
   ...label,
-  ...resolveGeometryLabelPlacement(label, canAutomaticallyInterrupt),
+  ...resolvePathLabelPlacement(label, canAutomaticallyInterrupt),
 });
 
 const canonicalizeStep = (step: ResolvedStepSource, canAutomaticallyInterrupt: boolean): CanonicalStep => {
@@ -219,7 +212,7 @@ const resolvePathPaint = (
 ): Exclude<IRPaintValue, number> | undefined =>
   typeof value === 'number' ? resolveContextualColor(value, { masterColor, mode: context.mode, fieldPath }) : value;
 
-/** 确定 geometry label 中单个文字或公式 run 的派生颜色 */
+/** 确定 path label 中单个文字或公式 run 的派生颜色 */
 const resolveLabelRunColor = (
   run: IRTextRun | IRMathRun,
   masterColor: string | undefined,
@@ -241,8 +234,8 @@ const resolveLabelRunColor = (
   };
 };
 
-/** 确定 geometry label 单行内容中各 run 的派生颜色 */
-const resolveGeometryLabelTextLine = (
+/** 确定 path label 单行内容中各 run 的派生颜色 */
+const resolvePathLabelTextLine = (
   text: IRLine,
   masterColor: string | undefined,
   context: Pick<PathResolveContext, 'mode'>,
@@ -267,24 +260,24 @@ const resolveGeometryLabelTextLine = (
   };
 };
 
-/** 确定 geometry label 文本块中各行的派生颜色 */
-const resolveGeometryLabelText = (
-  text: IRGeometryLabel['text'],
+/** 确定 path label 文本块中各行的派生颜色 */
+const resolvePathLabelText = (
+  text: IRPathLabel['text'],
   masterColor: string | undefined,
   context: Pick<PathResolveContext, 'mode'>,
   fieldPath: string,
 ): ResolvedLabelTextBlock =>
   Array.isArray(text)
-    ? text.map((line, index) => resolveGeometryLabelTextLine(line, masterColor, context, `${fieldPath}[${index}]`))
-    : resolveGeometryLabelTextLine(text, masterColor, context, fieldPath);
+    ? text.map((line, index) => resolvePathLabelTextLine(line, masterColor, context, `${fieldPath}[${index}]`))
+    : resolvePathLabelTextLine(text, masterColor, context, fieldPath);
 
-/** 确定一个 geometry label 的文字主色与 run 颜色 */
-export const resolveGeometryLabelColors = (
-  label: IRGeometryLabel,
+/** 确定一个 path label 的文字主色与 run 颜色 */
+export const resolvePathLabelColors = (
+  label: IRPathLabel,
   masterColor: string | undefined,
   context: Pick<PathResolveContext, 'mode'>,
   fieldPath: string,
-): ResolvedGeometryLabel => {
+): ResolvedPathLabel => {
   const { textColor, text, ...source } = label;
   const resolvedTextColor =
     textColor === undefined
@@ -299,7 +292,7 @@ export const resolveGeometryLabelColors = (
   return {
     ...source,
     ...(resolvedTextColor === undefined ? {} : { textColor: resolvedTextColor }),
-    text: resolveGeometryLabelText(text, textMaster, context, `${fieldPath}.text`),
+    text: resolvePathLabelText(text, textMaster, context, `${fieldPath}.text`),
   };
 };
 
@@ -317,7 +310,7 @@ const resolveStepLabelColors = (
 
   return {
     ...source,
-    label: resolveGeometryLabelColors(label, masterColor, context, `${fieldPath}.label`),
+    label: resolvePathLabelColors(label, masterColor, context, `${fieldPath}.label`),
   };
 };
 
@@ -368,9 +361,9 @@ const resolvePathContextualColors = (
       ? undefined
       : Array.isArray(label)
         ? label.map((item, index) =>
-            resolveGeometryLabelColors(item, labelMasterColor, context, `${irPath}.label[${index}]`),
+            resolvePathLabelColors(item, labelMasterColor, context, `${irPath}.label[${index}]`),
           )
-        : resolveGeometryLabelColors(label, labelMasterColor, context, `${irPath}.label`);
+        : resolvePathLabelColors(label, labelMasterColor, context, `${irPath}.label`);
 
   return {
     ...source,

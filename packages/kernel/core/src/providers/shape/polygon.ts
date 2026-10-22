@@ -1,19 +1,17 @@
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
-import type { Position } from '@retikz/math';
+import { DEG_TO_RAD, localToWorld } from '@retikz/math';
+import type { CenteredBox, ContourSegment, Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { number, strictObject } from 'zod';
 
 import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
 import { contourToPathCommands, contourToPathPrimitive, defineShape, verticesToSegments } from '../../contract';
 import { BuiltinShape } from '../../schemas';
-import type { ContourSegment, Rect } from '../../shared';
 import {
-  boundaryFromContour,
   CenterAnchor,
+  boundaryFromContour,
   contourCommands,
-  DEG_TO_RAD,
   isDirectionalAnchor,
-  localToWorld,
   pointsConnectionEnvelope,
   rect,
 } from '../../shared';
@@ -100,7 +98,8 @@ const circumradiusFor = (hw: number, hh: number, params: PolygonParams): number 
 };
 
 /** 由外接 AABB（emit / boundaryPoint 收到的 rect）反推外接圆半径：R = halfWidth / max|cosθ_k| */
-const circumradiusFromRect = (bounds: Rect, params: PolygonParams): number => bounds.width / 2 / maxAbsCos(params);
+const circumradiusFromRect = (bounds: CenteredBox, params: PolygonParams): number =>
+  bounds.width / 2 / maxAbsCos(params);
 
 /** 由内框计算扁菱形的两条半对角线，保证整个内框落在菱形内 */
 const diamondHalfAxesFor = (hw: number, hh: number, aspectRatio: number): { halfWidth: number; halfHeight: number } => {
@@ -123,7 +122,7 @@ const polygonLocalVertices = (radius: number, params: PolygonParams): Array<Posi
   });
 
 /** 从 shape AABB 得到 polygon 的局部顶点；扁菱形使用两条独立半对角线 */
-const polygonLocalVerticesForBounds = (bounds: Rect, params: PolygonParams): Array<Position> => {
+const polygonLocalVerticesForBounds = (bounds: CenteredBox, params: PolygonParams): Array<Position> => {
   if (isAspectRatioDiamond(params)) {
     const halfWidth = bounds.width / 2;
     const halfHeight = bounds.height / 2;
@@ -140,7 +139,7 @@ const polygonLocalVerticesForBounds = (bounds: Rect, params: PolygonParams): Arr
 };
 
 /** 正多边形顶点的世界坐标 */
-const polygonVertices = (bounds: Rect, params: PolygonParams): Array<Position> =>
+const polygonVertices = (bounds: CenteredBox, params: PolygonParams): Array<Position> =>
   polygonLocalVerticesForBounds(bounds, params).map(point => localToWorld(bounds, point));
 
 /**
@@ -167,7 +166,7 @@ export const polygon = defineShape<PolygonParams>({
 
     return { halfWidth, halfHeight };
   },
-  boundaryPoint: (bounds: Rect, toward: Position, params): Position => {
+  boundaryPoint: (bounds: CenteredBox, toward: Position, params): Position => {
     // 带 rotate 的 rect 下取世界系顶点环；rayOrigin = 几何中心（= rect 中心 = node position）
     const verts = polygonVertices(bounds, params);
     const segments: Array<ContourSegment> = verticesToSegments(verts);
@@ -176,7 +175,7 @@ export const polygon = defineShape<PolygonParams>({
 
     return hit ?? center;
   },
-  anchor: (bounds: Rect, name: ShapeAnchorName): Position | undefined => {
+  anchor: (bounds: CenteredBox, name: ShapeAnchorName): Position | undefined => {
     if (name === CenterAnchor.Center) return undefined;
     return isDirectionalAnchor(name) ? rect.anchor(bounds, name) : undefined;
   },
@@ -190,7 +189,7 @@ export const polygon = defineShape<PolygonParams>({
   },
   keyPoints: (bounds, params) =>
     polygonVertices(bounds, params).map((position, index) => ({ name: `vertex-${index}`, position })),
-  *emit(bounds: Rect, style, round, params): Iterable<ScenePrimitive> {
+  *emit(bounds: CenteredBox, style, round, params): Iterable<ScenePrimitive> {
     // emit 收轴对齐 rect（rotate=0）；顶点世界坐标 → 折线段 → rounded-contour 命令 → path
     const verts = polygonVertices(bounds, params);
     const segments: Array<ContourSegment> = verticesToSegments(verts);

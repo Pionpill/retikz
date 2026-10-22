@@ -1,15 +1,14 @@
-import type { Position } from '@retikz/math';
+import { localToWorld, worldToLocal } from '@retikz/math';
+import type { CenteredBox, Position } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import { rectangle } from '../../../src/providers/shape';
-import type { Rect } from '../../../src/shared/geometry/rect';
-import { rect as rectOps } from '../../../src/shared/geometry/rect';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 
 const identity = (n: number): number => n;
 
-const aaRect = (width = 120, height = 80): Rect => ({ x: 0, y: 0, width, height, rotate: 0 });
+const aaRect = (width = 120, height = 80): CenteredBox => ({ x: 0, y: 0, width, height, rotate: 0 });
 
 describe('rectangle cornerRadius — emit 仍 RectPrim', () => {
   it('rect_emit_stays_rectprim：emit 出 RectPrim（含 cornerRadius），非 path', () => {
@@ -97,7 +96,7 @@ describe('rectangle cornerRadius — r=0 等价于现状矩形边求交', () => 
     const rect = aaRect(120, 80);
 
     for (const toward of towards) {
-      const expected = rectOps.boundaryPoint(rect, toward);
+      const expected = sharpRectangleBoundary(rect, toward);
       const got = rectangle.boundaryPoint(rect, toward, {});
 
       expect(got[0]).toBeCloseTo(expected[0], 9);
@@ -118,10 +117,10 @@ describe('rectangle cornerRadius — r=0 等价于现状矩形边求交', () => 
   });
 
   it('rect_r0_boundary_equiv_rotated：带 rotate 的 rect 下省略 cornerRadius 仍 = rect.boundaryPoint', () => {
-    const rect: Rect = { x: 10, y: -5, width: 120, height: 80, rotate: 0.6 };
+    const rect: CenteredBox = { x: 10, y: -5, width: 120, height: 80, rotate: 0.6 };
 
     for (const toward of towards) {
-      const expected = rectOps.boundaryPoint(rect, toward);
+      const expected = sharpRectangleBoundary(rect, toward);
       const got = rectangle.boundaryPoint(rect, toward, {});
 
       expect(got[0]).toBeCloseTo(expected[0], 9);
@@ -154,3 +153,12 @@ describe('rectangle cornerRadius — scaleParams / paramsSchema', () => {
     expect(prim.cornerRadius).toBe(7.5);
   });
 });
+
+const sharpRectangleBoundary = (
+  rect: { x: number; y: number; width: number; height: number; rotate?: number },
+  toward: [number, number],
+): [number, number] => {
+  const local = worldToLocal(rect, toward);
+  const ratio = Math.max(Math.abs(local[0]) / (rect.width / 2), Math.abs(local[1]) / (rect.height / 2));
+  return localToWorld(rect, ratio === 0 ? [0, 0] : [local[0] / ratio, local[1] / ratio]);
+};

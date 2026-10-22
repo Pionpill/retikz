@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { strictObject } from 'zod';
 
 import type { CompileWarning, IRScene } from '../../src';
-import { BUILTIN_SHAPES, CompileWarningCode, defineShape, formatCompileWarning } from '../../src';
+import { BUILTIN_SHAPES, BuiltinCompileWarningCode, defineShape, formatCompileWarning } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 
 const scene = (children: IRScene['children']): IRScene => ({
@@ -27,7 +27,7 @@ describe('CompileOptions.onWarn', () => {
 
       expect(result.primitives).toEqual([]);
       expect(warnings).toHaveLength(1);
-      expect(warnings[0]).toMatchObject({ code: CompileWarningCode.PathTooShort });
+      expect(warnings[0]).toMatchObject({ code: BuiltinCompileWarningCode.PathTooShort });
     }
   });
 
@@ -43,7 +43,7 @@ describe('CompileOptions.onWarn', () => {
 
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toMatchObject({
-      code: CompileWarningCode.PathTooShort,
+      code: BuiltinCompileWarningCode.PathTooShort,
       path: 'children[0].path.children',
       origin: { kind: 'primary' },
     });
@@ -65,7 +65,7 @@ describe('CompileOptions.onWarn', () => {
 
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toMatchObject({
-      code: CompileWarningCode.PathTooShort,
+      code: BuiltinCompileWarningCode.PathTooShort,
       path: 'children[0].path.children[0]',
     });
     expect(warnings[0].message).toContain('requires a previous position');
@@ -84,9 +84,9 @@ describe('CompileOptions.onWarn', () => {
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
 
-    expect(warnings.some(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toBe(true);
+    expect(warnings.some(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference)).toBe(true);
 
-    const unresolved = warnings.find(w => w.code === CompileWarningCode.UnresolvedNodeReference);
+    const unresolved = warnings.find(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference);
 
     expect(unresolved!.path).toBe('children[0].path.children[0].to');
     expect(unresolved!.message).toContain("'bogus'");
@@ -104,7 +104,7 @@ describe('CompileOptions.onWarn', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
-    const unresolved = warnings.find(w => w.code === CompileWarningCode.UnresolvedNodeReference);
+    const unresolved = warnings.find(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference);
 
     expect(unresolved).toBeDefined();
     expect(unresolved!.path).toBe('children[0].path.children[0].to');
@@ -123,7 +123,7 @@ describe('CompileOptions.onWarn', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
-    const unresolved = warnings.find(w => w.code === CompileWarningCode.UnresolvedNodeReference);
+    const unresolved = warnings.find(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference);
 
     expect(unresolved).toBeDefined();
     expect(unresolved!.message).toContain("'bogus'");
@@ -142,7 +142,7 @@ describe('CompileOptions.onWarn', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
-    const unresolved = warnings.find(w => w.code === CompileWarningCode.UnresolvedNodeReference);
+    const unresolved = warnings.find(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference);
 
     expect(unresolved!.path).toBe('children[1].path.children[1].to');
   });
@@ -160,7 +160,7 @@ describe('CompileOptions.onWarn', () => {
     const codes: Array<string> = [];
     compileToScene(ir, { onWarn: w => codes.push(w.code) });
 
-    expect(codes.filter(c => c === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(2);
+    expect(codes.filter(c => c === BuiltinCompileWarningCode.UnresolvedNodeReference)).toHaveLength(2);
   });
 
   it('happy path 不触发 onWarn', () => {
@@ -211,9 +211,9 @@ describe('CompileOptions.onWarn', () => {
 
     compileToScene(ir, { shapes: [customShape], onWarn: warning => warnings.push(warning) });
 
-    expect(warnings.filter(warning => warning.code === CompileWarningCode.BoundaryTightFallback)).toEqual([
+    expect(warnings.filter(warning => warning.code === BuiltinCompileWarningCode.BoundaryTightFallback)).toEqual([
       expect.objectContaining({
-        code: CompileWarningCode.BoundaryTightFallback,
+        code: BuiltinCompileWarningCode.BoundaryTightFallback,
         path: 'children[0].node',
         message: expect.stringContaining("Shape 'custom-without-envelope'"),
       }),
@@ -241,7 +241,7 @@ describe('CompileOptions.onWarn 缺省行为', () => {
     const msg = consoleWarnSpy.mock.calls[0][0] as string;
 
     expect(msg).toContain('[retikz]');
-    expect(msg).toContain(CompileWarningCode.PathTooShort);
+    expect(msg).toContain(BuiltinCompileWarningCode.PathTooShort);
     expect(msg).toContain('children[0].path.children');
   });
 
@@ -275,21 +275,21 @@ describe('scope.transforms warn code 指向真正失败的那个 transform', () 
     expect(w).toBeDefined();
 
     // 旧实现取首个 translate 变体 → 误报 POLAR_ORIGIN_UNRESOLVED；现报实际失败的 offset
-    expect(w!.code).toBe(CompileWarningCode.OffsetBaseUnresolved);
+    expect(w!.code).toBe(BuiltinCompileWarningCode.OffsetBaseUnresolved);
   });
 });
 
-describe('CompileWarningCode 收编与导出', () => {
+describe('BuiltinCompileWarningCode 导出', () => {
   it('formatCompileWarning 从包根导出，可格式化为人类可读字符串', () => {
     const msg = formatCompileWarning({
-      code: CompileWarningCode.UnresolvedNodeReference,
+      code: BuiltinCompileWarningCode.UnresolvedNodeReference,
       message: "references undefined node id 'x'",
       path: 'children[0].to',
       origin: { kind: 'primary' },
     });
 
     expect(msg).toContain('[retikz]');
-    expect(msg).toContain(CompileWarningCode.UnresolvedNodeReference);
+    expect(msg).toContain(BuiltinCompileWarningCode.UnresolvedNodeReference);
     expect(msg).toContain('children[0].to');
   });
 });

@@ -1,4 +1,4 @@
-import type { RuntimeDiagnostic } from '@retikz/runtime';
+import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import type {
   AsyncProcessingController,
   AsyncProcessingOptions,
@@ -27,10 +27,10 @@ export type AsyncLayoutContentProps = {
   /** 已有 Runtime 诊断消费逻辑 */
   deliverDiagnostics: (
     controller: AsyncProcessingController,
-    callback: ((diagnostic: RuntimeDiagnostic) => void) | undefined,
+    callback: ((diagnostic: ReconcilerDiagnostic) => void) | undefined,
   ) => void;
   /** 诊断回调 */
-  onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
+  onDiagnostic?: (diagnostic: ReconcilerDiagnostic) => void;
 };
 
 /** 只消费 Vanilla Promise 和 committed result，不管理领域计算或发布 revision */

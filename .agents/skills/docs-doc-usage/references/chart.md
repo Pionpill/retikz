@@ -54,7 +54,7 @@ React + JSX 标签内先放该 chart 的专属子组件树，再给完整 JSX。
 - 阅读公开 schema、JSDoc / 注释及实际处理逻辑。若某个图元存在特殊继承、替换、计算或默认规则，除表格简述外，在这里以独立主题展开；不能仅凭注释推断尚未实现的行为。
 - 解释触发条件、计算依据、显式配置的优先级、结果和边界。例如散点自动留白说明为何使用最终最大点半径，而不是展开完整尺度实现。
 - 图文结合：图前说明比较对象，图中呈现该逻辑造成的可观察差异，图后解释原因；配图复用 [叙述图契约](../../docs-doc-principle/references/figure-contract.md)，不以文字流程框代替应可见的几何差异。
-- 章首用 `ComponentAlert` 的 `title`、`description` 属性标明选读，不能把提示正文放在不支持的 children 中；局部机制旁用 `SourceLinks` 指向已核对的源码。
+- 章首按[文档总则](../../docs-doc-principle/SKILL.md#共性约束)使用 ComponentAlert 标明选读；局部机制旁用 `SourceLinks` 指向已核对的源码。
 
 ## 错误与限制
 

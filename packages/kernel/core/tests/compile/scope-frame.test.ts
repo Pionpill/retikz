@@ -118,12 +118,14 @@ it('描边和阴影进入自动取景，clip 限制外框而显式 viewBox 不�
 });
 
 it('显式 undefined 使用默认值，上下文数值颜色由有效 Scope 主色解析', () => {
-  const scene = compile({
-    type: 'scope',
-    defaults: { style: { color: '#ff0000' } },
-    frame: { style: { fill: 1, stroke: undefined, strokeWidth: undefined } },
-    children: content,
-  });
+  const scene = compile(
+    ScopeSchema.parse({
+      type: 'scope',
+      defaults: { style: { color: '#ff0000' } },
+      frame: { style: { fill: 1, stroke: undefined, strokeWidth: undefined } },
+      children: content,
+    }),
+  );
 
   expect(childrenOf(scene.primitives[0])[0]).toMatchObject({ fill: '#ff0000', stroke: '#ff0000', strokeWidth: 1 });
 });

@@ -1,7 +1,7 @@
-import type { PathCommand, Rect } from '@retikz/core';
-import { worldToLocal } from '@retikz/core';
+import type { PathCommand } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import type { Position } from '@retikz/math';
+import { worldToLocal } from '@retikz/math';
+import type { CenteredBox, Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { enum as zodEnum, strictObject } from 'zod';
 
@@ -53,7 +53,11 @@ const rayEllipseParameters = (
 };
 
 /** 计算轴向半椭圆端最终外轮廓上的局部边界点 */
-export const ellipticCapLocalBoundary = (bounds: Rect, toward: Position, params: EllipticCapShapeParams): Position => {
+export const ellipticCapLocalBoundary = (
+  bounds: CenteredBox,
+  toward: Position,
+  params: EllipticCapShapeParams,
+): Position => {
   const direction = worldToLocal(bounds, toward);
   if (Math.hypot(...direction) < 1e-12) return [0, 0];
 
@@ -114,7 +118,7 @@ export const ellipticCapLocalBoundary = (bounds: Rect, toward: Position, params:
 
 /** 生成轴向半椭圆端闭合外轮廓，并按需追加近端端盖分隔弧 */
 export const ellipticCapCommands = (
-  bounds: Rect,
+  bounds: CenteredBox,
   params: EllipticCapShapeParams,
   round: (value: number) => number,
   includeDivider: boolean,

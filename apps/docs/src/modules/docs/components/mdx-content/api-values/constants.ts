@@ -11,14 +11,13 @@ import {
   FoldStepVia,
   FontStyle,
   FontWeightKeyword,
-  GeometryLabelPosition,
+  PathLabelPosition,
   NodeTextAlign,
   PathCloseMode,
   PathFillRule,
   BuiltinPathKind,
   PathLineCap,
   PathLineJoin,
-  PathThickness,
   BuiltinPatternShape,
   ScopeBoundingShape,
   ShadowPreset,
@@ -171,8 +170,8 @@ export const API_VALUE_REGISTRY = {
   FlexLayoutWrap: {
     values: Object.values(FlexLayoutWrap),
   },
-  GeometryLabelPosition: {
-    values: Object.values(GeometryLabelPosition),
+  PathLabelPosition: {
+    values: Object.values(PathLabelPosition),
   },
   GridBorderOrder: {
     values: Object.values(GridBorderOrder),
@@ -248,9 +247,6 @@ export const API_VALUE_REGISTRY = {
   },
   PathLineJoin: {
     values: Object.values(PathLineJoin),
-  },
-  PathThickness: {
-    values: Object.values(PathThickness),
   },
   BuiltinPatternShape: {
     values: Object.values(BuiltinPatternShape),

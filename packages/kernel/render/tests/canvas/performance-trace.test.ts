@@ -1,10 +1,8 @@
-import { CoreTraceUnit } from '@retikz/core';
 import type { Scene } from '@retikz/core';
-import type { PerformanceTraceRecord } from '@retikz/runtime';
-import { createRuntimeTraceReporter, PerformanceTraceOutcome } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 
-import { drawScene, RenderTracePhase } from '../../src/canvas';
+import { drawScene, RenderTracePhase, RenderTraceUnit } from '../../src/canvas';
+import type { RenderTraceRecord } from '../../src/trace';
 import { createSpyCanvasContext } from './draw-scene/helpers';
 
 const scene: Scene = {
@@ -22,27 +20,16 @@ const scene: Scene = {
 
 describe('drawScene performance trace', () => {
   it('每次完整 Canvas draw 递归统计 Group 与 child occurrence', () => {
-    const records: Array<PerformanceTraceRecord> = [];
-    const trace = createRuntimeTraceReporter({
-      owner: '@retikz/render:canvas',
-      phases: [
-        {
-          phase: RenderTracePhase.Commit,
-          unit: CoreTraceUnit.ScenePrimitive,
-          outcomes: [PerformanceTraceOutcome.Full],
-        },
-      ],
-      sink: record => records.push(record),
-    });
+    const records: Array<RenderTraceRecord> = [];
+    const trace = { report: (record: RenderTraceRecord) => records.push(record) };
 
     drawScene(createSpyCanvasContext() as unknown as CanvasRenderingContext2D, scene, { trace });
 
     expect(records).toEqual([
       {
-        owner: '@retikz/render:canvas',
         phase: RenderTracePhase.Commit,
-        unit: CoreTraceUnit.ScenePrimitive,
-        outcome: PerformanceTraceOutcome.Full,
+        unit: RenderTraceUnit.ScenePrimitive,
+        outcome: 'full',
         visited: 3,
         reused: 0,
         changed: 3,

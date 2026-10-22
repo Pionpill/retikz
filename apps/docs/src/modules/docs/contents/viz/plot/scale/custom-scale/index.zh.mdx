@@ -23,6 +23,8 @@ description: 用 ScaleDefinition 扩展值到坐标或颜色的映射，并通�
 
 下面的 demo 同时注册 `ease-position` 和 `brand`：前者让 x 坐标按指数重新分布，后者把分类 `tier` 映射到品牌色板。拖动指数可以比较位置映射，颜色映射保持不变；两种 definition、数据和宿主注入都可以从源码切换器中查看：
 
+这个自定义位置比例尺未实现 domain padding，因此示例通过 `properties.autoPadding: false` 关闭点标记的自动留白。
+
 <ComponentPreview
   files={['scale-custom', 'scale-custom.preview.tsx', 'scale-custom.definition.ts', 'scale-custom.data.ts']}
   size="lg"
@@ -64,8 +66,11 @@ const spec: IRPlot = {
   marks: [
     {
       type: 'point',
-      color: { kind: 'field', value: 'score', scale: 'brand-color' },
-      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+
+      encodings: {
+        color: { field: 'score', scale: 'brand-color' },
+        position: { x: { field: 'x' }, y: { field: 'y' } },
+      },
     },
   ],
 };

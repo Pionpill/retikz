@@ -36,8 +36,8 @@ export const renderExtensionFormatPreview = () => (
     style={{ maxWidth: '100%', height: 'auto' }}
     definitions={{ formats: [thousands] }}
   >
-    <PathMark x="month" y="revenue" order="month" />
-    <PointMark x="month" y="revenue" />
+    <PathMark encodings={{ order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
+    <PointMark encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />
   </Plot>

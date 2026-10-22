@@ -1,7 +1,8 @@
-import type { ConnectionEnvelopeKind, IRNode, PathPrim, Rect, ScenePrimitive, ShapeDefinition } from '@retikz/core';
+import type { ConnectionEnvelopeKind, IRNode, PathPrim, ScenePrimitive, ShapeDefinition } from '@retikz/core';
 import { boundsConnectionEnvelope, defineShape, ellipseShape, polygon, rectangle } from '@retikz/core';
 import { SectorShapeDefinition, StarShapeDefinition } from '@retikz/extension';
 import type { JsonObject } from '@retikz/foundation';
+import type { CenteredBox } from '@retikz/math';
 import { z } from 'zod';
 
 const shapeChoiceSchema = z.enum(['rectangle', 'circle', 'ellipse', 'diamond', 'polygon', 'star', 'sector']);
@@ -143,12 +144,12 @@ function* emitDottedGuide(primitives: Iterable<ScenePrimitive>): Iterable<SceneP
 
 /** 复用正式 provider 的 fit / gap 语义计算辅助轮廓矩形 */
 const guideRect = (
-  rect: Rect,
+  rect: CenteredBox,
   visual: ResolvedVisualShape,
   boundary: Exclude<NodeBoundaryChoice, 'shape'>,
   fit: z.infer<typeof boundaryFitSchema>,
   gap: number,
-): Rect => {
+): CenteredBox => {
   const kind: ConnectionEnvelopeKind = boundary;
   const envelope =
     boundary === 'rectangle' || fit === 'bounds'

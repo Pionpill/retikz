@@ -11,7 +11,7 @@ import {
   defineRuntimeSource,
   PerformanceTraceOutcome,
   RetikzRuntimeErrorCode,
-  RuntimeDiagnosticCode,
+  BuiltinRuntimeDiagnosticCode,
   RuntimeComputationPhase,
 } from '../../src';
 
@@ -288,7 +288,7 @@ describe('runtime runtime participant failure lifecycle', () => {
     const diagnostics = (thrown as { diagnostics: ReadonlyArray<RuntimeDiagnostic> }).diagnostics;
 
     expect(diagnostics.map(diagnostic => diagnostic.code)).toEqual([
-      RuntimeDiagnosticCode.TraceInvalidRecord,
+      BuiltinRuntimeDiagnosticCode.TraceInvalidRecord,
       RetikzRuntimeErrorCode.ParticipantRollbackFailed,
       RetikzRuntimeErrorCode.ParticipantTokenDisposeFailed,
       RetikzRuntimeErrorCode.ParticipantDisposeFailed,

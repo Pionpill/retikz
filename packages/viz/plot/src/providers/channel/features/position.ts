@@ -1,6 +1,6 @@
 import type { PositionChannelDefinition } from '../../../contract';
-import { ChannelDefinitionKind } from '../../../contract';
-import type { IRPlotChannel } from '../../../schemas';
+import { ChannelDefinitionKind, positionField } from '../../../contract';
+import type { IRPlotPositionInput } from '../../../schemas';
 
 /** 内置 position channel definition 的扩展形态 */
 export type BuiltinPositionChannelDefinition = PositionChannelDefinition & {
@@ -8,15 +8,15 @@ export type BuiltinPositionChannelDefinition = PositionChannelDefinition & {
   pickWithOptions: () => PositionChannelDefinition['pick'];
 };
 
-const markEncoding = (mark: unknown): Record<string, IRPlotChannel | undefined> | undefined =>
-  (mark as { encoding?: Record<string, IRPlotChannel | undefined> }).encoding;
+const markEncoding = (mark: unknown): Record<string, IRPlotPositionInput | undefined> | undefined =>
+  (mark as { encodings?: { position?: Record<string, IRPlotPositionInput | undefined> } }).encodings?.position;
 
 const positionChannelDefinitionOf = (role: string): BuiltinPositionChannelDefinition => ({
   channel: role,
   kind: ChannelDefinitionKind.Position,
   role,
-  pick: mark => markEncoding(mark)?.[role],
-  pickWithOptions: () => mark => markEncoding(mark)?.[role],
+  pick: mark => positionField(markEncoding(mark)?.[role]),
+  pickWithOptions: () => mark => positionField(markEncoding(mark)?.[role]),
 });
 
 /**

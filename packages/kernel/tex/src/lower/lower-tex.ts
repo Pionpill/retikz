@@ -23,7 +23,7 @@ import type { LowerTexOptions, TexLoweringResult } from './types';
 export const createLowerTex = (engine: MathJaxSvgEngine, options?: LowerTexOptions): LowerTex => {
   const cache = new Map<string, TexLoweringResult<NonNullable<ReturnType<LowerTex>>>>();
   return (content, style) => {
-    const key = JSON.stringify([style.fontSize, content.displayMode ?? false, style.color ?? null, content.tex]);
+    const key = JSON.stringify([style.fontSize, content.displayMode ?? false, content.tex]);
     const cached = cache.get(key);
     if (cached !== undefined) {
       if (!cached.ok) options?.onDiagnostic?.(cached.diagnostic);

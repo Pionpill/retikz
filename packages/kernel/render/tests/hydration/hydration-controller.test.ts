@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { isRetikzError } from '@retikz/foundation';
-import { createRuntimeIdentity } from '@retikz/runtime';
+import { createSceneIdentity } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
 import { RetikzRenderError, RetikzRenderErrorCode } from '../../src/error';
@@ -111,9 +111,9 @@ describe('Hydration 控制器', () => {
 
   it('同一 semantic owner 的多个 occurrence 之间移动不重复触发 enter/leave', () => {
     const root = document.createElement('div');
-    const owner = createRuntimeIdentity('hydration-owner', ['owner']);
+    const owner = createSceneIdentity('hydration-owner', ['owner']);
     const targets: ReadonlyArray<HydrationTarget> = ['shape', 'label'].map(segment => ({
-      identity: createRuntimeIdentity('hydration-owner', ['owner', segment]),
+      identity: createSceneIdentity('hydration-owner', ['owner', segment]),
       semanticOwner: owner,
       publicId: 'owner',
     }));

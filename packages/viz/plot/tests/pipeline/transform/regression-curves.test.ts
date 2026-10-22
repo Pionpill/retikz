@@ -43,10 +43,8 @@ const draw = (degree: number, scale = 'linear', clamp = false, curve = 'catmullR
     marks: [
       {
         type: 'path',
-        curve,
-        order: 'tx',
-        encoding: { x: { field: 'tx' }, y: { field: 'ty' } },
-        transform: [
+        properties: { curve },
+        transforms: [
           {
             operation: {
               kind: 'smooth',
@@ -62,6 +60,7 @@ const draw = (degree: number, scale = 'linear', clamp = false, curve = 'catmullR
           },
           ...(later ? [{ operation: { kind: 'sort', params: { field: 'tx' } } }] : []),
         ],
+        encodings: { order: 'tx', position: { x: { field: 'tx' }, y: { field: 'ty' } } },
       },
     ],
   });

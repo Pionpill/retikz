@@ -1,16 +1,15 @@
+import { DEFAULT_EPSILON, DEG_TO_RAD } from '@retikz/math';
 import type { Position } from '@retikz/math';
-import { DEFAULT_EPSILON } from '@retikz/math';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { CanonicalNodeLabelBoundaryPosition } from '../../../resolve';
 import { AnchorUnitVectorByAnchor } from '../../../shared';
-import { DEG_TO_RAD } from '../../../shared/geometry';
 import { placeBoundaryLabelBox, resolveBoundaryLabelRotation } from '../../text';
 import { anchorOf, angleBoundaryOf } from '../anchors';
-import type { MeasuredNodeLabel, NodeLabelLayout, NodeLayout } from '../types';
+import type { MeasuredNodeLabel, NodeLabelLayout, NodeLabelResolution, NodeLayout } from '../types';
 
 const isLabelBoundaryPosition = (
-  position: MeasuredNodeLabel['position'],
+  position: NodeLabelResolution['position'],
 ): position is CanonicalNodeLabelBoundaryPosition => typeof position === 'object';
 
 const ensureBoxLikeLabelBoundary = (layout: NodeLayout): void => {
@@ -45,7 +44,7 @@ const labelBoundaryDirection = (position: CanonicalNodeLabelBoundaryPosition): P
 };
 
 /** 从 attachment 直接解析 label 放置单位向量 */
-const labelPlacementVector = (position: MeasuredNodeLabel['position']): Position => {
+const labelPlacementVector = (position: NodeLabelResolution['position']): Position => {
   if (position === 'center') return [1, 0];
   if (isLabelBoundaryPosition(position)) return labelBoundaryDirection(position);
   if (typeof position === 'number') {
@@ -57,7 +56,7 @@ const labelPlacementVector = (position: MeasuredNodeLabel['position']): Position
 };
 
 /** 从 label 附着方向取得稳定的切线正向 */
-const labelTangentVector = (position: MeasuredNodeLabel['position']): Position => {
+const labelTangentVector = (position: NodeLabelResolution['position']): Position => {
   if (isLabelBoundaryPosition(position)) {
     if (position.boundary === 'top' || position.boundary === 'bottom') return [1, 0];
     return [0, 1];
@@ -73,7 +72,7 @@ const labelTangentVector = (position: MeasuredNodeLabel['position']): Position =
 };
 
 /** label 在 node 边界上的附着点 */
-export const labelBorderPoint = (layout: NodeLayout, label: Pick<MeasuredNodeLabel, 'position'>): Position => {
+export const labelBorderPoint = (layout: NodeLayout, label: Pick<NodeLabelResolution, 'position'>): Position => {
   if (label.position === 'center') return [layout.geometry.rect.x, layout.geometry.rect.y];
 
   const aaLayout: NodeLayout = {
@@ -145,32 +144,36 @@ export const labelBoxEdgeToward = ({
  * @description keepUpright 会翻转倒置文本
  */
 export const resolveLabelRotateDeg = (
-  label: Pick<MeasuredNodeLabel, 'position' | 'rotate' | 'keepUpright'>,
+  label: Pick<NodeLabelResolution, 'position' | 'rotate' | 'keepUpright'>,
 ): number => {
   return resolveBoundaryLabelRotation(label.rotate, label.keepUpright, labelPlacementVector(label.position));
 };
 
 /** 把已测量 label 解析为相对最终 Node rect 的局部几何 */
-export const resolveNodeLabelGeometry = (layout: NodeLayout, label: MeasuredNodeLabel): NodeLabelLayout => {
-  const rotateDeg = resolveLabelRotateDeg(label);
-  if (label.position === 'center') {
+export const resolveNodeLabelGeometry = (
+  layout: NodeLayout,
+  label: MeasuredNodeLabel,
+  properties: NodeLabelResolution,
+): NodeLabelLayout => {
+  const rotateDeg = resolveLabelRotateDeg(properties);
+  if (properties.position === 'center') {
     return { ...label, rotateDeg, centerOffset: [0, 0] };
   }
 
   const placed = placeBoundaryLabelBox({
     label: {
-      text: label.text,
-      rotate: label.rotate,
-      keepUpright: label.keepUpright,
-      placement: label.placement,
-      align: label.align,
+      text: properties.text.plainText,
+      rotate: properties.rotate,
+      keepUpright: properties.keepUpright,
+      placement: properties.placement,
+      align: properties.align,
     },
-    point: labelBorderPoint(layout, label),
-    outward: labelPlacementVector(label.position),
-    tangent: labelTangentVector(label.position),
+    point: labelBorderPoint(layout, properties),
+    outward: labelPlacementVector(properties.position),
+    tangent: labelTangentVector(properties.position),
     width: label.measuredWidth,
     height: label.measuredHeight,
-    distance: label.distance,
+    distance: properties.distance,
   });
 
   return {

@@ -1,4 +1,4 @@
-import { RuntimeDiagnosticCode } from '../diagnostic';
+import { BuiltinRuntimeDiagnosticCode } from '../diagnostic';
 import { getRuntimeDiagnosticMessage } from '../diagnostic/internal';
 import type { RuntimeSourceExecutionResult, RuntimeSourceLifecycleDiagnostic } from '../error';
 import { RetikzRuntimeError, RetikzRuntimeErrorCode, RuntimeSourcePhase } from '../error';
@@ -80,7 +80,7 @@ const disposeValue = <TInput, TValue, TRead, TChange>(
   } catch (cause) {
     return Object.freeze([
       Object.freeze<RuntimeSourceLifecycleDiagnostic>({
-        code: RuntimeDiagnosticCode.SourceDisposeFailed,
+        code: BuiltinRuntimeDiagnosticCode.SourceDisposeFailed,
         owner: definition.key,
         phase: RuntimeSourcePhase.Retire,
         severity: 'error',

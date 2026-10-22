@@ -2,7 +2,7 @@
 
 **Component properties**
 
-#### <ApiSourceLink label={"PathMarkProps"} path={"packages/viz/plot-react/src/components/marks.tsx"} startLine={13}>PathMarkProps</ApiSourceLink>
+#### <ApiSourceLink label={"PathMarkProps"} path={"packages/viz/plot-react/src/components/marks.tsx"} startLine={12}>PathMarkProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -10,46 +10,22 @@
 
 <ApiTable grouped>
 
-| Group      | Member            | Type                                                                               | Default | Description                                                                                                                                                                               |
-| ---------- | ----------------- | ---------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Main       | `anchorId?`       | `IRPlotAnchorId`                                                                   | —       | Naming rule for addressable path data anchors                                                                                                                                             |
-|            | `id?`             | `string`                                                                           | —       | Optional mark handle for scope and anchor references                                                                                                                                      |
-|            | `label?`          | `InputPlotGeometryLabel \| Array<InputPlotGeometryLabel>`                          | —       | One or more labels placed along path geometry                                                                                                                                             |
-| Data       | `color?`          | `InputPlotFieldName`                                                               | —       | Categorical color field with an automatic ordinal scale; implicitly splits paths when series is absent and defaults to series. Continuous and temporal fields are rejected                |
-|            | `order?`          | `InputPlotFieldName`                                                               | —       | Field controlling connection order; defaults to data array order                                                                                                                          |
-|            | `series?`         | `InputPlotFieldName`                                                               | —       | Series field splitting rows into multiple paths; defaults to one path                                                                                                                     |
-|            | `transform?`      | `Array<IRDataTransformDeclaration>`                                                | —       | Transform pipeline applied only to this mark data view                                                                                                                                    |
-|            | `x`               | `InputPlotFieldName`                                                               | —       | Field path for x, interpreted as angle in polar coordinates                                                                                                                               |
-|            | `y`               | `InputPlotFieldName`                                                               | —       | Field path for y, interpreted as radius in polar coordinates                                                                                                                              |
-| Geometry   | `closed?`         | `boolean`                                                                          | —       | Connect the last point to the first to form a polygon or polar radar outline; defaults to false in Cartesian coordinates and true in polar2D                                              |
-|            | `closure?`        | `IRPlotPathClosure`                                                                | —       | Construct a closed path: cycle joins the endpoints, baseline returns to a constant baseline, and stack returns along a per-row baseline field; fill controls whether the region is filled |
-|            | `connectNulls?`   | `IRPlotPathMark['connectNulls']`                                                   | —       | Bridge gaps in open paths with a dashed stroke by default; an object overrides the bridge stroke. Omit or use false to break at gaps                                                      |
-|            | `coordinateView?` | `string`                                                                           | —       | Coordinate view ID bound directly to this mark                                                                                                                                            |
-|            | `curve?`          | `PathCurve`                                                                        | —       | Connection between neighboring points; defaults to linear                                                                                                                                 |
-|            | `facetId?`        | `string`                                                                           | —       | Facet declaration ID, expanded into a coordinate view when building IRPlot                                                                                                                |
-|            | `interpolation?`  | `PolarInterpolation`                                                               | —       | Local override of the polar2D connection space; inherits the coordinate setting when omitted                                                                                              |
-|            | `rotate?`         | `InputPlotMarkValueProp<number> \| IRPlotPointNumberStyle`                         | —       | Path rotation angle                                                                                                                                                                       |
-|            | `roundedCorners?` | `InputPlotMarkValueProp<number> \| IRPlotPointNonnegativeNumberStyle`              | —       | Constant or data mapping for the radius of rounded path corners                                                                                                                           |
-|            | `scale?`          | `InputPlotMarkValueProp<IRPathScale> \| IRPlotPathScaleStyle`                      | —       | Path scale configuration                                                                                                                                                                  |
-|            | `trackId?`        | `string`                                                                           | —       | Shared track ID, expanded into a coordinate view when building IRPlot                                                                                                                     |
-|            | `xAxisId?`        | `string`                                                                           | —       | Adapter shorthand binding the mark to a named x axis; expanded to `coordinateView` before producing IRPlot                                                                                |
-|            | `yAxisId?`        | `string`                                                                           | —       | Adapter shorthand binding the mark to a named y axis; expanded to `coordinateView` before producing IRPlot                                                                                |
-| Style      | `blendMode?`      | `InputPlotMarkValueProp<BlendMode> \| IRPlotBlendModeStyle`                        | —       | Path blend mode                                                                                                                                                                           |
-|            | `dashPattern?`    | `InputPlotMarkValueProp<Array<number>> \| IRPlotNodeDashPatternStyle`              | —       | Custom stroke dash pattern                                                                                                                                                                |
-|            | `fill?`           | `InputPlotFieldName \| IRPaint \| IRPlotPointFillStyle`                            | —       | Path fill; strings are first resolved as field names                                                                                                                                      |
-|            | `fillRule?`       | `InputPlotMarkValueProp<InputPlotFillRule> \| IRPlotPathFillRuleStyle`             | —       | Path fill rule                                                                                                                                                                            |
-|            | `layer?`          | `IRPlotLayer`                                                                      | —       | Semantic layer override controlling the outer mark scope zIndex within the plot                                                                                                           |
-|            | `lineCap?`        | `InputPlotFieldName \| InputPlotLineCap \| InputPlotMarkValue<InputPlotLineCap>`   | —       | Constant or field mapping for path line caps                                                                                                                                              |
-|            | `lineJoin?`       | `InputPlotFieldName \| InputPlotLineJoin \| InputPlotMarkValue<InputPlotLineJoin>` | —       | Constant or field mapping for path line joins                                                                                                                                             |
-|            | `marks?`          | `IRPlotRelationPathSpecificOptions['marks']`                                       | —       | Markers placed along the path                                                                                                                                                             |
-|            | `opacity?`        | `InputPlotOpacity`                                                                 | —       | Constant or data mapping for overall path opacity                                                                                                                                         |
-|            | `shadow?`         | `InputPlotMarkValueProp<ShadowPreset \| IRDropShadow> \| IRPlotShadowStyle`        | —       | Path shadow                                                                                                                                                                               |
-|            | `stroke?`         | `InputPlotFieldName \| IRPaint \| IRPlotPointStrokeStyle`                          | —       | Path stroke; strings are first resolved as field names                                                                                                                                    |
-|            | `strokeWidth?`    | `InputPlotMarkValueProp<number> \| IRPlotPointStrokeWidthStyle`                    | —       | Constant or data mapping for path stroke width                                                                                                                                            |
-|            | `thickness?`      | `InputPlotMarkValueProp<InputPlotThickness> \| IRPlotPathThicknessStyle`           | —       | Path thickness preset                                                                                                                                                                     |
-|            | `zIndex?`         | `InputPlotMarkValueProp<number> \| IRPlotPointZIndexStyle`                         | —       | Path drawing order hint                                                                                                                                                                   |
-| Callbacks  | `resolveLabel?`   | `(row: ExternalRow) => string`                                                     | —       | Runtime callback generating label text from valid data rows; requires a mark ID                                                                                                           |
-| Extensions | `channels?`       | `Record<string, InputPlotExtensionChannel>`                                        | —       | Extension bindings forwarded to `encoding.channels`; strings denote field names                                                                                                           |
+| Group     | Member                | Type                                | Default | Description |
+| --------- | --------------------- | ----------------------------------- | ------- | ----------- |
+| Main      | `id?`                 | `string`                            | —       | —           |
+| Data      | `contributeToDomain?` | `false \| true`                     | —       | —           |
+|           | `encodings`           | `InputPlotPathMark['encodings']`    | —       | —           |
+|           | `transforms?`         | `InputPlotPathMark['transforms']`   | —       | —           |
+| Geometry  | `coordinateView?`     | `string`                            | —       | —           |
+|           | `properties?`         | `InputPlotPathMark['properties']`   | —       | —           |
+|           | `xAxisId?`            | `string`                            | —       | —           |
+|           | `yAxisId?`            | `string`                            | —       | —           |
+| Layout    | `facetId?`            | `string`                            | —       | —           |
+|           | `trackId?`            | `string`                            | —       | —           |
+| Style     | `defaultColorGroup?`  | `string`                            | —       | —           |
+|           | `defaultColorIndex?`  | `number`                            | —       | —           |
+|           | `layer?`              | `{ zIndex?: number \| undefined; }` | —       | —           |
+| Callbacks | `resolveLabel?`       | `(row: ExternalRow) => string`      | —       | —           |
 
 </ApiTable>
 
@@ -65,7 +41,7 @@ export type PathMarkProps = InputPlotPathMark;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRPlotPathMark"} path={"packages/viz/plot/src/schemas/mark/types.ts"} startLine={141}>IRPlotPathMark</ApiSourceLink> / <ApiSourceLink label={"PathMarkSchema"} path={"packages/viz/plot/src/schemas/mark/schema.ts"} startLine={782}>PathMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPlotPathMark"} path={"packages/viz/plot/src/schemas/mark/path.ts"} startLine={226}>IRPlotPathMark</ApiSourceLink> / <ApiSourceLink label={"PathMarkSchema"} path={"packages/viz/plot/src/schemas/mark/path.ts"} startLine={210}>PathMarkSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 

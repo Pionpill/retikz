@@ -152,7 +152,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   箭头端点放置配置: 'Endpoint arrow placement',
   折线拐角几何圆角半径: 'Geometric rounding radius at polyline corners',
   '实例视觉覆盖，逐字段覆盖继承默认值': 'Instance visual overrides, replacing inherited defaults field by field',
-  '语义 stroke 档位糖': 'Semantic stroke-width shorthand',
   'TikZ 风格的路径走向简写': 'TikZ-style route shorthand',
   '同层 stack 顺序': 'Stack order among siblings',
   'EllipsePath action：以游标为圆心绘制椭圆；无角度=整椭圆（画完回圆心），带角度=部分椭圆（TikZ `ellipse[x radius=…, y radius=…]`）':
@@ -225,8 +224,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Insert a tangent arc at each line-to-line joint, changing geometry rather than only stroke appearance. Curve, arc, Bézier, and fold joints stay sharp; the radius is clamped to adjacent segment lengths. Omission keeps sharp corners',
   '整条 path 缩放（绕包围盒中心）：number 等比，或 `{ x, y }` 非等比':
     'Scale the whole path around its bounding-box center: a number for uniform scaling or `{ x, y }` for independent axes',
-  '语义 stroke 档位糖（TikZ `ultra thin` … `ultra thick`）；构造 IR 时解析为 `strokeWidth`，显式 `strokeWidth` 始终优先':
-    'Semantic stroke-width shorthand (TikZ `ultra thin` through `ultra thick`), normalized to `strokeWidth`; explicit `strokeWidth` takes precedence',
   'TikZ 风格路径走向简写，由 Vanilla 统一解析为步骤': 'TikZ-style route shorthand, parsed into steps by Vanilla',
   '显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层子节点间生效':
     'Explicit stack order: larger values are above; defaults to 0, equal values preserve declaration order, and comparison is limited to siblings',
@@ -263,7 +260,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   箭头端点的共享与逐端放置配置: 'Shared and per-end arrow placement settings',
   '可选编译驱动自行解释的运行时载荷，不进入 Core IR':
     'Optional runtime payload interpreted by a compile driver; excluded from Core IR',
-  路径描边宽度语法糖: 'Path stroke-width shorthand',
   '无法由 authoring 字段唯一识别时显式指定路径类别':
     'Explicit path category when authoring fields cannot identify it uniquely',
   作者侧路径步骤: 'Authoring path step',

@@ -1,5 +1,5 @@
 import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
-import { array, number, object } from 'zod';
+import { array, number, strictObject } from 'zod';
 
 import { AnimationTrackSchema } from '../animation';
 import { GraphicStyleSchema } from '../style';
@@ -10,7 +10,7 @@ export const DrawableStyleSchema = GraphicStyleSchema.describe(
 );
 
 /** 校验可绘制元素的标识、元数据、动画与同级堆叠次序 */
-export const DrawableInstanceSchema = object({
+export const DrawableInstanceSchema = strictObject({
   id: NonBlankStringSchema.optional().describe(
     'Optional stable id used as a reference target for the Scene primitive emitted by this drawable element.',
   ),
@@ -28,6 +28,4 @@ export const DrawableInstanceSchema = object({
     .describe(
       'Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.',
     ),
-})
-  .strict()
-  .describe('Shared instance-level identity, provenance, animation, and stacking fields for drawable elements.');
+}).describe('Shared instance-level identity, provenance, animation, and stacking fields for drawable elements.');

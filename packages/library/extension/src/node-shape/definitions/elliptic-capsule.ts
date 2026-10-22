@@ -1,21 +1,21 @@
 import type { CoreDependencyProvider, ScenePrimitive } from '@retikz/core';
 import {
-  boundsConnectionEnvelope,
   CenterAnchor,
+  boundsConnectionEnvelope,
   contourToPathPrimitive,
   defineShape,
   isDirectionalAnchor,
-  localToWorld,
   rect,
 } from '@retikz/core';
+import { localToWorld } from '@retikz/math';
 
 import { BuiltinExtensionShapeName } from '../constants';
 import type { EllipticCapShapeParams } from './_elliptic-cap';
 import {
+  EllipticCapShapeParamsSchema,
   circumscribeEllipticCaps,
   ellipticCapCommands,
   ellipticCapLocalBoundary,
-  EllipticCapShapeParamsSchema,
   scaleEllipticCapParams,
 } from './_elliptic-cap';
 

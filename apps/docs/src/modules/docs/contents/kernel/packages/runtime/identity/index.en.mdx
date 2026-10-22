@@ -224,7 +224,7 @@ Identities support two common paths: compare two directly, or organize a complet
 
 ## Core application
 
-Core uses the same identity structure for entities inside a drawing document. In the document index used for incremental comparison, the root path is `['root']`. Each child path appends its type and explicit `id` to its parent's path. An ordinary node with `id: 'A'` directly under the root therefore has this identity:
+Reconciler derives semantic owners and primitive identities from Core compilation provenance. For a non-generated root child with an explicit id A that is unique within its namespace, the semantic owner can be represented as:
 
 ```ts
 import { createRuntimeIdentity } from '@retikz/runtime';
@@ -233,16 +233,9 @@ const root = createRuntimeIdentity('@retikz/core/document', ['root']);
 const nodeA = createRuntimeIdentity('@retikz/core/document', [...root.path, 'node', 'A']);
 ```
 
-The `owner` is the Core document Source's registration key; `path` distinguishes entities within the document. Changing only a node's color preserves its identity, while changing its parent path changes its identity. Core uses these identities to compare documents and check change hints. The document Source currently does not configure `collectIdentities`; Core's incremental computation logic builds this index.
+The owner uses the document Source key. Primitive identities additionally include an emission role and ordinal; anonymous, duplicate-name and generated elements use candidate-local identities. This mapping serves Scene snapshots, Render and hydration. It is neither an input snapshot diff index nor a Weave update address.
 
-<SourceLinks
-  sources={[
-    {
-      label: 'Core document identities and change checks',
-      path: 'packages/kernel/core/src/compile/incremental/diff.ts',
-    },
-  ]}
-/>
+<SourceLinks sources={[{ label: 'Scene identity', path: 'packages/kernel/reconciler/src/scene/identity.ts' }]} />
 
 ## Related props
 

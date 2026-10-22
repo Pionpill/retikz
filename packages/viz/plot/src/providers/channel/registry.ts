@@ -1,13 +1,14 @@
 import type { AnyChannelDefinition } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import type { BuiltinTextChannelOptions } from './features';
-import { createBuiltinPaintChannels, createBuiltinTextChannels, DELIVERY_CHANNELS } from './features';
+import { createBuiltinPaintChannels, createBuiltinTextChannels, DELIVERY_CHANNELS, LABEL_CHANNELS } from './features';
 
 /**
  * 保留的内置通道名集：扩展通道的 `channel` 不得撞这些
  * @description 含内置 mark / scope / node / path channel + 位置通道 x/y/z；同名内置通道可按 kind 注册多个 definition
  */
 export const BUILTIN_CHANNEL_NAMES: ReadonlySet<string> = new Set<string>([
+  ...LABEL_CHANNELS.map(definition => definition.channel),
   'x',
   'y',
   'z',
@@ -43,7 +44,9 @@ export const BUILTIN_CHANNEL_NAMES: ReadonlySet<string> = new Set<string>([
   'shadow',
   'blendMode',
   'fillRule',
-  'thickness',
+  'pull',
+  'geometry.width',
+  'geometry.endWidth',
 ]);
 
 /** 解析通道 registry 时可传入的自定义 definition 与文本选项 */
@@ -58,6 +61,7 @@ const createBuiltinChannels = (options: BuiltinTextChannelOptions = {}): Readonl
   ...Object.values(createBuiltinPaintChannels()),
   ...Object.values(createBuiltinTextChannels(options)),
   ...DELIVERY_CHANNELS,
+  ...LABEL_CHANNELS,
 ];
 
 /** 包含 definition 顺序视图的通道 registry */

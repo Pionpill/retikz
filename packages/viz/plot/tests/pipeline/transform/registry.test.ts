@@ -105,7 +105,7 @@ const pointSpec = (transform: IRPlot['transform']): IRPlot =>
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', encoding: { x: { field: 'x2' }, y: { field: 'y' } } }],
+    marks: [{ type: 'point', encodings: { position: { x: { field: 'x2' }, y: { field: 'y' } } } }],
   });
 
 describe('transform registry (contract)', () => {

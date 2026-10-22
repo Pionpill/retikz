@@ -1,14 +1,8 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
+import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
 import type { RenderHandlerContribution, RenderRuntimeConfigInput, RetainedRendererRead } from '@retikz/render/runtime';
-import {
-  builtinRetainedRendererFactory,
-  createRetainedRenderParticipant,
-  RenderCachePolicy,
-  RenderRuntimeSourceDefinition,
-} from '@retikz/render/runtime';
-import type { RuntimeDiagnostic } from '@retikz/runtime';
-import { createRuntimeSourceInput, createRuntimeSourceUpdate } from '@retikz/runtime';
+import { builtinRetainedRendererFactory, createRetainedRenderTarget, RenderCachePolicy } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputRuntimeMeta } from '../normalize';
@@ -137,23 +131,23 @@ type DomRetainedProcessingController<TUpdateOptions extends RetainedSvgUpdateOpt
     /** 释放 processing runtime 与已挂载 renderer */
     dispose: () => void;
     /** 读取并清空 Runtime 诊断 */
-    diagnostics: () => ReadonlyArray<RuntimeDiagnostic>;
+    diagnostics: () => ReadonlyArray<ReconcilerDiagnostic>;
     /** 读取当前 committed renderer 状态 */
     read: () => RetainedRendererRead;
     /** 读取当前 committed processing result */
     result: () => ProcessingResult;
   }>;
 
-/** 移除 direct compile 专属 trace，构造 runtime-lifetime processing options */
+/** 构造 runtime-lifetime processing options */
 const toProcessingOptions = (
   options: CommonOptions,
   updateStrategy: VanillaRetainedRuntimeOptions['updateStrategy'],
 ): ProcessingOptions => {
-  const { trace, ...compile } = options.compile ?? {};
-  void trace;
+  const compile = { ...options.compile };
 
   return {
     compile,
+    defaultFontFamily: options.defaultFontFamily,
     adapters: options.adapters,
     compileDriver: options.compileDriver,
     updateStrategy,
@@ -193,17 +187,13 @@ const createRenderParticipantFactory = (
 ): Readonly<{
   factory: ProcessingTransactionParticipantFactory;
   read: () => RetainedRendererRead;
-  updateConfig: (
-    input: ProcessingParticipantUpdateInput,
-  ) => ReadonlyArray<ReturnType<typeof createRuntimeSourceUpdate>>;
+  updateConfig: (input: ProcessingParticipantUpdateInput) => void;
 }> => {
-  let lease: ReturnType<typeof createRetainedRenderParticipant>['lease'] | undefined;
+  let lease: ReturnType<typeof createRetainedRenderTarget>['lease'] | undefined;
   let active:
     | Readonly<{
         read: () => RetainedRendererRead;
-        updateConfig: (
-          input: ProcessingParticipantUpdateInput,
-        ) => ReadonlyArray<ReturnType<typeof createRuntimeSourceUpdate>>;
+        updateConfig: (input: ProcessingParticipantUpdateInput) => void;
       }>
     | undefined;
 
@@ -211,16 +201,16 @@ const createRenderParticipantFactory = (
     const rendererFactory = options.runtimeOptions.rendererFactory ?? builtinRetainedRendererFactory;
     const renderer =
       options.backend === 'svg'
-        ? createRetainedRenderParticipant({
+        ? createRetainedRenderTarget({
             backend: 'svg',
             host: options.host,
             rendererFactory,
             immutableOptions: { backend: 'svg', idPrefix: options.idPrefix },
-            coreComputation: context.coreComputation,
             resolveReadonlyLayers: context.resolveReadonlyLayers,
+            configuration: () => createRenderConfig(current, currentHandlers, canvas),
             ...(lease === undefined ? {} : { rendererLease: lease }),
           })
-        : createRetainedRenderParticipant({
+        : createRetainedRenderTarget({
             backend: 'canvas',
             host: options.host,
             rendererFactory,
@@ -229,38 +219,25 @@ const createRenderParticipantFactory = (
               idPrefix: options.idPrefix,
               ...(options.devicePixelRatio === undefined ? {} : { devicePixelRatio: options.devicePixelRatio }),
             },
-            coreComputation: context.coreComputation,
             resolveReadonlyLayers: context.resolveReadonlyLayers,
+            configuration: () => createRenderConfig(current, currentHandlers, canvas),
             ...(lease === undefined ? {} : { rendererLease: lease }),
           });
     let current = Object.freeze({ ...initialState, runtimeMeta: context.initial.runtimeMeta });
     let currentHandlers = handlers();
 
-    const updateConfig = (
-      input: ProcessingParticipantUpdateInput,
-    ): ReadonlyArray<ReturnType<typeof createRuntimeSourceUpdate>> => {
+    const updateConfig = (input: ProcessingParticipantUpdateInput): void => {
       current =
         input.kind === 'source' ? Object.freeze({ ...state(), runtimeMeta: input.prepared.runtimeMeta }) : state();
       currentHandlers = handlers();
-
-      return Object.freeze([
-        createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, createRenderConfig(current, currentHandlers, canvas)),
-      ]);
     };
 
     return Object.freeze({
-      sources: Object.freeze([RenderRuntimeSourceDefinition]),
-      initialSnapshots: Object.freeze([
-        createRuntimeSourceInput(RenderRuntimeSourceDefinition, createRenderConfig(current, currentHandlers, canvas)),
-      ]),
-      participant: renderer.participant,
+      target: renderer.target,
       update: input => updateConfig(input),
-      connect: nextRuntime => {
+      connect: () => {
         lease = renderer.lease;
-        active = Object.freeze({
-          read: () => renderer.read(nextRuntime),
-          updateConfig,
-        });
+        active = Object.freeze({ read: () => renderer.read(), updateConfig });
       },
       updateParticipant: revision =>
         updateConfig({
@@ -278,7 +255,7 @@ const createRenderParticipantFactory = (
         throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'Vanilla DOM retained renderer is unavailable');
       return active.read();
     },
-    updateConfig: input => active?.updateConfig(input) ?? Object.freeze([]),
+    updateConfig: input => active?.updateConfig(input),
   });
 };
 
@@ -403,7 +380,7 @@ const createRetainedProcessingControllerImplementation = (
       });
     },
     dispose: processing.dispose,
-    diagnostics: processing.diagnostics as () => ReadonlyArray<RuntimeDiagnostic>,
+    diagnostics: processing.diagnostics as () => ReadonlyArray<ReconcilerDiagnostic>,
     read: () => render.read(),
     result: processing.read,
   });

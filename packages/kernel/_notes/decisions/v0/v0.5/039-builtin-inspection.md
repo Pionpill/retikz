@@ -79,7 +79,7 @@ type CompileObservationAncestor = Readonly<{
 | `CoordinateOwnerOutput` | `id: string`；`position: Position`                                                                                                                                                                                                                                                                                                 | 已完成引用/极坐标解析的 occurrence-local 点                                                                                                                                                   |
 | `ClipOwnerOutput`       | `path: SceneClipPath`                                                                                                                                                                                                                                                                                                              | 一次应用所在坐标系的最终 lowering 路径；不发布资源 id，不重新 resolve 或 lower                                                                                                                |
 
-Node 产物直接投影同次 settled layout，不通过 `artifacts.nodeLayouts` 开关取得，因此开启 Inspect 不改变 primary artifacts。既有 `CompiledNodeLayout` 的 world-space 摘要继续保持原语义；不得把它作为 occurrence-local 数据再乘一次 transform。
+Node 产物直接投影同次 settled layout，不通过 `artifacts.nodeLayouts` 开关取得，因此开启 Inspect 不改变 primary artifacts。既有 `NodeLayoutObservation` 的 world-space 摘要继续保持原语义；不得把它作为 occurrence-local 数据再乘一次 transform。
 
 Scope envelope 沿用 Core 的固有包络定义和 `boundingShape`，不是后代最终可见 primitive 的 union，也不是 Layout allocation。Path-only Scope 没有节点布局包络时不伪造包围框。Scope 层级检查表示最终逻辑容器层级，不是 renderer group 层级；没有可见 primitive 的 authored Scope 仍可观测。
 

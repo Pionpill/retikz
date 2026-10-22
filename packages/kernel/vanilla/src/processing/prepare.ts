@@ -16,6 +16,7 @@ import type {
 import { createEmptyInputRuntimeMetaSnapshot, isInputScene, normalizeScene } from '../normalize';
 import { createInputSceneTraversal } from '../normalize/scene';
 import { assertPreparationActive, prepareAuthoringContributions } from './authoring';
+import { createTextMeasurer } from './text-measurement';
 import type { PreparedProcessingInput, ProcessingOptions, ProcessingSource } from './types';
 import type { AsyncProcessingOptions } from './types';
 
@@ -44,6 +45,7 @@ const createInputEmbedThemeContextResolver = (
 const resolveCoreOptions = (
   compile: CompileOptions | undefined,
   contributions: Parameters<typeof resolveCoreProviderDependencies>[0]['contributions'],
+  defaultFontFamily?: string,
 ): CompileOptions<ReadonlyArray<AnyCompositeDefinition>> => {
   const resolved = resolveCoreProviderDependencies({
     contributions,
@@ -61,7 +63,11 @@ const resolveCoreOptions = (
             composites: compile.composites,
           },
   });
-  return Object.freeze({ ...compile, ...resolved });
+  return Object.freeze({
+    ...compile,
+    ...resolved,
+    measureText: createTextMeasurer(compile?.measureText, defaultFontFamily),
+  });
 };
 
 /** 将 typed InputScene 或已类型化 IRScene 准备为 processing 的唯一 Core 输入 */
@@ -84,6 +90,7 @@ export const prepareProcessingInput = (
             : { compositeInputs: createCompositeInputBindings(normalized.ir, normalized.runtimeInputs) }),
         },
         normalized.contributions,
+        options.defaultFontFamily,
       ),
       authoringSites: normalized.authoringSites,
       runtimeMeta: normalized.runtimeMeta,
@@ -92,7 +99,10 @@ export const prepareProcessingInput = (
 
   return Object.freeze({
     source,
-    coreOptions: Object.freeze({ ...(options.compile ?? {}) }),
+    coreOptions: Object.freeze({
+      ...options.compile,
+      measureText: createTextMeasurer(options.compile?.measureText, options.defaultFontFamily),
+    }),
     authoringSites: EMPTY_AUTHORING_SITES,
     runtimeMeta: createEmptyInputRuntimeMetaSnapshot(),
   });
@@ -126,6 +136,7 @@ export const prepareProcessingInputAsync = async (
           : { compositeInputs: createCompositeInputBindings(normalized.ir, normalized.runtimeInputs) }),
       },
       normalized.contributions,
+      options.defaultFontFamily,
     ),
     authoringSites: normalized.authoringSites,
     runtimeMeta: normalized.runtimeMeta,

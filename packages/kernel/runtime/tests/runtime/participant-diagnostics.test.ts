@@ -11,7 +11,7 @@ import {
   PerformanceTraceOutcome,
   RetikzRuntimeError,
   RetikzRuntimeErrorCode,
-  RuntimeDiagnosticCode,
+  BuiltinRuntimeDiagnosticCode,
 } from '../../src';
 import { getRuntimeTraceReporterDiagnosticDrainCount } from '../../src/trace/internal';
 
@@ -81,7 +81,7 @@ describe('runtime runtime participant diagnostics', () => {
     expect(diagnostics[0]?.phase).toBe('trace');
     expect(diagnostics[0]?.message).toContain('backend-reconcile');
     expect(diagnostics.map(diagnostic => diagnostic.code)).toEqual([
-      RuntimeDiagnosticCode.TraceSinkFailed,
+      BuiltinRuntimeDiagnosticCode.TraceSinkFailed,
       'RENDER_FALLBACK',
     ]);
 
@@ -128,7 +128,7 @@ describe('runtime runtime participant diagnostics', () => {
 
     const diagnostics = runtime.diagnostics();
     expect(diagnostics.map(diagnostic => diagnostic.code)).toEqual([
-      RuntimeDiagnosticCode.ParticipantDiagnosticInvalid,
+      BuiltinRuntimeDiagnosticCode.ParticipantDiagnosticInvalid,
       'VALID',
     ]);
     expect(diagnostics[0]?.cause).toBe(getterCause);
@@ -182,7 +182,7 @@ describe('runtime runtime participant diagnostics', () => {
       expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantPrepareFailed, cause: trigger }),
     );
     expect((thrown as { diagnostics: ReadonlyArray<RuntimeDiagnostic> }).diagnostics.map(item => item.code)).toEqual([
-      RuntimeDiagnosticCode.TraceInvalidRecord,
+      BuiltinRuntimeDiagnosticCode.TraceInvalidRecord,
       'ATTEMPTED',
     ]);
   });

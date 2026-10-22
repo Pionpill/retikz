@@ -10,7 +10,7 @@ import type {
 import {
   ChildSchema,
   compileToScene,
-  CompileWarningCode,
+  BuiltinCompileWarningCode,
   CompositeBaseSchema,
   defineComposite,
   LayoutAxisProposalKind,
@@ -814,7 +814,7 @@ describe('Legend items compile contract', () => {
     const label = artifact.items[0].label;
     if (label === null) throw new Error('Expected label artifact');
 
-    expect(warnings.filter(warning => warning.code === CompileWarningCode.DuplicateNodeId)).toHaveLength(1);
+    expect(warnings.filter(warning => warning.code === BuiltinCompileWarningCode.DuplicateNodeId)).toHaveLength(1);
 
     const path = output.scene.primitives.find(primitive => primitive.type === 'path');
 

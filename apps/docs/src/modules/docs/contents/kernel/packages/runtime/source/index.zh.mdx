@@ -244,7 +244,7 @@ Source Token 只关联规则。同一个 Token 可以交给多个 Runtime，每�
 
 ## Core 应用
 
-Core 将整份 Scene IR（图文档的结构化描述）作为一个 Source，而不是为每个节点分别创建 Source。它在模块加载时定义一次 `CoreSourceDefinition`，后续初始化、更新和编译都复用这个 Token。下面摘录来源定义，省略导入与类型声明：
+Reconciler 将整份 Scene IR（图文档的结构化描述）作为一个 Source，而不是为每个节点分别创建 Source。它在模块加载时定义一次 `CoreSourceDefinition`，后续初始化、更新和编译都复用这个 Token。下面摘录来源定义，省略导入与类型声明：
 
 ```ts
 export const CoreSourceDefinition = defineRuntimeSource({
@@ -272,8 +272,8 @@ Token 标识的是来源定义，不保存具体文档；多个 Runtime 可以�
 
 <SourceLinks
   sources={[
-    { label: 'Core 文档来源定义', path: 'packages/kernel/core/src/contract/runtime/source.ts' },
-    { label: 'Core 编译计算读取来源', path: 'packages/kernel/core/src/compile/incremental/computation.ts' },
+    { label: 'Core 文档来源定义', path: 'packages/kernel/reconciler/src/runtime/source.ts' },
+    { label: 'Core 编译计算读取来源', path: 'packages/kernel/reconciler/src/runtime/computation.ts' },
   ]}
 />
 

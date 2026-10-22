@@ -2,7 +2,6 @@ import { Layout, Path, Step } from '@retikz/react';
 
 /** 图形参数 */
 export type PathStylePreviewValues = {
-  thickness: 'thin' | 'semithick' | 'thick' | 'veryThick' | 'custom';
   stroke: string;
   strokeWidth: number;
   dashed: boolean;
@@ -15,15 +14,12 @@ export type PathStylePreviewValues = {
 
 /** 绘制示例图形 */
 export const PathStylePreview = (values: PathStylePreviewValues) => {
-  const thickness = values.thickness === 'custom' ? undefined : values.thickness;
-
   return (
     <Layout viewBox={{ x: -220, y: -120, width: 440, height: 240 }}>
       <Path
-        thickness={thickness}
         style={{
           stroke: values.stroke,
-          ...(values.thickness === 'custom' ? { strokeWidth: values.strokeWidth } : {}),
+          strokeWidth: values.strokeWidth,
           ...(values.dashed ? { dashPattern: [18, 10] } : {}),
           dashOffset: values.dashOffset,
           lineCap: values.lineCap,

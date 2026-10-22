@@ -79,7 +79,7 @@ export const createPreviewControlContract = (lang: Lang) =>
   ({
     controls: createControls(lang),
     canonicalValues: { route: 'line', side: 'center', position: 0.5 },
-    relatedApis: ['Path.label', 'Step.kind', 'IRGeometryLabel.side', 'IRGeometryLabel.position'],
+    relatedApis: ['Path.label', 'Step.kind', 'IRPathLabel.side', 'IRPathLabel.position'],
   }) satisfies PreviewControlContract;
 
 /** 默认中文预览契约 */

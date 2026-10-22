@@ -1,11 +1,12 @@
 import type { IRNode, IRPath, IRScope, IRShapeValue } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
+import { markChannelEncoding, channelField } from '../../../src/contract';
 import type { AnyChannelDefinition } from '../../../src/contract';
 import { ChannelDefinitionKind, defineNodeChannel, definePathChannel, defineScopeChannel } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
-import type { IRPlot } from '../../../src/schemas';
+import type { IRPlot, IRPlotChannel } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
@@ -14,20 +15,16 @@ import { measureLabel } from '../../helpers/text-measurement';
  * 与内置通道共享 channel registry / delivery
  */
 
-const extensionChannelsOf = (mark: {
-  encoding?: { channels?: Partial<Record<string, { field?: string; value?: unknown }>> };
-}): Partial<Record<string, { field?: string; value?: unknown }>> => mark.encoding?.channels ?? {};
-
 /** 自定义 intensity 通道：score 字段线性映射到 [0.3, 1]，落到 node.opacity */
 const intensityChannel = defineNodeChannel<number>({
   channel: 'intensity',
   output: { outputKind: 'number', range: [0.3, 1] },
   legend: 'ramp',
   resolve: (ctx, mark) => {
-    const binding = extensionChannelsOf(mark).intensity;
-    if (binding?.field === undefined) return undefined;
+    const binding = markChannelEncoding(mark, 'intensity');
+    if (binding === undefined) return undefined;
 
-    const field = binding.field;
+    const field = channelField(binding);
     const valueOf = (row: Record<string, unknown>): number => Number(row[field]);
     const nums = ctx.rows.map(row => valueOf(row)).filter(Number.isFinite);
     const lo = Math.min(...nums);
@@ -60,10 +57,10 @@ const categoryColorChannel = defineNodeChannel<string>({
   output: { outputKind: 'color' },
   legend: 'swatch',
   resolve: (ctx, mark) => {
-    const binding = extensionChannelsOf(mark).categoryColor;
-    if (binding?.field === undefined) return undefined;
+    const binding = markChannelEncoding(mark, 'categoryColor');
+    if (binding === undefined) return undefined;
 
-    const field = binding.field;
+    const field = channelField(binding);
     const domain = [...new Set(ctx.rows.map(row => String(row[field])))];
     const range = ['#dc2626', '#2563eb'];
     const colorByCategory = new Map(domain.map((category, index) => [category, range[index]] as const));
@@ -91,10 +88,10 @@ const symbolLegendChannel = defineNodeChannel<IRShapeValue>({
   output: { outputKind: 'symbol', palette: ['circle', 'diamond'] },
   legend: 'symbol',
   resolve: (ctx, mark) => {
-    const binding = extensionChannelsOf(mark).symbolCode;
-    if (binding?.field === undefined) return undefined;
+    const binding = markChannelEncoding(mark, 'symbolCode');
+    if (binding === undefined) return undefined;
 
-    const field = binding.field;
+    const field = channelField(binding);
     const domain = [...new Set(ctx.rows.map(row => String(row[field])))];
     const shapes: Array<IRShapeValue> = ['circle', 'diamond'];
     const shapeByCategory = new Map(
@@ -121,10 +118,10 @@ const symbolLegendChannel = defineNodeChannel<IRShapeValue>({
 const scopeTintChannel = defineScopeChannel<string>({
   channel: 'scopeTint',
   output: { outputKind: 'color' },
-  resolve: (_ctx, mark) => {
-    const binding = extensionChannelsOf(mark).scopeTint;
-    if (binding?.value === undefined) return undefined;
-    return { value: String(binding.value) };
+  resolve: (ctx, mark) => {
+    const binding = markChannelEncoding(mark, 'scopeTint');
+    if (binding === undefined) return undefined;
+    return { value: String(ctx.rows[0]?.[channelField(binding)]) };
   },
   deliver: (scope, value) => {
     scope.defaults = {
@@ -138,10 +135,10 @@ const lineWeightChannel = definePathChannel<number>({
   channel: 'lineWeight',
   output: { outputKind: 'number', range: [1, 6] },
   resolve: (_ctx, mark) => {
-    const binding = extensionChannelsOf(mark).lineWeight;
-    if (binding?.field === undefined) return undefined;
+    const binding = markChannelEncoding(mark, 'lineWeight');
+    if (binding === undefined) return undefined;
 
-    const field = binding.field;
+    const field = channelField(binding);
 
     return {
       resolver: row => {
@@ -160,7 +157,7 @@ const opts = (defs?: Array<AnyChannelDefinition>): LowerPlotsOptions => ({
   definitions: { channels: defs },
 });
 
-const scatterSpec = (channels?: Record<string, unknown>): IRPlot =>
+const scatterSpec = (channels?: Record<string, IRPlotChannel>): IRPlot =>
   PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -170,7 +167,7 @@ const scatterSpec = (channels?: Record<string, unknown>): IRPlot =>
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, ...(channels ? { channels } : {}) } }],
+    marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } }, ...channels } }],
   });
 
 const nodesOf = (scope: IRScope): Array<IRNode> => {
@@ -246,7 +243,7 @@ describe('custom node channel registry', () => {
 
   // Happy path：score 0/5/10 → opacity 0.3 / 0.65 / 1.0，落到各 node
   it('custom_intensity_delivers_to_node_opacity', () => {
-    const spec = scatterSpec({ intensity: { field: 'score' } });
+    const spec = scatterSpec({ intensity: 'score' });
     const nodes = nodesOf(firstLayer(spec, { d: rows }, opts([intensityChannel])));
     const opacities = nodes.map(n => n.style?.opacity ?? NaN);
 
@@ -265,7 +262,7 @@ describe('custom node channel registry', () => {
 
   // 错误路径：encoding.channels 写了通道名，但没有对应 definition → fail-loud
   it('channels_binding_without_registered_def_fails_loud', () => {
-    const spec = scatterSpec({ intensity: { field: 'score' } });
+    const spec = scatterSpec({ intensity: 'score' });
 
     expect(() => firstLayer(spec, { d: rows }, opts())).toThrow(/channel "intensity" is not registered/);
   });
@@ -336,8 +333,7 @@ describe('custom node channel registry', () => {
       marks: [
         {
           type: 'point',
-          size: { kind: 'field', value: 'score' },
-          encoding: { x: { field: 'x' }, y: { field: 'y' }, channels: { intensity: { field: 'score' } } },
+          encodings: { size: 'score', intensity: 'score', position: { x: { field: 'x' }, y: { field: 'y' } } },
         },
       ],
     });
@@ -348,8 +344,8 @@ describe('custom node channel registry', () => {
   });
 
   it('custom_scope_channel_delivers_to_layer_node_default', () => {
-    const spec = scatterSpec({ scopeTint: { value: '#f66' } });
-    const layer = firstLayer(spec, { d: rows }, opts([scopeTintChannel]));
+    const spec = scatterSpec({ scopeTint: 'tint' });
+    const layer = firstLayer(spec, { d: rows.map(row => ({ ...row, tint: '#f66' })) }, opts([scopeTintChannel]));
 
     expect(layer.defaults?.node?.style?.fill).toBe('#f66');
   });
@@ -365,10 +361,7 @@ describe('custom node channel registry', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        {
-          type: 'path',
-          encoding: { x: { field: 'x' }, y: { field: 'y' }, channels: { lineWeight: { field: 'weight' } } },
-        },
+        { type: 'path', encodings: { lineWeight: 'weight', position: { x: { field: 'x' }, y: { field: 'y' } } } },
       ],
     });
     const layer = firstLayer(
@@ -396,12 +389,7 @@ describe('custom node channel registry', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [
-        {
-          type: 'point',
-          encoding: { x: { field: 'x' }, y: { field: 'y' }, channels: { intensity: { field: 'score' } } },
-        },
-      ],
+      marks: [{ type: 'point', encodings: { intensity: 'score', position: { x: { field: 'x' }, y: { field: 'y' } } } }],
       guides: [{ type: 'legend', channel: 'intensity' }],
     });
     const root = expandOf(spec, { d: rows }, opts([intensityChannel]));
@@ -436,10 +424,7 @@ describe('custom node channel registry', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        {
-          type: 'point',
-          encoding: { x: { field: 'x' }, y: { field: 'y' }, channels: { categoryColor: { field: 'tone' } } },
-        },
+        { type: 'point', encodings: { categoryColor: 'tone', position: { x: { field: 'x' }, y: { field: 'y' } } } },
       ],
       guides: [{ type: 'legend', channel: 'categoryColor' }],
     });
@@ -463,7 +448,7 @@ describe('custom node channel registry', () => {
       { x: 1, y: 1, kind: 'B' },
     ];
     const spec = PlotSchema.parse({
-      ...scatterSpec({ symbolCode: { field: 'kind' } }),
+      ...scatterSpec({ symbolCode: 'kind' }),
       guides: [{ type: 'legend', channel: 'symbolCode' }],
     });
     const root = expandOf(spec, { d: symbolRows }, opts([symbolLegendChannel]));
@@ -485,10 +470,10 @@ describe('custom node channel registry', () => {
       output: { outputKind: 'number', range: [1, 2] },
       legend: 'symbol',
       resolve: (ctx, mark) => {
-        const binding = extensionChannelsOf(mark).invalidSymbol;
-        if (binding?.field === undefined) return undefined;
+        const binding = markChannelEncoding(mark, 'invalidSymbol');
+        if (binding === undefined) return undefined;
 
-        const field = binding.field;
+        const field = channelField(binding);
 
         return {
           resolver: row => Number(row[field]),
@@ -507,7 +492,7 @@ describe('custom node channel registry', () => {
       },
     });
     const spec = PlotSchema.parse({
-      ...scatterSpec({ invalidSymbol: { field: 'score' } }),
+      ...scatterSpec({ invalidSymbol: 'score' }),
       guides: [{ type: 'legend', channel: 'invalidSymbol' }],
     });
 
@@ -518,10 +503,10 @@ describe('custom node channel registry', () => {
 
   // JSON round-trip：encoding.channels 进 IR 不丢
   it('encoding_channels_survives_json_roundtrip', () => {
-    const spec = scatterSpec({ intensity: { field: 'score' } });
+    const spec = scatterSpec({ intensity: 'score' });
     const back = PlotSchema.parse(JSON.parse(JSON.stringify(spec)));
-    const mark = back.marks[0] as { encoding: { channels?: Record<string, unknown> } };
+    const mark = back.marks[0];
 
-    expect(mark.encoding.channels).toEqual({ intensity: { field: 'score' } });
+    expect(mark.encodings?.intensity).toEqual('score');
   });
 });

@@ -438,7 +438,6 @@ const inputNodeFromProps = (props: NodeProps): InputNode => {
 const inputPathFromProps = (props: PathProps): InputPath => {
   const isDirectPath =
     props.authoring === undefined &&
-    props.thickness === undefined &&
     props.arrow === undefined &&
     props.arrowDetail === undefined &&
     props.arrowPlacement === undefined &&
@@ -448,7 +447,6 @@ const inputPathFromProps = (props: PathProps): InputPath => {
     ...(isDirectPath ? { type: 'path' as const } : {}),
     ...pickDefined(props, PATH_FIELDS),
     ...(props.authoring === undefined ? {} : { authoring: props.authoring }),
-    ...(props.thickness === undefined ? {} : { thickness: props.thickness }),
     ...(props.arrow === undefined ? {} : { arrow: props.arrow }),
     ...(props.arrowDetail === undefined ? {} : { arrowDetail: props.arrowDetail }),
     ...(props.arrowPlacement === undefined ? {} : { arrowPlacement: props.arrowPlacement }),

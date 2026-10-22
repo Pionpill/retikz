@@ -14,7 +14,6 @@ import type { CoordinateDomainPaddingCapability } from '../domain-padding';
 import type { GuideContext, LoweredGuide } from '../guide';
 import type { ProvenanceContext } from '../provenance';
 import type { PositionScale, PositionScaleContinuity, TickSet } from '../scale';
-import type { Cell, CellGeometry } from './cell';
 import type { CoordinateFrame, DimensionRole } from './types';
 
 /** 坐标系解析后可用的绘图区矩形，单位是最终画布坐标 */
@@ -242,7 +241,9 @@ export type CreateCoordinateFrameOptions = {
   /** 映射后角色递增的屏幕切向；提供时必须同时提供两段投影 */
   tangentAt?: CoordinateFrame['tangentAt'];
   /** 正交 cell → CellGeometry；实现了才支持 cell 类 mark（interval / sector），省略 → cell 类 mark fail-loud */
-  projectCell?: (cell: Cell) => CellGeometry;
+  projectCell?: CoordinateFrame['projectCell'];
+  /** 映射后的角色端点沿坐标几何连接 */
+  projectSegment?: CoordinateFrame['projectSegment'];
   /** 原始角色值经 position scale 映射；支持 role-space placement 时与 projectMappedRoles 一起提供 */
   mapRoles?: (values: ReadonlyArray<unknown>) => ReadonlyArray<number> | null;
   /** 已映射角色值投影到屏幕；支持 role-space placement 时与 mapRoles 一起提供 */
@@ -256,7 +257,7 @@ export type CreateCoordinateFrameOptions = {
  * @description 把 definition 注册 type、roles 与 projectRoles 包成 CoordinateFrame。`type` 会保留调用方注册的真实判别值，
  *   不会压成 `custom`；point/path/region 等按 `projectRoles` 投影。第四参 options 逐项声明额外能力：
  *   roleScales 允许 guide / interval 构造读取 scale，mapRoles / projectMappedRoles 开启两段 position projection，
- *   placementBoundary 开启 role-space containment，tangentAt 提供局部切向，projectCell 开启 cell 类 mark。
+ *   placementBoundary 开启 role-space containment，tangentAt 提供局部切向，projectSegment 提供坐标路径，projectCell 开启 cell 类 mark。
  *   supportsPlotArea 默认开启，可显式设为 false；其它未声明的能力保持不可用并由消费方 fail-loud
  */
 export const createCoordinateFrame = (
@@ -275,6 +276,7 @@ export const createCoordinateFrame = (
   ...(options?.projectMappedRoles !== undefined ? { projectMappedRoles: options.projectMappedRoles } : {}),
   ...(options?.placementBoundary !== undefined ? { placementBoundary: options.placementBoundary } : {}),
   ...(options?.tangentAt !== undefined ? { tangentAt: options.tangentAt } : {}),
+  ...(options?.projectSegment !== undefined ? { projectSegment: options.projectSegment } : {}),
   ...(options?.projectCell !== undefined ? { projectCell: options.projectCell } : {}),
 });
 

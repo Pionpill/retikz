@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  DrawableInstanceSchema,
-  DrawableStyleSchema,
-  GeometryLabelSchema,
-  PathSchema,
-  StepLabelSchema,
-} from '../../src';
+import { DrawableInstanceSchema, DrawableStyleSchema, PathLabelSchema, PathSchema, StepLabelSchema } from '../../src';
 
 const steps = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -85,19 +79,19 @@ describe('Drawable shared schema', () => {
     });
   });
 
-  it('reuses geometry labels for step labels and path host labels', () => {
+  it('reuses path labels for step labels and path host labels', () => {
     const label = { text: '128', position: 0.75, placement: 'inside', sloped: true };
 
     expect(StepLabelSchema.parse(label)).toEqual(label);
     expect(PathSchema.parse(path({ label })).label).toEqual(label);
-    expect(StepLabelSchema).toBe(GeometryLabelSchema);
+    expect(StepLabelSchema).toBe(PathLabelSchema);
   });
 
   it('keeps edge label sides canonical and rejects parser sugar aliases', () => {
-    expect(GeometryLabelSchema.parse({ text: 'x', side: 'top' })).toMatchObject({ side: 'top' });
-    expect(GeometryLabelSchema.parse({ text: 'x', side: 'bottom' })).toMatchObject({ side: 'bottom' });
-    expect(() => GeometryLabelSchema.parse({ text: 'x', side: 'north' })).toThrow();
-    expect(() => GeometryLabelSchema.parse({ text: 'x', side: 'above' })).toThrow();
+    expect(PathLabelSchema.parse({ text: 'x', side: 'top' })).toMatchObject({ side: 'top' });
+    expect(PathLabelSchema.parse({ text: 'x', side: 'bottom' })).toMatchObject({ side: 'bottom' });
+    expect(() => PathLabelSchema.parse({ text: 'x', side: 'north' })).toThrow();
+    expect(() => PathLabelSchema.parse({ text: 'x', side: 'above' })).toThrow();
   });
 
   it('rejects unknown fields nested in kind options only when the custom schema rejects them', () => {

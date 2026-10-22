@@ -1,6 +1,5 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
 import { RetikzRenderError, RetikzRenderErrorCode } from '@retikz/render/runtime';
-import { defineRuntimeSource } from '@retikz/runtime';
 
 type CompositeSlot = {
   /** 当前 transaction 可见的 composite Definition */
@@ -34,19 +33,6 @@ const invalidDefinitions = (cause: unknown): never => {
     message: 'Vanilla retained processing must preserve composite definition keys, schemas, and execution branches',
   });
 };
-
-/** Vanilla composite callback revision 的内部 owner */
-export const VanillaCompositeRevisionSourceDefinition = defineRuntimeSource<number, number, number, never>({
-  key: '@retikz/vanilla:composite-revision',
-  value: {
-    capture: value => {
-      if (!Number.isSafeInteger(value) || value < 0) return invalidDefinitions(value);
-      return value;
-    },
-    read: value => value,
-    equals: Object.is,
-  },
-});
 
 /** 用稳定 callback 包装 normalization 每轮生成的 composite definition */
 const createCompositeDelegate = (initial: AnyCompositeDefinition, slot: CompositeSlot): AnyCompositeDefinition => {

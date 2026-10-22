@@ -2,7 +2,7 @@
 
 **组件属性**
 
-#### <ApiSourceLink label={"IntervalMarkProps"} path={"packages/viz/plot-react/src/components/marks.tsx"} startLine={17}>IntervalMarkProps</ApiSourceLink>
+#### <ApiSourceLink label={"IntervalMarkProps"} path={"packages/viz/plot-react/src/components/marks.tsx"} startLine={16}>IntervalMarkProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -10,56 +10,32 @@
 
 <ApiTable grouped>
 
-| 分组 | 成员              | 类型                                                                          | 默认值 | 说明                                                                                                                      |
-| ---- | ----------------- | ----------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
-| 主要 | `anchorId?`       | `IRPlotAnchorId`                                                              | —      | 为区间数据目标生成可引用锚点的命名规则                                                                                    |
-|      | `id?`             | `string`                                                                      | —      | 可选 mark 句柄（预留 scope/anchor）                                                                                       |
-|      | `label?`          | `InputPlotNodeLabel \| Array<InputPlotNodeLabel>`                             | —      | 单个或有序多个标签；字符串为字段名                                                                                        |
-| 数据 | `angle?`          | `InputPlotFieldName`                                                          | —      | polar 饼图 / 环图的份额值字段；设置后自动累积成角界（extent×full bounds），下沉为扇区                                     |
-|      | `arrangement?`    | `'dodge' \| 'stack' \| 'normalize-stack'`                                     | —      | 多系列区间的并排、堆叠或百分比堆叠策略                                                                                    |
-|      | `color?`          | `InputPlotFieldName`                                                          | —      | 颜色字段（→ color 通道 + 自动色 scale）；缺省取 series                                                                    |
-|      | `group?`          | `InputPlotFieldName`                                                          | —      | 多系列排布的分组字段，供 dodge / stack / normalize-stack 使用                                                             |
-|      | `percent?`        | `boolean`                                                                     | —      | 百分比堆叠简写，等价于 arrangement="normalize-stack"                                                                      |
-|      | `series?`         | `InputPlotFieldName`                                                          | —      | 系列字段：拆成多组 / 多系列柱；缺省单系列                                                                                 |
-|      | `stack?`          | `boolean`                                                                     | —      | 多系列时是否堆叠（true=stack，自动 stack transform + bounds.y=extent）；否则并排（dodge，bounds.x=band&#123;group&#125;） |
-|      | `stackOffset?`    | `'zero' \| 'normalize' \| 'diverging' \| 'center' \| 'overlap'`               | —      | arrangement="stack" 使用的堆叠基线策略                                                                                    |
-|      | `transform?`      | `Array<IRDataTransformDeclaration>`                                           | —      | 只作用于当前 mark 数据视图的变换链                                                                                        |
-|      | `width?`          | `InputPlotFieldName`                                                          | —      | 比例区间宽度字段；按行顺序推导连续区间                                                                                    |
-|      | `x?`              | `InputPlotFieldName`                                                          | —      | 绑 x 位置通道的字段路径（分类，自动 band scale；polar 下作角向类别）；直方连续 x 用 x0/x1 取代                            |
-|      | `x0?`             | `InputPlotFieldName`                                                          | —      | 直方连续 x 区间下界字段（如 bin 的 binStart）；与 x1 配对 → bounds.x = extent(x0,x1)                                      |
-|      | `x1?`             | `InputPlotFieldName`                                                          | —      | 直方连续 x 区间上界字段（如 bin 的 binEnd）；与 x0 配对                                                                   |
-|      | `y?`              | `InputPlotFieldName`                                                          | —      | 绑 y 位置通道的字段路径（数值；polar 下作径向值；直方下作箱高度 binCount 或自定义 metric 字段）                           |
-| 几何 | `boundary?`       | `InputPlotMarkValueProp<IRBoundary> \| IRPlotNodeBoundaryStyle`               | —      | 节点边界策略                                                                                                              |
-|      | `bounds?`         | `IRPlotIntervalBounds`                                                        | —      | 显式 per-role 区间来源（高级 / heatmap 双 band）：给定则直接落 IR bounds，便捷 props 之外的逃生舱                         |
-|      | `coordinateView?` | `string`                                                                      | —      | 直接绑定的坐标视图 id                                                                                                     |
-|      | `cornerRadius?`   | `InputPlotMarkValueProp<number> \| IRPlotPointNonnegativeNumberStyle`         | —      | 节点圆角半径                                                                                                              |
-|      | `direction?`      | `'vertical' \| 'horizontal'`                                                  | —      | 柱方向；horizontal 会把 x 当作数值、y 当作类别                                                                            |
-|      | `facetId?`        | `string`                                                                      | —      | 分面声明 id；构建 IRPlot 时展开为对应坐标视图                                                                             |
-|      | `interpolation?`  | `PolarInterpolation`                                                          | —      | Polar2D cell 边界局部覆盖；省略时继承坐标系                                                                               |
-|      | `margin?`         | `InputPlotMarkValueProp<number \| IRBoxSpacing> \| IRPlotNodeBoxSpacingStyle` | —      | 节点外边距                                                                                                                |
-|      | `padAngle?`       | `number`                                                                      | —      | 极坐标 cell 之间的角度间隔，先于 sector 或 chord contour 投影应用                                                         |
-|      | `padding?`        | `InputPlotMarkValueProp<number \| IRBoxSpacing> \| IRPlotNodeBoxSpacingStyle` | —      | 节点内边距                                                                                                                |
-|      | `pull?`           | `InputPlotMarkValueProp<number> \| IRPlotPointNonnegativeNumberStyle`         | —      | 极坐标 cell 沿中角方向的静态视觉偏移                                                                                      |
-|      | `scale?`          | `InputPlotMarkValueProp<number \| IRAxisScale> \| IRPlotNodeAxisScaleStyle`   | —      | 节点缩放值或轴向缩放配置                                                                                                  |
-|      | `trackId?`        | `string`                                                                      | —      | 共享轨道 id；构建 IRPlot 时展开为对应坐标视图                                                                             |
-|      | `xAxisId?`        | `string`                                                                      | —      | 适配器专用糖：把图元绑定到命名 x 轴；输出 IRPlot 前会展开为 `coordinateView`                                              |
-|      | `yAxisId?`        | `string`                                                                      | —      | 适配器专用糖：把图元绑定到命名 y 轴；输出 IRPlot 前会展开为 `coordinateView`                                              |
-| 样式 | `align?`          | `InputPlotMarkValueProp<NodeTextAlign> \| IRPlotNodeTextAlignStyle`           | —      | 文本水平对齐方式                                                                                                          |
-|      | `blendMode?`      | `InputPlotMarkValueProp<BlendMode> \| IRPlotBlendModeStyle`                   | —      | 节点混合模式                                                                                                              |
-|      | `dashed?`         | `InputPlotMarkValueProp<boolean> \| IRPlotNodeBooleanStyle`                   | —      | 是否使用虚线描边                                                                                                          |
-|      | `dashPattern?`    | `InputPlotMarkValueProp<Array<number>> \| IRPlotNodeDashPatternStyle`         | —      | 自定义描边间隔                                                                                                            |
-|      | `dotted?`         | `InputPlotMarkValueProp<boolean> \| IRPlotNodeBooleanStyle`                   | —      | 是否使用点线描边                                                                                                          |
-|      | `fill?`           | `InputPlotFieldName \| IRPaint \| IRPlotPointFillStyle`                       | —      | 区间图元填充的字段、常量或绘制资源输入                                                                                    |
-|      | `font?`           | `InputPlotMarkValueProp<IRFont> \| IRPlotNodeFontStyle`                       | —      | 字体配置                                                                                                                  |
-|      | `layer?`          | `IRPlotLayer`                                                                 | —      | 语义图层覆盖；控制该 mark 外层 scope 在 plot 内的 zIndex                                                                  |
-|      | `lineHeight?`     | `InputPlotMarkValueProp<number> \| IRPlotNodePositiveNumberStyle`             | —      | 文本行高                                                                                                                  |
-|      | `maxTextWidth?`   | `InputPlotMarkValueProp<number> \| IRPlotNodePositiveNumberStyle`             | —      | 文本最大宽度                                                                                                              |
-|      | `opacity?`        | `InputPlotOpacity`                                                            | —      | 区间整体透明度的常量或数据映射                                                                                            |
-|      | `shadow?`         | `InputPlotMarkValueProp<ShadowPreset \| IRDropShadow> \| IRPlotShadowStyle`   | —      | 节点阴影                                                                                                                  |
-|      | `stroke?`         | `InputPlotFieldName \| IRPaint \| IRPlotPointStrokeStyle`                     | —      | 区间图元描边的字段、常量或绘制资源输入                                                                                    |
-|      | `strokeWidth?`    | `InputPlotMarkValueProp<number> \| IRPlotPointStrokeWidthStyle`               | —      | 区间描边宽度的常量或数据映射                                                                                              |
-| 回调 | `resolveLabel?`   | `(row: ExternalRow) => string`                                                | —      | 运行时文字回调，优先于标签内容；需配 mark id，不进入 IR                                                                   |
-| 扩展 | `channels?`       | `Record<string, InputPlotExtensionChannel>`                                   | —      | 扩展通道绑定，字符串值按字段名处理                                                                                        |
+| 分组 | 成员                  | 类型                                                            | 默认值 | 说明                         |
+| ---- | --------------------- | --------------------------------------------------------------- | ------ | ---------------------------- |
+| 主要 | `id?`                 | `string`                                                        | —      | —                            |
+| 数据 | `angle?`              | `string`                                                        | —      | 饼环份额字段，展开为累积区间 |
+|      | `arrangement?`        | `'dodge' \| 'stack' \| 'normalize-stack'`                       | —      | 多系列排布方式               |
+|      | `contributeToDomain?` | `false \| true`                                                 | —      | —                            |
+|      | `encodings?`          | `InputPlotIntervalMark['encodings']`                            | —      | —                            |
+|      | `group?`              | `string`                                                        | —      | 排布使用的分组字段           |
+|      | `percent?`            | `boolean`                                                       | —      | 百分比堆叠简写               |
+|      | `stack?`              | `boolean`                                                       | —      | 堆叠简写                     |
+|      | `stackOffset?`        | `'zero' \| 'normalize' \| 'diverging' \| 'center' \| 'overlap'` | —      | 堆叠基线算法                 |
+|      | `transforms?`         | `InputPlotIntervalMark['transforms']`                           | —      | —                            |
+|      | `width?`              | `string`                                                        | —      | 比例区间权重字段             |
+|      | `x0?`                 | `string`                                                        | —      | 直方区间起点字段             |
+|      | `x1?`                 | `string`                                                        | —      | 直方区间终点字段             |
+| 几何 | `coordinateView?`     | `string`                                                        | —      | —                            |
+|      | `direction?`          | `'vertical' \| 'horizontal'`                                    | —      | 柱方向                       |
+|      | `properties?`         | `InputPlotIntervalMark['properties']`                           | —      | —                            |
+|      | `xAxisId?`            | `string`                                                        | —      | —                            |
+|      | `yAxisId?`            | `string`                                                        | —      | —                            |
+| 布局 | `facetId?`            | `string`                                                        | —      | —                            |
+|      | `trackId?`            | `string`                                                        | —      | —                            |
+| 样式 | `defaultColorGroup?`  | `string`                                                        | —      | —                            |
+|      | `defaultColorIndex?`  | `number`                                                        | —      | —                            |
+|      | `layer?`              | `{ zIndex?: number \| undefined; }`                             | —      | —                            |
+| 回调 | `resolveLabel?`       | `(row: ExternalRow) => string`                                  | —      | —                            |
 
 </ApiTable>
 
@@ -75,7 +51,7 @@ export type IntervalMarkProps = InputPlotIntervalMark;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRPlotIntervalMark"} path={"packages/viz/plot/src/schemas/mark/types.ts"} startLine={150}>IRPlotIntervalMark</ApiSourceLink> / <ApiSourceLink label={"IntervalMarkSchema"} path={"packages/viz/plot/src/schemas/mark/schema.ts"} startLine={892}>IntervalMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPlotIntervalMark"} path={"packages/viz/plot/src/schemas/mark/interval.ts"} startLine={153}>IRPlotIntervalMark</ApiSourceLink> / <ApiSourceLink label={"IntervalMarkSchema"} path={"packages/viz/plot/src/schemas/mark/interval.ts"} startLine={134}>IntervalMarkSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 

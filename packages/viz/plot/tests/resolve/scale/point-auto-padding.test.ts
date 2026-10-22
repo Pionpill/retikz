@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
-import { PlotSchema, PointAutoPaddingSchema, PointMarkSchema } from '../../../src/schemas';
+import type { IRPlotPointMark } from '../../../src/schemas';
+import { PlotSchema, PointAutoPaddingSchema, PointPropertiesSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
 const rows = [
@@ -21,9 +22,8 @@ const resolveFrame = (autoPadding?: unknown, domainPadding?: unknown) => {
     marks: [
       {
         type: 'point',
-        size: { kind: 'constant', value: 10 },
-        autoPadding,
-        encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+        properties: { size: 10, autoPadding },
       },
     ],
   });
@@ -60,12 +60,11 @@ describe('Point 自动留白', () => {
       ).dataArtifact.frameByCoordinateScopeId.values(),
     ];
   };
-  const point = (size: number, autoPadding: unknown = 'max-radius', extra = {}) => ({
+  const point = (size: number, autoPadding: unknown = 'max-radius', extra: Partial<IRPlotPointMark> = {}) => ({
     type: 'point',
-    size: { kind: 'constant', value: size },
-    autoPadding,
-    encoding: { x: { field: 'x' }, y: { field: 'y' } },
     ...extra,
+    encodings: { position: { x: { field: 'x' }, y: { field: 'y' } }, ...extra.encodings },
+    properties: { size, autoPadding, ...extra.properties },
   });
 
   it('混合策略按各端最大需求求解，匿名图元不与作者 id 碰撞', () => {
@@ -116,7 +115,7 @@ describe('Point 自动留白', () => {
     [2, 13],
     [18, 2],
   ])('尺寸尺度 %j 的输出上界决定最大半径', (start, end) => {
-    const scale = framesOf([point(1, 'max-radius', { size: { kind: 'field', value: 'x', scale: 'size' } })], {
+    const scale = framesOf([point(1, 'max-radius', { encodings: { size: { field: 'x', scale: 'size' } } })], {
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -144,25 +143,31 @@ describe('Point 自动留白', () => {
   it('Relation 只在启用策略时保护实际端点节点', () => {
     const relation = {
       type: 'relation',
-      source: { project: { x: 'x', y: 'y' } },
-      target: { project: { x: 'x', y: 'y' } },
-      endpoints: {
-        source: { size: { kind: 'constant', value: 8 } },
-        target: { size: { kind: 'constant', value: 15 } },
+      encodings: {
+        source: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+        target: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+      },
+      properties: {
+        endpoints: {
+          source: { size: 8 },
+          target: { size: 15 },
+        },
+        geometry: { kind: 'path' },
       },
     };
     const off = framesOf([relation])[0].roleScales!.x!;
     expect(off.coordinate(0)).toBe(off.range()[0]);
-    const on = framesOf([{ ...relation, autoPadding: 'max-radius' }])[0].roleScales!.x!;
+    const on = framesOf([{ ...relation, properties: { ...relation.properties, autoPadding: 'max-radius' } }])[0]
+      .roleScales!.x!;
     expect(on.coordinate(0) - on.range()[0]).toBeCloseTo(15);
   });
 
   it('无法确定尺寸上界时由 Plot 报错，显式尺度覆盖可跳过自动计算', () => {
     expect(() => framesOf([point(-1)])).toThrow();
-    const mark = point(1, 'max-radius', { size: { kind: 'field', value: 'x', scale: 'unknown' } });
-    expect(() => framesOf([mark])).toThrow(/radius upper bound/);
+    const mark = point(1, 'max-radius', { encodings: { size: { field: 'x', scale: 'unknown' } } });
+    expect(() => framesOf([mark])).toThrow(/unknown scale/);
     expect(() =>
-      framesOf([point(1, 'max-radius', { size: { kind: 'field', value: 'x', scale: 'size' } })], {
+      framesOf([point(1, 'max-radius', { encodings: { size: { field: 'x', scale: 'size' } } })], {
         scales: [
           { type: 'linear', name: 'x' },
           { type: 'linear', name: 'y' },
@@ -220,7 +225,7 @@ describe('Point 自动留白', () => {
   });
 
   it('默认策略与显式关闭可以 JSON 往返', () => {
-    expect(PointMarkSchema.parse({ type: 'point', encoding: {} }).autoPadding).toBe('max-radius');
+    expect(PointPropertiesSchema.parse({}).autoPadding).toBe('max-radius');
     const strategy = { kind: 'point-aware', clearance: { left: 0, default: 8 } };
     expect(PointAutoPaddingSchema.parse(JSON.parse(JSON.stringify(strategy)))).toEqual(strategy);
     expect(PointAutoPaddingSchema.parse(false)).toBe(false);

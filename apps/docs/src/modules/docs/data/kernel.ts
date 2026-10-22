@@ -368,19 +368,6 @@ export const kernelSection: Array<Section> = [
         ],
       },
       {
-        id: 'runtime-mechanics',
-        label: 'kernel.runtimeMechanics',
-        sidebarGroup: 'kernel.internals',
-        children: [
-          {
-            id: 'rendering-pipeline',
-            label: 'kernel.renderingPipeline',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'architecture', audience: 'integrator', sourceOfTruth: 'runtime' },
-          },
-        ],
-      },
-      {
         id: 'compilation-mechanisms',
         label: 'kernel.compilationMechanisms',
         sidebarGroup: 'kernel.internals',
@@ -391,6 +378,37 @@ export const kernelSection: Array<Section> = [
           difficulty: page.difficulty,
           linkTo: `/kernel/packages/core/${page.id}`,
         })),
+      },
+      {
+        id: 'runtime-mechanics',
+        label: 'kernel.runtimeMechanics',
+        sidebarGroup: 'kernel.internals',
+        children: [
+          {
+            id: 'rendering-pipeline',
+            label: 'kernel.renderingPipeline',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'architecture', audience: 'integrator', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'incremental-updates',
+            label: 'kernel.incrementalUpdates',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'architecture', audience: 'integrator', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'text-metrics',
+            label: 'kernel.textMetrics',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'architecture', audience: 'integrator', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'component-composition',
+            label: 'kernel.componentComposition',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'architecture', audience: 'integrator', sourceOfTruth: 'runtime' },
+          },
+        ],
       },
     ],
   },

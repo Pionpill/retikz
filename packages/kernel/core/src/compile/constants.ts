@@ -15,9 +15,8 @@ export const CANONICAL_STROKE_MITER_LIMIT = 10;
 /** 默认字号，同时作为 preset 与 rem 的解析根字号 */
 export const DEFAULT_FONT_SIZE = 16;
 
-/** 编译期 warning code（机器可读） */
-export const CompileWarningCode = {
-  ChangeSetMismatch: 'CORE_CHANGESET_MISMATCH',
+/** 内置编译警告码 */
+export const BuiltinCompileWarningCode = {
   UnresolvedNodeReference: 'UNRESOLVED_NODE_REFERENCE',
   PathTooShort: 'PATH_TOO_SHORT',
   OffsetBaseUnresolved: 'OFFSET_BASE_UNRESOLVED',
@@ -37,8 +36,10 @@ export const CompileWarningCode = {
   TextAutoContrastUnresolved: 'TEXT_AUTO_CONTRAST_UNRESOLVED',
 } as const;
 
-/** 编译期 warning code：包含内置 code，并允许扩展能力提供自定义字符串 code */
-export type CompileWarningCode = ValueOf<typeof CompileWarningCode> | (string & {});
+export type BuiltinCompileWarningCode = ValueOf<typeof BuiltinCompileWarningCode>;
+
+/** 编译警告码，支持内置名称和扩展能力提供的自定义名称 */
+export type CompileWarningCode = BuiltinCompileWarningCode | (string & {});
 
 /** 复合组件递归深度上限 */
 export const DEFAULT_MAX_COMPOSITE_DEPTH = 32;

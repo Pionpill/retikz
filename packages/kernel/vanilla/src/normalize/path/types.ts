@@ -5,7 +5,6 @@ import type {
   IRStep,
   IRStepLabel,
   IRTarget,
-  PathThickness,
   Side,
   WayDSL,
 } from '@retikz/core';
@@ -171,8 +170,6 @@ type InputPathBase = Omit<IRPath, 'type' | 'children'> & {
   children?: ReadonlyArray<InputStep>;
   /** TikZ 风格的路径走向简写 */
   way?: WayDSL;
-  /** 路径描边宽度语法糖 */
-  thickness?: PathThickness;
   /** 路径级箭头方向 */
   arrow?: InputPathArrowDirection;
   /** 箭头的顶层默认与端点覆盖配置 */

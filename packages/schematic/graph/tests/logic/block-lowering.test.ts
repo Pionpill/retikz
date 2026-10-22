@@ -1,7 +1,7 @@
 import type { CompileWarning, IRNode, LayoutProposal } from '@retikz/core';
 import {
   compileToScene,
-  CompileWarningCode,
+  BuiltinCompileWarningCode,
   defineThemeStyle,
   LayoutAxisProposalKind,
   resolveCoreProviderDependencies,
@@ -630,7 +630,9 @@ describe('Block-family layout-aware lowering', () => {
       expect.arrayContaining([expect.objectContaining({ type: 'group', id: 'local-block' })]),
     );
     expect(pathPrimitivesOf(output.scene.primitives).length).toBeGreaterThan(0);
-    expect(warnings).toContainEqual(expect.objectContaining({ code: CompileWarningCode.UnresolvedNodeReference }));
+    expect(warnings).toContainEqual(
+      expect.objectContaining({ code: BuiltinCompileWarningCode.UnresolvedNodeReference }),
+    );
   });
 
   it('projects Graph Theme through open Block-family content boundaries only', () => {

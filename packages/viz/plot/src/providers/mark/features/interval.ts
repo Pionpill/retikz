@@ -12,24 +12,31 @@ import type {
   FieldCollector,
   IntervalContext,
   MarkChannels,
+  MarkInstanceInput,
   MarkDefinition,
   MarkLoweringContext,
   PositionScale,
 } from '../../../contract';
 import type { PolarCoordinateFrame } from '../../../contract';
-import { hasProjectCell, isRenderableCellGeometry } from '../../../contract';
+import {
+  hasProjectCell,
+  isRenderableCellGeometry,
+  channelField,
+  markInstances,
+  mapPositionInput,
+  positionField,
+} from '../../../contract';
 import { RetikzPlotError } from '../../../error';
-import type { IRPlotIntervalBound, IRPlotIntervalMark, IRPlotMark } from '../../../schemas';
+import type { IRPlotPositionInput, IRPlotIntervalBound, IRPlotIntervalMark, IRPlotMark } from '../../../schemas';
 import { IntervalBoundKind, IntervalMarkSchema, BuiltinPlotCoordinate, BuiltinPlotMark } from '../../../schemas';
-import { channelValue } from '../../channel/shared';
 import type { CartesianCoordinateFrame } from '../../coordinate';
 import { isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame } from '../../coordinate';
 import { cellGeometryNode, cellLayer } from '../private';
 import type { MarkPaint } from '../shared';
-import { channelForRole } from '../shared';
+import { mappedRoleValue } from '../shared';
 import {
   applyNodeChannelDeliveries,
-  attachDatumAnchor,
+  attachMarkAnchor,
   attachDatumLabel,
   attachMarkLayer,
   channelDefaultOf,
@@ -39,6 +46,7 @@ import {
   decorateDatum,
   failLoudMessage,
   nodeChannelKinds,
+  resolveNodeMarkLabels,
 } from '../shared';
 
 type IntervalRoleContext = NonNullable<IntervalContext['byRole'][string]>;
@@ -49,9 +57,27 @@ type IntervalRoleContext = NonNullable<IntervalContext['byRole'][string]>;
  *   lowering 与 scale 推断共用此单一真源，杜绝两处各推各的漂移
  */
 export const resolveIntervalBound = (mark: IRPlotIntervalMark, role: DimensionRole): IRPlotIntervalBound => {
-  const explicit = (mark.bounds as Record<string, IRPlotIntervalBound | undefined> | undefined)?.[role];
+  const explicit = (mark.properties?.bounds as Record<string, IRPlotIntervalBound | undefined> | undefined)?.[role];
   if (explicit !== undefined) return explicit;
   return role === 'x' ? { kind: IntervalBoundKind.Band } : { kind: IntervalBoundKind.Span };
+};
+
+/** 读取权重字段，空间端点使用位置输入 */
+export const intervalBoundField = (mark: IRPlotIntervalMark, role: string, target: 'weight'): string => {
+  const field = mark.encodings?.bounds?.[role as 'x' | 'y']?.[target];
+  if (field === undefined) throw new RetikzPlotError('Interval bound requires weight for role ' + role);
+  return field;
+};
+
+/** 读取显式端点的字段、常量或边缘来源 */
+export const intervalBoundInput = (
+  mark: IRPlotIntervalMark,
+  role: string,
+  endpoint: 'from' | 'to',
+): IRPlotPositionInput => {
+  const input = mark.encodings?.bounds?.[role as 'x' | 'y']?.[endpoint];
+  if (input === undefined) throw new RetikzPlotError('Interval bound requires ' + endpoint + ' for role ' + role);
+  return input;
 };
 
 /**
@@ -142,7 +168,8 @@ const buildProportionalContext = (
 
   for (const role of roles) {
     const bound = resolveIntervalBound(mark, role);
-    if (bound.kind === IntervalBoundKind.Proportional) byRole[role] = buildProportionalIntervals(bound.field, rows);
+    if (bound.kind === IntervalBoundKind.Proportional)
+      byRole[role] = buildProportionalIntervals(intervalBoundField(mark, role, 'weight'), rows);
   }
 
   return Object.values(byRole)[0] === undefined ? undefined : byRole;
@@ -159,16 +186,18 @@ export const buildIntervalContext = (
   rows: Array<ExternalRow>,
 ): IntervalContext | undefined => {
   if (isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame)) {
+    const bounds: Partial<NonNullable<NonNullable<IRPlotIntervalMark['encodings']>['bounds']>> | undefined =
+      mark.encodings?.bounds;
     const xBound = resolveIntervalBound(mark, 'x');
     const yBound = resolveIntervalBound(mark, 'y');
     const xContext = buildBandContext(
       frame.primary.bandwidth,
-      xBound.kind === IntervalBoundKind.Band ? xBound.group : undefined,
+      xBound.kind === IntervalBoundKind.Band ? bounds?.x?.group : undefined,
       rows,
     );
     const yContext = buildBandContext(
       frame.secondary.bandwidth,
-      yBound.kind === IntervalBoundKind.Band ? yBound.group : undefined,
+      yBound.kind === IntervalBoundKind.Band ? bounds?.y?.group : undefined,
       rows,
     );
     const proportionalByRole = buildProportionalContext(mark, ['x', 'y'], rows);
@@ -185,7 +214,8 @@ export const buildIntervalContext = (
 
     for (const role of frame.roles) {
       const bound = resolveIntervalBound(mark, role);
-      const group = bound.kind === IntervalBoundKind.Band ? bound.group : undefined;
+      const group =
+        bound.kind === IntervalBoundKind.Band ? mark.encodings?.bounds?.[role as 'x' | 'y']?.group : undefined;
       if (group === undefined) continue;
 
       const scale = frame.roleScales?.[role];
@@ -207,9 +237,9 @@ export const buildIntervalContext = (
 };
 
 /** 取某行的 group 子带序号（值不在 rank 表 / 非标量 → 0，与 lowering 兜底一致） */
-const subBandIndexOf = (ctx: IntervalRoleContext, row: ExternalRow): number => {
+const subBandIndexOf = (ctx: IntervalRoleContext, row: ExternalRow | undefined): number => {
   if (ctx.group === undefined) return 0;
-  const series = resolveFieldPath(row, ctx.group);
+  const series = resolveFieldPath(row!, ctx.group);
   return (typeof series === 'string' || typeof series === 'number' ? ctx.seriesRank.get(series) : undefined) ?? 0;
 };
 
@@ -223,17 +253,16 @@ const boundOutputInterval = (
   axis: 'primary' | 'secondary',
   scale: PositionScale,
   mark: IRPlotIntervalMark,
-  row: ExternalRow,
+  row: ExternalRow | undefined,
   frame: CartesianCoordinateFrame | PolarCoordinateFrame,
   ctx: IntervalContext,
 ): [number, number] | null => {
-  const channel = axis === 'primary' ? mark.encoding.x : mark.encoding.y;
   const role = axis === 'primary' ? 'x' : 'y';
   const bandCtx = ctx.byRole[role];
 
   switch (bound.kind) {
     case IntervalBoundKind.Band: {
-      const center = scale.coordinate(channelValue(channel, row));
+      const center = mappedRoleValue(mark, role, row, scale);
       if (!Number.isFinite(center)) return null;
       if (bandCtx?.group !== undefined) {
         const index = subBandIndexOf(bandCtx, row);
@@ -245,28 +274,20 @@ const boundOutputInterval = (
     }
     case IntervalBoundKind.Span: {
       const base = scale.coordinate(bound.baseline ?? 0);
-      const value = scale.coordinate(channelValue(channel, row));
+      const value = mappedRoleValue(mark, role, row, scale);
       if (!Number.isFinite(base) || !Number.isFinite(value)) return null;
 
       return [base, value];
     }
     case IntervalBoundKind.Extent: {
-      const rawLo = resolveFieldPath(row, bound.from);
-      const rawHi = resolveFieldPath(row, bound.to);
-      if (!isFiniteNumber(rawLo) || !isFiniteNumber(rawHi)) {
-        throw new RetikzPlotError(
-          `lowerPlots: interval extent bound requires numeric ${bound.from} / ${bound.to} fields (run the stack / bin / derive-interval transform first)`,
-        );
-      }
-
-      const lo = scale.coordinate(rawLo);
-      const hi = scale.coordinate(rawHi);
+      const lo = mapPositionInput(intervalBoundInput(mark, role, 'from'), scale, row);
+      const hi = mapPositionInput(intervalBoundInput(mark, role, 'to'), scale, row);
       if (!Number.isFinite(lo) || !Number.isFinite(hi)) return null;
 
       return [lo, hi];
     }
     case IntervalBoundKind.Proportional: {
-      const raw = ctx.proportionalByRole?.[role]?.get(row);
+      const raw = ctx.proportionalByRole?.[role]?.get(row!);
       if (raw === undefined) {
         throw new RetikzPlotError(`lowerPlots: interval proportional bound requires context for role ${role}`);
       }
@@ -292,7 +313,7 @@ const boundOutputInterval = (
  */
 export const intervalCell = (
   mark: IRPlotIntervalMark,
-  row: ExternalRow,
+  row: ExternalRow | undefined,
   frame: CartesianCoordinateFrame | PolarCoordinateFrame,
   ctx: IntervalContext,
 ): Cell | null => {
@@ -326,7 +347,7 @@ const genericBoundOutputInterval = (
   bound: IRPlotIntervalBound,
   role: DimensionRole,
   mark: IRPlotIntervalMark,
-  row: ExternalRow,
+  row: ExternalRow | undefined,
   frame: CoordinateFrame,
   ctx?: IntervalContext,
 ): [number, number] | null => {
@@ -337,13 +358,11 @@ const genericBoundOutputInterval = (
     );
   }
 
-  const channel = channelForRole(mark, role);
-
   switch (bound.kind) {
     case IntervalBoundKind.Band: {
-      const center = scale.coordinate(channelValue(channel, row));
+      const center = mappedRoleValue(mark, role, row, scale);
       if (!Number.isFinite(center)) return null;
-      if (bound.group !== undefined) {
+      if (mark.encodings?.bounds?.[role as 'x' | 'y']?.group !== undefined) {
         if (ctx === undefined) {
           throw new RetikzPlotError(
             `lowerPlots: interval mark under the ${frame.type} coordinate system requires grouped band context for bounds.${role}.group`,
@@ -367,28 +386,20 @@ const genericBoundOutputInterval = (
     }
     case IntervalBoundKind.Span: {
       const base = scale.coordinate(bound.baseline ?? 0);
-      const value = scale.coordinate(channelValue(channel, row));
+      const value = mappedRoleValue(mark, role, row, scale);
       if (!Number.isFinite(base) || !Number.isFinite(value)) return null;
 
       return [base, value];
     }
     case IntervalBoundKind.Extent: {
-      const rawLo = resolveFieldPath(row, bound.from);
-      const rawHi = resolveFieldPath(row, bound.to);
-      if (!isFiniteNumber(rawLo) || !isFiniteNumber(rawHi)) {
-        throw new RetikzPlotError(
-          `lowerPlots: interval extent bound requires numeric ${bound.from} / ${bound.to} fields`,
-        );
-      }
-
-      const lo = scale.coordinate(rawLo);
-      const hi = scale.coordinate(rawHi);
+      const lo = mapPositionInput(intervalBoundInput(mark, role, 'from'), scale, row);
+      const hi = mapPositionInput(intervalBoundInput(mark, role, 'to'), scale, row);
       if (!Number.isFinite(lo) || !Number.isFinite(hi)) return null;
 
       return [lo, hi];
     }
     case IntervalBoundKind.Proportional: {
-      const raw = ctx?.proportionalByRole?.[role]?.get(row);
+      const raw = ctx?.proportionalByRole?.[role]?.get(row!);
       if (raw === undefined) {
         throw new RetikzPlotError(
           `lowerPlots: interval proportional bound under the ${frame.type} coordinate system requires proportional context for bounds.${role}`,
@@ -409,7 +420,7 @@ const genericBoundOutputInterval = (
 /** 带 projectCell 的通用坐标帧：按 frame.roles 和各 role scale 构造正交 cell */
 const genericIntervalCell = (
   mark: IRPlotIntervalMark,
-  row: ExternalRow,
+  row: ExternalRow | undefined,
   frame: CoordinateFrame,
   ctx?: IntervalContext,
 ): Cell | null => {
@@ -431,7 +442,7 @@ const genericIntervalCell = (
  */
 export const markCell = (
   mark: IRPlotMark,
-  row: ExternalRow,
+  row: ExternalRow | undefined,
   frame: CoordinateFrame,
   ctx?: IntervalContext,
 ): Cell | null => {
@@ -444,14 +455,14 @@ export const markCell = (
 };
 
 /** interval cell 类 mark 某行的 series 值（写进 datum meta；series 字段拆分） */
-const cellSeriesValue = (mark: IRPlotMark, row: ExternalRow): unknown =>
-  mark.type === BuiltinPlotMark.Interval && mark.series !== undefined ? resolveFieldPath(row, mark.series) : undefined;
+const cellSeriesValue = (mark: IRPlotMark, row: ExternalRow | undefined): unknown =>
+  mark.type === BuiltinPlotMark.Interval && mark.encodings?.series !== undefined
+    ? resolveFieldPath(row!, mark.encodings.series)
+    : undefined;
 
-const resolvePolarCellPull = (mark: IRPlotIntervalMark, row: ExternalRow): number => {
-  const pull = mark.pull;
-  if (pull === undefined) return 0;
-
-  const value = pull.kind === 'field' ? resolveFieldPath(row, pull.value) : pull.value;
+const resolvePolarCellPull = (mark: IRPlotIntervalMark, row: ExternalRow | undefined): number => {
+  const binding = mark.encodings?.pull;
+  const value = binding === undefined ? (mark.properties?.pull ?? 0) : resolveFieldPath(row!, channelField(binding));
   if (!isFiniteNumber(value) || value < 0) {
     throw new RetikzPlotError(
       'lowerPlots: interval pull requires a finite non-negative numeric value for polar cell geometry',
@@ -467,7 +478,7 @@ const paddedPolarCell = (cell: Cell, mark: IRPlotIntervalMark): Cell => {
   if (interval === undefined) return cell;
 
   const [startAngle, endAngle] = interval;
-  const padAngle = mark.padAngle;
+  const padAngle = mark.properties?.padAngle;
   if (padAngle === undefined) return cell;
 
   const sweep = endAngle - startAngle;
@@ -488,9 +499,10 @@ const paddedPolarCell = (cell: Cell, mark: IRPlotIntervalMark): Cell => {
 /** 解析单行 interval 在当前坐标帧中的 cell 几何 */
 export const intervalCellGeometry = (
   mark: IRPlotIntervalMark,
-  row: ExternalRow,
+  row: ExternalRow | undefined,
   frame: CoordinateFrame,
   ctx: IntervalContext | undefined,
+  pull?: number,
 ): CellGeometry | null => {
   if (!hasProjectCell(frame)) return null;
 
@@ -498,20 +510,21 @@ export const intervalCellGeometry = (
   if (!cell) return null;
   if (isPolarCoordinateFrame(frame)) {
     return frame.projectCell(paddedPolarCell(cell, mark), {
-      interpolation: mark.interpolation ?? frame.interpolation,
-      pull: resolvePolarCellPull(mark, row),
+      connection: mark.properties?.connection,
+      interpolation: mark.properties?.interpolation ?? frame.interpolation,
+      pull: pull ?? resolvePolarCellPull(mark, row),
     });
   }
 
-  if (mark.interpolation !== undefined) {
+  if (mark.properties?.interpolation !== undefined) {
     throw new RetikzPlotError('lowerPlots: interval interpolation override is only supported under polar2D');
   }
 
-  if (mark.pull !== undefined) {
+  if (mark.encodings?.pull !== undefined || mark.properties?.pull !== undefined) {
     throw new RetikzPlotError('lowerPlots: interval pull is only supported for polar2D cell geometry');
   }
 
-  return frame.projectCell(cell);
+  return frame.projectCell(cell, { connection: mark.properties?.connection });
 };
 
 const moveSectorCornerRadiusToShapeParams = (node: IRNode): void => {
@@ -536,7 +549,7 @@ const moveSectorCornerRadiusToShapeParams = (node: IRNode): void => {
  */
 const lowerCells = (
   mark: IRPlotIntervalMark,
-  rows: Array<ExternalRow>,
+  instances: MarkInstanceInput,
   frame: CoordinateFrame,
   intervalContext: IntervalContext | undefined,
   colorOf: ChannelValueResolver<string> | undefined,
@@ -547,14 +560,20 @@ const lowerCells = (
 ): IRScope | null => {
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   const fillOf =
-    'fill' in mark && mark.fill?.kind === 'field' && !colorOf ? channelValueOf<MarkPaint>(channels, 'fill') : undefined;
-  const strokeOf =
-    'stroke' in mark && mark.stroke?.kind === 'field' ? channelValueOf<MarkPaint>(channels, 'stroke') : undefined;
+    mark.encodings?.fill !== undefined && !colorOf ? channelValueOf<MarkPaint>(channels, 'fill') : undefined;
+  const strokeOf = mark.encodings?.stroke !== undefined ? channelValueOf<MarkPaint>(channels, 'stroke') : undefined;
   let kind: CellGeometry['kind'] | undefined;
 
-  for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
-    const row = rows[transformedIndex];
-    const geometry = intervalCellGeometry(mark, row, frame, intervalContext);
+  for (const instance of markInstances(instances)) {
+    const row = instance.kind === 'row' ? instance.row : undefined;
+    const transformedIndex = instance.kind === 'row' ? instance.transformedIndex : undefined;
+    const geometry = intervalCellGeometry(
+      mark,
+      row,
+      frame,
+      intervalContext,
+      row === undefined ? undefined : channelValueOf<number>(channels, 'pull')?.(row),
+    );
     if (!geometry) continue;
     if (!isRenderableCellGeometry(geometry)) continue;
 
@@ -562,25 +581,42 @@ const lowerCells = (
     const cellNode = cellGeometryNode(geometry);
     if (cellNode === null) continue;
 
-    const fill = fillOf?.(row);
+    const fill = row === undefined ? undefined : fillOf?.(row);
     if (fill !== undefined) cellNode.style = { ...cellNode.style, fill };
-    const stroke = strokeOf?.(row);
+    const stroke = row === undefined ? undefined : strokeOf?.(row);
     if (stroke !== undefined) cellNode.style = { ...cellNode.style, stroke };
-    applyNodeChannelDeliveries(cellNode, mark, row, channels, 'cell');
+    if (row !== undefined) applyNodeChannelDeliveries(cellNode, mark, row, channels, 'cell');
     moveSectorCornerRadiusToShapeParams(cellNode);
-    const node = attachDatumLabel(
-      attachDatumAnchor(
-        decorateDatum(cellNode, row, transformedIndex, mark.type, markContext?.provenance, cellSeriesValue(mark, row)),
-        mark,
-        row,
-        transformedIndex,
-        markContext,
-      ),
-      mark,
-      row,
-      labelOf,
-    );
-    placed.push({ color: colorOf?.(row), node });
+    const fixedLabels =
+      row === undefined ? resolveNodeMarkLabels(mark.properties?.label, undefined, undefined) : undefined;
+    const node =
+      row === undefined || transformedIndex === undefined
+        ? attachMarkAnchor(
+            { ...cellNode, ...(fixedLabels === undefined ? {} : { label: fixedLabels }) },
+            mark,
+            instance,
+            markContext,
+          )
+        : attachDatumLabel(
+            attachMarkAnchor(
+              decorateDatum(
+                cellNode,
+                row,
+                transformedIndex,
+                mark.type,
+                markContext?.provenance,
+                cellSeriesValue(mark, row),
+              ),
+              mark,
+              instance,
+              markContext,
+            ),
+            mark,
+            row,
+            labelOf,
+            channels,
+          );
+    placed.push({ color: row === undefined ? undefined : colorOf?.(row), node });
   }
 
   const defaultFill = channelDefaultOf<MarkPaint>(channels, 'fill') ?? defaultColor ?? undefined;
@@ -594,7 +630,7 @@ const lowerCells = (
 /** interval mark 图层下沉：坐标系守卫 + IntervalContext + lowerCells（cell 类单路径） */
 export const lowerIntervalLayer = (
   mark: IRPlotMark,
-  rows: Array<ExternalRow>,
+  instances: MarkInstanceInput,
   frame: CoordinateFrame,
   channels: MarkChannels,
   ctx: MarkLoweringContext | undefined,
@@ -606,10 +642,10 @@ export const lowerIntervalLayer = (
     throw new RetikzPlotError(failLoudMessage(mark.type, frame.type));
   }
 
-  const intervalContext = buildIntervalContext(mark, frame, rows);
+  const intervalContext = buildIntervalContext(mark, frame, instances.kind === 'rows' ? instances.rows : []);
   const layer = lowerCells(
     mark,
-    rows,
+    instances,
     frame,
     intervalContext,
     channelValueOf<string>(channels, 'color'),
@@ -624,25 +660,23 @@ export const lowerIntervalLayer = (
 
 /** 收集 interval mark 独有字段：series 分组与显式 extent bounds */
 const collectIntervalChannelFields = (mark: IRPlotIntervalMark, fields: FieldCollector): void => {
-  fields.addField(mark.series);
-  if (mark.pull?.kind === 'field') fields.addField(mark.pull.value);
-  if (mark.bounds !== undefined) {
-    for (const bound of Object.values(mark.bounds)) {
-      if (bound.kind === 'extent') fields.addFields(bound.from, bound.to);
-      if (bound.kind === 'proportional') fields.addField(bound.field);
-    }
-  }
+  fields.addField(mark.encodings?.series);
+  fields.addChannel(mark.encodings?.pull);
+  for (const bound of Object.values(mark.encodings?.bounds ?? {}))
+    fields.addFields(bound.group, positionField(bound.from), positionField(bound.to), bound.weight);
 };
 
 /** 内置 interval mark definition */
 export const intervalMarkDefinition: MarkDefinition<IRPlotIntervalMark> = {
   schema: IntervalMarkSchema,
+  labelHost: 'node',
   channelKinds: nodeChannelKinds,
   collectFields: (mark, fields: FieldCollector) => {
     collectCommonEncodingFields(mark, fields);
     collectNodeChannelFields(mark, fields);
     collectIntervalChannelFields(mark, fields);
   },
-  buildCell: (mark, row, frame, ctx) => markCell(mark, row, frame, ctx),
+  buildCell: (mark, instance, frame, ctx) =>
+    markCell(mark, instance.kind === 'row' ? instance.row : undefined, frame, ctx),
   lower: lowerIntervalLayer,
 };

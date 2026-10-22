@@ -77,6 +77,7 @@ const mountStaticSvg = (
       { primary: scene, layers },
       {
         idPrefix,
+        defaultFontFamily: options.defaultFontFamily,
         animate,
         snapshotAt: animation.snapshotAt,
         easings: animation.easings,
@@ -170,6 +171,7 @@ const mountRetainedSvg = (
 
   const root = document.createElementNS(SVG_NS, 'svg');
   const output = options.output ?? {};
+  if (options.defaultFontFamily) root.style.fontFamily = options.defaultFontFamily;
   if (output.width !== undefined) root.setAttribute('width', String(output.width));
   if (output.height !== undefined) root.setAttribute('height', String(output.height));
   const processing = createRetainedProcessingController({

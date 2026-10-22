@@ -1,12 +1,11 @@
-import { boundsOf, boundsToRect } from '@retikz/math';
+import { RAD_TO_DEG, boundsOf, boundsToRect } from '@retikz/math';
 
 import type { LayoutAlignmentGuide, Transform } from '../../contract';
-import { LayoutAlignmentGuideDimension, BuiltinLayoutAlignmentGuideName } from '../../contract';
+import { BuiltinLayoutAlignmentGuideName, LayoutAlignmentGuideDimension } from '../../contract';
 import type { IRPosition } from '../../schemas';
-import { RAD_TO_DEG } from '../../shared/geometry';
 import type { EffectiveScopeTransform } from '../transform';
 import { applyScopeTransform, composeScopeTransform, projectLayoutWithTransform } from '../transform';
-import type { CompiledNodeLayout } from '../types';
+import type { NodeLayoutObservation } from '../types';
 import type { NodeLayout } from './types';
 
 const isEffectiveIdentityRotation = (degrees: number): boolean => Object.is(degrees % 360, -0) || degrees % 360 === 0;
@@ -92,7 +91,7 @@ const nodeTransformOf = (layout: NodeLayout, transform: EffectiveScopeTransform)
 const contentBounds = (
   layout: NodeLayout,
   transform: EffectiveScopeTransform,
-): CompiledNodeLayout['content']['bounds'] => {
+): NodeLayoutObservation['content']['bounds'] => {
   const projected = contentCorners(layout).map(point => applyScopeTransform(point, transform));
   const bounds = boundsOf(projected);
   if (bounds === undefined) {
@@ -103,16 +102,17 @@ const contentBounds = (
 };
 
 /** 将内部 NodeLayout 收敛为公开 compile 观测 DTO */
-export const computeCompiledNodeLayout = (
+export const projectNodeLayoutObservation = (
   layout: NodeLayout,
   scopeChain: ReadonlyArray<Transform>,
   transform: EffectiveScopeTransform = composeScopeTransform(scopeChain),
-): CompiledNodeLayout => {
+  id?: string,
+): NodeLayoutObservation => {
   const globalLayout = scopeChain.length === 0 ? layout : projectLayoutWithTransform(layout, transform);
   const nodeTransform = nodeTransformOf(layout, transform);
   return {
     kind: 'node',
-    ...(layout.node.id === undefined ? {} : { id: layout.node.id }),
+    ...(id === undefined ? {} : { id }),
     content: {
       center: applyScopeTransform(layout.geometry.contentCenter, nodeTransform),
       size: {

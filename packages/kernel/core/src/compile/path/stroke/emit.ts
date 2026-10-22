@@ -6,7 +6,7 @@ import type { CanonicalStep, PathTargetView, StrokePathResolution } from '../../
 import type { IRPosition, IRTarget } from '../../../schemas';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
 import { cloneAndFreezeJson } from '../../../shared/json';
-import { CompileWarningCode } from '../../constants';
+import { BuiltinCompileWarningCode } from '../../constants';
 import type { PaintResolver } from '../../resource';
 import type { TextMeasurer } from '../../text';
 import { fallbackMeasurer } from '../../text';
@@ -74,7 +74,7 @@ const emitCanonicalPathPrimitive = (
   const soloSelfContained = steps.length === 1 && steps[0].kind === 'rectangle';
   if (steps.length < 2 && !soloSelfContained) {
     warn(
-      CompileWarningCode.PathTooShort,
+      BuiltinCompileWarningCode.PathTooShort,
       `Path requires at least 2 steps (got ${steps.length}); the entire path is skipped`,
       'children',
     );
@@ -268,7 +268,7 @@ const emitCanonicalPathPrimitive = (
     const prev = cursor.previous();
     if (!prev) {
       warn(
-        CompileWarningCode.PathTooShort,
+        BuiltinCompileWarningCode.PathTooShort,
         `Step '${step.kind}' requires a previous position; the entire path is skipped`,
         `children[${i}]`,
       );

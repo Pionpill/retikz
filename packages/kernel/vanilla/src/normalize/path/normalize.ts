@@ -8,7 +8,7 @@ import type {
   IRStep,
   IRTarget,
 } from '@retikz/core';
-import { AxisLineTargetSchema, parseTargetSugar, parseWay, THICKNESS_TO_WIDTH } from '@retikz/core';
+import { AxisLineTargetSchema, parseTargetSugar, parseWay } from '@retikz/core';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type { InputAxisLineTarget, InputPath, InputStep, InputTarget } from './types';
@@ -188,7 +188,6 @@ export const normalizePath = (input: InputPath): IRPath => {
     type: _type,
     authoring: _authoring,
     way,
-    thickness,
     arrow: _arrow,
     arrowDetail: _arrowDetail,
     arrowPlacement: _arrowPlacement,
@@ -217,17 +216,11 @@ export const normalizePath = (input: InputPath): IRPath => {
 
   const normalizedChildren = normalizePathChildren(authoredChildren);
   const marks = normalizePathMarks(input);
-  const strokeWidth = path.style?.strokeWidth;
 
   return {
     type: 'path',
     ...path,
     children: normalizedChildren,
-    ...(strokeWidth === undefined
-      ? thickness === undefined
-        ? {}
-        : { style: { ...path.style, strokeWidth: THICKNESS_TO_WIDTH[thickness] } }
-      : { style: path.style }),
     ...(marks === undefined ? {} : { marks }),
   };
 };

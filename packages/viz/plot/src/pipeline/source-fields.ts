@@ -6,8 +6,7 @@ import { createFieldCollector, resolveMarkRegistry } from '../providers';
 import { collectMarkFields } from '../resolve/mark';
 import type { IRPlot, IRPlotMarkOperation } from '../schemas';
 
-const markTransformOf = (mark: IRPlotMarkOperation): Array<IRDataTransformDeclaration> | undefined =>
-  (mark as { transform?: Array<IRDataTransformDeclaration> }).transform;
+const markTransformOf = (mark: IRPlotMarkOperation): Array<IRDataTransformDeclaration> | undefined => mark.transforms;
 
 /**
  * 按执行顺序收集 transform 管线依赖的外部字段，并返回管线结束后的派生字段集合

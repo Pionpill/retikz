@@ -10,6 +10,23 @@ const square: Array<[number, number]> = [
 ];
 
 describe('polygon.containsPoint', () => {
+  it('多次跨越水平射线时保持奇偶规则，绕向与重复顶点不改变非边界点结果', () => {
+    const comb: Array<[number, number]> = [
+      [0, -2],
+      [6, -2],
+    ];
+    for (let x = 6; x >= 0; x--) comb.push([x, x % 2]);
+    const repeated = comb.flatMap(vertex => [vertex, vertex]);
+    const original = structuredClone(comb);
+    for (const vertices of [comb, [...comb].reverse(), repeated]) {
+      expect(polygon.containsPoint(vertices, [1.25, 0.5])).toBe(true);
+      expect(polygon.containsPoint(vertices, [1.75, 0.5])).toBe(false);
+      expect(polygon.containsPoint(vertices, [-1, 0.5])).toBe(false);
+      expect(polygon.containsPoint(vertices, [3, -1])).toBe(true);
+      expect(polygon.containsPoint(vertices, [-1, 0])).toBe(false);
+    }
+    expect(comb).toEqual(original);
+  });
   it('内部点为真', () => {
     expect(polygon.containsPoint(square, [2, 2])).toBe(true);
   });

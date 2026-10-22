@@ -15,7 +15,7 @@ import { PlotAxis, PathMark, Plot } from '@retikz/plot-react';
 
 ```tsx
 <Plot data={rows}>
-  <PathMark x="month" y="revenue" order="month" />
+  <PathMark encodings={{ order: 'month', position: { x: 'month', y: 'revenue' } }} />
   <PlotAxis dimension="x" />
   <PlotAxis dimension="y" grid />
 </Plot>
@@ -104,9 +104,9 @@ PlotAxis 先按 `ticks.values > ticks.interval > ticks.count` 的优先级生成
     },
     {
       label: 'Plot 语义图层默认值',
-      path: 'packages/viz/plot/src/schemas/layer/constants.ts',
-      startLine: 3,
-      endLine: 20,
+      path: 'packages/viz/plot/src/schemas/plot/layer.ts',
+      startLine: 5,
+      endLine: 24,
     },
   ]}
 />

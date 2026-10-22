@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRPath, IRScene, ScenePrimitive } from '../../src';
-import { CompileWarningCode } from '../../src';
+import { BuiltinCompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import type { Scene } from '../../src/contract';
 import { arrowMarks } from '../helpers/arrow-marks';
@@ -297,7 +297,7 @@ describe('ATTACK 5: 退化 bbox + path transform', () => {
       pathIR([{ type: 'step', kind: 'move', to: [0, 0] }] as IRPath['children'], { rotate: 30 }),
       {
         onWarn: w => {
-          if (w.code === CompileWarningCode.PathTooShort) warned = true;
+          if (w.code === BuiltinCompileWarningCode.PathTooShort) warned = true;
         },
       },
     ).scene;

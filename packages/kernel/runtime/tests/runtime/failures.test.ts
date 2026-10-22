@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { RetikzRuntimeErrorCode, RuntimeDiagnosticCode } from '../../src';
+import { RetikzRuntimeErrorCode, BuiltinRuntimeDiagnosticCode } from '../../src';
 import { defineRuntimeComputation, RuntimeComputationKind, RuntimeComputationPhase } from '../../src/computation';
 import { RetikzRuntimeError } from '../../src/error';
 import { createRuntimeSourceRegistry, createRuntimeComputationRegistry } from '../../src/registry';
@@ -311,7 +311,7 @@ describe('runtime runtime failure isolation', () => {
     expect(result.revision).toBe(1);
     expect(result.diagnostics).toEqual([
       expect.objectContaining({
-        code: RuntimeDiagnosticCode.ComputationObserverFailed,
+        code: BuiltinRuntimeDiagnosticCode.ComputationObserverFailed,
         phase: 'observe',
         severity: 'error',
         computation: { owner: 'counter', key: 'a' },
@@ -392,7 +392,7 @@ describe('runtime runtime failure isolation', () => {
     expect(runtime.diagnostics()).toEqual([
       observedPrefixes[0]?.[0],
       expect.objectContaining({
-        code: RuntimeDiagnosticCode.ComputationObserverFailed,
+        code: BuiltinRuntimeDiagnosticCode.ComputationObserverFailed,
         phase: 'observe',
         cause: observerCause,
         computation: { owner: 'counter', key: 'a' },

@@ -1,8 +1,8 @@
 import type { IRNodeLabel } from '@retikz/core';
 
 import type { MarkChannelDefinition, ResolveLabel } from '../../../contract';
-import { ChannelDefinitionKind } from '../../../contract';
-import type { IRPlotMarkLabelContent, IRPlotMarkOperation, IRPlotTextChannel } from '../../../schemas';
+import { ChannelDefinitionKind, labelEntries } from '../../../contract';
+import type { IRPlotMarkLabelContent, IRPlotMarkOperation } from '../../../schemas';
 import { labelOf } from '../shared';
 
 /** 内置文本通道 definition 的按名称索引类型 */
@@ -17,14 +17,41 @@ export type BuiltinTextChannelOptions = {
   resolveLabel?: Record<string, ResolveLabel>;
 };
 
-const labelContentChannel = (mark: IRPlotMarkOperation): IRPlotTextChannel | IRPlotMarkLabelContent | undefined => {
-  const encodingText = (mark as { encoding?: { text?: IRPlotTextChannel } }).encoding?.text;
-  if (encodingText !== undefined) return encodingText;
+/** 文本目标的字段来源、固定内容与显示配置 */
+type LabelContentSources = {
+  field?: string;
+  content?: IRPlotMarkLabelContent;
+  displayFormat?: string;
+};
 
-  const label = (mark as { label?: { content?: IRPlotMarkLabelContent } | Array<{ content?: IRPlotMarkLabelContent }> })
-    .label;
-
-  return Array.isArray(label) ? label[0]?.content : label?.content;
+const labelContentSources = (mark: IRPlotMarkOperation): LabelContentSources => {
+  const source = mark as {
+    encodings?: { text?: string; label?: string | { content?: string } | Array<string | { content?: string }> };
+    properties?: {
+      text?: IRPlotMarkLabelContent;
+      displayFormat?: string;
+      label?:
+        | string
+        | { content?: IRPlotMarkLabelContent; displayFormat?: string }
+        | Array<string | { content?: IRPlotMarkLabelContent; displayFormat?: string }>;
+    };
+  };
+  if (source.encodings?.text !== undefined || source.properties?.text !== undefined) {
+    return {
+      field: source.encodings?.text,
+      content: source.properties?.text,
+      displayFormat: source.properties?.displayFormat,
+    };
+  }
+  const labels = source.properties?.label;
+  const label = labelEntries(labels).at(0);
+  const encodings = source.encodings?.label;
+  const encoding = labelEntries(encodings).at(0);
+  return {
+    field: encoding?.content,
+    content: label?.content,
+    displayFormat: label && 'displayFormat' in label ? label.displayFormat : undefined,
+  };
 };
 
 /**
@@ -37,18 +64,13 @@ export const createBuiltinTextChannels = (options: BuiltinTextChannelOptions = {
     channel: 'label',
     kind: ChannelDefinitionKind.Mark,
     resolve: (ctx, mark) => {
-      const content = labelContentChannel(mark);
-      const id = (mark as { id?: string }).id;
+      const { field, content, displayFormat } = labelContentSources(mark);
+      const id = mark.id;
       const runtime = id !== undefined ? options.resolveLabel?.[id] : undefined;
-      if (content === undefined && runtime === undefined) return undefined;
+      if (field === undefined && content === undefined && runtime === undefined) return undefined;
 
-      const fieldType =
-        content?.field !== undefined
-          ? ctx.model.find(definition => definition.name === content.field)?.type
-          : undefined;
-      const effectiveContent = content ?? { value: '' };
-
-      return { resolver: row => labelOf(effectiveContent, row, fieldType, runtime) };
+      const fieldType = field === undefined ? undefined : ctx.model.find(definition => definition.name === field)?.type;
+      return { resolver: row => labelOf(content, row, fieldType, runtime, field, displayFormat) };
     },
   },
 });

@@ -1,11 +1,5 @@
+import { DEG_TO_RAD, normalizeDegrees } from './angle';
 import type { Position } from './point';
-
-const DEG_TO_RAD = Math.PI / 180;
-
-const normalizeAngleDegrees = (angleDegrees: number): number => {
-  const normalizedDegrees = angleDegrees % 360;
-  return normalizedDegrees < 0 ? normalizedDegrees + 360 : normalizedDegrees;
-};
 
 /** 圆弧外接候选点参数 */
 export type ArcBoundingCandidatesInput = {
@@ -64,14 +58,14 @@ const collectAxisAngles = (lowerAngle: number, upperAngle: number): Array<number
   const span = upperAngle - lowerAngle;
   if (!Number.isFinite(span) || span >= 360) return [0, 90, 180, 270];
 
-  const normalizedLowerAngle = normalizeAngleDegrees(lowerAngle);
+  const normalizedLowerAngle = normalizeDegrees(lowerAngle);
   const normalizedUpperAngle = normalizedLowerAngle + span;
   const startAxisIndex = Math.ceil(normalizedLowerAngle / 90);
   const endAxisIndex = Math.floor(normalizedUpperAngle / 90);
   const angles: Array<number> = [];
 
   for (let axisIndex = startAxisIndex; axisIndex <= endAxisIndex; axisIndex++) {
-    angles.push(normalizeAngleDegrees(axisIndex * 90));
+    angles.push(normalizeDegrees(axisIndex * 90));
   }
 
   return angles;
@@ -106,8 +100,8 @@ export const collectArcBoundingCandidates = ({
 
   const lowerAngle = Math.min(startAngleDeg, endAngleDeg);
   const upperAngle = Math.max(startAngleDeg, endAngleDeg);
-  const normalizedStartAngle = normalizeAngleDegrees(startAngleDeg);
-  const normalizedEndAngle = normalizeAngleDegrees(endAngleDeg);
+  const normalizedStartAngle = normalizeDegrees(startAngleDeg);
+  const normalizedEndAngle = normalizeDegrees(endAngleDeg);
 
   for (const angle of collectAxisAngles(lowerAngle, upperAngle)) {
     // 端角已通过端点投影包含
@@ -135,7 +129,7 @@ export const isAngleWithinArcSweep = ({
 
   const ccw = span < 0;
   const raw = ccw ? startAngleDeg - angleDeg : angleDeg - startAngleDeg;
-  const swept = normalizeAngleDegrees(raw);
+  const swept = normalizeDegrees(raw);
 
   return swept <= total + toleranceDeg || swept >= 360 - toleranceDeg;
 };
@@ -168,8 +162,8 @@ export const collectEllipseArcBoundingCandidates = ({
   ];
   const lowerAngle = Math.min(startAngleDeg, endAngleDeg);
   const upperAngle = Math.max(startAngleDeg, endAngleDeg);
-  const normalizedStartAngle = normalizeAngleDegrees(startAngleDeg);
-  const normalizedEndAngle = normalizeAngleDegrees(endAngleDeg);
+  const normalizedStartAngle = normalizeDegrees(startAngleDeg);
+  const normalizedEndAngle = normalizeDegrees(endAngleDeg);
 
   for (const angle of collectAxisAngles(lowerAngle, upperAngle)) {
     if (angle === normalizedStartAngle || angle === normalizedEndAngle) continue;

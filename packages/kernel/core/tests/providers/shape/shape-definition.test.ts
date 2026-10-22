@@ -1,11 +1,11 @@
+import { localToWorld, worldToLocal } from '@retikz/math';
+import type { CenteredBox } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
 import type { PathCommand, ResolvedShapeStyle, ScenePrimitive, ShapeDefinition } from '../../../src/contract';
 import { defineShape } from '../../../src/contract';
 import { BUILTIN_SHAPES } from '../../../src/providers/shape';
-import type { Rect } from '../../../src/shared/geometry/rect';
-import { localToWorld, worldToLocal } from '../../../src/shared/geometry/transform';
 
 const SQRT2 = Math.SQRT2;
 
@@ -48,7 +48,7 @@ describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
 });
 
 describe('BUILTIN_SHAPES.anchor returns canonical anchors, undefined otherwise', () => {
-  const rect: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
+  const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
   it('rectangle named anchors', () => {
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'center', NO_PARAMS)).toBeUndefined();
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'top', NO_PARAMS)).toEqual([0, -5]);
@@ -70,7 +70,7 @@ describe('BUILTIN_SHAPES.anchor returns canonical anchors, undefined otherwise',
 
 describe('boundaryPoint honours rect.rotate (rotate-bearing rect)', () => {
   it('rectangle rotated 90° clips toward +x at the rotated short half-axis', () => {
-    const rect: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: Math.PI / 2 };
+    const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: Math.PI / 2 };
     const [px, py] = BUILTIN_SHAPES.rectangle.boundaryPoint(rect, [100, 0], NO_PARAMS);
 
     expect(px).toBeCloseTo(5, 6);
@@ -79,7 +79,7 @@ describe('boundaryPoint honours rect.rotate (rotate-bearing rect)', () => {
 });
 
 describe('emit runs in axis-aligned space and returns Iterable<ScenePrimitive>', () => {
-  const rect: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
+  const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
   const style: ResolvedShapeStyle = { fill: 'red', stroke: 'blue', strokeWidth: 2 };
   it('rectangle → single RectPrim', () => {
     const prims = [...BUILTIN_SHAPES.rectangle.emit(rect, style, id, NO_PARAMS)];
@@ -89,7 +89,7 @@ describe('emit runs in axis-aligned space and returns Iterable<ScenePrimitive>',
   });
 
   it('circle (= ellipse equal) emit → EllipsePrim with rx === ry', () => {
-    const square: Rect = { x: 0, y: 0, width: 20, height: 20, rotate: 0 };
+    const square: CenteredBox = { x: 0, y: 0, width: 20, height: 20, rotate: 0 };
     const prims = [...BUILTIN_SHAPES.ellipse.emit(square, style, id, EQUAL_PARAMS)];
 
     expect(prims[0].type).toBe('ellipse');
@@ -177,7 +177,7 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
 
   it('outline and keyPoints are optional geometry capabilities with JSON-safe results', () => {
     const poly = createPolygonShape();
-    const rect: Rect = { x: 4, y: 5, width: 10, height: 6, rotate: 0 };
+    const rect: CenteredBox = { x: 4, y: 5, width: 10, height: 6, rotate: 0 };
 
     expect(poly.outline?.(rect, NO_PARAMS)).toEqual([
       { kind: 'move', to: [-1, 2] },
@@ -191,7 +191,7 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
 });
 
 describe('BUILTIN_SHAPES outline contract', () => {
-  const rect: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
+  const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
 
   it('publishes explicit closed outlines for rectangle, ellipse, and polygon', () => {
     const rectangleOutline = BUILTIN_SHAPES.rectangle.outline?.(rect, NO_PARAMS);
@@ -221,7 +221,7 @@ describe('BUILTIN_SHAPES outline contract', () => {
 });
 
 describe('BUILTIN_SHAPES.edgePoint —— 内置 4 shape 必实现，落真实边界', () => {
-  const r: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
+  const r: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
 
   it('直边 / 周长类 shape（rectangle / ellipse）实现 edgePoint', () => {
     // circle preset 复用 ellipse edgePoint；diamond preset 复用 polygon（正多边形无 4 named side 语义、edgePoint 为可选不实现）。
@@ -234,7 +234,7 @@ describe('BUILTIN_SHAPES.edgePoint —— 内置 4 shape 必实现，落真实�
   });
 
   it('circle (= ellipse equal) edgePoint（外接框 20×20 → radius 10，right t=0.5）', () => {
-    const square: Rect = { x: 0, y: 0, width: 20, height: 20, rotate: 0 };
+    const square: CenteredBox = { x: 0, y: 0, width: 20, height: 20, rotate: 0 };
     const p = BUILTIN_SHAPES.ellipse.edgePoint!(square, 'right', 0.5, EQUAL_PARAMS);
 
     expect(p[0]).toBeCloseTo(10, 6);
@@ -242,7 +242,7 @@ describe('BUILTIN_SHAPES.edgePoint —— 内置 4 shape 必实现，落真实�
   });
 
   it('ellipse.edgePoint：外接框 ×√2 后落椭圆周（right t=0.5 = (rx, 0)）', () => {
-    // shapes/ellipse 把 Rect(width) → rx = width/2 / √2？实际由 toEllipse 决定，仅校验在周长上
+    // shapes/ellipse 把 CenteredBox(width) → rx = width/2 / √2？实际由 toEllipse 决定，仅校验在周长上
     const p = BUILTIN_SHAPES.ellipse.edgePoint!(r, 'right', 0.5, NO_PARAMS);
 
     // right 中点必在 +x 轴上

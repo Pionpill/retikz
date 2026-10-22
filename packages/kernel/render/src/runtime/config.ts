@@ -1,13 +1,11 @@
-import type { RuntimeDeepReadonly } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
-import type { RuntimeSourceDefinition } from '@retikz/runtime';
-import { defineRuntimeSource } from '@retikz/runtime';
+import type { RuntimeDeepReadonly } from '@retikz/reconciler';
 
 import type { AnimationPropertyRegistry, EasingRegistry } from '../animation';
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { HydrationHandlers } from '../hydration';
 import { RetikzEvent } from '../hydration';
-import { cloneAndFreezeRuntimeValue, isPlainObject, runtimeStructuralEquals } from './shared';
+import { cloneAndFreezeRuntimeValue, isPlainObject } from './shared';
 
 /** Render runtime config 的固定 owner key */
 export const RENDER_RUNTIME_SOURCE_KEY = '@retikz/render:runtime-config' as const;
@@ -228,7 +226,7 @@ const normalizeContributions = (value: unknown): ReadonlyArray<RenderHandlerCont
   return contributions.sort((left, right) => left.registration - right.registration);
 };
 
-const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRuntimeConfig => {
+export const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRuntimeConfig => {
   try {
     const candidate: unknown = input;
     assertPlainRecord(candidate);
@@ -310,18 +308,3 @@ const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRuntimeCon
     return invalidRuntimeInput(cause);
   }
 };
-
-/** Render runtime config 的 Runtime owner Definition */
-export const RenderRuntimeSourceDefinition: RuntimeSourceDefinition<
-  RenderRuntimeConfigInput,
-  RenderRuntimeConfig,
-  RenderRuntimeConfig,
-  never
-> = defineRuntimeSource<RenderRuntimeConfigInput, RenderRuntimeConfig, RenderRuntimeConfig, never>({
-  key: RENDER_RUNTIME_SOURCE_KEY,
-  value: {
-    capture: captureRuntimeConfig,
-    read: value => value,
-    equals: runtimeStructuralEquals,
-  },
-});

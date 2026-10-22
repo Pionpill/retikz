@@ -45,3 +45,7 @@ export type BuiltinPlotCoordinate = ValueOf<typeof BuiltinPlotCoordinate>;
 
 /** Polar2D 相邻位置的连接空间 */
 export type PolarInterpolation = ValueOf<typeof PolarInterpolation>;
+
+/** 几何连接遵循坐标空间或投影后直连 */
+export const CoordinateConnection = { Coordinate: 'coordinate', Straight: 'straight' } as const;
+export type CoordinateConnection = ValueOf<typeof CoordinateConnection>;

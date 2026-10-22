@@ -3,6 +3,7 @@ import { enum as zodEnum, lazy, number, object, string, union } from 'zod';
 
 import { FontStyle, FontWeightKeyword, WebFontSizePreset } from './constants';
 
+/** 校验正数 em 或 rem 字号 */
 const RelativeFontSizeSchema = string()
   .regex(/^(?:\d+(?:\.\d+)?|\.\d+)(?:em|rem)$/)
   .refine(value => Number.parseFloat(value) > 0)

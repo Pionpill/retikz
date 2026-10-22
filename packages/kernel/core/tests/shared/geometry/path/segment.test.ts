@@ -3,6 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { foldSegmentSample } from '../../../../src/shared/geometry/path';
 
 describe('foldSegmentSample', () => {
+  it('空拐点数组退化为一条直线', () => {
+    expect(foldSegmentSample([0, 0], [], [10, 0], 0.5)).toEqual({ point: [5, 0], tangent: [1, 0] });
+  });
   it('t<=0.5 走第一段 (from→corner)；t>0.5 走第二段 (corner→to)', () => {
     const from: [number, number] = [0, 0];
     const corner: [number, number] = [10, 0];

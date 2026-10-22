@@ -41,9 +41,9 @@ export const ScaleContinuousPreview = (values: ScaleContinuousPreviewValues) => 
     marks: [
       {
         type: 'point',
-        color: { kind: 'field', value: 'value', scale: 'color' },
-        size: { kind: 'constant', value: 7 },
-        encoding: { x: { field: 'x' }, y: { field: 'y' } },
+
+        encodings: { color: { field: 'value', scale: 'color' }, position: { x: { field: 'x' }, y: { field: 'y' } } },
+        properties: { size: 7 },
       },
     ],
     guides: [

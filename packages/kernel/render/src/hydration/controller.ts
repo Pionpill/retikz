@@ -1,4 +1,4 @@
-import { runtimeIdentityEquals } from '@retikz/runtime';
+import { sceneIdentityEquals } from '@retikz/reconciler';
 
 import type { BuildContext, HydrationContext } from './context';
 import { noopAnimationControls } from './context';
@@ -64,7 +64,7 @@ const hydrationTargetEquals = (
 ): boolean => {
   if (typeof left === 'string' || typeof right === 'string') return left === right;
   if (left === null || right === null) return left === right;
-  return runtimeIdentityEquals(left.semanticOwner, right.semanticOwner);
+  return sceneIdentityEquals(left.semanticOwner, right.semanticOwner);
 };
 
 /** 执行 listener teardown；成功项立即移除，失败项保留以允许后续重试 */
@@ -98,7 +98,7 @@ const hasContains = (target: EventTarget): target is Node => typeof (target as P
  *   root 注册一个 EVENT_DOM_TYPE 监听器，事件到来时经 locate 定位到图元 id、查 handlers 触发。
  *   pointerEnter / pointerLeave 不直接监听、由 pointermove + 「上一帧命中 id」状态机合成（renderer 无关、经
  *   同一 locate）：仅当 handlers 含任一 enter/leave 时才在 root 挂 pointermove；每次 move 解析 current target，
- *   与 last target 的 RuntimeIdentity 不同则先 fire 旧 public id 的 leave、再 fire 新 public id 的 enter。离开整图
+ *   与 last target 的 SceneIdentity 不同则先 fire 旧 public id 的 leave、再 fire 新 public id 的 enter。离开整图
  *   （root pointerleave，或 pointerout 且 relatedTarget 在 root 外）→ fire last target 的 leave 并清空。SVG 与 Canvas
  *   （hitTest 坐标命中）共用此实现 → 双模等价。返回 { dispose } 解绑全部 listener。
  *

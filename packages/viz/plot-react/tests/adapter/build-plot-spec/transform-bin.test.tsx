@@ -11,7 +11,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     const spec = buildPlotIR(
       <>
         <PlotTransform operation={{ kind: 'bin', params: { field: 'measurement', count: 20 } }} />
-        <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
+        <IntervalMark x0="binStart" x1="binEnd" encodings={{ position: { y: { field: 'binCount' } } }} />
       </>,
       '__plot',
     );
@@ -23,7 +23,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     const spec = buildPlotIR(
       <>
         <PlotTransform operation={{ kind: 'bin', params: { field: 'm', step: 5 } }} />
-        <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
+        <IntervalMark x0="binStart" x1="binEnd" encodings={{ position: { y: { field: 'binCount' } } }} />
       </>,
       '__plot',
     );
@@ -36,8 +36,8 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     if (!isBuiltinMark(mark) || mark.type !== 'interval') throw new Error('expected interval mark');
 
     // histogram：仅 y 高度通道、无 encoding.x
-    expect(mark.encoding.y).toEqual({ field: 'binCount' });
-    expect(mark.encoding.x).toBeUndefined();
+    expect(mark.encodings?.position?.y).toEqual({ field: 'binCount' });
+    expect(mark.encodings?.position?.x).toBeUndefined();
 
     // 连续 x linear scale（非 band）
     expect(spec.scales).toContainEqual({ type: 'linear', name: '__x' });
@@ -45,13 +45,23 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
   });
 
   it('bar_width_proportional_keeps_x_as_axis_label_field', () => {
-    const spec = buildPlotIR(<IntervalMark x="country" y="cost" width="gdp" color="country" />, '__plot');
+    const spec = buildPlotIR(
+      <IntervalMark
+        width="gdp"
+        encodings={{ color: 'country', position: { x: { field: 'country' }, y: { field: 'cost' } } }}
+      />,
+      '__plot',
+    );
     const mark = spec.marks[0];
 
     expect(mark).toMatchObject({
       type: 'interval',
-      bounds: { x: { kind: 'proportional', field: 'gdp' } },
-      encoding: { x: { field: 'country' }, y: { field: 'cost' }, color: { field: 'country', scale: '__color' } },
+      encodings: {
+        bounds: { x: { weight: 'gdp' } },
+        color: { field: 'country', scale: '__color' },
+        position: { x: { field: 'country' }, y: { field: 'cost' } },
+      },
+      properties: { bounds: { x: { kind: 'proportional' } } },
     });
     expect(spec.scales.find(scale => scale.name === '__x')?.type).toBe('linear');
   });
@@ -68,7 +78,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
             },
           }}
         />
-        <IntervalMark x="region" y="totalRevenue" />
+        <IntervalMark encodings={{ position: { x: { field: 'region' }, y: { field: 'totalRevenue' } } }} />
       </>,
       '__plot',
     );
@@ -88,24 +98,28 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     // 普通分类柱（x band）
     expect(spec.marks[0]).toMatchObject({
       type: 'interval',
-      encoding: { x: { field: 'region' }, y: { field: 'totalRevenue' } },
+      encodings: { position: { x: { field: 'region' }, y: { field: 'totalRevenue' } } },
     });
   });
 
   it('plot_transforms_option_direct_pass', () => {
-    const spec = buildPlotIR(<IntervalMark x="region" y="total" />, '__plot', {
-      transforms: [
-        {
-          operation: {
-            kind: 'summarize',
-            params: {
-              groupBy: ['region'],
-              metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+    const spec = buildPlotIR(
+      <IntervalMark encodings={{ position: { x: { field: 'region' }, y: { field: 'total' } } }} />,
+      '__plot',
+      {
+        transforms: [
+          {
+            operation: {
+              kind: 'summarize',
+              params: {
+                groupBy: ['region'],
+                metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+              },
             },
           },
-        },
-      ],
-    });
+        ],
+      },
+    );
 
     expect(spec.transform).toEqual([
       {
@@ -125,7 +139,10 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     const spec = buildPlotIR(
       <>
         <PlotTransform operation={{ kind: 'stack', params: { x: 'month', y: 'revenue', groupBy: 'product' } }} />
-        <IntervalMark x="month" y="revenue" series="product" stack />
+        <IntervalMark
+          stack
+          encodings={{ series: 'product', position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
+        />
       </>,
       '__plot',
     );
@@ -134,13 +151,24 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     expect(stacks).toHaveLength(1);
 
     // mark 仍标记为 stack 排布（bounds.y extent 读 y0/y1）
-    expect(spec.marks[0]).toMatchObject({ type: 'interval', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } } });
+    expect(spec.marks[0]).toMatchObject({
+      type: 'interval',
+      encodings: { bounds: { y: { from: { field: 'y0' }, to: { field: 'y1' } } } },
+      properties: { bounds: { y: { kind: 'extent' } } },
+    });
   });
 
   it('options_transforms_with_stack_suppresses_shortcut_stack', () => {
-    const spec = buildPlotIR(<IntervalMark x="month" y="revenue" series="product" stack />, '__plot', {
-      transforms: [{ operation: { kind: 'stack', params: { x: 'month', y: 'revenue', groupBy: 'product' } } }],
-    });
+    const spec = buildPlotIR(
+      <IntervalMark
+        stack
+        encodings={{ series: 'product', position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
+      />,
+      '__plot',
+      {
+        transforms: [{ operation: { kind: 'stack', params: { x: 'month', y: 'revenue', groupBy: 'product' } } }],
+      },
+    );
 
     expect(
       (spec.transform ?? []).map(declaration => declaration.operation).filter(t => t.kind === 'stack'),
@@ -160,7 +188,10 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
             },
           }}
         />
-        <IntervalMark x="month" y="total" series="product" stack />
+        <IntervalMark
+          stack
+          encodings={{ series: 'product', position: { x: { field: 'month' }, y: { field: 'total' } } }}
+        />
       </>,
       '__plot',
     );
@@ -173,7 +204,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     const spec = buildPlotIR(
       <>
         <PlotTransform operation={{ kind: 'bin', params: { field: 'm', count: 10 } }} />
-        <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
+        <IntervalMark x0="binStart" x1="binEnd" encodings={{ position: { y: { field: 'binCount' } } }} />
       </>,
       '__plot',
     );

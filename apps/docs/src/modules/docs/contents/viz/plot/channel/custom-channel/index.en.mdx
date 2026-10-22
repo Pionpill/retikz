@@ -1,13 +1,13 @@
 ---
 title: Custom Channels
-description: Use a ChannelDefinition to resolve fields or constants into existing Core properties, then inject it into Plot's shared channel registry through definitions.channels.
+description: Use a ChannelDefinition to resolve fields into existing Core properties, then inject it into Plot's shared channel registry through definitions.channels.
 ---
 
 After learning [field and constant bindings](/viz/plot/channel/binding), you can define your own channel names and value mappings. This page maps `score` to point opacity through `intensity`: higher scores produce more opaque points, while a constant gives every point the same opacity.
 
 ## Applicability
 
-- Define a custom channel when you need a new `encoding.channels.<name>` that participates in field / constant binding, per-row evaluation, and legend descriptors.
+- Define a custom channel when you need a new `encodings.<name>` that participates in field / constant binding, per-row evaluation, and legend descriptors.
 - Use a [Custom Scale](/viz/plot/scale/custom-scale) only when changing value-to-coordinate or value-to-color mapping. Other visual properties such as size and opacity are still evaluated and delivered by their channels.
 - Field preparation, aggregation, and filtering belong to [Data Extensions](/viz/data/model/extensions), not a channel resolver.
 
@@ -38,7 +38,7 @@ Use `defineScopeChannel`, `defineNodeChannel`, `definePathChannel`, or the gener
 
 | Field     | Purpose                                                                                                    |
 | --------- | ---------------------------------------------------------------------------------------------------------- |
-| `channel` | Unique registry name used by `encoding.channels.<name>`                                                    |
+| `channel` | Unique registry name used by `encodings.<name>`                                                    |
 | `output`  | Declares output type and optional range / palette / clamp metadata; it does not map or clamp values itself |
 | `legend?` | Declares the legend form                                                                                   |
 | `resolve` | Reads a field or constant binding, performs mapping and clamp, and returns a resolver plus descriptor      |
@@ -47,37 +47,19 @@ Use `defineScopeChannel`, `defineNodeChannel`, `definePathChannel`, or the gener
 This example uses `defineNodeChannel` because opacity is delivered to each point. The complete definition below is shared by the React and Vanilla hosts:
 
 ```ts
-import { defineNodeChannel } from '@retikz/plot';
-
-type ExtensionChannelBinding = { field?: string; value?: unknown };
-
-const extensionChannelsOf = (mark: {
-  encoding?: { channels?: Partial<Record<string, ExtensionChannelBinding>> };
-}): Partial<Record<string, ExtensionChannelBinding>> => mark.encoding?.channels ?? {};
+import { channelField, defineNodeChannel, markChannelEncoding } from '@retikz/plot';
 
 const clampIntensity = (value: number): number => Math.min(1, Math.max(0.3, value));
 
-/** Custom intensity channel: map field values to opacity and clamp constants before delivery */
+/** 自定义 intensity 通道：字段值映射到 opacity，固定透明度使用 properties.opacity */
 export const intensityChannel = defineNodeChannel<number>({
   channel: 'intensity',
   output: { outputKind: 'number', range: [0.3, 1], clamp: true },
   legend: 'ramp',
   resolve: (ctx, mark) => {
-    const binding = extensionChannelsOf(mark).intensity;
+    const binding = markChannelEncoding(mark, 'intensity');
     if (binding === undefined) return undefined;
-    if (binding.value !== undefined) {
-      if (typeof binding.value !== 'number' || !Number.isFinite(binding.value)) {
-        throw new Error('lowerPlots: intensity constant must be a finite number');
-      }
-
-      const value = clampIntensity(binding.value);
-
-      return { resolver: () => value };
-    }
-
-    if (binding.field === undefined) return undefined;
-
-    const field = binding.field;
+    const field = channelField(binding);
     const values = ctx.rows.map(row => Number(row[field])).filter(Number.isFinite);
     if (values.length === 0) return undefined;
 
@@ -123,37 +105,36 @@ React and Vanilla share the definition above; choose the host used by your proje
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
 
-Inject the definition on `Plot`, then reference its registered name in the child mark’s `channels`:
+Inject the definition on `Plot`, then reference its registered name in the child mark’s `encodings`:
 
 ```tsx
 <Plot data={customChannelPoints} definitions={{ channels: [intensityChannel] }}>
-  <PointMark x="x" y="y" channels={{ intensity: 'score' }} />
+  <PointMark encodings={{ intensity: 'score', position: { x: "x", y: "y" } }} />
 </Plot>
 ```
 
-A string in the React DSL means a field name; use `{ kind: 'constant', value }` for a constant:
+Write fields under `encodings`; set fixed opacity with `properties.opacity.overall`:
 
 ```tsx
-<PointMark channels={{ intensity: 'score' }} />
-<PointMark channels={{ intensity: { kind: 'constant', value: 0.65 } }} />
+<PointMark encodings={{ intensity: 'score' }} />
+<PointMark properties={{ opacity: { overall: 0.65 } }} />
 ```
 
 </DocTab>
 <DocTab value="vanilla" label="Vanilla">
 
-Inject through the third argument of `renderPlot`. Here, `spec` is the Plot configuration in the preview’s Vanilla source, where `encoding.channels.intensity` already binds score:
+Inject through the third argument of `renderPlot`. Here, `spec` is the Plot configuration in the preview’s Vanilla source, where `encodings.intensity` already binds score:
 
 ```ts
 const svg = renderPlot(spec, { points: customChannelPoints }, { definitions: { channels: [intensityChannel] } });
 ```
 
-The Vanilla example uses Plot IR directly: bind a field with `{ field }` or a constant with `{ value }`:
+Vanilla and JSON use the same field-name shorthand. Use a field/scale object only to select a declared scale:
 
 ```ts
 import type { IRPlotChannel } from '@retikz/plot';
 
-const fieldBinding: IRPlotChannel = { field: 'score' };
-const constantBinding: IRPlotChannel = { value: 0.65 };
+const fieldBinding: IRPlotChannel = 'score';
 ```
 
 </DocTab>
@@ -163,19 +144,10 @@ The definition always stays in the runtime and never enters Plot IR.
 
 ## Errors and limits
 
-- A custom `channel` cannot override a built-in name or be registered twice; binding an unregistered channel fails during lowering.
-- Each binding must select exactly one of `field` and `value`, and constants must be JSON values.
-- The definition decides which value types it accepts. The example `intensity` constant accepts only finite numbers and performs its own clamp in `resolve`.
-- `resolve` should not mutate data or generate geometry; `deliver` may only write properties supported by the corresponding Core primitive.
-- IR stores only field or JSON-constant bindings, never functions or definitions.
-
-This binding fails schema validation because it sets both a field and a constant:
-
-```ts
-encoding: {
-  channels: { intensity: { field: 'score', value: 0.65 } },
-}
-```
+- Custom names cannot override built-ins or be registered twice. Unregistered or unconsumed targets fail.
+- A binding accepts a nonblank field name or a required field/scale pair. Fixed values belong to the mark's supported properties.
+- This intensity definition maps fields to opacity. Fixed mode sets opacity.overall directly without introducing a new fixed property.
+- resolve does not mutate data or generate geometry; deliver writes supported host properties. Definitions remain in the runtime and never enter JSON.
 
 ## Related props
 
@@ -205,11 +177,10 @@ These are the entries used by this example. See the [encoding reference](/viz/pl
         'Inject through Plot props in React or renderPlot options in Vanilla. Each element contains channel, kind, and the matching resolution and delivery functions. These objects stay in the runtime and do not enter IR.',
     },
     {
-      name: 'PointMark.channels',
+      name: 'PointMark.encodings',
       kind: 'property',
       type: 'Record<string, InputPlotExtensionChannel>',
-      description:
-        "Binds values by registered channel name. This example uses the field string 'score' or an explicit constant { kind: 'constant', value: 0.65 }. Normalized IR stores { field: 'score' } or { value: 0.65 }; field and value are mutually exclusive.",
+      description: 'Binds fields by registered name; strings remain field names in Source.',
     },
   ]}
 />

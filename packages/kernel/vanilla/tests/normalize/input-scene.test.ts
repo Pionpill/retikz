@@ -1,7 +1,7 @@
 import type { AnyCompositeDefinition, CompileWarning, IRPath } from '@retikz/core';
 import {
   compileToScene,
-  CompileWarningCode,
+  BuiltinCompileWarningCode,
   CompositeBaseSchema,
   DEFAULT_RESOLVED_THEME,
   defineComposite,
@@ -108,7 +108,7 @@ describe('@retikz/vanilla InputScene', () => {
           id: 'main',
           children: [
             node({ id: 'source', position: [0, 0] }),
-            path({ id: 'edge', way: ['source', [24, 0]], thickness: 'thick' }),
+            path({ id: 'edge', way: ['source', [24, 0]], style: { strokeWidth: 2 } }),
           ],
         }),
       ],
@@ -121,7 +121,7 @@ describe('@retikz/vanilla InputScene', () => {
           id: 'main',
           children: [
             { type: 'node', id: 'source' },
-            { id: 'edge', way: ['source', [24, 0]], thickness: 'thick' },
+            { id: 'edge', way: ['source', [24, 0]], style: { strokeWidth: 2 } },
           ],
         },
       ],
@@ -246,7 +246,7 @@ describe('@retikz/vanilla InputScene', () => {
     const line = edge?.type === 'path' ? edge.commands.find(command => command.kind === 'line') : undefined;
 
     expect(warnings).toEqual(
-      expect.arrayContaining([expect.objectContaining({ code: CompileWarningCode.DuplicateNodeId })]),
+      expect.arrayContaining([expect.objectContaining({ code: BuiltinCompileWarningCode.DuplicateNodeId })]),
     );
     expect(line?.to[0]).toBeGreaterThan(60);
   });
@@ -296,7 +296,7 @@ describe('@retikz/vanilla InputScene', () => {
     expect(JSON.stringify(normalized.ir)).not.toContain('static');
   });
 
-  it('normalizeScene 解析 path shorthand，并遵守显式 strokeWidth 优先级', () => {
+  it('normalizeScene 解析 path shorthand，并保留零线宽', () => {
     const normalized = normalizeScene(
       scene([
         path({
@@ -305,7 +305,6 @@ describe('@retikz/vanilla InputScene', () => {
             [0, 0],
             [24, 0],
           ],
-          thickness: 'thick',
           style: { strokeWidth: 0 },
         }),
       ]),

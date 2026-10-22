@@ -1,3 +1,4 @@
+import type { CenteredBox } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { enum as zodEnum, number, strictObject } from 'zod';
 
@@ -5,7 +6,6 @@ import type { BoundaryDefinition, PathCommand, ShapeDefinition } from '../../con
 import { defineBoundary } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { BoundaryFit, BuiltinShape } from '../../schemas';
-import type { Rect } from '../../shared';
 import { defineBuiltinProviderArray } from '../registry/index';
 import { ellipseShape, rectangle } from '../shape';
 
@@ -19,7 +19,13 @@ const builtinBoundaryParamsSchema = strictObject({
 type BuiltinBoundaryParams = ZodInfer<typeof builtinBoundaryParamsSchema>;
 
 /** 用指定半轴替换 rect 尺寸，并在 fit 后应用有符号 gap */
-const withGap = (rect: Rect, halfWidth: number, halfHeight: number, gap: number, provider: string): Rect => {
+const withGap = (
+  rect: CenteredBox,
+  halfWidth: number,
+  halfHeight: number,
+  gap: number,
+  provider: string,
+): CenteredBox => {
   const effectiveHalfWidth = halfWidth + gap;
   const effectiveHalfHeight = halfHeight + gap;
   if (effectiveHalfWidth <= 0 || effectiveHalfHeight <= 0) {
@@ -33,19 +39,19 @@ const withGap = (rect: Rect, halfWidth: number, halfHeight: number, gap: number,
 };
 
 /** 按 visual AABB 返回规则圆半轴 */
-const boundsCircleHalfAxes = (rect: Rect): { halfWidth: number; halfHeight: number } => {
+const boundsCircleHalfAxes = (rect: CenteredBox): { halfWidth: number; halfHeight: number } => {
   const radius = Math.hypot(rect.width / 2, rect.height / 2);
   return { halfWidth: radius, halfHeight: radius };
 };
 
 /** 按 visual AABB 返回四角外接椭圆半轴 */
-const boundsEllipseHalfAxes = (rect: Rect): { halfWidth: number; halfHeight: number } => ({
+const boundsEllipseHalfAxes = (rect: CenteredBox): { halfWidth: number; halfHeight: number } => ({
   halfWidth: (rect.width / 2) * Math.SQRT2,
   halfHeight: (rect.height / 2) * Math.SQRT2,
 });
 
 /** 复用已解析 Shape provider 的精确轮廓能力，避免 Boundary 维护第二套几何公式 */
-const outlineFromShape = (shape: ShapeDefinition, rect: Rect): ReadonlyArray<PathCommand> => {
+const outlineFromShape = (shape: ShapeDefinition, rect: CenteredBox): ReadonlyArray<PathCommand> => {
   if (shape.outline === undefined) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.CompositeContractViolation,

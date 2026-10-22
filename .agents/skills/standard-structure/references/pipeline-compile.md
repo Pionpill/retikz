@@ -2,7 +2,7 @@
 
 `pipeline/` 和 `compile/` 是编排与消费层。公开编译入口接收已类型化的 Source IR 后，创建并维护 registry、引用、host、data、theme、measurement 等 context，在依赖就绪点调度纵向领域 `resolveXxx`，再执行 lowering / layout / emit，输出 Kernel IR 或 Scene primitive。默认、优先级、lookup、领域值转换和 Canonical 数据结构属于 `resolve/`；不要散落到 pipeline / compile。
 
-`compileToScene` 继续是 Core 唯一的公开编译入口，接收 `IRScene`；不新增同义的 `compileIRToScene`。`InputXxx -> IRXxx` 的 authoring normalize 属于 Vanilla，`unknown -> IRXxx` 的 parse 属于 parse / schema 边界。
+`compileToScene` 保持 Core 完整 Scene 编译的主入口，接收 `IRScene`；允许职责明确的编译准备、单元素计算及产物组装契约，不新增同义的 `compileIRToScene`，各入口必须复用同一绘图语义。`InputXxx -> IRXxx` 的 authoring normalize 属于 Vanilla，`unknown -> IRXxx` 的 parse 属于 parse / schema 边界。
 
 ## 分工
 

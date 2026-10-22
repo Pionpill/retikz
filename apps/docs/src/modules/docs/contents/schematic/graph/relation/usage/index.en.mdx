@@ -215,7 +215,7 @@ The combined playground switches among all five built-in roles and directly adju
 
 ## Labels and routes
 
-`labels` accepts Core GeometryLabel values. `text` supports newline-separated strings or arrays of text lines. Labels default to the path centerline, an `sm` font, and the relation color. Each label's `textColor`, `font`, and `opacity` override relation-level defaults.
+`labels` accepts Core PathLabel values. `text` supports newline-separated strings or arrays of text lines. Labels default to the path centerline, an `sm` font, and the relation color. Each label's `textColor`, `font`, and `opacity` override relation-level defaults.
 
 Without `route`, Relation connects source directly to target. An explicit route is a complete sequence of at least two Core Steps in root coordinates. React / Vanilla `way` normalizes to route; React also accepts Step children. These three forms are mutually exclusive. Put relation labels in `labels`, never in a route step's `label`.
 
@@ -272,7 +272,7 @@ These members cover endpoint references and authoring; component types and schem
     {
       name: 'Relation.labels',
       kind: 'property',
-      type: 'Array<IRGeometryLabel>',
+      type: 'Array<IRPathLabel>',
       description:
         'Each label contains `text`; use `position`, `side`, `font`, and `textColor` for placement and appearance.',
     },

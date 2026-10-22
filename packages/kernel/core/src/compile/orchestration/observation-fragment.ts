@@ -3,26 +3,26 @@ import { captureCompositeInputScope } from '../../contract/composite';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { safeErrorMessage } from '../../resolve/diagnostics';
 import type { IRChild } from '../../schemas';
-import { CompileWarningCode } from '../constants';
+import { BuiltinCompileWarningCode } from '../constants';
 import { createClipRegistry, createPaintRegistry } from '../resource';
 import { assertFiniteLayout, computeLayoutFromBounds } from '../scene';
 import type { CompileContext } from './context';
 import { orderCompileWarnings } from './diagnostics';
 import { compileChildrenToPrimitives } from './traversal';
-import type { PendingCompileObservation } from './types';
+import type { CompileObservationContribution } from './types';
 
 /** 辅助片段中必须提升为隔离编译失败的引用与 provider warning */
 const fatalFragmentWarningCodes = new Set<string>([
-  CompileWarningCode.CompositeNotRegistered,
-  CompileWarningCode.UnresolvedNodeReference,
-  CompileWarningCode.OffsetBaseUnresolved,
-  CompileWarningCode.PolarOriginUnresolved,
-  CompileWarningCode.AtTargetUnresolved,
+  BuiltinCompileWarningCode.CompositeNotRegistered,
+  BuiltinCompileWarningCode.UnresolvedNodeReference,
+  BuiltinCompileWarningCode.OffsetBaseUnresolved,
+  BuiltinCompileWarningCode.PolarOriginUnresolved,
+  BuiltinCompileWarningCode.AtTargetUnresolved,
 ]);
 
 /** 编译一个不回写 primary 的 occurrence-local IR 片段 */
 export const compileObservedFragment = (
-  entry: PendingCompileObservation,
+  entry: CompileObservationContribution,
   children: IRChild | ReadonlyArray<IRChild>,
   context: CompileContext,
 ): CompiledSceneFragment => {
@@ -34,7 +34,6 @@ export const compileObservedFragment = (
     ...context,
     runtimeInputs: captureCompositeInputScope({ children: values }, []),
     observation: undefined,
-    trace: undefined,
     paint,
     clip,
     onWarn: warning => {

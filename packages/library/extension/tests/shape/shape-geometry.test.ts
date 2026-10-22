@@ -1,5 +1,6 @@
-import type { PathPrim, Rect, ShapeDefinition } from '@retikz/core';
+import type { PathPrim, ShapeDefinition } from '@retikz/core';
 import type { JsonObject } from '@retikz/foundation';
+import type { CenteredBox } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -12,7 +13,7 @@ import {
 
 const identity = (value: number): number => value;
 
-const pathOf = (definition: ShapeDefinition, rect: Rect, params: JsonObject): PathPrim => {
+const pathOf = (definition: ShapeDefinition, rect: CenteredBox, params: JsonObject): PathPrim => {
   const primitive = [...definition.emit(rect, {}, identity, params)][0];
   if (primitive.type !== 'path') throw new Error(`Expected '${definition.name}' to emit one path`);
   return primitive;
@@ -243,7 +244,7 @@ describe('Extension container shape geometry', () => {
     expect(rounded.halfWidth).toBeGreaterThan(sharp.halfWidth);
     expect(rounded.halfHeight).toBeGreaterThan(sharp.halfHeight);
 
-    const rect: Rect = { x: 0, y: 0, width: rounded.halfWidth * 2, height: rounded.halfHeight * 2 };
+    const rect: CenteredBox = { x: 0, y: 0, width: rounded.halfWidth * 2, height: rounded.halfHeight * 2 };
 
     for (const corner of [
       [-36, -20],

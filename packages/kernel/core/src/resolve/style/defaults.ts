@@ -12,7 +12,10 @@ export const cutsStyleChannel = (reset: IRScopeDefaults['reset'], channel: Style
 };
 
 /** 在 Scope 入口合并默认配置；不提前展开主色或解析依赖元素的主题值 */
-export const resolveScopeDefaults = (scope: IRScope, parent: EffectiveScopeDefaults = {}): EffectiveScopeDefaults => {
+export const resolveScopeDefaults = <TScope extends Pick<IRScope, 'defaults'>>(
+  scope: TScope,
+  parent: EffectiveScopeDefaults = {},
+): EffectiveScopeDefaults => {
   const defaults = scope.defaults;
   if (defaults === undefined) return parent;
 

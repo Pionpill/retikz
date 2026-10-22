@@ -18,6 +18,11 @@ const createRecordingContext = (): CanvasRenderingContext2D => {
     strokeStyle: '#000',
     lineWidth: 1,
     lineDashOffset: 0,
+    measureText: (text: string) => ({
+      width: text.length * 8,
+      actualBoundingBoxAscent: 10,
+      actualBoundingBoxDescent: 2,
+    }),
   };
   return new Proxy(target, {
     get: (t, p) => (p in t ? t[p] : () => undefined),

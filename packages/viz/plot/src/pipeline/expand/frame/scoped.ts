@@ -6,6 +6,7 @@ import type { BoundsRect } from '@retikz/math';
 import type { AnyScaleDefinition, CoordinateFrame, DimensionRole } from '../../../contract';
 import type { ProvenanceContext } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
+import { resolveMarkRegistry } from '../../../providers';
 import { resolveCoordinateRegistry } from '../../../providers';
 import type {
   CompositionAxisPolicy,
@@ -153,6 +154,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     textMeasurer: options.textMeasurer,
     provenance,
     coordinateRegistry,
+    markRegistry: resolveMarkRegistry(options.definitions?.marks),
     fieldOrderRegistry: context.fieldOrderRegistry,
     scaleRegistry,
     legendReserve: legendReserveOf(guides.flatMap(guide => (guide.type === PlotGuide.Legend ? [guide] : []))),

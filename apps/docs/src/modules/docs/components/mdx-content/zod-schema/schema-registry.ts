@@ -917,10 +917,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/components/path/reference#pathmarkplacementschema',
   },
   StepSchema: { schema: IR.StepSchema, label: 'Step', url: '/kernel/components/path/reference#stepschema' },
-  GeometryLabelSchema: {
-    schema: IR.GeometryLabelSchema,
-    label: 'GeometryLabel',
-    url: '/kernel/components/path/reference#geometrylabelschema',
+  PathLabelSchema: {
+    schema: IR.PathLabelSchema,
+    label: 'PathLabel',
+    url: '/kernel/components/path/reference#pathlabelschema',
   },
   StepLabelSchema: { schema: IR.StepLabelSchema, label: 'StepLabel' },
   ControlPointSchema: {
@@ -2164,75 +2164,100 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'TrackArrangement',
     url: '/viz/plot/reference/plot#trackarrangementschema',
   },
-  EncodingSchema: {
-    schema: IRPlot.EncodingSchema,
-    label: 'Encoding',
-    url: '/viz/plot/reference/encoding#encodingschema',
-  },
   ChannelSchema: {
     schema: IRPlot.ChannelSchema,
     label: 'Channel',
     url: '/viz/plot/reference/encoding#channelschema',
+  },
+  Position1DEncodingSchema: {
+    schema: IRPlot.Position1DEncodingSchema,
+    label: 'Position1DEncoding',
+    url: '/viz/plot/reference/encoding#position1dencodingschema',
+  },
+  Position2DEncodingSchema: {
+    schema: IRPlot.Position2DEncodingSchema,
+    label: 'Position2DEncoding',
+    url: '/viz/plot/reference/encoding#position2dencodingschema',
+  },
+  Position3DEncodingSchema: {
+    schema: IRPlot.Position3DEncodingSchema,
+    label: 'Position3DEncoding',
+    url: '/viz/plot/reference/encoding#position3dencodingschema',
   },
   PositionEncodingSchema: {
     schema: IRPlot.PositionEncodingSchema,
     label: 'PositionEncoding',
     url: '/viz/plot/reference/encoding#positionencodingschema',
   },
-  MarkChannelEncodingSchema: {
-    schema: IRPlot.MarkChannelEncodingSchema,
-    label: 'MarkChannelEncoding',
-    url: '/viz/plot/reference/encoding#markchannelencodingschema',
+  VisualEncodingSchema: {
+    schema: IRPlot.VisualEncodingSchema,
+    label: 'VisualEncoding',
+    url: '/viz/plot/reference/encoding#visualencodingschema',
   },
-  SizeChannelSchema: {
-    schema: IRPlot.SizeChannelSchema,
-    label: 'SizeChannel',
-    url: '/viz/plot/reference/encoding#sizechannelschema',
+  LabelFontEncodingSchema: {
+    schema: IRPlot.LabelFontEncodingSchema,
+    label: 'LabelFontEncoding',
+    url: '/viz/plot/reference/encoding#labelfontencodingschema',
   },
-  OpacityChannelSchema: {
-    schema: IRPlot.OpacityChannelSchema,
-    label: 'OpacityChannel',
-    url: '/viz/plot/reference/encoding#opacitychannelschema',
+  NodeLabelEncodingSchema: {
+    schema: IRPlot.NodeLabelEncodingSchema,
+    label: 'NodeLabelEncoding',
+    url: '/viz/plot/reference/encoding#nodelabelencodingschema',
   },
-  ShapeChannelSchema: {
-    schema: IRPlot.ShapeChannelSchema,
-    label: 'ShapeChannel',
-    url: '/viz/plot/reference/encoding#shapechannelschema',
+  PathLabelEncodingSchema: {
+    schema: IRPlot.PathLabelEncodingSchema,
+    label: 'PathLabelEncoding',
+    url: '/viz/plot/reference/encoding#pathlabelencodingschema',
   },
-  TextChannelSchema: {
-    schema: IRPlot.TextChannelSchema,
-    label: 'TextChannel',
-    url: '/viz/plot/reference/encoding#textchannelschema',
+  LabelEncodingSchema: {
+    schema: IRPlot.LabelEncodingSchema,
+    label: 'LabelEncoding',
+    url: '/viz/plot/reference/encoding#labelencodingschema',
   },
-  LabelPinStyleSchema: {
-    schema: IRPlot.LabelPinStyleSchema,
-    label: 'LabelPinStyle',
-    url: '/viz/plot/reference/encoding#labelpinstyleschema',
+  OpacityEncodingSchema: {
+    schema: IRPlot.OpacityEncodingSchema,
+    label: 'OpacityEncoding',
+    url: '/viz/plot/reference/encoding#opacityencodingschema',
+  },
+  NodeEncodingSchema: {
+    schema: IRPlot.NodeEncodingSchema,
+    label: 'NodeEncoding',
+    url: '/viz/plot/reference/encoding#nodeencodingschema',
+  },
+  PathEncodingSchema: {
+    schema: IRPlot.PathEncodingSchema,
+    label: 'PathEncoding',
+    url: '/viz/plot/reference/encoding#pathencodingschema',
   },
   MarkLabelContentSchema: {
     schema: IRPlot.MarkLabelContentSchema,
     label: 'MarkLabelContent',
-    url: '/viz/plot/reference/encoding#marklabelcontentschema',
+    url: '/viz/plot/reference/mark#marklabelcontentschema',
   },
-  PointEncodingSchema: {
-    schema: IRPlot.PointEncodingSchema,
-    label: 'PointEncoding',
-    url: '/viz/plot/reference/encoding#pointencodingschema',
+  PathMarkEncodingSchema: {
+    schema: IRPlot.PathMarkEncodingSchema,
+    label: 'PathMarkEncoding',
+    url: '/viz/plot/reference/encoding#pathmarkencodingschema',
   },
-  MarkLabelSchema: {
-    schema: IRPlot.MarkLabelSchema,
-    label: 'MarkLabel',
-    url: '/viz/plot/reference/encoding#marklabelschema',
+  IntervalMarkEncodingSchema: {
+    schema: IRPlot.IntervalMarkEncodingSchema,
+    label: 'IntervalMarkEncoding',
+    url: '/viz/plot/reference/encoding#intervalmarkencodingschema',
+  },
+  PlotPointMarkEncodingSchema: {
+    schema: IRPlot.PointMarkEncodingSchema,
+    label: 'PointMarkEncoding',
+    url: '/viz/plot/reference/encoding#pointmarkencodingschema',
   },
   MarkNodeLabelSchema: {
     schema: IRPlot.MarkNodeLabelSchema,
     label: 'MarkNodeLabel',
-    url: '/viz/plot/reference/encoding#marknodelabelschema',
+    url: '/viz/plot/reference/mark#marknodelabelschema',
   },
-  MarkGeometryLabelSchema: {
-    schema: IRPlot.MarkGeometryLabelSchema,
-    label: 'MarkGeometryLabel',
-    url: '/viz/plot/reference/encoding#markgeometrylabelschema',
+  MarkPathLabelSchema: {
+    schema: IRPlot.MarkPathLabelSchema,
+    label: 'MarkPathLabel',
+    url: '/viz/plot/reference/mark#markpathlabelschema',
   },
   StackTransformSchema: {
     schema: DataIR.StackTransformSchema,

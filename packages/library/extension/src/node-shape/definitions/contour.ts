@@ -1,18 +1,16 @@
-import type { CoreDependencyProvider, Rect, ScenePrimitive } from '@retikz/core';
+import type { CoreDependencyProvider, ScenePrimitive } from '@retikz/core';
 import {
   boundaryFromContour,
   contourCommands,
   contourToPathCommands,
   contourToPathPrimitive,
   defineShape,
-  localToWorld,
   pointsConnectionEnvelope,
-  vector2,
   verticesToSegments,
 } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import type { Position } from '@retikz/math';
-import { boundsOf, centerOfBounds, halfAxesOfBounds } from '@retikz/math';
+import { boundsOf, centerOfBounds, halfAxesOfBounds, localToWorld, vector2 } from '@retikz/math';
+import type { CenteredBox, Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { array, number, strictObject, tuple } from 'zod';
 
@@ -52,7 +50,7 @@ const centeredPoints = (params: ContourShapeParams): Array<Position> => {
 };
 
 /** 将 Contour 转为世界系闭合轮廓 */
-const worldVertices = (rect: Rect, params: ContourShapeParams): Array<Position> =>
+const worldVertices = (rect: CenteredBox, params: ContourShapeParams): Array<Position> =>
   centeredPoints(params).map(vertex => localToWorld(rect, vertex));
 
 /** 可选 Contour 形状 Definition */

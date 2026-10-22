@@ -10,7 +10,7 @@ import type {
 } from '../computation';
 import { RuntimeComputationExecution, RuntimeComputationKind, RuntimeComputationPhase } from '../computation';
 import type { RuntimeDiagnostic, RuntimeDiagnosticPhase } from '../diagnostic';
-import { RuntimeDiagnosticCode } from '../diagnostic';
+import { BuiltinRuntimeDiagnosticCode } from '../diagnostic';
 import { getRuntimeDiagnosticMessage, RuntimeTraceDiagnosticCodes } from '../diagnostic/internal';
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import type { RuntimeRevision, RuntimeSourceDefinition, RuntimeSourceToken } from '../source';
@@ -44,7 +44,7 @@ export const createRuntimeObserverDiagnostic = (
   cause: unknown,
 ): RuntimeDiagnostic =>
   Object.freeze({
-    code: RuntimeDiagnosticCode.ComputationObserverFailed,
+    code: BuiltinRuntimeDiagnosticCode.ComputationObserverFailed,
     phase: 'observe',
     severity: 'error',
     message: getRuntimeDiagnosticMessage(cause),

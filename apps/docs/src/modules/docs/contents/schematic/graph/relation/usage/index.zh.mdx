@@ -215,7 +215,7 @@ Relation 的示例统一使用默认风格，并支持明暗模式。下面的 c
 
 ## 标签与路径
 
-`labels` 接受 Core GeometryLabel。`text` 支持换行字符串和文字行数组；默认位于路径中心线上，默认字体为 `sm`，文字颜色跟随 Relation 主色。单个 label 的 `textColor`、`font` 与 `opacity` 覆盖关系级默认。
+`labels` 接受 Core PathLabel。`text` 支持换行字符串和文字行数组；默认位于路径中心线上，默认字体为 `sm`，文字颜色跟随 Relation 主色。单个 label 的 `textColor`、`font` 与 `opacity` 覆盖关系级默认。
 
 省略 `route` 时从 source 直连 target。显式 `route` 是至少两个 Core Step 的完整序列，使用根坐标空间；React / Vanilla 的 `way` 会归一为 route，React 也支持 Step children。三种编写形式互斥。关系标签放在 `labels`，不能放到 route step 的 `label` 上。
 
@@ -272,7 +272,7 @@ Relation 的示例统一使用默认风格，并支持明暗模式。下面的 c
     {
       name: 'Relation.labels',
       kind: 'property',
-      type: 'Array<IRGeometryLabel>',
+      type: 'Array<IRPathLabel>',
       description: '沿线标签，每项包含 `text`，可用 `position`、`side`、`font` 和 `textColor` 调整位置与外观。',
     },
     {

@@ -2,13 +2,18 @@ import { isRetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 
 import type { RuntimeDiagnostic, RuntimeComputationId } from '../../src';
-import { RetikzRuntimeError, RetikzRuntimeErrorCode, RuntimeDiagnosticCode, RuntimeSourcePhase } from '../../src';
+import {
+  RetikzRuntimeError,
+  RetikzRuntimeErrorCode,
+  BuiltinRuntimeDiagnosticCode,
+  RuntimeSourcePhase,
+} from '../../src';
 
 const computation: RuntimeComputationId = { owner: 'owner', key: 'computation' };
 
 const diagnostics: ReadonlyArray<RuntimeDiagnostic> = [
   {
-    code: RuntimeDiagnosticCode.SourceDisposeFailed,
+    code: BuiltinRuntimeDiagnosticCode.SourceDisposeFailed,
     phase: 'retire',
     severity: 'warning',
     message: 'dispose failed',
@@ -88,7 +93,7 @@ describe('runtime structured errors', () => {
     const cause = new Error('dispose failed');
     const lifecycleDiagnostics = [
       {
-        code: RuntimeDiagnosticCode.SourceDisposeFailed,
+        code: BuiltinRuntimeDiagnosticCode.SourceDisposeFailed,
         owner: 'owner',
         phase: RuntimeSourcePhase.Retire,
         severity: 'error',

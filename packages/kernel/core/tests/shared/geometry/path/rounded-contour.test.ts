@@ -1,7 +1,7 @@
+import type { ContourSegment } from '@retikz/math';
 import { intersectRayWithArc, isAngleWithinArcSweep } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import type { ContourSegment } from '../../../../src/shared/geometry/path';
 import { boundaryFromContour, contourCommands, filletContour } from '../../../../src/shared/geometry/path';
 
 /*

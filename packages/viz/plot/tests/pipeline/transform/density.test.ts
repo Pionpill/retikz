@@ -58,9 +58,11 @@ describe('density transform behavior (contract)', () => {
       marks: [
         {
           type: 'path',
-          series: 'species',
-          order: 'densityX',
-          encoding: { x: { field: 'densityX' }, y: { field: 'density' } },
+          encodings: {
+            series: 'species',
+            order: 'densityX',
+            position: { x: { field: 'densityX' }, y: { field: 'density' } },
+          },
         },
       ],
     });

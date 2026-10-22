@@ -15,6 +15,7 @@ export const apiReferenceBranchLabels: Readonly<
   >
 > = {
   '@retikz/plot#ChannelDefinition': [
+    { value: 'label', field: 'kind', type: '"label"', label: { zh: '标签', en: 'Label' } },
     { value: 'position', field: 'kind', type: '"position"', label: { zh: '位置', en: 'Position' } },
     { value: 'mark', field: 'kind', type: '"mark"', label: { zh: '图元', en: 'Mark' } },
     { value: 'node', field: 'kind', type: '"node"', label: { zh: '节点', en: 'Node' } },
@@ -22,6 +23,7 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'scope', field: 'kind', type: '"scope"', label: { zh: '作用域', en: 'Scope' } },
   ],
   '@retikz/plot#AnyChannelDefinition': [
+    { value: 'label', field: 'kind', type: '"label"', label: { zh: '标签', en: 'Label' } },
     { value: 'position', field: 'kind', type: '"position"', label: { zh: '位置', en: 'Position' } },
     { value: 'mark', field: 'kind', type: 'typeof ChannelDefinitionKind.Mark', label: { zh: '图元', en: 'Mark' } },
     { value: 'node', field: 'kind', type: 'typeof ChannelDefinitionKind.Node', label: { zh: '节点', en: 'Node' } },
@@ -773,6 +775,16 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'cubic', field: 'kind', type: "'cubicBezier'", label: { zh: '三次贝塞尔', en: 'Cubic Bézier' } },
     { value: 'arc', field: 'kind', type: "'arc'", label: { zh: '圆弧', en: 'Circular arc' } },
     { value: 'ellipse-arc', field: 'kind', type: "'ellipseArc'", label: { zh: '椭圆弧', en: 'Elliptical arc' } },
+  ],
+  '@retikz/math#ContourCommand': [
+    { value: 'move', field: 'kind', type: "'move'", label: { zh: '移动', en: 'Move' } },
+    { value: 'line', field: 'kind', type: "'line'", label: { zh: '直线', en: 'Line' } },
+    { value: 'arc', field: 'kind', type: "'arc'", label: { zh: '圆弧', en: 'Arc' } },
+    { value: 'close', field: 'kind', type: "'close'", label: { zh: '闭合', en: 'Close' } },
+  ],
+  '@retikz/math#ContourSegment': [
+    { value: 'line', field: 'kind', type: "'line'", label: { zh: '直线段', en: 'Line segment' } },
+    { value: 'arc', field: 'kind', type: "'arc'", label: { zh: '圆弧段', en: 'Arc segment' } },
   ],
   '@retikz/react#FoldStepProps': [
     { value: 'two-segments', field: 'via', type: "'-|' | '|-'", label: { zh: '两段折线', en: 'Two segments' } },

@@ -65,7 +65,7 @@ export const renderValidationPolicyPreview = (values: ValidationPolicyValues, me
         height={250}
         style={{ maxWidth: '100%', height: 'auto' }}
       >
-        <IntervalMark x="month" y="revenue" color="month" />
+        <IntervalMark encodings={{ color: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
         <PlotScale dimension="y" type="linear" domainPadding={0} />
         <PlotAxis dimension="x" />
         <PlotAxis dimension="y" grid />

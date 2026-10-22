@@ -337,6 +337,11 @@ const translations: Record<string, string> = {
     'Compares identities by Source, path length, and exact segment equality',
 };
 
+translations[
+  '初始化按 Source → Computation → Participant prepare / commit / read 的顺序执行\n更新先在独立候选表中准备状态，所有 Participant 提交和读取成功后才发布状态与 revision\n发布后的 observer 与资源释放失败仅记录诊断；发布前失败则回滚，回滚失败后禁止继续读写'
+] =
+  'Initialization runs Source, Computation, then Participant prepare / commit / read in order. Updates prepare state in separate candidate tables and publish state and revision only after all Participants commit and read successfully. Observer and resource disposal failures after publication only produce diagnostics. Failures before publication trigger rollback; a failed rollback prevents further reads and writes.';
+
 /** 使用审阅后的英文说明，缺译时终止生成 */
 export const translateRuntimeApiReference = (source: string): string => {
   if (!/[\u3400-\u9fff]/u.test(source)) return source;

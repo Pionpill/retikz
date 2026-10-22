@@ -1,5 +1,5 @@
 import type { JsonObject } from '@retikz/foundation';
-import type { BoundsInsets } from '@retikz/math';
+import type { BoundsInsets, CenteredBox } from '@retikz/math';
 
 import type { BoundaryDefinition, PatternDefinition, ShapeDefinition } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
@@ -18,7 +18,6 @@ import type {
   StrokeDashPattern,
 } from '../../schemas';
 import type { ThemeMode } from '../../shared';
-import type { Rect } from '../../shared/geometry';
 import type { PaintResolutionInput } from '../resource';
 import type { EffectiveScopeDefaults, GraphicOpacityResolution } from '../style';
 import type { ResolvedLabelTextContent, ResolvedTextLine } from '../text';
@@ -175,7 +174,7 @@ export type NodeReferenceView = Readonly<{
   /** 已校验的 shape 参数 */
   shapeParams: JsonObject;
   /** 节点视觉 rect */
-  rect: Rect;
+  rect: CenteredBox;
   /** 节点外边距 */
   margin: BoundsInsets;
   /** 节点自身默认连接面 */

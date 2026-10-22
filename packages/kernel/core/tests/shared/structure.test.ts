@@ -13,8 +13,6 @@ const source = (path: string): string => readFileSync(resolve(root, path), 'utf8
 describe('shared source structure', () => {
   it('shared does not re-export math point types', () => {
     expect(source('src/shared/position.ts')).not.toMatch(/export\s+type\s+\{[^}]*\b(Position|Vector2)\b/);
-    expect(source('src/shared/geometry/point.ts')).not.toMatch(/type\s+(Position|Vector2)\b/);
-    expect(source('src/shared/geometry/transform.ts')).not.toMatch(/\btype\s+CenteredShape\b/);
   });
 
   it('core consumers import math point types from @retikz/math', () => {

@@ -43,6 +43,10 @@ Core 先解析节点的样式和形状，结合文字度量确定尺寸，再解
 
 <PackageManagerInstall packages="@retikz/core" />
 
+内置连接面名称使用 `BuiltinBoundary`，自定义连接面通过编译选项 `boundaries` 注册；`IRBoundary` 接受内置名称、自定义 boundary 或 shape 名称，以及 `{ type, params }` 引用。内置编译警告码使用 `BuiltinCompileWarningCode`，开放类型 `CompileWarningCode` 同时接受自定义警告码。
+
+声明图形时使用 Core 的 `IRScene` 等 IR 类型；处理编译后的路径命令时使用 Core 的 `PathCommand`。纯坐标和向量类型 `Position`、`Vector2` 从 `@retikz/math` 导入。
+
 Core 提供无框架差异的 TypeScript 编译入口。下面使用同样的 A、B 连线关系，节点尺寸采用默认布局：
 
 ```ts
@@ -74,15 +78,15 @@ console.log(result.scene);
 
 ## 包边界
 
-| Core 负责                          | 协作方负责                                     |
-| ---------------------------------- | ---------------------------------------------- |
-| 核心 IR、Definition 与扩展契约     | React / Vanilla 提供作者侧 API 并组织输入      |
-| 配置解析、节点布局、坐标与路径求解 | Math 提供基础计算；宿主提供文字度量等能力      |
-| 编译 Scene、汇总资源和其他产物     | Render 将 Scene 绘制为 SVG、Canvas 等输出      |
-| 定义绘图状态的依赖与增量计算规则   | Runtime 管理状态、计算结果的生命周期与一致发布 |
-| 提供编译观测输出                   | Inspect 消费观测并生成检查辅助图形             |
+| Core 负责                          | 协作方负责                                          |
+| ---------------------------------- | --------------------------------------------------- |
+| 核心 IR、Definition 与扩展契约     | React / Vanilla 提供作者侧 API 并组织输入           |
+| 配置解析、节点布局、坐标与路径求解 | Math 提供基础计算；宿主提供文字度量等能力           |
+| 编译 Scene、汇总资源和其他产物     | Render 将 Scene 绘制为 SVG、Canvas 等输出           |
+| 提供单次编译结果与可选来源信息     | Reconciler 负责增量复用，Runtime 管理事务与一致发布 |
+| 提供编译观测输出                   | Inspect 消费观测并生成检查辅助图形                  |
 
-本系列从一次编译的输入讲到最终产物。后续输入变化怎样经 Runtime、Core 和 Render 更新画面，属于跨包的动态更新专题；Runtime 的状态与事务机制见[增量执行](/kernel/packages/runtime)。
+本系列从一次编译的输入讲到最终产物。后续输入变化怎样经 Runtime、Reconciler、Core 和 Render 更新画面，属于跨包的动态更新专题；Runtime 的状态与事务机制见[增量执行](/kernel/packages/runtime)。
 
 ## 章节内容
 

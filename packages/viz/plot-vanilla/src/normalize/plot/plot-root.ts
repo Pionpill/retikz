@@ -61,7 +61,7 @@ export const normalizePlotRoot = (
 
   if (
     coordKind === 'polar2D' &&
-    collected.marks.some(mark => mark.type === BuiltinPlotMark.Path && mark.closed !== false)
+    collected.marks.some(mark => mark.type === BuiltinPlotMark.Path && mark.properties?.closed !== false)
   ) {
     collected.hasClosedLine = true;
   }

@@ -1,11 +1,11 @@
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
-import { GeometryLabelSchema } from '@retikz/core';
+import { PathLabelSchema } from '@retikz/core';
 import * as flowSchemas from '@retikz/diagram/flow';
 
 import { readSchemaDescriptions } from '../schema-reference/descriptions';
-import { geometryLabelSchemaDescriptions } from '../schema-reference/path';
+import { pathLabelSchemaDescriptions } from '../schema-reference/path';
 import { assertFlowApiReferenceTranslated, translateFlowApiReference } from './flow.en';
 import { writeReferenceFile } from './merged-reference';
 import { createSchemaLocalizationResolver, resolveStandardSchemaLocalization } from './standard-schema';
@@ -26,7 +26,7 @@ const groupDescriptions = readSchemaDescriptions(
 
 /** 复用 Schema 页的说明，固定排列的各分支保留独立词典 */
 const resolveFlowSchemaLocalization = createSchemaLocalizationResolver([
-  { schema: GeometryLabelSchema, localizations: { zh: { descriptions: geometryLabelSchemaDescriptions } } },
+  { schema: PathLabelSchema, localizations: { zh: { descriptions: pathLabelSchemaDescriptions } } },
   ...(
     [
       'FlowDiagramSchema',

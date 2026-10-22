@@ -5,7 +5,13 @@ description: 用无框架 InputScene 组织图形，并在根入口处理归一�
 
 `@retikz/vanilla` 是所有框架适配器共用的 API 基础包。它用普通 TypeScript 数据组织 `InputScene`，将其归一为 Core `IRScene`，再运行共享的 processing；React、Vue 等框架包只需要负责各自的输入收集和宿主接线。
 
-包根不依赖浏览器 DOM：可用于 SSR、构建脚本或其它框架。浏览器 SVG / Canvas 挂载位于 `@retikz/vanilla/dom` 子入口。IR、schema、几何与编译规则属于 `@retikz/core`，后端输出属于 `@retikz/render`。
+包根可安全用于 SSR、构建脚本或其它框架。默认文字测量器在实际测量时探测浏览器 Canvas；浏览器 SVG / Canvas 挂载位于 `@retikz/vanilla/dom` 子入口。IR、schema、几何与编译规则属于 `@retikz/core`，后端输出属于 `@retikz/render`。
+
+## 默认文字测量
+
+`compile.measureText` 显式提供时优先使用；否则由 Vanilla 按需使用 Canvas 2D，环境或上下文不可用时使用 Core 的估算器。实际测量异常和非法指标仍会报错。React 的 `Layout` 复用同一路径。
+
+`defaultFontFamily` 设置文字未指定字体族时的测量与宿主显示字体；React 对应 `Layout.style.fontFamily`。浏览器测量在两者均缺省时使用页面 `body` 的计算字体，最终使用 `sans-serif`。SVG 导出、SVG 挂载与 Canvas 挂载都接收该宿主默认值。已有 Scene 不重新度量；字体加载不会自动触发重编译。详见[文字度量](/kernel/components/runtime-mechanics/text-metrics)。
 
 ## 异步作者输入准备
 
@@ -43,7 +49,7 @@ const svg = renderToSvgString(input);
 const view = mount(document.querySelector('#diagram')!, input);
 ```
 
-`renderToSvgString` 不依赖 DOM，适合 SSR、构建期生成或保存 SVG；`mount` 用于浏览器宿主，默认创建 SVG，也可以通过 `renderer: 'canvas'` 切换到 Canvas。返回的 `view` 负责后续 `update`、交互水合、动画控制与释放。
+`renderToSvgString` 可安全用于 SSR、构建期生成或保存 SVG；`mount` 用于浏览器宿主，默认创建 SVG，也可以通过 `renderer: 'canvas'` 切换到 Canvas。返回的 `view` 负责后续 `update`、交互水合、动画控制与释放。
 
 `scene({ theme: { style, mode } })` 会把稀疏 Theme 写入 Input 根，`scope({ theme }, children)` 复用同一局部继承写法。归一化复制 Theme 对象，不修改调用方输入；最终两条路径都交给同一份 Core Theme 与 compile 契约。
 

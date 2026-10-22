@@ -9,17 +9,17 @@ describe('宿主标签简写与详细配置', () => {
   it('详细字段标签与手写 IR 等价', () => {
     const spec = buildPlotIR(
       <IntervalMark
-        x="month"
-        y="revenue"
-        label={{ field: 'revenue', position: 'top', distance: 6, displayFormat: ',.0f' }}
+        encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { content: 'revenue' } }}
+        properties={{ label: { position: 'top', distance: 6, displayFormat: ',.0f' } }}
       />,
       '__plot',
     );
-    const mark = spec.marks[0] as { type: string; label?: unknown };
+    const mark = spec.marks[0];
 
     expect(mark.type).toBe('interval');
-    expect(mark.label).toEqual({
-      content: { field: 'revenue', displayFormat: ',.0f' },
+    expect(mark.encodings).toMatchObject({ label: { content: 'revenue' } });
+    expect(mark.properties?.label).toEqual({
+      displayFormat: ',.0f',
       position: 'top',
       distance: 6,
     });
@@ -27,33 +27,38 @@ describe('宿主标签简写与详细配置', () => {
   });
 
   it('标签引线保留显式开关', () => {
-    const spec = buildPlotIR(<PointMark x="px" y="py" label={{ field: 'lbl', pin: true }} />, '__plot');
-    const mark = spec.marks[0] as { label?: { pin?: boolean } };
+    const spec = buildPlotIR(
+      <PointMark
+        encodings={{ position: { x: { field: 'px' }, y: { field: 'py' } }, label: { content: 'lbl' } }}
+        properties={{ label: { pin: true } }}
+      />,
+      '__plot',
+    );
+    const mark = spec.marks[0];
 
-    expect(mark.label?.pin).toBe(true);
+    expect(mark.properties?.label).toMatchObject({ pin: true });
   });
 
   it('label core style props pass through', () => {
     const spec = buildPlotIR(
       <IntervalMark
-        x="month"
-        y="revenue"
-        label={{
-          field: 'revenue',
-          textColor: '#334155',
-          opacity: 0.75,
-          font: { family: 'serif', size: 12, weight: 'bold' },
-          rotate: 'tangent',
-          keepUpright: true,
-          pin: { stroke: '#64748b', strokeWidth: 1.5, dashPattern: [2, 2] },
+        encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { content: 'revenue' } }}
+        properties={{
+          label: {
+            textColor: '#334155',
+            opacity: 0.75,
+            font: { family: 'serif', size: 12, weight: 'bold' },
+            rotate: 'tangent',
+            keepUpright: true,
+            pin: { stroke: '#64748b', strokeWidth: 1.5, dashPattern: [2, 2] },
+          },
         }}
       />,
       '__plot',
     );
-    const mark = spec.marks[0] as { label?: unknown };
+    const mark = spec.marks[0];
 
-    expect(mark.label).toMatchObject({
-      content: { field: 'revenue' },
+    expect(mark.properties?.label).toMatchObject({
       textColor: '#334155',
       opacity: 0.75,
       font: { family: 'serif', size: 12, weight: 'bold' },
@@ -65,96 +70,126 @@ describe('宿主标签简写与详细配置', () => {
 
   it('字符串与常量标签数组保持内容与顺序，零间距和关闭引线不会丢失', () => {
     const spec = buildPlotIR(
-      <PointMark x="px" y="py" label={['name', { value: 'fixed', distance: 0, pin: false }]} />,
+      <PointMark
+        encodings={{ position: { x: { field: 'px' }, y: { field: 'py' } }, label: [{ content: 'name' }, {}] }}
+        properties={{ label: [{}, { content: 'fixed', distance: 0, pin: false }] }}
+      />,
       '__plot',
     );
     expect(spec.marks[0]).toMatchObject({
-      label: [{ content: { field: 'name' } }, { content: { value: 'fixed' }, distance: 0, pin: false }],
+      encodings: { label: [{ content: 'name' }, {}] },
+      properties: { label: [{}, { content: 'fixed', distance: 0, pin: false }] },
     });
     expect(PlotSchema.safeParse(spec).success).toBe(true);
   });
 
   it('无 label prop → mark 无 label 字段', () => {
-    const spec = buildPlotIR(<IntervalMark x="m" y="r" />, '__plot');
+    const spec = buildPlotIR(
+      <IntervalMark encodings={{ position: { x: { field: 'm' }, y: { field: 'r' } } }} />,
+      '__plot',
+    );
 
-    expect(spec.marks[0]).not.toHaveProperty('label');
+    expect(spec.marks[0]).not.toHaveProperty('properties.label');
   });
 
   it('resolveLabel prop（配 id）→ 收进旁路、不落 IR', () => {
     const fn = (row: { revenue?: number }) => `$${row.revenue}`;
-    const spec = buildPlotIR(<IntervalMark id="bars" x="month" y="revenue" resolveLabel={fn} />, '__plot');
+    const spec = buildPlotIR(
+      <IntervalMark
+        id="bars"
+        resolveLabel={fn}
+        encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
+      />,
+      '__plot',
+    );
 
     expect(JSON.stringify(spec)).not.toContain('resolveLabel');
     expect(resolveLabelOf(spec)).toEqual({ bars: fn });
   });
 
   it('resolveLabel prop 无 id → fail-loud', () => {
-    expect(() => buildPlotIR(<IntervalMark x="month" y="revenue" resolveLabel={() => 'x'} />, '__plot')).toThrow(
-      /mark id/i,
-    );
+    expect(() =>
+      buildPlotIR(
+        <IntervalMark
+          resolveLabel={() => 'x'}
+          encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
+        />,
+        '__plot',
+      ),
+    ).toThrow(/mark id/i);
   });
 });
 
-describe('priority-2 PointMark text 扁平 props → IR point mark', () => {
-  it('react-textmark-encoding-assembly：PointMark text → type point、encoding.text、x/y/color、dx/dy 落顶层', () => {
-    const spec = buildPlotIR(<PointMark x="month" y="revenue" text="revenue" color="cat" dy={-8} />, '__plot', {
-      dataFieldNames: new Set(['cat']),
+describe('PointMark 内容字段与固定属性', () => {
+  it('文本与位置颜色字段进入 encodings，偏移保留在 properties', () => {
+    const spec = buildPlotIR(
+      <PointMark
+        encodings={{ color: 'cat', text: 'revenue', position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
+        properties={{ dy: -8 }}
+      />,
+      '__plot',
+      {
+        dataFieldNames: new Set(['cat']),
+      },
+    );
+    expect(spec.marks[0]).toMatchObject({
+      type: 'point',
+      encodings: {
+        text: 'revenue',
+        position: { x: { field: 'month' }, y: { field: 'revenue' } },
+        color: { field: 'cat', scale: '__color' },
+      },
+      properties: { dy: -8 },
     });
-    const mark = spec.marks[0] as {
-      type: string;
-      dx?: number;
-      dy?: number;
-      color?: unknown;
-      encoding: Record<string, unknown>;
-    };
-
-    expect(mark.type).toBe('point');
-    expect(mark.encoding.text).toEqual({ field: 'revenue' });
-    expect(mark.encoding.x).toEqual({ field: 'month' });
-    expect(mark.encoding.y).toEqual({ field: 'revenue' });
-    expect(mark.color).toEqual({ kind: 'field', value: 'cat', scale: '__color' });
-    expect(mark.dy).toBe(-8);
-    expect(mark).not.toHaveProperty('dx');
+    expect(spec.marks[0]).not.toHaveProperty('properties.dx');
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
-  it('PointMark text displayFormat → encoding.text.displayFormat', () => {
-    const spec = buildPlotIR(<PointMark x="x" y="y" text="v" displayFormat=",.1f" />, '__plot');
-    const mark = spec.marks[0] as { encoding: { text?: unknown } };
-
-    expect(mark.encoding.text).toEqual({ field: 'v', displayFormat: ',.1f' });
+  it('文本格式保留在 properties.displayFormat', () => {
+    const spec = buildPlotIR(
+      <PointMark
+        encodings={{ text: 'v', position: { x: { field: 'x' }, y: { field: 'y' } } }}
+        properties={{ displayFormat: ',.1f' }}
+      />,
+      '__plot',
+    );
+    expect(spec.marks[0]).toMatchObject({ encodings: { text: 'v' }, properties: { displayFormat: ',.1f' } });
   });
 
   it('PointMark text resolveLabel（配 id）→ 旁路收集、不落 IR', () => {
     const fn = (row: { label?: string }) => `<${row.label}>`;
-    const spec = buildPlotIR(<PointMark id="t1" x="x" y="y" text="label" resolveLabel={fn} />, '__plot');
+    const spec = buildPlotIR(
+      <PointMark
+        id="t1"
+        resolveLabel={fn}
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } }, text: 'label' }}
+      />,
+      '__plot',
+    );
 
     expect(JSON.stringify(spec)).not.toContain('resolveLabel');
     expect(resolveLabelOf(spec)).toEqual({ t1: fn });
   });
 });
 
-it('React and Vanilla share progressive opacity and label normalization', () => {
-  const opacity = { overall: 0.5, fill: { kind: 'field' as const, value: 'alpha', scale: 'alpha-scale' }, stroke: 0 };
-  const label = { field: 'name', position: 'top' as const, distance: 0, pin: false };
-  const react = buildPlotIR(<PointMark x="x" y="y" opacity={opacity} label={label} />, '__plot');
+it('React and Vanilla preserve split opacity and label declarations', () => {
+  const encodings = {
+    position: { x: { field: 'x' }, y: { field: 'y' } },
+    opacity: { fill: { field: 'alpha', scale: 'alpha-scale' } },
+    label: { content: 'name' },
+  };
+  const properties = {
+    opacity: { overall: 0.5, stroke: 0 },
+    label: { position: 'top' as const, distance: 0, pin: false },
+  };
+  const react = buildPlotIR(<PointMark encodings={encodings} properties={properties} />, '__plot');
   const vanilla = normalizePlotIR(
     {
-      declarations: [{ kind: 'point-mark', props: { x: 'x', y: 'y', opacity, label }, path: [0] }],
+      declarations: [{ kind: 'point-mark', props: { encodings, properties }, path: [0] }],
       runtimeSources: [],
     },
     '__plot',
   );
   expect(react.marks).toEqual(vanilla.marks);
-  expect(react.marks[0]).toMatchObject({
-    opacity: {
-      overall: { kind: 'constant', value: 0.5 },
-      fill: { kind: 'field', value: 'alpha', scale: 'alpha-scale' },
-      stroke: { kind: 'constant', value: 0 },
-    },
-    label: { content: { field: 'name' }, distance: 0, pin: false },
-  });
-  const scalar = buildPlotIR(<PointMark x="x" y="y" opacity={0.5} />, '__plot');
-  const detailed = buildPlotIR(<PointMark x="x" y="y" opacity={{ overall: 0.5 }} />, '__plot');
-  expect(scalar.marks).toEqual(detailed.marks);
+  expect(react.marks[0]).toMatchObject({ encodings, properties });
 });

@@ -264,7 +264,8 @@ export const assertBaselineScaleCompatible = (
       isBuiltinMark(mark) &&
       (mark.type === BuiltinPlotMark.Interval ||
         (mark.type === BuiltinPlotMark.Path &&
-          (mark.closure?.kind === PathClosureKind.Baseline || mark.closure?.kind === PathClosureKind.Stack))),
+          (mark.properties?.closure?.kind === PathClosureKind.Baseline ||
+            mark.properties?.closure?.kind === PathClosureKind.Stack))),
   );
   if (hasBaselineMark) {
     throw new RetikzPlotError(

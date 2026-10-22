@@ -1,14 +1,13 @@
+import type { ContourSegment } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import { NamespaceStack } from '../../src/compile/namespace';
-import { boundaryPointOf, layoutNode } from '../../src/compile/node';
+import { boundaryPointOf, compileResolvedNode } from '../../src/compile/node';
 import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
 import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import { resolveNode } from '../../src/resolve/node';
 import type { IRNode } from '../../src/schemas/node';
-import type { ContourSegment } from '../../src/shared/geometry/path';
 import { filletContour } from '../../src/shared/geometry/path';
 
 const measureText = (): { width: number; height: number; ascent: number } => ({
@@ -32,10 +31,10 @@ const layoutSquare = (node: IRNode) => {
     labelDistance: 12,
   });
 
-  return layoutNode(resolution, {
+  return compileResolvedNode(resolution, {
     measureText,
-    positionContext: createPositionResolveContext({ namespaceStack: new NamespaceStack(), nodeDistance: 24 }),
-  });
+    positionContext: createPositionResolveContext({ lookupReference: () => undefined, nodeDistance: 24 }),
+  }).layout;
 };
 
 /** 40×40 正方轮廓的 4 条 CW Line 段（用于独立复算 fillet 弧，断言边界端点落弧上） */

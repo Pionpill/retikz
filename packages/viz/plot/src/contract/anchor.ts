@@ -1,7 +1,7 @@
 import type { IRCoordinate } from '@retikz/core';
-import type { ExternalRow } from '@retikz/data';
 
 import type { IRPlotAnchorId } from '../schemas';
+import type { MarkInstance } from './mark';
 import type { MarkPositionResolution } from './position-adjustment';
 import type { MarkProvenance } from './provenance';
 
@@ -13,8 +13,6 @@ export type AnchorIdGeneratorContext = {
   markId?: string;
   /** 当前 mark 在声明列表中的索引 */
   markIndex: number;
-  /** 当前行在变换后数据中的索引 */
-  transformedIndex: number;
   /** 当前锚点命名规则使用的前缀 */
   prefix: string;
   /** 同一数据目标中需要区分的锚点角色 */
@@ -22,7 +20,7 @@ export type AnchorIdGeneratorContext = {
 };
 
 /** 按图元和数据行生成稳定锚点 id 的扩展函数 */
-export type AnchorIdGenerator = (row: ExternalRow, context: AnchorIdGeneratorContext) => string;
+export type AnchorIdGenerator = (instance: MarkInstance, context: AnchorIdGeneratorContext) => string;
 
 /** 锚点注册表记录的图元归属信息 */
 export type AnchorOwner = {
@@ -32,16 +30,14 @@ export type AnchorOwner = {
   markId?: string;
   /** 所属 mark 在声明列表中的索引 */
   markIndex: number;
-  /** 所属行在变换后数据中的索引 */
-  transformedIndex: number;
   /** 同一数据目标中需要区分的锚点角色 */
   role?: string;
-};
+} & ({ kind: 'single' } | { kind: 'row'; transformedIndex: number });
 
 /** 图元下沉期间注册、解析并校验锚点引用的运行时接口 */
 export type AnchorRegistry = {
   /** 按常量、字段或生成规则计算当前数据目标的锚点标识 */
-  makeId: (spec: IRPlotAnchorId, row: ExternalRow, owner: AnchorOwner) => string;
+  makeId: (spec: IRPlotAnchorId, instance: MarkInstance, owner: AnchorOwner, field?: string) => string;
   /** 登记锚点归属，并拒绝重复标识 */
   register: (id: string, owner: AnchorOwner) => void;
   /** 记录待校验的锚点引用及引用者 */

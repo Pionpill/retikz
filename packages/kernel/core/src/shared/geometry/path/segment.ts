@@ -14,9 +14,8 @@ import { curve, point } from '@retikz/math';
  */
 
 /**
- * 折角段 from → corners → to
- * @description 每条腿均分 t；精确分界归前一腿。零长腿保持常量 point，tangent 借用最近非零腿，
- *   等距时优先前一腿；全部零长时回退 `[1, 0]`
+ * 获取折线路径上指定比例处的位置和前进方向
+ * @description 每段均分 0 到 1 的比例范围，不按长度分配；没有拐点时按直线处理
  */
 export const foldSegmentSample = (
   from: Position,
@@ -24,9 +23,10 @@ export const foldSegmentSample = (
   to: Position,
   t: number,
 ): CurveSegmentSample => {
-  const corners = Array.isArray(cornerOrCorners[0])
-    ? (cornerOrCorners as ReadonlyArray<Position>)
-    : [cornerOrCorners as Position];
+  const corners =
+    cornerOrCorners.length === 0 || Array.isArray(cornerOrCorners[0])
+      ? (cornerOrCorners as ReadonlyArray<Position>)
+      : [cornerOrCorners as Position];
   const points = [from, ...corners, to];
   const legCount = points.length - 1;
   const clamped = Math.min(1, Math.max(0, t));
@@ -58,10 +58,8 @@ export const foldSegmentSample = (
 };
 
 /**
- * 矩形周长段：两对角 → 闭合周长上 t∈[0,1] 的点 / 切线
- * @description 4 条边按 rectOutline 的顺时针绕向（y-down：左上→右上→右下→左下→闭合回左上）均分参数，
- *   每条边占 1/4 t；切线 = 该边方向。忽略 cornerRadius（采尖角折线周长），mark 落在直边上精确、
- *   贴近圆角处略偏轮廓——对中段 marking 足够。退化（零宽 / 零高）由 Math line sampling 的零切线回退兜底
+ * 获取矩形边框上指定比例处的位置和前进方向
+ * @description 从左上角顺时针绕行，每条边占四分之一的比例范围；按直角矩形计算，不包含圆角
  */
 export const rectPerimeterSample = (from: Position, to: Position, t: number): CurveSegmentSample => {
   const x0 = Math.min(from[0], to[0]);

@@ -4,10 +4,10 @@ import type { DataInputBindings, DataLineageOptions, DataTransformExecutor, Data
 export type PreparedPlotData = Readonly<{
   /** 根变换结果 */
   root: DataTransformResult;
-  /** 根作用域各 mark 的结果 */
-  marks: ReadonlyArray<DataTransformResult>;
-  /** 按实际 facet panel 和 mark 顺序排列的结果 */
-  panels: ReadonlyArray<ReadonlyArray<DataTransformResult>>;
+  /** 根作用域各 mark 的结果，独立标注对应 undefined */
+  marks: ReadonlyArray<DataTransformResult | undefined>;
+  /** 按实际 facet panel 和 mark 顺序排列的结果，独立标注对应 undefined */
+  panels: ReadonlyArray<ReadonlyArray<DataTransformResult | undefined>>;
 }>;
 
 /**

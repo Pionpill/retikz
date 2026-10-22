@@ -38,7 +38,10 @@ export const BuiltinPositionPreview = (
     {values.yField !== 'month' ? (
       <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
     ) : null}
-    <PointMark x={values.xField} y={values.yField} size={8} fill="#2563eb" />
+    <PointMark
+      encodings={{ position: { x: { field: values.xField }, y: { field: values.yField } } }}
+      properties={{ size: 8, fill: '#2563eb' }}
+    />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />
   </Plot>

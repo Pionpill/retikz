@@ -92,7 +92,7 @@ Core needs a way to measure text, resolve shapes, and collect shared drawing res
 - Definition: an implementation of a shape, path, or composite capability.
 - Registry: a lookup table used to find a Definition by name during this compilation.
 
-`createCompileContext` assembles built-in and caller-provided definitions into their registries, resolves the root theme, and prepares measurement, output precision, resource tables, and warning collection. Without injected text measurement, it uses an approximate built-in measurer. Core itself does not read the DOM.
+`createCompileEnvironment` assembles built-in and caller-provided definitions into read-only registries and retains measurement services and numeric settings. The internal `createCompileContext` uses that environment to create a per-call workspace: the root theme, an isolated text measurement cache, paint / clip resources, and warning collection. Without injected text measurement, it uses an approximate built-in measurer. Core itself does not read the DOM.
 
 Built-in definitions and external definitions from CompileOptions are registered by capability in the context's registries for lookup and invocation during compilation, while generated paint and clip resources are collected by the context's `paint` and `clip` and written to the Scene resource table.
 
@@ -183,10 +183,11 @@ export type NodeResolution = Readonly<{
 
 <DocTab value="node-layout" label="NodeLayout">
 
+`irPath` records source provenance at the top level of the compilation result, alongside the node's `properties` and `layout` fields. Node, Coordinate, Path, and Scope compilation results all keep this path at the top level; layout objects do not carry source locations.
+
 ```ts
 export type NodeLayout = {
-  irPath: string;
-  node: NodeLayoutProperties;
+  boundarySource?: CanonicalNode['boundary'];
   shape: NodeResolution['shape'];
   boundary: NodeResolution['boundary'];
   geometry: NodeLayoutGeometry;
@@ -195,31 +196,27 @@ export type NodeLayout = {
 };
 
 export type NodeLayoutGeometry = {
-  rect: Rect;
+  rect: CenteredBox;
   margin: BoundsInsets;
   contentCenter: Position;
   contentSize: { width: number; height: number };
 };
 
-export type NodeLayoutProperties = Pick<
-  CanonicalNode,
-  | 'id'
-  | 'fill'
-  | 'fillOpacity'
-  | 'stroke'
-  | 'strokeOpacity'
-  | 'strokeWidth'
-  | 'dashPattern'
-  | 'dashOffset'
-  | 'cornerRadius'
-  | 'textColor'
-  | 'opacity'
-  | 'shadow'
-  | 'blendMode'
-  | 'boundary'
-  | 'meta'
-  | 'animations'
->;
+export type NodeCompilation = {
+  irPath: string;
+  properties: NodeResolvedProperties;
+  layout: NodeLayout;
+};
+
+export type NodeResolvedProperties = Omit<CanonicalNode, 'text' | 'label'> & {
+  text?: Array<TextLineResolution>;
+  label?: Array<NodeLabelResolution>;
+};
+
+export type NodeLabelResolution = Omit<CanonicalNodeLabel, 'text' | 'font'> & {
+  text: TextLineResolution;
+  font: CanonicalFont;
+};
 
 export type NodeTextLayout = {
   font: TextFont;
@@ -227,8 +224,8 @@ export type NodeTextLayout = {
   lineHeight: number;
   baselineOffsets?: Array<number>;
 } & (
-  | { kind: 'plain'; lines: Array<TextLine> }
-  | { kind: 'inline'; lines: Array<{ laid: LaidLine; baselineOffset: number }> }
+  | { kind: 'plain'; lines: Array<NodeTextLineLayout> }
+  | { kind: 'inline'; lines: Array<{ laid: InlineLineLayout; baselineOffset: number }> }
 );
 ```
 
@@ -236,7 +233,7 @@ export type NodeTextLayout = {
 
 </DocTabs>
 
-`resolveNode` determines effective configuration and capability bindings. `layoutNode` consumes measurement and position context to lay out text and determine the node's size and position. `emitNodePrimitives` turns that layout into Scene primitives such as rectangles and text. Resolution interprets configuration, layout computes geometry, and emission writes structures that a renderer can consume.
+`resolveNode` determines effective configuration and capability bindings. `compileResolvedNode` then prepares body and label text properties and computes typesetting, node size, and position. The returned `properties` field holds complete effective properties and identity, while `layout` holds computed geometry and typesetting. Stroke width, color, and dashes share one property source; label pins also retain their complete configuration. `emitNodePrimitives` consumes layout and current properties to produce Scene primitives. Physical text lines retain their authored-line index so painting can read current line styles without wrapping again. This structure does not replace change-impact analysis; Weave still needs a separate capability contract for classified scheduling.
 
 <ComponentPreview files="compilation-node" size="lg" hideCode type="illustration" />
 
@@ -343,7 +340,7 @@ Composite entries join compilation through registered Definitions, and the basic
 
 ## Assemble the result
 
-After child compilation, `compileCoreSnapshot` collects ordered primitives, paint and clip resources, and supported root animation configuration. An explicit `viewBox` determines the canvas bounds directly. Otherwise, Core computes them from accumulated layout bounds and `padding`.
+After child compilation, `prepareSceneCompilation` collects ordered primitives, paint and clip resources, and supported root animation configuration. An explicit `viewBox` determines the canvas bounds directly. Otherwise, Core computes them from accumulated layout bounds and `padding`.
 
 The example's content spans `[-30, -20]` to `[210, 20]`. Adding 10 units on all sides produces this `result.scene.layout`:
 
@@ -410,10 +407,10 @@ export type CompositeCompileArtifact<
 export type NodeLayoutCompileArtifact = Readonly<{
   kind: 'nodeLayout';
   occurrence: CompileOccurrenceLocator;
-  value: CompiledNodeLayout;
+  value: NodeLayoutObservation;
 }>;
 
-export type CompiledNodeLayout = {
+export type NodeLayoutObservation = {
   kind: 'node';
   id?: string;
   content: {
@@ -493,11 +490,11 @@ Warnings and fatal errors have different outcomes. Recoverable cases follow the 
 
 ## Complete implementation flow
 
-This diagram maps the earlier stages to actual implementation members. The synchronous `compileToScene` entry calls `compileCoreSnapshot`. Path emission and sorting happen inside traversal, which returns to the outer function for `CompileResult` assembly.
+This diagram maps the earlier stages to actual implementation members. The synchronous `compileToScene` entry calls `prepareSceneCompilation`. Path emission and sorting happen inside traversal, which returns to the outer function for `CompileResult` assembly.
 
 <ComponentPreview files="compilation-implementation" size="xxl" hideCode type="flow" />
 
-Start in `compileCoreSnapshot` to see context creation, traversal, and assembly together. Then enter `compileChildrenToPrimitives`: begin with the root `compileChildren` call near its end, follow dispatch in `compileChild`, trace a Node through resolve, layout, and emit, and finally follow Path queuing and emission. Scope and Composite are recursive branches to explore after this example.
+Start in `prepareSceneCompilation` to see context creation, traversal, and assembly together. Then enter `compileChildrenToPrimitives`: begin with the root `compileChildren` call near its end, follow dispatch in `compileChild`, trace a Node through resolve, layout, and emit, and finally follow Path queuing and emission. Scope and Composite are recursive branches to explore after this example.
 
 <SourceLinks
   sources={[
@@ -538,5 +535,83 @@ Start in `compileCoreSnapshot` to see context creation, traversal, and assembly 
       description: 'Follow child queries, isolated probes and replay',
       url: '/kernel/packages/core/composite-compilation',
     },
+  ]}
+/>
+
+## Independent compilation and reusable state
+
+A caller that schedules elements itself can retain a `CompileEnvironment` and compile one basic element through these entries. They share resolve, layout and emit logic with full compilation, do not recursively compile other elements, and do not register names automatically.
+
+| Entry               | Completed state      | Retained data                                                                    |
+| ------------------- | -------------------- | -------------------------------------------------------------------------------- |
+| `compileNode`       | `CompiledNode`       | NodeLayout in `layout`; drawing, resources and selected observations in `output` |
+| `compileCoordinate` | `CompiledCoordinate` | `id` and local `position`; `output` only when observation is selected            |
+| `compilePath`       | `CompiledPath`       | Complete `output`, including host processing for custom kinds                    |
+| `compileScope`      | `CompiledScope`      | `envelope`, `group` without children, and its own `output`                       |
+
+`NodeLayoutObservation`, previously named `CompiledNodeLayout`, is a public observation projection. It lacks the complete state required for drawing reuse; cache `CompiledNode` instead.
+
+```ts
+import { assembleSceneCompilation, compileNode, createCompileEnvironment, resolveScopeContext } from '@retikz/core';
+
+const environment = createCompileEnvironment();
+const result = compileNode(
+  { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+  {
+    environment,
+    context: resolveScopeContext({}, environment),
+    irPath: 'children[0].node',
+  },
+);
+
+if (result.status === 'compiled') {
+  const prepared = assembleSceneCompilation({}, [result.compiled.output], environment, {
+    diagnostics: result.diagnostics,
+  });
+  // prepared.result.scene is ready for a renderer; diagnostics are not dispatched
+}
+```
+
+An element call returns `compiled` or `pending`. The former includes complete state, `reads` and diagnostics; the latter includes reads only and publishes no partial result. Names are searched inside-out along a `CompileNamespace` parent chain; reads include both missing and matched bindings. Supply an explicit empty namespace to track names that may be added later. Omitting namespace means there are no queryable bindings for this call. Register only names visible at the declaration site: pending must not enable forward references for Node / Scope. Path can still wait for its references. `projectCompileReference` projects completed state into registerable reference geometry.
+
+Scope calculation has two stages. `prepareScopeCompilation` resolves inherited context and preliminary transforms; `compileScope` consumes completed child layouts to determine the envelope and final transforms. Pass the established ancestor transforms when compiling children. Envelope-dependent placement is projected after Scope completion. `assembleScopeOutput` combines the Scope's own output with child outputs without running providers again or storing a duplicate subtree in cached state.
+
+Resource IDs are local to each output fragment. `assembleScopeOutput` / `assembleSceneCompilation` import and remap resources, stably order sibling zIndex values, apply final transforms, and assemble Scene. Selected node layout artifacts and owner observations travel with the fragments. Create an observation session with `createCompileObservationRuntime`, pass it to element calls and final assembly, and do not reuse it across batches after completion. Other completed Composite artifacts, spatial handles and provenance are supplied through metadata from the same version; assembly does not infer this orchestration data.
+
+These entries provide Core's scheduling primitives. Reconciler owns name mapping, dependency invalidation, version isolation and publication; the interface does not construct or update the Weave tree automatically. Callers must not mutate data reachable from published compiled state. Changes to environment definitions or measurement services invalidate affected caches. Compiled state containing Definitions and text emit functions cannot be serialized directly into Worker messages.
+
+<SourceLinks
+  sources={[
+    { label: 'Element types and context', path: 'packages/kernel/core/src/compile/element/types.ts' },
+    { label: 'Stable compilation environment', path: 'packages/kernel/core/src/compile/environment.ts' },
+    { label: 'Local output assembly', path: 'packages/kernel/core/src/compile/element/output.ts' },
+    { label: 'Scene and metadata assembly', path: 'packages/kernel/core/src/compile/output.ts' },
+  ]}
+/>
+
+## Weave integration
+
+Core and Weave share `formatCompileChildPath(prefix, index, type?)` to construct declaration source paths. The prefix is empty or ends with a dot; basic elements supply a type suffix, while Composite declarations omit it. These paths identify source locations for provenance and diagnostics, not identities across versions.
+
+Weave is the compilation tree retained by Reconciler. Each node holds its own input, effective context and Core compilation state. The root holds the environment, Scene configuration, container index and version-specific read records. Automatically assigned Scope addresses stay outside the IR and do not affect drawing envelopes.
+
+Runtime holds a stable WeaveRoot directly as the tree entry. Nodes and Root each retain committed current and candidate pending states; parent-child links, dependencies and indexes reference stable node objects. Candidate writes isolate the affected state and mutable collections while sharing unchanged Core products read-only. Changing a child’s properties does not copy its Scope’s children array; changing membership does. Commit switches the states touched by the batch and retains recovery references until confirmation. A node reference does not provide a historical snapshot.
+
+Basic elements create nodes and bindings in declaration order. Node and Coordinate consume references visible at their declaration site. Scope prepares context, compiles its children and envelope, then completes its deferred paths. A top-level Path can wait for nodes in both Scopes to be published. `createCompileNamespaceRegistry` preserves same-frame replacement diagnostics; `projectScopeCompileLayouts` and `projectPublishedCompileLayout` reuse Core's envelope-contribution and final reference-projection rules.
+
+Reconciler then asks Core to assemble the complete output. `createCompileProvenanceTracker` retains primitive ownership through resource remapping and Scope wrapping, pairing final provenance paths with the sorted Scene without another full compilation. Runtime retains the previous result if preparation fails and publishes the matching tree and output only after success.
+
+The internal Weave reconciler accepts WeaveBatch on a mounted Root: it applies insert, update and remove operations in order, then computes from the final inputs. Context follows declaration links and dependency invalidation follows consumers. Scope preparation, child layout, envelopes and final projections follow Core's evaluation order, preserving deferred Path references. Unaffected compiled products can be reused while their inputs, declaration positions and name bindings remain valid. Active observation sessions or diagnostics that require regeneration cause the relevant elements to be recomputed. Invalidation is conservative: a Scope change may recompute its entire subtree, without style/layout filtering.
+
+Updates return complete output with commit, finish and rollback operations. Preparation preserves committed state; rollback remains available after commit until final confirmation releases recovery references. Rebuilding name indexes, provenance and output may still traverse the whole tree, so local compilation does not imply local total update cost.
+
+The public Runtime input remains a complete IR snapshot. Replacing it rebuilds the basic-element tree and publishes `replaceScene`; the internal batch entry is not connected to public Runtime, React or Vanilla APIs. Input containing Composite elements retains Core full preparation, including probes, instance inputs, artifacts and spatial handles. This path does not fabricate an expanded tree that claims to support local updates.
+
+<SourceLinks
+  sources={[
+    { label: 'Weave construction and Core calls', path: 'packages/kernel/reconciler/src/weave/reconcile.ts' },
+    { label: 'Weave state ownership', path: 'packages/kernel/reconciler/src/weave/types.ts' },
+    { label: 'Candidate isolation and recovery', path: 'packages/kernel/reconciler/src/weave/transaction.ts' },
+    { label: 'Runtime publication boundary', path: 'packages/kernel/reconciler/src/runtime/computation.ts' },
   ]}
 />

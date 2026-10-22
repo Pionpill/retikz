@@ -1,6 +1,7 @@
+import { lerp } from '@retikz/math';
+
 import type { IRAbsoluteTarget, IRNodeTarget, IRPosition } from '../../schemas';
 import { isBetweenPositionLike, isNodeTargetLike } from '../../shared';
-import { lerpPoint } from '../../shared/geometry';
 import { resolvePosition } from './resolve';
 import type { PositionTargetResolution, PositionTargetResolveContext, PositionTargetWorldResolution } from './types';
 
@@ -39,7 +40,7 @@ export const resolvePositionTargetWorld = (
     const end = resolvePositionTargetWorld(target.between[1], context).referencePoint;
     if (start === null || end === null) return { target, referencePoint: null };
 
-    const referencePoint = lerpPoint(start, end, target.fraction);
+    const referencePoint = lerp(start, end, target.fraction);
     if (!isFinitePoint(referencePoint)) return { target, referencePoint: null };
 
     return { target, referencePoint };

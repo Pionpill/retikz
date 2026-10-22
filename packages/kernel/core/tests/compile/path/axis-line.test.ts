@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
 import type { CompileWarning, IRPosition, IRScene, IRStep, ScenePrimitive } from '../../../src';
-import { compileToScene, CompileWarningCode, definePathGenerator } from '../../../src';
+import { compileToScene, BuiltinCompileWarningCode, definePathGenerator } from '../../../src';
 import { arrowMarks } from '../../helpers/arrow-marks';
 import { flattenPrims } from '../../helpers/flatten';
 import { line, move } from '../../helpers/path-command-factory';
@@ -415,7 +415,7 @@ describe('compile path: axis-line', () => {
     ).scene;
 
     expect(scene.primitives).toEqual([]);
-    expect(warnings).toContainEqual(expect.objectContaining({ code: CompileWarningCode.PathTooShort }));
+    expect(warnings).toContainEqual(expect.objectContaining({ code: BuiltinCompileWarningCode.PathTooShort }));
   });
 
   it('未定义 NodeTarget 发 UNRESOLVED_NODE_REFERENCE 并跳过整条 path', () => {
@@ -438,7 +438,9 @@ describe('compile path: axis-line', () => {
     ).scene;
 
     expect(scene.primitives).toEqual([]);
-    expect(warnings).toContainEqual(expect.objectContaining({ code: CompileWarningCode.UnresolvedNodeReference }));
+    expect(warnings).toContainEqual(
+      expect.objectContaining({ code: BuiltinCompileWarningCode.UnresolvedNodeReference }),
+    );
   });
 
   it('boundary-only target 仍投影节点中心', () => {

@@ -24,7 +24,7 @@ const spec: IRPlot = {
     { type: 'linear', name: 'y' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+  marks: [{ type: 'interval', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
 };
 
 const data: ExternalDatasets = {
@@ -41,7 +41,7 @@ describe('<Plot> lowerPlots option 转发', () => {
       ...spec,
       marks: spec.marks.map(mark => ({
         ...mark,
-        transform: [{ operation: { kind: 'sort', params: { field: 'revenue' } } }],
+        transforms: [{ operation: { kind: 'sort', params: { field: 'revenue' } } }],
       })),
     };
     const expected = renderToStaticMarkup(<Plot spec={transformed} data={data} />);
@@ -113,7 +113,7 @@ describe('<Plot dataTransforms> 快捷数据变换直传', () => {
           },
         ]}
       >
-        <IntervalMark x="region" y="total" />
+        <IntervalMark encodings={{ position: { x: { field: 'region' }, y: { field: 'total' } } }} />
       </Plot>,
     );
 
@@ -131,7 +131,7 @@ describe('<Plot dataTransforms> 快捷数据变换直传', () => {
           { operation: { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'count', as: 'n' }] } } },
         ]}
       >
-        <IntervalMark x="region" y="n" />
+        <IntervalMark encodings={{ position: { x: { field: 'region' }, y: { field: 'n' } } }} />
       </Plot>,
     );
 

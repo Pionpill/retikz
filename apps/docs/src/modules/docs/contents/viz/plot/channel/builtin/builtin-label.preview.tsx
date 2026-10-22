@@ -35,25 +35,26 @@ export const BuiltinLabelPreview = (
       <PlotScale dimension="x" type="linear" domain={[0, 4]} domainPadding={0} />
       <PlotScale dimension="y" type="linear" domain={[8, 16]} domainPadding={0} />
       <PointMark
-        x="x"
-        y="y"
-        shape={{ kind: 'constant', value: BuiltinShape.Rectangle }}
-        fill={{ kind: 'constant', value: '#dbeafe' }}
-        stroke={{ kind: 'constant', value: '#1d4ed8' }}
-        strokeWidth={1.5}
-        minimumSize={36}
-        cornerRadius={8}
-        label={
-          values.showLabel
+        encodings={{
+          ...(values.showLabel ? { label: { content: 'tag' } } : {}),
+          position: { x: { field: 'x' }, y: { field: 'y' } },
+        }}
+        properties={{
+          shape: BuiltinShape.Rectangle,
+          fill: '#dbeafe',
+          stroke: '#1d4ed8',
+          strokeWidth: 1.5,
+          minimumSize: 36,
+          cornerRadius: 8,
+          label: values.showLabel
             ? {
-                field: 'tag',
                 position: values.labelPosition,
                 distance: values.labelDistance,
                 pin: values.labelPin,
                 textColor: values.labelTextColor,
               }
-            : undefined
-        }
+            : undefined,
+        }}
       />
     </Plot>
   </Layout>

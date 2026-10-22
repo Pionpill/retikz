@@ -17,7 +17,7 @@ import { PlotLegend, Plot, PointMark } from '@retikz/plot-react';
 
 ```tsx
 <Plot data={cities}>
-  <PointMark x="lng" y="lat" color="region" size="pop" />
+  <PointMark encodings={{ color: 'region', size: 'pop', position: { x: 'lng', y: 'lat' } }} />
   <PlotLegend channel="color" />
   <PlotLegend channel="size" position="bottom" />
 </Plot>
@@ -90,9 +90,9 @@ PlotLegend 会按 `channel` 和可选 `scale` 找到通道描述与 scale。颜�
     },
     {
       label: 'Plot 语义图层默认值',
-      path: 'packages/viz/plot/src/schemas/layer/constants.ts',
-      startLine: 3,
-      endLine: 20,
+      path: 'packages/viz/plot/src/schemas/plot/layer.ts',
+      startLine: 5,
+      endLine: 24,
     },
   ]}
 />

@@ -3,7 +3,7 @@ export * from '../trace';
 export * from './builtin';
 export * from './config';
 export * from './frame';
-export * from './participant';
+
 export * from './readonly-layer';
 export type {
   DefineRetainedRenderer,
@@ -29,3 +29,4 @@ export {
   RetainedRendererCapability,
   RetainedRendererReadonlyLayerCapability,
 } from './renderer';
+export * from './target';

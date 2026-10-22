@@ -8,6 +8,41 @@ const encloses = (pts: Array<[number, number]>, eps = 1e-6): boolean => {
 };
 
 describe('circle.minimalEnclosing', () => {
+  it('轴向极值不能决定最终圆时仍覆盖斜向外点并保持最小半径', () => {
+    const points: Array<[number, number]> = [
+      [-2, 0],
+      [2, 0],
+      [0, -1],
+      [0, 1],
+      [1.9, 0.9],
+    ];
+    const centerY = 7 / 30;
+    for (const input of [points, [...points].reverse(), [...points.slice(2), ...points.slice(0, 2)]]) {
+      const original = structuredClone(input);
+      const result = circle.minimalEnclosing(input)!;
+      expect(result.center[0]).toBeCloseTo(0, 10);
+      expect(result.center[1]).toBeCloseTo(centerY, 10);
+      expect(result.radius).toBeCloseTo(Math.hypot(2, centerY), 10);
+      expect(encloses(input)).toBe(true);
+      expect(input).toEqual(original);
+    }
+  });
+
+  it('旋转奇数圆周与重复点保持已知最小圆及输入不变', () => {
+    const points: Array<[number, number]> = Array.from({ length: 17 }, (_, index) => {
+      const angle = (index * 2 * Math.PI) / 17 + 0.137;
+      return [3 + 2 * Math.cos(angle), -4 + 2 * Math.sin(angle)];
+    });
+    points.push(points[3], points[8]);
+    const original = structuredClone(points);
+    for (const input of [points, [...points].reverse()]) {
+      const result = circle.minimalEnclosing(input)!;
+      expect(result.center[0]).toBeCloseTo(3, 10);
+      expect(result.center[1]).toBeCloseTo(-4, 10);
+      expect(result.radius).toBeCloseTo(2, 10);
+    }
+    expect(points).toEqual(original);
+  });
   it('空集 → null', () => {
     expect(circle.minimalEnclosing([])).toBeNull();
   });

@@ -5,7 +5,13 @@ description: Organize graphics as framework-neutral InputScene data, normalize a
 
 `@retikz/vanilla` is the API foundation shared by all framework adapters. It organizes ordinary TypeScript data as an `InputScene`, normalizes that input into Core `IRScene`, and runs shared processing. React, Vue, and other framework packages only collect their framework input and host the result.
 
-The package root has no browser-DOM dependency, so it works in SSR, build scripts, and other frameworks. Browser SVG and Canvas mounting live at `@retikz/vanilla/dom`. IR, schemas, geometry, and compile rules belong to `@retikz/core`; backend output belongs to `@retikz/render`.
+The package root works safely in SSR, build scripts, and other frameworks. Its default text measurer probes browser Canvas when measurement is requested. Browser SVG and Canvas mounting live at `@retikz/vanilla/dom`. IR, schemas, geometry, and compile rules belong to `@retikz/core`; backend output belongs to `@retikz/render`.
+
+## Default text measurement
+
+An explicit `compile.measureText` takes precedence. Otherwise, Vanilla lazily uses Canvas 2D, falling back to the Core estimator when the environment or context is unavailable. Measurement failures and invalid metrics still fail. React's `Layout` uses the same default path.
+
+`defaultFontFamily` supplies the measurement and display font when text has no explicit family; React forwards `Layout.style.fontFamily` to this option. If neither is set, browser measurement uses the computed font of the page `body`, then `sans-serif`. SVG export, SVG mounting, and Canvas mounting all accept this host default. Existing Scenes are not measured again, and font loading does not automatically trigger compilation. See [Text Metrics](/kernel/components/runtime-mechanics/text-metrics).
 
 ## Async authoring preparation
 

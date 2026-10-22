@@ -1,9 +1,8 @@
-import type { TextLine } from '../../../contract';
-import type { CanonicalFont } from '../../../resolve';
+import type { CanonicalFont, TextLineResolution } from '../../../resolve';
 import { resolveTextLine } from '../../../resolve';
-import type { LaidLine, LineLayoutContext, TextFont, TextMeasurer } from '../../text';
+import type { InlineLineLayout, LineLayoutContext, TextFont, TextMeasurer } from '../../text';
 import { layoutInlineLine, normalizeTextMetrics } from '../../text';
-import type { NodeTextLayoutContext } from '../types';
+import type { NodeTextLayoutContext, NodeTextLineLayout } from '../types';
 import { measureMinimumTextWidth, wrapText } from './text';
 
 /** 节点正文布局输入 */
@@ -22,20 +21,22 @@ export type LayoutNodeContentInput = NodeTextLayoutContext & {
   minimumTextWidth?: boolean;
 };
 
-/** 节点正文布局结果 */
+/** 节点正文排版与完整作者行解析结果 */
 export type NodeContentLayout = {
   /** 普通文本行 */
-  lines?: Array<TextLine>;
+  lines?: Array<NodeTextLineLayout>;
   /** 行内公式混排块 */
   inlineBlock?: {
     /** 按正文顺序排列的混排行及其基线位置 */
     lines: Array<{
-      /** 该行的测量结果与图元生成函数 */
-      laid: LaidLine;
+      /** 该行的测量与片段布局 */
+      laid: InlineLineLayout;
       /** 相对正文块顶部的基线垂直偏移 */
       baselineOffset: number;
     }>;
   };
+  /** 按作者行排列的有效文字属性 */
+  resolvedLines: Array<TextLineResolution>;
   /** 内容文本宽度 */
   textWidth: number;
   /** 内容文本高度 */
@@ -63,10 +64,11 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
   } = input;
 
   const rawLines = node.text;
+  const resolvedLines: Array<TextLineResolution> = [];
   let textWidth = 0;
   let textHeight = 0;
-  let lines: Array<TextLine> | undefined;
-  let inlineBlock: { lines: Array<{ laid: LaidLine; baselineOffset: number }> } | undefined;
+  let lines: Array<NodeTextLineLayout> | undefined;
+  let inlineBlock: { lines: Array<{ laid: InlineLineLayout; baselineOffset: number }> } | undefined;
   let textBaselineOffsets: Array<number> | undefined;
 
   const texGatingOn = texLowering?.lowerTex !== undefined;
@@ -95,8 +97,6 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
         measureText,
         lowerTex: texLowering?.lowerTex,
         font: blockFont,
-        color: node.textColor,
-        opacity: node.opacity,
         warn: inlineWarn,
       };
       let cursor = 0;
@@ -107,6 +107,7 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
         cursor += slot;
         if (laid.width > textWidth) textWidth = laid.width;
 
+        resolvedLines.push(r);
         return { laid, baselineOffset };
       });
       inlineBlock = { lines: blockLines };
@@ -152,6 +153,7 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
           style: lineStyle?.fontStyle ?? fontStyle,
         };
 
+        resolvedLines.push(line);
         return { text: line.plainText, lineStyle, lineFontSize, font };
       });
 
@@ -183,7 +185,7 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
       textBaselineOffsets = [];
       let firstPlainBaselineOffset: number | undefined;
 
-      for (const { text, lineStyle, lineFontSize, font } of plainLines) {
+      for (const [sourceLineIndex, { text, lineStyle, lineFontSize, font }] of plainLines.entries()) {
         const hardLines = text.split('\n');
         const physical = hardLines.flatMap(hardLine =>
           wrappingWidth !== undefined
@@ -196,10 +198,8 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
           if (m.width > textWidth) textWidth = m.width;
           firstPlainBaselineOffset ??= (lineHeight - (m.ascent + m.descent)) / 2 + m.ascent;
           textBaselineOffsets.push(firstPlainBaselineOffset + lines.length * lineHeight);
-          const out: TextLine = { text: ptext };
+          const out: NodeTextLineLayout = { text: ptext, sourceLineIndex };
           if (lineStyle !== undefined) {
-            if (lineStyle.fill !== undefined) out.fill = lineStyle.fill;
-            if (lineStyle.opacity !== undefined) out.opacity = lineStyle.opacity;
             if (lineFontSize !== undefined) out.fontSize = lineFontSize * fontScale;
             if (lineStyle.fontFamily !== undefined) out.fontFamily = lineStyle.fontFamily;
             if (lineStyle.fontWeight !== undefined) out.fontWeight = lineStyle.fontWeight;
@@ -214,5 +214,5 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
     }
   }
 
-  return { lines, inlineBlock, textWidth, textHeight, textBaselineOffsets };
+  return { lines, inlineBlock, resolvedLines, textWidth, textHeight, textBaselineOffsets };
 };

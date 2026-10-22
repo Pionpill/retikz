@@ -143,8 +143,10 @@ const ordinalColorLegendSpec = (legend: Record<string, unknown> = {}): IRPlot =>
     marks: [
       {
         type: 'point',
-        color: { kind: 'field', value: 'kind', scale: 'kindColor' },
-        encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        encodings: {
+          color: { field: 'kind', scale: 'kindColor' },
+          position: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
       },
     ],
     guides: [{ type: 'legend', channel: 'color', scale: 'kindColor', ...legend }],
@@ -172,8 +174,10 @@ const sequentialColorLegendSpec = (): IRPlot =>
     marks: [
       {
         type: 'point',
-        color: { kind: 'field', value: 'temperature', scale: 'tempColor' },
-        encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        encodings: {
+          color: { field: 'temperature', scale: 'tempColor' },
+          position: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
       },
     ],
     guides: [{ type: 'legend', channel: 'color', scale: 'tempColor', ticks: { count: 4 } }],
@@ -193,9 +197,8 @@ const sizeLegendSpec = (legend: Record<string, unknown> = {}, markProperties: Re
     marks: [
       {
         type: 'point',
-        size: { kind: 'field', value: 'population' },
-        encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
-        ...markProperties,
+        properties: markProperties,
+        encodings: { size: 'population', position: { x: { field: 'lon' }, y: { field: 'lat' } } },
       },
     ],
     guides: [{ type: 'legend', channel: 'size', ...legend }],
@@ -226,13 +229,17 @@ const multiSizeLegendSpec = ({
     marks: [
       {
         type: 'point',
-        size: { kind: 'field', value: 'population', scale: firstScale },
-        encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        encodings: {
+          size: { field: 'population', scale: firstScale },
+          position: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
       },
       {
         type: 'point',
-        size: { kind: 'field', value: secondField, scale: secondScale },
-        encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        encodings: {
+          size: { field: secondField, scale: secondScale },
+          position: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
       },
     ],
     guides: [{ type: 'legend', channel: 'size', ...(guideScale === undefined ? {} : { scale: guideScale }) }],
@@ -252,13 +259,7 @@ const shapeLegendSpec = (legend: Record<string, unknown> = {}): IRPlot =>
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [
-      {
-        type: 'point',
-        shape: { kind: 'field', value: 'kind' },
-        encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
-      },
-    ],
+    marks: [{ type: 'point', encodings: { shape: 'kind', position: { x: { field: 'lon' }, y: { field: 'lat' } } } }],
     guides: [{ type: 'legend', channel: 'shape', ...legend }],
   });
 
@@ -284,8 +285,11 @@ const sectorColorLegendSpec = (): IRPlot =>
     marks: [
       {
         type: 'interval',
-        bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
-        encoding: { color: { field: 'label', scale: 'sliceColor' } },
+        encodings: {
+          bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } },
+          color: { field: 'label', scale: 'sliceColor' },
+        },
+        properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } } },
       },
     ],
     guides: [{ type: 'legend', channel: 'color', scale: 'sliceColor' }],
@@ -461,7 +465,7 @@ describe('lowerPlots legend — happy path（contract）', () => {
   });
 
   it('size_legend_symbols_use_the_mark_effective_color', () => {
-    const outer = expandOf(sizeLegendSpec({}, { color: { kind: 'constant', value: '#d946ef' } }), {
+    const outer = expandOf(sizeLegendSpec({}, { color: '#d946ef' }), {
       d: CONTINUOUS_ROWS,
     });
     const legend = findLegendLayer(outer);
@@ -580,8 +584,10 @@ describe('lowerPlots legend — 边界（contract）', () => {
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'density', scale: 'densColor' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: {
+            color: { field: 'density', scale: 'densColor' },
+            position: { x: { field: 'lon' }, y: { field: 'lat' } },
+          },
         },
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'densColor' }],
@@ -619,13 +625,17 @@ describe('lowerPlots legend — 错误路径（contract）', () => {
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'kind', scale: 'colorA' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: {
+            color: { field: 'kind', scale: 'colorA' },
+            position: { x: { field: 'lon' }, y: { field: 'lat' } },
+          },
         },
         {
           type: 'point',
-          color: { kind: 'field', value: 'kind', scale: 'colorB' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: {
+            color: { field: 'kind', scale: 'colorB' },
+            position: { x: { field: 'lon' }, y: { field: 'lat' } },
+          },
         },
       ],
       // channel=color 无 scale → 两个 color scale 歧义
@@ -650,8 +660,10 @@ describe('lowerPlots legend — 错误路径（contract）', () => {
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'kind', scale: 'kindColor' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: {
+            color: { field: 'kind', scale: 'kindColor' },
+            position: { x: { field: 'lon' }, y: { field: 'lat' } },
+          },
         },
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'doesNotExist' }],
@@ -678,8 +690,10 @@ describe('lowerPlots legend — 交互（contract 修 P1 ⑦ / P2 ⑩ / P1 ⑥�
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'kind', scale: 'kindColor' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: {
+            color: { field: 'kind', scale: 'kindColor' },
+            position: { x: { field: 'lon' }, y: { field: 'lat' } },
+          },
         },
       ],
       guides: [
@@ -710,8 +724,10 @@ describe('lowerPlots legend — 交互（contract 修 P1 ⑦ / P2 ⑩ / P1 ⑥�
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'kind', scale: 'kindColor' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: {
+            color: { field: 'kind', scale: 'kindColor' },
+            position: { x: { field: 'lon' }, y: { field: 'lat' } },
+          },
         },
       ],
       guides: [
@@ -739,7 +755,7 @@ describe('lowerPlots legend — 交互（contract 修 P1 ⑦ / P2 ⑩ / P1 ⑥�
           { type: 'linear', name: 'y' },
         ],
         coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-        marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+        marks: [{ type: 'point', encodings: { position: { x: { field: 'lon' }, y: { field: 'lat' } } } }],
       }),
       { d: ORDINAL_ROWS },
     );
@@ -801,8 +817,10 @@ const quantileColorLegendSpec = (): IRPlot =>
     marks: [
       {
         type: 'point',
-        color: { kind: 'field', value: 'density', scale: 'densColor' },
-        encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        encodings: {
+          color: { field: 'density', scale: 'densColor' },
+          position: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
       },
     ],
     guides: [{ type: 'legend', channel: 'color', scale: 'densColor' }],
@@ -831,8 +849,10 @@ describe('lowerPlots legend — ramp 刻度域取配置 domain', () => {
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'temperature', scale: 'tempColor' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: {
+            color: { field: 'temperature', scale: 'tempColor' },
+            position: { x: { field: 'lon' }, y: { field: 'lat' } },
+          },
         },
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'tempColor', ticks: { count: 4 } }],
@@ -875,8 +895,10 @@ describe('lowerPlots legend — ramp 刻度域取配置 domain', () => {
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'date', scale: 'dateColor' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: {
+            color: { field: 'date', scale: 'dateColor' },
+            position: { x: { field: 'lon' }, y: { field: 'lat' } },
+          },
         },
       ],
       guides: [
@@ -989,8 +1011,10 @@ it('rejects different ordered category domains in composite symbols', () => {
   spec.scales.push({ type: 'ordinal', name: 'otherColor', domain: ['C', 'B', 'A'] });
   spec.marks.push({
     type: 'point',
-    color: { kind: 'field', value: 'kind', scale: 'otherColor' },
-    encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+    encodings: {
+      color: { field: 'kind', scale: 'otherColor' },
+      position: { x: { field: 'lon' }, y: { field: 'lat' } },
+    },
   });
 
   expect(() => expandOf(spec, { d: ORDINAL_ROWS })).toThrow(/same ordered categorical domain/);

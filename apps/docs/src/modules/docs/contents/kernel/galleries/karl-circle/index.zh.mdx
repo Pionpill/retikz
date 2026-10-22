@@ -85,7 +85,7 @@ retikz 坐标统一是 SVG 像素，y 向下为正——所以「向上 1 单位
 
 ### 步骤 5：sin α 红线 + cos α 蓝线
 
-sin 是 (30°, 100px) 垂直落到 x 轴；cos 是落点回原点。两段都靠 [Draw](/kernel/components/path/usage)，way 数组里中间插一个 `{ label: { text, side } }` 算子给段挂边标注——边标注的 `text` 同样支持 `$...$` 行内公式，所以直接写 `$\sin\alpha$` / `$\cos\alpha$`（和 [TikZ 教程](https://tikz.dev/tutorial) 的 `node {$\sin \alpha$}` 一致）。`thickness="thick"` 是语义 stroke 档位，省得写具体像素值。
+sin 是 (30°, 100px) 垂直落到 x 轴；cos 是落点回原点。两段都靠 [Draw](/kernel/components/path/usage)，way 数组里中间插一个 `{ label: { text, side } }` 算子给段挂边标注——边标注的 `text` 同样支持 `$...$` 行内公式，所以直接写 `$\sin\alpha$` / `$\cos\alpha$`（和 [TikZ 教程](https://tikz.dev/tutorial) 的 `node {$\sin \alpha$}` 一致）。
 
 注：原 TikZ 用 `(30:1cm |- x axis)` 直接表达"30°,1cm 点与 x 轴的投影交点"。retikz 暂无投影 target，几何上等于 (cos30°, 0)，手算坐标喂进去。
 

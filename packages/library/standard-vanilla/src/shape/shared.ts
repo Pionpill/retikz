@@ -42,7 +42,7 @@ export const normalizeShapeInput = <TSource>(
 };
 
 /** 路径作者简写，由 Kernel Vanilla 统一解释 */
-export type InputShapeProperties = Pick<InputPath, 'thickness' | 'arrow' | 'arrowDetail' | 'arrowPlacement'>;
+export type InputShapeProperties = Pick<InputPath, 'arrow' | 'arrowDetail' | 'arrowPlacement'>;
 
 type NormalizedShapeProperties<TInput> = TInput extends object
   ? Omit<TInput, keyof InputShapeProperties> & Pick<InputPath, 'style' | 'marks'>

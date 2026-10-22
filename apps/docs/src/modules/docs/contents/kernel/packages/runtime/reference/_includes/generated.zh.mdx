@@ -420,14 +420,14 @@ export type RuntimeSourceExecutionResult<T> = Readonly<{
 
 <ApiTable>
 
-| 成员                | 类型                                               | 默认值 | 说明                                            |
-| ------------------- | -------------------------------------------------- | ------ | ----------------------------------------------- |
-| `readonly cause`    | `unknown`                                          | —      | 原始错误                                        |
-| `readonly code`     | `typeof RuntimeDiagnosticCode.SourceDisposeFailed` | —      | 诊断分类                                        |
-| `readonly message`  | `string`                                           | —      | 可读错误信息                                    |
-| `readonly owner`    | `string`                                           | —      | 发生失败的 Source                               |
-| `readonly phase`    | `typeof RuntimeSourcePhase.Retire`                 | —      | 释放阶段                                        |
-| `readonly severity` | `'error'`                                          | —      | lifecycle cleanup 固定为非致命 error diagnostic |
+| 成员                | 类型                                                      | 默认值 | 说明                                            |
+| ------------------- | --------------------------------------------------------- | ------ | ----------------------------------------------- |
+| `readonly cause`    | `unknown`                                                 | —      | 原始错误                                        |
+| `readonly code`     | `typeof BuiltinRuntimeDiagnosticCode.SourceDisposeFailed` | —      | 诊断分类                                        |
+| `readonly message`  | `string`                                                  | —      | 可读错误信息                                    |
+| `readonly owner`    | `string`                                                  | —      | 发生失败的 Source                               |
+| `readonly phase`    | `typeof RuntimeSourcePhase.Retire`                        | —      | 释放阶段                                        |
+| `readonly severity` | `'error'`                                                 | —      | lifecycle cleanup 固定为非致命 error diagnostic |
 
 </ApiTable>
 
@@ -437,7 +437,7 @@ export type RuntimeSourceExecutionResult<T> = Readonly<{
 
 ```ts
 export type RuntimeSourceLifecycleDiagnostic = Readonly<{
-  code: typeof RuntimeDiagnosticCode.SourceDisposeFailed;
+  code: typeof BuiltinRuntimeDiagnosticCode.SourceDisposeFailed;
   owner: string;
   phase: typeof RuntimeSourcePhase.Retire;
   severity: 'error';
@@ -1269,7 +1269,11 @@ export type RuntimeCommitEvent<TPublicRead> =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"createRuntime"} path={"packages/kernel/runtime/src/runtime/runtime.ts"} startLine={657}>createRuntime</ApiSourceLink> / <ApiSourceLink label={"RuntimeOptions"} path={"packages/kernel/runtime/src/runtime/types.ts"} startLine={11}>RuntimeOptions</ApiSourceLink>
+#### <ApiSourceLink label={"createRuntime"} path={"packages/kernel/runtime/src/runtime/runtime.ts"} startLine={651}>createRuntime</ApiSourceLink> / <ApiSourceLink label={"RuntimeOptions"} path={"packages/kernel/runtime/src/runtime/types.ts"} startLine={11}>RuntimeOptions</ApiSourceLink>
+
+初始化按 Source → Computation → Participant prepare / commit / read 的顺序执行
+更新先在独立候选表中准备状态，所有 Participant 提交和读取成功后才发布状态与 revision
+发布后的 observer 与资源释放失败仅记录诊断；发布前失败则回滚，回滚失败后禁止继续读写
 
 <DocTabs defaultValue="members">
 
@@ -2117,15 +2121,15 @@ export type RuntimeParticipantWarningInput = Readonly<{
 
 <ApiTable>
 
-| 成员                    | 类型                                                                                                                                                                                                                                                                                                                                                                                                                                | 默认值 | 说明                                                                |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------- |
-| `constructor`           | `(input: { cause?: unknown; code: RetikzRuntimeErrorCode; computation?: Readonly<{ key: string; owner: string }>; diagnostics?: readonly Array<Readonly<{ cause?: unknown; code: OpenString<RuntimeDiagnosticCode>; computation?: Readonly<{ key: string; owner: string }>; message: string; owner?: string; phase: RuntimeDiagnosticPhase; severity: 'warning' \| 'error' }>>; message?: string; owner?: string; phase: string })` | —      | 创建保留稳定 code、context 与 secondary diagnostics 的 Runtime 错误 |
-| `readonly cause`        | `unknown`                                                                                                                                                                                                                                                                                                                                                                                                                           | —      | 原始错误或无效输入                                                  |
-| `readonly code`         | `RetikzRuntimeErrorCode`                                                                                                                                                                                                                                                                                                                                                                                                            | —      | 稳定错误分类                                                        |
-| `readonly computation?` | `RuntimeComputationId`                                                                                                                                                                                                                                                                                                                                                                                                              | —      | 可选 Computation context                                            |
-| `readonly diagnostics`  | `ReadonlyArray<RuntimeDiagnostic>`                                                                                                                                                                                                                                                                                                                                                                                                  | —      | cleanup 等 secondary diagnostics                                    |
-| `readonly owner?`       | `string`                                                                                                                                                                                                                                                                                                                                                                                                                            | —      | 可选来源归属，例如 Source key 或 participant key                    |
-| `readonly phase`        | `string`                                                                                                                                                                                                                                                                                                                                                                                                                            | —      | 发生失败的 Runtime 阶段                                             |
+| 成员                    | 类型                                                                                                                                                                                                                                                                                                                                                                                                                                       | 默认值 | 说明                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------- |
+| `constructor`           | `(input: { cause?: unknown; code: RetikzRuntimeErrorCode; computation?: Readonly<{ key: string; owner: string }>; diagnostics?: readonly Array<Readonly<{ cause?: unknown; code: OpenString<BuiltinRuntimeDiagnosticCode>; computation?: Readonly<{ key: string; owner: string }>; message: string; owner?: string; phase: RuntimeDiagnosticPhase; severity: 'warning' \| 'error' }>>; message?: string; owner?: string; phase: string })` | —      | 创建保留稳定 code、context 与 secondary diagnostics 的 Runtime 错误 |
+| `readonly cause`        | `unknown`                                                                                                                                                                                                                                                                                                                                                                                                                                  | —      | 原始错误或无效输入                                                  |
+| `readonly code`         | `RetikzRuntimeErrorCode`                                                                                                                                                                                                                                                                                                                                                                                                                   | —      | 稳定错误分类                                                        |
+| `readonly computation?` | `RuntimeComputationId`                                                                                                                                                                                                                                                                                                                                                                                                                     | —      | 可选 Computation context                                            |
+| `readonly diagnostics`  | `ReadonlyArray<RuntimeDiagnostic>`                                                                                                                                                                                                                                                                                                                                                                                                         | —      | cleanup 等 secondary diagnostics                                    |
+| `readonly owner?`       | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                   | —      | 可选来源归属，例如 Source key 或 participant key                    |
+| `readonly phase`        | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                   | —      | 发生失败的 Runtime 阶段                                             |
 
 </ApiTable>
 
@@ -2165,15 +2169,15 @@ export class RetikzRuntimeError extends RetikzError<RetikzRuntimeErrorCode, Reti
 
 <ApiTable>
 
-| 成员                    | 类型                                | 默认值 | 说明                                         |
-| ----------------------- | ----------------------------------- | ------ | -------------------------------------------- |
-| `readonly cause?`       | `unknown`                           | —      | 隔离的原始非致命错误                         |
-| `readonly code`         | `OpenString<RuntimeDiagnosticCode>` | —      | 稳定诊断分类                                 |
-| `readonly computation?` | `RuntimeComputationId`              | —      | 关联的 Computation identity                  |
-| `readonly message`      | `string`                            | —      | 面向开发者的诊断信息                         |
-| `readonly owner?`       | `string`                            | —      | 来源归属，例如 Source key 或 participant key |
-| `readonly phase`        | `RuntimeDiagnosticPhase`            | —      | 产生诊断的执行阶段                           |
-| `readonly severity`     | `'warning' \| 'error'`              | —      | 诊断严重级别                                 |
+| 成员                    | 类型                                       | 默认值 | 说明                                         |
+| ----------------------- | ------------------------------------------ | ------ | -------------------------------------------- |
+| `readonly cause?`       | `unknown`                                  | —      | 隔离的原始非致命错误                         |
+| `readonly code`         | `OpenString<BuiltinRuntimeDiagnosticCode>` | —      | 稳定诊断分类                                 |
+| `readonly computation?` | `RuntimeComputationId`                     | —      | 关联的 Computation identity                  |
+| `readonly message`      | `string`                                   | —      | 面向开发者的诊断信息                         |
+| `readonly owner?`       | `string`                                   | —      | 来源归属，例如 Source key 或 participant key |
+| `readonly phase`        | `RuntimeDiagnosticPhase`                   | —      | 产生诊断的执行阶段                           |
+| `readonly severity`     | `'warning' \| 'error'`                     | —      | 诊断严重级别                                 |
 
 </ApiTable>
 
@@ -2183,7 +2187,7 @@ export class RetikzRuntimeError extends RetikzError<RetikzRuntimeErrorCode, Reti
 
 ```ts
 export type RuntimeDiagnostic = Readonly<{
-  code: OpenString<RuntimeDiagnosticCode>;
+  code: OpenString<BuiltinRuntimeDiagnosticCode>;
   phase: RuntimeDiagnosticPhase;
   severity: 'warning' | 'error';
   message: string;
@@ -2256,10 +2260,10 @@ export type RetikzRuntimeErrorCode = ValueOf<typeof RetikzRuntimeErrorCode>;
 
 </details>
 
-#### <ApiSourceLink label={"RuntimeDiagnosticCode"} path={"packages/kernel/runtime/src/diagnostic/constants.ts"} startLine={4}>RuntimeDiagnosticCode</ApiSourceLink>
+#### <ApiSourceLink label={"BuiltinRuntimeDiagnosticCode"} path={"packages/kernel/runtime/src/diagnostic/constants.ts"} startLine={4}>BuiltinRuntimeDiagnosticCode</ApiSourceLink>
 
 ```ts
-export const RuntimeDiagnosticCode = {
+export const BuiltinRuntimeDiagnosticCode = {
   SourceDisposeFailed: 'RUNTIME_SOURCE_DISPOSE_FAILED',
   ResultDisposeFailed: 'RUNTIME_RESULT_DISPOSE_FAILED',
   ComputationObserverFailed: 'RUNTIME_COMPUTATION_OBSERVER_FAILED',
@@ -2270,7 +2274,7 @@ export const RuntimeDiagnosticCode = {
   ParticipantDiagnosticReentrant: 'RUNTIME_PARTICIPANT_DIAGNOSTIC_REENTRANT',
 } as const;
 
-export type RuntimeDiagnosticCode = ValueOf<typeof RuntimeDiagnosticCode>;
+export type BuiltinRuntimeDiagnosticCode = ValueOf<typeof BuiltinRuntimeDiagnosticCode>;
 ```
 
 #### <ApiSourceLink label={"RuntimeDiagnosticPhase"} path={"packages/kernel/runtime/src/diagnostic/constants.ts"} startLine={24}>RuntimeDiagnosticPhase</ApiSourceLink>
