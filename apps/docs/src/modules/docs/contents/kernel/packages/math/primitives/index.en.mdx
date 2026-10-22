@@ -16,6 +16,23 @@ const end = vector2.add([20, 10], [40, -15]);
 const distance = point.distance([20, 10], end); // 42.720018726587654
 ```
 
+## Angles and sweeps
+
+Angle APIs use degrees; `DEG_TO_RAD` and `RAD_TO_DEG` convert between degrees and radians. `normalizeDegrees` returns a representation in `[0, 360)`, while `normalizeSignedDegrees` returns the representation closest to zero (keeping 180 positive).
+
+```ts
+import { alignAngleSweep, normalizeAngleRange, normalizeDegrees } from '@retikz/math';
+
+normalizeDegrees(-30); // 330
+normalizeAngleRange(300, 60); // { start: 300, end: 420, mid: 360 }
+alignAngleSweep(300, 60, false); // { start: 300, end: 420 }
+alignAngleSweep(300, 60, true); // { start: 300, end: 60 }
+```
+
+`normalizeAngleRange` preserves the start, unwraps the end in the increasing direction, and limits the sweep to one turn. `alignAngleSweep` adjusts the end for the requested direction: increasing angles are clockwise in screen coordinates; `counterClockwise: true` means decreasing angles. Identical endpoints keep a zero sweep; a nonzero whole-turn input preserves one full turn instead of becoming zero.
+
+Import pure geometry functions and types directly from `@retikz/math`. A centered rectangle uses `CenteredBox`, whose `x/y` describe its center; `BoundsRect` instead uses the top-left corner. Core continues to own anchors and connection policies.
+
 ## Vector operations
 
 2D geometric data can represent either a coordinate point or a vector: a point describes a position, while a vector describes direction and displacement. `Position` and `Vector2` both use the `[x, y]` form, but the method group should match the meaning of the data.
@@ -163,7 +180,7 @@ $$
       label: 'Elliptical arc boundary candidates',
       path: 'packages/kernel/math/src/primitives/arc.ts',
       startLine: 143,
-      endLine: 180,
+      endLine: 174,
     },
   ]}
 />
@@ -234,7 +251,7 @@ A zero semi-axis or a target at the center returns the ellipse center.
       label: 'Elliptical arc points and candidates',
       path: 'packages/kernel/math/src/primitives/arc.ts',
       startLine: 143,
-      endLine: 180,
+      endLine: 174,
     },
   ]}
 />

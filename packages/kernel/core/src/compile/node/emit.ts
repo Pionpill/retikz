@@ -1,3 +1,6 @@
+import { RAD_TO_DEG } from '@retikz/math';
+import type { CenteredBox } from '@retikz/math';
+
 import type { GroupPrim, ResolvedShapeStyle, ScenePrimitive, TextLine } from '../../contract';
 import type { CanonicalNode } from '../../resolve';
 import {
@@ -6,8 +9,6 @@ import {
   isLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
-import { RAD_TO_DEG } from '../../shared/geometry';
-import type { Rect } from '../../shared/geometry';
 import type { PaintResolver } from '../resource';
 import { validateMarkerPrimitives } from '../resource';
 import { validateScenePrimitives } from '../scene-primitive';
@@ -102,7 +103,7 @@ export const emitNodeShapePrimitives = (
   round: Round,
   resolvePaint: PaintResolver,
 ): Array<ScenePrimitive> => {
-  const axisAlignedRect: Rect = { ...layout.geometry.rect, rotate: 0 };
+  const axisAlignedRect: CenteredBox = { ...layout.geometry.rect, rotate: 0 };
   let emitted: unknown;
 
   try {

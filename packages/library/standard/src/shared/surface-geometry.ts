@@ -1,5 +1,5 @@
 import type { IRClip, IRPath } from '@retikz/core';
-import { rectOutline } from '@retikz/core';
+import { rectOutline } from '@retikz/math';
 
 /** 构造 Surface background 或 border 共用的矩形 Path */
 export const surfaceBoundaryPath = (

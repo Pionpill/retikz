@@ -1,3 +1,4 @@
+import type { ContourSegment } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import { boundaryPointOf, compileResolvedNode } from '../../src/compile/node';
@@ -7,7 +8,6 @@ import { resolvePatternRegistry } from '../../src/providers/pattern';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import { resolveNode } from '../../src/resolve/node';
 import type { IRNode } from '../../src/schemas/node';
-import type { ContourSegment } from '../../src/shared/geometry/path';
 import { filletContour } from '../../src/shared/geometry/path';
 
 const measureText = (): { width: number; height: number; ascent: number } => ({

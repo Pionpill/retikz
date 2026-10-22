@@ -1,10 +1,10 @@
+import { RAD_TO_DEG } from '@retikz/math';
 import type { CurveSegmentSample } from '@retikz/math';
 
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../../contract';
 import type { CanonicalFont, CanonicalGeometryLabel } from '../../../resolve';
 import { resolveFont, resolveTextLine } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
-import { RAD_TO_DEG } from '../../../shared/geometry';
 import { DEFAULT_FONT_SIZE } from '../../constants';
 import type { CompileWarningCode } from '../../constants';
 import type { LineLayoutContext, LowerTex, TextMeasurer } from '../../text';

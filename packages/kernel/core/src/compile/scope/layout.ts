@@ -1,3 +1,4 @@
+import type { CenteredBox } from '@retikz/math';
 import { boundsOf, centerOfBounds } from '@retikz/math';
 
 import type { Transform } from '../../contract';
@@ -6,7 +7,6 @@ import type { PositionTargetResolveContext } from '../../resolve/position';
 import { resolveTransformTranslation } from '../../resolve/position';
 import type { IRPosition, IRScopeSelfPoint, IRTransform } from '../../schemas';
 import { Anchor } from '../../shared';
-import type { Rect } from '../../shared/geometry';
 import { rect as rectOps } from '../../shared/geometry';
 import type { NodeLayout } from '../node';
 import { outerRectOf } from '../node';
@@ -127,7 +127,7 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Ar
 };
 
 /** 计算一组 layout 的全局 AABB；空数组返回 null */
-export const computeScopeBoundingBox = (layouts: ReadonlyArray<NodeLayout>): Rect | null => {
+export const computeScopeBoundingBox = (layouts: ReadonlyArray<NodeLayout>): CenteredBox | null => {
   const bounds = boundsOf(collectScopeCornerPoints(layouts));
   if (bounds === undefined) return null;
 

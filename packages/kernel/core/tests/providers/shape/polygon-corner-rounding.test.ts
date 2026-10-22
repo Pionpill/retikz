@@ -1,15 +1,14 @@
-import type { Position } from '@retikz/math';
+import type { CenteredBox, Position } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import { polygon } from '../../../src/providers/shape';
-import type { Rect } from '../../../src/shared/geometry/rect';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 
 const identity = (n: number): number => n;
 
 /** 轴对齐 rect（emit / boundaryPoint 都接受；boundaryPoint 含 rotate 语义但此处 rotate=0） */
-const squareRect = (size = 120): Rect => ({ x: 0, y: 0, width: size, height: size, rotate: 0 });
+const squareRect = (size = 120): CenteredBox => ({ x: 0, y: 0, width: size, height: size, rotate: 0 });
 
 describe('polygon cornerRadius — paramsSchema', () => {
   it('cornerRadius optional + nonnegative finite', () => {
@@ -118,7 +117,7 @@ describe('polygon cornerRadius — boundary aware', () => {
 describe('polygon cornerRadius — r=0 equivalence to current sharp-corner output', () => {
   // 现状参考实现：emit = move(v0) + line(v1..v_{n-1}) + close（顶点过 round），无回起点冗余 line。
   const sharpEmitReference = (
-    rect: Rect,
+    rect: CenteredBox,
     round: (n: number) => number,
     params: { sides: number; rotate?: number },
   ): Array<{ kind: string; to?: [number, number] }> => {

@@ -78,6 +78,7 @@
     "@retikz/vanilla": "workspace:*"
   },
   "devDependencies": {
+    "@retikz/math": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

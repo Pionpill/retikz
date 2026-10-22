@@ -563,6 +563,34 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
   ],
   'kernel/packages/math': [
     {
+      title: { zh: '角度与扫描', en: 'Angles and sweeps' },
+      members: [
+        'AngleRange',
+        'DEG_TO_RAD',
+        'RAD_TO_DEG',
+        'alignAngleSweep',
+        'normalizeAngleRange',
+        'normalizeDegrees',
+        'normalizeSignedDegrees',
+      ],
+      schemas: [],
+    },
+    {
+      title: { zh: '轮廓与圆角', en: 'Contours and fillets' },
+      members: [
+        'ArcSegment',
+        'ContourCommand',
+        'ContourSegment',
+        'FilletSolution',
+        'LineSegment',
+        'buildContourCommands',
+        'intersectContourRay',
+        'solveContourFillets',
+        'rectOutline',
+      ],
+      schemas: [],
+    },
+    {
       title: {
         zh: '坐标变换',
         en: 'Coordinate transforms',

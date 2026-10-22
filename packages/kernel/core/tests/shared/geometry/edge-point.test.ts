@@ -1,9 +1,8 @@
+import { lerp } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import { Anchor, Side } from '../../../src/shared';
-import { circle } from '../../../src/shared/geometry/circle';
-import { diamond } from '../../../src/shared/geometry/diamond';
-import { EDGE_ENDS, edgeAngleDeg, lerpPoint } from '../../../src/shared/geometry/edge';
+import { EDGE_ENDS, edgeAngleDeg } from '../../../src/shared/geometry/edge';
 import { ellipse } from '../../../src/shared/geometry/ellipse';
 import { rect } from '../../../src/shared/geometry/rect';
 
@@ -32,10 +31,10 @@ describe('edge 共享方向约定', () => {
     expect(edgeAngleDeg(Side.Left, 1)).toBeCloseTo(135, 6);
   });
 
-  it('lerpPoint：线性插值', () => {
-    near(lerpPoint([0, 0], [10, 20], 0.5), 5, 10);
-    near(lerpPoint([0, 0], [10, 20], 0), 0, 0);
-    near(lerpPoint([0, 0], [10, 20], 1), 10, 20);
+  it('lerp：线性插值', () => {
+    near(lerp([0, 0], [10, 20], 0.5), 5, 10);
+    near(lerp([0, 0], [10, 20], 0), 0, 0);
+    near(lerp([0, 0], [10, 20], 1), 10, 20);
   });
 });
 
@@ -75,33 +74,6 @@ describe('rect.edgePoint：矩形四直边', () => {
   });
 });
 
-describe('circle.edgePoint：周长弧段（真实边界，非外接矩形边）', () => {
-  const c = { x: 0, y: 0, radius: 20, rotate: 0 };
-  const onCircle = (p: readonly [number, number]): number => Math.hypot(p[0], p[1]);
-
-  it('right t=0.5 = (radius, 0)，t=0/1 = NE/SE 对角', () => {
-    near(circle.edgePoint(c, Side.Right, 0.5), 20, 0);
-    near(circle.edgePoint(c, Side.Right, 0), 20 * Math.SQRT1_2, -20 * Math.SQRT1_2); // NE
-    near(circle.edgePoint(c, Side.Right, 1), 20 * Math.SQRT1_2, 20 * Math.SQRT1_2); // SE
-  });
-
-  it('top t=0.5 = (0, -radius)', () => {
-    near(circle.edgePoint(c, Side.Top, 0.5), 0, -20);
-  });
-
-  it('任意 t 的点都落在圆周上（dist == radius）', () => {
-    for (const t of [0, 0.25, 0.5, 0.75, 1]) {
-      expect(onCircle(circle.edgePoint(c, Side.Top, t))).toBeCloseTo(20, 6);
-      expect(onCircle(circle.edgePoint(c, Side.Right, t))).toBeCloseTo(20, 6);
-    }
-  });
-
-  it('端点 t=0.5 与 circle.anchor 的 cardinal 点重合', () => {
-    near(circle.edgePoint(c, Side.Top, 0.5), circle.anchor(c, Anchor.Top)[0], circle.anchor(c, Anchor.Top)[1]);
-    near(circle.edgePoint(c, Side.Left, 0.5), circle.anchor(c, Anchor.Left)[0], circle.anchor(c, Anchor.Left)[1]);
-  });
-});
-
 describe('ellipse.edgePoint：周长弧段', () => {
   const e = { x: 0, y: 0, rx: 30, ry: 20, rotate: 0 };
   const onEllipse = (p: readonly [number, number]): number => (p[0] / 30) ** 2 + (p[1] / 20) ** 2;
@@ -115,43 +87,5 @@ describe('ellipse.edgePoint：周长弧段', () => {
       expect(onEllipse(ellipse.edgePoint(e, Side.Bottom, t))).toBeCloseTo(1, 6);
       expect(onEllipse(ellipse.edgePoint(e, Side.Left, t))).toBeCloseTo(1, 6);
     }
-  });
-});
-
-describe('diamond.edgePoint：过 cardinal 顶点的两段折线', () => {
-  // w=20,h=30 → halfA=10, halfB=15；顶点 N(0,-15) S(0,15) E(10,0) W(-10,0)
-  // 边中点 NW(-5,-7.5) NE(5,-7.5) SW(-5,7.5) SE(5,7.5)
-  const d = { x: 0, y: 0, halfA: 10, halfB: 15, rotate: 0 };
-
-  it('top t=0/0.5/1 = NW中点 / N顶点 / NE中点', () => {
-    near(diamond.edgePoint(d, Side.Top, 0), -5, -7.5);
-    near(diamond.edgePoint(d, Side.Top, 0.5), 0, -15);
-    near(diamond.edgePoint(d, Side.Top, 1), 5, -7.5);
-  });
-
-  it('top t=0.25 落在 NW中点→N顶点 连线（真实斜边）上', () => {
-    // lerp((-5,-7.5),(0,-15),0.5) = (-2.5,-11.25)
-    near(diamond.edgePoint(d, Side.Top, 0.25), -2.5, -11.25);
-  });
-
-  it('right t=0.5 = E 顶点；t=0/1 = NE/SE 中点（北→南）', () => {
-    near(diamond.edgePoint(d, Side.Right, 0.5), 10, 0);
-    near(diamond.edgePoint(d, Side.Right, 0), 5, -7.5);
-    near(diamond.edgePoint(d, Side.Right, 1), 5, 7.5);
-  });
-
-  it('每个 t 的点都在菱形边界上（|x|/halfA + |y|/halfB == 1）', () => {
-    for (const side of [Side.Top, Side.Bottom, Side.Right, Side.Left]) {
-      for (const t of [0, 0.25, 0.5, 0.75, 1]) {
-        const p = diamond.edgePoint(d, side, t);
-
-        expect(Math.abs(p[0]) / 10 + Math.abs(p[1]) / 15).toBeCloseTo(1, 6);
-      }
-    }
-  });
-
-  it('t=0.5 与 diamond.anchor cardinal 顶点重合', () => {
-    expect(diamond.edgePoint(d, Side.Top, 0.5)).toEqual(diamond.anchor(d, Anchor.Top));
-    expect(diamond.edgePoint(d, Side.Right, 0.5)).toEqual(diamond.anchor(d, Anchor.Right));
   });
 });

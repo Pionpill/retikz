@@ -1,7 +1,6 @@
-import type { Position } from '@retikz/math';
+import { DEG_TO_RAD, localToWorld, rectOutline } from '@retikz/math';
+import type { ContourCommand, LineSegment, Position } from '@retikz/math';
 
-import type { ContourCommand, LineSegment } from '../../shared';
-import { DEG_TO_RAD, localToWorld, rectOutline } from '../../shared';
 import type { PathCommand, PathPrim } from '../scene';
 import type { ResolvedShapeStyle } from './types';
 

@@ -1,4 +1,4 @@
----
+﻿---
 description: '@retikz/math 零依赖纯计算几何包；背景：Core 中已有私有的求交和弧几何，但纯数学、IR 类型和 TikZ 语义混在同一层'
 keywords: 'retikz、math'
 ---
@@ -15,7 +15,7 @@ Core 中已有私有的求交和弧几何，但纯数学、IR 类型和 TikZ 语
 
 ## 决策
 
-新建 @retikz/math：ESM、零运行时依赖、零 IR/Zod、不使用 class；所有 API 为纯函数、普通对象和 Position 数组。Position 与 DEFAULT_EPSILON（1e-9）在 math 中成为真源，core 通过 re-export 保持原公开面。
+新建 @retikz/math：ESM、零运行时依赖、零 IR/Zod、不使用 class；所有 API 为纯函数、普通对象和 Position 数组。Position 与 DEFAULT_EPSILON（1e-9）在 math 中成为真源，消费方从 math 公开入口直接导入。
 
 首切公开命名空间与能力：
 
@@ -34,11 +34,11 @@ Core 中已有私有的求交和弧几何，但纯数学、IR 类型和 TikZ 语
 - triangle 三点共线时返回 null；containsPoint 的边界结果首切未定义
 - 所有数值比较使用朴素 epsilon，复杂退化谓词另行升级
 
-math 只接受可迁移的纯数学能力；curve、matrix 和业务 shape 语义不属于本包的默认范围。
+math 只接受可独立复用的纯数学能力；曲线、变换与中立轮廓算法属于本包，业务 shape、Anchor 与 IR 语义不属于本包。
 
 ## 兼容性与实现结果
 
-@retikz/math 已加入 Kernel lockstep，核心几何 API 已落地；它是新增底座，既有 core 使用方式通过 re-export 保持兼容。
+@retikz/math 已加入 Kernel lockstep，核心几何 API 已落地；纯计算由 Math 单独提供公开入口，Core 不维护重复导出。
 
 ## 遗留风险
 

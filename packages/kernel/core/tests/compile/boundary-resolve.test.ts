@@ -1,3 +1,4 @@
+import type { CenteredBox } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
@@ -10,16 +11,15 @@ import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import type { ProviderCollection } from '../../src/providers/registry';
 import { ellipseShape, rectangle } from '../../src/providers/shape';
 import { boundaryKey, resolveBoundaryReference } from '../../src/resolve/node';
-import type { Rect } from '../../src/shared/geometry/rect';
 
-const visualRect: Rect = { x: 0, y: 0, width: 40, height: 20, rotate: 0 };
+const visualRect: CenteredBox = { x: 0, y: 0, width: 40, height: 20, rotate: 0 };
 
 const registry = [rectangle, ellipseShape];
 
 const shapeAwareVisual = {
   ...rectangle,
   name: 'shape-aware-visual',
-  connectionEnvelope: (_rect: Rect, kind: 'circle' | 'ellipse' | 'rectangle') => {
+  connectionEnvelope: (_rect: CenteredBox, kind: 'circle' | 'ellipse' | 'rectangle') => {
     if (kind === 'circle') return { halfWidth: 12, halfHeight: 12 };
     if (kind === 'ellipse') return { halfWidth: 14, halfHeight: 8 };
     return { halfWidth: 20, halfHeight: 10 };
@@ -94,7 +94,7 @@ describe('resolveBoundary', () => {
   });
 
   it("'circle' → rotated surface preserves corner enclosure and standard anchors", () => {
-    const rotatedRect: Rect = { x: 5, y: -7, width: 40, height: 20, rotate: Math.PI / 2 };
+    const rotatedRect: CenteredBox = { x: 5, y: -7, width: 40, height: 20, rotate: Math.PI / 2 };
     const r = resolveBoundary('circle', resolveContext({ visualRect: rotatedRect }));
     const corner = r.def.boundaryPoint(r.rect, [-5, 13], r.params);
     const top = r.def.anchor?.(r.rect, 'top', r.params);
@@ -117,7 +117,7 @@ describe('resolveBoundary', () => {
   });
 
   it("'ellipse' → rotated surface preserves corner enclosure and standard anchors", () => {
-    const rotatedRect: Rect = { x: 5, y: -7, width: 40, height: 20, rotate: Math.PI / 2 };
+    const rotatedRect: CenteredBox = { x: 5, y: -7, width: 40, height: 20, rotate: Math.PI / 2 };
     const r = resolveBoundary('ellipse', resolveContext({ visualRect: rotatedRect }));
     const corner = r.def.boundaryPoint(r.rect, [-5, 13], r.params);
     const top = r.def.anchor?.(r.rect, 'top', r.params);

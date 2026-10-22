@@ -1,15 +1,12 @@
-import type { Position } from '@retikz/math';
+import { ellipse } from '@retikz/math';
+import type { BoundsHalfAxes, CenteredBox, Position } from '@retikz/math';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { Rect } from './rect';
 
-/** 规则连接面包络种类 */
+/** 用于连线的外包形状种类 */
 type ConnectionEnvelopeKind = 'circle' | 'ellipse' | 'rectangle';
 
-/** 规则连接面半轴 */
-type ConnectionEnvelope = { halfWidth: number; halfHeight: number };
-
-/** 校验点集包络不是单点，并返回稳定的等轴退化 fallback */
+/** 检查半径是否为有限正数，无效时报告错误 */
 const positiveRadius = (radius: number): number => {
   if (!Number.isFinite(radius) || radius <= 0) {
     throw new RetikzCoreError(
@@ -21,13 +18,14 @@ const positiveRadius = (radius: number): number => {
   return radius;
 };
 
-/** 从视觉 AABB 得到安全的规则连接面半轴 */
-export const boundsConnectionEnvelope = (rect: Rect, kind: ConnectionEnvelopeKind): ConnectionEnvelope => {
+/** 根据图形外框计算能包住它的连接面半宽和半高 */
+export const boundsConnectionEnvelope = (rect: CenteredBox, kind: ConnectionEnvelopeKind): BoundsHalfAxes => {
   const halfWidth = rect.width / 2;
   const halfHeight = rect.height / 2;
   if (kind === 'circle') {
-    const radius = positiveRadius(Math.hypot(halfWidth, halfHeight));
-    return { halfWidth: radius, halfHeight: radius };
+    const axes = ellipse.circumscribedHalfAxes({ halfWidth, halfHeight }, 'equal');
+    positiveRadius(axes.halfWidth);
+    return axes;
   }
 
   if (kind === 'ellipse') {
@@ -36,20 +34,20 @@ export const boundsConnectionEnvelope = (rect: Rect, kind: ConnectionEnvelopeKin
       return { halfWidth: radius, halfHeight: radius };
     }
 
-    return { halfWidth: halfWidth * Math.SQRT2, halfHeight: halfHeight * Math.SQRT2 };
+    return ellipse.circumscribedHalfAxes({ halfWidth, halfHeight });
   }
 
   return { halfWidth, halfHeight };
 };
 
 /**
- * 从 AABB 中心局部点集得到规则连接面半轴
- * @description ellipse 保持点集 AABB 的纵横比并统一缩放到包含全部顶点；共线点集回退等轴包络
+ * 根据相对中心的点坐标，计算能包住全部点的连接面半宽和半高
+ * @description 椭圆保持点集外框的宽高比例；宽或高为零时改用圆形包围
  */
 export const pointsConnectionEnvelope = (
   points: ReadonlyArray<Position>,
   kind: ConnectionEnvelopeKind,
-): ConnectionEnvelope => {
+): BoundsHalfAxes => {
   let maxAbsX = 0;
   let maxAbsY = 0;
   let maxRadius = 0;

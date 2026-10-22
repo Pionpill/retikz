@@ -1,9 +1,8 @@
-import { boundsOf, boundsToRect } from '@retikz/math';
+import { RAD_TO_DEG, boundsOf, boundsToRect } from '@retikz/math';
 
 import type { LayoutAlignmentGuide, Transform } from '../../contract';
-import { LayoutAlignmentGuideDimension, BuiltinLayoutAlignmentGuideName } from '../../contract';
+import { BuiltinLayoutAlignmentGuideName, LayoutAlignmentGuideDimension } from '../../contract';
 import type { IRPosition } from '../../schemas';
-import { RAD_TO_DEG } from '../../shared/geometry';
 import type { EffectiveScopeTransform } from '../transform';
 import { applyScopeTransform, composeScopeTransform, projectLayoutWithTransform } from '../transform';
 import type { NodeLayoutObservation } from '../types';

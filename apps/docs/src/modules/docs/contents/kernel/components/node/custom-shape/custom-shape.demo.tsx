@@ -1,5 +1,6 @@
 import type { IRPosition, PathCommand, ShapeDefinition } from '@retikz/core';
-import { DEFAULT_EPSILON, defineShape, localToWorld, worldToLocal } from '@retikz/core';
+import { defineShape } from '@retikz/core';
+import { DEFAULT_EPSILON, localToWorld, worldToLocal } from '@retikz/math';
 import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 import { z } from 'zod';

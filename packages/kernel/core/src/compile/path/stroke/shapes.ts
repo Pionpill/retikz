@@ -4,6 +4,7 @@ import {
   curve,
   pointAtArcAngle,
   pointAtEllipseArcAngle,
+  rectOutline,
 } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
@@ -11,7 +12,7 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { CanonicalStep, PathGeneratorResolution, PathTargetView } from '../../../resolve';
 import { nodeIdFromResolvableTarget } from '../../../resolve/position';
 import type { IRPosition, IRTarget } from '../../../schemas';
-import { rectOutline, rectPerimeterSample } from '../../../shared/geometry';
+import { rectPerimeterSample } from '../../../shared/geometry';
 import { CompileWarningCode } from '../../constants';
 import { clipTarget, isAutoBoundaryTarget, pointOfTarget, samePoint } from '../host';
 import type { PathCommandEmitter } from './commands';

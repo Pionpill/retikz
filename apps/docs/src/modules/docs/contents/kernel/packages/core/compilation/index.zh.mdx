@@ -1,4 +1,4 @@
----
+﻿---
 title: 编译流程
 description: 沿一次完整编译追踪 IR、节点布局和延迟路径，理解 Core 怎样汇总 Scene、资源与附属产物。
 ---
@@ -191,7 +191,7 @@ export type NodeLayout = {
 };
 
 export type NodeLayoutGeometry = {
-  rect: Rect;
+  rect: CenteredBox;
   margin: BoundsInsets;
   contentCenter: Position;
   contentSize: { width: number; height: number };

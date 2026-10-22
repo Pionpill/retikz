@@ -20,6 +20,31 @@ const crossing = intersect.segmentSegment({
 }); // [10, 10]
 ```
 
+## Rounded contours
+
+Describe connected lines and circular arcs with `ContourSegment`, then solve their corner fillets with `solveContourFillets`. `buildContourCommands` converts the contour and fillets into neutral commands; `intersectContourRay` finds the nearest intersection along a ray from an origin toward a target. These functions do not create Core IR or Scene data.
+
+```ts
+import { buildContourCommands, intersectContourRay, solveContourFillets } from '@retikz/math';
+import type { ContourSegment } from '@retikz/math';
+
+const segments: Array<ContourSegment> = [
+  { kind: 'line', from: [0, 0], to: [40, 0] },
+  { kind: 'line', from: [40, 0], to: [40, 20] },
+  { kind: 'line', from: [40, 20], to: [0, 20] },
+  { kind: 'line', from: [0, 20], to: [0, 0] },
+];
+const fillets = solveContourFillets(segments, 4);
+if (fillets !== undefined) {
+  const commands = buildContourCommands(segments, fillets);
+  const hit = intersectContourRay(segments, [20, 10], [50, 10], fillets);
+}
+```
+
+Contours are closed by default. For an open contour, set the final `closed` argument to `false` in both the solver and command builder. The ray function consumes the fillet result directly and has no `closed` argument. Radii shrink to fit the available adjacent segment lengths. Arc–arc seams requiring a fillet are unsupported and return `undefined`; no rounding returns an empty array. A ray with no intersection also returns `undefined`. Command building and intersection do not solve fillets automatically: reuse results matching the current segments.
+
+For a rectangle defined by opposite corners, use `rectOutline(from, to, cornerRadius)`. It normalizes corner order and limits the radius to half the shorter side.
+
 ## Intersections
 
 Intersection algorithms find the points shared by two lines, two segments, a line and a circle, or two circles. Results are coordinate points; no intersection or degenerate input is expressed as `null` or an empty array.
@@ -246,20 +271,20 @@ A cached `totalLength` must use the same `sampleCount`; otherwise total distance
     {
       label: 'Polyline length approximation',
       path: 'packages/kernel/math/src/algorithms/curve.ts',
-      startLine: 306,
-      endLine: 331,
+      startLine: 346,
+      endLine: 398,
     },
     {
       label: 'Bisection from distance to parameter',
       path: 'packages/kernel/math/src/algorithms/curve.ts',
-      startLine: 536,
-      endLine: 565,
+      startLine: 630,
+      endLine: 668,
     },
     {
       label: 'Shape-preserving curve slicing',
       path: 'packages/kernel/math/src/algorithms/curve.ts',
-      startLine: 371,
-      endLine: 436,
+      startLine: 444,
+      endLine: 510,
     },
   ]}
 />
@@ -304,8 +329,8 @@ For example, a quadratic Bézier from `[0, 0]` through control point `[20, 10]` 
     {
       label: 'Interior extrema of curve projections',
       path: 'packages/kernel/math/src/algorithms/curve.ts',
-      startLine: 439,
-      endLine: 506,
+      startLine: 513,
+      endLine: 599,
     },
   ]}
 />

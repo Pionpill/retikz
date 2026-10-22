@@ -1,3 +1,5 @@
+import { DEG_TO_RAD } from '@retikz/math';
+
 import type { LayoutAxisProposal, Transform } from '../../contract';
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
@@ -14,7 +16,6 @@ import { resolvePosition, resolvePositionTargetWorld } from '../../resolve/posit
 import { resolveFont, resolveTextLineHeight } from '../../resolve/text';
 import type { IRAnchorPosition, IRPosition } from '../../schemas';
 import { CenterAnchor } from '../../shared';
-import { DEG_TO_RAD } from '../../shared/geometry';
 import { DEFAULT_FONT_SIZE } from '../constants';
 import type { CompileWarningCode } from '../constants';
 import { resolveAnchorRefUncached } from '../reference';

@@ -1,7 +1,6 @@
-import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import { alignAngleSweep } from '../../../src/shared';
+import { DEFAULT_EPSILON, alignAngleSweep } from '../../src';
 
 /*
  * alignAngleSweep 把 (start, end) 调整成沿给定扫描方向（ccw=true 递减 / 否则递增）表达，

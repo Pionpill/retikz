@@ -1,3 +1,4 @@
+import { RAD_TO_DEG } from '@retikz/math';
 import type { CurveSegmentSample } from '@retikz/math';
 
 import type {
@@ -10,7 +11,6 @@ import type {
   Transform,
 } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import { RAD_TO_DEG } from '../../../shared/geometry';
 
 const resolveMarkerContextFill = (value: MarkerFill, contextStroke: string): string =>
   typeof value === 'string' ? value : contextStroke;

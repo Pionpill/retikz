@@ -1,6 +1,6 @@
 import { DEFAULT_EPSILON } from '../constants';
 import type { Position, Vector2 } from '../primitives';
-import { lerp, point, vector2 } from '../primitives';
+import { alignAngleSweep, lerp, point, vector2 } from '../primitives';
 
 const DEFAULT_CURVE_SAMPLE_COUNT = 32;
 
@@ -209,22 +209,8 @@ const normalizedBisectionSteps = (bisectionSteps: number | undefined): number =>
 const normalizedArcSweep = (segment: CurveArcSegment): { startAngleDeg: number; endAngleDeg: number } => {
   const { startAngleDeg, endAngleDeg } = segment;
   const counterClockwise = segment.counterClockwise ?? endAngleDeg < startAngleDeg;
-  const sweep = endAngleDeg - startAngleDeg;
-  if (sweep === 0) return { startAngleDeg, endAngleDeg: startAngleDeg };
-  if (Math.abs(sweep) === 360) {
-    return { startAngleDeg, endAngleDeg: startAngleDeg + (counterClockwise ? -360 : 360) };
-  }
-
-  const normalizedSweep = ((sweep % 360) + 360) % 360;
-  const alignedSweep = counterClockwise
-    ? normalizedSweep === 0
-      ? -360
-      : normalizedSweep - 360
-    : normalizedSweep === 0
-      ? 360
-      : normalizedSweep;
-
-  return { startAngleDeg, endAngleDeg: startAngleDeg + alignedSweep };
+  const aligned = alignAngleSweep(startAngleDeg, endAngleDeg, counterClockwise);
+  return { startAngleDeg: aligned.start, endAngleDeg: aligned.end };
 };
 
 /** 根据已归一化的角度计算弧上位置，复用圆弧与椭圆弧的旋转公式 */

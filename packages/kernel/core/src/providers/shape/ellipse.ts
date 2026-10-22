@@ -1,12 +1,12 @@
-import { ellipse as mathEllipse } from '@retikz/math';
+import { RAD_TO_DEG, ellipse as mathEllipse, localToWorld } from '@retikz/math';
+import type { CenteredBox } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { enum as zodEnum, strictObject } from 'zod';
 
 import type { PathCommand, ScenePrimitive } from '../../contract';
 import { defineShape } from '../../contract';
 import { BuiltinShape } from '../../schemas';
-import type { Rect } from '../../shared';
-import { CenterAnchor, ellipse, isDirectionalAnchor, localToWorld, RAD_TO_DEG } from '../../shared';
+import { CenterAnchor, ellipse, isDirectionalAnchor } from '../../shared';
 import { ellipsePrimitiveStyle } from './style';
 
 const ellipseParamsSchema = strictObject({
@@ -20,7 +20,7 @@ const ellipseParamsSchema = strictObject({
 type EllipseParams = ZodInfer<typeof ellipseParamsSchema>;
 
 /** 生成与 ellipse emit 共用半轴的闭合椭圆轮廓 */
-const ellipseOutline = (bounds: Rect): Array<PathCommand> => {
+const ellipseOutline = (bounds: CenteredBox): Array<PathCommand> => {
   const radiusX = bounds.width / 2;
   const radiusY = bounds.height / 2;
   const rotation = (bounds.rotate ?? 0) * RAD_TO_DEG;
@@ -42,7 +42,7 @@ const ellipseOutline = (bounds: Rect): Array<PathCommand> => {
 };
 
 /** 生成 ellipse 的中心和两条轴端点关键点 */
-const ellipseKeyPoints = (bounds: Rect) => {
+const ellipseKeyPoints = (bounds: CenteredBox) => {
   const radiusX = bounds.width / 2;
   const radiusY = bounds.height / 2;
 
@@ -64,7 +64,7 @@ export const ellipseShape = defineShape<EllipseParams>({
   paramsSchema: ellipseParamsSchema,
   circumscribe: (hw, hh, params) =>
     mathEllipse.circumscribedHalfAxes({ halfWidth: hw, halfHeight: hh }, params.circumscribe),
-  boundaryPoint: (r, toward) => ellipse.boundaryPoint(mathEllipse.inscribedInBox(r), toward),
+  boundaryPoint: (r, toward) => mathEllipse.boundaryPoint(mathEllipse.inscribedInBox(r), toward),
   anchor: (r, name) => {
     if (name === CenterAnchor.Center) return undefined;
     return isDirectionalAnchor(name) ? ellipse.anchor(mathEllipse.inscribedInBox(r), name) : undefined;

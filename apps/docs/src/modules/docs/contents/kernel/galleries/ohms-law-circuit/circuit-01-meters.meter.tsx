@@ -1,5 +1,6 @@
 import type { IRNodeLabel, IRPosition, ShapeDefinition } from '@retikz/core';
-import { defineShape, localToWorld, worldToLocal } from '@retikz/core';
+import { defineShape } from '@retikz/core';
+import { localToWorld, worldToLocal } from '@retikz/math';
 import { Node } from '@retikz/react';
 import type { FC } from 'react';
 import { z } from 'zod';

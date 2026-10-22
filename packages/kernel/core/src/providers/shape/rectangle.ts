@@ -1,21 +1,13 @@
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import type { Position } from '@retikz/math';
+import { localToWorld } from '@retikz/math';
+import type { CenteredBox, ContourSegment, Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { strictObject } from 'zod';
 
 import type { ScenePrimitive } from '../../contract';
-import { defineShape, rectOutlinePathCommands } from '../../contract';
-import { verticesToSegments } from '../../contract';
+import { defineShape, rectOutlinePathCommands, verticesToSegments } from '../../contract';
 import { BuiltinShape } from '../../schemas';
-import type { ContourSegment, Rect } from '../../shared';
-import {
-  boundaryFromContour,
-  boundsConnectionEnvelope,
-  CenterAnchor,
-  isDirectionalAnchor,
-  localToWorld,
-  rect,
-} from '../../shared';
+import { CenterAnchor, boundaryFromContour, boundsConnectionEnvelope, isDirectionalAnchor, rect } from '../../shared';
 import { rectPrimitiveStyle } from './style';
 
 const rectangleParamsSchema = strictObject({
@@ -27,7 +19,7 @@ const rectangleParamsSchema = strictObject({
 type RectangleParams = ZodInfer<typeof rectangleParamsSchema>;
 
 /** 轴对齐 / 旋转矩形的 4 个角（CW 绕向：左上 → 右上 → 右下 → 左下），局部系经 localToWorld 投世界 */
-const rectVertices = (bounds: Rect): Array<Position> => {
+const rectVertices = (bounds: CenteredBox): Array<Position> => {
   const halfW = bounds.width / 2;
   const halfH = bounds.height / 2;
 
@@ -48,7 +40,7 @@ export const rectangle = defineShape<RectangleParams>({
   name: BuiltinShape.Rectangle,
   paramsSchema: rectangleParamsSchema,
   circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
-  boundaryPoint: (bounds: Rect, toward: Position, params): Position => {
+  boundaryPoint: (bounds: CenteredBox, toward: Position, params): Position => {
     const verts = rectVertices(bounds);
     const segments: Array<ContourSegment> = verticesToSegments(verts);
     const center: Position = [bounds.x, bounds.y];

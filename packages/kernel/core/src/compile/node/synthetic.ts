@@ -1,4 +1,5 @@
 import type { JsonObject } from '@retikz/foundation';
+import type { CenteredBox } from '@retikz/math';
 import { circle } from '@retikz/math';
 
 import type { BoundaryDefinition, ShapeDefinition, Transform } from '../../contract';
@@ -9,7 +10,6 @@ import { resolveNode } from '../../resolve';
 import type { PositionTargetResolveContext } from '../../resolve/position';
 import type { IRNode, IRPosition } from '../../schemas';
 import { ThemeMode } from '../../shared';
-import type { Rect } from '../../shared/geometry';
 import { DEFAULT_LABEL_DISTANCE, DEFAULT_NODE_DISTANCE } from '../constants';
 import { fallbackMeasurer } from '../text';
 import { applyTransformChain } from '../transform';
@@ -38,7 +38,7 @@ export type SyntheticRectangleLayoutInput = {
   /** 布局对象的标识 */
   id: string;
   /** layout 矩形 */
-  rect: Rect;
+  rect: CenteredBox;
 };
 
 /** synthetic scope rectangle layout 输入 */
@@ -46,7 +46,7 @@ export type ScopeRectangleLayoutInput = {
   /** 布局对象的标识 */
   id: string;
   /** 已计算的 bbox rect；空 scope 时传 null */
-  bbox: Rect | null;
+  bbox: CenteredBox | null;
   /** 空 bbox 时使用的回退原点 */
   fallbackOrigin: IRPosition;
 };
@@ -140,7 +140,7 @@ export const createScopeRectangleLayout = (
   input: ScopeRectangleLayoutInput,
   context: SyntheticLayoutRegistryContext = {},
 ): NodeLayout => {
-  const rect: Rect = input.bbox ?? {
+  const rect: CenteredBox = input.bbox ?? {
     x: input.fallbackOrigin[0],
     y: input.fallbackOrigin[1],
     width: 0,

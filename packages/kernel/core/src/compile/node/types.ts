@@ -1,16 +1,15 @@
 import type { JsonObject } from '@retikz/foundation';
-import type { BoundsInsets, Position } from '@retikz/math';
+import type { BoundsInsets, CenteredBox, Position } from '@retikz/math';
 
 import type { ConnectionEnvelopeKind, PathCommand, ShapeDefinition, TextLine } from '../../contract';
 import type {
+  CanonicalFont,
   CanonicalNode,
   CanonicalNodeLabel,
   NodeResolution,
-  CanonicalFont,
   TextLineResolution,
 } from '../../resolve';
 import type { IRFont } from '../../schemas';
-import type { Rect } from '../../shared/geometry';
 import type { CompileWarningCode } from '../constants';
 import type { InlineLineLayout, LowerTex, TextFont, TextMeasurer } from '../text';
 
@@ -22,11 +21,11 @@ export type BoundaryGeometryDefinition = {
   /** provider 名称 */
   name: string;
   /** 返回与解析后 rect 同坐标系的精确闭合连接面轮廓；空数组表示合法空几何 */
-  outline?: (rect: Rect, params: JsonObject) => ReadonlyArray<PathCommand>;
+  outline?: (rect: CenteredBox, params: JsonObject) => ReadonlyArray<PathCommand>;
   /** 按方向求连接点 */
-  boundaryPoint: (rect: Rect, toward: Position, params: JsonObject) => Position;
+  boundaryPoint: (rect: CenteredBox, toward: Position, params: JsonObject) => Position;
   /** 求命名 anchor */
-  anchor?: (rect: Rect, name: string, params: JsonObject) => Position | undefined;
+  anchor?: (rect: CenteredBox, name: string, params: JsonObject) => Position | undefined;
 };
 
 /** 已按视觉 rect 解析出的连接面几何 */
@@ -34,7 +33,7 @@ export type BoundaryGeometryResolution = {
   /** 连接面 definition */
   def: BoundaryGeometryDefinition;
   /** provider 使用的连接面 rect */
-  rect: Rect;
+  rect: CenteredBox;
   /** 已校验参数 */
   params: JsonObject;
 };
@@ -44,13 +43,13 @@ export type BoundaryGeometryResolveContext = {
   /** 节点视觉 shape definition */
   visualDef: ShapeDefinition;
   /** 节点视觉 shape rect */
-  visualRect: Rect;
+  visualRect: CenteredBox;
   /** 节点视觉 shape 参数 */
   visualParams: JsonObject;
   /** 当前 node 的 IR 路径 */
   irPath?: string;
   /** shape-aware envelope 缓存 */
-  connectionEnvelopeCache?: Map<string, Rect>;
+  connectionEnvelopeCache?: Map<string, CenteredBox>;
   /** tight fallback warning 去重集合 */
   connectionEnvelopeWarnings?: Set<ConnectionEnvelopeKind>;
   /** compile warning 分发函数 */
@@ -110,7 +109,7 @@ export type NodeTextLineLayout = Omit<TextLine, 'fill' | 'opacity'> & {
 /** 节点测量和定位产生的几何结果 */
 export type NodeLayoutGeometry = {
   /** 视觉外框，rotate 使用弧度 */
-  rect: Rect;
+  rect: CenteredBox;
   /** 缩放后的外边距 */
   margin: BoundsInsets;
   /** 正文内容中心 */

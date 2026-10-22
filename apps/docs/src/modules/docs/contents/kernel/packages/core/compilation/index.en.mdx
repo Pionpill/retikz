@@ -1,4 +1,4 @@
----
+﻿---
 title: Compilation Flow
 description: Follow IR, node layout, and deferred paths through one full Core compilation to Scene, resources, and associated outputs.
 ---
@@ -196,7 +196,7 @@ export type NodeLayout = {
 };
 
 export type NodeLayoutGeometry = {
-  rect: Rect;
+  rect: CenteredBox;
   margin: BoundsInsets;
   contentCenter: Position;
   contentSize: { width: number; height: number };
