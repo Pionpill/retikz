@@ -30,7 +30,7 @@ export const BarPositionPreview = (values: BarPositionPreviewValues) => {
           direction={isPolar ? undefined : values.direction}
           encodings={{
             color: 'quarter',
-            ...(values.showLabels ? { label: { content: 'value' } } : {}),
+            ...(values.showLabels ? { label: { text: 'value' } } : {}),
             position: {
               x: { field: isHorizontal ? 'value' : 'quarter' },
               y: { field: isHorizontal ? 'quarter' : 'value' },

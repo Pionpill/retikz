@@ -99,7 +99,7 @@ const POINT_ROWS: Datasets = {
 describe('contract priority-1 宿主 label（填 datum Node.label）', () => {
   it('label-host-node：interval label → 每个 datum Node.label 被填上 NodeLabelSchema，不新建额外 Node', () => {
     const spec = intervalSpec({
-      encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { content: 'revenue' } },
+      encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { text: 'revenue' } },
       properties: { label: { position: 'top', distance: 6 } },
     });
     const layer = expandOf(spec, BAR_ROWS);
@@ -124,7 +124,7 @@ describe('contract priority-1 宿主 label（填 datum Node.label）', () => {
 
   it('label-display-format：displayFormat 套在 field 上 → datum Node.label 文本为格式化串', () => {
     const spec = intervalSpec({
-      encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { content: 'revenue' } },
+      encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { text: 'revenue' } },
       properties: { label: { displayFormat: ',.0f' } },
     });
     const nodes = nodesOf(expandOf(spec, BAR_ROWS));
@@ -134,14 +134,14 @@ describe('contract priority-1 宿主 label（填 datum Node.label）', () => {
   });
 
   it('label-pin-leader：label.pin=true → 宿主 Node.label 带引线', () => {
-    const spec = intervalSpec({ properties: { label: { content: 'X', pin: true } } });
+    const spec = intervalSpec({ properties: { label: { text: 'X', pin: true } } });
     const nodes = nodesOf(expandOf(spec, BAR_ROWS));
 
     expect((nodes[0].label as { pin?: boolean }).pin).toBe(true);
   });
 
   it('label-value-constant：value → 所有 datum Node.label 同一常量串', () => {
-    const spec = intervalSpec({ properties: { label: { content: 'TOP' } } });
+    const spec = intervalSpec({ properties: { label: { text: 'TOP' } } });
     const nodes = nodesOf(expandOf(spec, BAR_ROWS));
 
     expect((nodes[0].label as { text: string }).text).toBe('TOP');
@@ -151,7 +151,7 @@ describe('contract priority-1 宿主 label（填 datum Node.label）', () => {
   it('label-resolve-runtime：resolveLabel(row) 覆盖 field/displayFormat，且 IR 内不含函数', () => {
     const spec = intervalSpec(
       {
-        encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { content: 'revenue' } },
+        encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { text: 'revenue' } },
         properties: { label: { displayFormat: ',.0f' } },
       },
       'bars',
@@ -170,9 +170,9 @@ describe('contract priority-1 宿主 label（填 datum Node.label）', () => {
     expect(JSON.stringify(layer)).not.toContain('function');
   });
 
-  it('label-field-null-skip：label.content.field 解析 null 的行不挂 label（datum Node 仍在）', () => {
+  it('label-field-null-skip：label.text.field 解析 null 的行不挂 label（datum Node 仍在）', () => {
     const spec = intervalSpec({
-      encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { content: 'note' } },
+      encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { text: 'note' } },
     });
     const layer = expandOf(spec, {
       d: [
@@ -407,7 +407,7 @@ describe('contract schema accept/reject', () => {
     expect(nodes.every(n => n.text === undefined)).toBe(true);
   });
 
-  it('label-content-both-reject：宿主 label.content 同时设 field 与 value → refine 拒', () => {
-    expect(() => intervalSpec({ properties: { label: { content: { field: 'revenue', value: 'x' } } } })).toThrow();
+  it('label-content-both-reject：宿主 label.text 同时设 field 与 value → refine 拒', () => {
+    expect(() => intervalSpec({ properties: { label: { text: { field: 'revenue', value: 'x' } } } })).toThrow();
   });
 });

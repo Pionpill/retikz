@@ -165,9 +165,9 @@ describe('Mark Source field encodings and fixed properties', () => {
       type: 'point',
       encodings: {
         position: { x: { field: 'x' }, y: { field: 'y' } },
-        label: [{ content: 'name' }, { content: 'value' }],
+        label: [{ text: 'name' }, { text: 'value' }],
       },
-      properties: { label: [{ content: 'fixed', placement: 'outside' }, { displayFormat: '.2f' }] },
+      properties: { label: [{ text: 'fixed', placement: 'outside' }, { displayFormat: '.2f' }] },
     };
     expect(PointMarkSchema.parse(input)).toMatchObject(input);
   });

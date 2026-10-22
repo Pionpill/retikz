@@ -190,7 +190,7 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'interval',
-          encodings: { label: { content: 'label' }, position: { x: { field: 'cat' }, y: { field: 'value' } } },
+          encodings: { label: { text: 'label' }, position: { x: { field: 'cat' }, y: { field: 'value' } } },
           properties: {
             label: {
               position: 'top',

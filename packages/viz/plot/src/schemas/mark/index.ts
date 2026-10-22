@@ -5,14 +5,14 @@ export { BuiltinPlotMark, MarkTransformSchema, MarkValueKind } from './base';
 export type { IRPlotMarkTransform } from './base';
 export * from './interval';
 export {
-  MarkLabelContentSchema,
+  MarkLabelTextSchema,
   MarkNodeLabelListSchema,
   MarkNodeLabelSchema,
   MarkPathLabelListSchema,
   MarkPathLabelSchema,
 } from './label';
 export type {
-  IRPlotMarkLabelContent,
+  IRPlotMarkLabelText,
   IRPlotMarkNodeLabel,
   IRPlotMarkNodeLabelList,
   IRPlotMarkPathLabel,

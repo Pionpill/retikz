@@ -310,8 +310,8 @@ const translations: Partial<Record<string, string>> = {
   字段或常量文本内容及可选展示格式: 'Field or constant text content with an optional display format',
   '字段类型；temporal 使用 UTC 时间格式，其余使用数值格式':
     'Field type; temporal fields use UTC date formatting, others use numeric formatting',
-  '优先于声明内容的运行时标签回调；省略时读取 content':
-    'Runtime label callback taking precedence over declared content; omitted to read content',
+  '优先于声明内容的运行时标签回调；省略时读取 text':
+    'Runtime label callback taking precedence over declared content; omitted to read text',
   '格式化文本或常量内容；字段为空或没有内容时返回 undefined':
     'Formatted text or constant content; undefined for an empty field or absent content',
   '创建 color-like mark 通道（color / fill / stroke）': 'Creates a color-like mark channel: color, fill, or stroke',

@@ -2,7 +2,7 @@ import type { IRNodeLabel } from '@retikz/core';
 
 import type { MarkChannelDefinition, ResolveLabel } from '../../../contract';
 import { ChannelDefinitionKind, labelEntries } from '../../../contract';
-import type { IRPlotMarkLabelContent, IRPlotMarkOperation } from '../../../schemas';
+import type { IRPlotMarkLabelText, IRPlotMarkOperation } from '../../../schemas';
 import { labelOf } from '../shared';
 
 /** 内置文本通道 definition 的按名称索引类型 */
@@ -20,26 +20,26 @@ export type BuiltinTextChannelOptions = {
 /** 文本目标的字段来源、固定内容与显示配置 */
 type LabelContentSources = {
   field?: string;
-  content?: IRPlotMarkLabelContent;
+  text?: IRPlotMarkLabelText;
   displayFormat?: string;
 };
 
 const labelContentSources = (mark: IRPlotMarkOperation): LabelContentSources => {
   const source = mark as {
-    encodings?: { text?: string; label?: string | { content?: string } | Array<string | { content?: string }> };
+    encodings?: { text?: string; label?: string | { text?: string } | Array<string | { text?: string }> };
     properties?: {
-      text?: IRPlotMarkLabelContent;
+      text?: IRPlotMarkLabelText;
       displayFormat?: string;
       label?:
         | string
-        | { content?: IRPlotMarkLabelContent; displayFormat?: string }
-        | Array<string | { content?: IRPlotMarkLabelContent; displayFormat?: string }>;
+        | { text?: IRPlotMarkLabelText; displayFormat?: string }
+        | Array<string | { text?: IRPlotMarkLabelText; displayFormat?: string }>;
     };
   };
   if (source.encodings?.text !== undefined || source.properties?.text !== undefined) {
     return {
       field: source.encodings?.text,
-      content: source.properties?.text,
+      text: source.properties?.text,
       displayFormat: source.properties?.displayFormat,
     };
   }
@@ -48,8 +48,8 @@ const labelContentSources = (mark: IRPlotMarkOperation): LabelContentSources => 
   const encodings = source.encodings?.label;
   const encoding = labelEntries(encodings).at(0);
   return {
-    field: encoding?.content,
-    content: label?.content,
+    field: encoding?.text,
+    text: label?.text,
     displayFormat: label && 'displayFormat' in label ? label.displayFormat : undefined,
   };
 };
@@ -64,13 +64,13 @@ export const createBuiltinTextChannels = (options: BuiltinTextChannelOptions = {
     channel: 'label',
     kind: ChannelDefinitionKind.Mark,
     resolve: (ctx, mark) => {
-      const { field, content, displayFormat } = labelContentSources(mark);
+      const { field, text, displayFormat } = labelContentSources(mark);
       const id = mark.id;
       const runtime = id !== undefined ? options.resolveLabel?.[id] : undefined;
-      if (field === undefined && content === undefined && runtime === undefined) return undefined;
+      if (field === undefined && text === undefined && runtime === undefined) return undefined;
 
       const fieldType = field === undefined ? undefined : ctx.model.find(definition => definition.name === field)?.type;
-      return { resolver: row => labelOf(content, row, fieldType, runtime, field, displayFormat) };
+      return { resolver: row => labelOf(text, row, fieldType, runtime, field, displayFormat) };
     },
   },
 });

@@ -1718,15 +1718,15 @@ resolveLabel takes precedence; reads the encoded field when present, otherwise u
 
 <ApiTable variant="parameters">
 
-| Category   | Name             | Type / signature                                | Description                                                                             |
-| ---------- | ---------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Parameters | `content`        | `IRPlotMarkLabelContent \| undefined`           | Fixed text content                                                                      |
-|            | `row`            | `ExternalRow`                                   | Data row used by the current mark                                                       |
-|            | `fieldType?`     | `DataFieldType`                                 | Field type; temporal fields use UTC date formatting, others use numeric formatting      |
-|            | `resolveLabel?`  | `ResolveLabel`                                  | Runtime label callback taking precedence over declared content; omitted to read content |
-|            | `field?`         | `string`                                        | Optional field encoding; invalid values do not fall back to fixed content               |
-|            | `displayFormat?` | `string`                                        | Display format for field values                                                         |
-| Returns    | —                | `IRPlotMarkLabelContent \| string \| undefined` | Formatted text or constant content; undefined for an empty field or absent content      |
+| Category   | Name             | Type / signature                             | Description                                                                          |
+| ---------- | ---------------- | -------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Parameters | `text`           | `IRPlotMarkLabelText \| undefined`           | Fixed text content                                                                   |
+|            | `row`            | `ExternalRow`                                | Data row used by the current mark                                                    |
+|            | `fieldType?`     | `DataFieldType`                              | Field type; temporal fields use UTC date formatting, others use numeric formatting   |
+|            | `resolveLabel?`  | `ResolveLabel`                               | Runtime label callback taking precedence over declared content; omitted to read text |
+|            | `field?`         | `string`                                     | Optional field encoding; invalid values do not fall back to fixed content            |
+|            | `displayFormat?` | `string`                                     | Display format for field values                                                      |
+| Returns    | —                | `IRPlotMarkLabelText \| string \| undefined` | Formatted text or constant content; undefined for an empty field or absent content   |
 
 </ApiTable>
 
@@ -1736,13 +1736,13 @@ resolveLabel takes precedence; reads the encoded field when present, otherwise u
 
 ```ts
 export declare const labelOf: (
-  content: IRPlotMarkLabelContent | undefined,
+  text: IRPlotMarkLabelText | undefined,
   row: ExternalRow,
   fieldType?: DataFieldType,
   resolveLabel?: ResolveLabel,
   field?: string,
   displayFormat?: string,
-) => IRPlotMarkLabelContent | string | undefined;
+) => IRPlotMarkLabelText | string | undefined;
 ```
 
 </DocTab>

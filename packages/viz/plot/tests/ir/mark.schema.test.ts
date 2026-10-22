@@ -768,7 +768,7 @@ describe('MarkSchema (contract)', () => {
   it('mark_interval_label_valid', () => {
     const m = {
       type: 'interval',
-      encodings: { label: { content: 'revenue' }, position: { x: { field: 'month' }, y: { field: 'revenue' } } },
+      encodings: { label: { text: 'revenue' }, position: { x: { field: 'month' }, y: { field: 'revenue' } } },
       properties: {
         connection: 'coordinate',
         label: { displayFormat: ',.0f', position: 'top', distance: 6, pin: true },
@@ -784,7 +784,7 @@ describe('MarkSchema (contract)', () => {
       encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
       properties: {
         connection: 'coordinate',
-        label: { content: 'trend', position: 'midway', side: 'top', sloped: true },
+        label: { text: 'trend', position: 'midway', side: 'top', sloped: true },
       },
     };
 
@@ -798,7 +798,7 @@ describe('MarkSchema (contract)', () => {
   it('mark_label_core_style_fields_valid', () => {
     const m = {
       type: 'interval',
-      encodings: { label: { content: 'revenue' }, position: { x: { field: 'month' }, y: { field: 'revenue' } } },
+      encodings: { label: { text: 'revenue' }, position: { x: { field: 'month' }, y: { field: 'revenue' } } },
       properties: {
         connection: 'coordinate',
         label: {
@@ -868,7 +868,7 @@ describe('MarkSchema (contract)', () => {
       MarkSchema.safeParse({
         type: 'interval',
         encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
-        properties: { connection: 'coordinate', label: { content: 'label', pin: { stroke: '   ' } } },
+        properties: { connection: 'coordinate', label: { text: 'label', pin: { stroke: '   ' } } },
       }).success,
     ).toBe(false);
   });
@@ -877,7 +877,7 @@ describe('MarkSchema (contract)', () => {
     const m = {
       type: 'point',
       encodings: { position: { x: { field: 'px' }, y: { field: 'py' } } },
-      properties: { autoPadding: 'max-radius', label: { content: 'x', position: 30 } },
+      properties: { autoPadding: 'max-radius', label: { text: 'x', position: 30 } },
     };
 
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
@@ -888,7 +888,7 @@ describe('MarkSchema (contract)', () => {
       MarkSchema.parse({
         type: 'interval',
         encodings: { position: { x: { field: 'm' }, y: { field: 'r' } } },
-        properties: { connection: 'coordinate', label: { content: {} } },
+        properties: { connection: 'coordinate', label: { text: {} } },
       }),
     ).toThrow();
   });
@@ -898,7 +898,7 @@ describe('MarkSchema (contract)', () => {
       MarkSchema.parse({
         type: 'path',
         encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
-        properties: { connection: 'coordinate', label: { content: 'trend', pin: true } },
+        properties: { connection: 'coordinate', label: { text: 'trend', pin: true } },
       }),
     ).toThrow();
   });
@@ -906,7 +906,7 @@ describe('MarkSchema (contract)', () => {
   it('mark_relation_label_valid_and_json_round_trip', () => {
     const m = {
       type: 'relation',
-      encodings: { label: { content: 'label' } },
+      encodings: { label: { text: 'label' } },
       properties: {
         autoPadding: false,
         label: { position: 0.5, placement: 'inside' },

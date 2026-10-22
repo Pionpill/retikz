@@ -58,7 +58,7 @@ describe('independent annotations', () => {
         properties: {
           ...properties,
           shape: 'circle',
-          label: { content: 'A', position: 'top', distance: 8 },
+          label: { text: 'A', position: 'top', distance: 8 },
         },
         contributeToDomain: false,
       },

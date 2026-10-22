@@ -131,9 +131,11 @@ Exactly one of `field`, `template`, and `generator` must be present.
 
 ## Mark labels
 
-### MarkLabelContentSchema
+Fixed labels use an optional `text` field. When omitted, `encodings.label.text` at the same index can provide the content. A label is omitted if neither source supplies valid text. String shorthand follows the same rules.
 
-<ZodSchema name="MarkLabelContentSchema" />
+### MarkLabelTextSchema
+
+<ZodSchema name="MarkLabelTextSchema" />
 
 ### MarkNodeLabelSchema
 

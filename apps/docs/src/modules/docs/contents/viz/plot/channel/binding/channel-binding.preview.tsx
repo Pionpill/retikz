@@ -36,7 +36,7 @@ export const ChannelBindingPreview = (values: ChannelBindingPreviewValues) => (
         ...(values.colorSource === 'field' ? { color: 'region' } : {}),
         ...(values.sizeSource === 'field' ? { size: 'population' } : {}),
         ...(values.shapeSource === 'field' ? { shape: 'region' } : {}),
-        ...(values.showLabel ? { label: { content: 'abbr' } } : {}),
+        ...(values.showLabel ? { label: { text: 'abbr' } } : {}),
       }}
       properties={{
         ...(values.colorSource === 'constant' ? { color: '#2563eb' } : {}),

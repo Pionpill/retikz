@@ -1002,10 +1002,10 @@ describe('Point Chart recipe Definitions', () => {
   });
 
   it('forwards Point offsets and labels as raw mark properties exactly once', () => {
-    const result = resolve(ScatterChartDefinition, { x: 'x', y: 'y' }, { dx: 3, dy: -2, label: { content: 'A' } });
+    const result = resolve(ScatterChartDefinition, { x: 'x', y: 'y' }, { dx: 3, dy: -2, label: { text: 'A' } });
     const [mark] = result.semanticMarks[0].plotMarks;
 
-    expect(mark).toMatchObject({ properties: { dx: 3, dy: -2, label: { content: 'A' } } });
+    expect(mark).toMatchObject({ properties: { dx: 3, dy: -2, label: { text: 'A' } } });
   });
 
   it('Regression adds ordered fits without duplicating observations and inherits sampling and style', () => {

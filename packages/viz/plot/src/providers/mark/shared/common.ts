@@ -157,13 +157,8 @@ type LabelText = IRNodeLabel['text'];
 
 type MarkLabelFieldSource = string | IRPlotLabelEncoding | ReadonlyArray<string | IRPlotLabelEncoding> | undefined;
 
-const omitContent = <T extends { content?: unknown; displayFormat?: unknown }>(
-  label: T,
-): Omit<T, 'content' | 'displayFormat'> =>
-  Object.fromEntries(Object.entries(label).filter(([key]) => key !== 'content' && key !== 'displayFormat')) as Omit<
-    T,
-    'content' | 'displayFormat'
-  >;
+const omitDisplayFormat = <T extends { text?: unknown; displayFormat?: unknown }>(label: T): Omit<T, 'displayFormat'> =>
+  Object.fromEntries(Object.entries(label).filter(([key]) => key !== 'displayFormat')) as Omit<T, 'displayFormat'>;
 
 const textForLabel = (
   label: IRPlotMarkNodeLabel | IRPlotMarkPathLabel,
@@ -172,9 +167,9 @@ const textForLabel = (
   index: number,
   field?: string,
 ): LabelText | undefined => {
-  if (row === undefined) return label.content;
+  if (row === undefined) return label.text;
   if (index === 0 && labelResolver !== undefined) return labelResolver(row);
-  return labelOf(label.content, row, undefined, undefined, field, label.displayFormat);
+  return labelOf(label.text, row, undefined, undefined, field, label.displayFormat);
 };
 
 const collapseResolvedLabels = <T>(labels: Array<T>): T | Array<T> | undefined => {
@@ -196,9 +191,9 @@ export const resolveNodeMarkLabels = (
     { length: Math.max(hosts.length, bindings.length) },
     (_, index) => hosts[index] ?? {},
   ).flatMap((label, index): Array<IRNodeLabel> => {
-    const text = textForLabel(label, row, labelResolver, index, bindings[index]?.content);
+    const text = textForLabel(label, row, labelResolver, index, bindings[index]?.text);
     if (text === undefined) return [];
-    const output: IRNodeLabel = { ...omitContent(label), text };
+    const output: IRNodeLabel = { ...omitDisplayFormat(label), text };
     if (row !== undefined)
       for (const delivery of channels?.labelDeliveries ?? []) if (delivery.index === index) delivery.apply(output, row);
     if (output.placement === 'inside' && output.pin)
@@ -222,9 +217,9 @@ export const resolveGeometryMarkLabels = (
     { length: Math.max(hosts.length, bindings.length) },
     (_, index) => hosts[index] ?? {},
   ).flatMap((label, index): Array<IRPathLabel> => {
-    const text = textForLabel(label, row, labelResolver, index, bindings[index]?.content);
+    const text = textForLabel(label, row, labelResolver, index, bindings[index]?.text);
     if (text === undefined) return [];
-    const output: IRPathLabel = { ...omitContent(label), text: typeof text === 'string' ? text : [text] };
+    const output: IRPathLabel = { ...omitDisplayFormat(label), text: typeof text === 'string' ? text : [text] };
     if (row !== undefined)
       for (const delivery of channels?.labelDeliveries ?? []) if (delivery.index === index) delivery.apply(output, row);
 
@@ -367,7 +362,7 @@ export const collectDatumLabelFields = (mark: PositionEncodedMark, fields: Field
 /** 收集标签内容及已声明叶子编码的字段依赖 */
 export const collectMarkLabelFields = (label: MarkLabelFieldSource, fields: FieldCollector): void => {
   for (const entry of labelEntries(label)) {
-    fields.addField(entry.content);
+    fields.addField(entry.text);
     for (const [, binding] of labelEncodingBindings(entry)) fields.addChannel(binding);
   }
 };

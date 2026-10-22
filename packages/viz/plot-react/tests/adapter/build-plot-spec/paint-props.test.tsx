@@ -23,8 +23,8 @@ describe('buildPlotIR paint props', () => {
           dashed: false,
           opacity: { overall: 0, fill: undefined },
           label: [
-            { content: 'A', distance: undefined },
-            { content: 'B', distance: 0 },
+            { text: 'A', distance: undefined },
+            { text: 'B', distance: 0 },
           ],
         }}
       />,
@@ -35,7 +35,7 @@ describe('buildPlotIR paint props', () => {
     expect(properties).toMatchObject({
       dashed: false,
       opacity: { overall: 0 },
-      label: [{ content: 'A' }, { content: 'B', distance: 0 }],
+      label: [{ text: 'A' }, { text: 'B', distance: 0 }],
     });
     expect(properties?.opacity).not.toHaveProperty('fill');
     expect(properties?.label).toHaveLength(2);

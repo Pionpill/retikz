@@ -43,7 +43,7 @@ export const AnnotationIntervalPreview: FC<AnnotationIntervalValues> = values =>
           opacity: { overall: values.opacity },
           stroke: 'dodgerblue',
           strokeWidth: 1,
-          label: values.showLabel ? { content: 'A', position: values.labelPosition, distance: 8 } : undefined,
+          label: values.showLabel ? { text: 'A', position: values.labelPosition, distance: 8 } : undefined,
           bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } },
         }}
       />
