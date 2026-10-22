@@ -1,6 +1,7 @@
 import {
   PathBaseSchema,
   DrawableInstanceSchema,
+  PathGeometrySchema,
   PathTransformSchema,
   PathDecorationSchema,
   PositionSchema,
@@ -13,6 +14,7 @@ import type { RefinementCtx, input as ZodInput } from 'zod';
 export const ShapePathSchema = strictObject({
   ...DrawableInstanceSchema.shape,
   ...PathTransformSchema.shape,
+  cornerRadius: PathGeometrySchema.shape.cornerRadius,
   ...PathDecorationSchema.shape,
   style: PathBaseSchema.shape.style,
 });

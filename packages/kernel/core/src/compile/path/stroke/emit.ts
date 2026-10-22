@@ -321,13 +321,13 @@ const emitCanonicalPathPrimitive = (
   // 折线几何圆角：对 line step ↔ line step 的内接缝插入圆弧
   // 在 shrink / split / marks 之前作用于未变换的 commands；缺省或 0 时逐字不变
   let roundedCommands = false;
-  if (path.roundedCorners !== undefined && path.roundedCorners > 0) {
+  if (path.cornerRadius !== undefined && path.cornerRadius > 0) {
     const before = commands.length;
     const next = applyRoundedCorners({
       commands,
       provenance,
       sourceStepIndexes: stepIndexes,
-      radius: path.roundedCorners,
+      radius: path.cornerRadius,
       round,
     });
 

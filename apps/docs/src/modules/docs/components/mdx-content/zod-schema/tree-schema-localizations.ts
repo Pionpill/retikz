@@ -33,7 +33,7 @@ export const treeSchemaLocalization = {
       '透传至Scene的JSON元数据，编译器不解释其内容',
     '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"animations"': '声明式动画轨道，不影响布局或包围盒',
     '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"zIndex"': '同组绘制顺序，数值较大时在上方',
-    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"roundedCorners"':
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"cornerRadius"':
       '线段连接处的几何圆角，与描边lineJoin独立',
     '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"rotate"': '围绕路径包围盒中心旋转整个边框',
     '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"scale"': '围绕路径包围盒中心缩放整个边框',
@@ -72,7 +72,7 @@ export const treeSchemaLocalization = {
       '透传至Scene的JSON元数据，编译器不解释其内容',
     '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"animations"': '声明式动画轨道，不影响布局或包围盒',
     '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"zIndex"': '同组绘制顺序，数值较大时在上方',
-    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"roundedCorners"':
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"cornerRadius"':
       '线段连接处的几何圆角，与描边lineJoin独立',
     '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"rotate"': '围绕路径包围盒中心旋转整个边框',
     '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"scale"': '围绕路径包围盒中心缩放整个边框',

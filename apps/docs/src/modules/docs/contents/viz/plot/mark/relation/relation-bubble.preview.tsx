@@ -56,7 +56,7 @@ export const RelationBubblePreview = (values: RelationBubblePreviewValues) => {
               sloped: values.labelSloped,
               textColor: 'currentColor',
             },
-            options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], roundedCorners: 8 },
+            options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], cornerRadius: 8 },
           },
         }}
       />

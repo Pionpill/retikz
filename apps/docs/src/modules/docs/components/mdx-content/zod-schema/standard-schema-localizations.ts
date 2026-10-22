@@ -751,7 +751,7 @@ const shapeDescriptions: Record<string, string> = {
   meta: '透传至 Scene 的 JSON 元数据，编译器不解释其内容',
   animations: '作用于图形的声明式动画，不参与布局且不跨作用域继承',
   zIndex: '同级图形的绘制层级，数值越大越靠上',
-  roundedCorners: '线段接头的几何圆角，与描边转角样式独立',
+  cornerRadius: '几何圆角半径；矩形按短边长度的一半限制，折线按相邻线段长度限制',
   rotate: '绕图形包络中心旋转的角度',
   scale: '绕图形包络中心缩放',
   label: '附着于路径的标签',
@@ -778,7 +778,6 @@ const shapeDescriptions: Record<string, string> = {
   width: '矩形宽度',
   height: '矩形高度',
   side: '正方形边长',
-  cornerRadius: '矩形圆角半径，限制为短边长度的一半',
   sides: '正多边形边数，至少为 3',
   sideLength: '正多边形边长',
   points: '星形外顶点数量，至少为 2',
@@ -809,25 +808,25 @@ for (const name of ['AxesSchema', 'FrameSchema', 'SurfaceSchema']) {
   };
 }
 standardSchemaLocalizations.ArcSchema = shapeLocalization(
-  'id meta animations zIndex roundedCorners rotate scale label marks style namespace type center radius startAngle endAngle sweepAngle close',
+  'id meta animations zIndex cornerRadius rotate scale label marks style namespace type center radius startAngle endAngle sweepAngle close',
 );
 standardSchemaLocalizations.CircleSchema = shapeLocalization(
-  'id meta animations zIndex roundedCorners rotate scale label marks style namespace type startAngle endAngle sweepAngle closed center radius diameter from to inset outset fit corner1 corner2 box',
+  'id meta animations zIndex cornerRadius rotate scale label marks style namespace type startAngle endAngle sweepAngle closed center radius diameter from to inset outset fit corner1 corner2 box',
 );
 standardSchemaLocalizations.EllipseSchema = shapeLocalization(
-  'id meta animations zIndex roundedCorners rotate scale label marks style namespace type startAngle endAngle sweepAngle closed center radius diameterX diameterY inset outset corner1 corner2 box',
+  'id meta animations zIndex cornerRadius rotate scale label marks style namespace type startAngle endAngle sweepAngle closed center radius diameterX diameterY inset outset corner1 corner2 box',
 );
 standardSchemaLocalizations.PolygonSchema = shapeLocalization(
-  'id meta animations zIndex roundedCorners rotate scale label marks style namespace type center sides radius sideLength',
+  'id meta animations zIndex cornerRadius rotate scale label marks style namespace type center sides radius sideLength',
 );
 standardSchemaLocalizations.RectangleSchema = shapeLocalization(
-  'id meta animations zIndex roundedCorners rotate scale label marks style namespace type cornerRadius corner1 corner2 center width height side',
+  'id meta animations zIndex cornerRadius rotate scale label marks style namespace type corner1 corner2 center width height side',
 );
 standardSchemaLocalizations.SectorSchema = shapeLocalization(
-  'id meta animations zIndex roundedCorners rotate scale label marks style namespace type startAngle endAngle sweepAngle center radius innerRadius',
+  'id meta animations zIndex cornerRadius rotate scale label marks style namespace type startAngle endAngle sweepAngle center radius innerRadius',
 );
 standardSchemaLocalizations.StarSchema = shapeLocalization(
-  'id meta animations zIndex roundedCorners rotate scale label marks style namespace type center points outerRadius innerRadius innerRatio',
+  'id meta animations zIndex cornerRadius rotate scale label marks style namespace type center points outerRadius innerRadius innerRatio',
 );
 
 const frameHeaderDescriptions = {

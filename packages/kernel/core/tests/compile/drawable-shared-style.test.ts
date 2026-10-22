@@ -79,7 +79,7 @@ describe('Drawable shared style resolution', () => {
           ],
           defaults: {
             path: {
-              roundedCorners: 5,
+              cornerRadius: 5,
               rotate: 30,
               scale: 2,
               style: {
@@ -138,7 +138,7 @@ describe('Drawable shared style resolution', () => {
           children: [linePath()],
           defaults: {
             path: {
-              roundedCorners: 5,
+              cornerRadius: 5,
               style: { color: '#2563eb', dashPattern: [4, 2], lineCap: 'round', lineJoin: 'round' },
             },
           },

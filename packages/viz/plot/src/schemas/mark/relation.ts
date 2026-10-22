@@ -102,7 +102,7 @@ export const RelationPathSpecificOptionsSchema = strictObject({
   })
     .partial()
     .describe('Path-only dash, fill rule, cap and join overrides'),
-  roundedCorners: PathGeometrySchema.shape.roundedCorners,
+  cornerRadius: PathGeometrySchema.shape.cornerRadius,
   rotate: PathGeometrySchema.shape.rotate,
   scale: PathGeometrySchema.shape.scale,
   marks: PathDecorationSchema.shape.marks,

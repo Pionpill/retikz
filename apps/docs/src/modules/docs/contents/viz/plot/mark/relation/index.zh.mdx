@@ -188,7 +188,7 @@ Source IR 的 `endpoints` 节点可以通过 `autoPadding` 参与边缘留白，
 | `path.routing?`       | `NonNullable<RelationMarkProps['path']>['routing']` | `line`          | `line`、`bend` 或 `orthogonal` 路由；与 `path.route` 互斥                              |
 | `path.route?`         | `NonNullable<RelationMarkProps['path']>['route']`   | —               | 显式 core-like step 序列；最后一步省略 `to` 时指向 target                              |
 | `path.label?`         | `NonNullable<RelationMarkProps['path']>['label']`   | —               | 默认或算法路径的 step label 便捷写法                                                   |
-| `path.options?`       | `NonNullable<RelationMarkProps['path']>['options']` | —               | 普通路径专属的 marks、dash、roundedCorners、lineCap 与 lineJoin                        |
+| `path.options?`       | `NonNullable<RelationMarkProps['path']>['options']` | —               | 普通路径专属的 marks、dash、cornerRadius、lineCap 与 lineJoin                          |
 | `ribbon.width`        | `IRPlotRelationRibbonOptions['width']`              | ribbon 必填     | source 侧宽度；省略 `endWidth` 时也是整条带宽                                          |
 | `ribbon.endWidth?`    | `IRPlotRelationRibbonOptions['endWidth']`           | —               | target 侧宽度                                                                          |
 | `ribbon.options?`     | `IRPlotRelationRibbonOptions['options']`            | —               | 对齐、采样与宽度插值选项                                                               |
@@ -201,4 +201,4 @@ Source IR 的 `endpoints` 节点可以通过 `autoPadding` 参与边缘留白，
 - [PathMark](/viz/plot/mark/path) —— 为路径顶点生成可引用的 Coordinate id
 - [坐标系](/viz/plot/coordinate) —— `project` 目标如何把关系行投影成坐标点
 
-`path.options.style` 收纳 `dashPattern`、`fillRule`、`lineCap`、`lineJoin`；`marks`、`roundedCorners`、`rotate`、`scale` 仍位于 `path.options` 根层。
+`path.options.style` 收纳 `dashPattern`、`fillRule`、`lineCap`、`lineJoin`；`marks`、`cornerRadius`、`rotate`、`scale` 仍位于 `path.options` 根层。

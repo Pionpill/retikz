@@ -125,7 +125,7 @@ export const TableCellAppearanceTracePath = {
   /** Path 默认线连接 */
   ContentPathDefaultLineJoin: '/content/defaults/path/style/lineJoin',
   /** Path 默认圆角 */
-  ContentPathDefaultRoundedCorners: '/content/defaults/path/roundedCorners',
+  ContentPathDefaultCornerRadius: '/content/defaults/path/cornerRadius',
   /** Path 默认旋转角度 */
   ContentPathDefaultRotate: '/content/defaults/path/rotate',
   /** Path 默认缩放 */

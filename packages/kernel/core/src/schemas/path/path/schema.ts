@@ -71,22 +71,22 @@ export const PathFillSchema = strictObject({
   ),
 }).describe('Path fill fields controlling the fill winding rule.');
 
-/** 校验整条路径的旋转、缩放与几何圆角处理 */
+/** 校验整条路径的旋转与缩放 */
 export const PathTransformSchema = strictObject({
-  roundedCorners: NonNegativeNumberSchema.optional().describe(
-    'Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.',
-  ),
   rotate: AngleDegreesSchema.optional().describe(
     'Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.',
   ),
   scale: PathScaleSchema.optional().describe(
     'Scale the whole path around its bounding-box center. Applied with rotate around the same center.',
   ),
-}).describe('Whole-path transforms and geometric corner treatment.');
+}).describe('Whole-path rotation and scaling.');
 
-/** 校验路径步骤与整条路径的几何变换字段 */
+/** 校验路径步骤、圆角与整条路径的几何变换字段 */
 export const PathGeometrySchema = strictObject({
   ...PathTransformSchema.shape,
+  cornerRadius: NonNegativeNumberSchema.optional().describe(
+    'Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.',
+  ),
   children: array(StepSchema)
     .min(2)
     .optional()

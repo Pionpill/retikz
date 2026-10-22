@@ -4,6 +4,7 @@ import {
   PathLabelSchema,
   NodeTargetSchema,
   DrawableInstanceSchema,
+  PathGeometrySchema,
   PathTransformSchema,
   GraphicColorSchema,
   GraphicOpacitySchema,
@@ -94,6 +95,7 @@ export const RelationSchema = strictObject({
   type: literal(GraphType.Relation).describe('Relation Source record discriminator.'),
   ...DrawableInstanceSchema.shape,
   ...PathTransformSchema.shape,
+  cornerRadius: PathGeometrySchema.shape.cornerRadius,
   style: strictObject({
     ...GraphicColorSchema.shape,
     ...GraphicOpacitySchema.shape,

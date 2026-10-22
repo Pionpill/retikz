@@ -25,10 +25,10 @@ plot channel coverage 以 core IR 既有能力为边界，但只纳入稳定 sca
 - 复杂对象与数组，如 IRPaint、Font、DropShadow、ArrowDetail、dashPattern、IRTransform 等，不进本轮内置 data channel。
 - `opacity`、`fillOpacity`、`drawOpacity`、`strokeWidth`、`zIndex` 等共享样式按同名共享 channel 处理，由 mark lowering 决定落到 Node、Path 或 Scope default。
 - point 专属的 `size`、`shape`、`padding`、`minimumSize`、`rotate` 等继续作为 Node channel。
-- path 专属的 `lineCap`、`lineJoin`、`roundedCorners` 等补 Path provider。
+- path 专属的 `lineCap`、`lineJoin`、`cornerRadius` 等补 Path provider。
 - scope 仅承接 layer default / zIndex 等整层默认值，不表达逐 datum 几何变化。
 
-首批补齐的用户可见字段包括：`opacity`、`fillOpacity`、`drawOpacity`、`strokeWidth`、`zIndex`、`lineCap`、`lineJoin`、`roundedCorners`、`textColor`，以及 datum `label` 到 core `NodeLabelSchema` 的稳定字段子集。
+首批补齐的用户可见字段包括：`opacity`、`fillOpacity`、`drawOpacity`、`strokeWidth`、`zIndex`、`lineCap`、`lineJoin`、`cornerRadius`、`textColor`，以及 datum `label` 到 core `NodeLabelSchema` 的稳定字段子集。
 
 ## 最终形态
 

@@ -73,7 +73,7 @@ describe('path.label：stroke host label 几何', () => {
       children: [
         {
           type: 'path',
-          roundedCorners: 10,
+          cornerRadius: 10,
           label: { text: 'label', position: 0.5, side: 'top', distance: 0, interrupt: false },
           children: commands.map(command => ({ type: 'step' as const, ...command })),
         },
@@ -112,7 +112,7 @@ describe('path.label：stroke host label 几何', () => {
       children: [
         {
           type: 'path',
-          roundedCorners: 10,
+          cornerRadius: 10,
           label: { text: 'curve', position: 0.5, side: 'top', distance: 0, interrupt: false },
           children: commands.map(command => ({ type: 'step' as const, ...command })),
         },

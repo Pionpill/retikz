@@ -38,7 +38,7 @@ export const PathLineCapStyleSchema = PathLineCapSchema.describe('path lineCap s
 export const PathLineJoinStyleSchema = PathLineJoinSchema.describe('path lineJoin style value');
 
 /** 校验路径圆角的固定非负半径 */
-export const PathRoundedCornersStyleSchema = NonNegativeNumberSchema.describe('path roundedCorners style value');
+export const PathCornerRadiusStyleSchema = NonNegativeNumberSchema.describe('path cornerRadius style value');
 
 /** 校验路径填充规则的固定环绕规则 */
 export const PathFillRuleStyleSchema = PathFillRuleSchema.describe('path fillRule style value');
@@ -174,8 +174,8 @@ export const PathPropertiesSchema = strictObject({
   opacity: MarkOpacityStyleSchema.optional(),
   lineCap: PathLineCapStyleSchema.optional().describe('Path stroke endpoint style: fixed core Path lineCap'),
   lineJoin: PathLineJoinStyleSchema.optional().describe('Path stroke join style: fixed core Path lineJoin'),
-  roundedCorners: PathRoundedCornersStyleSchema.optional().describe(
-    'Path geometric corner radius: fixed core Path roundedCorners',
+  cornerRadius: PathCornerRadiusStyleSchema.optional().describe(
+    'Path geometric corner radius: fixed core Path cornerRadius',
   ),
   ...corePathStyle,
   anchorId: AnchorIdSchema.optional().describe(

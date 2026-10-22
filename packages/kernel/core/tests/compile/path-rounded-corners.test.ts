@@ -20,7 +20,7 @@ const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: '
 
 const path = (...steps: Array<unknown>): IRScene => scene([{ type: 'path', children: steps as never }]);
 
-/** 带 path 级字段（roundedCorners / marks / rotate / scale）的 path IR */
+/** 带 path 级字段（cornerRadius / marks / rotate / scale）的 path IR */
 const pathWith = (config: Record<string, unknown>, ...steps: Array<unknown>): IRScene =>
   scene([{ type: 'path', ...config, children: steps as never }]);
 
@@ -47,10 +47,10 @@ const labelRotationCenter = (primitives: ReadonlyArray<ScenePrimitive>, text: st
 
 // ───────────────────────── Happy path ─────────────────────────
 
-describe('roundedCorners happy：折线 line-line 内拐角倒圆', () => {
+describe('cornerRadius happy：折线 line-line 内拐角倒圆', () => {
   it('三点折线单内拐角 → 命令序列为 move,line,arc,line（接缝插一段半径 r 的 arc，起末保持尖）', () => {
     const ir = pathWith(
-      { roundedCorners: 2 },
+      { cornerRadius: 2 },
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
       { type: 'step', kind: 'line', to: [10, 10] },
@@ -69,7 +69,7 @@ describe('roundedCorners happy：折线 line-line 内拐角倒圆', () => {
 
   it('五点折线多内拐角 → 每个内 line-line 接缝各出一段半径 r 的 arc（共 3 个内拐角 → 3 段 arc）', () => {
     const ir = pathWith(
-      { roundedCorners: 1 },
+      { cornerRadius: 1 },
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
       { type: 'step', kind: 'line', to: [10, 10] },
@@ -88,7 +88,7 @@ describe('roundedCorners happy：折线 line-line 内拐角倒圆', () => {
     // move A→line B→line C→line A→cycle：用户显式画回起点再 cycle，是有效闭合写法；
     // 三角形 3 顶点应全倒（含起点 A 接缝）→ 3 段 arc + close（修前 A 接缝按开放 run 保持尖，只 2 段）。
     const ir = pathWith(
-      { roundedCorners: 1 },
+      { cornerRadius: 1 },
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
       { type: 'step', kind: 'line', to: [10, 10] },
@@ -103,7 +103,7 @@ describe('roundedCorners happy：折线 line-line 内拐角倒圆', () => {
 
   it('折线 + cycle 闭合 → 闭合接缝也倒（等价闭合 contour，所有拐角倒圆）', () => {
     const ir = pathWith(
-      { roundedCorners: 1 },
+      { cornerRadius: 1 },
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
       { type: 'step', kind: 'line', to: [10, 10] },
@@ -122,15 +122,15 @@ describe('roundedCorners happy：折线 line-line 内拐角倒圆', () => {
 
 // ───────────────────────── 边界 ─────────────────────────
 
-describe('roundedCorners 边界', () => {
-  it('roundedCorners=0 → 命令与无该字段逐字一致（全尖角）', () => {
+describe('cornerRadius 边界', () => {
+  it('cornerRadius=0 → 命令与无该字段逐字一致（全尖角）', () => {
     const sharp = path(
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
       { type: 'step', kind: 'line', to: [10, 10] },
     );
     const zero = pathWith(
-      { roundedCorners: 0 },
+      { cornerRadius: 0 },
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
       { type: 'step', kind: 'line', to: [10, 10] },
@@ -141,7 +141,7 @@ describe('roundedCorners 边界', () => {
     );
   });
 
-  it('省略 roundedCorners → 尖角（baseline，无 arc 命令）', () => {
+  it('省略 cornerRadius → 尖角（baseline，无 arc 命令）', () => {
     const sharp = path(
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
@@ -154,13 +154,13 @@ describe('roundedCorners 边界', () => {
   it('半径过大 → clamp 到相邻段允许的最大可行半径（与较小显式半径编译结果一致）', () => {
     // 段长各 10 → 单拐角可行最大半径 = 5；r=1000 应 clamp 到 5
     const clamped = pathWith(
-      { roundedCorners: 1000 },
+      { cornerRadius: 1000 },
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
       { type: 'step', kind: 'line', to: [10, 10] },
     );
     const r5 = pathWith(
-      { roundedCorners: 5 },
+      { cornerRadius: 5 },
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
       { type: 'step', kind: 'line', to: [10, 10] },
@@ -171,10 +171,10 @@ describe('roundedCorners 边界', () => {
     );
   });
 
-  it('仅 2 点单 line（无内拐角）+ roundedCorners → 无 op（命令与尖角一致）', () => {
+  it('仅 2 点单 line（无内拐角）+ cornerRadius → 无 op（命令与尖角一致）', () => {
     const sharp = path({ type: 'step', kind: 'move', to: [0, 0] }, { type: 'step', kind: 'line', to: [10, 0] });
     const rounded = pathWith(
-      { roundedCorners: 3 },
+      { cornerRadius: 3 },
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
     );
@@ -187,10 +187,10 @@ describe('roundedCorners 边界', () => {
 
 // ───────────────────────── 错误路径（schema） ─────────────────────────
 
-describe('roundedCorners schema 拒绝非法半径', () => {
-  const withRounded = (roundedCorners: unknown): unknown => ({
+describe('cornerRadius schema 拒绝非法半径', () => {
+  const withRounded = (cornerRadius: unknown): unknown => ({
     type: 'path',
-    roundedCorners,
+    cornerRadius,
     children: [
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
@@ -198,21 +198,21 @@ describe('roundedCorners schema 拒绝非法半径', () => {
     ],
   });
 
-  it('roundedCorners=-1（负数）被 .nonnegative() 拒绝', () => {
+  it('cornerRadius=-1（负数）被 .nonnegative() 拒绝', () => {
     const parsed = PathSchema.safeParse(withRounded(-1));
 
     expect(parsed.success).toBe(false);
   });
 
-  it('roundedCorners=NaN 被 number schema 拒绝', () => {
+  it('cornerRadius=NaN 被 number schema 拒绝', () => {
     expect(PathSchema.safeParse(withRounded(Number.NaN)).success).toBe(false);
   });
 
-  it('roundedCorners=Infinity 被 number schema 拒绝', () => {
+  it('cornerRadius=Infinity 被 number schema 拒绝', () => {
     expect(PathSchema.safeParse(withRounded(Number.POSITIVE_INFINITY)).success).toBe(false);
   });
 
-  it('roundedCorners=0 与合法正数被接受', () => {
+  it('cornerRadius=0 与合法正数被接受', () => {
     expect(PathSchema.safeParse(withRounded(0)).success).toBe(true);
     expect(PathSchema.safeParse(withRounded(4)).success).toBe(true);
   });
@@ -220,11 +220,11 @@ describe('roundedCorners schema 拒绝非法半径', () => {
 
 // ───────────────────────── 交互 ─────────────────────────
 
-describe('roundedCorners 交互', () => {
+describe('cornerRadius 交互', () => {
   it('接缝一侧为 curve → 该接缝保持尖，同路径其余 line-line 接缝仍倒', () => {
     // move→line→line(内拐角A,应倒)→curve(line↔curve 接缝B,应保持尖)
     const ir = pathWith(
-      { roundedCorners: 1 },
+      { cornerRadius: 1 },
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
       { type: 'step', kind: 'line', to: [10, 10] },
@@ -244,7 +244,7 @@ describe('roundedCorners 交互', () => {
   it('含 fold step → fold 相关接缝保持尖角（拍板：fold 不参与），其余 line-line 仍倒', () => {
     // move→line→line(内拐角A,line-line,应倒)→fold(line↔fold 接缝,应保持尖)
     const ir = pathWith(
-      { roundedCorners: 1 },
+      { cornerRadius: 1 },
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
       { type: 'step', kind: 'line', to: [10, 10] },
@@ -260,7 +260,7 @@ describe('roundedCorners 交互', () => {
 
   it('三段 fold 的两个内部转折都保持尖角，外围 line-line 圆角不回归', () => {
     const ir = pathWith(
-      { roundedCorners: 1 },
+      { cornerRadius: 1 },
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
       { type: 'step', kind: 'line', to: [10, 10] },
@@ -272,7 +272,7 @@ describe('roundedCorners 交互', () => {
     expect(commands.filter(command => command.kind === 'line')).toHaveLength(5);
   });
 
-  it('roundedCorners + marks → mark 按倒角后新弧长重定位（倒角与尖角下 mark 落点/产物不同）', () => {
+  it('cornerRadius + marks → mark 按倒角后新弧长重定位（倒角与尖角下 mark 落点/产物不同）', () => {
     const steps = [
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
@@ -280,7 +280,7 @@ describe('roundedCorners 交互', () => {
     ];
     const marks: IRPath['marks'] = [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }];
     const sharp = scene([{ type: 'path', marks, children: steps as never }]);
-    const rounded = scene([{ type: 'path', roundedCorners: 3, marks, children: steps as never }]);
+    const rounded = scene([{ type: 'path', cornerRadius: 3, marks, children: steps as never }]);
 
     // mark 沿弧长归一化定位；倒角缩短了路径总弧长并改变中点几何，
     // 故倒角后 mark group 的 transforms（平移/旋转）应与尖角不同。
@@ -310,10 +310,10 @@ describe('roundedCorners 交互', () => {
     expect(gRounded?.transforms).not.toEqual(gSharp?.transforms);
   });
 
-  it('roundedCorners + centered label keeps its rounded arc while emitting split stroke fragments', () => {
+  it('cornerRadius + centered label keeps its rounded arc while emitting split stroke fragments', () => {
     const ir = pathWith(
       {
-        roundedCorners: 12,
+        cornerRadius: 12,
         style: { stroke: '#13579b' },
       },
       { type: 'step', kind: 'move', to: [0, 0] },
@@ -344,14 +344,14 @@ describe('roundedCorners 交互', () => {
       label: { text: 'continuous', position: 0.5, sloped: true, interrupt: false },
       shouldInterrupt: false,
     },
-  ])('roundedCorners + Path.label $name 从同一最终圆角几何定位文字和断口', ({ label, shouldInterrupt }) => {
+  ])('cornerRadius + Path.label $name 从同一最终圆角几何定位文字和断口', ({ label, shouldInterrupt }) => {
     // path 的中点位于倒角圆弧 45°：圆心 [70, 30]、半径 30，故锚点为 [91.213..., 8.786...]
     const roundedAnchor: [number, number] = [91.2132034, 8.7867966];
     const roundedMidpointAngle = -45;
     const compiledScene = compileToScene(
       pathWith(
         {
-          roundedCorners: 30,
+          cornerRadius: 30,
           label,
           style: { stroke: '#13579b' },
         },
@@ -390,14 +390,14 @@ describe('roundedCorners 交互', () => {
     }
   });
 
-  it('roundedCorners + path rotate → 先算几何圆角再施加 path 变换（内层 commands = 旋转前的倒角几何）', () => {
+  it('cornerRadius + path rotate → 先算几何圆角再施加 path 变换（内层 commands = 旋转前的倒角几何）', () => {
     const steps = [
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
       { type: 'step', kind: 'line', to: [10, 10] },
     ];
-    const roundedNoRot = scene([{ type: 'path', roundedCorners: 2, children: steps as never }]);
-    const roundedRot = scene([{ type: 'path', roundedCorners: 2, rotate: 90, children: steps as never }]);
+    const roundedNoRot = scene([{ type: 'path', cornerRadius: 2, children: steps as never }]);
+    const roundedRot = scene([{ type: 'path', cornerRadius: 2, rotate: 90, children: steps as never }]);
 
     // 变换顺序硬契约：几何先倒角（内层 path commands 不被 path transform 污染），
     // 旋转由外层 group 承担 → 旋转版内层 path commands 应与未旋转版逐字一致。
@@ -428,14 +428,14 @@ describe('roundedCorners 交互', () => {
     expect(hasTransformGroup).toBe(true);
   });
 
-  it('roundedCorners + path scale → 几何先倒角再缩放（内层倒角 commands = 缩放前几何）', () => {
+  it('cornerRadius + path scale → 几何先倒角再缩放（内层倒角 commands = 缩放前几何）', () => {
     const steps = [
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
       { type: 'step', kind: 'line', to: [10, 10] },
     ];
-    const roundedNoScale = scene([{ type: 'path', roundedCorners: 2, children: steps as never }]);
-    const roundedScale = scene([{ type: 'path', roundedCorners: 2, scale: 2, children: steps as never }]);
+    const roundedNoScale = scene([{ type: 'path', cornerRadius: 2, children: steps as never }]);
+    const roundedScale = scene([{ type: 'path', cornerRadius: 2, scale: 2, children: steps as never }]);
 
     const findPath = (list: ReadonlyArray<ScenePrimitive>): PathPrim | undefined => {
       for (const p of list) {
@@ -460,11 +460,11 @@ describe('roundedCorners 交互', () => {
 
 // ───────────────────────── JSON round-trip ─────────────────────────
 
-describe('roundedCorners JSON round-trip', () => {
-  it('含 roundedCorners 的 IRPath 经 JSON.stringify/parse 往返后 parse 深等于原 parse', () => {
+describe('cornerRadius JSON round-trip', () => {
+  it('含 cornerRadius 的 IRPath 经 JSON.stringify/parse 往返后 parse 深等于原 parse', () => {
     const original: IRPath = {
       type: 'path',
-      roundedCorners: 8,
+      cornerRadius: 8,
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [10, 0] },
@@ -475,6 +475,6 @@ describe('roundedCorners JSON round-trip', () => {
     const roundTripped = PathSchema.parse(JSON.parse(JSON.stringify(parsedOriginal)));
 
     expect(roundTripped).toEqual(parsedOriginal);
-    expect(roundTripped.roundedCorners).toBe(8);
+    expect(roundTripped.cornerRadius).toBe(8);
   });
 });

@@ -122,7 +122,7 @@ describe('PathDefaultSchema（every path 默认）', () => {
   it('接受完整 path 默认原子字段集合（不含 children）', () => {
     expect(
       PathDefaultSchema.safeParse({
-        roundedCorners: 3,
+        cornerRadius: 3,
         rotate: 30,
         scale: { x: 1.5, y: 2 },
         style: {

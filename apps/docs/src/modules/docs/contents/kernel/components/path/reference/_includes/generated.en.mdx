@@ -27,9 +27,9 @@ This component does not render DOM itself; `<Layout>` produces the final path fr
 | Geometry  | `arrow?`          | `InputPath['arrow']`          | `'none'`   | Path-level arrow direction<br />`'->'` at the end, `'<-'` at the start, or `'<->'` at both ends; omitted or `'none'` means no arrows                                                                                                                                                                                |
 |           | `arrowDetail?`    | `InputPath['arrowDetail']`    | —          | Detailed arrow configuration<br />Top-level defaults with optional `start` and `end` overrides merged field by field. On hollow shapes (open, openStealth, openDiamond, and openCircle), `fill` is a silent no-op                                                                                                   |
 |           | `arrowPlacement?` | `InputPath['arrowPlacement']` | —          | Endpoint arrow placement<br />Shared `overlap` for actual endpoints, with per-end `start` and `end` overrides; interpolates from default placement to alignment of the final visual back edge with the logical endpoint                                                                                             |
+|           | `cornerRadius?`   | `IRPath['cornerRadius']`      | —          | Geometric rounding radius at polyline corners (TikZ `rounded corners=`)<br />Insert a tangent arc at each line-to-line joint, changing geometry rather than only stroke appearance. Curve, arc, Bézier, and fold joints stay sharp; the radius is clamped to adjacent segment lengths. Omission keeps sharp corners |
 |           | `marks?`          | `IRPath['marks']`             | —          | Place marks at normalized positions along the path; currently only arrows<br />Each `{ pos, mark }` uses `pos∈[0,1]` and `mark.kind:'arrow'` plus visual settings; shape is a registered arrow name and direction follows the path tangent                                                                          |
 |           | `rotate?`         | `IRPath['rotate']`            | —          | Rotate the whole path in degrees about its bounding-box center; positive angles are visually clockwise in screen-down coordinates<br />Equivalent to a Scope rotating the path around its bounding-box center; endpoints resolve in the current scope before rotation                                               |
-|           | `roundedCorners?` | `IRPath['roundedCorners']`    | —          | Geometric rounding radius at polyline corners (TikZ `rounded corners=`)<br />Insert a tangent arc at each line-to-line joint, changing geometry rather than only stroke appearance. Curve, arc, Bézier, and fold joints stay sharp; the radius is clamped to adjacent segment lengths. Omission keeps sharp corners |
 |           | `scale?`          | `IRPath['scale']`             | —          | Scale the whole path around its bounding-box center: a number for uniform scaling or `{ x, y }` for independent axes                                                                                                                                                                                                |
 | Style     | `style?`          | `InputPath['style']`          | —          | Instance visual overrides, replacing inherited defaults field by field                                                                                                                                                                                                                                              |
 |           | `zIndex?`         | `IRPath['zIndex']`            | `0`        | Explicit stack order: larger values are above; defaults to 0, equal values preserve declaration order, and comparison is limited to siblings                                                                                                                                                                        |
@@ -64,7 +64,7 @@ export type PathProps = HydrationEventProps & {
   id?: IRPath['id'];
   meta?: IRPath['meta'];
   animations?: IRPath['animations'];
-  roundedCorners?: IRPath['roundedCorners'];
+  cornerRadius?: IRPath['cornerRadius'];
   arrow?: InputPath['arrow'];
   arrowDetail?: InputPath['arrowDetail'];
   arrowPlacement?: InputPath['arrowPlacement'];
@@ -96,7 +96,7 @@ React only provides JSX sugar; `normalizePath` is the sole parser dispatch point
 | `readonly arrow?`          | `PathProps['arrow']`          | —       | Path-level arrow direction                                             |
 | `readonly arrowDetail?`    | `PathProps['arrowDetail']`    | —       | Detailed arrow configuration                                           |
 | `readonly arrowPlacement?` | `PathProps['arrowPlacement']` | —       | Endpoint arrow placement                                               |
-| `readonly roundedCorners?` | `IRPath['roundedCorners']`    | —       | Geometric rounding radius at polyline corners                          |
+| `readonly cornerRadius?`   | `IRPath['cornerRadius']`      | —       | Geometric rounding radius at polyline corners                          |
 | `readonly style?`          | `InputPath['style']`          | —       | Instance visual overrides, replacing inherited defaults field by field |
 | `readonly way`             | `WayDSL`                      | —       | TikZ-style route shorthand                                             |
 | `readonly zIndex?`         | `IRPath['zIndex']`            | —       | Stack order among siblings                                             |
@@ -113,7 +113,7 @@ export declare const Draw: FC<DrawProps>;
 export type DrawProps = Readonly<{
   style?: InputPath['style'];
   way: WayDSL;
-  roundedCorners?: IRPath['roundedCorners'];
+  cornerRadius?: IRPath['cornerRadius'];
   arrow?: PathProps['arrow'];
   arrowDetail?: PathProps['arrowDetail'];
   arrowPlacement?: PathProps['arrowPlacement'];
@@ -1093,9 +1093,9 @@ export declare const samplePathRoute: (
 | Geometry  | `arrow?`          | `InputPathArrowDirection`             | —       | Path-level arrow direction                                                                                                                                                   |
 |           | `arrowDetail?`    | `IRArrowDetail`                       | —       | Top-level arrow defaults and endpoint overrides                                                                                                                              |
 |           | `arrowPlacement?` | `InputPathArrowPlacement`             | —       | Shared and per-end arrow placement settings                                                                                                                                  |
+|           | `cornerRadius?`   | `number`                              | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
 |           | `marks?`          | `InputPath["marks"]`                  | —       | Marks placed along the path at normalized positions; direction follows the path tangent.                                                                                     |
 |           | `rotate?`         | `number`                              | —       | Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.                                                        |
-|           | `roundedCorners?` | `number`                              | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
 |           | `scale?`          | `number \| { x: number; y: number; }` | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
 | Style     | `style?`          | `InputPath["style"]`                  | —       | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
 |           | `zIndex?`         | `number`                              | —       | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |

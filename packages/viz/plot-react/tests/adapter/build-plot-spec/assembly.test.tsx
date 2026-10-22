@@ -220,7 +220,7 @@ describe('buildPlotIR 装配', () => {
           opacity: { overall: 0.6 },
           lineCap: 'round',
           lineJoin: 'bevel',
-          roundedCorners: 4,
+          cornerRadius: 4,
           marks: [{ pos: 1, mark: { kind: 'arrow' } }],
         }}
       />,
@@ -234,7 +234,7 @@ describe('buildPlotIR 装配', () => {
         strokeWidth: 3,
         lineCap: 'round',
         lineJoin: 'bevel',
-        roundedCorners: 4,
+        cornerRadius: 4,
         marks: [{ pos: 1, mark: { kind: 'arrow' } }],
         opacity: { overall: 0.6 },
       },
@@ -298,7 +298,7 @@ describe('buildPlotIR 装配', () => {
             source: { anchorId: { prefix: 'pt' } },
             target: { anchorId: { prefix: 'pt' } },
             label: { position: 'midway' },
-            geometry: { kind: 'path', options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], roundedCorners: 6 } },
+            geometry: { kind: 'path', options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], cornerRadius: 6 } },
           }}
         />
       </>,
@@ -323,7 +323,7 @@ describe('buildPlotIR 装配', () => {
         source: { anchorId: { prefix: 'pt' } },
         target: { anchorId: { prefix: 'pt' } },
         label: { position: 'midway' },
-        geometry: { kind: 'path', options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], roundedCorners: 6 } },
+        geometry: { kind: 'path', options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], cornerRadius: 6 } },
       },
     });
     expect(() => PlotSchema.parse(spec)).not.toThrow();

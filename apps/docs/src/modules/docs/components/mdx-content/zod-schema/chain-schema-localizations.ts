@@ -58,7 +58,7 @@ export const chainSchemaLocalization = {
       '原样传递到 Scene 的动画轨道，不影响布局或包围盒，不跨作用域继承',
     '/union/0/field/"defaultConnection"/field/"path"/field/"zIndex"':
       '同级图元的绘制层级，较大值在上；省略为零，同层按原始顺序',
-    '/union/0/field/"defaultConnection"/field/"path"/field/"roundedCorners"': '线段接点的几何圆角半径；省略时保留尖角',
+    '/union/0/field/"defaultConnection"/field/"path"/field/"cornerRadius"': '线段接点的几何圆角半径；省略时保留尖角',
     '/union/0/field/"defaultConnection"/field/"path"/field/"rotate"':
       '绕路径包围盒中心旋转；先解析端点，再整体应用旋转',
     '/union/0/field/"defaultConnection"/field/"path"/field/"scale"': '绕路径包围盒中心缩放，与旋转使用相同中心',
@@ -186,7 +186,7 @@ export const chainSchemaLocalization = {
       '原样传递到 Scene 的动画轨道，不影响布局或包围盒，不跨作用域继承',
     '/union/0/field/"items"/array/union/2/field/"defaultConnection"/field/"path"/field/"zIndex"':
       '同级图元的绘制层级，较大值在上；省略为零，同层按原始顺序',
-    '/union/0/field/"items"/array/union/2/field/"defaultConnection"/field/"path"/field/"roundedCorners"':
+    '/union/0/field/"items"/array/union/2/field/"defaultConnection"/field/"path"/field/"cornerRadius"':
       '线段接点的几何圆角半径；省略时保留尖角',
     '/union/0/field/"items"/array/union/2/field/"defaultConnection"/field/"path"/field/"rotate"':
       '绕路径包围盒中心旋转；先解析端点，再整体应用旋转',
@@ -288,7 +288,7 @@ export const chainSchemaLocalization = {
       '原样传递到 Scene 的动画轨道，不影响布局或包围盒，不跨作用域继承',
     '/union/1/field/"defaultConnection"/field/"path"/field/"zIndex"':
       '同级图元的绘制层级，较大值在上；省略为零，同层按原始顺序',
-    '/union/1/field/"defaultConnection"/field/"path"/field/"roundedCorners"': '线段接点的几何圆角半径；省略时保留尖角',
+    '/union/1/field/"defaultConnection"/field/"path"/field/"cornerRadius"': '线段接点的几何圆角半径；省略时保留尖角',
     '/union/1/field/"defaultConnection"/field/"path"/field/"rotate"':
       '绕路径包围盒中心旋转；先解析端点，再整体应用旋转',
     '/union/1/field/"defaultConnection"/field/"path"/field/"scale"': '绕路径包围盒中心缩放，与旋转使用相同中心',
@@ -380,7 +380,7 @@ export const chainSchemaLocalization = {
       '原样传递到 Scene 的动画轨道，不影响布局或包围盒，不跨作用域继承',
     '/union/2/field/"defaultConnection"/field/"path"/field/"zIndex"':
       '同级图元的绘制层级，较大值在上；省略为零，同层按原始顺序',
-    '/union/2/field/"defaultConnection"/field/"path"/field/"roundedCorners"': '线段接点的几何圆角半径；省略时保留尖角',
+    '/union/2/field/"defaultConnection"/field/"path"/field/"cornerRadius"': '线段接点的几何圆角半径；省略时保留尖角',
     '/union/2/field/"defaultConnection"/field/"path"/field/"rotate"':
       '绕路径包围盒中心旋转；先解析端点，再整体应用旋转',
     '/union/2/field/"defaultConnection"/field/"path"/field/"scale"': '绕路径包围盒中心缩放，与旋转使用相同中心',

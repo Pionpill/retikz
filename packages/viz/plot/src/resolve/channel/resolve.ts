@@ -70,7 +70,12 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
     if (structuredTargets.has(channel)) continue;
     const definition = context.channelRegistry.get(channel);
     if (!definition) throw new RetikzPlotError(`lowerPlots: channel "${channel}" is not registered`);
-    if (channelKinds !== undefined && !channelKinds.has(definition.kind))
+    if (
+      channelKinds !== undefined &&
+      !context.channelRegistry.definitions.some(
+        candidate => candidate.channel === channel && channelKinds.has(candidate.kind),
+      )
+    )
       throw new RetikzPlotError(`lowerPlots: mark "${mark.type}" does not consume channel "${channel}"`);
   }
 

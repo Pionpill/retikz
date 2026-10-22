@@ -81,7 +81,7 @@ describe('Relation lowering', () => {
       relation({
         id: 'request',
         route,
-        roundedCorners: 4,
+        cornerRadius: 4,
         rotate: 10,
         scale: { x: 1.2, y: 0.8 },
         zIndex: 2,
@@ -105,7 +105,7 @@ describe('Relation lowering', () => {
     expect(lowered).toMatchObject({
       id: 'request',
       children: route,
-      roundedCorners: 4,
+      cornerRadius: 4,
       rotate: 10,
       scale: { x: 1.2, y: 0.8 },
       zIndex: 2,

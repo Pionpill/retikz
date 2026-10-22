@@ -38,7 +38,7 @@ const relation = {
     { type: 'step', kind: 'move', to: { id: 'service' } },
     { type: 'step', kind: 'line', to: { id: 'database' } },
   ],
-  roundedCorners: 4,
+  cornerRadius: 4,
   zIndex: 2,
   meta: { source: 'catalog' },
 } as const;

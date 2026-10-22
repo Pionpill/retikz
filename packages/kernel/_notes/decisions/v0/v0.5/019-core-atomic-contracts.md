@@ -47,7 +47,7 @@ Core 在不改变现有完整 Path 语义的前提下，提供可独立复用的
 
 - `PathStrokeSchema`：复用 `StrokeStyleSchema`，并增加 `lineCap`、`lineJoin`
 - `PathFillSchema`：`fillRule`
-- `PathGeometrySchema`：`roundedCorners`、`rotate`、`scale`、`children`
+- `PathGeometrySchema`：`cornerRadius`、`rotate`、`scale`、`children`
 - `PathDecorationSchema`：`label`、`marks`
 - `PathStructureSchema`：`type`、`kind`、`kindOptions`、`ribbon`
 
@@ -113,7 +113,7 @@ type IRPathDefault = IRGraphicStyle & IRPathStroke & IRPathFill & Omit<IRPathGeo
 
 以上类型只说明公开组合关系；schema 是字段约束、默认语义与描述的单一真源。`IRGraphicStyle` 继续对应兼容聚合 `GraphicStyleSchema`，因此保留现有 `strokeWidth`。`IRPathGeometry`、`IRPathDecoration` 与 `IRPathStructure` 的字段按前述清单固定，并继续服从现有 Path 的 JSON-safe、strict unknown-field 和 kind-specific refinement 规则。`IRPathDefault` / `PathDefaultSchema` 是 Core Scope owner 的兼容组合，不从完整 Path 偶然 `omit`；它排除 instance、structure、decoration 与 `children`，保持当前接受字段集合。原子只提供可复用的数据边界，不承诺能独立编译为 Scene
 
-`Scope.pathDefault` 的消费继续按 Path kind 保持当前语义：普通 stroke path 接受并消费 `IRPathDefault` 的全部适用字段；ribbon 只消费其中的 `IRGraphicStyle` 子集，包括 `color`、paint、`strokeWidth`、opacity 与 effect，不消费 `dashPattern`、`dashOffset`、`lineCap`、`lineJoin`、`fillRule`、`roundedCorners`、`rotate` 或 `scale`。这些 Path-only 默认字段对 ribbon 继续保持 schema 可接受但不适用，不新增诊断；显式写在 ribbon 自身的合法 Path 字段仍按完整 Path 契约处理
+`Scope.pathDefault` 的消费继续按 Path kind 保持当前语义：普通 stroke path 接受并消费 `IRPathDefault` 的全部适用字段；ribbon 只消费其中的 `IRGraphicStyle` 子集，包括 `color`、paint、`strokeWidth`、opacity 与 effect，不消费 `dashPattern`、`dashOffset`、`lineCap`、`lineJoin`、`fillRule`、`cornerRadius`、`rotate` 或 `scale`。这些 Path-only 默认字段对 ribbon 继续保持 schema 可接受但不适用，不新增诊断；显式写在 ribbon 自身的合法 Path 字段仍按完整 Path 契约处理
 
 Scene、manifest 与 renderer 输出只用于证明本轮重组前后等价。Scene type-only fragment、primitive type 重组和 renderer contract 原子化不属于本 ADR 首轮交付；未来如实施，必须按 resolved Scene 语义独立设计，不能直接复用 authoring IR schema
 

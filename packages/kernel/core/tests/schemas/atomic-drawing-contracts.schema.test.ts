@@ -16,6 +16,7 @@ import {
   PathSchema,
   PathStrokeSchema,
   PathStructureSchema,
+  PathTransformSchema,
   StrokePathSchema,
 } from '../../src';
 
@@ -78,10 +79,12 @@ describe('Core atomic drawing contracts', () => {
   });
 
   it('parses path fill, geometry, decoration, and structure independently', () => {
+    expect(PathTransformSchema.parse({ rotate: 30, scale: 2 })).toEqual({ rotate: 30, scale: 2 });
+    expect(PathTransformSchema.safeParse({ cornerRadius: 3 }).success).toBe(false);
     expect(PathFillSchema.parse({ fillRule: 'evenodd' })).toEqual({ fillRule: 'evenodd' });
     expect(PathFillSchema.safeParse({ lineCap: 'round' }).success).toBe(false);
 
-    const geometry = { roundedCorners: 3, rotate: 45, scale: 2, children: steps };
+    const geometry = { cornerRadius: 3, rotate: 45, scale: 2, children: steps };
 
     expect(PathGeometrySchema.parse(geometry)).toEqual(geometry);
     expect(PathGeometrySchema.safeParse({ scale: 0 }).success).toBe(false);
@@ -102,7 +105,7 @@ describe('Core atomic drawing contracts', () => {
     const path = {
       type: 'path' as const,
       children: steps,
-      roundedCorners: 2,
+      cornerRadius: 2,
       rotate: 15,
       scale: 1.25,
       label: { text: 'edge' },
@@ -155,7 +158,7 @@ describe('Core atomic drawing contracts', () => {
       dashPattern: [4, 2],
       lineJoin: 'round' as const,
       fillRule: 'evenodd' as const,
-      roundedCorners: 4,
+      cornerRadius: 4,
       scale: { x: 1.5, y: 2 },
       label: { text: 'edge' },
       marks: [mark],
@@ -171,9 +174,7 @@ describe('Core atomic drawing contracts', () => {
       ),
       ...PathStrokeSchema.parse(JSON.parse(JSON.stringify({ lineJoin: value.lineJoin }))),
       ...PathFillSchema.parse(JSON.parse(JSON.stringify({ fillRule: value.fillRule }))),
-      ...PathGeometrySchema.parse(
-        JSON.parse(JSON.stringify({ roundedCorners: value.roundedCorners, scale: value.scale })),
-      ),
+      ...PathGeometrySchema.parse(JSON.parse(JSON.stringify({ cornerRadius: value.cornerRadius, scale: value.scale }))),
       ...PathDecorationSchema.parse(JSON.parse(JSON.stringify({ label: value.label, marks: value.marks }))),
       ...PathStructureSchema.parse(JSON.parse(JSON.stringify({ type: value.type, kind: value.kind }))),
     };

@@ -43,6 +43,8 @@ Core 先解析节点的样式和形状，结合文字度量确定尺寸，再解
 
 <PackageManagerInstall packages="@retikz/core" />
 
+`PathTransformSchema` 只包含整条路径的 `rotate` 与 `scale`；`cornerRadius` 属于 `PathGeometrySchema`，用于将折线拐角改成圆角。
+
 组合描边 schema 时，`GraphicStrokeSchema` 统一提供线宽、虚线序列、偏移和 `stroke` 颜色或绘制资源。`NodeStrokeSchema` 增加 `dashed`、`dotted` 快捷设置，优先级为 `dashPattern > dashed > dotted`；`PathStrokeSchema` 增加 `lineCap`、`lineJoin`。这些片段的类型分别由 schema 推导为 `IRGraphicStroke`、`IRNodeStroke` 和 `IRPathStroke`。通用的 `GraphicStyleSchema` 与 `CascadingGraphicStyleSchema` 组合完整描边字段，支持虚线序列与相位偏移。
 
 内置连接面名称使用 `BuiltinBoundary`，自定义连接面通过编译选项 `boundaries` 注册；`IRBoundary` 接受内置名称、自定义 boundary 或 shape 名称，以及 `{ type, params }` 引用。内置编译警告码使用 `BuiltinCompileWarningCode`，开放类型 `CompileWarningCode` 同时接受自定义警告码。

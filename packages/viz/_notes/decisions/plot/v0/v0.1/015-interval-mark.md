@@ -41,7 +41,7 @@ export const BuiltinPlotMark = { Point: 'point', Line: 'line', Interval: 'interv
 - **baseline 取值**：alpha.3 固定 **0**；可配置 baseline / 对数轴 baseline / start-end 双端 encoding（甘特）留后续（非破坏加 `baseline?` / `y2?`）。
 - **value 缺失 / 非有限 / 类别缺失**：该行**跳过**（不产 Node），与 alpha.1 mark 投影返回 null 的跳过语义一致；全跳过 → 图层 null。
 - **0 值柱**：`yVal === yBase` → `minimumHeight=0`，**仍产 Node**（高度 0 矩形），不特殊剔除。
-- **柱描边**：默认 `strokeWidth:0`（纯填充柱，主流默认）；描边 / 圆角（`roundedCorners`）留后续样式字段。
+- **柱描边**：默认 `strokeWidth:0`（纯填充柱，主流默认）；描边 / 圆角（`cornerRadius`）留后续样式字段。
 - **柱宽是否减 padding**：柱宽直接用 `bandwidth`（band scale 的 paddingInner 已在 [ADR-014](./014-band-scale.md) 留出柱间缝）；bar 层不再二次缩。
 
 ## 长期边界

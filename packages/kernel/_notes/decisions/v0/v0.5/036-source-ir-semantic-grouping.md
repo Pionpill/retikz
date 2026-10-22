@@ -84,7 +84,7 @@ type IRPath = {
   id?: string;
   children?: Array<IRStep>;
   style?: IRPathStyle;
-  roundedCorners?: number;
+  cornerRadius?: number;
   rotate?: number;
   scale?: IRPathScale;
   label?: IRGeometryLabel | Array<IRGeometryLabel>;
@@ -102,7 +102,7 @@ Scope 把共享级联视觉默认值收进 `defaults.style`，与后代专属默
 ```ts
 type IRNodeDefault = Pick<IRNode, 'shape' | 'boundary' | 'cornerRadius' | 'rotate' | 'scale' | 'style' | 'layout'>;
 
-type IRPathDefault = Pick<IRPath, 'style' | 'roundedCorners' | 'rotate' | 'scale'>;
+type IRPathDefault = Pick<IRPath, 'style' | 'cornerRadius' | 'rotate' | 'scale'>;
 
 type IRScopeDefaults = {
   style?: IRCascadingGraphicStyle;

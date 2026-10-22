@@ -67,6 +67,30 @@ const collectScopes = (scope: IRScope): Array<IRScope> => {
 };
 
 describe('channel core coverage (contract)', () => {
+  it('delivers cornerRadius independently to node and path marks', () => {
+    const spec = PlotSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        { type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } }, cornerRadius: 'radius' } },
+        { type: 'path', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } }, cornerRadius: 'radius' } },
+      ],
+    });
+    const output = expandOf(spec, {
+      d: [
+        { x: 0, y: 0, radius: 4 },
+        { x: 1, y: 1, radius: 4 },
+      ],
+    });
+    expect(collectNodes(output).some(node => node.cornerRadius === 4)).toBe(true);
+    expect(collectPaths(output).some(path => path.cornerRadius === 4)).toBe(true);
+  });
   it('constant_style_channels_deliver_to_core_scope', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -113,7 +137,7 @@ describe('channel core coverage (contract)', () => {
           type: 'path',
           encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: {
-            roundedCorners: 4,
+            cornerRadius: 4,
             strokeWidth: 3,
             lineCap: 'round',
             lineJoin: 'bevel',
@@ -132,7 +156,7 @@ describe('channel core coverage (contract)', () => {
     );
 
     expect(path).toMatchObject({
-      roundedCorners: 4,
+      cornerRadius: 4,
       style: { strokeWidth: 3, opacity: { overall: 0.6 }, lineCap: 'round', lineJoin: 'bevel' },
     });
   });

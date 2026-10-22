@@ -5,7 +5,7 @@ import { AnimationTrackSchema } from '../animation';
 import { ClipSchema } from '../clip';
 import { FontSchema } from '../font';
 import { NodeSchema } from '../node';
-import { ArrowDetailSchema, PathBaseSchema, PathTransformSchema } from '../path';
+import { ArrowDetailSchema, PathBaseSchema, PathGeometrySchema, PathTransformSchema } from '../path';
 import { NodeTargetSchema, PositionSchema } from '../position';
 import { getRecursiveChildSchema } from '../recursive';
 import { ScopeSelfPointSchema } from '../scope-point';
@@ -35,6 +35,7 @@ export const NodeDefaultSchema = strictObject(NodeSchema.shape).pick({
 export const PathDefaultSchema = strictObject({
   style: PathBaseSchema.shape.style,
   ...PathTransformSchema.shape,
+  cornerRadius: PathGeometrySchema.shape.cornerRadius,
 });
 
 /** 校验作用域内节点标签与路径步骤标签共用的默认视觉样式 */

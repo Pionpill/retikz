@@ -396,7 +396,7 @@ describe('RelationMark and anchorId lowering', () => {
             geometry: {
               kind: 'path',
               label: { text: 'fallback' },
-              options: { roundedCorners: 6 },
+              options: { cornerRadius: 6 },
               route: [
                 { kind: 'fold', via: '-|', label: { position: 0.25 }, to: {} },
                 { kind: 'bend', bendDirection: 'left', bendAngle: 25 },
@@ -409,7 +409,7 @@ describe('RelationMark and anchorId lowering', () => {
     );
     const [path] = collectPaths(markLayer(root, 1));
 
-    expect(path.roundedCorners).toBe(6);
+    expect(path.cornerRadius).toBe(6);
     expect(path.children[1]).toMatchObject({ kind: 'fold', label: { text: 'A to B', position: 0.25, sloped: true } });
     expect(path.children[2]).toMatchObject({ kind: 'bend', bendDirection: 'left', bendAngle: 25 });
     expect('label' in path.children[2] ? path.children[2].label : undefined).toBeUndefined();

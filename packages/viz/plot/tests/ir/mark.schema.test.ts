@@ -819,7 +819,7 @@ describe('MarkSchema (contract)', () => {
     const m = {
       type: 'path',
       encodings: {
-        roundedCorners: 'corner',
+        cornerRadius: 'corner',
         position: { x: { field: 'x' }, y: { field: 'y' } },
         strokeWidth: 'weight',
       },

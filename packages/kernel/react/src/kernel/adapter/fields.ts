@@ -42,7 +42,7 @@ export const PATH_FIELDS = [
   'id',
   'meta',
   'animations',
-  'roundedCorners',
+  'cornerRadius',
   'zIndex',
   'rotate',
   'scale',
