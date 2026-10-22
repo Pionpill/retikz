@@ -37,14 +37,15 @@ describe('Field encoding contract', () => {
     expect(EncodingSchema.parse(JSON.parse(JSON.stringify(input)))).toEqual(input);
   });
 
-  it.each([{ x: { field: 'theta' } }, { x: { value: 1 }, z: { edge: 'end' } }])(
-    'accepts x with independently optional y/z: %j',
-    position => {
-      expect(EncodingSchema.parse({ position })).toEqual({ position });
-    },
-  );
-  it.each([{}, { y: { value: 1 } }, { x: { value: 1 }, u: { value: 2 } }])(
-    'rejects missing x or unknown roles: %j',
+  it.each([
+    { x: { field: 'theta' } },
+    { x: { value: 1 }, y: { edge: 'end' } },
+    { x: { value: 1 }, y: { field: 'height' }, z: { edge: 'end' } },
+  ])('accepts consecutive position roles in one, two or three dimensions: %j', position => {
+    expect(EncodingSchema.parse({ position })).toEqual({ position });
+  });
+  it.each([{}, { y: { value: 1 } }, { x: { value: 1 }, z: { edge: 'end' } }, { x: { value: 1 }, u: { value: 2 } }])(
+    'rejects skipped or unknown position roles: %j',
     position => {
       expect(PositionEncodingSchema.safeParse(position).success).toBe(false);
     },

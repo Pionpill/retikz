@@ -430,7 +430,7 @@ Plot 按图元实际使用的位置尺度汇总需求。最大半径加净空构
 
 ## 参考点与文字
 
-`encodings.position` 的 x 必填，y/z 按坐标需求选用。位置可使用 `{ field: '字段名' }`、`{ value: 50 }`（也可为分类字符串）或 `{ edge: 'start' }` / `{ edge: 'end' }`。常量位置沿用形状、文本、朝向与标签能力。
+`encodings.position` 的 x 必填；二维提供 x、y，三维提供 x、y、z，不能跳过 y。位置可使用 `{ field: '字段名' }`、`{ value: 50 }`（也可为分类字符串）或 `{ edge: 'start' }` / `{ edge: 'end' }`。常量位置沿用形状、文本、朝向与标签能力。
 
 以下参考图元显式设置 `contributeToDomain={false}`，不扩大主体数据的定义域。使用控件切换坐标系、位置、几何与标签。
 

@@ -59,6 +59,7 @@ import {
   NodeEncodingSchema,
   PathEncodingSchema,
   PositionEncodingSchema,
+  Position2DEncodingSchema,
   PositionInputSchema,
   MarkGeometryLabelListSchema,
   MarkNodeLabelListSchema,
@@ -728,7 +729,7 @@ export const IntervalBoundEncodingSchema = strictObject({
 /** 校验数据区间的位置、分组与边界编码 */
 export const IntervalEncodingSchema = NodeEncodingSchema.extend({
   anchorId: NonBlankStringSchema.optional(),
-  position: PositionEncodingSchema.omit({ z: true }).partial().optional(),
+  position: Position2DEncodingSchema.omit({ z: true }).partial().optional(),
   series: NonBlankStringSchema.optional(),
   bounds: strictObject({
     x: IntervalBoundEncodingSchema.optional(),

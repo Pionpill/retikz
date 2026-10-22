@@ -3,7 +3,7 @@ title: 契约 - 编码
 description: 查询 Plot 字段编码、位置角色、视觉目标与固定标签 schema。
 ---
 
-`encodings` 中的视觉通道绑定字段，视觉常量位于 `properties`。位置统一使用 `{ field }`、`{ value }` 或 `{ edge }`，比例尺由坐标角色决定。x 必填，y/z 按坐标需求选用。
+`encodings` 中的视觉通道绑定字段，视觉常量位于 `properties`。位置统一使用 `{ field }`、`{ value }` 或 `{ edge }`，比例尺由坐标角色决定。位置角色必须依次提供：`x`、`x/y` 或 `x/y/z`，不允许跳过 y 提供 z。
 
 ## EncodingSchema
 
@@ -30,11 +30,27 @@ description: 查询 Plot 字段编码、位置角色、视觉目标与固定标�
 
 ## PositionEncodingSchema
 
-<ZodSchema
-  name="PositionEncodingSchema"
-  description="坐标系消费的位置角色绑定。"
-  descriptions={{ x: '第一位置角色；是否必需由坐标 Definition 决定。', y: '第二位置角色；一维坐标不使用该字段。' }}
-/>
+由以下三个严格对象 Schema 组成联合，拒绝跳过位置角色或加入未知角色。
+
+<ZodSchema name="PositionEncodingSchema" />
+
+## Position1DEncodingSchema
+
+仅 x 必填，不允许 y、z。
+
+<ZodSchema name="Position1DEncodingSchema" />
+
+## Position2DEncodingSchema
+
+x、y 必填，不允许 z。
+
+<ZodSchema name="Position2DEncodingSchema" />
+
+## Position3DEncodingSchema
+
+x、y、z 全部必填。
+
+<ZodSchema name="Position3DEncodingSchema" />
 
 ## VisualEncodingSchema
 

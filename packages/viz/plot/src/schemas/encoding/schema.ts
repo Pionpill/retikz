@@ -1,7 +1,9 @@
 import { CssColorSchema, GeometryLabelSchema, NodeLabelSchema } from '@retikz/core';
 import type { JsonValue } from '@retikz/foundation';
 import { NonBlankStringSchema, PositiveNumberSchema } from '@retikz/foundation';
-import { array, enum as zodEnum, number, object, strictObject, union } from 'zod';
+import { array, enum as zodEnum, never, number, object, strictObject, union } from 'zod';
+
+import { PositionEdge } from './constants';
 
 /** 校验字段名简写或显式指定比例尺的字段绑定 */
 export const ChannelSchema = union([
@@ -16,15 +18,36 @@ export const ChannelSchema = union([
 export const PositionInputSchema = union([
   strictObject({ field: NonBlankStringSchema.describe('Field path in the final mark data view') }),
   strictObject({ value: union([number(), NonBlankStringSchema]).describe('Constant data-space value') }),
-  strictObject({ edge: zodEnum(['start', 'end']).describe('Boundary of the final coordinate role range') }),
+  strictObject({ edge: zodEnum(PositionEdge).describe('Boundary of the final coordinate role range') }),
 ]).describe('Exclusive field, constant value, or coordinate range edge');
 
-/** 校验点或路径端点的封闭位置角色，x 必填 */
-export const PositionEncodingSchema = strictObject({
+/** 校验仅使用 x 的一维位置，显式排除高维角色以约束联合类型 */
+export const Position1DEncodingSchema = strictObject({
   x: PositionInputSchema,
-  y: PositionInputSchema.optional(),
-  z: PositionInputSchema.optional(),
-}).describe('Position inputs for x and optional y/z; required coordinate roles must be supplied');
+  y: never().optional(),
+  z: never().optional(),
+}).describe('One-dimensional position: x is required; y and z are not allowed');
+
+/** 校验依次包含 x、y 的二维位置 */
+export const Position2DEncodingSchema = strictObject({
+  x: PositionInputSchema,
+  y: PositionInputSchema,
+  z: never().optional(),
+}).describe('Two-dimensional position: x and y are required; z is not allowed');
+
+/** 校验依次包含 x、y、z 的三维位置 */
+export const Position3DEncodingSchema = strictObject({
+  x: PositionInputSchema,
+  y: PositionInputSchema,
+  z: PositionInputSchema,
+}).describe('Three-dimensional position: x, y and z are required');
+
+/** 校验一至三维位置，坐标角色必须从 x 开始连续提供 */
+export const PositionEncodingSchema = union([
+  Position1DEncodingSchema,
+  Position2DEncodingSchema,
+  Position3DEncodingSchema,
+]).describe('Position inputs with consecutive roles: x, x/y, or x/y/z');
 
 /** 校验独立透明度因子的字段编码 */
 export const OpacityEncodingSchema = strictObject({

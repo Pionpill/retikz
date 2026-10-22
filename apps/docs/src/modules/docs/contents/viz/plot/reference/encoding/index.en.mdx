@@ -3,7 +3,7 @@ title: Contract - Encoding
 description: Query Plot field bindings, position roles, visual targets, and fixed label schemas.
 ---
 
-Visual channels in `encodings` bind fields; fixed visual values belong to `properties`. Positions use `{ field }`, `{ value }`, or `{ edge }`, with scales selected by coordinate roles. x is required; y and z depend on the coordinate system.
+Visual channels in `encodings` bind fields; fixed visual values belong to `properties`. Positions use `{ field }`, `{ value }`, or `{ edge }`, with scales selected by coordinate roles. Supply consecutive roles: `x`, `x/y`, or `x/y/z`; z cannot appear without y.
 
 ## EncodingSchema
 
@@ -15,7 +15,27 @@ Visual channels in `encodings` bind fields; fixed visual values belong to `prope
 
 ## PositionEncodingSchema
 
+A union of the following three strict object schemas rejects skipped or unknown position roles.
+
 <ZodSchema name="PositionEncodingSchema" />
+
+## Position1DEncodingSchema
+
+Requires x; y and z are not allowed.
+
+<ZodSchema name="Position1DEncodingSchema" />
+
+## Position2DEncodingSchema
+
+Requires x and y; z is not allowed.
+
+<ZodSchema name="Position2DEncodingSchema" />
+
+## Position3DEncodingSchema
+
+Requires x, y, and z.
+
+<ZodSchema name="Position3DEncodingSchema" />
 
 ## VisualEncodingSchema
 

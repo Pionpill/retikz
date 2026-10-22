@@ -12,6 +12,9 @@ import type {
   MarkNodeLabelSchema,
   PointEncodingSchema,
   PositionEncodingSchema,
+  Position1DEncodingSchema,
+  Position2DEncodingSchema,
+  Position3DEncodingSchema,
   PositionInputSchema,
 } from './schema';
 
@@ -21,7 +24,11 @@ export type IRPlotChannel = ZodInfer<typeof ChannelSchema>;
 /** 字段、数据空间常量或最终范围边缘的位置输入 */
 export type IRPlotPositionInput = ZodInfer<typeof PositionInputSchema>;
 
-/** x 必填，y/z 按坐标需求选用的位置绑定 */
+export type IRPlotPosition1DEncoding = ZodInfer<typeof Position1DEncodingSchema>;
+export type IRPlotPosition2DEncoding = ZodInfer<typeof Position2DEncodingSchema>;
+export type IRPlotPosition3DEncoding = ZodInfer<typeof Position3DEncodingSchema>;
+
+/** 从 x 开始连续提供坐标角色的一至三维位置绑定 */
 export type IRPlotPositionEncoding = ZodInfer<typeof PositionEncodingSchema>;
 
 /** 共享绘图外观的字段编码 */

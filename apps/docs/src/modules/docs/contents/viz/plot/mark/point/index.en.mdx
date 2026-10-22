@@ -451,7 +451,7 @@ Plot collects demands by each mark's actual position-scale binding. Maximum radi
 
 ## Reference points and text
 
-`encodings.position` requires x; y and z depend on the coordinate system. Use `{ field: 'fieldName' }`, `{ value: 50 }` (or a category string), or `{ edge: 'start' }` / `{ edge: 'end' }`. Constant positions retain shape, text, orientation, and label support.
+`encodings.position` requires consecutive roles: x in one dimension, x/y in two, and x/y/z in three. Use `{ field: 'fieldName' }`, `{ value: 50 }` (or a category string), or `{ edge: 'start' }` / `{ edge: 'end' }`. Constant positions retain shape, text, orientation, and label support.
 
 These reference marks set `contributeToDomain={false}` so they do not expand the data domain. Use the controls to change coordinates, positions, geometry, and labels.
 

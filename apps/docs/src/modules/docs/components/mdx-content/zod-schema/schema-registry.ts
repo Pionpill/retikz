@@ -2174,6 +2174,21 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'Channel',
     url: '/viz/plot/reference/encoding#channelschema',
   },
+  Position1DEncodingSchema: {
+    schema: IRPlot.Position1DEncodingSchema,
+    label: 'Position1DEncoding',
+    url: '/viz/plot/reference/encoding#position1dencodingschema',
+  },
+  Position2DEncodingSchema: {
+    schema: IRPlot.Position2DEncodingSchema,
+    label: 'Position2DEncoding',
+    url: '/viz/plot/reference/encoding#position2dencodingschema',
+  },
+  Position3DEncodingSchema: {
+    schema: IRPlot.Position3DEncodingSchema,
+    label: 'Position3DEncoding',
+    url: '/viz/plot/reference/encoding#position3dencodingschema',
+  },
   PositionEncodingSchema: {
     schema: IRPlot.PositionEncodingSchema,
     label: 'PositionEncoding',
