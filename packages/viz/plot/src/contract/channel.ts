@@ -1,4 +1,4 @@
-import type { IRNode, IRPath, IRScope, IRShapeValue, IRNodeLabel, IRGeometryLabel } from '@retikz/core';
+import type { IRNode, IRPath, IRScope, IRShapeValue, IRNodeLabel, IRPathLabel } from '@retikz/core';
 import type {
   DataTransformModel,
   DataFieldType,
@@ -566,7 +566,7 @@ export type AnyChannelDefinition =
 export type LabelHost = 'node' | 'geometry';
 
 /** 标签通道共用的 Core 投递目标 */
-export type LabelChannelTarget = IRNodeLabel | IRGeometryLabel;
+export type LabelChannelTarget = IRNodeLabel | IRPathLabel;
 
 /** 标签字段通道定义，内置与自定义共用注册、解析和投递入口 */
 export type LabelChannelDefinition = BaseChannelDefinition<typeof ChannelDefinitionKind.Label> & {

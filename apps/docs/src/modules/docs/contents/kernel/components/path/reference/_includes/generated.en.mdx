@@ -22,7 +22,7 @@ This component does not render DOM itself; `<Layout>` produces the final path fr
 |           | `id?`             | `IRPath['id']`                | —          | Path id, used by other paths or positions to reference it and by hydration to bind event handlers                                                                                                                                                                                                                   |
 |           | `kind?`           | `IRPath['kind']`              | `'stroke'` | Path kind; defaults to built-in stroke. Register custom kinds through Layout.extensions.pathKinds                                                                                                                                                                                                                   |
 |           | `kindOptions?`    | `IRPath['kindOptions']`       | —          | JSON options for the selected path kind; built-in stroke does not accept this field                                                                                                                                                                                                                                 |
-|           | `label?`          | `IRPath['label']`             | —          | One or more geometry labels attached to the whole path                                                                                                                                                                                                                                                              |
+|           | `label?`          | `IRPath['label']`             | —          | One or more path labels attached to the whole path                                                                                                                                                                                                                                                                  |
 |           | `way?`            | `WayDSL`                      | —          | TikZ-style route shorthand, parsed into steps by Vanilla                                                                                                                                                                                                                                                            |
 | Geometry  | `arrow?`          | `InputPath['arrow']`          | `'none'`   | Path-level arrow direction<br />`'->'` at the end, `'<-'` at the start, or `'<->'` at both ends; omitted or `'none'` means no arrows                                                                                                                                                                                |
 |           | `arrowDetail?`    | `InputPath['arrowDetail']`    | —          | Detailed arrow configuration<br />Top-level defaults with optional `start` and `end` overrides merged field by field. On hollow shapes (open, openStealth, openDiamond, and openCircle), `fill` is a silent no-op                                                                                                   |
@@ -736,7 +736,7 @@ export type ArrowEmitContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CanonicalGeometryLabelPlacement"} path={"packages/kernel/core/src/resolve/path/types.ts"} startLine={40}>CanonicalGeometryLabelPlacement</ApiSourceLink>
+#### <ApiSourceLink label={"CanonicalPathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/types.ts"} startLine={39}>CanonicalPathLabelPlacement</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -744,15 +744,15 @@ export type ArrowEmitContext = {
 
 <ApiTable>
 
-| Member       | Type                                               | Default | Description                                                                                                     |
-| ------------ | -------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------- |
-| `distance`   | `number`                                           | —       | Distance relative to the host                                                                                   |
-| `gap`        | `number`                                           | —       | Gap around the stroke interruption                                                                              |
-| `interrupt`  | `boolean`                                          | —       | Whether to interrupt the host stroke                                                                            |
-| `placement?` | `"outside" \| "inside"`                            | —       | Geometry label placement mode. outside uses side offset; inside lets area hosts place labels within their band. |
-| `position`   | `number`                                           | —       | Normalized position along the path                                                                              |
-| `side`       | `NonNullable<IRGeometryLabel['side']> \| 'center'` | —       | Side relative to the host                                                                                       |
-| `sloped?`    | `false \| true`                                    | —       | Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`.                        |
+| Member       | Type                                           | Default | Description                                                                                                 |
+| ------------ | ---------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------- |
+| `distance`   | `number`                                       | —       | Distance relative to the host                                                                               |
+| `gap`        | `number`                                       | —       | Gap around the stroke interruption                                                                          |
+| `interrupt`  | `boolean`                                      | —       | Whether to interrupt the host stroke                                                                        |
+| `placement?` | `"outside" \| "inside"`                        | —       | Path label placement mode. outside uses side offset; inside lets area hosts place labels within their band. |
+| `position`   | `number`                                       | —       | Normalized position along the path                                                                          |
+| `side`       | `NonNullable<IRPathLabel['side']> \| 'center'` | —       | Side relative to the host                                                                                   |
+| `sloped?`    | `false \| true`                                | —       | Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`.                    |
 
 </ApiTable>
 
@@ -761,12 +761,12 @@ export type ArrowEmitContext = {
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type CanonicalGeometryLabelPlacement = Omit<
-  GeometryLabelGeometryOptions,
+export type CanonicalPathLabelPlacement = Omit<
+  PathLabelGeometryOptions,
   'position' | 'side' | 'distance' | 'interrupt' | 'gap'
 > & {
   position: number;
-  side: NonNullable<IRGeometryLabel['side']> | 'center';
+  side: NonNullable<IRPathLabel['side']> | 'center';
   distance: number;
   interrupt: boolean;
   gap: number;
@@ -777,7 +777,7 @@ export type CanonicalGeometryLabelPlacement = Omit<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"GeometryLabelGeometryOptions"} path={"packages/kernel/core/src/resolve/path/types.ts"} startLine={37}>GeometryLabelGeometryOptions</ApiSourceLink>
+#### <ApiSourceLink label={"PathLabelGeometryOptions"} path={"packages/kernel/core/src/resolve/path/types.ts"} startLine={36}>PathLabelGeometryOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -790,7 +790,7 @@ export type CanonicalGeometryLabelPlacement = Omit<
 | `distance?`  | `number`                                                                                                             | —       | Side offset distance in user units. Defaults to the same distance as Path step labels.                                  |
 | `gap?`       | `number`                                                                                                             | —       | Extra clearance in user units on each side of an interrupted host stroke gap. Defaults to 4.                            |
 | `interrupt?` | `false \| true`                                                                                                      | —       | Whether this label requests a gap in a compatible host stroke. Omitted values use the host policy.                      |
-| `placement?` | `"outside" \| "inside"`                                                                                              | —       | Geometry label placement mode. outside uses side offset; inside lets area hosts place labels within their band.         |
+| `placement?` | `"outside" \| "inside"`                                                                                              | —       | Path label placement mode. outside uses side offset; inside lets area hosts place labels within their band.             |
 | `position?`  | `number \| "at-start" \| "very-near-start" \| "near-start" \| "midway" \| "near-end" \| "very-near-end" \| "at-end"` | —       | Position along the step: keyword or normalized number. Parameter meaning follows the step kind.                         |
 | `side?`      | `"top" \| "right" \| "bottom" \| "left"`                                                                             | —       | Authored side relative to the label anchor. An omitted value canonicalizes to `top`, or `center` when `sloped` is true. |
 | `sloped?`    | `false \| true`                                                                                                      | —       | Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`.                                |
@@ -802,7 +802,7 @@ export type CanonicalGeometryLabelPlacement = Omit<
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type GeometryLabelGeometryOptions = Omit<IRGeometryLabel, 'text' | 'textColor' | 'font' | 'opacity'>;
+export type PathLabelGeometryOptions = Omit<IRPathLabel, 'text' | 'textColor' | 'font' | 'opacity'>;
 ```
 
 </DocTab>
@@ -847,7 +847,7 @@ export type PathGeneratorGenerateContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={130}>PathKindBoundaryLabelInput</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={127}>PathKindBoundaryLabelInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -881,7 +881,7 @@ export type PathKindBoundaryLabelInput = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindCompileContext"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={147}>PathKindCompileContext</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindCompileContext"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={144}>PathKindCompileContext</ApiSourceLink>
 
 A custom kind can take over output completely or reuse standard stroke logic through callbacks
 
@@ -1009,7 +1009,7 @@ export const DrawWay = {
 } as const;
 ```
 
-#### <ApiSourceLink label={"resolveGeometryLabelPlacement"} path={"packages/kernel/core/src/resolve/path/resolve.ts"} startLine={124}>resolveGeometryLabelPlacement</ApiSourceLink>
+#### <ApiSourceLink label={"resolvePathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/resolve.ts"} startLine={120}>resolvePathLabelPlacement</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1017,11 +1017,11 @@ export const DrawWay = {
 
 <ApiTable variant="parameters">
 
-| Category   | Name                        | Type / signature                  | Description |
-| ---------- | --------------------------- | --------------------------------- | ----------- |
-| Parameters | `label`                     | `GeometryLabelGeometryOptions`    | —           |
-|            | `canAutomaticallyInterrupt` | `boolean`                         | —           |
-| Returns    | —                           | `CanonicalGeometryLabelPlacement` | —           |
+| Category   | Name                        | Type / signature              | Description |
+| ---------- | --------------------------- | ----------------------------- | ----------- |
+| Parameters | `label`                     | `PathLabelGeometryOptions`    | —           |
+|            | `canAutomaticallyInterrupt` | `boolean`                     | —           |
+| Returns    | —                           | `CanonicalPathLabelPlacement` | —           |
 
 </ApiTable>
 
@@ -1030,10 +1030,10 @@ export const DrawWay = {
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const resolveGeometryLabelPlacement: (
-  label: GeometryLabelGeometryOptions,
+export declare const resolvePathLabelPlacement: (
+  label: PathLabelGeometryOptions,
   canAutomaticallyInterrupt: boolean,
-) => CanonicalGeometryLabelPlacement;
+) => CanonicalPathLabelPlacement;
 ```
 
 </DocTab>
@@ -1237,7 +1237,7 @@ export type PathGeneratorDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindDefinition"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={187}>PathKindDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindDefinition"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={184}>PathKindDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1445,9 +1445,9 @@ Either tangent angle selects tangent mode; the omitted outgoing/incoming angle d
 
 <ZodSchema shallow name="GeneratorStepSchema" />
 
-#### <ApiSourceLink label={"GeometryLabelSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={25}>GeometryLabelSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathLabelSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={25}>PathLabelSchema</ApiSourceLink>
 
-<ZodSchema shallow name="GeometryLabelSchema" />
+<ZodSchema shallow name="PathLabelSchema" />
 
 #### <ApiSourceLink label={"ArrowMarkSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={43}>ArrowMarkSchema</ApiSourceLink>
 

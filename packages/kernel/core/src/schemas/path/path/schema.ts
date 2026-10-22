@@ -12,7 +12,7 @@ import { DrawableInstanceSchema, DrawableStyleSchema } from '../../drawable';
 import { AngleDegreesSchema } from '../../scalar';
 import { StrokeCapJoinSchema, StrokeStyleSchema } from '../../stroke';
 import { ArrowEndDetailSchema } from '../arrow';
-import { GeometryLabelSchema, StepSchema } from '../step';
+import { PathLabelSchema, StepSchema } from '../step';
 import { PathFillRule, BuiltinPathKind } from './constants';
 
 /** 校验路径内部区域的填充规则 */
@@ -94,7 +94,7 @@ export const PathGeometrySchema = strictObject({
 
 /** 校验附着于路径宿主的标签与沿路径标记 */
 export const PathDecorationSchema = strictObject({
-  label: union([GeometryLabelSchema, array(GeometryLabelSchema).min(1)])
+  label: union([PathLabelSchema, array(PathLabelSchema).min(1)])
     .optional()
     .describe('Host label attached to this path-like relation.'),
   marks: array(PathMarkPlacementSchema)

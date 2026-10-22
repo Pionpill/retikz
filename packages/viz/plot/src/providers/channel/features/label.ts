@@ -1,4 +1,4 @@
-import { FontSchema, NodeLabelSchema, GeometryLabelSchema } from '@retikz/core';
+import { FontSchema, NodeLabelSchema, PathLabelSchema } from '@retikz/core';
 import { resolveFieldPath } from '@retikz/data';
 import type { ZodType } from 'zod';
 
@@ -75,11 +75,11 @@ export const LABEL_CHANNELS: ReadonlyArray<LabelChannelDefinition> = [
   ...(['position', 'placement', 'distance'] as const).map(target =>
     labelChannel(target, {
       node: NodeLabelSchema.shape[target],
-      geometry: GeometryLabelSchema.shape[target],
+      geometry: PathLabelSchema.shape[target],
     }),
   ),
   ...(['align', 'rotate', 'keepUpright'] as const).map(target =>
     labelChannel(target, { node: NodeLabelSchema.shape[target] }),
   ),
-  ...(['side', 'sloped'] as const).map(target => labelChannel(target, { geometry: GeometryLabelSchema.shape[target] })),
+  ...(['side', 'sloped'] as const).map(target => labelChannel(target, { geometry: PathLabelSchema.shape[target] })),
 ];

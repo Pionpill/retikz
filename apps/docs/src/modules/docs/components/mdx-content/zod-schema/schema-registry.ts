@@ -917,10 +917,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/components/path/reference#pathmarkplacementschema',
   },
   StepSchema: { schema: IR.StepSchema, label: 'Step', url: '/kernel/components/path/reference#stepschema' },
-  GeometryLabelSchema: {
-    schema: IR.GeometryLabelSchema,
-    label: 'GeometryLabel',
-    url: '/kernel/components/path/reference#geometrylabelschema',
+  PathLabelSchema: {
+    schema: IR.PathLabelSchema,
+    label: 'PathLabel',
+    url: '/kernel/components/path/reference#pathlabelschema',
   },
   StepLabelSchema: { schema: IR.StepLabelSchema, label: 'StepLabel' },
   ControlPointSchema: {
@@ -2254,10 +2254,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'MarkNodeLabel',
     url: '/viz/plot/reference/mark#marknodelabelschema',
   },
-  MarkGeometryLabelSchema: {
-    schema: IRPlot.MarkGeometryLabelSchema,
-    label: 'MarkGeometryLabel',
-    url: '/viz/plot/reference/mark#markgeometrylabelschema',
+  MarkPathLabelSchema: {
+    schema: IRPlot.MarkPathLabelSchema,
+    label: 'MarkPathLabel',
+    url: '/viz/plot/reference/mark#markpathlabelschema',
   },
   StackTransformSchema: {
     schema: DataIR.StackTransformSchema,

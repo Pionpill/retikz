@@ -1,13 +1,4 @@
-import type {
-  IRChild,
-  IRGeometryLabel,
-  IRNode,
-  IRNodeDefault,
-  IRNodeLabel,
-  IRPaint,
-  IRPath,
-  IRScope,
-} from '@retikz/core';
+import type { IRChild, IRPathLabel, IRNode, IRNodeDefault, IRNodeLabel, IRPaint, IRPath, IRScope } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import { readSourceIndex, readSourceIndices } from '@retikz/data';
 
@@ -42,7 +33,7 @@ import type {
   IRPlotChannel,
   IRPlotIntervalMark,
   IRPlotMark,
-  IRPlotMarkGeometryLabel,
+  IRPlotMarkPathLabel,
   IRPlotMarkNodeLabel,
   IRPlotMarkOperation,
   IRPlotPathMark,
@@ -175,7 +166,7 @@ const omitContent = <T extends { content?: unknown; displayFormat?: unknown }>(
   >;
 
 const textForLabel = (
-  label: IRPlotMarkNodeLabel | IRPlotMarkGeometryLabel,
+  label: IRPlotMarkNodeLabel | IRPlotMarkPathLabel,
   row: ExternalRow | undefined,
   labelResolver: ChannelValueResolver<LabelText> | undefined,
   index: number,
@@ -217,9 +208,9 @@ export const resolveNodeMarkLabels = (
   return collapseResolvedLabels(resolved);
 };
 
-/** 把 plot geometry label 配置解析为 core Path label */
+/** 把 plot path label 配置解析为 core Path label */
 export const resolveGeometryMarkLabels = (
-  labels: string | IRPlotMarkGeometryLabel | ReadonlyArray<string | IRPlotMarkGeometryLabel> | undefined,
+  labels: string | IRPlotMarkPathLabel | ReadonlyArray<string | IRPlotMarkPathLabel> | undefined,
   row: ExternalRow | undefined,
   labelResolver: ChannelValueResolver<LabelText> | undefined,
   encodings?: MarkLabelFieldSource,
@@ -230,10 +221,10 @@ export const resolveGeometryMarkLabels = (
   const resolved = Array.from(
     { length: Math.max(hosts.length, bindings.length) },
     (_, index) => hosts[index] ?? {},
-  ).flatMap((label, index): Array<IRGeometryLabel> => {
+  ).flatMap((label, index): Array<IRPathLabel> => {
     const text = textForLabel(label, row, labelResolver, index, bindings[index]?.content);
     if (text === undefined) return [];
-    const output: IRGeometryLabel = { ...omitContent(label), text: typeof text === 'string' ? text : [text] };
+    const output: IRPathLabel = { ...omitContent(label), text: typeof text === 'string' ? text : [text] };
     if (row !== undefined)
       for (const delivery of channels?.labelDeliveries ?? []) if (delivery.index === index) delivery.apply(output, row);
 

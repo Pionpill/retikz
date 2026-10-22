@@ -11,11 +11,11 @@ export const pathSchemaDescriptions = readSchemaDescriptions(
   'PathSchema',
 );
 
-/** 几何标签公开投影复用同一 Schema 字段说明 */
-export const geometryLabelSchemaDescriptions = readSchemaDescriptions(
+/** 路径标签公开投影复用同一 Schema 字段说明 */
+export const pathLabelSchemaDescriptions = readSchemaDescriptions(
   path.resolve(
     import.meta.dirname,
     '../../src/modules/docs/contents/kernel/components/path/reference/_includes/schemas.zh.mdx',
   ),
-  'GeometryLabelSchema',
+  'PathLabelSchema',
 );

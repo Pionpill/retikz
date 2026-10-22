@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { TextMeasurer } from '../../src';
-import { samplePathRoute, resolveGeometryLabelPlacement } from '../../src';
+import { samplePathRoute, resolvePathLabelPlacement } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/contract';
@@ -83,7 +83,7 @@ describe('path.label：stroke host label 几何', () => {
 
     expect(label.x).toBeCloseTo(rounded!.point[0], 2);
     expect(visualBottom(label)).toBeCloseTo(rounded!.point[1], 2);
-    expect(resolveGeometryLabelPlacement({ position: 'near-end', sloped: true }, true)).toMatchObject({
+    expect(resolvePathLabelPlacement({ position: 'near-end', sloped: true }, true)).toMatchObject({
       position: 0.75,
       side: 'center',
       interrupt: true,

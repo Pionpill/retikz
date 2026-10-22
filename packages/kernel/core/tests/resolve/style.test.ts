@@ -9,7 +9,7 @@ import {
   resolveEffectivePath,
 } from '../../src/resolve/style';
 import type { IRPathBase, IRScope } from '../../src/schemas';
-import { GeometryLabelSchema, NodeSchema, PathBaseSchema, SHADOW_PRESETS } from '../../src/schemas';
+import { PathLabelSchema, NodeSchema, PathBaseSchema, SHADOW_PRESETS } from '../../src/schemas';
 
 const styleScope = (properties: Partial<IRScope>): IRScope => ({
   type: 'scope',
@@ -113,7 +113,7 @@ describe('Scope effective defaults', () => {
         defaults: { label: { font: { family: 'default', size: 20, weight: 'bold' } } },
       }),
     );
-    const label = GeometryLabelSchema.parse({ text: 'x', font: { family: 'label', size: 10 } });
+    const label = PathLabelSchema.parse({ text: 'x', font: { family: 'label', size: 10 } });
     const resolved = resolveEffectivePath(pathOf({ label }), frame);
 
     expect(resolved.label).toMatchObject({

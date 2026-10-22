@@ -17,7 +17,7 @@ import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { BUILTIN_MARKS, resolveMarkRegistry } from '../../../src/providers';
 import type { IRPlot } from '../../../src/schemas';
 import {
-  BUILTIN_MARK_TYPES,
+  BuiltinPlotMark,
   VisualEncodingSchema,
   PositionEncodingSchema,
   MarkOperationSchema,
@@ -133,7 +133,6 @@ describe('mark registry（contract：自定义 mark）', () => {
     expect(MarkOperationSchema.safeParse({ type: 'path', properties: { notAField: true } }).success).toBe(
       collide.success,
     );
-    expect(BUILTIN_MARK_TYPES.has('point')).toBe(true);
   });
 
   it('custom_mark_not_json_serializable_rejected', () => {
@@ -142,7 +141,7 @@ describe('mark registry（contract：自定义 mark）', () => {
   });
 
   it('builtin_marks_cover_public_builtin_types', () => {
-    expect(BUILTIN_MARKS.map(def => extractMarkType(def.schema)).sort()).toEqual([...BUILTIN_MARK_TYPES].sort());
+    expect(BUILTIN_MARKS.map(def => extractMarkType(def.schema)).sort()).toEqual(Object.values(BuiltinPlotMark).sort());
   });
 
   it('resolve_mark_registry_merges_builtin_and_custom', () => {

@@ -57,8 +57,8 @@ import {
   resolvePath as resolvePathValue,
   resolveStrokePathProviders,
   resolveTheme,
-  resolveGeometryLabel,
-  resolveGeometryLabelColors,
+  resolvePathLabel,
+  resolvePathLabelColors,
 } from '../../resolve';
 import {
   createCompositeContractError,
@@ -642,8 +642,8 @@ export const compileChildrenToPrimitives = (
     const emitBoundaryLabels = (input: ReadonlyArray<PathKindBoundaryLabelInput>): ReadonlyArray<ScenePrimitive> =>
       input.map(request => {
         const labelDefault = pendingPath.scopeDefaults.label ?? {};
-        const styled = resolveGeometryLabelColors(
-          resolveGeometryLabel(request.label, labelDefault, resolution.path.color),
+        const styled = resolvePathLabelColors(
+          resolvePathLabel(request.label, labelDefault, resolution.path.color),
           labelDefault.color ?? resolution.path.color,
           { mode: pendingPath.theme.mode },
           `${irPath}.${request.sourcePath}`,

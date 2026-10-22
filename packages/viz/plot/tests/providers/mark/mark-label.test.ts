@@ -53,7 +53,7 @@ const baseSpec = (marks: unknown): IRPlot =>
   });
 
 describe('contract mark host label lowering', () => {
-  it('path-mark-host-geometry-label：PathMark label lowering 到 core Path.label', () => {
+  it('path-mark-host-path-label：PathMark label lowering 到 core Path.label', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -76,7 +76,7 @@ describe('contract mark host label lowering', () => {
     expect(path.children.some(step => 'label' in step && step.label !== undefined)).toBe(false);
   });
 
-  it('path-mark-host-geometry-label accepts canonical side names', () => {
+  it('path-mark-host-path-label accepts canonical side names', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -98,7 +98,7 @@ describe('contract mark host label lowering', () => {
     expect(path.label).toEqual({ text: 'trend', position: 'midway', side: 'top' });
   });
 
-  it('wraps a legacy mixed geometry-label line as the Core TextBlock form', () => {
+  it('wraps a legacy mixed path-label line as the Core TextBlock form', () => {
     const root = expandOf(
       baseSpec([
         {

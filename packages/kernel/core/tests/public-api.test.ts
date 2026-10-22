@@ -26,7 +26,7 @@ describe('Core public API', () => {
     const forbidden = [
       'IRNodeLabelBoundaryPositionInput',
       'IRNodeLabelInput',
-      'IRGeometryLabelInput',
+      'IRPathLabelInput',
       'IRStepLabelInput',
       'IRAtPositionInput',
       'IRAtTranslateTransformInput',

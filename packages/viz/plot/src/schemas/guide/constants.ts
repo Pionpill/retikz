@@ -1,4 +1,4 @@
-import { GeometryLabelPosition } from '@retikz/core';
+import { PathLabelPosition } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
 
 /**
@@ -149,7 +149,7 @@ export const AxisTickLabelOverflow = {
 } as const;
 
 /** axis title 沿轴线的定位关键字，复用 core path label position 词表 */
-export const AxisTitlePlacementKeyword = GeometryLabelPosition;
+export const AxisTitlePlacementKeyword = PathLabelPosition;
 
 /** axis title 对齐锚点 */
 export const AxisTitleAnchor = {

@@ -11,7 +11,7 @@ import {
   FoldStepVia,
   FontStyle,
   FontWeightKeyword,
-  GeometryLabelPosition,
+  PathLabelPosition,
   NodeTextAlign,
   PathCloseMode,
   PathFillRule,
@@ -171,8 +171,8 @@ export const API_VALUE_REGISTRY = {
   FlexLayoutWrap: {
     values: Object.values(FlexLayoutWrap),
   },
-  GeometryLabelPosition: {
-    values: Object.values(GeometryLabelPosition),
+  PathLabelPosition: {
+    values: Object.values(PathLabelPosition),
   },
   GridBorderOrder: {
     values: Object.values(GridBorderOrder),

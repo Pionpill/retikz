@@ -1,4 +1,4 @@
-import type { IRGeometryLabel, PathCommand, PathKindCompileResult, PathKindLabel, ScenePrimitive } from '@retikz/core';
+import type { IRPathLabel, PathCommand, PathKindCompileResult, PathKindLabel, ScenePrimitive } from '@retikz/core';
 
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../errors';
 import type { RibbonCapDefinition } from '../cap-types';
@@ -29,7 +29,7 @@ const LABEL_POSITION: Record<string, number> = {
   'at-end': 1,
 };
 
-type ResolvedRibbonLabel = Omit<IRGeometryLabel, 'textColor' | 'text'> & Pick<PathKindLabel, 'textColor' | 'text'>;
+type ResolvedRibbonLabel = Omit<IRPathLabel, 'textColor' | 'text'> & Pick<PathKindLabel, 'textColor' | 'text'>;
 
 const canonicalizeLabel = (label: ResolvedRibbonLabel): PathKindLabel => ({
   ...label,

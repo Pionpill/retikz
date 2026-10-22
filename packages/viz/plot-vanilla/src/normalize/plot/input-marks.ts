@@ -5,7 +5,7 @@ import type {
   IRPlotIntervalMark,
   IRPlotRelationMark,
   IRPlotMarkNodeLabel,
-  IRPlotMarkGeometryLabel,
+  IRPlotMarkPathLabel,
   IRPlotMarkOpacityStyle,
   IRPlotChannel,
   IRPlotRelationPathGeometry,
@@ -64,9 +64,9 @@ export type InputPlotCoreNodeChannels = Pick<InputPlotPointMark, 'encodings' | '
 export type InputPlotCorePathChannels = Pick<InputPlotPathMark, 'encodings' | 'properties'>;
 export type InputPlotOpacity = IRPlotMarkOpacityStyle;
 export type InputPlotNodeLabel = string | IRPlotMarkNodeLabel;
-export type InputPlotGeometryLabel = string | IRPlotMarkGeometryLabel;
+export type InputPlotPathLabel = string | IRPlotMarkPathLabel;
 export type InputPlotMarkNodeLabel = string | IRPlotMarkNodeLabel;
-export type InputPlotMarkGeometryLabel = string | IRPlotMarkGeometryLabel;
+export type InputPlotMarkPathLabel = string | IRPlotMarkPathLabel;
 export type InputPlotExtensionChannel = IRPlotChannel;
 export type InputPlotRelationPathGeometry = IRPlotRelationPathGeometry;
 export type InputPlotRelationRouteStep = IRPlotRelationRouteStep;
