@@ -13,7 +13,7 @@ import type { Rect } from '../../shared/geometry';
 import { DEFAULT_LABEL_DISTANCE, DEFAULT_NODE_DISTANCE } from '../constants';
 import { fallbackMeasurer } from '../text';
 import { applyTransformChain } from '../transform';
-import { layoutNode } from './layout';
+import { compileResolvedNode } from './layout';
 import type { NodeLayout } from './types';
 
 /** synthetic Node 只消费字面量坐标，因此使用无引用的恒等 position context */
@@ -77,7 +77,7 @@ const syntheticNode = (
   };
 };
 
-/** 通过 resolveNode + layoutNode 构造 synthetic layout */
+/** 通过 resolveNode + compileResolvedNode 构造 synthetic layout */
 const resolveSyntheticLayout = (
   input: SyntheticRectangleLayoutInput,
   shape: 'rectangle' | 'ellipse',
@@ -98,7 +98,7 @@ const resolveSyntheticLayout = (
     warn: () => {},
     labelDistance: DEFAULT_LABEL_DISTANCE,
   });
-  const layout = layoutNode(resolution, {
+  const { layout } = compileResolvedNode(resolution, {
     measureText: fallbackMeasurer,
     positionContext: SYNTHETIC_POSITION_CONTEXT,
   });

@@ -6,8 +6,7 @@ import type { NodeLayout } from '../../src/compile/node';
 import { boxInsets } from '../../src/compile/node';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
-const makeLayout = (id: string, x = 0, y = 0): NodeLayout => ({
-  node: { id },
+const makeLayout = (_id: string, x = 0, y = 0): NodeLayout => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.rectangle, params: {} },
   geometry: {
     rect: { x, y, width: 0, height: 0, rotate: 0 },
@@ -21,7 +20,6 @@ const makeLayout = (id: string, x = 0, y = 0): NodeLayout => ({
     params: {},
     isShape: true,
   },
-  irPath: 'synthetic.test',
 });
 
 describe('NamespaceStack 基本 register / lookup', () => {

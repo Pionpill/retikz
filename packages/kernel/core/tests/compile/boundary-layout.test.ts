@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { boundaryPointOf, createNodeGeometryContext, layoutNode, nodeReferenceViewOf } from '../../src/compile/node';
+import {
+  boundaryPointOf,
+  createNodeGeometryContext,
+  compileResolvedNode,
+  nodeReferenceViewOf,
+} from '../../src/compile/node';
 import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
 import { resolveAnchor } from '../../src/compile/reference';
 import { composeScopeTransform, projectLayoutWithTransform } from '../../src/compile/transform';
@@ -29,10 +34,10 @@ const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveSha
     labelDistance: 12,
   });
 
-  return layoutNode(resolution, {
+  return compileResolvedNode(resolution, {
     measureText,
     positionContext: createPositionResolveContext({ lookupReference: () => undefined, nodeDistance: 24 }),
-  });
+  }).layout;
 };
 
 describe('NodeLayout boundary / shapes', () => {
@@ -75,7 +80,7 @@ describe('NodeLayout boundary / shapes', () => {
     const shapes = resolveShapeRegistry();
     const layout = layoutOf({ type: 'node', id: 'a', shape: 'rectangle', position: [0, 0] }, shapes);
 
-    expect(layout.node.boundary).toBeUndefined();
+    expect(layout.boundarySource).toBeUndefined();
     expect(layout.shape.definition).toBe(shapes.get('rectangle'));
   });
 
@@ -86,7 +91,7 @@ describe('NodeLayout boundary / shapes', () => {
       shapes,
     );
 
-    expect(layout.node.boundary).toBe('circle');
+    expect(layout.boundarySource).toBe('circle');
     expect(layout.shape.definition).toBe(shapes.get('rectangle'));
   });
 
@@ -113,9 +118,9 @@ describe('NodeLayout boundary / shapes', () => {
       layout: { minimumSize: { width: 40, height: 20 } },
     });
     const toward = [100, 0] as [number, number];
-    const clipped = boundaryPointOf(layout, toward, layout.node.boundary);
+    const clipped = boundaryPointOf(layout, toward, layout.boundarySource);
 
     expect(clipped[0]).toBeGreaterThan(layout.geometry.rect.x + layout.geometry.rect.width / 2);
-    expect(resolveAnchor(layout, 'right', layout.node.boundary)).toEqual(clipped);
+    expect(resolveAnchor(layout, 'right', layout.boundarySource)).toEqual(clipped);
   });
 });

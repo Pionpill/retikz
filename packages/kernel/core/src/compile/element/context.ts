@@ -70,7 +70,7 @@ const createElementWorkspace = (options: ElementCompileOptions) => {
           );
         }
         if (entry.state === 'pending') throw pending;
-        return { layout: entry.layout, state: 'resolved' };
+        return { layout: entry.layout, irPath: entry.irPath, state: 'resolved' };
       }
       return undefined;
     },

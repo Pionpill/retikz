@@ -39,6 +39,7 @@ describe('独立元素编译', () => {
       if (node.status !== 'compiled') throw new Error('expected node');
       const scope = compileScope(scopeInput, prepared.compiled, [node.compiled.layout], context);
       if (scope.status !== 'compiled') throw new Error('expected scope');
+      expect(scope.compiled.irPath).toBe(context.irPath);
       bindings.set(id, {
         state: 'ready',
         binding: {},
@@ -59,6 +60,7 @@ describe('独立元素编译', () => {
     };
     const path = compilePath(pathInput, { ...context, namespace: { bindings } });
     if (path.status !== 'compiled') throw new Error('expected path');
+    expect(path.compiled.irPath).toBe(context.irPath);
     expect(assembleSceneCompilation({}, [path.compiled.output, ...outputs], environment).result.scene).toEqual(
       compileToScene({ type: 'scene', version: 1, children: [pathInput, ...scopes] }).scene,
     );
@@ -243,6 +245,8 @@ describe('独立元素编译', () => {
     };
     const result = compileCoordinate(input, { ...context, namespace: { bindings: new Map(), parent: ready } });
     expect(result.status).toBe('compiled');
+    if (result.status !== 'compiled') throw new Error('expected coordinate');
+    expect(result.compiled.irPath).toBe(context.irPath);
     expect(result.reads.map(read => read.state)).toEqual(['missing', 'ready']);
   });
 

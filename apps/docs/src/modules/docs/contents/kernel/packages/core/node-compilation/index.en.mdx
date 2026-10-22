@@ -21,7 +21,7 @@ The text is first split into the lines that will actually be displayed, called *
 
 <SourceLinks
   sources={[
-    { label: 'layoutNode: layout entry point', path: 'packages/kernel/core/src/compile/node/layout.ts' },
+    { label: 'compileResolvedNode: layout entry point', path: 'packages/kernel/core/src/compile/node/layout.ts' },
     { label: 'NodeResolution: layout input', path: 'packages/kernel/core/src/resolve/node/types.ts' },
     { label: 'NodeLayout: geometry and text layout', path: 'packages/kernel/core/src/compile/node/types.ts' },
   ]}
@@ -138,7 +138,7 @@ The flow below follows a plain-text node. The left side shows layout stages; the
 
 <ComponentPreview files="layout-implementation" size="xl" hideCode type="flow" />
 
-Start reading at `layoutNode`: it organizes content layout, shape constraints, and label placement, completes self-anchor placement, and returns `NodeLayout` in local coordinates. Its `geometry` contains the outer box, content center, content dimensions, and margin. Its `text` holds physical lines and baselines, while `labels` holds relative positions of attached text.
+Start reading at `compileResolvedNode`: it organizes content layout, shape constraints, and label placement, then completes self-anchor placement. The result's `layout` field holds `NodeLayout` in local coordinates, while `properties` holds complete effective properties and identity. Within layout, `geometry` contains the outer box, content center, content dimensions, and margin. `text` holds physical lines and baselines, while `labels` holds relative positions of attached text. Painting reads current properties and existing layout; text, stroke, and label properties are not split according to layout or paint update categories.
 
 Traversal then projects geometry into world space for named references. Emission turns the local layout into shape, body-text, and label primitives. Reference geometry in the namespace and local primitives in Scene have different consumers; drawing coordinates do not all need to be expanded into world coordinates beforehand.
 

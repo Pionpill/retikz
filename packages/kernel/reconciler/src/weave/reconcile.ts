@@ -374,6 +374,7 @@ export class WeaveReconciler {
         : {
             state: 'ready',
             binding: node,
+            irPath: compileOptions.irPath,
             layout: this.projectNodeReference(node, compileOptions.transforms ?? []),
           },
       path,
@@ -551,6 +552,7 @@ export class WeaveReconciler {
       publication.namespaceRegistry.replace(publication.node, {
         state: 'ready',
         binding: publication.node,
+        irPath: this.transaction.readNode(publication.node).compiled?.irPath,
         layout: publication.layout,
       });
     }
@@ -559,6 +561,7 @@ export class WeaveReconciler {
       namespaceRegistry.replace(node, {
         state: 'ready',
         binding: node,
+        irPath: state.compiled.irPath,
         layout: this.projectNodeReference(node, context.transforms ?? []),
       });
     if (child.localNamespace) this.provenance.popNamespaceFrame();

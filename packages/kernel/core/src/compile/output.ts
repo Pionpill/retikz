@@ -107,7 +107,10 @@ export const assembleSceneCompilation = <const TComposites extends ReadonlyArray
       freezeCompileArtifact({
         kind: 'nodeLayout',
         occurrence: entry.occurrence,
-        value: cloneAndFreezeJson(projectNodeLayoutObservation(entry.layout, entry.scopeChain), 'Node layout artifact'),
+        value: cloneAndFreezeJson(
+          projectNodeLayoutObservation(entry.layout, entry.scopeChain, undefined, entry.id),
+          'Node layout artifact',
+        ),
       }),
     );
   }

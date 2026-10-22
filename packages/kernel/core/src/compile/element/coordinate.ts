@@ -28,6 +28,7 @@ export const compileCoordinate = (
       () => ({ id: input.id, position }),
     );
     return Object.freeze({
+      irPath: context.irPath,
       id: input.id,
       position,
       ...(observations.length === 0 ? {} : { output: { primitives: [], resources: [], bounds: [], observations } }),

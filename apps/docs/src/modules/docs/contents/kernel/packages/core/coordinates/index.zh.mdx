@@ -302,7 +302,7 @@ $$
 
 <ComponentPreview files="coordinate-implementation" size="xxxl" hideCode type="flow" />
 
-读源码时先从 `compileScopeChild` 看进入与收尾顺序，再沿 `createPositionResolveContext` 进入 `resolvePosition` / `resolvePositionTargetWorld`。普通节点由 `layoutNode` 完成位置与布局，随后投影并注册；Scope 在子树完成后计算包络和最终变换，回填路径，最后组织分组输出。
+读源码时先从 `compileScopeChild` 看进入与收尾顺序，再沿 `createPositionResolveContext` 进入 `resolvePosition` / `resolvePositionTargetWorld`。普通节点由 `compileResolvedNode` 完成位置与布局，随后投影并注册；Scope 在子树完成后计算包络和最终变换，回填路径，最后组织分组输出。
 
 总览中的“定位与布局”“注册世界引用几何”在子树中逐元素执行，“闭合 Scope”则每层执行一次。位置 resolver 只返回几何结果，引用的可见性、注册时机和生命周期由编译遍历管理。
 

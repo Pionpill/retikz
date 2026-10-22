@@ -99,6 +99,7 @@ export const compileScope = (
             () => ({ path: clipResource.path }),
           );
     return Object.freeze({
+      irPath: context.irPath,
       envelope,
       group: Object.freeze(group),
       output: Object.freeze({

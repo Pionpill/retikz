@@ -25,8 +25,6 @@ const mkLayout = (margin: number, rotate = 0): NodeLayout => ({
     params: {},
     isShape: true,
   },
-  irPath: 'synthetic.test',
-  node: {},
 });
 
 const hypot = (p: readonly [number, number]): number => Math.hypot(p[0], p[1]);

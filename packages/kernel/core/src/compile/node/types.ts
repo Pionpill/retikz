@@ -2,11 +2,17 @@ import type { JsonObject } from '@retikz/foundation';
 import type { BoundsInsets, Position } from '@retikz/math';
 
 import type { ConnectionEnvelopeKind, PathCommand, ShapeDefinition, TextLine } from '../../contract';
-import type { CanonicalNode, CanonicalNodeLabel, NodeResolution } from '../../resolve';
+import type {
+  CanonicalNode,
+  CanonicalNodeLabel,
+  NodeResolution,
+  CanonicalFont,
+  TextLineResolution,
+} from '../../resolve';
 import type { IRFont } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { CompileWarningCode } from '../constants';
-import type { LaidLine, LowerTex, TextFont, TextMeasurer } from '../text';
+import type { InlineLineLayout, LowerTex, TextFont, TextMeasurer } from '../text';
 
 /** 节点文本布局消费的字重，沿用 IR font weight 契约 */
 export type NodeFontWeight = NonNullable<IRFont['weight']>;
@@ -69,26 +75,37 @@ export type NodeTextLayoutContext = {
   fontStyle?: TextFont['style'];
 };
 
-/** 布局消费所需的节点属性，复用解析后的样式与身份契约 */
-export type NodeLayoutProperties = Pick<
-  CanonicalNode,
-  | 'id'
-  | 'fill'
-  | 'fillOpacity'
-  | 'stroke'
-  | 'strokeOpacity'
-  | 'strokeWidth'
-  | 'dashPattern'
-  | 'dashOffset'
-  | 'cornerRadius'
-  | 'textColor'
-  | 'opacity'
-  | 'shadow'
-  | 'blendMode'
-  | 'boundary'
-  | 'meta'
-  | 'animations'
->;
+/** 保持语义完整、正文与标签已确定化的节点属性 */
+export type NodeResolvedProperties = Omit<CanonicalNode, 'text' | 'label'> & {
+  /** 包含字体和外观的作者行解析结果 */
+  text?: Array<TextLineResolution>;
+  /** 按声明顺序排列的标签解析结果 */
+  label?: Array<NodeLabelResolution>;
+};
+
+/** 字体及行内内容已确定化的标签属性 */
+export type NodeLabelResolution = Omit<CanonicalNodeLabel, 'text' | 'font'> & {
+  /** 已解析的正文内容 */
+  text: TextLineResolution;
+  /** 完成缩放后的有效字体 */
+  font: CanonicalFont;
+};
+
+/** 分别持有有效属性与计算布局的节点编译状态 */
+export type NodeCompilation = {
+  /** 元素在 IR 树中的来源路径 */
+  irPath: string;
+  /** 当前有效语义属性 */
+  properties: NodeResolvedProperties;
+  /** 已计算的几何与排版结果 */
+  layout: NodeLayout;
+};
+
+/** 物理行排版与其作者行的对应关系 */
+export type NodeTextLineLayout = Omit<TextLine, 'fill' | 'opacity'> & {
+  /** 折行前的作者行索引，供绘制阶段读取当前外观 */
+  sourceLineIndex: number;
+};
 
 /** 节点测量和定位产生的几何结果 */
 export type NodeLayoutGeometry = {
@@ -113,16 +130,14 @@ export type NodeTextLayout = {
   /** 物理行相对内容顶部的基线偏移 */
   baselineOffsets?: Array<number>;
 } & (
-  | { kind: 'plain'; lines: Array<TextLine> }
-  | { kind: 'inline'; lines: Array<{ laid: LaidLine; baselineOffset: number }> }
+  | { kind: 'plain'; lines: Array<NodeTextLineLayout> }
+  | { kind: 'inline'; lines: Array<{ laid: InlineLineLayout; baselineOffset: number }> }
 );
 
 /** 节点完成测量和定位后的消费结果 */
 export type NodeLayout = {
-  /** 构建布局的 IR 路径 */
-  irPath: string;
-  /** 保留的身份和视觉属性 */
-  node: NodeLayoutProperties;
+  /** 用于匹配已解析连接面的作者配置 */
+  boundarySource?: CanonicalNode['boundary'];
   /** 已绑定的形状定义和参数 */
   shape: NodeResolution['shape'];
   /** 已绑定的连接面定义和参数 */
@@ -137,79 +152,16 @@ export type NodeLayout = {
 
 /** 已完成内容与视觉盒测量、尚未绑定 Node rect 的附属标签 */
 export type MeasuredNodeLabel = {
-  /** 纯文本内容 */
-  text: string;
-  /** 含公式时的混排行布局 */
-  laid?: LaidLine;
-  /** label 视觉盒沿附着切线的对齐方式 */
-  align: CanonicalNodeLabel['align'];
-  /** 8 方向枚举、center、数字角度，或 box-like boundary 上的归一位置 */
-  position: CanonicalNodeLabel['position'];
-  /** label 相对附着点向外或向内偏移 */
-  placement: CanonicalNodeLabel['placement'];
-  /** Node border 到 label 视觉盒的净距 */
-  distance: number;
-  /**
-   * label 文本颜色
-   * @default 'currentColor'
-   */
-  textColor?: string;
-  /**
-   * label 整体不透明度
-   * @default 1
-   */
-  opacity?: number;
-  /** 标签文本测量与输出使用的字号 */
-  fontSize: number;
-  /**
-   * label 字体族
-   * @default 'sans-serif'
-   */
-  fontFamily?: string;
-  /**
-   * label 字重
-   * @default 'normal'
-   */
-  fontWeight?: NodeFontWeight;
-  /**
-   * label 字形
-   * @default 'normal'
-   */
-  fontStyle?: 'normal' | 'italic' | 'oblique';
-  /**
-   * label 文本自旋模式
-   * @default 'none'
-   */
-  rotate?: 'none' | 'radial' | 'tangent' | number;
-  /**
-   * 自旋后若文字倒置则翻 180°
-   * @default false
-   */
-  keepUpright?: boolean;
-  /** label 文本视觉盒宽度 */
+  /** 混排计算结果 */
+  laid?: InlineLineLayout;
+  /** 测量宽度 */
   measuredWidth: number;
-  /** label 文本视觉盒高度 */
+  /** 测量高度 */
   measuredHeight: number;
-  /** label 规范化后的基线上伸 */
+  /** 基线上伸 */
   ascent: number;
-  /** label 规范化后的基线下伸 */
+  /** 基线下伸 */
   descent: number;
-  /**
-   * pin 引线配置
-   * @default false
-   */
-  pin?:
-    | boolean
-    | {
-        /** 标注引线的描边颜色 */
-        stroke?: string;
-        /** 标注引线的描边宽度 */
-        strokeWidth?: number;
-        /** 引线交替绘制与留白的长度序列 */
-        dashPattern?: Array<number>;
-        /** 引线虚线序列的起始偏移 */
-        dashOffset?: number;
-      };
 };
 
 /** 节点附属标签的最终局部布局 */

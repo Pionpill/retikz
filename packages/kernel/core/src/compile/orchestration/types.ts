@@ -472,6 +472,8 @@ export type LayoutBoundsContribution = {
 
 /** 等完整 Scope chain 冻结后再发送的节点布局观测记录 */
 export type PendingNodeLayoutObservation = {
+  /** 观察对象身份，独立于可复用布局 */
+  id?: string;
   /** 节点自身局部 layout */
   layout: NodeLayout;
   /** 从节点所在 frame 到 world 的最终只读 chain；Scope 收尾时替换链引用 */

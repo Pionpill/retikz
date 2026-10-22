@@ -41,4 +41,4 @@ export type { SceneCompilationMetadata } from './output';
 
 export { createCompileObservationRuntime, createCompileProvenanceTracker } from './orchestration';
 export type { CompileObservationRuntime, CompileProvenanceTracker } from './orchestration';
-export type { NodeLayout } from './node';
+export type { NodeCompilation, NodeLabelResolution, NodeLayout, NodeResolvedProperties } from './node';

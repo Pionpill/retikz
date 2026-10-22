@@ -59,6 +59,7 @@ export const compilePath = (input: IRPathBase, context: PathCompileContext): Ele
       },
     );
     return Object.freeze({
+      irPath: context.irPath,
       output: Object.freeze({
         zIndex: input.zIndex,
         primitives: result?.primitives ?? [],

@@ -59,7 +59,7 @@ const resolveBoundaryOf = (
   warn?: (code: string, message: string) => void,
   state?: NodeGeometryState,
 ) => {
-  const layout = 'node' in input ? nodeReferenceViewOf(input) : input;
+  const layout = 'geometry' in input ? nodeReferenceViewOf(input) : input;
   const resolution =
     boundaryResolution ??
     (boundary === undefined || boundary === 'shape'
@@ -93,7 +93,7 @@ export const boundaryPointOf = (
   warn?: (code: string, message: string) => void,
   state?: NodeGeometryState,
 ): Position => {
-  const layout = 'node' in input ? nodeReferenceViewOf(input) : input;
+  const layout = 'geometry' in input ? nodeReferenceViewOf(input) : input;
   const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, warn, state);
   const raw = def.boundaryPoint(inflateRect(rect, layout.margin), toward, params);
   return snapshotProviderPosition(`Boundary '${boundaryKey(boundary)}' boundaryPoint`, raw);
@@ -108,7 +108,7 @@ export const clipNodePolyline = (
   warn?: (code: string, message: string) => void,
   state?: NodeGeometryState,
 ): Array<Position> => {
-  const layout = 'node' in input ? nodeReferenceViewOf(input) : input;
+  const layout = 'geometry' in input ? nodeReferenceViewOf(input) : input;
   const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, warn, state);
   const outer = inflateRect(rect, layout.margin);
   const center: Position = [outer.x, outer.y];
@@ -149,7 +149,7 @@ export const anchorOf = (
   boundaryResolution?: BoundaryReferenceResolution,
   state?: NodeGeometryState,
 ): Position => {
-  const layout = 'node' in input ? nodeReferenceViewOf(input) : input;
+  const layout = 'geometry' in input ? nodeReferenceViewOf(input) : input;
   if (isAnchor(name)) {
     if (name === CenterAnchor.Center) {
       const own = snapshotOptionalProviderPosition(
@@ -215,7 +215,7 @@ export const angleBoundaryOf = (
   boundaryResolution?: BoundaryReferenceResolution,
   state?: NodeGeometryState,
 ): Position => {
-  const layout = 'node' in input ? nodeReferenceViewOf(input) : input;
+  const layout = 'geometry' in input ? nodeReferenceViewOf(input) : input;
   const rad = angleDeg * DEG_TO_RAD;
   const lx = Math.cos(rad);
   const ly = Math.sin(rad);

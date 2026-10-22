@@ -178,10 +178,11 @@ export type NodeResolution = Readonly<{
 
 <DocTab value="node-layout" label="NodeLayout">
 
+`irPath` 属于编译结果顶层的来源信息，与节点的 `properties`、`layout` 平级。Node、Coordinate、Path 和 Scope 的编译结果都在顶层保存该路径，布局对象不持有来源位置。
+
 ```ts
 export type NodeLayout = {
-  irPath: string;
-  node: NodeLayoutProperties;
+  boundarySource?: CanonicalNode['boundary'];
   shape: NodeResolution['shape'];
   boundary: NodeResolution['boundary'];
   geometry: NodeLayoutGeometry;
@@ -196,25 +197,21 @@ export type NodeLayoutGeometry = {
   contentSize: { width: number; height: number };
 };
 
-export type NodeLayoutProperties = Pick<
-  CanonicalNode,
-  | 'id'
-  | 'fill'
-  | 'fillOpacity'
-  | 'stroke'
-  | 'strokeOpacity'
-  | 'strokeWidth'
-  | 'dashPattern'
-  | 'dashOffset'
-  | 'cornerRadius'
-  | 'textColor'
-  | 'opacity'
-  | 'shadow'
-  | 'blendMode'
-  | 'boundary'
-  | 'meta'
-  | 'animations'
->;
+export type NodeCompilation = {
+  irPath: string;
+  properties: NodeResolvedProperties;
+  layout: NodeLayout;
+};
+
+export type NodeResolvedProperties = Omit<CanonicalNode, 'text' | 'label'> & {
+  text?: Array<TextLineResolution>;
+  label?: Array<NodeLabelResolution>;
+};
+
+export type NodeLabelResolution = Omit<CanonicalNodeLabel, 'text' | 'font'> & {
+  text: TextLineResolution;
+  font: CanonicalFont;
+};
 
 export type NodeTextLayout = {
   font: TextFont;
@@ -222,8 +219,8 @@ export type NodeTextLayout = {
   lineHeight: number;
   baselineOffsets?: Array<number>;
 } & (
-  | { kind: 'plain'; lines: Array<TextLine> }
-  | { kind: 'inline'; lines: Array<{ laid: LaidLine; baselineOffset: number }> }
+  | { kind: 'plain'; lines: Array<NodeTextLineLayout> }
+  | { kind: 'inline'; lines: Array<{ laid: InlineLineLayout; baselineOffset: number }> }
 );
 ```
 
@@ -231,7 +228,7 @@ export type NodeTextLayout = {
 
 </DocTabs>
 
-`resolveNode` 先确定有效配置和能力绑定，`layoutNode` 再消费度量与位置上下文，确定正文排版、节点尺寸及位置。`emitNodePrimitives` 根据布局生成矩形和文字等 Scene 图元。解析处理配置含义，布局处理几何，生成阶段把确定的结果写成渲染器可消费的结构。
+`resolveNode` 先确定有效配置和能力绑定，`compileResolvedNode` 再确定正文与标签的文字属性，计算排版、节点尺寸及位置。返回的 `properties` 保存完整有效属性及身份，`layout` 保存计算后的几何与排版。描边宽度、颜色和虚线保持在同一属性来源；标签引线也保留完整配置。`emitNodePrimitives` 消费布局与当前属性生成 Scene 图元；普通文本通过作者行索引读取当前行样式，改色时无需重新折行。这里的数据结构不代替变化影响判断，Weave 的分类调度仍需要独立的能力契约。
 
 <ComponentPreview files="compilation-node" size="lg" hideCode type="illustration" />
 

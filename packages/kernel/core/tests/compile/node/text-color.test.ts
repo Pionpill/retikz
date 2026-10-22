@@ -30,7 +30,7 @@ const resolvedTextColor = (
   const [text] = textPrimitives(
     sceneOf({
       ...node,
-      style: { fill, textColor: AUTO_CONTRAST, ...node.style },
+      style: { ...(fill === undefined ? {} : { fill }), textColor: AUTO_CONTRAST, ...node.style },
     }),
     warnings,
   );

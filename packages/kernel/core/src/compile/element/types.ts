@@ -11,7 +11,7 @@ import type { EffectiveScopeDefaults } from '../../resolve';
 import type { IRPosition, ResolvedDropShadow } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { CompileEnvironment } from '../environment';
-import type { NodeLayout } from '../node';
+import type { NodeCompilation, NodeLayout } from '../node';
 import type {
   CompileObservationContribution,
   CompileObservationRuntime,
@@ -30,7 +30,13 @@ export type ElementCompileContext = Readonly<{
 /** 一个版本中的名称绑定；对象身份由调用者映射到其节点 */
 export type CompileBinding =
   | Readonly<{ state: 'pending'; binding: object }>
-  | Readonly<{ state: 'ready'; binding: object; layout: NodeLayout }>;
+  | Readonly<{
+      state: 'ready';
+      binding: object;
+      /** 被引用元素的来源路径 */
+      irPath?: string;
+      layout: NodeLayout;
+    }>;
 
 /** 声明位置可见的名称空间；父引用形成 inside-out 查找链 */
 export type CompileNamespace = Readonly<{
@@ -103,15 +109,17 @@ export type CompileOutput = Readonly<{
 }>;
 
 /** 节点完整编译状态，布局与绘制使用同一次解析结果 */
-export type CompiledNode = Readonly<{
-  /** 节点局部布局 */
-  layout: NodeLayout;
-  /** 本地绘制输出 */
-  output: CompileOutput;
-}>;
+export type CompiledNode = Readonly<
+  NodeCompilation & {
+    /** 本地绘制输出 */
+    output: CompileOutput;
+  }
+>;
 
 /** 坐标编译状态，不创建虚构的可见图元 */
 export type CompiledCoordinate = Readonly<{
+  /** 元素在 IR 树中的来源路径 */
+  irPath: string;
   /** 供名称登记的作者 id */
   id: string;
   /** 本地位置 */
@@ -122,6 +130,8 @@ export type CompiledCoordinate = Readonly<{
 
 /** Path 完整编译状态，自定义 kind 不要求具有单一中心线 */
 export type CompiledPath = Readonly<{
+  /** 元素在 IR 树中的来源路径 */
+  irPath: string;
   /** 完成宿主处理后的本地输出，空输出也是合法完成状态 */
   output: CompileOutput;
 }>;
@@ -138,6 +148,8 @@ export type ScopeCompilationPreparation = Readonly<{
 
 /** Scope 编译状态，仅持有自身包络、输出与组装属性 */
 export type CompiledScope = Readonly<{
+  /** 元素在 IR 树中的来源路径 */
+  irPath: string;
   /** 局部内容包络，包含空内容时的既有退化布局 */
   envelope: NodeLayout;
   /** Scope 输出的包装属性，不包含 children */

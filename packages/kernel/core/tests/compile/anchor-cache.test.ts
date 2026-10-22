@@ -39,8 +39,6 @@ const makeLayout = (
       params: shape === 'circle' ? { circumscribe: 'equal' } : shape === 'diamond' ? { sides: 4, rotate: 0 } : {},
       isShape: true,
     },
-    irPath: 'synthetic.test',
-    node: {},
   };
 };
 
@@ -218,8 +216,6 @@ describe('resolveEdgePoint 边上比例点', () => {
         contentSize: { width: 0, height: 0 },
       },
       boundary: { name: noEdge.name, definition: noEdge, params: {}, isShape: true },
-      irPath: 'synthetic.test',
-      node: {},
     };
 
     expect(() => resolveEdgePoint(layout, 'top', 0.5)).toThrow(/does not support side anchors/);

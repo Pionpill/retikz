@@ -183,10 +183,11 @@ export type NodeResolution = Readonly<{
 
 <DocTab value="node-layout" label="NodeLayout">
 
+`irPath` records source provenance at the top level of the compilation result, alongside the node's `properties` and `layout` fields. Node, Coordinate, Path, and Scope compilation results all keep this path at the top level; layout objects do not carry source locations.
+
 ```ts
 export type NodeLayout = {
-  irPath: string;
-  node: NodeLayoutProperties;
+  boundarySource?: CanonicalNode['boundary'];
   shape: NodeResolution['shape'];
   boundary: NodeResolution['boundary'];
   geometry: NodeLayoutGeometry;
@@ -201,25 +202,21 @@ export type NodeLayoutGeometry = {
   contentSize: { width: number; height: number };
 };
 
-export type NodeLayoutProperties = Pick<
-  CanonicalNode,
-  | 'id'
-  | 'fill'
-  | 'fillOpacity'
-  | 'stroke'
-  | 'strokeOpacity'
-  | 'strokeWidth'
-  | 'dashPattern'
-  | 'dashOffset'
-  | 'cornerRadius'
-  | 'textColor'
-  | 'opacity'
-  | 'shadow'
-  | 'blendMode'
-  | 'boundary'
-  | 'meta'
-  | 'animations'
->;
+export type NodeCompilation = {
+  irPath: string;
+  properties: NodeResolvedProperties;
+  layout: NodeLayout;
+};
+
+export type NodeResolvedProperties = Omit<CanonicalNode, 'text' | 'label'> & {
+  text?: Array<TextLineResolution>;
+  label?: Array<NodeLabelResolution>;
+};
+
+export type NodeLabelResolution = Omit<CanonicalNodeLabel, 'text' | 'font'> & {
+  text: TextLineResolution;
+  font: CanonicalFont;
+};
 
 export type NodeTextLayout = {
   font: TextFont;
@@ -227,8 +224,8 @@ export type NodeTextLayout = {
   lineHeight: number;
   baselineOffsets?: Array<number>;
 } & (
-  | { kind: 'plain'; lines: Array<TextLine> }
-  | { kind: 'inline'; lines: Array<{ laid: LaidLine; baselineOffset: number }> }
+  | { kind: 'plain'; lines: Array<NodeTextLineLayout> }
+  | { kind: 'inline'; lines: Array<{ laid: InlineLineLayout; baselineOffset: number }> }
 );
 ```
 
@@ -236,7 +233,7 @@ export type NodeTextLayout = {
 
 </DocTabs>
 
-`resolveNode` determines effective configuration and capability bindings. `layoutNode` consumes measurement and position context to lay out text and determine the node's size and position. `emitNodePrimitives` turns that layout into Scene primitives such as rectangles and text. Resolution interprets configuration, layout computes geometry, and emission writes structures that a renderer can consume.
+`resolveNode` determines effective configuration and capability bindings. `compileResolvedNode` then prepares body and label text properties and computes typesetting, node size, and position. The returned `properties` field holds complete effective properties and identity, while `layout` holds computed geometry and typesetting. Stroke width, color, and dashes share one property source; label pins also retain their complete configuration. `emitNodePrimitives` consumes layout and current properties to produce Scene primitives. Physical text lines retain their authored-line index so painting can read current line styles without wrapping again. This structure does not replace change-impact analysis; Weave still needs a separate capability contract for classified scheduling.
 
 <ComponentPreview files="compilation-node" size="lg" hideCode type="illustration" />
 

@@ -1,4 +1,5 @@
 import type { GroupPrim, ResolvedShapeStyle, ScenePrimitive, TextLine } from '../../contract';
+import type { CanonicalNode } from '../../resolve';
 import {
   createLayoutProbeRecoverableError,
   isFatalProbeError,
@@ -10,15 +11,37 @@ import type { Rect } from '../../shared/geometry';
 import type { PaintResolver } from '../resource';
 import { validateMarkerPrimitives } from '../resource';
 import { validateScenePrimitives } from '../scene-primitive';
-import { toAlphabeticBaselineY } from '../text';
+import { emitInlineLine, inlineRunPaintsOf, toAlphabeticBaselineY } from '../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label/geometry';
-import type { NodeLabelLayout, NodeLayout } from './types';
+import type {
+  NodeCompilation,
+  NodeLabelLayout,
+  NodeLabelResolution,
+  NodeLayout,
+  NodeResolvedProperties,
+} from './types';
+
+/** 节点与 Scope 外框共享的有效形状样式 */
+type NodeShapeProperties = Pick<
+  CanonicalNode,
+  | 'fill'
+  | 'fillOpacity'
+  | 'stroke'
+  | 'strokeOpacity'
+  | 'strokeWidth'
+  | 'dashPattern'
+  | 'dashOffset'
+  | 'cornerRadius'
+  | 'opacity'
+  | 'shadow'
+  | 'blendMode'
+>;
 
 type Round = (n: number) => number;
 
 type NodeBaselineYs = Readonly<{
-  /** 传给 TextPrim / LaidLine.emit 的原始 baseline y */
+  /** 传给 TextPrim / emitInlineLine 的原始 baseline y */
   emitted: Array<number>;
   /** 与已 emit 的物理行对应、已按 Scene precision 圆整的 baseline y */
   observed: Array<number>;
@@ -58,23 +81,24 @@ export const nodeBaselineYsOf = (layout: NodeLayout, round: Round): NodeBaseline
 };
 
 /** 从 NodeLayout 收敛 shape emit 所需的视觉样式 */
-const toShapeStyle = (layout: NodeLayout, resolvePaint: PaintResolver): ResolvedShapeStyle => ({
-  fill: resolvePaint(layout.node.fill),
-  fillOpacity: layout.node.fillOpacity,
-  stroke: resolvePaint(layout.node.stroke) ?? 'currentColor',
-  strokeOpacity: layout.node.strokeOpacity,
-  strokeWidth: layout.node.strokeWidth,
-  dashPattern: layout.node.dashPattern,
-  dashOffset: layout.node.dashOffset,
-  cornerRadius: layout.node.cornerRadius,
-  opacity: layout.node.opacity,
-  shadow: layout.node.shadow,
-  blendMode: layout.node.blendMode,
+const toShapeStyle = (properties: NodeShapeProperties, resolvePaint: PaintResolver): ResolvedShapeStyle => ({
+  fill: resolvePaint(properties.fill),
+  fillOpacity: properties.fillOpacity,
+  stroke: resolvePaint(properties.stroke) ?? 'currentColor',
+  strokeOpacity: properties.strokeOpacity,
+  strokeWidth: properties.strokeWidth,
+  dashPattern: properties.dashPattern,
+  dashOffset: properties.dashOffset,
+  cornerRadius: properties.cornerRadius,
+  opacity: properties.opacity,
+  shadow: properties.shadow,
+  blendMode: properties.blendMode,
 });
 
 /** 发出节点 shape 主体图元 */
-const emitNodeShapePrimitives = (
+export const emitNodeShapePrimitives = (
   layout: NodeLayout,
+  properties: NodeShapeProperties,
   round: Round,
   resolvePaint: PaintResolver,
 ): Array<ScenePrimitive> => {
@@ -84,7 +108,7 @@ const emitNodeShapePrimitives = (
   try {
     emitted = layout.shape.definition.emit(
       axisAlignedRect,
-      toShapeStyle(layout, resolvePaint),
+      toShapeStyle(properties, resolvePaint),
       round,
       layout.shape.params,
     );
@@ -101,7 +125,11 @@ const emitNodeShapePrimitives = (
 };
 
 /** 发出节点正文图元 */
-const emitNodeContentPrimitives = (layout: NodeLayout, round: Round): Array<ScenePrimitive> => {
+const emitNodeContentPrimitives = (
+  layout: NodeLayout,
+  properties: NodeResolvedProperties,
+  round: Round,
+): Array<ScenePrimitive> => {
   const text = layout.text;
   if (text === undefined) return [];
   if (text.kind === 'inline') {
@@ -115,7 +143,17 @@ const emitNodeContentPrimitives = (layout: NodeLayout, round: Round): Array<Scen
           : text.align === 'end'
             ? layout.geometry.contentCenter[0] + halfBlockW - laid.width
             : layout.geometry.contentCenter[0] - laid.width / 2;
-      return laid.emit(originX, baselineYs[index], round);
+      return emitInlineLine(
+        laid,
+        {
+          color: properties.textColor,
+          opacity: properties.opacity,
+          runs: inlineRunPaintsOf(properties.text![index].runs),
+        },
+        originX,
+        baselineYs[index],
+        round,
+      );
     });
   }
 
@@ -137,27 +175,39 @@ const emitNodeContentPrimitives = (layout: NodeLayout, round: Round): Array<Scen
     align: text.align,
     baseline: 'alphabetic',
     lineHeight,
-    fill: layout.node.textColor ?? 'currentColor',
-    opacity: layout.node.opacity,
+    fill: properties.textColor ?? 'currentColor',
+    opacity: properties.opacity,
     measuredWidth: round(layout.geometry.contentSize.width),
     measuredHeight: round(measuredHeight),
   });
 
-  return [textPrimitive(text.lines, baselineYs[0], layout.geometry.contentSize.height)];
+  return [
+    textPrimitive(
+      text.lines.map(({ sourceLineIndex, ...line }) => ({
+        ...line,
+        fill: properties.text![sourceLineIndex].style?.fill,
+        opacity: properties.text![sourceLineIndex].style?.opacity,
+      })),
+      baselineYs[0],
+      layout.geometry.contentSize.height,
+    ),
+  ];
 };
 
 /** 发出 label pin 引线图元 */
 const emitNodeLabelPinPrimitive = (
   layout: NodeLayout,
   label: NodeLabelLayout,
+  labelProperties: NodeLabelResolution,
+  properties: NodeResolvedProperties,
   labelCenterPosition: [number, number],
   round: Round,
 ): ScenePrimitive | undefined => {
-  if (!label.pin) return undefined;
+  if (!labelProperties.pin) return undefined;
 
-  const style = typeof label.pin === 'object' ? label.pin : undefined;
+  const style = typeof labelProperties.pin === 'object' ? labelProperties.pin : undefined;
   const [lx, ly] = labelCenterPosition;
-  const [bx, by] = labelBorderPoint(layout, label);
+  const [bx, by] = labelBorderPoint(layout, labelProperties);
   const [nx, ny] = labelBoxEdgeToward({
     center: [lx, ly],
     border: [bx, by],
@@ -172,11 +222,11 @@ const emitNodeLabelPinPrimitive = (
       { kind: 'move', to: [round(bx), round(by)] },
       { kind: 'line', to: [round(nx), round(ny)] },
     ],
-    stroke: style?.stroke ?? label.textColor ?? 'currentColor',
+    stroke: style?.stroke ?? labelProperties.textColor ?? 'currentColor',
     strokeWidth: style?.strokeWidth ?? 1,
     dashPattern: style?.dashPattern,
     dashOffset: style?.dashOffset,
-    opacity: label.opacity ?? layout.node.opacity,
+    opacity: labelProperties.opacity ?? properties.opacity,
   };
 };
 
@@ -184,6 +234,8 @@ const emitNodeLabelPinPrimitive = (
 const emitNodeLabelContentPrimitive = (
   layout: NodeLayout,
   label: NodeLabelLayout,
+  labelProperties: NodeLabelResolution,
+  properties: NodeResolvedProperties,
   labelCenterPosition: [number, number],
   round: Round,
 ): ScenePrimitive => {
@@ -193,39 +245,72 @@ const emitNodeLabelContentPrimitive = (
     const originX = lx - laid.width / 2;
     const baselineY = ly + (laid.ascent - laid.descent) / 2;
 
-    return { type: 'group', children: laid.emit(originX, baselineY, round) };
+    return {
+      type: 'group',
+      children: emitInlineLine(
+        laid,
+        {
+          color: labelProperties.textColor,
+          opacity: labelProperties.opacity,
+          runs: inlineRunPaintsOf(labelProperties.text.runs),
+        },
+        originX,
+        baselineY,
+        round,
+      ),
+    };
   }
 
-  const labelLineHeight = round(label.fontSize * DEFAULT_LINE_HEIGHT_FACTOR);
+  const labelLineHeight = round(labelProperties.font.size * DEFAULT_LINE_HEIGHT_FACTOR);
 
   return {
     type: 'text',
     x: round(lx),
     y: round(ly + (label.ascent - label.descent) / 2),
-    lines: [{ text: label.text }],
-    fontSize: label.fontSize,
-    fontFamily: label.fontFamily,
-    fontWeight: label.fontWeight,
-    fontStyle: label.fontStyle,
+    lines: [{ text: labelProperties.text.plainText }],
+    fontSize: labelProperties.font.size,
+    fontFamily: labelProperties.font.family,
+    fontWeight: labelProperties.font.weight,
+    fontStyle: labelProperties.font.style,
     align: 'middle',
     baseline: 'alphabetic',
     lineHeight: labelLineHeight,
-    fill: label.textColor ?? 'currentColor',
-    opacity: label.opacity ?? layout.node.opacity,
+    fill: labelProperties.textColor ?? 'currentColor',
+    opacity: labelProperties.opacity ?? properties.opacity,
     measuredWidth: round(label.measuredWidth),
     measuredHeight: round(label.measuredHeight),
   };
 };
 
 /** 发出节点附属 label 图元 */
-const emitNodeLabelPrimitives = (layout: NodeLayout, label: NodeLabelLayout, round: Round): Array<ScenePrimitive> => {
+const emitNodeLabelPrimitives = (
+  layout: NodeLayout,
+  label: NodeLabelLayout,
+  labelProperties: NodeLabelResolution,
+  properties: NodeResolvedProperties,
+  round: Round,
+): Array<ScenePrimitive> => {
   const labelCenterPosition = labelCenter(layout, label);
   const [lx, ly] = labelCenterPosition;
   const primitives: Array<ScenePrimitive> = [];
-  const pinPrimitive = emitNodeLabelPinPrimitive(layout, label, labelCenterPosition, round);
+  const pinPrimitive = emitNodeLabelPinPrimitive(
+    layout,
+    label,
+    labelProperties,
+    properties,
+    labelCenterPosition,
+    round,
+  );
   if (pinPrimitive !== undefined) primitives.push(pinPrimitive);
 
-  const labelContent = emitNodeLabelContentPrimitive(layout, label, labelCenterPosition, round);
+  const labelContent = emitNodeLabelContentPrimitive(
+    layout,
+    label,
+    labelProperties,
+    properties,
+    labelCenterPosition,
+    round,
+  );
   const deg = label.rotateDeg;
   primitives.push(
     deg === 0
@@ -241,26 +326,34 @@ const emitNodeLabelPrimitives = (layout: NodeLayout, label: NodeLabelLayout, rou
 };
 
 /** 把节点标识和元数据写到纯几何节点的 shape 图元 */
-const stampNodeShapePrimitives = (layout: NodeLayout, primitives: Array<ScenePrimitive>): void => {
-  if (layout.node.id !== undefined) {
-    for (const prim of primitives) prim.id = layout.node.id;
+const stampNodeShapePrimitives = (
+  metadata: Pick<CanonicalNode, 'id' | 'meta' | 'animations'>,
+  primitives: Array<ScenePrimitive>,
+): void => {
+  if (metadata.id !== undefined) {
+    for (const prim of primitives) prim.id = metadata.id;
   }
 
-  if (layout.node.meta !== undefined) {
-    for (const prim of primitives) prim.meta = layout.node.meta;
+  if (metadata.meta !== undefined) {
+    for (const prim of primitives) prim.meta = metadata.meta;
   }
 
-  if (layout.node.animations !== undefined) {
-    for (const prim of primitives) prim.animations = layout.node.animations;
+  if (metadata.animations !== undefined) {
+    for (const prim of primitives) prim.animations = metadata.animations;
   }
 };
 
 /** 包装带文本或旋转的节点 group */
-const wrapNodeGroupPrimitive = (layout: NodeLayout, children: Array<ScenePrimitive>, round: Round): GroupPrim => {
+const wrapNodeGroupPrimitive = (
+  layout: NodeLayout,
+  metadata: Pick<CanonicalNode, 'id' | 'meta' | 'animations'>,
+  children: Array<ScenePrimitive>,
+  round: Round,
+): GroupPrim => {
   const group: GroupPrim = { type: 'group', children };
-  if (layout.node.id !== undefined) group.id = layout.node.id;
-  if (layout.node.meta !== undefined) group.meta = layout.node.meta;
-  if (layout.node.animations !== undefined) group.animations = layout.node.animations;
+  if (metadata.id !== undefined) group.id = metadata.id;
+  if (metadata.meta !== undefined) group.meta = metadata.meta;
+  if (metadata.animations !== undefined) group.animations = metadata.animations;
   if ((layout.geometry.rect.rotate ?? 0) !== 0) {
     group.transforms = [
       {
@@ -280,22 +373,25 @@ const wrapNodeGroupPrimitive = (layout: NodeLayout, children: Array<ScenePrimiti
  * @description shape 主体走 `shapeDef.emit`；文本和 label 追加为附属 primitive
  */
 export const emitNodePrimitives = (
-  layout: NodeLayout,
+  compilation: NodeCompilation,
   round: Round,
   resolvePaint: PaintResolver,
 ): Array<ScenePrimitive> => {
-  const shapePrimitives = emitNodeShapePrimitives(layout, round, resolvePaint);
+  const { layout, properties } = compilation;
+  const shapePrimitives = emitNodeShapePrimitives(layout, properties, round, resolvePaint);
   const inner: Array<ScenePrimitive> = [
     ...shapePrimitives,
-    ...emitNodeContentPrimitives(layout, round),
-    ...(layout.labels?.flatMap(label => emitNodeLabelPrimitives(layout, label, round)) ?? []),
+    ...emitNodeContentPrimitives(layout, properties, round),
+    ...(layout.labels?.flatMap((label, index) =>
+      emitNodeLabelPrimitives(layout, label, properties.label![index], properties, round),
+    ) ?? []),
   ];
 
   const needsGroup = (layout.geometry.rect.rotate ?? 0) !== 0 || layout.text !== undefined;
   if (!needsGroup) {
-    stampNodeShapePrimitives(layout, shapePrimitives);
+    stampNodeShapePrimitives(properties, shapePrimitives);
     return inner;
   }
 
-  return [wrapNodeGroupPrimitive(layout, inner, round)];
+  return [wrapNodeGroupPrimitive(layout, properties, inner, round)];
 };

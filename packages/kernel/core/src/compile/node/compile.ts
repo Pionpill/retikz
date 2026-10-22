@@ -10,8 +10,8 @@ import { filterAnimations } from '../orchestration';
 import type { EffectiveScopeTransform } from '../transform';
 import type { CompileWarningInput } from '../warning';
 import type { NodeGeometryContext } from './geometry-context';
-import { layoutNode } from './layout';
-import type { NodeLayout } from './types';
+import { compileResolvedNode } from './layout';
+import type { NodeCompilation } from './types';
 
 /** 节点解析与布局所需的显式调用环境 */
 export type NodeLayoutCompileContext = Pick<
@@ -37,7 +37,11 @@ export type NodeLayoutCompileContext = Pick<
 };
 
 /** 从自身输入完成节点解析、测量和定位；不登记名称或写入外部输出容器 */
-export const compileNodeLayout = (child: IRNode, nodeIrPath: string, context: NodeLayoutCompileContext): NodeLayout => {
+export const compileNodeState = (
+  child: IRNode,
+  nodeIrPath: string,
+  context: NodeLayoutCompileContext,
+): NodeCompilation => {
   const scopeChain = context.scopeChain;
   const warn = (code: CompileWarningCode, message: string): void => context.onWarn({ code, message, path: nodeIrPath });
   const resolvedNode = resolveNode(child, {
@@ -60,7 +64,7 @@ export const compileNodeLayout = (child: IRNode, nodeIrPath: string, context: No
     }),
   };
 
-  return layoutNode(
+  return compileResolvedNode(
     { ...resolvedNode, node: canonicalNode },
     {
       measureText: context.measureText,

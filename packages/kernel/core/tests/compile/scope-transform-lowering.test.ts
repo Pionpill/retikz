@@ -17,7 +17,6 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
 
   for (const [id, [x, y]] of entries) {
     const layout: NodeLayout = {
-      node: { id },
       shape: { name: 'rectangle', definition: BUILTIN_SHAPES.rectangle, params: {} },
       geometry: {
         rect: { x, y, width: 0, height: 0, rotate: 0 },
@@ -31,7 +30,6 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
         params: {},
         isShape: true,
       },
-      irPath: 'synthetic.test',
     };
     stack.register(id, layout);
   }
@@ -40,7 +38,6 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
 };
 
 const layoutForProjection = (): NodeLayout => ({
-  node: { id: 'A' },
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.rectangle, params: {} },
   geometry: {
     rect: { x: 10, y: 20, width: 30, height: 40, rotate: 0 },
@@ -54,7 +51,6 @@ const layoutForProjection = (): NodeLayout => ({
     params: {},
     isShape: true,
   },
-  irPath: 'synthetic.test',
 });
 
 type LowerOptions = Omit<Parameters<typeof lowerScopeTransforms>[1], 'positionContext'> &
@@ -70,7 +66,11 @@ const lower = (
   options: LowerOptions = {},
 ) => {
   const { nodeDistance = 24, scopeChain, resolveBetweenGlobal, ...rest } = options;
-  const base = createPositionResolveContext({ lookupReference: id => namespaceStack.lookupReference(id), nodeDistance, scopeChain });
+  const base = createPositionResolveContext({
+    lookupReference: id => namespaceStack.lookupReference(id),
+    nodeDistance,
+    scopeChain,
+  });
   const positionContext = { ...base, resolveBetweenWorld: resolveBetweenGlobal };
 
   return lowerScopeTransforms(transforms, { positionContext, ...rest });

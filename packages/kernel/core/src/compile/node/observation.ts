@@ -246,7 +246,7 @@ export const projectNodeOwnerOutput = (
     visualDef: layout.shape.definition,
     visualRect: observationRect,
     visualParams: shapeParams,
-    irPath: layout.irPath,
+    irPath: state?.irPath,
     connectionEnvelopeCache:
       state?.connectionEnvelopeCache === undefined ? undefined : new Map(state.connectionEnvelopeCache),
     connectionEnvelopeWarnings:

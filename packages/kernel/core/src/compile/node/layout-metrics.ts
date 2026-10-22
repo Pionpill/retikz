@@ -107,12 +107,13 @@ export const projectNodeLayoutObservation = (
   layout: NodeLayout,
   scopeChain: ReadonlyArray<Transform>,
   transform: EffectiveScopeTransform = composeScopeTransform(scopeChain),
+  id?: string,
 ): NodeLayoutObservation => {
   const globalLayout = scopeChain.length === 0 ? layout : projectLayoutWithTransform(layout, transform);
   const nodeTransform = nodeTransformOf(layout, transform);
   return {
     kind: 'node',
-    ...(layout.node.id === undefined ? {} : { id: layout.node.id }),
+    ...(id === undefined ? {} : { id }),
     content: {
       center: applyScopeTransform(layout.geometry.contentCenter, nodeTransform),
       size: {

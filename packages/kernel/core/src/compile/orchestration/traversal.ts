@@ -70,7 +70,7 @@ import type { NodeLayout } from '../node';
 import {
   alignmentGuidesOfNode,
   projectNodeLayoutObservation,
-  compileNodeLayout,
+  compileNodeState,
   createScopePlaceholderLayout,
   createSyntheticRectangleLayout,
   emitNodePrimitives,
@@ -446,7 +446,7 @@ export const compileChildrenToPrimitives = (
     const { scopeChain, primitiveSink, locatorPrefix, layoutSink, scopeDefaults } = frame;
     const nodeIrPath = formatCompileChildPath(locatorPrefix, index, 'node');
 
-    const layout = compileNodeLayout(child, nodeIrPath, {
+    const compilation = compileNodeState(child, nodeIrPath, {
       ...runtime.context,
       scopeDefaults,
       mode: frame.theme.mode,
@@ -456,6 +456,7 @@ export const compileChildrenToPrimitives = (
       childProposal: frame.childProposal,
     });
 
+    const { layout, properties } = compilation;
     const globalLayout = scopeTransformsContext.project(layout, scopeChain);
     publishKernelObservation(
       { kind: 'node' },
@@ -473,6 +474,7 @@ export const compileChildrenToPrimitives = (
 
     frame.publicationSink.push(globalLayout);
     frame.observationSink.push({
+      id: properties.id,
       layout,
       scopeChain,
       occurrence:
@@ -482,7 +484,7 @@ export const compileChildrenToPrimitives = (
           expansionPath: Object.freeze([]),
         }),
     });
-    const rawPrimitives = emitNodePrimitives(layout, runtime.context.round, runtime.context.paint.register);
+    const rawPrimitives = emitNodePrimitives(compilation, runtime.context.round, runtime.context.paint.register);
     const emittedPrimitives = runtime.state.provenanceTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
     if (semanticOwner !== undefined) {
       runtime.state.provenanceTracker?.recordPrimitives(emittedPrimitives, semanticOwner, 'node');
@@ -500,7 +502,7 @@ export const compileChildrenToPrimitives = (
       rectOps.anchor(outerRect, Anchor.BottomLeft),
       rectOps.anchor(outerRect, Anchor.BottomRight),
     ];
-    frame.boundsSink.push({ points: nodeBoundsPoints, shadow: layout.node.shadow });
+    frame.boundsSink.push({ points: nodeBoundsPoints, shadow: properties.shadow });
     frame.boundsSink.push({ points: labelExtentPoints(layout) });
     pushAllocation(frame.allocationSink, nodeBoundsPoints, frame.allocationBoundary);
     const alignmentGuides = alignmentGuidesOfNode(layout, runtime.context.round);
@@ -693,7 +695,7 @@ export const compileChildrenToPrimitives = (
         : scopeTransformsContext.append(frame.scopeChain, preliminaryTransforms);
     const layoutPlaceholder = registerScopeLayoutPlaceholder(child, { index, frame });
     if (layoutPlaceholder.placeholderLayout !== undefined) {
-      runtime.state.namespaceStack.enterScope(layoutPlaceholder.placeholderLayout);
+      runtime.state.namespaceStack.enterScope(layoutPlaceholder.placeholderLayout, child.id!);
     }
 
     const didPushNamespaceFrame = child.localNamespace === true;
@@ -2517,6 +2519,7 @@ export const compileChildrenToPrimitives = (
               observation.layout,
               observation.scopeChain,
               scopeTransformsContext.resolve(observation.scopeChain),
+              observation.id,
             ),
             'Node layout artifact',
           ),

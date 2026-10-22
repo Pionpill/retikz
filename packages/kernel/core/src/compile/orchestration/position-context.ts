@@ -68,7 +68,7 @@ export const createPositionResolveContext = (
     const entry = input.lookupReference(id);
     return entry === undefined
       ? undefined
-      : { state: entry.state, node: nodeReferenceViewOf(entry.layout, input.geometryContext) };
+      : { state: entry.state, node: nodeReferenceViewOf(entry.layout, input.geometryContext, id, entry.irPath) };
   };
 
   const toLocal = (world: IRPosition): IRPosition =>

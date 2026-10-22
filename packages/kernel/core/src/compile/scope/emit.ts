@@ -4,7 +4,7 @@ import { resolveScopeFrame } from '../../resolve';
 import type { ResolvedTheme } from '../../shared';
 import type { CompileEnvironment } from '../environment';
 import type { NodeLayout } from '../node';
-import { emitNodePrimitives } from '../node';
+import { emitNodeShapePrimitives } from '../node';
 import type { PaintResolver } from '../resource';
 import type { ScopeCompileInput } from './compile';
 
@@ -28,7 +28,6 @@ export const emitScopeFrame = (
   const { padding, fill, stroke, ...style } = appearance;
   const frameLayout: NodeLayout = {
     ...intrinsicLayout,
-    node: { ...intrinsicLayout.node, ...style, id: undefined, fill, stroke },
     geometry: {
       ...intrinsicLayout.geometry,
       rect: {
@@ -38,8 +37,10 @@ export const emitScopeFrame = (
       },
     },
   };
-  return emitNodePrimitives(frameLayout, environment.round, resolvePaint).map(primitive => ({
-    ...primitive,
-    hitTest: false,
-  }));
+  return emitNodeShapePrimitives(frameLayout, { fill, stroke, ...style }, environment.round, resolvePaint).map(
+    primitive => ({
+      ...primitive,
+      hitTest: false,
+    }),
+  );
 };

@@ -11,6 +11,8 @@ export type NamespaceEntryState = 'resolved' | 'scope-placeholder';
 
 /** namespace 中带生命周期状态的内部条目 */
 export type NamespaceEntry = {
+  /** 当前名称绑定的来源路径 */
+  irPath?: string;
   /** 可供既有引用解析逻辑消费的布局 */
   layout: NodeLayout;
   /** 区分合法已解析布局与尚未闭合的 Scope 占位布局 */
@@ -73,7 +75,7 @@ export type NamespaceFrameChange = {
  */
 export class NamespaceStack {
   /** 正在编译的命名 Scope；fork 保留祖先归属 */
-  private readonly scopeAncestors: Array<NodeLayout> = [];
+  private readonly scopeAncestors: Array<{ layout: NodeLayout; id: string }> = [];
 
   /** 栈式 frame 容器；栈底为根 frame，栈顶为当前 frame */
   private readonly frames: Array<Map<string, NamespaceEntry>>;
@@ -240,7 +242,7 @@ export class NamespaceStack {
     }
 
     this.snapshotIdentity = {};
-    topFrame.set(id, { layout, state, ...(state === 'scope-placeholder' ? { scopeOwner: layout } : {}) });
+    topFrame.set(id, { layout, irPath, state, ...(state === 'scope-placeholder' ? { scopeOwner: layout } : {}) });
     this.onRegister?.({
       id,
       frameDepth: this.frames.length - 1,
@@ -294,8 +296,8 @@ export class NamespaceStack {
   }
 
   /** 进入命名 Scope 的后代求值区间 */
-  enterScope(owner: NodeLayout): void {
-    this.scopeAncestors.push(owner);
+  enterScope(owner: NodeLayout, id: string): void {
+    this.scopeAncestors.push({ layout: owner, id });
   }
 
   /** 离开命名 Scope 的后代求值区间 */
@@ -306,8 +308,8 @@ export class NamespaceStack {
   /** 解析作者几何引用，拒绝实际绑定到祖先 Scope 的目标 */
   lookupReference(id: string): NamespaceEntry | undefined {
     const entry = this.lookupEntry(id);
-    if (entry?.scopeOwner !== undefined && this.scopeAncestors.includes(entry.scopeOwner)) {
-      const source = this.scopeAncestors.at(-1)?.node.id;
+    if (entry?.scopeOwner !== undefined && this.scopeAncestors.some(ancestor => ancestor.layout === entry.scopeOwner)) {
+      const source = this.scopeAncestors.at(-1)?.id;
       const error = new RetikzCoreError({
         code: RetikzCoreErrorCode.Compile,
         message: `Geometry reference from a descendant of Scope '${source}' cannot target ancestor Scope '${id}'`,
