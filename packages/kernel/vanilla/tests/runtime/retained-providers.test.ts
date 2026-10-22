@@ -6,7 +6,7 @@ import type {
   ClipShape,
   SceneClipPath,
 } from '@retikz/core';
-import { defineClip, PathBaseSchema, StrokePathOwnerOutputSchema } from '@retikz/core';
+import { defineClip, PathSchema, StrokePathOwnerOutputSchema } from '@retikz/core';
 import { RetikzRenderErrorCode } from '@retikz/render/runtime';
 import { describe, expect, it } from 'vitest';
 import type { ZodType } from 'zod';
@@ -17,7 +17,7 @@ import {
   createRetainedProviderDefinitions,
 } from '../../src/runtime/retained-providers';
 
-const pathKindSchema = PathBaseSchema.extend({ kind: literal('retained-fixture') });
+const pathKindSchema = PathSchema.extend({ kind: literal('retained-fixture') });
 
 const ownerOutput = { schema: StrokePathOwnerOutputSchema };
 
@@ -229,7 +229,7 @@ describe('retained Path Kind definitions', () => {
 
     changed.rollback();
 
-    const changedSchema = PathBaseSchema.extend({
+    const changedSchema = PathSchema.extend({
       kind: literal('retained-fixture'),
       kindOptions: strictObject({ changed: boolean() }).optional(),
     });

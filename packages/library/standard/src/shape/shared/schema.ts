@@ -1,5 +1,5 @@
 import {
-  PathBaseSchema,
+  PathSchema,
   DrawableInstanceSchema,
   PathGeometrySchema,
   PathTransformSchema,
@@ -16,7 +16,7 @@ export const ShapePathSchema = strictObject({
   ...PathTransformSchema.shape,
   cornerRadius: PathGeometrySchema.shape.cornerRadius,
   ...PathDecorationSchema.shape,
-  style: PathBaseSchema.shape.style,
+  style: PathSchema.shape.style,
 });
 
 /** 盒拟合策略及其默认值 */

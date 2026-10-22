@@ -4,9 +4,9 @@ import type { infer as ZodInfer, input as ZodInput } from 'zod';
 import type { IRComposite } from '../composite';
 import type { IRCoordinate } from '../coordinate';
 import type { IRNode } from '../node';
-import type { IRPathBase } from '../path';
+import type { ArrowDetailSchema, IRPathBase } from '../path';
 import type { ScopeStyleChannel } from './constants';
-import type { ArrowDefaultSchema, LabelDefaultSchema, NodeDefaultSchema, PathDefaultSchema } from './schema';
+import type { LabelDefaultSchema, NodeDefaultSchema, PathDefaultSchema } from './schema';
 import type {
   ScopeFrameSchema,
   ScopeDefaultsSchema,
@@ -26,7 +26,7 @@ export type IRPathDefault = ZodInfer<typeof PathDefaultSchema>;
 export type IRLabelDefault = ZodInfer<typeof LabelDefaultSchema>;
 
 /** every arrow 默认样式（= ArrowDetail） */
-export type IRArrowDefault = ZodInfer<typeof ArrowDefaultSchema>;
+export type IRArrowDefault = ZodInfer<typeof ArrowDetailSchema>;
 
 /** Scope 锚点定位允许的闭合目标 */
 export type IRScopePositionTarget = ZodInput<typeof ScopePositionTargetSchema>;

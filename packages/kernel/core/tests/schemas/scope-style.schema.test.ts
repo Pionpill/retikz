@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  ArrowDefaultSchema,
+  ArrowDetailSchema,
   LabelDefaultSchema,
   NodeDefaultSchema,
   PathDefaultSchema,
@@ -229,14 +229,14 @@ describe('LabelDefaultSchema（every label 默认）', () => {
   });
 });
 
-describe('ArrowDefaultSchema（every arrow 默认）', () => {
+describe('ArrowDetailSchema（every arrow 默认）', () => {
   it('接受箭头视觉字段', () => {
-    expect(ArrowDefaultSchema.safeParse({ shape: 'stealth', scale: 1.5 }).success).toBe(true);
+    expect(ArrowDetailSchema.safeParse({ shape: 'stealth', scale: 1.5 }).success).toBe(true);
   });
 
   it('= ArrowDetailSchema：接受 start / end 子对象', () => {
     expect(
-      ArrowDefaultSchema.safeParse({
+      ArrowDetailSchema.safeParse({
         shape: 'normal',
         end: { shape: 'circle' },
       }).success,
@@ -244,17 +244,17 @@ describe('ArrowDefaultSchema（every arrow 默认）', () => {
   });
 
   it('接受从 Path master 派生的数值 color 与从 arrow color 派生的数值 fill', () => {
-    expect(ArrowDefaultSchema.safeParse({ color: 0.9, fill: 0.2, end: { color: 0.8, fill: 0.1 } }).success).toBe(true);
+    expect(ArrowDetailSchema.safeParse({ color: 0.9, fill: 0.2, end: { color: 0.8, fill: 0.1 } }).success).toBe(true);
   });
 
   it('接受任意非空白 shape 名（未注册名拒绝移到 compile 期）', () => {
     // shape 已开成开放字符串（NonBlankStringSchema）：schema 不再门控名字白名单，
     // 未注册名的拒绝移到 compile 期（见 arrows/builtin-registry.test.ts 的 compile throw 用例）
-    expect(ArrowDefaultSchema.safeParse({ shape: 'bogus' }).success).toBe(true);
+    expect(ArrowDetailSchema.safeParse({ shape: 'bogus' }).success).toBe(true);
   });
 
   it.each(['', '   '])('拒绝空白 shape %j', shape => {
-    expect(ArrowDefaultSchema.safeParse({ shape }).success).toBe(false);
+    expect(ArrowDetailSchema.safeParse({ shape }).success).toBe(false);
   });
 });
 

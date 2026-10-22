@@ -5,7 +5,7 @@ import { AnimationTrackSchema } from '../animation';
 import { ClipSchema } from '../clip';
 import { FontSchema } from '../font';
 import { NodeSchema } from '../node';
-import { ArrowDetailSchema, PathBaseSchema, PathGeometrySchema, PathTransformSchema } from '../path';
+import { ArrowDetailSchema, PathSchema, PathGeometrySchema, PathTransformSchema } from '../path';
 import { NodeTargetSchema, PositionSchema } from '../position';
 import { getRecursiveChildSchema } from '../recursive';
 import { ScopeSelfPointSchema } from '../scope-point';
@@ -33,9 +33,9 @@ export const NodeDefaultSchema = strictObject(NodeSchema.shape).pick({
 
 /** 路径默认值仅继承视觉与整体几何 */
 export const PathDefaultSchema = strictObject({
-  style: PathBaseSchema.shape.style,
-  ...PathTransformSchema.shape,
+  style: PathSchema.shape.style,
   cornerRadius: PathGeometrySchema.shape.cornerRadius,
+  ...PathTransformSchema.shape,
 });
 
 /** 校验作用域内节点标签与路径步骤标签共用的默认视觉样式 */
@@ -47,9 +47,6 @@ export const LabelDefaultSchema = strictObject({
   opacity: OpacitySchema.optional().describe('Default label opacity.'),
   font: FontSchema.optional().describe('Default label font (family / size / weight / style); per-field fallback.'),
 }).describe('Default style applied to node labels and step labels in this scope.');
-
-/** 复用箭头细节校验规则，供作用域声明默认箭头样式 */
-export const ArrowDefaultSchema = ArrowDetailSchema;
 
 /** Scope 锚点对齐的父坐标系目标 */
 export const ScopePositionTargetSchema = union([PositionSchema, strictObject(NodeTargetSchema.shape)]).describe(
@@ -80,7 +77,7 @@ export const ScopeDefaultsSchema = strictObject({
     'Default style applied to path-like drawables in this scope. Arrows use the separate `defaults.arrow` channel.',
   ),
   label: LabelDefaultSchema.optional().describe('Default style applied to node labels and step labels in this scope.'),
-  arrow: ArrowDefaultSchema.optional().describe('Default style applied to arrows in this scope.'),
+  arrow: ArrowDetailSchema.optional().describe('Default style applied to arrows in this scope.'),
   reset: union([boolean(), array(zodEnum(ScopeStyleChannel))])
     .optional()
     .describe(

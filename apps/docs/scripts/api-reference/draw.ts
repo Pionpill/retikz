@@ -51,7 +51,7 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
     translate: translateDrawApiReference,
     schemaLocalizations: {
       PathLabelSchema: { descriptions: pathLabelSchemaDescriptions },
-      PathBaseSchema: { descriptions: pathSchemaDescriptions },
+      PathSchema: { descriptions: pathSchemaDescriptions },
     },
   },
   {
@@ -70,7 +70,7 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
     translate: translateDrawApiReference,
     schemaLocalizations: {
       PathLabelSchema: { descriptions: pathLabelSchemaDescriptions },
-      PathBaseSchema: { descriptions: pathSchemaDescriptions },
+      PathSchema: { descriptions: pathSchemaDescriptions },
     },
   },
   {
@@ -112,7 +112,7 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
     translate: translateDrawApiReference,
     schemaLocalizations: {
       PathLabelSchema: { descriptions: pathLabelSchemaDescriptions },
-      PathBaseSchema: { descriptions: pathSchemaDescriptions },
+      PathSchema: { descriptions: pathSchemaDescriptions },
     },
   },
 ];

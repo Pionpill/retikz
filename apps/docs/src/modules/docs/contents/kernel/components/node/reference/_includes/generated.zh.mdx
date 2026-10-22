@@ -704,7 +704,7 @@ export type IRCoordinate = ZodInfer<typeof CoordinateSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNode"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={31}>IRNode</ApiSourceLink>
+#### <ApiSourceLink label={"IRNode"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={32}>IRNode</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -747,7 +747,7 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNodeLabel"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={28}>IRNodeLabel</ApiSourceLink> / <ApiSourceLink label={"NodeLabelSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={84}>NodeLabelSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRNodeLabel"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={29}>IRNodeLabel</ApiSourceLink> / <ApiSourceLink label={"NodeLabelSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={86}>NodeLabelSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -805,7 +805,7 @@ export type IRNodeLabel = ZodInfer<typeof NodeLabelSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNodeLayout"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={47}>IRNodeLayout</ApiSourceLink> / <ApiSourceLink label={"NodeLayoutSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={179}>NodeLayoutSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRNodeLayout"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={50}>IRNodeLayout</ApiSourceLink> / <ApiSourceLink label={"NodeLayoutSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={185}>NodeLayoutSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -855,7 +855,7 @@ export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNodeStyle"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={45}>IRNodeStyle</ApiSourceLink> / <ApiSourceLink label={"NodeStyleSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={164}>NodeStyleSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRNodeStyle"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={46}>IRNodeStyle</ApiSourceLink> / <ApiSourceLink label={"NodeStyleSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={175}>NodeStyleSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -873,7 +873,9 @@ export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;
 | `dotted?`      | `false \| true`                                                                                                                                                                                                                                                                       | —      | 点线预设，被 dashPattern 或 dashed 覆盖                                |
 | `fill?`        | `ZodInfer<typeof NodeStyleSchema.shape["fill"]>`                                                                                                                                                                                                                                      | —      | 填充：精确颜色、主色权重或 Paint                                       |
 | `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                                                                                 | —      | 正文字体覆盖，缺省字段沿用文字默认值                                   |
-| `opacity?`     | `number \| { overall?: number \| undefined; fill?: number \| undefined; stroke?: number \| undefined; }`                                                                                                                                                                              | —      | 整个图元的不透明度                                                     |
+| `lineCap?`     | `"butt" \| "round" \| "square"`                                                                                                                                                                                                                                                       | —      | 描边端帽形状                                                           |
+| `lineJoin?`    | `"round" \| "miter" \| "bevel"`                                                                                                                                                                                                                                                       | —      | 描边拐角连接形状                                                       |
+| `opacity?`     | `number \| { overall?: number \| undefined; fill?: number \| undefined; stroke?: number \| undefined; }`                                                                                                                                                                              | —      | 整体透明度或独立的 overall、fill、stroke 因子                          |
 | `shadow?`      | `"none" \| "sm" \| "md" \| "lg" \| "xl" \| "2xl" \| { preset?: "none" \| "sm" \| "md" \| "lg" \| "xl" \| "2xl" \| undefined; offsetX?: number \| undefined; offsetY?: number \| undefined; blur?: number \| undefined; color?: string \| undefined; opacity?: number \| undefined; }` | —      | 投影预设或投影配置，不影响节点形状尺寸                                 |
 | `stroke?`      | `ZodInfer<typeof NodeStyleSchema.shape["stroke"]>`                                                                                                                                                                                                                                    | —      | 描边：精确颜色、主色权重或 Paint                                       |
 | `strokeWidth?` | `number`                                                                                                                                                                                                                                                                              | —      | 边框宽度，单位为用户单位；省略时默认 1                                 |
@@ -900,9 +902,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
     color: '图元主色，未单独覆盖的描边、填充和标签可由它派生',
     fill: '填充：精确颜色、主色权重或 Paint',
     stroke: '描边：精确颜色、主色权重或 Paint',
-    opacity: '整个图元的不透明度',
-    'opacity.fill': '填充不透明度',
-    'opacity.stroke': '描边不透明度',
+    opacity: '整体透明度或独立的 overall、fill、stroke 因子',
     shadow: '投影预设或投影配置，不影响节点形状尺寸',
     blendMode: '图元与背景的混合模式',
     strokeWidth: '边框宽度，单位为用户单位；省略时默认 1',
@@ -910,6 +910,8 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
     dotted: '点线预设，被 dashPattern 或 dashed 覆盖',
     dashPattern: '显式虚线段与间隔长度，优先于 dashed 和 dotted',
     dashOffset: '虚线起点偏移，允许正数、零或负数',
+    lineCap: '描边端帽形状',
+    lineJoin: '描边拐角连接形状',
     textColor: '文字颜色或主色权重；contrast 根据静态填充选择黑白，缺省为 currentColor',
     font: '正文字体覆盖，缺省字段沿用文字默认值',
   }}
@@ -919,7 +921,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"NodeSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={255}>NodeSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NodeSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={261}>NodeSchema</ApiSourceLink>
 
 <ZodSchema
   name="NodeSchema"
@@ -946,7 +948,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
   }}
 />
 
-#### <ApiSourceLink label={"NodeLabelBoundaryPositionSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={36}>NodeLabelBoundaryPositionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NodeLabelBoundaryPositionSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={42}>NodeLabelBoundaryPositionSchema</ApiSourceLink>
 
 <ZodSchema
   name="NodeLabelBoundaryPositionSchema"
@@ -957,16 +959,19 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
   }}
 />
 
-#### <ApiSourceLink label={"NodeLabelPinSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={72}>NodeLabelPinSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NodeLabelPinSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={78}>NodeLabelPinSchema</ApiSourceLink>
 
 <ZodSchema
   name="NodeLabelPinSchema"
   description="外侧节点标签的引线样式"
   descriptions={{
+    opacity: '引线独立透明度；省略时使用标签的有效透明度',
     stroke: '引线颜色或由标签主色派生的权重',
     strokeWidth: '引线宽度，单位为用户单位；默认 1',
     dashPattern: '引线虚线段与间隔长度',
     dashOffset: '虚线起点偏移，允许正数、零或负数',
+    lineCap: '描边端帽形状',
+    lineJoin: '描边拐角连接形状',
   }}
 />
 
@@ -978,7 +983,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
   descriptions={{}}
 />
 
-#### <ApiSourceLink label={"BoundaryLabelSchema"} path={"packages/kernel/core/src/schemas/text/schema.ts"} startLine={101}>BoundaryLabelSchema</ApiSourceLink>
+#### <ApiSourceLink label={"BoundaryLabelSchema"} path={"packages/kernel/core/src/schemas/text/schema.ts"} startLine={103}>BoundaryLabelSchema</ApiSourceLink>
 
 Kernel 共享的边界标签契约。Node 复用其中的旋转、放置和对齐字段，同时保留自己的位置、引线、单行内容及默认值；Ribbon 端点直接使用此 Schema。
 

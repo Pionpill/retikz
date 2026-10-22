@@ -693,7 +693,7 @@ export type IRCoordinate = ZodInfer<typeof CoordinateSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNode"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={31}>IRNode</ApiSourceLink>
+#### <ApiSourceLink label={"IRNode"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={32}>IRNode</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -736,7 +736,7 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNodeLabel"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={28}>IRNodeLabel</ApiSourceLink> / <ApiSourceLink label={"NodeLabelSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={84}>NodeLabelSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRNodeLabel"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={29}>IRNodeLabel</ApiSourceLink> / <ApiSourceLink label={"NodeLabelSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={86}>NodeLabelSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -778,7 +778,7 @@ export type IRNodeLabel = ZodInfer<typeof NodeLabelSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNodeLayout"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={47}>IRNodeLayout</ApiSourceLink> / <ApiSourceLink label={"NodeLayoutSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={179}>NodeLayoutSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRNodeLayout"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={50}>IRNodeLayout</ApiSourceLink> / <ApiSourceLink label={"NodeLayoutSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={185}>NodeLayoutSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -816,7 +816,7 @@ export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNodeStyle"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={45}>IRNodeStyle</ApiSourceLink> / <ApiSourceLink label={"NodeStyleSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={164}>NodeStyleSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRNodeStyle"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={46}>IRNodeStyle</ApiSourceLink> / <ApiSourceLink label={"NodeStyleSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={175}>NodeStyleSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -829,15 +829,17 @@ export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;
 | `blendMode?`   | `"color" \| "normal" \| "multiply" \| "screen" \| "overlay" \| "darken" \| "lighten" \| "color-dodge" \| "color-burn" \| "hard-light" \| "soft-light" \| "difference" \| "exclusion" \| "hue" \| "saturation" \| "luminosity"`                                                        | —       | How the emitted primary geometry blends with content already drawn beneath it. Omitted / `normal` means ordinary source-over.                                 |
 | `color?`       | `string`                                                                                                                                                                                                                                                                              | —       | Master color for primary geometry. Stroke, fill, labels, and arrows may inherit it unless individually overridden.                                            |
 | `dashed?`      | `false \| true`                                                                                                                                                                                                                                                                       | —       | Dashed border preset. `dashPattern` takes precedence.                                                                                                         |
-| `dashOffset?`  | `number`                                                                                                                                                                                                                                                                              | —       | Explicit stroke dash offset in user units. Positive and negative finite values are allowed.                                                                   |
-| `dashPattern?` | `Array<number>`                                                                                                                                                                                                                                                                       | —       | Explicit stroke dash pattern lengths in user units; overrides `dashed` and `dotted`.                                                                          |
+| `dashOffset?`  | `number`                                                                                                                                                                                                                                                                              | —       | Stroke dash offset in user units. Positive and negative finite values are allowed.                                                                            |
+| `dashPattern?` | `Array<number>`                                                                                                                                                                                                                                                                       | —       | Stroke dash pattern lengths in user units. Omitted fields mean solid line.                                                                                    |
 | `dotted?`      | `false \| true`                                                                                                                                                                                                                                                                       | —       | Dotted border preset. `dashPattern` and `dashed` take precedence.                                                                                             |
 | `fill?`        | `ZodInfer<typeof NodeStyleSchema.shape["fill"]>`                                                                                                                                                                                                                                      | —       | Fill paint for primary geometry: contextual color or IRPaint.                                                                                                 |
 | `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                                                                                 | —       | Font spec for the inner text label. Missing fields use text defaults.                                                                                         |
+| `lineCap?`     | `"butt" \| "round" \| "square"`                                                                                                                                                                                                                                                       | —       | Stroke endpoint shape. Omitted fields use butt; round adds a half-disc cap and square extends past the endpoint.                                              |
+| `lineJoin?`    | `"round" \| "miter" \| "bevel"`                                                                                                                                                                                                                                                       | —       | Stroke corner shape. Omitted fields use miter; round rounds the join and bevel cuts the corner flat.                                                          |
 | `opacity?`     | `number \| { overall?: number \| undefined; fill?: number \| undefined; stroke?: number \| undefined; }`                                                                                                                                                                              | —       | A scalar overall opacity or sparse overall, fill and stroke factors; omitted factors inherit.                                                                 |
 | `shadow?`      | `"none" \| "sm" \| "md" \| "lg" \| "xl" \| "2xl" \| { preset?: "none" \| "sm" \| "md" \| "lg" \| "xl" \| "2xl" \| undefined; offsetX?: number \| undefined; offsetY?: number \| undefined; blur?: number \| undefined; color?: string \| undefined; opacity?: number \| undefined; }` | —       | Drop shadow on the emitted primary geometry. A preset keyword (`sm`/`md`/`lg`/`xl`/`2xl`/`none`) or an explicit drop-shadow object.                           |
 | `stroke?`      | `ZodInfer<typeof NodeStyleSchema.shape["stroke"]>`                                                                                                                                                                                                                                    | —       | Stroke paint for primary geometry: contextual color or IRPaint.                                                                                               |
-| `strokeWidth?` | `number`                                                                                                                                                                                                                                                                              | —       | Border width in user units; defaults to 1 when omitted                                                                                                        |
+| `strokeWidth?` | `number`                                                                                                                                                                                                                                                                              | —       | Stroke width in user units.                                                                                                                                   |
 | `textColor?`   | `string \| number`                                                                                                                                                                                                                                                                    | —       | Node text color. A number derives from the effective node color; `contrast` selects black or white from the resolved static fill. Defaults to `currentColor`. |
 
 </ApiTable>
@@ -860,15 +862,15 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"NodeSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={255}>NodeSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NodeSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={261}>NodeSchema</ApiSourceLink>
 
 <ZodSchema name="NodeSchema" />
 
-#### <ApiSourceLink label={"NodeLabelBoundaryPositionSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={36}>NodeLabelBoundaryPositionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NodeLabelBoundaryPositionSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={42}>NodeLabelBoundaryPositionSchema</ApiSourceLink>
 
 <ZodSchema name="NodeLabelBoundaryPositionSchema" />
 
-#### <ApiSourceLink label={"NodeLabelPinSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={72}>NodeLabelPinSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NodeLabelPinSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={78}>NodeLabelPinSchema</ApiSourceLink>
 
 <ZodSchema name="NodeLabelPinSchema" />
 
@@ -876,7 +878,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
 
 <ZodSchema name="BoundarySchema" />
 
-#### <ApiSourceLink label={"BoundaryLabelSchema"} path={"packages/kernel/core/src/schemas/text/schema.ts"} startLine={101}>BoundaryLabelSchema</ApiSourceLink>
+#### <ApiSourceLink label={"BoundaryLabelSchema"} path={"packages/kernel/core/src/schemas/text/schema.ts"} startLine={103}>BoundaryLabelSchema</ApiSourceLink>
 
 The shared Kernel boundary-label contract. Node reuses its rotation, placement, and alignment fields while retaining its own position, leader, single-line content, and defaults. Ribbon endpoints use this schema directly.
 

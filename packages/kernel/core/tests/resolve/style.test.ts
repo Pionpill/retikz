@@ -9,7 +9,7 @@ import {
   resolveEffectivePath,
 } from '../../src/resolve/style';
 import type { IRPathBase, IRScope } from '../../src/schemas';
-import { PathLabelSchema, NodeSchema, PathBaseSchema, SHADOW_PRESETS } from '../../src/schemas';
+import { PathLabelSchema, NodeSchema, PathSchema, SHADOW_PRESETS } from '../../src/schemas';
 
 const styleScope = (properties: Partial<IRScope>): IRScope => ({
   type: 'scope',
@@ -18,7 +18,7 @@ const styleScope = (properties: Partial<IRScope>): IRScope => ({
 });
 
 const pathOf = (properties: Partial<IRPathBase> = {}): IRPathBase =>
-  PathBaseSchema.parse({
+  PathSchema.parse({
     type: 'path',
     children: [
       { type: 'step', kind: 'move', to: [0, 0] },

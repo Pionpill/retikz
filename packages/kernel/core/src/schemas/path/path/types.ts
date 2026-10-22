@@ -3,11 +3,11 @@ import type { infer as ZodInfer } from 'zod';
 import type { StepSchema } from '../step';
 import type {
   ArrowMarkSchema,
-  PathBaseSchema,
   PathDecorationSchema,
   PathFillSchema,
   PathGeometrySchema,
   PathScaleSchema,
+  PathSchema,
   PathStrokeSchema,
   PathStructureSchema,
   PathStyleSchema,
@@ -36,7 +36,7 @@ export type IRPathStructure = ZodInfer<typeof PathStructureSchema>;
 export type IRArrowMark = ZodInfer<typeof ArrowMarkSchema>;
 
 /** Path schema 的原始输出类型：供 kind 派生与特殊形态使用 */
-export type IRPathBase = ZodInfer<typeof PathBaseSchema>;
+export type IRPathBase = ZodInfer<typeof PathSchema>;
 
 /** 路径：由若干 step 动作（move/line/...）组成并携带 children */
 export type IRPath = Omit<IRPathBase, 'children'> & {

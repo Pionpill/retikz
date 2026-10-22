@@ -1,4 +1,4 @@
-import { ArrowDefaultSchema, FontSchema, LabelDefaultSchema, NodeDefaultSchema, PathDefaultSchema } from '@retikz/core';
+import { ArrowDetailSchema, FontSchema, LabelDefaultSchema, NodeDefaultSchema, PathDefaultSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { TableCellPlanSource } from '../../src';
@@ -95,7 +95,7 @@ describe('Table Cell plan lineage contract', () => {
 
     addLeaves('/content/defaults/node/layout', Object.keys(NodeDefaultSchema.shape.layout.unwrap().shape));
     addLeaves('/content/defaults/label', Object.keys(LabelDefaultSchema.shape));
-    addLeaves('/content/defaults/arrow', Object.keys(ArrowDefaultSchema.shape));
+    addLeaves('/content/defaults/arrow', Object.keys(ArrowDetailSchema.shape));
 
     expect(new Set(Object.values(TableCellAppearanceTracePath))).toEqual(expected);
   });

@@ -64,7 +64,7 @@ const addDescription = (
 const shared = {
   ...scopeSchemaLocalizations,
   ScopePropsSchema: scopeSchemaLocalizations.ScopeSchema,
-  PathBaseSchema: { descriptions: pathSchemaDescriptions },
+  PathSchema: { descriptions: pathSchemaDescriptions },
   ...nodeSchemas,
 };
 

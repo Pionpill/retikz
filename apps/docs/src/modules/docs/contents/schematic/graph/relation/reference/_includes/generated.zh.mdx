@@ -67,11 +67,11 @@ export type RelationProps = Omit<InputRelation, 'type'> &
 | `rotate?`              | `number`                                                                                                                                                                                              | —      | 路径绕边界中心旋转，端点先求值                                                          |
 | `scale?`               | `number \| { x: number; y: number; }`                                                                                                                                                                 | —      | 路径绕边界中心缩放                                                                      |
 | `readonly source`      | `InputRelationEndpoint`                                                                                                                                                                               | —      | —                                                                                       |
-| `sourceMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                                    | —      | 起点 marker 的外观覆盖，不包含 shape                                                    |
+| `sourceMarker?`        | `RelationInputEmbedProps["sourceMarker"]`                                                                                                                                                             | —      | 起点 marker 的外观覆盖，不包含 shape                                                    |
 | `status?`              | `"error" \| "success" \| "warning" \| "disabled"`                                                                                                                                                     | —      | 可选闭合状态：error、success、warning、disabled                                         |
 | `style?`               | `RelationInputEmbedProps["style"]`                                                                                                                                                                    | —      | 路径外观覆盖，不包含填充字段                                                            |
 | `readonly target`      | `InputRelationEndpoint`                                                                                                                                                                               | —      | —                                                                                       |
-| `targetMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                                    | —      | 终点 marker 的外观覆盖，不包含 shape                                                    |
+| `targetMarker?`        | `RelationInputEmbedProps["targetMarker"]`                                                                                                                                                             | —      | 终点 marker 的外观覆盖，不包含 shape                                                    |
 | `zIndex?`              | `number`                                                                                                                                                                                              | —      | 同级绘制顺序，越大越靠上；省略为 0，同值保留原顺序                                      |
 | `input` (参数)         | `RelationInputEmbedProps`                                                                                                                                                                             | —      | 关系编写字段，端点可使用 id 字符串，路径可使用 way                                      |
 | 返回值                 | `InputEmbed<RelationInputEmbedProps>`                                                                                                                                                                 | —      | 供 Vanilla 内容树使用的 embed 节点，由 RelationInputEmbedAdapter 转换为 Relation Source |
@@ -144,11 +144,11 @@ export type RelationInputEmbedProps = WithoutInputType<InputRelation>;
 | `rotate?`              | `number`                                                                                                                                                                                              | —      | 路径绕边界中心旋转，端点先求值                                |
 | `scale?`               | `number \| { x: number; y: number; }`                                                                                                                                                                 | —      | 路径绕边界中心缩放                                            |
 | `readonly source`      | `InputRelationEndpoint`                                                                                                                                                                               | —      | —                                                             |
-| `sourceMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                                    | —      | 起点 marker 的外观覆盖，不包含 shape                          |
+| `sourceMarker?`        | `InputRelation["sourceMarker"]`                                                                                                                                                                       | —      | 起点 marker 的外观覆盖，不包含 shape                          |
 | `status?`              | `"error" \| "success" \| "warning" \| "disabled"`                                                                                                                                                     | —      | 可选闭合状态：error、success、warning、disabled               |
 | `style?`               | `InputRelation["style"]`                                                                                                                                                                              | —      | 路径外观覆盖，不包含填充字段                                  |
 | `readonly target`      | `InputRelationEndpoint`                                                                                                                                                                               | —      | —                                                             |
-| `targetMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                                    | —      | 终点 marker 的外观覆盖，不包含 shape                          |
+| `targetMarker?`        | `InputRelation["targetMarker"]`                                                                                                                                                                       | —      | 终点 marker 的外观覆盖，不包含 shape                          |
 | `readonly type`        | `'relation'`                                                                                                                                                                                          | —      | 关系编写输入的判别字段                                        |
 | `zIndex?`              | `number`                                                                                                                                                                                              | —      | 同级绘制顺序，越大越靠上；省略为 0，同值保留原顺序            |
 | `input` (参数)         | `InputRelation`                                                                                                                                                                                       | —      | 带 type 判别字段的关系编写输入                                |
@@ -763,12 +763,12 @@ export type IRGraphRelation = ZodInfer<typeof RelationSchema>;
 
 <ApiTable>
 
-| 成员         | 类型               | 默认值 | 说明             |
-| ------------ | ------------------ | ------ | ---------------- |
-| `color?`     | `string \| number` | —      | 端点标记主色     |
-| `fill?`      | `string \| number` | —      | 端点标记填充     |
-| `lineWidth?` | `number`           | —      | 端点标记描边宽度 |
-| `opacity?`   | `number`           | —      | 端点标记不透明度 |
+| 成员         | 类型                                                                 | 默认值 | 说明             |
+| ------------ | -------------------------------------------------------------------- | ------ | ---------------- |
+| `color?`     | `string \| number`                                                   | —      | 端点标记主色     |
+| `fill?`      | `ZodInfer<typeof GraphRelationMarkerAppearanceSchema.shape["fill"]>` | —      | 端点标记填充     |
+| `lineWidth?` | `number`                                                             | —      | 端点标记描边宽度 |
+| `opacity?`   | `number`                                                             | —      | 端点标记不透明度 |
 
 </ApiTable>
 

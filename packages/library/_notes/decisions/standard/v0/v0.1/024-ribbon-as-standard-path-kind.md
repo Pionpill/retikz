@@ -43,7 +43,7 @@ type IRRibbonPath = IRPathBase &
   }>;
 ```
 
-`IRRibbonPath` 是便于 Standard 作者和 adapters 使用的 schema-derived 投影视图，不进入 Core `IRChild` 的闭合 union，也不成为第二个 Path schema 真源。其实际 JSON 先由 Core `PathBaseSchema` 接受开放的 `kind` 与 `kindOptions`，compile lookup 后再由已注册的 `RibbonPathKindDefinition.schema` 解析完整 Path subject。
+`IRRibbonPath` 是便于 Standard 作者和 adapters 使用的 schema-derived 投影视图，不进入 Core `IRChild` 的闭合 union，也不成为第二个 Path schema 真源。其实际 JSON 先由 Core `PathSchema` 接受开放的 `kind` 与 `kindOptions`，compile lookup 后再由已注册的 `RibbonPathKindDefinition.schema` 解析完整 Path subject。
 
 Core `PathKindDefinition` 因此把 provider identity 与完整 subject schema 分开：
 

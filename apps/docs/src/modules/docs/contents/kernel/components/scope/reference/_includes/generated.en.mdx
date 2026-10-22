@@ -204,7 +204,7 @@ export type IRScope = IRScopeProps & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopeAnchorPosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={35}>IRScopeAnchorPosition</ApiSourceLink> / <ApiSourceLink label={"ScopeAnchorPositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={59}>ScopeAnchorPositionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopeAnchorPosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={35}>IRScopeAnchorPosition</ApiSourceLink> / <ApiSourceLink label={"ScopeAnchorPositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={60}>ScopeAnchorPositionSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -238,7 +238,7 @@ export type IRScopeAnchorPosition = ZodInput<typeof ScopeAnchorPositionSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopeDefaults"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={66}>IRScopeDefaults</ApiSourceLink> / <ApiSourceLink label={"ScopeDefaultsSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={73}>ScopeDefaultsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopeDefaults"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={66}>IRScopeDefaults</ApiSourceLink> / <ApiSourceLink label={"ScopeDefaultsSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={74}>ScopeDefaultsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -275,7 +275,7 @@ export type IRScopeDefaults = ZodInfer<typeof ScopeDefaultsSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopeFrame"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={52}>IRScopeFrame</ApiSourceLink> / <ApiSourceLink label={"ScopeFrameSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={99}>ScopeFrameSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopeFrame"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={52}>IRScopeFrame</ApiSourceLink> / <ApiSourceLink label={"ScopeFrameSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={100}>ScopeFrameSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -310,7 +310,7 @@ A frame stores decoration spacing and independent styling, without an id, events
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopePosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={38}>IRScopePosition</ApiSourceLink> / <ApiSourceLink label={"ScopePositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={68}>ScopePositionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopePosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={38}>IRScopePosition</ApiSourceLink> / <ApiSourceLink label={"ScopePositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={69}>ScopePositionSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -330,7 +330,7 @@ export type IRScopePosition = ZodInput<typeof ScopePositionSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopePositionTarget"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={32}>IRScopePositionTarget</ApiSourceLink> / <ApiSourceLink label={"ScopePositionTargetSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={54}>ScopePositionTargetSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopePositionTarget"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={32}>IRScopePositionTarget</ApiSourceLink> / <ApiSourceLink label={"ScopePositionTargetSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={55}>ScopePositionTargetSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -390,13 +390,13 @@ export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame' | 'po
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScopeSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={155}>ScopeSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={156}>ScopeSchema</ApiSourceLink>
 
 <ZodSchema shallow name="ScopeSchema" />
 
 `Scope.theme` contains only sparse `style` / `mode` environment selectors, inherited per field. Core resolves shared colors; descendant composites consume this environment according to their own contracts. `defaults.reset` does not reset Theme.
 
-#### <ApiSourceLink label={"ScopeFrameStyleSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={91}>ScopeFrameStyleSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeFrameStyleSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={92}>ScopeFrameStyleSchema</ApiSourceLink>
 
 <ZodSchema name="ScopeFrameStyleSchema" shallow />
 

@@ -124,8 +124,8 @@ export const PathStyleSchema = strictObject({
   ...PathFillSchema.shape,
 }).describe('Path visual overrides; fields independently override inherited defaults.');
 
-/** 校验路径类关系的基础字段，具体种类继续细化结构约束 */
-export const PathBaseSchema = strictObject({
+/** 校验路径的公共字段，具体种类继续细化结构约束 */
+export const PathSchema = strictObject({
   ...PathStructureSchema.shape,
   ...DrawableInstanceSchema.shape,
   ...PathGeometrySchema.shape,
@@ -133,15 +133,10 @@ export const PathBaseSchema = strictObject({
   style: PathStyleSchema.optional().describe(
     'Path visual overrides; fields independently override inherited defaults.',
   ),
-}).describe('Base fields for a path-like relation before kind-specific structural refinement.');
-
-/** 校验由有序动作步骤组成的绘制路径 */
-export const PathSchema = PathBaseSchema.describe(
-  'A drawn path composed of a sequence of step actions (move / line / ...).',
-);
+}).describe('Common path fields before kind-specific structural refinement.');
 
 /** 校验内置描边路径的观察对象，包含完整宿主约束 */
-export const StrokePathSchema = PathBaseSchema.extend({
+export const StrokePathSchema = PathSchema.extend({
   // Keep malformed step payloads on the compile-time diagnostic path. The stroke
   // emitter owns geometric validity and emits the established warning/error.
   children: array(unknown()).optional().describe('Sequence of source step actions for the stroke path.'),
@@ -169,5 +164,5 @@ export const StrokePathSchema = PathBaseSchema.extend({
       });
     }
   })
-  .transform(path => path as ZodInfer<typeof PathBaseSchema>)
+  .transform(path => path as ZodInfer<typeof PathSchema>)
   .describe('Complete source subject schema for the built-in stroke path kind.');

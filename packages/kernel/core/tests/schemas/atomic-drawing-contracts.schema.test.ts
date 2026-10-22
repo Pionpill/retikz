@@ -8,7 +8,6 @@ import {
   GraphicStyleSchema,
   GraphicStrokeSchema,
   NodeStrokeSchema,
-  PathBaseSchema,
   PathDecorationSchema,
   PathDefaultSchema,
   PathFillSchema,
@@ -135,13 +134,13 @@ describe('Core atomic drawing contracts', () => {
     expect(GraphicStyleSchema.shape.shadow).toBe(GraphicEffectsSchema.shape.shadow);
     expect(GraphicStyleSchema.shape.strokeWidth).toBe(GraphicStrokeSchema.shape.strokeWidth);
     expect(CascadingGraphicStyleSchema.shape.strokeWidth).toBe(GraphicStrokeSchema.shape.strokeWidth);
-    expect(PathBaseSchema.shape.type).toBe(PathStructureSchema.shape.type);
-    expect(PathBaseSchema.shape.kind).toBe(PathStructureSchema.shape.kind);
-    expect(PathBaseSchema.shape.style.unwrap().shape.dashPattern).toBe(PathStrokeSchema.shape.dashPattern);
-    expect(PathBaseSchema.shape.style.unwrap().shape.fillRule).toBe(PathFillSchema.shape.fillRule);
-    expect(PathBaseSchema.shape.children).toBe(PathGeometrySchema.shape.children);
-    expect(PathBaseSchema.shape.label).toBe(PathDecorationSchema.shape.label);
-    expect(PathBaseSchema.shape.marks).toBe(PathDecorationSchema.shape.marks);
+    expect(PathSchema.shape.type).toBe(PathStructureSchema.shape.type);
+    expect(PathSchema.shape.kind).toBe(PathStructureSchema.shape.kind);
+    expect(PathSchema.shape.style.unwrap().shape.dashPattern).toBe(PathStrokeSchema.shape.dashPattern);
+    expect(PathSchema.shape.style.unwrap().shape.fillRule).toBe(PathFillSchema.shape.fillRule);
+    expect(PathSchema.shape.children).toBe(PathGeometrySchema.shape.children);
+    expect(PathSchema.shape.label).toBe(PathDecorationSchema.shape.label);
+    expect(PathSchema.shape.marks).toBe(PathDecorationSchema.shape.marks);
     expect(PathDefaultSchema.shape.style.unwrap().shape.color).toBe(GraphicStyleSchema.shape.color);
     expect(PathDefaultSchema.shape.style.unwrap().shape.shadow).toBe(GraphicStyleSchema.shape.shadow);
     expect(PathDefaultSchema.shape.style.unwrap().shape.strokeWidth).toBe(PathStrokeSchema.shape.strokeWidth);

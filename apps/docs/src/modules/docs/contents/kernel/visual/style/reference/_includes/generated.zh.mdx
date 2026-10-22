@@ -8,7 +8,7 @@ blendMode 使用公开常量 `BlendMode` 的字符串值，不拥有独立的持
 
 ## 图案
 
-#### <ApiSourceLink label={"IRPatternLineStyle"} path={"packages/kernel/core/src/schemas/paint/types.ts"} startLine={21}>IRPatternLineStyle</ApiSourceLink> / <ApiSourceLink label={"PatternLineStyleSchema"} path={"packages/kernel/core/src/schemas/paint/schema.ts"} startLine={57}>PatternLineStyleSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPatternLineStyle"} path={"packages/kernel/core/src/schemas/paint/types.ts"} startLine={17}>IRPatternLineStyle</ApiSourceLink> / <ApiSourceLink label={"PatternLineStyleSchema"} path={"packages/kernel/core/src/schemas/paint/schema.ts"} startLine={76}>PatternLineStyleSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -60,7 +60,7 @@ export type IRPatternLineStyle = ZodInfer<typeof PatternLineStyleSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRPatternLineStyleCycle"} path={"packages/kernel/core/src/schemas/paint/types.ts"} startLine={24}>IRPatternLineStyleCycle</ApiSourceLink> / <ApiSourceLink label={"PatternLineStyleCycleSchema"} path={"packages/kernel/core/src/schemas/paint/schema.ts"} startLine={80}>PatternLineStyleCycleSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPatternLineStyleCycle"} path={"packages/kernel/core/src/schemas/paint/types.ts"} startLine={20}>IRPatternLineStyleCycle</ApiSourceLink> / <ApiSourceLink label={"PatternLineStyleCycleSchema"} path={"packages/kernel/core/src/schemas/paint/schema.ts"} startLine={107}>PatternLineStyleCycleSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -110,7 +110,7 @@ export type IRPatternLineStyleCycle = ZodInfer<typeof PatternLineStyleCycleSchem
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRPatternPaint"} path={"packages/kernel/core/src/schemas/paint/types.ts"} startLine={18}>IRPatternPaint</ApiSourceLink>
+#### <ApiSourceLink label={"IRPatternPaint"} path={"packages/kernel/core/src/schemas/paint/types.ts"} startLine={14}>IRPatternPaint</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -341,7 +341,7 @@ export declare const definePattern: (def: PatternDefinition) => PatternDefinitio
 | `offsetX?` | `number`                                          | —      | —    |
 | `offsetY?` | `number`                                          | —      | —    |
 | `opacity?` | `number`                                          | —      | —    |
-| `preset?`  | `"none" \| "sm" \| "lg" \| "xl" \| "2xl" \| "md"` | —      | —    |
+| `preset?`  | `"none" \| "sm" \| "md" \| "lg" \| "xl" \| "2xl"` | —      | —    |
 
 </ApiTable>
 
@@ -424,7 +424,7 @@ export type BlendMode = ValueOf<typeof BlendMode>;
 
 ## 配置与校验
 
-#### <ApiSourceLink label={"PatternPaintSchema"} path={"packages/kernel/core/src/schemas/paint/schema.ts"} startLine={115}>PatternPaintSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PatternPaintSchema"} path={"packages/kernel/core/src/schemas/paint/schema.ts"} startLine={142}>PatternPaintSchema</ApiSourceLink>
 
 <ZodSchema
   name="PatternPaintSchema"
@@ -477,11 +477,11 @@ export type BlendMode = ValueOf<typeof BlendMode>;
   }}
 />
 
-#### <ApiSourceLink label={"PatternShapeNameSchema"} path={"packages/kernel/core/src/schemas/paint/schema.ts"} startLine={16}>PatternShapeNameSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PatternShapeNameSchema"} path={"packages/kernel/core/src/schemas/paint/schema.ts"} startLine={33}>PatternShapeNameSchema</ApiSourceLink>
 
 <ZodSchema name="PatternShapeNameSchema" description="内置或已注册的图案名称" />
 
-#### <ApiSourceLink label={"PatternLineStyleOverrideSchema"} path={"packages/kernel/core/src/schemas/paint/schema.ts"} startLine={71}>PatternLineStyleOverrideSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PatternLineStyleOverrideSchema"} path={"packages/kernel/core/src/schemas/paint/schema.ts"} startLine={98}>PatternLineStyleOverrideSchema</ApiSourceLink>
 
 <ZodSchema
   name="PatternLineStyleOverrideSchema"

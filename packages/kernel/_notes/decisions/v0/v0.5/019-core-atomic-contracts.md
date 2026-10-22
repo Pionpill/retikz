@@ -53,7 +53,7 @@ Core 在不改变现有完整 Path 语义的前提下，提供可独立复用的
 
 对应数据类型固定为 `IRGraphicPaint`、`IRGraphicOpacity`、`IRGraphicEffects`、`IRStrokeStyle`、`IRPathStroke`、`IRPathFill`、`IRPathGeometry`、`IRPathDecoration` 与 `IRPathStructure`，全部由对应 schema 通过 `z.infer` 推导。`strokeWidth` 与 dash 是 Core 共享描边词汇，不属于 Path 独占语义；`PathStrokeSchema` 只是 Path 所需描边字段的稳定组合
 
-现有 `GraphicStyleSchema`、`CascadingGraphicStyleSchema`、`DrawableStyleSchema`、`PathBaseSchema`、`PathSchema`、`PathDefaultSchema` 及其派生类型继续作为兼容聚合契约。它们改由上述原子组合，但首轮不删除名称、不扩大或收窄接受字段：`GraphicStyleSchema` 继续接受当前的 `strokeWidth`，`CascadingGraphicStyleSchema` 继续保留当前可继承字段，完整 Path 继续保持当前字段集合与 refinement。聚合与原子出现同名字段时必须复用同一个叶子 schema 实例，不复制约束或描述
+现有 `GraphicStyleSchema`、`CascadingGraphicStyleSchema`、`DrawableStyleSchema`、`PathSchema`、`PathDefaultSchema` 及其派生类型继续作为兼容聚合契约。它们改由上述原子组合，但首轮不删除名称、不扩大或收窄接受字段：`GraphicStyleSchema` 继续接受当前的 `strokeWidth`，`CascadingGraphicStyleSchema` 继续保留当前可继承字段，完整 Path 继续保持当前字段集合与 refinement。聚合与原子出现同名字段时必须复用同一个叶子 schema 实例，不复制约束或描述
 
 通用的 `DrawableInstanceSchema` 与其它基础词汇继续由 Core 各自拥有。共享原子与上述 Path fragment 组合为完整的 Path authoring / IR 契约；完整契约继续负责跨 fragment 的 kind、结构和字段关系校验。fragment 自身只负责 strict unknown-field 与稳定局部不变量，不因独立复用而成为另一个 Path 编译入口
 
@@ -128,7 +128,7 @@ Tier 2 / Tier 3 在表达与 Core 同义的绘图字段时必须消费 Core 原�
 - Table 的 line border、shared-edge priority、cell content cascade 等具有表格语义的契约继续由 Table 拥有；Table 可以复用 Core 叶子，但不直接把 Table border 变成 Core Path stroke
 - Data 继续以自己的 schema、contract、provider 和 pipeline 为真源，不因本 ADR 增加绘图 style bundle
 
-因此，`pick` / `omit` 的判断标准不是“是否出现”，而是它是否表达了上层自己的 owner 语义。上层可以从一个 Core 原子继续 `pick` / `omit` 自己的子集；不得再从 `PathBaseSchema` 等完整聚合契约投影已由原子命名的同义字段。首轮迁移覆盖仓库内直接依赖完整 Core 聚合做同义投影的 Standard 与 Plot；Chart、Table 或其它 Tier 3 只有存在直接重复 Core 词汇时才修改，领域 owner 投影和经 Standard / Plot 间接消费不为凑迁移范围改写
+因此，`pick` / `omit` 的判断标准不是“是否出现”，而是它是否表达了上层自己的 owner 语义。上层可以从一个 Core 原子继续 `pick` / `omit` 自己的子集；不得再从 `PathSchema` 等完整聚合契约投影已由原子命名的同义字段。首轮迁移覆盖仓库内直接依赖完整 Core 聚合做同义投影的 Standard 与 Plot；Chart、Table 或其它 Tier 3 只有存在直接重复 Core 词汇时才修改，领域 owner 投影和经 Standard / Plot 间接消费不为凑迁移范围改写
 
 ## 单一真源与字段消费闭环
 
