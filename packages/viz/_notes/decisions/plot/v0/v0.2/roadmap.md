@@ -18,7 +18,7 @@
 | 性能               | 基于 Kernel 增量底座建立领域失效与增量 lowering                         | —                                                                                                                                                                                                                                                                                                                                                |
 | 交互               | 基于 Kernel Headless Interaction 建立数据、系列与视图交互语义           | —                                                                                                                                                                                                                                                                                                                                                |
 | 图元 lowering      | 统一 Point / Path / Interval 的 Mark、Annotation 与 Kernel 几何能力对接 | —                                                                                                                                                                                                                                                                                                                                                |
-| 几何图元与上层组件 | 统一几何输入与绘制能力，由上层组合参考与关系组件                        | —                                                                                                                                                                                                                                                                                                                                                |
+| 几何图元与上层组件 | 统一 Mark 三类位置输入并整合 Annotation，由上层组合参考与关系组件       | [021](./021-unified-mark-position-inputs.md)                                                                                                                                                                                                                                                                                                     |
 
 ## 功能规划
 
@@ -128,7 +128,7 @@ Plot 生成流程具有清晰的阶段边界，布局后的位置调整与数据
 
 ### 几何图元与上层组件（长期方向）
 
-相关 ADR：[018](./018-independent-annotations.md)、[019](./019-data-bound-annotations.md)。
+相关 ADR：[018](./018-independent-annotations.md)、[019](./019-data-bound-annotations.md)、[021](./021-unified-mark-position-inputs.md)。
 
 主要场景：
 
@@ -138,8 +138,8 @@ Plot 生成流程具有清晰的阶段边界，布局后的位置调整与数据
 规划内容：
 
 - 由 PointMark、PathMark、IntervalMark 分别承担节点、连接路径与区间区域的几何构造，统一支持位置及区间边界的常量输入。
-- 区分通道取值与实例来源，明确独立数据源或单实例的表达，不通过“通道全部为常量”隐式推断实例数量。
-- 为显式几何提供 PointAnnotation、PathAnnotation、IntervalAnnotation 入口，保留常量单实例；扩展位置字段绑定与 Mark 同形局部 transform，以结果行生成参考点、路径和区域，保持既有 Mark API；两类入口共用数据解析、坐标投影与 Kernel 绘图能力。
+- 统一字段、常量和特殊值的位置输入，以有效字段绑定消费结果明细表，无字段绑定的完整几何生成单实例；保留多行顶点路径的分组与连接语义。
+- 将现有 Annotation 的点、显式端点路径、区间与数据变换消费能力整合到相应 Mark，移除独立 Annotation API；同步将能力说明与交互 demo 迁入对应 Mark 中英文文档。
 - 在共用位置与边界机制中支持当前坐标视图边缘引用，并明确参考几何是否参与比例尺 domain 推导及视图变化后的更新语义。
 - 移除独立的 ReferenceMark 类型及专属文档，后续以三类几何图元组合提供参考线、带、区域、标签和极坐标行为；替代能力未就绪前不保留兼容入口，具体契约由后续 ADR 明确。
 - 参考线、参考区域、四象限等用途由上层组件库封装，复用 Plot 公开能力；交互层提供选中等状态，不另建投影或绘制逻辑。
@@ -157,12 +157,12 @@ Plot 生成流程具有清晰的阶段边界，布局后的位置调整与数据
 规划内容：
 
 - 以前述三类 Mark / Annotation 与 Kernel 几何能力统一对接为前置，核对 RelationMark demos 与 Chart RangedDot 等消费场景的能力差距。
-- 保持 PathMark 的多行顶点组织与 PathAnnotation 的显式路径实例语义，具体连接、目标引用、路径类型与端点组合方案待源码审阅后确定，不预先将全部关系能力归入 PathMark。
+- 在统一 Mark 中保留多行顶点路径与逐行显式端点路径；具体关系查询、目标引用、路径类型与端点组合方案由后续设计确定，不将全部关系语义归入 PathMark。
 - 复用底层公开契约，核对路径、ribbon、节点边界与锚点、端点图形、极坐标、domain / 留白及交互身份的承接范围；完成替代与消费方迁移后移除 RelationMark，不保留旧入口兼容层。
 
 预期效果：
 
-关系用途通过现有几何图元与标注组合表达，不再由 RelationMark 独立维护绘图能力。当前仅记录演进目标，具体能力归属与公开契约由源码审阅及后续 ADR 确定，不承诺当前版本立即移除。
+关系用途通过统一 Mark 的几何能力组合表达，不再由 RelationMark 独立维护绘图能力。当前仅记录演进目标，具体能力归属与公开契约由源码审阅及后续 ADR 确定，不承诺当前版本立即移除。
 
 ### 性能
 
