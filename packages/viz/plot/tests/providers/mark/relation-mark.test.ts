@@ -6,7 +6,7 @@ import type { PositionScale } from '../../../src/contract';
 import { definePathChannel } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
-import { createPolarCoordinate, lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
+import { createPolarCoordinate, lowerMark as lowerMarkDefinition, MARK_REGISTRY } from '../../../src/providers';
 import { resolveMarkOperation } from '../../../src/resolve/mark';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema, PolarInterpolation } from '../../../src/schemas';
@@ -14,7 +14,7 @@ import { measureLabel } from '../../helpers/text-measurement';
 
 const opts: LowerPlotsOptions = { layout: { width: 200, height: 100 } };
 
-const markRegistry = resolveMarkRegistry();
+const markRegistry = MARK_REGISTRY;
 
 const linearScale = (domain: [number, number], range: [number, number]): PositionScale => ({
   coordinate: value => {

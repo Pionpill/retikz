@@ -11,7 +11,6 @@ import type {
   IRPlotCoordinateOperation,
   IRPlotGuide,
   IRPlotMark,
-  IRPlotMarkOperation,
   IRPlotScaleOperation,
   PolarInterpolation,
 } from '@retikz/plot';
@@ -82,7 +81,7 @@ export type MarkTransformShortcutContext = {
   /** 当前 mark 索引 */
   markIndex: number;
   /** Plot 内全部 marks */
-  marks: ReadonlyArray<IRPlotMarkOperation>;
+  marks: ReadonlyArray<IRPlotMark>;
 };
 
 /** 把特定 mark 转换为 Plot-level transforms 的作者侧扩展 */
@@ -161,7 +160,7 @@ export type PlotAuthoringContext = {
   /** 显式 guide 集合来源 */
   guides?: PlotDeclarationSource<ReadonlyArray<IRPlotGuide>>;
   /** 显式 mark 集合来源 */
-  marks?: PlotDeclarationSource<ReadonlyArray<IRPlotMarkOperation>>;
+  marks?: PlotDeclarationSource<ReadonlyArray<IRPlotMark>>;
   /** 根级数据变换 */
   dataTransforms?: Array<IRDataTransformDeclaration>;
   /** mark 作者侧变换简写 */
@@ -183,7 +182,7 @@ export type PlotMemberFragment = {
   /** Plot guide 集合 */
   guides?: Array<IRPlotGuide>;
   /** Plot mark 集合 */
-  marks?: Array<IRPlotMarkOperation>;
+  marks?: Array<IRPlotMark>;
 };
 
 /** 运行时 datum label 解析器 */

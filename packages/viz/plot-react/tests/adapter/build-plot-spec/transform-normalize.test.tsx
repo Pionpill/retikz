@@ -1,4 +1,4 @@
-import { isBuiltinMark, PlotSchema } from '@retikz/plot';
+import { PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
@@ -73,9 +73,7 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
     expect(stacks).toContainEqual({ kind: 'stack', params: { x: 'month', y: 'revenue', groupBy: 'region' } });
 
     // 两根柱都为 stacked interval（bounds.y extent 读 y0/y1）
-    expect(
-      spec.marks.every(m => isBuiltinMark(m) && m.type === 'interval' && m.properties?.bounds?.y?.kind === 'extent'),
-    ).toBe(true);
+    expect(spec.marks.every(m => m.type === 'interval' && m.properties?.bounds?.y?.kind === 'extent')).toBe(true);
   });
 
   it('derive_interval_declared_to_ir', () => {

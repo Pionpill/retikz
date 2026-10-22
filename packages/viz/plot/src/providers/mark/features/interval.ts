@@ -13,7 +13,6 @@ import type {
   IntervalContext,
   MarkChannels,
   MarkInstanceInput,
-  MarkDefinition,
   MarkLoweringContext,
   PositionScale,
 } from '../../../contract';
@@ -48,6 +47,7 @@ import {
   nodeChannelKinds,
   resolveNodeMarkLabels,
 } from '../shared';
+import type { MarkDefinition } from '../types';
 
 type IntervalRoleContext = NonNullable<IntervalContext['byRole'][string]>;
 

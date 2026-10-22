@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CustomMarkSchema, IntervalBoundsSchema, MarkOperationSchema, MarkSchema } from '../../src/schemas/mark';
+import { IntervalBoundsSchema, MarkSchema } from '../../src/schemas/mark';
 
 const gradientPaint = {
   kind: 'linearGradient',
@@ -81,30 +81,13 @@ describe('MarkSchema (contract)', () => {
       properties: { autoPadding: 'max-radius' },
     };
 
-    expect(MarkOperationSchema.parse(JSON.parse(JSON.stringify(mark)))).toEqual({ ...mark, contributeToDomain: true });
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(mark)))).toEqual({ ...mark, contributeToDomain: true });
     expect(() =>
-      MarkOperationSchema.parse({
+      MarkSchema.parse({
         ...mark,
         defaultColorGroup: '   ',
       }),
     ).toThrow();
-  });
-
-  it('custom_mark_accepts_default_color_group', () => {
-    const mark = { type: 'custom-symbol', defaultColorGroup: 'observations', properties: { value: 1 } };
-
-    expect(MarkOperationSchema.parse(mark)).toEqual({ ...mark, contributeToDomain: true });
-  });
-
-  it('custom_mark_reports_deep_non_json_leaf_path', () => {
-    const result = CustomMarkSchema.safeParse({
-      type: 'custom-symbol',
-      properties: { nested: [0, { bad: Symbol('invalid') }] },
-    });
-
-    expect(result.success).toBe(false);
-
-    if (!result.success) expect(result.error.issues.at(0)?.path).toEqual(['properties', 'nested']);
   });
 
   // 错误路径
@@ -116,12 +99,12 @@ describe('MarkSchema (contract)', () => {
       properties: { autoPadding: 'max-radius' },
     };
 
-    expect(MarkOperationSchema.parse(mark)).toEqual({ ...mark, contributeToDomain: true });
+    expect(MarkSchema.parse(mark)).toEqual({ ...mark, contributeToDomain: true });
   });
 
   it('mark_layer_rejects_fractional_zindex_and_unknown_fields', () => {
     expect(() =>
-      MarkOperationSchema.parse({
+      MarkSchema.parse({
         type: 'point',
         layer: { zIndex: 1.5 },
         encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -129,7 +112,7 @@ describe('MarkSchema (contract)', () => {
       }),
     ).toThrow();
     expect(() =>
-      MarkOperationSchema.parse({
+      MarkSchema.parse({
         type: 'point',
         layer: { zIndex: 1, order: 2 },
         encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -1055,16 +1038,6 @@ describe('MarkSchema (contract)', () => {
     };
 
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
-  });
-
-  it('custom_mark_accepts_local_transform', () => {
-    const m = {
-      type: 'dot',
-      transforms: [{ operation: { kind: 'top-n', params: { field: 'score', n: 3 } } }],
-      encodings: { position: { x: { field: 'x' }, y: { field: 'score' } } },
-    };
-
-    expect(MarkOperationSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 });
 

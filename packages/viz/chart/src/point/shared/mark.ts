@@ -1,7 +1,7 @@
 import type { IRGraphicStyle } from '@retikz/core';
 import { mergeGraphicStyle } from '@retikz/core';
 import type { JsonObject, JsonValue } from '@retikz/foundation';
-import type { IRPlotMarkOperation } from '@retikz/plot';
+import type { IRPlotMark } from '@retikz/plot';
 import { BuiltinPlotMark, PointMarkSchema } from '@retikz/plot';
 
 import type { ChartMarkResolveContext } from '../../_chart/contract/mark';
@@ -86,7 +86,7 @@ export const resolvePointMark = (
   encodings: JsonObject,
   properties: JsonObject,
   options: Readonly<{ coordinateView?: string }> = {},
-): IRPlotMarkOperation => {
+): IRPlotMark => {
   const x = requiredFieldOf(encodings, 'x', ['recipe', 'encodings', 'x']);
   const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
   const bindings: JsonObject = { position: { x: { field: x }, y: { field: y } } };

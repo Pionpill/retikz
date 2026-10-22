@@ -1,7 +1,7 @@
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import type { JsonObject } from '@retikz/foundation';
-import type { IRPlotMarkOperation, IRPlotScaleOperation } from '@retikz/plot';
+import type { IRPlotMark, IRPlotScaleOperation } from '@retikz/plot';
 import { defineScale, PathMarkSchema, PositionScaleContinuity, lowerPlotWithLineage } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
@@ -83,7 +83,7 @@ const resolveChart = <TSource extends IRChartSource>(
 
 const scaleDefaultsContextOf = (
   source: IRChartSource,
-  chartMarks: ReadonlyArray<IRPlotMarkOperation>,
+  chartMarks: ReadonlyArray<IRPlotMark>,
   scales: ReadonlyArray<IRPlotScaleOperation>,
 ): ChartScaleDefaultsResolveContext => ({
   identifyMark: index => `__chart.mark.${index}`,

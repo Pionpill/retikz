@@ -8,7 +8,7 @@ import type { Cell } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { buildIntervalContext, intervalCell } from '../../../src/providers';
-import { lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
+import { lowerMark as lowerMarkDefinition, MARK_REGISTRY } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
 import { datumAnchor as resolveDatumAnchor, resolveMarkOperation } from '../../../src/resolve/mark';
 import type { IRPlot, IRPlotIntervalMark } from '../../../src/schemas';
@@ -23,7 +23,7 @@ import { measureLabel } from '../../helpers/text-measurement';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const markRegistry = resolveMarkRegistry();
+const markRegistry = MARK_REGISTRY;
 
 const lowerMark = (mark: IRPlotIntervalMark, rows: Array<ExternalRow>, frame: CoordinateFrame) =>
   lowerMarkDefinition(resolveMarkOperation(mark, { registry: markRegistry }), { kind: 'rows', rows }, frame);

@@ -14,11 +14,11 @@ import type {
 import type { ProvenanceContext } from '../../contract';
 import { cellGeometryAnchor, isRenderableCellGeometry } from '../../contract';
 import { datumMeta } from '../../contract';
-import { buildIntervalContext, intervalCellGeometry, resolveMarkRegistry } from '../../providers';
+import { buildIntervalContext, intervalCellGeometry, MARK_REGISTRY } from '../../providers';
 import { coordinateScopeIdOf } from '../../resolve/composition';
 import { datumAnchor } from '../../resolve/mark';
 import type { IRPlot, IRPlotMark } from '../../schemas';
-import { isBuiltinMark, BuiltinPlotMark } from '../../schemas';
+import { BuiltinPlotMark } from '../../schemas';
 import { DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
 import type { LowerPlotsOptions, MarkDataView } from '../expand';
 import type { PlotDataArtifactLowerResult } from '../expand/lower';
@@ -202,7 +202,7 @@ export const buildPlotLocatorFromDataArtifact = (
   const renderEntries = collectRenderDatumEntries(lowered.child);
   const renderSeriesEntries = collectRenderSeriesEntries(lowered.child);
   const { compositionResolution, frameByCoordinateScopeId, markDataViews, rootMarkDataViews } = lowered.dataArtifact;
-  const markRegistry = resolveMarkRegistry(options.definitions?.marks);
+  const markRegistry = MARK_REGISTRY;
 
   // path datum没有独立Node；仅在实际lowering只有一个结构scope时，复用artifact的DataView与frame计算结构锚点
   const structuralMarkDataViewOf = (markIndex: number): MarkDataView | undefined => {
@@ -249,11 +249,7 @@ export const buildPlotLocatorFromDataArtifact = (
     transformedIndex: number,
   ): { position: [number, number]; row: ExternalRow; mark: IRPlotMark } | null => {
     const markDataView = structuralMarkDataViewOf(markIndex);
-    if (
-      markDataView === undefined ||
-      !isBuiltinMark(markDataView.mark) ||
-      markDataView.mark.type !== BuiltinPlotMark.Path
-    ) {
+    if (markDataView === undefined || markDataView.mark.type !== BuiltinPlotMark.Path) {
       return null;
     }
 
@@ -334,7 +330,7 @@ export const buildPlotLocatorFromDataArtifact = (
     if (hasContext || markIndex === undefined) return null;
 
     const markDataView = structuralMarkDataViewOf(markIndex);
-    if (markDataView === undefined || !isBuiltinMark(markDataView.mark)) return null;
+    if (markDataView === undefined) return null;
 
     const mark = markDataView.mark;
     const seriesField = seriesFieldOf(mark);

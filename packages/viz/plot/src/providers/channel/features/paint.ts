@@ -14,7 +14,7 @@ import {
   isBuiltinScaleOperation,
 } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
-import type { IRPlotChannel, IRPlotMarkOperation, IRPlotScaleOperation } from '../../../schemas';
+import type { IRPlotChannel, IRPlotMark, IRPlotScaleOperation } from '../../../schemas';
 import { BuiltinPlotScale } from '../../../schemas';
 
 /** 颜色通道 definition 的名称、取值与图例配置 */
@@ -22,9 +22,9 @@ export type ColorChannelDefinitionOptions = {
   /** 创建的颜色类通道名称 */
   channel: string;
   /** 从 mark 中读取该通道的绑定 */
-  pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined;
+  pick: (mark: IRPlotMark) => IRPlotChannel | undefined;
   /** 无有效字段编码时使用的固定 paint 属性 */
-  property?: (mark: IRPlotMarkOperation) => PlotPaint | undefined;
+  property?: (mark: IRPlotMark) => PlotPaint | undefined;
 };
 
 /** plot 通道可下沉到 core 的颜色或 paint 值 */

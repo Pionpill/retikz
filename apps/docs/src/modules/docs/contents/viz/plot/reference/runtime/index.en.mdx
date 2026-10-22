@@ -46,11 +46,11 @@ For a Vanilla runtime source, `{ input }` runs `normalizePlot` exactly once. `{ 
 
 Runtime options are grouped by responsibility. The corresponding `PlotLayoutOverrides`, `PlotDefinitions`, and `PlotImplementations` types are exported from `@retikz/plot` for independent declaration and reuse:
 
-| Group             | Fields                                                                                                                                                                              |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `layout`          | `width`, `height`, `fontSize`, `margin`                                                                                                                                             |
-| `definitions`     | `coordinates`, `transforms`, `statisticsReducers`, `rowSelectors`, `regressions`, `scales`, `channels`, `marks`, `positionAdjustments`, `formats`, `fieldOrders`, `plotThemeStyles` |
-| `implementations` | `transforms`, `statisticsReducers`, `rowSelectors`, `regressions`                                                                                                                   |
+| Group             | Fields                                                                                                                                                                     |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `layout`          | `width`, `height`, `fontSize`, `margin`                                                                                                                                    |
+| `definitions`     | `coordinates`, `transforms`, `statisticsReducers`, `rowSelectors`, `regressions`, `scales`, `channels`, `positionAdjustments`, `formats`, `fieldOrders`, `plotThemeStyles` |
+| `implementations` | `transforms`, `statisticsReducers`, `rowSelectors`, `regressions`                                                                                                          |
 
 For example, `renderPlot(spec, data, { layout: { width: 480, height: 300 } })`. React `width` / `height` still declare Plot IR dimensions; `layout` supplies runtime layout defaults. IR dimensions take precedence.
 

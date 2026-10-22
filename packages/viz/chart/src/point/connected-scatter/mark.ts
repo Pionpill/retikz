@@ -1,5 +1,5 @@
 import type { JsonObject } from '@retikz/foundation';
-import type { IRPlotMarkOperation } from '@retikz/plot';
+import type { IRPlotMark } from '@retikz/plot';
 import { PathMarkSchema, BuiltinPlotMark } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
@@ -45,7 +45,7 @@ const pathPropertiesOf = (properties: IRConnectedScatterChartProperties): JsonOb
 export const resolveConnectedScatterMarkGroup = (
   encodings: JsonObject,
   properties: IRConnectedScatterChartProperties,
-): readonly [IRPlotMarkOperation, IRPlotMarkOperation] => {
+): readonly [IRPlotMark, IRPlotMark] => {
   const x = requiredFieldOf(encodings, 'x', ['recipe', 'encodings', 'x']);
   const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
   const order = requiredFieldOf(encodings, 'order', ['recipe', 'encodings', 'order']);

@@ -1,31 +1,18 @@
 import type { IRScope } from '@retikz/core';
 import { defineTransformImplementation } from '@retikz/data';
-import type { ExternalRow } from '@retikz/data';
-import { defineTransform, resolveTransformRegistry, DataTransformDeclarationSchema } from '@retikz/data';
-import { JsonValueSchema, NonBlankStringSchema } from '@retikz/foundation';
+import { defineTransform, resolveTransformRegistry } from '@retikz/data';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import type { infer as ZodInfer } from 'zod';
-import { array, literal, looseObject, object } from 'zod';
+import { object } from 'zod';
 
-import { positionField } from '../../../src/contract';
-import { defineMark } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot, lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import type { IRPlot } from '../../../src/schemas';
-import { VisualEncodingSchema, PositionEncodingSchema, PlotSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
-
-const DotMarkSchema = looseObject({
-  type: literal('dot'),
-
-  encodings: VisualEncodingSchema.extend({ position: PositionEncodingSchema.optional() }).optional(),
-  transforms: array(DataTransformDeclarationSchema).optional(),
-}).catchall(JsonValueSchema);
-
-type DotMark = ZodInfer<typeof DotMarkSchema>;
 
 const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
 
@@ -80,19 +67,6 @@ const doubleTransformImplementation = defineTransformImplementation({
       [operation.params.as]: Number(row[operation.params.field]) * 2,
     })),
 });
-
-const recorderMark = (record: { rows: Array<ExternalRow> }) =>
-  defineMark<DotMark>({
-    schema: DotMarkSchema,
-    collectFields: (mark, fields) => {
-      fields.addField(positionField(mark.encodings?.position?.x));
-      fields.addField(positionField(mark.encodings?.position?.y));
-    },
-    lower: (_mark, rows) => {
-      record.rows = rows.kind === 'rows' ? rows.rows : [];
-      return { type: 'scope', children: [] };
-    },
-  });
 
 describe('mark-local transform', () => {
   it('retains unknown output fields and category order across empty root and mark scopes', () => {
@@ -190,8 +164,7 @@ describe('mark-local transform', () => {
     expect([...collectSourceFields(spec)].sort()).toEqual(['value', 'x']);
   });
 
-  it('custom_mark_receives_local_transform_rows', () => {
-    const record = { rows: [] as Array<ExternalRow> };
+  it('mark_data_view_contains_local_transform_rows', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -203,7 +176,7 @@ describe('mark-local transform', () => {
       coordinate: { type: 'cartesian2D', x: 'category', y: 'value' },
       marks: [
         {
-          type: 'dot',
+          type: 'point',
           transforms: [
             {
               operation: {
@@ -220,7 +193,7 @@ describe('mark-local transform', () => {
       ],
     });
 
-    expandOf(
+    const { dataArtifact } = lowerPlotWithDataArtifact(
       spec,
       {
         sales: [
@@ -229,10 +202,10 @@ describe('mark-local transform', () => {
           { category: 'B', value: 3 },
         ],
       },
-      { definitions: { marks: [recorderMark(record)] }, ...opts },
+      { ...opts, textMeasurer: measureLabel },
     );
 
-    expect(record.rows).toEqual([
+    expect(dataArtifact.markDataViews[0].dataView.rows).toEqual([
       expect.objectContaining({ category: 'A', total: 10 }),
       expect.objectContaining({ category: 'B', total: 3 }),
     ]);

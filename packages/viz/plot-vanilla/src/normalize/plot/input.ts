@@ -4,7 +4,7 @@ import type {
   IRPlotFacetConfiguration,
   IRPlotGuide,
   IRPlotIntervalMark,
-  IRPlotMarkOperation,
+  IRPlotMark,
   IRPlotPathMark,
   IRPlotPointMark,
   IRPlotScaleOperation,
@@ -46,7 +46,7 @@ type PlotForbiddenAxisBindings = {
 /** Plot mark 的 framework-neutral authoring 输入 */
 export type InputPlotMark =
   | (PlotAxisBindableMark & PlotTopologyBindings & PlotAxisBindings)
-  | (Exclude<IRPlotMarkOperation, PlotAxisBindableMark> & PlotTopologyBindings & PlotForbiddenAxisBindings);
+  | (Exclude<IRPlotMark, PlotAxisBindableMark> & PlotTopologyBindings & PlotForbiddenAxisBindings);
 
 /** Plot guide 的 framework-neutral authoring 输入 */
 export type InputPlotGuide = IRPlotGuide & {
@@ -115,7 +115,7 @@ export type PlotBindingsNormalizationContext = {
 /** 共享 binding normalization 的 Plot Source IR 结果 */
 export type NormalizedPlotBindings = {
   /** 已移除 authoring-only 字段的 mark */
-  marks: Array<IRPlotMarkOperation>;
+  marks: Array<IRPlotMark>;
   /** 已移除 authoring-only 字段的 guide */
   guides: Array<IRPlotGuide>;
   /** 轴绑定展开后的 scale */

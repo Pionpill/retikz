@@ -3,12 +3,7 @@ import type { ExternalRow, IRDataScalarValue } from '@retikz/data';
 import type { BoundsInsets, Position } from '@retikz/math';
 import type { ZodType } from 'zod';
 
-import type {
-  IRPlotAxisGuide,
-  IRPlotCoordinateOperation,
-  IRPlotMarkOperation,
-  IRPlotScaleOperation,
-} from '../../schemas';
+import type { IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotMark, IRPlotScaleOperation } from '../../schemas';
 import type { PlotLabelMeasure } from '../../shared';
 import type { CoordinateDomainPaddingCapability } from '../domain-padding';
 import type { GuideContext, LoweredGuide } from '../guide';
@@ -127,7 +122,7 @@ export type CoordinateDefinitionResolveContext = {
     range: readonly [number, number],
   ) => PositionScale;
   /** 校验 interval / area 等依赖 baseline 的 mark 是否可安全使用当前 scale 类型（type 串，含自定义） */
-  assertBaselineScaleCompatible: (scaleType: string, marks: ReadonlyArray<IRPlotMarkOperation>) => void;
+  assertBaselineScaleCompatible: (scaleType: string, marks: ReadonlyArray<IRPlotMark>) => void;
   /** 当前 plot 内所有 axis guide；definition 决定如何将其下沉到 grid / axis 层 */
   axisGuides: ReadonlyArray<IRPlotAxisGuide>;
   /** 下沉直线 / 内置 guide 的通用入口 */
@@ -142,7 +137,7 @@ export type CoordinateDefinitionResolveContext = {
   /** 已解析的外部数据行；高级坐标系可按需读取完整数据 */
   rows: Array<ExternalRow>;
   /** 当前 plot 的 mark 列表；主要用于 scale 兼容性与坐标系特定校验 */
-  marks: ReadonlyArray<IRPlotMarkOperation>;
+  marks: ReadonlyArray<IRPlotMark>;
 };
 
 /**

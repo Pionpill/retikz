@@ -33,7 +33,7 @@ const recipe = defineChartRecipe({
   resolveEncodings: resolveDirectEncodings,
   resolve: () => ({
     scaffold: { scales: [], spatial: { coordinate: { type: 'cartesian2D' }, replaceable: true } },
-    semanticMarks: [{ kind: 'fixture', plotMarks: [{ type: 'point', kind: 'data' }] }],
+    semanticMarks: [{ kind: 'fixture', plotMarks: [{ type: 'point', encodings: { position: { x: { value: 0 } } } }] }],
   }),
 });
 

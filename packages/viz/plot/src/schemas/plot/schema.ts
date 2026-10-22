@@ -13,7 +13,7 @@ import { array, boolean, discriminatedUnion, enum as zodEnum, literal, number, r
 import { CoordinateOperationSchema } from '../coordinate';
 import { GuideSchema, GuideTextStyleSchema } from '../guide';
 import { BoxPaddingSchema } from '../layout';
-import { MarkOperationSchema } from '../mark';
+import { MarkSchema } from '../mark';
 import { ScaleOperationSchema } from '../scale';
 import { PlotAxisRulesSchema, PlotDefaultsSchema } from '../theme';
 import {
@@ -461,11 +461,9 @@ export const PlotSchema = CompositeBaseSchema.extend({
   composition: CoordinateCompositionSchema.optional().describe(
     'Coordinate composition registry for Plot-internal coordinate views referenced by marks and axis guides',
   ),
-  marks: array(MarkOperationSchema)
+  marks: array(MarkSchema)
     .min(1)
-    .describe(
-      'Mark layers, drawn in array order (stable z-order); built-in mark configs or custom type open config validated by a runtime MarkDefinition',
-    ),
+    .describe('Built-in mark layers, drawn in array order (stable z-order): point, path, interval, or relation'),
   guides: array(GuideSchema)
     .optional()
     .describe(

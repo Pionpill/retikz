@@ -1,9 +1,10 @@
 import type { DataTransformModel, ExternalRow, IRDataFieldDefinition } from '@retikz/data';
 
-import type { AnyMarkDefinition, ChannelPaletteContext, ChannelScaleResolution } from '../../contract';
+import type { ChannelPaletteContext, ChannelScaleResolution } from '../../contract';
 import type { ChannelScaleResolveContext } from '../../contract';
+import type { AnyMarkDefinition } from '../../providers';
 import type { ChannelRegistry } from '../../providers';
-import type { IRPlot, IRPlotScaleOperation } from '../../schemas';
+import type { IRPlot, IRPlotMark, IRPlotScaleOperation } from '../../schemas';
 
 /** channel 领域 resolver 的窄上下文；provider definition context 由 resolver 在调用点投影 */
 export type ChannelResolveContext = {
@@ -15,8 +16,8 @@ export type ChannelResolveContext = {
   model: DataTransformModel;
   /** 已合并的 channel definitions */
   channelRegistry: ChannelRegistry;
-  /** 已合并的 mark definitions，供 channel-kind selection 与 operation validation 使用 */
-  markRegistry: ReadonlyMap<string, AnyMarkDefinition>;
+  /** 内置图元行为定义，供 channel-kind selection 与 operation validation 使用 */
+  markRegistry: Readonly<Record<IRPlotMark['type'], AnyMarkDefinition>>;
   /** 当前 mark / series 的默认颜色 */
   defaultColor: string;
   /** 由 resolve/scale 提供的 channel scale resolver */

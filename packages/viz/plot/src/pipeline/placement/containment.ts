@@ -1,7 +1,6 @@
 import type { ExternalRow } from '@retikz/data';
 
 import type {
-  AnyMarkDefinition,
   AnyPositionAdjustmentDefinition,
   CoordinateFrame,
   DimensionRole,
@@ -9,9 +8,10 @@ import type {
   MarkChannels,
 } from '../../contract';
 import { RetikzPlotError } from '../../error';
+import type { AnyMarkDefinition } from '../../providers';
 import { resolveMarkInstances } from '../../resolve';
 import { resolvePositionAdjustmentOperation } from '../../resolve/position-adjustment';
-import type { IRPlotMarkOperation, IRPlotMarkPlacement } from '../../schemas';
+import type { IRPlotMark, IRPlotMarkPlacement } from '../../schemas';
 
 /** 单个 Mark 对各 role 提出的最终 range inset */
 export type MarkPlacementRangeOverrides = Partial<Record<DimensionRole, readonly [number, number]>>;
@@ -29,7 +29,7 @@ const assertEnvelopeExtent = (kind: string, role: string, extent: { lower: numbe
  * @description 只读 Definition.measure，不执行 initializer；最终 frame 会用提议 range 重新解析 guide 与 mark
  */
 export const resolveMarkPlacementRangeOverrides = (
-  resolution: { definition: AnyMarkDefinition; operation: IRPlotMarkOperation },
+  resolution: { definition: AnyMarkDefinition; operation: IRPlotMark },
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   channels: MarkChannels,

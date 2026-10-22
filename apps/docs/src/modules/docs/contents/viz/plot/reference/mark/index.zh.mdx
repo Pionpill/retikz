@@ -1,17 +1,13 @@
 ---
 title: 契约 - 图元
-description: 查询 Plot 点、路径、区间、标注、关系与自定义图元 schema。
+description: 查询 Plot 点、路径、区间与关系图元 schema。
 ---
 
-图元是图形语法的几何输出层。内置图元使用精确判别联合，自定义图元则保留 JSON-safe 开放配置，并在 lowering 时由对应 `MarkDefinition` 校验。
+图元是图形语法的几何输出层。仅支持 Point、Path、Interval、Relation 四类内置图元，未知类型在 schema 入口被拒绝。
 
 ## MarkSchema
 
 <ZodSchema name="MarkSchema" description="Point、Path、Interval 与 Relation 内置图元的判别联合。" />
-
-## MarkOperationSchema
-
-<ZodSchema name="MarkOperationSchema" description="内置数据图元、显式标注或运行时注册自定义图元的联合。" />
 
 所有图元都可用 `defaultColorGroup` 声明默认颜色共享关系。同名组只按首次出现位置消费一个 `palette.series` 槽位；未分组图元各自按声明顺序消费。显式颜色编码或常量 paint 仍然优先。
 
@@ -386,22 +382,6 @@ description: 查询 Plot 点、路径、区间、标注、关系与自定义图�
     'label.gap': '断口两侧的额外留白，单位为用户单位，默认 4。',
     'label.placement': '标签放置方式：outside 按 side 外偏，inside 由区域 host 放在内部。',
     'label.distance': '标签相对锚点的侧向偏移距离，单位为用户坐标。',
-  }}
-/>
-
-## CustomMarkSchema
-
-<ZodSchema
-  name="CustomMarkSchema"
-  description="由运行时 MarkDefinition 校验和 lowering 的开放 JSON 图元操作。"
-  descriptions={{
-    defaultColorIndex: '默认分类色索引；省略时按默认颜色分组分配',
-    type: '已注册的自定义图元类型，不得与内置类型冲突。',
-    transform: '在 Plot 根变换之后执行的图元局部变换。',
-    layer: '自定义图元外层 Scope 的语义图层覆盖。',
-    coordinateView: '用于投影的坐标视图 id。',
-    defaultColorGroup: '省略显式颜色时共享同一个顺序色板槽位的语义组。',
-    encoding: '用于比例尺推断与 Definition 消费的位置、非位置通道。',
   }}
 />
 

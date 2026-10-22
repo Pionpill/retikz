@@ -1,5 +1,5 @@
 import type { IRPlotGuide } from '@retikz/plot';
-import { PlotGuide, BuiltinPlotScale, BuiltinPlotMark, isBuiltinMark, isBuiltinScaleOperation } from '@retikz/plot';
+import { PlotGuide, BuiltinPlotScale, BuiltinPlotMark, isBuiltinScaleOperation } from '@retikz/plot';
 
 import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
 import { defineChartRecipe } from '../../_chart/contract';
@@ -131,13 +131,7 @@ export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
     for (let index = 0; index < context.chartMarks.length - 1; index += 2) {
       const path = context.chartMarks[index];
       const point = context.chartMarks[index + 1];
-      if (
-        !isBuiltinMark(path) ||
-        path.type !== BuiltinPlotMark.Path ||
-        !isBuiltinMark(point) ||
-        point.type !== BuiltinPlotMark.Point
-      )
-        continue;
+      if (path.type !== BuiltinPlotMark.Path || point.type !== BuiltinPlotMark.Point) continue;
       const pointColor = point.encodings.color;
       if (pointColor === undefined || typeof pointColor === 'string') continue;
 

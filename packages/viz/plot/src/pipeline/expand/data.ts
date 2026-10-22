@@ -29,17 +29,18 @@ import {
   resolveRegressionImplementationRegistry,
 } from '@retikz/data';
 
-import type { AnyMarkDefinition, AnyPositionAdjustmentDefinition, AnyScaleDefinition } from '../../contract';
+import type { AnyPositionAdjustmentDefinition, AnyScaleDefinition } from '../../contract';
 import { markPositionInputs, positionField } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import { resolveMarkRegistry, resolvePositionAdjustmentRegistry, resolveScaleRegistry } from '../../providers';
-import type { IRPlot, IRPlotMarkOperation } from '../../schemas';
+import type { AnyMarkDefinition } from '../../providers';
+import { MARK_REGISTRY, resolvePositionAdjustmentRegistry, resolveScaleRegistry } from '../../providers';
+import type { IRPlot, IRPlotMark } from '../../schemas';
 import { collectSourceFields } from '../source-fields';
 import type { LowerPlotsOptions } from './types';
 
 /** 对单个mark应用局部transform，返回该mark实际消费的完整DataView */
 export const applyMarkTransforms = (
-  mark: IRPlotMarkOperation,
+  mark: IRPlotMark,
   dataView: DataView,
   options: ApplyTransformsOptions,
 ): DataView => {
@@ -107,7 +108,7 @@ export const prepareRows = (
   transformRegistry: Map<string, AnyTransformDefinition>;
   transformContext: TransformContext;
   scaleRegistry: Map<string, AnyScaleDefinition>;
-  markRegistry: Map<string, AnyMarkDefinition>;
+  markRegistry: Readonly<Record<IRPlotMark['type'], AnyMarkDefinition>>;
   positionAdjustmentRegistry: Map<string, AnyPositionAdjustmentDefinition>;
   fieldOrderRegistry: ReturnType<typeof resolveFieldOrderRegistry>;
 } => {
@@ -235,7 +236,7 @@ export const preparePlotRegistries = (options: LowerPlotsOptions) => {
     options.implementations?.regressions,
   );
   const scaleRegistry = resolveScaleRegistry(options.definitions?.scales);
-  const markRegistry = resolveMarkRegistry(options.definitions?.marks);
+  const markRegistry = MARK_REGISTRY;
   const positionAdjustmentRegistry = resolvePositionAdjustmentRegistry(options.definitions?.positionAdjustments);
 
   return {

@@ -46,11 +46,11 @@ React DSL 只收集 JSX / props 并调度 Plot Vanilla；Vanilla 的 `plot()` �
 
 运行时选项按职责分为三组；对应的 `PlotLayoutOverrides`、`PlotDefinitions`、`PlotImplementations` 类型均从 `@retikz/plot` 导出，可独立声明并复用：
 
-| 分组              | 字段                                                                                                                                                                                |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `layout`          | `width`、`height`、`fontSize`、`margin`                                                                                                                                             |
-| `definitions`     | `coordinates`、`transforms`、`statisticsReducers`、`rowSelectors`、`regressions`、`scales`、`channels`、`marks`、`positionAdjustments`、`formats`、`fieldOrders`、`plotThemeStyles` |
-| `implementations` | `transforms`、`statisticsReducers`、`rowSelectors`、`regressions`                                                                                                                   |
+| 分组              | 字段                                                                                                                                                                       |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `layout`          | `width`、`height`、`fontSize`、`margin`                                                                                                                                    |
+| `definitions`     | `coordinates`、`transforms`、`statisticsReducers`、`rowSelectors`、`regressions`、`scales`、`channels`、`positionAdjustments`、`formats`、`fieldOrders`、`plotThemeStyles` |
+| `implementations` | `transforms`、`statisticsReducers`、`rowSelectors`、`regressions`                                                                                                          |
 
 例如 `renderPlot(spec, data, { layout: { width: 480, height: 300 } })`。React 的 `width` / `height` 仍声明 Plot IR 尺寸，`layout` 则提供运行时布局默认值；IR 尺寸优先。
 

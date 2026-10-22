@@ -9,7 +9,6 @@ import type {
   ChannelValueResolver,
   FieldCollector,
   MarkChannels,
-  MarkDefinition,
   MarkLoweringContext,
   MarkProvenance,
 } from '../../../contract';
@@ -35,11 +34,11 @@ import type {
   IRPlotMark,
   IRPlotMarkPathLabel,
   IRPlotMarkNodeLabel,
-  IRPlotMarkOperation,
   IRPlotPathMark,
   IRPlotPointMark,
 } from '../../../schemas';
 import { BUILTIN_NODE_CHANNELS, BUILTIN_PATH_CHANNELS, labelOf } from '../../channel';
+import type { MarkDefinition } from '../types';
 
 /** 折线默认描边宽度（user units） */
 export const LINE_STROKE_WIDTH = 2;
@@ -255,7 +254,7 @@ export const attachDatumLabel = (
 /** 把已解析的 Node 通道值交付到单个 core Node */
 export const applyNodeChannelDeliveries = (
   node: IRNode,
-  mark: IRPlotMarkOperation,
+  mark: IRPlotMark,
   row: ExternalRow,
   channels: MarkChannels,
   nodeKind: 'pointGlyph' | 'pointText' | 'cell',
@@ -269,7 +268,7 @@ export const applyNodeChannelDeliveries = (
 /** 把已解析的 Path 通道值交付到单个 core Path */
 export const applyPathChannelDeliveries = (
   path: IRPath,
-  mark: IRPlotMarkOperation,
+  mark: IRPlotMark,
   row: ExternalRow | undefined,
   channels: MarkChannels,
 ): IRPath => {
@@ -395,7 +394,7 @@ type ChannelDefinitionMap = Readonly<Record<string, { channel: string }>>;
  * @description node/path 内置通道名由 channel 层单一维护；mark 侧只声明自己消费哪类 channel，避免再维护一份平行字段列表
  */
 const collectChannelDefinitionFields = (
-  mark: IRPlotMarkOperation,
+  mark: IRPlotMark,
   fields: FieldCollector,
   definitions: ChannelDefinitionMap,
 ): void => {
@@ -403,11 +402,11 @@ const collectChannelDefinitionFields = (
 };
 
 /** 收集当前 mark 消费的内置 Node channel 字段 */
-export const collectNodeChannelFields = (mark: IRPlotMarkOperation, fields: FieldCollector): void =>
+export const collectNodeChannelFields = (mark: IRPlotMark, fields: FieldCollector): void =>
   collectChannelDefinitionFields(mark, fields, BUILTIN_NODE_CHANNELS);
 
 /** 收集当前 mark 消费的内置 Path channel 字段 */
-export const collectPathChannelFields = (mark: IRPlotMarkOperation, fields: FieldCollector): void =>
+export const collectPathChannelFields = (mark: IRPlotMark, fields: FieldCollector): void =>
   collectChannelDefinitionFields(mark, fields, BUILTIN_PATH_CHANNELS);
 
 /** Node 类 mark 默认可消费的通道类型集合 */

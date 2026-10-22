@@ -7,8 +7,8 @@ import { isFiniteNumber } from '@retikz/math';
 import type { AnyChannelDefinition, PathChannelDefinition } from '../../../contract';
 import { ChannelDefinitionKind, markChannelEncoding, definePathChannel } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
-import type { IRPlotMarkOperation, IRPlotChannel } from '../../../schemas';
-import { isBuiltinMark } from '../../../schemas';
+import type { IRPlotMark, IRPlotChannel } from '../../../schemas';
+import {} from '../../../schemas';
 import { makeMarkValueResolver, resolveNumericChannel } from '../shared';
 import { OPACITY_MIN, STROKE_WIDTH_MAX, STROKE_WIDTH_MIN } from './node';
 
@@ -44,13 +44,11 @@ const defineSimplePathChannel = <T extends JsonValue>(
     deliver,
   });
 
-const pickPathStrokeWidth = (mark: IRPlotMarkOperation): IRPlotChannel | undefined =>
-  markChannelEncoding(mark, 'strokeWidth');
+const pickPathStrokeWidth = (mark: IRPlotMark): IRPlotChannel | undefined => markChannelEncoding(mark, 'strokeWidth');
 
-const pickPathOpacity = (mark: IRPlotMarkOperation): IRPlotChannel | undefined => markChannelEncoding(mark, 'opacity');
+const pickPathOpacity = (mark: IRPlotMark): IRPlotChannel | undefined => markChannelEncoding(mark, 'opacity');
 
-const pickPathFillOpacity = (mark: IRPlotMarkOperation): IRPlotChannel | undefined =>
-  markChannelEncoding(mark, 'fillOpacity');
+const pickPathFillOpacity = (mark: IRPlotMark): IRPlotChannel | undefined => markChannelEncoding(mark, 'fillOpacity');
 
 const pathNumericChannels: {
   strokeWidth: PathChannelDefinition<number>;
@@ -272,8 +270,7 @@ export const PATH_CHANNELS: ReadonlyArray<AnyChannelDefinition> = [
     channel: `geometry.${target}`,
     kind: ChannelDefinitionKind.Mark,
     resolve: (context, mark) => {
-      if (!isBuiltinMark(mark) || mark.type !== 'relation' || mark.properties.geometry.kind !== 'ribbon')
-        return undefined;
+      if (mark.type !== 'relation' || mark.properties.geometry.kind !== 'ribbon') return undefined;
       const binding = mark.encodings?.geometry?.[target];
       const fixed = mark.properties.geometry[target];
       if (binding === undefined) return fixed === undefined ? undefined : { resolver: () => fixed };

@@ -1,4 +1,4 @@
-import { isBuiltinMark, PlotSchema } from '@retikz/plot';
+import { PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { boxplotOutside, boxplotSummary } from '../../../../plot/tests/helpers/plot-spec-fixtures';
@@ -50,12 +50,7 @@ describe('buildPlotIR stat-geom 结构组合', () => {
       { deferPositionScaleInference: true },
     );
 
-    expect(spec.marks.map(mark => (isBuiltinMark(mark) ? mark.type : 'custom'))).toEqual([
-      'interval',
-      'relation',
-      'relation',
-      'point',
-    ]);
+    expect(spec.marks.map(mark => mark.type)).toEqual(['interval', 'relation', 'relation', 'point']);
     expect(spec.marks[0]).toMatchObject({
       type: 'interval',
       transforms: [{ operation: boxplotSummary }],

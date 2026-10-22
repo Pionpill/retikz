@@ -1,7 +1,6 @@
 import type { ExternalRow } from '@retikz/data';
 
 import type {
-  AnyMarkDefinition,
   AnyPositionAdjustmentDefinition,
   CoordinateFrame,
   MappedMarkPlacementTarget,
@@ -12,10 +11,11 @@ import type {
   ScreenPositionAdjustmentResultTarget,
 } from '../../contract';
 import { RetikzPlotError } from '../../error';
+import type { AnyMarkDefinition } from '../../providers';
 import { mapMarkRoles } from '../../providers';
 import { resolveMarkInstances } from '../../resolve';
 import { resolvePositionAdjustmentOperation } from '../../resolve/position-adjustment';
-import type { IRPlotMarkOperation, IRPlotMarkPlacement } from '../../schemas';
+import type { IRPlotMark, IRPlotMarkPlacement } from '../../schemas';
 
 /** 构造只读 target 快照，避免外部 initializer 原地修改输入绕过输出守门 */
 const readonlyMappedTargets = (
@@ -75,7 +75,7 @@ const assertKeysAndNulls = <T extends { key: string }>(
 
 /** 执行单个 Mark 的完整 Placement 管线 */
 export const resolveMarkPlacement = (
-  resolution: { definition: AnyMarkDefinition; operation: IRPlotMarkOperation },
+  resolution: { definition: AnyMarkDefinition; operation: IRPlotMark },
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   channels: MarkChannels,

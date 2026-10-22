@@ -20,7 +20,6 @@ import type {
   CoordinateFrame,
   FieldCollector,
   MarkChannels,
-  MarkDefinition,
   MarkLoweringContext,
   PolarCoordinateFrame,
 } from '../../../contract';
@@ -60,6 +59,7 @@ import {
   pathChannelKinds,
   resolveGeometryMarkLabels,
 } from '../shared';
+import type { MarkDefinition } from '../types';
 import { POINT_DEFAULT_RADIUS } from './point-glyph';
 import { pointGlyphStyle } from './point-glyph';
 

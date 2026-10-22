@@ -2,7 +2,7 @@ import type { IRNodeLabel } from '@retikz/core';
 
 import type { MarkChannelDefinition, ResolveLabel } from '../../../contract';
 import { ChannelDefinitionKind, labelEntries } from '../../../contract';
-import type { IRPlotMarkLabelText, IRPlotMarkOperation } from '../../../schemas';
+import type { IRPlotMarkLabelText, IRPlotMark } from '../../../schemas';
 import { labelOf } from '../shared';
 
 /** 内置文本通道 definition 的按名称索引类型 */
@@ -24,7 +24,7 @@ type LabelContentSources = {
   displayFormat?: string;
 };
 
-const labelContentSources = (mark: IRPlotMarkOperation): LabelContentSources => {
+const labelContentSources = (mark: IRPlotMark): LabelContentSources => {
   const source = mark as {
     encodings?: { text?: string; label?: string | { text?: string } | Array<string | { text?: string }> };
     properties?: {

@@ -320,8 +320,8 @@ const translations: Partial<Record<string, string>> = {
   '通道名称、绑定读取函数与常量 paint 策略': 'Channel name, binding reader, and constant paint policy',
   '使用颜色比例尺解析字段的 mark 通道定义；创建时不解析数据':
     'Mark channel definition that resolves fields through color scales; creation does not resolve data',
-  '把 schema 定义的 mark 样式值解析为「行 → 属性值」函数，供内置 mark 与自定义 mark 复用':
-    'Resolves a schema-defined mark style value into a row-to-property function shared by built-in and custom marks',
+  '把 schema 定义的 mark 样式值解析为「行 → 属性值」函数，供内置图元复用':
+    'Resolves a schema-defined mark style value into a row-to-property function shared by built-in marks',
   常量或字段解析器产出的视觉值类型: 'Visual value type produced by a constant or field resolver',
   '字段或常量样式值；省略时不产生解析结果': 'Field or constant style value; omitted to produce no resolution',
   当前数据的完整字段模型: 'Complete field model for the current data',
