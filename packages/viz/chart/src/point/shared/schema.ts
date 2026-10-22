@@ -15,7 +15,7 @@ import {
 import { MarkNodeLabelListSchema, PlotDomainPaddingKind, PointAutoPaddingSchema } from '@retikz/plot';
 import type { infer as ZodInfer } from 'zod';
 import type { ZodType } from 'zod';
-import { boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
+import { boolean, discriminatedUnion, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
 export { PointAutoPaddingSchema } from '@retikz/plot';
 
@@ -23,27 +23,34 @@ export type IRPointAutoPadding = ZodInfer<typeof PointAutoPaddingSchema>;
 
 const pointPositionDomainPaddingFields = Object.keys(BoxSpacingSchema.shape);
 
-const PointPositionDomainPaddingObjectSchema = strictObject({
-  kind: zodEnum(PlotDomainPaddingKind).optional().describe('Domain padding unit; omitted means range'),
+const PointPositionDomainPaddingRangeSchema = strictObject({
+  kind: literal(PlotDomainPaddingKind.Range).optional().describe('Domain padding unit; omitted means range'),
   ...BoxSpacingSchema.shape,
-})
-  .refine(value => pointPositionDomainPaddingFields.some(field => value[field as keyof typeof value] !== undefined), {
-    message: 'at least one position domain padding value is required',
-  })
-  .superRefine((value, context) => {
-    if (value.kind !== PlotDomainPaddingKind.Ratio) return;
+});
 
-    for (const field of pointPositionDomainPaddingFields) {
-      const padding = value[field as keyof typeof value];
-      if (typeof padding === 'number' && padding >= 1) {
-        context.addIssue({
-          code: 'custom',
-          path: [field],
-          message: 'ratio domain padding must be less than 1',
-        });
-      }
-    }
-  });
+/** 复用间距字段并将比例限制在 1 以下 */
+const createRatioSpacingSchema = (field: keyof typeof BoxSpacingSchema.shape) =>
+  BoxSpacingSchema.shape[field]
+    .unwrap()
+    .lt(1)
+    .optional()
+    .describe(BoxSpacingSchema.shape[field].description ?? '');
+
+const PointPositionDomainPaddingObjectSchema = discriminatedUnion('kind', [
+  PointPositionDomainPaddingRangeSchema,
+  PointPositionDomainPaddingRangeSchema.extend({
+    kind: literal(PlotDomainPaddingKind.Ratio).describe('Domain padding measured as a source-domain-span ratio'),
+    default: createRatioSpacingSchema('default'),
+    x: createRatioSpacingSchema('x'),
+    y: createRatioSpacingSchema('y'),
+    left: createRatioSpacingSchema('left'),
+    right: createRatioSpacingSchema('right'),
+    top: createRatioSpacingSchema('top'),
+    bottom: createRatioSpacingSchema('bottom'),
+  }),
+]).refine(value => pointPositionDomainPaddingFields.some(field => value[field as keyof typeof value] !== undefined), {
+  message: 'at least one position domain padding value is required',
+});
 
 /** 校验位置尺度的共享或按轴分别设置的连续定义域留白 */
 export const PointPositionDomainPaddingSchema = union([

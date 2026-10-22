@@ -153,23 +153,13 @@ const RelationOrthogonalRoutingSchema = strictObject({
   kind: literal(RelationRoutingKind.Orthogonal).describe(
     'Discriminator: connect each segment with right-angle orthogonal line steps',
   ),
-  via: zodEnum(RelationOrthogonalRoutingVia)
-    .optional()
-    .describe('Orthogonal direction: -| first horizontal then vertical; |- first vertical then horizontal'),
+  via: zodEnum(RelationOrthogonalRoutingVia, { error: 'orthogonal relation routing requires via' }).describe(
+    'Orthogonal direction: -| first horizontal then vertical; |- first vertical then horizontal',
+  ),
   labelStep: zodEnum(RelationOrthogonalLabelStep)
     .optional()
     .describe('Which generated drawable step receives the shorthand relation label; default main'),
-})
-  .superRefine((routing, ctx) => {
-    if (routing.via === undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['via'],
-        message: 'orthogonal relation routing requires via',
-      });
-    }
-  })
-  .describe('Orthogonal relation routing strategy');
+}).describe('Orthogonal relation routing strategy');
 
 /** 校验端点引用解析后生成 Core 步骤的关系路由策略 */
 export const RelationRoutingSchema = discriminatedUnion('kind', [

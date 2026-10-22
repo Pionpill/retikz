@@ -10,7 +10,6 @@ import {
   array,
   boolean,
   discriminatedUnion,
-  enum as zodEnum,
   literal,
   looseObject,
   number,
@@ -38,33 +37,21 @@ export const CategoryValueSchema = union([string(), number()]).describe(
   'A category value: string or number (the leaf a band / point scale domain element resolves to)',
 );
 
-const DomainPaddingObjectSchema = strictObject({
-  kind: zodEnum([PlotDomainPaddingKind.Range, PlotDomainPaddingKind.Ratio])
-    .optional()
-    .describe('Padding unit: range output units by default, or an explicit source-domain-span ratio'),
+const DomainPaddingRangeSchema = strictObject({
+  kind: literal(PlotDomainPaddingKind.Range).optional().describe('Padding unit: range output units by default'),
   lower: NonNegativeNumberSchema.optional().describe('Padding applied beyond the lower source domain bound'),
   upper: NonNegativeNumberSchema.optional().describe('Padding applied beyond the upper source domain bound'),
-}).superRefine((padding, ctx) => {
-  if (padding.lower === undefined && padding.upper === undefined) {
-    ctx.addIssue({
-      code: 'custom',
-      path: [],
-      message: 'domainPadding object requires lower or upper',
-    });
-  }
+});
 
-  if (padding.kind !== PlotDomainPaddingKind.Ratio) return;
-
-  for (const side of ['lower', 'upper'] as const) {
-    const value = padding[side];
-    if (value !== undefined && value >= 1) {
-      ctx.addIssue({
-        code: 'custom',
-        path: [side],
-        message: `ratio domainPadding ${side} must be less than 1`,
-      });
-    }
-  }
+const DomainPaddingObjectSchema = discriminatedUnion('kind', [
+  DomainPaddingRangeSchema,
+  DomainPaddingRangeSchema.extend({
+    kind: literal(PlotDomainPaddingKind.Ratio).describe('Padding measured as a source-domain-span ratio'),
+    lower: DomainPaddingRangeSchema.shape.lower.unwrap().lt(1).optional(),
+    upper: DomainPaddingRangeSchema.shape.upper.unwrap().lt(1).optional(),
+  }),
+]).refine(padding => padding.lower !== undefined || padding.upper !== undefined, {
+  message: 'domainPadding object requires lower or upper',
 });
 
 /** 自动留白时图元外缘到绘图区边界的最小净空 */

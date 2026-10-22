@@ -524,7 +524,6 @@ const orthogonalRoute = (
   label: IRStepLabel | undefined,
 ): Array<IRStep> => {
   const via = routing.via;
-  if (via === undefined) throw new RetikzPlotError('lowerPlots: orthogonal relation routing requires via');
 
   const steps: Array<IRStep> = [{ type: 'step', kind: RelationRouteStepKind.Move, to: targets[0] }];
   const candidates: Array<{ stepIndex: number; length: number }> = [];

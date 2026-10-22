@@ -6,7 +6,7 @@ import {
   PositiveNumberSchema,
 } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
-import { array, enum as zodEnum, literal, strictObject, union, unknown } from 'zod';
+import { array, enum as zodEnum, literal, never, strictObject, union, unknown } from 'zod';
 
 import { DrawableInstanceSchema } from '../../drawable';
 import { AngleDegreesSchema } from '../../scalar';
@@ -137,32 +137,14 @@ export const PathSchema = strictObject({
 
 /** 校验内置描边路径的观察对象，包含完整宿主约束 */
 export const StrokePathSchema = PathSchema.extend({
-  // Keep malformed step payloads on the compile-time diagnostic path. The stroke
-  // emitter owns geometric validity and emits the established warning/error.
-  children: array(unknown()).optional().describe('Sequence of source step actions for the stroke path.'),
+  kind: literal(BuiltinPathKind.Stroke).optional().describe('Built-in stroke path kind. May be omitted.'),
+  /** 步骤数据留到编译时检查，由描边编译逻辑校验几何有效性并报告警告或错误 */
+  children: array(unknown(), { error: 'Stroke paths require `children` steps.' }).describe(
+    'Sequence of source step actions for the stroke path.',
+  ),
+  kindOptions: never({ error: '`kindOptions` is not valid for the built-in `stroke` path kind.' })
+    .optional()
+    .describe('Not accepted by the built-in stroke path kind.'),
 })
-  .superRefine((path, ctx) => {
-    const kind = path.kind ?? BuiltinPathKind.Stroke;
-    if (kind !== BuiltinPathKind.Stroke) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['kind'],
-        message: 'Stroke path schema requires kind `stroke` or an omitted kind.',
-      });
-      return;
-    }
-
-    if (path.children === undefined) {
-      ctx.addIssue({ code: 'custom', path: ['children'], message: 'Stroke paths require `children` steps.' });
-    }
-
-    if (path.kindOptions !== undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['kindOptions'],
-        message: '`kindOptions` is not valid for the built-in `stroke` path kind.',
-      });
-    }
-  })
   .transform(path => path as ZodInfer<typeof PathSchema>)
   .describe('Complete source subject schema for the built-in stroke path kind.');

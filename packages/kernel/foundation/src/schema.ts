@@ -15,7 +15,7 @@ export const JsonObjectSchema = record(string(), JsonValueSchema).describe(
 
 /** 非空白字符串 schema */
 export const NonBlankStringSchema = string()
-  .refine(value => value.trim().length > 0, {
+  .regex(/\S/u, {
     message: 'String must contain at least one non-whitespace character.',
   })
   .describe('String containing at least one non-whitespace character.');

@@ -100,17 +100,19 @@ export const TreeSchema = CompositeBaseSchema.extend({
     .describe('Parent-child connection overrides; false hides the connection.'),
   layout: TreeLayoutSchema.optional().describe('Growth direction and clearances between levels and subtree envelopes.'),
   label: NodeSchema.shape.label,
-  root: TreeItemSchema.nullable().describe('Text leaf, configured recursive node, or null for an empty tree.'),
+  root: union([
+    string(),
+    TreeItemFieldsSchema.extend({
+      connection: never().optional().describe('Root node has no incoming connection.'),
+      children: array(TreeItemSchema.nullable()).optional(),
+    }),
+  ])
+    .nullable()
+    .describe('Text leaf, configured recursive node, or null for an empty tree.'),
 }).superRefine((source, context) => {
   const ids = new Set<string>();
   const visit = (item: IRTreeItem | null, path: Array<string | number>) => {
     if (item === null || typeof item === 'string') return;
-    if (path.length === 1 && item.connection !== undefined)
-      context.addIssue({
-        code: 'custom',
-        path: [...path, 'connection'],
-        message: 'Root node has no incoming connection.',
-      });
     if (item.id !== undefined) {
       if (ids.has(item.id))
         context.addIssue({ code: 'custom', path: [...path, 'id'], message: 'Duplicate tree node id.' });

@@ -23,6 +23,7 @@ const CustomMarkObjectSchema = strictObject({
   ...markBase,
   type: NonBlankStringSchema.refine(type => !builtinMarkTypes.has(type), {
     message: 'custom mark type must not collide with a built-in mark type',
+    abort: true,
   }),
   encodings: record(NonBlankStringSchema, JsonValueSchema).optional(),
   properties: record(NonBlankStringSchema, JsonValueSchema).optional(),
