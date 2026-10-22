@@ -39,7 +39,11 @@ export const TransformStackPreview = (
       <PlotTransform operation={{ ...stackOperationOf(values) }} />
       <PlotScale dimension="y" type="linear" domain={yDomainByOffset[values.offset]} />
       <IntervalMark
-        encodings={{ color: 'product', bounds: { y: { from: 'y0', to: 'y1' } }, position: { x: 'quarter' } }}
+        encodings={{
+          color: 'product',
+          bounds: { y: { from: { field: 'y0' }, to: { field: 'y1' } } },
+          position: { x: { field: 'quarter' } },
+        }}
         properties={{ bounds: { y: { kind: 'extent' } }, opacity: { overall: values.offset === 'overlap' ? 0.6 : 1 } }}
       />
       <PlotAxis dimension="x" title={i18n.quarter} />

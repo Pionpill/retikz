@@ -1,9 +1,9 @@
-import { PathAnnotation, PointAnnotation, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
+import { PathMark, PointMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import type { FC } from 'react';
 
-import { annotationX, annotationXScale } from './annotation-coordinate';
-import type { AnnotationCoordinate } from './annotation-coordinate';
+import { annotationX, annotationXScale } from '../shared/reference-coordinate';
+import type { AnnotationCoordinate } from '../shared/reference-coordinate';
 
 /** 标注试验场参数 */
 export type AnnotationPathValues = {
@@ -22,10 +22,13 @@ export const AnnotationPathPreview: FC<AnnotationPathValues> = values => (
     <Plot data={[]} width={320} height={240} coordinate={values.coordinate === 'cartesian' ? undefined : 'polar2D'}>
       <PlotScale dimension="x" {...annotationXScale(values.coordinate)} />
       <PlotScale dimension="y" type="linear" domain={[0, 100]} domainPadding={0} />
-      <PathAnnotation
+      <PathMark
+        contributeToDomain={false}
+        encodings={{
+          from: { x: { value: annotationX(values.coordinate, 10, 'A') }, y: { value: 70 } },
+          to: { x: { value: annotationX(values.coordinate, values.end, values.category) }, y: { value: 70 } },
+        }}
         properties={{
-          from: { x: annotationX(values.coordinate, 10, 'A'), y: 70 },
-          to: { x: annotationX(values.coordinate, values.end, values.category), y: 70 },
           connection: values.connection,
           stroke: 'dodgerblue',
           strokeWidth: 3,
@@ -39,15 +42,17 @@ export const AnnotationPathPreview: FC<AnnotationPathValues> = values => (
             : undefined,
         }}
       />
-      <PointAnnotation
-        properties={{ size: 4, fill: 'darkorange', position: { x: annotationX(values.coordinate, 10, 'A'), y: 70 } }}
+      <PointMark
+        contributeToDomain={false}
+        encodings={{ position: { x: { value: annotationX(values.coordinate, 10, 'A') }, y: { value: 70 } } }}
+        properties={{ size: 4, fill: 'darkorange' }}
       />
-      <PointAnnotation
-        properties={{
-          size: 4,
-          fill: 'darkorange',
-          position: { x: annotationX(values.coordinate, values.end, values.category), y: 70 },
+      <PointMark
+        contributeToDomain={false}
+        encodings={{
+          position: { x: { value: annotationX(values.coordinate, values.end, values.category) }, y: { value: 70 } },
         }}
+        properties={{ size: 4, fill: 'darkorange' }}
       />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" />

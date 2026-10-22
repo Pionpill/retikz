@@ -11,11 +11,15 @@ import { samples } from './point-coordinates.data';
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Layout>
     <Plot data={samples} width={300} height={150} coordinate="cartesian1D" position={[0, 40]}>
-      <PointMark encodings={{ color: 'group', position: { x: values[POINT_COORDINATE_1D_CONTROL_IDS.xField] } }} />
+      <PointMark
+        encodings={{ color: 'group', position: { x: { field: values[POINT_COORDINATE_1D_CONTROL_IDS.xField] } } }}
+      />
       <PlotAxis dimension="x" />
     </Plot>
     <Plot data={samples} width={230} height={230} coordinate="polar1D" position={[360, 0]}>
-      <PointMark encodings={{ color: 'group', position: { x: values[POINT_COORDINATE_1D_CONTROL_IDS.xField] } }} />
+      <PointMark
+        encodings={{ color: 'group', position: { x: { field: values[POINT_COORDINATE_1D_CONTROL_IDS.xField] } } }}
+      />
       <PlotAxis dimension="x" />
     </Plot>
   </Layout>

@@ -14,7 +14,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     height={220}
     coordinate={{ type: 'polar2D', innerRadius: values[BAR_RADIAL_INNER_RADIUS_ID] }}
   >
-    <IntervalMark encodings={{ color: 'month', position: { x: 'month', y: 'value' } }} />
+    <IntervalMark encodings={{ color: 'month', position: { x: { field: 'month' }, y: { field: 'value' } } }} />
     <PlotScale
       dimension="x"
       type="band"

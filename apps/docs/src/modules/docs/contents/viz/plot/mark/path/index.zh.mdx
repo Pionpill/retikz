@@ -7,8 +7,6 @@ description: 用 PathMark 按顺序连接数据位置，绘制折线、多系列
 
 本页从一条折线开始，再介绍分组、曲线、闭合和缺失值。字段绑定见[通道绑定](/viz/plot/channel/binding)，安装和宿主接入见[快速开始](/viz/plot/get-start)。
 
-只需绘制一次的常量参考点、参考线或区域，使用[独立标注](/viz/plot/mark/annotation)。
-
 ## 接入方式
 
 下面按月份连接三条营收记录。显式设置 `order="month"` 后，即使交换数据行的位置，连线仍按月份前进。
@@ -38,7 +36,7 @@ const rows = [
 
 createRoot(document.getElementById('plot')!).render(
   <Plot data={rows} width={360} height={220}>
-    <PathMark encodings={{ order: "month", position: { x: "month", y: "revenue" } }} />
+    <PathMark encodings={{ order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" />
   </Plot>,
@@ -68,7 +66,9 @@ const spec: IRPlot = {
     { name: 'y', type: 'linear' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'path', kind: "data", encodings: { position: { x: 'month', y: 'revenue' }, order: 'month' } }],
+  marks: [
+    { type: 'path', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' } },
+  ],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
@@ -97,7 +97,9 @@ const spec = plot({
     { name: 'y', type: 'linear' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'path', kind: "data", encodings: { position: { x: 'month', y: 'revenue' }, order: 'month' } }],
+  marks: [
+    { type: 'path', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' } },
+  ],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
@@ -129,7 +131,9 @@ const spec: IRPlot = {
     { name: 'y', type: 'linear' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'path', kind: "data", encodings: { position: { x: 'month', y: 'revenue' }, order: 'month' } }],
+  marks: [
+    { type: 'path', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' } },
+  ],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
@@ -356,6 +360,32 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 - **连续角度默认采样连接**：角度轴上的中间位置也有意义，例如从 0° 到 90° 之间存在连续的角度。对角度和半径插值后再投影，才能表现沿角度变化的路径；同半径的两个位置由此沿圆周连接，而不会被一条直线抄近路。
 
 这是根据角度尺度选择的默认策略，不是坐标系的强制限制。可以通过 `interpolation` 显式选择 `chord` 或 `polar`；采样后的点如何连接，仍由 `curve` 决定。
+
+## 端点路径与参考线
+
+通过 `encodings.from`、`encodings.to` 指定两个完整位置，每个角色可绑定字段、常量或视图边界。端点形式与 `encodings.position` 顶点形式互斥。`properties.connection` 选择沿坐标系连接或投影后的直线连接；切换极坐标，观察圆弧与弦的区别。
+
+以下参考图元显式设置 `contributeToDomain={false}`，不扩大主体数据的定义域。使用控件切换坐标系、位置、几何与标签。
+
+<ComponentPreview
+  files={['reference-path', 'reference-path.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
+  defaultSourceFile="reference-path.preview.tsx"
+  controls={{ name: 'reference-path' }}
+  size="md"
+/>
+
+下面通过局部 `summarize` 变换计算统计字段，再绑定到同一类 Mark。切换平均值 / 中位数或分组，观察每个结果行产生的独立参考图元；小点保留原始观测。
+
+<ComponentPreview
+  files={[
+    'reference-data-path',
+    '/viz/plot/mark/shared/reference-data.preview.tsx',
+    '/viz/plot/mark/shared/reference-data.data.ts',
+  ]}
+  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
+  controls={{ name: 'reference-data-path' }}
+  size="md"
+/>
 
 ## API 参考
 

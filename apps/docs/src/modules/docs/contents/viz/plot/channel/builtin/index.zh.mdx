@@ -34,7 +34,7 @@ description: 选择 Plot 内置的位置、颜色、大小、形状和文本通�
   caption="同一批记录的位置随所选字段变化。"
 />
 
-位置字段写入 `encodings.position`；固定数据位置写入 `properties.position`。
+位置输入统一写入 `encodings.position`：字段使用 `{ field: '字段名' }`，常量使用 `{ value: 50 }`，视图边界使用 `{ edge: 'start' }` 或 `{ edge: 'end' }`。
 
 ## 视觉编码
 
@@ -235,19 +235,29 @@ order 和 series 位于图元配置顶层，不在 encoding 中。它们组织�
 
 <ComponentProps
   items={[
-    { name: 'PointMark.encodings.position.x', kind: 'property', type: 'string', description: '位置字段；二维直角坐标下决定横坐标。' },
-    { name: 'PointMark.encodings.position.y', kind: 'property', type: 'string', description: '位置字段；二维直角坐标下决定纵坐标。' },
+    {
+      name: 'PointMark.encodings.position.x',
+      kind: 'property',
+      type: 'string',
+      description: '位置字段；二维直角坐标下决定横坐标。',
+    },
+    {
+      name: 'PointMark.encodings.position.y',
+      kind: 'property',
+      type: 'string',
+      description: '位置字段；二维直角坐标下决定纵坐标。',
+    },
     {
       name: 'PointMark.encodings.color',
       kind: 'property',
-      type: "string | { field: string; scale: string }",
+      type: 'string | { field: string; scale: string }',
       description:
         '字段名简写或显式绑定。字段形式读取 value 指定的字段，可用 scale 引用比例尺；常量形式使用固定 CSS 颜色。',
     },
     {
       name: 'PointMark.encodings.size',
       kind: 'property',
-      type: "string | { field: string; scale: string }",
+      type: 'string | { field: string; scale: string }',
       description: '字段映射点半径，非负数字直接指定半径；显式绑定中的 scale 可引用命名比例尺。',
     },
     {

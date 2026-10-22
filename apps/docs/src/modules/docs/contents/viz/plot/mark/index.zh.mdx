@@ -59,6 +59,23 @@ Mark 是图形语法里的几何层。它回答“每行或每组数据要生成
   ]}
 />
 
-## 独立标注
+## 位置输入与参考标记
 
-[Annotation](/viz/plot/mark/annotation) 复用点、路径与区间几何，以直接常量定义单个实例。数据图元继续按行或系列生成；两类声明可以共用坐标视图。Plot 根数据仍必需。
+Point、Path 和 Interval Mark 统一支持以下位置输入：
+
+| 输入 | 写法                                    | 含义                             |
+| ---- | --------------------------------------- | -------------------------------- |
+| 字段 | `{ field: 'x' }`                        | 读取最终结果行                   |
+| 常量 | `{ value: 50 }`                         | 数据空间数值或分类字符串         |
+| 边界 | `{ edge: 'start' }` / `{ edge: 'end' }` | 最终映射范围的两端，跟随范围反转 |
+
+位置统一写入 `encodings`，几何样式写入 `properties`。存在有效字段依赖时按最终结果行生成图元；只用常量和 edge 时，在每个实际视图中生成一个实例。空结果表不会产生数据实例。`transforms: []` 与省略相同；没有字段依赖时不能声明非空变换。
+
+参考线、文字和背景区域使用常规 Mark。以下示例绑定空数组、指定比例尺范围，并设置 `contributeToDomain={false}`；移动阈值观察参考线。
+
+<ComponentPreview
+  files={['reference-entry', 'reference.preview.tsx', 'shared/reference-coordinate.ts']}
+  defaultSourceFile="reference.preview.tsx"
+  controls={{ name: 'reference-entry' }}
+  size="md"
+/>

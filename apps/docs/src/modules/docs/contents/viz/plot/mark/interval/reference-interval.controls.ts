@@ -6,8 +6,8 @@ import {
   annotationCoordinateControl,
   annotationCategoryControl,
   annotationContinuousCondition,
-} from './annotation-coordinate.controls';
-import { annotationI18n } from './annotation-interval.i18n';
+} from '../shared/reference-coordinate.controls';
+import { annotationI18n } from './reference-interval.i18n';
 
 /** 标注试验场的控件与稳定状态 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
@@ -83,11 +83,11 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       labelPosition: 'top',
     },
     relatedApis: [
-      'IntervalAnnotation.connection',
-      'IntervalAnnotation.x',
-      'IntervalAnnotation.y',
-      'IntervalAnnotation.opacity',
-      'IntervalAnnotation.label',
+      'IntervalMark.properties.connection',
+      'IntervalMark.encodings.bounds.x',
+      'IntervalMark.encodings.bounds.y',
+      'IntervalMark.properties.opacity',
+      'IntervalMark.properties.label',
     ],
   } satisfies PreviewControlContract;
 };

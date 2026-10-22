@@ -26,7 +26,7 @@ const TransformEntry: FC = () => {
       <PlotTransform operation={entryOperation} />
       <PlotScale dimension="x" type="linear" domain={[0.5, 3.5]} />
       <PlotScale dimension="y" type="linear" domain={[0, 1]} />
-      <PointMark encodings={{ position: { x: 'month', y: 'share' } }} properties={{ size: 6 }} />
+      <PointMark encodings={{ position: { x: { field: 'month' }, y: { field: 'share' } } }} properties={{ size: 6 }} />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" />
     </Plot>

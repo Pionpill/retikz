@@ -2,8 +2,8 @@ import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract } from './annotation-path.controls';
-import { AnnotationPathPreview } from './annotation-path.preview';
+import { previewControlContract } from './reference-path.controls';
+import { AnnotationPathPreview } from './reference-path.preview';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => AnnotationPathPreview(values));
 /** 稳定源码状态 */

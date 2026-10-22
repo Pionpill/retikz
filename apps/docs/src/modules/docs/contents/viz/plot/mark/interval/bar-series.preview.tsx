@@ -24,7 +24,7 @@ export const BarSeriesPreview = (values: BarSeriesPreviewValues) => {
           group="product"
           arrangement={values.mode}
           stackOffset={values.mode === 'stack' ? values.stackOffset : undefined}
-          encodings={{ color: 'product', position: { x: 'quarter', y: 'revenue' } }}
+          encodings={{ color: 'product', position: { x: { field: 'quarter' }, y: { field: 'revenue' } } }}
         />
         <PlotScale dimension="x" type="band" paddingInner={values.gap} paddingOuter={isPolar ? values.gap / 2 : 0.15} />
         <PlotScale dimension="y" type="linear" domainPadding={0} />

@@ -34,15 +34,23 @@ export const TransformSmoothPreview = (
     >
       <PlotScale dimension="x" type="linear" domain={[-1, 5]} />
       <PlotScale dimension="y" type="linear" domain={[0, 10]} />
-      <PointMark encodings={{ position: { x: 'time', y: 'value' } }} properties={{ color: 'gray' }} />
+      <PointMark
+        encodings={{ position: { x: { field: 'time' }, y: { field: 'value' } } }}
+        properties={{ color: 'gray' }}
+      />
       <PathMark
         transforms={smoothTransform.map(operation => ({ operation }))}
-        encodings={{ color: 'series', order: 'trendX', series: 'series', position: { x: 'trendX', y: 'trendY' } }}
+        encodings={{
+          color: 'series',
+          order: 'trendX',
+          series: 'series',
+          position: { x: { field: 'trendX' }, y: { field: 'trendY' } },
+        }}
         properties={{ strokeWidth: 2 }}
       />
       <PointMark
         transforms={smoothTransform.map(operation => ({ operation }))}
-        encodings={{ stroke: 'series', position: { x: 'trendX', y: 'trendY' } }}
+        encodings={{ stroke: 'series', position: { x: { field: 'trendX' }, y: { field: 'trendY' } } }}
         properties={{ fill: 'white', size: 2.5, strokeWidth: 1 }}
       />
       <PlotAxis dimension="x" title={i18n.time} />

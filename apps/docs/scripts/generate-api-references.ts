@@ -17,7 +17,6 @@ import { writeLayoutComponentApiReferences } from './api-reference/layout-compon
 import { writeManualReferences } from './api-reference/manual-reference';
 import { writeMathApiReferenceMdx } from './api-reference/math';
 import { writeNodeApiReferenceMdx } from './api-reference/node';
-import { writePlotAnnotationApiReferenceMdx } from './api-reference/plot-annotation';
 import { writePlotChannelApiReferenceMdx } from './api-reference/plot-channel';
 import { writePlotIntervalApiReferenceMdx } from './api-reference/plot-interval';
 import { writePlotPathApiReferenceMdx } from './api-reference/plot-path';
@@ -119,4 +118,3 @@ await writePlotPointApiReferenceMdx();
 await writePlotPathApiReferenceMdx();
 
 await writePlotIntervalApiReferenceMdx();
-await writePlotAnnotationApiReferenceMdx();

@@ -22,7 +22,9 @@ export const ScaleOrdinalPreview = (values: ScaleOrdinalPreviewValues) => (
     width={400}
     height={250}
   >
-    <PathMark encodings={{ color: 'city', order: 'month', position: { x: 'month', y: 'temp' } }} />
+    <PathMark
+      encodings={{ color: 'city', order: 'month', position: { x: { field: 'month' }, y: { field: 'temp' } } }}
+    />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />
     {values.showLegend ? <PlotLegend channel="color" /> : null}

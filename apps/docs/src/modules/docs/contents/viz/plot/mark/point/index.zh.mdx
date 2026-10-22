@@ -7,8 +7,6 @@ description: 用 PointMark 将每行数据画成一个节点，按字段控制�
 
 这里的节点并不局限于传统意义上的散点，而是对应底层 Kernel 的 Node 组件，因此可以展现为散点、文本、图形等多种形式。本页先用三个点完成接入，再介绍外观、标签和重叠点的散布。字段与常量的区别见[通道绑定](/viz/plot/channel/binding)，安装和宿主接入见[快速开始](/viz/plot/get-start)。
 
-只需绘制一次的常量参考点、参考线或区域，使用[独立标注](/viz/plot/mark/annotation)。
-
 ## 接入方式
 
 下面将 GDP 绑定到横轴、预期寿命绑定到纵轴，每条记录画一个半径为 6 的圆点。两条比例尺各留出 15% 的数据域空间，便于看清边缘的点。这些是示例设置，不是 PointMark 的默认值。
@@ -50,7 +48,7 @@ createRoot(document.getElementById('plot')!).render(
   <Plot data={rows} width={360} height={220}>
     <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
     <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
-    <PointMark encodings={{ position: { x: "gdp", y: "life" } }} properties={{ size: 6 }} />
+    <PointMark encodings={{ position: { x: { field: 'gdp' }, y: { field: 'life' } } }} properties={{ size: 6 }} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" />
   </Plot>,
@@ -83,7 +81,7 @@ const spec: IRPlot = {
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [
-    { type: 'point', kind: "data", encodings: { position: { x: 'gdp', y: 'life' } }, properties: { size: 6 } },
+    { type: 'point', encodings: { position: { x: { field: 'gdp' }, y: { field: 'life' } } }, properties: { size: 6 } },
   ],
   guides: [
     { type: 'axis', dimension: 'x' },
@@ -116,7 +114,7 @@ const spec = plot({
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [
-    { type: 'point', kind: "data", encodings: { position: { x: 'gdp', y: 'life' } }, properties: { size: 6 } },
+    { type: 'point', encodings: { position: { x: { field: 'gdp' }, y: { field: 'life' } } }, properties: { size: 6 } },
   ],
   guides: [
     { type: 'axis', dimension: 'x' },
@@ -152,7 +150,7 @@ const spec: IRPlot = {
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [
-    { type: 'point', kind: "data", encodings: { position: { x: 'gdp', y: 'life' } }, properties: { size: 6 } },
+    { type: 'point', encodings: { position: { x: { field: 'gdp' }, y: { field: 'life' } } }, properties: { size: 6 } },
   ],
   guides: [
     { type: 'axis', dimension: 'x' },
@@ -428,6 +426,32 @@ Plot 按图元实际使用的位置尺度汇总需求。最大半径加净空构
     { label: '最大半径与策略需求', path: 'packages/viz/plot/src/resolve/scale/point-padding.ts' },
     { label: '共享尺度约束求解', path: 'packages/viz/plot/src/resolve/scale/mark-domain.ts' },
   ]}
+/>
+
+## 参考点与文字
+
+`encodings.position` 的 x 必填，y/z 按坐标需求选用。位置可使用 `{ field: '字段名' }`、`{ value: 50 }`（也可为分类字符串）或 `{ edge: 'start' }` / `{ edge: 'end' }`。常量位置沿用形状、文本、朝向与标签能力。
+
+以下参考图元显式设置 `contributeToDomain={false}`，不扩大主体数据的定义域。使用控件切换坐标系、位置、几何与标签。
+
+<ComponentPreview
+  files={['reference-point', 'reference-point.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
+  defaultSourceFile="reference-point.preview.tsx"
+  controls={{ name: 'reference-point' }}
+  size="md"
+/>
+
+下面通过局部 `summarize` 变换计算统计字段，再绑定到同一类 Mark。切换平均值 / 中位数或分组，观察每个结果行产生的独立参考图元；小点保留原始观测。
+
+<ComponentPreview
+  files={[
+    'reference-data-point',
+    '/viz/plot/mark/shared/reference-data.preview.tsx',
+    '/viz/plot/mark/shared/reference-data.data.ts',
+  ]}
+  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
+  controls={{ name: 'reference-data-point' }}
+  size="md"
 />
 
 ## API 参考

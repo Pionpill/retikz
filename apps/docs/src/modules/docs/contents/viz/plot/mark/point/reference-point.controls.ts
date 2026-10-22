@@ -6,8 +6,8 @@ import {
   annotationCoordinateControl,
   annotationCategoryControl,
   annotationContinuousCondition,
-} from './annotation-coordinate.controls';
-import { annotationI18n } from './annotation-point.i18n';
+} from '../shared/reference-coordinate.controls';
+import { annotationI18n } from './reference-point.i18n';
 
 /** 标注试验场的控件与稳定状态 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
@@ -136,12 +136,12 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       distance: 10,
     },
     relatedApis: [
-      'PointAnnotation.x',
-      'PointAnnotation.y',
-      'PointAnnotation.shape',
-      'PointAnnotation.size',
-      'PointAnnotation.orientation',
-      'PointAnnotation.label',
+      'PointMark.encodings.position.x',
+      'PointMark.encodings.position.y',
+      'PointMark.properties.shape',
+      'PointMark.properties.size',
+      'PointMark.properties.orientation',
+      'PointMark.properties.label',
     ],
   } satisfies PreviewControlContract;
 };

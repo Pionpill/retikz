@@ -7,8 +7,6 @@ description: Connect data positions in order with PathMark to draw lines, multip
 
 Start with one line, then explore grouping, curves, closure, and missing values. See [channel bindings](/viz/plot/channel/binding) for field bindings and [Quick start](/viz/plot/get-start) for installation and host setup.
 
-For a constant reference point, line, or region drawn once per view, use [independent annotations](/viz/plot/mark/annotation).
-
 ## Using this topic
 
 The example connects three revenue records by month. With `order="month"`, rearranging the input rows preserves the monthly connection order.
@@ -38,7 +36,7 @@ const rows = [
 
 createRoot(document.getElementById('plot')!).render(
   <Plot data={rows} width={360} height={220}>
-    <PathMark encodings={{ order: "month", position: { x: "month", y: "revenue" } }} />
+    <PathMark encodings={{ order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" />
   </Plot>,
@@ -68,7 +66,9 @@ const spec: IRPlot = {
     { name: 'y', type: 'linear' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'path', kind: "data", encodings: { position: { x: 'month', y: 'revenue' }, order: 'month' } }],
+  marks: [
+    { type: 'path', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' } },
+  ],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
@@ -97,7 +97,9 @@ const spec = plot({
     { name: 'y', type: 'linear' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'path', kind: "data", encodings: { position: { x: 'month', y: 'revenue' }, order: 'month' } }],
+  marks: [
+    { type: 'path', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' } },
+  ],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
@@ -129,7 +131,9 @@ const spec: IRPlot = {
     { name: 'y', type: 'linear' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'path', kind: "data", encodings: { position: { x: 'month', y: 'revenue' }, order: 'month' } }],
+  marks: [
+    { type: 'path', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' } },
+  ],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
@@ -360,6 +364,32 @@ The default polar connection depends on what the angle axis represents:
 - **Continuous angles default to sampled connections**: intermediate positions on the angle axis are meaningful. For example, angles vary continuously between 0° and 90°. Interpolating angle and radius before projection follows that angular progression; two positions with the same radius follow the circle instead of taking a straight shortcut.
 
 These are defaults chosen from the angle scale, not restrictions imposed by the coordinate system. Set `interpolation` explicitly to choose `chord` or `polar`. The `curve` option still determines how the resulting samples are connected.
+
+## Endpoint paths and reference lines
+
+Set two complete positions with `encodings.from` and `encodings.to`. Each role accepts a field, a constant, or a view edge. Endpoints and `encodings.position` vertices are mutually exclusive. `properties.connection` selects a coordinate-aware connection or a straight projected line; switch to polar coordinates to compare an arc with a chord.
+
+These reference marks set `contributeToDomain={false}` so they do not expand the data domain. Use the controls to change coordinates, positions, geometry, and labels.
+
+<ComponentPreview
+  files={['reference-path', 'reference-path.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
+  defaultSourceFile="reference-path.preview.tsx"
+  controls={{ name: 'reference-path' }}
+  size="md"
+/>
+
+The following example binds fields produced by a local `summarize` transform to the same Mark. Change the statistic or grouping to inspect the reference geometry generated for each result row; small points retain the original observations.
+
+<ComponentPreview
+  files={[
+    'reference-data-path',
+    '/viz/plot/mark/shared/reference-data.preview.tsx',
+    '/viz/plot/mark/shared/reference-data.data.ts',
+  ]}
+  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
+  controls={{ name: 'reference-data-path' }}
+  size="md"
+/>
 
 ## API Reference
 

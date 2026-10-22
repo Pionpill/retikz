@@ -60,7 +60,7 @@ scaleBinding: {
 
 ```tsx
 <Plot coordinate={{ type: 'bridge', archHeight: 60 }} definitions={{ coordinates: [bridgeCoordinate] }}>
-  <PointMark encodings={{ position: { x: "x", y: "y" } }} />
+  <PointMark encodings={{ position: { x: 'x', y: 'y' } }} />
 </Plot>
 ```
 
@@ -70,7 +70,7 @@ scaleBinding: {
 const spec = {
   // ...
   coordinate: { type: 'uv' },
-  marks: [{ type: 'point', kind: "data", encodings: { position: { u: 'u', v: 'v' } } }],
+  marks: [{ type: 'point', kind: 'data', encodings: { position: { u: 'u', v: 'v' } } }],
 };
 ```
 
@@ -89,7 +89,7 @@ const spec = {
 
 `createCoordinateFrame` 可以接收 `roleScales`、`mapRoles`、`projectMappedRoles`、`placementBoundary`、`tangentAt`、`projectSegment` 和 `projectCell`。位置调整依赖前三项拆分 scale 映射与投影，自动 containment 再使用边界度量；`projectCell` 把逻辑 Cell 投影成 rect、sector 或 contour 等几何。
 
-路径标注默认调用 `projectSegment(from, to)`，输入是按角色顺序排列、已完成比例尺映射的两个位置，输出是沿坐标几何的屏幕点序列。区间标注调用 `projectCell(cell, { connection })`：`coordinate` 沿坐标边界，`straight` 直接连接投影后的角点。自定义坐标须实现所消费的能力并遵守连接模式；缺少 `projectSegment` 时，路径标注只能显式使用 `connection="straight"`，不会静默降级。参见[标注](/viz/plot/mark/annotation)。
+路径标注默认调用 `projectSegment(from, to)`，输入是按角色顺序排列、已完成比例尺映射的两个位置，输出是沿坐标几何的屏幕点序列。区间标注调用 `projectCell(cell, { connection })`：`coordinate` 沿坐标边界，`straight` 直接连接投影后的角点。自定义坐标须实现所消费的能力并遵守连接模式；缺少 `projectSegment` 时，路径标注只能显式使用 `connection="straight"`，不会静默降级。参见[标注](/viz/plot/mark)。
 
 `tangentAt(role, mappedRoles)` 返回固定其他参数、所选映射后参数递增时的屏幕切向，供 Guide 和 PointMark 方向对齐共用。必须同时提供同源的 `mapRoles` 与 `projectMappedRoles`。例如映射 `projectMappedRoles: ([u, v]) => [u + v, v]` 的 x 切向是 `[1, 0]`，y 切向是 `[1, 1]`；x 的正法向是 `[0, 1]`，并不等于 y 切向。
 

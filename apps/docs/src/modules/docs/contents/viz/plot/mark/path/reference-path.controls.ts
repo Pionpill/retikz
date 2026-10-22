@@ -6,8 +6,8 @@ import {
   annotationCoordinateControl,
   annotationCategoryControl,
   annotationContinuousCondition,
-} from './annotation-coordinate.controls';
-import { annotationI18n } from './annotation-path.i18n';
+} from '../shared/reference-coordinate.controls';
+import { annotationI18n } from './reference-path.i18n';
 
 /** 标注试验场的控件与稳定状态 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
@@ -67,7 +67,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       sloped: true,
       distance: 10,
     },
-    relatedApis: ['PathAnnotation.to', 'PathAnnotation.connection', 'PathAnnotation.label'],
+    relatedApis: ['PathMark.encodings.to', 'PathMark.properties.connection', 'PathMark.properties.label'],
   } satisfies PreviewControlContract;
 };
 /** 默认控件契约 */

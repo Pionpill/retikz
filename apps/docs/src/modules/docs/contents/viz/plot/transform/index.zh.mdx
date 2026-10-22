@@ -39,7 +39,7 @@ createRoot(document.getElementById('plot')!).render(
     <PlotTransform operation={{ kind: 'normalize', params: { field: 'value', as: 'share' } }} />
     <PlotScale dimension="x" type="linear" domain={[0.5, 3.5]} />
     <PlotScale dimension="y" type="linear" domain={[0, 1]} />
-    <PointMark encodings={{ position: { x: "month", y: "share" } }} properties={{ size: 6 }} />
+    <PointMark encodings={{ position: { x: { field: 'month' }, y: { field: 'share' } } }} properties={{ size: 6 }} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" />
   </Plot>,
@@ -73,7 +73,11 @@ const spec: IRPlot = {
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [
-    { type: 'point', kind: "data", encodings: { position: { x: 'month', y: 'share' } }, properties: { size: 6 } },
+    {
+      type: 'point',
+      encodings: { position: { x: { field: 'month' }, y: { field: 'share' } } },
+      properties: { size: 6 },
+    },
   ],
   guides: [
     { type: 'axis', dimension: 'x' },
@@ -107,7 +111,11 @@ const spec = plot({
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [
-    { type: 'point', kind: "data", encodings: { position: { x: 'month', y: 'share' } }, properties: { size: 6 } },
+    {
+      type: 'point',
+      encodings: { position: { x: { field: 'month' }, y: { field: 'share' } } },
+      properties: { size: 6 },
+    },
   ],
   guides: [
     { type: 'axis', dimension: 'x' },
@@ -144,7 +152,11 @@ const spec: IRPlot = {
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [
-    { type: 'point', kind: "data", encodings: { position: { x: 'month', y: 'share' } }, properties: { size: 6 } },
+    {
+      type: 'point',
+      encodings: { position: { x: { field: 'month' }, y: { field: 'share' } } },
+      properties: { size: 6 },
+    },
   ],
   guides: [
     { type: 'axis', dimension: 'x' },
@@ -189,16 +201,29 @@ const operation: IRDataJitterTransform = {
 const rootExample = (
   <Plot data={rows}>
     <PlotTransform operation={operation} />
-    <PointMark encodings={{ position: { x: "month", y: "value" } }} properties={{ fill: "gray" }} />
-    <PointMark encodings={{ position: { x: "month", y: "value" } }} properties={{ fill: "dodgerblue" }} />
+    <PointMark
+      encodings={{ position: { x: { field: 'month' }, y: { field: 'value' } } }}
+      properties={{ fill: 'gray' }}
+    />
+    <PointMark
+      encodings={{ position: { x: { field: 'month' }, y: { field: 'value' } } }}
+      properties={{ fill: 'dodgerblue' }}
+    />
   </Plot>
 );
 
 // 局部：只有蓝色点读取抖动后的 month
 const localExample = (
   <Plot data={rows}>
-    <PointMark encodings={{ position: { x: "month", y: "value" } }} properties={{ fill: "gray" }} />
-    <PointMark transforms={[{ operation }]} encodings={{ position: { x: "month", y: "value" } }} properties={{ fill: "dodgerblue" }} />
+    <PointMark
+      encodings={{ position: { x: { field: 'month' }, y: { field: 'value' } } }}
+      properties={{ fill: 'gray' }}
+    />
+    <PointMark
+      transforms={[{ operation }]}
+      encodings={{ position: { x: { field: 'month' }, y: { field: 'value' } } }}
+      properties={{ fill: 'dodgerblue' }}
+    />
   </Plot>
 );
 ```
@@ -221,16 +246,16 @@ const transform = [{ operation }];
 const rootConfig = {
   transform,
   marks: [
-    { type: 'point', kind: "data", encodings: { position: { x: 'month', y: 'value' } } },
-    { type: 'point', kind: "data", encodings: { position: { x: 'month', y: 'value' } } },
+    { type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'value' } } },
+    { type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'value' } } },
   ],
 };
 
 // 局部：只在第二个图元上添加 transform
 const localConfig = {
   marks: [
-    { type: 'point', kind: "data", encodings: { position: { x: 'month', y: 'value' } } },
-    { type: 'point', transform, kind: "data", encodings: { position: { x: 'month', y: 'value' } } },
+    { type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'value' } } },
+    { type: 'point', transform, kind: 'data', encodings: { position: { x: 'month', y: 'value' } } },
   ],
 };
 ```

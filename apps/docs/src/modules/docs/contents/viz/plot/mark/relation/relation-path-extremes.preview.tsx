@@ -21,11 +21,11 @@ export const RelationPathExtremesPreview = (values: RelationPathExtremesPreviewV
   return (
     <Plot data={pathExtremeRelations} width={620} height={320}>
       <PathMark
-        encodings={{ order: 'order', anchorId: 'id', position: { x: 'x', y: 'y' } }}
+        encodings={{ order: 'order', anchorId: 'id', position: { x: { field: 'x' }, y: { field: 'y' } } }}
         properties={{ stroke: '#0f766e', strokeWidth: 2.2, anchorId: { prefix: 'trend' } }}
       />
       <PointMark
-        encodings={{ position: { x: 'x', y: 'y' } }}
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
         properties={{ fill: '#ffffff', stroke: '#0f766e', strokeWidth: 1, size: 4.5 }}
       />
       <RelationMark

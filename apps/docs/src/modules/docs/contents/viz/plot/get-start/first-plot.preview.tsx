@@ -21,7 +21,7 @@ export const FirstPlotPreview: FC<FirstPlotPreviewProps> = props => {
 
   return (
     <Plot data={measurements} width={width} height={220}>
-      <PathMark encodings={{ order: 'time', position: { x: 'time', y: 'value' } }} />
+      <PathMark encodings={{ order: 'time', position: { x: { field: 'time' }, y: { field: 'value' } } }} />
       <PlotAxis dimension="x" title={i18n.time} />
       <PlotAxis dimension="y" title={i18n.value} />
     </Plot>

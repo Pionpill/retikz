@@ -61,13 +61,16 @@ export const RegressionPreview: FC<RegressionPreviewProps> = props => {
     <Plot data={plotRows} width={420} height={260}>
       <PlotScale dimension="x" type="linear" domain={[0, 10]} />
       <PlotScale dimension="y" type="linear" domain={[-8, 45]} />
-      <PointMark encodings={{ position: { x: 'x', y: 'y' } }} properties={{ fill: 'gray', size: 5 }} />
+      <PointMark
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
+        properties={{ fill: 'gray', size: 5 }}
+      />
       <PathMark
-        encodings={{ order: 'trendX', position: { x: 'trendX', y: 'trendY' } }}
+        encodings={{ order: 'trendX', position: { x: { field: 'trendX' }, y: { field: 'trendY' } } }}
         properties={{ connectNulls: true, stroke: 'dodgerblue', strokeWidth: 2 }}
       />
       <PointMark
-        encodings={{ position: { x: 'trendX', y: 'trendY' } }}
+        encodings={{ position: { x: { field: 'trendX' }, y: { field: 'trendY' } } }}
         properties={{ fill: 'white', stroke: 'dodgerblue', size: 2.5 }}
       />
       <PlotAxis dimension="x" title={i18n.x} />

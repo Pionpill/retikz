@@ -35,7 +35,12 @@ export const TransformDensityPreview = (
       <PlotScale dimension="x" type="linear" domain={[1, 10]} />
       <PlotScale dimension="y" type="linear" domain={[0, 0.7]} />
       <PathMark
-        encodings={{ series: 'group', color: 'group', order: 'densityX', position: { x: 'densityX', y: 'density' } }}
+        encodings={{
+          series: 'group',
+          color: 'group',
+          order: 'densityX',
+          position: { x: { field: 'densityX' }, y: { field: 'density' } },
+        }}
         properties={{ closure: { kind: 'baseline', baseline: 0 }, fill: 'dodgerblue', strokeWidth: 2.2 }}
       />
       <PlotAxis dimension="x" title={i18n.measurement} />

@@ -13,8 +13,8 @@ export const ScaleTimePreview = () => (
     width={400}
     height={250}
   >
-    <PathMark encodings={{ order: 'date', position: { x: 'date', y: 'value' } }} />
-    <PointMark encodings={{ position: { x: 'date', y: 'value' } }} />
+    <PathMark encodings={{ order: 'date', position: { x: { field: 'date' }, y: { field: 'value' } } }} />
+    <PointMark encodings={{ position: { x: { field: 'date' }, y: { field: 'value' } } }} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />
   </Plot>

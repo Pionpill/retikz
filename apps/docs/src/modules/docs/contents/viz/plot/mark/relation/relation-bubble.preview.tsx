@@ -26,7 +26,7 @@ export const RelationBubblePreview = (values: RelationBubblePreviewValues) => {
           color: 'segment',
           anchorId: 'id',
           label: { content: 'label' },
-          position: { x: 'x', y: 'y' },
+          position: { x: { field: 'x' }, y: { field: 'y' } },
         }}
         properties={{
           anchorId: { prefix: 'bubble' },

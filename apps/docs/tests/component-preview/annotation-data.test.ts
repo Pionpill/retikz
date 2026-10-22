@@ -4,12 +4,12 @@ import { expect, it } from 'vitest';
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 import { resolvePreviewControlContract } from '../../src/modules/docs/components/component-preview/registry';
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
-import { createAnnotationDataControls } from '../../src/modules/docs/contents/viz/plot/mark/annotation/annotation-data-control-factory';
+import { createAnnotationDataControls } from '../../src/modules/docs/contents/viz/plot/mark/shared/reference-data-control-factory';
 import {
   AnnotationDataPointPreview,
   AnnotationDataPathPreview,
   AnnotationDataIntervalPreview,
-} from '../../src/modules/docs/contents/viz/plot/mark/annotation/annotation-data.preview';
+} from '../../src/modules/docs/contents/viz/plot/mark/shared/reference-data.preview';
 
 it('三类数据标注的双语控件默认值只包含各自可写字段且完整', () => {
   for (const geometry of ['point', 'path', 'interval'] as const) {

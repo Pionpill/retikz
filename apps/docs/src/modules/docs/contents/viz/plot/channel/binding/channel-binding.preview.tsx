@@ -32,7 +32,7 @@ export const ChannelBindingPreview = (values: ChannelBindingPreviewValues) => (
     <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.3 }} />
     <PointMark
       encodings={{
-        position: { x: values.xField, y: values.yField },
+        position: { x: { field: values.xField }, y: { field: values.yField } },
         ...(values.colorSource === 'field' ? { color: 'region' } : {}),
         ...(values.sizeSource === 'field' ? { size: 'population' } : {}),
         ...(values.shapeSource === 'field' ? { shape: 'region' } : {}),

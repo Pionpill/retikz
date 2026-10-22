@@ -29,7 +29,12 @@ export const RelationScatterPreview = (values: RelationScatterPreviewValues) => 
     <Plot data={scatterRelations} width={620} height={320}>
       <PointMark
         id="scatter-nodes"
-        encodings={{ anchorId: 'id', color: 'group', label: { content: 'label' }, position: { x: 'x', y: 'y' } }}
+        encodings={{
+          anchorId: 'id',
+          color: 'group',
+          label: { content: 'label' },
+          position: { x: { field: 'x' }, y: { field: 'y' } },
+        }}
         properties={{
           anchorId: { prefix: 'node' },
           label: { position: values.nodeLabelPosition, textColor: 'currentColor' },

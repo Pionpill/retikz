@@ -49,7 +49,7 @@ export const Coordinate1dCompositionPreview = (values: Coordinate1dCompositionPr
           anchorId: 'thingId',
           fill: 'relationColor',
           ...(values.sourceLabelVisible ? { label: { content: 'thingLabel' } } : {}),
-          position: { x: 'thingX' },
+          position: { x: { field: 'thingX' } },
         }}
         properties={{
           anchorId: { prefix: 'thing' },
@@ -77,7 +77,7 @@ export const Coordinate1dCompositionPreview = (values: Coordinate1dCompositionPr
           anchorId: 'practiceId',
           text: 'practiceGlyph',
           textColor: 'relationColor',
-          position: { x: 'practiceX' },
+          position: { x: { field: 'practiceX' } },
         }}
         properties={{
           anchorId: { prefix: 'practice' },
@@ -92,7 +92,7 @@ export const Coordinate1dCompositionPreview = (values: Coordinate1dCompositionPr
       {values.targetLabelVisible ? (
         <PointMark
           transforms={[{ operation: coordinate1DCompositionOperation }]}
-          encodings={{ text: 'practiceLabel', position: { x: 'practiceX' } }}
+          encodings={{ text: 'practiceLabel', position: { x: { field: 'practiceX' } } }}
           properties={{
             textColor: '#334155',
             font: {

@@ -29,7 +29,13 @@ export const LegendShapeOpacityPreview = (values: LegendShapeOpacityPreviewValue
       width={380}
       height={280}
     >
-      <PointMark encodings={{ shape: 'region', opacity: { overall: 'pop' }, position: { x: 'lng', y: 'lat' } }} />
+      <PointMark
+        encodings={{
+          shape: 'region',
+          opacity: { overall: 'pop' },
+          position: { x: { field: 'lng' }, y: { field: 'lat' } },
+        }}
+      />
       {values.showShape ? <PlotLegend channel="shape" position={values.shapePosition} title={i18n.region} /> : null}
       {values.showOpacity ? (
         <PlotLegend

@@ -39,7 +39,7 @@ export const Coordinate1dPlaygroundPreview = (values: Coordinate1dPlaygroundPrev
     <Plot data={oneDimensionalEvents} coordinate={coordinate} width={270} height={270}>
       <PlotScale dimension="x" type="linear" domain={[0, 24]} />
       <PointMark
-        encodings={{ position: { x: 'hour' } }}
+        encodings={{ position: { x: { field: 'hour' } } }}
         properties={{
           size: values.pointSize,
           fill: values.pointFill,

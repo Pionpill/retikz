@@ -21,7 +21,7 @@ export const CoordinateCustomBridgePreview = (values: CoordinateCustomBridgePrev
       coordinate={{ type: 'bridge', archHeight: values.archHeight }}
       definitions={{ coordinates: [bridgeCoordinate] }}
     >
-      <PointMark encodings={{ position: { x: 'x', y: 'y' } }} />
+      <PointMark encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" />
     </Plot>

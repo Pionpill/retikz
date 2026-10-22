@@ -87,7 +87,7 @@ const plotRows = [
 
 const PlotDemo: FC = () => (
   <Plot data={plotRows} width={100} height={80}>
-    <PointMark encodings={{ position: { x: 'category', y: 'value' } }} />
+    <PointMark encodings={{ position: { x: { field: 'category' }, y: { field: 'value' } } }} />
   </Plot>
 );
 

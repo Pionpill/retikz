@@ -19,7 +19,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           encodings={{
             ...(color === undefined ? {} : { color }),
             order: 'month',
-            position: { x: 'month', y: 'score' },
+            position: { x: { field: 'month' }, y: { field: 'score' } },
           }}
         />
         <PlotAxis dimension="x" />
@@ -30,7 +30,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           encodings={{
             ...(color === undefined ? {} : { color }),
             order: 'month',
-            position: { x: 'quarter', y: 'score' },
+            position: { x: { field: 'quarter' }, y: { field: 'score' } },
           }}
           properties={{ closed: true }}
         />

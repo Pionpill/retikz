@@ -3,7 +3,7 @@ title: Contract - Encoding
 description: Query Plot field bindings, position roles, visual targets, and fixed label schemas.
 ---
 
-`encodings` maps data fields to position roles or visual targets. Fixed values belong to `properties`. A binding is a field name or an explicit `{ field, scale }` pair. Coordinates own position scales, so position bindings accept field names only.
+Visual channels in `encodings` bind fields; fixed visual values belong to `properties`. Positions use `{ field }`, `{ value }`, or `{ edge }`, with scales selected by coordinate roles. x is required; y and z depend on the coordinate system.
 
 ## EncodingSchema
 

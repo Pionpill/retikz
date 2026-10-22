@@ -34,7 +34,7 @@ export const IntervalHistogramPreview = (values: IntervalHistogramPreviewValues)
       {values.continuousMode === 'histogram' ? (
         <Plot data={measurements} width={360} height={280} coordinate={coordinate}>
           <PlotTransform operation={{ ...intervalHistogramOperationOf(values.count) }} />
-          <IntervalMark x0="binStart" x1="binEnd" encodings={{ position: { y: 'binCount' } }} />
+          <IntervalMark x0="binStart" x1="binEnd" encodings={{ position: { y: { field: 'binCount' } } }} />
           <PlotScale dimension="x" type="linear" domainPadding={xDomainPadding} />
           <PlotScale dimension="y" type="linear" domainPadding={yDomainPadding} />
           <PlotAxis dimension="x" />
@@ -42,7 +42,10 @@ export const IntervalHistogramPreview = (values: IntervalHistogramPreviewValues)
         </Plot>
       ) : (
         <Plot data={laborCosts} width={360} height={280} coordinate={coordinate}>
-          <IntervalMark width="gdp" encodings={{ color: 'country', position: { x: 'country', y: 'cost' } }} />
+          <IntervalMark
+            width="gdp"
+            encodings={{ color: 'country', position: { x: { field: 'country' }, y: { field: 'cost' } } }}
+          />
           <PlotScale dimension="x" type="linear" domainPadding={xDomainPadding} />
           <PlotScale dimension="y" type="linear" domainPadding={yDomainPadding} />
           <PlotAxis dimension="x" />

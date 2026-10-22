@@ -9,23 +9,6 @@ export type ReferenceGroup = {
 
 /** 显式分组清单，生成时拒绝成员遗漏、未知或重复 */
 export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<ReferenceGroup>>>> = {
-  'viz/plot/mark/annotation': [
-    {
-      title: { zh: '点标注', en: 'Point annotations' },
-      members: ['PointAnnotationProps', 'IRPlotPointAnnotation'],
-      schemas: ['PointAnnotationSchema'],
-    },
-    {
-      title: { zh: '路径标注', en: 'Path annotations' },
-      members: ['PathAnnotationProps', 'IRPlotPathAnnotation'],
-      schemas: ['PathAnnotationSchema'],
-    },
-    {
-      title: { zh: '区间标注', en: 'Interval annotations' },
-      members: ['IntervalAnnotationProps', 'IRPlotIntervalAnnotation'],
-      schemas: ['IntervalAnnotationSchema'],
-    },
-  ],
   'viz/plot/mark/interval': [
     {
       title: { zh: '组件属性', en: 'Component properties' },

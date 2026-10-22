@@ -45,7 +45,9 @@ createRoot(document.getElementById('plot')!).render(
   <Plot data={rows} width={360} height={220}>
     <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
     <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
-    <PointMark encodings={{ position: { x: 'gdp', y: 'life' }, color: 'region', size: 'population' }} />
+    <PointMark
+      encodings={{ position: { x: { field: 'gdp' }, y: { field: 'life' } }, color: 'region', size: 'population' }}
+    />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" />
   </Plot>,
@@ -80,8 +82,8 @@ const spec: IRPlot = {
   marks: [
     {
       type: 'point',
-      kind: 'data',
-      encodings: { position: { x: 'gdp', y: 'life' }, color: 'region', size: 'population' },
+
+      encodings: { position: { x: { field: 'gdp' }, y: { field: 'life' } }, color: 'region', size: 'population' },
     },
   ],
   guides: [
@@ -117,8 +119,8 @@ const spec = plot({
   marks: [
     {
       type: 'point',
-      kind: 'data',
-      encodings: { position: { x: 'gdp', y: 'life' }, color: 'region', size: 'population' },
+
+      encodings: { position: { x: { field: 'gdp' }, y: { field: 'life' } }, color: 'region', size: 'population' },
     },
   ],
   guides: [
@@ -157,8 +159,8 @@ const spec: IRPlot = {
   marks: [
     {
       type: 'point',
-      kind: 'data',
-      encodings: { position: { x: 'gdp', y: 'life' }, color: 'region', size: 'population' },
+
+      encodings: { position: { x: { field: 'gdp' }, y: { field: 'life' } }, color: 'region', size: 'population' },
     },
   ],
   guides: [
@@ -179,17 +181,17 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 `encodings` 指定读取哪些字段，`properties` 指定固定值。React、Vanilla 和 JSON 使用相同分组；具名组件与工厂补齐 `type`、`kind`，直接 JSON Mark 则显式声明这两个字段。
 
-| 目标     | 字段编码                               | 固定属性                                              |
-| -------- | -------------------------------------- | ----------------------------------------------------- |
-| 横向位置 | `encodings.position.x: 'gdp'`          | `properties.position.x: 400`                          |
-| 颜色     | `encodings.color: 'region'`            | `properties.color: 'crimson'`                         |
-| 大小     | `encodings.size: 'population'`         | `properties.size: 12`                                 |
-| 形状     | `encodings.shape: 'region'`            | `properties.shape: 'circle'`                          |
-| 标签内容 | `encodings.label: { content: 'abbr' }` | `properties.label: { content: 'A', position: 'top' }` |
+| 目标     | 字段编码                                 | 固定属性                                              |
+| -------- | ---------------------------------------- | ----------------------------------------------------- |
+| 横向位置 | `encodings.position.x: { field: 'gdp' }` | `encodings.position.x: { value: 400 }`                |
+| 颜色     | `encodings.color: 'region'`              | `properties.color: 'crimson'`                         |
+| 大小     | `encodings.size: 'population'`           | `properties.size: 12`                                 |
+| 形状     | `encodings.shape: 'region'`              | `properties.shape: 'circle'`                          |
+| 标签内容 | `encodings.label: { content: 'abbr' }`   | `properties.label: { content: 'A', position: 'top' }` |
 
-普通绑定直接写字段名。需要指定已声明的比例尺时写 `{ field: 'population', scale: 'populationSize' }`。位置的比例尺由坐标角色决定，因此 `position.x`、`position.y` 只接受字段名；`{ field: 'gdp' }` 不是合法简写。
+普通绑定直接写字段名。需要指定已声明的比例尺时写 `{ field: 'population', scale: 'populationSize' }`。位置的比例尺由坐标角色决定；`position.x`、`position.y` 使用 `{ field: 'gdp' }` 绑定字段，使用 `{ value: 80 }` 指定常量，也可以使用 edge 指向视图边界。
 
-固定位置仍属于数据空间：`properties.position.y: 80` 表示数据值 80，随后经过比例尺与坐标投影。`{ edge: 'start' }` 和 `{ edge: 'end' }` 指向最终视图范围的边缘，详见[标注](/viz/plot/mark/annotation)。
+固定位置仍属于数据空间：`encodings.position.y: { value: 80 }` 表示数据值 80，随后经过比例尺与坐标投影。`{ edge: 'start' }` 和 `{ edge: 'end' }` 指向最终视图范围的边缘，详见[标注](/viz/plot/mark)。
 
 同一目标同时出现时，编码优先。字段不存在或尺度映射失败会报错，不使用固定属性作为回退。不同目标独立组合，例如编码 `opacity.overall` 时仍保留固定的 `opacity.fill` 与 `opacity.stroke`。
 

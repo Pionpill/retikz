@@ -39,12 +39,12 @@ export const TransformRelatePreview = (
           series: 'series',
           order: 'month',
           anchorId: 'id',
-          position: { x: 'month', y: 'value' },
+          position: { x: { field: 'month' }, y: { field: 'value' } },
         }}
         properties={{ strokeWidth: 2.2, anchorId: { prefix: 'trend' } }}
       />
       <PointMark
-        encodings={{ stroke: 'series', position: { x: 'month', y: 'value' } }}
+        encodings={{ stroke: 'series', position: { x: { field: 'month' }, y: { field: 'value' } } }}
         properties={{ fill: 'white', strokeWidth: 1.2, size: 5 }}
       />
       <RelationMark

@@ -36,11 +36,11 @@ export const CoordinateCompositionFacetPreview = (values: CoordinateCompositionF
         <PlotAxis dimension="x" grid={values.xGridVisible} />
         <PlotAxis dimension="y" grid={values.yGridVisible} />
         <PathMark
-          encodings={{ order: 'month', position: { x: 'month', y: 'accounts' } }}
+          encodings={{ order: 'month', position: { x: { field: 'month' }, y: { field: 'accounts' } } }}
           properties={{ stroke: 'steelblue', strokeWidth: values.lineWidth }}
         />
         <PointMark
-          encodings={{ position: { x: 'month', y: 'accounts' } }}
+          encodings={{ position: { x: { field: 'month' }, y: { field: 'accounts' } } }}
           properties={{ fill: 'lightblue', stroke: 'steelblue', strokeWidth: 1, size: values.pointSize }}
         />
       </PlotFacet>

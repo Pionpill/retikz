@@ -41,7 +41,7 @@ export const BuiltinOtherPreview = (
       <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
       <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
       <PointMark
-        encodings={{ fill: 'fill', zIndex: 'zIndex', position: { x: 'step', y: 'value' } }}
+        encodings={{ fill: 'fill', zIndex: 'zIndex', position: { x: { field: 'step' }, y: { field: 'value' } } }}
         properties={{ size: 18 }}
       />
       <PathMark
@@ -49,7 +49,7 @@ export const BuiltinOtherPreview = (
           ...(values.orderEnabled ? { order: 'step' } : {}),
           ...(values.seriesEnabled ? { series: 'series' } : {}),
           ...(values.seriesEnabled ? { color: 'series' } : {}),
-          position: { x: 'step', y: 'value' },
+          position: { x: { field: 'step' }, y: { field: 'value' } },
         }}
         properties={{ strokeWidth: 3 }}
       />

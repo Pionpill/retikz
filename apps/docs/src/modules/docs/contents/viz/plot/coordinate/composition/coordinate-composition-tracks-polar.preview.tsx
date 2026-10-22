@@ -43,28 +43,28 @@ export const CoordinateCompositionTracksPolarPreview = (values: CoordinateCompos
         <PlotTrack id="signal" band={{ role: 'y', start: 0.1, end: 0.4 }}>
           {localAxesVisible ? <PlotAxis dimension="y" grid={yGridVisible} title="signal" /> : null}
           <PathMark
-            encodings={{ order: 'order', position: { x: 'area', y: 'signal' } }}
+            encodings={{ order: 'order', position: { x: { field: 'area' }, y: { field: 'signal' } } }}
             properties={{ stroke: 'darkorange', strokeWidth: lineWidth }}
           />
           <PointMark
-            encodings={{ position: { x: 'area', y: 'signal' } }}
+            encodings={{ position: { x: { field: 'area' }, y: { field: 'signal' } } }}
             properties={{ fill: 'moccasin', stroke: 'darkorange', strokeWidth: 1, size: pointSize }}
           />
         </PlotTrack>
         <PlotTrack id="capacity" band={{ role: 'y', start: 0.5, end: 0.76 }}>
           {localAxesVisible ? <PlotAxis dimension="y" grid={yGridVisible} title="capacity" /> : null}
           <PathMark
-            encodings={{ order: 'order', position: { x: 'area', y: 'capacity' } }}
+            encodings={{ order: 'order', position: { x: { field: 'area' }, y: { field: 'capacity' } } }}
             properties={{ stroke: 'steelblue', strokeWidth: lineWidth }}
           />
           <PointMark
-            encodings={{ position: { x: 'area', y: 'capacity' } }}
+            encodings={{ position: { x: { field: 'area' }, y: { field: 'capacity' } } }}
             properties={{ fill: 'lightblue', stroke: 'steelblue', strokeWidth: 1, size: pointSize }}
           />
         </PlotTrack>
         <PlotTrack id="sector" band={{ role: 'y', start: 0.86, end: 1 }}>
           <IntervalMark
-            encodings={{ color: 'area', position: { x: 'area', y: 'outer' } }}
+            encodings={{ color: 'area', position: { x: { field: 'area' }, y: { field: 'outer' } } }}
             properties={{
               padAngle: values.sectorPadAngle,
               stroke: '#ffffff',

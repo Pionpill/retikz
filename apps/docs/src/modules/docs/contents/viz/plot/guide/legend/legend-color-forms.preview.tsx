@@ -73,10 +73,10 @@ export const LegendColorFormsPreview = (values: LegendColorFormsPreviewValues, l
     marks: [
       {
         type: 'point',
-        kind: 'data',
+
         encodings: {
           color: { field: form === 'swatch' ? 'region' : 'pop', scale: 'legendColor' },
-          position: { x: 'lng', y: 'lat' },
+          position: { x: { field: 'lng' }, y: { field: 'lat' } },
         },
         properties: { size: 6 },
       },

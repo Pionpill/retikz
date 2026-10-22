@@ -8,35 +8,34 @@
 
 <DocTab value="members" label="Members">
 
-
-
 <ApiTable grouped>
 
-| Group | Member | Type | Default | Description |
-| --- | --- | --- | --- | --- |
-| Main | `id?` | `string` | — | — |
-| Data | `angle?` | `string` | — | Pie or ring share field expanded into cumulative intervals |
-|  | `arrangement?` | `'dodge' \| 'stack' \| 'normalize-stack'` | — | Arrangement of multiple series |
-|  | `encodings?` | `InputPlotIntervalMark['encodings']` | — | — |
-|  | `group?` | `string` | — | Grouping field used by the arrangement |
-|  | `percent?` | `boolean` | — | Percentage stacking shorthand |
-|  | `stack?` | `boolean` | — | Stacking shorthand |
-|  | `stackOffset?` | `'zero' \| 'normalize' \| 'diverging' \| 'center' \| 'overlap'` | — | Stack baseline algorithm |
-|  | `transforms?` | `InputPlotIntervalMark['transforms']` | — | — |
-|  | `width?` | `string` | — | Weight field for proportional intervals |
-|  | `x0?` | `string` | — | Start field for histogram intervals |
-|  | `x1?` | `string` | — | End field for histogram intervals |
-| Geometry | `coordinateView?` | `string` | — | — |
-|  | `direction?` | `'vertical' \| 'horizontal'` | — | Bar direction |
-|  | `properties?` | `InputPlotIntervalMark['properties']` | — | — |
-|  | `xAxisId?` | `string` | — | — |
-|  | `yAxisId?` | `string` | — | — |
-| Layout | `facetId?` | `string` | — | — |
-|  | `trackId?` | `string` | — | — |
-| Style | `defaultColorGroup?` | `string` | — | — |
-|  | `defaultColorIndex?` | `number` | — | — |
-|  | `layer?` | `{ zIndex?: number \| undefined; }` | — | — |
-| Callbacks | `resolveLabel?` | `(row: ExternalRow) => string` | — | — |
+| Group     | Member                | Type                                                            | Default | Description                                                |
+| --------- | --------------------- | --------------------------------------------------------------- | ------- | ---------------------------------------------------------- |
+| Main      | `id?`                 | `string`                                                        | —       | —                                                          |
+| Data      | `angle?`              | `string`                                                        | —       | Pie or ring share field expanded into cumulative intervals |
+|           | `arrangement?`        | `'dodge' \| 'stack' \| 'normalize-stack'`                       | —       | Arrangement of multiple series                             |
+|           | `contributeToDomain?` | `false \| true`                                                 | —       | —                                                          |
+|           | `encodings?`          | `InputPlotIntervalMark['encodings']`                            | —       | —                                                          |
+|           | `group?`              | `string`                                                        | —       | Grouping field used by the arrangement                     |
+|           | `percent?`            | `boolean`                                                       | —       | Percentage stacking shorthand                              |
+|           | `stack?`              | `boolean`                                                       | —       | Stacking shorthand                                         |
+|           | `stackOffset?`        | `'zero' \| 'normalize' \| 'diverging' \| 'center' \| 'overlap'` | —       | Stack baseline algorithm                                   |
+|           | `transforms?`         | `InputPlotIntervalMark['transforms']`                           | —       | —                                                          |
+|           | `width?`              | `string`                                                        | —       | Weight field for proportional intervals                    |
+|           | `x0?`                 | `string`                                                        | —       | Start field for histogram intervals                        |
+|           | `x1?`                 | `string`                                                        | —       | End field for histogram intervals                          |
+| Geometry  | `coordinateView?`     | `string`                                                        | —       | —                                                          |
+|           | `direction?`          | `'vertical' \| 'horizontal'`                                    | —       | Bar direction                                              |
+|           | `properties?`         | `InputPlotIntervalMark['properties']`                           | —       | —                                                          |
+|           | `xAxisId?`            | `string`                                                        | —       | —                                                          |
+|           | `yAxisId?`            | `string`                                                        | —       | —                                                          |
+| Layout    | `facetId?`            | `string`                                                        | —       | —                                                          |
+|           | `trackId?`            | `string`                                                        | —       | —                                                          |
+| Style     | `defaultColorGroup?`  | `string`                                                        | —       | —                                                          |
+|           | `defaultColorIndex?`  | `number`                                                        | —       | —                                                          |
+|           | `layer?`              | `{ zIndex?: number \| undefined; }`                             | —       | —                                                          |
+| Callbacks | `resolveLabel?`       | `(row: ExternalRow) => string`                                  | —       | —                                                          |
 
 </ApiTable>
 
@@ -52,7 +51,7 @@ export type IntervalMarkProps = InputPlotIntervalMark;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRPlotIntervalMark"} path={"packages/viz/plot/src/schemas/mark/types.ts"} startLine={155}>IRPlotIntervalMark</ApiSourceLink> / <ApiSourceLink label={"IntervalMarkSchema"} path={"packages/viz/plot/src/schemas/mark/schema.ts"} startLine={755}>IntervalMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPlotIntervalMark"} path={"packages/viz/plot/src/schemas/mark/types.ts"} startLine={149}>IRPlotIntervalMark</ApiSourceLink> / <ApiSourceLink label={"IntervalMarkSchema"} path={"packages/viz/plot/src/schemas/mark/schema.ts"} startLine={742}>IntervalMarkSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 

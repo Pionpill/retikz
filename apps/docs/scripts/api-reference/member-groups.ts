@@ -85,6 +85,7 @@ export const apiReferenceMemberGroups: Readonly<Partial<Record<string, ApiRefere
   '@retikz/plot-react#IntervalMarkProps': {
     order: ['Main', 'Data', 'Geometry', 'Layout', 'Style', 'Callbacks'],
     members: {
+      contributeToDomain: 'Data',
       id: 'Main',
       encodings: 'Data',
       transforms: 'Data',
@@ -113,6 +114,7 @@ export const apiReferenceMemberGroups: Readonly<Partial<Record<string, ApiRefere
   '@retikz/plot-react#PathMarkProps': {
     order: ['Main', 'Data', 'Geometry', 'Layout', 'Style', 'Callbacks'],
     members: {
+      contributeToDomain: 'Data',
       id: 'Main',
       encodings: 'Data',
       transforms: 'Data',
@@ -131,6 +133,7 @@ export const apiReferenceMemberGroups: Readonly<Partial<Record<string, ApiRefere
   '@retikz/plot-react#PointMarkProps': {
     order: ['Main', 'Data', 'Geometry', 'Layout', 'Style', 'Callbacks'],
     members: {
+      contributeToDomain: 'Data',
       id: 'Main',
       encodings: 'Data',
       transforms: 'Data',

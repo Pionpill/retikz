@@ -16,7 +16,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   return (
     <Plot data={weeklyPipeline} width={620} height={280}>
       <PointMark
-        encodings={{ color: 'channel', position: { x: 'day', y: 'value' } }}
+        encodings={{ color: 'channel', position: { x: { field: 'day' }, y: { field: 'value' } } }}
         properties={{ opacity: { overall: 0.45 }, minimumSize: 6 }}
       />
       <PathMark
@@ -25,7 +25,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           order: 'trendX',
           ...(groupByChannel ? { series: 'channel' } : {}),
           ...(groupByChannel ? { color: 'channel' } : {}),
-          position: { x: 'trendX', y: 'trendY' },
+          position: { x: { field: 'trendX' }, y: { field: 'trendY' } },
         }}
         properties={{ stroke: groupByChannel ? undefined : '#0f172a', strokeWidth: 2.5 }}
       />

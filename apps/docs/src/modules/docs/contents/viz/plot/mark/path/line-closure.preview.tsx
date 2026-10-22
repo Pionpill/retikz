@@ -37,7 +37,7 @@ export const LineClosurePreview = (values: LineClosurePreviewValues) => {
         }}
       />
       <PathMark
-        encodings={{ order: 'order', position: { x: 'month', y: 'value' } }}
+        encodings={{ order: 'order', position: { x: { field: 'month' }, y: { field: 'value' } } }}
         properties={{
           lineJoin: 'round',
           closure,

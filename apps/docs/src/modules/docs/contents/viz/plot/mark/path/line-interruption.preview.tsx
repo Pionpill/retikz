@@ -29,7 +29,7 @@ export const LineInterruptionPreview = (values: LineInterruptionPreviewValues) =
             series: 'name',
             color: 'name',
             fill: 'name',
-            position: { x: 'year', y: 'amount' },
+            position: { x: { field: 'year' }, y: { field: 'amount' } },
           }}
           properties={{
             closure: { kind: 'baseline' },
@@ -41,7 +41,12 @@ export const LineInterruptionPreview = (values: LineInterruptionPreviewValues) =
         />
       ) : null}
       <PathMark
-        encodings={{ order: 'year', series: 'name', color: 'name', position: { x: 'year', y: 'amount' } }}
+        encodings={{
+          order: 'year',
+          series: 'name',
+          color: 'name',
+          position: { x: { field: 'year' }, y: { field: 'amount' } },
+        }}
         properties={{ closed: false, connectNulls: values.connectNulls, strokeWidth: 2.4 }}
       />
       <PlotAxis dimension="x" />

@@ -30,12 +30,17 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
             color: 'segment',
             fill: 'segment',
             closure: { baseline: 'y0' },
-            position: { x: 'month', y: 'y1' },
+            position: { x: { field: 'month' }, y: { field: 'y1' } },
           }}
           properties={{ curve, closure: { kind: 'stack' }, stroke: 'none' }}
         />
         <PathMark
-          encodings={{ order: 'order', series: 'segment', color: 'segment', position: { x: 'month', y: 'y1' } }}
+          encodings={{
+            order: 'order',
+            series: 'segment',
+            color: 'segment',
+            position: { x: { field: 'month' }, y: { field: 'y1' } },
+          }}
           properties={{ curve, strokeWidth: 2 }}
         />
         <PlotAxis dimension="x" />
@@ -59,12 +64,17 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
             color: 'segment',
             fill: 'segment',
             closure: { baseline: 'y0' },
-            position: { x: 'month', y: 'y1' },
+            position: { x: { field: 'month' }, y: { field: 'y1' } },
           }}
           properties={{ curve, closure: { kind: 'stack' }, stroke: 'none' }}
         />
         <PathMark
-          encodings={{ order: 'order', series: 'segment', color: 'segment', position: { x: 'month', y: 'y1' } }}
+          encodings={{
+            order: 'order',
+            series: 'segment',
+            color: 'segment',
+            position: { x: { field: 'month' }, y: { field: 'y1' } },
+          }}
           properties={{ curve, strokeWidth: 2 }}
         />
         <PlotAxis dimension="x" />

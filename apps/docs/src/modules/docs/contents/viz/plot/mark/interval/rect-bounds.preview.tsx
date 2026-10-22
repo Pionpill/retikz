@@ -27,7 +27,10 @@ export const RectBoundsPreview = (values: RectBoundsPreviewValues) => (
       coordinate={values.coordinate === 'polar2D' ? 'polar2D' : undefined}
     >
       <IntervalMark
-        encodings={{ ...(values.showColor ? { color: 'value' } : {}), position: { x: 'col', y: 'row' } }}
+        encodings={{
+          ...(values.showColor ? { color: 'value' } : {}),
+          position: { x: { field: 'col' }, y: { field: 'row' } },
+        }}
         properties={{
           fill: values.showColor ? undefined : '#60a5fa',
           bounds: { x: { kind: 'band' }, y: values.mode === 'band' ? { kind: 'band' } : { kind: 'full' } },

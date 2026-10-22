@@ -52,7 +52,7 @@ export const BuiltinNodePreview = (
       <PlotScale dimension="x" type="linear" domain={[0, 4]} domainPadding={0} />
       <PlotScale dimension="y" type="linear" domain={[8, 16]} domainPadding={0} />
       <PointMark
-        encodings={{ position: { x: 'x', y: 'y' } }}
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
         properties={{
           shape: BuiltinShape.Rectangle,
           fill: '#dbeafe',

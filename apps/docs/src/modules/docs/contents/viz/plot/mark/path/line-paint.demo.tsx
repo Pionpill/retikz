@@ -35,7 +35,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <Plot data={revenue} width={560} height={240}>
       {mode === 'area' ? (
         <PathMark
-          encodings={{ order: 'month', position: { x: 'month', y: 'revenue' } }}
+          encodings={{ order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
           properties={{
             closure: { kind: 'baseline' },
             fill: fillGradient,
@@ -45,7 +45,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         />
       ) : null}
       <PathMark
-        encodings={{ order: 'month', position: { x: 'month', y: 'revenue' } }}
+        encodings={{ order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
         properties={{
           lineCap: 'round',
           lineJoin: 'round',

@@ -1,10 +1,10 @@
-import { PointAnnotation, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
-import type { PointAnnotationProps } from '@retikz/plot-react';
+import { PointMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
+import type { PointMarkProps } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import type { FC } from 'react';
 
-import { annotationX, annotationXScale } from './annotation-coordinate';
-import type { AnnotationCoordinate } from './annotation-coordinate';
+import { annotationX, annotationXScale } from '../shared/reference-coordinate';
+import type { AnnotationCoordinate } from '../shared/reference-coordinate';
 
 /** 标注试验场参数 */
 export type AnnotationPointValues = {
@@ -23,7 +23,7 @@ export type AnnotationPointValues = {
 };
 /** 常量几何及其标签的可交互预览 */
 export const AnnotationPointPreview: FC<AnnotationPointValues> = values => {
-  const orientation: NonNullable<PointAnnotationProps['properties']>['orientation'] =
+  const orientation: NonNullable<PointMarkProps['properties']>['orientation'] =
     values.coordinate === 'cartesian' || values.orientation === 'screen'
       ? { kind: 'screen' }
       : {
@@ -37,17 +37,25 @@ export const AnnotationPointPreview: FC<AnnotationPointValues> = values => {
         <PlotScale dimension="x" {...annotationXScale(values.coordinate)} />
         <PlotScale dimension="y" type="linear" domain={[0, 100]} domainPadding={0} />
         {values.preset === 'text' ? (
-          <PointAnnotation
-            properties={{
-              text: 'A',
-              orientation,
-              textColor: 'darkorange',
-              font: { size: values.fontSize },
-              position: { x: annotationX(values.coordinate, values.x, values.category), y: values.y },
+          <PointMark
+            contributeToDomain={false}
+            encodings={{
+              position: {
+                x: { value: annotationX(values.coordinate, values.x, values.category) },
+                y: { value: values.y },
+              },
             }}
+            properties={{ text: 'A', orientation, textColor: 'darkorange', font: { size: values.fontSize } }}
           />
         ) : (
-          <PointAnnotation
+          <PointMark
+            contributeToDomain={false}
+            encodings={{
+              position: {
+                x: { value: annotationX(values.coordinate, values.x, values.category) },
+                y: { value: values.y },
+              },
+            }}
             properties={{
               shape: values.shape,
               orientation,
@@ -56,7 +64,6 @@ export const AnnotationPointPreview: FC<AnnotationPointValues> = values => {
               label: values.showLabel
                 ? { content: 'A', position: values.labelPosition, distance: values.distance }
                 : undefined,
-              position: { x: annotationX(values.coordinate, values.x, values.category), y: values.y },
             }}
           />
         )}

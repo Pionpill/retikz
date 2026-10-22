@@ -15,11 +15,14 @@ export const ScaleBandPreview = (values: ScaleBandPreviewValues) => {
   return (
     <Plot data={segments} width={400} height={270}>
       {values.scaleType === 'band' ? (
-        <IntervalMark encodings={{ position: { x: 'segment', y: 'revenue' } }} />
+        <IntervalMark encodings={{ position: { x: { field: 'segment' }, y: { field: 'revenue' } } }} />
       ) : (
         <>
-          <PathMark encodings={{ position: { x: 'segment', y: 'revenue' } }} />
-          <PointMark encodings={{ position: { x: 'segment', y: 'revenue' } }} properties={{ size: 6 }} />
+          <PathMark encodings={{ position: { x: { field: 'segment' }, y: { field: 'revenue' } } }} />
+          <PointMark
+            encodings={{ position: { x: { field: 'segment' }, y: { field: 'revenue' } } }}
+            properties={{ size: 6 }}
+          />
         </>
       )}
       {values.scaleType === 'band' ? (

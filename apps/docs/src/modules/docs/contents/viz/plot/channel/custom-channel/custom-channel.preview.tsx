@@ -22,7 +22,10 @@ export const CustomChannelPreview = (values: CustomChannelPreviewValues) => (
     <PlotScale dimension="x" type="linear" domainPadding={16} />
     <PlotScale dimension="y" type="linear" domainPadding={16} />
     <PointMark
-      encodings={{ ...(values.bindingMode === 'field' ? { intensity: 'score' } : {}), position: { x: 'x', y: 'y' } }}
+      encodings={{
+        ...(values.bindingMode === 'field' ? { intensity: 'score' } : {}),
+        position: { x: { field: 'x' }, y: { field: 'y' } },
+      }}
       properties={{
         size: 8,
         fill: '#2563eb',

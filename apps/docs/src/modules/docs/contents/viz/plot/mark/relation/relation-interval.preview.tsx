@@ -42,7 +42,11 @@ export const RelationIntervalPreview = (values: RelationIntervalPreviewValues) =
         <PlotAxis dimension="x" tickLabels={false} />
         <PlotAxis dimension="y" grid ticks={{ count: 4 }} />
         <IntervalMark
-          encodings={{ color: 'phase', label: { content: 'label' }, position: { x: 'slot', y: 'value' } }}
+          encodings={{
+            color: 'phase',
+            label: { content: 'label' },
+            position: { x: { field: 'slot' }, y: { field: 'value' } },
+          }}
           properties={{
             stroke: '#ffffff',
             strokeWidth: 0.8,
@@ -57,9 +61,12 @@ export const RelationIntervalPreview = (values: RelationIntervalPreviewValues) =
         <RelationMark
           transforms={[{ operation: relationDecreaseOperation }]}
           encodings={{
-            source: { position: { x: 'sourceX', y: 'sourceY' } },
-            target: { position: { x: 'targetX', y: 'targetY' } },
-            geometry: { via: [{ position: { x: 'sourceX', y: 'sourceViaY' } }], label: { text: 'deltaLabel' } },
+            source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
+            target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
+            geometry: {
+              via: [{ position: { x: { field: 'sourceX' }, y: { field: 'sourceViaY' } } }],
+              label: { text: 'deltaLabel' },
+            },
           }}
           properties={{
             color: '#b91c1c',
@@ -81,9 +88,12 @@ export const RelationIntervalPreview = (values: RelationIntervalPreviewValues) =
         <RelationMark
           transforms={[{ operation: relationIncreaseOperation }]}
           encodings={{
-            source: { position: { x: 'sourceX', y: 'sourceY' } },
-            target: { position: { x: 'targetX', y: 'targetY' } },
-            geometry: { via: [{ position: { x: 'sourceX', y: 'sourceViaY' } }], label: { text: 'deltaLabel' } },
+            source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
+            target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
+            geometry: {
+              via: [{ position: { x: { field: 'sourceX' }, y: { field: 'sourceViaY' } } }],
+              label: { text: 'deltaLabel' },
+            },
           }}
           properties={{
             color: '#15803d',

@@ -31,7 +31,7 @@ export const LineSeriesPreview = (values: LineSeriesPreviewValues) => {
           ...(grouping === 'series' ? { series: 'city' } : {}),
           ...(grouping === 'color' ? { color: 'city' } : {}),
           ...(grouped && values.showLabels ? { label: { content: 'city' } } : {}),
-          position: { x, y: 'score' },
+          position: { x: { field: x }, y: { field: 'score' } },
         }}
         properties={{
           label:

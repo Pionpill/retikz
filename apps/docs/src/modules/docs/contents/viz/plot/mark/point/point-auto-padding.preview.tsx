@@ -22,7 +22,7 @@ export const PointAutoPaddingPreview = (values: PointAutoPaddingValues) => (
         domainPadding={values.override === 'zero' ? 0 : values.override === 'lower' ? { lower: 0 } : undefined}
       />
       <PointMark
-        encodings={{ size: 'value', position: { x: 'x', y: 'y' } }}
+        encodings={{ size: 'value', position: { x: { field: 'x' }, y: { field: 'y' } } }}
         properties={{
           autoPadding: values.strategy === 'off' ? false : { kind: values.strategy, clearance: values.clearance },
           opacity: { overall: 0.6 },

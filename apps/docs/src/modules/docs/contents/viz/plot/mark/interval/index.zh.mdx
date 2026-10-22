@@ -7,8 +7,6 @@ description: 用 IntervalMark 定义数据区间，通过坐标投影绘制柱�
 
 本页从普通柱开始，再介绍系列排列、连续区间和极坐标扇区。字段写法见[通道绑定](/viz/plot/channel/binding)，安装与宿主接入见[快速开始](/viz/plot/get-start)。
 
-只需绘制一次的常量参考点、参考线或区域，使用[独立标注](/viz/plot/mark/annotation)。
-
 ## 接入方式
 
 下面用三个季度的营收绘制柱。`x` 绑定季度，`y` 绑定营收，柱从数值基线 0 延伸到对应值。
@@ -38,7 +36,7 @@ const rows = [
 
 createRoot(document.getElementById('plot')!).render(
   <Plot data={rows} width={360} height={220}>
-    <IntervalMark encodings={{ position: { x: "quarter", y: "revenue" } }} />
+    <IntervalMark encodings={{ position: { x: { field: 'quarter' }, y: { field: 'revenue' } } }} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" />
   </Plot>,
@@ -68,7 +66,7 @@ const spec: IRPlot = {
     { name: 'y', type: 'linear' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'interval', kind: "data", encodings: { position: { x: 'quarter', y: 'revenue' } } }],
+  marks: [{ type: 'interval', encodings: { position: { x: { field: 'quarter' }, y: { field: 'revenue' } } } }],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
@@ -97,7 +95,7 @@ const spec = plot({
     { name: 'y', type: 'linear' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'interval', kind: "data", encodings: { position: { x: 'quarter', y: 'revenue' } } }],
+  marks: [{ type: 'interval', encodings: { position: { x: { field: 'quarter' }, y: { field: 'revenue' } } } }],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
@@ -129,7 +127,7 @@ const spec: IRPlot = {
     { name: 'y', type: 'linear' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'interval', kind: "data", encodings: { position: { x: 'quarter', y: 'revenue' } } }],
+  marks: [{ type: 'interval', encodings: { position: { x: { field: 'quarter' }, y: { field: 'revenue' } } } }],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
@@ -299,6 +297,32 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
     { label: '便捷属性与系列排列归一化', path: 'packages/viz/plot-vanilla/src/normalize/plot/member-normalizer.ts' },
     { label: '区间解析、投影与 Node 下沉', path: 'packages/viz/plot/src/providers/mark/features/interval.ts' },
   ]}
+/>
+
+## 参考区间
+
+在 `encodings.bounds.x`、`encodings.bounds.y` 中设置 `from` 和 `to`，每个边界使用字段、常量或 edge；`properties.bounds` 的两轴设为 `{ kind: 'extent' }`。切换整个视图范围，观察 edge 边界如何覆盖当前坐标范围。
+
+以下参考图元显式设置 `contributeToDomain={false}`，不扩大主体数据的定义域。使用控件切换坐标系、位置、几何与标签。
+
+<ComponentPreview
+  files={['reference-interval', 'reference-interval.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
+  defaultSourceFile="reference-interval.preview.tsx"
+  controls={{ name: 'reference-interval' }}
+  size="md"
+/>
+
+下面通过局部 `summarize` 变换计算统计字段，再绑定到同一类 Mark。切换分组和完整视图范围，观察各组极值确定的参考区域；小点保留原始观测。
+
+<ComponentPreview
+  files={[
+    'reference-data-interval',
+    '/viz/plot/mark/shared/reference-data.preview.tsx',
+    '/viz/plot/mark/shared/reference-data.data.ts',
+  ]}
+  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
+  controls={{ name: 'reference-data-interval' }}
+  size="md"
 />
 
 ## API 参考

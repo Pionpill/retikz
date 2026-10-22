@@ -39,7 +39,7 @@ export const LineCurvePreview = (values: LineCurvePreviewValues) => {
     <Layout viewBox={{ x: -12, y: 0, width: 420, height: 292 }}>
       <Plot data={curveSamples} width={400} height={280} coordinate={coordinate === 'polar2D' ? 'polar2D' : undefined}>
         <PathMark
-          encodings={{ order: 'index', position: { x, y: 'value' } }}
+          encodings={{ order: 'index', position: { x: { field: x }, y: { field: 'value' } } }}
           properties={{
             lineCap: 'round',
             lineJoin: 'round',
@@ -53,7 +53,7 @@ export const LineCurvePreview = (values: LineCurvePreviewValues) => {
         />
         {showPoints ? (
           <PointMark
-            encodings={{ position: { x, y: 'value' } }}
+            encodings={{ position: { x: { field: x }, y: { field: 'value' } } }}
             properties={{ fill: '#64748b', opacity: { overall: 0.72 }, minimumSize: 5 }}
           />
         ) : null}

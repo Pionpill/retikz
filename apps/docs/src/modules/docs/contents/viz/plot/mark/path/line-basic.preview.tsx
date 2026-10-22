@@ -22,7 +22,7 @@ export const LineBasicPreview = (values: LineBasicPreviewValues) => {
   return (
     <Plot data={revenue} width={400} height={280} coordinate={coordinate === 'polar2D' ? 'polar2D' : undefined}>
       <PathMark
-        encodings={{ ...(order === undefined ? {} : { order }), position: { x, y: yField } }}
+        encodings={{ ...(order === undefined ? {} : { order }), position: { x: { field: x }, y: { field: yField } } }}
         properties={{ closed: coordinate === 'polar2D' && values.closed }}
       />
       <PlotAxis dimension="x" />

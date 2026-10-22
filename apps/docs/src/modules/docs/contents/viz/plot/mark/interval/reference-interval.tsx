@@ -2,8 +2,8 @@ import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract } from './annotation-interval.controls';
-import { AnnotationIntervalPreview } from './annotation-interval.preview';
+import { previewControlContract } from './reference-interval.controls';
+import { AnnotationIntervalPreview } from './reference-interval.preview';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => AnnotationIntervalPreview(values));
 /** 稳定源码状态 */

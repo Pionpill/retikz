@@ -43,8 +43,11 @@ const PointPaddingStrategiesFigure: FC<PointPaddingStrategiesFigureProps> = prop
           marks: [
             {
               type: 'point',
-              kind: 'data',
-              encodings: { position: { x: 'x', y: 'y' }, size: { field: 'radius', scale: 'radius' } },
+
+              encodings: {
+                position: { x: { field: 'x' }, y: { field: 'y' } },
+                size: { field: 'radius', scale: 'radius' },
+              },
               properties: { autoPadding, opacity: { fill: 0.6 } },
             },
           ],

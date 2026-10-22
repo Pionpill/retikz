@@ -77,10 +77,13 @@ export const renderExtensionTransformPreview = (values: ExtensionTransformValues
     <PlotTransform operation={{ ...scaleFieldOperationOf(values) }} />
     <PlotScale dimension="x" type="linear" domain={[0, 16]} />
     <PointMark
-      encodings={{ position: { x: 'x', y: 'y' } }}
+      encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
       properties={{ fill: '#94a3b8', opacity: { overall: 0.7 }, size: 5 }}
     />
-    <PointMark encodings={{ position: { x: 'scaledX', y: 'y' } }} properties={{ fill: '#2563eb', size: 7 }} />
+    <PointMark
+      encodings={{ position: { x: { field: 'scaledX' }, y: { field: 'y' } } }}
+      properties={{ fill: '#2563eb', size: 7 }}
+    />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />
   </Plot>

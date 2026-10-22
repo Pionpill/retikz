@@ -2,8 +2,8 @@ import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract } from './annotation-point.controls';
-import { AnnotationPointPreview } from './annotation-point.preview';
+import { previewControlContract } from './reference-point.controls';
+import { AnnotationPointPreview } from './reference-point.preview';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => AnnotationPointPreview(values));
 /** 稳定源码状态 */

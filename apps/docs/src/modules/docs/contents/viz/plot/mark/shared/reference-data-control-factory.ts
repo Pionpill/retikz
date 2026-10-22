@@ -2,9 +2,9 @@ import type { Lang } from '@/i18n';
 import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
-import { annotationCoordinateI18n } from './annotation-coordinate.i18n';
-import { annotationRows } from './annotation-data.data';
-import { annotationDataI18n } from './annotation-data.i18n';
+import { annotationCoordinateI18n } from './reference-coordinate.i18n';
+import { annotationRows } from './reference-data.data';
+import { annotationDataI18n } from './reference-data.i18n';
 
 /** 同一数据集上的几何类型分别展示相关聚合与位置控件 */
 export const createAnnotationDataControls = (geometry: 'point' | 'path' | 'interval', lang: Lang = 'zh') => {
@@ -77,9 +77,9 @@ export const createAnnotationDataControls = (geometry: 'point' | 'path' | 'inter
     },
     relatedApis:
       geometry === 'point'
-        ? ['Plot.coordinate', 'PointAnnotation.transform', 'PointAnnotation.position']
+        ? ['Plot.coordinate', 'PointMark.transforms', 'PointMark.encodings.position']
         : geometry === 'path'
-          ? ['Plot.coordinate', 'PathAnnotation.transform', 'PathAnnotation.from', 'PathAnnotation.to']
-          : ['Plot.coordinate', 'IntervalAnnotation.transform', 'IntervalAnnotation.bounds'],
+          ? ['Plot.coordinate', 'PathMark.transforms', 'PathMark.encodings.from', 'PathMark.encodings.to']
+          : ['Plot.coordinate', 'IntervalMark.transforms', 'IntervalMark.encodings.bounds'],
   } satisfies PreviewControlContract;
 };

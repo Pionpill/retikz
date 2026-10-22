@@ -52,7 +52,7 @@ export const PointTextPreview = (values: PointTextPreviewValues) => {
   const textProps: PointMarkProps =
     values.mode === 'label'
       ? {
-          encodings: { color: 'region', label: { content: values.textField }, position: { x: 'x', y: 'y' } },
+          encodings: { color: 'region', label: { content: values.textField }, position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: {
             label: {
               displayFormat,
@@ -65,7 +65,7 @@ export const PointTextPreview = (values: PointTextPreviewValues) => {
           },
         }
       : {
-          encodings: { text: values.textField, position: { x: 'x', y: 'y' } },
+          encodings: { text: values.textField, position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: {
             displayFormat,
             align: values.align,

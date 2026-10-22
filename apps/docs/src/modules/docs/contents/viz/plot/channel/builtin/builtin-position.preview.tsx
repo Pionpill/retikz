@@ -39,7 +39,7 @@ export const BuiltinPositionPreview = (
       <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
     ) : null}
     <PointMark
-      encodings={{ position: { x: values.xField, y: values.yField } }}
+      encodings={{ position: { x: { field: values.xField }, y: { field: values.yField } } }}
       properties={{ size: 8, fill: '#2563eb' }}
     />
     <PlotAxis dimension="x" />

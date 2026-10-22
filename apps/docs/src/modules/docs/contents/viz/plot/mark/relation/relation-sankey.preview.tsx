@@ -20,8 +20,8 @@ export const RelationSankeyPreview = (values: RelationSankeyPreviewValues) => (
     <Plot data={sankeyRelations} width={620} height={320} position={[0, 42]}>
       <RelationMark
         encodings={{
-          source: { position: { x: 'sourceX', y: 'sourceY' } },
-          target: { position: { x: 'targetX', y: 'targetY' } },
+          source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
+          target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
           fill: 'flowFill',
           geometry: { width: 'width' },
         }}
@@ -40,7 +40,10 @@ export const RelationSankeyPreview = (values: RelationSankeyPreviewValues) => (
     <Plot data={sankeyNodes} width={620} height={320} position={[0, 42]}>
       <IntervalMark
         encodings={{
-          bounds: { x: { from: 'nodeX0', to: 'nodeX1' }, y: { from: 'nodeY0', to: 'nodeY1' } },
+          bounds: {
+            x: { from: { field: 'nodeX0' }, to: { field: 'nodeX1' } },
+            y: { from: { field: 'nodeY0' }, to: { field: 'nodeY1' } },
+          },
           fill: 'nodeFill',
           label: { content: 'nodeLabel' },
         }}

@@ -8,25 +8,24 @@
 
 <DocTab value="members" label="属性">
 
-
-
 <ApiTable grouped>
 
-| 分组 | 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- | --- |
-| 主要 | `id?` | `string` | — | — |
-| 数据 | `encodings?` | `InputPlotPointMark['encodings']` | — | — |
-|  | `transforms?` | `InputPlotPointMark['transforms']` | — | — |
-| 几何 | `coordinateView?` | `string` | — | — |
-|  | `properties?` | `InputPlotPointMark['properties']` | — | — |
-|  | `xAxisId?` | `string` | — | — |
-|  | `yAxisId?` | `string` | — | — |
-| 布局 | `facetId?` | `string` | — | — |
-|  | `trackId?` | `string` | — | — |
-| 样式 | `defaultColorGroup?` | `string` | — | — |
-|  | `defaultColorIndex?` | `number` | — | — |
-|  | `layer?` | `{ zIndex?: number \| undefined; }` | — | — |
-| 回调 | `resolveLabel?` | `(row: ExternalRow) => string` | — | — |
+| 分组 | 成员                  | 类型                                | 默认值 | 说明 |
+| ---- | --------------------- | ----------------------------------- | ------ | ---- |
+| 主要 | `id?`                 | `string`                            | —      | —    |
+| 数据 | `contributeToDomain?` | `false \| true`                     | —      | —    |
+|      | `encodings`           | `InputPlotPointMark['encodings']`   | —      | —    |
+|      | `transforms?`         | `InputPlotPointMark['transforms']`  | —      | —    |
+| 几何 | `coordinateView?`     | `string`                            | —      | —    |
+|      | `properties?`         | `InputPlotPointMark['properties']`  | —      | —    |
+|      | `xAxisId?`            | `string`                            | —      | —    |
+|      | `yAxisId?`            | `string`                            | —      | —    |
+| 布局 | `facetId?`            | `string`                            | —      | —    |
+|      | `trackId?`            | `string`                            | —      | —    |
+| 样式 | `defaultColorGroup?`  | `string`                            | —      | —    |
+|      | `defaultColorIndex?`  | `number`                            | —      | —    |
+|      | `layer?`              | `{ zIndex?: number \| undefined; }` | —      | —    |
+| 回调 | `resolveLabel?`       | `(row: ExternalRow) => string`      | —      | —    |
 
 </ApiTable>
 
@@ -42,7 +41,7 @@ export type PointMarkProps = InputPlotPointMark;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRPlotPointMark"} path={"packages/viz/plot/src/schemas/mark/types.ts"} startLine={66}>IRPlotPointMark</ApiSourceLink> / <ApiSourceLink label={"PointMarkSchema"} path={"packages/viz/plot/src/schemas/mark/schema.ts"} startLine={551}>PointMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPlotPointMark"} path={"packages/viz/plot/src/schemas/mark/types.ts"} startLine={60}>IRPlotPointMark</ApiSourceLink> / <ApiSourceLink label={"PointMarkSchema"} path={"packages/viz/plot/src/schemas/mark/schema.ts"} startLine={532}>PointMarkSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 

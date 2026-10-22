@@ -77,7 +77,10 @@ const renderCategoricalScene = (values: AxisCartesianPlaygroundValues) => {
 
   return (
     <Plot data={axisCartesianPlaygroundRows} width={380} height={260}>
-      <IntervalMark encodings={{ position: { x: 'category', y: 'y' } }} properties={{ fill: '#2563eb' }} />
+      <IntervalMark
+        encodings={{ position: { x: { field: 'category' }, y: { field: 'y' } } }}
+        properties={{ fill: '#2563eb' }}
+      />
       <PlotAxis
         dimension="x"
         tickLabels={{
@@ -113,7 +116,10 @@ const renderContinuousScene = (values: AxisCartesianPlaygroundValues) => {
       <Plot data={axisCartesianPlaygroundRows} width={380} height={260}>
         <PlotScale dimension="x" type="linear" domain={[-35, 35]} />
         <PlotScale dimension="y" type="linear" domain={[-5, 35]} />
-        <PathMark encodings={{ order: 'x', position: { x: 'x', y: 'y' } }} properties={{ stroke: '#2563eb' }} />
+        <PathMark
+          encodings={{ order: 'x', position: { x: { field: 'x' }, y: { field: 'y' } } }}
+          properties={{ stroke: '#2563eb' }}
+        />
         <PlotAxis
           dimension="x"
           placement={{ kind: 'origin', origin: 0, tickSide: 'bottom' }}
@@ -139,7 +145,10 @@ const renderContinuousScene = (values: AxisCartesianPlaygroundValues) => {
     <Plot data={axisCartesianPlaygroundRows} width={380} height={260}>
       <PlotScale dimension="x" type="linear" domain={[-35, 35]} />
       <PlotScale dimension="y" type="linear" domain={[0, 35]} />
-      <PathMark encodings={{ order: 'x', position: { x: 'x', y: 'y' } }} properties={{ stroke: '#2563eb' }} />
+      <PathMark
+        encodings={{ order: 'x', position: { x: { field: 'x' }, y: { field: 'y' } } }}
+        properties={{ stroke: '#2563eb' }}
+      />
       <PlotAxis dimension="x" ticks={ticks} grid={grid} title="x" />
       <PlotAxis dimension="y" ticks={{ count: 5 }} title="y" />
     </Plot>

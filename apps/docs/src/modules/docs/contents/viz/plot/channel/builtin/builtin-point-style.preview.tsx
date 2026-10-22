@@ -41,7 +41,7 @@ export const BuiltinPointStylePreview = (
       <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
       <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
       <PointMark
-        encodings={{ position: { x: 'x', y: 'y' } }}
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
         properties={{
           color: usesColor ? values.paint : undefined,
           fill: usesFill ? values.paint : usesStroke ? '#dbeafe' : undefined,

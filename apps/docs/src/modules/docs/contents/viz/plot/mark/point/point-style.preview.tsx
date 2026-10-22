@@ -44,7 +44,11 @@ export const PointStylePreview = (values: PointStylePreviewValues) => {
   const usesFieldColor = values.paintMode === 'field';
   const fill = values.paintMode === 'gradient' ? gradientFill : values.paintMode === 'solid' ? values.fill : undefined;
   const pointProps: PointMarkProps = {
-    encodings: { position: { x: 'x', y: 'y' }, zIndex: values.zIndex, ...(usesFieldColor ? { color: 'region' } : {}) },
+    encodings: {
+      position: { x: { field: 'x' }, y: { field: 'y' } },
+      zIndex: values.zIndex,
+      ...(usesFieldColor ? { color: 'region' } : {}),
+    },
     properties: {
       fill,
       stroke: values.stroke,

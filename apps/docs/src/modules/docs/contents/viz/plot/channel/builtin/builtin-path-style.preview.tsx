@@ -39,7 +39,7 @@ export const BuiltinPathStylePreview = (
       <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
       <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
       <PathMark
-        encodings={{ order: 'step', position: { x: 'step', y: 'value' } }}
+        encodings={{ order: 'step', position: { x: { field: 'step' }, y: { field: 'value' } } }}
         properties={{
           stroke: values.stroke,
           strokeWidth: values.strokeWidth,

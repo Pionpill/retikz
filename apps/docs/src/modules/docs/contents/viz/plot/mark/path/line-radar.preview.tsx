@@ -22,7 +22,10 @@ export const LineRadarPreview = (values: LineRadarPreviewValues) => (
       coordinate={{ type: 'polar2D', interpolation: values.leftCoordinateInterpolation }}
       position={[10, 10]}
     >
-      <PathMark encodings={{ order: 'rank', position: { x: 'dim', y: 'score' } }} properties={{ closed: true }} />
+      <PathMark
+        encodings={{ order: 'rank', position: { x: { field: 'dim' }, y: { field: 'score' } } }}
+        properties={{ closed: true }}
+      />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />
     </Plot>
@@ -34,7 +37,7 @@ export const LineRadarPreview = (values: LineRadarPreviewValues) => (
       position={[330, 10]}
     >
       <PathMark
-        encodings={{ order: 'rank', position: { x: 'dim', y: 'score' } }}
+        encodings={{ order: 'rank', position: { x: { field: 'dim' }, y: { field: 'score' } } }}
         properties={{ closed: values.closed }}
       />
       <PlotAxis dimension="x" />

@@ -31,7 +31,10 @@ export const BarPositionPreview = (values: BarPositionPreviewValues) => {
           encodings={{
             color: 'quarter',
             ...(values.showLabels ? { label: { content: 'value' } } : {}),
-            position: { x: isHorizontal ? 'value' : 'quarter', y: isHorizontal ? 'quarter' : 'value' },
+            position: {
+              x: { field: isHorizontal ? 'value' : 'quarter' },
+              y: { field: isHorizontal ? 'quarter' : 'value' },
+            },
           }}
           properties={{
             cornerRadius: values.cornerRadius,

@@ -41,7 +41,7 @@ export const PointNodeShapePreview = (values: PointNodeShapePreviewValues) => (
       coordinate={values.coordinate === 'polar2D' ? 'polar2D' : undefined}
     >
       <PointMark
-        encodings={{ anchorId: 'label', color: 'region', position: { x: 'x', y: 'y' } }}
+        encodings={{ anchorId: 'label', color: 'region', position: { x: { field: 'x' }, y: { field: 'y' } } }}
         properties={{
           anchorId: { prefix: 'shape-demo' },
           size: values.shape === 'wide-rectangle' ? undefined : values.size,

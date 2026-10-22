@@ -1,17 +1,9 @@
 import type { IRDataTransformDeclaration } from '@retikz/data';
-import {
-  IntervalAnnotation,
-  PathAnnotation,
-  Plot,
-  PlotAxis,
-  PlotScale,
-  PointAnnotation,
-  PointMark,
-} from '@retikz/plot-react';
+import { IntervalMark, PathMark, Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { annotationRows } from './annotation-data.data';
+import { annotationRows } from './reference-data.data';
 
 /** 聚合标注的交互参数 */
 export type AnnotationDataValues = {
@@ -60,7 +52,7 @@ const AnnotationDataPlot: FC<{
         <PlotScale dimension="y" type="linear" domain={[0, 10]} domainPadding={0} />
         {children}
         <PointMark
-          encodings={{ ...(grouped ? { fill: 'group' } : {}), position: { x: 'x', y: 'y' } }}
+          encodings={{ ...(grouped ? { fill: 'group' } : {}), position: { x: { field: 'x' }, y: { field: 'y' } } }}
           properties={{ fill: grouped ? undefined : 'gray', stroke: 'none', size: 4 }}
         />
         <PlotAxis dimension="x" />
@@ -91,11 +83,12 @@ export const AnnotationDataPointPreview: FC<AnnotationDataValues> = props => {
   return (
     <AnnotationDataPlot coordinate={coordinate} grouped={grouped}>
       {colors.map((color, index) => (
-        <PointAnnotation
+        <PointMark
+          contributeToDomain={false}
           key={color}
           transforms={selectAnnotationGroup(transform, grouped, index)}
           defaultColorIndex={index}
-          encodings={{ position: { x: 'centerX', y: 'centerY' } }}
+          encodings={{ position: { x: { field: 'centerX' }, y: { field: 'centerY' } } }}
           properties={{ size: 9, fill: grouped ? undefined : color, stroke: 'none' }}
         />
       ))}
@@ -109,7 +102,8 @@ export const AnnotationDataPathPreview: FC<AnnotationDataValues> = props => {
   return (
     <AnnotationDataPlot coordinate={coordinate} grouped={grouped}>
       {groups.map(index => (
-        <PathAnnotation
+        <PathMark
+          contributeToDomain={false}
           key={index}
           transforms={selectAnnotationGroup(
             [
@@ -132,11 +126,10 @@ export const AnnotationDataPathPreview: FC<AnnotationDataValues> = props => {
           )}
           defaultColorIndex={index}
           encodings={{
-            from: { ...(fullX ? {} : { x: 'xMin' }), y: 'reference' },
-            to: { ...(fullX ? {} : { x: 'xMax' }), y: 'reference' },
+            from: { x: fullX ? { edge: 'start' } : { field: 'xMin' }, y: { field: 'reference' } },
+            to: { x: fullX ? { edge: 'end' } : { field: 'xMax' }, y: { field: 'reference' } },
           }}
           properties={{
-            ...(fullX ? { from: { x: { edge: 'start' as const } }, to: { x: { edge: 'end' as const } } } : {}),
             stroke: grouped ? undefined : 'dodgerblue',
             strokeWidth: 3,
           }}
@@ -153,7 +146,8 @@ export const AnnotationDataIntervalPreview: FC<AnnotationDataValues> = props => 
   return (
     <AnnotationDataPlot coordinate={coordinate} grouped={grouped}>
       {groups.map(index => (
-        <IntervalAnnotation
+        <IntervalMark
+          contributeToDomain={false}
           key={index}
           transforms={selectAnnotationGroup(
             [
@@ -178,15 +172,18 @@ export const AnnotationDataIntervalPreview: FC<AnnotationDataValues> = props => 
           defaultColorIndex={index}
           encodings={{
             bounds: {
-              x: { ...(fullX ? {} : { from: 'xMin' }), ...(fullX ? {} : { to: 'xMax' }) },
-              y: { from: 'yMin', to: 'yMax' },
+              x: {
+                from: fullX ? { edge: 'start' } : { field: 'xMin' },
+                to: fullX ? { edge: 'end' } : { field: 'xMax' },
+              },
+              y: { from: { field: 'yMin' }, to: { field: 'yMax' } },
             },
           }}
           properties={{
             fill: grouped ? undefined : 'dodgerblue',
             opacity: { overall: 0.2 },
             stroke: 'none',
-            bounds: { x: { from: fullX ? { edge: 'start' } : undefined, to: fullX ? { edge: 'end' } : undefined } },
+            bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } },
           }}
         />
       ))}

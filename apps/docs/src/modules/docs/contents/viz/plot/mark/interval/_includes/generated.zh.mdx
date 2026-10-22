@@ -8,35 +8,34 @@
 
 <DocTab value="members" label="属性">
 
-
-
 <ApiTable grouped>
 
-| 分组 | 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- | --- |
-| 主要 | `id?` | `string` | — | — |
-| 数据 | `angle?` | `string` | — | 饼环份额字段，展开为累积区间 |
-|  | `arrangement?` | `'dodge' \| 'stack' \| 'normalize-stack'` | — | 多系列排布方式 |
-|  | `encodings?` | `InputPlotIntervalMark['encodings']` | — | — |
-|  | `group?` | `string` | — | 排布使用的分组字段 |
-|  | `percent?` | `boolean` | — | 百分比堆叠简写 |
-|  | `stack?` | `boolean` | — | 堆叠简写 |
-|  | `stackOffset?` | `'zero' \| 'normalize' \| 'diverging' \| 'center' \| 'overlap'` | — | 堆叠基线算法 |
-|  | `transforms?` | `InputPlotIntervalMark['transforms']` | — | — |
-|  | `width?` | `string` | — | 比例区间权重字段 |
-|  | `x0?` | `string` | — | 直方区间起点字段 |
-|  | `x1?` | `string` | — | 直方区间终点字段 |
-| 几何 | `coordinateView?` | `string` | — | — |
-|  | `direction?` | `'vertical' \| 'horizontal'` | — | 柱方向 |
-|  | `properties?` | `InputPlotIntervalMark['properties']` | — | — |
-|  | `xAxisId?` | `string` | — | — |
-|  | `yAxisId?` | `string` | — | — |
-| 布局 | `facetId?` | `string` | — | — |
-|  | `trackId?` | `string` | — | — |
-| 样式 | `defaultColorGroup?` | `string` | — | — |
-|  | `defaultColorIndex?` | `number` | — | — |
-|  | `layer?` | `{ zIndex?: number \| undefined; }` | — | — |
-| 回调 | `resolveLabel?` | `(row: ExternalRow) => string` | — | — |
+| 分组 | 成员                  | 类型                                                            | 默认值 | 说明                         |
+| ---- | --------------------- | --------------------------------------------------------------- | ------ | ---------------------------- |
+| 主要 | `id?`                 | `string`                                                        | —      | —                            |
+| 数据 | `angle?`              | `string`                                                        | —      | 饼环份额字段，展开为累积区间 |
+|      | `arrangement?`        | `'dodge' \| 'stack' \| 'normalize-stack'`                       | —      | 多系列排布方式               |
+|      | `contributeToDomain?` | `false \| true`                                                 | —      | —                            |
+|      | `encodings?`          | `InputPlotIntervalMark['encodings']`                            | —      | —                            |
+|      | `group?`              | `string`                                                        | —      | 排布使用的分组字段           |
+|      | `percent?`            | `boolean`                                                       | —      | 百分比堆叠简写               |
+|      | `stack?`              | `boolean`                                                       | —      | 堆叠简写                     |
+|      | `stackOffset?`        | `'zero' \| 'normalize' \| 'diverging' \| 'center' \| 'overlap'` | —      | 堆叠基线算法                 |
+|      | `transforms?`         | `InputPlotIntervalMark['transforms']`                           | —      | —                            |
+|      | `width?`              | `string`                                                        | —      | 比例区间权重字段             |
+|      | `x0?`                 | `string`                                                        | —      | 直方区间起点字段             |
+|      | `x1?`                 | `string`                                                        | —      | 直方区间终点字段             |
+| 几何 | `coordinateView?`     | `string`                                                        | —      | —                            |
+|      | `direction?`          | `'vertical' \| 'horizontal'`                                    | —      | 柱方向                       |
+|      | `properties?`         | `InputPlotIntervalMark['properties']`                           | —      | —                            |
+|      | `xAxisId?`            | `string`                                                        | —      | —                            |
+|      | `yAxisId?`            | `string`                                                        | —      | —                            |
+| 布局 | `facetId?`            | `string`                                                        | —      | —                            |
+|      | `trackId?`            | `string`                                                        | —      | —                            |
+| 样式 | `defaultColorGroup?`  | `string`                                                        | —      | —                            |
+|      | `defaultColorIndex?`  | `number`                                                        | —      | —                            |
+|      | `layer?`              | `{ zIndex?: number \| undefined; }`                             | —      | —                            |
+| 回调 | `resolveLabel?`       | `(row: ExternalRow) => string`                                  | —      | —                            |
 
 </ApiTable>
 
@@ -52,7 +51,7 @@ export type IntervalMarkProps = InputPlotIntervalMark;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRPlotIntervalMark"} path={"packages/viz/plot/src/schemas/mark/types.ts"} startLine={155}>IRPlotIntervalMark</ApiSourceLink> / <ApiSourceLink label={"IntervalMarkSchema"} path={"packages/viz/plot/src/schemas/mark/schema.ts"} startLine={755}>IntervalMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPlotIntervalMark"} path={"packages/viz/plot/src/schemas/mark/types.ts"} startLine={149}>IRPlotIntervalMark</ApiSourceLink> / <ApiSourceLink label={"IntervalMarkSchema"} path={"packages/viz/plot/src/schemas/mark/schema.ts"} startLine={742}>IntervalMarkSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 

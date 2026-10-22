@@ -9,16 +9,16 @@ import { storeRevenue } from './bar-transform.data';
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Plot data={storeRevenue} width={620} height={280}>
     <PointMark
-      encodings={{ position: { x: 'segment', y: 'revenue' } }}
+      encodings={{ position: { x: { field: 'segment' }, y: { field: 'revenue' } } }}
       properties={{ fill: '#94a3b8', opacity: { overall: 0.45 }, minimumSize: 6 }}
     />
     <IntervalMark
       transforms={[{ operation: barTransformOperationOf(values) }]}
       encodings={{
-        bounds: { y: { from: 'y0', to: 'y1' } },
+        bounds: { y: { from: { field: 'y0' }, to: { field: 'y1' } } },
         color: 'segment',
         label: { content: 'store' },
-        position: { x: 'segment' },
+        position: { x: { field: 'segment' } },
       }}
       properties={{ bounds: { y: { kind: 'extent' } } }}
     />

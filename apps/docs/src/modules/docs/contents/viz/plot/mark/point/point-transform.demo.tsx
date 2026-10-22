@@ -9,12 +9,17 @@ import { regionOrders } from './point-transform.data';
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Plot data={regionOrders} width={620} height={280}>
     <PointMark
-      encodings={{ position: { x: 'region', y: 'orders' } }}
+      encodings={{ position: { x: { field: 'region' }, y: { field: 'orders' } } }}
       properties={{ fill: '#94a3b8', opacity: { overall: 0.35 }, minimumSize: 6 }}
     />
     <PointMark
       transforms={[{ operation: pointTransformOperationOf(values) }]}
-      encodings={{ size: 'orders', color: 'region', label: { content: 'rep' }, position: { x: 'region', y: 'orders' } }}
+      encodings={{
+        size: 'orders',
+        color: 'region',
+        label: { content: 'rep' },
+        position: { x: { field: 'region' }, y: { field: 'orders' } },
+      }}
     />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />

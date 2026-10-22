@@ -3,7 +3,7 @@ title: 契约 - 编码
 description: 查询 Plot 字段编码、位置角色、视觉目标与固定标签 schema。
 ---
 
-`encodings` 将数据字段映射到位置角色或视觉目标，固定值位于 `properties`。绑定使用字段名字符串；显式选择比例尺时使用 `{ field, scale }`，两个成员都必填。位置比例尺由坐标角色拥有，位置绑定只接受字段名。
+`encodings` 中的视觉通道绑定字段，视觉常量位于 `properties`。位置统一使用 `{ field }`、`{ value }` 或 `{ edge }`，比例尺由坐标角色决定。x 必填，y/z 按坐标需求选用。
 
 ## EncodingSchema
 

@@ -35,7 +35,10 @@ export const BuiltinLabelPreview = (
       <PlotScale dimension="x" type="linear" domain={[0, 4]} domainPadding={0} />
       <PlotScale dimension="y" type="linear" domain={[8, 16]} domainPadding={0} />
       <PointMark
-        encodings={{ ...(values.showLabel ? { label: { content: 'tag' } } : {}), position: { x: 'x', y: 'y' } }}
+        encodings={{
+          ...(values.showLabel ? { label: { content: 'tag' } } : {}),
+          position: { x: { field: 'x' }, y: { field: 'y' } },
+        }}
         properties={{
           shape: BuiltinShape.Rectangle,
           fill: '#dbeafe',

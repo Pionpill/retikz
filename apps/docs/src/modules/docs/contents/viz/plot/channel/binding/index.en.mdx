@@ -45,7 +45,9 @@ createRoot(document.getElementById('plot')!).render(
   <Plot data={rows} width={360} height={220}>
     <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
     <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
-    <PointMark encodings={{ position: { x: 'gdp', y: 'life' }, color: 'region', size: 'population' }} />
+    <PointMark
+      encodings={{ position: { x: { field: 'gdp' }, y: { field: 'life' } }, color: 'region', size: 'population' }}
+    />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" />
   </Plot>,
@@ -80,8 +82,8 @@ const spec: IRPlot = {
   marks: [
     {
       type: 'point',
-      kind: 'data',
-      encodings: { position: { x: 'gdp', y: 'life' }, color: 'region', size: 'population' },
+
+      encodings: { position: { x: { field: 'gdp' }, y: { field: 'life' } }, color: 'region', size: 'population' },
     },
   ],
   guides: [
@@ -117,8 +119,8 @@ const spec = plot({
   marks: [
     {
       type: 'point',
-      kind: 'data',
-      encodings: { position: { x: 'gdp', y: 'life' }, color: 'region', size: 'population' },
+
+      encodings: { position: { x: { field: 'gdp' }, y: { field: 'life' } }, color: 'region', size: 'population' },
     },
   ],
   guides: [
@@ -157,8 +159,8 @@ const spec: IRPlot = {
   marks: [
     {
       type: 'point',
-      kind: 'data',
-      encodings: { position: { x: 'gdp', y: 'life' }, color: 'region', size: 'population' },
+
+      encodings: { position: { x: { field: 'gdp' }, y: { field: 'life' } }, color: 'region', size: 'population' },
     },
   ],
   guides: [
@@ -179,17 +181,17 @@ The explicit `data.reference` must match the dataset name `rows`. All four entri
 
 `encodings` selects fields to read; `properties` supplies fixed values. React, Vanilla, and JSON use the same groups. Named components and factories supply `type` and `kind`; JSON marks declare both explicitly.
 
-| Target              | Field encoding                         | Fixed property                                        |
-| ------------------- | -------------------------------------- | ----------------------------------------------------- |
-| Horizontal position | `encodings.position.x: 'gdp'`          | `properties.position.x: 400`                          |
-| Color               | `encodings.color: 'region'`            | `properties.color: 'crimson'`                         |
-| Size                | `encodings.size: 'population'`         | `properties.size: 12`                                 |
-| Shape               | `encodings.shape: 'region'`            | `properties.shape: 'circle'`                          |
-| Label content       | `encodings.label: { content: 'abbr' }` | `properties.label: { content: 'A', position: 'top' }` |
+| Target              | Field encoding                           | Fixed property                                        |
+| ------------------- | ---------------------------------------- | ----------------------------------------------------- |
+| Horizontal position | `encodings.position.x: { field: 'gdp' }` | `encodings.position.x: { value: 400 }`                |
+| Color               | `encodings.color: 'region'`              | `properties.color: 'crimson'`                         |
+| Size                | `encodings.size: 'population'`           | `properties.size: 12`                                 |
+| Shape               | `encodings.shape: 'region'`              | `properties.shape: 'circle'`                          |
+| Label content       | `encodings.label: { content: 'abbr' }`   | `properties.label: { content: 'A', position: 'top' }` |
 
-Write a field name for an ordinary binding. To select a declared scale, use `{ field: 'population', scale: 'populationSize' }`. Coordinates own position scales, so `position.x` and `position.y` accept field names only. An object such as `{ field: 'gdp' }` is not a valid shorthand.
+Write a field name for an ordinary binding. To select a declared scale, use `{ field: 'population', scale: 'populationSize' }`. Coordinates own position scales. Use `{ field: 'gdp' }` to bind a position field, `{ value: 80 }` for a constant, or an edge for a view boundary.
 
-Fixed positions remain in data space: `properties.position.y: 80` means the data value 80, which passes through scale and coordinate projection. `{ edge: 'start' }` and `{ edge: 'end' }` refer to the final view range edges; see [annotations](/viz/plot/mark/annotation).
+Fixed positions remain in data space: `encodings.position.y: { value: 80 }` means the data value 80, which passes through scale and coordinate projection. `{ edge: 'start' }` and `{ edge: 'end' }` refer to the final view range edges; see [annotations](/viz/plot/mark).
 
 An encoding wins over a fixed property at the same target. Missing fields or failed scale mappings raise errors instead of falling back to the fixed property. Other targets remain independent: encoding `opacity.overall` preserves fixed `opacity.fill` and `opacity.stroke` factors.
 

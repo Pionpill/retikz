@@ -7,8 +7,6 @@ description: Define data intervals with IntervalMark and project them into bars,
 
 This page starts with bars, then covers series arrangements, continuous intervals, and polar sectors. See [channel binding](/viz/plot/channel/binding) for field syntax and [getting started](/viz/plot/get-start) for installation and host setup.
 
-For a constant reference point, line, or region drawn once per view, use [independent annotations](/viz/plot/mark/annotation).
-
 ## Integration
 
 The example plots revenue for three quarters. `x` binds the quarter and `y` binds revenue; each bar extends from a baseline of 0 to its value.
@@ -38,7 +36,7 @@ const rows = [
 
 createRoot(document.getElementById('plot')!).render(
   <Plot data={rows} width={360} height={220}>
-    <IntervalMark encodings={{ position: { x: "quarter", y: "revenue" } }} />
+    <IntervalMark encodings={{ position: { x: { field: 'quarter' }, y: { field: 'revenue' } } }} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" />
   </Plot>,
@@ -68,7 +66,7 @@ const spec: IRPlot = {
     { name: 'y', type: 'linear' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'interval', kind: "data", encodings: { position: { x: 'quarter', y: 'revenue' } } }],
+  marks: [{ type: 'interval', encodings: { position: { x: { field: 'quarter' }, y: { field: 'revenue' } } } }],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
@@ -97,7 +95,7 @@ const spec = plot({
     { name: 'y', type: 'linear' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'interval', kind: "data", encodings: { position: { x: 'quarter', y: 'revenue' } } }],
+  marks: [{ type: 'interval', encodings: { position: { x: { field: 'quarter' }, y: { field: 'revenue' } } } }],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
@@ -129,7 +127,7 @@ const spec: IRPlot = {
     { name: 'y', type: 'linear' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'interval', kind: "data", encodings: { position: { x: 'quarter', y: 'revenue' } } }],
+  marks: [{ type: 'interval', encodings: { position: { x: { field: 'quarter' }, y: { field: 'revenue' } } } }],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
@@ -305,6 +303,32 @@ These construction lines explain the geometry. The implementation calculates rec
       path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
     },
   ]}
+/>
+
+## Reference intervals
+
+Set `from` and `to` under `encodings.bounds.x` and `encodings.bounds.y` using fields, constants, or edges. Set both roles in `properties.bounds` to `{ kind: 'extent' }`. Toggle the full view range to see edges follow the coordinate extent.
+
+These reference marks set `contributeToDomain={false}` so they do not expand the data domain. Use the controls to change coordinates, positions, geometry, and labels.
+
+<ComponentPreview
+  files={['reference-interval', 'reference-interval.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
+  defaultSourceFile="reference-interval.preview.tsx"
+  controls={{ name: 'reference-interval' }}
+  size="md"
+/>
+
+The following example binds fields produced by a local `summarize` transform to the same Mark. Change grouping and the full view range to inspect the reference regions determined by each group’s extrema; small points retain the original observations.
+
+<ComponentPreview
+  files={[
+    'reference-data-interval',
+    '/viz/plot/mark/shared/reference-data.preview.tsx',
+    '/viz/plot/mark/shared/reference-data.data.ts',
+  ]}
+  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
+  controls={{ name: 'reference-data-interval' }}
+  size="md"
 />
 
 ## API reference

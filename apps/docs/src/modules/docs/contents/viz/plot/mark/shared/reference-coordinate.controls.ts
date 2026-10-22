@@ -1,7 +1,7 @@
 import type { Lang } from '@/i18n';
 
-import { annotationCategories } from './annotation-coordinate';
-import { annotationCoordinateI18n } from './annotation-coordinate.i18n';
+import { annotationCategories } from './reference-coordinate';
+import { annotationCoordinateI18n } from './reference-coordinate.i18n';
 
 /** 连续位置控件的显示条件 */
 export const annotationContinuousCondition = { controlId: 'coordinate', oneOf: ['cartesian', 'polar-continuous'] };

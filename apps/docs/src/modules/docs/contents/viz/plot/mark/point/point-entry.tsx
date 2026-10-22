@@ -17,7 +17,7 @@ const PointEntry: FC = () => {
     <Plot data={rows} width={Math.min(360, (dimensions?.width ?? 424) - 64)} height={220}>
       <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
       <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
-      <PointMark encodings={{ position: { x: 'gdp', y: 'life' } }} properties={{ size: 6 }} />
+      <PointMark encodings={{ position: { x: { field: 'gdp' }, y: { field: 'life' } } }} properties={{ size: 6 }} />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" />
     </Plot>

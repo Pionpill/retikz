@@ -2349,26 +2349,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PointMark',
     url: '/viz/plot/reference/mark#pointmarkschema',
   },
-  AnnotationSchema: {
-    schema: IRPlot.AnnotationSchema,
-    label: 'Annotation',
-    url: '/viz/plot/reference/mark#annotationschema',
-  },
-  PointAnnotationSchema: {
-    schema: IRPlot.PointAnnotationSchema,
-    label: 'PointAnnotation',
-    url: '/viz/plot/reference/mark#pointannotationschema',
-  },
-  PathAnnotationSchema: {
-    schema: IRPlot.PathAnnotationSchema,
-    label: 'PathAnnotation',
-    url: '/viz/plot/reference/mark#pathannotationschema',
-  },
-  IntervalAnnotationSchema: {
-    schema: IRPlot.IntervalAnnotationSchema,
-    label: 'IntervalAnnotation',
-    url: '/viz/plot/reference/mark#intervalannotationschema',
-  },
   PathMarkSchema: {
     schema: IRPlot.PathMarkSchema,
     label: 'PathMark',

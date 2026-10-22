@@ -101,12 +101,12 @@ For `size`, resolution determines the field, domain, and square-root scale, then
 
 Field mode returns both a per-row resolver and a legend descriptor containing the field, scale name, domain, and range. When no domain is authored and the data has no positive values, the mapping stays at the lower range bound. Missing or non-finite row values produce `undefined`; negative values or a non-continuous field cause an error.
 
-| Object being traced | Current contents                           | Consumer        |
-| ------------------- | ------------------------------------------ | --------------- |
-| Input binding       | `encodings.size: 'amount'` | Size definition |
-| Value function      | `amount = 25 → radius = 11`                | Node delivery   |
-| Mapping descriptor  | `domain: [0, 100]`, `range: [2, 20]`       | Size legend     |
-| Node property       | `layout.minimumSize: 11 × √2`              | Circle layout   |
+| Object being traced | Current contents                     | Consumer        |
+| ------------------- | ------------------------------------ | --------------- |
+| Input binding       | `encodings.size: 'amount'`           | Size definition |
+| Value function      | `amount = 25 → radius = 11`          | Node delivery   |
+| Mapping descriptor  | `domain: [0, 100]`, `range: [2, 20]` | Size legend     |
+| Node property       | `layout.minimumSize: 11 × √2`        | Circle layout   |
 
 Resolution is not a global cache. Legend collection, layout measurement, and final mark generation may all invoke resolution logic. A resolver must not depend on running only once or modify its input data during evaluation.
 
@@ -161,8 +161,7 @@ Paths need not correspond one-to-one with data rows. A line path can contain mul
     {
       label: 'Channel kinds supported by built-in marks',
       path: 'packages/viz/plot/src/providers/mark/shared/common.ts',
-      startLine: 474,
-      endLine: 480,
+
     },
     {
       label: 'Convert size radius to node layout',
@@ -188,7 +187,8 @@ Paths need not correspond one-to-one with data rows. A line path can contain mul
       startLine: 59,
       endLine: 95,
     },
-  ]}
+
+]}
 />
 
 ## Positions and legends

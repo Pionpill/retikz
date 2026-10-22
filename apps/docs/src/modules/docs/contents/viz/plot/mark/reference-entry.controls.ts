@@ -2,8 +2,8 @@ import type { Lang } from '@/i18n';
 import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
-import { annotationCoordinateControl } from './annotation-coordinate.controls';
-import { annotationCoordinateI18n } from './annotation-coordinate.i18n';
+import { annotationCoordinateControl } from './shared/reference-coordinate.controls';
+import { annotationCoordinateI18n } from './shared/reference-coordinate.i18n';
 
 /** 概览中的坐标切换 */
 export const createPreviewControlContract = (lang: Lang = 'zh') =>

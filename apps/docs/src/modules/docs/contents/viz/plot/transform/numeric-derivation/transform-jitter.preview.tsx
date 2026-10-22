@@ -33,7 +33,7 @@ export const TransformJitterPreview = (
       <PlotTransform operation={{ ...jitterOperationOf(values) }} />
       <PlotScale dimension="x" type="linear" domain={[0.5, 3.5]} />
       <PlotScale dimension="y" type="linear" domain={[10, 32]} />
-      <PointMark encodings={{ position: { x: 'dose', y: 'response' } }} />
+      <PointMark encodings={{ position: { x: { field: 'dose' }, y: { field: 'response' } } }} />
       <PlotAxis dimension="x" title={i18n.jittered} />
       <PlotAxis dimension="y" title={i18n.response} grid />
     </Plot>

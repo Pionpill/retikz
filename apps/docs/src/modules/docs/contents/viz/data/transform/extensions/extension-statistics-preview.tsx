@@ -99,7 +99,7 @@ export const renderExtensionStatisticsPreview = () => (
       implementations={{ statisticsReducers: [midpointImplementation] }}
     >
       <PlotTransform operation={{ ...midpointSummaryOperationOf() }} />
-      <PointMark encodings={{ position: { x: 'group', y: 'midpoint' } }} />
+      <PointMark encodings={{ position: { x: { field: 'group' }, y: { field: 'midpoint' } } }} />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />
     </Plot>
@@ -114,7 +114,7 @@ export const renderExtensionStatisticsPreview = () => (
       implementations={{ rowSelectors: [closestToMeanImplementation] }}
     >
       <PlotTransform operation={{ ...closestToMeanSelectOperationOf() }} />
-      <PointMark encodings={{ position: { x: 'group', y: 'score' } }} />
+      <PointMark encodings={{ position: { x: { field: 'group' }, y: { field: 'score' } } }} />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />
     </Plot>
