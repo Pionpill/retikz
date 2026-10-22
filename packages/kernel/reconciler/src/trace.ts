@@ -5,7 +5,9 @@ export const ReconcilerTracePhase = {
   /** 候选结果计算 */
   Update: 'update',
 } as const;
+
 export type ReconcilerTracePhase = ValueOf<typeof ReconcilerTracePhase>;
+
 /** 增量编译 trace 计数单位 */
 export const ReconcilerTraceUnit = {
   /** 输入对象 */
