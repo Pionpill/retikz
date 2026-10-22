@@ -1,8 +1,7 @@
-import { CoreTraceUnit } from '@retikz/core';
 import type { Scene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { drawScene, RenderTracePhase } from '../../src/canvas';
+import { drawScene, RenderTracePhase, RenderTraceUnit } from '../../src/canvas';
 import type { RenderTraceRecord } from '../../src/trace';
 import { createSpyCanvasContext } from './draw-scene/helpers';
 
@@ -29,7 +28,7 @@ describe('drawScene performance trace', () => {
     expect(records).toEqual([
       {
         phase: RenderTracePhase.Commit,
-        unit: CoreTraceUnit.ScenePrimitive,
+        unit: RenderTraceUnit.ScenePrimitive,
         outcome: 'full',
         visited: 3,
         reused: 0,

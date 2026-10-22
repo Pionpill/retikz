@@ -10,6 +10,7 @@ import { RetikzError } from '@retikz/foundation';
 import type { PerformanceTraceSink } from '@retikz/foundation';
 
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from './error';
+import { ReconcilerTracePhase, ReconcilerTraceUnit } from './trace';
 import { isWeaveScene, WeaveReconciler } from './weave';
 import type { WeaveBatch, WeavePreparedUpdate, WeaveRoot } from './weave';
 
@@ -48,7 +49,7 @@ export type ReconcilerSessionOptions = SceneCompilationPreparationOptions &
     target?: ReconcilerCommitTarget;
     /** 基础批次是否强制重算全部元素，完整输入替换始终完整编译 */
     updateStrategy?: ReconcilerUpdateStrategy;
-    /** 已提交编译的实际元素编译次数；不代表树遍历或图元修改次数 */
+    /** 已提交编译的工作量；Weave 按元素编译计数，Composite 按整场景编译计数 */
     trace?: PerformanceTraceSink;
   }>;
 
@@ -80,21 +81,7 @@ export class ReconcilerSession {
     try {
       const weave = isWeaveScene(source) ? new WeaveReconciler(source, options, this.execution) : undefined;
       const prepared = weave?.mount();
-      let compilationCount = 0;
-      const compilation =
-        prepared?.compilation ??
-        prepareSceneCompilation(
-          source,
-          {
-            ...options,
-            trace: {
-              report: record => {
-                compilationCount = record.visited;
-              },
-            },
-          },
-          this.execution,
-        );
+      const compilation = prepared?.compilation ?? prepareSceneCompilation(source, options, this.execution);
       const candidate: ReconcilerResult = {
         revision: this.nextRevision(),
         compilation,
@@ -102,7 +89,11 @@ export class ReconcilerSession {
       };
       const published = this.publish(candidate, weave, undefined, options);
       this.options = options;
-      this.reportTrace('full', prepared?.visited ?? compilationCount);
+      this.reportTrace(
+        'full',
+        prepared === undefined ? ReconcilerTraceUnit.SceneCompile : ReconcilerTraceUnit.ElementCompile,
+        prepared?.visited ?? 1,
+      );
       return published;
     } catch (cause) {
       if (cause instanceof RetikzError) throw cause;
@@ -130,7 +121,11 @@ export class ReconcilerSession {
         this.weave,
         prepared,
       );
-      this.reportTrace(this.execution.updateStrategy === 'full' ? 'full' : 'incremental', prepared.visited);
+      this.reportTrace(
+        this.execution.updateStrategy === 'full' ? 'full' : 'incremental',
+        ReconcilerTraceUnit.ElementCompile,
+        prepared.visited,
+      );
       return published;
     } finally {
       this.endUpdate();
@@ -246,12 +241,12 @@ export class ReconcilerSession {
   }
 
   /** 观测失败不能改变已经发布的编译结果 */
-  private reportTrace(outcome: 'full' | 'incremental', visited: number): void {
+  private reportTrace(outcome: 'full' | 'incremental', unit: ReconcilerTraceUnit, visited: number): void {
     try {
       this.execution.trace?.({
         owner: '@retikz/reconciler',
-        phase: 'update',
-        unit: 'element-compile',
+        phase: ReconcilerTracePhase.Update,
+        unit,
         outcome,
         visited,
         reused: 0,

@@ -1,8 +1,7 @@
-import { CoreTraceUnit } from '@retikz/core';
 import type { Scene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { buildSvgDocument, RenderTracePhase } from '../../../src/svg';
+import { buildSvgDocument, RenderTracePhase, RenderTraceUnit } from '../../../src/svg';
 import type { RenderTraceRecord } from '../../../src/trace';
 
 const scene: Scene = {
@@ -29,7 +28,7 @@ describe('buildSvgDocument performance trace', () => {
     expect(records).toEqual([
       {
         phase: RenderTracePhase.Commit,
-        unit: CoreTraceUnit.ScenePrimitive,
+        unit: RenderTraceUnit.ScenePrimitive,
         outcome: 'full',
         visited: 3,
         reused: 0,

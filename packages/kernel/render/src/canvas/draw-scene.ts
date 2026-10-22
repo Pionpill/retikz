@@ -1,4 +1,3 @@
-import { CoreTraceUnit } from '@retikz/core';
 import type {
   BlendMode,
   IRDropShadow,
@@ -25,7 +24,7 @@ import {
   parseHexColor,
   pathBounds,
 } from '../shared';
-import { RenderTracePhase } from '../trace';
+import { RenderTracePhase, RenderTraceUnit } from '../trace';
 import { applyPrimAnimations } from './animate';
 import { applySceneCamera } from './camera';
 import { buildGradientStrokeStyle, fillObjectGradient } from './gradient-paint';
@@ -914,7 +913,7 @@ export const drawScene = (ctx: CanvasRenderingContext2D, scene: Scene, options: 
     try {
       options.trace.report({
         phase: RenderTracePhase.Commit,
-        unit: CoreTraceUnit.ScenePrimitive,
+        unit: RenderTraceUnit.ScenePrimitive,
         outcome: 'full',
         visited,
         reused: 0,

@@ -60,18 +60,6 @@ describe('静态编译准备', () => {
     }
   });
 
-  it('观测回调失败不改变静态结果', () => {
-    expect(
-      prepareSceneCompilation(scene, {
-        trace: {
-          report: () => {
-            throw new Error('sink');
-          },
-        },
-      }).result,
-    ).toEqual(compileToScene(scene));
-  });
-
   it('配对检查不编译并拒绝过期绑定', () => {
     const bindings = createCompositeInputBindings(scene, []);
     expect(validateCompositeInputBindings(scene, bindings)).toBeUndefined();

@@ -34,7 +34,6 @@ export const compileObservedFragment = (
     ...context,
     runtimeInputs: captureCompositeInputScope({ children: values }, []),
     observation: undefined,
-    trace: undefined,
     paint,
     clip,
     onWarn: warning => {

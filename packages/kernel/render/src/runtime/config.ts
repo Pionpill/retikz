@@ -5,7 +5,7 @@ import type { AnimationPropertyRegistry, EasingRegistry } from '../animation';
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { HydrationHandlers } from '../hydration';
 import { RetikzEvent } from '../hydration';
-import { cloneAndFreezeRuntimeValue, isPlainObject, runtimeStructuralEquals } from './shared';
+import { cloneAndFreezeRuntimeValue, isPlainObject } from './shared';
 
 /** Render runtime config 的固定 owner key */
 export const RENDER_RUNTIME_SOURCE_KEY = '@retikz/render:runtime-config' as const;
@@ -308,4 +308,3 @@ export const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRun
     return invalidRuntimeInput(cause);
   }
 };
-

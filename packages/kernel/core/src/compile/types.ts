@@ -10,7 +10,6 @@ import type {
   SpatialHandleIndex,
 } from '../contract';
 import type { CoreProviderDefinitions, ThemeStyleDefinition } from '../contract';
-import type { CoreCompileTraceReporter } from '../shared';
 import type { LowerTex, TextMeasurer } from './text';
 import type { CompileWarning } from './warning';
 
@@ -242,6 +241,4 @@ export type CompileOptions<
     maxClipDepth?: number;
     /** 本次 compile 请求的 opt-in artifacts */
     artifacts?: CompileArtifactOptions;
-    /** 记录本次 full compile 的确定性 IRChild dispatch 工作量 */
-    trace?: CoreCompileTraceReporter;
   };

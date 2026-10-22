@@ -2381,7 +2381,6 @@ export const compileChildrenToPrimitives = (
   ): void => {
     try {
       withWarningOccurrence(occurrence, () => {
-        if (context.trace !== undefined) context.trace.visited += 1;
         if ('namespace' in child) {
           compileCompositeChild(child, index, frame, occurrence, compositeDepth, semanticOwner);
           return;

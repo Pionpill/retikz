@@ -1,6 +1,5 @@
 import type { AnyCompositeDefinition, CompileObserverDefinition, CompileObserverOutput } from '../contract';
 import type { IRScene } from '../schemas';
-import { CoreTracePhase, CoreTraceUnit } from '../shared';
 import {
   compileChildrenToPrimitives,
   createCompileContext,
@@ -103,20 +102,6 @@ export const prepareSceneCompilation = <const TComposites extends ReadonlyArray<
     observerOutputs,
     ...(provenanceTracker === undefined ? {} : { provenance: provenanceTracker.capture(primitives) }),
   });
-  if (context.trace !== undefined) {
-    try {
-      context.trace.reporter.report({
-        phase: CoreTracePhase.Compile,
-        unit: CoreTraceUnit.IrChild,
-        outcome: 'full',
-        visited: context.trace.visited,
-        reused: 0,
-        changed: context.trace.visited,
-      });
-    } catch {
-      /* 观测失败不影响编译产物 */
-    }
-  }
 
   return prepared;
 };

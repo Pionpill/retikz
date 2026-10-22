@@ -28,8 +28,6 @@ export type CompileContext = CompileEnvironment & {
   onWarn: (warning: CompileWarningInput) => void;
   /** 本次观察会话 */
   observation: CompileObservationRuntime | undefined;
-  /** 本次编译跟踪计数 */
-  trace: { reporter: NonNullable<CompileOptions['trace']>; visited: number } | undefined;
   /** 本次绘制资源注册表 */
   paint: ReturnType<typeof createPaintRegistry>;
   /** 本次裁剪资源注册表 */
@@ -63,7 +61,6 @@ export const createCompileContext = (
     measureText,
     onWarn,
     observation: options.observation,
-    trace: options.trace === undefined ? undefined : { reporter: options.trace, visited: 0 },
     paint: createPaintRegistry(environment.round),
     clip: createClipRegistry(environment.round, environment.clips, environment.maxClipDepth),
   };

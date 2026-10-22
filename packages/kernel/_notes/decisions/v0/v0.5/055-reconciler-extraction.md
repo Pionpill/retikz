@@ -77,15 +77,15 @@ Core 删除这些旧出口，不 re-export Reconciler，不保留兼容别名。
 
 完整 Snapshot 仍是真源，ChangeSet 仍为带 base revision 的可选提示，不能单独构造下一状态。运行时快照、topology、Patch 的数据形态与 coherence 规则保持现有契约；本决策不将完整结果改成惰性读取或持久化序列。
 
-### 静态 trace 与 Runtime 接线
+### 编译工作量观测
 
-Core 编译选项的 `trace` 改为 Core 拥有的 `CoreCompileTraceReporter` 窄接口，仅要求 `report` 方法接收静态编译事件：`phase: 'compile'`、`unit: 'ir-child'`、`outcome: 'full'` 及既有 `visited`、`reused`、`changed` 计数。Core 不导入 Runtime reporter、revision 或 outcome 类型。
+Core 不提供 trace 选项、reporter 或工作量计数；编译工作量由持有执行策略与提交边界的 Reconciler 报告。Foundation 保留通用 `PerformanceTraceRecord` 与 `PerformanceTraceSink` 契约。
 
-该接口与已有 Runtime reporter 的 `report` 能力结构兼容。采用 Runtime 观测时，由调用方创建 reporter 并提供；声明验证、通用 trace diagnostics 与 sink 隔离仍由 Runtime 负责。Core 隔离直接 reporter 的异常，不使观测失败改变编译结果，也不创建平行的 Runtime diagnostics 系统。
+Reconciler 在成功提交后报告 `update` 阶段：Weave 使用 `element-compile` 记录实际元素编译次数，包含 Composite 的完整 Core 编译使用 `scene-compile`，每次计 1，不统计内部展开、布局探测或 replay。完整编译报告 `full`，增量批次报告 `incremental`；`reused` 为 0，`changed` 等于 `visited`。
 
-Core 的 trace 词汇保留静态 `compile` 及 IR / Scene 计算单位；Reconciler 提供 `ReconcilerTracePhase`、`ReconcilerTraceUnit`，承载增量 `update`、`ir-child`、`scene-change` 等需要的词汇。迁出的 Core 增量专用成员删除，不保留旧成员别名。
+Reconciler 通过 `ReconcilerTracePhase`、`ReconcilerTraceUnit` 公开自己的观测词汇，隔离接收函数异常并提供诊断；观测失败不撤销已发布结果，失败事务不报告成功记录。空批次与只更新输出目标的调用不报告编译工作量。
 
-已有完整编译与增量执行的记录 owner、phase、unit 字符串、计数含义和发射边界不变，避免迁移重复报告一次工作。Reconciler 将完整编译计数映射到当前 full / incremental / fallback invocation，Core 本身不解释 Runtime 执行策略。
+Render 自行拥有 `RenderTracePhase` 与 `RenderTraceUnit.ScenePrimitive`，SVG / Canvas 的图元计数保持原语义。Core 旧 trace 出口直接删除，不保留别名；编译 observer 与 provenance 契约不受影响。
 
 ## 行为、失败语义与兼容性
 

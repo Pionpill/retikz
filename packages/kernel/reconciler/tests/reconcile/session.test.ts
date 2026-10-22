@@ -108,6 +108,12 @@ describe('独立编译会话', () => {
         compileToScene({ ...input, children: [{ type: 'node', id: 'a', position: [10, 0] }, input.children[1]] }),
       );
       counts.push(trace.mock.calls.at(-1)![0].visited);
+      expect(trace.mock.calls.at(-1)![0]).toMatchObject({
+        owner: '@retikz/reconciler',
+        phase: 'update',
+        unit: 'element-compile',
+        outcome: updateStrategy === 'full' ? 'full' : 'incremental',
+      });
       session.dispose();
     }
     expect(counts[1]).toBeGreaterThan(counts[0]);

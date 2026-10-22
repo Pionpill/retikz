@@ -1,4 +1,3 @@
-import { CoreTraceUnit } from '@retikz/core';
 import type { IRDropShadow, ResolvedArrowEnd, Scene, ScenePrimitive } from '@retikz/core';
 
 import type { EasingRegistry } from '../../animation';
@@ -6,7 +5,7 @@ import type { StaticRenderFrame } from '../../runtime';
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '../../runtime';
 import { countScenePrimitiveOccurrences } from '../../shared';
 import type { RenderTraceReporter } from '../../trace';
-import { RenderTracePhase } from '../../trace';
+import { RenderTracePhase, RenderTraceUnit } from '../../trace';
 import { createSvgAnimationCollector } from '../animation';
 import { toSafeSvgToken } from '../safe-token';
 import type { SvgNode } from '../types';
@@ -202,7 +201,7 @@ export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: BuildDo
     try {
       options.trace.report({
         phase: RenderTracePhase.Commit,
-        unit: CoreTraceUnit.ScenePrimitive,
+        unit: RenderTraceUnit.ScenePrimitive,
         outcome: 'full',
         visited,
         reused: 0,
