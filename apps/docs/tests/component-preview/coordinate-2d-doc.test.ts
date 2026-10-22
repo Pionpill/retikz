@@ -67,7 +67,9 @@ const previewOf = <TValues extends object>(render: PreviewRender<TValues> | unde
 const plotMarkOf = <TValues extends object>(render: PreviewRender<TValues> | undefined, values: TValues) => {
   const plot = PlotSchema.safeParse(previewOf(render, values)?.ir.children[0]);
   const mark = plot.success ? plot.data.marks[0] : undefined;
-  return mark === undefined ? undefined : { type: mark.type, closed: mark.type === 'path' ? mark.closed : undefined };
+  return mark === undefined
+    ? undefined
+    : { type: mark.type, closed: mark.type === 'path' && 'closed' in mark ? mark.closed : undefined };
 };
 
 const markupOf = <TValues extends object>(render: PreviewRender<TValues> | undefined, values: TValues) => {

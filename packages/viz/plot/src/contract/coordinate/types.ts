@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 
-import type { BuiltinPlotCoordinate, PolarInterpolation } from '../../schemas';
+import type { BuiltinPlotCoordinate, CoordinateConnection, PolarInterpolation } from '../../schemas';
 import type { PositionScale } from '../scale';
 import type { Cell, CellGeometry } from './cell';
 
@@ -10,6 +10,12 @@ import type { Cell, CellGeometry } from './cell';
  *   schema 只保留 JSON 形状，角色是否被坐标系支持由 definition.roles 在 lowering 阶段校验
  */
 export type DimensionRole = string;
+
+/** 坐标单元投影选项 */
+export type CellProjectionOptions = {
+  /** 默认沿坐标几何连接；straight 直接连接投影后的角点 */
+  connection?: CoordinateConnection;
+};
 
 /**
  * 运行时坐标帧的能力契约（抽象基座）
@@ -64,7 +70,9 @@ export type CoordinateFrame = {
    * @description 曲线 / 自定义 frame 自行把 cell 四边经自身几何投影密采样成 contour（用引擎 helper densifyCellContour）；
    *   不回传 → cell 类 mark 在该坐标系 fail-loud（无引擎自动兜底——「输出空间→屏幕」后段映射只有 frame 自己有）
    */
-  projectCell?: (cell: Cell) => CellGeometry;
+  projectCell?: (cell: Cell, options?: CellProjectionOptions) => CellGeometry;
+  /** 映射后的角色端点沿坐标几何连接；无法投影时返回 null */
+  projectSegment?: (from: ReadonlyArray<number>, to: ReadonlyArray<number>) => Array<Position> | null;
 };
 
 /**
@@ -111,12 +119,17 @@ export type PolarCoordinateFrame = {
   tangentAt?: CoordinateFrame['tangentAt'];
   /** 把已映射的极坐标对（theta 度, radius user units）换算成屏幕点 */
   projectPolar: (thetaDeg: number, radius: number) => Position | null;
+  /** 沿坐标几何连接两个映射位置 */
+  projectSegment?: CoordinateFrame['projectSegment'];
   /** 正交 cell -> 环扇或直弦 contour；options 只覆盖本次投影，不修改共享 frame */
-  projectCell: (cell: Cell, options?: { interpolation?: PolarInterpolation; pull?: number }) => CellGeometry;
+  projectCell: (
+    cell: Cell,
+    options?: CellProjectionOptions & { interpolation?: PolarInterpolation; pull?: number },
+  ) => CellGeometry;
 };
 
 /** 具备 cell 几何投影能力的运行时坐标帧 */
 export type CellProjectableCoordinate = CoordinateFrame & {
   /** 将各角色的尺度输出区间投影为可绘制单元几何 */
-  projectCell: (cell: Cell) => CellGeometry;
+  projectCell: (cell: Cell, options?: CellProjectionOptions) => CellGeometry;
 };

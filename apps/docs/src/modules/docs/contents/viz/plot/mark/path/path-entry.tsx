@@ -6,7 +6,7 @@ import { pathEntryRows } from './path-entry.data';
 /** 按月份连接三条营收记录 */
 const PathEntry: FC = () => (
   <Plot data={pathEntryRows} width={360} height={220}>
-    <PathMark x="month" y="revenue" order="month" />
+    <PathMark encodings={{ order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" />
   </Plot>

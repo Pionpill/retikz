@@ -1,0 +1,33 @@
+/** 标注试验场的双语控件文案 */
+export const annotationI18n = {
+  zh: {
+    title: '区间标注',
+    connection: '连接方式',
+    connection0: '沿坐标系',
+    connection1: '直线连接',
+    from: '范围起点',
+    to: '范围终点',
+    fullHeight: '铺满纵向范围',
+    opacity: '透明度',
+    showLabel: '显示标签',
+    labelPosition: '标签位置',
+    labelPosition0: '上方',
+    labelPosition1: '中央',
+    labelPosition2: '下方',
+  },
+  en: {
+    title: 'Interval annotation',
+    connection: 'Connection',
+    connection0: 'Follow coordinates',
+    connection1: 'Straight',
+    from: 'Range start',
+    to: 'Range end',
+    fullHeight: 'Full vertical range',
+    opacity: 'Opacity',
+    showLabel: 'Show label',
+    labelPosition: 'Label position',
+    labelPosition0: 'Top',
+    labelPosition1: 'Center',
+    labelPosition2: 'Bottom',
+  },
+};

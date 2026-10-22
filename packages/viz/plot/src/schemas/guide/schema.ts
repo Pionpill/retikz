@@ -2,7 +2,7 @@ import {
   ArrowEndDetailSchema,
   ContextualColorSchema,
   FontSchema,
-  GeometryLabelPosition,
+  PathLabelPosition,
   LineHeightSchema,
   OpacitySchema,
   PaintValueSchema,
@@ -38,7 +38,7 @@ import {
   union,
 } from 'zod';
 
-import { PlotLayerSchema } from '../layer';
+import { PlotLayerSchema } from '../plot/layer';
 import {
   AxisCardinalSide,
   AxisCrossingCorner,
@@ -440,7 +440,7 @@ export const AxisTickLabelsSchema = strictObject({
   ...GuideTextStyleSchema.shape,
 }).describe('Axis tick label style. Text content comes from the resolved tick set');
 
-const AxisTitlePlacementSchema = union([zodEnum(GeometryLabelPosition), NormalizedFractionSchema]).describe(
+const AxisTitlePlacementSchema = union([zodEnum(PathLabelPosition), NormalizedFractionSchema]).describe(
   'Axis title position along the baseline: keyword or normalized number from negative to positive direction',
 );
 

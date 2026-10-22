@@ -26,7 +26,12 @@ const spec = () =>
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     transform: [{ operation: { kind: 'normalize', params: { field: 'y', as: 'ratio' } } }],
-    marks: [{ type: 'point', encoding: { x: { field: 'x', scale: 'x' }, y: { field: 'ratio', scale: 'y' } } }],
+    marks: [
+      {
+        type: 'point',
+        encodings: { position: { x: { field: 'x' }, y: { field: 'ratio' } } },
+      },
+    ],
   });
 
 const fixture = () => {

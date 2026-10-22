@@ -1,6 +1,6 @@
 ---
 title: Contract - Mark
-description: Query the Plot schemas for point, path, interval, reference, relation, and custom marks.
+description: Query the Plot schemas for point, path, interval, relation, and custom marks.
 ---
 
 Marks are the geometry-output layer of the graphics grammar. Built-ins form a precise discriminated union; custom marks retain JSON-safe open configuration and are validated by their `MarkDefinition` during lowering.
@@ -128,3 +128,17 @@ Every mark can use `defaultColorGroup` to declare a shared fallback color. A nam
 <ZodSchema name="AnchorIdSchema" />
 
 Exactly one of `field`, `template`, and `generator` must be present.
+
+## Mark labels
+
+### MarkLabelContentSchema
+
+<ZodSchema name="MarkLabelContentSchema" />
+
+### MarkNodeLabelSchema
+
+<ZodSchema name="MarkNodeLabelSchema" />
+
+### MarkPathLabelSchema
+
+<ZodSchema name="MarkPathLabelSchema" />

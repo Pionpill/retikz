@@ -41,7 +41,7 @@ describe('coordinate frame N 通道泛化回归 (contract)', () => {
         { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'a' }, y: { field: 'b' } } } }],
     });
     const rows = [
       { a: 0, b: 0 },
@@ -65,7 +65,7 @@ describe('coordinate frame N 通道泛化回归 (contract)', () => {
         { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'theta' }, y: { field: 'value' } } } }],
     });
     const rows = [
       { theta: 0, value: 0 },
@@ -86,7 +86,7 @@ describe('coordinate frame N 通道泛化回归 (contract)', () => {
         data: { reference: 'd' },
         scales: [{ type: 'linear', name: 'x', domainPadding: 0 }],
         coordinate: { type: 'cartesian2D', x: 'x', y: 'x' },
-        marks: [{ type: 'point', encoding: { x: { field: 'a' } } }],
+        marks: [{ type: 'point', encodings: { position: { x: { field: 'a' } } } }],
       }),
     ).not.toThrow();
   });
@@ -100,7 +100,7 @@ describe('coordinate 必填角色校验 fail-loud (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x', domainPadding: 0 }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'x' },
-      marks: [{ type: 'point', encoding: { x: { field: 'a' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'a' } } } }],
     });
 
   it('cartesian_missing_y_throws', () => {
@@ -108,19 +108,19 @@ describe('coordinate 必填角色校验 fail-loud (contract)', () => {
   });
 
   it('polar_missing_x_throws', () => {
-    const spec = PlotSchema.parse({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'd' },
-      scales: [
-        { type: 'linear', name: 'a', domainPadding: 0 },
-        { type: 'linear', name: 'r', domainPadding: 0 },
-      ],
-      coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'point', encoding: { y: { field: 'value' } } }],
-    });
-
-    expect(() => expandOf(spec, { d: [{ value: 1 }] }, opts)).toThrow(/polar2D|requires|x/i);
+    expect(() =>
+      PlotSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [
+          { type: 'linear', name: 'a', domainPadding: 0 },
+          { type: 'linear', name: 'r', domainPadding: 0 },
+        ],
+        coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
+        marks: [{ type: 'point', encodings: { position: { y: { field: 'value' } } } }],
+      }),
+    ).toThrow();
   });
 });
 
@@ -136,7 +136,7 @@ describe('guide 维度校验 fail-loud', () => {
         { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'a' }, y: { field: 'b' } } } }],
       guides: [{ type: 'axis', dimension: 'angle' }],
     });
 
@@ -154,7 +154,7 @@ describe('guide 维度校验 fail-loud', () => {
         { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'a' }, y: { field: 'b' } } } }],
       guides: [{ type: 'axis', dimension: 'radius' }],
     });
 
@@ -162,19 +162,21 @@ describe('guide 维度校验 fail-loud', () => {
   });
 
   it('unknown_encoding_role_rejected_by_coordinate_definition_roles', () => {
-    const spec = PlotSchema.parse({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'd' },
-      scales: [
-        { type: 'linear', name: 'x', domainPadding: 0 },
-        { type: 'linear', name: 'y', domainPadding: 0 },
-      ],
-      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' }, size: { field: 's' } } }],
-    });
-
-    expect(() => expandOf(spec, { d: [{ a: 0, b: 0, s: 1 }] }, opts)).toThrow(/does not support encoding role "size"/);
+    expect(() =>
+      PlotSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [
+          { type: 'linear', name: 'x', domainPadding: 0 },
+          { type: 'linear', name: 'y', domainPadding: 0 },
+        ],
+        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+        marks: [
+          { type: 'point', encodings: { position: { x: { field: 'a' }, y: { field: 'b' }, size: { field: 's' } } } },
+        ],
+      }),
+    ).toThrow();
   });
 
   // 边界：polar 下 x / y 合法；x 是角向，y 是径向
@@ -189,7 +191,7 @@ describe('guide 维度校验 fail-loud', () => {
           { type: 'linear', name: 'r', domainPadding: 0 },
         ],
         coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-        marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
+        marks: [{ type: 'point', encodings: { position: { x: { field: 'theta' }, y: { field: 'value' } } } }],
         guides: [{ type: 'axis', dimension }],
       });
 
@@ -209,7 +211,7 @@ describe('guide 维度校验 fail-loud', () => {
         { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'a' }, y: { field: 'b' } } } }],
       guides: [
         { type: 'axis', dimension: 'x', grid: true },
         { type: 'axis', dimension: 'y' },

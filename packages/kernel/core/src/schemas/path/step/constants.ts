@@ -1,13 +1,13 @@
 import type { ValueOf } from '@retikz/foundation';
 
-/** 几何标签相对于宿主内部或外部的放置方式 */
-export const GeometryLabelPlacement = {
+/** 路径标签相对于宿主内部或外部的放置方式 */
+export const PathLabelPlacement = {
   Outside: 'outside',
   Inside: 'inside',
 } as const;
 
-/** path-like 几何标签沿段的位置关键字 */
-export const GeometryLabelPosition = {
+/** path-like 路径标签沿段的位置关键字 */
+export const PathLabelPosition = {
   /** 段起点 */
   AtStart: 'at-start',
   /** 非常靠近段起点 */
@@ -56,10 +56,10 @@ export const PathCloseMode = {
   Sector: 'sector',
 } as const;
 
-export type GeometryLabelPlacement = ValueOf<typeof GeometryLabelPlacement>;
+export type PathLabelPlacement = ValueOf<typeof PathLabelPlacement>;
 
-/** path-like 几何标签沿段的位置关键字取值 */
-export type GeometryLabelPosition = ValueOf<typeof GeometryLabelPosition>;
+/** path-like 路径标签沿段的位置关键字取值 */
+export type PathLabelPosition = ValueOf<typeof PathLabelPosition>;
 
 export type FoldStepVia = ValueOf<typeof FoldStepVia>;
 

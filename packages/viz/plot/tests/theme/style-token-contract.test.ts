@@ -18,7 +18,9 @@ const baseSpec = {
     { type: 'linear', name: 'y' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+  marks: [
+    { contributeToDomain: true, type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } },
+  ],
   guides: [],
 } as const;
 

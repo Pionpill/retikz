@@ -95,9 +95,8 @@ describe('Scatter Chart encoding resolution', () => {
       },
     ]);
     expect(result.plot.marks[0]).toMatchObject({
-      encoding: { x: { field: 'species' }, y: { field: 'meanMargin' } },
-      color: { kind: 'field', value: 'maxIntensity' },
-      shape: { kind: 'field', value: 'island' },
+      kind: 'data',
+      encodings: { position: { x: 'species', y: 'meanMargin' }, color: 'maxIntensity', shape: 'island' },
     });
   });
 
@@ -147,7 +146,8 @@ describe('Scatter Chart encoding resolution', () => {
       { operation: { kind: 'jitter', params: { axis: 'y', yField: 'margin', amount: 0.5 } } },
     ]);
     expect(result.plot.marks[0]).toMatchObject({
-      encoding: { x: { field: 'amountShare' }, y: { field: 'margin' } },
+      kind: 'data',
+      encodings: { position: { x: 'amountShare', y: 'margin' } },
     });
   });
 
@@ -289,9 +289,11 @@ describe('Scatter Chart encoding resolution', () => {
     ]);
     expect(result.plot.coordinate).toMatchObject({ x: 'amountScale', y: '__chart.scatter.scale.y' });
     expect(result.plot.marks[0]).toMatchObject({
-      color: { kind: 'field', value: 'group', scale: 'groupColorScale' },
-      size: { kind: 'field', value: 'weight', scale: 'weightSizeScale' },
-      opacity: { overall: { kind: 'field', value: 'confidence', scale: 'confidenceOpacityScale' } },
+      encodings: {
+        color: { field: 'group', scale: 'groupColorScale' },
+        size: { field: 'weight', scale: 'weightSizeScale' },
+        opacity: { overall: { field: 'confidence', scale: 'confidenceOpacityScale' } },
+      },
     });
   });
 
@@ -422,8 +424,8 @@ describe('Scatter Chart encoding resolution', () => {
 
     for (const mark of result.plot.marks) {
       expect(mark).toMatchObject({
-        encoding: { x: { field: 'species' }, y: { field: 'meanMargin' } },
-        size: { kind: 'field', value: 'weight', scale: 'weightSizeScale' },
+        kind: 'data',
+        encodings: { position: { x: 'species', y: 'meanMargin' }, size: { field: 'weight', scale: 'weightSizeScale' } },
       });
     }
   });

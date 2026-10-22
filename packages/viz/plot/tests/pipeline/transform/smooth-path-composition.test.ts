@@ -57,9 +57,12 @@ describe('smooth path composition (contract)', () => {
       marks: [
         {
           type: 'path',
-          series: 'group',
-          order: 'trendX',
-          encoding: { x: { field: 'trendX' }, y: { field: 'trendY' }, color: { field: 'group', scale: 'color' } },
+          encodings: {
+            series: 'group',
+            order: 'trendX',
+            color: { field: 'group', scale: 'color' },
+            position: { x: { field: 'trendX' }, y: { field: 'trendY' } },
+          },
         },
       ],
     });
@@ -90,10 +93,10 @@ describe('smooth path composition (contract)', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        { type: 'point', encoding: { x: { field: 'time' }, y: { field: 'value' } } },
+        { type: 'point', encodings: { position: { x: { field: 'time' }, y: { field: 'value' } } } },
         {
           type: 'path',
-          transform: [
+          transforms: [
             {
               operation: {
                 kind: 'smooth',
@@ -101,8 +104,7 @@ describe('smooth path composition (contract)', () => {
               },
             },
           ],
-          order: 'trendX',
-          encoding: { x: { field: 'trendX' }, y: { field: 'trendY' } },
+          encodings: { order: 'trendX', position: { x: { field: 'trendX' }, y: { field: 'trendY' } } },
         },
       ],
     });
@@ -133,11 +135,10 @@ describe('smooth path composition (contract)', () => {
       marks: [
         {
           type: 'path',
-          order: 'trendX',
-          transform: [
+          transforms: [
             { operation: { kind: 'smooth', params: { x: 'x', y: 'y', sampleCount: 2, xAs: 'trendX', yAs: 'trendY' } } },
           ],
-          encoding: { x: { field: 'trendX' }, y: { field: 'trendY' } },
+          encodings: { order: 'trendX', position: { x: { field: 'trendX' }, y: { field: 'trendY' } } },
         },
       ],
     });
@@ -182,9 +183,7 @@ describe('smooth path composition (contract)', () => {
         marks: [
           {
             type: 'path',
-            series: 'series',
-            order: 'trendX',
-            transform: [
+            transforms: [
               {
                 operation: {
                   kind: 'smooth',
@@ -199,10 +198,11 @@ describe('smooth path composition (contract)', () => {
                 },
               },
             ],
-            encoding: {
-              x: { field: 'trendX' },
-              y: { field: 'trendY' },
+            encodings: {
+              series: 'series',
+              order: 'trendX',
               color: { field: 'series', scale: 'colorScale' },
+              position: { x: { field: 'trendX' }, y: { field: 'trendY' } },
             },
           },
         ],

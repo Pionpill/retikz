@@ -27,7 +27,7 @@ export const LegendSizePreview = (values: LegendSizePreviewValues, lang: Lang) =
       width={360}
       height={260}
     >
-      <PointMark x="lng" y="lat" size="pop" />
+      <PointMark encodings={{ size: 'pop', position: { x: { field: 'lng' }, y: { field: 'lat' } } }} />
       <PlotLegend
         channel="size"
         position={values.position}

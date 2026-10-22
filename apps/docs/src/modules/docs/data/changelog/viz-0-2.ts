@@ -106,6 +106,21 @@ export const vizV02: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：标签字段样式', en: 'Unreleased: data-driven label styles' },
+          content: {
+            zh: 'Mark 标签支持字符串内容简写及混合标签数组。字号、字重、颜色、透明度与宿主附着属性可以绑定字段；字体按叶子覆盖，样式字段参与实例来源判断。JSON、Vanilla 与 React 使用同一契约。',
+            en: 'Mark labels support content string shorthand and mixed label arrays. Font size, weight, color, opacity and host attachment properties accept field bindings. Font overrides preserve sibling leaves, and style fields participate in instance selection. JSON, Vanilla and React share the same contract.',
+          },
+        },
+
+        {
+          label: { zh: '待发布：几何标注与数据绑定', en: 'Unreleased: geometric annotations and data bindings' },
+          content: {
+            zh: '新增 PointAnnotation、PathAnnotation 与 IntervalAnnotation，以及对应 Vanilla 工厂。位置支持常量、field/value 绑定和视图边缘，复用现有比例尺、坐标投影及 Mark 局部 transform。字段绑定或显式 transform 按结果行生成；纯常量且省略 transform 保持单实例。三类标注文档分别提供聚合参考点、统计参考线和数据范围区域的交互示例。路径与区间的 connection 默认沿坐标系连接，离散极坐标经过中间类别，也可选择 straight 直连；自定义坐标通过统一的线段与区域投影能力接入。默认不贡献尺度域；Plot 根数据声明与绑定仍必需。',
+            en: 'Adds PointAnnotation, PathAnnotation, IntervalAnnotation, and matching Vanilla factories. Positions accept constants, field/value bindings, and view edges, reusing scales, coordinate projection, and Mark-local transforms. Field bindings or explicit transforms produce one instance per result row; constants with transform omitted remain independent. The docs include interactive aggregate-point, reference-line, and extent-region examples. Path and interval connection defaults to coordinate geometry, traversing intermediate discrete polar categories; straight connects projected endpoints or corners. Custom coordinates use the same segment and cell projection capabilities. Domain contribution is opt-in; root Plot data and bindings remain required.',
+          },
+        },
+        {
           label: {
             zh: '待发布：BREAKING 坐标局部方向',
             en: 'Unreleased: BREAKING coordinate-relative orientation',

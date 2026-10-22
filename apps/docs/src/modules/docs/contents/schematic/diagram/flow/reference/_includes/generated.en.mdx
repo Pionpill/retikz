@@ -561,23 +561,23 @@ export type FlowLayoutProps = FlowLayoutMarkerProps &
 
 <ApiTable>
 
-| Member                 | Type                                                                                                                                                                                  | Default | Description                                                                                                                                                      |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `direction?`           | `"none" \| "reverse" \| "both" \| "forward"`                                                                                                                                          | —       | Optional semantic direction overriding the Graph role.                                                                                                           |
-| `group?`               | `string`                                                                                                                                                                              | —       | Optional Graph Relation color grouping identifier.                                                                                                               |
-| `kind?`                | `string`                                                                                                                                                                              | —       | Open stable kind within the selected Relation role.                                                                                                              |
-| `label?`               | `InputFlowRelation['label']`                                                                                                                                                          | —       | Optional compact Core TextBlock or complete GeometryLabel; full objects preserve Core geometry and appearance, including position, sloped, interruption and gap. |
-| `labelFont?`           | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }` | —       | Relation label font.                                                                                                                                             |
-| `labelOpacity?`        | `number`                                                                                                                                                                              | —       | Relation label opacity.                                                                                                                                          |
-| `labelTextForeground?` | `string \| number`                                                                                                                                                                    | —       | Relation label text color.                                                                                                                                       |
-| `role?`                | `"flow" \| string & {} \| "association" \| "dependency" \| "generalization" \| "influence"`                                                                                           | —       | Open Graph Relation role; omission resolves to flow.                                                                                                             |
-| `routing?`             | `InputFlowRelation['routing']`                                                                                                                                                        | —       | Relation-local routing override.                                                                                                                                 |
-| `source`               | `InputFlowRelation['source']`                                                                                                                                                         | —       | Source Entity or Group with optional connection constraints.                                                                                                     |
-| `sourceMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                    | —       | Source marker appearance fields.                                                                                                                                 |
-| `status?`              | `"error" \| "success" \| "warning" \| "disabled"`                                                                                                                                     | —       | Optional closed Graph semantic status.                                                                                                                           |
-| `style?`               | `InputFlowRelation['style']`                                                                                                                                                          | —       | Relation-local path style overrides.                                                                                                                             |
-| `target`               | `InputFlowRelation['target']`                                                                                                                                                         | —       | Target Entity or Group with optional connection constraints.                                                                                                     |
-| `targetMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                    | —       | Target marker appearance fields.                                                                                                                                 |
+| Member                 | Type                                                                                                                                                                                  | Default | Description                                                                                                                                                  |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `direction?`           | `"none" \| "reverse" \| "both" \| "forward"`                                                                                                                                          | —       | Optional semantic direction overriding the Graph role.                                                                                                       |
+| `group?`               | `string`                                                                                                                                                                              | —       | Optional Graph Relation color grouping identifier.                                                                                                           |
+| `kind?`                | `string`                                                                                                                                                                              | —       | Open stable kind within the selected Relation role.                                                                                                          |
+| `label?`               | `InputFlowRelation['label']`                                                                                                                                                          | —       | Optional compact Core TextBlock or complete PathLabel; full objects preserve Core geometry and appearance, including position, sloped, interruption and gap. |
+| `labelFont?`           | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }` | —       | Relation label font.                                                                                                                                         |
+| `labelOpacity?`        | `number`                                                                                                                                                                              | —       | Relation label opacity.                                                                                                                                      |
+| `labelTextForeground?` | `string \| number`                                                                                                                                                                    | —       | Relation label text color.                                                                                                                                   |
+| `role?`                | `"flow" \| string & {} \| "association" \| "dependency" \| "generalization" \| "influence"`                                                                                           | —       | Open Graph Relation role; omission resolves to flow.                                                                                                         |
+| `routing?`             | `InputFlowRelation['routing']`                                                                                                                                                        | —       | Relation-local routing override.                                                                                                                             |
+| `source`               | `InputFlowRelation['source']`                                                                                                                                                         | —       | Source Entity or Group with optional connection constraints.                                                                                                 |
+| `sourceMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                    | —       | Source marker appearance fields.                                                                                                                             |
+| `status?`              | `"error" \| "success" \| "warning" \| "disabled"`                                                                                                                                     | —       | Optional closed Graph semantic status.                                                                                                                       |
+| `style?`               | `InputFlowRelation['style']`                                                                                                                                                          | —       | Relation-local path style overrides.                                                                                                                         |
+| `target`               | `InputFlowRelation['target']`                                                                                                                                                         | —       | Target Entity or Group with optional connection constraints.                                                                                                 |
+| `targetMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                    | —       | Target marker appearance fields.                                                                                                                             |
 
 </ApiTable>
 
@@ -1413,7 +1413,7 @@ Layout endpoint result containing only identity and the resolved anchor.
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlowLayoutEndpoint"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={367}>FlowLayoutEndpoint</ApiSourceLink>
+#### <ApiSourceLink label={"FlowLayoutEndpoint"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={369}>FlowLayoutEndpoint</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1447,7 +1447,7 @@ export type FlowLayoutEndpoint = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlowLayoutExecutionContext"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={323}>FlowLayoutExecutionContext</ApiSourceLink>
+#### <ApiSourceLink label={"FlowLayoutExecutionContext"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={325}>FlowLayoutExecutionContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1497,7 +1497,7 @@ export type FlowLayoutExecutionContext = Readonly<{
 | `readonly distance?`  | `number`                                                                                                             | —       | Side offset distance in user units. Defaults to the same distance as Path step labels.                                  |
 | `readonly gap?`       | `number`                                                                                                             | —       | Extra clearance in user units on each side of an interrupted host stroke gap. Defaults to 4.                            |
 | `readonly interrupt?` | `false \| true`                                                                                                      | —       | Whether this label requests a gap in a compatible host stroke. Omitted values use the host policy.                      |
-| `readonly placement?` | `"outside" \| "inside"`                                                                                              | —       | Geometry label placement mode. outside uses side offset; inside lets area hosts place labels within their band.         |
+| `readonly placement?` | `"outside" \| "inside"`                                                                                              | —       | Path label placement mode. outside uses side offset; inside lets area hosts place labels within their band.             |
 | `readonly position?`  | `number \| "at-start" \| "very-near-start" \| "near-start" \| "midway" \| "near-end" \| "very-near-end" \| "at-end"` | —       | Position along the step: keyword or normalized number. Parameter meaning follows the step kind.                         |
 | `readonly side?`      | `"right" \| "left" \| "top" \| "bottom"`                                                                             | —       | Authored side relative to the label anchor. An omitted value canonicalizes to `top`, or `center` when `sloped` is true. |
 | `readonly sloped?`    | `false \| true`                                                                                                      | —       | Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`.                                |
@@ -1509,14 +1509,14 @@ export type FlowLayoutExecutionContext = Readonly<{
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type FlowLayoutLabelPlacement = Readonly<Omit<IRGeometryLabel, 'text' | 'textColor' | 'font' | 'opacity'>>;
+export type FlowLayoutLabelPlacement = Readonly<Omit<IRPathLabel, 'text' | 'textColor' | 'font' | 'opacity'>>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlowLayoutRelationInput"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={379}>FlowLayoutRelationInput</ApiSourceLink>
+#### <ApiSourceLink label={"FlowLayoutRelationInput"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={381}>FlowLayoutRelationInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1554,7 +1554,7 @@ export type FlowLayoutRelationInput = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlowLayoutRelationOutput"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={413}>FlowLayoutRelationOutput</ApiSourceLink>
+#### <ApiSourceLink label={"FlowLayoutRelationOutput"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={415}>FlowLayoutRelationOutput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1767,7 +1767,7 @@ export type FlowLayoutRouting =
     }>;
 ```
 
-#### <ApiSourceLink label={"FlowRoutePointsQuery"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={355}>FlowRoutePointsQuery</ApiSourceLink>
+#### <ApiSourceLink label={"FlowRoutePointsQuery"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={357}>FlowRoutePointsQuery</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1847,7 +1847,7 @@ export type FlowRoutingCapability =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlowSmoothRoute"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={345}>FlowSmoothRoute</ApiSourceLink>
+#### <ApiSourceLink label={"FlowSmoothRoute"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={347}>FlowSmoothRoute</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1879,7 +1879,7 @@ export type FlowSmoothRoute = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlowSmoothRouting"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={335}>FlowSmoothRouting</ApiSourceLink>
+#### <ApiSourceLink label={"FlowSmoothRouting"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={337}>FlowSmoothRouting</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2018,7 +2018,7 @@ export type FlowDiagramDefinitionOptions = DiagramDefinitionOptions &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlowLayoutDefinition"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={459}>FlowLayoutDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"FlowLayoutDefinition"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={461}>FlowLayoutDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2188,7 +2188,7 @@ Relation endpoints accept an id string or object. `side` selects a side, `overla
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlowDiagramSchema"} path={"packages/schematic/diagram/src/flow/schemas/flow/schema.ts"} startLine={546}>FlowDiagramSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FlowDiagramSchema"} path={"packages/schematic/diagram/src/flow/schemas/flow/schema.ts"} startLine={551}>FlowDiagramSchema</ApiSourceLink>
 
 <ZodSchema name="FlowDiagramSchema" shallow />
 
@@ -2200,7 +2200,7 @@ Relation endpoints accept an id string or object. `side` selects a side, `overla
 
 <ZodSchema name="FlowGroupSchema" shallow />
 
-#### <ApiSourceLink label={"FlowLayoutSchema"} path={"packages/schematic/diagram/src/flow/schemas/flow/schema.ts"} startLine={423}>FlowLayoutSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FlowLayoutSchema"} path={"packages/schematic/diagram/src/flow/schemas/flow/schema.ts"} startLine={428}>FlowLayoutSchema</ApiSourceLink>
 
 A vertical linear Layout allocates the largest natural width to its direct horizontal rows or Groups with one horizontal content root. A number fixes direct Entity widths; match-largest equalizes final widths; fill shares free width in an allocated horizontal row while preserving natural width differences.
 
@@ -2208,7 +2208,7 @@ A vertical linear Layout allocates the largest natural width to its direct horiz
 
 <ZodSchema name="FlowLayoutSchema" expandNested />
 
-#### <ApiSourceLink label={"FlowRelationSchema"} path={"packages/schematic/diagram/src/flow/schemas/flow/schema.ts"} startLine={525}>FlowRelationSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FlowRelationSchema"} path={"packages/schematic/diagram/src/flow/schemas/flow/schema.ts"} startLine={530}>FlowRelationSchema</ApiSourceLink>
 
 <ZodSchema name="FlowRelationSchema" shallow />
 

@@ -14,16 +14,25 @@ describe('Plot member extraction characterization', () => {
   it.each([false, 'max-radius', { kind: 'point-aware', clearance: { left: 0, default: 8 } }] as const)(
     'preserves autoPadding %j identically through React and Vanilla',
     autoPadding => {
-      const react = buildPlotIR(<PointMark x="x" y="y" autoPadding={autoPadding} />, 'rows');
+      const react = buildPlotIR(
+        <PointMark encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} properties={{ autoPadding }} />,
+        'rows',
+      );
       const vanilla = normalizePlotDeclarations(
         {
-          declarations: [{ kind: 'point-mark', props: { x: 'x', y: 'y', autoPadding }, path: [0] }],
+          declarations: [
+            {
+              kind: 'point-mark',
+              props: { encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } }, properties: { autoPadding } },
+              path: [0],
+            },
+          ],
           runtimeSources: [],
         },
         { data: { reference: 'rows' }, mode: 'plot-root' },
       );
       expect(react.marks[0]).toEqual(vanilla.fragment.marks?.[0]);
-      expect(react.marks[0]).toMatchObject({ autoPadding });
+      expect(react.marks[0]).toMatchObject({ properties: { autoPadding } });
     },
   );
   it('preserves mixed members, automatic bindings, shortcuts, and runtime callbacks', () => {
@@ -31,9 +40,16 @@ describe('Plot member extraction characterization', () => {
     const spec = buildPlotIR(
       <>
         <PlotTransform operation={{ kind: 'sort', params: { field: 'y', order: 'descending' } }} />
-        <PointMark id="points" x="x" y="y" fill="category" resolveLabel={resolvePointLabel} />
-        <PathMark id="trend" x="x" y="y" order="x" series="category" />
-        <IntervalMark id="bars" x="category" y="value" />
+        <PointMark
+          id="points"
+          resolveLabel={resolvePointLabel}
+          encodings={{ fill: 'category', position: { x: { field: 'x' }, y: { field: 'y' } } }}
+        />
+        <PathMark
+          id="trend"
+          encodings={{ order: 'x', series: 'category', position: { x: { field: 'x' }, y: { field: 'y' } } }}
+        />
+        <IntervalMark id="bars" encodings={{ position: { x: { field: 'category' }, y: { field: 'value' } } }} />
         <PlotScale dimension="y" type="log" base={2} />
         <PlotAxis dimension="x" grid />
         <PlotLegend channel="color" title="Category" />
@@ -69,24 +85,23 @@ describe('Plot member extraction characterization', () => {
         {
           type: 'point',
           id: 'points',
-          fill: { kind: 'field', value: 'category' },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          encodings: { fill: 'category', position: { x: { field: 'x' }, y: { field: 'y' } } },
         },
         {
           type: 'path',
           id: 'trend',
-          order: 'x',
-          series: 'category',
-          encoding: {
-            x: { field: 'x' },
-            y: { field: 'y' },
+          encodings: {
+            order: 'x',
+            series: 'category',
             color: { field: 'category', scale: '__color' },
+            position: { x: { field: 'x' }, y: { field: 'y' } },
           },
         },
         {
           type: 'interval',
           id: 'bars',
-          encoding: { x: { field: 'category' }, y: { field: 'value' } },
+          encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } },
+          properties: { bounds: { x: { kind: 'band' }, y: { kind: 'span' } } },
         },
       ],
       guides: [
@@ -101,14 +116,18 @@ describe('Plot member extraction characterization', () => {
 
   it('keeps raw nested arrays and generic iterables behavior-equivalent to flat children', () => {
     const nested: ReactNode = [
-      <PointMark key="point" x="x" y="y" />,
-      [null, false, <PathMark key="path" x="x" y="y" order="x" />],
+      <PointMark key="point" encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} />,
+      [
+        null,
+        false,
+        <PathMark key="path" encodings={{ order: 'x', position: { x: { field: 'x' }, y: { field: 'y' } } }} />,
+      ],
       new Set<ReactNode>([undefined, <PlotAxis key="axis" dimension="y" grid />]),
     ];
     const flat = (
       <>
-        <PointMark x="x" y="y" />
-        <PathMark x="x" y="y" order="x" />
+        <PointMark encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} />
+        <PathMark encodings={{ order: 'x', position: { x: { field: 'x' }, y: { field: 'y' } } }} />
         <PlotAxis dimension="y" grid />
       </>
     );
@@ -118,8 +137,8 @@ describe('Plot member extraction characterization', () => {
 
     expect(nestedSpec).toEqual(flatSpec);
     expect(nestedSpec.marks).toEqual([
-      { type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
-      { type: 'path', order: 'x', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+      { type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } },
+      { type: 'path', encodings: { order: 'x', position: { x: { field: 'x' }, y: { field: 'y' } } } },
     ]);
     expect(nestedSpec.guides).toEqual([{ type: 'axis', dimension: 'y', grid: true }]);
   });
@@ -127,7 +146,7 @@ describe('Plot member extraction characterization', () => {
   it('collects resolveLabel for polar interval marks through the runtime sidecar', () => {
     const resolveSectorLabel = (row: { category?: string }) => row.category ?? '';
     const spec = buildPlotIR(
-      <IntervalMark id="sectors" angle="value" color="category" resolveLabel={resolveSectorLabel} />,
+      <IntervalMark id="sectors" angle="value" resolveLabel={resolveSectorLabel} encodings={{ color: 'category' }} />,
       'rows',
       { coordinate: 'polar2D' },
     );
@@ -142,8 +161,11 @@ describe('Plot member extraction characterization', () => {
         <PlotAxis dimension="x" />
         <PlotAxis id="temperature" dimension="y" />
         <PlotAxis id="rainfall" dimension="y" grid />
-        <PathMark x="day" y="temperature" yAxisId="temperature" />
-        <PointMark x="day" y="rainfall" yAxisId="rainfall" />
+        <PathMark
+          yAxisId="temperature"
+          encodings={{ position: { x: { field: 'day' }, y: { field: 'temperature' } } }}
+        />
+        <PointMark yAxisId="rainfall" encodings={{ position: { x: { field: 'day' }, y: { field: 'rainfall' } } }} />
       </>,
       'weather',
     );
@@ -181,13 +203,12 @@ describe('Plot member extraction characterization', () => {
         { x: 1, y: 2, category: 'north' },
         { x: 2, y: 3, category: 'south' },
       ],
-      children: <PointMark x="x" y="y" fill="category" />,
+      children: <PointMark encodings={{ fill: 'category', position: { x: { field: 'x' }, y: { field: 'y' } } }} />,
     });
 
     expect(runtime.spec.marks[0]).toEqual({
       type: 'point',
-      fill: { kind: 'field', value: 'category' },
-      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+      encodings: { fill: 'category', position: { x: { field: 'x' }, y: { field: 'y' } } },
     });
     expect(JSON.stringify(runtime.spec)).not.toContain('dataFieldNames');
   });

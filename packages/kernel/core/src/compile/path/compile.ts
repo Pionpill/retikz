@@ -13,8 +13,8 @@ import type { PathResolution, PathTargetResolver } from '../../resolve';
 import {
   resolvePath as resolvePathValue,
   resolveStrokePathProviders,
-  resolveGeometryLabel,
-  resolveGeometryLabelColors,
+  resolvePathLabel,
+  resolvePathLabelColors,
 } from '../../resolve';
 import { createCompositeContractError } from '../../resolve/diagnostics';
 import type { IRPathBase, IRPosition, IRStep } from '../../schemas';
@@ -264,8 +264,8 @@ export const emitPathKindPrimitive = (
   const emitBoundaryLabels = (input: ReadonlyArray<PathKindBoundaryLabelInput>): ReadonlyArray<ScenePrimitive> =>
     input.map(request => {
       const labelDefault = pendingPath.scopeDefaults.label ?? {};
-      const styled = resolveGeometryLabelColors(
-        resolveGeometryLabel(request.label, labelDefault, resolution.path.color),
+      const styled = resolvePathLabelColors(
+        resolvePathLabel(request.label, labelDefault, resolution.path.color),
         labelDefault.color ?? resolution.path.color,
         { mode: pendingPath.theme.mode },
         `${irPath}.${request.sourcePath}`,

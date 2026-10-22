@@ -1,4 +1,4 @@
-import type { IRNode, IRScope } from '@retikz/core';
+﻿import type { IRNode, IRScope } from '@retikz/core';
 import type { IRShapeValue } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -7,7 +7,7 @@ import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { PLOT_SHAPE_PALETTE } from '../../../src/providers';
-import type { IRPlot } from '../../../src/schemas';
+import type { IRPlot, IRPlotChannel } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
@@ -38,7 +38,7 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
 
 const shapeOf = (node: IRNode): IRShapeValue | undefined => node.shape;
 
-const pointSpec = (shape: { kind: 'field'; value: string } | { kind: 'constant'; value: string } | undefined): IRPlot =>
+const pointSpec = (shape: IRPlotChannel | undefined, fixedShape?: IRShapeValue): IRPlot =>
   PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -48,7 +48,13 @@ const pointSpec = (shape: { kind: 'field'; value: string } | { kind: 'constant';
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', ...(shape ? { shape } : {}), encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+    marks: [
+      {
+        type: 'point',
+        encodings: { position: { x: { field: 'x' }, y: { field: 'y' } }, ...(shape === undefined ? {} : { shape }) },
+        ...(fixedShape === undefined ? {} : { properties: { shape: fixedShape } }),
+      },
+    ],
   });
 
 describe('shape channel 类别映射', () => {
@@ -58,7 +64,7 @@ describe('shape channel 类别映射', () => {
       { x: 1, y: 1, g: 'B' },
       { x: 2, y: 2, g: 'A' },
     ];
-    const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'g' }), { d: data }));
+    const nodes = collectNodes(firstLayer(pointSpec('g'), { d: data }));
 
     expect(shapeOf(nodes[0])).toBe(PLOT_SHAPE_PALETTE[0]);
     expect(shapeOf(nodes[1])).toBe(PLOT_SHAPE_PALETTE[1]);
@@ -68,7 +74,7 @@ describe('shape channel 类别映射', () => {
   it('shape_palette_cycles', () => {
     const cats = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
     const data = cats.map((g, i) => ({ x: i, y: i, g }));
-    const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'g' }), { d: data }));
+    const nodes = collectNodes(firstLayer(pointSpec('g'), { d: data }));
 
     expect(PLOT_SHAPE_PALETTE).toHaveLength(8);
     expect(nodes.map(shapeOf)).toEqual([...PLOT_SHAPE_PALETTE, PLOT_SHAPE_PALETTE[0]]);
@@ -81,7 +87,7 @@ describe('shape channel 类别映射', () => {
       { x: 2, y: 2, g: 'C' },
       { x: 3, y: 3, g: 'D' },
     ];
-    const spec = pointSpec({ kind: 'field', value: 'g' });
+    const spec = pointSpec('g');
     const [definition] = lowerPlots({ d: data }, cartOpts);
 
     expect(
@@ -93,7 +99,7 @@ describe('shape channel 类别映射', () => {
   it('defaultPlot_shape_palette_preserves_structured_refs', () => {
     const custom = [{ type: 'polygon', params: { sides: 5, rotate: -90 } }, 'cross'] satisfies Array<IRShapeValue>;
     const spec = PlotSchema.parse({
-      ...pointSpec({ kind: 'field', value: 'g' }),
+      ...pointSpec('g'),
       defaultPlot: { palette: { shape: custom } },
     });
     const data = [
@@ -111,7 +117,7 @@ describe('shape channel 类别映射', () => {
       { x: 0, y: 0 },
       { x: 1, y: 1 },
     ];
-    const nodes = collectNodes(firstLayer(pointSpec({ kind: 'constant', value: 'diamond' }), { d: data }));
+    const nodes = collectNodes(firstLayer(pointSpec(undefined, 'diamond'), { d: data }));
 
     expect(nodes.every(n => shapeOf(n) === 'diamond')).toBe(true);
   });
@@ -130,9 +136,7 @@ describe('shape channel 类别映射', () => {
       { x: 1, y: 1, v: 2.5 },
     ];
 
-    expect(() => expandOf(pointSpec({ kind: 'field', value: 'v' }), { d: data })).toThrow(
-      /shape requires a categorical field/,
-    );
+    expect(() => expandOf(pointSpec('v'), { d: data })).toThrow(/shape requires a categorical field/);
   });
 
   it('shape_temporal_field_fails_loud', () => {
@@ -141,9 +145,7 @@ describe('shape channel 类别映射', () => {
       { x: 1, y: 1, t: '2024-02-01' },
     ];
 
-    expect(() => expandOf(pointSpec({ kind: 'field', value: 't' }), { d: data })).toThrow(
-      /shape requires a categorical field/,
-    );
+    expect(() => expandOf(pointSpec('t'), { d: data })).toThrow(/shape requires a categorical field/);
   });
 
   // shape、color 与 size 可以同时生效
@@ -161,10 +163,12 @@ describe('shape channel 类别映射', () => {
       marks: [
         {
           type: 'point',
-          shape: { kind: 'field', value: 'g' },
-          size: { kind: 'field', value: 'p' },
-          color: { kind: 'field', value: 'g', scale: 'col' },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          encodings: {
+            shape: 'g',
+            size: 'p',
+            color: { field: 'g', scale: 'col' },
+            position: { x: { field: 'x' }, y: { field: 'y' } },
+          },
         },
       ],
     });

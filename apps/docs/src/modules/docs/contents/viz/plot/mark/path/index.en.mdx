@@ -36,7 +36,7 @@ const rows = [
 
 createRoot(document.getElementById('plot')!).render(
   <Plot data={rows} width={360} height={220}>
-    <PathMark x="month" y="revenue" order="month" />
+    <PathMark encodings={{ order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" />
   </Plot>,
@@ -66,7 +66,9 @@ const spec: IRPlot = {
     { name: 'y', type: 'linear' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' }],
+  marks: [
+    { type: 'path', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' } },
+  ],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
@@ -95,7 +97,9 @@ const spec = plot({
     { name: 'y', type: 'linear' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' }],
+  marks: [
+    { type: 'path', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' } },
+  ],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
@@ -127,7 +131,9 @@ const spec: IRPlot = {
     { name: 'y', type: 'linear' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' }],
+  marks: [
+    { type: 'path', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' } },
+  ],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
@@ -359,7 +365,35 @@ The default polar connection depends on what the angle axis represents:
 
 These are defaults chosen from the angle scale, not restrictions imposed by the coordinate system. Set `interpolation` explicitly to choose `chord` or `polar`. The `curve` option still determines how the resulting samples are connected.
 
+## Endpoint paths and reference lines
+
+Set two complete positions with `encodings.from` and `encodings.to`. Each role accepts a field, a constant, or a view edge. Endpoints and `encodings.position` vertices are mutually exclusive. `properties.connection` selects a coordinate-aware connection or a straight projected line; switch to polar coordinates to compare an arc with a chord.
+
+These reference marks set `contributeToDomain={false}` so they do not expand the data domain. Use the controls to change coordinates, positions, geometry, and labels.
+
+<ComponentPreview
+  files={['reference-path', 'reference-path.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
+  defaultSourceFile="reference-path.preview.tsx"
+  controls={{ name: 'reference-path' }}
+  size="md"
+/>
+
+The following example binds fields produced by a local `summarize` transform to the same Mark. Change the statistic or grouping to inspect the reference geometry generated for each result row; small points retain the original observations.
+
+<ComponentPreview
+  files={[
+    'reference-data-path',
+    '/viz/plot/mark/shared/reference-data.preview.tsx',
+    '/viz/plot/mark/shared/reference-data.data.ts',
+  ]}
+  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
+  controls={{ name: 'reference-data-path' }}
+  size="md"
+/>
+
 ## API Reference
+
+Use `encodings.label: 'name'` for a content field or `properties.label: 'Highlight'` for fixed text. Object labels support field bindings for `font.size`, `font.weight`, `textColor` and other targets. Label arrays match by index; unencoded font leaves retain inheritance. See [label encodings](/viz/plot/reference/encoding#labelencodingschema).
 
 `PathMarkProps` is exported by `@retikz/plot-react` and reuses `InputPlotPathMark` from `@retikz/plot-vanilla`. Members are grouped by purpose. `—` means the declaration has no field-level default; runtime defaults are explained above. Source IR fields and constraints reuse `PathMarkSchema` from the [mark contract reference](/viz/plot/reference/mark).
 

@@ -82,7 +82,7 @@ export type MarkTransformShortcutContext = {
   /** 当前 mark 索引 */
   markIndex: number;
   /** Plot 内全部 marks */
-  marks: ReadonlyArray<IRPlotMark>;
+  marks: ReadonlyArray<IRPlotMarkOperation>;
 };
 
 /** 把特定 mark 转换为 Plot-level transforms 的作者侧扩展 */

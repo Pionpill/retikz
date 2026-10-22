@@ -72,7 +72,7 @@ describe('node channel registry', () => {
     expect(shape.legend).toBe('symbol');
   });
 
-  it('size 常量编码：直接产最终半径、无 descriptor（不入 legend）', () => {
+  it('固定 size 属性不创建字段 resolver 或 legend descriptor', () => {
     const size = registry.get('size');
     if (size?.kind !== ChannelDefinitionKind.Node) throw new Error('size should be a node channel');
 
@@ -99,10 +99,10 @@ describe('node channel registry', () => {
           values.filter((value): value is string | number => typeof value === 'string' || typeof value === 'number'),
         resolveColorScheme: () => () => '#000000',
       },
-      { type: 'point', size: { kind: 'constant', value: 7 }, encoding: {} },
+      { type: 'point', properties: { size: 7 } },
     );
 
-    expect(resolution?.resolver({})).toBe(7);
+    expect(resolution).toBeUndefined();
     expect(resolution?.descriptor).toBeUndefined();
   });
 });

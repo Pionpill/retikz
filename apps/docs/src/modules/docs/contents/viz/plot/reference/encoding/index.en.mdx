@@ -1,13 +1,11 @@
 ---
 title: Contract - Encoding
-description: Query the Plot schemas for fields, constants, positional and visual channels, and mark-label encoding.
+description: Query Plot field bindings, position roles, visual targets, and fixed label schemas.
 ---
 
-Encoding maps data rows to positional roles or visual variables. A generic `ChannelSchema` must set exactly one of `field` and `value`. Coordinates own positional scales; non-positional channels usually reference a scale explicitly.
+Visual channels in `encodings` bind fields; fixed visual values belong to `properties`. Positions use `{ field }`, `{ value }`, or `{ edge }`, with scales selected by coordinate roles. Supply consecutive roles: `x`, `x/y`, or `x/y/z`; z cannot appear without y.
 
-## EncodingSchema
-
-<ZodSchema name="EncodingSchema" />
+Shared encodings describe positions, visual channels and host properties. Complete mark encodings combine them with mark-specific position and construction rules.
 
 ## ChannelSchema
 
@@ -15,52 +13,90 @@ Encoding maps data rows to positional roles or visual variables. A generic `Chan
 
 ## PositionEncodingSchema
 
+A union of the following three strict object schemas rejects skipped or unknown position roles.
+
 <ZodSchema name="PositionEncodingSchema" />
 
-## MarkChannelEncodingSchema
+## Position1DEncodingSchema
 
-<ZodSchema name="MarkChannelEncodingSchema" />
+Requires x; y and z are not allowed.
 
-## PointEncodingSchema
+<ZodSchema name="Position1DEncodingSchema" />
 
-<ZodSchema name="PointEncodingSchema" />
+## Position2DEncodingSchema
 
-## Point-specific channels
+Requires x and y; z is not allowed.
 
-### SizeChannelSchema
+<ZodSchema name="Position2DEncodingSchema" />
 
-<ZodSchema name="SizeChannelSchema" />
+## Position3DEncodingSchema
 
-### OpacityChannelSchema
+Requires x, y, and z.
 
-<ZodSchema name="OpacityChannelSchema" />
+<ZodSchema name="Position3DEncodingSchema" />
 
-### ShapeChannelSchema
+## VisualEncodingSchema
 
-<ZodSchema name="ShapeChannelSchema" />
+<ZodSchema name="VisualEncodingSchema" />
 
-### TextChannelSchema
+## NodeEncodingSchema
 
-<ZodSchema name="TextChannelSchema" />
+<ZodSchema name="NodeEncodingSchema" />
 
-## Mark labels
+## PathEncodingSchema
 
-### MarkLabelSchema
+<ZodSchema name="PathEncodingSchema" />
 
-<ZodSchema name="MarkLabelSchema" />
+## PointMarkEncodingSchema
 
-### MarkLabelContentSchema
+<ZodSchema name="PlotPointMarkEncodingSchema" />
 
-<ZodSchema name="MarkLabelContentSchema" />
+## PathMarkEncodingSchema
 
-### MarkNodeLabelSchema
+Vertex-sequence and complete-endpoint inputs are mutually exclusive.
 
-<ZodSchema name="MarkNodeLabelSchema" />
+<ZodSchema name="PathMarkEncodingSchema" />
 
-### MarkGeometryLabelSchema
+## IntervalMarkEncodingSchema
 
-<ZodSchema name="MarkGeometryLabelSchema" />
+Combines node appearance with interval positions, grouping and bound encodings.
 
-### LabelPinStyleSchema
+<ZodSchema name="IntervalMarkEncodingSchema" />
 
-<ZodSchema name="LabelPinStyleSchema" />
+## OpacityEncodingSchema
+
+<ZodSchema name="OpacityEncodingSchema" />
+
+## LabelEncodingSchema
+
+<ZodSchema name="LabelEncodingSchema" />
+
+`encodings.label: 'name'` is shorthand for `{ content: 'name' }`, a field binding; `properties.label: 'Highlight'` is fixed text. Use an object for additional settings. Non-empty arrays can mix strings and objects, with one label per entry.
+
+| Target                      | Encoding                                                     |
+| --------------------------- | ------------------------------------------------------------ |
+| `content`                   | Field name; fixed `displayFormat` controls formatting        |
+| `font.size`, `font.weight`  | Field name or numeric `{ field, scale }` mapping             |
+| `font.family`, `font.style` | Field name; reads the font family or style directly          |
+| `textColor`, `opacity`      | Field name or explicit scale; opacity is a label-only scalar |
+| Host attachment properties  | Field names with separate Node and Geometry constraints      |
+
+Unencoded font leaves retain fixed settings and inheritance. Failed bindings do not fall back to fixed values. A style-only binding still creates data-driven Mark instances. Path labels use the first row of each actual segment, not one label per vertex.
+
+### LabelFontEncodingSchema
+
+<ZodSchema name="LabelFontEncodingSchema" description="Independent size, weight, family and style field bindings." />
+
+### NodeLabelEncodingSchema
+
+<ZodSchema
+  name="NodeLabelEncodingSchema"
+  description="Node labels add align, rotate and keepUpright to the shared position, placement and distance targets."
+/>
+
+### PathLabelEncodingSchema
+
+<ZodSchema
+  name="PathLabelEncodingSchema"
+  description="Geometry labels add side and sloped; position describes placement along the path."
+/>

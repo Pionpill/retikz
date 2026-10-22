@@ -35,7 +35,7 @@ export const TransformHistogramPreview = (
       <PlotTransform operation={{ ...histogramOperationOf(values) }} />
       <PlotScale dimension="x" type="linear" domain={[0, 20]} />
       <PlotScale dimension="y" type="linear" domain={[0, 25]} />
-      <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
+      <IntervalMark x0="binStart" x1="binEnd" encodings={{ position: { y: { field: 'binCount' } } }} />
       <PlotAxis dimension="x" title={i18n.measurement} />
       <PlotAxis dimension="y" title={i18n.frequency} grid />
     </Plot>

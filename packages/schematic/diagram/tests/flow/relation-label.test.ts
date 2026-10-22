@@ -1,4 +1,4 @@
-import type { IRGeometryLabel, ScenePrimitive } from '@retikz/core';
+import type { IRPathLabel, ScenePrimitive } from '@retikz/core';
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -6,7 +6,7 @@ import { createFlowDiagramProviderContribution, FlowDiagramSchema, LayeredFlowLa
 import type { FlowLayoutInput, FlowLayoutRoute } from '../../src/flow';
 import { flowRouteLabelBounds } from '../../src/flow/providers';
 
-describe('Flow relation geometry labels', () => {
+describe('Flow relation path labels', () => {
   it('forwards interruption and gap to the actual cubic stroke', () => {
     const flatten = (items: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
       items.flatMap(item => (item.type === 'group' ? flatten(item.children) : [item]));
@@ -176,7 +176,7 @@ describe('Flow relation geometry labels', () => {
   });
 
   it.each(['straight', 'orthogonal', '-|', '|-', 'bend'] as const)('full label fields compile on %s', kind => {
-    const label: IRGeometryLabel = {
+    const label: IRPathLabel = {
       text: 'edge',
       textColor: '#123456',
       font: { size: 18 },

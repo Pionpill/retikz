@@ -14,7 +14,6 @@ import type {
 import type { InputPlot } from './input';
 import { applyDeclaration } from './member-normalizer';
 import { normalizePlotRoot } from './plot-root';
-import { styleSugarContext } from './style-sugar';
 
 /** normalization 内部累加器的本地简写 */
 type Collected = NormalizationState;
@@ -67,11 +66,10 @@ export const normalizePlotDeclarations = (
     hasClosedLine: false,
   };
   if (context.mode === 'chart-extension') assertChartExtensionCollection(collection, context);
-  const styleContext = styleSugarContext(context);
 
   for (const declaration of collection.declarations) {
     if (declaration.kind === 'unsupported') continue;
-    applyDeclaration(declaration, collected, styleContext);
+    applyDeclaration(declaration, collected);
   }
 
   for (const source of collection.runtimeSources) {

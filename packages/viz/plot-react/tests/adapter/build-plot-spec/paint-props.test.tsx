@@ -14,54 +14,100 @@ const gradientPaint: IRPaint = {
 };
 
 describe('buildPlotIR paint props', () => {
+  it('omits nested optional props while preserving explicit values and label array positions', () => {
+    const spec = buildPlotIR(
+      <PointMark
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
+        properties={{
+          fill: undefined,
+          dashed: false,
+          opacity: { overall: 0, fill: undefined },
+          label: [
+            { content: 'A', distance: undefined },
+            { content: 'B', distance: 0 },
+          ],
+        }}
+      />,
+      '__plot',
+    );
+    const properties = spec.marks[0].properties;
+    expect(properties).not.toHaveProperty('fill');
+    expect(properties).toMatchObject({
+      dashed: false,
+      opacity: { overall: 0 },
+      label: [{ content: 'A' }, { content: 'B', distance: 0 }],
+    });
+    expect(properties?.opacity).not.toHaveProperty('fill');
+    expect(properties?.label).toHaveLength(2);
+    expect(JSON.parse(JSON.stringify(properties))).toEqual(properties);
+  });
+
   it('point paint props pass through to mark IR', () => {
-    const spec = buildPlotIR(<PointMark x="x" y="y" fill={gradientPaint} stroke={gradientPaint} />, '__plot');
+    const spec = buildPlotIR(
+      <PointMark
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
+        properties={{ fill: gradientPaint, stroke: gradientPaint }}
+      />,
+      '__plot',
+    );
 
     expect(spec.marks[0]).toMatchObject({
       type: 'point',
-      fill: { kind: 'constant', value: gradientPaint },
-      stroke: { kind: 'constant', value: gradientPaint },
+      properties: { fill: gradientPaint, stroke: gradientPaint },
     });
   });
 
   it('path paint props pass through to mark IR', () => {
-    const spec = buildPlotIR(<PathMark x="x" y="y" fill={gradientPaint} stroke={gradientPaint} />, '__plot');
+    const spec = buildPlotIR(
+      <PathMark
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
+        properties={{ fill: gradientPaint, stroke: gradientPaint }}
+      />,
+      '__plot',
+    );
 
     expect(spec.marks[0]).toMatchObject({
       type: 'path',
-      fill: { kind: 'constant', value: gradientPaint },
-      stroke: { kind: 'constant', value: gradientPaint },
+      properties: { fill: gradientPaint, stroke: gradientPaint },
     });
   });
 
   it('path paint none passes through as constant paint', () => {
-    const spec = buildPlotIR(<PathMark x="x" y="y" stroke="none" />, '__plot');
+    const spec = buildPlotIR(
+      <PathMark encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} properties={{ stroke: 'none' }} />,
+      '__plot',
+    );
 
-    expect(spec.marks[0]).toMatchObject({
-      type: 'path',
-      stroke: { kind: 'constant', value: 'none' },
-    });
+    expect(spec.marks[0]).toMatchObject({ type: 'path', properties: { stroke: 'none' } });
   });
 
   it('path connectNulls passes through to mark IR', () => {
-    const spec = buildPlotIR(<PathMark x="x" y="y" connectNulls />, '__plot');
+    const spec = buildPlotIR(
+      <PathMark
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
+        properties={{ connectNulls: true }}
+      />,
+      '__plot',
+    );
 
     expect(spec.marks[0]).toMatchObject({
       type: 'path',
-      connectNulls: true,
+      properties: { connectNulls: true },
     });
   });
 
   it('interval paint props pass through to mark IR', () => {
     const spec = buildPlotIR(
-      <IntervalMark x="month" y="revenue" fill={gradientPaint} stroke={gradientPaint} />,
+      <IntervalMark
+        encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
+        properties={{ fill: gradientPaint, stroke: gradientPaint }}
+      />,
       '__plot',
     );
 
     expect(spec.marks[0]).toMatchObject({
       type: 'interval',
-      fill: { kind: 'constant', value: gradientPaint },
-      stroke: { kind: 'constant', value: gradientPaint },
+      properties: { fill: gradientPaint, stroke: gradientPaint },
     });
   });
 });

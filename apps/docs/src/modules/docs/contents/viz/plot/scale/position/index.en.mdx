@@ -110,7 +110,7 @@ A categorical line can opt into point positions:
 
 ```tsx
 <Plot data={rows} model={[{ name: 'segment', type: 'categorical' }]}>
-  <PathMark x="segment" y="revenue" order="segment" />
+  <PathMark encodings={{ order: "segment", position: { x: "segment", y: "revenue" } }} />
   <PlotScale dimension="x" type="point" />
   <PlotAxis dimension="x" />
 </Plot>

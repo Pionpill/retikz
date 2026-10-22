@@ -13,7 +13,7 @@ import type {
   EllipsePathStepSchema,
   FoldStepSchema,
   GeneratorStepSchema,
-  GeometryLabelSchema,
+  PathLabelSchema,
   LineStepSchema,
   MoveStepSchema,
   RectangleStepSchema,
@@ -24,10 +24,10 @@ import type {
 } from './schema';
 
 /** 路径类几何共用的标签 IR 类型 */
-export type IRGeometryLabel = ZodInfer<typeof GeometryLabelSchema>;
+export type IRPathLabel = ZodInfer<typeof PathLabelSchema>;
 
 /** 路径步骤附属标签的 IR 类型 */
-export type IRStepLabel = IRGeometryLabel;
+export type IRStepLabel = IRPathLabel;
 
 /** 椭圆半径对象，供 arc / ellipsePath step 复用 */
 export type IRStepAnisotropicRadius = ZodInfer<typeof StepAnisotropicRadiusSchema>;

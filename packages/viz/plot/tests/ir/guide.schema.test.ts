@@ -404,7 +404,7 @@ describe('GuideSchema contract', () => {
       namespace: 'plot',
       type: 'plot',
       data: { values: [{ x: 1, y: 2 }] },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
       defaultPlot: {
         axis: {
           line: {
@@ -428,7 +428,7 @@ describe('GuideSchema contract', () => {
           { type: 'linear', name: 'y' },
         ],
         coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-        marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+        marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
         defaultPlot: { axis: { ticks: { mark: { kind: 'circle', size: 4 } } } },
       }),
     ).not.toThrow();
@@ -442,7 +442,7 @@ describe('GuideSchema contract', () => {
           { type: 'linear', name: 'y' },
         ],
         coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-        marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+        marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
         defaultPlot: { axis: { ticks: { count: 5 } } },
       }),
     ).toThrow();
@@ -456,7 +456,7 @@ describe('GuideSchema contract', () => {
           { type: 'linear', name: 'y' },
         ],
         coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-        marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+        marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
         defaultPlot: { axis: { ticks: { density: { kind: 'sample', maxCount: 4 } } } },
       }),
     ).toThrow();
@@ -473,7 +473,7 @@ describe('GuideSchema contract', () => {
           { type: 'linear', name: 'y' },
         ],
         coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-        marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+        marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
         defaultPlot: { axis: { tickLabels: { layout: { hide: { strategy: 'greedy' } } } } },
       }),
     ).not.toThrow();
@@ -487,7 +487,7 @@ describe('GuideSchema contract', () => {
           { type: 'linear', name: 'y' },
         ],
         coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-        marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+        marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
         defaultPlot: { axis: { tickLabels: { format: '.2f' } } },
       }),
     ).toThrow();
@@ -504,7 +504,7 @@ describe('GuideSchema contract', () => {
           { type: 'linear', name: 'y' },
         ],
         coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-        marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+        marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
         defaultPlot: {
           axis: { grid: { stroke: '#ddd', lineCap: 'round', includeDomain: true } },
         },
@@ -530,7 +530,7 @@ describe('GuideSchema contract', () => {
             { type: 'linear', name: 'y' },
           ],
           coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-          marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+          marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
           defaultPlot: { axis: { grid } },
         }),
       ).toThrow();

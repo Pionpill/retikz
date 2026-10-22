@@ -138,24 +138,25 @@ export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
         point.type !== BuiltinPlotMark.Point
       )
         continue;
-      if (point.color?.kind !== 'field') continue;
+      const pointColor = point.encodings.color;
+      if (pointColor === undefined || typeof pointColor === 'string') continue;
 
-      const paint = point.fill?.kind === 'constant' ? point.fill.value : undefined;
-      const linePaint = path.stroke?.kind === 'constant' ? path.stroke.value : undefined;
+      const paint = point.properties?.fill;
+      const linePaint = path.properties?.stroke;
       symbolsGuides.push({
         type: PlotGuide.Legend,
         channel: 'color',
-        scale: point.color.scale,
+        scale: pointColor.scale,
         symbols: [
           {
             kind: 'line',
             ...(linePaint !== undefined
               ? { paint: linePaint }
-              : path.stroke?.kind === 'field'
-                ? { scale: path.stroke.scale }
+              : typeof path.encodings.stroke === 'object'
+                ? { scale: path.encodings.stroke.scale }
                 : {}),
           },
-          { kind: 'point', ...(paint !== undefined ? { paint } : { scale: point.color.scale }) },
+          { kind: 'point', ...(paint !== undefined ? { paint } : { scale: pointColor.scale }) },
         ],
       });
     }

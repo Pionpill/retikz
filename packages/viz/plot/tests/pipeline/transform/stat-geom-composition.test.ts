@@ -84,30 +84,38 @@ describe('stat-geom composition surface (contract)', () => {
       marks: [
         {
           type: 'interval',
-          transform: [{ operation: boxSummary }],
-          bounds: {
-            x: { kind: 'extent', from: 'boxX0', to: 'boxX1' },
-            y: { kind: 'extent', from: 'boxLow', to: 'boxHigh' },
+          transforms: [{ operation: boxSummary }],
+          encodings: {
+            bounds: {
+              x: { from: { field: 'boxX0' }, to: { field: 'boxX1' } },
+              y: { from: { field: 'boxLow' }, to: { field: 'boxHigh' } },
+            },
+            position: { x: { field: 'boxX' }, y: { field: 'boxHigh' } },
           },
-          encoding: { x: { field: 'boxX' }, y: { field: 'boxHigh' } },
-          opacity: { fill: { kind: 'constant', value: 0.28 } },
+          properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } }, opacity: { fill: 0.28 } },
         },
         {
           type: 'relation',
-          transform: [{ operation: boxSummary }],
-          source: { project: { x: 'boxX0', y: 'median' } },
-          target: { project: { x: 'boxX1', y: 'median' } },
+          transforms: [{ operation: boxSummary }],
+          encodings: {
+            source: { position: { x: { field: 'boxX0' }, y: { field: 'median' } } },
+            target: { position: { x: { field: 'boxX1' }, y: { field: 'median' } } },
+          },
+          properties: { geometry: { kind: 'path' } },
         },
         {
           type: 'relation',
-          transform: [{ operation: boxSummary }],
-          source: { project: { x: 'boxX', y: 'whiskerMin' } },
-          target: { project: { x: 'boxX', y: 'whiskerMax' } },
+          transforms: [{ operation: boxSummary }],
+          encodings: {
+            source: { position: { x: { field: 'boxX' }, y: { field: 'whiskerMin' } } },
+            target: { position: { x: { field: 'boxX' }, y: { field: 'whiskerMax' } } },
+          },
+          properties: { geometry: { kind: 'path' } },
         },
         {
           type: 'point',
-          transform: [{ operation: boxOutside }],
-          encoding: { x: { field: 'boxX' }, y: { field: 'value' } },
+          transforms: [{ operation: boxOutside }],
+          encodings: { position: { x: { field: 'boxX' }, y: { field: 'value' } } },
         },
       ],
     });
@@ -140,10 +148,10 @@ describe('stat-geom composition surface (contract)', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        { type: 'point', encoding: { x: { field: 'time' }, y: { field: 'value' } } },
+        { type: 'point', encodings: { position: { x: { field: 'time' }, y: { field: 'value' } } } },
         {
           type: 'path',
-          transform: [
+          transforms: [
             {
               operation: {
                 kind: 'smooth',
@@ -151,12 +159,11 @@ describe('stat-geom composition surface (contract)', () => {
               },
             },
           ],
-          order: 'trendX',
-          encoding: { x: { field: 'trendX' }, y: { field: 'trendY' } },
+          encodings: { order: 'trendX', position: { x: { field: 'trendX' }, y: { field: 'trendY' } } },
         },
         {
           type: 'path',
-          transform: [
+          transforms: [
             {
               operation: {
                 kind: 'density',
@@ -170,9 +177,8 @@ describe('stat-geom composition surface (contract)', () => {
               },
             },
           ],
-          closure: { kind: 'baseline', baseline: 0 },
-          order: 'densityX',
-          encoding: { x: { field: 'densityX' }, y: { field: 'density' } },
+          encodings: { order: 'densityX', position: { x: { field: 'densityX' }, y: { field: 'density' } } },
+          properties: { closure: { kind: 'baseline', baseline: 0 } },
         },
       ],
     });

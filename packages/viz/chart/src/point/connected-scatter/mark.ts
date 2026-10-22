@@ -27,11 +27,10 @@ const pathPropertiesOf = (properties: IRConnectedScatterChartProperties): JsonOb
   const result: JsonObject = {};
 
   for (const name of ['strokeWidth', 'lineCap', 'lineJoin', 'dashPattern', 'shadow', 'blendMode'] as const) {
-    if (source[name] !== undefined) result[name] = { kind: 'constant', value: source[name] };
+    if (source[name] !== undefined) result[name] = source[name];
   }
 
   const opacity = markOpacityOf(
-    {},
     mergeMarkProperties(properties.colorMode === 'muted' ? { opacity: { stroke: 0.6 } } : {}, source),
   );
   if (opacity !== undefined) result.opacity = opacity;
@@ -58,17 +57,20 @@ export const resolveConnectedScatterMarkGroup = (
     ...(properties.point ?? {}),
   };
   const separateColors = properties.colorMode === 'mark';
+  const pathBindings: JsonObject = {
+    position: { x: { field: x }, y: { field: y } },
+    order,
+    ...(series === undefined ? {} : { series: series.field }),
+  };
+  const pathProperties: JsonObject = { closed: false, ...pathPropertiesOf(properties) };
   const path: JsonObject = {
     type: BuiltinPlotMark.Path,
-    order,
-    closed: false,
-    ...(series === undefined ? {} : { series: series.field }),
-    encoding: { x: { field: x }, y: { field: y } },
-    ...pathPropertiesOf(properties),
+    encodings: pathBindings,
+    properties: pathProperties,
   };
   if (series === undefined) {
     if (separateColors) path.defaultColorIndex = 1;
-    if (properties.path?.stroke !== undefined) path.stroke = { kind: 'constant', value: properties.path.stroke };
+    if (properties.path?.stroke !== undefined) pathProperties.stroke = properties.path.stroke;
   } else {
     if (separateColors) {
       pointEncodings.color = { field: series.field, scale: `${series.scale}.point` };
@@ -78,10 +80,9 @@ export const resolveConnectedScatterMarkGroup = (
       pointEncodings.color = { field: series.field, scale: series.scale };
     }
 
-    path.stroke =
-      properties.path?.stroke === undefined
-        ? { kind: 'field', value: series.field, scale: separateColors ? `${series.scale}.path` : series.scale }
-        : { kind: 'constant', value: properties.path.stroke };
+    if (properties.path?.stroke === undefined)
+      pathBindings.stroke = { field: series.field, scale: separateColors ? `${series.scale}.path` : series.scale };
+    else pathProperties.stroke = properties.path.stroke;
   }
 
   const point = resolvePointMark(pointEncodings, pointProperties);

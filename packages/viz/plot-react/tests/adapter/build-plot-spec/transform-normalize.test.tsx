@@ -18,7 +18,10 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
           }}
         />
         <PlotTransform operation={{ kind: 'stack', params: { x: 'quarter', y: 'share', groupBy: 'product' } }} />
-        <IntervalMark x="quarter" y="share" series="product" stack />
+        <IntervalMark
+          stack
+          encodings={{ series: 'product', position: { x: { field: 'quarter' }, y: { field: 'share' } } }}
+        />
       </>,
       '__plot',
     );
@@ -37,7 +40,11 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
     expect(
       (spec.transform ?? []).map(declaration => declaration.operation).filter(t => t.kind === 'stack'),
     ).toHaveLength(1);
-    expect(spec.marks[0]).toMatchObject({ type: 'interval', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } } });
+    expect(spec.marks[0]).toMatchObject({
+      type: 'interval',
+      encodings: { bounds: { y: { from: { field: 'y0' }, to: { field: 'y1' } } } },
+      properties: { bounds: { y: { kind: 'extent' } } },
+    });
   });
 
   it('shortcut_stack_with_different_signature_is_kept', () => {
@@ -46,9 +53,15 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
     const spec = buildPlotIR(
       <>
         <PlotTransform operation={{ kind: 'stack', params: { x: 'quarter', y: 'share', groupBy: 'product' } }} />
-        <IntervalMark x="quarter" y="share" series="product" stack />
+        <IntervalMark
+          stack
+          encodings={{ series: 'product', position: { x: { field: 'quarter' }, y: { field: 'share' } } }}
+        />
         {/* 不同 y/groupBy 签名的另一组堆叠柱：其 shortcut stack 不能被误删 */}
-        <IntervalMark x="month" y="revenue" series="region" stack />
+        <IntervalMark
+          stack
+          encodings={{ series: 'region', position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
+        />
       </>,
       '__plot',
     );
@@ -60,16 +73,16 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
     expect(stacks).toContainEqual({ kind: 'stack', params: { x: 'month', y: 'revenue', groupBy: 'region' } });
 
     // 两根柱都为 stacked interval（bounds.y extent 读 y0/y1）
-    expect(spec.marks.every(m => isBuiltinMark(m) && m.type === 'interval' && m.bounds?.y?.kind === 'extent')).toBe(
-      true,
-    );
+    expect(
+      spec.marks.every(m => isBuiltinMark(m) && m.type === 'interval' && m.properties?.bounds?.y?.kind === 'extent'),
+    ).toBe(true);
   });
 
   it('derive_interval_declared_to_ir', () => {
     const spec = buildPlotIR(
       <>
         <PlotTransform operation={{ kind: 'derive-interval', params: { startFrom: 'start', endFrom: 'end' } }} />
-        <IntervalMark x="task" y="end" />
+        <IntervalMark encodings={{ position: { x: { field: 'task' }, y: { field: 'end' } } }} />
       </>,
       '__plot',
     );
@@ -83,7 +96,7 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
     const spec = buildPlotIR(
       <>
         <PlotTransform operation={{ kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 0.3, seed: 42 } }} />
-        <PointMark x="dose" y="response" />
+        <PointMark encodings={{ position: { x: { field: 'dose' }, y: { field: 'response' } } }} />
       </>,
       '__plot',
     );
@@ -97,7 +110,7 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
     const spec = buildPlotIR(
       <>
         <PlotTransform operation={{ kind: 'jitter', params: { axis: 'both', amount: 1, seed: 7 } }} />
-        <PointMark x="x" y="y" />
+        <PointMark encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} />
       </>,
       '__plot',
     );

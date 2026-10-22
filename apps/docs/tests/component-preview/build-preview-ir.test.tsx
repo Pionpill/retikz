@@ -101,7 +101,7 @@ const GraphStandalonePreviewSource = createGraphPreviewSource(() => (
 
 const PlotStandaloneDemo: FC = () => (
   <Plot data={[{ category: 'A', value: 1 }]} width={240} height={120} style={{ maxWidth: '100%', height: 'auto' }}>
-    <PointMark x="category" y="value" />
+    <PointMark encodings={{ position: { x: { field: 'category' }, y: { field: 'value' } } }} />
   </Plot>
 );
 

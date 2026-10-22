@@ -6,14 +6,10 @@ export * from './providers';
 export {
   DEFAULT_RESOLVED_THEME,
   mergeGraphicStyle,
-  resolveGeometryLabelPlacement,
+  resolvePathLabelPlacement,
   resolveGraphicOpacity,
   resolveTheme,
 } from './resolve';
-export type {
-  CanonicalGeometryLabelPlacement,
-  GeometryLabelGeometryOptions,
-  GraphicOpacityResolution,
-} from './resolve';
+export type { CanonicalPathLabelPlacement, PathLabelGeometryOptions, GraphicOpacityResolution } from './resolve';
 export * from './schemas';
 export * from './shared';

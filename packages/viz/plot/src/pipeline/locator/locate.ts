@@ -29,7 +29,7 @@ type PlotFacetLocatorValue = Exclude<PlotFacetLocatorOptions['row'], undefined>;
 
 /** 取某 mark 的 series 字段名（无则 undefined）；只有 path / interval 含 series */
 const seriesFieldOf = (mark: IRPlotMark): string | undefined =>
-  mark.type === BuiltinPlotMark.Path || mark.type === BuiltinPlotMark.Interval ? mark.series : undefined;
+  mark.type === BuiltinPlotMark.Path || mark.type === BuiltinPlotMark.Interval ? mark.encodings?.series : undefined;
 
 type RenderDatumEntry = PlotAnchorResolution & {
   transformedIndex: number;
@@ -85,14 +85,19 @@ const collectRenderDatumEntries = (
   parentMeta: JsonObject = {},
   offset: [number, number] = [0, 0],
 ): Array<RenderDatumEntry> => {
-  if (isNode(child)) {
+  if (isNode(child) || isPath(child)) {
     const meta = mergeMeta(parentMeta, child.meta);
     const transformedIndex = meta.transformedIndex;
     const markIndex = meta.markIndex;
     if (typeof transformedIndex !== 'number' || !Number.isInteger(transformedIndex)) return [];
     if (typeof markIndex !== 'number' || !Number.isInteger(markIndex)) return [];
 
-    const position = renderDatumPositionOf(child, offset);
+    const start = isPath(child) ? child.children.find(step => step.kind === 'move') : undefined;
+    const position: [number, number] | null = isNode(child)
+      ? renderDatumPositionOf(child, offset)
+      : start !== undefined && Array.isArray(start.to)
+        ? [start.to[0] + offset[0], start.to[1] + offset[1]]
+        : null;
     if (position === null) return [];
 
     const entry: RenderDatumEntry = {
@@ -259,7 +264,9 @@ export const buildPlotLocatorFromDataArtifact = (
     if (!Number.isInteger(transformedIndex) || transformedIndex < 0 || transformedIndex >= rows.length) return null;
 
     const row = rows[transformedIndex];
-    const position = datumAnchor(markDataView.mark, row, frame, { registry: markRegistry });
+    const position = datumAnchor(markDataView.mark, { kind: 'row', row, transformedIndex }, frame, {
+      registry: markRegistry,
+    });
 
     return position === null ? null : { position, row, mark: markDataView.mark };
   };
@@ -345,7 +352,7 @@ export const buildPlotLocatorFromDataArtifact = (
     let sumY = 0;
     let count = 0;
 
-    for (const row of rows) {
+    for (const [transformedIndex, row] of rows.entries()) {
       // 系列值匹配：先精确相等，再宽松字符串比对（resolve 的 '5' 字符串 token 匹配数值 5；#4）
       const fieldValue = resolveFieldPath(row, seriesField);
       if (fieldValue !== value && String(fieldValue) !== String(value)) continue;
@@ -356,7 +363,13 @@ export const buildPlotLocatorFromDataArtifact = (
               const geometry = intervalCellGeometry(mark, row, frame, intervalContext);
               return geometry === null || !isRenderableCellGeometry(geometry) ? null : cellGeometryAnchor(geometry);
             })()
-          : datumAnchor(mark, row, frame, { registry: markRegistry }, intervalContext);
+          : datumAnchor(
+              mark,
+              { kind: 'row', row, transformedIndex },
+              frame,
+              { registry: markRegistry },
+              intervalContext,
+            );
       if (!position) continue;
 
       sumX += position[0];

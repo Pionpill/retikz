@@ -17,6 +17,8 @@ import type {
   PreparedPlotData,
 } from '../contract';
 import { RetikzPlotError } from '../error';
+import { resolveMarkRegistry } from '../providers';
+import { isSingleMark } from '../resolve';
 import { resolvePlotLineageOptions } from '../resolve/lineage';
 import type { IRPlot, IRPlotMarkOperation, IRPlotScaleOperation } from '../schemas';
 import { CoordinateArrangementKind } from '../schemas';
@@ -57,43 +59,27 @@ const toJsonValue = (value: unknown): JsonValue | undefined => {
   return String(value);
 };
 
-/** 读取 channel 中的字段引用 */
-const encodingFieldOf = (channel: unknown): { field: string; scale?: string } | undefined => {
-  if (channel === null || typeof channel !== 'object') return undefined;
-
-  const record = channel as { field?: unknown; kind?: unknown; value?: unknown; scale?: unknown };
-  const field =
-    typeof record.field === 'string'
-      ? record.field
-      : record.kind === 'field' && typeof record.value === 'string'
-        ? record.value
-        : undefined;
-  if (field === undefined) return undefined;
-
-  return typeof record.scale === 'string' ? { field, scale: record.scale } : { field };
-};
-
-/** 收集 mark encoding 字段引用 */
+/** 按已校验的编码目标路径记录字段；固定属性不建立数据 lineage */
 const markEncodingFields = (mark: IRPlotMarkOperation): PlotMarkLineage['encoding'] => {
-  const encoding = (mark as { encoding?: Record<string, unknown> }).encoding;
-  if (encoding === undefined) return [];
-
   const out: NonNullable<PlotMarkLineage['encoding']> = [];
-
-  for (const [channel, value] of Object.entries(encoding)) {
-    if (channel === 'channels') continue;
-    const field = encodingFieldOf(value);
-    if (field !== undefined) out.push({ channel, ...field });
-  }
-
-  const extensionChannels = encoding.channels;
-  if (extensionChannels !== null && typeof extensionChannels === 'object' && !Array.isArray(extensionChannels)) {
-    for (const [channel, value] of Object.entries(extensionChannels)) {
-      const field = encodingFieldOf(value);
-      if (field !== undefined) out.push({ channel, ...field });
+  const visit = (binding: JsonValue | undefined, channel: string): void => {
+    if (typeof binding === 'string') {
+      out.push({ channel, field: binding });
+      return;
     }
-  }
-
+    if (binding === undefined || binding === null || typeof binding !== 'object') return;
+    if (!Array.isArray(binding) && ('value' in binding || 'edge' in binding)) return;
+    if (!Array.isArray(binding) && 'field' in binding) {
+      out.push({
+        channel,
+        field: binding.field as string,
+        ...('scale' in binding ? { scale: binding.scale as string } : {}),
+      });
+      return;
+    }
+    for (const [target, value] of Object.entries(binding)) visit(value, `${channel}.${target}`);
+  };
+  for (const [target, binding] of Object.entries(mark.encodings ?? {})) visit(binding, target);
   return out;
 };
 
@@ -167,7 +153,7 @@ const layoutLineageOf = (spec: IRPlot): NonNullable<PlotLineageLowerResult['line
 /** 从坐标配置推断位置 channel 绑定的 scale */
 const coordinateScaleNameOf = (spec: IRPlot, channel: string): string | undefined => {
   const coordinate = spec.coordinate as Record<string, unknown> | undefined;
-  const value = coordinate?.[channel];
+  const value = channel.startsWith('position.') ? coordinate?.[channel.slice('position.'.length)] : undefined;
   return typeof value === 'string' ? value : undefined;
 };
 
@@ -243,7 +229,15 @@ const buildPlotLineage = (
       : hostMetadataOf(lineageOptions.hostMetadata, options.hostLineageMetadata);
 
   spec.marks.forEach((mark, markIndex) => {
-    const transform = (mark as { transform?: Array<IRDataTransformDeclaration> }).transform;
+    if (isSingleMark(mark, { registry: resolveMarkRegistry(options.definitions?.marks) })) {
+      marks.push({
+        markIndex,
+        markType: mark.type,
+        ...(lineageOptions.markIdentity && mark.id !== undefined ? { markId: mark.id } : {}),
+      });
+      return;
+    }
+    const transform = mark.transforms;
     markData.push({ markIndex, events: markLineages[markIndex]?.events ?? [] });
 
     const markLineage: PlotMarkLineage = {

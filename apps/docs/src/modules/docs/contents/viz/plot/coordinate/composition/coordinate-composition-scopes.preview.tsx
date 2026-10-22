@@ -25,24 +25,20 @@ export const CoordinateCompositionScopesPreview = (values: CoordinateComposition
       <PlotAxis dimension="x" grid={xGridVisible} />
       <PlotAxis dimension="y" grid={yGridVisible} title="°C" />
       <PlotAxis id="rainfall" dimension="y" placement={{ kind: 'side', side: values.secondaryAxisSide }} title="mm" />
-      <PathMark x="day" y="temperature" order="day" stroke="darkorange" strokeWidth={values.temperatureLineWidth} />
       <PathMark
-        x="day"
-        y="rainfall"
-        order="day"
+        encodings={{ order: 'day', position: { x: { field: 'day' }, y: { field: 'temperature' } } }}
+        properties={{ stroke: 'darkorange', strokeWidth: values.temperatureLineWidth }}
+      />
+      <PathMark
         yAxisId={rainfallAxisId}
-        stroke="steelblue"
-        strokeWidth={values.rainfallLineWidth}
+        encodings={{ order: 'day', position: { x: { field: 'day' }, y: { field: 'rainfall' } } }}
+        properties={{ stroke: 'steelblue', strokeWidth: values.rainfallLineWidth }}
       />
       {values.rainfallPointsVisible ? (
         <PointMark
-          x="day"
-          y="rainfall"
           yAxisId={rainfallAxisId}
-          fill="lightblue"
-          stroke="steelblue"
-          strokeWidth={1}
-          size={values.rainfallPointSize}
+          encodings={{ position: { x: { field: 'day' }, y: { field: 'rainfall' } } }}
+          properties={{ fill: 'lightblue', stroke: 'steelblue', strokeWidth: 1, size: values.rainfallPointSize }}
         />
       ) : null}
     </Plot>
