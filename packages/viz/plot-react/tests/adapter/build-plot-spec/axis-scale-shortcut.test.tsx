@@ -8,7 +8,7 @@ describe('buildPlotIR PlotAxis scale shortcut', () => {
   it('builds the same dimension scale as <PlotScale>', () => {
     const spec = buildPlotIR(
       <>
-        <PathMark x="m" y="r" />
+        <PathMark encodings={{ position: { x: { field: 'm' }, y: { field: 'r' } } }} />
         <PlotAxis dimension="y" scale="log" />
       </>,
       '__plot',

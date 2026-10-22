@@ -27,13 +27,13 @@ export const RectBoundsPreview = (values: RectBoundsPreviewValues) => (
       coordinate={values.coordinate === 'polar2D' ? 'polar2D' : undefined}
     >
       <IntervalMark
-        x="col"
-        y="row"
-        color={values.showColor ? 'value' : undefined}
-        fill={values.showColor ? undefined : '#60a5fa'}
-        bounds={{
-          x: { kind: 'band' },
-          y: values.mode === 'band' ? { kind: 'band' } : { kind: 'full' },
+        encodings={{
+          ...(values.showColor ? { color: 'value' } : {}),
+          position: { x: { field: 'col' }, y: { field: 'row' } },
+        }}
+        properties={{
+          fill: values.showColor ? undefined : '#60a5fa',
+          bounds: { x: { kind: 'band' }, y: values.mode === 'band' ? { kind: 'band' } : { kind: 'full' } },
         }}
       />
       <PlotScale dimension="x" type="band" paddingOuter={0.15} />

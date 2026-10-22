@@ -18,16 +18,13 @@ export const IntervalSectorPreview = (values: IntervalSectorPreviewValues) => {
     <Plot data={data} width={340} height={270} coordinate={{ type: 'polar2D', innerRadius: values.innerRadius }}>
       <IntervalMark
         angle="value"
-        color="source"
-        padAngle={values.padAngle}
-        pull="pull"
-        stroke="#ffffff"
-        strokeWidth={1.5}
-        label={
-          values.showLabels
-            ? { field: 'source', position: 'right', distance: 8, font: { size: 10, weight: 'bold' } }
-            : undefined
-        }
+        encodings={{ color: 'source', pull: 'pull', ...(values.showLabels ? { label: { content: 'source' } } : {}) }}
+        properties={{
+          padAngle: values.padAngle,
+          stroke: '#ffffff',
+          strokeWidth: 1.5,
+          label: values.showLabels ? { position: 'right', distance: 8, font: { size: 10, weight: 'bold' } } : undefined,
+        }}
       />
     </Plot>
   );

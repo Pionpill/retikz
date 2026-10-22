@@ -146,24 +146,5 @@ const nodesById = new Map(positionedNodes.map(node => [node.id, node]));
 
 export const sankeyRelations: Array<SankeyDatum> = buildFlowRows(flows, nodesById);
 
-/** ribbon 关系与固定宽度节点共用的 Plot 数据 */
-export const sankeyData: Array<SankeyDatum> = [
-  ...sankeyRelations.map(row => ({
-    ...row,
-    nodeX0: 0,
-    nodeX1: 0,
-    nodeY0: 0,
-    nodeY1: 0,
-    nodeFill: 'transparent',
-    nodeLabel: '',
-  })),
-  ...buildNodeRows(positionedNodes).map(row => ({
-    ...row,
-    sourceX: 0,
-    sourceY: 0,
-    targetX: 1,
-    targetY: 0,
-    width: 0,
-    flowFill: 'transparent',
-  })),
-];
+/** 固定宽度节点的独立数据，避免把流线行交给区间边界求值 */
+export const sankeyNodes: Array<SankeyDatum> = buildNodeRows(positionedNodes);

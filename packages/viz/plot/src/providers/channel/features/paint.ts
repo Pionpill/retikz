@@ -1,12 +1,18 @@
 import type { IRPaint } from '@retikz/core';
-import { PaintSchema } from '@retikz/core';
 import { coerceTimestamp, resolveFieldPath } from '@retikz/data';
 import { DataFieldType, BuiltinFieldOrderMode } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { ChannelScaleResolveContext, MarkChannelDefinition } from '../../../contract';
 import type { ChannelPaletteContext } from '../../../contract';
-import { ChannelDefinitionKind, isBuiltinScaleOperation } from '../../../contract';
+import {
+  channelField,
+  channelScale,
+  markChannelEncoding,
+  markProperty,
+  ChannelDefinitionKind,
+  isBuiltinScaleOperation,
+} from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import type { IRPlotChannel, IRPlotMarkOperation, IRPlotScaleOperation } from '../../../schemas';
 import { BuiltinPlotScale } from '../../../schemas';
@@ -17,27 +23,12 @@ export type ColorChannelDefinitionOptions = {
   channel: string;
   /** 从 mark 中读取该通道的绑定 */
   pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined;
-  /**
-   * 是否允许常量分支使用颜色以外的 paint 输入
-   * @default false
-   */
-  constantPaint?: boolean;
+  /** 无有效字段编码时使用的固定 paint 属性 */
+  property?: (mark: IRPlotMarkOperation) => PlotPaint | undefined;
 };
 
 /** plot 通道可下沉到 core 的颜色或 paint 值 */
 export type PlotPaint = string | IRPaint;
-
-const parsePaintConstant = (channelName: string, value: unknown, allowPaintSpec: boolean): PlotPaint => {
-  if (typeof value === 'string') return value;
-  if (allowPaintSpec) {
-    const result = PaintSchema.safeParse(value);
-    if (result.success) return result.data;
-  }
-
-  throw new RetikzPlotError(
-    `lowerPlots: constant ${channelName} channel must be a CSS color string${allowPaintSpec ? ' or core IRPaint' : ''}`,
-  );
-};
 
 /**
  * 创建 color-like mark 通道（color / fill / stroke）
@@ -53,20 +44,17 @@ export const makeColorChannelDefinition = (
   resolve: (ctx, mark) => {
     const scaleByName = new Map(ctx.node.scales.map(scale => [scale.name, scale] as const));
     const channel = options.pick(mark);
-    if (!channel) return undefined;
-    if (channel.value !== undefined) {
-      const constant = parsePaintConstant(options.channel, channel.value, options.constantPaint ?? false);
-      return { resolver: () => constant, defaultValue: constant };
+    if (channel === undefined) {
+      const property = options.property?.(mark);
+      return property === undefined ? undefined : { resolver: () => property, defaultValue: property };
     }
-
-    if (channel.field === undefined) return undefined;
-
-    const field = channel.field;
+    const field = channelField(channel);
+    const scaleName = channelScale(channel);
     const definition = ctx.model.find(candidate => candidate.name === field);
     const colorFieldType = definition?.type;
     if (
       (colorFieldType === DataFieldType.Continuous || colorFieldType === DataFieldType.Temporal) &&
-      channel.scale === undefined
+      scaleName === undefined
     ) {
       throw new RetikzPlotError(
         `lowerPlots: continuous/temporal ${options.channel} field "${field}" requires an explicit sequential/diverging/quantize/threshold/quantile color scale reference`,
@@ -74,10 +62,10 @@ export const makeColorChannelDefinition = (
     }
 
     let scaleOperation: IRPlotScaleOperation;
-    if (channel.scale !== undefined) {
-      const found = scaleByName.get(channel.scale);
+    if (scaleName !== undefined) {
+      const found = scaleByName.get(scaleName);
       if (!found)
-        throw new RetikzPlotError(`lowerPlots: ${options.channel} channel references unknown scale "${channel.scale}"`);
+        throw new RetikzPlotError(`lowerPlots: ${options.channel} channel references unknown scale "${scaleName}"`);
 
       scaleOperation = found;
     } else {
@@ -142,25 +130,6 @@ export type BuiltinPaintChannels = {
   stroke: MarkChannelDefinition<PlotPaint>;
 };
 
-const markValueChannel = (value: unknown): IRPlotChannel | undefined => {
-  if (value === undefined) return undefined;
-  if (value === null || typeof value !== 'object') return undefined;
-
-  const candidate = value as { kind?: unknown; value?: unknown; scale?: unknown };
-  if (candidate.kind === 'field')
-    return {
-      field: String(candidate.value),
-      ...(typeof candidate.scale === 'string' ? { scale: candidate.scale } : {}),
-    };
-
-  if (candidate.kind === 'constant') return { value: candidate.value as IRPlotChannel['value'] };
-
-  return undefined;
-};
-
-const encodingChannel = (mark: IRPlotMarkOperation, channel: string): IRPlotChannel | undefined =>
-  (mark as { encoding?: Record<string, IRPlotChannel | undefined> }).encoding?.[channel];
-
 /**
  * 创建内置 paint channel definitions
  * @returns 新建的 color、fill、stroke 通道定义集合
@@ -168,16 +137,17 @@ const encodingChannel = (mark: IRPlotMarkOperation, channel: string): IRPlotChan
 export const createBuiltinPaintChannels = (): BuiltinPaintChannels => ({
   color: makeColorChannelDefinition({
     channel: 'color',
-    pick: mark => markValueChannel((mark as Record<string, unknown>).color) ?? encodingChannel(mark, 'color'),
+    pick: mark => markChannelEncoding(mark, 'color'),
+    property: mark => markProperty<PlotPaint>(mark, 'color'),
   }),
   fill: makeColorChannelDefinition({
     channel: 'fill',
-    pick: mark => markValueChannel((mark as Record<string, unknown>).fill),
-    constantPaint: true,
+    pick: mark => markChannelEncoding(mark, 'fill'),
+    property: mark => markProperty<PlotPaint>(mark, 'fill'),
   }),
   stroke: makeColorChannelDefinition({
     channel: 'stroke',
-    pick: mark => markValueChannel((mark as Record<string, unknown>).stroke),
-    constantPaint: true,
+    pick: mark => markChannelEncoding(mark, 'stroke'),
+    property: mark => markProperty<PlotPaint>(mark, 'stroke'),
   }),
 });

@@ -5,6 +5,7 @@ import type {
   AnyMarkDefinition,
   CoordinateFrame,
   MarkChannels,
+  MarkInstanceInput,
   MarkDefinition,
   MarkLoweringContext,
 } from '../../contract';
@@ -81,15 +82,15 @@ const applyScopeChannelDeliveries = (
  */
 export const lowerMark = (
   resolution: { definition: AnyMarkDefinition; operation: IRPlotMarkOperation },
-  rows: Array<ExternalRow>,
+  instances: MarkInstanceInput,
   frame: CoordinateFrame,
   channels: MarkChannels = {},
   markContext?: MarkLoweringContext,
 ): IRChild | null => {
   return applyScopeChannelDeliveries(
-    resolution.definition.lower(resolution.operation as never, rows, frame, channels, markContext),
+    resolution.definition.lower(resolution.operation as never, instances, frame, channels, markContext),
     resolution.operation,
-    rows,
+    instances.kind === 'rows' ? instances.rows : [],
     channels,
   );
 };

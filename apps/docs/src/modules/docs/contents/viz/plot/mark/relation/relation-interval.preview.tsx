@@ -42,66 +42,73 @@ export const RelationIntervalPreview = (values: RelationIntervalPreviewValues) =
         <PlotAxis dimension="x" tickLabels={false} />
         <PlotAxis dimension="y" grid ticks={{ count: 4 }} />
         <IntervalMark
-          x="slot"
-          y="value"
-          color="phase"
-          stroke="#ffffff"
-          strokeWidth={0.8}
-          label={{
-            field: 'label',
-            position: values[RELATION_INTERVAL_CONTROL_IDS.barLabelPosition],
-            distance: 4,
-            textColor: values[RELATION_INTERVAL_CONTROL_IDS.barLabelColor],
-            font: { size: 10, weight: 'bold' },
+          encodings={{
+            color: 'phase',
+            label: { content: 'label' },
+            position: { x: { field: 'slot' }, y: { field: 'value' } },
           }}
-        />
-        <RelationMark
-          transform={[{ operation: relationDecreaseOperation }]}
-          source={{ project: { x: 'sourceX', y: 'sourceY' } }}
-          target={{ project: { x: 'targetX', y: 'targetY' } }}
-          style={{
-            color: { kind: 'constant', value: '#b91c1c' },
-            strokeWidth: { kind: 'constant', value: values[RELATION_INTERVAL_CONTROL_IDS.strokeWidth] },
-          }}
-          path={{
-            via: [{ project: { x: 'sourceX', y: 'sourceViaY' } }],
-            routing: { kind: 'orthogonal', via: '-|', labelStep: 'main' },
+          properties={{
+            stroke: '#ffffff',
+            strokeWidth: 0.8,
             label: {
-              text: { field: 'deltaLabel' },
-              position: values[RELATION_INTERVAL_CONTROL_IDS.labelPosition],
-              ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
-              sloped: values[RELATION_INTERVAL_CONTROL_IDS.labelSloped],
-              textColor: 'currentColor',
+              position: values[RELATION_INTERVAL_CONTROL_IDS.barLabelPosition],
+              distance: 4,
+              textColor: values[RELATION_INTERVAL_CONTROL_IDS.barLabelColor],
               font: { size: 10, weight: 'bold' },
-            },
-            options: {
-              marks: [{ pos: 1, mark: { kind: 'arrow' } }],
-              style: lineOptions,
             },
           }}
         />
         <RelationMark
-          transform={[{ operation: relationIncreaseOperation }]}
-          source={{ project: { x: 'sourceX', y: 'sourceY' } }}
-          target={{ project: { x: 'targetX', y: 'targetY' } }}
-          style={{
-            color: { kind: 'constant', value: '#15803d' },
-            strokeWidth: { kind: 'constant', value: values[RELATION_INTERVAL_CONTROL_IDS.strokeWidth] },
-          }}
-          path={{
-            via: [{ project: { x: 'sourceX', y: 'sourceViaY' } }],
-            routing: { kind: 'orthogonal', via: '-|', labelStep: 'main' },
-            label: {
-              text: { field: 'deltaLabel' },
-              position: values[RELATION_INTERVAL_CONTROL_IDS.labelPosition],
-              ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
-              sloped: values[RELATION_INTERVAL_CONTROL_IDS.labelSloped],
-              textColor: 'currentColor',
-              font: { size: 10, weight: 'bold' },
+          transforms={[{ operation: relationDecreaseOperation }]}
+          encodings={{
+            source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
+            target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
+            geometry: {
+              via: [{ position: { x: { field: 'sourceX' }, y: { field: 'sourceViaY' } } }],
+              label: { text: 'deltaLabel' },
             },
-            options: {
-              marks: [{ pos: 1, mark: { kind: 'arrow' } }],
-              style: lineOptions,
+          }}
+          properties={{
+            color: '#b91c1c',
+            strokeWidth: values[RELATION_INTERVAL_CONTROL_IDS.strokeWidth],
+            geometry: {
+              kind: 'path',
+              routing: { kind: 'orthogonal', via: '-|', labelStep: 'main' },
+              label: {
+                position: values[RELATION_INTERVAL_CONTROL_IDS.labelPosition],
+                ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
+                sloped: values[RELATION_INTERVAL_CONTROL_IDS.labelSloped],
+                textColor: 'currentColor',
+                font: { size: 10, weight: 'bold' },
+              },
+              options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], style: lineOptions },
+            },
+          }}
+        />
+        <RelationMark
+          transforms={[{ operation: relationIncreaseOperation }]}
+          encodings={{
+            source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
+            target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
+            geometry: {
+              via: [{ position: { x: { field: 'sourceX' }, y: { field: 'sourceViaY' } } }],
+              label: { text: 'deltaLabel' },
+            },
+          }}
+          properties={{
+            color: '#15803d',
+            strokeWidth: values[RELATION_INTERVAL_CONTROL_IDS.strokeWidth],
+            geometry: {
+              kind: 'path',
+              routing: { kind: 'orthogonal', via: '-|', labelStep: 'main' },
+              label: {
+                position: values[RELATION_INTERVAL_CONTROL_IDS.labelPosition],
+                ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
+                sloped: values[RELATION_INTERVAL_CONTROL_IDS.labelSloped],
+                textColor: 'currentColor',
+                font: { size: 10, weight: 'bold' },
+              },
+              options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], style: lineOptions },
             },
           }}
         />

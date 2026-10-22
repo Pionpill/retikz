@@ -1,4 +1,6 @@
 import type { ValueOf } from '@retikz/foundation';
+import type { infer as ZodInfer } from 'zod';
+import { number, strictObject } from 'zod';
 
 /**
  * Plot 语义图层的默认 core zIndex
@@ -22,3 +24,14 @@ export const PlotLayerZIndex = {
 } as const;
 
 export type PlotLayerZIndex = ValueOf<typeof PlotLayerZIndex>;
+
+/** 校验绘图语义图层的堆叠次序覆盖 */
+export const PlotLayerSchema = strictObject({
+  zIndex: number()
+    .int()
+    .optional()
+    .describe('Core zIndex override for this semantic plot layer; omit to use the layer default'),
+}).describe('Plot semantic layer stacking override');
+
+/** Plot 语义图层的堆叠次序覆盖 */
+export type IRPlotLayer = ZodInfer<typeof PlotLayerSchema>;

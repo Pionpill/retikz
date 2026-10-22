@@ -48,7 +48,7 @@ createRoot(document.getElementById('plot')!).render(
   <Plot data={rows} width={360} height={220}>
     <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
     <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
-    <PointMark x="gdp" y="life" size={6} />
+    <PointMark encodings={{ position: { x: { field: 'gdp' }, y: { field: 'life' } } }} properties={{ size: 6 }} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" />
   </Plot>,
@@ -81,11 +81,7 @@ const spec: IRPlot = {
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [
-    {
-      type: 'point',
-      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
-      size: { kind: 'constant', value: 6 },
-    },
+    { type: 'point', encodings: { position: { x: { field: 'gdp' }, y: { field: 'life' } } }, properties: { size: 6 } },
   ],
   guides: [
     { type: 'axis', dimension: 'x' },
@@ -118,11 +114,7 @@ const spec = plot({
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [
-    {
-      type: 'point',
-      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
-      size: { kind: 'constant', value: 6 },
-    },
+    { type: 'point', encodings: { position: { x: { field: 'gdp' }, y: { field: 'life' } } }, properties: { size: 6 } },
   ],
   guides: [
     { type: 'axis', dimension: 'x' },
@@ -158,11 +150,7 @@ const spec: IRPlot = {
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [
-    {
-      type: 'point',
-      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
-      size: { kind: 'constant', value: 6 },
-    },
+    { type: 'point', encodings: { position: { x: { field: 'gdp' }, y: { field: 'life' } } }, properties: { size: 6 } },
   ],
   guides: [
     { type: 'axis', dimension: 'x' },
@@ -268,22 +256,26 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 文字有两种用途，先选择需要的结果，再设置样式。
 
-| 属性            | 含义           | 说明                                                                                                                     |
-| --------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `text`          | 文本节点内容   | 组件属性只绑定字段；设置后以无边框文字代替普通形状                                                                       |
-| `displayFormat` | 文本格式       | 仅与 `text` 字段同用，直接指定数值或时间格式串，不是通道绑定                                                             |
-| `textColor`     | 文字颜色       | 支持常量或字段通道，作用于文本节点；附属标签的颜色在 `label` 中设置                                                      |
-| `font`          | 字体           | 支持字体配置对象或字段通道，可设置字号、字重、字体族等；附属标签使用 `label.font`                                        |
-| `align`         | 多行文字对齐   | 支持 `start`、`middle`、`end`，作用于多行文本块内部                                                                      |
-| `lineHeight`    | 文字行高       | 正数，输出单位；作用于多行文本节点                                                                                       |
-| `maxTextWidth`  | 文字宽度上限   | 正数，超过宽度时换行；与行高、对齐结合使用                                                                               |
-| `dx`、`dy`      | 文本位置偏移   | 直接指定数值，不支持字段通道；正值分别向右和屏幕下方移动，仅作用于文本节点                                               |
-| `label`         | 附属标签       | 支持字段名、标签对象或有序标签数组；对象指定内容、位置、距离、引线与样式。固定内容使用 `value`，格式使用 `displayFormat` |
-| `resolveLabel`  | 运行时标签回调 | 接收数据行并返回文字，优先于标签内容；必须设置图元 `id`，回调不进入可序列化 IR                                           |
+| 属性            | 含义           | 说明                                                                                                                                                     |
+| --------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `text`          | 文本节点内容   | 组件属性只绑定字段；设置后以无边框文字代替普通形状                                                                                                       |
+| `displayFormat` | 文本格式       | 仅与 `text` 字段同用，直接指定数值或时间格式串，不是通道绑定                                                                                             |
+| `textColor`     | 文字颜色       | 支持常量或字段通道，作用于文本节点；附属标签的颜色在 `label` 中设置                                                                                      |
+| `font`          | 字体           | 支持字体配置对象或字段通道，可设置字号、字重、字体族等；附属标签使用 `label.font`                                                                        |
+| `align`         | 多行文字对齐   | 支持 `start`、`middle`、`end`，作用于多行文本块内部                                                                                                      |
+| `lineHeight`    | 文字行高       | 正数，输出单位；作用于多行文本节点                                                                                                                       |
+| `maxTextWidth`  | 文字宽度上限   | 正数，超过宽度时换行；与行高、对齐结合使用                                                                                                               |
+| `dx`、`dy`      | 文本位置偏移   | 直接指定数值，不支持字段通道；正值分别向右和屏幕下方移动，仅作用于文本节点                                                                               |
+| `label`         | 附属标签       | 支持字段名、标签对象或有序标签数组；对象指定内容、位置、距离、引线与样式。固定内容使用 `properties.label` 的字符串或 `content`，格式使用 `displayFormat` |
+| `resolveLabel`  | 运行时标签回调 | 接收数据行并返回文字，优先于标签内容；必须设置图元 `id`，回调不进入可序列化 IR                                                                           |
 
 标签的位置、距离、引线与字体写在 `label` 对象中；Source IR 的文字绑定写在 `label.content`。文本点通过 `textColor`、`font` 设置文字外观，`dx`、`dy` 调整相对位置，正值分别向右、向屏幕下方移动。它们不会平移普通散点。
 
 切换“文本点”与“多行文字”后比较对齐、行高和宽度；选择人口字段后比较数值格式。“回调标签”展示由同一行的字母和人口数值组合生成的内容。
+
+标签内容可简写为 `encodings.label: 'name'`，固定文字写 `properties.label: '重点'`。对象形式支持 `font.size`、`font.weight`、`textColor` 等字段编码，多标签数组按索引配对；未编码的字体叶子继续继承。详见[标签编码](/viz/plot/reference/encoding#labelencodingschema)。
+
+标签模式中，字号与字重控件改变数据中的 `labelSize`、`labelWeight` 字段；各行字号不同，固定字体的其它属性仍保留。
 
 <ComponentPreview
   mode="showcase"
@@ -438,6 +430,32 @@ Plot 按图元实际使用的位置尺度汇总需求。最大半径加净空构
     { label: '最大半径与策略需求', path: 'packages/viz/plot/src/resolve/scale/point-padding.ts' },
     { label: '共享尺度约束求解', path: 'packages/viz/plot/src/resolve/scale/mark-domain.ts' },
   ]}
+/>
+
+## 参考点与文字
+
+`encodings.position` 的 x 必填；二维提供 x、y，三维提供 x、y、z，不能跳过 y。位置可使用 `{ field: '字段名' }`、`{ value: 50 }`（也可为分类字符串）或 `{ edge: 'start' }` / `{ edge: 'end' }`。常量位置沿用形状、文本、朝向与标签能力。
+
+以下参考图元显式设置 `contributeToDomain={false}`，不扩大主体数据的定义域。使用控件切换坐标系、位置、几何与标签。
+
+<ComponentPreview
+  files={['reference-point', 'reference-point.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
+  defaultSourceFile="reference-point.preview.tsx"
+  controls={{ name: 'reference-point' }}
+  size="md"
+/>
+
+下面通过局部 `summarize` 变换计算统计字段，再绑定到同一类 Mark。切换平均值 / 中位数或分组，观察每个结果行产生的独立参考图元；小点保留原始观测。
+
+<ComponentPreview
+  files={[
+    'reference-data-point',
+    '/viz/plot/mark/shared/reference-data.preview.tsx',
+    '/viz/plot/mark/shared/reference-data.data.ts',
+  ]}
+  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
+  controls={{ name: 'reference-data-point' }}
+  size="md"
 />
 
 ## API 参考

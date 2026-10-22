@@ -60,9 +60,11 @@ describe('smooth transform behavior (contract)', () => {
       marks: [
         {
           type: 'path',
-          series: 'series',
-          order: 'trendX',
-          encoding: { x: { field: 'trendX' }, y: { field: 'trendY' } },
+          encodings: {
+            series: 'series',
+            order: 'trendX',
+            position: { x: { field: 'trendX' }, y: { field: 'trendY' } },
+          },
         },
       ],
     });

@@ -24,7 +24,7 @@ const salesSpec = (id?: string) =>
       {
         type: 'interval',
         id: 'bars',
-        encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
       },
     ],
   });
@@ -41,7 +41,7 @@ const salesInput = (id?: string) => ({
     {
       type: 'interval' as const,
       id: 'bars',
-      encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+      encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
     },
   ],
 });

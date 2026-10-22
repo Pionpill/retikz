@@ -6,10 +6,26 @@ import { ZodLiteral, ZodObject } from 'zod';
 import { RetikzPlotError } from '../error';
 import type { IRPlotMark, IRPlotMarkOperation } from '../schemas';
 import type { MarkLoweringContext } from './anchor';
-import type { ChannelDefinitionKind, FieldCollector, MarkChannels } from './channel';
+import type { LabelHost, ChannelDefinitionKind, FieldCollector, MarkChannels } from './channel';
 import type { Cell, CoordinateFrame } from './coordinate';
 import type { MarkDomainPaddingCapability } from './domain-padding';
 import type { MarkPlacementTarget } from './position-adjustment';
+
+/** 下沉、位置调整与域留白共同消费的实例来源 */
+export type MarkInstanceInput = { kind: 'single' } | { kind: 'rows'; rows: Array<ExternalRow> };
+
+/** 单个几何目标的真实实例身份，独立实例没有数据行 */
+export type MarkInstance = { kind: 'single' } | { kind: 'row'; row: ExternalRow; transformedIndex: number };
+
+/** 将实例来源展开为稳定有序的几何消费目标，空结果保持为空 */
+export const markInstances = (input: MarkInstanceInput): Array<MarkInstance> =>
+  input.kind === 'single'
+    ? [{ kind: 'single' }]
+    : input.rows.map((row, transformedIndex) => ({ kind: 'row', row, transformedIndex }));
+
+/** 取得声明内稳定的实例键，独立实例不借用行索引 */
+export const markInstanceKey = (instance: MarkInstance): string =>
+  instance.kind === 'single' ? 'single' : String(instance.transformedIndex);
 
 /**
  * 区间柱（interval mark）摆放上下文：lowering 与 locator 共享的一次性派生量
@@ -48,6 +64,8 @@ export type MarkDefinition<T extends IRPlotMarkOperation = IRPlotMark> = {
   schema: ZodType<T>;
   /** 收集该 mark 额外引用的用户源字段；通用 encoding / label 字段由 data 层统一处理 */
   collectFields?: (mark: T, fields: FieldCollector) => void;
+  /** 附属标签的 Core 宿主；有标签样式编码时必须声明 */
+  labelHost?: LabelHost;
   /**
    * 声明该 mark 能消费哪些通道交付面
    * @description channel registry 会据此只解析 mark 实际会下沉的 channel definition。比如 point 可消费 mark / scope / node
@@ -55,11 +73,11 @@ export type MarkDefinition<T extends IRPlotMarkOperation = IRPlotMark> = {
    */
   channelKinds?: (mark: T) => ReadonlySet<ChannelDefinitionKind>;
   /** 区间类 mark：某行 → 正交 Cell（interval 用；非区间类省略） */
-  buildCell?: (mark: T, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
+  buildCell?: (mark: T, instance: MarkInstance, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
   /** 可选 Mark Placement 能力；只有显式声明的 Mark 才能消费 `placement` */
   placement?: {
     /** 按稳定顺序枚举可调整的位置目标 */
-    targets: (mark: T, rows: Array<ExternalRow>, frame: CoordinateFrame) => Array<MarkPlacementTarget>;
+    targets: (mark: T, instances: MarkInstanceInput, frame: CoordinateFrame) => Array<MarkPlacementTarget>;
     /** 目标沿指定屏幕单位法向的 glyph extent；无法证明时返回 undefined */
     normalExtent?: (
       mark: T,
@@ -73,7 +91,7 @@ export type MarkDefinition<T extends IRPlotMarkOperation = IRPlotMark> = {
   /** 下沉到 core IR 图层（无可绘制图元返回 null；不支持的 mark × coordinate 由实现 fail-loud） */
   lower: (
     mark: T,
-    rows: Array<ExternalRow>,
+    instances: MarkInstanceInput,
     frame: CoordinateFrame,
     channels: MarkChannels,
     ctx?: MarkLoweringContext,
@@ -117,14 +135,16 @@ export type AnyMarkDefinition = {
   schema: ZodType;
   /** 内部宽类型占位；按 type 取出后调用方已知具体 mark */
   collectFields?: (mark: never, fields: FieldCollector) => void;
+  /** 附属标签的 Core 宿主；有标签样式编码时必须声明 */
+  labelHost?: LabelHost;
   /** 内部宽类型占位；语义同 MarkDefinition.channelKinds，供 registry 按 type 分发后调用 */
   channelKinds?: (mark: never) => ReadonlySet<ChannelDefinitionKind>;
   /** 内部宽类型占位；按 type 取出后调用方已知具体 mark */
-  buildCell?: (mark: never, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
+  buildCell?: (mark: never, instance: MarkInstance, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
   /** 内部宽类型占位；语义同 MarkDefinition.placement */
   placement?: {
     /** 从有效数据行提取具有稳定键和角色值的待定位目标 */
-    targets: (mark: never, rows: Array<ExternalRow>, frame: CoordinateFrame) => Array<MarkPlacementTarget>;
+    targets: (mark: never, instances: MarkInstanceInput, frame: CoordinateFrame) => Array<MarkPlacementTarget>;
     /** 计算目标沿给定单位法向的视觉外延，无法确定时返回 undefined */
     normalExtent?: (
       mark: never,
@@ -136,7 +156,7 @@ export type AnyMarkDefinition = {
   /** 内部宽类型占位；按 type 取出后调用方已知具体 mark */
   lower: (
     mark: never,
-    rows: Array<ExternalRow>,
+    instances: MarkInstanceInput,
     frame: CoordinateFrame,
     channels: MarkChannels,
     ctx?: MarkLoweringContext,

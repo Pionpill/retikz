@@ -19,19 +19,19 @@ import { PositionSchema } from '../../position';
 import { AngleDegreesSchema } from '../../scalar';
 import { createLabelVisualStyleShape, TextBlockSchema } from '../../text';
 import { NodeTargetSchema, TargetSchema } from '../target';
-import { BendDirection, FoldStepVia, GeometryLabelPlacement, GeometryLabelPosition, PathCloseMode } from './constants';
+import { BendDirection, FoldStepVia, PathLabelPlacement, PathLabelPosition, PathCloseMode } from './constants';
 
 /** 校验附着于路径类宿主、由中心线采样确定位置的文本标签 */
-export const GeometryLabelSchema = strictObject({
+export const PathLabelSchema = strictObject({
   ...createLabelVisualStyleShape({
     textColor: 'Label text color; falls back to label defaults, path color, then currentColor.',
     opacity: 'Label-only opacity, multiplied with the owning path opacity.',
     font: 'Label font overrides. Missing fields inherit from scope label defaults.',
   }),
   text: TextBlockSchema.describe(
-    'One text block for this geometry label. Arrays provide authored lines with optional per-line styles.',
+    'One text block for this path label. Arrays provide authored lines with optional per-line styles.',
   ),
-  position: union([zodEnum(GeometryLabelPosition), NormalizedFractionSchema])
+  position: union([zodEnum(PathLabelPosition), NormalizedFractionSchema])
     .optional()
     .describe('Position along the step: keyword or normalized number. Parameter meaning follows the step kind.'),
   side: zodEnum(Side)
@@ -48,20 +48,20 @@ export const GeometryLabelSchema = strictObject({
   gap: NonNegativeNumberSchema.optional().describe(
     'Extra clearance in user units on each side of an interrupted host stroke gap. Defaults to 4.',
   ),
-  placement: zodEnum(GeometryLabelPlacement)
+  placement: zodEnum(PathLabelPlacement)
     .optional()
     .describe(
-      'Geometry label placement mode. outside uses side offset; inside lets area hosts place labels within their band.',
+      'Path label placement mode. outside uses side offset; inside lets area hosts place labels within their band.',
     ),
   distance: NonNegativeNumberSchema.optional().describe(
     'Side offset distance in user units. Defaults to the same distance as Path step labels.',
   ),
 }).describe(
-  'Geometry label spec attached to a path-like host; compiled as one text block positioned from a centerline sample.',
+  'Path label spec attached to a path-like host; compiled as one text block positioned from a centerline sample.',
 );
 
-/** 复用几何标签规则，校验路径步骤附属标签 */
-export const StepLabelSchema = GeometryLabelSchema;
+/** 复用路径标签规则，校验路径步骤附属标签 */
+export const StepLabelSchema = PathLabelSchema;
 
 /** 校验只移动路径游标、不绘制线段的动作 */
 export const MoveStepSchema = strictObject({

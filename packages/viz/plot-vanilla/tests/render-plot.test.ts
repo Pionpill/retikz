@@ -33,8 +33,8 @@ const spec: IRPlot = {
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [
-    { type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
-    { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+    { type: 'path', encodings: { order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
+    { type: 'point', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
   ],
 };
 
@@ -126,8 +126,8 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       marks: [
         {
           type: 'point',
-          placement: { adjustments: [{ kind: 'screen-shift', dx: 9 }] },
-          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
+          properties: { placement: { adjustments: [{ kind: 'screen-shift', dx: 9 }] } },
         },
       ],
     };
@@ -164,7 +164,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         {
           type: 'point',
           id: 'points',
-          encoding: { x: { field: 'x' }, y: { field: 'y' }, color: { field: 'series', scale: 'color' } },
+          encodings: { color: { field: 'series', scale: 'color' }, position: { x: { field: 'x' }, y: { field: 'y' } } },
         },
       ],
       guides: [
@@ -204,12 +204,11 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         {
           type: 'path',
           id: 'lines',
-          series: 'city',
-          order: 'month',
-          encoding: {
-            x: { field: 'month' },
-            y: { field: 'score' },
+          encodings: {
+            series: 'city',
+            order: 'month',
             color: { field: 'city', scale: 'color' },
+            position: { x: { field: 'month' }, y: { field: 'score' } },
           },
         },
       ],
@@ -294,7 +293,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
     };
 
     expect(renderPlot(barSpec, data, { layout: { width: 480, height: 300 } })).toMatch(/<rect/);
@@ -345,7 +344,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       data: { reference: 'samples' },
       scales: [{ type: 'linear', name: 'x' }],
       coordinate: { type: 'cartesian1D', x: 'x' },
-      marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'v' } } } }],
     };
     const svg = renderPlot(rugSpec, samples, { layout: { width: 480, height: 120 } });
 
@@ -360,7 +359,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       data: { reference: 'hours' },
       scales: [{ type: 'linear', name: 'a' }],
       coordinate: { type: 'polar1D', angle: 'a', radius: 1, startAngle: 0, endAngle: 360 },
-      marks: [{ type: 'point', encoding: { x: { field: 'h' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'h' } } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
     };
     const svg = renderPlot(
@@ -402,8 +401,8 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       marks: [
         {
           type: 'interval',
-          bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
-          encoding: { x: { field: 'rk' }, y: { field: 'ck' }, color: { field: 'v', scale: 'heat' } },
+          encodings: { color: { field: 'v', scale: 'heat' }, position: { x: { field: 'rk' }, y: { field: 'ck' } } },
+          properties: { bounds: { x: { kind: 'band' }, y: { kind: 'band' } } },
         },
       ],
     };
@@ -436,8 +435,8 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       marks: [
         {
           type: 'interval',
-          bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
-          encoding: { x: { field: 'day' }, y: { field: 'hour' } },
+          encodings: { position: { x: { field: 'day' }, y: { field: 'hour' } } },
+          properties: { bounds: { x: { kind: 'band' }, y: { kind: 'band' } } },
         },
       ],
     };
@@ -459,8 +458,8 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       marks: [
         {
           type: 'interval',
-          label: { content: { field: 'revenue', displayFormat: ',.0f' }, position: 'top', distance: 6 },
-          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+          encodings: { label: { content: 'revenue' }, position: { x: { field: 'month' }, y: { field: 'revenue' } } },
+          properties: { label: { displayFormat: ',.0f', position: 'top', distance: 6 } },
         },
       ],
     };
@@ -484,7 +483,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label' } } }],
+      marks: [{ type: 'point', encodings: { text: 'label', position: { x: { field: 'px' }, y: { field: 'py' } } } }],
     };
     const labels: ExternalDatasets = {
       labels: [
@@ -539,7 +538,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'total' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'region' }, y: { field: 'total' } } } }],
     };
 
     // 聚合柱（band 矩形 Node）→ <rect>；两组（N/S）两根柱
@@ -569,7 +568,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'dose' }, y: { field: 'response' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'dose' }, y: { field: 'response' } } } }],
     };
     const a = renderPlot(jitterSpec, scatterPts, { layout: { width: 480, height: 300 } });
     const b = renderPlot(jitterSpec, scatterPts, { layout: { width: 480, height: 300 } });

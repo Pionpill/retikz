@@ -12,7 +12,7 @@ import type {
   MarkLoweringContext,
   MarkProvenance,
 } from '../../../contract';
-import { seriesPathMeta, slug } from '../../../contract';
+import { seriesPathMeta, slug, channelField } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import type { IRPlotMark, IRPlotPathClosure, IRPlotPathMark } from '../../../schemas';
 import {
@@ -22,15 +22,14 @@ import {
   BuiltinPlotMark,
   PlotPathConnectNullsStyleSchema,
 } from '../../../schemas';
-import { channelValue } from '../../channel/shared';
 import type { PolarVertex } from '../../coordinate';
 import {
   densifyPolarSegments,
   isCartesianCoordinateFrame,
   isGenericCoordinateFrame,
   isPolarCoordinateFrame,
-  toPolarVertex,
 } from '../../coordinate';
+import { pointsToSteps } from '../shared';
 import type { MarkPaint } from '../shared';
 import {
   applyPathChannelDeliveries,
@@ -45,29 +44,20 @@ import {
   pathChannelKinds,
   resolveGeometryMarkLabels,
   roleAnchor,
+  roleValue,
+  mapMarkRoles,
+  mappedRoleValue,
 } from '../shared';
+import { lowerPathEndpoints } from './path-endpoints';
 
 /**
  * 取一行的位置通道值 → [xValue, yValue]（坐标系无关；投影交给 frame.project，frame 把 x/y 重解释为对应角色）
  * @description x/y 是唯一位置通道（坐标系决定其含义）
  */
 export const resolveRolePosition = (mark: IRPlotPathMark, row: ExternalRow): [unknown, unknown] => [
-  channelValue(mark.encoding.x, row),
-  channelValue(mark.encoding.y, row),
+  roleValue(mark, 'x', row),
+  roleValue(mark, 'y', row),
 ];
-
-/** 把若干屏幕点连成 move + line steps（按需尾部加 cycle 闭合）；点数 < 2 返回 null */
-export const pointsToSteps = (points: ReadonlyArray<[number, number]>, closed: boolean): Array<IRStep> | null => {
-  if (points.length < 2) return null;
-
-  const steps: Array<IRStep> = [
-    { type: 'step', kind: 'move', to: points[0] },
-    ...points.slice(1).map((point): IRStep => ({ type: 'step', kind: 'line', to: point })),
-  ];
-  if (closed) steps.push({ type: 'step', kind: 'cycle' });
-
-  return steps;
-};
 
 // PathMark 的 curve 是图表层连接方式；这里统一下沉为 core Path 已支持的 step 序列
 const cubicStep = (
@@ -345,28 +335,17 @@ export const buildOutlinePoints = (
   frame: CoordinateFrame,
   closed: boolean,
 ): Array<[number, number]> => {
-  if (isPolarCoordinateFrame(frame) && (mark.interpolation ?? frame.interpolation) === 'polar') {
+  if (isPolarCoordinateFrame(frame) && (mark.properties?.interpolation ?? frame.interpolation) === 'polar') {
     const vertices = ordered
       .map(row => {
-        const [primaryValue, secondaryValue] = resolveRolePosition(mark, row);
-        return toPolarVertex(frame, primaryValue, secondaryValue);
+        const mapped = mapMarkRoles(mark, resolveRolePosition(mark, row), frame);
+        return mapped === null ? null : { theta: mapped[0], radius: mapped[1] };
       })
       .filter((vertex): vertex is PolarVertex => vertex !== null);
     return densifyPolarSegments(frame, vertices, { closed });
   }
 
-  if (isGenericCoordinateFrame(frame)) {
-    return ordered
-      .map(row => roleAnchor(mark, row, frame))
-      .filter((point): point is [number, number] => point !== null);
-  }
-
-  return ordered
-    .map(row => {
-      const [primaryValue, secondaryValue] = resolveRolePosition(mark, row);
-      return frame.project(primaryValue, secondaryValue);
-    })
-    .filter((point): point is [number, number] => point !== null);
+  return ordered.map(row => roleAnchor(mark, row, frame)).filter((point): point is [number, number] => point !== null);
 };
 
 const ZERO_BASELINE = 0;
@@ -386,19 +365,32 @@ const pathDefaultBaseline = (frame: CoordinateFrame): number => {
   return Math.abs(min - ZERO_BASELINE) <= Math.abs(max - ZERO_BASELINE) ? min : max;
 };
 
-const pathClosureOf = (mark: IRPlotPathMark): IRPlotPathClosure | undefined => mark.closure;
+const pathClosureOf = (mark: IRPlotPathMark): IRPlotPathClosure | undefined => mark.properties?.closure;
 
 type PathRowSegment = Array<ExternalRow>;
 
 type PathStepSegment = { rows: PathRowSegment; steps: Array<IRStep>; bridgesNulls?: boolean };
 
-const projectableTopPoint = (mark: IRPlotPathMark, row: ExternalRow, frame: CoordinateFrame): boolean => {
-  if (isGenericCoordinateFrame(frame)) return roleAnchor(mark, row, frame) !== null;
+const projectableTopPoint = (mark: IRPlotPathMark, row: ExternalRow, frame: CoordinateFrame): boolean =>
+  roleAnchor(mark, row, frame) !== null;
 
-  const [primaryValue, secondaryValue] = resolveRolePosition(mark, row);
-  if (isPolarCoordinateFrame(frame)) return toPolarVertex(frame, primaryValue, secondaryValue) !== null;
+/** 闭合基线仅替换次轴，主轴仍使用相同的字段或最终边缘映射 */
+const projectBaselinePoint = (
+  mark: IRPlotPathMark,
+  row: ExternalRow,
+  frame: CoordinateFrame,
+  baseline: unknown,
+): [number, number] | null => {
+  if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) return null;
+  const mapped = [mappedRoleValue(mark, 'x', row, frame.primary), frame.secondary.coordinate(baseline)];
+  return mapped.every(Number.isFinite) ? frame.projectMappedRoles(mapped) : null;
+};
 
-  return frame.project(primaryValue, secondaryValue) !== null;
+/** 读取堆叠闭合所需的逐行基线字段 */
+export const pathBaselineField = (mark: IRPlotPathMark): string => {
+  const field = mark.encodings.closure?.baseline;
+  if (field === undefined) throw new RetikzPlotError('Stack path closure requires encodings.closure.baseline');
+  return field;
 };
 
 const projectableClosurePoint = (
@@ -409,11 +401,10 @@ const projectableClosurePoint = (
 ): boolean => {
   if (!projectableTopPoint(mark, row, frame)) return false;
 
-  const [primaryValue] = resolveRolePosition(mark, row);
   if (closure.kind === PathClosureKind.Baseline)
-    return frame.project(primaryValue, closure.baseline ?? pathDefaultBaseline(frame)) !== null;
+    return projectBaselinePoint(mark, row, frame, closure.baseline ?? pathDefaultBaseline(frame)) !== null;
   if (closure.kind === PathClosureKind.Stack)
-    return frame.project(primaryValue, resolveFieldPath(row, closure.baselineField)) !== null;
+    return projectBaselinePoint(mark, row, frame, resolveFieldPath(row, pathBaselineField(mark))) !== null;
 
   return true;
 };
@@ -451,8 +442,8 @@ const pathRowSegments = (
   frame: CoordinateFrame,
   closure: IRPlotPathClosure | undefined,
 ): Array<PathRowSegment> => {
-  const ordered = orderRows(rows, mark.order);
-  const connectNulls = mark.connectNulls !== undefined && mark.connectNulls !== false;
+  const ordered = orderRows(rows, mark.encodings.order);
+  const connectNulls = mark.properties?.connectNulls !== undefined && mark.properties.connectNulls !== false;
   const projectable = (row: ExternalRow): boolean =>
     closure === undefined ? projectableTopPoint(mark, row, frame) : projectableClosurePoint(mark, row, frame, closure);
 
@@ -466,10 +457,7 @@ const buildConstantBaselinePoints = (
   baseline: number,
 ): Array<[number, number]> =>
   ordered
-    .map(row => {
-      const [primaryValue] = resolveRolePosition(mark, row);
-      return frame.project(primaryValue, baseline);
-    })
+    .map(row => projectBaselinePoint(mark, row, frame, baseline))
     .filter((point): point is [number, number] => point !== null)
     .reverse();
 
@@ -480,10 +468,7 @@ const buildStackBaselinePoints = (
   baselineField: string,
 ): Array<[number, number]> =>
   ordered
-    .map(row => {
-      const [primaryValue] = resolveRolePosition(mark, row);
-      return frame.project(primaryValue, resolveFieldPath(row, baselineField));
-    })
+    .map(row => projectBaselinePoint(mark, row, frame, resolveFieldPath(row, baselineField)))
     .filter((point): point is [number, number] => point !== null)
     .reverse();
 
@@ -498,7 +483,7 @@ const buildClosureReturnPoints = (
   }
 
   if (closure.kind === PathClosureKind.Stack) {
-    return buildStackBaselinePoints(mark, ordered, frame, closure.baselineField);
+    return buildStackBaselinePoints(mark, ordered, frame, pathBaselineField(mark));
   }
 
   return [];
@@ -510,10 +495,10 @@ const buildLineStepSegments = (
   frame: CoordinateFrame,
   closed: boolean,
 ): Array<PathStepSegment> => {
-  const connectNulls = mark.connectNulls !== undefined && mark.connectNulls !== false;
+  const connectNulls = mark.properties?.connectNulls !== undefined && mark.properties.connectNulls !== false;
   if (!closed && connectNulls) {
     const runs = splitRowsByProjectability(
-      orderRows(rows, mark.order),
+      orderRows(rows, mark.encodings.order),
       row => projectableTopPoint(mark, row, frame),
       false,
     );
@@ -526,7 +511,7 @@ const buildLineStepSegments = (
         const steps = pointsToCurveSteps(
           buildOutlinePoints(mark, bridgeRows, frame, false),
           false,
-          effectivePathCurve(mark.curve, frame),
+          effectivePathCurve(mark.properties?.curve, frame),
         );
         if (steps !== null) segments.push({ rows: bridgeRows, steps, bridgesNulls: true });
       }
@@ -534,7 +519,7 @@ const buildLineStepSegments = (
       const steps = pointsToCurveSteps(
         buildOutlinePoints(mark, run, frame, false),
         false,
-        effectivePathCurve(mark.curve, frame),
+        effectivePathCurve(mark.properties?.curve, frame),
       );
       if (steps !== null) segments.push({ rows: run, steps });
     }
@@ -546,7 +531,7 @@ const buildLineStepSegments = (
     const steps = pointsToCurveSteps(
       buildOutlinePoints(mark, segmentRows, frame, closed),
       closed,
-      effectivePathCurve(mark.curve, frame),
+      effectivePathCurve(mark.properties?.curve, frame),
     );
     return steps === null ? [] : [{ rows: segmentRows, steps }];
   });
@@ -557,7 +542,8 @@ const defaultNullConnectionStyle = PlotPathConnectNullsStyleSchema.parse({});
 /** 通道描边生效后，仅覆盖跨缺值连接段 */
 const applyNullConnectionStyle = (path: IRPath, segment: PathStepSegment, mark: IRPlotPathMark): IRPath => {
   if (!segment.bridgesNulls) return path;
-  const overrides = typeof mark.connectNulls === 'object' ? mark.connectNulls : defaultNullConnectionStyle;
+  const overrides =
+    typeof mark.properties?.connectNulls === 'object' ? mark.properties.connectNulls : defaultNullConnectionStyle;
   const { strokeOpacity, ...styleOverrides } = { ...defaultNullConnectionStyle, ...overrides };
   return {
     ...path,
@@ -589,7 +575,7 @@ const buildClosureStepSegment = (
     const steps = pointsToCurveSteps(
       buildOutlinePoints(mark, segmentRows, frame, true),
       true,
-      effectivePathCurve(mark.curve, frame),
+      effectivePathCurve(mark.properties?.curve, frame),
     );
     return steps === null ? null : { rows: segmentRows, steps };
   }
@@ -600,7 +586,7 @@ const buildClosureStepSegment = (
 
   const topLoop = closed ? [...top, top[0]] : top;
   const bottomLoop = closed ? [bottom[bottom.length - 1], ...bottom] : bottom;
-  const curve = effectivePathCurve(mark.curve, frame);
+  const curve = effectivePathCurve(mark.properties?.curve, frame);
   const topSteps = pointsToCurveSteps(topLoop, false, curve);
   const bottomSteps = returnCurveSteps(bottomLoop, curve);
   if (!topSteps || !bottomSteps) return null;
@@ -630,7 +616,7 @@ export type SeriesPathBuilder = (seriesRows: Array<ExternalRow>) => Array<PathSt
 type IRPathChild = IRPath;
 
 const pathMarkOptions = (mark: IRPlotPathMark): Partial<Pick<IRPath, 'marks'>> =>
-  mark.marks === undefined ? {} : { marks: mark.marks };
+  mark.properties?.marks === undefined ? {} : { marks: mark.properties.marks };
 
 /** 按 series 分组并构造独立 scope owner */
 export const buildSeriesPathScopes = (
@@ -667,7 +653,13 @@ export const buildSeriesPathScopes = (
     for (let index = 0; index < segments.length; index += 1) {
       const segment = segments[index];
       const row = segment.rows[0] ?? {};
-      const label = resolveGeometryMarkLabels(mark.label, row, channelValueOf<IRNodeLabel['text']>(channels, 'label'));
+      const label = resolveGeometryMarkLabels(
+        mark.properties?.label,
+        row,
+        channelValueOf<IRNodeLabel['text']>(channels, 'label'),
+        mark.encodings.label,
+        channels,
+      );
       const path: IRPathChild = applyPathChannelDeliveries(
         {
           type: 'path',
@@ -708,9 +700,9 @@ export const markPaintOf = (
   rows: Array<ExternalRow>,
   fallback?: MarkPaint,
 ): MarkPaint | undefined => {
-  const value = (mark as { fill?: { kind: string }; stroke?: { kind: string } })[channel];
-  const resolver = value?.kind === 'field' ? channelValueOf<MarkPaint>(channels, channel) : undefined;
-  return resolver?.(rows[0] ?? {}) ?? channelDefaultOf<MarkPaint>(channels, channel) ?? fallback;
+  const resolver = channelValueOf<MarkPaint>(channels, channel);
+  if (resolver !== undefined) return resolver(rows[0] ?? {});
+  return channelDefaultOf<MarkPaint>(channels, channel) ?? fallback;
 };
 
 /**
@@ -738,16 +730,17 @@ const assertColorConstantWithinSeries = (rows: Array<ExternalRow>, seriesField: 
 
 /**
  * path mark（path）的有效 series 字段
- * @description 显式 mark.series 优先；无显式 series 但有 categorical color 字段 → 隐式按 color 拆系列。
+ * @description 显式 mark.encodings.series 优先；无显式 series 但有 categorical color 字段 → 隐式按 color 拆系列。
  *   显式 series 与 color 字段并存且 color 在 series 内不恒定 → fail-loud
  */
 export const pathSeriesField = (mark: IRPlotMark, rows: Array<ExternalRow>): string | undefined => {
   if (mark.type !== BuiltinPlotMark.Path) return undefined;
 
-  const colorField = mark.encoding.color?.field;
-  if (mark.series) {
-    if (colorField && colorField !== mark.series) assertColorConstantWithinSeries(rows, mark.series, colorField);
-    return mark.series;
+  const colorField = mark.encodings.color === undefined ? undefined : channelField(mark.encodings.color);
+  if (mark.encodings.series) {
+    if (colorField && colorField !== mark.encodings.series)
+      assertColorConstantWithinSeries(rows, mark.encodings.series, colorField);
+    return mark.encodings.series;
   }
 
   return colorField;
@@ -764,12 +757,12 @@ const lowerPath = (
   markProvenance: MarkProvenance | undefined,
 ): IRScope | null => {
   if (mark.type !== BuiltinPlotMark.Path) return null;
-  if (mark.interpolation !== undefined && !isPolarCoordinateFrame(frame)) {
+  if (mark.properties?.interpolation !== undefined && !isPolarCoordinateFrame(frame)) {
     throw new RetikzPlotError('lowerPlots: path interpolation override is only supported under polar2D');
   }
 
   const closure = pathClosureOf(mark);
-  const closed = mark.closed ?? isPolarCoordinateFrame(frame);
+  const closed = mark.properties?.closed ?? isPolarCoordinateFrame(frame);
   const seriesField = pathSeriesField(mark, rows);
   const defaultStroke = markPaintOf(mark, channels, 'stroke', rows, defaultColor ?? DEFAULT_FILL) ?? DEFAULT_FILL;
   const defaultFill = markPaintOf(mark, channels, 'fill', rows, undefined);
@@ -779,7 +772,7 @@ const lowerPath = (
       return fill !== undefined && fill !== 'none';
     }) ||
     (defaultFill !== undefined && defaultFill !== 'none');
-  if (typeof mark.connectNulls === 'object' && (closed || closure !== undefined || filled)) {
+  if (typeof mark.properties?.connectNulls === 'object' && (closed || closure !== undefined || filled)) {
     throw new RetikzPlotError('lowerPlots: connectNulls stroke configuration requires an open unfilled path');
   }
 
@@ -789,7 +782,7 @@ const lowerPath = (
           const steps = pointsToCurveSteps(
             buildOutlinePoints(mark, run, frame, false),
             false,
-            effectivePathCurve(mark.curve, frame),
+            effectivePathCurve(mark.properties?.curve, frame),
           );
           return steps === null ? [] : [{ rows: run, steps }];
         })
@@ -828,20 +821,36 @@ const lowerPath = (
   const segments = closure ? buildClosureStepSegments(mark, rows, frame, closure, closed) : lineSegments(rows);
   if (segments.length === 0) return null;
 
-  const colorValue = mark.encoding.color?.value;
-  const stroke = colorValue !== undefined ? String(colorValue) : defaultStroke;
+  const stroke = defaultStroke;
 
   return {
     type: 'scope',
     children: segments.map(segment => {
       const row = segment.rows[0] ?? {};
-      const label = resolveGeometryMarkLabels(mark.label, row, channelValueOf<IRNodeLabel['text']>(channels, 'label'));
+      const fill = markPaintOf(mark, channels, 'fill', segment.rows);
+      const label = resolveGeometryMarkLabels(
+        mark.properties?.label,
+        row,
+        channelValueOf<IRNodeLabel['text']>(channels, 'label'),
+        mark.encodings.label,
+        channels,
+      );
 
       return applyNullConnectionStyle(
         applyPathChannelDeliveries(
           {
             type: 'path',
             ...pathMarkOptions(mark),
+            style: {
+              ...(fill === undefined ? {} : { fill }),
+              stroke: markPaintOf(
+                mark,
+                channels,
+                'stroke',
+                segment.rows,
+                colorOf?.(row) ?? defaultColor ?? DEFAULT_FILL,
+              ),
+            },
             ...(label !== undefined ? { label } : {}),
             children: segment.steps,
           },
@@ -872,10 +881,11 @@ const pathAnchorCoordinates = (
   frame: CoordinateFrame,
   ctx: MarkLoweringContext | undefined,
 ): Array<IRCoordinate> => {
-  if (mark.anchorId === undefined || ctx?.anchors === undefined) return [];
+  if ((mark.properties?.anchorId === undefined && mark.encodings.anchorId === undefined) || ctx?.anchors === undefined)
+    return [];
 
   const coordinates: Array<IRCoordinate> = [];
-  const ordered = orderRows(rows, mark.order);
+  const ordered = orderRows(rows, mark.encodings.order);
 
   for (let transformedIndex = 0; transformedIndex < ordered.length; transformedIndex += 1) {
     const row = ordered[transformedIndex];
@@ -883,12 +893,18 @@ const pathAnchorCoordinates = (
     if (position === null) continue;
 
     const owner = {
+      kind: 'row' as const,
       markType: mark.type,
       markId: mark.id,
       markIndex: ctx.markIndex,
       transformedIndex,
     };
-    const id = ctx.anchors.makeId(mark.anchorId, row, owner);
+    const id = ctx.anchors.makeId(
+      mark.properties?.anchorId ?? {},
+      { kind: 'row', row, transformedIndex },
+      owner,
+      mark.encodings.anchorId,
+    );
     coordinates.push(ctx.anchors.coordinate(id, position, owner));
   }
 
@@ -906,8 +922,8 @@ export const lowerPathLayer = (
   const supportsGenericOpenPath =
     isGenericCoordinateFrame(frame) &&
     mark.type === BuiltinPlotMark.Path &&
-    mark.closure === undefined &&
-    mark.closed !== true;
+    mark.properties?.closure === undefined &&
+    mark.properties?.closed !== true;
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame) && !supportsGenericOpenPath) {
     throw new RetikzPlotError(failLoudMessage(mark.type, frame.type));
   }
@@ -932,20 +948,25 @@ export const lowerPathLayer = (
 /** 收集 path mark 独有字段：连接顺序与 series 拆分 */
 const collectPathMarkChannelFields = (mark: IRPlotPathMark, fields: FieldCollector): void => {
   fields.addFields(
-    mark.order,
-    mark.series,
-    mark.closure?.kind === PathClosureKind.Stack ? mark.closure.baselineField : undefined,
+    mark.encodings.order,
+    mark.encodings.series,
+    mark.properties?.closure?.kind === PathClosureKind.Stack ? mark.encodings.closure?.baseline : undefined,
   );
 };
 
 /** 内置 path mark definition */
 export const pathMarkDefinition: MarkDefinition<IRPlotPathMark> = {
   schema: PathMarkSchema,
+  labelHost: 'geometry',
   channelKinds: pathChannelKinds,
   collectFields: (mark, fields: FieldCollector) => {
     collectCommonEncodingFields(mark, fields);
     collectPathChannelFields(mark, fields);
     collectPathMarkChannelFields(mark, fields);
   },
-  lower: lowerPathLayer,
+  lower: (mark, input, frame, channels, context) => {
+    if (mark.encodings.from !== undefined) return lowerPathEndpoints(mark, input, frame, channels, context);
+    if (input.kind === 'single') return null;
+    return lowerPathLayer(mark, input.rows, frame, channels, context);
+  },
 };

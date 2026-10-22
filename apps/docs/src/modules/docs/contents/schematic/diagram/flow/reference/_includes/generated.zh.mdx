@@ -566,7 +566,7 @@ export type FlowLayoutProps = FlowLayoutMarkerProps &
 | `direction?`           | `"none" \| "reverse" \| "both" \| "forward"`                                                                                                                                          | —      | 覆盖 Graph role 的语义箭头方向                                            |
 | `group?`               | `string`                                                                                                                                                                              | —      | 与 Entity 共享分类色的分组 key                                            |
 | `kind?`                | `string`                                                                                                                                                                              | —      | 当前 role 下的稳定子类型                                                  |
-| `label?`               | `InputFlowRelation['label']`                                                                                                                                                          | —      | 非空 TextBlock，或保留 Core 全部几何与外观字段的 GeometryLabel            |
+| `label?`               | `InputFlowRelation['label']`                                                                                                                                                          | —      | 非空 TextBlock，或保留 Core 全部几何与外观字段的 PathLabel                |
 | `labelFont?`           | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }` | —      | 标签字体                                                                  |
 | `labelOpacity?`        | `number`                                                                                                                                                                              | —      | 标签不透明度                                                              |
 | `labelTextForeground?` | `string \| number`                                                                                                                                                                    | —      | 标签文字颜色                                                              |
@@ -1416,7 +1416,7 @@ export type FlowEndpointTarget = ZodInfer<typeof FlowEndpointTargetSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlowLayoutEndpoint"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={367}>FlowLayoutEndpoint</ApiSourceLink>
+#### <ApiSourceLink label={"FlowLayoutEndpoint"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={369}>FlowLayoutEndpoint</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1450,7 +1450,7 @@ export type FlowLayoutEndpoint = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlowLayoutExecutionContext"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={323}>FlowLayoutExecutionContext</ApiSourceLink>
+#### <ApiSourceLink label={"FlowLayoutExecutionContext"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={325}>FlowLayoutExecutionContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1512,14 +1512,14 @@ export type FlowLayoutExecutionContext = Readonly<{
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type FlowLayoutLabelPlacement = Readonly<Omit<IRGeometryLabel, 'text' | 'textColor' | 'font' | 'opacity'>>;
+export type FlowLayoutLabelPlacement = Readonly<Omit<IRPathLabel, 'text' | 'textColor' | 'font' | 'opacity'>>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlowLayoutRelationInput"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={379}>FlowLayoutRelationInput</ApiSourceLink>
+#### <ApiSourceLink label={"FlowLayoutRelationInput"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={381}>FlowLayoutRelationInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1557,7 +1557,7 @@ export type FlowLayoutRelationInput = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlowLayoutRelationOutput"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={413}>FlowLayoutRelationOutput</ApiSourceLink>
+#### <ApiSourceLink label={"FlowLayoutRelationOutput"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={415}>FlowLayoutRelationOutput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1770,7 +1770,7 @@ export type FlowLayoutRouting =
     }>;
 ```
 
-#### <ApiSourceLink label={"FlowRoutePointsQuery"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={355}>FlowRoutePointsQuery</ApiSourceLink>
+#### <ApiSourceLink label={"FlowRoutePointsQuery"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={357}>FlowRoutePointsQuery</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1850,7 +1850,7 @@ export type FlowRoutingCapability =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlowSmoothRoute"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={345}>FlowSmoothRoute</ApiSourceLink>
+#### <ApiSourceLink label={"FlowSmoothRoute"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={347}>FlowSmoothRoute</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1882,7 +1882,7 @@ export type FlowSmoothRoute = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlowSmoothRouting"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={335}>FlowSmoothRouting</ApiSourceLink>
+#### <ApiSourceLink label={"FlowSmoothRouting"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={337}>FlowSmoothRouting</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2021,7 +2021,7 @@ export type FlowDiagramDefinitionOptions = DiagramDefinitionOptions &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlowLayoutDefinition"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={459}>FlowLayoutDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"FlowLayoutDefinition"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={461}>FlowLayoutDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2191,7 +2191,7 @@ export type IRFlowEndpoint = ZodInfer<typeof FlowEndpointSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlowDiagramSchema"} path={"packages/schematic/diagram/src/flow/schemas/flow/schema.ts"} startLine={546}>FlowDiagramSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FlowDiagramSchema"} path={"packages/schematic/diagram/src/flow/schemas/flow/schema.ts"} startLine={551}>FlowDiagramSchema</ApiSourceLink>
 
 <ZodSchema
   name="FlowDiagramSchema"
@@ -2267,7 +2267,7 @@ export type IRFlowEndpoint = ZodInfer<typeof FlowEndpointSchema>;
   }}
 />
 
-#### <ApiSourceLink label={"FlowLayoutSchema"} path={"packages/schematic/diagram/src/flow/schemas/flow/schema.ts"} startLine={423}>FlowLayoutSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FlowLayoutSchema"} path={"packages/schematic/diagram/src/flow/schemas/flow/schema.ts"} startLine={428}>FlowLayoutSchema</ApiSourceLink>
 
 纵向 linear 布局按直接子容器的最大自然宽度分配空间；子容器为横向行或只有一个横向内容根的 Group。 数值固定直接 Entity 宽度；match-largest 令其最终等宽；fill 在有父级分配的横向行内均分剩余空间，保留自然宽度差异。
 
@@ -2303,7 +2303,7 @@ export type IRFlowEndpoint = ZodInfer<typeof FlowEndpointSchema>;
   }}
 />
 
-#### <ApiSourceLink label={"FlowRelationSchema"} path={"packages/schematic/diagram/src/flow/schemas/flow/schema.ts"} startLine={525}>FlowRelationSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FlowRelationSchema"} path={"packages/schematic/diagram/src/flow/schemas/flow/schema.ts"} startLine={530}>FlowRelationSchema</ApiSourceLink>
 
 <ZodSchema
   name="FlowRelationSchema"
@@ -2312,7 +2312,7 @@ export type IRFlowEndpoint = ZodInfer<typeof FlowEndpointSchema>;
   descriptions={{
     source: '起点 Entity 或 Group：id 字符串或含 id、side / anchor、overlap 的端点对象',
     target: '终点 Entity 或 Group：id 字符串或含 id、side / anchor、overlap 的端点对象',
-    label: '非空 TextBlock，或保留 Core 全部几何与外观字段的 GeometryLabel',
+    label: '非空 TextBlock，或保留 Core 全部几何与外观字段的 PathLabel',
     role: 'Graph Relation 的开放角色，省略使用 flow',
     kind: '当前 role 下的稳定子类型',
     status: 'Graph 语义状态',

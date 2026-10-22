@@ -28,7 +28,7 @@ const recipe = defineChartRecipe({
       definition: defineChartMark({
         kind: 'annotation',
         schema: strictObject({ kind: literal('annotation') }),
-        resolve: () => ({ marks: [{ type: 'point', id: 'annotation', encoding: {} }] }),
+        resolve: () => ({ marks: [{ type: 'point', id: 'annotation', kind: 'data' }] }),
       }),
       inherit: {},
     },
@@ -46,7 +46,7 @@ const recipe = defineChartRecipe({
       spatial: { coordinate: { type: 'cartesian2D' }, replaceable: true },
       guides: { value: [], replaceable: true },
     },
-    semanticMarks: [{ kind: 'demo', plotMarks: [{ type: 'point', id: 'semantic', encoding: {} }] }],
+    semanticMarks: [{ kind: 'demo', plotMarks: [{ type: 'point', id: 'semantic', kind: 'data' }] }],
   }),
 });
 

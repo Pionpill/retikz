@@ -3,7 +3,7 @@ import type { ZodType } from 'zod';
 
 import type {
   IRBoundaryLabel,
-  IRGeometryLabel,
+  IRPathLabel,
   IRLine,
   IRMathRun,
   IRPathBase,
@@ -93,14 +93,11 @@ type PathKindLabelTextLine =
 type PathKindLabelText = PathKindLabelTextLine | Array<PathKindLabelTextLine>;
 
 /** Path kind 请求宿主标签编译时提供的已定位几何信息，不包含 Stroke 专属 interruption */
-export type PathKindLabel = Omit<
-  IRGeometryLabel,
-  'position' | 'side' | 'distance' | 'textColor' | 'text' | 'interrupt'
-> & {
+export type PathKindLabel = Omit<IRPathLabel, 'position' | 'side' | 'distance' | 'textColor' | 'text' | 'interrupt'> & {
   /** 标签在宿主路径上的归一化位置 */
   position: number;
   /** 标签相对路径的放置侧，center 表示居中 */
-  side: NonNullable<IRGeometryLabel['side']> | 'center';
+  side: NonNullable<IRPathLabel['side']> | 'center';
   /** 标签相对宿主边界的间距 */
   distance: number;
   /** 已解析为颜色字符串的可选文字色 */

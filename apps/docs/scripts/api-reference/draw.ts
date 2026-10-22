@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
-import { geometryLabelSchemaDescriptions, pathSchemaDescriptions } from '../schema-reference/path';
+import { pathLabelSchemaDescriptions, pathSchemaDescriptions } from '../schema-reference/path';
 import { translateDrawApiReference } from './draw.en';
 import { writeReferenceFile } from './merged-reference';
 import type { ApiReferenceLanguage, ApiReferencePackageConfig } from './tex';
@@ -50,7 +50,7 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
     ],
     translate: translateDrawApiReference,
     schemaLocalizations: {
-      GeometryLabelSchema: { descriptions: geometryLabelSchemaDescriptions },
+      PathLabelSchema: { descriptions: pathLabelSchemaDescriptions },
       PathBaseSchema: { descriptions: pathSchemaDescriptions },
     },
   },
@@ -69,7 +69,7 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
     ],
     translate: translateDrawApiReference,
     schemaLocalizations: {
-      GeometryLabelSchema: { descriptions: geometryLabelSchemaDescriptions },
+      PathLabelSchema: { descriptions: pathLabelSchemaDescriptions },
       PathBaseSchema: { descriptions: pathSchemaDescriptions },
     },
   },
@@ -89,9 +89,9 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
         },
         symbols: [
           'samplePathRoute',
-          'resolveGeometryLabelPlacement',
-          'GeometryLabelGeometryOptions',
-          'CanonicalGeometryLabelPlacement',
+          'resolvePathLabelPlacement',
+          'PathLabelGeometryOptions',
+          'CanonicalPathLabelPlacement',
           'DrawWay',
           'WayDSL',
           'WayItem',
@@ -111,7 +111,7 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
     ],
     translate: translateDrawApiReference,
     schemaLocalizations: {
-      GeometryLabelSchema: { descriptions: geometryLabelSchemaDescriptions },
+      PathLabelSchema: { descriptions: pathLabelSchemaDescriptions },
       PathBaseSchema: { descriptions: pathSchemaDescriptions },
     },
   },

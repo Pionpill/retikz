@@ -15,16 +15,19 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Plot data={weeklyPipeline} width={620} height={280}>
-      <PointMark x="day" y="value" color="channel" opacity={0.45} minimumSize={6} />
+      <PointMark
+        encodings={{ color: 'channel', position: { x: { field: 'day' }, y: { field: 'value' } } }}
+        properties={{ opacity: { overall: 0.45 }, minimumSize: 6 }}
+      />
       <PathMark
-        x="trendX"
-        y="trendY"
-        order="trendX"
-        series={groupByChannel ? 'channel' : undefined}
-        color={groupByChannel ? 'channel' : undefined}
-        stroke={groupByChannel ? undefined : '#0f172a'}
-        strokeWidth={2.5}
-        transform={[{ operation: lineTransformOperationOf(values) }]}
+        transforms={[{ operation: lineTransformOperationOf(values) }]}
+        encodings={{
+          order: 'trendX',
+          ...(groupByChannel ? { series: 'channel' } : {}),
+          ...(groupByChannel ? { color: 'channel' } : {}),
+          position: { x: { field: 'trendX' }, y: { field: 'trendY' } },
+        }}
+        properties={{ stroke: groupByChannel ? undefined : '#0f172a', strokeWidth: 2.5 }}
       />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />

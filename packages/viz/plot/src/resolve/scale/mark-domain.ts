@@ -13,7 +13,7 @@ import type { IRPlotMarkDomainPadding, IRPlotScaleOperation, IRPlotMarkOperation
 import { resolveMarkChannels } from '../channel';
 import type { ChannelResolveContext } from '../channel';
 import type { MarkDataView } from '../coordinate';
-import { resolveMarkOperation } from '../mark';
+import { resolveMarkOperation, resolveMarkInstances } from '../mark';
 import type { MarkPaddingResolution, MarkPaddingSample } from './mark-padding';
 import { solveMarkPadding } from './mark-padding';
 
@@ -238,7 +238,7 @@ export const createMarkPaddingContext = (
       const markChannels = resolveMarkChannels(view.mark, { ...channels, ...view.dataView });
       const result = resolved.definition.domainPadding(
         resolved.operation as never,
-        view.dataView.rows,
+        resolveMarkInstances(resolved, view.dataView.rows),
         roles,
         markChannels,
       );

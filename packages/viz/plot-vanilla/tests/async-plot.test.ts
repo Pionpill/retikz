@@ -25,7 +25,7 @@ const spec = () =>
     scales: [],
     coordinate: { type: 'cartesian2D' },
     transform: [{ operation: { kind: 'normalize', params: { field: 'y', as: 'ratio' } } }],
-    marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'ratio' } } }],
+    marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'ratio' } } } }],
   });
 
 describe('async Plot authoring', () => {

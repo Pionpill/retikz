@@ -1,51 +1,16 @@
 import type { IRPathScale } from '@retikz/core';
 import { DropShadowSchema, PathScaleSchema } from '@retikz/core';
-import type { DataTransformModel, ExternalRow } from '@retikz/data';
-import { resolveFieldPath } from '@retikz/data';
-import { DataFieldType } from '@retikz/data';
 import type { JsonValue } from '@retikz/foundation';
 import { JsonValueSchema } from '@retikz/foundation';
 import { isFiniteNumber } from '@retikz/math';
 
-import type { AnyChannelDefinition, ChannelResolution, PathChannelDefinition } from '../../../contract';
-import { definePathChannel, isBuiltinScaleOperation } from '../../../contract';
+import type { AnyChannelDefinition, PathChannelDefinition } from '../../../contract';
+import { ChannelDefinitionKind, markChannelEncoding, definePathChannel } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
-import type { IRPlotMarkOpacityStyle } from '../../../schemas';
-import type { IRPlot, IRPlotLinearScale, IRPlotMarkOperation, IRPlotPointNumberStyle } from '../../../schemas';
-import { MarkValueKind, BuiltinPlotScale } from '../../../schemas';
-import { resolveLinearScale } from '../../scale';
-import { makeMarkValueResolver } from '../shared';
+import type { IRPlotMarkOperation, IRPlotChannel } from '../../../schemas';
+import { isBuiltinMark } from '../../../schemas';
+import { makeMarkValueResolver, resolveNumericChannel } from '../shared';
 import { OPACITY_MIN, STROKE_WIDTH_MAX, STROKE_WIDTH_MIN } from './node';
-
-type NumericPathResolverOptions = {
-  range?: readonly [number, number];
-  clamp?: boolean;
-};
-
-type MarkStyleValue<T> =
-  | Extract<IRPlotPointNumberStyle, { kind: typeof MarkValueKind.Field }>
-  | (Omit<Extract<IRPlotPointNumberStyle, { kind: typeof MarkValueKind.Constant }>, 'value'> & { value: T });
-
-const isMarkStyleValue = <T>(value: unknown): value is MarkStyleValue<T> =>
-  value !== null &&
-  typeof value === 'object' &&
-  ((value as { kind?: unknown }).kind === MarkValueKind.Field ||
-    (value as { kind?: unknown }).kind === MarkValueKind.Constant) &&
-  'value' in value;
-
-const pickStyleChannel = <T>(mark: IRPlotMarkOperation, channel: string): MarkStyleValue<T> | undefined => {
-  const source = mark as Record<string, unknown>;
-  const opacity = source.opacity as IRPlotMarkOpacityStyle | undefined;
-  const value =
-    channel === 'opacity'
-      ? opacity?.overall
-      : channel === 'fillOpacity'
-        ? opacity?.fill
-        : channel === 'strokeOpacity'
-          ? opacity?.stroke
-          : source[channel];
-  return isMarkStyleValue<T>(value) ? value : undefined;
-};
 
 const jsonValue = (value: unknown): JsonValue | undefined =>
   JsonValueSchema.safeParse(value).success ? (value as JsonValue) : undefined;
@@ -72,75 +37,20 @@ const defineSimplePathChannel = <T extends JsonValue>(
     channel,
     output,
     resolve: (ctx, mark) =>
-      makeMarkValueResolver<T>(pickStyleChannel<T>(mark, channel), ctx.model, {
+      makeMarkValueResolver<T>(markChannelEncoding(mark, channel), ctx.model, {
         channelName: channel,
         parse,
       }),
     deliver,
   });
 
-const resolveNumericPathChannel = (
-  node: IRPlot,
-  rows: Array<ExternalRow>,
-  model: DataTransformModel,
-  channel: MarkStyleValue<number> | undefined,
-  channelName: string,
-  options: NumericPathResolverOptions = {},
-): ChannelResolution<number> | undefined => {
-  const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
-  if (!channel) return undefined;
+const pickPathStrokeWidth = (mark: IRPlotMarkOperation): IRPlotChannel | undefined =>
+  markChannelEncoding(mark, 'strokeWidth');
 
-  const source = makeMarkValueResolver<number>(channel, model, {
-    channelName,
-    expectedFieldType: DataFieldType.Continuous,
-    parse: value => (isFiniteNumber(value) ? value : undefined),
-  });
-  if (!source) return undefined;
-  if (source.field === undefined) return source;
+const pickPathOpacity = (mark: IRPlotMarkOperation): IRPlotChannel | undefined => markChannelEncoding(mark, 'opacity');
 
-  const numeric = rows.map(row => resolveFieldPath(row, source.field as string)).filter(isFiniteNumber);
-  const scaleName = channel.kind === MarkValueKind.Field ? channel.scale : undefined;
-  let scale: ((value: number) => number) | undefined;
-  if (scaleName !== undefined || options.range !== undefined) {
-    let def: IRPlotLinearScale = {
-      type: BuiltinPlotScale.Linear,
-      name: scaleName ?? `__path_${channelName}_${source.field}`,
-      ...(options.range !== undefined ? { range: [options.range[0], options.range[1]] as [number, number] } : {}),
-      ...(options.clamp !== undefined ? { clamp: options.clamp } : {}),
-    };
-    if (scaleName !== undefined) {
-      const found = scaleByName.get(scaleName);
-      if (!found)
-        throw new RetikzPlotError(`lowerPlots: ${channelName} path channel references unknown scale "${scaleName}"`);
-      if (!isBuiltinScaleOperation(found) || found.type !== BuiltinPlotScale.Linear)
-        throw new RetikzPlotError(
-          `lowerPlots: ${channelName} path channel scale "${scaleName}" must be a linear scale`,
-        );
-
-      def = { ...found, range: found.range ?? def.range, clamp: found.clamp ?? def.clamp };
-    }
-
-    scale = resolveLinearScale(def, numeric, options.range ?? [0, 1]);
-  }
-
-  return {
-    resolver: row => {
-      const value = source.resolver(row);
-      if (value === undefined) return undefined;
-      return scale ? scale(value) : value;
-    },
-    descriptor: source.descriptor,
-  };
-};
-
-const pickPathStrokeWidth = (mark: IRPlotMarkOperation): MarkStyleValue<number> | undefined =>
-  pickStyleChannel<number>(mark, 'strokeWidth');
-
-const pickPathOpacity = (mark: IRPlotMarkOperation): MarkStyleValue<number> | undefined =>
-  pickStyleChannel<number>(mark, 'opacity');
-
-const pickPathFillOpacity = (mark: IRPlotMarkOperation): MarkStyleValue<number> | undefined =>
-  pickStyleChannel<number>(mark, 'fillOpacity');
+const pickPathFillOpacity = (mark: IRPlotMarkOperation): IRPlotChannel | undefined =>
+  markChannelEncoding(mark, 'fillOpacity');
 
 const pathNumericChannels: {
   strokeWidth: PathChannelDefinition<number>;
@@ -152,7 +62,7 @@ const pathNumericChannels: {
     channel: 'strokeWidth',
     output: { outputKind: 'number', range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true },
     resolve: (ctx, mark) =>
-      resolveNumericPathChannel(ctx.node, ctx.rows, ctx.model, pickPathStrokeWidth(mark), 'strokeWidth', {
+      resolveNumericChannel(ctx.node, ctx.rows, ctx.model, pickPathStrokeWidth(mark), 'strokeWidth', {
         range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX],
         clamp: true,
       }),
@@ -165,7 +75,7 @@ const pathNumericChannels: {
     output: { outputKind: 'number', range: [OPACITY_MIN, 1], clamp: true },
     legend: 'ramp',
     resolve: (ctx, mark) =>
-      resolveNumericPathChannel(ctx.node, ctx.rows, ctx.model, pickPathOpacity(mark), 'opacity', {
+      resolveNumericChannel(ctx.node, ctx.rows, ctx.model, pickPathOpacity(mark), 'opacity', {
         range: [OPACITY_MIN, 1],
         clamp: true,
       }),
@@ -183,7 +93,7 @@ const pathNumericChannels: {
     channel: 'fillOpacity',
     output: { outputKind: 'number', range: [0.2, 1], clamp: true },
     resolve: (ctx, mark) =>
-      resolveNumericPathChannel(ctx.node, ctx.rows, ctx.model, pickPathFillOpacity(mark), 'fillOpacity', {
+      resolveNumericChannel(ctx.node, ctx.rows, ctx.model, pickPathFillOpacity(mark), 'fillOpacity', {
         range: [0.2, 1],
         clamp: true,
       }),
@@ -201,11 +111,11 @@ const pathNumericChannels: {
     channel: 'roundedCorners',
     output: { outputKind: 'number', range: [0, 0] },
     resolve: (ctx, mark) =>
-      resolveNumericPathChannel(
+      resolveNumericChannel(
         ctx.node,
         ctx.rows,
         ctx.model,
-        pickStyleChannel<number>(mark, 'roundedCorners'),
+        markChannelEncoding(mark, 'roundedCorners'),
         'roundedCorners',
       ),
     deliver: (path, value) => {
@@ -327,15 +237,11 @@ export const BUILTIN_PATH_CHANNELS = {
     channel: 'lineCap',
     output: { outputKind: 'symbol', palette: [...lineCapValues] },
     resolve: (ctx, mark) => {
-      return makeMarkValueResolver<'butt' | 'round' | 'square'>(
-        pickStyleChannel<'butt' | 'round' | 'square'>(mark, 'lineCap'),
-        ctx.model,
-        {
-          channelName: 'lineCap',
-          parse: value =>
-            typeof value === 'string' && lineCapValues.has(value) ? (value as 'butt' | 'round' | 'square') : undefined,
-        },
-      );
+      return makeMarkValueResolver<'butt' | 'round' | 'square'>(markChannelEncoding(mark, 'lineCap'), ctx.model, {
+        channelName: 'lineCap',
+        parse: value =>
+          typeof value === 'string' && lineCapValues.has(value) ? (value as 'butt' | 'round' | 'square') : undefined,
+      });
     },
     deliver: (path, value) => {
       path.style = { ...path.style, lineCap: value };
@@ -345,15 +251,11 @@ export const BUILTIN_PATH_CHANNELS = {
     channel: 'lineJoin',
     output: { outputKind: 'symbol', palette: [...lineJoinValues] },
     resolve: (ctx, mark) => {
-      return makeMarkValueResolver<'miter' | 'round' | 'bevel'>(
-        pickStyleChannel<'miter' | 'round' | 'bevel'>(mark, 'lineJoin'),
-        ctx.model,
-        {
-          channelName: 'lineJoin',
-          parse: value =>
-            typeof value === 'string' && lineJoinValues.has(value) ? (value as 'miter' | 'round' | 'bevel') : undefined,
-        },
-      );
+      return makeMarkValueResolver<'miter' | 'round' | 'bevel'>(markChannelEncoding(mark, 'lineJoin'), ctx.model, {
+        channelName: 'lineJoin',
+        parse: value =>
+          typeof value === 'string' && lineJoinValues.has(value) ? (value as 'miter' | 'round' | 'bevel') : undefined,
+      });
     },
     deliver: (path, value) => {
       path.style = { ...path.style, lineJoin: value };
@@ -364,6 +266,33 @@ export const BUILTIN_PATH_CHANNELS = {
 const erasePathChannelDefinition = (def: unknown): AnyChannelDefinition => def as AnyChannelDefinition;
 
 /** 内置 Path 通道 definition 集合 */
-export const PATH_CHANNELS: ReadonlyArray<AnyChannelDefinition> = Object.values(BUILTIN_PATH_CHANNELS).map(def =>
-  erasePathChannelDefinition(def),
-);
+export const PATH_CHANNELS: ReadonlyArray<AnyChannelDefinition> = [
+  ...Object.values(BUILTIN_PATH_CHANNELS).map(def => erasePathChannelDefinition(def)),
+  ...(['width', 'endWidth'] as const).map((target): AnyChannelDefinition => ({
+    channel: `geometry.${target}`,
+    kind: ChannelDefinitionKind.Mark,
+    resolve: (context, mark) => {
+      if (!isBuiltinMark(mark) || mark.type !== 'relation' || mark.properties.geometry.kind !== 'ribbon')
+        return undefined;
+      const binding = mark.encodings?.geometry?.[target];
+      const fixed = mark.properties.geometry[target];
+      if (binding === undefined) return fixed === undefined ? undefined : { resolver: () => fixed };
+      const resolution = resolveNumericChannel(
+        context.node,
+        context.rows,
+        context.model,
+        binding,
+        `geometry.${target}`,
+      );
+      if (resolution === undefined) return undefined;
+      return {
+        resolver: row => {
+          const width = resolution.resolver(row);
+          if (width === undefined || !Number.isFinite(width) || width <= 0)
+            throw new RetikzPlotError(`Relation geometry.${target} must map to a positive finite width`);
+          return width;
+        },
+      };
+    },
+  })),
+];

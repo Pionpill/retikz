@@ -2,7 +2,7 @@ import { RAD_TO_DEG } from '@retikz/math';
 import type { CurveSegmentSample } from '@retikz/math';
 
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../../contract';
-import type { CanonicalFont, CanonicalGeometryLabel } from '../../../resolve';
+import type { CanonicalFont, CanonicalPathLabel } from '../../../resolve';
 import { resolveFont, resolveTextLine } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import { DEFAULT_FONT_SIZE } from '../../constants';
@@ -63,7 +63,7 @@ export type EmitLabelPrimitiveContext = {
  * @description 返回 label primitive 及其 bbox 外接点
  */
 export const emitLabelPrimitive = (
-  label: CanonicalGeometryLabel,
+  label: CanonicalPathLabel,
   sample: CurveSegmentSample,
   context: EmitLabelPrimitiveContext,
 ): { primitive: ScenePrimitive; boundsPoints: Array<IRPosition> } => {

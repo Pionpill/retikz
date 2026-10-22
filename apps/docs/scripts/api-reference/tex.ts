@@ -413,6 +413,7 @@ const resolveObjectMembers = (
   program: ts.Program,
   sourceFile: ts.SourceFile,
   name: string,
+  fullMembers = false,
 ):
   | {
       members?: Array<ApiReferenceMember>;
@@ -822,8 +823,9 @@ const resolveObjectMembers = (
     type.isUnion() &&
     type.types.length <= MAX_UNION_TABLE_BRANCHES &&
     type.types.every(isObject) &&
-    new Set(type.types.flatMap(branch => checker.getPropertiesOfType(branch).map(member => member.name))).size <=
-      MAX_UNION_TABLE_MEMBERS
+    (fullMembers ||
+      new Set(type.types.flatMap(branch => checker.getPropertiesOfType(branch).map(member => member.name))).size <=
+        MAX_UNION_TABLE_MEMBERS)
       ? type.types
       : undefined;
   const expandedNodes = new Map<ts.Type, ts.TypeNode | undefined>();
@@ -2185,7 +2187,7 @@ export const createApiReferenceMdx = async (
             if (!schemaUrl) {
               const resolved =
                 reflection.kind === ReflectionKind.TypeAlias || reflection.kind === ReflectionKind.Interface
-                  ? resolveObjectMembers(program, sourceFile, symbol.name)
+                  ? resolveObjectMembers(program, sourceFile, symbol.name, showFullMembers)
                   : undefined;
               const sourceSignature = resolveSourceSignature(program, sourceFile, symbol.name, symbol.signature);
               if (resolved) {

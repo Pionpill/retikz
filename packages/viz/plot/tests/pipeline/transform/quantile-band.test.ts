@@ -448,8 +448,11 @@ describe('quantile-band statistics behavior (contract)', () => {
       marks: [
         {
           type: 'interval',
-          bounds: { y: { kind: 'extent', from: 'boxLow', to: 'boxHigh' } },
-          encoding: { x: { field: 'group' }, y: { field: 'boxHigh' } },
+          encodings: {
+            bounds: { y: { from: { field: 'boxLow' }, to: { field: 'boxHigh' } } },
+            position: { x: { field: 'group' }, y: { field: 'boxHigh' } },
+          },
+          properties: { bounds: { y: { kind: 'extent' } } },
         },
       ],
     });

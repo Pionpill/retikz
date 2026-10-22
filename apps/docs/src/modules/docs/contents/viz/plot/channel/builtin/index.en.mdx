@@ -152,7 +152,7 @@ label adds an annotation beside a mark while keeping the node body visible. Use 
 | `label.pin`       | Boolean                          | Whether to show a label pin.                  |
 | `label.textColor` | Color                            | Label text color.                             |
 
-Use `label: 'name'` to display the name field for each record. For finer control, use `label: { field: 'name', position: 'top', distance: 12, pin: true }`. Use value instead of field for fixed text, or an array for multiple labels.
+Use `encodings.label: { content: 'name' }` for field content and `properties.label: { position: 'top', distance: 12, pin: true }` for layout. Fixed text belongs to `properties.label.content`. Multiple labels match encodings and properties by array index.
 
 The example labels three nodes with the tag field. Change the label position, distance, or pin while the node bodies and data positions stay fixed.
 
@@ -213,7 +213,7 @@ Rows are deliberately shuffled. Toggle sorting to compare input order with step 
   caption="The points at step=2 overlap to reveal drawing order."
 />
 
-order and series live at the top level of mark configuration, outside encoding. They organize the data consumed by the mark rather than encode a visual property such as color or position. zIndex changes drawing order without changing path connections or row sorting.
+order and series live in `encodings`. They organize the data consumed by the mark rather than encode a visual property such as color or position. zIndex changes drawing order without changing path connections or row sorting.
 
 <ComponentAlert
   type="tip"
@@ -224,7 +224,7 @@ order and series live at the top level of mark configuration, outside encoding. 
 ## Errors and limitations
 
 - **Check mark support first.** Point, path, and interval mark properties do not all have the same shape. Do not copy configurations between mark types without checking.
-- **Strings match fields first.** React style shorthand may interpret a color or shape name as an existing field. Use `{ kind: 'constant', value: '#2563eb' }` for a fixed color. See [channel binding](/viz/plot/channel/binding#errors-and-limitations) for position and field lookup rules.
+- **Group by source.** `encodings` reads fields and `properties` supplies fixed values. An encoding wins at the same target; invalid bindings do not fall back.
 - **Distinguish mappings from direct values.** A point size field uses a square-root scale by default; a constant size is a radius. Shape fields must be categorical. Opacity ranges from 0 to 1; radii and stroke widths cannot be negative.
 - **Target the intended paint.** Use fill and stroke to control them independently. textColor affects node text; label.textColor affects external labels.
 - **Leave space for large marks and labels.** domainPadding expands position-scale domains. Large radii, rotation, or labels may need more room; check dimensions and domains if marks extend outside the drawing.
@@ -236,33 +236,33 @@ These are selected members used on this page. See the [mark reference](/viz/plot
 <ComponentProps
   items={[
     {
-      name: 'PointMark.x',
+      name: 'PointMark.encodings.position.x',
       kind: 'property',
       type: 'string',
       description: 'Position field; sets the horizontal coordinate in 2D Cartesian coordinates.',
     },
     {
-      name: 'PointMark.y',
+      name: 'PointMark.encodings.position.y',
       kind: 'property',
       type: 'string',
       description: 'Position field; sets the vertical coordinate in 2D Cartesian coordinates.',
     },
     {
-      name: 'PointMark.color',
+      name: 'PointMark.encodings.color',
       kind: 'property',
-      type: "string | { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: string }",
+      type: "string | { field: string; scale: string }",
       description:
         'A shorthand field or explicit binding. Field bindings read the named field and may reference a scale; constants use a fixed CSS color.',
     },
     {
-      name: 'PointMark.size',
+      name: 'PointMark.encodings.size',
       kind: 'property',
-      type: "string | number | { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: number }",
+      type: "string | { field: string; scale: string }",
       description:
         'Fields map to radii; nonnegative numbers set a radius directly. The explicit field binding can reference a named scale.',
     },
     {
-      name: 'PointMark.text',
+      name: 'PointMark.encodings.text',
       kind: 'property',
       type: 'string',
       description: 'Field displayed inside the node; changes the point mark into text.',
@@ -275,13 +275,13 @@ These are selected members used on this page. See the [mark reference](/viz/plot
         'Field name or an object with field/value, placement, and style; arrays add multiple labels. Omitted means no label.',
     },
     {
-      name: 'PathMark.order',
+      name: 'PathMark.encodings.order',
       kind: 'property',
       type: 'string',
       description: 'Sorts by a field before connecting points; lives outside encoding.',
     },
     {
-      name: 'PathMark.series',
+      name: 'PathMark.encodings.series',
       kind: 'property',
       type: 'string',
       description: 'Splits paths into series by a field; lives outside encoding.',

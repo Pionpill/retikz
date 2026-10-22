@@ -110,7 +110,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
 
 ```tsx
 <Plot data={rows} model={[{ name: 'segment', type: 'categorical' }]}>
-  <PathMark x="segment" y="revenue" order="segment" />
+  <PathMark encodings={{ order: "segment", position: { x: "segment", y: "revenue" } }} />
   <PlotScale dimension="x" type="point" />
   <PlotAxis dimension="x" />
 </Plot>

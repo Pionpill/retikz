@@ -34,10 +34,13 @@ describe('relate transform', () => {
       marks: [
         {
           type: 'relation',
-          transform: [{ operation }],
-          source: { project: { x: 'sourceX', y: 'sourceY' } },
-          target: { project: { x: 'targetX', y: 'targetY' } },
-          label: { content: { field: 'deltaLabel' } },
+          transforms: [{ operation }],
+          encodings: {
+            label: { content: 'deltaLabel' },
+            source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
+            target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
+          },
+          properties: { label: {}, geometry: { kind: 'path' } },
         },
       ],
     });

@@ -1,5 +1,5 @@
 import type { PathCommand } from '@retikz/core';
-import { bendControlPoints, outInControlPoints, resolveGeometryLabelPlacement, samplePathRoute } from '@retikz/core';
+import { bendControlPoints, outInControlPoints, resolvePathLabelPlacement, samplePathRoute } from '@retikz/core';
 import type { BoundsRect, CurveSegment, Position } from '@retikz/math';
 import { applyAffine, boundsOf, boundsToRect, cornersOfBounds, rectToBounds, curve } from '@retikz/math';
 
@@ -108,7 +108,7 @@ export const flowRouteLabelBounds = (
 ): BoundsRect | undefined => {
   if (relation.labelSize === undefined) return undefined;
 
-  const placement = resolveGeometryLabelPlacement(relation.labelPlacement ?? {}, true);
+  const placement = resolvePathLabelPlacement(relation.labelPlacement ?? {}, true);
   const sample = samplePathRoute(
     routeCommands(route),
     'cornerRadius' in route ? route.cornerRadius : 0,

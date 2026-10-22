@@ -36,7 +36,7 @@ const rows = [
 
 createRoot(document.getElementById('plot')!).render(
   <Plot data={rows} width={360} height={220}>
-    <PathMark x="month" y="revenue" order="month" />
+    <PathMark encodings={{ order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" />
   </Plot>,
@@ -66,7 +66,9 @@ const spec: IRPlot = {
     { name: 'y', type: 'linear' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' }],
+  marks: [
+    { type: 'path', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' } },
+  ],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
@@ -95,7 +97,9 @@ const spec = plot({
     { name: 'y', type: 'linear' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' }],
+  marks: [
+    { type: 'path', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' } },
+  ],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
@@ -127,7 +131,9 @@ const spec: IRPlot = {
     { name: 'y', type: 'linear' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' }],
+  marks: [
+    { type: 'path', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' } },
+  ],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
@@ -355,7 +361,35 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 这是根据角度尺度选择的默认策略，不是坐标系的强制限制。可以通过 `interpolation` 显式选择 `chord` 或 `polar`；采样后的点如何连接，仍由 `curve` 决定。
 
+## 端点路径与参考线
+
+通过 `encodings.from`、`encodings.to` 指定两个完整位置，每个角色可绑定字段、常量或视图边界。端点形式与 `encodings.position` 顶点形式互斥。`properties.connection` 选择沿坐标系连接或投影后的直线连接；切换极坐标，观察圆弧与弦的区别。
+
+以下参考图元显式设置 `contributeToDomain={false}`，不扩大主体数据的定义域。使用控件切换坐标系、位置、几何与标签。
+
+<ComponentPreview
+  files={['reference-path', 'reference-path.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
+  defaultSourceFile="reference-path.preview.tsx"
+  controls={{ name: 'reference-path' }}
+  size="md"
+/>
+
+下面通过局部 `summarize` 变换计算统计字段，再绑定到同一类 Mark。切换平均值 / 中位数或分组，观察每个结果行产生的独立参考图元；小点保留原始观测。
+
+<ComponentPreview
+  files={[
+    'reference-data-path',
+    '/viz/plot/mark/shared/reference-data.preview.tsx',
+    '/viz/plot/mark/shared/reference-data.data.ts',
+  ]}
+  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
+  controls={{ name: 'reference-data-path' }}
+  size="md"
+/>
+
 ## API 参考
+
+标签内容可简写为 `encodings.label: 'name'`，固定文字写 `properties.label: '重点'`。对象形式支持 `font.size`、`font.weight`、`textColor` 等字段编码，多标签数组按索引配对；未编码的字体叶子继续继承。详见[标签编码](/viz/plot/reference/encoding#labelencodingschema)。
 
 `PathMarkProps` 从 `@retikz/plot-react` 导出，复用 `@retikz/plot-vanilla` 的 `InputPlotPathMark`。下表按用途分组；`—` 表示声明没有字段级默认值，实际缺省行为见上文。Source IR 的字段与约束复用[图元契约参考](/viz/plot/reference/mark)中的 `PathMarkSchema`。
 

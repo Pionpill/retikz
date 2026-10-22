@@ -1344,7 +1344,9 @@ const guidedSpec = (guides: Array<unknown>): IRPlot =>
       { type: 'linear', name: 'yRevenue' },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-    marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    marks: [
+      { type: 'path', encodings: { order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
+    ],
     guides,
   });
 
@@ -1411,7 +1413,9 @@ describe('lowerPlots guide orchestration (contract)', () => {
         { type: 'linear', name: 'yRevenue', range: [200, 0] },
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-      marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      marks: [
+        { type: 'path', encodings: { order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
+      ],
       guides: [{ type: 'axis', dimension: 'x' }],
     });
     const outer = expandOf(spec);

@@ -76,8 +76,7 @@ const pointSpec = (colorScale: Record<string, unknown>): IRPlot =>
     marks: [
       {
         type: 'point',
-        color: { kind: 'field', value: 'v', scale: 'col' },
-        encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        encodings: { color: { field: 'v', scale: 'col' }, position: { x: { field: 'x' }, y: { field: 'y' } } },
       },
     ],
   });
@@ -315,8 +314,11 @@ describe('离散色 · fail-loud 守卫（contract）', () => {
       marks: [
         {
           type: markType,
-          order: 'x',
-          encoding: { x: { field: 'x' }, y: { field: 'y' }, color: { field: 'v', scale: 'col' } },
+          encodings: {
+            order: 'x',
+            color: { field: 'v', scale: 'col' },
+            position: { x: { field: 'x' }, y: { field: 'y' } },
+          },
         },
       ],
     });

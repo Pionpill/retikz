@@ -1,8 +1,8 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
+import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
 import type { RenderHandlerContribution, RenderRuntimeConfigInput, RetainedRendererRead } from '@retikz/render/runtime';
 import { builtinRetainedRendererFactory, createRetainedRenderTarget, RenderCachePolicy } from '@retikz/render/runtime';
-import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputRuntimeMeta } from '../normalize';
@@ -138,13 +138,12 @@ type DomRetainedProcessingController<TUpdateOptions extends RetainedSvgUpdateOpt
     result: () => ProcessingResult;
   }>;
 
-/** 移除 direct compile 专属 trace，构造 runtime-lifetime processing options */
+/** 构造 runtime-lifetime processing options */
 const toProcessingOptions = (
   options: CommonOptions,
   updateStrategy: VanillaRetainedRuntimeOptions['updateStrategy'],
 ): ProcessingOptions => {
-  const { trace, ...compile } = options.compile ?? {};
-  void trace;
+  const compile = { ...options.compile };
 
   return {
     compile,

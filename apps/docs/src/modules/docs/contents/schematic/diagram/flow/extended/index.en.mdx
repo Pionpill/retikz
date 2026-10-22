@@ -40,7 +40,7 @@ The fraction inherits only between orthogonal root, Group and Relation settings,
   caption="Switch between automatic and explicit angles to explore bounded candidate selection as the obstacle moves; move the label and toggle slope and interruption along the same curve."
 />
 
-A compact `label: 'Continue'` retains the default label strategy. A complete object such as `label: { text: 'Continue', position: 0.5, sloped: true }` exposes all Core GeometryLabel options: `position`, `side`, `sloped`, `placement`, `distance`, `interrupt`, `gap`, `textColor`, `font`, and `opacity`. Position uses the curve parameter rather than equal arc length; slope follows the tangent, while interruption and gap control the stroke opening around the label. An object containing only text still uses complete-label defaults. Font fields inherit individually, with label appearance taking precedence over relation appearance. Reserved boxes inform layout scoring; Core draws the final text and clips endpoints to node boundaries.
+A compact `label: 'Continue'` retains the default label strategy. A complete object such as `label: { text: 'Continue', position: 0.5, sloped: true }` exposes all Core PathLabel options: `position`, `side`, `sloped`, `placement`, `distance`, `interrupt`, `gap`, `textColor`, `font`, and `opacity`. Position uses the curve parameter rather than equal arc length; slope follows the tangent, while interruption and gap control the stroke opening around the label. An object containing only text still uses complete-label defaults. Font fields inherit individually, with label appearance taking precedence over relation appearance. Reserved boxes inform layout scoring; Core draws the final text and clips endpoints to node boundaries.
 
 ### Bezier curves
 

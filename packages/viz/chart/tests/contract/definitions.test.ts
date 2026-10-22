@@ -30,14 +30,14 @@ const recipe = defineChartRecipe({
   resolveEncodings: resolveDirectEncodings,
   resolve: () => ({
     scaffold: { scales: [], spatial: { coordinate: { type: 'cartesian2D' }, replaceable: false } },
-    semanticMarks: [{ kind: 'fixture', plotMarks: [{ type: 'point', encoding: {} }] }],
+    semanticMarks: [{ kind: 'fixture', plotMarks: [{ type: 'point', kind: 'data' }] }],
   }),
 });
 
 const mark = defineChartMark({
   kind: 'fixture',
   schema: strictObject({ kind: literal('fixture') }),
-  resolve: () => ({ marks: [{ type: 'point', encoding: {} }] }),
+  resolve: () => ({ marks: [{ type: 'point', kind: 'data' }] }),
 });
 
 describe('Chart Definition contracts', () => {

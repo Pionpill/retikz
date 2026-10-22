@@ -24,7 +24,7 @@ const specWithField = (field: { name: string } & Record<string, unknown>): IRPlo
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', encoding: { x: { field: field.name }, y: { field: 'y' } } }],
+    marks: [{ type: 'point', encodings: { position: { x: { field: field.name }, y: { field: 'y' } } } }],
   });
 
 /** 跑一次绑定准备，取首行 logical 字段的 canonical 值 */
@@ -179,7 +179,7 @@ describe('IRDataFieldDefinition.format 自定义格式', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'v' }, y: { field: 'y' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'v' }, y: { field: 'y' } } } }],
     });
     const ingested = tagSourceIndex([{ v: '50%', y: '1.000,50' }]);
     const { normalized } = prepareRows(
@@ -252,7 +252,7 @@ describe('IRDataFieldDefinition.format — 交互', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'v' }, y: { field: 'y' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'v' }, y: { field: 'y' } } } }],
     });
     const value = parseFirst(spec, { d: [{ ratio: '50%', y: 1 }] }, 'v', { datasetFieldMaps: { d: { v: 'ratio' } } });
 

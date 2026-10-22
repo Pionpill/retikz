@@ -1,7 +1,7 @@
 import type { CurveSegmentSample } from '@retikz/math';
 
 import type { PathCommand, ScenePrimitive } from '../../../contract';
-import type { CanonicalGeometryLabel, CanonicalStep } from '../../../resolve';
+import type { CanonicalPathLabel, CanonicalStep } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import type { LowerTex, TextMeasurer } from '../../text';
 import { emitLabelPrimitive } from '../host';
@@ -70,7 +70,7 @@ export type StrokeSamplingCollector = {
 /** 已在完整逻辑路径上 materialize 的 Stroke label */
 export type StrokeLabelMaterialization = {
   /** 原 canonical label */
-  label: CanonicalGeometryLabel;
+  label: CanonicalPathLabel;
   /** 产生的 Scene primitive */
   primitive: ScenePrimitive;
   /** label 的 layout 候选点，同时作为 interruption 视觉投影范围 */
@@ -134,7 +134,7 @@ export const createStrokeSamplingCollector = ({
   const segmentSamplers: Array<StrokeSegmentSampler> = [];
   const samplerRecords: Array<StrokeSamplerRecord> = [];
   const labelRequests: Array<{
-    label: CanonicalGeometryLabel;
+    label: CanonicalPathLabel;
     sourceStepIndex: number;
     stepKind: CanonicalStep['kind'];
     mode: StrokeSamplingMode;
@@ -143,7 +143,7 @@ export const createStrokeSamplingCollector = ({
   let activeStepKind: CanonicalStep['kind'] = 'move';
   let activeSamplingMode: StrokeSamplingMode = 'parameter';
 
-  const emitLegacyLabel = (label: CanonicalGeometryLabel, sample: CurveSegmentSample): void => {
+  const emitLegacyLabel = (label: CanonicalPathLabel, sample: CurveSegmentSample): void => {
     const result = emitLabelPrimitive(label, sample, {
       measureText,
       round,

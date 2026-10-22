@@ -31,12 +31,19 @@ export const ChannelBindingPreview = (values: ChannelBindingPreviewValues) => (
     <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
     <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.3 }} />
     <PointMark
-      x={values.xField}
-      y={values.yField}
-      color={values.colorSource === 'field' ? 'region' : { kind: 'constant', value: '#2563eb' }}
-      size={values.sizeSource === 'field' ? 'population' : 12}
-      shape={values.shapeSource === 'field' ? 'region' : { kind: 'constant', value: BuiltinShape.Circle }}
-      label={values.showLabel ? { field: 'abbr', position: 'top' } : undefined}
+      encodings={{
+        position: { x: { field: values.xField }, y: { field: values.yField } },
+        ...(values.colorSource === 'field' ? { color: 'region' } : {}),
+        ...(values.sizeSource === 'field' ? { size: 'population' } : {}),
+        ...(values.shapeSource === 'field' ? { shape: 'region' } : {}),
+        ...(values.showLabel ? { label: { content: 'abbr' } } : {}),
+      }}
+      properties={{
+        ...(values.colorSource === 'constant' ? { color: '#2563eb' } : {}),
+        ...(values.sizeSource === 'constant' ? { size: 12 } : {}),
+        ...(values.shapeSource === 'constant' ? { shape: BuiltinShape.Circle } : {}),
+        ...(values.showLabel ? { label: { position: 'top' } } : {}),
+      }}
     />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />

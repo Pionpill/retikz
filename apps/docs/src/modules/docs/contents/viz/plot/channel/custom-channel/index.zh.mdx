@@ -1,13 +1,13 @@
 ---
 title: 自定义通道
-description: 用 ChannelDefinition 把字段或常量解析为既有 Core 属性，并通过 definitions.channels 注入 Plot 的统一通道注册表。
+description: 用 ChannelDefinition 把字段解析为既有 Core 属性，并通过 definitions.channels 注入 Plot 的统一通道注册表。
 ---
 
 在学会[字段与常量绑定](/viz/plot/channel/binding)后，可以定义自己的通道名和取值规则。本页用 `intensity` 将 `score` 映射为点的透明度：分数越高，点越不透明；切换为常量后，所有点使用同一透明度。
 
 ## 适用边界
 
-- 需要新的 `encoding.channels.<name>`，并希望它参与字段 / 常量绑定、逐行求值和图例描述时，定义自定义通道。
+- 需要新的 `encodings.<name>`，并希望它参与字段绑定、逐行求值和图例描述时，定义自定义通道。
 - 只改变“值 → 坐标”或“值 → 颜色”规则时，使用[自定义比例尺](/viz/plot/scale/custom-scale)；大小、透明度等其它视觉属性仍由对应通道负责求值和交付。
 - 字段准备、聚合或筛选属于[数据扩展](/viz/data/model/extensions)，不放进通道 resolver。
 
@@ -19,7 +19,7 @@ description: 用 ChannelDefinition 把字段或常量解析为既有 Core 属性
 
 ## 最小结果
 
-下面的 `intensity` 通道把字段值映射到 `[0.3, 1]`，也接受直接表示透明度的数值常量。用面板切换字段与常量绑定；definition、数据和宿主注入都可以从源码切换器中查看：
+下面的 `intensity` 通道把字段值映射到 `[0.3, 1]`，固定模式使用 `properties.opacity.overall`。用面板切换字段编码与固定属性；definition、数据和宿主注入都可以从源码切换器中查看：
 
 <ComponentPreview
   files={['custom-channel', 'custom-channel.preview.tsx', 'custom-channel.definition.ts', 'custom-channel.data.ts']}
@@ -38,7 +38,7 @@ description: 用 ChannelDefinition 把字段或常量解析为既有 Core 属性
 
 | 字段      | 作用                                                                            |
 | --------- | ------------------------------------------------------------------------------- |
-| `channel` | 唯一注册名，对应 `encoding.channels.<name>`                                     |
+| `channel` | 唯一注册名，对应 `encodings.<name>`                                     |
 | `output`  | 声明输出类型及可选的 range / palette / clamp 元数据；不会自动映射或截断值       |
 | `legend?` | 声明图例形态                                                                    |
 | `resolve` | 读取字段或常量绑定，自行完成映射与 clamp，并返回逐行 resolver 和可选 descriptor |
@@ -47,37 +47,19 @@ description: 用 ChannelDefinition 把字段或常量解析为既有 Core 属性
 本例选择 `defineNodeChannel`，因为透明度需要逐点交付。下面是完整定义，由 React 和 Vanilla 宿主共用：
 
 ```ts
-import { defineNodeChannel } from '@retikz/plot';
-
-type ExtensionChannelBinding = { field?: string; value?: unknown };
-
-const extensionChannelsOf = (mark: {
-  encoding?: { channels?: Partial<Record<string, ExtensionChannelBinding>> };
-}): Partial<Record<string, ExtensionChannelBinding>> => mark.encoding?.channels ?? {};
+import { channelField, defineNodeChannel, markChannelEncoding } from '@retikz/plot';
 
 const clampIntensity = (value: number): number => Math.min(1, Math.max(0.3, value));
 
-/** 自定义 intensity 通道：字段值自行映射到 opacity，常量值自行截断后直接交付 */
+/** 自定义 intensity 通道：字段值映射到 opacity，固定透明度使用 properties.opacity */
 export const intensityChannel = defineNodeChannel<number>({
   channel: 'intensity',
   output: { outputKind: 'number', range: [0.3, 1], clamp: true },
   legend: 'ramp',
   resolve: (ctx, mark) => {
-    const binding = extensionChannelsOf(mark).intensity;
+    const binding = markChannelEncoding(mark, 'intensity');
     if (binding === undefined) return undefined;
-    if (binding.value !== undefined) {
-      if (typeof binding.value !== 'number' || !Number.isFinite(binding.value)) {
-        throw new Error('lowerPlots: intensity constant must be a finite number');
-      }
-
-      const value = clampIntensity(binding.value);
-
-      return { resolver: () => value };
-    }
-
-    if (binding.field === undefined) return undefined;
-
-    const field = binding.field;
+    const field = channelField(binding);
     const values = ctx.rows.map(row => Number(row[field])).filter(Number.isFinite);
     if (values.length === 0) return undefined;
 
@@ -123,37 +105,36 @@ React 和 Vanilla 共用前面的 definition，选择与你的项目一致的宿
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
 
-在 `Plot` 上注入 definition，在子图元的 `channels` 中按注册名引用：
+在 `Plot` 上注入 definition，在子图元的 `encodings` 中按注册名引用：
 
 ```tsx
 <Plot data={customChannelPoints} definitions={{ channels: [intensityChannel] }}>
-  <PointMark x="x" y="y" channels={{ intensity: 'score' }} />
+  <PointMark encodings={{ intensity: 'score', position: { x: "x", y: "y" } }} />
 </Plot>
 ```
 
-React DSL 的字符串值表示字段名，常量使用 `{ kind: 'constant', value }`：
+字段写入 `encodings`，固定透明度使用已有的 `properties.opacity.overall`：
 
 ```tsx
-<PointMark channels={{ intensity: 'score' }} />
-<PointMark channels={{ intensity: { kind: 'constant', value: 0.65 } }} />
+<PointMark encodings={{ intensity: 'score' }} />
+<PointMark properties={{ opacity: { overall: 0.65 } }} />
 ```
 
 </DocTab>
 <DocTab value="vanilla" label="Vanilla">
 
-在 `renderPlot` 的第三个参数中注入。这里的 `spec` 是预览 Vanilla 源码中的 Plot 配置，已经通过 `encoding.channels.intensity` 绑定 score：
+在 `renderPlot` 的第三个参数中注入。这里的 `spec` 是预览 Vanilla 源码中的 Plot 配置，已经通过 `encodings.intensity` 绑定 score：
 
 ```ts
 const svg = renderPlot(spec, { points: customChannelPoints }, { definitions: { channels: [intensityChannel] } });
 ```
 
-Vanilla 示例直接使用 Plot IR：字段绑定写为 `{ field }`，常量绑定写为 `{ value }`：
+Vanilla 与 JSON 使用相同的字段名简写；只有显式选定比例尺才使用 field/scale 对象：
 
 ```ts
 import type { IRPlotChannel } from '@retikz/plot';
 
-const fieldBinding: IRPlotChannel = { field: 'score' };
-const constantBinding: IRPlotChannel = { value: 0.65 };
+const fieldBinding: IRPlotChannel = 'score';
 ```
 
 </DocTab>
@@ -163,19 +144,10 @@ definition 始终留在运行时，不进入 Plot IR。
 
 ## 错误与限制
 
-- 自定义 `channel` 不能覆盖内置名，也不能重复注册；绑定未注册通道时 lowering 会直接报错。
-- 每个 binding 必须在 `field` 与 `value` 中恰好选择一个；常量还必须是 JSON value。
-- definition 决定接受哪些值类型。示例的 `intensity` 常量只接受有限数，并在自己的 `resolve` 中执行 clamp。
-- `resolve` 不应修改数据或生成几何；`deliver` 只能写入对应 Core 图元已经支持的属性。
-- IR 中只保存字段或 JSON 常量绑定，不能包含函数或 definition。
-
-下面的 binding 会在 schema 校验时失败，因为同时设置了字段和常量：
-
-```ts
-encoding: {
-  channels: { intensity: { field: 'score', value: 0.65 } },
-}
-```
+- 自定义名称不能覆盖内置名或重复注册；未注册、未消费的编码目标会报错。
+- 字段编码只接受非空白字段名，或必填 field/scale 的对象；数值常量放在图元支持的 properties 中。
+- 本例的 intensity 只负责字段到透明度的映射。固定模式直接设置 opacity.overall，不声明新的固定属性。
+- resolve 不修改数据或生成几何，deliver 只写入宿主支持的属性；definition 留在运行时，不进入 JSON。
 
 ## 相关属性
 
@@ -205,11 +177,10 @@ encoding: {
         'React 在 Plot props 中注入，Vanilla 在 renderPlot options 中注入。数组元素为通道定义对象：包含 channel、kind 及对应种类的解析与交付函数；属于运行时配置，不进入 IR。',
     },
     {
-      name: 'PointMark.channels',
+      name: 'PointMark.encodings',
       kind: 'property',
       type: 'Record<string, InputPlotExtensionChannel>',
-      description:
-        "按已注册名称绑定值。本例使用字段字符串 'score' 或显式常量 { kind: 'constant', value: 0.65 }；归一化 IR 分别保存 { field: 'score' } 和 { value: 0.65 }，不能同时提供 field 与 value。",
+      description: '按注册名绑定字段，字符串直接保留为 Source 字段名。',
     },
   ]}
 />

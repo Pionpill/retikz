@@ -53,7 +53,7 @@ const lineSpec = (yScale: Record<string, unknown>): IRPlot =>
       { ...yScale, name: 'y', domainPadding: yScale.domainPadding ?? 0 },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'path', order: 'i', encoding: { x: { field: 'i' }, y: { field: 'v' } } }],
+    marks: [{ type: 'path', encodings: { order: 'i', position: { x: { field: 'i' }, y: { field: 'v' } } } }],
   });
 
 describe('scale family · log (contract)', () => {
@@ -212,7 +212,7 @@ describe('scale family · radial', () => {
         { type: 'radial', name: 'r', domainPadding: 0 },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r', interpolation: 'polar' },
-      marks: [{ type: 'interval', encoding: { x: { field: 'cat' }, y: { field: 'val' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'cat' }, y: { field: 'val' } } } }],
     });
     const data = [
       { cat: 'A', val: 1 },
@@ -254,7 +254,7 @@ describe('scale family · radial', () => {
         { type: 'radial', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'cat' }, y: { field: 'v' } } } }],
     });
     const data = [
       { cat: 'a', v: 1 },
@@ -276,7 +276,7 @@ describe('scale family · L1 baseline guard (contract)', () => {
         { ...yScale, name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'cat' }, y: { field: 'v' } } } }],
     });
 
   const areaSpec = (yScale: Record<string, unknown>): IRPlot =>
@@ -290,7 +290,11 @@ describe('scale family · L1 baseline guard (contract)', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        { type: 'path', order: 'i', closure: { kind: 'baseline' }, encoding: { x: { field: 'i' }, y: { field: 'v' } } },
+        {
+          type: 'path',
+          encodings: { order: 'i', position: { x: { field: 'i' }, y: { field: 'v' } } },
+          properties: { closure: { kind: 'baseline' } },
+        },
       ],
     });
 

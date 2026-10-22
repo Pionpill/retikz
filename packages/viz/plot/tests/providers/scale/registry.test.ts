@@ -274,7 +274,13 @@ describe('scale registry（contract spec）', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [
+        {
+          type: 'point',
+          properties: { autoPadding: false },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+        },
+      ],
     };
     const layer = expandOf(
       spec,
@@ -311,8 +317,7 @@ describe('scale registry（contract spec）', () => {
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'g', scale: 'col' },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          encodings: { color: { field: 'g', scale: 'col' }, position: { x: { field: 'x' }, y: { field: 'y' } } },
         },
       ],
     };
@@ -342,7 +347,7 @@ describe('scale registry（contract spec）', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
     };
     const roundtrip = PlotSchema.parse(JSON.parse(JSON.stringify(spec)));
 

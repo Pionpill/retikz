@@ -8,7 +8,7 @@ import { number, strictObject, string, union } from 'zod';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { BUILTIN_NODE_CHANNELS, SIZE_MAX_RADIUS, SIZE_MIN_RADIUS } from '../../../src/providers';
-import type { IRPlot } from '../../../src/schemas';
+import type { IRPlot, IRPlotChannel } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
@@ -75,7 +75,7 @@ const radiusOf = (node: IRNode): number | undefined => {
 };
 
 const pointSpec = (
-  size: { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: number } | undefined,
+  size: IRPlotChannel | number | undefined,
   extraScales: Array<Record<string, unknown>> = [],
   model?: Array<{ name: string; type?: DataFieldType; format?: string }>,
 ): IRPlot =>
@@ -85,7 +85,16 @@ const pointSpec = (
     data: { reference: 'd', ...(model === undefined ? {} : { model }) },
     scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, ...extraScales],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', ...(size ? { size } : {}), encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+    marks: [
+      {
+        type: 'point',
+        encodings: {
+          position: { x: { field: 'x' }, y: { field: 'y' } },
+          ...(typeof size === 'number' ? {} : { size }),
+        },
+        properties: typeof size === 'number' ? { size } : {},
+      },
+    ],
   });
 
 const derivedSizePointSpec = (value: string | number): IRPlot =>
@@ -101,17 +110,16 @@ const derivedSizePointSpec = (value: string | number): IRPlot =>
     marks: [
       {
         type: 'point',
-        transform: [
+        transforms: [
           { operation: { kind: SizeChannelTestTransform.DeriveValue, params: { as: 'derivedSize', value } } },
         ],
-        size: { kind: 'field', value: 'derivedSize' },
-        encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        encodings: { size: 'derivedSize', position: { x: { field: 'x' }, y: { field: 'y' } } },
       },
     ],
   });
 
 const sizeResolutionOf = (
-  size: { kind: 'field'; value: string; scale?: string },
+  size: IRPlotChannel,
   rows: Array<Record<string, unknown>>,
   extraScales: Array<Record<string, unknown>> = [],
   options: {
@@ -124,7 +132,12 @@ const sizeResolutionOf = (
     {
       node,
       rows,
-      model: [{ name: size.value, ...(options.fieldType === undefined ? {} : { type: options.fieldType }) }],
+      model: [
+        {
+          name: typeof size === 'string' ? size : size.field,
+          ...(options.fieldType === undefined ? {} : { type: options.fieldType }),
+        },
+      ],
       resolveChannelScale: () => ({
         of: () => undefined,
         legendForm: 'swatch',
@@ -154,7 +167,7 @@ describe('size channel 映射节点半径', () => {
       { x: 1, y: 1, p: 4 },
       { x: 2, y: 2, p: 16 },
     ];
-    const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'p' }), { d: data }, cartOpts));
+    const nodes = collectNodes(firstLayer(pointSpec('p'), { d: data }, cartOpts));
     const radii = nodes.map(radiusOf);
 
     expect(radii[0]).toBeCloseTo(SIZE_MIN_RADIUS, 6); // p=0 位于 domain 下界，映射到 MIN
@@ -171,7 +184,7 @@ describe('size channel 映射节点半径', () => {
       { x: 0, y: 0 },
       { x: 1, y: 1 },
     ];
-    const nodes = collectNodes(firstLayer(pointSpec({ kind: 'constant', value: 8 }), { d: data }, cartOpts));
+    const nodes = collectNodes(firstLayer(pointSpec(8), { d: data }, cartOpts));
 
     expect(nodes.every(n => radiusOf(n) !== undefined && Math.abs(radiusOf(n)! - 8) < 1e-6)).toBe(true);
   });
@@ -191,9 +204,11 @@ describe('size channel 映射节点半径', () => {
       marks: [
         {
           type: 'point',
-          size: { kind: 'field', value: 'p' },
-          color: { kind: 'field', value: 'g', scale: 'col' },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          encodings: {
+            size: 'p',
+            color: { field: 'g', scale: 'col' },
+            position: { x: { field: 'x' }, y: { field: 'y' } },
+          },
         },
       ],
     });
@@ -218,11 +233,7 @@ describe('size channel 边界输入', () => {
       { x: 4, y: 4, p: 9 },
     ];
     const nodes = collectNodes(
-      firstLayer(
-        pointSpec({ kind: 'field', value: 'p' }),
-        { d: data },
-        { ...cartOpts, provenance: true, datumProvenance: true },
-      ),
+      firstLayer(pointSpec('p'), { d: data }, { ...cartOpts, provenance: true, datumProvenance: true }),
     );
 
     expect(nodes).toHaveLength(1);
@@ -241,11 +252,7 @@ describe('size channel 边界输入', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        {
-          type: 'point',
-          size: { kind: 'field', value: 'p' },
-          encoding: { x: { field: 'x' }, y: { field: 'y' }, text: { field: 'name' } },
-        },
+        { type: 'point', encodings: { size: 'p', text: 'name', position: { x: { field: 'x' }, y: { field: 'y' } } } },
       ],
     });
     const data = [
@@ -265,7 +272,7 @@ describe('size channel 边界输入', () => {
       { x: 0, y: 0, p: 0 },
       { x: 1, y: 1, p: 0 },
     ];
-    const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'p' }), { d: data }, cartOpts));
+    const nodes = collectNodes(firstLayer(pointSpec('p'), { d: data }, cartOpts));
 
     expect(nodes.every(n => Math.abs(radiusOf(n)! - SIZE_MIN_RADIUS) < 1e-6)).toBe(true);
   });
@@ -275,20 +282,20 @@ describe('size channel 边界输入', () => {
       { x: 0, y: 0, p: 7 },
       { x: 1, y: 1, p: 7 },
     ];
-    const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'p' }), { d: data }, cartOpts));
+    const nodes = collectNodes(firstLayer(pointSpec('p'), { d: data }, cartOpts));
 
     expect(nodes.every(n => Math.abs(radiusOf(n)! - SIZE_MAX_RADIUS) < 1e-6)).toBe(true);
   });
 
   it('empty_data_no_nodes', () => {
-    const outer = expandOf(pointSpec({ kind: 'field', value: 'p' }), { d: [] }, cartOpts);
+    const outer = expandOf(pointSpec('p'), { d: [] }, cartOpts);
 
     expect(outer.children).toHaveLength(0);
   });
 
   it('empty_data_preserves_explicit_sqrt_definition_in_resolver_and_descriptor', () => {
     const resolution = sizeResolutionOf(
-      { kind: 'field', value: 'p', scale: 'sizeScale' },
+      { field: 'p', scale: 'sizeScale' },
       [],
       [{ type: 'sqrt', name: 'sizeScale', domain: [0, 16], range: [3, 11] }],
     );
@@ -308,7 +315,7 @@ describe('size channel 边界输入', () => {
     ['empty', []],
     ['all-missing', [{ p: undefined }, { p: null }, { p: Number.NaN }]],
   ])('untyped_%s_rows_preserve_the_size_descriptor', (_label, rows) => {
-    const resolution = sizeResolutionOf({ kind: 'field', value: 'p' }, rows);
+    const resolution = sizeResolutionOf('p', rows);
 
     expect(resolution.descriptor).toMatchObject({
       channel: 'size',
@@ -320,12 +327,12 @@ describe('size channel 边界输入', () => {
 
     const data = rows.map(row => ({ x: 0, y: 0, ...row }));
 
-    expect(collectNodes(expandOf(pointSpec({ kind: 'field', value: 'p' }), { d: data }, cartOpts))).toEqual([]);
+    expect(collectNodes(expandOf(pointSpec('p'), { d: data }, cartOpts))).toEqual([]);
   });
 
   it('all_zero_data_uses_explicit_sqrt_range_in_resolver_and_descriptor', () => {
     const rows = [{ p: 0 }, { p: 0 }];
-    const resolution = sizeResolutionOf({ kind: 'field', value: 'p', scale: 'sizeScale' }, rows, [
+    const resolution = sizeResolutionOf({ field: 'p', scale: 'sizeScale' }, rows, [
       { type: 'sqrt', name: 'sizeScale', domain: [0, 16], range: [3, 11] },
     ]);
 
@@ -339,7 +346,7 @@ describe('size channel 边界输入', () => {
 
   it('derived_all_zero_scale_reports_the_effective_constant_range', () => {
     const rows = [{ p: 0 }, { p: 0 }];
-    const resolution = sizeResolutionOf({ kind: 'field', value: 'p' }, rows);
+    const resolution = sizeResolutionOf('p', rows);
 
     expect(rows.map(row => resolution.resolver(row))).toEqual([SIZE_MIN_RADIUS, SIZE_MIN_RADIUS]);
     expect(resolution.descriptor).toMatchObject({
@@ -350,7 +357,7 @@ describe('size channel 边界输入', () => {
 
   it('explicit_degenerate_domain_uses_the_formal_sqrt_mapping', () => {
     const resolution = sizeResolutionOf(
-      { kind: 'field', value: 'p', scale: 'sizeScale' },
+      { field: 'p', scale: 'sizeScale' },
       [],
       [{ type: 'sqrt', name: 'sizeScale', domain: [5, 5], range: [3, 11] }],
     );
@@ -361,7 +368,7 @@ describe('size channel 边界输入', () => {
 
   it('nice_sqrt_scale_exposes_the_domain_used_by_the_resolver', () => {
     const resolution = sizeResolutionOf(
-      { kind: 'field', value: 'p', scale: 'sizeScale' },
+      { field: 'p', scale: 'sizeScale' },
       [{ p: 2.5 }],
       [{ type: 'sqrt', name: 'sizeScale', domain: [0, 9.1], range: [3, 11], nice: true }],
     );
@@ -372,7 +379,7 @@ describe('size channel 边界输入', () => {
 
   it('single_positive_default_scale_keeps_resolver_and_descriptor_identity_aligned', () => {
     const rows = [{ p: 7 }];
-    const resolution = sizeResolutionOf({ kind: 'field', value: 'p' }, rows);
+    const resolution = sizeResolutionOf('p', rows);
 
     expect(resolution.resolver(rows[0])).toBeCloseTo(SIZE_MAX_RADIUS, 6);
     expect(resolution.descriptor).toMatchObject({
@@ -412,7 +419,7 @@ describe('size channel 错误输入', () => {
   });
 
   it('observed_derived_continuous_size_descriptor_reports_its_type', () => {
-    const node = pointSpec({ kind: 'field', value: 'derivedSize' });
+    const node = pointSpec('derivedSize');
     const resolution = BUILTIN_NODE_CHANNELS.size.resolve(
       {
         node,
@@ -448,14 +455,14 @@ describe('size channel 错误输入', () => {
 
     expect(() =>
       expandOf(
-        pointSpec({ kind: 'field', value: 'p' }, [], [...model, { name: 'p', type: DataFieldType.Categorical }]),
+        pointSpec('p', [], [...model, { name: 'p', type: DataFieldType.Categorical }]),
         { d: rows },
         { ...cartOpts, resolveField: resolver(DataFieldType.Continuous) },
       ),
     ).not.toThrow();
     expect(() =>
       expandOf(
-        pointSpec({ kind: 'field', value: 'p' }, [], [...model, { name: 'p', type: DataFieldType.Continuous }]),
+        pointSpec('p', [], [...model, { name: 'p', type: DataFieldType.Continuous }]),
         { d: rows },
         { ...cartOpts, resolveField: resolver(DataFieldType.Categorical) },
       ),
@@ -464,7 +471,7 @@ describe('size channel 错误输入', () => {
 
   it('resolve_field_type_overrides_format_and_runs_once_per_field', () => {
     const spec = pointSpec(
-      { kind: 'field', value: 'p' },
+      'p',
       [],
       [
         { name: 'x', type: DataFieldType.Continuous },
@@ -504,9 +511,8 @@ describe('size channel 错误输入', () => {
       marks: [
         {
           type: 'point',
-          transform: [{ operation: { kind: 'normalize', params: { field: 'p', as: 'p' } } }],
-          size: { kind: 'field', value: 'p' },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          transforms: [{ operation: { kind: 'normalize', params: { field: 'p', as: 'p' } } }],
+          encodings: { size: 'p', position: { x: { field: 'x' }, y: { field: 'y' } } },
         },
       ],
     });
@@ -518,7 +524,7 @@ describe('size channel 错误输入', () => {
     ['empty', []],
     ['all-missing', [{ x: 0, y: 0, p: undefined }]],
   ])('resolve_field_type_remains_authoritative_for_%s_rows', (_label, rows) => {
-    const spec = pointSpec({ kind: 'field', value: 'p' });
+    const spec = pointSpec('p');
     const resolveField: LowerPlotsOptions['resolveField'] = field =>
       field === 'p' ? { type: DataFieldType.Categorical } : undefined;
 
@@ -529,7 +535,7 @@ describe('size channel 错误输入', () => {
 
   it('format_implied_type_remains_authoritative_for_all_missing_rows', () => {
     const spec = pointSpec(
-      { kind: 'field', value: 'p' },
+      'p',
       [],
       [
         { name: 'x', type: DataFieldType.Continuous },
@@ -551,9 +557,7 @@ describe('size channel 错误输入', () => {
     const rowSets = [[{ p: 4 }], [], [{ p: undefined }, { p: null }, { p: Number.NaN }]];
 
     for (const rows of rowSets) {
-      expect(() => sizeResolutionOf({ kind: 'field', value: 'p' }, rows, [], { fieldType, model })).toThrow(
-        /size requires a continuous field/,
-      );
+      expect(() => sizeResolutionOf('p', rows, [], { fieldType, model })).toThrow(/size requires a continuous field/);
     }
   });
 
@@ -561,9 +565,7 @@ describe('size channel 错误输入', () => {
     ['categorical', [{ x: 0, y: 0, p: 'large' }]],
     ['temporal', [{ x: 0, y: 0, p: '2026-08-02' }]],
   ])('observed_untyped_%s_size_field_fails_loud', (_label, rows) => {
-    expect(() => expandOf(pointSpec({ kind: 'field', value: 'p' }), { d: rows }, cartOpts)).toThrow(
-      /size requires a continuous field/,
-    );
+    expect(() => expandOf(pointSpec('p'), { d: rows }, cartOpts)).toThrow(/size requires a continuous field/);
   });
 
   it('negative_field_value_fails_loud', () => {
@@ -572,22 +574,20 @@ describe('size channel 错误输入', () => {
       { x: 1, y: 1, p: -3 },
     ];
 
-    expect(() => expandOf(pointSpec({ kind: 'field', value: 'p' }), { d: data }, cartOpts)).toThrow(/negative/);
+    expect(() => expandOf(pointSpec('p'), { d: data }, cartOpts)).toThrow(/negative/);
   });
 
   it('unknown_size_scale_fails_loud', () => {
     const data = [{ x: 0, y: 0, p: 1 }];
 
-    expect(() => expandOf(pointSpec({ kind: 'field', value: 'p', scale: 'nope' }), { d: data }, cartOpts)).toThrow(
-      /unknown scale/,
-    );
+    expect(() => expandOf(pointSpec({ field: 'p', scale: 'nope' }), { d: data }, cartOpts)).toThrow(/unknown scale/);
   });
 
   it.each([
     ['empty', []],
     ['all-zero', [{ p: 0 }, { p: 0 }]],
   ])('unknown_size_scale_fails_loud_for_%s_rows', (_label, rows) => {
-    expect(() => sizeResolutionOf({ kind: 'field', value: 'p', scale: 'nope' }, rows)).toThrow(/unknown scale/);
+    expect(() => sizeResolutionOf({ field: 'p', scale: 'nope' }, rows)).toThrow(/unknown scale/);
   });
 
   it('non_sqrt_size_scale_fails_loud', () => {
@@ -595,7 +595,7 @@ describe('size channel 错误输入', () => {
       { x: 0, y: 0, p: 1 },
       { x: 1, y: 1, p: 4 },
     ];
-    const spec = pointSpec({ kind: 'field', value: 'p', scale: 'mySize' }, [{ type: 'linear', name: 'mySize' }]);
+    const spec = pointSpec({ field: 'p', scale: 'mySize' }, [{ type: 'linear', name: 'mySize' }]);
 
     expect(() => expandOf(spec, { d: data }, cartOpts)).toThrow(/must be a sqrt scale/);
   });
@@ -604,9 +604,9 @@ describe('size channel 错误输入', () => {
     ['empty', []],
     ['all-zero', [{ p: 0 }, { p: 0 }]],
   ])('non_sqrt_size_scale_fails_loud_for_%s_rows', (_label, rows) => {
-    expect(() =>
-      sizeResolutionOf({ kind: 'field', value: 'p', scale: 'mySize' }, rows, [{ type: 'linear', name: 'mySize' }]),
-    ).toThrow(/must be a sqrt scale/);
+    expect(() => sizeResolutionOf({ field: 'p', scale: 'mySize' }, rows, [{ type: 'linear', name: 'mySize' }])).toThrow(
+      /must be a sqrt scale/,
+    );
   });
 
   it.each([
@@ -614,7 +614,7 @@ describe('size channel 错误输入', () => {
     ['all-zero', [{ p: 0 }, { p: 0 }]],
   ])('negative_degenerate_sqrt_domain_fails_loud_for_%s_rows', (_label, rows) => {
     expect(() =>
-      sizeResolutionOf({ kind: 'field', value: 'p', scale: 'sizeScale' }, rows, [
+      sizeResolutionOf({ field: 'p', scale: 'sizeScale' }, rows, [
         { type: 'sqrt', name: 'sizeScale', domain: [-1, -1] },
       ]),
     ).toThrow(/domain must be non-negative/);
@@ -622,7 +622,7 @@ describe('size channel 错误输入', () => {
 
   it('field_size_descriptor_uses_explicit_scale_identity', () => {
     const resolution = sizeResolutionOf(
-      { kind: 'field', value: 'p', scale: 'mySize' },
+      { field: 'p', scale: 'mySize' },
       [{ p: 4 }],
       [{ type: 'sqrt', name: 'mySize' }],
     );

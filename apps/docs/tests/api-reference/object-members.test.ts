@@ -69,7 +69,7 @@ interface Base {
   nested: Nested;
 }
 interface SharedFields {
-  ${Array.from({ length: 22 }, (_, index) => `shared${index}?: string;`).join('\n')}
+  ${Array.from({ length: 42 }, (_, index) => `shared${index}?: string;`).join('\n')}
 }
 export type LargeUnion = SharedFields & (
   | { kind: 'text'; value: string; payload?: never; optional: number; readonly mutable: string;
@@ -137,6 +137,7 @@ export type IndexedProps = IndexedMarker;
           {
             source: entry,
             title: { zh: 'Objects', en: 'Objects' },
+            fullMemberSymbols: ['LargeUnion'],
             symbolPairs: [
               ['marker', 'MarkerProps'],
               ['plainMarker', 'PlainMarkerProps'],

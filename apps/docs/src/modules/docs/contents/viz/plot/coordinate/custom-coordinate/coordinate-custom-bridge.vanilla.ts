@@ -13,7 +13,7 @@ const spec: IRPlot = {
     { type: 'linear', name: 'y' },
   ],
   coordinate: { type: 'bridge', archHeight: 60, horizontalScale: 'x', verticalScale: 'y' },
-  marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+  marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },

@@ -21,7 +21,7 @@ import {
 import { LayoutInspectSpacingOptionsSchema } from '@retikz/layout/inspect';
 import {
   CoordinateSchema as PlotCoordinateSchema,
-  EncodingSchema,
+  VisualEncodingSchema,
   GuideSchema,
   MarkSchema,
   PlotDefaultsSchema,
@@ -49,7 +49,7 @@ describe('SCHEMA_REGISTRY', () => {
       LayoutInspectSpacingOptionsSchema: { schema: LayoutInspectSpacingOptionsSchema },
       TableSchema: { schema: TableSchema },
       PlotSchema: { schema: PlotSchema },
-      EncodingSchema: { schema: EncodingSchema },
+      VisualEncodingSchema: { schema: VisualEncodingSchema },
       DataTransformSchema: { schema: TransformSchema },
       MarkSchema: { schema: MarkSchema },
       ScaleSchema: { schema: ScaleSchema },

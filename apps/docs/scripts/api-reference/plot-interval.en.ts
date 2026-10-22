@@ -1,5 +1,16 @@
 /** 区间公开属性的人工审阅英文说明 */
 const translations: Partial<Record<string, string>> = {
+  '饼环份额字段，展开为累积区间': 'Pie or ring share field expanded into cumulative intervals',
+  '多系列排布方式': 'Arrangement of multiple series',
+  '排布使用的分组字段': 'Grouping field used by the arrangement',
+  '百分比堆叠简写': 'Percentage stacking shorthand',
+  '堆叠简写': 'Stacking shorthand',
+  '堆叠基线算法': 'Stack baseline algorithm',
+  '比例区间权重字段': 'Weight field for proportional intervals',
+  '直方区间起点字段': 'Start field for histogram intervals',
+  '直方区间终点字段': 'End field for histogram intervals',
+  '柱方向': 'Bar direction',
+
   'interval mark（柱 / histogram / heatmap / 径向柱 / 饼环）':
     'Interval mark for bars, histograms, heatmaps, radial bars, and pie or donut charts',
   为区间数据目标生成可引用锚点的命名规则: 'Naming rule for addressable interval data anchors',

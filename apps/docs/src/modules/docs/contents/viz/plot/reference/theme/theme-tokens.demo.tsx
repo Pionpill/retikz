@@ -33,7 +33,10 @@ export default function ThemeTokensDemo() {
   return (
     <Layout>
       <Plot data={points} width={440} height={270} defaultPlot={defaultPlot} plotRules={plotRules}>
-        <PointMark x="x" y="y" color="series" size={8} />
+        <PointMark
+          encodings={{ color: 'series', position: { x: { field: 'x' }, y: { field: 'y' } } }}
+          properties={{ size: 8 }}
+        />
         <PlotAxis dimension="x" />
         <PlotAxis dimension="y" />
         <PlotLegend channel="color" />

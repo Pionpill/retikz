@@ -45,16 +45,19 @@ export const Coordinate1dCompositionPreview = (values: Coordinate1dCompositionPr
     <Plot data={coordinate1DCompositionRows} coordinate="cartesian1D" width={560} height={250}>
       <PlotScale dimension="x" type="linear" domain={[0, 12.5]} />
       <PointMark
-        x="thingX"
-        anchorId={{ prefix: 'thing', field: 'thingId' }}
-        fill={{ kind: 'field', value: 'relationColor' }}
-        stroke="#ffffff"
-        strokeWidth={1.5}
-        size={values.sourcePointSize}
-        label={
-          values.sourceLabelVisible
+        encodings={{
+          anchorId: 'thingId',
+          fill: 'relationColor',
+          ...(values.sourceLabelVisible ? { label: { content: 'thingLabel' } } : {}),
+          position: { x: { field: 'thingX' } },
+        }}
+        properties={{
+          anchorId: { prefix: 'thing' },
+          stroke: '#ffffff',
+          strokeWidth: 1.5,
+          size: values.sourcePointSize,
+          label: values.sourceLabelVisible
             ? {
-                field: 'thingLabel',
                 position: 'top',
                 distance: values.sourceLabelDistance,
                 textColor: '#475569',
@@ -64,56 +67,53 @@ export const Coordinate1dCompositionPreview = (values: Coordinate1dCompositionPr
                 },
                 rotate: values.sourceLabelRotate,
               }
-            : undefined
-        }
-
-        zIndex={2}
+            : undefined,
+          zIndex: 2,
+        }}
       />
       <PointMark
-        transform={[{ operation: coordinate1DCompositionOperation }]}
-        x="practiceX"
-        anchorId={{ prefix: 'practice', field: 'practiceId' }}
-        text="practiceGlyph"
-        textColor={{ kind: 'field', value: 'relationColor' }}
-        font={{
-          size: values.targetPointSize,
-          weight: 'bold',
+        transforms={[{ operation: coordinate1DCompositionOperation }]}
+        encodings={{
+          anchorId: 'practiceId',
+          text: 'practiceGlyph',
+          textColor: 'relationColor',
+          position: { x: { field: 'practiceX' } },
         }}
-        dy={72}
-        zIndex={2}
+        properties={{
+          anchorId: { prefix: 'practice' },
+          font: {
+            size: values.targetPointSize,
+            weight: 'bold',
+          },
+          dy: 72,
+          zIndex: 2,
+        }}
       />
       {values.targetLabelVisible ? (
         <PointMark
-          transform={[{ operation: coordinate1DCompositionOperation }]}
-          x="practiceX"
-          text="practiceLabel"
-          textColor="#334155"
-          font={{
-            size: values.targetLabelSize,
-            weight: 'bold',
+          transforms={[{ operation: coordinate1DCompositionOperation }]}
+          encodings={{ text: 'practiceLabel', position: { x: { field: 'practiceX' } } }}
+          properties={{
+            textColor: '#334155',
+            font: {
+              size: values.targetLabelSize,
+              weight: 'bold',
+            },
+            dy: 100,
+            zIndex: 2,
           }}
-          dy={100}
-          zIndex={2}
         />
       ) : null}
       <RelationMark
-        source={{ anchorId: { prefix: 'thing', field: 'thingId' } }}
-        target={{ anchorId: { prefix: 'practice', field: 'practiceId' } }}
-        style={{
-          color: { kind: 'field', value: 'relationColor' },
-          strokeWidth: {
-            kind: 'constant',
-            value: values.relationStrokeWidth,
-          },
-          zIndex: { kind: 'constant', value: 1 },
-          opacity: {
-            overall: {
-              kind: 'constant',
-              value: values.relationOpacity,
-            },
-          },
+        encodings={{ source: { anchorId: 'thingId' }, target: { anchorId: 'practiceId' }, color: 'relationColor' }}
+        properties={{
+          source: { anchorId: { prefix: 'thing' } },
+          target: { anchorId: { prefix: 'practice' } },
+          strokeWidth: values.relationStrokeWidth,
+          zIndex: 1,
+          opacity: { overall: values.relationOpacity },
+          geometry: { kind: 'path', routing },
         }}
-        path={{ routing }}
       />
       {values.axisVisible ? (
         <PlotAxis

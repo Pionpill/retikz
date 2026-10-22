@@ -10,45 +10,22 @@
 
 <ApiTable grouped>
 
-| 分组 | 成员              | 类型                                                                               | 默认值 | 说明                                                                                                                     |
-| ---- | ----------------- | ---------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------ |
-| 主要 | `anchorId?`       | `IRPlotAnchorId`                                                                   | —      | 为路径数据目标生成可引用锚点的命名规则                                                                                   |
-|      | `id?`             | `string`                                                                           | —      | 可选 mark 句柄（预留 scope/anchor）                                                                                      |
-|      | `label?`          | `InputPlotGeometryLabel \| Array<InputPlotGeometryLabel>`                          | —      | 按路径几何放置的单个或多个标签                                                                                           |
-| 数据 | `color?`          | `InputPlotFieldName`                                                               | —      | 颜色字段（categorical，自动 ordinal 色 scale）：无显式 series 时按此字段隐式拆多条线；缺省取 series。连续 / 时间字段报错 |
-|      | `order?`          | `InputPlotFieldName`                                                               | —      | 驱动连接顺序的字段；缺省按数据数组顺序                                                                                   |
-|      | `series?`         | `InputPlotFieldName`                                                               | —      | 系列字段：按其拆成多条折线（多系列）；缺省单线                                                                           |
-|      | `transform?`      | `Array<IRDataTransformDeclaration>`                                                | —      | 只作用于当前 mark 数据视图的变换链                                                                                       |
-|      | `x`               | `InputPlotFieldName`                                                               | —      | 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值）                                                                  |
-|      | `y`               | `InputPlotFieldName`                                                               | —      | 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值）                                                                  |
-| 几何 | `closed?`         | `boolean`                                                                          | —      | 末点回连首点闭合成多边形（polar 下即雷达轮廓）；cartesian 缺省 false，polar2D 缺省 true                                  |
-|      | `closure?`        | `IRPlotPathClosure`                                                                | —      | 构建闭合路径：cycle 首尾闭合，baseline 回到基线，stack 回到逐行基线字段；是否填充由 fill 控制                            |
-|      | `connectNulls?`   | `IRPlotPathMark['connectNulls']`                                                   | —      | 开放轨迹跨缺值段默认虚线；对象覆盖该段描边，省略或 false 断开                                                            |
-|      | `coordinateView?` | `string`                                                                           | —      | 直接绑定的坐标视图 id                                                                                                    |
-|      | `curve?`          | `PathCurve`                                                                        | —      | 相邻点连接方式；缺省 linear                                                                                              |
-|      | `facetId?`        | `string`                                                                           | —      | 分面声明 id；构建 IRPlot 时展开为对应坐标视图                                                                            |
-|      | `interpolation?`  | `PolarInterpolation`                                                               | —      | Polar2D 连接空间局部覆盖；省略时继承坐标系                                                                               |
-|      | `rotate?`         | `InputPlotMarkValueProp<number> \| IRPlotPointNumberStyle`                         | —      | 路径旋转角度                                                                                                             |
-|      | `roundedCorners?` | `InputPlotMarkValueProp<number> \| IRPlotPointNonnegativeNumberStyle`              | —      | 路径折角圆角半径的常量或数据映射                                                                                         |
-|      | `scale?`          | `InputPlotMarkValueProp<IRPathScale> \| IRPlotPathScaleStyle`                      | —      | 路径缩放配置                                                                                                             |
-|      | `trackId?`        | `string`                                                                           | —      | 共享轨道 id；构建 IRPlot 时展开为对应坐标视图                                                                            |
-|      | `xAxisId?`        | `string`                                                                           | —      | 适配器专用糖：把图元绑定到命名 x 轴；输出 IRPlot 前会展开为 `coordinateView`                                             |
-|      | `yAxisId?`        | `string`                                                                           | —      | 适配器专用糖：把图元绑定到命名 y 轴；输出 IRPlot 前会展开为 `coordinateView`                                             |
-| 样式 | `blendMode?`      | `InputPlotMarkValueProp<BlendMode> \| IRPlotBlendModeStyle`                        | —      | 路径混合模式                                                                                                             |
-|      | `dashPattern?`    | `InputPlotMarkValueProp<Array<number>> \| IRPlotNodeDashPatternStyle`              | —      | 自定义描边间隔                                                                                                           |
-|      | `fill?`           | `InputPlotFieldName \| IRPaint \| IRPlotPointFillStyle`                            | —      | 路径填充；字符串优先按字段名解析                                                                                         |
-|      | `fillRule?`       | `InputPlotMarkValueProp<InputPlotFillRule> \| IRPlotPathFillRuleStyle`             | —      | 路径填充规则                                                                                                             |
-|      | `layer?`          | `IRPlotLayer`                                                                      | —      | 语义图层覆盖；控制该 mark 外层 scope 在 plot 内的 zIndex                                                                 |
-|      | `lineCap?`        | `InputPlotFieldName \| InputPlotLineCap \| InputPlotMarkValue<InputPlotLineCap>`   | —      | 路径端点形状的常量或字段映射                                                                                             |
-|      | `lineJoin?`       | `InputPlotFieldName \| InputPlotLineJoin \| InputPlotMarkValue<InputPlotLineJoin>` | —      | 路径连接处形状的常量或字段映射                                                                                           |
-|      | `marks?`          | `IRPlotRelationPathSpecificOptions['marks']`                                       | —      | 路径上的标记配置                                                                                                         |
-|      | `opacity?`        | `InputPlotOpacity`                                                                 | —      | 路径整体透明度的常量或数据映射                                                                                           |
-|      | `shadow?`         | `InputPlotMarkValueProp<ShadowPreset \| IRDropShadow> \| IRPlotShadowStyle`        | —      | 路径阴影                                                                                                                 |
-|      | `stroke?`         | `InputPlotFieldName \| IRPaint \| IRPlotPointStrokeStyle`                          | —      | 路径描边；字符串优先按字段名解析                                                                                         |
-|      | `strokeWidth?`    | `InputPlotMarkValueProp<number> \| IRPlotPointStrokeWidthStyle`                    | —      | 路径描边宽度的常量或数据映射                                                                                             |
-|      | `zIndex?`         | `InputPlotMarkValueProp<number> \| IRPlotPointZIndexStyle`                         | —      | 路径绘制顺序提示                                                                                                         |
-| 回调 | `resolveLabel?`   | `(row: ExternalRow) => string`                                                     | —      | 按有效数据行生成标签文字的运行时回调，需配合 mark id 使用                                                                |
-| 扩展 | `channels?`       | `Record<string, InputPlotExtensionChannel>`                                        | —      | 扩展通道绑定，会转发到 `encoding.channels`；字符串值按字段名处理                                                         |
+| 分组 | 成员                  | 类型                                | 默认值 | 说明 |
+| ---- | --------------------- | ----------------------------------- | ------ | ---- |
+| 主要 | `id?`                 | `string`                            | —      | —    |
+| 数据 | `contributeToDomain?` | `false \| true`                     | —      | —    |
+|      | `encodings`           | `InputPlotPathMark['encodings']`    | —      | —    |
+|      | `transforms?`         | `InputPlotPathMark['transforms']`   | —      | —    |
+| 几何 | `coordinateView?`     | `string`                            | —      | —    |
+|      | `properties?`         | `InputPlotPathMark['properties']`   | —      | —    |
+|      | `xAxisId?`            | `string`                            | —      | —    |
+|      | `yAxisId?`            | `string`                            | —      | —    |
+| 布局 | `facetId?`            | `string`                            | —      | —    |
+|      | `trackId?`            | `string`                            | —      | —    |
+| 样式 | `defaultColorGroup?`  | `string`                            | —      | —    |
+|      | `defaultColorIndex?`  | `number`                            | —      | —    |
+|      | `layer?`              | `{ zIndex?: number \| undefined; }` | —      | —    |
+| 回调 | `resolveLabel?`       | `(row: ExternalRow) => string`      | —      | —    |
 
 </ApiTable>
 
@@ -64,7 +41,7 @@ export type PathMarkProps = InputPlotPathMark;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRPlotPathMark"} path={"packages/viz/plot/src/schemas/mark/types.ts"} startLine={136}>IRPlotPathMark</ApiSourceLink> / <ApiSourceLink label={"PathMarkSchema"} path={"packages/viz/plot/src/schemas/mark/schema.ts"} startLine={769}>PathMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPlotPathMark"} path={"packages/viz/plot/src/schemas/mark/path.ts"} startLine={226}>IRPlotPathMark</ApiSourceLink> / <ApiSourceLink label={"PathMarkSchema"} path={"packages/viz/plot/src/schemas/mark/path.ts"} startLine={210}>PathMarkSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 

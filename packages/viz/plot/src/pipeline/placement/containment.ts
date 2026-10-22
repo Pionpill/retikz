@@ -9,6 +9,7 @@ import type {
   MarkChannels,
 } from '../../contract';
 import { RetikzPlotError } from '../../error';
+import { resolveMarkInstances } from '../../resolve';
 import { resolvePositionAdjustmentOperation } from '../../resolve/position-adjustment';
 import type { IRPlotMarkOperation, IRPlotMarkPlacement } from '../../schemas';
 
@@ -37,7 +38,7 @@ export const resolveMarkPlacementRangeOverrides = (
   boundaryRanges?: Partial<Record<DimensionRole, readonly [number, number]>>,
   protectedRoles: ReadonlyArray<DimensionRole> = [],
 ): MarkPlacementRangeOverrides | undefined => {
-  const placement = (resolution.operation as { placement?: IRPlotMarkPlacement }).placement;
+  const placement = (resolution.operation.properties as { placement?: IRPlotMarkPlacement } | undefined)?.placement;
   if (placement === undefined) return undefined;
 
   const definitions = placement.adjustments.map(operation => resolvePositionAdjustmentOperation(operation, registry));
@@ -58,7 +59,7 @@ export const resolveMarkPlacementRangeOverrides = (
   }
 
   const targets: Array<MappedMarkPlacementTarget> = capability
-    .targets(resolution.operation as never, rows, frame)
+    .targets(resolution.operation as never, resolveMarkInstances(resolution, rows), frame)
     .map(target => ({ ...target, mappedRoles: frame.mapRoles?.(target.roleValues) ?? null }));
   const envelopeByRole = new Map<string, { lower: number; upper: number }>();
 

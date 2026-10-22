@@ -17,10 +17,10 @@ const endpointGlyphOf = (properties: IRRangedDotPointProperties): JsonObject => 
   const glyph: JsonObject = {};
 
   for (const name of ['color', 'size', 'shape', 'fill', 'stroke', 'strokeWidth', 'rotate', 'minimumSize'] as const) {
-    if (properties[name] !== undefined) glyph[name] = { kind: 'constant', value: properties[name] };
+    if (properties[name] !== undefined) glyph[name] = properties[name];
   }
 
-  const opacity = markOpacityOf({}, properties);
+  const opacity = markOpacityOf(properties);
   if (opacity !== undefined) glyph.opacity = opacity;
   return glyph;
 };
@@ -29,10 +29,10 @@ const rangeStyleOf = (properties: IRRangedDotRangeProperties): JsonObject => {
   const style: JsonObject = {};
 
   for (const name of ['stroke', 'strokeWidth', 'shadow', 'blendMode'] as const) {
-    if (properties[name] !== undefined) style[name] = { kind: 'constant', value: properties[name] };
+    if (properties[name] !== undefined) style[name] = properties[name];
   }
 
-  const opacity = markOpacityOf({}, properties);
+  const opacity = markOpacityOf(properties);
   if (opacity !== undefined) style.opacity = opacity;
   return style;
 };
@@ -79,13 +79,17 @@ export const resolveRangedDotMark = (
 
   return RelationMarkSchema.parse({
     type: BuiltinPlotMark.Relation,
-    autoPadding: properties.autoPadding ?? 'max-radius',
-    source: { project: { x: start, y: category } },
-    target: { project: { x: end, y: category } },
-    style,
-    ...(path === undefined ? {} : { path }),
-    endpoints: { source, target },
-    ...(color === undefined ? {} : { encoding: { color } }),
+    encodings: {
+      source: { position: { x: { field: start }, y: { field: category } } },
+      target: { position: { x: { field: end }, y: { field: category } } },
+      ...(color === undefined ? {} : { color }),
+    },
+    properties: {
+      autoPadding: properties.autoPadding ?? 'max-radius',
+      ...style,
+      geometry: { kind: 'path', ...path },
+      endpoints: { source, target },
+    },
   });
 };
 

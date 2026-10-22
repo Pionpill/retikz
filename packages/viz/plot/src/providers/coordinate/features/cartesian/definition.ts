@@ -187,6 +187,8 @@ export type CartesianCoordinateFrame = {
   mapRoles: (values: ReadonlyArray<unknown>) => ReadonlyArray<number> | null;
   /** 已映射 x/y 直接解释为屏幕位置 */
   projectMappedRoles: (values: ReadonlyArray<number>) => Position | null;
+  /** 直角坐标线段投影 */
+  projectSegment: NonNullable<CoordinateFrame['projectSegment']>;
   /** 笛卡尔 role-space containment 边界度量 */
   placementBoundary: NonNullable<CoordinateFrame['placementBoundary']>;
   /** 映射后角色递增时的屏幕切向 */
@@ -231,6 +233,11 @@ export const createCartesianCoordinate = (
     projectRoles: values => project(values[0], values[1]),
     mapRoles,
     projectMappedRoles,
+    projectSegment: (from, to) => {
+      const start = projectMappedRoles(from);
+      const end = projectMappedRoles(to);
+      return start && end ? [start, end] : null;
+    },
     tangentAt: role => (role === 'x' ? [1, 0] : role === 'y' ? [0, 1] : null),
     placementBoundary: {
       isCyclic: () => false,
@@ -280,6 +287,8 @@ export type Cartesian1DCoordinateFrame = {
   mapRoles: (values: ReadonlyArray<unknown>) => ReadonlyArray<number> | null;
   /** 已映射 x 投影到 horizontal / vertical 屏幕轴 */
   projectMappedRoles: (values: ReadonlyArray<number>) => Position | null;
+  /** 直角坐标线段投影 */
+  projectSegment: NonNullable<CoordinateFrame['projectSegment']>;
   /** 一维笛卡尔 role-space containment 边界度量 */
   placementBoundary: NonNullable<CoordinateFrame['placementBoundary']>;
   /** 映射后角色递增时的屏幕切向 */
@@ -324,6 +333,11 @@ export const createCartesian1DCoordinate = (
     projectRoles,
     mapRoles,
     projectMappedRoles,
+    projectSegment: (from, to) => {
+      const start = projectMappedRoles(from);
+      const end = projectMappedRoles(to);
+      return start && end ? [start, end] : null;
+    },
     tangentAt: role => (role !== 'x' ? null : orientation === Cartesian1DOrientation.Horizontal ? [1, 0] : [0, 1]),
     placementBoundary: {
       isCyclic: () => false,

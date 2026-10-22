@@ -9,7 +9,7 @@ import type {
 } from '../../contract';
 import type {
   IRArrowMark,
-  IRGeometryLabel,
+  IRPathLabel,
   IRPaint,
   IRPathBase,
   IRPathStyle,
@@ -24,8 +24,8 @@ import type { PaintResolutionInput } from '../resource';
 import type { EffectiveScopeDefaults, GraphicOpacityResolution } from '../style';
 import type { ResolvedLabelTextBlock } from '../text';
 
-/** 已把文字与 run 派生颜色确定为字符串的路径几何标签 */
-export type ResolvedGeometryLabel = Omit<IRGeometryLabel, 'textColor' | 'text'> & {
+/** 已把文字与 run 派生颜色确定为字符串的路径标签 */
+export type ResolvedPathLabel = Omit<IRPathLabel, 'textColor' | 'text'> & {
   /** 已确定的标签文字主色 */
   textColor?: string;
   /** 已确定 run 颜色的标签正文 */
@@ -33,17 +33,17 @@ export type ResolvedGeometryLabel = Omit<IRGeometryLabel, 'textColor' | 'text'> 
 };
 
 /** 标签的几何配置，不含文本和视觉外观 */
-export type GeometryLabelGeometryOptions = Omit<IRGeometryLabel, 'text' | 'textColor' | 'font' | 'opacity'>;
+export type PathLabelGeometryOptions = Omit<IRPathLabel, 'text' | 'textColor' | 'font' | 'opacity'>;
 
 /** 已展开默认的标签几何，不含文本和视觉外观 */
-export type CanonicalGeometryLabelPlacement = Omit<
-  GeometryLabelGeometryOptions,
+export type CanonicalPathLabelPlacement = Omit<
+  PathLabelGeometryOptions,
   'position' | 'side' | 'distance' | 'interrupt' | 'gap'
 > & {
   /** 路径上的归一化位置 */
   position: number;
   /** 相对宿主的方向 */
-  side: NonNullable<IRGeometryLabel['side']> | 'center';
+  side: NonNullable<IRPathLabel['side']> | 'center';
   /** 相对宿主的距离 */
   distance: number;
   /** 是否中断宿主描边 */
@@ -52,15 +52,12 @@ export type CanonicalGeometryLabelPlacement = Omit<
   gap: number;
 };
 
-/** 展开位置、方向与距离默认值后的路径几何标签 */
-export type CanonicalGeometryLabel = Omit<
-  ResolvedGeometryLabel,
-  'position' | 'side' | 'distance' | 'interrupt' | 'gap'
-> & {
+/** 展开位置、方向与距离默认值后的路径标签 */
+export type CanonicalPathLabel = Omit<ResolvedPathLabel, 'position' | 'side' | 'distance' | 'interrupt' | 'gap'> & {
   /** 路径上的归一化位置 */
   position: number;
   /** 相对宿主线段的方向 */
-  side: NonNullable<IRGeometryLabel['side']> | 'center';
+  side: NonNullable<IRPathLabel['side']> | 'center';
   /** 相对宿主线的偏移距离 */
   distance: number;
   /** 是否在兼容的宿主描边上产生断口 */
@@ -71,7 +68,7 @@ export type CanonicalGeometryLabel = Omit<
 
 type WithResolvedStepLabel<TStep extends IRStep> = TStep extends unknown
   ? 'label' extends keyof TStep
-    ? Omit<TStep, 'label'> & { label?: ResolvedGeometryLabel }
+    ? Omit<TStep, 'label'> & { label?: ResolvedPathLabel }
     : TStep
   : never;
 
@@ -98,7 +95,7 @@ export type ResolvedPathSource = Omit<IRPathBase, 'style' | 'children' | 'label'
   /** 已确定 step label 颜色的步骤 */
   children?: Array<ResolvedStepSource>;
   /** 已确定的宿主标签 */
-  label?: ResolvedGeometryLabel | Array<ResolvedGeometryLabel>;
+  label?: ResolvedPathLabel | Array<ResolvedPathLabel>;
   /** 已确定 arrow 颜色的 marks */
   marks?: Array<
     Omit<NonNullable<IRPathBase['marks']>[number], 'mark'> & {
@@ -110,7 +107,7 @@ export type ResolvedPathSource = Omit<IRPathBase, 'style' | 'children' | 'label'
 
 type WithCanonicalStepLabel<TStep extends ResolvedStepSource> = TStep extends unknown
   ? 'label' extends keyof TStep
-    ? Omit<TStep, 'label'> & { label?: CanonicalGeometryLabel }
+    ? Omit<TStep, 'label'> & { label?: CanonicalPathLabel }
     : TStep
   : never;
 
@@ -149,7 +146,7 @@ export type CanonicalPath = Omit<
     /** 完整路径步骤 */
     children?: Array<CanonicalStep>;
     /** 统一为数组的宿主标签 */
-    label?: Array<CanonicalGeometryLabel>;
+    label?: Array<CanonicalPathLabel>;
     /** 已展开预设与静态默认值的投影 */
     shadow?: ResolvedDropShadow;
   };
