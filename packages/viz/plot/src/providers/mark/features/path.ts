@@ -14,7 +14,6 @@ import type {
 } from '../../../contract';
 import { seriesPathMeta, slug, channelField } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
-import { PathAnnotationSchema } from '../../../schemas';
 import type { IRPlotMark, IRPlotPathClosure, IRPlotPathMark } from '../../../schemas';
 import {
   PathClosureKind,
@@ -49,7 +48,7 @@ import {
   mapMarkRoles,
   mappedRoleValue,
 } from '../shared';
-import { lowerAnnotation } from './annotation';
+import { lowerPathEndpoints } from './path-endpoints';
 
 /**
  * 取一行的位置通道值 → [xValue, yValue]（坐标系无关；投影交给 frame.project，frame 把 x/y 重解释为对应角色）
@@ -389,7 +388,7 @@ const projectBaselinePoint = (
 
 /** 读取堆叠闭合所需的逐行基线字段 */
 export const pathBaselineField = (mark: IRPlotPathMark): string => {
-  const field = mark.encodings?.closure?.baseline;
+  const field = mark.encodings.closure?.baseline;
   if (field === undefined) throw new RetikzPlotError('Stack path closure requires encodings.closure.baseline');
   return field;
 };
@@ -443,7 +442,7 @@ const pathRowSegments = (
   frame: CoordinateFrame,
   closure: IRPlotPathClosure | undefined,
 ): Array<PathRowSegment> => {
-  const ordered = orderRows(rows, mark.encodings?.order);
+  const ordered = orderRows(rows, mark.encodings.order);
   const connectNulls = mark.properties?.connectNulls !== undefined && mark.properties.connectNulls !== false;
   const projectable = (row: ExternalRow): boolean =>
     closure === undefined ? projectableTopPoint(mark, row, frame) : projectableClosurePoint(mark, row, frame, closure);
@@ -499,7 +498,7 @@ const buildLineStepSegments = (
   const connectNulls = mark.properties?.connectNulls !== undefined && mark.properties.connectNulls !== false;
   if (!closed && connectNulls) {
     const runs = splitRowsByProjectability(
-      orderRows(rows, mark.encodings?.order),
+      orderRows(rows, mark.encodings.order),
       row => projectableTopPoint(mark, row, frame),
       false,
     );
@@ -658,7 +657,7 @@ export const buildSeriesPathScopes = (
         mark.properties?.label,
         row,
         channelValueOf<IRNodeLabel['text']>(channels, 'label'),
-        mark.encodings?.label,
+        mark.encodings.label,
       );
       const path: IRPathChild = applyPathChannelDeliveries(
         {
@@ -730,14 +729,14 @@ const assertColorConstantWithinSeries = (rows: Array<ExternalRow>, seriesField: 
 
 /**
  * path mark（path）的有效 series 字段
- * @description 显式 mark.encodings?.series 优先；无显式 series 但有 categorical color 字段 → 隐式按 color 拆系列。
+ * @description 显式 mark.encodings.series 优先；无显式 series 但有 categorical color 字段 → 隐式按 color 拆系列。
  *   显式 series 与 color 字段并存且 color 在 series 内不恒定 → fail-loud
  */
 export const pathSeriesField = (mark: IRPlotMark, rows: Array<ExternalRow>): string | undefined => {
   if (mark.type !== BuiltinPlotMark.Path) return undefined;
 
-  const colorField = mark.encodings?.color === undefined ? undefined : channelField(mark.encodings.color);
-  if (mark.encodings?.series) {
+  const colorField = mark.encodings.color === undefined ? undefined : channelField(mark.encodings.color);
+  if (mark.encodings.series) {
     if (colorField && colorField !== mark.encodings.series)
       assertColorConstantWithinSeries(rows, mark.encodings.series, colorField);
     return mark.encodings.series;
@@ -832,7 +831,7 @@ const lowerPath = (
         mark.properties?.label,
         row,
         channelValueOf<IRNodeLabel['text']>(channels, 'label'),
-        mark.encodings?.label,
+        mark.encodings.label,
       );
 
       return applyNullConnectionStyle(
@@ -880,11 +879,11 @@ const pathAnchorCoordinates = (
   frame: CoordinateFrame,
   ctx: MarkLoweringContext | undefined,
 ): Array<IRCoordinate> => {
-  if ((mark.properties?.anchorId === undefined && mark.encodings?.anchorId === undefined) || ctx?.anchors === undefined)
+  if ((mark.properties?.anchorId === undefined && mark.encodings.anchorId === undefined) || ctx?.anchors === undefined)
     return [];
 
   const coordinates: Array<IRCoordinate> = [];
-  const ordered = orderRows(rows, mark.encodings?.order);
+  const ordered = orderRows(rows, mark.encodings.order);
 
   for (let transformedIndex = 0; transformedIndex < ordered.length; transformedIndex += 1) {
     const row = ordered[transformedIndex];
@@ -892,12 +891,18 @@ const pathAnchorCoordinates = (
     if (position === null) continue;
 
     const owner = {
+      kind: 'row' as const,
       markType: mark.type,
       markId: mark.id,
       markIndex: ctx.markIndex,
       transformedIndex,
     };
-    const id = ctx.anchors.makeId(mark.properties?.anchorId ?? {}, row, owner, mark.encodings?.anchorId);
+    const id = ctx.anchors.makeId(
+      mark.properties?.anchorId ?? {},
+      { kind: 'row', row, transformedIndex },
+      owner,
+      mark.encodings.anchorId,
+    );
     coordinates.push(ctx.anchors.coordinate(id, position, owner));
   }
 
@@ -941,21 +946,24 @@ export const lowerPathLayer = (
 /** 收集 path mark 独有字段：连接顺序与 series 拆分 */
 const collectPathMarkChannelFields = (mark: IRPlotPathMark, fields: FieldCollector): void => {
   fields.addFields(
-    mark.encodings?.order,
-    mark.encodings?.series,
-    mark.properties?.closure?.kind === PathClosureKind.Stack ? mark.encodings?.closure?.baseline : undefined,
+    mark.encodings.order,
+    mark.encodings.series,
+    mark.properties?.closure?.kind === PathClosureKind.Stack ? mark.encodings.closure?.baseline : undefined,
   );
 };
 
 /** 内置 path mark definition */
 export const pathMarkDefinition: MarkDefinition<IRPlotPathMark> = {
   schema: PathMarkSchema,
-  annotation: { schema: PathAnnotationSchema, lower: lowerAnnotation },
   channelKinds: pathChannelKinds,
   collectFields: (mark, fields: FieldCollector) => {
     collectCommonEncodingFields(mark, fields);
     collectPathChannelFields(mark, fields);
     collectPathMarkChannelFields(mark, fields);
   },
-  lower: lowerPathLayer,
+  lower: (mark, input, frame, channels, context) => {
+    if (mark.encodings.from !== undefined) return lowerPathEndpoints(mark, input, frame, channels, context);
+    if (input.kind === 'single') return null;
+    return lowerPathLayer(mark, input.rows, frame, channels, context);
+  },
 };

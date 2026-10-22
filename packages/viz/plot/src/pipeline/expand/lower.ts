@@ -29,7 +29,6 @@ import type {
   PreparedPlotData,
 } from '../../contract';
 import { PositionScaleContinuity, rootMeta, slug } from '../../contract';
-import { isIndependentAnnotation } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import {
   isPolarCoordinateFrame,
@@ -37,7 +36,9 @@ import {
   lowerMark,
   makeColorSchemeResolver,
   resolveChannelRegistry,
+  createFieldCollector,
 } from '../../providers';
+import { isSingleMark, resolveMarkInstances } from '../../resolve';
 import { resolvePlotDataExecution } from '../../resolve';
 import type { ChannelResolveContext } from '../../resolve/channel';
 import { resolveMarkChannels } from '../../resolve/channel';
@@ -76,7 +77,7 @@ import {
 import type { CoordinateFrameResolution, CoordinateResolveContext } from '../../resolve/coordinate';
 import { resolveCoordinateFrame } from '../../resolve/coordinate';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
-import { resolveMarkOperation } from '../../resolve/mark';
+import { collectMarkFields, resolveMarkOperation } from '../../resolve/mark';
 import {
   createMarkPaddingContext,
   markDomainPaddingOf,
@@ -445,13 +446,13 @@ export const lowerPlotWithDataArtifact = (
   } = compositionResolution;
 
   /** 在一个明确DataView scope内执行一次mark-local transform并保留可选lineage */
-  const resolveMarkTransform = (
+  const transformMarkData = (
     mark: IRPlotMarkOperation,
     markIndex: number,
     inputDataView: DataView,
     prepared?: DataTransformResult,
   ) => {
-    if (isIndependentAnnotation(mark))
+    if (isSingleMark(mark, { registry: markRegistry }))
       return { markDataView: { markIndex, mark, dataView: inputDataView } satisfies MarkDataView, lineage: undefined };
     if (prepared !== undefined)
       return {
@@ -489,6 +490,25 @@ export const lowerPlotWithDataArtifact = (
       markDataView: { markIndex, mark, dataView: result.dataView } satisfies MarkDataView,
       lineage: result.lineage,
     };
+  };
+
+  /** 校验最终逻辑模型中的字段依赖，允许字段内的缺失值但拒绝已移除字段 */
+  const resolveMarkTransform = (
+    mark: IRPlotMarkOperation,
+    markIndex: number,
+    inputDataView: DataView,
+    prepared?: DataTransformResult,
+  ) => {
+    const result = transformMarkData(mark, markIndex, inputDataView, prepared);
+    const fields = new Set<string>();
+    collectMarkFields(mark, createFieldCollector(fields), { registry: markRegistry });
+    const available = new Set(result.markDataView.dataView.model.map(field => field.name));
+    for (const field of fields) {
+      if (!available.has(field)) {
+        throw new RetikzPlotError(`Mark ${markIndex} references field "${field}" absent from its final data model`);
+      }
+    }
+    return result;
   };
 
   const rootMarkResults = node.marks.map((mark, markIndex) =>
@@ -533,6 +553,7 @@ export const lowerPlotWithDataArtifact = (
     textMeasurer: options.textMeasurer,
     provenance,
     coordinateRegistry,
+    markRegistry,
     fieldOrderRegistry,
     scaleRegistry,
     legendReserve: legendReserveOf(guides.filter(isLegendGuide)),
@@ -1349,13 +1370,21 @@ export const lowerPlotWithDataArtifact = (
               { width: panelWidth, height: panelHeight },
               positionAdjustmentRegistry,
             );
-            const layer = lowerMark(operationResolution, markRows, frameResolution.frame, markChannels, {
-              markIndex,
-              plotId: node.id,
-              ...(provenance !== undefined ? { provenance: { context: provenance, markIndex, registerDatumId } } : {}),
-              anchors: anchorRegistry,
-              ...(positions !== undefined ? { positions } : {}),
-            });
+            const layer = lowerMark(
+              operationResolution,
+              resolveMarkInstances(operationResolution, markRows),
+              frameResolution.frame,
+              markChannels,
+              {
+                markIndex,
+                plotId: node.id,
+                ...(provenance !== undefined
+                  ? { provenance: { context: provenance, markIndex, registerDatumId } }
+                  : {}),
+                anchors: anchorRegistry,
+                ...(positions !== undefined ? { positions } : {}),
+              },
+            );
 
             return layer === null ? null : withScopeContext(layer, panelContext);
           })
@@ -1461,13 +1490,19 @@ export const lowerPlotWithDataArtifact = (
         { width, height },
         positionAdjustmentRegistry,
       );
-      const layer = lowerMark(operationResolution, markRows, frame, markChannels, {
-        markIndex,
-        plotId: node.id,
-        ...(provenance !== undefined ? { provenance: { context: provenance, markIndex, registerDatumId } } : {}),
-        anchors: anchorRegistry,
-        ...(positions !== undefined ? { positions } : {}),
-      });
+      const layer = lowerMark(
+        operationResolution,
+        resolveMarkInstances(operationResolution, markRows),
+        frame,
+        markChannels,
+        {
+          markIndex,
+          plotId: node.id,
+          ...(provenance !== undefined ? { provenance: { context: provenance, markIndex, registerDatumId } } : {}),
+          anchors: anchorRegistry,
+          ...(positions !== undefined ? { positions } : {}),
+        },
+      );
       if (layer === null) return null;
 
       const scope = scopeById.get(coordinateScopeId);

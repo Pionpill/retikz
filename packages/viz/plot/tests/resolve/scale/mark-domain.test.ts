@@ -42,8 +42,7 @@ const plotOf = (padding: unknown = { kind: 'mark', marks: ['dots'] }, guides: Ar
       {
         id: 'dots',
         type: 'point',
-        kind: 'data',
-        encodings: { position: { x: 'x', y: 'y' }, size: { field: 'r', scale: 'size' } },
+        encodings: { position: { x: { field: 'x' }, y: { field: 'y' } }, size: { field: 'r', scale: 'size' } },
       },
     ],
   });
@@ -401,8 +400,10 @@ describe('mark padding final geometry', () => {
         {
           id: 'dots',
           type: 'relation',
-          kind: 'data',
-          encodings: { source: { position: { x: 'x', y: 'y' } }, target: { position: { x: 'x', y: 'y' } } },
+          encodings: {
+            source: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+            target: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+          },
           properties: {
             endpoints: {
               source: { size: 8 },
@@ -429,7 +430,7 @@ describe('mark padding capabilities', () => {
       schema: strictObject({ ...PointMarkSchema.shape, type: literal('custom-dot') }),
       lower: ((mark, data, frame, channels, context) =>
         pointMarkDefinition.lower(
-          { ...mark, type: 'point', kind: 'data' },
+          { ...mark, type: 'point' },
           data,
           frame,
           channels,
@@ -566,7 +567,7 @@ describe('mark padding shared coordinate views', () => {
           ...base.marks[0],
           id: 'overlay-dots',
           coordinateView: 'overlay',
-          encodings: { position: { x: 'x', y: 'y' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: { size: 8 },
         },
       ],

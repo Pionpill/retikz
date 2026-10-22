@@ -30,6 +30,7 @@ import {
 } from '@retikz/data';
 
 import type { AnyMarkDefinition, AnyPositionAdjustmentDefinition, AnyScaleDefinition } from '../../contract';
+import { markPositionInputs, positionField } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { resolveMarkRegistry, resolvePositionAdjustmentRegistry, resolveScaleRegistry } from '../../providers';
 import type { IRPlot, IRPlotMarkOperation } from '../../schemas';
@@ -162,8 +163,25 @@ export const prepareRows = (
 
   const parsers = new Map([...formatParsers, ...resolverParsers]);
   const normalized = normalizeRows(ingested, fieldTypeMap, fieldMap, parsers);
+  const positionFields = new Set<string>();
+  for (const mark of spec.marks)
+    for (const position of markPositionInputs(mark))
+      for (const input of Object.values(position)) {
+        const field = positionField(input);
+        if (field !== undefined) positionFields.add(field);
+      }
 
   for (const field of userSourceFields) {
+    const physicalPath = fieldMap?.[field] ?? field;
+    if (
+      ingested.length > 0 &&
+      positionFields.has(field) &&
+      !spec.data.model?.some(declaration => declaration.name === field) &&
+      !parsers.has(field) &&
+      !ingested.some(row => Object.hasOwn(row, physicalPath) || resolveFieldPath(row, physicalPath) !== undefined)
+    ) {
+      throw new RetikzPlotError(`Plot references source field "${field}" absent from dataset "${spec.data.reference}"`);
+    }
     const hasUsableObservation = normalized.some(row => {
       const value = resolveFieldPath(row, field);
       return typeof value === 'number' ? Number.isFinite(value) : value !== undefined && value !== null;

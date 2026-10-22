@@ -81,9 +81,7 @@ const pieSpec = (extraMark: Record<string, unknown> = {}, innerRadius = 0): IRPl
     marks: [
       {
         type: 'interval',
-
-        kind: 'data',
-        encodings: { bounds: { x: { from: 'y0', to: 'y1' } }, color: 'label' },
+        encodings: { bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } }, color: 'label' },
         properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } } },
         ...extraMark,
       },
@@ -106,9 +104,14 @@ describe('IntervalMark.pull sector geometry', () => {
 
   it('field-bound pull only moves rows with a non-zero field value', () => {
     const nodes = sectorNodes(
-      firstLayer(pieSpec({ encodings: { bounds: { x: { from: 'y0', to: 'y1' } }, color: 'label', pull: 'offset' } }), {
-        share,
-      }),
+      firstLayer(
+        pieSpec({
+          encodings: { bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } }, color: 'label', pull: 'offset' },
+        }),
+        {
+          share,
+        },
+      ),
     );
 
     expect(nodes[0].position).toEqual([200, 200]);
@@ -118,7 +121,7 @@ describe('IntervalMark.pull sector geometry', () => {
   it('maps pull through a named scale and exposes the same displaced locator anchor', () => {
     const spec = pieSpec({
       encodings: {
-        bounds: { x: { from: 'y0', to: 'y1' } },
+        bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } },
         color: 'label',
         pull: { field: 'offset', scale: 'pull' },
         series: 'label',
@@ -193,8 +196,7 @@ describe('IntervalMark.pull sector geometry', () => {
       marks: [
         {
           type: 'interval',
-          kind: 'data',
-          encodings: { position: { x: 'label', y: 'value' } },
+          encodings: { position: { x: { field: 'label' }, y: { field: 'value' } } },
           properties: { pull: 8 },
         },
       ],
@@ -204,7 +206,9 @@ describe('IntervalMark.pull sector geometry', () => {
   });
 
   it('invalid field-bound pull fails loud', () => {
-    const spec = pieSpec({ encodings: { bounds: { x: { from: 'y0', to: 'y1' } }, color: 'label', pull: 'offset' } });
+    const spec = pieSpec({
+      encodings: { bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } }, color: 'label', pull: 'offset' },
+    });
 
     expect(() => expandOf(spec, { share: [{ label: 'A', value: 1, offset: -1 }] })).toThrow(/pull|non-negative/i);
     expect(() => expandOf(spec, { share: [{ label: 'A', value: 1, offset: 'far' }] })).toThrow(/pull|numeric/i);
@@ -223,7 +227,12 @@ describe('IntervalMark.pull sector geometry', () => {
 
   it('locator series centroid uses pulled datum anchors', () => {
     const spec = pieSpec({
-      encodings: { bounds: { x: { from: 'y0', to: 'y1' } }, color: 'label', pull: 'offset', series: 'label' },
+      encodings: {
+        bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } },
+        color: 'label',
+        pull: 'offset',
+        series: 'label',
+      },
     });
     const locator = createPlotLocator(spec, { share }, { ...opts, environment: {} });
 

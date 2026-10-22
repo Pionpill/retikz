@@ -54,8 +54,10 @@ describe('Plot defaults palette consumers', () => {
         marks: [
           {
             type: 'point',
-            kind: 'data',
-            encodings: { color: { field: 'value', scale: 'color' }, position: { x: 'x', y: 'y' } },
+            encodings: {
+              color: { field: 'value', scale: 'color' },
+              position: { x: { field: 'x' }, y: { field: 'y' } },
+            },
           },
         ],
       },
@@ -79,14 +81,15 @@ describe('Plot defaults palette consumers', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'y' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: { color: '#mark-color' },
         },
         {
           type: 'point',
-          kind: 'data',
-          encodings: { color: { field: 'category', scale: 'color' }, position: { x: 'x', y: 'y' } },
+          encodings: {
+            color: { field: 'category', scale: 'color' },
+            position: { x: { field: 'x' }, y: { field: 'y' } },
+          },
         },
       ],
     };
@@ -105,8 +108,10 @@ describe('Plot defaults palette consumers', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { color: { field: 'category', scale: 'color' }, position: { x: 'x', y: 'y' } },
+          encodings: {
+            color: { field: 'category', scale: 'color' },
+            position: { x: { field: 'x' }, y: { field: 'y' } },
+          },
         },
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'color' }],

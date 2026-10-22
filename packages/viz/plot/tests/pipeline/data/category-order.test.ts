@@ -41,7 +41,7 @@ const bandSpec = (model: Array<Record<string, unknown>>, scales: Array<unknown> 
     data: { reference: 'd', model },
     scales,
     coordinate: { type: 'cartesian2D', y: 'yv' },
-    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'cat', y: 'val' } } }],
+    marks: [{ type: 'point', encodings: { position: { x: { field: 'cat' }, y: { field: 'val' } } } }],
   });
 
 /**
@@ -250,7 +250,7 @@ describe('IRDataFieldDefinition.order — 错误契约', () => {
         { type: 'linear', name: 'yv' },
       ],
       coordinate: { type: 'cartesian2D', x: 'xv', y: 'yv' },
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'cx', y: 'val' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'cx' }, y: { field: 'val' } } } }],
     });
 
     expect(() => expandOf(spec, { d: [{ cx: value, val: 2 }] })).toThrow(/order.*categorical/);
@@ -272,8 +272,8 @@ describe('IRDataFieldDefinition.order — 错误契约', () => {
       scales: [{ type: 'linear', name: 'yv' }],
       coordinate: { type: 'cartesian2D', y: 'yv' },
       marks: [
-        { type: 'point', kind: 'data', encodings: { position: { x: 'a', y: 'val' } } },
-        { type: 'point', kind: 'data', encodings: { position: { x: 'b', y: 'val' } } },
+        { type: 'point', encodings: { position: { x: { field: 'a' }, y: { field: 'val' } } } },
+        { type: 'point', encodings: { position: { x: { field: 'b' }, y: { field: 'val' } } } },
       ],
     });
 
@@ -304,7 +304,7 @@ describe('IRDataFieldDefinition.order — 交互', () => {
       },
       scales: [{ type: 'linear', name: 'yv' }],
       coordinate: { type: 'cartesian2D', y: 'yv' },
-      marks: [{ type: 'point', kind: 'data', encodings: { color: 'cat', position: { x: 'cat', y: 'val' } } }],
+      marks: [{ type: 'point', encodings: { color: 'cat', position: { x: { field: 'cat' }, y: { field: 'val' } } } }],
     });
     const rows = [
       { cat: 'L', val: 1 },
@@ -381,7 +381,7 @@ describe('IRDataFieldDefinition.order — 交互', () => {
         { type: 'linear', name: 'yv' },
       ],
       coordinate: { type: 'cartesian2D', x: 'xv', y: 'yv' },
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'cat', y: 'val' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'cat' }, y: { field: 'val' } } } }],
     });
     const rows = {
       d: [
@@ -408,7 +408,7 @@ describe('IRDataFieldDefinition.order — 交互', () => {
         { type: 'linear', name: 'yv' },
       ],
       coordinate: { type: 'cartesian2D', x: 'xv', y: 'yv' },
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'cat', y: 'val' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'cat' }, y: { field: 'val' } } } }],
     });
     const refLayer = firstLayer(reference, rows);
     const xs = layer.children.map(c => ((c as IRNode).position as [number, number])[0]);
@@ -498,7 +498,7 @@ it('uses the same natural domain for position, color, and legend', () => {
         ],
         [{ type: 'linear', name: 'yv' }],
       ),
-      marks: [{ type: 'point', kind: 'data', encodings: { color: 'cat', position: { x: 'cat', y: 'val' } } }],
+      marks: [{ type: 'point', encodings: { color: 'cat', position: { x: { field: 'cat' }, y: { field: 'val' } } } }],
       guides: [{ type: 'legend', channel: 'color' }],
     });
   const data = {

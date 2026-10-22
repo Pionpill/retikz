@@ -21,7 +21,13 @@ const coordinateShorthandSpec = {
     { type: 'linear', name: 'yValue' },
   ],
   coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yValue' },
-  marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'value' } } }],
+  marks: [
+    {
+      contributeToDomain: true,
+      type: 'point',
+      encodings: { position: { x: { field: 'month' }, y: { field: 'value' } } },
+    },
+  ],
   guides: [{ type: 'axis', dimension: 'x' }],
 };
 
@@ -49,8 +55,13 @@ const compositionSpec = {
     ],
   },
   marks: [
-    { type: 'point', kind: 'data', encodings: { position: { x: 'month' } } },
-    { type: 'point', coordinateView: 'xy', kind: 'data', encodings: { position: { x: 'month', y: 'value' } } },
+    { contributeToDomain: true, type: 'point', encodings: { position: { x: { field: 'month' } } } },
+    {
+      contributeToDomain: true,
+      type: 'point',
+      coordinateView: 'xy',
+      encodings: { position: { x: { field: 'month' }, y: { field: 'value' } } },
+    },
   ],
   guides: [
     { type: 'axis', dimension: 'x' },
@@ -99,7 +110,13 @@ describe('coordinate composition registry schema', () => {
         defaultView: 'main',
         views: [{ id: 'main', coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yValue' } }],
       },
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'value' } } }],
+      marks: [
+        {
+          contributeToDomain: true,
+          type: 'point',
+          encodings: { position: { x: { field: 'month' }, y: { field: 'value' } } },
+        },
+      ],
       guides: [{ type: 'axis', dimension: 'x' }],
     };
 
@@ -113,7 +130,7 @@ describe('coordinate composition registry schema', () => {
         defaultView: 'arch',
         views: [{ id: 'arch', coordinate: { type: 'arch', x: 'xMonth', archHeight: 30 } }],
       },
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month' } } }],
+      marks: [{ contributeToDomain: true, type: 'point', encodings: { position: { x: { field: 'month' } } } }],
       guides: [],
     };
 
@@ -156,7 +173,14 @@ describe('coordinate composition registry schema', () => {
   it('missing_mark_coordinate_scope_rejected', () => {
     const spec = {
       ...compositionSpec,
-      marks: [{ type: 'point', coordinateView: 'missing', kind: 'data', encodings: { position: { x: 'month' } } }],
+      marks: [
+        {
+          contributeToDomain: true,
+          type: 'point',
+          coordinateView: 'missing',
+          encodings: { position: { x: { field: 'month' } } },
+        },
+      ],
     };
 
     expect(() => parsePlotIR(spec)).toThrow(/coordinateView/);
@@ -175,7 +199,12 @@ describe('coordinate composition registry schema', () => {
     const spec = {
       ...coordinateShorthandSpec,
       marks: [
-        { type: 'point', coordinateView: 'missing', kind: 'data', encodings: { position: { x: 'month', y: 'value' } } },
+        {
+          contributeToDomain: true,
+          type: 'point',
+          coordinateView: 'missing',
+          encodings: { position: { x: { field: 'month' }, y: { field: 'value' } } },
+        },
       ],
     };
 
@@ -211,7 +240,13 @@ describe('coordinate composition registry schema', () => {
           },
         ],
       },
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'value' } } }],
+      marks: [
+        {
+          contributeToDomain: true,
+          type: 'point',
+          encodings: { position: { x: { field: 'month' }, y: { field: 'value' } } },
+        },
+      ],
       guides: [{ type: 'axis', dimension: 'x' }],
     };
 
@@ -279,8 +314,13 @@ describe('coordinate composition registry lowering', () => {
         ],
       },
       marks: [
-        { type: 'point', kind: 'data', encodings: { position: { x: 'month' } } },
-        { type: 'point', coordinateView: 'plane', kind: 'data', encodings: { position: { x: 'month', y: 'value' } } },
+        { contributeToDomain: true, type: 'point', encodings: { position: { x: { field: 'month' } } } },
+        {
+          contributeToDomain: true,
+          type: 'point',
+          coordinateView: 'plane',
+          encodings: { position: { x: { field: 'month' }, y: { field: 'value' } } },
+        },
       ],
       guides: [{ type: 'axis', dimension: 'y', coordinateView: 'plane' }],
     };

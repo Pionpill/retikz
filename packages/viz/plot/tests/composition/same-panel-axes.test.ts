@@ -38,8 +38,17 @@ const dualAxisSpec = {
     ],
   },
   marks: [
-    { type: 'path', kind: 'data', encodings: { order: 'day', position: { x: 'day', y: 'temperature' } } },
-    { type: 'interval', coordinateView: 'rain', kind: 'data', encodings: { position: { x: 'day', y: 'rainfall' } } },
+    {
+      contributeToDomain: true,
+      type: 'path',
+      encodings: { order: 'day', position: { x: { field: 'day' }, y: { field: 'temperature' } } },
+    },
+    {
+      contributeToDomain: true,
+      type: 'interval',
+      coordinateView: 'rain',
+      encodings: { position: { x: { field: 'day' }, y: { field: 'rainfall' } } },
+    },
   ],
   guides: [
     { type: 'axis', dimension: 'y', coordinateView: 'temp', placement: { kind: 'side', side: 'left' } },
@@ -73,12 +82,16 @@ const sharedYOverlaySpec = {
     ],
   },
   marks: [
-    { type: 'path', kind: 'data', encodings: { order: 'day', position: { x: 'day', y: 'temperature' } } },
     {
+      contributeToDomain: true,
+      type: 'path',
+      encodings: { order: 'day', position: { x: { field: 'day' }, y: { field: 'temperature' } } },
+    },
+    {
+      contributeToDomain: true,
       type: 'path',
       coordinateView: 'calendar',
-      kind: 'data',
-      encodings: { order: 'rainfall', position: { x: 'rainfall', y: 'rainfall' } },
+      encodings: { order: 'rainfall', position: { x: { field: 'rainfall' }, y: { field: 'rainfall' } } },
     },
   ],
 };
@@ -186,10 +199,10 @@ describe('same-panel multi-axis overlay schema', () => {
       },
       marks: [
         {
+          contributeToDomain: true,
           type: 'path',
           coordinateView: 'a',
-          kind: 'data',
-          encodings: { order: 'day', position: { x: 'day', y: 'temperature' } },
+          encodings: { order: 'day', position: { x: { field: 'day' }, y: { field: 'temperature' } } },
         },
       ],
       guides: [

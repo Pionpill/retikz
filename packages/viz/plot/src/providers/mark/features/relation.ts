@@ -14,6 +14,9 @@ import type { ExternalRow } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
 
 import type {
+  AnchorOwner,
+  MarkInstance,
+  MarkInstanceInput,
   CoordinateFrame,
   FieldCollector,
   MarkChannels,
@@ -21,9 +24,10 @@ import type {
   MarkLoweringContext,
   PolarCoordinateFrame,
 } from '../../../contract';
-import { markProperty } from '../../../contract';
+import { markProperty, markInstances, positionValue, positionField, mapPositionInput } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import type {
+  IRPlotPositionInput,
   IRPlotRelationEndpointGlyph,
   IRPlotRelationMark,
   IRPlotRelationPrimitiveStyle,
@@ -41,7 +45,7 @@ import {
   RelationRoutingKind,
 } from '../../../schemas';
 import type { PolarVertex } from '../../coordinate';
-import { densifyPolarSegments, isPolarCoordinateFrame, toPolarVertex } from '../../coordinate';
+import { densifyPolarSegments, isPolarCoordinateFrame } from '../../coordinate';
 import type { MarkPaint } from '../shared';
 import {
   applyPathChannelDeliveries,
@@ -51,7 +55,6 @@ import {
   collectAnchorIdFields,
   collectMarkLabelFields,
   collectPathChannelFields,
-  annotationValue,
   decorateDatum,
   DEFAULT_FILL,
   pathChannelKinds,
@@ -60,6 +63,10 @@ import {
 import { POINT_DEFAULT_RADIUS } from './point-glyph';
 import { pointGlyphStyle } from './point-glyph';
 
+/** 为锚点注册恢复当前真实实例，不存储重复的行身份 */
+const relationInstance = (row: ExternalRow | undefined, transformedIndex: number | undefined): MarkInstance =>
+  row === undefined ? { kind: 'single' } : { kind: 'row', row, transformedIndex: transformedIndex! };
+
 type TargetResolution = {
   target: IRTarget;
   coordinates: Array<IRCoordinate>;
@@ -67,25 +74,31 @@ type TargetResolution = {
   polarVertex?: PolarVertex;
 };
 
-const targetOwner = (mark: IRPlotRelationMark, ctx: MarkLoweringContext, transformedIndex: number, role: string) => ({
+const targetOwner = (
+  mark: IRPlotRelationMark,
+  ctx: MarkLoweringContext,
+  transformedIndex: number | undefined,
+  role: string,
+): AnchorOwner => ({
   markType: mark.type,
   markId: mark.id,
   markIndex: ctx.markIndex,
-  transformedIndex,
+  ...(transformedIndex === undefined ? { kind: 'single' } : { kind: 'row', transformedIndex }),
   role,
 });
 
 const relationGeneratedCoordinateId = (
   mark: IRPlotRelationMark,
   ctx: MarkLoweringContext,
-  transformedIndex: number,
+  transformedIndex: number | undefined,
   role: string,
 ): string => {
-  const base = `${mark.id ?? `relation.${ctx.markIndex}`}.${transformedIndex}.${role}`;
+  const base = `${mark.id ?? `relation.${ctx.markIndex}`}.${transformedIndex ?? 'single'}.${role}`;
   return ctx.plotId === undefined ? base : `${ctx.plotId}.${base}`;
 };
 
-const targetExtras = (ref: IRPlotTargetRef = { position: {} }): Omit<IRNodeTarget, 'id'> => {
+const targetExtras = (ref?: IRPlotTargetRef): Omit<IRNodeTarget, 'id'> => {
+  if (ref === undefined) return {};
   const boundary = ref.boundary === true ? 'shape' : ref.boundary === false ? undefined : ref.boundary;
   return {
     ...(ref.anchor !== undefined ? { anchor: ref.anchor } : {}),
@@ -110,40 +123,26 @@ const targetEncodingOf = (mark: IRPlotRelationMark, role: string): TargetEncodin
 const resolveProjectedTarget = (
   mark: IRPlotRelationMark,
   ref: IRPlotTargetRef | undefined,
-  row: ExternalRow,
+  row: ExternalRow | undefined,
   frame: CoordinateFrame,
   ctx: MarkLoweringContext | undefined,
-  transformedIndex: number,
+  transformedIndex: number | undefined,
   role: string,
   forceCoordinate: boolean,
 ): TargetResolution | null => {
   const encoding = targetEncodingOf(mark, role);
-  const fixed = ref !== undefined && 'position' in ref ? ref.position : {};
-  const values = frame.roles.map(frameRole => {
-    const field = encoding?.position?.[frameRole];
-    return field === undefined ? annotationValue(fixed[frameRole]) : resolveFieldPath(row, field);
+  const positions: Partial<Record<string, IRPlotPositionInput>> = {
+    ...encoding?.position,
+  };
+  const mapped = frame.roles.map(frameRole => {
+    const scale = frame.roleScales?.[frameRole];
+    return scale === undefined ? NaN : mapPositionInput(positions[frameRole], scale, row);
   });
-  const hasFixedEdge = frame.roles.some(
-    frameRole => encoding?.position?.[frameRole] === undefined && typeof fixed[frameRole] === 'object',
-  );
-  const mapped = hasFixedEdge
-    ? frame.roles.map((frameRole, index) => {
-        const scale = frame.roleScales?.[frameRole];
-        const value = fixed[frameRole];
-        return encoding?.position?.[frameRole] === undefined && typeof value === 'object'
-          ? (scale?.range()[value.edge === 'start' ? 0 : 1] ?? NaN)
-          : (scale?.coordinate(values[index]) ?? NaN);
-      })
-    : undefined;
-  if (mapped !== undefined && !mapped.every(Number.isFinite)) return null;
-  const position = mapped === undefined ? frame.projectRoles(values) : (frame.projectMappedRoles?.(mapped) ?? null);
+  if (!mapped.every(Number.isFinite)) return null;
+  const position = frame.projectMappedRoles?.(mapped) ?? null;
   if (position === null) return null;
 
-  const polarVertex = isPolarCoordinateFrame(frame)
-    ? mapped === undefined
-      ? toPolarVertex(frame, values[0], values[1])
-      : { theta: mapped[0], radius: mapped[1] }
-    : null;
+  const polarVertex = isPolarCoordinateFrame(frame) ? { theta: mapped[0], radius: mapped[1] } : null;
   const polarTarget = polarVertex === null ? {} : { polarVertex };
   if ((ref !== undefined && 'anchorId' in ref && ref.anchorId !== undefined) || encoding?.anchorId !== undefined) {
     if (ctx?.anchors === undefined) {
@@ -153,7 +152,7 @@ const resolveProjectedTarget = (
     const owner = targetOwner(mark, ctx, transformedIndex, role);
     const id = ctx.anchors.makeId(
       ref !== undefined && 'anchorId' in ref ? (ref.anchorId ?? {}) : {},
-      row,
+      relationInstance(row, transformedIndex),
       owner,
       targetEncodingOf(mark, role)?.anchorId,
     );
@@ -192,14 +191,14 @@ const resolveProjectedTarget = (
 const resolveTarget = (
   mark: IRPlotRelationMark,
   ref: IRPlotTargetRef | undefined,
-  row: ExternalRow,
+  row: ExternalRow | undefined,
   frame: CoordinateFrame,
   ctx: MarkLoweringContext | undefined,
-  transformedIndex: number,
+  transformedIndex: number | undefined,
   role: string,
   forceCoordinate = false,
 ): TargetResolution | null => {
-  if (targetEncodingOf(mark, role)?.position !== undefined || (ref !== undefined && 'position' in ref))
+  if (targetEncodingOf(mark, role)?.position !== undefined)
     return resolveProjectedTarget(mark, ref, row, frame, ctx, transformedIndex, role, forceCoordinate);
   if (ref !== undefined && 'id' in ref) return { target: { id: ref.id, ...targetExtras(ref) }, coordinates: [] };
   if (ctx?.anchors === undefined) {
@@ -210,8 +209,8 @@ const resolveTarget = (
 
   const owner = targetOwner(mark, ctx, transformedIndex, role);
   const id = ctx.anchors.makeId(
-    ref !== undefined && 'anchorId' in ref ? ref.anchorId : {},
-    row,
+    ref !== undefined && 'anchorId' in ref ? (ref.anchorId ?? {}) : {},
+    relationInstance(row, transformedIndex),
     owner,
     targetEncodingOf(mark, role)?.anchorId,
   );
@@ -220,8 +219,13 @@ const resolveTarget = (
   return { target: { id, ...targetExtras(ref) }, coordinates: [] };
 };
 
-const anchorInputMissing = (ref: IRPlotTargetRef | undefined, row: ExternalRow, encoding?: TargetEncoding): boolean => {
+const anchorInputMissing = (
+  ref: IRPlotTargetRef | undefined,
+  row: ExternalRow | undefined,
+  encoding?: TargetEncoding,
+): boolean => {
   const anchorId = ref !== undefined && 'anchorId' in ref ? ref.anchorId : undefined;
+  if (row === undefined) return false;
   if (encoding?.anchorId !== undefined) return resolveFieldPath(row, encoding.anchorId) === undefined;
   if (anchorId === undefined) return false;
   if (anchorId.template !== undefined) {
@@ -242,7 +246,7 @@ type MarkStyleValue =
   | NonNullable<IRPlotRelationPrimitiveStyle[Exclude<keyof IRPlotRelationPrimitiveStyle, 'opacity'>]>
   | NonNullable<IRPlotRelationEndpointGlyph[Exclude<keyof IRPlotRelationEndpointGlyph, 'opacity'>]>;
 
-const resolveMarkValue = <T>(value: MarkStyleValue | undefined, _row: ExternalRow): T | undefined => {
+const resolveMarkValue = <T>(value: MarkStyleValue | undefined, _row: ExternalRow | undefined): T | undefined => {
   if (value === undefined) return undefined;
   return value as T;
 };
@@ -250,8 +254,8 @@ const resolveMarkValue = <T>(value: MarkStyleValue | undefined, _row: ExternalRo
 const endpointGlyphNode = (
   glyph: IRPlotRelationEndpointGlyph,
   position: [number, number],
-  row: ExternalRow,
-  transformedIndex: number,
+  row: ExternalRow | undefined,
+  transformedIndex: number | undefined,
   mark: IRPlotRelationMark,
   sharedColor: string | undefined,
   ctx: MarkLoweringContext | undefined,
@@ -274,14 +278,21 @@ const endpointGlyphNode = (
       ? undefined
       : { context: ctx.provenance.context, markIndex: ctx.provenance.markIndex };
 
-  return decorateDatum(node, row, transformedIndex, mark.type, provenance, undefined);
+  return row === undefined || transformedIndex === undefined
+    ? node
+    : decorateDatum(node, row, transformedIndex, mark.type, provenance, undefined);
 };
 
-const relationPrimitiveStyle = (row: ExternalRow, channels: MarkChannels): NonNullable<IRPath['style']> => {
-  const color = channelValueOf<string>(channels, 'color')?.(row) ?? channelDefaultOf<string>(channels, 'color');
-  const fill = channelValueOf<MarkPaint>(channels, 'fill')?.(row) ?? channelDefaultOf<MarkPaint>(channels, 'fill');
+const relationPrimitiveStyle = (row: ExternalRow | undefined, channels: MarkChannels): NonNullable<IRPath['style']> => {
+  const color =
+    (row === undefined ? undefined : channelValueOf<string>(channels, 'color')?.(row)) ??
+    channelDefaultOf<string>(channels, 'color');
+  const fill =
+    (row === undefined ? undefined : channelValueOf<MarkPaint>(channels, 'fill')?.(row)) ??
+    channelDefaultOf<MarkPaint>(channels, 'fill');
   const stroke =
-    channelValueOf<MarkPaint>(channels, 'stroke')?.(row) ?? channelDefaultOf<MarkPaint>(channels, 'stroke');
+    (row === undefined ? undefined : channelValueOf<MarkPaint>(channels, 'stroke')?.(row)) ??
+    channelDefaultOf<MarkPaint>(channels, 'stroke');
   return {
     ...(color === undefined ? {} : { color }),
     ...(fill === undefined ? {} : { fill }),
@@ -291,12 +302,12 @@ const relationPrimitiveStyle = (row: ExternalRow, channels: MarkChannels): NonNu
 
 const resolveLabel = (
   label: IRPlotRelationStepLabel | undefined,
-  row: ExternalRow,
+  row: ExternalRow | undefined,
   field?: string,
 ): IRStepLabel | undefined => {
   if (label === undefined && field === undefined) return undefined;
 
-  const value = field === undefined ? label?.text : resolveFieldPath(row, field);
+  const value = field === undefined ? label?.text : resolveFieldPath(row!, field);
   if (value === undefined) return undefined;
   return withDefaultLabelSide({ ...label, text: field === undefined ? (value as IRStepLabel['text']) : String(value) });
 };
@@ -556,7 +567,12 @@ const routedSteps = (
   return orthogonalRoute(routing, targets, label);
 };
 
-const routeStepToIr = (step: IRPlotRelationRouteStep, target: IRTarget, row: ExternalRow, field?: string): IRStep => {
+const routeStepToIr = (
+  step: IRPlotRelationRouteStep,
+  target: IRTarget,
+  row: ExternalRow | undefined,
+  field?: string,
+): IRStep => {
   const label = resolveLabel(step.label, row, field);
 
   switch (step.kind) {
@@ -614,10 +630,10 @@ const routeStepToIr = (step: IRPlotRelationRouteStep, target: IRTarget, row: Ext
 
 const explicitRoute = (
   mark: IRPlotRelationMark,
-  row: ExternalRow,
+  row: ExternalRow | undefined,
   frame: CoordinateFrame,
   ctx: MarkLoweringContext | undefined,
-  transformedIndex: number,
+  transformedIndex: number | undefined,
   source: IRTarget,
   target: IRTarget,
 ): { steps: Array<IRStep>; coordinates: Array<IRCoordinate> } => {
@@ -661,7 +677,7 @@ const explicitRoute = (
 /** 把 relation mark 下沉为 path 或 ribbon core IR */
 export const lowerRelation = (
   mark: IRPlotRelationMark,
-  rows: Array<ExternalRow>,
+  input: MarkInstanceInput,
   frame: CoordinateFrame,
   channels: MarkChannels,
   ctx: MarkLoweringContext | undefined,
@@ -673,8 +689,9 @@ export const lowerRelation = (
   const children: Array<IRChild> = [];
   const endpointChildren: Array<IRNode> = [];
 
-  for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex += 1) {
-    const row = rows[transformedIndex];
+  for (const instance of markInstances(input)) {
+    const row = instance.kind === 'row' ? instance.row : undefined;
+    const transformedIndex = instance.kind === 'row' ? instance.transformedIndex : undefined;
     if (
       anchorInputMissing(mark.properties.source, row, mark.encodings?.source) ||
       anchorInputMissing(mark.properties.target, row, mark.encodings?.target)
@@ -689,9 +706,13 @@ export const lowerRelation = (
     const style = relationPrimitiveStyle(row, channels);
     const zIndex = markProperty<number>(mark, 'zIndex');
     if (mark.properties.geometry.kind === RelationGeometryKind.Ribbon) {
-      const width = channelValueOf<number>(channels, 'geometry.width')?.(row);
+      const width =
+        row === undefined ? mark.properties.geometry.width : channelValueOf<number>(channels, 'geometry.width')?.(row);
       if (width === undefined) continue;
-      const endWidth = channelValueOf<number>(channels, 'geometry.endWidth')?.(row);
+      const endWidth =
+        row === undefined
+          ? mark.properties.geometry.endWidth
+          : channelValueOf<number>(channels, 'geometry.endWidth')?.(row);
       const { interpolation, ...ribbonOptions } = mark.properties.geometry.options ?? {};
       const label = resolveGeometryMarkLabels(mark.properties.label, row, labelOf, mark.encodings?.label);
       const ribbon: IRPath = applyPathChannelDeliveries(
@@ -780,7 +801,7 @@ export const lowerRelation = (
       channels,
     );
     children.push(...coordinates, path);
-    const sharedColor = colorOf?.(row) ?? defaultColor;
+    const sharedColor = (row === undefined ? undefined : colorOf?.(row)) ?? defaultColor;
     if (mark.properties.endpoints?.source !== undefined && source.position !== undefined) {
       endpointChildren.push(
         endpointGlyphNode(
@@ -822,39 +843,29 @@ const collectTargetFields = (
 ): void => {
   collectAnchorIdFields(ref !== undefined && 'anchorId' in ref ? ref.anchorId : undefined, fields);
   fields.addField(encoding?.anchorId);
-  for (const field of Object.values(encoding?.position ?? {})) fields.addField(field);
+  for (const field of Object.values({ ...encoding?.position })) fields.addField(positionField(field));
 };
 
 /** 内置 relation mark definition */
 export const relationMarkDefinition: MarkDefinition<IRPlotRelationMark> = {
   schema: RelationMarkSchema,
-  domainPadding: (mark, rows, roles) =>
-    rows.flatMap(row =>
-      (['source', 'target'] as const).flatMap(side => {
+  domainPadding: (mark, input, roles) =>
+    markInstances(input).flatMap(instance => {
+      const row = instance.kind === 'row' ? instance.row : undefined;
+      return (['source', 'target'] as const).flatMap(side => {
         const glyph = mark.properties.endpoints?.[side];
         if (glyph === undefined) return [];
-
-        const target = mark.properties[side];
-        const encoding = mark.encodings?.[side];
-        if (encoding?.position === undefined && !(target !== undefined && 'position' in target))
-          throw new RetikzPlotError('Relation domain padding requires projected endpoints');
-
-        const radius = resolveMarkValue<number>(glyph.size, row) ?? POINT_DEFAULT_RADIUS;
-
+        const positions: Partial<Record<string, IRPlotPositionInput>> = { ...mark.encodings?.[side]?.position };
+        if (roles.some(role => positions[role] !== undefined && 'edge' in positions[role]))
+          throw new RetikzPlotError('Edge positions do not provide data-domain padding');
         return [
           {
-            values: roles.map(role =>
-              annotationValue(
-                target !== undefined && 'position' in target ? target.position[role] : undefined,
-                encoding?.position?.[role],
-                row,
-              ),
-            ),
-            extent: roles.map(() => radius),
+            values: roles.map(role => positionValue(positions[role], row)),
+            extent: roles.map(() => glyph.size ?? POINT_DEFAULT_RADIUS),
           },
         ];
-      }),
-    ),
+      });
+    }),
   channelKinds: pathChannelKinds,
   collectFields: (mark, fields) => {
     collectTargetFields(mark.properties.source, mark.encodings?.source, fields);

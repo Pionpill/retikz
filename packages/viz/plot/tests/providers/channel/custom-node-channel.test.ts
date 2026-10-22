@@ -167,7 +167,7 @@ const scatterSpec = (channels?: Record<string, IRPlotChannel>): IRPlot =>
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' }, ...channels } }],
+    marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } }, ...channels } }],
   });
 
 const nodesOf = (scope: IRScope): Array<IRNode> => {
@@ -331,7 +331,10 @@ describe('custom node channel registry', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        { type: 'point', kind: 'data', encodings: { size: 'score', intensity: 'score', position: { x: 'x', y: 'y' } } },
+        {
+          type: 'point',
+          encodings: { size: 'score', intensity: 'score', position: { x: { field: 'x' }, y: { field: 'y' } } },
+        },
       ],
     });
     const nodes = nodesOf(firstLayer(spec, { d: rows }, opts([intensityChannel])));
@@ -357,7 +360,9 @@ describe('custom node channel registry', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'path', kind: 'data', encodings: { lineWeight: 'weight', position: { x: 'x', y: 'y' } } }],
+      marks: [
+        { type: 'path', encodings: { lineWeight: 'weight', position: { x: { field: 'x' }, y: { field: 'y' } } } },
+      ],
     });
     const layer = firstLayer(
       spec,
@@ -384,7 +389,7 @@ describe('custom node channel registry', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', kind: 'data', encodings: { intensity: 'score', position: { x: 'x', y: 'y' } } }],
+      marks: [{ type: 'point', encodings: { intensity: 'score', position: { x: { field: 'x' }, y: { field: 'y' } } } }],
       guides: [{ type: 'legend', channel: 'intensity' }],
     });
     const root = expandOf(spec, { d: rows }, opts([intensityChannel]));
@@ -418,7 +423,9 @@ describe('custom node channel registry', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', kind: 'data', encodings: { categoryColor: 'tone', position: { x: 'x', y: 'y' } } }],
+      marks: [
+        { type: 'point', encodings: { categoryColor: 'tone', position: { x: { field: 'x' }, y: { field: 'y' } } } },
+      ],
       guides: [{ type: 'legend', channel: 'categoryColor' }],
     });
     const root = expandOf(spec, { d: colorRows }, opts([categoryColorChannel]));

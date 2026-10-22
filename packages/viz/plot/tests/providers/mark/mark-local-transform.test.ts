@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import type { infer as ZodInfer } from 'zod';
 import { array, literal, looseObject, object } from 'zod';
 
+import { positionField } from '../../../src/contract';
 import { defineMark } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot, lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
@@ -19,7 +20,7 @@ type Datasets = Record<string, Array<Record<string, unknown>>>;
 
 const DotMarkSchema = looseObject({
   type: literal('dot'),
-  kind: literal('data'),
+
   encodings: EncodingSchema.optional(),
   transforms: array(DataTransformDeclarationSchema).optional(),
 }).catchall(JsonValueSchema);
@@ -59,8 +60,7 @@ const groupPointSpec = (): IRPlot =>
             },
           },
         ],
-        kind: 'data',
-        encodings: { position: { x: 'category', y: 'total' } },
+        encodings: { position: { x: { field: 'category' }, y: { field: 'total' } } },
       },
     ],
   });
@@ -85,11 +85,11 @@ const recorderMark = (record: { rows: Array<ExternalRow> }) =>
   defineMark<DotMark>({
     schema: DotMarkSchema,
     collectFields: (mark, fields) => {
-      fields.addChannel(mark.encodings?.position?.x);
-      fields.addChannel(mark.encodings?.position?.y);
+      fields.addField(positionField(mark.encodings?.position?.x));
+      fields.addField(positionField(mark.encodings?.position?.y));
     },
     lower: (_mark, rows) => {
-      record.rows = rows;
+      record.rows = rows.kind === 'rows' ? rows.rows : [];
       return { type: 'scope', children: [] };
     },
   });
@@ -123,8 +123,7 @@ describe('mark-local transform', () => {
         {
           type: 'point',
           transforms: [{ operation: { kind: 'sort', params: { field: 'range' } } }],
-          kind: 'data',
-          encodings: { position: { x: 'group', y: 'range' } },
+          encodings: { position: { x: { field: 'group' }, y: { field: 'range' } } },
         },
       ],
     });
@@ -183,8 +182,7 @@ describe('mark-local transform', () => {
         {
           type: 'point',
           transforms: [{ operation: { kind: 'normalize', params: { field: 'value', as: 'value' } } }],
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'value' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'value' } } },
         },
       ],
     });
@@ -217,8 +215,7 @@ describe('mark-local transform', () => {
               },
             },
           ],
-          kind: 'data',
-          encodings: { position: { x: 'category', y: 'total' } },
+          encodings: { position: { x: { field: 'category' }, y: { field: 'total' } } },
         },
       ],
     });
@@ -256,8 +253,7 @@ describe('mark-local transform', () => {
           {
             type: 'point',
             transforms: [{ operation: { kind: 'double-local', params: { field: 'value', as: 'double' } } }],
-            kind: 'data',
-            encodings: { position: { x: 'x', y: 'double' } },
+            encodings: { position: { x: { field: 'x' }, y: { field: 'double' } } },
           },
         ],
       }),
@@ -291,8 +287,7 @@ describe('mark-local transform', () => {
         {
           type: 'point',
           transforms: [{ operation: { kind: 'double-local', params: { field: 'value', as: 'double' } } }],
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'double' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'double' } } },
         },
       ],
     });

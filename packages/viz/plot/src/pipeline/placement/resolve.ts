@@ -13,6 +13,7 @@ import type {
 } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { mapMarkRoles } from '../../providers';
+import { resolveMarkInstances } from '../../resolve';
 import { resolvePositionAdjustmentOperation } from '../../resolve/position-adjustment';
 import type { IRPlotMarkOperation, IRPlotMarkPlacement } from '../../schemas';
 
@@ -97,7 +98,7 @@ export const resolveMarkPlacement = (
     );
   }
 
-  const rawTargets = capability.targets(resolution.operation as never, rows, frame);
+  const rawTargets = capability.targets(resolution.operation as never, resolveMarkInstances(resolution, rows), frame);
   const keys = new Set<string>();
   let mappedTargets: Array<MappedMarkPlacementTarget> = rawTargets.map(target => {
     if (keys.has(target.key)) {

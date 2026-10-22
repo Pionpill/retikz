@@ -89,7 +89,11 @@ const polarSpec = (guides: Array<Record<string, unknown>>, extra: Record<string,
     ],
     coordinate: { type: 'polar2D', angle: 'a', radius: 'r', ...extra },
     marks: [
-      { type: 'path', kind: 'data', encodings: { position: { x: 'cat', y: 'value' } }, properties: { closed: true } },
+      {
+        type: 'path',
+        encodings: { position: { x: { field: 'cat' }, y: { field: 'value' } } },
+        properties: { closed: true },
+      },
     ],
     guides,
   });
@@ -246,7 +250,7 @@ describe('lowerPlots polar guide — radial axis (contract)', () => {
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'theta', y: 'value' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'theta' }, y: { field: 'value' } } } }],
       guides,
     });
   const radialRows = [
@@ -337,7 +341,7 @@ describe('lowerPlots polar guide — grid (contract)', () => {
       { type: 'linear', name: 'r', domain: [0, 10] },
     ],
     coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'theta', y: 'value' } } }],
+    marks: [{ type: 'point', encodings: { position: { x: { field: 'theta' }, y: { field: 'value' } } } }],
     guides: [{ type: 'axis', dimension: 'y', grid: true }],
   });
 
@@ -395,7 +399,11 @@ describe('lowerPlots polar guide — grid (contract)', () => {
     ],
     coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
     marks: [
-      { type: 'path', kind: 'data', encodings: { position: { x: 'cat', y: 'value' } }, properties: { closed: true } },
+      {
+        type: 'path',
+        encodings: { position: { x: { field: 'cat' }, y: { field: 'value' } } },
+        properties: { closed: true },
+      },
     ],
     guides: [{ type: 'axis', dimension: 'x', grid: true }],
   });
@@ -439,7 +447,11 @@ describe('lowerPlots polar guide — z-order (contract)', () => {
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       marks: [
-        { type: 'path', kind: 'data', encodings: { position: { x: 'cat', y: 'value' } }, properties: { closed: true } },
+        {
+          type: 'path',
+          encodings: { position: { x: { field: 'cat' }, y: { field: 'value' } } },
+          properties: { closed: true },
+        },
       ],
       guides: [
         { type: 'axis', dimension: 'x' },
@@ -473,7 +485,11 @@ describe('lowerPlots polar guide — 错误路径 (contract)', () => {
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       marks: [
-        { type: 'path', kind: 'data', encodings: { position: { x: 'cat', y: 'value' } }, properties: { closed: true } },
+        {
+          type: 'path',
+          encodings: { position: { x: { field: 'cat' }, y: { field: 'value' } } },
+          properties: { closed: true },
+        },
       ],
       guides: [
         { type: 'axis', dimension: 'x' },
@@ -496,7 +512,11 @@ describe('lowerPlots polar guide — 错误路径 (contract)', () => {
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       marks: [
-        { type: 'path', kind: 'data', encodings: { position: { x: 'cat', y: 'value' } }, properties: { closed: true } },
+        {
+          type: 'path',
+          encodings: { position: { x: { field: 'cat' }, y: { field: 'value' } } },
+          properties: { closed: true },
+        },
       ],
       guides: [
         { type: 'axis', dimension: 'x' },
@@ -519,7 +539,9 @@ describe('lowerPlots cartesian guide 回归 (contract)', () => {
       { type: 'linear', name: 'yRevenue' },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-    marks: [{ type: 'path', kind: 'data', encodings: { order: 'month', position: { x: 'month', y: 'revenue' } } }],
+    marks: [
+      { type: 'path', encodings: { order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
+    ],
     guides: [
       { type: 'axis', dimension: 'x' },
       { type: 'axis', dimension: 'y', grid: true },

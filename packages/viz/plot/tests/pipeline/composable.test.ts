@@ -26,7 +26,7 @@ const pointSpec = (extra: Record<string, unknown> = {}): IRPlot =>
       { type: 'linear', name: 'yRevenue', domainPadding: 0 },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
+    marks: [{ type: 'point', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
     ...extra,
   });
 

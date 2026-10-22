@@ -36,17 +36,17 @@ const cartesianScaffoldSpec = {
   },
   marks: [
     {
+      contributeToDomain: true,
       type: 'point',
       coordinateView: 'events',
-      kind: 'data',
-      encodings: { position: { x: 'eventX', y: 'eventY' } },
+      encodings: { position: { x: { field: 'eventX' }, y: { field: 'eventY' } } },
       properties: { autoPadding: 'max-radius' },
     },
     {
+      contributeToDomain: true,
       type: 'point',
       coordinateView: 'volume',
-      kind: 'data',
-      encodings: { position: { x: 'volumeX', y: 'volumeY' } },
+      encodings: { position: { x: { field: 'volumeX' }, y: { field: 'volumeY' } } },
       properties: { autoPadding: 'max-radius' },
     },
   ],
@@ -82,17 +82,17 @@ const polarScaffoldSpec = {
   },
   marks: [
     {
+      contributeToDomain: true,
       type: 'point',
       coordinateView: 'inner',
-      kind: 'data',
-      encodings: { position: { x: 'angleA', y: 'radiusA' } },
+      encodings: { position: { x: { field: 'angleA' }, y: { field: 'radiusA' } } },
       properties: { autoPadding: 'max-radius' },
     },
     {
+      contributeToDomain: true,
       type: 'point',
       coordinateView: 'outer',
-      kind: 'data',
-      encodings: { position: { x: 'angleB', y: 'radiusB' } },
+      encodings: { position: { x: { field: 'angleB' }, y: { field: 'radiusB' } } },
       properties: { autoPadding: 'max-radius' },
     },
   ],

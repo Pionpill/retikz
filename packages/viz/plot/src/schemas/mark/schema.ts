@@ -1,8 +1,6 @@
 import {
   NodeSchema,
-  NodeStyleSchema,
   NodeLayoutSchema,
-  PathStyleSchema,
   PathTransformSchema,
   BendDirection,
   BoxSpacingSchema,
@@ -47,12 +45,11 @@ import {
   discriminatedUnion,
   enum as zodEnum,
   literal,
+  never,
   number,
-  object,
   record,
   strictObject,
   union,
-  unknown,
 } from 'zod';
 
 import { CoordinateConnection, PolarInterpolation } from '../coordinate';
@@ -62,6 +59,7 @@ import {
   NodeEncodingSchema,
   PathEncodingSchema,
   PositionEncodingSchema,
+  PositionInputSchema,
   MarkGeometryLabelListSchema,
   MarkNodeLabelListSchema,
   PointEncodingSchema,
@@ -90,6 +88,10 @@ export const MarkTransformSchema = array(DataTransformDeclarationSchema).describ
 export const RelationTransformSchema = MarkTransformSchema;
 
 const markBase = {
+  contributeToDomain: boolean()
+    .default(true)
+    .optional()
+    .describe('Include data-space positions in inferred domains; edges never contribute'),
   id: NonBlankStringSchema.optional().describe('Optional mark handle used by generated scope and anchor targets'),
   defaultColorGroup: NonBlankStringSchema.optional().describe(
     'Optional semantic group whose marks share one sequential palette.series slot when no explicit color is authored',
@@ -109,27 +111,6 @@ const markBase = {
     'Optional mark-local transform pipeline applied after the plot root transform',
   ),
 };
-
-/** 校验数据空间固定位置或最终视图边缘 */
-export const AnnotationPositionValueSchema = union([
-  number(),
-  NonBlankStringSchema,
-  strictObject({ edge: zodEnum(['start', 'end']) }),
-]).describe('Fixed data-space position or final coordinate range edge');
-
-/** 校验固定位置角色，编码可补齐其它角色 */
-export const AnnotationPositionSchema = record(NonBlankStringSchema, AnnotationPositionValueSchema).describe(
-  'Fixed coordinate role values; field encodings may supply remaining roles',
-);
-
-/** 校验固定区间端点，编码可补齐其它端点 */
-export const AnnotationBoundsSchema = record(
-  NonBlankStringSchema,
-  strictObject({
-    from: AnnotationPositionValueSchema.optional(),
-    to: AnnotationPositionValueSchema.optional(),
-  }),
-);
 
 /** 校验生成 Core 节点或坐标标识的标记局部稳定锚点规则 */
 export const AnchorIdSchema = strictObject({
@@ -184,7 +165,6 @@ const GeneratedAnchorPlotTargetRefSchema = strictObject({
 }).describe('Generated anchor target reference evaluated from the current relation row');
 
 const ProjectedPlotTargetRefSchema = strictObject({
-  position: AnnotationPositionSchema.describe('Fixed coordinate roles projected in the relation frame'),
   anchorId: AnchorIdSchema.optional().describe('Optional id rule for the generated projected Coordinate'),
   ...anchorTargetFields,
 }).describe('Projected coordinate target from the current relation row');
@@ -542,7 +522,7 @@ export const PointPropertiesSchema = strictObject({
     'Position adjustments applied after position scale mapping and before mark geometry',
   ),
   ...nodeHostLabel,
-  position: AnnotationPositionSchema.optional(),
+  width: NodeLayoutSchema.shape.width,
   text: NodeSchema.shape.text,
   displayFormat: NonBlankStringSchema.optional(),
 }).describe('Fixed point properties and construction parameters');
@@ -551,8 +531,7 @@ export const PointPropertiesSchema = strictObject({
 export const PointMarkSchema = strictObject({
   ...markBase,
   type: literal(BuiltinPlotMark.Point),
-  kind: literal('data'),
-  encodings: PointEncodingSchema.optional(),
+  encodings: PointEncodingSchema,
   properties: PointPropertiesSchema.optional(),
 })
   .refine(hasValidAnchorSource, {
@@ -595,6 +574,9 @@ export const PlotPathConnectNullsStyleSchema = PathStrokeSchema.extend({
 
 /** 校验按记录顺序连接为一维轨迹的路径标记 */
 export const PathPropertiesSchema = strictObject({
+  connection: zodEnum(CoordinateConnection).default(CoordinateConnection.Coordinate).optional(),
+  ...PathTransformSchema.shape,
+  ...PathDecorationSchema.shape,
   color: CssColorSchema.optional(),
   closed: boolean()
     .optional()
@@ -625,24 +607,35 @@ export const PathPropertiesSchema = strictObject({
     'Stable id rule for generated per-datum core Coordinates along this path',
   ),
   ...geometryHostLabel,
-  position: AnnotationPositionSchema.optional(),
 }).describe('Fixed data path properties and construction rules');
 
-/** 校验路径顶点、分组与排序字段 */
-export const PathMarkEncodingSchema = PathEncodingSchema.extend({
-  anchorId: NonBlankStringSchema.optional(),
-  position: PositionEncodingSchema.optional(),
-  series: NonBlankStringSchema.optional(),
-  order: NonBlankStringSchema.optional(),
-  closure: strictObject({ baseline: NonBlankStringSchema }).optional(),
-});
+/** 校验按顶点组织的路径或逐实例完整端点，输入形态互斥 */
+export const PathMarkEncodingSchema = union([
+  PathEncodingSchema.extend({
+    anchorId: NonBlankStringSchema.optional(),
+    position: PositionEncodingSchema,
+    from: never().optional(),
+    to: never().optional(),
+    series: NonBlankStringSchema.optional(),
+    order: NonBlankStringSchema.optional(),
+    closure: strictObject({ baseline: NonBlankStringSchema }).optional(),
+  }),
+  PathEncodingSchema.extend({
+    anchorId: NonBlankStringSchema.optional(),
+    from: PositionEncodingSchema,
+    to: PositionEncodingSchema,
+    position: never().optional(),
+    series: never().optional(),
+    order: never().optional(),
+    closure: never().optional(),
+  }),
+]);
 
 /** 校验按系列与顺序连接数据顶点的路径 */
 export const PathMarkSchema = strictObject({
   ...markBase,
   type: literal(BuiltinPlotMark.Path),
-  kind: literal('data'),
-  encodings: PathMarkEncodingSchema.optional(),
+  encodings: PathMarkEncodingSchema,
   properties: PathPropertiesSchema.optional(),
 })
   .refine(hasValidAnchorSource, {
@@ -689,24 +682,15 @@ export const IntervalBoundSchema = discriminatedUnion('kind', [
   FullBoundSchema,
 ]).describe('Single-role interval bound source: band / span / extent / proportional / full');
 
-const IntervalBoundsObjectSchema = object({
-  x: IntervalBoundSchema.optional().describe(
-    'Primary-role interval bound (coordinate maps x→primary: cartesian2D horizontal, polar2D angle); omit to infer from the scale (band scale → band)',
-  ),
-  y: IntervalBoundSchema.optional().describe(
-    'Secondary-role interval bound (coordinate maps y→secondary: cartesian2D vertical, polar2D radius); omit to infer (continuous scale → span from 0)',
-  ),
-}).catchall(IntervalBoundSchema);
-
-/** 校验按坐标角色组织的区间边界 */
-export const IntervalBoundsSchema = record(NonBlankStringSchema, unknown())
-  .pipe(IntervalBoundsObjectSchema)
-  .describe(
-    'Per-role interval bounds keyed by coordinate role; built-ins use x / y, custom coordinates may add role keys',
-  );
+/** 校验二维区间构造模式，未声明模式由对应尺度推导 */
+export const IntervalBoundsSchema = strictObject({
+  x: IntervalBoundSchema.optional(),
+  y: IntervalBoundSchema.optional(),
+}).describe('Interval construction for x/y; omitted modes are inferred from role scales');
 
 /** 校验由各角色区间与坐标系共同确定几何的区间标记 */
 export const IntervalPropertiesSchema = strictObject({
+  connection: zodEnum(CoordinateConnection).default(CoordinateConnection.Coordinate).optional(),
   color: CssColorSchema.optional(),
   bounds: IntervalBoundsSchema.optional().describe(
     'Per-role interval bounds keyed by coordinate role; omit to infer from the coordinate role',
@@ -731,23 +715,25 @@ export const IntervalPropertiesSchema = strictObject({
   ),
   ...coreNodeStyle,
   ...nodeHostLabel,
-  position: AnnotationPositionSchema.optional(),
 }).describe('Fixed interval construction rules and appearance');
 
 /** 校验区间角色的字段来源 */
 export const IntervalBoundEncodingSchema = strictObject({
   group: NonBlankStringSchema.optional(),
-  from: NonBlankStringSchema.optional(),
-  to: NonBlankStringSchema.optional(),
+  from: PositionInputSchema.optional(),
+  to: PositionInputSchema.optional(),
   weight: NonBlankStringSchema.optional(),
 });
 
 /** 校验数据区间的位置、分组与边界编码 */
 export const IntervalEncodingSchema = NodeEncodingSchema.extend({
   anchorId: NonBlankStringSchema.optional(),
-  position: PositionEncodingSchema.optional(),
+  position: PositionEncodingSchema.omit({ z: true }).partial().optional(),
   series: NonBlankStringSchema.optional(),
-  bounds: record(NonBlankStringSchema, IntervalBoundEncodingSchema).optional(),
+  bounds: strictObject({
+    x: IntervalBoundEncodingSchema.optional(),
+    y: IntervalBoundEncodingSchema.optional(),
+  }).optional(),
   pull: ChannelSchema.optional(),
 });
 
@@ -755,7 +741,6 @@ export const IntervalEncodingSchema = NodeEncodingSchema.extend({
 export const IntervalMarkSchema = strictObject({
   ...markBase,
   type: literal(BuiltinPlotMark.Interval),
-  kind: literal('data'),
   encodings: IntervalEncodingSchema.optional(),
   properties: IntervalPropertiesSchema.optional(),
 })
@@ -864,7 +849,6 @@ export const RelationEncodingSchema = VisualEncodingSchema.extend({
 export const RelationMarkSchema = strictObject({
   ...markBase,
   type: literal(BuiltinPlotMark.Relation),
-  kind: literal('data'),
   encodings: RelationEncodingSchema.optional(),
   properties: RelationPropertiesSchema,
 })
@@ -935,7 +919,7 @@ export const RelationMarkSchema = strictObject({
     for (const role of ['source', 'target'] as const) {
       const target = properties[role];
       const encoding = encodings?.[role];
-      if ((target === undefined || !('position' in target)) && encoding?.position === undefined) {
+      if (encoding?.position === undefined) {
         ctx.addIssue({
           code: 'custom',
           path: ['properties', role],
@@ -974,7 +958,6 @@ const CustomMarkObjectSchema = strictObject({
   type: NonBlankStringSchema.refine(type => !BUILTIN_MARK_TYPES.has(type), {
     message: 'custom mark type must not collide with a built-in mark type',
   }),
-  kind: zodEnum(['data', 'annotation']),
   encodings: record(NonBlankStringSchema, JsonValueSchema).optional(),
   properties: record(NonBlankStringSchema, JsonValueSchema).optional(),
 });
@@ -984,103 +967,7 @@ export const CustomMarkSchema = CustomMarkObjectSchema.describe(
   'Custom mark Source; registered definition validates its targets',
 );
 
-const annotationBase = {
-  ...markBase,
-  kind: literal('annotation'),
-  contributeToDomain: boolean()
-    .default(false)
-    .optional()
-    .describe('Include effective data-space positions in inferred domains; edges never contribute'),
-};
-
-/** 校验显式点的位置与获准字段目标 */
-export const PointAnnotationSchema = strictObject({
-  ...annotationBase,
-  type: literal(BuiltinPlotMark.Point),
-  encodings: PointEncodingSchema.omit({ anchorId: true })
-    .optional()
-    .describe('Point annotation field bindings for positions and supported visual targets'),
-  properties: PointPropertiesSchema.omit({
-    anchorId: true,
-    autoPadding: true,
-    placement: true,
-  })
-    .extend({ width: NodeLayoutSchema.shape.width, size: PositiveNumberSchema.optional() })
-    .optional()
-    .describe('Fixed point annotation positions, appearance, and construction settings'),
-});
-
-/** 校验显式路径固定端点与连接规则 */
-export const PathAnnotationPropertiesSchema = strictObject({
-  ...PathStyleSchema.shape,
-  ...PathTransformSchema.shape,
-  ...PathDecorationSchema.shape,
-  opacity: MarkOpacityStyleSchema.optional(),
-  label: MarkGeometryLabelListSchema.optional(),
-  from: AnnotationPositionSchema.optional(),
-  to: AnnotationPositionSchema.optional(),
-  connection: zodEnum(CoordinateConnection).default(CoordinateConnection.Coordinate),
-  zIndex: NodeSchema.shape.zIndex,
-});
-
-/** 校验逐结果行生成的完整显式路径 */
-export const PathAnnotationSchema = strictObject({
-  ...annotationBase,
-  type: literal(BuiltinPlotMark.Path),
-  encodings: PathEncodingSchema.omit({ roundedCorners: true })
-    .extend({
-      from: PositionEncodingSchema.optional(),
-      to: PositionEncodingSchema.optional(),
-    })
-    .optional()
-    .describe('Path annotation endpoint and visual field bindings'),
-  properties: PathAnnotationPropertiesSchema.optional().describe(
-    'Fixed path annotation endpoints, connection, and appearance',
-  ),
-});
-
-/** 校验显式区间的固定端点与外观 */
-export const IntervalAnnotationPropertiesSchema = strictObject({
-  ...NodeStyleSchema.shape,
-  rotate: NodeSchema.shape.rotate,
-  scale: NodeSchema.shape.scale,
-  boundary: NodeSchema.shape.boundary,
-  cornerRadius: NodeSchema.shape.cornerRadius,
-  label: MarkNodeLabelListSchema.optional(),
-  zIndex: NodeSchema.shape.zIndex,
-  opacity: MarkOpacityStyleSchema.optional(),
-  bounds: AnnotationBoundsSchema.optional(),
-  connection: PathAnnotationPropertiesSchema.shape.connection,
-});
-
-/** 校验逐结果行生成的完整显式区间 */
-export const IntervalAnnotationSchema = strictObject({
-  ...annotationBase,
-  type: literal(BuiltinPlotMark.Interval),
-  encodings: NodeEncodingSchema.extend({
-    bounds: record(
-      NonBlankStringSchema,
-      strictObject({
-        from: NonBlankStringSchema.optional(),
-        to: NonBlankStringSchema.optional(),
-      }),
-    ).optional(),
-  })
-    .optional()
-    .describe('Interval annotation bounds and visual field bindings'),
-  properties: IntervalAnnotationPropertiesSchema.optional().describe(
-    'Fixed interval annotation bounds, connection, and appearance',
-  ),
-});
-
-/** 三种显式几何标注 */
-export const AnnotationSchema = discriminatedUnion('type', [
-  PointAnnotationSchema,
-  PathAnnotationSchema,
-  IntervalAnnotationSchema,
-]);
-
 /** 校验内置或自定义标记操作 */
-export const MarkOperationSchema = union([AnnotationSchema, MarkSchema, CustomMarkSchema]).describe(
-  'Mark operation union: data marks, explicit annotations, and registered custom mark configurations',
+export const MarkOperationSchema = union([MarkSchema, CustomMarkSchema]).describe(
+  'Built-in and registered custom mark configurations',
 );

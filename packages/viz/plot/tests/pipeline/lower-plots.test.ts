@@ -34,7 +34,9 @@ const lineSpec: IRPlot = PlotSchema.parse({
     { type: 'linear', name: 'yRevenue', domainPadding: 0 },
   ],
   coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-  marks: [{ type: 'path', kind: 'data', encodings: { order: 'month', position: { x: 'month', y: 'revenue' } } }],
+  marks: [
+    { type: 'path', encodings: { order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
+  ],
 });
 
 const pointSpec = (): IRPlot =>
@@ -47,7 +49,7 @@ const pointSpec = (): IRPlot =>
       { type: 'linear', name: 'yRevenue', domainPadding: 0 },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
+    marks: [{ type: 'point', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
   });
 
 const expandOf = (
@@ -127,7 +129,7 @@ describe('lowerPlots (contract)', () => {
         { type: 'linear', name: 'y', domain: [0, 1] },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
       guides: [
         {
           type: 'axis',
@@ -211,22 +213,19 @@ describe('lowerPlots (contract)', () => {
         {
           type: 'point',
           defaultColorGroup: 'observations',
-          kind: 'data',
-          encodings: { position: { x: 'month', y: 'revenue' } },
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
         },
         {
           type: 'point',
           defaultColorGroup: 'observations',
-          kind: 'data',
-          encodings: { position: { x: 'month', y: 'revenue' } },
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
         },
         {
           type: 'point',
           defaultColorGroup: 'forecast',
-          kind: 'data',
-          encodings: { position: { x: 'month', y: 'revenue' } },
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
         },
-        { type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } },
+        { type: 'point', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
       ],
     });
     const layers = expandOf(spec, { sales: SALES }, opts).children.filter(isScope);
@@ -252,8 +251,7 @@ describe('lowerPlots (contract)', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'month', y: 'revenue' } },
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
           properties: {
             fill: '#f8fafc',
             stroke: '#0f172a',
@@ -297,8 +295,10 @@ describe('lowerPlots (contract)', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { color: { field: 'region', scale: 'regionColor' }, position: { x: 'month', y: 'revenue' } },
+          encodings: {
+            color: { field: 'region', scale: 'regionColor' },
+            position: { x: { field: 'month' }, y: { field: 'revenue' } },
+          },
         },
       ],
       guides: [
@@ -367,8 +367,10 @@ describe('lowerPlots (contract)', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { color: { field: 'region', scale: 'regionColor' }, position: { x: 'month', y: 'revenue' } },
+          encodings: {
+            color: { field: 'region', scale: 'regionColor' },
+            position: { x: { field: 'month' }, y: { field: 'revenue' } },
+          },
         },
       ],
       guides: [
@@ -426,8 +428,7 @@ describe('lowerPlots (contract)', () => {
         {
           type: 'point',
           layer: { zIndex: 120 },
-          kind: 'data',
-          encodings: { position: { x: 'month', y: 'revenue' } },
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
           properties: { zIndex: 3 },
         },
       ],
@@ -453,11 +454,10 @@ describe('lowerPlots (contract)', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
           encodings: {
             stroke: { field: 'region', scale: 'strokeRegion' },
             strokeWidth: { field: 'density', scale: 'strokeWeight' },
-            position: { x: 'month', y: 'revenue' },
+            position: { x: { field: 'month' }, y: { field: 'revenue' } },
           },
         },
       ],
@@ -552,7 +552,7 @@ describe('lowerPlots (contract)', () => {
         { type: 'linear', name: 'yRevenue', domainPadding: 0, domain: [0, 100], range: [100, 0] },
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
     });
     const layer = firstLayer(spec, { sales: [{ month: 5, revenue: 50 }] }, opts);
 
@@ -583,7 +583,9 @@ describe('lowerPlots (contract)', () => {
       { type: 'linear', name: 'yRevenue', domainPadding: 0 },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-    marks: [{ type: 'path', kind: 'data', encodings: { order: 'month', position: { x: 'month', y: 'revenue' } } }],
+    marks: [
+      { type: 'path', encodings: { order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
+    ],
     guides: [
       { type: 'axis', dimension: 'x' },
       { type: 'axis', dimension: 'y' },
@@ -623,7 +625,7 @@ describe('lowerPlots (contract)', () => {
         { type: 'linear', name: 'yRevenue', domainPadding: 0, domain: [0, 100], range: [100, 0] },
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
       defaultPlot: { axis: { grid: false } },
       guides: [
         { type: 'axis', dimension: 'x' },
@@ -647,7 +649,7 @@ const barSpec = (): IRPlot =>
       { type: 'linear', name: 'yRevenue', domainPadding: 0 },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-    marks: [{ type: 'interval', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
+    marks: [{ type: 'interval', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
   });
 
 describe('lowerPlots interval/bar (contract)', () => {
@@ -712,8 +714,7 @@ describe('lowerPlots interval/bar (contract)', () => {
       marks: [
         {
           type: 'interval',
-          kind: 'data',
-          encodings: { bounds: { x: { weight: 'gdp' } }, position: { x: 'country', y: 'cost' } },
+          encodings: { bounds: { x: { weight: 'gdp' } }, position: { x: { field: 'country' }, y: { field: 'cost' } } },
           properties: { bounds: { x: { kind: 'proportional' } } },
         },
       ],
@@ -771,8 +772,8 @@ describe('lowerPlots interval/bar (contract)', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [
-        { type: 'interval', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } },
-        { type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } },
+        { type: 'interval', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
+        { type: 'point', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
       ],
     });
 
@@ -802,8 +803,10 @@ describe('lowerPlots color (contract)', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { color: { field: 'continent', scale: 'col' }, position: { x: 'gdp', y: 'life' } },
+          encodings: {
+            color: { field: 'continent', scale: 'col' },
+            position: { x: { field: 'gdp' }, y: { field: 'life' } },
+          },
         },
       ],
     });
@@ -860,7 +863,9 @@ describe('lowerPlots color (contract)', () => {
         { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', kind: 'data', encodings: { color: 'continent', position: { x: 'gdp', y: 'life' } } }],
+      marks: [
+        { type: 'point', encodings: { color: 'continent', position: { x: { field: 'gdp' }, y: { field: 'life' } } } },
+      ],
     });
     const layer = firstLayer(spec, { c: COUNTRIES }, opts);
 
@@ -881,8 +886,7 @@ describe('lowerPlots color (contract)', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'gdp', y: 'life' } },
+          encodings: { position: { x: { field: 'gdp' }, y: { field: 'life' } } },
           properties: { color: '#333' },
         },
       ],
@@ -926,8 +930,7 @@ describe('lowerPlots color (contract)', () => {
       marks: [
         {
           type: 'path',
-          kind: 'data',
-          encodings: { order: 'gdp', position: { x: 'gdp', y: 'life' } },
+          encodings: { order: 'gdp', position: { x: { field: 'gdp' }, y: { field: 'life' } } },
           properties: { color: 'tomato' },
         },
       ],
@@ -950,8 +953,10 @@ describe('lowerPlots color (contract)', () => {
       marks: [
         {
           type: 'interval',
-          kind: 'data',
-          encodings: { color: { field: 'continent', scale: 'col' }, position: { x: 'gdp', y: 'life' } },
+          encodings: {
+            color: { field: 'continent', scale: 'col' },
+            position: { x: { field: 'gdp' }, y: { field: 'life' } },
+          },
         },
       ],
     });
@@ -981,8 +986,7 @@ describe('lowerPlots mark paint', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'month', y: 'revenue' } },
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
           properties: { fill: paintGradient, stroke: paintGradient },
         },
       ],
@@ -1013,8 +1017,7 @@ describe('lowerPlots mark paint', () => {
       marks: [
         {
           type: 'path',
-          kind: 'data',
-          encodings: { order: 'month', position: { x: 'month', y: 'revenue' } },
+          encodings: { order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } },
           properties: { stroke: paintGradient },
         },
       ],
@@ -1044,8 +1047,7 @@ describe('lowerPlots mark paint', () => {
       marks: [
         {
           type: 'interval',
-          kind: 'data',
-          encodings: { position: { x: 'month', y: 'revenue' } },
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
           properties: { fill: paintGradient, stroke: paintGradient },
         },
       ],
@@ -1076,8 +1078,7 @@ describe('lowerPlots mark paint', () => {
       marks: [
         {
           type: 'path',
-          kind: 'data',
-          encodings: { order: 'month', position: { x: 'month', y: 'revenue' } },
+          encodings: { order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } },
           properties: { closure: { kind: 'baseline' }, fill: paintGradient, stroke: paintGradient },
         },
       ],
@@ -1108,8 +1109,7 @@ describe('lowerPlots mark paint', () => {
       marks: [
         {
           type: 'interval',
-          kind: 'data',
-          encodings: { position: { x: 'month', y: 'revenue' } },
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
           properties: {
             bounds: { x: { kind: 'full' }, y: { kind: 'span', baseline: 8 } },
             fill: paintGradient,
@@ -1157,12 +1157,11 @@ describe('lowerPlots relation (contract)', () => {
       marks: [
         {
           type: 'interval',
-          kind: 'data',
           encodings: {
             series: 'product',
             bounds: { x: { group: 'product' } },
             color: { field: 'product', scale: 'col' },
-            position: { x: 'month', y: 'revenue' },
+            position: { x: { field: 'month' }, y: { field: 'revenue' } },
           },
           properties: { bounds: { x: { kind: 'band' } } },
         },
@@ -1206,12 +1205,11 @@ describe('lowerPlots relation (contract)', () => {
       marks: [
         {
           type: 'interval',
-          kind: 'data',
           encodings: {
             series: 'product',
-            bounds: { y: { from: 'y0', to: 'y1' } },
+            bounds: { y: { from: { field: 'y0' }, to: { field: 'y1' } } },
             color: { field: 'product', scale: 'col' },
-            position: { x: 'month', y: 'revenue' },
+            position: { x: { field: 'month' }, y: { field: 'revenue' } },
           },
           properties: { bounds: { y: { kind: 'extent' } } },
         },
@@ -1247,18 +1245,17 @@ describe('lowerPlots relation (contract)', () => {
       marks: [
         {
           type: 'interval',
-          kind: 'data',
           encodings: {
             series: 'product',
-            bounds: { y: { from: 'y0', to: 'y1' } },
-            position: { x: 'month', y: 'revenue' },
+            bounds: { y: { from: { field: 'y0' }, to: { field: 'y1' } } },
+            position: { x: { field: 'month' }, y: { field: 'revenue' } },
           },
           properties: { bounds: { y: { kind: 'extent' } } },
         },
       ],
     });
 
-    expect(() => expandOf(spec, { s: SALES2 }, opts)).toThrow(/stack/);
+    expect(() => expandOf(spec, { s: SALES2 }, opts)).toThrow(/field.*y0/);
   });
 
   it('line_series_multi_paths', () => {
@@ -1281,12 +1278,11 @@ describe('lowerPlots relation (contract)', () => {
       marks: [
         {
           type: 'path',
-          kind: 'data',
           encodings: {
             series: 'city',
             order: 't',
             color: { field: 'city', scale: 'col' },
-            position: { x: 't', y: 'v' },
+            position: { x: { field: 't' }, y: { field: 'v' } },
           },
         },
       ],
@@ -1314,7 +1310,7 @@ describe('lowerPlots relation (contract)', () => {
         { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
     });
     const layer = firstLayer(spec, { s: SALES2 }, opts);
 
@@ -1336,12 +1332,11 @@ describe('lowerPlots relation (contract)', () => {
       marks: [
         {
           type: 'interval',
-          kind: 'data',
           encodings: {
             series: 'product',
-            bounds: { y: { from: 'y0', to: 'y1' } },
+            bounds: { y: { from: { field: 'y0' }, to: { field: 'y1' } } },
             color: { field: 'product', scale: 'col' },
-            position: { x: 'month', y: 'revenue' },
+            position: { x: { field: 'month' }, y: { field: 'revenue' } },
           },
           properties: { bounds: { y: { kind: 'extent' } } },
         },

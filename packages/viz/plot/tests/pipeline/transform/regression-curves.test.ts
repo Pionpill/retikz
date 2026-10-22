@@ -60,8 +60,7 @@ const draw = (degree: number, scale = 'linear', clamp = false, curve = 'catmullR
           },
           ...(later ? [{ operation: { kind: 'sort', params: { field: 'tx' } } }] : []),
         ],
-        kind: 'data',
-        encodings: { order: 'tx', position: { x: 'tx', y: 'ty' } },
+        encodings: { order: 'tx', position: { x: { field: 'tx' }, y: { field: 'ty' } } },
       },
     ],
   });

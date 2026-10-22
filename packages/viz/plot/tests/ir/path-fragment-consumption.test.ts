@@ -25,7 +25,6 @@ describe('Plot atomic path fragment consumption', () => {
 
     const relation = RelationMarkSchema.parse({
       type: 'relation',
-      kind: 'data',
       properties: { source: { id: 'source' }, target: { id: 'target' }, geometry: { kind: 'path', options } },
     });
 

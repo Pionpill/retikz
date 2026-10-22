@@ -4,12 +4,6 @@ import type { infer as ZodInfer } from 'zod';
 import { BUILTIN_MARK_TYPES } from './constants';
 import type { MarkOpacityStyleSchema } from './schema';
 import type {
-  AnnotationSchema,
-  AnnotationPositionSchema,
-  AnnotationPositionValueSchema,
-  PointAnnotationSchema,
-  PathAnnotationSchema,
-  IntervalAnnotationSchema,
   AnchorIdSchema,
   BlendModeStyleSchema,
   CustomMarkSchema,
@@ -209,19 +203,7 @@ export type IRPlotCustomMark = ZodInfer<typeof CustomMarkSchema>;
 export type IRPlotMarkOperation = ZodInfer<typeof MarkOperationSchema>;
 
 /** 判断是否为内置数据图元，独立标注使用独立实例分支 */
-export const isBuiltinMark = (mark: IRPlotMarkOperation): mark is IRPlotMark =>
-  BUILTIN_MARK_TYPES.has(mark.type) && !isAnnotation(mark);
-
-export type IRPlotAnnotation = ZodInfer<typeof AnnotationSchema>;
-export type IRPlotAnnotationPosition = ZodInfer<typeof AnnotationPositionSchema>;
-export type IRPlotAnnotationPositionValue = ZodInfer<typeof AnnotationPositionValueSchema>;
-export type IRPlotPointAnnotation = ZodInfer<typeof PointAnnotationSchema>;
-export type IRPlotPathAnnotation = ZodInfer<typeof PathAnnotationSchema>;
-export type IRPlotIntervalAnnotation = ZodInfer<typeof IntervalAnnotationSchema>;
-
-/** 判断声明是否采用独立实例来源 */
-export const isAnnotation = (mark: IRPlotMarkOperation): mark is IRPlotAnnotation =>
-  BUILTIN_MARK_TYPES.has(mark.type) && 'kind' in mark && mark.kind === 'annotation';
+export const isBuiltinMark = (mark: IRPlotMarkOperation): mark is IRPlotMark => BUILTIN_MARK_TYPES.has(mark.type);
 
 /** 分组后的透明度通道绑定 */
 export type IRPlotMarkOpacityStyle = ZodInfer<typeof MarkOpacityStyleSchema>;

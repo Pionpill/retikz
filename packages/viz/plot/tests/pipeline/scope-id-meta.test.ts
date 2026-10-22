@@ -97,8 +97,7 @@ const barSpec = (over: { id?: string; markId?: string } = {}): IRPlot =>
       {
         type: 'interval',
         ...(over.markId ? { id: over.markId } : {}),
-        kind: 'data',
-        encodings: { position: { x: 'month', y: 'revenue' } },
+        encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
       },
     ],
   });
@@ -115,7 +114,7 @@ const pointSpec = (over: { id?: string } = {}): IRPlot =>
       { type: 'linear', name: 'yRevenue' },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
+    marks: [{ type: 'point', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
   });
 
 // =====================================================================
@@ -185,12 +184,11 @@ describe('scope id/meta — happy path', () => {
       marks: [
         {
           type: 'path',
-          kind: 'data',
           encodings: {
             series: 'city',
             order: 't',
             color: { field: 'city', scale: 'col' },
-            position: { x: 't', y: 'v' },
+            position: { x: { field: 't' }, y: { field: 'v' } },
           },
         },
       ],
@@ -275,8 +273,7 @@ describe('scope id/meta — boundary', () => {
       marks: [
         {
           type: 'interval',
-          kind: 'data',
-          encodings: { bounds: { x: { from: 'y0', to: 'y1' } }, color: 'k' },
+          encodings: { bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } }, color: 'k' },
           properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } } },
         },
       ],
@@ -327,7 +324,10 @@ describe('scope id/meta — boundary', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        { type: 'path', kind: 'data', encodings: { series: 'region', order: 't', position: { x: 't', y: 'v' } } },
+        {
+          type: 'path',
+          encodings: { series: 'region', order: 't', position: { x: { field: 't' }, y: { field: 'v' } } },
+        },
       ],
     });
     const layer = firstLayer(spec, { t: TREND }, { ...opts, provenance: true });
@@ -369,7 +369,10 @@ describe('scope id/meta — boundary', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        { type: 'path', kind: 'data', encodings: { series: 'region', order: 't', position: { x: 't', y: 'v' } } },
+        {
+          type: 'path',
+          encodings: { series: 'region', order: 't', position: { x: { field: 't' }, y: { field: 'v' } } },
+        },
       ],
     });
 
@@ -394,7 +397,7 @@ describe('scope id/meta — boundary', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
     });
     const layer = firstLayer(spec, { sales: rows }, { ...opts, provenance: true, datumProvenance: true });
     const nodes = layer.children as Array<IRNode>;
@@ -467,7 +470,7 @@ describe('scope id/meta — interaction', () => {
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'interval', kind: 'data', encodings: { position: { x: 'cat', y: 'value' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'cat' }, y: { field: 'value' } } } }],
     });
     const rows = [
       { cat: 'A', value: 4 },
@@ -496,8 +499,7 @@ describe('scope id/meta — interaction', () => {
       marks: [
         {
           type: 'interval',
-          kind: 'data',
-          encodings: { bounds: { x: { from: 'y0', to: 'y1' } }, color: 'k' },
+          encodings: { bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } }, color: 'k' },
           properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } } },
         },
       ],
@@ -618,7 +620,7 @@ describe('scope id/meta — interaction', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
       guides: [{ type: 'axis', dimension: 'x', id: 'xaxis' }],
     });
     const outer = expandOf(spec, { sales: SALES }, { ...opts, provenance: true });
@@ -650,8 +652,10 @@ describe('scope id/meta — interaction', () => {
         marks: [
           {
             type: 'point',
-            kind: 'data',
-            encodings: { color: { field: 'series', scale: 'color' }, position: { x: 'x', y: 'y' } },
+            encodings: {
+              color: { field: 'series', scale: 'color' },
+              position: { x: { field: 'x' }, y: { field: 'y' } },
+            },
           },
         ],
         guides: [{ type: 'legend', channel: 'color' }],

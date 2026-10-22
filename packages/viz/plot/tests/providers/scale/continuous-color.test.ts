@@ -97,7 +97,10 @@ const pointSpec = (colorScale: Record<string, unknown>, defaultPlot?: IRPlot['de
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [
-      { type: 'point', kind: 'data', encodings: { color: { field: 'v', scale: 'col' }, position: { x: 'x', y: 'y' } } },
+      {
+        type: 'point',
+        encodings: { color: { field: 'v', scale: 'col' }, position: { x: { field: 'x' }, y: { field: 'y' } } },
+      },
     ],
     defaultPlot,
   });
@@ -154,8 +157,7 @@ describe('连续色 · sequential 求值（contract）', () => {
       marks: [
         {
           type: 'interval',
-          kind: 'data',
-          encodings: { color: { field: 'v', scale: 'col' }, position: { x: 'cat', y: 'v' } },
+          encodings: { color: { field: 'v', scale: 'col' }, position: { x: { field: 'cat' }, y: { field: 'v' } } },
         },
       ],
     });
@@ -320,8 +322,11 @@ describe('连续色 · fail-loud 守卫（contract）', () => {
       marks: [
         {
           type: markType,
-          kind: 'data',
-          encodings: { order: 'x', color: { field: 'v', scale: 'col' }, position: { x: 'x', y: 'y' } },
+          encodings: {
+            order: 'x',
+            color: { field: 'v', scale: 'col' },
+            position: { x: { field: 'x' }, y: { field: 'y' } },
+          },
         },
       ],
     });
@@ -383,8 +388,7 @@ describe('连续色 · fail-loud 守卫（contract）', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { color: { field: 'date', scale: 'col' }, position: { x: 'x', y: 'y' } },
+          encodings: { color: { field: 'date', scale: 'col' }, position: { x: { field: 'x' }, y: { field: 'y' } } },
         },
       ],
     });
@@ -413,8 +417,7 @@ describe('连续色 · temporal sequential（contract）', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { color: { field: 'date', scale: 'col' }, position: { x: 'x', y: 'y' } },
+          encodings: { color: { field: 'date', scale: 'col' }, position: { x: { field: 'x' }, y: { field: 'y' } } },
         },
       ],
     });
@@ -447,8 +450,7 @@ describe('连续色 · 非有限 domain 端点 fail-loud（contract 越界一致
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { color: { field: 'v', scale: 'col' }, position: { x: 'x', y: 'y' } },
+          encodings: { color: { field: 'v', scale: 'col' }, position: { x: { field: 'x' }, y: { field: 'y' } } },
         },
       ],
     }) as IRPlot;
@@ -489,8 +491,7 @@ describe('连续色 · 回归：categorical 仍走 ordinal（contract）', () =>
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { color: { field: 'city', scale: 'col' }, position: { x: 'x', y: 'y' } },
+          encodings: { color: { field: 'city', scale: 'col' }, position: { x: { field: 'x' }, y: { field: 'y' } } },
         },
       ],
     });

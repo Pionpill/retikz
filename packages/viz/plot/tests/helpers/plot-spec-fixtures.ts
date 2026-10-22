@@ -48,8 +48,10 @@ export const createPolarPieSpec = (
   marks: [
     {
       type: 'interval',
-      kind: 'data',
-      encodings: { bounds: { x: { from: 'y0', to: 'y1' } }, color: { field: 'label', scale: scales.color } },
+      encodings: {
+        bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } },
+        color: { field: 'label', scale: scales.color },
+      },
       properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } } },
     },
   ],
@@ -62,8 +64,11 @@ export const createPolarPulledSpec = (): IRPlot => ({
   marks: [
     {
       type: 'interval',
-      kind: 'data',
-      encodings: { bounds: { x: { from: 'y0', to: 'y1' } }, pull: 'offset', color: { field: 'label', scale: 'color' } },
+      encodings: {
+        bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } },
+        pull: 'offset',
+        color: { field: 'label', scale: 'color' },
+      },
       properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } } },
     },
   ],
@@ -83,8 +88,10 @@ export const createPolarRadialBarSpec = (): IRPlot => ({
   marks: [
     {
       type: 'interval',
-      kind: 'data',
-      encodings: { color: { field: 'label', scale: 'color' }, position: { x: 'label', y: 'value' } },
+      encodings: {
+        color: { field: 'label', scale: 'color' },
+        position: { x: { field: 'label' }, y: { field: 'value' } },
+      },
     },
   ],
   guides: [],
@@ -113,8 +120,10 @@ export const createHistogramSpec = (
   marks: [
     {
       type: 'interval',
-      kind: 'data',
-      encodings: { bounds: { x: { from: 'binStart', to: 'binEnd' } }, position: { y: 'binCount' } },
+      encodings: {
+        bounds: { x: { from: { field: 'binStart' }, to: { field: 'binEnd' } } },
+        position: { y: { field: 'binCount' } },
+      },
       properties: { bounds: { x: { kind: 'extent' } } },
     },
   ],
@@ -185,8 +194,11 @@ export const createDensityAreaSpec = (reference = 'samples', options: DensityOpt
     marks: [
       {
         type: 'path',
-        kind: 'data',
-        encodings: { series: 'species', order: 'densityX', position: { x: 'densityX', y: 'density' } },
+        encodings: {
+          series: 'species',
+          order: 'densityX',
+          position: { x: { field: 'densityX' }, y: { field: 'density' } },
+        },
         properties: {
           closure: { kind: 'baseline', baseline: 0 },
           fill: '#60a5fa',
@@ -245,8 +257,10 @@ export const createSmoothTrendSpec = (reference = 'samples', options: SmoothOpti
     marks: [
       {
         type: 'point',
-        kind: 'data',
-        encodings: { color: { field: 'series', scale: scales.color }, position: { x: 'time', y: 'value' } },
+        encodings: {
+          color: { field: 'series', scale: scales.color },
+          position: { x: { field: 'time' }, y: { field: 'value' } },
+        },
       },
       {
         type: 'path',
@@ -266,12 +280,11 @@ export const createSmoothTrendSpec = (reference = 'samples', options: SmoothOpti
             },
           },
         ],
-        kind: 'data',
         encodings: {
           series: 'series',
           order: 'trendX',
           color: { field: 'series', scale: scales.color },
-          position: { x: 'trendX', y: 'trendY' },
+          position: { x: { field: 'trendX' }, y: { field: 'trendY' } },
         },
       },
     ],
@@ -351,10 +364,12 @@ export const createBoxplotComposition = (
     {
       type: 'interval',
       transforms: [{ operation: boxplotSummary }],
-      kind: 'data',
       encodings: {
-        bounds: { x: { from: 'boxX0', to: 'boxX1' }, y: { from: 'boxLow', to: 'boxHigh' } },
-        position: { x: 'boxX', y: 'boxHigh' },
+        bounds: {
+          x: { from: { field: 'boxX0' }, to: { field: 'boxX1' } },
+          y: { from: { field: 'boxLow' }, to: { field: 'boxHigh' } },
+        },
+        position: { x: { field: 'boxX' }, y: { field: 'boxHigh' } },
       },
       properties: {
         bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } },
@@ -365,28 +380,25 @@ export const createBoxplotComposition = (
     {
       type: 'relation',
       transforms: [{ operation: boxplotSummary }],
-      kind: 'data',
       encodings: {
-        source: { position: { x: 'boxX0', y: 'median' } },
-        target: { position: { x: 'boxX1', y: 'median' } },
+        source: { position: { x: { field: 'boxX0' }, y: { field: 'median' } } },
+        target: { position: { x: { field: 'boxX1' }, y: { field: 'median' } } },
       },
       properties: { geometry: { kind: 'path' } },
     },
     {
       type: 'relation',
       transforms: [{ operation: boxplotSummary }],
-      kind: 'data',
       encodings: {
-        source: { position: { x: 'boxX', y: 'whiskerMin' } },
-        target: { position: { x: 'boxX', y: 'whiskerMax' } },
+        source: { position: { x: { field: 'boxX' }, y: { field: 'whiskerMin' } } },
+        target: { position: { x: { field: 'boxX' }, y: { field: 'whiskerMax' } } },
       },
       properties: { geometry: { kind: 'path' } },
     },
     {
       type: 'point',
       transforms: [{ operation: boxplotOutside }],
-      kind: 'data',
-      encodings: { position: { x: 'boxX', y: 'value' } },
+      encodings: { position: { x: { field: 'boxX' }, y: { field: 'value' } } },
     },
   ],
   guides: [],

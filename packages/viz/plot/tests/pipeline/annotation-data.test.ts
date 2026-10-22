@@ -32,14 +32,15 @@ const plot = (marks: Array<unknown>) =>
   });
 const point = {
   type: 'point',
-  kind: 'annotation',
-  properties: { position: { x: 1, y: 2 }, fill: 'red', color: 'red' },
+  encodings: { position: { x: { value: 1 }, y: { value: 2 } } },
+  properties: { fill: 'red', color: 'red' },
+  contributeToDomain: false,
 };
 const path = {
   type: 'path',
-  kind: 'annotation',
-  encodings: { from: { y: 'mean' }, to: { y: 'mean' } },
-  properties: { from: { x: { edge: 'start' } }, to: { x: { edge: 'end' } } },
+  encodings: { from: { x: { edge: 'start' }, y: { field: 'mean' } }, to: { x: { edge: 'end' }, y: { field: 'mean' } } },
+  properties: {},
+  contributeToDomain: false,
 };
 const summarize = [
   { operation: { kind: 'summarize', params: { groupBy: [], metrics: [{ kind: 'mean', field: 'y', as: 'mean' }] } } },
@@ -55,39 +56,29 @@ describe('data-bound annotations', () => {
     const source = MarkOperationSchema.parse({
       ...point,
       transforms: [],
-      kind: 'annotation',
-      encodings: { position: { x: 'x' } },
-      properties: { ...point.properties, position: { y: 2 } },
+      encodings: { position: { y: { value: 2 }, x: { field: 'x' } } },
+      properties: { ...point.properties },
+      contributeToDomain: false,
     });
     expect(MarkOperationSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);
-    expect(MarkOperationSchema.safeParse({ ...point, position: { x: { field: 'x', value: 1 }, y: 2 } }).success).toBe(
-      false,
-    );
-    expect(MarkOperationSchema.safeParse({ ...point, position: { x: { value: { edge: 'end' } }, y: 2 } }).success).toBe(
-      false,
-    );
+    expect(
+      MarkOperationSchema.safeParse({ ...point, position: { x: { field: 'x', value: 1 }, y: { value: 2 } } }).success,
+    ).toBe(false);
+    expect(
+      MarkOperationSchema.safeParse({ ...point, position: { x: { value: { edge: 'end' } }, y: { value: 2 } } }).success,
+    ).toBe(false);
   });
 
-  it('distinguishes independent constants from an explicitly empty data chain', () => {
+  it('keeps constants independent with an explicitly empty data chain', () => {
     expect(leaves(lowerPlot(plot([point]), { rows }, options))).toHaveLength(1);
     expect(
-      leaves(
-        lowerPlot(
-          plot([{ ...point, transforms: [], kind: 'annotation', properties: { ...point.properties } }]),
-          { rows },
-          options,
-        ),
-      ),
-    ).toHaveLength(2);
+      leaves(lowerPlot(plot([{ ...point, transforms: [], properties: { ...point.properties } }]), { rows }, options)),
+    ).toHaveLength(1);
     expect(
       leaves(
-        lowerPlot(
-          plot([{ ...point, transforms: [], kind: 'annotation', properties: { ...point.properties } }]),
-          { rows: [] },
-          options,
-        ),
+        lowerPlot(plot([{ ...point, transforms: [], properties: { ...point.properties } }]), { rows: [] }, options),
       ),
-    ).toHaveLength(0);
+    ).toHaveLength(1);
   });
 
   it('projects each point and interval row identically to explicit constants', () => {
@@ -95,25 +86,34 @@ describe('data-bound annotations', () => {
       {
         ...point,
         id: 'points',
-        kind: 'annotation',
-        encodings: { position: { x: 'x', y: 'y' } },
+        encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
         properties: { ...point.properties },
+        contributeToDomain: false,
       },
       {
         type: 'interval',
         id: 'regions',
-        kind: 'annotation',
-        encodings: { bounds: { x: { to: 'x' }, y: { to: 'y' } } },
-        properties: { fill: 'blue', bounds: { x: { from: 0 }, y: { from: 0 } } },
+        encodings: {
+          bounds: { x: { from: { value: 0 }, to: { field: 'x' } }, y: { from: { value: 0 }, to: { field: 'y' } } },
+        },
+        properties: { fill: 'blue', bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } } },
+        contributeToDomain: false,
       },
     ]);
     const output = lowerPlot(data, { rows }, options);
     const constant = plot([
-      ...rows.map(row => ({ ...point, kind: 'annotation', properties: { ...point.properties, position: row } })),
+      ...rows.map(row => ({
+        ...point,
+        encodings: { position: { x: { value: row.x }, y: { value: row.y } } },
+        properties: { ...point.properties },
+      })),
       ...rows.map(row => ({
         type: 'interval',
-        kind: 'annotation',
-        properties: { fill: 'blue', bounds: { x: { from: 0, to: row.x }, y: { from: 0, to: row.y } } },
+        encodings: {
+          bounds: { x: { from: { value: 0 }, to: { value: row.x } }, y: { from: { value: 0 }, to: { value: row.y } } },
+        },
+        properties: { fill: 'blue', bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } } },
+        contributeToDomain: false,
       })),
     ]);
     expect(leaves(output).map(({ id: _id, ...geometry }) => geometry)).toEqual(
@@ -125,12 +125,12 @@ describe('data-bound annotations', () => {
   it('computes a local mean without mutating a sibling data view', () => {
     const output = lowerPlot(
       plot([
-        { ...path, transforms: summarize, kind: 'annotation', properties: { ...path.properties } },
+        { ...path, transforms: summarize, properties: { ...path.properties } },
         {
           ...point,
-          kind: 'annotation',
-          encodings: { position: { x: 'x', y: 'y' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: { ...point.properties },
+          contributeToDomain: false,
         },
       ]),
       { rows },
@@ -140,9 +140,9 @@ describe('data-bound annotations', () => {
       plot([
         {
           ...path,
-          kind: 'annotation',
-          encodings: {},
-          properties: { ...path.properties, from: { x: { edge: 'start' }, y: 5 }, to: { x: { edge: 'end' }, y: 5 } },
+          encodings: { from: { x: { edge: 'start' }, y: { value: 5 } }, to: { x: { edge: 'end' }, y: { value: 5 } } },
+          properties: { ...path.properties },
+          contributeToDomain: false,
         },
       ]),
       { rows: [] },
@@ -153,9 +153,7 @@ describe('data-bound annotations', () => {
   });
 
   it('uses the same aggregated results for asynchronous preparation and lineage', async () => {
-    const source = plot([
-      { ...path, id: 'mean', transforms: summarize, kind: 'annotation', properties: { ...path.properties } },
-    ]);
+    const source = plot([{ ...path, id: 'mean', transforms: summarize, properties: { ...path.properties } }]);
     const prepared = await (
       await preparePlotData(source, { dataBindings: { rows: { kind: 'rows', rows } } })
     ).execute();
@@ -175,36 +173,31 @@ describe('data-bound annotations', () => {
     expect(result.lineage.data.marks).toHaveLength(1);
   });
 
-  it('rejects fields removed by aggregation and unmappable row values', () => {
+  it('rejects fields removed by aggregation and skips missing point values', () => {
     expect(() =>
       lowerPlot(
         plot([
           {
             ...point,
             transforms: summarize,
-            kind: 'annotation',
-            encodings: { position: { x: 'x' } },
-            properties: { ...point.properties, position: { y: 2 } },
+            encodings: { position: { y: { value: 2 }, x: { field: 'x' } } },
+            properties: { ...point.properties },
+            contributeToDomain: false,
           },
         ]),
         { rows },
         options,
       ),
     ).toThrow(/field|map|x/i);
-    expect(() =>
-      lowerPlot(
-        plot([
-          {
-            ...point,
-            kind: 'annotation',
-            encodings: { position: { x: 'x' } },
-            properties: { ...point.properties, position: { y: 2 } },
-          },
-        ]),
-        { rows: [{ x: null }] },
-        options,
+    expect(
+      leaves(
+        lowerPlot(
+          plot([{ ...point, encodings: { position: { x: { field: 'x' }, y: { value: 2 } } } }]),
+          { rows: [{ x: null }] },
+          options,
+        ),
       ),
-    ).toThrow();
+    ).toHaveLength(0);
   });
 
   it('creates independent group spans and exposes one datum with aggregate provenance per path', () => {
@@ -227,9 +220,12 @@ describe('data-bound annotations', () => {
             },
           },
         ],
-        kind: 'annotation',
-        encodings: { from: { x: 'start', y: 'mean' }, to: { x: 'end', y: 'mean' } },
+        encodings: {
+          from: { x: { field: 'start' }, y: { field: 'mean' } },
+          to: { x: { field: 'end' }, y: { field: 'mean' } },
+        },
         properties: { ...path.properties },
+        contributeToDomain: false,
       },
     ]);
     const data = {
@@ -253,7 +249,7 @@ describe('data-bound annotations', () => {
   });
 
   it('aggregates the actual facet partition and preserves scoped locator identity', async () => {
-    const source = plot([{ ...path, transforms: summarize, kind: 'annotation', properties: { ...path.properties } }]);
+    const source = plot([{ ...path, transforms: summarize, properties: { ...path.properties } }]);
     delete source.coordinate;
     source.composition = {
       defaultView: 'main',
@@ -284,12 +280,16 @@ describe('data-bound annotations', () => {
 
   it('only contributes final data positions to an inferred domain when enabled', () => {
     const source = plot([
-      { type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } }, properties: { autoPadding: false } },
+      {
+        type: 'point',
+        encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+        properties: { autoPadding: false },
+      },
       {
         ...point,
-        kind: 'annotation',
-        encodings: { position: { y: 'limit' } },
-        properties: { ...point.properties, position: { x: 5 } },
+        encodings: { position: { x: { value: 5 }, y: { field: 'limit' } } },
+        properties: { ...point.properties },
+        contributeToDomain: false,
       },
     ]);
     source.scales = [
@@ -313,15 +313,17 @@ describe('data-bound annotations', () => {
     const source = plot([
       {
         ...path,
-        kind: 'annotation',
-        encodings: { from: { y: 'y' }, to: { y: 'y' } },
-        properties: { ...path.properties, from: { x: 0 }, to: { x: 5 } },
+        encodings: { from: { x: { value: 0 }, y: { field: 'y' } }, to: { x: { value: 5 }, y: { field: 'y' } } },
+        properties: { ...path.properties },
+        contributeToDomain: false,
       },
       {
         type: 'interval',
-        kind: 'annotation',
-        encodings: { bounds: { y: { to: 'y' } } },
-        properties: { bounds: { x: { from: 0, to: 5 }, y: { from: 1 } } },
+        encodings: {
+          bounds: { x: { from: { value: 0 }, to: { value: 5 } }, y: { from: { value: 1 }, to: { field: 'y' } } },
+        },
+        properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } } },
+        contributeToDomain: false,
       },
     ]);
     source.coordinate = { type: 'polar2D', angle: 'x', radius: 'y' };
@@ -331,7 +333,7 @@ describe('data-bound annotations', () => {
   });
 
   it('applies marks execution policy and declaration overrides to annotation transforms', () => {
-    const source = plot([{ ...path, transforms: summarize, kind: 'annotation', properties: { ...path.properties } }]);
+    const source = plot([{ ...path, transforms: summarize, properties: { ...path.properties } }]);
     source.dataExecution = { root: { mode: 'builtin' }, marks: { mode: 'external', external: 'fixture' } };
     expect(() => lowerPlot(source, { rows }, options)).toThrow(/async preparation/i);
     source.marks[0] = MarkOperationSchema.parse({
@@ -340,7 +342,6 @@ describe('data-bound annotations', () => {
         ...declaration,
         dataExecution: { mode: 'builtin' },
       })),
-      kind: 'annotation',
       properties: { ...path.properties },
     });
     expect(leaves(lowerPlot(source, { rows }, options))).toHaveLength(1);

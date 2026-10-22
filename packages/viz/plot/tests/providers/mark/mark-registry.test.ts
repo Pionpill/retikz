@@ -4,6 +4,7 @@ import type { infer as ZodInfer } from 'zod';
 import { literal, number, object, strictObject } from 'zod';
 
 import * as plot from '../../../src';
+import { positionField } from '../../../src/contract';
 import {
   defineMark,
   defineNodeChannel,
@@ -22,14 +23,14 @@ type Datasets = Record<string, Array<Record<string, unknown>>>;
 
 const DotMarkSchema = strictObject({
   type: literal('dot'),
-  kind: literal('data'),
+
   properties: strictObject({ strength: number().positive() }),
   encodings: EncodingSchema.optional(),
 });
 
 type DotMark = ZodInfer<typeof DotMarkSchema>;
 
-const BareMarkSchema = object({ type: literal('bare'), kind: literal('data') });
+const BareMarkSchema = object({ type: literal('bare') });
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
   return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
@@ -40,12 +41,12 @@ const makeDotMark = (record: { calls: number; rows: number }) =>
   defineMark<DotMark>({
     schema: DotMarkSchema,
     collectFields: (mark, fields) => {
-      fields.addChannel(mark.encodings?.position?.x);
-      fields.addChannel(mark.encodings?.position?.y);
+      fields.addField(positionField(mark.encodings?.position?.x));
+      fields.addField(positionField(mark.encodings?.position?.y));
     },
     lower: (_mark, rows) => {
       record.calls += 1;
-      record.rows = rows.length;
+      record.rows = rows.kind === 'rows' ? rows.rows.length : 1;
       return { type: 'scope', children: [] };
     },
   });
@@ -54,7 +55,8 @@ const makeBareMark = () =>
   defineMark({
     schema: BareMarkSchema,
     lower: (mark, rows, _frame, channels) => {
-      const row = rows[0] ?? {};
+      if (rows.kind === 'single' || rows.rows.length === 0) return null;
+      const row = rows.rows[0];
       const node: IRNode = {
         type: 'node',
         position: [0, 0],
@@ -96,7 +98,11 @@ const dotSpec = (overrides?: Partial<IRPlot>): IRPlot =>
       { type: 'linear', name: 'val' },
     ],
     marks: [
-      { type: 'dot', kind: 'data', encodings: { position: { x: 'cat', y: 'val' } }, properties: { strength: 1 } },
+      {
+        type: 'dot',
+        encodings: { position: { x: { field: 'cat' }, y: { field: 'val' } } },
+        properties: { strength: 1 },
+      },
     ],
     ...overrides,
   });
@@ -106,19 +112,19 @@ const opts: LowerPlotsOptions = { layout: { width: 400, height: 300 } };
 describe('mark registry（contract：自定义 mark）', () => {
   it('mark_operation_schema_accepts_builtin_and_custom', () => {
     expect(
-      MarkOperationSchema.safeParse({ type: 'point', kind: 'data', encodings: { position: { x: 'a' } } }).success,
+      MarkOperationSchema.safeParse({ type: 'point', encodings: { position: { x: { field: 'a' } } } }).success,
     ).toBe(true);
-    expect(
-      MarkOperationSchema.safeParse({ type: 'dot', kind: 'data', encodings: { position: { x: 'a' } } }).success,
-    ).toBe(true);
+    expect(MarkOperationSchema.safeParse({ type: 'dot', encodings: { position: { x: { field: 'a' } } } }).success).toBe(
+      true,
+    );
   });
 
   it('custom_mark_type_collision_rejected', () => {
     // 自定义 type 撞内置 → IRPlotCustomMark refine 拒；内置 'point' 走内置分支但缺位置编码也不该当自定义通过
-    const collide = MarkOperationSchema.safeParse({ type: 'point', kind: 'data', properties: { foo: 1 } });
+    const collide = MarkOperationSchema.safeParse({ type: 'point', properties: { foo: 1 } });
 
     // 'point' 命中内置 schema（point 字段可选）→ accept；但带非法额外字段的纯自定义占用名应被内置严格 schema 兜住
-    expect(MarkOperationSchema.safeParse({ type: 'path', kind: 'data', properties: { notAField: true } }).success).toBe(
+    expect(MarkOperationSchema.safeParse({ type: 'path', properties: { notAField: true } }).success).toBe(
       collide.success,
     );
     expect(BUILTIN_MARK_TYPES.has('point')).toBe(true);
@@ -183,8 +189,7 @@ describe('mark registry（contract：自定义 mark）', () => {
         {
           type: 'dot',
           defaultColorGroup: 'observations',
-          kind: 'data',
-          encodings: { position: { x: 'cat', y: 'val' } },
+          encodings: { position: { x: { field: 'cat' }, y: { field: 'val' } } },
           properties: { strength: 1 },
         },
       ],
@@ -200,7 +205,11 @@ describe('mark registry（contract：自定义 mark）', () => {
     const record = { calls: 0, rows: 0 };
     const spec = dotSpec({
       marks: [
-        { type: 'dot', kind: 'data', encodings: { position: { x: 'cat', y: 'val' } }, properties: { strength: -1 } },
+        {
+          type: 'dot',
+          encodings: { position: { x: { field: 'cat' }, y: { field: 'val' } } },
+          properties: { strength: -1 },
+        },
       ],
     });
 
@@ -220,7 +229,7 @@ describe('mark registry（contract：自定义 mark）', () => {
         { type: 'band', name: 'cat' },
         { type: 'linear', name: 'val' },
       ],
-      marks: [{ type: 'bare', kind: 'data', encodings: { ghost: 'intensity' } }],
+      marks: [{ type: 'bare', encodings: { ghost: 'intensity' } }],
     });
 
     expect(() =>
@@ -239,7 +248,7 @@ describe('mark registry（contract：自定义 mark）', () => {
         { type: 'band', name: 'cat' },
         { type: 'linear', name: 'val' },
       ],
-      marks: [{ type: 'bare', kind: 'data', encodings: { bareIntensity: 'intensity' } }],
+      marks: [{ type: 'bare', encodings: { bareIntensity: 'intensity' } }],
     });
     expandOf(
       spec,
@@ -290,8 +299,12 @@ describe('mark registry（contract：自定义 mark）', () => {
     // 自定义 dot + 内置 point 同 plot，共用同一坐标 / scale；lowering 不抛、两 mark 各产一层
     const spec = dotSpec({
       marks: [
-        { type: 'dot', kind: 'data', encodings: { position: { x: 'cat', y: 'val' } }, properties: { strength: 1 } },
-        { type: 'point', kind: 'data', encodings: { position: { x: 'cat', y: 'val' } } },
+        {
+          type: 'dot',
+          encodings: { position: { x: { field: 'cat' }, y: { field: 'val' } } },
+          properties: { strength: 1 },
+        },
+        { type: 'point', encodings: { position: { x: { field: 'cat' }, y: { field: 'val' } } } },
       ],
     });
     const scope = expandOf(spec, { d: rows }, { definitions: { marks: [makeDotMark(record)] }, ...opts });

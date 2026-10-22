@@ -60,8 +60,7 @@ const intervalSpec = (extra: Record<string, unknown> = {}, id?: string): IRPlot 
       {
         type: 'interval',
         ...(id !== undefined ? { id } : {}),
-        kind: 'data',
-        encodings: { position: { x: 'month', y: 'revenue' } },
+        encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
         ...extra,
       },
     ],
@@ -79,7 +78,7 @@ const textSpec = (extra: Record<string, unknown> = {}): IRPlot =>
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'px', y: 'py' } }, ...extra }],
+    marks: [{ type: 'point', encodings: { position: { x: { field: 'px' }, y: { field: 'py' } } }, ...extra }],
     guides: [],
   });
 
@@ -100,7 +99,7 @@ const POINT_ROWS: Datasets = {
 describe('contract priority-1 宿主 label（填 datum Node.label）', () => {
   it('label-host-node：interval label → 每个 datum Node.label 被填上 NodeLabelSchema，不新建额外 Node', () => {
     const spec = intervalSpec({
-      encodings: { position: { x: 'month', y: 'revenue' }, label: { content: 'revenue' } },
+      encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { content: 'revenue' } },
       properties: { label: { position: 'top', distance: 6 } },
     });
     const layer = expandOf(spec, BAR_ROWS);
@@ -125,7 +124,7 @@ describe('contract priority-1 宿主 label（填 datum Node.label）', () => {
 
   it('label-display-format：displayFormat 套在 field 上 → datum Node.label 文本为格式化串', () => {
     const spec = intervalSpec({
-      encodings: { position: { x: 'month', y: 'revenue' }, label: { content: 'revenue' } },
+      encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { content: 'revenue' } },
       properties: { label: { displayFormat: ',.0f' } },
     });
     const nodes = nodesOf(expandOf(spec, BAR_ROWS));
@@ -152,7 +151,7 @@ describe('contract priority-1 宿主 label（填 datum Node.label）', () => {
   it('label-resolve-runtime：resolveLabel(row) 覆盖 field/displayFormat，且 IR 内不含函数', () => {
     const spec = intervalSpec(
       {
-        encodings: { position: { x: 'month', y: 'revenue' }, label: { content: 'revenue' } },
+        encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { content: 'revenue' } },
         properties: { label: { displayFormat: ',.0f' } },
       },
       'bars',
@@ -172,7 +171,9 @@ describe('contract priority-1 宿主 label（填 datum Node.label）', () => {
   });
 
   it('label-field-null-skip：label.content.field 解析 null 的行不挂 label（datum Node 仍在）', () => {
-    const spec = intervalSpec({ encodings: { position: { x: 'month', y: 'revenue' }, label: { content: 'note' } } });
+    const spec = intervalSpec({
+      encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { content: 'note' } },
+    });
     const layer = expandOf(spec, {
       d: [
         { month: 'Jan', revenue: 10, note: 'hi' },
@@ -190,7 +191,10 @@ describe('contract priority-1 宿主 label（填 datum Node.label）', () => {
 describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）', () => {
   it('text-field-content：text={field} → 每行 Node.text = 字段值转串', () => {
     const nodes = nodesOf(
-      expandOf(textSpec({ encodings: { position: { x: 'px', y: 'py' }, text: 'label' } }), POINT_ROWS),
+      expandOf(
+        textSpec({ encodings: { position: { x: { field: 'px' }, y: { field: 'py' } }, text: 'label' } }),
+        POINT_ROWS,
+      ),
     );
 
     expect(nodes).toHaveLength(2);
@@ -206,7 +210,10 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
 
   it('text-position-parity-with-point：同 x/y 的 TextMark 与 point 投影出的 Node.position 逐字节相等', () => {
     const textNodes = nodesOf(
-      expandOf(textSpec({ encodings: { position: { x: 'px', y: 'py' }, text: 'label' } }), POINT_ROWS),
+      expandOf(
+        textSpec({ encodings: { position: { x: { field: 'px' }, y: { field: 'py' } }, text: 'label' } }),
+        POINT_ROWS,
+      ),
     );
     const pointSpec = PlotSchema.parse({
       namespace: 'plot',
@@ -217,7 +224,7 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'px', y: 'py' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'px' }, y: { field: 'py' } } } }],
       guides: [],
     });
     const pointNodes = nodesOf(expandOf(pointSpec, POINT_ROWS));
@@ -227,7 +234,7 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
 
   it('text-field-null-skip：text.field 解析 null 的行被跳过（不产 Node）', () => {
     const nodes = nodesOf(
-      expandOf(textSpec({ encodings: { position: { x: 'px', y: 'py' }, text: 'label' } }), {
+      expandOf(textSpec({ encodings: { position: { x: { field: 'px' }, y: { field: 'py' } }, text: 'label' } }), {
         d: [
           { px: 1, py: 2, label: 'A' },
           { px: 3, py: 4 },
@@ -240,20 +247,29 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
   });
 
   it('text-empty-rows：全跳过 → 该 text 图层不产（无 node）', () => {
-    const layer = expandOf(textSpec({ encodings: { position: { x: 'px', y: 'py' }, text: 'label' } }), {
-      d: [{ px: 1, py: 2 }],
-    });
+    const layer = expandOf(
+      textSpec({ encodings: { position: { x: { field: 'px' }, y: { field: 'py' } }, text: 'label' } }),
+      {
+        d: [{ px: 1, py: 2 }],
+      },
+    );
 
     expect(nodesOf(layer)).toHaveLength(0);
   });
 
   it('text-dx-dy：dx/dy 微调 → Node.position 相对锚点偏移', () => {
     const base = nodesOf(
-      expandOf(textSpec({ encodings: { position: { x: 'px', y: 'py' }, text: 'label' } }), POINT_ROWS),
+      expandOf(
+        textSpec({ encodings: { position: { x: { field: 'px' }, y: { field: 'py' } }, text: 'label' } }),
+        POINT_ROWS,
+      ),
     );
     const shifted = nodesOf(
       expandOf(
-        textSpec({ encodings: { position: { x: 'px', y: 'py' }, text: 'label' }, properties: { dx: 5, dy: -8 } }),
+        textSpec({
+          encodings: { position: { x: { field: 'px' }, y: { field: 'py' } }, text: 'label' },
+          properties: { dx: 5, dy: -8 },
+        }),
         POINT_ROWS,
       ),
     );
@@ -276,8 +292,11 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { color: { field: 'cat', scale: 'c' }, text: 'label', position: { x: 'px', y: 'py' } },
+          encodings: {
+            color: { field: 'cat', scale: 'c' },
+            text: 'label',
+            position: { x: { field: 'px' }, y: { field: 'py' } },
+          },
         },
       ],
       guides: [],
@@ -324,7 +343,7 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
         { type: 'linear', name: 'r' },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r', startAngle: 0, endAngle: 360, innerRadius: 0 },
-      marks: [{ type: 'point', kind: 'data', encodings: { text: 'label', position: { x: 'px', y: 'py' } } }],
+      marks: [{ type: 'point', encodings: { text: 'label', position: { x: { field: 'px' }, y: { field: 'py' } } } }],
       guides: [],
     });
     const nodes = nodesOf(expandOf(spec, POINT_ROWS));
@@ -341,11 +360,15 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
 
   it('text-resolve-runtime：resolveLabel(row) 覆盖 text.field（按 mark id 注入）', () => {
     const nodes = nodesOf(
-      expandOf(textSpec({ encodings: { position: { x: 'px', y: 'py' }, text: 'label' }, id: 't1' }), POINT_ROWS, {
-        layout: { width: WIDTH, height: HEIGHT },
+      expandOf(
+        textSpec({ encodings: { position: { x: { field: 'px' }, y: { field: 'py' } }, text: 'label' }, id: 't1' }),
+        POINT_ROWS,
+        {
+          layout: { width: WIDTH, height: HEIGHT },
 
-        resolveLabel: { t1: row => `<${row.label}>` },
-      }),
+          resolveLabel: { t1: row => `<${row.label}>` },
+        },
+      ),
     );
 
     expect(nodes[0].text).toBe('<A>');
@@ -373,7 +396,7 @@ describe('contract schema accept/reject', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'px', y: 'py' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'px' }, y: { field: 'py' } } } }],
       guides: [],
     });
     const nodes = nodesOf(expandOf(spec, POINT_ROWS));

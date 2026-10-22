@@ -1,8 +1,7 @@
 import type { IRCoordinate } from '@retikz/core';
-import type { ExternalRow } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
 
-import type { AnchorIdGenerator, AnchorOwner, AnchorRegistry } from '../contract';
+import type { MarkInstance, AnchorIdGenerator, AnchorOwner, AnchorRegistry } from '../contract';
 import { slug } from '../contract';
 import { RetikzPlotError } from '../error';
 import type { IRPlotAnchorId } from '../schemas';
@@ -10,18 +9,27 @@ import type { IRPlotAnchorId } from '../schemas';
 const ownerText = (owner: AnchorOwner): string => {
   const id = owner.markId === undefined ? '' : ` id="${owner.markId}"`;
   const role = owner.role === undefined ? '' : ` ${owner.role}`;
-  return `${owner.markType}${role} mark${id} at markIndex=${owner.markIndex}, rowIndex=${owner.transformedIndex}`;
+  return `${owner.markType}${role} mark${id} at markIndex=${owner.markIndex}, rowIndex=${owner.kind === 'row' ? owner.transformedIndex : 'single'}`;
 };
 
-const renderTemplate = (template: string, row: ExternalRow, owner: AnchorOwner, plotId: string | undefined): string =>
+const renderTemplate = (
+  template: string,
+  instance: MarkInstance,
+  owner: AnchorOwner,
+  plotId: string | undefined,
+): string =>
   template.replace(/\{(plotId|markId|markIndex|index|field:[^}]+)\}/g, (match, token: string) => {
     if (token === 'plotId') return plotId ?? '';
     if (token === 'markId') return owner.markId ?? '';
     if (token === 'markIndex') return String(owner.markIndex);
-    if (token === 'index') return String(owner.transformedIndex);
+    if (token === 'index') {
+      if (instance.kind === 'single') throw new RetikzPlotError('Anchor index template requires a row instance');
+      return String(instance.transformedIndex);
+    }
+    if (instance.kind === 'single') throw new RetikzPlotError('Anchor field template requires a row instance');
 
     const field = token.slice('field:'.length);
-    const value = resolveFieldPath(row, field);
+    const value = resolveFieldPath(instance.row, field);
     if (value === undefined) {
       throw new RetikzPlotError(
         `lowerPlots: anchorId template references missing field "${field}" for ${ownerText(owner)}`,
@@ -46,10 +54,11 @@ export const createAnchorRegistry = (options: {
     return options.plotId === undefined ? scoped : `${options.plotId}.${scoped}`;
   };
 
-  const makeId = (spec: IRPlotAnchorId, row: ExternalRow, owner: AnchorOwner, field?: string): string => {
+  const makeId = (spec: IRPlotAnchorId, instance: MarkInstance, owner: AnchorOwner, field?: string): string => {
     const prefix = spec.prefix ?? defaultPrefix(owner);
     if (field !== undefined) {
-      const raw = resolveFieldPath(row, field);
+      if (instance.kind === 'single') throw new RetikzPlotError('Anchor field requires a row instance');
+      const raw = resolveFieldPath(instance.row, field);
       if (raw === undefined) {
         throw new RetikzPlotError(`lowerPlots: anchorId field "${field}" missing for ${ownerText(owner)}`);
       }
@@ -58,7 +67,7 @@ export const createAnchorRegistry = (options: {
     }
 
     if (spec.template !== undefined) {
-      const rendered = renderTemplate(spec.template, row, owner, options.plotId);
+      const rendered = renderTemplate(spec.template, instance, owner, options.plotId);
       if (rendered.length === 0) {
         throw new RetikzPlotError(`lowerPlots: anchorId template produced an empty id for ${ownerText(owner)}`);
       }
@@ -74,11 +83,10 @@ export const createAnchorRegistry = (options: {
         );
       }
 
-      const generated = generator(row, {
+      const generated = generator(instance, {
         plotId: options.plotId,
         markId: owner.markId,
         markIndex: owner.markIndex,
-        transformedIndex: owner.transformedIndex,
         prefix,
         role: owner.role,
       });

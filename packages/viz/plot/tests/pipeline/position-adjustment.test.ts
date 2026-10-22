@@ -31,8 +31,7 @@ const specOf = (adjustments?: Array<Record<string, unknown>>): IRPlot =>
       {
         type: 'point',
         properties: { ...(adjustments === undefined ? {} : { placement: { adjustments } }) },
-        kind: 'data',
-        encodings: { position: { x: 'category', y: 'value' } },
+        encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } },
       },
     ],
   });
@@ -403,8 +402,7 @@ describe('Mark Placement pipeline', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'y' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: {
             size: 10,
             strokeWidth: 2,
@@ -475,8 +473,7 @@ describe('Mark Placement pipeline', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'category', y: 'value' } },
+          encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } },
           properties: { placement: { adjustments: [{ kind: 'fixed-angle', offset: 22.5 }] } },
         },
       ],
@@ -484,7 +481,7 @@ describe('Mark Placement pipeline', () => {
     const base = positionsOf(
       PlotSchema.parse({
         ...polarSpec,
-        marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'category', y: 'value' } } }],
+        marks: [{ type: 'point', encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } } }],
       }),
       { layout: { width: 200, height: 200 } },
       polarRows,
@@ -533,8 +530,7 @@ describe('Mark Placement pipeline', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'category', y: 'value' } },
+          encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } },
           properties: { placement: { adjustments: [{ kind: 'fixed-polar-angle', offset: 22.5 }] } },
         },
       ],
@@ -542,7 +538,7 @@ describe('Mark Placement pipeline', () => {
     const base = positionsOf(
       PlotSchema.parse({
         ...polarSpec,
-        marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'category', y: 'value' } } }],
+        marks: [{ type: 'point', encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } } }],
       }),
       { layout: { width: 200, height: 200 } },
       polarRows,
@@ -589,8 +585,7 @@ describe('Mark Placement pipeline', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'angle', y: 'value' } },
+          encodings: { position: { x: { field: 'angle' }, y: { field: 'value' } } },
           properties: { placement: { adjustments: [{ kind: 'fixed-continuous-angle', offset: 22.5 }] } },
         },
       ],
@@ -598,7 +593,7 @@ describe('Mark Placement pipeline', () => {
     const base = positionsOf(
       PlotSchema.parse({
         ...continuousSpec,
-        marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'angle', y: 'value' } } }],
+        marks: [{ type: 'point', encodings: { position: { x: { field: 'angle' }, y: { field: 'value' } } } }],
       }),
       { layout: { width: 200, height: 200 } },
       continuousRows,
@@ -628,8 +623,7 @@ describe('Mark Placement pipeline', () => {
         marks: [
           {
             type: 'point',
-            kind: 'data',
-            encodings: { position: { x: 'category', y: 'value' } },
+            encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } },
             properties: {
               placement: { adjustments: [{ kind: 'jitter', role: 'x', span: { kind: 'ratio', value: 1 } }] },
             },
@@ -692,8 +686,7 @@ describe('Mark Placement pipeline', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'category' } },
+          encodings: { position: { x: { field: 'category' } } },
           properties: { placement: { adjustments: [{ kind: 'jitter', span: { kind: 'ratio', value: 1 }, seed: 2 }] } },
         },
       ],
@@ -727,7 +720,7 @@ describe('Mark Placement pipeline', () => {
         { type: 'linear', name: 'radius', domain: [0, 10], domainPadding: 0 },
       ],
       coordinate: { type: 'polar2D', angle: 'angle', radius: 'radius' },
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'category', y: 'value' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } } }],
     });
     const polarFrame = defaultFrameOf(polarSpec, [
       { category: 'A', value: 2 },
@@ -784,8 +777,7 @@ describe('Mark Placement pipeline', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'category' } },
+          encodings: { position: { x: { field: 'category' } } },
           properties: { placement: { adjustments: [{ kind: 'screen-noop' }] } },
         },
       ],
@@ -819,8 +811,7 @@ describe('Mark Placement pipeline', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'category', y: 'value' } },
+          encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } },
           properties: {
             size: 10,
             placement: {

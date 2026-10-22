@@ -57,12 +57,11 @@ describe('smooth path composition (contract)', () => {
       marks: [
         {
           type: 'path',
-          kind: 'data',
           encodings: {
             series: 'group',
             order: 'trendX',
             color: { field: 'group', scale: 'color' },
-            position: { x: 'trendX', y: 'trendY' },
+            position: { x: { field: 'trendX' }, y: { field: 'trendY' } },
           },
         },
       ],
@@ -94,7 +93,7 @@ describe('smooth path composition (contract)', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        { type: 'point', kind: 'data', encodings: { position: { x: 'time', y: 'value' } } },
+        { type: 'point', encodings: { position: { x: { field: 'time' }, y: { field: 'value' } } } },
         {
           type: 'path',
           transforms: [
@@ -105,8 +104,7 @@ describe('smooth path composition (contract)', () => {
               },
             },
           ],
-          kind: 'data',
-          encodings: { order: 'trendX', position: { x: 'trendX', y: 'trendY' } },
+          encodings: { order: 'trendX', position: { x: { field: 'trendX' }, y: { field: 'trendY' } } },
         },
       ],
     });
@@ -140,8 +138,7 @@ describe('smooth path composition (contract)', () => {
           transforms: [
             { operation: { kind: 'smooth', params: { x: 'x', y: 'y', sampleCount: 2, xAs: 'trendX', yAs: 'trendY' } } },
           ],
-          kind: 'data',
-          encodings: { order: 'trendX', position: { x: 'trendX', y: 'trendY' } },
+          encodings: { order: 'trendX', position: { x: { field: 'trendX' }, y: { field: 'trendY' } } },
         },
       ],
     });
@@ -201,12 +198,11 @@ describe('smooth path composition (contract)', () => {
                 },
               },
             ],
-            kind: 'data',
             encodings: {
               series: 'series',
               order: 'trendX',
               color: { field: 'series', scale: 'colorScale' },
-              position: { x: 'trendX', y: 'trendY' },
+              position: { x: { field: 'trendX' }, y: { field: 'trendY' } },
             },
           },
         ],

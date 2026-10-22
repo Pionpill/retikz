@@ -51,8 +51,7 @@ const pointSpec = (shape: IRPlotChannel | undefined, fixedShape?: IRShapeValue):
     marks: [
       {
         type: 'point',
-        kind: 'data',
-        encodings: { position: { x: 'x', y: 'y' }, ...(shape === undefined ? {} : { shape }) },
+        encodings: { position: { x: { field: 'x' }, y: { field: 'y' } }, ...(shape === undefined ? {} : { shape }) },
         ...(fixedShape === undefined ? {} : { properties: { shape: fixedShape } }),
       },
     ],
@@ -164,8 +163,12 @@ describe('shape channel 类别映射', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { shape: 'g', size: 'p', color: { field: 'g', scale: 'col' }, position: { x: 'x', y: 'y' } },
+          encodings: {
+            shape: 'g',
+            size: 'p',
+            color: { field: 'g', scale: 'col' },
+            position: { x: { field: 'x' }, y: { field: 'y' } },
+          },
         },
       ],
     });

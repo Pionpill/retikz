@@ -148,7 +148,7 @@ const sineSpec = (): IRPlot =>
     data: { reference: 'd' },
     scales: [],
     coordinate: { type: 'sine' },
-    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'v' } }, properties: { autoPadding: false } }],
+    marks: [{ type: 'point', encodings: { position: { x: { field: 'v' } } }, properties: { autoPadding: false } }],
   });
 
 const bridgeSpec = (): IRPlot =>
@@ -159,7 +159,11 @@ const bridgeSpec = (): IRPlot =>
     scales: [],
     coordinate: { type: 'bridge', archHeight: ARCH_HEIGHT },
     marks: [
-      { type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } }, properties: { autoPadding: false } },
+      {
+        type: 'point',
+        encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+        properties: { autoPadding: false },
+      },
     ],
   });
 
@@ -167,10 +171,10 @@ const uvCoordinate = defineCoordinate({
   schema: object({
     type: literal('uv').describe('Discriminator: uv custom coordinate operation'),
   }),
-  roles: ['u', 'v'],
+  roles: ['x', 'y'],
   resolve: (_operation, context) => {
-    const uValues = context.collectRoleValues('u');
-    const vValues = context.collectRoleValues('v');
+    const uValues = context.collectRoleValues('x');
+    const vValues = context.collectRoleValues('y');
     const uScale = context.buildPositionScale(context.resolveScaleForRole('u', undefined, uValues), uValues, [
       0,
       context.width,
@@ -186,7 +190,7 @@ const uvCoordinate = defineCoordinate({
       return Number.isFinite(u) && Number.isFinite(v) ? [u, v] : null;
     };
 
-    const frame = createCoordinateFrame('uv', ['u', 'v'], projectRoles, { roleScales: { u: uScale, v: vScale } });
+    const frame = createCoordinateFrame('uv', ['x', 'y'], projectRoles, { roleScales: { x: uScale, y: vScale } });
     const gridLayers: Array<IRScope> = [];
     const axisLayers: Array<IRScope> = [];
 
@@ -306,7 +310,7 @@ describe('custom coordinate — 二维桥（x 沿拱、y 竖直）', () => {
     expect(base.find(entry => entry.x === 5)!.p[1]).toBeLessThan(base.find(entry => entry.x === 0)!.p[1]);
   });
 
-  it('custom_role_names_survive_schema_and_drive_projection_and_axis', () => {
+  it('custom_coordinate_maps_xy_roles_to_arbitrary_fields_and_axis', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -316,12 +320,11 @@ describe('custom coordinate — 二维桥（x 沿拱、y 竖直）', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { u: 'u', v: 'v' } },
+          encodings: { position: { x: { field: 'u' }, y: { field: 'v' } } },
           properties: { autoPadding: false },
         },
       ],
-      guides: [{ type: 'axis', dimension: 'u' }],
+      guides: [{ type: 'axis', dimension: 'x' }],
     });
     const root = expandOf(
       spec,
@@ -364,12 +367,10 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'bridge' },
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x' } }, properties: { autoPadding: false } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'x' } } }, properties: { autoPadding: false } }],
     });
 
-    expect(() => expandOf(spec, { d: [{ x: 1 }] }, opts([bridgeCoordinate]))).toThrow(
-      /bridge coordinate system requires the "y" position channel/i,
-    );
+    expect(() => expandOf(spec, { d: [{ x: 1 }] }, opts([bridgeCoordinate]))).toThrow(/bridge.*requires.*y/i);
   });
 
   // 非法 guide 维度：schema 接受任意非空 role 名，坐标系 definition.roles 在 lowering 阶段 fail-loud
@@ -383,8 +384,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'y' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: { autoPadding: false },
         },
       ],
@@ -406,8 +406,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       marks: [
         {
           type: 'path',
-          kind: 'data',
-          encodings: { order: 'x', position: { x: 'x', y: 'y' } },
+          encodings: { order: 'x', position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: { closed: false },
         },
       ],
@@ -453,8 +452,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
         {
           type: 'path',
           properties: pathShape,
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'y' }, closure: { baseline: 'baseline' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } }, closure: { baseline: 'baseline' } },
         },
       ],
     });
@@ -484,8 +482,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'y' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: { autoPadding: false },
         },
       ],
@@ -526,9 +523,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       data: { reference: 'd' },
       scales: [{ type: 'ordinal', name: 'col', range: ['#aa', '#bb'] }],
       coordinate: { type: 'sine' },
-      marks: [
-        { type: 'point', kind: 'data', encodings: { color: { field: 'g', scale: 'col' }, position: { x: 'v' } } },
-      ],
+      marks: [{ type: 'point', encodings: { color: { field: 'g', scale: 'col' }, position: { x: { field: 'v' } } } }],
     });
     const layer = firstLayer(
       spec,
@@ -652,7 +647,7 @@ const sineAxisSpec = (type = 'sineFramed'): IRPlot =>
     data: { reference: 'd' },
     scales: [],
     coordinate: { type },
-    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'v' } }, properties: { autoPadding: false } }],
+    marks: [{ type: 'point', encodings: { position: { x: { field: 'v' } } }, properties: { autoPadding: false } }],
     guides: [{ type: 'axis', dimension: 'x' }],
   });
 
@@ -787,8 +782,7 @@ describe('custom coordinate — tangentAt 局部标架契约（contract）', () 
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'y' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: { autoPadding: false },
         },
       ],

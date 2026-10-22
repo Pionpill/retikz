@@ -12,6 +12,8 @@ import type { ExternalRow } from '@retikz/data';
 import { readSourceIndex, readSourceIndices } from '@retikz/data';
 
 import type {
+  AnchorOwner,
+  MarkInstance,
   ChannelValue,
   ChannelValueResolver,
   FieldCollector,
@@ -26,6 +28,8 @@ import {
   markLayerId,
   markLayerMeta,
   markProperty,
+  positionField,
+  markPositionInputs,
   markChannelEncoding,
 } from '../../../contract';
 import type { IRPlotMarkOpacityStyle } from '../../../schemas';
@@ -198,11 +202,12 @@ const omitContent = <T extends { content?: unknown; displayFormat?: unknown }>(
 
 const textForLabel = (
   label: IRPlotMarkNodeLabel | IRPlotMarkGeometryLabel,
-  row: ExternalRow,
+  row: ExternalRow | undefined,
   labelResolver: ChannelValueResolver<LabelText> | undefined,
   index: number,
   field?: string,
 ): LabelText | undefined => {
+  if (row === undefined) return label.content;
   if (index === 0 && labelResolver !== undefined) return labelResolver(row);
   return labelOf(label.content, row, undefined, undefined, field, label.displayFormat);
 };
@@ -246,7 +251,7 @@ const normalizeGeometryLabel = (label: IRGeometryLabel): IRGeometryLabel => {
 /** 把 plot Node label 配置解析为 core Node label */
 export const resolveNodeMarkLabels = (
   labels: IRPlotMarkNodeLabel | ReadonlyArray<IRPlotMarkNodeLabel> | undefined,
-  row: ExternalRow,
+  row: ExternalRow | undefined,
   labelResolver: ChannelValueResolver<LabelText> | undefined,
   encodings?: { content?: string } | ReadonlyArray<{ content?: string }>,
 ): IRNode['label'] | undefined => {
@@ -267,7 +272,7 @@ export const resolveNodeMarkLabels = (
 /** 把 plot geometry label 配置解析为 core Path label */
 export const resolveGeometryMarkLabels = (
   labels: IRPlotMarkGeometryLabel | ReadonlyArray<IRPlotMarkGeometryLabel> | undefined,
-  row: ExternalRow,
+  row: ExternalRow | undefined,
   labelResolver: ChannelValueResolver<LabelText> | undefined,
   encodings?: { content?: string } | ReadonlyArray<{ content?: string }>,
 ): IRPath['label'] | undefined => {
@@ -325,9 +330,10 @@ export const applyNodeChannelDeliveries = (
 export const applyPathChannelDeliveries = (
   path: IRPath,
   mark: IRPlotMarkOperation,
-  row: ExternalRow,
+  row: ExternalRow | undefined,
   channels: MarkChannels,
 ): IRPath => {
+  if (row === undefined) return path;
   for (const entry of channels.pathDeliveries ?? []) {
     const value = entry.resolver(row);
     if (value !== undefined) entry.deliver(path, value, { mark, row });
@@ -369,47 +375,38 @@ export const failLoudMessage = (markType: string, frameType: string): string =>
 
 type PositionEncodedMark = IRPlotPointMark | IRPlotPathMark | IRPlotIntervalMark;
 
-const anchorOwnerOf = (
+/** 按真实实例身份注册节点或完整路径锚点 */
+export const attachMarkAnchor = <T extends IRNode | IRPath>(
+  node: T,
   mark: PositionEncodedMark,
-  transformedIndex: number,
-  ctx: MarkLoweringContext,
-  role?: string,
-) => ({
-  markType: mark.type,
-  markId: mark.id,
-  markIndex: ctx.markIndex,
-  transformedIndex,
-  ...(role !== undefined ? { role } : {}),
-});
-
-/** 按图元锚点配置为 datum 图元注册稳定 id */
-export const attachDatumAnchor = (
-  node: IRNode,
-  mark: PositionEncodedMark,
-  row: ExternalRow,
-  transformedIndex: number,
+  instance: MarkInstance,
   ctx: MarkLoweringContext | undefined,
   role?: string,
-): IRNode => {
+): T => {
   if ((mark.properties?.anchorId === undefined && mark.encodings?.anchorId === undefined) || ctx?.anchors === undefined)
     return node;
-
-  const owner = anchorOwnerOf(mark, transformedIndex, ctx, role);
-  const id = ctx.anchors.makeId(mark.properties?.anchorId ?? {}, row, owner, mark.encodings?.anchorId);
+  const owner: AnchorOwner = {
+    markType: mark.type,
+    markId: mark.id,
+    markIndex: ctx.markIndex,
+    role,
+    ...(instance.kind === 'single' ? { kind: 'single' } : { kind: 'row', transformedIndex: instance.transformedIndex }),
+  };
+  const id = ctx.anchors.makeId(mark.properties?.anchorId ?? {}, instance, owner, mark.encodings?.anchorId);
   ctx.anchors.register(id, owner);
-
   return { ...node, id };
 };
 
 /** 收集坐标角色字段 */
 export const collectPositionRoleFields = (mark: PositionEncodedMark, fields: FieldCollector): void => {
-  for (const field of Object.values(mark.encodings?.position ?? {})) fields.addField(field);
+  for (const position of markPositionInputs(mark))
+    for (const input of Object.values(position)) fields.addField(positionField(input));
 };
 
 /** 收集注册的直接视觉字段目标，结构目标由其宿主收集 */
 export const collectEncodingChannelFields = (mark: PositionEncodedMark, fields: FieldCollector): void => {
   for (const [target, binding] of Object.entries(mark.encodings ?? {})) {
-    if (['position', 'opacity', 'label', 'bounds', 'closure'].includes(target)) continue;
+    if (['position', 'from', 'to', 'opacity', 'label', 'bounds', 'closure'].includes(target)) continue;
     fields.addChannel(binding as IRPlotChannel | undefined);
   }
 };

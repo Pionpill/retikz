@@ -14,7 +14,7 @@ describe('TransformSchema external operations', () => {
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
       ],
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'year', y: 'value' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'year' }, y: { field: 'value' } } } }],
     };
 
     expect(PlotSchema.parse(spec).transform).toEqual(spec.transform);

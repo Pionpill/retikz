@@ -36,13 +36,12 @@ const render = (marks: Array<unknown>, rows: Array<Record<string, string | numbe
 
 describe('mark field and property lowering', () => {
   it('uses the same final range edge for data points and annotations', () => {
-    const properties = { position: { y: { edge: 'end' } }, autoPadding: false };
+    const properties = { autoPadding: false };
     const [point] = render(
       [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'x' } },
+          encodings: { position: { x: { field: 'x' }, y: { edge: 'end' } } },
           properties,
         },
       ],
@@ -51,8 +50,9 @@ describe('mark field and property lowering', () => {
     const [annotation] = render([
       {
         type: 'point',
-        kind: 'annotation',
-        properties: { position: { x: 2, y: { edge: 'end' } } },
+        encodings: { position: { x: { value: 2 }, y: { edge: 'end' } } },
+        properties: {},
+        contributeToDomain: false,
       },
     ]);
     expect(point).toMatchObject({ position: annotation.type === 'node' ? annotation.position : undefined });
@@ -65,9 +65,8 @@ describe('mark field and property lowering', () => {
         [
           {
             type: 'path',
-            kind: 'data',
-            encodings: { position: { y: 'y' } },
-            properties: { position: { x: { edge: 'end' } }, ...(closure === undefined ? {} : { closure }) },
+            encodings: { position: { x: { edge: 'end' }, y: { field: 'y' } } },
+            properties: { ...(closure === undefined ? {} : { closure }) },
           },
         ],
         rows,
@@ -76,9 +75,8 @@ describe('mark field and property lowering', () => {
         [
           {
             type: 'path',
-            kind: 'data',
-            encodings: { position: { y: 'y' } },
-            properties: { position: { x: 10 }, ...(closure === undefined ? {} : { closure }) },
+            encodings: { position: { x: { value: 10 }, y: { field: 'y' } } },
+            properties: { ...(closure === undefined ? {} : { closure }) },
           },
         ],
         rows,
@@ -88,15 +86,17 @@ describe('mark field and property lowering', () => {
     },
   );
   it('projects fixed relation target edges through the final coordinate range', () => {
-    const relation = (x: number | { edge: 'end' }) => ({
+    const relation = (x: { value: number } | { edge: 'end' }) => ({
       type: 'relation',
-      kind: 'data',
-      encodings: { source: { position: { y: 'start' } }, target: { position: { y: 'end' } } },
-      properties: { geometry: { kind: 'path' }, source: { position: { x: 0 } }, target: { position: { x } } },
+      encodings: {
+        source: { position: { x: { value: 0 }, y: { field: 'start' } } },
+        target: { position: { x, y: { field: 'end' } } },
+      },
+      properties: { source: {}, target: {}, geometry: { kind: 'path' } },
     });
     const rows = [{ start: 2, end: 8 }];
     const actual = render([relation({ edge: 'end' })], rows);
-    const expected = render([relation(10)], rows);
+    const expected = render([relation({ value: 10 })], rows);
     expect(expected).toHaveLength(1);
     expect(actual).toEqual(expected);
   });
@@ -114,11 +114,14 @@ describe('mark field and property lowering', () => {
       marks: [
         {
           type: 'relation',
-          kind: 'data',
-          encodings: { geometry: { width: { field: 'amount', scale: 'width' } } },
+          encodings: {
+            source: { position: { x: { value: 1 }, y: { value: 2 } } },
+            target: { position: { x: { value: 8 }, y: { value: 6 } } },
+            geometry: { width: { field: 'amount', scale: 'width' } },
+          },
           properties: {
-            source: { position: { x: 1, y: 2 } },
-            target: { position: { x: 8, y: 6 } },
+            source: {},
+            target: {},
             geometry: { kind: 'ribbon', width: 99 },
           },
         },
@@ -132,9 +135,8 @@ describe('mark field and property lowering', () => {
       [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'x' } },
-          properties: { position: { y: 3 }, autoPadding: false },
+          encodings: { position: { y: { value: 3 }, x: { field: 'x' } } },
+          properties: { autoPadding: false },
         },
       ],
       [{ x: 2 }],
@@ -143,8 +145,7 @@ describe('mark field and property lowering', () => {
       [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'y' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: { autoPadding: false },
         },
       ],
@@ -152,22 +153,34 @@ describe('mark field and property lowering', () => {
     );
     expect(actual).toMatchObject({ position: expected.type === 'node' ? expected.position : undefined });
   });
-  it('keeps fixed annotations independent but preserves an explicitly empty transform chain', () => {
-    const mark = { type: 'point', kind: 'annotation', properties: { position: { x: 2, y: 3 } } };
+  it('keeps constant marks independent with an omitted or empty transform chain', () => {
+    const mark = {
+      type: 'point',
+      encodings: { position: { x: { value: 2 }, y: { value: 3 } } },
+      properties: {},
+      contributeToDomain: false,
+    };
     expect(render([mark])).toHaveLength(1);
-    expect(render([{ ...mark, transforms: [] }])).toHaveLength(0);
-    expect(render([{ ...mark, transforms: [] }], [{ x: 1 }, { x: 2 }])).toHaveLength(2);
+    expect(render([{ ...mark, transforms: [] }])).toHaveLength(1);
+    expect(render([{ ...mark, transforms: [] }], [{ x: 1 }, { x: 2 }])).toHaveLength(1);
   });
 
   it('combines field and fixed roles without treating fixed positions as pixels', () => {
     const source = {
       type: 'point',
-      kind: 'annotation',
-      encodings: { position: { x: 'value' } },
-      properties: { position: { y: 3 } },
+      encodings: { position: { y: { value: 3 }, x: { field: 'value' } } },
+      properties: {},
+      contributeToDomain: false,
     };
     const actual = render([source], [{ value: 2 }])[0];
-    const expected = render([{ type: 'point', kind: 'annotation', properties: { position: { x: 2, y: 3 } } }])[0];
+    const expected = render([
+      {
+        type: 'point',
+        encodings: { position: { x: { value: 2 }, y: { value: 3 } } },
+        properties: {},
+        contributeToDomain: false,
+      },
+    ])[0];
     expect(actual).toMatchObject({ position: expected.type === 'node' ? expected.position : undefined });
   });
 
@@ -176,8 +189,10 @@ describe('mark field and property lowering', () => {
       [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'y' }, label: [{ content: 'a' }, { content: 'b' }] },
+          encodings: {
+            position: { x: { field: 'x' }, y: { field: 'y' } },
+            label: [{ content: 'a' }, { content: 'b' }],
+          },
           properties: { label: [{ position: 'left', content: 'ignored' }, { position: 'right' }] },
         },
       ],
@@ -196,9 +211,9 @@ describe('mark field and property lowering', () => {
       [
         {
           type: 'point',
-          kind: 'annotation',
-          encodings: { text: 'name' },
-          properties: { position: { x: 2, y: 3 }, text: 'fallback' },
+          encodings: { text: 'name', position: { x: { value: 2 }, y: { value: 3 } } },
+          properties: { text: 'fallback' },
+          contributeToDomain: false,
         },
       ],
       [{ name: 'one' }, { name: 'two' }],
@@ -212,9 +227,9 @@ describe('mark field and property lowering', () => {
         [
           {
             type: 'point',
-            kind: 'annotation',
-            encodings: { position: { x: 'missing' } },
-            properties: { position: { x: 2, y: 3 } },
+            encodings: { position: { y: { value: 3 }, x: { field: 'missing' } } },
+            properties: {},
+            contributeToDomain: false,
           },
         ],
         [{ x: 1 }],

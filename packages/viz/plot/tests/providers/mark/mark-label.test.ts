@@ -55,8 +55,7 @@ describe('contract mark host label lowering', () => {
       baseSpec([
         {
           type: 'path',
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'y' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: { label: { content: 'trend', position: 'midway', side: 'top', sloped: true } },
         },
       ]),
@@ -79,8 +78,7 @@ describe('contract mark host label lowering', () => {
       baseSpec([
         {
           type: 'path',
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'y' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: { label: { content: 'trend', position: 'midway', side: 'top' } },
         },
       ]),
@@ -102,8 +100,7 @@ describe('contract mark host label lowering', () => {
       baseSpec([
         {
           type: 'path',
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'y' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: { label: { content: { runs: [{ text: 'trend ' }, { tex: 'x' }] }, position: 'midway' } },
         },
       ]),
@@ -125,11 +122,10 @@ describe('contract mark host label lowering', () => {
       baseSpec([
         {
           type: 'relation',
-          kind: 'data',
           encodings: {
-            source: { position: { x: 'sourceX', y: 'sourceY' } },
-            target: { position: { x: 'targetX', y: 'targetY' } },
             label: { content: 'label' },
+            source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
+            target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
           },
           properties: { label: { position: 0.5, side: 'top' }, geometry: { kind: 'path' } },
         },
@@ -150,10 +146,9 @@ describe('contract mark host label lowering', () => {
       baseSpec([
         {
           type: 'relation',
-          kind: 'data',
           encodings: {
-            source: { position: { x: 'sourceX', y: 'sourceY' } },
-            target: { position: { x: 'targetX', y: 'targetY' } },
+            source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
+            target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
           },
           properties: {
             label: { content: 'flow', position: 'midway', placement: 'inside', sloped: true },

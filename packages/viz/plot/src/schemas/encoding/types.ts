@@ -12,12 +12,16 @@ import type {
   MarkNodeLabelSchema,
   PointEncodingSchema,
   PositionEncodingSchema,
+  PositionInputSchema,
 } from './schema';
 
 /** 字段名简写或显式 field/scale 绑定 */
 export type IRPlotChannel = ZodInfer<typeof ChannelSchema>;
 
-/** 位置通道绑定；内置坐标系使用 x、y、z，自定义坐标系可扩展角色键 */
+/** 字段、数据空间常量或最终范围边缘的位置输入 */
+export type IRPlotPositionInput = ZodInfer<typeof PositionInputSchema>;
+
+/** x 必填，y/z 按坐标需求选用的位置绑定 */
 export type IRPlotPositionEncoding = ZodInfer<typeof PositionEncodingSchema>;
 
 /** 共享绘图外观的字段编码 */

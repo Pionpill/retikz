@@ -16,11 +16,12 @@ import type {
   PlotSeriesLineage,
   PreparedPlotData,
 } from '../contract';
-import { isIndependentAnnotation } from '../contract';
 import { RetikzPlotError } from '../error';
+import { resolveMarkRegistry } from '../providers';
+import { isSingleMark } from '../resolve';
 import { resolvePlotLineageOptions } from '../resolve/lineage';
 import type { IRPlot, IRPlotMarkOperation, IRPlotScaleOperation } from '../schemas';
-import { isAnnotation, CoordinateArrangementKind } from '../schemas';
+import { CoordinateArrangementKind } from '../schemas';
 import type { PlotDataArtifact } from './expand/lower';
 import type { PlotStandaloneOptions } from './expand/standalone';
 import { lowerStandalonePlot } from './expand/standalone';
@@ -67,8 +68,13 @@ const markEncodingFields = (mark: IRPlotMarkOperation): PlotMarkLineage['encodin
       return;
     }
     if (binding === undefined || binding === null || typeof binding !== 'object') return;
-    if (!Array.isArray(binding) && 'field' in binding && 'scale' in binding) {
-      out.push({ channel, field: binding.field as string, scale: binding.scale as string });
+    if (!Array.isArray(binding) && ('value' in binding || 'edge' in binding)) return;
+    if (!Array.isArray(binding) && 'field' in binding) {
+      out.push({
+        channel,
+        field: binding.field as string,
+        ...('scale' in binding ? { scale: binding.scale as string } : {}),
+      });
       return;
     }
     for (const [target, value] of Object.entries(binding)) visit(value, `${channel}.${target}`);
@@ -223,7 +229,7 @@ const buildPlotLineage = (
       : hostMetadataOf(lineageOptions.hostMetadata, options.hostLineageMetadata);
 
   spec.marks.forEach((mark, markIndex) => {
-    if (isAnnotation(mark) && isIndependentAnnotation(mark)) {
+    if (isSingleMark(mark, { registry: resolveMarkRegistry(options.definitions?.marks) })) {
       marks.push({
         markIndex,
         markType: mark.type,

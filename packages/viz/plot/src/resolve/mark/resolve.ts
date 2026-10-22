@@ -1,12 +1,19 @@
 import type { ExternalRow } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 
-import type { AnyMarkDefinition, CoordinateFrame, FieldCollector, IntervalContext } from '../../contract';
-import { annotationChannelsOf, cellGeometryAnchor } from '../../contract';
+import type {
+  MarkInstanceInput,
+  MarkInstance,
+  AnyMarkDefinition,
+  CoordinateFrame,
+  FieldCollector,
+  IntervalContext,
+} from '../../contract';
+import { cellGeometryAnchor } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import { cellAnchor, intervalCellGeometry, roleAnchor } from '../../providers';
+import { createFieldCollector, cellAnchor, intervalCellGeometry, roleAnchor } from '../../providers';
 import type { IRPlotMark, IRPlotMarkOperation } from '../../schemas';
-import { isAnnotation, isBuiltinMark, BuiltinPlotMark } from '../../schemas';
+import { isBuiltinMark, BuiltinPlotMark } from '../../schemas';
 import type { MarkOperationResolution, MarkResolveContext } from './types';
 
 /** 查找 mark definition；未注册 type 会给出上下文明确的 fail-loud 诊断 */
@@ -27,16 +34,18 @@ export const resolveMarkOperation = (
   context: MarkResolveContext,
 ): MarkOperationResolution => {
   const definition = resolveMarkDefinition(mark, context);
-  const { defaultColorGroup, ...definitionOperation } = mark;
-  const schema = isAnnotation(mark) ? definition.annotation?.schema : definition.schema;
-  if (!schema) throw new RetikzPlotError(`Mark "${mark.type}" does not support annotations`);
+  const { defaultColorGroup, contributeToDomain, ...definitionOperation } = mark;
+  const schema = definition.schema;
   const resolved = schema.parse(definitionOperation) as IRPlotMarkOperation;
   const operation =
     defaultColorGroup === undefined
       ? resolved
       : { ...resolved, defaultColorGroup: NonBlankStringSchema.parse(defaultColorGroup) };
 
-  return { definition, operation };
+  return {
+    definition,
+    operation: { ...operation, ...(contributeToDomain === undefined ? {} : { contributeToDomain }) },
+  };
 };
 
 /** 通过已解析 mark definition 收集图元引用的源字段 */
@@ -46,10 +55,6 @@ export const collectMarkFields = (
   context: MarkResolveContext,
 ): void => {
   const { definition, operation } = resolveMarkOperation(mark, context);
-  if (isAnnotation(operation)) {
-    for (const channel of annotationChannelsOf(operation)) fields.addChannel(channel);
-    return;
-  }
   definition.collectFields?.(operation as never, fields);
 };
 
@@ -65,11 +70,12 @@ export const channelKindsForMark = (
 /** 解析 datum 锚点所需的 mark capability，并复用 provider 提供的 cell / role 几何投影 */
 export const datumAnchor = (
   mark: IRPlotMark,
-  row: ExternalRow,
+  instance: Extract<MarkInstance, { kind: 'row' }>,
   frame: CoordinateFrame,
   context: MarkResolveContext,
   intervalContext?: IntervalContext,
 ): [number, number] | null => {
+  const { row } = instance;
   const { definition, operation } = resolveMarkOperation(mark, context);
   if (isBuiltinMark(operation) && operation.type === BuiltinPlotMark.Interval) {
     const geometry = intervalCellGeometry(operation, row, frame, intervalContext);
@@ -77,8 +83,25 @@ export const datumAnchor = (
   }
 
   if (definition.buildCell !== undefined) {
-    return cellAnchor(definition.buildCell(operation as never, row, frame, intervalContext), frame);
+    return cellAnchor(definition.buildCell(operation as never, instance, frame, intervalContext), frame);
   }
 
   return roleAnchor(operation as IRPlotMark, row, frame);
 };
+
+/** 按 Definition 声明的有效字段消费者确定实例来源 */
+export const resolveMarkInstances = (
+  resolution: MarkOperationResolution,
+  rows: Array<ExternalRow>,
+): MarkInstanceInput => {
+  const fields = new Set<string>();
+  resolution.definition.collectFields?.(resolution.operation as never, createFieldCollector(fields));
+  if (fields.size > 0) return { kind: 'rows', rows };
+  if ((resolution.operation.transforms?.length ?? 0) > 0)
+    throw new RetikzPlotError('Mark-local transforms require an effective field consumer');
+  return { kind: 'single' };
+};
+
+/** 在数据变换准备阶段解析实例来源，不提前读取结果行 */
+export const isSingleMark = (mark: IRPlotMarkOperation, context: MarkResolveContext): boolean =>
+  resolveMarkInstances(resolveMarkOperation(mark, context), []).kind === 'single';

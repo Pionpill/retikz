@@ -17,7 +17,7 @@ const pointSpec = (model?: Array<{ name: string; type?: string }>): IRPlot =>
     data: { reference: 'd', ...(model ? { model } : {}) },
     scales: [],
     coordinate: { type: 'cartesian2D' },
-    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } }],
+    marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
   });
 
 const parseSlashDate = (raw: unknown): ParsedFieldValue => Date.parse(String(raw).replaceAll('/', '-'));
@@ -265,7 +265,7 @@ describe('render ⟺ locator parity + scale 兼容', () => {
         { type: 'linear', name: 'ys' },
       ],
       coordinate: { type: 'cartesian2D', x: 'xs', y: 'ys' },
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
     });
 
     expect(

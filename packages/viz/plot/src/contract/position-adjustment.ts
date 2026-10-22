@@ -1,4 +1,3 @@
-import type { ExternalRow } from '@retikz/data';
 import type { ValueOf } from '@retikz/foundation';
 import type { Position } from '@retikz/math';
 import type { ZodType } from 'zod';
@@ -8,6 +7,7 @@ import { RetikzPlotError } from '../error';
 import type { IRPlotPositionAdjustmentOperation } from '../schemas';
 import type { MarkChannels } from './channel';
 import type { CoordinateFrame, DimensionRole } from './coordinate';
+import type { MarkInstance } from './mark';
 import type { PositionScale } from './scale';
 
 /** Position Adjustment 的执行空间 */
@@ -26,7 +26,7 @@ export type MarkPlacementTarget = {
   /** 同一 Mark operation 内唯一且确定的目标键 */
   key: string;
   /** 目标对应的有效数据行 */
-  row: ExternalRow;
+  instance: MarkInstance;
   /** 按 `frame.roles` 排列的原始角色值 */
   roleValues: ReadonlyArray<unknown>;
 };

@@ -50,10 +50,8 @@ const pointSpec = (opacity: IRPlotChannel | number | undefined): IRPlot =>
     marks: [
       {
         type: 'point',
-
-        kind: 'data',
         encodings: {
-          position: { x: 'x', y: 'y' },
+          position: { x: { field: 'x' }, y: { field: 'y' } },
           ...(typeof opacity === 'number' || opacity === undefined ? {} : { opacity: { overall: opacity } }),
         },
         properties: typeof opacity === 'number' ? { opacity: { overall: opacity } } : {},
@@ -91,8 +89,10 @@ describe('opacity channel (contract)', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'y' }, opacity: { overall: { field: 'd', scale: 'alpha' } } },
+          encodings: {
+            position: { x: { field: 'x' }, y: { field: 'y' } },
+            opacity: { overall: { field: 'd', scale: 'alpha' } },
+          },
         },
       ],
     });
@@ -168,8 +168,7 @@ describe('opacity channel (contract)', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { size: 'p', position: { x: 'x', y: 'y' }, opacity: { overall: 'd' } },
+          encodings: { size: 'p', position: { x: { field: 'x' }, y: { field: 'y' } }, opacity: { overall: 'd' } },
         },
       ],
     });
@@ -193,9 +192,8 @@ it('opacity members resolve independent fields and named scales', () => {
   spec.marks = [
     {
       type: 'point',
-      kind: 'data',
       encodings: {
-        position: { x: 'x', y: 'y' },
+        position: { x: { field: 'x' }, y: { field: 'y' } },
         opacity: {
           overall: { field: 'a', scale: 'overall-alpha' },
           fill: { field: 'b', scale: 'fill-alpha' },

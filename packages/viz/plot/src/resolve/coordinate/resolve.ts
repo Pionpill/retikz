@@ -10,21 +10,20 @@ import {
 import type { CoordinateFrame, DomainPaddingScale, PositionScale } from '../../contract';
 import type { AnyCoordinateDefinition, DimensionRole, TickSet } from '../../contract';
 import { isBuiltinScaleOperation, readCoordinateScaleNames } from '../../contract';
-import { annotationPositionsOf, isIndependentAnnotation } from '../../contract';
+import { markPositionInputs, positionValue, positionField } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import {
   buildProportionalIntervals,
-  channelValue,
   createPositionChannelDefinitions,
   proportionalIntervalDomainValues,
   resolveIntervalBound,
   intervalBoundField,
+  intervalBoundInput,
   pathBaselineField,
   fixedRoleValue,
 } from '../../providers';
-import { annotationValue } from '../../providers';
-import { isAnnotation } from '../../schemas';
 import type {
+  IRPlotPositionInput,
   IRPlot,
   IRPlotAxisGuide,
   IRPlotDomainPadding,
@@ -42,6 +41,7 @@ import {
   BuiltinPlotMark,
   BuiltinPlotScale,
 } from '../../schemas';
+import { isSingleMark } from '../mark';
 import {
   assertBaselineScaleCompatible,
   assertScaleFieldCompatible,
@@ -71,33 +71,6 @@ export const resolveCoordinateDefinition = (
   return definition;
 };
 
-/**
- * interval mark 在某位置 role 对 scale 域的贡献值（按 bounds 来源）
- * @description band / span → 取 encoding 位置通道值（band 为类别、span 为值，baseline 由 includeBaseline 纳入）；
- *   extent → 取两字段（histogram 箱边 / 堆叠 y0,y1 / 累积饼角 start,end）；full → 不贡献（满铺坐标域）
- */
-const intervalRoleValues = (
-  mark: IRPlotIntervalMark,
-  axis: 'primary' | 'secondary',
-  pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined,
-  rows: Array<ExternalRow>,
-): Array<unknown> => {
-  const bound = resolveIntervalBound(mark, axis === 'primary' ? 'x' : 'y');
-  if (bound.kind === IntervalBoundKind.Extent)
-    return rows.flatMap(row => [
-      resolveFieldPath(row, intervalBoundField(mark, axis === 'primary' ? 'x' : 'y', 'from')),
-      resolveFieldPath(row, intervalBoundField(mark, axis === 'primary' ? 'x' : 'y', 'to')),
-    ]);
-  if (bound.kind === IntervalBoundKind.Proportional)
-    return proportionalIntervalDomainValues(intervalBoundField(mark, axis === 'primary' ? 'x' : 'y', 'weight'), rows);
-  if (bound.kind === IntervalBoundKind.Full) return [];
-
-  const channel = pick(mark);
-  if (channel === undefined) return [];
-
-  return rows.map(row => channelValue(channel, row));
-};
-
 /** interval mark 在某 role 是否需把 baseline 0 纳入连续域（span / extent 值轴含 0；band / full 不需） */
 const intervalContributesBaseline = (mark: IRPlotIntervalMark, axis: 'primary' | 'secondary'): boolean => {
   const bound = resolveIntervalBound(mark, axis === 'primary' ? 'x' : 'y');
@@ -121,7 +94,7 @@ const intervalProportionalAxisTicks = (
   const bound = resolveIntervalBound(mark, role);
   if (bound.kind !== IntervalBoundKind.Proportional) return undefined;
 
-  const channel = mark.encodings?.position?.[role];
+  const channel = (mark.encodings?.position as Partial<Record<string, IRPlotPositionInput>> | undefined)?.[role];
   if (channel === undefined) return undefined;
 
   const intervals = buildProportionalIntervals(intervalBoundField(mark, role, 'weight'), rows);
@@ -136,51 +109,16 @@ const intervalProportionalAxisTicks = (
     if (!Number.isFinite(center)) continue;
 
     values.push(center);
-    const label = channelValue(channel, row);
+    const label = positionValue(channel, row);
     labels.push(label === null || label === undefined ? '' : String(label));
   }
 
   return values.length > 0 ? { values, labels } : undefined;
 };
 
-const relationTargetRoleValues = (
-  mark: IRPlotMarkOperation,
-  role: DimensionRole,
-  rows: Array<ExternalRow>,
-): Array<unknown> => {
-  if (!isBuiltinMark(mark) || mark.type !== BuiltinPlotMark.Relation) return [];
-
-  const geometry = mark.properties.geometry;
-  const refs = [
-    { property: mark.properties.source, encoding: mark.encodings?.source },
-    { property: mark.properties.target, encoding: mark.encodings?.target },
-    ...(geometry.kind !== 'path'
-      ? []
-      : [
-          ...Array.from(
-            { length: Math.max(geometry.via?.length ?? 0, mark.encodings?.geometry?.via?.length ?? 0) },
-            (_, index) => ({ property: geometry.via?.[index], encoding: mark.encodings?.geometry?.via?.[index] }),
-          ),
-          ...(geometry.route ?? []).map((step, index) => ({
-            property: step.to,
-            encoding: mark.encodings?.geometry?.route?.[index]?.to,
-          })),
-        ]),
-  ];
-  return refs.flatMap(({ property, encoding }) => {
-    const fixed = property !== undefined && 'position' in property ? property.position[role] : undefined;
-    const field = encoding?.position?.[role];
-    if (fixed === undefined && field === undefined) return [];
-    return rows.flatMap(row => {
-      const value = field === undefined ? annotationValue(fixed) : resolveFieldPath(row, field);
-      return value === undefined ? [] : [value];
-    });
-  });
-};
-
 /** 读 mark 的 encoding（内置与自定义共享 EncodingSchema 形态）；自定义 mark 缺 encoding 时 undefined */
-const markEncoding = (mark: IRPlotMarkOperation): Record<string, IRPlotChannel | undefined> | undefined =>
-  (mark as { encodings?: { position?: Record<string, string | undefined> } }).encodings?.position;
+const markEncoding = (mark: IRPlotMarkOperation): Record<string, IRPlotPositionInput | undefined> | undefined =>
+  (mark as { encodings?: { position?: Record<string, IRPlotPositionInput | undefined> } }).encodings?.position;
 
 /** 非位置 encoding key：这些键有专属语义，不参与 CoordinateDefinition.roles 校验 */
 
@@ -199,7 +137,7 @@ const assertKnownPositionEncodingRoles = (
   for (const mark of marks) {
     if (!isBuiltinMark(mark)) continue;
 
-    const encoding = markEncoding(mark);
+    const encoding = Object.assign({}, ...markPositionInputs(mark));
     const properties =
       mark.properties !== undefined && 'position' in mark.properties ? (mark.properties.position ?? {}) : {};
 
@@ -253,7 +191,7 @@ const assertRequiredPositionChannels = (
 
     // interval：band / span bounds 需对应 encoding 位置通道；extent（字段区间）/ full（满域）从字段 / 坐标系取位置，豁免该角色
     if (mark.type === BuiltinPlotMark.Interval) {
-      const encoding = (mark.encodings?.position ?? {}) as Record<string, string | undefined>;
+      const encoding = (mark.encodings?.position ?? {}) as Record<string, IRPlotPositionInput | undefined>;
 
       for (const channel of required) {
         if (!intervalBoundConsumesRoleChannel(mark, channel)) continue;
@@ -266,14 +204,10 @@ const assertRequiredPositionChannels = (
       continue;
     }
 
-    // point / path：所有必填位置角色都要对应 encoding 通道
-    const encoding = (mark.encodings?.position ?? {}) as Record<string, string | undefined>;
-
-    for (const channel of required) {
-      if (encoding[channel] === undefined && fixedRoleValue(mark, channel) === undefined) {
-        throw new RetikzPlotError(
-          `lowerPlots: ${coordinateType} coordinate system requires the "${channel}" position channel on ${mark.type} marks, but it is missing`,
-        );
+    for (const encoding of markPositionInputs(mark)) {
+      for (const channel of required) {
+        if (encoding[channel] === undefined)
+          throw new RetikzPlotError('Coordinate ' + coordinateType + ' requires position role ' + channel);
       }
     }
   }
@@ -330,26 +264,6 @@ export const resolveCoordinateFrame = (
   assertKnownPositionEncodingRoles(coordinateOperation.type, roles, node.marks);
   assertRequiredPositionChannels(coordinateOperation.type, roles, node.marks);
 
-  /** 独立标注显式贡献的域值；视图边缘不作为数据值参与推导 */
-  const annotationDomainValues = (
-    mark: IRPlotMarkOperation,
-    role: DimensionRole,
-    annotationRows: Array<ExternalRow>,
-  ): Array<string | number> => {
-    if (!isAnnotation(mark) || !mark.contributeToDomain) return [];
-    const values: Array<string | number> = [];
-    const inputs = isIndependentAnnotation(mark) ? [undefined] : annotationRows;
-    for (const position of annotationPositionsOf(mark)) {
-      const property = position.properties[role];
-      const field = position.encodings[role];
-      for (const row of inputs) {
-        const value = annotationValue(property, field, row);
-        if (value !== undefined) values.push(value);
-      }
-    }
-    return values;
-  };
-
   // 收集某角色（位置 scale 名 + 通道角色）下所有 mark 的通道原始值（不预过滤）：
   //   连续 scale 内部过滤为有限数求 extent、分类 scale 按数据序去重推断 domain。
   // role 决定从哪个通道取值：cartesian 用 x/y；polar 用 angle??x / radius??y（mark 不写死笛卡尔）。
@@ -363,29 +277,26 @@ export const resolveCoordinateFrame = (
     const sourceViews = markDataViewsForRole(role);
 
     for (const { mark, dataView } of sourceViews) {
-      if (isAnnotation(mark)) {
-        out.push(...annotationDomainValues(mark, role, dataView.rows));
-        continue;
+      if (mark.contributeToDomain === false) continue;
+      const inputs: Array<ExternalRow | undefined> = isSingleMark(mark, { registry: context.markRegistry })
+        ? [undefined]
+        : dataView.rows;
+      if (isBuiltinMark(mark) && mark.type === BuiltinPlotMark.Interval) {
+        const bound = resolveIntervalBound(mark, role);
+        if (bound.kind === IntervalBoundKind.Full) continue;
+        if (bound.kind === IntervalBoundKind.Proportional) {
+          out.push(...proportionalIntervalDomainValues(intervalBoundField(mark, role, 'weight'), dataView.rows));
+          continue;
+        }
+        if (bound.kind === IntervalBoundKind.Extent) {
+          for (const row of inputs)
+            for (const endpoint of ['from', 'to'] as const)
+              out.push(positionValue(intervalBoundInput(mark, role, endpoint), row));
+          continue;
+        }
       }
-      const markRows = dataView.rows;
-      out.push(...relationTargetRoleValues(mark, role, markRows));
-
-      // interval：域贡献按 bounds 来源（band/span → 位置通道值、extent → 两字段、full → 不贡献），统一替代旧 histogram / stack / sector 特判
-      if (isBuiltinMark(mark) && mark.type === BuiltinPlotMark.Interval && axis !== undefined) {
-        out.push(...intervalRoleValues(mark, axis, pick, markRows));
-        continue;
-      }
-
-      const channel = pick(mark);
-      if (channel === undefined) {
-        const fixed = fixedRoleValue(mark, role);
-        if (fixed !== undefined && typeof fixed !== 'object' && markRows.length > 0) out.push(fixed);
-        continue;
-      }
-
-      for (const row of markRows) {
-        out.push(channelValue(channel, row));
-      }
+      for (const position of markPositionInputs(mark))
+        for (const row of inputs) out.push(positionValue(position[role], row));
     }
 
     // 值轴从 baseline 起：interval span / extent 按实际 role 纳入 0；path closure 仍由调用方显式请求。
@@ -393,14 +304,17 @@ export const resolveCoordinateFrame = (
       axis !== undefined &&
       node.marks.some(
         mark =>
-          isBuiltinMark(mark) && mark.type === BuiltinPlotMark.Interval && intervalContributesBaseline(mark, axis),
+          mark.contributeToDomain !== false &&
+          isBuiltinMark(mark) &&
+          mark.type === BuiltinPlotMark.Interval &&
+          intervalContributesBaseline(mark, axis),
       )
     )
       out.push(0);
 
     if (includeBaseline) {
       for (const mark of node.marks) {
-        if (isBuiltinMark(mark) && mark.type === BuiltinPlotMark.Path) {
+        if (mark.contributeToDomain !== false && isBuiltinMark(mark) && mark.type === BuiltinPlotMark.Path) {
           if (mark.properties?.closure?.kind === PathClosureKind.Baseline) {
             out.push(mark.properties.closure.baseline ?? 0);
           } else if (mark.properties?.closure?.kind === PathClosureKind.Stack) {
@@ -444,44 +358,22 @@ export const resolveCoordinateFrame = (
   };
 
   // 某角色（跨所有 mark）绑定字段的全部类型——多 mark 共用一角色时须校验 / 派生全部，不能只看首个
-  const roleFieldTypes = (
-    role: DimensionRole,
-    pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined,
-  ): Array<DataFieldType> => {
+  const roleFieldTypes = (role: DimensionRole): Array<DataFieldType> => {
     const types: Array<DataFieldType> = [];
 
     for (const { mark, dataView } of markDataViewsForRole(role)) {
-      if (isAnnotation(mark)) {
-        if (!mark.contributeToDomain) continue;
-        for (const position of annotationPositionsOf(mark)) {
-          const field = position.encodings[role];
-          if (field !== undefined) {
-            const type = dataView.model.find(definition => definition.name === field)?.type;
-            if (type !== undefined) types.push(type);
-          } else {
-            const value = annotationValue(position.properties[role]);
-            if (value !== undefined) types.push(typeof value === 'string' ? 'categorical' : 'continuous');
-          }
+      if (mark.contributeToDomain === false) continue;
+      for (const position of markPositionInputs(mark)) {
+        const input = position[role];
+        const field = positionField(input);
+        if (field !== undefined) {
+          const type = dataView.model.find(definition => definition.name === field)?.type;
+          if (type !== undefined) types.push(type);
+        } else {
+          const value = positionValue(input);
+          if (value !== undefined) types.push(typeof value === 'string' ? 'categorical' : 'continuous');
         }
-        continue;
       }
-      if (
-        isBuiltinMark(mark) &&
-        mark.type === BuiltinPlotMark.Interval &&
-        !intervalBoundConsumesRoleChannel(mark, role)
-      )
-        continue;
-
-      const channel = pick(mark);
-      if (channel === undefined) {
-        const fixed = fixedRoleValue(mark, role);
-        if (fixed !== undefined && typeof fixed !== 'object')
-          types.push(typeof fixed === 'string' ? 'categorical' : 'continuous');
-        continue;
-      }
-
-      const type = dataView.model.find(field => field.name === channel)?.type;
-      if (type !== undefined) types.push(type);
     }
 
     return types;
@@ -492,38 +384,17 @@ export const resolveCoordinateFrame = (
    * @description 收集该 role 各绑定字段的非默认 order（!=='appearance'）：
    *   ≥2 个不同非默认 order → throw；恰好 1 个 → 返回它；0 个 → undefined（保持现状出现序）
    */
-  const resolveRoleOrder = (
-    role: DimensionRole,
-    pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined,
-  ): NonNullable<IRDataFieldDefinition['order']> | undefined => {
+  const resolveRoleOrder = (role: DimensionRole): NonNullable<IRDataFieldDefinition['order']> | undefined => {
     const found: Array<NonNullable<IRDataFieldDefinition['order']>> = [];
 
     for (const { mark, dataView } of markDataViewsForRole(role)) {
-      if (isAnnotation(mark)) {
-        if (!mark.contributeToDomain) continue;
-        for (const position of annotationPositionsOf(mark)) {
-          const field = position.encodings[role];
-          if (field === undefined) continue;
-          const order = dataView.model.find(definition => definition.name === field)?.order;
-          if (order !== undefined && order !== BuiltinFieldOrderMode.Appearance) found.push(order);
-        }
-        continue;
+      if (mark.contributeToDomain === false) continue;
+      for (const position of markPositionInputs(mark)) {
+        const field = positionField(position[role]);
+        if (field === undefined) continue;
+        const order = dataView.model.find(definition => definition.name === field)?.order;
+        if (order !== undefined && order !== BuiltinFieldOrderMode.Appearance) found.push(order);
       }
-      if (
-        isBuiltinMark(mark) &&
-        mark.type === BuiltinPlotMark.Interval &&
-        !intervalBoundConsumesRoleChannel(mark, role)
-      )
-        continue;
-
-      const channel = pick(mark);
-      if (channel === undefined) continue;
-
-      const definition = dataView.model.find(field => field.name === channel);
-      const order = definition?.order;
-      if (order === undefined || order === BuiltinFieldOrderMode.Appearance) continue;
-
-      found.push(order);
     }
 
     if (found.length === 0) return undefined;
@@ -546,10 +417,10 @@ export const resolveCoordinateFrame = (
     pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined,
     values: Array<unknown>,
   ): IRPlotScaleOperation => {
-    const types = roleFieldTypes(role, pick);
+    const types = roleFieldTypes(role);
 
     // 解析该 role 有效 order 并检查顺序冲突，无论 scale 显式与否都先校验
-    const order = resolveRoleOrder(role, pick);
+    const order = resolveRoleOrder(role);
     let def: IRPlotScaleOperation;
     if (scaleName !== undefined) {
       const found = scaleByName.get(scaleName);

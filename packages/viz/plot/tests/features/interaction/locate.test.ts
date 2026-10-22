@@ -132,7 +132,7 @@ const barSpec = (over: { id?: string } = {}): IRPlot =>
       { type: 'linear', name: 'yRevenue' },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-    marks: [{ type: 'interval', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
+    marks: [{ type: 'interval', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
   });
 
 /** linear point spec；可带 root id */
@@ -147,7 +147,7 @@ const pointSpec = (over: { id?: string } = {}): IRPlot =>
       { type: 'linear', name: 'yRevenue' },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
+    marks: [{ type: 'point', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
   });
 
 /** 饼图 sector spec（stack transform 产累积界 → sector mark） */
@@ -166,8 +166,7 @@ const pieSpec = (over: { id?: string } = {}): IRPlot =>
     marks: [
       {
         type: 'interval',
-        kind: 'data',
-        encodings: { bounds: { x: { from: 'y0', to: 'y1' } }, color: 'k' },
+        encodings: { bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } }, color: 'k' },
         properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } } },
       },
     ],
@@ -265,7 +264,7 @@ describe('datum locator — happy path', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       // series-bearing mark：point 无 series 字段（schema 会剥离），改用 line（含 series）以承载多系列拆分
-      marks: [{ type: 'path', kind: 'data', encodings: { series: 'city', position: { x: 't', y: 'v' } } }],
+      marks: [{ type: 'path', encodings: { series: 'city', position: { x: { field: 't' }, y: { field: 'v' } } } }],
     });
     const datasets: Datasets = { t: TREND };
     const locator = createPlotLocator(spec, datasets, { ...opts, environment: {} });
@@ -319,12 +318,11 @@ describe('datum locator — happy path', () => {
               },
             },
           ],
-          kind: 'data',
           encodings: {
             series: 'series',
             order: 'trendX',
             color: { field: 'series', scale: 'colorScale' },
-            position: { x: 'trendX', y: 'trendY' },
+            position: { x: { field: 'trendX' }, y: { field: 'trendY' } },
           },
         },
       ],
@@ -389,7 +387,9 @@ describe('datum locator — boundary', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       // series-bearing mark：point 无 series 字段（schema 会剥离），改用 line（含 series）
-      marks: [{ type: 'path', kind: 'data', encodings: { series: 'city', position: { x: 'month', y: 'revenue' } } }],
+      marks: [
+        { type: 'path', encodings: { series: 'city', position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
+      ],
     });
     const locator = createPlotLocator(spec, { sales: rows }, { ...opts, environment: {} });
 
@@ -427,7 +427,9 @@ describe('datum locator — boundary', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       // series-bearing mark：point 无 series 字段（schema 会剥离），改用 line（含 series）
-      marks: [{ type: 'path', kind: 'data', encodings: { series: 'city', position: { x: 'month', y: 'revenue' } } }],
+      marks: [
+        { type: 'path', encodings: { series: 'city', position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
+      ],
     });
     const locator = createPlotLocator(spec, { sales: rows }, { ...opts, environment: {} });
 
@@ -618,7 +620,7 @@ describe('datum locator — bug hunter regressions', () => {
         { type: 'linear', name: 'yRevenue' },
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-      marks: [{ type: 'interval', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
     });
     const datasets = { sales: SALES };
     const options: LowerPlotsOptions = { ...opts, provenance: true, datumProvenance: true };
@@ -681,7 +683,7 @@ describe('datum locator transform registry parity', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x2', y: 'y' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'x2' }, y: { field: 'y' } } } }],
     });
     const datasets = {
       d: [
@@ -719,8 +721,7 @@ describe('datum locator transform registry parity', () => {
         {
           type: 'point',
           transforms: [{ operation: { kind: 'sort', params: { field: 'revenue', order: 'descending' } } }],
-          kind: 'data',
-          encodings: { position: { x: 'month', y: 'revenue' } },
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
         },
       ],
     });
@@ -756,7 +757,7 @@ describe('datum locator transform registry parity', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', kind: 'data', encodings: { position: { x: 'group', y: 'total' } } }],
+      marks: [{ type: 'interval', encodings: { position: { x: { field: 'group' }, y: { field: 'total' } } } }],
     });
     const datasets = {
       d: [
@@ -796,8 +797,11 @@ describe('datum locator — anchor parity and fail-loud', () => {
       marks: [
         {
           type: 'interval',
-          kind: 'data',
-          encodings: { series: 'g', bounds: { x: { group: 'g' } }, position: { x: 'cat', y: 'v' } },
+          encodings: {
+            series: 'g',
+            bounds: { x: { group: 'g' } },
+            position: { x: { field: 'cat' }, y: { field: 'v' } },
+          },
           properties: { bounds: { x: { kind: 'band' } } },
         },
       ],
@@ -825,8 +829,11 @@ describe('datum locator — anchor parity and fail-loud', () => {
       marks: [
         {
           type: 'interval',
-          kind: 'data',
-          encodings: { series: 'g', bounds: { y: { from: 'y0', to: 'y1' } }, position: { x: 'cat', y: 'v' } },
+          encodings: {
+            series: 'g',
+            bounds: { y: { from: { field: 'y0' }, to: { field: 'y1' } } },
+            position: { x: { field: 'cat' }, y: { field: 'v' } },
+          },
           properties: { bounds: { y: { kind: 'extent' } } },
         },
       ],
@@ -853,8 +860,11 @@ describe('datum locator — anchor parity and fail-loud', () => {
       marks: [
         {
           type: 'interval',
-          kind: 'data',
-          encodings: { series: 'g', bounds: { x: { group: 'g' } }, position: { x: 'cat', y: 'v' } },
+          encodings: {
+            series: 'g',
+            bounds: { x: { group: 'g' } },
+            position: { x: { field: 'cat' }, y: { field: 'v' } },
+          },
           properties: { bounds: { x: { kind: 'band' } } },
         },
       ],
@@ -953,8 +963,8 @@ describe('datum locator — anchor parity and fail-loud', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        { type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } },
-        { type: 'interval', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } },
+        { type: 'point', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
+        { type: 'interval', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
       ],
     });
     const options: LowerPlotsOptions = { ...opts, datumIdField: 'q' };
@@ -996,7 +1006,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'path', kind: 'data', encodings: { series: 'g', position: { x: 't', y: 'v' } } }],
+      marks: [{ type: 'path', encodings: { series: 'g', position: { x: { field: 't' }, y: { field: 'v' } } } }],
     });
     const locator = createPlotLocator(spec, { t: TREND }, { ...opts, environment: {} });
     const viaAddress = locator.resolve('p.series.5');

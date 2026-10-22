@@ -89,7 +89,7 @@ export const resolvePointPadding = (
     const mark = view.mark;
     if (!isBuiltinMark(mark)) continue;
     let radius = 0;
-    if (mark.type === 'point') radius = maximumRadiusOf(mark.encodings?.size ?? mark.properties?.size, scales);
+    if (mark.type === 'point') radius = maximumRadiusOf(mark.encodings.size ?? mark.properties?.size, scales);
     else if (mark.type === 'relation') {
       for (const glyph of [mark.properties.endpoints?.source, mark.properties.endpoints?.target]) {
         if (glyph !== undefined) radius = Math.max(radius, maximumRadiusOf(glyph.size, scales));

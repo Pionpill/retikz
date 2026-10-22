@@ -84,15 +84,18 @@ describe('lowerPlots 笛卡尔面积路径', () => {
         {
           type: 'path',
           ...extra,
-          kind: 'data',
-          encodings: { position: { x: 'month', y: 'revenue' }, ...extra.encodings },
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, ...extra.encodings },
           properties: { closure: { kind: 'baseline' }, ...extra.properties },
         },
       ],
     });
 
   it('area_closure_without_fill_is_unfilled', () => {
-    const layer = firstLayer(areaSpec({ encodings: { order: 'month' } }), { sales: SALES }, cartOpts);
+    const layer = firstLayer(
+      areaSpec({ encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' } }),
+      { sales: SALES },
+      cartOpts,
+    );
     const paths = collectPaths(layer);
 
     expect(paths).toHaveLength(1);
@@ -105,7 +108,10 @@ describe('lowerPlots 笛卡尔面积路径', () => {
 
   it('area_fill_can_be_enabled_explicitly', () => {
     const layer = firstLayer(
-      areaSpec({ encodings: { order: 'month' }, properties: { fill: 'rgba(14, 165, 233, 0.22)' } }),
+      areaSpec({
+        encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' },
+        properties: { fill: 'rgba(14, 165, 233, 0.22)' },
+      }),
       { sales: SALES },
       cartOpts,
     );
@@ -117,7 +123,13 @@ describe('lowerPlots 笛卡尔面积路径', () => {
   });
 
   it('area_starts_with_move_and_is_closed', () => {
-    const path = collectPaths(firstLayer(areaSpec({ encodings: { order: 'month' } }), { sales: SALES }, cartOpts))[0];
+    const path = collectPaths(
+      firstLayer(
+        areaSpec({ encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' } }),
+        { sales: SALES },
+        cartOpts,
+      ),
+    )[0];
     const steps = path.children;
 
     expect(steps[0].kind).toBe('move');
@@ -126,7 +138,13 @@ describe('lowerPlots 笛卡尔面积路径', () => {
 
   it('area_top_outline_matches_value_projection', () => {
     // domain x [0,2] -> [0,480]；y [9,14] -> [300,0]；上沿首点是 (month0, revenue10) 的投影
-    const path = collectPaths(firstLayer(areaSpec({ encodings: { order: 'month' } }), { sales: SALES }, cartOpts))[0];
+    const path = collectPaths(
+      firstLayer(
+        areaSpec({ encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' } }),
+        { sales: SALES },
+        cartOpts,
+      ),
+    )[0];
     const first = stepPoint(path.children[0]);
 
     expect(first[0]).toBeCloseTo(0, 6);
@@ -140,7 +158,10 @@ describe('lowerPlots 笛卡尔面积路径', () => {
     // baseline 0 投影到屏幕底部 y = 300，回边至少有一点贴近该位置
     const path = collectPaths(
       firstLayer(
-        areaSpec({ encodings: { order: 'month' }, properties: { closure: { kind: 'baseline', baseline: 0 } } }),
+        areaSpec({
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' },
+          properties: { closure: { kind: 'baseline', baseline: 0 } },
+        }),
         { sales: SALES },
         cartOpts,
       ),
@@ -168,8 +189,7 @@ describe('lowerPlots 笛卡尔面积路径', () => {
       marks: [
         {
           type: 'path',
-          kind: 'data',
-          encodings: { order: 'month', position: { x: 'month', y: 'revenue' } },
+          encodings: { order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } },
           properties: { closure: { kind: 'baseline' } },
         },
       ],
@@ -182,7 +202,13 @@ describe('lowerPlots 笛卡尔面积路径', () => {
 
   it('area_compiles_to_scene', () => {
     const scene = compileToScene(
-      { version: 1, type: 'scene', children: [areaSpec({ encodings: { order: 'month' } })] },
+      {
+        version: 1,
+        type: 'scene',
+        children: [
+          areaSpec({ encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' } }),
+        ],
+      },
       { composites: lowerPlots({ sales: SALES }, cartOpts) },
     ).scene;
 
@@ -211,7 +237,13 @@ describe('lowerPlots 笛卡尔面积路径', () => {
     ];
 
     // 仍有两个有效顶点，可以生成面积且不抛错
-    const path = collectPaths(firstLayer(areaSpec({ encodings: { order: 'month' } }), { sales: rows }, cartOpts))[0];
+    const path = collectPaths(
+      firstLayer(
+        areaSpec({ encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } }, order: 'month' } }),
+        { sales: rows },
+        cartOpts,
+      ),
+    )[0];
 
     expect(path.type).toBe('path');
   });
@@ -237,12 +269,11 @@ describe('lowerPlots 笛卡尔面积路径', () => {
       marks: [
         {
           type: 'path',
-          kind: 'data',
           encodings: {
             series: 'city',
             order: 't',
             color: { field: 'city', scale: 'col' },
-            position: { x: 't', y: 'v' },
+            position: { x: { field: 't' }, y: { field: 'v' } },
           },
           properties: { closure: { kind: 'baseline' } },
         },
@@ -271,7 +302,11 @@ describe('lowerPlots 笛卡尔折线回归', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        { type: 'path', ...extra, kind: 'data', encodings: { order: 'month', position: { x: 'month', y: 'revenue' } } },
+        {
+          type: 'path',
+          ...extra,
+          encodings: { order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        },
       ],
     });
 
@@ -418,8 +453,7 @@ describe('lowerPlots path closure cartesian', () => {
         {
           type: 'path',
           ...extra,
-          kind: 'data',
-          encodings: { order: 'x', position: { x: 'x', y: 'y' }, ...extra.encodings },
+          encodings: { order: 'x', position: { x: { field: 'x' }, y: { field: 'y' } }, ...extra.encodings },
         },
       ],
     });
@@ -494,8 +528,7 @@ describe('lowerPlots path closure cartesian', () => {
 
   it('path_closure_stack_uses_per_row_baseline_field', () => {
     const spec = pathSpec({
-      kind: 'data',
-      encodings: { closure: { baseline: 'y0' }, position: { x: 'x', y: 'y1' } },
+      encodings: { closure: { baseline: 'y0' }, position: { x: { field: 'x' }, y: { field: 'y1' } } },
       properties: { closure: { kind: 'stack' } },
     });
     const path = collectPaths(firstLayer(spec, { series: SERIES }, cartOpts))[0];
@@ -514,8 +547,7 @@ describe('lowerPlots path closure cartesian', () => {
 
   it('path_closure_stack_applies_curve_to_return_edge', () => {
     const spec = pathSpec({
-      kind: 'data',
-      encodings: { closure: { baseline: 'y0' }, position: { x: 'x', y: 'y1' } },
+      encodings: { closure: { baseline: 'y0' }, position: { x: { field: 'x' }, y: { field: 'y1' } } },
       properties: { curve: 'cardinal', closure: { kind: 'stack' } },
     });
     const path = collectPaths(firstLayer(spec, { series: SERIES }, cartOpts))[0];
@@ -545,8 +577,7 @@ describe('lowerPlots 极坐标折线采样', () => {
         {
           type: 'path',
           ...extra,
-          kind: 'data',
-          encodings: { order: 'a', position: { x: 'a', y: 'r' }, ...extra.encodings },
+          encodings: { order: 'a', position: { x: { field: 'a' }, y: { field: 'r' } }, ...extra.encodings },
         },
       ],
     });
@@ -611,7 +642,7 @@ describe('lowerPlots 极坐标折线采样', () => {
         { type: 'band', name: 'a' },
         { type: 'linear', name: 'r', domainPadding: 0 },
       ],
-      marks: [{ type: 'path', kind: 'data', encodings: { position: { x: 'dim', y: 'v' } } }],
+      marks: [{ type: 'path', encodings: { position: { x: { field: 'dim' }, y: { field: 'v' } } } }],
     });
     const path = collectPaths(firstLayer(spec, { d: CAT }, polarOpts))[0];
     const points = path.children.filter(s => s.kind === 'move' || s.kind === 'line');
@@ -659,7 +690,11 @@ describe('lowerPlots 极坐标折线采样', () => {
         { type: 'linear', name: 'r', domain: [0, 10], domainPadding: 0 },
       ],
       marks: [
-        { type: 'path', kind: 'data', encodings: { position: { x: 'a', y: 'r' } }, properties: { closed: true } },
+        {
+          type: 'path',
+          encodings: { position: { x: { field: 'a' }, y: { field: 'r' } } },
+          properties: { closed: true },
+        },
       ],
     });
     const path = collectPaths(
@@ -695,8 +730,7 @@ describe('lowerPlots 极坐标折线采样', () => {
       marks: [
         {
           type: 'path',
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'y1' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y1' } } },
           properties: { interpolation: 'polar' },
         },
       ],
@@ -736,7 +770,11 @@ describe('lowerPlots 雷达图', () => {
         { type: 'linear', name: 'r', domainPadding: 0 },
       ],
       marks: [
-        { type: 'path', kind: 'data', encodings: { position: { x: 'dim', y: 'value' } }, properties: { closed: true } },
+        {
+          type: 'path',
+          encodings: { position: { x: { field: 'dim' }, y: { field: 'value' } } },
+          properties: { closed: true },
+        },
       ],
     });
 
@@ -797,8 +835,7 @@ describe('lowerPlots 极坐标面积路径', () => {
         {
           type: 'path',
           ...extra,
-          kind: 'data',
-          encodings: { position: { x: 'dim', y: 'value' } },
+          encodings: { position: { x: { field: 'dim' }, y: { field: 'value' } } },
           properties: { closure: { kind: 'baseline', baseline: 0 }, ...extra.properties },
         },
       ],
@@ -817,8 +854,7 @@ describe('lowerPlots 极坐标面积路径', () => {
         {
           type: 'path',
           ...extra,
-          kind: 'data',
-          encodings: { closure: { baseline: 'y0' }, position: { x: 'dim', y: 'y1' } },
+          encodings: { closure: { baseline: 'y0' }, position: { x: { field: 'dim' }, y: { field: 'y1' } } },
           properties: { closure: { kind: 'stack' }, ...extra.properties },
         },
       ],
@@ -879,8 +915,7 @@ describe('lowerPlots 极坐标面积路径', () => {
       marks: [
         {
           type: 'path',
-          kind: 'data',
-          encodings: { position: { x: 'dim', y: 'value' } },
+          encodings: { position: { x: { field: 'dim' }, y: { field: 'value' } } },
           properties: { closure: { kind: 'baseline' } },
         },
       ],

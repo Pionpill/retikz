@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { PointMarkSchema } from '../../src/schemas';
-import { ChannelSchema, EncodingSchema, PointEncodingSchema, PositionEncodingSchema } from '../../src/schemas/encoding';
+import { PointMarkSchema, PathMarkSchema, IntervalMarkSchema } from '../../src/schemas';
+import {
+  ChannelSchema,
+  EncodingSchema,
+  PointEncodingSchema,
+  PositionEncodingSchema,
+  PositionInputSchema,
+} from '../../src/schemas/encoding';
 
 describe('Field encoding contract', () => {
   it('preserves nested field paths and explicit scale references', () => {
@@ -22,18 +28,46 @@ describe('Field encoding contract', () => {
     expect(ChannelSchema.safeParse(input).success).toBe(false);
   });
 
-  it('groups extensible coordinate roles separately from visual targets through JSON', () => {
-    const input = { position: { u: 'longitude', v: 'latitude' }, color: { field: 'continent', scale: 'col' } };
+  it('groups closed coordinate roles separately from visual targets through JSON', () => {
+    const input = {
+      position: { x: { field: 'longitude' }, y: { field: 'latitude' } },
+      color: { field: 'continent', scale: 'col' },
+    };
     expect(EncodingSchema.parse(input)).toEqual(input);
     expect(EncodingSchema.parse(JSON.parse(JSON.stringify(input)))).toEqual(input);
   });
 
-  it.each([{}, { x: 'theta' }, { y: 'value' }])(
-    'leaves coordinate role completeness to coordinate resolution: %j',
+  it.each([{ x: { field: 'theta' } }, { x: { value: 1 }, z: { edge: 'end' } }])(
+    'accepts x with independently optional y/z: %j',
     position => {
       expect(EncodingSchema.parse({ position })).toEqual({ position });
     },
   );
+  it.each([{}, { y: { value: 1 } }, { x: { value: 1 }, u: { value: 2 } }])(
+    'rejects missing x or unknown roles: %j',
+    position => {
+      expect(PositionEncodingSchema.safeParse(position).success).toBe(false);
+    },
+  );
+  it.each([{ field: 'a.b' }, { value: 12 }, { value: 'May' }, { edge: 'start' }, { edge: 'end' }])(
+    'round-trips a position source: %j',
+    input => {
+      expect(PositionInputSchema.parse(JSON.parse(JSON.stringify(input)))).toEqual(input);
+    },
+  );
+  it.each([
+    'x',
+    1,
+    {},
+    { field: 'x', value: 1 },
+    { value: 1, edge: 'start' },
+    { edge: 'middle' },
+    { value: Infinity },
+    { value: null },
+    { field: 'x', scale: 's' },
+  ])('rejects invalid or mixed position sources: %j', input => {
+    expect(PositionInputSchema.safeParse(input).success).toBe(false);
+  });
 
   it('rejects blank role keys and nested role binding objects', () => {
     expect(PositionEncodingSchema.safeParse({ ' ': 'longitude' }).success).toBe(false);
@@ -42,20 +76,85 @@ describe('Field encoding contract', () => {
   });
 
   it('supports size and shape as field targets and retains registered extension candidates', () => {
-    const input = { position: { x: 'x', y: 'y' }, size: 'population', shape: 'category', custom: 'value' };
+    const input = {
+      position: { x: { field: 'x' }, y: { field: 'y' } },
+      size: 'population',
+      shape: 'category',
+      custom: 'value',
+    };
     expect(PointEncodingSchema.parse(input)).toEqual(input);
-    expect(PointEncodingSchema.parse({ size: { field: 'p', scale: 'sizes' } })).toEqual({
+    expect(PointEncodingSchema.parse({ position: { x: { value: 1 } }, size: { field: 'p', scale: 'sizes' } })).toEqual({
+      position: { x: { value: 1 } },
       size: { field: 'p', scale: 'sizes' },
     });
   });
 
   it('validates fixed sizes and shapes in properties rather than field encodings', () => {
     expect(
-      PointMarkSchema.parse({ type: 'point', kind: 'data', properties: { size: 8, shape: 'diamond' } }).properties,
+      PointMarkSchema.parse({
+        type: 'point',
+        encodings: { position: { x: { value: 1 } } },
+        properties: { size: 8, shape: 'diamond' },
+      }).properties,
     ).toMatchObject({ size: 8, shape: 'diamond' });
     for (const size of [-3, 'big']) {
-      expect(PointMarkSchema.safeParse({ type: 'point', kind: 'data', properties: { size } }).success).toBe(false);
+      expect(
+        PointMarkSchema.safeParse({ type: 'point', encodings: { position: { x: { value: 1 } } }, properties: { size } })
+          .success,
+      ).toBe(false);
     }
     expect(PointEncodingSchema.safeParse({ shape: { value: 'diamond' } }).success).toBe(false);
+  });
+});
+
+describe('Mark position geometry inputs', () => {
+  const start = { x: { edge: 'start' }, y: { value: 10 } };
+  const end = { x: { edge: 'end' }, y: { value: 10 } };
+
+  it('accepts complete endpoints and keeps default domain contribution', () => {
+    const mark = { type: 'path', encodings: { from: start, to: end } };
+    expect(PathMarkSchema.parse(JSON.parse(JSON.stringify(mark)))).toMatchObject({ ...mark, contributeToDomain: true });
+  });
+
+  it.each([
+    { position: start, from: start, to: end },
+    { from: start },
+    { from: start, to: end, series: 'group' },
+    { from: start, to: end, order: 'order' },
+  ])('rejects mixed or incomplete path geometry: %j', encodings => {
+    expect(PathMarkSchema.safeParse({ type: 'path', encodings }).success).toBe(false);
+  });
+
+  it('accepts independently sourced extent endpoints on x/y', () => {
+    const mark = {
+      type: 'interval',
+      properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } } },
+      encodings: {
+        bounds: {
+          x: { from: { edge: 'start' }, to: { edge: 'end' } },
+          y: { from: { field: 'low' }, to: { value: 20 } },
+        },
+      },
+    };
+    expect(IntervalMarkSchema.parse(JSON.parse(JSON.stringify(mark)))).toMatchObject(mark);
+  });
+
+  it('rejects z and arbitrary interval roles in all position structures', () => {
+    for (const mark of [
+      { type: 'interval', encodings: { position: { x: { value: 1 }, z: { value: 2 } } } },
+      { type: 'interval', encodings: { bounds: { z: { from: { value: 1 }, to: { value: 2 } } } } },
+      { type: 'interval', properties: { bounds: { z: { kind: 'full' } } } },
+    ])
+      expect(IntervalMarkSchema.safeParse(mark).success).toBe(false);
+  });
+
+  it('rejects obsolete kind and property positions instead of converting them', () => {
+    expect(PointMarkSchema.safeParse({ type: 'point', kind: 'data', encodings: { position: start } }).success).toBe(
+      false,
+    );
+    expect(
+      PointMarkSchema.safeParse({ type: 'point', encodings: { position: start }, properties: { position: { x: 1 } } })
+        .success,
+    ).toBe(false);
   });
 });

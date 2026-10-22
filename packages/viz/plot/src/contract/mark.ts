@@ -4,12 +4,28 @@ import type { ZodType } from 'zod';
 import { ZodLiteral, ZodObject } from 'zod';
 
 import { RetikzPlotError } from '../error';
-import type { IRPlotAnnotation, IRPlotMark, IRPlotMarkOperation } from '../schemas';
+import type { IRPlotMark, IRPlotMarkOperation } from '../schemas';
 import type { MarkLoweringContext } from './anchor';
 import type { ChannelDefinitionKind, FieldCollector, MarkChannels } from './channel';
 import type { Cell, CoordinateFrame } from './coordinate';
 import type { MarkDomainPaddingCapability } from './domain-padding';
 import type { MarkPlacementTarget } from './position-adjustment';
+
+/** 下沉、位置调整与域留白共同消费的实例来源 */
+export type MarkInstanceInput = { kind: 'single' } | { kind: 'rows'; rows: Array<ExternalRow> };
+
+/** 单个几何目标的真实实例身份，独立实例没有数据行 */
+export type MarkInstance = { kind: 'single' } | { kind: 'row'; row: ExternalRow; transformedIndex: number };
+
+/** 将实例来源展开为稳定有序的几何消费目标，空结果保持为空 */
+export const markInstances = (input: MarkInstanceInput): Array<MarkInstance> =>
+  input.kind === 'single'
+    ? [{ kind: 'single' }]
+    : input.rows.map((row, transformedIndex) => ({ kind: 'row', row, transformedIndex }));
+
+/** 取得声明内稳定的实例键，独立实例不借用行索引 */
+export const markInstanceKey = (instance: MarkInstance): string =>
+  instance.kind === 'single' ? 'single' : String(instance.transformedIndex);
 
 /**
  * 区间柱（interval mark）摆放上下文：lowering 与 locator 共享的一次性派生量
@@ -44,8 +60,6 @@ export type IntervalContext = {
  * @template T schema 校验并交给字段收集、通道选择与下沉回调的 mark 类型
  */
 export type MarkDefinition<T extends IRPlotMarkOperation = IRPlotMark> = {
-  /** 同一显式几何的独立或逐行实例能力 */
-  annotation?: MarkAnnotationCapability;
   /** 完整 mark operation schema；必须含非空 `z.literal('type')` 供 registry 提取注册键 */
   schema: ZodType<T>;
   /** 收集该 mark 额外引用的用户源字段；通用 encoding / label 字段由 data 层统一处理 */
@@ -57,11 +71,11 @@ export type MarkDefinition<T extends IRPlotMarkOperation = IRPlotMark> = {
    */
   channelKinds?: (mark: T) => ReadonlySet<ChannelDefinitionKind>;
   /** 区间类 mark：某行 → 正交 Cell（interval 用；非区间类省略） */
-  buildCell?: (mark: T, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
+  buildCell?: (mark: T, instance: MarkInstance, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
   /** 可选 Mark Placement 能力；只有显式声明的 Mark 才能消费 `placement` */
   placement?: {
     /** 按稳定顺序枚举可调整的位置目标 */
-    targets: (mark: T, rows: Array<ExternalRow>, frame: CoordinateFrame) => Array<MarkPlacementTarget>;
+    targets: (mark: T, instances: MarkInstanceInput, frame: CoordinateFrame) => Array<MarkPlacementTarget>;
     /** 目标沿指定屏幕单位法向的 glyph extent；无法证明时返回 undefined */
     normalExtent?: (
       mark: T,
@@ -75,7 +89,7 @@ export type MarkDefinition<T extends IRPlotMarkOperation = IRPlotMark> = {
   /** 下沉到 core IR 图层（无可绘制图元返回 null；不支持的 mark × coordinate 由实现 fail-loud） */
   lower: (
     mark: T,
-    rows: Array<ExternalRow>,
+    instances: MarkInstanceInput,
     frame: CoordinateFrame,
     channels: MarkChannels,
     ctx?: MarkLoweringContext,
@@ -113,8 +127,6 @@ export const extractMarkType = (schema: ZodType): string => {
  * @description registry 需要存放不同 mark 子类型的 definition；真正调用前由 lowerMark 按 type 取出，行为函数入参用 never 防误调
  */
 export type AnyMarkDefinition = {
-  /** 同一显式几何的独立或逐行实例能力 */
-  annotation?: MarkAnnotationCapability;
   /** 注册后按具体 operation 调用的域留白能力 */
   domainPadding?: MarkDomainPaddingCapability<never>;
   /** 不同 definition 的 schema 泛型不同，registry 只关心 type 提取与运行时 parse */
@@ -124,11 +136,11 @@ export type AnyMarkDefinition = {
   /** 内部宽类型占位；语义同 MarkDefinition.channelKinds，供 registry 按 type 分发后调用 */
   channelKinds?: (mark: never) => ReadonlySet<ChannelDefinitionKind>;
   /** 内部宽类型占位；按 type 取出后调用方已知具体 mark */
-  buildCell?: (mark: never, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
+  buildCell?: (mark: never, instance: MarkInstance, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
   /** 内部宽类型占位；语义同 MarkDefinition.placement */
   placement?: {
     /** 从有效数据行提取具有稳定键和角色值的待定位目标 */
-    targets: (mark: never, rows: Array<ExternalRow>, frame: CoordinateFrame) => Array<MarkPlacementTarget>;
+    targets: (mark: never, instances: MarkInstanceInput, frame: CoordinateFrame) => Array<MarkPlacementTarget>;
     /** 计算目标沿给定单位法向的视觉外延，无法确定时返回 undefined */
     normalExtent?: (
       mark: never,
@@ -140,23 +152,9 @@ export type AnyMarkDefinition = {
   /** 内部宽类型占位；按 type 取出后调用方已知具体 mark */
   lower: (
     mark: never,
-    rows: Array<ExternalRow>,
+    instances: MarkInstanceInput,
     frame: CoordinateFrame,
     channels: MarkChannels,
     ctx?: MarkLoweringContext,
-  ) => IRChild | null;
-};
-
-/** 显式几何的解析及绘图契约，沿用 mark registry */
-export type MarkAnnotationCapability = {
-  /** 显式几何的严格 Source schema */
-  schema: ZodType;
-  /** 绘制显式几何；datum 存在时输出单行图元，由调用方统一组织图层 */
-  lower: (
-    mark: IRPlotAnnotation,
-    frame: CoordinateFrame,
-    channels: MarkChannels,
-    context?: MarkLoweringContext,
-    datum?: { row: ExternalRow; transformedIndex: number },
   ) => IRChild | null;
 };

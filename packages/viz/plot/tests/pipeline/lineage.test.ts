@@ -63,8 +63,7 @@ const pointSpec = (): IRPlot =>
       {
         id: 'points',
         type: 'point',
-        kind: 'data',
-        encodings: { color: 'month', position: { x: 'region', y: 'revenue' } },
+        encodings: { color: 'month', position: { x: { field: 'region' }, y: { field: 'revenue' } } },
       },
     ],
   });
@@ -96,8 +95,7 @@ const summarySpec = (): IRPlot =>
         id: 'bars',
         type: 'interval',
         transforms: [{ operation: { kind: 'sort', params: { field: 'totalRevenue', order: 'descending' } } }],
-        kind: 'data',
-        encodings: { position: { x: 'region', y: 'totalRevenue' } },
+        encodings: { position: { x: { field: 'region' }, y: { field: 'totalRevenue' } } },
       },
     ],
   });
@@ -117,8 +115,7 @@ const seriesSpec = (): IRPlot =>
       {
         id: 'bars',
         type: 'interval',
-        kind: 'data',
-        encodings: { series: 'month', color: 'month', position: { x: 'region', y: 'revenue' } },
+        encodings: { series: 'month', color: 'month', position: { x: { field: 'region' }, y: { field: 'revenue' } } },
       },
     ],
   });
@@ -139,10 +136,9 @@ const extensionChannelSpec = (): IRPlot =>
       {
         id: 'points',
         type: 'point',
-        kind: 'data',
         encodings: {
           intensity: { field: 'revenue', scale: 'intensityScale' },
-          position: { x: 'region', y: 'revenue' },
+          position: { x: { field: 'region' }, y: { field: 'revenue' } },
         },
       },
     ],

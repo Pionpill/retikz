@@ -20,8 +20,7 @@ it('coordinate alignment shares rotated node geometry, connection endpoints and 
         {
           type: 'point',
           id: 'points',
-          kind: 'data',
-          encodings: { position: { x: 'angle', y: 'radius' }, anchorId: 'name' },
+          encodings: { position: { x: { field: 'angle' }, y: { field: 'radius' } }, anchorId: 'name' },
           properties: {
             ...(aligned ? { orientation: { kind: 'coordinate', role: 'y', align: 'tangent' } } : {}),
             autoPadding: false,
@@ -33,7 +32,6 @@ it('coordinate alignment shares rotated node geometry, connection endpoints and 
         },
         {
           type: 'relation',
-          kind: 'data',
           encodings: { source: { anchorId: 'name' }, target: { anchorId: 'next' } },
           properties: {
             source: { anchorId: { prefix: 'point' } },

@@ -88,8 +88,10 @@ const pointSpec = (
     marks: [
       {
         type: 'point',
-        kind: 'data',
-        encodings: { position: { x: 'x', y: 'y' }, ...(typeof size === 'number' ? {} : { size }) },
+        encodings: {
+          position: { x: { field: 'x' }, y: { field: 'y' } },
+          ...(typeof size === 'number' ? {} : { size }),
+        },
         properties: typeof size === 'number' ? { size } : {},
       },
     ],
@@ -111,8 +113,7 @@ const derivedSizePointSpec = (value: string | number): IRPlot =>
         transforms: [
           { operation: { kind: SizeChannelTestTransform.DeriveValue, params: { as: 'derivedSize', value } } },
         ],
-        kind: 'data',
-        encodings: { size: 'derivedSize', position: { x: 'x', y: 'y' } },
+        encodings: { size: 'derivedSize', position: { x: { field: 'x' }, y: { field: 'y' } } },
       },
     ],
   });
@@ -203,8 +204,11 @@ describe('size channel 映射节点半径', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { size: 'p', color: { field: 'g', scale: 'col' }, position: { x: 'x', y: 'y' } },
+          encodings: {
+            size: 'p',
+            color: { field: 'g', scale: 'col' },
+            position: { x: { field: 'x' }, y: { field: 'y' } },
+          },
         },
       ],
     });
@@ -247,7 +251,9 @@ describe('size channel 边界输入', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', kind: 'data', encodings: { size: 'p', text: 'name', position: { x: 'x', y: 'y' } } }],
+      marks: [
+        { type: 'point', encodings: { size: 'p', text: 'name', position: { x: { field: 'x' }, y: { field: 'y' } } } },
+      ],
     });
     const data = [
       { x: 0, y: 0, p: undefined, name: 'missing' },
@@ -506,8 +512,7 @@ describe('size channel 错误输入', () => {
         {
           type: 'point',
           transforms: [{ operation: { kind: 'normalize', params: { field: 'p', as: 'p' } } }],
-          kind: 'data',
-          encodings: { size: 'p', position: { x: 'x', y: 'y' } },
+          encodings: { size: 'p', position: { x: { field: 'x' }, y: { field: 'y' } } },
         },
       ],
     });

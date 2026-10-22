@@ -3,17 +3,25 @@ import { compileToScene } from '@retikz/core';
 import { createDataTransformExecutor } from '@retikz/data';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { MarkChannels } from '../../src/contract';
 import type { CoordinateFrame, PositionScale } from '../../src/contract';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
 import { preparePlotData } from '../../src/pipeline/expand/preparation';
 import { lowerPlotWithLineage } from '../../src/pipeline/lineage';
+import { lowerMark, resolveMarkRegistry } from '../../src/providers';
 import { createCartesianCoordinate } from '../../src/providers';
-import { lowerAnnotation } from '../../src/providers/mark/features/annotation';
-import { PointAnnotationSchema } from '../../src/schemas';
+import { resolveMarkOperation, resolveMarkInstances } from '../../src/resolve/mark';
+import type { IRPlotMarkOperation } from '../../src/schemas';
+import { PointMarkSchema } from '../../src/schemas';
 import { MarkOperationSchema, PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
 
-const point = { type: 'point', kind: 'annotation', properties: { position: { x: 5, y: 5 }, text: 'target' } };
+const point = {
+  type: 'point',
+  encodings: { position: { x: { value: 5 }, y: { value: 5 } } },
+  properties: { text: 'target' },
+  contributeToDomain: false,
+};
 const plot = (marks: Array<unknown> = [point]) =>
   PlotSchema.parse({
     namespace: 'plot',
@@ -46,14 +54,13 @@ describe('independent annotations', () => {
     const source = plot([
       {
         type: 'point',
-        kind: 'annotation',
-        encodings,
+        encodings: { ...encodings, position: { x: { value: 5 }, y: { value: 5 } } },
         properties: {
           ...properties,
-          position: { x: 5, y: 5 },
           shape: 'circle',
           label: { content: 'A', position: 'top', distance: 8 },
         },
+        contributeToDomain: false,
       },
     ]);
     const output = nodes(lowerPlot(source, { data: [{ title: 'Bound body' }] }, { textMeasurer: measureLabel }));
@@ -63,11 +70,16 @@ describe('independent annotations', () => {
   });
 
   it('uses coordinate connections by default and preserves explicit straight connections in JSON', () => {
-    const path = { type: 'path', kind: 'annotation', properties: { from: { x: 0, y: 5 }, to: { x: 5, y: 5 } } };
+    const path = {
+      type: 'path',
+      encodings: { from: { x: { value: 0 }, y: { value: 5 } }, to: { x: { value: 5 }, y: { value: 5 } } },
+      properties: {},
+      contributeToDomain: false,
+    };
     expect(MarkOperationSchema.parse(path)).toHaveProperty('properties.connection', 'coordinate');
     const straight = MarkOperationSchema.parse({
       ...path,
-      kind: 'annotation',
+
       properties: { ...path.properties, connection: 'straight' },
     });
     expect(MarkOperationSchema.parse(JSON.parse(JSON.stringify(straight)))).toEqual(straight);
@@ -76,12 +88,25 @@ describe('independent annotations', () => {
 
   it('passes through intermediate categories for paths and includes both interval boundaries', () => {
     const source = plot([
-      { type: 'path', kind: 'annotation', properties: { from: { x: 'A', y: 5 }, to: { x: 'C', y: 5 } } },
-      { type: 'point', kind: 'annotation', properties: { position: { x: 'B', y: 5 } } },
+      {
+        type: 'path',
+        encodings: { from: { x: { value: 'A' }, y: { value: 5 } }, to: { x: { value: 'C' }, y: { value: 5 } } },
+        properties: {},
+        contributeToDomain: false,
+      },
+      {
+        type: 'point',
+        encodings: { position: { x: { value: 'B' }, y: { value: 5 } } },
+        properties: {},
+        contributeToDomain: false,
+      },
       {
         type: 'interval',
-        kind: 'annotation',
-        properties: { bounds: { x: { from: 'B', to: 'E' }, y: { from: 2, to: 8 } } },
+        encodings: {
+          bounds: { x: { from: { value: 'B' }, to: { value: 'E' } }, y: { from: { value: 2 }, to: { value: 8 } } },
+        },
+        properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } } },
+        contributeToDomain: false,
       },
     ]);
     source.coordinate = { type: 'polar2D', angle: 'x', radius: 'y' };
@@ -103,7 +128,7 @@ describe('independent annotations', () => {
     }
     source.marks[0] = MarkOperationSchema.parse({
       ...source.marks[0],
-      kind: 'annotation',
+
       properties: { ...source.marks[0].properties, connection: 'straight' },
     });
     expect(
@@ -111,7 +136,7 @@ describe('independent annotations', () => {
     ).toHaveLength(2);
   });
 
-  it('uses arbitrary coordinate roles and final reversed ranges for edges', () => {
+  it('uses declared coordinate roles and final reversed ranges for edges', () => {
     const scale: PositionScale = {
       coordinate: value => Number(value) * 10,
       domain: () => [0, 10],
@@ -122,27 +147,31 @@ describe('independent annotations', () => {
       ticks: () => ({ values: [], labels: [] }),
     };
     const base = createCartesianCoordinate(scale, scale);
-    const frame: CoordinateFrame = { ...base, roles: ['u', 'v'], roleScales: { u: scale, v: scale } };
-    const mark = PointAnnotationSchema.parse({
+    const frame: CoordinateFrame = { ...base, roles: ['x', 'y'], roleScales: { x: scale, y: scale } };
+    const mark = PointMarkSchema.parse({
       type: 'point',
-      kind: 'annotation',
-      properties: { position: { u: { edge: 'end' }, v: 2 } },
+      encodings: { position: { x: { edge: 'end' }, y: { value: 2 } } },
+      properties: {},
+      contributeToDomain: false,
     });
-    expect(nodes(lowerAnnotation(mark, frame, {})!)[0].position).toEqual([-20, 20]);
+    expect(nodes(lowerGeometry(mark, frame, {})!)[0].position).toEqual([-20, 20]);
     const { projectMappedRoles: _project, ...unsupported } = frame;
-    expect(() => lowerAnnotation(mark, unsupported, {})).toThrow(/projection/i);
+    expect(() => lowerGeometry(mark, unsupported, {})).toThrow(/projection/i);
   });
 
   it('does not let a reference constant expand the data domain unless opted in', () => {
     const dataMark = {
       type: 'point',
-      kind: 'data',
-      encodings: { position: { x: 'x', y: 'y' } },
+      encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
       properties: { autoPadding: false },
     };
     const source = plot([
       dataMark,
-      { ...point, kind: 'annotation', properties: { ...point.properties, position: { x: 5, y: 100 } } },
+      {
+        ...point,
+        encodings: { position: { x: { value: 5 }, y: { value: 100 } } },
+        properties: { ...point.properties },
+      },
     ]);
     source.scales = [
       { type: 'linear', name: 'x', domainPadding: 0 },
@@ -155,17 +184,18 @@ describe('independent annotations', () => {
       ],
     };
     const without = nodes(lowerPlot(source, data, { textMeasurer: measureLabel }));
-    source.marks[1] = PointAnnotationSchema.parse({
+    source.marks[1] = PointMarkSchema.parse({
       ...point,
       contributeToDomain: true,
-      kind: 'annotation',
-      properties: { ...point.properties, position: { x: 5, y: 100 } },
+
+      encodings: { position: { x: { value: 5 }, y: { value: 100 } } },
+      properties: { ...point.properties },
     });
     const withContribution = nodes(lowerPlot(source, data, { textMeasurer: measureLabel }));
     expect(without[1].position).not.toEqual(withContribution[1].position);
   });
   it('retains declaration identity without claiming row values or transform lineage', () => {
-    const source = plot([{ ...point, id: 'reference', kind: 'annotation', properties: { ...point.properties } }]);
+    const source = plot([{ ...point, id: 'reference', properties: { ...point.properties } }]);
     const result = lowerPlotWithLineage(
       source,
       { data: [{ privateValue: 17 }] },
@@ -181,7 +211,7 @@ describe('independent annotations', () => {
   });
 
   it('draws once per actual facet without fabricating missing partitions', () => {
-    const source = plot([{ ...point, id: 'reference', kind: 'annotation', properties: { ...point.properties } }]);
+    const source = plot([{ ...point, id: 'reference', properties: { ...point.properties } }]);
     delete source.coordinate;
     source.composition = {
       defaultView: 'main',
@@ -217,13 +247,17 @@ describe('independent annotations', () => {
     const source = plot([
       {
         type: 'path',
-        kind: 'annotation',
-        properties: { from: { x: { edge: 'start' }, y: 5 }, to: { x: { edge: 'end' }, y: 5 }, stroke: 'red' },
+        encodings: { from: { x: { edge: 'start' }, y: { value: 5 } }, to: { x: { edge: 'end' }, y: { value: 5 } } },
+        properties: { stroke: 'red' },
+        contributeToDomain: false,
       },
       {
         type: 'interval',
-        kind: 'annotation',
-        properties: { bounds: { x: { from: 2, to: 8 }, y: { from: 2, to: 8 } }, fill: 'blue' },
+        encodings: {
+          bounds: { x: { from: { value: 2 }, to: { value: 8 } }, y: { from: { value: 2 }, to: { value: 8 } } },
+        },
+        properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } }, fill: 'blue' },
+        contributeToDomain: false,
       },
     ]);
     const output = lowerPlot(source, { data: [] }, { textMeasurer: measureLabel });
@@ -231,16 +265,24 @@ describe('independent annotations', () => {
     expect(paths(output)[0].children).toHaveLength(2);
     expect(paths(output)[0].style?.stroke).toBe('red');
     expect(nodes(output)).toHaveLength(1);
-    expect(nodes(output)[0].style?.fill).toBe('blue');
+    expect((output as IRScope).children[1]).toMatchObject({ defaults: { node: { style: { fill: 'blue' } } } });
   });
 
   it('preserves polar interpolation and projects intervals as sectors', () => {
     const source = plot([
-      { type: 'path', kind: 'annotation', properties: { from: { x: 0, y: 5 }, to: { x: 5, y: 5 } } },
+      {
+        type: 'path',
+        encodings: { from: { x: { value: 0 }, y: { value: 5 } }, to: { x: { value: 5 }, y: { value: 5 } } },
+        properties: {},
+        contributeToDomain: false,
+      },
       {
         type: 'interval',
-        kind: 'annotation',
-        properties: { bounds: { x: { from: 0, to: 5 }, y: { from: 2, to: 8 } } },
+        encodings: {
+          bounds: { x: { from: { value: 0 }, to: { value: 5 } }, y: { from: { value: 2 }, to: { value: 8 } } },
+        },
+        properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } } },
+        contributeToDomain: false,
       },
     ]);
     source.coordinate = { type: 'polar2D', angle: 'x', radius: 'y' };
@@ -250,9 +292,7 @@ describe('independent annotations', () => {
   });
 
   it('uses explicit literal domain contributions without requiring rows', () => {
-    const source = plot([
-      { ...point, contributeToDomain: true, kind: 'annotation', properties: { ...point.properties } },
-    ]);
+    const source = plot([{ ...point, contributeToDomain: true, properties: { ...point.properties } }]);
     source.scales = [
       { type: 'linear', name: 'x', domainPadding: 0 },
       { type: 'linear', name: 'y', domainPadding: 0 },
@@ -298,8 +338,7 @@ describe('independent annotations', () => {
       plot([
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'y' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: { autoPadding: false },
         },
       ]),
@@ -313,7 +352,7 @@ describe('independent annotations', () => {
     for (const position of [{ x: 5 }, { x: 5, y: 5, z: 1 }]) {
       expect(() =>
         lowerPlot(
-          plot([{ ...point, position, kind: 'annotation', properties: { ...point.properties } }]),
+          plot([{ ...point, position, properties: { ...point.properties } }]),
           { data: [] },
           { textMeasurer: measureLabel },
         ),
@@ -321,3 +360,9 @@ describe('independent annotations', () => {
     }
   });
 });
+
+/** 通过普通 Mark 注册入口验证坐标能力 */
+const lowerGeometry = (mark: IRPlotMarkOperation, frame: CoordinateFrame, channels: MarkChannels) => {
+  const resolution = resolveMarkOperation(mark, { registry: resolveMarkRegistry() });
+  return lowerMark(resolution, resolveMarkInstances(resolution, []), frame, channels);
+};

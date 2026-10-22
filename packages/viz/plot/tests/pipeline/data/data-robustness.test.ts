@@ -30,7 +30,7 @@ const specNoModel = (): IRPlot =>
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'a', y: 'b' } } }],
+    marks: [{ type: 'point', encodings: { position: { x: { field: 'a' }, y: { field: 'b' } } } }],
   });
 
 /** 有 model：x continuous / y continuous（point mark，x/y 绑 a/b） */
@@ -50,7 +50,7 @@ const specWithModel = (): IRPlot =>
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'a', y: 'b' } } }],
+    marks: [{ type: 'point', encodings: { position: { x: { field: 'a' }, y: { field: 'b' } } } }],
   });
 
 /** 无 model + 时间字段（推断 temporal，应归一化成 epoch ms） */
@@ -64,7 +64,7 @@ const specTemporalNoModel = (): IRPlot =>
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'path', kind: 'data', encodings: { position: { x: 't', y: 'v' } } }],
+    marks: [{ type: 'path', encodings: { position: { x: { field: 't' }, y: { field: 'v' } } } }],
   });
 
 /** stack transform spec：分组 m + 量 v（x continuous，验证非法值被 skip 但整行仍参与 stack） */
@@ -88,8 +88,10 @@ const specStack = (): IRPlot =>
     marks: [
       {
         type: 'interval',
-        kind: 'data',
-        encodings: { bounds: { y: { from: 'y0', to: 'y1' } }, position: { x: 'm', y: 'v' } },
+        encodings: {
+          bounds: { y: { from: { field: 'y0' }, to: { field: 'y1' } } },
+          position: { x: { field: 'm' }, y: { field: 'v' } },
+        },
         properties: { bounds: { y: { kind: 'extent' } } },
       },
     ],

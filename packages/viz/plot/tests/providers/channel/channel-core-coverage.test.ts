@@ -80,8 +80,7 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'y' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: { strokeWidth: 2, zIndex: 3, opacity: { overall: 0.7, fill: 0.5, stroke: 0.4 } },
         },
       ],
@@ -112,8 +111,7 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'path',
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'y' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: {
             roundedCorners: 4,
             strokeWidth: 3,
@@ -152,8 +150,11 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'interval',
-          kind: 'data',
-          encodings: { strokeWidth: 'weight', position: { x: 'cat', y: 'value' }, opacity: { fill: 'alpha' } },
+          encodings: {
+            strokeWidth: 'weight',
+            position: { x: { field: 'cat' }, y: { field: 'value' } },
+            opacity: { fill: 'alpha' },
+          },
           properties: { opacity: { overall: 0.9 } },
         },
       ],
@@ -189,8 +190,7 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'interval',
-          kind: 'data',
-          encodings: { label: { content: 'label' }, position: { x: 'cat', y: 'value' } },
+          encodings: { label: { content: 'label' }, position: { x: { field: 'cat' }, y: { field: 'value' } } },
           properties: {
             label: {
               position: 'top',
@@ -232,7 +232,10 @@ describe('channel core coverage (contract)', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        { type: 'point', kind: 'data', encodings: { textColor: 'tone', text: 'label', position: { x: 'x', y: 'y' } } },
+        {
+          type: 'point',
+          encodings: { textColor: 'tone', text: 'label', position: { x: { field: 'x' }, y: { field: 'y' } } },
+        },
       ],
     });
     const nodes = collectNodes(
@@ -260,8 +263,7 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { align: 'align', text: 'label', position: { x: 'x', y: 'y' } },
+          encodings: { align: 'align', text: 'label', position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: {
             lineHeight: 18,
             maxTextWidth: 72,
@@ -307,8 +309,7 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { color: { field: 'group', scale: 'tone' }, position: { x: 'x', y: 'y' } },
+          encodings: { color: { field: 'group', scale: 'tone' }, position: { x: { field: 'x' }, y: { field: 'y' } } },
         },
       ],
     });
@@ -342,8 +343,7 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { dashed: 'dashed', position: { x: 'x', y: 'y' } },
+          encodings: { dashed: 'dashed', position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: {
             dotted: false,
             dashPattern: [6, 2],
@@ -383,8 +383,7 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'path',
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'y' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: {
             zIndex: 7,
             rotate: 15,

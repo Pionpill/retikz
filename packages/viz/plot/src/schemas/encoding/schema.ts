@@ -1,7 +1,7 @@
 import { CssColorSchema, GeometryLabelSchema, NodeLabelSchema } from '@retikz/core';
 import type { JsonValue } from '@retikz/foundation';
 import { NonBlankStringSchema, PositiveNumberSchema } from '@retikz/foundation';
-import { array, number, object, record, strictObject, union } from 'zod';
+import { array, enum as zodEnum, number, object, strictObject, union } from 'zod';
 
 /** 校验字段名简写或显式指定比例尺的字段绑定 */
 export const ChannelSchema = union([
@@ -12,10 +12,19 @@ export const ChannelSchema = union([
   }),
 ]).describe('Field encoding: a non-blank field name, or a field and explicit scale pair');
 
-/** 校验由坐标定义拥有比例尺的位置角色字段映射 */
-export const PositionEncodingSchema = record(NonBlankStringSchema, NonBlankStringSchema).describe(
-  'Coordinate role to field name map; coordinate roles own their position scales',
-);
+/** 校验字段、数据空间常量或最终坐标范围边缘，三类输入互斥 */
+export const PositionInputSchema = union([
+  strictObject({ field: NonBlankStringSchema.describe('Field path in the final mark data view') }),
+  strictObject({ value: union([number(), NonBlankStringSchema]).describe('Constant data-space value') }),
+  strictObject({ edge: zodEnum(['start', 'end']).describe('Boundary of the final coordinate role range') }),
+]).describe('Exclusive field, constant value, or coordinate range edge');
+
+/** 校验点或路径端点的封闭位置角色，x 必填 */
+export const PositionEncodingSchema = strictObject({
+  x: PositionInputSchema,
+  y: PositionInputSchema.optional(),
+  z: PositionInputSchema.optional(),
+}).describe('Position inputs for x and optional y/z; required coordinate roles must be supplied');
 
 /** 校验独立透明度因子的字段编码 */
 export const OpacityEncodingSchema = strictObject({

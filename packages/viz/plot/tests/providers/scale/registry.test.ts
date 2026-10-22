@@ -258,12 +258,10 @@ describe('scale registry（contract spec）', () => {
   it('allowsBaseline 谓词驱动 baseline guard', () => {
     const registry = resolveScaleRegistry();
 
-    expect(() => assertBaselineScaleCompatible('log', [{ type: 'interval', kind: 'data' }], { registry })).toThrow(
+    expect(() => assertBaselineScaleCompatible('log', [{ type: 'interval' }], { registry })).toThrow(
       /cannot be used with interval\/area/,
     );
-    expect(() =>
-      assertBaselineScaleCompatible('linear', [{ type: 'interval', kind: 'data' }], { registry }),
-    ).not.toThrow();
+    expect(() => assertBaselineScaleCompatible('linear', [{ type: 'interval' }], { registry })).not.toThrow();
   });
 
   it('custom_position_scale_lowers_in_plot', () => {
@@ -279,9 +277,8 @@ describe('scale registry（contract spec）', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
           properties: { autoPadding: false },
-          encodings: { position: { x: 'x', y: 'y' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
         },
       ],
     };
@@ -320,8 +317,7 @@ describe('scale registry（contract spec）', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { color: { field: 'g', scale: 'col' }, position: { x: 'x', y: 'y' } },
+          encodings: { color: { field: 'g', scale: 'col' }, position: { x: { field: 'x' }, y: { field: 'y' } } },
         },
       ],
     };
@@ -351,7 +347,7 @@ describe('scale registry（contract spec）', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
     };
     const roundtrip = PlotSchema.parse(JSON.parse(JSON.stringify(spec)));
 

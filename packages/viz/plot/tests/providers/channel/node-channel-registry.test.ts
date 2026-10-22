@@ -99,7 +99,7 @@ describe('node channel registry', () => {
           values.filter((value): value is string | number => typeof value === 'string' || typeof value === 'number'),
         resolveColorScheme: () => () => '#000000',
       },
-      { type: 'point', kind: 'data', properties: { size: 7 } },
+      { type: 'point', properties: { size: 7 } },
     );
 
     expect(resolution).toBeUndefined();

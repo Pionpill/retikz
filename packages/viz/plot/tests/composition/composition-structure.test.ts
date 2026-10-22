@@ -14,7 +14,13 @@ const baseSpec = {
     defaultView: 'main',
     views: [{ id: 'main', coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' } }],
   },
-  marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
+  marks: [
+    {
+      contributeToDomain: true,
+      type: 'point',
+      encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
+    },
+  ],
   guides: [{ type: 'axis', dimension: 'y', coordinateView: 'main', grid: true }],
 };
 

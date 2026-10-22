@@ -24,8 +24,8 @@ import {
 } from '@retikz/data';
 
 import type { PlotDataPreparation, PlotDataPreparationOptions, PreparedPlotData } from '../../contract';
-import { isIndependentAnnotation } from '../../contract';
 import { RetikzPlotError } from '../../error';
+import { isSingleMark } from '../../resolve';
 import { resolvePlotDataExecution } from '../../resolve';
 import { resolveComposition, resolveFacetPanels } from '../../resolve/composition';
 import type { IRPlot, IRPlotMarkOperation } from '../../schemas';
@@ -132,7 +132,9 @@ export const preparePlotData = async <TSource = never>(
   const rootResolution = resolveDataTransforms(spec.transform ?? [], descriptor.model, semantic);
   const model = rootResolution.stages.at(-1)?.outputModel ?? rootResolution.inputModel;
   const markResolutions = spec.marks.map(mark =>
-    isIndependentAnnotation(mark) ? undefined : resolveDataTransforms(plotMarkTransformsOf(mark), model, semantic),
+    isSingleMark(mark, { registry: registries.markRegistry })
+      ? undefined
+      : resolveDataTransforms(plotMarkTransformsOf(mark), model, semantic),
   );
 
   const prepareScope = async (

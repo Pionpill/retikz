@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { CustomPositionAdjustmentSchema, MarkOperationSchema, PointMarkSchema } from '../../src/schemas';
 
-const point = { type: 'point', kind: 'data', encodings: { position: { x: 'category', y: 'value' } } };
+const point = { type: 'point', encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } } };
 
 describe('Position Adjustment schema', () => {
   it('accepts JSON-safe numeric and ratio jitter on Point', () => {
@@ -89,8 +89,7 @@ describe('Position Adjustment schema', () => {
     expect(() =>
       MarkOperationSchema.parse({
         type: 'interval',
-        kind: 'data',
-        encodings: { position: { x: 'category', y: 'value' } },
+        encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } },
         properties: {
           bounds: { x: { kind: 'band' }, y: { kind: 'extent', start: 0, end: 'value' } },
           placement: { adjustments: [{ kind: 'jitter', role: 'x' }] },

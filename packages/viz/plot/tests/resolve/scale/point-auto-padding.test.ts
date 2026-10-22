@@ -22,8 +22,7 @@ const resolveFrame = (autoPadding?: unknown, domainPadding?: unknown) => {
     marks: [
       {
         type: 'point',
-        kind: 'data',
-        encodings: { position: { x: 'x', y: 'y' } },
+        encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
         properties: { size: 10, autoPadding },
       },
     ],
@@ -64,8 +63,7 @@ describe('Point 自动留白', () => {
   const point = (size: number, autoPadding: unknown = 'max-radius', extra: Partial<IRPlotPointMark> = {}) => ({
     type: 'point',
     ...extra,
-    kind: 'data',
-    encodings: { position: { x: 'x', y: 'y' }, ...extra.encodings },
+    encodings: { position: { x: { field: 'x' }, y: { field: 'y' } }, ...extra.encodings },
     properties: { size, autoPadding, ...extra.properties },
   });
 
@@ -145,8 +143,10 @@ describe('Point 自动留白', () => {
   it('Relation 只在启用策略时保护实际端点节点', () => {
     const relation = {
       type: 'relation',
-      kind: 'data',
-      encodings: { source: { position: { x: 'x', y: 'y' } }, target: { position: { x: 'x', y: 'y' } } },
+      encodings: {
+        source: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+        target: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+      },
       properties: {
         endpoints: {
           source: { size: 8 },

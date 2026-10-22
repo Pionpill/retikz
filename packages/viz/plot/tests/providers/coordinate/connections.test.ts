@@ -1,11 +1,14 @@
 import type { Position } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import type { PositionScale } from '../../../src/contract';
+import type { MarkChannels } from '../../../src/contract';
+import type { CoordinateFrame, PositionScale } from '../../../src/contract';
 import { createCoordinateFrame } from '../../../src/contract';
+import { lowerMark, resolveMarkRegistry } from '../../../src/providers';
 import { createPolarCoordinate } from '../../../src/providers';
-import { lowerAnnotation } from '../../../src/providers/mark/features/annotation';
-import { IntervalAnnotationSchema, PathAnnotationSchema } from '../../../src/schemas';
+import { resolveMarkOperation, resolveMarkInstances } from '../../../src/resolve/mark';
+import type { IRPlotMarkOperation } from '../../../src/schemas';
+import { IntervalMarkSchema, PathMarkSchema } from '../../../src/schemas';
 
 const scale: PositionScale = {
   coordinate: value => Number(value),
@@ -79,8 +82,8 @@ describe('coordinate connection geometry', () => {
   });
 
   it('uses custom coordinate capabilities and fails rather than silently drawing a straight path', () => {
-    const frame = createCoordinateFrame('curved', ['u', 'v'], () => [0, 0], {
-      roleScales: { u: scale, v: scale },
+    const frame = createCoordinateFrame('curved', ['x', 'y'], () => [0, 0], {
+      roleScales: { x: scale, y: scale },
       projectMappedRoles: values => [values[0], values[1]],
       projectSegment: (from, to) => [
         [from[0], from[1]],
@@ -106,26 +109,30 @@ describe('coordinate connection geometry', () => {
               ],
       }),
     });
-    const path = PathAnnotationSchema.parse({
+    const path = PathMarkSchema.parse({
       type: 'path',
-      kind: 'annotation',
-      properties: { from: { u: 0, v: 0 }, to: { u: 100, v: 0 } },
+      encodings: { from: { x: { value: 0 }, y: { value: 0 } }, to: { x: { value: 100 }, y: { value: 0 } } },
+      properties: {},
+      contributeToDomain: false,
     });
-    const output = lowerAnnotation(path, frame, {});
+    const output = lowerGeometry(path, frame, {});
     expect(output).toMatchObject({ children: [{ children: [{ to: [0, 0] }, { to: [50, 90] }, { to: [100, 0] }] }] });
     const { projectSegment: _segment, ...unsupported } = frame;
-    expect(() => lowerAnnotation(path, unsupported, {})).toThrow(/projectSegment/);
+    expect(() => lowerGeometry(path, unsupported, {})).toThrow(/projectSegment/);
     expect(
-      lowerAnnotation({ ...path, properties: { ...path.properties, connection: 'straight' } }, unsupported, {}),
+      lowerGeometry({ ...path, properties: { ...path.properties, connection: 'straight' } }, unsupported, {}),
     ).toMatchObject({
       children: [{ children: [{ to: [0, 0] }, { to: [100, 0] }] }],
     });
-    const interval = IntervalAnnotationSchema.parse({
+    const interval = IntervalMarkSchema.parse({
       type: 'interval',
-      kind: 'annotation',
-      properties: { connection: 'straight', bounds: { u: { from: 0, to: 100 }, v: { from: 0, to: 100 } } },
+      encodings: {
+        bounds: { x: { from: { value: 0 }, to: { value: 100 } }, y: { from: { value: 0 }, to: { value: 100 } } },
+      },
+      properties: { connection: 'straight', bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } } },
+      contributeToDomain: false,
     });
-    expect(lowerAnnotation(interval, frame, {})).toMatchObject({
+    expect(lowerGeometry(interval, frame, {})).toMatchObject({
       children: [
         {
           shape: {
@@ -143,3 +150,9 @@ describe('coordinate connection geometry', () => {
     });
   });
 });
+
+/** 通过普通 Mark 注册入口验证坐标能力 */
+const lowerGeometry = (mark: IRPlotMarkOperation, frame: CoordinateFrame, channels: MarkChannels) => {
+  const resolution = resolveMarkOperation(mark, { registry: resolveMarkRegistry() });
+  return lowerMark(resolution, resolveMarkInstances(resolution, []), frame, channels);
+};

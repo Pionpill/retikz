@@ -38,7 +38,13 @@ const baseLine = {
     { type: 'linear', name: 'yRevenue', nice: true },
   ],
   coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-  marks: [{ type: 'path', kind: 'data', encodings: { order: 'month', position: { x: 'month', y: 'revenue' } } }],
+  marks: [
+    {
+      contributeToDomain: true,
+      type: 'path',
+      encodings: { order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } },
+    },
+  ],
 };
 
 describe('PlotSchema (contract)', () => {
@@ -64,7 +70,9 @@ describe('PlotSchema (contract)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'xs' }],
       coordinate: { type: 'cartesian2D', x: 'xs', y: 'xs' },
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } }],
+      marks: [
+        { contributeToDomain: true, type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } },
+      ],
     };
 
     expect(PlotSchema.parse(spec)).toEqual(spec);
@@ -130,8 +138,16 @@ describe('PlotSchema (contract)', () => {
     const spec = {
       ...baseLine,
       marks: [
-        { type: 'path', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } },
-        { type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } },
+        {
+          contributeToDomain: true,
+          type: 'path',
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        },
+        {
+          contributeToDomain: true,
+          type: 'point',
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        },
       ],
     };
 
@@ -204,8 +220,16 @@ describe('PlotSchema (contract)', () => {
     const spec = {
       ...baseLine,
       marks: [
-        { type: 'path', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } },
-        { type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } },
+        {
+          contributeToDomain: true,
+          type: 'path',
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        },
+        {
+          contributeToDomain: true,
+          type: 'point',
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        },
       ],
       guides: [{ type: 'axis', dimension: 'x' }],
     };

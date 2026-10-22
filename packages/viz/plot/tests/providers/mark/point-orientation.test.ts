@@ -35,8 +35,7 @@ const render = (
       {
         type: 'point',
         ...extra,
-        kind: 'data',
-        encodings: { position: { x: 'angle', y: 'radius' }, ...extra.encodings },
+        encodings: { position: { x: { field: 'angle' }, y: { field: 'radius' } }, ...extra.encodings },
         properties: { autoPadding: false, ...extra.properties },
       },
     ],
@@ -72,8 +71,7 @@ describe('PointMark coordinate orientation', () => {
   it('文本使用同一方向与字段旋转通道', () => {
     expect(
       render({
-        kind: 'data',
-        encodings: { text: 'text', position: { x: 'angle', y: 'radius' }, rotate: 'rotation' },
+        encodings: { text: 'text', position: { x: { field: 'angle' }, y: { field: 'radius' } }, rotate: 'rotation' },
         properties: { orientation: { kind: 'coordinate', role: 'x', align: 'tangent' } },
       })[0].rotate,
     ).toBeCloseTo(195);
@@ -85,8 +83,7 @@ describe('PointMark coordinate orientation', () => {
 
   it('屏幕偏移只移动文本，不改变方向', () => {
     const extra: Partial<IRPlotPointMark> = {
-      kind: 'data',
-      encodings: { text: 'text', position: { x: 'angle', y: 'radius' } },
+      encodings: { text: 'text', position: { x: { field: 'angle' }, y: { field: 'radius' } } },
       properties: { orientation: { kind: 'coordinate', role: 'x', align: 'tangent' } },
     };
     const original = render(extra)[0];

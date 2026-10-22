@@ -5,15 +5,15 @@ import type {
   AnyMarkDefinition,
   CoordinateFrame,
   MarkChannels,
+  MarkInstanceInput,
   MarkDefinition,
   MarkLoweringContext,
 } from '../../contract';
-import { extractMarkType, isIndependentAnnotation } from '../../contract';
+import { extractMarkType } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import type { IRPlotMarkOperation } from '../../schemas';
-import { isAnnotation, BuiltinPlotMark } from '../../schemas';
+import { BuiltinPlotMark } from '../../schemas';
 import { intervalMarkDefinition, pathMarkDefinition, pointMarkDefinition, relationMarkDefinition } from './features';
-import { attachMarkLayer } from './shared';
 
 const asAnyMarkDefinition = <T extends IRPlotMarkOperation>(def: MarkDefinition<T>): AnyMarkDefinition => def;
 
@@ -82,38 +82,15 @@ const applyScopeChannelDeliveries = (
  */
 export const lowerMark = (
   resolution: { definition: AnyMarkDefinition; operation: IRPlotMarkOperation },
-  rows: Array<ExternalRow>,
+  instances: MarkInstanceInput,
   frame: CoordinateFrame,
   channels: MarkChannels = {},
   markContext?: MarkLoweringContext,
 ): IRChild | null => {
-  if (isAnnotation(resolution.operation)) {
-    const operation = resolution.operation;
-    const capability = resolution.definition.annotation;
-    if (!capability) throw new RetikzPlotError(`Mark "${resolution.operation.type}" does not support annotations`);
-    try {
-      if (!isIndependentAnnotation(resolution.operation)) {
-        const children = rows.flatMap((row, transformedIndex) => {
-          const child = capability.lower(operation, frame, channels, markContext, {
-            row,
-            transformedIndex,
-          });
-          return child === null ? [] : [child];
-        });
-        return children.length === 0
-          ? null
-          : attachMarkLayer({ type: 'scope', children }, resolution.operation, markContext);
-      }
-      return capability.lower(resolution.operation, frame, channels, markContext);
-    } catch (cause) {
-      if (cause instanceof RetikzPlotError) throw cause;
-      throw new RetikzPlotError(`Annotation "${resolution.operation.type}" projection failed`, { cause });
-    }
-  }
   return applyScopeChannelDeliveries(
-    resolution.definition.lower(resolution.operation as never, rows, frame, channels, markContext),
+    resolution.definition.lower(resolution.operation as never, instances, frame, channels, markContext),
     resolution.operation,
-    rows,
+    instances.kind === 'rows' ? instances.rows : [],
     channels,
   );
 };

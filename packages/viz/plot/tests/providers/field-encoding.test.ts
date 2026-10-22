@@ -1,16 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  annotationChannelsOf,
-  channelField,
-  channelScale,
-  isIndependentAnnotation,
-  markChannelEncoding,
-  markProperty,
-} from '../../src/contract';
+import { channelField, channelScale, markChannelEncoding, markProperty } from '../../src/contract';
+import { positionValue } from '../../src/contract';
+import { resolveMarkRegistry } from '../../src/providers';
 import { channelValue, createFieldCollector, labelOf } from '../../src/providers/channel';
-import { annotationValue } from '../../src/providers/mark/shared';
-import { PointAnnotationSchema } from '../../src/schemas';
+import { isSingleMark, collectMarkFields } from '../../src/resolve/mark';
+
+const markContext = { registry: resolveMarkRegistry() };
+import { PointMarkSchema } from '../../src/schemas';
 
 describe('field encoding consumption', () => {
   it('reads the same field path from shorthand and named-scale bindings', () => {
@@ -48,39 +45,46 @@ describe('field encoding consumption', () => {
   });
 
   it('treats a non-position field as a data dependency for annotations', () => {
-    const mark = PointAnnotationSchema.parse({
+    const mark = PointMarkSchema.parse({
       type: 'point',
-      kind: 'annotation',
-      properties: { position: { x: 1, y: 2 } },
-      encodings: { color: { field: 'group', scale: 'palette' }, opacity: { fill: 'alpha' } },
+      properties: {},
+      encodings: {
+        color: { field: 'group', scale: 'palette' },
+        opacity: { fill: 'alpha' },
+        position: { x: { value: 1 }, y: { value: 2 } },
+      },
+      contributeToDomain: false,
     });
-    expect(isIndependentAnnotation(mark)).toBe(false);
-    expect(annotationChannelsOf(mark).map(channelField)).toEqual(['alpha', 'group']);
+    expect(isSingleMark(mark, markContext)).toBe(false);
+    const fields = new Set<string>();
+    collectMarkFields(mark, createFieldCollector(fields), markContext);
+    expect([...fields].sort()).toEqual(['alpha', 'group']);
   });
 
-  it('preserves the distinction between omitted transforms and an empty data chain', () => {
+  it('treats omitted transforms and an empty data chain as the same instance source', () => {
     const source = {
       type: 'point',
-      kind: 'annotation',
-      properties: { position: { x: 1, y: 2 }, color: 'red' },
+      encodings: { position: { x: { value: 1 }, y: { value: 2 } } },
+      properties: { color: 'red' },
+      contributeToDomain: false,
     };
-    expect(isIndependentAnnotation(PointAnnotationSchema.parse(source))).toBe(true);
-    expect(isIndependentAnnotation(PointAnnotationSchema.parse({ ...source, transforms: [] }))).toBe(false);
+    expect(isSingleMark(PointMarkSchema.parse(source), markContext)).toBe(true);
+    expect(isSingleMark(PointMarkSchema.parse({ ...source, transforms: [] }), markContext)).toBe(true);
   });
 
   it('does not treat objects in data cells as annotation position instructions', () => {
-    expect(annotationValue(3, 'value', { value: 5 })).toBe(5);
-    expect(annotationValue({ edge: 'end' })).toBeUndefined();
-    expect(() => annotationValue(3, 'value', { value: { edge: 'end' } })).toThrow(/cannot map/);
-    expect(() => annotationValue(3, 'value', {})).toThrow(/cannot map/);
+    expect(positionValue({ field: 'value' }, { value: 5 })).toBe(5);
+    expect(positionValue({ edge: 'end' })).toBeUndefined();
+    expect(positionValue({ field: 'value' }, { value: { edge: 'end' } })).toEqual({ edge: 'end' });
+    expect(positionValue({ field: 'value' }, {})).toBeUndefined();
   });
 
   it('suppresses only the fixed property addressed by an effective field encoding', () => {
-    const mark = PointAnnotationSchema.parse({
+    const mark = PointMarkSchema.parse({
       type: 'point',
-      kind: 'annotation',
-      encodings: { color: 'missing', opacity: { overall: 'alpha' } },
-      properties: { position: { x: 1, y: 2 }, color: 'red', opacity: { overall: 0.8, fill: 0.4 } },
+      encodings: { color: 'missing', opacity: { overall: 'alpha' }, position: { x: { value: 1 }, y: { value: 2 } } },
+      properties: { color: 'red', opacity: { overall: 0.8, fill: 0.4 } },
+      contributeToDomain: false,
     });
     expect(markProperty(mark, 'color')).toBeUndefined();
     expect(markProperty(mark, 'opacity')).toBeUndefined();

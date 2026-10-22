@@ -264,7 +264,9 @@ export const buildPlotLocatorFromDataArtifact = (
     if (!Number.isInteger(transformedIndex) || transformedIndex < 0 || transformedIndex >= rows.length) return null;
 
     const row = rows[transformedIndex];
-    const position = datumAnchor(markDataView.mark, row, frame, { registry: markRegistry });
+    const position = datumAnchor(markDataView.mark, { kind: 'row', row, transformedIndex }, frame, {
+      registry: markRegistry,
+    });
 
     return position === null ? null : { position, row, mark: markDataView.mark };
   };
@@ -350,7 +352,7 @@ export const buildPlotLocatorFromDataArtifact = (
     let sumY = 0;
     let count = 0;
 
-    for (const row of rows) {
+    for (const [transformedIndex, row] of rows.entries()) {
       // 系列值匹配：先精确相等，再宽松字符串比对（resolve 的 '5' 字符串 token 匹配数值 5；#4）
       const fieldValue = resolveFieldPath(row, seriesField);
       if (fieldValue !== value && String(fieldValue) !== String(value)) continue;
@@ -361,7 +363,13 @@ export const buildPlotLocatorFromDataArtifact = (
               const geometry = intervalCellGeometry(mark, row, frame, intervalContext);
               return geometry === null || !isRenderableCellGeometry(geometry) ? null : cellGeometryAnchor(geometry);
             })()
-          : datumAnchor(mark, row, frame, { registry: markRegistry }, intervalContext);
+          : datumAnchor(
+              mark,
+              { kind: 'row', row, transformedIndex },
+              frame,
+              { registry: markRegistry },
+              intervalContext,
+            );
       if (!position) continue;
 
       sumX += position[0];

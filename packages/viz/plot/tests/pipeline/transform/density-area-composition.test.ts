@@ -60,12 +60,11 @@ describe('density area composition (contract)', () => {
       marks: [
         {
           type: 'path',
-          kind: 'data',
           encodings: {
             series: 'group',
             order: 'densityX',
             color: { field: 'group', scale: 'color' },
-            position: { x: 'densityX', y: 'density' },
+            position: { x: { field: 'densityX' }, y: { field: 'density' } },
           },
           properties: { closure: { kind: 'baseline', baseline: 0 }, fill: '#60a5fa', opacity: { fill: 0.28 } },
         },
@@ -97,7 +96,7 @@ describe('density area composition (contract)', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        { type: 'point', kind: 'data', encodings: { position: { x: 'value' } }, properties: { position: { y: 0 } } },
+        { type: 'point', encodings: { position: { y: { value: 0 }, x: { field: 'value' } } }, properties: {} },
         {
           type: 'path',
           transforms: [
@@ -114,8 +113,7 @@ describe('density area composition (contract)', () => {
               },
             },
           ],
-          kind: 'data',
-          encodings: { order: 'densityX', position: { x: 'densityX', y: 'density' } },
+          encodings: { order: 'densityX', position: { x: { field: 'densityX' }, y: { field: 'density' } } },
         },
       ],
     });

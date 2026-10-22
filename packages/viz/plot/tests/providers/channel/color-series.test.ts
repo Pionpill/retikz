@@ -78,8 +78,12 @@ describe('color × series · B/C 收口（contract）', () => {
   it('explicit_series_line_splits_and_colors', () => {
     const spec = specOf({
       type: 'path',
-      kind: 'data',
-      encodings: { series: 'city', order: 't', color: { field: 'city', scale: 'col' }, position: { x: 't', y: 'v' } },
+      encodings: {
+        series: 'city',
+        order: 't',
+        color: { field: 'city', scale: 'col' },
+        position: { x: { field: 't' }, y: { field: 'v' } },
+      },
     });
     const paths = collectPaths(firstLayer(spec, { d: SERIES_DATA }));
 
@@ -91,8 +95,11 @@ describe('color × series · B/C 收口（contract）', () => {
   it('single_line_categorical_color_implicitly_splits', () => {
     const spec = specOf({
       type: 'path',
-      kind: 'data',
-      encodings: { order: 't', color: { field: 'city', scale: 'col' }, position: { x: 't', y: 'v' } },
+      encodings: {
+        order: 't',
+        color: { field: 'city', scale: 'col' },
+        position: { x: { field: 't' }, y: { field: 'v' } },
+      },
     });
     const paths = collectPaths(firstLayer(spec, { d: SERIES_DATA }));
 
@@ -103,13 +110,20 @@ describe('color × series · B/C 收口（contract）', () => {
   it('implicit_split_equals_explicit_series', () => {
     const implicit = specOf({
       type: 'path',
-      kind: 'data',
-      encodings: { order: 't', color: { field: 'city', scale: 'col' }, position: { x: 't', y: 'v' } },
+      encodings: {
+        order: 't',
+        color: { field: 'city', scale: 'col' },
+        position: { x: { field: 't' }, y: { field: 'v' } },
+      },
     });
     const explicit = specOf({
       type: 'path',
-      kind: 'data',
-      encodings: { series: 'city', order: 't', color: { field: 'city', scale: 'col' }, position: { x: 't', y: 'v' } },
+      encodings: {
+        series: 'city',
+        order: 't',
+        color: { field: 'city', scale: 'col' },
+        position: { x: { field: 't' }, y: { field: 'v' } },
+      },
     });
 
     expect(firstLayer(implicit, { d: SERIES_DATA })).toEqual(firstLayer(explicit, { d: SERIES_DATA }));
@@ -119,8 +133,11 @@ describe('color × series · B/C 收口（contract）', () => {
   it('single_closed_path_categorical_color_implicitly_splits', () => {
     const spec = specOf({
       type: 'path',
-      kind: 'data',
-      encodings: { order: 't', color: { field: 'city', scale: 'col' }, position: { x: 't', y: 'v' } },
+      encodings: {
+        order: 't',
+        color: { field: 'city', scale: 'col' },
+        position: { x: { field: 't' }, y: { field: 'v' } },
+      },
       properties: { closure: { kind: 'baseline' } },
     });
     const paths = collectPaths(firstLayer(spec, { d: SERIES_DATA }));
@@ -132,8 +149,7 @@ describe('color × series · B/C 收口（contract）', () => {
   it('point_colors_per_datum_no_series', () => {
     const spec = specOf({
       type: 'point',
-      kind: 'data',
-      encodings: { color: { field: 'city', scale: 'col' }, position: { x: 't', y: 'v' } },
+      encodings: { color: { field: 'city', scale: 'col' }, position: { x: { field: 't' }, y: { field: 'v' } } },
     });
     const nodes = collectNodes(firstLayer(spec, { d: SERIES_DATA }));
 
@@ -153,8 +169,8 @@ describe('plot theme default palette', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        { type: 'path', kind: 'data', encodings: { order: 'x', position: { x: 'x', y: 'y' } } },
-        { type: 'interval', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } },
+        { type: 'path', encodings: { order: 'x', position: { x: { field: 'x' }, y: { field: 'y' } } } },
+        { type: 'interval', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } },
       ],
     });
     const root = expandOf(spec, {
@@ -181,9 +197,9 @@ describe('plot theme default palette', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        { type: 'path', kind: 'data', encodings: { order: 'x', position: { x: 'x', y: 'y' } } },
-        { type: 'interval', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } },
-        { type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } },
+        { type: 'path', encodings: { order: 'x', position: { x: { field: 'x' }, y: { field: 'y' } } } },
+        { type: 'interval', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } },
+        { type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } },
       ],
     });
     const root = expandOf(spec, {
@@ -214,8 +230,7 @@ describe('plot theme default palette', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { color: { field: 'city', scale: 'col' }, position: { x: 'x', y: 'y' } },
+          encodings: { color: { field: 'city', scale: 'col' }, position: { x: { field: 'x' }, y: { field: 'y' } } },
         },
       ],
     });
@@ -235,7 +250,10 @@ describe('plot theme default palette', () => {
 
 describe('color 类型兼容校验（contract）', () => {
   it('continuous_color_field_fails_loud', () => {
-    const spec = specOf({ type: 'point', kind: 'data', encodings: { color: 'v', position: { x: 'x', y: 'y' } } });
+    const spec = specOf({
+      type: 'point',
+      encodings: { color: 'v', position: { x: { field: 'x' }, y: { field: 'y' } } },
+    });
 
     expect(() =>
       expandOf(spec, {
@@ -248,7 +266,10 @@ describe('color 类型兼容校验（contract）', () => {
   });
 
   it('temporal_color_field_fails_loud', () => {
-    const spec = specOf({ type: 'point', kind: 'data', encodings: { color: 'date', position: { x: 'x', y: 'y' } } });
+    const spec = specOf({
+      type: 'point',
+      encodings: { color: 'date', position: { x: { field: 'x' }, y: { field: 'y' } } },
+    });
 
     expect(() =>
       expandOf(spec, {
@@ -266,8 +287,12 @@ describe('series + color 冲突（contract）', () => {
     // series=city 但 color=shade 在同一 city 内多值 → fail-loud
     const spec = specOf({
       type: 'path',
-      kind: 'data',
-      encodings: { series: 'city', order: 't', color: { field: 'shade', scale: 'col' }, position: { x: 't', y: 'v' } },
+      encodings: {
+        series: 'city',
+        order: 't',
+        color: { field: 'shade', scale: 'col' },
+        position: { x: { field: 't' }, y: { field: 'v' } },
+      },
     });
     const data = [
       { t: 0, v: 1, city: 'X', shade: 'a' },
@@ -280,8 +305,12 @@ describe('series + color 冲突（contract）', () => {
   it('color_equals_series_field_ok', () => {
     const spec = specOf({
       type: 'path',
-      kind: 'data',
-      encodings: { series: 'city', order: 't', color: { field: 'city', scale: 'col' }, position: { x: 't', y: 'v' } },
+      encodings: {
+        series: 'city',
+        order: 't',
+        color: { field: 'city', scale: 'col' },
+        position: { x: { field: 't' }, y: { field: 'v' } },
+      },
     });
 
     expect(() => expandOf(spec, { d: SERIES_DATA })).not.toThrow();
