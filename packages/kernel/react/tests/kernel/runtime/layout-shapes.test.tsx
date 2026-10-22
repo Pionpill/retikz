@@ -1,13 +1,11 @@
 import type { BoundaryDefinition, ClipDefinition, IRScene, ScenePrimitive, ShapeDefinition } from '@retikz/core';
-import { defineBoundary, defineClip, defineShape, localToWorld, worldToLocal } from '@retikz/core';
+import { defineBoundary, defineClip, defineShape } from '@retikz/core';
+import { localToWorld, worldToLocal } from '@retikz/math';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
-import { Layout } from '../../../src/kernel';
-import { Node } from '../../../src/kernel';
-import { Path } from '../../../src/kernel';
-import { Step } from '../../../src/kernel';
+import { Layout, Node, Path, Step } from '../../../src/kernel';
 
 /**
  * <Layout shapes={...}> 自定义 shape 注入透传

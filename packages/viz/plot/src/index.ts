@@ -59,7 +59,7 @@ export {
   applyPathChannelDeliveries,
   assertUniqueAxisDimension,
   assertUniqueAxisPlacement,
-  attachDatumAnchor,
+  attachMarkAnchor,
   attachDatumLabel,
   attachMarkLayer,
   axisPlacementKeyOf,
@@ -165,3 +165,5 @@ export {
 export type { PlotFacetCompositionResolveContext } from './resolve';
 export { mergePlotDefaults, resolvePlotFacetComposition, resolvePlotTheme } from './resolve';
 export * from './schemas';
+export {} from './schemas';
+export type {} from './schemas';

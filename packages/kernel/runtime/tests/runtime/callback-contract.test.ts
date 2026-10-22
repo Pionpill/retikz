@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { RetikzRuntimeErrorCode, RuntimeDiagnosticCode } from '../../src';
+import { RetikzRuntimeErrorCode, BuiltinRuntimeDiagnosticCode } from '../../src';
 import type { RuntimeComputationDefinitionInput, RuntimeComputationWarningInput } from '../../src/computation';
 import { defineRuntimeComputation, RuntimeComputationKind } from '../../src/computation';
 import { createRuntimeSourceRegistry, createRuntimeComputationRegistry } from '../../src/registry';
@@ -255,7 +255,7 @@ describe('runtime callback contract', () => {
     });
 
     expect(runtime.diagnostics()).toEqual([
-      expect.objectContaining({ code: RuntimeDiagnosticCode.TraceInvalidRecord, severity: 'error' }),
+      expect.objectContaining({ code: BuiltinRuntimeDiagnosticCode.TraceInvalidRecord, severity: 'error' }),
     ]);
   });
 });

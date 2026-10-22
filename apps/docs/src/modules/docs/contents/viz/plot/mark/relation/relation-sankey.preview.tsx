@@ -3,7 +3,7 @@ import { Layout } from '@retikz/react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
 
-import { sankeyData } from './relation-sankey.data';
+import { sankeyNodes, sankeyRelations } from './relation-sankey.data';
 
 /** 图形参数 */
 export type RelationSankeyPreviewValues = {
@@ -17,35 +17,46 @@ export type RelationSankeyPreviewValues = {
 /** 绘制示例图形 */
 export const RelationSankeyPreview = (values: RelationSankeyPreviewValues) => (
   <Layout viewBox={{ x: 0, y: 0, width: 620, height: 360 }}>
-    <Plot data={sankeyData} width={620} height={320} position={[0, 42]}>
+    <Plot data={sankeyRelations} width={620} height={320} position={[0, 42]}>
       <RelationMark
-        kind="ribbon"
-        source={{ project: { x: 'sourceX', y: 'sourceY' } }}
-        target={{ project: { x: 'targetX', y: 'targetY' } }}
-        style={{
-          fill: { kind: 'field', value: 'flowFill' },
-          stroke: { kind: 'constant', value: 'none' },
-          opacity: { fill: { kind: 'constant', value: values.opacity } },
+        encodings={{
+          source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
+          target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
+          fill: 'flowFill',
+          geometry: { width: 'width' },
         }}
-        ribbon={{
-          width: { kind: 'field', value: 'width' },
-          options: { sampling: { kind: 'fixed', samples: values.samples }, align: 'center' },
+        properties={{
+          stroke: 'none',
+          opacity: { fill: values.opacity },
+          geometry: {
+            kind: 'ribbon',
+            options: { sampling: { kind: 'fixed', samples: values.samples }, align: 'center' },
+          },
         }}
       />
+      <PlotScale dimension="x" type="linear" domain={[0, 3]} domainPadding={0} />
+      <PlotScale dimension="y" type="linear" domain={[0, 100]} domainPadding={0} />
+    </Plot>
+    <Plot data={sankeyNodes} width={620} height={320} position={[0, 42]}>
       <IntervalMark
-        bounds={{
-          x: { kind: 'extent', from: 'nodeX0', to: 'nodeX1' },
-          y: { kind: 'extent', from: 'nodeY0', to: 'nodeY1' },
+        encodings={{
+          bounds: {
+            x: { from: { field: 'nodeX0' }, to: { field: 'nodeX1' } },
+            y: { from: { field: 'nodeY0' }, to: { field: 'nodeY1' } },
+          },
+          fill: 'nodeFill',
+          label: { content: 'nodeLabel' },
         }}
-        fill="nodeFill"
-        stroke="#ffffff"
-        strokeWidth={values.nodeStrokeWidth}
-        label={{
-          field: 'nodeLabel',
-          position: values.nodeLabelPosition,
-          distance: values.nodeLabelDistance,
-          textColor: 'currentColor',
-          font: { size: 11, weight: 'bold' },
+        properties={{
+          bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } },
+          stroke: '#ffffff',
+          strokeWidth: values.nodeStrokeWidth,
+          label: {
+            position: values.nodeLabelPosition,
+            distance: values.nodeLabelDistance,
+            textColor: 'currentColor',
+            font: { size: 11, weight: 'bold' },
+          },
         }}
       />
       <PlotScale dimension="x" type="linear" domain={[0, 3]} domainPadding={0} />

@@ -1,19 +1,19 @@
-import type { CoreDependencyProvider, Rect, ScenePrimitive } from '@retikz/core';
+import type { CoreDependencyProvider, ScenePrimitive } from '@retikz/core';
 import {
-  boundaryFromContour,
   CenterAnchor,
+  boundaryFromContour,
   contourCommands,
   contourToPathCommands,
   contourToPathPrimitive,
   defineShape,
   isDirectionalAnchor,
-  localToWorld,
   pointsConnectionEnvelope,
   rect,
   verticesToSegments,
 } from '@retikz/core';
 import { PositiveNumberSchema } from '@retikz/foundation';
-import type { Position } from '@retikz/math';
+import { localToWorld } from '@retikz/math';
+import type { CenteredBox, Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { strictObject, union } from 'zod';
 
@@ -112,13 +112,13 @@ const crossGeometry = (
 };
 
 /** 将 Cross 的局部轮廓转换为相对外接矩形中心的坐标 */
-const crossLocalVertices = (bounds: Rect, params: CrossShapeParams): Array<Position> => {
+const crossLocalVertices = (bounds: CenteredBox, params: CrossShapeParams): Array<Position> => {
   const geometry = crossGeometry(params, bounds.width / 2, bounds.height / 2);
   return geometry.vertices.map(([x, y]) => [x - geometry.offset[0], y - geometry.offset[1]]);
 };
 
 /** 将 Cross 的局部轮廓转换为世界坐标 */
-const crossVertices = (bounds: Rect, params: CrossShapeParams): Array<Position> =>
+const crossVertices = (bounds: CenteredBox, params: CrossShapeParams): Array<Position> =>
   crossLocalVertices(bounds, params).map(point => localToWorld(bounds, point));
 
 /** 根据内容尺寸计算 Cross 的外接几何 */

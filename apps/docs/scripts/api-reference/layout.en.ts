@@ -1,5 +1,7 @@
 /** 经核对的 Layout API 英文说明，签名与标识符保持源码原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '自定义文字测量；省略时使用 Vanilla 的环境测量与估算降级':
+    'Custom text measurement; omitted uses Vanilla environment measurement with estimation when unavailable',
   缓动能力注册表: 'easing registry',
   '基线以上的高度；省略时由 normalizeTextMetrics 根据总高度与 descent 补齐，两者均省略时各取总高度的一半':
     'Height above the baseline; normalizeTextMetrics derives an omitted value from total height and descent, or assigns half the total height when both are omitted',

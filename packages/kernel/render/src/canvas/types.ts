@@ -1,6 +1,5 @@
-import type { RuntimeTraceReporter } from '@retikz/runtime';
-
 import type { AnimationPropertyRegistry, EasingRegistry } from '../animation';
+import type { RenderTraceReporter } from '../trace';
 
 /** Canvas renderer 暂不支持能力的降级类别 */
 export type UnsupportedCanvasFeature = 'paint' | 'clip' | 'animation';
@@ -35,7 +34,7 @@ export type PrimAnimationResolution =
 /** Canvas Scene 绘制选项 */
 export type DrawOptions = {
   /** 记录完整 Canvas draw 消费的 Scene primitive occurrence */
-  trace?: RuntimeTraceReporter<'@retikz/render:canvas'>;
+  trace?: RenderTraceReporter;
   /** 接收未支持能力的诊断告警；缺省写入 `console.warn` */
   warnUnsupported?: (warning: CanvasWarning) => void;
   /** 文本 primitive 未指定 fontFamily 时的默认 CSS font-family */

@@ -7,7 +7,7 @@
 retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR 描述节点、路径、箭头、图表等图元，编译成 renderer-agnostic 的 Scene，再交给 SVG / Canvas 等后端渲染。
 
 - Monorepo：pnpm workspace，glob 为 `packages/*/*` + `apps/*`
-- Kernel 组：`packages/kernel/{foundation,math,runtime,core,inspect,render,react,vanilla,tex}`，其中 `foundation` 是仅依赖 Zod 的跨包原子契约与基础 schema 底座，`math` 是零依赖计算底座，`runtime` 是增量执行与事务底座，`tex` 是可选 LaTeX 公式接入包
+- Kernel 组：`packages/kernel/{foundation,math,core,reconciler,inspect,render,react,vanilla,tex}`，其中 `foundation` 是仅依赖 Zod 的跨包原子契约与基础 schema 底座，`math` 是零依赖计算底座，`reconciler` 持有 Weave 编译状态与输出事务，`tex` 是可选 LaTeX 公式接入包
 - Viz 组：`packages/viz/{plot,plot-react,plot-vanilla}`，通过 core 的 composite / lowering 能力接入
 - Apps：`apps/docs` 文档站，`apps/eval` 评测工具
 
@@ -163,7 +163,7 @@ Control: <human-directed|llm-autonomous>
 
 - subject 只写改动内容，不写版本号、ADR 编号或“按 ADR 实现”；追溯信息放 footer。release / tag commit 可写版本。
 - `scope` 用包或分组名，不带 `@retikz/`：`core` / `render` / `react` / `vanilla` / `tex` / `plot` / `docs`。
-- 常用 emoji：🚧 开发、✨ 功能、🐛 修复、♻️ 重构、🚚 移动、📝 使用文档、📐 设计与规范（ADR、roadmap、架构设计与规范文档）、🔧 工程、🤖 LLM / Agent 流程、📦 打包、➕ 依赖、🔥 删除、🔖 发布、✅ 测试。
+- 常用 emoji：🚧 开发、✨ 功能、🐛 修复、♻️ 重构、🚚 移动、📝 使用文档、📐 设计与规范（ADR、roadmap、架构设计与规范文档）、🔧 工程、🤖 LLM / Agent 流程、📦 打包、➕ 依赖、🔥 删除、🔖 发布、✅ 功能测试、⏱️ 性能测试（基准用例、采样、预算与报告）、⚡ 性能优化（生产代码运行性能）。
 
 ## 分支策略
 

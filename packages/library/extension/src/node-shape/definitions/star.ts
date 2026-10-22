@@ -1,17 +1,16 @@
-import type { CoreDependencyProvider, Rect, ScenePrimitive, ShapeAnchorName } from '@retikz/core';
+import type { CoreDependencyProvider, ScenePrimitive, ShapeAnchorName } from '@retikz/core';
 import {
   boundaryFromContour,
   contourCommands,
   contourToPathCommands,
   contourToPathPrimitive,
   defineShape,
-  DEG_TO_RAD,
-  localToWorld,
   pointsConnectionEnvelope,
   verticesToSegments,
 } from '@retikz/core';
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
-import type { Position } from '@retikz/math';
+import { DEG_TO_RAD, localToWorld } from '@retikz/math';
+import type { CenteredBox, Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { number, strictObject } from 'zod';
 
@@ -71,7 +70,7 @@ const starGeometry = (params: StarShapeParams): StarGeometry => {
 };
 
 /** 星形局部顶点转换为世界坐标 */
-const worldVertices = (rect: Rect, geometry: StarGeometry): Array<Position> =>
+const worldVertices = (rect: CenteredBox, geometry: StarGeometry): Array<Position> =>
   geometry.vertices.map(vertex => localToWorld(rect, vertex));
 
 /** 可选 Star 形状 Definition */

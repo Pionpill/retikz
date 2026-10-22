@@ -36,16 +36,18 @@ const cartesianScaffoldSpec = {
   },
   marks: [
     {
+      contributeToDomain: true,
       type: 'point',
-      autoPadding: 'max-radius',
       coordinateView: 'events',
-      encoding: { x: { field: 'eventX' }, y: { field: 'eventY' } },
+      encodings: { position: { x: { field: 'eventX' }, y: { field: 'eventY' } } },
+      properties: { autoPadding: 'max-radius' },
     },
     {
+      contributeToDomain: true,
       type: 'point',
-      autoPadding: 'max-radius',
       coordinateView: 'volume',
-      encoding: { x: { field: 'volumeX' }, y: { field: 'volumeY' } },
+      encodings: { position: { x: { field: 'volumeX' }, y: { field: 'volumeY' } } },
+      properties: { autoPadding: 'max-radius' },
     },
   ],
   guides: [
@@ -80,16 +82,18 @@ const polarScaffoldSpec = {
   },
   marks: [
     {
+      contributeToDomain: true,
       type: 'point',
-      autoPadding: 'max-radius',
       coordinateView: 'inner',
-      encoding: { x: { field: 'angleA' }, y: { field: 'radiusA' } },
+      encodings: { position: { x: { field: 'angleA' }, y: { field: 'radiusA' } } },
+      properties: { autoPadding: 'max-radius' },
     },
     {
+      contributeToDomain: true,
       type: 'point',
-      autoPadding: 'max-radius',
       coordinateView: 'outer',
-      encoding: { x: { field: 'angleB' }, y: { field: 'radiusB' } },
+      encodings: { position: { x: { field: 'angleB' }, y: { field: 'radiusB' } } },
+      properties: { autoPadding: 'max-radius' },
     },
   ],
 };
@@ -327,7 +331,10 @@ describe('track placement containment', () => {
         ...cartesianScaffoldSpec,
         marks: cartesianScaffoldSpec.marks.map(mark => ({
           ...mark,
-          placement: { adjustments: [{ kind: 'jitter', role: 'y', span: 20, seed: 7 }] },
+          properties: {
+            ...mark.properties,
+            placement: { adjustments: [{ kind: 'jitter', role: 'y', span: 20, seed: 7 }] },
+          },
         })),
       },
       true,

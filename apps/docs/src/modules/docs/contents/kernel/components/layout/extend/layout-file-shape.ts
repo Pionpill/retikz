@@ -1,13 +1,7 @@
-import type { IRPosition, PathCommand, Rect, ShapeDefinition } from '@retikz/core';
-import {
-  CenterAnchor,
-  DEFAULT_EPSILON,
-  defineShape,
-  isDirectionalAnchor,
-  localToWorld,
-  rect,
-  worldToLocal,
-} from '@retikz/core';
+import type { IRPosition, PathCommand, ShapeDefinition } from '@retikz/core';
+import { CenterAnchor, defineShape, isDirectionalAnchor, rect } from '@retikz/core';
+import { DEFAULT_EPSILON, localToWorld, worldToLocal } from '@retikz/math';
+import type { CenteredBox } from '@retikz/math';
 import { z } from 'zod';
 
 type Position = IRPosition;
@@ -19,7 +13,7 @@ export const FileShapeName = 'drawio-file';
 const cross = (a: Position, b: Position): number => a[0] * b[1] - a[1] * b[0];
 
 /** 根据外接框生成顺时针折角文件轮廓 */
-const createFileVertices = (bounds: Rect): Array<Position> => {
+const createFileVertices = (bounds: CenteredBox): Array<Position> => {
   const halfWidth = bounds.width / 2;
   const halfHeight = bounds.height / 2;
   const foldSize = Math.min(bounds.width, bounds.height) * 0.28;
@@ -60,7 +54,7 @@ const findFileBoundaryPoint = (vertices: Array<Position>, direction: Position): 
 
 /** 将局部点序列转成 Scene path commands */
 const toPathCommands = (
-  bounds: Rect,
+  bounds: CenteredBox,
   points: Array<Position>,
   round: (value: number) => number,
   close = false,

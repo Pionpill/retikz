@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import { CompileWarningCode } from '../../src/compile/constants';
+import { BuiltinCompileWarningCode } from '../../src/compile/constants';
 import type { LowerTex } from '../../src/compile/text';
 import type { CompileWarning } from '../../src/compile/warning';
 import type { PathPrim, ScenePrimitive, TextPrim } from '../../src/contract';
@@ -121,7 +121,7 @@ f'(x) &= 2ax + b
   it('warns on an unbalanced `$` but keeps the text', () => {
     const { warnings } = compile([{ type: 'node', id: 'a', position: [0, 0], text: 'a $x' } as never]);
 
-    expect(warnings.some(w => w.code === CompileWarningCode.TextTexParseError)).toBe(true);
+    expect(warnings.some(w => w.code === BuiltinCompileWarningCode.TextTexParseError)).toBe(true);
   });
 
   it('warns and skips an invalid tex run, keeping the rest of the line', () => {
@@ -129,7 +129,7 @@ f'(x) &= 2ax + b
       { type: 'node', id: 'a', position: [0, 0], text: 'ok $INVALID$ done' } as never,
     ]);
 
-    expect(warnings.some(w => w.code === CompileWarningCode.TexInvalid)).toBe(true);
+    expect(warnings.some(w => w.code === BuiltinCompileWarningCode.TexInvalid)).toBe(true);
     expect(glyphPaths(primitives).length).toBe(0);
     expect(textPrims(primitives).length).toBeGreaterThan(0);
   });

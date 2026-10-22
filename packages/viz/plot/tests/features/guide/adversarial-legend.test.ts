@@ -114,8 +114,7 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 't', scale: 'c' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: { color: { field: 't', scale: 'c' }, position: { x: { field: 'lon' }, y: { field: 'lat' } } },
         },
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'c' }],
@@ -154,8 +153,7 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'kind', scale: 'kc' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: { color: { field: 'kind', scale: 'kc' }, position: { x: { field: 'lon' }, y: { field: 'lat' } } },
         },
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'kc' }],
@@ -194,8 +192,7 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 't', scale: 'c' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: { color: { field: 't', scale: 'c' }, position: { x: { field: 'lon' }, y: { field: 'lat' } } },
         },
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'c' }],
@@ -229,8 +226,7 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'kind', scale: 'kc' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: { color: { field: 'kind', scale: 'kc' }, position: { x: { field: 'lon' }, y: { field: 'lat' } } },
         },
       ],
       guides: [
@@ -285,9 +281,11 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'kind', scale: 'kc' },
-          size: { kind: 'field', value: 'lon' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: {
+            color: { field: 'kind', scale: 'kc' },
+            size: 'lon',
+            position: { x: { field: 'lon' }, y: { field: 'lat' } },
+          },
         },
       ],
       guides: [
@@ -320,8 +318,7 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 't', scale: 'c' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: { color: { field: 't', scale: 'c' }, position: { x: { field: 'lon' }, y: { field: 'lat' } } },
         },
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'c', ticks: { count: -3 } }],
@@ -341,7 +338,7 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'lon' }, y: { field: 'lat' } } } }],
       guides: [{ type: 'legend', channel: 'colour' }],
     };
     const parsed = PlotSchema.parse(bad);
@@ -359,7 +356,7 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'lon' }, y: { field: 'lat' } } } }],
       guides: [{ type: 'legend' }],
     };
 
@@ -378,7 +375,7 @@ describe('[adversarial] legend — channel 未编码 / 消歧（攻击面 5）',
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'lon' }, y: { field: 'lat' } } } }],
       guides: [{ type: 'legend', channel: 'size' }],
     });
 
@@ -395,7 +392,7 @@ describe('[adversarial] legend — channel 未编码 / 消歧（攻击面 5）',
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'lon' }, y: { field: 'lat' } } } }],
       guides: [{ type: 'legend', channel: 'color' }],
     });
 
@@ -417,8 +414,7 @@ describe('[adversarial] legend — channel 未编码 / 消歧（攻击面 5）',
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'kind', scale: 'kc' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: { color: { field: 'kind', scale: 'kc' }, position: { x: { field: 'lon' }, y: { field: 'lat' } } },
         },
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'x' }],
@@ -465,8 +461,7 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'v', scale: 'c' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: { color: { field: 'v', scale: 'c' }, position: { x: { field: 'lon' }, y: { field: 'lat' } } },
         },
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'c' }],
@@ -511,8 +506,7 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'v', scale: 'c' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: { color: { field: 'v', scale: 'c' }, position: { x: { field: 'lon' }, y: { field: 'lat' } } },
         },
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'c' }],
@@ -553,8 +547,7 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'kind', scale: 'kc' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: { color: { field: 'kind', scale: 'kc' }, position: { x: { field: 'lon' }, y: { field: 'lat' } } },
         },
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'kc' }],
@@ -584,9 +577,7 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [
-        { type: 'point', size: { kind: 'field', value: 'p' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } },
-      ],
+      marks: [{ type: 'point', encodings: { size: 'p', position: { x: { field: 'lon' }, y: { field: 'lat' } } } }],
       guides: [{ type: 'legend', channel: 'size' }],
     });
 
@@ -627,8 +618,7 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
       marks: [
         {
           type: 'point',
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
-          opacity: { overall: { kind: 'field', value: 'o' } },
+          encodings: { position: { x: { field: 'lon' }, y: { field: 'lat' } }, opacity: { overall: 'o' } },
         },
       ],
       guides: [{ type: 'legend', channel: 'opacity' }],
@@ -678,8 +668,7 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 't', scale: 'c' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: { color: { field: 't', scale: 'c' }, position: { x: { field: 'lon' }, y: { field: 'lat' } } },
         },
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'c', ticks: { count: 1 } }],
@@ -728,8 +717,7 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 't', scale: 'c' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: { color: { field: 't', scale: 'c' }, position: { x: { field: 'lon' }, y: { field: 'lat' } } },
         },
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'c', ticks: { count: 1000 } }],
@@ -759,8 +747,7 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'kind', scale: 'kc' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: { color: { field: 'kind', scale: 'kc' }, position: { x: { field: 'lon' }, y: { field: 'lat' } } },
         },
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'kc' }],
@@ -797,8 +784,7 @@ describe('[adversarial] legend × 默认 axes / polar（攻击面 9）', () => {
       marks: [
         {
           type: 'point',
-          color: { kind: 'field', value: 'kind', scale: 'kc' },
-          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          encodings: { color: { field: 'kind', scale: 'kc' }, position: { x: { field: 'lon' }, y: { field: 'lat' } } },
         },
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'kc', position: 'right' }],

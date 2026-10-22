@@ -29,31 +29,30 @@ const fillGradient: IRPaint = {
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const mode = values[LINE_PAINT_CONTROL_IDS.mode];
-  const stroke =
-    mode === 'gradient' ? strokeGradient : { kind: 'constant' as const, value: values[LINE_PAINT_CONTROL_IDS.stroke] };
+  const stroke = mode === 'gradient' ? strokeGradient : values[LINE_PAINT_CONTROL_IDS.stroke];
 
   return (
     <Plot data={revenue} width={560} height={240}>
       {mode === 'area' ? (
         <PathMark
-          x="month"
-          y="revenue"
-          order="month"
-          closure={{ kind: 'baseline' }}
-          fill={fillGradient}
-          stroke="none"
-          opacity={values[LINE_PAINT_CONTROL_IDS.opacity]}
+          encodings={{ order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
+          properties={{
+            closure: { kind: 'baseline' },
+            fill: fillGradient,
+            stroke: 'none',
+            opacity: { overall: values[LINE_PAINT_CONTROL_IDS.opacity] },
+          }}
         />
       ) : null}
       <PathMark
-        x="month"
-        y="revenue"
-        order="month"
-        stroke={stroke}
-        strokeWidth={values[LINE_PAINT_CONTROL_IDS.strokeWidth]}
-        opacity={values[LINE_PAINT_CONTROL_IDS.opacity]}
-        lineCap="round"
-        lineJoin="round"
+        encodings={{ order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
+        properties={{
+          lineCap: 'round',
+          lineJoin: 'round',
+          stroke,
+          strokeWidth: values[LINE_PAINT_CONTROL_IDS.strokeWidth],
+          opacity: { overall: values[LINE_PAINT_CONTROL_IDS.opacity] },
+        }}
       />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />

@@ -1,13 +1,11 @@
-import { CoreTraceUnit } from '@retikz/core';
 import type { IRDropShadow, ResolvedArrowEnd, Scene, ScenePrimitive } from '@retikz/core';
-import type { RuntimeTraceReporter } from '@retikz/runtime';
-import { PerformanceTraceOutcome } from '@retikz/runtime';
 
 import type { EasingRegistry } from '../../animation';
 import type { StaticRenderFrame } from '../../runtime';
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '../../runtime';
 import { countScenePrimitiveOccurrences } from '../../shared';
-import { RenderTracePhase } from '../../trace';
+import type { RenderTraceReporter } from '../../trace';
+import { RenderTracePhase, RenderTraceUnit } from '../../trace';
 import { createSvgAnimationCollector } from '../animation';
 import { toSafeSvgToken } from '../safe-token';
 import type { SvgNode } from '../types';
@@ -29,6 +27,8 @@ export type BuildDocumentOptions = {
    *   caller 注入（React 用剥冒号的 `useId()`；SSR / Vanilla 显式给）
    */
   idPrefix: string;
+  /** 根 SVG 的默认字体族；文字自身指定的字体族优先 */
+  defaultFontFamily?: string;
   /**
    * 是否产出动画（缺省 true）；`false` → 不 emit `<style>` / WAAPI 描述，渲染 base 静态图（settled 不变量）
    * @description runtime 据 `{animate:false}` / `prefers-reduced-motion` 走静态路径时传 false
@@ -44,7 +44,7 @@ export type BuildDocumentOptions = {
    */
   snapshotAt?: number;
   /** 记录完整 SVG document build 消费的 Scene primitive occurrence */
-  trace?: RuntimeTraceReporter<'@retikz/render:svg'>;
+  trace?: RenderTraceReporter;
 };
 
 /** 按 idPrefix 派生确定性的资源 id / 引用回调，并组装 builder context */
@@ -177,7 +177,10 @@ export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: BuildDo
   const layers = validateReadonlyLayers(frame.layers);
   const document: SvgNode = {
     tag: 'svg',
-    attrs: { viewBox: formatViewBox(scene.layout) },
+    attrs: {
+      viewBox: formatViewBox(scene.layout),
+      ...(options.defaultFontFamily ? { 'font-family': options.defaultFontFamily } : {}),
+    },
     children: [
       ...buildSvgFragment(scene, options),
       ...layers.map(layer =>
@@ -195,14 +198,18 @@ export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: BuildDo
   };
   if (options.trace !== undefined) {
     const visited = countScenePrimitiveOccurrences(scene.primitives);
-    options.trace.report({
-      phase: RenderTracePhase.Commit,
-      unit: CoreTraceUnit.ScenePrimitive,
-      outcome: PerformanceTraceOutcome.Full,
-      visited,
-      reused: 0,
-      changed: visited,
-    });
+    try {
+      options.trace.report({
+        phase: RenderTracePhase.Commit,
+        unit: RenderTraceUnit.ScenePrimitive,
+        outcome: 'full',
+        visited,
+        reused: 0,
+        changed: visited,
+      });
+    } catch {
+      /* 观测失败不影响绘制结果 */
+    }
   }
 
   return document;

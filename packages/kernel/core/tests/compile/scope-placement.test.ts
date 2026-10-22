@@ -196,9 +196,9 @@ describe('Scope anchor position 两阶段布局', () => {
         },
       ],
     ],
-  ] as const)('%s Scope target fail-loud，不读取未完成 placeholder', (_name, children) => {
+  ] as const)('%s Scope target fail-loud，不读取未完成 placeholder', (name, children) => {
     expect(() => compileToScene(scene(children as unknown as IRScene['children'])).scene).toThrow(
-      /scope position target/i,
+      name === 'ancestor placeholder' ? /ancestor Scope.*outer/ : /scope position target/i,
     );
   });
 

@@ -6,27 +6,23 @@ import {
   PositiveNumberSchema,
 } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
-import { array, enum as zodEnum, literal, object, strictObject, union, unknown } from 'zod';
+import { array, enum as zodEnum, literal, strictObject, union, unknown } from 'zod';
 
 import { DrawableInstanceSchema, DrawableStyleSchema } from '../../drawable';
 import { AngleDegreesSchema } from '../../scalar';
 import { StrokeCapJoinSchema, StrokeStyleSchema } from '../../stroke';
 import { ArrowEndDetailSchema } from '../arrow';
-import { GeometryLabelSchema, StepSchema } from '../step';
+import { PathLabelSchema, StepSchema } from '../step';
 import { PathFillRule, BuiltinPathKind } from './constants';
 
 /** 校验路径内部区域的填充规则 */
 export const PathFillRuleSchema = zodEnum(PathFillRule).describe('Path fill rule keyword.');
 
-const PathKindSchema = createOpenStringSchema(BuiltinPathKind);
-
 /** 校验 x 与 y 轴独立指定的路径缩放倍率 */
-export const PathAnisotropicScaleSchema = object({
+export const PathAnisotropicScaleSchema = strictObject({
   x: PositiveNumberSchema.describe('Scale factor on the x axis.'),
   y: PositiveNumberSchema.describe('Scale factor on the y axis.'),
-})
-  .strict()
-  .describe('Anisotropic scale with independent x / y factors.');
+}).describe('Anisotropic scale with independent x / y factors.');
 
 /** 校验围绕路径包围盒中心进行的统一或双轴缩放 */
 export const PathScaleSchema = union([PositiveNumberSchema, PathAnisotropicScaleSchema]).describe(
@@ -49,7 +45,7 @@ export const ArrowMarkSchema = ArrowEndDetailSchema.extend({
   );
 
 /** 校验路径上的单个标记位置与端点重叠策略 */
-export const PathMarkPlacementSchema = object({
+export const PathMarkPlacementSchema = strictObject({
   pos: NormalizedFractionSchema.describe(
     'Normalized position along the path. Parameter meaning matches step labels: arc length for line-like steps and Bezier parameter for curve-like steps.',
   ),
@@ -59,9 +55,7 @@ export const PathMarkPlacementSchema = object({
   mark: ArrowMarkSchema.describe(
     'The mark to place at this position; currently an arrow tip oriented by the path tangent.',
   ),
-})
-  .strict()
-  .describe('One mark placement along the path.');
+}).describe('One mark placement along the path.');
 
 /** 校验路径填充区域的环绕判定字段 */
 export const PathFillSchema = strictObject({
@@ -94,7 +88,7 @@ export const PathGeometrySchema = strictObject({
 
 /** 校验附着于路径宿主的标签与沿路径标记 */
 export const PathDecorationSchema = strictObject({
-  label: union([GeometryLabelSchema, array(GeometryLabelSchema).min(1)])
+  label: union([PathLabelSchema, array(PathLabelSchema).min(1)])
     .optional()
     .describe('Host label attached to this path-like relation.'),
   marks: array(PathMarkPlacementSchema)
@@ -105,7 +99,9 @@ export const PathDecorationSchema = strictObject({
 /** 校验开放路径种类的判别字段和能力选项 */
 export const PathStructureSchema = strictObject({
   type: literal('path').describe('Discriminator marking this child as a path.'),
-  kind: PathKindSchema.optional().describe('Path kind provider name. Omitted means built-in `stroke`.'),
+  kind: createOpenStringSchema(BuiltinPathKind)
+    .optional()
+    .describe('Path kind provider name. Omitted means built-in `stroke`.'),
   kindOptions: JsonObjectSchema.optional().describe(
     'JSON-safe option object consumed by the selected path kind provider.',
   ),

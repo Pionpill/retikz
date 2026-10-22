@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { defineRuntimeCommitParticipant, RetikzRuntimeErrorCode, RuntimeDiagnosticCode } from '../../src';
+import { defineRuntimeCommitParticipant, RetikzRuntimeErrorCode, BuiltinRuntimeDiagnosticCode } from '../../src';
 import type { RuntimeCommitEvent, RuntimeComputationTraceReporter } from '../../src/computation';
 import { defineRuntimeComputation, RuntimeComputationKind, RuntimeComputationPhase } from '../../src/computation';
 import { RetikzRuntimeError } from '../../src/error';
@@ -85,21 +85,21 @@ describe('runtime runtime diagnostics', () => {
 
     expect(result.diagnostics).toEqual([
       expect.objectContaining({
-        code: RuntimeDiagnosticCode.TraceInvalidRecord,
+        code: BuiltinRuntimeDiagnosticCode.TraceInvalidRecord,
         phase: 'trace',
         severity: 'error',
         owner: 'counter',
         computation: { owner: 'counter', key: 'a' },
       }),
       expect.objectContaining({
-        code: RuntimeDiagnosticCode.TraceInvalidRecord,
+        code: BuiltinRuntimeDiagnosticCode.TraceInvalidRecord,
         phase: 'trace',
         severity: 'error',
         owner: 'counter',
         computation: { owner: 'counter', key: 'a' },
       }),
       expect.objectContaining({
-        code: RuntimeDiagnosticCode.ComputationObserverFailed,
+        code: BuiltinRuntimeDiagnosticCode.ComputationObserverFailed,
         phase: 'observe',
         cause: observerCause,
       }),
@@ -158,7 +158,7 @@ describe('runtime runtime diagnostics', () => {
       update: (_previous, view, context) => {
         const diagnose = context.diagnose as (diagnostic: unknown) => void;
         diagnose({
-          code: RuntimeDiagnosticCode.TraceInvalidRecord,
+          code: BuiltinRuntimeDiagnosticCode.TraceInvalidRecord,
           phase: 'trace',
           message: 'discard me',
           severity: 'error',
@@ -211,9 +211,9 @@ describe('runtime runtime diagnostics', () => {
         code: RetikzRuntimeErrorCode.ComputationUpdateFailed,
         cause: updateCause,
         diagnostics: [
-          expect.objectContaining({ code: RuntimeDiagnosticCode.TraceInvalidRecord }),
+          expect.objectContaining({ code: BuiltinRuntimeDiagnosticCode.TraceInvalidRecord }),
           expect.objectContaining({
-            code: RuntimeDiagnosticCode.ResultDisposeFailed,
+            code: BuiltinRuntimeDiagnosticCode.ResultDisposeFailed,
             cause: disposeCause,
           }),
         ],
@@ -383,7 +383,7 @@ describe('runtime runtime diagnostics', () => {
     ]);
     expect(runtime.diagnostics()).toEqual([
       expect.objectContaining({
-        code: RuntimeDiagnosticCode.SourceDisposeFailed,
+        code: BuiltinRuntimeDiagnosticCode.SourceDisposeFailed,
         severity: 'error',
         owner: 'counter',
         cause: expect.objectContaining({ code: RetikzRuntimeErrorCode.Reentrant }),
@@ -466,15 +466,15 @@ describe('runtime runtime diagnostics', () => {
     expect(cleanupOrder).toEqual(['computation:b', 'computation:a', 'owner:b', 'owner:a']);
     expect(runtime.diagnostics()).toEqual([
       expect.objectContaining({
-        code: RuntimeDiagnosticCode.ResultDisposeFailed,
+        code: BuiltinRuntimeDiagnosticCode.ResultDisposeFailed,
         computation: { owner: 'b', key: 'derive' },
       }),
       expect.objectContaining({
-        code: RuntimeDiagnosticCode.ResultDisposeFailed,
+        code: BuiltinRuntimeDiagnosticCode.ResultDisposeFailed,
         computation: { owner: 'a', key: 'derive' },
       }),
-      expect.objectContaining({ code: RuntimeDiagnosticCode.SourceDisposeFailed, owner: 'b' }),
-      expect.objectContaining({ code: RuntimeDiagnosticCode.SourceDisposeFailed, owner: 'a' }),
+      expect.objectContaining({ code: BuiltinRuntimeDiagnosticCode.SourceDisposeFailed, owner: 'b' }),
+      expect.objectContaining({ code: BuiltinRuntimeDiagnosticCode.SourceDisposeFailed, owner: 'a' }),
     ]);
     expect(runtime.diagnostics()).toEqual([]);
   });
@@ -482,14 +482,14 @@ describe('runtime runtime diagnostics', () => {
   it.each([
     {
       name: 'sink throw',
-      expectedCode: RuntimeDiagnosticCode.TraceSinkFailed,
+      expectedCode: BuiltinRuntimeDiagnosticCode.TraceSinkFailed,
       createSink: () => () => {
         throw new Error('sink failed');
       },
     },
     {
       name: 'reentrant report',
-      expectedCode: RuntimeDiagnosticCode.TraceReentrant,
+      expectedCode: BuiltinRuntimeDiagnosticCode.TraceReentrant,
       createSink: (readReporter: () => RuntimeComputationTraceReporter | undefined) => () => {
         readReporter()?.report({
           phase: 'counter-evaluate',
@@ -590,7 +590,7 @@ describe('runtime runtime diagnostics', () => {
       outcome: RuntimeComputationKind.Bailout,
       diagnostics: [
         expect.objectContaining({
-          code: RuntimeDiagnosticCode.SourceDisposeFailed,
+          code: BuiltinRuntimeDiagnosticCode.SourceDisposeFailed,
           cause: disposeCause,
         }),
       ],
@@ -654,7 +654,7 @@ describe('runtime runtime diagnostics', () => {
         cause: captureCause,
         diagnostics: [
           expect.objectContaining({
-            code: RuntimeDiagnosticCode.SourceDisposeFailed,
+            code: BuiltinRuntimeDiagnosticCode.SourceDisposeFailed,
             owner: 'a',
             cause: disposeCause,
           }),
@@ -673,7 +673,7 @@ describe('runtime runtime diagnostics', () => {
 
     expect(queuedDiagnostics).toEqual([
       expect.objectContaining({
-        code: RuntimeDiagnosticCode.SourceDisposeFailed,
+        code: BuiltinRuntimeDiagnosticCode.SourceDisposeFailed,
         owner: 'a',
         cause: disposeCause,
       }),
@@ -745,11 +745,11 @@ describe('runtime runtime diagnostics', () => {
       expect.objectContaining({
         code: RetikzRuntimeErrorCode.ResultCaptureFailed,
         cause: captureCause,
-        diagnostics: [expect.objectContaining({ code: RuntimeDiagnosticCode.TraceInvalidRecord })],
+        diagnostics: [expect.objectContaining({ code: BuiltinRuntimeDiagnosticCode.TraceInvalidRecord })],
       }),
     );
     expect(runtime.diagnostics()).toEqual([
-      expect.objectContaining({ code: RuntimeDiagnosticCode.TraceInvalidRecord }),
+      expect.objectContaining({ code: BuiltinRuntimeDiagnosticCode.TraceInvalidRecord }),
     ]);
   });
 

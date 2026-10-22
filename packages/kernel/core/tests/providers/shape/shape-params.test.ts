@@ -1,5 +1,5 @@
 import type { JsonObject } from '@retikz/foundation';
-import type { Position } from '@retikz/math';
+import type { CenteredBox, Position } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 import type { ZodType } from 'zod';
 import { number, object, strictObject } from 'zod';
@@ -9,7 +9,6 @@ import type { ScenePrimitive, ShapeDefinition } from '../../../src/contract';
 import { defineShape } from '../../../src/contract';
 import type { IRScene } from '../../../src/schemas';
 import { NodeSchema, ShapeRefSchema, ShapeValueSchema } from '../../../src/schemas';
-import type { Rect } from '../../../src/shared/geometry';
 import { flattenPrims } from '../../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
@@ -24,9 +23,9 @@ const ringShape = (): ShapeDefinition =>
     name: 'ring',
     paramsSchema: strictObject({ r: number() }),
     circumscribe: (_hw, _hh, params) => ({ halfWidth: params.r, halfHeight: params.r }),
-    boundaryPoint: (rect: Rect, _toward: Position, params): Position => [rect.x + params.r, rect.y],
-    anchor: (rect: Rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
-    *emit(rect: Rect, _style, _round, params): Iterable<ScenePrimitive> {
+    boundaryPoint: (rect: CenteredBox, _toward: Position, params): Position => [rect.x + params.r, rect.y],
+    anchor: (rect: CenteredBox, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+    *emit(rect: CenteredBox, _style, _round, params): Iterable<ScenePrimitive> {
       yield {
         type: 'ellipse',
         cx: rect.x,
@@ -46,9 +45,9 @@ const looseShape = (): ShapeDefinition =>
     name: 'loose',
     paramsSchema: object({}).passthrough() as unknown as ZodType<JsonObject>,
     circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
-    boundaryPoint: (rect: Rect): Position => [rect.x, rect.y],
-    anchor: (rect: Rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
-    *emit(rect: Rect): Iterable<ScenePrimitive> {
+    boundaryPoint: (rect: CenteredBox): Position => [rect.x, rect.y],
+    anchor: (rect: CenteredBox, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+    *emit(rect: CenteredBox): Iterable<ScenePrimitive> {
       yield {
         type: 'rect',
         x: rect.x,

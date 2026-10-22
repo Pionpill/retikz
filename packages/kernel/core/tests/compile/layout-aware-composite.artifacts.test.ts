@@ -4,7 +4,7 @@ import { literal, number, strictObject } from 'zod';
 import type { IRChild, IRPaint, IRScene, LayoutChildResult, CompositeCompileContext, LayoutProposal } from '../../src';
 import {
   compileToScene,
-  CompileWarningCode,
+  BuiltinCompileWarningCode,
   CompositeBaseSchema,
   defineComposite,
   formatCompileOccurrence,
@@ -170,7 +170,7 @@ describe('layout-aware composite transactions and artifacts', () => {
     });
 
     expect(warnings).not.toContainEqual({
-      code: CompileWarningCode.TexLowererMissing,
+      code: BuiltinCompileWarningCode.TexLowererMissing,
     });
   });
 
@@ -294,7 +294,9 @@ describe('layout-aware composite transactions and artifacts', () => {
       },
     );
 
-    expect(warnings).toContainEqual(expect.objectContaining({ code: CompileWarningCode.UnresolvedNodeReference }));
+    expect(warnings).toContainEqual(
+      expect.objectContaining({ code: BuiltinCompileWarningCode.UnresolvedNodeReference }),
+    );
     expect(result.scene.primitives.some(primitive => primitive.type === 'path')).toBe(false);
   });
 

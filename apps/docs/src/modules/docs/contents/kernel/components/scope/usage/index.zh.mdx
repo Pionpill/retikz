@@ -155,6 +155,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 </DocTab>
 </DocTabs>
+Scope 的后代不能通过命名引用使用任一祖先 Scope 的中心、锚点或边界，包括嵌套 Node、Coordinate、Scope 和 Path；这类引用会抛出错误，即使 Path 延迟到包络完成后求值也不例外。外部 Path 仍可连接该 Scope，Scope 也仍可引用合法的外部 Node 定位，并用自身包络确定 pivot 或 selfAnchor。同名局部节点按命名空间正常解析，不因名称与祖先相同而被禁止。
 
 ## 何时使用
 

@@ -20,7 +20,7 @@ const relationMemberTypeLabels = {
   route: 'Array<IRGraphRelationRouteStep>',
   source: 'IRNodeTarget',
   target: 'IRNodeTarget',
-  labels: 'Array<IRGeometryLabel>',
+  labels: 'Array<IRPathLabel>',
   sourceMarker: 'IRGraphRelationMarkerAppearance',
   targetMarker: 'IRGraphRelationMarkerAppearance',
 } as const;

@@ -1,15 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { fallbackMeasurer, layoutInlineLine, snapshotLoweredTex } from '../../src/compile/text';
+import { emitInlineLine, fallbackMeasurer, layoutInlineLine, snapshotLoweredTex } from '../../src/compile/text';
 import type { GroupPrim, PathPrim } from '../../src/contract';
 
 describe('[tex-lowering] multi-path contract', () => {
   it('按 paint order 输出多条路径并解析宿主颜色与透明度', () => {
-    const line = layoutInlineLine([{ tex: 'x', fill: '#0af', opacity: 0.8 }], {
+    const line = layoutInlineLine([{ tex: 'x' }], {
       measureText: fallbackMeasurer,
       font: { size: 16 },
-      color: '#333',
-      opacity: 0.5,
       warn: () => undefined,
       lowerTex: () => ({
         paths: [
@@ -41,7 +39,13 @@ describe('[tex-lowering] multi-path contract', () => {
       }),
     });
 
-    const [group] = line.emit(0, 6, value => value) as Array<GroupPrim>;
+    const [group] = emitInlineLine(
+      line,
+      { color: '#333', opacity: 0.5, runs: [{ fill: '#0af', opacity: 0.8 }] },
+      0,
+      6,
+      value => value,
+    ) as Array<GroupPrim>;
 
     expect(group.children).toHaveLength(2);
 
@@ -86,7 +90,7 @@ describe('[tex-lowering] multi-path contract', () => {
       }),
     });
 
-    const [group] = line.emit(0, 1, value => value) as Array<GroupPrim>;
+    const [group] = emitInlineLine(line, { runs: [{}] }, 0, 1, value => value) as Array<GroupPrim>;
     const [path] = group.children as Array<PathPrim>;
 
     expect(path).not.toHaveProperty('fill');
@@ -117,7 +121,7 @@ describe('[tex-lowering] multi-path contract', () => {
     command.to[0] = 99;
     lowered.paths.length = 0;
 
-    const [group] = line.emit(0, 1, value => value) as Array<GroupPrim>;
+    const [group] = emitInlineLine(line, { runs: [{}] }, 0, 1, value => value) as Array<GroupPrim>;
     const [path] = group.children as Array<PathPrim>;
 
     expect(path.commands).toEqual([{ kind: 'move', to: [0, 0] }]);

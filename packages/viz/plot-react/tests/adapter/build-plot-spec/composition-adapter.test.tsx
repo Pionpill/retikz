@@ -23,8 +23,14 @@ describe('buildPlotIR composition adapter surface', () => {
   it('passes composition coordinateView and axis placement through schema', () => {
     const spec = buildPlotIR(
       <>
-        <PointMark coordinateView="temp" x="day" y="temperature" />
-        <IntervalMark coordinateView="rain" x="day" y="rainfall" />
+        <PointMark
+          coordinateView="temp"
+          encodings={{ position: { x: { field: 'day' }, y: { field: 'temperature' } } }}
+        />
+        <IntervalMark
+          coordinateView="rain"
+          encodings={{ position: { x: { field: 'day' }, y: { field: 'rainfall' } } }}
+        />
         <PlotAxis coordinateView="rain" dimension="y" placement={{ kind: 'side', side: 'right' }} title="Rainfall" />
       </>,
       'weather',
@@ -47,7 +53,10 @@ describe('buildPlotIR composition adapter surface', () => {
   it('passes axis grid target selectors through schema', () => {
     const spec = buildPlotIR(
       <>
-        <PointMark coordinateView="temp" x="day" y="temperature" />
+        <PointMark
+          coordinateView="temp"
+          encodings={{ position: { x: { field: 'day' }, y: { field: 'temperature' } } }}
+        />
         <PlotAxis
           coordinateView="temp"
           dimension="y"
@@ -77,7 +86,7 @@ describe('buildPlotIR composition adapter surface', () => {
       <>
         <PlotScale dimension="x" type="linear" />
         <PlotScale dimension="y" type="linear" />
-        <PointMark x="day" y="temperature" />
+        <PointMark encodings={{ position: { x: { field: 'day' }, y: { field: 'temperature' } } }} />
       </>,
       'weather',
       {
@@ -107,7 +116,7 @@ describe('buildPlotIR composition adapter surface', () => {
       <>
         <PlotScale dimension="x" type="linear" />
         <PlotScale dimension="y" type="linear" />
-        <PointMark coordinateView="events" x="week" y="count" />
+        <PointMark coordinateView="events" encodings={{ position: { x: { field: 'week' }, y: { field: 'count' } } }} />
       </>,
       'ops',
       {

@@ -307,7 +307,6 @@ After installing `@retikz/inspect`, use `InspectLayout` and `InspectPath` to dis
 | retikz                             | TikZ mapping                                      |
 | ---------------------------------- | ------------------------------------------------- |
 | `style.lineCap` / `style.lineJoin` | `line cap` / `line join`                          |
-| `ultraThin` … `ultraThick`         | `ultra thin` … `ultra thick`                      |
 | `marks` and endpoint arrows scale  | Mark and endpoint-arrow sizing follows line width |
 | `roundedCorners={r}`               | `rounded corners=<r>`                             |
 | `style.color`                      | `color=`                                          |
@@ -316,7 +315,7 @@ After installing `@retikz/inspect`, use `InspectLayout` and `InspectPath` to dis
 
 ## Styling
 
-Set `strokeWidth` directly or use the semantic `thickness` presets from `ultraThin` through `ultraThick`; an explicit `strokeWidth` wins. `dashOffset` shifts only the dash rhythm's origin. `lineCap` / `lineJoin` shape endpoints and corners; the panel keeps overall and stroke-opacity channels so each change remains directly observable.
+Set a numeric width with `style.strokeWidth`. `dashOffset` shifts only the dash rhythm's origin. `lineCap` / `lineJoin` shape endpoints and corners; the panel keeps overall and stroke-opacity channels so each change remains directly observable.
 
 <ComponentPreview
   files={['path-style', 'path-style.preview.tsx']}

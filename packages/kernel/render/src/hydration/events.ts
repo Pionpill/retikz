@@ -1,5 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { RuntimeIdentity } from '@retikz/runtime';
+import type { SceneIdentity } from '@retikz/reconciler';
 
 import type { HydrationContext } from './context';
 
@@ -64,9 +64,9 @@ export type HydrationHandlers = Record<string, ElementHandlers>;
 /** Retained hydration 命中的 runtime occurrence 与语义 owner */
 export type HydrationTarget = Readonly<{
   /** 图元在逻辑树中当前出现位置的身份 */
-  identity: RuntimeIdentity;
+  identity: SceneIdentity;
   /** 聚合多个 primitive 的 semantic owner identity */
-  semanticOwner: RuntimeIdentity;
+  semanticOwner: SceneIdentity;
   /** handler registry 使用的公开 id；anonymous occurrence 可缺省 */
   publicId?: string;
 }>;

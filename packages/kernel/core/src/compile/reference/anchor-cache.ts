@@ -40,7 +40,7 @@ const computeAnchor = (
 
 /** 不经过 WeakMap 缓存解析视觉 shape 的边上比例点 */
 const computeEdgePoint = (input: AnchorLayout, side: Side, fraction: number): IRPosition => {
-  const layout = 'node' in input ? nodeReferenceViewOf(input) : input;
+  const layout = 'geometry' in input ? nodeReferenceViewOf(input) : input;
   const { edgePoint } = layout.shapeDef;
   if (!edgePoint) {
     throw new RetikzCoreError(

@@ -28,20 +28,19 @@ export const renderCoordinatePolar = (values: CoordinatePolarValues) => (
   >
     <PlotScale dimension="y" type="linear" domainPadding={0} />
     {values.markType === 'point' ? (
-      <PointMark x="category" y="value" />
+      <PointMark encodings={{ position: { x: { field: 'category' }, y: { field: 'value' } } }} />
     ) : values.markType === 'line' ? (
       <PathMark
-        x="category"
-        y="value"
-        order="order"
-        closed
-        interpolation={values.markInterpolation === 'inherit' ? undefined : values.markInterpolation}
+        encodings={{ order: 'order', position: { x: { field: 'category' }, y: { field: 'value' } } }}
+        properties={{
+          closed: true,
+          interpolation: values.markInterpolation === 'inherit' ? undefined : values.markInterpolation,
+        }}
       />
     ) : (
       <IntervalMark
-        x="category"
-        y="value"
-        interpolation={values.markInterpolation === 'inherit' ? undefined : values.markInterpolation}
+        encodings={{ position: { x: { field: 'category' }, y: { field: 'value' } } }}
+        properties={{ interpolation: values.markInterpolation === 'inherit' ? undefined : values.markInterpolation }}
       />
     )}
     <PlotAxis dimension="x" />

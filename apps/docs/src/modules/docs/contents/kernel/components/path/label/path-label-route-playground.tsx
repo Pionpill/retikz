@@ -1,4 +1,4 @@
-import type { IRGeometryLabel } from '@retikz/core';
+import type { IRPathLabel } from '@retikz/core';
 import { Layout, Node, Path, Step } from '@retikz/react';
 import type { ReactNode } from 'react';
 
@@ -35,7 +35,7 @@ const routeStepOf = (route: PathLabelRoutePlaygroundValues['route']): ReactNode 
 };
 
 /** 将面板中的居中概念值转换为 Path label 的真实作者输入 */
-const labelOf = (values: PathLabelRoutePlaygroundValues, text: string): IRGeometryLabel => {
+const labelOf = (values: PathLabelRoutePlaygroundValues, text: string): IRPathLabel => {
   const base = {
     text,
     position: values.position,

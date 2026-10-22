@@ -1,4 +1,4 @@
-import type { IRPath, PathThickness, WayDSL } from '@retikz/core';
+import type { IRPath, WayDSL } from '@retikz/core';
 import type { InputPath } from '@retikz/vanilla';
 import type { FC } from 'react';
 
@@ -13,8 +13,6 @@ export type DrawProps = Readonly<{
   way: WayDSL;
   /** 折线拐角几何圆角半径 */
   roundedCorners?: IRPath['roundedCorners'];
-  /** 语义 stroke 档位糖 */
-  thickness?: PathThickness;
   /** 路径级箭头方向 */
   arrow?: PathProps['arrow'];
   /** 箭头详细配置 */

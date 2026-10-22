@@ -1,8 +1,8 @@
 import { mergeProperties } from '@retikz/foundation';
 
-import type { IRGeometryLabel, IRPathBase, IRPathStyle, IRStep } from '../../schemas';
+import type { IRPathLabel, IRPathBase, IRPathStyle, IRStep } from '../../schemas';
 import { resolvePathMarks } from './arrow';
-import { resolveGeometryLabel } from './label';
+import { resolvePathLabel } from './label';
 import { mergeGraphicStyle } from './opacity';
 import type { EffectiveLabelDefault, EffectiveScopeDefaults } from './types';
 
@@ -14,23 +14,23 @@ const resolveStepLabels = (
 ): Array<IRStep> =>
   children.map(step => {
     if ('label' in step && step.label !== undefined) {
-      return { ...step, label: resolveGeometryLabel(step.label, labelDefault, masterColor) };
+      return { ...step, label: resolvePathLabel(step.label, labelDefault, masterColor) };
     }
 
     return step;
   });
 
-const resolveGeometryLabelField = (
-  label: IRGeometryLabel | Array<IRGeometryLabel> | undefined,
+const resolvePathLabelField = (
+  label: IRPathLabel | Array<IRPathLabel> | undefined,
   labelDefault: EffectiveLabelDefault,
   masterColor: string | undefined,
-): IRGeometryLabel | Array<IRGeometryLabel> | undefined => {
+): IRPathLabel | Array<IRPathLabel> | undefined => {
   if (label === undefined) return undefined;
   if (Array.isArray(label)) {
-    return label.map(item => resolveGeometryLabel(item, labelDefault, masterColor));
+    return label.map(item => resolvePathLabel(item, labelDefault, masterColor));
   }
 
-  return resolveGeometryLabel(label, labelDefault, masterColor);
+  return resolvePathLabel(label, labelDefault, masterColor);
 };
 
 /** 解析 path 的最终样式 */
@@ -53,7 +53,7 @@ export const resolveEffectivePath = (path: IRPathBase, scopeDefaults: EffectiveS
     delete effective.children;
   }
 
-  const label = resolveGeometryLabelField(path.label, labelDefault, masterColor);
+  const label = resolvePathLabelField(path.label, labelDefault, masterColor);
   if (label !== undefined) effective.label = label;
 
   return effective;

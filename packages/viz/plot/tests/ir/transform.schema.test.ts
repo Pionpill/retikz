@@ -8,13 +8,13 @@ describe('TransformSchema external operations', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      transform: [{ operation: { kind: 'regression', x: 'year', y: 'value' } }],
+      transform: [{ operation: { kind: 'custom-regression', params: { x: 'year', y: 'value' } } }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
       ],
-      marks: [{ type: 'point', encoding: { x: { field: 'year' }, y: { field: 'value' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'year' }, y: { field: 'value' } } } }],
     };
 
     expect(PlotSchema.parse(spec).transform).toEqual(spec.transform);

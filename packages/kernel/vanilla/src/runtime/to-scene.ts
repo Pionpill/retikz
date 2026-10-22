@@ -60,8 +60,8 @@ export const prepareVanillaCompileInput = (
 /**
  * 入参归一成 `Scene`
  * @description 已是 `Scene`（有 `primitives`）直接用；InputScene 先规范化成 IR；
- *   否则当 `IRScene` 经 `compileToScene` 编译。`InputScene` 会先进入 processing 归一与 resolver。`options.compile` 原样透传（`measureText` 缺省时 core 回退
- *   `fallbackMeasurer`，Node 下确定可跑）
+ *   否则当 `IRScene` 经 `compileToScene` 编译。`InputScene` 会先进入 processing 归一与 resolver。
+ *   显式测量器优先，否则按需使用浏览器 Canvas；不可用时使用 Core 估算器
  */
 export const toSceneResult = (input: RenderInput, options: CommonOptions): SceneResult => {
   if ('primitives' in input) {

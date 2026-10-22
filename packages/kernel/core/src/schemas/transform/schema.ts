@@ -6,12 +6,14 @@ import { AbsoluteTargetSchema, PolarPositionSchema, PositionSchema } from '../po
 import { AngleDegreesSchema } from '../scalar';
 import { ScopeSelfPointSchema } from '../scope-point';
 
+/** 校验水平和竖直平移量 */
 const TranslateSchema = object({
   kind: literal('translate').describe('Discriminator for Cartesian translate.'),
   x: number().describe('Cartesian x translation in user units.'),
   y: number().describe('Cartesian y translation in user units (screen y-down).'),
 }).describe('Cartesian translate transform using user-unit x and y offsets.');
 
+/** 校验按角度和距离指定的平移 */
 const PolarTranslateSchema = object({
   kind: literal('polar-translate').describe('Discriminator for polar translate.'),
   origin: union([NonBlankStringSchema, PositionSchema, PolarPositionSchema])
@@ -25,6 +27,7 @@ const PolarTranslateSchema = object({
   ),
 }).describe('Polar translate transform lowered to Cartesian translate at compile time.');
 
+/** 校验相对已有节点的方向平移 */
 const AtTranslateSchema = object({
   kind: literal('at-translate').describe('Discriminator for direction-relative translate.'),
   direction: zodEnum(Anchor).describe('Canonical direction enum (8 values, shared with AtPosition.direction).'),
@@ -34,6 +37,7 @@ const AtTranslateSchema = object({
   ),
 }).describe('Direction-relative translate transform lowered to Cartesian translate at compile time.');
 
+/** 校验相对参考位置的坐标偏移 */
 const OffsetTranslateSchema = object({
   kind: literal('offset-translate').describe('Discriminator for offset-from-reference translate.'),
   of: union([NonBlankStringSchema, PositionSchema, PolarPositionSchema]).describe(
@@ -46,6 +50,7 @@ const OffsetTranslateSchema = object({
     ),
 }).describe('Offset translate transform lowered to Cartesian translate at compile time.');
 
+/** 校验按两点之间的比例指定的平移 */
 const BetweenTranslateSchema = object({
   kind: literal('between-translate').describe('Discriminator for proportional translate between two endpoints.'),
   between: tuple([AbsoluteTargetSchema, AbsoluteTargetSchema]).describe(
@@ -54,6 +59,7 @@ const BetweenTranslateSchema = object({
   fraction: NormalizedFractionSchema.describe('Proportion from the first endpoint to the second endpoint.'),
 }).describe('Proportional translate transform lowered to Cartesian translate at compile time.');
 
+/** 校验旋转角度与可选支点 */
 const RotateSchema = strictObject({
   kind: literal('rotate').describe('Discriminator: rotation about a point.'),
   degrees: AngleDegreesSchema.describe('Rotation angle in degrees; positive = visually clockwise under screen y-down.'),
@@ -62,6 +68,7 @@ const RotateSchema = strictObject({
   ),
 }).describe('Rotation transform around an intrinsic Scope self point.');
 
+/** 校验缩放倍率与可选支点 */
 const ScaleSchema = strictObject({
   kind: literal('scale').describe('Discriminator: uniform / anisotropic scale.'),
   x: number().describe('Scale factor on the x axis.'),

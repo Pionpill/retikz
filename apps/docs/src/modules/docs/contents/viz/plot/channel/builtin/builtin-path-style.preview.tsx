@@ -39,16 +39,16 @@ export const BuiltinPathStylePreview = (
       <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
       <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
       <PathMark
-        x="step"
-        y="value"
-        order="step"
-        stroke={{ kind: 'constant', value: values.stroke }}
-        strokeWidth={values.strokeWidth}
-        opacity={values.opacity}
-        dashPattern={dashPattern}
-        lineCap={values.lineCap}
-        lineJoin={values.lineJoin}
-        roundedCorners={values.roundedCorners}
+        encodings={{ order: 'step', position: { x: { field: 'step' }, y: { field: 'value' } } }}
+        properties={{
+          stroke: values.stroke,
+          strokeWidth: values.strokeWidth,
+          opacity: { overall: values.opacity },
+          dashPattern,
+          lineCap: values.lineCap,
+          lineJoin: values.lineJoin,
+          roundedCorners: values.roundedCorners,
+        }}
       />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />

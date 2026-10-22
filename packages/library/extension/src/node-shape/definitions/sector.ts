@@ -1,4 +1,4 @@
-import type { CoreDependencyProvider, Rect, ScenePrimitive, ShapeAnchorName } from '@retikz/core';
+import type { CoreDependencyProvider, ScenePrimitive, ShapeAnchorName } from '@retikz/core';
 import {
   boundaryFromContour,
   boundsConnectionEnvelope,
@@ -6,24 +6,24 @@ import {
   contourToPathCommands,
   contourToPathPrimitive,
   defineShape,
-  DEG_TO_RAD,
   filletContour,
-  localToWorld,
-  normalizeAngleRange,
   pathPrimitiveStyle,
-  RAD_TO_DEG,
-  worldToLocal,
 } from '@retikz/core';
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
-import type { Position } from '@retikz/math';
 import {
+  DEFAULT_EPSILON,
+  DEG_TO_RAD,
+  RAD_TO_DEG,
   boundsOf,
   centerOfBounds,
   collectArcBoundingCandidates,
-  DEFAULT_EPSILON,
   halfAxesOfBounds,
+  localToWorld,
+  normalizeAngleRange,
   pointAtArcAngle,
+  worldToLocal,
 } from '@retikz/math';
+import type { CenteredBox, Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { number, strictObject } from 'zod';
 
@@ -132,11 +132,11 @@ const sectorPolarPoint = (radius: number, angleDegrees: number): Position =>
   pointAtArcAngle([0, 0], radius, angleDegrees);
 
 /** 将 Sector 圆心局部点转换为世界坐标 */
-const toWorld = (rect: Rect, apexOffset: Position, localFromApex: Position): Position =>
+const toWorld = (rect: CenteredBox, apexOffset: Position, localFromApex: Position): Position =>
   localToWorld(rect, [localFromApex[0] + apexOffset[0], localFromApex[1] + apexOffset[1]]);
 
 /** 构造 Sector 闭合轮廓 */
-const sectorSegments = (rect: Rect, params: SectorShapeParams) => {
+const sectorSegments = (rect: CenteredBox, params: SectorShapeParams) => {
   const geometry = computeSectorGeometry(params);
   const { innerRadius, outerRadius } = params;
   const { start, end } = geometry.range;
@@ -192,7 +192,7 @@ const sectorSegments = (rect: Rect, params: SectorShapeParams) => {
 };
 
 /** 计算零厚度 Sector 开放弧在目标方向上的投影点 */
-const openSectorBoundaryPoint = (rect: Rect, toward: Position, params: SectorShapeParams): Position => {
+const openSectorBoundaryPoint = (rect: CenteredBox, toward: Position, params: SectorShapeParams): Position => {
   const geometry = computeSectorGeometry(params);
   const radius = params.outerRadius;
   const { start, end } = geometry.range;

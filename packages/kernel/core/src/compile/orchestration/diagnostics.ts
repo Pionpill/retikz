@@ -1,7 +1,7 @@
 import type { CompileOccurrenceLocator } from '../../contract';
 import { compareCompileOccurrences } from '../../contract';
 import type { IRTransform } from '../../schemas';
-import { CompileWarningCode } from '../constants';
+import { BuiltinCompileWarningCode } from '../constants';
 import type { DuplicateRegisterInfo } from '../namespace';
 import type { CompileWarning, CompileWarningInput } from '../warning';
 import { freezeOccurrence } from './artifact';
@@ -16,13 +16,13 @@ type OrderedCompileWarning = CompileWarningInput & {
 export const transformWarnCode = (failed: IRTransform | undefined): CompileWarningInput['code'] => {
   switch (failed?.kind) {
     case 'offset-translate':
-      return CompileWarningCode.OffsetBaseUnresolved;
+      return BuiltinCompileWarningCode.OffsetBaseUnresolved;
     case 'at-translate':
-      return CompileWarningCode.AtTargetUnresolved;
+      return BuiltinCompileWarningCode.AtTargetUnresolved;
     case 'polar-translate':
-      return CompileWarningCode.PolarOriginUnresolved;
+      return BuiltinCompileWarningCode.PolarOriginUnresolved;
     default:
-      return CompileWarningCode.UnresolvedNodeReference;
+      return BuiltinCompileWarningCode.UnresolvedNodeReference;
   }
 };
 
@@ -36,7 +36,7 @@ export const createDuplicateWarning = (info: DuplicateRegisterInfo): CompileWarn
   const secondLoc = info.secondIrPath ?? '(unknown current location)';
 
   return {
-    code: CompileWarningCode.DuplicateNodeId,
+    code: BuiltinCompileWarningCode.DuplicateNodeId,
     message: `Duplicate id '${info.id}' registered in the same namespace frame (${frameNote}); first defined at ${firstLoc}, redefined at ${secondLoc}. The later definition overrides the earlier one (last-wins).`,
     path: secondLoc,
   };
@@ -80,11 +80,17 @@ export const orderCompileWarnings = (warnings: ReadonlyArray<CompileWarningInput
       (left, right) =>
         compareCompileOccurrences(left.occurrence, right.occurrence) || left.emissionOrder - right.emissionOrder,
     )
-    .map(({ warning }) =>
-      Object.freeze({
-        code: warning.code,
-        message: warning.message,
-        path: warning.path,
-        origin: warning.origin ?? ({ kind: 'primary' } as const),
-      }),
+    .map(
+      ({ warning, occurrence }) =>
+        Object.freeze(
+          replaceCompileWarningOccurrence(
+            {
+              code: warning.code,
+              message: warning.message,
+              path: warning.path,
+              origin: warning.origin ?? ({ kind: 'primary' } as const),
+            },
+            occurrence,
+          ),
+        ) as CompileWarning,
     );

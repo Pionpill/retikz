@@ -54,7 +54,8 @@ description: Use when writing or reviewing Retikz documentation, demos, figures,
 - 所有文档中，讲解可操作功能的每个小节必须就地提供 demo，并提供直接控制本节 API、效果可观察的 controls；不得仅引用其它小节的试验场代替。接入说明、纯概念、原理与参考清单不算功能节；入门接入保留最小静态示例。按 [Controls](references/controls.md) 验证参数、边界值与 Reset。
 
 - 普通文档 zh/en 成对，zh 为写作真源；博客语言例外由博客入口规定。公开签名、JSDoc、schema 与默认值仍以源码为契约真源。
-- Kernel 之外可独立安装、直接使用的上层包，其正文以本包的概念、任务与入口自洽；不把 Kernel 作为读者前提，不在主线比较或展开与 Kernel 的关系。确有必要说明依赖或边界时，用简短 `<ComponentAlert type="tip">` 补充，移除该 Tip 后主线仍应能完成当前任务。
+- `ComponentAlert` 必须通过 `title`、`description` 传入标题和正文，不支持 children；使用 `<ComponentAlert type="tip" title="标题" description="正文" />`。页面核验时确认标题与正文实际显示，静态检查不能替代此检查。
+- Kernel 之外可独立安装、直接使用的上层包，其正文以本包的概念、任务与入口自洽；不把 Kernel 作为读者前提，不在主线比较或展开与 Kernel 的关系。确有必要说明依赖或边界时，用简短的 ComponentAlert Tip 补充，移除该 Tip 后主线仍应能完成当前任务。
 - contents、data、i18n 协同；URL 段、目录段和 data id 对齐。共享概念与完整 API/Schema 各有唯一 owner。
 - 开篇说明问题与可观察结果；段落围绕一个观点，术语首次出现就近解释。步骤用列表，重复比较用表格，不按行数或字数强行拆段。
 - 加粗标记内不要包含全角括号，括号说明放在标记外，如 `**Computation**（计算）`；页面核验时检查正文是否残留未解析的 `**`。

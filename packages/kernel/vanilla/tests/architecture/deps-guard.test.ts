@@ -19,7 +19,7 @@ describe('@retikz/vanilla 架构守卫', () => {
   it('no-react-dep：运行时依赖仅 foundation/core/render/runtime，无 react', () => {
     const deps = Object.keys(pkg.dependencies ?? {}).sort();
 
-    expect(deps).toEqual(['@retikz/core', '@retikz/foundation', '@retikz/render', '@retikz/runtime']);
+    expect(deps).toEqual(['@retikz/core', '@retikz/foundation', '@retikz/reconciler', '@retikz/render']);
     expect(JSON.stringify(pkg)).not.toContain('@retikz/react');
     expect(pkg.dependencies).not.toHaveProperty('react');
   });

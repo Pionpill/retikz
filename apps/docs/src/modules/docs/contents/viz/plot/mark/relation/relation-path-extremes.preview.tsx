@@ -21,37 +21,41 @@ export const RelationPathExtremesPreview = (values: RelationPathExtremesPreviewV
   return (
     <Plot data={pathExtremeRelations} width={620} height={320}>
       <PathMark
-        x="x"
-        y="y"
-        order="order"
-        stroke="#0f766e"
-        strokeWidth={2.2}
-        anchorId={{ prefix: 'trend', field: 'id' }}
+        encodings={{ order: 'order', anchorId: 'id', position: { x: { field: 'x' }, y: { field: 'y' } } }}
+        properties={{ stroke: '#0f766e', strokeWidth: 2.2, anchorId: { prefix: 'trend' } }}
       />
-      <PointMark x="x" y="y" fill="#ffffff" stroke="#0f766e" strokeWidth={1} size={4.5} />
+      <PointMark
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
+        properties={{ fill: '#ffffff', stroke: '#0f766e', strokeWidth: 1, size: 4.5 }}
+      />
       <RelationMark
-        transform={[{ operation: relationPathOperationOf(values) }]}
-        source={{ anchorId: { prefix: 'trend', field: 'sourceId' } }}
-        target={{ anchorId: { prefix: 'trend', field: 'targetId' } }}
-        style={{
-          color: { kind: 'constant', value: values[RELATION_PATH_CONTROL_IDS.color] },
-          strokeWidth: { kind: 'constant', value: values[RELATION_PATH_CONTROL_IDS.strokeWidth] },
+        transforms={[{ operation: relationPathOperationOf(values) }]}
+        encodings={{
+          source: { anchorId: 'sourceId' },
+          target: { anchorId: 'targetId' },
+          geometry: { label: { text: 'deltaLabel' } },
         }}
-        path={{
-          routing: {
-            kind: 'bend',
-            bendDirection: values[RELATION_PATH_CONTROL_IDS.bendDirection],
-            bendAngle: values[RELATION_PATH_CONTROL_IDS.bendAngle],
+        properties={{
+          source: { anchorId: { prefix: 'trend' } },
+          target: { anchorId: { prefix: 'trend' } },
+          color: values[RELATION_PATH_CONTROL_IDS.color],
+          strokeWidth: values[RELATION_PATH_CONTROL_IDS.strokeWidth],
+          geometry: {
+            kind: 'path',
+            routing: {
+              kind: 'bend',
+              bendDirection: values[RELATION_PATH_CONTROL_IDS.bendDirection],
+              bendAngle: values[RELATION_PATH_CONTROL_IDS.bendAngle],
+            },
+            label: {
+              position: values[RELATION_PATH_CONTROL_IDS.labelPosition],
+              ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
+              sloped: true,
+              textColor: 'currentColor',
+              font: { size: 11, weight: 'bold' },
+            },
+            options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
           },
-          label: {
-            text: { field: 'deltaLabel' },
-            position: values[RELATION_PATH_CONTROL_IDS.labelPosition],
-            ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
-            sloped: true,
-            textColor: 'currentColor',
-            font: { size: 11, weight: 'bold' },
-          },
-          options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
         }}
       />
       <PlotAxis dimension="x" grid />

@@ -159,9 +159,9 @@ These are the path-label props configured on this page. See the [API reference](
     {
       name: 'label',
       kind: 'property',
-      type: '<Path label>: IRGeometryLabel | Array<IRGeometryLabel>; <Step label>: InputStepLabel; way: { label: string | InputStepLabel }',
+      type: '<Path label>: IRPathLabel | Array<IRPathLabel>; <Step label>: InputStepLabel; way: { label: string | InputStepLabel }',
       description:
-        "Choose the label host:\n\n- `<Path label>`: `IRGeometryLabel | Array<IRGeometryLabel>` for the entire path\n- `<Step label>`: `InputStepLabel` for the current step\n- `{ label: string | InputStepLabel }` in `way`: the following segment\n\nObject fields:\n\n- `text: TextBlock`: a string (`\\n` for line breaks) or `Array<{ text: string; fill?: string; font?: Font }>`\n- `position?: number | 'at-start' | 'very-near-start' | 'near-start' | 'midway' | 'near-end' | 'very-near-end' | 'at-end'`: keywords map to 0, 0.125, 0.25, 0.5, 0.75, 0.875, 1\n- `side?: 'top' | 'right' | 'bottom' | 'left'`: label side; defaults to top, or centered when `sloped: true`\n- `sloped?: boolean`: rotate along the tangent\n- `interrupt?: boolean`: cut an unfilled built-in Stroke path; only centered sloped labels interrupt automatically\n- `gap?: number`: extra space on each side of the cut, default 4",
+        "Choose the label host:\n\n- `<Path label>`: `IRPathLabel | Array<IRPathLabel>` for the entire path\n- `<Step label>`: `InputStepLabel` for the current step\n- `{ label: string | InputStepLabel }` in `way`: the following segment\n\nObject fields:\n\n- `text: TextBlock`: a string (`\\n` for line breaks) or `Array<{ text: string; fill?: string; font?: Font }>`\n- `position?: number | 'at-start' | 'very-near-start' | 'near-start' | 'midway' | 'near-end' | 'very-near-end' | 'at-end'`: keywords map to 0, 0.125, 0.25, 0.5, 0.75, 0.875, 1\n- `side?: 'top' | 'right' | 'bottom' | 'left'`: label side; defaults to top, or centered when `sloped: true`\n- `sloped?: boolean`: rotate along the tangent\n- `interrupt?: boolean`: cut an unfilled built-in Stroke path; only centered sloped labels interrupt automatically\n- `gap?: number`: extra space on each side of the cut, default 4",
     },
   ]}
 />

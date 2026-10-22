@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import type { CompiledNodeLayout, IRScene, ScenePrimitive, TextMeasurer, TextPrim } from '@retikz/core';
+import type { NodeLayoutObservation, IRScene, ScenePrimitive, TextMeasurer, TextPrim } from '@retikz/core';
 import { compileToScene, fallbackMeasurer, isNodeLayoutCompileArtifact } from '@retikz/core';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -188,7 +188,7 @@ type NodeGeometryValues = {
 const compileGeometryNode = (
   values: NodeGeometryValues,
   measureText: TextMeasurer = fallbackMeasurer,
-): { layout: CompiledNodeLayout; bounds: ReturnType<typeof compileToScene>['scene']['layout'] } => {
+): { layout: NodeLayoutObservation; bounds: ReturnType<typeof compileToScene>['scene']['layout'] } => {
   const result = compileToScene(
     {
       type: 'scene',
@@ -242,7 +242,7 @@ const findTextPrimitive = (primitives: ReadonlyArray<ScenePrimitive>): TextPrim 
 const compileBuiltinText = (
   text: string,
   values: { align: 'start' | 'middle' | 'end'; fontSize: number; lineHeight: number; maxTextWidth: number },
-): { layout: CompiledNodeLayout; text: TextPrim } => {
+): { layout: NodeLayoutObservation; text: TextPrim } => {
   const result = compileToScene(
     {
       type: 'scene',
@@ -1431,7 +1431,7 @@ describe('preview controls registry', () => {
 
       if (padding?.kind !== 'range' || minimumSize?.kind !== 'range') continue;
 
-      const compileGlyph = (paddingValue: number): CompiledNodeLayout => {
+      const compileGlyph = (paddingValue: number): NodeLayoutObservation => {
         const result = compileToScene(
           {
             type: 'scene',

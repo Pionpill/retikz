@@ -563,10 +563,10 @@ Observers run synchronously in registry dependency order. The event outcome belo
 
 ## Core application
 
-Core wraps drawing compilation in a Computation. Its public `createCoreComputation(options)` factory returns a compilation token. It consumes the document Source, retains state for incremental compilation internally, and exposes compilation output and a Scene snapshot.
+Reconciler wraps Core drawing compilation in a Computation. Its public `createCoreComputation(options)` factory returns a compilation token. It consumes the document Source, retains state for incremental compilation internally, and exposes compilation output and a Scene snapshot.
 
 ```ts
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
 import { createRuntimeSourceRegistry, createRuntimeComputationRegistry } from '@retikz/runtime';
 
 const compile = createCoreComputation({});
@@ -582,9 +582,9 @@ This maps to the three responsibilities above: `run` compiles a complete documen
   sources={[
     {
       label: 'Core computation and incremental branches',
-      path: 'packages/kernel/core/src/compile/incremental/computation.ts',
+      path: 'packages/kernel/reconciler/src/runtime/computation.ts',
     },
-    { label: 'Core public result view', path: 'packages/kernel/core/src/compile/incremental/public.ts' },
+    { label: 'Core public result view', path: 'packages/kernel/reconciler/src/runtime/public.ts' },
   ]}
 />
 

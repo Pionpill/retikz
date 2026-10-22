@@ -7,7 +7,7 @@ import {
   defineRuntimeSource,
   RetikzRuntimeError,
   RetikzRuntimeErrorCode,
-  RuntimeDiagnosticCode,
+  BuiltinRuntimeDiagnosticCode,
 } from '../../src';
 import { createRuntimeSourceExecutor } from '../../src/source/executor';
 
@@ -127,7 +127,7 @@ describe('runtime owner executor', () => {
       expect(error).toBeInstanceOf(RetikzRuntimeError);
       expect(error).toMatchObject({ code: RetikzRuntimeErrorCode.ReadFailed, phase: 'read', cause: readCause });
       expect((error as RetikzRuntimeError).diagnostics).toEqual([
-        expect.objectContaining({ code: RuntimeDiagnosticCode.SourceDisposeFailed, cause: disposeCause }),
+        expect.objectContaining({ code: BuiltinRuntimeDiagnosticCode.SourceDisposeFailed, cause: disposeCause }),
       ]);
     }
   });
@@ -229,7 +229,7 @@ describe('runtime owner executor', () => {
     const prepared = executor.prepare(definition, { values: [] }).value;
 
     expect(executor.retire(definition, prepared).diagnostics).toEqual([
-      expect.objectContaining({ code: RuntimeDiagnosticCode.SourceDisposeFailed, cause: disposeCause }),
+      expect.objectContaining({ code: BuiltinRuntimeDiagnosticCode.SourceDisposeFailed, cause: disposeCause }),
     ]);
     expect(() => executor.retire(definition, prepared)).toThrow(/already retired/i);
   });

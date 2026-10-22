@@ -58,3 +58,24 @@ Built-in marks eventually lower into [@retikz/core](/kernel/components/introduct
     },
   ]}
 />
+
+## Position inputs and reference marks
+
+Point, Path, and Interval marks share these position inputs:
+
+| Input    | Syntax                                  | Meaning                                                        |
+| -------- | --------------------------------------- | -------------------------------------------------------------- |
+| Field    | `{ field: 'x' }`                        | Read a final result row                                        |
+| Constant | `{ value: 50 }`                         | Data-space number or category string                           |
+| Edge     | `{ edge: 'start' }` / `{ edge: 'end' }` | Endpoints of the final mapped range, including reversed ranges |
+
+Positions belong in `encodings`; geometry styles belong in `properties`. Effective field dependencies generate marks from final result rows; constants and edges alone generate one instance per actual view. Empty result tables generate no data instances. `transforms: []` is equivalent to omission; nonempty transforms require field dependencies.
+
+Use regular marks for reference lines, text, and background regions. This example binds an empty array, sets explicit scale domains, and uses `contributeToDomain={false}`. Move the threshold to inspect the reference line.
+
+<ComponentPreview
+  files={['reference-entry', 'reference.preview.tsx', 'shared/reference-coordinate.ts']}
+  defaultSourceFile="reference.preview.tsx"
+  controls={{ name: 'reference-entry' }}
+  size="md"
+/>

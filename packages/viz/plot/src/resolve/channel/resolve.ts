@@ -1,5 +1,7 @@
 import type {
+  LabelChannelDelivery,
   AnyChannelDefinition,
+  ChannelValue,
   ChannelDefinitionResolveContext,
   MarkChannels,
   NodeChannelDelivery,
@@ -7,15 +9,11 @@ import type {
   ScaleDescriptor,
   ScopeChannelDelivery,
 } from '../../contract';
-import { ChannelDefinitionKind } from '../../contract';
+import { ChannelDefinitionKind, markProperty, labelEntries, labelEncodingBindings } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import { BUILTIN_CHANNEL_NAMES } from '../../providers';
-import type { IRPlotMarkOperation } from '../../schemas';
+import type { IRPlotMarkOperation, IRPlotLabelEncoding } from '../../schemas';
 import { resolveMarkOperation } from '../mark';
 import type { ChannelResolveContext } from './types';
-
-const extensionChannelsOf = (mark: IRPlotMarkOperation): Record<string, unknown> =>
-  (mark as { encoding?: { channels?: Record<string, unknown> } }).encoding?.channels ?? {};
 
 const assertChannelDelivery = (definition: AnyChannelDefinition): void => {
   if (
@@ -52,18 +50,28 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
   const operation = operationResolution.operation;
   const channelKinds = operationResolution.definition.channelKinds?.(operation as never);
 
-  for (const channel of Object.keys(extensionChannelsOf(mark))) {
-    if (BUILTIN_CHANNEL_NAMES.has(channel)) {
-      throw new RetikzPlotError(
-        `lowerPlots: encoding.channels.${channel} collides with a built-in channel; use the named mark property instead`,
-      );
-    }
-
-    if (!context.channelRegistry.has(channel)) {
-      throw new RetikzPlotError(
-        `lowerPlots: channel "${channel}" is not registered; pass a ChannelDefinition via options.definitions.channels`,
-      );
-    }
+  const structuredTargets = new Set([
+    'position',
+    'from',
+    'to',
+    'bounds',
+    'closure',
+    'source',
+    'target',
+    'geometry',
+    'label',
+    'opacity',
+    'anchorId',
+    'series',
+    'order',
+    'text',
+  ]);
+  for (const channel of Object.keys(mark.encodings ?? {})) {
+    if (structuredTargets.has(channel)) continue;
+    const definition = context.channelRegistry.get(channel);
+    if (!definition) throw new RetikzPlotError(`lowerPlots: channel "${channel}" is not registered`);
+    if (channelKinds !== undefined && !channelKinds.has(definition.kind))
+      throw new RetikzPlotError(`lowerPlots: mark "${mark.type}" does not consume channel "${channel}"`);
   }
 
   const values: Record<string, NonNullable<MarkChannels['values']>[string]> = {};
@@ -89,6 +97,44 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
   };
 
   const definitionContext = definitionContextOf(context);
+  const labelDeliveries: Array<LabelChannelDelivery> = [];
+  const labelSource = mark.encodings?.label as
+    | string
+    | IRPlotLabelEncoding
+    | Array<string | IRPlotLabelEncoding>
+    | undefined;
+  const host = operationResolution.definition.labelHost;
+  for (const [index, label] of labelEntries<IRPlotLabelEncoding>(labelSource).entries()) {
+    for (const [target, binding] of labelEncodingBindings(label)) {
+      const definition = context.channelRegistry.get(`label.${target}`);
+      const location = `Mark "${mark.id ?? mark.type}" label[${index}].${target}`;
+      if (definition?.kind !== ChannelDefinitionKind.Label)
+        throw new RetikzPlotError(`${location}: label channel is not registered`);
+      if (
+        (channelKinds !== undefined && !channelKinds.has(ChannelDefinitionKind.Label)) ||
+        host === undefined ||
+        !definition.hosts.includes(host)
+      )
+        throw new RetikzPlotError(`${location}: unsupported label host`);
+      try {
+        const resolution = definition.resolve(definitionContext, binding, host, mark);
+        labelDeliveries.push({
+          index,
+          apply: (output, row) => {
+            try {
+              const value = resolution.resolver(row);
+              if (value === undefined) throw new RetikzPlotError('Missing label channel value');
+              definition.deliver(output, value, host);
+            } catch (cause) {
+              throw new RetikzPlotError(`${location}: label channel delivery failed`, { cause });
+            }
+          },
+        });
+      } catch (cause) {
+        throw new RetikzPlotError(`${location}: label channel resolution failed`, { cause });
+      }
+    }
+  }
 
   for (const definition of context.channelRegistry.definitions) {
     assertChannelDelivery(definition);
@@ -117,6 +163,15 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
     }
 
     if (definition.kind === ChannelDefinitionKind.Path) {
+      const property = markProperty<ChannelValue>(mark, definition.channel);
+      if (property !== undefined) {
+        pathDeliveries.push({
+          channel: definition.channel,
+          resolver: () => property,
+          deliver: (target, value, deliveryContext) => definition.deliver(target, value as never, deliveryContext),
+        });
+        continue;
+      }
       const resolution = definition.resolve(definitionContext, mark);
       if (!resolution) continue;
 
@@ -130,6 +185,15 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
     }
 
     if (definition.kind !== ChannelDefinitionKind.Node) continue;
+    const property = markProperty<ChannelValue>(mark, definition.channel);
+    if (property !== undefined) {
+      nodeDeliveries.push({
+        channel: definition.channel,
+        resolver: () => property,
+        deliver: (target, value, deliveryContext) => definition.deliver(target, value as never, deliveryContext),
+      });
+      continue;
+    }
 
     const resolution = definition.resolve(definitionContext, mark);
     if (!resolution) continue;
@@ -142,5 +206,5 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
     registerDescriptor(resolution.descriptor);
   }
 
-  return { values, defaults, scopeDeliveries, nodeDeliveries, pathDeliveries, descriptors };
+  return { values, defaults, scopeDeliveries, nodeDeliveries, pathDeliveries, descriptors, labelDeliveries };
 };

@@ -1,7 +1,7 @@
+import { DEG_TO_RAD, RAD_TO_DEG, normalizeDegrees } from '@retikz/math';
 import type { Position } from '@retikz/math';
 
 import type { IRBoundaryLabel } from '../../schemas';
-import { DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from '../../shared/geometry';
 
 /** 根据外向轴解析文字旋转，保持 Node 既有翻转语义 */
 export const resolveBoundaryLabelRotation = (

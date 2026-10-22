@@ -6,7 +6,7 @@
 
 ## 组件声明
 
-#### <ApiSourceLink label={"Path"} path={"packages/kernel/react/src/kernel/components/Path.tsx"} startLine={82}>Path</ApiSourceLink> / <ApiSourceLink label={"PathProps"} path={"packages/kernel/react/src/kernel/components/Path.tsx"} startLine={9}>PathProps</ApiSourceLink>
+#### <ApiSourceLink label={"Path"} path={"packages/kernel/react/src/kernel/components/Path.tsx"} startLine={80}>Path</ApiSourceLink> / <ApiSourceLink label={"PathProps"} path={"packages/kernel/react/src/kernel/components/Path.tsx"} startLine={9}>PathProps</ApiSourceLink>
 
 本组件自身不渲染 DOM；最终路径由 `<Layout>` 根据 step 序列、样式、箭头和标记输出
 
@@ -32,7 +32,6 @@
 |        | `roundedCorners?` | `IRPath['roundedCorners']`    | —          | 折线拐角几何圆角半径（TikZ `rounded corners=`）<br />对每个 line↔line 接缝插切圆弧、改路径几何（区别于 lineJoin 仅描边）；curve / arc / bezier / fold 接缝保持尖；按相邻段长 clamp；省略 = 尖角 |
 |        | `scale?`          | `IRPath['scale']`             | —          | 整条 path 缩放（绕包围盒中心）：number 等比，或 `{ x, y }` 非等比                                                                                                                               |
 | 样式   | `style?`          | `InputPath['style']`          | —          | 实例视觉覆盖，逐字段覆盖继承默认值                                                                                                                                                              |
-|        | `thickness?`      | `PathThickness`               | —          | 语义 stroke 档位糖（TikZ `ultra thin` … `ultra thick`）；构造 IR 时解析为 `strokeWidth`，显式 `strokeWidth` 始终优先                                                                            |
 |        | `zIndex?`         | `IRPath['zIndex']`            | `0`        | 显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层子节点间生效                                                                                                                       |
 | 回调   | `onClick?`        | `HydrationHandler`            | —          | 单击该图元（DOM `click`）                                                                                                                                                                       |
 |        | `onDoubleClick?`  | `HydrationHandler`            | —          | 双击该图元（DOM `dblclick`）                                                                                                                                                                    |
@@ -66,7 +65,6 @@ export type PathProps = HydrationEventProps & {
   meta?: IRPath['meta'];
   animations?: IRPath['animations'];
   roundedCorners?: IRPath['roundedCorners'];
-  thickness?: PathThickness;
   arrow?: InputPath['arrow'];
   arrowDetail?: InputPath['arrowDetail'];
   arrowPlacement?: InputPath['arrowPlacement'];
@@ -83,7 +81,7 @@ export type PathProps = HydrationEventProps & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Draw"} path={"packages/kernel/react/src/sugar/path/Draw.tsx"} startLine={32}>Draw</ApiSourceLink> / <ApiSourceLink label={"DrawProps"} path={"packages/kernel/react/src/sugar/path/Draw.tsx"} startLine={9}>DrawProps</ApiSourceLink>
+#### <ApiSourceLink label={"Draw"} path={"packages/kernel/react/src/sugar/path/Draw.tsx"} startLine={30}>Draw</ApiSourceLink> / <ApiSourceLink label={"DrawProps"} path={"packages/kernel/react/src/sugar/path/Draw.tsx"} startLine={9}>DrawProps</ApiSourceLink>
 
 React 只负责 JSX sugar；`normalizePath` 是 `way` 的唯一 parser 调度位置
 
@@ -100,7 +98,6 @@ React 只负责 JSX sugar；`normalizePath` 是 `way` 的唯一 parser 调度位
 | `readonly arrowPlacement?` | `PathProps['arrowPlacement']` | —      | 箭头端点放置配置                   |
 | `readonly roundedCorners?` | `IRPath['roundedCorners']`    | —      | 折线拐角几何圆角半径               |
 | `readonly style?`          | `InputPath['style']`          | —      | 实例视觉覆盖，逐字段覆盖继承默认值 |
-| `readonly thickness?`      | `PathThickness`               | —      | 语义 stroke 档位糖                 |
 | `readonly way`             | `WayDSL`                      | —      | TikZ 风格的路径走向简写            |
 | `readonly zIndex?`         | `IRPath['zIndex']`            | —      | 同层 stack 顺序                    |
 
@@ -117,7 +114,6 @@ export type DrawProps = Readonly<{
   style?: InputPath['style'];
   way: WayDSL;
   roundedCorners?: IRPath['roundedCorners'];
-  thickness?: PathThickness;
   arrow?: PathProps['arrow'];
   arrowDetail?: PathProps['arrowDetail'];
   arrowPlacement?: PathProps['arrowPlacement'];
@@ -738,7 +734,7 @@ export type ArrowEmitContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CanonicalGeometryLabelPlacement"} path={"packages/kernel/core/src/resolve/path/types.ts"} startLine={40}>CanonicalGeometryLabelPlacement</ApiSourceLink>
+#### <ApiSourceLink label={"CanonicalPathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/types.ts"} startLine={39}>CanonicalPathLabelPlacement</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -746,15 +742,15 @@ export type ArrowEmitContext = {
 
 <ApiTable>
 
-| 成员         | 类型                                               | 默认值 | 说明                                                                                                            |
-| ------------ | -------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------- |
-| `distance`   | `number`                                           | —      | 相对宿主的距离                                                                                                  |
-| `gap`        | `number`                                           | —      | 断口留白                                                                                                        |
-| `interrupt`  | `boolean`                                          | —      | 是否中断宿主描边                                                                                                |
-| `placement?` | `"outside" \| "inside"`                            | —      | 标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Extension Ribbon 等面状宿主在未指定 side 时放在内部 |
-| `position`   | `number`                                           | —      | 路径上的归一化位置                                                                                              |
-| `side`       | `NonNullable<IRGeometryLabel['side']> \| 'center'` | —      | 相对宿主的方向                                                                                                  |
-| `sloped?`    | `false \| true`                                    | —      | 是否沿采样点切线旋转标签；为 true 且省略 side 时 canonicalize 为 center，显式 side 仍控制方位                   |
+| 成员         | 类型                                           | 默认值 | 说明                                                                                                            |
+| ------------ | ---------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------- |
+| `distance`   | `number`                                       | —      | 相对宿主的距离                                                                                                  |
+| `gap`        | `number`                                       | —      | 断口留白                                                                                                        |
+| `interrupt`  | `boolean`                                      | —      | 是否中断宿主描边                                                                                                |
+| `placement?` | `"outside" \| "inside"`                        | —      | 标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Extension Ribbon 等面状宿主在未指定 side 时放在内部 |
+| `position`   | `number`                                       | —      | 路径上的归一化位置                                                                                              |
+| `side`       | `NonNullable<IRPathLabel['side']> \| 'center'` | —      | 相对宿主的方向                                                                                                  |
+| `sloped?`    | `false \| true`                                | —      | 是否沿采样点切线旋转标签；为 true 且省略 side 时 canonicalize 为 center，显式 side 仍控制方位                   |
 
 </ApiTable>
 
@@ -763,12 +759,12 @@ export type ArrowEmitContext = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type CanonicalGeometryLabelPlacement = Omit<
-  GeometryLabelGeometryOptions,
+export type CanonicalPathLabelPlacement = Omit<
+  PathLabelGeometryOptions,
   'position' | 'side' | 'distance' | 'interrupt' | 'gap'
 > & {
   position: number;
-  side: NonNullable<IRGeometryLabel['side']> | 'center';
+  side: NonNullable<IRPathLabel['side']> | 'center';
   distance: number;
   interrupt: boolean;
   gap: number;
@@ -779,7 +775,7 @@ export type CanonicalGeometryLabelPlacement = Omit<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"GeometryLabelGeometryOptions"} path={"packages/kernel/core/src/resolve/path/types.ts"} startLine={37}>GeometryLabelGeometryOptions</ApiSourceLink>
+#### <ApiSourceLink label={"PathLabelGeometryOptions"} path={"packages/kernel/core/src/resolve/path/types.ts"} startLine={36}>PathLabelGeometryOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -804,7 +800,7 @@ export type CanonicalGeometryLabelPlacement = Omit<
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type GeometryLabelGeometryOptions = Omit<IRGeometryLabel, 'text' | 'textColor' | 'font' | 'opacity'>;
+export type PathLabelGeometryOptions = Omit<IRPathLabel, 'text' | 'textColor' | 'font' | 'opacity'>;
 ```
 
 </DocTab>
@@ -849,7 +845,7 @@ export type PathGeneratorGenerateContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={130}>PathKindBoundaryLabelInput</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={127}>PathKindBoundaryLabelInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -883,7 +879,7 @@ export type PathKindBoundaryLabelInput = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindCompileContext"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={147}>PathKindCompileContext</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindCompileContext"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={144}>PathKindCompileContext</ApiSourceLink>
 
 自定义 kind 可以完全接管输出，也可以调用回调复用标准描边逻辑
 
@@ -1012,7 +1008,7 @@ export const DrawWay = {
 } as const;
 ```
 
-#### <ApiSourceLink label={"resolveGeometryLabelPlacement"} path={"packages/kernel/core/src/resolve/path/resolve.ts"} startLine={124}>resolveGeometryLabelPlacement</ApiSourceLink>
+#### <ApiSourceLink label={"resolvePathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/resolve.ts"} startLine={120}>resolvePathLabelPlacement</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1020,11 +1016,11 @@ export const DrawWay = {
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称                        | 类型 / 签名                       | 说明 |
-| ------ | --------------------------- | --------------------------------- | ---- |
-| 参数   | `label`                     | `GeometryLabelGeometryOptions`    | —    |
-|        | `canAutomaticallyInterrupt` | `boolean`                         | —    |
-| 返回值 | —                           | `CanonicalGeometryLabelPlacement` | —    |
+| 类别   | 名称                        | 类型 / 签名                   | 说明 |
+| ------ | --------------------------- | ----------------------------- | ---- |
+| 参数   | `label`                     | `PathLabelGeometryOptions`    | —    |
+|        | `canAutomaticallyInterrupt` | `boolean`                     | —    |
+| 返回值 | —                           | `CanonicalPathLabelPlacement` | —    |
 
 </ApiTable>
 
@@ -1033,10 +1029,10 @@ export const DrawWay = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const resolveGeometryLabelPlacement: (
-  label: GeometryLabelGeometryOptions,
+export declare const resolvePathLabelPlacement: (
+  label: PathLabelGeometryOptions,
   canAutomaticallyInterrupt: boolean,
-) => CanonicalGeometryLabelPlacement;
+) => CanonicalPathLabelPlacement;
 ```
 
 </DocTab>
@@ -1080,7 +1076,7 @@ export declare const samplePathRoute: (
 
 ## 直接调用
 
-#### <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={30}>path</ApiSourceLink> / <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={187}>InputPath</ApiSourceLink>
+#### <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={30}>path</ApiSourceLink> / <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={184}>InputPath</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1094,7 +1090,7 @@ export declare const samplePathRoute: (
 |        | `id?`             | `string`                              | —      | 可选稳定 id：供其它元素 anchor 引用，也是水合事件绑定的挂点（带 id 才能给 path 绑 onClick 等 handler）                                                                                  |
 |        | `kind?`           | `string & {} \| "stroke"`             | —      | Path kind provider 名；省略时使用内置 `stroke`                                                                                                                                          |
 |        | `kindOptions?`    | `Record<string, JsonValue>`           | —      | 由选定 Path kind provider 消费的 JSON-safe 参数对象；完整 schema 在后续解析                                                                                                             |
-|        | `label?`          | `InputPath["label"]`                  | —      | 附着在 Path 或其它 path-like 宿主上的几何标签                                                                                                                                           |
+|        | `label?`          | `InputPath["label"]`                  | —      | 附着在 Path 或其它 path-like 宿主上的路径标签                                                                                                                                           |
 |        | `type?`           | `'path'`                              | —      | 无法由 authoring 字段唯一识别时显式指定路径类别                                                                                                                                         |
 |        | `way?`            | `WayDSL`                              | —      | TikZ 风格的路径走向简写                                                                                                                                                                 |
 | 几何   | `arrow?`          | `InputPathArrowDirection`             | —      | 路径级箭头方向                                                                                                                                                                          |
@@ -1105,7 +1101,6 @@ export declare const samplePathRoute: (
 |        | `roundedCorners?` | `number`                              | —      | 线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同                                                                                                                            |
 |        | `scale?`          | `number \| { x: number; y: number; }` | —      | 整条 path 缩放（数字等比，或 `{ x, y }` 非等比，绕包围盒中心）                                                                                                                          |
 | 样式   | `style?`          | `InputPath["style"]`                  | —      | 当前实例的视觉覆盖，按字段继承与覆盖                                                                                                                                                    |
-|        | `thickness?`      | `PathThickness`                       | —      | 路径描边宽度语法糖                                                                                                                                                                      |
 |        | `zIndex?`         | `number`                              | —      | 显式栈序：大者在上；缺省 0、同值保持声明顺序；只在同层子节点间生效                                                                                                                      |
 | 动画   | `animations?`     | `InputPath["animations"]`             | —      | 声明式动画 track 数组（关键帧 + 时长 / 缓动 / 触发器）；用法与 preset 见动画组件文档                                                                                                    |
 | 运行时 | `authoring?`      | `unknown`                             | —      | 可选编译驱动自行解释的运行时载荷，不进入 Core IR                                                                                                                                        |
@@ -1129,7 +1124,7 @@ export type InputPath = InputPathBase & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputStep"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={152}>InputStep</ApiSourceLink>
+#### <ApiSourceLink label={"InputStep"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={151}>InputStep</ApiSourceLink>
 
 ```ts
 export type InputStep =
@@ -1240,7 +1235,7 @@ export type PathGeneratorDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindDefinition"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={187}>PathKindDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindDefinition"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={184}>PathKindDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1382,7 +1377,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
 
 ## 配置与校验
 
-#### <ApiSourceLink label={"PathSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={133}>PathSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={129}>PathSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1416,13 +1411,13 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
     rotate: '整条 path 旋转角（度，绕包围盒中心）',
     scale: '整条 path 缩放（数字等比，或 `{ x, y }` 非等比，绕包围盒中心）',
     roundedCorners: '线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同',
-    label: '附着在 Path 或其它 path-like 宿主上的几何标签',
+    label: '附着在 Path 或其它 path-like 宿主上的路径标签',
     marks:
       "沿路径放方向标记：每项 `{ pos, endpointOverlap?, mark }`，`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线；endpointOverlap 只适用于内置 Stroke Path 实际选中的端点 mark",
   }}
 />
 
-#### <ApiSourceLink label={"StepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={352}>StepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"StepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={359}>StepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="StepSchema" description="单个路径动作；通过 kind 字段选择具体 step 变体。" />
 
@@ -1468,7 +1463,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"FoldStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={122}>FoldStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FoldStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={125}>FoldStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1484,7 +1479,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"CycleStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={127}>CycleStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CycleStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={130}>CycleStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1496,7 +1491,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"CurveStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={136}>CurveStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CurveStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={139}>CurveStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1511,7 +1506,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"CubicStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={145}>CubicStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CubicStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={148}>CubicStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1527,7 +1522,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"BendStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={176}>BendStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"BendStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={179}>BendStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1547,7 +1542,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"ArcStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={246}>ArcStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArcStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={251}>ArcStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1564,7 +1559,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"CirclePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={269}>CirclePathStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CirclePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={275}>CirclePathStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1581,7 +1576,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"EllipsePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={294}>EllipsePathStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"EllipsePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={301}>EllipsePathStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1598,7 +1593,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"RectangleStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={299}>RectangleStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RectangleStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={306}>RectangleStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1613,7 +1608,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"SmoothStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={317}>SmoothStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"SmoothStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={324}>SmoothStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1628,7 +1623,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"GeneratorStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={334}>GeneratorStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"GeneratorStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={341}>GeneratorStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1645,12 +1640,12 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"GeometryLabelSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={25}>GeometryLabelSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathLabelSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={25}>PathLabelSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
-  name="GeometryLabelSchema"
-  description="几何标签：附着在 path step 或可选 Extension Ribbon centerline 上的文本与定位规格。"
+  name="PathLabelSchema"
+  description="路径标签：附着在 path step 或可选 Extension Ribbon centerline 上的文本与定位规格。"
   descriptions={{
     text: '标签文字；支持字符串、换行文本和 TextBlock 行数组',
     position: '沿段归一化位置：7 个 keyword 或 0..1 数字；默认 midway',
@@ -1668,7 +1663,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"ArrowMarkSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={43}>ArrowMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArrowMarkSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={39}>ArrowMarkSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1687,7 +1682,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"PathMarkPlacementSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={52}>PathMarkPlacementSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathMarkPlacementSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={48}>PathMarkPlacementSchema</ApiSourceLink>
 
 <ZodSchema
   shallow

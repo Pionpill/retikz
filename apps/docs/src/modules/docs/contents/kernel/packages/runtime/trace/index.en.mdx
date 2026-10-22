@@ -352,55 +352,43 @@ Start source reading with reporter validation and receiver isolation. Then follo
 
 Runtime converts Source capture, comparison and disposal failures into structured errors or diagnostics; Source callbacks do not receive a computation-style `context.trace`. Computations and Participants report explicitly through their contexts, while Runtime adds ownership and collects diagnostics at transaction boundaries. Configuring a sink does not automatically generate work records for every stage: algorithms and participants supply them. See [Lifecycle](/kernel/packages/runtime/lifecycle#no-change-and-failure) to place these information channels into initialization, commit and disposal order.
 
-## Core application
+## Compilation and rendering observations
 
-Core's compilation computation already declares and emits Trace records. Connect a receiver to Runtime to consume them. This example reuses the Runtime imports above and initializes an empty Scene IR:
-
-```ts
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
-
-const coreRecords: Array<PerformanceTraceRecord> = [];
-const compile = createCoreComputation({});
-const coreSources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-const coreComputations = createRuntimeComputationRegistry({ sources: coreSources, computations: [compile] });
-const coreRuntime = createRuntime({
-  sources: coreSources,
-  computations: coreComputations,
-  initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, { version: 1, type: 'scene', children: [] })],
-  trace: record => coreRecords.push(record),
-});
-console.log(coreRecords.map(record => [record.owner, record.phase, record.unit, record.outcome]));
-// [['@retikz/core/document', 'update', 'ir-child', 'full']]
-coreRuntime.dispose();
-```
-
-Core's full path reports `ir-child` work; updates can additionally report `scene-change`. Its supported root-node style incremental path reports `incremental` with visited, reused and changed counts. Unsupported incremental work falls back to the full path and reports `fallback`. These describe the algorithm's chosen path; Runtime does not infer Core's counts.
-
-When calling `compileToScene` independently, create a reporter with Core's public phases and units. `CoreTracePhase` names compilation stages, while `CoreTraceUnit` names the IR / Scene entities being counted. The reporter's `phases` declares the combinations allowed for this execution. This example reuses the `PerformanceTraceOutcome` import above:
+Reconciler sessions report compilation work. Pass a sink in the second constructor argument to record successfully committed compilation work:
 
 ```ts
-import { compileToScene, CoreTracePhase, CoreTraceUnit } from '@retikz/core';
-import { createRuntimeTraceReporter } from '@retikz/runtime';
+import type { PerformanceTraceRecord } from '@retikz/foundation';
+import { ReconcilerSession } from '@retikz/reconciler';
 
-const compileTrace = createRuntimeTraceReporter({
-  owner: '@retikz/core',
-  phases: [{ phase: CoreTracePhase.Compile, unit: CoreTraceUnit.IrChild, outcomes: [PerformanceTraceOutcome.Full] }],
-  sink: record => console.log(record),
-});
-compileToScene({ version: 1, type: 'scene', children: [] }, { trace: compileTrace });
-console.log(compileTrace.diagnostics()); // []
+const records: Array<PerformanceTraceRecord> = [];
+const session = new ReconcilerSession({}, { trace: record => records.push(record) });
+session.mount({ version: 1, type: 'scene', children: [{ type: 'node', id: 'a', position: [0, 0] }] });
+console.log(records.map(record => [record.owner, record.phase, record.unit, record.visited]));
+// [['@retikz/reconciler', 'update', 'element-compile', 1]]
+session.dispose();
 ```
 
-Render exposes backend phases through `RenderTracePhase` in the corresponding public `@retikz/render/svg`, `@retikz/render/canvas`, or `@retikz/render/runtime` entry. Scene entity counts reuse `CoreTraceUnit`. Plot, Table, and custom owners may each declare `compile`, or name domain stages such as `axis-layout`. Compare records by owner, phase, and unit together; a shared phase name does not make work counts interchangeable.
+`ReconcilerTracePhase.Update` represents `update`. `ReconcilerTraceUnit` distinguishes two units of work:
 
-Core domain diagnostics reside in compilation `output.diagnostics`. Runtime transaction, cleanup and observation diagnostics come from update results or the instance queue. Their owners differ. When Core detects a ChangeSet mismatch with actual state, it also explains the fallback through the computation's fallback diagnostics.
+| Compilation path                                              | unit              | visited                                   | outcome       |
+| ------------------------------------------------------------- | ----------------- | ----------------------------------------- | ------------- |
+| Weave mount, complete replacement, or forced full update      | `element-compile` | Actual element compilation count          | `full`        |
+| Weave incremental batch                                       | `element-compile` | Actual element compilations in this batch | `incremental` |
+| Complete compilation of a scene containing Composite elements | `scene-compile`   | 1 per successful commit                   | `full`        |
+
+Composite expansion, layout probes, and replay are not counted separately. `reused` is always 0 and `changed` equals `visited`; these fields do not measure tree traversal, primitive changes, or cache hit rates. An empty base scene reports zero element compilations. Empty batches and output-target-only updates emit no compilation record.
+
+Records are delivered after successful publication; failed commits emit no success record. A throwing sink does not undo the published result. Read observation failures through `session.diagnostics()`. Core domain diagnostics are available in `session.read().compilation.diagnostics`.
+
+Direct calls to Core's `compileToScene` or `prepareSceneCompilation` have no trace option. Compilation observers and provenance remain available through their respective contracts.
+
+Render owns backend phases through `RenderTracePhase` and units through `RenderTraceUnit.ScenePrimitive`, exported from the corresponding `@retikz/render/svg`, `@retikz/render/canvas`, or `@retikz/render/runtime` entry. SVG / Canvas continue to count `scene-primitive` work. Compare owner, phase, and unit together; do not combine counts with different units.
 
 <SourceLinks
   sources={[
-    {
-      label: 'Core phase declarations, reporting and fallback diagnostics',
-      path: 'packages/kernel/core/src/compile/incremental/computation.ts',
-    },
+    { label: 'Reconciler session reporting and failure isolation', path: 'packages/kernel/reconciler/src/session.ts' },
+    { label: 'Reconciler phases and units', path: 'packages/kernel/reconciler/src/trace.ts' },
+    { label: 'Render phases and units', path: 'packages/kernel/render/src/trace/constants.ts' },
   ]}
 />
 

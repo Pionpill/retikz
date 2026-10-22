@@ -420,14 +420,14 @@ export type RuntimeSourceExecutionResult<T> = Readonly<{
 
 <ApiTable>
 
-| Member              | Type                                               | Default | Description                                                    |
-| ------------------- | -------------------------------------------------- | ------- | -------------------------------------------------------------- |
-| `readonly cause`    | `unknown`                                          | —       | Original error                                                 |
-| `readonly code`     | `typeof RuntimeDiagnosticCode.SourceDisposeFailed` | —       | Diagnostic category                                            |
-| `readonly message`  | `string`                                           | —       | Readable error message                                         |
-| `readonly owner`    | `string`                                           | —       | Source in which the failure occurred                           |
-| `readonly phase`    | `typeof RuntimeSourcePhase.Retire`                 | —       | Disposal phase                                                 |
-| `readonly severity` | `'error'`                                          | —       | Lifecycle cleanup always produces a non-fatal error diagnostic |
+| Member              | Type                                                      | Default | Description                                                    |
+| ------------------- | --------------------------------------------------------- | ------- | -------------------------------------------------------------- |
+| `readonly cause`    | `unknown`                                                 | —       | Original error                                                 |
+| `readonly code`     | `typeof BuiltinRuntimeDiagnosticCode.SourceDisposeFailed` | —       | Diagnostic category                                            |
+| `readonly message`  | `string`                                                  | —       | Readable error message                                         |
+| `readonly owner`    | `string`                                                  | —       | Source in which the failure occurred                           |
+| `readonly phase`    | `typeof RuntimeSourcePhase.Retire`                        | —       | Disposal phase                                                 |
+| `readonly severity` | `'error'`                                                 | —       | Lifecycle cleanup always produces a non-fatal error diagnostic |
 
 </ApiTable>
 
@@ -437,7 +437,7 @@ export type RuntimeSourceExecutionResult<T> = Readonly<{
 
 ```ts
 export type RuntimeSourceLifecycleDiagnostic = Readonly<{
-  code: typeof RuntimeDiagnosticCode.SourceDisposeFailed;
+  code: typeof BuiltinRuntimeDiagnosticCode.SourceDisposeFailed;
   owner: string;
   phase: typeof RuntimeSourcePhase.Retire;
   severity: 'error';
@@ -1269,7 +1269,9 @@ export type RuntimeCommitEvent<TPublicRead> =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"createRuntime"} path={"packages/kernel/runtime/src/runtime/runtime.ts"} startLine={657}>createRuntime</ApiSourceLink> / <ApiSourceLink label={"RuntimeOptions"} path={"packages/kernel/runtime/src/runtime/types.ts"} startLine={11}>RuntimeOptions</ApiSourceLink>
+#### <ApiSourceLink label={"createRuntime"} path={"packages/kernel/runtime/src/runtime/runtime.ts"} startLine={651}>createRuntime</ApiSourceLink> / <ApiSourceLink label={"RuntimeOptions"} path={"packages/kernel/runtime/src/runtime/types.ts"} startLine={11}>RuntimeOptions</ApiSourceLink>
+
+Initialization runs Source, Computation, then Participant prepare / commit / read in order. Updates prepare state in separate candidate tables and publish state and revision only after all Participants commit and read successfully. Observer and resource disposal failures after publication only produce diagnostics. Failures before publication trigger rollback; a failed rollback prevents further reads and writes.
 
 <DocTabs defaultValue="members">
 
@@ -2117,15 +2119,15 @@ export type RuntimeParticipantWarningInput = Readonly<{
 
 <ApiTable>
 
-| Member                  | Type                                                                                                                                                                                                                                                                                                                                                                                                                                | Default | Description                                                                            |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------- |
-| `constructor`           | `(input: { cause?: unknown; code: RetikzRuntimeErrorCode; computation?: Readonly<{ key: string; owner: string }>; diagnostics?: readonly Array<Readonly<{ cause?: unknown; code: OpenString<RuntimeDiagnosticCode>; computation?: Readonly<{ key: string; owner: string }>; message: string; owner?: string; phase: RuntimeDiagnosticPhase; severity: 'warning' \| 'error' }>>; message?: string; owner?: string; phase: string })` | —       | Creates a Runtime error preserving its stable code, context, and secondary diagnostics |
-| `readonly cause`        | `unknown`                                                                                                                                                                                                                                                                                                                                                                                                                           | —       | Original error or invalid input                                                        |
-| `readonly code`         | `RetikzRuntimeErrorCode`                                                                                                                                                                                                                                                                                                                                                                                                            | —       | Stable error category                                                                  |
-| `readonly computation?` | `RuntimeComputationId`                                                                                                                                                                                                                                                                                                                                                                                                              | —       | Optional Computation context                                                           |
-| `readonly diagnostics`  | `ReadonlyArray<RuntimeDiagnostic>`                                                                                                                                                                                                                                                                                                                                                                                                  | —       | Secondary diagnostics such as cleanup failures                                         |
-| `readonly owner?`       | `string`                                                                                                                                                                                                                                                                                                                                                                                                                            | —       | Optional owner, such as a Source key or participant key                                |
-| `readonly phase`        | `string`                                                                                                                                                                                                                                                                                                                                                                                                                            | —       | Runtime phase in which the failure occurred                                            |
+| Member                  | Type                                                                                                                                                                                                                                                                                                                                                                                                                                       | Default | Description                                                                            |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | -------------------------------------------------------------------------------------- |
+| `constructor`           | `(input: { cause?: unknown; code: RetikzRuntimeErrorCode; computation?: Readonly<{ key: string; owner: string }>; diagnostics?: readonly Array<Readonly<{ cause?: unknown; code: OpenString<BuiltinRuntimeDiagnosticCode>; computation?: Readonly<{ key: string; owner: string }>; message: string; owner?: string; phase: RuntimeDiagnosticPhase; severity: 'warning' \| 'error' }>>; message?: string; owner?: string; phase: string })` | —       | Creates a Runtime error preserving its stable code, context, and secondary diagnostics |
+| `readonly cause`        | `unknown`                                                                                                                                                                                                                                                                                                                                                                                                                                  | —       | Original error or invalid input                                                        |
+| `readonly code`         | `RetikzRuntimeErrorCode`                                                                                                                                                                                                                                                                                                                                                                                                                   | —       | Stable error category                                                                  |
+| `readonly computation?` | `RuntimeComputationId`                                                                                                                                                                                                                                                                                                                                                                                                                     | —       | Optional Computation context                                                           |
+| `readonly diagnostics`  | `ReadonlyArray<RuntimeDiagnostic>`                                                                                                                                                                                                                                                                                                                                                                                                         | —       | Secondary diagnostics such as cleanup failures                                         |
+| `readonly owner?`       | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                   | —       | Optional owner, such as a Source key or participant key                                |
+| `readonly phase`        | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                   | —       | Runtime phase in which the failure occurred                                            |
 
 </ApiTable>
 
@@ -2165,15 +2167,15 @@ export class RetikzRuntimeError extends RetikzError<RetikzRuntimeErrorCode, Reti
 
 <ApiTable>
 
-| Member                  | Type                                | Default | Description                                    |
-| ----------------------- | ----------------------------------- | ------- | ---------------------------------------------- |
-| `readonly cause?`       | `unknown`                           | —       | Isolated original non-fatal error              |
-| `readonly code`         | `OpenString<RuntimeDiagnosticCode>` | —       | Stable diagnostic category                     |
-| `readonly computation?` | `RuntimeComputationId`              | —       | Associated Computation identity                |
-| `readonly message`      | `string`                            | —       | Diagnostic message for developers              |
-| `readonly owner?`       | `string`                            | —       | Owner, such as a Source key or participant key |
-| `readonly phase`        | `RuntimeDiagnosticPhase`            | —       | Execution phase that produced the diagnostic   |
-| `readonly severity`     | `'warning' \| 'error'`              | —       | Diagnostic severity                            |
+| Member                  | Type                                       | Default | Description                                    |
+| ----------------------- | ------------------------------------------ | ------- | ---------------------------------------------- |
+| `readonly cause?`       | `unknown`                                  | —       | Isolated original non-fatal error              |
+| `readonly code`         | `OpenString<BuiltinRuntimeDiagnosticCode>` | —       | Stable diagnostic category                     |
+| `readonly computation?` | `RuntimeComputationId`                     | —       | Associated Computation identity                |
+| `readonly message`      | `string`                                   | —       | Diagnostic message for developers              |
+| `readonly owner?`       | `string`                                   | —       | Owner, such as a Source key or participant key |
+| `readonly phase`        | `RuntimeDiagnosticPhase`                   | —       | Execution phase that produced the diagnostic   |
+| `readonly severity`     | `'warning' \| 'error'`                     | —       | Diagnostic severity                            |
 
 </ApiTable>
 
@@ -2183,7 +2185,7 @@ export class RetikzRuntimeError extends RetikzError<RetikzRuntimeErrorCode, Reti
 
 ```ts
 export type RuntimeDiagnostic = Readonly<{
-  code: OpenString<RuntimeDiagnosticCode>;
+  code: OpenString<BuiltinRuntimeDiagnosticCode>;
   phase: RuntimeDiagnosticPhase;
   severity: 'warning' | 'error';
   message: string;
@@ -2256,10 +2258,10 @@ export type RetikzRuntimeErrorCode = ValueOf<typeof RetikzRuntimeErrorCode>;
 
 </details>
 
-#### <ApiSourceLink label={"RuntimeDiagnosticCode"} path={"packages/kernel/runtime/src/diagnostic/constants.ts"} startLine={4}>RuntimeDiagnosticCode</ApiSourceLink>
+#### <ApiSourceLink label={"BuiltinRuntimeDiagnosticCode"} path={"packages/kernel/runtime/src/diagnostic/constants.ts"} startLine={4}>BuiltinRuntimeDiagnosticCode</ApiSourceLink>
 
 ```ts
-export const RuntimeDiagnosticCode = {
+export const BuiltinRuntimeDiagnosticCode = {
   SourceDisposeFailed: 'RUNTIME_SOURCE_DISPOSE_FAILED',
   ResultDisposeFailed: 'RUNTIME_RESULT_DISPOSE_FAILED',
   ComputationObserverFailed: 'RUNTIME_COMPUTATION_OBSERVER_FAILED',
@@ -2270,7 +2272,7 @@ export const RuntimeDiagnosticCode = {
   ParticipantDiagnosticReentrant: 'RUNTIME_PARTICIPANT_DIAGNOSTIC_REENTRANT',
 } as const;
 
-export type RuntimeDiagnosticCode = ValueOf<typeof RuntimeDiagnosticCode>;
+export type BuiltinRuntimeDiagnosticCode = ValueOf<typeof BuiltinRuntimeDiagnosticCode>;
 ```
 
 #### <ApiSourceLink label={"RuntimeDiagnosticPhase"} path={"packages/kernel/runtime/src/diagnostic/constants.ts"} startLine={24}>RuntimeDiagnosticPhase</ApiSourceLink>

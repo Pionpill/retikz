@@ -1,5 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { RuntimeDiagnostic, RuntimeUpdateStrategy } from '@retikz/runtime';
+import type { ReconcilerDiagnostic, ReconcilerUpdateStrategy } from '@retikz/reconciler';
 
 /** React Layout 的宿主执行模式 */
 export const LayoutRuntimeMode = Object.freeze({
@@ -30,11 +30,11 @@ export type LayoutRetainedRuntimeOptions = LayoutPreparationOptions &
     mode?: typeof LayoutRuntimeMode.Retained;
     /**
      * 更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行
-     * @default RuntimeUpdateStrategy.Auto
+     * @default ReconcilerUpdateStrategy.Auto
      */
-    updateStrategy?: RuntimeUpdateStrategy;
+    updateStrategy?: ReconcilerUpdateStrategy;
     /** 接收图形更新的结构化诊断，按产生顺序通知；更新失败时保留最后一次成功画面 */
-    onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
+    onDiagnostic?: (diagnostic: ReconcilerDiagnostic) => void;
   }>;
 
 /** 每次输入变化时完整编译图形，不保留增量执行状态 */

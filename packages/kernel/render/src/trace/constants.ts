@@ -10,3 +10,11 @@ export const RenderTracePhase = {
 
 /** Render trace 阶段名称 */
 export type RenderTracePhase = ValueOf<typeof RenderTracePhase>;
+
+/** Render 后端工作量计数单位 */
+export const RenderTraceUnit = {
+  /** 后端处理的 Scene 图元 */
+  ScenePrimitive: 'scene-primitive',
+} as const;
+
+export type RenderTraceUnit = ValueOf<typeof RenderTraceUnit>;

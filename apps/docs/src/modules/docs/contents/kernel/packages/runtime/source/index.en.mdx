@@ -257,7 +257,7 @@ Initialization captures the first state. An update prepares a candidate and comp
 
 ## Core application
 
-Core treats the complete Scene IR—a structured description of a drawing document—as one Source, rather than creating a Source for each node. It defines `CoreSourceDefinition` once when the module loads and reuses that token for initialization, updates and compilation. This excerpt omits imports and the type declaration:
+Reconciler treats the complete Scene IR—a structured description of a drawing document—as one Source, rather than creating a Source for each node. It defines `CoreSourceDefinition` once when the module loads and reuses that token for initialization, updates and compilation. This excerpt omits imports and the type declaration:
 
 ```ts
 export const CoreSourceDefinition = defineRuntimeSource({
@@ -285,8 +285,8 @@ The token identifies the Source definition and stores no document data. Multiple
 
 <SourceLinks
   sources={[
-    { label: 'Core document Source definition', path: 'packages/kernel/core/src/contract/runtime/source.ts' },
-    { label: 'Source reads in Core compilation', path: 'packages/kernel/core/src/compile/incremental/computation.ts' },
+    { label: 'Core document Source definition', path: 'packages/kernel/reconciler/src/runtime/source.ts' },
+    { label: 'Source reads in Core compilation', path: 'packages/kernel/reconciler/src/runtime/computation.ts' },
   ]}
 />
 

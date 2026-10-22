@@ -13,6 +13,8 @@ The preview below uses the same shared IR as the [Canvas page](/kernel/packages/
 
 SVG string output defaults to the dimensions of Scene.layout. Usually omit output width / height; when one numeric axis is provided, the other follows the content aspect ratio.
 
+Document builders and string output in `@retikz/render/svg` accept `defaultFontFamily`, writing it to the root SVG's `font-family`. An explicit text font family takes precedence. This option affects display without recalculating the Scene; Vanilla uses the same option for both compilation measurements and host display.
+
 ## How to use it
 
 **React** — `<Layout>` defaults to SVG, so `renderer` is optional:
@@ -36,7 +38,7 @@ const view = mountSvg(container, ir);
 // view.root is the <svg>; view.update(next) uses the selected static or retained processing; view.dispose() unmounts
 ```
 
-**Vanilla (SSR / build-time)** — `renderToSvgString` returns an HTML string without touching the DOM, so it runs in Node:
+**Vanilla (SSR / build-time)** — `renderToSvgString` returns an SVG string and runs in Node, estimating text dimensions when Canvas is unavailable:
 
 ```ts
 import { renderToSvgString } from '@retikz/vanilla';

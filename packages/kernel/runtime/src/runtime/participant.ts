@@ -1,7 +1,7 @@
 import type { RuntimeComputationDefinition, RuntimeComputationToken } from '../computation';
 import { RuntimeComputationPhase } from '../computation';
 import type { RuntimeDiagnostic } from '../diagnostic';
-import { RuntimeDiagnosticCode } from '../diagnostic';
+import { BuiltinRuntimeDiagnosticCode } from '../diagnostic';
 import { RuntimeTraceDiagnosticCodes, getRuntimeDiagnosticMessage } from '../diagnostic/internal';
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import type {
@@ -120,7 +120,7 @@ const createRuntimeParticipantInvocation = (
       if (diagnosing) {
         diagnostics.push(
           Object.freeze({
-            code: RuntimeDiagnosticCode.ParticipantDiagnosticReentrant,
+            code: BuiltinRuntimeDiagnosticCode.ParticipantDiagnosticReentrant,
             phase: 'diagnose',
             severity: 'error',
             message: 'Runtime participant diagnose reentry was rejected',
@@ -138,7 +138,7 @@ const createRuntimeParticipantInvocation = (
       } catch (cause) {
         diagnostics.push(
           Object.freeze({
-            code: RuntimeDiagnosticCode.ParticipantDiagnosticInvalid,
+            code: BuiltinRuntimeDiagnosticCode.ParticipantDiagnosticInvalid,
             phase: 'diagnose',
             severity: 'error',
             message: 'Runtime participant diagnostic input is invalid',

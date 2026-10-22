@@ -10,7 +10,7 @@ describe('normalizePlot', () => {
       coordinate: { type: 'cartesian2D' },
       dataExecution: { root: { mode: 'hybrid', external: 'sql' }, marks: { mode: 'builtin' } },
       scales: [],
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
     });
     expect(spec.dataExecution).toEqual({ root: { mode: 'hybrid', external: 'sql' }, marks: { mode: 'builtin' } });
     expect(PlotSchema.parse(spec).dataExecution).toEqual(spec.dataExecution);
@@ -85,14 +85,30 @@ describe('normalizePlot', () => {
     const declaration = normalizePlotDeclarations(
       {
         declarations: [
-          { kind: 'path-mark', props: { x: 'angle', y: 'radius', interpolation: 'polar' }, path: [0] },
-          { kind: 'interval-mark', props: { x: 'angle', y: 'radius', interpolation: 'chord' }, path: [1] },
+          {
+            kind: 'path-mark',
+            props: {
+              encodings: { position: { x: { field: 'angle' }, y: { field: 'radius' } } },
+              properties: { interpolation: 'polar' },
+            },
+            path: [0],
+          },
+          {
+            kind: 'interval-mark',
+            props: {
+              encodings: { position: { x: { field: 'angle' }, y: { field: 'radius' } } },
+              properties: { interpolation: 'chord' },
+            },
+            path: [1],
+          },
           {
             kind: 'relation-mark',
             props: {
-              source: { project: { x: 'sourceAngle', y: 'sourceRadius' } },
-              target: { project: { x: 'targetAngle', y: 'targetRadius' } },
-              path: { interpolation: 'chord' },
+              encodings: {
+                source: { position: { x: 'sourceAngle', y: 'sourceRadius' } },
+                target: { position: { x: 'targetAngle', y: 'targetRadius' } },
+              },
+              properties: { geometry: { kind: 'path', interpolation: 'chord' } },
             },
             path: [3],
           },
@@ -104,9 +120,9 @@ describe('normalizePlot', () => {
 
     expect(spec.coordinate).toMatchObject({ interpolation: 'chord' });
     expect(declaration.fragment.marks).toMatchObject([
-      { type: 'path', interpolation: 'polar' },
-      { type: 'interval', interpolation: 'chord' },
-      { type: 'relation', path: { interpolation: 'chord' } },
+      { type: 'path', properties: { interpolation: 'polar' } },
+      { type: 'interval', properties: { interpolation: 'chord' } },
+      { type: 'relation', properties: { geometry: { kind: 'path', interpolation: 'chord' } } },
     ]);
   });
 
@@ -126,8 +142,8 @@ describe('normalizePlot', () => {
       marks: [
         {
           type: 'point',
-          placement,
-          encoding: { x: { field: 'category' }, y: { field: 'value' } },
+          properties: { placement },
+          encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } },
         },
       ],
     });
@@ -136,7 +152,10 @@ describe('normalizePlot', () => {
         declarations: [
           {
             kind: 'point-mark',
-            props: { x: 'category', y: 'value', placement },
+            props: {
+              encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } },
+              properties: { placement },
+            },
             path: [0],
           },
         ],
@@ -146,7 +165,7 @@ describe('normalizePlot', () => {
     );
 
     expect(declaration.fragment.marks?.[0]).toEqual(plain.marks[0]);
-    expect(plain.marks[0]).toMatchObject({ placement });
+    expect(plain.marks[0]).toMatchObject({ properties: { placement } });
   });
 
   it('从 plain authoring input 创建 schema-valid IRPlot 并保留显式 identity', () => {
@@ -162,7 +181,7 @@ describe('normalizePlot', () => {
         {
           type: 'point' as const,
           id: 'points',
-          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
         },
       ],
       guides: [{ type: 'axis' as const, id: 'revenue-axis', dimension: 'y' as const }],
@@ -191,7 +210,7 @@ describe('normalizePlot', () => {
         {
           type: 'path' as const,
           facetId: 'sales',
-          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
         },
       ],
       guides: [{ type: 'axis' as const, facetId: 'sales', dimension: 'y' as const, grid: true }],
@@ -244,7 +263,13 @@ describe('normalizePlot', () => {
           spacing: { panelGap: 8 },
         },
       ],
-      marks: [{ type: 'point', facetId: 'region', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [
+        {
+          type: 'point',
+          facetId: 'region',
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+        },
+      ],
     });
 
     expect(spec.composition).toEqual({
@@ -283,7 +308,13 @@ describe('normalizePlot', () => {
         { id: 'region', row: 'region', view: 'regionTemplate' },
         { id: 'channel', column: 'channel', view: 'channelTemplate' },
       ],
-      marks: [{ type: 'point', facetId: 'channel', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [
+        {
+          type: 'point',
+          facetId: 'channel',
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+        },
+      ],
     });
 
     expect(spec.composition).toMatchObject({
@@ -341,7 +372,7 @@ describe('normalizePlot', () => {
         {
           type: 'path' as const,
           trackId: 'load',
-          encoding: { x: { field: 'week' }, y: { field: 'load' } },
+          encodings: { position: { x: { field: 'week' }, y: { field: 'load' } } },
         },
       ],
       guides: [{ type: 'axis' as const, scaffoldId: 'ops', dimension: 'x' as const }],
@@ -370,7 +401,7 @@ describe('normalizePlot', () => {
           {
             type: 'point',
             facetId: 'sales',
-            encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+            encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
           },
         ],
       }),

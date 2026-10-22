@@ -811,9 +811,9 @@ describe('Chart providers through Core compile', () => {
             marks: [
               {
                 type: 'path',
-                order: 'x',
-                encoding: { x: { field: 'x' }, y: { field: 'size' } },
-                stroke: { kind: 'constant', value: '#2563eb' },
+                kind: 'data',
+                encodings: { order: 'x', position: { x: 'x', y: 'size' } },
+                properties: { stroke: '#2563eb' },
               },
             ],
           },
@@ -957,8 +957,9 @@ describe('Chart providers through Core compile', () => {
         marks: [
           PointMarkSchema.parse({
             type: 'point',
-            encoding: { x: { field: 'x' }, y: { field: 'y' } },
-            opacity: { overall: { kind: 'constant', value: 0.25 } },
+            kind: 'data',
+            encodings: { position: { x: 'x', y: 'y' } },
+            properties: { opacity: { overall: 0.25 } },
           }),
         ],
       }),
@@ -979,10 +980,7 @@ describe('Chart providers through Core compile', () => {
           {
             kind: 'semantic',
             plotMarks: [
-              PointMarkSchema.parse({
-                type: 'point',
-                encoding: { x: { field: 'x' }, y: { field: 'y' } },
-              }),
+              PointMarkSchema.parse({ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } }),
             ],
           },
         ],

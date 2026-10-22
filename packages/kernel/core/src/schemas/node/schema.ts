@@ -33,17 +33,15 @@ import {
 import { NodeLabelPlacement, NodeLabelPosition } from './constants';
 
 /** 校验标签在矩形类节点指定边上的归一化附着位置 */
-export const NodeLabelBoundaryPositionSchema = object({
+export const NodeLabelBoundaryPositionSchema = strictObject({
   boundary: zodEnum(Side).describe('Canonical box-like node boundary side used as the label attachment line.'),
   fraction: NormalizedFractionSchema.optional().describe(
     'Normalized position along the selected boundary. Defaults to 0.5.',
   ),
-})
-  .strict()
-  .describe('Label position on a box-like node boundary.');
+}).describe('Label position on a box-like node boundary.');
 
 /** 校验按边、轴或统一值指定的盒间距；具体边优先于轴，轴优先于统一值 */
-export const BoxSpacingSchema = object({
+export const BoxSpacingSchema = strictObject({
   default: NonNegativeNumberSchema.optional().describe('Fallback spacing for all sides.'),
   x: NonNegativeNumberSchema.optional().describe('Horizontal spacing for left and right sides.'),
   y: NonNegativeNumberSchema.optional().describe('Vertical spacing for top and bottom sides.'),
@@ -51,33 +49,24 @@ export const BoxSpacingSchema = object({
   right: NonNegativeNumberSchema.optional().describe('Right-side spacing.'),
   top: NonNegativeNumberSchema.optional().describe('Top-side spacing.'),
   bottom: NonNegativeNumberSchema.optional().describe('Bottom-side spacing.'),
-})
-  .strict()
-  .describe('CSS-like box spacing overrides. Side fields override axis fields, then default.');
+}).describe('CSS-like box spacing overrides. Side fields override axis fields, then default.');
 
+/** 接受统一间距或按方向设置的间距 */
 const BoxSpacingValueSchema = union([NonNegativeNumberSchema, BoxSpacingSchema]);
 
 /** 校验双轴缩放覆盖值；指定轴优先于统一倍率 */
-export const AxisScaleSchema = object({
+export const AxisScaleSchema = strictObject({
   default: PositiveNumberSchema.optional().describe('Fallback scale factor for both axes.'),
   x: PositiveNumberSchema.optional().describe('Horizontal scale factor.'),
   y: PositiveNumberSchema.optional().describe('Vertical scale factor.'),
-})
-  .strict()
-  .describe('Axis-specific scale overrides. Axis fields override default.');
-
-const AxisScaleValueSchema = union([PositiveNumberSchema, AxisScaleSchema]);
+}).describe('Axis-specific scale overrides. Axis fields override default.');
 
 /** 校验宽高覆盖值；单独指定的宽或高优先于统一尺寸 */
-export const BoxSizeSchema = object({
+export const BoxSizeSchema = strictObject({
   default: NonNegativeNumberSchema.optional().describe('Fallback size for width and height.'),
   width: NonNegativeNumberSchema.optional().describe('Width size.'),
   height: NonNegativeNumberSchema.optional().describe('Height size.'),
-})
-  .strict()
-  .describe('Box size overrides. Width and height override default.');
-
-const BoxSizeValueSchema = union([NonNegativeNumberSchema, BoxSizeSchema]);
+}).describe('Box size overrides. Width and height override default.');
 
 /** 校验节点外侧标签引线的颜色、线宽与虚线样式 */
 export const NodeLabelPinSchema = object({
@@ -141,6 +130,7 @@ export const NodeLabelSchema = object({
   })
   .describe('Extra text attached around a node border. Multiple labels supported via array form on `Node.label`.');
 
+/** 校验节点可使用的坐标与相对定位方式 */
 const SharedNodePositionSchema = union([
   PositionSchema,
   PolarPositionSchema,
@@ -191,9 +181,11 @@ export const NodeLayoutSchema = strictObject({
   width: PositiveNumberSchema.optional().describe(
     'Exact unscaled visible border width in user units. Excludes margin and must not be smaller than the effective minimum width.',
   ),
-  minimumSize: BoxSizeValueSchema.optional().describe(
-    'Minimum visual border size in user units. Number applies to width and height; object width / height override default.',
-  ),
+  minimumSize: union([NonNegativeNumberSchema, BoxSizeSchema])
+    .optional()
+    .describe(
+      'Minimum visual border size in user units. Number applies to width and height; object width / height override default.',
+    ),
   padding: BoxSpacingValueSchema.optional().describe(
     'Inner spacing from content to border. Number applies to all sides; object fields resolve as side > axis > default.',
   ),
@@ -202,6 +194,7 @@ export const NodeLayoutSchema = strictObject({
   ),
 }).describe('Node size, spacing, and text layout overrides.');
 
+/** 组合节点自身字段与共用样式，供最终节点校验复用 */
 const NodeBaseSchema = strictObject({
   type: literal('node').describe('Discriminator marking this child as a node'),
   id: NonBlankStringSchema.optional().describe(
@@ -236,9 +229,11 @@ const NodeBaseSchema = strictObject({
   cornerRadius: NonNegativeNumberSchema.optional().describe(
     'Top-level corner radius in user units. Only effective on `rectangle` shape.',
   ),
-  scale: AxisScaleValueSchema.optional().describe(
-    'Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.',
-  ),
+  scale: union([PositiveNumberSchema, AxisScaleSchema])
+    .optional()
+    .describe(
+      'Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.',
+    ),
   label: union([NodeLabelSchema, array(NodeLabelSchema)])
     .optional()
     .describe(

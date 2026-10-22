@@ -1,7 +1,6 @@
 import type { IRChild, IRPathStyle, IRPosition, IRStep, PathCommand } from '@retikz/core';
-import { alignAngleSweep, DEG_TO_RAD } from '@retikz/core';
+import { DEFAULT_EPSILON, DEG_TO_RAD, alignAngleSweep, applyAffine, localToWorld } from '@retikz/math';
 import type { AffineMatrix } from '@retikz/math';
-import { applyAffine, DEFAULT_EPSILON, localToWorld } from '@retikz/math';
 
 /** 由 Inspector 生成的普通 Path 子项样式 */
 export type InspectionPathStyle = Readonly<{

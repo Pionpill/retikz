@@ -13,19 +13,17 @@ export const TextAlignSchema = zodEnum(NodeTextAlign).describe('Text alignment w
 export const LineHeightSchema = PositiveNumberSchema.describe('Text line height in user units.');
 
 /** 校验混排行中的纯文本片段及其局部视觉覆盖 */
-export const TextRunSchema = object({
+export const TextRunSchema = strictObject({
   text: string().describe('Text segment content within a mixed text+math line.'),
   fill: ContextualColorSchema.optional().describe(
     'Per-run text color: an exact CSS color or a weight derived from the effective host text color.',
   ),
   opacity: OpacitySchema.optional().describe('Per-run opacity.'),
   font: FontSchema.optional().describe('Per-run font overrides; missing fields inherit from the line / block font.'),
-})
-  .strict()
-  .describe('A text segment in a mixed line (same fields as a line object).');
+}).describe('A text segment in a mixed line (same fields as a line object).');
 
 /** 校验与相邻文本共用基线的公式片段及其局部颜色和透明度 */
-export const MathRunSchema = object({
+export const MathRunSchema = strictObject({
   tex: string().describe(
     'LaTeX source for this inline formula segment, rendered to glyph paths by an injected lowerTex capability.',
   ),
@@ -38,22 +36,18 @@ export const MathRunSchema = object({
     'Glyph color for this formula segment: an exact CSS color or a weight derived from the effective host text color.',
   ),
   opacity: OpacitySchema.optional().describe('Per-run opacity.'),
-})
-  .strict()
-  .describe(
-    'Inline math segment in a mixed line, baseline-aligned to surrounding text. Requires an injected lowerTex capability.',
-  );
+}).describe(
+  'Inline math segment in a mixed line, baseline-aligned to surrounding text. Requires an injected lowerTex capability.',
+);
 
 /** 校验从左到右排列、共用基线的非空文本与公式片段序列 */
-export const MixedLineSchema = object({
+export const MixedLineSchema = strictObject({
   runs: array(union([TextRunSchema, MathRunSchema]))
     .min(1)
     .describe('Text and math segments laid out left-to-right on a shared baseline.'),
-})
-  .strict()
-  .describe(
-    'A line composed of text and math runs laid out left-to-right on a shared baseline (canonical form of the `$...$` string sugar).',
-  );
+}).describe(
+  'A line composed of text and math runs laid out left-to-right on a shared baseline (canonical form of the `$...$` string sugar).',
+);
 
 /** 校验单行标签内容，接受文本语法糖或显式混排片段 */
 export const LabelTextContentSchema = union([string(), MixedLineSchema]).describe(
@@ -70,6 +64,7 @@ export const StyledLineSchema = object({
   font: FontSchema.optional().describe('Per-line font overrides; missing fields inherit from block-level `font`'),
 }).describe('One styled text line with per-line visual overrides.');
 
+/** 允许调用方替换的标签字段说明 */
 type LabelVisualStyleDescriptionOverrides = Partial<Record<'textColor' | 'opacity' | 'font', string>>;
 
 /** 创建标签共用的视觉字段校验器，并允许调用方覆盖字段的英文契约描述 */
@@ -86,9 +81,9 @@ export const createLabelVisualStyleShape = (descriptions: LabelVisualStyleDescri
 });
 
 /** 校验节点标签与几何标签共用的颜色、透明度及字体覆盖 */
-export const LabelVisualStyleSchema = object(createLabelVisualStyleShape())
-  .strict()
-  .describe('Shared visual style fields for node labels and geometry labels.');
+export const LabelVisualStyleSchema = strictObject(createLabelVisualStyleShape()).describe(
+  'Shared visual style fields for node labels and geometry labels.',
+);
 
 /** 校验普通字符串、带样式文本行或文本与公式混排行 */
 export const LineSchema = union([string(), StyledLineSchema, MixedLineSchema]).describe(

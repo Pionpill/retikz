@@ -23,7 +23,7 @@ A math run is a formula segment in a text line, as opposed to an ordinary text s
 
 Callers can also declare a formula segment directly in structured text: this is an explicit math run, requiring no dollar-delimiter recognition. Because it already explicitly requests formula layout, a missing lowerer skips the segment with a diagnostic instead of falling back to ordinary text.
 
-Core passes the source, `displayMode`, font size, and color to synchronous `LowerTex`. This separates text layout from formula typesetting: Core does not need to know how MathJax lays out the formula.
+Core passes the source, `displayMode`, and font size to synchronous `LowerTex`. Host color is resolved when painting and does not participate in lowering. This separates text layout from formula typesetting: Core does not need to know how MathJax lays out the formula.
 
 This page follows the inline example. Display mode also calls the lowerer through `layoutInlineLine()`, forwarding `displayMode` to the engine rather than using a separate SVG conversion pipeline.
 
@@ -45,10 +45,7 @@ This does not lock Retikz to MathJax: it is the built-in engine. Another engine 
 Core depends only on the synchronous `LowerTex` contract:
 
 ```ts
-type LowerTex = (
-  content: { tex: string; displayMode?: boolean },
-  style: { fontSize: number; color?: string },
-) => LoweredTex | null;
+type LowerTex = (content: { tex: string; displayMode?: boolean }, style: { fontSize: number }) => LoweredTex | null;
 ```
 
 `LoweredTex` contains paths in draw order plus formula `width`, `height`, and `depth`. Each path carries fill / stroke, opacity, and path commands, so Core can continue layout and rendering. The minimal engine contract consumed by Tex is synchronous `MathJaxSvgEngine.convert(tex, { display }) => string`; a custom engine must return the SVG subset supported by this package.
@@ -105,7 +102,7 @@ This figure only shows how a formula request hits the cache, or is parsed by Mat
 
 <ComponentPreview files="tex-lower-cache" size="sm" type="flow" hideCode />
 
-`createLowerTex` maintains an in-memory cache per lowerer. Its key contains TeX source, inline / display mode, font size, and host color. Successful results and deterministic MathJax / SVG failures are cached. An exception from `engine.convert` is transient and not cached, so the next call can retry. Every public failure calls the latest `onDiagnostic`.
+`createLowerTex` maintains an in-memory cache per lowerer. Its key contains TeX source, inline / display mode, and font size. Changing the host color reuses the glyph cache; explicit colors in the formula source remain intact. Successful results and deterministic MathJax / SVG failures are cached. An exception from `engine.convert` is transient and not cached, so the next call can retry. Every public failure calls the latest `onDiagnostic`.
 
 Failures have two diagnostic levels: the Tex lowerer reports the specific cause through `onDiagnostic`; Core reports the general `TEX_INVALID` after receiving `null`, indicating that this formula cannot participate in layout. One failure can therefore appear in two diagnostic channels without representing two independent failures.
 

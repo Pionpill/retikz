@@ -55,7 +55,7 @@ export const lowerStandalonePlot = (
     {
       version: 1,
       type: 'scene',
-      theme: options.environment.theme,
+      ...(options.environment.theme === undefined ? {} : { theme: options.environment.theme }),
       children:
         options.environment.defaults === undefined
           ? [spec]

@@ -25,6 +25,7 @@ describe('foundation public surface', () => {
         'createOpenStringSchema',
         'createReadonlyMap',
         'isRetikzError',
+        'jsonStructuralEquals',
         'mergeProperties',
         'parseStaticCssColor',
       ].sort(),

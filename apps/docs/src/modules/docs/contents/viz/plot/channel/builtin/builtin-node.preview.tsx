@@ -52,19 +52,20 @@ export const BuiltinNodePreview = (
       <PlotScale dimension="x" type="linear" domain={[0, 4]} domainPadding={0} />
       <PlotScale dimension="y" type="linear" domain={[8, 16]} domainPadding={0} />
       <PointMark
-        x="x"
-        y="y"
-        shape={{ kind: 'constant', value: BuiltinShape.Rectangle }}
-        fill={{ kind: 'constant', value: '#dbeafe' }}
-        stroke={{ kind: 'constant', value: '#1d4ed8' }}
-        strokeWidth={1.5}
-        padding={values.padding}
-        cornerRadius={values.cornerRadius}
-        rotate={values.rotate}
-        minimumSize={values.minimumSize}
-        scale={values.scale}
-        shadow={values.shadow}
-        blendMode={values.blendMode}
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
+        properties={{
+          shape: BuiltinShape.Rectangle,
+          fill: '#dbeafe',
+          stroke: '#1d4ed8',
+          strokeWidth: 1.5,
+          padding: values.padding,
+          cornerRadius: values.cornerRadius,
+          rotate: values.rotate,
+          minimumSize: values.minimumSize,
+          scale: values.scale,
+          shadow: values.shadow,
+          blendMode: values.blendMode,
+        }}
       />
     </Plot>
   </Layout>

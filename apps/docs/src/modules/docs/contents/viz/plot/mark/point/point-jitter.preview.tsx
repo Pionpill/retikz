@@ -25,11 +25,8 @@ export const PointJitterPreview = (values: PointJitterPreviewValues) => {
     <Layout viewBox={{ x: -40, y: -40, width: 480, height: 360 }}>
       <Plot data={jitterPoints} width={400} height={280} coordinate={polar ? 'polar2D' : undefined}>
         <PointMark
-          x={continuous ? 'angle' : 'group'}
-          y="value"
-          size={6}
-          color={{ kind: 'constant', value: '#2563eb' }}
-          placement={{ adjustments: [jitterOperationOf(values)] }}
+          encodings={{ position: { x: { field: continuous ? 'angle' : 'group' }, y: { field: 'value' } } }}
+          properties={{ size: 6, color: '#2563eb', placement: { adjustments: [jitterOperationOf(values)] } }}
         />
         {continuous ? (
           <PlotScale dimension="x" type="linear" domain={[0, 360]} />

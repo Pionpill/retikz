@@ -18,13 +18,16 @@ export const resolveStripPointMark = (
 
   return PointMarkSchema.parse({
     ...point,
-    placement: {
-      adjustments: [
-        {
-          kind: BuiltinPlotPositionAdjustment.Jitter,
-          ...(jitter === undefined ? {} : jitter),
-        },
-      ],
+    properties: {
+      ...point.properties,
+      placement: {
+        adjustments: [
+          {
+            kind: BuiltinPlotPositionAdjustment.Jitter,
+            ...(jitter === undefined ? {} : jitter),
+          },
+        ],
+      },
     },
   });
 };

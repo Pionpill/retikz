@@ -1,5 +1,5 @@
 import type { RuntimeDiagnostic } from '../diagnostic';
-import { RuntimeDiagnosticCode } from '../diagnostic';
+import { BuiltinRuntimeDiagnosticCode } from '../diagnostic';
 import { RuntimeTraceDiagnosticCodes } from '../diagnostic/internal';
 import type { RetikzRuntimeErrorCode } from '../error';
 import { RetikzRuntimeError } from '../error';
@@ -31,8 +31,8 @@ export const createRuntimeContractError = (
 /** 失败 transaction 可从 Runtime 内部保留的 execution diagnostic 闭集 */
 const executionDiagnosticCodes = new Set<string>([
   ...Object.values(RuntimeTraceDiagnosticCodes),
-  RuntimeDiagnosticCode.ResultDisposeFailed,
-  RuntimeDiagnosticCode.SourceDisposeFailed,
+  BuiltinRuntimeDiagnosticCode.ResultDisposeFailed,
+  BuiltinRuntimeDiagnosticCode.SourceDisposeFailed,
 ]);
 
 /** 判断失败 transaction 中仍需保留的执行诊断 */

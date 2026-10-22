@@ -15,8 +15,14 @@ import { Plot, PointMark, RelationMark } from '@retikz/plot-react';
 
 ```tsx
 <Plot data={edges}>
-  <PointMark x="sourceX" y="sourceY" anchorId={{ prefix: 'node', field: 'sourceId' }} />
-  <PointMark x="targetX" y="targetY" anchorId={{ prefix: 'node', field: 'targetId' }} />
+  <PointMark
+    encodings={{ anchorId: 'sourceId', position: { x: 'sourceX', y: 'sourceY' } }}
+    properties={{ anchorId: { prefix: 'node' } }}
+  />
+  <PointMark
+    encodings={{ anchorId: 'targetId', position: { x: 'targetX', y: 'targetY' } }}
+    properties={{ anchorId: { prefix: 'node' } }}
+  />
   <RelationMark
     source={{ anchorId: { prefix: 'node', field: 'sourceId' } }}
     target={{ anchorId: { prefix: 'node', field: 'targetId' } }}
@@ -59,7 +65,7 @@ RelationMark 是底层关系路径 mark：它不重新发明箭头、标签或�
 
 #### 桑基带状关系
 
-桑基关系仍使用同一套 `source` / `target` 引用，但将 `kind` 设为 `ribbon`，并用 `ribbon.width` 声明带宽。填充和透明度继续放在 path / ribbon 共用的 `style` 中。
+桑基关系通过 `encodings.source` / `encodings.target` 绑定端点，将 `properties.geometry.kind` 设为 `ribbon`，并用 `encodings.geometry.width` 绑定带宽字段。填充字段放在 `encodings.fill`，固定透明度放在 `properties.opacity`。示例将流线与节点分到两个使用相同坐标范围的 Plot 图层，各自只消费对应的数据行。
 
 <ComponentPreview
   files={['relation-sankey', 'relation-sankey.preview.tsx', 'relation-sankey.data.ts']}
@@ -164,6 +170,8 @@ PathMark 为每个顶点注册可引用坐标，RelationMark 的局部 `relate` 
 />
 
 ## API 参考
+
+标签内容可简写为 `encodings.label: 'name'`，固定文字写 `properties.label: '重点'`。对象形式支持 `font.size`、`font.weight`、`textColor` 等字段编码，多标签数组按索引配对；未编码的字体叶子继续继承。详见[标签编码](/viz/plot/reference/encoding#labelencodingschema)。
 
 Source IR 的 `endpoints` 节点可以通过 `autoPadding` 参与边缘留白，默认 `false`。策略只保护实际存在的端点节点，不包含连线路径；Ranged Dot Chart 会显式传入策略。共同规则与示例见 [PointMark 边缘留白](/viz/plot/mark/point#边缘留白)。
 

@@ -1,7 +1,7 @@
 import type { IRStep } from '@retikz/core';
 import {
   ArrowEndDetailSchema,
-  GeometryLabelSchema,
+  PathLabelSchema,
   NodeTargetSchema,
   DrawableInstanceSchema,
   PathTransformSchema,
@@ -79,16 +79,15 @@ export const GraphRelationMarkerAppearanceSchema = ArrowEndDetailSchema.pick({
 }).describe('Sparse appearance fields for one Relation endpoint marker.');
 
 /** 校验关系根级标签文本颜色 */
-export const GraphRelationLabelTextForegroundSchema = GeometryLabelSchema.shape.textColor.describe(
+export const GraphRelationLabelTextForegroundSchema = PathLabelSchema.shape.textColor.describe(
   'Relation root label text color.',
 );
 
 /** 校验关系根级标签字体 */
-export const GraphRelationLabelFontSchema = GeometryLabelSchema.shape.font.describe('Relation root label font.');
+export const GraphRelationLabelFontSchema = PathLabelSchema.shape.font.describe('Relation root label font.');
 
 /** 校验关系根级标签不透明度 */
-export const GraphRelationLabelOpacitySchema =
-  GeometryLabelSchema.shape.opacity.describe('Relation root label opacity.');
+export const GraphRelationLabelOpacitySchema = PathLabelSchema.shape.opacity.describe('Relation root label opacity.');
 
 /** 校验语义端点、角色与不冲突的 Core Path 字段组成的图关系 */
 export const RelationSchema = strictObject({
@@ -113,7 +112,7 @@ export const RelationSchema = strictObject({
   status: GraphStatusSchema.optional().describe('Optional closed Graph semantic status.'),
   direction: RelationDirectionSchema.optional().describe('Explicit semantic direction overriding role defaults.'),
   group: string().optional().describe('Optional Graph-root relation color grouping identifier.'),
-  labels: array(GeometryLabelSchema)
+  labels: array(PathLabelSchema)
     .optional()
     .describe('Optional complete Core Geometry Labels attached to the Relation path.'),
   route: array(GraphRelationRouteStepSchema)

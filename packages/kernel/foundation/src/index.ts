@@ -6,3 +6,4 @@ export * from './json';
 export * from './objects';
 export * from './schema';
 export * from './types';
+export * from './trace';

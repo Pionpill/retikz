@@ -74,7 +74,7 @@ describe('[lower-tex] diagnostics and cache', () => {
     expect(diagnostics).toMatchObject([{ kind: 'engine-error', source: 'x' }]);
   });
 
-  it('缓存 key 包含宿主 color', () => {
+  it('同一公式与字号复用字形，字号和显示模式变化重新降解', () => {
     let calls = 0;
     const lower = createLowerTex({
       convert: () => {
@@ -83,9 +83,12 @@ describe('[lower-tex] diagnostics and cache', () => {
       },
     });
 
-    lower({ tex: 'x' }, { fontSize: 16, color: 'red' });
-    lower({ tex: 'x' }, { fontSize: 16, color: 'blue' });
+    const first = lower({ tex: 'x' }, { fontSize: 16 });
+    expect(lower({ tex: 'x' }, { fontSize: 16 })).toBe(first);
+    expect(calls).toBe(1);
+    lower({ tex: 'x' }, { fontSize: 20 });
+    lower({ tex: 'x', displayMode: true }, { fontSize: 20 });
 
-    expect(calls).toBe(2);
+    expect(calls).toBe(3);
   });
 });

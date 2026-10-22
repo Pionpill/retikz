@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { isNodeLayoutCompileArtifact } from '../../src/compile/artifact';
 import { compileToScene } from '../../src/compile/compile';
-import { CompileWarningCode } from '../../src/compile/constants';
+import { BuiltinCompileWarningCode } from '../../src/compile/constants';
 import type { LowerTex, TextMeasurer, TextMetrics } from '../../src/compile/text';
 import { normalizeTextMetrics } from '../../src/compile/text';
 import type { CompileWarning } from '../../src/compile/warning';
@@ -278,7 +278,7 @@ describe('Node label resolved metrics', () => {
       onWarn: warning => warnings.push(warning),
     }).scene;
 
-    expect(warnings.some(warning => warning.code === CompileWarningCode.TexInvalid)).toBe(true);
+    expect(warnings.some(warning => warning.code === BuiltinCompileWarningCode.TexInvalid)).toBe(true);
     expect(
       flattenPrims(scene.primitives).some(primitive => primitive.type === 'path' && primitive.fillRule !== undefined),
     ).toBe(false);

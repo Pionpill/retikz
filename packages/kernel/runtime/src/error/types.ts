@@ -1,10 +1,10 @@
-import type { RuntimeDiagnosticCode } from '../diagnostic';
+import type { BuiltinRuntimeDiagnosticCode } from '../diagnostic';
 import type { RuntimeSourcePhase } from './constants';
 
 /** Runtime Source value 释放失败的非致命诊断 */
 export type RuntimeSourceLifecycleDiagnostic = Readonly<{
   /** 诊断分类 */
-  code: typeof RuntimeDiagnosticCode.SourceDisposeFailed;
+  code: typeof BuiltinRuntimeDiagnosticCode.SourceDisposeFailed;
   /** 发生失败的 Source */
   owner: string;
   /** 释放阶段 */

@@ -1,4 +1,4 @@
-import type { IRGeometryLabel, IRTarget, IRNodeTarget, Side } from '@retikz/core';
+import type { IRPathLabel, IRTarget, IRNodeTarget, Side } from '@retikz/core';
 import type { RelationDirection } from '@retikz/graph';
 import type { BoundsInsets, BoundsRect, Position } from '@retikz/math';
 
@@ -139,7 +139,7 @@ export type FlowLayoutRouting =
     }>;
 
 /** 完整标签提供给布局的几何配置，不包含文字或外观 */
-export type FlowLayoutLabelPlacement = Readonly<Omit<IRGeometryLabel, 'text' | 'textColor' | 'font' | 'opacity'>>;
+export type FlowLayoutLabelPlacement = Readonly<Omit<IRPathLabel, 'text' | 'textColor' | 'font' | 'opacity'>>;
 
 /** bend 参考几何，仅保留一个生效参数族 */
 export type FlowBendRoute = Readonly<{

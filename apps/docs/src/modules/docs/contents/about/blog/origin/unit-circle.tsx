@@ -130,18 +130,15 @@ const Demo: FC<UnitCircleProps> = props => {
       {/* sin alpha, cos alpha, and tan alpha */}
       <Draw
         way={[{ angle: -30, radius: 100 }, { label: { text: 'sin α', side: 'left' } }, [COS30 * 100, 0]]}
-        thickness="thick"
-        style={{ stroke: 'red' }}
+        style={{ strokeWidth: 2, stroke: 'red' }}
       />
       <Draw
         way={[[COS30 * 100, 0], { label: { text: 'cos α', side: 'bottom' } }, [0, 0]]}
-        thickness="thick"
-        style={{ stroke: 'dodgerblue' }}
+        style={{ strokeWidth: 2, stroke: 'dodgerblue' }}
       />
       <Draw
         way={[[100, 0], { label: { text: 'tan α = sin α / cos α', side: 'right' } }, [100, -TAN30 * 100]]}
-        thickness="thick"
-        style={{ stroke: 'darkorange' }}
+        style={{ strokeWidth: 2, stroke: 'darkorange' }}
       />
       <Coordinate id="t" position={[100, -TAN30 * 100]} />
       <Draw way={[[0, 0], 't']} />

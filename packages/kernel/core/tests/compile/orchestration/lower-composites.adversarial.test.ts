@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, object, string } from 'zod';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../../src';
-import { compileToScene, CompileWarningCode, CompositeBaseSchema, defineComposite } from '../../../src';
+import { compileToScene, BuiltinCompileWarningCode, CompositeBaseSchema, defineComposite } from '../../../src';
 import { flattenPrims } from '../../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
@@ -152,7 +152,7 @@ describe('lowerComposites — adversarial', () => {
     };
     const scene = compileToScene(ir, { composites: [], onWarn: w => warnings.push(w) }).scene;
 
-    expect(warnings.some(w => w.code === CompileWarningCode.CompositeNotRegistered)).toBe(true);
+    expect(warnings.some(w => w.code === BuiltinCompileWarningCode.CompositeNotRegistered)).toBe(true);
     expect(scene.primitives.filter(p => p.type === 'rect' || p.type === 'text')).toHaveLength(0); // 节点被跳过
   });
 

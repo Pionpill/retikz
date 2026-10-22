@@ -1,10 +1,9 @@
+import { AFFINE_IDENTITY, DEG_TO_RAD, applyAffine, multiplyAffine } from '@retikz/math';
 import type { AffineMatrix } from '@retikz/math';
-import { AFFINE_IDENTITY, applyAffine, multiplyAffine } from '@retikz/math';
 
 import type { Transform } from '../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import type { IRPosition } from '../schemas';
-import { DEG_TO_RAD } from '../shared/geometry';
 import type { NodeLayout } from './node';
 
 /** 将局部点按 transform chain 投影到全局坐标 */

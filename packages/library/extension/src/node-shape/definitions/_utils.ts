@@ -1,17 +1,17 @@
-import type { Rect, ScenePrimitive, ShapeAnchorName } from '@retikz/core';
+import type { ScenePrimitive, ShapeAnchorName } from '@retikz/core';
 import {
-  boundaryFromContour,
   CenterAnchor,
+  boundaryFromContour,
   contourCommands,
   contourToPathCommands,
   contourToPathPrimitive,
   isDirectionalAnchor,
-  localToWorld,
   pointsConnectionEnvelope,
   rect,
   verticesToSegments,
 } from '@retikz/core';
-import type { Position } from '@retikz/math';
+import { localToWorld } from '@retikz/math';
+import type { CenteredBox, Position } from '@retikz/math';
 
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../errors';
 
@@ -122,12 +122,12 @@ export const circumscribeRoundedPolygon = (
 };
 
 /** 将局部多边形顶点映射到 Shape 世界坐标 */
-export const polygonWorldVertices = (bounds: Rect, verticesFor: PolygonVertices): Array<Position> =>
+export const polygonWorldVertices = (bounds: CenteredBox, verticesFor: PolygonVertices): Array<Position> =>
   verticesFor(bounds.width / 2, bounds.height / 2).map(vertex => localToWorld(bounds, vertex));
 
 /** 从最终多边形轮廓解析方向边界点 */
 export const polygonBoundaryPoint = (
-  bounds: Rect,
+  bounds: CenteredBox,
   toward: Position,
   cornerRadius: number | undefined,
   verticesFor: PolygonVertices,
@@ -140,14 +140,14 @@ export const polygonBoundaryPoint = (
 };
 
 /** 解析仅由 Core 提供的标准方向 anchor */
-export const polygonAnchor = (bounds: Rect, name: ShapeAnchorName): Position | undefined => {
+export const polygonAnchor = (bounds: CenteredBox, name: ShapeAnchorName): Position | undefined => {
   if (name === CenterAnchor.Center) return undefined;
   return isDirectionalAnchor(name) ? rect.anchor(bounds, name) : undefined;
 };
 
 /** 从最终局部多边形轮廓计算规则连接包络 */
 export const polygonConnectionEnvelope = (
-  bounds: Rect,
+  bounds: CenteredBox,
   kind: 'circle' | 'ellipse' | 'rectangle',
   verticesFor: PolygonVertices,
 ): { halfWidth: number; halfHeight: number } =>
@@ -155,7 +155,7 @@ export const polygonConnectionEnvelope = (
 
 /** 发射与 boundary 共用顶点和圆角语义的多边形路径 */
 export const emitPolygon = function* (
-  bounds: Rect,
+  bounds: CenteredBox,
   style: Parameters<typeof contourToPathPrimitive>[1],
   round: (value: number) => number,
   cornerRadius: number | undefined,

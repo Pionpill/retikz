@@ -1,3 +1,5 @@
+import { DEG_TO_RAD } from '@retikz/math';
+
 import type { LayoutAxisProposal, Transform } from '../../contract';
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
@@ -14,7 +16,6 @@ import { resolvePosition, resolvePositionTargetWorld } from '../../resolve/posit
 import { resolveFont, resolveTextLineHeight } from '../../resolve/text';
 import type { IRAnchorPosition, IRPosition } from '../../schemas';
 import { CenterAnchor } from '../../shared';
-import { DEG_TO_RAD } from '../../shared/geometry';
 import { DEFAULT_FONT_SIZE } from '../constants';
 import type { CompileWarningCode } from '../constants';
 import { resolveAnchorRefUncached } from '../reference';
@@ -26,7 +27,7 @@ import { layoutNodeContent } from './content/layout';
 import { createNodeGeometryContext } from './geometry-context';
 import type { NodeGeometryContext } from './geometry-context';
 import { layoutNodeLabels, measureNodeLabels } from './label/layout';
-import type { NodeLayout, TexLoweringContext } from './types';
+import type { NodeCompilation, NodeLayout, TexLoweringContext } from './types';
 
 /** 限制 custom circumscribe 反馈次数，保证 proposal 求值有确定上界 */
 const MAX_ALLOCATION_REFLOW_ATTEMPTS = 32;
@@ -145,7 +146,7 @@ export type LayoutNodeContext = {
 };
 
 /** 按文本测量、节点缩放与父级宽度提案计算正文、形状和边界布局 */
-export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContext): NodeLayout => {
+export const compileResolvedNode = (resolution: NodeResolution, context: LayoutNodeContext): NodeCompilation => {
   const { node, shape: shapeResolution, boundary: boundaryResolution } = resolution;
   const {
     measureText,
@@ -378,24 +379,7 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
   });
 
   const provisional: NodeLayout = {
-    node: {
-      id: node.id,
-      fill: node.fill,
-      fillOpacity: node.fillOpacity,
-      stroke: node.stroke,
-      strokeOpacity: node.strokeOpacity,
-      strokeWidth: node.strokeWidth,
-      dashPattern: node.dashPattern,
-      dashOffset: node.dashOffset,
-      cornerRadius: node.cornerRadius,
-      textColor: node.textColor,
-      opacity: node.opacity,
-      shadow: node.shadow,
-      blendMode: node.blendMode,
-      boundary: node.boundary,
-      meta: node.meta,
-      animations: node.animations,
-    },
+    boundarySource: node.boundary,
     shape: shapeResolution,
     geometry: {
       rect: {
@@ -432,12 +416,15 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
               font: { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle },
             },
     boundary: boundaryResolution,
-    irPath: resolution.irPath,
   };
   geometryContext.get(provisional).warn = warn;
-  const resolved: NodeLayout = { ...provisional, labels: layoutNodeLabels(provisional, measuredLabels) };
+  geometryContext.get(provisional).irPath = resolution.irPath;
+  const resolved: NodeLayout = {
+    ...provisional,
+    labels: layoutNodeLabels(provisional, measuredLabels),
+  };
 
-  return anchorPosition
+  const layout = anchorPosition
     ? placeAnchorPositionedLayout(
         node,
         anchorPosition,
@@ -447,4 +434,13 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
         geometryContext,
       )
     : resolved;
+  return {
+    irPath: resolution.irPath,
+    layout,
+    properties: {
+      ...node,
+      text: node.text === undefined ? undefined : contentLayout.resolvedLines,
+      label: measuredLabels?.map(label => label.properties),
+    },
+  };
 };

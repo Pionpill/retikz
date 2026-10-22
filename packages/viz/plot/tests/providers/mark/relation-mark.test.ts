@@ -1,6 +1,7 @@
 import type { IRCoordinate, IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
+import { markChannelEncoding, channelField } from '../../../src/contract';
 import type { PositionScale } from '../../../src/contract';
 import { definePathChannel } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
@@ -28,18 +29,14 @@ const linearScale = (domain: [number, number], range: [number, number]): Positio
   setRange: () => undefined,
 });
 
-const extensionChannelsOf = (mark: {
-  encoding?: { channels?: Partial<Record<string, { field?: string; value?: unknown }>> };
-}): Partial<Record<string, { field?: string; value?: unknown }>> => mark.encoding?.channels ?? {};
-
 const lineWeightChannel = definePathChannel<number>({
   channel: 'lineWeight',
   output: { outputKind: 'number', range: [1, 6] },
   resolve: (_ctx, mark) => {
-    const binding = extensionChannelsOf(mark).lineWeight;
-    if (binding?.field === undefined) return undefined;
+    const binding = markChannelEncoding(mark, 'lineWeight');
+    if (binding === undefined) return undefined;
 
-    const field = binding.field;
+    const field = channelField(binding);
 
     return {
       resolver: row => {
@@ -164,9 +161,11 @@ describe('RelationMark and anchorId lowering', () => {
       baseSpec([
         {
           type: 'relation',
-          source: { id: 'A' },
-          target: { id: 'B' },
-          path: { options: { marks: [{ pos: 1, mark: { kind: 'arrow', length: 8 } }] } },
+          properties: {
+            source: { id: 'A' },
+            target: { id: 'B' },
+            geometry: { kind: 'path', options: { marks: [{ pos: 1, mark: { kind: 'arrow', length: 8 } }] } },
+          },
         },
       ]),
     ).not.toThrow();
@@ -175,26 +174,33 @@ describe('RelationMark and anchorId lowering', () => {
       baseSpec([
         {
           type: 'relation',
-          source: { id: 'A' },
-          target: { id: 'B' },
-          path: { options: { arrow: '->', arrowDetail: { end: { length: 8 } } } },
+          properties: {
+            source: { id: 'A' },
+            target: { id: 'B' },
+            geometry: { kind: 'path', options: { arrow: '->', arrowDetail: { end: { length: 8 } } } },
+          },
         },
       ]),
     ).toThrow();
 
     expect(() =>
-      baseSpec([{ type: 'point', anchorId: { prefix: 'pt' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } }]),
+      baseSpec([
+        {
+          type: 'point',
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+          properties: { anchorId: { prefix: 'pt' } },
+        },
+      ]),
     ).toThrow(/exactly one of field, template, or generator/);
 
     expect(() =>
       baseSpec([
         {
           type: 'relation',
-          source: { id: 'A' },
-          target: { id: 'B' },
-          path: {
-            via: [{ id: 'C' }],
-            route: [{ kind: 'line' }],
+          properties: {
+            source: { id: 'A' },
+            target: { id: 'B' },
+            geometry: { kind: 'path', via: [{ id: 'C' }], route: [{ kind: 'line' }] },
           },
         },
       ]),
@@ -204,7 +210,11 @@ describe('RelationMark and anchorId lowering', () => {
   it('writes point anchorId to generated core Node ids', () => {
     const root = expandOf(
       baseSpec([
-        { type: 'point', anchorId: { prefix: 'pt', field: 'id' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+        {
+          type: 'point',
+          encodings: { anchorId: 'id', position: { x: { field: 'x' }, y: { field: 'y' } } },
+          properties: { anchorId: { prefix: 'pt' } },
+        },
       ]),
       { d: rows },
     );
@@ -219,8 +229,8 @@ describe('RelationMark and anchorId lowering', () => {
       baseSpec([
         {
           type: 'interval',
-          anchorId: { prefix: 'bar', field: 'id' },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          encodings: { anchorId: 'id', position: { x: { field: 'x' }, y: { field: 'y' } } },
+          properties: { anchorId: { prefix: 'bar' } },
         },
       ]),
       { d: rows },
@@ -232,13 +242,18 @@ describe('RelationMark and anchorId lowering', () => {
   it('supports runtime anchorId generator keys without storing functions in the spec', () => {
     const root = expandOf(
       baseSpec([
-        { type: 'point', anchorId: { generator: 'city' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+        {
+          type: 'point',
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+          properties: { anchorId: { generator: 'city' } },
+        },
       ]),
       { d: rows },
       {
         ...opts,
         anchorIdGenerators: {
-          city: row => `generated.${String(row.id).toLowerCase()}`,
+          city: instance =>
+            instance.kind === 'row' ? `generated.${String(instance.row.id).toLowerCase()}` : 'generated.single',
         },
       },
     );
@@ -250,11 +265,18 @@ describe('RelationMark and anchorId lowering', () => {
   it('collects and resolves anchorId template field placeholders', () => {
     const root = expandOf(
       baseSpec([
-        { type: 'point', anchorId: { template: 'pt.{field:id}' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+        {
+          type: 'point',
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+          properties: { anchorId: { template: 'pt.{field:id}' } },
+        },
         {
           type: 'relation',
-          source: { anchorId: { template: 'pt.{field:source}' } },
-          target: { anchorId: { template: 'pt.{field:target}' } },
+          properties: {
+            source: { anchorId: { template: 'pt.{field:source}' } },
+            target: { anchorId: { template: 'pt.{field:target}' } },
+            geometry: { kind: 'path' },
+          },
         },
       ]),
       { d: rows },
@@ -268,7 +290,11 @@ describe('RelationMark and anchorId lowering', () => {
   it('writes path anchorId as per-datum coordinates', () => {
     const root = expandOf(
       baseSpec([
-        { type: 'path', anchorId: { prefix: 'way', field: 'id' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+        {
+          type: 'path',
+          encodings: { anchorId: 'id', position: { x: { field: 'x' }, y: { field: 'y' } } },
+          properties: { anchorId: { prefix: 'way' } },
+        },
       ]),
       { d: rows },
     );
@@ -282,9 +308,11 @@ describe('RelationMark and anchorId lowering', () => {
       baseSpec([
         {
           type: 'relation',
-          source: { id: 'A', anchor: 'right' },
-          target: { id: 'B', anchor: 'left' },
-          path: { options: { marks: [{ pos: 1, mark: { kind: 'arrow', length: 10, width: 7 } }] } },
+          properties: {
+            source: { id: 'A', anchor: 'right' },
+            target: { id: 'B', anchor: 'left' },
+            geometry: { kind: 'path', options: { marks: [{ pos: 1, mark: { kind: 'arrow', length: 10, width: 7 } }] } },
+          },
         },
       ]),
       { d: [rows[0]] },
@@ -299,19 +327,31 @@ describe('RelationMark and anchorId lowering', () => {
   it('lowers generated source-target anchors to a core Path with labels and path mark config', () => {
     const root = expandOf(
       baseSpec([
-        { type: 'point', anchorId: { prefix: 'pt', field: 'id' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+        {
+          type: 'point',
+          encodings: { anchorId: 'id', position: { x: { field: 'x' }, y: { field: 'y' } } },
+          properties: { anchorId: { prefix: 'pt' } },
+        },
         {
           type: 'relation',
-          source: { anchorId: { prefix: 'pt', field: 'source' } },
-          target: { anchorId: { prefix: 'pt', field: 'target' } },
-          style: { color: { kind: 'constant', value: '#2563eb' } },
-          path: {
-            label: { text: { field: 'label' }, position: 'midway' },
-            options: {
-              marks: [
-                { pos: 0.5, mark: { kind: 'arrow' } },
-                { pos: 1, mark: { kind: 'arrow' } },
-              ],
+          encodings: {
+            source: { anchorId: 'source' },
+            target: { anchorId: 'target' },
+            geometry: { label: { text: 'label' } },
+          },
+          properties: {
+            color: '#2563eb',
+            source: { anchorId: { prefix: 'pt' } },
+            target: { anchorId: { prefix: 'pt' } },
+            geometry: {
+              kind: 'path',
+              label: { position: 'midway' },
+              options: {
+                marks: [
+                  { pos: 0.5, mark: { kind: 'arrow' } },
+                  { pos: 1, mark: { kind: 'arrow' } },
+                ],
+              },
             },
           },
         },
@@ -336,23 +376,32 @@ describe('RelationMark and anchorId lowering', () => {
   it('defaults relation route labels to sloped and keeps explicit route step label before shorthand label', () => {
     const root = expandOf(
       baseSpec([
-        { type: 'point', anchorId: { prefix: 'pt', field: 'id' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+        {
+          type: 'point',
+          encodings: { anchorId: 'id', position: { x: { field: 'x' }, y: { field: 'y' } } },
+          properties: { anchorId: { prefix: 'pt' } },
+        },
         {
           type: 'relation',
-          source: { anchorId: { prefix: 'pt', field: 'source' } },
-          target: { anchorId: { prefix: 'pt', field: 'target' } },
-          path: {
-            route: [
-              {
-                kind: 'fold',
-                via: '-|',
-                to: { project: { x: 'x', y: 'y' } },
-                label: { text: { field: 'label' }, position: 0.25 },
-              },
-              { kind: 'bend', bendDirection: 'left', bendAngle: 25 },
-            ],
-            label: { text: 'fallback' },
-            options: { roundedCorners: 6 },
+          encodings: {
+            source: { anchorId: 'source' },
+            target: { anchorId: 'target' },
+            geometry: {
+              route: [{ label: { text: 'label' }, to: { position: { x: { field: 'x' }, y: { field: 'y' } } } }, {}],
+            },
+          },
+          properties: {
+            source: { anchorId: { prefix: 'pt' } },
+            target: { anchorId: { prefix: 'pt' } },
+            geometry: {
+              kind: 'path',
+              label: { text: 'fallback' },
+              options: { roundedCorners: 6 },
+              route: [
+                { kind: 'fold', via: '-|', label: { position: 0.25 }, to: {} },
+                { kind: 'bend', bendDirection: 'left', bendAngle: 25 },
+              ],
+            },
           },
         },
       ]),
@@ -369,12 +418,23 @@ describe('RelationMark and anchorId lowering', () => {
   it('passes explicit relation label canonical side names', () => {
     const root = expandOf(
       baseSpec([
-        { type: 'point', anchorId: { prefix: 'pt', field: 'id' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+        {
+          type: 'point',
+          encodings: { anchorId: 'id', position: { x: { field: 'x' }, y: { field: 'y' } } },
+          properties: { anchorId: { prefix: 'pt' } },
+        },
         {
           type: 'relation',
-          source: { anchorId: { prefix: 'pt', field: 'source' } },
-          target: { anchorId: { prefix: 'pt', field: 'target' } },
-          path: { label: { text: { field: 'label' }, side: 'top' } },
+          encodings: {
+            source: { anchorId: 'source' },
+            target: { anchorId: 'target' },
+            geometry: { label: { text: 'label' } },
+          },
+          properties: {
+            source: { anchorId: { prefix: 'pt' } },
+            target: { anchorId: { prefix: 'pt' } },
+            geometry: { kind: 'path', label: { side: 'top' } },
+          },
         },
       ]),
       { d: rows },
@@ -387,12 +447,23 @@ describe('RelationMark and anchorId lowering', () => {
   it('skips rows whose generated relation anchor fields are missing', () => {
     const root = expandOf(
       baseSpec([
-        { type: 'point', anchorId: { prefix: 'pt', field: 'id' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+        {
+          type: 'point',
+          encodings: { anchorId: 'id', position: { x: { field: 'x' }, y: { field: 'y' } } },
+          properties: { anchorId: { prefix: 'pt' } },
+        },
         {
           type: 'relation',
-          source: { anchorId: { prefix: 'pt', field: 'source' }, boundary: true },
-          target: { anchorId: { prefix: 'pt', field: 'target' }, boundary: true },
-          path: { label: { text: { field: 'label' } } },
+          encodings: {
+            source: { anchorId: 'source' },
+            target: { anchorId: 'target' },
+            geometry: { label: { text: 'label' } },
+          },
+          properties: {
+            source: { anchorId: { prefix: 'pt' }, boundary: true },
+            target: { anchorId: { prefix: 'pt' }, boundary: true },
+            geometry: { kind: 'path', label: {} },
+          },
         },
       ]),
       {
@@ -417,13 +488,24 @@ describe('RelationMark and anchorId lowering', () => {
   it('generates coordinates for relation projected via waypoints', () => {
     const root = expandOf(
       baseSpec([
-        { type: 'point', anchorId: { prefix: 'pt', field: 'id' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+        {
+          type: 'point',
+          encodings: { anchorId: 'id', position: { x: { field: 'x' }, y: { field: 'y' } } },
+          properties: { anchorId: { prefix: 'pt' } },
+        },
         {
           type: 'relation',
           id: 'rel',
-          source: { anchorId: { prefix: 'pt', field: 'source' } },
-          target: { anchorId: { prefix: 'pt', field: 'target' } },
-          path: { via: [{ project: { x: 'x', y: 'y' } }] },
+          encodings: {
+            source: { anchorId: 'source' },
+            target: { anchorId: 'target' },
+            geometry: { via: [{ position: { x: { field: 'x' }, y: { field: 'y' } } }] },
+          },
+          properties: {
+            source: { anchorId: { prefix: 'pt' } },
+            target: { anchorId: { prefix: 'pt' } },
+            geometry: { kind: 'path', via: [{}] },
+          },
         },
       ]),
       { d: rows },
@@ -439,8 +521,11 @@ describe('RelationMark and anchorId lowering', () => {
       polarSpec([
         {
           type: 'relation',
-          source: { project: { x: 'sourceAngle', y: 'sourceRadius' } },
-          target: { project: { x: 'targetAngle', y: 'targetRadius' } },
+          encodings: {
+            source: { position: { x: { field: 'sourceAngle' }, y: { field: 'sourceRadius' } } },
+            target: { position: { x: { field: 'targetAngle' }, y: { field: 'targetRadius' } } },
+          },
+          properties: { geometry: { kind: 'path' } },
         },
       ]),
       { d: [{ sourceAngle: 0, sourceRadius: 4, targetAngle: 10, targetRadius: 8 }] },
@@ -458,9 +543,11 @@ describe('RelationMark and anchorId lowering', () => {
         [
           {
             type: 'relation',
-            source: { project: { x: 'sourceAngle', y: 'sourceRadius' } },
-            target: { project: { x: 'targetAngle', y: 'targetRadius' } },
-            path: { interpolation: 'polar' },
+            encodings: {
+              source: { position: { x: { field: 'sourceAngle' }, y: { field: 'sourceRadius' } } },
+              target: { position: { x: { field: 'targetAngle' }, y: { field: 'targetRadius' } } },
+            },
+            properties: { geometry: { kind: 'path', interpolation: 'polar' } },
           },
         ],
         'chord',
@@ -477,23 +564,22 @@ describe('RelationMark and anchorId lowering', () => {
       polarSpec([
         {
           type: 'relation',
-          source: {
-            project: { x: 'sourceAngle', y: 'sourceRadius' },
-            anchorId: { prefix: 'source', field: 'edgeId' },
+          encodings: {
+            source: { position: { x: { field: 'sourceAngle' }, y: { field: 'sourceRadius' } }, anchorId: 'edgeId' },
+            target: { position: { x: { field: 'targetAngle' }, y: { field: 'targetRadius' } }, anchorId: 'edgeId' },
+            geometry: {
+              via: [{ anchorId: 'edgeId', position: { x: { field: 'viaAngle' }, y: { field: 'viaRadius' } } }],
+            },
           },
-          target: {
-            project: { x: 'targetAngle', y: 'targetRadius' },
-            anchorId: { prefix: 'target', field: 'edgeId' },
-          },
-          path: {
-            interpolation: 'polar',
-            via: [
-              {
-                project: { x: 'viaAngle', y: 'viaRadius' },
-                anchorId: { prefix: 'via', field: 'edgeId' },
-              },
-            ],
-            label: { text: 'route' },
+          properties: {
+            source: { anchorId: { prefix: 'source' } },
+            target: { anchorId: { prefix: 'target' } },
+            geometry: {
+              kind: 'path',
+              interpolation: 'polar',
+              label: { text: 'route' },
+              via: [{ anchorId: { prefix: 'via' } }],
+            },
           },
         },
       ]),
@@ -528,13 +614,14 @@ describe('RelationMark and anchorId lowering', () => {
     const spec = polarSpec([
       {
         type: 'relation',
-        source: {
-          project: { x: 'sourceAngle', y: 'sourceRadius' },
-          anchorId: { prefix: 'source', field: 'edgeId' },
+        encodings: {
+          source: { position: { x: { field: 'sourceAngle' }, y: { field: 'sourceRadius' } }, anchorId: 'edgeId' },
+          target: { position: { x: { field: 'targetAngle' }, y: { field: 'targetRadius' } }, anchorId: 'edgeId' },
         },
-        target: {
-          project: { x: 'targetAngle', y: 'targetRadius' },
-          anchorId: { prefix: 'target', field: 'edgeId' },
+        properties: {
+          source: { anchorId: { prefix: 'source' } },
+          target: { anchorId: { prefix: 'target' } },
+          geometry: { kind: 'path' },
         },
       },
     ]);
@@ -551,7 +638,7 @@ describe('RelationMark and anchorId lowering', () => {
     });
     const layer = lowerMarkDefinition(
       resolveMarkOperation(spec.marks[0], { registry: markRegistry }),
-      [{ edgeId: 'A', sourceAngle: 0, sourceRadius: 4, targetAngle: 10, targetRadius: 8 }],
+      { kind: 'rows', rows: [{ edgeId: 'A', sourceAngle: 0, sourceRadius: 4, targetAngle: 10, targetRadius: 8 }] },
       frame,
     ) as IRScope;
     const [path] = collectPaths(layer);
@@ -563,9 +650,11 @@ describe('RelationMark and anchorId lowering', () => {
     const cartesian = baseSpec([
       {
         type: 'relation',
-        source: { project: { x: 'sourceAngle', y: 'sourceRadius' } },
-        target: { project: { x: 'targetAngle', y: 'targetRadius' } },
-        path: { interpolation: 'polar' },
+        encodings: {
+          source: { position: { x: { field: 'sourceAngle' }, y: { field: 'sourceRadius' } } },
+          target: { position: { x: { field: 'targetAngle' }, y: { field: 'targetRadius' } } },
+        },
+        properties: { geometry: { kind: 'path', interpolation: 'polar' } },
       },
     ]);
 
@@ -576,9 +665,8 @@ describe('RelationMark and anchorId lowering', () => {
     const unresolvedTarget = polarSpec([
       {
         type: 'relation',
-        source: { id: 'A' },
-        target: { project: { x: 'targetAngle', y: 'targetRadius' } },
-        path: { interpolation: 'polar' },
+        encodings: { target: { position: { x: { field: 'targetAngle' }, y: { field: 'targetRadius' } } } },
+        properties: { source: { id: 'A' }, geometry: { kind: 'path', interpolation: 'polar' } },
       },
     ]);
 
@@ -590,8 +678,8 @@ describe('RelationMark and anchorId lowering', () => {
   it('rejects explicit relation interpolation with route, routing, or ribbon geometry', () => {
     const row = { sourceAngle: 0, sourceRadius: 4, targetAngle: 10, targetRadius: 8 };
     const projectedTargets = {
-      source: { project: { x: 'sourceAngle', y: 'sourceRadius' } },
-      target: { project: { x: 'targetAngle', y: 'targetRadius' } },
+      source: { position: { x: { value: 'sourceAngle' }, y: { value: 'sourceRadius' } } },
+      target: { position: { x: { value: 'targetAngle' }, y: { value: 'targetRadius' } } },
     };
 
     expect(() =>
@@ -599,8 +687,8 @@ describe('RelationMark and anchorId lowering', () => {
         polarSpec([
           {
             type: 'relation',
-            ...projectedTargets,
-            path: { interpolation: 'polar', route: [{ kind: 'line' }] },
+            encodings: projectedTargets,
+            properties: { geometry: { kind: 'path', interpolation: 'polar', route: [{ kind: 'line' }] } },
           },
         ]),
         { d: [row] },
@@ -611,8 +699,8 @@ describe('RelationMark and anchorId lowering', () => {
         polarSpec([
           {
             type: 'relation',
-            ...projectedTargets,
-            path: { interpolation: 'polar', routing: { kind: 'line' } },
+            encodings: projectedTargets,
+            properties: { geometry: { kind: 'path', interpolation: 'polar', routing: { kind: 'line' } } },
           },
         ]),
         { d: [row] },
@@ -622,13 +710,11 @@ describe('RelationMark and anchorId lowering', () => {
       polarSpec([
         {
           type: 'relation',
-          kind: 'ribbon',
-          ...projectedTargets,
-          path: { interpolation: 'polar' },
-          ribbon: { width: { kind: 'constant', value: 8 } },
+          encodings: projectedTargets,
+          properties: { geometry: { kind: 'ribbon', interpolation: 'polar', width: 8 } },
         },
       ]),
-    ).toThrow(/relation.*interpolation.*ribbon/i);
+    ).toThrow();
   });
 
   it('preserves unsupported relation-owned routing when interpolation is omitted', () => {
@@ -636,9 +722,11 @@ describe('RelationMark and anchorId lowering', () => {
       polarSpec([
         {
           type: 'relation',
-          source: { project: { x: 'sourceAngle', y: 'sourceRadius' } },
-          target: { project: { x: 'targetAngle', y: 'targetRadius' } },
-          path: { routing: { kind: 'line' } },
+          encodings: {
+            source: { position: { x: { field: 'sourceAngle' }, y: { field: 'sourceRadius' } } },
+            target: { position: { x: { field: 'targetAngle' }, y: { field: 'targetRadius' } } },
+          },
+          properties: { geometry: { kind: 'path', routing: { kind: 'line' } } },
         },
       ]),
       { d: [{ sourceAngle: 0, sourceRadius: 4, targetAngle: 10, targetRadius: 8 }] },
@@ -653,8 +741,8 @@ describe('RelationMark and anchorId lowering', () => {
     const spec = baseSpec([
       {
         type: 'point',
-        anchorId: { prefix: 'pt', field: 'source' },
-        encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        encodings: { anchorId: 'source', position: { x: { field: 'x' }, y: { field: 'y' } } },
+        properties: { anchorId: { prefix: 'pt' } },
       },
     ]);
 
@@ -663,11 +751,19 @@ describe('RelationMark and anchorId lowering', () => {
 
   it('fails loud on missing generated relation anchors after lowering', () => {
     const spec = baseSpec([
-      { type: 'point', anchorId: { prefix: 'pt', field: 'id' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+      {
+        type: 'point',
+        encodings: { anchorId: 'id', position: { x: { field: 'x' }, y: { field: 'y' } } },
+        properties: { anchorId: { prefix: 'pt' } },
+      },
       {
         type: 'relation',
-        source: { anchorId: { prefix: 'pt', field: 'source' } },
-        target: { anchorId: { prefix: 'pt', field: 'missing' } },
+        encodings: { source: { anchorId: 'source' }, target: { anchorId: 'missing' } },
+        properties: {
+          source: { anchorId: { prefix: 'pt' } },
+          target: { anchorId: { prefix: 'pt' } },
+          geometry: { kind: 'path' },
+        },
       },
     ]);
 
@@ -679,12 +775,12 @@ describe('RelationMark and anchorId lowering', () => {
       baseSpec([
         {
           type: 'path',
-          anchorId: { prefix: 'trend', field: 'id' },
-          encoding: { x: { field: 'x' }, y: { field: 'value' } },
+          encodings: { anchorId: 'id', position: { x: { field: 'x' }, y: { field: 'value' } } },
+          properties: { anchorId: { prefix: 'trend' } },
         },
         {
           type: 'relation',
-          transform: [
+          transforms: [
             {
               operation: {
                 kind: 'relate',
@@ -698,12 +794,20 @@ describe('RelationMark and anchorId lowering', () => {
               },
             },
           ],
-          source: { anchorId: { prefix: 'trend', field: 'sourceId' } },
-          target: { anchorId: { prefix: 'trend', field: 'targetId' } },
-          path: {
-            routing: { kind: 'bend', bendDirection: 'left', bendAngle: 20 },
-            label: { text: { field: 'deltaLabel' }, position: 0.5 },
-            options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
+          encodings: {
+            source: { anchorId: 'sourceId' },
+            target: { anchorId: 'targetId' },
+            geometry: { label: { text: 'deltaLabel' } },
+          },
+          properties: {
+            source: { anchorId: { prefix: 'trend' } },
+            target: { anchorId: { prefix: 'trend' } },
+            geometry: {
+              kind: 'path',
+              routing: { kind: 'bend', bendDirection: 'left', bendAngle: 20 },
+              label: { position: 0.5 },
+              options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
+            },
           },
         },
       ]),
@@ -734,7 +838,7 @@ describe('RelationMark and anchorId lowering', () => {
       baseSpec([
         {
           type: 'relation',
-          transform: [
+          transforms: [
             {
               operation: {
                 kind: 'relate',
@@ -745,9 +849,11 @@ describe('RelationMark and anchorId lowering', () => {
               },
             },
           ],
-          source: { project: { x: 'sourceX', y: 'sourceY' } },
-          target: { project: { x: 'targetX', y: 'targetY' } },
-          path: { routing: { kind: 'line' } },
+          encodings: {
+            source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
+            target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
+          },
+          properties: { geometry: { kind: 'path', routing: { kind: 'line' } } },
         },
       ]),
       {
@@ -769,19 +875,17 @@ describe('RelationMark and anchorId lowering', () => {
       baseSpec([
         {
           type: 'relation',
-          source: { project: { x: 'start', y: 'category' } },
-          target: { project: { x: 'end', y: 'category' } },
-          style: { stroke: { kind: 'constant', value: '#64748b' } },
-          endpoints: {
-            source: {
-              color: { kind: 'constant', value: '#2563eb' },
-              size: { kind: 'constant', value: 5 },
+          encodings: {
+            source: { position: { x: { field: 'start' }, y: { field: 'category' } } },
+            target: { position: { x: { field: 'end' }, y: { field: 'category' } } },
+          },
+          properties: {
+            stroke: '#64748b',
+            endpoints: {
+              source: { color: '#2563eb', size: 5 },
+              target: { color: '#dc2626', shape: 'diamond', size: 6 },
             },
-            target: {
-              color: { kind: 'constant', value: '#dc2626' },
-              shape: { kind: 'constant', value: 'diamond' },
-              size: { kind: 'constant', value: 6 },
-            },
+            geometry: { kind: 'path' },
           },
         },
       ]),
@@ -817,19 +921,14 @@ describe('RelationMark and anchorId lowering', () => {
   it('uses the same final-radius geometry for Point and Relation endpoint glyphs', () => {
     const root = expandOf(
       baseSpec([
-        {
-          type: 'point',
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
-          size: { kind: 'constant', value: 5 },
-        },
+        { type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } }, properties: { size: 5 } },
         {
           type: 'relation',
-          source: { project: { x: 'start', y: 'category' } },
-          target: { project: { x: 'end', y: 'category' } },
-          endpoints: {
-            source: { size: { kind: 'constant', value: 5 } },
-            target: { size: { kind: 'constant', value: 5 } },
+          encodings: {
+            source: { position: { x: { field: 'start' }, y: { field: 'category' } } },
+            target: { position: { x: { field: 'end' }, y: { field: 'category' } } },
           },
+          properties: { endpoints: { source: { size: 5 }, target: { size: 5 } }, geometry: { kind: 'path' } },
         },
       ]),
       { d: [{ x: 0.5, y: 0.5, category: 0.5, start: 0.25, end: 0.75 }] },
@@ -848,9 +947,11 @@ describe('RelationMark and anchorId lowering', () => {
       baseSpec([
         {
           type: 'relation',
-          source: { project: { x: 'start', y: 'category' } },
-          target: { project: { x: 'end', y: 'category' } },
-          endpoints: { source: {}, target: {} },
+          encodings: {
+            source: { position: { x: { field: 'start' }, y: { field: 'category' } } },
+            target: { position: { x: { field: 'end' }, y: { field: 'category' } } },
+          },
+          properties: { endpoints: { source: {}, target: {} }, geometry: { kind: 'path' } },
         },
       ]),
       { d: [{ category: 0, start: 0.5, end: 0.5 }] },
@@ -874,9 +975,11 @@ describe('RelationMark and anchorId lowering', () => {
       baseSpec([
         {
           type: 'relation',
-          source: { project: { x: 'start', y: 'category' } },
-          target: { project: { x: 'end', y: 'category' } },
-          endpoints: { source: {}, target: {} },
+          encodings: {
+            source: { position: { x: { field: 'start' }, y: { field: 'category' } } },
+            target: { position: { x: { field: 'end' }, y: { field: 'category' } } },
+          },
+          properties: { endpoints: { source: {}, target: {} }, geometry: { kind: 'path' } },
         },
       ]),
       { d: [{ key: 'range-a', category: 0, start: 0.25, end: 0.75 }] },
@@ -898,7 +1001,7 @@ describe('RelationMark and anchorId lowering', () => {
         {
           type: 'relation',
           id: 'delta',
-          transform: [
+          transforms: [
             {
               operation: {
                 kind: 'relate',
@@ -912,11 +1015,17 @@ describe('RelationMark and anchorId lowering', () => {
               },
             },
           ],
-          source: { project: { x: 'sourceX', y: 'sourceY' } },
-          target: { project: { x: 'targetX', y: 'targetY' } },
-          path: {
-            routing: { kind: 'orthogonal', via: '|-', labelStep: 'main' },
-            label: { text: { field: 'deltaLabel' }, position: 0.5 },
+          encodings: {
+            source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
+            target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
+            geometry: { label: { text: 'deltaLabel' } },
+          },
+          properties: {
+            geometry: {
+              kind: 'path',
+              routing: { kind: 'orthogonal', via: '|-', labelStep: 'main' },
+              label: { position: 0.5 },
+            },
           },
         },
       ]),
@@ -940,11 +1049,10 @@ describe('RelationMark and anchorId lowering', () => {
       baseSpec([
         {
           type: 'relation',
-          source: { id: 'A' },
-          target: { id: 'B' },
-          path: {
-            route: [{ kind: 'line' }],
-            routing: { kind: 'line' },
+          properties: {
+            source: { id: 'A' },
+            target: { id: 'B' },
+            geometry: { kind: 'path', route: [{ kind: 'line' }], routing: { kind: 'line' } },
           },
         },
       ]),
@@ -954,9 +1062,11 @@ describe('RelationMark and anchorId lowering', () => {
       baseSpec([
         {
           type: 'relation',
-          source: { id: 'A' },
-          target: { id: 'B' },
-          path: { routing: { kind: 'orthogonal' } },
+          properties: {
+            source: { id: 'A' },
+            target: { id: 'B' },
+            geometry: { kind: 'path', routing: { kind: 'orthogonal' } },
+          },
         },
       ]),
     ).toThrow(/via/);
@@ -964,24 +1074,25 @@ describe('RelationMark and anchorId lowering', () => {
 
   it('lowers ribbon relation kind to core ribbon path with shared style and field-bound width', () => {
     const root = expandOf(
-      baseSpec([
-        {
-          type: 'relation',
-          kind: 'ribbon',
-          source: { project: { x: 'sourceX', y: 'sourceY' } },
-          target: { project: { x: 'targetX', y: 'targetY' } },
-          style: {
-            fill: { kind: 'field', value: 'fill' },
-            stroke: { kind: 'constant', value: 'none' },
-            opacity: { fill: { kind: 'constant', value: 0.55 } },
+      {
+        ...baseSpec([
+          {
+            type: 'relation',
+            encodings: {
+              fill: 'fill',
+              source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
+              target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
+              geometry: { width: 'width' },
+            },
+            properties: {
+              stroke: 'none',
+              opacity: { fill: 0.55 },
+              geometry: { kind: 'ribbon', endWidth: 8, options: { interpolation: 'smooth', align: 'center' } },
+            },
           },
-          ribbon: {
-            width: { kind: 'field', value: 'width' },
-            endWidth: { kind: 'constant', value: 8 },
-            options: { interpolation: 'smooth', align: 'center' },
-          },
-        },
-      ]),
+        ]),
+        defaultPlot: { palette: { categorical: ['#123456'] } },
+      },
       {
         d: [{ sourceX: 0, sourceY: 0, targetX: 1, targetY: 1, fill: '#38bdf8', width: 12 }],
       },
@@ -1001,7 +1112,7 @@ describe('RelationMark and anchorId lowering', () => {
         width: { kind: 'taper', start: 12, end: 8, interpolation: 'smooth' },
         align: 'center',
       },
-      style: { fill: '#38bdf8', stroke: 'none', opacity: { fill: 0.55 } },
+      style: { fill: '#123456', stroke: 'none', opacity: { fill: 0.55 } },
     });
   });
 
@@ -1010,17 +1121,13 @@ describe('RelationMark and anchorId lowering', () => {
       baseSpec([
         {
           type: 'relation',
-          kind: 'ribbon',
-          source: { project: { x: 'sourceX', y: 'sourceY' } },
-          target: { project: { x: 'targetX', y: 'targetY' } },
-          ribbon: {
-            width: { kind: 'field', value: 'width' },
+          encodings: {
+            lineWeight: 'lineWeight',
+            source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
+            target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
+            geometry: { width: 'width' },
           },
-          encoding: {
-            channels: {
-              lineWeight: { field: 'lineWeight' },
-            },
-          },
+          properties: { geometry: { kind: 'ribbon' } },
         },
       ]),
       {

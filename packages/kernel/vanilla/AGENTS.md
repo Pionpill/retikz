@@ -23,7 +23,7 @@ dom/       DOM mount、hydrate、view lifecycle
 - helper 只能构造或归一化既有 Core IR；不得新增平行字段语义。
 - `processing` 组合 Core / Render，拥有所有框架可复用的 compile driver、retained processing session、revision、只读 processing result；`runtime` 保留 SSR 和共享运行时类型，Scene → SVG / Canvas 算法保持在 `@retikz/render`。
 - 预编译 `Scene` 只创建 static processing result；IR / InputScene 由 processing mode 选择 retained Session 或无 Session 的 static full 执行，默认 retained；Patch、fallback 与 rollback 只属于 retained 路径并委托 Render participant。
-- 根入口与 SSR 路径不得依赖 DOM 全局。DOM 访问只在 `dom/` 的浏览器 mount / hydrate 调用路径发生；框架包不调用该子入口。
+- 根入口导入与 SSR 调用必须安全；仅默认文字测量器可按需探测 Canvas 与读取默认字体，其余 DOM 访问只在 `dom/` 的 mount / hydrate 路径发生；框架包不调用该子入口。
 - Tier 2 adapter 只负责把领域输入转成 Core IR contribution，不把领域 schema 或算法内置到 vanilla。
 - Tier 2 adapter 的 Composite roots / providers 只收集后交给 Core provider graph resolver；Vanilla 不维护单 namespace maker 聚合、私有拓扑、dataset 冲突或 definition 去重语义。
 

@@ -1,4 +1,4 @@
-本页使用 `@retikz/graph` 公开 schema。Relation 引用的 Core NodeTarget、GeometryLabel、Step 和共享 Graph predicate / status 保留所属 schema 名称，不在此复制定义。Definition 中的函数和参数 schema 属于运行时装配，见[自定义用法](/schematic/graph/relation/custom)。
+本页使用 `@retikz/graph` 公开 schema。Relation 引用的 Core NodeTarget、PathLabel、Step 和共享 Graph predicate / status 保留所属 schema 名称，不在此复制定义。Definition 中的函数和参数 schema 属于运行时装配，见[自定义用法](/schematic/graph/relation/custom)。
 
 可解析不等于可绘制：role / kind / predicate 的注册与归属、有效方向，以及端点是否存在仍需运行时验证。省略可选字段不会在 Source 中自动写入主题值。
 
@@ -26,7 +26,7 @@
     status: '可选闭合状态：error、success、warning、disabled',
     direction: '显式语义方向，覆盖 kind / role 默认且须在允许集合内',
     group: 'Graph 根内的分类色分组 key，不创建 Group 容器',
-    labels: '附着到关系路径的完整 Core 几何标签数组',
+    labels: '附着到关系路径的完整 Core 路径标签数组',
     route: '至少两个 Core Step 的完整路径序列，使用 Graph 根坐标空间且禁止 step.label',
     sourceMarker: '起点 marker 的外观覆盖，不包含 shape',
     targetMarker: '终点 marker 的外观覆盖，不包含 shape',

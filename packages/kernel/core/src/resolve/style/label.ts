@@ -1,4 +1,4 @@
-import type { IRFont, IRGeometryLabel } from '../../schemas';
+import type { IRFont, IRPathLabel } from '../../schemas';
 import type { EffectiveLabelDefault } from './types';
 
 /** 逐字段合并字体 */
@@ -20,12 +20,12 @@ const mergeFont = (a: IRFont | undefined, b: IRFont | undefined): IRFont | undef
 };
 
 /** 解析 path label 的最终样式 */
-export const resolveGeometryLabel = (
-  label: IRGeometryLabel,
+export const resolvePathLabel = (
+  label: IRPathLabel,
   labelDefault: EffectiveLabelDefault,
   masterColor: string | undefined,
-): IRGeometryLabel => {
-  const out: IRGeometryLabel = { ...label };
+): IRPathLabel => {
+  const out: IRPathLabel = { ...label };
   const textColor = label.textColor ?? labelDefault.textColor ?? labelDefault.color ?? masterColor;
   if (textColor !== undefined) out.textColor = textColor;
   else delete out.textColor;

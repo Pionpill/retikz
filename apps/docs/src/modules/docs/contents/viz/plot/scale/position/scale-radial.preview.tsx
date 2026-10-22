@@ -18,7 +18,9 @@ export const ScaleRadialPreview = (values: ScaleRadialPreviewValues) => {
           <code>linear</code> · r ∝ value
         </figcaption>
         <Plot data={data} width={190} height={190} coordinate={{ type: 'polar2D' }}>
-          <IntervalMark x="category" y="value" color="category" />
+          <IntervalMark
+            encodings={{ color: 'category', position: { x: { field: 'category' }, y: { field: 'value' } } }}
+          />
           <PlotScale dimension="y" type="linear" domainPadding={0} />
         </Plot>
       </figure>
@@ -27,7 +29,9 @@ export const ScaleRadialPreview = (values: ScaleRadialPreviewValues) => {
           <code>radial</code> · r² ∝ value
         </figcaption>
         <Plot data={data} width={190} height={190} coordinate={{ type: 'polar2D' }}>
-          <IntervalMark x="category" y="value" color="category" />
+          <IntervalMark
+            encodings={{ color: 'category', position: { x: { field: 'category' }, y: { field: 'value' } } }}
+          />
           <PlotScale dimension="y" type="radial" domainPadding={0} />
         </Plot>
       </figure>

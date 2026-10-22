@@ -1,3 +1,5 @@
+import { point } from '@retikz/math';
+
 import type { Transform } from '../../contract';
 import type { NodeReferenceView, PathTargetView, TargetResolution } from '../../resolve';
 import type { PositionTargetResolveContext } from '../../resolve/position';
@@ -5,13 +7,11 @@ import { resolvePositionTarget } from '../../resolve/position';
 import type { IRNodeTarget, IRPosition, IRRelativeAccumulateTarget, IRRelativeTarget, IRTarget } from '../../schemas';
 import { FoldStepVia } from '../../schemas';
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
-import { point } from '../../shared/geometry';
-import { createNodeGeometryContext } from '../node';
+import { boundaryPointOf, clipNodePolyline, createNodeGeometryContext } from '../node';
 import type { NodeGeometryContext } from '../node';
-import { boundaryPointOf, clipNodePolyline } from '../node';
 import { resolveAnchorRef } from '../reference';
 import type { EffectiveScopeTransform } from '../transform';
-import { applyScopeTransform, inverseScopeTransform, composeScopeTransform } from '../transform';
+import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../transform';
 
 /** 判断 target 是否为按 id 引用节点或坐标的对象目标 */
 const isNodeTarget = (t: IRTarget): t is IRNodeTarget => isNodeTargetLike(t);

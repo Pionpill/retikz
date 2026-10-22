@@ -1,10 +1,8 @@
-import { CoreTraceUnit } from '@retikz/core';
 import type { Scene } from '@retikz/core';
-import type { PerformanceTraceRecord } from '@retikz/runtime';
-import { createRuntimeTraceReporter, PerformanceTraceOutcome } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 
-import { buildSvgDocument, RenderTracePhase } from '../../../src/svg';
+import { buildSvgDocument, RenderTracePhase, RenderTraceUnit } from '../../../src/svg';
+import type { RenderTraceRecord } from '../../../src/trace';
 
 const scene: Scene = {
   layout: { x: 0, y: 0, width: 40, height: 20 },
@@ -21,28 +19,17 @@ const scene: Scene = {
 
 describe('buildSvgDocument performance trace', () => {
   it('每次完整 document build 递归统计 Group 与 child occurrence', () => {
-    const records: Array<PerformanceTraceRecord> = [];
-    const trace = createRuntimeTraceReporter({
-      owner: '@retikz/render:svg',
-      phases: [
-        {
-          phase: RenderTracePhase.Commit,
-          unit: CoreTraceUnit.ScenePrimitive,
-          outcomes: [PerformanceTraceOutcome.Full],
-        },
-      ],
-      sink: record => records.push(record),
-    });
+    const records: Array<RenderTraceRecord> = [];
+    const trace = { report: (record: RenderTraceRecord) => records.push(record) };
 
     const document = buildSvgDocument(scene, { idPrefix: 'trace', trace });
 
     expect(document.tag).toBe('svg');
     expect(records).toEqual([
       {
-        owner: '@retikz/render:svg',
         phase: RenderTracePhase.Commit,
-        unit: CoreTraceUnit.ScenePrimitive,
-        outcome: PerformanceTraceOutcome.Full,
+        unit: RenderTraceUnit.ScenePrimitive,
+        outcome: 'full',
         visited: 3,
         reused: 0,
         changed: 3,

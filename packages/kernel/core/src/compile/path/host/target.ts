@@ -1,9 +1,10 @@
+import { point } from '@retikz/math';
+
 import type { Transform } from '../../../contract';
 import type { PathTargetView } from '../../../resolve';
 import type { IRPosition, IRTarget } from '../../../schemas';
 import { FoldStepVia } from '../../../schemas';
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
-import { point } from '../../../shared/geometry';
 
 /** 判断 target 是否为自动边界裁剪的节点引用 */
 export const isAutoBoundaryTarget = (target: IRTarget): boolean =>

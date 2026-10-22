@@ -34,42 +34,44 @@ export const TransformRelatePreview = (
       <PlotScale dimension="x" type="linear" domain={[0.5, 6.5]} />
       <PlotScale dimension="y" type="linear" domain={[20, 62]} />
       <PathMark
-        color="series"
-        series="series"
-        x="month"
-        y="value"
-        order="month"
-        strokeWidth={2.2}
-        anchorId={{ prefix: 'trend', field: 'id' }}
+        encodings={{
+          color: 'series',
+          series: 'series',
+          order: 'month',
+          anchorId: 'id',
+          position: { x: { field: 'month' }, y: { field: 'value' } },
+        }}
+        properties={{ strokeWidth: 2.2, anchorId: { prefix: 'trend' } }}
       />
       <PointMark
-        x="month"
-        y="value"
-        fill={{ kind: 'constant', value: 'white' }}
-        stroke="series"
-        strokeWidth={1.2}
-        size={5}
+        encodings={{ stroke: 'series', position: { x: { field: 'month' }, y: { field: 'value' } } }}
+        properties={{ fill: 'white', strokeWidth: 1.2, size: 5 }}
       />
       <RelationMark
-        transform={[{ operation: relateOperationOf(values) }]}
-        source={{ anchorId: { prefix: 'trend', field: 'sourceId' } }}
-        target={{ anchorId: { prefix: 'trend', field: 'targetId' } }}
-        style={{
-          color: { kind: 'constant', value: 'mediumvioletred' },
-          strokeWidth: { kind: 'constant', value: 1.6 },
+        transforms={[{ operation: relateOperationOf(values) }]}
+        encodings={{
+          source: { anchorId: 'sourceId' },
+          target: { anchorId: 'targetId' },
+          geometry: { label: { text: 'deltaLabel' } },
         }}
-        path={{
-          routing: { kind: 'bend', bendDirection: 'left', bendAngle: 28 },
-          label: {
-            text: { field: 'deltaLabel' },
-            position: 0.5,
-            side: 'top',
-            distance: 4,
-            sloped: true,
-            textColor: 'mediumvioletred',
-            font: { size: 11, weight: 'bold' },
+        properties={{
+          source: { anchorId: { prefix: 'trend' } },
+          target: { anchorId: { prefix: 'trend' } },
+          color: 'mediumvioletred',
+          strokeWidth: 1.6,
+          geometry: {
+            kind: 'path',
+            routing: { kind: 'bend', bendDirection: 'left', bendAngle: 28 },
+            label: {
+              position: 0.5,
+              side: 'top',
+              distance: 4,
+              sloped: true,
+              textColor: 'mediumvioletred',
+              font: { size: 11, weight: 'bold' },
+            },
+            options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
           },
-          options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
         }}
       />
       <PlotAxis dimension="x" title={i18n.month} grid />

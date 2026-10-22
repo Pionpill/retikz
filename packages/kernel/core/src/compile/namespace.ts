@@ -1,3 +1,5 @@
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
+import { registerFatalProbeError } from '../resolve/diagnostics';
 import type { NodeLayout } from './node';
 import { createCompileInvariantError } from './probe-failure';
 
@@ -9,10 +11,14 @@ export type NamespaceEntryState = 'resolved' | 'scope-placeholder';
 
 /** namespace 中带生命周期状态的内部条目 */
 export type NamespaceEntry = {
+  /** 当前名称绑定的来源路径 */
+  irPath?: string;
   /** 可供既有引用解析逻辑消费的布局 */
   layout: NodeLayout;
   /** 区分合法已解析布局与尚未闭合的 Scope 占位布局 */
   state: NamespaceEntryState;
+  /** Scope 占位到最终布局共享的对象身份，用于引用归属检查 */
+  scopeOwner?: NodeLayout;
 };
 
 /** 同一 namespace frame 内重复 id 的诊断载荷 */
@@ -68,7 +74,10 @@ export type NamespaceFrameChange = {
  * @description register 写入栈顶，lookup 按 inside-out 查找；同 frame 重名 last-wins 并触发诊断
  */
 export class NamespaceStack {
-  /** 栈式 frame 容器；栈底（index 0）= 根 frame，栈顶（last）= 当前 frame */
+  /** 正在编译的命名 Scope；fork 保留祖先归属 */
+  private readonly scopeAncestors: Array<{ layout: NodeLayout; id: string }> = [];
+
+  /** 栈式 frame 容器；栈底为根 frame，栈顶为当前 frame */
   private readonly frames: Array<Map<string, NamespaceEntry>>;
 
   /** 与每个 frame 对应的"已注册 id → 首次 register 时的 irPath"映射，用于 duplicate warn 复述位置 */
@@ -106,6 +115,7 @@ export class NamespaceStack {
     fork.frames.splice(0, fork.frames.length, ...this.frames.map(frame => new Map(frame)));
     fork.firstIrPaths.splice(0, fork.firstIrPaths.length, ...this.firstIrPaths.map(paths => new Map(paths)));
     fork.forkBaselineFrames = this.frames.map(frame => new Map(frame));
+    fork.scopeAncestors.push(...this.scopeAncestors);
     fork.currentPhase = this.currentPhase;
     fork.snapshotIdentity = this.snapshotIdentity;
 
@@ -232,7 +242,7 @@ export class NamespaceStack {
     }
 
     this.snapshotIdentity = {};
-    topFrame.set(id, { layout, state });
+    topFrame.set(id, { layout, irPath, state, ...(state === 'scope-placeholder' ? { scopeOwner: layout } : {}) });
     this.onRegister?.({
       id,
       frameDepth: this.frames.length - 1,
@@ -268,9 +278,47 @@ export class NamespaceStack {
     if (expectedCurrent !== undefined && current?.layout !== expectedCurrent) return false;
 
     this.snapshotIdentity = {};
-    targetFrame.set(id, { layout, state: 'resolved' });
+    targetFrame.set(id, { ...current, layout, state: 'resolved' });
 
     return true;
+  }
+
+  /** 用新的投影替换本次名称绑定，不原位修改布局或 fork 共享的 entry */
+  replacePublishedLayout(previous: NodeLayout, next: NodeLayout): void {
+    if (previous === next) return;
+    for (const frame of this.frames) {
+      for (const [id, entry] of frame) {
+        if (entry.layout !== previous) continue;
+        frame.set(id, { ...entry, layout: next });
+        this.snapshotIdentity = {};
+      }
+    }
+  }
+
+  /** 进入命名 Scope 的后代求值区间 */
+  enterScope(owner: NodeLayout, id: string): void {
+    this.scopeAncestors.push({ layout: owner, id });
+  }
+
+  /** 离开命名 Scope 的后代求值区间 */
+  leaveScope(): void {
+    this.scopeAncestors.pop();
+  }
+
+  /** 解析作者几何引用，拒绝实际绑定到祖先 Scope 的目标 */
+  lookupReference(id: string): NamespaceEntry | undefined {
+    const entry = this.lookupEntry(id);
+    if (entry?.scopeOwner !== undefined && this.scopeAncestors.some(ancestor => ancestor.layout === entry.scopeOwner)) {
+      const source = this.scopeAncestors.at(-1)?.id;
+      const error = new RetikzCoreError({
+        code: RetikzCoreErrorCode.Compile,
+        message: `Geometry reference from a descendant of Scope '${source}' cannot target ancestor Scope '${id}'`,
+        details: { sourceScopeId: source, targetId: id },
+      });
+      registerFatalProbeError(error);
+      throw error;
+    }
+    return entry;
   }
 
   /** 按 inside-out 规则查找 id 对应的 layout */

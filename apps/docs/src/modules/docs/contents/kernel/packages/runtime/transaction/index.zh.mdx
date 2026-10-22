@@ -368,7 +368,7 @@ Runtime 是同步且不可重入的：准备、通知或清理回调中不要再
 Core 把文档作为来源、编译作为计算。以下接线沿用前文的 Runtime 导入，复用 Core 已定义的 Token 和计算工厂；`document` 表示调用方已有的完整 Scene IR：
 
 ```ts
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
 
 const compile = createCoreComputation({});
 const coreSources = createRuntimeSourceRegistry([CoreSourceDefinition]);
@@ -384,7 +384,7 @@ const scene = coreRuntime.result(compile).value.output.result.scene;
 后续完整文档仍通过更新命令提交。Runtime 保证文档与编译结果一起发布；Core 决定如何编译、校验领域提示和回退。使用结束后调用 `coreRuntime.dispose()`，将 Scene 应用到 renderer 的外部提交见 [Participant · 参与者](/kernel/packages/runtime/participant)。
 
 <SourceLinks
-  sources={[{ label: 'Core 编译计算入口', path: 'packages/kernel/core/src/compile/incremental/computation.ts' }]}
+  sources={[{ label: 'Core 编译计算入口', path: 'packages/kernel/reconciler/src/runtime/computation.ts' }]}
 />
 
 ## 相关属性

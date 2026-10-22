@@ -1,5 +1,5 @@
-import type { RuntimeIdentity } from '@retikz/runtime';
-import { createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runtime';
+import type { SceneIdentity } from '@retikz/reconciler';
+import { createSceneIdentityLookup, sceneIdentityEquals } from '@retikz/reconciler';
 
 import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { HydrationController } from '../hydration';
@@ -11,35 +11,35 @@ export const isPlainObject = (value: object): boolean => {
   return prototype === Object.prototype || prototype === null;
 };
 
-type RuntimeIdentityMapNode<TValue> = {
-  children: Map<string, RuntimeIdentityMapNode<TValue>>;
-  entry?: Readonly<{ identity: RuntimeIdentity; value: TValue }>;
+type SceneIdentityMapNode<TValue> = {
+  children: Map<string, SceneIdentityMapNode<TValue>>;
+  entry?: Readonly<{ identity: SceneIdentity; value: TValue }>;
 };
 
 /**
  * 以结构化 identity path 建立经 Runtime contract 校验的值索引
  * @template TValue 与精确运行时标识关联的值类型，供 set 写入和 get 读取
  */
-export type RuntimeIdentityMap<TValue> = Readonly<{
+export type SceneIdentityMap<TValue> = Readonly<{
   /** 查询 exact identity 对应的值 */
-  get: (identity: RuntimeIdentity) => TValue | undefined;
+  get: (identity: SceneIdentity) => TValue | undefined;
   /** 判断 exact identity 是否已存在 */
-  has: (identity: RuntimeIdentity) => boolean;
+  has: (identity: SceneIdentity) => boolean;
   /** 写入尚不存在的 exact identity */
-  set: (identity: RuntimeIdentity, value: TValue) => boolean;
+  set: (identity: SceneIdentity, value: TValue) => boolean;
   /** 删除 exact identity */
-  delete: (identity: RuntimeIdentity) => boolean;
+  delete: (identity: SceneIdentity) => boolean;
 }>;
 
 /**
  * 创建不拼接 identity key 的 Runtime identity 值索引
  * @template TValue 初始条目与后续索引读写使用的值类型
  */
-export const createRuntimeIdentityMap = <TValue>(
-  entries: ReadonlyArray<readonly [RuntimeIdentity, TValue]>,
-): RuntimeIdentityMap<TValue> => {
-  const roots = new Map<string, RuntimeIdentityMapNode<TValue>>();
-  const byOwner = new Map<string, Array<RuntimeIdentity>>();
+export const createSceneIdentityMap = <TValue>(
+  entries: ReadonlyArray<readonly [SceneIdentity, TValue]>,
+): SceneIdentityMap<TValue> => {
+  const roots = new Map<string, SceneIdentityMapNode<TValue>>();
+  const byOwner = new Map<string, Array<SceneIdentity>>();
 
   for (const [identity] of entries) {
     const identities = byOwner.get(identity.owner) ?? [];
@@ -47,12 +47,12 @@ export const createRuntimeIdentityMap = <TValue>(
     byOwner.set(identity.owner, identities);
   }
 
-  for (const [owner, identities] of byOwner) createRuntimeIdentityLookup(owner, identities);
+  for (const [owner, identities] of byOwner) createSceneIdentityLookup(owner, identities);
 
-  const locate = (identity: RuntimeIdentity, create: boolean): RuntimeIdentityMapNode<TValue> | undefined => {
-    runtimeIdentityEquals(identity, identity);
+  const locate = (identity: SceneIdentity, create: boolean): SceneIdentityMapNode<TValue> | undefined => {
+    sceneIdentityEquals(identity, identity);
     const existingRoot = roots.get(identity.owner);
-    let current: RuntimeIdentityMapNode<TValue>;
+    let current: SceneIdentityMapNode<TValue>;
     if (existingRoot === undefined) {
       if (!create) return undefined;
       current = { children: new Map() };
@@ -60,7 +60,7 @@ export const createRuntimeIdentityMap = <TValue>(
     } else current = existingRoot;
 
     for (const segment of identity.path) {
-      let child: RuntimeIdentityMapNode<TValue> | undefined = current.children.get(segment);
+      let child: SceneIdentityMapNode<TValue> | undefined = current.children.get(segment);
       if (child === undefined) {
         if (!create) return undefined;
         child = { children: new Map() };
@@ -73,12 +73,12 @@ export const createRuntimeIdentityMap = <TValue>(
     return current;
   };
 
-  const get = (identity: RuntimeIdentity): TValue | undefined => {
+  const get = (identity: SceneIdentity): TValue | undefined => {
     const entry = locate(identity, false)?.entry;
-    return entry !== undefined && runtimeIdentityEquals(entry.identity, identity) ? entry.value : undefined;
+    return entry !== undefined && sceneIdentityEquals(entry.identity, identity) ? entry.value : undefined;
   };
 
-  const set = (identity: RuntimeIdentity, value: TValue): boolean => {
+  const set = (identity: SceneIdentity, value: TValue): boolean => {
     const node = locate(identity, true);
     if (node === undefined || node.entry !== undefined) return false;
 
@@ -87,9 +87,9 @@ export const createRuntimeIdentityMap = <TValue>(
     return true;
   };
 
-  const remove = (identity: RuntimeIdentity): boolean => {
+  const remove = (identity: SceneIdentity): boolean => {
     const node = locate(identity, false);
-    if (node?.entry === undefined || !runtimeIdentityEquals(node.entry.identity, identity)) return false;
+    if (node?.entry === undefined || !sceneIdentityEquals(node.entry.identity, identity)) return false;
 
     delete node.entry;
 
@@ -117,10 +117,10 @@ type SemanticOwnerPublicIdState = {
  * @description 一个 owner 可发射多个 primitive；重复出现同一公开 id 仍视为唯一，冲突 id 则不提供回退
  */
 export const createSemanticOwnerPublicIdMap = (
-  topology: ReadonlyArray<Readonly<{ semanticOwner: RuntimeIdentity; publicId?: string }>>,
-): RuntimeIdentityMap<string> => {
-  const stateByOwner = createRuntimeIdentityMap<SemanticOwnerPublicIdState>([]);
-  const states: Array<readonly [RuntimeIdentity, SemanticOwnerPublicIdState]> = [];
+  topology: ReadonlyArray<Readonly<{ semanticOwner: SceneIdentity; publicId?: string }>>,
+): SceneIdentityMap<string> => {
+  const stateByOwner = createSceneIdentityMap<SemanticOwnerPublicIdState>([]);
+  const states: Array<readonly [SceneIdentity, SemanticOwnerPublicIdState]> = [];
 
   for (const node of topology) {
     if (node.publicId === undefined) continue;
@@ -133,7 +133,7 @@ export const createSemanticOwnerPublicIdMap = (
     } else if (existing.publicId !== node.publicId) existing.ambiguous = true;
   }
 
-  return createRuntimeIdentityMap(
+  return createSceneIdentityMap(
     states.flatMap(([identity, state]) => (state.ambiguous ? [] : ([[identity, state.publicId]] as const))),
   );
 };
@@ -141,7 +141,7 @@ export const createSemanticOwnerPublicIdMap = (
 /** 按 effective public id 聚合完整 topology primitive paths */
 export const createPublicIdPrimitivePathMap = (
   topology: ReadonlyArray<
-    Readonly<{ semanticOwner: RuntimeIdentity; primitivePath: ReadonlyArray<number>; publicId?: string }>
+    Readonly<{ semanticOwner: SceneIdentity; primitivePath: ReadonlyArray<number>; publicId?: string }>
   >,
 ): ReadonlyMap<string, ReadonlyArray<ReadonlyArray<number>>> => {
   const publicIdByOwner = createSemanticOwnerPublicIdMap(topology);

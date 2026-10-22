@@ -1,4 +1,3 @@
-import type { RuntimeRevision } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, strictObject } from 'zod';
 
@@ -17,7 +16,7 @@ import type {
 import {
   ChildSchema,
   compileToScene,
-  CompileWarningCode,
+  BuiltinCompileWarningCode,
   CompositeBaseSchema,
   defineClip,
   defineComposite,
@@ -30,7 +29,7 @@ import {
 } from '../../src';
 import { NamespaceStack } from '../../src/compile/namespace';
 import { createCompileContext } from '../../src/compile/orchestration/context';
-import { createRuntimeTopologyTracker } from '../../src/compile/orchestration/runtime-topology';
+import { createCompileProvenanceTracker } from '../../src/compile/orchestration/provenance';
 import { compileChildrenToPrimitives } from '../../src/compile/orchestration/traversal';
 import type { CompositeCompileSession } from '../../src/compile/orchestration/types';
 
@@ -578,7 +577,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const failingIr = scene([{ namespace: 'test', type: 'nestedScopeClipPreflight', fail: true }]);
     const context = createCompileContext(failingIr, options);
     const namespaceStack = new NamespaceStack();
-    const identityTracker = createRuntimeTopologyTracker(1 as RuntimeRevision);
+    const provenanceTracker = createCompileProvenanceTracker();
     const session: CompositeCompileSession = {
       measurements: new Map(),
       measurementIdentities: new WeakMap(),
@@ -594,7 +593,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       compileChildrenToPrimitives(failingIr.children, context, {
         session,
         namespaceStack,
-        identityTracker,
+        provenanceTracker,
       }),
     ).toThrow(/runtime Scope clip failed/i);
     expect(warnings).toEqual([]);
@@ -602,7 +601,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     expect(context.paint.resources()).toEqual([]);
     expect(context.clip.resources()).toEqual([]);
     expect(namespaceStack.lookup('same')).toBeUndefined();
-    expect(identityTracker.rootIdentityRegistrations()).toEqual([]);
+    expect(provenanceTracker.rootIdentityRegistrations()).toEqual([]);
     expect(session.outputChildren.get(replayHandle!)).toMatchObject({ used: false });
     expect(session.outputChildren.get(scopeHandle!)).toMatchObject({ used: false });
 
@@ -624,7 +623,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
 
     expect(committed.scene.primitives).toHaveLength(2);
     expect(committed.scene.resources?.map(resource => resource.kind)).toEqual(['paint', 'clip']);
-    expect(warnings.map(warning => warning.code)).toContain(CompileWarningCode.DuplicateNodeId);
+    expect(warnings.map(warning => warning.code)).toContain(BuiltinCompileWarningCode.DuplicateNodeId);
     expect(committed.artifacts.filter(isNodeLayoutCompileArtifact)).toHaveLength(2);
     expect(clipResolveCalls).toBe(2);
   });
@@ -886,7 +885,9 @@ describe('layout-aware composite runtime wrapper tree', () => {
       onWarn: warning => warnings.push(warning),
     });
 
-    expect(warnings).toContainEqual(expect.objectContaining({ code: CompileWarningCode.UnresolvedNodeReference }));
+    expect(warnings).toContainEqual(
+      expect.objectContaining({ code: BuiltinCompileWarningCode.UnresolvedNodeReference }),
+    );
   });
 
   it('allows replayed ids to shadow outer ids inside a runtime local namespace', () => {
@@ -909,7 +910,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     });
 
     expect(groups(result.scene.primitives)).toContainEqual(expect.objectContaining({ id: 'local' }));
-    expect(warnings).not.toContainEqual(expect.objectContaining({ code: CompileWarningCode.DuplicateNodeId }));
+    expect(warnings).not.toContainEqual(expect.objectContaining({ code: BuiltinCompileWarningCode.DuplicateNodeId }));
   });
 
   it('preserves probe-local duplicate warnings when suppressing an obsolete parent collision', () => {
@@ -941,7 +942,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       onWarn: warning => warnings.push(warning),
     });
 
-    const duplicates = warnings.filter(warning => warning.code === CompileWarningCode.DuplicateNodeId);
+    const duplicates = warnings.filter(warning => warning.code === BuiltinCompileWarningCode.DuplicateNodeId);
 
     expect(duplicates).toHaveLength(1);
     expect(duplicates[0].message).toContain('under <Scope localNamespace>');

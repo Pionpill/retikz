@@ -16,6 +16,23 @@ const end = vector2.add([20, 10], [40, -15]);
 const distance = point.distance([20, 10], end); // 42.720018726587654
 ```
 
+## 角度与扫描范围
+
+角度 API 使用度数；`DEG_TO_RAD` 和 `RAD_TO_DEG` 用于和弧度换算。`normalizeDegrees` 返回 `[0, 360)` 内的表示，`normalizeSignedDegrees` 返回最接近零的表示（180 保留为正值）。
+
+```ts
+import { alignAngleSweep, normalizeAngleRange, normalizeDegrees } from '@retikz/math';
+
+normalizeDegrees(-30); // 330
+normalizeAngleRange(300, 60); // { start: 300, end: 420, mid: 360 }
+alignAngleSweep(300, 60, false); // { start: 300, end: 420 }
+alignAngleSweep(300, 60, true); // { start: 300, end: 60 }
+```
+
+`normalizeAngleRange` 保留起始角，沿角度递增方向展开终止角并限制到一圈。`alignAngleSweep` 按指定方向调整终止角：屏幕坐标系中角度递增为顺时针，`counterClockwise: true` 为递减。相同起止角保持零跨度；非零整圈输入保持一整圈，不折成零。
+
+纯几何函数和类型直接从 `@retikz/math` 导入。居中矩形使用 `CenteredBox`，其中 `x/y` 为中心；不要与 `x/y` 表示左上角的 `BoundsRect` 混用。Core 的锚点和连接策略仍由 Core 提供。
+
 ## 向量运算
 
 二维几何数据可以表示为坐标点或向量：点表示位置，向量表示方向与位移。`Position` 与 `Vector2` 都使用 `[x, y]` 形式，但应根据语义选择对应的方法集合。
@@ -163,7 +180,7 @@ $$
       label: '椭圆弧的边界候选点',
       path: 'packages/kernel/math/src/primitives/arc.ts',
       startLine: 143,
-      endLine: 180,
+      endLine: 174,
     },
   ]}
 />
@@ -234,7 +251,7 @@ $$
       label: '椭圆弧的取点和候选点',
       path: 'packages/kernel/math/src/primitives/arc.ts',
       startLine: 143,
-      endLine: 180,
+      endLine: 174,
     },
   ]}
 />

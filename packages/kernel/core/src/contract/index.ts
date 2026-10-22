@@ -4,7 +4,7 @@ export * from './box-spacing';
 export * from './clip';
 export * from './composite/constants';
 export * from './composite/define';
-export { createCompositeInputBindings } from './composite/input';
+export { createCompositeInputBindings, validateCompositeInputBindings } from './composite/input';
 export type {
   CompositeBoundChild,
   CompositeInputBinding,
@@ -19,9 +19,7 @@ export * from './path-generator';
 export * from './path-kind';
 export * from './pattern';
 export * from './provider';
-export * from './runtime';
 export * from './scene';
-export * from './scene-patch';
 export * from './shape';
 export * from './spatial-handle';
 export * from './theme-style';

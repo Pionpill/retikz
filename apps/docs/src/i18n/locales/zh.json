@@ -50,6 +50,9 @@
   "kernel": {
     "runtimeMechanics": "运行机制",
     "renderingPipeline": "渲染链路",
+    "incrementalUpdates": "增量更新",
+    "textMetrics": "文字度量",
+    "componentComposition": "组件组合",
     "compilationMechanisms": "编译机制",
     "internals": "进阶",
     "label": "内核",

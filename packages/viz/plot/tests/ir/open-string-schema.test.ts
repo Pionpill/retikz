@@ -3,7 +3,7 @@ import { BuiltinDataTransform, ExternalTransformSchema } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { toJSONSchema } from 'zod';
 
-import { ShapeChannelSchema } from '../../src/schemas/encoding';
+import { PointPropertiesSchema } from '../../src/schemas';
 import {
   ColorSchemeNameSchema,
   BuiltinPlotColorScheme,
@@ -24,9 +24,9 @@ describe('Plot registry-backed open string schemas', () => {
     expect(() => ColorSchemeNameSchema.parse('   ')).toThrow();
   });
 
-  it('reuses the Core shape vocabulary for constant shape channels', () => {
-    expect(ShapeChannelSchema.parse({ value: 'custom.glyph' })).toEqual({ value: 'custom.glyph' });
-    expect(() => ShapeChannelSchema.parse({ value: '   ' })).toThrow();
+  it('reuses the Core shape vocabulary for fixed shape properties', () => {
+    expect(PointPropertiesSchema.parse({ shape: 'custom.glyph' }).shape).toBe('custom.glyph');
+    expect(() => PointPropertiesSchema.parse({ shape: '   ' })).toThrow();
     expect(toJSONSchema(ShapeNameSchema)).toMatchObject({ anyOf: expect.any(Array) });
   });
 

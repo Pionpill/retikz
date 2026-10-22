@@ -19,19 +19,19 @@ import { PositionSchema } from '../../position';
 import { AngleDegreesSchema } from '../../scalar';
 import { createLabelVisualStyleShape, TextBlockSchema } from '../../text';
 import { NodeTargetSchema, TargetSchema } from '../target';
-import { BendDirection, FoldStepVia, GeometryLabelPlacement, GeometryLabelPosition, PathCloseMode } from './constants';
+import { BendDirection, FoldStepVia, PathLabelPlacement, PathLabelPosition, PathCloseMode } from './constants';
 
 /** 校验附着于路径类宿主、由中心线采样确定位置的文本标签 */
-export const GeometryLabelSchema = strictObject({
+export const PathLabelSchema = strictObject({
   ...createLabelVisualStyleShape({
     textColor: 'Label text color; falls back to label defaults, path color, then currentColor.',
     opacity: 'Label-only opacity, multiplied with the owning path opacity.',
     font: 'Label font overrides. Missing fields inherit from scope label defaults.',
   }),
   text: TextBlockSchema.describe(
-    'One text block for this geometry label. Arrays provide authored lines with optional per-line styles.',
+    'One text block for this path label. Arrays provide authored lines with optional per-line styles.',
   ),
-  position: union([zodEnum(GeometryLabelPosition), NormalizedFractionSchema])
+  position: union([zodEnum(PathLabelPosition), NormalizedFractionSchema])
     .optional()
     .describe('Position along the step: keyword or normalized number. Parameter meaning follows the step kind.'),
   side: zodEnum(Side)
@@ -48,20 +48,20 @@ export const GeometryLabelSchema = strictObject({
   gap: NonNegativeNumberSchema.optional().describe(
     'Extra clearance in user units on each side of an interrupted host stroke gap. Defaults to 4.',
   ),
-  placement: zodEnum(GeometryLabelPlacement)
+  placement: zodEnum(PathLabelPlacement)
     .optional()
     .describe(
-      'Geometry label placement mode. outside uses side offset; inside lets area hosts place labels within their band.',
+      'Path label placement mode. outside uses side offset; inside lets area hosts place labels within their band.',
     ),
   distance: NonNegativeNumberSchema.optional().describe(
     'Side offset distance in user units. Defaults to the same distance as Path step labels.',
   ),
 }).describe(
-  'Geometry label spec attached to a path-like host; compiled as one text block positioned from a centerline sample.',
+  'Path label spec attached to a path-like host; compiled as one text block positioned from a centerline sample.',
 );
 
-/** 复用几何标签规则，校验路径步骤附属标签 */
-export const StepLabelSchema = GeometryLabelSchema;
+/** 复用路径标签规则，校验路径步骤附属标签 */
+export const StepLabelSchema = PathLabelSchema;
 
 /** 校验只移动路径游标、不绘制线段的动作 */
 export const MoveStepSchema = strictObject({
@@ -92,6 +92,7 @@ export const AxisLineStepSchema = strictObject({
   label: StepLabelSchema.optional().describe('Edge label attached to this projected line segment'),
 }).describe('Axis-line action: project a target to one local host axis and draw one straight segment.');
 
+/** 折线路径步骤共用的终点和标签字段 */
 const FoldStepCommonShape = {
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('fold').describe('Folded orthogonal segment from cursor to target.'),
@@ -101,6 +102,7 @@ const FoldStepCommonShape = {
   ),
 };
 
+/** 校验只有一个拐点的折线路径步骤 */
 const TwoLegFoldStepSchema = strictObject({
   ...FoldStepCommonShape,
   via: zodEnum([FoldStepVia.HorizontalThenVertical, FoldStepVia.VerticalThenHorizontal]).describe(
@@ -108,6 +110,7 @@ const TwoLegFoldStepSchema = strictObject({
   ),
 });
 
+/** 校验有两个拐点的折线路径步骤 */
 const ThreeLegFoldStepSchema = strictObject({
   ...FoldStepCommonShape,
   via: zodEnum([FoldStepVia.HorizontalVerticalHorizontal, FoldStepVia.VerticalHorizontalVertical]).describe(
@@ -200,6 +203,7 @@ export const StepRadiusSchema = union([PositiveNumberSchema, StepAnisotropicRadi
   'Circular radius number or anisotropic radius object.',
 );
 
+/** 检查局部圆弧的起止角是否成对，以及是否与整圈闭合冲突 */
 const refinePartialAngles = (
   step: { startAngle?: number; endAngle?: number; closed?: string },
   ctx: RefinementCtx,
@@ -224,6 +228,7 @@ const refinePartialAngles = (
   }
 };
 
+/** 校验圆弧步骤的基本字段，角度关系由最终校验补充 */
 const ArcStepBaseSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('arc').describe(
@@ -245,6 +250,7 @@ const ArcStepBaseSchema = strictObject({
 /** 校验从路径游标出发的圆弧或椭圆弧动作 */
 export const ArcStepSchema = ArcStepBaseSchema;
 
+/** 校验圆形路径步骤的基本字段 */
 const CirclePathStepBaseSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('circlePath').describe(
@@ -270,6 +276,7 @@ export const CirclePathStepSchema = CirclePathStepBaseSchema.superRefine((step, 
   refinePartialAngles(step, ctx, 'circlePath'),
 );
 
+/** 校验椭圆路径步骤的基本字段 */
 const EllipsePathStepBaseSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('ellipsePath').describe(

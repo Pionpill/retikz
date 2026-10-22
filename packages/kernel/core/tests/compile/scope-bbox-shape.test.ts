@@ -2,7 +2,7 @@ import { circle } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
-import { CompileWarningCode } from '../../src';
+import { BuiltinCompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import type { NodeLayout } from '../../src/compile/node';
 import { boxInsets } from '../../src/compile/node';
@@ -31,7 +31,6 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
 
 /** 构造一个 width/height 已知、中心已知的 0-rotate 测试 layout */
 const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => ({
-  node: { id: 'test' },
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.rectangle, params: {} },
   geometry: {
     rect: { x: cx, y: cy, width: w, height: h, rotate: 0 },
@@ -45,7 +44,6 @@ const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => (
     params: {},
     isShape: true,
   },
-  irPath: 'synthetic.test',
 });
 
 describe('createScopeCircleLayout 单元测试', () => {
@@ -59,7 +57,6 @@ describe('createScopeCircleLayout 单元测试', () => {
   it('空点集 → 0×0 占位落在 fallbackOrigin', () => {
     const layout = createScopeCircleLayout({ id: 'g', cornerPoints: [], fallbackOrigin: [30, 40] });
 
-    expect(layout.node.id).toBe('g');
     expect(layout.geometry.rect.x).toBe(30);
     expect(layout.geometry.rect.y).toBe(40);
     expect(layout.geometry.rect.width).toBe(0);
@@ -115,7 +112,7 @@ describe('scope boundingShape="circle" 集成测试', () => {
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
 
-    expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
+    expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
 
     const end = lineTo(topPath(compiled.primitives));
 

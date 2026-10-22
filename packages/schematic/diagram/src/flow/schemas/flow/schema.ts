@@ -4,7 +4,7 @@ import {
   Side,
   BendStepSchema,
   ControlPointSchema,
-  GeometryLabelSchema,
+  PathLabelSchema,
   ScopePropsSchema,
   SmoothStepSchema,
   TextBlockSchema,
@@ -310,7 +310,7 @@ const FlowRelationLabelTextSchema = TextBlockSchema.refine(hasFlowEntityText, {
 
 const FlowRelationLabelSchema = union([
   FlowRelationLabelTextSchema,
-  GeometryLabelSchema.extend({ text: FlowRelationLabelTextSchema }),
+  PathLabelSchema.extend({ text: FlowRelationLabelTextSchema }),
 ]);
 
 /** 校验将投影为单个 Graph 实体的 Flow 节点输入 */
@@ -531,7 +531,7 @@ export const FlowRelationSchema = strictObject({
   source: FlowEndpointSchema.describe('Source Entity or Group with optional connection constraints.'),
   target: FlowEndpointSchema.describe('Target Entity or Group with optional connection constraints.'),
   label: FlowRelationLabelSchema.optional().describe(
-    'Optional compact Core TextBlock or complete GeometryLabel; full objects preserve Core geometry and appearance, including position, sloped, interruption and gap.',
+    'Optional compact Core TextBlock or complete PathLabel; full objects preserve Core geometry and appearance, including position, sloped, interruption and gap.',
   ),
   role: RelationRoleSchema.optional().describe('Open Graph Relation role; omission resolves to flow.'),
   kind: RelationKindSchema.optional().describe('Open stable kind within the selected Relation role.'),

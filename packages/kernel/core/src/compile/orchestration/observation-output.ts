@@ -5,10 +5,10 @@ import { freezeOccurrence } from './artifact';
 import type { CompileContext } from './context';
 import type { CompileObservationRuntime } from './observation';
 import { compileObservedFragment } from './observation-fragment';
-import type { PendingCompileObservation } from './types';
+import type { CompileObservationContribution } from './types';
 
 /** 把 owner identity 转为同 occurrence 下的稳定排序键 */
-const ownerKeyOf = (entry: PendingCompileObservation): string =>
+const ownerKeyOf = (entry: CompileObservationContribution): string =>
   entry.owner.kind === 'composite'
     ? `composite:${entry.owner.namespace}.${entry.owner.type}`
     : entry.owner.kind === 'path'
@@ -16,7 +16,7 @@ const ownerKeyOf = (entry: PendingCompileObservation): string =>
       : entry.owner.kind;
 
 /** 把 observation entry 的 scope chain 投影为局部坐标到 Scene 坐标的仿射矩阵 */
-const matrixOf = (entry: PendingCompileObservation): readonly [number, number, number, number, number, number] => {
+const matrixOf = (entry: CompileObservationContribution): readonly [number, number, number, number, number, number] => {
   const origin = applyTransformChain([0, 0], entry.scopeChain);
   const xBasis = applyTransformChain([1, 0], entry.scopeChain);
   const yBasis = applyTransformChain([0, 1], entry.scopeChain);
@@ -33,7 +33,7 @@ const matrixOf = (entry: PendingCompileObservation): readonly [number, number, n
 
 /** 按最终 occurrence 收集并提交一次 observed compile 的全部 owner output */
 export const dispatchCompileObservations = (
-  entries: ReadonlyArray<PendingCompileObservation>,
+  entries: ReadonlyArray<CompileObservationContribution>,
   runtime: CompileObservationRuntime | undefined,
   context: CompileContext,
 ): ReadonlyArray<CompileObserverOutput> => {

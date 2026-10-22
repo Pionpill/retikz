@@ -304,19 +304,18 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 <Comparison target="tikz" title="Path 写法映射">
 
-| retikz                             | TikZ 对照                    |
-| ---------------------------------- | ---------------------------- |
-| `style.lineCap` / `style.lineJoin` | `line cap` / `line join`     |
-| `ultraThin` … `ultraThick`         | `ultra thin` … `ultra thick` |
-| `marks` 与端点箭头随线宽缩放       | 标记与端点箭头随线宽缩放     |
-| `roundedCorners={r}`               | `rounded corners=<r>`        |
-| `style.color`                      | `color=`                     |
+| retikz                             | TikZ 对照                |
+| ---------------------------------- | ------------------------ |
+| `style.lineCap` / `style.lineJoin` | `line cap` / `line join` |
+| `marks` 与端点箭头随线宽缩放       | 标记与端点箭头随线宽缩放 |
+| `roundedCorners={r}`               | `rounded corners=<r>`    |
+| `style.color`                      | `color=`                 |
 
 </Comparison>
 
 ## 样式
 
-`strokeWidth` 可直接给数值；`thickness` 则提供 `ultraThin` 到 `ultraThick` 的语义档位，且显式 `strokeWidth` 优先。`dashOffset` 只移动虚线节奏的起点。`lineCap` / `lineJoin` 分别控制端点与拐点；面板保留整体与描边两个透明度通道，便于直接观察效果。
+`style.strokeWidth` 设置数值线宽。`dashOffset` 只移动虚线节奏的起点。`lineCap` / `lineJoin` 分别控制端点与拐点；面板保留整体与描边两个透明度通道，便于直接观察效果。
 
 <ComponentPreview
   files={['path-style', 'path-style.preview.tsx']}

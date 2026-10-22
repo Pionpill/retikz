@@ -4,6 +4,7 @@ import type { BoundsInsets, BoundsRect } from '@retikz/math';
 
 import type {
   AnyCoordinateDefinition,
+  AnyMarkDefinition,
   AnyScaleDefinition,
   CoordinateFrame,
   DimensionRole,
@@ -79,6 +80,8 @@ export type CoordinateResolveContext = {
   /** provenance 上下文 */
   provenance?: ProvenanceContext;
   /** 已合并的 coordinate definitions */
+  /** 当前请求的图元定义，供实例来源解析 */
+  markRegistry: ReadonlyMap<string, AnyMarkDefinition>;
   coordinateRegistry: ReadonlyMap<string, AnyCoordinateDefinition>;
   /** 已合并的 scale definitions */
   scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>;

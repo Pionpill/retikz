@@ -1,3 +1,4 @@
+import type { CenteredBox } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 import { number, strictObject } from 'zod';
 
@@ -8,7 +9,6 @@ import { defineBoundary, defineShape } from '../../../src/contract';
 import { BUILTIN_BOUNDARIES } from '../../../src/providers/boundary';
 import type { IRBoundary, IRScene } from '../../../src/schemas';
 import { BoundarySchema } from '../../../src/schemas/boundary';
-import type { Rect } from '../../../src/shared/geometry/rect';
 import { flattenPrims } from '../../helpers/flatten';
 
 const lineEndpoint = (options: CompileOptions, boundary?: IRBoundary): [number, number] => {
@@ -145,7 +145,7 @@ describe('Boundary provider contract', () => {
 
   it('custom boundary may publish an explicit closed outline', () => {
     const boundary = outlinedBoundary();
-    const rect: Rect = { x: 4, y: 5, width: 10, height: 6, rotate: 0 };
+    const rect: CenteredBox = { x: 4, y: 5, width: 10, height: 6, rotate: 0 };
 
     expect(boundary.outline?.(rect, {})).toEqual([
       { kind: 'move', to: [-1, 2] },
@@ -157,7 +157,7 @@ describe('Boundary provider contract', () => {
   });
 
   it('built-in circle, rectangle, and ellipse boundaries publish explicit closed outlines', () => {
-    const rect: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
+    const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
 
     for (const boundary of BUILTIN_BOUNDARIES) {
       const outline = boundary.outline?.(rect, { fit: 'tight', gap: 0 });

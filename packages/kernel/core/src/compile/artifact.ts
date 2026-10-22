@@ -9,3 +9,13 @@ export const formatCompileOccurrence = (locator: CompileOccurrenceLocator): stri
 export const isNodeLayoutCompileArtifact = (
   artifact: CompositeCompileArtifact | NodeLayoutCompileArtifact,
 ): artifact is NodeLayoutCompileArtifact => artifact.kind === 'nodeLayout';
+
+/**
+ * 格式化声明子元素的来源路径；prefix 为空或以点结尾
+ * @remarks 基础元素附带 type，Composite 声明不附带类型后缀；路径仅用于来源与诊断
+ */
+export const formatCompileChildPath = (
+  prefix: string,
+  index: number,
+  type?: 'node' | 'coordinate' | 'path' | 'scope',
+): string => `${prefix}children[${index}]${type === undefined ? '' : `.${type}`}`;

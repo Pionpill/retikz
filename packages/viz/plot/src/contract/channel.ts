@@ -1,4 +1,4 @@
-import type { IRNode, IRPath, IRScope, IRShapeValue } from '@retikz/core';
+import type { IRNode, IRPath, IRScope, IRShapeValue, IRNodeLabel, IRPathLabel } from '@retikz/core';
 import type {
   DataTransformModel,
   DataFieldType,
@@ -55,6 +55,8 @@ export type ResolveLabel = (row: ExternalRow) => string;
 export const ChannelDefinitionKind = {
   /** 位置通道：由坐标系 role 消费 */
   Position: 'position',
+  /** 附属标签的字段外观通道 */
+  Label: 'label',
   /** Mark 通道：解析后交给 mark definition 按图元语义消费 */
   Mark: 'mark',
   /** Scope 通道：解析后直接交付到 core IRScope 级联属性或 every-X 默认 */
@@ -131,6 +133,8 @@ export type ScopeChannelDelivery = {
  *   存放直接落到 core IRScope / IRNode / IRPath 的通道交付项
  */
 export type MarkChannels = {
+  /** 按原始标签索引投递的字段样式 */
+  labelDeliveries?: ReadonlyArray<LabelChannelDelivery>;
   /** 按通道名称索引的逐行视觉值解析函数 */
   values?: Readonly<Record<string, ChannelValueResolver>>;
   /** 未应用逐行编码时由 mark 消费的通道默认值 */
@@ -145,15 +149,58 @@ export type MarkChannels = {
   descriptors?: ReadonlyArray<ScaleDescriptor>;
 };
 
-/** addChannel 接受的通道形态：普通 channel 或 mark 样式字段 / 常量引用 */
-export type FieldChannel =
-  | IRPlotChannel
-  | {
-      /** 区分数据字段引用与不依赖数据的常量 */
-      kind: 'field' | 'constant';
-      /** 字段名称或常量值，由 kind 决定解释方式 */
-      value: unknown;
-    };
+/** 获取字段绑定的字段路径，不解释固定属性 */
+export const channelField = (channel: IRPlotChannel): string => (typeof channel === 'string' ? channel : channel.field);
+
+/** 获取字段绑定显式指定的比例尺名称 */
+export const channelScale = (channel: IRPlotChannel): string | undefined =>
+  typeof channel === 'string' ? undefined : channel.scale;
+
+/** 读取内置视觉目标的编码，透明度因子使用其声明成员 */
+export const markChannelEncoding = (mark: IRPlotMarkOperation, target: string): IRPlotChannel | undefined => {
+  const encodings = mark.encodings as
+    | (Record<string, IRPlotChannel | undefined> & {
+        opacity?: { overall?: IRPlotChannel; fill?: IRPlotChannel; stroke?: IRPlotChannel };
+      })
+    | undefined;
+  if (target === 'opacity') return encodings?.opacity?.overall;
+  if (target === 'fillOpacity') return encodings?.opacity?.fill;
+  if (target === 'strokeOpacity') return encodings?.opacity?.stroke;
+  return encodings?.[target];
+};
+
+/** 读取未被同目标编码覆盖的固定属性 */
+export const markProperty = <T>(mark: IRPlotMarkOperation, target: string): T | undefined => {
+  if (markChannelEncoding(mark, target) !== undefined) return undefined;
+  const properties: Record<string, unknown> | undefined = mark.properties;
+  const opacity = properties?.opacity as { overall?: number; fill?: number; stroke?: number } | undefined;
+  if (target === 'opacity') return opacity?.overall as T | undefined;
+  if (target === 'fillOpacity') return opacity?.fill as T | undefined;
+  if (target === 'strokeOpacity') return opacity?.stroke as T | undefined;
+  return properties?.[target] as T | undefined;
+};
+
+/** 排除被字段编码覆盖的固定外观；结构目标保持原样，透明度按独立因子处理 */
+export const unencodedMarkProperties = <T extends IRPlotMarkOperation>(mark: T): T['properties'] => {
+  if (mark.properties === undefined) return undefined;
+  const properties: Record<string, unknown> = { ...mark.properties };
+  for (const [target, binding] of Object.entries(mark.encodings ?? {})) {
+    if (target === 'anchorId' || target === 'label') continue;
+    if (typeof binding === 'string' || (binding !== null && typeof binding === 'object' && 'field' in binding))
+      delete properties[target];
+  }
+  if (properties.opacity !== undefined) {
+    const opacity = Object.fromEntries(
+      (['overall', 'fill', 'stroke'] as const).flatMap((factor, index) => {
+        const value = markProperty<number>(mark, ['opacity', 'fillOpacity', 'strokeOpacity'][index]);
+        return value === undefined ? [] : [[factor, value]];
+      }),
+    );
+    if (Object.keys(opacity).length === 0) delete properties.opacity;
+    else properties.opacity = opacity;
+  }
+  return properties;
+};
 
 /** 字段收集器：把 mark / transform 声明中引用外部数据源的字段加入集合 */
 export type FieldCollector = {
@@ -161,8 +208,8 @@ export type FieldCollector = {
   addField: (field?: string) => void;
   /** 一次加入多个字段名；undefined 会被跳过 */
   addFields: (...fields: Array<string | undefined>) => void;
-  /** 加入普通 channel 或 mark 样式字段引用；常量值不引用数据源 */
-  addChannel: (channel?: FieldChannel) => void;
+  /** 加入编码引用的字段路径，固定属性不经过字段收集器 */
+  addChannel: (channel?: IRPlotChannel) => void;
 };
 
 /**
@@ -403,6 +450,7 @@ export type PathChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
  * @template T 通道解析、传递或整层共享的视觉值类型
  */
 export type ChannelDefinition<T extends ChannelValue = ChannelValue> =
+  | LabelChannelDefinition
   | PositionChannelDefinition
   | MarkChannelDefinition<T>
   | ScopeChannelDefinition<T>
@@ -449,6 +497,7 @@ export const definePathChannel = <T extends ChannelValue>(
 
 /** registry / options 注入用的通用宽类型 */
 export type AnyChannelDefinition =
+  | LabelChannelDefinition
   | PositionChannelDefinition
   | {
       /** 在通道注册表中唯一的名称 */
@@ -512,3 +561,37 @@ export type AnyChannelDefinition =
       /** 把已解析的视觉值写入对应 Core 宿主的已有属性 */
       deliver: (path: IRPath, value: never, context: PathChannelDeliveryContext) => void;
     };
+
+/** 标签几何宿主，沿用 Core 的两个标签消费面 */
+export type LabelHost = 'node' | 'geometry';
+
+/** 标签通道共用的 Core 投递目标 */
+export type LabelChannelTarget = IRNodeLabel | IRPathLabel;
+
+/** 标签字段通道定义，内置与自定义共用注册、解析和投递入口 */
+export type LabelChannelDefinition = BaseChannelDefinition<typeof ChannelDefinitionKind.Label> & {
+  /** 允许消费本通道的标签宿主 */
+  hosts: ReadonlyArray<LabelHost>;
+  /** 根据字段绑定与宿主解析逐行值 */
+  resolve: (
+    context: ChannelDefinitionResolveContext,
+    binding: IRPlotChannel,
+    host: LabelHost,
+    mark: IRPlotMarkOperation,
+  ) => ChannelResolution<ChannelValue>;
+  /** 将确定值写入 Core 标签 */
+  deliver: (label: LabelChannelTarget, value: ChannelValue, host: LabelHost) => void;
+};
+
+/** 定义标签通道，不创建独立 registry */
+export const defineLabelChannel = (
+  definition: WithOptionalProperties<LabelChannelDefinition, 'kind'>,
+): LabelChannelDefinition => ({ ...definition, kind: ChannelDefinitionKind.Label });
+
+/** 保留声明索引的标签样式投递 */
+export type LabelChannelDelivery = {
+  /** 原始标签索引 */
+  index: number;
+  /** 已绑定宿主与诊断上下文的逐行投递 */
+  apply: (label: LabelChannelTarget, row: ExternalRow) => void;
+};
