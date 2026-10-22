@@ -13,7 +13,7 @@ import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot, lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import type { IRPlot } from '../../../src/schemas';
-import { EncodingSchema, PlotSchema } from '../../../src/schemas';
+import { VisualEncodingSchema, PositionEncodingSchema, PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
@@ -21,7 +21,7 @@ type Datasets = Record<string, Array<Record<string, unknown>>>;
 const DotMarkSchema = looseObject({
   type: literal('dot'),
 
-  encodings: EncodingSchema.optional(),
+  encodings: VisualEncodingSchema.extend({ position: PositionEncodingSchema.optional() }).optional(),
   transforms: array(DataTransformDeclarationSchema).optional(),
 }).catchall(JsonValueSchema);
 

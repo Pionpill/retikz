@@ -116,7 +116,7 @@ const intervalProportionalAxisTicks = (
   return values.length > 0 ? { values, labels } : undefined;
 };
 
-/** 读 mark 的 encoding（内置与自定义共享 EncodingSchema 形态）；自定义 mark 缺 encoding 时 undefined */
+/** 读取 Mark 的位置编码；自定义 Mark 未声明位置编码时返回 undefined */
 const markEncoding = (mark: IRPlotMarkOperation): Record<string, IRPlotPositionInput | undefined> | undefined =>
   (mark as { encodings?: { position?: Record<string, IRPlotPositionInput | undefined> } }).encodings?.position;
 

@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { PointMarkSchema, PathMarkSchema, IntervalMarkSchema } from '../../src/schemas';
 import {
   ChannelSchema,
-  EncodingSchema,
   PointEncodingSchema,
   PositionEncodingSchema,
   PositionInputSchema,
@@ -33,8 +32,8 @@ describe('Field encoding contract', () => {
       position: { x: { field: 'longitude' }, y: { field: 'latitude' } },
       color: { field: 'continent', scale: 'col' },
     };
-    expect(EncodingSchema.parse(input)).toEqual(input);
-    expect(EncodingSchema.parse(JSON.parse(JSON.stringify(input)))).toEqual(input);
+    expect(PointEncodingSchema.parse(input)).toEqual(input);
+    expect(PointEncodingSchema.parse(JSON.parse(JSON.stringify(input)))).toEqual(input);
   });
 
   it.each([
@@ -42,7 +41,7 @@ describe('Field encoding contract', () => {
     { x: { value: 1 }, y: { edge: 'end' } },
     { x: { value: 1 }, y: { field: 'height' }, z: { edge: 'end' } },
   ])('accepts consecutive position roles in one, two or three dimensions: %j', position => {
-    expect(EncodingSchema.parse({ position })).toEqual({ position });
+    expect(PositionEncodingSchema.parse(position)).toEqual(position);
   });
   it.each([{}, { y: { value: 1 } }, { x: { value: 1 }, z: { edge: 'end' } }, { x: { value: 1 }, u: { value: 2 } }])(
     'rejects skipped or unknown position roles: %j',

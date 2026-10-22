@@ -2164,11 +2164,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'TrackArrangement',
     url: '/viz/plot/reference/plot#trackarrangementschema',
   },
-  EncodingSchema: {
-    schema: IRPlot.EncodingSchema,
-    label: 'Encoding',
-    url: '/viz/plot/reference/encoding#encodingschema',
-  },
   ChannelSchema: {
     schema: IRPlot.ChannelSchema,
     label: 'Channel',
@@ -2209,10 +2204,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'NodeLabelEncoding',
     url: '/viz/plot/reference/encoding#nodelabelencodingschema',
   },
-  GeometryLabelEncodingSchema: {
-    schema: IRPlot.GeometryLabelEncodingSchema,
-    label: 'GeometryLabelEncoding',
-    url: '/viz/plot/reference/encoding#geometrylabelencodingschema',
+  PathLabelEncodingSchema: {
+    schema: IRPlot.PathLabelEncodingSchema,
+    label: 'PathLabelEncoding',
+    url: '/viz/plot/reference/encoding#pathlabelencodingschema',
   },
   LabelEncodingSchema: {
     schema: IRPlot.LabelEncodingSchema,

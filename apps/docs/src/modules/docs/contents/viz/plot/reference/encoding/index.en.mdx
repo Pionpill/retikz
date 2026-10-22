@@ -5,10 +5,6 @@ description: Query Plot field bindings, position roles, visual targets, and fixe
 
 Visual channels in `encodings` bind fields; fixed visual values belong to `properties`. Positions use `{ field }`, `{ value }`, or `{ edge }`, with scales selected by coordinate roles. Supply consecutive roles: `x`, `x/y`, or `x/y/z`; z cannot appear without y.
 
-## EncodingSchema
-
-<ZodSchema name="EncodingSchema" />
-
 ## ChannelSchema
 
 <ZodSchema name="ChannelSchema" />
@@ -76,10 +72,10 @@ Unencoded font leaves retain fixed settings and inheritance. Failed bindings do 
   description="Node labels add align, rotate and keepUpright to the shared position, placement and distance targets."
 />
 
-### GeometryLabelEncodingSchema
+### PathLabelEncodingSchema
 
 <ZodSchema
-  name="GeometryLabelEncodingSchema"
+  name="PathLabelEncodingSchema"
   description="Geometry labels add side and sloped; position describes placement along the path."
 />
 

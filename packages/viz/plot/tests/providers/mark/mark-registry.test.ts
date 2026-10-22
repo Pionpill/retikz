@@ -16,7 +16,13 @@ import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { BUILTIN_MARKS, resolveMarkRegistry } from '../../../src/providers';
 import type { IRPlot } from '../../../src/schemas';
-import { BUILTIN_MARK_TYPES, EncodingSchema, MarkOperationSchema, PlotSchema } from '../../../src/schemas';
+import {
+  BUILTIN_MARK_TYPES,
+  VisualEncodingSchema,
+  PositionEncodingSchema,
+  MarkOperationSchema,
+  PlotSchema,
+} from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
@@ -25,7 +31,7 @@ const DotMarkSchema = strictObject({
   type: literal('dot'),
 
   properties: strictObject({ strength: number().positive() }),
-  encodings: EncodingSchema.optional(),
+  encodings: VisualEncodingSchema.extend({ position: PositionEncodingSchema.optional() }).optional(),
 });
 
 type DotMark = ZodInfer<typeof DotMarkSchema>;

@@ -3,7 +3,6 @@ import type { infer as ZodInfer } from 'zod';
 import type {
   LabelEncodingSchema,
   ChannelSchema,
-  EncodingSchema,
   VisualEncodingSchema,
   MarkGeometryLabelListSchema,
   MarkGeometryLabelSchema,
@@ -34,9 +33,6 @@ export type IRPlotPositionEncoding = ZodInfer<typeof PositionEncodingSchema>;
 
 /** 共享绘图外观的字段编码 */
 export type IRPlotVisualEncoding = ZodInfer<typeof VisualEncodingSchema>;
-
-/** 标记的位置通道与共享通道绑定 */
-export type IRPlotEncoding = ZodInfer<typeof EncodingSchema>;
 
 /** 点标记编码，仅包含位置通道与可选文本通道 */
 export type IRPlotPointEncoding = ZodInfer<typeof PointEncodingSchema>;

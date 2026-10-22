@@ -99,7 +99,7 @@ export const NodeLabelEncodingSchema = LabelEncodingSchema.extend({
 });
 
 /** 校验几何标签附着属性的字段绑定 */
-export const GeometryLabelEncodingSchema = LabelEncodingSchema.extend({
+export const PathLabelEncodingSchema = LabelEncodingSchema.extend({
   side: NonBlankStringSchema.optional(),
   sloped: NonBlankStringSchema.optional(),
   align: never().optional(),
@@ -108,7 +108,7 @@ export const GeometryLabelEncodingSchema = LabelEncodingSchema.extend({
 });
 
 const nodeLabelEncoding = union([NonBlankStringSchema, NodeLabelEncodingSchema]);
-const geometryLabelEncoding = union([NonBlankStringSchema, GeometryLabelEncodingSchema]);
+const pathLabelEncoding = union([NonBlankStringSchema, PathLabelEncodingSchema]);
 
 /** 校验节点宿主允许的字段编码目标 */
 export const NodeEncodingSchema = VisualEncodingSchema.extend({
@@ -137,13 +137,8 @@ export const PathEncodingSchema = VisualEncodingSchema.extend({
   lineCap: ChannelSchema.optional(),
   lineJoin: ChannelSchema.optional(),
   roundedCorners: ChannelSchema.optional(),
-  label: union([geometryLabelEncoding, array(geometryLabelEncoding).min(1)]).optional(),
+  label: union([pathLabelEncoding, array(pathLabelEncoding).min(1)]).optional(),
 }).describe('Declared path-host visual field targets');
-
-/** 校验位置与共享视觉字段编码 */
-export const EncodingSchema = VisualEncodingSchema.extend({
-  position: PositionEncodingSchema.optional(),
-}).describe('Position role bindings and declared shared visual encodings');
 
 /** 校验点的位置、内容及节点外观字段编码 */
 export const PointEncodingSchema = NodeEncodingSchema.extend({
