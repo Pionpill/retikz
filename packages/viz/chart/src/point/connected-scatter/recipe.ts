@@ -138,7 +138,7 @@ export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
         point.type !== BuiltinPlotMark.Point
       )
         continue;
-      const pointColor = point.encodings?.color;
+      const pointColor = point.encodings.color;
       if (pointColor === undefined || typeof pointColor === 'string') continue;
 
       const paint = point.properties?.fill;
@@ -152,7 +152,7 @@ export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
             kind: 'line',
             ...(linePaint !== undefined
               ? { paint: linePaint }
-              : typeof path.encodings?.stroke === 'object'
+              : typeof path.encodings.stroke === 'object'
                 ? { scale: path.encodings.stroke.scale }
                 : {}),
           },

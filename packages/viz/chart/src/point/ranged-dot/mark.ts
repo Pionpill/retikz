@@ -79,10 +79,9 @@ export const resolveRangedDotMark = (
 
   return RelationMarkSchema.parse({
     type: BuiltinPlotMark.Relation,
-    kind: 'data',
     encodings: {
-      source: { position: { x: start, y: category } },
-      target: { position: { x: end, y: category } },
+      source: { position: { x: { field: start }, y: { field: category } } },
+      target: { position: { x: { field: end }, y: { field: category } } },
       ...(color === undefined ? {} : { color }),
     },
     properties: {

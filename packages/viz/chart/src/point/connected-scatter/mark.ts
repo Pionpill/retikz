@@ -58,14 +58,13 @@ export const resolveConnectedScatterMarkGroup = (
   };
   const separateColors = properties.colorMode === 'mark';
   const pathBindings: JsonObject = {
-    position: { x, y },
+    position: { x: { field: x }, y: { field: y } },
     order,
     ...(series === undefined ? {} : { series: series.field }),
   };
   const pathProperties: JsonObject = { closed: false, ...pathPropertiesOf(properties) };
   const path: JsonObject = {
     type: BuiltinPlotMark.Path,
-    kind: 'data',
     encodings: pathBindings,
     properties: pathProperties,
   };

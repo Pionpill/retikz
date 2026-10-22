@@ -89,9 +89,9 @@ export const resolvePointMark = (
 ): IRPlotMarkOperation => {
   const x = requiredFieldOf(encodings, 'x', ['recipe', 'encodings', 'x']);
   const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
-  const bindings: JsonObject = { position: { x, y } };
+  const bindings: JsonObject = { position: { x: { field: x }, y: { field: y } } };
   const fixed: JsonObject = {};
-  const mark: JsonObject = { type: BuiltinPlotMark.Point, kind: 'data', encodings: bindings, properties: fixed };
+  const mark: JsonObject = { type: BuiltinPlotMark.Point, encodings: bindings, properties: fixed };
   if (options.coordinateView !== undefined) mark.coordinateView = options.coordinateView;
   for (const name of pointVisualSlots) {
     if (name === 'opacity') continue;

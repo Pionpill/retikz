@@ -1,6 +1,6 @@
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import type { IRChild, IRPath, IRScope } from '@retikz/core';
-import { lowerPlotWithLineage } from '@retikz/plot';
+import { isBuiltinMark, lowerPlotWithLineage } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
@@ -47,9 +47,10 @@ describe('Connected Scatter connection curves', () => {
   it('仅为排序后各序列内部的缺口生成独立描边，保留曲线与观测点', () => {
     const plot = plotOf({ curve: 'catmullRom', connectNulls: { stroke: '#ff0000', strokeWidth: 4 } });
     const path = plot.marks[0];
-    if (path.type !== 'path') throw new Error('Expected path mark');
+    if (!isBuiltinMark(path) || path.type !== 'path' || path.encodings.position === undefined)
+      throw new Error('Expected path mark');
 
-    path.encodings = { ...path.encodings, series: 'group' };
+    path.encodings.series = 'group';
     const datasets = {
       rows: [
         { x: 3, y: 2, order: 3, group: 'a' },
@@ -79,7 +80,6 @@ describe('Connected Scatter connection curves', () => {
     expect(plotOf().marks[0]).not.toHaveProperty('properties.curve');
     expect(plotOf({ curve: 'catmullRom' }, [{ kind: 'connected-scatter', override: true }]).marks[0]).toMatchObject({
       type: 'path',
-      kind: 'data',
       properties: { curve: 'catmullRom' },
     });
     expect(
@@ -90,7 +90,7 @@ describe('Connected Scatter connection curves', () => {
           properties: { path: { curve: 'step' } },
         },
       ]).marks[0],
-    ).toMatchObject({ type: 'path', kind: 'data', properties: { curve: 'step' } });
+    ).toMatchObject({ type: 'path', properties: { curve: 'step' } });
     expect(() => plotOf({ curve: 'unsupported' })).toThrow();
   });
 

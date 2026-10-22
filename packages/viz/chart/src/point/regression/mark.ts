@@ -104,10 +104,9 @@ export const resolveRegressionMarkGroup = (
     const trend = settings.trend ?? {};
     const path: JsonObject = {
       type: BuiltinPlotMark.Path,
-      kind: 'data',
       transforms: [{ operation: smooth }],
       encodings: {
-        position: { x: trendXField, y: trendYField },
+        position: { x: { field: trendXField }, y: { field: trendYField } },
         order: trendXField,
         ...(series === undefined ? {} : { series: series.field }),
         ...(series === undefined || explicitStroke ? {} : { stroke: { field: series.field, scale: series.scale } }),
