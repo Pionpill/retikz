@@ -373,15 +373,60 @@ export const kernelV05: Release = {
       pkg: '@retikz/core',
       version: 'v0.5',
       description: {
-        zh: '节点与分组更容易对齐，连线和标签获得更精细的控制；新增安全的局部增量编译，暂不支持局部处理的变化仍完整编译。',
-        en: 'Makes nodes and groups easier to align and adds finer path and label control. Safe local incremental compilation is available; changes outside its supported cases still compile fully.',
+        zh: '节点与分组更容易对齐，连线和标签获得更精细的控制；Core 专注静态编译，增量复用由 Reconciler 承担。',
+        en: 'Makes nodes and groups easier to align and adds finer path and label control. Core focuses on static compilation; Reconciler owns incremental reuse.',
       },
       highlights: [
+        {
+          label: { zh: '移除旧输入 diff 协议', en: 'Remove the old input diff protocol' },
+          content: {
+            zh: '移除 CoreChange 及其增删改移动类型、CoreComputationDiagnosticCode 和旧快照 diff 校验。完整输入继续重建并提交 replaceScene；Weave 批次执行尚未接入。Runtime 通用 ChangeSet 与图元身份契约保持不变。',
+            en: 'Removed CoreChange and its add/update/remove/move types, CoreComputationDiagnosticCode, and old snapshot diff validation. Full inputs still rebuild and publish replaceScene; Weave batch execution is not connected yet. Generic Runtime ChangeSets and primitive identity contracts remain unchanged.',
+          },
+        },
+        {
+          label: { zh: 'Weave 批次计算与状态隔离', en: 'Weave batch computation and state isolation' },
+          content: {
+            zh: 'Weave 使用稳定节点引用与 current / pending 双状态，内部批次入口支持增删改、保守依赖失效和编译缓存复用，完整输出准备后可提交或回滚。公开 Runtime 输入仍为完整 IR，尚未接入批次 API 或局部 Render Patch。',
+            en: 'Weave uses stable node references with current / pending states. Its internal batch entry supports insertion, updates, removal, conservative dependency invalidation and compiled cache reuse, with commit or rollback after complete output preparation. Public Runtime inputs remain full IR; batch APIs and local Render patches are not connected.',
+          },
+        },
+        {
+          label: { zh: 'Weave 编译接入', en: 'Weave compilation integration' },
+          content: {
+            zh: '基础元素输入通过 Weave 构建声明树，持有 Core 编译环境、状态与名称读取关系，并生成同版本的 Scene 和来源信息。完整输入替换重新准备候选树，失败保留已发布结果。Composite 保留 Core 完整准备路径；原根 Node 填充色特例移除，当前更新发布 replaceScene，批次局部调度尚未接入。',
+            en: 'Basic-element input now builds a Weave declaration tree with Core compilation state, environment and name-read relations, producing a matching Scene and provenance. Full input replacement prepares a candidate tree; failure preserves the published result. Composite input retains Core full preparation. The root-node fill special case is removed; updates currently publish replaceScene, while batch-local scheduling remains unconnected.',
+          },
+        },
+        {
+          label: { zh: '单元素编译与可复用状态', en: 'Element compilation and reusable state' },
+          content: {
+            zh: 'Core 新增 compileNode / compileCoordinate / compilePath / compileScope 与对应 CompiledXxx 状态、显式 CompileEnvironment、引用读取和输出组装能力，供 Reconciler 持有与调度。Scope 保留准备与包络完成两个阶段；本次不实现 Weave 调度算法。',
+            en: 'Core adds compileNode / compileCoordinate / compilePath / compileScope, matching CompiledXxx states, explicit CompileEnvironment, reference reads and output assembly for Reconciler. Scope retains separate preparation and envelope completion phases; Weave scheduling is not implemented in this change.',
+          },
+        },
+        {
+          label: { zh: 'BREAKING：节点布局观察类型更名', en: 'BREAKING: node layout observation type renamed' },
+          content: {
+            zh: '公开类型 CompiledNodeLayout 更名为 NodeLayoutObservation，请更新类型导入。完整可缓存节点状态使用 CompiledNode，观察 DTO 的字段语义保持不变。',
+            en: 'The public CompiledNodeLayout type is renamed to NodeLayoutObservation; update type imports. Use CompiledNode for complete cacheable state. Observation DTO field semantics are unchanged.',
+          },
+        },
         {
           label: { zh: '按需布局测量', en: 'On-demand layout measurement' },
           content: {
             zh: '复合组件新增按轴 measureChild 贡献查询；同次编译复用等价尺寸贡献与纯文字度量，完整布局和一次 replay 仍保持独立。',
             en: 'Composite components gain axis-specific measureChild queries. Equivalent size contributions and text metrics are reused within a compilation, while full layout and one-use replay remain separate.',
+          },
+        },
+        {
+          label: {
+            zh: '待发布：BREAKING 增量能力迁入 Reconciler',
+            en: 'Unreleased: BREAKING incremental APIs move to Reconciler',
+          },
+          content: {
+            zh: 'CoreSourceDefinition、CoreCompositeInputSourceDefinition、createCoreComputation、CoreChange、SceneRuntimeSnapshot、ScenePatch 及相关类型改从 @retikz/reconciler 导入，Core 不保留转发。Core 新增 prepareSceneCompilation 与 validateCompositeInputBindings，不再依赖 Runtime。增量输入捕获与装配错误改为 RetikzReconcilerError；更新 trace 常量改为 ReconcilerTracePhase / ReconcilerTraceUnit，ChangeSetMismatch 改由 CoreComputationDiagnosticCode 提供，原诊断码字符串与身份 owner 值保持不变。',
+            en: 'Import CoreSourceDefinition, CoreCompositeInputSourceDefinition, createCoreComputation, CoreChange, SceneRuntimeSnapshot, ScenePatch and related types from @retikz/reconciler; Core no longer forwards them. Core adds prepareSceneCompilation and validateCompositeInputBindings and drops its Runtime dependency. Incremental capture and assembly failures use RetikzReconcilerError. Update trace constants move to ReconcilerTracePhase / ReconcilerTraceUnit, and CoreComputationDiagnosticCode provides ChangeSetMismatch. Diagnostic strings and identity owner values remain unchanged.',
           },
         },
         {

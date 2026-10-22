@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import type { IRScene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '@retikz/core';
-import { RetikzRuntimeErrorCode } from '@retikz/runtime';
 import { describe, expect, it, vi } from 'vitest';
 import { literal } from 'zod';
 
@@ -376,14 +375,12 @@ describe('Vanilla processing', () => {
     controller.subscribe(listener);
 
     expect(() => controller.update({ children: [{ id: 'broken', position: [20, 0] }] })).toThrow(
-      /RUNTIME_PARTICIPANT_PREPARE_FAILED/,
+      /Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
     );
 
     expect(controller.read()).toBe(stable);
     expect(listener).not.toHaveBeenCalled();
-    expect(controller.diagnostics()).toEqual([
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantPrepareFailed }),
-    ]);
+    expect(controller.diagnostics()).toEqual([expect.objectContaining({ code: 'VANILLA_COMPILE_DRIVER_FAILED' })]);
 
     controller.update({ children: [{ id: 'recovered', position: [40, 0] }] });
 

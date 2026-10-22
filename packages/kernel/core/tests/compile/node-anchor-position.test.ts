@@ -1,19 +1,19 @@
+import type { CenteredBox } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
-import type { CompiledNodeLayout, CompileOptions } from '../../src/compile';
+import type { CompileOptions, NodeLayoutObservation } from '../../src/compile';
 import { compileToScene, isNodeLayoutCompileArtifact } from '../../src/compile';
 import type { RectPrim } from '../../src/contract';
 import { defineBoundary } from '../../src/contract';
 import type { IRNode, IRScene } from '../../src/schemas';
-import type { Rect } from '../../src/shared/geometry';
 import { rect as rectOps } from '../../src/shared/geometry';
 import { flattenPrims } from '../helpers/flatten';
 
 const scene = (children: IRScene['children']): IRScene => ({ type: 'scene', version: 1, children });
 
-const compileLayouts = (ir: IRScene, options: CompileOptions = {}): Map<string, CompiledNodeLayout> => {
-  const layouts = new Map<string, CompiledNodeLayout>();
+const compileLayouts = (ir: IRScene, options: CompileOptions = {}): Map<string, NodeLayoutObservation> => {
+  const layouts = new Map<string, NodeLayoutObservation>();
   const result = compileToScene(ir, {
     ...options,
     artifacts: { nodeLayouts: true },
@@ -26,7 +26,7 @@ const compileLayouts = (ir: IRScene, options: CompileOptions = {}): Map<string, 
   return layouts;
 };
 
-const inflatedRect = (layout: CompiledNodeLayout, marginX: number, marginY = marginX): Rect => ({
+const inflatedRect = (layout: NodeLayoutObservation, marginX: number, marginY = marginX): CenteredBox => ({
   ...layout.rect,
   width: layout.rect.width + marginX * 2,
   height: layout.rect.height + marginY * 2,
@@ -425,7 +425,7 @@ describe('Node anchor-to-anchor position fail-loud', () => {
             },
           ]),
         ).scene,
-    ).toThrow(/anchor position target 'open'.*Scope.*still being laid out/i);
+    ).toThrow(/ancestor Scope 'open'/i);
   });
 
   it('拒绝当前 Scope chain 中的零缩放轴', () => {

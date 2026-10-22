@@ -388,7 +388,7 @@ describe('channel core coverage (contract)', () => {
             zIndex: 7,
             rotate: 15,
             scale: { x: 1.2, y: 0.8 },
-            thickness: 'thick',
+            strokeWidth: 2,
             fillRule: 'evenodd',
             dashPattern: [4, 2],
             shadow: { preset: 'md', offsetX: 1, offsetY: 2 },

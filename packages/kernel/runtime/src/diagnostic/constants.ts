@@ -1,7 +1,7 @@
 import type { ValueOf } from '@retikz/foundation';
 
 /** Runtime 内置结构化诊断码 */
-export const RuntimeDiagnosticCode = {
+export const BuiltinRuntimeDiagnosticCode = {
   /** Source value 释放失败 */
   SourceDisposeFailed: 'RUNTIME_SOURCE_DISPOSE_FAILED',
   /** result 释放失败 */
@@ -87,7 +87,7 @@ export const RuntimeDiagnosticPhase = {
 } as const;
 
 /** Runtime 内置结构化诊断码取值 */
-export type RuntimeDiagnosticCode = ValueOf<typeof RuntimeDiagnosticCode>;
+export type BuiltinRuntimeDiagnosticCode = ValueOf<typeof BuiltinRuntimeDiagnosticCode>;
 
 /** Runtime 结构化诊断阶段取值 */
 export type RuntimeDiagnosticPhase = ValueOf<typeof RuntimeDiagnosticPhase>;

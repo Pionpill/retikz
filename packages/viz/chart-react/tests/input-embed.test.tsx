@@ -222,8 +222,16 @@ describe('Chart React InputEmbed routing', () => {
           <ChartData data={[{ x: 0, y: 1, label: 'A' }]} />
           <ScatterEncodings x="x" y="y" />
           <ChartExtension>
-            <PointMark id="labelled" encodings={{ position: { x: 'x', y: 'y' } }} resolveLabel={childResolveLabel} />
-            <PointMark id="child-only" encodings={{ position: { x: 'x', y: 'y' } }} resolveLabel={childResolveLabel} />
+            <PointMark
+              id="labelled"
+              encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
+              resolveLabel={childResolveLabel}
+            />
+            <PointMark
+              id="child-only"
+              encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
+              resolveLabel={childResolveLabel}
+            />
           </ChartExtension>
         </>
       ),

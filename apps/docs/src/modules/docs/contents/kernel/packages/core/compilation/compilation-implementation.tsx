@@ -17,7 +17,7 @@ const CompilationImplementation: FC<CompilationImplementationProps> = props => {
   const lang = props.lang ?? ((i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en');
   const text = compilationImplementationI18n[lang];
   const stages = [
-    { id: 'entry', name: 'compileCoreSnapshot', detail: text.entry },
+    { id: 'entry', name: 'prepareSceneCompilation', detail: text.entry },
     { id: 'context', name: 'createCompileContext', detail: text.context },
     { id: 'visit', name: 'compileChildrenToPrimitives', detail: text.visit },
     { id: 'flush', name: 'flushPendingPathEmissions', detail: text.flush },

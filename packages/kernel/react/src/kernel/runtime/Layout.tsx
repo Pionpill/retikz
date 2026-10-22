@@ -21,7 +21,7 @@ import type {
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import { resolveAnimationEnabled } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
-import type { RuntimeDiagnostic } from '@retikz/runtime';
+import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import type {
   InputScene,
   InputScope,
@@ -41,7 +41,6 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExtern
 import { RetikzReactError, RetikzReactErrorCode } from '../../error';
 import { usePrefersReducedMotion } from '../../render/animation';
 import { ProcessingResultHost } from '../../render/processing-result';
-import { browserMeasurer } from '../../render/text';
 import { pickScopeStyle, wrapRootScope } from '../adapter';
 import { createInputScene } from '../adapter/input-scene';
 import { useAnimationMode } from './animation-context';
@@ -116,7 +115,7 @@ const createProcessingControllerKey = (): number => {
 };
 
 /** 判断 processing diagnostics 中的值是否为 Runtime 的结构化诊断 */
-const isRuntimeDiagnostic = (diagnostic: unknown): diagnostic is RuntimeDiagnostic => {
+const isReconcilerDiagnostic = (diagnostic: unknown): diagnostic is ReconcilerDiagnostic => {
   if (typeof diagnostic !== 'object' || diagnostic === null) return false;
 
   const candidate = diagnostic as Record<string, unknown>;
@@ -132,10 +131,10 @@ const isRuntimeDiagnostic = (diagnostic: unknown): diagnostic is RuntimeDiagnost
 /** 逐条隔离通知 Runtime 结构化诊断，避免回调异常影响已提交 processing result */
 const deliverProcessingDiagnostics = (
   controller: Pick<ProcessingController | AsyncProcessingController, 'diagnostics'>,
-  callback: ((diagnostic: RuntimeDiagnostic) => void) | undefined,
+  callback: ((diagnostic: ReconcilerDiagnostic) => void) | undefined,
 ): void => {
   for (const diagnostic of controller.diagnostics()) {
-    if (!isRuntimeDiagnostic(diagnostic) || callback === undefined) continue;
+    if (!isReconcilerDiagnostic(diagnostic) || callback === undefined) continue;
 
     try {
       callback(diagnostic);
@@ -173,17 +172,6 @@ const canonicalizeDefinitionArray = <TDefinition extends object>(
   current.value ??= Object.freeze([...definitions]);
 
   return current.value as ReadonlyArray<TDefinition>;
-};
-
-/** 将浏览器 text measurer 叠加 Layout style 的默认字体 */
-const withDefaultFontFamily = (measureText: TextMeasurer, defaultFontFamily: string | undefined): TextMeasurer => {
-  if (defaultFontFamily === undefined) return measureText;
-
-  return (text, font) =>
-    measureText(text, {
-      ...font,
-      family: typeof font.family === 'string' && font.family.trim().length > 0 ? font.family : defaultFontFamily,
-    });
 };
 
 /**
@@ -240,6 +228,8 @@ export type LayoutExtensions = Readonly<{
 
 /** React Layout 的公开属性 */
 export type LayoutProps = {
+  /** 自定义文字测量；省略时使用 Vanilla 的环境测量与估算降级 */
+  measureText?: TextMeasurer;
   /** JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效 */
   rootScope?: Pick<InputScope, 'defaults'>;
   /** 直接传入持久化 Source IR，与 children 二选一 */
@@ -358,7 +348,7 @@ const StaticLayoutContent: FC<{
 const RetainedLayoutContent: FC<{
   source: ProcessingSource;
   options: ProcessingOptions;
-  onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
+  onDiagnostic?: (diagnostic: ReconcilerDiagnostic) => void;
   hostKey: string;
   hostProps: LayoutResultHostProps;
 }> = ({ source, options, onDiagnostic, hostKey, hostProps }) => {
@@ -422,6 +412,7 @@ const RetainedLayoutContent: FC<{
  */
 export const Layout: FC<LayoutProps> = props => {
   const {
+    measureText,
     ir: irFromProp,
     theme,
     children,
@@ -525,7 +516,6 @@ export const Layout: FC<LayoutProps> = props => {
   }, [ambientTheme, irFromProp, reactInput, rootAnimations, theme, viewBox]);
 
   const defaultFontFamily = styleFontFamily(style);
-  const measureText = useMemo(() => withDefaultFontFamily(browserMeasurer, defaultFontFamily), [defaultFontFamily]);
   const compileArtifacts = useMemo<CompileArtifactOptions | undefined>(
     () => (artifacts?.nodeLayouts === true ? { nodeLayouts: true } : undefined),
     [artifacts?.nodeLayouts],
@@ -533,6 +523,7 @@ export const Layout: FC<LayoutProps> = props => {
 
   const processingOptions = useMemo<ProcessingOptions | AsyncProcessingOptions>(
     () => ({
+      defaultFontFamily,
       compileDriver,
       ...inputAdapterOptions(stableInputAdapters, prepareAsync),
       ...(prepareAsync ? { signal: resolvedRuntime.signal } : {}),
@@ -555,6 +546,7 @@ export const Layout: FC<LayoutProps> = props => {
       } satisfies CompileOptions,
     }),
     [
+      defaultFontFamily,
       compileDriver,
       prepareAsync,
       resolvedRuntime.signal,

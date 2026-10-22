@@ -10,3 +10,4 @@ export * from './observation';
 export * from './reference';
 export * from './synthetic';
 export * from './types';
+export * from './compile';

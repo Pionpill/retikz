@@ -1,7 +1,8 @@
+import type { CenteredBox } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
-import { CompileWarningCode } from '../../src';
+import { BuiltinCompileWarningCode } from '../../src';
 import type { BoundaryGeometryResolveContext } from '../../src/compile/node';
 import { resolveBoundary as resolveBoundaryGeometry } from '../../src/compile/node';
 import type { BoundaryDefinition, ShapeDefinition } from '../../src/contract';
@@ -10,16 +11,15 @@ import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import type { ProviderCollection } from '../../src/providers/registry';
 import { ellipseShape, rectangle } from '../../src/providers/shape';
 import { boundaryKey, resolveBoundaryReference } from '../../src/resolve/node';
-import type { Rect } from '../../src/shared/geometry/rect';
 
-const visualRect: Rect = { x: 0, y: 0, width: 40, height: 20, rotate: 0 };
+const visualRect: CenteredBox = { x: 0, y: 0, width: 40, height: 20, rotate: 0 };
 
 const registry = [rectangle, ellipseShape];
 
 const shapeAwareVisual = {
   ...rectangle,
   name: 'shape-aware-visual',
-  connectionEnvelope: (_rect: Rect, kind: 'circle' | 'ellipse' | 'rectangle') => {
+  connectionEnvelope: (_rect: CenteredBox, kind: 'circle' | 'ellipse' | 'rectangle') => {
     if (kind === 'circle') return { halfWidth: 12, halfHeight: 12 };
     if (kind === 'ellipse') return { halfWidth: 14, halfHeight: 8 };
     return { halfWidth: 20, halfHeight: 10 };
@@ -94,7 +94,7 @@ describe('resolveBoundary', () => {
   });
 
   it("'circle' → rotated surface preserves corner enclosure and standard anchors", () => {
-    const rotatedRect: Rect = { x: 5, y: -7, width: 40, height: 20, rotate: Math.PI / 2 };
+    const rotatedRect: CenteredBox = { x: 5, y: -7, width: 40, height: 20, rotate: Math.PI / 2 };
     const r = resolveBoundary('circle', resolveContext({ visualRect: rotatedRect }));
     const corner = r.def.boundaryPoint(r.rect, [-5, 13], r.params);
     const top = r.def.anchor?.(r.rect, 'top', r.params);
@@ -117,7 +117,7 @@ describe('resolveBoundary', () => {
   });
 
   it("'ellipse' → rotated surface preserves corner enclosure and standard anchors", () => {
-    const rotatedRect: Rect = { x: 5, y: -7, width: 40, height: 20, rotate: Math.PI / 2 };
+    const rotatedRect: CenteredBox = { x: 5, y: -7, width: 40, height: 20, rotate: Math.PI / 2 };
     const r = resolveBoundary('ellipse', resolveContext({ visualRect: rotatedRect }));
     const corner = r.def.boundaryPoint(r.rect, [-5, 13], r.params);
     const top = r.def.anchor?.(r.rect, 'top', r.params);
@@ -200,7 +200,7 @@ describe('resolveBoundary', () => {
     expect(first.rect.width).toBeCloseTo(2 * Math.hypot(20, 10));
     expect(second.rect).toEqual(first.rect);
     expect(warnings).toHaveLength(1);
-    expect(warnings[0]).toMatchObject({ code: CompileWarningCode.BoundaryTightFallback });
+    expect(warnings[0]).toMatchObject({ code: BuiltinCompileWarningCode.BoundaryTightFallback });
   });
 
   it('无效 shape envelope 与 gap 产生非正半轴时 fail-loud', () => {

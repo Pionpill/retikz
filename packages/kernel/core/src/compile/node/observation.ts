@@ -1,12 +1,11 @@
 import type { JsonObject } from '@retikz/foundation';
 import { NonBlankStringSchema } from '@retikz/foundation';
-import type { Position } from '@retikz/math';
+import { DEG_TO_RAD, RAD_TO_DEG } from '@retikz/math';
+import type { CenteredBox, Position } from '@retikz/math';
 
 import type { GeometryKeyPoint, NodeOwnerOutput, PathCommand } from '../../contract';
 import { createCompositeContractError } from '../../resolve/diagnostics';
 import { PathCommandSchema } from '../../schemas';
-import type { Rect } from '../../shared/geometry';
-import { DEG_TO_RAD, RAD_TO_DEG } from '../../shared/geometry';
 import {
   assertProviderOutputKeys,
   providerOutputArray,
@@ -39,7 +38,7 @@ const rotateNodePoint = (layout: NodeLayout, point: Position, round: Round): Pos
 };
 
 /** 取 Node rect 的最终圆整快照 */
-const snapshotNodeRect = (layout: NodeLayout, round: Round): Rect => ({
+const snapshotNodeRect = (layout: NodeLayout, round: Round): CenteredBox => ({
   ...layout.geometry.rect,
   x: round(layout.geometry.rect.x),
   y: round(layout.geometry.rect.y),
@@ -51,7 +50,7 @@ const snapshotNodeRect = (layout: NodeLayout, round: Round): Rect => ({
 });
 
 /** 构造与 Node emit 同源的观测几何矩形；保留原始位置与尺寸，仅采用最终输出的圆整旋转角 */
-const observationRectOf = (layout: NodeLayout, round: Round): Rect => ({
+const observationRectOf = (layout: NodeLayout, round: Round): CenteredBox => ({
   x: layout.geometry.rect.x,
   y: layout.geometry.rect.y,
   width: layout.geometry.rect.width,
@@ -135,8 +134,8 @@ const assertClosedOutline = (owner: string, commands: ReadonlyArray<PathCommand>
 /** 调用并校验 provider 的闭合 outline；空数组是合法空几何 */
 const readClosedOutline = (
   owner: string,
-  outline: (rect: Rect, params: JsonObject) => ReadonlyArray<PathCommand>,
-  rect: Rect,
+  outline: (rect: CenteredBox, params: JsonObject) => ReadonlyArray<PathCommand>,
+  rect: CenteredBox,
   params: JsonObject,
 ): Array<PathCommand> =>
   withProviderOutputValidationBoundary(owner, () => {
@@ -151,8 +150,8 @@ const readClosedOutline = (
 /** 调用并校验 Shape provider 的命名结构关键点 */
 const readKeyPoints = (
   owner: string,
-  keyPoints: (rect: Rect, params: JsonObject) => ReadonlyArray<GeometryKeyPoint>,
-  rect: Rect,
+  keyPoints: (rect: CenteredBox, params: JsonObject) => ReadonlyArray<GeometryKeyPoint>,
+  rect: CenteredBox,
   params: JsonObject,
 ): Array<GeometryKeyPoint> =>
   withProviderOutputValidationBoundary(owner, () => {
@@ -246,7 +245,7 @@ export const projectNodeOwnerOutput = (
     visualDef: layout.shape.definition,
     visualRect: observationRect,
     visualParams: shapeParams,
-    irPath: layout.irPath,
+    irPath: state?.irPath,
     connectionEnvelopeCache:
       state?.connectionEnvelopeCache === undefined ? undefined : new Map(state.connectionEnvelopeCache),
     connectionEnvelopeWarnings:

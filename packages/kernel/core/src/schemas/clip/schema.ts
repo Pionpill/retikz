@@ -17,8 +17,7 @@ export const RectClipSchema = strictObject({
   height: NonNegativeNumberSchema.describe('Rect height in user units; zero produces an empty clip region.'),
 }).describe('Rectangular clip region.');
 
-const RESERVED_CLIP_KINDS = new Set(['rect']);
-
+/** 校验自定义裁剪数据，内置矩形须使用矩形 schema */
 const CustomClipSchema = intersection(
   object({
     kind: NonBlankStringSchema.describe('Custom clip discriminator registered through CompileOptions.clips.'),
@@ -26,7 +25,7 @@ const CustomClipSchema = intersection(
   JsonObjectSchema,
 )
   .superRefine((value, ctx) => {
-    if (RESERVED_CLIP_KINDS.has(value.kind)) {
+    if (value.kind === 'rect') {
       ctx.addIssue({
         code: 'custom',
         message: `Builtin clip kind '${value.kind}' must match its builtin schema.`,

@@ -1,5 +1,4 @@
 import type { JsonValue } from '@retikz/foundation';
-import type { RuntimeTraceReporter } from '@retikz/runtime';
 import type { ZodType } from 'zod';
 
 import type {
@@ -15,7 +14,7 @@ import type { LowerTex, TextMeasurer } from './text';
 import type { CompileWarning } from './warning';
 
 /** 编译期节点布局观测结果 */
-export type CompiledNodeLayout = {
+export type NodeLayoutObservation = {
   /** 布局对象类型 */
   kind: 'node';
   /** 节点 id */
@@ -95,7 +94,7 @@ export type NodeLayoutCompileArtifact = Readonly<{
   /** 被观测节点的最终编译出现位置 */
   occurrence: CompileOccurrenceLocator;
   /** 节点的正文测量、视觉外框及文本布局结果 */
-  value: CompiledNodeLayout;
+  value: NodeLayoutObservation;
 }>;
 
 /** compile 返回的通用 artifact envelope */
@@ -242,6 +241,4 @@ export type CompileOptions<
     maxClipDepth?: number;
     /** 本次 compile 请求的 opt-in artifacts */
     artifacts?: CompileArtifactOptions;
-    /** 记录本次 full compile 的确定性 IRChild dispatch 工作量 */
-    trace?: RuntimeTraceReporter<'@retikz/core'>;
   };

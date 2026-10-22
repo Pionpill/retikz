@@ -1,4 +1,4 @@
----
+﻿---
 description: Core 纯几何按函数粒度下沉到 @retikz/math；背景：Core 的 geometry 公开面被多个 adapter 使用，但形状模块同时包含纯射线数学和 TikZ anchor/IR 语义
 keywords: 'Core、retikz、math'
 ---
@@ -15,16 +15,13 @@ Core 的 geometry 公开面被多个 adapter 使用，但形状模块同时包�
 
 ## 决策
 
-- 依赖方向为 core → math，math 不依赖 core
-- point 的向量运算、transform 全部、edge.lerpPoint 和 arc 全部迁入 math；contour 改用 math intersect，但 filletContour、contourCommands 和业务类型留在 core
-- circle、ellipse、rect、diamond 的 contains/boundaryPoint/anchor/edgePoint 留在 core；polar 和 anchor 的 IR/TikZ 语义留在 core
-- core 继续 re-export Position、point、lerpPoint、localToWorld、worldToLocal 等原有公开符号；react、render、vanilla 和 plot 继续从 core 取得这些能力
-- arc 作为非公开 core 模块移除后，消费者改用 math；math 的 null 结果语义替代原先 undefined 时，调用方按 null 处理
+- 依赖方向为 core → math，math 不依赖 core；消费方从 math 公开入口直接导入纯几何函数和类型，Core 不维护重复导出
+- Math 拥有点与向量、坐标变换、角度、圆弧、矩形轮廓以及由直线/圆弧组成的中立轮廓数据、圆角求解、命令构造与射线求交
+- 居中矩形统一使用 Math 的 CenteredBox；轮廓命令不依赖 Core IR 或 Scene
+- Core 保留 Anchor/Side、极坐标 IR 输入解析、连接面策略、路径弯曲默认值和编译错误语义
+- 圆弧—圆弧接缝需要圆角时，Math 返回无解；Core 将无解转换为所属包的几何错误。构造命令和求交可复用同一轮廓的圆角结果
+- 无实际消费者的形状 helper 与重复包装直接删除；具体 shape provider 通过 Math 计算实现自身契约
 
-## 兼容性与实现结果
+## 行为边界
 
-Core geometry 的公开导入面逐字保持，底层纯实现已下沉并完成消费方接线；这是稳定的 re-export，不是旧语法兼容桥。既有形状、编译和连接行为应保持不变。
-
-## 遗留风险
-
-形状的 contains/boundaryPoint 下沉、curve、matrix 和 bend 仍未定义；若拆分必须继续隔离 anchor/IR 语义，不能整体搬迁业务模块。
+几何计算与退化结果保持一致。Core 的连接包络仍遵循同心、同旋转及固定比例策略，不替换为自由中心的最小外接几何。命令数据由 Core 映射成绘图契约，Math 不承担编译、锚点或渲染职责。

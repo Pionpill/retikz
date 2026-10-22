@@ -13,7 +13,6 @@ export const PathEncodingSchema = VisualEncodingSchema.extend({
   rotate: ChannelSchema.optional(),
   scale: ChannelSchema.optional(),
   fillRule: ChannelSchema.optional(),
-  thickness: ChannelSchema.optional(),
   dashPattern: ChannelSchema.optional(),
   lineCap: ChannelSchema.optional(),
   lineJoin: ChannelSchema.optional(),

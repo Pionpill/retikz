@@ -17,13 +17,9 @@ import {
   AnimationTrigger,
 } from './constants';
 
-const AnimationEasingNameSchema = createOpenStringSchema(BuiltinAnimationEasing);
-
-const AnimationPropertySchema = createOpenStringSchema(BuiltinAnimationProperty);
-
 /** 校验缓动曲线名称或三次贝塞尔控制点四元组 */
 export const EasingSchema = union([
-  AnimationEasingNameSchema,
+  createOpenStringSchema(BuiltinAnimationEasing),
   tuple([number(), number(), number(), number()]),
 ]).describe(
   'Easing curve: built-in easing name, custom easing name, or cubic-bezier tuple [x1, y1, x2, y2]. Omitted fields use linear easing.',
@@ -64,7 +60,7 @@ export const OriginSchema = union([
 
 /** 校验单属性动画轨道及按时间升序排列的绝对值关键帧 */
 export const AnimationTrackSchema = object({
-  property: AnimationPropertySchema.describe(
+  property: createOpenStringSchema(BuiltinAnimationProperty).describe(
     'Animated property name. Built-ins have refined value types; custom names accept JSON values. viewBox is scene-root only.',
   ),
   keyframes: array(KeyframeSchema)

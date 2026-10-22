@@ -20,6 +20,31 @@ const crossing = intersect.segmentSegment({
 }); // [10, 10]
 ```
 
+## 圆角轮廓
+
+用 `ContourSegment` 描述连续的直线和圆弧，再用 `solveContourFillets` 求接缝圆角。`buildContourCommands` 将轮廓和圆角转成中立命令，`intersectContourRay` 求从指定原点朝目标点发出的射线与轮廓的最近交点。它们不生成 Core IR 或 Scene。
+
+```ts
+import { buildContourCommands, intersectContourRay, solveContourFillets } from '@retikz/math';
+import type { ContourSegment } from '@retikz/math';
+
+const segments: Array<ContourSegment> = [
+  { kind: 'line', from: [0, 0], to: [40, 0] },
+  { kind: 'line', from: [40, 0], to: [40, 20] },
+  { kind: 'line', from: [40, 20], to: [0, 20] },
+  { kind: 'line', from: [0, 20], to: [0, 0] },
+];
+const fillets = solveContourFillets(segments, 4);
+if (fillets !== undefined) {
+  const commands = buildContourCommands(segments, fillets);
+  const hit = intersectContourRay(segments, [20, 10], [50, 10], fillets);
+}
+```
+
+默认轮廓闭合；开放轮廓应将求解和构造命令的最后一个参数 `closed` 都设为 `false`。射线函数不接收 `closed`，直接消费圆角结果。半径会按相邻段可用长度收缩。需要倒圆角的圆弧—圆弧接缝尚不支持，此时求解返回 `undefined`；不需要圆角返回空数组。射线没有交点也返回 `undefined`。构造命令和求交不会自动求圆角，应复用与当前段序列匹配的求解结果。
+
+仅需两对角确定的矩形轮廓时，使用 `rectOutline(from, to, cornerRadius)`；它会归一化对角顺序，并将半径限制到短边的一半。
+
 ## 求交
 
 求交用于找出两条直线、两条线段、直线与圆，或两个圆之间的交点。结果是坐标点；没有交点或输入退化时，函数会返回 `null` 或空数组。
@@ -246,20 +271,20 @@ $$
     {
       label: '曲线长度的折线近似',
       path: 'packages/kernel/math/src/algorithms/curve.ts',
-      startLine: 306,
-      endLine: 331,
+      startLine: 346,
+      endLine: 398,
     },
     {
       label: '距离到参数的二分反解',
       path: 'packages/kernel/math/src/algorithms/curve.ts',
-      startLine: 536,
-      endLine: 565,
+      startLine: 630,
+      endLine: 668,
     },
     {
       label: '保形曲线切片',
       path: 'packages/kernel/math/src/algorithms/curve.ts',
-      startLine: 371,
-      endLine: 436,
+      startLine: 444,
+      endLine: 510,
     },
   ]}
 />

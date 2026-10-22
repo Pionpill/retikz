@@ -1110,7 +1110,7 @@ describe('Typed Point Chart React declarations', () => {
             <ChartCoordinate coordinate="cartesian2D" />
             <ChartExtension>
               <PlotFacet id="regions" row="region">
-                <PointMark encodings={{ position: { x: 'x', y: 'y' } }} />
+                <PointMark encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} />
               </PlotFacet>
             </ChartExtension>
           </>,
@@ -1128,7 +1128,10 @@ describe('Typed Point Chart React declarations', () => {
         <ScatterEncodings x="x" y="y" />
         <ScatterMark properties={{ fill: '#ff0000' }} />
         <ChartExtension>
-          <PointMark encodings={{ position: { x: 'x', y: 'y' } }} properties={{ fill: '#0000ff' }} />
+          <PointMark
+            encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
+            properties={{ fill: '#0000ff' }}
+          />
         </ChartExtension>
       </ScatterChart>,
     );

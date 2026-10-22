@@ -13,7 +13,7 @@
 
 ## 组件声明
 
-#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={423}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={242}>LayoutProps</ApiSourceLink>
+#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={413}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={230}>LayoutProps</ApiSourceLink>
 
 通过 children 声明图形，或通过 ir 传入完整场景；同时提供时使用 ir。默认使用 retained 模式处理后续更新，可通过 runtime 切换为 static 完整编译模式
 
@@ -53,6 +53,7 @@
 | 扩展   | `compileDriver?`       | `VanillaCompileDriver`                                | —                             | 处理作者输入的编译驱动                                                                                   |
 |        | `extensions?`          | `LayoutExtensions`                                    | —                             | 按能力分类的运行时扩展注册，复用 Core 编译契约                                                           |
 |        | `lowerTex?`            | `LowerTex`                                            | —                             | 公式下沉能力                                                                                             |
+|        | `measureText?`         | `TextMeasurer`                                        | —                             | 自定义文字测量；省略时使用 Vanilla 的环境测量与估算降级                                                  |
 
 </ApiTable>
 
@@ -64,6 +65,7 @@
 export declare const Layout: FC<LayoutProps>;
 
 export type LayoutProps = {
+  measureText?: TextMeasurer;
   rootScope?: Pick<InputScope, 'defaults'>;
   ir?: IRScene;
   theme?: IRScene['theme'];
@@ -101,7 +103,7 @@ export type LayoutProps = {
 
 ## 执行与辅助契约
 
-#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={193}>LayoutExtensions</ApiSourceLink>
+#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={181}>LayoutExtensions</ApiSourceLink>
 
 通过 Layout 的 extensions 属性传入，各字段接收对应的定义数组；这些运行时定义不写入可持久化的场景数据
 

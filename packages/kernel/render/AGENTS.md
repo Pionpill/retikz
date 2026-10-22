@@ -16,7 +16,7 @@
 - `./canvas` 与 `./canvas-node` 只负责 Scene 的 Canvas 执行和必要命中能力，不建立平行 scene graph。
 - `./hydration` 负责定位、事件绑定和 context/controller 机制，不定义产品级交互状态机。
 - `./animation` 负责时间求值、easing、property registry 与执行控制，不拥有动画 authoring DSL 或 Core animation schema。
-- `./runtime` 负责 Scene Patch 校验、retained renderer Definition 与 Runtime commit participant，不拥有 Core 编译或 adapter 宿主生命周期。
+- `./runtime` 负责 Scene Patch 校验、retained renderer Definition 与 Reconciler 单目标提交接线，不拥有 Core 编译或 adapter 宿主生命周期。
 - 各后端对同一 Scene 能力要么等价实现，要么明确诊断或记录支持边界，不能静默改写语义。
 
 ## 验证

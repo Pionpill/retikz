@@ -428,7 +428,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         zh: '数据容器',
         en: 'Data containers',
       },
-      members: ['JsonObject', 'JsonValue', 'assertPlainDataContainers', 'cloneAndFreezeJson'],
+      members: ['JsonObject', 'JsonValue', 'assertPlainDataContainers', 'cloneAndFreezeJson', 'jsonStructuralEquals'],
       schemas: [],
     },
     {
@@ -569,6 +569,34 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
     },
   ],
   'kernel/packages/math': [
+    {
+      title: { zh: '角度与扫描', en: 'Angles and sweeps' },
+      members: [
+        'AngleRange',
+        'DEG_TO_RAD',
+        'RAD_TO_DEG',
+        'alignAngleSweep',
+        'normalizeAngleRange',
+        'normalizeDegrees',
+        'normalizeSignedDegrees',
+      ],
+      schemas: [],
+    },
+    {
+      title: { zh: '轮廓与圆角', en: 'Contours and fillets' },
+      members: [
+        'ArcSegment',
+        'ContourCommand',
+        'ContourSegment',
+        'FilletSolution',
+        'LineSegment',
+        'buildContourCommands',
+        'intersectContourRay',
+        'solveContourFillets',
+        'rectOutline',
+      ],
+      schemas: [],
+    },
     {
       title: {
         zh: '坐标变换',
@@ -821,7 +849,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         'RetikzRuntimeError',
         'RuntimeDiagnostic',
         'RetikzRuntimeErrorCode',
-        'RuntimeDiagnosticCode',
+        'BuiltinRuntimeDiagnosticCode',
         'RuntimeDiagnosticPhase',
       ],
       schemas: [],

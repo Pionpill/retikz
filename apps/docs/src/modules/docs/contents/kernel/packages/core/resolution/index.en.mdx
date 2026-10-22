@@ -235,7 +235,7 @@ The example's `NodeResolution` has four fields:
 }
 ```
 
-`CanonicalNode` is an internal resolved result and can carry bound paint capabilities. It still retains position expressions for layout to resolve and has no final text dimensions or outer box. `layoutNode` receives `NodeResolution` and combines it with measurement capabilities and position context to produce `NodeLayout`.
+`CanonicalNode` is an internal resolved result and can carry bound paint capabilities. It still retains position expressions for layout to resolve and has no final text dimensions or outer box. `compileResolvedNode` receives `NodeResolution` and combines it with measurement capabilities and position context to produce separate layout, paint, and identity metadata.
 
 <SourceLinks
   sources={[

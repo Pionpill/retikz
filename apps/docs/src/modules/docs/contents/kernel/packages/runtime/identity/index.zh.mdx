@@ -223,7 +223,7 @@ const graph = defineRuntimeSource<GraphState, GraphState, GraphState, never>({
 
 ## Core 应用
 
-Core 用同一套身份结构标识图文档中的实体。例如，在增量比较使用的文档索引中，根的路径是 `['root']`，子实体的路径由父路径、实体类型和显式 `id` 拼接而成。对于根下一个 `id` 为 `A` 的普通节点，对应身份如下：
+Reconciler 根据 Core 编译来源为 Scene 记录语义 owner 与图元身份。对于根下显式 id 为 A、在名称空间内唯一且非生成的普通节点，其语义 owner 可以表示为：
 
 ```ts
 import { createRuntimeIdentity } from '@retikz/runtime';
@@ -232,11 +232,9 @@ const root = createRuntimeIdentity('@retikz/core/document', ['root']);
 const nodeA = createRuntimeIdentity('@retikz/core/document', [...root.path, 'node', 'A']);
 ```
 
-这里的 `owner` 是 Core 文档来源的注册键，`path` 区分文档内部的实体。节点只改颜色时身份不变；父路径改变时，身份也随之改变。Core 在比较前后文档、核对变更提示时使用这些身份。当前文档来源没有配置 `collectIdentities`，这份索引由 Core 的增量计算逻辑建立。
+这里的 owner 使用文档来源的注册键。实际图元身份还会附加发射角色与序号；匿名、重名和生成元素使用候选版本内的身份。该映射服务 Scene 快照、Render 与水合，不用于输入快照 diff，也不是 Weave 的节点更新地址。
 
-<SourceLinks
-  sources={[{ label: 'Core 文档身份与变更核对', path: 'packages/kernel/core/src/compile/incremental/diff.ts' }]}
-/>
+<SourceLinks sources={[{ label: 'Scene identity', path: 'packages/kernel/reconciler/src/scene/identity.ts' }]} />
 
 ## 相关属性
 

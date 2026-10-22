@@ -1,4 +1,5 @@
-import type { Scene, SceneRuntimeSnapshot } from '@retikz/core';
+import type { Scene } from '@retikz/core';
+import type { SceneRuntimeSnapshot } from '@retikz/reconciler';
 
 import type { RenderReadonlyLayer } from './readonly-layer';
 

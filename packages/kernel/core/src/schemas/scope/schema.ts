@@ -1,5 +1,5 @@
 import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
-import { array, boolean, enum as zodEnum, lazy, literal, number, object, strictObject, union } from 'zod';
+import { array, boolean, enum as zodEnum, lazy, literal, number, strictObject, union } from 'zod';
 
 import { AnimationTrackSchema } from '../animation';
 import { ClipSchema } from '../clip';
@@ -38,16 +38,14 @@ export const PathDefaultSchema = strictObject({
 });
 
 /** 校验作用域内节点标签与路径步骤标签共用的默认视觉样式 */
-export const LabelDefaultSchema = object({
+export const LabelDefaultSchema = strictObject({
   color: CssColorSchema.optional().describe('Master color for labels in this scope; textColor falls back to it.'),
   textColor: ContextualColorSchema.optional().describe(
     'Default label text color: an exact CSS color or a weight derived from the effective label / host master color.',
   ),
   opacity: OpacitySchema.optional().describe('Default label opacity.'),
   font: FontSchema.optional().describe('Default label font (family / size / weight / style); per-field fallback.'),
-})
-  .strict()
-  .describe('Default style applied to node labels and step labels in this scope.');
+}).describe('Default style applied to node labels and step labels in this scope.');
 
 /** 复用箭头细节校验规则，供作用域声明默认箭头样式 */
 export const ArrowDefaultSchema = ArrowDetailSchema;

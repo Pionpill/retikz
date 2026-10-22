@@ -232,7 +232,7 @@ Node 与 Path 都将稀疏声明整理为后续编译可用的结果，但它们
 }
 ```
 
-`CanonicalNode` 是解析后的内部结果，可以携带已绑定的 paint 能力。它仍保留供布局解析的位置表达，也尚未包含最终文字尺寸和外框。`layoutNode` 接过 `NodeResolution`，再结合测量能力与位置上下文产生 `NodeLayout`。
+`CanonicalNode` 是解析后的内部结果，可以携带已绑定的 paint 能力。它仍保留供布局解析的位置表达，也尚未包含最终文字尺寸和外框。`compileResolvedNode` 接过 `NodeResolution`，再结合测量能力与位置上下文产生分开的布局、外观与身份元数据。
 
 <SourceLinks
   sources={[

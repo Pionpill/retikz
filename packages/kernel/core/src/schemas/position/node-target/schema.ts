@@ -13,6 +13,7 @@ export const BoundaryAnchorRefSchema = object({
   ),
 }).describe('Proportional point on the real shape boundary edge');
 
+/** 校验节点提供的自定义锚点名称 */
 const NamedAnchorRefSchema = createOpenStringSchema({ ...CenterAnchor, ...Anchor });
 
 /** 校验命名锚点、角度或边界比例点形式的锚点引用 */

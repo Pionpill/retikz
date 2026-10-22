@@ -23,7 +23,7 @@ math run 是文本行中的一个公式片段，与普通文字片段相区别�
 
 调用方也可以直接在结构化文本中声明公式片段，这就是“显式 math run”，不需要从美元符号中识别。它已经明确要求公式排版，因此缺少 lowerer 时会跳过该片段并报告诊断，而不是退回普通文字。
 
-Core 将公式内容、`displayMode`、字号和颜色传入同步 `LowerTex`。这一步把文本布局与公式引擎隔开，Core 不需要知道 MathJax 如何排版。
+Core 将公式内容、`displayMode` 和字号传入同步 `LowerTex`。宿主颜色留到绘制时解析，不参与公式降解。这一步把文本布局与公式引擎隔开，Core 不需要知道 MathJax 如何排版。
 
 本文沿 inline 例子展开；display 模式同样通过 `layoutInlineLine()` 调用 lowerer，并把 `displayMode` 传给引擎，不是另一套 SVG 转换链路。
 
@@ -45,10 +45,7 @@ MathJax 也提供按 package 组合的 TeX 语法能力，正好对应 `profile`
 Core 只依赖同步的 `LowerTex`：
 
 ```ts
-type LowerTex = (
-  content: { tex: string; displayMode?: boolean },
-  style: { fontSize: number; color?: string },
-) => LoweredTex | null;
+type LowerTex = (content: { tex: string; displayMode?: boolean }, style: { fontSize: number }) => LoweredTex | null;
 ```
 
 `LoweredTex` 包含按绘制顺序排列的 paths，以及公式的 `width`、`height`、`depth`。每条 path 自带 fill / stroke、透明度和路径命令，因此 Core 可以继续布局和渲染。Tex 包消费的最小 engine 契约是同步的 `MathJaxSvgEngine.convert(tex, { display }) => string`；自定义 engine 必须返回本包支持的 SVG 子集。
@@ -103,7 +100,7 @@ Core 把每条字形路径发为 `PathPrim`，用带基线平移的 `GroupPrim` 
 
 <ComponentPreview files="tex-lower-cache" size="sm" type="flow" hideCode />
 
-`createLowerTex` 为每个 lowerer 建立内存缓存，key 包含 TeX source、inline / display 模式、字号和宿主颜色。成功结果与确定性的 MathJax / SVG 失败会缓存；`engine.convert` 抛出的异常视为瞬态失败，不缓存，下一次调用仍可重试。每次公开 lowering 失败都会调用最新的 `onDiagnostic`。
+`createLowerTex` 为每个 lowerer 建立内存缓存，key 包含 TeX source、inline / display 模式和字号。宿主改色不产生新的字形缓存；公式源码中的显式颜色仍保留。成功结果与确定性的 MathJax / SVG 失败会缓存；`engine.convert` 抛出的异常视为瞬态失败，不缓存，下一次调用仍可重试。每次公开 lowering 失败都会调用最新的 `onDiagnostic`。
 
 失败诊断有两层：Tex lowerer 通过 `onDiagnostic` 报告具体原因；Core 收到 `null` 后报告统一的 `TEX_INVALID`，表示该公式无法参与布局。因此一次失败可能分别出现在两个诊断通道，不代表发生了两次独立失败。
 

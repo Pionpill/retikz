@@ -88,6 +88,49 @@ const sceneOf = (child: IRChild): IRScene => ({
 });
 
 describe('layout-aware composite', () => {
+  it('allows an external Composite query of a completed child Scope boundary', () => {
+    const definition = defineComposite({
+      namespace: 'test',
+      type: 'scope-query',
+      schema: strictObject({ namespace: literal('test'), type: literal('scope-query') }),
+      compile: (_source, context) => {
+        const child: IRChild = {
+          type: 'scope',
+          id: 'box',
+          children: [{ type: 'node', position: [20, 10], layout: { minimumSize: 20, padding: 0, margin: 0 } }],
+        };
+        for (let index = 0; index < 2; index++) {
+          expect(
+            context.resolvePathTargets({ child, source: { id: 'box', anchor: 'center' }, points: [] }).source,
+          ).toEqual([20, 10]);
+        }
+        return { children: [child] };
+      },
+    });
+    compileToScene(sceneOf({ namespace: 'test', type: 'scope-query' }), { composites: [definition] });
+  });
+
+  it('rejects ancestor references during isolated Composite measurement', () => {
+    const definition = createLayoutDefinition();
+    expect(() =>
+      compileToScene(
+        sceneOf({
+          type: 'scope',
+          id: 'outer',
+          children: [
+            {
+              namespace: 'test',
+              type: 'layout',
+              width: 100,
+              child: { type: 'node', position: { of: 'outer', offset: [10, 0] } },
+            },
+          ],
+        }),
+        { composites: [definition] },
+      ),
+    ).toThrow(/ancestor Scope.*outer/);
+  });
+
   it('局部主题上下文共享输入所有权，测量和目标查询一致且不修改父主题', () => {
     const child = defineComposite({
       namespace: 'test',

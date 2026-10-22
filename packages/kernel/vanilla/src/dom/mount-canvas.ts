@@ -69,6 +69,7 @@ const mountStaticCanvas = (
   }
 
   const canvas = document.createElement('canvas');
+  if (options.defaultFontFamily) canvas.style.fontFamily = options.defaultFontFamily;
   const output = options.output ?? {};
   const animation = options.animation ?? {};
   const canvasOptions = options.canvas ?? {};
@@ -384,6 +385,7 @@ const mountRetainedCanvas = (
   }
 
   const canvas = document.createElement('canvas');
+  if (options.defaultFontFamily) canvas.style.fontFamily = options.defaultFontFamily;
   const output = options.output ?? {};
   const ratio = resolveDevicePixelRatio(options.canvas?.devicePixelRatio);
   if (output.width !== undefined) canvas.style.width = `${output.width}px`;

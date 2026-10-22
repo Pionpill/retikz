@@ -776,6 +776,16 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'arc', field: 'kind', type: "'arc'", label: { zh: '圆弧', en: 'Circular arc' } },
     { value: 'ellipse-arc', field: 'kind', type: "'ellipseArc'", label: { zh: '椭圆弧', en: 'Elliptical arc' } },
   ],
+  '@retikz/math#ContourCommand': [
+    { value: 'move', field: 'kind', type: "'move'", label: { zh: '移动', en: 'Move' } },
+    { value: 'line', field: 'kind', type: "'line'", label: { zh: '直线', en: 'Line' } },
+    { value: 'arc', field: 'kind', type: "'arc'", label: { zh: '圆弧', en: 'Arc' } },
+    { value: 'close', field: 'kind', type: "'close'", label: { zh: '闭合', en: 'Close' } },
+  ],
+  '@retikz/math#ContourSegment': [
+    { value: 'line', field: 'kind', type: "'line'", label: { zh: '直线段', en: 'Line segment' } },
+    { value: 'arc', field: 'kind', type: "'arc'", label: { zh: '圆弧段', en: 'Arc segment' } },
+  ],
   '@retikz/react#FoldStepProps': [
     { value: 'two-segments', field: 'via', type: "'-|' | '|-'", label: { zh: '两段折线', en: 'Two segments' } },
     { value: 'three-segments', field: 'via', type: "'-|-' | '|-|'", label: { zh: '三段折线', en: 'Three segments' } },

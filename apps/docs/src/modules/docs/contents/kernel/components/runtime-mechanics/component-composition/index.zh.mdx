@@ -1,0 +1,158 @@
+---
+title: 组件组合
+description: 以带标题的折线图为例，追踪高层组件如何通过定义、子布局和尺寸反馈协作，最终进入同一个 Scene。
+---
+
+一张带标题的折线图同时包含文字、绘图区和容器。Chart 知道标题放在哪里、哪些字段构成折线；布局组件知道怎样分配空间；Core 负责把文字和几何编译成 Scene。本页沿这张图追踪它们交接的数据，直到最终图元进入 Scene。
+
+阅读前先了解[渲染链路](/kernel/components/runtime-mechanics/rendering-pipeline)中的声明、IR 与 Scene。本文关注跨包组合；Core 内部如何隔离试算、重放资源与引用，见[复合编译](/kernel/packages/core/composite-compilation)。
+
+## 整体流程
+
+本文使用三条示例数据：`(1, 2)`、`(2, 4)`、`(3, 3)`，标题为“观测值”，Chart 外部尺寸为 480 × 320。下面的画面由真实 ConnectedScatterChart 生成。标题与坐标轴文字最终都交给 Core；Plot 根据数据和可用绘图区计算三个点的位置，并按 x 的升序用折线连接。
+
+<ComponentPreview files="composition-example" hideCode type="illustration" size="lg" />
+
+先区分接下来会传递的对象：
+
+- **Source IR**：描述这张图的可序列化输入，如折线类型、字段映射和标题。
+- **Definition**：注册到 Core 的能力定义，提供输入 schema 与编译回调。
+- **尺寸提案**（proposal）：父级询问子项在某个尺寸要求下如何布局。
+- **布局结果**：子项返回的占用尺寸、边界以及可以提交的编译结果。
+
+图中的箭头表示主要处理顺序。布局阶段会递归进入子项，并接收子项的尺寸反馈。
+
+<ComponentPreview files="composition-overview" hideCode type="flow" size="md" />
+
+能力定义在实例编译前装配。之后 Chart 生成组合结构，Surface 与 FlexLayout 分配空间，Plot 把数据映射成 Core 子声明，各层选中的结果共同组成 Scene。
+
+<SourceLinks
+  sources={[
+    { label: 'Chart 输入适配与依赖贡献', path: 'packages/viz/chart-vanilla/src/shared/adapter.ts' },
+    { label: 'Chart 复合编译入口', path: 'packages/viz/chart/src/_chart/providers/composite.ts' },
+  ]}
+/>
+
+## 输入与定义
+
+React 或 Vanilla 接收作者输入后，由 Adapter 整理成高层组件的 Source IR，并提供本次编译需要的能力。对 Core 来说，接下来需要知道两件事：要编译什么，以及由哪个 Definition 处理。
+
+提供者负责声明能力之间的依赖，并创建 Definition。本例中，Chart 依赖 Surface、FlexLayout 和 Plot；Vanilla 汇总这些提供者，Core 按依赖关系装配定义，供遍历子声明时调用。
+
+| 交接物          | 本例内容                                | 后续消费者       |
+| --------------- | --------------------------------------- | ---------------- |
+| Source IR       | 图表配置、字段映射与标题                | Chart Definition |
+| 数据集          | 图中的三条记录                          | Plot 数据处理    |
+| Definition 集合 | Chart、Surface、FlexLayout、Plot 及依赖 | Core 遍历器      |
+
+这些定义准备好后，Core 才能沿组件结构逐层调用编译能力；实际的尺寸分配与图形生成发生在后续编译中。
+
+<SourceLinks
+  sources={[
+    { label: 'Adapter 提供输入与依赖', path: 'packages/viz/chart-vanilla/src/shared/adapter.ts' },
+    { label: 'Chart 与 Plot 的依赖汇总', path: 'packages/viz/chart-vanilla/src/shared/contribution.ts' },
+    { label: 'Core 装配 Definition', path: 'packages/kernel/core/src/contract/provider/resolve-dependencies.ts' },
+  ]}
+/>
+
+## 组件展开
+
+Core 遇到 Chart 声明后调用对应 Definition。Chart 解析主题、字段映射和折线配方，得到完整 Plot 声明，再组织标题与绘图区的结构。
+
+带标题时，`resolveChartPresentation` 创建一个 Surface，其内容为纵向 FlexLayout。FlexLayout 内，标题成为普通文字 Node，Plot 成为带 `grow: 1`、`min: 0` 的布局项。前者提供文字尺寸，后者参与剩余空间分配。可选的副标题、注释和来源按固定槽位插入；本例只有标题和 Plot。
+
+下图展示 Chart 生成的子声明关系。连线表示包含关系，省略了布局项包装字段；它们不是 React DOM 层级，也不是各层依次输出的多张画布。
+
+<ComponentPreview files="composition-tree" hideCode type="illustration" size="md" />
+
+Surface 拥有背景、内边距等通用容器语义；FlexLayout 拥有子项排列与空间分配；Plot 拥有比例尺、坐标系、标记和坐标轴。这些能力分别来自 Standard、Layout 与 Plot 包，通过同一套 Core 复合契约协作。
+
+若 `presentation` 完全省略，Surface 直接包裹 Plot，不生成这一层 FlexLayout。这里展示的结构来自当前 Chart 实现，不要求每种高层组件都经过相同层级。
+
+主题也按职责消费：Chart 解析自身的展示默认值并生成标题样式，Plot 消费绘图区与标记的主题配置，Core 继续处理生成的 Node、Path 等声明。标题的显式局部样式覆盖对应展示默认值。
+
+<SourceLinks
+  sources={[
+    { label: '配方、主题与 Plot 的解析顺序', path: 'packages/viz/chart/src/_chart/resolve/resolve.ts' },
+    { label: '标题、Plot 与 Surface 的组合', path: 'packages/viz/chart/src/_chart/resolve/presentation.ts' },
+    { label: 'Chart 主题默认值', path: 'packages/viz/chart/src/_chart/resolve/theme.ts' },
+  ]}
+/>
+
+## 布局协作
+
+生成子声明后，还要确定每个子项能用多少空间。父级通过尺寸提案向子级传递要求，子级返回布局结果，父级据此安排最终位置。提案每个轴可以是自然尺寸、精确尺寸或范围约束；本例沿精确尺寸展开。
+
+Chart 显式设置 `layout.width: 480`、`layout.height: 320`，因此给 Surface 的提案为 480 × 320。Chart 自己未指定某一轴时，才使用父级的精确提案，或将偏好尺寸限制到父级给定的范围内。
+
+本例同时显式设置四边 padding 为 16，因此 Surface 把 448 × 288 的内容空间交给 FlexLayout。计算是 `480 - 16 - 16` 与 `320 - 16 - 16`；这一步只扣除容器内边距，坐标轴等 Plot 内部空间尚未分配。
+
+| 层级       | 收到的要求                 | 交给下层的内容                       |
+| ---------- | -------------------------- | ------------------------------------ |
+| Chart      | 显式外部尺寸 480 × 320     | 给 Surface 的精确尺寸提案            |
+| Surface    | 480 × 320，四边 padding 16 | 给 FlexLayout 的 448 × 288 内容空间  |
+| FlexLayout | 内容空间、标题和 Plot      | 各子项的尺寸提案与最终平移           |
+| Plot       | 分配给它的宽高             | 按该尺寸生成的坐标轴和点等 Core 声明 |
+
+FlexLayout 先查询子项的尺寸贡献，再依据布局规则分配空间，并用最终提案取得子项结果。标题由 Core 度量；Plot 接受分配给它的尺寸，在内部继续预留坐标轴、图例等空间。因此 448 × 288 是整个 Flex 内容区，不能直接当作折线坐标的取值范围。正文高度和最终绘图区还取决于字体、主题及轴配置。
+
+对本例，标题与 Plot 上下排列；如果标题实际占用高度增加，在外部高度不变且仍能容纳内容时，Plot 可用高度会相应减少。这里的反馈发生在一次编译内；跨次更新如何调度，见[增量更新](/kernel/components/runtime-mechanics/incremental-updates)。
+
+布局返回后，FlexLayout 用平移放置子项；Surface 再把内容放到内边距内。空间不足也有明确边界：例如 Surface 收到的精确宽度小于左右 padding 总和，会直接失败。不能把尺寸提案理解为保证所有内容总能放下。
+
+<SourceLinks
+  sources={[
+    { label: 'Chart 尺寸选择与 Surface 试算', path: 'packages/viz/chart/src/_chart/providers/composite.ts' },
+    { label: 'Surface 扣除内边距与放置内容', path: 'packages/library/standard/src/presentation/surface/pipeline.ts' },
+    { label: 'FlexLayout 的测量、分配与平移', path: 'packages/library/layout/src/composites/flex-layout/pipeline.ts' },
+    { label: 'Plot 消费父级提案并下沉', path: 'packages/viz/plot/src/pipeline/expand/lower.ts' },
+  ]}
+/>
+
+## 编译输出
+
+Plot 确定尺寸后，根据比例尺和坐标系把三条数据映射到点的位置，按 x 的升序连接这些点，并生成 Scope、Node、Path 等 Core 声明。它通过 Core 编译这些子声明，返回选中的子布局结果。标题 Node 也走 Core 的文字和节点编译路径。
+
+各层通过 `replay` 提交选中的子布局结果。FlexLayout 附加子项平移，Surface 附加内边距平移和需要的背景、边框或裁切，Chart 返回整个容器的结果。这些结果最终汇入同一个 Scene，Render 消费其中的图元、分组变换和资源。
+
+布局占用边界用于父级排布，实际可见内容的边界用于描述绘制结果；两者可能不同。例如 Plot 向父级报告完整分配区域，但折线路径只覆盖其中一部分。理解这种差别后，才能判断一个空白区域是布局保留的空间，还是数据没有覆盖的区域。
+
+Core 提供递归编译、度量和结果提交能力；Chart、Surface、FlexLayout 与 Plot 决定各自领域的结构和布局策略。创建新的高层组件时，同样可以使用复合 Definition 接入。
+
+<SourceLinks
+  sources={[
+    { label: 'Plot 转换为 Core 子声明', path: 'packages/viz/plot/src/pipeline/expand/lower.ts' },
+    { label: 'Core 遍历与复合结果提交', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: '子布局结果与 replay 契约', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+  ]}
+/>
+
+## 完整实现流程
+
+下图把主线对应到源码入口。中间一行在 Core 调用各组件编译回调时递归发生：Chart 进入 Surface，Surface 进入 FlexLayout，FlexLayout 再查询并编译标题与 Plot。箭头概括主调用方向，尺寸结果沿调用栈返回。
+
+<ComponentPreview files="composition-implementation" hideCode type="flow" size="lg" />
+
+阅读源码时，从 `ConnectedScatterChartInputEmbedAdapter` 看输入如何生成 Source IR 与依赖，再看 `createChartDefinition` 怎样得到展示结构并发起布局。接着沿 `compileSurface`、`compileFlexLayout` 和 `lowerPlots` 查看子项提案与输出；最后回到 Core 遍历器查看结果如何汇合。函数名是源码定位点，不要求应用直接调用这些内部入口。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: '复合编译',
+      description: '继续查看 Core 内部的试算隔离、结果重放与资源合并',
+      url: '/kernel/packages/core/composite-compilation',
+    },
+    {
+      title: '文字度量',
+      description: '理解标题尺寸如何进入布局计算',
+      url: '/kernel/components/runtime-mechanics/text-metrics',
+    },
+    {
+      title: '编译产物',
+      description: '区分 Scene、布局边界与附属产物',
+      url: '/kernel/packages/core/compilation-output',
+    },
+  ]}
+/>

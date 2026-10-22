@@ -1,19 +1,15 @@
 ﻿// @vitest-environment jsdom
 import type { Canvas as NapiCanvas } from '@napi-rs/canvas';
-import type { IRScene, RuntimeScenePrimitive, Scene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
-import type { RuntimeCommitParticipantToken } from '@retikz/runtime';
+import type { IRScene, Scene } from '@retikz/core';
+import { prepareSceneCompilation } from '@retikz/core';
+import type { RuntimeScenePrimitive, ScenePatch, ScenePatchOperation, SceneRuntimeSnapshot } from '@retikz/reconciler';
 import {
-  createRuntimeIdentity,
-  createRuntimeSourceInput,
-  createRuntimeSourceRegistry,
-  createRuntimeSourceUpdate,
-  createRuntimeComputationRegistry,
-  createRuntime,
-  defineRuntimeCommitParticipant,
-  RetikzRuntimeErrorCode,
-  RuntimeComputationPhase,
-} from '@retikz/runtime';
+  ReconcilerSession,
+  createSceneIdentity,
+  createFullSceneRuntimeSnapshot,
+  RetikzReconcilerErrorCode,
+} from '@retikz/reconciler';
+import type { ReconcilerCommitTarget } from '@retikz/reconciler';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { bindWaapiDescriptors } from '../../src/animation';
@@ -22,11 +18,7 @@ import { renderToCanvas } from '../../src/canvas';
 import { RetikzRenderError, RetikzRenderErrorCode } from '../../src/error';
 import type { HydrationAnimationControls, HydrationContext } from '../../src/hydration';
 import type { RenderFrameSnapshot, RenderReadonlyLayer, RenderRuntimeConfigInput } from '../../src/runtime';
-import {
-  builtinRetainedRendererFactory,
-  createRetainedRenderParticipant,
-  RenderRuntimeSourceDefinition,
-} from '../../src/runtime';
+import { builtinRetainedRendererFactory, createRetainedRenderTarget } from '../../src/runtime';
 import { getRetainedRendererExecutor } from '../../src/runtime/renderer';
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
@@ -163,22 +155,22 @@ const createSession = (
     config?: RenderRuntimeConfigInput;
     ir?: IRScene;
     mountMode?: 'create' | 'adopt';
-    participants?: ReadonlyArray<RuntimeCommitParticipantToken>;
+    probe?: ReconcilerCommitTarget;
     useAmbientDevicePixelRatio?: boolean;
   }> = {},
 ) => {
-  const coreComputation = createCoreComputation({ onWarn: () => undefined });
+  let config = options.config ?? {};
   const handle =
     backend === 'svg'
-      ? createRetainedRenderParticipant({
+      ? createRetainedRenderTarget({
           backend,
           host: host as SVGSVGElement,
           rendererFactory: builtinRetainedRendererFactory,
           immutableOptions: { backend, idPrefix: 'builtin-test' },
-          coreComputation,
+          configuration: () => config,
           ...(options.mountMode === undefined ? {} : { mountMode: options.mountMode }),
         })
-      : createRetainedRenderParticipant({
+      : createRetainedRenderTarget({
           backend,
           host: host as HTMLCanvasElement,
           rendererFactory: builtinRetainedRendererFactory,
@@ -187,44 +179,101 @@ const createSession = (
             idPrefix: 'builtin-test',
             ...(options.useAmbientDevicePixelRatio === true ? {} : { devicePixelRatio: 1 }),
           },
-          coreComputation,
+          configuration: () => config,
           ...(options.mountMode === undefined ? {} : { mountMode: options.mountMode }),
         });
-  const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-  const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
-  const session = createRuntime({
-    sources,
-    computations,
-    participants: [handle.participant, ...(options.participants ?? [])],
-    initialSnapshots: [
-      createRuntimeSourceInput(CoreSourceDefinition, options.ir ?? scene('#ef4444')),
-      createRuntimeSourceInput(RenderRuntimeSourceDefinition, options.config ?? {}),
-    ],
-  });
+  const target: ReconcilerCommitTarget = {
+    prepare: (candidate, previous) => {
+      const render = handle.target.prepare(candidate, previous);
+      let probe;
+      try {
+        probe = options.probe?.prepare(candidate, previous);
+      } catch (cause) {
+        render.rollback();
+        render.dispose();
+        throw cause;
+      }
+      return {
+        commit: () => {
+          render.commit();
+          probe?.commit();
+        },
+        rollback: () => {
+          try {
+            probe?.rollback();
+          } finally {
+            render.rollback();
+          }
+        },
+        dispose: () => {
+          try {
+            probe?.dispose();
+          } finally {
+            render.dispose();
+          }
+        },
+      };
+    },
+    dispose: () => handle.target.dispose?.(),
+  };
+  const session = Object.assign(
+    new ReconcilerSession({ onWarn: () => undefined }, { captureProvenance: true, target }),
+    {
+      updateConfig: (next: RenderRuntimeConfigInput) => {
+        const previous = config;
+        config = next;
+        try {
+          return session.updateTarget();
+        } catch (cause) {
+          config = previous;
+          throw cause;
+        }
+      },
+    },
+  );
+  session.mount(options.ir ?? scene('#ef4444'));
 
   return { handle, session };
 };
 
 /** 编译一对固定 Runtime snapshot 与 canonical Patch，供内置 renderer 黑盒测试 */
 const createCorePair = (currentSource: IRScene, nextSource: IRScene) => {
-  const coreComputation = createCoreComputation({ onWarn: () => undefined });
-  const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-  const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
-  const session = createRuntime({
-    sources,
-    computations,
-    initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, currentSource)],
+  const [current, next] = [currentSource, nextSource].map((source, revision) => {
+    const compiled = prepareSceneCompilation(source, {}, { captureProvenance: true });
+    return createFullSceneRuntimeSnapshot(compiled.result.scene, revision, compiled.provenance!);
   });
-  const current = session.result(coreComputation).value.snapshot;
-  session.update({
-    baseRevision: session.revision(),
-    sources: [createRuntimeSourceUpdate(CoreSourceDefinition, nextSource)],
-  });
-  const result = session.result(coreComputation).value;
-  session.dispose();
-  if (result.patch === undefined) throw new Error('expected incremental Core patch');
-
-  return Object.freeze({ current, next: result.snapshot, patch: result.patch });
+  // Renderer 的 entity patch 测试显式构造固定拓扑更新，不依赖编译器 diff 策略
+  const operations: Array<ScenePatchOperation> = [];
+  if (JSON.stringify(current.topology) !== JSON.stringify(next.topology)) {
+    operations.push({ kind: 'replaceScene', snapshot: next });
+  } else {
+    for (const [index, primitive] of next.scene.primitives.entries()) {
+      if (JSON.stringify(primitive) === JSON.stringify(current.scene.primitives[index])) continue;
+      const nodes = next.topology.filter(node => node.primitivePath[0] === index);
+      const root = nodes.find(node => node.primitivePath.length === 1)!;
+      operations.push({
+        kind: 'update',
+        identity: root.identity,
+        subtree: {
+          root: root.identity,
+          primitive,
+          topology: nodes.map(node => ({
+            ...node,
+            parent: node === root ? undefined : node.parent,
+            primitivePath: node.primitivePath.slice(1),
+          })),
+        },
+      });
+    }
+    if (JSON.stringify(current.scene.layout) !== JSON.stringify(next.scene.layout))
+      operations.push({ kind: 'setLayout', layout: next.scene.layout });
+    if (JSON.stringify(current.scene.resources) !== JSON.stringify(next.scene.resources))
+      operations.push({ kind: 'setResources', resources: next.scene.resources });
+    if (JSON.stringify(current.scene.animations) !== JSON.stringify(next.scene.animations))
+      operations.push({ kind: 'setAnimations', animations: next.scene.animations });
+  }
+  const patch: ScenePatch = { baseRevision: current.revision, nextRevision: next.revision, operations };
+  return { current, next, patch };
 };
 
 afterEach(() => vi.restoreAllMocks());
@@ -432,7 +481,7 @@ describe('builtin retained renderers', () => {
 
     expect(host.querySelector('defs')).not.toBeNull();
     expect(host.querySelector('[data-retikz-id="nested"]')).not.toBeNull();
-    expect(handle.read(session).frame.primary.topology.length).toBeGreaterThan(1);
+    expect(handle.read().frame.primary.topology.length).toBeGreaterThan(1);
 
     session.dispose();
   });
@@ -472,7 +521,7 @@ describe('builtin retained renderers', () => {
     });
 
     expect(host.querySelector('[data-retikz-id="animated-group"]')).not.toBeNull();
-    expect(handle.read(session).frame.primary.topology.length).toBeGreaterThan(1);
+    expect(handle.read().frame.primary.topology.length).toBeGreaterThan(1);
 
     session.dispose();
   });
@@ -512,7 +561,7 @@ describe('builtin retained renderers', () => {
     const { session } = createSession('svg', host);
     const staticRead = createSession('svg', document.createElementNS(SVG_NAMESPACE, 'svg'));
 
-    expect(staticRead.handle.read(staticRead.session).animation).toBeUndefined();
+    expect(staticRead.handle.read().animation).toBeUndefined();
 
     staticRead.session.dispose();
 
@@ -521,10 +570,7 @@ describe('builtin retained renderers', () => {
     expect(host.style.getPropertyValue('background-color')).toBe('rgb(1, 2, 3)');
     expect(host.getAttribute('viewBox')).not.toBeNull();
 
-    session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e'))],
-    });
+    session.replace(scene('#22c55e'));
 
     expect(host.getAttribute('aria-label')).toBe('external');
     expect(host.style.getPropertyValue('background-color')).toBe('rgb(1, 2, 3)');
@@ -577,15 +623,10 @@ describe('builtin retained renderers', () => {
     const throwing = vi.fn(() => {
       throw new Error('isolated');
     });
-    session.update({
-      baseRevision: session.revision(),
-      sources: [
-        createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, {
-          handlerContributions: [
-            { registration: 1, handlers: { 'node-a': { click: throwing } } },
-            { registration: 2, handlers: { 'node-a': { click: second } } },
-          ],
-        }),
+    session.updateConfig({
+      handlerContributions: [
+        { registration: 1, handlers: { 'node-a': { click: throwing } } },
+        { registration: 2, handlers: { 'node-a': { click: second } } },
       ],
     });
     node?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -593,13 +634,8 @@ describe('builtin retained renderers', () => {
     expect(reportError).toHaveBeenCalledWith(expect.objectContaining({ message: 'isolated' }));
     expect(calls).toEqual(['first', 'second']);
 
-    session.update({
-      baseRevision: session.revision(),
-      sources: [
-        createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, {
-          handlerContributions: [{ registration: 2, handlers: { 'node-a': { click: second } } }],
-        }),
-      ],
+    session.updateConfig({
+      handlerContributions: [{ registration: 2, handlers: { 'node-a': { click: second } } }],
     });
     node?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
@@ -617,35 +653,24 @@ describe('builtin retained renderers', () => {
     const host = document.createElementNS(SVG_NAMESPACE, 'svg');
     const first = vi.fn();
     const second = vi.fn();
-    const probe = defineRuntimeCommitParticipant<Readonly<{ ok: true }>>({
-      key: 'z:hydration-probe',
-      sources: [],
-      computations: [],
-      revisionPolicy: 'continuous',
-      tracePhases: [],
-      prepare: candidate => ({
+    const probe: ReconcilerCommitTarget = {
+      prepare: (_candidate, previous) => ({
         commit: () => {
-          if (candidate.phase === RuntimeComputationPhase.Update) {
+          if (previous !== undefined) {
             host.querySelector('[data-retikz-id="node-a"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
           }
         },
         rollback: () => undefined,
         dispose: () => undefined,
       }),
-      read: () => Object.freeze({ ok: true as const }),
       dispose: () => undefined,
-    });
+    };
     const { session } = createSession('svg', host, {
       config: { handlerContributions: [{ registration: 1, handlers: { 'node-a': { click: first } } }] },
-      participants: [probe],
+      probe,
     });
-    session.update({
-      baseRevision: session.revision(),
-      sources: [
-        createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, {
-          handlerContributions: [{ registration: 2, handlers: { 'node-a': { click: second } } }],
-        }),
-      ],
+    session.updateConfig({
+      handlerContributions: [{ registration: 2, handlers: { 'node-a': { click: second } } }],
     });
 
     expect(first).not.toHaveBeenCalled();
@@ -655,12 +680,12 @@ describe('builtin retained renderers', () => {
   });
 
   it('SVG 与 Canvas hydration 接受同一 semantic owner 发射多个 primitive，并为匿名 occurrence 继承唯一 public id', () => {
-    const root = createRuntimeIdentity('multi-primitive-owner', ['root']);
-    const owner = createRuntimeIdentity('multi-primitive-owner', ['owner']);
+    const root = createSceneIdentity('multi-primitive-owner', ['root']);
+    const owner = createSceneIdentity('multi-primitive-owner', ['owner']);
     const identities = [
-      createRuntimeIdentity('multi-primitive-owner', ['owner', 'shape']),
-      createRuntimeIdentity('multi-primitive-owner', ['owner', 'label']),
-      createRuntimeIdentity('multi-primitive-owner', ['owner', 'anonymous']),
+      createSceneIdentity('multi-primitive-owner', ['owner', 'shape']),
+      createSceneIdentity('multi-primitive-owner', ['owner', 'label']),
+      createSceneIdentity('multi-primitive-owner', ['owner', 'anonymous']),
     ];
     const animation = {
       property: 'opacity' as const,
@@ -673,7 +698,7 @@ describe('builtin retained renderers', () => {
     };
     const anonymousAnimation = { ...animation, trigger: { onEvent: 'click' } as const };
     const snapshot: SceneRuntimeSnapshot = {
-      revision: 0 as SceneRuntimeSnapshot['revision'],
+      revision: 0,
       root,
       scene: {
         layout: { x: 0, y: 0, width: 100, height: 40 },
@@ -886,8 +911,8 @@ describe('builtin retained renderers', () => {
   });
 
   it('Canvas 合成 pointerLeave context 按 previous public id 控制 occurrence', () => {
-    const root = createRuntimeIdentity('canvas-leave-animation', ['root']);
-    const identities = ['a', 'b'].map(id => createRuntimeIdentity('canvas-leave-animation', [id]));
+    const root = createSceneIdentity('canvas-leave-animation', ['root']);
+    const identities = ['a', 'b'].map(id => createSceneIdentity('canvas-leave-animation', [id]));
     const animation = {
       property: 'opacity' as const,
       keyframes: [
@@ -898,7 +923,7 @@ describe('builtin retained renderers', () => {
       trigger: 'manual' as const,
     };
     const snapshot: SceneRuntimeSnapshot = {
-      revision: 0 as SceneRuntimeSnapshot['revision'],
+      revision: 0,
       root,
       scene: {
         layout: { x: 0, y: 0, width: 100, height: 40 },
@@ -1031,12 +1056,7 @@ describe('builtin retained renderers', () => {
     });
 
     try {
-      expect(() =>
-        svg.session.update({
-          baseRevision: svg.session.revision(),
-          sources: [createRuntimeSourceUpdate(CoreSourceDefinition, animatedScene('#22c55e', 'manual'))],
-        }),
-      ).toThrow();
+      expect(() => svg.session.replace(animatedScene('#22c55e', 'manual'))).toThrow();
 
       svgHost.querySelector('[data-retikz-id="node-a"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
@@ -1108,12 +1128,7 @@ describe('builtin retained renderers', () => {
       ],
     };
 
-    expect(() =>
-      canvas.session.update({
-        baseRevision: canvas.session.revision(),
-        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, autoplayScene)],
-      }),
-    ).toThrow();
+    expect(() => canvas.session.replace(autoplayScene)).toThrow();
 
     canvasHost.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 100, clientY: 50 }));
 
@@ -1145,14 +1160,9 @@ describe('builtin retained renderers', () => {
       originalRemove(type, listener, options);
     });
 
-    expect(() =>
-      session.update({
-        baseRevision: session.revision(),
-        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e'))],
-      }),
-    ).toThrowError(
+    expect(() => session.replace(scene('#22c55e'))).toThrowError(
       expect.objectContaining({
-        code: RetikzRuntimeErrorCode.ParticipantCommitFailed,
+        code: RetikzReconcilerErrorCode.Compile,
         cause: expect.objectContaining({ message: 'old dblclick removal rejected' }),
       }),
     );
@@ -1186,19 +1196,13 @@ describe('builtin retained renderers', () => {
       originalRemove(type, listener, options);
     });
 
-    expect(() =>
-      session.update({
-        baseRevision: session.revision(),
-        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e'))],
-      }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantRollbackFailed }));
+    expect(() => session.replace(scene('#22c55e'))).toThrowError(
+      expect.objectContaining({ code: RetikzReconcilerErrorCode.Contract }),
+    );
     expect(host.innerHTML).toBe(committedMarkup);
-    expect(() =>
-      session.update({
-        baseRevision: session.revision(),
-        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#3b82f6'))],
-      }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantRollbackFailed }));
+    expect(() => session.replace(scene('#3b82f6'))).toThrowError(
+      expect.objectContaining({ code: RetikzReconcilerErrorCode.Contract }),
+    );
     expect(() => session.dispose()).not.toThrow();
   });
 
@@ -1289,22 +1293,17 @@ describe('builtin retained renderers', () => {
     });
 
     expect(() =>
-      session.update({
-        baseRevision: session.revision(),
-        sources: [
-          createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, {
-            handlerContributions: [
-              {
-                registration: 2,
-                handlers: { 'node-a': { click: candidateClick, doubleClick: vi.fn() } },
-              },
-            ],
-          }),
+      session.updateConfig({
+        handlerContributions: [
+          {
+            registration: 2,
+            handlers: { 'node-a': { click: candidateClick, doubleClick: vi.fn() } },
+          },
         ],
       }),
     ).toThrowError(
       expect.objectContaining({
-        code: RetikzRuntimeErrorCode.ParticipantCommitFailed,
+        code: RetikzReconcilerErrorCode.Compile,
         cause: expect.objectContaining({ message: 'candidate dblclick registration rejected' }),
       }),
     );
@@ -1347,28 +1346,19 @@ describe('builtin retained renderers', () => {
     });
 
     expect(() =>
-      session.update({
-        baseRevision: session.revision(),
-        sources: [
-          createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, {
-            handlerContributions: [
-              {
-                registration: 2,
-                handlers: { 'node-a': { click: candidateClick, doubleClick: vi.fn() } },
-              },
-            ],
-          }),
+      session.updateConfig({
+        handlerContributions: [
+          {
+            registration: 2,
+            handlers: { 'node-a': { click: candidateClick, doubleClick: vi.fn() } },
+          },
         ],
       }),
     ).toThrowError(
       expect.objectContaining({
-        code: RetikzRuntimeErrorCode.ParticipantRollbackFailed,
-        cause: expect.objectContaining({
-          trigger: expect.objectContaining({
-            cause: expect.objectContaining({ message: 'candidate dblclick registration rejected' }),
-          }),
-          rollback: expect.objectContaining({ message: 'candidate click cleanup rejected 2' }),
-        }),
+        code: RetikzReconcilerErrorCode.Contract,
+        cause: expect.objectContaining({ message: 'candidate dblclick registration rejected' }),
+        details: { recoveryErrors: [expect.objectContaining({ message: 'candidate click cleanup rejected 2' })] },
       }),
     );
     expect(host.innerHTML).toBe(committedMarkup);
@@ -1409,20 +1399,15 @@ describe('builtin retained renderers', () => {
     });
 
     expect(() =>
-      session.update({
-        baseRevision: session.revision(),
-        sources: [
-          createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, {
-            handlerContributions: [
-              {
-                registration: 2,
-                handlers: { 'node-a': { click: candidateClick, doubleClick: vi.fn() } },
-              },
-            ],
-          }),
+      session.updateConfig({
+        handlerContributions: [
+          {
+            registration: 2,
+            handlers: { 'node-a': { click: candidateClick, doubleClick: vi.fn() } },
+          },
         ],
       }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantRollbackFailed }));
+    ).toThrowError(expect.objectContaining({ code: RetikzReconcilerErrorCode.Contract }));
 
     expect(() => session.dispose()).not.toThrow();
 
@@ -1620,7 +1605,7 @@ describe('builtin retained renderers', () => {
     const current = createCorePair(scene('#ef4444'), canvasLifecycleScene(300)).next;
     const next: SceneRuntimeSnapshot = {
       ...current,
-      revision: (Number(current.revision) + 1) as SceneRuntimeSnapshot['revision'],
+      revision: current.revision + 1,
     };
     const patch: ScenePatch = {
       baseRevision: current.revision,
@@ -2107,7 +2092,7 @@ describe('builtin retained renderers', () => {
     const current = createCorePair(scene('#ef4444'), animatedScene('#22c55e', 'manual')).next;
     const next: SceneRuntimeSnapshot = {
       ...current,
-      revision: (Number(current.revision) + 1) as SceneRuntimeSnapshot['revision'],
+      revision: current.revision + 1,
     };
     const patch: ScenePatch = {
       baseRevision: current.revision,
@@ -2238,7 +2223,7 @@ describe('builtin retained renderers', () => {
     const current = createCorePair(scene('#ef4444'), canvasLifecycleScene(300)).next;
     const next: SceneRuntimeSnapshot = {
       ...current,
-      revision: (Number(current.revision) + 1) as SceneRuntimeSnapshot['revision'],
+      revision: current.revision + 1,
     };
     const patch: ScenePatch = {
       baseRevision: current.revision,
@@ -2359,8 +2344,8 @@ describe('builtin retained renderers', () => {
         },
       });
     });
-    const root = createRuntimeIdentity('canvas-root-animation', ['root']);
-    const identity = createRuntimeIdentity('canvas-root-animation', ['node']);
+    const root = createSceneIdentity('canvas-root-animation', ['root']);
+    const identity = createSceneIdentity('canvas-root-animation', ['node']);
     const primitive: RuntimeScenePrimitive = {
       type: 'rect',
       id: 'node',
@@ -2391,7 +2376,7 @@ describe('builtin retained renderers', () => {
       trigger: 'load' as const,
     });
     const snapshot = (revision: number, duration: number): SceneRuntimeSnapshot => ({
-      revision: revision as SceneRuntimeSnapshot['revision'],
+      revision,
       root,
       scene: {
         layout: { x: 0, y: 0, width: 100, height: 40 },
@@ -3117,8 +3102,8 @@ describe('builtin retained renderers', () => {
   });
 
   it('SVG 按 RuntimeIdentity 保留未变 WAAPI binding，并在 change/remove/replace 后释放旧 binding', () => {
-    const root = createRuntimeIdentity('svg-animation', ['root']);
-    const identities = ['node-a', 'node-b'].map(id => createRuntimeIdentity('svg-animation', [id]));
+    const root = createSceneIdentity('svg-animation', ['root']);
+    const identities = ['node-a', 'node-b'].map(id => createSceneIdentity('svg-animation', [id]));
     const primitive = (id: string, index: number, duration: number): RuntimeScenePrimitive => ({
       type: 'rect',
       id,
@@ -3140,7 +3125,7 @@ describe('builtin retained renderers', () => {
       ],
     });
     const snapshot = (revision: number, primitives: ReadonlyArray<RuntimeScenePrimitive>): SceneRuntimeSnapshot => ({
-      revision: revision as SceneRuntimeSnapshot['revision'],
+      revision,
       root,
       scene: {
         layout: { x: 0, y: 0, width: 100, height: 40 },
@@ -3194,7 +3179,7 @@ describe('builtin retained renderers', () => {
       expect(stable).toBeDefined();
       expect(changedOld).toBeDefined();
 
-      const stableSnapshot = { ...current, revision: 1 as SceneRuntimeSnapshot['revision'] };
+      const stableSnapshot = { ...current, revision: 1 };
       const stablePatch: ScenePatch = {
         baseRevision: current.revision,
         nextRevision: stableSnapshot.revision,
@@ -3274,8 +3259,8 @@ describe('builtin retained renderers', () => {
   });
 
   it('SVG 同 identity primitive 换元素类型时把未变动画 descriptor 重新绑定到新元素', () => {
-    const root = createRuntimeIdentity('svg-animation-element', ['root']);
-    const identity = createRuntimeIdentity('svg-animation-element', ['node']);
+    const root = createSceneIdentity('svg-animation-element', ['root']);
+    const identity = createSceneIdentity('svg-animation-element', ['node']);
     const animation = {
       property: 'opacity' as const,
       keyframes: [
@@ -3304,7 +3289,7 @@ describe('builtin retained renderers', () => {
       animations: [animation],
     };
     const snapshot = (revision: number, primitive: RuntimeScenePrimitive): SceneRuntimeSnapshot => ({
-      revision: revision as SceneRuntimeSnapshot['revision'],
+      revision,
       root,
       scene: {
         layout: { x: 0, y: 0, width: 40, height: 40 },
@@ -3373,7 +3358,7 @@ describe('builtin retained renderers', () => {
   it('SVG commit 后、prepared dispose 前旧 onEvent binding 已失效，rollback 可恢复', () => {
     const current = animatedScene('#ef4444', { onEvent: 'click' });
     const pair = createCorePair(current, scene('#22c55e'));
-    const next = { ...pair.current, revision: 1 as SceneRuntimeSnapshot['revision'] };
+    const next = { ...pair.current, revision: 1 };
     const host = document.createElementNS(SVG_NAMESPACE, 'svg');
     const play = vi.fn();
     const animate = vi.fn(() => ({
@@ -3432,7 +3417,7 @@ describe('builtin retained renderers', () => {
 
   it('SVG retired WAAPI suspension 抛错后 rollback 恢复旧 binding gate', () => {
     const pair = createCorePair(animatedScene('#ef4444', { onEvent: 'click' }), scene('#22c55e'));
-    const next = { ...pair.current, revision: 1 as SceneRuntimeSnapshot['revision'] };
+    const next = { ...pair.current, revision: 1 };
     const host = document.createElementNS(SVG_NAMESPACE, 'svg');
     let rejectPause = false;
     const play = vi.fn();
@@ -3555,7 +3540,7 @@ describe('builtin retained renderers', () => {
     const canvasControls = canvasExecutor.read().animation;
     const nextCanvasSnapshot = {
       ...canvasPair.current,
-      revision: 1 as SceneRuntimeSnapshot['revision'],
+      revision: 1,
     };
     const retired = canvasExecutor.prepare(
       {
@@ -3624,8 +3609,8 @@ describe('builtin retained renderers', () => {
   });
 
   it('SVG full reconcile 保留未变 WAAPI binding 接管的 transform styles', () => {
-    const root = createRuntimeIdentity('svg-animation-style', ['root']);
-    const identity = createRuntimeIdentity('svg-animation-style', ['node']);
+    const root = createSceneIdentity('svg-animation-style', ['root']);
+    const identity = createSceneIdentity('svg-animation-style', ['node']);
     const primitive: RuntimeScenePrimitive = {
       type: 'rect',
       id: 'node',
@@ -3648,7 +3633,7 @@ describe('builtin retained renderers', () => {
       ],
     };
     const snapshot = (revision: number, width: number): SceneRuntimeSnapshot => ({
-      revision: revision as SceneRuntimeSnapshot['revision'],
+      revision,
       root,
       scene: {
         layout: { x: 0, y: 0, width, height: 40 },
@@ -3715,8 +3700,8 @@ describe('builtin retained renderers', () => {
   });
 
   it('SVG animation binding 分组创建中途失败会释放先前已创建 controls', () => {
-    const root = createRuntimeIdentity('svg-animation-failure', ['root']);
-    const identities = ['a', 'b'].map(id => createRuntimeIdentity('svg-animation-failure', [id]));
+    const root = createSceneIdentity('svg-animation-failure', ['root']);
+    const identities = ['a', 'b'].map(id => createSceneIdentity('svg-animation-failure', [id]));
     const primitives: ReadonlyArray<RuntimeScenePrimitive> = [200, 300].map((duration, index) => ({
       type: 'rect',
       id: `node-${index}`,
@@ -3737,7 +3722,7 @@ describe('builtin retained renderers', () => {
       ],
     }));
     const snapshot: SceneRuntimeSnapshot = {
-      revision: 0 as SceneRuntimeSnapshot['revision'],
+      revision: 0,
       root,
       scene: {
         layout: { x: 0, y: 0, width: 100, height: 40 },
@@ -3870,28 +3855,22 @@ describe('builtin retained renderers', () => {
     expect(nodeA).not.toBeNull();
     expect(nodeB).not.toBeNull();
 
-    session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e'))],
-    });
+    session.replace(scene('#22c55e'));
 
     expect(host.querySelector('[data-retikz-id="node-a"]')).toBe(nodeA);
 
-    session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e', true))],
-    });
+    session.replace(scene('#22c55e', true));
 
     expect(host.querySelector('[data-retikz-id="node-a"]')).toBe(nodeA);
     expect(host.querySelector('[data-retikz-id="node-b"]')).toBe(nodeB);
-    expect(handle.read(session).frame.primary.revision).toBe(2);
+    expect(handle.read().frame.primary.revision).toBe(2);
 
     session.dispose();
 
-    expect(() => handle.read(session)).toThrow();
+    expect(() => handle.read()).toThrow();
   });
 
-  it('SVG duplicate public id 的 full/resource reconcile 仍按 RuntimeIdentity 保留 occurrence node', () => {
+  it('SVG full/resource reconcile 在 topology 乱序和 public id 重复时保留 occurrence，回滚恢复原顺序', () => {
     const sourceScene = (reversed: boolean, gradient: boolean, rootAnimated = false): IRScene => {
       const children: IRScene['children'] = [
         {
@@ -3948,20 +3927,17 @@ describe('builtin retained renderers', () => {
           primitives: Object.freeze(snapshot.scene.primitives.map(duplicatePrimitiveIds)),
         }),
         topology: Object.freeze(
-          snapshot.topology.map(node =>
-            Object.freeze({ ...node, ...(node.publicId === undefined ? {} : { publicId: 'duplicate' }) }),
-          ),
+          snapshot.topology
+            .toReversed()
+            .map(node => Object.freeze({ ...node, ...(node.publicId === undefined ? {} : { publicId: 'duplicate' }) })),
         ),
       });
 
     const seedHost = document.createElementNS(SVG_NAMESPACE, 'svg');
     const seed = createSession('svg', seedHost, { ir: sourceScene(false, false) });
-    const current = duplicatePublicIds(seed.handle.read(seed.session).frame.primary);
-    seed.session.update({
-      baseRevision: seed.session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, sourceScene(true, true, true))],
-    });
-    const next = duplicatePublicIds(seed.handle.read(seed.session).frame.primary);
+    const current = duplicatePublicIds(seed.handle.read().frame.primary);
+    seed.session.replace(sourceScene(true, true, true));
+    const next = duplicatePublicIds(seed.handle.read().frame.primary);
     seed.session.dispose();
 
     const host = document.createElementNS(SVG_NAMESPACE, 'svg');
@@ -3987,6 +3963,7 @@ describe('builtin retained renderers', () => {
     mount.commit();
     mount.dispose();
     const occurrences = Array.from(host.querySelectorAll('[data-retikz-id="duplicate"]'));
+    const originalMarkup = host.innerHTML;
     const nodeA = occurrences.find(element => element.textContent === 'A');
     const nodeB = occurrences.find(element => element.textContent === 'B');
 
@@ -4006,12 +3983,17 @@ describe('builtin retained renderers', () => {
     });
     const prepared = executor.prepare(replacePatch, frameOf(next), runtimeConfig);
     prepared.commit();
-    prepared.dispose();
     const nextOccurrences = Array.from(host.querySelectorAll('[data-retikz-id="duplicate"]'));
 
     expect(nextOccurrences.find(element => element.textContent === 'A')).toBe(nodeA);
     expect(nextOccurrences.find(element => element.textContent === 'B')).toBe(nodeB);
     expect(nextOccurrences[0]).toBe(nodeB);
+
+    prepared.rollback();
+    expect(host.innerHTML).toBe(originalMarkup);
+    expect(Array.from(host.querySelectorAll('[data-retikz-id="duplicate"]'))).toEqual(occurrences);
+    expect(host.querySelector('[data-retikz-id="duplicate"]')).toBe(nodeA);
+    prepared.dispose();
 
     executor.dispose();
   });
@@ -4053,13 +4035,10 @@ describe('builtin retained renderers', () => {
 
     expect(drawImage).toHaveBeenCalledTimes(1);
 
-    session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e'))],
-    });
+    session.replace(scene('#22c55e'));
 
     expect(drawImage).toHaveBeenCalledTimes(2);
-    expect(handle.read(session).frame.primary.revision).toBe(1);
+    expect(handle.read().frame.primary.revision).toBe(1);
 
     session.dispose();
   });
@@ -4087,22 +4066,17 @@ describe('builtin retained renderers', () => {
     host.height = 100;
     document.body.appendChild(host);
     const { handle, session } = createSession('canvas', host);
-    const previousRead = handle.read(session);
+    const previousRead = handle.read();
 
     expect(drawImage).toHaveBeenCalledTimes(1);
 
-    session.update({
-      baseRevision: session.revision(),
-      sources: [
-        createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, {
-          handlerContributions: [{ registration: 0, handlers: {} }],
-        }),
-      ],
+    session.updateConfig({
+      handlerContributions: [{ registration: 0, handlers: {} }],
     });
 
     expect(drawImage).toHaveBeenCalledTimes(1);
-    expect(handle.read(session)).not.toBe(previousRead);
-    expect(handle.read(session).frame.primary.revision).toBe(1);
+    expect(handle.read()).not.toBe(previousRead);
+    expect(handle.read().frame.primary.revision).toBe(1);
 
     session.dispose();
   });
@@ -4154,17 +4128,14 @@ describe('builtin retained renderers', () => {
 
     strokeStyles.length = 0;
     fonts.length = 0;
-    handle.read(session).animation?.play();
+    handle.read().animation?.play();
     frames.at(-1)?.(0);
 
     expect(strokeStyles).toContain('rgb(1, 2, 3)');
     expect(fonts.some(font => String(font).includes('Retikz Test'))).toBe(true);
 
     computedStyle = { color: 'rgb(4, 5, 6)', fontFamily: 'Retikz Changed' } as CSSStyleDeclaration;
-    session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, { cachePolicy: 'static' })],
-    });
+    session.updateConfig({ cachePolicy: 'static' });
 
     expect(strokeStyles).toContain('rgb(4, 5, 6)');
     expect(fonts.some(font => String(font).includes('Retikz Changed'))).toBe(true);
@@ -4585,12 +4556,12 @@ describe('builtin retained renderers', () => {
       { ...currentText, x: 46, lines: [{ text: 'Italic!', fontStyle: 'italic' }] },
       overlay,
     ];
-    const root = createRuntimeIdentity('canvas-oracle', ['root']);
+    const root = createSceneIdentity('canvas-oracle', ['root']);
     const identities = currentPrimitives.map((_, index) =>
-      createRuntimeIdentity('canvas-oracle', ['item', String(index)]),
+      createSceneIdentity('canvas-oracle', ['item', String(index)]),
     );
     const snapshot = (revision: number, primitives: ReadonlyArray<RuntimeScenePrimitive>): SceneRuntimeSnapshot => ({
-      revision: revision as SceneRuntimeSnapshot['revision'],
+      revision,
       root,
       scene: {
         layout: { x: 0, y: 0, width: 120, height: 80 },
@@ -4680,36 +4651,25 @@ describe('builtin retained renderers', () => {
         set: (target, key, value) => Reflect.set(target, key, value),
       });
     });
-    const failure = defineRuntimeCommitParticipant<Readonly<{ ok: true }>>({
-      key: 'z:prepare-failure',
-      sources: [],
-      computations: [],
-      revisionPolicy: 'continuous',
-      tracePhases: [],
-      prepare: candidate => {
-        if (candidate.phase === RuntimeComputationPhase.Update) throw new Error('late prepare failed');
+    const failure: ReconcilerCommitTarget = {
+      prepare: (_candidate, previous) => {
+        if (previous !== undefined) throw new Error('late prepare failed');
         return { commit: () => undefined, rollback: () => undefined, dispose: () => undefined };
       },
-      read: () => Object.freeze({ ok: true as const }),
       dispose: () => undefined,
-    });
+    };
     const host = document.createElement('canvas');
     host.width = 200;
     host.height = 100;
     document.body.appendChild(host);
-    const { handle, session } = createSession('canvas', host, { participants: [failure] });
-    const previousRead = handle.read(session);
+    const { handle, session } = createSession('canvas', host, { probe: failure });
+    const previousRead = handle.read();
 
     expect(drawImage).toHaveBeenCalledTimes(1);
 
-    expect(() =>
-      session.update({
-        baseRevision: session.revision(),
-        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e'))],
-      }),
-    ).toThrow();
+    expect(() => session.replace(scene('#22c55e'))).toThrow();
     expect(drawImage).toHaveBeenCalledTimes(1);
-    expect(handle.read(session)).toBe(previousRead);
+    expect(handle.read()).toBe(previousRead);
 
     session.dispose();
   });
@@ -4743,16 +4703,11 @@ describe('builtin retained renderers', () => {
     host.height = 100;
     document.body.appendChild(host);
     const { handle, session } = createSession('canvas', host);
-    const previousRead = handle.read(session);
+    const previousRead = handle.read();
 
-    expect(() =>
-      session.update({
-        baseRevision: session.revision(),
-        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e'))],
-      }),
-    ).toThrow();
+    expect(() => session.replace(scene('#22c55e'))).toThrow();
     expect(connectedPaintCount).toBe(3);
-    expect(handle.read(session)).toBe(previousRead);
+    expect(handle.read()).toBe(previousRead);
 
     session.dispose();
   });
@@ -4784,10 +4739,7 @@ describe('builtin retained renderers', () => {
     expect(drawImage).toHaveBeenCalledTimes(1);
 
     host.width = 300;
-    session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, { cachePolicy: 'static' })],
-    });
+    session.updateConfig({ cachePolicy: 'static' });
 
     expect(drawImage).toHaveBeenCalledTimes(2);
 
@@ -4819,10 +4771,7 @@ describe('builtin retained renderers', () => {
     expect([host.width, host.height]).toEqual([200, 100]);
     expect(drawImage).toHaveBeenCalledTimes(1);
 
-    session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, { canvas: { width: 300, height: 120 } })],
-    });
+    session.updateConfig({ canvas: { width: 300, height: 120 } });
 
     expect([host.width, host.height]).toEqual([300, 120]);
     expect(drawImage).toHaveBeenCalledTimes(2);
@@ -4858,14 +4807,9 @@ describe('builtin retained renderers', () => {
     expect([host.width, host.height]).toEqual([100, 50]);
 
     Object.defineProperty(globalThis, 'devicePixelRatio', { configurable: true, value: 2 });
-    session.update({
-      baseRevision: session.revision(),
-      sources: [
-        createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, {
-          canvas: { width: 100, height: 50 },
-          cachePolicy: 'static',
-        }),
-      ],
+    session.updateConfig({
+      canvas: { width: 100, height: 50 },
+      cachePolicy: 'static',
     });
 
     expect([host.width, host.height]).toEqual([100, 50]);
@@ -4892,12 +4836,7 @@ describe('builtin retained renderers', () => {
       });
     });
     let initial = true;
-    const failure = defineRuntimeCommitParticipant<Readonly<{ ok: true }>>({
-      key: 'z:canvas-size-commit-failure',
-      sources: [],
-      computations: [],
-      revisionPolicy: 'continuous',
-      tracePhases: [],
+    const failure: ReconcilerCommitTarget = {
       prepare: () => ({
         commit: () => {
           if (initial) initial = false;
@@ -4906,25 +4845,19 @@ describe('builtin retained renderers', () => {
         rollback: () => undefined,
         dispose: () => undefined,
       }),
-      read: () => Object.freeze({ ok: true as const }),
       dispose: () => undefined,
-    });
+    };
     const host = document.createElement('canvas');
     document.body.appendChild(host);
     const { handle, session } = createSession('canvas', host, {
       config: { canvas: { width: 200, height: 100 } },
-      participants: [failure],
+      probe: failure,
     });
-    const previous = handle.read(session);
+    const previous = handle.read();
 
-    expect(() =>
-      session.update({
-        baseRevision: session.revision(),
-        sources: [createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, { canvas: { width: 300, height: 120 } })],
-      }),
-    ).toThrow();
+    expect(() => session.updateConfig({ canvas: { width: 300, height: 120 } })).toThrow();
     expect([host.width, host.height]).toEqual([200, 100]);
-    expect(handle.read(session)).toBe(previous);
+    expect(handle.read()).toBe(previous);
 
     session.dispose();
   });
@@ -5063,31 +4996,33 @@ describe('builtin retained renderers', () => {
     host.width = 200;
     host.height = 100;
     document.body.appendChild(host);
-    const { handle, session } = createSession('canvas', host, { ir: animatedScene('#ef4444', 'manual') });
-    const before = handle.read(session).animation;
-
-    expect(before).toBeDefined();
-
-    before?.seek(123);
-    session.update({
-      baseRevision: session.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, animatedScene('#22c55e', 'manual'))],
+    const pair = createCorePair(animatedScene('#ef4444', 'manual'), animatedScene('#22c55e', 'manual'));
+    const renderer = builtinRetainedRendererFactory({
+      backend: 'canvas',
+      host,
+      immutableOptions: { backend: 'canvas', idPrefix: 'clock', devicePixelRatio: 1 },
     });
-
-    expect(handle.read(session).animation?.time).toBe(123);
-
+    const executor = getRetainedRendererExecutor(renderer)!;
+    const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
+    mount.commit();
+    mount.dispose();
+    const before = executor.read().animation;
+    expect(before).toBeDefined();
+    before?.seek(123);
+    const token = executor.prepare(pair.patch, frameOf(pair.next), {});
+    token.commit();
+    token.dispose();
+    expect(executor.read().animation?.time).toBe(123);
     fillStyles.length = 0;
-    handle.read(session).animation?.seek(124);
-
+    executor.read().animation?.seek(124);
     expect(fillStyles).toContain('#22c55e');
     expect(fillStyles).not.toContain('#ef4444');
-
-    session.dispose();
+    executor.dispose();
   });
 
   it('Canvas duplicate public id 仍按 identity 重启单 timeline，并刷新 coarse clock envelope', () => {
-    const root = createRuntimeIdentity('canvas-animation', ['root']);
-    const identities = ['node-a', 'node-b'].map(id => createRuntimeIdentity('canvas-animation', [id]));
+    const root = createSceneIdentity('canvas-animation', ['root']);
+    const identities = ['node-a', 'node-b'].map(id => createSceneIdentity('canvas-animation', [id]));
     const primitive = (id: string, index: number, duration: number): RuntimeScenePrimitive => ({
       type: 'rect',
       id,
@@ -5110,7 +5045,7 @@ describe('builtin retained renderers', () => {
     const currentPrimitives = [primitive('duplicate', 0, 300), primitive('duplicate', 1, 300)];
     const nextPrimitives = [currentPrimitives[0], primitive('duplicate', 1, 600)];
     const snapshot = (revision: number, primitives: ReadonlyArray<RuntimeScenePrimitive>): SceneRuntimeSnapshot => ({
-      revision: revision as SceneRuntimeSnapshot['revision'],
+      revision,
       root,
       scene: {
         layout: { x: 0, y: 0, width: 240, height: 100 },
@@ -5221,8 +5156,8 @@ describe('builtin retained renderers', () => {
   });
 
   it('Canvas anonymous occurrence descriptor 变化只重启自身 timeline', () => {
-    const root = createRuntimeIdentity('canvas-anonymous-animation', ['root']);
-    const identities = ['a', 'b'].map(id => createRuntimeIdentity('canvas-anonymous-animation', [id]));
+    const root = createSceneIdentity('canvas-anonymous-animation', ['root']);
+    const identities = ['a', 'b'].map(id => createSceneIdentity('canvas-anonymous-animation', [id]));
     const primitive = (index: number, duration: number): RuntimeScenePrimitive => ({
       type: 'rect',
       x: index * 40,
@@ -5243,7 +5178,7 @@ describe('builtin retained renderers', () => {
     const currentPrimitives = [primitive(0, 300), primitive(1, 300)];
     const nextPrimitives = [currentPrimitives[0], primitive(1, 600)];
     const snapshot = (revision: number, primitives: ReadonlyArray<RuntimeScenePrimitive>): SceneRuntimeSnapshot => ({
-      revision: revision as SceneRuntimeSnapshot['revision'],
+      revision,
       root,
       scene: {
         layout: { x: 0, y: 0, width: 100, height: 40 },
@@ -5323,8 +5258,8 @@ describe('builtin retained renderers', () => {
   });
 
   it('Canvas finite coarse clock 为重启 occurrence 保留完整 descriptor 时长', () => {
-    const root = createRuntimeIdentity('canvas-animation-envelope', ['root']);
-    const identity = createRuntimeIdentity('canvas-animation-envelope', ['node']);
+    const root = createSceneIdentity('canvas-animation-envelope', ['root']);
+    const identity = createSceneIdentity('canvas-animation-envelope', ['node']);
     const primitive = (duration: number): RuntimeScenePrimitive => ({
       type: 'rect',
       x: 0,
@@ -5343,7 +5278,7 @@ describe('builtin retained renderers', () => {
       ],
     });
     const snapshot = (revision: number, duration: number): SceneRuntimeSnapshot => ({
-      revision: revision as SceneRuntimeSnapshot['revision'],
+      revision,
       root,
       scene: {
         layout: { x: 0, y: 0, width: 40, height: 40 },
@@ -5418,8 +5353,8 @@ describe('builtin retained renderers', () => {
   });
 
   it('Canvas 已结束 autoplay occurrence 变更后重启 coarse clock', () => {
-    const root = createRuntimeIdentity('canvas-ended-autoplay', ['root']);
-    const identity = createRuntimeIdentity('canvas-ended-autoplay', ['node']);
+    const root = createSceneIdentity('canvas-ended-autoplay', ['root']);
+    const identity = createSceneIdentity('canvas-ended-autoplay', ['node']);
     const primitive = (duration: number): RuntimeScenePrimitive => ({
       type: 'rect',
       x: 0,
@@ -5438,7 +5373,7 @@ describe('builtin retained renderers', () => {
       ],
     });
     const snapshot = (revision: number, duration: number): SceneRuntimeSnapshot => ({
-      revision: revision as SceneRuntimeSnapshot['revision'],
+      revision,
       root,
       scene: {
         layout: { x: 0, y: 0, width: 40, height: 40 },
@@ -5516,10 +5451,10 @@ describe('builtin retained renderers', () => {
   });
 
   it('Canvas descriptor 改为 visible 时重建可见性触发集合', () => {
-    const root = createRuntimeIdentity('canvas-visible-rebind', ['root']);
-    const identity = createRuntimeIdentity('canvas-visible-rebind', ['node']);
+    const root = createSceneIdentity('canvas-visible-rebind', ['root']);
+    const identity = createSceneIdentity('canvas-visible-rebind', ['node']);
     const snapshot = (revision: number, trigger: 'manual' | 'visible'): SceneRuntimeSnapshot => ({
-      revision: revision as SceneRuntimeSnapshot['revision'],
+      revision,
       root,
       scene: {
         layout: { x: 0, y: 0, width: 100, height: 40 },
@@ -5606,8 +5541,8 @@ describe('builtin retained renderers', () => {
   });
 
   it('Canvas Scene commit 立即按 committed per-identity clock 绘制 host', () => {
-    const root = createRuntimeIdentity('canvas-candidate-clock', ['root']);
-    const identity = createRuntimeIdentity('canvas-candidate-clock', ['node']);
+    const root = createSceneIdentity('canvas-candidate-clock', ['root']);
+    const identity = createSceneIdentity('canvas-candidate-clock', ['node']);
     const primitive = (fill: string): RuntimeScenePrimitive => ({
       type: 'rect',
       id: 'node',
@@ -5629,7 +5564,7 @@ describe('builtin retained renderers', () => {
       ],
     });
     const snapshot = (revision: number, fill: string): SceneRuntimeSnapshot => ({
-      revision: revision as SceneRuntimeSnapshot['revision'],
+      revision,
       root,
       scene: {
         layout: { x: 0, y: 0, width: 100, height: 40 },
@@ -5743,7 +5678,7 @@ describe('builtin retained renderers', () => {
       config: { animation: { snapshotAt: 150 } },
     });
 
-    expect(handle.read(session).animation).toBeUndefined();
+    expect(handle.read().animation).toBeUndefined();
     expect(requestFrame).not.toHaveBeenCalled();
 
     session.dispose();
@@ -5931,34 +5866,23 @@ describe('builtin retained renderers', () => {
         },
       ],
     };
-    const failure = defineRuntimeCommitParticipant<Readonly<{ ok: true }>>({
-      key: 'z:image-failure',
-      sources: [],
-      computations: [],
-      revisionPolicy: 'continuous',
-      tracePhases: [],
-      prepare: candidate => ({
+    const failure: ReconcilerCommitTarget = {
+      prepare: (_candidate, previous) => ({
         commit: () => {
-          if (candidate.phase === RuntimeComputationPhase.Update) throw new Error('reject image candidate');
+          if (previous !== undefined) throw new Error('reject image candidate');
         },
         rollback: () => undefined,
         dispose: () => undefined,
       }),
-      read: () => Object.freeze({ ok: true as const }),
       dispose: () => undefined,
-    });
+    };
     const rollbackHost = document.createElement('canvas');
     rollbackHost.width = 200;
     rollbackHost.height = 100;
     document.body.appendChild(rollbackHost);
-    const rollbackSession = createSession('canvas', rollbackHost, { participants: [failure] }).session;
+    const rollbackSession = createSession('canvas', rollbackHost, { probe: failure }).session;
 
-    expect(() =>
-      rollbackSession.update({
-        baseRevision: rollbackSession.revision(),
-        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, imageScene)],
-      }),
-    ).toThrow();
+    expect(() => rollbackSession.replace(imageScene)).toThrow();
 
     const rolledBackImage = TestImage.instances.at(-1);
 
@@ -5975,10 +5899,7 @@ describe('builtin retained renderers', () => {
 
     expect(committedImage?.onload).not.toBeNull();
 
-    removalSession.update({
-      baseRevision: removalSession.revision(),
-      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#ef4444'))],
-    });
+    removalSession.replace(scene('#ef4444'));
 
     expect(committedImage?.onload).toBeNull();
 
@@ -6091,35 +6012,24 @@ describe('builtin retained renderers', () => {
   });
 
   it('后序 participant commit 失败时恢复 SVG DOM 与旧 committed read identity', () => {
-    const failure = defineRuntimeCommitParticipant<Readonly<{ ok: true }>>({
-      key: 'z:failure',
-      sources: [],
-      computations: [],
-      revisionPolicy: 'continuous',
-      tracePhases: [],
-      prepare: candidate => ({
+    const failure: ReconcilerCommitTarget = {
+      prepare: (_candidate, previous) => ({
         commit: () => {
-          if (candidate.phase === RuntimeComputationPhase.Update) throw new Error('late commit failed');
+          if (previous !== undefined) throw new Error('late commit failed');
         },
         rollback: () => undefined,
         dispose: () => undefined,
       }),
-      read: () => Object.freeze({ ok: true as const }),
       dispose: () => undefined,
-    });
+    };
     const host = document.createElementNS(SVG_NAMESPACE, 'svg');
-    const { handle, session } = createSession('svg', host, { participants: [failure] });
-    const previousRead = handle.read(session);
+    const { handle, session } = createSession('svg', host, { probe: failure });
+    const previousRead = handle.read();
     const previousMarkup = host.innerHTML;
     const node = host.querySelector('[data-retikz-id="node-a"]');
 
-    expect(() =>
-      session.update({
-        baseRevision: session.revision(),
-        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e'))],
-      }),
-    ).toThrow();
-    expect(handle.read(session)).toBe(previousRead);
+    expect(() => session.replace(scene('#22c55e'))).toThrow();
+    expect(handle.read()).toBe(previousRead);
     expect(host.innerHTML).toBe(previousMarkup);
     expect(host.querySelector('[data-retikz-id="node-a"]')).toBe(node);
 
@@ -6146,18 +6056,12 @@ it('Scope 外框在 SVG retained 更新与移除时保持命中隔离', () => {
   expect(host.querySelectorAll('[pointer-events="none"]')).toHaveLength(1);
 
   const frame = host.querySelector('[pointer-events="none"]');
-  session.update({
-    baseRevision: session.revision(),
-    sources: [createRuntimeSourceUpdate(CoreSourceDefinition, source(20))],
-  });
+  session.replace(source(20));
 
   expect(host.querySelector('[pointer-events="none"]')).toBe(frame);
   expect(host.querySelector('[data-retikz-id="child"]')).not.toBeNull();
 
-  session.update({
-    baseRevision: session.revision(),
-    sources: [createRuntimeSourceUpdate(CoreSourceDefinition, source())],
-  });
+  session.replace(source());
 
   expect(host.querySelector('[pointer-events="none"]')).toBeNull();
 });

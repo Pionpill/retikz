@@ -340,55 +340,43 @@ runtime.dispose();
 
 Source 的捕获、比较和释放故障由 Runtime 转换为结构化错误或诊断；Source 回调没有计算式的 `context.trace`。Computation 和 Participant 则通过各自的上下文主动报告，Runtime 补齐归属并在事务边界收集。配置接收函数不会自动产生每个阶段的工作量记录，记录内容仍由算法或参与者提供。把三条信息通路放回初始化、提交与释放时序，可继续读[生命周期](/kernel/packages/runtime/lifecycle#无变化与失败)。
 
-## Core 应用
+## 编译与渲染观测
 
-Core 的编译计算已经声明并报告 Trace，调用方只需把接收函数接到 Runtime。以下示例沿用前文的 Runtime 导入，使用一份空 Scene IR 完成初始化：
-
-```ts
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
-
-const coreRecords: Array<PerformanceTraceRecord> = [];
-const compile = createCoreComputation({});
-const coreSources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-const coreComputations = createRuntimeComputationRegistry({ sources: coreSources, computations: [compile] });
-const coreRuntime = createRuntime({
-  sources: coreSources,
-  computations: coreComputations,
-  initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, { version: 1, type: 'scene', children: [] })],
-  trace: record => coreRecords.push(record),
-});
-console.log(coreRecords.map(record => [record.owner, record.phase, record.unit, record.outcome]));
-// [['@retikz/core/document', 'update', 'ir-child', 'full']]
-coreRuntime.dispose();
-```
-
-Core 的全量路径报告 `ir-child` 工作量；更新时还可报告 `scene-change`。受支持的根节点样式增量路径报告 `incremental` 及访问、复用和变化计数；不能增量处理时回退全量路径，记录 `fallback`。这说明算法采用了什么路径，不表示 Runtime 替 Core 推断了计数。
-
-独立调用 `compileToScene` 时，可用 Core 的公开阶段与单位创建 reporter。`CoreTracePhase` 描述编译阶段，`CoreTraceUnit` 描述被计数的 IR / Scene 实体；传入 reporter 的 `phases` 才是这次执行允许报告的组合。下面沿用前文的 `PerformanceTraceOutcome` 导入：
+编译工作量由 Reconciler 会话报告。把接收函数传给会话的第二个参数，即可记录成功提交的编译工作量：
 
 ```ts
-import { compileToScene, CoreTracePhase, CoreTraceUnit } from '@retikz/core';
-import { createRuntimeTraceReporter } from '@retikz/runtime';
+import type { PerformanceTraceRecord } from '@retikz/foundation';
+import { ReconcilerSession } from '@retikz/reconciler';
 
-const compileTrace = createRuntimeTraceReporter({
-  owner: '@retikz/core',
-  phases: [{ phase: CoreTracePhase.Compile, unit: CoreTraceUnit.IrChild, outcomes: [PerformanceTraceOutcome.Full] }],
-  sink: record => console.log(record),
-});
-compileToScene({ version: 1, type: 'scene', children: [] }, { trace: compileTrace });
-console.log(compileTrace.diagnostics()); // []
+const records: Array<PerformanceTraceRecord> = [];
+const session = new ReconcilerSession({}, { trace: record => records.push(record) });
+session.mount({ version: 1, type: 'scene', children: [{ type: 'node', id: 'a', position: [0, 0] }] });
+console.log(records.map(record => [record.owner, record.phase, record.unit, record.visited]));
+// [['@retikz/reconciler', 'update', 'element-compile', 1]]
+session.dispose();
 ```
 
-Render 的后端阶段使用 `RenderTracePhase`，从对应的 `@retikz/render/svg`、`@retikz/render/canvas` 或 `@retikz/render/runtime` 公开入口导入；计数 Scene 实体时复用 `CoreTraceUnit`。Plot、Table 和自定义 owner 可以各自声明 `compile`，也可以使用 `axis-layout` 等领域阶段。比较记录时同时使用 owner、phase 和 unit，不能仅凭阶段同名就合并工作量。
+`ReconcilerTracePhase.Update` 对应 `update`；`ReconcilerTraceUnit` 区分以下两种工作量：
 
-Core 的领域诊断保存在编译输出的 `output.diagnostics`；Runtime 的事务、清理与观测诊断来自更新返回值或实例队列。两者归属不同。Core 发现 ChangeSet 与实际状态不符时，还会通过计算的 fallback 诊断说明回退原因。
+| 编译路径                               | unit              | visited              | outcome       |
+| -------------------------------------- | ----------------- | -------------------- | ------------- |
+| Weave 首次编译、完整替换或强制全量更新 | `element-compile` | 实际元素编译次数     | `full`        |
+| Weave 增量批次                         | `element-compile` | 本次实际元素编译次数 | `incremental` |
+| 包含 Composite 的整场景编译            | `scene-compile`   | 每次成功提交为 1     | `full`        |
+
+Composite 内部展开、布局探测与 replay 不单独计数。`reused` 固定为 0，`changed` 等于 `visited`，不能据此推算树遍历数、图元变化数或缓存命中率。空基础场景报告零次元素编译；空批次和只更新输出目标的调用不报告编译记录。
+
+记录在成功发布后送达；提交失败不报告成功记录。接收函数抛错不会撤销已经发布的结果，异常可通过 `session.diagnostics()` 读取。Core 的领域诊断则保存在 `session.read().compilation.diagnostics`。
+
+直接调用 Core 的 `compileToScene` 或 `prepareSceneCompilation` 不提供 trace 选项。编译 observer 和 provenance 仍可按各自契约使用。
+
+Render 的后端阶段和单位分别使用 `RenderTracePhase` 与 `RenderTraceUnit.ScenePrimitive`，从对应的 `@retikz/render/svg`、`@retikz/render/canvas` 或 `@retikz/render/runtime` 入口导入。SVG / Canvas 继续按 `scene-primitive` 计数。比较记录时同时使用 owner、phase 和 unit，不合并不同单位的工作量。
 
 <SourceLinks
   sources={[
-    {
-      label: 'Core 的阶段声明、报告与 fallback 诊断',
-      path: 'packages/kernel/core/src/compile/incremental/computation.ts',
-    },
+    { label: 'Reconciler 会话报告与异常隔离', path: 'packages/kernel/reconciler/src/session.ts' },
+    { label: 'Reconciler 阶段与单位', path: 'packages/kernel/reconciler/src/trace.ts' },
+    { label: 'Render 阶段与单位', path: 'packages/kernel/render/src/trace/constants.ts' },
   ]}
 />
 

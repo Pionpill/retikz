@@ -282,6 +282,72 @@ const translations: Readonly<Record<string, string>> = {
   '返回 `outer × inner`，即对点先应用 `inner`，再应用 `outer`':
     'Returns `outer × inner`: apply `inner` to a point first, then `outer`.',
   '将左上角 + 尺寸矩形转成 min/max bounds': 'Converts a top-left-plus-size rectangle to min/max bounds',
+  '角度区间（单位：度），用于描述沿屏幕坐标系的有向扫描范围':
+    'An angle range in degrees describing a directed sweep in screen coordinates',
+  '规范化后的终止角（度），落在起始角之后最多一整圈':
+    'Normalized end angle in degrees, at most one full turn after the start',
+  '起止角中分角（度）': 'Midpoint angle in degrees',
+  '规范化后的起始角（度）': 'Normalized start angle in degrees',
+  '圆弧段：圆心、半径、起末角（度）与扫描方向':
+    'A circular arc defined by its center, radius, endpoint angles in degrees, and sweep direction',
+  '圆心 [x, y]': 'Center [x, y]',
+  '是否逆时针扫描；缺省 / false = CW（角度递增 / 屏幕顺时针）':
+    'Whether to sweep counterclockwise; omitted or false means increasing angles, clockwise on screen',
+  '终止角度（度）': 'End angle in degrees',
+  鉴别字面量: 'Discriminator literal',
+  '半径（user units）': 'Radius in user units',
+  '起始角度（度，0=+x、90=+y 视觉下）': 'Start angle in degrees; 0 points along +x and 90 along screen-down +y',
+  '中立轮廓命令，描述移动、直线、圆弧与闭合': 'Neutral contour commands describing moves, lines, arcs, and closure',
+  '选择移动、直线、圆弧或闭合操作': 'Selects a move, line, arc, or close operation',
+  移动或直线操作的目标坐标: 'Destination coordinate for a move or line',
+  圆弧中心坐标: 'Arc center',
+  '是否逆时针扫描；缺省 / false = CW': 'Whether to sweep counterclockwise; omitted or false means clockwise',
+  '圆弧终止角，单位为度': 'Arc end angle in degrees',
+  '圆弧半径，使用绘图坐标单位': 'Arc radius in coordinate units',
+  '圆弧起始角，单位为度；0 指向水平正向': 'Arc start angle in degrees; 0 points right',
+  '轮廓段：组成开放或闭合轮廓的直线或圆弧': 'A line or arc segment in an open or closed contour',
+  '起点 [x, y]': 'Start point [x, y]',
+  '终点 [x, y]': 'End point [x, y]',
+  '一个接缝处 fillet 的解算结果': 'The fillet solution at one seam',
+  'tangentInPoint = 前段被裁短到此点（前段新终点）；tangentOutPoint = 后段从此点起（后段新起点）；\n  圆心、半径与起末角描述连接两切点的圆弧。clampedToZero=true 表示该角夹紧后 r→0，不倒角（保持尖角）':
+    'The incoming segment ends at tangentInPoint and the outgoing segment starts at tangentOutPoint. The center, radius, and endpoint angles describe the connecting arc. clampedToZero means the radius was clamped to zero and the corner remains sharp.',
+  'fillet 圆心': 'Fillet center',
+  '夹紧后 r→0，本角不倒（emit 走原尖角）': 'Whether the radius was clamped to zero, preserving the sharp corner',
+  'fillet 弧是否逆时针': 'Whether the fillet arc sweeps counterclockwise',
+  'fillet 弧终止角（度，从 center 看 tangentOutPoint）':
+    'Fillet end angle in degrees, from the center toward tangentOutPoint',
+  'fillet 半径': 'Fillet radius',
+  'fillet 弧起始角（度，从 center 看 tangentInPoint）':
+    'Fillet start angle in degrees, from the center toward tangentInPoint',
+  '前段切点（前段新终点）': 'Incoming tangent point and new incoming-segment endpoint',
+  '后段切点（后段新起点）': 'Outgoing tangent point and new outgoing-segment start point',
+  '直线段：从 from 到 to 的有向线段': 'A directed line segment from from to to',
+  '角度（degree）转弧度（radian）的乘数': 'Multiplier converting degrees to radians',
+  '弧度（radian）转角度（degree）的乘数': 'Multiplier converting radians to degrees',
+  '调整 endAngle，使 start -> end 沿指定方向扫描且跨度不超过一整圈':
+    'Aligns the end angle to sweep from start in the requested direction by at most one full turn',
+  将轮廓与已求解的圆角组装为中立路径命令: 'Builds neutral contour commands from segments and previously solved fillets',
+  'fillets 为空时保留原轮廓；非空时必须与同一段序列及 closed 配对，逐段裁剪并插入相切圆弧。\n  夹紧到零的接缝保持尖角；closed 为 false 时不添加闭合命令':
+    'An empty fillet list preserves the original contour. A nonempty list must match the same segment sequence and closed flag; segments are trimmed and tangent arcs inserted. Zero-radius seams remain sharp. No closing command is emitted when closed is false.',
+  '从 rayOrigin 朝 toward 射线 ∩ fillet 后轮廓全部段，返回最近正向交点':
+    'Intersects the ray from rayOrigin toward toward with the filleted contour, returning the nearest forward hit',
+  'rayOrigin 显式传（不假设中心）；toward 是射线指向的目标点（方向 = toward − rayOrigin）。\n  遍历 fillet 后的有效段（缩短 line / 裁剪 arc / fillet arc），对每段求 ray∩段、取最小正参数命中点。\n  fillets 为空时查询原轮廓；非空时复用与同一段序列配对的圆角结果。无命中返回 undefined':
+    'The explicit ray origin need not be the contour center; direction is toward minus rayOrigin. Tests trimmed lines, original arcs, and fillet arcs, selecting the smallest positive ray parameter. An empty fillet list queries the original contour; a nonempty list must match the segments. Returns undefined when no hit exists.',
+  '规范化起止角：保证 start <= end <= start + 360，并给出中分角':
+    'Normalizes endpoint angles so start <= end <= start + 360 and returns the midpoint angle',
+  '角度沿屏幕系（角度递增 = 顺时针）从 start 扫到 end；end < start 视为跨过 360 度':
+    'Sweeps from start to end with increasing angles, clockwise in screen coordinates; an end below start wraps across 360 degrees.',
+  '把角度规范化到 [0, 360) 区间': 'Normalizes an angle to [0, 360)',
+  '把角度规范化为最近表示，范围为 [-180, 180]':
+    'Normalizes an angle to its nearest signed representation in [-180, 180]',
+  '矩形 outline：两对角 → 顺时针 path 算子序列':
+    'Builds clockwise rectangle contour commands from two opposite corners',
+  'from/to 任意顺序，归一化 (x0,y0)=min、(x1,y1)=max。直角 = 3 line + close（起点左上 (x0,y0)）；\n  圆角 = 4 line + 4 quarter-arc + close（起点 (x0+r, y0)）。cornerRadius clamp 到 min(w,h)/2。\n  角度约定同 `@retikz/math` arc（y-down：0=+x, 90=+y/下, 180=-x, 270=-y/上）':
+    'Accepts either corner order and derives the minimum and maximum coordinates. Sharp corners use three line commands plus close from the top-left corner. Rounded corners use four lines and four quarter-arcs plus close, starting at (x0+r, y0). The radius is clamped to half the shorter side. Angles follow screen coordinates: 0=right, 90=down, 180=left, 270=up.',
+  '对轮廓的每个接缝做 fillet，返回 fillet 解算列表（与接缝一一对应，下标 i = 段 i 终点接段下一段起点）':
+    'Solves one fillet per contour seam; index i joins the end of segment i to the next segment',
+  'cornerRadius 省略 / ≤0 → 返回空数组；需要倒角的 arc-arc 接缝返回 undefined。\n  closed（缺省 true）= 闭合轮廓，含首尾环绕接缝（下标 n-1 = 段 n-1 终点接段 0 起点）；\n  closed=false = 开放折线，只倒内部接缝（下标 0..n-2），末位补一个 clampedToZero 占位使返回长度恒 = n，\n  下游轮廓构造与射线求交据 clampedToZero 跳过该「不存在的」环绕缝':
+    'An omitted or nonpositive radius returns an empty list. Arc-to-arc seams requiring a fillet return undefined. closed defaults to true and includes the wraparound seam. For an open contour, only internal seams are rounded; a final clampedToZero placeholder preserves one result per segment so construction and intersection can skip the absent wraparound seam.',
 };
 
 /** 将中文 JSDoc 投影为英文文案，缺少审阅后的映射时终止生成 */

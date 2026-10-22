@@ -371,7 +371,7 @@ Both `run` and computation `update` prepare candidate results before publication
 Core uses a document Source and a compilation Computation. This wiring uses the Runtime imports from earlier and Core's token and computation factory; `document` stands for the caller's complete Scene IR:
 
 ```ts
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
 
 const compile = createCoreComputation({});
 const coreSources = createRuntimeSourceRegistry([CoreSourceDefinition]);
@@ -387,9 +387,7 @@ const scene = coreRuntime.result(compile).value.output.result.scene;
 Subsequent complete documents are submitted through update commands. Runtime publishes the document and compilation results together; Core owns compilation, domain hint validation and fallback. Call `coreRuntime.dispose()` when finished. Applying the Scene to a renderer through an external commit is covered in [Participant](/kernel/packages/runtime/participant).
 
 <SourceLinks
-  sources={[
-    { label: 'Core compilation computation', path: 'packages/kernel/core/src/compile/incremental/computation.ts' },
-  ]}
+  sources={[{ label: 'Core compilation computation', path: 'packages/kernel/reconciler/src/runtime/computation.ts' }]}
 />
 
 ## Related props

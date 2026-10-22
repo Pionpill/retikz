@@ -58,6 +58,7 @@ export default defineConfig(({ command, mode }) => ({
     exclude: [
       '@retikz/core',
       '@retikz/runtime',
+      '@retikz/reconciler',
       '@retikz/react',
       '@retikz/vanilla',
       '@retikz/tex',

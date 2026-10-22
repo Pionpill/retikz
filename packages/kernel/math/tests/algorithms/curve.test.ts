@@ -170,6 +170,27 @@ describe('curve.sampleAt', () => {
 });
 
 describe('curve.parameterAtDistance', () => {
+  it('keeps prepared geometry local to each query', () => {
+    const segment: CurveSegment = {
+      kind: 'ellipseArc',
+      center: [0, 0],
+      radiusX: 7,
+      radiusY: 2,
+      rotationDeg: 37,
+      startAngleDeg: 0,
+      endAngleDeg: -180,
+    };
+    const options = { sampleCount: 64 };
+    const beforeLength = curve.approximateLength(segment, options);
+    const beforeParameter = curve.parameterAtDistance(segment, beforeLength / 3, options);
+    segment.radiusX *= 2;
+    segment.radiusY *= 2;
+    expect(curve.approximateLength(segment, options)).toBeCloseTo(beforeLength * 2, 12);
+    expect(curve.parameterAtDistance(segment, (beforeLength * 2) / 3, options)).toBeCloseTo(beforeParameter, 6);
+    expect(curve.parameterAtDistance(segment, -1, options)).toBe(0);
+    expect(curve.parameterAtDistance(segment, beforeLength * 3, options)).toBe(1);
+  });
+
   it('inverts a known line distance and preserves a caller-supplied total length', () => {
     const segment: CurveSegment = { kind: 'line', from: [0, 0], to: [20, 0] };
 
@@ -300,4 +321,42 @@ describe('curve.slice', () => {
       endAngleDeg: -135,
     });
   });
+});
+
+describe('curve.approximateLength 的等参数折线契约', () => {
+  const segments: Array<CurveSegment> = [
+    { kind: 'quadraticBezier', from: [-2, 1], control: [7, -5], to: [3, 9] },
+    { kind: 'cubicBezier', from: [1, 2], control1: [-8, 3], control2: [6, -7], to: [12, 4] },
+    {
+      kind: 'ellipseArc',
+      center: [3, -2],
+      radiusX: 7,
+      radiusY: 2,
+      rotationDeg: 37,
+      startAngleDeg: 300,
+      endAngleDeg: -60,
+      counterClockwise: true,
+    },
+    { kind: 'quadraticBezier', from: [3, 4], control: [3, 4], to: [3, 4] },
+  ];
+  for (const segment of segments) {
+    it(`保持 ${segment.kind} 的采样折线长度与输入不变`, () => {
+      const original = structuredClone(segment);
+      for (const sampleCount of [4, 17, 32, 64, 128, 512]) {
+        const positions = Array.from(
+          { length: sampleCount + 1 },
+          (_, index) => curve.sampleAt(segment, index / sampleCount).point,
+        );
+        let expected = 0;
+        for (let index = 1; index < positions.length; index++) {
+          expected += Math.hypot(
+            positions[index][0] - positions[index - 1][0],
+            positions[index][1] - positions[index - 1][1],
+          );
+        }
+        expect(curve.approximateLength(segment, { sampleCount })).toBeCloseTo(expected, 12);
+      }
+      expect(segment).toEqual(original);
+    });
+  }
 });

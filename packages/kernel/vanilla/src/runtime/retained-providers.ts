@@ -10,7 +10,6 @@ import type {
   ShapeDefinition,
 } from '@retikz/core';
 import { RetikzRenderError, RetikzRenderErrorCode } from '@retikz/render/runtime';
-import { defineRuntimeSource } from '@retikz/runtime';
 
 type ProviderDefinition =
   | ShapeDefinition
@@ -68,19 +67,6 @@ export const captureCoreProviderDefinitions = (
     ),
   );
 };
-
-/** 以非负安全整数记录 provider 回调版本，用于触发运行时重新计算 */
-export const VanillaProviderRevisionSourceDefinition = defineRuntimeSource<number, number, number, never>({
-  key: '@retikz/vanilla:provider-revision',
-  value: {
-    capture: value => {
-      if (!Number.isSafeInteger(value) || value < 0) return invalidDefinitions(value);
-      return value;
-    },
-    read: value => value,
-    equals: Object.is,
-  },
-});
 
 const definitionKey = (definition: ProviderDefinition): string => {
   if ('namespace' in definition && 'type' in definition)

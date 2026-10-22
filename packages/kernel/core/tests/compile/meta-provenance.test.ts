@@ -177,7 +177,12 @@ describe('交互', () => {
           { type: 'step', kind: 'line', to: [10, 0] },
         ],
       },
-      { type: 'scope', meta: { kind: 'scope' }, children: [{ type: 'node', id: 'b', position: [5, 5] }] },
+      {
+        type: 'scope',
+        position: [0, 0],
+        meta: { kind: 'scope' },
+        children: [{ type: 'node', id: 'b', position: [5, 5] }],
+      },
     ]);
     const reparsed = SceneSchema.parse(JSON.parse(JSON.stringify(ir)));
 

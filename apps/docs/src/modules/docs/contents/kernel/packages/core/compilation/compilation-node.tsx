@@ -46,7 +46,7 @@ const CompilationNode: FC<CompilationNodeProps> = props => {
             },
             {
               id: 'layout',
-              text: 'layoutNode',
+              text: 'compileResolvedNode',
               role: 'activity',
               kind: 'docs.logic.important',
               layout: { width: 160 },

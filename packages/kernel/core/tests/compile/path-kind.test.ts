@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import type { CompileWarning, IRScene, PathPrim, ScenePrimitive } from '../../src';
-import { compileToScene, CompileWarningCode, definePathGenerator, definePathKind, PathSchema } from '../../src';
+import { compileToScene, BuiltinCompileWarningCode, definePathGenerator, definePathKind, PathSchema } from '../../src';
 
 const steps = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -257,7 +257,7 @@ describe('Path kind registry', () => {
       }),
     ).not.toThrow();
     expect(warnings).toHaveLength(1);
-    expect(warnings[0]).toMatchObject({ code: CompileWarningCode.PathTooShort });
+    expect(warnings[0]).toMatchObject({ code: BuiltinCompileWarningCode.PathTooShort });
   });
 
   it('keeps the no-Inspector emitStroke result free of inspection-only subject data', () => {

@@ -32,6 +32,14 @@ const childByTag = (doc: SvgNode, tag: string): SvgNode | undefined =>
   (doc.children ?? []).find((c): c is SvgNode => typeof c !== 'string' && c.tag === tag);
 
 describe('buildSvgDocument —— 边界', () => {
+  it('默认字体进入 SVG 根属性和字符串输出，省略时不强制字体', () => {
+    const scene: Scene = { primitives: [], layout };
+    expect(buildSvgDocument(scene, { idPrefix: 'font', defaultFontFamily: 'serif' }).attrs['font-family']).toBe(
+      'serif',
+    );
+    expect(renderToSvgString(scene, { idPrefix: 'font', defaultFontFamily: 'serif' })).toContain('font-family="serif"');
+    expect(buildSvgDocument(scene, { idPrefix: 'font' }).attrs).not.toHaveProperty('font-family');
+  });
   it('empty-scene：无 primitive / 无 resource → <svg> 不含 <defs>', () => {
     const scene: Scene = { primitives: [], layout };
     const doc = buildSvgDocument(scene, { idPrefix: 'd1' });

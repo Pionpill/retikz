@@ -200,6 +200,7 @@ export const apiReferenceMemberGroups: Readonly<Partial<Record<string, ApiRefere
   '@retikz/react#LayoutProps': {
     order: ['Main', 'Layout', 'Style', 'Rendering', 'Callbacks', 'Animation', 'Runtime', 'Output', 'Extensions'],
     members: {
+      measureText: 'Extensions',
       children: 'Main',
       ir: 'Main',
       nodeDistance: 'Layout',
@@ -283,7 +284,6 @@ export const apiReferenceMemberGroups: Readonly<Partial<Record<string, ApiRefere
       roundedCorners: 'Geometry',
       scale: 'Geometry',
       style: 'Style',
-      thickness: 'Style',
       zIndex: 'Style',
       onClick: 'Callbacks',
       onDoubleClick: 'Callbacks',
@@ -317,7 +317,6 @@ export const apiReferenceMemberGroups: Readonly<Partial<Record<string, ApiRefere
       roundedCorners: 'Geometry',
       scale: 'Geometry',
       style: 'Style',
-      thickness: 'Style',
       zIndex: 'Style',
       animations: 'Animation',
       authoring: 'Runtime',

@@ -1,5 +1,13 @@
 /** @retikz/foundation 中文 JSDoc 的审阅后英文投影 */
 const translations: Readonly<Record<string, string>> = {
+  '递归比较两棵 JSON 数据树的结构和值': 'Recursively compares the structure and values of two JSON data trees',
+  '对象属性顺序不影响结果，数组按顺序比较，标量使用 Object.is，因此 0 与 -0 不相等；不修改输入':
+    'Ignores object property order, compares arrays in order, and uses Object.is for scalars, so 0 and -0 differ; does not mutate inputs',
+  '调用方负责保证输入为合法 JSON 数据树；不执行合法性校验，不支持循环引用、Date、Map 或 class 实例':
+    'Callers must provide valid JSON data trees; does not validate inputs or support cycles, Date, Map, or class instances',
+  '左侧 JSON 数据树': 'Left JSON data tree',
+  '右侧 JSON 数据树': 'Right JSON data tree',
+  两侧结构和值是否相同: 'Whether both trees have the same structure and values',
   '属性写入策略；默认 {}，不筛除源属性': 'Property write strategy; defaults to {}, retaining all source properties',
   '使用默认错误码创建 Foundation 错误': 'Creates a Foundation error with the default error code',
   '使用结构化参数创建 Foundation 错误': 'Creates a Foundation error from structured options',

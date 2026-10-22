@@ -1,0 +1,170 @@
+---
+title: Text Metrics
+description: Learn where text and formula dimensions come from, and how Core uses them to lay out nodes and pass drawing geometry to Render.
+---
+
+Change node A's text from `A` to `Alpha`. An automatically sized node will usually become wider, and a path connected to its edge will move with it. This starts with text metrics: measure width and baseline information, calculate the content, node and connection geometry, then produce the drawing.
+
+This article follows that example across metric providers, React / Vanilla, Core, Tex and Render. Read [Rendering Pipeline](/kernel/components/runtime-mechanics/rendering-pipeline) first. For the node's internal sizing algorithm, see [Node Compilation](/kernel/packages/core/node-compilation).
+
+## Overall flow
+
+Before compilation, the input contains text, fonts and node constraints. During compilation, Core asks a provider for dimensions and uses the result to calculate geometry. Text and formulas supply different materials:
+
+- Text measurer: accepts a string and font, returning width, height and optional ascent and descent around the baseline
+- Formula lowerer: accepts TeX and styles such as font size, returning dimensions, baseline depth and drawable paths
+
+The diagram follows these materials through compilation to the drawing. The host or application injects the measurement capabilities; Core calls them during layout.
+
+<ComponentPreview files="metrics-overview" size="md" hideCode type="flow" />
+
+Node sizes and path endpoints are already determined when Render receives the Scene. For a text change to move a connection, the updated metrics must pass through compilation.
+
+## Metric providers
+
+Vanilla selects its default measurer when `compile.measureText` is absent and acquires a Canvas 2D context only when measurement is requested. React's `Layout` uses this default path, or forwards an explicit `measureText` to Vanilla. Browser measurement uses Canvas 2D `measureText` for width and glyph ascent and descent, including when SVG is the selected output backend. It does not need to mount an SVG text element first.
+
+Font family comes from the text's explicit configuration, then Vanilla's `defaultFontFamily`. React forwards `Layout`'s `style.fontFamily` through this option. If the family is still absent, the default browser measurer reads the computed font on the page's `body`, falling back to `sans-serif`. The font used for measurement should match the displayed font. Changing surrounding CSS inheritance alone does not guarantee that existing geometry updates.
+
+An explicit measurer takes precedence over environment detection. Without a browser or a usable Canvas context, the default measurer uses Core's `fallbackMeasurer`. Exceptions from custom measurers, invalid metrics and actual browser measurement failures are not silently replaced with estimates. Calling Core directly without a measurer also uses `fallbackMeasurer`.
+
+The fallback estimates width as `text.length × font.size × 0.55` and height as `font.size × 1.2`. It does not distinguish font family, weight or style. This allows compilation without a browser, but the result is not an exact measurement of the displayed font.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'React measurement and default font injection',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+    },
+    {
+      label: 'Vanilla default measurement and font forwarding',
+      path: 'packages/kernel/vanilla/src/processing/text-measurement.ts',
+    },
+    { label: 'Vanilla compile option forwarding', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
+    { label: 'Text metric contract and fallback', path: 'packages/kernel/core/src/compile/text/metrics.ts' },
+  ]}
+/>
+
+## Content and nodes
+
+Core resolves the effective font before requesting metrics. The returned `width` supports placement and wrapping. `ascent` is the height above the baseline, and `descent` is the depth below it. These values let different fonts and formulas share a baseline. When both are absent, Core splits the total height equally above and below the baseline; when one is supplied, it fills the other from the total height.
+
+Consider an unscaled rectangular node with one line, automatic width, padding of 8 on each side and no effective minimum-size constraint. These numbers use the fallback with font size 16 to illustrate the calculation; they are not browser font measurements:
+
+| Stage                                          | `A`  | `Alpha` |
+| ---------------------------------------------- | ---- | ------- |
+| Text width                                     | 8.8  | 44      |
+| Node width including left and right padding    | 24.8 | 60      |
+| Right edge with the node center fixed at x = 0 | 12.4 | 30      |
+
+With another node fixed to the right, a horizontal connection and no arrow or extra endpoint offset, the A endpoint moves from 12.4 to 30. The path references the node by name, and Core consumes its new connection boundary. The application does not have to write the text width into the path.
+
+A width constraint may instead increase the line count. The plain-text branch wraps using measured width, finding breaks between Western words or CJK characters. An indivisible segment wider than the limit may overflow. The actual line count and line height determine content height, which then participates in node sizing. Shape geometry, explicit sizes and layout proposals still affect the final boundary; the rectangular calculation above does not apply to every node.
+
+Within a compile context, metrics for identical text and font combinations are reused. This cache avoids repeated measurer calls. It does not watch fonts for changes, and its lifetime differs from incremental computation across updates.
+
+<SourceLinks
+  sources={[
+    { label: 'Content layout and baselines', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
+    { label: 'Plain-text wrapping', path: 'packages/kernel/core/src/compile/node/content/text.ts' },
+    { label: 'Content dimensions enter node sizing', path: 'packages/kernel/core/src/compile/node/layout.ts' },
+    { label: 'Node connection boundaries', path: 'packages/kernel/core/src/compile/node/boundary.ts' },
+    { label: 'Compile-context metric cache', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+  ]}
+/>
+
+## Inline formulas
+
+When A contains text mixed with formulas, text still goes to the measurer and formula runs go to `lowerTex`. The MathJax integration in `@retikz/tex` initializes its engine asynchronously, then supplies a synchronous lowerer. Core does not wait for the engine to load during layout.
+
+Formulas follow TeX → MathJax SVG → `LoweredTex` paths and metrics → Core `PathPrim` → Render. Their dimensions come from SVG lowering rather than Canvas text measurement; both SVG and Canvas backends consume the same path primitives. See [TeX Implementation](/kernel/packages/tex/mechanism) for the conversion details.
+
+The lowered result's `width` determines horizontal space. `height - depth` is the height above the baseline, and `depth` is the depth below it. Core adds run widths and takes the maximum ascent and descent separately to form the line's baseline box. The mixed line's slot height is the greater of the configured line height and this box height, giving tall formulas enough room between lines.
+
+Text runs then become Scene text primitives. Formula paths enter translated groups positioned against the same baseline. The backend still draws ordinary text glyphs; formulas are already paths. The mixed-content branch lays out the resolved lines and does not apply the plain-text branch's `maxTextWidth` automatic wrapping.
+
+Without a lowerer, `$...$` inside a string stays literal text, while an explicit math run produces a warning and is skipped. If an installed lowerer returns `null`, Core also warns and skips that formula, continuing with the remaining runs. Applications that do not want an intermediate result should wait for initialization to succeed before displaying the formula scene.
+
+<SourceLinks
+  sources={[
+    { label: 'Text and formula resolution', path: 'packages/kernel/core/src/resolve/text/resolve.ts' },
+    {
+      label: 'Mixed metrics, baselines and primitive emission',
+      path: 'packages/kernel/core/src/compile/text/layout.ts',
+    },
+    { label: 'Async initialization and synchronous lowering', path: 'packages/kernel/tex/src/lower/create-mathjax.ts' },
+    { label: 'TeX conversion and instance cache', path: 'packages/kernel/tex/src/lower/lower-tex.ts' },
+  ]}
+/>
+
+## Updates and display
+
+When new text, font size or explicit font configuration enters another compilation, Core recalculates geometry and passes it to Render. SVG and Canvas consume the text positions, baselines and fonts in Scene. Drawing the text does not feed changes back into Core's node or connection boundaries.
+
+Changes to external measurement conditions also need application wiring. The current triggers differ:
+
+| Change                             | Current handling                                                                                                                                       |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Node text or font configuration    | Normal input updates enter processing; a local incremental fast path is not guaranteed                                                                 |
+| React formula engine becomes ready | `useLowerTex` returns ready, and the application passes `lowerTex` to Layout; changed compile options trigger processing again                         |
+| Browser font file finishes loading | Hosts do not subscribe to font-loading events; compile initially after fonts are available, or explicitly recompile / recreate the processing instance |
+
+For example, compilation may use a fallback font before the intended font loads. SVG text may then display the new glyphs while the node retains its old width. Drawing the same Scene again cannot correct that size: compilation must use the new metrics. In React, a parent render with unchanged input and options is also insufficient to guarantee recomputation.
+
+The formula lowerer has its own instance cache, keyed by formula source, display mode, font size and color. Its lifetime differs from Core's per-compilation cache. Use a corresponding new lowerer when replacing engine configuration; existing cached results do not detect external engine mutations.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'React input and compile-option dependencies',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+    },
+    {
+      label: 'Formula initialization state and lowerer instances',
+      path: 'packages/kernel/tex/src/react/use-lower-tex.ts',
+    },
+    { label: 'SVG text primitive consumption', path: 'packages/kernel/render/src/svg/builders/prim.ts' },
+    { label: 'Canvas Scene consumption', path: 'packages/kernel/render/src/canvas/draw-scene.ts' },
+  ]}
+/>
+
+## Complete implementation flow
+
+The diagram follows metric sources through to node geometry. The top row lists plain-text measurers in priority order; only one is selected. Formulas supply dimensions, baseline metrics and paths through `lowerTex`. `layoutInlineLine` aligns them with ordinary text before returning to node sizing. Blue nodes highlight the core measurement and layout methods.
+
+<ComponentPreview files="metrics-implementation" size="xxl" hideCode type="flow" />
+
+Start with `Layout`'s compile options to identify the measurer, then read `createCompileContext`, `layoutNodeContent` and `compileResolvedNode`. Finally, inspect how Render consumes text primitives. The full node-solving and baseline algorithms belong to the Core documentation.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Measurement enters the compile context',
+      path: 'packages/kernel/core/src/compile/orchestration/context.ts',
+    },
+    { label: 'Content measurement and branches', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
+    { label: 'Node sizing', path: 'packages/kernel/core/src/compile/node/layout.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Node Compilation',
+      description: 'Explore content, baselines, node sizes and connection boundaries',
+      url: '/kernel/packages/core/node-compilation',
+    },
+    {
+      title: 'LaTeX formulas · tex',
+      description: 'Read about formula engine initialization, lowering and integration',
+      url: '/kernel/packages/tex',
+    },
+    {
+      title: 'Incremental Updates',
+      description: 'Distinguish input updates, full fallback and display commits',
+      url: '/kernel/components/runtime-mechanics/incremental-updates',
+    },
+  ]}
+/>

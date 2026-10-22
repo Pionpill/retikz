@@ -1,6 +1,6 @@
 import { DEFAULT_EPSILON } from '../constants';
 import type { Position, Vector2 } from '../primitives';
-import { lerp, point, vector2 } from '../primitives';
+import { alignAngleSweep, lerp, point, vector2 } from '../primitives';
 
 const DEFAULT_CURVE_SAMPLE_COUNT = 32;
 
@@ -209,22 +209,24 @@ const normalizedBisectionSteps = (bisectionSteps: number | undefined): number =>
 const normalizedArcSweep = (segment: CurveArcSegment): { startAngleDeg: number; endAngleDeg: number } => {
   const { startAngleDeg, endAngleDeg } = segment;
   const counterClockwise = segment.counterClockwise ?? endAngleDeg < startAngleDeg;
-  const sweep = endAngleDeg - startAngleDeg;
-  if (sweep === 0) return { startAngleDeg, endAngleDeg: startAngleDeg };
-  if (Math.abs(sweep) === 360) {
-    return { startAngleDeg, endAngleDeg: startAngleDeg + (counterClockwise ? -360 : 360) };
-  }
+  const aligned = alignAngleSweep(startAngleDeg, endAngleDeg, counterClockwise);
+  return { startAngleDeg: aligned.start, endAngleDeg: aligned.end };
+};
 
-  const normalizedSweep = ((sweep % 360) + 360) % 360;
-  const alignedSweep = counterClockwise
-    ? normalizedSweep === 0
-      ? -360
-      : normalizedSweep - 360
-    : normalizedSweep === 0
-      ? 360
-      : normalizedSweep;
-
-  return { startAngleDeg, endAngleDeg: startAngleDeg + alignedSweep };
+/** 根据已归一化的角度计算弧上位置，复用圆弧与椭圆弧的旋转公式 */
+const evaluateArcPoint = (
+  center: Position,
+  radiusX: number,
+  radiusY: number,
+  angleRad: number,
+  rotationRad: number,
+): Position => {
+  const x = radiusX * Math.cos(angleRad);
+  const y = radiusY * Math.sin(angleRad);
+  return [
+    center[0] + x * Math.cos(rotationRad) - y * Math.sin(rotationRad),
+    center[1] + x * Math.sin(rotationRad) + y * Math.cos(rotationRad),
+  ];
 };
 
 const sampleArcAt = (segment: CurveArcSegment, parameter: number): CurveSegmentSample => {
@@ -248,6 +250,43 @@ const sampleArcAt = (segment: CurveArcSegment, parameter: number): CurveSegmentS
       localTangent[0] * Math.sin(rotationRad) + localTangent[1] * Math.cos(rotationRad),
     ]),
   };
+};
+
+/** 在已知二次曲线类型时复用调用方准备的参数基，避免重复分派 */
+const evaluateQuadraticPoint = (segment: QuadraticBezierCurveSegment, t: number, inverse: number): Position => [
+  inverse * inverse * segment.from[0] + 2 * inverse * t * segment.control[0] + t * t * segment.to[0],
+  inverse * inverse * segment.from[1] + 2 * inverse * t * segment.control[1] + t * t * segment.to[1],
+];
+
+/** 在已知三次曲线类型时复用调用方准备的参数基，避免重复分派 */
+const evaluateCubicPoint = (segment: CubicBezierCurveSegment, t: number, inverse: number): Position => [
+  inverse * inverse * inverse * segment.from[0] +
+    3 * inverse * inverse * t * segment.control1[0] +
+    3 * inverse * t * t * segment.control2[0] +
+    t * t * t * segment.to[0],
+  inverse * inverse * inverse * segment.from[1] +
+    3 * inverse * inverse * t * segment.control1[1] +
+    3 * inverse * t * t * segment.control2[1] +
+    t * t * t * segment.to[1],
+];
+
+/** 仅计算单个参数位置，供裁切和投影使用 */
+const evaluateCurvePoint = (segment: CurveSegment, parameter: number): Position => {
+  const t = clampUnit(parameter);
+  if (segment.kind === 'line') {
+    return [
+      segment.from[0] + (segment.to[0] - segment.from[0]) * t,
+      segment.from[1] + (segment.to[1] - segment.from[1]) * t,
+    ];
+  }
+  if (segment.kind === 'quadraticBezier') return evaluateQuadraticPoint(segment, t, 1 - t);
+  if (segment.kind === 'cubicBezier') return evaluateCubicPoint(segment, t, 1 - t);
+  const sweep = normalizedArcSweep(segment);
+  const angleRad = ((sweep.startAngleDeg + (sweep.endAngleDeg - sweep.startAngleDeg) * t) * Math.PI) / 180;
+  const radiusX = segment.kind === 'arc' ? segment.radius : segment.radiusX;
+  const radiusY = segment.kind === 'arc' ? segment.radius : segment.radiusY;
+  const rotationRad = segment.kind === 'ellipseArc' ? ((segment.rotationDeg ?? 0) * Math.PI) / 180 : 0;
+  return evaluateArcPoint(segment.center, radiusX, radiusY, angleRad, rotationRad);
 };
 
 const sampleCurveSegmentAt = (segment: CurveSegment, parameter: number): CurveSegmentSample => {
@@ -303,26 +342,60 @@ const sampleCurveSegmentAt = (segment: CurveSegment, parameter: number): CurveSe
   return sampleArcAt(segment, t);
 };
 
-const approximateCurveLengthTo = (segment: CurveSegment, parameter: number, sampleCount: number): number => {
-  const t = clampUnit(parameter);
-  if (t <= DEFAULT_EPSILON) return 0;
-  if (segment.kind === 'line') return point.distance(segment.from, segment.to) * t;
+/** 为一次长度查询或反解准备求长函数，不跨调用缓存输入几何 */
+const createLengthMeasure = (segment: CurveSegment, sampleCount: number): ((parameter: number) => number) => {
+  if (segment.kind === 'line') {
+    const length = point.distance(segment.from, segment.to);
+    return parameter => {
+      const t = clampUnit(parameter);
+      return t <= DEFAULT_EPSILON ? 0 : length * t;
+    };
+  }
   if (segment.kind === 'arc') {
     const sweep = normalizedArcSweep(segment);
-    return Math.abs(sweep.endAngleDeg - sweep.startAngleDeg) * (Math.PI / 180) * Math.abs(segment.radius) * t;
+    const length = Math.abs(sweep.endAngleDeg - sweep.startAngleDeg) * (Math.PI / 180) * Math.abs(segment.radius);
+    return parameter => {
+      const t = clampUnit(parameter);
+      return t <= DEFAULT_EPSILON ? 0 : length * t;
+    };
   }
 
-  const samples = Math.max(4, Math.ceil(sampleCount * t));
-  let length = 0;
-  let previousPoint = sampleCurveSegmentAt(segment, 0).point;
-
-  for (let index = 1; index <= samples; index += 1) {
-    const currentPoint = sampleCurveSegmentAt(segment, (t * index) / samples).point;
-    length += point.distance(previousPoint, currentPoint);
-    previousPoint = currentPoint;
+  let evaluatePoint: (t: number) => Position;
+  if (segment.kind === 'quadraticBezier') {
+    evaluatePoint = t => evaluateQuadraticPoint(segment, t, 1 - t);
+  } else if (segment.kind === 'cubicBezier') {
+    evaluatePoint = t => evaluateCubicPoint(segment, t, 1 - t);
+  } else {
+    const sweep = normalizedArcSweep(segment);
+    const rotationRad = ((segment.rotationDeg ?? 0) * Math.PI) / 180;
+    const cosRotation = Math.cos(rotationRad);
+    const sinRotation = Math.sin(rotationRad);
+    evaluatePoint = t => {
+      const angleRad = ((sweep.startAngleDeg + (sweep.endAngleDeg - sweep.startAngleDeg) * t) * Math.PI) / 180;
+      const x = segment.radiusX * Math.cos(angleRad);
+      const y = segment.radiusY * Math.sin(angleRad);
+      return [
+        segment.center[0] + x * cosRotation - y * sinRotation,
+        segment.center[1] + x * sinRotation + y * cosRotation,
+      ];
+    };
   }
 
-  return length;
+  const start = evaluatePoint(0);
+  return parameter => {
+    const t = clampUnit(parameter);
+    if (t <= DEFAULT_EPSILON) return 0;
+    const samples = Math.max(4, Math.ceil(sampleCount * t));
+    let length = 0;
+    let previousPoint = start;
+
+    for (let index = 1; index <= samples; index += 1) {
+      const currentPoint = evaluatePoint((t * index) / samples);
+      length += point.distance(previousPoint, currentPoint);
+      previousPoint = currentPoint;
+    }
+    return length;
+  };
 };
 
 const splitQuadraticBezier = (
@@ -374,8 +447,8 @@ const sliceCurveSegment = (segment: CurveSegment, fromParameter: number, toParam
   if (segment.kind === 'line') {
     return {
       kind: 'line',
-      from: sampleCurveSegmentAt(segment, start).point,
-      to: sampleCurveSegmentAt(segment, end).point,
+      from: evaluateCurvePoint(segment, start),
+      to: evaluateCurvePoint(segment, end),
     };
   }
 
@@ -439,10 +512,33 @@ const sliceCurveSegment = (segment: CurveSegment, fromParameter: number, toParam
 /** 曲线在给定向量上的标量投影范围，包含内部极值 */
 const projectedCurveRange = (segment: CurveSegment, axis: Vector2): { min: number; max: number } => {
   const dot = (p: Position): number => p[0] * axis[0] + p[1] * axis[1];
-  const parameters = [0, 1];
+  let evaluatePoint = (t: number): Position => evaluateCurvePoint(segment, t);
+  if (segment.kind === 'arc' || segment.kind === 'ellipseArc') {
+    // 一次投影中的候选点共享扫角和半轴，避免每个极值点重复准备
+    const sweep = normalizedArcSweep(segment);
+    const radiusX = segment.kind === 'arc' ? segment.radius : segment.radiusX;
+    const radiusY = segment.kind === 'arc' ? segment.radius : segment.radiusY;
+    const rotationRad = segment.kind === 'ellipseArc' ? ((segment.rotationDeg ?? 0) * Math.PI) / 180 : 0;
+    evaluatePoint = t =>
+      evaluateArcPoint(
+        segment.center,
+        radiusX,
+        radiusY,
+        ((sweep.startAngleDeg + (sweep.endAngleDeg - sweep.startAngleDeg) * t) * Math.PI) / 180,
+        rotationRad,
+      );
+  }
+  const start = dot(evaluatePoint(0));
+  const end = dot(evaluatePoint(1));
+  let min = Math.min(start, end);
+  let max = Math.max(start, end);
 
   const add = (t: number): void => {
-    if (t > 0 && t < 1) parameters.push(t);
+    if (t > 0 && t < 1) {
+      const projection = dot(evaluatePoint(t));
+      min = Math.min(min, projection);
+      max = Math.max(max, projection);
+    }
   };
 
   if (segment.kind === 'quadraticBezier') {
@@ -500,9 +596,7 @@ const projectedCurveRange = (segment: CurveSegment, axis: Vector2): { min: numbe
     }
   }
 
-  const values = parameters.map(t => dot(sampleCurveSegmentAt(segment, t).point));
-
-  return { min: Math.min(...values), max: Math.max(...values) };
+  return { min, max };
 };
 
 /** 可参数化曲线的纯几何运算 */
@@ -523,7 +617,7 @@ export const curve = {
    * @remarks 复杂度：时间 O(n)，空间 O(1)，n 为有效采样数量
    */
   approximateLength: (segment: CurveSegment, options: CurveApproximationOptions = {}): number =>
-    approximateCurveLengthTo(segment, 1, normalizedSampleCount(options.sampleCount)),
+    createLengthMeasure(segment, normalizedSampleCount(options.sampleCount))(1),
   /**
    * 将沿曲线的距离反解为参数位置
    * @description 使用与 `approximateLength` 相同的离散长度模型；传入 `totalLength` 时必须与相同 sample count 对应。当中点的近似长度与目标距离相差不超过默认几何容差时提前返回
@@ -539,7 +633,12 @@ export const curve = {
     options: CurveParameterAtDistanceOptions = {},
   ): number => {
     const sampleCount = normalizedSampleCount(options.sampleCount);
-    const totalLength = options.totalLength ?? approximateCurveLengthTo(segment, 1, sampleCount);
+    let measureLength: ((parameter: number) => number) | undefined;
+    let totalLength = options.totalLength;
+    if (totalLength === undefined) {
+      measureLength = createLengthMeasure(segment, sampleCount);
+      totalLength = measureLength(1);
+    }
     if (!Number.isFinite(totalLength) || totalLength <= DEFAULT_EPSILON) return 0;
 
     const clampedDistance = Math.max(0, Math.min(totalLength, distance));
@@ -547,12 +646,15 @@ export const curve = {
     if (totalLength - clampedDistance <= DEFAULT_EPSILON) return 1;
     if (segment.kind === 'line' || segment.kind === 'arc') return clampedDistance / totalLength;
 
+    // 缓存总长的端点和解析路径无需准备积分函数
+    measureLength ??= createLengthMeasure(segment, sampleCount);
     let lowerParameter = 0;
     let upperParameter = 1;
 
-    for (let index = 0; index < normalizedBisectionSteps(options.bisectionSteps); index += 1) {
+    const bisectionSteps = normalizedBisectionSteps(options.bisectionSteps);
+    for (let index = 0; index < bisectionSteps; index += 1) {
       const middleParameter = (lowerParameter + upperParameter) / 2;
-      const middleLength = approximateCurveLengthTo(segment, middleParameter, sampleCount);
+      const middleLength = measureLength(middleParameter);
       if (Math.abs(middleLength - clampedDistance) <= DEFAULT_EPSILON) return middleParameter;
       if (middleLength < clampedDistance) {
         lowerParameter = middleParameter;

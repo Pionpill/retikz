@@ -1,0 +1,148 @@
+---
+title: 文字度量
+description: 理解普通文字与公式的尺寸从哪里来，以及 Core 如何据此排版、确定节点边界并交给 Render。
+---
+
+把节点 A 的文字从 `A` 改成 `Alpha`，自动尺寸的节点通常会变宽，连接到它边缘的路径也会改变。这个变化从文字度量开始：先得到文字占用的宽度和基线信息，再计算正文、节点与连线，最后生成画面。
+
+本文沿这个例子说明度量提供方、React / Vanilla、Core、Tex 与 Render 的交接。阅读前先了解[渲染链路](/kernel/components/runtime-mechanics/rendering-pipeline)；节点内部的尺寸求解细节见[节点编译](/kernel/packages/core/node-compilation)。
+
+## 整体流程
+
+编译前，输入只有文字、字体和节点约束。编译时，Core 向度量提供方查询尺寸，并把结果用于几何计算。普通文字与公式提供的材料不同：
+
+- 文字测量器：接收字符串与字体，返回宽度、高度和可选的基线上伸、下伸
+- 公式下沉器：接收 TeX 与字号等样式，返回公式尺寸、基线深度及可绘制路径
+
+下图追踪材料进入编译后怎样成为节点与画面。度量能力由宿主或应用注入，调用发生在 Core 排版过程中。
+
+<ComponentPreview files="metrics-overview" size="md" hideCode type="flow" />
+
+Render 收到 Scene 时，节点尺寸和路径端点已经确定。要让文字变化带动连线，必须把更新后的度量送回编译过程。
+
+## 度量来源
+
+Vanilla 在未提供 `compile.measureText` 时选择默认测量器，实际测量时才尝试获取 Canvas 2D 上下文。React 的 `Layout` 复用这条默认路径；显式传入 `measureText` 时则透传给 Vanilla。浏览器测量使用 Canvas 2D 的 `measureText` 查询字宽和字形上下边界，即使最后选择 SVG 后端也走这条测量路径；无需先挂载一个 SVG 文本元素再读取它的尺寸。
+
+字体族优先使用文字自身的配置，其次使用 Vanilla 的 `defaultFontFamily`；React 将 `Layout` 的 `style.fontFamily` 传入这一选项。默认浏览器测量器在字体族仍缺省时读取页面 `body` 的计算字体，最终使用 `sans-serif`。测量使用的字体应与实际显示的字体一致；只改变外围 CSS 的继承环境，不能保证已有几何随之更新。
+
+显式测量器优先于默认环境探测。没有浏览器环境或无法创建 Canvas 上下文时，默认测量器使用 Core 的 `fallbackMeasurer`；自定义测量器抛错、返回非法指标，或实际浏览器测量抛错时，不会静默改为估算。直接调用 Core 且未提供测量器时，也使用 `fallbackMeasurer`。
+
+这个估算器按 `text.length × font.size × 0.55` 计算宽度，按 `font.size × 1.2` 计算高度，不区分字体族、字重或字形。它允许无浏览器环境完成编译，但结果不代表实际字体的精确尺寸。
+
+<SourceLinks
+  sources={[
+    { label: 'React 透传度量与默认字体', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
+    { label: 'Vanilla 默认测量与字体补入', path: 'packages/kernel/vanilla/src/processing/text-measurement.ts' },
+    { label: 'Vanilla 传递编译选项', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
+    { label: '文字度量契约与估算器', path: 'packages/kernel/core/src/compile/text/metrics.ts' },
+  ]}
+/>
+
+## 正文与节点
+
+Core 先确定文字的有效字体，再请求测量。返回的 `width` 用于排列和折行；`ascent` 是基线以上的高度，`descent` 是基线以下的深度。它们让不同字体和公式能共享一条基线。缺少两项基线数据时，Core 将总高度平均分到基线上下；只提供一项时，由总高度补足另一项。
+
+以无缩放、单行、自动宽度的矩形节点为例，假设两侧 padding 都是 8，最小尺寸不约束结果。下面使用估算器和字号 16 展示计算，数值不代表浏览器字体实测：
+
+| 阶段                            | `A`  | `Alpha` |
+| ------------------------------- | ---- | ------- |
+| 文字宽度                        | 8.8  | 44      |
+| 加上左右 padding 后的节点宽度   | 24.8 | 60      |
+| 节点中心固定为 x = 0 时的右边界 | 12.4 | 30      |
+
+当另一节点固定在右侧、连线水平且没有箭头或额外端点偏移时，A 端的连接位置随右边界从 12.4 移到 30。路径引用节点名称，Core 消费新节点的连接边界；应用无需把文字宽度写进路径。
+
+有宽度约束时，结果可能表现为行数增加。普通文字分支按测量宽度折行，西文按词、CJK 按字寻找断点；不可断片段超过行宽时允许溢出。正文高度由实际行数和行高计算，随后参与节点尺寸求解。形状、显式尺寸和布局提案仍会影响最终边界，不能把上表的矩形公式套到所有节点。
+
+在一次编译上下文内，相同文字及字体组合的度量会复用。这个缓存避免重复调用测量器，不负责监听字体变化，也不等同于跨更新的增量计算。
+
+<SourceLinks
+  sources={[
+    { label: '正文排版与基线', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
+    { label: '普通文字折行', path: 'packages/kernel/core/src/compile/node/content/text.ts' },
+    { label: '正文尺寸进入节点求解', path: 'packages/kernel/core/src/compile/node/layout.ts' },
+    { label: '节点连接边界', path: 'packages/kernel/core/src/compile/node/boundary.ts' },
+    { label: '编译上下文内的度量缓存', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+  ]}
+/>
+
+## 公式混排
+
+将 A 的正文换成文字与公式混排时，普通文字仍交给测量器，公式片段则交给 `lowerTex`。`@retikz/tex` 的 MathJax 接入先异步初始化引擎，再提供同步下沉函数；Core 的这次排版不会等待公式引擎加载。
+
+公式的转换链路是 TeX → MathJax SVG → `LoweredTex` 路径与度量 → Core `PathPrim` → Render。公式尺寸随 SVG 下沉得到，不走 Canvas 文字测量；SVG 与 Canvas 后端最终消费同一份路径图元。具体转换过程见 [TeX 实现原理](/kernel/packages/tex/mechanism)。
+
+下沉结果的 `width` 决定公式占用的横向空间，`height - depth` 是基线上方高度，`depth` 是基线下方深度。Core 把各片段宽度相加，并分别取最大的上伸和下伸，得到这一行的基线盒。混排行的行槽高度取配置行高与基线盒高度中的较大值，避免较高的公式挤到邻行。
+
+随后，文字片段成为 Scene 的文字图元，公式路径放进带平移的分组，按同一条基线定位。普通文字最终仍由后端绘制字形，公式则已经是路径。当前混排分支按解析后的行排版，不执行普通文字分支的 `maxTextWidth` 自动折行。
+
+缺少下沉器时，字符串里的 `$...$` 保持普通文字；显式声明的 math run 则会告警并跳过。已有下沉器但返回 `null` 时，也会告警并跳过该公式片段，其余片段继续排版。应用若不希望出现中间结果，应等初始化成功后再显示公式场景。
+
+<SourceLinks
+  sources={[
+    { label: '文字与公式的解析入口', path: 'packages/kernel/core/src/resolve/text/resolve.ts' },
+    { label: '混排度量、基线与图元输出', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+    { label: '异步初始化、同步下沉', path: 'packages/kernel/tex/src/lower/create-mathjax.ts' },
+    { label: 'TeX 转换与实例缓存', path: 'packages/kernel/tex/src/lower/lower-tex.ts' },
+  ]}
+/>
+
+## 更新与显示
+
+文字、字号或明确的字体配置变化进入新一轮编译后，Core 会重新计算相关几何，再交给 Render。SVG 与 Canvas 消费 Scene 中的文字位置、基线和字体信息；它们绘制文字时不会反向修改 Core 已确定的节点或连接边界。
+
+外部度量条件的变化还需要应用接线。当前实现中，这几种情况的触发方式不同：
+
+| 变化                   | 当前处理方式                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| 节点文字或字体配置更新 | 通过正常输入更新进入处理链；不能假定命中局部增量快路径                               |
+| React 公式引擎就绪     | `useLowerTex` 返回 ready 状态，应用把 `lowerTex` 传给 Layout；编译选项变化后重新处理 |
+| 浏览器字体文件加载完成 | 宿主未订阅字体加载事件；应用应在字体可用后首次编译，或主动重新编译／重建处理实例     |
+
+例如，先用备用字体完成编译，再加载目标字体，SVG 文字可能已经显示为新字形，而节点仍保留旧宽度。重新绘制同一份 Scene 无法修正这个尺寸；需要让编译使用新度量。React 中也不能依赖一次输入和选项均未变化的父组件重渲染来保证重算。
+
+公式下沉器还有自己的实例缓存，按公式内容、显示模式、字号与颜色复用转换结果。它与 Core 的单次编译缓存寿命不同；替换公式引擎配置时应使用对应的新下沉器，已有缓存不会感知外部引擎被修改。
+
+<SourceLinks
+  sources={[
+    { label: 'React 的输入与编译选项依赖', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
+    { label: '公式初始化状态与下沉器实例', path: 'packages/kernel/tex/src/react/use-lower-tex.ts' },
+    { label: 'SVG 消费文字图元', path: 'packages/kernel/render/src/svg/builders/prim.ts' },
+    { label: 'Canvas 消费 Scene', path: 'packages/kernel/render/src/canvas/draw-scene.ts' },
+  ]}
+/>
+
+## 完整实现流程
+
+下图从度量来源追踪到节点几何。顶行按优先级列出普通文字测量器，每次只选用其中一个；公式通过 `lowerTex` 提供尺寸、基线和路径，在 `layoutInlineLine` 与普通文字对齐后回到节点尺寸求解。蓝色节点标出核心测量与排版方法。
+
+<ComponentPreview files="metrics-implementation" size="xxl" hideCode type="flow" />
+
+从 `Layout` 的编译选项开始，确认 `measureText` 的来源，再进入 `createCompileContext`、`layoutNodeContent` 和 `compileResolvedNode`。最后查看 Render 如何消费文字图元；节点求解与基线算法的完整展开留在 Core 文档。
+
+<SourceLinks
+  sources={[
+    { label: '度量能力进入编译上下文', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: '正文度量与分支', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
+    { label: '节点尺寸求解', path: 'packages/kernel/core/src/compile/node/layout.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: '节点编译',
+      description: '深入正文、基线、节点尺寸与连接边界的内部计算',
+      url: '/kernel/packages/core/node-compilation',
+    },
+    { title: 'LaTeX 公式 · tex', description: '查看公式引擎初始化、下沉与接入方式', url: '/kernel/packages/tex' },
+    {
+      title: '增量更新',
+      description: '区分输入更新、全量回退与画面提交',
+      url: '/kernel/components/runtime-mechanics/incremental-updates',
+    },
+  ]}
+/>

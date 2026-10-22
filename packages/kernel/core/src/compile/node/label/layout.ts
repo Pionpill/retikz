@@ -2,7 +2,13 @@ import type { CanonicalFont } from '../../../resolve';
 import { resolveFont, resolveTextLine } from '../../../resolve';
 import type { TextMeasurer } from '../../text';
 import { layoutInlineLine, normalizeTextMetrics } from '../../text';
-import type { MeasuredNodeLabel, NodeLabelLayout, NodeLayout, NodeTextLayoutContext } from '../types';
+import type {
+  MeasuredNodeLabel,
+  NodeLabelResolution,
+  NodeLabelLayout,
+  NodeLayout,
+  NodeTextLayoutContext,
+} from '../types';
 import { resolveNodeLabelGeometry } from './geometry';
 
 /** 节点附属 label 布局输入 */
@@ -20,7 +26,9 @@ const nodeLabelMeasurer =
     normalizeTextMetrics(measureText(text, font));
 
 /** 测量节点附属 label，不读取 Node rect */
-export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredNodeLabel> | undefined => {
+export const measureNodeLabels = (
+  input: LayoutNodeLabelsInput,
+): Array<{ layout: MeasuredNodeLabel; properties: NodeLabelResolution }> | undefined => {
   const { node, measureText, texLowering, baseFontSize, rootFontSize, fontScale, fontFamily, fontWeight, fontStyle } =
     input;
   const rawLabels = node.label;
@@ -38,7 +46,6 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
     const labWeight = resolvedLabelFont.weight;
     const labStyle = resolvedLabelFont.style;
     const labTextColor = lab.textColor ?? node.textColor;
-    const labOpacity = lab.opacity;
     const labTextFont: CanonicalFont = { size: labFontSize, family: labFamily, weight: labWeight, style: labStyle };
 
     const resolved = resolveTextLine(lab.text, {
@@ -56,8 +63,6 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
           measureText: measureLabelText,
           lowerTex: texLowering?.lowerTex,
           font: labTextFont,
-          color: labTextColor,
-          opacity: labOpacity,
           warn: inlineWarn,
         })
       : undefined;
@@ -72,25 +77,14 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
       : normalizeTextMetrics(measureText(plainText, labTextFont));
 
     return {
-      text: plainText,
-      laid,
-      align: lab.align,
-      position: lab.position,
-      placement: lab.placement,
-      distance: lab.distance,
-      textColor: labTextColor,
-      opacity: labOpacity,
-      fontSize: labFontSize,
-      fontFamily: labFamily,
-      fontWeight: labWeight,
-      fontStyle: labStyle,
-      rotate: lab.rotate,
-      keepUpright: lab.keepUpright,
-      measuredWidth: metrics.width,
-      measuredHeight: metrics.height,
-      ascent: metrics.ascent,
-      descent: metrics.descent,
-      pin: lab.pin,
+      properties: { ...lab, text: resolved, font: labTextFont, textColor: labTextColor },
+      layout: {
+        laid,
+        measuredWidth: metrics.width,
+        measuredHeight: metrics.height,
+        ascent: metrics.ascent,
+        descent: metrics.descent,
+      },
     };
   });
 };
@@ -98,5 +92,6 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
 /** 把已测量 label 绑定到最终 Node rect */
 export const layoutNodeLabels = (
   layout: NodeLayout,
-  labels: Array<MeasuredNodeLabel> | undefined,
-): Array<NodeLabelLayout> | undefined => labels?.map(label => resolveNodeLabelGeometry(layout, label));
+  labels: Array<{ layout: MeasuredNodeLabel; properties: NodeLabelResolution }> | undefined,
+): Array<NodeLabelLayout> | undefined =>
+  labels?.map(label => resolveNodeLabelGeometry(layout, label.layout, label.properties));

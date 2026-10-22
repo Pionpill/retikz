@@ -1,7 +1,7 @@
 import type { BoundaryDefinition, ClipDefinition, IRScene } from '@retikz/core';
 import { compileToScene, defineBoundary, defineClip } from '@retikz/core';
 import { renderToSvgString as svgRenderToString } from '@retikz/render/svg';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { literal, number, strictObject } from 'zod';
 
 import { renderToSvgString } from '../../src';
@@ -14,6 +14,24 @@ const nodeIr: IRScene = {
   type: 'scene',
   children: [{ type: 'node', id: 'a', position: [0, 0], text: 'A' }],
 };
+
+it('SSR 自定义测量与 SVG 输出共享宿主默认字体', () => {
+  const measureText = vi.fn(() => ({ width: 20, height: 16 }));
+  const svg = renderToSvgString(nodeIr, { defaultFontFamily: 'serif', compile: { measureText } });
+  expect(measureText).toHaveBeenCalledWith('A', expect.objectContaining({ family: 'serif' }));
+  expect(svg).toContain('font-family="serif"');
+});
+
+it('预编译 Scene 只改变显示字体，不调用测量器或改变几何', () => {
+  const scene = compileToScene(nodeIr).scene;
+  const snapshot = JSON.stringify(scene);
+  const measureText = vi.fn(() => ({ width: 999, height: 16 }));
+  expect(renderToSvgString(scene, { defaultFontFamily: 'serif', compile: { measureText } })).toContain(
+    'font-family="serif"',
+  );
+  expect(measureText).not.toHaveBeenCalled();
+  expect(JSON.stringify(scene)).toBe(snapshot);
+});
 
 const boundaryIr: IRScene = {
   version: 1,

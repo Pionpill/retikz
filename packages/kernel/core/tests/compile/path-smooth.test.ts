@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene, IRTarget } from '../../src';
-import { CompileWarningCode } from '../../src';
+import { BuiltinCompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import type { CubicPathCommand, PathPrim, ScenePrimitive, TextPrim } from '../../src/contract';
 import { PathSchema, SmoothStepSchema } from '../../src/schemas';
@@ -225,7 +225,7 @@ describe('smooth step：错误路径', () => {
     const result = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(result.primitives.find(p => p.type === 'path')).toBeUndefined();
-    expect(warnings.find(w => w.code === CompileWarningCode.PathTooShort)).toBeDefined();
+    expect(warnings.find(w => w.code === BuiltinCompileWarningCode.PathTooShort)).toBeDefined();
   });
 });
 

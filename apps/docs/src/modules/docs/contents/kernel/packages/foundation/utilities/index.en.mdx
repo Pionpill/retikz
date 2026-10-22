@@ -13,6 +13,7 @@ Import these capabilities from the package root:
 import {
   createReadonlyMap,
   cloneAndFreezeJson,
+  jsonStructuralEquals,
   assertPlainDataContainers,
   parseStaticCssColor,
   compositeOpaqueColor,
@@ -46,6 +47,20 @@ Object.isFrozen(snapshot.filters); // true
 ```
 
 `assertPlainDataContainers(value, path)` checks container structure without copying data or reading accessors. It is reserved for runtime Definition boundaries that have no persisted schema but still need plain-container isolation. Source inputs with an owner schema consume the Zod `parse()` result directly instead of using this assertion as a generic preflight.
+
+## JSON structural comparison
+
+`jsonStructuralEquals(left, right)` checks whether two JSON values have the same structure and content. Distinct object references and different property insertion orders can still compare equal; array element order matters.
+
+```ts
+jsonStructuralEquals({ field: 'age', value: 18 }, { value: 18, field: 'age' }); // true
+jsonStructuralEquals({ values: [1, 2] }, { values: [2, 1] }); // false
+jsonStructuralEquals({ value: 0 }, { value: -0 }); // false
+```
+
+Use it to compare configuration snapshots or check whether data content has changed. It reads the tree recursively without mutating either input. Scalars use `Object.is`, so `0` and `-0` differ.
+
+Both inputs must already be valid JSON data trees. The function does not validate JSON or handle cycles, `Date`, `Map`, or class instances. Validate unknown external input with its owning schema first.
 
 ## Static CSS colors
 

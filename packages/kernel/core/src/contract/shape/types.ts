@@ -1,9 +1,9 @@
 import type { JsonObject } from '@retikz/foundation';
-import type { Position } from '@retikz/math';
+import type { CenteredBox, Position } from '@retikz/math';
 import type { ZodType } from 'zod';
 
 import type { IRGraphicStyle, IRPathBase, ResolvedDropShadow } from '../../schemas';
-import type { Anchor, Rect, Side } from '../../shared';
+import type { Anchor, Side } from '../../shared';
 import type { PaintValue, PathCommand, ScenePrimitive } from '../scene';
 
 /** 从 IR graphic style 复用的已解析 shape 样式字段 */
@@ -129,32 +129,36 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
    * 返回从 rect 中心指向 `toward` 的射线与 shape 边界的交点
    * @description `rect` 可包含旋转；实现需要按需转换坐标
    */
-  boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
+  boundaryPoint: (rect: CenteredBox, toward: Position, params: TParams) => Position;
   /**
    * 解析命名 anchor 的世界坐标；不支持时返回 `undefined`
    */
-  anchor: (rect: Rect, name: ShapeAnchorName, params: TParams) => Position | undefined;
+  anchor: (rect: CenteredBox, name: ShapeAnchorName, params: TParams) => Position | undefined;
   /**
    * 返回安全包含视觉几何轮廓的规则连接面半轴
    * @description 结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩。未提供时 tight boundary 回退到 bounds 并发出 warning
    * @default undefined
    */
-  connectionEnvelope?: (rect: Rect, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope | undefined;
+  connectionEnvelope?: (
+    rect: CenteredBox,
+    kind: ConnectionEnvelopeKind,
+    params: TParams,
+  ) => ConnectionEnvelope | undefined;
   /** 返回与 rect 同坐标系的精确闭合视觉轮廓；空数组表示合法空几何 */
-  outline?: (rect: Rect, params: TParams) => ReadonlyArray<PathCommand>;
+  outline?: (rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>;
   /** 返回 provider 命名的稳定结构关键点；名称在同一实例内必须唯一 */
-  keyPoints?: (rect: Rect, params: TParams) => ReadonlyArray<GeometryKeyPoint>;
+  keyPoints?: (rect: CenteredBox, params: TParams) => ReadonlyArray<GeometryKeyPoint>;
   /**
    * 解析标准 side 上 `t ∈ [0, 1]` 的比例点
    * @description `rect` 可包含旋转；未实现表示该 shape 不支持 side anchor
    * @default undefined
    */
-  edgePoint?: (rect: Rect, side: Side, t: number, params: TParams) => Position;
+  edgePoint?: (rect: CenteredBox, side: Side, t: number, params: TParams) => Position;
   /**
    * 生成轴对齐 rect 内的视觉 primitive
    */
   emit: (
-    rect: Rect,
+    rect: CenteredBox,
     style: ResolvedShapeStyle,
     round: (n: number) => number,
     params: TParams,

@@ -295,7 +295,10 @@ The target is determined before entering children. Scope anchor placement theref
 
 <SourceLinks
   sources={[
-    { label: 'Envelope collection and self-pivot resolution', path: 'packages/kernel/core/src/compile/scope.ts' },
+    {
+      label: 'Envelope collection and self-pivot resolution',
+      path: 'packages/kernel/core/src/compile/scope/layout.ts',
+    },
     {
       label: 'Scope target restrictions, placeholder registration, and replacement',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
@@ -322,7 +325,7 @@ During finalization, Core adds only transforms that have not already been applie
   sources={[
     {
       label: 'lowerScopeTransforms: referenced translation and envelope pivots',
-      path: 'packages/kernel/core/src/compile/scope.ts',
+      path: 'packages/kernel/core/src/compile/scope/layout.ts',
     },
     {
       label: 'Preliminary transforms, final alignment, and geometry publication',
@@ -338,7 +341,7 @@ This diagram follows the lifecycle of a Scope with an `id`. The main chain runs 
 
 <ComponentPreview files="coordinate-implementation" size="xxxl" hideCode type="flow" />
 
-Start with entry and finalization in `compileScopeChild`, then follow `createPositionResolveContext` into `resolvePosition` / `resolvePositionTargetWorld`. Ordinary nodes go through `layoutNode`, followed by projection and registration. Scope computes its envelope and final transforms after child traversal, fills deferred paths, and assembles group output.
+Start with entry and finalization in `compileScopeChild`, then follow `createPositionResolveContext` into `resolvePosition` / `resolvePositionTargetWorld`. Ordinary nodes go through `compileResolvedNode`, followed by projection and registration. Scope computes its envelope and final transforms after child traversal, fills deferred paths, and assembles group output.
 
 The overview's positioning and layout step, followed by world reference registration, runs per child. Scope finalization runs once per Scope. Position resolvers return geometry; compilation traversal owns reference visibility, registration timing, and lifecycle.
 

@@ -3,7 +3,6 @@ import {
   PathLineCapSchema,
   PathLineJoinSchema,
   PathScaleSchema,
-  PathThickness,
   CssColorSchema,
   OpacitySchema,
   PathDecorationSchema,
@@ -44,9 +43,6 @@ export const PathRoundedCornersStyleSchema = NonNegativeNumberSchema.describe('p
 /** 校验路径填充规则的固定环绕规则 */
 export const PathFillRuleStyleSchema = PathFillRuleSchema.describe('path fillRule style value');
 
-/** 校验路径粗细的固定预设 */
-export const PathThicknessStyleSchema = zodEnum(PathThickness).describe('path thickness style value');
-
 /** 校验路径缩放的固定统一与双轴倍率 */
 export const PathScaleStyleSchema = PathScaleSchema.describe('path scale style value');
 
@@ -58,7 +54,6 @@ const corePathStyle = {
   rotate: MarkNumberStyleSchema.optional().describe('Core Path rotate: fixed angle'),
   scale: PathScaleStyleSchema.optional().describe('Core Path scale: fixed number / {x,y}'),
   fillRule: PathFillRuleStyleSchema.optional().describe('Core Path fillRule: fixed nonzero / evenodd'),
-  thickness: PathThicknessStyleSchema.optional().describe('Core Path thickness: fixed preset'),
   marks: PathDecorationSchema.shape.marks
     .optional()
     .describe('Static core Path marks placed along the lowered path; use endpoint marks for arrows'),
@@ -232,9 +227,6 @@ export type IRPlotPathMark = ZodInfer<typeof PathMarkSchema>;
 
 /** PathMark 填充规则样式值 */
 export type IRPlotPathFillRuleStyle = ZodInfer<typeof PathFillRuleStyleSchema>;
-
-/** PathMark 线宽样式值 */
-export type IRPlotPathThicknessStyle = ZodInfer<typeof PathThicknessStyleSchema>;
 
 /** PathMark scale 绑定样式值 */
 export type IRPlotPathScaleStyle = ZodInfer<typeof PathScaleStyleSchema>;

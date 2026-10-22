@@ -1,7 +1,8 @@
-import type { ConnectionEnvelopeKind, IRNode, Rect, ShapeDefinition } from '@retikz/core';
+import type { ConnectionEnvelopeKind, IRNode, ShapeDefinition } from '@retikz/core';
 import { boundsConnectionEnvelope, defineShape, ellipseShape, polygon, rectangle } from '@retikz/core';
 import { SectorShapeDefinition, StarShapeDefinition } from '@retikz/extension';
 import type { JsonObject } from '@retikz/foundation';
+import type { CenteredBox } from '@retikz/math';
 import { z } from 'zod';
 
 const shapeChoiceSchema = z.enum(['rectangle', 'circle', 'ellipse', 'diamond', 'polygon', 'star', 'sector']);
@@ -75,12 +76,12 @@ type BoundaryGuideParams = z.infer<typeof boundaryGuideParamsSchema>;
 
 /** 复用正式 provider 的 fit / gap 语义计算辅助轮廓矩形 */
 const guideRect = (
-  rect: Rect,
+  rect: CenteredBox,
   visual: ResolvedVisualShape,
   boundary: Exclude<BoundaryChoice, 'shape'>,
   fit: BoundaryFitChoice,
   gap: number,
-): Rect => {
+): CenteredBox => {
   const kind: ConnectionEnvelopeKind = boundary;
   const envelope =
     boundary === 'rectangle' || fit === 'bounds'

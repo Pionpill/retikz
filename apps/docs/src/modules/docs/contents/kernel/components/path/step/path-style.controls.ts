@@ -17,19 +17,6 @@ const createControls = (lang: Lang) => {
         controls: [
           { kind: 'color', id: 'stroke', label: i18n.color, defaultValue: '#172033' },
           {
-            kind: 'select',
-            id: 'thickness',
-            label: i18n.thickness,
-            defaultValue: 'custom',
-            options: [
-              { value: 'custom', label: i18n.custom },
-              { value: 'thin', label: i18n.thin },
-              { value: 'semithick', label: i18n.semithick },
-              { value: 'thick', label: i18n.thick },
-              { value: 'veryThick', label: i18n.verythick },
-            ],
-          },
-          {
             kind: 'range',
             id: 'strokeWidth',
             label: i18n.strokeWidth,
@@ -37,7 +24,6 @@ const createControls = (lang: Lang) => {
             min: 1,
             max: 14,
             step: 1,
-            visibleWhen: { controlId: 'thickness', oneOf: ['custom'] },
           },
           { kind: 'switch', id: 'dashed', label: i18n.dashed, defaultValue: true },
           {
@@ -102,7 +88,6 @@ export const createPreviewControlContract = (lang: Lang) =>
     controls: createControls(lang),
     canonicalValues: {
       stroke: '#172033',
-      thickness: 'custom',
       strokeWidth: 5,
       dashed: true,
       dashOffset: 0,
@@ -113,7 +98,6 @@ export const createPreviewControlContract = (lang: Lang) =>
     },
     relatedApis: [
       'Path.style.stroke',
-      'Path.thickness',
       'Path.style.strokeWidth',
       'Path.style.opacity',
       'Path.style.dashPattern',

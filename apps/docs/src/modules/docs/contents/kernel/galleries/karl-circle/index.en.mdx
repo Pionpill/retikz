@@ -84,7 +84,7 @@ The α label is written as the `$\alpha$` inline formula (a real Greek letter) a
 
 ### Step 5 — sin α red line + cos α dodgerblue line
 
-`sin` drops from (30°, 100px) vertically to the x-axis; `cos` goes from that foot back to the origin. Both use [Draw](/kernel/components/path/usage), with a `{ label: { text, side } }` operator threaded into the `way` array to attach an edge label — and the label's `text` also accepts `$...$`, so we write `$\sin\alpha$` / `$\cos\alpha$` directly (matching the [TikZ tutorial](https://tikz.dev/tutorial)'s `node {$\sin \alpha$}`). `thickness="thick"` is a semantic stroke preset — saves having to pick a numeric width.
+`sin` drops from (30°, 100px) vertically to the x-axis; `cos` goes from that foot back to the origin. Both use [Draw](/kernel/components/path/usage), with a `{ label: { text, side } }` operator threaded into the `way` array to attach an edge label — and the label's `text` also accepts `$...$`, so we write `$\sin\alpha$` / `$\cos\alpha$` directly (matching the [TikZ tutorial](https://tikz.dev/tutorial)'s `node {$\sin \alpha$}`).
 
 Note: the original TikZ uses `(30:1cm |- x axis)` to express "horizontal projection of (30°, 1cm) onto the x-axis" directly. retikz has no projection target yet — geometrically that equals (cos30°, 0), so we hand-compute the coordinate.
 

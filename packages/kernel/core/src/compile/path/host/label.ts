@@ -1,14 +1,21 @@
+import { RAD_TO_DEG } from '@retikz/math';
 import type { CurveSegmentSample } from '@retikz/math';
 
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../../contract';
 import type { CanonicalFont, CanonicalPathLabel } from '../../../resolve';
 import { resolveFont, resolveTextLine } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
-import { RAD_TO_DEG } from '../../../shared/geometry';
 import { DEFAULT_FONT_SIZE } from '../../constants';
 import type { CompileWarningCode } from '../../constants';
 import type { LineLayoutContext, LowerTex, TextMeasurer } from '../../text';
-import { combineOpacity, layoutInlineLine, normalizeTextMetrics, toAlphabeticBaselineY } from '../../text';
+import {
+  combineOpacity,
+  emitInlineLine,
+  inlineRunPaintsOf,
+  layoutInlineLine,
+  normalizeTextMetrics,
+  toAlphabeticBaselineY,
+} from '../../text';
 
 /** 边标注默认行高 */
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
@@ -108,8 +115,6 @@ export const emitLabelPrimitive = (
       measureText,
       lowerTex: texCtx?.lowerTex,
       font,
-      color: label.textColor,
-      opacity: labelOpacity,
       warn: texCtx?.warn ?? ((): void => {}),
     };
     const laidLines = resolvedLines.map(line => layoutInlineLine(line.runs, ctx));
@@ -145,7 +150,13 @@ export const emitLabelPrimitive = (
       const baselineY = top + verticalOffset + (slot - naturalHeight) / 2 + laid.ascent;
       verticalOffset += slot;
 
-      return laid.emit(left + (blockWidth - laid.width) / 2, baselineY, round);
+      return emitInlineLine(
+        laid,
+        { color: label.textColor, opacity: labelOpacity, runs: inlineRunPaintsOf(resolvedLines[index].runs) },
+        left + (blockWidth - laid.width) / 2,
+        baselineY,
+        round,
+      );
     });
     const group: GroupPrim = { type: 'group', children };
     const right = left + blockWidth;

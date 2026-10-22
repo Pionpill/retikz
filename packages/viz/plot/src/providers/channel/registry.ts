@@ -44,7 +44,6 @@ export const BUILTIN_CHANNEL_NAMES: ReadonlySet<string> = new Set<string>([
   'shadow',
   'blendMode',
   'fillRule',
-  'thickness',
   'pull',
   'geometry.width',
   'geometry.endWidth',

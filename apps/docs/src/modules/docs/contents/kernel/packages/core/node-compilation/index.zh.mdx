@@ -21,7 +21,7 @@ description: 追踪 Core 如何把文字度量和形状约束转为节点尺寸�
 
 <SourceLinks
   sources={[
-    { label: 'layoutNode：节点布局入口', path: 'packages/kernel/core/src/compile/node/layout.ts' },
+    { label: 'compileResolvedNode：节点布局入口', path: 'packages/kernel/core/src/compile/node/layout.ts' },
     { label: 'NodeResolution：布局输入', path: 'packages/kernel/core/src/resolve/node/types.ts' },
     { label: 'NodeLayout：几何与排版结果', path: 'packages/kernel/core/src/compile/node/types.ts' },
   ]}
@@ -129,7 +129,7 @@ Core 通过注入的 `measureText` 取得度量，不直接读取 DOM。测量�
 
 <ComponentPreview files="layout-implementation" size="xl" hideCode type="flow" />
 
-阅读源码时从 `layoutNode` 开始：它组织正文排版、形状约束和标签放置，完成自身锚点定位后返回局部坐标下的 `NodeLayout`。其中 `geometry` 保存外框、正文中心、正文尺寸和 margin，`text` 保存物理行与基线，`labels` 保存附属文字的相对位置。
+阅读源码时从 `compileResolvedNode` 开始：它组织正文排版、形状约束和标签放置，完成自身锚点定位后将局部坐标下的 `NodeLayout` 放入结果的 `layout` 字段，完整有效属性与身份保存在 `properties`。布局中的 `geometry` 保存外框、正文中心、正文尺寸和 margin，`text` 保存物理行与基线，`labels` 保存附属文字的相对位置。绘制读取当前属性和已有布局，不按 layout / paint 更新类别拆散文字、描边或标签属性。
 
 遍历器随后把几何投影到世界空间，供命名引用查询；绘制阶段把局部布局转为形状、正文和标签图元。命名空间中的引用几何与 Scene 中的局部图元用途不同，不必把所有绘制坐标提前展开成世界坐标。
 

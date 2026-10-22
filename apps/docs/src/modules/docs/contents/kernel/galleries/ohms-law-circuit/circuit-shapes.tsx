@@ -1,14 +1,8 @@
 /* oxlint-disable react/only-export-components -- 形状定义、注册表与元件组件成组放在一处便于各 step 复用；本文件不是 HMR 热点 */
-import type {
-  IRAnchorRef,
-  IRNodeLabel,
-  IRNodeTarget,
-  IRPosition,
-  Rect,
-  ScenePrimitive,
-  ShapeDefinition,
-} from '@retikz/core';
-import { defineShape, localToWorld, worldToLocal } from '@retikz/core';
+import type { IRAnchorRef, IRNodeLabel, IRNodeTarget, IRPosition, ScenePrimitive, ShapeDefinition } from '@retikz/core';
+import { defineShape } from '@retikz/core';
+import { localToWorld, worldToLocal } from '@retikz/math';
+import type { CenteredBox } from '@retikz/math';
 import { Node } from '@retikz/react';
 import type { FC } from 'react';
 import { z } from 'zod';
@@ -34,9 +28,9 @@ const RESISTOR_LEAD = 19.5;
 /** 引用某个元件的固定端点（如 battery 的 right），导线靠它落到元件边框而非猜中心坐标 */
 export const at = (id: string, anchor: IRAnchorRef): IRNodeTarget => ({ id, anchor });
 
-const anchorPoint = (rect: Rect, x: number, y: number): Position => localToWorld(rect, [x, y]);
+const anchorPoint = (rect: CenteredBox, x: number, y: number): Position => localToWorld(rect, [x, y]);
 
-const boxAnchor = (rect: Rect, name: string): Position | undefined => {
+const boxAnchor = (rect: CenteredBox, name: string): Position | undefined => {
   const halfWidth = rect.width / 2;
   const halfHeight = rect.height / 2;
 
@@ -64,20 +58,20 @@ const boxAnchor = (rect: Rect, name: string): Position | undefined => {
   }
 };
 
-const horizontalTerminalAnchor = (rect: Rect, name: string): Position | undefined => {
+const horizontalTerminalAnchor = (rect: CenteredBox, name: string): Position | undefined => {
   if (name === 'input') return boxAnchor(rect, 'left');
   if (name === 'output') return boxAnchor(rect, 'right');
   return boxAnchor(rect, name);
 };
 
 /** 电池端点：长板（正极）在右 = right，短板（负极）在左 = left；同时兼容 input / output / 方位名 */
-const batteryAnchor = (rect: Rect, name: string): Position | undefined => {
+const batteryAnchor = (rect: CenteredBox, name: string): Position | undefined => {
   if (name === 'positive') return boxAnchor(rect, 'right');
   if (name === 'negative') return boxAnchor(rect, 'left');
   return horizontalTerminalAnchor(rect, name);
 };
 
-const horizontalBoundaryPoint = (rect: Rect, toward: Position): Position => {
+const horizontalBoundaryPoint = (rect: CenteredBox, toward: Position): Position => {
   const [localX] = worldToLocal(rect, toward);
   return anchorPoint(rect, localX < 0 ? -rect.width / 2 : rect.width / 2, 0);
 };

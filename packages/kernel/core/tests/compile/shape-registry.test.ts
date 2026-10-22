@@ -1,3 +1,4 @@
+import { localToWorld, worldToLocal } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 import { number, strictObject } from 'zod';
 
@@ -7,7 +8,6 @@ import { defineShape } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import type { IRScene } from '../../src/schemas';
 import { NodeSchema } from '../../src/schemas';
-import { localToWorld, worldToLocal } from '../../src/shared/geometry/transform';
 import { flattenPrims } from '../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(

@@ -2,7 +2,7 @@ import type { Transform } from '../../../contract';
 import type { CanonicalStep, PathTargetView } from '../../../resolve';
 import { nodeIdFromResolvableTarget } from '../../../resolve/position';
 import type { IRPosition, IRTarget } from '../../../schemas';
-import { CompileWarningCode } from '../../constants';
+import { BuiltinCompileWarningCode } from '../../constants';
 import { pointOfTarget } from '../host';
 
 /** 具有普通目标点、可作为后续 step 前驱的 path step */
@@ -84,7 +84,7 @@ export const createStrokeCursor = ({ steps, targetView, scopeChain, warn }: Crea
     const targetId = nodeIdFromResolvableTarget(step.to);
     if (!anchor && targetId !== undefined) {
       warn(
-        CompileWarningCode.UnresolvedNodeReference,
+        BuiltinCompileWarningCode.UnresolvedNodeReference,
         `Step.to references undefined node id '${targetId}'; the entire path is skipped`,
         `children[${index}].to`,
       );

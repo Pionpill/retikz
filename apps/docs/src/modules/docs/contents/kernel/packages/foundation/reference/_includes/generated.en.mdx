@@ -421,7 +421,7 @@ export type JsonValue =
     };
 ```
 
-#### <ApiSourceLink label={"assertPlainDataContainers"} path={"packages/kernel/foundation/src/json.ts"} startLine={97}>assertPlainDataContainers</ApiSourceLink>
+#### <ApiSourceLink label={"assertPlainDataContainers"} path={"packages/kernel/foundation/src/json.ts"} startLine={136}>assertPlainDataContainers</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -451,7 +451,7 @@ export declare const assertPlainDataContainers: (value: unknown, path?: string) 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"cloneAndFreezeJson"} path={"packages/kernel/foundation/src/json.ts"} startLine={109}>cloneAndFreezeJson</ApiSourceLink>
+#### <ApiSourceLink label={"cloneAndFreezeJson"} path={"packages/kernel/foundation/src/json.ts"} startLine={148}>cloneAndFreezeJson</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -474,6 +474,38 @@ export declare const assertPlainDataContainers: (value: unknown, path?: string) 
 
 ```ts
 export declare const cloneAndFreezeJson: <T>(value: T, path?: string) => T;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"jsonStructuralEquals"} path={"packages/kernel/foundation/src/json.ts"} startLine={160}>jsonStructuralEquals</ApiSourceLink>
+
+Ignores object property order, compares arrays in order, and uses Object.is for scalars, so 0 and -0 differ; does not mutate inputs
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature | Description                                           |
+| ---------- | ------- | ---------------- | ----------------------------------------------------- |
+| Parameters | `left`  | `unknown`        | Left JSON data tree                                   |
+|            | `right` | `unknown`        | Right JSON data tree                                  |
+| Returns    | —       | `boolean`        | Whether both trees have the same structure and values |
+
+</ApiTable>
+
+> **Notes:** Callers must provide valid JSON data trees; does not validate inputs or support cycles, Date, Map, or class instances
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const jsonStructuralEquals: (left: unknown, right: unknown) => boolean;
 ```
 
 </DocTab>

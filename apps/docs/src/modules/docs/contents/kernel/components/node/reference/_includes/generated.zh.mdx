@@ -356,10 +356,10 @@ export type BoundaryAnchorName = Anchor | (string & {});
 
 <ApiTable>
 
-| 成员                 | 类型                                     | 默认值 | 说明                                      |
-| -------------------- | ---------------------------------------- | ------ | ----------------------------------------- |
-| `connectionEnvelope` | `(kind: ConnectionEnvelopeKind) => Rect` | —      | 获取视觉 shape 对指定规则连接面的安全包络 |
-| `visualRect`         | `Rect`                                   | —      | 节点视觉 shape 的外接矩形                 |
+| 成员                 | 类型                                            | 默认值 | 说明                                      |
+| -------------------- | ----------------------------------------------- | ------ | ----------------------------------------- |
+| `connectionEnvelope` | `(kind: ConnectionEnvelopeKind) => CenteredBox` | —      | 获取视觉 shape 对指定规则连接面的安全包络 |
+| `visualRect`         | `CenteredBox`                                   | —      | 节点视觉 shape 的外接矩形                 |
 
 </ApiTable>
 
@@ -369,8 +369,8 @@ export type BoundaryAnchorName = Anchor | (string & {});
 
 ```ts
 export type BoundaryFitContext = {
-  visualRect: Rect;
-  connectionEnvelope: (kind: ConnectionEnvelopeKind) => Rect;
+  visualRect: CenteredBox;
+  connectionEnvelope: (kind: ConnectionEnvelopeKind) => CenteredBox;
 };
 ```
 
@@ -398,14 +398,14 @@ export type NodeTextColor = ValueOf<typeof NodeTextColor>;
 
 <ApiTable>
 
-| 成员            | 类型                                                                                                 | 默认值               | 说明                                                                                                                   |
-| --------------- | ---------------------------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `anchor?`       | `(rect: Rect, name: BoundaryAnchorName, params: Record<string, JsonValue>) => Position \| undefined` | `undefined`          | 可选的标准方位 anchor 支持；Node 引用中的中心与形状专属名称不调用此回调<br />未提供时由调用方回退或报告不支持该 anchor |
-| `boundaryPoint` | `(rect: Rect, toward: Position, params: Record<string, JsonValue>) => Position`                      | —                    | 从中心指向 toward 的射线与连接面的交点                                                                                 |
-| `name`          | `string`                                                                                             | —                    | 注册表 key，由 IR `boundary` 引用                                                                                      |
-| `outline?`      | `(rect: Rect, params: Record<string, JsonValue>) => ReadonlyArray<PathCommand>`                      | —                    | 返回与解析后 rect 同坐标系的精确闭合连接面轮廓；空数组表示合法空几何                                                   |
-| `paramsSchema`  | `BoundaryDefinition["paramsSchema"]`                                                                 | —                    | 运行时连接面参数的 schema                                                                                              |
-| `resolveRect?`  | `(context: BoundaryFitContext, params: Record<string, JsonValue>) => Rect`                           | `context.visualRect` | 根据视觉 shape 和实例 params 解析本连接面使用的矩形<br />未提供时使用视觉矩形                                          |
+| 成员            | 类型                                                                                                        | 默认值               | 说明                                                                                                                   |
+| --------------- | ----------------------------------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `anchor?`       | `(rect: CenteredBox, name: BoundaryAnchorName, params: Record<string, JsonValue>) => Position \| undefined` | `undefined`          | 可选的标准方位 anchor 支持；Node 引用中的中心与形状专属名称不调用此回调<br />未提供时由调用方回退或报告不支持该 anchor |
+| `boundaryPoint` | `(rect: CenteredBox, toward: Position, params: Record<string, JsonValue>) => Position`                      | —                    | 从中心指向 toward 的射线与连接面的交点                                                                                 |
+| `name`          | `string`                                                                                                    | —                    | 注册表 key，由 IR `boundary` 引用                                                                                      |
+| `outline?`      | `(rect: CenteredBox, params: Record<string, JsonValue>) => ReadonlyArray<PathCommand>`                      | —                    | 返回与解析后 rect 同坐标系的精确闭合连接面轮廓；空数组表示合法空几何                                                   |
+| `paramsSchema`  | `BoundaryDefinition["paramsSchema"]`                                                                        | —                    | 运行时连接面参数的 schema                                                                                              |
+| `resolveRect?`  | `(context: BoundaryFitContext, params: Record<string, JsonValue>) => CenteredBox`                           | `context.visualRect` | 根据视觉 shape 和实例 params 解析本连接面使用的矩形<br />未提供时使用视觉矩形                                          |
 
 </ApiTable>
 
@@ -429,15 +429,15 @@ export type BoundaryDefinition = BoundaryDefinitionInput<JsonObject>;
 
 <ApiTable>
 
-| 成员             | 类型                                                                               | 默认值               | 说明                                                                                                                   |
-| ---------------- | ---------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `TParams` (泛型) | `extends JsonObject`                                                               | —                    | 由 paramsSchema 解析得到的 JSON 对象类型，各连接面回调接收同一参数类型                                                 |
-| `anchor?`        | `(rect: Rect, name: BoundaryAnchorName, params: TParams) => Position \| undefined` | `undefined`          | 可选的标准方位 anchor 支持；Node 引用中的中心与形状专属名称不调用此回调<br />未提供时由调用方回退或报告不支持该 anchor |
-| `boundaryPoint`  | `(rect: Rect, toward: Position, params: TParams) => Position`                      | —                    | 从中心指向 toward 的射线与连接面的交点                                                                                 |
-| `name`           | `string`                                                                           | —                    | 注册表 key，由 IR `boundary` 引用                                                                                      |
-| `outline?`       | `(rect: Rect, params: TParams) => ReadonlyArray<PathCommand>`                      | —                    | 返回与解析后 rect 同坐标系的精确闭合连接面轮廓；空数组表示合法空几何                                                   |
-| `paramsSchema`   | `ZodType<TParams>`                                                                 | —                    | 运行时连接面参数的 schema                                                                                              |
-| `resolveRect?`   | `(context: BoundaryFitContext, params: TParams) => Rect`                           | `context.visualRect` | 根据视觉 shape 和实例 params 解析本连接面使用的矩形<br />未提供时使用视觉矩形                                          |
+| 成员             | 类型                                                                                      | 默认值               | 说明                                                                                                                   |
+| ---------------- | ----------------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `TParams` (泛型) | `extends JsonObject`                                                                      | —                    | 由 paramsSchema 解析得到的 JSON 对象类型，各连接面回调接收同一参数类型                                                 |
+| `anchor?`        | `(rect: CenteredBox, name: BoundaryAnchorName, params: TParams) => Position \| undefined` | `undefined`          | 可选的标准方位 anchor 支持；Node 引用中的中心与形状专属名称不调用此回调<br />未提供时由调用方回退或报告不支持该 anchor |
+| `boundaryPoint`  | `(rect: CenteredBox, toward: Position, params: TParams) => Position`                      | —                    | 从中心指向 toward 的射线与连接面的交点                                                                                 |
+| `name`           | `string`                                                                                  | —                    | 注册表 key，由 IR `boundary` 引用                                                                                      |
+| `outline?`       | `(rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>`                      | —                    | 返回与解析后 rect 同坐标系的精确闭合连接面轮廓；空数组表示合法空几何                                                   |
+| `paramsSchema`   | `ZodType<TParams>`                                                                        | —                    | 运行时连接面参数的 schema                                                                                              |
+| `resolveRect?`   | `(context: BoundaryFitContext, params: TParams) => CenteredBox`                           | `context.visualRect` | 根据视觉 shape 和实例 params 解析本连接面使用的矩形<br />未提供时使用视觉矩形                                          |
 
 </ApiTable>
 
@@ -449,10 +449,10 @@ export type BoundaryDefinition = BoundaryDefinitionInput<JsonObject>;
 export type BoundaryDefinitionInput<TParams extends JsonObject> = {
   name: string;
   paramsSchema: ZodType<TParams>;
-  resolveRect?: (context: BoundaryFitContext, params: TParams) => Rect;
-  outline?: (rect: Rect, params: TParams) => ReadonlyArray<PathCommand>;
-  boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
-  anchor?: (rect: Rect, name: BoundaryAnchorName, params: TParams) => Position | undefined;
+  resolveRect?: (context: BoundaryFitContext, params: TParams) => CenteredBox;
+  outline?: (rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>;
+  boundaryPoint: (rect: CenteredBox, toward: Position, params: TParams) => Position;
+  anchor?: (rect: CenteredBox, name: BoundaryAnchorName, params: TParams) => Position | undefined;
 };
 ```
 
@@ -460,7 +460,7 @@ export type BoundaryDefinitionInput<TParams extends JsonObject> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ShapeDefinition"} path={"packages/kernel/core/src/contract/shape/types.ts"} startLine={175}>ShapeDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ShapeDefinition"} path={"packages/kernel/core/src/contract/shape/types.ts"} startLine={179}>ShapeDefinition</ApiSourceLink>
 
 所有函数收 `JsonObject`（实际类型由 `paramsSchema.parse` 在编译期保证）；registry 同构
 不泛型化（避免逆变 / 落 any）。定义点用 `defineShape<TParams>` 拿类型安全
@@ -471,20 +471,20 @@ export type BoundaryDefinitionInput<TParams extends JsonObject> = {
 
 <ApiTable>
 
-| 成员                  | 类型                                                                                                                                   | 默认值                   | 说明                                                                                                                                                                            |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `anchor`              | `(rect: Rect, name: ShapeAnchorName, params: Record<string, JsonValue>) => Position \| undefined`                                      | —                        | 解析命名 anchor 的世界坐标；不支持时返回 `undefined`                                                                                                                            |
-| `boundaryPoint`       | `(rect: Rect, toward: Position, params: Record<string, JsonValue>) => Position`                                                        | —                        | 返回从 rect 中心指向 `toward` 的射线与 shape 边界的交点<br />`rect` 可包含旋转；实现需要按需转换坐标                                                                            |
-| `circumscribe`        | `(innerHalfWidth: number, innerHalfHeight: number, params: Record<string, JsonValue>) => { halfWidth: number; halfHeight: number; }`   | —                        | 根据内容半轴和 params 计算完整 shape 的外接 AABB 半轴                                                                                                                           |
-| `circumscribeOffset?` | `(params: Record<string, JsonValue>) => Position`                                                                                      | `[0, 0]`                 | 外接 AABB 中心相对 node `position` 的未旋转局部偏移                                                                                                                             |
-| `connectionEnvelope?` | `(rect: Rect, kind: ConnectionEnvelopeKind, params: Record<string, JsonValue>) => ConnectionEnvelope \| undefined`                     | `undefined`              | 返回安全包含视觉几何轮廓的规则连接面半轴<br />结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩。未提供时 tight boundary 回退到 bounds 并发出 warning |
-| `edgePoint?`          | `(rect: Rect, side: Side, t: number, params: Record<string, JsonValue>) => Position`                                                   | `undefined`              | 解析标准 side 上 `t ∈ [0, 1]` 的比例点<br />`rect` 可包含旋转；未实现表示该 shape 不支持 side anchor                                                                            |
-| `emit`                | `(rect: Rect, style: ResolvedShapeStyle, round: (n: number) => number, params: Record<string, JsonValue>) => Iterable<ScenePrimitive>` | —                        | 生成轴对齐 rect 内的视觉 primitive                                                                                                                                              |
-| `keyPoints?`          | `(rect: Rect, params: Record<string, JsonValue>) => ReadonlyArray<Readonly<{ name: string; position: Position; }>>`                    | —                        | 返回 provider 命名的稳定结构关键点；名称在同一实例内必须唯一                                                                                                                    |
-| `name`                | `string`                                                                                                                               | —                        | shape 名称，由 IR `node.shape` 引用                                                                                                                                             |
-| `outline?`            | `(rect: Rect, params: Record<string, JsonValue>) => ReadonlyArray<PathCommand>`                                                        | —                        | 返回与 rect 同坐标系的精确闭合视觉轮廓；空数组表示合法空几何                                                                                                                    |
-| `paramsSchema`        | `ShapeDefinition["paramsSchema"]`                                                                                                      | —                        | 实例参数 schema<br />解析结果必须是 JSON object；无参 shape 使用 `z.strictObject({})`                                                                                           |
-| `scaleParams?`        | `(params: Record<string, JsonValue>, sx: number, sy: number) => Record<string, JsonValue>`                                             | `scaleJsonObjectNumbers` | 返回 node scale 后的 params<br />适用于 params 含角度等非长度字段的 shape；省略时按 Math.sqrt(sx \* sy) 深度缩放 params 中的数值叶子                                            |
+| 成员                  | 类型                                                                                                                                          | 默认值                   | 说明                                                                                                                                                                            |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `anchor`              | `(rect: CenteredBox, name: ShapeAnchorName, params: Record<string, JsonValue>) => Position \| undefined`                                      | —                        | 解析命名 anchor 的世界坐标；不支持时返回 `undefined`                                                                                                                            |
+| `boundaryPoint`       | `(rect: CenteredBox, toward: Position, params: Record<string, JsonValue>) => Position`                                                        | —                        | 返回从 rect 中心指向 `toward` 的射线与 shape 边界的交点<br />`rect` 可包含旋转；实现需要按需转换坐标                                                                            |
+| `circumscribe`        | `(innerHalfWidth: number, innerHalfHeight: number, params: Record<string, JsonValue>) => { halfWidth: number; halfHeight: number; }`          | —                        | 根据内容半轴和 params 计算完整 shape 的外接 AABB 半轴                                                                                                                           |
+| `circumscribeOffset?` | `(params: Record<string, JsonValue>) => Position`                                                                                             | `[0, 0]`                 | 外接 AABB 中心相对 node `position` 的未旋转局部偏移                                                                                                                             |
+| `connectionEnvelope?` | `(rect: CenteredBox, kind: ConnectionEnvelopeKind, params: Record<string, JsonValue>) => ConnectionEnvelope \| undefined`                     | `undefined`              | 返回安全包含视觉几何轮廓的规则连接面半轴<br />结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩。未提供时 tight boundary 回退到 bounds 并发出 warning |
+| `edgePoint?`          | `(rect: CenteredBox, side: Side, t: number, params: Record<string, JsonValue>) => Position`                                                   | `undefined`              | 解析标准 side 上 `t ∈ [0, 1]` 的比例点<br />`rect` 可包含旋转；未实现表示该 shape 不支持 side anchor                                                                            |
+| `emit`                | `(rect: CenteredBox, style: ResolvedShapeStyle, round: (n: number) => number, params: Record<string, JsonValue>) => Iterable<ScenePrimitive>` | —                        | 生成轴对齐 rect 内的视觉 primitive                                                                                                                                              |
+| `keyPoints?`          | `(rect: CenteredBox, params: Record<string, JsonValue>) => ReadonlyArray<Readonly<{ name: string; position: Position; }>>`                    | —                        | 返回 provider 命名的稳定结构关键点；名称在同一实例内必须唯一                                                                                                                    |
+| `name`                | `string`                                                                                                                                      | —                        | shape 名称，由 IR `node.shape` 引用                                                                                                                                             |
+| `outline?`            | `(rect: CenteredBox, params: Record<string, JsonValue>) => ReadonlyArray<PathCommand>`                                                        | —                        | 返回与 rect 同坐标系的精确闭合视觉轮廓；空数组表示合法空几何                                                                                                                    |
+| `paramsSchema`        | `ShapeDefinition["paramsSchema"]`                                                                                                             | —                        | 实例参数 schema<br />解析结果必须是 JSON object；无参 shape 使用 `z.strictObject({})`                                                                                           |
+| `scaleParams?`        | `(params: Record<string, JsonValue>, sx: number, sy: number) => Record<string, JsonValue>`                                                    | `scaleJsonObjectNumbers` | 返回 node scale 后的 params<br />适用于 params 含角度等非长度字段的 shape；省略时按 Math.sqrt(sx \* sy) 深度缩放 params 中的数值叶子                                            |
 
 </ApiTable>
 
@@ -514,16 +514,16 @@ export type ShapeDefinition = ShapeDefinitionInput<JsonObject>;
 | 成员                  | 类型                                                                                                                                    | 默认值                   | 说明                                                                                                                                                                            |
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `TParams` (泛型)      | `extends JsonObject`                                                                                                                    | —                        | 由 paramsSchema 解析得到的 JSON 对象类型，各形状回调接收同一参数类型                                                                                                            |
-| `anchor`              | `(rect: Rect, name: ShapeAnchorName, params: TParams) => Position \| undefined`                                                         | —                        | 解析命名 anchor 的世界坐标；不支持时返回 `undefined`                                                                                                                            |
-| `boundaryPoint`       | `(rect: Rect, toward: Position, params: TParams) => Position`                                                                           | —                        | 返回从 rect 中心指向 `toward` 的射线与 shape 边界的交点<br />`rect` 可包含旋转；实现需要按需转换坐标                                                                            |
+| `anchor`              | `(rect: CenteredBox, name: ShapeAnchorName, params: TParams) => Position \| undefined`                                                  | —                        | 解析命名 anchor 的世界坐标；不支持时返回 `undefined`                                                                                                                            |
+| `boundaryPoint`       | `(rect: CenteredBox, toward: Position, params: TParams) => Position`                                                                    | —                        | 返回从 rect 中心指向 `toward` 的射线与 shape 边界的交点<br />`rect` 可包含旋转；实现需要按需转换坐标                                                                            |
 | `circumscribe`        | `(innerHalfWidth: number, innerHalfHeight: number, params: TParams) => {`<br />`halfWidth: number;`<br />`halfHeight: number;`<br />`}` | —                        | 根据内容半轴和 params 计算完整 shape 的外接 AABB 半轴                                                                                                                           |
 | `circumscribeOffset?` | `(params: TParams) => Position`                                                                                                         | `[0, 0]`                 | 外接 AABB 中心相对 node `position` 的未旋转局部偏移                                                                                                                             |
-| `connectionEnvelope?` | `(rect: Rect, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope \| undefined`                                        | `undefined`              | 返回安全包含视觉几何轮廓的规则连接面半轴<br />结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩。未提供时 tight boundary 回退到 bounds 并发出 warning |
-| `edgePoint?`          | `(rect: Rect, side: Side, t: number, params: TParams) => Position`                                                                      | `undefined`              | 解析标准 side 上 `t ∈ [0, 1]` 的比例点<br />`rect` 可包含旋转；未实现表示该 shape 不支持 side anchor                                                                            |
-| `emit`                | `(rect: Rect, style: ResolvedShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>`                    | —                        | 生成轴对齐 rect 内的视觉 primitive                                                                                                                                              |
-| `keyPoints?`          | `(rect: Rect, params: TParams) => ReadonlyArray<GeometryKeyPoint>`                                                                      | —                        | 返回 provider 命名的稳定结构关键点；名称在同一实例内必须唯一                                                                                                                    |
+| `connectionEnvelope?` | `(rect: CenteredBox, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope \| undefined`                                 | `undefined`              | 返回安全包含视觉几何轮廓的规则连接面半轴<br />结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩。未提供时 tight boundary 回退到 bounds 并发出 warning |
+| `edgePoint?`          | `(rect: CenteredBox, side: Side, t: number, params: TParams) => Position`                                                               | `undefined`              | 解析标准 side 上 `t ∈ [0, 1]` 的比例点<br />`rect` 可包含旋转；未实现表示该 shape 不支持 side anchor                                                                            |
+| `emit`                | `(rect: CenteredBox, style: ResolvedShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>`             | —                        | 生成轴对齐 rect 内的视觉 primitive                                                                                                                                              |
+| `keyPoints?`          | `(rect: CenteredBox, params: TParams) => ReadonlyArray<GeometryKeyPoint>`                                                               | —                        | 返回 provider 命名的稳定结构关键点；名称在同一实例内必须唯一                                                                                                                    |
 | `name`                | `string`                                                                                                                                | —                        | shape 名称，由 IR `node.shape` 引用                                                                                                                                             |
-| `outline?`            | `(rect: Rect, params: TParams) => ReadonlyArray<PathCommand>`                                                                           | —                        | 返回与 rect 同坐标系的精确闭合视觉轮廓；空数组表示合法空几何                                                                                                                    |
+| `outline?`            | `(rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>`                                                                    | —                        | 返回与 rect 同坐标系的精确闭合视觉轮廓；空数组表示合法空几何                                                                                                                    |
 | `paramsSchema`        | `ZodType<TParams>`                                                                                                                      | —                        | 实例参数 schema<br />解析结果必须是 JSON object；无参 shape 使用 `z.strictObject({})`                                                                                           |
 | `scaleParams?`        | `(params: TParams, sx: number, sy: number) => TParams`                                                                                  | `scaleJsonObjectNumbers` | 返回 node scale 后的 params<br />适用于 params 含角度等非长度字段的 shape；省略时按 Math.sqrt(sx \* sy) 深度缩放 params 中的数值叶子                                            |
 
@@ -546,14 +546,18 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
     halfHeight: number;
   };
   circumscribeOffset?: (params: TParams) => Position;
-  boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
-  anchor: (rect: Rect, name: ShapeAnchorName, params: TParams) => Position | undefined;
-  connectionEnvelope?: (rect: Rect, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope | undefined;
-  outline?: (rect: Rect, params: TParams) => ReadonlyArray<PathCommand>;
-  keyPoints?: (rect: Rect, params: TParams) => ReadonlyArray<GeometryKeyPoint>;
-  edgePoint?: (rect: Rect, side: Side, t: number, params: TParams) => Position;
+  boundaryPoint: (rect: CenteredBox, toward: Position, params: TParams) => Position;
+  anchor: (rect: CenteredBox, name: ShapeAnchorName, params: TParams) => Position | undefined;
+  connectionEnvelope?: (
+    rect: CenteredBox,
+    kind: ConnectionEnvelopeKind,
+    params: TParams,
+  ) => ConnectionEnvelope | undefined;
+  outline?: (rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>;
+  keyPoints?: (rect: CenteredBox, params: TParams) => ReadonlyArray<GeometryKeyPoint>;
+  edgePoint?: (rect: CenteredBox, side: Side, t: number, params: TParams) => Position;
   emit: (
-    rect: Rect,
+    rect: CenteredBox,
     style: ResolvedShapeStyle,
     round: (n: number) => number,
     params: TParams,
@@ -566,7 +570,7 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BUILTIN_BOUNDARIES"} path={"packages/kernel/core/src/providers/boundary/definitions.ts"} startLine={119}>BUILTIN_BOUNDARIES</ApiSourceLink>
+#### <ApiSourceLink label={"BUILTIN_BOUNDARIES"} path={"packages/kernel/core/src/providers/boundary/definitions.ts"} startLine={125}>BUILTIN_BOUNDARIES</ApiSourceLink>
 
 ```ts
 export const BUILTIN_BOUNDARIES = defineBuiltinProviderArray<BoundaryDefinition, BuiltinBoundaryProviderName>([
@@ -661,7 +665,7 @@ export declare const defineShape: <TParams extends JsonObject>(def: ShapeDefinit
 | 成员       | 类型                                                                                                                                                                                                                                                                                                                         | 默认值 | 说明                                                         |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------ |
 | `id`       | `string`                                                                                                                                                                                                                                                                                                                     | —      | 必填引用标识，供路径或节点定位使用                           |
-| `position` | `[number, number] \| SharedPolarPosition \| IRBetweenPosition \| { direction: "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left"; of: string; distance?: number \| undefined; } \| { of: string \| [number, number] \| SharedPolarPosition; offset: [number, number]; }` | —      | 笛卡尔、极坐标、相对、偏移或两点比例位置；不支持自身锚点对齐 |
+| `position` | `SharedPolarPosition \| IRBetweenPosition \| [number, number] \| { direction: "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left"; of: string; distance?: number \| undefined; } \| { of: string \| SharedPolarPosition \| [number, number]; offset: [number, number]; }` | —      | 笛卡尔、极坐标、相对、偏移或两点比例位置；不支持自身锚点对齐 |
 | `type`     | `"coordinate"`                                                                                                                                                                                                                                                                                                               | —      | 判别字段，固定为 coordinate                                  |
 
 </ApiTable>
@@ -752,7 +756,7 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 | `opacity?`     | `number`                                                                                                                                                                                                                | —      | 标签自身不透明度，与节点不透明度相乘                                         |
 | `pin?`         | `false \| true \| { stroke?: string \| number \| undefined; strokeWidth?: number \| undefined; dashPattern?: Array<number> \| undefined; dashOffset?: number \| undefined; }`                                           | —      | 外侧标签引线；true 使用默认值，对象覆盖引线样式，不能与 inside 同用          |
 | `placement?`   | `"outside" \| "inside"`                                                                                                                                                                                                 | —      | 标签位于附着点的外侧或内侧，缺省 outside                                     |
-| `position?`    | `number \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| { boundary: "top" \| "right" \| "bottom" \| "left"; fraction?: number \| undefined; }` | —      | 命名方向、center、角度或边界比例位置，缺省 top                               |
+| `position?`    | `number \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| "center" \| { boundary: "top" \| "right" \| "bottom" \| "left"; fraction?: number \| undefined; }` | —      | 命名方向、center、角度或边界比例位置，缺省 top                               |
 | `rotate?`      | `number \| "none" \| "radial" \| "tangent"`                                                                                                                                                                             | —      | 标签自身旋转：none、radial、tangent 或角度；边界比例位置以所选边的外法向为准 |
 | `text`         | `ZodInfer<typeof NodeLabelSchema.shape["text"]>`                                                                                                                                                                        | —      | 标签文字或混排行                                                             |
 | `textColor?`   | `string \| number`                                                                                                                                                                                                      | —      | 标签文字颜色，缺省沿继承链求值                                               |
@@ -853,7 +857,7 @@ export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;
 
 | 成员           | 类型                                                                                                                                                                                                                                                                                  | 默认值 | 说明                                                                   |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------- |
-| `blendMode?`   | `"normal" \| "color" \| "multiply" \| "screen" \| "overlay" \| "darken" \| "lighten" \| "color-dodge" \| "color-burn" \| "hard-light" \| "soft-light" \| "difference" \| "exclusion" \| "hue" \| "saturation" \| "luminosity"`                                                        | —      | 图元与背景的混合模式                                                   |
+| `blendMode?`   | `"color" \| "normal" \| "multiply" \| "screen" \| "overlay" \| "darken" \| "lighten" \| "color-dodge" \| "color-burn" \| "hard-light" \| "soft-light" \| "difference" \| "exclusion" \| "hue" \| "saturation" \| "luminosity"`                                                        | —      | 图元与背景的混合模式                                                   |
 | `color?`       | `string`                                                                                                                                                                                                                                                                              | —      | 图元主色，未单独覆盖的描边、填充和标签可由它派生                       |
 | `dashed?`      | `false \| true`                                                                                                                                                                                                                                                                       | —      | 虚线预设，被显式 dashPattern 覆盖                                      |
 | `dashOffset?`  | `number`                                                                                                                                                                                                                                                                              | —      | 虚线起点偏移，允许正数、零或负数                                       |
@@ -862,7 +866,7 @@ export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;
 | `fill?`        | `ZodInfer<typeof NodeStyleSchema.shape["fill"]>`                                                                                                                                                                                                                                      | —      | 填充：精确颜色、主色权重或 Paint                                       |
 | `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                                                                                 | —      | 正文字体覆盖，缺省字段沿用文字默认值                                   |
 | `opacity?`     | `number \| { overall?: number \| undefined; fill?: number \| undefined; stroke?: number \| undefined; }`                                                                                                                                                                              | —      | 整个图元的不透明度                                                     |
-| `shadow?`      | `"none" \| "sm" \| "lg" \| "xl" \| "2xl" \| "md" \| { preset?: "none" \| "sm" \| "lg" \| "xl" \| "2xl" \| "md" \| undefined; offsetX?: number \| undefined; offsetY?: number \| undefined; blur?: number \| undefined; color?: string \| undefined; opacity?: number \| undefined; }` | —      | 投影预设或投影配置，不影响节点形状尺寸                                 |
+| `shadow?`      | `"none" \| "sm" \| "md" \| "lg" \| "xl" \| "2xl" \| { preset?: "none" \| "sm" \| "md" \| "lg" \| "xl" \| "2xl" \| undefined; offsetX?: number \| undefined; offsetY?: number \| undefined; blur?: number \| undefined; color?: string \| undefined; opacity?: number \| undefined; }` | —      | 投影预设或投影配置，不影响节点形状尺寸                                 |
 | `stroke?`      | `ZodInfer<typeof NodeStyleSchema.shape["stroke"]>`                                                                                                                                                                                                                                    | —      | 描边：精确颜色、主色权重或 Paint                                       |
 | `strokeWidth?` | `number`                                                                                                                                                                                                                                                                              | —      | 边框宽度，单位为用户单位；省略时默认 1                                 |
 | `textColor?`   | `string \| number`                                                                                                                                                                                                                                                                    | —      | 文字颜色或主色权重；contrast 根据静态填充选择黑白，缺省为 currentColor |

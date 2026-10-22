@@ -56,6 +56,7 @@
     "dist/**/*"
   ],
   "scripts": {
+    "bench": "pnpm run build && vitest bench --config vitest.bench.config.ts --run --no-file-parallelism",
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint .",
