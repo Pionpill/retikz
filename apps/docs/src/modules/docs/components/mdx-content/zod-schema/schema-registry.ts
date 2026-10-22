@@ -789,10 +789,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PathStructure',
   },
   PathSchema: { schema: IR.PathSchema, label: 'Path', url: '/kernel/components/path/reference#pathschema' },
-  DrawableStyleSchema: {
-    schema: IR.DrawableStyleSchema,
-    label: 'DrawableStyle',
-  },
   DrawableInstanceSchema: {
     schema: IR.DrawableInstanceSchema,
     label: 'DrawableInstance',
@@ -977,10 +973,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   GraphicEffectsSchema: {
     schema: IR.GraphicEffectsSchema,
     label: 'GraphicEffects',
-  },
-  StrokeStyleSchema: {
-    schema: IR.StrokeStyleSchema,
-    label: 'StrokeStyle',
   },
   StrokeWidthSchema: {
     schema: IR.StrokeWidthSchema,
@@ -1194,9 +1186,9 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'ArrowDetail',
     url: '/kernel/components/path/reference#arrowdetailschema',
   },
-  ArrowEndDetailSchema: {
-    schema: IR.ArrowEndDetailSchema,
-    label: 'ArrowEndDetail',
+  ArrowStyleSchema: {
+    schema: IR.ArrowStyleSchema,
+    label: 'ArrowStyle',
     url: '/kernel/components/path/reference#arrowenddetailschema',
   },
 

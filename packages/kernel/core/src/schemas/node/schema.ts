@@ -20,8 +20,14 @@ import {
 } from '../position';
 import { AngleDegreesSchema } from '../scalar';
 import { ShapeValueSchema } from '../shape';
-import { StrokeDashOffsetSchema, StrokeDashPatternSchema } from '../stroke';
-import { ContextualColorSchema, GraphicStyleSchema } from '../style';
+import {
+  ContextualColorSchema,
+  GraphicColorSchema,
+  GraphicFillSchema,
+  GraphicStrokeSchema,
+  GraphicOpacitySchema,
+  GraphicEffectsSchema,
+} from '../style';
 import {
   BoundaryLabelSchema,
   createLabelVisualStyleShape,
@@ -70,14 +76,10 @@ export const BoxSizeSchema = strictObject({
 
 /** 校验节点外侧标签引线的颜色、线宽与虚线样式 */
 export const NodeLabelPinSchema = object({
+  ...GraphicStrokeSchema.omit({ stroke: true }).shape,
   stroke: ContextualColorSchema.optional().describe(
     'Leader line color; an exact CSS color or a weight derived from the effective label color.',
   ),
-  strokeWidth: PositiveNumberSchema.optional().describe('Leader line width (user units); default 1'),
-  dashPattern: array(number()).optional().describe('Leader dash pattern lengths in user units.'),
-  dashOffset: number()
-    .optional()
-    .describe('Leader dash offset in user units. Positive and negative finite values are allowed.'),
 }).describe('Leader line style overrides for an outside node label.');
 
 /** 校验附属标签的文本、附着位置、视觉样式与引线描述 */
@@ -160,18 +162,22 @@ const NodePositionSchema = preprocess(
   union([SharedNodePositionSchema, AnchorPositionSchema]),
 );
 
-/** 节点实例视觉覆盖 */
-export const NodeStyleSchema = strictObject({
-  ...GraphicStyleSchema.shape,
-  strokeWidth: NonNegativeNumberSchema.optional().describe('Border width in user units; defaults to 1 when omitted'),
+/** 校验节点描边及虚线快捷设置 */
+export const NodeStrokeSchema = strictObject({
+  ...GraphicStrokeSchema.shape,
   dashed: boolean().optional().describe('Dashed border preset. `dashPattern` takes precedence.'),
   dotted: boolean().optional().describe('Dotted border preset. `dashPattern` and `dashed` take precedence.'),
-  dashPattern: StrokeDashPatternSchema.optional().describe(
-    'Explicit stroke dash pattern lengths in user units; overrides `dashed` and `dotted`.',
-  ),
-  dashOffset: StrokeDashOffsetSchema.optional().describe(
-    'Explicit stroke dash offset in user units. Positive and negative finite values are allowed.',
-  ),
+}).describe(
+  'Node stroke overrides. dashPattern takes precedence over dashed, then dotted. Omitted width defaults to 1 when no width is inherited.',
+);
+
+/** 节点实例视觉覆盖 */
+export const NodeStyleSchema = strictObject({
+  ...GraphicColorSchema.shape,
+  ...GraphicFillSchema.shape,
+  ...NodeStrokeSchema.shape,
+  ...GraphicOpacitySchema.shape,
+  ...GraphicEffectsSchema.shape,
   ...TextVisualSchema.shape,
 }).describe('Node visual overrides; fields independently override inherited defaults.');
 

@@ -378,6 +378,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '共享虚线描边', en: 'Shared dashed strokes' },
+          content: {
+            zh: '`Scope.defaults.style` 支持 `dashPattern` 与 `dashOffset`，Node 与 Path 按既有通道优先级继承；Scope 外框支持独立的虚线与相位设置。',
+            en: '`Scope.defaults.style` supports `dashPattern` and `dashOffset`, inherited by Node and Path through existing channel precedence. Scope frames support independent dash patterns and offsets.',
+          },
+        },
+        {
           label: { zh: '移除旧输入 diff 协议', en: 'Remove the old input diff protocol' },
           content: {
             zh: '移除 CoreChange 及其增删改移动类型、CoreComputationDiagnosticCode 和旧快照 diff 校验。完整输入继续重建并提交 replaceScene；Weave 批次执行尚未接入。Runtime 通用 ChangeSet 与图元身份契约保持不变。',

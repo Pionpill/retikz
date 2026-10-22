@@ -1,13 +1,12 @@
 import type { IRStep } from '@retikz/core';
 import {
-  ArrowEndDetailSchema,
+  ArrowStyleSchema,
   PathLabelSchema,
   NodeTargetSchema,
   DrawableInstanceSchema,
   PathTransformSchema,
   GraphicColorSchema,
   GraphicOpacitySchema,
-  GraphicStrokeSchema,
   GraphicEffectsSchema,
   PathStrokeSchema,
   PathStyleSchema,
@@ -59,19 +58,19 @@ export const GraphRelationRouteStepSchema: ZodType<GraphRelationRouteStep> = Ste
 }).transform(step => step);
 
 /** 校验不含外观颜色的端点标记结构配方 */
-export const GraphRelationMarkerRecipeSchema = ArrowEndDetailSchema.pick({
+export const GraphRelationMarkerRecipeSchema = ArrowStyleSchema.pick({
   shape: true,
   scale: true,
   length: true,
   width: true,
 })
   .extend({
-    shape: ArrowEndDetailSchema.shape.shape.unwrap().describe('Registered Core Arrow provider name.'),
+    shape: ArrowStyleSchema.shape.shape.unwrap().describe('Registered Core Arrow provider name.'),
   })
   .describe('Structural marker recipe without appearance tokens.');
 
 /** 校验单个关系端点标记的稀疏外观覆盖 */
-export const GraphRelationMarkerAppearanceSchema = ArrowEndDetailSchema.pick({
+export const GraphRelationMarkerAppearanceSchema = ArrowStyleSchema.pick({
   color: true,
   fill: true,
   opacity: true,
@@ -98,7 +97,6 @@ export const RelationSchema = strictObject({
   style: strictObject({
     ...GraphicColorSchema.shape,
     ...GraphicOpacitySchema.shape,
-    ...GraphicStrokeSchema.shape,
     ...GraphicEffectsSchema.shape,
     ...PathStrokeSchema.shape,
   })

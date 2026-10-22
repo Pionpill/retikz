@@ -1,3 +1,3 @@
-export * from './primitives';
+export * from './constants';
 export * from './schema';
 export * from './types';

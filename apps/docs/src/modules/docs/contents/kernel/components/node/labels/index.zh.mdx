@@ -130,6 +130,8 @@ import { Node } from '@retikz/react';
 
 `label.pin` 给标签加一条**引线**连回节点边界：`pin: true` 是默认细实线（继承标签色）；`pin: { stroke, strokeWidth, dashPattern, dashOffset }` 自定义引线样式；不写 / `false` 则无引线。引线终点是摆放射线与旋转后视觉框的精确交点，没有额外隐藏留白；标签摆放仍只由前述盒几何决定。
 
+引线与 Path 使用相同的线宽和虚线约束：`strokeWidth` 非负，缺省为 `1`，设为 `0` 时不显示引线；`dashPattern` 是非空的非负长度数组；`dashOffset` 允许负值。
+
 <ComponentPreview
   files={['node-label-rotate-pin', 'node-label-rotate-pin.preview.tsx']}
   size="lg"

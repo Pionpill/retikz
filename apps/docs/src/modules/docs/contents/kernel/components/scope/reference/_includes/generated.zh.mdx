@@ -205,7 +205,7 @@ export type IRScope = IRScopeProps & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopeAnchorPosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={35}>IRScopeAnchorPosition</ApiSourceLink> / <ApiSourceLink label={"ScopeAnchorPositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={61}>ScopeAnchorPositionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopeAnchorPosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={35}>IRScopeAnchorPosition</ApiSourceLink> / <ApiSourceLink label={"ScopeAnchorPositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={59}>ScopeAnchorPositionSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -216,7 +216,7 @@ export type IRScope = IRScopeProps & {
 | 成员          | 类型                                                                                                                                                                                                                                                 | 默认值 | 说明                                           |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------- |
 | `kind`        | `"anchor"`                                                                                                                                                                                                                                           | —      | 锚点定位的判别字段                             |
-| `selfAnchor?` | `number \| "origin" \| string & {} \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| [number, number] \| { side: "top" \| "right" \| "bottom" \| "left"; fraction: number; }` | —      | 变换后 Scope 包络上的对齐点；省略时使用 center |
+| `selfAnchor?` | `number \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| [number, number] \| string & {} \| "center" \| "origin" \| { side: "top" \| "right" \| "bottom" \| "left"; fraction: number; }` | —      | 变换后 Scope 包络上的对齐点；省略时使用 center |
 | `target`      | `ZodInput<typeof ScopeAnchorPositionSchema.shape["target"]>`                                                                                                                                                                                         | —      | 父坐标系中的定位目标                           |
 
 </ApiTable>
@@ -248,7 +248,7 @@ export type IRScopeAnchorPosition = ZodInput<typeof ScopeAnchorPositionSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopeDefaults"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={66}>IRScopeDefaults</ApiSourceLink> / <ApiSourceLink label={"ScopeDefaultsSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={75}>ScopeDefaultsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopeDefaults"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={66}>IRScopeDefaults</ApiSourceLink> / <ApiSourceLink label={"ScopeDefaultsSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={73}>ScopeDefaultsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -296,7 +296,7 @@ export type IRScopeDefaults = ZodInfer<typeof ScopeDefaultsSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopeFrame"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={52}>IRScopeFrame</ApiSourceLink> / <ApiSourceLink label={"ScopeFrameSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={101}>ScopeFrameSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopeFrame"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={52}>IRScopeFrame</ApiSourceLink> / <ApiSourceLink label={"ScopeFrameSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={99}>ScopeFrameSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -335,7 +335,7 @@ export type IRScopeFrame = ZodInput<typeof ScopeFrameSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopePosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={38}>IRScopePosition</ApiSourceLink> / <ApiSourceLink label={"ScopePositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={70}>ScopePositionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopePosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={38}>IRScopePosition</ApiSourceLink> / <ApiSourceLink label={"ScopePositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={68}>ScopePositionSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -355,7 +355,7 @@ export type IRScopePosition = ZodInput<typeof ScopePositionSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopePositionTarget"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={32}>IRScopePositionTarget</ApiSourceLink> / <ApiSourceLink label={"ScopePositionTargetSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={56}>ScopePositionTargetSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopePositionTarget"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={32}>IRScopePositionTarget</ApiSourceLink> / <ApiSourceLink label={"ScopePositionTargetSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={54}>ScopePositionTargetSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -419,7 +419,7 @@ export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame' | 'po
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScopeSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={157}>ScopeSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={155}>ScopeSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -458,7 +458,7 @@ export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame' | 'po
 
 `Scope.theme` 只包含稀疏的 `style` / `mode` 环境选择器，逐字段继承。Core 解析共享颜色，后代 Composite 按自身契约消费该环境；`defaults.reset` 不重置 Theme。
 
-#### <ApiSourceLink label={"ScopeFrameStyleSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={93}>ScopeFrameStyleSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeFrameStyleSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={91}>ScopeFrameStyleSchema</ApiSourceLink>
 
 <ZodSchema name="ScopeFrameStyleSchema" shallow />
 
@@ -470,7 +470,7 @@ export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame' | 'po
   description="Scope 固有包络上的锚点、局部原点 origin，或显式局部坐标。"
 />
 
-#### <ApiSourceLink label={"ClipSchema"} path={"packages/kernel/core/src/schemas/clip/schema.ts"} startLine={40}>ClipSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ClipSchema"} path={"packages/kernel/core/src/schemas/clip/schema.ts"} startLine={39}>ClipSchema</ApiSourceLink>
 
 <ZodSchema
   shallow

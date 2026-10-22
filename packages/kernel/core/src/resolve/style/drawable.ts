@@ -1,4 +1,4 @@
-import type { IRDrawableStyle, IRDropShadow, ResolvedDropShadow, ShadowPreset, StrokeDashPattern } from '../../schemas';
+import type { IRGraphicStyle, IRDropShadow, ResolvedDropShadow, ShadowPreset, StrokeDashPattern } from '../../schemas';
 import { SHADOW_PRESETS } from '../../schemas';
 
 /** 虚线预设 */
@@ -10,19 +10,21 @@ const DOTTED_PATTERN: StrokeDashPattern = [1, 2];
 /** 投影缺省颜色 */
 const DEFAULT_SHADOW_COLOR = 'rgba(0,0,0,0.5)';
 
-const DRAWABLE_STYLE_KEYS = [
+const GRAPHIC_STYLE_KEYS = [
   'color',
   'fill',
   'stroke',
   'strokeWidth',
+  'dashPattern',
+  'dashOffset',
   'opacity',
   'shadow',
   'blendMode',
-] as const satisfies ReadonlyArray<keyof IRDrawableStyle>;
+] as const satisfies ReadonlyArray<keyof IRGraphicStyle>;
 
-/** 提取 drawable style 字段 */
-export const pickDrawableStyle = (src: Partial<IRDrawableStyle>): Partial<IRDrawableStyle> => {
-  const entries = DRAWABLE_STYLE_KEYS.flatMap(key => {
+/** 提取通用图形样式字段 */
+export const pickGraphicStyle = (src: Partial<IRGraphicStyle>): Partial<IRGraphicStyle> => {
+  const entries = GRAPHIC_STYLE_KEYS.flatMap(key => {
     const value = src[key];
     return value === undefined ? [] : ([[key, value]] as const);
   });

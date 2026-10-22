@@ -259,6 +259,8 @@ Theme 与样式默认值是两条独立通道：`defaults.reset` 不重置 Theme
 
 **样式默认值。** Scope 同时提供 `defaults.style.color`、`defaults.style` 中的共享视觉属性与 `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow`。这些值逐字段向内继承，元素显式值优先；`defaults.reset` 只切断指定通道的外层继承。
 
+共享描边包含 `stroke`、`strokeWidth`、`dashPattern` 和 `dashOffset`。例如 `defaults: { style: { dashPattern: [6, 2], dashOffset: -2 } }` 同时影响后代 Node 边框和 Path。当前层的通道默认覆盖共享默认，元素显式样式再覆盖通道默认；虚线数组整体替换，`dashOffset: 0` 可覆盖继承相位。省略字段继续继承，使用 `defaults: { reset: ['node'] }` 可切断 Node 通道的外层虚线而保留 Path 通道；空虚线数组不合法。
+
 样式是 Scope 的辅助职责，不改变局部坐标、引用或裁剪语义。需要查字段时查看 [API 参考](/kernel/components/scope/reference)，不必为颜色、线宽或透明度建立额外 Scope。
 
 <ComponentAlert
@@ -274,6 +276,8 @@ Theme 与样式默认值是两条独立通道：`defaults.reset` 不重置 Theme
 <ComponentPreview files="scope-frame" />
 
 `frame: {}` 开启无填充、1 单位宽的默认描边；`frame.padding` 默认 0，只向内容包络外侧增加间距。`boundingShape` 为 `rectangle` 时向四边扩张，为 `circle` 时增加半径。`frame.style` 不继承后代默认值，只共享有效颜色上下文。
+
+外框也支持 `frame: { style: { dashPattern: [3, 2], dashOffset: -1 } }`，但不会继承 `defaults.style` 的虚线设置。
 
 外框始终位于全部子内容下面，跟随 Scope 的变换、定位和裁剪。描边与阴影进入自动取景，但不改变布局、锚点或命中区域；显式 `viewBox` 保持不变。空 Scope 不产生外框，祖先外框也不会因后代外框扩大而反复变大。需要布局内边距或容器尺寸时使用 Standard Surface。
 

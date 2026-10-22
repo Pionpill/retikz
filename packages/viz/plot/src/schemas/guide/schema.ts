@@ -1,5 +1,5 @@
 import {
-  ArrowEndDetailSchema,
+  ArrowStyleSchema,
   ContextualColorSchema,
   FontSchema,
   PathLabelPosition,
@@ -233,9 +233,7 @@ const AxisLineExtentSchema = union([
   }),
 ]).describe('Axis baseline extent along the bound dimension');
 
-const AxisArrowEndSchema = union([boolean(), ArrowEndDetailSchema]).describe(
-  'Axis arrow endpoint switch or visual detail',
-);
+const AxisArrowEndSchema = union([boolean(), ArrowStyleSchema]).describe('Axis arrow endpoint switch or visual detail');
 
 const AxisLineArrowSchema = strictObject({
   negative: AxisArrowEndSchema.optional().describe('Arrow at the negative axis direction endpoint'),

@@ -1,10 +1,44 @@
-import { NormalizedFractionSchema } from '@retikz/foundation';
-import { enum as zodEnum, strictObject, union } from 'zod';
+import { NonBlankStringSchema, NonNegativeNumberSchema, NormalizedFractionSchema } from '@retikz/foundation';
+import { array, enum as zodEnum, lazy, number, strictObject, union } from 'zod';
 
 import { BlendMode, DropShadowSchema, ShadowPreset } from '../effects';
 import { PaintSchema } from '../paint';
-import { StrokeStyleSchema } from '../stroke';
-import { CssColorSchema, OpacitySchema } from './primitives';
+import { PathLineCap, PathLineJoin } from './constants';
+
+/** 校验由非负长度构成的非空虚线序列，长度采用用户单位 */
+export const StrokeDashPatternSchema = array(NonNegativeNumberSchema)
+  .min(1)
+  .describe('Stroke dash pattern lengths in user units.');
+
+/** 校验用户单位下的虚线相位偏移，允许有限负值 */
+export const StrokeDashOffsetSchema = number().describe(
+  'Stroke dash offset in user units. Positive and negative finite values are allowed.',
+);
+
+/** 校验路径端点的线帽形状关键字 */
+export const PathLineCapSchema = zodEnum(PathLineCap).describe('Path stroke endpoint cap keyword.');
+
+/** 校验路径拐角的连接样式关键字 */
+export const PathLineJoinSchema = zodEnum(PathLineJoin).describe('Path stroke corner join keyword.');
+
+/** 校验用户单位下的非负描边宽度 */
+export const StrokeWidthSchema = NonNegativeNumberSchema.describe('Stroke width in user units.');
+
+/** 校验路径端点线帽与拐角连接样式 */
+export const StrokeCapJoinSchema = strictObject({
+  lineCap: PathLineCapSchema.optional().describe(
+    'Stroke endpoint shape. Omitted fields use butt; round adds a half-disc cap and square extends past the endpoint.',
+  ),
+  lineJoin: PathLineJoinSchema.optional().describe(
+    'Stroke corner shape. Omitted fields use miter; round rounds the join and bevel cuts the corner flat.',
+  ),
+}).describe('Stroke endpoint caps and corner joins.');
+
+/** 校验非空 CSS 颜色字符串，不解析颜色语法 */
+export const CssColorSchema = NonBlankStringSchema.describe('Non-blank CSS color string.');
+
+/** 校验闭区间 0 到 1 内的不透明度 */
+export const OpacitySchema = NormalizedFractionSchema.describe('Opacity value in the inclusive 0..1 range.');
 
 /** 校验精确 CSS 颜色或基于有效主色计算的归一化权重 */
 export const ContextualColorSchema = union([CssColorSchema, NormalizedFractionSchema]).describe(
@@ -12,7 +46,7 @@ export const ContextualColorSchema = union([CssColorSchema, NormalizedFractionSc
 );
 
 /** 校验上下文颜色或结构化渐变、图案填充 */
-export const PaintValueSchema = union([ContextualColorSchema, PaintSchema]).describe(
+export const PaintValueSchema = union([ContextualColorSchema, lazy(() => PaintSchema)]).describe(
   'Paint value: a contextual color or an IRPaint object.',
 );
 
@@ -33,10 +67,17 @@ export const GraphicFillSchema = strictObject({
   fill: PaintValueSchema.optional().describe('Fill paint for primary geometry: contextual color or IRPaint.'),
 }).describe('Fill paint for primary geometry.');
 
-/** 校验描边颜色 */
+/** 校验描边颜色、线宽与虚线样式 */
 export const GraphicStrokeSchema = strictObject({
+  strokeWidth: StrokeWidthSchema.optional().describe('Stroke width in user units.'),
+  dashPattern: StrokeDashPatternSchema.optional().describe(
+    'Stroke dash pattern lengths in user units. Omitted fields mean solid line.',
+  ),
+  dashOffset: StrokeDashOffsetSchema.optional().describe(
+    'Stroke dash offset in user units. Positive and negative finite values are allowed.',
+  ),
   stroke: PaintValueSchema.optional().describe('Stroke paint for primary geometry: contextual color or IRPaint.'),
-}).describe('Stroke paint for primary geometry.');
+}).describe('Graphic stroke paint, width, dash pattern, and dash offset.');
 
 /** 校验主体几何共享的主色、填充与描边字段 */
 export const GraphicPaintSchema = strictObject({
@@ -62,7 +103,7 @@ export const GraphicOpacitySchema = strictObject({
 
 /** 校验主体几何的投影与混合模式 */
 export const GraphicEffectsSchema = strictObject({
-  shadow: union([zodEnum(ShadowPreset), DropShadowSchema])
+  shadow: union([zodEnum(ShadowPreset), lazy(() => DropShadowSchema)])
     .optional()
     .describe(
       'Drop shadow on the emitted primary geometry. A preset keyword (`sm`/`md`/`lg`/`xl`/`2xl`/`none`) or an explicit drop-shadow object.',
@@ -80,7 +121,6 @@ export const GraphicStyleSchema = strictObject({
   ...GraphicFillSchema.shape,
   ...GraphicStrokeSchema.shape,
   ...GraphicOpacitySchema.shape,
-  strokeWidth: StrokeStyleSchema.shape.strokeWidth,
   ...GraphicEffectsSchema.shape,
 }).describe('Graphic style fields for primary node / drawable geometry.');
 
@@ -90,5 +130,4 @@ export const CascadingGraphicStyleSchema = strictObject({
   ...GraphicFillSchema.shape,
   ...GraphicStrokeSchema.shape,
   ...GraphicOpacitySchema.shape,
-  strokeWidth: StrokeStyleSchema.shape.strokeWidth,
 }).describe('Cascading graphic style fields shared by node and path-like elements.');

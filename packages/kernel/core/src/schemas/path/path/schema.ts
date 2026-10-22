@@ -8,10 +8,17 @@ import {
 import type { infer as ZodInfer } from 'zod';
 import { array, enum as zodEnum, literal, strictObject, union, unknown } from 'zod';
 
-import { DrawableInstanceSchema, DrawableStyleSchema } from '../../drawable';
+import { DrawableInstanceSchema } from '../../drawable';
 import { AngleDegreesSchema } from '../../scalar';
-import { StrokeCapJoinSchema, StrokeStyleSchema } from '../../stroke';
-import { ArrowEndDetailSchema } from '../arrow';
+import {
+  StrokeCapJoinSchema,
+  GraphicColorSchema,
+  GraphicFillSchema,
+  GraphicStrokeSchema,
+  GraphicOpacitySchema,
+  GraphicEffectsSchema,
+} from '../../style';
+import { ArrowStyleSchema } from '../arrow';
 import { PathLabelSchema, StepSchema } from '../step';
 import { PathFillRule, BuiltinPathKind } from './constants';
 
@@ -29,14 +36,14 @@ export const PathScaleSchema = union([PositiveNumberSchema, PathAnisotropicScale
   'Whole-path scale: a single number for uniform scaling, or an { x, y } object for anisotropic scaling. Applied around the path bounding-box center with rotate.',
 );
 
-/** 校验路径共用的线宽、虚线、端点线帽与拐角样式 */
+/** 校验路径描边颜色、线宽、虚线、端点线帽与拐角样式 */
 export const PathStrokeSchema = strictObject({
-  ...StrokeStyleSchema.shape,
+  ...GraphicStrokeSchema.shape,
   ...StrokeCapJoinSchema.shape,
 }).describe('Path stroke fields combining shared stroke style with path endpoint and join options.');
 
 /** 校验沿路径切线定向的箭头标记，shape 指定能力名称而非方向 */
-export const ArrowMarkSchema = ArrowEndDetailSchema.extend({
+export const ArrowMarkSchema = ArrowStyleSchema.extend({
   kind: literal('arrow').describe('Discriminator marking this mark as an arrow tip.'),
 })
   .strict()
@@ -109,7 +116,10 @@ export const PathStructureSchema = strictObject({
 
 /** 路径实例视觉覆盖 */
 export const PathStyleSchema = strictObject({
-  ...DrawableStyleSchema.shape,
+  ...GraphicColorSchema.shape,
+  ...GraphicFillSchema.shape,
+  ...GraphicOpacitySchema.shape,
+  ...GraphicEffectsSchema.shape,
   ...PathStrokeSchema.shape,
   ...PathFillSchema.shape,
 }).describe('Path visual overrides; fields independently override inherited defaults.');

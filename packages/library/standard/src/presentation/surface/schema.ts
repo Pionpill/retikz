@@ -4,7 +4,6 @@ import {
   CompositeBaseSchema,
   GraphicColorSchema,
   GraphicOpacitySchema,
-  GraphicStrokeSchema,
   PathStrokeSchema,
   PaintValueSchema,
   ScopePropsSchema,
@@ -26,7 +25,6 @@ export const SurfaceBackgroundSchema = strictObject({
 export const SurfaceBorderSchema = strictObject({
   ...GraphicColorSchema.shape,
   ...GraphicOpacitySchema.shape,
-  ...GraphicStrokeSchema.shape,
   ...PathStrokeSchema.shape,
 }).describe('Optional stroke appearance drawn on the Surface allocation boundary.');
 

@@ -1,5 +1,5 @@
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import { enum as zodEnum, number, object } from 'zod';
+import { enum as zodEnum, lazy, number, object } from 'zod';
 
 import { CssColorSchema, OpacitySchema } from '../style';
 import { ShadowPreset } from './constants';
@@ -18,10 +18,14 @@ export const DropShadowSchema = object({
   blur: NonNegativeNumberSchema.optional().describe(
     'Shadow blur radius in user units. Overrides the preset value; 0 means hard-edged.',
   ),
-  color: CssColorSchema.optional().describe(
-    'Shadow color, any CSS color (overrides preset); when neither preset nor color given = translucent black rgba(0,0,0,0.5).',
-  ),
-  opacity: OpacitySchema.optional().describe('Shadow opacity multiplier applied to the resolved shadow color.'),
+  color: lazy(() => CssColorSchema)
+    .optional()
+    .describe(
+      'Shadow color, any CSS color (overrides preset); when neither preset nor color given = translucent black rgba(0,0,0,0.5).',
+    ),
+  opacity: lazy(() => OpacitySchema)
+    .optional()
+    .describe('Shadow opacity multiplier applied to the resolved shadow color.'),
 })
   .refine(s => s.preset !== undefined || (s.offsetX !== undefined && s.offsetY !== undefined), {
     message: 'Provide a `preset`, or explicit `offsetX` + `offsetY`.',

@@ -259,6 +259,8 @@ Theme and style defaults are independent channels. `defaults.reset` does not res
 
 **Style defaults.** Scope also exposes `defaults.style.color`, shared visual properties, and `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow`. Values cascade per field, explicit element values win, and `defaults.reset` cuts only selected outer channels.
 
+Shared stroke fields include `stroke`, `strokeWidth`, `dashPattern`, and `dashOffset`. For example, `defaults: { style: { dashPattern: [6, 2], dashOffset: -2 } }` affects both descendant Node borders and Paths. Current-scope channel defaults override shared defaults, and explicit element styles override channel defaults. Dash arrays replace the entire inherited array; `dashOffset: 0` overrides an inherited phase. Omitted fields inherit. Use `defaults: { reset: ['node'] }` to cut off inherited Node dashes while retaining Path defaults; empty dash arrays are invalid.
+
 Style is a supporting responsibility and does not alter local coordinates, references, or clipping. Consult the [API reference](/kernel/components/scope/reference) for color, stroke, and opacity fields rather than creating extra Scopes for visual variants.
 
 <ComponentAlert
@@ -274,6 +276,8 @@ Use `frame` to add a background or outline to an existing subgraph. The dotted p
 <ComponentPreview files="scope-frame" />
 
 `frame: {}` enables a 1-unit outline with no fill. `frame.padding` defaults to 0 and adds spacing outside the content envelope. `boundingShape: 'rectangle'` expands all four sides; `circle` increases the radius. `frame.style` ignores descendant defaults and shares only the effective color context.
+
+Frames also support `frame: { style: { dashPattern: [3, 2], dashOffset: -1 } }`, but do not inherit dash settings from `defaults.style`.
 
 The frame stays below every child and follows Scope transforms, position, and clipping. Its stroke and shadow contribute to automatic framing without changing layout, anchors, or hit regions. An explicit `viewBox` is unchanged. Empty scopes produce no frame, and descendant frames do not enlarge ancestor envelopes. Use Standard Surface for layout padding or container sizing.
 

@@ -9,8 +9,8 @@ export const ArrowShapeSchema = createOpenStringSchema(BuiltinArrowShape).descri
   'Arrow shape provider name: a Core built-in or a custom name registered via CompileOptions.arrows.',
 );
 
-/** 校验单端箭头视觉覆盖，缺失字段由路径公共箭头细节和定义默认值补齐 */
-export const ArrowEndDetailSchema = strictObject({
+/** 校验箭头的形状、尺寸与视觉样式 */
+export const ArrowStyleSchema = strictObject({
   shape: ArrowShapeSchema.optional().describe(
     'Arrow shape provider name. Built-ins and registered custom names are accepted.',
   ),
@@ -33,14 +33,14 @@ export const ArrowEndDetailSchema = strictObject({
   lineWidth: NonNegativeNumberSchema.optional().describe(
     'Outline width for hollow arrow definitions, in user units. Solid arrow definitions ignore this field.',
   ),
-}).describe('Per-end arrow visual spec. Missing fields inherit from arrowDetail and definition defaults.');
+}).describe('Arrow shape, dimensions, and visual style overrides.');
 
 /** 校验两端箭头共用的视觉字段及逐端覆盖 */
-export const ArrowDetailSchema = ArrowEndDetailSchema.extend({
-  start: ArrowEndDetailSchema.optional().describe(
+export const ArrowDetailSchema = ArrowStyleSchema.extend({
+  start: ArrowStyleSchema.optional().describe(
     'Per-start arrow override. Present fields override top-level arrowDetail defaults.',
   ),
-  end: ArrowEndDetailSchema.optional().describe(
+  end: ArrowStyleSchema.optional().describe(
     'Per-end arrow override. Present fields override top-level arrowDetail defaults.',
   ),
 })

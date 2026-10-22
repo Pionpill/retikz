@@ -3,7 +3,6 @@ import {
   GraphicColorSchema,
   GraphicOpacitySchema,
   GraphicFillSchema,
-  GraphicStrokeSchema,
   PathStrokeSchema,
   TextVisualSchema,
   ScopePropsSchema,
@@ -17,7 +16,6 @@ import { SurfaceSchema } from '../../../presentation/surface/schema';
 export const CellStyleSchema = strictObject({
   ...GraphicColorSchema.shape,
   ...GraphicOpacitySchema.shape,
-  ...GraphicStrokeSchema.shape,
   ...PathStrokeSchema.shape,
   ...GraphicFillSchema.shape,
   ...TextVisualSchema.shape,

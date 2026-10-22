@@ -1,6 +1,8 @@
 import type { infer as ZodInfer } from 'zod';
 
 import type {
+  StrokeDashPatternSchema,
+  StrokeCapJoinSchema,
   CascadingGraphicStyleSchema,
   ContextualColorSchema,
   GraphicEffectsSchema,
@@ -39,3 +41,8 @@ export type IRGraphicElementOpacity = ZodInfer<typeof GraphicElementOpacitySchem
 export type IRGraphicFill = ZodInfer<typeof GraphicFillSchema>;
 
 export type IRGraphicStroke = ZodInfer<typeof GraphicStrokeSchema>;
+
+/** 描边 dash / gap 长度序列 */
+export type StrokeDashPattern = ZodInfer<typeof StrokeDashPatternSchema>;
+
+export type IRStrokeCapJoin = ZodInfer<typeof StrokeCapJoinSchema>;

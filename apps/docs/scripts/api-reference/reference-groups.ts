@@ -335,7 +335,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         'ArrowMarkSchema',
         'PathMarkPlacementSchema',
         'ArrowDetailSchema',
-        'ArrowEndDetailSchema',
+        'ArrowStyleSchema',
       ],
     },
   ],

@@ -190,7 +190,7 @@ Core 默认提供六种基础箭头，其中包括空心三角、空心 Stealth 
       kind: 'property',
       type: 'IRArrowDetail',
       description:
-        '共享默认与单端覆盖：\n\n- `IRArrowEndDetail`：`{ shape?: string; scale?: number; length?: number; width?: number; color?: string; fill?: string; opacity?: number; lineWidth?: number }`\n- `start?: IRArrowEndDetail` / `end?: IRArrowEndDetail`：仅覆盖已填写字段，其余回退共享默认\n\n`shape` 可取 `normal`、`open`、`stealth`、`openStealth`、`circle`、`openCircle`，或已注册名称；Extension 还提供 `diamond` 与 `openDiamond`。空心形状忽略 fill，实心形状忽略 lineWidth。默认 stealth，length / width 均为 8；scale 乘在二者之后，颜色与透明度继承路径。',
+        '共享默认与单端覆盖：\n\n- `IRArrowStyle`：`{ shape?: string; scale?: number; length?: number; width?: number; color?: string; fill?: string; opacity?: number; lineWidth?: number }`\n- `start?: IRArrowStyle` / `end?: IRArrowStyle`：仅覆盖已填写字段，其余回退共享默认\n\n`shape` 可取 `normal`、`open`、`stealth`、`openStealth`、`circle`、`openCircle`，或已注册名称；Extension 还提供 `diamond` 与 `openDiamond`。空心形状忽略 fill，实心形状忽略 lineWidth。默认 stealth，length / width 均为 8；scale 乘在二者之后，颜色与透明度继承路径。',
     },
     {
       name: 'arrowPlacement',

@@ -10,6 +10,7 @@ import type {
   NodeLabelSchema,
   NodeLayoutSchema,
   NodeSchema,
+  NodeStrokeSchema,
   NodeStyleSchema,
 } from './schema';
 
@@ -43,5 +44,7 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 export type NodeShape = OpenString<BuiltinShape>;
 
 export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
+
+export type IRNodeStroke = ZodInfer<typeof NodeStrokeSchema>;
 
 export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;

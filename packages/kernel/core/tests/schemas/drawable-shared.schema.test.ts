@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { DrawableInstanceSchema, DrawableStyleSchema, PathLabelSchema, PathSchema, StepLabelSchema } from '../../src';
+import { DrawableInstanceSchema, GraphicStyleSchema, PathLabelSchema, PathSchema, StepLabelSchema } from '../../src';
 
 const steps = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -110,11 +110,11 @@ describe('Drawable shared schema', () => {
     }
   });
 
-  it('keeps instance fields out of the drawable style helper schema', () => {
-    expect(DrawableStyleSchema.safeParse({ id: 'x' }).success).toBe(false);
-    expect(DrawableStyleSchema.safeParse({ meta: { x: 1 } }).success).toBe(false);
-    expect(DrawableStyleSchema.safeParse({ animations: [] }).success).toBe(false);
-    expect(DrawableStyleSchema.safeParse({ zIndex: 1 }).success).toBe(false);
+  it('keeps instance fields out of the graphic style schema', () => {
+    expect(GraphicStyleSchema.safeParse({ id: 'x' }).success).toBe(false);
+    expect(GraphicStyleSchema.safeParse({ meta: { x: 1 } }).success).toBe(false);
+    expect(GraphicStyleSchema.safeParse({ animations: [] }).success).toBe(false);
+    expect(GraphicStyleSchema.safeParse({ zIndex: 1 }).success).toBe(false);
     expect(DrawableInstanceSchema.safeParse({ zIndex: 1, meta: { ok: true } }).success).toBe(true);
   });
 
@@ -134,6 +134,6 @@ describe('Drawable shared schema', () => {
       blendMode: 'multiply',
     };
 
-    expect(DrawableStyleSchema.parse(JSON.parse(JSON.stringify(style)))).toEqual(style);
+    expect(GraphicStyleSchema.parse(JSON.parse(JSON.stringify(style)))).toEqual(style);
   });
 });

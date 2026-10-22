@@ -1377,7 +1377,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
 
 ## 配置与校验
 
-#### <ApiSourceLink label={"PathSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={129}>PathSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={139}>PathSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1663,7 +1663,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"ArrowMarkSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={39}>ArrowMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArrowMarkSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={46}>ArrowMarkSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1682,7 +1682,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"PathMarkPlacementSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={48}>PathMarkPlacementSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathMarkPlacementSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={55}>PathMarkPlacementSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1716,12 +1716,12 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"ArrowEndDetailSchema"} path={"packages/kernel/core/src/schemas/path/arrow/schema.ts"} startLine={13}>ArrowEndDetailSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArrowStyleSchema"} path={"packages/kernel/core/src/schemas/path/arrow/schema.ts"} startLine={13}>ArrowStyleSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
-  name="ArrowEndDetailSchema"
-  description="单个箭头端点的视觉覆盖配置，不递归包含 start / end。"
+  name="ArrowStyleSchema"
+  description="箭头的形状、尺寸与视觉样式，供端点箭头和沿路径箭头标记复用。"
   descriptions={{
     shape: '箭头形状名（开放字符串，含 `CompileOptions.arrows` 扩展名）；缺省时继承顶层，顶层也缺省时回退 stealth',
     scale: '等比缩放因子',

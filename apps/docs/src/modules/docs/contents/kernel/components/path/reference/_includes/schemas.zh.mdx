@@ -341,12 +341,12 @@
   }}
 />
 
-## ArrowEndDetailSchema
+## ArrowStyleSchema
 
 <ZodSchema
   shallow
-  name="ArrowEndDetailSchema"
-  description="单个箭头端点的视觉覆盖配置，不递归包含 start / end。"
+  name="ArrowStyleSchema"
+  description="箭头的形状、尺寸与视觉样式，供端点箭头和沿路径箭头标记复用。"
   descriptions={{
     shape: '箭头形状名（开放字符串，含 `CompileOptions.arrows` 扩展名）；缺省时继承顶层，顶层也缺省时回退 stealth',
     scale: '等比缩放因子',

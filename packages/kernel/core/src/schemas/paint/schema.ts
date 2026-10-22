@@ -5,11 +5,28 @@ import {
   NormalizedFractionSchema,
   PositiveNumberSchema,
 } from '@retikz/foundation';
-import { array, boolean, discriminatedUnion, enum as zodEnum, literal, number, object, strictObject, tuple } from 'zod';
+import {
+  array,
+  boolean,
+  discriminatedUnion,
+  enum as zodEnum,
+  lazy,
+  literal,
+  number,
+  object,
+  strictObject,
+  tuple,
+} from 'zod';
 
 import { AngleDegreesSchema } from '../scalar';
-import { PathLineCapSchema, PathLineJoinSchema, StrokeDashOffsetSchema, StrokeDashPatternSchema } from '../stroke';
-import { CssColorSchema, OpacitySchema } from '../style';
+import {
+  CssColorSchema,
+  OpacitySchema,
+  PathLineCapSchema,
+  PathLineJoinSchema,
+  StrokeDashOffsetSchema,
+  StrokeDashPatternSchema,
+} from '../style';
 import { ImageFit, BuiltinPatternShape } from './constants';
 
 /** Core 内置 pattern motif 与自定义注册名共享的开放名称 schema */
@@ -20,8 +37,10 @@ export const PatternShapeNameSchema = createOpenStringSchema(BuiltinPatternShape
 /** 校验渐变色标的归一化位置、CSS 颜色与可选透明度 */
 export const GradientStopSchema = object({
   offset: NormalizedFractionSchema.describe('Stop position along the gradient axis.'),
-  color: CssColorSchema.describe('CSS color for this stop.'),
-  opacity: OpacitySchema.optional().describe('Stop opacity. Omitted fields are fully opaque.'),
+  color: lazy(() => CssColorSchema).describe('CSS color for this stop.'),
+  opacity: lazy(() => OpacitySchema)
+    .optional()
+    .describe('Stop opacity. Omitted fields are fully opaque.'),
 }).describe('A single gradient color stop');
 
 /** 校验至少含两个色标的线性渐变及可选方向角 */
@@ -55,16 +74,24 @@ export const ConicGradientPaintSchema = object({
 
 /** 校验线状图案的局部样式覆盖；显式虚线序列优先于预设 */
 export const PatternLineStyleSchema = strictObject({
-  color: CssColorSchema.optional().describe('Line motif color override.'),
+  color: lazy(() => CssColorSchema)
+    .optional()
+    .describe('Line motif color override.'),
   lineWidth: PositiveNumberSchema.optional().describe('Line motif stroke width override in user units.'),
   dashed: boolean().optional().describe('Dashed preset override. Explicit `dashPattern` takes precedence.'),
   dotted: boolean().optional().describe('Dotted preset override. Explicit `dashPattern` and `dashed` take precedence.'),
-  dashPattern: StrokeDashPatternSchema.optional().describe(
-    'Explicit line motif dash pattern override; takes precedence over presets.',
-  ),
-  dashOffset: StrokeDashOffsetSchema.optional().describe('Line motif dash offset override in user units.'),
-  lineCap: PathLineCapSchema.optional().describe('Line motif endpoint cap override.'),
-  lineJoin: PathLineJoinSchema.optional().describe('Line motif corner join override.'),
+  dashPattern: lazy(() => StrokeDashPatternSchema)
+    .optional()
+    .describe('Explicit line motif dash pattern override; takes precedence over presets.'),
+  dashOffset: lazy(() => StrokeDashOffsetSchema)
+    .optional()
+    .describe('Line motif dash offset override in user units.'),
+  lineCap: lazy(() => PathLineCapSchema)
+    .optional()
+    .describe('Line motif endpoint cap override.'),
+  lineJoin: lazy(() => PathLineJoinSchema)
+    .optional()
+    .describe('Line motif corner join override.'),
 });
 
 /** 校验图案样式周期中某个零基槽位的局部覆盖 */
@@ -118,7 +145,9 @@ export const PatternPaintSchema = object({
     'Pattern motif provider name. Built-ins are `lines`, `dots`, and `grid`; custom names must be registered via CompileOptions.patterns.',
   ),
   color: PatternLineStyleSchema.shape.color.describe('Motif color; any CSS color, defaults to `currentColor`'),
-  background: CssColorSchema.optional().describe('Tile background fill; omitted = transparent'),
+  background: lazy(() => CssColorSchema)
+    .optional()
+    .describe('Tile background fill; omitted = transparent'),
   size: PositiveNumberSchema.optional().describe(
     'Base motif size or spacing in user units; the definition may emit a different final tile size. Defaults to the definition value or 8.',
   ),

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ArrowDetailSchema, ArrowEndDetailSchema, BuiltinArrowShape, PathSchema } from '../../src/schemas';
+import { ArrowDetailSchema, ArrowStyleSchema, BuiltinArrowShape, PathSchema } from '../../src/schemas';
 
 /**
  * ArrowDetailSchema schema-level 测试
@@ -55,7 +55,7 @@ describe('ArrowDetailSchema：字段合法 / optional', () => {
   });
 
   it('start 子对象不含 start/end 字段自身（不递归）', () => {
-    const parsed = ArrowEndDetailSchema.safeParse({
+    const parsed = ArrowStyleSchema.safeParse({
       shape: 'normal',
       start: { shape: 'stealth' },
     });

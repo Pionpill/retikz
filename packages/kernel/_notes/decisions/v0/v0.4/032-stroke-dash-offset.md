@@ -32,6 +32,12 @@ Schema 拦截 NaN / Infinity，保留负相位以对齐 SVG / Canvas 原生语�
 
 这是 Core 通用字段，Node border、shape outline、marker、label pin 与 Plot guide 可共用；renderer 只执行 Scene 中已解析的描边值
 
+## 共享样式与作用域
+
+`GraphicStyleSchema` 与 `CascadingGraphicStyleSchema` 组合完整的通用描边契约：`stroke`、`strokeWidth`、`dashPattern`、`dashOffset`。`Scope.defaults.style` 对 Node / Path 共用这些字段，按祖先默认、本层共享默认、本层通道默认、实例显式值的顺序逐字段覆盖；虚线数组整体替换，相位 0 是显式覆盖。省略字段继续继承，恢复内置实线通过对应默认通道的 reset 屏障完成，不改变非空虚线数组约束。
+
+Scope 外框独立消费同一通用描边契约，显式虚线与相位进入 Scene；外框只共享有效颜色上下文，不继承后代默认通道的描边样式。Renderer 继续执行已有 Scene 描边字段，不新增平行语义。
+
 ## 遗留边界
 
 Plot guide 的默认值与 theme mapping 仍由 Plot owner 消费；pathDraw 动画 offset 不是独立动画属性

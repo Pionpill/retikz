@@ -17,7 +17,6 @@ export * from './scene';
 export * from './scope';
 export * from './scope-point';
 export * from './shape';
-export * from './stroke';
 export * from './style';
 export * from './tex';
 export * from './text';

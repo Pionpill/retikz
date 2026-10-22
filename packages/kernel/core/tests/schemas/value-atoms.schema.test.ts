@@ -10,7 +10,7 @@ import {
   LineHeightSchema,
   NodeSchema,
   PaintValueSchema,
-  StrokeStyleSchema,
+  GraphicStrokeSchema,
   StrokeWidthSchema,
   TextAlignSchema,
 } from '../../src';
@@ -100,6 +100,6 @@ describe('Core value atom schemas', () => {
     expect(FontSchema.shape.style.unwrap()).toBe(FontStyleSchema);
     expect(NodeSchema.shape.layout.unwrap().shape.align.unwrap()).toBe(TextAlignSchema);
     expect(NodeSchema.shape.layout.unwrap().shape.lineHeight.unwrap()).toBe(LineHeightSchema);
-    expect(StrokeStyleSchema.shape.strokeWidth.unwrap()).toBe(StrokeWidthSchema);
+    expect(GraphicStrokeSchema.shape.strokeWidth.unwrap()).toBe(StrokeWidthSchema);
   });
 });

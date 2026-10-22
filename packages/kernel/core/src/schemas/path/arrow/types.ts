@@ -1,9 +1,9 @@
 import type { infer as ZodInfer } from 'zod';
 
-import type { ArrowDetailSchema, ArrowEndDetailSchema, ArrowShapeSchema } from './schema';
+import type { ArrowDetailSchema, ArrowStyleSchema, ArrowShapeSchema } from './schema';
 
-/** 端点级箭头视觉规格 */
-export type IRArrowEndDetail = ZodInfer<typeof ArrowEndDetailSchema>;
+/** 箭头形状、尺寸与视觉样式 */
+export type IRArrowStyle = ZodInfer<typeof ArrowStyleSchema>;
 
 /** Path 级箭头详细配置 */
 export type IRArrowDetail = ZodInfer<typeof ArrowDetailSchema>;
