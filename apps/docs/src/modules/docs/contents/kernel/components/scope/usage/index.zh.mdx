@@ -5,6 +5,8 @@ description: 使用 Scope 组织局部坐标、整体引用、样式默认值与
 
 用 Scope 让一组图元一起移动、共享默认值或接受裁剪。它放在 Layout 内，也可以嵌套；每个 Scope 只改变自己包含的子树。
 
+`defaults.style` 可统一设置后代节点和路径的 `lineCap`、`lineJoin`、`shadow` 与 `blendMode`。阴影和混合模式逐个作用于后代的主体几何，不会把 Scope 合成为一张图层；外框仍由 `frame.style` 独立设置。
+
 ## 接入方式
 
 选择宿主与输入形式：React 使用 JSX 或 `ir` 属性；Vanilla 使用构造函数或直接传入 IR。四种写法都保留左侧 `x = 0` 参照，并让 Scope 内的 A、B 整体向右平移 80。

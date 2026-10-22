@@ -13,7 +13,7 @@ import type { ShapeResolution } from './types';
 /** 节点 shape 解析输入 */
 export type NodeShapeResolveInput = {
   /** 待解析节点 */
-  node: IRNode;
+  node: Pick<IRNode, 'shape' | 'cornerRadius'>;
   /** shape 注册表 */
   shapes: ProviderCollection<ShapeDefinition>;
   /** x 轴缩放 */

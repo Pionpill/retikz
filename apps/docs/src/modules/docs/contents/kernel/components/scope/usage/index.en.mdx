@@ -5,6 +5,8 @@ description: Use Scope for local coordinates, group references, defaults, and cl
 
 Use Scope to move a group, share defaults, or clip children. Place it inside Layout or another Scope; each Scope affects only its own subtree.
 
+`defaults.style` can share `lineCap`, `lineJoin`, `shadow`, and `blendMode` across descendant nodes and paths. Shadows and blend modes apply to each descendant’s primary geometry; they do not composite the Scope as a single layer. The frame remains independently styled through `frame.style`.
+
 ## Using this topic
 
 Choose a host and input format: React accepts JSX or an `ir` prop; Vanilla accepts builder output or IR directly. All four variants keep the left `x = 0` reference and move A and B inside Scope 80 units to the right.

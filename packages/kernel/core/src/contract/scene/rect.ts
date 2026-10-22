@@ -48,6 +48,10 @@ export type RectPrim = {
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern（如 [4, 2]） */
   dashPattern?: NonNullable<IRPathBase['style']>['dashPattern'];
+  /** 描边线帽 */
+  strokeLinecap?: NonNullable<IRPathBase['style']>['lineCap'];
+  /** 描边连接 */
+  strokeLinejoin?: NonNullable<IRPathBase['style']>['lineJoin'];
   /** 描边 dash offset */
   dashOffset?: NonNullable<IRPathBase['style']>['dashOffset'];
   /**

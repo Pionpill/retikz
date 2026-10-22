@@ -5,6 +5,7 @@ import type { IRArrowMark, IRPathBase } from '../../schemas';
 import { ARROW_MARKER_DEFAULT_SIZE, ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH, DEFAULT_ARROW_SHAPE } from '../../schemas';
 import { createCompositeContractError } from '../diagnostics';
 import { parseProviderPayload } from '../provider-payload';
+import { resolvePaint } from '../resource';
 import type {
   ArrowMarkGeometry,
   ArrowMarkResolution,
@@ -124,8 +125,13 @@ export const resolveArrowMark = (mark: ResolvedArrowMark, context: PathResolveCo
     length: mark.length ?? definition.defaultLength ?? ARROW_MARKER_DEFAULT_SIZE,
     width: mark.width ?? definition.defaultWidth ?? ARROW_MARKER_DEFAULT_SIZE,
     ...(mark.color === undefined ? {} : { color: mark.color }),
-    ...(definition.hollow || mark.fill === undefined ? {} : { fill: mark.fill }),
+    ...(definition.hollow || mark.fill === undefined ? {} : { fill: resolvePaint(mark.fill, context) }),
     ...(mark.opacity === undefined ? {} : { opacity: mark.opacity }),
+    stroke: resolvePaint(mark.stroke, context),
+    dashPattern: mark.dashPattern,
+    dashOffset: mark.dashOffset,
+    lineCap: mark.lineCap,
+    lineJoin: mark.lineJoin,
     lineWidth: mark.lineWidth ?? ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
   };
   const baseSize = definition.baseSize ?? ARROW_GEOMETRY_BASE_SIZE;

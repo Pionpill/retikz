@@ -101,7 +101,7 @@ describe('resolve text', () => {
 
     expect(resolved.segments).toEqual([
       { text: 'a', font: { size: 18, family: 'mono', weight: 400 } },
-      { tex: 'x', fill: 'blue' },
+      { tex: 'x', fill: 'blue', fontSize: 18 },
     ]);
     expect(resolved.hasMath).toBe(true);
     expect(resolved.mixed).toBe(true);

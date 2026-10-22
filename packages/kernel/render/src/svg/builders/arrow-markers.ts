@@ -10,7 +10,11 @@ import { buildMarkerPrim } from './marker-prim';
  *   wrapper 参数来自 `spec.baseSize`（viewBox `0 0 baseSize baseSize` + refY = baseSize/2）/ `spec.refX` /
  *   `spec.markerWidth` / `spec.markerHeight`。`overflow=visible` 允许空心描边落在标准几何边界外
  */
-export const buildArrowMarker = (id: string, spec: ResolvedArrowEnd): SvgNode => ({
+export const buildArrowMarker = (
+  id: string,
+  spec: ResolvedArrowEnd,
+  paintRefUrl?: (id: string) => string,
+): SvgNode => ({
   tag: 'marker',
   attrs: compact({
     id,
@@ -25,5 +29,5 @@ export const buildArrowMarker = (id: string, spec: ResolvedArrowEnd): SvgNode =>
     overflow: 'visible',
     opacity: spec.opacity,
   }),
-  children: spec.marker.map(prim => buildMarkerPrim(prim)),
+  children: spec.marker.map(prim => buildMarkerPrim(prim, paintRefUrl)),
 });

@@ -74,17 +74,28 @@ export const assertFiniteNumbers = (owner: string, value: unknown): void => {
   visitFiniteNumbers(owner, value, new WeakSet());
 };
 
-const assertMarkerStrokeStyle = (owner: string, candidate: Record<string, unknown>, path: string): void => {
-  assertProviderOutputPaint(owner, candidate.fill, 'fill', true);
-  assertProviderOutputPaint(owner, candidate.stroke, 'stroke', true);
+const assertMarkerStrokeStyle = (
+  owner: string,
+  candidate: Record<string, unknown>,
+  path: string,
+  allowPaintResources: boolean,
+): void => {
+  assertProviderOutputPaint(owner, candidate.fill, 'fill', !allowPaintResources);
+  assertProviderOutputPaint(owner, candidate.stroke, 'stroke', !allowPaintResources);
   assertProviderOutputUnitInterval(owner, candidate, 'fillOpacity', path);
   assertProviderOutputUnitInterval(owner, candidate, 'strokeOpacity', path);
   assertProviderOutputOptionalFinite(owner, candidate, 'strokeWidth', path, true);
   assertProviderOutputOptionalFinite(owner, candidate, 'dashOffset', path);
   assertProviderOutputDashPattern(owner, candidate, path);
+  assertProviderOutputPathEnums(owner, candidate, path);
 };
 
-const visitMarkerPrimitive = (owner: string, prim: unknown, active: WeakSet<object>): void => {
+const visitMarkerPrimitive = (
+  owner: string,
+  prim: unknown,
+  active: WeakSet<object>,
+  allowPaintResources: boolean,
+): void => {
   const candidate = providerOutputRecord(owner, prim, 'marker primitive');
   const path = 'marker';
 
@@ -111,7 +122,7 @@ const visitMarkerPrimitive = (owner: string, prim: unknown, active: WeakSet<obje
       );
       assertProviderOutputPathCommands(owner, candidate.commands, 'marker path');
       assertProviderOutputPathEnums(owner, candidate, path);
-      assertMarkerStrokeStyle(owner, candidate, path);
+      assertMarkerStrokeStyle(owner, candidate, path, allowPaintResources);
 
       return;
     case 'ellipse':
@@ -132,6 +143,8 @@ const visitMarkerPrimitive = (owner: string, prim: unknown, active: WeakSet<obje
           'strokeWidth',
           'dashPattern',
           'dashOffset',
+          'strokeLinecap',
+          'strokeLinejoin',
         ],
         'marker primitive',
       );
@@ -140,7 +153,7 @@ const visitMarkerPrimitive = (owner: string, prim: unknown, active: WeakSet<obje
       assertProviderOutputFinite(owner, candidate.rx, 'marker rx', true);
       assertProviderOutputFinite(owner, candidate.ry, 'marker ry', true);
       assertProviderOutputOptionalFinite(owner, candidate, 'rotate', path);
-      assertMarkerStrokeStyle(owner, candidate, path);
+      assertMarkerStrokeStyle(owner, candidate, path, allowPaintResources);
 
       return;
     case 'rect':
@@ -161,6 +174,8 @@ const visitMarkerPrimitive = (owner: string, prim: unknown, active: WeakSet<obje
           'dashPattern',
           'dashOffset',
           'cornerRadius',
+          'strokeLinecap',
+          'strokeLinejoin',
         ],
         'marker primitive',
       );
@@ -169,7 +184,7 @@ const visitMarkerPrimitive = (owner: string, prim: unknown, active: WeakSet<obje
       assertProviderOutputFinite(owner, candidate.width, 'marker width', true);
       assertProviderOutputFinite(owner, candidate.height, 'marker height', true);
       assertProviderOutputOptionalFinite(owner, candidate, 'cornerRadius', path, true);
-      assertMarkerStrokeStyle(owner, candidate, path);
+      assertMarkerStrokeStyle(owner, candidate, path, allowPaintResources);
 
       return;
     case 'group': {
@@ -181,7 +196,7 @@ const visitMarkerPrimitive = (owner: string, prim: unknown, active: WeakSet<obje
 
       try {
         for (const child of children) {
-          visitMarkerPrimitive(owner, child, active);
+          visitMarkerPrimitive(owner, child, active, allowPaintResources);
         }
       } finally {
         active.delete(candidate);
@@ -199,11 +214,15 @@ const visitMarkerPrimitive = (owner: string, prim: unknown, active: WeakSet<obje
 
 /** 校验单个 marker primitive 符合 marker 允许的窄子集 */
 export const assertValidMarkerPrim = (owner: string, prim: unknown): void => {
-  visitMarkerPrimitive(owner, prim, new WeakSet());
+  visitMarkerPrimitive(owner, prim, new WeakSet(), true);
 };
 
 /** 在统一 fatal boundary 内物化并校验 Marker provider output */
-export const validateMarkerPrimitives = (owner: string, emitted: unknown): Array<MarkerPrimitive> =>
+export const validateMarkerPrimitives = (
+  owner: string,
+  emitted: unknown,
+  allowPaintResources = true,
+): Array<MarkerPrimitive> =>
   withProviderOutputValidationBoundary(owner, () => {
     if (
       emitted === null ||
@@ -223,7 +242,7 @@ export const validateMarkerPrimitives = (owner: string, emitted: unknown): Array
     const active = new WeakSet<object>();
 
     for (const prim of providerOutputArray(owner, marker, 'marker primitive list')) {
-      visitMarkerPrimitive(owner, prim, active);
+      visitMarkerPrimitive(owner, prim, active, allowPaintResources);
     }
 
     return marker.map(primitive => omitProviderOutputUndefined(primitive)) as Array<MarkerPrimitive>;

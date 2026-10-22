@@ -528,132 +528,31 @@ const startArrowPlacement = (commands: ReadonlyArray<PathCommand>): { vertex: Po
   return { vertex: segment.from, angle };
 };
 
-/** marker-local fill 取值 → canvas 颜色：contextStroke 解析为线的 stroke（缺省回退当前 strokeStyle） */
-const resolveMarkerFill = (
-  ctx: CanvasRenderingContext2D,
-  fill: MarkerFill | undefined,
-  pathStroke: string | undefined,
-  options: DrawOptions,
-): string | undefined => {
-  if (fill === undefined) return undefined;
-  if (typeof fill === 'string') return fill === 'none' ? undefined : resolveColor(fill, options);
-  return pathStroke ?? String(ctx.strokeStyle);
-};
-
-/** marker-local stroke 取值 → canvas 颜色：`{ kind:'contextStroke' }`（及 legacy `context-stroke` 关键字）解析为线的 stroke（缺省回退当前 strokeStyle） */
-const resolveMarkerStroke = (
-  ctx: CanvasRenderingContext2D,
-  stroke: MarkerFill | undefined,
-  pathStroke: string | undefined,
-  options: DrawOptions,
-): string | undefined => {
-  if (stroke === undefined) return undefined;
-  if (typeof stroke === 'string') {
-    if (stroke === 'none') return undefined;
-    if (stroke === 'context-stroke') return pathStroke ?? String(ctx.strokeStyle); // legacy 关键字兼容
-    return resolveColor(stroke, options) ?? stroke;
-  }
-
-  return pathStroke ?? String(ctx.strokeStyle); // { kind: 'contextStroke' }
-};
-
-const fillMarkerPath = (
-  ctx: CanvasRenderingContext2D,
-  fill: string | undefined,
-  fillOpacity: number | undefined,
-  fillRule: CanvasFillRule | undefined,
-): void => {
-  if (fill === undefined) return;
-  if (fillOpacity !== undefined) {
-    ctx.save();
-    ctx.globalAlpha *= fillOpacity;
-  }
-
-  ctx.fillStyle = fill;
-  ctx.fill(fillRule);
-  if (fillOpacity !== undefined) ctx.restore();
-};
-
-const strokeMarkerPath = (
-  ctx: CanvasRenderingContext2D,
-  stroke: string | undefined,
-  strokeOpacity: number | undefined,
-  strokeWidth: number | undefined,
-  dashPattern: Array<number> | undefined,
-  dashOffset: number | undefined,
-): void => {
-  if (stroke === undefined) return;
-  if (strokeOpacity !== undefined) ctx.save();
-  ctx.strokeStyle = stroke;
-  if (strokeWidth !== undefined) ctx.lineWidth = strokeWidth;
-  if (strokeOpacity !== undefined) ctx.globalAlpha *= strokeOpacity;
-  applyDash(ctx, dashPattern, dashOffset);
-  ctx.stroke();
-  if (strokeOpacity !== undefined) ctx.restore();
-};
-
-/** 绘制单个 marker-local primitive（path/ellipse/rect/group 窄子集）；fill/stroke 的 contextStroke 解析为线色 */
+/** 将 marker 的宿主描边引用绑定为 Scene paint 后复用普通图元绘制 */
 const drawMarkerPrim = (
   ctx: CanvasRenderingContext2D,
   prim: MarkerPrimitive,
   pathStroke: string | undefined,
   options: DrawOptions,
+  resources: ResourceMap,
+  state: DrawState,
 ): void => {
-  ctx.save();
-
-  switch (prim.type) {
-    case 'path':
-      buildPath(ctx, prim.commands);
-      if (prim.strokeLinecap !== undefined) ctx.lineCap = prim.strokeLinecap;
-      if (prim.strokeLinejoin !== undefined) ctx.lineJoin = prim.strokeLinejoin;
-      fillMarkerPath(ctx, resolveMarkerFill(ctx, prim.fill, pathStroke, options), prim.fillOpacity, prim.fillRule);
-      strokeMarkerPath(
-        ctx,
-        resolveMarkerStroke(ctx, prim.stroke, pathStroke, options),
-        prim.strokeOpacity,
-        prim.strokeWidth,
-        prim.dashPattern,
-        prim.dashOffset,
-      );
-      break;
-    case 'ellipse':
-      if (prim.rotate) {
-        ctx.translate(prim.cx, prim.cy);
-        ctx.rotate(prim.rotate * DEG_TO_RAD);
-        ctx.translate(-prim.cx, -prim.cy);
-      }
-
-      ctx.beginPath();
-      ctx.ellipse(prim.cx, prim.cy, prim.rx, prim.ry, 0, 0, Math.PI * 2);
-      fillMarkerPath(ctx, resolveMarkerFill(ctx, prim.fill, pathStroke, options), prim.fillOpacity, undefined);
-      strokeMarkerPath(
-        ctx,
-        resolveMarkerStroke(ctx, prim.stroke, pathStroke, options),
-        prim.strokeOpacity,
-        prim.strokeWidth,
-        prim.dashPattern,
-        prim.dashOffset,
-      );
-      break;
-    case 'rect':
-      roundedRectPath(ctx, prim.x, prim.y, prim.width, prim.height, prim.cornerRadius);
-      fillMarkerPath(ctx, resolveMarkerFill(ctx, prim.fill, pathStroke, options), prim.fillOpacity, undefined);
-      strokeMarkerPath(
-        ctx,
-        resolveMarkerStroke(ctx, prim.stroke, pathStroke, options),
-        prim.strokeOpacity,
-        prim.strokeWidth,
-        prim.dashPattern,
-        prim.dashOffset,
-      );
-      break;
-    case 'group':
-      for (const transform of prim.transforms ?? []) applyTransform(ctx, transform);
-      for (const child of prim.children) drawMarkerPrim(ctx, child, pathStroke, options);
-      break;
+  if (prim.type === 'group') {
+    ctx.save();
+    for (const transform of prim.transforms ?? []) applyTransform(ctx, transform);
+    for (const child of prim.children) drawMarkerPrim(ctx, child, pathStroke, options, resources, state);
+    ctx.restore();
+    return;
   }
-
-  ctx.restore();
+  const resolveMarkerPaint = (paint: MarkerFill | undefined): PaintValue | undefined =>
+    typeof paint === 'object' && paint.kind === 'contextStroke' ? (pathStroke ?? String(ctx.strokeStyle)) : paint;
+  drawPrim(
+    ctx,
+    { ...prim, fill: resolveMarkerPaint(prim.fill), stroke: resolveMarkerPaint(prim.stroke) },
+    options,
+    resources,
+    state,
+  );
 };
 
 /**
@@ -676,7 +575,8 @@ const buildPattern = (
 
   const motifColor = options.currentColor ?? '#000';
 
-  for (const prim of tile.motif) drawMarkerPrim(off, prim, motifColor, options);
+  for (const prim of tile.motif)
+    drawMarkerPrim(off, prim, motifColor, options, new Map(), { gradientPatterns: new Map() });
   const pattern = ctx.createPattern(off.canvas, 'repeat');
   if (pattern === null) return undefined;
   if (tile.rotation) {
@@ -700,6 +600,8 @@ const drawArrowMarker = (
   strokeWidth: number,
   pathStroke: string | undefined,
   options: DrawOptions,
+  resources: ResourceMap,
+  state: DrawState,
 ): void => {
   ctx.save();
   if (spec.opacity !== undefined) ctx.globalAlpha *= spec.opacity;
@@ -712,7 +614,7 @@ const drawArrowMarker = (
   ctx.scale((spec.markerWidth * strokeWidth) / spec.baseSize, (spec.markerHeight * strokeWidth) / spec.baseSize);
   ctx.translate(-spec.refX, -spec.baseSize / 2);
 
-  for (const prim of spec.marker) drawMarkerPrim(ctx, prim, pathStroke, options);
+  for (const prim of spec.marker) drawMarkerPrim(ctx, prim, pathStroke, options, resources, state);
   ctx.restore();
 };
 
@@ -742,6 +644,8 @@ const drawPrim = (
 
   switch (p.type) {
     case 'rect':
+      ctx.lineCap = p.strokeLinecap ?? 'butt';
+      ctx.lineJoin = p.strokeLinejoin ?? 'miter';
       withBlend(ctx, p.blendMode, () =>
         withShadow(ctx, p.shadow, options.resolveCssColor, () =>
           withOpacity(ctx, p.opacity, () => {
@@ -774,6 +678,8 @@ const drawPrim = (
       );
       break;
     case 'ellipse':
+      ctx.lineCap = p.strokeLinecap ?? 'butt';
+      ctx.lineJoin = p.strokeLinejoin ?? 'miter';
       withBlend(ctx, p.blendMode, () =>
         withShadow(ctx, p.shadow, options.resolveCssColor, () =>
           withOpacity(ctx, p.opacity, () => {
@@ -852,13 +758,25 @@ const drawPrim = (
                     strokeWidth,
                     pathStroke,
                     options,
+                    resources,
+                    state,
                   );
               }
 
               if (p.arrowEnd) {
                 const placement = endArrowPlacement(p.commands);
                 if (placement)
-                  drawArrowMarker(ctx, p.arrowEnd, placement.vertex, placement.angle, strokeWidth, pathStroke, options);
+                  drawArrowMarker(
+                    ctx,
+                    p.arrowEnd,
+                    placement.vertex,
+                    placement.angle,
+                    strokeWidth,
+                    pathStroke,
+                    options,
+                    resources,
+                    state,
+                  );
               }
             }
           }),

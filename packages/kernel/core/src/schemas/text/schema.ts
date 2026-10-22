@@ -1,7 +1,7 @@
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
-import { array, boolean, enum as zodEnum, object, strictObject, string, union } from 'zod';
+import { array, boolean, enum as zodEnum, strictObject, string, union } from 'zod';
 
-import { FontSchema } from '../font';
+import { FontSchema, FontSizeSchema } from '../font';
 import { AngleDegreesSchema } from '../scalar';
 import { ContextualColorSchema, OpacitySchema } from '../style';
 import { NodeTextAlign } from './constants';
@@ -26,6 +26,7 @@ export const TextSegmentSchema = strictObject({
 
 /** 校验与相邻文本共用基线的公式片段及其局部颜色和透明度 */
 export const MathSegmentSchema = strictObject({
+  fontSize: FontSizeSchema.optional().describe('Math font size; omitted values inherit the effective line font size.'),
   tex: string().describe(
     'LaTeX source for this inline formula segment, rendered to glyph paths by an injected lowerTex capability.',
   ),
@@ -44,6 +45,7 @@ export const MathSegmentSchema = strictObject({
 
 /** 校验从左到右排列、共用基线的非空文本与公式片段序列 */
 export const SegmentedLineSchema = strictObject({
+  ...TextSegmentSchema.omit({ text: true }).shape,
   segments: array(union([TextSegmentSchema, MathSegmentSchema]))
     .min(1)
     .describe('Text and math segments laid out left-to-right on a shared baseline.'),
@@ -57,7 +59,7 @@ export const LabelTextContentSchema = union([string(), SegmentedLineSchema]).des
 );
 
 /** 校验带有逐行颜色、透明度和字体覆盖的文本行 */
-export const TextLineSchema = object({
+export const TextLineSchema = strictObject({
   text: string().describe('Line content'),
   fill: ContextualColorSchema.optional().describe(
     'Per-line text color: an exact CSS color or a weight derived from the effective block text color.',

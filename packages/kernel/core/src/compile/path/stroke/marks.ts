@@ -12,10 +12,11 @@ import type {
 } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 
-const resolveMarkerContextFill = (value: MarkerFill, contextStroke: string): string =>
-  typeof value === 'string' ? value : contextStroke;
+const resolveMarkerContextFill = (value: MarkerFill, contextStroke: string): PaintValue =>
+  typeof value === 'object' && value.kind === 'contextStroke' ? contextStroke : value;
 
-const markerFillUsesContextStroke = (value: MarkerFill | undefined): boolean => typeof value === 'object';
+const markerFillUsesContextStroke = (value: MarkerFill | undefined): boolean =>
+  typeof value === 'object' && value.kind === 'contextStroke';
 
 const markerPrimUsesContextStroke = (prim: MarkerPrimitive): boolean => {
   if (prim.type === 'group') return prim.children.some(markerPrimUsesContextStroke);
@@ -47,7 +48,8 @@ export const assertArrowCanInheritStroke = (
  * 取得标记可继承的 CSS 描边色；缺省时使用 currentColor
  * @throws RetikzCoreError 描边是渐变或图案等结构化 paint 时抛出
  */
-export const markerContextStroke = (stroke: PaintValue | undefined): string => {
+export const markerContextStroke = (stroke: PaintValue | undefined, marker: ReadonlyArray<MarkerPrimitive>): string => {
+  if (!marker.some(markerPrimUsesContextStroke)) return 'currentColor';
   if (stroke === undefined) return 'currentColor';
   if (typeof stroke === 'string') return stroke;
 
@@ -102,5 +104,10 @@ export const buildMarkMarkerGroup = (
     { kind: 'translate', x: round(-spec.refX), y: round(-refY) },
   ];
 
-  return { type: 'group', transforms, children: spec.marker.map(p => markerPrimToScene(p, contextStroke)) };
+  return {
+    type: 'group',
+    transforms,
+    ...(spec.opacity === undefined ? {} : { opacity: spec.opacity }),
+    children: spec.marker.map(p => markerPrimToScene(p, contextStroke)),
+  };
 };

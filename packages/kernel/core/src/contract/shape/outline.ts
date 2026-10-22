@@ -93,6 +93,8 @@ type PathPrimitiveStyle = Pick<
   | 'strokeWidth'
   | 'dashPattern'
   | 'dashOffset'
+  | 'strokeLinecap'
+  | 'strokeLinejoin'
   | 'opacity'
   | 'shadow'
   | 'blendMode'

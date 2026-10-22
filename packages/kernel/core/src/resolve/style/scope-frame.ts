@@ -41,6 +41,8 @@ export const resolveScopeFrame = (
     fill: paint(style.fill, 'fill'),
     stroke: paint(style.stroke, 'stroke'),
     strokeWidth: style.strokeWidth,
+    lineCap: style.lineCap,
+    lineJoin: style.lineJoin,
     ...(style.dashPattern === undefined ? {} : { dashPattern: style.dashPattern }),
     ...(style.dashOffset === undefined ? {} : { dashOffset: style.dashOffset }),
     ...resolveGraphicOpacity(style.opacity),

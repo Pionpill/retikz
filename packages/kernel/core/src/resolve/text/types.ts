@@ -1,4 +1,4 @@
-import type { IRFont, IRLine, IRMathSegment, IRTextSegment } from '../../schemas';
+import type { IRFont, IRLine, IRMathSegment, IRTextSegment, IRSegmentedLine } from '../../schemas';
 
 type WithResolvedFill<T> = T extends unknown ? Omit<T, 'fill'> & { fill?: string } : never;
 
@@ -12,10 +12,13 @@ export type ResolvedMathSegment = WithResolvedFill<IRMathSegment>;
 export type ResolvedInlineSourceSegment = ResolvedTextSegment | ResolvedMathSegment;
 
 /** 已把 segment 派生颜色确定为字符串的混排行 */
-export type ResolvedSegmentedLine = Readonly<{
-  /** 保留作者顺序的文本与行内内容片段 */
-  segments: Array<ResolvedInlineSourceSegment>;
-}>;
+export type ResolvedSegmentedLine = Omit<IRSegmentedLine, 'segments' | 'fill'> &
+  Readonly<{
+    /** 已解析行级颜色 */
+    fill?: string;
+    /** 保留作者顺序的文本与行内内容片段 */
+    segments: Array<ResolvedInlineSourceSegment>;
+  }>;
 
 /** 已把派生颜色确定为字符串的单行 Source */
 export type ResolvedTextLine =
@@ -68,7 +71,9 @@ export type CanonicalTextSegment = Omit<ResolvedTextSegment, 'font'> &
   }>;
 
 /** 已确定的行内文字或公式 segment */
-export type CanonicalInlineSegment = CanonicalTextSegment | ResolvedMathSegment;
+export type CanonicalInlineSegment =
+  | CanonicalTextSegment
+  | (Omit<ResolvedMathSegment, 'fontSize'> & { /** 有效数学字号 */ fontSize: number });
 
 /** Source IR 行内文字或公式 segment */
 export type SourceInlineSegment = ResolvedInlineSourceSegment;

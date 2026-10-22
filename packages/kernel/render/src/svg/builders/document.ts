@@ -117,7 +117,7 @@ const buildDefs = (scene: Scene, idPrefix: string): SvgNode | undefined => {
   const children: Array<SvgNode> = [];
 
   for (const spec of uniqueByKey.values()) {
-    children.push(buildArrowMarker(arrowMarkerIdFor(spec), spec));
+    children.push(buildArrowMarker(arrowMarkerIdFor(spec), spec, id => `url(#${paintIdFor(id)})`));
   }
 
   for (const r of paintResources) children.push(buildPaintDef(r, paintIdFor(r.id)));

@@ -15,7 +15,7 @@ const TEXT_TEX_PARSE_ERROR = 'TEXT_TEX_PARSE_ERROR';
 
 /** 仅保留作者显式写出的 TextLine 样式 */
 const resolveExplicitStyle = (
-  source: Exclude<TextLineSource, string | { segments: Array<SourceInlineSegment> }>,
+  source: Exclude<TextLineSource, string>,
   context: TextLineResolveContext,
 ): ResolvedTextLineStyle => ({
   fill: source.fill,
@@ -38,12 +38,20 @@ const resolveSegment = (
   lineFont: IRFont | undefined,
   context: TextLineResolveContext,
 ): CanonicalInlineSegment => {
-  if (isMathSegment(segment)) return segment;
+  const inheritedFont = resolveFont(lineFont, context);
+  if (isMathSegment(segment))
+    return {
+      ...segment,
+      fontSize: resolveFontSize(segment.fontSize, {
+        rootFontSize: context.rootFontSize,
+        inheritedFontSize: inheritedFont.size,
+      }),
+    };
 
-  const sourceFont = segment.font ?? lineFont;
+  const sourceFont = segment.font;
   const resolved: Omit<ResolvedTextSegment, 'font'> & { font: ReturnType<typeof resolveFont> } = {
     ...segment,
-    font: resolveFont(sourceFont, context),
+    font: resolveFont(sourceFont, { ...context, inheritedFont }),
   };
 
   return resolved;
@@ -51,7 +59,7 @@ const resolveSegment = (
 
 /** 确定单行文字的 shorthand、样式、字体与混排形态 */
 export const resolveTextLine = (source: TextLineSource, context: TextLineResolveContext): TextLineResolution => {
-  const styled = typeof source === 'object' && !('segments' in source) ? source : undefined;
+  const styled = typeof source === 'object' ? source : undefined;
   const parsed =
     typeof source === 'string'
       ? parseInlineSegments(source, context.gatingOn)

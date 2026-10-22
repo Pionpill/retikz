@@ -128,7 +128,7 @@ import { Node } from '@retikz/react';
 
 `label.rotate` 让标签文字绕**自身中心**自旋：`'radial'` 沿 `position` 定义的方向，边界比例位置使用所选边的外法向；`'tangent'` 取其切向（radial + 90°），数字为显式角度（度）。`placement: 'inside'` 只反转标签偏移，不反转该朝向；`keepUpright` 在文字会倒置时翻 180° 保持可读。旋转会改变视觉框沿摆放方向的投影，所以编译器会相应移动标签中心，保证 `distance` 仍是同一个净距。
 
-`label.pin` 给标签加一条**引线**连回节点边界：`pin: true` 是默认细实线（继承标签色）；`pin: { stroke, strokeWidth, dashPattern, dashOffset }` 自定义引线样式；不写 / `false` 则无引线。引线终点是摆放射线与旋转后视觉框的精确交点，没有额外隐藏留白；标签摆放仍只由前述盒几何决定。
+`label.pin` 给标签加一条**引线**连回节点边界：`pin: true` 是默认细实线（继承标签色）；`pin: { stroke, strokeWidth, dashPattern, dashOffset, lineCap, lineJoin, opacity }` 自定义引线样式；不写 / `false` 则无引线。引线终点是摆放射线与旋转后视觉框的精确交点，没有额外隐藏留白；标签摆放仍只由前述盒几何决定。
 
 引线与 Path 使用相同的线宽和虚线约束：`strokeWidth` 非负，缺省为 `1`，设为 `0` 时不显示引线；`dashPattern` 是非空的非负长度数组；`dashOffset` 允许负值。
 
@@ -137,6 +137,8 @@ import { Node } from '@retikz/react';
   size="lg"
   defaultSourceFile="node-label-rotate-pin.preview.tsx"
 />
+
+`pin.stroke` 可使用颜色、渐变或图案；`lineCap` 和 `lineJoin` 分别设置端帽和连接样式。显式 `pin.opacity` 单独控制引线透明度；省略时沿用标签的有效透明度。
 
 <Comparison target="tikz" title="节点标签写法">
 
@@ -215,7 +217,7 @@ import { Node } from '@retikz/react';
   description: `仅外侧标签可用的引线：
 
 - \`true\`：使用默认细实线
-- \`{ stroke?, strokeWidth?, dashPattern?, dashOffset? }\`：自定义引线样式；\`strokeWidth\` 缺省为 \`1\`，\`dashPattern\` 与 \`dashOffset\` 控制虚线`,
+- \`{ stroke?, strokeWidth?, dashPattern?, dashOffset?, lineCap?, lineJoin?, opacity? }\`：自定义引线样式；\`strokeWidth\` 缺省为 \`1\`，\`dashPattern\` 与 \`dashOffset\` 控制虚线`,
   },
   ]}
   />

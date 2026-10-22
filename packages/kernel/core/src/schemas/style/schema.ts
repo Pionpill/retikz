@@ -69,6 +69,7 @@ export const GraphicFillSchema = strictObject({
 
 /** 校验描边颜色、线宽与虚线样式 */
 export const GraphicStrokeSchema = strictObject({
+  ...StrokeCapJoinSchema.shape,
   strokeWidth: StrokeWidthSchema.optional().describe('Stroke width in user units.'),
   dashPattern: StrokeDashPatternSchema.optional().describe(
     'Stroke dash pattern lengths in user units. Omitted fields mean solid line.',
@@ -130,4 +131,5 @@ export const CascadingGraphicStyleSchema = strictObject({
   ...GraphicFillSchema.shape,
   ...GraphicStrokeSchema.shape,
   ...GraphicOpacitySchema.shape,
+  ...GraphicEffectsSchema.shape,
 }).describe('Cascading graphic style fields shared by node and path-like elements.');

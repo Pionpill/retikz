@@ -14,12 +14,18 @@ describe('inline layout and paint', () => {
         { commands: [], fill: { kind: 'color' as const, value: 'red' }, stroke: { kind: 'none' as const } },
       ],
     }));
-    const layout = layoutInlineLine([{ text: 'A', font: { size: 16 } }, { tex: 'x' }], {
-      measureText,
-      lowerTex,
-      font: { size: 16 },
-      warn: () => undefined,
-    });
+    const layout = layoutInlineLine(
+      [
+        { text: 'A', font: { size: 16 } },
+        { tex: 'x', fontSize: 16 },
+      ],
+      {
+        measureText,
+        lowerTex,
+        font: { size: 16 },
+        warn: () => undefined,
+      },
+    );
     const snapshot = JSON.stringify(layout);
     const first = emitInlineLine(layout, { color: 'blue', opacity: 0.5, segments: [{}, {}] }, 0, 8, n => n);
     const next = emitInlineLine(
@@ -40,12 +46,18 @@ describe('inline layout and paint', () => {
   });
 
   it('跳过无效公式后仍按原 run 对应外观', () => {
-    const layout = layoutInlineLine([{ tex: 'bad' }, { text: 'A', font: { size: 16 } }], {
-      measureText: fallbackMeasurer,
-      lowerTex: () => null,
-      font: { size: 16 },
-      warn: () => undefined,
-    });
+    const layout = layoutInlineLine(
+      [
+        { tex: 'bad', fontSize: 16 },
+        { text: 'A', font: { size: 16 } },
+      ],
+      {
+        measureText: fallbackMeasurer,
+        lowerTex: () => null,
+        font: { size: 16 },
+        warn: () => undefined,
+      },
+    );
     expect(emitInlineLine(layout, { segments: [{ fill: 'red' }, { fill: 'blue' }] }, 0, 8, n => n)).toMatchObject([
       { fill: 'blue' },
     ]);

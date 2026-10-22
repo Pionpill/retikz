@@ -41,6 +41,10 @@ export type GeometryKeyPoint = Readonly<{
  *   与 IR style schema 同语义的标量字段通过 `IRGraphicStyle` 复用类型；paint / shadow 等 compile 后字段显式组合
  */
 export type ResolvedShapeStyle = {
+  /** 描边线帽 */
+  strokeLinecap?: IRGraphicStyle['lineCap'];
+  /** 描边拐角连接 */
+  strokeLinejoin?: IRGraphicStyle['lineJoin'];
   /**
    * 已解析填充 paint；缺省由 shape emit 按透明填充处理
    * @default 'transparent'

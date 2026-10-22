@@ -17,6 +17,8 @@ const GRAPHIC_STYLE_KEYS = [
   'strokeWidth',
   'dashPattern',
   'dashOffset',
+  'lineCap',
+  'lineJoin',
   'opacity',
   'shadow',
   'blendMode',

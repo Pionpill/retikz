@@ -68,7 +68,7 @@ describe('Core atomic drawing contracts', () => {
       dashed: true,
       dotted: true,
     });
-    expect(NodeStrokeSchema.safeParse({ lineCap: 'round' }).success).toBe(false);
+    expect(NodeStrokeSchema.safeParse({ lineCap: 'round' }).success).toBe(true);
 
     const pathStroke = { ...graphicStroke, lineCap: 'round' as const, lineJoin: 'bevel' as const };
 

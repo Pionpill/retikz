@@ -254,6 +254,11 @@ const resolveNodeLineColors = (
   if (typeof line === 'string') return line;
   if ('segments' in line) {
     return {
+      ...line,
+      fill:
+        line.fill === undefined
+          ? undefined
+          : resolveContextualColor(line.fill, { masterColor, mode, fieldPath: `${fieldPath}.fill` }),
       segments: line.segments.map((segment, index) =>
         resolveInlineSegmentColor(segment, masterColor, mode, `${fieldPath}.segments[${index}]`),
       ),
@@ -280,6 +285,11 @@ const resolveLabelTextColors = (
   typeof text === 'string'
     ? text
     : {
+        ...text,
+        fill:
+          text.fill === undefined
+            ? undefined
+            : resolveContextualColor(text.fill, { masterColor, mode, fieldPath: `${fieldPath}.fill` }),
         segments: text.segments.map((segment, index) =>
           resolveInlineSegmentColor(segment, masterColor, mode, `${fieldPath}.segments[${index}]`),
         ),
@@ -290,7 +300,7 @@ const resolveNodeLabelColors = (
   label: MaterializedNodeLabel,
   labelMasterColor: string | undefined,
   inheritedTextColor: string | undefined,
-  mode: NodeResolveContext['mode'],
+  context: NodeResolveContext,
   fieldPath: string,
 ): CanonicalNodeLabel => {
   const { textColor, text, pin, ...source } = label;
@@ -299,7 +309,7 @@ const resolveNodeLabelColors = (
       ? inheritedTextColor
       : resolveContextualColor(textColor, {
           masterColor: labelMasterColor,
-          mode,
+          mode: context.mode,
           fieldPath: `${fieldPath}.textColor`,
         });
   const textMaster = resolvedTextColor ?? inheritedTextColor;
@@ -311,11 +321,16 @@ const resolveNodeLabelColors = (
       ...(stroke === undefined
         ? {}
         : {
-            stroke: resolveContextualColor(stroke, {
-              masterColor: textMaster,
-              mode,
-              fieldPath: `${fieldPath}.pin.stroke`,
-            }),
+            stroke: resolvePaint(
+              typeof stroke === 'object'
+                ? stroke
+                : resolveContextualColor(stroke, {
+                    masterColor: textMaster,
+                    mode: context.mode,
+                    fieldPath: `${fieldPath}.pin.stroke`,
+                  }),
+              { patterns: context.patterns, round: context.round, irPath: `${fieldPath}.pin.stroke` },
+            ),
           }),
     };
   } else {
@@ -325,7 +340,7 @@ const resolveNodeLabelColors = (
   return {
     ...source,
     ...(resolvedTextColor === undefined ? {} : { textColor: resolvedTextColor }),
-    text: resolveLabelTextColors(text, textMaster, mode, `${fieldPath}.text`),
+    text: resolveLabelTextColors(text, textMaster, context.mode, `${fieldPath}.text`),
     ...(resolvedPin === undefined ? {} : { pin: resolvedPin }),
   };
 };
@@ -334,7 +349,7 @@ const resolveNodeLabelColors = (
 const resolveNodeDependentColors = (
   node: PrimaryColorResolvedMaterializedNode,
   labelDefault: EffectiveLabelDefault,
-  context: NodeColorContext,
+  context: NodeResolveContext,
   labelWasArray: boolean,
 ): ResolvedNodeSource => {
   const { text, label, ...source } = node;
@@ -360,7 +375,7 @@ const resolveNodeDependentColors = (
               item,
               labelDefault.color ?? node.style?.color,
               textMaster,
-              context.mode,
+              context,
               labelWasArray ? `${context.irPath}.label[${index}]` : `${context.irPath}.label`,
             ),
           ),

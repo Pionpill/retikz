@@ -244,6 +244,11 @@ const resolvePathLabelTextLine = (
   if (typeof text === 'string') return text;
   if ('segments' in text) {
     return {
+      ...text,
+      fill:
+        text.fill === undefined
+          ? undefined
+          : resolveContextualColor(text.fill, { masterColor, mode: context.mode, fieldPath: `${fieldPath}.fill` }),
       segments: text.segments.map((segment, index) =>
         resolveLabelSegmentColor(segment, masterColor, context, `${fieldPath}.segments[${index}]`),
       ),
@@ -321,7 +326,7 @@ const resolveArrowColors = (
   context: PathResolveContext,
   fieldPath: string,
 ): ResolvedArrowMark => {
-  const { color, fill, ...source } = mark;
+  const { color, fill, stroke, ...source } = mark;
   const resolvedColor =
     color === undefined
       ? masterColor
@@ -333,15 +338,30 @@ const resolveArrowColors = (
 
   return {
     ...source,
+    ...(stroke === undefined
+      ? {}
+      : {
+          stroke:
+            typeof stroke === 'object'
+              ? stroke
+              : resolveContextualColor(stroke, {
+                  masterColor: resolvedColor,
+                  mode: context.mode,
+                  fieldPath: `${fieldPath}.stroke`,
+                }),
+        }),
     ...(resolvedColor === undefined ? {} : { color: resolvedColor }),
     ...(fill === undefined
       ? {}
       : {
-          fill: resolveContextualColor(fill, {
-            masterColor: resolvedColor,
-            mode: context.mode,
-            fieldPath: `${fieldPath}.fill`,
-          }),
+          fill:
+            typeof fill === 'object'
+              ? fill
+              : resolveContextualColor(fill, {
+                  masterColor: resolvedColor,
+                  mode: context.mode,
+                  fieldPath: `${fieldPath}.fill`,
+                }),
         }),
   };
 };

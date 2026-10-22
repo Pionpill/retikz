@@ -121,7 +121,7 @@ export const layoutInlineLine = (
 
       const rawLowered = ctx.lowerTex(
         { tex: segment.tex, displayMode: segment.displayMode },
-        { fontSize: ctx.font.size },
+        { fontSize: segment.fontSize },
       );
       if (rawLowered === null) {
         ctx.warn(BuiltinCompileWarningCode.TexInvalid, `Failed to render inline tex: ${segment.tex}`);

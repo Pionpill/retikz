@@ -378,6 +378,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '视觉样式完整消费', en: 'Complete visual style support' },
+          content: {
+            zh: '补齐通用描边端帽与连接样式、后代默认阴影和混合模式；引线支持 paint 与独立透明度，箭头支持 paint 与虚线。分段行支持行级样式，公式继承行字号并可单独覆盖。',
+            en: 'Completes shared stroke caps and joins, descendant shadow/blend defaults, leader paints and independent opacity, and arrow paints and dashes. Segmented lines support line styles; math inherits the line size with optional overrides.',
+          },
+        },
+        {
           label: { zh: '共享虚线描边', en: 'Shared dashed strokes' },
           content: {
             zh: '`Scope.defaults.style` 支持 `dashPattern` 与 `dashOffset`，Node 与 Path 按既有通道优先级继承；Scope 外框支持独立的虚线与相位设置。',
@@ -961,6 +968,13 @@ export const kernelV05: Release = {
         en: 'Drawing updates can preserve unchanged SVG elements and reduce Canvas repainting, with rendering, events, and animation state committed together.',
       },
       highlights: [
+        {
+          label: { zh: '视觉样式完整消费', en: 'Complete visual style support' },
+          content: {
+            zh: 'SVG 与 Canvas 统一执行矩形、椭圆和箭头的端帽、连接样式与 paint；SVG 箭头资源使用实例隔离的引用。',
+            en: 'SVG and Canvas render caps, joins, and paints on rectangles, ellipses, and arrows consistently. SVG arrow paint references are scoped to each instance.',
+          },
+        },
         {
           label: { zh: 'Retained renderer runtime', en: 'Retained renderer runtime' },
           content: {

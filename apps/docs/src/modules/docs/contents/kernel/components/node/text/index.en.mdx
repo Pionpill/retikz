@@ -160,6 +160,8 @@ import { NodeTextColor } from '@retikz/core';
 - Translucent / missing fills, `opacity.fill < 1`, gradients, patterns, images, `var()`, and `currentColor` use the fixed `currentColor` fallback and emit `TEXT_AUTO_CONTRAST_UNRESOLVED`
 - Per-line / segment `fill`, explicit label colors, and `defaults.label` still win. The keyword affects only body text, labels, and pins that ultimately inherit the Node text color
 
+Both text lines and segmented lines accept `fill`, `opacity`, and `font`. Segmented lines inherit the block font, then apply line defaults and segment overrides. A segment that changes only weight keeps the line size and family. Math uses the effective line size unless its `fontSize` overrides it; `em` is relative to that line and `rem` to the root size. The TeX integration controls math fonts.
+
 ## Errors and limitations
 
 Text only works inside Node and takes string or number children. Block alignment, line height, and wrapping width belong to `Node.layout.align`, `lineHeight`, and `maxTextWidth`; per-line fonts belong to Text `font`.
@@ -179,9 +181,9 @@ These members provide body text, wrapping, and per-line overrides. See the [API 
         description: `Supplies explicit node text and wins over \`children\`:
 
 - \`string\`: one line by default; \`\\n\` makes hard breaks and \`$...$\` formula sugar is allowed
-- \`Array<IRLine>\`: a multiline array with at least one line. Each item may be \`string\`, \`{ text, fill?, opacity?, font? }\`, or \`{ segments: Array<IRTextSegment | IRMathSegment> }\`
+- \`Array<IRLine>\`: a multiline array with at least one line. Each item may be \`string\`, \`{ text, fill?, opacity?, font? }\`, or \`{ segments: Array<IRTextSegment | IRMathSegment>, fill?, opacity?, font? }\`
   - Text segment: \`{ text, fill?, opacity?, font? }\`
-  - Math segment: \`{ tex, displayMode?, fill?, opacity? }\`, which requires \`lowerTex\`
+  - Math segment: \`{ tex, displayMode?, fontSize?, fill?, opacity? }\`, which requires \`lowerTex\`
   - \`segments\` lay out text and formulas in order on one baseline`,
 },
 {

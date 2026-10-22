@@ -1,21 +1,17 @@
-﻿import type { IRGraphicStyle, IRPathBase, PathFillRule, PathLineCap, PathLineJoin } from '../../schemas';
+import type { IRGraphicStyle, IRPathBase, PathFillRule, PathLineCap, PathLineJoin } from '../../schemas';
 import type { Transform } from './group';
+import type { PaintValue } from './paint';
 import type { PathCommand } from './path';
 
 /**
  * marker-local 填充取值
- * @description 只允许纯色或 `contextStroke`，不允许引用外部 paint resource
+ * @description 允许纯色、`contextStroke` 和 Scene paint resource 引用；pattern motif 仍禁止外部资源引用
  */
-export type MarkerFill =
-  | string
-  | {
-      /** 从宿主路径描边继承 marker 填充的标记 */
-      kind: 'contextStroke';
-    };
+export type MarkerFill = PaintValue;
 
 /**
  * marker-local path 原语：`PathPrim` 去掉 arrowStart / arrowEnd（禁递归箭头），fill 收窄到 `MarkerFill`
- * @description 局部 baseSize 坐标系；不含外部 resourceRef / clip / text
+ * @description 局部 baseSize 坐标系；不含 clip / text
  */
 export type MarkerPathPrim = {
   /** 类型判别符 */
@@ -61,7 +57,7 @@ export type MarkerPathPrim = {
 
 /**
  * marker-local ellipse 原语：`EllipsePrim` fill 收窄到 `MarkerFill`
- * @description 圆形（rx=ry）复用同一 prim；不含外部 resourceRef
+ * @description 圆形（rx=ry）复用同一 prim；支持 Scene paint resource 引用
  */
 export type MarkerEllipsePrim = {
   /** 类型判别符 */
@@ -99,11 +95,15 @@ export type MarkerEllipsePrim = {
   dashPattern?: NonNullable<IRPathBase['style']>['dashPattern'];
   /** 描边 dash offset */
   dashOffset?: NonNullable<IRPathBase['style']>['dashOffset'];
+  /** 描边样式 */
+  strokeLinecap?: PathLineCap;
+  /** 描边样式 */
+  strokeLinejoin?: PathLineJoin;
 };
 
 /**
  * marker-local rect 原语：`RectPrim` fill 收窄到 `MarkerFill`
- * @description 不含外部 resourceRef；`x`/`y` 维持 RectPrim 的左上角约定
+ * @description 支持 Scene paint resource 引用；`x`/`y` 维持 RectPrim 的左上角约定
  */
 export type MarkerRectPrim = {
   /** 类型判别符 */
@@ -136,6 +136,10 @@ export type MarkerRectPrim = {
   dashPattern?: NonNullable<IRPathBase['style']>['dashPattern'];
   /** 描边 dash offset */
   dashOffset?: NonNullable<IRPathBase['style']>['dashOffset'];
+  /** 描边样式 */
+  strokeLinecap?: PathLineCap;
+  /** 描边样式 */
+  strokeLinejoin?: PathLineJoin;
   /**
    * 圆角半径（同时作用于 rx/ry）
    * @default 0
@@ -162,6 +166,6 @@ export type MarkerGroupPrim = {
 
 /**
  * marker 物化窄子集：ArrowDefinition.emit 的产物类型
- * @description 相对 `ScenePrimitive` 的收窄子集：禁 text、递归箭头、外部 resourceRef 和 clip
+ * @description 相对 `ScenePrimitive` 的收窄子集：禁 text、递归箭头、clip
  */
 export type MarkerPrimitive = MarkerPathPrim | MarkerEllipsePrim | MarkerRectPrim | MarkerGroupPrim;

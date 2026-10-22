@@ -25,7 +25,7 @@ import type { ResolvedLabelTextContent, ResolvedTextLine } from '../text';
 /** 已把派生颜色确定为字符串的 Node label pin */
 export type ResolvedNodeLabelPin = Omit<Exclude<IRNodeLabel['pin'], boolean | undefined>, 'stroke'> & {
   /** 已确定的引线颜色 */
-  stroke?: string;
+  stroke?: PaintResolutionInput;
 };
 
 /** 已把 Node 自身派生颜色确定为字符串、但尚未处理正文和 label 的中间形态 */

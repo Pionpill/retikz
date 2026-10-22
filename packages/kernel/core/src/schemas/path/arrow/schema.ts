@@ -1,7 +1,7 @@
 import { createOpenStringSchema, NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { strictObject } from 'zod';
 
-import { ContextualColorSchema, OpacitySchema } from '../../style';
+import { ContextualColorSchema, OpacitySchema, GraphicStrokeSchema, PaintValueSchema } from '../../style';
 import { BuiltinArrowShape } from './constants';
 
 /** Core 内置 arrow 与自定义注册名共享的开放名称 schema */
@@ -11,6 +11,7 @@ export const ArrowShapeSchema = createOpenStringSchema(BuiltinArrowShape).descri
 
 /** 校验箭头的形状、尺寸与视觉样式 */
 export const ArrowStyleSchema = strictObject({
+  ...GraphicStrokeSchema.omit({ strokeWidth: true }).shape,
   shape: ArrowShapeSchema.optional().describe(
     'Arrow shape provider name. Built-ins and registered custom names are accepted.',
   ),
@@ -26,7 +27,7 @@ export const ArrowStyleSchema = strictObject({
   color: ContextualColorSchema.optional().describe(
     'Arrow color override. A number derives from the effective path color; omitted arrows inherit the path stroke.',
   ),
-  fill: ContextualColorSchema.optional().describe(
+  fill: PaintValueSchema.optional().describe(
     'Fill override for solid arrow shapes. A number derives from the effective arrow color; hollow definitions ignore fill.',
   ),
   opacity: OpacitySchema.optional().describe('Arrow-only opacity. When omitted, the arrow follows the path opacity.'),

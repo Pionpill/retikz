@@ -21,7 +21,7 @@ import {
 import { AngleDegreesSchema } from '../scalar';
 import { ShapeValueSchema } from '../shape';
 import {
-  ContextualColorSchema,
+  OpacitySchema,
   GraphicColorSchema,
   GraphicFillSchema,
   GraphicStrokeSchema,
@@ -75,10 +75,10 @@ export const BoxSizeSchema = strictObject({
 }).describe('Box size overrides. Width and height override default.');
 
 /** 校验节点外侧标签引线的颜色、线宽与虚线样式 */
-export const NodeLabelPinSchema = object({
-  ...GraphicStrokeSchema.omit({ stroke: true }).shape,
-  stroke: ContextualColorSchema.optional().describe(
-    'Leader line color; an exact CSS color or a weight derived from the effective label color.',
+export const NodeLabelPinSchema = strictObject({
+  ...GraphicStrokeSchema.shape,
+  opacity: OpacitySchema.optional().describe(
+    'Independent leader opacity; otherwise inherits the effective label opacity.',
   ),
 }).describe('Leader line style overrides for an outside node label.');
 

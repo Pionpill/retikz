@@ -160,6 +160,8 @@ import { NodeTextColor } from '@retikz/core';
 - 透明 / 缺省 fill、`opacity.fill < 1`、gradient、pattern、image、`var()`、`currentColor` 等无法闭合求值的背景使用固定 `currentColor` fallback，并发出 `TEXT_AUTO_CONTRAST_UNRESOLVED`
 - 行 / segment 的 `fill`、label 的显式颜色和 `defaults.label` 仍优先；关键字只影响最终继承 Node 文字颜色的正文、label 与 pin
 
+单文本行与分段行都支持 `fill`、`opacity` 和 `font`。分段行先继承块级字体，再应用行级默认和片段覆盖；片段只改字重时，字号和字体族仍继承所在行。公式采用所在行的有效字号，也可用公式片段的 `fontSize` 单独设置；`em` 相对所在行字号，`rem` 相对根字号。公式字体由 TeX 接入方处理。
+
 ## 错误与限制
 
 Text 只在 Node 中生效，每个 Text 的 children 是字符串或数字。块级对齐、行距与折行宽度分别写在 `Node.layout.align`、`lineHeight` 与 `maxTextWidth`；行级字体写在 Text 的 `font`。
@@ -179,9 +181,9 @@ Text 只在 Node 中生效，每个 Text 的 children 是字符串或数字。�
         description: `显式提供节点正文，优先于 \`children\`：
 
 - \`string\`：普通字符串是一行；其中的 \`\\n\` 形成硬分行，也可含 \`$...$\` 公式 sugar
-- \`Array<IRLine>\`：多行数组至少包含一行；每项可为 \`string\`、\`{ text, fill?, opacity?, font? }\`，或 \`{ segments: Array<IRTextSegment | IRMathSegment> }\`
+- \`Array<IRLine>\`：多行数组至少包含一行；每项可为 \`string\`、\`{ text, fill?, opacity?, font? }\`，或 \`{ segments: Array<IRTextSegment | IRMathSegment>, fill?, opacity?, font? }\`
   - 文字段：\`{ text, fill?, opacity?, font? }\`
-  - 公式段：\`{ tex, displayMode?, fill?, opacity? }\`，需要 \`lowerTex\`
+  - 公式段：\`{ tex, displayMode?, fontSize?, fill?, opacity? }\`，需要 \`lowerTex\`
   - \`segments\` 在同一基线上依次排版文字和公式`,
 },
 {

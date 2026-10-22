@@ -1,103 +1,13 @@
-import type { MarkerFill, MarkerPrimitive, PathCommand } from '@retikz/core';
+import type { MarkerPrimitive } from '@retikz/core';
 
-import { buildPathD } from '../path-d-builder';
-import { buildTransform } from '../transform-builder';
 import type { SvgNode } from '../types';
-import { compact } from './attrs';
+import { buildPrim } from './prim';
 
-/**
- * marker fill 取值 → SVG fill 属性值
- * @description 纯色字符串直传；`{ kind:'contextStroke' }` → `context-stroke`（继承所在元素描边，主题反应）；
- *   省略（hollow 几何无 fill）→ `none`（SVG `<path>` 缺省填黑，空心几何必须显式置 `none`）
- */
-const markerFillToSvg = (fill: MarkerFill | undefined): string => {
-  if (fill === undefined) return 'none';
-  if (typeof fill === 'string') return fill;
-  return 'context-stroke';
-};
-
-/**
- * marker stroke 取值 → SVG stroke 属性值
- * @description 纯色字符串直传；`{ kind:'contextStroke' }` → `context-stroke`（继承所在元素描边）；
- *   省略 → undefined（compact 丢弃，SVG stroke 缺省 none）
- */
-const markerStrokeToSvg = (stroke: MarkerFill | undefined): string | undefined => {
-  if (stroke === undefined) return undefined;
-  if (typeof stroke === 'string') return stroke;
-  return 'context-stroke';
-};
-
-/** marker-local path 命令序列 → SVG `d` 字符串（复用主 path 的 `buildPathD`） */
-const markerCommandsToD = (commands: ReadonlyArray<PathCommand>): string => buildPathD(commands);
-
-/**
- * 单个 `MarkerPrimitive` → `SvgNode`（arrow marker / pattern motif 共用物化）
- * @description core 已在 compile 把 emit 几何解析成纯数据；本 builder 只翻成 SVG 描述。group 递归；
- *   fill 走 `markerFillToSvg`（contextStroke → context-stroke）。属性名一律 SVG 真名（kebab）
- */
-export const buildMarkerPrim = (prim: MarkerPrimitive): SvgNode => {
-  switch (prim.type) {
-    case 'path':
-      return {
-        tag: 'path',
-        attrs: compact({
-          d: markerCommandsToD(prim.commands),
-          fill: markerFillToSvg(prim.fill),
-          'fill-opacity': prim.fillOpacity,
-          'fill-rule': prim.fillRule,
-          stroke: markerStrokeToSvg(prim.stroke),
-          'stroke-opacity': prim.strokeOpacity,
-          'stroke-width': prim.strokeWidth,
-          'stroke-dasharray': prim.dashPattern?.join(' '),
-          'stroke-dashoffset': prim.dashOffset,
-          'stroke-linecap': prim.strokeLinecap,
-          'stroke-linejoin': prim.strokeLinejoin,
-        }),
-      };
-    case 'ellipse':
-      return {
-        tag: 'ellipse',
-        attrs: compact({
-          cx: prim.cx,
-          cy: prim.cy,
-          rx: prim.rx,
-          ry: prim.ry,
-          fill: markerFillToSvg(prim.fill),
-          'fill-opacity': prim.fillOpacity,
-          stroke: markerStrokeToSvg(prim.stroke),
-          'stroke-opacity': prim.strokeOpacity,
-          'stroke-width': prim.strokeWidth,
-          'stroke-dasharray': prim.dashPattern?.join(' '),
-          'stroke-dashoffset': prim.dashOffset,
-          transform: prim.rotate ? `rotate(${prim.rotate} ${prim.cx} ${prim.cy})` : undefined,
-        }),
-      };
-    case 'rect':
-      return {
-        tag: 'rect',
-        attrs: compact({
-          x: prim.x,
-          y: prim.y,
-          width: prim.width,
-          height: prim.height,
-          rx: prim.cornerRadius,
-          ry: prim.cornerRadius,
-          fill: markerFillToSvg(prim.fill),
-          'fill-opacity': prim.fillOpacity,
-          stroke: markerStrokeToSvg(prim.stroke),
-          'stroke-opacity': prim.strokeOpacity,
-          'stroke-width': prim.strokeWidth,
-          'stroke-dasharray': prim.dashPattern?.join(' '),
-          'stroke-dashoffset': prim.dashOffset,
-        }),
-      };
-    case 'group':
-      return {
-        tag: 'g',
-        attrs: compact({
-          transform: buildTransform(prim.transforms),
-        }),
-        children: prim.children.map(child => buildMarkerPrim(child)),
-      };
+/** 将 marker 局部图元复用为 SVG 图元，省略 fill 时保持空心语义 */
+export const buildMarkerPrim = (prim: MarkerPrimitive, paintRefUrl?: (id: string) => string): SvgNode => {
+  if (prim.type === 'group') {
+    const node = buildPrim({ ...prim, children: [] }, { paintRefUrl });
+    return { ...node, children: prim.children.map(child => buildMarkerPrim(child, paintRefUrl)) };
   }
+  return buildPrim({ ...prim, fill: prim.fill ?? 'none' }, { paintRefUrl });
 };

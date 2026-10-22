@@ -5,7 +5,7 @@ import type { GroupPrim, PathPrim } from '../../src/contract';
 
 describe('[tex-lowering] multi-path contract', () => {
   it('按 paint order 输出多条路径并解析宿主颜色与透明度', () => {
-    const line = layoutInlineLine([{ tex: 'x' }], {
+    const line = layoutInlineLine([{ tex: 'x', fontSize: 16 }], {
       measureText: fallbackMeasurer,
       font: { size: 16 },
       warn: () => undefined,
@@ -72,7 +72,7 @@ describe('[tex-lowering] multi-path contract', () => {
   });
 
   it('仅 currentColor 回退到宿主默认色，none 不输出 paint', () => {
-    const line = layoutInlineLine([{ tex: 'x' }], {
+    const line = layoutInlineLine([{ tex: 'x', fontSize: 16 }], {
       measureText: fallbackMeasurer,
       font: { size: 16 },
       warn: () => undefined,
@@ -111,7 +111,7 @@ describe('[tex-lowering] multi-path contract', () => {
       height: 1,
       depth: 0,
     };
-    const line = layoutInlineLine([{ tex: 'x' }], {
+    const line = layoutInlineLine([{ tex: 'x', fontSize: 16 }], {
       measureText: fallbackMeasurer,
       font: { size: 16 },
       warn: () => undefined,

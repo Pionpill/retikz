@@ -90,7 +90,7 @@ const resolvePatternTile = (resolution: PatternResolution, round: (n: number) =>
     emittedMotif = emitted.motif;
   }
 
-  const motif = validateMarkerPrimitives(`Pattern '${spec.shape}' motif`, emittedMotif);
+  const motif = validateMarkerPrimitives(`Pattern '${spec.shape}' motif`, emittedMotif, false);
   const tile: ResolvedPatternTile = { size: tileSize, motif };
   if (spec.background !== undefined) tile.background = spec.background;
   if (spec.rotation !== undefined) tile.rotation = spec.rotation;

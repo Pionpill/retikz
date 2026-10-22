@@ -491,6 +491,7 @@ const assertSceneStyle = (owner: string, value: Record<string, unknown>, path: s
   assertProviderOutputOptionalFinite(owner, value, 'strokeWidth', path, true);
   assertProviderOutputOptionalFinite(owner, value, 'dashOffset', path);
   assertProviderOutputDashPattern(owner, value, path);
+  assertProviderOutputPathEnums(owner, value, path);
   if (value.blendMode !== undefined && !Object.values(BlendMode).includes(value.blendMode as never)) {
     failProviderOutput(owner, `an invalid ${path}.blendMode`);
   }
@@ -532,6 +533,8 @@ const visitScenePrimitive = (
           'strokeWidth',
           'dashPattern',
           'dashOffset',
+          'strokeLinecap',
+          'strokeLinejoin',
           'cornerRadius',
           'opacity',
           'shadow',
@@ -566,6 +569,8 @@ const visitScenePrimitive = (
           'strokeWidth',
           'dashPattern',
           'dashOffset',
+          'strokeLinecap',
+          'strokeLinejoin',
           'opacity',
           'shadow',
           'blendMode',

@@ -370,6 +370,7 @@ const emitCanonicalPathPrimitive = (
   });
 
   const { arrows, inlineMarks } = emitPathEndpointDecorations(path, {
+    resolvePaint,
     arrowResolutions: resolution.arrows,
     round,
     irPath,
@@ -421,6 +422,7 @@ const emitCanonicalPathPrimitive = (
     inlineMarks,
     segmentSamplers,
     roundedCommands,
+    resolvePaint,
     arrowResolutions: resolution.arrows,
     baseProps,
     round,
