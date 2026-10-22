@@ -417,7 +417,7 @@ export type JsonValue =
     };
 ```
 
-#### <ApiSourceLink label={"assertPlainDataContainers"} path={"packages/kernel/foundation/src/json.ts"} startLine={97}>assertPlainDataContainers</ApiSourceLink>
+#### <ApiSourceLink label={"assertPlainDataContainers"} path={"packages/kernel/foundation/src/json.ts"} startLine={136}>assertPlainDataContainers</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -447,7 +447,7 @@ export declare const assertPlainDataContainers: (value: unknown, path?: string) 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"cloneAndFreezeJson"} path={"packages/kernel/foundation/src/json.ts"} startLine={109}>cloneAndFreezeJson</ApiSourceLink>
+#### <ApiSourceLink label={"cloneAndFreezeJson"} path={"packages/kernel/foundation/src/json.ts"} startLine={148}>cloneAndFreezeJson</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -470,6 +470,38 @@ export declare const assertPlainDataContainers: (value: unknown, path?: string) 
 
 ```ts
 export declare const cloneAndFreezeJson: <T>(value: T, path?: string) => T;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"jsonStructuralEquals"} path={"packages/kernel/foundation/src/json.ts"} startLine={160}>jsonStructuralEquals</ApiSourceLink>
+
+对象属性顺序不影响结果，数组按顺序比较，标量使用 Object.is，因此 0 与 -0 不相等；不修改输入
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称    | 类型 / 签名 | 说明                 |
+| ------ | ------- | ----------- | -------------------- |
+| 参数   | `left`  | `unknown`   | 左侧 JSON 数据树     |
+|        | `right` | `unknown`   | 右侧 JSON 数据树     |
+| 返回值 | —       | `boolean`   | 两侧结构和值是否相同 |
+
+</ApiTable>
+
+> **备注：** 调用方负责保证输入为合法 JSON 数据树；不执行合法性校验，不支持循环引用、Date、Map 或 class 实例
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const jsonStructuralEquals: (left: unknown, right: unknown) => boolean;
 ```
 
 </DocTab>

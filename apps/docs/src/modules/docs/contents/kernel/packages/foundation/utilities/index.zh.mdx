@@ -13,6 +13,7 @@ description: 复用 @retikz/foundation 的只读集合、JSON 快照与静态 CS
 import {
   createReadonlyMap,
   cloneAndFreezeJson,
+  jsonStructuralEquals,
   assertPlainDataContainers,
   parseStaticCssColor,
   compositeOpaqueColor,
@@ -46,6 +47,20 @@ Object.isFrozen(snapshot.filters); // true
 ```
 
 `assertPlainDataContainers(value, path)` 只检查容器结构，不复制数据，也不读取访问器。它用于没有持久化 schema、但仍需隔离 runtime Definition 容器的边界；已有 owner schema 的 Source 输入直接消费 Zod `parse()` 结果，不再把该断言作为通用前置校验。
+
+## JSON 结构比较
+
+`jsonStructuralEquals(left, right)` 判断两份 JSON 数据的结构和值是否相同。即使对象引用不同、属性插入顺序不同，也可以得到 `true`；数组的元素顺序则参与比较。
+
+```ts
+jsonStructuralEquals({ field: 'age', value: 18 }, { value: 18, field: 'age' }); // true
+jsonStructuralEquals({ values: [1, 2] }, { values: [2, 1] }); // false
+jsonStructuralEquals({ value: 0 }, { value: -0 }); // false
+```
+
+该方法可用于比较配置快照或确认数据内容是否变化。它逐层读取数据，不修改输入；标量按 `Object.is` 比较，因此区分 `0` 与 `-0`。
+
+调用前应保证两侧都是合法 JSON 数据树。它不执行 JSON 校验，也不处理循环引用、`Date`、`Map` 或 class 实例；外部未知输入应先通过所属 schema 校验。
 
 ## 静态 CSS 颜色
 

@@ -421,7 +421,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         zh: '数据容器',
         en: 'Data containers',
       },
-      members: ['JsonObject', 'JsonValue', 'assertPlainDataContainers', 'cloneAndFreezeJson'],
+      members: ['JsonObject', 'JsonValue', 'assertPlainDataContainers', 'cloneAndFreezeJson', 'jsonStructuralEquals'],
       schemas: [],
     },
     {

@@ -15,7 +15,6 @@ import {
   projectPublishedCompileLayout,
   projectScopeCompileLayouts,
   resolveScopeContext,
-  jsonStructuralEquals,
 } from '@retikz/core';
 import type {
   CompileNamespaceRegistry,
@@ -35,6 +34,7 @@ import type {
   CompileCompositeOptions,
   PreparedSceneCompilation,
 } from '@retikz/core';
+import { jsonStructuralEquals } from '@retikz/foundation';
 
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
 import { WeaveEditor } from './editor';

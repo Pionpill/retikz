@@ -1,11 +1,47 @@
 import {
   assertPlainDataContainers,
   cloneAndFreezeJson,
+  jsonStructuralEquals,
   RetikzError,
   RetikzFoundationError,
   RetikzFoundationErrorCode,
 } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
+
+describe('jsonStructuralEquals', () => {
+  it('compares nested objects independently of property insertion order without changing inputs', () => {
+    const left = cloneAndFreezeJson({ filters: [{ field: 'age', value: 18 }], enabled: true });
+    const right = cloneAndFreezeJson({ enabled: true, filters: [{ value: 18, field: 'age' }] });
+    expect(jsonStructuralEquals(left, right)).toBe(true);
+    expect(jsonStructuralEquals(right, left)).toBe(true);
+    expect(jsonStructuralEquals(left, left)).toBe(true);
+    expect(left.filters[0]).toEqual({ field: 'age', value: 18 });
+    expect(right.filters[0]).toEqual({ value: 18, field: 'age' });
+  });
+
+  it.each([
+    [{ a: 1 }, { a: 1, b: 2 }],
+    [{ a: 1 }, { b: 1 }],
+    [{ nested: { value: 1 } }, { nested: { value: 2 } }],
+    [
+      [1, 2],
+      [2, 1],
+    ],
+    [[1], [1, 2]],
+    [[1], { 0: 1 }],
+    [null, {}],
+    [1, '1'],
+    [false, 0],
+    [0, -0],
+  ])('distinguishes different structures or values: %j versus %j', (left, right) => {
+    expect(jsonStructuralEquals(left, right)).toBe(false);
+    expect(jsonStructuralEquals(right, left)).toBe(false);
+  });
+
+  it.each([null, true, false, '', 'value', 0, -0, 1.5, [], {}])('compares equal JSON values: %j', value => {
+    expect(jsonStructuralEquals(value, cloneAndFreezeJson(value))).toBe(true);
+  });
+});
 
 describe('cloneAndFreezeJson', () => {
   it('returns a detached deeply frozen JSON tree', () => {

@@ -41,6 +41,7 @@ const config = {
         'createOpenStringSchema',
         'createReadonlyMap',
         'isRetikzError',
+        'jsonStructuralEquals',
         'mergeProperties',
         'parseStaticCssColor',
       ],

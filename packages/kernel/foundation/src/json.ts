@@ -148,3 +148,37 @@ export const assertPlainDataContainers = (value: unknown, path = 'value'): void 
 export const cloneAndFreezeJson = <T>(value: T, path = 'value'): T => {
   return inspectPlainData(value, path, true) as T;
 };
+
+/**
+ * 递归比较两棵 JSON 数据树的结构和值
+ * @description 对象属性顺序不影响结果，数组按顺序比较，标量使用 Object.is，因此 0 与 -0 不相等；不修改输入
+ * @remarks 调用方负责保证输入为合法 JSON 数据树；不执行合法性校验，不支持循环引用、Date、Map 或 class 实例
+ * @param left 左侧 JSON 数据树
+ * @param right 右侧 JSON 数据树
+ * @returns 两侧结构和值是否相同
+ */
+export const jsonStructuralEquals = (left: unknown, right: unknown): boolean => {
+  if (Object.is(left, right)) return true;
+  if (Array.isArray(left) || Array.isArray(right)) {
+    if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) return false;
+
+    for (let index = 0; index < left.length; index += 1) {
+      if (!Object.hasOwn(left, index) || !Object.hasOwn(right, index)) return false;
+      if (!jsonStructuralEquals(left[index], right[index])) return false;
+    }
+
+    return true;
+  }
+
+  if (left === null || right === null || typeof left !== 'object' || typeof right !== 'object') return false;
+
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+
+  return (
+    leftKeys.length === rightKeys.length &&
+    leftKeys.every(
+      key => Object.hasOwn(right, key) && jsonStructuralEquals(Reflect.get(left, key), Reflect.get(right, key)),
+    )
+  );
+};
