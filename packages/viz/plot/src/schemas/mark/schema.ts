@@ -22,7 +22,6 @@ import {
   PathLineCapSchema,
   PathLineJoinSchema,
   PathScaleSchema,
-  PathThickness,
   ShadowPreset,
   ShapeValueSchema,
   OpacitySchema,
@@ -505,14 +504,6 @@ export const PathFillRuleStyleSchema = markValueSchema(
   'path fillRule style value',
 );
 
-/** 校验路径粗细的字段绑定或固定预设 */
-export const PathThicknessStyleSchema = markValueSchema(
-  zodEnum(PathThickness),
-  'Data field path bound to path thickness',
-  'Constant core Path thickness preset',
-  'path thickness style value',
-);
-
 /** 校验路径缩放的字段绑定或固定统一与双轴倍率 */
 export const PathScaleStyleSchema = markValueSchema(
   PathScaleSchema,
@@ -644,9 +635,6 @@ const corePathStyle = {
   ),
   fillRule: PathFillRuleStyleSchema.optional().describe(
     'Core Path fillRule: field-bound datum channel or constant nonzero / evenodd',
-  ),
-  thickness: PathThicknessStyleSchema.optional().describe(
-    'Core Path thickness: field-bound datum channel or constant preset',
   ),
   marks: PathDecorationSchema.shape.marks
     .optional()

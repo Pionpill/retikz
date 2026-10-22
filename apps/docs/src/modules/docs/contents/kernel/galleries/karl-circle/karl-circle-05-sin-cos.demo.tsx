@@ -107,15 +107,13 @@ const Demo: FC = () => {
           IR 还没投影 target，手算投影坐标兜底；边标注的 text 也支持 `$...$` 行内公式 */}
       <Draw
         way={[{ angle: -30, radius: 100 }, { label: { text: '$\\sin\\alpha$', side: 'left' } }, [COS30 * 100, 0]]}
-        thickness="thick"
-        style={{ stroke: 'red' }}
+        style={{ strokeWidth: 2, stroke: 'red' }}
       />
 
       {/* cos α 蓝色横线：投影点 → 原点 */}
       <Draw
         way={[[COS30 * 100, 0], { label: { text: '$\\cos\\alpha$', side: 'bottom' } }, [0, 0]]}
-        thickness="thick"
-        style={{ stroke: 'dodgerblue' }}
+        style={{ strokeWidth: 2, stroke: 'dodgerblue' }}
       />
     </Layout>
   );

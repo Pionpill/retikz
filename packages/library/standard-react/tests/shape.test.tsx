@@ -10,7 +10,7 @@ import { synchronousAdapters } from './helpers/synchronous-adapters';
 
 it('keeps the complete family equivalent across adapters with Path authoring conveniences', () => {
   const visual = {
-    thickness: 'thick' as const,
+    style: { strokeWidth: 2 },
     arrow: '->' as const,
     scale: 1.5,
     meta: { origin: 'author' },

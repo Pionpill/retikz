@@ -40,12 +40,6 @@ describe('Core public API', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('保留路径粗细词汇和确定性映射，不公开 typed authoring dispatch', () => {
-    expect(core.PathThickness.Thick).toBe('thick');
-    expect(core.THICKNESS_TO_WIDTH.thick).toBe(2);
-    expect(core).not.toHaveProperty('parsePathThickness');
-  });
-
   it('公开 occurrence 展开路径的稳定阶段类别', () => {
     expect(core.CompileExpansionKind).toEqual({
       Output: 'output',

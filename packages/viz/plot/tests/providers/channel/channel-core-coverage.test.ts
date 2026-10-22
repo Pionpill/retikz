@@ -386,7 +386,7 @@ describe('channel core coverage (contract)', () => {
           zIndex: { kind: 'constant', value: 7 },
           rotate: { kind: 'constant', value: 15 },
           scale: { kind: 'constant', value: { x: 1.2, y: 0.8 } },
-          thickness: { kind: 'constant', value: 'thick' },
+          strokeWidth: { kind: 'constant', value: 2 },
           encoding: { x: { field: 'x' }, y: { field: 'y' } },
           fillRule: { kind: 'constant', value: 'evenodd' },
           dashPattern: { kind: 'constant', value: [4, 2] },

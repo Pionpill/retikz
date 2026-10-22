@@ -43,7 +43,6 @@ export const BUILTIN_CHANNEL_NAMES: ReadonlySet<string> = new Set<string>([
   'shadow',
   'blendMode',
   'fillRule',
-  'thickness',
 ]);
 
 /** 解析通道 registry 时可传入的自定义 definition 与文本选项 */

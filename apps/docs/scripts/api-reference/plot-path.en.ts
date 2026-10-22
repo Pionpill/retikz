@@ -40,7 +40,6 @@ const translations: Partial<Record<string, string>> = {
   路径阴影: 'Path shadow',
   '路径描边；字符串优先按字段名解析': 'Path stroke; strings are first resolved as field names',
   路径描边宽度的常量或数据映射: 'Constant or data mapping for path stroke width',
-  路径预设粗细: 'Path thickness preset',
   '共享轨道 id；构建 IRPlot 时展开为对应坐标视图':
     'Shared track ID, expanded into a coordinate view when building IRPlot',
   '只作用于当前 mark 数据视图的变换链': 'Transform pipeline applied only to this mark data view',

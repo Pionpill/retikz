@@ -33,14 +33,13 @@ describe('Vanilla Input normalizers', () => {
     expect(normalizeNode(node)).toEqual({ type: 'node', id: 'target', position: { direction: 'top', of: 'source' } });
   });
 
-  it('将 way 与 thickness 收敛为 Path Source IR，并保留显式零线宽', () => {
+  it('将 way 收敛为 Path Source IR，并保留显式零线宽', () => {
     const input: InputPath = {
       id: 'edge',
       way: [
         [0, 0],
         [24, 0],
       ],
-      thickness: 'thick',
       style: { strokeWidth: 0 },
     };
 

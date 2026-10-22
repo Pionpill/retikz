@@ -27,7 +27,6 @@ import type {
   PathFillRuleStyleSchema,
   PathMarkSchema,
   PathScaleStyleSchema,
-  PathThicknessStyleSchema,
   PlotTargetRefSchema,
   PointColorStyleSchema,
   PointFillStyleSchema,
@@ -126,9 +125,6 @@ export type IRPlotBlendModeStyle = ZodInfer<typeof BlendModeStyleSchema>;
 
 /** PathMark 填充规则样式值 */
 export type IRPlotPathFillRuleStyle = ZodInfer<typeof PathFillRuleStyleSchema>;
-
-/** PathMark 线宽样式值 */
-export type IRPlotPathThicknessStyle = ZodInfer<typeof PathThicknessStyleSchema>;
 
 /** PathMark scale 绑定样式值 */
 export type IRPlotPathScaleStyle = ZodInfer<typeof PathScaleStyleSchema>;

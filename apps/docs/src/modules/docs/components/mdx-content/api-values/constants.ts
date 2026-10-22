@@ -18,7 +18,6 @@ import {
   BuiltinPathKind,
   PathLineCap,
   PathLineJoin,
-  PathThickness,
   BuiltinPatternShape,
   ScopeBoundingShape,
   ShadowPreset,
@@ -248,9 +247,6 @@ export const API_VALUE_REGISTRY = {
   },
   PathLineJoin: {
     values: Object.values(PathLineJoin),
-  },
-  PathThickness: {
-    values: Object.values(PathThickness),
   },
   BuiltinPatternShape: {
     values: Object.values(BuiltinPatternShape),

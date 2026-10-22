@@ -40,7 +40,6 @@ import type {
   IRPlotPathMark,
   IRPlotPathFillRuleStyle,
   IRPlotPathScaleStyle,
-  IRPlotPathThicknessStyle,
   IRPlotPointColorStyle,
   IRPlotPointFillStyle,
   IRPlotPointNonnegativeNumberStyle,
@@ -98,9 +97,6 @@ export type InputPlotLineJoin = 'miter' | 'round' | 'bevel';
 
 /** 路径填充规则 */
 export type InputPlotFillRule = 'nonzero' | 'evenodd';
-
-/** 路径预设粗细 */
-export type InputPlotThickness = 'ultraThin' | 'veryThin' | 'thin' | 'semithick' | 'thick' | 'veryThick' | 'ultraThick';
 
 /** 节点形状通道值：内置 / 自定义形状名或完整形状引用 */
 export type InputPlotNodeShapeChannelValue = string | IRShapeRef;
@@ -172,8 +168,6 @@ export type InputPlotCorePathChannels = {
   scale?: InputPlotMarkValueProp<IRPathScale> | IRPlotPathScaleStyle;
   /** 路径填充规则 */
   fillRule?: InputPlotMarkValueProp<InputPlotFillRule> | IRPlotPathFillRuleStyle;
-  /** 路径预设粗细 */
-  thickness?: InputPlotMarkValueProp<InputPlotThickness> | IRPlotPathThicknessStyle;
   /** 路径上的标记配置 */
   marks?: IRPlotRelationPathSpecificOptions['marks'];
   /** 自定义描边间隔 */

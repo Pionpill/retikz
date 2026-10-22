@@ -384,15 +384,6 @@ export const pathStylePropsOf = (
   put('rotate', numberStyleOf(props.rotate, 'rotate', context));
   put('scale', jsonStyleOf(props.scale, 'scale', context));
   put('fillRule', enumStyleOf(props.fillRule, 'fillRule', new Set(['nonzero', 'evenodd']), context));
-  put(
-    'thickness',
-    enumStyleOf(
-      props.thickness,
-      'thickness',
-      new Set(['ultraThin', 'veryThin', 'thin', 'semithick', 'thick', 'veryThick', 'ultraThick']),
-      context,
-    ),
-  );
   put('marks', props.marks);
   put('dashPattern', jsonStyleOf(props.dashPattern, 'dashPattern', context));
   put(

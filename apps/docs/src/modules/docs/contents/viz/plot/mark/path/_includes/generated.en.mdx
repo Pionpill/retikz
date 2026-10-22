@@ -2,7 +2,7 @@
 
 **Component properties**
 
-#### <ApiSourceLink label={"PathMarkProps"} path={"packages/viz/plot-react/src/components/marks.tsx"} startLine={13}>PathMarkProps</ApiSourceLink>
+#### <ApiSourceLink label={"PathMarkProps"} path={"packages/viz/plot-react/src/components/marks.tsx"} startLine={12}>PathMarkProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -46,7 +46,6 @@
 |            | `shadow?`         | `InputPlotMarkValueProp<ShadowPreset \| IRDropShadow> \| IRPlotShadowStyle`        | —       | Path shadow                                                                                                                                                                               |
 |            | `stroke?`         | `InputPlotFieldName \| IRPaint \| IRPlotPointStrokeStyle`                          | —       | Path stroke; strings are first resolved as field names                                                                                                                                    |
 |            | `strokeWidth?`    | `InputPlotMarkValueProp<number> \| IRPlotPointStrokeWidthStyle`                    | —       | Constant or data mapping for path stroke width                                                                                                                                            |
-|            | `thickness?`      | `InputPlotMarkValueProp<InputPlotThickness> \| IRPlotPathThicknessStyle`           | —       | Path thickness preset                                                                                                                                                                     |
 |            | `zIndex?`         | `InputPlotMarkValueProp<number> \| IRPlotPointZIndexStyle`                         | —       | Path drawing order hint                                                                                                                                                                   |
 | Callbacks  | `resolveLabel?`   | `(row: ExternalRow) => string`                                                     | —       | Runtime callback generating label text from valid data rows; requires a mark ID                                                                                                           |
 | Extensions | `channels?`       | `Record<string, InputPlotExtensionChannel>`                                        | —       | Extension bindings forwarded to `encoding.channels`; strings denote field names                                                                                                           |
@@ -65,7 +64,7 @@ export type PathMarkProps = InputPlotPathMark;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRPlotPathMark"} path={"packages/viz/plot/src/schemas/mark/types.ts"} startLine={141}>IRPlotPathMark</ApiSourceLink> / <ApiSourceLink label={"PathMarkSchema"} path={"packages/viz/plot/src/schemas/mark/schema.ts"} startLine={782}>PathMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPlotPathMark"} path={"packages/viz/plot/src/schemas/mark/types.ts"} startLine={136}>IRPlotPathMark</ApiSourceLink> / <ApiSourceLink label={"PathMarkSchema"} path={"packages/viz/plot/src/schemas/mark/schema.ts"} startLine={769}>PathMarkSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 

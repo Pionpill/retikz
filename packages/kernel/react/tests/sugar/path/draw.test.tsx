@@ -62,7 +62,6 @@ describe('Draw: 基础展开', () => {
       <Draw
         way={['a', 'b']}
         roundedCorners={6}
-        thickness="thick"
         arrow="<->"
         arrowDetail={{ shape: 'stealth' }}
         zIndex={5}
@@ -106,8 +105,8 @@ describe('Draw: 基础展开', () => {
     });
   });
 
-  it('thickness 由 Vanilla Path normalizer 映射为 strokeWidth，且显式 0 优先', () => {
-    expect(ir(<Draw way={['a', 'b']} thickness="thick" />).children).toEqual([
+  it('数值 strokeWidth 透传到 Path，并保留零线宽', () => {
+    expect(ir(<Draw way={['a', 'b']} style={{ strokeWidth: 2 }} />).children).toEqual([
       {
         type: 'path',
         children: [
@@ -117,7 +116,7 @@ describe('Draw: 基础展开', () => {
         style: { strokeWidth: 2 },
       },
     ]);
-    expect(ir(<Draw way={['a', 'b']} thickness="thick" style={{ strokeWidth: 0 }} />).children[0]).toMatchObject({
+    expect(ir(<Draw way={['a', 'b']} style={{ strokeWidth: 0 }} />).children[0]).toMatchObject({
       style: { strokeWidth: 0 },
     });
   });

@@ -9,7 +9,6 @@ export const previewControls = pathStyleControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values =>
   PathStylePreview({
-    thickness: values.thickness,
     stroke: values.stroke,
     strokeWidth: values.strokeWidth,
     dashed: values.dashed,
