@@ -21,13 +21,13 @@ Plot 当前把位置放在 encoding，把颜色、尺寸等字段驱动属性放
 
 Plot Source Mark 使用下列语义分组。只有存在内容时才提供可选分组；唯一例外是 transforms 的空数组具有明确数据消费语义。
 
-| 字段         | 契约                                                                                       |
-| ------------ | ------------------------------------------------------------------------------------------ |
-| `type`       | Mark Definition 注册键，内置为 point、path、interval、relation；自定义类型使用相同注册机制 |
-| `kind`       | 该类型的构造方式，Source 显式为 data 或 annotation；Definition 声明支持的分支              |
-| `encodings`  | 字段到已声明属性目标或数据角色的映射，不接受常量或任意函数                                 |
-| `properties` | 固定实例属性与构造参数，不包含字段绑定；精确结构由 type/kind 决定                          |
-| `transforms` | 有序的 Mark 局部 Data transform declaration，不承载几何变换                                |
+| 字段         | 契约                                                                          |
+| ------------ | ----------------------------------------------------------------------------- |
+| `type`       | 封闭图元类型：point、path、interval、relation                                 |
+| `kind`       | 该类型的构造方式，Source 显式为 data 或 annotation；Definition 声明支持的分支 |
+| `encodings`  | 字段到已声明属性目标或数据角色的映射，不接受常量或任意函数                    |
+| `properties` | 固定实例属性与构造参数，不包含字段绑定；精确结构由 type/kind 决定             |
+| `transforms` | 有序的 Mark 局部 Data transform declaration，不承载几何变换                   |
 
 id、coordinateView、layer、声明级默认颜色分配及 contributeToDomain 等身份、作用域或域贡献控制仍在声明层。构造规则与实例样式进入 properties，字段角色进入 encodings。不是所有固定属性都允许数据编码，也不是所有数据角色都有固定属性形式。
 
@@ -57,7 +57,7 @@ type 选择几何能力，kind 选择其构造方式。data 不保证逐行一�
 
 Point、Path、Interval 支持 data 与 annotation。Relation 保留 data 分支，不因此新增 RelationAnnotation。Relation 原顶层 path/ribbon 判别进入 properties.geometry.kind，相应 path/ribbon 专属构造配置归入该 geometry 分支，端点图形与共享外观保持自己的目标，不混入顶层 kind。
 
-React／Vanilla 的具名 Mark 与 Annotation 工厂补齐 type/kind；直接 JSON Source 显式声明。custom Mark 不得使用 kind 表示另一个无关判别轴；不支持的 type/kind 组合明确失败。
+React／Vanilla 的具名 Mark 与 Annotation 工厂补齐 type/kind；直接 JSON Source 显式声明。不支持的 type/kind 组合明确失败。
 
 ### 字段绑定与固定值
 
@@ -169,7 +169,7 @@ Plot 拥有精确 Source、可编码目标、字段／尺度／坐标解析、�
 
 ## 扩展、失败语义与兼容性
 
-内置与自定义 Mark 共用 Definition／registry。Definition 必须明确支持的 kind、精确 properties 与 encoding 目标、目标值域、适用 scale 和消费粒度；自定义通道在同一 encodings 结构注册，不保留额外 channels 字典。Definition 与执行函数只存在于运行时，不写入 JSON。
+Mark 类型集合按 [023](./023-closed-mark-vocabulary.md) 封闭，仅内置实现使用内部行为定义。Definition 必须明确支持的 kind、精确 properties 与 encoding 目标、目标值域、适用 scale 和消费粒度；自定义通道在同一 encodings 结构注册，不保留额外 channels 字典。Definition 与执行函数只存在于运行时，不写入 JSON。
 
 属性和值域复用权威 schema 原子；不按对象形状机械生成“所有属性均可绑定”的平行 schema。未注册目标、未消费字段、不支持的 kind、非法固定值、非法尺度、缺失角色、聚合后字段不存在或无法映射都在相应边界明确诊断。外部 JSON 由 schema 解析，依赖上下文的领域错误由 Plot 解析层报告。
 
