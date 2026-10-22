@@ -1,7 +1,6 @@
-/**
- * 内置箭头形状常量（用 const 而非 TS enum 避免 reverse-mapping 和字面量不互通）
- * @description normal 实心三角；open 空心三角；stealth 尖锐倒钩；openStealth 空心尖锐倒钩；circle 实心圆点；openCircle 空心圆点
- */
+import type { ValueOf } from '@retikz/foundation';
+
+/** 内置箭头形状名称 */
 export const BuiltinArrowShape = {
   Normal: 'normal',
   Open: 'open',
@@ -10,6 +9,8 @@ export const BuiltinArrowShape = {
   Circle: 'circle',
   OpenCircle: 'openCircle',
 } as const;
+
+export type BuiltinArrowShape = ValueOf<typeof BuiltinArrowShape>;
 
 /** 箭头默认形状 */
 export const DEFAULT_ARROW_SHAPE = BuiltinArrowShape.Stealth;

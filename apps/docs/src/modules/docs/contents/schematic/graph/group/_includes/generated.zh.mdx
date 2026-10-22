@@ -264,13 +264,13 @@ export declare const createGraphProviders: (options?: GraphDefinitionOptions) =>
 
 **持久化配置**
 
-#### <ApiSourceLink label={"IRGroup"} path={"packages/schematic/graph/src/schemas/group/types.ts"} startLine={15}>IRGroup</ApiSourceLink>
+#### <ApiSourceLink label={"IRGroup"} path={"packages/schematic/graph/src/schemas/group/types.ts"} startLine={12}>IRGroup</ApiSourceLink>
 
 ```ts
 export type IRGroup = Omit<ZodInfer<typeof GroupSchema>, 'position'> & Pick<ZodInput<typeof GroupSchema>, 'position'>;
 ```
 
-#### <ApiSourceLink label={"IRGroupCaption"} path={"packages/schematic/graph/src/schemas/group/types.ts"} startLine={12}>IRGroupCaption</ApiSourceLink> / <ApiSourceLink label={"GroupCaptionSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={38}>GroupCaptionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRGroupCaption"} path={"packages/schematic/graph/src/schemas/group/types.ts"} startLine={9}>IRGroupCaption</ApiSourceLink> / <ApiSourceLink label={"GroupCaptionSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={39}>GroupCaptionSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -318,7 +318,7 @@ export type IRGroupCaption = ZodInfer<typeof GroupCaptionSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRGroupCaptionText"} path={"packages/schematic/graph/src/schemas/group/types.ts"} startLine={6}>IRGroupCaptionText</ApiSourceLink> / <ApiSourceLink label={"GroupCaptionTextSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={17}>GroupCaptionTextSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRGroupCaptionText"} path={"packages/schematic/graph/src/schemas/group/types.ts"} startLine={6}>IRGroupCaptionText</ApiSourceLink> / <ApiSourceLink label={"GroupCaptionTextSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={18}>GroupCaptionTextSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -368,7 +368,7 @@ export type IRGroupCaptionText = ZodInfer<typeof GroupCaptionTextSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"GroupSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={54}>GroupSchema</ApiSourceLink>
+#### <ApiSourceLink label={"GroupSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={55}>GroupSchema</ApiSourceLink>
 
 <ZodSchema
   name="GroupSchema"
@@ -401,10 +401,10 @@ export type IRGroupCaptionText = ZodInfer<typeof GroupCaptionTextSchema>;
   }}
 />
 
-#### <ApiSourceLink label={"GroupCaptionSideSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={28}>GroupCaptionSideSchema</ApiSourceLink>
+#### <ApiSourceLink label={"GroupCaptionSideSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={29}>GroupCaptionSideSchema</ApiSourceLink>
 
 <ZodSchema name="GroupCaptionSideSchema" shallow />
 
-#### <ApiSourceLink label={"GroupCaptionDirectionSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={33}>GroupCaptionDirectionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"GroupCaptionDirectionSchema"} path={"packages/schematic/graph/src/schemas/group/schema.ts"} startLine={34}>GroupCaptionDirectionSchema</ApiSourceLink>
 
 <ZodSchema name="GroupCaptionDirectionSchema" shallow />

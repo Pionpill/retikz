@@ -12,6 +12,7 @@ import { array, enum as zodEnum, literal, strictObject } from 'zod';
 
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 import { GraphDefaultsSchema, GraphRuleSchema } from '../theme';
+import { GroupCaptionDirection } from './constants';
 
 /** Group caption 文本可复用的 Core Node 文字字段 */
 export const GroupCaptionTextSchema = strictObject({
@@ -30,7 +31,7 @@ export const GroupCaptionSideSchema = zodEnum([Side.Top, Side.Bottom]).describe(
 );
 
 /** Group caption 内 title 与 description 的排列方向 */
-export const GroupCaptionDirectionSchema = zodEnum(['horizontal', 'vertical']).describe(
+export const GroupCaptionDirectionSchema = zodEnum(GroupCaptionDirection).describe(
   'Physical direction used to arrange caption title and description.',
 );
 

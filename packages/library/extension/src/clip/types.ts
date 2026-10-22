@@ -1,4 +1,4 @@
-import type { ClipShape, IRClipFillRule, IRPosition, PathCommand } from '@retikz/core';
+import type { ClipShape, ClipFillRule, IRPosition, PathCommand } from '@retikz/core';
 import type { JsonObject } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
@@ -61,7 +61,7 @@ export type PathClipShape = JsonObject & {
   /** 描述裁剪区域边界的结构化路径命令 */
   commands: Array<PathCommand>;
   /** @default nonzero */
-  fillRule?: IRClipFillRule;
+  fillRule?: ClipFillRule;
 };
 
 /** 按 authored 顺序累积子形状的复合裁剪形状 */
@@ -71,5 +71,5 @@ export type CompoundClipShape = JsonObject & {
   /** 按作者顺序累积的子裁剪形状 */
   children: Array<ClipShape>;
   /** @default nonzero */
-  fillRule?: IRClipFillRule;
+  fillRule?: ClipFillRule;
 };

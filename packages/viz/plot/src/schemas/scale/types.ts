@@ -1,5 +1,7 @@
+import type { OpenString } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
+import type { BuiltinPlotScale } from './constants';
 import type {
   BandScaleSchema,
   CategoryValueSchema,
@@ -9,7 +11,6 @@ import type {
   LinearScaleSchema,
   LogScaleSchema,
   OrdinalScaleSchema,
-  PlotScaleTypeSchema,
   PointScaleSchema,
   PowScaleSchema,
   QuantileColorScaleSchema,
@@ -24,8 +25,8 @@ import type {
   TimeScaleSchema,
 } from './schema';
 
-/** Plot可接受的开放scale type */
-export type PlotScaleType = ZodInfer<typeof PlotScaleTypeSchema>;
+/** 比例尺类型，支持内置名称和已注册的自定义名称 */
+export type PlotScaleType = OpenString<BuiltinPlotScale>;
 
 /** 分类标量：类别取值 */
 export type IRPlotCategoryValue = ZodInfer<typeof CategoryValueSchema>;

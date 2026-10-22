@@ -1,14 +1,10 @@
 import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
-import type {
-  FlexLayoutArtifactSchema,
-  FlexLayoutItemSchema,
-  FlexLayoutSchema,
-  FlexMainDistributionSchema,
-} from './schema';
+import type { LayoutDistribution } from '../shared';
+import type { FlexLayoutArtifactSchema, FlexLayoutItemSchema, FlexLayoutSchema } from './schema';
 
 /** FlexLayout 主轴剩余空间分布取值 */
-export type FlexMainDistribution = ZodInfer<typeof FlexMainDistributionSchema>;
+export type FlexMainDistribution = Exclude<LayoutDistribution, typeof LayoutDistribution.Stretch>;
 
 /** 持久化的 FlexLayout item */
 export type IRFlexLayoutItem = Omit<ZodInput<typeof FlexLayoutItemSchema>, 'child'> &

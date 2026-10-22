@@ -178,6 +178,8 @@ const view = mount(document.getElementById('diagram')!, ir, { compile: { composi
 
 `caption` is the title and description region inside the shell. It can sit above or below the body and arrange its items horizontally or vertically. Use the controls below to adjust its position, direction, and spacing. The title defaults to `sm` without bold weight; the description defaults to `xs` with reduced opacity
 
+Use `GroupCaptionDirection.Horizontal` or `GroupCaptionDirection.Vertical` for `caption.direction` to arrange the caption horizontally or vertically.
+
 <ComponentPreview
   files={['group-basic', 'group-basic.preview.tsx']}
   size="lg"

@@ -1,9 +1,11 @@
+import type { OpenString } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
-import type { ShapeNameSchema, ShapeRefSchema, ShapeValueSchema } from './schema';
+import type { BuiltinShape } from './constants';
+import type { ShapeRefSchema, ShapeValueSchema } from './schema';
 
 /** Core 内置 shape 或自定义注册名 */
-export type ShapeName = ZodInfer<typeof ShapeNameSchema>;
+export type ShapeName = OpenString<BuiltinShape>;
 
 /** shape 引用：type 名 + 可选 JSON params（编译期由注册的 shape 校验字段形态） */
 export type IRShapeRef = ZodInfer<typeof ShapeRefSchema>;

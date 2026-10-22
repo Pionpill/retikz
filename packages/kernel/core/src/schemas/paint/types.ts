@@ -1,12 +1,8 @@
+import type { OpenString } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
-import type {
-  GradientStopSchema,
-  PaintSchema,
-  PatternLineStyleCycleSchema,
-  PatternLineStyleSchema,
-  PatternShapeNameSchema,
-} from './schema';
+import type { BuiltinPatternShape } from './constants';
+import type { GradientStopSchema, PaintSchema, PatternLineStyleCycleSchema, PatternLineStyleSchema } from './schema';
 
 /** 渐变 stop 类型 */
 export type IRGradientStop = ZodInfer<typeof GradientStopSchema>;
@@ -23,9 +19,5 @@ export type IRPatternLineStyle = ZodInfer<typeof PatternLineStyleSchema>;
 /** Pattern 相邻线条的稀疏周期样式 */
 export type IRPatternLineStyleCycle = ZodInfer<typeof PatternLineStyleCycleSchema>;
 
-/**
- * pattern motif 名：开放字符串
- * @description 内置 `BuiltinPatternShape`，或经 `CompileOptions.patterns` 注册的扩展 motif 名；
- *   `& {}` 让 IDE 仍对内置 3 名自动补全，同时接受任意非空字符串
- */
-export type PatternShapeName = ZodInfer<typeof PatternShapeNameSchema>;
+/** 图案形状名称，支持内置名称和已注册的自定义名称 */
+export type PatternShapeName = OpenString<BuiltinPatternShape>;
