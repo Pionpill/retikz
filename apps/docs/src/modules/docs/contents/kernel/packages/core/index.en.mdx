@@ -43,6 +43,8 @@ The figure specifies minimum node sizes to make the connection boundaries clear.
 
 <PackageManagerInstall packages="@retikz/core" />
 
+Use `BuiltinBoundary` for built-in connection surface names and register custom surfaces through the `boundaries` compile option. `IRBoundary` accepts built-in names, custom boundary or shape names, and `{ type, params }` references. Use `BuiltinCompileWarningCode` for built-in compilation warning codes; the open `CompileWarningCode` type also accepts custom codes.
+
 Use Core IR types such as `IRScene` to declare drawings, and Core's `PathCommand` for compiled path commands. Import the plain coordinate and vector types `Position` and `Vector2` from `@retikz/math`.
 
 Core provides a framework-independent TypeScript compilation API. This example uses the same A-to-B connection with default node layout:

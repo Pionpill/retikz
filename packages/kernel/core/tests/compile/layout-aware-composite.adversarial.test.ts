@@ -23,7 +23,7 @@ import {
   BUILTIN_SHAPES,
   ChildSchema,
   compileToScene,
-  CompileWarningCode,
+  BuiltinCompileWarningCode,
   CompositeBaseSchema,
   defineArrow,
   defineBoundary,
@@ -3277,7 +3277,7 @@ describe('layout-aware composite replay ownership', () => {
       },
     );
 
-    expect(warnings.filter(warning => warning.code === CompileWarningCode.DuplicateNodeId)).toHaveLength(1);
+    expect(warnings.filter(warning => warning.code === BuiltinCompileWarningCode.DuplicateNodeId)).toHaveLength(1);
 
     const path = result.scene.primitives.find(primitive => primitive.type === 'path');
 
@@ -3320,7 +3320,7 @@ describe('layout-aware composite replay ownership', () => {
       },
     );
 
-    expect(warnings.filter(warning => warning.code === CompileWarningCode.DuplicateNodeId)).toHaveLength(1);
+    expect(warnings.filter(warning => warning.code === BuiltinCompileWarningCode.DuplicateNodeId)).toHaveLength(1);
 
     const path = result.scene.primitives.find(primitive => primitive.type === 'path');
 

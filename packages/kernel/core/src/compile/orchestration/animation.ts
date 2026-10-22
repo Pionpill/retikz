@@ -1,5 +1,5 @@
 import type { IRAnimationTrack } from '../../schemas';
-import { CompileWarningCode } from '../constants';
+import { BuiltinCompileWarningCode } from '../constants';
 import type { CompileWarningInput } from '../warning';
 
 /** animation 过滤上下文 */
@@ -28,7 +28,7 @@ export const filterAnimations = (
     const valid = target === 'root' ? isViewBox : !isViewBox;
     if (!valid) {
       onWarn({
-        code: CompileWarningCode.AnimationInvalidProperty,
+        code: BuiltinCompileWarningCode.AnimationInvalidProperty,
         message:
           target === 'root'
             ? `Scene-root animation must use the "viewBox" property (camera); got "${track.property}". Track dropped.`

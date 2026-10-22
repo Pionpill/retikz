@@ -2,7 +2,7 @@ import type { CenteredBox } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
-import { CompileWarningCode } from '../../src';
+import { BuiltinCompileWarningCode } from '../../src';
 import type { BoundaryGeometryResolveContext } from '../../src/compile/node';
 import { resolveBoundary as resolveBoundaryGeometry } from '../../src/compile/node';
 import type { BoundaryDefinition, ShapeDefinition } from '../../src/contract';
@@ -200,7 +200,7 @@ describe('resolveBoundary', () => {
     expect(first.rect.width).toBeCloseTo(2 * Math.hypot(20, 10));
     expect(second.rect).toEqual(first.rect);
     expect(warnings).toHaveLength(1);
-    expect(warnings[0]).toMatchObject({ code: CompileWarningCode.BoundaryTightFallback });
+    expect(warnings[0]).toMatchObject({ code: BuiltinCompileWarningCode.BoundaryTightFallback });
   });
 
   it('无效 shape envelope 与 gap 产生非正半轴时 fail-loud', () => {

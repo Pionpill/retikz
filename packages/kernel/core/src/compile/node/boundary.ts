@@ -10,7 +10,7 @@ import {
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import { boundsConnectionEnvelope, isDirectionalAnchor, rect as rectOps } from '../../shared';
-import { CompileWarningCode } from '../constants';
+import { BuiltinCompileWarningCode } from '../constants';
 import { withProviderOutputValidationBoundary } from '../scene-primitive';
 import type { BoundaryGeometryDefinition, BoundaryGeometryResolution, BoundaryGeometryResolveContext } from './types';
 
@@ -74,7 +74,7 @@ const connectionEnvelopeOf = (kind: ConnectionEnvelopeKind, context: BoundaryGeo
   if (own === undefined && !context.connectionEnvelopeWarnings?.has(kind)) {
     context.connectionEnvelopeWarnings?.add(kind);
     context.warn?.(
-      CompileWarningCode.BoundaryTightFallback,
+      BuiltinCompileWarningCode.BoundaryTightFallback,
       `Shape '${context.visualDef.name}' does not provide a ${kind} connection envelope; falling back to visual bounds.`,
     );
   }

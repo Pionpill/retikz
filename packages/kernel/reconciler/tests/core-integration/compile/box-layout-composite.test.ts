@@ -10,7 +10,7 @@ import type {
 import {
   ChildSchema,
   compileToScene,
-  CompileWarningCode,
+  BuiltinCompileWarningCode,
   CompositeBaseSchema,
   defineComposite,
   LayoutAxisProposalKind,
@@ -827,6 +827,8 @@ describe('Box Layout Composite contract', () => {
       diagnostics: freshDiagnostics,
       observerOutputs: [],
     });
-    expect(artifact.compilation.diagnostics.map(warning => warning.code)).toContain(CompileWarningCode.DuplicateNodeId);
+    expect(artifact.compilation.diagnostics.map(warning => warning.code)).toContain(
+      BuiltinCompileWarningCode.DuplicateNodeId,
+    );
   });
 });

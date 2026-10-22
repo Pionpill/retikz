@@ -12,7 +12,7 @@ import type {
 } from '../../src';
 import {
   compileToScene,
-  CompileWarningCode,
+  BuiltinCompileWarningCode,
   CompositeBaseSchema,
   defineComposite,
   formatCompileOccurrence,
@@ -296,8 +296,10 @@ describe('three-level layout proposal closure', () => {
 
     expect(run.result.scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: selectedPaint }]);
     expect(run.warnings).toEqual([]);
-    expect(run.warnings.filter(warning => warning.code === CompileWarningCode.DuplicateNodeId)).toEqual([]);
-    expect(run.warnings.filter(warning => warning.code === CompileWarningCode.UnresolvedNodeReference)).toEqual([]);
+    expect(run.warnings.filter(warning => warning.code === BuiltinCompileWarningCode.DuplicateNodeId)).toEqual([]);
+    expect(run.warnings.filter(warning => warning.code === BuiltinCompileWarningCode.UnresolvedNodeReference)).toEqual(
+      [],
+    );
 
     const selectedNodeArtifact = run.result.artifacts.find(isNodeLayoutCompileArtifact);
 

@@ -1,6 +1,7 @@
 import type { GroupPrim, PathPrim, ScenePrimitive, TextPrim } from '../../contract';
 import type { CanonicalInlineRun } from '../../resolve';
-import { CompileWarningCode } from '../constants';
+import { BuiltinCompileWarningCode } from '../constants';
+import type { CompileWarningCode } from '../constants';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from './baseline';
 import type { TextFont, TextMeasurer } from './metrics';
 import { normalizeTextMetrics } from './metrics';
@@ -109,7 +110,7 @@ export const layoutInlineLine = (runs: Array<InlineRunLayoutInput>, ctx: LineLay
     if ('tex' in run) {
       if (!ctx.lowerTex) {
         ctx.warn(
-          CompileWarningCode.TexLowererMissing,
+          BuiltinCompileWarningCode.TexLowererMissing,
           `Inline math "${run.tex}" has no lowerTex injected; provide CompileOptions.lowerTex (from @retikz/tex). Segment skipped.`,
         );
         continue;
@@ -117,7 +118,7 @@ export const layoutInlineLine = (runs: Array<InlineRunLayoutInput>, ctx: LineLay
 
       const rawLowered = ctx.lowerTex({ tex: run.tex, displayMode: run.displayMode }, { fontSize: ctx.font.size });
       if (rawLowered === null) {
-        ctx.warn(CompileWarningCode.TexInvalid, `Failed to render inline tex: ${run.tex}`);
+        ctx.warn(BuiltinCompileWarningCode.TexInvalid, `Failed to render inline tex: ${run.tex}`);
         continue;
       }
 

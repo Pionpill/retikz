@@ -10,7 +10,7 @@ import { resolvePatternRegistry } from '../../../src/providers/pattern';
 import { BUILTIN_SHAPES } from '../../../src/providers/shape';
 import { resolveNode } from '../../../src/resolve/node';
 import type { IRNode } from '../../../src/schemas';
-import { BoundaryKeyword, BoundarySchema } from '../../../src/schemas/boundary';
+import { BuiltinBoundary, BoundarySchema } from '../../../src/schemas/boundary';
 import { NodeSchema } from '../../../src/schemas/node';
 import { NodeTargetSchema } from '../../../src/schemas/path/target';
 
@@ -33,8 +33,8 @@ describe('BoundarySchema', () => {
   });
 
   it('exposes reserved-keyword constant', () => {
-    expect(BoundaryKeyword.Self).toBe('shape');
-    expect(BoundaryKeyword.Circle).toBe('circle');
+    expect(BuiltinBoundary.Self).toBe('shape');
+    expect(BuiltinBoundary.Circle).toBe('circle');
   });
 });
 
@@ -151,11 +151,11 @@ describe('boundary-aware boundary/canonical', () => {
 // ─── 导出断言 + 补充象限 ──────────────────────────────────────────────────────
 
 describe('public export + remaining quadrants', () => {
-  it('BoundaryKeyword / BoundarySchema exported from package root', () => {
-    expect(core.BoundaryKeyword.Self).toBe('shape');
-    expect(core.BoundaryKeyword.Circle).toBe('circle');
+  it('BuiltinBoundary / BoundarySchema exported from package root', () => {
+    expect(core.BuiltinBoundary.Self).toBe('shape');
+    expect(core.BuiltinBoundary.Circle).toBe('circle');
     expect(core.BoundarySchema).toBeDefined();
-    // BoundaryKeyword / IRBoundary 是类型，仅编译时可见，此处不再 runtime 断言
+    // BuiltinBoundary / IRBoundary 是类型，仅编译时可见，此处不再 runtime 断言
   });
 
   it('boundary_unregistered_throws: boundary 指向未注册 shape 且有 path 连到该节点时编译抛错', () => {

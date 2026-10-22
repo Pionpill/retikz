@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, number, string, union } from 'zod';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../../src';
-import { compileToScene, CompileWarningCode, CompositeBaseSchema, defineComposite } from '../../../src';
+import { compileToScene, BuiltinCompileWarningCode, CompositeBaseSchema, defineComposite } from '../../../src';
 import { flattenPrims } from '../../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
@@ -198,7 +198,7 @@ describe('lowerComposites — 错误路径', () => {
     };
     const scene = compileToScene(ir, { composites: [], onWarn: w => warnings.push(w) }).scene;
 
-    expect(warnings.some(w => w.code === CompileWarningCode.CompositeNotRegistered)).toBe(true);
+    expect(warnings.some(w => w.code === BuiltinCompileWarningCode.CompositeNotRegistered)).toBe(true);
     expect(findByType(scene.primitives, 'rect')).toBeDefined(); // node A 照常
   });
 

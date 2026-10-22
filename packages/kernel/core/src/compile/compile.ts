@@ -15,7 +15,7 @@ import type { CompileOptions, CompileResult, CompositeArtifactOf, ObservedCompil
 import type { CompileWarning, CompileWarningInput } from './warning';
 import { formatCompileWarning } from './warning';
 
-export { CompileWarningCode } from './constants';
+export { BuiltinCompileWarningCode, type CompileWarningCode } from './constants';
 export type {
   CompileArtifact,
   CompileArtifactOptions,

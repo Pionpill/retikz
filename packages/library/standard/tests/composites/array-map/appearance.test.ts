@@ -1,5 +1,5 @@
 import type { CompileWarning, IRChild, ScenePrimitive } from '@retikz/core';
-import { CompileWarningCode, compileToScene } from '@retikz/core';
+import { BuiltinCompileWarningCode, compileToScene } from '@retikz/core';
 import { PathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
@@ -234,7 +234,7 @@ it('preserves Core namespace isolation, duplicate diagnostics, and delayed cell 
       },
     );
 
-    expect(warnings.filter(warning => warning.code === CompileWarningCode.DuplicateNodeId)).toHaveLength(
+    expect(warnings.filter(warning => warning.code === BuiltinCompileWarningCode.DuplicateNodeId)).toHaveLength(
       localNamespace ? 0 : 1,
     );
 

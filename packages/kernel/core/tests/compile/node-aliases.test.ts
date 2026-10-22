@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRChild } from '../../src';
-import { compileToScene, CompileWarningCode, NodeSchema } from '../../src';
+import { compileToScene, BuiltinCompileWarningCode, NodeSchema } from '../../src';
 
 const node = (id = 'primary', aliasIds = ['alternate']) =>
   NodeSchema.parse({ type: 'node', id, aliasIds, position: [30, 40], text: 'one' });
@@ -27,7 +27,7 @@ describe('Node query aliases', () => {
       { onWarn: warning => warnings.push(warning) },
     );
 
-    expect(warnings.filter(warning => warning.code === CompileWarningCode.DuplicateNodeId)).toHaveLength(1);
+    expect(warnings.filter(warning => warning.code === BuiltinCompileWarningCode.DuplicateNodeId)).toHaveLength(1);
     expect(result.scene).toEqual(compile([first, second, path('second')]).scene);
 
     const isolatedWarnings: Array<CompileWarning> = [];

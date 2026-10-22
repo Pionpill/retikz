@@ -1,6 +1,6 @@
 export { formatCompileChildPath, formatCompileOccurrence, isNodeLayoutCompileArtifact } from './artifact';
 export { compileToScene, observeCompileToScene, prepareSceneCompilation } from './compile';
-export { CompileWarningCode } from './constants';
+export { BuiltinCompileWarningCode, type CompileWarningCode } from './constants';
 export { samplePathRoute } from './path';
 export { computeLayout } from './scene';
 export type {

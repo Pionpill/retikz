@@ -63,7 +63,7 @@ import { Anchor } from '../../shared';
 import { rect as rectOps } from '../../shared/geometry';
 import { cloneAndFreezeJson } from '../../shared/json';
 import { formatCompileChildPath, formatCompileOccurrence } from '../artifact';
-import { CompileWarningCode } from '../constants';
+import { BuiltinCompileWarningCode } from '../constants';
 import { projectPublishedCompileLayout, projectScopeCompileLayouts } from '../element';
 import { NamespaceStack } from '../namespace';
 import type { NodeLayout } from '../node';
@@ -1615,7 +1615,7 @@ export const compileChildrenToPrimitives = (
       }
 
       runtime.context.onWarn({
-        code: CompileWarningCode.CompositeNotRegistered,
+        code: BuiltinCompileWarningCode.CompositeNotRegistered,
         message: `No composite registered for '${key}'; the node is skipped.`,
         path: compositeIrPath,
       });
@@ -1705,10 +1705,10 @@ export const compileChildrenToPrimitives = (
 
       const captureWarning = (warning: CompileWarningInput): void => {
         if (
-          warning.code === CompileWarningCode.UnresolvedNodeReference ||
-          warning.code === CompileWarningCode.OffsetBaseUnresolved ||
-          warning.code === CompileWarningCode.PolarOriginUnresolved ||
-          warning.code === CompileWarningCode.AtTargetUnresolved
+          warning.code === BuiltinCompileWarningCode.UnresolvedNodeReference ||
+          warning.code === BuiltinCompileWarningCode.OffsetBaseUnresolved ||
+          warning.code === BuiltinCompileWarningCode.PolarOriginUnresolved ||
+          warning.code === BuiltinCompileWarningCode.AtTargetUnresolved
         ) {
           throw new RetikzCoreError(
             RetikzCoreErrorCode.Compile,

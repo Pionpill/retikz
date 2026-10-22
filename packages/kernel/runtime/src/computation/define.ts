@@ -1,5 +1,5 @@
 import type { RuntimeDiagnostic } from '../diagnostic';
-import { RuntimeDiagnosticCode } from '../diagnostic';
+import { BuiltinRuntimeDiagnosticCode } from '../diagnostic';
 import { getRuntimeDiagnosticMessage } from '../diagnostic/internal';
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import type { RuntimeSourceToken } from '../source';
@@ -120,7 +120,7 @@ const runtimeComputationExecutors = new WeakMap<object, RuntimeComputationErased
 /** 创建 result dispose 失败的非致命诊断 */
 const resultDisposeDiagnostic = (computation: RuntimeComputationToken, cause: unknown): RuntimeDiagnostic =>
   Object.freeze({
-    code: RuntimeDiagnosticCode.ResultDisposeFailed,
+    code: BuiltinRuntimeDiagnosticCode.ResultDisposeFailed,
     phase: 'result-dispose',
     severity: 'error',
     message: getRuntimeDiagnosticMessage(cause),

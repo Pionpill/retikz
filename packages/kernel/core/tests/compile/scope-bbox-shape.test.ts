@@ -2,7 +2,7 @@ import { circle } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
-import { CompileWarningCode } from '../../src';
+import { BuiltinCompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import type { NodeLayout } from '../../src/compile/node';
 import { boxInsets } from '../../src/compile/node';
@@ -112,7 +112,7 @@ describe('scope boundingShape="circle" 集成测试', () => {
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
 
-    expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
+    expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
 
     const end = lineTo(topPath(compiled.primitives));
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { NodeLayoutObservation, LowerTex, TextMeasurer } from '../../src/compile';
-import { compileToScene, CompileWarningCode, isNodeLayoutCompileArtifact } from '../../src/compile';
+import { compileToScene, BuiltinCompileWarningCode, isNodeLayoutCompileArtifact } from '../../src/compile';
 import type { CompileWarning } from '../../src/compile/warning';
 import type { TextPrim } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
@@ -162,7 +162,7 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
 
     expect(layouts[0].content.size.width).toBe(20);
     expect(layouts[0].text.hasInlineTex).toBe(false);
-    expect(warnings.some(warning => warning.code === CompileWarningCode.TexLowererMissing)).toBe(true);
+    expect(warnings.some(warning => warning.code === BuiltinCompileWarningCode.TexLowererMissing)).toBe(true);
   });
 
   it('skips invalid TeX runs and preserves warnings', () => {
@@ -181,7 +181,7 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
 
     expect(layouts[0].content.size.width).toBe(40);
     expect(layouts[0].text.hasInlineTex).toBe(false);
-    expect(warnings.some(warning => warning.code === CompileWarningCode.TexInvalid)).toBe(true);
+    expect(warnings.some(warning => warning.code === BuiltinCompileWarningCode.TexInvalid)).toBe(true);
   });
 
   it('locates anonymous nodes in the artifact envelope', () => {

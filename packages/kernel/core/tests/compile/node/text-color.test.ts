@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CompileWarningCode } from '../../../src';
+import { BuiltinCompileWarningCode } from '../../../src';
 import { compileToScene } from '../../../src/compile/compile';
 import type { CompileWarning } from '../../../src/compile/warning';
 import type { TextPrim } from '../../../src/contract';
@@ -78,7 +78,7 @@ describe('Node auto-contrast static opaque color parsing', () => {
 
     expect(result.fill).toBe('currentColor');
     expect(result.warnings).toHaveLength(1);
-    expect(result.warnings[0]?.code).toBe(CompileWarningCode.TextAutoContrastUnresolved);
+    expect(result.warnings[0]?.code).toBe(BuiltinCompileWarningCode.TextAutoContrastUnresolved);
   });
 });
 
@@ -141,7 +141,7 @@ describe('Node auto-contrast consumers and warnings', () => {
     expect(texts.map(text => text.fill)).toContain('currentColor');
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toMatchObject({
-      code: CompileWarningCode.TextAutoContrastUnresolved,
+      code: BuiltinCompileWarningCode.TextAutoContrastUnresolved,
       path: 'children[0].node',
     });
     expect(warnings[0]?.message).toContain('linearGradient');

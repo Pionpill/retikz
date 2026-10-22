@@ -13,7 +13,7 @@ import type { CanonicalStep, PathGeneratorResolution, PathTargetView } from '../
 import { nodeIdFromResolvableTarget } from '../../../resolve/position';
 import type { IRPosition, IRTarget } from '../../../schemas';
 import { rectPerimeterSample } from '../../../shared/geometry';
-import { CompileWarningCode } from '../../constants';
+import { BuiltinCompileWarningCode } from '../../constants';
 import { clipTarget, isAutoBoundaryTarget, pointOfTarget, samePoint } from '../host';
 import type { PathCommandEmitter } from './commands';
 import type { StrokeCursor } from './cursor';
@@ -66,7 +66,7 @@ const resolvePartialClosed = (
   if (closed === 'sector') return 'sector';
   if (closed === 'closed') {
     warn(
-      CompileWarningCode.PartialArcClosedInvalid,
+      BuiltinCompileWarningCode.PartialArcClosedInvalid,
       "Partial circle/ellipse (with angles) cannot use closed:'closed'; falling back to 'chord'",
       `children[${index}]`,
     );
@@ -187,7 +187,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
       const toId = nodeIdFromResolvableTarget(step.to);
       if (!from && fromId !== undefined) {
         warn(
-          CompileWarningCode.UnresolvedNodeReference,
+          BuiltinCompileWarningCode.UnresolvedNodeReference,
           `Rectangle from references undefined node id '${fromId}'; the entire path is skipped`,
           `children[${index}].from`,
         );
@@ -195,7 +195,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
 
       if (!to && toId !== undefined) {
         warn(
-          CompileWarningCode.UnresolvedNodeReference,
+          BuiltinCompileWarningCode.UnresolvedNodeReference,
           `Rectangle to references undefined node id '${toId}'; the entire path is skipped`,
           `children[${index}].to`,
         );
@@ -238,7 +238,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
   const previous = cursor.previous();
   if (!previous) {
     warn(
-      CompileWarningCode.PathTooShort,
+      BuiltinCompileWarningCode.PathTooShort,
       `Step '${step.kind}' requires a previous position; the entire path is skipped`,
       `children[${index}]`,
     );
@@ -253,7 +253,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
         const centerId = nodeIdFromResolvableTarget(step.center);
         if (centerId !== undefined) {
           warn(
-            CompileWarningCode.UnresolvedNodeReference,
+            BuiltinCompileWarningCode.UnresolvedNodeReference,
             `Arc step center references undefined node id '${centerId}'; the entire path is skipped`,
             `children[${index}].center`,
           );
@@ -338,7 +338,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
     }
 
     warn(
-      CompileWarningCode.ArcMissingRadius,
+      BuiltinCompileWarningCode.ArcMissingRadius,
       'Arc step requires radius; the entire path is skipped',
       `children[${index}]`,
     );
@@ -398,7 +398,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
 
     if (step.startAngle !== undefined || step.endAngle !== undefined) {
       warn(
-        CompileWarningCode.PartialArcNeedsBothAngles,
+        BuiltinCompileWarningCode.PartialArcNeedsBothAngles,
         'circlePath needs both startAngle and endAngle for a partial circle; treated as a full circle',
         `children[${index}]`,
       );
@@ -464,7 +464,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
 
     if (step.startAngle !== undefined || step.endAngle !== undefined) {
       warn(
-        CompileWarningCode.PartialArcNeedsBothAngles,
+        BuiltinCompileWarningCode.PartialArcNeedsBothAngles,
         'ellipsePath needs both startAngle and endAngle for a partial ellipse; treated as a full ellipse',
         `children[${index}]`,
       );
@@ -496,7 +496,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
       const pointId = nodeIdFromResolvableTarget(point);
       if (pointId !== undefined) {
         warn(
-          CompileWarningCode.UnresolvedNodeReference,
+          BuiltinCompileWarningCode.UnresolvedNodeReference,
           `Smooth step point references undefined node id '${pointId}'; the entire path is skipped`,
           `children[${index}].points[${pointIndex}]`,
         );

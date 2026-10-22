@@ -1,7 +1,7 @@
 import type { AnyCompositeDefinition, CompileWarning, IRPath } from '@retikz/core';
 import {
   compileToScene,
-  CompileWarningCode,
+  BuiltinCompileWarningCode,
   CompositeBaseSchema,
   DEFAULT_RESOLVED_THEME,
   defineComposite,
@@ -246,7 +246,7 @@ describe('@retikz/vanilla InputScene', () => {
     const line = edge?.type === 'path' ? edge.commands.find(command => command.kind === 'line') : undefined;
 
     expect(warnings).toEqual(
-      expect.arrayContaining([expect.objectContaining({ code: CompileWarningCode.DuplicateNodeId })]),
+      expect.arrayContaining([expect.objectContaining({ code: BuiltinCompileWarningCode.DuplicateNodeId })]),
     );
     expect(line?.to[0]).toBeGreaterThan(60);
   });

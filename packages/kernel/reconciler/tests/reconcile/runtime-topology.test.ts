@@ -9,7 +9,7 @@ import type {
 } from '@retikz/core';
 import {
   compileToScene,
-  CompileWarningCode,
+  BuiltinCompileWarningCode,
   CompositeBaseSchema,
   defineComposite,
   definePathKind,
@@ -526,8 +526,8 @@ describe('Core compile warning collection', () => {
     );
 
     expect(warnings.map(warning => warning.code)).toEqual([
-      CompileWarningCode.PathTooShort,
-      CompileWarningCode.DuplicateNodeId,
+      BuiltinCompileWarningCode.PathTooShort,
+      BuiltinCompileWarningCode.DuplicateNodeId,
     ]);
   });
 
@@ -567,8 +567,8 @@ describe('Core compile warning collection', () => {
     );
 
     expect(warnings.map(warning => warning.code)).toEqual([
-      CompileWarningCode.PathTooShort,
-      CompileWarningCode.DuplicateNodeId,
+      BuiltinCompileWarningCode.PathTooShort,
+      BuiltinCompileWarningCode.DuplicateNodeId,
     ]);
   });
 
@@ -608,8 +608,8 @@ describe('Core compile warning collection', () => {
     );
 
     expect(warnings.map(warning => warning.code)).toEqual([
-      CompileWarningCode.PathTooShort,
-      CompileWarningCode.DuplicateNodeId,
+      BuiltinCompileWarningCode.PathTooShort,
+      BuiltinCompileWarningCode.DuplicateNodeId,
     ]);
   });
 
@@ -652,9 +652,9 @@ describe('Core compile warning collection', () => {
     );
 
     expect(warnings.map(warning => warning.code)).toEqual([
-      CompileWarningCode.UnresolvedNodeReference,
-      CompileWarningCode.PathTooShort,
-      CompileWarningCode.PathTooShort,
+      BuiltinCompileWarningCode.UnresolvedNodeReference,
+      BuiltinCompileWarningCode.PathTooShort,
+      BuiltinCompileWarningCode.PathTooShort,
     ]);
   });
 
@@ -691,9 +691,9 @@ describe('Core compile warning collection', () => {
     );
 
     expect(warnings.map(warning => warning.code)).toEqual([
-      CompileWarningCode.UnresolvedNodeReference,
-      CompileWarningCode.PathTooShort,
-      CompileWarningCode.CompositeNotRegistered,
+      BuiltinCompileWarningCode.UnresolvedNodeReference,
+      BuiltinCompileWarningCode.PathTooShort,
+      BuiltinCompileWarningCode.CompositeNotRegistered,
     ]);
   });
 

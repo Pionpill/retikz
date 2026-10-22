@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { CompileWarningCode } from '../../src/compile/constants';
+import { BuiltinCompileWarningCode } from '../../src/compile/constants';
 import {
   parseInlineRuns,
   resolveFont,
@@ -118,7 +118,7 @@ describe('resolve text', () => {
     });
 
     expect(resolved.plainText).toBe('a $b');
-    expect(warn).toHaveBeenCalledWith(CompileWarningCode.TextTexParseError, 'unbalanced');
+    expect(warn).toHaveBeenCalledWith(BuiltinCompileWarningCode.TextTexParseError, 'unbalanced');
   });
 
   it('uses the inherited font size for omitted line height', () => {

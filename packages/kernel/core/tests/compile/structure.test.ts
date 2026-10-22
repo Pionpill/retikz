@@ -15,7 +15,7 @@ const source = (path: string): string => readFileSync(resolve(root, path), 'utf8
 describe('compile source structure', () => {
   it('compile barrel exposes only stable runtime entries', () => {
     expect(Object.keys(compile).sort()).toEqual([
-      'CompileWarningCode',
+      'BuiltinCompileWarningCode',
       'assembleCompileOutputs',
       'assembleSceneCompilation',
       'assembleScopeOutput',

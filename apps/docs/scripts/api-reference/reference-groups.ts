@@ -842,7 +842,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         'RetikzRuntimeError',
         'RuntimeDiagnostic',
         'RetikzRuntimeErrorCode',
-        'RuntimeDiagnosticCode',
+        'BuiltinRuntimeDiagnosticCode',
         'RuntimeDiagnosticPhase',
       ],
       schemas: [],
