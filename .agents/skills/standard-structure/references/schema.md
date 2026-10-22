@@ -12,6 +12,7 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 
 - IR 必须 100% JSON 可序列化，不接收函数、ReactNode、class 实例或 renderer 专属对象。
 - 公开 IR 类型从同一 schema 的输入或输出派生，不手写平行字段定义。
+- 枚举与名称类型以 const object 为真源：封闭枚举用 `ValueOf<typeof Xxx>`，开放名称用 `OpenString<BuiltinXxx>`，受限子集从常量类型精确提取或排除，不绕经 schema 推导；对应 schema 复用同一常量。对象、数组、结构联合及含转换或品牌约束的类型仍从 schema 派生，不得因简化类型而改变值域。
 - 静态默认值使用真实 `.default()`，供运行时、JSON Schema 与 LLM 共享；resolver 读取权威字段 schema 的缺省结果，不复制默认常量。上下文默认仍由 resolver 确定。
 - 继承合并消费原始配置，缺省与 undefined 不覆盖父级。直接 parse 结果中的默认字段视为显式值，JSON 往返不恢复省略意图。需要继承的 ZodDefault 字段用 `.unwrap().optional()` 精确投影，不重复约束和 describe。
 - schema 负责 Source IR 契约、静态默认与可在 Source IR 表达的跨字段校验；`resolve/` 负责 context lookup、优先级、默认应用时机、Canonical 化后不变量和值转换；pipeline / compile 负责 context 生命周期、调度、lowering 与 emit
