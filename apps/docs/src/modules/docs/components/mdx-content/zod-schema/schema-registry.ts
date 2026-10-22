@@ -2229,15 +2229,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PathEncoding',
     url: '/viz/plot/reference/encoding#pathencodingschema',
   },
-  LabelPinStyleSchema: {
-    schema: IRPlot.LabelPinStyleSchema,
-    label: 'LabelPinStyle',
-    url: '/viz/plot/reference/encoding#labelpinstyleschema',
-  },
   MarkLabelContentSchema: {
     schema: IRPlot.MarkLabelContentSchema,
     label: 'MarkLabelContent',
-    url: '/viz/plot/reference/encoding#marklabelcontentschema',
+    url: '/viz/plot/reference/mark#marklabelcontentschema',
   },
   PathMarkEncodingSchema: {
     schema: IRPlot.PathMarkEncodingSchema,
@@ -2254,20 +2249,15 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PointMarkEncoding',
     url: '/viz/plot/reference/encoding#pointmarkencodingschema',
   },
-  MarkLabelSchema: {
-    schema: IRPlot.MarkLabelSchema,
-    label: 'MarkLabel',
-    url: '/viz/plot/reference/encoding#marklabelschema',
-  },
   MarkNodeLabelSchema: {
     schema: IRPlot.MarkNodeLabelSchema,
     label: 'MarkNodeLabel',
-    url: '/viz/plot/reference/encoding#marknodelabelschema',
+    url: '/viz/plot/reference/mark#marknodelabelschema',
   },
   MarkGeometryLabelSchema: {
     schema: IRPlot.MarkGeometryLabelSchema,
     label: 'MarkGeometryLabel',
-    url: '/viz/plot/reference/encoding#markgeometrylabelschema',
+    url: '/viz/plot/reference/mark#markgeometrylabelschema',
   },
   StackTransformSchema: {
     schema: DataIR.StackTransformSchema,

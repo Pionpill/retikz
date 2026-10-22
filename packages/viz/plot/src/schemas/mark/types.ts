@@ -2,6 +2,13 @@ import type { IRBoxSpacing } from '@retikz/core';
 import type { infer as ZodInfer } from 'zod';
 
 import { BUILTIN_MARK_TYPES } from './constants';
+import type {
+  MarkGeometryLabelListSchema,
+  MarkGeometryLabelSchema,
+  MarkLabelContentSchema,
+  MarkNodeLabelListSchema,
+  MarkNodeLabelSchema,
+} from './label';
 import type { MarkOpacityStyleSchema } from './schema';
 import type {
   AnchorIdSchema,
@@ -211,3 +218,18 @@ export const isBuiltinMark = (mark: IRPlotMarkOperation): mark is IRPlotMark => 
 
 /** 分组后的透明度通道绑定 */
 export type IRPlotMarkOpacityStyle = ZodInfer<typeof MarkOpacityStyleSchema>;
+
+/** 标记标签内容的绑定 */
+export type IRPlotMarkLabelContent = ZodInfer<typeof MarkLabelContentSchema>;
+
+/** 与 Core NodeLabelSchema 对齐的宿主数据项标签配置 */
+export type IRPlotMarkNodeLabel = ZodInfer<typeof MarkNodeLabelSchema>;
+
+/** 与 Core GeometryLabelSchema 对齐的宿主几何标签配置 */
+export type IRPlotMarkGeometryLabel = ZodInfer<typeof MarkGeometryLabelSchema>;
+
+/** 单个或数组形式的节点标签声明 */
+export type IRPlotMarkNodeLabelList = ZodInfer<typeof MarkNodeLabelListSchema>;
+
+/** 单个或数组形式的几何标签声明 */
+export type IRPlotMarkGeometryLabelList = ZodInfer<typeof MarkGeometryLabelListSchema>;

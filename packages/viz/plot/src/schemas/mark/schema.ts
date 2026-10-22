@@ -61,8 +61,6 @@ import {
   PositionEncodingSchema,
   Position2DEncodingSchema,
   PositionInputSchema,
-  MarkGeometryLabelListSchema,
-  MarkNodeLabelListSchema,
 } from '../encoding';
 import { PlotLayerSchema } from '../plot/layer';
 import { MarkPlacementSchema } from '../position-adjustment';
@@ -78,6 +76,7 @@ import {
   RelationRouteStepKind,
   RelationRoutingKind,
 } from './constants';
+import { MarkGeometryLabelListSchema, MarkNodeLabelListSchema } from './label';
 
 /** 校验根变换之后执行、仅供当前标记消费的数据变换序列 */
 export const MarkTransformSchema = array(DataTransformDeclarationSchema).describe(
