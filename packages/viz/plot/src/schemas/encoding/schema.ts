@@ -140,18 +140,6 @@ export const PathEncodingSchema = VisualEncodingSchema.extend({
   label: union([pathLabelEncoding, array(pathLabelEncoding).min(1)]).optional(),
 }).describe('Declared path-host visual field targets');
 
-/** 校验点的位置、内容及节点外观字段编码 */
-export const PointEncodingSchema = NodeEncodingSchema.extend({
-  anchorId: NonBlankStringSchema.optional(),
-  position: PositionEncodingSchema.optional(),
-  text: NonBlankStringSchema.optional(),
-  textColor: ChannelSchema.optional(),
-  size: ChannelSchema.optional(),
-  shape: ChannelSchema.optional(),
-  rotate: ChannelSchema.optional(),
-  minimumSize: ChannelSchema.optional(),
-}).describe('Point field encodings; fixed values belong to properties');
-
 /** 校验与 Core 节点标签对齐的引线样式 */
 export const LabelPinStyleSchema = object({
   stroke: CssColorSchema.optional().describe('Leader line color; defaults to the label color / currentColor'),

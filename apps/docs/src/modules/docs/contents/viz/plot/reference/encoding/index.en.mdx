@@ -5,6 +5,8 @@ description: Query Plot field bindings, position roles, visual targets, and fixe
 
 Visual channels in `encodings` bind fields; fixed visual values belong to `properties`. Positions use `{ field }`, `{ value }`, or `{ edge }`, with scales selected by coordinate roles. Supply consecutive roles: `x`, `x/y`, or `x/y/z`; z cannot appear without y.
 
+Shared encodings describe positions, visual channels and host properties. Complete mark encodings combine them with mark-specific position and construction rules.
+
 ## ChannelSchema
 
 <ZodSchema name="ChannelSchema" />
@@ -37,9 +39,29 @@ Requires x, y, and z.
 
 <ZodSchema name="VisualEncodingSchema" />
 
-## PointEncodingSchema
+## NodeEncodingSchema
 
-<ZodSchema name="PointEncodingSchema" />
+<ZodSchema name="NodeEncodingSchema" />
+
+## PathEncodingSchema
+
+<ZodSchema name="PathEncodingSchema" />
+
+## PointMarkEncodingSchema
+
+<ZodSchema name="PlotPointMarkEncodingSchema" />
+
+## PathMarkEncodingSchema
+
+Vertex-sequence and complete-endpoint inputs are mutually exclusive.
+
+<ZodSchema name="PathMarkEncodingSchema" />
+
+## IntervalMarkEncodingSchema
+
+Combines node appearance with interval positions, grouping and bound encodings.
+
+<ZodSchema name="IntervalMarkEncodingSchema" />
 
 ## OpacityEncodingSchema
 

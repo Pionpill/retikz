@@ -63,7 +63,6 @@ import {
   PositionInputSchema,
   MarkGeometryLabelListSchema,
   MarkNodeLabelListSchema,
-  PointEncodingSchema,
 } from '../encoding';
 import { PlotLayerSchema } from '../plot/layer';
 import { MarkPlacementSchema } from '../position-adjustment';
@@ -528,11 +527,23 @@ export const PointPropertiesSchema = strictObject({
   displayFormat: NonBlankStringSchema.optional(),
 }).describe('Fixed point properties and construction parameters');
 
+/** 校验点的位置、内容及节点外观字段编码 */
+export const PointMarkEncodingSchema = NodeEncodingSchema.extend({
+  anchorId: NonBlankStringSchema.optional(),
+  position: PositionEncodingSchema.optional(),
+  text: NonBlankStringSchema.optional(),
+  textColor: ChannelSchema.optional(),
+  size: ChannelSchema.optional(),
+  shape: ChannelSchema.optional(),
+  rotate: ChannelSchema.optional(),
+  minimumSize: ChannelSchema.optional(),
+}).describe('Point field encodings; fixed values belong to properties');
+
 /** 校验逐记录点的身份、字段编码与固定属性 */
 export const PointMarkSchema = strictObject({
   ...markBase,
   type: literal(BuiltinPlotMark.Point),
-  encodings: PointEncodingSchema,
+  encodings: PointMarkEncodingSchema,
   properties: PointPropertiesSchema.optional(),
 })
   .refine(hasValidAnchorSource, {
@@ -727,7 +738,7 @@ export const IntervalBoundEncodingSchema = strictObject({
 });
 
 /** 校验数据区间的位置、分组与边界编码 */
-export const IntervalEncodingSchema = NodeEncodingSchema.extend({
+export const IntervalMarkEncodingSchema = NodeEncodingSchema.extend({
   anchorId: NonBlankStringSchema.optional(),
   position: Position2DEncodingSchema.omit({ z: true }).partial().optional(),
   series: NonBlankStringSchema.optional(),
@@ -742,7 +753,7 @@ export const IntervalEncodingSchema = NodeEncodingSchema.extend({
 export const IntervalMarkSchema = strictObject({
   ...markBase,
   type: literal(BuiltinPlotMark.Interval),
-  encodings: IntervalEncodingSchema.optional(),
+  encodings: IntervalMarkEncodingSchema.optional(),
   properties: IntervalPropertiesSchema.optional(),
 })
   .refine(hasValidAnchorSource, {

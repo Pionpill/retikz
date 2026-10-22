@@ -10,7 +10,6 @@ import type {
   MarkLabelSchema,
   MarkNodeLabelListSchema,
   MarkNodeLabelSchema,
-  PointEncodingSchema,
   PositionEncodingSchema,
   Position1DEncodingSchema,
   Position2DEncodingSchema,
@@ -33,9 +32,6 @@ export type IRPlotPositionEncoding = ZodInfer<typeof PositionEncodingSchema>;
 
 /** 共享绘图外观的字段编码 */
 export type IRPlotVisualEncoding = ZodInfer<typeof VisualEncodingSchema>;
-
-/** 点标记编码，仅包含位置通道与可选文本通道 */
-export type IRPlotPointEncoding = ZodInfer<typeof PointEncodingSchema>;
 
 /** 标记标签内容的绑定 */
 export type IRPlotMarkLabelContent = ZodInfer<typeof MarkLabelContentSchema>;

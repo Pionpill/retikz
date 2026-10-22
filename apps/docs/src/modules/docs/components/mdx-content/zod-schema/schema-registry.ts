@@ -2239,10 +2239,20 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'MarkLabelContent',
     url: '/viz/plot/reference/encoding#marklabelcontentschema',
   },
-  PointEncodingSchema: {
-    schema: IRPlot.PointEncodingSchema,
-    label: 'PointEncoding',
-    url: '/viz/plot/reference/encoding#pointencodingschema',
+  PathMarkEncodingSchema: {
+    schema: IRPlot.PathMarkEncodingSchema,
+    label: 'PathMarkEncoding',
+    url: '/viz/plot/reference/encoding#pathmarkencodingschema',
+  },
+  IntervalMarkEncodingSchema: {
+    schema: IRPlot.IntervalMarkEncodingSchema,
+    label: 'IntervalMarkEncoding',
+    url: '/viz/plot/reference/encoding#intervalmarkencodingschema',
+  },
+  PlotPointMarkEncodingSchema: {
+    schema: IRPlot.PointMarkEncodingSchema,
+    label: 'PointMarkEncoding',
+    url: '/viz/plot/reference/encoding#pointmarkencodingschema',
   },
   MarkLabelSchema: {
     schema: IRPlot.MarkLabelSchema,

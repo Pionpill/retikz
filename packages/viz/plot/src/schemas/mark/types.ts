@@ -31,6 +31,7 @@ import type {
   PlotTargetRefSchema,
   PointColorStyleSchema,
   PointFillStyleSchema,
+  PointMarkEncodingSchema,
   PointMarkSchema,
   PointNonnegativeNumberStyleSchema,
   PointNumberStyleSchema,
@@ -55,6 +56,9 @@ import type {
 } from './schema';
 
 export type { IRBoxSpacing };
+
+/** 点图元的位置、文本与节点外观字段编码 */
+export type IRPlotPointMarkEncoding = ZodInfer<typeof PointMarkEncodingSchema>;
 
 /** point mark（散点 + 文本标签） */
 export type IRPlotPointMark = ZodInfer<typeof PointMarkSchema>;
