@@ -30,16 +30,12 @@ export type InputPlotDatumLabel = {
   resolveLabel?: (row: ExternalRow) => string;
 };
 
-export type InputPlotPointMark = Omit<IRPlotPointMark, 'type' | 'kind'> &
-  InputPlotCoordinateScope &
-  InputPlotDatumLabel;
-export type InputPlotPathMark = Omit<IRPlotPathMark, 'type' | 'kind'> & InputPlotCoordinateScope & InputPlotDatumLabel;
-export type InputPlotRelationMark = Omit<IRPlotRelationMark, 'type' | 'kind'> &
-  InputPlotCoordinateScope &
-  InputPlotDatumLabel;
+export type InputPlotPointMark = Omit<IRPlotPointMark, 'type'> & InputPlotCoordinateScope & InputPlotDatumLabel;
+export type InputPlotPathMark = Omit<IRPlotPathMark, 'type'> & InputPlotCoordinateScope & InputPlotDatumLabel;
+export type InputPlotRelationMark = Omit<IRPlotRelationMark, 'type'> & InputPlotCoordinateScope & InputPlotDatumLabel;
 
 /** 区间构造糖保持 Data 变换语义，视觉目标与 Source 使用同一分组 */
-export type InputPlotIntervalMark = Omit<IRPlotIntervalMark, 'type' | 'kind'> &
+export type InputPlotIntervalMark = Omit<IRPlotIntervalMark, 'type'> &
   InputPlotCoordinateScope &
   InputPlotDatumLabel & {
     /** 饼环份额字段，展开为累积区间 */

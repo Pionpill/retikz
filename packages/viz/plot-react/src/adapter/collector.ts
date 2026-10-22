@@ -14,9 +14,6 @@ import type { ReactElement, ReactNode } from 'react';
 import { Fragment, isValidElement } from 'react';
 
 import {
-  PointAnnotation,
-  PathAnnotation,
-  IntervalAnnotation,
   IntervalMark,
   PathMark,
   PlotAxis,
@@ -31,9 +28,6 @@ import {
 } from '../components';
 
 const declarationKindOf = (element: ReactElement): PlotDeclarationKind | undefined => {
-  if (element.type === PointAnnotation) return 'point-annotation';
-  if (element.type === PathAnnotation) return 'path-annotation';
-  if (element.type === IntervalAnnotation) return 'interval-annotation';
   if (element.type === PlotFacet) return 'facet';
   if (element.type === PlotScaffold) return 'scaffold';
   if (element.type === PlotTrack) return 'track';

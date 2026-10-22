@@ -17,7 +17,7 @@ describe('buildPlotIR paint props', () => {
   it('omits nested optional props while preserving explicit values and label array positions', () => {
     const spec = buildPlotIR(
       <PointMark
-        encodings={{ position: { x: 'x', y: 'y' } }}
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
         properties={{
           fill: undefined,
           dashed: false,
@@ -45,7 +45,7 @@ describe('buildPlotIR paint props', () => {
   it('point paint props pass through to mark IR', () => {
     const spec = buildPlotIR(
       <PointMark
-        encodings={{ position: { x: 'x', y: 'y' } }}
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
         properties={{ fill: gradientPaint, stroke: gradientPaint }}
       />,
       '__plot',
@@ -53,7 +53,6 @@ describe('buildPlotIR paint props', () => {
 
     expect(spec.marks[0]).toMatchObject({
       type: 'point',
-      kind: 'data',
       properties: { fill: gradientPaint, stroke: gradientPaint },
     });
   });
@@ -61,7 +60,7 @@ describe('buildPlotIR paint props', () => {
   it('path paint props pass through to mark IR', () => {
     const spec = buildPlotIR(
       <PathMark
-        encodings={{ position: { x: 'x', y: 'y' } }}
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
         properties={{ fill: gradientPaint, stroke: gradientPaint }}
       />,
       '__plot',
@@ -69,23 +68,25 @@ describe('buildPlotIR paint props', () => {
 
     expect(spec.marks[0]).toMatchObject({
       type: 'path',
-      kind: 'data',
       properties: { fill: gradientPaint, stroke: gradientPaint },
     });
   });
 
   it('path paint none passes through as constant paint', () => {
     const spec = buildPlotIR(
-      <PathMark encodings={{ position: { x: 'x', y: 'y' } }} properties={{ stroke: 'none' }} />,
+      <PathMark encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} properties={{ stroke: 'none' }} />,
       '__plot',
     );
 
-    expect(spec.marks[0]).toMatchObject({ type: 'path', kind: 'data', properties: { stroke: 'none' } });
+    expect(spec.marks[0]).toMatchObject({ type: 'path', properties: { stroke: 'none' } });
   });
 
   it('path connectNulls passes through to mark IR', () => {
     const spec = buildPlotIR(
-      <PathMark encodings={{ position: { x: 'x', y: 'y' } }} properties={{ connectNulls: true }} />,
+      <PathMark
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
+        properties={{ connectNulls: true }}
+      />,
       '__plot',
     );
 
@@ -98,7 +99,7 @@ describe('buildPlotIR paint props', () => {
   it('interval paint props pass through to mark IR', () => {
     const spec = buildPlotIR(
       <IntervalMark
-        encodings={{ position: { x: 'month', y: 'revenue' } }}
+        encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
         properties={{ fill: gradientPaint, stroke: gradientPaint }}
       />,
       '__plot',
@@ -106,7 +107,6 @@ describe('buildPlotIR paint props', () => {
 
     expect(spec.marks[0]).toMatchObject({
       type: 'interval',
-      kind: 'data',
       properties: { fill: gradientPaint, stroke: gradientPaint },
     });
   });

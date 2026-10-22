@@ -15,7 +15,7 @@ describe('Plot member extraction characterization', () => {
     'preserves autoPadding %j identically through React and Vanilla',
     autoPadding => {
       const react = buildPlotIR(
-        <PointMark encodings={{ position: { x: 'x', y: 'y' } }} properties={{ autoPadding }} />,
+        <PointMark encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} properties={{ autoPadding }} />,
         'rows',
       );
       const vanilla = normalizePlotDeclarations(
@@ -23,7 +23,7 @@ describe('Plot member extraction characterization', () => {
           declarations: [
             {
               kind: 'point-mark',
-              props: { encodings: { position: { x: 'x', y: 'y' } }, properties: { autoPadding } },
+              props: { encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } }, properties: { autoPadding } },
               path: [0],
             },
           ],
@@ -43,10 +43,13 @@ describe('Plot member extraction characterization', () => {
         <PointMark
           id="points"
           resolveLabel={resolvePointLabel}
-          encodings={{ fill: 'category', position: { x: 'x', y: 'y' } }}
+          encodings={{ fill: 'category', position: { x: { field: 'x' }, y: { field: 'y' } } }}
         />
-        <PathMark id="trend" encodings={{ order: 'x', series: 'category', position: { x: 'x', y: 'y' } }} />
-        <IntervalMark id="bars" encodings={{ position: { x: 'category', y: 'value' } }} />
+        <PathMark
+          id="trend"
+          encodings={{ order: 'x', series: 'category', position: { x: { field: 'x' }, y: { field: 'y' } } }}
+        />
+        <IntervalMark id="bars" encodings={{ position: { x: { field: 'category' }, y: { field: 'value' } } }} />
         <PlotScale dimension="y" type="log" base={2} />
         <PlotAxis dimension="x" grid />
         <PlotLegend channel="color" title="Category" />
@@ -79,23 +82,25 @@ describe('Plot member extraction characterization', () => {
       ],
       coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
       marks: [
-        { type: 'point', id: 'points', kind: 'data', encodings: { fill: 'category', position: { x: 'x', y: 'y' } } },
+        {
+          type: 'point',
+          id: 'points',
+          encodings: { fill: 'category', position: { x: { field: 'x' }, y: { field: 'y' } } },
+        },
         {
           type: 'path',
           id: 'trend',
-          kind: 'data',
           encodings: {
             order: 'x',
             series: 'category',
             color: { field: 'category', scale: '__color' },
-            position: { x: 'x', y: 'y' },
+            position: { x: { field: 'x' }, y: { field: 'y' } },
           },
         },
         {
           type: 'interval',
           id: 'bars',
-          kind: 'data',
-          encodings: { position: { x: 'category', y: 'value' } },
+          encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } },
           properties: { bounds: { x: { kind: 'band' }, y: { kind: 'span' } } },
         },
       ],
@@ -111,14 +116,18 @@ describe('Plot member extraction characterization', () => {
 
   it('keeps raw nested arrays and generic iterables behavior-equivalent to flat children', () => {
     const nested: ReactNode = [
-      <PointMark key="point" encodings={{ position: { x: 'x', y: 'y' } }} />,
-      [null, false, <PathMark key="path" encodings={{ order: 'x', position: { x: 'x', y: 'y' } }} />],
+      <PointMark key="point" encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} />,
+      [
+        null,
+        false,
+        <PathMark key="path" encodings={{ order: 'x', position: { x: { field: 'x' }, y: { field: 'y' } } }} />,
+      ],
       new Set<ReactNode>([undefined, <PlotAxis key="axis" dimension="y" grid />]),
     ];
     const flat = (
       <>
-        <PointMark encodings={{ position: { x: 'x', y: 'y' } }} />
-        <PathMark encodings={{ order: 'x', position: { x: 'x', y: 'y' } }} />
+        <PointMark encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} />
+        <PathMark encodings={{ order: 'x', position: { x: { field: 'x' }, y: { field: 'y' } } }} />
         <PlotAxis dimension="y" grid />
       </>
     );
@@ -128,8 +137,8 @@ describe('Plot member extraction characterization', () => {
 
     expect(nestedSpec).toEqual(flatSpec);
     expect(nestedSpec.marks).toEqual([
-      { type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } },
-      { type: 'path', kind: 'data', encodings: { order: 'x', position: { x: 'x', y: 'y' } } },
+      { type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } },
+      { type: 'path', encodings: { order: 'x', position: { x: { field: 'x' }, y: { field: 'y' } } } },
     ]);
     expect(nestedSpec.guides).toEqual([{ type: 'axis', dimension: 'y', grid: true }]);
   });
@@ -152,8 +161,11 @@ describe('Plot member extraction characterization', () => {
         <PlotAxis dimension="x" />
         <PlotAxis id="temperature" dimension="y" />
         <PlotAxis id="rainfall" dimension="y" grid />
-        <PathMark yAxisId="temperature" encodings={{ position: { x: 'day', y: 'temperature' } }} />
-        <PointMark yAxisId="rainfall" encodings={{ position: { x: 'day', y: 'rainfall' } }} />
+        <PathMark
+          yAxisId="temperature"
+          encodings={{ position: { x: { field: 'day' }, y: { field: 'temperature' } } }}
+        />
+        <PointMark yAxisId="rainfall" encodings={{ position: { x: { field: 'day' }, y: { field: 'rainfall' } } }} />
       </>,
       'weather',
     );
@@ -191,13 +203,12 @@ describe('Plot member extraction characterization', () => {
         { x: 1, y: 2, category: 'north' },
         { x: 2, y: 3, category: 'south' },
       ],
-      children: <PointMark encodings={{ fill: 'category', position: { x: 'x', y: 'y' } }} />,
+      children: <PointMark encodings={{ fill: 'category', position: { x: { field: 'x' }, y: { field: 'y' } } }} />,
     });
 
     expect(runtime.spec.marks[0]).toEqual({
       type: 'point',
-      kind: 'data',
-      encodings: { fill: 'category', position: { x: 'x', y: 'y' } },
+      encodings: { fill: 'category', position: { x: { field: 'x' }, y: { field: 'y' } } },
     });
     expect(JSON.stringify(runtime.spec)).not.toContain('dataFieldNames');
   });

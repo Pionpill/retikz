@@ -1,4 +1,5 @@
 import { BuiltinDataTransform } from '@retikz/data';
+import { positionField } from '@retikz/plot';
 import type { IRPlotChannel, IRPlotIntervalMark } from '@retikz/plot';
 
 import { RetikzPlotVanillaError } from '../../error';
@@ -39,8 +40,8 @@ export const normalizeIntervalDeclaration = (
     bounds: { ...source.encodings?.bounds },
   };
   const properties = { ...source.properties, bounds: { ...source.properties?.bounds } };
-  const x = source.encodings?.position?.x;
-  const y = source.encodings?.position?.y;
+  const x = positionField(source.encodings?.position?.x);
+  const y = positionField(source.encodings?.position?.y);
   const series = encodings.series;
   const arrangementGroup = group ?? series;
   const direction = rawDirection ?? 'vertical';
@@ -62,7 +63,7 @@ export const normalizeIntervalDeclaration = (
       params: { y: angle, ...(series === undefined ? {} : { groupBy: series }) },
     });
     properties.bounds = { x: { kind: 'extent' }, y: { kind: 'full' } };
-    encodings.bounds = { x: { from: 'y0', to: 'y1' } };
+    encodings.bounds = { x: { from: { field: 'y0' }, to: { field: 'y1' } } };
     if (encodings.color === undefined && properties.color === undefined) encodings.color = series ?? group ?? angle;
     into.hasSector = true;
   } else if (source.properties?.bounds !== undefined) {
@@ -116,14 +117,14 @@ export const normalizeIntervalDeclaration = (
         },
       });
       properties.bounds[valueRole] = { kind: 'extent' };
-      bounds[valueRole] = { from: 'y0', to: 'y1' };
+      bounds[valueRole] = { from: { field: 'y0' }, to: { field: 'y1' } };
     } else properties.bounds[valueRole] = { kind: 'span' };
     if (proportional) {
       properties.bounds[bandRole] = { kind: 'proportional' };
       bounds[bandRole] = { weight: width };
     } else if (histogram) {
       properties.bounds.x = { kind: 'extent' };
-      bounds.x = { from: x0, to: x1 };
+      bounds.x = { from: { field: x0 }, to: { field: x1 } };
     } else {
       properties.bounds[bandRole] = { kind: 'band' };
       if (arrangement === 'dodge' && arrangementGroup !== undefined) bounds[bandRole] = { group: arrangementGroup };
@@ -137,7 +138,7 @@ export const normalizeIntervalDeclaration = (
   if (Object.keys(encodings.position ?? {}).length === 0) delete encodings.position;
   if (Object.keys(encodings.bounds ?? {}).length === 0) delete encodings.bounds;
   if (typeof encodings.color === 'string') encodings.color = { field: encodings.color, scale: '__color' };
-  const mark: IRPlotIntervalMark = { ...context, ...source, type: 'interval', kind: 'data', encodings, properties };
+  const mark: IRPlotIntervalMark = { ...context, ...source, type: 'interval', encodings, properties };
   into.marks.push(mark);
   recordFieldColor(into, encodings.color);
   recordResolveLabel(into, mark.id, resolveLabel);

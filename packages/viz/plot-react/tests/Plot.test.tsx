@@ -32,8 +32,8 @@ const spec: IRPlot = {
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [
-    { type: 'path', kind: 'data', encodings: { order: 'month', position: { x: 'month', y: 'revenue' } } },
-    { type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } },
+    { type: 'path', encodings: { order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
+    { type: 'point', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
   ],
 };
 
@@ -145,12 +145,12 @@ describe('<Plot spec data> 薄包装', () => {
           <PointMark
             id="points"
             resolveLabel={pointResolveLabel}
-            encodings={{ position: { x: 'month', y: 'revenue' } }}
+            encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
           />
           <IntervalMark
             id="bars"
             resolveLabel={intervalResolveLabel}
-            encodings={{ position: { x: 'month', y: 'revenue' } }}
+            encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
           />
         </>
       ),
@@ -230,7 +230,7 @@ describe('<Plot spec data> 薄包装', () => {
     );
     const dslSvg = renderToStaticMarkup(
       <Plot data={revenue} plotRules={plotRules} width={480} height={300}>
-        <PointMark encodings={{ position: { x: 'quarter', y: 'value' } }} />
+        <PointMark encodings={{ position: { x: { field: 'quarter' }, y: { field: 'value' } } }} />
         <PlotAxis dimension="x" />
       </Plot>,
     );
@@ -274,8 +274,7 @@ describe('<Plot spec data> 薄包装', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'month', y: 'revenue' } },
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
           properties: { placement: { adjustments: [{ kind: 'react-screen-shift', dx: 8 }] } },
         },
       ],
@@ -309,12 +308,16 @@ describe('<Plot spec data> 薄包装', () => {
     const svg = renderToStaticMarkup(
       <Layout width={580} height={260}>
         <Plot position={[0, 20]} id="cartesianPanel" data={revenue} width={300} height={220}>
-          <IntervalMark encodings={{ color: 'quarter', position: { x: 'quarter', y: 'value' } }} />
+          <IntervalMark
+            encodings={{ color: 'quarter', position: { x: { field: 'quarter' }, y: { field: 'value' } } }}
+          />
           <PlotAxis dimension="x" />
           <PlotAxis dimension="y" grid />
         </Plot>
         <Plot position={[320, 0]} id="polarPanel" data={revenue} width={260} height={260} coordinate="polar2D">
-          <IntervalMark encodings={{ color: 'quarter', position: { x: 'quarter', y: 'value' } }} />
+          <IntervalMark
+            encodings={{ color: 'quarter', position: { x: { field: 'quarter' }, y: { field: 'value' } } }}
+          />
           <PlotAxis dimension="x" />
           <PlotAxis dimension="y" grid />
         </Plot>
@@ -333,7 +336,7 @@ describe('<Plot spec data> 薄包装', () => {
   it('单独渲染时也承接面板 transforms', () => {
     const svg = renderToStaticMarkup(
       <Plot data={revenue} width={300} height={220} transforms={[{ kind: 'translate', x: 10, y: 20 }]}>
-        <IntervalMark encodings={{ color: 'quarter', position: { x: 'quarter', y: 'value' } }} />
+        <IntervalMark encodings={{ color: 'quarter', position: { x: { field: 'quarter' }, y: { field: 'value' } } }} />
         <PlotAxis dimension="x" />
         <PlotAxis dimension="y" grid />
       </Plot>,
@@ -359,7 +362,7 @@ describe('<Plot spec data> 薄包装', () => {
           },
         ]}
       >
-        <PointMark encodings={{ position: { x: 'x', y: 'share' } }} />
+        <PointMark encodings={{ position: { x: { field: 'x' }, y: { field: 'share' } } }} />
       </Plot>,
     );
 
@@ -410,11 +413,11 @@ describe('<Plot spec data> 薄包装', () => {
     const svg = renderToStaticMarkup(
       <Layout width={580} height={260}>
         <Plot position={[0, 20]} id="leftPanel" dataRef="shared" data={revenue} width={300} height={220}>
-          <IntervalMark encodings={{ position: { x: 'quarter', y: 'value' } }} />
+          <IntervalMark encodings={{ position: { x: { field: 'quarter' }, y: { field: 'value' } } }} />
           <PlotAxis dimension="x" />
         </Plot>
         <Plot position={[320, 20]} id="rightPanel" dataRef="shared" data={revenue} width={260} height={220}>
-          <PathMark encodings={{ order: 'quarter', position: { x: 'quarter', y: 'value' } }} />
+          <PathMark encodings={{ order: 'quarter', position: { x: { field: 'quarter' }, y: { field: 'value' } } }} />
           <PlotAxis dimension="x" />
         </Plot>
       </Layout>,
@@ -449,10 +452,10 @@ describe('<Plot spec data> 薄包装', () => {
           width={280}
           height={220}
         >
-          <PointMark encodings={{ position: { x: 'month', y: 'revenue' } }} />
+          <PointMark encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
         </Plot>
         <Plot position={[300, 0]} id="directPanel" data={directRows} model={model} width={280} height={220}>
-          <PointMark encodings={{ position: { x: 'month', y: 'revenue' } }} />
+          <PointMark encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
         </Plot>
       </Layout>,
     );

@@ -24,7 +24,7 @@ const spec: IRPlot = {
     { type: 'linear', name: 'y' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'interval', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } }],
+  marks: [{ type: 'interval', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
 };
 
 const data: ExternalDatasets = {
@@ -113,7 +113,7 @@ describe('<Plot dataTransforms> 快捷数据变换直传', () => {
           },
         ]}
       >
-        <IntervalMark encodings={{ position: { x: 'region', y: 'total' } }} />
+        <IntervalMark encodings={{ position: { x: { field: 'region' }, y: { field: 'total' } } }} />
       </Plot>,
     );
 
@@ -131,7 +131,7 @@ describe('<Plot dataTransforms> 快捷数据变换直传', () => {
           { operation: { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'count', as: 'n' }] } } },
         ]}
       >
-        <IntervalMark encodings={{ position: { x: 'region', y: 'n' } }} />
+        <IntervalMark encodings={{ position: { x: { field: 'region' }, y: { field: 'n' } } }} />
       </Plot>,
     );
 

@@ -18,7 +18,10 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
           }}
         />
         <PlotTransform operation={{ kind: 'stack', params: { x: 'quarter', y: 'share', groupBy: 'product' } }} />
-        <IntervalMark stack encodings={{ series: 'product', position: { x: 'quarter', y: 'share' } }} />
+        <IntervalMark
+          stack
+          encodings={{ series: 'product', position: { x: { field: 'quarter' }, y: { field: 'share' } } }}
+        />
       </>,
       '__plot',
     );
@@ -39,8 +42,7 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
     ).toHaveLength(1);
     expect(spec.marks[0]).toMatchObject({
       type: 'interval',
-      kind: 'data',
-      encodings: { bounds: { y: { from: 'y0', to: 'y1' } } },
+      encodings: { bounds: { y: { from: { field: 'y0' }, to: { field: 'y1' } } } },
       properties: { bounds: { y: { kind: 'extent' } } },
     });
   });
@@ -51,9 +53,15 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
     const spec = buildPlotIR(
       <>
         <PlotTransform operation={{ kind: 'stack', params: { x: 'quarter', y: 'share', groupBy: 'product' } }} />
-        <IntervalMark stack encodings={{ series: 'product', position: { x: 'quarter', y: 'share' } }} />
+        <IntervalMark
+          stack
+          encodings={{ series: 'product', position: { x: { field: 'quarter' }, y: { field: 'share' } } }}
+        />
         {/* 不同 y/groupBy 签名的另一组堆叠柱：其 shortcut stack 不能被误删 */}
-        <IntervalMark stack encodings={{ series: 'region', position: { x: 'month', y: 'revenue' } }} />
+        <IntervalMark
+          stack
+          encodings={{ series: 'region', position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
+        />
       </>,
       '__plot',
     );
@@ -74,7 +82,7 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
     const spec = buildPlotIR(
       <>
         <PlotTransform operation={{ kind: 'derive-interval', params: { startFrom: 'start', endFrom: 'end' } }} />
-        <IntervalMark encodings={{ position: { x: 'task', y: 'end' } }} />
+        <IntervalMark encodings={{ position: { x: { field: 'task' }, y: { field: 'end' } } }} />
       </>,
       '__plot',
     );
@@ -88,7 +96,7 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
     const spec = buildPlotIR(
       <>
         <PlotTransform operation={{ kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 0.3, seed: 42 } }} />
-        <PointMark encodings={{ position: { x: 'dose', y: 'response' } }} />
+        <PointMark encodings={{ position: { x: { field: 'dose' }, y: { field: 'response' } } }} />
       </>,
       '__plot',
     );
@@ -102,7 +110,7 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
     const spec = buildPlotIR(
       <>
         <PlotTransform operation={{ kind: 'jitter', params: { axis: 'both', amount: 1, seed: 7 } }} />
-        <PointMark encodings={{ position: { x: 'x', y: 'y' } }} />
+        <PointMark encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} />
       </>,
       '__plot',
     );

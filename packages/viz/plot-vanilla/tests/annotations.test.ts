@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { intervalAnnotation, pathAnnotation, plot, pointAnnotation, renderPlot } from '../src';
+import { plot, renderPlot } from '../src';
 
-describe('annotation rendering', () => {
-  it('renders all three factories through the existing SVG entry with an explicit empty binding', () => {
+describe('constant mark rendering', () => {
+  it('renders three mark geometries through SVG with an explicit empty binding', () => {
     const source = plot({
       data: { reference: 'rows' },
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
@@ -12,11 +12,26 @@ describe('annotation rendering', () => {
         { type: 'linear', name: 'y', domain: [0, 10], domainPadding: 0 },
       ],
       marks: [
-        intervalAnnotation({ properties: { bounds: { x: { from: 2, to: 4 }, y: { from: 2, to: 8 } }, fill: 'blue' } }),
-        pathAnnotation({
-          properties: { from: { x: { edge: 'start' }, y: 5 }, to: { x: { edge: 'end' }, y: 5 }, stroke: 'red' },
-        }),
-        pointAnnotation({ properties: { position: { x: 6, y: 6 }, text: 'target' } }),
+        {
+          type: 'interval',
+          contributeToDomain: false,
+          encodings: {
+            bounds: { x: { from: { value: 2 }, to: { value: 4 } }, y: { from: { value: 2 }, to: { value: 8 } } },
+          },
+          properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } }, fill: 'blue' },
+        },
+        {
+          type: 'path',
+          contributeToDomain: false,
+          encodings: { from: { x: { edge: 'start' }, y: { value: 5 } }, to: { x: { edge: 'end' }, y: { value: 5 } } },
+          properties: { stroke: 'red' },
+        },
+        {
+          type: 'point',
+          contributeToDomain: false,
+          encodings: { position: { x: { value: 6 }, y: { value: 6 } } },
+          properties: { text: 'target' },
+        },
       ],
     });
     const svg = renderPlot(source, { rows: [] });

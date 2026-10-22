@@ -9,7 +9,7 @@ describe('宿主标签简写与详细配置', () => {
   it('详细字段标签与手写 IR 等价', () => {
     const spec = buildPlotIR(
       <IntervalMark
-        encodings={{ position: { x: 'month', y: 'revenue' }, label: { content: 'revenue' } }}
+        encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { content: 'revenue' } }}
         properties={{ label: { position: 'top', distance: 6, displayFormat: ',.0f' } }}
       />,
       '__plot',
@@ -29,7 +29,7 @@ describe('宿主标签简写与详细配置', () => {
   it('标签引线保留显式开关', () => {
     const spec = buildPlotIR(
       <PointMark
-        encodings={{ position: { x: 'px', y: 'py' }, label: { content: 'lbl' } }}
+        encodings={{ position: { x: { field: 'px' }, y: { field: 'py' } }, label: { content: 'lbl' } }}
         properties={{ label: { pin: true } }}
       />,
       '__plot',
@@ -42,7 +42,7 @@ describe('宿主标签简写与详细配置', () => {
   it('label core style props pass through', () => {
     const spec = buildPlotIR(
       <IntervalMark
-        encodings={{ position: { x: 'month', y: 'revenue' }, label: { content: 'revenue' } }}
+        encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { content: 'revenue' } }}
         properties={{
           label: {
             textColor: '#334155',
@@ -71,7 +71,7 @@ describe('宿主标签简写与详细配置', () => {
   it('字符串与常量标签数组保持内容与顺序，零间距和关闭引线不会丢失', () => {
     const spec = buildPlotIR(
       <PointMark
-        encodings={{ position: { x: 'px', y: 'py' }, label: [{ content: 'name' }, {}] }}
+        encodings={{ position: { x: { field: 'px' }, y: { field: 'py' } }, label: [{ content: 'name' }, {}] }}
         properties={{ label: [{}, { content: 'fixed', distance: 0, pin: false }] }}
       />,
       '__plot',
@@ -84,7 +84,10 @@ describe('宿主标签简写与详细配置', () => {
   });
 
   it('无 label prop → mark 无 label 字段', () => {
-    const spec = buildPlotIR(<IntervalMark encodings={{ position: { x: 'm', y: 'r' } }} />, '__plot');
+    const spec = buildPlotIR(
+      <IntervalMark encodings={{ position: { x: { field: 'm' }, y: { field: 'r' } } }} />,
+      '__plot',
+    );
 
     expect(spec.marks[0]).not.toHaveProperty('properties.label');
   });
@@ -92,7 +95,11 @@ describe('宿主标签简写与详细配置', () => {
   it('resolveLabel prop（配 id）→ 收进旁路、不落 IR', () => {
     const fn = (row: { revenue?: number }) => `$${row.revenue}`;
     const spec = buildPlotIR(
-      <IntervalMark id="bars" resolveLabel={fn} encodings={{ position: { x: 'month', y: 'revenue' } }} />,
+      <IntervalMark
+        id="bars"
+        resolveLabel={fn}
+        encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
+      />,
       '__plot',
     );
 
@@ -103,7 +110,10 @@ describe('宿主标签简写与详细配置', () => {
   it('resolveLabel prop 无 id → fail-loud', () => {
     expect(() =>
       buildPlotIR(
-        <IntervalMark resolveLabel={() => 'x'} encodings={{ position: { x: 'month', y: 'revenue' } }} />,
+        <IntervalMark
+          resolveLabel={() => 'x'}
+          encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
+        />,
         '__plot',
       ),
     ).toThrow(/mark id/i);
@@ -114,7 +124,7 @@ describe('PointMark 内容字段与固定属性', () => {
   it('文本与位置颜色字段进入 encodings，偏移保留在 properties', () => {
     const spec = buildPlotIR(
       <PointMark
-        encodings={{ color: 'cat', text: 'revenue', position: { x: 'month', y: 'revenue' } }}
+        encodings={{ color: 'cat', text: 'revenue', position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
         properties={{ dy: -8 }}
       />,
       '__plot',
@@ -124,8 +134,11 @@ describe('PointMark 内容字段与固定属性', () => {
     );
     expect(spec.marks[0]).toMatchObject({
       type: 'point',
-      kind: 'data',
-      encodings: { text: 'revenue', position: { x: 'month', y: 'revenue' }, color: { field: 'cat', scale: '__color' } },
+      encodings: {
+        text: 'revenue',
+        position: { x: { field: 'month' }, y: { field: 'revenue' } },
+        color: { field: 'cat', scale: '__color' },
+      },
       properties: { dy: -8 },
     });
     expect(spec.marks[0]).not.toHaveProperty('properties.dx');
@@ -134,7 +147,10 @@ describe('PointMark 内容字段与固定属性', () => {
 
   it('文本格式保留在 properties.displayFormat', () => {
     const spec = buildPlotIR(
-      <PointMark encodings={{ text: 'v', position: { x: 'x', y: 'y' } }} properties={{ displayFormat: ',.1f' }} />,
+      <PointMark
+        encodings={{ text: 'v', position: { x: { field: 'x' }, y: { field: 'y' } } }}
+        properties={{ displayFormat: ',.1f' }}
+      />,
       '__plot',
     );
     expect(spec.marks[0]).toMatchObject({ encodings: { text: 'v' }, properties: { displayFormat: ',.1f' } });
@@ -143,7 +159,11 @@ describe('PointMark 内容字段与固定属性', () => {
   it('PointMark text resolveLabel（配 id）→ 旁路收集、不落 IR', () => {
     const fn = (row: { label?: string }) => `<${row.label}>`;
     const spec = buildPlotIR(
-      <PointMark id="t1" resolveLabel={fn} encodings={{ position: { x: 'x', y: 'y' }, text: 'label' }} />,
+      <PointMark
+        id="t1"
+        resolveLabel={fn}
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } }, text: 'label' }}
+      />,
       '__plot',
     );
 
@@ -154,7 +174,7 @@ describe('PointMark 内容字段与固定属性', () => {
 
 it('React and Vanilla preserve split opacity and label declarations', () => {
   const encodings = {
-    position: { x: 'x', y: 'y' },
+    position: { x: { field: 'x' }, y: { field: 'y' } },
     opacity: { fill: { field: 'alpha', scale: 'alpha-scale' } },
     label: { content: 'name' },
   };
@@ -164,7 +184,10 @@ it('React and Vanilla preserve split opacity and label declarations', () => {
   };
   const react = buildPlotIR(<PointMark encodings={encodings} properties={properties} />, '__plot');
   const vanilla = normalizePlotIR(
-    { declarations: [{ kind: 'point-mark', props: { encodings, properties }, path: [0] }], runtimeSources: [] },
+    {
+      declarations: [{ kind: 'point-mark', props: { encodings, properties }, path: [0] }],
+      runtimeSources: [],
+    },
     '__plot',
   );
   expect(react.marks).toEqual(vanilla.marks);

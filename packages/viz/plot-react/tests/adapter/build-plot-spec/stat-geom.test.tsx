@@ -12,8 +12,11 @@ describe('buildPlotIR stat-geom 结构组合', () => {
         <IntervalMark
           transforms={[{ operation: boxplotSummary }]}
           encodings={{
-            position: { x: 'boxX', y: 'boxHigh' },
-            bounds: { x: { from: 'boxX0', to: 'boxX1' }, y: { from: 'boxLow', to: 'boxHigh' } },
+            position: { x: { field: 'boxX' }, y: { field: 'boxHigh' } },
+            bounds: {
+              x: { from: { field: 'boxX0' }, to: { field: 'boxX1' } },
+              y: { from: { field: 'boxLow' }, to: { field: 'boxHigh' } },
+            },
           }}
           properties={{
             bounds: {
@@ -26,19 +29,22 @@ describe('buildPlotIR stat-geom 结构组合', () => {
           properties={{ geometry: { kind: 'path' } }}
           transforms={[{ operation: boxplotSummary }]}
           encodings={{
-            source: { position: { x: 'boxX0', y: 'median' } },
-            target: { position: { x: 'boxX1', y: 'median' } },
+            source: { position: { x: { field: 'boxX0' }, y: { field: 'median' } } },
+            target: { position: { x: { field: 'boxX1' }, y: { field: 'median' } } },
           }}
         />
         <RelationMark
           properties={{ geometry: { kind: 'path' } }}
           transforms={[{ operation: boxplotSummary }]}
           encodings={{
-            source: { position: { x: 'boxX', y: 'whiskerMin' } },
-            target: { position: { x: 'boxX', y: 'whiskerMax' } },
+            source: { position: { x: { field: 'boxX' }, y: { field: 'whiskerMin' } } },
+            target: { position: { x: { field: 'boxX' }, y: { field: 'whiskerMax' } } },
           }}
         />
-        <PointMark transforms={[{ operation: boxplotOutside }]} encodings={{ position: { x: 'boxX', y: 'value' } }} />
+        <PointMark
+          transforms={[{ operation: boxplotOutside }]}
+          encodings={{ position: { x: { field: 'boxX' }, y: { field: 'value' } } }}
+        />
       </>,
       '__plot',
       { deferPositionScaleInference: true },
@@ -53,9 +59,8 @@ describe('buildPlotIR stat-geom 结构组合', () => {
     expect(spec.marks[0]).toMatchObject({
       type: 'interval',
       transforms: [{ operation: boxplotSummary }],
-      kind: 'data',
     });
-    expect(spec.marks[3]).toMatchObject({ type: 'point', transforms: [{ operation: boxplotOutside }], kind: 'data' });
+    expect(spec.marks[3]).toMatchObject({ type: 'point', transforms: [{ operation: boxplotOutside }] });
     expect(JSON.stringify(spec)).not.toMatch(/BoxPlot|DensityPlot|RegressionPlot|boxplot/i);
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });

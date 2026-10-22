@@ -8,7 +8,10 @@ import { PlotScale } from '../../../src/components/scales';
 
 describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => {
   it('barmark_equivalence_band_x', () => {
-    const spec = buildPlotIR(<IntervalMark encodings={{ position: { x: 'month', y: 'revenue' } }} />, '__plot');
+    const spec = buildPlotIR(
+      <IntervalMark encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />,
+      '__plot',
+    );
     const expected: IRPlot = {
       namespace: 'plot',
       type: 'plot',
@@ -21,8 +24,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
       marks: [
         {
           type: 'interval',
-          kind: 'data',
-          encodings: { position: { x: 'month', y: 'revenue' } },
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
           properties: { bounds: { x: { kind: 'band' }, y: { kind: 'span' } } },
         },
       ],
@@ -35,7 +37,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
   it('bar_explicit_band_scale_forwards_gap_options', () => {
     const spec = buildPlotIR(
       <>
-        <IntervalMark encodings={{ position: { x: 'month', y: 'revenue' } }} />
+        <IntervalMark encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
         <PlotScale dimension="x" type="band" paddingInner={0} paddingOuter={0} align={0.25} />
       </>,
       '__plot',
@@ -52,7 +54,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
 
   it('point_color_builds_ordinal_scale_and_ref', () => {
     const spec = buildPlotIR(
-      <PointMark encodings={{ color: 'continent', position: { x: 'gdp', y: 'life' } }} />,
+      <PointMark encodings={{ color: 'continent', position: { x: { field: 'gdp' }, y: { field: 'life' } } }} />,
       '__plot',
       {
         dataFieldNames: new Set(['continent']),
@@ -66,7 +68,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
   it('plot_defaults_palette_is_preserved_without_adapter_owned_range', () => {
     const colors = ['#2563eb', '#f97316', 'currentColor'];
     const spec = buildPlotIR(
-      <PointMark encodings={{ color: 'continent', position: { x: 'gdp', y: 'life' } }} />,
+      <PointMark encodings={{ color: 'continent', position: { x: { field: 'gdp' }, y: { field: 'life' } } }} />,
       '__plot',
       {
         defaultPlot: { palette: { categorical: colors } },
@@ -79,40 +81,44 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
   });
 
   it('no_color_no_ordinal_scale', () => {
-    const spec = buildPlotIR(<PointMark encodings={{ position: { x: 'm', y: 'r' } }} />, '__plot');
+    const spec = buildPlotIR(
+      <PointMark encodings={{ position: { x: { field: 'm' }, y: { field: 'r' } } }} />,
+      '__plot',
+    );
 
     expect(spec.scales.some(s => s.type === 'ordinal')).toBe(false);
   });
 
   it('bar_series_dodge_default_and_color_eq_series', () => {
     const spec = buildPlotIR(
-      <IntervalMark encodings={{ series: 'product', position: { x: 'month', y: 'revenue' } }} />,
+      <IntervalMark encodings={{ series: 'product', position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />,
       '__plot',
     );
     const mark = spec.marks[0];
 
     expect(mark).toMatchObject({
       type: 'interval',
-      kind: 'data',
       encodings: { series: 'product', bounds: { x: { group: 'product' } } },
       properties: { bounds: { x: { kind: 'band' } } },
     });
 
     // color 缺省取 series
-    expect(mark).toMatchObject({ kind: 'data', encodings: { color: { field: 'product', scale: '__color' } } });
+    expect(mark).toMatchObject({ encodings: { color: { field: 'product', scale: '__color' } } });
     expect(spec.transform).toBeUndefined();
   });
 
   it('bar_stack_assembles_transform', () => {
     const spec = buildPlotIR(
-      <IntervalMark stack encodings={{ series: 'product', position: { x: 'month', y: 'revenue' } }} />,
+      <IntervalMark
+        stack
+        encodings={{ series: 'product', position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
+      />,
       '__plot',
     );
 
     expect(spec.marks[0]).toMatchObject({
       type: 'interval',
-      kind: 'data',
-      encodings: { series: 'product', bounds: { y: { from: 'y0', to: 'y1' } } },
+      encodings: { series: 'product', bounds: { y: { from: { field: 'y0' }, to: { field: 'y1' } } } },
       properties: { bounds: { y: { kind: 'extent' } } },
     });
     expect(spec.transform).toEqual([
@@ -123,7 +129,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
   it('scale_x_time', () => {
     const spec = buildPlotIR(
       <>
-        <PathMark encodings={{ position: { x: 'date', y: 'v' } }} />
+        <PathMark encodings={{ position: { x: { field: 'date' }, y: { field: 'v' } } }} />
         <PlotScale dimension="x" type="time" />
       </>,
       '__plot',
@@ -136,7 +142,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
     expect(
       buildPlotIR(
         <>
-          <PathMark encodings={{ position: { x: 'd', y: 'v' } }} />
+          <PathMark encodings={{ position: { x: { field: 'd' }, y: { field: 'v' } } }} />
           <PlotScale dimension="x" type="log" />
         </>,
         '__plot',
@@ -145,7 +151,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
     expect(
       buildPlotIR(
         <>
-          <PathMark encodings={{ position: { x: 'd', y: 'v' } }} />
+          <PathMark encodings={{ position: { x: { field: 'd' }, y: { field: 'v' } } }} />
           <PlotScale dimension="x" type="sqrt" />
         </>,
         '__plot',
@@ -155,14 +161,16 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
 
   it('scale_y_log_sqrt_on_value_axis', () => {
     // <PlotScale dimension="y"> 作用于值轴（__y，scales[1]）；缺省 linear
-    expect(buildPlotIR(<PathMark encodings={{ position: { x: 'd', y: 'v' } }} />, '__plot').scales[1]).toEqual({
+    expect(
+      buildPlotIR(<PathMark encodings={{ position: { x: { field: 'd' }, y: { field: 'v' } } }} />, '__plot').scales[1],
+    ).toEqual({
       type: 'linear',
       name: '__y',
     });
     expect(
       buildPlotIR(
         <>
-          <PathMark encodings={{ position: { x: 'd', y: 'v' } }} />
+          <PathMark encodings={{ position: { x: { field: 'd' }, y: { field: 'v' } } }} />
           <PlotScale dimension="y" type="log" />
         </>,
         '__plot',
@@ -171,7 +179,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
     expect(
       buildPlotIR(
         <>
-          <PointMark encodings={{ position: { x: 'd', y: 'v' } }} />
+          <PointMark encodings={{ position: { x: { field: 'd' }, y: { field: 'v' } } }} />
           <PlotScale dimension="y" type="sqrt" />
         </>,
         '__plot',
@@ -184,7 +192,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
     expect(
       buildPlotIR(
         <>
-          <PathMark encodings={{ position: { x: 'd', y: 'v' } }} />
+          <PathMark encodings={{ position: { x: { field: 'd' }, y: { field: 'v' } } }} />
           <PlotScale dimension="y" type="symlog" />
         </>,
         '__plot',
@@ -193,7 +201,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
     expect(
       buildPlotIR(
         <>
-          <PointMark encodings={{ position: { x: 'd', y: 'v' } }} />
+          <PointMark encodings={{ position: { x: { field: 'd' }, y: { field: 'v' } } }} />
           <PlotScale dimension="y" type="radial" />
         </>,
         '__plot',
@@ -205,7 +213,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
     expect(() =>
       buildPlotIR(
         <>
-          <PathMark encodings={{ position: { x: 'd', y: 'v' } }} />
+          <PathMark encodings={{ position: { x: { field: 'd' }, y: { field: 'v' } } }} />
           <PlotScale dimension="x" type="time" />
           <PlotScale dimension="x" type="linear" />
         </>,
@@ -216,25 +224,32 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
 
   it('line_series_color_eq_series', () => {
     const spec = buildPlotIR(
-      <PathMark encodings={{ series: 'city', order: 't', position: { x: 't', y: 'v' } }} />,
+      <PathMark encodings={{ series: 'city', order: 't', position: { x: { field: 't' }, y: { field: 'v' } } }} />,
       '__plot',
     );
 
-    expect(spec.marks[0]).toMatchObject({ type: 'path', kind: 'data', encodings: { series: 'city', order: 't' } });
-    expect(spec.marks[0]).toMatchObject({ kind: 'data', encodings: { color: { field: 'city', scale: '__color' } } });
+    expect(spec.marks[0]).toMatchObject({ type: 'path', encodings: { series: 'city', order: 't' } });
+    expect(spec.marks[0]).toMatchObject({ encodings: { color: { field: 'city', scale: '__color' } } });
   });
 
   it('all_dsl_products_pass_schema', () => {
     expect(() =>
       PlotSchema.parse(
-        buildPlotIR(<IntervalMark stack encodings={{ series: 'p', position: { x: 'm', y: 'r' } }} />, '__plot'),
+        buildPlotIR(
+          <IntervalMark stack encodings={{ series: 'p', position: { x: { field: 'm' }, y: { field: 'r' } } }} />,
+          '__plot',
+        ),
       ),
     ).not.toThrow();
     expect(() =>
       PlotSchema.parse(
-        buildPlotIR(<PointMark encodings={{ color: 'c', position: { x: 'm', y: 'r' } }} />, '__plot', {
-          dataFieldNames: new Set(['c']),
-        }),
+        buildPlotIR(
+          <PointMark encodings={{ color: 'c', position: { x: { field: 'm' }, y: { field: 'r' } } }} />,
+          '__plot',
+          {
+            dataFieldNames: new Set(['c']),
+          },
+        ),
       ),
     ).not.toThrow();
   });
@@ -243,8 +258,8 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
     // 混合 IntervalMark + PathMark → x band（IntervalMark 优先）
     const spec = buildPlotIR(
       <>
-        <IntervalMark encodings={{ position: { x: 'month', y: 'revenue' } }} />
-        <PathMark encodings={{ position: { x: 'month', y: 'revenue' } }} />
+        <IntervalMark encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
+        <PathMark encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
       </>,
       '__plot',
     );

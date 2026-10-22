@@ -11,29 +11,35 @@ describe('buildPlotIR mark-local transform', () => {
 
   it('point_mark_forwards_local_transform', () => {
     const spec = buildPlotIR(
-      <PointMark transforms={markTransform} encodings={{ position: { x: 'x', y: 'score' } }} />,
+      <PointMark transforms={markTransform} encodings={{ position: { x: { field: 'x' }, y: { field: 'score' } } }} />,
       '__plot',
     );
 
-    expect(spec.marks[0]).toMatchObject({ type: 'point', transforms: markTransform, kind: 'data' });
+    expect(spec.marks[0]).toMatchObject({ type: 'point', transforms: markTransform });
   });
 
   it('path_mark_forwards_local_transform', () => {
     const spec = buildPlotIR(
-      <PathMark transforms={markTransform} encodings={{ order: 'x', position: { x: 'x', y: 'score' } }} />,
+      <PathMark
+        transforms={markTransform}
+        encodings={{ order: 'x', position: { x: { field: 'x' }, y: { field: 'score' } } }}
+      />,
       '__plot',
     );
 
-    expect(spec.marks[0]).toMatchObject({ type: 'path', transforms: markTransform, kind: 'data' });
+    expect(spec.marks[0]).toMatchObject({ type: 'path', transforms: markTransform });
   });
 
   it('interval_mark_forwards_local_transform', () => {
     const spec = buildPlotIR(
-      <IntervalMark transforms={markTransform} encodings={{ position: { x: 'x', y: 'score' } }} />,
+      <IntervalMark
+        transforms={markTransform}
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'score' } } }}
+      />,
       '__plot',
     );
 
-    expect(spec.marks[0]).toMatchObject({ type: 'interval', transforms: markTransform, kind: 'data' });
+    expect(spec.marks[0]).toMatchObject({ type: 'interval', transforms: markTransform });
   });
 
   it('mark_transform_shortcut_definitions_append_plot_transforms_without_consuming_mark_local_transform', () => {
@@ -42,7 +48,7 @@ describe('buildPlotIR mark-local transform', () => {
       params: { axis: 'x', xField: 'x', amount: 0.2, seed: 9 },
     };
     const spec = buildPlotIR(
-      <PointMark transforms={markTransform} encodings={{ position: { x: 'x', y: 'score' } }} />,
+      <PointMark transforms={markTransform} encodings={{ position: { x: { field: 'x' }, y: { field: 'score' } } }} />,
       '__plot',
       {
         markTransformShortcuts: [
@@ -55,6 +61,6 @@ describe('buildPlotIR mark-local transform', () => {
     );
 
     expect(spec.transform).toEqual([{ operation: shortcutTransform }]);
-    expect(spec.marks[0]).toMatchObject({ type: 'point', transforms: markTransform, kind: 'data' });
+    expect(spec.marks[0]).toMatchObject({ type: 'point', transforms: markTransform });
   });
 });

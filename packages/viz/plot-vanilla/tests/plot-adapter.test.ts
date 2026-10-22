@@ -21,7 +21,11 @@ const salesSpec = (id?: string) =>
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [
-      { type: 'interval', id: 'bars', kind: 'data' as const, encodings: { position: { x: 'month', y: 'revenue' } } },
+      {
+        type: 'interval',
+        id: 'bars',
+        encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
+      },
     ],
   });
 
@@ -37,8 +41,7 @@ const salesInput = (id?: string) => ({
     {
       type: 'interval' as const,
       id: 'bars',
-      kind: 'data' as const,
-      encodings: { position: { x: 'month', y: 'revenue' } },
+      encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
     },
   ],
 });

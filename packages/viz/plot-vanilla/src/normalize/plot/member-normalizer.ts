@@ -2,8 +2,6 @@ import type { IRDataTransformDeclaration } from '@retikz/data';
 import { PlotGuide } from '@retikz/plot';
 
 import { RetikzPlotVanillaError } from '../../error';
-import { pointAnnotation, pathAnnotation, intervalAnnotation } from './annotations';
-import type { InputPlotPointAnnotation, InputPlotPathAnnotation, InputPlotIntervalAnnotation } from './annotations';
 import type {
   NormalizationState,
   PlotAuthoringDeclaration,
@@ -49,20 +47,6 @@ const scaffoldTracksOf = (scaffoldId: string, propTracks: Array<ScaffoldTrack> |
 export const applyDeclaration = (declaration: PlotAuthoringDeclaration, into: Collected): void => {
   const context = declaration.context ?? {};
   const child: { props: unknown } = { props: declaration.props };
-  if (
-    declaration.kind === 'point-annotation' ||
-    declaration.kind === 'path-annotation' ||
-    declaration.kind === 'interval-annotation'
-  ) {
-    const annotation =
-      declaration.kind === 'point-annotation'
-        ? pointAnnotation(child.props as InputPlotPointAnnotation)
-        : declaration.kind === 'path-annotation'
-          ? pathAnnotation(child.props as InputPlotPathAnnotation)
-          : intervalAnnotation(child.props as InputPlotIntervalAnnotation);
-    into.marks.push({ ...context, ...annotation });
-    return;
-  }
   if (declaration.kind === 'facet') {
     const { row, column, ...facet } = child.props as InputPlotFacet;
     into.facets.push({
@@ -109,22 +93,21 @@ export const applyDeclaration = (declaration: PlotAuthoringDeclaration, into: Co
     const { resolveLabel, ...source } = props;
     const type = declaration.kind === 'path-mark' ? 'path' : declaration.kind === 'point-mark' ? 'point' : 'relation';
     const path = type === 'path' ? (props as InputPlotPathMark) : undefined;
-    const series = path?.encodings?.series;
-    let encodings =
+    const series = path?.encodings.series;
+    let encodings: typeof source.encodings =
       type === 'path' &&
       series !== undefined &&
       source.encodings?.color === undefined &&
       source.properties?.color === undefined
-        ? { ...source.encodings, color: series }
+        ? Object.assign({}, source.encodings, { color: series })
         : source.encodings;
     if (typeof encodings?.color === 'string')
-      encodings = { ...encodings, color: { field: encodings.color, scale: '__color' } };
+      encodings = Object.assign({}, encodings, { color: { field: encodings.color, scale: '__color' } });
     const mark = {
       ...context,
       ...source,
       ...(encodings === undefined ? {} : { encodings }),
       type,
-      kind: 'data',
     } as AxisBoundMark;
     into.marks.push(mark);
     recordResolveLabel(into, source.id, resolveLabel);

@@ -10,7 +10,7 @@ describe('normalizePlot', () => {
       coordinate: { type: 'cartesian2D' },
       dataExecution: { root: { mode: 'hybrid', external: 'sql' }, marks: { mode: 'builtin' } },
       scales: [],
-      marks: [{ type: 'point', kind: 'data' as const, encodings: { position: { x: 'x', y: 'y' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
     });
     expect(spec.dataExecution).toEqual({ root: { mode: 'hybrid', external: 'sql' }, marks: { mode: 'builtin' } });
     expect(PlotSchema.parse(spec).dataExecution).toEqual(spec.dataExecution);
@@ -87,12 +87,18 @@ describe('normalizePlot', () => {
         declarations: [
           {
             kind: 'path-mark',
-            props: { encodings: { position: { x: 'angle', y: 'radius' } }, properties: { interpolation: 'polar' } },
+            props: {
+              encodings: { position: { x: { field: 'angle' }, y: { field: 'radius' } } },
+              properties: { interpolation: 'polar' },
+            },
             path: [0],
           },
           {
             kind: 'interval-mark',
-            props: { encodings: { position: { x: 'angle', y: 'radius' } }, properties: { interpolation: 'chord' } },
+            props: {
+              encodings: { position: { x: { field: 'angle' }, y: { field: 'radius' } } },
+              properties: { interpolation: 'chord' },
+            },
             path: [1],
           },
           {
@@ -137,8 +143,7 @@ describe('normalizePlot', () => {
         {
           type: 'point',
           properties: { placement },
-          kind: 'data' as const,
-          encodings: { position: { x: 'category', y: 'value' } },
+          encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } },
         },
       ],
     });
@@ -147,7 +152,10 @@ describe('normalizePlot', () => {
         declarations: [
           {
             kind: 'point-mark',
-            props: { encodings: { position: { x: 'category', y: 'value' } }, properties: { placement } },
+            props: {
+              encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } },
+              properties: { placement },
+            },
             path: [0],
           },
         ],
@@ -173,8 +181,7 @@ describe('normalizePlot', () => {
         {
           type: 'point' as const,
           id: 'points',
-          kind: 'data' as const,
-          encodings: { position: { x: 'month', y: 'revenue' } },
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
         },
       ],
       guides: [{ type: 'axis' as const, id: 'revenue-axis', dimension: 'y' as const }],
@@ -203,8 +210,7 @@ describe('normalizePlot', () => {
         {
           type: 'path' as const,
           facetId: 'sales',
-          kind: 'data' as const,
-          encodings: { position: { x: 'month', y: 'revenue' } },
+          encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
         },
       ],
       guides: [{ type: 'axis' as const, facetId: 'sales', dimension: 'y' as const, grid: true }],
@@ -257,7 +263,13 @@ describe('normalizePlot', () => {
           spacing: { panelGap: 8 },
         },
       ],
-      marks: [{ type: 'point', facetId: 'region', kind: 'data' as const, encodings: { position: { x: 'x', y: 'y' } } }],
+      marks: [
+        {
+          type: 'point',
+          facetId: 'region',
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+        },
+      ],
     });
 
     expect(spec.composition).toEqual({
@@ -297,7 +309,11 @@ describe('normalizePlot', () => {
         { id: 'channel', column: 'channel', view: 'channelTemplate' },
       ],
       marks: [
-        { type: 'point', facetId: 'channel', kind: 'data' as const, encodings: { position: { x: 'x', y: 'y' } } },
+        {
+          type: 'point',
+          facetId: 'channel',
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+        },
       ],
     });
 
@@ -356,8 +372,7 @@ describe('normalizePlot', () => {
         {
           type: 'path' as const,
           trackId: 'load',
-          kind: 'data' as const,
-          encodings: { position: { x: 'week', y: 'load' } },
+          encodings: { position: { x: { field: 'week' }, y: { field: 'load' } } },
         },
       ],
       guides: [{ type: 'axis' as const, scaffoldId: 'ops', dimension: 'x' as const }],
@@ -386,8 +401,7 @@ describe('normalizePlot', () => {
           {
             type: 'point',
             facetId: 'sales',
-            kind: 'data' as const,
-            encodings: { position: { x: 'month', y: 'revenue' } },
+            encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
           },
         ],
       }),

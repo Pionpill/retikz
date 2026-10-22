@@ -1,4 +1,3 @@
-import type { IRPlotAnnotation } from '@retikz/plot';
 import type {
   IRPlot,
   IRPlotCoordinateOperation,
@@ -18,7 +17,7 @@ type PlotArrangement = NonNullable<PlotComposition['arrangements']>[number];
 type SharedScaffold = Extract<PlotArrangement, { kind: 'tracks' }>;
 
 /** 支持按坐标轴分配 coordinate view 的内置 position mark */
-type PlotAxisBindableMark = IRPlotPathMark | IRPlotPointMark | IRPlotIntervalMark | IRPlotAnnotation;
+type PlotAxisBindableMark = IRPlotPathMark | IRPlotPointMark | IRPlotIntervalMark;
 
 /** mark 共享的 topology authoring binding */
 type PlotTopologyBindings = {

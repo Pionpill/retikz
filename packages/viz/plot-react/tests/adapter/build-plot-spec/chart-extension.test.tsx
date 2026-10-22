@@ -87,7 +87,11 @@ describe('Plot chart-extension declaration normalization', () => {
     const result = normalizeExtension(
       [
         <PlotTransform key="sort" operation={{ kind: 'sort', params: { field: 'amount', order: 'descending' } }} />,
-        <PointMark key="point" id="extension.point" encodings={{ position: { x: 'amount', y: 'margin' } }} />,
+        <PointMark
+          key="point"
+          id="extension.point"
+          encodings={{ position: { x: { field: 'amount' }, y: { field: 'margin' } } }}
+        />,
         <PlotScale key="scale" dimension="x" type="log" base={2} />,
         <PlotAxis key="axis" dimension="x" grid />,
         <PlotLegend key="legend" channel="color" title="Series" />,
@@ -106,7 +110,11 @@ describe('Plot chart-extension declaration normalization', () => {
         scales: [{ type: 'log', name: '__x', base: 2 }],
         coordinate: { type: 'cartesian2D', x: '__x', y: 'recipe.y' },
         marks: [
-          { type: 'point', id: 'extension.point', kind: 'data', encodings: { position: { x: 'amount', y: 'margin' } } },
+          {
+            type: 'point',
+            id: 'extension.point',
+            encodings: { position: { x: { field: 'amount' }, y: { field: 'margin' } } },
+          },
         ],
         guides: [
           { type: 'axis', dimension: 'x', grid: true },
@@ -125,17 +133,20 @@ describe('Plot chart-extension declaration normalization', () => {
       defaultView: 'main',
       views: [{ id: 'main', coordinate: { type: 'cartesian2D', x: 'recipe.x' } }],
     };
-    const result = normalizeExtension(<PointMark encodings={{ position: { x: 'amount', y: 'margin' } }} />, {
-      scales: { value: scales, path: ['spec', 'scales'] },
-      guides: { value: guides, path: ['spec', 'guides'] },
-      composition: { value: composition, path: ['spec', 'composition'] },
-    });
+    const result = normalizeExtension(
+      <PointMark encodings={{ position: { x: { field: 'amount' }, y: { field: 'margin' } } }} />,
+      {
+        scales: { value: scales, path: ['spec', 'scales'] },
+        guides: { value: guides, path: ['spec', 'guides'] },
+        composition: { value: composition, path: ['spec', 'composition'] },
+      },
+    );
 
     expect(result).toEqual({
       fragment: {
         scales,
         composition,
-        marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'amount', y: 'margin' } } }],
+        marks: [{ type: 'point', encodings: { position: { x: { field: 'amount' }, y: { field: 'margin' } } } }],
         guides,
       },
       runtime: {},
@@ -145,11 +156,15 @@ describe('Plot chart-extension declaration normalization', () => {
   it('preserves Plot runtime sidecars without serializing them into the member fragment', () => {
     const resolveLabel = (row: ExternalRow): string => String(row.label);
     const result = normalizeExtension(
-      <PointMark id="labelled" resolveLabel={resolveLabel} encodings={{ position: { x: 'x', y: 'y' } }} />,
+      <PointMark
+        id="labelled"
+        resolveLabel={resolveLabel}
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
+      />,
     );
 
     expect(result.fragment).toEqual({
-      marks: [{ type: 'point', id: 'labelled', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } }],
+      marks: [{ type: 'point', id: 'labelled', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
     });
     expect(result.runtime).toEqual({ resolveLabel: { labelled: resolveLabel } });
     expect(JSON.stringify(result.fragment)).not.toContain('resolveLabel');
@@ -157,12 +172,15 @@ describe('Plot chart-extension declaration normalization', () => {
 
   it('rejects duplicate JSX and typed mark sources with their original paths', () => {
     const marks: PlotDeclarationSource<ReadonlyArray<NonNullable<PlotAuthoringContext['marks']>['value'][number]>> = {
-      value: [{ type: 'point', kind: 'data', encodings: { position: { x: 'amount', y: 'margin' } } }],
+      value: [{ type: 'point', encodings: { position: { x: { field: 'amount' }, y: { field: 'margin' } } } }],
       path: ['props', 'marks'],
     };
 
     expectDeclarationError(
-      () => normalizeExtension(<PointMark encodings={{ position: { x: 'amount', y: 'margin' } }} />, { marks }),
+      () =>
+        normalizeExtension(<PointMark encodings={{ position: { x: { field: 'amount' }, y: { field: 'margin' } } }} />, {
+          marks,
+        }),
       'duplicate-declaration-source',
       ['children', 0],
       ['props', 'marks'],
@@ -185,7 +203,7 @@ describe('Plot chart-extension declaration normalization', () => {
             type: 'plot',
             data: { reference: 'nested' },
             scales: [],
-            marks: [{ type: 'point', kind: 'data', properties: { position: { x: 0, y: 0 } } }],
+            marks: [{ type: 'point', encodings: { position: { x: { value: 0 }, y: { value: 0 } } }, properties: {} }],
           }}
           data={{ nested: [] }}
         />
@@ -211,11 +229,11 @@ describe('Plot chart-extension declaration normalization', () => {
 
   it('reports the second nested composition declaration and the context source it conflicts with', () => {
     const children = [
-      <PointMark key="point" encodings={{ position: { x: 'x', y: 'y' } }} />,
+      <PointMark key="point" encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} />,
       <>
         {null}
         <PlotFacet id="regions" row="region">
-          <PointMark encodings={{ position: { x: 'x', y: 'y' } }} />
+          <PointMark encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} />
         </PlotFacet>
       </>,
     ];
@@ -242,7 +260,7 @@ describe('Plot chart-extension declaration normalization', () => {
       () =>
         normalizeExtension(
           <PlotFacet id="regions" row="region">
-            <PointMark encodings={{ position: { x: 'x', y: 'y' } }} />
+            <PointMark encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} />
           </PlotFacet>,
           {
             coordinate: {

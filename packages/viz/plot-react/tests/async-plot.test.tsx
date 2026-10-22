@@ -29,8 +29,7 @@ const spec = () =>
     marks: [
       {
         type: 'point',
-        kind: 'data',
-        encodings: { position: { x: 'x', y: 'ratio' } },
+        encodings: { position: { x: { field: 'x' }, y: { field: 'ratio' } } },
       },
     ],
   });

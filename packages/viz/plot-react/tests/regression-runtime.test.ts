@@ -31,8 +31,7 @@ describe('Plot regression runtime injection', () => {
               },
             },
           ],
-          kind: 'data',
-          encodings: { position: { x: 'tx', y: 'ty' } },
+          encodings: { position: { x: { field: 'tx' }, y: { field: 'ty' } } },
         },
       ],
     });
@@ -73,7 +72,7 @@ it.each([false, true])('injects field orders into React runtime with embedded=%s
     },
     coordinate: { type: 'cartesian2D' },
     scales: [],
-    marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } }],
+    marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
   });
   const data = {
     rows: [

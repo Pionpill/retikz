@@ -6,7 +6,6 @@ import type {
   IRDataTransformDeclaration,
 } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
-import type { IRPlotAnnotation } from '@retikz/plot';
 import type {
   IRPlot,
   IRPlotCoordinateOperation,
@@ -197,7 +196,7 @@ export type PlotAuthoringRuntime = {
 };
 
 /** 绑定 composition 作用域的 mark */
-export type AxisBoundMark = Extract<InputPlotMark, IRPlotMark | IRPlotAnnotation>;
+export type AxisBoundMark = Extract<InputPlotMark, IRPlotMark>;
 
 /** 绑定 composition 作用域的 guide */
 export type AxisBoundGuide = IRPlotGuide & {
@@ -277,9 +276,6 @@ export type CollectionContext = {
 
 /** collector 可识别的 React declaration kind */
 export type PlotDeclarationKind =
-  | 'point-annotation'
-  | 'path-annotation'
-  | 'interval-annotation'
   | 'facet'
   | 'scaffold'
   | 'track'

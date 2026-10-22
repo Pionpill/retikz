@@ -11,7 +11,7 @@ describe('buildPlotIR heatmap interval mark（ADR-02 双 band，显式 bounds）
   it('heatmap-react-build-plot-spec：显式双 band bounds → interval IR + 双 band 推断', () => {
     const spec = buildPlotIR(
       <IntervalMark
-        encodings={{ color: 'value', position: { x: 'rowKey', y: 'colKey' } }}
+        encodings={{ color: 'value', position: { x: { field: 'rowKey' }, y: { field: 'colKey' } } }}
         properties={{ bounds: bandBounds }}
       />,
       '__plot',
@@ -20,8 +20,10 @@ describe('buildPlotIR heatmap interval mark（ADR-02 双 band，显式 bounds）
     expect(spec.marks).toEqual([
       {
         type: 'interval',
-        kind: 'data',
-        encodings: { color: { field: 'value', scale: '__color' }, position: { x: 'rowKey', y: 'colKey' } },
+        encodings: {
+          color: { field: 'value', scale: '__color' },
+          position: { x: { field: 'rowKey' }, y: { field: 'colKey' } },
+        },
         properties: { bounds: { x: { kind: 'band' }, y: { kind: 'band' } } },
       },
     ]);
@@ -34,14 +36,16 @@ describe('buildPlotIR heatmap interval mark（ADR-02 双 band，显式 bounds）
 
   it('heatmap 缺 color → 纯网格（无 color 编码），仍双 band', () => {
     const spec = buildPlotIR(
-      <IntervalMark encodings={{ position: { x: 'day', y: 'hour' } }} properties={{ bounds: bandBounds }} />,
+      <IntervalMark
+        encodings={{ position: { x: { field: 'day' }, y: { field: 'hour' } } }}
+        properties={{ bounds: bandBounds }}
+      />,
       '__plot',
     );
 
     expect(spec.marks[0]).toEqual({
       type: 'interval',
-      kind: 'data',
-      encodings: { position: { x: 'day', y: 'hour' } },
+      encodings: { position: { x: { field: 'day' }, y: { field: 'hour' } } },
       properties: { bounds: { x: { kind: 'band' }, y: { kind: 'band' } } },
     });
     expect(spec.scales).toContainEqual({ type: 'band', name: '__x' });
@@ -51,7 +55,10 @@ describe('buildPlotIR heatmap interval mark（ADR-02 双 band，显式 bounds）
   it('heatmap_explicit_band_scale_forwards_padding_on_forced_dimension', () => {
     const spec = buildPlotIR(
       <>
-        <IntervalMark encodings={{ position: { x: 'rowKey', y: 'colKey' } }} properties={{ bounds: bandBounds }} />
+        <IntervalMark
+          encodings={{ position: { x: { field: 'rowKey' }, y: { field: 'colKey' } } }}
+          properties={{ bounds: bandBounds }}
+        />
         <PlotScale dimension="y" type="band" paddingInner={0.2} paddingOuter={0} />
       </>,
       '__plot',
@@ -70,7 +77,7 @@ describe('buildPlotIR heatmap interval mark（ADR-02 双 band，显式 bounds）
       buildPlotIR(
         <>
           <IntervalMark
-            encodings={{ color: 'value', position: { x: 'rowKey', y: 'colKey' } }}
+            encodings={{ color: 'value', position: { x: { field: 'rowKey' }, y: { field: 'colKey' } } }}
             properties={{ bounds: bandBounds }}
           />
           <PlotScale dimension="y" type="linear" />
@@ -83,7 +90,7 @@ describe('buildPlotIR heatmap interval mark（ADR-02 双 band，显式 bounds）
   it('heatmap 装配产物过 PlotSchema', () => {
     const spec = buildPlotIR(
       <IntervalMark
-        encodings={{ color: 'value', position: { x: 'rowKey', y: 'colKey' } }}
+        encodings={{ color: 'value', position: { x: { field: 'rowKey' }, y: { field: 'colKey' } } }}
         properties={{ bounds: bandBounds }}
       />,
       '__plot',

@@ -1,80 +1,59 @@
-import { AnnotationSchema } from '@retikz/plot';
-import { pointAnnotation, pathAnnotation, intervalAnnotation } from '@retikz/plot-vanilla';
+﻿import { MarkOperationSchema } from '@retikz/plot';
+import { normalizePlot } from '@retikz/plot-vanilla';
+import type { InputPlotPointMark, InputPlotPathMark, InputPlotIntervalMark } from '@retikz/plot-vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotIR, PointAnnotation, PathAnnotation, IntervalAnnotation } from '../../src';
+import { buildPlotIR, PointMark, PathMark, IntervalMark } from '../../src';
 
-describe('annotation authoring parity', () => {
-  it('shares field bindings, constant normalization and explicit empty transforms with Vanilla', () => {
-    const source = buildPlotIR(
-      <>
-        <PointAnnotation encodings={{ position: { x: 'x' } }} properties={{ position: { y: 2 } }} transforms={[]} />
-        <PathAnnotation
-          encodings={{ from: { y: 'y' }, to: { y: 'y' } }}
-          properties={{ from: { x: { edge: 'start' } }, to: { x: 10 } }}
-        />
-        <IntervalAnnotation
-          encodings={{ bounds: { x: { to: 'x' }, y: { to: 'y' } } }}
-          properties={{ bounds: { x: { from: 1 }, y: { from: 0 } } }}
-        />
-      </>,
-      'data',
-    );
-    const vanilla = [
-      pointAnnotation({ encodings: { position: { x: 'x' } }, properties: { position: { y: 2 } }, transforms: [] }),
-      pathAnnotation({
-        encodings: { from: { y: 'y' }, to: { y: 'y' } },
-        properties: { from: { x: { edge: 'start' } }, to: { x: 10 } },
-      }),
-      intervalAnnotation({
-        encodings: { bounds: { x: { to: 'x' }, y: { to: 'y' } } },
-        properties: { bounds: { x: { from: 1 }, y: { from: 0 } } },
-      }),
-    ];
-    expect(source.marks.map(mark => AnnotationSchema.parse(mark))).toEqual(
-      vanilla.map(mark => AnnotationSchema.parse(mark)),
-    );
-    expect(vanilla[0]).toMatchObject({
-      encodings: { position: { x: 'x' } },
-      properties: { position: { y: 2 } },
+describe('mark authoring parity', () => {
+  it.each([false, true])('shares field, constant and edge positions with Vanilla (constant=%s)', constant => {
+    const point: InputPlotPointMark = {
+      contributeToDomain: false,
+      encodings: { position: { x: constant ? { value: 5 } : { field: 'x' }, y: { value: 2 } } },
+      properties: { text: 'target', fill: 'red' },
       transforms: [],
-    });
-    expect(vanilla[1]).toMatchObject({ properties: { to: { x: 10 } } });
-    expect(vanilla[2]).toMatchObject({ properties: { bounds: { x: { from: 1 } } } });
-  });
-  it('normalizes React and Vanilla constants to identical Source declarations', () => {
+    };
+    const path: InputPlotPathMark = {
+      contributeToDomain: false,
+      encodings: {
+        from: { x: { edge: 'start' }, y: constant ? { value: 5 } : { field: 'y' } },
+        to: { x: { value: 10 }, y: { value: 5 } },
+      },
+      properties: { stroke: 'blue', connection: 'straight' },
+    };
+    const interval: InputPlotIntervalMark = {
+      contributeToDomain: false,
+      encodings: {
+        bounds: {
+          x: { from: { value: 1 }, to: constant ? { value: 4 } : { field: 'x' } },
+          y: { from: { value: 0 }, to: constant ? { value: 7 } : { field: 'y' } },
+        },
+      },
+      properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } }, fill: 'green', connection: 'coordinate' },
+    };
     const source = buildPlotIR(
       <>
-        <PointAnnotation properties={{ position: { x: 5, y: 6 }, text: 'target', fill: 'red' }} />
-        <PathAnnotation
-          properties={{ from: { x: 0, y: 5 }, to: { x: 10, y: 5 }, stroke: 'blue', connection: 'straight' }}
-        />
-        <IntervalAnnotation
-          properties={{
-            bounds: { x: { from: 2, to: 4 }, y: { from: 3, to: 7 } },
-            fill: 'green',
-            connection: 'coordinate',
-          }}
-        />
+        <PointMark {...point} />
+        <PathMark {...path} />
+        <IntervalMark {...interval} />
       </>,
       'data',
     );
-    const vanilla = [
-      pointAnnotation({ properties: { position: { x: 5, y: 6 }, text: 'target', fill: 'red' } }),
-      pathAnnotation({
-        properties: { from: { x: 0, y: 5 }, to: { x: 10, y: 5 }, stroke: 'blue', connection: 'straight' },
-      }),
-      intervalAnnotation({
-        properties: {
-          bounds: { x: { from: 2, to: 4 }, y: { from: 3, to: 7 } },
-          fill: 'green',
-          connection: 'coordinate',
-        },
-      }),
-    ];
+    const vanilla = normalizePlot({
+      scales: [],
+      data: { reference: 'data' },
+      marks: [
+        { type: 'point', ...point },
+        { type: 'path', ...path },
+        { type: 'interval', ...interval },
+      ],
+    });
     expect(source.data.reference).toBe('data');
-    expect(source.marks.map(mark => AnnotationSchema.parse(mark))).toEqual(
-      vanilla.map(mark => AnnotationSchema.parse(mark)),
+    expect(source.marks.map(mark => MarkOperationSchema.parse(mark))).toEqual(
+      vanilla.marks.map(mark => MarkOperationSchema.parse(mark)),
     );
+    expect(source.marks[0]).toMatchObject({ transforms: [], encodings: point.encodings });
+    expect(source.marks[1]).toMatchObject({ encodings: path.encodings });
+    expect(source.marks[2]).toMatchObject({ encodings: interval.encodings });
   });
 });

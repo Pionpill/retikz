@@ -36,7 +36,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
     const viaDsl = renderToStaticMarkup(
       <Plot data={data} width={480} height={300}>
         <PathMark
-          encodings={{ order: 'month', position: { x: 'month', y: 'revenue' } }}
+          encodings={{ order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
           properties={{ connectNulls }}
         />
       </Plot>,
@@ -54,8 +54,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         {
           type: 'path',
           properties: { connectNulls },
-          kind: 'data',
-          encodings: { order: 'month', position: { x: 'month', y: 'revenue' } },
+          encodings: { order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } },
         },
       ],
       guides: [],
@@ -74,10 +73,10 @@ describe('<Plot data>{marks} 组合 DSL', () => {
     const svg = renderToStaticMarkup(
       <Layout width={480} height={300}>
         <Plot id="revenue-a" data={rows} width={220} height={140}>
-          <PointMark encodings={{ position: { x: 'month', y: 'revenue' } }} />
+          <PointMark encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
         </Plot>
         <Plot id="revenue-b" data={rows} position={[240, 0]} width={220} height={140}>
-          <PointMark encodings={{ position: { x: 'month', y: 'revenue' } }} />
+          <PointMark encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
         </Plot>
       </Layout>,
     );
@@ -88,8 +87,8 @@ describe('<Plot data>{marks} 组合 DSL', () => {
   it('端到端渲出 path（折线）+ ellipse（散点）', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
-        <PathMark encodings={{ order: 'month', position: { x: 'month', y: 'revenue' } }} />
-        <PointMark encodings={{ position: { x: 'month', y: 'revenue' } }} />
+        <PathMark encodings={{ order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
+        <PointMark encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
       </Plot>,
     );
 
@@ -100,8 +99,8 @@ describe('<Plot data>{marks} 组合 DSL', () => {
   it('与等价 spec 入口渲染几何一致（DSL 只装配、渲染同源）', () => {
     const viaDsl = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
-        <PathMark encodings={{ order: 'month', position: { x: 'month', y: 'revenue' } }} />
-        <PointMark encodings={{ position: { x: 'month', y: 'revenue' } }} />
+        <PathMark encodings={{ order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
+        <PointMark encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
       </Plot>,
     );
 
@@ -116,8 +115,8 @@ describe('<Plot data>{marks} 组合 DSL', () => {
       ],
       coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
       marks: [
-        { type: 'path', kind: 'data', encodings: { order: 'month', position: { x: 'month', y: 'revenue' } } },
-        { type: 'point', kind: 'data', encodings: { position: { x: 'month', y: 'revenue' } } },
+        { type: 'path', encodings: { order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
+        { type: 'point', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
       ],
       guides: [],
     };
@@ -132,7 +131,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
   it('dsl_no_axis_no_text：薄 <Plot> 无 <PlotAxis> → 渲 path 但不出刻度文字', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
-        <PathMark encodings={{ order: 'month', position: { x: 'month', y: 'revenue' } }} />
+        <PathMark encodings={{ order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
       </Plot>,
     );
 
@@ -143,7 +142,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
   it('dsl_explicit_axis_renders_text：显式 <PlotAxis> → 渲出刻度文字', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
-        <PathMark encodings={{ order: 'month', position: { x: 'month', y: 'revenue' } }} />
+        <PathMark encodings={{ order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
         <PlotAxis dimension="x" />
         <PlotAxis dimension="y" grid />
       </Plot>,
@@ -162,7 +161,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
     ];
     const svg = renderToStaticMarkup(
       <Plot data={quarterly} width={480} height={300}>
-        <PathMark encodings={{ order: 'quarter', position: { x: 'quarter', y: 'revenue' } }} />
+        <PathMark encodings={{ order: 'quarter', position: { x: { field: 'quarter' }, y: { field: 'revenue' } } }} />
         <PlotAxis dimension="x" />
         <PlotAxis dimension="y" grid />
       </Plot>,
@@ -176,7 +175,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
   it('barmark_renders_rect：<IntervalMark> 渲出矩形', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
-        <IntervalMark encodings={{ position: { x: 'month', y: 'revenue' } }} />
+        <IntervalMark encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
       </Plot>,
     );
 
@@ -186,7 +185,10 @@ describe('<Plot data>{marks} 组合 DSL', () => {
   it('horizontal_barmark_renders_rect：<IntervalMark direction="horizontal"> 渲出矩形', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
-        <IntervalMark direction="horizontal" encodings={{ position: { x: 'revenue', y: 'month' } }} />
+        <IntervalMark
+          direction="horizontal"
+          encodings={{ position: { x: { field: 'revenue' }, y: { field: 'month' } } }}
+        />
       </Plot>,
     );
 
@@ -202,7 +204,11 @@ describe('<Plot data>{marks} 组合 DSL', () => {
     ];
     const svg = renderToStaticMarkup(
       <Plot data={sales} width={480} height={300}>
-        <IntervalMark direction="horizontal" group="product" encodings={{ position: { x: 'revenue', y: 'month' } }} />
+        <IntervalMark
+          direction="horizontal"
+          group="product"
+          encodings={{ position: { x: { field: 'revenue' }, y: { field: 'month' } } }}
+        />
       </Plot>,
     );
 
@@ -218,7 +224,10 @@ describe('<Plot data>{marks} 组合 DSL', () => {
     ];
     const svg = renderToStaticMarkup(
       <Plot data={sales} width={480} height={300}>
-        <IntervalMark stack encodings={{ series: 'product', position: { x: 'month', y: 'revenue' } }} />
+        <IntervalMark
+          stack
+          encodings={{ series: 'product', position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
+        />
       </Plot>,
     );
 
@@ -233,7 +242,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
     ];
     const svg = renderToStaticMarkup(
       <Plot data={trend} width={480} height={300}>
-        <PathMark encodings={{ order: 'date', position: { x: 'date', y: 'v' } }} />
+        <PathMark encodings={{ order: 'date', position: { x: { field: 'date' }, y: { field: 'v' } } }} />
         <PlotScale dimension="x" type="time" />
         <PlotAxis dimension="x" />
       </Plot>,
@@ -274,7 +283,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
   it('polar_radial_bar_renders：<IntervalMark> + polar 渲出扇形（径向柱）', () => {
     const svg = renderToStaticMarkup(
       <Plot data={share} coordinate="polar2D" width={360} height={360}>
-        <IntervalMark encodings={{ color: 'label', position: { x: 'label', y: 'value' } }} />
+        <IntervalMark encodings={{ color: 'label', position: { x: { field: 'label' }, y: { field: 'value' } } }} />
       </Plot>,
     );
 
@@ -290,7 +299,10 @@ describe('<Plot data>{marks} 组合 DSL', () => {
     ];
     const svg = renderToStaticMarkup(
       <Plot data={metrics} coordinate="polar2D" width={360} height={360}>
-        <PathMark encodings={{ position: { x: 'dim', y: 'value' } }} properties={{ closed: true }} />
+        <PathMark
+          encodings={{ position: { x: { field: 'dim' }, y: { field: 'value' } } }}
+          properties={{ closed: true }}
+        />
         <PlotAxis dimension="x" />
         <PlotAxis dimension="y" grid />
       </Plot>,
@@ -308,7 +320,10 @@ describe('<Plot data>{marks} 组合 DSL', () => {
     ];
     const svg = renderToStaticMarkup(
       <Plot data={spiral} coordinate="polar2D" width={360} height={360}>
-        <PathMark encodings={{ order: 'theta', position: { x: 'theta', y: 'r' } }} properties={{ closed: false }} />
+        <PathMark
+          encodings={{ order: 'theta', position: { x: { field: 'theta' }, y: { field: 'r' } } }}
+          properties={{ closed: false }}
+        />
       </Plot>,
     );
 
@@ -323,7 +338,10 @@ describe('<Plot data>{marks} 组合 DSL', () => {
     ];
     const svg = renderToStaticMarkup(
       <Plot data={metrics} coordinate="polar2D" width={360} height={360}>
-        <PathMark encodings={{ position: { x: 'dim', y: 'value' } }} properties={{ closure: { kind: 'cycle' } }} />
+        <PathMark
+          encodings={{ position: { x: { field: 'dim' }, y: { field: 'value' } } }}
+          properties={{ closure: { kind: 'cycle' } }}
+        />
       </Plot>,
     );
 
@@ -357,8 +375,10 @@ describe('<Plot data>{marks} 组合 DSL', () => {
       marks: [
         {
           type: 'interval',
-          kind: 'data',
-          encodings: { bounds: { x: { from: 'y0', to: 'y1' } }, color: { field: 'label', scale: '__color' } },
+          encodings: {
+            bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } },
+            color: { field: 'label', scale: '__color' },
+          },
           properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } } },
         },
       ],

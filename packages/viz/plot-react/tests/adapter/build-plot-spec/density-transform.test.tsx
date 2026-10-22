@@ -23,7 +23,11 @@ describe('buildPlotIR density transform forwarding', () => {
           }}
         />
         <PathMark
-          encodings={{ series: 'species', order: 'densityX', position: { x: 'densityX', y: 'density' } }}
+          encodings={{
+            series: 'species',
+            order: 'densityX',
+            position: { x: { field: 'densityX' }, y: { field: 'density' } },
+          }}
           properties={{ closure: { kind: 'baseline', baseline: 0 }, fill: '#60a5fa' }}
         />
       </>,

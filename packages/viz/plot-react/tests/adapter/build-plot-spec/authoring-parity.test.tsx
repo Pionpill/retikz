@@ -17,7 +17,10 @@ describe('React 与 framework-neutral authoring parity', () => {
   it('点方向与旋转偏移在 React 与 Vanilla 入口等价', () => {
     const orientation = { kind: 'coordinate', role: 'x', align: 'normal' } as const;
     const react = buildPlotIR(
-      <PointMark encodings={{ position: { x: 'x', y: 'y' } }} properties={{ orientation, rotate: 15 }} />,
+      <PointMark
+        encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
+        properties={{ orientation, rotate: 15 }}
+      />,
       'points',
     );
     const plain = normalizePlot({
@@ -30,8 +33,7 @@ describe('React 与 framework-neutral authoring parity', () => {
       marks: [
         {
           type: 'point',
-          kind: 'data',
-          encodings: { position: { x: 'x', y: 'y' } },
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: { orientation, rotate: 15 },
         },
       ],
@@ -46,7 +48,10 @@ describe('React 与 framework-neutral authoring parity', () => {
       ],
     };
     const react = buildPlotIR(
-      <PointMark encodings={{ position: { x: 'category', y: 'value' } }} properties={{ placement }} />,
+      <PointMark
+        encodings={{ position: { x: { field: 'category' }, y: { field: 'value' } } }}
+        properties={{ placement }}
+      />,
       'points',
     );
     const plain = normalizePlot({
@@ -60,8 +65,7 @@ describe('React 与 framework-neutral authoring parity', () => {
         {
           type: 'point',
           properties: { placement },
-          kind: 'data',
-          encodings: { position: { x: 'category', y: 'value' } },
+          encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } },
         },
       ],
     });
@@ -73,7 +77,10 @@ describe('React 与 framework-neutral authoring parity', () => {
     const react = buildPlotIR(
       <>
         <PlotFacet id="sales" row="channel" column="region" />
-        <PathMark facetId="sales" encodings={{ order: 'month', position: { x: 'month', y: 'revenue' } }} />
+        <PathMark
+          facetId="sales"
+          encodings={{ order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
+        />
         <PlotAxis facetId="sales" dimension="y" grid />
       </>,
       'sales',
@@ -90,8 +97,7 @@ describe('React 与 framework-neutral authoring parity', () => {
         {
           type: 'path',
           facetId: 'sales',
-          kind: 'data',
-          encodings: { order: 'month', position: { x: 'month', y: 'revenue' } },
+          encodings: { order: 'month', position: { x: { field: 'month' }, y: { field: 'revenue' } } },
         },
       ],
       guides: [{ type: 'axis', facetId: 'sales', dimension: 'y', grid: true }],
@@ -107,8 +113,14 @@ describe('React 与 framework-neutral authoring parity', () => {
           <PlotTrack id="incidents" band={{ role: 'y', start: 0, end: 0.42 }} />
           <PlotTrack id="load" band={{ role: 'y', start: 0.58, end: 1 }} />
         </PlotScaffold>
-        <PathMark trackId="incidents" encodings={{ order: 'week', position: { x: 'week', y: 'incidents' } }} />
-        <PathMark trackId="load" encodings={{ order: 'week', position: { x: 'week', y: 'load' } }} />
+        <PathMark
+          trackId="incidents"
+          encodings={{ order: 'week', position: { x: { field: 'week' }, y: { field: 'incidents' } } }}
+        />
+        <PathMark
+          trackId="load"
+          encodings={{ order: 'week', position: { x: { field: 'week' }, y: { field: 'load' } } }}
+        />
         <PlotAxis scaffoldId="ops" dimension="x" grid />
       </>,
       'ops',
@@ -134,14 +146,12 @@ describe('React 与 framework-neutral authoring parity', () => {
         {
           type: 'path',
           trackId: 'incidents',
-          kind: 'data',
-          encodings: { order: 'week', position: { x: 'week', y: 'incidents' } },
+          encodings: { order: 'week', position: { x: { field: 'week' }, y: { field: 'incidents' } } },
         },
         {
           type: 'path',
           trackId: 'load',
-          kind: 'data',
-          encodings: { order: 'week', position: { x: 'week', y: 'load' } },
+          encodings: { order: 'week', position: { x: { field: 'week' }, y: { field: 'load' } } },
         },
       ],
       guides: [{ type: 'axis', scaffoldId: 'ops', dimension: 'x', grid: true }],
@@ -154,7 +164,7 @@ describe('React 与 framework-neutral authoring parity', () => {
     const spec = buildPlotIR(
       <>
         <PlotFacet id="sales" column="region" />
-        <PointMark facetId="sales" encodings={{ position: { x: 'month', y: 'revenue' } }} />
+        <PointMark facetId="sales" encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
       </>,
       'sales',
       {
@@ -176,7 +186,7 @@ describe('React 与 framework-neutral authoring parity', () => {
       <>
         <PlotFacet id="sales" column="region" />
         <PlotScale dimension="x" type="time" />
-        <PointMark facetId="sales" encodings={{ position: { x: 'month', y: 'revenue' } }} />
+        <PointMark facetId="sales" encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }} />
       </>,
       'sales',
       {
@@ -207,8 +217,8 @@ describe('React 与 framework-neutral authoring parity', () => {
           <PlotTrack id="incidents" band={{ role: 'y', start: 0, end: 0.42 }} />
           <PlotTrack id="load" band={{ role: 'y', start: 0.58, end: 1 }} />
         </PlotScaffold>
-        <PointMark trackId="incidents" encodings={{ position: { x: 'week', y: 'incidents' } }} />
-        <PointMark trackId="load" encodings={{ position: { x: 'week', y: 'load' } }} />
+        <PointMark trackId="incidents" encodings={{ position: { x: { field: 'week' }, y: { field: 'incidents' } } }} />
+        <PointMark trackId="load" encodings={{ position: { x: { field: 'week' }, y: { field: 'load' } } }} />
       </>,
       'ops',
       { deferPositionScaleInference: true },
@@ -229,7 +239,10 @@ describe('React 与 framework-neutral authoring parity', () => {
           <PlotTrack id="load" band={{ role: 'y', start: 0, end: 0.42 }} />
           <PlotTrack id="incidents" view="manual.incidents" band={{ role: 'y', start: 0.58, end: 1 }} />
         </PlotScaffold>
-        <PathMark trackId="load" encodings={{ order: 'week', position: { x: 'week', y: 'load' } }} />
+        <PathMark
+          trackId="load"
+          encodings={{ order: 'week', position: { x: { field: 'week' }, y: { field: 'load' } } }}
+        />
         <PlotAxis trackId="incidents" dimension="y" />
         <PlotAxis scaffoldId="ops" dimension="x" />
       </>,
@@ -257,8 +270,7 @@ describe('React 与 framework-neutral authoring parity', () => {
         {
           type: 'path',
           trackId: 'load',
-          kind: 'data',
-          encodings: { order: 'week', position: { x: 'week', y: 'load' } },
+          encodings: { order: 'week', position: { x: { field: 'week' }, y: { field: 'load' } } },
         },
       ],
       guides: [
@@ -276,8 +288,11 @@ describe('React 与 framework-neutral authoring parity', () => {
         <PlotAxis dimension="x" />
         <PlotAxis id="temperature" dimension="y" />
         <PlotAxis id="rainfall" dimension="y" grid />
-        <PathMark yAxisId="temperature" encodings={{ position: { x: 'day', y: 'temperature' } }} />
-        <PointMark yAxisId="rainfall" encodings={{ position: { x: 'day', y: 'rainfall' } }} />
+        <PathMark
+          yAxisId="temperature"
+          encodings={{ position: { x: { field: 'day' }, y: { field: 'temperature' } } }}
+        />
+        <PointMark yAxisId="rainfall" encodings={{ position: { x: { field: 'day' }, y: { field: 'rainfall' } } }} />
       </>,
       'weather',
     );
@@ -289,8 +304,16 @@ describe('React 与 framework-neutral authoring parity', () => {
       ],
       coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
       marks: [
-        { type: 'path', yAxisId: 'temperature', kind: 'data', encodings: { position: { x: 'day', y: 'temperature' } } },
-        { type: 'point', yAxisId: 'rainfall', kind: 'data', encodings: { position: { x: 'day', y: 'rainfall' } } },
+        {
+          type: 'path',
+          yAxisId: 'temperature',
+          encodings: { position: { x: { field: 'day' }, y: { field: 'temperature' } } },
+        },
+        {
+          type: 'point',
+          yAxisId: 'rainfall',
+          encodings: { position: { x: { field: 'day' }, y: { field: 'rainfall' } } },
+        },
       ],
       guides: [
         { type: 'axis', dimension: 'x' },
@@ -318,7 +341,7 @@ describe('React 与 framework-neutral authoring parity', () => {
       <>
         <PlotScale dimension="x" type="linear" />
         <PlotScale dimension="y" type="linear" />
-        <PointMark encodings={{ position: { x: 'day', y: 'temperature' } }} />
+        <PointMark encodings={{ position: { x: { field: 'day' }, y: { field: 'temperature' } } }} />
       </>,
       'weather',
       { composition },
@@ -331,7 +354,7 @@ describe('React 与 framework-neutral authoring parity', () => {
       ],
       coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
       composition,
-      marks: [{ type: 'point', kind: 'data', encodings: { position: { x: 'day', y: 'temperature' } } }],
+      marks: [{ type: 'point', encodings: { position: { x: { field: 'day' }, y: { field: 'temperature' } } } }],
     });
 
     expect(react).toEqual(plain);
@@ -348,8 +371,7 @@ describe('React 与 framework-neutral authoring parity', () => {
             type: 'point',
             facetId: 'sales',
             yAxisId: 'right',
-            kind: 'data',
-            encodings: { position: { x: 'month', y: 'revenue' } },
+            encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
           },
         ],
         guides: [{ type: 'axis', id: 'right', dimension: 'y' }],
@@ -359,7 +381,11 @@ describe('React 与 framework-neutral authoring parity', () => {
         <>
           <PlotFacet id="sales" row="region" />
           <PlotAxis id="right" dimension="y" />
-          <PointMark facetId="sales" yAxisId="right" encodings={{ position: { x: 'month', y: 'revenue' } }} />
+          <PointMark
+            facetId="sales"
+            yAxisId="right"
+            encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
+          />
         </>,
         'sales',
       );
