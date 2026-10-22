@@ -43,6 +43,8 @@ Core 先解析节点的样式和形状，结合文字度量确定尺寸，再解
 
 <PackageManagerInstall packages="@retikz/core" />
 
+声明图形时使用 Core 的 `IRScene` 等 IR 类型；处理编译后的路径命令时使用 Core 的 `PathCommand`。纯坐标和向量类型 `Position`、`Vector2` 从 `@retikz/math` 导入。
+
 Core 提供无框架差异的 TypeScript 编译入口。下面使用同样的 A、B 连线关系，节点尺寸采用默认布局：
 
 ```ts

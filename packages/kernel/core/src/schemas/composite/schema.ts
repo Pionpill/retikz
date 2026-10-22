@@ -1,6 +1,7 @@
 import { JsonValueSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { object, strictObject } from 'zod';
 
+/** 组合节点共用的命名空间和类型字段 */
 const compositeBaseShape = {
   namespace: NonBlankStringSchema.describe('Tier 2 domain namespace that selects the registered definition.'),
   type: NonBlankStringSchema.describe('Composite type name within the namespace.'),
