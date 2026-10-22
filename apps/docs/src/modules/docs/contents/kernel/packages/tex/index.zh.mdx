@@ -19,7 +19,7 @@ description: 浏览 @retikz/tex 的公式解析、lowering 与运行时接入
 
 <PackageManagerInstall packages="@retikz/tex mathjax-full" />
 
-按宿主选择注入入口。公式只有在 lowerer 注入后才会进入 MathJax lowering；未注入时，`$...$` 仍按普通文字兼容处理，显式 math run 会被跳过并产生 Core warning。
+按宿主选择注入入口。公式只有在 lowerer 注入后才会进入 MathJax lowering；未注入时，`$...$` 仍按普通文字兼容处理，显式 math segment 会被跳过并产生 Core warning。
 
 | 宿主    | 入口               | 接入位置                                                           |
 | ------- | ------------------ | ------------------------------------------------------------------ |
@@ -114,7 +114,7 @@ const svg = renderToSvgString(input, { compile: { lowerTex } });
   items={[
     {
       title: '公式写法',
-      description: '从行内公式到显式 math run 的排版方式',
+      description: '从行内公式到显式 math segment 的排版方式',
       url: '/kernel/packages/tex/authoring',
     },
     {

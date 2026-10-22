@@ -104,7 +104,7 @@ describe('contract mark host label lowering', () => {
         {
           type: 'path',
           encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
-          properties: { label: { content: { runs: [{ text: 'trend ' }, { tex: 'x' }] }, position: 'midway' } },
+          properties: { label: { content: { segments: [{ text: 'trend ' }, { tex: 'x' }] }, position: 'midway' } },
         },
       ]),
       {
@@ -117,7 +117,7 @@ describe('contract mark host label lowering', () => {
 
     const [path] = collectPaths(markLayer(root, 0));
 
-    expect(path.label).toEqual({ text: [{ runs: [{ text: 'trend ' }, { tex: 'x' }] }], position: 'midway' });
+    expect(path.label).toEqual({ text: [{ segments: [{ text: 'trend ' }, { tex: 'x' }] }], position: 'midway' });
   });
 
   it('relation-path-host-label：RelationMark 顶层 label lowering 到 core Path.label', () => {

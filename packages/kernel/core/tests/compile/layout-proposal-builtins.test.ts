@@ -279,7 +279,7 @@ describe('atomic Node content proposal refusal', () => {
   const mixedNode: IRChild = {
     type: 'node',
     position: [0, 0],
-    text: [{ runs: [{ text: 'aa bb' }] }, { runs: [{ text: 'cccc' }] }],
+    text: [{ segments: [{ text: 'aa bb' }] }, { segments: [{ text: 'cccc' }] }],
     style: { font: { size: 10 } },
     layout: { lineHeight: 10, padding: 0, margin: 0 },
   };
@@ -301,7 +301,7 @@ describe('atomic Node content proposal refusal', () => {
     const texNode: IRChild = {
       type: 'node',
       position: [0, 0],
-      text: [{ runs: [{ tex: 'x' }] }],
+      text: [{ segments: [{ tex: 'x' }] }],
       style: { font: { size: 10 }, fill: 'transparent', stroke: 'transparent' },
       layout: { lineHeight: 10, padding: 0, margin: 0 },
     };

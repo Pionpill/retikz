@@ -6,18 +6,18 @@ import type {
   IRBoxSize,
   IRBoxSpacing,
   IRLine,
-  IRMathRun,
+  IRMathSegment,
   IRNode,
   IRNodeLabel,
   IRPaintValue,
-  IRTextRun,
+  IRTextSegment,
 } from '../../schemas';
 import { NodeSchema } from '../../schemas';
 import { resolvePaint } from '../resource';
 import { resolveGraphicOpacity } from '../style';
 import { resolveContextualColor, resolveDashPattern, resolveDropShadow, resolveEffectiveNodeStyle } from '../style';
 import type { EffectiveLabelDefault } from '../style';
-import type { ResolvedInlineSourceRun, ResolvedLabelTextContent, ResolvedTextLine } from '../text';
+import type { ResolvedInlineSourceSegment, ResolvedLabelTextContent, ResolvedTextLine } from '../text';
 import { resolveBoundaryReference } from './boundary';
 import { resolveNodeShape } from './shape';
 import { resolveNodeTextColor } from './text-color';
@@ -228,14 +228,14 @@ const resolveNodePrimaryColors = (
   };
 };
 
-/** 确定单个文字或公式 run 的派生颜色 */
-const resolveInlineRunColor = (
-  run: IRTextRun | IRMathRun,
+/** 确定单个文字或公式 segment 的派生颜色 */
+const resolveInlineSegmentColor = (
+  segment: IRTextSegment | IRMathSegment,
   masterColor: string | undefined,
   mode: NodeResolveContext['mode'],
   fieldPath: string,
-): ResolvedInlineSourceRun => {
-  const { fill, ...source } = run;
+): ResolvedInlineSourceSegment => {
+  const { fill, ...source } = segment;
   return {
     ...source,
     ...(fill === undefined
@@ -244,7 +244,7 @@ const resolveInlineRunColor = (
   };
 };
 
-/** 确定正文一行的 line / run 派生颜色 */
+/** 确定正文一行的 line / segment 派生颜色 */
 const resolveNodeLineColors = (
   line: IRLine,
   masterColor: string | undefined,
@@ -252,9 +252,11 @@ const resolveNodeLineColors = (
   fieldPath: string,
 ): ResolvedTextLine => {
   if (typeof line === 'string') return line;
-  if ('runs' in line) {
+  if ('segments' in line) {
     return {
-      runs: line.runs.map((run, index) => resolveInlineRunColor(run, masterColor, mode, `${fieldPath}.runs[${index}]`)),
+      segments: line.segments.map((segment, index) =>
+        resolveInlineSegmentColor(segment, masterColor, mode, `${fieldPath}.segments[${index}]`),
+      ),
     };
   }
 
@@ -268,7 +270,7 @@ const resolveNodeLineColors = (
   };
 };
 
-/** 确定 label 单行内容中各 run 的派生颜色 */
+/** 确定 label 单行内容中各 segment 的派生颜色 */
 const resolveLabelTextColors = (
   text: IRNodeLabel['text'],
   masterColor: string | undefined,
@@ -278,12 +280,12 @@ const resolveLabelTextColors = (
   typeof text === 'string'
     ? text
     : {
-        runs: text.runs.map((run, index) =>
-          resolveInlineRunColor(run, masterColor, mode, `${fieldPath}.runs[${index}]`),
+        segments: text.segments.map((segment, index) =>
+          resolveInlineSegmentColor(segment, masterColor, mode, `${fieldPath}.segments[${index}]`),
         ),
       };
 
-/** 确定 Node label 的文字主色、run 与 pin 颜色 */
+/** 确定 Node label 的文字主色、segment 与 pin 颜色 */
 const resolveNodeLabelColors = (
   label: MaterializedNodeLabel,
   labelMasterColor: string | undefined,
@@ -328,7 +330,7 @@ const resolveNodeLabelColors = (
   };
 };
 
-/** 在 auto-contrast 后确定正文、label run 与 pin 的派生颜色 */
+/** 在 auto-contrast 后确定正文、label segment 与 pin 的派生颜色 */
 const resolveNodeDependentColors = (
   node: PrimaryColorResolvedMaterializedNode,
   labelDefault: EffectiveLabelDefault,

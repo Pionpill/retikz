@@ -57,7 +57,7 @@ const textBlockMeasureText = (text: IRNode['text']): string => {
     .map(line => {
       if (typeof line === 'string') return line;
       if ('text' in line) return line.text;
-      return line.runs.map(run => ('text' in run ? run.text : run.tex)).join('');
+      return line.segments.map(segment => ('text' in segment ? segment.text : segment.tex)).join('');
     })
     .join('\n');
 };

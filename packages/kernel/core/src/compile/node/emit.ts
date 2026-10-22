@@ -12,7 +12,7 @@ import {
 import type { PaintResolver } from '../resource';
 import { validateMarkerPrimitives } from '../resource';
 import { validateScenePrimitives } from '../scene-primitive';
-import { emitInlineLine, inlineRunPaintsOf, toAlphabeticBaselineY } from '../text';
+import { emitInlineLine, inlineSegmentPaintsOf, toAlphabeticBaselineY } from '../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label/geometry';
 import type {
@@ -149,7 +149,7 @@ const emitNodeContentPrimitives = (
         {
           color: properties.textColor,
           opacity: properties.opacity,
-          runs: inlineRunPaintsOf(properties.text![index].runs),
+          segments: inlineSegmentPaintsOf(properties.text![index].segments),
         },
         originX,
         baselineYs[index],
@@ -253,7 +253,7 @@ const emitNodeLabelContentPrimitive = (
         {
           color: labelProperties.textColor,
           opacity: labelProperties.opacity,
-          runs: inlineRunPaintsOf(labelProperties.text.runs),
+          segments: inlineSegmentPaintsOf(labelProperties.text.segments),
         },
         originX,
         baselineY,

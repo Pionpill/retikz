@@ -80,7 +80,7 @@ describe('resolve source structure', () => {
     ].join('\n');
     const pathLabel = source('src/compile/path/host/label.ts');
 
-    expect(compileText).not.toContain('parseInlineRuns');
+    expect(compileText).not.toContain('parseInlineSegments');
     expect(compileText).not.toContain('resolveFontSize');
     expect(nodeLayout).not.toContain('resolveLineRunsWithWarning');
     expect(nodeLayout).not.toContain('resolveFontSize');

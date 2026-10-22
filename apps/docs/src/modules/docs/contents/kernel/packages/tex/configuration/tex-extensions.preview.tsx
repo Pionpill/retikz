@@ -18,9 +18,9 @@ const renderTexExtensions = (values: TexExtensionsPreviewValues, lowerTex?: Lowe
   );
   const extensionStatus = [
     {
-      runs: [{ text: 'Extensions: ', font: { weight: 'bold' as const } }, { text: extensionLines[0] ?? 'none' }],
+      segments: [{ text: 'Extensions: ', font: { weight: 'bold' as const } }, { text: extensionLines[0] ?? 'none' }],
     },
-    ...extensionLines.slice(1).map(line => ({ runs: [{ text: line }] })),
+    ...extensionLines.slice(1).map(line => ({ segments: [{ text: line }] })),
   ];
 
   return (

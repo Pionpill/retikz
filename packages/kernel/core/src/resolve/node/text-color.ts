@@ -10,7 +10,7 @@ import type { PrimaryColorResolvedNode } from './types';
 /** 判断正文行是否仍消费 Node 文字颜色 */
 const bodyLineInheritsNodeTextColor = (line: IRLine): boolean => {
   if (typeof line === 'string') return true;
-  if ('runs' in line) return line.runs.some(run => run.fill === undefined);
+  if ('segments' in line) return line.segments.some(segment => segment.fill === undefined);
   return line.fill === undefined;
 };
 
@@ -27,7 +27,8 @@ const labelInheritsNodeTextColor = (label: IRNodeLabel, labelDefault: EffectiveL
     return false;
   }
 
-  const textInherits = typeof label.text === 'string' || label.text.runs.some(run => run.fill === undefined);
+  const textInherits =
+    typeof label.text === 'string' || label.text.segments.some(segment => segment.fill === undefined);
   const pinInherits = label.pin === true || (typeof label.pin === 'object' && label.pin.stroke === undefined);
 
   return textInherits || pinInherits;

@@ -7,7 +7,7 @@ describe('StepLabelSchema 新增样式字段', () => {
     const text = [
       '标题',
       { text: '说明', fill: 'gray', font: { size: 10 } },
-      { runs: [{ text: 'x = ' }, { tex: '1' }] },
+      { segments: [{ text: 'x = ' }, { tex: '1' }] },
     ];
 
     expect(StepLabelSchema.parse({ text })).toMatchObject({ text });

@@ -13,7 +13,7 @@ A node must contain its text before satisfying shape and minimum-size constraint
 - **Content box**: the text box plus `padding` on each side
 - **Visual border**: the shape enclosing that content, with a size floor set by `minimumSize`
 
-In the browser, plain text is measured with Canvas `measureText` using its actual font, size, and weight, then wrapped to `maxTextWidth` (by word for Western text and by character for CJK). The text box uses the widest resulting line and a height of line count times `lineHeight` (1.2 times the font size by default), so it includes line spacing; glyph ascent and descent position the baseline. Without a browser measurer, average character widths provide an estimate. Formulas and mixed runs instead align baselines using each fragment's metrics.
+In the browser, plain text is measured with Canvas `measureText` using its actual font, size, and weight, then wrapped to `maxTextWidth` (by word for Western text and by character for CJK). The text box uses the widest resulting line and a height of line count times `lineHeight` (1.2 times the font size by default), so it includes line spacing; glyph ascent and descent position the baseline. Without a browser measurer, average character widths provide an estimate. Formulas and mixed segments instead align baselines using each fragment's metrics.
 
 Follow the same Hello node below. Padding enlarges the middle border; adding the label on the right leaves that border unchanged.
 
@@ -268,7 +268,7 @@ After normalization, every line enters Core through the same color precedence. A
 
 When a Node uses `NodeTextColor.Contrast`, Core reads the final `fill` after style cascading. Only a static color with effective opacity 1 is used to compare black and white text against the background (using WCAG relative luminance) and resolves to `#000000` or `#ffffff`. Missing, translucent, gradient, `var()`, and other unresolved backgrounds use the fixed `currentColor` fallback and emit `TEXT_AUTO_CONTRAST_UNRESOLVED`. The Node's overall `opacity` does not participate in this background decision.
 
-A per-line `font` still participates in that line's width measurement; wrapping, `align`, and `lineHeight` remain Node block-level responsibilities. Use a `{ runs }` IRLine through `text` when one line needs multiple styles.
+A per-line `font` still participates in that line's width measurement; wrapping, `align`, and `lineHeight` remain Node block-level responsibilities. Use a `{ segments }` IRLine through `text` when one line needs multiple styles.
 
 <SourceLinks
   sources={[
@@ -490,7 +490,11 @@ The execution order is:
       description: 'Choose positions, anchors, and connection surfaces',
       url: '/kernel/components/node/extend',
     },
-    { title: 'Node text', description: 'Write multi-line content and mixed runs', url: '/kernel/components/node/text' },
+    {
+      title: 'Node text',
+      description: 'Write multi-line content and mixed segments',
+      url: '/kernel/components/node/text',
+    },
     {
       title: 'label · Label',
       description: 'Place annotations and leader lines',

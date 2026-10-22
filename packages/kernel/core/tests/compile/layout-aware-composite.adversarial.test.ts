@@ -1628,7 +1628,7 @@ describe('layout-aware composite constraints and bounds', () => {
       child: {
         type: 'node' as const,
         position: [0, 0] as [number, number],
-        text: [{ runs: [{ text: 'mixed body' }] }],
+        text: [{ segments: [{ text: 'mixed body' }] }],
       },
     },
     {
@@ -1636,7 +1636,7 @@ describe('layout-aware composite constraints and bounds', () => {
       child: {
         type: 'node' as const,
         position: [0, 0] as [number, number],
-        label: { text: { runs: [{ text: 'mixed label' }] }, position: 'center' as const },
+        label: { text: { segments: [{ text: 'mixed label' }] }, position: 'center' as const },
       },
     },
     {
@@ -1704,12 +1704,12 @@ describe('layout-aware composite constraints and bounds', () => {
             ? {
                 type: 'node',
                 position: [0, 0],
-                label: { text: { runs: [{ tex: 'x' }] }, position: 'center' },
+                label: { text: { segments: [{ tex: 'x' }] }, position: 'center' },
               }
             : {
                 type: 'node',
                 position: [0, 0],
-                text: [{ runs: [{ tex: 'x' }] }],
+                text: [{ segments: [{ tex: 'x' }] }],
               };
         context.layoutChild(child, NaturalLayoutProposal);
 
@@ -1770,7 +1770,7 @@ describe('layout-aware composite constraints and bounds', () => {
           {
             type: 'node',
             position: [0, 0],
-            text: provider === 'measureText' ? 'plain' : [{ runs: [{ tex: 'x' }] }],
+            text: provider === 'measureText' ? 'plain' : [{ segments: [{ tex: 'x' }] }],
           },
           NaturalLayoutProposal,
         );

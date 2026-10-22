@@ -238,7 +238,7 @@ describe('Diagram Foundation lowering', () => {
 
   it('places complete Presentation text in a node-reset heading outside the drawing child', () => {
     const presentation = DiagramPresentationSchema.parse({
-      title: { text: ['Title', { runs: [{ text: 'styled', fill: '#2563eb' }, { tex: 'x^2' }] }] },
+      title: { text: ['Title', { segments: [{ text: 'styled', fill: '#2563eb' }, { tex: 'x^2' }] }] },
       description: { text: 'Description' },
     });
     const surface = lowerDiagramFoundation(resolveFoundation({ presentation }), drawing);

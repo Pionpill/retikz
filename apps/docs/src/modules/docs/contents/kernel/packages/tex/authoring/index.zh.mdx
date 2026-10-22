@@ -1,9 +1,9 @@
 ---
 title: 公式写法
-description: 在 Node 文本中用行内公式、display 公式或显式 math run 编写并排版 LaTeX
+description: 在 Node 文本中用行内公式、display 公式或显式 math segment 编写并排版 LaTeX
 ---
 
-当 Node 文本需要使用 LaTeX 时，仍然通过 `$...$`、`$$...$$` 或显式 math run 编写公式。完成 [安装与接入](/kernel/packages/tex) 后，`@retikz/tex` 会把它们转换为 Core 能消费的字形路径，让 SVG 与 Canvas 复用同一份公式结果。
+当 Node 文本需要使用 LaTeX 时，仍然通过 `$...$`、`$$...$$` 或显式 math segment 编写公式。完成 [安装与接入](/kernel/packages/tex) 后，`@retikz/tex` 会把它们转换为 Core 能消费的字形路径，让 SVG 与 Canvas 复用同一份公式结果。
 
 <ComponentAlert
   type="tip"
@@ -13,24 +13,24 @@ description: 在 Node 文本中用行内公式、display 公式或显式 math ru
 
 ## 基础用法
 
-先看最常见的三种写法：字符串中的行内公式、字符串中的 display 公式，以及可以逐段设置样式的显式 math run。下面的静态 demo 把它们放在同一个 Layout 中，先观察公式在文本中的实际效果：
+先看最常见的三种写法：字符串中的行内公式、字符串中的 display 公式，以及可以逐段设置样式的显式 math segment。下面的静态 demo 把它们放在同一个 Layout 中，先观察公式在文本中的实际效果：
 
 <ComponentPreview
   files="tex-formula-basics"
   size="sm"
-  caption="同一个 Layout 中同时展示 inline、显式 math run 和 display 公式。"
+  caption="同一个 Layout 中同时展示 inline、显式 math segment 和 display 公式。"
 />
 
-字符串中的公式 sugar 会由 Core 解析为 text run 和 math run：
+字符串中的公式 sugar 会由 Core 解析为 text segment 和 math segment：
 
 | 写法                    | 含义                                       |
 | ----------------------- | ------------------------------------------ |
 | `$...$`                 | 行内公式，使用 inline 度量并和文字基线对齐 |
 | `$$...$$`               | display 公式，使用更舒展的上下度量         |
 | `\\$`                   | 字面美元符号，不作为公式分隔符             |
-| `{ tex, displayMode? }` | 显式 math run；可逐段控制颜色或透明度      |
+| `{ tex, displayMode? }` | 显式 math segment；可逐段控制颜色或透明度  |
 
-显式 run 可以和普通 text run 混排：
+显式 segment 可以和普通 text segment 混排：
 
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
@@ -48,7 +48,7 @@ export const Formula = () => {
 
   return (
     <Layout lowerTex={state.lowerTex}>
-      <Node text={[{ runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: '（长度）' }] }]} />
+      <Node text={[{ segments: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: '（长度）' }] }]} />
     </Layout>
   );
 };
@@ -68,7 +68,7 @@ const input = scene({
   children: [
     node({
       id: 'formula',
-      text: [{ runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: '（长度）' }] }],
+      text: [{ segments: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: '（长度）' }] }],
     }),
   ],
 });
@@ -78,7 +78,7 @@ const svg = renderToSvgString(input, { compile: { lowerTex } });
 </DocTab>
 </DocTabs>
 
-`displayMode` 只控制公式度量，不会把一个 Node 拆成多个 Node；多行 LaTeX 环境仍然作为一个公式片段参与同一行布局。中文注释建议使用 text run，由普通文本测量负责，不要依赖 MathJax 的 `\\text{}` 提供 CJK 字体覆盖。
+`displayMode` 只控制公式度量，不会把一个 Node 拆成多个 Node；多行 LaTeX 环境仍然作为一个公式片段参与同一行布局。中文注释建议使用 text segment，由普通文本测量负责，不要依赖 MathJax 的 `\\text{}` 提供 CJK 字体覆盖。
 
 ## 编辑与预览
 

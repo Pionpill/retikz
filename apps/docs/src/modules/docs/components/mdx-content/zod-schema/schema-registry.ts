@@ -751,16 +751,16 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
   TextBlockSchema: { schema: IR.TextBlockSchema, label: 'TextBlock' },
   LineSchema: { schema: IR.LineSchema, label: 'Line' },
-  StyledLineSchema: {
-    schema: IR.StyledLineSchema,
-    label: 'StyledLine',
+  TextLineSchema: {
+    schema: IR.TextLineSchema,
+    label: 'TextLine',
   },
-  MixedLineSchema: {
-    schema: IR.MixedLineSchema,
-    label: 'MixedLine',
+  SegmentedLineSchema: {
+    schema: IR.SegmentedLineSchema,
+    label: 'SegmentedLine',
   },
-  TextRunSchema: { schema: IR.TextRunSchema, label: 'TextRun' },
-  MathRunSchema: { schema: IR.MathRunSchema, label: 'MathRun' },
+  TextSegmentSchema: { schema: IR.TextSegmentSchema, label: 'TextSegment' },
+  MathSegmentSchema: { schema: IR.MathSegmentSchema, label: 'MathSegment' },
   ShapeRefSchema: { schema: IR.ShapeRefSchema, label: 'ShapeRef' },
   BoundarySchema: {
     schema: IR.BoundarySchema,

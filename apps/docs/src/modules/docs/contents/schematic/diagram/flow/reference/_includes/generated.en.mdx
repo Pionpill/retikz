@@ -63,17 +63,17 @@ export type FlowDiagramProps = Omit<InputFlowDiagram, 'entities' | 'groups' | 'l
 
 <ApiTable>
 
-| Member    | Type                                                                                                       | Default | Description                                                               |
-| --------- | ---------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------- |
-| `group?`  | `string`                                                                                                   | —       | Optional Graph visual color grouping identifier.                          |
-| `id`      | `string`                                                                                                   | —       | Flow-wide authored Entity identity.                                       |
-| `kind?`   | `string`                                                                                                   | —       | Open stable kind within the selected Entity role.                         |
-| `layout?` | `InputFlowEntity['layout']`                                                                                | —       | Entity-local size, margin, and text-layout overrides.                     |
-| `rank?`   | `number`                                                                                                   | —       | Optional rank constraint within the nearest Flow scope.                   |
-| `role?`   | `string & {} \| "participant" \| "activity" \| "event" \| "state" \| "gateway" \| "resource" \| "concept"` | —       | Open Graph Entity role; omission resolves to concept.                     |
-| `status?` | `"error" \| "success" \| "warning" \| "disabled"`                                                          | —       | Optional closed Graph semantic status.                                    |
-| `style?`  | `InputFlowEntity['style']`                                                                                 | —       | Entity-local visual overrides.                                            |
-| `text`    | `InputFlowEntity['text']`                                                                                  | —       | Required Core TextBlock with at least one non-whitespace text or TeX run. |
+| Member    | Type                                                                                                       | Default | Description                                                                   |
+| --------- | ---------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------- |
+| `group?`  | `string`                                                                                                   | —       | Optional Graph visual color grouping identifier.                              |
+| `id`      | `string`                                                                                                   | —       | Flow-wide authored Entity identity.                                           |
+| `kind?`   | `string`                                                                                                   | —       | Open stable kind within the selected Entity role.                             |
+| `layout?` | `InputFlowEntity['layout']`                                                                                | —       | Entity-local size, margin, and text-layout overrides.                         |
+| `rank?`   | `number`                                                                                                   | —       | Optional rank constraint within the nearest Flow scope.                       |
+| `role?`   | `string & {} \| "participant" \| "activity" \| "event" \| "state" \| "gateway" \| "resource" \| "concept"` | —       | Open Graph Entity role; omission resolves to concept.                         |
+| `status?` | `"error" \| "success" \| "warning" \| "disabled"`                                                          | —       | Optional closed Graph semantic status.                                        |
+| `style?`  | `InputFlowEntity['style']`                                                                                 | —       | Entity-local visual overrides.                                                |
+| `text`    | `InputFlowEntity['text']`                                                                                  | —       | Required Core TextBlock with at least one non-whitespace text or TeX segment. |
 
 </ApiTable>
 
@@ -360,7 +360,7 @@ export declare const FlowEntity: {
                   | undefined;
               }
             | {
-                runs: Array<
+                segments: Array<
                   | {
                       text: string;
                       fill?: string | number | undefined;
@@ -610,7 +610,7 @@ export declare const FlowRelation: {
                   | undefined;
               }
             | {
-                runs: Array<
+                segments: Array<
                   | {
                       text: string;
                       fill?: string | number | undefined;
@@ -652,7 +652,7 @@ export declare const FlowRelation: {
                         | undefined;
                     }
                   | {
-                      runs: Array<
+                      segments: Array<
                         | {
                             text: string;
                             fill?: string | number | undefined;
@@ -1911,7 +1911,7 @@ export type FlowSmoothRouting = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"getFlowLayoutCatalog"} path={"packages/schematic/diagram/src/flow/providers/layout/registry.ts"} startLine={227}>getFlowLayoutCatalog</ApiSourceLink>
+#### <ApiSourceLink label={"getFlowLayoutCatalog"} path={"packages/schematic/diagram/src/flow/providers/layout/registry.ts"} startLine={229}>getFlowLayoutCatalog</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

@@ -122,11 +122,11 @@ const textBlockHasContent = (value: unknown): boolean => {
     if (typeof line === 'string') return line.length > 0;
     if (line && typeof line === 'object' && 'text' in line && typeof line.text === 'string')
       return line.text.length > 0;
-    if (line && typeof line === 'object' && 'runs' in line && Array.isArray(line.runs)) {
-      return line.runs.some((run: unknown) => {
-        if (!run || typeof run !== 'object') return false;
-        if ('text' in run && typeof run.text === 'string') return run.text.length > 0;
-        if ('tex' in run && typeof run.tex === 'string') return run.tex.length > 0;
+    if (line && typeof line === 'object' && 'segments' in line && Array.isArray(line.segments)) {
+      return line.segments.some((segment: unknown) => {
+        if (!segment || typeof segment !== 'object') return false;
+        if ('text' in segment && typeof segment.text === 'string') return segment.text.length > 0;
+        if ('tex' in segment && typeof segment.tex === 'string') return segment.tex.length > 0;
 
         return false;
       });

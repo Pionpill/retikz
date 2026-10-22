@@ -11,7 +11,7 @@ import type { LineLayoutContext, LowerTex, TextMeasurer } from '../../text';
 import {
   combineOpacity,
   emitInlineLine,
-  inlineRunPaintsOf,
+  inlineSegmentPaintsOf,
   layoutInlineLine,
   normalizeTextMetrics,
   toAlphabeticBaselineY,
@@ -117,7 +117,7 @@ export const emitLabelPrimitive = (
       font,
       warn: texCtx?.warn ?? ((): void => {}),
     };
-    const laidLines = resolvedLines.map(line => layoutInlineLine(line.runs, ctx));
+    const laidLines = resolvedLines.map(line => layoutInlineLine(line.segments, ctx));
     const slots = laidLines.map(line => Math.max(fontSize * LABEL_LINE_HEIGHT_FACTOR, line.ascent + line.descent));
     const blockWidth = Math.max(...laidLines.map(line => line.width));
     const blockHeight = slots.reduce((height, slot) => height + slot, 0);
@@ -152,7 +152,11 @@ export const emitLabelPrimitive = (
 
       return emitInlineLine(
         laid,
-        { color: label.textColor, opacity: labelOpacity, runs: inlineRunPaintsOf(resolvedLines[index].runs) },
+        {
+          color: label.textColor,
+          opacity: labelOpacity,
+          segments: inlineSegmentPaintsOf(resolvedLines[index].segments),
+        },
         left + (blockWidth - laid.width) / 2,
         baselineY,
         round,

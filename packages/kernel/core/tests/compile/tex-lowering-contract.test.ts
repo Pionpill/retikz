@@ -41,7 +41,7 @@ describe('[tex-lowering] multi-path contract', () => {
 
     const [group] = emitInlineLine(
       line,
-      { color: '#333', opacity: 0.5, runs: [{ fill: '#0af', opacity: 0.8 }] },
+      { color: '#333', opacity: 0.5, segments: [{ fill: '#0af', opacity: 0.8 }] },
       0,
       6,
       value => value,
@@ -90,7 +90,7 @@ describe('[tex-lowering] multi-path contract', () => {
       }),
     });
 
-    const [group] = emitInlineLine(line, { runs: [{}] }, 0, 1, value => value) as Array<GroupPrim>;
+    const [group] = emitInlineLine(line, { segments: [{}] }, 0, 1, value => value) as Array<GroupPrim>;
     const [path] = group.children as Array<PathPrim>;
 
     expect(path).not.toHaveProperty('fill');
@@ -121,7 +121,7 @@ describe('[tex-lowering] multi-path contract', () => {
     command.to[0] = 99;
     lowered.paths.length = 0;
 
-    const [group] = emitInlineLine(line, { runs: [{}] }, 0, 1, value => value) as Array<GroupPrim>;
+    const [group] = emitInlineLine(line, { segments: [{}] }, 0, 1, value => value) as Array<GroupPrim>;
     const [path] = group.children as Array<PathPrim>;
 
     expect(path.commands).toEqual([{ kind: 'move', to: [0, 0] }]);

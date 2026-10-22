@@ -5,11 +5,11 @@ import type {
   IRBoundaryLabel,
   IRPathLabel,
   IRLine,
-  IRMathRun,
+  IRMathSegment,
   IRPathBase,
   IRPosition,
   IRStep,
-  IRTextRun,
+  IRTextSegment,
 } from '../../schemas';
 import type { CompileOwnerOutputDefinition, CompileOwnerOutputPublisher } from '../observation';
 import type { PathCommand, PathPrim, ScenePrimitive } from '../scene';
@@ -81,13 +81,13 @@ export type ResolvedPathKindAppearance = Readonly<
     >
 >;
 
-type PathKindInlineRun<T> = T extends unknown ? Omit<T, 'fill'> & { fill?: string } : never;
+type PathKindInlineSegment<T> = T extends unknown ? Omit<T, 'fill'> & { fill?: string } : never;
 
 type PathKindLabelTextLine =
   | string
   | (Omit<Extract<IRLine, { text: string }>, 'fill'> & { fill?: string })
   | {
-      runs: Array<PathKindInlineRun<IRTextRun | IRMathRun>>;
+      segments: Array<PathKindInlineSegment<IRTextSegment | IRMathSegment>>;
     };
 
 type PathKindLabelText = PathKindLabelTextLine | Array<PathKindLabelTextLine>;

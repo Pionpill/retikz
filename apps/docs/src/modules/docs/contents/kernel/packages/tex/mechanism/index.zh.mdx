@@ -19,9 +19,9 @@ description: 沿一次公式请求理解 TeX 如何经引擎排版、SVG lowerin
 
 ## 识别公式
 
-math run 是文本行中的一个公式片段，与普通文字片段相区别。宿主注入 `lowerTex` 后，Core 才把字符串中的 `$...$` / `$$...$$` 识别为公式片段：前者使用行内（inline）模式，后者使用展示（display）模式。例子中的 `$x^2$` 因此成为公式内容 `x^2` 与 inline 模式；没有 lowerer 时，它仍是普通文字。
+math segment 是文本行中的一个公式片段，与普通文字片段相区别。宿主注入 `lowerTex` 后，Core 才把字符串中的 `$...$` / `$$...$$` 识别为公式片段：前者使用行内（inline）模式，后者使用展示（display）模式。例子中的 `$x^2$` 因此成为公式内容 `x^2` 与 inline 模式；没有 lowerer 时，它仍是普通文字。
 
-调用方也可以直接在结构化文本中声明公式片段，这就是“显式 math run”，不需要从美元符号中识别。它已经明确要求公式排版，因此缺少 lowerer 时会跳过该片段并报告诊断，而不是退回普通文字。
+调用方也可以直接在结构化文本中声明公式片段，这就是“显式 math segment”，不需要从美元符号中识别。它已经明确要求公式排版，因此缺少 lowerer 时会跳过该片段并报告诊断，而不是退回普通文字。
 
 Core 将公式内容、`displayMode` 和字号传入同步 `LowerTex`。宿主颜色留到绘制时解析，不参与公式降解。这一步把文本布局与公式引擎隔开，Core 不需要知道 MathJax 如何排版。
 
@@ -106,13 +106,13 @@ Core 把每条字形路径发为 `PathPrim`，用带基线平移的 `GroupPrim` 
 
 表中的“错误节点”指返回的 SVG 中含有 MathJax 的 `data-mml-node="merror"` 标记，不是 engine 返回了另一种数据类型。
 
-| 场景                           | 可观察结果                                                                                             |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| 未注入 lowerer 的字符串公式    | `$...$` / `$$...$$` 保持普通文字，不进入公式解析                                                       |
-| 未注入 lowerer 的显式 math run | 跳过该片段并报告 `TEX_LOWERER_MISSING`；同一行的 text run 继续渲染                                     |
-| MathJax 返回错误节点           | lowerer 返回 `null`，报告 `mathjax-error`，Core 再报告 `TEX_INVALID`；该确定性失败会缓存               |
-| SVG 不支持或格式错误           | 拒绝整段公式，报告 `unsupported-svg` 或 `malformed-svg`，Core 再报告 `TEX_INVALID`；该确定性失败会缓存 |
-| `engine.convert` 抛出异常      | lowerer 返回 `null`，报告 `engine-error`，Core 再报告 `TEX_INVALID`；该瞬态失败不缓存                  |
+| 场景                               | 可观察结果                                                                                             |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| 未注入 lowerer 的字符串公式        | `$...$` / `$$...$$` 保持普通文字，不进入公式解析                                                       |
+| 未注入 lowerer 的显式 math segment | 跳过该片段并报告 `TEX_LOWERER_MISSING`；同一行的 text segment 继续渲染                                 |
+| MathJax 返回错误节点               | lowerer 返回 `null`，报告 `mathjax-error`，Core 再报告 `TEX_INVALID`；该确定性失败会缓存               |
+| SVG 不支持或格式错误               | 拒绝整段公式，报告 `unsupported-svg` 或 `malformed-svg`，Core 再报告 `TEX_INVALID`；该确定性失败会缓存 |
+| `engine.convert` 抛出异常          | lowerer 返回 `null`，报告 `engine-error`，Core 再报告 `TEX_INVALID`；该瞬态失败不缓存                  |
 
 <SourceLinks
   sources={[

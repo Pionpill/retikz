@@ -130,6 +130,8 @@ import { Node } from '@retikz/react';
 
 `label.pin` adds a **leader line** from the node border to the label: `pin: true` is a default thin solid line (inherits the label color); `pin: { stroke, strokeWidth, dashPattern, dashOffset }` customizes it; omitted / `false` = no leader. Its endpoint is the exact intersection of the placement ray and the rotated visual box, with no hidden padding; the preceding box geometry still owns label placement.
 
+Leader lines share the same width and dash constraints as Path: `strokeWidth` is nonnegative, defaults to `1`, and hides the line when set to `0`; `dashPattern` is a nonempty array of nonnegative lengths; `dashOffset` accepts negative values.
+
 <ComponentPreview
   files={['node-label-rotate-pin', 'node-label-rotate-pin.preview.tsx']}
   size="lg"
@@ -224,7 +226,11 @@ These members control label attachment, placement, and visual style. See the [AP
 
 <LinkedSections
   items={[
-    { title: 'Node text', description: 'Write multi-line content and mixed runs', url: '/kernel/components/node/text' },
+    {
+      title: 'Node text',
+      description: 'Write multi-line content and mixed segments',
+      url: '/kernel/components/node/text',
+    },
     {
       title: 'Implementation',
       description: 'Understand sizing, text, and reference timing',

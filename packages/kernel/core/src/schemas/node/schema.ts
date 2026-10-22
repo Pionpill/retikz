@@ -224,7 +224,7 @@ const NodeBaseSchema = strictObject({
     'Rotation in degrees around the node center; positive is visually clockwise.',
   ),
   text: TextBlockSchema.optional().describe(
-    'Optional node text content. Accepts a string, an array of lines, styled line objects, or mixed text/math runs. Newlines are hard line breaks; math sugar requires lowerTex.',
+    'Optional node text content. Accepts a string, an array of lines, styled line objects, or mixed text/math segments. Newlines are hard line breaks; math sugar requires lowerTex.',
   ),
   cornerRadius: NonNegativeNumberSchema.optional().describe(
     'Top-level corner radius in user units. Only effective on `rectangle` shape.',

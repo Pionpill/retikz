@@ -23,11 +23,11 @@ export const texConversionFlowI18n: Record<Lang, TexConversionFlowI18n> = {
     label7: '公式片段',
   },
   en: {
-    label1: ['layoutInlineLine()', { text: 'Recognized math run', fill: 'gray', font: { size: 'sm' } }],
+    label1: ['layoutInlineLine()', { text: 'Recognized math segment', fill: 'gray', font: { size: 'sm' } }],
     label2: ['lowerTex()', { text: 'Created by createLowerTex()', fill: 'gray', font: { size: 'sm' } }],
     label3: ['engine.convert()', { text: 'Typeset as SVG', fill: 'gray', font: { size: 'sm' } }],
     label4: ['lowerMathJaxSvg()', { text: 'Convert glyphs and metrics', fill: 'gray', font: { size: 'sm' } }],
     label6: ['layoutInlineLine()', { text: 'Baseline layout and PathPrim', fill: 'gray', font: { size: 'sm' } }],
-    label7: 'math run',
+    label7: 'math segment',
   },
 };

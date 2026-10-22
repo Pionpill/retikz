@@ -13,17 +13,19 @@ export const TextAlignSchema = zodEnum(NodeTextAlign).describe('Text alignment w
 export const LineHeightSchema = PositiveNumberSchema.describe('Text line height in user units.');
 
 /** 校验混排行中的纯文本片段及其局部视觉覆盖 */
-export const TextRunSchema = strictObject({
+export const TextSegmentSchema = strictObject({
   text: string().describe('Text segment content within a mixed text+math line.'),
   fill: ContextualColorSchema.optional().describe(
-    'Per-run text color: an exact CSS color or a weight derived from the effective host text color.',
+    'Per-segment text color: an exact CSS color or a weight derived from the effective host text color.',
   ),
-  opacity: OpacitySchema.optional().describe('Per-run opacity.'),
-  font: FontSchema.optional().describe('Per-run font overrides; missing fields inherit from the line / block font.'),
+  opacity: OpacitySchema.optional().describe('Per-segment opacity.'),
+  font: FontSchema.optional().describe(
+    'Per-segment font overrides; missing fields inherit from the line / block font.',
+  ),
 }).describe('A text segment in a mixed line (same fields as a line object).');
 
 /** 校验与相邻文本共用基线的公式片段及其局部颜色和透明度 */
-export const MathRunSchema = strictObject({
+export const MathSegmentSchema = strictObject({
   tex: string().describe(
     'LaTeX source for this inline formula segment, rendered to glyph paths by an injected lowerTex capability.',
   ),
@@ -35,27 +37,27 @@ export const MathRunSchema = strictObject({
   fill: ContextualColorSchema.optional().describe(
     'Glyph color for this formula segment: an exact CSS color or a weight derived from the effective host text color.',
   ),
-  opacity: OpacitySchema.optional().describe('Per-run opacity.'),
+  opacity: OpacitySchema.optional().describe('Per-segment opacity.'),
 }).describe(
   'Inline math segment in a mixed line, baseline-aligned to surrounding text. Requires an injected lowerTex capability.',
 );
 
 /** 校验从左到右排列、共用基线的非空文本与公式片段序列 */
-export const MixedLineSchema = strictObject({
-  runs: array(union([TextRunSchema, MathRunSchema]))
+export const SegmentedLineSchema = strictObject({
+  segments: array(union([TextSegmentSchema, MathSegmentSchema]))
     .min(1)
     .describe('Text and math segments laid out left-to-right on a shared baseline.'),
 }).describe(
-  'A line composed of text and math runs laid out left-to-right on a shared baseline (canonical form of the `$...$` string sugar).',
+  'A line composed of text and math segments laid out left-to-right on a shared baseline (canonical form of the `$...$` string sugar).',
 );
 
 /** 校验单行标签内容，接受文本语法糖或显式混排片段 */
-export const LabelTextContentSchema = union([string(), MixedLineSchema]).describe(
-  'Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ runs }` mixed text+math line. Single-line.',
+export const LabelTextContentSchema = union([string(), SegmentedLineSchema]).describe(
+  'Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ segments }` mixed text+math line. Single-line.',
 );
 
 /** 校验带有逐行颜色、透明度和字体覆盖的文本行 */
-export const StyledLineSchema = object({
+export const TextLineSchema = object({
   text: string().describe('Line content'),
   fill: ContextualColorSchema.optional().describe(
     'Per-line text color: an exact CSS color or a weight derived from the effective block text color.',
@@ -86,13 +88,13 @@ export const LabelVisualStyleSchema = strictObject(createLabelVisualStyleShape()
 );
 
 /** 校验普通字符串、带样式文本行或文本与公式混排行 */
-export const LineSchema = union([string(), StyledLineSchema, MixedLineSchema]).describe(
-  'Single line of text: bare string for default styling (with `$...$` math sugar), an object with per-line `fill` / `opacity` / `font` overrides, or a `{ runs }` mixed text+math line.',
+export const LineSchema = union([string(), TextLineSchema, SegmentedLineSchema]).describe(
+  'Single line of text: bare string for default styling (with `$...$` math sugar), an object with per-line `fill` / `opacity` / `font` overrides, or a `{ segments }` mixed text+math line.',
 );
 
 /** 校验单字符串文本块或非空文本行序列 */
 export const TextBlockSchema = union([string(), array(LineSchema).min(1)]).describe(
-  'Text block: a single string for one line, or a non-empty array of line specs (string for default, object for per-line overrides, `{ runs }` for mixed text+math).',
+  'Text block: a single string for one line, or a non-empty array of line specs (string for default, object for per-line overrides, `{ segments }` for mixed text+math).',
 );
 
 /** 宿主已提供边界锚点时的共享标签配置 */

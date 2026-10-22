@@ -360,7 +360,7 @@ export declare const FlowEntity: {
                   | undefined;
               }
             | {
-                runs: Array<
+                segments: Array<
                   | {
                       text: string;
                       fill?: string | number | undefined;
@@ -610,7 +610,7 @@ export declare const FlowRelation: {
                   | undefined;
               }
             | {
-                runs: Array<
+                segments: Array<
                   | {
                       text: string;
                       fill?: string | number | undefined;
@@ -652,7 +652,7 @@ export declare const FlowRelation: {
                         | undefined;
                     }
                   | {
-                      runs: Array<
+                      segments: Array<
                         | {
                             text: string;
                             fill?: string | number | undefined;
@@ -1914,7 +1914,7 @@ export type FlowSmoothRouting = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"getFlowLayoutCatalog"} path={"packages/schematic/diagram/src/flow/providers/layout/registry.ts"} startLine={227}>getFlowLayoutCatalog</ApiSourceLink>
+#### <ApiSourceLink label={"getFlowLayoutCatalog"} path={"packages/schematic/diagram/src/flow/providers/layout/registry.ts"} startLine={229}>getFlowLayoutCatalog</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2283,6 +2283,8 @@ export type IRFlowEndpoint = ZodInfer<typeof FlowEndpointSchema>;
     '/case/"kind"/string/"linear"/field/"excludeFromBounds"': '不计入本 Layout 对外结构边界的直接子项 id',
     '/case/"kind"/string/"linear"/field/"rank"': '父 Flow 作用域内的可选层级约束',
     '/case/"kind"/string/"linear"/field/"itemWidth"': '直接 Entity 固定宽度、match-largest 等宽，或 fill 均分新增宽度',
+    '/case/"kind"/string/"linear"/field/"containerHeight"':
+      '横向 linear 布局按直接子 Group 的最大自然高度统一外框，节点保持自然尺寸，单一纵向线性内容的剩余高度均分到间隙',
     '/case/"kind"/string/"linear"/field/"containerWidth"': '纵向容器为直接子容器分配最大自然宽度',
     '/case/"kind"/string/"linear"/field/"children"': '非空的直接子项 id 有序列表',
     '/case/"kind"/string/"linear"/field/"direction"': '直接子项的必填排列方向',

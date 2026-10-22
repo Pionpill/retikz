@@ -250,8 +250,8 @@ const translations: Record<string, string> = {
     "One object or an array; each label accepts `text`, optional `position` and `distance`, and inherited styles. Position accepts an eight-direction enum or angle in degrees (`label=30:foo` equals `position: 30`), defaulting to 'top'; distance defaults to 12",
   "六种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例 partway `{ between: [A, B], fraction }` / 锚点对齐 `{ kind: 'anchor', target, selfAnchor? }`。锚点对齐会先完成当前 Node 的文本、shape、padding、margin、scale、rotate 布局，再整体平移；双方 anchor 缺省为 center":
     "Six forms: Cartesian `[x, y]`, polar `{ angle, radius, origin? }`, relative `{ direction, of, distance? }`, offset `{ of, offset }`, partway `{ between: [A, B], fraction }`, or anchor alignment `{ kind: 'anchor', target, selfAnchor? }`. Anchor alignment lays out the node's text, shape, padding, margin, scale, and rotation before translating the whole node; both anchors default to center",
-  '`string` 单行（可含 `$...$` 公式）/ `Array<string | IRLine>` 多行可对单行覆盖 fill / opacity / font，\n或行内混排 `{ runs: [{ text }, { tex }] }`（每 run 可单独着色）':
-    'A single-line `string` (optionally containing `$...$` formulas), multiline `Array<string | IRLine>` with per-line fill, opacity, and font overrides, or inline mixed content `{ runs: [{ text }, { tex }] }` with per-run colors',
+  '`string` 单行（可含 `$...$` 公式）/ `Array<string | IRLine>` 多行可对单行覆盖 fill / opacity / font，\n或行内混排 `{ segments: [{ text }, { tex }] }`（每 segment 可单独着色）':
+    'A single-line `string` (optionally containing `$...$` formulas), multiline `Array<string | IRLine>` with per-line fill, opacity, and font overrides, or inline mixed content `{ segments: [{ text }, { tex }] }` with per-segment colors',
   '路径级时间轴动画；渲染端播放或降级为静态，不参与布局':
     'Path timeline animations, played by the renderer or rendered statically, without participating in layout',
   路径级箭头方向: 'Arrow direction for the path',

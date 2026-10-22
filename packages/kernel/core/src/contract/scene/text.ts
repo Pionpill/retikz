@@ -1,6 +1,6 @@
 import type { JsonObject } from '@retikz/foundation';
 
-import type { IRAnimationTrack, IRFont, IRTextRun } from '../../schemas';
+import type { IRAnimationTrack, IRFont, IRTextSegment } from '../../schemas';
 
 type SceneFontWeight = NonNullable<IRFont['weight']> | (string & {});
 
@@ -37,7 +37,7 @@ export type TextLine = {
    * 行级透明度 0..1 覆盖；缺省走块级
    * @default TextPrim.opacity
    */
-  opacity?: IRTextRun['opacity'];
+  opacity?: IRTextSegment['opacity'];
 };
 
 /**

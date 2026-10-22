@@ -19,11 +19,11 @@ export const previewSource = {
 
 /** 右侧说明框：每行常规文字 + `$...$` 公式混排，线名按颜色着色（对照 tikz.dev/tutorial 的 information text） */
 const LEGEND = [
-  { runs: [{ text: '角 ' }, { tex: '\\alpha = 30^\\circ = \\frac{\\pi}{6}' }] },
-  { runs: [{ text: '红线', fill: 'red' }, { text: ' ' }, { tex: '\\sin\\alpha = \\frac{1}{2}' }] },
-  { runs: [{ text: '蓝线', fill: 'dodgerblue' }, { text: ' ' }, { tex: '\\cos\\alpha = \\frac{\\sqrt{3}}{2}' }] },
+  { segments: [{ text: '角 ' }, { tex: '\\alpha = 30^\\circ = \\frac{\\pi}{6}' }] },
+  { segments: [{ text: '红线', fill: 'red' }, { text: ' ' }, { tex: '\\sin\\alpha = \\frac{1}{2}' }] },
+  { segments: [{ text: '蓝线', fill: 'dodgerblue' }, { text: ' ' }, { tex: '\\cos\\alpha = \\frac{\\sqrt{3}}{2}' }] },
   {
-    runs: [
+    segments: [
       { text: '橙线', fill: 'darkorange' },
       { text: ' ' },
       { tex: '\\tan\\alpha = \\frac{\\sin\\alpha}{\\cos\\alpha} = \\frac{1}{\\sqrt{3}}' },
@@ -141,7 +141,7 @@ const Demo: FC = () => {
       <Coordinate id="t" position={[100, -TAN30 * 100]} />
       <Draw way={[[0, 0], 't']} />
 
-      {/* 右侧说明框：浅灰虚线框 + 文字与公式混排，每行一个 `{ runs }` */}
+      {/* 右侧说明框：浅灰虚线框 + 文字与公式混排，每行一个 `{ segments }` */}
       <Node
         position={[400, 0]}
         shape="rectangle"

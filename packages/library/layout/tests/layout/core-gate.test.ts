@@ -299,7 +299,7 @@ describe('Layout Core layout capability gate', () => {
     const mixed = probeChild(
       {
         ...plainNode(''),
-        text: [{ runs: [{ text: 'aa ' }, { tex: 'x' }] }],
+        text: [{ segments: [{ text: 'aa ' }, { tex: 'x' }] }],
       },
       exactAtomicProposal,
       { lowerTex },
@@ -307,7 +307,7 @@ describe('Layout Core layout capability gate', () => {
     const tex = probeChild(
       {
         ...plainNode(''),
-        text: [{ runs: [{ tex: 'x' }] }],
+        text: [{ segments: [{ tex: 'x' }] }],
       },
       exactAtomicProposal,
       { lowerTex },
@@ -338,7 +338,7 @@ describe('Layout Core layout capability gate', () => {
                 id: 'selected-node',
                 position: [0, 0],
                 shape: 'layout-core-gate-shape',
-                text: [{ runs: [{ tex: 'x' }] }],
+                text: [{ segments: [{ tex: 'x' }] }],
                 layout: { padding: 0, margin: 0 },
               },
             ],

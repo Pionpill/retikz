@@ -456,7 +456,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
           type: 'node',
           id: 'same',
           position: [20, 0],
-          text: [{ runs: [{ tex: 'x' }] }],
+          text: [{ segments: [{ tex: 'x' }] }],
         });
         const replay = context.replay(laid);
 

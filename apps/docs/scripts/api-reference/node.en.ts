@@ -77,8 +77,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Visual shape: use a name when no parameters are required, or `{ type, params }` for parameterized shapes; register optional shapes through Layout.extensions.shapes',
   '实例视觉覆盖，逐字段覆盖继承默认值': 'Instance visual overrides, applied field by field over inherited defaults',
   '显式 text，优先级高于 children': 'Explicit text, taking precedence over children',
-  '`string` 单行（可含 `$...$` 公式）/ `Array<string | IRLine>` 多行可对单行覆盖 fill / opacity / font，\n或行内混排 `{ runs: [{ text }, { tex }] }`（每 run 可单独着色）':
-    'A `string` (optionally containing `$...$` formulas), `Array<string | IRLine>` with per-line fill/opacity/font overrides, or mixed runs `{ runs: [{ text }, { tex }] }` with per-run colors',
+  '`string` 单行（可含 `$...$` 公式）/ `Array<string | IRLine>` 多行可对单行覆盖 fill / opacity / font，\n或行内混排 `{ segments: [{ text }, { tex }] }`（每 segment 可单独着色）':
+    'A `string` (optionally containing `$...$` formulas), `Array<string | IRLine>` with per-line fill/opacity/font overrides, or mixed segments `{ segments: [{ text }, { tex }] }` with per-segment colors',
   '同层元素的栈序；大者在上，同值保持声明顺序':
     'Stacking among siblings; higher values draw on top and ties preserve declaration order',
   'Node 内单行文字的内容与样式覆盖': 'Content and style overrides for one text line inside Node',

@@ -263,7 +263,7 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
 
 当 Node 使用 `NodeTextColor.Contrast` 时，Core 在样式级联后读取最终 `fill`。只有静态且有效不透明度为 1 的颜色参与黑白文字与背景的对比度计算（WCAG 相对明度），并解析成 `#000000` 或 `#ffffff`；缺省、半透明、gradient、`var()` 等无法闭合求值的背景使用固定 `currentColor`，同时发出 `TEXT_AUTO_CONTRAST_UNRESOLVED`。Node 的整体 `opacity` 不参与背景判断。
 
-行级 `font` 仍参与当前行的宽度测量；换行、`align` 与 `lineHeight` 继续由 Node 的块级配置负责。同一行需要多段样式时，使用 `text` prop 的 `{ runs }` IRLine。
+行级 `font` 仍参与当前行的宽度测量；换行、`align` 与 `lineHeight` 继续由 Node 的块级配置负责。同一行需要多段样式时，使用 `text` prop 的 `{ segments }` IRLine。
 
 <SourceLinks
   sources={[

@@ -21,8 +21,14 @@ describe('inline layout and paint', () => {
       warn: () => undefined,
     });
     const snapshot = JSON.stringify(layout);
-    const first = emitInlineLine(layout, { color: 'blue', opacity: 0.5, runs: [{}, {}] }, 0, 8, n => n);
-    const next = emitInlineLine(layout, { color: 'green', opacity: 0.8, runs: [{ fill: 'purple' }, {}] }, 0, 8, n => n);
+    const first = emitInlineLine(layout, { color: 'blue', opacity: 0.5, segments: [{}, {}] }, 0, 8, n => n);
+    const next = emitInlineLine(
+      layout,
+      { color: 'green', opacity: 0.8, segments: [{ fill: 'purple' }, {}] },
+      0,
+      8,
+      n => n,
+    );
     expect(first[0]).toMatchObject({ fill: 'blue', opacity: 0.5 });
     expect(next[0]).toMatchObject({ fill: 'purple', opacity: 0.8 });
     expect(next[1]).toMatchObject({ children: [{ fill: 'green' }, { fill: 'red' }] });
@@ -40,7 +46,7 @@ describe('inline layout and paint', () => {
       font: { size: 16 },
       warn: () => undefined,
     });
-    expect(emitInlineLine(layout, { runs: [{ fill: 'red' }, { fill: 'blue' }] }, 0, 8, n => n)).toMatchObject([
+    expect(emitInlineLine(layout, { segments: [{ fill: 'red' }, { fill: 'blue' }] }, 0, 8, n => n)).toMatchObject([
       { fill: 'blue' },
     ]);
   });

@@ -25,7 +25,7 @@ SVG 或 Canvas
 |        | `children?`       | `ReactNode`                                                                                                                   | —             | children 内容：文本<br />与 `text` 二选一、`text` 优先；支持字符串内嵌 `\\n` / 模板字面量 / 字符串数组 / 混 `<Text>` 带样式行。<br />字符串里可写行内公式 `$...$`（inline）/ `$$...$$`（display），编译期在注入 `<Layout lowerTex>` 时解析；未注入则字面渲染                                                                                                                                                 |
 |        | `id?`             | `string`                                                                                                                      | —             | 节点 id；路径端点和其他节点通过它引用本节点                                                                                                                                                                                                                                                                                                                                                                  |
 |        | `label?`          | `InputNodeLabel \| Array<InputNodeLabel>`                                                                                     | —             | 节点附加标签，支持单对象或数组<br />标签可附着到命名方向、中心、角度或边界比例位置；支持内外侧摆放、旋转、切向对齐和外侧引线，不参与节点形状尺寸计算。缺省位置为 top，间距继承编译配置 labelDistance                                                                                                                                                                                                         |
-|        | `text?`           | `string \| Array<IRLine>`                                                                                                     | —             | 显式 text，优先级高于 children<br />`string` 单行（可含 `$...$` 公式）/ `Array<string \| IRLine>` 多行可对单行覆盖 fill / opacity / font，<br />或行内混排 `{ runs: [{ text }, { tex }] }`（每 run 可单独着色）                                                                                                                                                                                              |
+|        | `text?`           | `string \| Array<IRLine>`                                                                                                     | —             | 显式 text，优先级高于 children<br />`string` 单行（可含 `$...$` 公式）/ `Array<string \| IRLine>` 多行可对单行覆盖 fill / opacity / font，<br />或行内混排 `{ segments: [{ text }, { tex }] }`（每 segment 可单独着色）                                                                                                                                                                                      |
 | 几何   | `boundary?`       | `IRBoundary`                                                                                                                  | `'shape'`     | 连线接触的边界；省略时沿用视觉形状，也可选择已注册的连接面或形状，不改变节点外观                                                                                                                                                                                                                                                                                                                             |
 |        | `cornerRadius?`   | `number`                                                                                                                      | —             | 圆角半径（用户单位）；只对 `rectangle` shape 生效。建议用形状 params 形式 `shape={{ type: 'rectangle', params: { cornerRadius } }}`                                                                                                                                                                                                                                                                          |
 |        | `layout?`         | `IRNodeLayout`                                                                                                                | —             | 节点尺寸、间距与文本布局                                                                                                                                                                                                                                                                                                                                                                                     |
@@ -739,7 +739,7 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNodeLabel"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={28}>IRNodeLabel</ApiSourceLink> / <ApiSourceLink label={"NodeLabelSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={95}>NodeLabelSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRNodeLabel"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={28}>IRNodeLabel</ApiSourceLink> / <ApiSourceLink label={"NodeLabelSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={84}>NodeLabelSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -797,7 +797,7 @@ export type IRNodeLabel = ZodInfer<typeof NodeLabelSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNodeLayout"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={47}>IRNodeLayout</ApiSourceLink> / <ApiSourceLink label={"NodeLayoutSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={189}>NodeLayoutSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRNodeLayout"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={47}>IRNodeLayout</ApiSourceLink> / <ApiSourceLink label={"NodeLayoutSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={179}>NodeLayoutSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -847,7 +847,7 @@ export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNodeStyle"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={45}>IRNodeStyle</ApiSourceLink> / <ApiSourceLink label={"NodeStyleSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={174}>NodeStyleSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRNodeStyle"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={45}>IRNodeStyle</ApiSourceLink> / <ApiSourceLink label={"NodeStyleSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={164}>NodeStyleSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -911,7 +911,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"NodeSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={260}>NodeSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NodeSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={255}>NodeSchema</ApiSourceLink>
 
 <ZodSchema
   name="NodeSchema"
@@ -949,7 +949,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
   }}
 />
 
-#### <ApiSourceLink label={"NodeLabelPinSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={83}>NodeLabelPinSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NodeLabelPinSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={72}>NodeLabelPinSchema</ApiSourceLink>
 
 <ZodSchema
   name="NodeLabelPinSchema"
@@ -962,7 +962,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
   }}
 />
 
-#### <ApiSourceLink label={"BoundarySchema"} path={"packages/kernel/core/src/schemas/boundary/schema.ts"} startLine={10}>BoundarySchema</ApiSourceLink>
+#### <ApiSourceLink label={"BoundarySchema"} path={"packages/kernel/core/src/schemas/boundary/schema.ts"} startLine={8}>BoundarySchema</ApiSourceLink>
 
 <ZodSchema
   name="BoundarySchema"
@@ -970,7 +970,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
   descriptions={{}}
 />
 
-#### <ApiSourceLink label={"BoundaryLabelSchema"} path={"packages/kernel/core/src/schemas/text/schema.ts"} startLine={104}>BoundaryLabelSchema</ApiSourceLink>
+#### <ApiSourceLink label={"BoundaryLabelSchema"} path={"packages/kernel/core/src/schemas/text/schema.ts"} startLine={101}>BoundaryLabelSchema</ApiSourceLink>
 
 Kernel 共享的边界标签契约。Node 复用其中的旋转、放置和对齐字段，同时保留自己的位置、引线、单行内容及默认值；Ribbon 端点直接使用此 Schema。
 

@@ -251,7 +251,7 @@ it('uses the specified endpoint section for radial rotation and tangent alignmen
 it('uses arc cap extrema for rich text labels', () => {
   const scene = labeledScene(
     { name: 'arc', params: { center: [0, 0], radius: 10 } },
-    { text: [{ runs: [{ text: 'rich', fill: 'red' }] }] },
+    { text: [{ segments: [{ text: 'rich', fill: 'red' }] }] },
   );
 
   expect(textsOf(scene.primitives)).toContain('rich');

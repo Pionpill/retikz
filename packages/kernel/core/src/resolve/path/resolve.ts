@@ -6,13 +6,13 @@ import type {
   IRArrowMark,
   IRPathLabel,
   IRLine,
-  IRMathRun,
+  IRMathSegment,
   IRPaintValue,
   IRPathBase,
   IRPosition,
   IRStep,
   IRTarget,
-  IRTextRun,
+  IRTextSegment,
 } from '../../schemas';
 import { BendAngleSchema, BuiltinPathKind, SmoothTensionSchema } from '../../schemas';
 import {
@@ -29,7 +29,7 @@ import { resolvePaint } from '../resource';
 import { resolveGraphicOpacity } from '../style';
 import { resolveContextualColor, resolveEffectivePath } from '../style';
 import { resolveDropShadow } from '../style';
-import type { ResolvedInlineSourceRun, ResolvedLabelTextBlock, ResolvedTextLine } from '../text';
+import type { ResolvedInlineSourceSegment, ResolvedLabelTextBlock, ResolvedTextLine } from '../text';
 import { resolvePathKind } from './provider';
 import type {
   CanonicalPathLabel,
@@ -212,14 +212,14 @@ const resolvePathPaint = (
 ): Exclude<IRPaintValue, number> | undefined =>
   typeof value === 'number' ? resolveContextualColor(value, { masterColor, mode: context.mode, fieldPath }) : value;
 
-/** 确定 path label 中单个文字或公式 run 的派生颜色 */
-const resolveLabelRunColor = (
-  run: IRTextRun | IRMathRun,
+/** 确定 path label 中单个文字或公式 segment 的派生颜色 */
+const resolveLabelSegmentColor = (
+  segment: IRTextSegment | IRMathSegment,
   masterColor: string | undefined,
   context: Pick<PathResolveContext, 'mode'>,
   fieldPath: string,
-): ResolvedInlineSourceRun => {
-  const { fill, ...source } = run;
+): ResolvedInlineSourceSegment => {
+  const { fill, ...source } = segment;
   return {
     ...source,
     ...(fill === undefined
@@ -234,7 +234,7 @@ const resolveLabelRunColor = (
   };
 };
 
-/** 确定 path label 单行内容中各 run 的派生颜色 */
+/** 确定 path label 单行内容中各 segment 的派生颜色 */
 const resolvePathLabelTextLine = (
   text: IRLine,
   masterColor: string | undefined,
@@ -242,10 +242,10 @@ const resolvePathLabelTextLine = (
   fieldPath: string,
 ): ResolvedTextLine => {
   if (typeof text === 'string') return text;
-  if ('runs' in text) {
+  if ('segments' in text) {
     return {
-      runs: text.runs.map((run, index) =>
-        resolveLabelRunColor(run, masterColor, context, `${fieldPath}.runs[${index}]`),
+      segments: text.segments.map((segment, index) =>
+        resolveLabelSegmentColor(segment, masterColor, context, `${fieldPath}.segments[${index}]`),
       ),
     };
   }
@@ -271,7 +271,7 @@ const resolvePathLabelText = (
     ? text.map((line, index) => resolvePathLabelTextLine(line, masterColor, context, `${fieldPath}[${index}]`))
     : resolvePathLabelTextLine(text, masterColor, context, fieldPath);
 
-/** 确定一个 path label 的文字主色与 run 颜色 */
+/** 确定一个 path label 的文字主色与 segment 颜色 */
 export const resolvePathLabelColors = (
   label: IRPathLabel,
   masterColor: string | undefined,

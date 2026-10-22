@@ -5,22 +5,22 @@ import type {
   LabelTextContentSchema,
   LabelVisualStyleSchema,
   LineSchema,
-  MathRunSchema,
-  MixedLineSchema,
+  MathSegmentSchema,
+  SegmentedLineSchema,
   TextBlockSchema,
-  TextRunSchema,
+  TextSegmentSchema,
   TextVisualSchema,
   TextLayoutSchema,
 } from './schema';
 
 /** 混排文字段 IR 类型 */
-export type IRTextRun = ZodInfer<typeof TextRunSchema>;
+export type IRTextSegment = ZodInfer<typeof TextSegmentSchema>;
 
 /** 混排公式段 IR 类型 */
-export type IRMathRun = ZodInfer<typeof MathRunSchema>;
+export type IRMathSegment = ZodInfer<typeof MathSegmentSchema>;
 
 /** 混排行 IR 类型 */
-export type IRMixedLine = ZodInfer<typeof MixedLineSchema>;
+export type IRSegmentedLine = ZodInfer<typeof SegmentedLineSchema>;
 
 export type IRLabelTextContent = ZodInfer<typeof LabelTextContentSchema>;
 

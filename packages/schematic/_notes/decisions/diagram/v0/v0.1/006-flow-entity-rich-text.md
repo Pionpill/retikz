@@ -40,7 +40,7 @@ text: [
 layout: { align: 'start', lineHeight: 18, maxTextWidth: 160 }
 ```
 
-Flow 的 Entity 文本仍是必填且语义非空；Relation label 可省略，出现时同样必须语义非空。字符串、每个 styled line 的文本，以及 mixed line 的文本 / TeX run 全部为空白时必须被 Source schema 拒绝。空数组继续不合法；非空数组不能以空行或空白 run 规避该约束。该判断不改变 Core TextBlock 在其它 owner 中允许的表达范围
+Flow 的 Entity 文本仍是必填且语义非空；Relation label 可省略，出现时同样必须语义非空。字符串、每个 styled line 的文本，以及 mixed line 的文本 / TeX segment 全部为空白时必须被 Source schema 拒绝。空数组继续不合法；非空数组不能以空行或空白 segment 规避该约束。该判断不改变 Core TextBlock 在其它 owner 中允许的表达范围
 
 TextBlock 的逐行样式遵循 Core 既有继承：未指定字段继承 Entity / Graph 的有效文本外观。Flow 不提供独立的副标题默认值或颜色 / 字号枚举；因此 theme、custom Graph Entity role 与已有 Core text capability 继续以相同方式生效。`align`、`lineHeight` 与 `maxTextWidth` 保持 Entity 级 `layout` 字段，不可在单行中覆盖
 
@@ -50,4 +50,4 @@ TextBlock 的逐行样式遵循 Core 既有继承：未指定字段继承 Entity
 
 Direct IR、Vanilla 与 React 对同一值必须产生等价 Source、Graph 投影和 Scene。任一入口的空白 TextBlock 都必须在 Flow Source schema 边界 fail-loud，且不由 adapter 补写主文本、副标题、颜色、字号或 Relation label 行
 
-这是一项向宽的 0.x Source 扩展：以前有效的 Entity 文本保持有效；不保留第二套旧 schema、解析 fallback 或 Flow 专属别名。文本里使用 Core 已有 math run 时，仍遵守其 lowerTex capability 的既有失败语义
+这是一项向宽的 0.x Source 扩展：以前有效的 Entity 文本保持有效；不保留第二套旧 schema、解析 fallback 或 Flow 专属别名。文本里使用 Core 已有 math segment 时，仍遵守其 lowerTex capability 的既有失败语义

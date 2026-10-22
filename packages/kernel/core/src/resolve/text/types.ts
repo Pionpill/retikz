@@ -1,20 +1,20 @@
-import type { IRFont, IRLine, IRMathRun, IRTextRun } from '../../schemas';
+import type { IRFont, IRLine, IRMathSegment, IRTextSegment } from '../../schemas';
 
 type WithResolvedFill<T> = T extends unknown ? Omit<T, 'fill'> & { fill?: string } : never;
 
-/** 已把派生颜色确定为字符串的文字 run */
-export type ResolvedTextRun = WithResolvedFill<IRTextRun>;
+/** 已把派生颜色确定为字符串的文字 segment */
+export type ResolvedTextSegment = WithResolvedFill<IRTextSegment>;
 
-/** 已把派生颜色确定为字符串的公式 run */
-export type ResolvedMathRun = WithResolvedFill<IRMathRun>;
+/** 已把派生颜色确定为字符串的公式 segment */
+export type ResolvedMathSegment = WithResolvedFill<IRMathSegment>;
 
-/** 已把派生颜色确定为字符串的行内 Source run */
-export type ResolvedInlineSourceRun = ResolvedTextRun | ResolvedMathRun;
+/** 已把派生颜色确定为字符串的行内 Source segment */
+export type ResolvedInlineSourceSegment = ResolvedTextSegment | ResolvedMathSegment;
 
-/** 已把 run 派生颜色确定为字符串的混排行 */
-export type ResolvedMixedLine = Readonly<{
+/** 已把 segment 派生颜色确定为字符串的混排行 */
+export type ResolvedSegmentedLine = Readonly<{
   /** 保留作者顺序的文本与行内内容片段 */
-  runs: Array<ResolvedInlineSourceRun>;
+  segments: Array<ResolvedInlineSourceSegment>;
 }>;
 
 /** 已把派生颜色确定为字符串的单行 Source */
@@ -24,10 +24,10 @@ export type ResolvedTextLine =
       /** 当前文本行已解析的填充颜色 */
       fill?: string;
     })
-  | ResolvedMixedLine;
+  | ResolvedSegmentedLine;
 
 /** 已把派生颜色确定为字符串的 label 单行内容 */
-export type ResolvedLabelTextContent = string | ResolvedMixedLine;
+export type ResolvedLabelTextContent = string | ResolvedSegmentedLine;
 
 /** 已把派生颜色确定为字符串的路径标签文本块 */
 export type ResolvedLabelTextBlock = ResolvedTextLine | Array<ResolvedTextLine>;
@@ -60,24 +60,24 @@ export type FontResolveContext = Readonly<{
   inheritedFont: CanonicalFont;
 }>;
 
-/** 已解析字体的文本 run */
-export type CanonicalTextRun = Omit<ResolvedTextRun, 'font'> &
+/** 已解析字体的文本 segment */
+export type CanonicalTextSegment = Omit<ResolvedTextSegment, 'font'> &
   Readonly<{
     /** 当前文本片段完成继承与默认值补全的字体 */
     font: CanonicalFont;
   }>;
 
-/** 已确定的行内文字或公式 run */
-export type CanonicalInlineRun = CanonicalTextRun | ResolvedMathRun;
+/** 已确定的行内文字或公式 segment */
+export type CanonicalInlineSegment = CanonicalTextSegment | ResolvedMathSegment;
 
-/** Source IR 行内文字或公式 run */
-export type SourceInlineRun = ResolvedInlineSourceRun;
+/** Source IR 行内文字或公式 segment */
+export type SourceInlineSegment = ResolvedInlineSourceSegment;
 
 /** 行内 shorthand 解析结果 */
-export type ParsedInlineRuns = Readonly<{
-  /** Source IR run 序列 */
-  runs: Array<SourceInlineRun>;
-  /** 是否包含公式 run */
+export type ParsedInlineSegments = Readonly<{
+  /** Source IR segment 序列 */
+  segments: Array<SourceInlineSegment>;
+  /** 是否包含公式 segment */
   hasMath: boolean;
   /** 是否遇到未闭合公式分隔符 */
   warn: boolean;
@@ -101,13 +101,13 @@ export type ResolvedTextLineStyle = Readonly<{
 
 /** 单行 Source IR 的确定化结果 */
 export type TextLineResolution = Readonly<{
-  /** 已确定字体和行样式的 run */
-  runs: Array<CanonicalInlineRun>;
-  /** 去除公式 run 后的纯文本内容 */
+  /** 已确定字体和行样式的 segment */
+  segments: Array<CanonicalInlineSegment>;
+  /** 去除公式 segment 后的纯文本内容 */
   plainText: string;
-  /** 是否包含公式 run */
+  /** 是否包含公式 segment */
   hasMath: boolean;
-  /** 是否需要逐 run 混排 */
+  /** 是否需要逐 segment 混排 */
   mixed: boolean;
   /** 仅包含作者显式写出的行级样式 */
   style?: ResolvedTextLineStyle;

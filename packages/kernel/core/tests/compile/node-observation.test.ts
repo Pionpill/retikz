@@ -129,7 +129,7 @@ describe('Node 观测几何', () => {
 
   it.each([
     ['plain', ['a', 'bb', 'ccc']],
-    ['mixed', [{ runs: [{ text: 'a' }] }, { runs: [{ text: 'bb' }] }, { runs: [{ text: 'ccc' }] }]],
+    ['mixed', [{ segments: [{ text: 'a' }] }, { segments: [{ text: 'bb' }] }, { segments: [{ text: 'ccc' }] }]],
   ] satisfies Array<[string, IRNode['text']]>)(
     '%s 正文基线与同次 emit 的每条物理行一致，包括低精度圆整',
     (_kind, text) => {
