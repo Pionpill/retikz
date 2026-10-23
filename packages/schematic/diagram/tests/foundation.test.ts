@@ -458,7 +458,7 @@ describe('Diagram Foundation provider integration', () => {
         drawing,
       },
       {
-        host: { clip: { kind: 'rect', x: 0, y: 0, width: 40, height: 30 } },
+        host: { clip: { kind: 'rect', params: { x: 0, y: 0, width: 40, height: 30 } } },
       },
     );
     const clippedGroups = primitivesOf(output.scene.primitives).filter(

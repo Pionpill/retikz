@@ -208,10 +208,7 @@ const assertClipPathGrammar = (commands: ReadonlyArray<PathCommand>, owner: stri
 
 /** 隔离 operation provider 返回的形状快照 */
 const snapshotResolvedClipShape = (shape: ClipShape, owner: string): ClipShape =>
-  withProviderOutputValidationBoundary(
-    owner,
-    () => snapshotProviderOutputJson(owner, shape, 'root shape'),
-  );
+  withProviderOutputValidationBoundary(owner, () => snapshotProviderOutputJson(owner, shape, 'root shape'));
 
 /** 物化并规范化 ClipShape lower 输出，建立唯一 SceneClipPath 字段顺序 */
 const canonicalizeClipPath = (path: SceneClipPath, owner: string, round: (n: number) => number): SceneClipPath =>
@@ -245,7 +242,7 @@ export const createClipRegistry = (
       let resolved: ClipShape;
 
       try {
-        resolved = definition.resolve(params as { kind: string }, {
+        resolved = definition.resolve(params, {
           round,
           resolve: nested => resolveOperation(resolution.resolve(nested), guard),
         });

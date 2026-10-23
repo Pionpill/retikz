@@ -181,9 +181,9 @@ describe('shared layout Box geometry', () => {
     const positive = layoutClipOf({ width: 20, height: 10 });
     const zeroWidth = layoutClipOf({ width: 0, height: 10 });
 
-    expect(positive).toEqual({ kind: 'rect', x: 0, y: 0, width: 20, height: 10 });
+    expect(positive).toEqual({ kind: 'rect', params: { x: 0, y: 0, width: 20, height: 10 } });
     expect(RectClipSchema.safeParse(positive).success).toBe(true);
-    expect(zeroWidth).toEqual({ kind: 'rect', x: 0, y: 0, width: 0, height: 10 });
+    expect(zeroWidth).toEqual({ kind: 'rect', params: { x: 0, y: 0, width: 0, height: 10 } });
     expect(RectClipSchema.safeParse(zeroWidth).success).toBe(true);
   });
 });

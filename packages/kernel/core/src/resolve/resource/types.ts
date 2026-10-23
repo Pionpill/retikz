@@ -1,7 +1,6 @@
-import type { JsonObject } from '@retikz/foundation';
-
 import type {
   ClipDefinition,
+  ClipLike,
   ClipShape,
   PatternDefinition,
   ResolvedPatternLineStyle,
@@ -56,8 +55,8 @@ export type ClipResolution = Readonly<{
   kind: string;
   /** 已绑定的 clip provider */
   definition: ClipDefinition;
-  /** provider schema parse 后的 JSON params */
-  params: JsonObject;
+  /** provider schema 解析后的完整 spec，保留转换后的参数类型 */
+  params: ClipLike;
   /** 递归解析嵌套 clip，闭包捕获同一有效 registry */
   resolve: (clip: IRClip) => ClipResolution;
 }>;

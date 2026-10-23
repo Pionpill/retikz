@@ -52,8 +52,8 @@ const fixedBoundary = (): BoundaryDefinition =>
 const customClip = (): ClipDefinition =>
   defineClip({
     kind: 'customClip',
-    schema: strictObject({ kind: literal('customClip') }),
-    resolve: () => ({ kind: 'customClip' }),
+    schema: strictObject({ kind: literal('customClip'), params: strictObject({}) }),
+    resolve: () => ({ kind: 'customClip', params: {} }),
     lower: () => ({
       commands: [
         { kind: 'move', to: [0, 0] },
@@ -71,7 +71,7 @@ const clippedIr: IRScene = {
   children: [
     {
       type: 'scope',
-      clip: { kind: 'customClip' },
+      clip: { kind: 'customClip', params: {} },
       children: [{ type: 'node', position: [0, 0], text: 'A' }],
     },
   ],

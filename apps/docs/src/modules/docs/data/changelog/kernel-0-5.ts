@@ -378,6 +378,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: 'BREAKING：裁剪参数收口到 params', en: 'BREAKING: clip parameters move into params' },
+          content: {
+            zh: 'Clip 输入与解析后形状统一使用 { kind, params }。矩形、官方扩展和自定义裁剪均把几何字段放入必填 params；resolve/lower 分别读取 spec.params 和 shape.params。移除平铺参数写法，Scene 路径与渲染行为不变。',
+            en: 'Clip specs and resolved shapes now use { kind, params }. Built-in, official extension, and custom clips put geometry fields in the required params object; resolve/lower read spec.params and shape.params. Flat parameter fields are removed; Scene paths and rendering behavior are unchanged.',
+          },
+        },
+        {
           label: { zh: 'BREAKING：主色传播与箭头绘制上下文', en: 'BREAKING: master colors and arrow drawing contexts' },
           content: {
             zh: 'Path 的有效 color 覆盖 mark 的 color，具体 stroke / fill 仍优先。Arrow Definition 直接消费已解析的绘制上下文，包括虚线、端帽和连接样式；Core 不再覆盖输出图元的局部样式。实心定义默认无描边，需要同色线条的自定义定义改用上下文 fill。透明度语义保持不变。',

@@ -14,8 +14,8 @@ import {
 const customClip = (): ClipDefinition =>
   defineClip({
     kind: 'ticketClip',
-    schema: strictObject({ kind: literal('ticketClip') }),
-    resolve: () => ({ kind: 'ticketClip' }),
+    schema: strictObject({ kind: literal('ticketClip'), params: strictObject({}) }),
+    resolve: () => ({ kind: 'ticketClip', params: {} }),
     lower: () => ({
       commands: [
         { kind: 'move', to: [0, 0] },
@@ -31,7 +31,7 @@ const input: InputScene = {
   children: [
     {
       type: 'scope',
-      clip: { kind: 'ticketClip' },
+      clip: { kind: 'ticketClip', params: {} },
       children: [{ id: 'ticket', position: [10, 5], text: 'A' }],
     },
   ],

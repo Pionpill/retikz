@@ -7,6 +7,7 @@ keywords: 'Clip、Definition、SceneClipPath、ClipDefinition、ClipShapeDefinit
 
 - 状态：Accepted
 - 决策日期：2026-08-16
+- 参数结构由 [ADR-073](./073-clip-params-envelope.md) 更新为 `{ kind, params }`；本决策的单一 Definition 与 registry 机制继续有效
 - 关联：[ADR-030](./030-extensible-clip-shapes.md) · [Standard ADR-027](../../../../../library/_notes/decisions/standard/v0/v0.1/027-single-clip-definition.md)
 
 ## 背景与目标

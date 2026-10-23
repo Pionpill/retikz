@@ -234,7 +234,7 @@ describe('viewBox 与 clip / paint 资源正交共存', () => {
       children: [
         {
           type: 'scope',
-          clip: { kind: 'rect', x: -20, y: -20, width: 40, height: 40 },
+          clip: { kind: 'rect', params: { x: -20, y: -20, width: 40, height: 40 } },
           children: [circleNode('o', [0, 0])],
         },
       ],

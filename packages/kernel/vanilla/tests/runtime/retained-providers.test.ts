@@ -27,17 +27,25 @@ const nextResult = { primitives: [], boundsPoints: [[1, 1] as [number, number]] 
 
 type RetainedClip = {
   kind: 'retainedClip';
-  size: number;
+  /** 裁剪参数 */
+  params: {
+    size: number;
+  };
 };
 
 type RetainedClipShape = ClipShape & {
   kind: 'retainedClip';
-  size: number;
+  /** 裁剪参数 */
+  params: {
+    size: number;
+  };
 };
 
 const retainedClipSchema: ZodType<RetainedClip> = strictObject({
   kind: literal('retainedClip'),
-  size: number().positive(),
+  params: strictObject({
+    size: number().positive(),
+  }),
 });
 
 const initialClipPath: SceneClipPath = {
@@ -61,7 +69,7 @@ type RetainedClipResolve = (spec: RetainedClip, context: ClipResolveContext) => 
 type RetainedClipLower = (shape: RetainedClipShape, context: ClipLowerContext) => SceneClipPath;
 
 const createClipDefinition = (
-  resolve: RetainedClipResolve = spec => ({ kind: 'retainedClip', size: spec.size }),
+  resolve: RetainedClipResolve = spec => ({ kind: 'retainedClip', params: { size: spec.params.size } }),
   lower: RetainedClipLower = () => initialClipPath,
   schema: ZodType<RetainedClip> = retainedClipSchema,
 ): ClipDefinition =>
@@ -80,7 +88,7 @@ const createDefinition = (
 
 describe('retained Path Kind definitions', () => {
   it('captures every complete Clip callback and schema identity in clips', () => {
-    const resolve: RetainedClipResolve = spec => ({ kind: 'retainedClip', size: spec.size });
+    const resolve: RetainedClipResolve = spec => ({ kind: 'retainedClip', params: { size: spec.params.size } });
     const lower: RetainedClipLower = () => initialClipPath;
     const definition = createClipDefinition(resolve, lower);
     const captured = captureCoreProviderDefinitions({ clips: [definition] });
@@ -94,9 +102,9 @@ describe('retained Path Kind definitions', () => {
   });
 
   it('delegates stable Clip resolve/lower callbacks across prepare and rollback', () => {
-    const initialResolve: RetainedClipResolve = spec => ({ kind: 'retainedClip', size: spec.size });
+    const initialResolve: RetainedClipResolve = spec => ({ kind: 'retainedClip', params: { size: spec.params.size } });
     const initialLower: RetainedClipLower = () => initialClipPath;
-    const nextResolve: RetainedClipResolve = spec => ({ kind: 'retainedClip', size: spec.size + 1 });
+    const nextResolve: RetainedClipResolve = spec => ({ kind: 'retainedClip', params: { size: spec.params.size + 1 } });
     const nextLower: RetainedClipLower = () => nextClipPath;
     const retained = createRetainedProviderDefinitions({
       clips: [createClipDefinition(initialResolve, initialLower)],
@@ -122,35 +130,41 @@ describe('retained Path Kind definitions', () => {
       },
     };
 
-    expect(stableResolve({ kind: 'retainedClip', size: 4 }, resolveContext)).toEqual({
+    expect(stableResolve({ kind: 'retainedClip', params: { size: 4 } }, resolveContext)).toEqual({
       kind: 'retainedClip',
-      size: 4,
+      params: {
+        size: 4,
+      },
     });
-    expect(stableLower({ kind: 'retainedClip', size: 4 }, lowerContext)).toBe(initialClipPath);
+    expect(stableLower({ kind: 'retainedClip', params: { size: 4 } }, lowerContext)).toBe(initialClipPath);
 
     const changed = retained.prepare({ clips: [createClipDefinition(nextResolve, nextLower)] });
 
     expect(changed.changed).toBe(true);
-    expect(stableResolve({ kind: 'retainedClip', size: 4 }, resolveContext)).toEqual({
+    expect(stableResolve({ kind: 'retainedClip', params: { size: 4 } }, resolveContext)).toEqual({
       kind: 'retainedClip',
-      size: 5,
+      params: {
+        size: 5,
+      },
     });
-    expect(stableLower({ kind: 'retainedClip', size: 4 }, lowerContext)).toBe(nextClipPath);
+    expect(stableLower({ kind: 'retainedClip', params: { size: 4 } }, lowerContext)).toBe(nextClipPath);
 
     changed.rollback();
 
-    expect(stableResolve({ kind: 'retainedClip', size: 4 }, resolveContext)).toEqual({
+    expect(stableResolve({ kind: 'retainedClip', params: { size: 4 } }, resolveContext)).toEqual({
       kind: 'retainedClip',
-      size: 4,
+      params: {
+        size: 4,
+      },
     });
-    expect(stableLower({ kind: 'retainedClip', size: 4 }, lowerContext)).toBe(initialClipPath);
+    expect(stableLower({ kind: 'retainedClip', params: { size: 4 } }, lowerContext)).toBe(initialClipPath);
   });
 
   it('rejects an operation-only Clip object before creating retained delegates', () => {
     const operationOnly = {
       kind: 'retainedClip',
       schema: retainedClipSchema,
-      resolve: (spec: RetainedClip) => ({ kind: 'retainedClip' as const, size: spec.size }),
+      resolve: (spec: RetainedClip) => ({ kind: 'retainedClip' as const, params: { size: spec.params.size } }),
     } as unknown as ClipDefinition;
 
     expect(() => createRetainedProviderDefinitions({ clips: [operationOnly] })).toThrow(
@@ -163,14 +177,16 @@ describe('retained Path Kind definitions', () => {
     const invalid = expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid });
     const changedSchema = strictObject({
       kind: literal('retainedClip'),
-      size: number().positive(),
-      changed: boolean().optional(),
+      params: strictObject({
+        size: number().positive(),
+        changed: boolean().optional(),
+      }),
     }) as unknown as ZodType<RetainedClip>;
 
     const renamed = defineClip({
       kind: 'renamedClip',
-      schema: strictObject({ kind: literal('renamedClip'), size: number().positive() }),
-      resolve: spec => ({ kind: 'renamedClip', size: spec.size }),
+      schema: strictObject({ kind: literal('renamedClip'), params: strictObject({ size: number().positive() }) }),
+      resolve: spec => ({ kind: 'renamedClip', params: { size: spec.params.size } }),
       lower: () => initialClipPath,
     });
     const changedFields = { ...createClipDefinition(), metadata: true } as unknown as ClipDefinition;

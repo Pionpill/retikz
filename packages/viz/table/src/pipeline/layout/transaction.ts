@@ -475,10 +475,12 @@ const cellOutputOf = (
         : {
             clip: {
               kind: 'rect',
-              x: placement.clipBounds.x,
-              y: placement.clipBounds.y,
-              width: placement.clipBounds.width,
-              height: placement.clipBounds.height,
+              params: {
+                x: placement.clipBounds.x,
+                y: placement.clipBounds.y,
+                width: placement.clipBounds.width,
+                height: placement.clipBounds.height,
+              },
             },
           }),
     },

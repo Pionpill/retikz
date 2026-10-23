@@ -115,7 +115,7 @@ describe('Code block root and composition semantics', () => {
       minWidth: 0,
       transforms: [{ kind: 'translate', x: 15, y: 25 }],
       position: { kind: 'anchor', target: [100, 100], selfAnchor: 'center' },
-      clip: { kind: 'rect', x: 0, y: 0, width: 300, height: 160 },
+      clip: { kind: 'rect', params: { x: 0, y: 0, width: 300, height: 160 } },
       meta: { file: 'service.ts' },
       defaults: { style: { opacity: 0.8 }, node: { style: { textColor: '#123456' } } },
     });

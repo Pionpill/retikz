@@ -18,11 +18,14 @@ import type {
 export const CircleClipDefinition = defineClip<IRCircleClip, CircleClipShape>({
   kind: 'circle',
   schema: CircleClipSchema,
-  resolve: spec => ({ kind: 'circle', cx: spec.cx, cy: spec.cy, r: spec.r }),
+  resolve: spec => ({ kind: 'circle', params: { cx: spec.params.cx, cy: spec.params.cy, r: spec.params.r } }),
   lower: (shape, context) => ({
     commands: [
-      { kind: 'move', to: [context.round(shape.cx) + context.round(shape.r), context.round(shape.cy)] },
-      { kind: 'arc', center: [shape.cx, shape.cy], radius: shape.r, startAngle: 0, endAngle: 360 },
+      {
+        kind: 'move',
+        to: [context.round(shape.params.cx) + context.round(shape.params.r), context.round(shape.params.cy)],
+      },
+      { kind: 'arc', center: [shape.params.cx, shape.params.cy], radius: shape.params.r, startAngle: 0, endAngle: 360 },
       { kind: 'close' },
     ],
     fillRule: 'nonzero',
@@ -33,15 +36,21 @@ export const CircleClipDefinition = defineClip<IRCircleClip, CircleClipShape>({
 export const EllipseClipDefinition = defineClip<IREllipseClip, EllipseClipShape>({
   kind: 'ellipse',
   schema: EllipseClipSchema,
-  resolve: spec => ({ kind: 'ellipse', cx: spec.cx, cy: spec.cy, rx: spec.rx, ry: spec.ry }),
+  resolve: spec => ({
+    kind: 'ellipse',
+    params: { cx: spec.params.cx, cy: spec.params.cy, rx: spec.params.rx, ry: spec.params.ry },
+  }),
   lower: (shape, context) => ({
     commands: [
-      { kind: 'move', to: [context.round(shape.cx) + context.round(shape.rx), context.round(shape.cy)] },
+      {
+        kind: 'move',
+        to: [context.round(shape.params.cx) + context.round(shape.params.rx), context.round(shape.params.cy)],
+      },
       {
         kind: 'ellipseArc',
-        center: [shape.cx, shape.cy],
-        radiusX: shape.rx,
-        radiusY: shape.ry,
+        center: [shape.params.cx, shape.params.cy],
+        radiusX: shape.params.rx,
+        radiusY: shape.params.ry,
         startAngle: 0,
         endAngle: 360,
       },
@@ -55,11 +64,11 @@ export const EllipseClipDefinition = defineClip<IREllipseClip, EllipseClipShape>
 export const PolygonClipDefinition = defineClip<IRPolygonClip, PolygonClipShape>({
   kind: 'polygon',
   schema: PolygonClipSchema,
-  resolve: spec => ({ kind: 'polygon', points: spec.points }),
+  resolve: spec => ({ kind: 'polygon', params: { points: spec.params.points } }),
   lower: shape => ({
     commands: [
-      { kind: 'move', to: shape.points[0] },
-      ...shape.points.slice(1).map(to => ({ kind: 'line' as const, to })),
+      { kind: 'move', to: shape.params.points[0] },
+      ...shape.params.points.slice(1).map(to => ({ kind: 'line' as const, to })),
       { kind: 'close' },
     ],
     fillRule: 'nonzero',
@@ -72,10 +81,12 @@ export const PathClipDefinition = defineClip<IRPathClip, PathClipShape>({
   schema: PathClipSchema,
   resolve: spec => ({
     kind: 'path',
-    commands: spec.commands,
-    ...(spec.fillRule === undefined ? {} : { fillRule: spec.fillRule }),
+    params: {
+      commands: spec.params.commands,
+      ...(spec.params.fillRule === undefined ? {} : { fillRule: spec.params.fillRule }),
+    },
   }),
-  lower: shape => ({ commands: shape.commands, fillRule: shape.fillRule ?? 'nonzero' }),
+  lower: shape => ({ commands: shape.params.commands, fillRule: shape.params.fillRule ?? 'nonzero' }),
 });
 
 /** Extension 提供的完整复合裁剪 Definition */
@@ -84,11 +95,13 @@ export const CompoundClipDefinition = defineClip<IRCompoundClip, CompoundClipSha
   schema: CompoundClipSchema,
   resolve: (spec, context) => ({
     kind: 'compound',
-    children: spec.children.map(child => context.resolve(child)),
-    ...(spec.fillRule === undefined ? {} : { fillRule: spec.fillRule }),
+    params: {
+      children: spec.params.children.map(child => context.resolve(child)),
+      ...(spec.params.fillRule === undefined ? {} : { fillRule: spec.params.fillRule }),
+    },
   }),
   lower: (shape, context) => ({
-    commands: shape.children.flatMap(child => context.lower(child).commands),
-    fillRule: shape.fillRule ?? 'nonzero',
+    commands: shape.params.children.flatMap(child => context.lower(child).commands),
+    fillRule: shape.params.fillRule ?? 'nonzero',
   }),
 });

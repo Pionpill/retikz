@@ -8,13 +8,16 @@ import { createProviderRegistry } from './registry';
 const rectClip = defineClip<IRRectClip, RectClipShape>({
   kind: 'rect',
   schema: RectClipSchema,
-  resolve: spec => ({ kind: 'rect', x: spec.x, y: spec.y, width: spec.width, height: spec.height }),
+  resolve: spec => ({
+    kind: 'rect',
+    params: { x: spec.params.x, y: spec.params.y, width: spec.params.width, height: spec.params.height },
+  }),
   lower: shape => ({
     commands: [
-      { kind: 'move', to: [shape.x, shape.y] },
-      { kind: 'line', to: [shape.x + shape.width, shape.y] },
-      { kind: 'line', to: [shape.x + shape.width, shape.y + shape.height] },
-      { kind: 'line', to: [shape.x, shape.y + shape.height] },
+      { kind: 'move', to: [shape.params.x, shape.params.y] },
+      { kind: 'line', to: [shape.params.x + shape.params.width, shape.params.y] },
+      { kind: 'line', to: [shape.params.x + shape.params.width, shape.params.y + shape.params.height] },
+      { kind: 'line', to: [shape.params.x, shape.params.y + shape.params.height] },
       { kind: 'close' },
     ],
     fillRule: 'nonzero',

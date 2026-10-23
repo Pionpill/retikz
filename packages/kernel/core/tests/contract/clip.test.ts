@@ -7,22 +7,32 @@ import { compileToScene, defineClip } from '../../src';
 
 type TicketClip = {
   kind: 'ticket';
-  size: number;
+  /** 裁剪参数 */
+  params: {
+    size: number;
+  };
 };
 
 type TicketClipShape = ClipShape & {
   kind: 'ticket';
-  size: number;
+  /** 裁剪参数 */
+  params: {
+    size: number;
+  };
 };
 
 const TicketClipSchema: ZodType<TicketClip> = strictObject({
   kind: literal('ticket'),
-  size: number().positive(),
+  params: strictObject({
+    size: number().positive(),
+  }),
 });
 
 const TicketClipShapeSchema: ZodType<TicketClipShape> = strictObject({
   kind: literal('ticket'),
-  size: number().positive(),
+  params: strictObject({
+    size: number().positive(),
+  }),
 });
 
 describe('Clip definition contract', () => {
@@ -30,11 +40,11 @@ describe('Clip definition contract', () => {
     const definition = defineClip<TicketClip, TicketClipShape>({
       kind: 'ticket',
       schema: TicketClipSchema,
-      resolve: spec => ({ kind: 'ticket', size: spec.size }),
+      resolve: spec => ({ kind: 'ticket', params: { size: spec.params.size } }),
       lower: shape => ({
         commands: [
           { kind: 'move', to: [0, 0] },
-          { kind: 'line', to: [shape.size, shape.size] },
+          { kind: 'line', to: [shape.params.size, shape.params.size] },
         ],
         fillRule: 'nonzero',
       }),
@@ -42,7 +52,7 @@ describe('Clip definition contract', () => {
 
     expect(
       definition.lower(
-        { kind: 'ticket', size: 4 },
+        { kind: 'ticket', params: { size: 4 } },
         {
           round: value => value,
           lower: () => {
@@ -66,12 +76,12 @@ describe('Clip definition contract', () => {
       lower: shape => ({
         commands: [
           { kind: 'move', to: [0, 0] },
-          { kind: 'line', to: [shape.size, shape.size] },
+          { kind: 'line', to: [shape.params.size, shape.params.size] },
         ],
         fillRule: 'nonzero',
       }),
     });
-    const spec = { kind: 'ticket', size: 4 } as const;
+    const spec = { kind: 'ticket', params: { size: 4 } } as const;
 
     expect(definition.resolve(spec, { round: value => value, resolve: () => spec })).toBe(spec);
 

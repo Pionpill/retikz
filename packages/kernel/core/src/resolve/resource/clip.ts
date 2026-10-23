@@ -1,5 +1,3 @@
-import type { JsonObject } from '@retikz/foundation';
-
 import type { ClipDefinition, ClipShape } from '../../contract';
 import { providerDefinitionOf } from '../../providers';
 import type { IRClip } from '../../schemas';
@@ -27,7 +25,7 @@ export const resolveClip = (clip: IRClip, context: ClipResolveContext): ClipReso
     schema: definition.schema,
     value: clip,
   });
-  const params = parsed as JsonObject;
+  const params = parsed;
   if (params.kind !== kind) {
     throw createCompositeContractError(
       `Clip provider 'clip:${kind}' schema returned kind '${String(params.kind)}' instead of '${kind}'.`,

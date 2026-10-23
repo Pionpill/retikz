@@ -5,29 +5,36 @@ import type { IRClip } from '../schemas';
 import type { SceneClipPath } from './scene';
 
 /** Clip Definition 解析并降低的开放 JSON 裁剪形状 */
-export type ClipShape = JsonObject & {
+export type ClipShape = {
   /** 与 definition、spec 和 registry 一致的判别字段 */
   kind: string;
+  /** 由所属裁剪定义解释的 JSON 形状参数 */
+  params: JsonObject;
 };
 
 /** 用户坐标系中的矩形裁剪形状 */
-export type RectClipShape = JsonObject & {
+export type RectClipShape = {
   /** 标识矩形裁剪形状 */
   kind: 'rect';
-  /** 矩形左上角的用户坐标 x */
-  x: number;
-  /** 矩形左上角的用户坐标 y */
-  y: number;
-  /** 矩形宽度，单位为用户坐标单位 */
-  width: number;
-  /** 矩形高度，单位为用户坐标单位 */
-  height: number;
+  /** 裁剪参数 */
+  params: {
+    /** 矩形左上角的用户坐标 x */
+    x: number;
+    /** 矩形左上角的用户坐标 y */
+    y: number;
+    /** 矩形宽度，单位为用户坐标单位 */
+    width: number;
+    /** 矩形高度，单位为用户坐标单位 */
+    height: number;
+  };
 };
 
 /** clip spec 的最小判别形态 */
 export type ClipLike = {
   /** clip spec 判别字段，对应 clip registry key */
   kind: string;
+  /** 经所属 schema 解析的参数，允许 schema 转换产生非 JSON 临时值 */
+  params: object;
 };
 
 /**
@@ -138,7 +145,8 @@ const defineClipImplementation = (
   if (definition.resolve === undefined) {
     return {
       ...definition,
-      resolve: spec => spec,
+      // identity 分支的 schema 已保证 spec 满足完整形状契约，注册表在此擦除泛型
+      resolve: spec => spec as ClipShape,
     };
   }
 

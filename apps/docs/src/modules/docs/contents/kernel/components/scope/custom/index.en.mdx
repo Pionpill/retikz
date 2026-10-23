@@ -3,7 +3,9 @@ title: Custom clipping
 description: Define a JSON-safe clip shape for Scope, then register and use it from a React or Vanilla host
 ---
 
-When Core's built-in `rect` and Standard's circle / ellipse / polygon / path / compound clips do not fit, define a new shape with one `ClipDefinition`. The Definition stays out of IR; IR stores only a `kind` and serializable parameters, while renderers, visual bounds, and hit testing share the same lowered result.
+When Core's built-in `rect` and Extension's circle / ellipse / polygon / path / compound clips do not fit, define a new shape with one `ClipDefinition`. The Definition stays out of IR; IR stores only a `kind` and serializable parameters, while renderers, visual bounds, and hit testing share the same lowered result.
+
+Both the input spec and resolved shape use `{ kind, params }`. `kind` selects the registered definition; the required `params` object holds its parameters. The two stages may have different parameter fields. `schema` validates the complete spec, `resolve` reads `spec.params` and returns a shape with the same kind, and `lower` reads `shape.params` to produce the path. Use `{}` when there are no parameters.
 
 ## Applicability boundary
 
@@ -37,29 +39,31 @@ import { z } from 'zod';
 
 const roundedRectClipSchema = z.strictObject({
   kind: z.literal('rounded-rect'),
-  x: z.number(),
-  y: z.number(),
-  width: z.number().positive(),
-  height: z.number().positive(),
-  radius: z.number().nonnegative(),
+  params: z.strictObject({
+    x: z.number(),
+    y: z.number(),
+    width: z.number().positive(),
+    height: z.number().positive(),
+    radius: z.number().nonnegative(),
+  }),
 });
 export const roundedRectClip = defineClip({
   kind: 'rounded-rect',
   schema: roundedRectClipSchema,
   lower: shape => {
-    const right = shape.x + shape.width;
-    const bottom = shape.y + shape.height;
-    const radius = Math.min(shape.radius, shape.width / 2, shape.height / 2);
+    const right = shape.params.x + shape.params.width;
+    const bottom = shape.params.y + shape.params.height;
+    const radius = Math.min(shape.params.radius, shape.params.width / 2, shape.params.height / 2);
     const commands: Array<PathCommand> = [
-      { kind: 'move', to: [shape.x + radius, shape.y] },
-      { kind: 'line', to: [right - radius, shape.y] },
-      { kind: 'quad', control: [right, shape.y], to: [right, shape.y + radius] },
+      { kind: 'move', to: [shape.params.x + radius, shape.params.y] },
+      { kind: 'line', to: [right - radius, shape.params.y] },
+      { kind: 'quad', control: [right, shape.params.y], to: [right, shape.params.y + radius] },
       { kind: 'line', to: [right, bottom - radius] },
       { kind: 'quad', control: [right, bottom], to: [right - radius, bottom] },
-      { kind: 'line', to: [shape.x + radius, bottom] },
-      { kind: 'quad', control: [shape.x, bottom], to: [shape.x, bottom - radius] },
-      { kind: 'line', to: [shape.x, shape.y + radius] },
-      { kind: 'quad', control: [shape.x, shape.y], to: [shape.x + radius, shape.y] },
+      { kind: 'line', to: [shape.params.x + radius, bottom] },
+      { kind: 'quad', control: [shape.params.x, bottom], to: [shape.params.x, bottom - radius] },
+      { kind: 'line', to: [shape.params.x, shape.params.y + radius] },
+      { kind: 'quad', control: [shape.params.x, shape.params.y], to: [shape.params.x + radius, shape.params.y] },
       { kind: 'close' },
     ];
     return { commands, fillRule: 'nonzero' };
@@ -82,7 +86,7 @@ import { roundedRectClip } from './rounded-rect-clip';
 
 const Demo = () => (
   <Layout extensions={{ clips: [roundedRectClip] }}>
-    <Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
+    <Scope clip={{ kind: 'rounded-rect', params: { x: -150, y: -72, width: 300, height: 144, radius: 36 } }}>
       <Node
         position={[-88, -8]}
         shape="circle"
@@ -128,11 +132,13 @@ const input: InputScene = {
       type: 'scope',
       clip: {
         kind: 'rounded-rect',
-        x: -150,
-        y: -72,
-        width: 300,
-        height: 144,
-        radius: 36,
+        params: {
+          x: -150,
+          y: -72,
+          width: 300,
+          height: 144,
+          radius: 36,
+        },
       },
       children: [
         {

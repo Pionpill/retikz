@@ -6,20 +6,32 @@ import { compileToScene, defineClip } from '../../src';
 
 type TestPolygonClipShape = ClipShape & {
   kind: 'polygon';
-  points: Array<[number, number]>;
+  /** 裁剪参数 */
+  params: {
+    points: Array<[number, number]>;
+  };
 };
 
-const polygonClip = defineClip<{ kind: 'polygon'; points: Array<[number, number]> }, TestPolygonClipShape>({
+const polygonClip = defineClip<
+  {
+    kind: 'polygon';
+    /** 裁剪参数 */
+    params: { points: Array<[number, number]> };
+  },
+  TestPolygonClipShape
+>({
   kind: 'polygon',
   schema: strictObject({
     kind: literal('polygon'),
-    points: array(tuple([number(), number()])).min(3),
+    params: strictObject({
+      points: array(tuple([number(), number()])).min(3),
+    }),
   }),
-  resolve: spec => ({ kind: 'polygon', points: spec.points }),
+  resolve: spec => ({ kind: 'polygon', params: { points: spec.params.points } }),
   lower: shape => ({
     commands: [
-      { kind: 'move', to: shape.points[0] },
-      ...shape.points.slice(1).map(to => ({ kind: 'line' as const, to })),
+      { kind: 'move', to: shape.params.points[0] },
+      ...shape.params.points.slice(1).map(to => ({ kind: 'line' as const, to })),
       { kind: 'close' },
     ],
     fillRule: 'nonzero',
@@ -60,11 +72,11 @@ const handcraftedScope = (
 
 describe('clip 非 finite 守卫：必须编译期抛、绝不进 Scene', () => {
   const cases: Array<{ name: string; clip: unknown }> = [
-    { name: 'rect x = Infinity', clip: { kind: 'rect', x: Infinity, y: 0, width: 10, height: 10 } },
-    { name: 'rect y = -Infinity', clip: { kind: 'rect', x: 0, y: -Infinity, width: 10, height: 10 } },
-    { name: 'rect width = NaN', clip: { kind: 'rect', x: 0, y: 0, width: NaN, height: 10 } },
-    { name: 'rect width = -Infinity', clip: { kind: 'rect', x: 0, y: 0, width: -Infinity, height: 10 } },
-    { name: 'rect width = -5（负尺寸）', clip: { kind: 'rect', x: 0, y: 0, width: -5, height: 10 } },
+    { name: 'rect x = Infinity', clip: { kind: 'rect', params: { x: Infinity, y: 0, width: 10, height: 10 } } },
+    { name: 'rect y = -Infinity', clip: { kind: 'rect', params: { x: 0, y: -Infinity, width: 10, height: 10 } } },
+    { name: 'rect width = NaN', clip: { kind: 'rect', params: { x: 0, y: 0, width: NaN, height: 10 } } },
+    { name: 'rect width = -Infinity', clip: { kind: 'rect', params: { x: 0, y: 0, width: -Infinity, height: 10 } } },
+    { name: 'rect width = -5（负尺寸）', clip: { kind: 'rect', params: { x: 0, y: 0, width: -5, height: 10 } } },
   ];
 
   for (const { name, clip } of cases) {
@@ -75,14 +87,17 @@ describe('clip 非 finite 守卫：必须编译期抛、绝不进 Scene', () => 
 
   it('抛出的错误信息包含无效输入字段', () => {
     expect(
-      () => compileToScene(handcraftedScope({ kind: 'rect', x: 0, y: 0, width: Infinity, height: 10 })).scene,
+      () =>
+        compileToScene(handcraftedScope({ kind: 'rect', params: { x: 0, y: 0, width: Infinity, height: 10 } })).scene,
     ).toThrow(/width/i);
   });
 });
 
 describe('finite 守卫不误伤合法值', () => {
   it('rect 负坐标 + 正尺寸合法（取景窗可在第三象限）', () => {
-    const compiled = compileToScene(handcraftedScope({ kind: 'rect', x: -50, y: -40, width: 10, height: 10 })).scene;
+    const compiled = compileToScene(
+      handcraftedScope({ kind: 'rect', params: { x: -50, y: -40, width: 10, height: 10 } }),
+    ).scene;
     const clips = clipResources(compiled.resources);
 
     expect(clips).toHaveLength(1);
@@ -91,7 +106,9 @@ describe('finite 守卫不误伤合法值', () => {
   });
 
   it('rect 零尺寸合法并表示空裁剪区域', () => {
-    const compiled = compileToScene(handcraftedScope({ kind: 'rect', x: 0, y: 0, width: 0, height: 0 })).scene;
+    const compiled = compileToScene(
+      handcraftedScope({ kind: 'rect', params: { x: 0, y: 0, width: 0, height: 0 } }),
+    ).scene;
 
     expect(clipResources(compiled.resources)).toHaveLength(1);
   });
@@ -107,19 +124,21 @@ describe('clip Scene JSON round-trip 不失真', () => {
   };
 
   it('rect clip round-trip 等价', () => {
-    assertRoundTrip(handcraftedScope({ kind: 'rect', x: -50, y: 0, width: 40, height: 30 }));
+    assertRoundTrip(handcraftedScope({ kind: 'rect', params: { x: -50, y: 0, width: 40, height: 30 } }));
   });
 
   it('polygon clip round-trip 等价（点序保持）', () => {
     assertRoundTrip(
       handcraftedScope({
         kind: 'polygon',
-        points: [
-          [0, 0],
-          [40, 0],
-          [20, 40],
-          [-10, 20],
-        ],
+        params: {
+          points: [
+            [0, 0],
+            [40, 0],
+            [20, 40],
+            [-10, 20],
+          ],
+        },
       }),
     );
   });
@@ -130,7 +149,7 @@ describe('clip Scene JSON round-trip 不失真', () => {
     //   裁剪区不得携带 NaN/Infinity（会变 null 失真），数值层面 -0==0 视作等价。
     // 注：vitest toEqual 用 Object.is 区分 -0/0，故这里 round-trip 与原始的 strict 深比较会差一格
     //   （见报告：-0 量化是既有 quirk，渲染无影响，不 BLOCKING）。
-    const ir = handcraftedScope({ kind: 'rect', x: -0.001, y: -0.004, width: 10, height: 10 });
+    const ir = handcraftedScope({ kind: 'rect', params: { x: -0.001, y: -0.004, width: 10, height: 10 } });
     const compiled = compileToScene(ir, polygonOptions).scene;
     const json = JSON.stringify(compiled);
 
@@ -153,8 +172,11 @@ describe('clip Scene JSON round-trip 不失真', () => {
 describe('clip dedup 边界', () => {
   it('字段书写顺序不同但结构相同 → 仍 dedup 为 1 条资源', () => {
     // 手搓两个 rect，字段顺序故意打乱（width 在前 / height 在前），结构等价应 dedup
-    const clipA = { height: 30, width: 40, y: 0, x: 0, kind: 'rect' };
-    const clipB = { kind: 'rect', x: 0, y: 0, width: 40, height: 30 };
+    const clipA = {
+      params: { height: 30, width: 40, y: 0, x: 0 },
+      kind: 'rect',
+    };
+    const clipB = { kind: 'rect', params: { x: 0, y: 0, width: 40, height: 30 } };
     const ir = scene([
       {
         type: 'scope',
@@ -182,11 +204,13 @@ describe('clip dedup 边界', () => {
         type: 'scope',
         clip: {
           kind: 'polygon',
-          points: [
-            [0, 0],
-            [40, 0],
-            [20, 40],
-          ],
+          params: {
+            points: [
+              [0, 0],
+              [40, 0],
+              [20, 40],
+            ],
+          },
         },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
@@ -194,11 +218,13 @@ describe('clip dedup 边界', () => {
         type: 'scope',
         clip: {
           kind: 'polygon',
-          points: [
-            [40, 0],
-            [0, 0],
-            [20, 40],
-          ],
+          params: {
+            points: [
+              [40, 0],
+              [0, 0],
+              [20, 40],
+            ],
+          },
         },
         children: [{ type: 'node', id: 'B', position: [80, 0], text: 'B' }],
       },
@@ -214,12 +240,12 @@ describe('clip dedup 边界', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0.001, y: 0, width: 10, height: 10 },
+        clip: { kind: 'rect', params: { x: 0.001, y: 0, width: 10, height: 10 } },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0.004, y: 0, width: 10, height: 10 },
+        clip: { kind: 'rect', params: { x: 0.004, y: 0, width: 10, height: 10 } },
         children: [{ type: 'node', id: 'B', position: [80, 0], text: 'B' }],
       },
     ]);
@@ -232,12 +258,12 @@ describe('clip dedup 边界', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 10, height: 10 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 10, height: 10 } },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 20, height: 20 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 20, height: 20 } },
         children: [{ type: 'node', id: 'B', position: [80, 0], text: 'B' }],
       },
     ]);
@@ -252,17 +278,17 @@ describe('clip 编译确定性：同 IR 编译两次产同 id', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 10, height: 10 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 10, height: 10 } },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 1, y: 1, width: 5, height: 5 },
+        clip: { kind: 'rect', params: { x: 1, y: 1, width: 5, height: 5 } },
         children: [{ type: 'node', id: 'B', position: [40, 0], text: 'B' }],
       },
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 2, y: 2, width: 3, height: 2 },
+        clip: { kind: 'rect', params: { x: 2, y: 2, width: 3, height: 2 } },
         children: [{ type: 'node', id: 'C', position: [80, 0], text: 'C' }],
       },
     ]);
@@ -294,7 +320,7 @@ describe('clip + paint 资源命名空间：大量混合不撞、稳定', () => 
       },
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 10, height: 10 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 10, height: 10 } },
         children: [{ type: 'node', id: 'A', position: [40, 0], text: 'A' }],
       },
       {
@@ -306,7 +332,7 @@ describe('clip + paint 资源命名空间：大量混合不撞、稳定', () => 
       },
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 1, y: 1, width: 5, height: 5 },
+        clip: { kind: 'rect', params: { x: 1, y: 1, width: 5, height: 5 } },
         children: [{ type: 'node', id: 'B', position: [120, 0], text: 'B' }],
       },
     ]);
@@ -333,7 +359,7 @@ describe('clip prune / 复合 scope', () => {
         id: 'S',
         zIndex: 5,
         transforms: [{ kind: 'translate', x: 10, y: 5 }],
-        clip: { kind: 'rect', x: 0, y: 0, width: 50, height: 50 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 50, height: 50 } },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
@@ -349,11 +375,11 @@ describe('clip prune / 复合 scope', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 100, height: 100 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 100, height: 100 } },
         children: [
           {
             type: 'scope',
-            clip: { kind: 'rect', x: 10, y: 10, width: 20, height: 20 },
+            clip: { kind: 'rect', params: { x: 10, y: 10, width: 20, height: 20 } },
             children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
           },
         ],
@@ -376,7 +402,9 @@ describe('clip prune / 复合 scope', () => {
   });
 
   it('空 children + 无 id + 无 transforms 但带 clip 的 scope 不被 prune', () => {
-    const compiled = compileToScene(handcraftedScope({ kind: 'rect', x: 0, y: 0, width: 20, height: 20 }, [])).scene;
+    const compiled = compileToScene(
+      handcraftedScope({ kind: 'rect', params: { x: 0, y: 0, width: 20, height: 20 } }, []),
+    ).scene;
     const group = firstGroup(compiled.primitives);
 
     expect(group).toBeDefined();
@@ -390,7 +418,7 @@ describe('clip 退化几何', () => {
       Math.round(50 * Math.cos((i / 500) * 2 * Math.PI)),
       Math.round(50 * Math.sin((i / 500) * 2 * Math.PI)),
     ]);
-    const compiled = compileToScene(handcraftedScope({ kind: 'polygon', points }), polygonOptions).scene;
+    const compiled = compileToScene(handcraftedScope({ kind: 'polygon', params: { points } }), polygonOptions).scene;
     const clips = clipResources(compiled.resources);
 
     expect(clips).toHaveLength(1);
@@ -403,11 +431,13 @@ describe('clip 退化几何', () => {
     const compiled = compileToScene(
       handcraftedScope({
         kind: 'polygon',
-        points: [
-          [5, 5],
-          [5, 5],
-          [5, 5],
-        ],
+        params: {
+          points: [
+            [5, 5],
+            [5, 5],
+            [5, 5],
+          ],
+        },
       }),
       polygonOptions,
     ).scene;
@@ -416,7 +446,7 @@ describe('clip 退化几何', () => {
   });
 
   it('rect 极大坐标（finite 但巨大）→ 不抛、round-trip 等价', () => {
-    const ir = handcraftedScope({ kind: 'rect', x: 1e15, y: -1e15, width: 1e10, height: 1e10 });
+    const ir = handcraftedScope({ kind: 'rect', params: { x: 1e15, y: -1e15, width: 1e10, height: 1e10 } });
     const compiled = compileToScene(ir).scene;
 
     expect(clipResources(compiled.resources)).toHaveLength(1);

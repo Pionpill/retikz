@@ -18,22 +18,24 @@ const roundedRectClip = (): ClipDefinition =>
     kind: 'roundedRect',
     schema: strictObject({
       kind: literal('roundedRect'),
-      x: number(),
-      y: number(),
-      width: number().positive(),
-      height: number().positive(),
-      radius: number().positive(),
+      params: strictObject({
+        x: number(),
+        y: number(),
+        width: number().positive(),
+        height: number().positive(),
+        radius: number().positive(),
+      }),
     }),
     resolve: spec => {
       const commands: Array<PathCommand> = [
-        { kind: 'move', to: [spec.x, spec.y] },
-        { kind: 'line', to: [spec.x + spec.width, spec.y] },
-        { kind: 'line', to: [spec.x + spec.width, spec.y + spec.height] },
+        { kind: 'move', to: [spec.params.x, spec.params.y] },
+        { kind: 'line', to: [spec.params.x + spec.params.width, spec.params.y] },
+        { kind: 'line', to: [spec.params.x + spec.params.width, spec.params.y + spec.params.height] },
         { kind: 'close' },
       ];
-      return { kind: 'roundedRect', commands };
+      return { kind: 'roundedRect', params: { commands } };
     },
-    lower: shape => ({ commands: shape.commands, fillRule: 'nonzero' }),
+    lower: shape => ({ commands: shape.params.commands, fillRule: 'nonzero' }),
   });
 
 describe('Extension compound clip definition', () => {
@@ -49,11 +51,13 @@ describe('Extension compound clip definition', () => {
           type: 'scope',
           clip: {
             kind: 'polygon',
-            points: [
-              [0, 0],
-              [20, 0],
-              [10, 20],
-            ],
+            params: {
+              points: [
+                [0, 0],
+                [20, 0],
+                [10, 20],
+              ],
+            },
           },
           children: [],
         },
@@ -66,12 +70,14 @@ describe('Extension compound clip definition', () => {
   it('parses recursive compound children and delegates a custom child to Core registry resolution', () => {
     const clip = CompoundClipSchema.parse({
       kind: 'compound',
-      fillRule: 'evenodd',
-      children: [
-        { kind: 'circle', cx: 20, cy: 20, r: 10 },
-        { kind: 'compound', children: [{ kind: 'ellipse', cx: 20, cy: 20, rx: 8, ry: 6 }] },
-        { kind: 'roundedRect', x: 0, y: 0, width: 40, height: 40, radius: 4 },
-      ],
+      params: {
+        fillRule: 'evenodd',
+        children: [
+          { kind: 'circle', params: { cx: 20, cy: 20, r: 10 } },
+          { kind: 'compound', params: { children: [{ kind: 'ellipse', params: { cx: 20, cy: 20, rx: 8, ry: 6 } }] } },
+          { kind: 'roundedRect', params: { x: 0, y: 0, width: 40, height: 40, radius: 4 } },
+        ],
+      },
     });
     const scene: IRScene = {
       type: 'scene',
@@ -116,7 +122,9 @@ describe('Extension compound clip definition', () => {
           type: 'scope',
           clip: {
             kind: 'compound',
-            children: [{ kind: 'roundedRect', x: 0, y: 0, width: 40, height: 40, radius: 4 }],
+            params: {
+              children: [{ kind: 'roundedRect', params: { x: 0, y: 0, width: 40, height: 40, radius: 4 } }],
+            },
           },
           children: [],
         },
@@ -135,7 +143,7 @@ describe('Extension compound clip definition', () => {
   });
 
   it('reports the Extension compound schema diagnostic before compile when children are empty', () => {
-    expect(() => CompoundClipSchema.parse({ kind: 'compound', children: [] })).toThrow(/children/i);
+    expect(() => CompoundClipSchema.parse({ kind: 'compound', params: { children: [] } })).toThrow(/children/i);
   });
 
   it('requires the Compound definition to be explicitly injected into Core clip resolution', () => {
@@ -145,7 +153,7 @@ describe('Extension compound clip definition', () => {
       children: [
         {
           type: 'scope',
-          clip: { kind: 'compound', children: [{ kind: 'circle', cx: 20, cy: 20, r: 10 }] },
+          clip: { kind: 'compound', params: { children: [{ kind: 'circle', params: { cx: 20, cy: 20, r: 10 } }] } },
           children: [],
         },
       ],

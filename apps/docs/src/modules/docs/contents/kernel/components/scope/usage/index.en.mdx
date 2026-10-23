@@ -237,6 +237,8 @@ Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The
 
 ## Clipping and stacking
 
+All clips use `{ kind, params }`: `kind` selects the clip definition, and the required `params` object holds its parameters, for example `{ kind: 'rect', params: { x: 0, y: 0, width: 100, height: 80 } }`.
+
 `clip` uses Scope-local coordinates and becomes a renderer-agnostic Scene resource downstream. The panel shows Core's `rect` plus `circle` / `ellipse` / `polygon` / `path` / `compound` provided by Standard and injected into the drawing. Register a [Custom Clip](/kernel/components/scope/custom) when a domain needs another operation or geometry kind.
 
 <ComponentPreview

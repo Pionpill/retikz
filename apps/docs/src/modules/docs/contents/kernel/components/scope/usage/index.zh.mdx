@@ -237,6 +237,8 @@ Scope 的后代不能通过命名引用使用任一祖先 Scope 的中心、锚�
 
 ## 裁剪与层级
 
+所有裁剪都使用 `{ kind, params }`：`kind` 选择裁剪定义，必填的 `params` 对象保存该类型的参数，例如 `{ kind: 'rect', params: { x: 0, y: 0, width: 100, height: 80 } }`。
+
 `clip` 使用 Scope 局部坐标，并把裁剪结果作为渲染无关的 Scene 资源交给下游。面板展示 Core 的 `rect`，以及由 Extension 提供并注入的 `circle` / `ellipse` / `polygon` / `path` / `compound`；需要业务 operation 或几何 kind 时再注册[自定义裁剪区](/kernel/components/scope/custom)。
 
 <ComponentPreview

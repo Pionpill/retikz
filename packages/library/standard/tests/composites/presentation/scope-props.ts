@@ -9,7 +9,7 @@ export const fullScopeProps = {
   transforms: [{ kind: 'translate', x: 4, y: 5 }],
   position: { kind: 'anchor', target: [10, 20], selfAnchor: 'center' },
   zIndex: 3,
-  clip: { kind: 'rect', x: -10, y: -10, width: 40, height: 30 },
+  clip: { kind: 'rect', params: { x: -10, y: -10, width: 40, height: 30 } },
   meta: { source: 'scope-props-test' },
   animations: [
     {

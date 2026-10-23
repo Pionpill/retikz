@@ -547,7 +547,7 @@ describe('builtin retained renderers', () => {
         children: [
           {
             type: 'scope',
-            clip: { kind: 'rect', x: -20, y: -20, width: 40, height: 40 },
+            clip: { kind: 'rect', params: { x: -20, y: -20, width: 40, height: 40 } },
             children: [
               {
                 type: 'scope',

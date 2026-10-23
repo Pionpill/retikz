@@ -27,19 +27,21 @@ const preview = defineControlledBuiltinInspectPreview(
           position={[values.position[0], values.position[1]]}
           clip={{
             kind: 'path',
-            fillRule: 'evenodd',
-            commands: [
-              { kind: 'move', to: [-values.width / 2, -values.height / 2] },
-              { kind: 'line', to: [values.width / 2, -values.height / 2] },
-              { kind: 'line', to: [values.width / 2, values.height / 2] },
-              { kind: 'line', to: [-values.width / 2, values.height / 2] },
-              { kind: 'close' },
-              { kind: 'move', to: [-values.hole, 0] },
-              { kind: 'line', to: [0, -values.hole] },
-              { kind: 'line', to: [values.hole, 0] },
-              { kind: 'line', to: [0, values.hole] },
-              { kind: 'close' },
-            ],
+            params: {
+              fillRule: 'evenodd',
+              commands: [
+                { kind: 'move', to: [-values.width / 2, -values.height / 2] },
+                { kind: 'line', to: [values.width / 2, -values.height / 2] },
+                { kind: 'line', to: [values.width / 2, values.height / 2] },
+                { kind: 'line', to: [-values.width / 2, values.height / 2] },
+                { kind: 'close' },
+                { kind: 'move', to: [-values.hole, 0] },
+                { kind: 'line', to: [0, -values.hole] },
+                { kind: 'line', to: [values.hole, 0] },
+                { kind: 'line', to: [0, values.hole] },
+                { kind: 'close' },
+              ],
+            },
           }}
         >
           <Node

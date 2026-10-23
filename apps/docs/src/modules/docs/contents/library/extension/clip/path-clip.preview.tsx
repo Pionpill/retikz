@@ -22,21 +22,23 @@ export const renderPathClipPreview = (values: PathClipPreviewValues) => (
     <Scope
       clip={{
         kind: 'path',
-        fillRule: values.fillRule,
-        commands: [
-          { kind: 'move', to: [-82, -values.halfHeight] },
-          { kind: 'line', to: [18, -values.halfHeight] },
-          { kind: 'line', to: [values.tipX, 0] },
-          { kind: 'line', to: [18, values.halfHeight] },
-          { kind: 'line', to: [-82, values.halfHeight] },
-          { kind: 'line', to: [values.notchX, 0] },
-          { kind: 'close' },
-          { kind: 'move', to: [-values.holeSize, 0] },
-          { kind: 'line', to: [0, -values.holeSize] },
-          { kind: 'line', to: [values.holeSize, 0] },
-          { kind: 'line', to: [0, values.holeSize] },
-          { kind: 'close' },
-        ],
+        params: {
+          fillRule: values.fillRule,
+          commands: [
+            { kind: 'move', to: [-82, -values.halfHeight] },
+            { kind: 'line', to: [18, -values.halfHeight] },
+            { kind: 'line', to: [values.tipX, 0] },
+            { kind: 'line', to: [18, values.halfHeight] },
+            { kind: 'line', to: [-82, values.halfHeight] },
+            { kind: 'line', to: [values.notchX, 0] },
+            { kind: 'close' },
+            { kind: 'move', to: [-values.holeSize, 0] },
+            { kind: 'line', to: [0, -values.holeSize] },
+            { kind: 'line', to: [values.holeSize, 0] },
+            { kind: 'line', to: [0, values.holeSize] },
+            { kind: 'close' },
+          ],
+        },
       }}
     >
       <Node

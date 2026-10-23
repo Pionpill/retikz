@@ -61,7 +61,7 @@ describe('最终观测树', () => {
           children: [
             context.replay(laid.result, {
               transforms: [{ kind: 'translate', x: 15, y: 20 }],
-              clip: { kind: 'rect', x: 0, y: 0, width: 60, height: 60 },
+              clip: { kind: 'rect', params: { x: 0, y: 0, width: 60, height: 60 } },
             }),
           ],
         };
@@ -185,7 +185,7 @@ describe('最终观测树', () => {
   });
 
   it('几何相同的 Scope clip 按逻辑应用分别发布，开启观测不改变 primary', () => {
-    const clip = { kind: 'rect', x: 0, y: 0, width: 80, height: 50 };
+    const clip = { kind: 'rect', params: { x: 0, y: 0, width: 80, height: 50 } };
     const { source, observed, observations } = capture([
       {
         type: 'scope',
@@ -244,7 +244,7 @@ describe('最终观测树', () => {
             context.createScope({ transforms: [{ kind: 'translate', x: 20, y: 30 }] }, [
               context.replay(selected.result, {
                 transforms: [{ kind: 'translate', x: 100, y: 200 }],
-                clip: { kind: 'rect', x: 90, y: 190, width: 100, height: 40 },
+                clip: { kind: 'rect', params: { x: 90, y: 190, width: 100, height: 40 } },
               }),
             ]),
           ],

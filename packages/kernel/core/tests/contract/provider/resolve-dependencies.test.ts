@@ -51,12 +51,12 @@ const arrowDefinitionOf = (name: string) =>
 const clipDefinitionOf = (name: string) =>
   defineClip({
     kind: name,
-    schema: strictObject({ kind: literal(name) }),
-    resolve: () => ({ kind: name, size: 4 }),
+    schema: strictObject({ kind: literal(name), params: strictObject({}) }),
+    resolve: () => ({ kind: name, params: { size: 4 } }),
     lower: shape => ({
       commands: [
         { kind: 'move', to: [0, 0] },
-        { kind: 'line', to: [shape.size, shape.size] },
+        { kind: 'line', to: [shape.params.size, shape.params.size] },
       ],
       fillRule: 'nonzero',
     }),

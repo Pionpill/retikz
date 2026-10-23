@@ -23,11 +23,13 @@ export const renderCompoundClipPreview = (values: CompoundClipPreviewValues) => 
     <Scope
       clip={{
         kind: 'compound',
-        fillRule: values.fillRule,
-        children: [
-          { kind: 'circle', cx: -values.offset / 2, cy: 0, r: values.radius },
-          { kind: 'circle', cx: values.offset / 2, cy: 0, r: values.radius },
-        ],
+        params: {
+          fillRule: values.fillRule,
+          children: [
+            { kind: 'circle', params: { cx: -values.offset / 2, cy: 0, r: values.radius } },
+            { kind: 'circle', params: { cx: values.offset / 2, cy: 0, r: values.radius } },
+          ],
+        },
       }}
     >
       <Node

@@ -1246,7 +1246,7 @@ describe('layout-aware composite constraints and bounds', () => {
       enumerable: true,
       get: () => {
         clipReads += 1;
-        return { kind: 'rect', x: 0, y: 0, width: 10, height: 10 };
+        return { kind: 'rect', params: { x: 0, y: 0, width: 10, height: 10 } };
       },
     });
     const parent = defineComposite({
@@ -2095,8 +2095,8 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     const badClip = defineClip({
       kind: 'badResolvedClip',
-      schema: strictObject({ kind: literal('badResolvedClip') }),
-      resolve: () => ({ kind: 'badResolvedClip' }),
+      schema: strictObject({ kind: literal('badResolvedClip'), params: strictObject({}) }),
+      resolve: () => ({ kind: 'badResolvedClip', params: {} }),
       lower: () => ({
         commands: [{ kind: 'line', to: [1, 1] }],
         fillRule: 'nonzero',
@@ -2137,7 +2137,7 @@ describe('layout-aware composite constraints and bounds', () => {
                 : value.variant === 'clip'
                   ? {
                       type: 'scope',
-                      clip: { kind: 'badResolvedClip' } as never,
+                      clip: { kind: 'badResolvedClip', params: {} } as never,
                       children: [{ type: 'node', position: [0, 0] }],
                     }
                   : {
@@ -2223,14 +2223,20 @@ describe('layout-aware composite constraints and bounds', () => {
       lineContactX: 0,
       emit: () => [cyclicMarkerGroup],
     });
-    const cyclicClipShape: { kind: 'cyclicCompoundClip'; children: Array<ClipShape> } = {
+    const cyclicClipShape: {
+      kind: 'cyclicCompoundClip';
+      /** 裁剪参数 */
+      params: { children: Array<ClipShape> };
+    } = {
       kind: 'cyclicCompoundClip',
-      children: [],
+      params: {
+        children: [],
+      },
     };
-    cyclicClipShape.children.push(cyclicClipShape);
+    cyclicClipShape.params.children.push(cyclicClipShape);
     const cyclicClip = defineClip({
       kind: 'cyclicCompoundClip',
-      schema: strictObject({ kind: literal('cyclicCompoundClip') }),
+      schema: strictObject({ kind: literal('cyclicCompoundClip'), params: strictObject({}) }),
       resolve: () => cyclicClipShape,
       lower: () => ({
         commands: [
@@ -2275,7 +2281,7 @@ describe('layout-aware composite constraints and bounds', () => {
             : value.variant === 'cyclicCompoundClip'
               ? {
                   type: 'scope',
-                  clip: { kind: 'cyclicCompoundClip' } as never,
+                  clip: { kind: 'cyclicCompoundClip', params: {} } as never,
                   children: [{ type: 'node', position: [0, 0] }],
                 }
               : {
@@ -2363,20 +2369,22 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     const symbolClipShape: Record<PropertyKey, unknown> = {
       kind: 'symbolKeyClip',
-      x: 0,
-      y: 0,
-      width: 1,
-      height: 1,
+      params: {
+        x: 0,
+        y: 0,
+        width: 1,
+        height: 1,
+      },
     };
     symbolClipShape[Symbol('clip-hidden-function')] = () => 'hidden';
     const badClip = defineClip({
       kind: 'symbolKeyClip',
-      schema: strictObject({ kind: literal('symbolKeyClip') }),
+      schema: strictObject({ kind: literal('symbolKeyClip'), params: strictObject({}) }),
       resolve: () => symbolClipShape as unknown as ClipShape,
       lower: shape => ({
         commands: [
-          { kind: 'move', to: [shape.x as number, shape.y as number] },
-          { kind: 'line', to: [(shape.x as number) + (shape.width as number), shape.y as number] },
+          { kind: 'move', to: [shape.params.x as number, shape.params.y as number] },
+          { kind: 'line', to: [(shape.params.x as number) + (shape.params.width as number), shape.params.y as number] },
         ],
         fillRule: 'nonzero',
       }),
@@ -2410,7 +2418,7 @@ describe('layout-aware composite constraints and bounds', () => {
             : value.variant === 'symbolKeyClip'
               ? {
                   type: 'scope',
-                  clip: { kind: 'symbolKeyClip' } as never,
+                  clip: { kind: 'symbolKeyClip', params: {} } as never,
                   children: [{ type: 'node', position: [0, 0] }],
                 }
               : {
@@ -2473,7 +2481,7 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     const clipTrap = new Error('clip getPrototypeOf trap');
     const clipProxy = new Proxy(
-      { kind: 'proxyTrapClip', x: 0, y: 0, width: 1, height: 1 },
+      { kind: 'proxyTrapClip', params: { x: 0, y: 0, width: 1, height: 1 } },
       {
         getPrototypeOf: () => {
           throw clipTrap;
@@ -2482,7 +2490,7 @@ describe('layout-aware composite constraints and bounds', () => {
     );
     const proxyClip = defineClip({
       kind: 'proxyTrapClip',
-      schema: strictObject({ kind: literal('proxyTrapClip') }),
+      schema: strictObject({ kind: literal('proxyTrapClip'), params: strictObject({}) }),
       resolve: () => clipProxy as unknown as ClipShape,
       lower: () => ({
         commands: [
@@ -2516,7 +2524,7 @@ describe('layout-aware composite constraints and bounds', () => {
                 }
               : {
                   type: 'scope',
-                  clip: { kind: 'proxyTrapClip' } as never,
+                  clip: { kind: 'proxyTrapClip', params: {} } as never,
                   children: [{ type: 'node', position: [0, 0] }],
                 };
         context.layoutChild(child, NaturalLayoutProposal);
@@ -2654,26 +2662,29 @@ describe('layout-aware composite constraints and bounds', () => {
 
   it('snapshots a dynamic Clip shape before validation and resource registration', () => {
     let kindReads = 0;
-    const dynamicShape = new Proxy({ kind: 'dynamicClipShape', x: 0, y: 0, width: 10, height: 10 } as const, {
-      get: (target, property, receiver) => {
-        if (property === 'kind') {
-          kindReads += 1;
-          return kindReads === 1 ? 'dynamicClipShape' : 'bogus';
-        }
+    const dynamicShape = new Proxy(
+      { kind: 'dynamicClipShape', params: { x: 0, y: 0, width: 10, height: 10 } } as const,
+      {
+        get: (target, property, receiver) => {
+          if (property === 'kind') {
+            kindReads += 1;
+            return kindReads === 1 ? 'dynamicClipShape' : 'bogus';
+          }
 
-        return Reflect.get(target, property, receiver);
+          return Reflect.get(target, property, receiver);
+        },
       },
-    });
+    );
     const dynamicClip = defineClip({
       kind: 'dynamicClipShape',
-      schema: strictObject({ kind: literal('dynamicClipShape') }),
+      schema: strictObject({ kind: literal('dynamicClipShape'), params: strictObject({}) }),
       resolve: () => dynamicShape,
       lower: shape => ({
         commands: [
-          { kind: 'move', to: [shape.x, shape.y] },
-          { kind: 'line', to: [shape.x + shape.width, shape.y] },
-          { kind: 'line', to: [shape.x + shape.width, shape.y + shape.height] },
-          { kind: 'line', to: [shape.x, shape.y + shape.height] },
+          { kind: 'move', to: [shape.params.x, shape.params.y] },
+          { kind: 'line', to: [shape.params.x + shape.params.width, shape.params.y] },
+          { kind: 'line', to: [shape.params.x + shape.params.width, shape.params.y + shape.params.height] },
+          { kind: 'line', to: [shape.params.x, shape.params.y + shape.params.height] },
           { kind: 'close' },
         ],
         fillRule: 'nonzero',
@@ -2683,7 +2694,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const result = compileToScene(
       sceneOf({
         type: 'scope',
-        clip: { kind: 'dynamicClipShape' } as never,
+        clip: { kind: 'dynamicClipShape', params: {} } as never,
         children: [{ type: 'node', position: [0, 0] }],
       }),
       { clips: [dynamicClip] },
@@ -2973,10 +2984,10 @@ describe('layout-aware composite constraints and bounds', () => {
     stage => {
       const throwingClip = defineClip({
         kind: 'ordinaryThrowingClip',
-        schema: strictObject({ kind: literal('ordinaryThrowingClip') }),
+        schema: strictObject({ kind: literal('ordinaryThrowingClip'), params: strictObject({}) }),
         resolve: () => {
           if (stage === 'resolve') throw new Error('ordinary clip resolve failure');
-          return { kind: 'ordinaryThrowingClip' };
+          return { kind: 'ordinaryThrowingClip', params: {} };
         },
         lower: () => {
           if (stage === 'lower') throw new Error('ordinary clip lower failure');
@@ -3001,7 +3012,7 @@ describe('layout-aware composite constraints and bounds', () => {
           const probe = context.layoutChild(
             {
               type: 'scope',
-              clip: { kind: 'ordinaryThrowingClip' } as never,
+              clip: { kind: 'ordinaryThrowingClip', params: {} } as never,
               children: [{ type: 'node', position: [0, 0] }],
             },
             NaturalLayoutProposal,
@@ -3208,7 +3219,7 @@ describe('layout-aware composite replay ownership', () => {
         const laid = resolvedResultOf(context, { namespace: 'test', type: 'multipleRoots' });
         return {
           children: [
-            context.replay(laid, { clip: { kind: 'rect', x: -20, y: -20, width: 40, height: 40 } }),
+            context.replay(laid, { clip: { kind: 'rect', params: { x: -20, y: -20, width: 40, height: 40 } } }),
             { type: 'node', position: [20, 0], zIndex: 5 },
           ],
         };

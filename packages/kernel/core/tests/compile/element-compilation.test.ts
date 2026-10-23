@@ -182,7 +182,7 @@ describe('独立元素编译', () => {
       type: 'scope',
       id: 'outer',
       position: [20, 30],
-      clip: { kind: 'rect', x: -10, y: -10, width: 20, height: 20 },
+      clip: { kind: 'rect', params: { x: -10, y: -10, width: 20, height: 20 } },
     };
     const inner: Omit<IRScope, 'children'> = { type: 'scope', id: 'inner', position: [5, 8] };
     const input: IRNode = { type: 'node', position: [0, 0], text: 'A' };

@@ -12,19 +12,26 @@ const clippedIr = (clip: IRClip): IRScene => ({
 
 type RecursiveClip = {
   kind: 'recursive';
-  depth: number;
+  /** 裁剪参数 */
+  params: {
+    depth: number;
+  };
 };
 
 type RecursiveClipShape = ClipShape & {
   kind: 'recursive';
-  commands: Array<PathCommand>;
+  /** 裁剪参数 */
+  params: {
+    commands: Array<PathCommand>;
+  };
 };
 
 const RecursiveClipDefinition = defineClip<RecursiveClip, RecursiveClipShape>({
   kind: 'recursive',
-  schema: strictObject({ kind: literal('recursive'), depth: number().int().nonnegative() }),
+  schema: strictObject({ kind: literal('recursive'), params: strictObject({ depth: number().int().nonnegative() }) }),
   resolve: (spec, context) => {
-    if (spec.depth > 0) return context.resolve({ kind: 'recursive', depth: spec.depth - 1 }) as RecursiveClipShape;
+    if (spec.params.depth > 0)
+      return context.resolve({ kind: 'recursive', params: { depth: spec.params.depth - 1 } }) as RecursiveClipShape;
 
     const commands: Array<PathCommand> = [
       { kind: 'move', to: [0, 0] },
@@ -33,14 +40,14 @@ const RecursiveClipDefinition = defineClip<RecursiveClip, RecursiveClipShape>({
       { kind: 'close' },
     ];
 
-    return { kind: 'recursive', commands };
+    return { kind: 'recursive', params: { commands } };
   },
-  lower: shape => ({ commands: shape.commands, fillRule: 'nonzero' }),
+  lower: shape => ({ commands: shape.params.commands, fillRule: 'nonzero' }),
 });
 
 const OperationCycleDefinition = defineClip({
   kind: 'operationCycle',
-  schema: strictObject({ kind: literal('operationCycle') }),
+  schema: strictObject({ kind: literal('operationCycle'), params: strictObject({}) }),
   resolve: (spec, context) => context.resolve(spec),
   lower: () => ({
     commands: [
@@ -53,22 +60,22 @@ const OperationCycleDefinition = defineClip({
 
 const LowerCycleDefinition = defineClip({
   kind: 'lowerCycle',
-  schema: strictObject({ kind: literal('lowerCycle') }),
-  resolve: () => ({ kind: 'lowerCycle' }),
+  schema: strictObject({ kind: literal('lowerCycle'), params: strictObject({}) }),
+  resolve: () => ({ kind: 'lowerCycle', params: {} }),
   lower: (shape, context) => context.lower(shape),
 });
 
 describe('clip recursion guard', () => {
   it('shares the exact explicit budget across operation resolve and shape lower', () => {
     expect(
-      compileToScene(clippedIr({ kind: 'recursive', depth: 2 }), {
+      compileToScene(clippedIr({ kind: 'recursive', params: { depth: 2 } }), {
         clips: [RecursiveClipDefinition],
         maxClipDepth: 4,
       }).scene.resources,
     ).toHaveLength(1);
 
     expect(() =>
-      compileToScene(clippedIr({ kind: 'recursive', depth: 2 }), {
+      compileToScene(clippedIr({ kind: 'recursive', params: { depth: 2 } }), {
         clips: [RecursiveClipDefinition],
         maxClipDepth: 3,
       }),
@@ -85,7 +92,7 @@ describe('clip recursion guard', () => {
       }),
       compile: (_, context) => ({
         children: [
-          context.createScope({ clip: { kind: 'recursive', depth: 2 } }, [
+          context.createScope({ clip: { kind: 'recursive', params: { depth: 2 } } }, [
             { type: 'node', position: [0, 0], text: 'A' },
           ]),
         ],
@@ -115,16 +122,17 @@ describe('clip recursion guard', () => {
 
   it('uses a default budget of 32 edges', () => {
     expect(
-      compileToScene(clippedIr({ kind: 'recursive', depth: 30 }), { clips: [RecursiveClipDefinition] }).scene.resources,
+      compileToScene(clippedIr({ kind: 'recursive', params: { depth: 30 } }), { clips: [RecursiveClipDefinition] })
+        .scene.resources,
     ).toHaveLength(1);
     expect(() =>
-      compileToScene(clippedIr({ kind: 'recursive', depth: 31 }), { clips: [RecursiveClipDefinition] }),
+      compileToScene(clippedIr({ kind: 'recursive', params: { depth: 31 } }), { clips: [RecursiveClipDefinition] }),
     ).toThrow(/maxClipDepth.*32/i);
   });
 
   it('rejects an active operation object cycle before depth overflow', () => {
     expect(() =>
-      compileToScene(clippedIr({ kind: 'operationCycle' }), {
+      compileToScene(clippedIr({ kind: 'operationCycle', params: {} }), {
         clips: [OperationCycleDefinition],
         maxClipDepth: 100,
       }),
@@ -133,7 +141,7 @@ describe('clip recursion guard', () => {
 
   it('rejects an active lower object cycle before depth overflow', () => {
     expect(() =>
-      compileToScene(clippedIr({ kind: 'lowerCycle' }), {
+      compileToScene(clippedIr({ kind: 'lowerCycle', params: {} }), {
         clips: [LowerCycleDefinition],
         maxClipDepth: 100,
       }),
@@ -143,7 +151,7 @@ describe('clip recursion guard', () => {
 
 describe('clip failure boundaries', () => {
   it('reports missing definitions with available registry keys', () => {
-    expect(() => compileToScene(clippedIr({ kind: 'missingOperation' }))).toThrow(
+    expect(() => compileToScene(clippedIr({ kind: 'missingOperation', params: {} }))).toThrow(
       /Unknown provider .*available: rect/i,
     );
   });
@@ -151,11 +159,13 @@ describe('clip failure boundaries', () => {
   it('keeps malformed lower output as a fatal provider contract error', () => {
     const malformed = defineClip({
       kind: 'malformed',
-      schema: strictObject({ kind: literal('malformed') }),
-      resolve: () => ({ kind: 'malformed' }),
+      schema: strictObject({ kind: literal('malformed'), params: strictObject({}) }),
+      resolve: () => ({ kind: 'malformed', params: {} }),
       lower: () => ({ commands: [], fillRule: 'nonzero' }),
     });
 
-    expect(() => compileToScene(clippedIr({ kind: 'malformed' }), { clips: [malformed] })).toThrow(RetikzCoreError);
+    expect(() => compileToScene(clippedIr({ kind: 'malformed', params: {} }), { clips: [malformed] })).toThrow(
+      RetikzCoreError,
+    );
   });
 });

@@ -233,5 +233,5 @@ export const alignAllocationInSlot = (
 export const layoutClipOf = (size: Readonly<{ width: number; height: number }>): IRClip => {
   finiteNonNegative(size.width, 'clip width');
   finiteNonNegative(size.height, 'clip height');
-  return { kind: 'rect', x: 0, y: 0, width: size.width, height: size.height };
+  return { kind: 'rect', params: { x: 0, y: 0, width: size.width, height: size.height } };
 };

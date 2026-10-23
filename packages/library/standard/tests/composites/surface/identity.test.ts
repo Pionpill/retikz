@@ -89,7 +89,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
       cornerRadius: 4,
       background: { fill: '#fff' },
       border: { stroke: '#000' },
-      clip: { kind: 'rect', x: 1, y: 1, width: 18, height: 8 },
+      clip: { kind: 'rect', params: { x: 1, y: 1, width: 18, height: 8 } },
     });
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },

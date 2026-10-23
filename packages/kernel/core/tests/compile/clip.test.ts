@@ -31,7 +31,7 @@ describe('clip 资源生成 + GroupPrim.clipRef 挂载', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 40, height: 30 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 40, height: 30 } },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
@@ -62,7 +62,7 @@ describe('clip 资源生成 + GroupPrim.clipRef 挂载', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 10, height: 10 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 10, height: 10 } },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
@@ -74,7 +74,7 @@ describe('clip 资源生成 + GroupPrim.clipRef 挂载', () => {
 
 describe('clip 去重 / 不同 clip 各自资源', () => {
   it('两 scope 用结构相同 clip → 1 条 clip 资源、两 GroupPrim 同 clipRef', () => {
-    const sameClip = { kind: 'rect', x: 0, y: 0, width: 40, height: 30 } as const;
+    const sameClip = { kind: 'rect', params: { x: 0, y: 0, width: 40, height: 30 } } as const;
     const ir = scene([
       {
         type: 'scope',
@@ -103,12 +103,12 @@ describe('clip 去重 / 不同 clip 各自资源', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 40, height: 30 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 40, height: 30 } },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 5, y: 5, width: 20, height: 15 },
+        clip: { kind: 'rect', params: { x: 5, y: 5, width: 20, height: 15 } },
         children: [{ type: 'node', id: 'B', position: [80, 0], text: 'B' }],
       },
     ]);
@@ -129,7 +129,7 @@ describe('带 clip 的 scope 不被 prune', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 60, height: 60 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 60, height: 60 } },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
@@ -145,7 +145,7 @@ describe('带 clip 的 scope 不被 prune', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 20, height: 20 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 20, height: 20 } },
         children: [],
       },
     ]);
@@ -169,7 +169,7 @@ describe('交互：paint + clip 资源共存 / transformed scope path ownership'
       },
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 40, height: 30 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 40, height: 30 } },
         children: [{ type: 'node', id: 'A', position: [80, 0], text: 'A' }],
       },
     ]);
@@ -191,7 +191,7 @@ describe('交互：paint + clip 资源共存 / transformed scope path ownership'
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 100, height: 100 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 100, height: 100 } },
         transforms: [{ kind: 'translate', x: 10, y: 0 }],
         children: [
           { type: 'node', id: 'A', position: [0, 0], text: 'A' },
@@ -224,7 +224,7 @@ describe('交互：paint + clip 资源共存 / transformed scope path ownership'
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 100, height: 100 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 100, height: 100 } },
         children: [
           { type: 'node', id: 'A', position: [0, 0], text: 'A' },
           { type: 'node', id: 'B', position: [30, 0], text: 'B' },
@@ -255,7 +255,7 @@ describe('退化裁剪区手搓 IR 编译期守卫', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: Infinity, height: 10 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: Infinity, height: 10 } },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
@@ -267,7 +267,7 @@ describe('退化裁剪区手搓 IR 编译期守卫', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 10, height: NaN },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 10, height: NaN } },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
@@ -281,10 +281,12 @@ describe('退化裁剪区手搓 IR 编译期守卫', () => {
         type: 'scope',
         clip: {
           kind: 'polygon',
-          points: [
-            [0, 0],
-            [10, 0],
-          ],
+          params: {
+            points: [
+              [0, 0],
+              [10, 0],
+            ],
+          },
         },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },

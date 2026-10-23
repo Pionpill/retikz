@@ -153,7 +153,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
             context.createScope(
               {
                 id: 'cell',
-                clip: { kind: 'rect', x: 0, y: 0, width: 30, height: 20 },
+                clip: { kind: 'rect', params: { x: 0, y: 0, width: 30, height: 20 } },
                 meta: { role: 'cell' },
               },
               [placement],
@@ -289,7 +289,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
               localNamespace: true,
               transforms: [{ kind: 'rotate', degrees: 30, pivot: [4, 5] }],
               position: { kind: 'anchor', target: [20, 30], selfAnchor: [4, 5] },
-              clip: { kind: 'rect', x: -20, y: -20, width: 40, height: 40 },
+              clip: { kind: 'rect', params: { x: -20, y: -20, width: 40, height: 40 } },
               zIndex: 2,
               boundingShape: 'circle',
               meta: { role: 'all' },
@@ -483,19 +483,21 @@ describe('layout-aware composite runtime wrapper tree', () => {
       kind: 'conditionalPreflightClip',
       schema: strictObject({
         kind: literal('conditionalPreflightClip'),
-        fail: boolean(),
+        params: strictObject({
+          fail: boolean(),
+        }),
       }),
       resolve: spec => {
         clipResolveCalls += 1;
-        if (spec.fail) throw new Error('runtime Scope clip failed');
-        return { kind: 'conditionalPreflightClip', x: -10, y: -10, width: 20, height: 20 };
+        if (spec.params.fail) throw new Error('runtime Scope clip failed');
+        return { kind: 'conditionalPreflightClip', params: { x: -10, y: -10, width: 20, height: 20 } };
       },
       lower: shape => ({
         commands: [
-          { kind: 'move', to: [shape.x, shape.y] },
-          { kind: 'line', to: [shape.x + shape.width, shape.y] },
-          { kind: 'line', to: [shape.x + shape.width, shape.y + shape.height] },
-          { kind: 'line', to: [shape.x, shape.y + shape.height] },
+          { kind: 'move', to: [shape.params.x, shape.params.y] },
+          { kind: 'line', to: [shape.params.x + shape.params.width, shape.params.y] },
+          { kind: 'line', to: [shape.params.x + shape.params.width, shape.params.y + shape.params.height] },
+          { kind: 'line', to: [shape.params.x, shape.params.y + shape.params.height] },
           { kind: 'close' },
         ],
         fillRule: 'nonzero',
@@ -547,9 +549,10 @@ describe('layout-aware composite runtime wrapper tree', () => {
         const laid = resolvedResultOf(context, { namespace: 'test', type: 'preflightArtifactLeaf' });
         retainedResult = laid;
         replayHandle = context.replay(laid);
-        scopeHandle = context.createScope({ clip: { kind: 'conditionalPreflightClip', fail: value.fail } }, [
-          context.createScope({}, []),
-        ]);
+        scopeHandle = context.createScope(
+          { clip: { kind: 'conditionalPreflightClip', params: { fail: value.fail } } },
+          [context.createScope({}, [])],
+        );
 
         return {
           children: [replayHandle, scopeHandle],
@@ -768,12 +771,12 @@ describe('layout-aware composite runtime wrapper tree', () => {
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, {
           type: 'scope',
-          clip: { kind: 'rect', x: -20, y: -20, width: 40, height: 40 },
+          clip: { kind: 'rect', params: { x: -20, y: -20, width: 40, height: 40 } },
           children: [{ ...node('resource'), fill: paint }],
         });
         return {
           children: [
-            context.createScope({ clip: { kind: 'rect', x: -10, y: -10, width: 20, height: 20 } }, [
+            context.createScope({ clip: { kind: 'rect', params: { x: -10, y: -10, width: 20, height: 20 } } }, [
               context.createScope({}, [context.replay(laid)]),
             ]),
           ],
@@ -947,7 +950,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('detachedWrapper') }),
       compile: (_value, context) => {
         const transforms = [{ kind: 'translate' as const, x: 2, y: 3 }];
-        const clip = { kind: 'rect' as const, x: 0, y: 0, width: 20, height: 10 };
+        const clip = { kind: 'rect' as const, params: { x: 0, y: 0, width: 20, height: 10 } };
         const meta = { role: 'original' };
         const animations = [{ ...fade, keyframes: fade.keyframes.map(frame => ({ ...frame })) }];
         const children: Array<IRChild | CompositeCompileChild> = [node('original')];
@@ -955,7 +958,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
         const wrapper = context.createScope(props, children);
 
         transforms[0].x = 99;
-        clip.width = 99;
+        clip.params.width = 99;
         meta.role = 'mutated';
         animations[0].duration = 999;
         children[0] = node('mutated');
@@ -1015,7 +1018,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
         const before = laid.visualBounds;
         const replay = context.replay(laid, {
           transforms: [{ kind: 'translate', x: 20, y: 0 }],
-          clip: { kind: 'rect', x: 18, y: -10, width: 4, height: 20 },
+          clip: { kind: 'rect', params: { x: 18, y: -10, width: 4, height: 20 } },
         });
 
         return { children: [replay], artifact: { before, after: laid.visualBounds } };
@@ -1094,7 +1097,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
         const cell = context.createScope(
           {
             id: 'cell-0-0',
-            clip: { kind: 'rect', x: 0, y: 0, width: 40, height: 20 },
+            clip: { kind: 'rect', params: { x: 0, y: 0, width: 40, height: 20 } },
             meta: { row: 0, column: 0 },
           },
           [context.createScope({ transforms: [{ kind: 'translate', x: 5, y: 6 }] }, [context.replay(content)])],

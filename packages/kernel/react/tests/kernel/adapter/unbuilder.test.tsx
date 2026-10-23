@@ -1190,16 +1190,18 @@ describe('convertIRToReactNode', () => {
 
     it('round-trips Scope.clip：circle / rect / ellipse / polygon', () => {
       const clips: Array<IRClip> = [
-        { kind: 'circle' as const, cx: 0, cy: 0, r: 80 },
-        { kind: 'rect' as const, x: -10, y: -10, width: 40, height: 30 },
-        { kind: 'ellipse' as const, cx: 0, cy: 0, rx: 30, ry: 20 },
+        { kind: 'circle' as const, params: { cx: 0, cy: 0, r: 80 } },
+        { kind: 'rect' as const, params: { x: -10, y: -10, width: 40, height: 30 } },
+        { kind: 'ellipse' as const, params: { cx: 0, cy: 0, rx: 30, ry: 20 } },
         {
           kind: 'polygon',
-          points: [
-            [0, 0],
-            [40, 0],
-            [20, 40],
-          ],
+          params: {
+            points: [
+              [0, 0],
+              [40, 0],
+              [20, 40],
+            ],
+          },
         },
       ];
 

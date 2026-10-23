@@ -19,7 +19,7 @@ const rectCommands: Array<PathCommand> = [
 
 describe('Core rect Clip definition', () => {
   it('resolves and lowers rect through the complete builtin definition', () => {
-    const scene = compileToScene(clippedIr({ kind: 'rect', x: 1, y: 2, width: 3, height: 4 })).scene;
+    const scene = compileToScene(clippedIr({ kind: 'rect', params: { x: 1, y: 2, width: 3, height: 4 } })).scene;
 
     expect(scene.resources).toEqual([
       {
@@ -31,7 +31,7 @@ describe('Core rect Clip definition', () => {
   });
 
   it('keeps a zero-width rect as a canonical empty clip path', () => {
-    const scene = compileToScene(clippedIr({ kind: 'rect', x: 1, y: 2, width: 0, height: 4 })).scene;
+    const scene = compileToScene(clippedIr({ kind: 'rect', params: { x: 1, y: 2, width: 0, height: 4 } })).scene;
 
     expect(scene.resources).toEqual([
       {

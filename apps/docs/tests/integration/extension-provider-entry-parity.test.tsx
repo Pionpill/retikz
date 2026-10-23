@@ -21,7 +21,9 @@ const source: IRScene = {
       type: 'scope',
       clip: {
         kind: 'compound',
-        children: [{ kind: 'circle', cx: 0, cy: 0, r: 36 }],
+        params: {
+          children: [{ kind: 'circle', params: { cx: 0, cy: 0, r: 36 } }],
+        },
       },
       children: [{ type: 'node', position: [0, 0], shape: 'cross', text: 'optional shape' }],
     },

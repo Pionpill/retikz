@@ -42,7 +42,7 @@ describe('Core minimal builtin providers', () => {
         scene([
           {
             type: 'scope',
-            clip: { kind: 'compound', children: [{ kind: 'circle', cx: 0, cy: 0, r: 10 }] },
+            clip: { kind: 'compound', params: { children: [{ kind: 'circle', params: { cx: 0, cy: 0, r: 10 } }] } },
             children: [],
           },
         ]),
@@ -50,20 +50,22 @@ describe('Core minimal builtin providers', () => {
       ),
     ).toThrow(/Unknown provider 'compound'.*available:/i);
 
-    const optionalClips: Array<{ kind: string; points?: Array<[number, number]>; commands?: Array<unknown> }> = [
+    const optionalClips: Array<IRClip> = [
       {
         kind: 'polygon',
-        points: [
-          [0, 0],
-          [10, 0],
-          [5, 10],
-        ],
+        params: {
+          points: [
+            [0, 0],
+            [10, 0],
+            [5, 10],
+          ],
+        },
       },
-      { kind: 'path', commands: [{ kind: 'move', to: [0, 0] }] },
+      { kind: 'path', params: { commands: [{ kind: 'move', to: [0, 0] }] } },
     ];
 
     for (const clip of optionalClips) {
-      expect(() => compileToScene(scene([{ type: 'scope', clip, children: [] } as never]), { padding: 0 })).toThrow(
+      expect(() => compileToScene(scene([{ type: 'scope', clip, children: [] }]), { padding: 0 })).toThrow(
         new RegExp(`Unknown provider '${clip.kind}'.*available:`, 'i'),
       );
     }
@@ -85,7 +87,8 @@ describe('Core minimal builtin providers', () => {
   });
 
   it.each(['circle', 'ellipse'])('requires an optional definition for the %s clip operation', kind => {
-    const clip: IRClip = kind === 'circle' ? { kind, cx: 0, cy: 0, r: 10 } : { kind, cx: 0, cy: 0, rx: 10, ry: 5 };
+    const clip: IRClip =
+      kind === 'circle' ? { kind, params: { cx: 0, cy: 0, r: 10 } } : { kind, params: { cx: 0, cy: 0, rx: 10, ry: 5 } };
 
     expect(() => compileToScene(scene([{ type: 'scope', clip, children: [] }]), { padding: 0 })).toThrow(
       new RegExp(`Unknown provider '${kind}'.*available:`, 'i'),
