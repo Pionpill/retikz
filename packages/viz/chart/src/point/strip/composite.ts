@@ -8,12 +8,12 @@ import { StripChartDefinition } from './recipe';
 
 /** 创建只安装 Strip recipe 的 Point family provider contribution */
 export const createStripChartProviderContribution = (
-  themeDefinitions: ReadonlyArray<ChartThemeDefinition> = [],
+  chartThemeDefinitions: ReadonlyArray<ChartThemeDefinition> = [],
   lowerOptions: LowerPlotsOptions = {},
 ): ChartProviderContribution =>
   createChartProviderContribution({
     family: ChartFamily.Point,
     recipe: StripChartDefinition,
-    themeDefinitions,
+    chartThemeDefinitions,
     lowerOptions,
   });

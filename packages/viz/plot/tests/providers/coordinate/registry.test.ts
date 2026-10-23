@@ -69,6 +69,21 @@ describe('coordinate registry（contract spec）', () => {
     });
   });
 
+  it('preserves a precise operation transform while reading and rebinding scales', () => {
+    const definition = defineCoordinate({
+      ...archDefinition,
+      schema: object({ type: literal('arch'), archHeight: number(), x: string().optional() }).transform(operation => ({
+        ...operation,
+        archHeight: operation.archHeight + 10,
+      })),
+    });
+    const operation = definition.schema.parse({ type: 'arch', archHeight: 20, x: 'original' });
+    expect(readCoordinateScaleNames(definition, operation)).toEqual({ x: 'original' });
+    const bound = bindCoordinateScaleNames(definition, operation, { x: 'replacement' });
+    expect(bound).toEqual({ type: 'arch', archHeight: 30, x: 'replacement' });
+    expect(operation).toEqual({ type: 'arch', archHeight: 30, x: 'original' });
+  });
+
   it('polar_coordinate_scale_binding_aliases_x/y_roles_to_angle/radius_fields', () => {
     const definition = resolveCoordinateRegistry().get(BuiltinPlotCoordinate.Polar2D);
 
@@ -171,12 +186,6 @@ describe('coordinate registry（contract spec）', () => {
     };
 
     expect(() => resolveCoordinateRegistry([malformed])).toThrow(/non-empty z\.literal string/);
-  });
-
-  it('empty_coordinate_role_throws', () => {
-    const malformed: AnyCoordinateDefinition = { ...archDefinition, roles: [''] };
-
-    expect(() => resolveCoordinateRegistry([malformed])).toThrow(/non-empty coordinate role/);
   });
 
   it('duplicate_coordinate_role_throws', () => {

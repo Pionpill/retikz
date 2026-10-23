@@ -34,7 +34,7 @@ const scene: IRScene = {
     {
       type: 'node',
       position: [0, 0],
-      text: [{ runs: [{ tex: 'x', fill: 'royalblue' }] }],
+      text: [{ segments: [{ tex: 'x', fill: 'royalblue' }] }],
     },
   ],
 };

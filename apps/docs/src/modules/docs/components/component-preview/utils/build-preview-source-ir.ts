@@ -85,8 +85,8 @@ const sceneChildrenOf = (inputScene: InputScene): ReadonlyArray<InputChild> => {
 };
 
 const GRAPH_DEFINITION_OPTION_KEYS = new Set([
-  'diagramThemeStyles',
-  'flowThemeStyles',
+  'diagramThemeDefinitions',
+  'flowThemeDefinitions',
   'flowLayouts',
   'defaultFlowLayout',
   'entityRoles',
@@ -95,7 +95,7 @@ const GRAPH_DEFINITION_OPTION_KEYS = new Set([
   'relationRoles',
   'relationKinds',
   'relationPredicates',
-  'graphThemeStyles',
+  'graphThemeDefinitions',
 ]);
 
 const sourcePropsOf = (props: unknown): Record<string, unknown> =>

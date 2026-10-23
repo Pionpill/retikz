@@ -239,11 +239,11 @@ describe('Node label resolved metrics', () => {
 
   it('rejects invalid metrics for mixed Node labels and mixed Node body text', () => {
     const invalidHeight: TextMeasurer = () => ({ width: 10, height: -1, ascent: 6, descent: 2 });
-    const labelScene = sceneWithLabel({ text: { runs: [{ text: 'L' }] }, position: 'center' });
+    const labelScene = sceneWithLabel({ text: { segments: [{ text: 'L' }] }, position: 'center' });
     const nodeTextScene: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], text: [{ runs: [{ text: 'body' }] }] }],
+      children: [{ type: 'node', position: [0, 0], text: [{ segments: [{ text: 'body' }] }] }],
     };
 
     expect(() => compileToScene(labelScene, { measureText: invalidHeight }).scene).toThrow(
@@ -263,7 +263,7 @@ describe('Node label resolved metrics', () => {
     });
 
     expect(() =>
-      compileToScene(sceneWithLabel({ text: { runs: [{ tex: 'x' }] }, position: 'center' }), {
+      compileToScene(sceneWithLabel({ text: { segments: [{ tex: 'x' }] }, position: 'center' }), {
         lowerTex,
         measureText: fixedMeasure,
       }),
@@ -272,7 +272,7 @@ describe('Node label resolved metrics', () => {
 
   it('keeps lowerTex null as a warning-based absence on the Node label path', () => {
     const warnings: Array<CompileWarning> = [];
-    const scene = compileToScene(sceneWithLabel({ text: { runs: [{ tex: 'x' }] }, position: 'center' }), {
+    const scene = compileToScene(sceneWithLabel({ text: { segments: [{ tex: 'x' }] }, position: 'center' }), {
       lowerTex: () => null,
       measureText: fixedMeasure,
       onWarn: warning => warnings.push(warning),

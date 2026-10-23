@@ -2,9 +2,8 @@ import { mergeGraphicStyle } from '@retikz/core';
 import type { ResolvedTheme } from '@retikz/core';
 import type { JsonObject, JsonValue } from '@retikz/foundation';
 import { mergeProperties } from '@retikz/foundation';
-import { array, strictObject } from 'zod';
 
-import type { CodeBlockTokens, GraphThemeStyleDefinition, GraphThemeStyleSource } from '../../contract';
+import type { CodeBlockTokens, GraphThemeDefinition, GraphThemeResolution } from '../../contract';
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import { getDefaultGraphThemePreset } from '../../providers';
 import type {
@@ -19,8 +18,7 @@ import type {
   IRGraphRule,
   IRGraphSurfaceDefaults,
 } from '../../schemas';
-import { GraphDefaultsSchema, GraphRuleSchema } from '../../schemas';
-import type { GraphAuthorLayer, GraphThemeResolution } from './types';
+import type { GraphAuthorLayer } from './types';
 
 /** 按字段覆盖一个已选定的命名组，空组不物化 */
 const mergeFields = <T extends object>(current: T | undefined, override: T | undefined): T | undefined => {
@@ -127,14 +125,6 @@ const mergeRules = (defaults: ReadonlyArray<IRGraphRule>, overrides: ReadonlyArr
   ...(overrides ?? []),
 ];
 
-const GraphThemeStyleSourceSchema = strictObject({
-  defaults: GraphDefaultsSchema.optional(),
-  rules: array(GraphRuleSchema).optional(),
-});
-
-const parseGraphThemeStyleSource = (source: GraphThemeStyleSource): GraphThemeStyleSource =>
-  GraphThemeStyleSourceSchema.parse(source);
-
 const jsonEqual = (left: JsonValue, right: JsonValue): boolean => {
   if (Array.isArray(left) || Array.isArray(right)) {
     return (
@@ -221,27 +211,27 @@ export type GraphThemeSelectorRegistryContext = Readonly<{
 const selectorKeys = (value: string | ReadonlyArray<string> | undefined): ReadonlyArray<string> =>
   value === undefined ? [] : typeof value === 'string' ? [value] : value;
 
-const assertSelectorKeysRegistered = (
-  keys: ReadonlyArray<string>,
-  registry: ReadonlySet<string> | ReadonlyMap<string, unknown>,
-  capability: string,
-): void => {
-  for (const key of keys) {
-    if (!registry.has(key)) {
-      throw new RetikzGraphError({
-        code: RetikzGraphErrorCode.DefinitionNotRegistered,
-        message: `${capability} selector key '${key}' is not registered.`,
-        details: { capability, key, availableKeys: [...registry.keys()] },
-      });
-    }
-  }
-};
-
 /** 校验 Theme selector 引用的全部开放 key 已在对应成员 registry 注册 */
 export const validateGraphThemeSelector = (
   selector: IRGraphEntityThemeSelector | IRGraphRelationThemeSelector | undefined,
   context: GraphThemeSelectorRegistryContext,
 ): void => {
+  const assertSelectorKeysRegistered = (
+    keys: ReadonlyArray<string>,
+    registry: ReadonlySet<string> | ReadonlyMap<string, unknown>,
+    capability: string,
+  ): void => {
+    for (const key of keys) {
+      if (!registry.has(key)) {
+        throw new RetikzGraphError({
+          code: RetikzGraphErrorCode.DefinitionNotRegistered,
+          message: `${capability} selector key '${key}' is not registered.`,
+          details: { capability, key, availableKeys: [...registry.keys()] },
+        });
+      }
+    }
+  };
+
   if (selector === undefined) return;
 
   const capabilityPrefix = context.member.toLowerCase();
@@ -254,26 +244,26 @@ export const validateGraphThemeSelector = (
   );
 };
 
-/** 按当前 Core Theme style 解析 Graph defaults 与有序 rules */
+/** 按当前 Core Theme 解析 Graph defaults 与有序 rules */
 export const resolveGraphTheme = (
   theme: ResolvedTheme,
-  styles: ReadonlyMap<string, GraphThemeStyleDefinition>,
+  styles: ReadonlyMap<string, GraphThemeDefinition>,
 ): GraphThemeResolution => {
   const baseline = getDefaultGraphThemePreset(theme);
-  if (theme.style === undefined) return baseline;
+  if (theme.name === undefined) return baseline;
 
-  const definition = styles.get(theme.style);
+  const definition = styles.get(theme.name);
   if (definition === undefined) {
     throw new RetikzGraphError({
       code: RetikzGraphErrorCode.DefinitionNotRegistered,
-      message: `Graph theme style '${theme.style}' is not registered.`,
-      details: { capability: 'graph-theme-style', key: theme.style, availableKeys: [...styles.keys()] },
+      message: `Graph theme '${theme.name}' is not registered.`,
+      details: { capability: 'graph-theme', key: theme.name, availableKeys: [...styles.keys()] },
     });
   }
 
   try {
     const { codeBlockTokens, ...fragments } = definition.resolve(theme);
-    const source = parseGraphThemeStyleSource(fragments);
+    const source = structuredClone(fragments);
 
     return {
       defaults: mergeGraphDefaults(baseline.defaults, source.defaults) ?? baseline.defaults,
@@ -283,8 +273,8 @@ export const resolveGraphTheme = (
   } catch (cause) {
     throw new RetikzGraphError({
       code: RetikzGraphErrorCode.DefinitionCallbackFailed,
-      message: `Graph theme style '${theme.style}' resolution failed.`,
-      details: { capability: 'graph-theme-style', key: theme.style },
+      message: `Graph theme '${theme.name}' resolution failed.`,
+      details: { capability: 'graph-theme', key: theme.name },
       cause,
     });
   }
@@ -293,5 +283,5 @@ export const resolveGraphTheme = (
 /** 按有效 Core Theme 与 Graph Definition 解析代码实体的有限视觉 token */
 export const resolveCodeBlockTokens = (
   theme: ResolvedTheme,
-  styles: ReadonlyMap<string, GraphThemeStyleDefinition>,
+  styles: ReadonlyMap<string, GraphThemeDefinition>,
 ): CodeBlockTokens => resolveGraphTheme(theme, styles).codeBlockTokens;

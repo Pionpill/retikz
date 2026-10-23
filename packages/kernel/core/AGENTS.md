@@ -36,6 +36,8 @@ parse/       字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
 
 改这些层的依赖方向、文件职责或 define-registry 能力前，按根 AGENTS 的 `standard-structure` 加载对应层级 references。
 
+`schemas/` 是统一 owner，其下目录仅按强相关语义分组；内部直接引用语义文件以保留递归装配的初始化顺序，外部 owner 经 `schemas/index.ts` 消费，包根入口单独裁剪公共导出。
+
 ## 几何与坐标
 
 - 坐标系为 `[x, y]`，x 向右、y 向下，与 SVG / Canvas 一致；单位是 user units。

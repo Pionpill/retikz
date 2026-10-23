@@ -523,7 +523,8 @@ export const resolveCoordinateFrame = (
   };
 
   const paddedScales = new Map<string, PositionScale>();
-  const coordinateScaleNames = readCoordinateScaleNames(coordinateDefinition, coordinateOperation);
+  const parsedCoordinateOperation = coordinateDefinition.schema.parse(coordinateOperation) as IRPlotCoordinateOperation;
+  const coordinateScaleNames = readCoordinateScaleNames(coordinateDefinition, parsedCoordinateOperation);
   const hasMarkPadding = roles.some(role => {
     const values = collectValues(role, undefined, roleChannelOf(role), role === 'y');
     const scale = resolveScaleForDefinitionRole(role, coordinateScaleNames[role], values);
@@ -706,8 +707,7 @@ export const resolveCoordinateFrame = (
   };
 
   // legend 预留：按 position 在对应边让出带宽，plotArea 据此收窄（决策 ⑩）
-  const parsedCoordinateOperation = coordinateDefinition.schema.parse(coordinateOperation) as never;
-  const resolution = coordinateDefinition.resolve(parsedCoordinateOperation, {
+  const resolution = coordinateDefinition.resolve(parsedCoordinateOperation as never, {
     width,
     height,
     fontSize,

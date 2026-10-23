@@ -82,13 +82,6 @@ export type ApplyTransformsToDataViewResult = Readonly<{
   lineage?: DataLineageRun;
 }>;
 
-/** 无 metadata 的同步行输入只从实际规范 scalar 获取证据 */
-const describeRows = (rows: Array<ExternalRow>, fields: ReadonlyArray<string> = []): DataView =>
-  createDataView(
-    rows,
-    [...new Set([...fields, ...rows.flatMap(row => Object.keys(row))])].map(name => ({ name })),
-  );
-
 /** 明确建立同步计算集合；不调用回调探测 Promise */
 const createSyncContext = (
   registry: ReadonlyMap<string, AnyTransformDefinition>,
@@ -237,6 +230,28 @@ export const applyTransforms = (
   operations: Array<IRDataTransform> = [],
   options: ApplyTransformsOptions = {},
 ): ApplyTransformsResult => {
+  /** 无 metadata 的同步行输入只从实际规范 scalar 获取证据 */
+  const describeRows = (inputRows: Array<ExternalRow>, fields: ReadonlyArray<string> = []): DataView =>
+    createDataView(
+      inputRows,
+      [...new Set([...fields, ...inputRows.flatMap(row => Object.keys(row))])].map(name => ({ name })),
+    );
+
+  /** 裸行调用以显式字段引用提供未知类型的模型槽位 */
+  const collectRowInputFields = (
+    declarations: ReadonlyArray<ParsedDataTransformDeclaration>,
+    transformOptions: ApplyTransformsOptions,
+  ): Array<string> => {
+    const context: TransformSemanticContext = { ...transformOptions.context, model: [] };
+    const fields = new Set<string>();
+
+    for (const { declaration, definition } of declarations) {
+      for (const field of definition.inputFields?.(declaration.operation as never, context) ?? []) fields.add(field);
+    }
+
+    return [...fields];
+  };
+
   if (operations.length === 0 && options.provenance !== true && !options.lineage) return { rows };
 
   const parsed = parseDataTransformDeclarations(
@@ -247,19 +262,4 @@ export const applyTransforms = (
 
   const result = applyToView(describeRows(rows, fields), operations, options, parsed);
   return { rows: result.dataView.rows, ...(result.lineage === undefined ? {} : { lineage: result.lineage }) };
-};
-
-/** 裸行调用以显式字段引用提供未知类型的模型槽位 */
-const collectRowInputFields = (
-  declarations: ReadonlyArray<ParsedDataTransformDeclaration>,
-  options: ApplyTransformsOptions,
-): Array<string> => {
-  const context: TransformSemanticContext = { ...options.context, model: [] };
-  const fields = new Set<string>();
-
-  for (const { declaration, definition } of declarations) {
-    for (const field of definition.inputFields?.(declaration.operation as never, context) ?? []) fields.add(field);
-  }
-
-  return [...fields];
 };

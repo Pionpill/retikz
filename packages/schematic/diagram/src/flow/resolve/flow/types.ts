@@ -2,7 +2,7 @@ import type { ResolvedTheme } from '@retikz/core';
 import type { GraphDefinitionOptions, IRGraphEntity, IRGraphRelation, IRGroup } from '@retikz/graph';
 
 import type { FlowLayoutEndpoint } from '../../contract';
-import type { FlowThemeStyleDefinition } from '../../contract';
+import type { FlowThemeDefinition } from '../../contract';
 import type {
   IRFlowDefaults,
   IRFlowDiagram,
@@ -24,7 +24,7 @@ export type FlowResolveContext = Readonly<{
   /** 当前宿主已经解析的 Core 主题 */
   theme: ResolvedTheme;
   /** 可供当前 Flow 选择的主题样式定义 */
-  flowThemeStyles: ReadonlyMap<string, FlowThemeStyleDefinition>;
+  flowThemeDefinitions: ReadonlyMap<string, FlowThemeDefinition>;
   /** 解析 Graph 语义投影所使用的扩展定义 */
   graph?: GraphDefinitionOptions;
 }>;

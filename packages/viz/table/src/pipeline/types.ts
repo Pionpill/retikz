@@ -15,7 +15,7 @@ import type {
   AnyTableStructureDefinition,
   TableLayoutManifest,
   TableLayoutManifestSchema,
-  TableThemeStyleDefinition,
+  TableThemeDefinition,
   TableDataOptions,
 } from '../contract';
 import type { TABLE_NAMESPACE } from '../schemas';
@@ -31,8 +31,8 @@ export type LowerTablesOptions = TableDataOptions &
     formatterDefinitions?: ReadonlyArray<AnyCellFormatterDefinition>;
     /** 用户自定义 Cell visual scale definitions */
     visualScaleDefinitions?: ReadonlyArray<AnyCellVisualScaleDefinition>;
-    /** 用户自定义 Table Theme style definitions */
-    tableThemeStyles?: ReadonlyArray<TableThemeStyleDefinition>;
+    /** 用户自定义 Table Theme definitions */
+    tableThemeDefinitions?: ReadonlyArray<TableThemeDefinition>;
   }>;
 
 /** Table layout-aware composite 的 typed artifact */

@@ -202,7 +202,7 @@ describe('Inspect demo source views', () => {
             adapters: synchronousInputAdaptersOf(original.adapters),
             compile: {
               clips: root.props.extensions?.clips,
-              themeStyles: theme.PreviewThemeDefinitionBundle.core,
+              themeDefinitions: theme.PreviewThemeDefinitionBundle.core,
               measureText: measure.browserMeasurer,
             },
             compileDriver: inspectVanilla.createInspectionVanillaDriver({

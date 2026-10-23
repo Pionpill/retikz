@@ -1,4 +1,4 @@
-import { PathCommandSchema } from '@retikz/core';
+import type { SceneClipPath } from '@retikz/core';
 import type {
   RuntimeScene,
   RuntimeScenePrimitive,
@@ -91,12 +91,7 @@ const isCanonicalClipPath = (value: unknown): boolean => {
   let activeSubpath = false;
   let hasDrawingSegment = false;
 
-  for (const commandValue of value.commands) {
-    const parsed = PathCommandSchema.safeParse(commandValue);
-    if (!parsed.success) return false;
-
-    const command = parsed.data;
-
+  for (const command of value.commands as SceneClipPath['commands']) {
     switch (command.kind) {
       case 'move':
         activeSubpath = true;
@@ -598,21 +593,15 @@ const validateOperationShape = (operation: ScenePatchOperation): void => {
     const identity = Reflect.get(candidate, 'identity');
     const parent = Reflect.get(candidate, 'parent');
     const before = Reflect.get(candidate, 'before');
-    if (
-      !isSceneIdentity(identity) ||
-      !isSceneIdentity(parent) ||
-      (before !== undefined && !isSceneIdentity(before))
-    ) {
+    if (!isSceneIdentity(identity) || !isSceneIdentity(parent) || (before !== undefined && !isSceneIdentity(before))) {
       return patchError(operation);
     }
 
     return;
   }
 
-  if (kind === 'replaceScene') {
-    validateSceneRuntimeSnapshot(Reflect.get(candidate, 'snapshot') as SceneRuntimeSnapshot);
-    return;
-  }
+  // replacement 的完整快照由 patch 分支统一校验
+  if (kind === 'replaceScene') return;
 
   return patchError({ reason: 'unknown-operation-kind', operation });
 };
@@ -631,26 +620,26 @@ const comparePrimitivePaths = (left: ReadonlyArray<number>, right: ReadonlyArray
 const pathContains = (ancestor: ReadonlyArray<number>, descendant: ReadonlyArray<number>): boolean =>
   ancestor.length < descendant.length && ancestor.every((segment, index) => segment === descendant[index]);
 
-const validateSnapshotTargetOverlap = (snapshot: SceneRuntimeSnapshot, targets: SceneIdentityMap<true>): void => {
-  const paths = snapshot.topology
-    .filter(node => targets.has(node.identity))
-    .map(node => node.primitivePath)
-    .sort(comparePrimitivePaths);
-
-  for (let index = 1; index < paths.length; index += 1) {
-    const previous = paths[index - 1];
-    const current = paths[index];
-    if (pathContains(previous, current)) {
-      return patchError({ reason: 'overlapping-targets', ancestor: previous, descendant: current });
-    }
-  }
-};
-
 const validateNonOverlappingTargets = (
   operations: ReadonlyArray<ScenePatchOperation>,
   current: SceneRuntimeSnapshot,
   next: SceneRuntimeSnapshot,
 ): void => {
+  const validateSnapshotTargetOverlap = (snapshot: SceneRuntimeSnapshot, targets: SceneIdentityMap<true>): void => {
+    const paths = snapshot.topology
+      .filter(node => targets.has(node.identity))
+      .map(node => node.primitivePath)
+      .sort(comparePrimitivePaths);
+
+    for (let index = 1; index < paths.length; index += 1) {
+      const previous = paths[index - 1];
+      const currentPath = paths[index];
+      if (pathContains(previous, currentPath)) {
+        return patchError({ reason: 'overlapping-targets', ancestor: previous, descendant: currentPath });
+      }
+    }
+  };
+
   const targets = createSceneIdentityMap<true>(
     operations
       .map(operationTarget)
@@ -816,7 +805,9 @@ const validateScenePatchInternal = (
   if (replacements.length > 0) {
     if (patch.operations.length !== 1 || replacements.length !== 1) patchError({ reason: 'replace-not-exclusive' });
     const replacement = replacements[0];
-    validateSceneRuntimeSnapshot(replacement.snapshot);
+    if (replacement.snapshot !== next && replacement.snapshot !== current) {
+      validateSceneRuntimeSnapshot(replacement.snapshot);
+    }
     if (!sceneRuntimeSnapshotEquals(replacement.snapshot, next)) mismatchError({ reason: 'replace-mismatch' });
 
     return;

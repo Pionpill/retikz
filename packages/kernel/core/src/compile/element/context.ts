@@ -25,7 +25,7 @@ export const resolveScopeContext = (
       parent?.theme ?? DEFAULT_RESOLVED_THEME,
       scope.theme,
       `${irPath}.theme`,
-      environment.themeStyles,
+      environment.themeDefinitions,
     ),
   });
 

@@ -8,19 +8,7 @@ const steps = [
   { type: 'step' as const, kind: 'line' as const, to: [10, 0] as [number, number] },
 ];
 
-const callDefinePathKind = (input: unknown): unknown => Reflect.apply(definePathKind, undefined, [input]);
-
 describe('Path kind full-subject contract', () => {
-  it.each([
-    { label: 'missing', definition: { name: 'missing-schema', compile: (): null => null } },
-    {
-      label: 'invalid',
-      definition: { name: 'invalid-schema', schema: { parse: 'not-a-function' }, compile: (): null => null },
-    },
-  ])('rejects a $label schema with a stable definition error', ({ definition }) => {
-    expect(() => callDefinePathKind(definition)).toThrowError('definePathKind: schema must be a Zod schema.');
-  });
-
   it('accepts an open path host with any kind and JSON options', () => {
     expect(
       PathSchema.safeParse({

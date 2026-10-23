@@ -1,12 +1,10 @@
 import type { PathCommand } from '../../contract';
 import type { IRTexContent } from '../../schemas';
-import { PathCommandSchema } from '../../schemas';
 import { cloneAndFreezeJson } from '../../shared/json';
 import {
   assertProviderOutputFinite,
   assertProviderOutputKeys,
   assertProviderOutputOptionalFinite,
-  assertProviderOutputPathCommands,
   assertProviderOutputUnitInterval,
   failProviderOutput,
   providerOutputArray,
@@ -93,7 +91,6 @@ const snapshotLoweredTexPath = (owner: string, value: unknown, index: number): L
     ['commands', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'strokeOpacity', 'opacity', 'fillRule'],
     pathName,
   );
-  assertProviderOutputPathCommands(owner, path.commands, pathName);
   assertProviderOutputUnitInterval(owner, path, 'fillOpacity', pathName);
   assertProviderOutputOptionalFinite(owner, path, 'strokeWidth', pathName, true);
   assertProviderOutputUnitInterval(owner, path, 'strokeOpacity', pathName);
@@ -102,9 +99,7 @@ const snapshotLoweredTexPath = (owner: string, value: unknown, index: number): L
     failProviderOutput(owner, `an invalid ${pathName}.fillRule`);
   }
 
-  const commands = providerOutputArray(owner, path.commands, `${pathName}.commands`).map(command =>
-    PathCommandSchema.parse(command),
-  );
+  const commands = path.commands as LoweredTexPath['commands'];
 
   return {
     commands,

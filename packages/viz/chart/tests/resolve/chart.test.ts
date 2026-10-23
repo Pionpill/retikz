@@ -66,7 +66,7 @@ const resolve = (input = source) => {
     {
       family: 'point',
       recipe,
-      themeDefinitions: [
+      chartThemeDefinitions: [
         defineChartTheme({
           name: 'clean',
           defaults: { layout: { gap: 8 } },
@@ -76,9 +76,9 @@ const resolve = (input = source) => {
     },
   ]);
   return resolveSelectedChart(input, {
-    theme: { ...DEFAULT_RESOLVED_THEME, style: 'clean' },
+    theme: { ...DEFAULT_RESOLVED_THEME, name: 'clean' },
     recipe,
-    themeDefinitions: [registry.themes.get('clean')!],
+    chartThemeDefinitions: [registry.themes.get('clean')!],
     runtime: registry.runtime,
   });
 };

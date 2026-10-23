@@ -21,49 +21,6 @@ type LayoutItemInputByKind = Readonly<{
   overlay: InputOverlayLayoutItem;
 }>;
 
-/** 透明展开 Fragment 和数组，同时保留需要由容器验证的直属节点 */
-const flattenLayoutChildren = (children: ReactNode): Array<ReactNode> => {
-  const flattened: Array<ReactNode> = [];
-  Children.forEach(children, child => {
-    if (child === null || child === undefined || typeof child === 'boolean') return;
-    if (isValidElement(child) && child.type === Fragment) {
-      flattenLayoutChildren((child as ReactElement<{ children?: ReactNode }>).props.children).forEach(value =>
-        flattened.push(value),
-      );
-      return;
-    }
-
-    flattened.push(child);
-  });
-
-  return flattened;
-};
-
-/** 收集单个布局子项的 React child，不在 React 内归一化 */
-const resolveLayoutItemChild = (
-  props: LayoutItemAuthoringProps,
-  embedIdPrefix: string,
-): Readonly<{
-  /** 当前布局项目包含的作者侧子元素 */
-  child: InputChild;
-  /** React 子树需要注册到根 Scene 的 Vanilla adapter */
-  adapters: ReadonlyArray<AnyInputEmbedAdapter>;
-}> => {
-  if (props.ir !== undefined) return Object.freeze({ child: props.ir, adapters: [] });
-
-  const input = createInputScene(props.children, { embedIdPrefix });
-  const children = input.scene.children;
-  if (children === undefined || children.length !== 1) {
-    throw new RetikzLayoutError({
-      code: RetikzLayoutErrorCode.AuthoringInvalid,
-      message: 'Layout item must contain exactly one authoring child',
-      details: { childCount: children?.length ?? 0 },
-    });
-  }
-
-  return Object.freeze({ child: children[0], adapters: input.adapters });
-};
-
 /**
  * 将 React 直属布局子项组装为匹配 Vanilla adapter 的 typed Input
  * @template TKind 预期的布局项种类，同时决定返回 items 的输入类型
@@ -78,6 +35,49 @@ export const createInputLayoutItems = <TKind extends LayoutItemKind>(
   /** React 子树需要注册到根 Scene 的 Vanilla adapter */
   adapters: ReadonlyArray<AnyInputEmbedAdapter>;
 }> => {
+  /** 透明展开 Fragment 和数组，同时保留需要由容器验证的直属节点 */
+  const flattenLayoutChildren = (childNodes: ReactNode): Array<ReactNode> => {
+    const flattened: Array<ReactNode> = [];
+    Children.forEach(childNodes, child => {
+      if (child === null || child === undefined || typeof child === 'boolean') return;
+      if (isValidElement(child) && child.type === Fragment) {
+        flattenLayoutChildren((child as ReactElement<{ children?: ReactNode }>).props.children).forEach(value =>
+          flattened.push(value),
+        );
+        return;
+      }
+
+      flattened.push(child);
+    });
+
+    return flattened;
+  };
+
+  /** 收集单个布局子项的 React child，不在 React 内归一化 */
+  const resolveLayoutItemChild = (
+    props: LayoutItemAuthoringProps,
+    embedIdPrefix: string,
+  ): Readonly<{
+    /** 当前布局项目包含的作者侧子元素 */
+    child: InputChild;
+    /** React 子树需要注册到根 Scene 的 Vanilla adapter */
+    adapters: ReadonlyArray<AnyInputEmbedAdapter>;
+  }> => {
+    if (props.ir !== undefined) return Object.freeze({ child: props.ir, adapters: [] });
+
+    const input = createInputScene(props.children, { embedIdPrefix });
+    const normalizedChildren = input.scene.children;
+    if (normalizedChildren === undefined || normalizedChildren.length !== 1) {
+      throw new RetikzLayoutError({
+        code: RetikzLayoutErrorCode.AuthoringInvalid,
+        message: 'Layout item must contain exactly one authoring child',
+        details: { childCount: normalizedChildren?.length ?? 0 },
+      });
+    }
+
+    return Object.freeze({ child: normalizedChildren[0], adapters: input.adapters });
+  };
+
   const adapters: Array<AnyInputEmbedAdapter> = [];
   const items = flattenLayoutChildren(children).map((child, index) => {
     const expectedComponent = layoutItemComponents[expectedKind];

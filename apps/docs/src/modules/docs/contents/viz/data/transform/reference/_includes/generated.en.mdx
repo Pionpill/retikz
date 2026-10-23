@@ -1799,7 +1799,7 @@ export declare const resolveRegressionImplementationRegistry: <
 
 ## Field models and stage resolution
 
-#### <ApiSourceLink label={"DataTransformModel"} path={"packages/viz/data/src/model/contract.ts"} startLine={52}>DataTransformModel</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformModel"} path={"packages/viz/data/src/model/contract.ts"} startLine={55}>DataTransformModel</ApiSourceLink>
 
 ```ts
 export type DataTransformModel = Array<DataTransformField<IRDataModel[number]>>;
@@ -2876,7 +2876,7 @@ export type DataTransformExecutor<TSource> = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformResult"} path={"packages/viz/data/src/model/contract.ts"} startLine={60}>DataTransformResult</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformResult"} path={"packages/viz/data/src/model/contract.ts"} startLine={63}>DataTransformResult</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -3194,7 +3194,7 @@ export type ApplyTransformsResult = Readonly<{
 | Category   | Name          | Type / signature                  | Description                                                                                  |
 | ---------- | ------------- | --------------------------------- | -------------------------------------------------------------------------------------------- |
 | Parameters | `view`        | `DataView`                        | Normalized input data view                                                                   |
-|            | `operations?` | `Array<IRDataTransform>`          | Transform operations in execution order; omitted means an empty list                         |
+|            | `transforms?` | `Array<IRDataTransform>`          | Transform operations in execution order; omitted means an empty list                         |
 |            | `options?`    | `ApplyTransformsOptions`          | Semantic registries, synchronous implementations, and optional provenance or event recording |
 | Returns    | —             | `ApplyTransformsToDataViewResult` | Complete data view and optional execution events                                             |
 | Throws     | —             | —                                 | Semantic resolution, computation, or result validation fails                                 |
@@ -3208,7 +3208,7 @@ export type ApplyTransformsResult = Readonly<{
 ```ts
 export declare const applyTransformsToDataView: (
   view: DataView,
-  operations?: Array<IRDataTransform>,
+  transforms?: Array<IRDataTransform>,
   options?: ApplyTransformsOptions,
 ) => ApplyTransformsToDataViewResult;
 ```

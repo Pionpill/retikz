@@ -197,9 +197,9 @@ describe('Chart React InputEmbed routing', () => {
   });
 
   it('forwards Theme definitions without putting them in Source IR', () => {
-    const themeDefinitions = [] as const;
+    const chartThemeDefinitions = [] as const;
     const input = inputOf(ScatterChart, {
-      themeDefinitions,
+      chartThemeDefinitions,
       children: (
         <>
           <ChartData data={[{ x: 0, y: 1 }]} />
@@ -208,8 +208,8 @@ describe('Chart React InputEmbed routing', () => {
       ),
     });
 
-    expect(input.themeDefinitions).toBe(themeDefinitions);
-    expect(sourceOf(input)).not.toHaveProperty('themeDefinitions');
+    expect(input.chartThemeDefinitions).toBe(chartThemeDefinitions);
+    expect(sourceOf(input)).not.toHaveProperty('chartThemeDefinitions');
   });
 
   it('keeps resolveLabel in runtime options and lets explicit lowerOptions win by mark id', () => {

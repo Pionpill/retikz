@@ -234,12 +234,12 @@ describe('@retikz/diagram-vanilla/flow', () => {
 
     if (flowDiagram === undefined || adapter === undefined) return;
 
-    const flowThemeStyle = DiagramFlow.defineFlowThemeStyle({ name: 'brand', resolve: () => ({}) });
-    const embed = flowDiagram({ ...sourceInput, flowThemeStyles: [flowThemeStyle] });
+    const flowTheme = DiagramFlow.defineFlowTheme({ name: 'brand', resolve: () => ({}) });
+    const embed = flowDiagram({ ...sourceInput, flowThemeDefinitions: [flowTheme] });
     const contribution = adapter.lower(embed.props, context);
 
     expect(contribution.node).toEqual(expectedSource);
-    expect(contribution.node).not.toHaveProperty('flowThemeStyles');
+    expect(contribution.node).not.toHaveProperty('flowThemeDefinitions');
     expect(contribution.providerDependencies.roots).toEqual([DiagramFlow.FlowDiagramProviderKey]);
   });
 

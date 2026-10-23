@@ -4,8 +4,9 @@ import type { PathCommand, ResolvedArrowEnd, ScenePrimitive } from '../../../con
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { ArrowMarkResolution, CanonicalPath } from '../../../resolve';
 import type { IRPathBase, IRPosition } from '../../../schemas';
+import type { PaintResolver } from '../../resource';
 import type { PathPrimitiveEmitResult } from '../types';
-import { buildMarkMarkerGroup, markerContextStroke } from './marks';
+import { buildMarkMarkerGroup } from './marks';
 import type { PathBasePropsWithStrokeWidth } from './output';
 import { sampleStrokePath } from './sampling';
 import { emitEndpointArrowMark, emitMarkArrow } from './shrink';
@@ -37,6 +38,8 @@ export type EmitPathEndpointDecorationsContext = {
   arrowResolutions: ReadonlyMap<NonNullable<IRPathBase['marks']>[number]['mark'], ArrowMarkResolution>;
   /** 坐标取整函数 */
   round: (n: number) => number;
+  /** Resolve scene paint resources */
+  resolvePaint: PaintResolver;
   /** 当前 Path 的 IR locator */
   irPath: string;
 };
@@ -49,7 +52,7 @@ export const emitPathEndpointDecorations = (
   path: Pick<CanonicalPath, 'marks'>,
   context: EmitPathEndpointDecorationsContext,
 ): PathEndpointDecorations => {
-  const { arrowResolutions, round, irPath } = context;
+  const { arrowResolutions, round, irPath, resolvePaint } = context;
   const arrows: PathEndpointDecorations['arrows'] = {
     shrinkStart: 0,
     shrinkEnd: 0,
@@ -70,6 +73,7 @@ export const emitPathEndpointDecorations = (
           })(),
         item.endpointOverlap ?? 0,
         round,
+        resolvePaint,
       );
       arrows.arrowStart = resolved.spec;
       arrows.shrinkStart = resolved.shrink;
@@ -88,6 +92,7 @@ export const emitPathEndpointDecorations = (
           })(),
         item.endpointOverlap ?? 0,
         round,
+        resolvePaint,
       );
       arrows.arrowEnd = resolved.spec;
       arrows.shrinkEnd = resolved.shrink;
@@ -116,7 +121,7 @@ export type EmitInlineMarkPrimitivesInput = {
   inlineMarks: NonNullable<IRPathBase['marks']>;
   /** 每段几何采样器 */
   segmentSamplers: Array<(t: number) => CurveSegmentSample>;
-  /** commands 是否已经被 roundedCorners 改写 */
+  /** commands 是否已经被 cornerRadius 改写 */
   roundedCommands: boolean;
   /** 已解析 arrow registry */
   arrowResolutions: ReadonlyMap<NonNullable<IRPathBase['marks']>[number]['mark'], ArrowMarkResolution>;
@@ -124,6 +129,8 @@ export type EmitInlineMarkPrimitivesInput = {
   baseProps: PathBasePropsWithStrokeWidth;
   /** 坐标取整函数 */
   round: (n: number) => number;
+  /** Resolve scene paint resources */
+  resolvePaint: PaintResolver;
 };
 
 /**
@@ -138,6 +145,7 @@ export const emitInlineMarkPrimitives = ({
   arrowResolutions,
   baseProps,
   round,
+  resolvePaint,
 }: EmitInlineMarkPrimitivesInput): PathPrimitiveEmitResult => {
   const primitives: Array<ScenePrimitive> = [];
   const boundsPoints: Array<IRPosition> = [];
@@ -159,12 +167,12 @@ export const emitInlineMarkPrimitives = ({
       );
     }
 
-    const spec = emitMarkArrow(resolution, round);
+    const spec = emitMarkArrow(resolution, round, resolvePaint);
     primitives.push(
       buildMarkMarkerGroup(spec, sample, {
         strokeWidth,
         round,
-        contextStroke: markerContextStroke(baseProps.stroke),
+        contextStroke: baseProps.stroke ?? 'currentColor',
       }),
     );
     boundsPoints.push(sample.point);

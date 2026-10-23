@@ -5,6 +5,8 @@ description: Use Scope for local coordinates, group references, defaults, and cl
 
 Use Scope to move a group, share defaults, or clip children. Place it inside Layout or another Scope; each Scope affects only its own subtree.
 
+`defaults.style` can share `lineCap`, `lineJoin`, `shadow`, and `blendMode` across descendant nodes and paths. Shadows and blend modes apply to each descendant’s primary geometry; they do not composite the Scope as a single layer.
+
 ## Using this topic
 
 Choose a host and input format: React accepts JSX or an `ir` prop; Vanilla accepts builder output or IR directly. All four variants keep the left `x = 0` reference and move A and B inside Scope 80 units to the right.
@@ -253,11 +255,17 @@ Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The
 
 ## Additional notes
 
-**Local Theme.** `<Scope theme>` writes sparse `style` / `mode` selectors to `IRScope.theme` and affects descendant composites only. Fields inherit independently: `{ mode: ThemeMode.Dark }` changes the light/dark environment while retaining the outer `style`. During compilation, Core regenerates shared colors through the current style registry; an unregistered style fails immediately. See [Layout: Inherited Theme](/kernel/components/layout/extend#theme-configuration) for the complete example.
+**Local Theme.** `<Scope theme>` writes sparse `name` / `mode` selectors to `IRScope.theme` and affects descendant composites only. Fields inherit independently: `{ mode: ThemeMode.Dark }` changes the light/dark environment while retaining the outer `name`. During compilation, Core regenerates shared colors through the current theme registry; an unregistered theme fails immediately. See [Layout: Inherited Theme](/kernel/components/layout/extend#theme-configuration) for the complete example.
 
-Theme and style defaults are independent channels. `defaults.reset` does not reset Theme, and Theme does not fill Node or Path colors. Omitting `style` uses the owning package's default baseline; within a nested `Scope`, omitting `style` inherits the outer style and cannot reset to that baseline.
+Theme and style defaults are independent channels. `defaults.reset` does not reset Theme, and Theme does not fill Node or Path colors. Omitting `name` uses the owning package's default baseline; within a nested `Scope`, omitting `name` inherits the outer name and cannot reset to that baseline.
 
-**Style defaults.** Scope also exposes `defaults.style.color`, shared visual properties, and `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow`. Values cascade per field, explicit element values win, and `defaults.reset` cuts only selected outer channels.
+**Style defaults.** Scope also exposes `defaults.style.color`, shared visual properties, and `defaults.node` / `defaults.path`. Values cascade per field, explicit element values win, and `defaults.reset` cuts only selected outer channels.
+
+Decoration defaults belong to their hosts. `defaults.node.label` configures existing node labels, including attachment, alignment, distance, rotation, leader lines, and appearance. `defaults.path.label` configures existing path and step labels, including position, slope, interruption, and appearance. `defaults.path.arrow` configures existing arrow marks and endpoint overrides. These fragments contain no label text and create neither labels nor arrows.
+
+Font fields inherit independently across nested Scopes and instances: changing size retains the family and weight. `reset: ['node']` clears inherited node and node-label defaults; `reset: ['path']` clears path, label, and arrow defaults. `true` clears both host channels; declarations on the current Scope still apply.
+
+Shared stroke fields include `stroke`, `strokeWidth`, `dashPattern`, and `dashOffset`. For example, `defaults: { style: { dashPattern: [6, 2], dashOffset: -2 } }` affects both descendant Node borders and Paths. Current-scope channel defaults override shared defaults, and explicit element styles override channel defaults. Dash arrays replace the entire inherited array; `dashOffset: 0` overrides an inherited phase. Omitted fields inherit. Use `defaults: { reset: ['node'] }` to cut off inherited Node dashes while retaining Path defaults; empty dash arrays are invalid.
 
 Style is a supporting responsibility and does not alter local coordinates, references, or clipping. Consult the [API reference](/kernel/components/scope/reference) for color, stroke, and opacity fields rather than creating extra Scopes for visual variants.
 
@@ -267,17 +275,9 @@ Style is a supporting responsibility and does not alter local coordinates, refer
   description="Putting genuinely shared local styles on Scope avoids repeating the same fields on every child, often reducing both configuration objects and persisted JSON substantially. Tier 2 packages such as Plot also centralize series or layer styles as Scope defaults during lowering to keep generated IR compact."
 />
 
-## Envelope frame
+## Visible containers
 
-Use `frame` to add a background or outline to an existing subgraph. The dotted pattern below belongs only to the frame; A and B keep their own white fills.
-
-<ComponentPreview files="scope-frame" />
-
-`frame: {}` enables a 1-unit outline with no fill. `frame.padding` defaults to 0 and adds spacing outside the content envelope. `boundingShape: 'rectangle'` expands all four sides; `circle` increases the radius. `frame.style` ignores descendant defaults and shares only the effective color context.
-
-The frame stays below every child and follows Scope transforms, position, and clipping. Its stroke and shadow contribute to automatic framing without changing layout, anchors, or hit regions. An explicit `viewBox` is unchanged. Empty scopes produce no frame, and descendant frames do not enlarge ancestor envelopes. Use Standard Surface for layout padding or container sizing.
-
-Ordinary Paths do not contribute to the existing intrinsic Scope envelope, so a Scope containing only Paths produces no frame. Curves, labels, and markers are not guaranteed to fit inside it. Frames follow envelope contributors such as Nodes and Coordinates rather than measuring all visible pixels.
+Scope retains its content envelope and references but draws no frame. Use [Surface](/library/standard/presentation/surface) for backgrounds, borders, and padding, or [Frame](/library/standard/presentation/frame) for a titled container.
 
 ## Related props
 
@@ -344,6 +344,26 @@ The following are the props most relevant to this page. See the [API reference](
 - Zero scaling is valid visually, but inverse coordinate projection across it fails.
 - Duplicate ids in one namespace warn and use the later definition. Use `localNamespace` to isolate reusable child ids.
 - Base Scope has no layout-inspection props; use the Layout package’s `LayoutInspectScope` for subtree inspection.
+
+## Set label and arrow defaults by host
+
+Configure node and path labels separately. The labels below provide content while their placement, spacing, fonts, and arrow appearance inherit from host defaults. Elements without a label or arrow do not gain decorations.
+
+```tsx
+<Scope
+  defaults={{
+    node: { label: { position: 'bottom', distance: 12, font: { size: 14 } } },
+    path: {
+      label: { side: 'top', distance: 8, sloped: true },
+      arrow: { length: 10 },
+    },
+  }}
+>
+  <Node id="a" position={[0, 0]} label={{ text: 'A' }} />
+  <Node id="b" position={[100, 0]} label={{ text: 'B' }} />
+  <Draw way={['a', 'b']} arrow="->" label={{ text: 'A → B' }} />
+</Scope>
+```
 
 ## Further reading
 

@@ -181,20 +181,20 @@ describe('Chart-native Scatter presentation', () => {
     expect(vanilla.svg).toContain('<svg');
   });
 
-  it('renders a selected docs Chart theme style through the Vanilla preview path', () => {
+  it('renders a selected docs Chart theme through the Vanilla preview path', () => {
     const preview = buildPreviewIR(() => fertilityWorkZhPreviewSource.canonicalRender?.() ?? null);
     const vanilla = buildVanillaPreview(preview, {
       datasetImports: fertilityWorkZhPreviewSource.datasetImports,
-      theme: { mode: 'light', style: 'academic' },
+      theme: { mode: 'light', name: 'academic' },
     });
 
     expect(vanilla.svg).toContain('<svg');
     expect(vanilla.code).toContain(
       "import { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';",
     );
-    expect(vanilla.code).toContain("style: 'academic'");
-    expect(vanilla.code).toContain('themeStyles: PreviewThemeDefinitionBundle.core');
-    expect(vanilla.code).toContain('themeDefinitions: PreviewThemeDefinitionBundle.chart');
-    expect(vanilla.code).toContain('plotThemeStyles: PreviewThemeDefinitionBundle.plot');
+    expect(vanilla.code).toContain("name: 'academic'");
+    expect(vanilla.code).toContain('themeDefinitions: PreviewThemeDefinitionBundle.core');
+    expect(vanilla.code).toContain('chartThemeDefinitions: PreviewThemeDefinitionBundle.chart');
+    expect(vanilla.code).toContain('plotThemeDefinitions: PreviewThemeDefinitionBundle.plot');
   });
 });

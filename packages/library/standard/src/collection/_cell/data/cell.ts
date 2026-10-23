@@ -5,15 +5,15 @@ import type { IRCell } from '../schema';
 import { DataExpandComponent } from './constants';
 import type { DataExpandSchema } from './schema';
 
-/** 区分 JSON 联合中的只读数组 */
-const isJsonArray = (value: JsonValue): value is ReadonlyArray<JsonValue> => Array.isArray(value);
-
 /** 展开 JSON 数据单元格；仅沿自动生成的子树传递 Array 内容宽度，不赋予命名身份 */
 export const createDataCell = (
   value: JsonValue,
   dataExpand: output<typeof DataExpandSchema>,
   inheritContentWidth = false,
 ): IRCell => {
+  /** 区分 JSON 联合中的只读数组 */
+  const isJsonArray = (jsonValue: JsonValue): jsonValue is ReadonlyArray<JsonValue> => Array.isArray(jsonValue);
+
   const expandArray = dataExpand === true || (dataExpand !== false && dataExpand.includes(DataExpandComponent.Array));
   const expandMap = dataExpand === true || (dataExpand !== false && dataExpand.includes(DataExpandComponent.Map));
   if (isJsonArray(value))

@@ -1,4 +1,4 @@
-import { ArrowEndDetailSchema } from '@retikz/core';
+import { ArrowStyleSchema } from '@retikz/core';
 import { boolean, strictObject, union } from 'zod';
 
 import { OpenBorderSchema } from './open-border';
@@ -7,7 +7,7 @@ import { OpenBorderSchema } from './open-border';
 export const OperationArrowSchema = union([
   boolean(),
   OpenBorderSchema.pick({ style: true }).extend({
-    arrowDetail: ArrowEndDetailSchema.optional().describe(
+    arrowDetail: ArrowStyleSchema.optional().describe(
       'Appearance of the terminal arrow tip; custom registered shapes are supported.',
     ),
   }),

@@ -7,53 +7,17 @@ const canonicalNumber = (value: number): number => (Object.is(value, -0) ? 0 : v
 const guideKey = (guide: LayoutAlignmentGuide): string => `${guide.dimension}\u0000${guide.name}`;
 
 /** 校验并分离一组 result-facing alignment guides */
-export const cloneAlignmentGuides = (guides: unknown, ownerLabel: string): ReadonlyArray<LayoutAlignmentGuide> => {
-  if (!Array.isArray(guides)) {
-    throw createCompositeContractError(`${ownerLabel} returned invalid alignmentGuides; expected an array`);
-  }
-
+export const cloneAlignmentGuides = (
+  guides: ReadonlyArray<LayoutAlignmentGuide>,
+  ownerLabel: string,
+): ReadonlyArray<LayoutAlignmentGuide> => {
   const keys = new Set<string>();
   const cloned: Array<LayoutAlignmentGuide> = [];
   const guideCount = guides.length;
 
   for (let index = 0; index < guideCount; index += 1) {
-    if (!Object.hasOwn(guides, index)) {
-      throw createCompositeContractError(
-        `${ownerLabel} returned invalid alignment guide at index ${index}; sparse arrays are unsupported`,
-      );
-    }
-
-    const guide: unknown = guides[index];
-    if (guide === null || typeof guide !== 'object' || Array.isArray(guide)) {
-      throw createCompositeContractError(
-        `${ownerLabel} returned invalid alignment guide at index ${index}; expected an object`,
-      );
-    }
-
-    const input = guide as Record<string, unknown>;
-    const unsupported = Object.keys(input).filter(key => !['name', 'dimension', 'position'].includes(key));
-    if (unsupported.length > 0) {
-      throw createCompositeContractError(
-        `${ownerLabel} returned invalid alignment guide at index ${index}; unsupported field(s): ${unsupported.join(', ')}`,
-      );
-    }
-
-    const name = input.name;
-    const dimension = input.dimension;
-    const position = input.position;
-    if (typeof name !== 'string') {
-      throw createCompositeContractError(
-        `${ownerLabel} returned invalid alignment guide name at index ${index}; expected a string`,
-      );
-    }
-
-    if (dimension !== LayoutAlignmentGuideDimension.X && dimension !== LayoutAlignmentGuideDimension.Y) {
-      throw createCompositeContractError(
-        `${ownerLabel} returned invalid alignment guide dimension at index ${index}; expected x or y`,
-      );
-    }
-
-    if (typeof position !== 'number' || !Number.isFinite(position)) {
+    const { name, dimension, position } = guides[index];
+    if (!Number.isFinite(position)) {
       throw createCompositeContractError(
         `${ownerLabel} returned invalid alignment guide position at index ${index}; expected finite number`,
       );

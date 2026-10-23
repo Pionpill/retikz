@@ -42,10 +42,7 @@ const rulesOf = (): Array<IRTableCellRule> => [
             style: { font: { family: 'serif', weight: 400 } },
             layout: { padding: 2 },
           },
-          path: {
-            style: { dashPattern: [2, 1] },
-          },
-          arrow: { start: { shape: 'triangle' } },
+          path: { style: { dashPattern: [2, 1] }, arrow: { start: { shape: 'triangle' } } },
         },
       },
       borders: {
@@ -66,10 +63,7 @@ const rulesOf = (): Array<IRTableCellRule> => [
             style: { font: { weight: 700 } },
             layout: { padding: { left: 4 } },
           },
-          path: {
-            style: { dashPattern: [5] },
-          },
-          arrow: { start: { shape: 'stealth' } },
+          path: { style: { dashPattern: [5] }, arrow: { start: { shape: 'stealth' } } },
         },
       },
       borders: {
@@ -100,10 +94,7 @@ describe('resolved Table Cell plans', () => {
               style: { font: { family: 'serif', weight: 700 } },
               layout: { padding: { left: 4 } },
             },
-            path: {
-              style: { dashPattern: [5] },
-            },
-            arrow: { start: { shape: 'stealth' } },
+            path: { style: { dashPattern: [5] }, arrow: { start: { shape: 'stealth' } } },
           },
         },
         borders: {
@@ -124,7 +115,7 @@ describe('resolved Table Cell plans', () => {
           '/content/defaults/node/style/font/weight': { kind: 'rootRule', ruleIndex: 1 },
           '/content/defaults/node/layout/padding': { kind: 'rootRule', ruleIndex: 1 },
           '/content/defaults/path/style/dashPattern': { kind: 'rootRule', ruleIndex: 1 },
-          '/content/defaults/arrow/start': { kind: 'rootRule', ruleIndex: 1 },
+          '/content/defaults/path/arrow/start': { kind: 'rootRule', ruleIndex: 1 },
           '/borders/top': { kind: 'rootRule', ruleIndex: 0 },
           '/borders/bottom': { kind: 'rootRule', ruleIndex: 1 },
           '/borders/left': { kind: 'rootRule', ruleIndex: 1 },

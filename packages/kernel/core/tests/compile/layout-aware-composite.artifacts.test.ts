@@ -156,7 +156,7 @@ describe('layout-aware composite transactions and artifacts', () => {
           {
             type: 'node',
             position: [0, 0],
-            text: [{ runs: [{ tex: 'x' }] }],
+            text: [{ segments: [{ tex: 'x' }] }],
           },
           NaturalLayoutProposal,
         );
@@ -199,7 +199,7 @@ describe('layout-aware composite transactions and artifacts', () => {
                 type: 'node',
                 id: 'discarded-side-effects',
                 position: [0, 0],
-                text: [{ runs: [{ tex: 'x' }] }],
+                text: [{ segments: [{ tex: 'x' }] }],
                 style: { fill: gradient('#123', '#456') },
               },
               { namespace: 'test', type: 'lateProbeFailure' },

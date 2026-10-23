@@ -1,4 +1,4 @@
-import type { PlotThemeStyleDefinition } from './types';
+import type { PlotThemeDefinition } from './types';
 
-/** 定义一个 Plot Theme style resolver */
-export const definePlotThemeStyle = (definition: PlotThemeStyleDefinition): PlotThemeStyleDefinition => definition;
+/** 定义一个 Plot Theme resolver */
+export const definePlotTheme = (definition: PlotThemeDefinition): PlotThemeDefinition => definition;

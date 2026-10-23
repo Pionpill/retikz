@@ -98,7 +98,7 @@ describe('Core contextual color compile', () => {
         position: [0, 0],
         text: [{ text: 'line', fill: 0.5 }],
         label: {
-          text: { runs: [{ text: 'label-run', fill: 0.5 }] },
+          text: { segments: [{ text: 'label-run', fill: 0.5 }] },
           textColor: 0.4,
           pin: { stroke: 0.25 },
         },

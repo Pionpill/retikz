@@ -21,7 +21,7 @@ import {
   vanillaModuleLoaders,
   vanillaOverrideLoaders,
 } from '@/modules/docs/components/component-preview/registry';
-import { PreviewThemeStyle } from '@/modules/docs/components/component-preview/theme';
+import { PreviewTheme } from '@/modules/docs/components/component-preview/theme';
 import { useComponentPreviewStore } from '@/modules/docs/store';
 
 beforeAll(async () => {
@@ -46,11 +46,11 @@ Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const roots: Array<Root> = [];
 
-const originalThemeStyle = useComponentPreviewStore.getState().themeStyle;
+const originalTheme = useComponentPreviewStore.getState().themeName;
 
 afterEach(() => {
   roots.splice(0).forEach(root => act(() => root.unmount()));
-  useComponentPreviewStore.getState().setThemeStyle(originalThemeStyle);
+  useComponentPreviewStore.getState().setTheme(originalTheme);
   document.body.replaceChildren();
 });
 
@@ -71,7 +71,7 @@ describe('ComponentPreview 资源加载', () => {
   ])(
     '$module/$section 中的图式示例固定默认风格并保留明暗切换',
     async ({ module, section, page, subPage, name }) => {
-      useComponentPreviewStore.getState().setThemeStyle(PreviewThemeStyle.Vibrant);
+      useComponentPreviewStore.getState().setTheme(PreviewTheme.Vibrant);
       const container = document.createElement('div');
       document.body.appendChild(container);
       const root = createRoot(container);
@@ -99,7 +99,7 @@ describe('ComponentPreview 资源加载', () => {
         { timeout: 15_000 },
       );
 
-      expect(container.querySelector('button[aria-label="Theme style"]')).toBeNull();
+      expect(container.querySelector('button[aria-label="Theme"]')).toBeNull();
 
       const darkButton = container.querySelector<HTMLButtonElement>('button[aria-label="Preview theme dark"]');
 
@@ -112,7 +112,7 @@ describe('ComponentPreview 资源加载', () => {
           stroke: shape.getAttribute('stroke'),
         }));
       const lightShapes = shapes();
-      act(() => useComponentPreviewStore.getState().setThemeStyle(PreviewThemeStyle.Clean));
+      act(() => useComponentPreviewStore.getState().setTheme(PreviewTheme.Clean));
 
       expect(shapes()).toEqual(lightShapes);
 

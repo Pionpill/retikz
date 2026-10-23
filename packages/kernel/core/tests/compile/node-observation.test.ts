@@ -1,13 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { CompileObservation, CompileOptions, IRNode, IRScene, PathCommand, ShapeDefinition } from '../../src';
-import {
-  BUILTIN_SHAPES,
-  compileToScene,
-  NodeOwnerOutputSchema,
-  observeCompileToScene,
-  RetikzCoreError,
-} from '../../src';
+import { BUILTIN_SHAPES, compileToScene, observeCompileToScene, RetikzCoreError } from '../../src';
+import type { NodeOwnerOutput } from '../../src';
 import { flattenPrims } from '../helpers/flatten';
 
 const source: IRScene = {
@@ -50,7 +45,7 @@ describe('Node 观测几何', () => {
       { precision: 0 },
     );
 
-    expect(NodeOwnerOutputSchema.parse(observations[0]?.value).rect.rotate).toBeCloseTo(Math.PI / 6, 12);
+    expect((observations[0].value as NodeOwnerOutput).rect.rotate).toBeCloseTo(Math.PI / 6, 12);
   });
 
   it.each([
@@ -74,8 +69,8 @@ describe('Node 观测几何', () => {
     const options = { precision: 0 };
     const wholeDegree = capture(sceneOf(30), options);
     const fractionalDegree = capture(sceneOf(30.49), options);
-    const wholeOutput = NodeOwnerOutputSchema.parse(wholeDegree.observations[0]?.value);
-    const fractionalOutput = NodeOwnerOutputSchema.parse(fractionalDegree.observations[0]?.value);
+    const wholeOutput = wholeDegree.observations[0].value as NodeOwnerOutput;
+    const fractionalOutput = fractionalDegree.observations[0].value as NodeOwnerOutput;
 
     expect(fractionalDegree.result.primary.scene).toEqual(wholeDegree.result.primary.scene);
     expect(fractionalOutput.shape.outline).toEqual(wholeOutput.shape.outline);
@@ -84,7 +79,7 @@ describe('Node 观测几何', () => {
   });
 
   it('观测边界不新增或吞掉主图后续连接面 warning', () => {
-    const { connectionEnvelope: omitted, ...shape } = BUILTIN_SHAPES.rectangle;
+    const { connectionEnvelope: omitted, ...shape } = BUILTIN_SHAPES.get('rectangle')!;
     void omitted;
     const children: IRScene['children'] = [
       {
@@ -129,7 +124,7 @@ describe('Node 观测几何', () => {
 
   it.each([
     ['plain', ['a', 'bb', 'ccc']],
-    ['mixed', [{ runs: [{ text: 'a' }] }, { runs: [{ text: 'bb' }] }, { runs: [{ text: 'ccc' }] }]],
+    ['mixed', [{ segments: [{ text: 'a' }] }, { segments: [{ text: 'bb' }] }, { segments: [{ text: 'ccc' }] }]],
   ] satisfies Array<[string, IRNode['text']]>)(
     '%s 正文基线与同次 emit 的每条物理行一致，包括低精度圆整',
     (_kind, text) => {
@@ -148,7 +143,7 @@ describe('Node 观测几何', () => {
       const renderedBaselines = textPrimitives.flatMap(primitive =>
         primitive.lines.map((_line, index) => primitive.y + index * primitive.lineHeight),
       );
-      const output = NodeOwnerOutputSchema.parse(observations[0]?.value);
+      const output = observations[0].value as NodeOwnerOutput;
 
       expect(output.content?.baselines).toHaveLength(3);
 
@@ -162,7 +157,7 @@ describe('Node 观测几何', () => {
   it('不启用或不选择时不调用几何出口；启用不增加文字度量或改变 primary', () => {
     const outline = vi.fn((): Array<PathCommand> => []);
     const keyPoints = vi.fn(() => []);
-    const definition: ShapeDefinition = { ...BUILTIN_SHAPES.rectangle, name: 'custom', outline, keyPoints };
+    const definition: ShapeDefinition = { ...BUILTIN_SHAPES.get('rectangle')!, name: 'custom', outline, keyPoints };
     const measureText = vi.fn(() => ({ width: 10, height: 12 }));
     const options = { shapes: [definition], measureText };
     const primary = compileToScene(source, options);
@@ -181,11 +176,11 @@ describe('Node 观测几何', () => {
     expect(measureText).toHaveBeenCalledTimes(measurementCount);
     expect(keyPoints).toHaveBeenCalledTimes(1);
     expect(observations).toHaveLength(1);
-    expect(NodeOwnerOutputSchema.parse(observations[0]?.value).shape.outline).toEqual([]);
+    expect((observations[0].value as NodeOwnerOutput).shape.outline).toEqual([]);
   });
 
   it('缺失 capability 使用 null，无正文不伪造文本盒', () => {
-    const { outline: omittedOutline, keyPoints: omittedPoints, ...base } = BUILTIN_SHAPES.rectangle;
+    const { outline: omittedOutline, keyPoints: omittedPoints, ...base } = BUILTIN_SHAPES.get('rectangle')!;
     void omittedOutline;
     void omittedPoints;
     const { observations } = capture(
@@ -193,7 +188,7 @@ describe('Node 观测几何', () => {
       { shapes: [{ ...base, name: 'custom' }] },
     );
 
-    expect(NodeOwnerOutputSchema.parse(observations[0]?.value)).toMatchObject({
+    expect(observations[0].value as NodeOwnerOutput).toMatchObject({
       shape: { outline: null, keyPoints: null },
       boundary: { outline: null },
       content: null,
@@ -216,9 +211,9 @@ describe('Node 观测几何', () => {
       },
     ],
   ])('%s 是 Core contract failure，而不是不支持', (_label, outline) => {
-    expect(() => capture(source, { shapes: [{ ...BUILTIN_SHAPES.rectangle, name: 'custom', outline }] })).toThrow(
-      RetikzCoreError,
-    );
+    expect(() =>
+      capture(source, { shapes: [{ ...BUILTIN_SHAPES.get('rectangle')!, name: 'custom', outline }] }),
+    ).toThrow(RetikzCoreError);
   });
 
   it('拒绝同一实例重复的语义关键点名', () => {
@@ -226,7 +221,7 @@ describe('Node 观测几何', () => {
       capture(source, {
         shapes: [
           {
-            ...BUILTIN_SHAPES.rectangle,
+            ...BUILTIN_SHAPES.get('rectangle')!,
             name: 'custom',
             keyPoints: () => [
               { name: 'same', position: [0, 0] },

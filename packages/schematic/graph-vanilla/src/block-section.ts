@@ -11,14 +11,14 @@ import { normalizeGraphAuthoringChildren } from './semantic-children';
 /** Block Section embed 的 Source authoring 输入 */
 export type BlockSectionInputEmbedProps = WithoutInputType<InputBlockSection>;
 
-const inputOf = (props: BlockSectionInputEmbedProps): InputBlockSection => {
-  return { type: 'blockSection', ...props };
-};
-
 /** Block Section Source 的 InputEmbed adapter */
 export const BlockSectionInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockSectionInputEmbedProps> = {
   kind: BlockSectionEmbedKind,
   lower: (props, context) => {
+    const inputOf = (inputProps: BlockSectionInputEmbedProps): InputBlockSection => {
+      return { type: 'blockSection', ...inputProps };
+    };
+
     const input = inputOf(props);
     const normalized = normalizeGraphAuthoringChildren(input.children ?? [], context, 'BlockSection.children');
     const dependencies = createGraphProviderDependencies(BlockSectionProviderKey);

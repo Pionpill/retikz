@@ -1,9 +1,9 @@
-import type { CssColorValue, NonEmptyReadonlyArray, ThemeMode, ThemeStyleColorOverrides } from '@retikz/core';
-import { defineThemeStyle } from '@retikz/core';
+import type { CssColorValue, NonEmptyReadonlyArray, ThemeMode, ThemeColorOverrides } from '@retikz/core';
+import { defineTheme } from '@retikz/core';
 
-import { PreviewThemeStyle } from '../constants';
+import { PreviewTheme } from '../constants';
 
-type ReferenceStyle = Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'default'>;
+type ReferenceStyle = Exclude<(typeof PreviewTheme)[keyof typeof PreviewTheme], 'default'>;
 
 type Tone = readonly [saturation: number, lightness: number];
 
@@ -126,7 +126,7 @@ const tonePresets: Record<ReferenceStyle, Record<ThemeMode, ReadonlyArray<Tone>>
   },
 };
 
-const semanticPresets: Record<ReferenceStyle, Record<ThemeMode, NonNullable<ThemeStyleColorOverrides['semantic']>>> = {
+const semanticPresets: Record<ReferenceStyle, Record<ThemeMode, NonNullable<ThemeColorOverrides['semantic']>>> = {
   academic: {
     light: {
       error: 'hsl(0, 68%, 42%)',
@@ -165,7 +165,7 @@ const semanticPresets: Record<ReferenceStyle, Record<ThemeMode, NonNullable<Them
   },
 };
 
-const resolveColors = (style: ReferenceStyle, mode: ThemeMode): ThemeStyleColorOverrides => {
+const resolveColors = (style: ReferenceStyle, mode: ThemeMode): ThemeColorOverrides => {
   const categorical = hues.map((hue, index) => {
     const [saturation, lightness] = tonePresets[style][mode][index];
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
@@ -174,8 +174,6 @@ const resolveColors = (style: ReferenceStyle, mode: ThemeMode): ThemeStyleColorO
 };
 
 /** docs 维护的三个 Core reference Theme definitions */
-export const PreviewCoreThemeStyles = [
-  PreviewThemeStyle.Academic,
-  PreviewThemeStyle.Vibrant,
-  PreviewThemeStyle.Clean,
-].map(style => defineThemeStyle({ name: style, resolve: ({ mode }) => resolveColors(style, mode) }));
+export const PreviewCoreThemeDefinitions = [PreviewTheme.Academic, PreviewTheme.Vibrant, PreviewTheme.Clean].map(
+  style => defineTheme({ name: style, resolve: ({ mode }) => resolveColors(style, mode) }),
+);

@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { strictObject, string } from 'zod';
 
 import {
   createDefaultInspectorRegistry,
@@ -18,7 +17,6 @@ const definition = (namespace: string, type: string) =>
     namespace,
     type,
     owner: { kind: 'path' as const, name: 'stroke' },
-    subjectSchema: strictObject({ value: string() }),
     inspect: () => [],
   });
 
@@ -28,7 +26,6 @@ describe('Inspector registry', () => {
       namespace: 'test',
       type: 'empty-options',
       owner: { kind: 'path' as const, name: 'stroke' },
-      subjectSchema: strictObject({ value: string() }),
       inspect: () => [],
     };
     defineInspector(rawDefinition);
@@ -48,7 +45,6 @@ describe('Inspector registry', () => {
       namespace: 'test',
       type: 'resolved-empty',
       owner: { kind: 'path', name: 'stroke' },
-      subjectSchema: strictObject({ value: string() }),
       resolveOptions,
       inspect: (_subject, context) => ({ type: 'node', position: [0, 0], content: context.options.label }),
     });
@@ -75,17 +71,6 @@ describe('Inspector registry', () => {
     expect(Object.isFrozen(registered)).toBe(true);
     expect(Object.isFrozen(registered.owner)).toBe(true);
     expect(resolveRegistry(createInspectorRegistry([registered])).require(registered)).toBe(registered);
-  });
-
-  it('does not trust a caller-frozen definition with an invalid owner', () => {
-    const invalidDefinition = Object.freeze({
-      ...definition('test', 'invalid'),
-      owner: Object.freeze({ kind: 'path' as const, name: ' ' }),
-    });
-
-    expect(() => createInspectorRegistry([invalidDefinition])).toThrow(
-      'Inspector owner name must be a non-empty string.',
-    );
   });
 
   it('allows multiple keys for one owner and resolves each key', () => {

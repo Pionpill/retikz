@@ -371,12 +371,6 @@ export const parseStaticCssColor = (input: string): ParsedCssColor | null => {
   return body.includes(',') ? parseLegacyFunction(name, body) : parseModernFunction(name, body);
 };
 
-/** 把归一化 sRGB 通道格式化为两位小写十六进制 */
-const formatChannel = (channel: number): string =>
-  Math.round(channel * 255)
-    .toString(16)
-    .padStart(2, '0');
-
 /** 创建颜色原子输入错误 */
 const createColorError = (
   input: 'foreground' | 'backdrop' | 'weight',
@@ -399,6 +393,12 @@ const createColorError = (
  * @throws 颜色不支持、底色含透明度或权重越界时抛出 RetikzFoundationError
  */
 export const compositeOpaqueColor = (foreground: string, backdrop: string, weight: number): `#${string}` => {
+  /** 把归一化 sRGB 通道格式化为两位小写十六进制 */
+  const formatChannel = (channel: number): string =>
+    Math.round(channel * 255)
+      .toString(16)
+      .padStart(2, '0');
+
   if (!Number.isFinite(weight) || weight < 0 || weight > 1) {
     throw createColorError('weight', weight, 'compositeOpaqueColor: weight must be a finite number in [0, 1].');
   }

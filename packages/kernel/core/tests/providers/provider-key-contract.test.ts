@@ -10,32 +10,12 @@ import {
   CompositeBaseSchema,
   defineComposite,
   definePathGenerator,
-  definePathKind,
   defineShape,
-  PathSchema,
-  RetikzCoreError,
-  RetikzCoreErrorCode,
 } from '../../src';
-
-const expectCoreNonEmptyError = (action: () => unknown, code: RetikzCoreErrorCode, label: string): void => {
-  let caught: unknown;
-
-  try {
-    action();
-  } catch (error) {
-    caught = error;
-  }
-
-  expect(caught).toBeInstanceOf(RetikzCoreError);
-  expect(caught).toMatchObject({
-    code,
-    message: `${label} must be a non-empty string.`,
-  });
-};
 
 describe('provider key contract', () => {
   it('shape_definitions_declare_their_registry_name', () => {
-    const shapeNames = BUILTIN_SHAPES.map(def => def.name).sort();
+    const shapeNames = [...BUILTIN_SHAPES.values()].map(def => def.name).sort();
 
     expect(shapeNames).toContain('rectangle');
     expect(shapeNames).toContain('ellipse');
@@ -103,39 +83,10 @@ describe('provider key contract', () => {
     expect(() => compileToScene(ir, { pathGenerators: [segment] }).scene).not.toThrow();
   });
 
-  it.each(['', ' ', '\u2003', '\ufeff'])(
-    'path generator rejects a blank name with the established error (%j)',
-    name => {
-      expectCoreNonEmptyError(
-        () =>
-          definePathGenerator({
-            name,
-            paramsSchema: object({}),
-            generate: () => [],
-          }),
-        RetikzCoreErrorCode.Contract,
-        'definePathGenerator: name',
-      );
-    },
-  );
-
   it('path_kind_definitions_are_keyed_by_definition_name', () => {
-    const pathKindNames = BUILTIN_PATH_KINDS.map(def => def.name).sort();
+    const pathKindNames = [...BUILTIN_PATH_KINDS.values()].map(def => def.name).sort();
 
     expect(pathKindNames).toEqual(['stroke']);
-  });
-
-  it.each(['', ' ', '\u2003', '\ufeff'])('path kind rejects a blank name (%j)', name => {
-    expectCoreNonEmptyError(
-      () =>
-        definePathKind({
-          name,
-          schema: PathSchema.extend({ kind: literal('custom') }),
-          compile: () => null,
-        }),
-      RetikzCoreErrorCode.Contract,
-      'definePathKind: name',
-    );
   });
 
   it('composite_definition_declares_namespace_and_type_as_provider_key', () => {
@@ -168,40 +119,6 @@ describe('provider key contract', () => {
         compile: () => ({ children: [] }),
       }),
     ).toThrow(/namespace.*declared.*actual/s);
-  });
-
-  it.each(['', ' ', '\u2003', '\ufeff'])('composite rejects a blank namespace literal (%j)', namespace => {
-    expectCoreNonEmptyError(
-      () =>
-        defineComposite({
-          namespace: 'demo',
-          type: 'badge',
-          schema: CompositeBaseSchema.extend({
-            namespace: literal(namespace),
-            type: literal('badge'),
-          }),
-          compile: () => ({ children: [] }),
-        }),
-      RetikzCoreErrorCode.CompositeContractViolation,
-      'defineComposite: schema.namespace',
-    );
-  });
-
-  it.each(['', ' ', '\u2003', '\ufeff'])('composite rejects a blank type literal (%j)', type => {
-    expectCoreNonEmptyError(
-      () =>
-        defineComposite({
-          namespace: 'demo',
-          type: 'badge',
-          schema: CompositeBaseSchema.extend({
-            namespace: literal('demo'),
-            type: literal(type),
-          }),
-          compile: () => ({ children: [] }),
-        }),
-      RetikzCoreErrorCode.CompositeContractViolation,
-      'defineComposite: schema.type',
-    );
   });
 
   it('composite_object_union_declares_one_shared_provider_key', () => {

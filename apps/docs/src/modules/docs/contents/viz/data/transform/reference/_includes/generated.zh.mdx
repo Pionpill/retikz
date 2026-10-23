@@ -1856,7 +1856,7 @@ export declare const resolveRegressionImplementationRegistry: <
 
 ## 字段模型与阶段解析
 
-#### <ApiSourceLink label={"DataTransformModel"} path={"packages/viz/data/src/model/contract.ts"} startLine={52}>DataTransformModel</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformModel"} path={"packages/viz/data/src/model/contract.ts"} startLine={55}>DataTransformModel</ApiSourceLink>
 
 ```ts
 export type DataTransformModel = Array<DataTransformField<IRDataModel[number]>>;
@@ -2940,7 +2940,7 @@ export type DataTransformExecutor<TSource> = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformResult"} path={"packages/viz/data/src/model/contract.ts"} startLine={60}>DataTransformResult</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformResult"} path={"packages/viz/data/src/model/contract.ts"} startLine={63}>DataTransformResult</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -3258,7 +3258,7 @@ export type ApplyTransformsResult = Readonly<{
 | 类别   | 名称          | 类型 / 签名                       | 说明                                        |
 | ------ | ------------- | --------------------------------- | ------------------------------------------- |
 | 参数   | `view`        | `DataView`                        | 已规范化的输入数据视图                      |
-|        | `operations?` | `Array<IRDataTransform>`          | 按顺序执行的变换操作；省略时为空列表        |
+|        | `transforms?` | `Array<IRDataTransform>`          | 按顺序执行的变换操作；省略时为空列表        |
 |        | `options?`    | `ApplyTransformsOptions`          | 语义注册表、同步计算实现与可选来源/事件记录 |
 | 返回值 | —             | `ApplyTransformsToDataViewResult` | 完整数据视图及可选执行事件                  |
 | 错误   | —             | —                                 | 语义解析、计算或结果校验失败                |
@@ -3272,7 +3272,7 @@ export type ApplyTransformsResult = Readonly<{
 ```ts
 export declare const applyTransformsToDataView: (
   view: DataView,
-  operations?: Array<IRDataTransform>,
+  transforms?: Array<IRDataTransform>,
   options?: ApplyTransformsOptions,
 ) => ApplyTransformsToDataViewResult;
 ```

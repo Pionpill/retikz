@@ -1,13 +1,4 @@
-import type {
-  IRArrowDetail,
-  IRAxisLineTarget,
-  IRPath,
-  IRStep,
-  IRStepLabel,
-  IRTarget,
-  Side,
-  WayDSL,
-} from '@retikz/core';
+import type { IRArrowDetail, IRAxisLineTarget, IRPath, IRStep, IRStepLabel, IRTarget, WayDSL } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
 
 /** 作者侧路径箭头方向 */
@@ -38,10 +29,7 @@ export type InputPathArrowPlacement = {
 };
 
 /** 作者侧路径步骤标签 */
-export type InputStepLabel = Omit<IRStepLabel, 'side'> & {
-  /** 标签相对于路径段的放置侧 */
-  side?: Side;
-};
+export type InputStepLabel = IRStepLabel;
 
 /** 作者侧路径 target */
 export type InputTarget = IRTarget | string;

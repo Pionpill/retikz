@@ -46,7 +46,7 @@ const createControls = (lang: Lang) => {
           },
           {
             kind: 'range',
-            id: 'roundedCorners',
+            id: 'cornerRadius',
             label: i18n.cornerRadius,
             defaultValue: 0,
             min: 0,
@@ -72,7 +72,7 @@ export const createPreviewControlContract = (lang: Lang) =>
       dashed: false,
       dashOffset: 0,
       arrow: '->',
-      roundedCorners: 0,
+      cornerRadius: 0,
     },
     relatedApis: [
       'Draw.style.stroke',
@@ -80,7 +80,7 @@ export const createPreviewControlContract = (lang: Lang) =>
       'Draw.style.dashPattern',
       'Draw.style.dashOffset',
       'Draw.arrow',
-      'Draw.roundedCorners',
+      'Draw.cornerRadius',
     ],
   }) satisfies PreviewControlContract;
 

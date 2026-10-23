@@ -320,18 +320,18 @@ const normalizeFacetConfiguration = (facet: InputPlotFacet): IRPlotFacetConfigur
   };
 };
 
-/** 按显式 view、scaffold 模板或 authoring 默认解析 track view id */
-const scaffoldTrackViewIdOf = (
-  scaffold: Pick<InputPlotScaffold, 'id' | 'viewIdTemplate'>,
-  track: InputPlotScaffold['tracks'][number],
-): string => {
-  if (track.view !== undefined) return track.view;
-  if (scaffold.viewIdTemplate === undefined) return track.id;
-  return scaffold.viewIdTemplate.replaceAll('{arrangement}', scaffold.id).replaceAll('{track}', track.id);
-};
-
 /** 把 scaffold authoring 输入转为 canonical tracks arrangement */
 const normalizeScaffold = (scaffold: InputPlotScaffold, coordinate: IRPlotCoordinateOperation): SharedScaffold => {
+  /** 按显式 view、scaffold 模板或 authoring 默认解析 track view id */
+  const scaffoldTrackViewIdOf = (
+    sourceScaffold: Pick<InputPlotScaffold, 'id' | 'viewIdTemplate'>,
+    track: InputPlotScaffold['tracks'][number],
+  ): string => {
+    if (track.view !== undefined) return track.view;
+    if (sourceScaffold.viewIdTemplate === undefined) return track.id;
+    return sourceScaffold.viewIdTemplate.replaceAll('{arrangement}', sourceScaffold.id).replaceAll('{track}', track.id);
+  };
+
   const { coordinate: scaffoldCoordinate, spacing, resolve, ...rest } = scaffold;
   return {
     ...rest,
@@ -545,8 +545,6 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
 
   for (const axis of axes) {
     if (axis.id === undefined) continue;
-    if (axis.id.length === 0)
-      throw new RetikzPlotVanillaError(`${ERROR_PREFIX} axis id must be non-empty when using axis id binding`);
 
     const duplicateKey = `${axis.dimension}:${axis.id}`;
     if (seenAxisKeys.has(duplicateKey)) {
@@ -576,8 +574,6 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
 
   for (const mark of marks) {
     if (mark.xAxisId !== undefined) {
-      if (mark.xAxisId.length === 0)
-        throw new RetikzPlotVanillaError(`${ERROR_PREFIX} xAxisId must be a non-empty string`);
       if (mark.xAxisId !== DEFAULT_AXIS_SCOPE) {
         if (xAxesById.has(mark.xAxisId)) {
           if (!referencedXAxisIds.includes(mark.xAxisId)) referencedXAxisIds.push(mark.xAxisId);
@@ -592,8 +588,6 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
     }
 
     if (mark.yAxisId !== undefined) {
-      if (mark.yAxisId.length === 0)
-        throw new RetikzPlotVanillaError(`${ERROR_PREFIX} yAxisId must be a non-empty string`);
       if (mark.yAxisId !== DEFAULT_AXIS_SCOPE) {
         if (yAxesById.has(mark.yAxisId)) {
           if (!referencedYAxisIds.includes(mark.yAxisId)) referencedYAxisIds.push(mark.yAxisId);

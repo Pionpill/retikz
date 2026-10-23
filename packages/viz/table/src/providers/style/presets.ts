@@ -14,8 +14,11 @@ const presets: Readonly<Record<ThemeMode, IRTableDefaults>> = deepFreeze({
         content: {
           defaults: {
             style: { color: '#18181b' },
-            node: { style: { font: { family: 'sans-serif', weight: 400 } } },
-            label: { font: { family: 'sans-serif', weight: 400 } },
+            node: {
+              style: { font: { family: 'sans-serif', weight: 400 } },
+              label: { font: { family: 'sans-serif', weight: 400 } },
+            },
+            path: { label: { font: { family: 'sans-serif', weight: 400 } } },
           },
         },
       },
@@ -24,8 +27,11 @@ const presets: Readonly<Record<ThemeMode, IRTableDefaults>> = deepFreeze({
         content: {
           defaults: {
             style: { color: '#71717a' },
-            node: { style: { font: { family: 'sans-serif', weight: 500 } } },
-            label: { font: { family: 'sans-serif', weight: 500 } },
+            node: {
+              style: { font: { family: 'sans-serif', weight: 500 } },
+              label: { font: { family: 'sans-serif', weight: 500 } },
+            },
+            path: { label: { font: { family: 'sans-serif', weight: 500 } } },
           },
         },
         borders: { bottom: line('#e4e4e7', 1) },
@@ -41,8 +47,11 @@ const presets: Readonly<Record<ThemeMode, IRTableDefaults>> = deepFreeze({
         content: {
           defaults: {
             style: { color: '#fafafa' },
-            node: { style: { font: { family: 'sans-serif', weight: 400 } } },
-            label: { font: { family: 'sans-serif', weight: 400 } },
+            node: {
+              style: { font: { family: 'sans-serif', weight: 400 } },
+              label: { font: { family: 'sans-serif', weight: 400 } },
+            },
+            path: { label: { font: { family: 'sans-serif', weight: 400 } } },
           },
         },
       },
@@ -51,8 +60,11 @@ const presets: Readonly<Record<ThemeMode, IRTableDefaults>> = deepFreeze({
         content: {
           defaults: {
             style: { color: '#a1a1aa' },
-            node: { style: { font: { family: 'sans-serif', weight: 500 } } },
-            label: { font: { family: 'sans-serif', weight: 500 } },
+            node: {
+              style: { font: { family: 'sans-serif', weight: 500 } },
+              label: { font: { family: 'sans-serif', weight: 500 } },
+            },
+            path: { label: { font: { family: 'sans-serif', weight: 500 } } },
           },
         },
         borders: { bottom: line('#27272a', 1) },

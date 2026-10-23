@@ -15,15 +15,9 @@ describe('Table Cell appearance schema', () => {
             strokeWidth: 2,
             opacity: { fill: 0.5, stroke: 0.8, overall: 0.9 },
           },
-          node: {
-            style: { textColor: '#9a4d00', font: { weight: 600 } },
-          },
-          path: {
-            style: { lineCap: 'round' },
-          },
-          label: { textColor: '#7c2d12' },
-          arrow: { fill: '#7c2d12' },
-          reset: ['node', 'label'],
+          reset: ['node', 'path'],
+          node: { style: { textColor: '#9a4d00', font: { weight: 600 } }, label: { textColor: '#7c2d12' } },
+          path: { style: { lineCap: 'round' }, label: { textColor: '#7c2d12' }, arrow: { fill: '#7c2d12' } },
         },
       },
       borders: { top: { kind: 'none', priority: 4 }, bottom: { kind: 'line', width: 2 } },

@@ -15,19 +15,6 @@ import type { IRPlotMark, IRPlotLabelEncoding } from '../../schemas';
 import { resolveMarkOperation } from '../mark';
 import type { ChannelResolveContext } from './types';
 
-const assertChannelDelivery = (definition: AnyChannelDefinition): void => {
-  if (
-    (definition.kind === ChannelDefinitionKind.Scope ||
-      definition.kind === ChannelDefinitionKind.Node ||
-      definition.kind === ChannelDefinitionKind.Path) &&
-    typeof definition.deliver !== 'function'
-  ) {
-    throw new RetikzPlotError(
-      `lowerPlots: custom ${definition.kind} channel "${definition.channel}" must provide deliver (how its resolved value lands on the core ${definition.kind})`,
-    );
-  }
-};
-
 const definitionContextOf = (context: ChannelResolveContext): ChannelDefinitionResolveContext => ({
   node: context.node,
   rows: context.rows,
@@ -46,6 +33,19 @@ export const resolveChannelDefinition = (
 
 /** 解析当前 mark 可消费的 channel definition，并组装 values/default/delivery/descriptor */
 export const resolveMarkChannels = (mark: IRPlotMark, context: ChannelResolveContext): MarkChannels => {
+  const assertChannelDelivery = (definition: AnyChannelDefinition): void => {
+    if (
+      (definition.kind === ChannelDefinitionKind.Scope ||
+        definition.kind === ChannelDefinitionKind.Node ||
+        definition.kind === ChannelDefinitionKind.Path) &&
+      typeof definition.deliver !== 'function'
+    ) {
+      throw new RetikzPlotError(
+        `lowerPlots: custom ${definition.kind} channel "${definition.channel}" must provide deliver (how its resolved value lands on the core ${definition.kind})`,
+      );
+    }
+  };
+
   const operationResolution = resolveMarkOperation(mark, { registry: context.markRegistry });
   const operation = operationResolution.operation;
   const channelKinds = operationResolution.definition.channelKinds?.(operation as never);
@@ -70,7 +70,12 @@ export const resolveMarkChannels = (mark: IRPlotMark, context: ChannelResolveCon
     if (structuredTargets.has(channel)) continue;
     const definition = context.channelRegistry.get(channel);
     if (!definition) throw new RetikzPlotError(`lowerPlots: channel "${channel}" is not registered`);
-    if (channelKinds !== undefined && !channelKinds.has(definition.kind))
+    if (
+      channelKinds !== undefined &&
+      !context.channelRegistry.definitions.some(
+        candidate => candidate.channel === channel && channelKinds.has(candidate.kind),
+      )
+    )
       throw new RetikzPlotError(`lowerPlots: mark "${mark.type}" does not consume channel "${channel}"`);
   }
 

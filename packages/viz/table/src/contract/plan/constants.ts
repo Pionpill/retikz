@@ -34,6 +34,22 @@ export const TableCellAppearanceTracePath = {
   ContentStrokeOpacity: '/content/defaults/style/opacity/stroke',
   /** Cell 内容整体不透明度 */
   ContentOpacity: '/content/defaults/style/opacity/overall',
+  /** 共享默认 shadow */
+  ContentShadow: '/content/defaults/style/shadow',
+  /** 共享默认 blendMode */
+  ContentBlendMode: '/content/defaults/style/blendMode',
+  /** 共享默认 dashPattern */
+  ContentDashPattern: '/content/defaults/style/dashPattern',
+  /** 共享默认 dashOffset */
+  ContentDashOffset: '/content/defaults/style/dashOffset',
+  /** 共享默认 lineCap */
+  ContentLineCap: '/content/defaults/style/lineCap',
+  /** 共享默认 lineJoin */
+  ContentLineJoin: '/content/defaults/style/lineJoin',
+  /** 共享默认 lineCap */
+  ContentNodeDefaultLineCap: '/content/defaults/node/style/lineCap',
+  /** 共享默认 lineJoin */
+  ContentNodeDefaultLineJoin: '/content/defaults/node/style/lineJoin',
   /** Cell 内容样式重置配置 */
   ContentResetStyle: '/content/defaults/reset',
   /** Node 默认主颜色 */
@@ -125,45 +141,97 @@ export const TableCellAppearanceTracePath = {
   /** Path 默认线连接 */
   ContentPathDefaultLineJoin: '/content/defaults/path/style/lineJoin',
   /** Path 默认圆角 */
-  ContentPathDefaultRoundedCorners: '/content/defaults/path/roundedCorners',
+  ContentPathDefaultCornerRadius: '/content/defaults/path/cornerRadius',
   /** Path 默认旋转角度 */
   ContentPathDefaultRotate: '/content/defaults/path/rotate',
   /** Path 默认缩放 */
   ContentPathDefaultScale: '/content/defaults/path/scale',
-  /** Label 默认主颜色 */
-  ContentLabelDefaultColor: '/content/defaults/label/color',
-  /** Label 默认文本颜色 */
-  ContentLabelDefaultTextColor: '/content/defaults/label/textColor',
-  /** Label 默认整体不透明度 */
-  ContentLabelDefaultOpacity: '/content/defaults/label/opacity',
-  /** Label 默认字体族 */
-  ContentLabelDefaultFontFamily: '/content/defaults/label/font/family',
-  /** Label 默认字体大小 */
-  ContentLabelDefaultFontSize: '/content/defaults/label/font/size',
-  /** Label 默认字体粗细 */
-  ContentLabelDefaultFontWeight: '/content/defaults/label/font/weight',
-  /** Label 默认字体样式 */
-  ContentLabelDefaultFontStyle: '/content/defaults/label/font/style',
-  /** Arrow 默认形状 */
-  ContentArrowDefaultShape: '/content/defaults/arrow/shape',
-  /** Arrow 默认缩放 */
-  ContentArrowDefaultScale: '/content/defaults/arrow/scale',
-  /** Arrow 默认长度 */
-  ContentArrowDefaultLength: '/content/defaults/arrow/length',
-  /** Arrow 默认宽度 */
-  ContentArrowDefaultWidth: '/content/defaults/arrow/width',
-  /** Arrow 默认主颜色 */
-  ContentArrowDefaultColor: '/content/defaults/arrow/color',
-  /** Arrow 默认填充 */
-  ContentArrowDefaultFill: '/content/defaults/arrow/fill',
-  /** Arrow 默认整体不透明度 */
-  ContentArrowDefaultOpacity: '/content/defaults/arrow/opacity',
-  /** Arrow 默认线宽 */
-  ContentArrowDefaultLineWidth: '/content/defaults/arrow/lineWidth',
-  /** Arrow 默认起点配置 */
-  ContentArrowDefaultStart: '/content/defaults/arrow/start',
-  /** Arrow 默认终点配置 */
-  ContentArrowDefaultEnd: '/content/defaults/arrow/end',
+  /** node 标签默认 color */
+  ContentNodeLabelDefaultColor: '/content/defaults/node/label/color',
+  /** node 标签默认 textColor */
+  ContentNodeLabelDefaultTextColor: '/content/defaults/node/label/textColor',
+  /** node 标签默认 opacity */
+  ContentNodeLabelDefaultOpacity: '/content/defaults/node/label/opacity',
+  /** node 标签默认 position */
+  ContentNodeLabelDefaultPosition: '/content/defaults/node/label/position',
+  /** node 标签默认 align */
+  ContentNodeLabelDefaultAlign: '/content/defaults/node/label/align',
+  /** node 标签默认 placement */
+  ContentNodeLabelDefaultPlacement: '/content/defaults/node/label/placement',
+  /** node 标签默认 distance */
+  ContentNodeLabelDefaultDistance: '/content/defaults/node/label/distance',
+  /** node 标签默认 rotate */
+  ContentNodeLabelDefaultRotate: '/content/defaults/node/label/rotate',
+  /** node 标签默认 keepUpright */
+  ContentNodeLabelDefaultKeepUpright: '/content/defaults/node/label/keepUpright',
+  /** node 标签默认 pin */
+  ContentNodeLabelDefaultPin: '/content/defaults/node/label/pin',
+  /** node 标签字体 family */
+  ContentNodeLabelDefaultFontFamily: '/content/defaults/node/label/font/family',
+  /** node 标签字体 size */
+  ContentNodeLabelDefaultFontSize: '/content/defaults/node/label/font/size',
+  /** node 标签字体 weight */
+  ContentNodeLabelDefaultFontWeight: '/content/defaults/node/label/font/weight',
+  /** node 标签字体 style */
+  ContentNodeLabelDefaultFontStyle: '/content/defaults/node/label/font/style',
+  /** path 标签默认 color */
+  ContentPathLabelDefaultColor: '/content/defaults/path/label/color',
+  /** path 标签默认 textColor */
+  ContentPathLabelDefaultTextColor: '/content/defaults/path/label/textColor',
+  /** path 标签默认 opacity */
+  ContentPathLabelDefaultOpacity: '/content/defaults/path/label/opacity',
+  /** path 标签默认 position */
+  ContentPathLabelDefaultPosition: '/content/defaults/path/label/position',
+  /** path 标签默认 side */
+  ContentPathLabelDefaultSide: '/content/defaults/path/label/side',
+  /** path 标签默认 sloped */
+  ContentPathLabelDefaultSloped: '/content/defaults/path/label/sloped',
+  /** path 标签默认 interrupt */
+  ContentPathLabelDefaultInterrupt: '/content/defaults/path/label/interrupt',
+  /** path 标签默认 gap */
+  ContentPathLabelDefaultGap: '/content/defaults/path/label/gap',
+  /** path 标签默认 placement */
+  ContentPathLabelDefaultPlacement: '/content/defaults/path/label/placement',
+  /** path 标签默认 distance */
+  ContentPathLabelDefaultDistance: '/content/defaults/path/label/distance',
+  /** path 标签字体 family */
+  ContentPathLabelDefaultFontFamily: '/content/defaults/path/label/font/family',
+  /** path 标签字体 size */
+  ContentPathLabelDefaultFontSize: '/content/defaults/path/label/font/size',
+  /** path 标签字体 weight */
+  ContentPathLabelDefaultFontWeight: '/content/defaults/path/label/font/weight',
+  /** path 标签字体 style */
+  ContentPathLabelDefaultFontStyle: '/content/defaults/path/label/font/style',
+  /** 路径箭头默认 shape */
+  ContentPathArrowDefaultShape: '/content/defaults/path/arrow/shape',
+  /** 路径箭头默认 scale */
+  ContentPathArrowDefaultScale: '/content/defaults/path/arrow/scale',
+  /** 路径箭头默认 length */
+  ContentPathArrowDefaultLength: '/content/defaults/path/arrow/length',
+  /** 路径箭头默认 width */
+  ContentPathArrowDefaultWidth: '/content/defaults/path/arrow/width',
+  /** 路径箭头默认 color */
+  ContentPathArrowDefaultColor: '/content/defaults/path/arrow/color',
+  /** 路径箭头默认 fill */
+  ContentPathArrowDefaultFill: '/content/defaults/path/arrow/fill',
+  /** 路径箭头默认 opacity */
+  ContentPathArrowDefaultOpacity: '/content/defaults/path/arrow/opacity',
+  /** 路径箭头默认 lineWidth */
+  ContentPathArrowDefaultLineWidth: '/content/defaults/path/arrow/lineWidth',
+  /** 路径箭头默认 start */
+  ContentPathArrowDefaultStart: '/content/defaults/path/arrow/start',
+  /** 路径箭头默认 end */
+  ContentPathArrowDefaultEnd: '/content/defaults/path/arrow/end',
+  /** 路径箭头默认 stroke */
+  ContentPathArrowDefaultStroke: '/content/defaults/path/arrow/stroke',
+  /** 路径箭头默认 dashPattern */
+  ContentPathArrowDefaultDashPattern: '/content/defaults/path/arrow/dashPattern',
+  /** 路径箭头默认 dashOffset */
+  ContentPathArrowDefaultDashOffset: '/content/defaults/path/arrow/dashOffset',
+  /** 路径箭头默认 lineCap */
+  ContentPathArrowDefaultLineCap: '/content/defaults/path/arrow/lineCap',
+  /** 路径箭头默认 lineJoin */
+  ContentPathArrowDefaultLineJoin: '/content/defaults/path/arrow/lineJoin',
   /** Cell 上侧边框 */
   BorderTop: '/borders/top',
   /** Cell 右侧边框 */

@@ -18,8 +18,8 @@
     zIndex: '同层图元的显式栈序。',
     rotate: '绕包围盒中心旋转的角度。',
     scale: '绕包围盒中心缩放的比例。',
-    roundedCorners: '几何圆角半径。',
-    label: 'Path 共享几何标签；当前仅 centerline 模式支持。',
+    cornerRadius: '几何圆角半径。',
+    label: '不接受顶层标签；中心线标签配置在 kindOptions.label。',
     marks: '沿路径放置的方向标记。',
   }}
 />
@@ -37,6 +37,7 @@
     start: '起点端面方向、端帽与标签。',
     end: '终点端面方向、端帽与标签。',
     align: '生成带状轮廓时，中心线位于哪一侧。',
+    label: '中心线标签，接受单个对象或非空数组，各项可独立设置内外位置。',
     upper: 'boundary 模式的开放上边界 Step 序列。',
     lower: 'boundary 模式的开放下边界 Step 序列。',
   }}
@@ -50,6 +51,15 @@
   shallow
   name="CenterlineRibbonPathOptionsSchema"
   description="中心线模式：width 必填；端点可配置 direction、cap 与 label，mode 可省略。"
+/>
+
+## RibbonLabelSchema
+
+<ZodSchema
+  shallow
+  name="RibbonLabelSchema"
+  description="流带中心线标签，复用路径标签的文字和视觉字段，不接受描边断线配置。"
+  descriptions={{ placement: '标签放在流带内部或外部；省略时按外部放置，inside 且未指定 side 时居中。' }}
 />
 
 ## BoundaryRibbonPathOptionsSchema
@@ -154,7 +164,7 @@
   }}
 />
 
-端点的 `label` 直接使用 Kernel [BoundaryLabelSchema](/kernel/components/node/reference#boundarylabelschema)，与 `cap` 并列；无需 Ribbon 专属标签 Schema。
+端点的 `label` 直接使用 Kernel [BoundaryLabelSchema](/kernel/components/node/reference#boundarylabelschema)，与 `cap` 并列；无需 Ribbon 专属端点标签 Schema。
 
 ## RibbonDirectionSchema
 

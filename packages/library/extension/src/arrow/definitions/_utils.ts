@@ -1,8 +1,8 @@
-import type { ArrowEmitContext, MarkerPathPrim, MarkerPrimitive } from '@retikz/core';
+import type { ArrowEmitContext, PathPrim, ScenePrimitive } from '@retikz/core';
 
 /** 空心 path 的可选几何配置 */
 type HollowPathOptions = {
-  strokeLinejoin?: MarkerPathPrim['strokeLinejoin'];
+  strokeLinejoin?: PathPrim['strokeLinejoin'];
 };
 
 /** 一条开放 marker 子路径 */
@@ -14,14 +14,14 @@ export type OpenMarkerSubpath = Readonly<{
 }>;
 
 /** 创建实心闭合标记路径 */
-export const filledPath = (context: ArrowEmitContext, points: ReadonlyArray<[number, number]>): MarkerPrimitive => ({
+export const filledPath = (context: ArrowEmitContext, points: ReadonlyArray<[number, number]>): ScenePrimitive => ({
   type: 'path',
   commands: [
     { kind: 'move', to: points[0] },
     ...points.slice(1).map((point): { kind: 'line'; to: [number, number] } => ({ kind: 'line', to: point })),
     { kind: 'close' },
   ],
-  fill: typeof context.fill === 'string' ? context.fill : { kind: 'contextStroke' },
+  fill: context.fill,
 });
 
 /** 创建空心闭合标记路径 */
@@ -29,14 +29,15 @@ export const hollowPath = (
   context: ArrowEmitContext,
   points: ReadonlyArray<[number, number]>,
   options: HollowPathOptions = {},
-): MarkerPrimitive => ({
+): ScenePrimitive => ({
   type: 'path',
   commands: [
     { kind: 'move', to: points[0] },
     ...points.slice(1).map((point): { kind: 'line'; to: [number, number] } => ({ kind: 'line', to: point })),
     { kind: 'close' },
   ],
-  stroke: typeof context.stroke === 'string' ? context.stroke : { kind: 'contextStroke' },
+  fill: 'none',
+  stroke: context.stroke,
   strokeWidth: context.lineWidth,
   ...(options.strokeLinejoin === undefined ? {} : { strokeLinejoin: options.strokeLinejoin }),
 });
@@ -45,12 +46,13 @@ export const hollowPath = (
 export const openStrokePath = (
   context: ArrowEmitContext,
   subpaths: ReadonlyArray<OpenMarkerSubpath>,
-): MarkerPrimitive => ({
+): ScenePrimitive => ({
   type: 'path',
   commands: subpaths.flatMap(({ from, to }) => [
     { kind: 'move' as const, to: from },
     { kind: 'line' as const, to },
   ]),
-  stroke: typeof context.stroke === 'string' ? context.stroke : { kind: 'contextStroke' },
+  fill: 'none',
+  stroke: context.stroke,
   strokeWidth: context.lineWidth,
 });

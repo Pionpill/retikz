@@ -18,7 +18,7 @@ Kernel 的 shape、arrow、pattern、path generator、path kind、ribbon width p
 所有 Kernel provider registry 使用统一输入和解析规则：
 
 ```ts
-type ProviderRegistryOptions<TDefinition> = {
+type CreateProviderRegistryOptions<TDefinition> = {
   capability: string;
   builtins: ReadonlyArray<TDefinition>;
   custom?: ReadonlyArray<TDefinition>;
@@ -26,8 +26,8 @@ type ProviderRegistryOptions<TDefinition> = {
   optionName: string;
 };
 
-const resolveProviderRegistry: <TDefinition>(
-  options: ProviderRegistryOptions<TDefinition>,
+const createProviderRegistry: <TDefinition>(
+  options: CreateProviderRegistryOptions<TDefinition>,
 ) => ReadonlyMap<string, TDefinition>;
 ```
 

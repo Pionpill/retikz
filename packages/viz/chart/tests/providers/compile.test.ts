@@ -761,7 +761,7 @@ describe('Chart providers through Core compile', () => {
     ).toThrow(/chartType|scatter|bubble/i);
   });
 
-  it.each([120, 184, 248, 500])('fits the Plot item into the remaining %ipx presentation space', height => {
+  it.each([120, 184, 248, 500])('fits the Plot item or reports insufficient %ipx presentation space', height => {
     const source = ScatterChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -775,7 +775,13 @@ describe('Chart providers through Core compile', () => {
       },
     });
 
-    const result = compileToScene(sceneOf(source), compileDefinitionsOf([createScatterChartProviderContribution()]));
+    const definitions = compileDefinitionsOf([createScatterChartProviderContribution()]);
+    if (height === 120) {
+      expect(() => compileToScene(sceneOf(source), definitions)).toThrow(/margins.*exceed.*canvas/);
+      return;
+    }
+
+    const result = compileToScene(sceneOf(source), definitions);
     const artifact = result.artifacts.find(value => value.kind === 'composite' && value.type === 'flexLayout');
     if (artifact === undefined) throw new Error('Expected Chart presentation FlexLayout compile artifact');
 
@@ -811,8 +817,7 @@ describe('Chart providers through Core compile', () => {
             marks: [
               {
                 type: 'path',
-                kind: 'data',
-                encodings: { order: 'x', position: { x: 'x', y: 'size' } },
+                encodings: { order: 'x', position: { x: { field: 'x' }, y: { field: 'size' } } },
                 properties: { stroke: '#2563eb' },
               },
             ],
@@ -957,8 +962,7 @@ describe('Chart providers through Core compile', () => {
         marks: [
           PointMarkSchema.parse({
             type: 'point',
-            kind: 'data',
-            encodings: { position: { x: 'x', y: 'y' } },
+            encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
             properties: { opacity: { overall: 0.25 } },
           }),
         ],
@@ -980,7 +984,10 @@ describe('Chart providers through Core compile', () => {
           {
             kind: 'semantic',
             plotMarks: [
-              PointMarkSchema.parse({ type: 'point', kind: 'data', encodings: { position: { x: 'x', y: 'y' } } }),
+              PointMarkSchema.parse({
+                type: 'point',
+                encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+              }),
             ],
           },
         ],

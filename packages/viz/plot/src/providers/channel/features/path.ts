@@ -54,7 +54,7 @@ const pathNumericChannels: {
   strokeWidth: PathChannelDefinition<number>;
   opacity: PathChannelDefinition<number>;
   fillOpacity: PathChannelDefinition<number>;
-  roundedCorners: PathChannelDefinition<number>;
+  cornerRadius: PathChannelDefinition<number>;
 } = {
   strokeWidth: definePathChannel<number>({
     channel: 'strokeWidth',
@@ -105,19 +105,13 @@ const pathNumericChannels: {
       };
     },
   }),
-  roundedCorners: definePathChannel<number>({
-    channel: 'roundedCorners',
+  cornerRadius: definePathChannel<number>({
+    channel: 'cornerRadius',
     output: { outputKind: 'number', range: [0, 0] },
     resolve: (ctx, mark) =>
-      resolveNumericChannel(
-        ctx.node,
-        ctx.rows,
-        ctx.model,
-        markChannelEncoding(mark, 'roundedCorners'),
-        'roundedCorners',
-      ),
+      resolveNumericChannel(ctx.node, ctx.rows, ctx.model, markChannelEncoding(mark, 'cornerRadius'), 'cornerRadius'),
     deliver: (path, value) => {
-      path.roundedCorners = value;
+      path.cornerRadius = value;
     },
   }),
 };

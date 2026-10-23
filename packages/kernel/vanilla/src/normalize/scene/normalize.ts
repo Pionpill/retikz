@@ -263,7 +263,7 @@ const collectChildEmbedSites = (
         identityPath: [...ctx.path, id],
         ...(ctx.embedThemeContext === undefined
           ? {}
-          : { theme: ctx.embedThemeContext.theme, themeStyles: ctx.embedThemeContext.themeStyles }),
+          : { theme: ctx.embedThemeContext.theme, themeDefinitions: ctx.embedThemeContext.themeDefinitions }),
       };
 
       let slotIndex = 0;
@@ -450,9 +450,9 @@ const normalizeEmbed = (input: AnyInputEmbed, embedId: string, ctx: NormalizeCon
       ? {}
       : {
           theme: ctx.embedThemeContext.theme,
-          ...(ctx.embedThemeContext.themeStyles === undefined
+          ...(ctx.embedThemeContext.themeDefinitions === undefined
             ? {}
-            : { themeStyles: ctx.embedThemeContext.themeStyles }),
+            : { themeDefinitions: ctx.embedThemeContext.themeDefinitions }),
         }),
     normalizeChildren: children =>
       normalizeEmbeddedChildren(

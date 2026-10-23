@@ -54,7 +54,6 @@ const customClip = (): ClipDefinition =>
     kind: 'customClip',
     schema: strictObject({ kind: literal('customClip') }),
     resolve: () => ({ kind: 'customClip' }),
-    shapeSchema: strictObject({ kind: literal('customClip') }),
     lower: () => ({
       commands: [
         { kind: 'move', to: [0, 0] },
@@ -96,7 +95,7 @@ describe('<Layout shapes> 自定义 shape 注入', () => {
           <Node id="A" shape="hexagon" position={[0, 0]} text="hex" />
         </Layout>,
       ),
-    ).toThrow(/Unknown shape 'hexagon'/);
+    ).toThrow(/Unknown provider 'hexagon'/);
   });
 });
 

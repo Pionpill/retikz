@@ -22,16 +22,12 @@ const ScopePlacement: FC<ScopePlacementProps> = props => {
       >
         <Coordinate id="top-target" position={[140, 0]} />
         <Coordinate id="bottom-target" position={[140, 150]} />
-        <Scope position={[140, 0]} frame={{ style: { stroke: 'dodgerblue' } }}>
+        <Scope position={[140, 0]}>
           <Node position={[60, 0]} style={{ stroke: 'dodgerblue' }}>
             N
           </Node>
         </Scope>
-        <Scope
-          id="aligned-scope"
-          position={{ kind: 'anchor', target: { id: 'bottom-target' }, selfAnchor: 'left' }}
-          frame={{ style: { stroke: 'darkorange' } }}
-        >
+        <Scope id="aligned-scope" position={{ kind: 'anchor', target: { id: 'bottom-target' }, selfAnchor: 'left' }}>
           <Node position={[60, 0]} style={{ stroke: 'darkorange' }}>
             N
           </Node>

@@ -19,11 +19,17 @@ export const previewSource = {
 
 /** Right-hand info box: regular text + `$...$` formulas on each line, line names colored (mirrors tikz.dev/tutorial's information text) */
 const LEGEND = [
-  { runs: [{ text: 'angle ' }, { tex: '\\alpha = 30^\\circ = \\frac{\\pi}{6}' }] },
-  { runs: [{ text: 'red line', fill: 'red' }, { text: ' ' }, { tex: '\\sin\\alpha = \\frac{1}{2}' }] },
-  { runs: [{ text: 'blue line', fill: 'dodgerblue' }, { text: ' ' }, { tex: '\\cos\\alpha = \\frac{\\sqrt{3}}{2}' }] },
+  { segments: [{ text: 'angle ' }, { tex: '\\alpha = 30^\\circ = \\frac{\\pi}{6}' }] },
+  { segments: [{ text: 'red line', fill: 'red' }, { text: ' ' }, { tex: '\\sin\\alpha = \\frac{1}{2}' }] },
   {
-    runs: [
+    segments: [
+      { text: 'blue line', fill: 'dodgerblue' },
+      { text: ' ' },
+      { tex: '\\cos\\alpha = \\frac{\\sqrt{3}}{2}' },
+    ],
+  },
+  {
+    segments: [
       { text: 'orange line', fill: 'darkorange' },
       { text: ' ' },
       { tex: '\\tan\\alpha = \\frac{\\sin\\alpha}{\\cos\\alpha} = \\frac{1}{\\sqrt{3}}' },
@@ -141,7 +147,7 @@ const Demo: FC = () => {
       <Coordinate id="t" position={[100, -TAN30 * 100]} />
       <Draw way={[[0, 0], 't']} />
 
-      {/* right-hand info box: light dashed frame + mixed text/formula, one `{ runs }` per line */}
+      {/* right-hand info box: light dashed frame + mixed text/formula, one `{ segments }` per line */}
       <Node
         position={[400, 0]}
         shape="rectangle"

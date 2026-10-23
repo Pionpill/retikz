@@ -19,7 +19,7 @@ const LayoutThemeOverlays: FC<LayoutThemeOverlaysProps> = props => {
 
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
-      {[i18n.source, 'theme.style', 'theme.mode'].map((title, index) => (
+      {[i18n.source, 'theme.name', 'theme.mode'].map((title, index) => (
         <Node
           key={title}
           position={[80 + index * 130, 20]}

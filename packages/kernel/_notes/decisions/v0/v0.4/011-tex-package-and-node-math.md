@@ -19,13 +19,13 @@ keywords: 'retikz、tex'
 
 - createMathJaxEngine 创建引擎，createLowerTex(engine) 产生可传给 core 的 LowerTex；@retikz/tex/react 提供 useLowerTex
 - MathJax 是 optional peer，由用户控制安装、版本和 macro；core、render、react 不直接依赖它
-- 最终公开模型没有 node.math、node.tex 或 TexNode。公式是文本的一部分：单独公式使用单个 $$...$$ display run，带框公式使用同一文本节点加普通 shape
+- 最终公开模型没有 node.math、node.tex 或 TexNode。公式是文本的一部分：单独公式使用单个 $$...$$ display segment，带框公式使用同一文本节点加普通 shape
 - 未注入 lowerTex 时发出 TEX_LOWERER_MISSING；lowerTex 返回 null 或引擎失败时发出 TEX_INVALID。两者都只降级公式段，不抛 MathJax 运行时错误
 - MathJax 对象、DOM 和字体状态不进入 IR 或 Scene；glyph path 继续走现有 renderer-agnostic primitive
 
 ## 兼容性与实现结果
 
-core 已增加 lowerTex 注入点与诊断，tex 包和 React/Vanilla 透传已实现；公式公开模型由 ADR-013 的 text run 收敛。
+core 已增加 lowerTex 注入点与诊断，tex 包和 React/Vanilla 透传已实现；公式公开模型由 ADR-013 的 text segment 收敛。
 
 ## 遗留风险
 

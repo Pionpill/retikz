@@ -1,5 +1,4 @@
 import type { IRChild, IRPosition, IRStep, ScopeOwnerOutput } from '@retikz/core';
-import { ScopeOwnerOutputSchema } from '@retikz/core';
 import { mergeProperties } from '@retikz/foundation';
 import type { output as ZodOutput } from 'zod';
 
@@ -64,7 +63,6 @@ const envelopeChildrenOf = (subject: ScopeOwnerOutput, color: string): Array<IRC
 export const SCOPE_INSPECTOR = defineInspector({
   ...SCOPE_INSPECTOR_KEY,
   owner: { kind: 'scope' },
-  subjectSchema: ScopeOwnerOutputSchema,
   optionsSchema: ScopeInspectOptionsSchema,
   mergeOptionsInput: (inherited, local) => ({
     ...inherited,

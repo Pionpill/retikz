@@ -32,7 +32,7 @@ describe('irToVanillaCode', () => {
 
     expect(code).toContain('graph({');
     expect(code).toContain('entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds');
-    expect(code).toContain('graphThemeStyles: PreviewThemeDefinitionBundle.graph');
+    expect(code).toContain('graphThemeDefinitions: PreviewThemeDefinitionBundle.graph');
     expect(code).not.toContain('children: []');
 
     const explicitCode = irToVanillaCode(

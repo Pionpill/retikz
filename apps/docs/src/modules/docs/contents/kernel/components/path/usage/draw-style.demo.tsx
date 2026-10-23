@@ -9,7 +9,7 @@ export const previewControls = drawStyleControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values =>
   DrawStylePreview({
-    roundedCorners: values.roundedCorners,
+    cornerRadius: values.cornerRadius,
     arrow: values.arrow,
     stroke: values.stroke,
     strokeWidth: values.strokeWidth,

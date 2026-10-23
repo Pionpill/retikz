@@ -292,7 +292,7 @@ After installing `@retikz/inspect`, use `InspectLayout` and `InspectPath` to dis
 
 ### Rounded corners
 
-`roundedCorners` rounds every **line↔line joint** of the path with a tangent arc of the same radius — handy for flowcharts, routing, and polyline connections where you want soft corners instead of sharp ones. Omitted = sharp corners everywhere (behavior unchanged). The first / last endpoint stays sharp; a joint whose neighbor is a curve / arc / Bézier / fold stays sharp too. When the radius is too large it is **clamped per joint** to what the adjacent segment lengths allow. After a `cycle` close, the closing joint is rounded as well.
+`cornerRadius` rounds every **line↔line joint** of the path with a tangent arc of the same radius — handy for flowcharts, routing, and polyline connections where you want soft corners instead of sharp ones. Omitted = sharp corners everywhere (behavior unchanged). The first / last endpoint stays sharp; a joint whose neighbor is a curve / arc / Bézier / fold stays sharp too. When the radius is too large it is **clamped per joint** to what the adjacent segment lengths allow. After a `cycle` close, the closing joint is rounded as well.
 
 <ComponentPreview
   files={['path-rounded-corners', 'path-rounded-corners.preview.tsx']}
@@ -300,7 +300,7 @@ After installing `@retikz/inspect`, use `InspectLayout` and `InspectPath` to dis
   defaultSourceFile="path-rounded-corners.preview.tsx"
 />
 
-`roundedCorners` changes the **path geometry** — it pulls the joint vertices back and inserts a tangent arc, so it affects the bounding box, arc length, path-level `marks` normalization, and connection-point resolution. This is distinct from `lineJoin`, which only styles the **stroke render** while the path centerline stays a sharp fold. The panel shows `lineJoin` above and geometric rounding below so you can drag the radius and compare them directly. See [Implementation](/kernel/components/path/mechanism) for label sampling and gaps.
+`cornerRadius` changes the **path geometry** — it pulls the joint vertices back and inserts a tangent arc, so it affects the bounding box, arc length, path-level `marks` normalization, and connection-point resolution. This is distinct from `lineJoin`, which only styles the **stroke render** while the path centerline stays a sharp fold. The panel shows `lineJoin` above and geometric rounding below so you can drag the radius and compare them directly. See [Implementation](/kernel/components/path/mechanism) for label sampling and gaps.
 
 <Comparison target="tikz" title="Path Syntax Mapping">
 
@@ -308,7 +308,7 @@ After installing `@retikz/inspect`, use `InspectLayout` and `InspectPath` to dis
 | ---------------------------------- | ------------------------------------------------- |
 | `style.lineCap` / `style.lineJoin` | `line cap` / `line join`                          |
 | `marks` and endpoint arrows scale  | Mark and endpoint-arrow sizing follows line width |
-| `roundedCorners={r}`               | `rounded corners=<r>`                             |
+| `cornerRadius={r}`                 | `rounded corners=<r>`                             |
 | `style.color`                      | `color=`                                          |
 
 </Comparison>
@@ -512,7 +512,7 @@ The following are the props most relevant to this page. See the [API reference](
       description: 'Set the arrow direction at the start, end, or both; omit it or pass `none` for no endpoint arrow.',
     },
     {
-      name: 'roundedCorners',
+      name: 'cornerRadius',
       kind: 'property',
       type: 'number',
       description: 'Set a geometric radius at each joint between two line segments; omitted joints remain sharp.',

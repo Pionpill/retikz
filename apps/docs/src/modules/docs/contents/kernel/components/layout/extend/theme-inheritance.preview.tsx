@@ -35,13 +35,13 @@ const ThemeCard: ThemeCardComponent = Object.assign(() => null, {
 
 /** 图形参数 */
 export type ThemeInheritancePreviewValues = {
-  style: 'academic' | 'default' | 'vibrant' | 'clean';
+  name: 'academic' | 'default' | 'vibrant' | 'clean';
   mode: 'light' | 'dark';
 };
 
 /** 绘制示例图形 */
 export const ThemeInheritancePreview = (values: ThemeInheritancePreviewValues) => (
-  <Layout width={240} height={140} theme={resolvePreviewTheme(values.style, values.mode)}>
+  <Layout width={240} height={140} theme={resolvePreviewTheme(values.name, values.mode)}>
     <ThemeCard label="Composite" />
   </Layout>
 );

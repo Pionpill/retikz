@@ -18,7 +18,7 @@ export type CodeBlockTokens = Readonly<{
 }>;
 
 /** 当前 Core Theme 下确定的 Graph defaults 与 ordered rules */
-export type GraphThemeStyleResolution = Readonly<{
+export type GraphThemeResolution = Readonly<{
   /** 已确定的稀疏 Graph Source defaults */
   defaults: IRGraphDefaults;
   /** 代码实体的有效视觉 token */
@@ -27,8 +27,8 @@ export type GraphThemeStyleResolution = Readonly<{
   rules: ReadonlyArray<IRGraphRule>;
 }>;
 
-/** Graph Theme style 作者相对 Neutral preset 提供的稀疏 defaults/rules */
-export type GraphThemeStyleSource = Readonly<{
+/** Graph Theme 作者相对 Neutral preset 提供的稀疏 defaults/rules */
+export type GraphThemeSource = Readonly<{
   /** 可选稀疏 Graph Source defaults */
   defaults?: IRGraphDefaults;
   /** 相对 Neutral 的稀疏代码实体视觉 token */
@@ -37,10 +37,10 @@ export type GraphThemeStyleSource = Readonly<{
   rules?: ReadonlyArray<IRGraphRule>;
 }>;
 
-/** 为一个 Core Theme style 解析 Graph-owned defaults/rules 的运行时定义 */
-export type GraphThemeStyleDefinition = Readonly<{
-  /** 与 Core Theme style 对齐的开放名称 */
+/** 为一个 Core Theme 解析 Graph-owned defaults/rules 的运行时定义 */
+export type GraphThemeDefinition = Readonly<{
+  /** 与 Core Theme 对齐的开放名称 */
   name: string;
   /** 从当前位置完整 Core Theme 解析 Graph defaults/rules 稀疏片段 */
-  resolve: (theme: ResolvedTheme) => GraphThemeStyleSource;
+  resolve: (theme: ResolvedTheme) => GraphThemeSource;
 }>;

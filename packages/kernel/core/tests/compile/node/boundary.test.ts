@@ -10,9 +10,9 @@ import { resolvePatternRegistry } from '../../../src/providers/pattern';
 import { BUILTIN_SHAPES } from '../../../src/providers/shape';
 import { resolveNode } from '../../../src/resolve/node';
 import type { IRNode } from '../../../src/schemas';
-import { BuiltinBoundary, BoundarySchema } from '../../../src/schemas/boundary';
-import { NodeSchema } from '../../../src/schemas/node';
-import { NodeTargetSchema } from '../../../src/schemas/path/target';
+import { BuiltinBoundary, BoundarySchema } from '../../../src/schemas';
+import { NodeSchema } from '../../../src/schemas';
+import { NodeTargetSchema } from '../../../src/schemas';
 
 describe('BoundarySchema', () => {
   it('parses reserved keywords and registered names', () => {

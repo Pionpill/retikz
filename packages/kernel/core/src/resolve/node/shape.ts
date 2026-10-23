@@ -2,8 +2,8 @@ import type { JsonObject, JsonValue } from '@retikz/foundation';
 
 import type { ShapeDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { ProviderCollection } from '../../providers/registry';
-import { providerDefinitionOf } from '../../providers/registry';
+import type { ProviderRegistry } from '../../providers';
+import { providerDefinitionOf } from '../../providers';
 import type { IRNode, IRShapeRef } from '../../schemas';
 import { BuiltinShape } from '../../schemas';
 import { parseProviderPayload } from '../provider-payload';
@@ -13,9 +13,9 @@ import type { ShapeResolution } from './types';
 /** 节点 shape 解析输入 */
 export type NodeShapeResolveInput = {
   /** 待解析节点 */
-  node: IRNode;
+  node: Pick<IRNode, 'shape' | 'cornerRadius'>;
   /** shape 注册表 */
-  shapes: ProviderCollection<ShapeDefinition>;
+  shapes: ProviderRegistry<ShapeDefinition>;
   /** x 轴缩放 */
   scaleX: number;
   /** y 轴缩放 */
@@ -78,7 +78,7 @@ export const resolveNodeShape = (input: NodeShapeResolveInput): ShapeResolution 
   const { node, shapes, scaleX, scaleY, irPath = 'node' } = input;
   const { type: shapeName, params: rawShapeParams } = resolveNodeShapePreset(node.shape);
   const shapeParamsPath = `${irPath}.shape.params`;
-  const shapeDefinition = providerDefinitionOf(shapes, shapeName, { capability: 'shape', optionName: 'shapes' });
+  const shapeDefinition = providerDefinitionOf(shapes, shapeName);
   const parsedShapeParams: JsonObject = parseProviderPayload({
     capability: 'shape',
     providerName: shapeName,

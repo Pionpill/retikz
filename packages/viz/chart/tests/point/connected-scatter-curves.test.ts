@@ -9,7 +9,7 @@ import { ConnectedScatterChartSchema } from '../../src/point/connected-scatter';
 import { ConnectedScatterChartDefinition } from '../../src/point/connected-scatter/recipe';
 
 const runtime = resolveChartProviderRegistry([
-  { family: 'point', recipe: ConnectedScatterChartDefinition, themeDefinitions: [] },
+  { family: 'point', recipe: ConnectedScatterChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const plotOf = (path: Record<string, unknown> = {}, marks: Array<Record<string, unknown>> = []) => {
@@ -31,7 +31,7 @@ const plotOf = (path: Record<string, unknown> = {}, marks: Array<Record<string, 
   return resolveSelectedChart(source, {
     theme: DEFAULT_RESOLVED_THEME,
     recipe: ConnectedScatterChartDefinition,
-    themeDefinitions: [],
+    chartThemeDefinitions: [],
     runtime,
   }).plot;
 };

@@ -292,7 +292,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 ### 折线圆角
 
-`roundedCorners` 给整条 path 的每个 **line↔line 内拐角**倒一个半径相同的圆角弧——画流程图、布线、折线连接时把硬尖角磨圆。缺省 / 省略 = 全尖角（行为不变）。首点 / 末点保持尖；接缝一侧是曲线 / 弧 / 贝塞尔 / 折角（`fold`）时该接缝也保持尖。半径过大时按相邻段长**逐拐角夹紧**到可行最大值。`cycle` 闭合后，闭合接缝也参与倒圆。
+`cornerRadius` 给整条 path 的每个 **line↔line 内拐角**倒一个半径相同的圆角弧——画流程图、布线、折线连接时把硬尖角磨圆。缺省 / 省略 = 全尖角（行为不变）。首点 / 末点保持尖；接缝一侧是曲线 / 弧 / 贝塞尔 / 折角（`fold`）时该接缝也保持尖。半径过大时按相邻段长**逐拐角夹紧**到可行最大值。`cycle` 闭合后，闭合接缝也参与倒圆。
 
 <ComponentPreview
   files={['path-rounded-corners', 'path-rounded-corners.preview.tsx']}
@@ -300,7 +300,7 @@ const view = mount(document.getElementById('diagram')!, ir);
   defaultSourceFile="path-rounded-corners.preview.tsx"
 />
 
-`roundedCorners` 改的是**路径几何**——它把拐角顶点回退并插入一段相切圆弧，因此影响包围盒、弧长、路径级 `marks` 的归一化定位和连接点解析。这和 `lineJoin` 是两码事：`lineJoin` 只改**描边视觉**，路径中心线仍是尖折。面板上方展示 `lineJoin`，下方展示几何圆角，可直接拖动半径比较。标签采样与断口处理见[实现原理](/kernel/components/path/mechanism)。
+`cornerRadius` 改的是**路径几何**——它把拐角顶点回退并插入一段相切圆弧，因此影响包围盒、弧长、路径级 `marks` 的归一化定位和连接点解析。这和 `lineJoin` 是两码事：`lineJoin` 只改**描边视觉**，路径中心线仍是尖折。面板上方展示 `lineJoin`，下方展示几何圆角，可直接拖动半径比较。标签采样与断口处理见[实现原理](/kernel/components/path/mechanism)。
 
 <Comparison target="tikz" title="Path 写法映射">
 
@@ -308,7 +308,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 | ---------------------------------- | ------------------------ |
 | `style.lineCap` / `style.lineJoin` | `line cap` / `line join` |
 | `marks` 与端点箭头随线宽缩放       | 标记与端点箭头随线宽缩放 |
-| `roundedCorners={r}`               | `rounded corners=<r>`    |
+| `cornerRadius={r}`                 | `rounded corners=<r>`    |
 | `style.color`                      | `color=`                 |
 
 </Comparison>
@@ -437,7 +437,7 @@ const view = mount(document.getElementById('diagram')!, ir);
       description: '设置起点、终点或双端箭头方向；省略或传入 `none` 时不绘制端点箭头。',
     },
     {
-      name: 'roundedCorners',
+      name: 'cornerRadius',
       kind: 'property',
       type: 'number',
       description: '为每个两段直线相接的拐角设置几何圆角半径；省略时保留尖角。',

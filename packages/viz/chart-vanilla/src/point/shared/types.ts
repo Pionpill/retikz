@@ -1,5 +1,5 @@
 import type { ChartThemeDefinition, IRChartSource } from '@retikz/chart';
-import type { IRScene, ThemeStyleDefinition } from '@retikz/core';
+import type { IRScene, ThemeDefinition } from '@retikz/core';
 import type { ExternalRow, DataInputBindings, DataTransformExecutor } from '@retikz/data';
 import type { LowerPlotsOptions } from '@retikz/plot';
 
@@ -48,13 +48,13 @@ export type TypedChartCommonInput<TSource extends IRChartSource, TNative = never
     /** Core host Theme 环境 */
     theme?: IRScene['theme'];
     /** 当前编译边界可见的命名 Chart Theme Definition */
-    themeDefinitions?: ReadonlyArray<ChartThemeDefinition>;
+    chartThemeDefinitions?: ReadonlyArray<ChartThemeDefinition>;
     /** Plot lowering 的运行时选项 */
     lowerOptions?: LowerPlotsOptions;
     /** Chart Source 外层宿主 Scope */
     panel?: InputChartPanel;
     /** Core 宿主的主题定义 */
-    themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
+    themeDefinitions?: ReadonlyArray<ThemeDefinition>;
     /** 显式 Plot-owned fragment */
     plotExtension?: TSource['plotExtension'];
   }>;

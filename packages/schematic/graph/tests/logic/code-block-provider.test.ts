@@ -1,9 +1,4 @@
-import {
-  compileToScene,
-  DEFAULT_RESOLVED_THEME,
-  defineThemeStyle,
-  resolveCoreProviderDependencies,
-} from '@retikz/core';
+import { compileToScene, DEFAULT_RESOLVED_THEME, defineTheme, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
@@ -46,22 +41,22 @@ describe('Code block contribution closure', () => {
 
   it('resolves a local named Core theme before composing content', () => {
     const definition = serviceDefinition();
-    const style = Graph.defineGraphThemeStyle({
+    const style = Graph.defineGraphTheme({
       name: 'local',
       resolve: theme => ({ codeBlockTokens: { accentColor: theme.mode === 'dark' ? '#fedcba' : '#123456' } }),
     });
     const providers = resolveCoreProviderDependencies({
-      contributions: [Graph.createCodeBlockContribution(definition, { graphThemeStyles: [style] })],
+      contributions: [Graph.createCodeBlockContribution(definition, { graphThemeDefinitions: [style] })],
     });
     const source = schema().parse({
       namespace: 'test',
       type: 'service',
       name: 'Local',
-      theme: { style: 'local', mode: 'dark' },
+      theme: { name: 'local', mode: 'dark' },
     });
     const output = compileToScene(
       { type: 'scene', version: 1, children: [source] },
-      { ...providers, themeStyles: [defineThemeStyle({ name: 'local', resolve: () => ({}) })] },
+      { ...providers, themeDefinitions: [defineTheme({ name: 'local', resolve: () => ({}) })] },
     );
 
     expect(JSON.stringify(output.scene)).toContain('#fedcba');

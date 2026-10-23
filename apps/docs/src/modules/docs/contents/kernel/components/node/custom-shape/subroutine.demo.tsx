@@ -12,9 +12,9 @@ import { z } from 'zod';
 const subroutine: ShapeDefinition = defineShape({
   name: 'subroutine',
   paramsSchema: z.strictObject({}),
-  circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-  boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-  anchor: BUILTIN_SHAPES.rectangle.anchor,
+  circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+  boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+  anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
   *emit(rect, style, round) {
     const hw = rect.width / 2;
     const hh = rect.height / 2;

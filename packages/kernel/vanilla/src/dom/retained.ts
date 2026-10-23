@@ -61,16 +61,6 @@ const captureRetainedMountOptions = (options: RetainedMountCanvasOptions): Retai
   });
 };
 
-/** 把 Vanilla layer hints 保守折叠为 Render cache policy */
-const resolveCachePolicy = (runtimeMeta: InputRuntimeMeta): 'auto' | 'static' | 'dynamic' => {
-  if (runtimeMeta.layers.some(layer => layer.cache === InputLayerCache.Dynamic)) return RenderCachePolicy.Dynamic;
-  if (runtimeMeta.layers.length > 0 && runtimeMeta.layers.every(layer => layer.cache === InputLayerCache.Static)) {
-    return RenderCachePolicy.Static;
-  }
-
-  return RenderCachePolicy.Auto;
-};
-
 type RetainedRuntimeState = Readonly<{
   /** 当前 committed 动画配置 */
   animation: VanillaAnimationOptions;
@@ -138,22 +128,6 @@ type DomRetainedProcessingController<TUpdateOptions extends RetainedSvgUpdateOpt
     result: () => ProcessingResult;
   }>;
 
-/** 构造 runtime-lifetime processing options */
-const toProcessingOptions = (
-  options: CommonOptions,
-  updateStrategy: VanillaRetainedRuntimeOptions['updateStrategy'],
-): ProcessingOptions => {
-  const compile = { ...options.compile };
-
-  return {
-    compile,
-    defaultFontFamily: options.defaultFontFamily,
-    adapters: options.adapters,
-    compileDriver: options.compileDriver,
-    updateStrategy,
-  };
-};
-
 /** 复制并冻结 hydration handlers，避免调用方 mutation 改写已提交配置 */
 const captureHydrationHandlers = (handlers: HydrateOptions['handlers']): HydrateOptions['handlers'] =>
   Object.freeze(
@@ -165,17 +139,29 @@ const createRenderConfig = (
   state: RetainedRuntimeState,
   handlers: ReadonlyArray<RenderHandlerContribution>,
   canvas: RenderRuntimeConfigInput['canvas'],
-): RenderRuntimeConfigInput => ({
-  handlerContributions: handlers,
-  animation: {
-    enabled: resolveAnimationEnabled(state.animation.enabled, prefersReducedMotion()),
-    ...(state.animation.snapshotAt === undefined ? {} : { snapshotAt: state.animation.snapshotAt }),
-    ...(state.animation.easings === undefined ? {} : { easings: state.animation.easings }),
-    ...(state.canvas.animationProperties === undefined ? {} : { properties: state.canvas.animationProperties }),
-  },
-  ...(canvas === undefined ? {} : { canvas }),
-  cachePolicy: resolveCachePolicy(state.runtimeMeta),
-});
+): RenderRuntimeConfigInput => {
+  /** 把 Vanilla layer hints 保守折叠为 Render cache policy */
+  const resolveCachePolicy = (runtimeMeta: InputRuntimeMeta): 'auto' | 'static' | 'dynamic' => {
+    if (runtimeMeta.layers.some(layer => layer.cache === InputLayerCache.Dynamic)) return RenderCachePolicy.Dynamic;
+    if (runtimeMeta.layers.length > 0 && runtimeMeta.layers.every(layer => layer.cache === InputLayerCache.Static)) {
+      return RenderCachePolicy.Static;
+    }
+
+    return RenderCachePolicy.Auto;
+  };
+
+  return {
+    handlerContributions: handlers,
+    animation: {
+      enabled: resolveAnimationEnabled(state.animation.enabled, prefersReducedMotion()),
+      ...(state.animation.snapshotAt === undefined ? {} : { snapshotAt: state.animation.snapshotAt }),
+      ...(state.animation.easings === undefined ? {} : { easings: state.animation.easings }),
+      ...(state.canvas.animationProperties === undefined ? {} : { properties: state.canvas.animationProperties }),
+    },
+    ...(canvas === undefined ? {} : { canvas }),
+    cachePolicy: resolveCachePolicy(state.runtimeMeta),
+  };
+};
 
 /** 创建 DOM 子入口固定注入的 Render participant factory */
 const createRenderParticipantFactory = (
@@ -263,6 +249,22 @@ const createRenderParticipantFactory = (
 const createRetainedProcessingControllerImplementation = (
   options: CreateRetainedRuntimeOptions,
 ): DomRetainedProcessingController<RetainedSvgUpdateOptions | RetainedCanvasUpdateOptions> => {
+  /** 构造 runtime-lifetime processing options */
+  const toProcessingOptions = (
+    processingOptions: CommonOptions,
+    updateStrategy: VanillaRetainedRuntimeOptions['updateStrategy'],
+  ): ProcessingOptions => {
+    const compile = { ...processingOptions.compile };
+
+    return {
+      compile,
+      defaultFontFamily: processingOptions.defaultFontFamily,
+      adapters: processingOptions.adapters,
+      compileDriver: processingOptions.compileDriver,
+      updateStrategy,
+    };
+  };
+
   const fixedOptions = captureRetainedMountOptions(options.options);
   const { devicePixelRatio: _devicePixelRatio, ...initialCanvas } = fixedOptions.canvas ?? {};
   void _devicePixelRatio;

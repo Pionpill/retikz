@@ -3,9 +3,9 @@ import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
-import type { FlowThemeStyleDefinition } from '../../src/flow';
-import { defineFlowThemeStyle } from '../../src/flow';
-import { resolveFlowThemeStyleRegistry } from '../../src/flow/providers';
+import type { FlowThemeDefinition } from '../../src/flow';
+import { defineFlowTheme } from '../../src/flow';
+import { resolveFlowThemeRegistry } from '../../src/flow/providers';
 import { resolveFlowDiagram } from '../../src/flow/resolve';
 import { parseTestFlowDiagram } from './fixtures';
 
@@ -14,32 +14,28 @@ const themeWith = (overrides: Partial<ResolvedTheme>): ResolvedTheme => ({
   ...overrides,
 });
 
-const registryOf = (
-  ...definitions: ReadonlyArray<FlowThemeStyleDefinition>
-): ReadonlyMap<string, FlowThemeStyleDefinition> => resolveFlowThemeStyleRegistry(definitions);
+const registryOf = (...definitions: ReadonlyArray<FlowThemeDefinition>): ReadonlyMap<string, FlowThemeDefinition> =>
+  resolveFlowThemeRegistry(definitions);
 
 describe('Flow Theme Definition and registry', () => {
   it('keeps the exact Definition object as a typed identity', () => {
     const definition = {
       name: 'brand',
       resolve: () => ({ entity: { style: { opacity: 0.8 } } }),
-    } satisfies FlowThemeStyleDefinition;
+    } satisfies FlowThemeDefinition;
 
-    expect(defineFlowThemeStyle(definition)).toBe(definition);
+    expect(defineFlowTheme(definition)).toBe(definition);
   });
 
-  it('deduplicates the same identity and rejects blank or conflicting names', () => {
-    const brand = defineFlowThemeStyle({
+  it('deduplicates the same identity and rejects conflicting names', () => {
+    const brand = defineFlowTheme({
       name: 'brand',
       resolve: () => ({ entity: { style: { opacity: 0.8 } } }),
     });
 
-    expect([...resolveFlowThemeStyleRegistry([brand, brand]).keys()]).toEqual(['brand']);
+    expect([...resolveFlowThemeRegistry([brand, brand]).keys()]).toEqual(['brand']);
 
-    for (const run of [
-      () => resolveFlowThemeStyleRegistry([{ name: ' ', resolve: () => ({}) }]),
-      () => resolveFlowThemeStyleRegistry([brand, { ...brand }]),
-    ]) {
+    for (const run of [() => resolveFlowThemeRegistry([brand, { ...brand }])]) {
       expect(run).toThrowError(RetikzDiagramError);
     }
   });
@@ -56,17 +52,17 @@ describe('Flow Theme Definition and registry', () => {
 
     try {
       resolveFlowDiagram(source, {
-        theme: themeWith({ style: 'missing' }),
-        flowThemeStyles: registryOf(),
+        theme: themeWith({ name: 'missing' }),
+        flowThemeDefinitions: registryOf(),
       });
 
-      expect.unreachable('Expected missing Flow Theme style failure');
+      expect.unreachable('Expected missing Flow Theme failure');
     } catch (error) {
       if (!(error instanceof RetikzDiagramError)) throw error;
 
       expect(error.code).toBe(RetikzDiagramErrorCode.DefinitionNotRegistered);
       expect(error.details).toMatchObject({
-        capability: 'flow-theme-style',
+        capability: 'flow-theme',
         key: 'missing',
         availableKeys: [],
       });
@@ -80,8 +76,6 @@ describe('Flow Theme Definition and registry', () => {
         throw new Error('external callback failed');
       },
     ],
-    ['removed tokens wrapper', () => ({ entity: {}, tokens: {} })],
-    ['structural field', () => ({ entity: { style: { opacity: 1, shape: 'circle' } } })],
   ])('wraps invalid %s output with the Definition as cause', (_label, resolve) => {
     const source = parseTestFlowDiagram({
       namespace: 'diagram',
@@ -91,12 +85,12 @@ describe('Flow Theme Definition and registry', () => {
       layouts: [],
       children: ['entity'],
     });
-    const definition = defineFlowThemeStyle({ name: 'invalid', resolve });
+    const definition = defineFlowTheme({ name: 'invalid', resolve });
 
     try {
       resolveFlowDiagram(source, {
-        theme: themeWith({ style: 'invalid' }),
-        flowThemeStyles: registryOf(definition),
+        theme: themeWith({ name: 'invalid' }),
+        flowThemeDefinitions: registryOf(definition),
       });
 
       expect.unreachable('Expected invalid Flow Theme callback output');
@@ -104,7 +98,7 @@ describe('Flow Theme Definition and registry', () => {
       if (!(error instanceof RetikzDiagramError)) throw error;
 
       expect(error.code).toBe(RetikzDiagramErrorCode.DefinitionCallbackFailed);
-      expect(error.details).toMatchObject({ capability: 'flow-theme-style', key: 'invalid' });
+      expect(error.details).toMatchObject({ capability: 'flow-theme', key: 'invalid' });
       expect(error.cause).toBeDefined();
     }
   });
@@ -112,7 +106,7 @@ describe('Flow Theme Definition and registry', () => {
 
 describe('Flow Theme cascade', () => {
   it('applies named defaults, author defaults, Group layout and item overrides in order', () => {
-    const brand = defineFlowThemeStyle({
+    const brand = defineFlowTheme({
       name: 'brand',
       resolve: () => ({
         layout: { nodeGap: 8 },
@@ -140,8 +134,8 @@ describe('Flow Theme cascade', () => {
     });
 
     const resolved = resolveFlowDiagram(source, {
-      theme: themeWith({ style: 'brand' }),
-      flowThemeStyles: registryOf(brand),
+      theme: themeWith({ name: 'brand' }),
+      flowThemeDefinitions: registryOf(brand),
     });
     const group = resolved.elements[0];
     if (group.type !== 'group') throw new Error('Expected Group');

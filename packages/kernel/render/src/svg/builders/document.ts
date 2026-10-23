@@ -1,23 +1,22 @@
-import type { IRDropShadow, ResolvedArrowEnd, Scene, ScenePrimitive } from '@retikz/core';
+import type { PaintValue, Scene, ScenePrimitive } from '@retikz/core';
 
 import type { EasingRegistry } from '../../animation';
 import type { StaticRenderFrame } from '../../runtime';
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '../../runtime';
-import { countScenePrimitiveOccurrences } from '../../shared';
+import { validateSceneContent } from '../../shared';
+import { countScenePrimitiveOccurrences, startArrowPlacement, endArrowPlacement } from '../../shared';
 import type { RenderTraceReporter } from '../../trace';
 import { RenderTracePhase, RenderTraceUnit } from '../../trace';
 import { createSvgAnimationCollector } from '../animation';
 import { toSafeSvgToken } from '../safe-token';
 import type { SvgNode } from '../types';
 import { formatViewBox } from '../view-box';
-import { collectArrowEnds, hashKey, stableArrowKey } from './arrow-collect';
-import { buildArrowMarker } from './arrow-markers';
 import { buildClipDef } from './clip-defs';
 import { buildPaintDef } from './paint-defs';
 import type { BuildContext } from './prim';
 import { buildPrim } from './prim';
 import { buildSvgReadonlyLayer } from './readonly-layer';
-import { buildShadowDef, collectShadows, shadowHash, stableShadowKey } from './shadow-defs';
+import { buildShadowDef, shadowHash } from './shadow-defs';
 
 /** `buildSvgDocument` / `buildSvgFragment` 选项 */
 export type BuildDocumentOptions = {
@@ -47,95 +46,13 @@ export type BuildDocumentOptions = {
   trace?: RenderTraceReporter;
 };
 
-/** 按 idPrefix 派生确定性的资源 id / 引用回调，并组装 builder context */
-const makeContext = (
-  idPrefix: string,
-): {
-  context: BuildContext;
-  arrowMarkerIdFor: (spec: ResolvedArrowEnd) => string;
-  paintIdFor: (id: string) => string;
-  clipIdFor: (id: string) => string;
-  shadowIdFor: (shadow: IRDropShadow) => string;
-} => {
-  const safeIdPrefix = toSafeSvgToken(idPrefix);
-  const arrowMarkerIdFor = (spec: ResolvedArrowEnd): string =>
-    `retikz-arrow-${safeIdPrefix}-${hashKey(stableArrowKey(spec))}`;
-  const paintIdFor = (id: string): string => `retikz-paint-${safeIdPrefix}-${id}`;
-  const clipIdFor = (id: string): string => `retikz-clip-${safeIdPrefix}-${id}`;
-  const shadowIdFor = (shadow: IRDropShadow): string => `retikz-shadow-${safeIdPrefix}-${shadowHash(shadow)}`;
-
-  return {
-    context: {
-      arrowMarkerIdFor,
-      paintRefUrl: (id: string) => `url(#${paintIdFor(id)})`,
-      clipRefUrl: (id: string) => `url(#${clipIdFor(id)})`,
-      shadowIdFor,
-    },
-    arrowMarkerIdFor,
-    paintIdFor,
-    clipIdFor,
-    shadowIdFor,
-  };
-};
-
-/** 收集 + 按 stableArrowKey dedup arrow 端点 spec（保持首次出现顺序） */
-const dedupArrowSpecs = (prims: ReadonlyArray<ScenePrimitive>): Map<string, ResolvedArrowEnd> => {
-  const uniqueByKey = new Map<string, ResolvedArrowEnd>();
-
-  for (const s of collectArrowEnds(prims)) {
-    const k = stableArrowKey(s);
-    if (!uniqueByKey.has(k)) uniqueByKey.set(k, s);
-  }
-
-  return uniqueByKey;
-};
-
-/** 收集 + 按 stableShadowKey dedup shadow（保持首次出现顺序） */
-const dedupShadows = (prims: ReadonlyArray<ScenePrimitive>): Map<string, IRDropShadow> => {
-  const uniqueByKey = new Map<string, IRDropShadow>();
-
-  for (const s of collectShadows(prims)) {
-    const k = stableShadowKey(s);
-    if (!uniqueByKey.has(k)) uniqueByKey.set(k, s);
-  }
-
-  return uniqueByKey;
-};
-
-/** 组装 `<defs>` 子节点（arrow marker → paint → clip → shadow filter）；无任何资源时返回 undefined（不产空 `<defs>`） */
-const buildDefs = (scene: Scene, idPrefix: string): SvgNode | undefined => {
-  const { arrowMarkerIdFor, paintIdFor, clipIdFor, shadowIdFor } = makeContext(idPrefix);
-  const uniqueByKey = dedupArrowSpecs(scene.primitives);
-  const uniqueShadows = dedupShadows(scene.primitives);
-  const resources = scene.resources ?? [];
-  const paintResources = resources.filter(r => r.kind === 'paint');
-  const clipResources = resources.filter(r => r.kind === 'clip');
-  if (uniqueByKey.size === 0 && uniqueShadows.size === 0 && paintResources.length === 0 && clipResources.length === 0) {
-    return undefined;
-  }
-
-  const children: Array<SvgNode> = [];
-
-  for (const spec of uniqueByKey.values()) {
-    children.push(buildArrowMarker(arrowMarkerIdFor(spec), spec));
-  }
-
-  for (const r of paintResources) children.push(buildPaintDef(r, paintIdFor(r.id)));
-
-  for (const r of clipResources) children.push(buildClipDef(r, clipIdFor(r.id)));
-
-  for (const s of uniqueShadows.values()) children.push(buildShadowDef(s, shadowIdFor(s), scene.layout));
-
-  return { tag: 'defs', attrs: {}, children };
-};
-
 /**
  * Scene → SVG 内容子树（`<defs>` + primitives，无 `<svg>` 外壳）
  * @description 给 Vanilla `mountSvg` 往已有容器塞、或需要自定义 `<svg>` 外壳的 caller 用
  */
 export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): Array<SvgNode> => {
   const safeIdPrefix = toSafeSvgToken(options.idPrefix);
-  const { context } = makeContext(options.idPrefix);
+  validateSceneContent(scene);
 
   // 截帧（snapshotAt 给定）→ 烘焙静态帧的收集器；否则按 animate 决定动画收集器 / 无（base）
   const collector =
@@ -153,10 +70,71 @@ export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): A
             easings: options.easings,
             onWarn: options.onAnimationWarn,
           });
-  if (collector) context.decorate = collector.decorate;
-  const defs = buildDefs(scene, options.idPrefix);
+  const definitions = new Map<string, () => SvgNode>();
+  const resources = new Map((scene.resources ?? []).map(resource => [resource.id, resource]));
+  const clipIdFor = (id: string): string => `retikz-clip-${safeIdPrefix}-${id}`;
+  const contextFor = (hostId?: string, resourceContent = false, contextStroke?: PaintValue): BuildContext => {
+    const suffix = hostId === undefined ? '' : `-host-${toSafeSvgToken(hostId)}`;
+    const resourceContext = (): BuildContext => contextFor(hostId, true, 'currentColor');
+    return {
+      hostId,
+      contextStroke,
+      resourceContent,
+      forPrimitive: resourceContent ? undefined : primitive => contextFor(primitive.id ?? hostId),
+      decorate: collector?.decorate,
+      clipRefUrl: id => `url(#${clipIdFor(id)})`,
+      arrowContentFor: primitive => {
+        const children: Array<SvgNode> = [];
+        for (const [spec, placement] of [
+          [primitive.arrowStart, startArrowPlacement(primitive.commands)],
+          [primitive.arrowEnd, endArrowPlacement(primitive.commands)],
+        ] as const) {
+          if (!spec || !placement) continue;
+          const strokeWidth = primitive.strokeWidth ?? 1;
+          const stroke =
+            typeof primitive.stroke === 'object' && primitive.stroke.kind === 'contextStroke'
+              ? contextStroke
+              : primitive.stroke;
+          children.push({
+            tag: 'g',
+            attrs: {
+              transform: `translate(${placement.vertex[0]} ${placement.vertex[1]}) rotate(${(placement.angle * 180) / Math.PI}) scale(${(spec.markerWidth * strokeWidth) / spec.baseSize} ${(spec.markerHeight * strokeWidth) / spec.baseSize}) translate(${-spec.refX} ${-spec.baseSize / 2})`,
+              ...(spec.opacity === undefined ? {} : { opacity: spec.opacity }),
+            },
+            children: spec.marker.map(child => buildPrim(child, contextFor(hostId, true, stroke ?? 'none'))),
+          });
+        }
+        return children;
+      },
+      paintRefUrl: resourceId => {
+        const resource = resources.get(resourceId);
+        const id = `retikz-paint-${safeIdPrefix}-${resourceId}${resource?.kind === 'paint' && resource.tile ? suffix : ''}`;
+        if (resource?.kind === 'paint' && !definitions.has(id)) {
+          definitions.set(id, () => buildPaintDef(resource, id, resourceContext()));
+        }
+        return `url(#${id})`;
+      },
+      shadowIdFor: shadow => {
+        const id = `retikz-shadow-${safeIdPrefix}-${shadowHash(shadow)}`;
+        if (!definitions.has(id)) definitions.set(id, () => buildShadowDef(shadow, id, scene.layout));
+        return id;
+      },
+    };
+  };
+  const context = contextFor();
+  for (const resource of resources.values()) {
+    if (resource.kind === 'clip') {
+      const id = clipIdFor(resource.id);
+      definitions.set(id, () => buildClipDef(resource, id));
+    }
+  }
   let prims = scene.primitives.filter((p): p is ScenePrimitive => Boolean(p)).map(p => buildPrim(p, context));
   if (collector) prims = collector.wrapCamera(prims, scene);
+  const definitionNodes: Array<SvgNode> = [];
+  for (const build of definitions.values()) definitionNodes.push(build());
+  const defs: SvgNode | undefined = definitionNodes.length
+    ? { tag: 'defs', attrs: {}, children: definitionNodes }
+    : undefined;
   const style = collector?.styleNode();
 
   // 顺序：<style>（动画）→ <defs>（资源）→ primitives

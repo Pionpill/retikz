@@ -1,18 +1,18 @@
 import type { IRChild, IRScope, ResolvedTheme, ScenePrimitive } from '@retikz/core';
-import { DEFAULT_RESOLVED_THEME, defineThemeStyle, LayoutAxisProposalKind, ThemeMode } from '@retikz/core';
+import { DEFAULT_RESOLVED_THEME, defineTheme, LayoutAxisProposalKind, ThemeMode } from '@retikz/core';
 import type { IRFlexLayout } from '@retikz/layout';
 import { FlexLayoutArtifactSchema, FlexLayoutDirection, FlexLayoutSchema, LayoutAlignment } from '@retikz/layout';
 import { LegendArtifactSchema, LegendSchema } from '@retikz/standard/presentation';
 import { describe, expect, it } from 'vitest';
 
 import {
-  defineDiagramThemeStyle,
+  defineDiagramTheme,
   DiagramDefaultsSchema,
   DiagramFrameSchema,
   DiagramPresentationSchema,
   lowerDiagramFoundation,
   resolveDiagramFoundation,
-  resolveDiagramThemeStyleRegistry,
+  resolveDiagramThemeRegistry,
 } from '../src/_diagram';
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../src/errors';
 import { compileTestDiagramFoundation } from './test-utils';
@@ -82,7 +82,7 @@ const resolveFoundation = (
 ) =>
   resolveDiagramFoundation(source, {
     theme: DEFAULT_RESOLVED_THEME,
-    diagramThemeStyles: resolveDiagramThemeStyleRegistry(),
+    diagramThemeDefinitions: resolveDiagramThemeRegistry(),
   });
 
 const flexOf = (child: IRChild): IRFlexLayout => {
@@ -238,7 +238,7 @@ describe('Diagram Foundation lowering', () => {
 
   it('places complete Presentation text in a node-reset heading outside the drawing child', () => {
     const presentation = DiagramPresentationSchema.parse({
-      title: { text: ['Title', { runs: [{ text: 'styled', fill: '#2563eb' }, { tex: 'x^2' }] }] },
+      title: { text: ['Title', { segments: [{ text: 'styled', fill: '#2563eb' }, { tex: 'x^2' }] }] },
       description: { text: 'Description' },
     });
     const surface = lowerDiagramFoundation(resolveFoundation({ presentation }), drawing);
@@ -300,14 +300,14 @@ describe('Diagram Foundation lowering', () => {
 describe('Diagram Foundation provider integration', () => {
   it('observes the effective Core Scope Theme before resolving the named Diagram style', () => {
     const observed: Array<ResolvedTheme> = [];
-    const diagramStyle = defineDiagramThemeStyle({
+    const diagramStyle = defineDiagramTheme({
       name: 'brand',
       resolve: theme => {
         observed.push(theme);
         return { presentation: { title: { style: { textColor: '#f97316' } } } };
       },
     });
-    const coreStyle = defineThemeStyle({
+    const coreStyle = defineTheme({
       name: 'brand',
       resolve: () => ({ semantic: { guide: '#94a3b8' } }),
     });
@@ -317,9 +317,9 @@ describe('Diagram Foundation provider integration', () => {
         drawing,
       },
       {
-        host: { theme: { style: 'brand', mode: ThemeMode.Dark } },
-        diagram: { diagramThemeStyles: [diagramStyle] },
-        themeStyles: [coreStyle],
+        host: { theme: { name: 'brand', mode: ThemeMode.Dark } },
+        diagram: { diagramThemeDefinitions: [diagramStyle] },
+        themeDefinitions: [coreStyle],
       },
     );
     const text = primitivesOf(output.scene.primitives).find(
@@ -327,7 +327,7 @@ describe('Diagram Foundation provider integration', () => {
     );
 
     expect(observed).toHaveLength(1);
-    expect(observed[0]).toMatchObject({ style: 'brand', mode: ThemeMode.Dark });
+    expect(observed[0]).toMatchObject({ name: 'brand', mode: ThemeMode.Dark });
     expect(text).toMatchObject({ type: 'text', fill: '#f97316' });
   });
 

@@ -199,7 +199,7 @@ export const LayoutInputEmbedAdapters: ReadonlyArray<
 > = Object.freeze([FlexLayoutInputEmbedAdapter, GridLayoutInputEmbedAdapter, OverlayLayoutInputEmbedAdapter]);
 ```
 
-#### <ApiSourceLink label={"createFlexLayout"} path={"packages/library/layout/src/composites/flex-layout/composite.ts"} startLine={30}>createFlexLayout</ApiSourceLink> / <ApiSourceLink label={"FlexLayoutInput"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={29}>FlexLayoutInput</ApiSourceLink>
+#### <ApiSourceLink label={"createFlexLayout"} path={"packages/library/layout/src/composites/flex-layout/composite.ts"} startLine={30}>createFlexLayout</ApiSourceLink> / <ApiSourceLink label={"FlexLayoutInput"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={25}>FlexLayoutInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -230,7 +230,7 @@ export type FlexLayoutInput = Omit<IRFlexLayout, 'namespace' | 'type'>;
 
 ## 执行与辅助契约
 
-#### <ApiSourceLink label={"FlexLayoutArtifact"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={32}>FlexLayoutArtifact</ApiSourceLink>
+#### <ApiSourceLink label={"FlexLayoutArtifact"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={28}>FlexLayoutArtifact</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -260,7 +260,7 @@ export type FlexLayoutArtifact = ZodInfer<typeof FlexLayoutArtifactSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlexLayoutItemInput"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={18}>FlexLayoutItemInput</ApiSourceLink>
+#### <ApiSourceLink label={"FlexLayoutItemInput"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={14}>FlexLayoutItemInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -295,7 +295,7 @@ export type FlexLayoutItemInput = IRFlexLayoutItem;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlexMainDistribution"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={11}>FlexMainDistribution</ApiSourceLink>
+#### <ApiSourceLink label={"FlexMainDistribution"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={7}>FlexMainDistribution</ApiSourceLink>
 
 <DocTabs defaultValue="expanded">
 
@@ -310,7 +310,7 @@ export type FlexMainDistribution = 'start' | 'center' | 'end' | 'space-between' 
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type FlexMainDistribution = ZodInfer<typeof FlexMainDistributionSchema>;
+export type FlexMainDistribution = Exclude<LayoutDistribution, typeof LayoutDistribution.Stretch>;
 ```
 
 </DocTab>
@@ -500,7 +500,7 @@ export type LayoutOverflow = ValueOf<typeof LayoutOverflow>;
 
 ## 持久化配置
 
-#### <ApiSourceLink label={"IRFlexLayout"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={21}>IRFlexLayout</ApiSourceLink>
+#### <ApiSourceLink label={"IRFlexLayout"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={17}>IRFlexLayout</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -530,7 +530,7 @@ export type IRFlexLayout = Omit<ZodInput<typeof FlexLayoutSchema>, 'children'> &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRFlexLayoutItem"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={14}>IRFlexLayoutItem</ApiSourceLink>
+#### <ApiSourceLink label={"IRFlexLayoutItem"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={10}>IRFlexLayoutItem</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

@@ -1,7 +1,7 @@
 import type { ThemeMode } from './constants';
 
 /** 可由 Theme IR 持久化的开放视觉人格名称 */
-export type ThemeStyleValue = string;
+export type ThemeName = string;
 
 /** CSS 颜色在 Core shared color contract 中的 JSON-safe 字符串形态 */
 export type CssColorValue = string;
@@ -35,7 +35,7 @@ export type ResolvedThemeColors = Readonly<{
 /** 编译当前位置完整、只读的有效 Theme */
 export type ResolvedTheme = Readonly<{
   /** 当前视觉人格 */
-  style?: ThemeStyleValue;
+  name?: ThemeName;
   /** 当前明暗环境 */
   mode: ThemeMode;
   /** 由 selector 派生的 shared color view */

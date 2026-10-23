@@ -16,7 +16,6 @@ const customClip = (): ClipDefinition =>
     kind: 'ticketClip',
     schema: strictObject({ kind: literal('ticketClip') }),
     resolve: () => ({ kind: 'ticketClip' }),
-    shapeSchema: strictObject({ kind: literal('ticketClip') }),
     lower: () => ({
       commands: [
         { kind: 'move', to: [0, 0] },

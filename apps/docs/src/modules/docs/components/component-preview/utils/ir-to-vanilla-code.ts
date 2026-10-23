@@ -813,7 +813,7 @@ const graphAuthoringCode = (graph: IRGraph, indent: number, ctx: Ctx): string =>
     ...input,
     ...(children === undefined ? {} : { children }),
     entityKinds: '__GRAPH_ENTITY_KINDS__',
-    graphThemeStyles: '__GRAPH_THEME_STYLES__',
+    graphThemeDefinitions: '__GRAPH_THEME_STYLES__',
   };
   let code = formatObject(encoded, indent)
     .replace("'__GRAPH_ENTITY_KINDS__'", 'PreviewThemeDefinitionBundle.graphEntityKinds')
@@ -994,10 +994,10 @@ const flowCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => 
   ctx.flowCount += 1;
   const encoded = {
     ...input,
-    diagramThemeStyles: '__DIAGRAM_THEME_STYLES__',
+    diagramThemeDefinitions: '__DIAGRAM_THEME_STYLES__',
     entityKinds: '__GRAPH_ENTITY_KINDS__',
-    flowThemeStyles: '__FLOW_THEME_STYLES__',
-    graphThemeStyles: '__GRAPH_THEME_STYLES__',
+    flowThemeDefinitions: '__FLOW_THEME_STYLES__',
+    graphThemeDefinitions: '__GRAPH_THEME_STYLES__',
   };
 
   return `flowDiagram(${formatObject(encoded, indent)
@@ -1223,12 +1223,12 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     ...(hasStandaloneGraphMembers ? [] : definitions.graph),
   ];
   const providerCode = hasStandaloneGraphMembers
-    ? `\nconst definitions = resolveCoreProviderDependencies({ contributions: [{ roots: [GraphProviderKey], providers: createGraphProviders({ entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds, graphThemeStyles: PreviewThemeDefinitionBundle.graph }) }], definitions: { composites: [${definitionNames.join(', ')}] } });\n`
+    ? `\nconst definitions = resolveCoreProviderDependencies({ contributions: [{ roots: [GraphProviderKey], providers: createGraphProviders({ entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds, graphThemeDefinitions: PreviewThemeDefinitionBundle.graph }) }], definitions: { composites: [${definitionNames.join(', ')}] } });\n`
     : '';
   const compileEntries = [
     ...(shapeImports.length ? [`shapes: [${shapeImports.join(', ')}]`] : []),
     ...(usesRibbon ? ['pathKinds: [RibbonPathKindDefinition]'] : []),
-    ...(graphHelpers.length > 0 || ctx.flowCount > 0 ? ['themeStyles: PreviewThemeDefinitionBundle.core'] : []),
+    ...(graphHelpers.length > 0 || ctx.flowCount > 0 ? ['themeDefinitions: PreviewThemeDefinitionBundle.core'] : []),
     ...(hasStandaloneGraphMembers
       ? ['...definitions']
       : definitionNames.length > 0

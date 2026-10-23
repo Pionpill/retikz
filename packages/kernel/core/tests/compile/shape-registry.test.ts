@@ -53,8 +53,8 @@ const chipShape = (): ShapeDefinition =>
     name: 'chip',
     paramsSchema: strictObject({}),
     circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
-    boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-    anchor: BUILTIN_SHAPES.rectangle.anchor,
+    boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+    anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
     *emit(rect): Iterable<ScenePrimitive> {
       const hw = rect.width / 2;
       yield {
@@ -141,7 +141,7 @@ describe('Shape registry — injection (happy path)', () => {
       height: 10,
     };
     const cachedShape: ShapeDefinition = {
-      ...BUILTIN_SHAPES.rectangle,
+      ...BUILTIN_SHAPES.get('rectangle')!,
       name: 'cachedShape',
       *emit(): Iterable<ScenePrimitive> {
         yield cachedPrim;
@@ -232,10 +232,10 @@ describe('Shape registry — boundary', () => {
 
   it('synthetic_layouts_use_effective_rectangle_shape: scope.id 自定义 anchor 走注入后的 rectangle', () => {
     const sentinelRect: ShapeDefinition = {
-      ...BUILTIN_SHAPES.rectangle,
+      ...BUILTIN_SHAPES.get('rectangle')!,
       name: 'sentinelRect',
       anchor: (rect, name) =>
-        name === 'sentinel' ? [rect.x + 77, rect.y + 88] : BUILTIN_SHAPES.rectangle.anchor(rect, name, {}),
+        name === 'sentinel' ? [rect.x + 77, rect.y + 88] : BUILTIN_SHAPES.get('rectangle')!.anchor(rect, name, {}),
     };
     const ir: IRScene = {
       version: 1,
@@ -269,7 +269,7 @@ describe('Shape registry — error path', () => {
       children: [{ type: 'node', id: 'A', shape: 'cloud', position: [0, 0] }],
     };
 
-    expect(() => compileToScene(ir).scene).toThrow(/Unknown shape 'cloud'/);
+    expect(() => compileToScene(ir).scene).toThrow(/Unknown provider 'cloud'/);
 
     // circle 是内置 shape preset，不在 provider 注册表（裸 'circle' 由 compile 解析到 ellipse，不走查表）
     // 注册表含 polygon：排序后落在 ellipse 与 rectangle 之间。
@@ -286,8 +286,8 @@ describe('Shape registry — error path', () => {
       name: 'scaledBox',
       paramsSchema: strictObject({ scale: number().positive() }),
       circumscribe: (hw, hh, params) => ({ halfWidth: hw * params.scale, halfHeight: hh * params.scale }),
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
       *emit(rect, style): Iterable<ScenePrimitive> {
         yield {
           type: 'rect',
@@ -357,7 +357,7 @@ describe('Shape registry — error path', () => {
 describe('Shape registry — interaction', () => {
   it('duplicate_builtin_shape_rejected: override rectangle → duplicate error', () => {
     const ovalRect: ShapeDefinition = {
-      ...BUILTIN_SHAPES.rectangle,
+      ...BUILTIN_SHAPES.get('rectangle')!,
       name: 'ovalRect',
       *emit(rect, style): Iterable<ScenePrimitive> {
         yield {
@@ -389,7 +389,7 @@ describe('Shape registry — interaction', () => {
 
     try {
       const ovalRect: ShapeDefinition = {
-        ...BUILTIN_SHAPES.rectangle,
+        ...BUILTIN_SHAPES.get('rectangle')!,
         name: 'ovalRect',
         *emit(rect): Iterable<ScenePrimitive> {
           yield { type: 'ellipse', cx: rect.x, cy: rect.y, rx: rect.width / 2, ry: rect.height / 2 };

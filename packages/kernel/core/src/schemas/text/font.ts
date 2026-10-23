@@ -1,0 +1,108 @@
+import type { ValueOf } from '@retikz/foundation';
+import { PositiveNumberSchema } from '@retikz/foundation';
+import { string, union, enum as zodEnum, number, object, lazy } from 'zod';
+import type { infer as ZodInfer } from 'zod';
+
+/** CSS font-weight 关键字 */
+export const FontWeightKeyword = {
+  /** 常规字重 */
+  Normal: 'normal',
+  /** 加粗字重 */
+  Bold: 'bold',
+} as const;
+
+/** CSS font-style 关键字 */
+export const FontStyle = {
+  /** 常规字体样式 */
+  Normal: 'normal',
+  /** 斜体样式 */
+  Italic: 'italic',
+  /** 倾斜样式 */
+  Oblique: 'oblique',
+} as const;
+
+/** Web 风格字号 preset */
+export const WebFontSizePreset = {
+  Xxs: '2xs',
+  Xs: 'xs',
+  Sm: 'sm',
+  Base: 'base',
+  Lg: 'lg',
+  Xl: 'xl',
+  Xl2: '2xl',
+  Xl3: '3xl',
+  Xl4: '4xl',
+  Xl5: '5xl',
+  Xl6: '6xl',
+  Xl7: '7xl',
+  Xl8: '8xl',
+  Xl9: '9xl',
+} as const;
+
+/** Web 风格字号 preset 到 root font size 的比例 */
+export const WebFontSizeRatio = {
+  [WebFontSizePreset.Xxs]: 0.625,
+  [WebFontSizePreset.Xs]: 0.75,
+  [WebFontSizePreset.Sm]: 0.875,
+  [WebFontSizePreset.Base]: 1,
+  [WebFontSizePreset.Lg]: 1.125,
+  [WebFontSizePreset.Xl]: 1.25,
+  [WebFontSizePreset.Xl2]: 1.5,
+  [WebFontSizePreset.Xl3]: 1.875,
+  [WebFontSizePreset.Xl4]: 2.25,
+  [WebFontSizePreset.Xl5]: 3,
+  [WebFontSizePreset.Xl6]: 3.75,
+  [WebFontSizePreset.Xl7]: 4.5,
+  [WebFontSizePreset.Xl8]: 6,
+  [WebFontSizePreset.Xl9]: 8,
+} as const satisfies Record<ValueOf<typeof WebFontSizePreset>, number>;
+
+/** CSS font-weight 关键字取值 */
+export type FontWeightKeyword = ValueOf<typeof FontWeightKeyword>;
+
+/** CSS font-style 关键字取值 */
+export type FontStyle = ValueOf<typeof FontStyle>;
+
+/** 字号 preset 取值 */
+export type WebFontSizePreset = ValueOf<typeof WebFontSizePreset>;
+
+/** 校验正数 em 或 rem 字号 */
+const RelativeFontSizeSchema = string()
+  .regex(/^(?:\d+(?:\.\d+)?|\.\d+)(?:em|rem)$/)
+  .refine(value => Number.parseFloat(value) > 0)
+  .describe('Relative font size with `em` or `rem`, resolved during compile.');
+
+/** 校验用户单位字号、Web 预设或 em 与 rem 相对字号 */
+export const FontSizeSchema = union([
+  PositiveNumberSchema,
+  zodEnum(WebFontSizePreset),
+  RelativeFontSizeSchema,
+]).describe('Font size as user units, web preset, or relative `em` / `rem` value.');
+
+/** 校验供文本使用的 CSS 字体族字符串 */
+export const FontFamilySchema = string().describe(
+  'CSS font-family string such as "serif", "monospace", or "Inter, sans-serif".',
+);
+
+/** 校验字重关键字或数值字重 */
+export const FontWeightSchema = union([zodEnum(FontWeightKeyword), number()]).describe(
+  'CSS font-weight keyword or numeric value.',
+);
+
+/** 校验 CSS 字形关键字 */
+export const FontStyleSchema = zodEnum(FontStyle).describe('CSS font-style keyword.');
+
+/** 校验正文、标签和作用域默认样式共用的字体覆盖字段 */
+export const FontSchema = object({
+  family: FontFamilySchema.optional().describe(
+    'CSS font-family string such as "serif", "monospace", or "Inter, sans-serif".',
+  ),
+  size: lazy(() => FontSizeSchema)
+    .optional()
+    .describe('Font size in user units, presets, or relative units. Omitted fields use inherited text defaults.'),
+  weight: FontWeightSchema.optional().describe('CSS font-weight: keyword `normal` / `bold` or numeric value.'),
+  style: FontStyleSchema.optional().describe('CSS font-style keyword.'),
+}).describe('Font properties shared by node text, labels, line specs, and scope defaults.');
+
+/** 字体规格 IR 类型（所有字段可选，编译期解析默认值） */
+export type IRFont = ZodInfer<typeof FontSchema>;

@@ -116,7 +116,7 @@ export const createCompileFlowDiagram =
     const definition = options.flowLayouts.defaultLayout;
     const diagram = resolveFlowDiagram(source, {
       theme: context.theme,
-      flowThemeStyles: options.flowThemeStyles,
+      flowThemeDefinitions: options.flowThemeDefinitions,
       graph: options.graph,
     });
     assertFlowLayoutCapabilities(definition, diagram);
@@ -296,7 +296,7 @@ export const createCompileFlowDiagram =
         ...(source.frame === undefined ? {} : { frame: source.frame }),
         ...(source.defaultDiagram === undefined ? {} : { defaultDiagram: source.defaultDiagram }),
       },
-      { theme: context.theme, diagramThemeStyles: options.diagramThemeStyles },
+      { theme: context.theme, diagramThemeDefinitions: options.diagramThemeDefinitions },
     );
     let foundation;
 

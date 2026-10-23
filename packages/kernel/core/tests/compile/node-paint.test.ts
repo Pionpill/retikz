@@ -66,7 +66,7 @@ describe('节点有效属性与布局复用', () => {
       text: result.compiled.properties.text?.map((line, index) => ({
         ...line,
         style: { ...line.style, fill: index === 0 ? 'green' : 'purple' },
-        runs: line.runs.map(run => ({ ...run, fill: index === 0 ? 'green' : 'purple' })),
+        segments: line.segments.map(segment => ({ ...segment, fill: index === 0 ? 'green' : 'purple' })),
       })),
     };
     const primitives = emitNodePrimitives(

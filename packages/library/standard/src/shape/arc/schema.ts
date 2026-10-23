@@ -1,4 +1,4 @@
-import { TargetSchema, StepLabelSchema } from '@retikz/core';
+import { TargetSchema, PathLabelSchema } from '@retikz/core';
 import { literal, strictObject } from 'zod';
 
 import {
@@ -18,5 +18,5 @@ export const ArcSchema = strictObject({
   radius: ShapeRadiusSchema.describe('Radius in user units; an object specifies the two ellipse axes.'),
   ...ShapeAnglesSchema.shape,
   close: ShapeArcCloseSchema,
-  label: StepLabelSchema.optional(),
+  label: PathLabelSchema.optional(),
 }).superRefine((input, ctx) => refineShapeAngles(input, ctx, true));

@@ -5,7 +5,6 @@ import type { CenteredBox, Position } from '@retikz/math';
 
 import type { GeometryKeyPoint, NodeOwnerOutput, PathCommand } from '../../contract';
 import { createCompositeContractError } from '../../resolve/diagnostics';
-import { PathCommandSchema } from '../../schemas';
 import {
   assertProviderOutputKeys,
   providerOutputArray,
@@ -140,11 +139,8 @@ const readClosedOutline = (
 ): Array<PathCommand> =>
   withProviderOutputValidationBoundary(owner, () => {
     const raw = outline(rect, params);
-    const snapshot = snapshotProviderOutputJson(owner, raw, 'outline');
-    const parsed = PathCommandSchema.array().parse(snapshot);
-    assertClosedOutline(owner, parsed);
-
-    return parsed;
+    assertClosedOutline(owner, raw);
+    return [...raw];
   });
 
 /** 调用并校验 Shape provider 的命名结构关键点 */

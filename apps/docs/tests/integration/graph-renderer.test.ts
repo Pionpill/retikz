@@ -162,7 +162,7 @@ describe('Graph renderer integration', () => {
     expect(vanilla.code).toContain('GraphInputEmbedAdapter');
     expect(vanilla.code).not.toContain('EntityInputEmbedAdapter');
     expect(vanilla.code).not.toContain('RelationInputEmbedAdapter');
-    expect(vanilla.code).toContain('graphThemeStyles: PreviewThemeDefinitionBundle.graph');
+    expect(vanilla.code).toContain('graphThemeDefinitions: PreviewThemeDefinitionBundle.graph');
     expect(vanilla.svg).toContain('<svg');
   });
 

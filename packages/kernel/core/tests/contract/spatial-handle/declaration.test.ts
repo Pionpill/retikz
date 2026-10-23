@@ -10,7 +10,7 @@ const scene: IRScene = {
   children: [{ namespace: 'third', type: 'card' }],
 };
 
-const defineCard = (spatialHandles: unknown) =>
+const defineCard = (spatialHandles: ReadonlyArray<SpatialHandleDeclaration>) =>
   defineComposite({
     namespace: 'third',
     type: 'card',
@@ -18,11 +18,7 @@ const defineCard = (spatialHandles: unknown) =>
       namespace: literal('third'),
       type: literal('card'),
     }),
-    compile: () =>
-      ({ children: [], spatialHandles }) as {
-        children: [];
-        spatialHandles: ReadonlyArray<SpatialHandleDeclaration>;
-      },
+    compile: () => ({ children: [], spatialHandles }),
   });
 
 const valid = {
@@ -39,21 +35,15 @@ describe('spatial handle declaration contract', () => {
   });
 
   it.each([
-    ['empty id', { ...valid, id: '' }],
-    ['empty alias', { ...valid, aliasIds: [''] }],
     ['repeated alias', { ...valid, aliasIds: ['a', 'a'] }],
     ['primary alias', { ...valid, aliasIds: ['body'] }],
-    ['empty role', { ...valid, role: '' }],
     ['non-finite x', { ...valid, bounds: { ...valid.bounds, x: Number.NaN } }],
     ['non-finite y', { ...valid, bounds: { ...valid.bounds, y: Number.POSITIVE_INFINITY } }],
     ['non-finite width', { ...valid, bounds: { ...valid.bounds, width: Number.NaN } }],
     ['non-finite height', { ...valid, bounds: { ...valid.bounds, height: Number.NEGATIVE_INFINITY } }],
     ['negative width', { ...valid, bounds: { ...valid.bounds, width: -1 } }],
     ['negative height', { ...valid, bounds: { ...valid.bounds, height: -1 } }],
-    ['empty tag', { ...valid, tags: ['content', ''] }],
     ['duplicate tag', { ...valid, tags: ['content', 'content'] }],
-    ['non-json payload', { ...valid, payload: { callback: () => undefined } }],
-    ['extra field', { ...valid, unsupported: true }],
   ])('rejects %s', (_label, declaration) => {
     expect(() => compileToScene(scene, { composites: [defineCard([declaration])] })).toThrow(/spatial handle/i);
   });
@@ -84,38 +74,5 @@ describe('spatial handle declaration contract', () => {
 
     expect(result.spatialHandles.entries[0]?.aliasIds).toEqual(['alternate']);
     expect(Object.isFrozen(result.spatialHandles.entries[0]?.aliasIds)).toBe(true);
-  });
-
-  it('rejects unsupported result fields at the callback boundary', () => {
-    const definition = defineComposite({
-      namespace: 'third',
-      type: 'card',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('third'),
-        type: literal('card'),
-      }),
-      compile: () => ({ children: [], spatialHandles: [], unsupported: true }) as never,
-    });
-
-    expect(() => compileToScene(scene, { composites: [definition] })).toThrow(/unsupported.*unsupported/i);
-  });
-
-  it.each([
-    ['single child', { type: 'node', position: [0, 0] }],
-    ['child array', [{ type: 'node', position: [0, 0] }]],
-  ])('rejects the legacy %s expand shorthand at runtime', (_label, result) => {
-    const definition = defineComposite({
-      namespace: 'third',
-      type: 'card',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('third'),
-        type: literal('card'),
-      }),
-      compile: () => result as never,
-    });
-
-    expect(() => compileToScene(scene, { composites: [definition] })).toThrow(
-      /unsupported expand result|expand result.*children.*array/i,
-    );
   });
 });

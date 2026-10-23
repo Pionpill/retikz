@@ -37,8 +37,10 @@ export type CompositeRuntimeInputContext = Readonly<{
 
 /** 编译内部使用的 Source 子树及稀疏输入 */
 export type CompositeRuntimeInputScope = Readonly<{
-  /** 独立的原始 Source 子树 */
+  /** 当前原始 Source 子树 */
   source: unknown;
+  /** 当前子树在捕获 Source 中的位置；根节点省略 */
+  sourcePath?: CompositeInputPath;
   /** 相对当前 Source 子树的绑定 */
   bindings: ReadonlyArray<CompositeInputBinding>;
 }>;
@@ -105,7 +107,7 @@ export const resolveCompositeInputScope = (
   source: IRScene,
   inputs: CompositeInputBindings | undefined,
 ): CompositeRuntimeInputScope => {
-  if (inputs === undefined) return captureCompositeInputScope(source, []);
+  if (inputs === undefined) return { source, bindings: [] };
 
   const snapshot = snapshots.get(inputs);
   if (snapshot === undefined || !jsonStructuralEquals(snapshot.source, source))
@@ -123,6 +125,7 @@ export const selectCompositeInputScope = (
   path: CompositeInputPath,
 ): CompositeRuntimeInputScope => ({
   source: sourceAtPath(scope.source, path),
+  sourcePath: [...(scope.sourcePath ?? []), ...path],
   bindings: scope.bindings
     .filter(binding => path.every((segment, index) => binding.path[index] === segment))
     .map(binding => ({ path: binding.path.slice(path.length), input: binding.input })),

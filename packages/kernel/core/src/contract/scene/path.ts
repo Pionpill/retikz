@@ -12,8 +12,8 @@ import type {
   PathLineJoin,
   ResolvedDropShadow,
 } from '../../schemas';
-import type { MarkerPrimitive } from './marker';
 import type { PaintValue } from './paint';
+import type { ScenePrimitive } from './scene';
 
 /** 移动命令：移动游标到目标点，不绘制 */
 export type MovePathCommand = {
@@ -138,7 +138,7 @@ export type ResolvedArrowEnd = {
    */
   opacity?: number;
   /** 局部 baseSize 坐标系下的内部几何 */
-  marker: Array<MarkerPrimitive>;
+  marker: Array<ScenePrimitive>;
 };
 
 /** 路径原语：结构化 commands 数组；adapter 在 render 时翻译为各自原生 API */

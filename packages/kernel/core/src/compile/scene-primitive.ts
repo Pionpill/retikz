@@ -1,21 +1,9 @@
-import { JsonObjectSchema } from '@retikz/foundation';
 import type { Position } from '@retikz/math';
 
-import type { MarkerPrimitive, ScenePrimitive } from '../contract';
+import type { ScenePrimitive } from '../contract';
 import { createCompositeContractError } from '../resolve/diagnostics';
 import { withProviderOutputValidationBoundary as validateProviderOutput } from '../resolve/provider-validation';
-import {
-  AnimationTrackSchema,
-  BlendMode,
-  FontStyle,
-  PathCommandSchema,
-  PathFillRule,
-  PathLineCap,
-  PathLineJoin,
-} from '../schemas';
-
-/** provider output runtime validation 使用的 marker 子集验证入口 */
-export type MarkerPrimitiveValidator = (owner: string, marker: unknown) => ReadonlyArray<MarkerPrimitive>;
+import { BlendMode, FontStyle, PathFillRule, PathLineCap, PathLineJoin } from '../schemas';
 
 /**
  * 在 provider 返回后的统一边界把未知 validation failure 分类为 fatal contract error
@@ -47,7 +35,7 @@ export const failProviderOutput = (owner: string, detail: string): never => {
 };
 
 /**
- * 物化 provider plain JSON 输出，并保留对象 undefined 字段供完整契约校验
+ * 物化 provider plain JSON 输出，同时省略对象的可选 undefined 字段
  * @template T 校验并复制为 JSON 快照的提供者输出类型
  */
 export const snapshotProviderOutputJson = <T>(owner: string, value: T, path: string): T => {
@@ -135,7 +123,7 @@ export const snapshotProviderOutputJson = <T>(owner: string, value: T, path: str
 
       for (const key of stringKeys) {
         const descriptor = readDataDescriptor(objectInput, key, currentPath);
-        output[key] = descriptor.value === undefined ? undefined : snapshot(descriptor.value, `${currentPath}.${key}`);
+        if (descriptor.value !== undefined) output[key] = snapshot(descriptor.value, `${currentPath}.${key}`);
       }
 
       return output;
@@ -145,30 +133,6 @@ export const snapshotProviderOutputJson = <T>(owner: string, value: T, path: str
   };
 
   return snapshot(value, path) as T;
-};
-
-/**
- * 从已验证且归 Core 所有的 provider snapshot 递归省略对象 undefined 字段
- * @template T 原地移除 undefined 属性并原样返回的对象类型
- */
-export const omitProviderOutputUndefined = <T>(value: T): T => {
-  if (value === null || typeof value !== 'object') return value;
-  if (Array.isArray(value)) {
-    value.forEach(omitProviderOutputUndefined);
-    return value;
-  }
-
-  const record = value as Record<string, unknown>;
-
-  for (const key of Object.keys(record)) {
-    if (record[key] === undefined) {
-      delete record[key];
-    } else {
-      omitProviderOutputUndefined(record[key]);
-    }
-  }
-
-  return value;
 };
 
 /** 读取对象的全部自有字符串键，并拒绝 symbol、隐藏字段与 accessor */
@@ -348,19 +312,6 @@ export const assertProviderOutputTransforms = (owner: string, value: unknown, pa
   });
 };
 
-/** 校验 Scene/Marker 的结构化 path command 数组 */
-export const assertProviderOutputPathCommands = (owner: string, value: unknown, path: string): void => {
-  providerOutputArray(owner, value, path).forEach((command, index) => {
-    assertProviderOutputJsonValue(owner, command, `${path}[${index}]`);
-    const parsed = PathCommandSchema.safeParse(command);
-    if (!parsed.success || !equalProviderOutputJson(command, parsed.data)) {
-      throw createCompositeContractError(`${owner} emit produced an invalid ${path} command at index ${index}.`, {
-        ...(!parsed.success ? { cause: parsed.error } : {}),
-      });
-    }
-  });
-};
-
 /** 校验 Scene/Marker path 的 fill/stroke enum 字段 */
 export const assertProviderOutputPathEnums = (owner: string, value: Record<string, unknown>, path: string): void => {
   if (value.fillRule !== undefined && !Object.values(PathFillRule).includes(value.fillRule as never)) {
@@ -417,72 +368,21 @@ export const assertProviderOutputJsonValue = (owner: string, value: unknown, pat
   assertProviderOutputJsonValueWithActive(owner, value, path, new WeakSet());
 };
 
-/** 比较两棵已验证 JSON tree 的值和全部 key 是否完全一致 */
-const equalProviderOutputJson = (left: unknown, right: unknown): boolean => {
-  if (Object.is(left, right)) return true;
-  if (left === null || right === null || typeof left !== 'object' || typeof right !== 'object') return false;
-  if (Array.isArray(left) || Array.isArray(right)) {
-    if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) return false;
-    return left.every((entry, index) => equalProviderOutputJson(entry, right[index]));
-  }
-
-  const leftRecord = left as Record<string, unknown>;
-  const rightRecord = right as Record<string, unknown>;
-  const leftKeys = Reflect.ownKeys(leftRecord);
-  const rightKeys = Reflect.ownKeys(rightRecord);
-  if (leftKeys.length !== rightKeys.length || leftKeys.some(key => typeof key !== 'string')) return false;
-
-  return leftKeys.every(
-    key =>
-      typeof key === 'string' &&
-      Object.prototype.hasOwnProperty.call(rightRecord, key) &&
-      equalProviderOutputJson(leftRecord[key], rightRecord[key]),
-  );
-};
-
-/** 先验证原始 JSON graph，再验证 schema 且拒绝任何 schema stripping */
-const assertJsonSchema = (owner: string, value: unknown, path: string, schema: typeof JsonObjectSchema): void => {
-  assertProviderOutputJsonValue(owner, value, path);
-  const parsed = schema.safeParse(value);
-  if (!parsed.success || !equalProviderOutputJson(value, parsed.data)) failProviderOutput(owner, `an invalid ${path}`);
-};
-
-/** 校验动画 track 原始对象图与 AnimationTrackSchema 完全一致 */
-const assertAnimationTrack = (owner: string, value: unknown, path: string): void => {
-  assertProviderOutputJsonValue(owner, value, path);
-  const parsed = AnimationTrackSchema.safeParse(value);
-  if (!parsed.success || !equalProviderOutputJson(value, parsed.data)) {
-    failProviderOutput(owner, `an invalid ${path}`);
-  }
-};
-
-/** 校验 Scene primitive 的共享 id/meta/animations 字段 */
-const assertSceneCommon = (owner: string, value: Record<string, unknown>, path: string): void => {
-  if (value.hitTest !== undefined && value.hitTest !== false) failProviderOutput(owner, `an invalid ${path}.hitTest`);
-  if (value.id !== undefined && typeof value.id !== 'string') failProviderOutput(owner, `an invalid ${path}.id`);
-  if (value.meta !== undefined) assertJsonSchema(owner, value.meta, `${path}.meta`, JsonObjectSchema);
-  if (value.animations !== undefined) {
-    providerOutputArray(owner, value.animations, `${path}.animations`).forEach((track, index) =>
-      assertAnimationTrack(owner, track, `${path}.animations[${index}]`),
-    );
-  }
-};
-
-/** 校验 Scene resolved shadow 的 required 字段与范围 */
-const assertResolvedShadow = (owner: string, value: unknown, path: string): void => {
-  if (value === undefined) return;
-
-  const shadow = providerOutputRecord(owner, value, path);
-  assertProviderOutputKeys(owner, shadow, ['offsetX', 'offsetY', 'blur', 'color', 'opacity'], path);
-  assertProviderOutputFinite(owner, shadow.offsetX, `${path}.offsetX`);
-  assertProviderOutputFinite(owner, shadow.offsetY, `${path}.offsetY`);
-  if (typeof shadow.color !== 'string') failProviderOutput(owner, `an invalid ${path}.color`);
-  assertProviderOutputOptionalFinite(owner, shadow, 'blur', path, true);
-  assertProviderOutputUnitInterval(owner, shadow, 'opacity', path);
-};
-
 /** 校验 Scene geometry primitive 的共享 paint/style 字段 */
 const assertSceneStyle = (owner: string, value: Record<string, unknown>, path: string): void => {
+  /** 校验 Scene resolved shadow 的 required 字段与范围 */
+  const assertResolvedShadow = (providerOwner: string, shadowValue: unknown, shadowPath: string): void => {
+    if (shadowValue === undefined) return;
+
+    const shadow = providerOutputRecord(providerOwner, shadowValue, shadowPath);
+    assertProviderOutputKeys(providerOwner, shadow, ['offsetX', 'offsetY', 'blur', 'color', 'opacity'], shadowPath);
+    assertProviderOutputFinite(providerOwner, shadow.offsetX, `${shadowPath}.offsetX`);
+    assertProviderOutputFinite(providerOwner, shadow.offsetY, `${shadowPath}.offsetY`);
+    if (typeof shadow.color !== 'string') failProviderOutput(providerOwner, `an invalid ${shadowPath}.color`);
+    assertProviderOutputOptionalFinite(providerOwner, shadow, 'blur', shadowPath, true);
+    assertProviderOutputUnitInterval(providerOwner, shadow, 'opacity', shadowPath);
+  };
+
   assertProviderOutputPaint(owner, value.fill, `${path}.fill`);
   assertProviderOutputPaint(owner, value.stroke, `${path}.stroke`);
   assertProviderOutputUnitInterval(owner, value, 'fillOpacity', path);
@@ -491,6 +391,7 @@ const assertSceneStyle = (owner: string, value: Record<string, unknown>, path: s
   assertProviderOutputOptionalFinite(owner, value, 'strokeWidth', path, true);
   assertProviderOutputOptionalFinite(owner, value, 'dashOffset', path);
   assertProviderOutputDashPattern(owner, value, path);
+  assertProviderOutputPathEnums(owner, value, path);
   if (value.blendMode !== undefined && !Object.values(BlendMode).includes(value.blendMode as never)) {
     failProviderOutput(owner, `an invalid ${path}.blendMode`);
   }
@@ -501,7 +402,6 @@ const assertSceneStyle = (owner: string, value: Record<string, unknown>, path: s
 /** Scene recursive validation 所需的 active-path 与 Marker 子集入口 */
 type SceneValidationContext = Readonly<{
   active: WeakSet<object>;
-  validateMarkerPrimitives: MarkerPrimitiveValidator;
 }>;
 
 /** 递归校验单个 Scene primitive 并沿当前 group 路径检测循环 */
@@ -511,35 +411,10 @@ const visitScenePrimitive = (
   path: string,
   context: SceneValidationContext,
 ): void => {
-  const value = providerOutputRecord(owner, primitive, path);
-  const commonFields = ['type', 'id', 'meta', 'animations', 'hitTest'];
+  const value = primitive as Record<string, unknown>;
 
   switch (value.type) {
     case 'rect':
-      assertProviderOutputKeys(
-        owner,
-        value,
-        [
-          ...commonFields,
-          'x',
-          'y',
-          'width',
-          'height',
-          'fill',
-          'fillOpacity',
-          'stroke',
-          'strokeOpacity',
-          'strokeWidth',
-          'dashPattern',
-          'dashOffset',
-          'cornerRadius',
-          'opacity',
-          'shadow',
-          'blendMode',
-        ],
-        path,
-      );
-      assertSceneCommon(owner, value, path);
       assertProviderOutputFinite(owner, value.x, `${path}.x`);
       assertProviderOutputFinite(owner, value.y, `${path}.y`);
       assertProviderOutputFinite(owner, value.width, `${path}.width`, true);
@@ -549,30 +424,6 @@ const visitScenePrimitive = (
 
       return;
     case 'ellipse':
-      assertProviderOutputKeys(
-        owner,
-        value,
-        [
-          ...commonFields,
-          'cx',
-          'cy',
-          'rx',
-          'ry',
-          'rotate',
-          'fill',
-          'fillOpacity',
-          'stroke',
-          'strokeOpacity',
-          'strokeWidth',
-          'dashPattern',
-          'dashOffset',
-          'opacity',
-          'shadow',
-          'blendMode',
-        ],
-        path,
-      );
-      assertSceneCommon(owner, value, path);
       assertProviderOutputFinite(owner, value.cx, `${path}.cx`);
       assertProviderOutputFinite(owner, value.cy, `${path}.cy`);
       assertProviderOutputFinite(owner, value.rx, `${path}.rx`, true);
@@ -582,52 +433,22 @@ const visitScenePrimitive = (
 
       return;
     case 'path': {
-      assertProviderOutputKeys(
-        owner,
-        value,
-        [
-          ...commonFields,
-          'commands',
-          'fill',
-          'fillOpacity',
-          'fillRule',
-          'stroke',
-          'strokeOpacity',
-          'strokeWidth',
-          'dashPattern',
-          'dashOffset',
-          'strokeLinecap',
-          'strokeLinejoin',
-          'arrowStart',
-          'arrowEnd',
-          'opacity',
-          'shadow',
-          'blendMode',
-        ],
-        path,
-      );
-      assertSceneCommon(owner, value, path);
-      assertProviderOutputPathCommands(owner, value.commands, `${path}.commands`);
       assertProviderOutputPathEnums(owner, value, path);
 
       for (const field of ['arrowStart', 'arrowEnd'] as const) {
         if (value[field] === undefined) continue;
 
-        const arrow = providerOutputRecord(owner, value[field], `${path}.${field}`);
-        assertProviderOutputKeys(
-          owner,
-          arrow,
-          ['shape', 'baseSize', 'refX', 'markerWidth', 'markerHeight', 'opacity', 'marker'],
-          `${path}.${field}`,
-        );
+        const arrow = value[field] as Record<string, unknown>;
         if (typeof arrow.shape !== 'string') failProviderOutput(owner, `an invalid ${path}.${field}.shape`);
         assertProviderOutputFinite(owner, arrow.baseSize, `${path}.${field}.baseSize`, true);
         assertProviderOutputFinite(owner, arrow.refX, `${path}.${field}.refX`);
         assertProviderOutputFinite(owner, arrow.markerWidth, `${path}.${field}.markerWidth`, true);
         assertProviderOutputFinite(owner, arrow.markerHeight, `${path}.${field}.markerHeight`, true);
         assertProviderOutputUnitInterval(owner, arrow, 'opacity', `${path}.${field}`);
-        const marker = providerOutputArray(owner, arrow.marker, `${path}.${field}.marker`);
-        context.validateMarkerPrimitives(`${owner} ${field}`, marker);
+        const marker = arrow.marker as Array<unknown>;
+        marker.forEach((child, index) =>
+          visitScenePrimitive(owner, child, `${path}.${field}.marker[${index}]`, context),
+        );
       }
 
       assertSceneStyle(owner, value, path);
@@ -635,30 +456,6 @@ const visitScenePrimitive = (
       return;
     }
     case 'text': {
-      assertProviderOutputKeys(
-        owner,
-        value,
-        [
-          ...commonFields,
-          'x',
-          'y',
-          'lines',
-          'fontSize',
-          'fontFamily',
-          'fontWeight',
-          'fontStyle',
-          'align',
-          'baseline',
-          'lineHeight',
-          'measuredWidth',
-          'measuredHeight',
-          'fill',
-          'opacity',
-        ],
-        path,
-      );
-
-      assertSceneCommon(owner, value, path);
       assertProviderOutputFinite(owner, value.x, `${path}.x`);
       assertProviderOutputFinite(owner, value.y, `${path}.y`);
       assertProviderOutputFinite(owner, value.fontSize, `${path}.fontSize`, true);
@@ -666,16 +463,10 @@ const visitScenePrimitive = (
       assertProviderOutputFinite(owner, value.measuredWidth, `${path}.measuredWidth`, true);
       assertProviderOutputFinite(owner, value.measuredHeight, `${path}.measuredHeight`, true);
 
-      const lines = providerOutputArray(owner, value.lines, `${path}.lines`);
+      const lines = value.lines as Array<unknown>;
       if (lines.length === 0) failProviderOutput(owner, `an invalid ${path}.lines`);
       lines.forEach((line, index) => {
-        const candidate = providerOutputRecord(owner, line, `${path}.lines[${index}]`);
-        assertProviderOutputKeys(
-          owner,
-          candidate,
-          ['text', 'fontSize', 'fontFamily', 'fontWeight', 'fontStyle', 'fill', 'opacity'],
-          `${path}.lines[${index}]`,
-        );
+        const candidate = line as Record<string, unknown>;
         if (typeof candidate.text !== 'string') failProviderOutput(owner, `an invalid ${path}.lines[${index}].text`);
         assertProviderOutputOptionalFinite(owner, candidate, 'fontSize', `${path}.lines[${index}]`, true);
         if (candidate.fontFamily !== undefined && typeof candidate.fontFamily !== 'string')
@@ -720,12 +511,10 @@ const visitScenePrimitive = (
       return;
     }
     case 'group': {
-      assertProviderOutputKeys(owner, value, [...commonFields, 'transforms', 'clipRef', 'children'], path);
-      assertSceneCommon(owner, value, path);
       assertProviderOutputTransforms(owner, value.transforms, `${path}.transforms`);
       if (value.clipRef !== undefined && typeof value.clipRef !== 'string')
         failProviderOutput(owner, `an invalid ${path}.clipRef`);
-      const children = providerOutputArray(owner, value.children, `${path}.children`);
+      const children = value.children as Array<unknown>;
       if (context.active.has(value)) failProviderOutput(owner, `a cyclic ${path}`);
       context.active.add(value);
 
@@ -742,25 +531,19 @@ const visitScenePrimitive = (
   }
 };
 
-/** 校验单个第三方 Shape primitive 的完整 Core Scene runtime contract */
-const assertValidScenePrimitive: (
-  owner: string,
-  primitive: unknown,
-  validateMarkerPrimitives: MarkerPrimitiveValidator,
-) => asserts primitive is ScenePrimitive = (owner, primitive, validateMarkerPrimitives) => {
-  visitScenePrimitive(owner, primitive, 'Scene primitive', {
-    active: new WeakSet(),
-    validateMarkerPrimitives,
-  });
-};
-
 /** 在统一 fatal boundary 内物化并校验 Shape provider 发出的 Scene primitive 列表 */
-export const validateScenePrimitives = (
-  owner: string,
-  emitted: unknown,
-  validateMarkerPrimitives: MarkerPrimitiveValidator,
-): Array<ScenePrimitive> =>
-  withProviderOutputValidationBoundary(owner, () => {
+export const validateScenePrimitives = (owner: string, emitted: unknown): Array<ScenePrimitive> => {
+  /** 校验单个第三方 Shape primitive 的完整 Core Scene runtime contract */
+  const assertValidScenePrimitive: (owner: string, primitive: unknown) => asserts primitive is ScenePrimitive = (
+    providerOwner,
+    primitive,
+  ) => {
+    visitScenePrimitive(providerOwner, primitive, 'Scene primitive', {
+      active: new WeakSet(),
+    });
+  };
+
+  return withProviderOutputValidationBoundary(owner, () => {
     if (
       emitted === null ||
       (typeof emitted !== 'object' && typeof emitted !== 'function') ||
@@ -771,7 +554,8 @@ export const validateScenePrimitives = (
 
     return [...(emitted as Iterable<unknown>)].map(primitive => {
       const snapshot = snapshotProviderOutputJson(owner, primitive, 'Scene primitive');
-      assertValidScenePrimitive(owner, snapshot, validateMarkerPrimitives);
-      return omitProviderOutputUndefined(snapshot);
+      assertValidScenePrimitive(owner, snapshot);
+      return snapshot;
     });
   });
+};

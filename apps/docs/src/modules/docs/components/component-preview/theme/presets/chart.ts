@@ -3,9 +3,9 @@ import { ChartDefaultsSchema, defineChartTheme } from '@retikz/chart';
 import type { NodeTextAlign } from '@retikz/core';
 import { NodeTextAlign as TextAlign } from '@retikz/core';
 
-import { PreviewThemeStyle } from '../constants';
+import { PreviewTheme } from '../constants';
 
-type ReferenceStyle = Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'default'>;
+type ReferenceStyle = Exclude<(typeof PreviewTheme)[keyof typeof PreviewTheme], 'default'>;
 
 const styles = {
   academic: {
@@ -72,8 +72,6 @@ const defaultsOf = (style: ReferenceStyle): IRChartDefaults => {
 };
 
 /** docs 维护的三个 Chart reference Theme definitions */
-export const PreviewChartThemeDefinitions = [
-  PreviewThemeStyle.Academic,
-  PreviewThemeStyle.Vibrant,
-  PreviewThemeStyle.Clean,
-].map(name => defineChartTheme({ name, defaults: defaultsOf(name) }));
+export const PreviewChartThemeDefinitions = [PreviewTheme.Academic, PreviewTheme.Vibrant, PreviewTheme.Clean].map(
+  name => defineChartTheme({ name, defaults: defaultsOf(name) }),
+);

@@ -582,3 +582,53 @@ describe('per-id 虚拟时钟（registry + resolvePrimAnimation）', () => {
     expect(reg.isStopped('removed')).toBe(true);
   });
 });
+
+it('resource animations resolve playback using each host instead of local ids', () => {
+  const content: ScenePrimitive = {
+    type: 'rect',
+    id: 'local',
+    x: 0,
+    y: 0,
+    width: 4,
+    height: 4,
+    fill: 'red',
+    animations: [
+      {
+        property: 'opacity',
+        duration: 100,
+        trigger: 'manual',
+        keyframes: [
+          { at: 0, value: 0 },
+          { at: 1, value: 1 },
+        ],
+      },
+    ],
+  };
+  const spec = { shape: 'test', baseSize: 10, refX: 10, markerWidth: 10, markerHeight: 10, marker: [content] };
+  const ctx = createCtx();
+  const resolve = vi.fn((id: string | undefined) => ({
+    mode: 'at' as const,
+    time: id === 'A' ? 25 : 75,
+    includeNonAutoplay: true,
+  }));
+  drawScene(
+    ctx,
+    scene(
+      ['A', 'B'].map(id => ({
+        type: 'path',
+        id,
+        stroke: 'black',
+        strokeWidth: 1,
+        fill: 'none',
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [20, 0] },
+        ],
+        arrowEnd: spec,
+      })),
+    ),
+    { resolvePrimAnimation: resolve },
+  );
+  expect(resolve.mock.calls.map(call => call[0])).toEqual(['A', 'B']);
+  expect(ctx.calls.filter(call => call.name === 'fill').map(call => call.globalAlpha)).toEqual([0.25, 0.75]);
+});

@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ComponentPreviewCard } from '../../src/modules/docs/components/component-preview/ComponentPreviewCard';
 import { ComponentPreviewDialog } from '../../src/modules/docs/components/component-preview/ComponentPreviewDialog';
-import { PreviewThemeStyle } from '../../src/modules/docs/components/component-preview/theme';
+import { PreviewTheme } from '../../src/modules/docs/components/component-preview/theme';
 import type {
   ComponentRenderSource,
   PreviewActionSlot,
@@ -90,17 +90,17 @@ describe('ComponentPreviewDialog', () => {
         themeMode="inherit"
         onThemeModeChange={() => undefined}
         enableThemeSwitch
-        themeStyleSelection={PreviewThemeStyle.Academic}
-        onThemeStyleChange={() => undefined}
+        themeNameSelection={PreviewTheme.Academic}
+        onThemeChange={() => undefined}
         controlPanelOpen
         onControlPanelOpenChange={() => undefined}
         onClose={() => undefined}
       />,
     );
 
-    expect(markup).toContain('aria-label="Theme style"');
+    expect(markup).toContain('aria-label="Theme"');
     expect(markup).toContain('lucide-graduation-cap');
-    expect(markup.indexOf('Preview theme dark')).toBeLessThan(markup.indexOf('aria-label="Theme style"'));
+    expect(markup.indexOf('Preview theme dark')).toBeLessThan(markup.indexOf('aria-label="Theme"'));
   });
 
   it('Core style 缺省时仍显示默认风格切换按钮', () => {
@@ -115,15 +115,15 @@ describe('ComponentPreviewDialog', () => {
         themeMode="inherit"
         onThemeModeChange={() => undefined}
         enableThemeSwitch
-        themeStyleSelection={PreviewThemeStyle.Default}
-        onThemeStyleChange={() => undefined}
+        themeNameSelection={PreviewTheme.Default}
+        onThemeChange={() => undefined}
         controlPanelOpen
         onControlPanelOpenChange={() => undefined}
         onClose={() => undefined}
       />,
     );
 
-    expect(markup).toContain('aria-label="Theme style"');
+    expect(markup).toContain('aria-label="Theme"');
     expect(markup).toContain('lucide-circle-dot');
   });
 

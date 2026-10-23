@@ -4,13 +4,13 @@ import { describe, expect, it } from 'vitest';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
 import { FlowDiagramSchema } from '../../src/flow';
-import { resolveFlowThemeStyleRegistry } from '../../src/flow/providers';
+import { resolveFlowThemeRegistry } from '../../src/flow/providers';
 import { resolveFlowDiagram } from '../../src/flow/resolve';
 
 const resolve = (source: unknown, graph?: Parameters<typeof resolveFlowDiagram>[1]['graph']) =>
   resolveFlowDiagram(FlowDiagramSchema.parse(source), {
     theme: DEFAULT_RESOLVED_THEME,
-    flowThemeStyles: resolveFlowThemeStyleRegistry(),
+    flowThemeDefinitions: resolveFlowThemeRegistry(),
     ...(graph === undefined ? {} : { graph }),
   });
 

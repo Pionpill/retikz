@@ -6,5 +6,4 @@ export * from './label';
 export * from './node';
 export * from './opacity';
 export * from './path';
-export * from './scope-frame';
 export * from './types';

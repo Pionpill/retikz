@@ -194,21 +194,21 @@ const profile = { kind: 'profile', name: 'bulge', params: { base: 16, peak: 58 }
 
 ## 标签位置
 
-标签通过 `Path.label` 配置，沿中心线的累计弧长定位。放在内部时居中于中心线，放在外侧时从对应边界向外偏移；沿路径旋转使用标签所在位置的中心线切线。
+标签通过 `Path.kindOptions.label` 配置，沿中心线的累计弧长定位。放在内部时居中于中心线，放在外侧时从对应边界向外偏移；沿路径旋转使用标签所在位置的中心线切线。
 
-Ribbon 复用 Kernel 的 [Path 几何标签](/kernel/components/path/label)，不是独立的标签 API。共享文字、字体和外观字段按该契约配置；Ribbon 提供中心线采样与带宽偏移。当前 Path 几何标签仅支持 `sloped` 控制切线旋转，没有任意角度的 `label.rotate`；该字段属于 Node 标签。`interrupt` / `gap` 用于支持断口的描边宿主，不适用于 Ribbon。
+`kindOptions.label` 接受单个标签对象或非空数组，每个标签可分别设置 `placement`。Ribbon 复用 Kernel 的 [Path 几何标签](/kernel/components/path/label)文字、字体和外观字段，并自行计算带内或带外位置；标签仍继承宿主的路径标签默认配置。旋转使用 `sloped`，不接受 `rotate`；描边断线字段 `interrupt` / `gap` 也不适用于 Ribbon。通用 Path 标签不提供 `placement`。
 
-| 属性              | 可用值                                          | 解释                                                                       |
-| ----------------- | ----------------------------------------------- | -------------------------------------------------------------------------- |
-| `label.text`      | 文本、行数组或富文本内容                        | 标签内容，复用 Kernel 文本块契约                                           |
-| `label.position`  | 0–1，或 `at-start`, `midway`, `at-end` 等位置词 | 指定中心线上的位置；数值是累计弧长比例，默认居中                           |
-| `label.placement` | `inside`、`outside`                             | 内部或外部放置；省略时按外部方式偏移，内部居中可用 `inside` 并省略 `side`  |
-| `label.side`      | `top`、`bottom`、`left`、`right`、`center`      | 相对标签锚点的方位；关闭 `sloped` 时沿画布坐标偏移，开启时随中心线切线旋转 |
-| `label.distance`  | 数值                                            | 外侧标签与流带边界的间距；默认 4                                           |
-| `label.sloped`    | `true`, `false`                                 | 是否沿中心线局部切线旋转，不受端面方向影响                                 |
-| `label.textColor` | 颜色值或 `currentColor`                         | 示例继承当前文字颜色，便于在流带内外阅读                                   |
-| `label.font`      | 字体配置对象                                    | 复用 Kernel 字体配置，例如 `size`、`family`、`weight`、`style`             |
-| `label.opacity`   | 0–1                                             | 标签透明度，与宿主透明度相乘                                               |
+| 属性                          | 可用值                                          | 解释                                                                       |
+| ----------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------- |
+| `kindOptions.label.text`      | 文本、行数组或富文本内容                        | 标签内容，复用 Kernel 文本块契约                                           |
+| `kindOptions.label.position`  | 0–1，或 `at-start`, `midway`, `at-end` 等位置词 | 指定中心线上的位置；数值是累计弧长比例，默认居中                           |
+| `kindOptions.label.placement` | `inside`、`outside`                             | 内部或外部放置；省略时按外部方式偏移，内部居中可用 `inside` 并省略 `side`  |
+| `kindOptions.label.side`      | `top`、`bottom`、`left`、`right`、`center`      | 相对标签锚点的方位；关闭 `sloped` 时沿画布坐标偏移，开启时随中心线切线旋转 |
+| `kindOptions.label.distance`  | 数值                                            | 外侧标签与流带边界的间距；默认 4                                           |
+| `kindOptions.label.sloped`    | `true`, `false`                                 | 是否沿中心线局部切线旋转，不受端面方向影响                                 |
+| `kindOptions.label.textColor` | 颜色值或 `currentColor`                         | 示例继承当前文字颜色，便于在流带内外阅读                                   |
+| `kindOptions.label.font`      | 字体配置对象                                    | 复用 Kernel 字体配置，例如 `size`、`family`、`weight`、`style`             |
+| `kindOptions.label.opacity`   | 0–1                                             | 标签透明度，与宿主透明度相乘                                               |
 
 在 demo 中拖动“位置”，观察标签沿曲线移动；切换到“外侧”后选择上、下、左或右侧，比较标签相对边界的位置。关闭“沿路径旋转”，再与开启时比较文字方向。中心线和宽度保持固定，便于单独观察标签变化。
 
@@ -218,7 +218,7 @@ Ribbon 复用 Kernel 的 [Path 几何标签](/kernel/components/path/label)，�
   size="md"
 />
 
-`left` / `right` 改变的是当前位置的标签偏移方向，不会把标签移到流带首尾；首尾位置用 `label.position` 的 `0` / `1` 指定。左右偏移不保证标签完全位于带状轮廓外。
+`left` / `right` 改变的是当前位置的标签偏移方向，不会把标签移到流带首尾；首尾位置用 `kindOptions.label.position` 的 `0` / `1` 指定。左右偏移不保证标签完全位于带状轮廓外。
 
 ## 样式外观
 

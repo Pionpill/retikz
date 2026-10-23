@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { TexContentSchema } from '../../src/schemas/tex';
+import { TexContentSchema } from '../../src/schemas';
 
 describe('[tex-schema] TexContentSchema (lowerTex payload)', () => {
   it('accepts a tex source', () => {

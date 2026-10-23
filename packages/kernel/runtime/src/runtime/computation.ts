@@ -21,23 +21,6 @@ import { createRuntimeContractError, withRuntimeFailureDiagnostics } from './err
 import type { RuntimeComputationOutcome, RuntimeComputationState, RuntimeSourceState } from './state';
 import type { RuntimeOptions } from './types';
 
-/** 把 Computation callback throw 转成稳定 lifecycle error */
-const computationError = (
-  code: typeof RetikzRuntimeErrorCode.ComputationRunFailed | typeof RetikzRuntimeErrorCode.ComputationUpdateFailed,
-  phase: 'run' | 'update',
-  definition: RuntimeComputationToken,
-  cause: unknown,
-  diagnostics: ReadonlyArray<RuntimeDiagnostic> = [],
-) =>
-  new RetikzRuntimeError({
-    code,
-    phase,
-    owner: definition.id.owner,
-    computation: definition.id,
-    cause,
-    diagnostics,
-  });
-
 /** 把 observer throw 转成不影响 publish 的结构化诊断 */
 export const createRuntimeObserverDiagnostic = (
   definition: RuntimeComputationToken,
@@ -193,6 +176,23 @@ export const runRuntimeComputation = (
   outcome?: RuntimeComputationOutcome;
   diagnostics: ReadonlyArray<RuntimeDiagnostic>;
 }> => {
+  /** 把 Computation callback throw 转成稳定 lifecycle error */
+  const computationError = (
+    code: typeof RetikzRuntimeErrorCode.ComputationRunFailed | typeof RetikzRuntimeErrorCode.ComputationUpdateFailed,
+    failurePhase: 'run' | 'update',
+    failedComputation: RuntimeComputationToken,
+    cause: unknown,
+    diagnostics: ReadonlyArray<RuntimeDiagnostic> = [],
+  ) =>
+    new RetikzRuntimeError({
+      code,
+      phase: failurePhase,
+      owner: failedComputation.id.owner,
+      computation: failedComputation.id,
+      cause,
+      diagnostics,
+    });
+
   /** 只信任当前 callback invocation 内由 CandidateView 产生的 contract error */
   const invocationErrors = new WeakSet<RetikzRuntimeError>();
   const view = createCandidateView(

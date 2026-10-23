@@ -33,7 +33,7 @@ Group 只在 Group boundary label 省略 `align` 时注入 `start`；显式 `ali
 
 ```ts
 type IRNodeLabel = {
-  text: string | { runs: Array<IRTextRun | IRMathRun> };
+  text: string | { segments: Array<IRTextSegment | IRMathSegment> };
   align?: 'start' | 'middle' | 'end';
   position?:
     | 'top'

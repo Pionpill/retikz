@@ -3,14 +3,13 @@ import { mergeProperties } from '@retikz/foundation';
 import { mergeGraphDefaults } from '@retikz/graph';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
-import type { FlowThemeStyleDefinition } from '../../contract';
+import type { FlowThemeDefinition } from '../../contract';
 import type {
   IRFlowDefaults,
   IRFlowDefaultsGroup,
   IRFlowDefaultsGroupCaptionText,
   IRFlowLayoutIntent,
 } from '../../schemas';
-import { FlowDefaultsSchema } from '../../schemas';
 
 const mergeFields = <T extends object>(base: T | undefined, override: T | undefined): T | undefined => {
   const merged = mergeProperties<Partial<T>>([base, override], { shouldOverride: value => value !== undefined });
@@ -114,26 +113,26 @@ export const mergeFlowDefaults = (
 
 const resolveRegisteredDefaults = (
   theme: ResolvedTheme,
-  registry: ReadonlyMap<string, FlowThemeStyleDefinition>,
+  registry: ReadonlyMap<string, FlowThemeDefinition>,
 ): IRFlowDefaults | undefined => {
-  if (theme.style === undefined) return undefined;
+  if (theme.name === undefined) return undefined;
 
-  const definition = registry.get(theme.style);
+  const definition = registry.get(theme.name);
   if (definition === undefined) {
     throw new RetikzDiagramError({
       code: RetikzDiagramErrorCode.DefinitionNotRegistered,
-      message: `Flow theme style '${theme.style}' is not registered.`,
-      details: { capability: 'flow-theme-style', key: theme.style, availableKeys: [...registry.keys()] },
+      message: `Flow theme '${theme.name}' is not registered.`,
+      details: { capability: 'flow-theme', key: theme.name, availableKeys: [...registry.keys()] },
     });
   }
 
   try {
-    return FlowDefaultsSchema.parse(definition.resolve(theme));
+    return structuredClone(definition.resolve(theme));
   } catch (cause) {
     throw new RetikzDiagramError({
       code: RetikzDiagramErrorCode.DefinitionCallbackFailed,
-      message: `Flow theme style '${theme.style}' resolution failed.`,
-      details: { capability: 'flow-theme-style', key: theme.style },
+      message: `Flow theme '${theme.name}' resolution failed.`,
+      details: { capability: 'flow-theme', key: theme.name },
       cause,
     });
   }
@@ -142,10 +141,10 @@ const resolveRegisteredDefaults = (
 /** 按同名 Theme Definition 与 Flow Source defaults 解析最终 Flow defaults */
 export const resolveFlowTheme = (
   theme: ResolvedTheme,
-  styles: ReadonlyMap<string, FlowThemeStyleDefinition>,
+  styles: ReadonlyMap<string, FlowThemeDefinition>,
   inline?: IRFlowDefaults,
 ): IRFlowDefaults => {
   const registered = resolveRegisteredDefaults(theme, styles);
-  const source = inline === undefined ? undefined : FlowDefaultsSchema.parse(inline);
+  const source = inline;
   return mergeFlowDefaults(registered, source);
 };

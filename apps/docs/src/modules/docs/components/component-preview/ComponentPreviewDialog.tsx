@@ -49,7 +49,7 @@ import type {
   PreviewControlState,
   PreviewFigureType,
   PreviewThemeMode,
-  PreviewThemeStyleSelection,
+  PreviewThemeSelection,
   SizeKey,
 } from './types';
 import { buildAskAiPrompt } from './utils';
@@ -89,13 +89,13 @@ export type ComponentPreviewDialogProps = {
   themeMode: PreviewThemeMode;
   /** 更新 Card/Dialog 共享的局部主题 */
   onThemeModeChange: (themeMode: PreviewThemeMode) => void;
-  /** 是否显示单预览 ThemeStyle 切换器。 */
+  /** 是否显示单预览 Theme 切换器。 */
   enableThemeSwitch?: boolean;
-  /** 当前预览实际生效的 ThemeStyle。 */
-  /** 当前单预览 ThemeStyle 选择。 */
-  themeStyleSelection?: PreviewThemeStyleSelection;
-  /** 更新当前单预览 ThemeStyle 选择。 */
-  onThemeStyleChange?: (themeStyle: PreviewThemeStyleSelection) => void;
+  /** 当前预览实际生效的 Theme。 */
+  /** 当前单预览 Theme 选择。 */
+  themeNameSelection?: PreviewThemeSelection;
+  /** 更新当前单预览 Theme 选择。 */
+  onThemeChange?: (themeName: PreviewThemeSelection) => void;
   /** 与所属 Card 共享的属性面板打开状态 */
   controlPanelOpen: boolean;
   /** 属性面板的默认尺寸百分比。桌面端为宽度，窄屏时等比作为高度 */
@@ -171,8 +171,8 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
     themeMode,
     onThemeModeChange,
     enableThemeSwitch = false,
-    themeStyleSelection = 'inherit',
-    onThemeStyleChange,
+    themeNameSelection = 'inherit',
+    onThemeChange,
     controlPanelOpen,
     controlPanelDefaultSize,
     onControlPanelOpenChange,
@@ -228,8 +228,8 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
       themeMode={themeMode}
       onThemeModeChange={onThemeModeChange}
       enableThemeSwitch={enableThemeSwitch}
-      themeStyleSelection={themeStyleSelection}
-      onThemeStyleChange={onThemeStyleChange}
+      themeNameSelection={themeNameSelection}
+      onThemeChange={onThemeChange}
       controlPanelOpen={controlPanelOpen}
       controlPanelDefaultSize={controlPanelDefaultSize}
       controlDensity="default"
@@ -319,8 +319,8 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
               themeMode={themeMode}
               onThemeModeChange={onThemeModeChange}
               enableThemeSwitch={enableThemeSwitch}
-              themeStyleSelection={themeStyleSelection}
-              onThemeStyleChange={onThemeStyleChange}
+              themeNameSelection={themeNameSelection}
+              onThemeChange={onThemeChange}
               className={sizeClass[previewState.size]}
             />
           </div>

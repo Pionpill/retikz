@@ -85,7 +85,7 @@ const renderPlotAsyncImpl = async <TSource = never>(
     {
       adapters: [adapter],
       signal,
-      compile: { themeStyles: options.themeStyles },
+      compile: { themeDefinitions: options.themeDefinitions },
     },
   );
 
@@ -100,7 +100,7 @@ const renderPlotAsyncImpl = async <TSource = never>(
     lineage: lowerPlotWithLineage(
       spec,
       {},
-      { ...options, environment: { theme: options.theme, compile: { themeStyles: options.themeStyles } } },
+      { ...options, environment: { theme: options.theme, compile: { themeDefinitions: options.themeDefinitions } } },
       preparedData,
     ).lineage,
   };

@@ -11,14 +11,14 @@ import { normalizeGraphAuthoringChildren } from './semantic-children';
 /** Block Header embed 的 Source authoring 输入 */
 export type BlockHeaderInputEmbedProps = WithoutInputType<InputBlockHeader>;
 
-const inputOf = (props: BlockHeaderInputEmbedProps): InputBlockHeader => {
-  return { type: 'blockHeader', ...props };
-};
-
 /** Block Header Source 的 InputEmbed adapter */
 export const BlockHeaderInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockHeaderInputEmbedProps> = {
   kind: BlockHeaderEmbedKind,
   lower: (props, context) => {
+    const inputOf = (inputProps: BlockHeaderInputEmbedProps): InputBlockHeader => {
+      return { type: 'blockHeader', ...inputProps };
+    };
+
     const input = inputOf(props);
     const slots: Array<InputGraphChild> = [];
     if (input.icon !== undefined) slots.push(input.icon);

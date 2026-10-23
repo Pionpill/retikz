@@ -95,15 +95,15 @@ const componentLabel = (type: unknown): string => {
   return String(type);
 };
 
-/** 判断字符串中的当前位置是否被反斜杠转义 */
-const isEscapedAt = (text: string, index: number): boolean => {
-  let slashCount = 0;
-  for (let cursor = index - 1; cursor >= 0 && text[cursor] === '\\'; cursor -= 1) slashCount += 1;
-  return slashCount % 2 === 1;
-};
-
 /** 按普通换行拆 Node 文本，同时保留 display TeX 内部的换行 */
 const splitChildTextLines = (text: string): Array<string> => {
+  /** 判断字符串中的当前位置是否被反斜杠转义 */
+  const isEscapedAt = (sourceText: string, index: number): boolean => {
+    let slashCount = 0;
+    for (let cursor = index - 1; cursor >= 0 && sourceText[cursor] === '\\'; cursor -= 1) slashCount += 1;
+    return slashCount % 2 === 1;
+  };
+
   const lines: Array<string> = [];
   let start = 0;
   let inDisplayTex = false;
@@ -590,22 +590,15 @@ export const pickScopeStyle = (scope: ScopeStyleProps): Partial<ScopeStyleProps>
   const picked = pickDefined(scope, SCOPE_STYLE_FIELDS);
   const defaults = picked.defaults;
   if (defaults !== undefined) {
-    const { style: nodeStyle, layout: nodeLayout, ...nodeGeometry } = defaults.node ?? {};
-    const { style: pathStyle, ...pathGeometry } = defaults.path ?? {};
+    const { style: nodeStyle, layout: nodeLayout, label: nodeLabel, ...nodeGeometry } = defaults.node ?? {};
+    const { style: pathStyle, label: pathLabel, arrow, ...pathGeometry } = defaults.path ?? {};
     const reset = defaults.reset;
     const hasReset = reset === true || (Array.isArray(reset) && reset.length > 0);
     const hasDefaults =
       hasReset ||
-      [
-        defaults.style,
-        nodeStyle,
-        nodeLayout,
-        nodeGeometry,
-        pathStyle,
-        pathGeometry,
-        defaults.label,
-        defaults.arrow,
-      ].some(hasDefinedFields);
+      [defaults.style, nodeStyle, nodeLayout, nodeGeometry, pathStyle, pathGeometry, nodeLabel, pathLabel, arrow].some(
+        hasDefinedFields,
+      );
     if (!hasDefaults) delete picked.defaults;
   }
 

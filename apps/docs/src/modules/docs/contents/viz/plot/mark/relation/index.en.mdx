@@ -192,7 +192,7 @@ This table keeps only RelationMark-specific props and props whose meaning is red
 | `ribbon.width`        | `IRPlotRelationRibbonOptions['width']`              | Required for ribbon | Source width; also the full width when `endWidth` is absent                                                         |
 | `ribbon.endWidth?`    | `IRPlotRelationRibbonOptions['endWidth']`           | —                   | Target width                                                                                                        |
 | `ribbon.options?`     | `IRPlotRelationRibbonOptions['options']`            | —                   | Alignment, sampling, and width interpolation                                                                        |
-| `style?`              | `RelationMarkProps['style']`                        | —                   | Visual styles shared by path and ribbon                                                                             |
+| `name?`               | `RelationMarkProps['style']`                        | —                   | Visual styles shared by path and ribbon                                                                             |
 | `color?`              | `RelationMarkProps['color']`                        | —                   | Field-driven relation color channel                                                                                 |
 
 ## Related
@@ -201,4 +201,4 @@ This table keeps only RelationMark-specific props and props whose meaning is red
 - [PathMark](/viz/plot/mark/path) — generate referenceable Coordinate ids for path vertices
 - [Coordinates](/viz/plot/coordinate) — how a `project` target turns relation-row fields into a coordinate
 
-`path.options.style` contains `dashPattern`, `fillRule`, `lineCap`, and `lineJoin`; `marks`, `roundedCorners`, `rotate`, and `scale` remain at the `path.options` root.
+`path.options.style` contains `dashPattern`, `fillRule`, `lineCap`, and `lineJoin`; `marks`, `cornerRadius`, `rotate`, and `scale` remain at the `path.options` root.

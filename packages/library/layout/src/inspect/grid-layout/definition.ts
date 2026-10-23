@@ -1,6 +1,5 @@
 import { defineInspector } from '@retikz/inspect';
 
-import { GridLayoutArtifactSchema } from '../../composites/grid-layout';
 import { LAYOUT_NAMESPACE } from '../../shared';
 import { resolveGridLayoutInspectOptions } from '../resolve/grid-layout';
 import { mergeLayoutInspectOptionsInput } from '../resolve/shared';
@@ -18,7 +17,6 @@ export const GRID_LAYOUT_INSPECTOR_KEY = Object.freeze({
 export const GRID_LAYOUT_INSPECTOR = defineInspector({
   ...GRID_LAYOUT_INSPECTOR_KEY,
   owner: { kind: 'composite', namespace: LAYOUT_NAMESPACE, type: 'gridLayout' },
-  subjectSchema: GridLayoutArtifactSchema,
   optionsSchema: GridLayoutInspectOptionsSchema,
   resolveOptions: resolveGridLayoutInspectOptions,
   mergeOptionsInput: mergeLayoutInspectOptionsInput,

@@ -1,5 +1,6 @@
 import type {
   IRPosition,
+  PathKindCompileContext,
   IRStep,
   PathCommand,
   PathKindLabelInput,
@@ -12,7 +13,7 @@ import type { CurveSegmentSample, Vector2 } from '@retikz/math';
 import type { CanonicalRibbonOptions, IRRibbonPath } from '../types';
 
 /** ribbon 编译期归一化后的输入 */
-export type RibbonLike = Omit<IRRibbonPath, 'kindOptions'> & CanonicalRibbonOptions;
+export type RibbonLike = Omit<IRRibbonPath, 'kindOptions' | 'label'> & CanonicalRibbonOptions;
 
 /** 可按 t∈[0,1] 采样的中心线段 */
 export type RibbonSegment = {
@@ -119,6 +120,8 @@ export type RibbonEmitOptions = Readonly<{
   materializePath: RibbonMaterializePath;
   /** 当前路径的宿主标签服务 */
   emitHostLabels: (input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>;
+  /** 在几何采样前继承宿主标签配置 */
+  resolveHostLabel: PathKindCompileContext['resolveHostLabel'];
   /** Kernel 共享边界标签服务 */
   emitBoundaryLabels: (input: ReadonlyArray<PathKindBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>;
 }>;

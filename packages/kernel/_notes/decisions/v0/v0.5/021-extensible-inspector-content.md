@@ -36,7 +36,7 @@ Observer 创建、选择、产物校验、回调、片段编译或 complete 失�
 
 Inspector key 为 namespace + type；owner 是被观察对象，二者相互独立。同一 owner 可注册多个不同 key，重复 key 拒绝。内置与第三方共用 defineInspector、补全、注册、解析、回调和隔离编译路径
 
-Definition 必填身份、owner、subjectSchema 与 inspect。作者省略 optionsSchema 表示只允许严格空选项；省略 resolveOptions 表示直接消费 schema 的解析结果；省略 mergeOptionsInput 表示更具体的输入整体替换
+Definition 必填身份、owner 与 inspect；subject 由所属者 TypeScript 契约约束，驱动不重复解析内部产物。作者省略 optionsSchema 表示只允许严格空选项；省略 resolveOptions 表示直接消费 schema 的解析结果；省略 mergeOptionsInput 表示更具体的输入整体替换
 
 所有启用规则都先做选项准入，未匹配或被覆盖的非法规则也不能漏检。继承保留原始配置，合并后只应用一次 schema 默认与变换，再交给 resolveOptions；不把已变换输出重复解析。需要逐字段继承的 Inspector 提供 mergeOptionsInput，undefined 不覆盖父级，false 等显式值保留
 

@@ -5,12 +5,7 @@ import type {
   TableCellPlanSource,
   TableLegendDescriptor,
 } from '../../contract';
-import {
-  TableCellAppearanceTracePathSchema,
-  TableCellPlanSourceKind,
-  TableCellPlanSourceSchema,
-  TableLegendDescriptorSchema,
-} from '../../contract';
+import { TableCellAppearanceTracePathSchema, TableCellPlanSourceKind } from '../../contract';
 import { RetikzTableError } from '../../error';
 import { resolveCellVisualScaleRegistry } from '../../providers';
 import { resolveCellVisualScale } from '../../providers/encoding';
@@ -28,8 +23,6 @@ import {
   TableCellLocation,
   TableCellPayloadKind,
   BuiltinTableCellPresentation,
-  TableFormatterRefSchema,
-  TablePresentationRefSchema,
   TableVisualChannel,
 } from '../../schemas';
 import { deepFreeze } from '../../shared';
@@ -88,7 +81,7 @@ const defaultsSourceOf = (options: ResolveTableCellPlansOptions, path: ReadonlyA
   for (let index = layers.length - 1; index >= 0; index -= 1) {
     const layer = layers[index];
     if (layer.defaults !== undefined && hasOwnPath(layer.defaults, path)) {
-      return TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.Defaults, path: layer.path });
+      return { kind: TableCellPlanSourceKind.Defaults, path: layer.path };
     }
   }
 
@@ -165,7 +158,7 @@ const styleAppearanceOf = (
       }
     });
 
-  return { appearance: TableCellAppearanceSchema.parse(appearance), trace };
+  return { appearance, trace };
 };
 
 /** 从 style seed 与 semantic border 构造初始 appearance */
@@ -179,7 +172,7 @@ const initialAppearanceOf = (
   return cascadeTableCellAppearance(
     style.appearance,
     style.trace,
-    TableCellAppearanceSchema.parse({ borders: cell.layout.borders }),
+    { borders: structuredClone(cell.layout.borders) as IRTableCellAppearance['borders'] },
     STRUCTURE_SOURCE,
   );
 };
@@ -199,10 +192,8 @@ const initialPlanOf = (cell: SemanticTableCell, options: ResolveTableCellPlansOp
   return {
     kind: TableCellPayloadKind.Value,
     ...(cell.id === undefined ? {} : { cellId: cell.id }),
-    formatter: TableFormatterRefSchema.parse(cell.payload.formatter ?? { name: BuiltinTableCellFormatter.Identity }),
-    presentation: TablePresentationRefSchema.parse(
-      cell.payload.presentation ?? { name: BuiltinTableCellPresentation.Text },
-    ),
+    formatter: structuredClone(cell.payload.formatter ?? { name: BuiltinTableCellFormatter.Identity }),
+    presentation: structuredClone(cell.payload.presentation ?? { name: BuiltinTableCellPresentation.Text }),
     appearance: structuredClone(initial.appearance),
     trace: {
       formatter: cell.payload.formatter === undefined ? DEFAULT_SOURCE : STRUCTURE_SOURCE,
@@ -217,7 +208,7 @@ const initialPlanOf = (cell: SemanticTableCell, options: ResolveTableCellPlansOp
 const applyEncodingColor = (plan: MutableValuePlan, encoding: IRTableCellVisualEncoding, color: string): void => {
   const source = { kind: TableCellPlanSourceKind.Encoding, encodingId: encoding.id } as const;
   if (encoding.channel === TableVisualChannel.BackgroundFill) {
-    plan.appearance = TableCellAppearanceSchema.parse({
+    plan.appearance = {
       ...plan.appearance,
       background: {
         fill: color,
@@ -225,10 +216,10 @@ const applyEncodingColor = (plan: MutableValuePlan, encoding: IRTableCellVisualE
           ? {}
           : { fillOpacity: plan.appearance.background.fillOpacity }),
       },
-    });
+    };
     plan.trace.appearance = { ...structuredClone(plan.trace.appearance), '/background/fill': source };
   } else {
-    plan.appearance = TableCellAppearanceSchema.parse({
+    plan.appearance = {
       ...plan.appearance,
       content: {
         ...plan.appearance.content,
@@ -237,7 +228,7 @@ const applyEncodingColor = (plan: MutableValuePlan, encoding: IRTableCellVisualE
           style: { ...plan.appearance.content?.defaults?.style, color },
         },
       },
-    });
+    };
     plan.trace.appearance = { ...structuredClone(plan.trace.appearance), '/content/defaults/style/color': source };
   }
 
@@ -318,18 +309,16 @@ export const resolveTableCellPlans = (
         cellIndices.push(candidate.index);
       });
       if (typeof encoding.legend === 'object') {
-        legendDescriptors.push(
-          TableLegendDescriptorSchema.parse({
-            encodingId: encoding.id,
-            channel: encoding.channel,
-            scaleName: encoding.scale.name,
-            ...(encoding.legend.title === undefined ? {} : { title: encoding.legend.title }),
-            form: resolution.legendForm,
-            domain: resolution.domain,
-            range: resolution.range,
-            ...(resolution.edges === undefined ? {} : { edges: resolution.edges }),
-          }),
-        );
+        legendDescriptors.push({
+          encodingId: encoding.id,
+          channel: encoding.channel,
+          scaleName: encoding.scale.name,
+          ...(encoding.legend.title === undefined ? {} : { title: encoding.legend.title }),
+          form: resolution.legendForm,
+          domain: [...resolution.domain],
+          range: [...resolution.range],
+          ...(resolution.edges === undefined ? {} : { edges: [...resolution.edges] }),
+        });
       }
     }
 

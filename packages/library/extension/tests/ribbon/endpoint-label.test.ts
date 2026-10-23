@@ -40,6 +40,7 @@ describe('Ribbon endpoint labels', () => {
             type: 'path',
             kind: 'ribbon',
             kindOptions: {
+              label: { text: 'flow', placement: 'inside' },
               width: { kind: 'fixed', value: 20 },
               start: { label: { text: 'source' } },
               end: { label: { text: ['target', 'detail'], rotate: 30 } },
@@ -48,7 +49,6 @@ describe('Ribbon endpoint labels', () => {
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },
             ],
-            label: { text: 'flow', placement: 'inside' },
           },
         ],
       },
@@ -194,8 +194,8 @@ it('inherits Kernel label font and color, multiplies opacity, and retains host m
       {
         type: 'scope',
         defaults: {
-          label: { textColor: 'blue', font: { size: 18, weight: 'bold' } },
-          path: { style: { opacity: 0.5 } },
+          node: { label: { textColor: 'blue', font: { size: 18, weight: 'bold' } } },
+          path: { style: { opacity: 0.5 }, label: { textColor: 'blue', font: { size: 18, weight: 'bold' } } },
         },
         children: [
           {
@@ -251,7 +251,7 @@ it('uses the specified endpoint section for radial rotation and tangent alignmen
 it('uses arc cap extrema for rich text labels', () => {
   const scene = labeledScene(
     { name: 'arc', params: { center: [0, 0], radius: 10 } },
-    { text: [{ runs: [{ text: 'rich', fill: 'red' }] }] },
+    { text: [{ segments: [{ text: 'rich', fill: 'red' }] }] },
   );
 
   expect(textsOf(scene.primitives)).toContain('rich');
@@ -274,8 +274,8 @@ describe('Whole Ribbon transforms', () => {
             id: 'ribbon',
             meta: { owner: 'connection' },
             kind: 'ribbon',
-            rotate,
-            scale,
+            ...(rotate === undefined ? {} : { rotate }),
+            ...(scale === undefined ? {} : { scale }),
             kindOptions: { width: { kind: 'fixed', value: 20 }, end: { label: { text: 'target' } } },
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },

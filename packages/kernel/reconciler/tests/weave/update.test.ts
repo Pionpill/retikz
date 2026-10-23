@@ -391,3 +391,38 @@ describe('Weave 批次更新', () => {
     expect(readWeaveCurrent(b).dependencies.has(original.children[0])).toBe(false);
   });
 });
+
+it('宿主装饰默认更新与完整编译一致，并保留提交前结果', () => {
+  const children: IRScene['children'] = [
+    { type: 'node', id: 'n', text: 'body', label: { text: 'label' } },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: [0, 30] },
+        { type: 'step', kind: 'line', to: [100, 30] },
+      ],
+      label: { text: 'path' },
+      marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+    },
+  ];
+  const input: IRScene = { type: 'scene', version: 1, children: [{ type: 'scope', id: 'host', children }] };
+  const session = new WeaveReconciler(input);
+  const mounted = session.mount();
+  const before = structuredClone(mounted.compilation.result);
+  const scope = readWeaveCurrent(mounted.root).children[0];
+  if (scope.type !== 'scope') throw new Error('Expected scope');
+  const properties = {
+    type: 'scope' as const,
+    id: 'host',
+    defaults: {
+      node: { label: { distance: 20, pin: true, font: { size: 18 } } },
+      path: { label: { distance: 12, sloped: true }, arrow: { shape: 'stealth', scale: 2 } },
+    },
+  };
+  const updated = session.update({
+    operations: [{ kind: 'update', target: { kind: 'scope', scopeId: scope.scopeId }, input: properties }],
+  });
+  expect(updated.compilation.result).toEqual(compileToScene({ ...input, children: [{ ...properties, children }] }));
+  expect(mounted.compilation.result).toEqual(before);
+  updated.commit();
+});

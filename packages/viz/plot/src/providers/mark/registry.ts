@@ -5,9 +5,7 @@ import type { CoordinateFrame, MarkChannels, MarkInstanceInput, MarkLoweringCont
 import type { IRPlotMark } from '../../schemas';
 import { BuiltinPlotMark } from '../../schemas';
 import { intervalMarkDefinition, pathMarkDefinition, pointMarkDefinition, relationMarkDefinition } from './features';
-import type { AnyMarkDefinition, MarkDefinition } from './types';
-
-const asAnyMarkDefinition = <T extends IRPlotMark>(def: MarkDefinition<T>): AnyMarkDefinition => def;
+import type { AnyMarkDefinition } from './types';
 
 /**
  * mark lowering 行为注册表：每个内置 mark 对应一个注册项（lowerMark 按 type 查表分发）
@@ -15,10 +13,10 @@ const asAnyMarkDefinition = <T extends IRPlotMark>(def: MarkDefinition<T>): AnyM
  *   Plot mark schema 仍是静态单一真源，不由此表组装
  */
 export const MARK_REGISTRY: Record<BuiltinPlotMark, AnyMarkDefinition> = {
-  [BuiltinPlotMark.Point]: asAnyMarkDefinition(pointMarkDefinition),
-  [BuiltinPlotMark.Path]: asAnyMarkDefinition(pathMarkDefinition),
-  [BuiltinPlotMark.Interval]: asAnyMarkDefinition(intervalMarkDefinition),
-  [BuiltinPlotMark.Relation]: asAnyMarkDefinition(relationMarkDefinition),
+  [BuiltinPlotMark.Point]: pointMarkDefinition,
+  [BuiltinPlotMark.Path]: pathMarkDefinition,
+  [BuiltinPlotMark.Interval]: intervalMarkDefinition,
+  [BuiltinPlotMark.Relation]: relationMarkDefinition,
 };
 
 const isScopeLayer = (layer: IRChild | null): layer is IRScope =>

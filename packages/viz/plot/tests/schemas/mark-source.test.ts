@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { treeifyError } from 'zod';
 
 import { ChannelSchema, MarkSchema, PointMarkSchema, PositionEncodingSchema } from '../../src';
 
@@ -49,7 +50,7 @@ describe('Mark Source field encodings and fixed properties', () => {
     expect(PositionEncodingSchema.safeParse({ ' ': 'value' }).success).toBe(false);
     const result = PositionEncodingSchema.safeParse({ x: { field: 'height', scale: 'x' } });
     expect(result.success).toBe(false);
-    if (!result.success) expect(result.error.issues.some(issue => issue.path[0] === 'x')).toBe(true);
+    if (!result.success) expect(treeifyError(result.error).properties).toHaveProperty('x');
   });
 
   it('retains both authored sources so resolution can apply encoding precedence', () => {

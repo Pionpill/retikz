@@ -113,7 +113,7 @@ Categorical color legends accept overlaid `symbols`. For example, `symbols={[{ k
 | `orient?`     | <ApiValues name="LegendOrient" />   | by `position` | Item direction; left/right default to vertical, while top/bottom default to horizontal                                                                                        |
 | `ticks?`      | `PlotLegendProps['ticks']`          | by form       | Ramps support the complete tick source; size currently reads `count` only; categorical swatches and shape ignore it                                                           |
 | `tickLabels?` | `PlotLegendProps['tickLabels']`     | `true`        | Hide labels with `false`; `format` applies to ramp tick labels                                                                                                                |
-| `style?`      | `PlotLegendProps['style']`          | theme legend  | Local visual tokens for swatch / ramp size, gaps, and text. Size symbols default to `symbolFit:'fit'` inside the `symbolSize` box; use `'preserve'` to retain rendered radius |
+| `name?`       | `PlotLegendProps['style']`          | theme legend  | Local visual tokens for swatch / ramp size, gaps, and text. Size symbols default to `symbolFit:'fit'` inside the `symbolSize` box; use `'preserve'` to retain rendered radius |
 | `layer?`      | `PlotLegendProps['layer']`          | legend layer  | Override the semantic layer of the whole legend scope                                                                                                                         |
 
 Support for `PlotLegendProps['ticks']` by legend form:

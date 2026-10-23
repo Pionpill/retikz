@@ -224,7 +224,7 @@ Clips use their own registry: the clipping capability produces a shape, which is
     },
     { label: 'Clip lowering and registration', path: 'packages/kernel/core/src/compile/resource/clip.ts' },
     { label: 'Resource and reference contracts', path: 'packages/kernel/core/src/contract/scene/paint.ts' },
-    { label: 'Clip resource structure', path: 'packages/kernel/core/src/contract/scene/clip.ts' },
+    { label: 'Clip resource structure', path: 'packages/kernel/core/src/contract/scene/group.ts' },
   ]}
 />
 
@@ -305,7 +305,7 @@ Core filters tracks by their target level during compilation. Non-`viewBox` trac
 
 <SourceLinks
   sources={[
-    { label: 'Animation tracks and keyframes', path: 'packages/kernel/core/src/schemas/animation/schema.ts' },
+    { label: 'Animation tracks and keyframes', path: 'packages/kernel/core/src/schemas/scene/animation.ts' },
     { label: 'Root and element track filtering', path: 'packages/kernel/core/src/compile/orchestration/animation.ts' },
     { label: 'Scene animation assembly', path: 'packages/kernel/core/src/compile/compile.ts' },
   ]}
@@ -355,7 +355,7 @@ An `occurrence` identifies an appearance in this compilation through a Source pa
 
 ### Composite artifacts
 
-A composite declares its domain result through `artifactSchema`. Core validates the value and wraps it in the following record, with generics simplified to their default types:
+A composite declares its domain result type through `artifactSchema`. The callback author is responsible for satisfying that contract. Core does not reparse typed artifacts through the schema; it preserves JSON snapshot isolation and wraps the value in the following record, with generics simplified to their default types:
 
 ```ts
 type CompositeCompileArtifact = Readonly<{
@@ -501,7 +501,7 @@ The node's `id` is optional; `occurrence` identifies its final compilation appea
 <SourceLinks
   sources={[
     { label: 'Artifact and node layout types', path: 'packages/kernel/core/src/compile/types.ts' },
-    { label: 'Occurrence locators', path: 'packages/kernel/core/src/contract/occurrence/types.ts' },
+    { label: 'Occurrence locators', path: 'packages/kernel/core/src/contract/occurrence.ts' },
     {
       label: 'FlexLayout artifact declaration',
       path: 'packages/library/layout/src/composites/flex-layout/composite.ts',
@@ -610,8 +610,8 @@ For an actual consumer, see [Flow’s bounds example](/schematic/diagram/flow/ex
 
 <SourceLinks
   sources={[
-    { label: 'Spatial index and entries', path: 'packages/kernel/core/src/contract/spatial-handle/types.ts' },
-    { label: 'Declarations and Scope ownership', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: 'Spatial index and entries', path: 'packages/kernel/core/src/contract/spatial-handle/handle.ts' },
+    { label: 'Declarations and Scope ownership', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     { label: 'Filtering and unique lookup', path: 'packages/kernel/core/src/contract/spatial-handle/query.ts' },
     {
       label: 'Flow bounds consumer',
@@ -655,7 +655,7 @@ Consider inspecting a node whose text is `Hello`. Enabling the node inspector's 
 At the Core level, enable observation with `observeCompileToScene(ir, options, observers)`. Pass observer definitions as the third argument; this example uses `undefined` for the second argument because it needs no extra compile options. It reads node geometry without drawing inspection boxes.
 
 ```ts
-import { NodeOwnerOutputSchema, observeCompileToScene } from '@retikz/core';
+import { type NodeOwnerOutput, observeCompileToScene } from '@retikz/core';
 import type { CompileObservation, CompileObserverDefinition } from '@retikz/core';
 
 const nodeObserver: CompileObserverDefinition<ReadonlyArray<CompileObservation>> = {
@@ -665,7 +665,7 @@ const nodeObserver: CompileObserverDefinition<ReadonlyArray<CompileObservation>>
     return {
       select: site => site.owner.kind === 'node',
       observe: observation => {
-        const node = NodeOwnerOutputSchema.parse(observation.value);
+        const node = observation.value as NodeOwnerOutput;
         console.log(node.rect, node.content?.corners);
         observations.push(observation);
       },
@@ -688,7 +688,7 @@ console.log(result.primary.scene);
 console.log(result.observerOutputs[0]);
 ```
 
-`select` chooses all nodes. `observe` receives each final node output and parses its geometry with `NodeOwnerOutputSchema`. The array inside `createSession` belongs to this compilation, and `complete` returns it as the observer result. Thus `observerOutputs[0]` has the key `example/node-geometry` and a `value` containing the collected observation events; the original drawing is in `primary.scene`.
+`select` chooses all nodes. `observe` receives each final node output and reads its geometry as `NodeOwnerOutput` without parsing internal output again. The array inside `createSession` belongs to this compilation, and `complete` returns it as the observer result. Thus `observerOutputs[0]` has the key `example/node-geometry` and a `value` containing the collected observation events; the original drawing is in `primary.scene`.
 
 Inspect builds on this Core API to generate inspection boxes:
 
@@ -707,7 +707,7 @@ Events are sorted and dispatched after final occurrences have been determined. T
   sources={[
     { label: 'Node inspector', path: 'packages/kernel/inspect/src/providers/node.ts' },
     { label: 'Inspection helper compilation', path: 'packages/kernel/inspect/src/compile/driver.ts' },
-    { label: 'Observer output', path: 'packages/kernel/core/src/contract/observation/types.ts' },
+    { label: 'Observer output', path: 'packages/kernel/core/src/contract/observation.ts' },
     {
       label: 'Observer session creation, selection and completion',
       path: 'packages/kernel/core/src/compile/orchestration/observation.ts',

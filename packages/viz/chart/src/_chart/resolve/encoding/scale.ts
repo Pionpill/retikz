@@ -39,19 +39,6 @@ const resolveScaleSource = (
   };
 };
 
-const assertScaleCompatible = (
-  consumer: ChartEncodingFieldConsumer,
-  source: ResolvedScaleSource,
-  path: ReadonlyArray<string | number>,
-): void => {
-  const expected = consumer.scale;
-  if (expected === undefined)
-    throw invalidEncoding(`Chart encoding "${consumer.slot}" does not support named scales`, path);
-  if (source.family !== expected.family || (expected.type !== undefined && source.type !== expected.type)) {
-    throw invalidEncoding(`Chart scale is incompatible with encoding "${consumer.slot}"`, path);
-  }
-};
-
 /** exact encoding scale declaration、reference 与 recipe fallback 的连接结果 */
 export type ChartEncodingScaleResolution = Readonly<{
   /** 字段映射显式产生的尺度操作 */
@@ -77,6 +64,19 @@ export const resolveChartEncodingScales = <
   consumers: ReadonlyArray<ChartEncodingFieldConsumer<TEncodingSlot>>,
   directEncodings: JsonObject,
 ): ChartEncodingScaleResolution => {
+  const assertScaleCompatible = (
+    consumer: ChartEncodingFieldConsumer,
+    source: ResolvedScaleSource,
+    path: ReadonlyArray<string | number>,
+  ): void => {
+    const expected = consumer.scale;
+    if (expected === undefined)
+      throw invalidEncoding(`Chart encoding "${consumer.slot}" does not support named scales`, path);
+    if (source.family !== expected.family || (expected.type !== undefined && source.type !== expected.type)) {
+      throw invalidEncoding(`Chart scale is incompatible with encoding "${consumer.slot}"`, path);
+    }
+  };
+
   const extensionScales = [...(context.source.plotExtension?.scales ?? [])];
   const extensionScaleByName = new Map<string, Readonly<{ index: number; operation: IRPlotScaleOperation }>>();
 

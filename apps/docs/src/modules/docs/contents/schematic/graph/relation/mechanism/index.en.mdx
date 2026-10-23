@@ -55,7 +55,7 @@ Status and group colors participate through appearance defaults. Numeric stroke,
 
 Without route, lowering emits `move(source) → line(target)`. An explicit route becomes Path.children directly; lowering neither compares its endpoints to semantic endpoints nor appends connector segments. sourceMarker / targetMarker become Arrow marks at positions 0 / 1. Core handles shape lookup, marker shortening, and drawing.
 
-Labels become Path.label. Each label's text color and opacity win over defaults, while font fields inherit individually. When placement and side are both absent, lowering sets inside so labels sit on the centerline. Multiple labels remain separate labels rather than a new text model.
+Labels become Path.label. Each label's text color and opacity win over defaults, while font fields inherit individually. When side is absent, lowering sets center so labels sit on the centerline. Multiple labels remain separate labels rather than a new text model.
 
 The id and non-conflicting Core Path fields pass through; relation-specific fields are removed. Core handles unresolved endpoints, duplicate ids, and position expressions.
 

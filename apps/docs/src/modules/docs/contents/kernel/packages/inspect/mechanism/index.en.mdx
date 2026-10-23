@@ -89,7 +89,7 @@ With that flow in mind, the following fields show how Core supplies results and 
 | What Core provides                            | How Inspect uses it                                                                                       |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | `CompileObservation.owner` and `occurrence`   | Matches a request to the observed object's final instance by owner and occurrence location                |
-| `CompileObservation.value`                    | Validates final output with `subjectSchema` and supplies it to `inspect()`                                |
+| `CompileObservation.value`                    | Supplies typed final output directly to `inspect()`                                                       |
 | `CompileObservationContext.theme`             | Gives auxiliary content the current occurrence's theme and semantic colors                                |
 | `CompileObservationContext.compileFragment()` | Compiles ordinary IR returned by an Inspector in the current Theme, Scope-style, and provider environment |
 
@@ -103,7 +103,7 @@ Each observation also carries `ancestors`, an outside-in chain of the Scope and 
   sources={[
     {
       label: 'Core observation context and isolated compilation',
-      path: 'packages/kernel/core/src/contract/observation/types.ts',
+      path: 'packages/kernel/core/src/contract/observation.ts',
     },
     {
       label: 'Core dispatch of final observations',
@@ -183,9 +183,9 @@ Calling `PathInspectOptionsSchema.parse({})` directly produces a defaulted snaps
 
 ## Generate auxiliary descriptions
 
-The previous stage decides “which instance, with which configuration”; this stage decides “what to read from that instance and what guides to draw.” Merged options receive defaults from `optionsSchema` and shorthand expansion from `resolveOptions` to become callback configuration. Separately, the observation's `value` passes through `subjectSchema` to become the callback's subject. Configuration and observed geometry are different inputs.
+The previous stage decides “which instance, with which configuration”; this stage decides “what to read from that instance and what guides to draw.” Merged options receive defaults from `optionsSchema` and shorthand expansion from `resolveOptions` to become callback configuration. Separately, the observation's `value` becomes the callback's subject through its owner's type contract. Configuration and observed geometry are different inputs.
 
-For matched requests, the driver validates and freezes observation values with `subjectSchema`, then passes them to `inspect(subject, context)`. Control-point inspection reads geometry already resolved by Core and returns ordinary IR for points and guides, without recomputing the primary figure.
+For matched requests, the driver creates isolated read-only snapshots of observation values, then passes them to `inspect(subject, context)`. Control-point inspection reads geometry already resolved by Core and returns ordinary IR for points and guides, without recomputing the primary figure.
 
 Two inputs meet at `inspect()`: configuration on the left decides what to show, while geometry on the right supplies where to draw it. The bottom row follows callback output through fragment preparation, isolated compilation, and host adaptation into readonly layers. Arrows express data handoffs, not concurrent configuration and geometry validation.
 
@@ -244,7 +244,7 @@ An `inspect(subject, context)` callback can call `context.warn(code, message)` w
 | `InspectionCompileResult.inspection`  | Ordered auxiliary plane; `null` when every callback produces no output |
 | `InspectionCompileResult.diagnostics` | Structured warnings from Inspector callbacks and isolated fragments    |
 
-`RetikzInspectError.details.origin.stage` identifies a failure in selection, final-output (`subjectSchema`) validation, an `inspect` callback, output normalization, auxiliary-fragment compilation, or final assembly. Duplicate registry keys, unregistered requests, owner mismatch, and schema failures stop that inspection compile without delivering a partial auxiliary result.
+`RetikzInspectError.details.origin.stage` identifies a failure in selection, final-output snapshot handling, an `inspect` callback, output normalization, auxiliary-fragment compilation, or final assembly. Duplicate registry keys, unregistered requests, owner mismatch, and input-option schema failures stop that inspection compile without delivering a partial auxiliary result.
 
 <SourceLinks
   sources={[

@@ -140,7 +140,11 @@ describe('Plot 使用 Core 文字测量参与布局', () => {
     const titleOf = (size: number) =>
       compile(measure, {
         guides: [
-          { type: 'axis', dimension: 'y', title: { text: [{ runs: [{ text: 'Rich', font: { size } }] }], rotate: 0 } },
+          {
+            type: 'axis',
+            dimension: 'y',
+            title: { text: [{ segments: [{ text: 'Rich', font: { size } }] }], rotate: 0 },
+          },
         ],
       })
         .filter(p => p.type === 'text')

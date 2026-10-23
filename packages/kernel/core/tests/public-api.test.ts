@@ -50,13 +50,6 @@ describe('Core public API', () => {
     });
   });
 
-  it('exports the JSON schemas for every builtin observation owner output', () => {
-    expect(core.NodeOwnerOutputSchema).toBeDefined();
-    expect(core.ScopeOwnerOutputSchema).toBeDefined();
-    expect(core.CoordinateOwnerOutputSchema).toBeDefined();
-    expect(core.ClipOwnerOutputSchema).toBeDefined();
-  });
-
   it('公开 occurrence 和 observation owner 的稳定比较工具', () => {
     const first = { sourcePath: 'children[0]', expansionPath: [{ kind: 'output', index: 0 }] } as const;
     const second = { sourcePath: 'children[1]', expansionPath: [{ kind: 'output', index: 0 }] } as const;

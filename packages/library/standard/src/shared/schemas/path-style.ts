@@ -3,7 +3,6 @@ import {
   GraphicColorSchema,
   GraphicOpacitySchema,
   GraphicFillSchema,
-  GraphicStrokeSchema,
   PathFillSchema,
   PathStrokeSchema,
 } from '@retikz/core';
@@ -13,7 +12,6 @@ import { strictObject } from 'zod';
 export const StandardPathStrokeStyleSchema = strictObject({
   ...GraphicColorSchema.shape,
   ...GraphicOpacitySchema.shape,
-  ...GraphicStrokeSchema.shape,
   ...PathStrokeSchema.shape,
   zIndex: DrawableInstanceSchema.shape.zIndex,
 }).describe('Standard presentation stroke style composed from Core graphic and path fragments.');

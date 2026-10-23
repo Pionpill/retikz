@@ -1,4 +1,4 @@
-﻿import type { ExternalRow } from '@retikz/data';
+import type { ExternalRow } from '@retikz/data';
 import { Entity, Relation } from '@retikz/graph-react';
 import { Layout, Scope } from '@retikz/react';
 import type { IRTableCellPayload } from '@retikz/table';
@@ -52,7 +52,7 @@ export const DataTransformShapeFigure: FC<DataTransformShapeFigureProps> = props
   ];
 
   return (
-    <Layout theme={{ style: 'docs.logic' }}>
+    <Layout theme={{ name: 'docs.logic' }}>
       <PreviewGraph entityKinds={logicFigureEntityDefinitions} relationKinds={logicFigureRelationKinds}>
         <Scope id="source" position={[-282, -65]}>
           <PreviewDetailTable id="source-table" dataRef="source-rows" data={sourceRows} layout={TABLE_LAYOUT}>

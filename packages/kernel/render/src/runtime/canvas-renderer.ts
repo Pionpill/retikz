@@ -35,6 +35,7 @@ import { defineRetainedRenderer } from './renderer';
 import type { SceneAnimationDescriptorDiff } from './runtime-options';
 import {
   diffSceneAnimationDescriptors,
+  occurrenceAnimationTracks,
   materializeEasingRegistry,
   SceneAnimationOccurrenceChangeKind,
 } from './runtime-options';
@@ -73,16 +74,15 @@ const primitiveAtPath = (
 };
 
 /** 读取单个 occurrence 自身动画 descriptor 的有限结束时刻 */
-const primitiveAnimationDurationMs = (primitive: RuntimeScenePrimitive): number | null =>
+const primitiveAnimationDurationMs = (
+  primitive: RuntimeScenePrimitive,
+  resources: SceneRuntimeSnapshot['scene']['resources'],
+): number | null =>
   sceneAnimationDurationMs({
     layout: { x: 0, y: 0, width: 0, height: 0 },
     resources: [],
-    animations: [],
-    primitives: [
-      primitive.type === 'group'
-        ? ({ ...(primitive as unknown as Scene['primitives'][number]), children: [] } as Scene['primitives'][number])
-        : (primitive as unknown as Scene['primitives'][number]),
-    ],
+    primitives: [],
+    animations: occurrenceAnimationTracks(primitive, resources),
   });
 
 /** 判断 readonly Runtime descriptor 集合是否含 load / 缺省自动播放 track */
@@ -1245,7 +1245,7 @@ const createCanvasAnimation = (
     const walk = (primitives: ReadonlyArray<Scene['primitives'][number]>): void => {
       for (const primitive of primitives) {
         if (primitive.id !== undefined && registry.isActive(primitive.id)) {
-          const duration = primitiveAnimationDurationMs(primitive);
+          const duration = primitiveAnimationDurationMs(primitive, snapshot.scene.resources);
           const effectiveTime = registry.timeFor(primitive.id, currentTime);
           timelineEndByToken.set(
             primitive.id,
@@ -1268,7 +1268,7 @@ const createCanvasAnimation = (
     const token = occurrenceIndex.tokenByIdentity.get(node.identity);
     const primitive = primitiveAtPath(snapshot, node.primitivePath);
     if (token !== undefined && primitive !== undefined)
-      timelineEndByToken.set(token, primitiveAnimationDurationMs(primitive));
+      timelineEndByToken.set(token, primitiveAnimationDurationMs(primitive, snapshot.scene.resources));
   }
 
   clockEnd = sceneAnimationDurationMs(scene);
@@ -1384,9 +1384,11 @@ const createCanvasAnimation = (
               'Canvas animation occurrence topology is incomplete',
             );
 
-          const duration = primitiveAnimationDurationMs(primitive);
+          const duration = primitiveAnimationDurationMs(primitive, nextSnapshot.scene.resources);
           candidateTimelineEndByToken.set(nextToken, duration === null ? null : candidateTime + duration);
-          restartedAutoplay ||= runtimeAnimationsHaveAutoplay(primitive.animations);
+          restartedAutoplay ||= runtimeAnimationsHaveAutoplay(
+            occurrenceAnimationTracks(primitive, nextSnapshot.scene.resources),
+          );
         }
       }
 

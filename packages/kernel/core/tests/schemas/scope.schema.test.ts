@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import { ChildSchema, ScopeSchema, TransformSchema } from '../../src/schemas';
 
+it('外部 Scope 输入拒绝稀疏变换数组', () => {
+  expect(ScopeSchema.safeParse({ type: 'scope', children: [], transforms: Array<unknown>(1) }).success).toBe(false);
+});
+
 describe('ScopeSchema 合法形态', () => {
   it('最简 scope：仅 children 空数组', () => {
     const parsed = ScopeSchema.safeParse({ type: 'scope', children: [] });
@@ -562,4 +566,20 @@ describe('TransformSchema 各变体拒绝缺字段', () => {
 
     expect(parsed.success).toBe(false);
   });
+});
+
+it.each([
+  ['unknown key', { unknown: true }],
+  ['empty id', { id: '' }],
+  ['invalid localNamespace', { localNamespace: 'yes' }],
+  ['fractional zIndex', { zIndex: 1.5 }],
+  ['infinite zIndex', { zIndex: Infinity }],
+  ['invalid boundingShape', { boundingShape: 'triangle' }],
+  ['non-json meta', { meta: { bad: undefined } }],
+  ['invalid clip', { clip: { kind: 'rect', x: 0, y: 0, width: -1, height: 10 } }],
+  ['invalid animations', { animations: [{}] }],
+  ['malformed transform', { transforms: [{ kind: 'translate', x: 0 }] }],
+  ['non-finite transform', { transforms: [{ kind: 'scale', x: NaN }] }],
+])('外部 Scope 属性拒绝非法输入：%s', (_name, rawProps) => {
+  expect(() => ScopeSchema.parse({ type: 'scope', children: [], ...rawProps })).toThrow();
 });

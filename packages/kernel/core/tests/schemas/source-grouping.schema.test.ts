@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { NodeSchema, PathBaseSchema, ScopeSchema, StrokePathSchema } from '../../src/schemas';
+import { NodeSchema, PathSchema, ScopeSchema, StrokePathSchema } from '../../src/schemas';
 
 describe('Source 语义分组', () => {
   it('节点的视觉和布局字段使用各自的闭合命名空间', () => {
@@ -41,11 +41,9 @@ describe('Source 语义分组', () => {
 
       defaults: {
         style: { stroke: 'blue' },
-        node: { style: { font: { size: 12 } }, layout: { padding: 0 } },
-        path: { style: { lineCap: 'round' } },
-        label: { font: { size: 10 } },
-        arrow: { scale: 2 },
         reset: ['node'],
+        node: { style: { font: { size: 12 } }, layout: { padding: 0 }, label: { font: { size: 10 } } },
+        path: { style: { lineCap: 'round' }, label: { font: { size: 10 } }, arrow: { scale: 2 } },
       },
     };
 
@@ -65,9 +63,9 @@ describe('Source 语义分组', () => {
 
   it('通用 Path 保留开放 host，Stroke 独立要求步骤', () => {
     expect(
-      PathBaseSchema.parse({ type: 'path', kind: 'custom', style: { fillRule: 'evenodd', stroke: 'red' } }),
+      PathSchema.parse({ type: 'path', kind: 'custom', style: { fillRule: 'evenodd', stroke: 'red' } }),
     ).toMatchObject({ kind: 'custom', style: { fillRule: 'evenodd' } });
     expect(StrokePathSchema.safeParse({ type: 'path', style: {} }).success).toBe(false);
-    expect(PathBaseSchema.safeParse({ type: 'path', stroke: 'red' }).success).toBe(false);
+    expect(PathSchema.safeParse({ type: 'path', stroke: 'red' }).success).toBe(false);
   });
 });

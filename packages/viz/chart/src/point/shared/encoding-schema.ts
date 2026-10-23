@@ -26,7 +26,7 @@ import {
   TimeScaleSchema,
 } from '@retikz/plot';
 import type { infer as ZodInfer, RefinementCtx } from 'zod';
-import { strictObject, union } from 'zod';
+import { literal, strictObject, union } from 'zod';
 
 import {
   createChartAggregateMappingSchema,
@@ -75,26 +75,23 @@ export const PointOpacityScaleBindingSchema = createChartScaleBindingSchema(unio
 const createPointJitterMappingSchema = (role: 'x' | 'y', chartType: string) =>
   strictObject({
     transform: strictObject({
-      operation: JitterTransformSchema,
+      operation: JitterTransformSchema.extend({
+        params: JitterTransformSchema.shape.params.extend({
+          axis: (role === 'x' ? literal('x').optional() : literal('y')).describe(
+            'Jitter only the bound position axis; omission is allowed for x.',
+          ),
+        }),
+      }),
       dataExecution: DataTransformDeclarationSchema.shape.dataExecution,
     }),
     output: NonBlankStringSchema,
     scale: PointPositionScaleBindingSchema.optional(),
   })
     .superRefine((mapping, context) => {
-      const axis = mapping.transform.operation.params.axis ?? 'x';
       const field =
         role === 'x'
           ? (mapping.transform.operation.params.xField ?? 'x')
           : (mapping.transform.operation.params.yField ?? 'y');
-      if (axis !== role) {
-        context.addIssue({
-          code: 'custom',
-          path: ['transform', 'operation', 'params', 'axis'],
-          message: `${chartType} ${role} jitter must target only the ${role} axis`,
-        });
-      }
-
       if (mapping.output !== field) {
         context.addIssue({
           code: 'custom',

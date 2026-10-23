@@ -12,7 +12,7 @@ export type BranchDiagramInputEmbedProps = InputBranchDiagram & BranchDiagramDef
 
 const inputOf = (props: BranchDiagramInputEmbedProps): InputBranchDiagram => {
   const {
-    diagramThemeStyles: _diagramThemeStyles,
+    diagramThemeDefinitions: _diagramThemeDefinitions,
     branchLayouts: _branchLayouts,
     defaultBranchLayout: _defaultBranchLayout,
     entityRoles: _entityRoles,
@@ -21,10 +21,10 @@ const inputOf = (props: BranchDiagramInputEmbedProps): InputBranchDiagram => {
     relationRoles: _relationRoles,
     relationKinds: _relationKinds,
     relationPredicates: _relationPredicates,
-    graphThemeStyles: _graphThemeStyles,
+    graphThemeDefinitions: _graphThemeDefinitions,
     ...input
   } = props;
-  void _diagramThemeStyles;
+  void _diagramThemeDefinitions;
   void _branchLayouts;
   void _defaultBranchLayout;
   void _entityRoles;
@@ -33,7 +33,7 @@ const inputOf = (props: BranchDiagramInputEmbedProps): InputBranchDiagram => {
   void _relationRoles;
   void _relationKinds;
   void _relationPredicates;
-  void _graphThemeStyles;
+  void _graphThemeDefinitions;
 
   return input;
 };

@@ -29,15 +29,12 @@ export const fullScopeProps = {
       strokeWidth: 2,
       opacity: { overall: 0.9, fill: 0.4, stroke: 0.8 },
     },
-    node: {
-      style: { fill: '#e2e8f0' },
-      layout: { padding: 2 },
-    },
+    reset: ['path'],
+    node: { style: { fill: '#e2e8f0' }, layout: { padding: 2 }, label: { textColor: '#475569', opacity: 0.7 } },
     path: {
       style: { stroke: '#64748b', strokeWidth: 1.5 },
+      label: { textColor: '#475569', opacity: 0.7 },
+      arrow: { shape: 'stealth', scale: 1.2 },
     },
-    label: { textColor: '#475569', opacity: 0.7 },
-    arrow: { shape: 'stealth', scale: 1.2 },
-    reset: ['path'],
   },
 } satisfies IRScopeProps;

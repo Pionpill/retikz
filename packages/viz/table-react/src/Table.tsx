@@ -24,7 +24,7 @@ export type TableLayoutHostProps = Pick<
   | 'height'
   | 'viewBox'
   | 'theme'
-  | 'themeStyles'
+  | 'themeDefinitions'
   | 'className'
   | 'renderer'
   | 'animate'

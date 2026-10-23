@@ -230,15 +230,13 @@ export const TableDefaultsSourceRecordSchema: ReturnType<
 /** 显式引用已有 schema，避免声明生成时展开深层 defaults 而丢失类型 */
 export const TableManifestStyleSchema: ReturnType<
   typeof strictObject<{
-    style: ZodOptional<typeof NonBlankStringSchema>;
+    name: ZodOptional<typeof NonBlankStringSchema>;
     themeMode: ZodEnum<typeof ThemeMode>;
     defaults: typeof TableDefaultsSchema;
     layers: ZodArray<typeof TableDefaultsSourceRecordSchema>;
   }>
 > = strictObject({
-  style: NonBlankStringSchema.optional().describe(
-    'Optional Core Theme style selecting a host-injected Table definition.',
-  ),
+  name: NonBlankStringSchema.optional().describe('Optional Core Theme selecting a host-injected Table definition.'),
   themeMode: zodEnum(ThemeMode).describe('Effective Core Theme mode selecting the Table style baseline.'),
   defaults: TableDefaultsSchema.describe('Complete resolved Table Source defaults.'),
   layers: array(TableDefaultsSourceRecordSchema)
@@ -267,7 +265,7 @@ export const TableManifestStyleSchema: ReturnType<
 
       seen.add(layer.path);
       if (layer.kind === 'style') {
-        const expected = style.style === undefined ? undefined : `$style/${style.style}/${style.themeMode}`;
+        const expected = style.name === undefined ? undefined : `$style/${style.name}/${style.themeMode}`;
         if (expected === undefined || layer.path !== expected) {
           context.addIssue({
             code: 'custom',

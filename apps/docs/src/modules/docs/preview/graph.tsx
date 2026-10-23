@@ -25,7 +25,7 @@ const graphCanonicalRender = (node: ReactNode): ReactNode => {
           relationKinds: logicFigureRelationKinds,
         }
       : element.props;
-  const { children, width, height, viewBox, className, renderer, themeStyles, ...graphProps } = resolvedProps;
+  const { children, width, height, viewBox, className, renderer, themeDefinitions, ...graphProps } = resolvedProps;
 
   const hostProps: GraphLayoutHostProps = {
     ...(width === undefined ? {} : { width }),
@@ -33,7 +33,7 @@ const graphCanonicalRender = (node: ReactNode): ReactNode => {
     ...(viewBox === undefined ? {} : { viewBox }),
     ...(className === undefined ? {} : { className }),
     ...(renderer === undefined ? {} : { renderer }),
-    ...(themeStyles === undefined ? {} : { themeStyles }),
+    ...(themeDefinitions === undefined ? {} : { themeDefinitions }),
   };
 
   return <Layout {...hostProps}>{createElement(PreviewGraph, graphProps, children)}</Layout>;

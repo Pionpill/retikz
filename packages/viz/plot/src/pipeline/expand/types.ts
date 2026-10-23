@@ -17,7 +17,7 @@ import type {
   AnyCoordinateDefinition,
   AnyPositionAdjustmentDefinition,
   AnyScaleDefinition,
-  PlotThemeStyleDefinition,
+  PlotThemeDefinition,
   ResolveLabel,
 } from '../../contract';
 import type { PlotLabelMeasure } from '../../shared';
@@ -40,8 +40,8 @@ export type PlotLayoutOverrides = {
 export type PlotDefinitions = {
   /** 当前请求注入的分类顺序定义 */
   fieldOrders?: ReadonlyArray<FieldOrderDefinition>;
-  /** 运行时注入的 Plot Theme style definitions */
-  plotThemeStyles?: ReadonlyArray<PlotThemeStyleDefinition>;
+  /** 运行时注入的 Plot Theme definitions */
+  plotThemeDefinitions?: ReadonlyArray<PlotThemeDefinition>;
   /**
    * 自定义坐标系 definition 数组（运行时函数，不进 IR）：spec 的 `coordinate: {type:<customType>, ...config}` 据此解析投影
    * @description 让用户插入任意坐标系几何（曲线一维 / 拱形 x 轴等），无需给坐标系枚举塞成员、也不破坏 IR JSON 化。未注册 type → fail-loud

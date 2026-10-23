@@ -7,7 +7,7 @@ import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import { resolveNode } from '../../src/resolve/node';
-import type { IRNode } from '../../src/schemas/node';
+import type { IRNode } from '../../src/schemas';
 import { filletContour } from '../../src/shared/geometry/path';
 
 const measureText = (): { width: number; height: number; ascent: number } => ({

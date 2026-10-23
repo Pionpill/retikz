@@ -2,7 +2,7 @@ import type { JsonObject } from '@retikz/foundation';
 
 import type { BoundaryDefinition, ShapeDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { ProviderCollection } from '../../providers/registry';
+import type { ProviderRegistry } from '../../providers';
 import type { IRBoundary } from '../../schemas';
 import { parseProviderPayload } from '../provider-payload';
 import type { BoundaryReferenceResolution } from './types';
@@ -17,20 +17,15 @@ export type BoundaryReferenceResolveContext = {
   /** 节点视觉形状参数 */
   visualParams: JsonObject;
   /** shape 注册表 */
-  shapeRegistry: ProviderCollection<ShapeDefinition>;
+  shapeRegistry: ProviderRegistry<ShapeDefinition>;
   /** boundary 注册表 */
-  boundaryRegistry: ProviderCollection<BoundaryDefinition>;
+  boundaryRegistry: ProviderRegistry<BoundaryDefinition>;
   /** 当前 node 的 IR 路径，用于 provider payload 诊断 */
   irPath?: string;
 };
 
-const providerOf = <TDefinition>(registry: ProviderCollection<TDefinition>, key: string): TDefinition | undefined =>
-  Array.isArray(registry)
-    ? registry.find(item => item.name === key)
-    : (registry as ReadonlyMap<string, TDefinition>).get(key);
-
-const registeredNames = <TDefinition>(registry: ProviderCollection<TDefinition>): string => {
-  const names = Array.isArray(registry) ? registry.map(definition => definition.name) : [...registry.keys()];
+const registeredNames = <TDefinition>(registry: ProviderRegistry<TDefinition>): string => {
+  const names = [...registry.keys()];
   return names.sort().join(', ') || '(none registered)';
 };
 
@@ -51,7 +46,7 @@ export const resolveBoundaryReference = (
   const type = typeof boundary === 'string' ? boundary : boundary.type;
   const rawParams = typeof boundary === 'string' ? {} : (boundary.params ?? {});
   const paramsPath = `${context.irPath ?? 'node'}.boundary.params`;
-  const boundaryDef = providerOf(context.boundaryRegistry, type);
+  const boundaryDef = context.boundaryRegistry.get(type);
   if (boundaryDef !== undefined) {
     return {
       name: type,
@@ -68,7 +63,7 @@ export const resolveBoundaryReference = (
     };
   }
 
-  const shapeDef = providerOf(context.shapeRegistry, type);
+  const shapeDef = context.shapeRegistry.get(type);
   if (shapeDef !== undefined) {
     return {
       name: type,

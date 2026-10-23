@@ -9,9 +9,7 @@ description: 定义参与者消费来源与计算结果，将外部状态的提�
 
 Participant 可以修改 DOM、替换 Canvas 画面或管理宿主状态。它的准备、提交或读取失败会阻止本次事务发布，并触发对已准备对象的回滚。因此，它的逻辑参与决定事务能否成功；自己的读取视图也只有成功发布后才对外可读。
 
-例如，Vanilla 更新一份 SVG 文档时，需要同时更新对外的处理结果和实际画面。如果新结果已经对外可读，但 SVG 更新失败，调用方看到的数据就会与画面不一致。Vanilla 将处理结果与 renderer 分别接入提交参与者：全部成功才发布；失败且回滚成功时，两者都保留旧状态。
-
-`runtime.update(...)` 负责执行这笔事务，`runtime.participant(token)` 则读取某个参与者最近成功发布的结果，不会触发提交。后文先用计数与显示缓冲区演示协议，最后在 [Vanilla 应用](#vanilla-应用) 中对应到实际接线。
+`runtime.update(...)` 负责执行事务，`runtime.participant(token)` 读取某个参与者最近成功发布的结果，不会触发提交。后文使用独立的计数与显示缓冲区示例：只有计算和显示提交都成功，新计数与对应显示内容才一起发布。
 
 ## 整体流程
 
@@ -348,44 +346,7 @@ console.log(display.text); // ''
 
 发布之后才通知计算的 `observeCommit`、清理被替换的旧来源与结果，最后清理单次提交对象。Runtime 查询到的是成功发布的状态；宿主恢复能力来自参与者实现的回滚逻辑。
 
-<SourceLinks
-  sources={[
-    { label: 'Runtime 提交调度', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
-    { label: 'Retained renderer 参与者', path: 'packages/kernel/render/src/runtime/participant.ts' },
-  ]}
-/>
-
-## Vanilla 应用
-
-Vanilla 的保留式 DOM 接入将 **Core 计算、处理结果发布和 renderer 提交**接在同一个 Runtime 上。以更新 SVG 为例，Core 先产生候选编译结果，两个参与者各自准备要提交的状态：
-
-| 对象            | 提交职责                                                                        | 公开读取内容                                  |
-| --------------- | ------------------------------------------------------------------------------- | --------------------------------------------- |
-| 处理结果参与者  | 从 Core 输出生成新的 `ProcessingResult`，成功提交时替换旧结果，回滚时恢复旧结果 | Vanilla 对外提供的处理结果                    |
-| renderer 参与者 | 将 Scene 与渲染配置应用到 SVG 或 Canvas，失败时按协议恢复                       | 已提交的 `frame` 和可选动画控制器 `animation` |
-
-Vanilla 在 `createRuntime` 的 `participants` 中注册这两个参与者。更新时先调用 `runtime.update(...)`；成功返回后，才通过 `runtime.participant(resultParticipant)` 取得新的处理结果并更新对外缓存。渲染侧的读取封装也最终调用 `runtime.participant(rendererParticipant)`，取得 renderer 已提交的公开视图。
-
-下图展示一次成功更新：Core 候选结果在事务内交给两个参与者；统一发布后，Vanilla 和渲染封装分别通过 `runtime.participant(...)` 读取缓存，供调用方处理结果、宿主读取帧或控制动画。两个参与者之间不互相读取。
-
-<ComponentPreview files="participant-vanilla" size="sm" hideCode type="flow" />
-
-假设 Core 已算出新 Scene，但 renderer 在提交中失败：Runtime 尝试回滚本次已准备的参与者。回滚成功后，旧处理结果、旧画面和读取缓存保持一致，Vanilla 不会把这次候选处理结果当作成功结果返回。若回滚也失败，则按前文的失败状态处理，不能继续假定画面与数据一致。
-
-这里 `runtime.result(coreComputation)` 读取编译计算结果，参与者读取入口则暴露外部提交层的结果；两者都受成功发布约束，但返回内容与所有者不同。宿主也能自行保存已提交状态，不过统一读取入口复用了 Runtime 的发布缓存，无需每个消费方再维护成功与回滚时的切换逻辑。
-
-renderer 接入使用 `@retikz/render` 的 `createRetainedRenderParticipant`，它以 `continuous` 跟随发布版本。普通 Vanilla 用户使用其封装好的接口即可，通常不需要直接操作 Runtime 的参与者 Token。
-
-<SourceLinks
-  sources={[
-    {
-      label: '处理结果参与者、注册与成功后读取',
-      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
-    },
-    { label: 'Vanilla DOM 接入 renderer 参与者', path: 'packages/kernel/vanilla/src/dom/retained.ts' },
-    { label: '渲染提交与公开读取封装', path: 'packages/kernel/render/src/runtime/participant.ts' },
-  ]}
-/>
+<SourceLinks sources={[{ label: 'Runtime 提交调度', path: 'packages/kernel/runtime/src/runtime/runtime.ts' }]} />
 
 ## 相关属性
 

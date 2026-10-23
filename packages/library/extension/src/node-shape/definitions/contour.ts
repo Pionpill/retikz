@@ -29,22 +29,22 @@ const ContourShapeParamsSchema = strictObject({
 /** Contour 形状的参数 */
 export type ContourShapeParams = ZodInfer<typeof ContourShapeParamsSchema>;
 
-/** 计算点集 AABB 中心 */
-const aabbCenterOf = (points: Array<Position>): Position => {
-  const bounds = boundsOf(points);
-  if (bounds === undefined) {
-    throw new RetikzExtensionError({
-      code: RetikzExtensionErrorCode.GeometryInvalid,
-      message: 'contour: points must contain at least one vertex.',
-      details: { pointCount: points.length, shape: 'contour' },
-    });
-  }
-
-  return centerOfBounds(bounds);
-};
-
 /** 归一化局部顶点 */
 const centeredPoints = (params: ContourShapeParams): Array<Position> => {
+  /** 计算点集 AABB 中心 */
+  const aabbCenterOf = (points: Array<Position>): Position => {
+    const bounds = boundsOf(points);
+    if (bounds === undefined) {
+      throw new RetikzExtensionError({
+        code: RetikzExtensionErrorCode.GeometryInvalid,
+        message: 'contour: points must contain at least one vertex.',
+        details: { pointCount: points.length, shape: 'contour' },
+      });
+    }
+
+    return centerOfBounds(bounds);
+  };
+
   const center = aabbCenterOf(params.points);
   return params.points.map(pointValue => vector2.sub(pointValue, center));
 };

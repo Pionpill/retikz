@@ -192,7 +192,7 @@ describe('Flow Source schema', () => {
     const text = [
       'Frontend form',
       { text: 'Complete user details', fill: 'gray', font: { size: 'sm' } },
-      { runs: [{ text: 'Field ' }, { tex: 'x' }] },
+      { segments: [{ text: 'Field ' }, { tex: 'x' }] },
     ];
     const parsed = FlowDiagramSchema.parse({
       namespace: 'diagram',
@@ -336,7 +336,7 @@ describe('Flow Source schema', () => {
     { ...completeFlow, entities: [{ id: '', text: 'blank id' }] },
     { ...completeFlow, entities: [{ id: 'blank-text', text: '' }] },
     { ...completeFlow, entities: [{ id: 'blank-lines', text: ['', { text: ' ' }] }] },
-    { ...completeFlow, entities: [{ id: 'blank-runs', text: [{ runs: [{ text: ' ' }, { tex: ' ' }] }] }] },
+    { ...completeFlow, entities: [{ id: 'blank-segments', text: [{ segments: [{ text: ' ' }, { tex: ' ' }] }] }] },
     { ...completeFlow, entities: [{ id: 'negative-rank', text: 'x', rank: -1 }] },
     { ...completeFlow, flowTheme: {} },
     { ...completeFlow, flowThemeTokens: {} },

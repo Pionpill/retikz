@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { literal, number, strictObject, string } from 'zod';
+import { literal } from 'zod';
 
 import type { CompileObserverDefinition, IRScene } from '../../src';
 import * as core from '../../src';
@@ -24,11 +24,10 @@ describe('Core Path owner output', () => {
   it('requests and publishes a typed output exactly once for a non-empty Path', () => {
     let requested = false;
     let publishCount = 0;
-    const ownerOutput = { schema: strictObject({ label: string() }) };
-    const kind = core.definePathKind({
+    const kind = core.definePathKind<core.IRPathBase, { label: string }>({
       name: 'owner-output',
       schema: core.PathSchema.extend({ kind: literal('owner-output') }),
-      ownerOutput,
+      ownerOutput: true,
       compile: context => {
         requested = context.ownerOutput.requested;
         context.ownerOutput.publish({ label: 'path-output' });
@@ -74,7 +73,7 @@ describe('Core Path owner output', () => {
     const kind = core.definePathKind({
       name: 'lazy-owner-output',
       schema: core.PathSchema.extend({ kind: literal('lazy-owner-output') }),
-      ownerOutput: { schema: strictObject({ value: number() }) },
+      ownerOutput: true,
       compile: context => {
         requested = context.ownerOutput.requested;
         if (context.ownerOutput.requested) {
@@ -109,7 +108,7 @@ describe('Core Path owner output', () => {
     const kind = core.definePathKind({
       name: `bad-owner-output-${_label.replace(' ', '-')}`,
       schema: core.PathSchema.extend({ kind: literal(`bad-owner-output-${_label.replace(' ', '-')}`) }),
-      ownerOutput: { schema: strictObject({ value: number() }) },
+      ownerOutput: true,
       compile: context => {
         publishOutput(context.ownerOutput.publish);
         return {
@@ -144,7 +143,7 @@ describe('Core Path owner output', () => {
     const kind = core.definePathKind({
       name: 'null-owner-output',
       schema: core.PathSchema.extend({ kind: literal('null-owner-output') }),
-      ownerOutput: { schema: strictObject({ value: number() }) },
+      ownerOutput: true,
       compile: context => {
         context.ownerOutput.publish({ value: 1 });
         return null;

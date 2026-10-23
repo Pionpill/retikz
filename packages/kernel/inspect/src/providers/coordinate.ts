@@ -1,5 +1,4 @@
 import type { CoordinateOwnerOutput, IRChild } from '@retikz/core';
-import { CoordinateOwnerOutputSchema } from '@retikz/core';
 import { mergeProperties } from '@retikz/foundation';
 import type { output as ZodOutput } from 'zod';
 
@@ -17,7 +16,6 @@ export const COORDINATE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type:
 export const COORDINATE_INSPECTOR = defineInspector({
   ...COORDINATE_INSPECTOR_KEY,
   owner: { kind: 'coordinate' },
-  subjectSchema: CoordinateOwnerOutputSchema,
   optionsSchema: CoordinateInspectOptionsSchema,
   mergeOptionsInput: (inherited, local) => ({
     ...inherited,

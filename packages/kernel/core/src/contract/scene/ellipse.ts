@@ -46,6 +46,10 @@ export type EllipsePrim = {
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 沿椭圆边界重复的虚线段与间隙序列 */
   dashPattern?: NonNullable<IRPathBase['style']>['dashPattern'];
+  /** 描边线帽 */
+  strokeLinecap?: NonNullable<IRPathBase['style']>['lineCap'];
+  /** 描边连接 */
+  strokeLinejoin?: NonNullable<IRPathBase['style']>['lineJoin'];
   /** 描边 dash offset */
   dashOffset?: NonNullable<IRPathBase['style']>['dashOffset'];
   /**

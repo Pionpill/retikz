@@ -24,6 +24,11 @@ import {
 } from '../../../src/shape';
 
 describe('Standard shape family', () => {
+  it('applies rectangle corner radius only to the rectangle step', () => {
+    const path = lowerRectangle(createRectangle({ center: [0, 0], width: 40, height: 20, cornerRadius: 4 }));
+    expect(path).not.toHaveProperty('cornerRadius');
+    expect(path.children.at(-1)).toMatchObject({ kind: 'rectangle', cornerRadius: 4 });
+  });
   it('preserves referenced ellipse centers and derives rectangle corners', () => {
     expect(lowerEllipse(createEllipse({ center: { id: 'origin' }, diameterX: 40, diameterY: 20 })).children).toEqual([
       { type: 'step', kind: 'move', to: { id: 'origin' } },

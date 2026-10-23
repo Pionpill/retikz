@@ -117,19 +117,13 @@ describe('drawScene clip 裁剪', () => {
     expect(context.calls.filter(c => c.name === 'lineTo').length).toBeGreaterThanOrEqual(2);
   });
 
-  it('clip-missing-resource：clipRef 指向缺失资源 → 告警 clip 且子图元仍绘制', () => {
+  it('missing clip fails before drawing any primitive', () => {
     const context = createSpyCanvasContext();
-    const warnings: Array<string> = [];
     const s: Scene = {
       layout: { x: 0, y: 0, width: 100, height: 100 },
       primitives: [{ type: 'group', clipRef: 'nope', children: [{ type: 'rect', x: 0, y: 0, width: 10, height: 10 }] }],
     };
-
-    drawScene(context as unknown as CanvasRenderingContext2D, s, {
-      warnUnsupported: w => warnings.push(w.feature),
-    });
-
-    expect(warnings).toContain('clip');
-    expect(context.calls.some(c => c.name === 'rect')).toBe(true);
+    expect(() => drawScene(context as unknown as CanvasRenderingContext2D, s)).toThrow(/expected clip resource 'nope'/);
+    expect(context.calls.some(c => c.name === 'rect')).toBe(false);
   });
 });

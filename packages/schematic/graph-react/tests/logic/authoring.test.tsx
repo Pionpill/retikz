@@ -1,6 +1,6 @@
 import {
   defineEntityRole,
-  defineGraphThemeStyle,
+  defineGraphTheme,
   defineRelationKind,
   defineRelationRole,
   EntityProviderKey,
@@ -30,7 +30,7 @@ import {
   Group,
   Relation,
   RetikzGraphReactErrorCode,
-  useGraphThemeStyles,
+  useGraphThemeDefinitions,
 } from '../../src';
 import { collectEntityInput, collectRelationInput, graphLayoutHostPropsOf } from '../../src/graph/authoring';
 import { synchronousAdapters } from '../helpers/synchronous-adapters';
@@ -246,7 +246,7 @@ const hostPropKeys = [
   'pathGenerators',
   'pathKinds',
   'composites',
-  'themeStyles',
+  'themeDefinitions',
   'lowerTex',
   'artifacts',
   'onArtifacts',
@@ -260,7 +260,7 @@ const definitionOptionKeys = [
   'relationRoles',
   'relationKinds',
   'relationPredicates',
-  'graphThemeStyles',
+  'graphThemeDefinitions',
 ] as const;
 
 const decorationAdapter = {
@@ -532,15 +532,13 @@ describe('Graph Source and child authoring', () => {
               strokeWidth: 2,
               opacity: { overall: 0.8, fill: 0.7, stroke: 0.9 },
             },
-            node: {
-              style: { fill: 'white' },
-            },
+            reset: ['path'],
+            node: { style: { fill: 'white' }, label: { font: { size: 10 } } },
             path: {
               style: { stroke: 'green' },
+              label: { font: { size: 10 } },
+              arrow: { shape: 'stealth', scale: 1.5 },
             },
-            label: { font: { size: 10 } },
-            arrow: { shape: 'stealth', scale: 1.5 },
-            reset: ['path'],
           },
         },
         createElement(Node, { id: 'child', position: [0, 0] }),
@@ -577,15 +575,9 @@ describe('Graph Source and child authoring', () => {
             strokeWidth: 2,
             opacity: { overall: 0.8, fill: 0.7, stroke: 0.9 },
           },
-          node: {
-            style: { fill: 'white' },
-          },
-          path: {
-            style: { stroke: 'green' },
-          },
-          label: { font: { size: 10 } },
-          arrow: { shape: 'stealth', scale: 1.5 },
           reset: ['path'],
+          node: { style: { fill: 'white' }, label: { font: { size: 10 } } },
+          path: { style: { stroke: 'green' }, label: { font: { size: 10 } }, arrow: { shape: 'stealth', scale: 1.5 } },
         },
       },
     ]);
@@ -702,7 +694,7 @@ describe('Graph standalone and embedded host classification', () => {
       pathGenerators: undefined,
       pathKinds: undefined,
       composites: undefined,
-      themeStyles: undefined,
+      themeDefinitions: undefined,
       lowerTex: undefined,
       artifacts: undefined,
       onArtifacts: undefined,
@@ -812,7 +804,7 @@ describe('Graph Definition options parity', () => {
       relationRoles: [relationRole],
       relationKinds: [],
       relationPredicates: [],
-      graphThemeStyles: [],
+      graphThemeDefinitions: [],
     } as const;
     const input = createInputScene(
       createElement(
@@ -856,19 +848,19 @@ describe('Graph Definition options parity', () => {
 
 describe('GraphThemeProvider', () => {
   it('merges ancestor and local definitions in declaration order', () => {
-    const parent = defineGraphThemeStyle({ name: 'parent', resolve: () => ({}) });
-    const local = defineGraphThemeStyle({ name: 'local', resolve: () => ({}) });
+    const parent = defineGraphTheme({ name: 'parent', resolve: () => ({}) });
+    const local = defineGraphTheme({ name: 'local', resolve: () => ({}) });
 
     const Probe: FC = () => {
-      const styles = useGraphThemeStyles();
+      const styles = useGraphThemeDefinitions();
       return createElement('span', null, styles?.map(style => style.name).join(','));
     };
 
     const markup = renderToStaticMarkup(
       createElement(
         GraphThemeProvider,
-        { graphThemeStyles: [parent] },
-        createElement(GraphThemeProvider, { graphThemeStyles: [local] }, createElement(Probe)),
+        { graphThemeDefinitions: [parent] },
+        createElement(GraphThemeProvider, { graphThemeDefinitions: [local] }, createElement(Probe)),
       ),
     );
 
@@ -876,8 +868,8 @@ describe('GraphThemeProvider', () => {
   });
 
   it('supplies ambient definitions to standalone Graph and keeps Graph props last', () => {
-    const ambient = defineGraphThemeStyle({ name: 'ambient', resolve: () => ({}) });
-    const brand = defineGraphThemeStyle({
+    const ambient = defineGraphTheme({ name: 'ambient', resolve: () => ({}) });
+    const brand = defineGraphTheme({
       name: 'brand',
       resolve: () => ({ defaults: { entity: { style: { stroke: '#2563eb', textColor: '#2563eb' } } } }),
     });
@@ -892,13 +884,13 @@ describe('GraphThemeProvider', () => {
     const markup = renderToStaticMarkup(
       createElement(
         GraphThemeProvider,
-        { graphThemeStyles: [ambient] },
+        { graphThemeDefinitions: [ambient] },
         createElement(
           Graph,
           {
-            theme: { style: 'brand' },
-            themeStyles: [coreBrand],
-            graphThemeStyles: [brand],
+            theme: { name: 'brand' },
+            themeDefinitions: [coreBrand],
+            graphThemeDefinitions: [brand],
             width: 240,
             height: 120,
           },

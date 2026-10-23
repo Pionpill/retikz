@@ -122,6 +122,56 @@ describe('data transform runtime', () => {
     expect(readSourceIndices(out[1])).toEqual([2, 3]);
   });
 
+  it('reuses parsed reducer parameters across groups and reparses for a new request', () => {
+    let parses = 0;
+    const reducer = defineStatisticsReducer({
+      schema: strictObject({
+        kind: literal('prepared-count'),
+        as: NonBlankStringSchema,
+        factor: number()
+          .default(2)
+          .transform(value => {
+            parses += 1;
+            return value + 1;
+          }),
+      }),
+      outputs: operation => [{ field: operation.as }],
+    });
+    const implementation = defineStatisticsReducerImplementation({
+      definition: reducer,
+      reduce: (rows, operation) => ({ [operation.as]: rows.length * operation.factor }),
+    });
+    const registry = resolveStatisticsReducerRegistry([reducer]);
+    const run = (rows: Array<ExternalRow>) =>
+      applyTransforms(
+        rows,
+        [
+          {
+            kind: 'summarize',
+            params: { groupBy: ['month'], metrics: [{ kind: 'prepared-count', as: 'count' }] },
+          },
+        ],
+        {
+          context: {
+            ...DEFAULT_TRANSFORM_CONTEXT,
+            statisticsReducerRegistry: registry,
+            statisticsReducerImplementationRegistry: resolveStatisticsReducerImplementationRegistry(registry, [
+              implementation,
+            ]),
+          },
+        },
+      ).rows;
+    expect(run(SALES.slice(0, 2))).toEqual([{ month: 'Jan', count: 6 }]);
+    const firstRequestParses = parses;
+    parses = 0;
+    expect(run(SALES)).toEqual([
+      { month: 'Jan', count: 6 },
+      { month: 'Feb', count: 6 },
+    ]);
+    expect(parses).toBe(firstRequestParses);
+    expect(parses).toBeGreaterThan(0);
+  });
+
   it('uses custom statistics reducer registry from transform context', () => {
     const range = defineStatisticsReducer({
       schema: object({

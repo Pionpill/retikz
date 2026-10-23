@@ -17,7 +17,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, (value
       opacity: values.opacity,
       lineCap: values.lineCap,
       lineJoin: values.lineJoin,
-      roundedCorners: values.roundedCorners,
+      cornerRadius: values.cornerRadius,
     },
     dimensions,
   ),

@@ -2,6 +2,7 @@ import type {
   PaintValue,
   PatternEmitContext,
   PatternEmitResult,
+  PatternEmitOutput,
   ResolvedPatternTile,
   SceneResource,
 } from '../../contract';
@@ -11,7 +12,7 @@ import {
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import type { PaintResolution, PaintResolutionInput, PatternResolution } from '../../resolve/resource';
-import { validateMarkerPrimitives } from './marker-primitive';
+import { materializeScenePrimitives } from './scene-content';
 
 /** Paint resource registry 输入：resolve 阶段已绑定的 paint */
 export type PaintInput = PaintResolutionInput;
@@ -29,11 +30,9 @@ export type PaintRegistry = {
   resources: () => Array<SceneResource>;
 };
 
-const isPatternEmitResult = (value: unknown): value is PatternEmitResult =>
-  typeof value === 'object' &&
-  value !== null &&
-  Object.prototype.hasOwnProperty.call(value, 'tileSize') &&
-  Object.prototype.hasOwnProperty.call(value, 'motif');
+/** 区分完整 tile 输出与可能携带单个同名元数据字段的图元 iterable */
+const isPatternEmitResult = (value: PatternEmitOutput): value is PatternEmitResult =>
+  'tileSize' in value && 'motif' in value;
 
 /** 生成与对象属性插入顺序无关的 paint resource key */
 const paintKeyOf = (value: unknown): string => {
@@ -60,13 +59,7 @@ const resolvePatternTile = (resolution: PatternResolution, round: (n: number) =>
   if (style.horizontalStyle !== undefined) ctx.horizontalStyle = style.horizontalStyle;
   if (style.verticalStyle !== undefined) ctx.verticalStyle = style.verticalStyle;
   if (style.lineStyleCycle !== undefined) ctx.lineStyleCycle = style.lineStyleCycle;
-  if (typeof definition.emit !== 'function') {
-    throw createCompositeContractError(
-      `Pattern '${spec.shape}' is missing an emit function (PatternDefinition.emit is required).`,
-    );
-  }
-
-  let emitted: unknown;
+  let emitted: PatternEmitOutput;
 
   try {
     emitted = definition.emit(ctx);
@@ -78,19 +71,18 @@ const resolvePatternTile = (resolution: PatternResolution, round: (n: number) =>
   }
 
   let tileSize = size;
-  let emittedMotif = emitted;
+  const emittedMotif = isPatternEmitResult(emitted) ? emitted.motif : emitted;
   if (isPatternEmitResult(emitted)) {
-    if (typeof emitted.tileSize !== 'number' || !Number.isFinite(emitted.tileSize) || emitted.tileSize <= 0) {
+    if (!Number.isFinite(emitted.tileSize) || emitted.tileSize <= 0) {
       throw createCompositeContractError(
         `Pattern '${spec.shape}' emit returned an invalid tileSize (${String(emitted.tileSize)}); it must be a finite number greater than 0.`,
       );
     }
 
     tileSize = round(emitted.tileSize);
-    emittedMotif = emitted.motif;
   }
 
-  const motif = validateMarkerPrimitives(`Pattern '${spec.shape}' motif`, emittedMotif);
+  const motif = materializeScenePrimitives(`Pattern '${spec.shape}' motif`, emittedMotif);
   const tile: ResolvedPatternTile = { size: tileSize, motif };
   if (spec.background !== undefined) tile.background = spec.background;
   if (spec.rotation !== undefined) tile.rotation = spec.rotation;
@@ -111,7 +103,9 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
     counter += 1;
     id = `paint-${counter}`;
     idByKey.set(key, id);
-    list.push(resourceOf(id));
+    const resource = resourceOf(id);
+    list.push(resource);
+    if (resource.kind === 'paint') idByKey.set(paintKeyOf({ spec: resource.spec, tile: resource.tile }), id);
 
     return id;
   };
@@ -137,7 +131,7 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
   };
 
   const importResolved = (resource: Extract<SceneResource, { kind: 'paint' }>): PaintValue => {
-    const key = paintKeyOf(resource.spec);
+    const key = paintKeyOf({ spec: resource.spec, tile: resource.tile });
     const id = insert(key, nextId => ({ ...resource, id: nextId }));
     return { kind: 'resourceRef', id };
   };

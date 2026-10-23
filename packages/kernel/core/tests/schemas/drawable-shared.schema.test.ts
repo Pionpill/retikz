@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { DrawableInstanceSchema, DrawableStyleSchema, PathLabelSchema, PathSchema, StepLabelSchema } from '../../src';
+import { DrawableInstanceSchema, GraphicStyleSchema, PathLabelSchema, PathSchema } from '../../src';
 
 const steps = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -80,11 +80,11 @@ describe('Drawable shared schema', () => {
   });
 
   it('reuses path labels for step labels and path host labels', () => {
-    const label = { text: '128', position: 0.75, placement: 'inside', sloped: true };
+    const label = { text: '128', position: 0.75, sloped: true };
 
-    expect(StepLabelSchema.parse(label)).toEqual(label);
+    expect(PathLabelSchema.parse(label)).toEqual(label);
     expect(PathSchema.parse(path({ label })).label).toEqual(label);
-    expect(StepLabelSchema).toBe(PathLabelSchema);
+    expect(PathLabelSchema.safeParse({ ...label, placement: 'inside' }).success).toBe(false);
   });
 
   it('keeps edge label sides canonical and rejects parser sugar aliases', () => {
@@ -95,7 +95,7 @@ describe('Drawable shared schema', () => {
   });
 
   it('rejects unknown fields nested in kind options only when the custom schema rejects them', () => {
-    for (const field of ['dashPattern', 'arrow', 'arrowDetail', 'lineCap', 'lineJoin', 'roundedCorners']) {
+    for (const field of ['dashPattern', 'arrow', 'arrowDetail', 'lineCap', 'lineJoin', 'cornerRadius']) {
       const value = field === 'dashPattern' ? [4, 2] : 'round';
 
       expect(PathSchema.safeParse(path({ kind: 'custom', kindOptions: { width: 12, [field]: value } })).success).toBe(
@@ -110,11 +110,11 @@ describe('Drawable shared schema', () => {
     }
   });
 
-  it('keeps instance fields out of the drawable style helper schema', () => {
-    expect(DrawableStyleSchema.safeParse({ id: 'x' }).success).toBe(false);
-    expect(DrawableStyleSchema.safeParse({ meta: { x: 1 } }).success).toBe(false);
-    expect(DrawableStyleSchema.safeParse({ animations: [] }).success).toBe(false);
-    expect(DrawableStyleSchema.safeParse({ zIndex: 1 }).success).toBe(false);
+  it('keeps instance fields out of the graphic style schema', () => {
+    expect(GraphicStyleSchema.safeParse({ id: 'x' }).success).toBe(false);
+    expect(GraphicStyleSchema.safeParse({ meta: { x: 1 } }).success).toBe(false);
+    expect(GraphicStyleSchema.safeParse({ animations: [] }).success).toBe(false);
+    expect(GraphicStyleSchema.safeParse({ zIndex: 1 }).success).toBe(false);
     expect(DrawableInstanceSchema.safeParse({ zIndex: 1, meta: { ok: true } }).success).toBe(true);
   });
 
@@ -134,6 +134,6 @@ describe('Drawable shared schema', () => {
       blendMode: 'multiply',
     };
 
-    expect(DrawableStyleSchema.parse(JSON.parse(JSON.stringify(style)))).toEqual(style);
+    expect(GraphicStyleSchema.parse(JSON.parse(JSON.stringify(style)))).toEqual(style);
   });
 });

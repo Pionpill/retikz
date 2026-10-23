@@ -9,7 +9,7 @@ description: Browse @retikz/tex formula parsing, lowering, and runtime integrati
 
 Authoring determines formula content, configuration selects available syntax, and integration returns typeset paths to Core text layout. SVG and Canvas share the resulting geometry without parsing LaTeX again.
 
-Compare inline, explicit-run, and display formulas below. Choose the intended result before enabling formula support. Caching and SVG conversion details belong in Implementation.
+Compare inline, explicit-segment, and display formulas below. Choose the intended result before enabling formula support. Caching and SVG conversion details belong in Implementation.
 
 <ComponentPreview files="/kernel/packages/tex/authoring/tex-formula-basics" size="sm" hideCode />
 
@@ -19,7 +19,7 @@ Compare inline, explicit-run, and display formulas below. Choose the intended re
 
 <PackageManagerInstall packages="@retikz/tex mathjax-full" />
 
-Choose the injection entry for your host. Formulas enter MathJax lowering only after a lowerer is injected; without it, `$...$` strings stay compatible ordinary text and explicit math runs are skipped with a Core warning.
+Choose the injection entry for your host. Formulas enter MathJax lowering only after a lowerer is injected; without it, `$...$` strings stay compatible ordinary text and explicit math segments are skipped with a Core warning.
 
 | Host    | Entry              | Integration point                                                                |
 | ------- | ------------------ | -------------------------------------------------------------------------------- |
@@ -114,7 +114,7 @@ If the engine and lowerer do not need separate configuration, await `createMathJ
   items={[
     {
       title: 'Formula Authoring',
-      description: 'From inline formulas to explicit math-run layout',
+      description: 'From inline formulas to explicit math-segment layout',
       url: '/kernel/packages/tex/authoring',
     },
     {

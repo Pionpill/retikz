@@ -52,7 +52,7 @@ const createCodeBlockContentDefinition = <TSource extends IRCodeBlock>(
     type: key.type,
     schema: strictObject({ namespace: literal(key.namespace), type: literal(key.type), source: definition.schema }),
     compile: ({ source }, context) => {
-      const codeBlockTokens = resolveCodeBlockTokens(context.theme, options.graphThemeStyles);
+      const codeBlockTokens = resolveCodeBlockTokens(context.theme, options.graphThemeDefinitions);
       const surface = resolveCodeBlockSurface(source);
 
       try {

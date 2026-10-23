@@ -27,7 +27,7 @@ const makeRibbonDefinition: CoreDependencyProvider['makeDefinition'] = datasets 
  * @description 包含 ribbon 根依赖与内置定义，调用方可追加宽度函数和端帽；不自动注入编译器
  * @param options 扩展注册项，默认 {}；profiles 与 caps 默认 []，仍保留全部内置定义
  * @returns 包含 ribbon 根依赖及对应 provider 的贡献项，交给 resolveCoreProviderDependencies 装配
- * @throws RetikzExtensionError：注册名为空或全空白、不同宽度函数定义同名，或端帽注册名重复时
+ * @throws RetikzExtensionError：不同宽度函数定义同名，或端帽注册名重复时
  */
 export const createRibbonProviderContribution = (
   options: Readonly<{

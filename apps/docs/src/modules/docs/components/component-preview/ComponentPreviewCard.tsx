@@ -31,7 +31,7 @@ import type {
   PreviewControlValues,
   PreviewFigureType,
   PreviewThemeMode,
-  PreviewThemeStyleSelection,
+  PreviewThemeSelection,
   SizeKey,
 } from './types';
 import { buildAskAiPrompt, findPrecedingHeading, resolvePreviewCodeVisible } from './utils';
@@ -88,13 +88,13 @@ export type ComponentPreviewCardProps = {
   controlSlots?: Array<PreviewControlSlot>;
   /** 分别针对弹窗 runtime 求值的全屏 header 动作定义。 */
   dialogActions?: Array<PreviewActionSlot>;
-  /** 是否显示单预览 ThemeStyle 切换器。 */
+  /** 是否显示单预览 Theme 切换器。 */
   enableThemeSwitch?: boolean;
-  /** 当前预览实际生效的 ThemeStyle。 */
-  /** 当前单预览 ThemeStyle 选择。 */
-  themeStyleSelection?: PreviewThemeStyleSelection;
-  /** 更新当前单预览 ThemeStyle 选择。 */
-  onThemeStyleChange?: (themeStyle: PreviewThemeStyleSelection) => void;
+  /** 当前预览实际生效的 Theme。 */
+  /** 当前单预览 Theme 选择。 */
+  themeNameSelection?: PreviewThemeSelection;
+  /** 更新当前单预览 Theme 选择。 */
+  onThemeChange?: (themeName: PreviewThemeSelection) => void;
   /** 紧跟在卡片正下方的读图或操作说明。 */
   caption?: ReactNode;
 };
@@ -128,8 +128,8 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     controlSlots,
     dialogActions,
     enableThemeSwitch = false,
-    themeStyleSelection = 'inherit',
-    onThemeStyleChange,
+    themeNameSelection = 'inherit',
+    onThemeChange,
     caption,
   } = props;
 
@@ -274,8 +274,8 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
             themeMode={themeMode}
             onThemeModeChange={setThemeMode}
             enableThemeSwitch={enableThemeSwitch}
-            themeStyleSelection={themeStyleSelection}
-            onThemeStyleChange={onThemeStyleChange}
+            themeNameSelection={themeNameSelection}
+            onThemeChange={onThemeChange}
             className={cn(sizeClass[previewState.size], previewClassName)}
           />
         ) : (
@@ -293,8 +293,8 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
             onControlPanelOpenChange={setLocalControlPanelOpen}
             workspaceClassName={sizeClass[previewState.size]}
             enableThemeSwitch={enableThemeSwitch}
-            themeStyleSelection={themeStyleSelection}
-            onThemeStyleChange={onThemeStyleChange}
+            themeNameSelection={themeNameSelection}
+            onThemeChange={onThemeChange}
             previewState={previewState}
             Component={Component}
             responsive={responsive}
@@ -345,8 +345,8 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
             controlSlots={controlSlots}
             dialogActions={dialogActions}
             enableThemeSwitch={enableThemeSwitch}
-            themeStyleSelection={themeStyleSelection}
-            onThemeStyleChange={onThemeStyleChange}
+            themeNameSelection={themeNameSelection}
+            onThemeChange={onThemeChange}
             showAskAi={showAskAi}
             onClose={() => setIsMaximized(false)}
           />

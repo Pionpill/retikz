@@ -1,7 +1,7 @@
-import type { MarkerPrimitive } from '@retikz/core';
+import type { ScenePrimitive } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { buildMarkerPrim } from '../../../src/svg/builders/marker-prim';
+import { buildPrim } from '../../../src/svg/builders/prim';
 
 /**
  * marker group 的 transforms 必须落到 SVG `<g>` 的 transform 属性——锁定 SVG 与 Canvas 后端
@@ -9,20 +9,20 @@ import { buildMarkerPrim } from '../../../src/svg/builders/marker-prim';
  */
 describe('marker group transform', () => {
   it('group 的 transforms 落到 <g> 的 transform 属性', () => {
-    const group: MarkerPrimitive = {
+    const group: ScenePrimitive = {
       type: 'group',
       transforms: [{ kind: 'translate', x: 3, y: 4 }],
       children: [],
     };
-    const node = buildMarkerPrim(group);
+    const node = buildPrim(group);
 
     expect(node.tag).toBe('g');
     expect(node.attrs.transform).toBe('translate(3 4)');
   });
 
   it('无 transforms 时不写 transform 属性', () => {
-    const group: MarkerPrimitive = { type: 'group', children: [] };
-    const node = buildMarkerPrim(group);
+    const group: ScenePrimitive = { type: 'group', children: [] };
+    const node = buildPrim(group);
 
     expect(node.attrs.transform).toBeUndefined();
   });

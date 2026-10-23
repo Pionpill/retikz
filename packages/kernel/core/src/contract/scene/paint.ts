@@ -1,6 +1,5 @@
 import type { IRPaint } from '../../schemas';
-import type { ClipResource } from './clip';
-import type { MarkerPrimitive } from './marker';
+import type { ScenePrimitive } from './scene';
 
 /**
  * paint 属性取值词汇表（可用于 fill / stroke，不绑定单一属性）
@@ -36,8 +35,8 @@ export type ResolvedPatternTile = {
    * @default 0
    */
   rotation?: number;
-  /** 局部 tile 坐标系下的 motif 几何（`MarkerPrimitive` 窄子集，纯数据） */
-  motif: Array<MarkerPrimitive>;
+  /** 局部 tile 坐标系下的基础场景图元，使用所属 Scene 的资源 */
+  motif: Array<ScenePrimitive>;
 };
 
 /**
@@ -54,9 +53,3 @@ export type PaintResource = {
   /** 已解析 pattern tile；仅 pattern 资源有，gradient / image 资源缺省 */
   tile?: ResolvedPatternTile;
 };
-
-/**
- * Scene 级渲染无关资源
- * @description 通过 `kind` 区分 paint 与 clip，id 在各资源类型间保持稳定且不冲突
- */
-export type SceneResource = PaintResource | ClipResource;

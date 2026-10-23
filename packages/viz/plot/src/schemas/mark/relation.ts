@@ -6,7 +6,7 @@ import {
   PathGeometrySchema,
   PathStrokeSchema,
   PositionSchema,
-  StepLabelSchema,
+  PathLabelSchema,
 } from '@retikz/core';
 import { CenterlineRibbonPathOptionsSchema, TaperRibbonWidthSchema } from '@retikz/extension';
 import type { ValueOf } from '@retikz/foundation';
@@ -88,8 +88,8 @@ export type RelationOrthogonalLabelStep = ValueOf<typeof RelationOrthogonalLabel
 export const RelationTransformSchema = MarkTransformSchema;
 
 /** 校验关系路径步骤标签的固定配置 */
-export const RelationStepLabelSchema = StepLabelSchema.extend({
-  text: StepLabelSchema.shape.text.optional(),
+export const RelationStepLabelSchema = PathLabelSchema.extend({
+  text: PathLabelSchema.shape.text.optional(),
 }).describe('Fixed step label properties; field text is supplied by the corresponding encoding');
 
 /** 校验仅供普通路径关系使用的 Core Path 选项 */
@@ -102,7 +102,7 @@ export const RelationPathSpecificOptionsSchema = strictObject({
   })
     .partial()
     .describe('Path-only dash, fill rule, cap and join overrides'),
-  roundedCorners: PathGeometrySchema.shape.roundedCorners,
+  cornerRadius: PathGeometrySchema.shape.cornerRadius,
   rotate: PathGeometrySchema.shape.rotate,
   scale: PathGeometrySchema.shape.scale,
   marks: PathDecorationSchema.shape.marks,
@@ -153,23 +153,13 @@ const RelationOrthogonalRoutingSchema = strictObject({
   kind: literal(RelationRoutingKind.Orthogonal).describe(
     'Discriminator: connect each segment with right-angle orthogonal line steps',
   ),
-  via: zodEnum(RelationOrthogonalRoutingVia)
-    .optional()
-    .describe('Orthogonal direction: -| first horizontal then vertical; |- first vertical then horizontal'),
+  via: zodEnum(RelationOrthogonalRoutingVia, { error: 'orthogonal relation routing requires via' }).describe(
+    'Orthogonal direction: -| first horizontal then vertical; |- first vertical then horizontal',
+  ),
   labelStep: zodEnum(RelationOrthogonalLabelStep)
     .optional()
     .describe('Which generated drawable step receives the shorthand relation label; default main'),
-})
-  .superRefine((routing, ctx) => {
-    if (routing.via === undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['via'],
-        message: 'orthogonal relation routing requires via',
-      });
-    }
-  })
-  .describe('Orthogonal relation routing strategy');
+}).describe('Orthogonal relation routing strategy');
 
 /** 校验端点引用解析后生成 Core 步骤的关系路由策略 */
 export const RelationRoutingSchema = discriminatedUnion('kind', [

@@ -159,7 +159,7 @@ const materializeRelation = (
                   { type: 'step' as const, kind: 'line' as const, to: output.target },
                 ]),
     ],
-    ...('cornerRadius' in routing && routing.cornerRadius > 0 ? { roundedCorners: routing.cornerRadius } : {}),
+    ...('cornerRadius' in routing && routing.cornerRadius > 0 ? { cornerRadius: routing.cornerRadius } : {}),
     ...(label === undefined ? {} : { labels: [label] }),
   };
 };

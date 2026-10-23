@@ -1,15 +1,9 @@
 import type { IRScene } from '@retikz/core';
-import { CompositeBaseSchema, defineComposite, defineThemeStyle, NodeOwnerOutputSchema } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineTheme } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { literal, strictObject, string, ZodError } from 'zod';
+import { literal, strictObject, string } from 'zod';
 
-import {
-  compileInspectionToScene,
-  createInspectorRegistry,
-  defineInspector,
-  RetikzInspectError,
-  RetikzInspectErrorCode,
-} from '../../src';
+import { compileInspectionToScene, createInspectorRegistry, defineInspector, RetikzInspectError } from '../../src';
 
 const key = { namespace: 'test', type: 'artifact' };
 
@@ -41,7 +35,6 @@ describe('Inspection compile driver', () => {
     const inspector = defineInspector({
       ...key,
       owner,
-      subjectSchema: strictObject({ label: string() }),
       optionsSchema: strictObject({ label: string().transform(label => `${label}!`) }),
       resolveOptions: options => options,
       inspect: (_subject, context) => [{ type: 'node', position: [0, 0], text: context.options.label }],
@@ -61,7 +54,6 @@ describe('Inspection compile driver', () => {
     const inspector = defineInspector({
       ...key,
       owner,
-      subjectSchema: strictObject({ label: string() }),
       optionsSchema: strictObject({}),
       resolveOptions: () => {
         throw cause;
@@ -96,7 +88,7 @@ describe('Inspection compile driver', () => {
           };
         }
       | undefined;
-    const themeStyle = defineThemeStyle({
+    const themeName = defineTheme({
       name: 'inspect-brand',
       resolve: () => ({
         semantic: { error: '#error', success: '#success', warning: '#warning', guide: '#guide' },
@@ -107,7 +99,6 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: strictObject({ label: literal('settled') }),
         optionsSchema: strictObject({}),
         resolveOptions: options => options,
         inspect: (_subject, context) => {
@@ -118,8 +109,8 @@ describe('Inspection compile driver', () => {
     ]);
 
     compileInspectionToScene(
-      { ...ir, theme: { style: themeStyle.name } },
-      { registry, selection, compileOptions: { composites: [composite], themeStyles: [themeStyle] } },
+      { ...ir, theme: { name: themeName.name } },
+      { registry, selection, compileOptions: { composites: [composite], themeDefinitions: [themeName] } },
     );
 
     expect(appearance).toEqual({
@@ -135,7 +126,6 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: strictObject({ label: literal('settled') }),
         optionsSchema: strictObject({}),
         resolveOptions: options => options,
         inspect: (_subject, context) => [
@@ -170,7 +160,6 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: strictObject({ label: string() }),
         optionsSchema: strictObject({}),
         resolveOptions: options => options,
         inspect: (_subject, context) => {
@@ -210,7 +199,6 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: strictObject({ label: string() }),
         optionsSchema: strictObject({}),
         resolveOptions: options => options,
         inspect: () => ({ type: 'node', position: [0, 0], text: 'captured' }),
@@ -227,32 +215,20 @@ describe('Inspection compile driver', () => {
     expect(result.inspection?.entries).toHaveLength(1);
   });
 
-  it('validates all subjects before invoking any Inspector callback', () => {
-    let callbacks = 0;
+  it('passes the typed owner output directly to the Inspector callback', () => {
+    const subjects: Array<unknown> = [];
     const registry = createInspectorRegistry([
-      defineInspector({
+      defineInspector<{ label: string }>({
         ...key,
         owner,
-        subjectSchema: strictObject({ label: literal('different') }),
-        optionsSchema: strictObject({}),
-        resolveOptions: options => options,
-        inspect: () => {
-          callbacks += 1;
+        inspect: subject => {
+          subjects.push(subject);
           return [];
         },
       }),
     ]);
-
-    expect(() =>
-      compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } }),
-    ).toThrow(RetikzInspectError);
-    expect(callbacks).toBe(0);
-
-    try {
-      compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } });
-    } catch (error) {
-      expect((error as RetikzInspectError).details.origin).toMatchObject({ stage: 'subject', inspector: key });
-    }
+    compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } });
+    expect(subjects).toEqual([{ label: 'settled' }]);
   });
 
   it('rejects a cross-primary fragment reference with a fragment origin', () => {
@@ -260,7 +236,6 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: strictObject({ label: string() }),
         optionsSchema: strictObject({}),
         resolveOptions: options => options,
         inspect: () => ({
@@ -287,35 +262,6 @@ describe('Inspection compile driver', () => {
     }
   });
 
-  it('reports invalid callback data from the Core Child owner schema', () => {
-    const registry = createInspectorRegistry([
-      defineInspector({
-        ...key,
-        owner,
-        subjectSchema: strictObject({ label: string() }),
-        optionsSchema: strictObject({}),
-        resolveOptions: options => options,
-        inspect: () =>
-          ({
-            type: 'node',
-            position: [0, 0],
-            text: 'invalid',
-            extension: () => 'not JSON',
-          }) as unknown as { type: 'node'; position: [number, number]; text: string },
-      }),
-    ]);
-
-    try {
-      compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } });
-      throw new Error('expected compile to fail');
-    } catch (error) {
-      expect(error).toBeInstanceOf(RetikzInspectError);
-      expect((error as RetikzInspectError).code).toBe(RetikzInspectErrorCode.CompileFailed);
-      expect((error as RetikzInspectError).cause).toBeInstanceOf(ZodError);
-      expect((error as RetikzInspectError).details.origin).toMatchObject({ stage: 'output', outputIndex: 0 });
-    }
-  });
-
   it('places mixed local and scene fragments independently and preserves context warnings', () => {
     const nodeScene: IRScene = {
       version: 1,
@@ -332,7 +278,6 @@ describe('Inspection compile driver', () => {
     const nodeInspector = defineInspector({
       ...nodeKey,
       owner: { kind: 'node' as const },
-      subjectSchema: NodeOwnerOutputSchema,
       optionsSchema: strictObject({}),
       resolveOptions: options => options,
       inspect: (_subject, context) => {

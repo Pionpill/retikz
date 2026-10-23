@@ -143,7 +143,7 @@ Core built-in child 复用既有真实 layout / geometry / provider 路径，不
 
 - Plain-text line 的 x 轴 `natural` 使用自然排版宽度，`minimum` 使用相同 injected `measureText` 与现有 tokenization 得到最小可断单元宽度。硬换行保持 authored line boundary：natural width 取各行自然宽度最大值，minimum width 取所有行最小不可断单元的最大值。
 - Plain text 收到 x 轴 `range` / `exact` 时，以 proposal 针对 allocation box 的口径扣除 margin、padding 与既有 box 开销，再在每条硬换行边界内复用现有文本换行路径；显式 `maxTextWidth` 仍取更严格预算。
-- Mixed inline runs 与 TeX run 当前没有合法的 run-level line breaking contract。本 ADR 把每条 mixed / TeX authored line 视为 atomic content：x minimum 等于 natural，range / exact 只求值 `slotSize`，不重排、不缩放该行，`allocationBounds` 保留真实自然占用并可溢出 slot。多条 authored line 仍按现有 vertical stack 形成总高度。
+- Mixed inline segments 与 TeX segment 当前没有合法的 segment-level line breaking contract。本 ADR 把每条 mixed / TeX authored line 视为 atomic content：x minimum 等于 natural，range / exact 只求值 `slotSize`，不重排、不缩放该行，`allocationBounds` 保留真实自然占用并可溢出 slot。多条 authored line 仍按现有 vertical stack 形成总高度。
 - 文本 y 轴 `minimum` / `natural` 都取应用完整 x 轴 proposal 后的实际排版高度。当前没有独立纵向重排能力，因此二者可以相等。
 - Path、Coordinate、普通 Scope 与其它不能重排的固定 geometry 不缩放；其 allocation 继续来自真实 Core 几何。
 - 不支持某轴重排的 child 可以在该轴返回相同的 minimum / natural contribution。
@@ -338,6 +338,6 @@ React 与 Vanilla 继续通过现有 compile options 注入完全相同的 Compo
 ## 遗留风险与后续
 
 - 本合同只冻结同步、compile-local probe / replay；不支持异步测量、跨 compile cache 或 incremental layout solver
-- mixed / TeX 当前保持原子 contribution；完整 run-level intrinsic sizing、CSS writing mode、百分比与 aspect-ratio transfer 不在本 ADR 范围
+- mixed / TeX 当前保持原子 contribution；完整 segment-level intrinsic sizing、CSS writing mode、百分比与 aspect-ratio transfer 不在本 ADR 范围
 - 非轴保持变换后的 alignment guide 被省略；需要二维直线、点或区域 guide 时应另立公开空间引用能力
 - Layout 继续拥有 Box / Flex / Grid / Overlay slot 规则、baseline policy、overflow 与 clip；Core 不拥有这些 solver 语义

@@ -40,7 +40,7 @@ description: 配置 Flow 曲线路由、组合分组与固定布局，并统一�
   caption="切换自动角度与手动角度，移动障碍观察有限候选选择；移动标签、切换倾斜和中断，观察同一曲线上的标签布局。"
 />
 
-紧凑 `label: '继续'` 沿用默认标签策略。完整对象 `label: { text: '继续', position: 0.5, sloped: true }` 开放 Core PathLabel 的全部配置：`position`、`side`、`sloped`、`placement`、`distance`、`interrupt`、`gap`、`textColor`、`font` 和 `opacity`。`position` 使用曲线参数而非等弧长；`sloped` 跟随切线，`interrupt` 与 `gap` 控制标签处的描边间隙。完整对象即使只填 text，也使用完整标签默认。字体字段逐项继承，标签自身外观优先于关系外观。预留盒帮助布局评分，最终文字和节点边界裁剪仍由 Core 绘制。
+紧凑 `label: '继续'` 沿用默认标签策略。完整对象 `label: { text: '继续', position: 0.5, sloped: true }` 开放 Core PathLabel 的全部配置：`position`、`side`、`sloped`、`distance`、`interrupt`、`gap`、`textColor`、`font` 和 `opacity`。`position` 使用曲线参数而非等弧长；`sloped` 跟随切线，`interrupt` 与 `gap` 控制标签处的描边间隙。完整对象即使只填 text，也使用完整标签默认。字体字段逐项继承，标签自身外观优先于关系外观。预留盒帮助布局评分，最终文字和节点边界裁剪仍由 Core 绘制。
 
 ### 贝塞尔曲线
 
@@ -245,7 +245,7 @@ Flow、Graph 与 Diagram 的外观配置可以改变可见样式，而不改动�
   caption="调整任一分区后，同类对象会一起更新；节点和连线的结构与相对位置保持不变。"
 />
 
-`theme: { style, mode }` 选择主题环境；`flowThemeStyles` / `diagramThemeStyles` 注入对应 Definition。Flow 根级的 `graphRules` 为下沉的 Entity 与 Relation 设置条件外观；Group 的同名字段可为其后代追加局部规则，不改变 routing 或包含关系。`defaultFlow` 与 `defaultDiagram` 是显式默认值，使用正式 Source 的相同路径。Entity 与 Relation 的 `group` 直接复用 Graph：同一 Flow 根中相同 group 共享从分类色板正序自动取得的颜色，未分组元素保持原有外观。Entity / Relation 外观的覆盖顺序为 Graph Theme、所属 Graph 上下文的默认值与规则、`defaultFlow`、实例字段。
+`theme: { name, mode }` 选择主题环境；`flowThemeDefinitions` / `diagramThemeDefinitions` 注入对应 Definition。Flow 根级的 `graphRules` 为下沉的 Entity 与 Relation 设置条件外观；Group 的同名字段可为其后代追加局部规则，不改变 routing 或包含关系。`defaultFlow` 与 `defaultDiagram` 是显式默认值，使用正式 Source 的相同路径。Entity 与 Relation 的 `group` 直接复用 Graph：同一 Flow 根中相同 group 共享从分类色板正序自动取得的颜色，未分组元素保持原有外观。Entity / Relation 外观的覆盖顺序为 Graph Theme、所属 Graph 上下文的默认值与规则、`defaultFlow`、实例字段。
 
 Flow defaults 包含 `layout.nodeGap/rankGap`、`entity.style/layout`、Group 的 Surface 外观与 caption 排列和文字格式，以及 Relation 的路径、marker 和标签格式。`caption.title` 和 `caption.description` 的默认格式只应用于已声明的文本项，不会创建内容。它不包含 identity、children、自动布局 direction、routing 或 overflow，也不会创建 Group 或 marker。空对象与 undefined 不覆盖已有值，0 和 false 保留；Node 字体整体替换，Relation 的 `labelFont` 按字段合并。
 

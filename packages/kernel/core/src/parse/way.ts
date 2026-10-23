@@ -22,7 +22,6 @@ import type {
   IRTarget,
 } from '../schemas';
 import { AxisLineTargetSchema, FoldStepVia } from '../schemas';
-import type { Side } from '../shared';
 import { parseSideAlias } from './anchor-alias';
 import { parseTargetSugar } from './target-sugar';
 
@@ -130,12 +129,7 @@ export type WayEllipseOp = {
 };
 
 /** 边标注 parser grammar：字符串=`{text:s}`，对象接收可写入 IR 的 canonical side */
-export type WayLabel =
-  | (Omit<IRStepLabel, 'side'> & {
-      /** 标签相对路径采样点的放置方位 */
-      side?: (typeof Side)[keyof typeof Side];
-    })
-  | string;
+export type WayLabel = IRStepLabel | string;
 
 /**
  * 边标注 prefix 算子（infix），修饰下一段

@@ -109,27 +109,34 @@ const ChainBaseSchema = CompositeBaseSchema.extend({
   defaultCell: CellDefaultSchema.optional(),
 });
 
+/** 校验显式链单元入口 */
+const ChainItemsSchema = ChainBaseSchema.extend({
+  items: array(ChainItemSchema).describe('Explicit sequential cells and nested parallel branches.'),
+  data: never().optional().describe('Unavailable with this input form.'),
+  skeleton: never().optional().describe('Unavailable with this input form.'),
+  dataExpand: never().optional().describe('Unavailable with this input form.'),
+});
+
+/** 校验 JSON 数据链入口 */
+const ChainDataSchema = ChainBaseSchema.extend({
+  data: array(JsonValueSchema).describe('JSON values expanded into sequential cells.'),
+  items: never().optional().describe('Unavailable with this input form.'),
+  skeleton: never().optional().describe('Unavailable with this input form.'),
+  dataExpand: DataExpandSchema.optional().describe('Nested data expansion policy for the data input.'),
+});
+
+/** 校验骨架链入口 */
+const ChainSkeletonInputSchema = ChainBaseSchema.extend({
+  skeleton: ChainSkeletonSchema.describe('Schematic chain structure without data content.'),
+  items: never().optional().describe('Unavailable with this input form.'),
+  data: never().optional().describe('Unavailable with this input form.'),
+  dataExpand: never().optional().describe('Unavailable with this input form.'),
+});
+
 /** 三入口与递归结构的 Source 真源 */
-export const ChainSchema = union([
-  ChainBaseSchema.extend({
-    items: array(ChainItemSchema).describe('Explicit sequential cells and nested parallel branches.'),
-    data: never().optional().describe('Unavailable with this input form.'),
-    skeleton: never().optional().describe('Unavailable with this input form.'),
-    dataExpand: never().optional().describe('Unavailable with this input form.'),
-  }),
-  ChainBaseSchema.extend({
-    data: array(JsonValueSchema).describe('JSON values expanded into sequential cells.'),
-    items: never().optional().describe('Unavailable with this input form.'),
-    skeleton: never().optional().describe('Unavailable with this input form.'),
-    dataExpand: DataExpandSchema.optional().describe('Nested data expansion policy for the data input.'),
-  }),
-  ChainBaseSchema.extend({
-    skeleton: ChainSkeletonSchema.describe('Schematic chain structure without data content.'),
-    items: never().optional().describe('Unavailable with this input form.'),
-    data: never().optional().describe('Unavailable with this input form.'),
-    dataExpand: never().optional().describe('Unavailable with this input form.'),
-  }),
-]).superRefine((value, ctx) => {
+export const ChainSchema: ZodUnion<
+  readonly [typeof ChainItemsSchema, typeof ChainDataSchema, typeof ChainSkeletonInputSchema]
+> = union([ChainItemsSchema, ChainDataSchema, ChainSkeletonInputSchema]).superRefine((value, ctx) => {
   const fail = (path: Array<string | number>, message: string) => ctx.addIssue({ code: 'custom', path, message });
 
   const visit = (

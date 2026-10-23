@@ -77,7 +77,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 - `position` defaults to `'top'` and accepts `'top'`, `'top-right'`, `'right'`, `'bottom-right'`, `'bottom'`, `'bottom-left'`, `'left'`, and `'top-left'`
 - It also accepts the center `'center'`, an angle such as `30`, or a boundary fraction such as `{ boundary: 'right', fraction: 0.25 }`; centered labels have no collision avoidance
 - `placement` defaults to `'outside'`; use `'inside'` to place the label inside the border
-- `font` / `textColor` use explicit label values first, then `Scope.defaults.label`, and finally inherit missing values from the node
+- `font` / `textColor` use explicit label values first, then `Scope.defaults.node.label`, and finally inherit missing values from the node
 - `opacity` is 0..1 and multiplies the node opacity
 
 <ComponentPreview
@@ -128,13 +128,17 @@ import { Node } from '@retikz/react';
 
 `label.rotate` spins the label text around **its own center**: `'radial'` follows the direction defined by `position`, using the selected side's outward normal for a boundary-fraction position; `'tangent'` is its tangent (radial + 90°), and a number is an explicit angle in degrees. `placement: 'inside'` reverses only the label offset, not this orientation. `keepUpright` flips it 180° when it would otherwise read upside-down. Rotation changes the visual box projection along the placement direction, so the compiler adjusts the label center to preserve the same `distance` gap.
 
-`label.pin` adds a **leader line** from the node border to the label: `pin: true` is a default thin solid line (inherits the label color); `pin: { stroke, strokeWidth, dashPattern, dashOffset }` customizes it; omitted / `false` = no leader. Its endpoint is the exact intersection of the placement ray and the rotated visual box, with no hidden padding; the preceding box geometry still owns label placement.
+`label.pin` adds a **leader line** from the node border to the label: `pin: true` is a default thin solid line (inherits the label color); `pin: { stroke, strokeWidth, dashPattern, dashOffset, lineCap, lineJoin, opacity }` customizes it; omitted / `false` = no leader. Its endpoint is the exact intersection of the placement ray and the rotated visual box, with no hidden padding; the preceding box geometry still owns label placement.
+
+Leader lines share the same width and dash constraints as Path: `strokeWidth` is nonnegative, defaults to `1`, and hides the line when set to `0`; `dashPattern` is a nonempty array of nonnegative lengths; `dashOffset` accepts negative values.
 
 <ComponentPreview
   files={['node-label-rotate-pin', 'node-label-rotate-pin.preview.tsx']}
   size="lg"
   defaultSourceFile="node-label-rotate-pin.preview.tsx"
 />
+
+`pin.stroke` accepts a color, gradient, or pattern. `lineCap` and `lineJoin` set the cap and join styles. Explicit `pin.opacity` controls the leader independently; when omitted, it follows the effective label opacity.
 
 <Comparison target="tikz" title="Node Label Syntax">
 
@@ -215,7 +219,7 @@ These members control label attachment, placement, and visual style. See the [AP
   description: `Leader line for outside labels only:
 
 - \`true\`: uses the default thin solid line
-- \`{ stroke?, strokeWidth?, dashPattern?, dashOffset? }\`: customizes the leader line; \`strokeWidth\` defaults to \`1\`, while \`dashPattern\` and \`dashOffset\` control dashes`,
+- \`{ stroke?, strokeWidth?, dashPattern?, dashOffset?, lineCap?, lineJoin?, opacity? }\`: customizes the leader line; \`strokeWidth\` defaults to \`1\`, while \`dashPattern\` and \`dashOffset\` control dashes`,
   },
   ]}
   />
@@ -224,7 +228,11 @@ These members control label attachment, placement, and visual style. See the [AP
 
 <LinkedSections
   items={[
-    { title: 'Node text', description: 'Write multi-line content and mixed runs', url: '/kernel/components/node/text' },
+    {
+      title: 'Node text',
+      description: 'Write multi-line content and mixed segments',
+      url: '/kernel/components/node/text',
+    },
     {
       title: 'Implementation',
       description: 'Understand sizing, text, and reference timing',

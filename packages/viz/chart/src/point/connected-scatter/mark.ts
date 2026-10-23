@@ -1,6 +1,6 @@
 import type { JsonObject } from '@retikz/foundation';
-import type { IRPlotMark } from '@retikz/plot';
-import { PathMarkSchema, BuiltinPlotMark } from '@retikz/plot';
+import type { IRPlotMark, IRPlotPathMark } from '@retikz/plot';
+import { BuiltinPlotMark } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
 import { defineChartMark } from '../../_chart/contract';
@@ -57,13 +57,13 @@ export const resolveConnectedScatterMarkGroup = (
     ...(properties.point ?? {}),
   };
   const separateColors = properties.colorMode === 'mark';
-  const pathBindings: JsonObject = {
+  const pathBindings: IRPlotPathMark['encodings'] = {
     position: { x: { field: x }, y: { field: y } },
     order,
     ...(series === undefined ? {} : { series: series.field }),
   };
   const pathProperties: JsonObject = { closed: false, ...pathPropertiesOf(properties) };
-  const path: JsonObject = {
+  const path: IRPlotMark = {
     type: BuiltinPlotMark.Path,
     encodings: pathBindings,
     properties: pathProperties,
@@ -87,10 +87,7 @@ export const resolveConnectedScatterMarkGroup = (
 
   const point = resolvePointMark(pointEncodings, pointProperties);
 
-  return [
-    PathMarkSchema.parse(path),
-    separateColors && series === undefined ? { ...point, defaultColorIndex: 0 } : point,
-  ];
+  return [path, separateColors && series === undefined ? { ...point, defaultColorIndex: 0 } : point];
 };
 
 const mergedPropertiesOf = (

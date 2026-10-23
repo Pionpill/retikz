@@ -1,23 +1,20 @@
-import { ZodError } from 'zod';
-
 import type {
   CompositeCompileChild,
   CompositeBoundChild,
   CompositeCompileScopeProps,
   CompositeReplayWrapper,
-  Transform,
+  SpatialHandleDeclaration,
 } from '../../contract';
 import { validateSpatialHandleDeclarations } from '../../contract';
 import type { CompositeRuntimeInputScope } from '../../contract/composite';
 import { createCompositeContractError } from '../../resolve/diagnostics';
 import type { IRChild } from '../../schemas';
-import { ScopePropsSchema } from '../../schemas';
 import { cloneAndFreezeJson } from '../../shared/json';
 import { withProviderOutputValidationBoundary } from '../scene-primitive';
 import type { CompositeCompileOwner, CompositeCompileSession, CompositeRuntimeOutputChild } from './types';
 
 /** 把通用 declaration validator 的失败提升为带 provider owner 的 contract error */
-export const validateCompositeSpatialHandles = (owner: string, value: unknown) => {
+export const validateCompositeSpatialHandles = (owner: string, value: ReadonlyArray<SpatialHandleDeclaration>) => {
   try {
     return validateSpatialHandleDeclarations(owner, value);
   } catch (cause) {
@@ -38,17 +35,6 @@ const containsGeneratedSpatialScope = (children: ReadonlyArray<IRChild>): boolea
     if (hasPosition || (child.transforms?.length ?? 0) > 0) return true;
     return containsGeneratedSpatialScope(child.children);
   });
-
-/** 从 Scope schema 失败中提取可读的 Theme 字段路径 */
-const readThemeIssuePath = (error: unknown): string | undefined => {
-  if (!(error instanceof ZodError)) return undefined;
-
-  const issue = error.issues[0];
-  const segments = issue.path.map(String);
-  if (issue.code === 'unrecognized_keys') segments.push(issue.keys[0]);
-
-  return segments.join('.');
-};
 
 /** 脱离普通 callback child，并只校验主链 dispatch 所需的顶层判别结构 */
 const snapshotCompositeCallbackChild = (owner: string, value: unknown, location: string): IRChild => {
@@ -82,7 +68,11 @@ export const snapshotCompositeLayoutChild = (owner: string, value: unknown, inde
   snapshotCompositeCallbackChild(owner, value, `layoutChild input at probe ${index}`);
 
 /** 校验直接声明的空间区域，带变换的子 Scope 应在自身局部坐标声明 */
-export const validateCompositeSpatialOutput = (owner: string, value: unknown, children: ReadonlyArray<IRChild>) => {
+export const validateCompositeSpatialOutput = (
+  owner: string,
+  value: ReadonlyArray<SpatialHandleDeclaration> | undefined,
+  children: ReadonlyArray<IRChild>,
+) => {
   const spatialHandles = value === undefined ? undefined : validateCompositeSpatialHandles(owner, value);
   if ((spatialHandles?.length ?? 0) > 0 && containsGeneratedSpatialScope(children)) {
     throw createCompositeContractError(
@@ -92,125 +82,14 @@ export const validateCompositeSpatialOutput = (owner: string, value: unknown, ch
   return spatialHandles;
 };
 
-/** 以普通 Scope props schema 校验并脱离完整 authored Scope props */
-const cloneScopeProps = (props: unknown, owner: CompositeCompileOwner): CompositeCompileScopeProps => {
-  if (props === null || typeof props !== 'object' || Array.isArray(props)) {
-    throw createCompositeContractError(`${owner.label} received invalid runtime Scope props.`);
-  }
-
-  let parsed: ReturnType<typeof ScopePropsSchema.parse>;
-
-  try {
-    parsed = ScopePropsSchema.parse(props);
-  } catch (error) {
-    const raw = props as Record<string, unknown>;
-    const themeIssuePath = raw.theme === undefined ? undefined : readThemeIssuePath(error);
-    throw createCompositeContractError(
-      themeIssuePath === undefined
-        ? `${owner.label} received invalid or unsupported runtime Scope props.`
-        : `${owner.label} received invalid runtime Scope ${themeIssuePath}.`,
-      { cause: error },
-    );
-  }
-
-  return parsed;
-};
-
-/** 校验 replay wrapper 的已 lowering Scene transform 并复制为 detached value */
-const cloneReplayTransform = (value: unknown, owner: CompositeCompileOwner, index: number): Transform => {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-    throw createCompositeContractError(
-      `${owner.label} received an invalid replay wrapper transform at index ${index}.`,
-    );
-  }
-
-  const fail = (): never => {
-    throw createCompositeContractError(
-      `${owner.label} received an invalid or non-finite replay wrapper transform at index ${index}.`,
-    );
-  };
-
-  const assertFinite: (number: unknown) => asserts number is number = number => {
-    if (typeof number !== 'number' || !Number.isFinite(number)) fail();
-  };
-
-  const input = value as Record<string, unknown>;
-  const keys = Object.keys(input);
-
-  switch (input.kind) {
-    case 'translate': {
-      const { x, y } = input;
-      if (keys.some(key => !['kind', 'x', 'y'].includes(key))) fail();
-      assertFinite(x);
-      assertFinite(y);
-
-      return { kind: 'translate', x, y };
-    }
-    case 'scale': {
-      const { x, y } = input;
-      if (keys.some(key => !['kind', 'x', 'y'].includes(key))) fail();
-      assertFinite(x);
-      if (y !== undefined) assertFinite(y);
-
-      return { kind: 'scale', x, ...(y === undefined ? {} : { y }) };
-    }
-    case 'rotate': {
-      const { degrees, cx, cy } = input;
-      if (keys.some(key => !['kind', 'degrees', 'cx', 'cy'].includes(key))) fail();
-      assertFinite(degrees);
-      if (cx !== undefined) assertFinite(cx);
-      if (cy !== undefined) assertFinite(cy);
-
-      return {
-        kind: 'rotate',
-        degrees,
-        ...(cx === undefined ? {} : { cx }),
-        ...(cy === undefined ? {} : { cy }),
-      };
-    }
-    default:
-      return fail();
-  }
-};
-
-/** 校验并脱离 replay 专用的 transform / clip 外壳 */
-const cloneReplayWrapper = (wrapper: unknown, owner: CompositeCompileOwner): CompositeReplayWrapper | undefined => {
+/** 复制回放外壳，隔离 callback 后续修改 */
+const cloneReplayWrapper = (wrapper: CompositeReplayWrapper | undefined): CompositeReplayWrapper | undefined => {
   if (wrapper === undefined) return undefined;
-  if (wrapper === null || typeof wrapper !== 'object' || Array.isArray(wrapper)) {
-    throw createCompositeContractError(`${owner.label} received an invalid replay wrapper.`);
-  }
-
-  const raw = wrapper as Record<string, unknown>;
-  const unsupportedKeys = Object.keys(raw).filter(key => !['transforms', 'clip'].includes(key));
-  if (unsupportedKeys.length > 0) {
-    throw createCompositeContractError(
-      `${owner.label} received unsupported replay wrapper fields: ${unsupportedKeys.map(key => `'${key}'`).join(', ')}.`,
-    );
-  }
-
-  const rawTransforms = raw.transforms;
-  const rawClip = raw.clip;
-  if (rawTransforms !== undefined && !Array.isArray(rawTransforms)) {
-    throw createCompositeContractError(`${owner.label} received invalid replay wrapper transforms; expected an array.`);
-  }
-
-  let parsed: ReturnType<typeof ScopePropsSchema.parse>;
-
-  try {
-    parsed = ScopePropsSchema.parse(rawClip === undefined ? {} : { clip: rawClip });
-  } catch (error) {
-    throw createCompositeContractError(`${owner.label} received an invalid replay wrapper clip.`, { cause: error });
-  }
-
-  const transforms =
-    rawTransforms === undefined
-      ? undefined
-      : Array.from(rawTransforms, (transform, index) => cloneReplayTransform(transform, owner, index));
-
-  return {
+  const { transforms, clip } = wrapper;
+  return structuredClone({
     ...(transforms === undefined ? {} : { transforms }),
-    ...(parsed.clip === undefined ? {} : { clip: parsed.clip }),
-  };
+    ...(clip === undefined ? {} : { clip }),
+  });
 };
 
 /** 创建 callback-local replay output child */
@@ -236,7 +115,7 @@ export const createCompositeReplayChild = (
       );
     }
 
-    const clonedWrapper = cloneReplayWrapper(wrapper, owner);
+    const clonedWrapper = cloneReplayWrapper(wrapper);
     const child: CompositeRuntimeOutputChild = {
       kind: 'replay',
       replay: layoutResult.replay,
@@ -252,9 +131,9 @@ export const createCompositeReplayChild = (
 export const createCompositeScopeChild = (
   session: CompositeCompileSession,
   owner: CompositeCompileOwner,
-  props: unknown,
+  props: CompositeCompileScopeProps,
   children: unknown,
-  spatialHandles?: unknown,
+  spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>,
 ): CompositeCompileChild =>
   withProviderOutputValidationBoundary(owner.label, () => {
     if (!Array.isArray(children)) {
@@ -279,7 +158,7 @@ export const createCompositeScopeChild = (
     });
     const child: CompositeRuntimeOutputChild = {
       kind: 'scope',
-      props: cloneScopeProps(props, owner),
+      props: structuredClone(props),
       children: clonedChildren,
       ...(spatialHandles === undefined
         ? {}

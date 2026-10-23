@@ -41,7 +41,7 @@ export const createLayoutInspectPreviewSource = (
         adapters: synchronousInputAdaptersOf(authoring.adapters),
         compile: {
           measureText: browserMeasurer,
-          themeStyles: PreviewThemeDefinitionBundle.core,
+          themeDefinitions: PreviewThemeDefinitionBundle.core,
           composites: element.props.extensions?.composites,
         },
         compileDriver: createLayoutInspectionVanillaDriver({ selection }),

@@ -362,7 +362,7 @@ describe('Node layout alignment baselines', () => {
       {
         type: 'node',
         position: [4, 7.04],
-        text: [{ runs: [{ text: 'A' }, { tex: 'x' }] }, { runs: [{ text: 'B' }, { tex: 'x' }] }],
+        text: [{ segments: [{ text: 'A' }, { tex: 'x' }] }, { segments: [{ text: 'B' }, { tex: 'x' }] }],
         layout: { lineHeight: 20, padding: 0, margin: 0 },
       },
       text =>

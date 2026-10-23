@@ -323,7 +323,7 @@ describe('qualified spatial handle compile', () => {
         type: literal('invalidDiscardedCard'),
       }),
       compile: (_node, context) => {
-        void context.scope({}, [], [{ id: '', role: 'card', bounds: { x: 0, y: 0, width: 1, height: 1 } }]);
+        void context.scope({}, [], [{ id: 'body', role: 'card', bounds: { x: 0, y: 0, width: -1, height: 1 } }]);
         return { children: [] };
       },
     });
@@ -332,6 +332,6 @@ describe('qualified spatial handle compile', () => {
       compileToScene(sceneOf([{ namespace: 'third', type: 'invalidDiscardedCard' }]), {
         composites: [layoutCard],
       }),
-    ).toThrow(/id.*non-empty/i);
+    ).toThrow(/width.*nonnegative/i);
   });
 });

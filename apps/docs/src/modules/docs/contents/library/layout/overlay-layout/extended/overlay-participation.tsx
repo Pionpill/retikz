@@ -20,7 +20,7 @@ const createPreview = (lang: Lang) =>
         <OverlayLayout padding={12} justifyItems="start" alignItems="start">
           <OverlayLayoutItem itemKey="first">
             <Node
-              text={[{ runs: [{ text: `${demoI18n[lang].first} · z:0`, fill: '#153b60' }] }]}
+              text={[{ segments: [{ text: `${demoI18n[lang].first} · z:0`, fill: '#153b60' }] }]}
               layout={{ minimumSize: { width: 140, height: 60 } }}
               style={{ stroke: 'dodgerblue', fill: '#dceeff' }}
             />
@@ -32,7 +32,7 @@ const createPreview = (lang: Lang) =>
             offset={{ x: values.offsetX, y: values.offsetY }}
           >
             <Node
-              text={[{ runs: [{ text: `${demoI18n[lang].second} · z:${values.zIndex}`, fill: '#653b0c' }] }]}
+              text={[{ segments: [{ text: `${demoI18n[lang].second} · z:${values.zIndex}`, fill: '#653b0c' }] }]}
               layout={{ minimumSize: { width: 220, height: 100 } }}
               style={{ stroke: 'darkorange', fill: '#ffe4bd' }}
             />

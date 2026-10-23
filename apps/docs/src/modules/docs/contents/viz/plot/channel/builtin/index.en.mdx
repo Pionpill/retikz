@@ -169,15 +169,15 @@ The example labels three nodes with the tag field. Change the label position, di
 
 Path styles control line paint, width, dashes, endpoints, and joins. Choose the feature you want to change, then adjust its property.
 
-| Property         | Values                              | Effect and constraints                                                 |
-| ---------------- | ----------------------------------- | ---------------------------------------------------------------------- |
-| `stroke`         | Field or explicit color constant    | Line paint.                                                            |
-| `strokeWidth`    | Numeric field or nonnegative number | Line width.                                                            |
-| `opacity`        | Field or 0–1                        | Opacity of the path.                                                   |
-| `dashPattern`    | Numeric array                       | Alternating dash and gap lengths; this example uses [7, 4] and [1, 4]. |
-| `lineCap`        | butt, round, square                 | Flat, rounded, or projecting square endpoints.                         |
-| `lineJoin`       | miter, round, bevel                 | Mitered, rounded, or beveled joins.                                    |
-| `roundedCorners` | Nonnegative number                  | Rounds the path geometry at corners.                                   |
+| Property       | Values                              | Effect and constraints                                                 |
+| -------------- | ----------------------------------- | ---------------------------------------------------------------------- |
+| `stroke`       | Field or explicit color constant    | Line paint.                                                            |
+| `strokeWidth`  | Numeric field or nonnegative number | Line width.                                                            |
+| `opacity`      | Field or 0–1                        | Opacity of the path.                                                   |
+| `dashPattern`  | Numeric array                       | Alternating dash and gap lengths; this example uses [7, 4] and [1, 4]. |
+| `lineCap`      | butt, round, square                 | Flat, rounded, or projecting square endpoints.                         |
+| `lineJoin`     | miter, round, bevel                 | Mitered, rounded, or beveled joins.                                    |
+| `cornerRadius` | Nonnegative number                  | Rounds the path geometry at corners.                                   |
 
 Set corner rounding to 0 and compare the three join styles, then increase the radius. Switch between dashed and dotted lines to observe how endpoint style affects them.
 

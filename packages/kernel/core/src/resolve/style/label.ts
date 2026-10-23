@@ -1,38 +1,42 @@
-import type { IRFont, IRPathLabel } from '../../schemas';
-import type { EffectiveLabelDefault } from './types';
+import { mergeProperties } from '@retikz/foundation';
 
-/** 逐字段合并字体 */
-const mergeFont = (a: IRFont | undefined, b: IRFont | undefined): IRFont | undefined => {
-  if (a === undefined) return b;
-  if (b === undefined) return a;
+import type { IRNodeLabelDefault, IRPathLabelDefault, IRPathLabel } from '../../schemas';
+import { mergeFont } from './font';
 
-  const out: IRFont = {};
-  const family = a.family ?? b.family;
-  if (family !== undefined) out.family = family;
-  const size = a.size ?? b.size;
-  if (size !== undefined) out.size = size;
-  const weight = a.weight ?? b.weight;
-  if (weight !== undefined) out.weight = weight;
-  const style = a.style ?? b.style;
-  if (style !== undefined) out.style = style;
-
+/** 合并路径标签默认配置，字体逐字段覆盖 */
+export const mergePathLabelDefaults = (
+  parent: IRPathLabelDefault = {},
+  own: IRPathLabelDefault = {},
+): IRPathLabelDefault => {
+  const out = mergeProperties([parent, own], { shouldOverride: value => value !== undefined });
+  const font = mergeFont(parent.font, own.font);
+  if (font !== undefined) out.font = font;
   return out;
 };
 
-/** 解析 path label 的最终样式 */
+/** 合并节点标签配置；pin 对象逐字段覆盖，布尔值整体替换 */
+export const mergeNodeLabelDefaults = (
+  parent: IRNodeLabelDefault = {},
+  own: IRNodeLabelDefault = {},
+): IRNodeLabelDefault => {
+  const out = mergeProperties([parent, own], { shouldOverride: value => value !== undefined });
+  const font = mergeFont(parent.font, own.font);
+  if (font !== undefined) out.font = font;
+  if (typeof parent.pin === 'object' && typeof own.pin === 'object') {
+    out.pin = mergeProperties([parent.pin, own.pin], { shouldOverride: value => value !== undefined });
+  }
+  return out;
+};
+
+/** 解析路径或步骤已有标签的配置，默认片段不产生内容 */
 export const resolvePathLabel = (
   label: IRPathLabel,
-  labelDefault: EffectiveLabelDefault,
+  labelDefault: Readonly<IRPathLabelDefault>,
   masterColor: string | undefined,
 ): IRPathLabel => {
-  const out: IRPathLabel = { ...label };
-  const textColor = label.textColor ?? labelDefault.textColor ?? labelDefault.color ?? masterColor;
+  const { color, ...configuration } = mergePathLabelDefaults(labelDefault, label);
+  const out: IRPathLabel = { ...configuration, text: label.text };
+  const textColor = label.textColor ?? labelDefault.textColor ?? color ?? masterColor;
   if (textColor !== undefined) out.textColor = textColor;
-  else delete out.textColor;
-  const font = mergeFont(label.font, labelDefault.font);
-  if (font !== undefined) out.font = font;
-  const opacity = label.opacity ?? labelDefault.opacity;
-  if (opacity !== undefined) out.opacity = opacity;
-
   return out;
 };

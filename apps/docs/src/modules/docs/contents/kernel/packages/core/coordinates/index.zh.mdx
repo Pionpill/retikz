@@ -17,7 +17,7 @@ description: 追踪 Core 如何解析位置、查找名称与锚点，并在 Sco
 
 下面的案例包含内外层同名节点、嵌套坐标和锚点定位。其中一个 Scope 设置了 `id="cluster"`，下文用 `cluster` 指代这个分组，其他元素也通过这个 id 引用它。
 
-包络是由子布局汇总出的范围，供 Scope 定位使用。灰色外框帮助辨认这个分组的内容范围，只是额外绘制的装饰，不改变包络。
+包络是由子布局汇总出的范围，供 Scope 定位使用。Scope 本身不绘制这个包络；它用于定位与引用。
 
 <ComponentPreview files="coordinate-example" size="lg" />
 
@@ -72,7 +72,7 @@ position: {
       path: 'packages/kernel/core/src/resolve/position/resolve.ts',
     },
     { label: 'resolvePositionTarget：节点目标与两点插值', path: 'packages/kernel/core/src/resolve/position/target.ts' },
-    { label: 'Node 锚点定位的输入契约', path: 'packages/kernel/core/src/schemas/position/anchor-position/schema.ts' },
+    { label: 'Node 锚点定位的输入契约', path: 'packages/kernel/core/src/schemas/position/anchor.ts' },
   ]}
 />
 
@@ -92,7 +92,7 @@ Node 对齐自身锚点时，要先获得临时布局：自己的尺寸与旋转
 
 <SourceLinks
   sources={[
-    { label: '节点目标、角度与边上比例锚点', path: 'packages/kernel/core/src/schemas/position/node-target/schema.ts' },
+    { label: '节点目标、角度与边上比例锚点', path: 'packages/kernel/core/src/schemas/position/target.ts' },
     { label: '锚点取点与缓存', path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts' },
     {
       label: 'placeAnchorPositionedLayout：自身锚点的最终对齐',
@@ -245,7 +245,7 @@ A 收尾时，b 还未注册，因此 A 中的 Path 无法引用 b。退出普�
 
 Scope 的原点和内容包络中心通常不同。`position: [x, y]` 放置的是局部原点；锚点形式则放置变换后的包络上的某个点，默认自身锚点为包络中心。
 
-下面两组都只有一个局部中心为 `[60, 0]`、宽度为 72 的节点。上组把原点移到目标点，下组把包络左锚点贴到目标点。虚线是共同的 x 参照，实线框显示真实包络边界。
+下面两组都只有一个局部中心为 `[60, 0]`、宽度为 72 的节点。上组把原点移到目标点，下组把包络左锚点贴到目标点。虚线是共同的 x 参照，彩色边框属于节点；Scope 的包络由子节点计算，本身不绘制外框。
 
 <ComponentPreview files="scope-placement" size="xl" hideCode type="illustration" />
 
@@ -253,7 +253,7 @@ Scope 的原点和内容包络中心通常不同。`position: [x, y]` 放置的�
 
 ### 包络与占位
 
-Scope 的包络要等子布局完成才知道。Core 从 Node、Coordinate、子 Scope 等贡献的布局汇总包络；`boundingShape` 选择矩形或圆形。路径视觉范围、裁剪和 `frame` 装饰不反过来扩张这个固有包络。
+Scope 的包络要等子布局完成才知道。Core 从 Node、Coordinate、子 Scope 等贡献的布局汇总包络；`boundingShape` 选择矩形或圆形。路径视觉范围和裁剪不反过来扩张这个固有包络。
 
 有 `id` 的 Scope 在进入子树前注册一条 `scope-placeholder` 记录，以占住父命名空间中的名称。这个记录是编译中的临时状态，不是完成的包络；需要完整几何的锚点定位不能用它作为目标。子树完成后，Core 用 `replaceLayout` 将同一名称升级为 `resolved`，不把正常升级当作重复名称注册。
 
@@ -292,7 +292,7 @@ $$
   sources={[
     { label: 'lowerScopeTransforms：引用平移与包络 pivot', path: 'packages/kernel/core/src/compile/scope/layout.ts' },
     { label: '预备变换、最终对齐与发布几何更新', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
-    { label: 'Scope 原点与锚点定位契约', path: 'packages/kernel/core/src/schemas/scope/schema.ts' },
+    { label: 'Scope 原点与锚点定位契约', path: 'packages/kernel/core/src/schemas/scope/defaults.ts' },
   ]}
 />
 

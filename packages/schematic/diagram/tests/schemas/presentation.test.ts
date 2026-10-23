@@ -16,7 +16,7 @@ describe('Diagram Presentation schema', () => {
           'Architecture',
           { text: 'Runtime', fill: '#2563eb', opacity: 0.8, font: { size: 18, weight: 600 } },
           {
-            runs: [
+            segments: [
               { text: 'O(', fill: '#111827', font: { style: 'italic' } },
               { tex: 'n^2', displayMode: false, fill: '#dc2626', opacity: 0.7 },
               { text: ')' },
@@ -33,7 +33,7 @@ describe('Diagram Presentation schema', () => {
       'Architecture',
       { text: 'Runtime', fill: '#2563eb', opacity: 0.8, font: { size: 18, weight: 600 } },
       {
-        runs: [
+        segments: [
           { text: 'O(', fill: '#111827', font: { style: 'italic' } },
           { tex: 'n^2', displayMode: false, fill: '#dc2626', opacity: 0.7 },
           { text: ')' },
@@ -46,8 +46,8 @@ describe('Diagram Presentation schema', () => {
   it('accepts authored whitespace without trimming it', () => {
     expect(DiagramPresentationSchema.parse({ title: { text: '   ' } }).title?.text).toBe('   ');
     expect(
-      DiagramPresentationSchema.parse({ description: { text: [{ runs: [{ tex: '  ' }] }] } }).description?.text,
-    ).toEqual([{ runs: [{ tex: '  ' }] }]);
+      DiagramPresentationSchema.parse({ description: { text: [{ segments: [{ tex: '  ' }] }] } }).description?.text,
+    ).toEqual([{ segments: [{ tex: '  ' }] }]);
   });
 
   it('preserves valid empty Core TextBlock authoring', () => {
@@ -55,8 +55,8 @@ describe('Diagram Presentation schema', () => {
     expect(DiagramPresentationSchema.parse({ title: { text: [''] } }).title?.text).toEqual(['']);
     expect(DiagramPresentationSchema.parse({ title: { text: [{ text: '' }] } }).title?.text).toEqual([{ text: '' }]);
     expect(
-      DiagramPresentationSchema.parse({ title: { text: [{ runs: [{ text: '' }, { tex: '' }] }] } }).title?.text,
-    ).toEqual([{ runs: [{ text: '' }, { tex: '' }] }]);
+      DiagramPresentationSchema.parse({ title: { text: [{ segments: [{ text: '' }, { tex: '' }] }] } }).title?.text,
+    ).toEqual([{ segments: [{ text: '' }, { tex: '' }] }]);
   });
 
   it.each([{}, { unknown: true }])('rejects an empty Presentation or records outside the fixed slots: %j', input => {

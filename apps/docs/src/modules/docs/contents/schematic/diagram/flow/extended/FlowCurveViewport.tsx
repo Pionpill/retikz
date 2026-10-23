@@ -1,6 +1,6 @@
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import type { FlowDiagramProps } from '@retikz/diagram-react/flow';
-import { useTheme, useThemeStyles } from '@retikz/react';
+import { useTheme, useThemeDefinitions } from '@retikz/react';
 import { cloneElement, useMemo } from 'react';
 import type { FC, ReactElement } from 'react';
 
@@ -14,14 +14,14 @@ export type FlowCurveViewportProps = Readonly<{ diagram: ReactElement<FlowDiagra
 export const FlowCurveViewport: FC<FlowCurveViewportProps> = props => {
   const { diagram, orthogonal = false } = props;
   const theme = useTheme();
-  const themeStyles = useThemeStyles();
+  const themeDefinitions = useThemeDefinitions();
   const viewBox = useMemo(() => {
     const { ir, contributions } = buildPreviewIR(() => diagram);
     const result = compileToScene(
       { ...ir, theme },
       {
         ...resolveCoreProviderDependencies({ contributions }),
-        themeStyles,
+        themeDefinitions,
         measureText: browserMeasurer,
       },
     );
@@ -34,7 +34,7 @@ export const FlowCurveViewport: FC<FlowCurveViewportProps> = props => {
       width: 600,
       height: orthogonal ? 260 : 340,
     };
-  }, [diagram, theme, themeStyles, orthogonal]);
+  }, [diagram, theme, themeDefinitions, orthogonal]);
 
   return cloneElement(diagram, { viewBox });
 };

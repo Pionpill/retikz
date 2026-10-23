@@ -20,7 +20,7 @@ Internally, `wrapRootScope` selects effective `defaults` overrides, creates an o
 Wrapping depends on whether the configuration contributes an override, not merely whether the `rootScope` object exists:
 
 - **No effective override**: when omitted, `{}`, or limited to empty overrides such as `defaults: { style: {} }` and `defaults: {}`, use the original children without adding a synthetic Scope.
-- **Effective override**: actual styles, defaults, or an effective `defaults.reset` wrap the children in an ordinary Scope and reuse its inheritance rules. A `reset` of `true` or a nonempty channel list cuts the corresponding outer style inheritance; `false` or an empty list alone does not trigger wrapping.
+- **Effective override**: actual styles, defaults, or an effective `defaults.reset` wrap the children in an ordinary Scope and reuse its inheritance rules. A `reset` of `true` or a nonempty channel list cuts the corresponding outer name inheritance; `false` or an empty list alone does not trigger wrapping.
 - **ir supplied**: use the complete child structure described by IR, ignoring any children and `rootScope` supplied alongside it. Change the IR itself to change its scopes; host CSS `style` remains applicable.
 
 **The synthetic Scope is not a local namespace.** `rootScope` only accepts `defaults`. Use an explicit Scope inside the drawing for `localNamespace`; see [Scope usage](/kernel/components/scope/usage) for naming and references.
@@ -31,7 +31,7 @@ Wrapping depends on whether the configuration contributes an override, not merel
       label: 'Choose whether effective overrides require a root Scope',
       path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
       startLine: 586,
-      endLine: 615,
+      endLine: 612,
     },
     {
       label: 'Layout: ir and rootScope boundaries',
@@ -154,24 +154,24 @@ SVG and Canvas share this display-size calculation. CSS strings are not parsed a
 
 Layout retains the outer `clean` style when it supplies only `{ mode: 'light' }`: themes merge field by field, so omitted fields remain inherited. Both selectors here belong to `theme`:
 
-- **theme.style**: selects a theme style, such as `clean`; it is distinct from the host's CSS `style` prop.
+- **theme.name**: selects a theme, such as `clean`; it is distinct from the host's CSS `style` prop.
 - **theme.mode**: selects light or dark mode, such as `dark` or `light`.
 
-Read the following figure from top to bottom in override order. ThemeProvider supplies `{ style: 'clean', mode: 'dark' }`, the input scene omits its theme, and Layout's `theme` prop supplies only `{ mode: 'light' }`. Follow the `theme.style` and `theme.mode` columns separately: `—` means omitted, not cleared.
+Read the following figure from top to bottom in override order. ThemeProvider supplies `{ name: 'clean', mode: 'dark' }`, the input scene omits its theme, and Layout's `theme` prop supplies only `{ mode: 'light' }`. Follow the `theme.name` and `theme.mode` columns separately: `—` means omitted, not cleared.
 
 <ComponentPreview files="layout-theme-overlays" size="lg" type="illustration" hideCode />
 
-In the final theme, `style: 'clean'` comes from Provider, while `mode: 'light'` comes from Layout. If the input scene supplies a theme, it overrides Provider first, before Layout applies its own overrides. `mergeThemeOverlays` writes only the fields supplied at each layer. Nested ThemeProviders reuse this rule.
+In the final theme, `name: 'clean'` comes from Provider, while `mode: 'light'` comes from Layout. If the input scene supplies a theme, it overrides Provider first, before Layout applies its own overrides. `mergeThemeOverlays` writes only the fields supplied at each layer. Nested ThemeProviders reuse this rule.
 
 Merging a theme and setting drawing styles are separate operations. A **Composite** accepts a high-level description and expands it into basic drawing elements; it can consume a theme to generate element styles. `theme`, `rootScope`, and host `style` target the following places, rather than forming three priority levels of one object:
 
 | Configuration        | Applied to                             | Controls                                       |
 | -------------------- | -------------------------------------- | ---------------------------------------------- |
-| `theme`              | Input scene and theme-aware Composites | Theme style and light/dark mode                |
+| `theme`              | Input scene and theme-aware Composites | Theme and light/dark mode                      |
 | `rootScope.defaults` | Root scope of JSX children             | Drawing styles and element defaults            |
 | `style`              | SVG / Canvas host                      | Page CSS, such as background and maximum width |
 
-Layout writes the theme into the input scene for later processing. It does not directly turn the selected theme style into every ordinary Node's fill. Use a node property or `rootScope` to set its fill; use host `style={{ maxWidth: '100%' }}` to constrain the drawing's maximum page width.
+Layout writes the theme into the input scene for later processing. It does not directly turn the selected theme into every ordinary Node's fill. Use a node property or `rootScope` to set its fill; use host `style={{ maxWidth: '100%' }}` to constrain the drawing's maximum page width.
 
 Two further boundaries affect final colors:
 

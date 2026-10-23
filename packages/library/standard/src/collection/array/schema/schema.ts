@@ -67,6 +67,8 @@ const ArrayBaseSchema = CompositeBaseSchema.extend({
   defaultCell: ArrayCellDefaultSchema.optional(),
 });
 
+const ArrayStructuredCellIdModeSchema = ArrayBaseSchema.shape.cellIdMode.unwrap().exclude(['String']);
+
 /** 校验数组集合的显式格子、JSON 数据或骨架输入，并拒绝混用互斥来源 */
 export const ArraySchema = union([
   ArrayBaseSchema.required({ items: true })
@@ -119,32 +121,24 @@ export const ArraySchema = union([
       skeleton: never().optional().describe('Not accepted in this input branch.'),
       items: never().optional().describe('Not accepted in this input branch.'),
       dataExpand: DataExpandSchema,
+      cellIdMode: ArrayStructuredCellIdModeSchema.default(
+        ArrayStructuredCellIdModeSchema.parse(ArrayBaseSchema.shape.cellIdMode.parse(undefined)),
+      ).describe(ArrayBaseSchema.shape.cellIdMode.description ?? ''),
     })
     .superRefine((node, context) => {
-      if (node.cellIdMode === ArrayCellIdMode.String)
-        context.addIssue({
-          code: 'custom',
-          path: ['cellIdMode'],
-          message: 'String cell identity only supports items.',
-        });
-
       if (node.cellIdMode === ArrayCellIdMode.Index && node.id === undefined)
         context.addIssue({ code: 'custom', path: ['id'], message: 'Index cell identity requires a Array id.' });
     }),
   ArrayBaseSchema.required({ skeleton: true })
     .extend({
+      cellIdMode: ArrayStructuredCellIdModeSchema.default(
+        ArrayStructuredCellIdModeSchema.parse(ArrayBaseSchema.shape.cellIdMode.parse(undefined)),
+      ).describe(ArrayBaseSchema.shape.cellIdMode.description ?? ''),
       items: never().optional().describe('Not accepted in this input branch.'),
       data: never().optional().describe('Not accepted in this input branch.'),
       dataExpand: never().optional().describe('Not accepted in this input branch.'),
     })
     .superRefine((node, context) => {
-      if (node.cellIdMode === ArrayCellIdMode.String)
-        context.addIssue({
-          code: 'custom',
-          path: ['cellIdMode'],
-          message: 'String cell identity only supports items.',
-        });
-
       if (node.cellIdMode === ArrayCellIdMode.Index && node.id === undefined)
         context.addIssue({ code: 'custom', path: ['id'], message: 'Index cell identity requires a Array id.' });
     }),

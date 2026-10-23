@@ -190,7 +190,7 @@ The default cellIdMode, explicit, uses only explicit cell ids. Index mode requir
 
 Explicit and generated ids may reference the same cell. Identical names on one cell deduplicate; cross-cell collisions fail. References use the actual cell border box, excluding unused track space, gaps, indices, and overflow. Spatial roles are matrix-cell for cells and container for the root.
 
-Fixed dimensions clip by default; auto dimensions preserve overflow. Override overflow explicitly when needed. Clipping never scales or wraps content. Label follows the [Node label contract](/kernel/components/node/labels), accepting one object or an array. Labels attach to the entire Matrix without changing cell measurement. Overall font, color, and defaults.label may provide defaults; cell styles do not affect container labels.
+Fixed dimensions clip by default; auto dimensions preserve overflow. Override overflow explicitly when needed. Clipping never scales or wraps content. Label follows the [Node label contract](/kernel/components/node/labels), accepting one object or an array. Labels attach to the entire Matrix without changing cell measurement. Overall font, color, and defaults.node.label may provide defaults; cell styles do not affect container labels.
 
 ## Errors and limitations
 

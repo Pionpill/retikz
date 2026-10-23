@@ -815,7 +815,7 @@ describe('MarkSchema (contract)', () => {
     const m = {
       type: 'path',
       encodings: {
-        roundedCorners: 'corner',
+        cornerRadius: 'corner',
         position: { x: { field: 'x' }, y: { field: 'y' } },
         strokeWidth: 'weight',
       },
@@ -905,7 +905,7 @@ describe('MarkSchema (contract)', () => {
       encodings: { label: { text: 'label' } },
       properties: {
         autoPadding: false,
-        label: { position: 0.5, placement: 'inside' },
+        label: { position: 0.5, side: 'center' },
         source: { anchorId: { template: 'A' } },
         target: { anchorId: { template: 'B' } },
         geometry: { kind: 'path' },
@@ -916,6 +916,16 @@ describe('MarkSchema (contract)', () => {
       ...m,
       contributeToDomain: true,
     });
+  });
+
+  it('路径标签编码不接受节点专属 placement', () => {
+    expect(
+      MarkSchema.safeParse({
+        type: 'relation',
+        encodings: { label: { placement: 'labelPlacement' } },
+        properties: { source: { id: 'A' }, target: { id: 'B' }, geometry: { kind: 'path' } },
+      }).success,
+    ).toBe(false);
   });
 
   it('mark_relation_accepts_projected_endpoint_glyphs', () => {

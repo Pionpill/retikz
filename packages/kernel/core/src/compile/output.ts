@@ -1,5 +1,6 @@
 import type { AxisAlignedBounds } from '@retikz/math';
 
+import { visitSceneContent } from '../contract';
 import type {
   AnyCompositeDefinition,
   CompileObserverOutput,
@@ -76,6 +77,7 @@ export const assemblePreparedScene = <const TComposites extends ReadonlyArray<An
     ...(resources.length === 0 ? {} : { resources }),
     ...(animations === undefined ? {} : { animations }),
   };
+  visitSceneContent(scene, () => {});
   return Object.freeze({
     result: Object.freeze({
       scene,

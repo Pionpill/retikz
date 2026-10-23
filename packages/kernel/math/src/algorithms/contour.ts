@@ -117,9 +117,6 @@ const tangentAt = (seg: ContourSegment, atStart: boolean): Position => {
   return vector2.normalize([-Math.sin(rad) * sign, Math.cos(rad) * sign]);
 };
 
-/** arc 段的角跨度（带符号：CW 为正递增、CCW 为负），单位度 */
-const arcSpan = (seg: ArcSegment): number => seg.endAngle - seg.startAngle;
-
 /**
  * 一个接缝处 fillet 的解算结果
  * @description tangentInPoint = 前段被裁短到此点（前段新终点）；tangentOutPoint = 后段从此点起（后段新起点）；
@@ -149,6 +146,9 @@ export type FilletSolution = {
  * @description 用于逐角夹紧：校验切点是否落在该段长度（弧用角度）内。返回 fraction 可能 <0 或 >1 表示越界
  */
 const fractionAlong = (seg: ContourSegment, p: Position, fromStart: boolean): number => {
+  /** arc 段的角跨度（带符号：CW 为正递增、CCW 为负），单位度 */
+  const arcSpan = (arcSegment: ArcSegment): number => arcSegment.endAngle - arcSegment.startAngle;
+
   if (seg.kind === 'line') {
     const ex = seg.to[0] - seg.from[0];
     const ey = seg.to[1] - seg.from[1];

@@ -130,7 +130,7 @@ export {
   resolveLogScale,
   resolveNodeMarkLabels,
   resolveOrdinalScale,
-  resolvePlotThemeStyleRegistry,
+  resolvePlotThemeRegistry,
   resolvePointScale,
   resolvePositionAdjustmentRegistry,
   resolvePowScale,

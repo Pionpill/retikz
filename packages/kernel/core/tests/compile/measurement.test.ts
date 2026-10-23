@@ -293,45 +293,59 @@ it.each([
   ).toThrow();
 });
 
-it('keeps identical authored objects at different source positions independent', () => {
-  let calls = 0;
-  const leaf = defineComposite({
-    namespace: 'measurement-test',
-    type: 'position-leaf',
-    schema: schema('position-leaf'),
-    compile: (): CompositeEvaluationResult => {
-      calls++;
-      return { kind: 'contribution', contribution: { axis: 'x', width: 12 } };
-    },
-  });
-  const host = defineComposite({
-    namespace: 'measurement-test',
-    type: 'position-host',
-    schema: schema('position-host').extend({ first: ChildSchema, second: ChildSchema }),
-    compile: (_node, context) => {
-      for (const key of ['first', 'second']) {
-        const child = context.sourceChild([key]);
-        for (let i = 0; i < 2; i++) {
-          expect(context.measureChild(child, NaturalLayoutProposal, 'x')).toEqual({
-            kind: 'resolved',
-            result: { axis: 'x', width: 12 },
-          });
+it.each([false, true])(
+  'keeps identical authored objects at different source positions independent: nested=%s',
+  nested => {
+    let calls = 0;
+    const leaf = defineComposite({
+      namespace: 'measurement-test',
+      type: 'position-leaf',
+      schema: schema('position-leaf'),
+      compile: (): CompositeEvaluationResult => {
+        calls++;
+        return { kind: 'contribution', contribution: { axis: 'x', width: 12 } };
+      },
+    });
+    const wrapper = defineComposite({
+      namespace: 'measurement-test',
+      type: 'position-wrapper',
+      schema: schema('position-wrapper').extend({ child: ChildSchema }),
+      compile: (_node, context): CompositeEvaluationResult => {
+        const measured = context.measureChild(context.sourceChild(['child']), NaturalLayoutProposal, 'x');
+        if (measured.kind === 'failed') return context.raise(measured.failure);
+        return { kind: 'contribution', contribution: measured.result };
+      },
+    });
+    const host = defineComposite({
+      namespace: 'measurement-test',
+      type: 'position-host',
+      schema: schema('position-host').extend({ first: ChildSchema, second: ChildSchema }),
+      compile: (_node, context) => {
+        for (const key of ['first', 'second']) {
+          const child = context.sourceChild([key]);
+          for (let i = 0; i < 2; i++) {
+            expect(context.measureChild(child, NaturalLayoutProposal, 'x')).toEqual({
+              kind: 'resolved',
+              result: { axis: 'x', width: 12 },
+            });
+          }
         }
-      }
-      return { children: [] };
-    },
-  });
-  const child = { namespace: 'measurement-test', type: 'position-leaf' };
-  compileToScene(
-    {
-      version: 1,
-      type: 'scene',
-      children: [{ namespace: 'measurement-test', type: 'position-host', first: child, second: child }],
-    },
-    { composites: [host, leaf] },
-  );
-  expect(calls).toBe(2);
-});
+        return { children: [] };
+      },
+    });
+    const leafSource = { namespace: 'measurement-test', type: 'position-leaf' };
+    const child = nested ? { namespace: 'measurement-test', type: 'position-wrapper', child: leafSource } : leafSource;
+    compileToScene(
+      {
+        version: 1,
+        type: 'scene',
+        children: [{ namespace: 'measurement-test', type: 'position-host', first: child, second: child }],
+      },
+      { composites: [host, leaf, wrapper] },
+    );
+    expect(calls).toBe(2);
+  },
+);
 
 it('isolates full fallback candidates and publishes only the independent final replay', () => {
   let calls = 0;

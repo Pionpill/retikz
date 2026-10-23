@@ -10,9 +10,8 @@ import {
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import type { PaintResolver } from '../resource';
-import { validateMarkerPrimitives } from '../resource';
 import { validateScenePrimitives } from '../scene-primitive';
-import { emitInlineLine, inlineRunPaintsOf, toAlphabeticBaselineY } from '../text';
+import { emitInlineLine, inlineSegmentPaintsOf, toAlphabeticBaselineY } from '../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label/geometry';
 import type {
@@ -23,7 +22,7 @@ import type {
   NodeResolvedProperties,
 } from './types';
 
-/** 节点与 Scope 外框共享的有效形状样式 */
+/** 节点形状绘制使用的有效样式 */
 type NodeShapeProperties = Pick<
   CanonicalNode,
   | 'fill'
@@ -33,6 +32,8 @@ type NodeShapeProperties = Pick<
   | 'strokeWidth'
   | 'dashPattern'
   | 'dashOffset'
+  | 'lineCap'
+  | 'lineJoin'
   | 'cornerRadius'
   | 'opacity'
   | 'shadow'
@@ -90,6 +91,8 @@ const toShapeStyle = (properties: NodeShapeProperties, resolvePaint: PaintResolv
   strokeWidth: properties.strokeWidth,
   dashPattern: properties.dashPattern,
   dashOffset: properties.dashOffset,
+  strokeLinecap: properties.lineCap,
+  strokeLinejoin: properties.lineJoin,
   cornerRadius: properties.cornerRadius,
   opacity: properties.opacity,
   shadow: properties.shadow,
@@ -122,7 +125,7 @@ export const emitNodeShapePrimitives = (
     });
   }
 
-  return validateScenePrimitives(`Shape '${layout.shape.name}'`, emitted, validateMarkerPrimitives);
+  return validateScenePrimitives(`Shape '${layout.shape.name}'`, emitted);
 };
 
 /** 发出节点正文图元 */
@@ -149,7 +152,7 @@ const emitNodeContentPrimitives = (
         {
           color: properties.textColor,
           opacity: properties.opacity,
-          runs: inlineRunPaintsOf(properties.text![index].runs),
+          segments: inlineSegmentPaintsOf(properties.text![index].segments),
         },
         originX,
         baselineYs[index],
@@ -203,6 +206,7 @@ const emitNodeLabelPinPrimitive = (
   properties: NodeResolvedProperties,
   labelCenterPosition: [number, number],
   round: Round,
+  resolvePaint: PaintResolver,
 ): ScenePrimitive | undefined => {
   if (!labelProperties.pin) return undefined;
 
@@ -223,11 +227,13 @@ const emitNodeLabelPinPrimitive = (
       { kind: 'move', to: [round(bx), round(by)] },
       { kind: 'line', to: [round(nx), round(ny)] },
     ],
-    stroke: style?.stroke ?? labelProperties.textColor ?? 'currentColor',
+    stroke: resolvePaint(style?.stroke) ?? labelProperties.textColor ?? 'currentColor',
     strokeWidth: style?.strokeWidth ?? 1,
     dashPattern: style?.dashPattern,
     dashOffset: style?.dashOffset,
-    opacity: labelProperties.opacity ?? properties.opacity,
+    strokeLinecap: style?.lineCap,
+    strokeLinejoin: style?.lineJoin,
+    opacity: style?.opacity ?? labelProperties.opacity ?? properties.opacity,
   };
 };
 
@@ -253,7 +259,7 @@ const emitNodeLabelContentPrimitive = (
         {
           color: labelProperties.textColor,
           opacity: labelProperties.opacity,
-          runs: inlineRunPaintsOf(labelProperties.text.runs),
+          segments: inlineSegmentPaintsOf(labelProperties.text.segments),
         },
         originX,
         baselineY,
@@ -290,6 +296,7 @@ const emitNodeLabelPrimitives = (
   labelProperties: NodeLabelResolution,
   properties: NodeResolvedProperties,
   round: Round,
+  resolvePaint: PaintResolver,
 ): Array<ScenePrimitive> => {
   const labelCenterPosition = labelCenter(layout, label);
   const [lx, ly] = labelCenterPosition;
@@ -301,6 +308,7 @@ const emitNodeLabelPrimitives = (
     properties,
     labelCenterPosition,
     round,
+    resolvePaint,
   );
   if (pinPrimitive !== undefined) primitives.push(pinPrimitive);
 
@@ -384,7 +392,7 @@ export const emitNodePrimitives = (
     ...shapePrimitives,
     ...emitNodeContentPrimitives(layout, properties, round),
     ...(layout.labels?.flatMap((label, index) =>
-      emitNodeLabelPrimitives(layout, label, properties.label![index], properties, round),
+      emitNodeLabelPrimitives(layout, label, properties.label![index], properties, round, resolvePaint),
     ) ?? []),
   ];
 

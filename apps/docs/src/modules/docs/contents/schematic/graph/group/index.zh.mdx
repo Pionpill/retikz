@@ -178,6 +178,8 @@ const view = mount(document.getElementById('diagram')!, ir, { compile: { composi
 
 `caption` 是外框内部的标题与说明区域，支持放在 body 上方或下方，并可按横向或纵向排列。下方控制面板可以调整位置、排列方向和间距。title 默认使用 `sm` 字号且不加粗，description 默认使用 `xs` 字号与较低透明度
 
+`caption.direction` 可使用 `GroupCaptionDirection.Horizontal` 或 `GroupCaptionDirection.Vertical`，分别表示水平和垂直排列。
+
 <ComponentPreview
   files={['group-basic', 'group-basic.preview.tsx']}
   size="lg"
@@ -233,7 +235,7 @@ Group 的样式调整集中在外框的背景、边框、线型、圆角和内�
 ### 内容与主题
 
 - `children` 直接使用 Core `IRChild`，可以放 Entity、Relation、Group、Node、Path、Scope、Layout、Plot 或其它已注册 composite
-- `defaults.node`、`defaults.path`、`defaults.label`、Core `theme`、transform、placement、clip 与 namespace 都保持 Scope 语义
+- `defaults.node`、`defaults.path`、`defaults.node.label` / `defaults.path.label`、Core `theme`、transform、placement、clip 与 namespace 都保持 Scope 语义
 - 命名 Graph Theme 会为 Group 根外框提供 `background`、`border` 与 `cornerRadius` 基线；Source 显式字段最终优先，并对对应 Theme 对象执行完整顶层字段替换，不在 `border` 或 `background` 内部深合并
 - `defaultGraph` 影响可见后代 Entity / Relation 与后代 Group / Block 外框；`graphRules` 只匹配后代 Entity / Relation。两者不影响当前 Group 自身外框、caption、boundary labels 或普通 Core children
 - 切换内容的 `theme` 或设置 Core `defaults.reset` 不清除作者默认值与规则；当前外框使用传入的主题与祖先默认值

@@ -6,7 +6,7 @@ export type InspectorDefinitionFlowI18n = Readonly<{
   definition: string;
   finalOutput: InputFlowEntity['text'];
   userOptions: InputFlowEntity['text'];
-  subjectSchema: InputFlowEntity['text'];
+  subject: InputFlowEntity['text'];
   mergeOptionsInput: InputFlowEntity['text'];
   optionsSchema: InputFlowEntity['text'];
   resolveOptions: InputFlowEntity['text'];
@@ -20,8 +20,8 @@ export const inspectorDefinitionFlowI18n: Record<Lang, InspectorDefinitionFlowI1
   zh: {
     definition: 'InspectorDefinition',
     finalOutput: 'Core 最终产物',
+    subject: '已类型化产物',
     userOptions: '用户 options',
-    subjectSchema: ['subjectSchema', { text: '校验 → subject', fill: 'gray', font: { size: 'sm' } }],
     mergeOptionsInput: ['mergeOptionsInput', { text: '可选 · 合并原始配置', fill: 'gray', font: { size: 'sm' } }],
     optionsSchema: ['optionsSchema', { text: '可省略 · 默认 {}', fill: 'gray', font: { size: 'sm' } }],
     resolveOptions: ['resolveOptions', { text: '可省略 · 恒等传递', fill: 'gray', font: { size: 'sm' } }],
@@ -33,8 +33,8 @@ export const inspectorDefinitionFlowI18n: Record<Lang, InspectorDefinitionFlowI1
   en: {
     definition: 'InspectorDefinition',
     finalOutput: 'Core final output',
+    subject: 'Typed subject',
     userOptions: 'User options',
-    subjectSchema: ['subjectSchema', { text: 'Validate → subject', fill: 'gray', font: { size: 'sm' } }],
     mergeOptionsInput: ['mergeOptionsInput', { text: 'Optional · merge input', fill: 'gray', font: { size: 'sm' } }],
     optionsSchema: ['optionsSchema', { text: 'Optional · empty schema', fill: 'gray', font: { size: 'sm' } }],
     resolveOptions: ['resolveOptions', { text: 'Optional · identity', fill: 'gray', font: { size: 'sm' } }],

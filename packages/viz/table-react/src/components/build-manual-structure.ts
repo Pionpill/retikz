@@ -13,10 +13,6 @@ import { Row } from './row';
 /** ManualTable children 收集后交给 plain constructor 的矩形结构输入 */
 export type ManualStructureInput = Pick<ManualTableInput, 'rows' | 'rowKinds'>;
 
-/** 判断节点是否为 Row marker */
-const isRowElement = (child: ReactNode): child is ReactElement<RowProps, typeof Row> =>
-  isValidElement(child) && child.type === Row;
-
 /** 判断节点是否为 Cell marker */
 const isCellElement = (child: ReactNode): child is ReactElement<CellProps, typeof Cell> =>
   isValidElement(child) && child.type === Cell;
@@ -41,6 +37,10 @@ const buildCell = (element: ReactElement<CellProps, typeof Cell>): IRManualTable
 
 /** 从 Row 与 Cell marker children 构造 manual Table 的矩形 rows */
 export const buildManualStructure = (children: ReactNode): ManualStructureInput => {
+  /** 判断节点是否为 Row marker */
+  const isRowElement = (child: ReactNode): child is ReactElement<RowProps, typeof Row> =>
+    isValidElement(child) && child.type === Row;
+
   const rowElements: Array<ReactElement<RowProps, typeof Row>> = [];
   visitTableChildren(children, child => {
     if (!isRowElement(child)) {

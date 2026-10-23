@@ -5,7 +5,7 @@ import type { CompileEnvironment } from '../environment';
 import type { CompileProvenanceTracker, CompileSemanticOwner } from '../orchestration';
 import { collectLayoutBounds } from '../orchestration';
 import { optionalVisualBoundsOfPrimitives } from '../orchestration';
-import { createClipRegistry, createPaintRegistry, remapPrimitiveResources } from '../resource';
+import { createClipRegistry, createPaintRegistry, importSceneResources, remapPrimitiveResources } from '../resource';
 import { applyTransformChain } from '../transform';
 import type { CompiledScope, CompileOutput } from './types';
 
@@ -22,15 +22,7 @@ export const assembleCompileOutputs = (
   const nodeLayouts: Array<NonNullable<CompileOutput['nodeLayouts']>[number]> = [];
   const observations: Array<NonNullable<CompileOutput['observations']>[number]> = [];
   for (const output of outputs) {
-    const ids = new Map<string, string>();
-    for (const resource of output.resources) {
-      if (resource.kind === 'paint') {
-        const imported = paint.importResolved(resource);
-        if (typeof imported === 'object' && imported.kind === 'resourceRef') ids.set(resource.id, imported.id);
-      } else {
-        ids.set(resource.id, clip.importPath(resource.path));
-      }
-    }
+    const ids = importSceneResources(output.resources, paint, clip);
     const primitives = output.primitives.map(primitive => remapPrimitiveResources(primitive, ids));
     provenance?.transferPrimitives(output.primitives, primitives);
     fragments.push({

@@ -62,7 +62,7 @@ export const RelationScatterPreview = (values: RelationScatterPreviewValues) => 
             kind: 'path',
             label: {
               position: values.labelPosition,
-              ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
+              side: labelSide,
               sloped: values.labelSloped,
               textColor: 'currentColor',
             },

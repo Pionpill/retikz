@@ -4,7 +4,7 @@ import { RelationMarkSchema, RelationPathGeometrySchema, RelationPathSpecificOpt
 
 const options = {
   style: { dashPattern: [4, 2], fillRule: 'evenodd' as const, lineCap: 'round' as const, lineJoin: 'bevel' as const },
-  roundedCorners: 2,
+  cornerRadius: 2,
   rotate: 15,
   scale: 1.25,
   marks: [{ pos: 0.5, mark: { kind: 'arrow' as const, shape: 'stealth' } }],
