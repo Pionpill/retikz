@@ -1,6 +1,6 @@
-import { PositionSchema, AngleDegreesSchema } from '@retikz/core';
+import { PositionSchema } from '@retikz/core';
 import { PositiveNumberSchema } from '@retikz/foundation';
-import { boolean, discriminatedUnion, literal, strictObject } from 'zod';
+import { number, boolean, discriminatedUnion, literal, strictObject } from 'zod';
 
 /** 校验将子路径起点移到指定坐标的裁剪输入命令 */
 const MovePathClipCommandSchema = strictObject({
@@ -34,8 +34,8 @@ const ArcPathClipCommandSchema = strictObject({
   kind: literal('arc').describe('Discriminator for circular arc path commands.'),
   center: PositionSchema.describe('Arc center point.'),
   radius: PositiveNumberSchema.describe('Arc radius in user units.'),
-  startAngle: AngleDegreesSchema.describe('Arc start angle in degrees.'),
-  endAngle: AngleDegreesSchema.describe('Arc end angle in degrees.'),
+  startAngle: number().describe('Arc start angle in degrees.'),
+  endAngle: number().describe('Arc end angle in degrees.'),
   counterClockwise: boolean().optional().describe('Whether to draw counter-clockwise.'),
 });
 
@@ -45,9 +45,9 @@ const EllipseArcPathClipCommandSchema = strictObject({
   center: PositionSchema.describe('Ellipse arc center point.'),
   radiusX: PositiveNumberSchema.describe('Ellipse arc x radius in user units.'),
   radiusY: PositiveNumberSchema.describe('Ellipse arc y radius in user units.'),
-  rotation: AngleDegreesSchema.optional().describe('Ellipse rotation in degrees.'),
-  startAngle: AngleDegreesSchema.describe('Ellipse arc start angle in degrees.'),
-  endAngle: AngleDegreesSchema.describe('Ellipse arc end angle in degrees.'),
+  rotation: number().optional().describe('Ellipse rotation in degrees.'),
+  startAngle: number().describe('Ellipse arc start angle in degrees.'),
+  endAngle: number().describe('Ellipse arc end angle in degrees.'),
   counterClockwise: boolean().optional().describe('Whether to draw counter-clockwise.'),
 });
 

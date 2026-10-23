@@ -1,7 +1,6 @@
 import { discriminatedUnion, literal, number, object, strictObject } from 'zod';
 
 import { AtPositionSchema, BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema } from '../position';
-import { AngleDegreesSchema } from '../scalar';
 import { ScopeSelfPointSchema } from '../scope/self-point';
 
 /** 校验水平和竖直平移量 */
@@ -44,7 +43,7 @@ const BetweenTranslateSchema = object({
 /** 校验旋转角度与可选支点 */
 const RotateSchema = strictObject({
   kind: literal('rotate').describe('Discriminator: rotation about a point.'),
-  degrees: AngleDegreesSchema.describe('Rotation angle in degrees; positive = visually clockwise under screen y-down.'),
+  degrees: number().describe('Rotation angle in degrees; positive = visually clockwise under screen y-down.'),
   pivot: ScopeSelfPointSchema.optional().describe(
     'Pivot on the intrinsic Scope envelope or an explicit local point. Omitted fields use origin.',
   ),

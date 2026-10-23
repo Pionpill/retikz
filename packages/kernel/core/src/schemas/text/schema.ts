@@ -1,8 +1,7 @@
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
-import { array, boolean, enum as zodEnum, strictObject, string, union } from 'zod';
+import { number, array, boolean, enum as zodEnum, strictObject, string, union } from 'zod';
 
 import { FontSchema, FontSizeSchema } from '../font';
-import { AngleDegreesSchema } from '../scalar';
 import { ContextualColorSchema, OpacitySchema } from '../style';
 import { NodeTextAlign } from './constants';
 
@@ -106,7 +105,7 @@ export const BoundaryLabelSchema = strictObject({
   align: TextAlignSchema.default('middle').describe('Alignment along the attachment tangent.'),
   placement: zodEnum(['outside', 'inside']).default('outside').describe('Side of the boundary support line.'),
   distance: NonNegativeNumberSchema.default(4).describe('Gap from the support line to the rotated label box.'),
-  rotate: union([zodEnum(['none', 'radial', 'tangent']), AngleDegreesSchema])
+  rotate: union([zodEnum(['none', 'radial', 'tangent']), number().describe('Angle in degrees.')])
     .default('none')
     .describe('Text rotation: none, outward radial, radial plus 90 degrees, or an explicit angle.'),
   keepUpright: boolean().default(false).describe('Flip upside-down text in host-local coordinates.'),

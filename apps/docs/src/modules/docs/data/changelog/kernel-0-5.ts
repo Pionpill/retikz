@@ -378,6 +378,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: 'BREAKING：移除角度 Schema 别名', en: 'BREAKING: remove the angle schema alias' },
+          content: {
+            zh: '移除 `AngleDegreesSchema` 导出；自定义 Schema 直接使用 Zod `number()`，并在字段描述中注明角度单位。现有角度字段的数值校验、约束和默认值保持不变。',
+            en: 'The `AngleDegreesSchema` export is removed. Use Zod `number()` in custom schemas and describe the angle unit on each field. Existing angle validation, constraints, and defaults remain unchanged.',
+          },
+        },
+        {
           label: {
             zh: 'BREAKING：统一主题名称与定义注册',
             en: 'BREAKING: consistent theme names and definition registries',

@@ -6,10 +6,9 @@ import {
   PositiveNumberSchema,
 } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
-import { array, enum as zodEnum, literal, never, strictObject, union, unknown } from 'zod';
+import { number, array, enum as zodEnum, literal, never, strictObject, union, unknown } from 'zod';
 
 import { DrawableInstanceSchema } from '../../drawable';
-import { AngleDegreesSchema } from '../../scalar';
 import {
   StrokeCapJoinSchema,
   GraphicColorSchema,
@@ -73,9 +72,11 @@ export const PathFillSchema = strictObject({
 
 /** 校验整条路径的旋转与缩放 */
 export const PathTransformSchema = strictObject({
-  rotate: AngleDegreesSchema.optional().describe(
-    'Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.',
-  ),
+  rotate: number()
+    .optional()
+    .describe(
+      'Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.',
+    ),
   scale: PathScaleSchema.optional().describe(
     'Scale the whole path around its bounding-box center. Applied with rotate around the same center.',
   ),

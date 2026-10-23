@@ -6,7 +6,7 @@ import {
   PositiveNumberSchema,
 } from '@retikz/foundation';
 import type { RefinementCtx } from 'zod';
-import { array, boolean, discriminatedUnion, enum as zodEnum, literal, strictObject, union } from 'zod';
+import { number, array, boolean, discriminatedUnion, enum as zodEnum, literal, strictObject, union } from 'zod';
 
 import { Side } from '../../../shared';
 import {
@@ -16,7 +16,6 @@ import {
   DEFAULT_BEND_LOOSENESS,
 } from '../../../shared/geometry';
 import { PositionSchema } from '../../position';
-import { AngleDegreesSchema } from '../../scalar';
 import { createLabelVisualStyleShape, TextBlockSchema } from '../../text';
 import { NodeTargetSchema, TargetSchema } from '../target';
 import { BendDirection, FoldStepVia, PathLabelPosition, CirclePathCloseMode } from './constants';
@@ -144,20 +143,25 @@ export const CubicStepSchema = strictObject({
 }).describe('Cubic action: cubic Bezier; two control points give precise tangent control at both ends');
 
 /** 对称 bend 角度的权威约束与默认 */
-export const BendAngleSchema = AngleDegreesSchema.gt(-180)
+export const BendAngleSchema = number()
+  .gt(-180)
   .lt(180)
   .describe('Symmetric bend angle in degrees; negative values reverse the side. Defaults to 30.')
   .default(DEFAULT_BEND_ANGLE);
 
 /** 切线 bend 出射角的权威约束与默认 */
-export const BendOutAngleSchema = AngleDegreesSchema.describe(
-  'Absolute outgoing tangent angle in screen coordinates (positive toward +y). Either tangent angle activates tangent mode and overrides symmetric bend parameters. Defaults to 0.',
-).default(DEFAULT_BEND_OUT_ANGLE);
+export const BendOutAngleSchema = number()
+  .describe(
+    'Absolute outgoing tangent angle in screen coordinates (positive toward +y). Either tangent angle activates tangent mode and overrides symmetric bend parameters. Defaults to 0.',
+  )
+  .default(DEFAULT_BEND_OUT_ANGLE);
 
 /** 切线 bend 入射角的权威约束与默认 */
-export const BendInAngleSchema = AngleDegreesSchema.describe(
-  'Absolute incoming tangent angle in screen coordinates, measured from the endpoint toward its control point. Either tangent angle activates tangent mode. Defaults to 180.',
-).default(DEFAULT_BEND_IN_ANGLE);
+export const BendInAngleSchema = number()
+  .describe(
+    'Absolute incoming tangent angle in screen coordinates, measured from the endpoint toward its control point. Either tangent angle activates tangent mode. Defaults to 180.',
+  )
+  .default(DEFAULT_BEND_IN_ANGLE);
 
 /** 切线 bend 松弛度的权威约束与默认 */
 export const BendLoosenessSchema = PositiveNumberSchema.describe(
@@ -223,12 +227,10 @@ export const ArcStepSchema = strictObject({
   kind: literal('arc').describe(
     'Arc segment sweeping from startAngle to endAngle around a center. Use radius as a number or `{ x, y }`.',
   ),
-  startAngle: AngleDegreesSchema.describe(
+  startAngle: number().describe(
     'Arc start angle in degrees, measured from +x axis. 0° = +x, 90° = +y = screen-down (visual clockwise under screen y-down); matches polar / Node label angle convention.',
   ),
-  endAngle: AngleDegreesSchema.describe(
-    'Arc end angle in degrees; sweep direction inferred from startAngle vs endAngle',
-  ),
+  endAngle: number().describe('Arc end angle in degrees; sweep direction inferred from startAngle vs endAngle'),
   radius: StepRadiusSchema.describe('Arc radius. Number creates a circular arc; `{ x, y }` creates an elliptical arc.'),
   center: TargetSchema.optional().describe('Explicit arc center. Omitted fields use the current cursor as center.'),
   label: PathLabelSchema.optional().describe('Edge label attached to this arc'),
@@ -243,12 +245,14 @@ const CirclePathStepBaseSchema = strictObject({
     'Circle centered at the cursor. Without angles, emits a full circle; with angles, emits a partial arc closed by `closed`.',
   ),
   radius: PositiveNumberSchema.describe('Circle radius in user units'),
-  startAngle: AngleDegreesSchema.optional().describe(
-    'Partial-circle start angle in degrees (same convention as arc: 0°=+x, 90°=+y screen-down). Give both startAngle and endAngle for a partial circle, or neither for a full circle.',
-  ),
-  endAngle: AngleDegreesSchema.optional().describe(
-    'Partial-circle end angle in degrees; sweep direction inferred from startAngle vs endAngle.',
-  ),
+  startAngle: number()
+    .optional()
+    .describe(
+      'Partial-circle start angle in degrees (same convention as arc: 0°=+x, 90°=+y screen-down). Give both startAngle and endAngle for a partial circle, or neither for a full circle.',
+    ),
+  endAngle: number()
+    .optional()
+    .describe('Partial-circle end angle in degrees; sweep direction inferred from startAngle vs endAngle.'),
   closed: zodEnum(CirclePathCloseMode)
     .optional()
     .describe('Closing mode for a circle path: closed, chord, sector, or open. With angles, omitted fields use chord.'),
@@ -269,10 +273,12 @@ const EllipsePathStepBaseSchema = strictObject({
     'Ellipse centered at the cursor. Without angles, emits a full ellipse; with angles, emits a partial arc closed by `closed`.',
   ),
   radius: StepAnisotropicRadiusSchema.describe('Ellipse radius object `{ x, y }` in user units.'),
-  startAngle: AngleDegreesSchema.optional().describe(
-    'Partial-ellipse start angle in degrees (parametric, same convention as arc). Give both startAngle and endAngle for a partial ellipse, or neither for a full ellipse.',
-  ),
-  endAngle: AngleDegreesSchema.optional().describe('Partial-ellipse end angle in degrees.'),
+  startAngle: number()
+    .optional()
+    .describe(
+      'Partial-ellipse start angle in degrees (parametric, same convention as arc). Give both startAngle and endAngle for a partial ellipse, or neither for a full ellipse.',
+    ),
+  endAngle: number().optional().describe('Partial-ellipse end angle in degrees.'),
   closed: zodEnum(CirclePathCloseMode)
     .optional()
     .describe(

@@ -3,7 +3,6 @@ import { enum as zodEnum, number, object, tuple, union } from 'zod';
 
 import { Anchor, CenterAnchor, Side } from '../../../shared';
 import { BoundarySchema } from '../../boundary';
-import { AngleDegreesSchema } from '../../scalar';
 
 /** 校验真实形状边界上按边及比例指定的锚点 */
 export const BoundaryAnchorRefSchema = object({
@@ -21,7 +20,7 @@ export const AnchorRefSchema = union([
   NamedAnchorRefSchema.describe(
     'Named anchor: canonical anchor or shape-specific anchor. Unknown names fail at compile time.',
   ),
-  AngleDegreesSchema.describe('Angle anchor in degrees (boundary point in that direction)'),
+  number().describe('Angle anchor in degrees (boundary point in that direction)'),
   BoundaryAnchorRefSchema,
 ]).describe(
   'Anchor reference: named anchor, angle in degrees, or proportional point { side, fraction } on the boundary',

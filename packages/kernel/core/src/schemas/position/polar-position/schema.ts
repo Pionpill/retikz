@@ -3,7 +3,6 @@ import type { ZodType } from 'zod';
 import { lazy, number, object, union } from 'zod';
 
 import type { SharedPolarPosition } from '../../../shared';
-import { AngleDegreesSchema } from '../../scalar';
 import { PositionSchema } from '../position';
 
 /** 校验可嵌套原点引用的极坐标；角度从正 x 轴沿屏幕坐标方向计量 */
@@ -13,7 +12,7 @@ export const PolarPositionSchema = object({
     .describe(
       'Origin reference: node id string, Cartesian [x, y], or nested PolarPosition. Omitted fields use [0, 0].',
     ),
-  angle: AngleDegreesSchema.describe(
+  angle: number().describe(
     'Angle in degrees measured from the positive x axis. Positive angles follow the screen y-down convention.',
   ),
   radius: number().describe('Radius or distance in user units.'),

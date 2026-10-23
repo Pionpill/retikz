@@ -18,7 +18,6 @@ import {
   PolarPositionSchema,
   PositionSchema,
 } from '../position';
-import { AngleDegreesSchema } from '../scalar';
 import { ShapeValueSchema } from '../shape';
 import {
   OpacitySchema,
@@ -93,7 +92,7 @@ export const NodeLabelConfigSchema = object({
     .unwrap()
     .optional()
     .describe('Attachment tangent alignment: start, middle, or end. Defaults to middle.'),
-  position: union([zodEnum(NodeLabelPosition), AngleDegreesSchema, NodeLabelBoundaryPositionSchema])
+  position: union([zodEnum(NodeLabelPosition), number().describe('Angle in degrees.'), NodeLabelBoundaryPositionSchema])
     .optional()
     .describe(
       'Label attachment point: canonical direction, center, angle, or `{ boundary, fraction }`. Omitted fields use top.',
@@ -230,9 +229,7 @@ const NodeBaseSchema = strictObject({
   position: NodePositionSchema.default([0, 0]).describe(
     'Node placement: Cartesian [x, y], polar, relative-to-node, offset, between two endpoints, or anchor-to-anchor alignment. Defaults to [0, 0] in the current local coordinate system. Non-Cartesian forms resolve at compile time.',
   ),
-  rotate: AngleDegreesSchema.optional().describe(
-    'Rotation in degrees around the node center; positive is visually clockwise.',
-  ),
+  rotate: number().optional().describe('Rotation in degrees around the node center; positive is visually clockwise.'),
   text: TextBlockSchema.optional().describe(
     'Optional node text content. Accepts a string, an array of lines, styled line objects, or mixed text/math segments. Newlines are hard line breaks; math sugar requires lowerTex.',
   ),

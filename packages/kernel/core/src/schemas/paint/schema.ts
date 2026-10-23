@@ -18,7 +18,6 @@ import {
   tuple,
 } from 'zod';
 
-import { AngleDegreesSchema } from '../scalar';
 import {
   CssColorSchema,
   OpacitySchema,
@@ -47,9 +46,9 @@ export const GradientStopSchema = object({
 export const LinearGradientPaintSchema = object({
   kind: literal('linearGradient').describe('Discriminator for linear gradient paint.'),
   stops: array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
-  angle: AngleDegreesSchema.optional().describe(
-    'Gradient direction angle in degrees. Omitted fields use the paint backend default.',
-  ),
+  angle: number()
+    .optional()
+    .describe('Gradient direction angle in degrees. Omitted fields use the paint backend default.'),
 }).describe('Linear gradient paint server');
 
 /** 校验径向渐变；中心与半径采用对象包围盒坐标 */
@@ -69,7 +68,7 @@ export const ConicGradientPaintSchema = object({
   center: tuple([number(), number()])
     .optional()
     .describe('Center in object-bounding-box coordinates. Omitted fields use [0.5, 0.5].'),
-  angle: AngleDegreesSchema.optional().describe('Start angle in degrees. Omitted fields use 0.'),
+  angle: number().optional().describe('Start angle in degrees. Omitted fields use 0.'),
 }).describe('Conic gradient paint server');
 
 /** 校验线状图案的局部样式覆盖；显式虚线序列优先于预设 */
@@ -173,7 +172,7 @@ export const PatternPaintSchema = object({
   lineStyleCycle: PatternLineStyleCycleSchema.optional().describe(
     'Sparse repeating style cycle for adjacent line motifs.',
   ),
-  rotation: AngleDegreesSchema.optional().describe('Rotate the whole pattern, in degrees'),
+  rotation: number().optional().describe('Rotate the whole pattern, in degrees'),
 }).describe('Pattern paint server (hatching / dots / grid)');
 
 /** 校验以图片填充形状的资源地址与适配方式 */

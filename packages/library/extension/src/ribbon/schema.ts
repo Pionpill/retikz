@@ -1,12 +1,5 @@
 import type { IRStep } from '@retikz/core';
-import {
-  AngleDegreesSchema,
-  BoundaryLabelSchema,
-  PathLabelSchema,
-  PolarPositionSchema,
-  StepSchema,
-  Vector2Schema,
-} from '@retikz/core';
+import { BoundaryLabelSchema, PathLabelSchema, PolarPositionSchema, StepSchema, Vector2Schema } from '@retikz/core';
 import {
   createOpenStringSchema,
   JsonObjectSchema,
@@ -94,7 +87,7 @@ export const RibbonWidthSchema = discriminatedUnion('kind', [
 
 /** Core 坐标 Schema 接受 unknown；这里将作者输入限定为公开方向类型，运行时仍复用其完整校验 */
 export const RibbonDirectionSchema = union([
-  AngleDegreesSchema.describe('Direction angle in degrees, where 0 points to the positive x axis.'),
+  number().describe('Direction angle in degrees, where 0 points to the positive x axis.'),
   Vector2Schema.refine(([x, y]) => x !== 0 || y !== 0, {
     message: 'Ribbon direction vector must not be zero length.',
   }).describe(
