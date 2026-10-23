@@ -110,7 +110,7 @@ describe('Vanilla processing', () => {
       createProcessingController({
         children: [{ type: 'node', id: 'broken', position: [0, 0], shape: 'missing-shape' }],
       }),
-    ).toThrow(/Unknown shape 'missing-shape'/);
+    ).toThrow(/Unknown provider 'missing-shape'/);
   });
 
   it('controller 仅在完整成功后发布不可变 revision，失败保持上一次结果', () => {

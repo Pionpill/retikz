@@ -130,7 +130,7 @@ describe('Extension compound clip definition', () => {
     ).not.toThrow();
 
     expect(() => compileToScene(scene, { clips: [CompoundClipDefinition] })).toThrow(
-      /Unknown clip 'roundedRect'.*options\.clips/i,
+      /Unknown provider 'roundedRect'.*available:/i,
     );
   });
 
@@ -151,6 +151,6 @@ describe('Extension compound clip definition', () => {
       ],
     };
 
-    expect(() => compileToScene(scene)).toThrow(/Unknown clip 'compound'.*options\.clips/i);
+    expect(() => compileToScene(scene)).toThrow(/Unknown provider 'compound'.*available:/i);
   });
 });

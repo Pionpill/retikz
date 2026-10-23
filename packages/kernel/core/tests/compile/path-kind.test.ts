@@ -56,7 +56,7 @@ describe('Path kind registry', () => {
         compileToScene(
           scene([{ type: 'path', kind: 'missing', kindOptions: {}, children: steps }] as IRScene['children']),
         ).scene,
-    ).toThrow(/Unknown path kind 'missing'/);
+    ).toThrow(/Unknown provider 'missing'/);
   });
 
   it('lets custom path kinds reuse the built-in stroke emitter', () => {

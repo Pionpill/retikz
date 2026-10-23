@@ -1,5 +1,5 @@
 import type { AnyPathKindDefinition } from '../../contract';
-import { resolveProviderRegistry } from '../registry/index';
+import { createProviderRegistry } from '../registry/index';
 import { BUILTIN_PATH_KINDS } from './definitions';
 
 const keyOfPathKind = (definition: AnyPathKindDefinition): string => definition.name;
@@ -8,7 +8,7 @@ const keyOfPathKind = (definition: AnyPathKindDefinition): string => definition.
 export const resolvePathKindRegistry = (
   pathKinds?: ReadonlyArray<AnyPathKindDefinition>,
 ): ReadonlyMap<string, AnyPathKindDefinition> =>
-  resolveProviderRegistry({
+  createProviderRegistry({
     capability: 'path kind',
     builtins: BUILTIN_PATH_KINDS,
     custom: pathKinds,

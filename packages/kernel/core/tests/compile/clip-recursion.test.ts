@@ -140,8 +140,10 @@ describe('clip recursion guard', () => {
 });
 
 describe('clip failure boundaries', () => {
-  it('points every missing definition to options.clips', () => {
-    expect(() => compileToScene(clippedIr({ kind: 'missingOperation' }))).toThrow(/options\.clips/i);
+  it('reports missing definitions with available registry keys', () => {
+    expect(() => compileToScene(clippedIr({ kind: 'missingOperation' }))).toThrow(
+      /Unknown provider .*available: rect/i,
+    );
   });
 
   it('keeps malformed lower output as a fatal provider contract error', () => {

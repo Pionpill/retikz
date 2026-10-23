@@ -205,7 +205,7 @@ describe('buildPreviewSource', () => {
     for (const source of [result.source?.ir, result.source?.vanilla]) {
       const svg = renderToStaticMarkup(source?.render?.('svg'));
       expect(svg).toContain('<path');
-      expect(svg).not.toContain('Unknown shape');
+      expect(svg).not.toContain('Unknown provider');
     }
   });
   it('preserves a positioned Scope and its children in authoring Source', () => {

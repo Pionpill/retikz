@@ -109,7 +109,7 @@ describe('clip providers', () => {
   it('custom clip kind is rejected at compile time when no provider is registered', () => {
     expect(
       () => compileToScene(clippedIr({ kind: 'roundedRect', x: 0, y: 0, width: 40, height: 30, r: 5 })).scene,
-    ).toThrow(/options\.clips/i);
+    ).toThrow(/Unknown provider .*available: rect/i);
   });
 
   it('custom clip cannot override builtin clip kinds', () => {

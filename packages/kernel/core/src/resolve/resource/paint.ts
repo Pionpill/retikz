@@ -24,10 +24,7 @@ const resolvePattern = (
   spec: Extract<IRPaint, { kind: 'pattern' }>,
   context: PaintResolveContext,
 ): PatternResolution => {
-  const definition = providerDefinitionOf(context.patterns, spec.shape, {
-    capability: 'pattern shape',
-    optionName: 'patterns',
-  });
+  const definition = providerDefinitionOf(context.patterns, spec.shape);
   const rawSize = spec.size ?? definition.defaultSize ?? DEFAULT_PATTERN_SIZE;
   if (!Number.isFinite(rawSize) || rawSize <= 0) {
     throw new RetikzCoreError(

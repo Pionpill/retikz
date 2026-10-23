@@ -209,6 +209,6 @@ describe('Entity lowering', () => {
         { type: 'scene', version: 1, children: [entity({ id: 'custom', role: 'custom' })] },
         { ...definitions, padding: 0 },
       ),
-    ).toThrow(/Unknown shape 'missing-shape'/);
+    ).toThrow(/Unknown provider 'missing-shape'/);
   });
 });

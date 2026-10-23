@@ -90,17 +90,17 @@ IR 只写注册名或带参引用；宿主负责在每次编译时提供相同�
 
 ## 错误与限制
 
-| 情况                         | 结果与排查入口                                                       |
-| ---------------------------- | -------------------------------------------------------------------- |
-| `name` 为空                  | 注册阶段报 provider key 必须是非空字符串                             |
-| 与内置或另一个自定义项同名   | 注册阶段报 `duplicate shape registration`；内置形状不能覆盖          |
-| IR 引用了未注册名称          | 编译报 `Unknown shape`，列出可用名称并提示通过 `options.shapes` 注入 |
-| params 不是 JSON object      | 编译在 `node.shape.params` 路径报 JSON 校验错误                      |
-| params 不符合 `paramsSchema` | 编译同时报告 shape 名、IR 路径与 zod 细节                            |
-| `anchor` 不认识专属名称      | 返回 `undefined` 后由编译层报 `Unknown anchor`                       |
-| 未实现 `edgePoint`           | 使用 `{ side, fraction }` 时编译报该 shape 不支持 side anchors       |
-| 未实现 `connectionEnvelope`  | 内置 boundary 的 `fit: 'tight'` 回退到 bounds，并产生一次 warning    |
-| 返回非法连接包络             | 编译报错；半轴必须是有限正数，circle 的两个半轴还必须相等            |
+| 情况                         | 结果与排查入口                                                    |
+| ---------------------------- | ----------------------------------------------------------------- |
+| `name` 为空                  | 注册阶段报 provider key 必须是非空字符串                          |
+| 与内置或另一个自定义项同名   | 注册阶段报 `duplicate shape registration`；内置形状不能覆盖       |
+| IR 引用了未注册名称          | 编译报 `Unknown provider`，包含请求名称并列出可用名称             |
+| params 不是 JSON object      | 编译在 `node.shape.params` 路径报 JSON 校验错误                   |
+| params 不符合 `paramsSchema` | 编译同时报告 shape 名、IR 路径与 zod 细节                         |
+| `anchor` 不认识专属名称      | 返回 `undefined` 后由编译层报 `Unknown anchor`                    |
+| 未实现 `edgePoint`           | 使用 `{ side, fraction }` 时编译报该 shape 不支持 side anchors    |
+| 未实现 `connectionEnvelope`  | 内置 boundary 的 `fit: 'tight'` 回退到 bounds，并产生一次 warning |
+| 返回非法连接包络             | 编译报错；半轴必须是有限正数，circle 的两个半轴还必须相等         |
 
 <ComponentAlert
   type="warn"

@@ -18,7 +18,7 @@ export type ClipResolveContext = Readonly<{
 /** 绑定 definition 并解析 provider params；provider resolve 保留到 compile resource 阶段执行 */
 export const resolveClip = (clip: IRClip, context: ClipResolveContext): ClipResolution => {
   const kind = clip.kind;
-  const definition = providerDefinitionOf(context.clips, kind, { capability: 'clip', optionName: 'clips' });
+  const definition = providerDefinitionOf(context.clips, kind);
   const parsed = parseProviderPayload({
     capability: 'clip',
     providerName: kind,
@@ -42,6 +42,6 @@ export const resolveClip = (clip: IRClip, context: ClipResolveContext): ClipReso
 /** 通过同一个 Clip registry 绑定已类型化 shape 的 definition */
 export const resolveClipShape = (shape: ClipShape, context: ClipResolveContext): ClipShapeResolution => {
   const kind = shape.kind;
-  const definition = providerDefinitionOf(context.clips, kind, { capability: 'clip', optionName: 'clips' });
+  const definition = providerDefinitionOf(context.clips, kind);
   return { spec: shape, kind, definition, params: shape };
 };

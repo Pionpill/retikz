@@ -34,7 +34,7 @@ describe('Core minimal builtin providers', () => {
 
   it('requires optional Standard definitions when IR names an optional provider', () => {
     expect(() => compileToScene(scene([{ type: 'node', position: [0, 0], shape: 'cross' }]), { padding: 0 })).toThrow(
-      /Unknown shape 'cross'.*options\.shapes/i,
+      /Unknown provider 'cross'.*available:/i,
     );
 
     expect(() =>
@@ -48,7 +48,7 @@ describe('Core minimal builtin providers', () => {
         ]),
         { padding: 0 },
       ),
-    ).toThrow(/Unknown clip 'compound'.*options\.clips/i);
+    ).toThrow(/Unknown provider 'compound'.*available:/i);
 
     const optionalClips: Array<{ kind: string; points?: Array<[number, number]>; commands?: Array<unknown> }> = [
       {
@@ -64,7 +64,7 @@ describe('Core minimal builtin providers', () => {
 
     for (const clip of optionalClips) {
       expect(() => compileToScene(scene([{ type: 'scope', clip, children: [] } as never]), { padding: 0 })).toThrow(
-        new RegExp(`Unknown clip '${clip.kind}'.*options\\.clips`, 'i'),
+        new RegExp(`Unknown provider '${clip.kind}'.*available:`, 'i'),
       );
     }
 
@@ -81,14 +81,14 @@ describe('Core minimal builtin providers', () => {
         ]),
         { padding: 0 },
       ),
-    ).toThrow(/Unknown path generator 'parabola'.*options\.pathGenerators/i);
+    ).toThrow(/Unknown provider 'parabola'.*available:/i);
   });
 
   it.each(['circle', 'ellipse'])('requires an optional definition for the %s clip operation', kind => {
     const clip: IRClip = kind === 'circle' ? { kind, cx: 0, cy: 0, r: 10 } : { kind, cx: 0, cy: 0, rx: 10, ry: 5 };
 
     expect(() => compileToScene(scene([{ type: 'scope', clip, children: [] }]), { padding: 0 })).toThrow(
-      new RegExp(`Unknown clip '${kind}'.*options\\.clips`, 'i'),
+      new RegExp(`Unknown provider '${kind}'.*available:`, 'i'),
     );
   });
 

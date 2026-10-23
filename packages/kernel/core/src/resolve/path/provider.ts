@@ -32,10 +32,7 @@ export const resolvePathKind = (
   irPath: string,
 ): PathKindResolution => {
   const kind = path.kind ?? 'stroke';
-  const definition = providerDefinitionOf(context.pathKinds, kind, {
-    capability: 'path kind',
-    optionName: 'pathKinds',
-  });
+  const definition = providerDefinitionOf(context.pathKinds, kind);
   const parsed = parseProviderPayload({
     capability: 'path kind',
     providerName: kind,
@@ -55,10 +52,7 @@ export const resolvePathGenerator = (
   context: PathResolveContext,
   irPath: string,
 ): PathGeneratorResolution => {
-  const definition = providerDefinitionOf(context.pathGenerators, step.name, {
-    capability: 'path generator',
-    optionName: 'pathGenerators',
-  });
+  const definition = providerDefinitionOf(context.pathGenerators, step.name);
   const paramsPath = `${irPath}.params`;
   const params = parseProviderPayload({
     capability: 'path generator',
@@ -114,10 +108,7 @@ const assertFiniteArrowGeometry = (shape: string, definition: ArrowDefinition): 
 /** 解析 arrow mark 的有效视觉属性与几何输入 */
 export const resolveArrowMark = (mark: ResolvedArrowMark, context: PathResolveContext): ArrowMarkResolution => {
   const shape = mark.shape ?? DEFAULT_ARROW_SHAPE;
-  const definition = providerDefinitionOf(context.arrows, shape, {
-    capability: 'arrow shape',
-    optionName: 'arrows',
-  });
+  const definition = providerDefinitionOf(context.arrows, shape);
   assertFiniteArrowGeometry(shape, definition);
   const visual: ArrowMarkVisual = {
     shape,

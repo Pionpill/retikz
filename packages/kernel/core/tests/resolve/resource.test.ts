@@ -70,7 +70,7 @@ describe('resolve/resource paint', () => {
 
   it('reports unknown pattern provider at the resolve boundary', () => {
     expect(() => resolvePaint({ kind: 'pattern', shape: 'missing' }, patternContext())).toThrow(
-      /Unknown pattern shape 'missing'/,
+      /Unknown provider 'missing'/,
     );
   });
 
@@ -267,6 +267,8 @@ describe('resolve/resource clip', () => {
   });
 
   it('reports unknown clip provider at the resolve boundary', () => {
-    expect(() => resolveClip({ kind: 'missing' }, { clips: resolveClipRegistry() })).toThrow(/Unknown clip 'missing'/);
+    expect(() => resolveClip({ kind: 'missing' }, { clips: resolveClipRegistry() })).toThrow(
+      /Unknown provider 'missing'/,
+    );
   });
 });

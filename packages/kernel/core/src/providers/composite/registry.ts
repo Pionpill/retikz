@@ -1,5 +1,5 @@
 import type { AnyCompositeDefinition } from '../../contract';
-import { resolveProviderRegistry } from '../registry/index';
+import { createProviderRegistry } from '../registry/index';
 
 const keyOfComposite = (definition: AnyCompositeDefinition): string => `${definition.namespace}.${definition.type}`;
 
@@ -10,7 +10,7 @@ const keyOfComposite = (definition: AnyCompositeDefinition): string => `${defini
 export const resolveCompositeRegistry = (
   composites?: ReadonlyArray<AnyCompositeDefinition>,
 ): ReadonlyMap<string, AnyCompositeDefinition> =>
-  resolveProviderRegistry({
+  createProviderRegistry({
     capability: 'composite',
     custom: composites,
     keyOf: keyOfComposite,

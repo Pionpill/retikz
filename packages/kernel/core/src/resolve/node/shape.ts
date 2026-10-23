@@ -78,7 +78,7 @@ export const resolveNodeShape = (input: NodeShapeResolveInput): ShapeResolution 
   const { node, shapes, scaleX, scaleY, irPath = 'node' } = input;
   const { type: shapeName, params: rawShapeParams } = resolveNodeShapePreset(node.shape);
   const shapeParamsPath = `${irPath}.shape.params`;
-  const shapeDefinition = providerDefinitionOf(shapes, shapeName, { capability: 'shape', optionName: 'shapes' });
+  const shapeDefinition = providerDefinitionOf(shapes, shapeName);
   const parsedShapeParams: JsonObject = parseProviderPayload({
     capability: 'shape',
     providerName: shapeName,
