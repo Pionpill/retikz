@@ -18,7 +18,7 @@ Source 省略由布局计算的位置和路径。运行时选择的 Definition �
 
 ## 组件声明
 
-#### <ApiSourceLink label={"FlowDiagram"} path={"packages/schematic/diagram-react/src/flow/FlowDiagram.tsx"} startLine={61}>FlowDiagram</ApiSourceLink> / <ApiSourceLink label={"FlowDiagramProps"} path={"packages/schematic/diagram-react/src/flow/authoring.ts"} startLine={295}>FlowDiagramProps</ApiSourceLink>
+#### <ApiSourceLink label={"FlowDiagram"} path={"packages/schematic/diagram-react/src/flow/FlowDiagram.tsx"} startLine={71}>FlowDiagram</ApiSourceLink> / <ApiSourceLink label={"FlowDiagramProps"} path={"packages/schematic/diagram-react/src/flow/authoring.ts"} startLine={295}>FlowDiagramProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -129,15 +129,6 @@ export declare const FlowEntity: {
       status?: 'error' | 'success' | 'warning' | 'disabled' | undefined;
       style?:
         | {
-            color?: string | undefined;
-            opacity?:
-              | number
-              | { overall?: number | undefined; fill?: number | undefined; stroke?: number | undefined }
-              | undefined;
-            dashed?: boolean | undefined;
-            dotted?: boolean | undefined;
-            dashPattern?: Array<number> | undefined;
-            dashOffset?: number | undefined;
             fill?:
               | string
               | number
@@ -216,6 +207,10 @@ export declare const FlowEntity: {
                   rotation?: number | undefined;
                 }
               | { kind: 'image'; href: string; fit?: 'fill' | 'contain' | 'cover' | undefined }
+              | undefined;
+            opacity?:
+              | number
+              | { overall?: number | undefined; fill?: number | undefined; stroke?: number | undefined }
               | undefined;
             stroke?:
               | string
@@ -297,6 +292,11 @@ export declare const FlowEntity: {
               | { kind: 'image'; href: string; fit?: 'fill' | 'contain' | 'cover' | undefined }
               | undefined;
             strokeWidth?: number | undefined;
+            color?: string | undefined;
+            dashed?: boolean | undefined;
+            dotted?: boolean | undefined;
+            dashPattern?: Array<number> | undefined;
+            dashOffset?: number | undefined;
             shadow?:
               | 'none'
               | 'sm'
@@ -314,8 +314,8 @@ export declare const FlowEntity: {
                 }
               | undefined;
             blendMode?:
-              | 'color'
               | 'normal'
+              | 'color'
               | 'multiply'
               | 'screen'
               | 'overlay'
@@ -376,11 +376,22 @@ export declare const FlowEntity: {
                     }
                   | {
                       tex: string;
+                      fontSize?: string | number | undefined;
                       displayMode?: boolean | undefined;
                       fill?: string | number | undefined;
                       opacity?: number | undefined;
                     }
                 >;
+                fill?: string | number | undefined;
+                opacity?: number | undefined;
+                font?:
+                  | {
+                      family?: string | undefined;
+                      size?: string | number | undefined;
+                      weight?: number | 'normal' | 'bold' | undefined;
+                      style?: 'normal' | 'italic' | 'oblique' | undefined;
+                    }
+                  | undefined;
               }
           >;
     },
@@ -562,7 +573,7 @@ export type FlowLayoutProps = FlowLayoutMarkerProps &
 
 | 成员                   | 类型                                                                                                                                                                                  | 默认值 | 说明                                                                      |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------- |
-| `direction?`           | `"none" \| "reverse" \| "both" \| "forward"`                                                                                                                                          | —      | 覆盖 Graph role 的语义箭头方向                                            |
+| `direction?`           | `"reverse" \| "none" \| "both" \| "forward"`                                                                                                                                          | —      | 覆盖 Graph role 的语义箭头方向                                            |
 | `group?`               | `string`                                                                                                                                                                              | —      | 与 Entity 共享分类色的分组 key                                            |
 | `kind?`                | `string`                                                                                                                                                                              | —      | 当前 role 下的稳定子类型                                                  |
 | `label?`               | `InputFlowRelation['label']`                                                                                                                                                          | —      | 非空 TextBlock，或保留 Core 全部几何与外观字段的 PathLabel                |
@@ -572,11 +583,11 @@ export type FlowLayoutProps = FlowLayoutMarkerProps &
 | `role?`                | `"flow" \| string & {} \| "association" \| "dependency" \| "generalization" \| "influence"`                                                                                           | —      | Graph Relation 的开放角色，省略使用 flow                                  |
 | `routing?`             | `InputFlowRelation['routing']`                                                                                                                                                        | —      | 当前 Relation 的路由覆盖                                                  |
 | `source`               | `InputFlowRelation['source']`                                                                                                                                                         | —      | 起点 Entity 或 Group：id 字符串或含 id、side / anchor、overlap 的端点对象 |
-| `sourceMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                    | —      | 起点 marker 外观                                                          |
+| `sourceMarker?`        | `InputFlowRelation['sourceMarker']`                                                                                                                                                   | —      | 起点 marker 外观                                                          |
 | `status?`              | `"error" \| "success" \| "warning" \| "disabled"`                                                                                                                                     | —      | Graph 语义状态                                                            |
 | `style?`               | `InputFlowRelation['style']`                                                                                                                                                          | —      | 当前 Relation 的路径外观覆盖                                              |
 | `target`               | `InputFlowRelation['target']`                                                                                                                                                         | —      | 终点 Entity 或 Group：id 字符串或含 id、side / anchor、overlap 的端点对象 |
-| `targetMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                    | —      | 终点 marker 外观                                                          |
+| `targetMarker?`        | `InputFlowRelation['targetMarker']`                                                                                                                                                   | —      | 终点 marker 外观                                                          |
 
 </ApiTable>
 
@@ -588,7 +599,7 @@ export type FlowLayoutProps = FlowLayoutMarkerProps &
 export declare const FlowRelation: {
   (
     props: {
-      direction?: 'none' | 'reverse' | 'both' | 'forward' | undefined;
+      direction?: 'reverse' | 'none' | 'both' | 'forward' | undefined;
       group?: string | undefined;
       kind?: string | undefined;
       label?:
@@ -625,11 +636,22 @@ export declare const FlowRelation: {
                     }
                   | {
                       tex: string;
+                      fontSize?: string | number | undefined;
                       displayMode?: boolean | undefined;
                       fill?: string | number | undefined;
                       opacity?: number | undefined;
                     }
                 >;
+                fill?: string | number | undefined;
+                opacity?: number | undefined;
+                font?:
+                  | {
+                      family?: string | undefined;
+                      size?: string | number | undefined;
+                      weight?: number | 'normal' | 'bold' | undefined;
+                      style?: 'normal' | 'italic' | 'oblique' | undefined;
+                    }
+                  | undefined;
               }
           >
         | {
@@ -667,11 +689,22 @@ export declare const FlowRelation: {
                           }
                         | {
                             tex: string;
+                            fontSize?: string | number | undefined;
                             displayMode?: boolean | undefined;
                             fill?: string | number | undefined;
                             opacity?: number | undefined;
                           }
                       >;
+                      fill?: string | number | undefined;
+                      opacity?: number | undefined;
+                      font?:
+                        | {
+                            family?: string | undefined;
+                            size?: string | number | undefined;
+                            weight?: number | 'normal' | 'bold' | undefined;
+                            style?: 'normal' | 'italic' | 'oblique' | undefined;
+                          }
+                        | undefined;
                     }
                 >;
             position?:
@@ -742,8 +775,8 @@ export declare const FlowRelation: {
         | {
             kind: 'smooth';
             points: Array<
-              | [number, number]
               | SharedPolarPosition
+              | [number, number]
               | {
                   id: string;
                   anchor?:
@@ -789,7 +822,7 @@ export declare const FlowRelation: {
                       }
                     | undefined;
                 }
-              | { of: string | [number, number] | SharedPolarPosition; offset: [number, number] }
+              | { of: string | SharedPolarPosition | [number, number]; offset: [number, number] }
               | IRBetweenPosition
               | { relative: [number, number] }
               | { relativeAccumulate: [number, number] }
@@ -826,10 +859,88 @@ export declare const FlowRelation: {
           };
       sourceMarker?:
         | {
-            color?: string | number | undefined;
+            fill?:
+              | string
+              | number
+              | {
+                  kind: 'linearGradient';
+                  stops: Array<{ offset: number; color: string; opacity?: number | undefined }>;
+                  angle?: number | undefined;
+                }
+              | {
+                  kind: 'radialGradient';
+                  stops: Array<{ offset: number; color: string; opacity?: number | undefined }>;
+                  center?: [number, number] | undefined;
+                  radius?: number | undefined;
+                }
+              | {
+                  kind: 'conicGradient';
+                  stops: Array<{ offset: number; color: string; opacity?: number | undefined }>;
+                  center?: [number, number] | undefined;
+                  angle?: number | undefined;
+                }
+              | {
+                  kind: 'pattern';
+                  shape: OpenString<ValueOf<{ readonly Lines: 'lines'; readonly Dots: 'dots'; readonly Grid: 'grid' }>>;
+                  color?: string | undefined;
+                  background?: string | undefined;
+                  size?: number | undefined;
+                  lineWidth?: number | undefined;
+                  dashed?: boolean | undefined;
+                  dotted?: boolean | undefined;
+                  dashPattern?: Array<number> | undefined;
+                  dashOffset?: number | undefined;
+                  lineCap?: 'butt' | 'round' | 'square' | undefined;
+                  lineJoin?: 'round' | 'miter' | 'bevel' | undefined;
+                  horizontalStyle?:
+                    | {
+                        color?: string | undefined;
+                        lineWidth?: number | undefined;
+                        dashed?: boolean | undefined;
+                        dotted?: boolean | undefined;
+                        dashPattern?: Array<number> | undefined;
+                        dashOffset?: number | undefined;
+                        lineCap?: 'butt' | 'round' | 'square' | undefined;
+                        lineJoin?: 'round' | 'miter' | 'bevel' | undefined;
+                      }
+                    | undefined;
+                  verticalStyle?:
+                    | {
+                        color?: string | undefined;
+                        lineWidth?: number | undefined;
+                        dashed?: boolean | undefined;
+                        dotted?: boolean | undefined;
+                        dashPattern?: Array<number> | undefined;
+                        dashOffset?: number | undefined;
+                        lineCap?: 'butt' | 'round' | 'square' | undefined;
+                        lineJoin?: 'round' | 'miter' | 'bevel' | undefined;
+                      }
+                    | undefined;
+                  lineStyleCycle?:
+                    | {
+                        period: number;
+                        overrides: Array<{
+                          index: number;
+                          style: {
+                            color?: string | undefined;
+                            lineWidth?: number | undefined;
+                            dashed?: boolean | undefined;
+                            dotted?: boolean | undefined;
+                            dashPattern?: Array<number> | undefined;
+                            dashOffset?: number | undefined;
+                            lineCap?: 'butt' | 'round' | 'square' | undefined;
+                            lineJoin?: 'round' | 'miter' | 'bevel' | undefined;
+                          };
+                        }>;
+                      }
+                    | undefined;
+                  rotation?: number | undefined;
+                }
+              | { kind: 'image'; href: string; fit?: 'fill' | 'contain' | 'cover' | undefined }
+              | undefined;
             opacity?: number | undefined;
+            color?: string | number | undefined;
             lineWidth?: number | undefined;
-            fill?: string | number | undefined;
           }
         | undefined;
       status?: 'error' | 'success' | 'warning' | 'disabled' | undefined;
@@ -840,40 +951,6 @@ export declare const FlowRelation: {
             strokeWidth?: number | undefined;
             dashPattern?: Array<number> | undefined;
             dashOffset?: number | undefined;
-            shadow?:
-              | 'none'
-              | 'sm'
-              | 'md'
-              | 'lg'
-              | 'xl'
-              | '2xl'
-              | {
-                  preset?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | undefined;
-                  offsetX?: number | undefined;
-                  offsetY?: number | undefined;
-                  blur?: number | undefined;
-                  color?: string | undefined;
-                  opacity?: number | undefined;
-                }
-              | undefined;
-            blendMode?:
-              | 'color'
-              | 'normal'
-              | 'multiply'
-              | 'screen'
-              | 'overlay'
-              | 'darken'
-              | 'lighten'
-              | 'color-dodge'
-              | 'color-burn'
-              | 'hard-light'
-              | 'soft-light'
-              | 'difference'
-              | 'exclusion'
-              | 'hue'
-              | 'saturation'
-              | 'luminosity'
-              | undefined;
             stroke?:
               | string
               | number
@@ -953,6 +1030,40 @@ export declare const FlowRelation: {
                 }
               | { kind: 'image'; href: string; fit?: 'fill' | 'contain' | 'cover' | undefined }
               | undefined;
+            shadow?:
+              | 'none'
+              | 'sm'
+              | 'md'
+              | 'lg'
+              | 'xl'
+              | '2xl'
+              | {
+                  preset?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | undefined;
+                  offsetX?: number | undefined;
+                  offsetY?: number | undefined;
+                  blur?: number | undefined;
+                  color?: string | undefined;
+                  opacity?: number | undefined;
+                }
+              | undefined;
+            blendMode?:
+              | 'normal'
+              | 'color'
+              | 'multiply'
+              | 'screen'
+              | 'overlay'
+              | 'darken'
+              | 'lighten'
+              | 'color-dodge'
+              | 'color-burn'
+              | 'hard-light'
+              | 'soft-light'
+              | 'difference'
+              | 'exclusion'
+              | 'hue'
+              | 'saturation'
+              | 'luminosity'
+              | undefined;
             opacity?:
               | number
               | { overall?: number | undefined; fill?: number | undefined; stroke?: number | undefined }
@@ -989,10 +1100,88 @@ export declare const FlowRelation: {
           };
       targetMarker?:
         | {
-            color?: string | number | undefined;
+            fill?:
+              | string
+              | number
+              | {
+                  kind: 'linearGradient';
+                  stops: Array<{ offset: number; color: string; opacity?: number | undefined }>;
+                  angle?: number | undefined;
+                }
+              | {
+                  kind: 'radialGradient';
+                  stops: Array<{ offset: number; color: string; opacity?: number | undefined }>;
+                  center?: [number, number] | undefined;
+                  radius?: number | undefined;
+                }
+              | {
+                  kind: 'conicGradient';
+                  stops: Array<{ offset: number; color: string; opacity?: number | undefined }>;
+                  center?: [number, number] | undefined;
+                  angle?: number | undefined;
+                }
+              | {
+                  kind: 'pattern';
+                  shape: OpenString<ValueOf<{ readonly Lines: 'lines'; readonly Dots: 'dots'; readonly Grid: 'grid' }>>;
+                  color?: string | undefined;
+                  background?: string | undefined;
+                  size?: number | undefined;
+                  lineWidth?: number | undefined;
+                  dashed?: boolean | undefined;
+                  dotted?: boolean | undefined;
+                  dashPattern?: Array<number> | undefined;
+                  dashOffset?: number | undefined;
+                  lineCap?: 'butt' | 'round' | 'square' | undefined;
+                  lineJoin?: 'round' | 'miter' | 'bevel' | undefined;
+                  horizontalStyle?:
+                    | {
+                        color?: string | undefined;
+                        lineWidth?: number | undefined;
+                        dashed?: boolean | undefined;
+                        dotted?: boolean | undefined;
+                        dashPattern?: Array<number> | undefined;
+                        dashOffset?: number | undefined;
+                        lineCap?: 'butt' | 'round' | 'square' | undefined;
+                        lineJoin?: 'round' | 'miter' | 'bevel' | undefined;
+                      }
+                    | undefined;
+                  verticalStyle?:
+                    | {
+                        color?: string | undefined;
+                        lineWidth?: number | undefined;
+                        dashed?: boolean | undefined;
+                        dotted?: boolean | undefined;
+                        dashPattern?: Array<number> | undefined;
+                        dashOffset?: number | undefined;
+                        lineCap?: 'butt' | 'round' | 'square' | undefined;
+                        lineJoin?: 'round' | 'miter' | 'bevel' | undefined;
+                      }
+                    | undefined;
+                  lineStyleCycle?:
+                    | {
+                        period: number;
+                        overrides: Array<{
+                          index: number;
+                          style: {
+                            color?: string | undefined;
+                            lineWidth?: number | undefined;
+                            dashed?: boolean | undefined;
+                            dotted?: boolean | undefined;
+                            dashPattern?: Array<number> | undefined;
+                            dashOffset?: number | undefined;
+                            lineCap?: 'butt' | 'round' | 'square' | undefined;
+                            lineJoin?: 'round' | 'miter' | 'bevel' | undefined;
+                          };
+                        }>;
+                      }
+                    | undefined;
+                  rotation?: number | undefined;
+                }
+              | { kind: 'image'; href: string; fit?: 'fill' | 'contain' | 'cover' | undefined }
+              | undefined;
             opacity?: number | undefined;
+            color?: string | number | undefined;
             lineWidth?: number | undefined;
-            fill?: string | number | undefined;
           }
         | undefined;
     },
@@ -1051,44 +1240,44 @@ export type FlowRelationsProps = Readonly<{
 
 <ApiTable>
 
-| 成员                           | 类型                                                                                                                              | 默认值                             | 说明                                                                               |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------- |
-| `animations?`                  | `InputFlowDiagram['animations']`                                                                                                  | —                                  | 整张图的动画轨道，不参与 Flow 排布                                                 |
-| `boundingShape?`               | `"rectangle" \| "circle"`                                                                                                         | —                                  | 图示引用 id 使用的合成包络形状                                                     |
-| `children`                     | `Array<string>`                                                                                                                   | —                                  | 根级直接子项 id 的非空有序列表                                                     |
-| `clip?`                        | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                          | —                                  | 图示局部坐标系中的裁剪区域                                                         |
-| `defaultDiagram?`              | `InputFlowDiagram['defaultDiagram']`                                                                                              | —                                  | Diagram 层的稀疏默认值                                                             |
-| `defaultFlow?`                 | `InputFlowDiagram['defaultFlow']`                                                                                                 | —                                  | Flow 布局和对象外观的稀疏默认值                                                    |
-| `readonly defaultFlowLayout?`  | `string`                                                                                                                          | `LayeredFlowLayoutDefinition.name` | 当前编译使用的布局名称，必须已注册；省略时使用内置 layered 布局                    |
-| `defaults?`                    | `InputFlowDiagram['defaults']`                                                                                                    | —                                  | 后代默认样式及继承屏障                                                             |
+| 成员                                | 类型                                                                                                                              | 默认值                             | 说明                                                                         |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------- |
+| `animations?`                       | `InputFlowDiagram['animations']`                                                                                                  | —                                  | 整张图的动画轨道，不参与 Flow 排布                                           |
+| `boundingShape?`                    | `"rectangle" \| "circle"`                                                                                                         | —                                  | 图示引用 id 使用的合成包络形状                                               |
+| `children`                          | `Array<string>`                                                                                                                   | —                                  | 根级直接子项 id 的非空有序列表                                               |
+| `clip?`                             | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                          | —                                  | 图示局部坐标系中的裁剪区域                                                   |
+| `defaultDiagram?`                   | `InputFlowDiagram['defaultDiagram']`                                                                                              | —                                  | Diagram 层的稀疏默认值                                                       |
+| `defaultFlow?`                      | `InputFlowDiagram['defaultFlow']`                                                                                                 | —                                  | Flow 布局和对象外观的稀疏默认值                                              |
+| `readonly defaultFlowLayout?`       | `string`                                                                                                                          | `LayeredFlowLayoutDefinition.name` | 当前编译使用的布局名称，必须已注册；省略时使用内置 layered 布局              |
+| `defaults?`                         | `InputFlowDiagram['defaults']`                                                                                                    | —                                  | 后代默认样式及继承屏障                                                       |
 | `readonly diagramThemeDefinitions?` | `ReadonlyArray<DiagramThemeDefinition>`                                                                                           | `[]`                               | 与 Core Theme 同名的 Diagram Theme definitions；使用命名主题时需提供匹配定义 |
-| `entities`                     | `InputFlowDiagram['entities']`                                                                                                    | —                                  | 非空的平级 Entity 声明目录                                                         |
-| `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`                                                                                             | `[]`                               | 自定义 Entity kind definitions                                                     |
-| `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`                                                                                        | `[]`                               | 自定义 Entity predicate definitions                                                |
-| `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`                                                                                             | `[]`                               | 自定义 Entity role definitions                                                     |
-| `readonly flowLayouts?`        | `ReadonlyArray<FlowLayoutDefinition>`                                                                                             | `[]`                               | 追加到内置布局目录的自定义定义；名称不能与不同定义重复                             |
+| `entities`                          | `InputFlowDiagram['entities']`                                                                                                    | —                                  | 非空的平级 Entity 声明目录                                                   |
+| `readonly entityKinds?`             | `ReadonlyArray<EntityKindDefinition>`                                                                                             | `[]`                               | 自定义 Entity kind definitions                                               |
+| `readonly entityPredicates?`        | `ReadonlyArray<EntityPredicateDefinition>`                                                                                        | `[]`                               | 自定义 Entity predicate definitions                                          |
+| `readonly entityRoles?`             | `ReadonlyArray<EntityRoleDefinition>`                                                                                             | `[]`                               | 自定义 Entity role definitions                                               |
+| `readonly flowLayouts?`             | `ReadonlyArray<FlowLayoutDefinition>`                                                                                             | `[]`                               | 追加到内置布局目录的自定义定义；名称不能与不同定义重复                       |
 | `readonly flowThemeDefinitions?`    | `ReadonlyArray<FlowThemeDefinition>`                                                                                              | `[]`                               | 与 Core Theme 同名的 Flow Theme definitions；使用命名主题时需提供匹配定义    |
-| `frame?`                       | `InputFlowDiagram['frame']`                                                                                                       | —                                  | 图示外框覆盖                                                                       |
-| `graphRules?`                  | `InputFlowDiagram['graphRules']`                                                                                                  | —                                  | 作用于生成的 Entity 与 Relation 的有序 Graph 规则                                  |
+| `frame?`                            | `InputFlowDiagram['frame']`                                                                                                       | —                                  | 图示外框覆盖                                                                 |
+| `graphRules?`                       | `InputFlowDiagram['graphRules']`                                                                                                  | —                                  | 作用于生成的 Entity 与 Relation 的有序 Graph 规则                            |
 | `readonly graphThemeDefinitions?`   | `ReadonlyArray<GraphThemeDefinition>`                                                                                             | `[]`                               | 与 Core Theme 同名的 Graph Theme definitions                                 |
-| `groups?`                      | `InputFlowDiagram['groups']`                                                                                                      | `[]`                               | 平级 Group 声明目录，省略时解析为空数组                                            |
-| `id?`                          | `string`                                                                                                                          | —                                  | 可选的图示引用 id                                                                  |
-| `layout?`                      | `{ direction?: "right" \| "left" \| "up" \| "down" \| undefined; nodeGap?: number \| undefined; rankGap?: number \| undefined; }` | —                                  | 根级方向与间距覆盖                                                                 |
-| `layouts?`                     | `InputFlowDiagram['layouts']`                                                                                                     | `[]`                               | 平级无外壳 Layout 声明目录，省略时解析为空数组                                     |
-| `localNamespace?`              | `false \| true`                                                                                                                   | —                                  | 将后代 id 留在本图的局部命名空间                                                   |
-| `meta?`                        | `Record<string, JsonValue>`                                                                                                       | —                                  | 透传且不参与编译的 JSON 元信息                                                     |
-| `position?`                    | `InputFlowDiagram['position']`                                                                                                    | `[0,0]`                            | 父坐标系中的原点位置或局部变换后的锚点对齐                                         |
-| `presentation?`                | `InputFlowDiagram['presentation']`                                                                                                | —                                  | 标题、说明与图例等完整图示内容                                                     |
-| `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`                                                                                           | `[]`                               | 自定义 Relation kind definitions                                                   |
-| `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>`                                                                                      | `[]`                               | 自定义 Relation predicate definitions                                              |
-| `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`                                                                                           | `[]`                               | 自定义 Relation role definitions                                                   |
-| `relations?`                   | `InputFlowDiagram['relations']`                                                                                                   | —                                  | 可选的根级有序 Relation 声明                                                       |
-| `routing?`                     | `InputFlowDiagram['routing']`                                                                                                     | —                                  | 根级关系路由默认值                                                                 |
+| `groups?`                           | `InputFlowDiagram['groups']`                                                                                                      | `[]`                               | 平级 Group 声明目录，省略时解析为空数组                                      |
+| `id?`                               | `string`                                                                                                                          | —                                  | 可选的图示引用 id                                                            |
+| `layout?`                           | `{ direction?: "right" \| "left" \| "up" \| "down" \| undefined; nodeGap?: number \| undefined; rankGap?: number \| undefined; }` | —                                  | 根级方向与间距覆盖                                                           |
+| `layouts?`                          | `InputFlowDiagram['layouts']`                                                                                                     | `[]`                               | 平级无外壳 Layout 声明目录，省略时解析为空数组                               |
+| `localNamespace?`                   | `false \| true`                                                                                                                   | —                                  | 将后代 id 留在本图的局部命名空间                                             |
+| `meta?`                             | `Record<string, JsonValue>`                                                                                                       | —                                  | 透传且不参与编译的 JSON 元信息                                               |
+| `position?`                         | `InputFlowDiagram['position']`                                                                                                    | `[0,0]`                            | 父坐标系中的原点位置或局部变换后的锚点对齐                                   |
+| `presentation?`                     | `InputFlowDiagram['presentation']`                                                                                                | —                                  | 标题、说明与图例等完整图示内容                                               |
+| `readonly relationKinds?`           | `ReadonlyArray<RelationKindDefinition>`                                                                                           | `[]`                               | 自定义 Relation kind definitions                                             |
+| `readonly relationPredicates?`      | `ReadonlyArray<RelationPredicateDefinition>`                                                                                      | `[]`                               | 自定义 Relation predicate definitions                                        |
+| `readonly relationRoles?`           | `ReadonlyArray<RelationRoleDefinition>`                                                                                           | `[]`                               | 自定义 Relation role definitions                                             |
+| `relations?`                        | `InputFlowDiagram['relations']`                                                                                                   | —                                  | 可选的根级有序 Relation 声明                                                 |
+| `routing?`                          | `InputFlowDiagram['routing']`                                                                                                     | —                                  | 根级关系路由默认值                                                           |
 | `theme?`                            | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                          | —                                  | 本图及后代的稀疏主题覆盖                                                     |
-| `transforms?`                  | `InputFlowDiagram['transforms']`                                                                                                  | —                                  | 应用于图示整体的局部变换                                                           |
-| `zIndex?`                      | `number`                                                                                                                          | —                                  | 整张图在同级内容中的绘制顺序                                                       |
-| `input` (参数)                 | `FlowDiagramInputEmbedProps`                                                                                                      | —                                  | Flow 声明与运行时扩展；由 adapter 在编译时组装 Source 和 provider                  |
-| 返回值                         | `InputEmbed<FlowDiagramInputEmbedProps>`                                                                                          | —                                  | 保留 input 对象引用的 embed 节点，不在此处执行布局                                 |
+| `transforms?`                       | `InputFlowDiagram['transforms']`                                                                                                  | —                                  | 应用于图示整体的局部变换                                                     |
+| `zIndex?`                           | `number`                                                                                                                          | —                                  | 整张图在同级内容中的绘制顺序                                                 |
+| `input` (参数)                      | `FlowDiagramInputEmbedProps`                                                                                                      | —                                  | Flow 声明与运行时扩展；由 adapter 在编译时组装 Source 和 provider            |
+| 返回值                              | `InputEmbed<FlowDiagramInputEmbedProps>`                                                                                          | —                                  | 保留 input 对象引用的 embed 节点，不在此处执行布局                           |
 
 </ApiTable>
 
@@ -1984,19 +2173,19 @@ export declare const routeFlowRelations: (
 
 <ApiTable>
 
-| 成员                           | 类型                                         | 默认值                             | 说明                                                                               |
-| ------------------------------ | -------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------- |
-| `readonly defaultFlowLayout?`  | `string`                                     | `LayeredFlowLayoutDefinition.name` | 当前编译使用的布局名称，必须已注册；省略时使用内置 layered 布局                    |
+| 成员                                | 类型                                         | 默认值                             | 说明                                                                         |
+| ----------------------------------- | -------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------- |
+| `readonly defaultFlowLayout?`       | `string`                                     | `LayeredFlowLayoutDefinition.name` | 当前编译使用的布局名称，必须已注册；省略时使用内置 layered 布局              |
 | `readonly diagramThemeDefinitions?` | `ReadonlyArray<DiagramThemeDefinition>`      | `[]`                               | 与 Core Theme 同名的 Diagram Theme definitions；使用命名主题时需提供匹配定义 |
-| `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`        | `[]`                               | 自定义 Entity kind definitions                                                     |
-| `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`   | `[]`                               | 自定义 Entity predicate definitions                                                |
-| `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`        | `[]`                               | 自定义 Entity role definitions                                                     |
-| `readonly flowLayouts?`        | `ReadonlyArray<FlowLayoutDefinition>`        | `[]`                               | 追加到内置布局目录的自定义定义；名称不能与不同定义重复                             |
+| `readonly entityKinds?`             | `ReadonlyArray<EntityKindDefinition>`        | `[]`                               | 自定义 Entity kind definitions                                               |
+| `readonly entityPredicates?`        | `ReadonlyArray<EntityPredicateDefinition>`   | `[]`                               | 自定义 Entity predicate definitions                                          |
+| `readonly entityRoles?`             | `ReadonlyArray<EntityRoleDefinition>`        | `[]`                               | 自定义 Entity role definitions                                               |
+| `readonly flowLayouts?`             | `ReadonlyArray<FlowLayoutDefinition>`        | `[]`                               | 追加到内置布局目录的自定义定义；名称不能与不同定义重复                       |
 | `readonly flowThemeDefinitions?`    | `ReadonlyArray<FlowThemeDefinition>`         | `[]`                               | 与 Core Theme 同名的 Flow Theme definitions；使用命名主题时需提供匹配定义    |
 | `readonly graphThemeDefinitions?`   | `ReadonlyArray<GraphThemeDefinition>`        | `[]`                               | 与 Core Theme 同名的 Graph Theme definitions                                 |
-| `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`      | `[]`                               | 自定义 Relation kind definitions                                                   |
-| `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | `[]`                               | 自定义 Relation predicate definitions                                              |
-| `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | `[]`                               | 自定义 Relation role definitions                                                   |
+| `readonly relationKinds?`           | `ReadonlyArray<RelationKindDefinition>`      | `[]`                               | 自定义 Relation kind definitions                                             |
+| `readonly relationPredicates?`      | `ReadonlyArray<RelationPredicateDefinition>` | `[]`                               | 自定义 Relation predicate definitions                                        |
+| `readonly relationRoles?`           | `ReadonlyArray<RelationRoleDefinition>`      | `[]`                               | 自定义 Relation role definitions                                             |
 
 </ApiTable>
 

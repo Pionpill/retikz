@@ -113,16 +113,16 @@ Pass these options through the extensions prop of Layout. Each field accepts an 
 
 <ApiTable>
 
-| Member                     | Type                                     | Default                   | Description                      |
-| -------------------------- | ---------------------------------------- | ------------------------- | -------------------------------- |
-| `readonly arrows?`         | `ReadonlyArray<ArrowDefinition>`         | `BUILTIN_ARROWS`          | Arrow definitions                |
-| `readonly boundaries?`     | `ReadonlyArray<BoundaryDefinition>`      | `BUILTIN_BOUNDARIES`      | Connection boundary definitions  |
-| `readonly clips?`          | `ReadonlyArray<ClipDefinition>`          | `BUILTIN_CLIPS`           | Clip definitions                 |
-| `readonly composites?`     | `ReadonlyArray<AnyCompositeDefinition>`  | `BUILTIN_COMPOSITES`      | Tier 2 composite expansion logic |
-| `readonly pathGenerators?` | `ReadonlyArray<PathGeneratorDefinition>` | `BUILTIN_PATH_GENERATORS` | Path generator definitions       |
-| `readonly pathKinds?`      | `ReadonlyArray<AnyPathKindDefinition>`   | `BUILTIN_PATH_KINDS`      | Path kind definitions            |
-| `readonly patterns?`       | `ReadonlyArray<PatternDefinition>`       | `BUILTIN_PATTERNS`        | Pattern definitions              |
-| `readonly shapes?`         | `ReadonlyArray<ShapeDefinition>`         | `BUILTIN_SHAPES`          | Shape definitions                |
+| Member                       | Type                                     | Default                   | Description                      |
+| ---------------------------- | ---------------------------------------- | ------------------------- | -------------------------------- |
+| `readonly arrows?`           | `ReadonlyArray<ArrowDefinition>`         | `BUILTIN_ARROWS`          | Arrow definitions                |
+| `readonly boundaries?`       | `ReadonlyArray<BoundaryDefinition>`      | `BUILTIN_BOUNDARIES`      | Connection boundary definitions  |
+| `readonly clips?`            | `ReadonlyArray<ClipDefinition>`          | `BUILTIN_CLIPS`           | Clip definitions                 |
+| `readonly composites?`       | `ReadonlyArray<AnyCompositeDefinition>`  | `BUILTIN_COMPOSITES`      | Tier 2 composite expansion logic |
+| `readonly pathGenerators?`   | `ReadonlyArray<PathGeneratorDefinition>` | `BUILTIN_PATH_GENERATORS` | Path generator definitions       |
+| `readonly pathKinds?`        | `ReadonlyArray<AnyPathKindDefinition>`   | `BUILTIN_PATH_KINDS`      | Path kind definitions            |
+| `readonly patterns?`         | `ReadonlyArray<PatternDefinition>`       | `BUILTIN_PATTERNS`        | Pattern definitions              |
+| `readonly shapes?`           | `ReadonlyArray<ShapeDefinition>`         | `BUILTIN_SHAPES`          | Shape definitions                |
 | `readonly themeDefinitions?` | `ReadonlyArray<ThemeDefinition>`         | `ThemeDefinitionsContext` | Theme definitions                |
 
 </ApiTable>
@@ -157,13 +157,13 @@ export type LayoutExtensions = Readonly<{
 
 <ApiTable>
 
-| Member                     | Type                                      | Default                      | Description                                                                                                                              |
-| -------------------------- | ----------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime                                                                                                               |
-| `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing         |
-| `readonly preparation?`    | `'sync' \| 'async'`                       | `'sync'`                     | Client authoring preparation mode; synchronous SSR continues to use synchronous lower                                                    |
-| `readonly signal?`         | `AbortSignal`                             | —                            | Lifecycle signal for async preparation and the controller                                                                                |
-| `readonly updateStrategy?` | `RuntimeUpdateStrategy`                   | `RuntimeUpdateStrategy.Auto` | Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution |
+| Member                     | Type                                         | Default                         | Description                                                                                                                              |
+| -------------------------- | -------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`          | `LayoutRuntimeMode.Retained`    | Creates a retained Runtime                                                                                                               |
+| `readonly onDiagnostic?`   | `(diagnostic: ReconcilerDiagnostic) => void` | —                               | Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing         |
+| `readonly preparation?`    | `'sync' \| 'async'`                          | `'sync'`                        | Client authoring preparation mode; synchronous SSR continues to use synchronous lower                                                    |
+| `readonly signal?`         | `AbortSignal`                                | —                               | Lifecycle signal for async preparation and the controller                                                                                |
+| `readonly updateStrategy?` | `ReconcilerUpdateStrategy`                   | `ReconcilerUpdateStrategy.Auto` | Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution |
 
 </ApiTable>
 
@@ -175,8 +175,8 @@ export type LayoutExtensions = Readonly<{
 export type LayoutRetainedRuntimeOptions = LayoutPreparationOptions &
   Readonly<{
     mode?: typeof LayoutRuntimeMode.Retained;
-    updateStrategy?: RuntimeUpdateStrategy;
-    onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
+    updateStrategy?: ReconcilerUpdateStrategy;
+    onDiagnostic?: (diagnostic: ReconcilerDiagnostic) => void;
   }>;
 ```
 
@@ -205,11 +205,11 @@ Common members apply to every branch; a value must also satisfy at least one bra
 
 <ApiTable>
 
-| Member                     | Type                                      | Default                      | Description                                                                                                                              |
-| -------------------------- | ----------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime                                                                                                               |
-| `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing         |
-| `readonly updateStrategy?` | `RuntimeUpdateStrategy`                   | `RuntimeUpdateStrategy.Auto` | Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution |
+| Member                     | Type                                         | Default                         | Description                                                                                                                              |
+| -------------------------- | -------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`          | `LayoutRuntimeMode.Retained`    | Creates a retained Runtime                                                                                                               |
+| `readonly onDiagnostic?`   | `(diagnostic: ReconcilerDiagnostic) => void` | —                               | Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing         |
+| `readonly updateStrategy?` | `ReconcilerUpdateStrategy`                   | `ReconcilerUpdateStrategy.Auto` | Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution |
 
 </ApiTable>
 
@@ -517,7 +517,7 @@ export type InputSceneLayers = InputSceneBase & {
 
 ## Persistent configuration
 
-#### <ApiSourceLink label={"IRScene"} path={"packages/kernel/core/src/schemas/scene/types.ts"} startLine={20}>IRScene</ApiSourceLink> / <ApiSourceLink label={"SceneSchema"} path={"packages/kernel/core/src/schemas/scene/schema.ts"} startLine={38}>SceneSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScene"} path={"packages/kernel/core/src/schemas/scene/types.ts"} startLine={20}>IRScene</ApiSourceLink> / <ApiSourceLink label={"SceneSchema"} path={"packages/kernel/core/src/schemas/scene/schema.ts"} startLine={39}>SceneSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -525,14 +525,14 @@ export type InputSceneLayers = InputSceneBase & {
 
 <ApiTable>
 
-| Member        | Type                                                                      | Default | Description                                                                                                 |
-| ------------- | ------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------- |
-| `animations?` | `ZodInfer<typeof SceneSchema.shape["animations"]>`                        | —       | Scene-root animation tracks, including viewBox framing animations; omitting this field adds no root tracks. |
-| `children`    | `Array<IRChild>`                                                          | —       | Ordered top-level scene children; an empty array is allowed.                                                |
+| Member        | Type                                                                     | Default | Description                                                                                                 |
+| ------------- | ------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------- |
+| `animations?` | `ZodInfer<typeof SceneSchema.shape["animations"]>`                       | —       | Scene-root animation tracks, including viewBox framing animations; omitting this field adds no root tracks. |
+| `children`    | `Array<IRChild>`                                                         | —       | Ordered top-level scene children; an empty array is allowed.                                                |
 | `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.                                       |
-| `type`        | `"scene"`                                                                 | —       | Discriminator marking this object as the root scene                                                         |
-| `version`     | `1`                                                                       | —       | Scene data format version; currently must be 1, independent of the package version.                         |
-| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`                | —       | Explicit framing; when omitted, bounds are computed from content plus padding.                              |
+| `type`        | `"scene"`                                                                | —       | Discriminator marking this object as the root scene                                                         |
+| `version`     | `1`                                                                      | —       | Scene data format version; currently must be 1, independent of the package version.                         |
+| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —       | Explicit framing; when omitted, bounds are computed from content plus padding.                              |
 
 </ApiTable>
 
@@ -554,7 +554,7 @@ export type IRScene = ZodInfer<typeof SceneSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRViewBox"} path={"packages/kernel/core/src/schemas/scene/types.ts"} startLine={17}>IRViewBox</ApiSourceLink> / <ApiSourceLink label={"ViewBoxSchema"} path={"packages/kernel/core/src/schemas/scene/schema.ts"} startLine={30}>ViewBoxSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRViewBox"} path={"packages/kernel/core/src/schemas/scene/types.ts"} startLine={17}>IRViewBox</ApiSourceLink> / <ApiSourceLink label={"ViewBoxSchema"} path={"packages/kernel/core/src/schemas/scene/schema.ts"} startLine={31}>ViewBoxSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

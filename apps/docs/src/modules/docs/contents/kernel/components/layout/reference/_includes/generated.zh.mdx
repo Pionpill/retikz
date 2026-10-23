@@ -113,16 +113,16 @@ export type LayoutProps = {
 
 <ApiTable>
 
-| 成员                       | 类型                                     | 默认值                    | 说明                      |
-| -------------------------- | ---------------------------------------- | ------------------------- | ------------------------- |
-| `readonly arrows?`         | `ReadonlyArray<ArrowDefinition>`         | `BUILTIN_ARROWS`          | 箭头定义                  |
-| `readonly boundaries?`     | `ReadonlyArray<BoundaryDefinition>`      | `BUILTIN_BOUNDARIES`      | 连接表面定义              |
-| `readonly clips?`          | `ReadonlyArray<ClipDefinition>`          | `BUILTIN_CLIPS`           | 裁剪定义                  |
-| `readonly composites?`     | `ReadonlyArray<AnyCompositeDefinition>`  | `BUILTIN_COMPOSITES`      | Tier 2 composite 展开逻辑 |
-| `readonly pathGenerators?` | `ReadonlyArray<PathGeneratorDefinition>` | `BUILTIN_PATH_GENERATORS` | 路径生成器定义            |
-| `readonly pathKinds?`      | `ReadonlyArray<AnyPathKindDefinition>`   | `BUILTIN_PATH_KINDS`      | 路径种类定义              |
-| `readonly patterns?`       | `ReadonlyArray<PatternDefinition>`       | `BUILTIN_PATTERNS`        | 图案定义                  |
-| `readonly shapes?`         | `ReadonlyArray<ShapeDefinition>`         | `BUILTIN_SHAPES`          | 形状定义                  |
+| 成员                         | 类型                                     | 默认值                    | 说明                      |
+| ---------------------------- | ---------------------------------------- | ------------------------- | ------------------------- |
+| `readonly arrows?`           | `ReadonlyArray<ArrowDefinition>`         | `BUILTIN_ARROWS`          | 箭头定义                  |
+| `readonly boundaries?`       | `ReadonlyArray<BoundaryDefinition>`      | `BUILTIN_BOUNDARIES`      | 连接表面定义              |
+| `readonly clips?`            | `ReadonlyArray<ClipDefinition>`          | `BUILTIN_CLIPS`           | 裁剪定义                  |
+| `readonly composites?`       | `ReadonlyArray<AnyCompositeDefinition>`  | `BUILTIN_COMPOSITES`      | Tier 2 composite 展开逻辑 |
+| `readonly pathGenerators?`   | `ReadonlyArray<PathGeneratorDefinition>` | `BUILTIN_PATH_GENERATORS` | 路径生成器定义            |
+| `readonly pathKinds?`        | `ReadonlyArray<AnyPathKindDefinition>`   | `BUILTIN_PATH_KINDS`      | 路径种类定义              |
+| `readonly patterns?`         | `ReadonlyArray<PatternDefinition>`       | `BUILTIN_PATTERNS`        | 图案定义                  |
+| `readonly shapes?`           | `ReadonlyArray<ShapeDefinition>`         | `BUILTIN_SHAPES`          | 形状定义                  |
 | `readonly themeDefinitions?` | `ReadonlyArray<ThemeDefinition>`         | `ThemeDefinitionsContext` | 主题样式定义              |
 
 </ApiTable>
@@ -157,13 +157,13 @@ export type LayoutExtensions = Readonly<{
 
 <ApiTable>
 
-| 成员                       | 类型                                      | 默认值                       | 说明                                                                     |
-| -------------------------- | ----------------------------------------- | ---------------------------- | ------------------------------------------------------------------------ |
-| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | 创建保留式 Runtime                                                       |
-| `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | 接收图形更新的结构化诊断，按产生顺序通知；更新失败时保留最后一次成功画面 |
-| `readonly preparation?`    | `'sync' \| 'async'`                       | `'sync'`                     | 客户端作者准备方式；同步 SSR 仍消费同步 lower                            |
-| `readonly signal?`         | `AbortSignal`                             | —                            | 异步 preparation 与 controller 的生命周期信号                            |
-| `readonly updateStrategy?` | `RuntimeUpdateStrategy`                   | `RuntimeUpdateStrategy.Auto` | 更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行   |
+| 成员                       | 类型                                         | 默认值                          | 说明                                                                     |
+| -------------------------- | -------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------ |
+| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`          | `LayoutRuntimeMode.Retained`    | 创建保留式 Runtime                                                       |
+| `readonly onDiagnostic?`   | `(diagnostic: ReconcilerDiagnostic) => void` | —                               | 接收图形更新的结构化诊断，按产生顺序通知；更新失败时保留最后一次成功画面 |
+| `readonly preparation?`    | `'sync' \| 'async'`                          | `'sync'`                        | 客户端作者准备方式；同步 SSR 仍消费同步 lower                            |
+| `readonly signal?`         | `AbortSignal`                                | —                               | 异步 preparation 与 controller 的生命周期信号                            |
+| `readonly updateStrategy?` | `ReconcilerUpdateStrategy`                   | `ReconcilerUpdateStrategy.Auto` | 更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行   |
 
 </ApiTable>
 
@@ -175,8 +175,8 @@ export type LayoutExtensions = Readonly<{
 export type LayoutRetainedRuntimeOptions = LayoutPreparationOptions &
   Readonly<{
     mode?: typeof LayoutRuntimeMode.Retained;
-    updateStrategy?: RuntimeUpdateStrategy;
-    onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
+    updateStrategy?: ReconcilerUpdateStrategy;
+    onDiagnostic?: (diagnostic: ReconcilerDiagnostic) => void;
   }>;
 ```
 
@@ -205,11 +205,11 @@ export type LayoutRetainedRuntimeOptions = LayoutPreparationOptions &
 
 <ApiTable>
 
-| 成员                       | 类型                                      | 默认值                       | 说明                                                                     |
-| -------------------------- | ----------------------------------------- | ---------------------------- | ------------------------------------------------------------------------ |
-| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | 创建保留式 Runtime                                                       |
-| `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | 接收图形更新的结构化诊断，按产生顺序通知；更新失败时保留最后一次成功画面 |
-| `readonly updateStrategy?` | `RuntimeUpdateStrategy`                   | `RuntimeUpdateStrategy.Auto` | 更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行   |
+| 成员                       | 类型                                         | 默认值                          | 说明                                                                     |
+| -------------------------- | -------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------ |
+| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`          | `LayoutRuntimeMode.Retained`    | 创建保留式 Runtime                                                       |
+| `readonly onDiagnostic?`   | `(diagnostic: ReconcilerDiagnostic) => void` | —                               | 接收图形更新的结构化诊断，按产生顺序通知；更新失败时保留最后一次成功画面 |
+| `readonly updateStrategy?` | `ReconcilerUpdateStrategy`                   | `ReconcilerUpdateStrategy.Auto` | 更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行   |
 
 </ApiTable>
 
@@ -517,7 +517,7 @@ export type InputSceneLayers = InputSceneBase & {
 
 ## 持久化配置
 
-#### <ApiSourceLink label={"IRScene"} path={"packages/kernel/core/src/schemas/scene/types.ts"} startLine={20}>IRScene</ApiSourceLink> / <ApiSourceLink label={"SceneSchema"} path={"packages/kernel/core/src/schemas/scene/schema.ts"} startLine={38}>SceneSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScene"} path={"packages/kernel/core/src/schemas/scene/types.ts"} startLine={20}>IRScene</ApiSourceLink> / <ApiSourceLink label={"SceneSchema"} path={"packages/kernel/core/src/schemas/scene/schema.ts"} startLine={39}>SceneSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -525,14 +525,14 @@ export type InputSceneLayers = InputSceneBase & {
 
 <ApiTable>
 
-| 成员          | 类型                                                                      | 默认值 | 说明                                                            |
-| ------------- | ------------------------------------------------------------------------- | ------ | --------------------------------------------------------------- |
-| `animations?` | `ZodInfer<typeof SceneSchema.shape["animations"]>`                        | —      | 场景根动画轨道，可包含 viewBox 取景动画；省略时不添加根动画轨道 |
-| `children`    | `Array<IRChild>`                                                          | —      | 有顺序的顶层子节点列表，允许空数组                              |
+| 成员          | 类型                                                                     | 默认值 | 说明                                                            |
+| ------------- | ------------------------------------------------------------------------ | ------ | --------------------------------------------------------------- |
+| `animations?` | `ZodInfer<typeof SceneSchema.shape["animations"]>`                       | —      | 场景根动画轨道，可包含 viewBox 取景动画；省略时不添加根动画轨道 |
+| `children`    | `Array<IRChild>`                                                         | —      | 有顺序的顶层子节点列表，允许空数组                              |
 | `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —      | 场景根主题选择；只填写需要覆盖的 name 与 mode 字段              |
-| `type`        | `"scene"`                                                                 | —      | 判别字段，标记该对象为 scene 根节点                             |
-| `version`     | `1`                                                                       | —      | 场景数据格式版本，当前必须为 1，与包版本号无关                  |
-| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`                | —      | 显式指定取景范围；省略时根据内容范围与留白自动计算              |
+| `type`        | `"scene"`                                                                | —      | 判别字段，标记该对象为 scene 根节点                             |
+| `version`     | `1`                                                                      | —      | 场景数据格式版本，当前必须为 1，与包版本号无关                  |
+| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —      | 显式指定取景范围；省略时根据内容范围与留白自动计算              |
 
 </ApiTable>
 
@@ -566,7 +566,7 @@ export type IRScene = ZodInfer<typeof SceneSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRViewBox"} path={"packages/kernel/core/src/schemas/scene/types.ts"} startLine={17}>IRViewBox</ApiSourceLink> / <ApiSourceLink label={"ViewBoxSchema"} path={"packages/kernel/core/src/schemas/scene/schema.ts"} startLine={30}>ViewBoxSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRViewBox"} path={"packages/kernel/core/src/schemas/scene/types.ts"} startLine={17}>IRViewBox</ApiSourceLink> / <ApiSourceLink label={"ViewBoxSchema"} path={"packages/kernel/core/src/schemas/scene/schema.ts"} startLine={31}>ViewBoxSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

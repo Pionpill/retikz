@@ -18,7 +18,7 @@ Source omits positions and routes derived by layout. Runtime Definition defaults
 
 ## Component declarations
 
-#### <ApiSourceLink label={"FlowDiagram"} path={"packages/schematic/diagram-react/src/flow/FlowDiagram.tsx"} startLine={61}>FlowDiagram</ApiSourceLink> / <ApiSourceLink label={"FlowDiagramProps"} path={"packages/schematic/diagram-react/src/flow/authoring.ts"} startLine={295}>FlowDiagramProps</ApiSourceLink>
+#### <ApiSourceLink label={"FlowDiagram"} path={"packages/schematic/diagram-react/src/flow/FlowDiagram.tsx"} startLine={71}>FlowDiagram</ApiSourceLink> / <ApiSourceLink label={"FlowDiagramProps"} path={"packages/schematic/diagram-react/src/flow/authoring.ts"} startLine={295}>FlowDiagramProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -129,15 +129,6 @@ export declare const FlowEntity: {
       status?: 'error' | 'success' | 'warning' | 'disabled' | undefined;
       style?:
         | {
-            color?: string | undefined;
-            opacity?:
-              | number
-              | { overall?: number | undefined; fill?: number | undefined; stroke?: number | undefined }
-              | undefined;
-            dashed?: boolean | undefined;
-            dotted?: boolean | undefined;
-            dashPattern?: Array<number> | undefined;
-            dashOffset?: number | undefined;
             fill?:
               | string
               | number
@@ -216,6 +207,10 @@ export declare const FlowEntity: {
                   rotation?: number | undefined;
                 }
               | { kind: 'image'; href: string; fit?: 'fill' | 'contain' | 'cover' | undefined }
+              | undefined;
+            opacity?:
+              | number
+              | { overall?: number | undefined; fill?: number | undefined; stroke?: number | undefined }
               | undefined;
             stroke?:
               | string
@@ -297,6 +292,11 @@ export declare const FlowEntity: {
               | { kind: 'image'; href: string; fit?: 'fill' | 'contain' | 'cover' | undefined }
               | undefined;
             strokeWidth?: number | undefined;
+            color?: string | undefined;
+            dashed?: boolean | undefined;
+            dotted?: boolean | undefined;
+            dashPattern?: Array<number> | undefined;
+            dashOffset?: number | undefined;
             shadow?:
               | 'none'
               | 'sm'
@@ -314,8 +314,8 @@ export declare const FlowEntity: {
                 }
               | undefined;
             blendMode?:
-              | 'color'
               | 'normal'
+              | 'color'
               | 'multiply'
               | 'screen'
               | 'overlay'
@@ -376,11 +376,22 @@ export declare const FlowEntity: {
                     }
                   | {
                       tex: string;
+                      fontSize?: string | number | undefined;
                       displayMode?: boolean | undefined;
                       fill?: string | number | undefined;
                       opacity?: number | undefined;
                     }
                 >;
+                fill?: string | number | undefined;
+                opacity?: number | undefined;
+                font?:
+                  | {
+                      family?: string | undefined;
+                      size?: string | number | undefined;
+                      weight?: number | 'normal' | 'bold' | undefined;
+                      style?: 'normal' | 'italic' | 'oblique' | undefined;
+                    }
+                  | undefined;
               }
           >;
     },
@@ -562,7 +573,7 @@ export type FlowLayoutProps = FlowLayoutMarkerProps &
 
 | Member                 | Type                                                                                                                                                                                  | Default | Description                                                                                                                                                  |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `direction?`           | `"none" \| "reverse" \| "both" \| "forward"`                                                                                                                                          | —       | Optional semantic direction overriding the Graph role.                                                                                                       |
+| `direction?`           | `"reverse" \| "none" \| "both" \| "forward"`                                                                                                                                          | —       | Optional semantic direction overriding the Graph role.                                                                                                       |
 | `group?`               | `string`                                                                                                                                                                              | —       | Optional Graph Relation color grouping identifier.                                                                                                           |
 | `kind?`                | `string`                                                                                                                                                                              | —       | Open stable kind within the selected Relation role.                                                                                                          |
 | `label?`               | `InputFlowRelation['label']`                                                                                                                                                          | —       | Optional compact Core TextBlock or complete PathLabel; full objects preserve Core geometry and appearance, including position, sloped, interruption and gap. |
@@ -572,11 +583,11 @@ export type FlowLayoutProps = FlowLayoutMarkerProps &
 | `role?`                | `"flow" \| string & {} \| "association" \| "dependency" \| "generalization" \| "influence"`                                                                                           | —       | Open Graph Relation role; omission resolves to flow.                                                                                                         |
 | `routing?`             | `InputFlowRelation['routing']`                                                                                                                                                        | —       | Relation-local routing override.                                                                                                                             |
 | `source`               | `InputFlowRelation['source']`                                                                                                                                                         | —       | Source Entity or Group with optional connection constraints.                                                                                                 |
-| `sourceMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                    | —       | Source marker appearance fields.                                                                                                                             |
+| `sourceMarker?`        | `InputFlowRelation['sourceMarker']`                                                                                                                                                   | —       | Source marker appearance fields.                                                                                                                             |
 | `status?`              | `"error" \| "success" \| "warning" \| "disabled"`                                                                                                                                     | —       | Optional closed Graph semantic status.                                                                                                                       |
 | `style?`               | `InputFlowRelation['style']`                                                                                                                                                          | —       | Relation-local path style overrides.                                                                                                                         |
 | `target`               | `InputFlowRelation['target']`                                                                                                                                                         | —       | Target Entity or Group with optional connection constraints.                                                                                                 |
-| `targetMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                    | —       | Target marker appearance fields.                                                                                                                             |
+| `targetMarker?`        | `InputFlowRelation['targetMarker']`                                                                                                                                                   | —       | Target marker appearance fields.                                                                                                                             |
 
 </ApiTable>
 
@@ -588,7 +599,7 @@ export type FlowLayoutProps = FlowLayoutMarkerProps &
 export declare const FlowRelation: {
   (
     props: {
-      direction?: 'none' | 'reverse' | 'both' | 'forward' | undefined;
+      direction?: 'reverse' | 'none' | 'both' | 'forward' | undefined;
       group?: string | undefined;
       kind?: string | undefined;
       label?:
@@ -625,11 +636,22 @@ export declare const FlowRelation: {
                     }
                   | {
                       tex: string;
+                      fontSize?: string | number | undefined;
                       displayMode?: boolean | undefined;
                       fill?: string | number | undefined;
                       opacity?: number | undefined;
                     }
                 >;
+                fill?: string | number | undefined;
+                opacity?: number | undefined;
+                font?:
+                  | {
+                      family?: string | undefined;
+                      size?: string | number | undefined;
+                      weight?: number | 'normal' | 'bold' | undefined;
+                      style?: 'normal' | 'italic' | 'oblique' | undefined;
+                    }
+                  | undefined;
               }
           >
         | {
@@ -667,11 +689,22 @@ export declare const FlowRelation: {
                           }
                         | {
                             tex: string;
+                            fontSize?: string | number | undefined;
                             displayMode?: boolean | undefined;
                             fill?: string | number | undefined;
                             opacity?: number | undefined;
                           }
                       >;
+                      fill?: string | number | undefined;
+                      opacity?: number | undefined;
+                      font?:
+                        | {
+                            family?: string | undefined;
+                            size?: string | number | undefined;
+                            weight?: number | 'normal' | 'bold' | undefined;
+                            style?: 'normal' | 'italic' | 'oblique' | undefined;
+                          }
+                        | undefined;
                     }
                 >;
             position?:
@@ -742,8 +775,8 @@ export declare const FlowRelation: {
         | {
             kind: 'smooth';
             points: Array<
-              | [number, number]
               | SharedPolarPosition
+              | [number, number]
               | {
                   id: string;
                   anchor?:
@@ -789,7 +822,7 @@ export declare const FlowRelation: {
                       }
                     | undefined;
                 }
-              | { of: string | [number, number] | SharedPolarPosition; offset: [number, number] }
+              | { of: string | SharedPolarPosition | [number, number]; offset: [number, number] }
               | IRBetweenPosition
               | { relative: [number, number] }
               | { relativeAccumulate: [number, number] }
@@ -826,10 +859,88 @@ export declare const FlowRelation: {
           };
       sourceMarker?:
         | {
-            color?: string | number | undefined;
+            fill?:
+              | string
+              | number
+              | {
+                  kind: 'linearGradient';
+                  stops: Array<{ offset: number; color: string; opacity?: number | undefined }>;
+                  angle?: number | undefined;
+                }
+              | {
+                  kind: 'radialGradient';
+                  stops: Array<{ offset: number; color: string; opacity?: number | undefined }>;
+                  center?: [number, number] | undefined;
+                  radius?: number | undefined;
+                }
+              | {
+                  kind: 'conicGradient';
+                  stops: Array<{ offset: number; color: string; opacity?: number | undefined }>;
+                  center?: [number, number] | undefined;
+                  angle?: number | undefined;
+                }
+              | {
+                  kind: 'pattern';
+                  shape: OpenString<ValueOf<{ readonly Lines: 'lines'; readonly Dots: 'dots'; readonly Grid: 'grid' }>>;
+                  color?: string | undefined;
+                  background?: string | undefined;
+                  size?: number | undefined;
+                  lineWidth?: number | undefined;
+                  dashed?: boolean | undefined;
+                  dotted?: boolean | undefined;
+                  dashPattern?: Array<number> | undefined;
+                  dashOffset?: number | undefined;
+                  lineCap?: 'butt' | 'round' | 'square' | undefined;
+                  lineJoin?: 'round' | 'miter' | 'bevel' | undefined;
+                  horizontalStyle?:
+                    | {
+                        color?: string | undefined;
+                        lineWidth?: number | undefined;
+                        dashed?: boolean | undefined;
+                        dotted?: boolean | undefined;
+                        dashPattern?: Array<number> | undefined;
+                        dashOffset?: number | undefined;
+                        lineCap?: 'butt' | 'round' | 'square' | undefined;
+                        lineJoin?: 'round' | 'miter' | 'bevel' | undefined;
+                      }
+                    | undefined;
+                  verticalStyle?:
+                    | {
+                        color?: string | undefined;
+                        lineWidth?: number | undefined;
+                        dashed?: boolean | undefined;
+                        dotted?: boolean | undefined;
+                        dashPattern?: Array<number> | undefined;
+                        dashOffset?: number | undefined;
+                        lineCap?: 'butt' | 'round' | 'square' | undefined;
+                        lineJoin?: 'round' | 'miter' | 'bevel' | undefined;
+                      }
+                    | undefined;
+                  lineStyleCycle?:
+                    | {
+                        period: number;
+                        overrides: Array<{
+                          index: number;
+                          style: {
+                            color?: string | undefined;
+                            lineWidth?: number | undefined;
+                            dashed?: boolean | undefined;
+                            dotted?: boolean | undefined;
+                            dashPattern?: Array<number> | undefined;
+                            dashOffset?: number | undefined;
+                            lineCap?: 'butt' | 'round' | 'square' | undefined;
+                            lineJoin?: 'round' | 'miter' | 'bevel' | undefined;
+                          };
+                        }>;
+                      }
+                    | undefined;
+                  rotation?: number | undefined;
+                }
+              | { kind: 'image'; href: string; fit?: 'fill' | 'contain' | 'cover' | undefined }
+              | undefined;
             opacity?: number | undefined;
+            color?: string | number | undefined;
             lineWidth?: number | undefined;
-            fill?: string | number | undefined;
           }
         | undefined;
       status?: 'error' | 'success' | 'warning' | 'disabled' | undefined;
@@ -840,40 +951,6 @@ export declare const FlowRelation: {
             strokeWidth?: number | undefined;
             dashPattern?: Array<number> | undefined;
             dashOffset?: number | undefined;
-            shadow?:
-              | 'none'
-              | 'sm'
-              | 'md'
-              | 'lg'
-              | 'xl'
-              | '2xl'
-              | {
-                  preset?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | undefined;
-                  offsetX?: number | undefined;
-                  offsetY?: number | undefined;
-                  blur?: number | undefined;
-                  color?: string | undefined;
-                  opacity?: number | undefined;
-                }
-              | undefined;
-            blendMode?:
-              | 'color'
-              | 'normal'
-              | 'multiply'
-              | 'screen'
-              | 'overlay'
-              | 'darken'
-              | 'lighten'
-              | 'color-dodge'
-              | 'color-burn'
-              | 'hard-light'
-              | 'soft-light'
-              | 'difference'
-              | 'exclusion'
-              | 'hue'
-              | 'saturation'
-              | 'luminosity'
-              | undefined;
             stroke?:
               | string
               | number
@@ -953,6 +1030,40 @@ export declare const FlowRelation: {
                 }
               | { kind: 'image'; href: string; fit?: 'fill' | 'contain' | 'cover' | undefined }
               | undefined;
+            shadow?:
+              | 'none'
+              | 'sm'
+              | 'md'
+              | 'lg'
+              | 'xl'
+              | '2xl'
+              | {
+                  preset?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | undefined;
+                  offsetX?: number | undefined;
+                  offsetY?: number | undefined;
+                  blur?: number | undefined;
+                  color?: string | undefined;
+                  opacity?: number | undefined;
+                }
+              | undefined;
+            blendMode?:
+              | 'normal'
+              | 'color'
+              | 'multiply'
+              | 'screen'
+              | 'overlay'
+              | 'darken'
+              | 'lighten'
+              | 'color-dodge'
+              | 'color-burn'
+              | 'hard-light'
+              | 'soft-light'
+              | 'difference'
+              | 'exclusion'
+              | 'hue'
+              | 'saturation'
+              | 'luminosity'
+              | undefined;
             opacity?:
               | number
               | { overall?: number | undefined; fill?: number | undefined; stroke?: number | undefined }
@@ -989,10 +1100,88 @@ export declare const FlowRelation: {
           };
       targetMarker?:
         | {
-            color?: string | number | undefined;
+            fill?:
+              | string
+              | number
+              | {
+                  kind: 'linearGradient';
+                  stops: Array<{ offset: number; color: string; opacity?: number | undefined }>;
+                  angle?: number | undefined;
+                }
+              | {
+                  kind: 'radialGradient';
+                  stops: Array<{ offset: number; color: string; opacity?: number | undefined }>;
+                  center?: [number, number] | undefined;
+                  radius?: number | undefined;
+                }
+              | {
+                  kind: 'conicGradient';
+                  stops: Array<{ offset: number; color: string; opacity?: number | undefined }>;
+                  center?: [number, number] | undefined;
+                  angle?: number | undefined;
+                }
+              | {
+                  kind: 'pattern';
+                  shape: OpenString<ValueOf<{ readonly Lines: 'lines'; readonly Dots: 'dots'; readonly Grid: 'grid' }>>;
+                  color?: string | undefined;
+                  background?: string | undefined;
+                  size?: number | undefined;
+                  lineWidth?: number | undefined;
+                  dashed?: boolean | undefined;
+                  dotted?: boolean | undefined;
+                  dashPattern?: Array<number> | undefined;
+                  dashOffset?: number | undefined;
+                  lineCap?: 'butt' | 'round' | 'square' | undefined;
+                  lineJoin?: 'round' | 'miter' | 'bevel' | undefined;
+                  horizontalStyle?:
+                    | {
+                        color?: string | undefined;
+                        lineWidth?: number | undefined;
+                        dashed?: boolean | undefined;
+                        dotted?: boolean | undefined;
+                        dashPattern?: Array<number> | undefined;
+                        dashOffset?: number | undefined;
+                        lineCap?: 'butt' | 'round' | 'square' | undefined;
+                        lineJoin?: 'round' | 'miter' | 'bevel' | undefined;
+                      }
+                    | undefined;
+                  verticalStyle?:
+                    | {
+                        color?: string | undefined;
+                        lineWidth?: number | undefined;
+                        dashed?: boolean | undefined;
+                        dotted?: boolean | undefined;
+                        dashPattern?: Array<number> | undefined;
+                        dashOffset?: number | undefined;
+                        lineCap?: 'butt' | 'round' | 'square' | undefined;
+                        lineJoin?: 'round' | 'miter' | 'bevel' | undefined;
+                      }
+                    | undefined;
+                  lineStyleCycle?:
+                    | {
+                        period: number;
+                        overrides: Array<{
+                          index: number;
+                          style: {
+                            color?: string | undefined;
+                            lineWidth?: number | undefined;
+                            dashed?: boolean | undefined;
+                            dotted?: boolean | undefined;
+                            dashPattern?: Array<number> | undefined;
+                            dashOffset?: number | undefined;
+                            lineCap?: 'butt' | 'round' | 'square' | undefined;
+                            lineJoin?: 'round' | 'miter' | 'bevel' | undefined;
+                          };
+                        }>;
+                      }
+                    | undefined;
+                  rotation?: number | undefined;
+                }
+              | { kind: 'image'; href: string; fit?: 'fill' | 'contain' | 'cover' | undefined }
+              | undefined;
             opacity?: number | undefined;
+            color?: string | number | undefined;
             lineWidth?: number | undefined;
-            fill?: string | number | undefined;
           }
         | undefined;
     },
@@ -1051,44 +1240,44 @@ export type FlowRelationsProps = Readonly<{
 
 <ApiTable>
 
-| Member                         | Type                                                                                                                              | Default                            | Description                                                                                                                                     |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `animations?`                  | `InputFlowDiagram['animations']`                                                                                                  | —                                  | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
-| `boundingShape?`               | `"rectangle" \| "circle"`                                                                                                         | —                                  | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
-| `children`                     | `Array<string>`                                                                                                                   | —                                  | Non-empty ordered direct child references of the Flow root.                                                                                     |
-| `clip?`                        | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                          | —                                  | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
-| `defaultDiagram?`              | `InputFlowDiagram['defaultDiagram']`                                                                                              | —                                  | Optional Diagram Source defaults.                                                                                                               |
-| `defaultFlow?`                 | `InputFlowDiagram['defaultFlow']`                                                                                                 | —                                  | Optional Flow Source defaults.                                                                                                                  |
-| `readonly defaultFlowLayout?`  | `string`                                                                                                                          | `LayeredFlowLayoutDefinition.name` | The registered layout name used for compilation; omission selects the built-in layered layout                                                   |
-| `defaults?`                    | `InputFlowDiagram['defaults']`                                                                                                    | —                                  | Named descendant defaults and their inheritance barrier.                                                                                        |
+| Member                              | Type                                                                                                                              | Default                            | Description                                                                                                                                     |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`                       | `InputFlowDiagram['animations']`                                                                                                  | —                                  | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`                    | `"rectangle" \| "circle"`                                                                                                         | —                                  | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `children`                          | `Array<string>`                                                                                                                   | —                                  | Non-empty ordered direct child references of the Flow root.                                                                                     |
+| `clip?`                             | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                          | —                                  | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `defaultDiagram?`                   | `InputFlowDiagram['defaultDiagram']`                                                                                              | —                                  | Optional Diagram Source defaults.                                                                                                               |
+| `defaultFlow?`                      | `InputFlowDiagram['defaultFlow']`                                                                                                 | —                                  | Optional Flow Source defaults.                                                                                                                  |
+| `readonly defaultFlowLayout?`       | `string`                                                                                                                          | `LayeredFlowLayoutDefinition.name` | The registered layout name used for compilation; omission selects the built-in layered layout                                                   |
+| `defaults?`                         | `InputFlowDiagram['defaults']`                                                                                                    | —                                  | Named descendant defaults and their inheritance barrier.                                                                                        |
 | `readonly diagramThemeDefinitions?` | `ReadonlyArray<DiagramThemeDefinition>`                                                                                           | `[]`                               | Diagram Theme definitions with the same name as a Core Theme; a named theme requires a matching definition                                      |
-| `entities`                     | `InputFlowDiagram['entities']`                                                                                                    | —                                  | Non-empty flat Flow Entity declaration catalog.                                                                                                 |
-| `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`                                                                                             | `[]`                               | Custom Entity kind definitions                                                                                                                  |
-| `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`                                                                                        | `[]`                               | Custom Entity predicate definitions                                                                                                             |
-| `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`                                                                                             | `[]`                               | Custom Entity role definitions                                                                                                                  |
-| `readonly flowLayouts?`        | `ReadonlyArray<FlowLayoutDefinition>`                                                                                             | `[]`                               | Custom definitions appended to the built-in layout catalog; different definitions cannot share a name                                           |
+| `entities`                          | `InputFlowDiagram['entities']`                                                                                                    | —                                  | Non-empty flat Flow Entity declaration catalog.                                                                                                 |
+| `readonly entityKinds?`             | `ReadonlyArray<EntityKindDefinition>`                                                                                             | `[]`                               | Custom Entity kind definitions                                                                                                                  |
+| `readonly entityPredicates?`        | `ReadonlyArray<EntityPredicateDefinition>`                                                                                        | `[]`                               | Custom Entity predicate definitions                                                                                                             |
+| `readonly entityRoles?`             | `ReadonlyArray<EntityRoleDefinition>`                                                                                             | `[]`                               | Custom Entity role definitions                                                                                                                  |
+| `readonly flowLayouts?`             | `ReadonlyArray<FlowLayoutDefinition>`                                                                                             | `[]`                               | Custom definitions appended to the built-in layout catalog; different definitions cannot share a name                                           |
 | `readonly flowThemeDefinitions?`    | `ReadonlyArray<FlowThemeDefinition>`                                                                                              | `[]`                               | Flow Theme definitions with the same name as a Core Theme; a named theme requires a matching definition                                         |
-| `frame?`                       | `InputFlowDiagram['frame']`                                                                                                       | —                                  | Optional Diagram Frame overrides.                                                                                                               |
-| `graphRules?`                  | `InputFlowDiagram['graphRules']`                                                                                                  | —                                  | Optional ordered Graph rules for Flow-materialized Entities and Relations.                                                                      |
+| `frame?`                            | `InputFlowDiagram['frame']`                                                                                                       | —                                  | Optional Diagram Frame overrides.                                                                                                               |
+| `graphRules?`                       | `InputFlowDiagram['graphRules']`                                                                                                  | —                                  | Optional ordered Graph rules for Flow-materialized Entities and Relations.                                                                      |
 | `readonly graphThemeDefinitions?`   | `ReadonlyArray<GraphThemeDefinition>`                                                                                             | `[]`                               | Graph Theme definitions sharing a Core Theme name                                                                                               |
-| `groups?`                      | `InputFlowDiagram['groups']`                                                                                                      | `[]`                               | Flat Flow Group declaration catalog; defaults to an empty array.                                                                                |
-| `id?`                          | `string`                                                                                                                          | —                                  | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
-| `layout?`                      | `{ direction?: "right" \| "left" \| "up" \| "down" \| undefined; nodeGap?: number \| undefined; rankGap?: number \| undefined; }` | —                                  | Root Flow layout overrides.                                                                                                                     |
-| `layouts?`                     | `InputFlowDiagram['layouts']`                                                                                                     | `[]`                               | Flat Flow Layout declaration catalog; defaults to an empty array.                                                                               |
-| `localNamespace?`              | `false \| true`                                                                                                                   | —                                  | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
-| `meta?`                        | `Record<string, JsonValue>`                                                                                                       | —                                  | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
-| `position?`                    | `InputFlowDiagram['position']`                                                                                                    | `[0,0]`                            | Parent-frame origin position, or final anchor alignment after local transforms. Defaults to [0, 0].                                             |
-| `presentation?`                | `InputFlowDiagram['presentation']`                                                                                                | —                                  | Optional complete Diagram Presentation.                                                                                                         |
-| `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`                                                                                           | `[]`                               | Custom Relation kind definitions                                                                                                                |
-| `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>`                                                                                      | `[]`                               | Custom Relation predicate definitions                                                                                                           |
-| `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`                                                                                           | `[]`                               | Custom Relation role definitions                                                                                                                |
-| `relations?`                   | `InputFlowDiagram['relations']`                                                                                                   | —                                  | Optional non-empty root relation collection.                                                                                                    |
-| `routing?`                     | `InputFlowDiagram['routing']`                                                                                                     | —                                  | Root Flow relation routing default.                                                                                                             |
+| `groups?`                           | `InputFlowDiagram['groups']`                                                                                                      | `[]`                               | Flat Flow Group declaration catalog; defaults to an empty array.                                                                                |
+| `id?`                               | `string`                                                                                                                          | —                                  | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `layout?`                           | `{ direction?: "right" \| "left" \| "up" \| "down" \| undefined; nodeGap?: number \| undefined; rankGap?: number \| undefined; }` | —                                  | Root Flow layout overrides.                                                                                                                     |
+| `layouts?`                          | `InputFlowDiagram['layouts']`                                                                                                     | `[]`                               | Flat Flow Layout declaration catalog; defaults to an empty array.                                                                               |
+| `localNamespace?`                   | `false \| true`                                                                                                                   | —                                  | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`                             | `Record<string, JsonValue>`                                                                                                       | —                                  | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `position?`                         | `InputFlowDiagram['position']`                                                                                                    | `[0,0]`                            | Parent-frame origin position, or final anchor alignment after local transforms. Defaults to [0, 0].                                             |
+| `presentation?`                     | `InputFlowDiagram['presentation']`                                                                                                | —                                  | Optional complete Diagram Presentation.                                                                                                         |
+| `readonly relationKinds?`           | `ReadonlyArray<RelationKindDefinition>`                                                                                           | `[]`                               | Custom Relation kind definitions                                                                                                                |
+| `readonly relationPredicates?`      | `ReadonlyArray<RelationPredicateDefinition>`                                                                                      | `[]`                               | Custom Relation predicate definitions                                                                                                           |
+| `readonly relationRoles?`           | `ReadonlyArray<RelationRoleDefinition>`                                                                                           | `[]`                               | Custom Relation role definitions                                                                                                                |
+| `relations?`                        | `InputFlowDiagram['relations']`                                                                                                   | —                                  | Optional non-empty root relation collection.                                                                                                    |
+| `routing?`                          | `InputFlowDiagram['routing']`                                                                                                     | —                                  | Root Flow relation routing default.                                                                                                             |
 | `theme?`                            | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                          | —                                  | Sparse Theme override inherited by this Scope descendants.                                                                                      |
-| `transforms?`                  | `InputFlowDiagram['transforms']`                                                                                                  | —                                  | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
-| `zIndex?`                      | `number`                                                                                                                          | —                                  | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
-| `input` (Parameter)            | `FlowDiagramInputEmbedProps`                                                                                                      | —                                  | Flow declarations and runtime extensions; the adapter assembles the Source and providers during compilation                                     |
-| Returns                        | `InputEmbed<FlowDiagramInputEmbedProps>`                                                                                          | —                                  | An embed node that retains the input object reference without running layout here                                                               |
+| `transforms?`                       | `InputFlowDiagram['transforms']`                                                                                                  | —                                  | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `zIndex?`                           | `number`                                                                                                                          | —                                  | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+| `input` (Parameter)                 | `FlowDiagramInputEmbedProps`                                                                                                      | —                                  | Flow declarations and runtime extensions; the adapter assembles the Source and providers during compilation                                     |
+| Returns                             | `InputEmbed<FlowDiagramInputEmbedProps>`                                                                                          | —                                  | An embed node that retains the input object reference without running layout here                                                               |
 
 </ApiTable>
 
@@ -1981,19 +2170,19 @@ export declare const routeFlowRelations: (
 
 <ApiTable>
 
-| Member                         | Type                                         | Default                            | Description                                                                                                      |
-| ------------------------------ | -------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `readonly defaultFlowLayout?`  | `string`                                     | `LayeredFlowLayoutDefinition.name` | The registered layout name used for compilation; omission selects the built-in layered layout                    |
+| Member                              | Type                                         | Default                            | Description                                                                                                |
+| ----------------------------------- | -------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `readonly defaultFlowLayout?`       | `string`                                     | `LayeredFlowLayoutDefinition.name` | The registered layout name used for compilation; omission selects the built-in layered layout              |
 | `readonly diagramThemeDefinitions?` | `ReadonlyArray<DiagramThemeDefinition>`      | `[]`                               | Diagram Theme definitions with the same name as a Core Theme; a named theme requires a matching definition |
-| `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`        | `[]`                               | Custom Entity kind definitions                                                                                   |
-| `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`   | `[]`                               | Custom Entity predicate definitions                                                                              |
-| `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`        | `[]`                               | Custom Entity role definitions                                                                                   |
-| `readonly flowLayouts?`        | `ReadonlyArray<FlowLayoutDefinition>`        | `[]`                               | Custom definitions appended to the built-in layout catalog; different definitions cannot share a name            |
+| `readonly entityKinds?`             | `ReadonlyArray<EntityKindDefinition>`        | `[]`                               | Custom Entity kind definitions                                                                             |
+| `readonly entityPredicates?`        | `ReadonlyArray<EntityPredicateDefinition>`   | `[]`                               | Custom Entity predicate definitions                                                                        |
+| `readonly entityRoles?`             | `ReadonlyArray<EntityRoleDefinition>`        | `[]`                               | Custom Entity role definitions                                                                             |
+| `readonly flowLayouts?`             | `ReadonlyArray<FlowLayoutDefinition>`        | `[]`                               | Custom definitions appended to the built-in layout catalog; different definitions cannot share a name      |
 | `readonly flowThemeDefinitions?`    | `ReadonlyArray<FlowThemeDefinition>`         | `[]`                               | Flow Theme definitions with the same name as a Core Theme; a named theme requires a matching definition    |
 | `readonly graphThemeDefinitions?`   | `ReadonlyArray<GraphThemeDefinition>`        | `[]`                               | Graph Theme definitions sharing a Core Theme name                                                          |
-| `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`      | `[]`                               | Custom Relation kind definitions                                                                                 |
-| `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | `[]`                               | Custom Relation predicate definitions                                                                            |
-| `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | `[]`                               | Custom Relation role definitions                                                                                 |
+| `readonly relationKinds?`           | `ReadonlyArray<RelationKindDefinition>`      | `[]`                               | Custom Relation kind definitions                                                                           |
+| `readonly relationPredicates?`      | `ReadonlyArray<RelationPredicateDefinition>` | `[]`                               | Custom Relation predicate definitions                                                                      |
+| `readonly relationRoles?`           | `ReadonlyArray<RelationRoleDefinition>`      | `[]`                               | Custom Relation role definitions                                                                           |
 
 </ApiTable>
 

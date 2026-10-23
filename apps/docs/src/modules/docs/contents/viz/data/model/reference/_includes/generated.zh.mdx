@@ -62,7 +62,7 @@ export type ExternalRow = Record<string, unknown>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FieldResolution"} path={"packages/viz/data/src/model/contract.ts"} startLine={24}>FieldResolution</ApiSourceLink>
+#### <ApiSourceLink label={"FieldResolution"} path={"packages/viz/data/src/model/contract.ts"} startLine={27}>FieldResolution</ApiSourceLink>
 
 `type` 覆盖最终字段测量类型；`parse` 覆盖内置 coercion，返回 undefined 表示该值不可用
 
@@ -250,13 +250,13 @@ export type IRDataReference = ZodInfer<typeof DataReferenceSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ParsedFieldValue"} path={"packages/viz/data/src/model/contract.ts"} startLine={18}>ParsedFieldValue</ApiSourceLink>
+#### <ApiSourceLink label={"ParsedFieldValue"} path={"packages/viz/data/src/model/contract.ts"} startLine={21}>ParsedFieldValue</ApiSourceLink>
 
 ```ts
 export type ParsedFieldValue = string | number | undefined;
 ```
 
-#### <ApiSourceLink label={"ResolveField"} path={"packages/viz/data/src/model/contract.ts"} startLine={38}>ResolveField</ApiSourceLink>
+#### <ApiSourceLink label={"ResolveField"} path={"packages/viz/data/src/model/contract.ts"} startLine={41}>ResolveField</ApiSourceLink>
 
 按字段名返回类型覆盖与可选自定义解析；返回 undefined 时保留已有的模型或格式解析结果
 

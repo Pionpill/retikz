@@ -62,7 +62,7 @@ export type ExternalRow = Record<string, unknown>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FieldResolution"} path={"packages/viz/data/src/model/contract.ts"} startLine={24}>FieldResolution</ApiSourceLink>
+#### <ApiSourceLink label={"FieldResolution"} path={"packages/viz/data/src/model/contract.ts"} startLine={27}>FieldResolution</ApiSourceLink>
 
 `type` overrides the resolved measurement type; `parse` overrides built-in coercion and returns undefined for an unusable value
 
@@ -225,13 +225,13 @@ export type IRDataReference = ZodInfer<typeof DataReferenceSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ParsedFieldValue"} path={"packages/viz/data/src/model/contract.ts"} startLine={18}>ParsedFieldValue</ApiSourceLink>
+#### <ApiSourceLink label={"ParsedFieldValue"} path={"packages/viz/data/src/model/contract.ts"} startLine={21}>ParsedFieldValue</ApiSourceLink>
 
 ```ts
 export type ParsedFieldValue = string | number | undefined;
 ```
 
-#### <ApiSourceLink label={"ResolveField"} path={"packages/viz/data/src/model/contract.ts"} startLine={38}>ResolveField</ApiSourceLink>
+#### <ApiSourceLink label={"ResolveField"} path={"packages/viz/data/src/model/contract.ts"} startLine={41}>ResolveField</ApiSourceLink>
 
 Returns a type override and optional parser by field name; undefined preserves the existing model or format resolution
 
