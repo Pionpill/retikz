@@ -4,15 +4,8 @@ export * from './auto-padding';
 export { BuiltinPlotMark, MarkTransformSchema, MarkValueKind } from './base';
 export type { IRPlotMarkTransform } from './base';
 export * from './interval';
-export {
-  MarkLabelTextSchema,
-  MarkNodeLabelListSchema,
-  MarkNodeLabelSchema,
-  MarkPathLabelListSchema,
-  MarkPathLabelSchema,
-} from './label';
+export { MarkNodeLabelListSchema, MarkNodeLabelSchema, MarkPathLabelListSchema, MarkPathLabelSchema } from './label';
 export type {
-  IRPlotMarkLabelText,
   IRPlotMarkNodeLabel,
   IRPlotMarkNodeLabelList,
   IRPlotMarkPathLabel,

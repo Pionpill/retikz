@@ -226,7 +226,7 @@ export const resolveGeometryMarkLabels = (
   ).flatMap((label, index): Array<IRPathLabel> => {
     const text = textForLabel(label, row, labelResolver, index, bindings[index]?.text);
     if (text === undefined) return [];
-    const output: IRPathLabel = { ...omitDisplayFormat(label), text: typeof text === 'string' ? text : [text] };
+    const output: IRPathLabel = { ...omitDisplayFormat(label), text };
     if (row !== undefined)
       for (const delivery of channels?.labelDeliveries ?? []) if (delivery.index === index) delivery.apply(output, row);
 

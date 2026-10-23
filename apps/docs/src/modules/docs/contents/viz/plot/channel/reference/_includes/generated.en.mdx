@@ -1677,7 +1677,7 @@ export type FieldCollector = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"channelValue"} path={"packages/viz/plot/src/providers/channel/shared/field.ts"} startLine={18}>channelValue</ApiSourceLink>
+#### <ApiSourceLink label={"channelValue"} path={"packages/viz/plot/src/providers/channel/shared/field.ts"} startLine={19}>channelValue</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1705,7 +1705,7 @@ export declare const channelValue: (channel: IRPlotChannel | undefined, row: Ext
 
 </DocTabs>
 
-#### <ApiSourceLink label={"labelOf"} path={"packages/viz/plot/src/providers/channel/shared/field.ts"} startLine={52}>labelOf</ApiSourceLink>
+#### <ApiSourceLink label={"labelOf"} path={"packages/viz/plot/src/providers/channel/shared/field.ts"} startLine={53}>labelOf</ApiSourceLink>
 
 resolveLabel takes precedence; reads the encoded field when present, otherwise uses fixed content
 
@@ -1717,13 +1717,13 @@ resolveLabel takes precedence; reads the encoded field when present, otherwise u
 
 | Category   | Name             | Type / signature                             | Description                                                                          |
 | ---------- | ---------------- | -------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Parameters | `text`           | `IRPlotMarkLabelText \| undefined`           | Fixed text content                                                                   |
+| Parameters | `text`           | `IRNodeLabel['text'] \| undefined`           | Fixed text content                                                                   |
 |            | `row`            | `ExternalRow`                                | Data row used by the current mark                                                    |
 |            | `fieldType?`     | `DataFieldType`                              | Field type; temporal fields use UTC date formatting, others use numeric formatting   |
 |            | `resolveLabel?`  | `ResolveLabel`                               | Runtime label callback taking precedence over declared content; omitted to read text |
 |            | `field?`         | `string`                                     | Optional field encoding; invalid values do not fall back to fixed content            |
 |            | `displayFormat?` | `string`                                     | Display format for field values                                                      |
-| Returns    | —                | `IRPlotMarkLabelText \| string \| undefined` | Formatted text or constant content; undefined for an empty field or absent content   |
+| Returns    | —                | `IRNodeLabel['text'] \| string \| undefined` | Formatted text or constant content; undefined for an empty field or absent content   |
 
 </ApiTable>
 
@@ -1733,13 +1733,13 @@ resolveLabel takes precedence; reads the encoded field when present, otherwise u
 
 ```ts
 export declare const labelOf: (
-  text: IRPlotMarkLabelText | undefined,
+  text: IRNodeLabel['text'] | undefined,
   row: ExternalRow,
   fieldType?: DataFieldType,
   resolveLabel?: ResolveLabel,
   field?: string,
   displayFormat?: string,
-) => IRPlotMarkLabelText | string | undefined;
+) => IRNodeLabel['text'] | string | undefined;
 ```
 
 </DocTab>

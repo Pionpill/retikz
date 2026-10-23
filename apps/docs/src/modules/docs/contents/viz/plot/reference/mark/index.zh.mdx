@@ -410,9 +410,7 @@ description: 查询 Plot 点、路径、区间与关系图元 schema。
 
 固定标签使用可选的 `text` 字段；省略时可由同一索引的 `encodings.label.text` 提供内容。两处均未提供有效文字时不生成标签，字符串简写保持相同语义。
 
-### MarkLabelTextSchema
-
-<ZodSchema name="MarkLabelTextSchema" description="图元标签的固定 Core 文本内容。" />
+节点与路径标签的 `text` 均复用 Core 文本块，支持包含换行的字符串或非空行数组。逐行样式与混排片段放在行数组内；一个文本块仍对应一个标签。
 
 ### MarkNodeLabelSchema
 

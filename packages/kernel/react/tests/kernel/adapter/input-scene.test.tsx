@@ -9,6 +9,17 @@ import { convertIRToReactNode } from '../../../src/kernel/adapter/unbuilder';
 import { Draw, EdgeLabel } from '../../../src/sugar';
 
 describe('React JSX Input 场景', () => {
+  it('preserves multiline node labels through JSX, Vanilla and IR round-trip', () => {
+    const text = ['first', { text: 'second', fill: '#ff0000' }];
+    const input = createInputScene(<Node label={{ text }} />);
+    const ir = normalizeScene(input.scene).ir;
+    expect(ir.children[0]).toMatchObject({ label: { text } });
+    expect(SceneSchema.parse(ir).children[0]).toMatchObject({ label: { text } });
+    const child = ir.children[0];
+    if ('namespace' in child || child.type !== 'node') throw new Error('expected Kernel node');
+    const rebuilt = createInputScene(convertIRToReactNode({ ...ir, children: [child] }));
+    expect(normalizeScene(rebuilt.scene).ir).toEqual(ir);
+  });
   it('preserves Node aliases through JSX, Vanilla normalization and IR round-trip', () => {
     const input = createInputScene(<Node id="primary" aliasIds={['alternate']} position={[0, 0]} text="A" />);
     const ir = normalizeScene(input.scene).ir;

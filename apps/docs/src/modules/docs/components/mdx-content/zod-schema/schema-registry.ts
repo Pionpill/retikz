@@ -2216,11 +2216,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PathEncoding',
     url: '/viz/plot/reference/encoding#pathencodingschema',
   },
-  MarkLabelTextSchema: {
-    schema: IRPlot.MarkLabelTextSchema,
-    label: 'MarkLabelText',
-    url: '/viz/plot/reference/mark#marklabeltextschema',
-  },
   PathMarkEncodingSchema: {
     schema: IRPlot.PathMarkEncodingSchema,
     label: 'PathMarkEncoding',

@@ -20,7 +20,7 @@ import type {
 import type { ThemeMode } from '../../shared';
 import type { PaintResolutionInput } from '../resource';
 import type { EffectiveScopeDefaults, GraphicOpacityResolution } from '../style';
-import type { ResolvedLabelTextContent, ResolvedTextLine } from '../text';
+import type { ResolvedLabelTextBlock, ResolvedTextLine } from '../text';
 
 /** 已把派生颜色确定为字符串的 Node label pin */
 export type ResolvedNodeLabelPin = Omit<Exclude<IRNodeLabel['pin'], boolean | undefined>, 'stroke'> & {
@@ -71,7 +71,7 @@ export type CanonicalNodeLabel = Omit<
   /** 已确定的标签文字主色 */
   textColor?: string;
   /** 已确定 run 颜色的标签正文 */
-  text: ResolvedLabelTextContent;
+  text: ResolvedLabelTextBlock;
   /** 已确定 stroke 颜色的标签引线 */
   pin?: boolean | ResolvedNodeLabelPin;
 };

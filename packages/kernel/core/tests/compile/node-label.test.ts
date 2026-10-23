@@ -23,6 +23,50 @@ const findLabel = (prims: Array<ScenePrimitive>, text: string): TextPrim | undef
   collectTexts(prims).find(t => t.lines.some(l => (typeof l === 'string' ? l : l.text) === text));
 
 describe('Node label', () => {
+  it('preserves per-line and segment styles in a multiline label', () => {
+    const scene = compileToScene({
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'node',
+          style: { fill: '#000000', textColor: 'contrast' },
+          label: {
+            position: 'center',
+            opacity: 0.5,
+            text: [
+              { text: 'styled', fill: '#ff0000', opacity: 0.4, font: { size: 24 } },
+              { segments: [{ text: 'inherited' }, { text: 'explicit', fill: '#00ff00' }] },
+            ],
+          },
+        },
+      ],
+    }).scene;
+    const styled = findLabel(scene.primitives, 'styled');
+    const inherited = findLabel(scene.primitives, 'inherited');
+    expect(styled?.fontSize).toBe(24);
+    expect(styled?.fill).toBe('#ff0000');
+    expect(styled?.opacity).toBeCloseTo(0.2);
+    expect(inherited?.fill).toBe('#ffffff');
+    expect(findLabel(scene.primitives, 'explicit')?.fill).toBe('#00ff00');
+    expect(inherited!.y).toBeGreaterThan(styled!.y);
+  });
+  it('lays out hard line breaks as one centered label block', () => {
+    const scene = compileToScene(
+      {
+        version: 1,
+        type: 'scene',
+        children: [{ type: 'node', label: { text: 'first\nsecond', position: 'center', font: { size: 10 } } }],
+      },
+      { measureText: text => ({ width: text.length * 6, height: 10, ascent: 7, descent: 3 }) },
+    ).scene;
+    const first = findLabel(scene.primitives, 'first');
+    const second = findLabel(scene.primitives, 'second');
+    expect(first).toBeDefined();
+    expect(second).toBeDefined();
+    expect(second!.y - first!.y).toBeCloseTo(12);
+    expect(first!.x + first!.measuredWidth / 2).toBeCloseTo(second!.x + second!.measuredWidth / 2);
+  });
   it.each([undefined, 0, 0.4])('普通、混排标签及默认引线使用标签透明度，省略时继承节点：%s', opacity => {
     const scene = compileToScene({
       version: 1,
@@ -34,7 +78,7 @@ describe('Node label', () => {
           label: [
             { text: 'plain', pin: true, ...(opacity === undefined ? {} : { opacity }) },
             {
-              text: { segments: [{ text: 'mixed', opacity: 0.5 }] },
+              text: [{ segments: [{ text: 'mixed', opacity: 0.5 }] }],
               pin: { opacity: 0.7 },
               ...(opacity === undefined ? {} : { opacity }),
             },

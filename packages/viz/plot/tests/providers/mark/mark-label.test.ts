@@ -98,13 +98,15 @@ describe('contract mark host label lowering', () => {
     expect(path.label).toEqual({ text: 'trend', position: 'midway', side: 'top' });
   });
 
-  it('wraps a legacy mixed path-label line as the Core TextBlock form', () => {
+  it('preserves multiline path-label text blocks during lowering', () => {
     const root = expandOf(
       baseSpec([
         {
           type: 'path',
           encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
-          properties: { label: { text: { segments: [{ text: 'trend ' }, { tex: 'x' }] }, position: 'midway' } },
+          properties: {
+            label: { text: ['first line', { segments: [{ text: 'trend ' }, { tex: 'x' }] }], position: 'midway' },
+          },
         },
       ]),
       {
@@ -117,7 +119,10 @@ describe('contract mark host label lowering', () => {
 
     const [path] = collectPaths(markLayer(root, 0));
 
-    expect(path.label).toEqual({ text: [{ segments: [{ text: 'trend ' }, { tex: 'x' }] }], position: 'midway' });
+    expect(path.label).toEqual({
+      text: ['first line', { segments: [{ text: 'trend ' }, { tex: 'x' }] }],
+      position: 'midway',
+    });
   });
 
   it('relation-path-host-label：RelationMark 顶层 label lowering 到 core Path.label', () => {

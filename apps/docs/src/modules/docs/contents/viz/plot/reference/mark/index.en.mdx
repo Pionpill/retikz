@@ -127,9 +127,7 @@ Exactly one of `field`, `template`, and `generator` must be present.
 
 Fixed labels use an optional `text` field. When omitted, `encodings.label.text` at the same index can provide the content. A label is omitted if neither source supplies valid text. String shorthand follows the same rules.
 
-### MarkLabelTextSchema
-
-<ZodSchema name="MarkLabelTextSchema" />
+Node and path labels both use the Core text block: a string with line breaks or a non-empty array of lines. Per-line styles and mixed segments belong inside that array. One text block still represents one label.
 
 ### MarkNodeLabelSchema
 

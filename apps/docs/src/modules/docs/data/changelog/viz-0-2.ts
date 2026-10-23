@@ -106,6 +106,16 @@ export const vizV02: Release = {
       },
       highlights: [
         {
+          label: {
+            zh: '待发布：BREAKING 标签复用 Core 文本块',
+            en: 'Unreleased: BREAKING Core text blocks for labels',
+          },
+          content: {
+            zh: '节点与路径标签均支持多行文本，lowering 直接保留 Core TextBlock。移除 MarkLabelTextSchema 和 IRPlotMarkLabelText，改用 Core TextBlockSchema / IRTextBlock；混排行写在非空行数组内，不再使用顶层 segments 对象。',
+            en: 'Node and path labels support multiline text, and lowering preserves Core TextBlock directly. MarkLabelTextSchema and IRPlotMarkLabelText are removed; use Core TextBlockSchema / IRTextBlock. Mixed lines belong inside a non-empty line array rather than a top-level segments object.',
+          },
+        },
+        {
           label: { zh: '待发布：BREAKING 对齐 Core 图形样式', en: 'Unreleased: BREAKING Core graphic style alignment' },
           content: {
             zh: 'Point、Path、Interval 支持固定与字段编码的 dashOffset；Point、Interval 补齐 lineCap、lineJoin。固定 fill/stroke 接受 Core 主色权重，opacity 可用数值表示 overall，并保留未被编码覆盖的因子。移除无独立语义的 Mark*StyleSchema、PointSizeStyleSchema、PointShapeStyleSchema、NodeBoxSizeStyleSchema、Path*StyleSchema 及对应冗余 IRPlot 样式类型，改用 @retikz/core 或 @retikz/foundation 的原子契约。',

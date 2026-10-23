@@ -1486,7 +1486,7 @@ describe('layout-aware composite constraints and bounds', () => {
       child: {
         type: 'node' as const,
         position: [0, 0] as [number, number],
-        label: { text: { segments: [{ text: 'mixed label' }] }, position: 'center' as const },
+        label: { text: [{ segments: [{ text: 'mixed label' }] }], position: 'center' as const },
       },
     },
     {
@@ -1554,7 +1554,7 @@ describe('layout-aware composite constraints and bounds', () => {
             ? {
                 type: 'node',
                 position: [0, 0],
-                label: { text: { segments: [{ tex: 'x' }] }, position: 'center' },
+                label: { text: [{ segments: [{ tex: 'x' }] }], position: 'center' },
               }
             : {
                 type: 'node',

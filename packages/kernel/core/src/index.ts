@@ -118,7 +118,6 @@ export {
   ImageFit,
   ImagePaintSchema,
   KeyframeSchema,
-  LabelTextContentSchema,
   LabelVisualStyleSchema,
   LineHeightSchema,
   LineSchema,

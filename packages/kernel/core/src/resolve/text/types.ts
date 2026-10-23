@@ -29,11 +29,8 @@ export type ResolvedTextLine =
     })
   | ResolvedSegmentedLine;
 
-/** 已把派生颜色确定为字符串的 label 单行内容 */
-export type ResolvedLabelTextContent = string | ResolvedSegmentedLine;
-
-/** 已把派生颜色确定为字符串的路径标签文本块 */
-export type ResolvedLabelTextBlock = ResolvedTextLine | Array<ResolvedTextLine>;
+/** 已把派生颜色确定为字符串的标签文本块 */
+export type ResolvedLabelTextBlock = string | Array<ResolvedTextLine>;
 
 /** 字号解析所需的根字号与继承字号 */
 export type FontSizeResolveContext = Readonly<{

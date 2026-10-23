@@ -274,7 +274,7 @@ const resolvePathLabelText = (
 ): ResolvedLabelTextBlock =>
   Array.isArray(text)
     ? text.map((line, index) => resolvePathLabelTextLine(line, masterColor, context, `${fieldPath}[${index}]`))
-    : resolvePathLabelTextLine(text, masterColor, context, fieldPath);
+    : text;
 
 /** 确定一个 path label 的文字主色与 segment 颜色 */
 export const resolvePathLabelColors = (
