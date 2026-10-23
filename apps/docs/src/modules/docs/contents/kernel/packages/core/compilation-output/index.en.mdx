@@ -224,7 +224,7 @@ Clips use their own registry: the clipping capability produces a shape, which is
     },
     { label: 'Clip lowering and registration', path: 'packages/kernel/core/src/compile/resource/clip.ts' },
     { label: 'Resource and reference contracts', path: 'packages/kernel/core/src/contract/scene/paint.ts' },
-    { label: 'Clip resource structure', path: 'packages/kernel/core/src/contract/scene/clip.ts' },
+    { label: 'Clip resource structure', path: 'packages/kernel/core/src/contract/scene/group.ts' },
   ]}
 />
 
@@ -305,7 +305,7 @@ Core filters tracks by their target level during compilation. Non-`viewBox` trac
 
 <SourceLinks
   sources={[
-    { label: 'Animation tracks and keyframes', path: 'packages/kernel/core/src/schemas/animation/schema.ts' },
+    { label: 'Animation tracks and keyframes', path: 'packages/kernel/core/src/schemas/scene/animation.ts' },
     { label: 'Root and element track filtering', path: 'packages/kernel/core/src/compile/orchestration/animation.ts' },
     { label: 'Scene animation assembly', path: 'packages/kernel/core/src/compile/compile.ts' },
   ]}
@@ -355,7 +355,7 @@ An `occurrence` identifies an appearance in this compilation through a Source pa
 
 ### Composite artifacts
 
-A composite declares its domain result through `artifactSchema`. Core validates the value and wraps it in the following record, with generics simplified to their default types:
+A composite declares its domain result type through `artifactSchema`. The callback author is responsible for satisfying that contract. Core does not reparse typed artifacts through the schema; it preserves JSON snapshot isolation and wraps the value in the following record, with generics simplified to their default types:
 
 ```ts
 type CompositeCompileArtifact = Readonly<{

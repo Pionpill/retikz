@@ -1240,10 +1240,10 @@ export type PathGeneratorDefinition = {
 
 <ApiTable>
 
-| Member                          | Type                              | Default | Description                                                                                                        |
-| ------------------------------- | --------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
-| `TPath` (Type parameter)        | `extends IRPathBase = IRPathBase` | —       | Result type of the complete path schema, also determining the compile context path field; defaults to IRPathBase   |
-| `TOwnerOutput` (Type parameter) | `extends JsonValue = never`       | —       | JSON type of owner output; the default never disallows ownerOutput, otherwise a matching output schema is required |
+| Member                          | Type                              | Default | Description                                                                                                                      |
+| ------------------------------- | --------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `TPath` (Type parameter)        | `extends IRPathBase = IRPathBase` | —       | Result type of the complete path schema, also determining the compile context path field; defaults to IRPathBase                 |
+| `TOwnerOutput` (Type parameter) | `extends JsonValue = never`       | —       | JSON type of the owner output; the default never disallows ownerOutput, while other types require declaring the published output |
 
 </ApiTable>
 
@@ -1263,7 +1263,7 @@ export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutp
 
 </DocTabs>
 
-#### <ApiSourceLink label={"definePathKind"} path={"packages/kernel/core/src/contract/path-kind/define.ts"} startLine={70}>definePathKind</ApiSourceLink>
+#### <ApiSourceLink label={"definePathKind"} path={"packages/kernel/core/src/contract/path-kind/define.ts"} startLine={56}>definePathKind</ApiSourceLink>
 
 <DocTabs defaultValue="without-owner-output">
 
@@ -1273,12 +1273,12 @@ Define a path kind that does not publish owner output
 
 <ApiTable variant="parameters">
 
-| Category        | Name         | Type / signature                   | Description                                                                                                                              |
-| --------------- | ------------ | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Type parameters | `TPath`      | `extends IRPathBase = IRPathBase`  | Path type parsed by the definition schema; defaults to IRPathBase                                                                        |
-| Parameters      | `definition` | `PathKindDefinition<TPath, never>` | Definition containing the name, complete path schema, and compile function                                                               |
-| Returns         | —            | `PathKindDefinition<TPath, never>` | The original validated definition, preserving the path type without copying or modifying the input                                       |
-| Throws          | —            | —                                  | RetikzCoreError when name is empty or whitespace-only, schema has no parse function, or the supplied ownerOutput.schema is not an object |
+| Category        | Name         | Type / signature                   | Description                                                                                        |
+| --------------- | ------------ | ---------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Type parameters | `TPath`      | `extends IRPathBase = IRPathBase`  | Path type parsed by the definition schema; defaults to IRPathBase                                  |
+| Parameters      | `definition` | `PathKindDefinition<TPath, never>` | Definition containing the name, complete path schema, and compile function                         |
+| Returns         | —            | `PathKindDefinition<TPath, never>` | The original validated definition, preserving the path type without copying or modifying the input |
+| Throws          | —            | —                                  | RetikzCoreError when name is empty or whitespace-only, or schema has no parse function             |
 
 </ApiTable>
 
@@ -1290,13 +1290,13 @@ Define a path kind that publishes owner output
 
 <ApiTable variant="parameters">
 
-| Category        | Name           | Type / signature                          | Description                                                                                                                              |
-| --------------- | -------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Type parameters | `TPath`        | `extends IRPathBase`                      | Path type parsed by the definition schema                                                                                                |
-|                 | `TOwnerOutput` | `extends JsonValue`                       | Type of JSON output validated by ownerOutput.schema and published through the compile context                                            |
-| Parameters      | `definition`   | `PathKindDefinition<TPath, TOwnerOutput>` | Path kind definition including ownerOutput.schema                                                                                        |
-| Returns         | —              | `PathKindDefinition<TPath, TOwnerOutput>` | The original validated definition, preserving path and output types without copying or modifying the input                               |
-| Throws          | —              | —                                         | RetikzCoreError when name is empty or whitespace-only, schema has no parse function, or the supplied ownerOutput.schema is not an object |
+| Category        | Name           | Type / signature                          | Description                                                                                                |
+| --------------- | -------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Type parameters | `TPath`        | `extends IRPathBase`                      | Path type parsed by the definition schema                                                                  |
+|                 | `TOwnerOutput` | `extends JsonValue`                       | JSON output type published through the compile context                                                     |
+| Parameters      | `definition`   | `PathKindDefinition<TPath, TOwnerOutput>` | A path definition including its ownerOutput publication flag                                               |
+| Returns         | —              | `PathKindDefinition<TPath, TOwnerOutput>` | The original validated definition, preserving path and output types without copying or modifying the input |
+| Throws          | —              | —                                         | RetikzCoreError when name is empty or whitespace-only, or schema has no parse function                     |
 
 </ApiTable>
 
@@ -1374,88 +1374,88 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
 
 ## Configuration and validation
 
-#### <ApiSourceLink label={"PathSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={128}>PathSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathSchema"} path={"packages/kernel/core/src/schemas/path/path.ts"} startLine={148}>PathSchema</ApiSourceLink>
 
 <ZodSchema shallow name="PathSchema" />
 
-#### <ApiSourceLink label={"StepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={345}>StepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"StepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={354}>StepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="StepSchema" />
 
-#### <ApiSourceLink label={"MoveStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={59}>MoveStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"MoveStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={65}>MoveStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="MoveStepSchema" />
 
-#### <ApiSourceLink label={"LineStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={66}>LineStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"LineStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={72}>LineStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="LineStepSchema" />
 
-#### <ApiSourceLink label={"AxisLineStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={79}>AxisLineStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"AxisLineStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={85}>AxisLineStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="AxisLineStepSchema" />
 
-#### <ApiSourceLink label={"FoldStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={117}>FoldStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FoldStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={123}>FoldStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="FoldStepSchema" />
 
-#### <ApiSourceLink label={"CycleStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={122}>CycleStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CycleStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={128}>CycleStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="CycleStepSchema" />
 
-#### <ApiSourceLink label={"CurveStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={128}>CurveStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CurveStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={134}>CurveStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="CurveStepSchema" />
 
-#### <ApiSourceLink label={"CubicStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={137}>CubicStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CubicStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={143}>CubicStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="CubicStepSchema" />
 
 Either tangent angle selects tangent mode; the omitted outgoing/incoming angle defaults to 0/180. Angles are absolute screen angles (0 right, 90 down). Looseness defaults to 1 and affects only tangent mode.
 
-#### <ApiSourceLink label={"BendStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={168}>BendStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"BendStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={179}>BendStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="BendStepSchema" />
 
-#### <ApiSourceLink label={"ArcStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={221}>ArcStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArcStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={228}>ArcStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="ArcStepSchema" />
 
-#### <ApiSourceLink label={"CirclePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={261}>CirclePathStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CirclePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={268}>CirclePathStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="CirclePathStepSchema" />
 
-#### <ApiSourceLink label={"EllipsePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={287}>EllipsePathStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"EllipsePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={296}>EllipsePathStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="EllipsePathStepSchema" />
 
-#### <ApiSourceLink label={"RectangleStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={292}>RectangleStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RectangleStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={301}>RectangleStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="RectangleStepSchema" />
 
-#### <ApiSourceLink label={"SmoothStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={310}>SmoothStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"SmoothStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={319}>SmoothStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="SmoothStepSchema" />
 
-#### <ApiSourceLink label={"GeneratorStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={327}>GeneratorStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"GeneratorStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={336}>GeneratorStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="GeneratorStepSchema" />
 
-#### <ApiSourceLink label={"PathLabelSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={25}>PathLabelSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathLabelSchema"} path={"packages/kernel/core/src/schemas/path/label.ts"} startLine={32}>PathLabelSchema</ApiSourceLink>
 
 <ZodSchema shallow name="PathLabelSchema" />
 
-#### <ApiSourceLink label={"ArrowMarkSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={46}>ArrowMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArrowMarkSchema"} path={"packages/kernel/core/src/schemas/path/path.ts"} startLine={64}>ArrowMarkSchema</ApiSourceLink>
 
 <ZodSchema shallow name="ArrowMarkSchema" />
 
-#### <ApiSourceLink label={"PathMarkPlacementSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={55}>PathMarkPlacementSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathMarkPlacementSchema"} path={"packages/kernel/core/src/schemas/path/path.ts"} startLine={73}>PathMarkPlacementSchema</ApiSourceLink>
 
 <ZodSchema shallow name="PathMarkPlacementSchema" />
 
-#### <ApiSourceLink label={"ArrowDetailSchema"} path={"packages/kernel/core/src/schemas/path/arrow/schema.ts"} startLine={40}>ArrowDetailSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArrowDetailSchema"} path={"packages/kernel/core/src/schemas/path/arrow.ts"} startLine={62}>ArrowDetailSchema</ApiSourceLink>
 
 <ZodSchema shallow name="ArrowDetailSchema" />
 
-#### <ApiSourceLink label={"ArrowStyleSchema"} path={"packages/kernel/core/src/schemas/path/arrow/schema.ts"} startLine={13}>ArrowStyleSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArrowStyleSchema"} path={"packages/kernel/core/src/schemas/path/arrow.ts"} startLine={35}>ArrowStyleSchema</ApiSourceLink>
 
 <ZodSchema shallow name="ArrowStyleSchema" />

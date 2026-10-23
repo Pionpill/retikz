@@ -1,8 +1,5 @@
-import { array, strictObject } from 'zod';
-
 import type { ThemeColorOverrides } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { CssColorSchema } from '../../schemas';
 import type { CoreSemanticColors, CssColorValue, NonEmptyReadonlyArray, ResolvedThemeColors } from '../../shared';
 import { ThemeMode } from '../../shared';
 
@@ -103,16 +100,6 @@ const CORE_COLOR_PRESETS: Readonly<Record<ThemeMode, ResolvedThemeColors>> = Obj
   ),
 });
 
-const ThemeColorOverridesSchema = strictObject({
-  semantic: strictObject({
-    error: CssColorSchema.optional(),
-    success: CssColorSchema.optional(),
-    warning: CssColorSchema.optional(),
-    guide: CssColorSchema.optional(),
-  }).optional(),
-  categorical: array(CssColorSchema).min(1).optional(),
-});
-
 /** 解析默认 baseline 的完整 shared colors */
 export const resolveDefaultCoreThemeColors = (mode: ThemeMode): ResolvedThemeColors => {
   const preset = CORE_COLOR_PRESETS[mode];
@@ -122,15 +109,14 @@ export const resolveDefaultCoreThemeColors = (mode: ThemeMode): ResolvedThemeCol
 /** 按当前 mode 的默认 shared colors 补全一层 Theme 稀疏覆盖 */
 export const resolveCoreThemeColors = (mode: ThemeMode, overrides: ThemeColorOverrides): ResolvedThemeColors => {
   const preset = CORE_COLOR_PRESETS[mode];
-  const parsed = ThemeColorOverridesSchema.parse(overrides);
 
   return freezeColorView(
     {
-      error: parsed.semantic?.error ?? preset.semantic.error,
-      success: parsed.semantic?.success ?? preset.semantic.success,
-      warning: parsed.semantic?.warning ?? preset.semantic.warning,
-      guide: parsed.semantic?.guide ?? preset.semantic.guide,
+      error: overrides.semantic?.error ?? preset.semantic.error,
+      success: overrides.semantic?.success ?? preset.semantic.success,
+      warning: overrides.semantic?.warning ?? preset.semantic.warning,
+      guide: overrides.semantic?.guide ?? preset.semantic.guide,
     },
-    parsed.categorical ?? preset.categorical,
+    overrides.categorical ?? preset.categorical,
   );
 };

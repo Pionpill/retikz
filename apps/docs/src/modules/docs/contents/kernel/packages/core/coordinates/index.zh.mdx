@@ -72,7 +72,7 @@ position: {
       path: 'packages/kernel/core/src/resolve/position/resolve.ts',
     },
     { label: 'resolvePositionTarget：节点目标与两点插值', path: 'packages/kernel/core/src/resolve/position/target.ts' },
-    { label: 'Node 锚点定位的输入契约', path: 'packages/kernel/core/src/schemas/position/anchor-position/schema.ts' },
+    { label: 'Node 锚点定位的输入契约', path: 'packages/kernel/core/src/schemas/position/anchor.ts' },
   ]}
 />
 
@@ -92,7 +92,7 @@ Node 对齐自身锚点时，要先获得临时布局：自己的尺寸与旋转
 
 <SourceLinks
   sources={[
-    { label: '节点目标、角度与边上比例锚点', path: 'packages/kernel/core/src/schemas/position/node-target/schema.ts' },
+    { label: '节点目标、角度与边上比例锚点', path: 'packages/kernel/core/src/schemas/position/target.ts' },
     { label: '锚点取点与缓存', path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts' },
     {
       label: 'placeAnchorPositionedLayout：自身锚点的最终对齐',
@@ -292,7 +292,7 @@ $$
   sources={[
     { label: 'lowerScopeTransforms：引用平移与包络 pivot', path: 'packages/kernel/core/src/compile/scope/layout.ts' },
     { label: '预备变换、最终对齐与发布几何更新', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
-    { label: 'Scope 原点与锚点定位契约', path: 'packages/kernel/core/src/schemas/scope/schema.ts' },
+    { label: 'Scope 原点与锚点定位契约', path: 'packages/kernel/core/src/schemas/scope/defaults.ts' },
   ]}
 />
 

@@ -1,6 +1,8 @@
-import { literal, union } from 'zod';
+import { union, literal } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
-import { AnchorRefSchema, PositionSchema } from '../position';
+import { PositionSchema } from '../position/position';
+import { AnchorRefSchema } from '../position/target';
 
 /**
  * Scope 固有局部坐标系中的自身参照点
@@ -9,3 +11,6 @@ import { AnchorRefSchema, PositionSchema } from '../position';
 export const ScopeSelfPointSchema = union([literal('origin'), AnchorRefSchema, PositionSchema]).describe(
   'Point on the intrinsic Scope envelope, the local origin, or an explicit local Cartesian point.',
 );
+
+/** Scope 固有局部坐标系中的自身参照点 */
+export type IRScopeSelfPoint = ZodInfer<typeof ScopeSelfPointSchema>;

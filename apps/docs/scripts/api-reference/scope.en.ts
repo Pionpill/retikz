@@ -24,7 +24,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '按声明顺序保留的子图元，不复制子数组': 'Children retained in declaration order; the array is not copied',
   '保留配置与子图元引用的 Scope 输入，尚未归一化或编译':
     'Scope input retaining options and child references, before normalization or compilation',
-  'Scope IR 类型——手写而非 z.infer 派生': 'Scope IR type, declared explicitly rather than inferred with z.infer',
+  '分组容器及其递归子项，支持局部变换和样式继承':
+    'A grouping container with recursive children, local transforms, and style inheritance',
   'ChildSchema 通过 z.lazy 延迟回灌，z.infer 推断 children 元素时拿不到精确的 IRNode | IRPath | IRCoordinate | IRScope union；手写让 children 类型显式表达递归 union。\n  Scope 通过 defaults.style 提供级联视觉默认值，并在 defaults 中提供两个宿主通道与 reset 继承屏障':
     'ChildSchema is populated lazily through z.lazy, so an explicit declaration preserves the recursive union of child types. Scope provides shared visual defaults through defaults.style, and two host channels plus a reset barrier through defaults.',
   'Scope 最终锚点对齐放置': 'Final anchor-aligned Scope placement',

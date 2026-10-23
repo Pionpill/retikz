@@ -1,5 +1,11 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '所属者产物的 JSON 类型；默认 never 时不能声明 ownerOutput，否则必须声明发布产物':
+    'JSON type of the owner output; the default never disallows ownerOutput, while other types require declaring the published output',
+  'RetikzCoreError 当 name 为空或仅含空白字符、schema 没有 parse 函数时':
+    'RetikzCoreError when name is empty or whitespace-only, or schema has no parse function',
+  '通过编译上下文发布的 JSON 产物类型': 'JSON output type published through the compile context',
+  '包含路径定义及 ownerOutput 发布标记的定义': 'A path definition including its ownerOutput publication flag',
   'marker 元素级不透明度 0..1，与路径整体不透明度相乘；省略时不额外降低不透明度':
     'Marker opacity from 0 to 1, multiplied by the overall path opacity; omission applies no additional reduction',
   '屏幕绝对出射角（度）；任一 outAngle / inAngle 触发切线模式，缺省出射角为 0，优先于对称配置':

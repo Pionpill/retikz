@@ -1,4 +1,5 @@
 const translations: Partial<Record<string, string>> = {
+  '内置图案：平行线、圆点和网格': 'Built-in patterns: parallel lines, dots, and grids',
   缓动能力注册表: 'easing registry',
   'Pattern 单条线 motif 的可序列化样式覆盖': 'Serializable style overrides for a pattern line motif',
   'Pattern 相邻线条的稀疏周期样式': 'Sparse repeating styles for adjacent pattern lines',

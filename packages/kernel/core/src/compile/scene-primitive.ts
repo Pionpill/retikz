@@ -1,10 +1,9 @@
-import { JsonObjectSchema } from '@retikz/foundation';
 import type { Position } from '@retikz/math';
 
 import type { MarkerPrimitive, ScenePrimitive } from '../contract';
 import { createCompositeContractError } from '../resolve/diagnostics';
 import { withProviderOutputValidationBoundary as validateProviderOutput } from '../resolve/provider-validation';
-import { AnimationTrackSchema, BlendMode, FontStyle, PathFillRule, PathLineCap, PathLineJoin } from '../schemas';
+import { BlendMode, FontStyle, PathFillRule, PathLineCap, PathLineJoin } from '../schemas';
 
 /** provider output runtime validation 使用的 marker 子集验证入口 */
 export type MarkerPrimitiveValidator = (owner: string, marker: unknown) => ReadonlyArray<MarkerPrimitive>;
@@ -396,57 +395,6 @@ export const assertProviderOutputJsonValue = (owner: string, value: unknown, pat
   assertProviderOutputJsonValueWithActive(owner, value, path, new WeakSet());
 };
 
-/** 比较两棵已验证 JSON tree 的值和全部 key 是否完全一致 */
-const equalProviderOutputJson = (left: unknown, right: unknown): boolean => {
-  if (Object.is(left, right)) return true;
-  if (left === null || right === null || typeof left !== 'object' || typeof right !== 'object') return false;
-  if (Array.isArray(left) || Array.isArray(right)) {
-    if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) return false;
-    return left.every((entry, index) => equalProviderOutputJson(entry, right[index]));
-  }
-
-  const leftRecord = left as Record<string, unknown>;
-  const rightRecord = right as Record<string, unknown>;
-  const leftKeys = Reflect.ownKeys(leftRecord);
-  const rightKeys = Reflect.ownKeys(rightRecord);
-  if (leftKeys.length !== rightKeys.length || leftKeys.some(key => typeof key !== 'string')) return false;
-
-  return leftKeys.every(
-    key =>
-      typeof key === 'string' &&
-      Object.prototype.hasOwnProperty.call(rightRecord, key) &&
-      equalProviderOutputJson(leftRecord[key], rightRecord[key]),
-  );
-};
-
-/** 先验证原始 JSON graph，再验证 schema 且拒绝任何 schema stripping */
-const assertJsonSchema = (owner: string, value: unknown, path: string, schema: typeof JsonObjectSchema): void => {
-  assertProviderOutputJsonValue(owner, value, path);
-  const parsed = schema.safeParse(value);
-  if (!parsed.success || !equalProviderOutputJson(value, parsed.data)) failProviderOutput(owner, `an invalid ${path}`);
-};
-
-/** 校验动画 track 原始对象图与 AnimationTrackSchema 完全一致 */
-const assertAnimationTrack = (owner: string, value: unknown, path: string): void => {
-  assertProviderOutputJsonValue(owner, value, path);
-  const parsed = AnimationTrackSchema.safeParse(value);
-  if (!parsed.success || !equalProviderOutputJson(value, parsed.data)) {
-    failProviderOutput(owner, `an invalid ${path}`);
-  }
-};
-
-/** 校验 Scene primitive 的共享 id/meta/animations 字段 */
-const assertSceneCommon = (owner: string, value: Record<string, unknown>, path: string): void => {
-  if (value.hitTest !== undefined && value.hitTest !== false) failProviderOutput(owner, `an invalid ${path}.hitTest`);
-  if (value.id !== undefined && typeof value.id !== 'string') failProviderOutput(owner, `an invalid ${path}.id`);
-  if (value.meta !== undefined) assertJsonSchema(owner, value.meta, `${path}.meta`, JsonObjectSchema);
-  if (value.animations !== undefined) {
-    providerOutputArray(owner, value.animations, `${path}.animations`).forEach((track, index) =>
-      assertAnimationTrack(owner, track, `${path}.animations[${index}]`),
-    );
-  }
-};
-
 /** 校验 Scene resolved shadow 的 required 字段与范围 */
 const assertResolvedShadow = (owner: string, value: unknown, path: string): void => {
   if (value === undefined) return;
@@ -494,6 +442,10 @@ const visitScenePrimitive = (
   const value = providerOutputRecord(owner, primitive, path);
   const commonFields = ['type', 'id', 'meta', 'animations', 'hitTest'];
 
+  // 对公开输出保留 JSON 图完整性检查，不重新解析已类型化的字段结构
+  if (value.meta !== undefined) assertProviderOutputJsonValue(owner, value.meta, `${path}.meta`);
+  if (value.animations !== undefined) assertProviderOutputJsonValue(owner, value.animations, `${path}.animations`);
+
   switch (value.type) {
     case 'rect':
       assertProviderOutputKeys(
@@ -521,7 +473,6 @@ const visitScenePrimitive = (
         ],
         path,
       );
-      assertSceneCommon(owner, value, path);
       assertProviderOutputFinite(owner, value.x, `${path}.x`);
       assertProviderOutputFinite(owner, value.y, `${path}.y`);
       assertProviderOutputFinite(owner, value.width, `${path}.width`, true);
@@ -556,7 +507,6 @@ const visitScenePrimitive = (
         ],
         path,
       );
-      assertSceneCommon(owner, value, path);
       assertProviderOutputFinite(owner, value.cx, `${path}.cx`);
       assertProviderOutputFinite(owner, value.cy, `${path}.cy`);
       assertProviderOutputFinite(owner, value.rx, `${path}.rx`, true);
@@ -590,7 +540,6 @@ const visitScenePrimitive = (
         ],
         path,
       );
-      assertSceneCommon(owner, value, path);
       assertProviderOutputPathEnums(owner, value, path);
 
       for (const field of ['arrowStart', 'arrowEnd'] as const) {
@@ -640,8 +589,6 @@ const visitScenePrimitive = (
         ],
         path,
       );
-
-      assertSceneCommon(owner, value, path);
       assertProviderOutputFinite(owner, value.x, `${path}.x`);
       assertProviderOutputFinite(owner, value.y, `${path}.y`);
       assertProviderOutputFinite(owner, value.fontSize, `${path}.fontSize`, true);
@@ -704,7 +651,6 @@ const visitScenePrimitive = (
     }
     case 'group': {
       assertProviderOutputKeys(owner, value, [...commonFields, 'transforms', 'clipRef', 'children'], path);
-      assertSceneCommon(owner, value, path);
       assertProviderOutputTransforms(owner, value.transforms, `${path}.transforms`);
       if (value.clipRef !== undefined && typeof value.clipRef !== 'string')
         failProviderOutput(owner, `an invalid ${path}.clipRef`);

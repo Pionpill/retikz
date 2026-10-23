@@ -8,7 +8,7 @@ import type { BoundaryDefinition, ScenePrimitive } from '../../../src/contract';
 import { defineBoundary, defineShape } from '../../../src/contract';
 import { BUILTIN_BOUNDARIES } from '../../../src/providers/boundary';
 import type { IRBoundary, IRScene } from '../../../src/schemas';
-import { BoundarySchema } from '../../../src/schemas/boundary';
+import { BoundarySchema } from '../../../src/schemas';
 import { flattenPrims } from '../../helpers/flatten';
 
 const lineEndpoint = (options: CompileOptions, boundary?: IRBoundary): [number, number] => {

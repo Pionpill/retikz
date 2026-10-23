@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { GroupPrim, IRScene, ScenePrimitive, TextPrim } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import type { PathPrim } from '../../src/contract';
-import type { IRPath } from '../../src/schemas/path/path';
-import { PathSchema } from '../../src/schemas/path/path';
+import type { IRPath } from '../../src/schemas';
+import { PathSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 import { close } from '../helpers/path-command-factory';
 

@@ -4,7 +4,7 @@
 
 | Owner / 职责                   | 目录与文件名                                                           | 说明                                                                       |
 | ------------------------------ | ---------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Source IR 契约                 | `schemas/<domain>/schema.ts`、`types.ts`、`constants.ts`               | 只放 schema 与其 `IRXxx` 类型                                              |
+| Source IR 契约                 | `schemas/<domain>.ts` 或 `schemas/<group>/<domain>.ts`                 | 只放 schema 与其 `IRXxx` 类型                                              |
 | 外部 unknown 输入              | `parse/<domain>/parse.ts` 或小型 `parse/<domain>.ts`                   | `parseXxx()` 将 unknown、JSON、字符串或序列化 DSL 校验为 IR                |
 | Vanilla API authoring          | `normalize/<domain>/normalize.ts`、owner-local `types.ts`              | `normalizeXxx()` 无 compile context 地把 `InputXxx` 转为 IR                |
 | 纵向领域内部解析               | `resolve/<domain>/resolve.ts`、`types.ts`                              | `resolveXxx()` 消费 Source IR 与 context，产出 Canonical 或领域 Resolution |

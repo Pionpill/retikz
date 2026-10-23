@@ -26,15 +26,7 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 
 ## 文件分层
 
-先按能力归属组织，再按职责拆文件。目录仅聚合彼此独立的子域时，各子域的常量、schema 与派生类型放在各自模块，不集中到父目录的 `constants.ts` / `types.ts`；例如 reducer、selector、regression 各自持有声明。下表适用于单个能力确需拆文件的情况，不是固定文件模板；只有真实共享且语义稳定的声明才提取到共同 owner。
-
-| 文件                                | 职责                                                          |
-| ----------------------------------- | ------------------------------------------------------------- |
-| `schemas/<capability>/constants.ts` | 本 schema 私有 const object enum、关键字常量                  |
-| `schemas/<capability>/schema.ts`    | Zod schema、`.describe(...)`、必要 refinement                 |
-| `schemas/<capability>/types.ts`     | `IRXxx`、const object 派生类型及其 TS 组合                    |
-| `shared/`                           | 跨 schema / contract / providers / compile 复用的词汇与纯工具 |
-
+默认按语义单文件组织，将同一概念的常量、Schema 与派生类型就近放置；单一消费领域或职责强相关的概念归入同一领域目录。目录归属看 owner 内的语义职责，上层通过公共入口复用不决定内部归组。只有内容较多且职责或依赖确需独立维护时才拆 `constants.ts` / `schema.ts` / `types.ts`，不套固定模板、不设机械行数阈值、不保留转发文件。目录聚合不自动扩大公共导出。
 不要把 IR schema 放到 `contract` / `providers` / `compile`。新增 shared 内容先读 [shared](shared.md)。
 
 ## 命名
@@ -108,7 +100,7 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 - 对 discriminator 字段，说明它是 discriminator 以及该值对应的变体语义。
 - 对 provider 名称、custom key、fallback 策略，明确“可自定义”与“未注册在领域 resolve 期处理”的边界。
 - 不写实现故事、历史背景、ADR、renderer 细节或长示例。
-- `schemas/**/schema.ts` 不写 JSDoc；schema 与字段的契约说明统一使用英文 `.describe(...)`。`types.ts`、`constants.ts` 的导出类型、非 schema 常量和重要 helper 默认写中文 JSDoc，纯推断 / 重命名别名（如 `ValueOf`、`z.infer`）可省略。
+- 按符号职责组织说明，不按文件名区分：Schema 与字段契约使用英文 `.describe(...)`，必要中文 JSDoc 简述用途；非 Schema 导出类型、常量和重要 helper 默认写中文 JSDoc，纯推断 / 重命名别名（如 `ValueOf`、`z.infer`）可省略。
 
 非 schema 符号的公共注释按 [JSDoc](../../docs-doc-reference/references/jsdoc.md)；不重复维护 tag 写法。
 

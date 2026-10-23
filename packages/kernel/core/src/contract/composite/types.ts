@@ -293,7 +293,7 @@ export type AnyCompositeDefinition = {
   | {
       /** 生成当前组件的编译输出与可选产物 */
       compile: (node: never, context: CompositeCompileContext) => CompositeEvaluationResult<JsonValue>;
-      /** JSON 产物校验契约 */
+      /** JSON 产物的类型契约；回调输出不重复执行 Schema 解析 */
       artifactSchema: ZodType<JsonValue>;
     }
 );

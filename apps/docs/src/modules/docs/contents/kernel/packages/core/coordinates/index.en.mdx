@@ -77,7 +77,7 @@ The branches differ in their starting space. Local expressions calculate before 
     },
     {
       label: 'Node anchor placement input',
-      path: 'packages/kernel/core/src/schemas/position/anchor-position/schema.ts',
+      path: 'packages/kernel/core/src/schemas/position/anchor.ts',
     },
   ]}
 />
@@ -100,7 +100,7 @@ Aligning a Node's own anchor requires a provisional layout because its dimension
   sources={[
     {
       label: 'Node targets, angle anchors, and edge fractions',
-      path: 'packages/kernel/core/src/schemas/position/node-target/schema.ts',
+      path: 'packages/kernel/core/src/schemas/position/target.ts',
     },
     {
       label: 'Anchor point calculation and caching',
@@ -331,7 +331,7 @@ During finalization, Core adds only transforms that have not already been applie
       label: 'Preliminary transforms, final alignment, and geometry publication',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
     },
-    { label: 'Scope origin and anchor placement contract', path: 'packages/kernel/core/src/schemas/scope/schema.ts' },
+    { label: 'Scope origin and anchor placement contract', path: 'packages/kernel/core/src/schemas/scope/defaults.ts' },
   ]}
 />
 

@@ -2190,18 +2190,10 @@ export const compileChildrenToPrimitives = (
           throw createCompositeContractError(`Composite '${key}' returned artifact without artifactSchema.`);
         }
 
-        let parsedArtifact: JsonValue;
-
-        try {
-          parsedArtifact = callable.artifactSchema.parse(resultArtifact);
-        } catch (cause) {
-          throw createCompositeContractError(`${owner.label} returned an invalid artifact.`, { cause });
-        }
-
         let frozenArtifact: JsonValue;
 
         try {
-          frozenArtifact = cloneAndFreezeJson(parsedArtifact, `Composite '${key}' artifact`);
+          frozenArtifact = cloneAndFreezeJson(resultArtifact, `Composite '${key}' artifact`);
         } catch (cause) {
           const detail = safeThrownDetail(cause);
           throw createCompositeContractError(`${owner.label} returned a non-JSON artifact: ${detail}`, { cause });

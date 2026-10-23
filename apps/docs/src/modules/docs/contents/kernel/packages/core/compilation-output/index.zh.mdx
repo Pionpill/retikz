@@ -219,7 +219,7 @@ Core 支持节点形状等多种自定义能力，其中许多会在编译过程
     { label: 'paint 登记、去重与导入', path: 'packages/kernel/core/src/compile/resource/paint.ts' },
     { label: '裁剪降低与资源登记', path: 'packages/kernel/core/src/compile/resource/clip.ts' },
     { label: '资源与引用契约', path: 'packages/kernel/core/src/contract/scene/paint.ts' },
-    { label: '裁剪资源结构', path: 'packages/kernel/core/src/contract/scene/clip.ts' },
+    { label: '裁剪资源结构', path: 'packages/kernel/core/src/contract/scene/group.ts' },
   ]}
 />
 
@@ -297,7 +297,7 @@ Core 在编译时筛选轨道所属层级：根级的非 `viewBox` 轨道、元�
 
 <SourceLinks
   sources={[
-    { label: '动画轨道与关键帧', path: 'packages/kernel/core/src/schemas/animation/schema.ts' },
+    { label: '动画轨道与关键帧', path: 'packages/kernel/core/src/schemas/scene/animation.ts' },
     { label: '根级与元素级轨道筛选', path: 'packages/kernel/core/src/compile/orchestration/animation.ts' },
     { label: '场景动画装配', path: 'packages/kernel/core/src/compile/compile.ts' },
   ]}
@@ -347,7 +347,7 @@ type CompileExpansionKind = 'output' | 'probe' | 'replay' | 'scopeChild' | 'clip
 
 ### 复合产物
 
-复合组件通过 `artifactSchema` 声明领域结果结构，Core 校验后将结果包装为以下记录；这里将泛型简化为默认类型：
+复合组件通过 `artifactSchema` 声明领域结果类型，回调作者负责满足该契约。Core 不对已类型化产物重新执行 Schema 解析，只保留 JSON 快照隔离，并将结果包装为以下记录；这里将泛型简化为默认类型：
 
 ```ts
 type CompositeCompileArtifact = Readonly<{

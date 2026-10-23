@@ -386,7 +386,7 @@ export type BoundaryFitContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"NodeTextColor"} path={"packages/kernel/core/src/schemas/node/constants.ts"} startLine={6}>NodeTextColor</ApiSourceLink>
+#### <ApiSourceLink label={"NodeTextColor"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={31}>NodeTextColor</ApiSourceLink>
 
 ```ts
 export const NodeTextColor = {
@@ -662,7 +662,7 @@ export declare const defineShape: <TParams extends JsonObject>(def: ShapeDefinit
 
 ## 持久化配置
 
-#### <ApiSourceLink label={"IRCoordinate"} path={"packages/kernel/core/src/schemas/coordinate/types.ts"} startLine={6}>IRCoordinate</ApiSourceLink> / <ApiSourceLink label={"CoordinateSchema"} path={"packages/kernel/core/src/schemas/coordinate/schema.ts"} startLine={13}>CoordinateSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRCoordinate"} path={"packages/kernel/core/src/schemas/node/coordinate.ts"} startLine={29}>IRCoordinate</ApiSourceLink> / <ApiSourceLink label={"CoordinateSchema"} path={"packages/kernel/core/src/schemas/node/coordinate.ts"} startLine={12}>CoordinateSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -670,11 +670,11 @@ export declare const defineShape: <TParams extends JsonObject>(def: ShapeDefinit
 
 <ApiTable>
 
-| 成员       | 类型                                                                                                                                                                                                                                                                                                                         | 默认值 | 说明                                                         |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------ |
-| `id`       | `string`                                                                                                                                                                                                                                                                                                                     | —      | 必填引用标识，供路径或节点定位使用                           |
-| `position` | `SharedPolarPosition \| IRBetweenPosition \| [number, number] \| { direction: "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left"; of: string; distance?: number \| undefined; } \| { of: string \| SharedPolarPosition \| [number, number]; offset: [number, number]; }` | —      | 笛卡尔、极坐标、相对、偏移或两点比例位置；不支持自身锚点对齐 |
-| `type`     | `"coordinate"`                                                                                                                                                                                                                                                                                                               | —      | 判别字段，固定为 coordinate                                  |
+| 成员       | 类型                                                  | 默认值 | 说明                                                         |
+| ---------- | ----------------------------------------------------- | ------ | ------------------------------------------------------------ |
+| `id`       | `string`                                              | —      | 必填引用标识，供路径或节点定位使用                           |
+| `position` | `ZodInfer<typeof CoordinateSchema.shape["position"]>` | —      | 笛卡尔、极坐标、相对、偏移或两点比例位置；不支持自身锚点对齐 |
+| `type`     | `"coordinate"`                                        | —      | 判别字段，固定为 coordinate                                  |
 
 </ApiTable>
 
@@ -704,7 +704,7 @@ export type IRCoordinate = ZodInfer<typeof CoordinateSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNode"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={32}>IRNode</ApiSourceLink>
+#### <ApiSourceLink label={"IRNode"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={215}>IRNode</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -747,7 +747,7 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNodeLabel"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={29}>IRNodeLabel</ApiSourceLink> / <ApiSourceLink label={"NodeLabelSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={135}>NodeLabelSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRNodeLabel"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={112}>IRNodeLabel</ApiSourceLink> / <ApiSourceLink label={"NodeLabelSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={105}>NodeLabelSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -805,7 +805,7 @@ export type IRNodeLabel = ZodInfer<typeof NodeLabelSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNodeLayout"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={50}>IRNodeLayout</ApiSourceLink> / <ApiSourceLink label={"NodeLayoutSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={189}>NodeLayoutSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRNodeLayout"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={227}>IRNodeLayout</ApiSourceLink> / <ApiSourceLink label={"NodeLayoutSchema"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={116}>NodeLayoutSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -855,7 +855,7 @@ export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNodeStyle"} path={"packages/kernel/core/src/schemas/node/types.ts"} startLine={46}>IRNodeStyle</ApiSourceLink> / <ApiSourceLink label={"NodeStyleSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={179}>NodeStyleSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRNodeStyle"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={223}>IRNodeStyle</ApiSourceLink> / <ApiSourceLink label={"NodeStyleSchema"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={106}>NodeStyleSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -921,7 +921,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"NodeSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={265}>NodeSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NodeSchema"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={190}>NodeSchema</ApiSourceLink>
 
 <ZodSchema
   name="NodeSchema"
@@ -948,7 +948,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
   }}
 />
 
-#### <ApiSourceLink label={"NodeLabelBoundaryPositionSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={42}>NodeLabelBoundaryPositionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NodeLabelBoundaryPositionSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={40}>NodeLabelBoundaryPositionSchema</ApiSourceLink>
 
 <ZodSchema
   name="NodeLabelBoundaryPositionSchema"
@@ -959,7 +959,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
   }}
 />
 
-#### <ApiSourceLink label={"NodeLabelPinSchema"} path={"packages/kernel/core/src/schemas/node/schema.ts"} startLine={78}>NodeLabelPinSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NodeLabelPinSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={48}>NodeLabelPinSchema</ApiSourceLink>
 
 <ZodSchema
   name="NodeLabelPinSchema"
@@ -975,7 +975,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
   }}
 />
 
-#### <ApiSourceLink label={"BoundarySchema"} path={"packages/kernel/core/src/schemas/boundary/schema.ts"} startLine={8}>BoundarySchema</ApiSourceLink>
+#### <ApiSourceLink label={"BoundarySchema"} path={"packages/kernel/core/src/schemas/node/boundary.ts"} startLine={31}>BoundarySchema</ApiSourceLink>
 
 <ZodSchema
   name="BoundarySchema"
@@ -983,7 +983,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
   descriptions={{}}
 />
 
-#### <ApiSourceLink label={"BoundaryLabelSchema"} path={"packages/kernel/core/src/schemas/text/schema.ts"} startLine={103}>BoundaryLabelSchema</ApiSourceLink>
+#### <ApiSourceLink label={"BoundaryLabelSchema"} path={"packages/kernel/core/src/schemas/text/label.ts"} startLine={36}>BoundaryLabelSchema</ApiSourceLink>
 
 Kernel 共享的边界标签契约。Node 复用其中的旋转、放置和对齐字段，同时保留自己的位置、引线、单行内容及默认值；Ribbon 端点直接使用此 Schema。
 

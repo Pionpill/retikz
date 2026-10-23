@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { ZodError } from 'zod';
 
 import { defineTheme } from '../../src/contract';
 import { RetikzCoreErrorCode } from '../../src/error';
@@ -124,51 +123,6 @@ describe('resolve theme', () => {
         cause,
       }),
     );
-  });
-
-  it('strictly validates external name color outputs after undefined fallback', () => {
-    const colorsWithUnknown = { semantic: { error: '#aa0000' } };
-    Object.defineProperty(colorsWithUnknown, 'unknown', { enumerable: true, value: undefined });
-    const unknownColorField = defineTheme({
-      name: 'brand-unknown-color-field',
-      resolve: () => colorsWithUnknown,
-    });
-    const semanticWithUnknown = { error: '#aa0000' };
-    Object.defineProperty(semanticWithUnknown, 'unknown', { enumerable: true, value: undefined });
-    const unknownSemanticRole = defineTheme({
-      name: 'brand-unknown',
-      resolve: () => ({ semantic: semanticWithUnknown }),
-    });
-    const blank = defineTheme({
-      name: 'brand-blank',
-      resolve: () => ({ semantic: { error: '   ' } }),
-    });
-    const emptyCategorical: [string] = ['#112233'];
-    emptyCategorical.pop();
-    const empty = defineTheme({
-      name: 'brand-empty',
-      resolve: () => ({ categorical: emptyCategorical }),
-    });
-    const blankCategorical = defineTheme({
-      name: 'brand-blank-categorical',
-      resolve: () => ({ categorical: [''] }),
-    });
-
-    for (const definition of [unknownColorField, unknownSemanticRole, blank, empty, blankCategorical]) {
-      expect(() =>
-        resolveTheme(
-          DEFAULT_RESOLVED_THEME,
-          { name: definition.name },
-          'scene.theme',
-          new Map([[definition.name, definition]]),
-        ),
-      ).toThrowError(
-        expect.objectContaining({
-          code: RetikzCoreErrorCode.Resolve,
-          cause: expect.any(ZodError),
-        }),
-      );
-    }
   });
 
   it('projects external name color object outputs through the owner schema', () => {

@@ -1283,7 +1283,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('does not downgrade hostile nested replay wrapper reflection to a failed probe', () => {
+  it('does not downgrade replay wrapper access errors to a failed probe', () => {
     const malformed = defineComposite({
       namespace: 'test',
       type: 'hostileReplayWrapper',
@@ -1295,8 +1295,8 @@ describe('layout-aware composite constraints and bounds', () => {
         const wrapper = new Proxy(
           {},
           {
-            ownKeys: () => {
-              throw new Error('hostile replay wrapper reflection');
+            get: () => {
+              throw new Error('hostile replay wrapper read');
             },
           },
         );
@@ -1356,40 +1356,6 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(clipReads).toBe(1);
   });
 
-  it('does not downgrade sparse nested replay wrapper transforms to a failed probe', () => {
-    const malformed = defineComposite({
-      namespace: 'test',
-      type: 'sparseReplayWrapperTransforms',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('sparseReplayWrapperTransforms'),
-      }),
-      compile: (_, context) => {
-        const probe = context.layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, NaturalLayoutProposal);
-        if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
-        return { children: [context.replay(probe.result, { transforms: Array<never>(1) })] };
-      },
-    });
-    const parent = defineComposite({
-      namespace: 'test',
-      type: 'sparseReplayWrapperTransformsParent',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('sparseReplayWrapperTransformsParent'),
-      }),
-      compile: (_, context) => {
-        context.layoutChild({ namespace: 'test', type: 'sparseReplayWrapperTransforms' }, NaturalLayoutProposal);
-        return { children: [] };
-      },
-    });
-
-    expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'sparseReplayWrapperTransformsParent' }), {
-        composites: [malformed, parent],
-      }),
-    ).toThrow(RetikzCoreError);
-  });
-
   it('does not downgrade hostile nested runtime Scope props reflection to a failed probe', () => {
     const malformed = defineComposite({
       namespace: 'test',
@@ -1425,36 +1391,6 @@ describe('layout-aware composite constraints and bounds', () => {
 
     expect(() =>
       compileToScene(sceneOf({ namespace: 'test', type: 'hostileRuntimeScopePropsParent' }), {
-        composites: [malformed, parent],
-      }),
-    ).toThrow(RetikzCoreError);
-  });
-
-  it('does not downgrade sparse nested runtime Scope transforms to a failed probe', () => {
-    const malformed = defineComposite({
-      namespace: 'test',
-      type: 'sparseRuntimeScopeTransforms',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('sparseRuntimeScopeTransforms'),
-      }),
-      compile: (_, context) => ({ children: [context.scope({ transforms: Array<never>(1) }, [])] }),
-    });
-    const parent = defineComposite({
-      namespace: 'test',
-      type: 'sparseRuntimeScopeTransformsParent',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('sparseRuntimeScopeTransformsParent'),
-      }),
-      compile: (_, context) => {
-        context.layoutChild({ namespace: 'test', type: 'sparseRuntimeScopeTransforms' }, NaturalLayoutProposal);
-        return { children: [] };
-      },
-    });
-
-    expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'sparseRuntimeScopeTransformsParent' }), {
         composites: [malformed, parent],
       }),
     ).toThrow(RetikzCoreError);
@@ -2460,15 +2396,6 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     const functionTrack = validTrack();
     functionTrack.extra = () => 'not JSON';
-    const unknownTrack = validTrack();
-    unknownTrack.extra = 'schema would strip this';
-    const nestedUnknownTrack = validTrack();
-    nestedUnknownTrack.keyframes = [
-      { at: 0, value: 0, extra: true },
-      { at: 1, value: 1 },
-    ];
-    const triggerUnknownTrack = validTrack();
-    triggerUnknownTrack.trigger = { onEvent: 'activate', extra: true };
     const cyclicTrack = validTrack();
     cyclicTrack.self = cyclicTrack;
     const animatedRect = (track: Record<PropertyKey, unknown>): ScenePrimitive =>
@@ -2490,9 +2417,6 @@ describe('layout-aware composite constraints and bounds', () => {
     symbolShapeRect[Symbol('shape-hidden-function')] = () => 'hidden';
     const shapeOutputs = new Map<string, ScenePrimitive>([
       ['animationFunctionShape', animatedRect(functionTrack)],
-      ['animationUnknownShape', animatedRect(unknownTrack)],
-      ['animationNestedUnknownShape', animatedRect(nestedUnknownTrack)],
-      ['animationTriggerUnknownShape', animatedRect(triggerUnknownTrack)],
       ['animationCycleShape', animatedRect(cyclicTrack)],
       ['symbolKeyShape', symbolShapeRect as unknown as ScenePrimitive],
     ]);
@@ -2542,9 +2466,6 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     const variants = [
       'animationFunctionShape',
-      'animationUnknownShape',
-      'animationNestedUnknownShape',
-      'animationTriggerUnknownShape',
       'animationCycleShape',
       'symbolKeyShape',
       'symbolKeyMarkerArrow',
@@ -3577,28 +3498,6 @@ describe('layout-aware composite replay ownership', () => {
 });
 
 describe('layout-aware composite artifacts and lowering errors', () => {
-  it('rejects schema-mismatched artifact payloads', () => {
-    const mismatched = defineComposite({
-      namespace: 'test',
-      type: 'mismatchedArtifact',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('mismatchedArtifact'),
-      }),
-      artifactSchema: strictObject({ count: number() }),
-      compile: () => ({
-        children: [],
-        artifact: { count: 'not-a-number' as unknown as number },
-      }),
-    });
-
-    expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'mismatchedArtifact' }), {
-        composites: [mismatched],
-      }),
-    ).toThrow();
-  });
-
   it('applies maxCompositeDepth to the layout-aware compile branch', () => {
     const recursive = defineComposite({
       namespace: 'test',

@@ -17,7 +17,7 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 - React 组件和类才使用 PascalCase。hook、store、context 分别使用 `useXxx`、`useXxxStore`、`useXxxContext`；其余值和函数使用 camelCase
 - 类成员按“属性 → 构造函数 → 公开方法 → 私有方法”排列；同一方法的重载声明与实现相邻，方法名应直接表达动作与职责
 - `index.ts` 只用作目录 barrel：导出 owner 的稳定表面，不承载业务逻辑
-- `types.ts` 放导出或 owner 内共享类型，`constants.ts` 放稳定常量与 const object enum，`utils.ts` 只放没有更窄职责的纯 helper。只有一个调用点的 helper 与其 consumer 相邻
+- 默认按语义单文件组织强相关声明，仅内容较多且职责或依赖确需分离时拆技术分类文件；拆分后 `types.ts` 放导出或 owner 内共享类型，`constants.ts` 放稳定常量与 const object enum，`utils.ts` 只放没有更窄职责的纯 helper。只有一个调用点的 helper 与其 consumer 相邻
 - 概念在定义处命名。不得通过 import / export `as` 隐藏 owner 本应解决的命名冲突
 - 具名结构必须由符号自身显式表达语义角色，不能依赖字段名、目录或调用位置补足含义；当职责已由类型或局部上下文明确时，字段与局部变量可使用简洁的 `context`、`schema`、`diagnostic(s)`、`options`
 
