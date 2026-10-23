@@ -125,6 +125,8 @@ By default, the arrow tip stays at the resolved path start / end, and arrows are
 
 One panel combines the `arrow` direction, six Core basic arrows, two optional Extension arrows, color, opacity, and size. Enable “Configure ends separately” to let `start` / `end` override the shared shape and color field by field; disable it to share the top-level values. The panel explicitly injects the Extension Definitions it uses. Omitting `arrowDetail` uses a `stealth` tip that inherits the path color, with length and width both set to 8.
 
+Endpoint arrows and inline marks both multiply the Path's overall opacity by the mark's own opacity. Any opacity on a custom primitive also multiplies this factor; an explicit `0` stays fully transparent.
+
 <ComponentPreview
   files={['arrow-appearance', 'arrow-appearance.preview.tsx']}
   size="lg"

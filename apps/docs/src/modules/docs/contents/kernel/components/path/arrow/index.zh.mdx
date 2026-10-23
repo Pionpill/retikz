@@ -125,6 +125,8 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 一个面板集中控制 `arrow` 方向、六种 Core 基础箭头与两种 Extension 可选箭头、颜色、透明度和尺寸。开启“分别配置起末”后，`start` / `end` 会逐字段覆盖顶层形状与颜色；关闭时两端共用顶层配置。面板已显式注入它使用的 Extension 定义。省略 `arrowDetail` 的默认值是继承路径颜色的 `stealth`，长度和宽度都是 8。
 
+端点箭头和中段 mark 都应用 Path 整体透明度与 mark 自身透明度的乘积；自定义图元已有的透明度再与该乘积相乘，显式 `0` 保持完全透明。
+
 <ComponentPreview
   files={['arrow-appearance', 'arrow-appearance.preview.tsx']}
   size="lg"

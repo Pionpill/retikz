@@ -2,6 +2,7 @@ import { RAD_TO_DEG } from '@retikz/math';
 import type { CurveSegmentSample } from '@retikz/math';
 
 import type { GroupPrim, PaintValue, ScenePrimitive, ResolvedArrowEnd, Transform } from '../../../contract';
+import { combineOpacity } from '../../text';
 
 const resolveMarkerContextFill = (value: PaintValue, contextStroke: PaintValue): PaintValue =>
   typeof value === 'object' && value.kind === 'contextStroke' ? contextStroke : value;
@@ -14,17 +15,23 @@ export type BuildMarkMarkerGroupContext = {
   round: (n: number) => number;
   /** 替换标记内部继承描边色占位的 CSS 颜色 */
   contextStroke: PaintValue;
+  /** 与标记自身及其绘制图元透明度相乘的宿主因子 */
+  hostOpacity?: number;
 };
 
-/** marker 图元 → Scene 图元：结构同构，仅把 fill/stroke 的 contextStroke 解析成具体描边色（递归 group） */
-const markerPrimToScene = (prim: ScenePrimitive, contextStroke: PaintValue): ScenePrimitive => {
-  if (prim.type === 'text') return prim;
+/** 保留标记结构，递归解析宿主描边色并将透明度因子应用到绘制图元 */
+const markerPrimToScene = (prim: ScenePrimitive, contextStroke: PaintValue, hostOpacity?: number): ScenePrimitive => {
   if (prim.type === 'group') {
-    return { ...prim, children: prim.children.map(c => markerPrimToScene(c, contextStroke)) };
+    return { ...prim, children: prim.children.map(c => markerPrimToScene(c, contextStroke, hostOpacity)) };
   }
+
+  const opacity = combineOpacity(prim.opacity, hostOpacity);
+  const appearance = opacity === undefined ? {} : { opacity };
+  if (prim.type === 'text') return { ...prim, ...appearance };
 
   return {
     ...prim,
+    ...appearance,
     ...(prim.fill !== undefined && { fill: resolveMarkerContextFill(prim.fill, contextStroke) }),
     ...(prim.stroke !== undefined && { stroke: resolveMarkerContextFill(prim.stroke, contextStroke) }),
   };
@@ -54,7 +61,8 @@ export const buildMarkMarkerGroup = (
   return {
     type: 'group',
     transforms,
-    ...(spec.opacity === undefined ? {} : { opacity: spec.opacity }),
-    children: spec.marker.map(p => markerPrimToScene(p, contextStroke)),
+    children: spec.marker.map(p =>
+      markerPrimToScene(p, contextStroke, combineOpacity(spec.opacity, context.hostOpacity)),
+    ),
   };
 };

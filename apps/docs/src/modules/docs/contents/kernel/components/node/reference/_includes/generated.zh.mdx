@@ -270,7 +270,7 @@ export type InputCoordinate = IRCoordinate & {
 | `distance?`    | `number`                                                                                                                                                                              | —      | 节点边框到旋转后标签视觉框的净距；省略时使用编译配置 labelDistance           |
 | `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }` | —      | 标签字体覆盖，缺省字段继承节点字体                                           |
 | `keepUpright?` | `false \| true`                                                                                                                                                                       | —      | 为 true 时将倒置文字翻转 180 度；缺省 false                                  |
-| `opacity?`     | `number`                                                                                                                                                                              | —      | 标签自身不透明度，与节点不透明度相乘                                         |
+| `opacity?`     | `number`                                                                                                                                                                              | —      | 标签不透明度覆盖；省略时继承节点整体不透明度                                 |
 | `pin?`         | `IRNodeLabel['pin']`                                                                                                                                                                  | —      | 外侧标签引线；true 使用默认值，对象覆盖引线样式，不能与 inside 同用          |
 | `placement?`   | `"outside" \| "inside"`                                                                                                                                                               | —      | 标签位于附着点的外侧或内侧，缺省 outside                                     |
 | `position?`    | `InputNodeLabelPosition`                                                                                                                                                              | —      | 标签位置；省略时位于节点上方，支持方向、角度或边界比例                       |
@@ -761,7 +761,7 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 | `distance?`    | `number`                                                                                                                                                                                                                | —      | 节点边框到旋转后标签视觉框的净距；省略时使用编译配置 labelDistance           |
 | `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                   | —      | 标签字体覆盖，缺省字段继承节点字体                                           |
 | `keepUpright?` | `false \| true`                                                                                                                                                                                                         | —      | 为 true 时将倒置文字翻转 180 度；缺省 false                                  |
-| `opacity?`     | `number`                                                                                                                                                                                                                | —      | 标签自身不透明度，与节点不透明度相乘                                         |
+| `opacity?`     | `number`                                                                                                                                                                                                                | —      | 标签不透明度覆盖；省略时继承节点整体不透明度                                 |
 | `pin?`         | `ZodInfer<typeof NodeLabelSchema.shape["pin"]>`                                                                                                                                                                         | —      | 外侧标签引线；true 使用默认值，对象覆盖引线样式，不能与 inside 同用          |
 | `placement?`   | `"outside" \| "inside"`                                                                                                                                                                                                 | —      | 标签位于附着点的外侧或内侧，缺省 outside                                     |
 | `position?`    | `number \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| "center" \| { boundary: "top" \| "right" \| "bottom" \| "left"; fraction?: number \| undefined; }` | —      | 命名方向、center、角度或边界比例位置，缺省 top                               |
@@ -789,7 +789,7 @@ export type IRNodeLabel = ZodInfer<typeof NodeLabelSchema>;
   descriptions={{
     text: '标签文字或混排行',
     textColor: '标签文字颜色，缺省沿继承链求值',
-    opacity: '标签自身不透明度，与节点不透明度相乘',
+    opacity: '标签不透明度覆盖；省略时继承节点整体不透明度',
     font: '标签字体覆盖，缺省字段继承节点字体',
     align: '标签视觉框沿附着点切线的对齐方式，缺省 middle',
     position: '命名方向、center、角度或边界比例位置，缺省 top',

@@ -28,6 +28,50 @@ const linePathIR = (marks?: IRPath['marks']): IRScene => ({
 });
 
 describe('marks → 中段 marker primitive', () => {
+  it.each([undefined, 0, 0.4])('中段mark将宿主和自身透明度合成到嵌套绘制图元：%s', opacity => {
+    const scene = compileToScene(
+      {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            style: { opacity: 0.5 },
+            marks: [
+              { pos: 0.5, mark: { kind: 'arrow', shape: 'nested', ...(opacity === undefined ? {} : { opacity }) } },
+            ],
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [100, 0] },
+            ],
+          },
+        ],
+      },
+      {
+        arrows: [
+          {
+            name: 'nested',
+            backX: 0,
+            lineContactX: 5,
+            emit: () => [
+              {
+                type: 'group',
+                children: [{ type: 'ellipse', cx: 5, cy: 5, rx: 2, ry: 2, fill: 'red', opacity: 0.5 }],
+              },
+            ],
+          },
+        ],
+      },
+    ).scene;
+    const primitives = flattenPrims(scene.primitives);
+    expect(primitives.find(primitive => primitive.type === 'ellipse')).toMatchObject({
+      opacity: 0.25 * (opacity ?? 1),
+    });
+    for (const group of primitives.filter(primitive => primitive.type === 'group')) {
+      expect(group).not.toHaveProperty('opacity');
+    }
+  });
+
   it('单个中点 mark 比无 mark 多产 primitive', () => {
     const without = leafCount(compileToScene(linePathIR()).scene.primitives);
     const withMark = leafCount(
