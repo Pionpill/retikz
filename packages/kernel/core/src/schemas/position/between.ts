@@ -12,7 +12,7 @@ import { NodeTargetSchema } from './target';
 import type { IRNodeTarget } from './target';
 
 /** 递归校验不依赖路径相对游标的绝对目标 */
-export const AbsoluteTargetSchema: ZodType<IRAbsoluteTarget> = lazy(() =>
+export const AbsoluteTargetSchema: ZodType<IRAbsoluteTarget, IRAbsoluteTarget> = lazy(() =>
   union([PositionSchema, PolarPositionSchema, NodeTargetSchema, OffsetPositionSchema, BetweenPositionSchema]),
 );
 

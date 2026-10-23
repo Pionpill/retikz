@@ -18,9 +18,11 @@ keywords: label、标签、encoding、font、字号、字重、宿主、字段�
 
 ## 决策：按明确目标开放标签通道
 
-`encodings.label` 与 `properties.label` 均支持字符串简写，等价于同一位置的 `{ content: string }`；需要细化外观或附着属性时再使用对象。编码中的字符串是字段名，固定属性中的字符串是文字内容，不根据字符串值猜测来源。
+`encodings.label` 与 `properties.label` 均支持字符串简写，等价于同一位置的 `{ text: string }`；需要细化外观或附着属性时再使用对象。编码中的字符串是字段名，固定属性中的字符串是文字内容，不根据字符串值猜测来源。
 
-两者均接受单个字符串、单个对象，或由字符串与对象组成的非空数组。单个值等价于索引为零的一个标签，多标签按同一数组索引对应；标签数组表示多个标签，不表示一个标签的多行文字。固定多行内容使用对象的 `content` 表达，沿用 Core 文本内容契约。
+标签内容字段统一使用 `text`，与 Core 标签同名。Plot 的固定标签与标签编码均允许省略 `text`，以便单独声明外观；最终没有解析出文字时不生成标签。固定配置不保留 `content` 别名。
+
+两者均接受单个字符串、单个对象，或由字符串与对象组成的非空数组。单个值等价于索引为零的一个标签，多标签按同一数组索引对应；标签数组表示多个标签，不表示一个标签的多行文字。固定多行内容使用对象的 `text` 表达，沿用 Core 文本内容契约。
 
 编码目标是明确声明的语义单元，不将 Core 标签对象自动递归转换为通道字典。内置和自定义目标通过统一 Channel Definition / registry 声明字段依赖、适用宿主、值解析、尺度能力及投递目标，并经过相同解析与诊断路径。未注册或宿主不支持的目标不能以任意键透传。
 
@@ -28,7 +30,7 @@ keywords: label、标签、encoding、font、字号、字重、宿主、字段�
 
 | 编码目标                    | 字段绑定与映射语义                                                                                     |
 | --------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `content`                   | 字段名字符串；使用既有内容格式化语义，不使用视觉比例尺                                                 |
+| `text`                      | 字段名字符串；使用既有内容格式化语义，不使用视觉比例尺                                                 |
 | `font.size`                 | 字段名或显式字段与尺度；无显式尺度时消费合法字号值，不借用 Mark 点半径／面积的默认映射                 |
 | `font.weight`               | 字段名或显式字段与尺度；输出必须符合 Core 字重值契约                                                   |
 | `font.family`、`font.style` | 仅字段名；直接消费合法字体族或字形，不使用比例尺                                                       |
@@ -55,14 +57,14 @@ keywords: label、标签、encoding、font、字号、字重、宿主、字段�
 最常见的内容标签直接使用字符串：
 
 ```ts
-// 字段内容；等价于 encodings: { label: { content: 'name' } }
+// 字段内容；等价于 encodings: { label: { text: 'name' } }
 const fieldLabel = {
   encodings: {
     label: 'name',
   },
 };
 
-// 固定内容；等价于 properties: { label: { content: '重点' } }
+// 固定内容；等价于 properties: { label: { text: '重点' } }
 const fixedLabel = {
   properties: {
     label: '重点',
@@ -72,7 +74,7 @@ const fixedLabel = {
 // 多标签允许混合简写和详细对象，保持声明顺序
 const multipleLabels = {
   encodings: {
-    label: ['name', { content: 'value', font: { weight: 'labelWeight' } }],
+    label: ['name', { text: 'value', font: { weight: 'labelWeight' } }],
   },
 };
 ```
@@ -83,7 +85,7 @@ const multipleLabels = {
 const styledLabel = {
   encodings: {
     label: {
-      content: 'name',
+      text: 'name',
       font: {
         size: { field: 'importance', scale: 'labelSize' },
         weight: 'labelWeight',

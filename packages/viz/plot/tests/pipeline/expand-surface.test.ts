@@ -11,14 +11,14 @@ import { resolveCoordinateFrame } from '../../src/resolve/coordinate';
 
 describe('expand pipeline stable surface', () => {
   it('合并不同分组对象中的相同共享字段，允许各 Plot 使用不同尺寸', () => {
-    const marks: PlotDefinitions['marks'] = [];
+    const channels: PlotDefinitions['channels'] = [];
     const transforms: PlotImplementations['transforms'] = [];
     const contributions = [200, 400].map(width =>
       createPlotProviderContribution(
         {},
         {
           layout: { width, height: width / 2, fontSize: 12 },
-          definitions: { marks },
+          definitions: { channels },
           implementations: { transforms },
         },
       ),
@@ -32,7 +32,7 @@ describe('expand pipeline stable surface', () => {
 
   it.each<[LowerPlotsOptions, LowerPlotsOptions, string]>([
     [{ layout: { fontSize: 12 } }, { layout: { fontSize: 16 } }, 'layout.fontSize'],
-    [{ definitions: { marks: [] } }, { definitions: { marks: [] } }, 'definitions.marks'],
+    [{ definitions: { channels: [] } }, { definitions: { channels: [] } }, 'definitions.channels'],
     [{ implementations: { transforms: [] } }, { implementations: { transforms: [] } }, 'implementations.transforms'],
   ])('拒绝冲突的共享字段：%j / %j', (first, second, field) => {
     expect(() =>

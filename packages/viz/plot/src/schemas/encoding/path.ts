@@ -5,7 +5,7 @@ import { ChannelSchema } from './channel';
 import { PathLabelEncodingSchema } from './label';
 import { VisualEncodingSchema } from './visual';
 
-/** 路径标签的字段名简写等价于同一标签索引的 content 绑定 */
+/** 路径标签的字段名简写等价于同一标签索引的 text 绑定 */
 const pathLabelEncoding = union([NonBlankStringSchema, PathLabelEncodingSchema]);
 
 /** 校验路径宿主的外观与标签字段编码；不包含顶点、端点、分组或排序规则 */

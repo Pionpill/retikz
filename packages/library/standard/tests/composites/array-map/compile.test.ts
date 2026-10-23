@@ -21,6 +21,7 @@ const compile = (
   child: IRChild,
   proposal: LayoutProposal = intrinsicLayoutProposal('natural'),
   extra: Array<AnyCompositeDefinition> = [],
+  arrayDefinition = ArrayDefinition,
 ) => {
   let observed: LayoutChildResult | undefined;
   const harness = defineComposite({
@@ -43,7 +44,7 @@ const compile = (
   const scene = compileToScene(
     { type: 'scene', version: 1, children: [{ namespace: 'cell-test', type: 'harness', child }] },
     {
-      composites: [harness, ArrayDefinition, MapDefinition, ...extra],
+      composites: [harness, arrayDefinition, MapDefinition, ...extra],
       clips: [PathClipDefinition],
       padding: 0,
     },
@@ -395,8 +396,18 @@ it('keeps fixed slot geometry under finite range bounds', () => {
   ).toThrow();
 });
 
-it('measures fixed-cell content naturally without repeated layout compilation', () => {
+it('measures each fixed-cell content once per Array callback, including replay under changed defaults', () => {
   let calls = 0;
+  const callsPerArray: Array<number> = [];
+  const arrayDefinition: typeof ArrayDefinition = {
+    ...ArrayDefinition,
+    compile: (node, context) => {
+      const before = calls;
+      const result = ArrayDefinition.compile(node, context);
+      callsPerArray.push(calls - before);
+      return result;
+    },
+  };
   const measured = defineComposite({
     namespace: 'cell-test',
     type: 'measured',
@@ -419,10 +430,12 @@ it('measures fixed-cell content naturally without repeated layout compilation', 
     },
     intrinsicLayoutProposal('natural'),
     [measured],
+    arrayDefinition,
   );
 
   expect(calls).toBeGreaterThan(0);
-  expect(calls).toBeLessThanOrEqual(6);
+  expect(callsPerArray.length).toBeGreaterThan(0);
+  expect(callsPerArray.every(count => count === 6)).toBe(true);
 });
 
 it('keeps label visual overflow outside the parent allocation including indexed lists', () => {

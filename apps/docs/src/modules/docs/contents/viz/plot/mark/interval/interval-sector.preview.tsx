@@ -18,7 +18,7 @@ export const IntervalSectorPreview = (values: IntervalSectorPreviewValues) => {
     <Plot data={data} width={340} height={270} coordinate={{ type: 'polar2D', innerRadius: values.innerRadius }}>
       <IntervalMark
         angle="value"
-        encodings={{ color: 'source', pull: 'pull', ...(values.showLabels ? { label: { content: 'source' } } : {}) }}
+        encodings={{ color: 'source', pull: 'pull', ...(values.showLabels ? { label: { text: 'source' } } : {}) }}
         properties={{
           padAngle: values.padAngle,
           stroke: '#ffffff',

@@ -1,4 +1,4 @@
-﻿import { MarkOperationSchema } from '@retikz/plot';
+﻿import { MarkSchema } from '@retikz/plot';
 import { normalizePlot } from '@retikz/plot-vanilla';
 import type { InputPlotPointMark, InputPlotPathMark, InputPlotIntervalMark } from '@retikz/plot-vanilla';
 import { describe, expect, it } from 'vitest';
@@ -49,9 +49,7 @@ describe('mark authoring parity', () => {
       ],
     });
     expect(source.data.reference).toBe('data');
-    expect(source.marks.map(mark => MarkOperationSchema.parse(mark))).toEqual(
-      vanilla.marks.map(mark => MarkOperationSchema.parse(mark)),
-    );
+    expect(source.marks.map(mark => MarkSchema.parse(mark))).toEqual(vanilla.marks.map(mark => MarkSchema.parse(mark)));
     expect(source.marks[0]).toMatchObject({ transforms: [], encodings: point.encodings });
     expect(source.marks[1]).toMatchObject({ encodings: path.encodings });
     expect(source.marks[2]).toMatchObject({ encodings: interval.encodings });

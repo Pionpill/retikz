@@ -111,7 +111,7 @@ Interval、Reference band 与 region 的固定半径边界同样继承有效模�
 - Guide 行为：angular axis 的固定半径轴线与 radial grid rings 使用 coordinate interpolation；radial axis、angular ticks 与 angular grid spokes 仍是直线
 - Mark 行为：Path、Interval、Reference 与完全由 coordinate-projected target 构成的默认 Relation path 继承 frame；Point 与 endpoint glyph 不提供 interpolation override，但离散角轴上的 role-space adjustment 结果经 frame 的 resolved interpolation 投影；anchor / node target、显式 Relation route / routing 和 ribbon 不消费该字段
 - 失败与诊断：Polar interpolation 取值不合法由严格 schema 拒绝；Mark override 用于非 `polar2D`，Relation path override 缺少完整 projected target 或与显式 route / routing、ribbon 冲突，或 angular scale definition 无法提供连续性时 fail-loud，并定位到 coordinate / mark 与 interpolation
-- registry 边界：自定义 position scale 必须声明连续性，才能参与省略值推断；自定义 coordinate 与 custom mark 不自动获得公共 interpolation 字段，其专有行为仍由各自 Definition 解析
+- registry 边界：自定义 position scale 必须声明连续性，才能参与省略值推断；自定义 coordinate 不自动获得公共 interpolation 字段，其专有行为仍由自身 Definition 解析；Mark 仅支持内置类型
 - 兼容性 / breaking：离散 Polar Path 的默认弦连接保持不变，连续 Polar Path 从错误的默认弦修正为极坐标曲线；离散 angular scale 的固定半径 Guide 和 cell 边界从默认圆弧改为多边形边界。离散 `chord` 坐标中经 role-space adjustment 产生的类别间 Point 位置从圆周修正为多边形边，省略 placement、原始类别顶点和连续角轴保持不变。需要保留圆弧的离散 Plot 可显式设置 coordinate 或 Mark `interpolation: 'polar'`。`PositionScaleDefinition` 的自定义实现必须声明 `continuity`，不保留按 type 白名单或运行时形状猜测的 fallback
 - React / Vanilla 等价性：JSON IR、Vanilla Input 与 React props 表达同一 schema-derived contract；adapter 只传递 interpolation，不推断 scale 连续性、不合并优先级、不生成几何
 

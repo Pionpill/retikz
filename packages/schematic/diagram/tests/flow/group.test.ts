@@ -1,6 +1,6 @@
 import type { ScenePrimitive } from '@retikz/core';
 import { compileToScene, DEFAULT_RESOLVED_THEME, resolveCoreProviderDependencies } from '@retikz/core';
-import { GroupCaptionSchema, GroupSchema } from '@retikz/graph';
+import { GroupCaptionSchema } from '@retikz/graph';
 import { describe, expect, it } from 'vitest';
 
 import * as Flow from '../../src/flow';
@@ -49,7 +49,6 @@ describe('Flow Group Graph surface', () => {
     const source = flow({
       caption,
       labels: [{ text: 'Boundary', position: 'bottom' }],
-      frame: GroupSchema.shape.frame.unwrap().parse({}),
       theme: { mode: 'dark' },
       defaults: { style: { opacity: 0.8 }, node: { style: { font: { size: 16 } } } },
       zIndex: 4,
@@ -203,7 +202,8 @@ describe('Flow Group Graph surface', () => {
         meta: { owner: 'service' },
         clip: { kind: 'rect', x: 0, y: 0, width: 200, height: 100 },
         defaults: { style: { opacity: 0.8 } },
-        frame: GroupSchema.shape.frame.unwrap().parse({ padding: 5, style: { stroke: 'red' } }),
+        padding: 5,
+        border: { stroke: 'red' },
         animations: [],
       }),
     );
@@ -216,7 +216,7 @@ describe('Flow Group Graph surface', () => {
     if (group?.type !== 'group') throw new Error('Expected Group Scope');
 
     expect(group.clipRef).toBeDefined();
-    expect(primitives(output.scene.primitives).some(value => value.type === 'rect' && value.stroke === 'red')).toBe(
+    expect(primitives(output.scene.primitives).some(value => value.type === 'path' && value.stroke === 'red')).toBe(
       true,
     );
   });

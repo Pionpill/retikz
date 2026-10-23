@@ -8,7 +8,7 @@ import { MarkPlacementSchema } from '../position-adjustment';
 import { AnchorIdSchema, hasValidAnchorSource } from './anchor';
 import { PointAutoPaddingSchema } from './auto-padding';
 import { BuiltinPlotMark, markBase } from './base';
-import { nodeHostLabel } from './label';
+import { MarkNodeLabelListSchema } from './label';
 import {
   MarkOpacityStyleSchema,
   MarkColorStyleSchema,
@@ -81,7 +81,9 @@ export const PointPropertiesSchema = strictObject({
   placement: MarkPlacementSchema.optional().describe(
     'Position adjustments applied after position scale mapping and before mark geometry',
   ),
-  ...nodeHostLabel,
+  label: MarkNodeLabelListSchema.optional().describe(
+    'Node-host label: lowered onto each datum Node.label (core border-relative placement)',
+  ),
   width: NodeLayoutSchema.shape.width,
   text: NodeSchema.shape.text,
   displayFormat: NonBlankStringSchema.optional(),

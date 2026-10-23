@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CustomPositionAdjustmentSchema, MarkOperationSchema, PointMarkSchema } from '../../src/schemas';
+import { CustomPositionAdjustmentSchema, MarkSchema, PointMarkSchema } from '../../src/schemas';
 
 const point = { type: 'point', encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } } };
 
@@ -87,7 +87,7 @@ describe('Position Adjustment schema', () => {
 
   it('does not add placement to unsupported built-in marks', () => {
     expect(() =>
-      MarkOperationSchema.parse({
+      MarkSchema.parse({
         type: 'interval',
         encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } },
         properties: {

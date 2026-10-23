@@ -1,17 +1,13 @@
 ---
 title: Contract - Mark
-description: Query the Plot schemas for point, path, interval, relation, and custom marks.
+description: Query the Plot schemas for point, path, interval, and relation marks.
 ---
 
-Marks are the geometry-output layer of the graphics grammar. Built-ins form a precise discriminated union; custom marks retain JSON-safe open configuration and are validated by their `MarkDefinition` during lowering.
+Marks are the geometry-output layer of the graphics grammar. Point, Path, Interval, and Relation form a closed discriminated union. Unknown mark types are rejected at the schema boundary.
 
 ## MarkSchema
 
 <ZodSchema name="MarkSchema" />
-
-## MarkOperationSchema
-
-<ZodSchema name="MarkOperationSchema" />
 
 Every mark can use `defaultColorGroup` to declare a shared fallback color. A named group consumes one `palette.series` slot at its first appearance and reuses it for later members; ungrouped marks each consume the next slot in declaration order. Explicit color encodings and constant paints still take precedence.
 
@@ -113,10 +109,6 @@ Every mark can use `defaultColorGroup` to declare a shared fallback color. A nam
 
 <ZodSchema name="RelationRouteStepSchema" />
 
-## CustomMarkSchema
-
-<ZodSchema name="CustomMarkSchema" />
-
 ## Shared helpers
 
 ### MarkTransformSchema
@@ -131,9 +123,11 @@ Exactly one of `field`, `template`, and `generator` must be present.
 
 ## Mark labels
 
-### MarkLabelContentSchema
+Fixed labels use an optional `text` field. When omitted, `encodings.label.text` at the same index can provide the content. A label is omitted if neither source supplies valid text. String shorthand follows the same rules.
 
-<ZodSchema name="MarkLabelContentSchema" />
+### MarkLabelTextSchema
+
+<ZodSchema name="MarkLabelTextSchema" />
 
 ### MarkNodeLabelSchema
 

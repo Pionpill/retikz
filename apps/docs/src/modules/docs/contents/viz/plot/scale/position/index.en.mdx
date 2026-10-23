@@ -73,7 +73,7 @@ The mark branch accepts `clearance`, a nonnegative minimum distance from protect
 
 Built-in support covers Cartesian2D and Polar2D with all continuous position scales, band/point categorical scales, Point marks, and projected Relation endpoints. Role-space placement uses adjusted positions. Categorical scales preserve their domains and compress output ranges. Polar boundaries include circles, annuli, and sectors; full-circle angular axes do not gain a seam. Empty data adds no automatic padding. Points outside the baseline domain do not constrain padding and retain existing rendering/clipping semantics. Shared scales use one final domain; incompatible fixed ends and missing capabilities produce errors. Chart generates this branch for its `point-aware` policy.
 
-Custom Mark, position Scale, and Coordinate definitions can expose `domainPadding` capabilities for targets/extents, baseline normalization and final mapping, and coordinate boundary measurements. They use the existing registries; size evaluation must not depend on the position padding being solved. See [PointMark padding comparison](/viz/plot/mark/point#edge-padding).
+Built-in marks provide targets/extents. Custom position Scale and Coordinate definitions can expose `domainPadding` capabilities for baseline normalization and final mapping, and coordinate boundary measurements. They use the existing registries; size evaluation must not depend on the position padding being solved. See [PointMark padding comparison](/viz/plot/mark/point#edge-padding).
 
 ## Time
 
@@ -110,7 +110,7 @@ A categorical line can opt into point positions:
 
 ```tsx
 <Plot data={rows} model={[{ name: 'segment', type: 'categorical' }]}>
-  <PathMark encodings={{ order: "segment", position: { x: "segment", y: "revenue" } }} />
+  <PathMark encodings={{ order: 'segment', position: { x: 'segment', y: 'revenue' } }} />
   <PlotScale dimension="x" type="point" />
   <PlotAxis dimension="x" />
 </Plot>

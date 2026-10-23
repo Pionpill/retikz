@@ -60,7 +60,7 @@ describe('resolve source structure', () => {
   it('keeps composite provider binding in resolve', () => {
     expect(source('src/resolve/index.ts')).toContain("export * from './composite';");
 
-    const lower = source('src/compile/orchestration/composite.ts');
+    const lower = source('src/compile/orchestration/composite-output.ts');
     const traversal = source('src/compile/orchestration/traversal.ts');
 
     expect(lower).not.toContain('parseProviderPayload');

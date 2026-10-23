@@ -44,7 +44,7 @@ export const RelationIntervalPreview = (values: RelationIntervalPreviewValues) =
         <IntervalMark
           encodings={{
             color: 'phase',
-            label: { content: 'label' },
+            label: { text: 'label' },
             position: { x: { field: 'slot' }, y: { field: 'value' } },
           }}
           properties={{

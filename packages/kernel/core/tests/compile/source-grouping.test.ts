@@ -24,7 +24,7 @@ describe('分组 Source 解析与编译', () => {
     );
   });
 
-  it('实例单字段覆盖保留其它继承字段，节点字体整体覆盖', () => {
+  it('实例单字段覆盖保留其它继承字段，节点字体按字段继承', () => {
     const frame = resolveScopeDefaults(
       ScopeSchema.parse({
         type: 'scope',
@@ -47,7 +47,7 @@ describe('分组 Source 解析与编译', () => {
       style: { fill: 'red', stroke: 'blue', font: { size: 12 } },
       layout: { padding: 0, minimumSize: 30 },
     });
-    expect(resolveEffectiveNodeStyle(node, frame)).not.toMatchObject({ style: { font: { family: 'serif' } } });
+    expect(resolveEffectiveNodeStyle(node, frame)).toMatchObject({ style: { font: { family: 'serif', size: 12 } } });
   });
 
   it('空分组不清除继承，JSON 往返保持绘图结果', () => {

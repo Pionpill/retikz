@@ -1,5 +1,5 @@
 import type { JsonObject } from '@retikz/foundation';
-import type { IRPlotMarkOperation } from '@retikz/plot';
+import type { IRPlotMark } from '@retikz/plot';
 import { BuiltinPlotMark } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
@@ -62,10 +62,7 @@ const fieldMappingOf = (
 };
 
 /** 把一个 Ranged Dot semantic mark 解析为原子 projected Relation */
-export const resolveRangedDotMark = (
-  encodings: JsonObject,
-  properties: IRRangedDotChartProperties,
-): IRPlotMarkOperation => {
+export const resolveRangedDotMark = (encodings: JsonObject, properties: IRRangedDotChartProperties): IRPlotMark => {
   const category = requiredFieldOf(encodings, 'category', ['recipe', 'encodings', 'category']);
   const start = requiredFieldOf(encodings, 'start', ['recipe', 'encodings', 'start']);
   const end = requiredFieldOf(encodings, 'end', ['recipe', 'encodings', 'end']);

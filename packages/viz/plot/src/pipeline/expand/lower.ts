@@ -96,7 +96,7 @@ import type {
   IRPlotAxisGuide,
   IRPlotCoordinateOperation,
   IRPlotGuide,
-  IRPlotMarkOperation,
+  IRPlotMark,
 } from '../../schemas';
 import {
   AxisGridApplyTo,
@@ -173,7 +173,7 @@ const assertPlacementRangeCompatible = (
 };
 
 /** 按首次出现顺序为默认颜色组与未分组 mark 分配连续色板槽位 */
-const defaultColorPaletteIndicesOf = (marks: ReadonlyArray<IRPlotMarkOperation>): ReadonlyArray<number> => {
+const defaultColorPaletteIndicesOf = (marks: ReadonlyArray<IRPlotMark>): ReadonlyArray<number> => {
   const indices = new Map<string, number>();
   let nextIndex = 0;
 
@@ -447,7 +447,7 @@ export const lowerPlotWithDataArtifact = (
 
   /** 在一个明确DataView scope内执行一次mark-local transform并保留可选lineage */
   const transformMarkData = (
-    mark: IRPlotMarkOperation,
+    mark: IRPlotMark,
     markIndex: number,
     inputDataView: DataView,
     prepared?: DataTransformResult,
@@ -494,7 +494,7 @@ export const lowerPlotWithDataArtifact = (
 
   /** 校验最终逻辑模型中的字段依赖，允许字段内的缺失值但拒绝已移除字段 */
   const resolveMarkTransform = (
-    mark: IRPlotMarkOperation,
+    mark: IRPlotMark,
     markIndex: number,
     inputDataView: DataView,
     prepared?: DataTransformResult,

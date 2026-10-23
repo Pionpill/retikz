@@ -36,7 +36,7 @@ export const BuiltinLabelPreview = (
       <PlotScale dimension="y" type="linear" domain={[8, 16]} domainPadding={0} />
       <PointMark
         encodings={{
-          ...(values.showLabel ? { label: { content: 'tag' } } : {}),
+          ...(values.showLabel ? { label: { text: 'tag' } } : {}),
           position: { x: { field: 'x' }, y: { field: 'y' } },
         }}
         properties={{

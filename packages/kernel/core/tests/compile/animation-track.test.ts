@@ -358,6 +358,6 @@ describe('交互', () => {
       { animations: [CAMERA] },
     );
 
-    expect(SceneSchema.parse(JSON.parse(JSON.stringify(ir)))).toEqual(ir);
+    expect(SceneSchema.parse(JSON.parse(JSON.stringify(ir)))).toEqual(SceneSchema.parse(ir));
   });
 });

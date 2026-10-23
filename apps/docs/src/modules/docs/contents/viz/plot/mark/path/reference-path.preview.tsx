@@ -34,7 +34,7 @@ export const AnnotationPathPreview: FC<AnnotationPathValues> = values => (
           strokeWidth: 3,
           label: values.showLabel
             ? {
-                content: values.coordinate === 'polar-discrete' ? `A → ${values.category}` : 'A → B',
+                text: values.coordinate === 'polar-discrete' ? `A → ${values.category}` : 'A → B',
                 position: values.labelPosition,
                 sloped: values.sloped,
                 distance: values.distance,

@@ -4,11 +4,10 @@ import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
-import type { CoordinateFrame } from '../../../src/contract';
-import { defineMark, defineScale } from '../../../src/contract';
+import { defineScale } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
-import { linearPositionScale, resolveLinearScale } from '../../../src/providers';
+import { lowerPlot, lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
+import { isPolarCoordinateFrame, linearPositionScale, resolveLinearScale } from '../../../src/providers';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema, PolarInterpolation } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
@@ -40,31 +39,15 @@ const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
 
 const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
 
-const FrameProbeSchema = strictObject({ type: literal('polar-frame-probe') });
-
 const resolvedInterpolationOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): string | undefined => {
-  let captured: string | undefined;
-  const probe = defineMark({
-    schema: FrameProbeSchema,
-    lower: (_mark, _rows, frame: CoordinateFrame) => {
-      const value = Reflect.get(frame, 'interpolation');
-      captured = typeof value === 'string' ? value : undefined;
-      return null;
-    },
-  });
-  const withProbe = PlotSchema.parse({
-    ...spec,
-    marks: [...spec.marks, { type: 'polar-frame-probe' }],
-  });
-
-  expandOf(withProbe, datasets, {
+  const { dataArtifact } = lowerPlotWithDataArtifact(spec, datasets, {
     ...opts,
     ...options,
     layout: { ...opts.layout, ...options?.layout },
-    definitions: { ...options?.definitions, marks: [...(options?.definitions?.marks ?? []), probe] },
+    textMeasurer: measureLabel,
   });
-
-  return captured;
+  const frame = [...dataArtifact.frameByCoordinateScopeId.values()][0];
+  return isPolarCoordinateFrame(frame) ? frame.interpolation : undefined;
 };
 
 /** 角向 a / 径向 r，均线性；用裸 x/y 通道（复用语义）或显式 angle/radius 通道 */

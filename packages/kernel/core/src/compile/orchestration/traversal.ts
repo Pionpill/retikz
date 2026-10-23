@@ -1835,6 +1835,7 @@ export const compileChildrenToPrimitives = (
           const cacheKey = JSON.stringify([
             identityOf(inputs?.source ?? nextChild),
             inputs === undefined ? identityOf(owner) : null,
+            inputs?.sourcePath,
             clonedChild,
             axis,
             clonedProposal,

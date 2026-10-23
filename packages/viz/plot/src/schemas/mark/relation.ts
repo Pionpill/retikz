@@ -19,7 +19,7 @@ import { ChannelSchema, PathEncodingSchema, VisualEncodingSchema } from '../enco
 import { PlotTargetEncodingSchema, PlotTargetRefSchema } from './anchor';
 import { PointAutoPaddingSchema } from './auto-padding';
 import { BuiltinPlotMark, MarkTransformSchema, markBase } from './base';
-import { pathHostLabel } from './label';
+import { MarkPathLabelListSchema } from './label';
 import { PointPropertiesSchema } from './point';
 import {
   MarkBlendModeStyleSchema,
@@ -280,7 +280,7 @@ export const RelationPropertiesSchema = RelationPrimitiveStyleSchema.extend({
   geometry: RelationGeometrySchema,
   endpoints: RelationEndpointGlyphsSchema.optional(),
   autoPadding: PointAutoPaddingSchema.default(false).optional(),
-  ...pathHostLabel,
+  label: MarkPathLabelListSchema.optional().describe('Path-host label: lowered onto the generated core Path.label'),
 });
 
 /** 校验关系几何与目标中的字段依赖 */
@@ -385,8 +385,7 @@ export const RelationMarkSchema = strictObject({
       }
       if (
         (target !== undefined &&
-          ('id' in target ||
-            ('anchorId' in target && target.anchorId !== undefined) ||
+          (('anchorId' in target && target.anchorId !== undefined) ||
             target.anchor !== undefined ||
             target.offset !== undefined ||
             target.boundary !== undefined)) ||
@@ -395,7 +394,7 @@ export const RelationMarkSchema = strictObject({
         ctx.addIssue({
           code: 'custom',
           path: ['properties', role],
-          message: 'Endpoint glyph targets cannot use anchor, offset, boundary, id or anchorId',
+          message: 'Endpoint glyph targets cannot use anchor, offset, boundary or anchorId',
         });
       }
     }

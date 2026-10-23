@@ -1,82 +1,9 @@
-import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import type { infer as ZodInfer } from 'zod';
-import { literal, number, object, strictObject } from 'zod';
 
-import * as plot from '../../../src';
-import { positionField } from '../../../src/contract';
-import {
-  defineMark,
-  defineNodeChannel,
-  extractMarkType,
-  markChannelEncoding,
-  channelField,
-} from '../../../src/contract';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import { defineNodeChannel, markChannelEncoding, channelField } from '../../../src/contract';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
-import { BUILTIN_MARKS, resolveMarkRegistry } from '../../../src/providers';
-import type { IRPlot } from '../../../src/schemas';
-import {
-  BuiltinPlotMark,
-  VisualEncodingSchema,
-  PositionEncodingSchema,
-  MarkOperationSchema,
-  PlotSchema,
-} from '../../../src/schemas';
+import { MarkSchema, PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
-
-type Datasets = Record<string, Array<Record<string, unknown>>>;
-
-const DotMarkSchema = strictObject({
-  type: literal('dot'),
-
-  properties: strictObject({ strength: number().positive() }),
-  encodings: VisualEncodingSchema.extend({ position: PositionEncodingSchema.optional() }).optional(),
-});
-
-type DotMark = ZodInfer<typeof DotMarkSchema>;
-
-const BareMarkSchema = object({ type: literal('bare') });
-
-const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
-  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
-};
-
-/** 自定义 mark：记录被分派调用 + 读取的行数，返回一个可识别的空 layer scope */
-const makeDotMark = (record: { calls: number; rows: number }) =>
-  defineMark<DotMark>({
-    schema: DotMarkSchema,
-    collectFields: (mark, fields) => {
-      fields.addField(positionField(mark.encodings?.position?.x));
-      fields.addField(positionField(mark.encodings?.position?.y));
-    },
-    lower: (_mark, rows) => {
-      record.calls += 1;
-      record.rows = rows.kind === 'rows' ? rows.rows.length : 1;
-      return { type: 'scope', children: [] };
-    },
-  });
-
-const makeBareMark = () =>
-  defineMark({
-    schema: BareMarkSchema,
-    lower: (mark, rows, _frame, channels) => {
-      if (rows.kind === 'single' || rows.rows.length === 0) return null;
-      const row = rows.rows[0];
-      const node: IRNode = {
-        type: 'node',
-        position: [0, 0],
-        layout: { minimumSize: 1 },
-      };
-
-      for (const entry of channels.nodeDeliveries ?? []) {
-        const value = entry.resolver(row);
-        if (value !== undefined) entry.deliver(node, value, { mark, row, nodeKind: 'pointGlyph' });
-      }
-
-      return { type: 'scope', children: [node] };
-    },
-  });
 
 const makeBareIntensityChannel = (delivered: { value?: number }) =>
   defineNodeChannel<number>({
@@ -93,7 +20,7 @@ const makeBareIntensityChannel = (delivered: { value?: number }) =>
     },
   });
 
-const dotSpec = (overrides?: Partial<IRPlot>): IRPlot =>
+const specWithChannel = (channel: string) =>
   PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -104,217 +31,36 @@ const dotSpec = (overrides?: Partial<IRPlot>): IRPlot =>
       { type: 'linear', name: 'val' },
     ],
     marks: [
-      {
-        type: 'dot',
-        encodings: { position: { x: { field: 'cat' }, y: { field: 'val' } } },
-        properties: { strength: 1 },
-      },
+      { type: 'point', encodings: { position: { x: { field: 'cat' }, y: { field: 'val' } }, [channel]: 'intensity' } },
     ],
-    ...overrides,
   });
 
-const opts: LowerPlotsOptions = { layout: { width: 400, height: 300 } };
-
-describe('mark registry（contract：自定义 mark）', () => {
-  it('mark_operation_schema_accepts_builtin_and_custom', () => {
-    expect(
-      MarkOperationSchema.safeParse({ type: 'point', encodings: { position: { x: { field: 'a' } } } }).success,
-    ).toBe(true);
-    expect(MarkOperationSchema.safeParse({ type: 'dot', encodings: { position: { x: { field: 'a' } } } }).success).toBe(
-      true,
-    );
+describe('closed mark vocabulary and channel extensions', () => {
+  it('rejects unknown mark types at the JSON boundary', () => {
+    expect(MarkSchema.safeParse({ type: 'dot', encodings: { position: { x: { field: 'a' } } } }).success).toBe(false);
+    expect(PlotSchema.safeParse({ ...specWithChannel('bareIntensity'), marks: [{ type: 'dot' }] }).success).toBe(false);
   });
 
-  it('custom_mark_type_collision_rejected', () => {
-    // 自定义 type 撞内置 → IRPlotCustomMark refine 拒；内置 'point' 走内置分支但缺位置编码也不该当自定义通过
-    const collide = MarkOperationSchema.safeParse({ type: 'point', properties: { foo: 1 } });
-
-    // 'point' 命中内置 schema（point 字段可选）→ accept；但带非法额外字段的纯自定义占用名应被内置严格 schema 兜住
-    expect(MarkOperationSchema.safeParse({ type: 'path', properties: { notAField: true } }).success).toBe(
-      collide.success,
-    );
-  });
-
-  it('custom_mark_not_json_serializable_rejected', () => {
-    expect(MarkOperationSchema.safeParse({ type: 'dot', bad: () => 1 }).success).toBe(false);
-    expect(MarkOperationSchema.safeParse({ type: 'dot', bad: Number.NaN }).success).toBe(false);
-  });
-
-  it('builtin_marks_cover_public_builtin_types', () => {
-    expect(BUILTIN_MARKS.map(def => extractMarkType(def.schema)).sort()).toEqual(Object.values(BuiltinPlotMark).sort());
-  });
-
-  it('resolve_mark_registry_merges_builtin_and_custom', () => {
-    const record = { calls: 0, rows: 0 };
-    const registry = resolveMarkRegistry([makeDotMark(record)]);
-
-    expect(registry.get('dot')).toBeDefined();
-    expect(registry.get('point')).toBeDefined();
-  });
-
-  it('duplicate_mark_registration_throws（自定义撞内置）', () => {
-    const collide = defineMark({
-      schema: strictObject({ type: literal('point'), kind: literal('data') }),
-      lower: () => null,
-    });
-
-    expect(() => resolveMarkRegistry([collide])).toThrow(/duplicate mark registration: "point"/);
-  });
-
-  it('duplicate_mark_registration_throws（两自定义同 type）', () => {
-    const a = defineMark({ schema: DotMarkSchema, lower: () => null });
-    const b = defineMark({ schema: DotMarkSchema, lower: () => null });
-
-    expect(() => resolveMarkRegistry([a, b])).toThrow(/duplicate mark registration: "dot"/);
-  });
-
-  it('public_barrel_exports_mark_extension_helpers', () => {
-    expect(plot.defineMark).toBe(defineMark);
-    expect(plot.extractMarkType).toBe(extractMarkType);
-    expect(plot.resolveMarkRegistry).toBe(resolveMarkRegistry);
-  });
-
-  it('custom_mark_lower_dispatched_with_transformed_rows', () => {
-    const record = { calls: 0, rows: 0 };
-    const rows = [
-      { cat: 'A', val: 3 },
-      { cat: 'B', val: 6 },
-      { cat: 'C', val: 9 },
-    ];
-    expandOf(dotSpec(), { d: rows }, { definitions: { marks: [makeDotMark(record)] }, ...opts });
-
-    expect(record.calls).toBe(1);
-    expect(record.rows).toBe(rows.length);
-  });
-
-  it('custom_mark_definition_does_not_revalidate_pipeline_owned_default_color_group', () => {
-    const record = { calls: 0, rows: 0 };
-    const spec = dotSpec({
-      marks: [
-        {
-          type: 'dot',
-          defaultColorGroup: 'observations',
-          encodings: { position: { x: { field: 'cat' }, y: { field: 'val' } } },
-          properties: { strength: 1 },
-        },
-      ],
-    });
-
+  it('rejects unregistered channels on builtin marks', () => {
     expect(() =>
-      expandOf(spec, { d: [{ cat: 'A', val: 3 }] }, { definitions: { marks: [makeDotMark(record)] }, ...opts }),
-    ).not.toThrow();
-    expect(record.calls).toBe(1);
-  });
-
-  it('custom_mark_schema_rejects_invalid_operation_before_behavior_callbacks', () => {
-    const record = { calls: 0, rows: 0 };
-    const spec = dotSpec({
-      marks: [
-        {
-          type: 'dot',
-          encodings: { position: { x: { field: 'cat' }, y: { field: 'val' } } },
-          properties: { strength: -1 },
-        },
-      ],
-    });
-
-    expect(() =>
-      expandOf(spec, { d: [{ cat: 'A', val: 3 }] }, { definitions: { marks: [makeDotMark(record)] }, ...opts }),
-    ).toThrow();
-    expect(record.calls).toBe(0);
-  });
-
-  it('extension_channels_are_validated_before_custom_schema_strips_them', () => {
-    const spec = PlotSchema.parse({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'd' },
-      coordinate: { type: 'cartesian2D', x: 'cat', y: 'val' },
-      scales: [
-        { type: 'band', name: 'cat' },
-        { type: 'linear', name: 'val' },
-      ],
-      marks: [{ type: 'bare', encodings: { ghost: 'intensity' } }],
-    });
-
-    expect(() =>
-      expandOf(spec, { d: [{ cat: 'A', val: 3 }] }, { definitions: { marks: [makeBareMark()] }, ...opts }),
+      lowerPlot(
+        specWithChannel('ghost'),
+        { d: [{ cat: 'A', val: 3, intensity: 0.75 }] },
+        { textMeasurer: measureLabel },
+      ),
     ).toThrow(/channel "ghost" is not registered/);
   });
 
-  it('registered_extension_channel_reads_source_mark_after_custom_schema_strips_it', () => {
+  it('delivers registered extension channels on builtin marks', () => {
     const delivered: { value?: number } = {};
-    const spec = PlotSchema.parse({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'd' },
-      coordinate: { type: 'cartesian2D', x: 'cat', y: 'val' },
-      scales: [
-        { type: 'band', name: 'cat' },
-        { type: 'linear', name: 'val' },
-      ],
-      marks: [{ type: 'bare', encodings: { bareIntensity: 'intensity' } }],
-    });
-    expandOf(
-      spec,
+    lowerPlot(
+      specWithChannel('bareIntensity'),
       { d: [{ cat: 'A', val: 3, intensity: 0.75 }] },
-      { definitions: { marks: [makeBareMark()], channels: [makeBareIntensityChannel(delivered)] }, ...opts },
-    );
-
-    expect(delivered.value).toBe(0.75);
-  });
-
-  it('unregistered_custom_mark_fails_loud', () => {
-    const rows = [{ cat: 'A', val: 3 }];
-
-    expect(() => expandOf(dotSpec(), { d: rows }, opts)).toThrow(/mark type "dot" is not registered/);
-  });
-
-  it('custom_mark_fields_collected_for_strict_model', () => {
-    const record = { calls: 0, rows: 0 };
-    const rows = [
-      { cat: 'A', val: 3 },
-      { cat: 'B', val: 6 },
-    ];
-
-    // strict model：custom mark 的 collectFields 登记 x=cat / y=val，否则严格校验会因未声明字段失败
-    const spec = dotSpec({
-      data: {
-        reference: 'd',
-        model: [
-          { name: 'cat', type: 'categorical' },
-          { name: 'val', type: 'continuous' },
-        ],
+      {
+        definitions: { channels: [makeBareIntensityChannel(delivered)] },
+        textMeasurer: measureLabel,
       },
-    });
-
-    expect(() =>
-      expandOf(spec, { d: rows }, { definitions: { marks: [makeDotMark(record)] }, ...opts, validateData: true }),
-    ).not.toThrow();
-    expect(record.calls).toBe(1);
-  });
-
-  it('custom_and_builtin_marks_share_scale', () => {
-    const record = { calls: 0, rows: 0 };
-    const rows = [
-      { cat: 'A', val: 3 },
-      { cat: 'B', val: 6 },
-    ];
-
-    // 自定义 dot + 内置 point 同 plot，共用同一坐标 / scale；lowering 不抛、两 mark 各产一层
-    const spec = dotSpec({
-      marks: [
-        {
-          type: 'dot',
-          encodings: { position: { x: { field: 'cat' }, y: { field: 'val' } } },
-          properties: { strength: 1 },
-        },
-        { type: 'point', encodings: { position: { x: { field: 'cat' }, y: { field: 'val' } } } },
-      ],
-    });
-    const scope = expandOf(spec, { d: rows }, { definitions: { marks: [makeDotMark(record)] }, ...opts });
-
-    expect(record.calls).toBe(1);
-    expect(scope.children.length).toBeGreaterThanOrEqual(2);
+    );
+    expect(delivered.value).toBe(0.75);
   });
 });

@@ -310,8 +310,8 @@ const translations: Partial<Record<string, string>> = {
   字段或常量文本内容及可选展示格式: 'Field or constant text content with an optional display format',
   '字段类型；temporal 使用 UTC 时间格式，其余使用数值格式':
     'Field type; temporal fields use UTC date formatting, others use numeric formatting',
-  '优先于声明内容的运行时标签回调；省略时读取 content':
-    'Runtime label callback taking precedence over declared content; omitted to read content',
+  '优先于声明内容的运行时标签回调；省略时读取 text':
+    'Runtime label callback taking precedence over declared content; omitted to read text',
   '格式化文本或常量内容；字段为空或没有内容时返回 undefined':
     'Formatted text or constant content; undefined for an empty field or absent content',
   '创建 color-like mark 通道（color / fill / stroke）': 'Creates a color-like mark channel: color, fill, or stroke',
@@ -320,8 +320,8 @@ const translations: Partial<Record<string, string>> = {
   '通道名称、绑定读取函数与常量 paint 策略': 'Channel name, binding reader, and constant paint policy',
   '使用颜色比例尺解析字段的 mark 通道定义；创建时不解析数据':
     'Mark channel definition that resolves fields through color scales; creation does not resolve data',
-  '把 schema 定义的 mark 样式值解析为「行 → 属性值」函数，供内置 mark 与自定义 mark 复用':
-    'Resolves a schema-defined mark style value into a row-to-property function shared by built-in and custom marks',
+  '把 schema 定义的 mark 样式值解析为「行 → 属性值」函数，供内置图元复用':
+    'Resolves a schema-defined mark style value into a row-to-property function shared by built-in marks',
   常量或字段解析器产出的视觉值类型: 'Visual value type produced by a constant or field resolver',
   '字段或常量样式值；省略时不产生解析结果': 'Field or constant style value; omitted to produce no resolution',
   当前数据的完整字段模型: 'Complete field model for the current data',

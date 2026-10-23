@@ -8,12 +8,12 @@ import type { CoordinateFrame, PositionScale } from '../../src/contract';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
 import { preparePlotData } from '../../src/pipeline/expand/preparation';
 import { lowerPlotWithLineage } from '../../src/pipeline/lineage';
-import { lowerMark, resolveMarkRegistry } from '../../src/providers';
+import { lowerMark, MARK_REGISTRY } from '../../src/providers';
 import { createCartesianCoordinate } from '../../src/providers';
 import { resolveMarkOperation, resolveMarkInstances } from '../../src/resolve/mark';
-import type { IRPlotMarkOperation } from '../../src/schemas';
+import type { IRPlotMark } from '../../src/schemas';
 import { PointMarkSchema } from '../../src/schemas';
-import { MarkOperationSchema, PlotSchema } from '../../src/schemas';
+import { MarkSchema, PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
 
 const point = {
@@ -58,7 +58,7 @@ describe('independent annotations', () => {
         properties: {
           ...properties,
           shape: 'circle',
-          label: { content: 'A', position: 'top', distance: 8 },
+          label: { text: 'A', position: 'top', distance: 8 },
         },
         contributeToDomain: false,
       },
@@ -76,14 +76,14 @@ describe('independent annotations', () => {
       properties: {},
       contributeToDomain: false,
     };
-    expect(MarkOperationSchema.parse(path)).toHaveProperty('properties.connection', 'coordinate');
-    const straight = MarkOperationSchema.parse({
+    expect(MarkSchema.parse(path)).toHaveProperty('properties.connection', 'coordinate');
+    const straight = MarkSchema.parse({
       ...path,
 
       properties: { ...path.properties, connection: 'straight' },
     });
-    expect(MarkOperationSchema.parse(JSON.parse(JSON.stringify(straight)))).toEqual(straight);
-    expect(MarkOperationSchema.safeParse({ ...path, connection: 'invalid' }).success).toBe(false);
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(straight)))).toEqual(straight);
+    expect(MarkSchema.safeParse({ ...path, connection: 'invalid' }).success).toBe(false);
   });
 
   it('passes through intermediate categories for paths and includes both interval boundaries', () => {
@@ -126,7 +126,7 @@ describe('independent annotations', () => {
     if (typeof region.shape === 'object' && region.shape.type === 'contour') {
       expect(region.shape.params?.points).toHaveLength(8);
     }
-    source.marks[0] = MarkOperationSchema.parse({
+    source.marks[0] = MarkSchema.parse({
       ...source.marks[0],
 
       properties: { ...source.marks[0].properties, connection: 'straight' },
@@ -300,12 +300,12 @@ describe('independent annotations', () => {
     expect(nodes(lowerPlot(source, { data: [] }, { textMeasurer: measureLabel }))).toHaveLength(1);
   });
   it('round-trips direct constants without interpreting strings as fields', () => {
-    const parsed = MarkOperationSchema.parse(point);
-    expect(MarkOperationSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
+    const parsed = MarkSchema.parse(point);
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
   it.each(['encoding', 'field', 'dataset', 'series', 'order'])('rejects unsupported property %s', key => {
-    expect(MarkOperationSchema.safeParse({ ...point, [key]: 'value' }).success).toBe(false);
+    expect(MarkSchema.safeParse({ ...point, [key]: 'value' }).success).toBe(false);
   });
 
   it.each([
@@ -362,7 +362,7 @@ describe('independent annotations', () => {
 });
 
 /** 通过普通 Mark 注册入口验证坐标能力 */
-const lowerGeometry = (mark: IRPlotMarkOperation, frame: CoordinateFrame, channels: MarkChannels) => {
-  const resolution = resolveMarkOperation(mark, { registry: resolveMarkRegistry() });
+const lowerGeometry = (mark: IRPlotMark, frame: CoordinateFrame, channels: MarkChannels) => {
+  const resolution = resolveMarkOperation(mark, { registry: MARK_REGISTRY });
   return lowerMark(resolution, resolveMarkInstances(resolution, []), frame, channels);
 };

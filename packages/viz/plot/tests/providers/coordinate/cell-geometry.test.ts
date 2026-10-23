@@ -17,11 +17,11 @@ import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import type { CartesianCoordinateFrame } from '../../../src/providers';
 import { buildIntervalContext } from '../../../src/providers';
-import { lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
+import { lowerMark as lowerMarkDefinition, MARK_REGISTRY } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
 import { datumAnchor as resolveDatumAnchor, resolveMarkOperation } from '../../../src/resolve/mark';
 import type { IRPlot, IRPlotIntervalMark } from '../../../src/schemas';
-import { isBuiltinMark, PlotSchema, PolarInterpolation } from '../../../src/schemas';
+import { PlotSchema, PolarInterpolation } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
 /**
@@ -32,7 +32,7 @@ import { measureLabel } from '../../helpers/text-measurement';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const markRegistry = resolveMarkRegistry();
+const markRegistry = MARK_REGISTRY;
 
 const lowerMark = (mark: IRPlotIntervalMark, rows: Array<ExternalRow>, frame: CoordinateFrame) =>
   lowerMarkDefinition(resolveMarkOperation(mark, { registry: markRegistry }), { kind: 'rows', rows }, frame);
@@ -552,7 +552,7 @@ const intervalMarkSpec = (): IRPlot =>
 /** 取首个 interval mark（窄化为 IRPlotIntervalMark，供需 IRPlotIntervalMark 的 buildIntervalContext 用） */
 const firstIntervalMark = (spec: IRPlot): IRPlotIntervalMark => {
   const mark = spec.marks[0];
-  if (!isBuiltinMark(mark) || mark.type !== 'interval') throw new Error('expected interval mark');
+  if (mark.type !== 'interval') throw new Error('expected interval mark');
   return mark;
 };
 

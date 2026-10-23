@@ -14,7 +14,7 @@ import type {
   IRPlotCoordinateOperation,
   IRPlotFacetOptions,
   IRPlotGuide,
-  IRPlotMarkOperation,
+  IRPlotMark,
   IRPlotPartitionDimension,
   IRPlotScaleOperation,
 } from '@retikz/plot';
@@ -113,7 +113,7 @@ export type ChartScaleDefaultsResolveContext = Readonly<{
   /** 当前 recipe 的 encoding 解析结果 */
   encodings: ChartEncodingResolution;
   /** authored override 合并后的最终 Chart semantic Plot marks */
-  chartMarks: ReadonlyArray<IRPlotMarkOperation>;
+  chartMarks: ReadonlyArray<IRPlotMark>;
   /** recipe、encoding 与 Plot extension 合并后的 scale operations */
   scales: ReadonlyArray<IRPlotScaleOperation>;
   /** 最终生效的 coordinate 或 composition */
@@ -127,7 +127,7 @@ export type ChartGuideDefaultsResolveContext = Readonly<{
   /** 当前 recipe 的 encoding 解析结果 */
   encodings: ChartEncodingResolution;
   /** authored override 合并后的最终 Chart semantic Plot marks */
-  chartMarks: ReadonlyArray<IRPlotMarkOperation>;
+  chartMarks: ReadonlyArray<IRPlotMark>;
   /** scale 默认值补齐后的最终 scale operations */
   scales: ReadonlyArray<IRPlotScaleOperation>;
   /** 最终生效的 coordinate 或 composition */
@@ -180,7 +180,7 @@ export type ChartSemanticMarkResolution = Readonly<{
   /** 当前内建语义 mark 对应的 Chart mark kind */
   kind: string;
   /** 当前语义 mark 原子生成的非空、有序 Plot mark 序列 */
-  plotMarks: NonEmptyReadonlyArray<IRPlotMarkOperation>;
+  plotMarks: NonEmptyReadonlyArray<IRPlotMark>;
 }>;
 
 /** Recipe semantic mark groups 与 scaffold 的确定解析结果 */
