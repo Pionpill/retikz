@@ -20,7 +20,7 @@ const CoordinateExample: FC<CoordinateExampleProps> = props => {
         <Node id="A" position={[0, 0]}>
           {text.outer}
         </Node>
-        <Scope id="cluster" position={[180, -40]} localNamespace frame={{ padding: 12, style: { stroke: 'gray' } }}>
+        <Scope id="cluster" position={[180, -40]} localNamespace>
           {/* 路径先入队，等本层节点与 Scope 包络完成后再绑定引用 */}
           <Path arrow="->">
             <Step kind="move" to={{ id: 'A', anchor: 'bottom' }} />

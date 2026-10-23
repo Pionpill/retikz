@@ -2,13 +2,13 @@
 
 本页按名称选择 Scope 自有及 `clip` 直接相关的 `@retikz/core` schema，字段由源码读取。共享的图元默认值与变换 schema 只在 Scope 字段类型中保留名称，不在本页重复展开。React 属性见 [API 参考](/kernel/components/scope/reference)，首次使用见[基础用法](/kernel/components/scope/usage)。
 
-`ScopeSchema` 是 Tier 1 的容器节点。它通过可选 `frame` 绘制独立包络装饰，并给一组 children 建立局部变换、样式默认值、裁剪、层级与引用边界；Scope 本身仍可通过 `id` 被引用。
+`ScopeSchema` 是 Tier 1 的容器节点。它给一组 children 建立局部变换、样式默认值、裁剪、层级与引用边界；Scope 本身仍可通过 `id` 被引用。
 
 <span id="scope"></span>
 
 ## 组件声明
 
-#### <ApiSourceLink label={"Scope"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={66}>Scope</ApiSourceLink> / <ApiSourceLink label={"ScopeProps"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={11}>ScopeProps</ApiSourceLink>
+#### <ApiSourceLink label={"Scope"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={64}>Scope</ApiSourceLink> / <ApiSourceLink label={"ScopeProps"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={11}>ScopeProps</ApiSourceLink>
 
 给一组节点 / 路径提供局部样式、命名空间、原点或锚点定位、局部变换、裁剪和引用包络
 
@@ -28,7 +28,6 @@
 |        | `position?`       | `IRScope['position']`                   | `[0, 0]`      | Scope 在父坐标系中的原点位置或最终锚点对齐<br />坐标位置在局部 transforms 外侧应用；anchor 形式将变换后包络的 selfAnchor 对齐 target，selfAnchor 缺省为 center                                          |
 |        | `transforms?`     | `Array<InputTransform>`                 | —             | 局部 transform 列表；遵循 SVG transform list，最后一项先作用于局部点<br />支持 translate / polar-translate / at-translate / offset-translate / between-translate / rotate / scale                       |
 | 样式   | `defaults?`       | `InputScope['defaults']`                | —             | 为后代 Node、Path、Label 与 Arrow 提供默认样式；元素显式值优先，reset 可阻断指定外层通道                                                                                                                |
-|        | `frame?`          | `IRScope['frame']`                      | —             | 固有包络的独立外框；位于内容下方，不参与布局、引用或命中                                                                                                                                                |
 |        | `theme?`          | `IRScope['theme']`                      | —             | 仅覆盖已声明字段并由后代 Composite 继承的局部 Theme                                                                                                                                                     |
 |        | `zIndex?`         | `number`                                | `0`           | 显式栈序：作用于 scope 整体在父层的位置（不影响 scope 内部子元素相对栈序）；缺省 0 = 声明顺序                                                                                                           |
 | 回调   | `onClick?`        | `HydrationHandler`                      | —             | 单击该图元（DOM `click`）                                                                                                                                                                               |
@@ -63,7 +62,6 @@ export type ScopeProps = ScopeStyleProps &
     zIndex?: IRScope['zIndex'];
     clip?: IRScope['clip'];
     boundingShape?: IRScope['boundingShape'];
-    frame?: IRScope['frame'];
     meta?: IRScope['meta'];
     animations?: IRScope['animations'];
     authoring?: unknown;
@@ -126,7 +124,6 @@ export type ScopeStyleProps = {
 |        | `position?`       | `IRScopePosition`                                                                        | —      | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
 |        | `transforms?`     | `ReadonlyArray<InputTransform>`                                                          | —      | 局部变换列表，最后一项先作用于局部点；省略时不施加局部变换                                     |
 | 样式   | `defaults?`       | `InputScope["defaults"]`                                                                 | —      | 后代默认值通道及继承屏障                                                                       |
-|        | `frame?`          | `IRScopeFrame`                                                                           | —      | 可省略默认值的包络装饰                                                                         |
 |        | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
 |        | `zIndex?`         | `number`                                                                                 | —      | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
 | 动画   | `animations?`     | `InputScope["animations"]`                                                               | —      | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
@@ -160,7 +157,7 @@ export type InputScope = InputScopeBase & {
 
 ## 持久化配置
 
-#### <ApiSourceLink label={"IRScope"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={59}>IRScope</ApiSourceLink>
+#### <ApiSourceLink label={"IRScope"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={53}>IRScope</ApiSourceLink>
 
 ChildSchema 通过 z.lazy 延迟回灌，z.infer 推断 children 元素时拿不到精确的 IRNode | IRPath | IRCoordinate | IRScope union；手写让 children 类型显式表达递归 union。
 Scope 通过 defaults.style 提供级联视觉默认值，并在 defaults 中提供两个宿主通道与 reset 继承屏障
@@ -182,7 +179,6 @@ Scope 通过 defaults.style 提供级联视觉默认值，并在 defaults 中提
 |        | `position?`       | `IRScopePosition`                                                                        | —      | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
 |        | `transforms?`     | `IRScopeProps['transforms']`                                                             | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
 | 样式   | `defaults?`       | `IRScopeProps['defaults']`                                                               | —      | 后代默认值通道及继承屏障                                                                       |
-|        | `frame?`          | `IRScopeFrame`                                                                           | —      | 可省略默认值的包络装饰                                                                         |
 |        | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
 |        | `zIndex?`         | `number`                                                                                 | —      | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
 | 动画   | `animations?`     | `IRScopeProps['animations']`                                                             | —      | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
@@ -205,7 +201,7 @@ export type IRScope = IRScopeProps & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopeAnchorPosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={35}>IRScopeAnchorPosition</ApiSourceLink> / <ApiSourceLink label={"ScopeAnchorPositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={56}>ScopeAnchorPositionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopeAnchorPosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={34}>IRScopeAnchorPosition</ApiSourceLink> / <ApiSourceLink label={"ScopeAnchorPositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={56}>ScopeAnchorPositionSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -248,7 +244,7 @@ export type IRScopeAnchorPosition = ZodInput<typeof ScopeAnchorPositionSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopeDefaults"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={66}>IRScopeDefaults</ApiSourceLink> / <ApiSourceLink label={"ScopeDefaultsSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={70}>ScopeDefaultsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopeDefaults"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={60}>IRScopeDefaults</ApiSourceLink> / <ApiSourceLink label={"ScopeDefaultsSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={70}>ScopeDefaultsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -295,46 +291,7 @@ export type IRScopeDefaults = ZodInfer<typeof ScopeDefaultsSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopeFrame"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={52}>IRScopeFrame</ApiSourceLink> / <ApiSourceLink label={"ScopeFrameSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={94}>ScopeFrameSchema</ApiSourceLink>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="属性">
-
-<ApiTable>
-
-| 成员       | 类型                                               | 默认值 | 说明                               |
-| ---------- | -------------------------------------------------- | ------ | ---------------------------------- |
-| `padding?` | `number`                                           | `0`    | 均匀装饰间距，默认 0；不参与布局   |
-| `style?`   | `ZodInput<typeof ScopeFrameSchema.shape["style"]>` | —      | 独立外框样式，仅共享有效颜色上下文 |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type IRScopeFrame = ZodInput<typeof ScopeFrameSchema>;
-```
-
-</DocTab>
-
-<DocTab value="schema" label="Schema">
-
-外框只记录装饰间距与独立样式；不接受 id、事件或独立动画。
-
-<ZodSchema
-  name="ScopeFrameSchema"
-  shallow
-  descriptions={{ padding: '均匀装饰间距，默认 0；不参与布局', style: '独立外框样式，仅共享有效颜色上下文' }}
-/>
-
-</DocTab>
-
-</DocTabs>
-
-#### <ApiSourceLink label={"IRScopePosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={38}>IRScopePosition</ApiSourceLink> / <ApiSourceLink label={"ScopePositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={65}>ScopePositionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopePosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={37}>IRScopePosition</ApiSourceLink> / <ApiSourceLink label={"ScopePositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={65}>ScopePositionSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -354,7 +311,7 @@ export type IRScopePosition = ZodInput<typeof ScopePositionSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopePositionTarget"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={32}>IRScopePositionTarget</ApiSourceLink> / <ApiSourceLink label={"ScopePositionTargetSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={51}>ScopePositionTargetSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopePositionTarget"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={31}>IRScopePositionTarget</ApiSourceLink> / <ApiSourceLink label={"ScopePositionTargetSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={51}>ScopePositionTargetSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -378,7 +335,7 @@ export type IRScopePositionTarget = ZodInput<typeof ScopePositionTargetSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopeProps"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={44}>IRScopeProps</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopeProps"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={43}>IRScopeProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -392,7 +349,6 @@ export type IRScopePositionTarget = ZodInput<typeof ScopePositionTargetSchema>;
 | `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —      | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —      | 以 scope 局部坐标描述的裁剪区域                                                                |
 | `defaults?`       | `IRScopeProps["defaults"]`                                                               | —      | 后代默认值通道及继承屏障                                                                       |
-| `frame?`          | `IRScopeFrame`                                                                           | —      | 可省略默认值的包络装饰                                                                         |
 | `id?`             | `string`                                                                                 | —      | 可选引用 id；始终注册到父级命名空间                                                            |
 | `localNamespace?` | `false \| true`                                                                          | —      | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
 | `meta?`           | `Record<string, JsonValue>`                                                              | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
@@ -408,9 +364,8 @@ export type IRScopePositionTarget = ZodInput<typeof ScopePositionTargetSchema>;
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame' | 'position'> & {
+export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'position'> & {
   position?: IRScopePosition;
-  frame?: IRScopeFrame;
 };
 ```
 
@@ -418,14 +373,13 @@ export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame' | 'po
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScopeSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={150}>ScopeSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={128}>ScopeSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
   name="ScopeSchema"
   description="作用域容器：组织子树，并提供局部变换、样式默认值与裁剪。"
   descriptions={{
-    frame: '位于子图下方的固有包络装饰，不参与布局或命中',
     'defaults.style': '后代共享视觉默认值，逐字段继承与覆盖',
     defaults: '后代默认值通道及继承屏障',
     type: '判别字段，标记此子节点为 scope',
@@ -457,10 +411,6 @@ export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame' | 'po
 />
 
 `Scope.theme` 只包含稀疏的 `style` / `mode` 环境选择器，逐字段继承。Core 解析共享颜色，后代 Composite 按自身契约消费该环境；`defaults.reset` 不重置 Theme。
-
-#### <ApiSourceLink label={"ScopeFrameStyleSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={86}>ScopeFrameStyleSchema</ApiSourceLink>
-
-<ZodSchema name="ScopeFrameStyleSchema" shallow />
 
 #### <ApiSourceLink label={"ScopeSelfPointSchema"} path={"packages/kernel/core/src/schemas/scope-point/schema.ts"} startLine={9}>ScopeSelfPointSchema</ApiSourceLink>
 

@@ -6,7 +6,6 @@ import type { NodeLayout } from '../node';
 import { filterAnimations } from '../orchestration';
 import {
   createIntrinsicScopeLayout,
-  emitScopeFrame,
   resolveFinalScopeTransforms,
   resolvePreliminaryScopeTransforms,
   resolveScopePositionTarget,
@@ -49,18 +48,6 @@ export const compileScope = (
       preparation.positionTarget,
       preparation.preliminaryTransforms,
     );
-    const primitives =
-      layouts.length === 0
-        ? []
-        : emitScopeFrame(
-            input,
-            envelope,
-            preparation.scope.defaults,
-            preparation.scope.theme.mode,
-            context.environment,
-            workspace.paint.register,
-            context.irPath,
-          );
     const group: Omit<GroupPrim, 'children'> = { type: 'group' };
     if (input.id !== undefined) group.id = input.id;
     if (input.meta !== undefined) group.meta = input.meta;
@@ -104,7 +91,7 @@ export const compileScope = (
       group: Object.freeze(group),
       output: Object.freeze({
         zIndex: input.zIndex,
-        primitives,
+        primitives: [],
         resources: [...workspace.paint.resources(), ...workspace.clip.resources()],
         bounds: [],
         observations: [

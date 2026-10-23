@@ -33,8 +33,6 @@ export type EffectiveScopeDefaults = Readonly<{
     /** 已声明箭头的有效默认值 */
     arrow?: Readonly<IRArrowDetail>;
   }>;
-  /** 外框继承的共同主色，不受元素通道的 reset 影响 */
-  scopeColor?: string;
 }>;
 
 /** Scene 与几何消费的独立不透明度因子 */

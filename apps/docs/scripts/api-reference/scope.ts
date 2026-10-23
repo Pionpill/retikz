@@ -12,7 +12,6 @@ const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 export const scopeSchemaLocalizations = {
   ScopeSchema: {
     descriptions: {
-      frame: '位于子图下方的固有包络装饰，不参与布局或命中',
       'defaults.style': '后代共享视觉默认值，逐字段继承与覆盖',
       defaults: '后代默认值通道及继承屏障',
       type: '判别字段，标记此子节点为 scope',
@@ -41,9 +40,6 @@ export const scopeSchemaLocalizations = {
       animations: '作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承',
       children: '可递归包含 node、path、coordinate、scope 或 Tier 2 composite',
     },
-  },
-  ScopeFrameSchema: {
-    descriptions: { padding: '均匀装饰间距，默认 0；不参与布局', style: '独立外框样式，仅共享有效颜色上下文' },
   },
   ScopeAnchorPositionSchema: {
     descriptions: {
@@ -125,7 +121,6 @@ export const scopeApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> 
         symbols: [
           'IRScope',
           'IRScopeProps',
-          'IRScopeFrame',
           'IRScopePosition',
           'IRScopeAnchorPosition',
           'IRScopePositionTarget',

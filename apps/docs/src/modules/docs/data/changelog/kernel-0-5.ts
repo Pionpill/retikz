@@ -378,6 +378,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: 'BREAKING：移除 Scope 外框', en: 'BREAKING: remove Scope frames' },
+          content: {
+            zh: '删除 Scope.frame 及相关类型、Schema 和编译绘制。Scope 保留包络、定位和引用；已有外框配置需改用 Standard Surface / Frame，React、Vanilla 和直接 IR 使用同一契约。',
+            en: 'Removes Scope.frame, its types and schemas, and frame rendering. Scope retains its envelope, placement, and references. Replace frame configuration with Standard Surface / Frame; React, Vanilla, and direct IR share the same contract.',
+          },
+        },
+        {
           label: { zh: 'BREAKING：默认配置归属宿主', en: 'BREAKING: host-owned defaults' },
           content: {
             zh: '将 defaults.label 分别迁移到 defaults.node.label 与 defaults.path.label，将 defaults.arrow 迁移到 defaults.path.arrow。标签默认支持除 text 外的完整配置，只装饰已有内容；字体逐字段继承。reset 仅接受 node / path，并同时清除对应标签与箭头默认；true 清除所有默认通道。',
@@ -394,8 +401,8 @@ export const kernelV05: Release = {
         {
           label: { zh: '共享虚线描边', en: 'Shared dashed strokes' },
           content: {
-            zh: '`Scope.defaults.style` 支持 `dashPattern` 与 `dashOffset`，Node 与 Path 按既有通道优先级继承；Scope 外框支持独立的虚线与相位设置。',
-            en: '`Scope.defaults.style` supports `dashPattern` and `dashOffset`, inherited by Node and Path through existing channel precedence. Scope frames support independent dash patterns and offsets.',
+            zh: '`Scope.defaults.style` 支持 `dashPattern` 与 `dashOffset`，Node 与 Path 按既有通道优先级继承。',
+            en: '`Scope.defaults.style` supports `dashPattern` and `dashOffset`, inherited by Node and Path through existing channel precedence.',
           },
         },
         {
@@ -508,13 +515,6 @@ export const kernelV05: Release = {
           content: {
             zh: 'grow、growUp、pulse、spin、flash、blink、wiggle 及专属选项迁至 @retikz/extension 根入口。Core 保留基础预设与通用轨道工具；效果默认值、已保存轨道 JSON 和播放机制不变，旧 Core 导入不再保留。Kernel 与 Extension 双语文档和 API 参考同步按归属拆分。',
             en: 'grow, growUp, pulse, spin, flash, blink, wiggle and their options move to the @retikz/extension root. Core retains basic presets and track utilities. Defaults, saved track JSON and playback are unchanged; old Core imports are removed. Bilingual Kernel and Extension guides and API references follow their sources.',
-          },
-        },
-        {
-          label: { zh: 'Scope 包络外框', en: 'Scope envelope frames' },
-          content: {
-            zh: '`Scope.frame` 为固有包络添加独立填充、描边、图案与阴影，支持均匀装饰间距；不改变布局、锚点或命中。React、Vanilla 与直接 IR 使用同一契约。Scene 的 `hitTest: false` 在 SVG、Canvas 与 retained 更新中排除装饰命中。',
-            en: '`Scope.frame` adds independent fill, stroke, patterns, shadows, and uniform decoration spacing to the intrinsic envelope without changing layout, anchors, or hit regions. React, Vanilla, and direct IR share the contract. Scene `hitTest: false` excludes decoration from SVG, Canvas, and retained hit testing.',
           },
         },
         {

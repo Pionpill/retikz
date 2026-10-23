@@ -23,7 +23,7 @@ import type {
   NodeResolvedProperties,
 } from './types';
 
-/** 节点与 Scope 外框共享的有效形状样式 */
+/** 节点形状绘制使用的有效样式 */
 type NodeShapeProperties = Pick<
   CanonicalNode,
   | 'fill'

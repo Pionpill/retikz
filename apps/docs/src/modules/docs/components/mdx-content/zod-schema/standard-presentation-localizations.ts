@@ -36,7 +36,6 @@ export const GridSchemaZhLocalization = {
     'defaults.path.label': '作用域内已有路径与步骤标签的默认配置',
     'defaults.path.arrow': '作用域内箭头的默认样式',
     'defaults.reset': '默认样式的继承屏障；true 重置全部通道，也可列出需要重置的 node、path（包含各自装饰） 通道',
-    frame: '子图下方的包络装饰',
     localNamespace: '为子节点与嵌套作用域启用局部命名空间',
     meta: '编译与渲染不解释的 JSON 元数据',
     position: '父坐标系中的原点位置或作用域变换后的锚点对齐',

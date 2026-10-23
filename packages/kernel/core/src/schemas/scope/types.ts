@@ -8,7 +8,6 @@ import type { IRPathBase } from '../path';
 import type { ScopeStyleChannel } from './constants';
 import type { NodeLabelDefaultSchema, PathLabelDefaultSchema, NodeDefaultSchema, PathDefaultSchema } from './schema';
 import type {
-  ScopeFrameSchema,
   ScopeDefaultsSchema,
   ScopeAnchorPositionSchema,
   ScopePositionSchema,
@@ -41,15 +40,10 @@ export type IRScopePosition = ZodInput<typeof ScopePositionSchema>;
 export type StyleChannel = ValueOf<typeof ScopeStyleChannel>;
 
 /** Scope 除 `type` 与递归 `children` 外的完整 authored 属性集合 */
-export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame' | 'position'> & {
+export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'position'> & {
   /** 父坐标系原点位置或最终锚点对齐，省略时为原点 */
   position?: IRScopePosition;
-  /** 可省略默认值的包络装饰 */
-  frame?: IRScopeFrame;
 };
-
-/** Scope 外框的可省略默认值输入 */
-export type IRScopeFrame = ZodInput<typeof ScopeFrameSchema>;
 
 /**
  * Scope IR 类型——手写而非 z.infer 派生

@@ -65,7 +65,7 @@ it('segmented line defaults retain partial font and visual overrides', () => {
   expect(text[1]).toMatchObject({ fontSize: 24, fontFamily: 'serif', fill: 'blue', opacity: 0.8 });
 });
 
-it('shared effects and stroke geometry reach node and independent frame', () => {
+it('shared effects and stroke geometry reach the scoped node', () => {
   const source = SceneSchema.parse({
     type: 'scene',
     version: 1,
@@ -73,16 +73,14 @@ it('shared effects and stroke geometry reach node and independent frame', () => 
       {
         type: 'scope',
         defaults: { style: { shadow: 'sm', blendMode: 'multiply', lineCap: 'round', lineJoin: 'bevel' } },
-        frame: { style: { lineCap: 'square', lineJoin: 'round' } },
         children: [{ type: 'node', position: [0, 0] }],
       },
     ],
   });
   const output = leaves(compileToScene(source).scene.primitives);
-  expect(output[0]).toMatchObject({ strokeLinecap: 'square', strokeLinejoin: 'round' });
-  expect(output[0]).not.toHaveProperty('shadow');
-  expect(output[1]).toMatchObject({ strokeLinecap: 'round', strokeLinejoin: 'bevel', blendMode: 'multiply' });
-  expect(output[1]).toHaveProperty('shadow');
+  expect(output).toHaveLength(1);
+  expect(output[0]).toMatchObject({ strokeLinecap: 'round', strokeLinejoin: 'bevel', blendMode: 'multiply' });
+  expect(output[0]).toHaveProperty('shadow');
 });
 
 const gradient = {

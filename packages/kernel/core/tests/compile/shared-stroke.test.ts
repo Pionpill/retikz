@@ -76,14 +76,4 @@ describe('共享描边', () => {
       expect(primitive).not.toHaveProperty('dashOffset');
     }
   });
-
-  it('外框保留显式虚线，但不继承后代共享虚线', () => {
-    const base: IRScope = { type: 'scope', defaults: { style: { dashPattern: [6, 2], dashOffset: 4 } }, children };
-    const plain = compile({ ...base, frame: {} });
-    expect(plain[0]).not.toHaveProperty('dashPattern');
-    expect(plain[0]).not.toHaveProperty('dashOffset');
-    const explicit = compile({ ...base, frame: { style: { dashPattern: [1, 2], dashOffset: -2 } } });
-    expect(explicit[0]).toMatchObject({ dashPattern: [1, 2], dashOffset: -2, hitTest: false });
-    expect(explicit.slice(1)).toEqual(plain.slice(1));
-  });
 });

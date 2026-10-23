@@ -8,7 +8,7 @@ import { ArrowDetailSchema, PathLabelSchema, PathSchema, PathGeometrySchema, Pat
 import { NodeTargetSchema, PositionSchema } from '../position';
 import { getRecursiveChildSchema } from '../recursive';
 import { ScopeSelfPointSchema } from '../scope-point';
-import { CascadingGraphicStyleSchema, CssColorSchema, GraphicStyleSchema } from '../style';
+import { CascadingGraphicStyleSchema, CssColorSchema } from '../style';
 import { ThemeSchema } from '../theme';
 import { TransformSchema } from '../transform';
 import { ScopeBoundingShape, ScopeStyleChannel } from './constants';
@@ -82,30 +82,8 @@ export const ScopeDefaultsSchema = strictObject({
     ),
 }).describe('Named descendant defaults and their inheritance barrier.');
 
-/** 外框独立外观的静态默认值 */
-export const ScopeFrameStyleSchema = GraphicStyleSchema.extend({
-  fill: GraphicStyleSchema.shape.fill.default('none'),
-  stroke: GraphicStyleSchema.shape.stroke.default('currentColor'),
-  strokeWidth: GraphicStyleSchema.shape.strokeWidth.default(1),
-  opacity: GraphicStyleSchema.shape.opacity.default(1),
-}).describe('Isolated frame style defaults.');
-
-/** Scope 固有内容包络的独立绘制装饰 */
-export const ScopeFrameSchema = strictObject({
-  padding: number()
-    .nonnegative()
-    .default(0)
-    .describe('Uniform decoration spacing outside the intrinsic envelope; does not allocate layout space.'),
-  style: ScopeFrameStyleSchema.prefault({}).describe(
-    'Isolated frame appearance; only the effective scope color context is shared.',
-  ),
-}).describe('Non-interactive decoration derived from the intrinsic scope envelope.');
-
 /** 校验容器变换、样式继承、命名空间与最终放置等作用域属性 */
 export const ScopePropsSchema = strictObject({
-  frame: ScopeFrameSchema.optional().describe(
-    'Optional intrinsic-envelope decoration drawn beneath all scope children.',
-  ),
   theme: ThemeSchema.optional().describe('Sparse Theme override inherited by this Scope descendants.'),
   id: NonBlankStringSchema.optional().describe(
     'Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.',

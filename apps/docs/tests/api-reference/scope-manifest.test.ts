@@ -16,7 +16,6 @@ describe('Scope API 公开范围', () => {
       'IRScope',
       'IRScopeAnchorPosition',
       'IRScopeDefaults',
-      'IRScopeFrame',
       'IRScopePosition',
       'IRScopePositionTarget',
       'IRScopeProps',
@@ -30,10 +29,6 @@ describe('Scope API 公开范围', () => {
     expect(input).toContain('| Returns |');
     expect(input).not.toContain('####');
 
-    const frame = source.split('### IRScopeFrame\n')[1]?.split('\n### ')[0] ?? '';
-
-    expect(frame).toContain('Uniform decoration spacing');
-    expect(frame).toContain('`padding?` | `number` | `0`');
     expect(source).toContain('<ApiValues name="ScopeBoundingShape" />');
     expect(source).toContain('export declare const Scope: FC<ScopeProps>;');
     expect(source).toContain('`position?`');

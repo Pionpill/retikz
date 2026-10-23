@@ -89,7 +89,6 @@ import {
 import { createClipRegistry, createPaintRegistry, remapPrimitiveResources } from '../resource';
 import { withProviderOutputValidationBoundary } from '../scene-primitive';
 import {
-  emitScopeFrame,
   createIntrinsicScopeLayout,
   resolveScopePositionTarget,
   resolveFinalScopeTransforms,
@@ -616,19 +615,12 @@ export const compileChildrenToPrimitives = (
     const scopeIrPath = formatCompileChildPath(locatorPrefix, index, 'scope');
     const hasScopeTransforms = scopeTransforms.length > 0;
     const isPrunable =
-      (input.framePrimitives?.length ?? 0) === 0 &&
-      scopePrimitiveSink.length === 0 &&
-      !hasScopeTransforms &&
-      child.id === undefined &&
-      child.clip === undefined;
+      scopePrimitiveSink.length === 0 && !hasScopeTransforms && child.id === undefined && child.clip === undefined;
     if (isPrunable) return;
 
     const group: GroupPrim = {
       type: 'group',
-      children: [
-        ...(input.framePrimitives ?? []),
-        ...stableSortByZIndex(sealSink(scopePrimitiveSink), runtime.state.zIndexOf),
-      ],
+      children: stableSortByZIndex(sealSink(scopePrimitiveSink), runtime.state.zIndexOf),
     };
     if (child.id !== undefined) group.id = child.id;
     if (child.meta !== undefined) group.meta = child.meta;
@@ -716,7 +708,6 @@ export const compileChildrenToPrimitives = (
     const scopeCompileObservations: TraversalFrame['compileObservationSink'] = [];
     const scopeSpatialHandles: TraversalFrame['spatialHandleSink'] = [];
     let scopeTransforms: Array<Transform> = [];
-    let framePrimitives: Array<ScenePrimitive> = [];
 
     try {
       const scopeFrame: TraversalFrame = {
@@ -749,19 +740,6 @@ export const compileChildrenToPrimitives = (
       }
 
       const intrinsicLayout = createIntrinsicScopeLayout(child, scopeLayouts, runtime.context);
-      if (child.frame !== undefined && scopeLayouts.length > 0) {
-        framePrimitives = emitScopeFrame(
-          child,
-          intrinsicLayout,
-          scopeFrame.scopeDefaults,
-          theme.mode,
-          context,
-          context.paint.register,
-          scopeOccurrence.sourcePath,
-        );
-        if (semanticOwner !== undefined)
-          runtime.state.provenanceTracker?.recordPrimitives(framePrimitives, semanticOwner, 'scope-frame');
-      }
 
       scopeTransforms = resolveFinalScopeTransforms(
         child,
@@ -882,7 +860,6 @@ export const compileChildrenToPrimitives = (
     }
 
     const clipRef = emitScopeGroup(child, {
-      framePrimitives,
       index,
       scopeTransforms,
       scopePrimitiveSink,
@@ -913,32 +890,6 @@ export const compileChildrenToPrimitives = (
         frame.boundsSink.push({
           points: contribution.points.map(point => scopeTransformsContext.apply(point, scopeTransforms)),
           shadow: contribution.shadow,
-        });
-      }
-    }
-
-    if (framePrimitives.length > 0) {
-      const decorationBounds = optionalVisualBoundsOfPrimitives(
-        [
-          {
-            type: 'group',
-            children: framePrimitives,
-            transforms: scopeTransforms,
-            ...(clipRef === undefined ? {} : { clipRef }),
-          },
-        ],
-        [...context.paint.resources(), ...context.clip.resources()],
-      );
-      if (decorationBounds !== undefined) {
-        const { x, y, width, height } = decorationBounds;
-        frame.boundsSink.push({
-          decoration: true,
-          points: [
-            [x, y],
-            [x + width, y],
-            [x, y + height],
-            [x + width, y + height],
-          ],
         });
       }
     }

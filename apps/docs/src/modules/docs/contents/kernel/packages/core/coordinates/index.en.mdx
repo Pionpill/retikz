@@ -17,7 +17,7 @@ Compilation traversal supplies visible names and transforms at each level. Core 
 
 The example combines inner and outer nodes with the same name, nested coordinates, and anchor alignment. One Scope has `id="cluster"`. Below, `cluster` refers to that group; other elements also use this id to reference it.
 
-An envelope is the extent collected from child layouts for Scope placement. The gray frame identifies the group's contents; it is decoration and does not change the envelope.
+An envelope is the extent collected from child layouts for Scope placement. Scope does not draw this envelope; it uses it for placement and references.
 
 <ComponentPreview files="coordinate-example" size="lg" />
 
@@ -275,7 +275,7 @@ Registered world geometry serves reference lookup. Drawing geometry in Scene can
 
 A Scope's origin and content envelope center often differ. `position: [x, y]` places the local origin. Anchor placement positions a point on the transformed envelope; its default self-anchor is the envelope center.
 
-Each group below contains one node with local center `[60, 0]` and width 72. The upper group places the origin at the target. The lower group aligns the envelope's left anchor with the target. The dashed line is a shared x reference; the solid frames show the actual envelopes.
+Each group below contains one node with local center `[60, 0]` and width 72. The upper group places the origin at the target. The lower group aligns the envelope's left anchor with the target. The dashed line is a shared x reference; the node outlines make the single-node envelopes visible.
 
 <ComponentPreview files="scope-placement" size="xl" hideCode type="illustration" />
 
@@ -283,7 +283,7 @@ The upper target is `[140, 0]`, the node center is `[200, 0]`, and the envelope'
 
 ### Envelope and placeholder
 
-A Scope envelope is known only after child layout. Core collects layout contributions from Nodes, Coordinates, child Scopes, and similar children. `boundingShape` selects a rectangle or circle. Path visual extents, clipping, and frame decoration do not expand this intrinsic envelope.
+A Scope envelope is known only after child layout. Core collects layout contributions from Nodes, Coordinates, child Scopes, and similar children. `boundingShape` selects a rectangle or circle. Path visual extents and clipping do not expand this intrinsic envelope.
 
 Before entering children, a Scope with an `id` registers a `scope-placeholder` entry in the parent namespace. It is an intermediate compilation state, not a completed envelope. Anchor placement requiring complete geometry cannot use it as a target. Once the children finish, `replaceLayout` upgrades the name to `resolved` without treating the normal upgrade as duplicate registration.
 

@@ -573,16 +573,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/packages/foundation/reference#normalizedfractionschema',
   },
 
-  ScopeFrameSchema: {
-    schema: IR.ScopeFrameSchema,
-    label: 'ScopeFrame',
-    url: '/kernel/components/scope/reference#irscopeframe--scopeframeschema',
-  },
-  ScopeFrameStyleSchema: {
-    schema: IR.ScopeFrameStyleSchema,
-    label: 'ScopeFrameStyle',
-    url: '/kernel/components/scope/reference#scopeframestyleschema',
-  },
   ScopeSchema: { schema: IR.ScopeSchema, label: 'Scope', url: '/kernel/components/scope/reference#scopeschema' },
   AnchorRefSchema: {
     schema: IR.AnchorRefSchema,

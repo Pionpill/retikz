@@ -5,7 +5,7 @@ description: 使用 Scope 组织局部坐标、整体引用、样式默认值与
 
 用 Scope 让一组图元一起移动、共享默认值或接受裁剪。它放在 Layout 内，也可以嵌套；每个 Scope 只改变自己包含的子树。
 
-`defaults.style` 可统一设置后代节点和路径的 `lineCap`、`lineJoin`、`shadow` 与 `blendMode`。阴影和混合模式逐个作用于后代的主体几何，不会把 Scope 合成为一张图层；外框仍由 `frame.style` 独立设置。
+`defaults.style` 可统一设置后代节点和路径的 `lineCap`、`lineJoin`、`shadow` 与 `blendMode`。阴影和混合模式逐个作用于后代的主体几何，不会把 Scope 合成为一张图层。
 
 ## 接入方式
 
@@ -275,19 +275,9 @@ Theme 与样式默认值是两条独立通道：`defaults.reset` 不重置 Theme
   description="把真正共享的局部样式写在 Scope 上，可以避免为每个 child 重复同一组字段，通常能显著减小配置对象和持久化 JSON。Plot 等 Tier 2 包也常在 lowering 时把系列或图层样式集中为 Scope 默认值，以压缩生成 IR 的体积。"
 />
 
-## 包络外框
+## 可见容器
 
-用 `frame` 给已有子图添加背景或边框。下面的点状图案只绘制在外框上，A、B 保留各自的白色填充。
-
-<ComponentPreview files="scope-frame" />
-
-`frame: {}` 开启无填充、1 单位宽的默认描边；`frame.padding` 默认 0，只向内容包络外侧增加间距。`boundingShape` 为 `rectangle` 时向四边扩张，为 `circle` 时增加半径。`frame.style` 不继承后代默认值，只共享有效颜色上下文。
-
-外框也支持 `frame: { style: { dashPattern: [3, 2], dashOffset: -1 } }`，但不会继承 `defaults.style` 的虚线设置。
-
-外框始终位于全部子内容下面，跟随 Scope 的变换、定位和裁剪。描边与阴影进入自动取景，但不改变布局、锚点或命中区域；显式 `viewBox` 保持不变。空 Scope 不产生外框，祖先外框也不会因后代外框扩大而反复变大。需要布局内边距或容器尺寸时使用 Standard Surface。
-
-普通 Path 不贡献现有 Scope 固有包络，因此仅含 Path 的 Scope 不生成外框；曲线、label、marker 也不保证被外框包住。外框以参与包络计算的 Node、Coordinate 等内容为依据，不按全部可见像素重新测量。
+Scope 保留内容包络与引用，但不绘制自身外框。需要背景、边框或内边距时使用 [Surface](/library/standard/presentation/surface)；需要标题框时使用 [Frame](/library/standard/presentation/frame)。
 
 ## 相关属性
 

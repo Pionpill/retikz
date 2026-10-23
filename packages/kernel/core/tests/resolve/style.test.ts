@@ -72,7 +72,6 @@ describe('Scope effective defaults', () => {
       parent,
     );
     expect(resolveEffectiveNodeStyle({ type: 'node', position: [0, 0] }, child).style).toEqual({});
-    expect(child.scopeColor).toBe('red');
     expect(child.node?.label).toBeUndefined();
     expect(child.path?.label).toEqual({});
     expect(child.path?.arrow).toEqual({});

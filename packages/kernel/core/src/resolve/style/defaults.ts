@@ -49,5 +49,5 @@ export const resolveScopeDefaults = <TScope extends Pick<IRScope, 'defaults'>>(
     };
   }
 
-  return { node, path, scopeColor: style?.color ?? parent.scopeColor };
+  return { node, path };
 };

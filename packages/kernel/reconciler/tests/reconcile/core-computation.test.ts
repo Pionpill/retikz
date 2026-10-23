@@ -364,7 +364,7 @@ describe('Core Runtime Computation replacement style update', () => {
   });
 });
 
-it('Scope 外框更新、资源撤销和匿名组删除与全量编译等价', () => {
+it('Scope 子内容更新、资源撤销和匿名组删除与全量编译等价', () => {
   const session = new ReconcilerSession({});
 
   const initial: IRScene = { version: 1, type: 'scene', children: [] };
@@ -375,8 +375,9 @@ it('Scope 外框更新、资源撤销和匿名组删除与全量编译等价', (
       children: [
         {
           type: 'scope',
-          frame: { padding: 8, style: { fill: { kind: 'pattern', shape: 'dots' } } },
-          children: [{ type: 'node', position: [0, 0], text: 'A' }],
+          children: [
+            { type: 'node', position: [0, 0], text: 'A', style: { fill: { kind: 'pattern', shape: 'dots' } } },
+          ],
         },
       ],
     },
@@ -385,7 +386,6 @@ it('Scope 外框更新、资源撤销和匿名组删除与全量编译等价', (
       children: [
         {
           type: 'scope',
-          frame: { padding: 20, style: { fill: 'red' } },
           children: [{ type: 'node', position: [80, 0], text: 'B' }],
         },
       ],

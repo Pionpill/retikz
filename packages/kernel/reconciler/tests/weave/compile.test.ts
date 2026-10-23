@@ -141,7 +141,6 @@ describe('Weave 与 Core 可观察等价', () => {
         {
           type: 'scope',
           position: [30, 40],
-          frame: { padding: 4 },
           children: [
             { type: 'scope', position: [10, 20], children: [{ type: 'node', id: 'a', position: [5, 10] }] },
             { type: 'node', id: 'b', position: { direction: 'right', of: 'a' } },
