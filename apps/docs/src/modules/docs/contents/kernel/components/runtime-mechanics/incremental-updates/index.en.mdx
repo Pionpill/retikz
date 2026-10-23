@@ -1,224 +1,127 @@
----
-title: Incremental Updates
-description: Follow a node color change through input snapshots, Runtime scheduling, Weave compilation state and Render commits, including full fallback and failure boundaries.
+﻿---
+title: Incremental updates
+description: Follow a node color change through input preparation, the Reconciler session, Weave compilation and Render commits, distinguishing full replacement from basic-element batches.
 ---
 
 <ComponentAlert
   type="warn"
   title="Experimental feature"
-  description="Incremental updates are currently experimental, and the update strategy will change. This page describes the current implementation, not the final design."
+  description="Incremental updates are experimental. Complete-input updates, basic-element batches and host commits have different boundaries; local recomputation is not guaranteed for every update."
 />
 
-Once a drawing is visible, which work must run again when node A changes from orange to blue? This page follows a retained update across packages: the adapter submits new input, Runtime schedules computation, Reconciler prepares new compilation state, and the host displays the committed result. Complete input replacement currently recompiles the drawing. Weave retains inputs, results and relations for subsequent local scheduling.
+When node A changes from orange to blue, what needs to run again? This page follows a Vanilla DOM retained update: Vanilla prepares input, a Reconciler session invokes Core, Render prepares and commits the drawing, and the new result is published only after success. React subscribes to processing results and displays them with its own host commit boundary.
 
-Start with [Rendering Pipeline](/kernel/components/runtime-mechanics/rendering-pipeline) for IR, Scene and package responsibilities. This page covers state passed between compilations. See [Core compilation](/kernel/packages/core/compilation) for geometry within one pass, and [Runtime](/kernel/packages/runtime) for the general transaction machinery.
+First read the IR, Scene and package roles in the [rendering pipeline](/kernel/components/runtime-mechanics/rendering-pipeline). For one compilation, see [Core compilation](/kernel/packages/core/compilation).
 
 ## Overall flow
 
-The example contains two root nodes, A and B, with unique ids and direct coordinates. There are no paths or drawing resources. The first frame compiles both nodes. The next input changes only A's `style.fill`; positions, text and B stay the same. The figure compares the two outputs. Its arrow represents an input edit, and the arrangement is only for comparison.
+The example has two root nodes, A and B, with unique ids. The second input changes only A's `style.fill`, but still submits a complete document containing both nodes. The layout below places the results side by side for comparison.
 
 <ComponentPreview files="update-example" size="md" hideCode type="illustration" />
 
-A retained controller keeps previous input and output so they can be compared with the next state. Packages cooperate on the update, but there are two host paths: Vanilla DOM can join the Runtime transaction; React subscribes to the processing result after it commits.
+Ordinary React and Vanilla input updates use complete replacement. Reconciler batches require explicit operations on the current basic-element tree. Both return complete compilation output. Reusing element compilation state and updating part of a host are decisions made at different layers.
 
 <ComponentPreview files="update-overview" size="md" hideCode type="flow" />
 
-Reconciler always returns a complete result. A Patch describes how consecutive Scenes connect; it does not replace the next complete snapshot.
+## Input preparation
 
-## Input updates
+React converts component declarations into `InputScene`, which Vanilla normalizes into `IRScene`; existing IR enters processing directly. `prepareProcessingInput` also prepares compilation configuration and Composite inputs. The controller owns a `ReconcilerSession`, calling `mount` initially and `replace` for ordinary subsequent input.
 
-React components, Vanilla DSL and existing IR all converge at Vanilla's processing entry point. They reach a complete `IRScene` in different ways:
-
-| Input form       | How it reaches complete IR                                                              |
-| ---------------- | --------------------------------------------------------------------------------------- |
-| React components | Layout collects declarations into `InputScene`, which Vanilla normalizes into `IRScene` |
-| Vanilla DSL      | The caller supplies `InputScene`, which Vanilla normalizes into `IRScene`               |
-| Existing IR      | The complete `IRScene` is used directly, without input normalization                    |
-
-In the retained mode discussed here, Vanilla submits the complete IR to Runtime. The packages then cooperate with these responsibilities:
-
-| Package    | Responsibility during an update                                                                                                                                                                                                           |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Vanilla    | Coordinates input preparation and pipeline assembly: normalizes authoring input, prepares IR, compile options and Composite inputs, wires Runtime and Reconciler computations, manages controller lifecycles and submits subsequent input |
-| Runtime    | Provides general update scheduling and transactions: manages snapshots and revisions, selects computations by dependency, invokes incremental or full entry points, and coordinates commits and rollback                                  |
-| Reconciler | Builds Weave and name relations, assigns runtime identities, calls Core, and assembles Scene snapshots and Patches                                                                                                                        |
-| Core       | Performs one static compilation from `IRScene` and context to Scene and other [compilation output](/kernel/packages/core/compilation-output), with optional provenance                                                                    |
-
-Runtime determines when to invoke which computations; Reconciler chooses what to recompute, and Core performs the compilation. Compile options, Composite inputs and related information travel through their own contracts rather than all being placed inside IR. In static mode, Vanilla arranges one complete compilation without this Runtime incremental transaction.
-
-Even when only A's fill changes, an ordinary input update still delivers the complete IR containing A and B. Later stages prepare a new basic-element tree or a complete Composite result. This discussion follows a later update with stable controller configuration and compile options. Changing controller configuration involves its lifecycle.
-
-Two objects matter here:
-
-- Source: the owner of an input category, defining how to capture, read and compare values. Core documents use `CoreSourceDefinition`.
-- Snapshot: the input held by a Source at a revision. A revision identifies a committed version.
-
-The Reconciler Source copies and freezes JSON on capture and compares its structure. Creating a new JavaScript object with identical content therefore does not, by itself, trigger Reconciler compilation. Vanilla's ordinary input update currently submits complete Sources.
-
-In the color example, the next snapshot still contains A and B, with only A's `style.fill` changed. Reconciler prepares a new tree and output from the complete input; it no longer accepts or checks the old change hints.
+This path does not use the generic Runtime package's Source / Computation registry graph. `replace` explicitly rebuilds compilation output; it does not promise to skip compilation for equal document contents. Configuration-only changes can use `updateTarget` to retain compilation output.
 
 <SourceLinks
   sources={[
+    { label: 'Input preparation', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
     {
-      label: 'React controller reuse and subsequent input',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      label: 'Controller and session integration',
+      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
     },
-    { label: 'Vanilla input preparation', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
-    { label: 'Source capture and structural equality', path: 'packages/kernel/reconciler/src/runtime/source.ts' },
+    { label: 'Replacement and configuration updates', path: 'packages/kernel/reconciler/src/session.ts' },
   ]}
 />
 
-<ComponentAlert
-  type="tip"
-  title="Current scope of incremental updates"
-  description="Ordinary updates submit complete IR snapshots. Basic elements use Weave construction and Core element compilation; Composite input retains full preparation. Updates publish replaceScene. The previous color special case is removed; WeaveBatch execution and fine-grained propagation are not connected yet."
-/>
+## Compilation and reuse
 
-## Scheduling computation
+Complete replacement selects a compilation entry by input kind. Basic elements build a Weave tree and use Core element compilation. Documents containing Composites use Core full preparation, preserving probes, instance inputs, artifacts and spatial handles.
 
-Runtime receives an update with `baseRevision`, checks that it targets the current version, and prepares candidate Sources. A candidate is new state that has not been published; the committed state remains available while calculations run. If no Source actually changes, Runtime skips computations and participants and keeps its own revision.
+<ComponentPreview files="update-reuse" size="md" hideCode type="flow" />
 
-Otherwise, Runtime selects computations through declared dependencies. A **Computation** reads Sources and produces a result; Reconciler integrates through `createCoreComputation`. Runtime knows which inputs affect it, while Reconciler decides how to compile the drawing again.
+Weave retains input, context, compiled state and dependencies. `ReconcilerSession.update(batch, expected)` applies a `WeaveBatch` to an existing basic-element tree. `expected` must be the current session result; stale results are rejected. Composite scenes do not support this entry, and empty batches retain the current result.
 
-The initial computation executes the full `run` path. On later updates, the default incremental strategy allows `update` to inspect the previous result and candidate snapshots. It can return incremental output or request full fallback. A forced full strategy invokes `run` directly. General Runtime computations can also return bailout to retain their result; Reconciler currently requests fallback to prepare a complete candidate result.
-
-Vanilla also wires Composite input and invalidation Sources into Reconciler. Changes to these dependencies can require compilation even when the IR is unchanged. If Composite definition topology becomes incompatible, Vanilla prepares a new retained state and replaces the old state only after success. This definition topology describes the registered capabilities; it is distinct from the Scene primitive hierarchy discussed below.
+Batches recompute affected elements from final inputs and reuse valid products. Context follows declaration structure and invalidation follows dependencies; a Scope change can recompute its whole subtree. Name indexing and output assembly can still traverse the tree, so local compilation does not imply local total update cost. Ordinary React and Vanilla input updates do not yet use this batch entry.
 
 <SourceLinks
   sources={[
-    { label: 'Source equality and dependency propagation', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
-    { label: 'Choosing update, fallback and run', path: 'packages/kernel/runtime/src/runtime/computation.ts' },
-    { label: 'Reconciler Computation integration', path: 'packages/kernel/reconciler/src/runtime/computation.ts' },
-    { label: 'Vanilla Sources and lifecycle', path: 'packages/kernel/vanilla/src/processing/internal/controller.ts' },
+    { label: 'Session batches and version constraints', path: 'packages/kernel/reconciler/src/session.ts' },
+    {
+      label: 'Element scheduling and dependency invalidation',
+      path: 'packages/kernel/reconciler/src/weave/reconcile.ts',
+    },
+    { label: 'Candidate isolation and recovery', path: 'packages/kernel/reconciler/src/weave/transaction.ts' },
   ]}
 />
 
-This section outlines the scheduling and computation flow. For details on dependency scheduling, execution strategies and transaction lifecycles, see the [Runtime package documentation](/kernel/packages/runtime).
+## Host commits
 
-## Compilation state and identity
+Vanilla DOM connects a renderer through `createRetainedRenderTarget`, combining host commits with `ProcessingResult` publication in the session's output target. The target prepares a new frame and configuration. Changed compilation output produces `replaceScene`; configuration-only updates produce an empty-operation Patch. This integration does not derive per-primitive Patches automatically from complete-result differences.
 
-Reconciler retains drawing provenance and identity for each version. Weave also holds basic-element inputs, Core state and direct relations. Identity alone does not imply compilation reuse. Three kinds of information connect them:
+Scene snapshots record primitive identities, owners and topology from compilation provenance for Render validation and hydration. These identities are not Weave batch node addresses and do not guarantee local host updates.
 
-- Semantic identity identifies the IR object that produced primitives. A's identity path includes `root / node / A`.
-- Primitive identity identifies a particular emission from that object. A Node with text can produce a group containing a shape and text, so Node ids and primitives do not have a simple one-to-one relationship.
-- Scene topology records primitive identity, semantic owner, parent, order and location in the primitive tree, allowing outputs to be matched across versions.
-
-Core records the relationship between declarations, namespaces and emitted primitives during one compilation. Reconciler combines that provenance with the candidate revision to construct identities through Runtime. An author-supplied `id` is retained in IR and contributes to identity generation. The complete runtime identity consists of a domain identifier, `owner`, and an array of path segments, `path`. For a Core document, `owner` is `@retikz/core/document`.
-
-For node A in this example, identity is built in successive layers: author id → semantic identity → primitive identity. One declaration can produce several primitives, so a single semantic identity can lead to multiple distinct primitive identities. Slashes in the table separate the segments of the `path` array.
-
-| Level              | How it is generated                                                                                                                                                          |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Author id          | The example declares the node with `id: 'A'`                                                                                                                                 |
-| Semantic identity  | Reconciler appends the node type and a valid unique id to the parent's identity path; root node A receives `root / node / A`                                                 |
-| Primitive identity | Reconciler appends `emission`, the output role and its emission ordinal to the semantic identity path; A's first node group is `root / node / A / emission / node:group / 0` |
-
-For anonymous, duplicate-id or compiler-generated objects, among other cases, Reconciler builds a semantic identity from a path containing the candidate revision, object kind and position index, then derives primitive identities from it. These identities apply only to the current candidate version and do not promise reuse across updates. Duplicate ids are detected within the compilation namespace.
-
-For a node with stable identity such as A, Reconciler can still match its primitives across versions when its fill changes, provided that the parent identity, object type, id and other identity components remain stable. Stable identity establishes correspondence. Complete replacement still recompiles the input; local reuse requires the subsequent scheduler.
+React Layout subscribes to a successfully published `ProcessingResult` before constructing host output. Reconciler target rollback guarantees do not cover React's own commit cycle.
 
 <SourceLinks
   sources={[
-    {
-      label: 'Semantic owners and primitive identities',
-      path: 'packages/kernel/reconciler/src/scene/identity.ts',
-    },
-    { label: 'Complete Scene Runtime snapshots', path: 'packages/kernel/reconciler/src/scene/snapshot.ts' },
-  ]}
-/>
-
-### Weave compilation
-
-For basic-element input, Weave builds a declaration tree. The root owns the environment and lookup indexes; nodes retain their own input, effective context and Core compilation state. Scope prepares context before compiling children and its envelope. Path runs when references in its container are ready. Name reads establish direct relations, but cross-batch invalidation propagation is not yet implemented.
-
-<ComponentPreview files="update-reuse" size="xl" hideCode type="flow" />
-
-| Input                            | Current preparation path                                                     |
-| -------------------------------- | ---------------------------------------------------------------------------- |
-| Node, Coordinate, Path and Scope | Build Weave, call Core element compilation and assemble complete output      |
-| Contains Composite               | Core full preparation, retaining probes, instance inputs and attached output |
-
-Even when only A changes color, the current update prepares a new tree containing both A and B. Failure retains the previous result. Successful updates produce one exclusive `replaceScene`; the presence of a Patch does not imply local computation.
-
-<SourceLinks
-  sources={[
-    { label: 'Weave construction and Core calls', path: 'packages/kernel/reconciler/src/weave/reconcile.ts' },
-    { label: 'Full preparation and candidate output', path: 'packages/kernel/reconciler/src/runtime/computation.ts' },
-    {
-      label: 'Update and transaction regression tests',
-      path: 'packages/kernel/reconciler/tests/reconcile/core-computation.test.ts',
-    },
-  ]}
-/>
-
-## Display commits
-
-Reconciler's **SceneRuntimeSnapshot** contains the complete Scene, revision and topology. A **ScenePatch** contains `baseRevision`, `nextRevision` and operations. Current updates carry a complete replacement snapshot; the Patch contract still allows future scheduling to describe local operations. Consumers must pair the Patch with its correct previous version.
-
-In Vanilla DOM retained mounting, Render receives the compilation result and Patch for the update, applies local updates or full replacement according to backend capabilities, and coordinates with Runtime as a **Participant** to commit or roll back the rendering work. When preparing rendering operations, Render validates revisions and consistency between the Patch and target snapshot. An unsupported local operation can become `replaceScene`; an invalid Patch is rejected.
-
-Whether Reconciler avoids geometry work and whether a backend updates locally are separate decisions. SVG and Canvas consume the same Scene contract, while each backend determines how to perform DOM changes or Canvas drawing.
-
-React Layout follows another path. The Vanilla controller commits a `ProcessingResult`, then React subscribes to it. The SVG host builds a description tree from the complete result, while the Canvas host consumes a frame. Render Participant rollback guarantees do not extend directly to React's own commit cycle.
-
-<SourceLinks
-  sources={[
-    { label: 'Vanilla DOM wiring for Render Participants', path: 'packages/kernel/vanilla/src/dom/retained.ts' },
-    {
-      label: 'Patch validation, capabilities and commit tokens',
-      path: 'packages/kernel/render/src/runtime/participant.ts',
-    },
-    {
-      label: 'React host output from ProcessingResult',
-      path: 'packages/kernel/react/src/render/processing-result.tsx',
-    },
+    { label: 'Vanilla DOM target assembly', path: 'packages/kernel/vanilla/src/dom/retained.ts' },
+    { label: 'Candidate frames, Patches and commits', path: 'packages/kernel/render/src/runtime/target.ts' },
+    { label: 'Scene snapshots and identities', path: 'packages/kernel/reconciler/src/scene/snapshot.ts' },
+    { label: 'React displays processing results', path: 'packages/kernel/react/src/render/processing-result.tsx' },
   ]}
 />
 
 ## Failure handling
 
-Consider the Vanilla DOM transaction path. Finishing computation does not publish the next version. Participants first prepare, then commit and provide candidate reads. Runtime publishes Sources, computation results and the revision together only after those steps succeed.
+Preparation retains the previous result. The session prepares its output target, then commits candidate Weave state and the target. It publishes the new result only after both succeed. Complete replacement uses a new tree, leaving the previous tree in place until publication.
 
 <ComponentPreview files="update-commit" size="lg" hideCode type="flow" />
 
-A failure before publication cleans up candidates and rolls back prepared participants in reverse order. Successful rollback preserves the previous committed state. If rollback itself fails, Runtime becomes broken and blocks normal reads and writes; the host can no longer be assumed to have recovered. Initialization has no previous successful frame, so failure throws from creation.
+On commit failure, the session rolls back the target before restoring candidate Weave state. Successful recovery leaves the previous result readable. Failed recovery puts the session into the broken state, blocking normal reads and writes until disposal. A preparation function that fails before returning its commit token must clean up resources it already acquired.
 
-Observer or cleanup failures after publication become diagnostics and do not revoke the published version. Vanilla subscriber exceptions likewise do not roll back completed updates. React Layout retains its last successful result when a subsequent controller update fails and forwards diagnostics. A compilation failure therefore does not replace its current display input with an incomplete result.
+Warning callbacks, tracing and commit-token cleanup failures after publication are recorded as diagnostics and do not undo the published revision. Vanilla notifies subscribers only of successfully published processing results; React retains the last successful result when an update fails.
 
 <SourceLinks
   sources={[
-    { label: 'Publication, rollback and broken state', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
-    { label: 'Participant prepare, commit and rollback', path: 'packages/kernel/runtime/src/runtime/participant.ts' },
-    {
-      label: 'Controller results and subscriber notification',
-      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
-    },
-    { label: 'React retention after update failure', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
+    { label: 'Publication, rollback and broken state', path: 'packages/kernel/reconciler/src/session.ts' },
+    { label: 'Host state recovery', path: 'packages/kernel/render/src/runtime/target.ts' },
+    { label: 'React retains successful results', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
   ]}
 />
 
 ## Complete implementation flow
 
-This diagram follows Vanilla DOM retained execution. Function names locate implementation code, including internal members; applications do not need to invoke them individually.
+This diagram locates an ordinary Vanilla DOM input replacement. Member names are source-reading anchors, not APIs an application must call one by one.
 
 <ComponentPreview files="update-implementation" size="lg" hideCode type="flow" />
 
-Start at the controller input update and follow `RuntimeManager.update`, then the `update` and `run` branches of `createCoreComputation`. Basic elements reach `prepareWeaveCompilation` for the tree and output; input containing Composite reaches `prepareSceneCompilation`. Finally, follow Render Participant preparation and Runtime publication to see when the candidate becomes current state. For React display, return to Layout's subscription and `ProcessingResultHost`.
+Start at `prepareProcessingInput` and the controller, then follow `ReconcilerSession.replace` through the Weave / Composite branches. `publish` prepares and commits the target; the Render target materializes candidate output as a host frame. The session then publishes its result and the controller notifies subscribers.
 
 ## Further reading
 
 <LinkedSections
   items={[
     {
-      title: 'Runtime',
-      description: 'Explore Sources, dependency scheduling and transaction lifecycles',
-      url: '/kernel/packages/runtime',
+      title: 'Core compilation',
+      description: 'Element compilation, assembly and Weave integration',
+      url: '/kernel/packages/core/compilation',
     },
     {
-      title: 'Compilation Output',
-      description: 'Understand Scene, artifacts, spatial handles and diagnostics',
+      title: 'Compilation output',
+      description: 'Scenes, artifacts, spatial handles and diagnostics',
       url: '/kernel/packages/core/compilation-output',
     },
-    { title: 'Render', description: 'Explore consumption by SVG and Canvas backends', url: '/kernel/packages/render' },
+    {
+      title: 'Render',
+      description: 'SVG and Canvas consumption and commit boundaries',
+      url: '/kernel/packages/render',
+    },
   ]}
 />

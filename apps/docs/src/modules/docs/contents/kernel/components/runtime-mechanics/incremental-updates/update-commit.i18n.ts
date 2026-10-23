@@ -9,9 +9,9 @@ export const text: Record<Lang, Record<string, [string, string]>> = {
     edge3: ['回滚失败', ''],
     candidate: ['候选计算结果', '尚未发布'],
     prepare: ['prepare', '准备可回滚操作'],
-    commit: ['commit + read', '提交并读取宿主结果'],
+    commit: ['commit', '提交 Weave 与宿主'],
     publish: ['发布 revision', '成功后通知观察者'],
-    rollback: ['逆序 rollback', '成功：保留旧状态'],
+    rollback: ['rollback', '先目标，后 Weave'],
     broken: ['broken', '回滚失败：封锁读写'],
   },
   en: {
@@ -21,9 +21,9 @@ export const text: Record<Lang, Record<string, [string, string]>> = {
     edge3: ['Rollback fails', ''],
     candidate: ['Candidate result', 'Not published yet'],
     prepare: ['prepare', 'Prepare reversible work'],
-    commit: ['commit + read', 'Commit and read hosts'],
+    commit: ['commit', 'Commit Weave and host'],
     publish: ['Publish revision', 'Then notify observers'],
-    rollback: ['Reverse rollback', 'Success: retain old state'],
+    rollback: ['rollback', 'Target first, then Weave'],
     broken: ['broken', 'Rollback fails: block access'],
   },
 };

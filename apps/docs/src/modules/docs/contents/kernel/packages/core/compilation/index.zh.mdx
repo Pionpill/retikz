@@ -574,23 +574,23 @@ Core 与 Weave 共用 `formatCompileChildPath(prefix, index, type?)` 生成声�
 
 Weave 是 Reconciler 持有的编译树：每个节点保留自身输入、有效上下文与 Core 编译状态。Root 统一持有编译环境、Scene 配置、容器定位索引和本版本的读取记录；Scope 的自动定位 id 不写回 IR，也不参与绘图包络计算。
 
-Runtime 直接持有稳定 WeaveRoot，作为整棵树的入口。节点和 Root 各自保存已提交的 current 与候选 pending 状态；父子关系、依赖和索引引用稳定节点对象。候选修改先隔离对应状态与可变集合，未变的 Core 产物只读共享。只修改子节点属性时，Scope 的 children 无需复制；增删成员时才取得独立数组。提交逐个切换本批触及的状态，完成前保留恢复依据，节点引用本身不提供历史快照。
+Reconciler 会话通过 Weave 协调器持有稳定 WeaveRoot，作为整棵树的入口。节点和 Root 各自保存已提交的 current 与候选 pending 状态；父子关系、依赖和索引引用稳定节点对象。候选修改先隔离对应状态与可变集合，未变的 Core 产物只读共享。只修改子节点属性时，Scope 的 children 无需复制；增删成员时才取得独立数组。提交逐个切换本批触及的状态，完成前保留恢复依据，节点引用本身不提供历史快照。
 
 基础元素输入按声明顺序建立节点与名称绑定。Node 和 Coordinate 使用当前位置可见的引用；Scope 先准备上下文，再计算子元素和包络，最后完成所属路径。顶层 Path 可等到两侧 Scope 的节点发布后计算。名称注册由 `createCompileNamespaceRegistry` 保持同层覆盖诊断，`projectScopeCompileLayouts` 与 `projectPublishedCompileLayout` 复用 Core 的包络贡献和最终引用投影规则。
 
-编译完成后，Reconciler 通过 Core 组装完整输出。`createCompileProvenanceTracker` 保存图元来源，在资源重映射和 Scope 包装时转移到新图元；最终来源路径与排序后的 Scene 配对，不需要再次完整编译补齐。候选计算失败时，Runtime 保留旧结果；成功后才发布配对的树与输出。
+编译完成后，Reconciler 通过 Core 组装完整输出。`createCompileProvenanceTracker` 保存图元来源，在资源重映射和 Scope 包装时转移到新图元；最终来源路径与排序后的 Scene 配对，不需要再次完整编译补齐。候选计算失败时，Reconciler 会话保留旧结果；成功后才发布配对的树与输出。
 
 内部 Weave 协调器支持在已构建的 Root 上处理 WeaveBatch：先按顺序应用增删改，再基于最终输入计算。上下文沿声明结构传递，依赖失效沿消费者传播；Scope 准备、子布局、包络与最终投影遵守 Core 的计算顺序，Path 保留延后引用能力。未受影响且输入、声明位置和名称绑定仍有效的编译产物可以复用；启用观察会话或需要重新生成诊断时重新计算相关元素。当前采用保守失效，Scope 变化可能使整个子树重新计算，尚不按 style / layout 粒度过滤。
 
 更新返回完整输出和提交、确认、回滚操作。准备期间旧状态保持不变；提交后仍可恢复，最终确认才释放恢复依据。名称索引恢复、来源与输出组装仍可能遍历完整树，局部编译不等于整次更新具有局部成本。
 
-当前公开 Runtime 输入仍是完整 IR 快照，替换输入会重新构建基础元素树，并发布 `replaceScene`；内部批次入口尚未接入公开 Runtime、React 或 Vanilla API。包含 Composite 的输入继续使用 Core 完整准备路径，保留 probe、实例输入、artifacts 与空间句柄；此路径不会假造已具备局部更新能力的展开树。
+Reconciler 的 `replace` 接收完整 IR 并重新编译，`update` 接收已有基础元素树的 `WeaveBatch`；批次必须绑定当前会话结果，Composite 场景不支持该批次入口。React 与 Vanilla 的普通输入更新仍调用完整替换。Render 提交目标将新的编译结果转换为 `replaceScene`，不能据此推断后端已执行细粒度 Patch 更新。含 Composite 的输入使用 Core 完整准备路径，保留 probe、实例输入、artifacts 与空间句柄。
 
 <SourceLinks
   sources={[
     { label: 'Weave 构建与 Core 调用', path: 'packages/kernel/reconciler/src/weave/reconcile.ts' },
     { label: 'Weave 状态归属', path: 'packages/kernel/reconciler/src/weave/types.ts' },
     { label: '候选状态隔离与恢复', path: 'packages/kernel/reconciler/src/weave/transaction.ts' },
-    { label: 'Runtime 发布边界', path: 'packages/kernel/reconciler/src/runtime/computation.ts' },
+    { label: 'Reconciler 会话与发布边界', path: 'packages/kernel/reconciler/src/session.ts' },
   ]}
 />

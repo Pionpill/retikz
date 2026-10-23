@@ -1,202 +1,113 @@
----
+﻿---
 title: 增量更新
-description: 沿一次节点改色，追踪输入快照、Runtime 调度、Weave 编译状态和 Render 提交，并理解全量回退与失败边界。
+description: 沿一次节点改色，追踪输入准备、Reconciler 会话、Weave 编译与 Render 提交，区分完整替换和基础元素批次。
 ---
 
 <ComponentAlert
   type="warn"
   title="实验性功能"
-  description="增量更新目前为实验性功能，具体更新方案后续会调整。本文说明当前实现，不代表最终方案。"
+  description="增量更新目前为实验性功能。完整输入更新、基础元素批次和宿主提交具有不同边界，不保证每次更新都只重算局部。"
 />
 
-一张图已经显示后，把节点 A 的填充色从橙色改成蓝色，哪些工作需要重做？本文沿这次修改追踪 retained 模式下的跨包更新：Adapter 提交新输入，Runtime 安排计算，Reconciler 准备新编译状态，宿主显示成功提交的结果。当前完整输入替换会重新编译；Weave 保存了后续局部调度所需的输入、结果和关联。
+把节点 A 从橙色改成蓝色，哪些工作需要重做？本文沿 Vanilla DOM 的 retained 更新追踪：Vanilla 准备输入，Reconciler 会话调用 Core 编译，Render 准备并提交画面，成功后才发布新结果。React 订阅处理结果后显示它，拥有不同的宿主提交边界。
 
-阅读前先了解[渲染链路](/kernel/components/runtime-mechanics/rendering-pipeline)中的 IR、Scene 与包职责。本文关注两次编译之间的状态交接；单次几何计算见 [Core 编译流程](/kernel/packages/core/compilation)，Runtime 的通用事务算法见 [Runtime](/kernel/packages/runtime)。
+阅读前先了解[渲染链路](/kernel/components/runtime-mechanics/rendering-pipeline)中的 IR、Scene 与包职责。单次编译见 [Core 编译流程](/kernel/packages/core/compilation)。
 
 ## 整体流程
 
-本例只有两个根节点 A、B，使用唯一 id 和直接坐标，没有连线或绘制资源。第一次显示时完整编译两个节点；第二次只改变 A 的 `style.fill`，位置、文字和 B 的配置保持不变。下面是两次输入对应的画面，箭头表示输入修改，图中的布局仅用于并列比较。
+本例包含具有唯一 id 的两个根节点 A、B。第二次输入只改变 A 的 `style.fill`，但仍提交包含 A、B 的完整文档。下面的布局仅用于并列比较改色前后的画面。
 
 <ComponentPreview files="update-example" size="md" hideCode type="illustration" />
 
-retained 控制器保留上一轮输入与结果，因此能够比较前后状态。各包围绕同一次更新交接，但显示结果有两条宿主路径：Vanilla DOM 可以参与 Runtime 事务；React 在处理结果提交后订阅并显示它。
+普通 React／Vanilla 输入更新走完整替换；Reconciler 的批次入口需要调用方提供当前基础元素树上的明确操作。两者都返回完整编译结果。是否复用元素编译状态、是否局部修改宿主，由不同层决定。
 
 <ComponentPreview files="update-overview" size="md" hideCode type="flow" />
 
-图中 Reconciler 的输出始终包含完整结果。Core 的静态编译能力由它调用。局部更新附带的 Patch 用来说明前后 Scene 如何衔接，并不替代下一份完整快照。
+## 输入准备
 
-## 输入更新
+React 将组件声明转换为 `InputScene`，Vanilla 再归一化为 `IRScene`；已有 IR 直接进入处理流程。`prepareProcessingInput` 同时整理编译配置和 Composite 输入。控制器持有 `ReconcilerSession`，初始化调用 `mount`，普通后续输入调用 `replace`。
 
-React 组件、Vanilla DSL 和已有 IR 三种输入，最终都汇合到 Vanilla 的处理入口。它们到达完整 `IRScene` 的过程有所不同：
-
-| 输入形式    | 如何得到完整 IR                                                           |
-| ----------- | ------------------------------------------------------------------------- |
-| React 组件  | Layout 收集组件声明，转换为 `InputScene`，再由 Vanilla 归一化为 `IRScene` |
-| Vanilla DSL | 调用方提供 `InputScene`，由 Vanilla 归一化为 `IRScene`                    |
-| 已有 IR     | 直接使用完整的 `IRScene`，不再经过输入归一化                              |
-
-在本文的 retained 模式下，Vanilla 将完整 IR 提交给 Runtime，后续更新由各包按以下职责协作：
-
-| 包         | 更新中的职责                                                                                                                                  |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Vanilla    | 统筹输入准备与流程装配：归一化作者输入，准备 IR、编译选项与 Composite 输入，装配 Runtime 和 Reconciler 计算，管理控制器生命周期并提交后续输入 |
-| Runtime    | 负责通用更新调度与事务：管理快照和版本，按依赖选择计算，调用增量或全量入口，协调结果提交与回滚                                                |
-| Reconciler | 负责编译状态：建立 Weave、运行时身份和名称关联，调用 Core 编译并组装 Scene 快照和 Patch                                                       |
-| Core       | 负责单次静态编译：将 `IRScene` 和编译上下文转换为 Scene 等[编译产物](/kernel/packages/core/compilation-output)，按需提供编译来源信息          |
-
-Runtime 决定何时调用哪些计算，Reconciler 决定哪些产物需要重新计算，Core 执行具体编译。编译选项、Composite 输入等配套信息按各自契约传递，并非全部放进 IR。static 模式则由 Vanilla 安排一次完整编译，不经过这套 Runtime 增量事务。
-
-因此，即使只改 A 的填充色，普通输入更新交付的仍是包含 A、B 的完整 IR，后续准备一棵新的基础元素树或 Composite 完整结果。这里追踪控制器与编译选项保持稳定的一次后续更新；切换控制器配置涉及生命周期重建。
-
-此时需要区分两个对象：
-
-- Source：一类输入的持有者，定义怎样捕获、读取和比较数据；Core 文档使用 `CoreSourceDefinition`。
-- Snapshot：该 Source 在某个 revision 下的输入快照。revision 是已提交状态的版本编号。
-
-Reconciler Source 捕获输入时复制并冻结 JSON，用结构比较判断内容是否变化。因此，新建一个内容相同的 JavaScript 对象，不会单凭对象引用变化触发 Reconciler 重编。Vanilla 当前的普通输入更新提交完整 Source。
-
-在改色例子中，新快照仍包含 A 和 B，只是 A 的 `style.fill` 变了。Reconciler 根据完整输入准备新树与输出，不再接受或核对旧的变化提示。
+这条链路不经过通用 Runtime 包的 Source／Computation 注册图。`replace` 显式重建编译结果，没有基于文档内容相等而跳过编译的保证。仅修改渲染配置时，控制器可调用 `updateTarget` 复用已有编译结果。
 
 <SourceLinks
   sources={[
-    { label: 'React 复用控制器并提交后续输入', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
-    { label: 'Vanilla 输入准备', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
-    { label: 'Source 的捕获与结构比较', path: 'packages/kernel/reconciler/src/runtime/source.ts' },
+    { label: '输入准备', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
+    { label: '控制器与会话接线', path: 'packages/kernel/vanilla/src/processing/internal/controller.ts' },
+    { label: '完整替换与配置更新', path: 'packages/kernel/reconciler/src/session.ts' },
   ]}
 />
 
-<ComponentAlert
-  type="tip"
-  title="当前增量更新的范围"
-  description="当前普通输入更新提交完整 IR 快照。基础元素接入 Weave 构建与 Core 单元素编译，含 Composite 的输入保留完整准备路径；更新统一发布 replaceScene。原改色特例已移除，WeaveBatch 执行与细粒度依赖传播尚未接入。"
-/>
+## 编译与复用
 
-## 调度与计算
+完整替换根据输入选择编译入口：基础元素构建 Weave 树，由 Core 单元素能力完成计算；含 Composite 的文档走 Core 完整准备路径，保留 probe、实例输入、artifacts 与空间句柄。
 
-Runtime 收到带 `baseRevision` 的更新后，先确认调用方基于当前版本，再准备候选 Source。候选是尚未发布的新状态，计算期间原来的已提交状态仍然保留。如果整批 Source 都没有实际变化，Runtime 跳过计算和提交参与者，并保持自己的 revision。
+<ComponentPreview files="update-reuse" size="md" hideCode type="flow" />
 
-有变化时，Runtime 按已声明的依赖关系选择计算。这里的 **Computation** 是读取 Source 并产出结果的计算定义，Reconciler 通过 `createCoreComputation` 接入。Runtime 知道哪些输入影响它；怎样重新编译节点，由 Reconciler 决定。
+Weave 保存输入、上下文、编译状态和依赖。`ReconcilerSession.update(batch, expected)` 可在已有基础元素树上应用 `WeaveBatch`；`expected` 必须是当前会话结果，旧结果会被拒绝。Composite 场景不支持该批次入口，空批次保留当前结果。
 
-第一次计算执行完整 `run`。后续默认增量策略允许进入 `update`，它读取上次结果和这次候选快照，返回局部结果或请求全量回退。强制 full 策略直接执行 `run`。通用 Runtime 还支持计算返回 bailout 来保留结果；当前 Reconciler 使用 fallback 重新准备完整候选结果。
-
-Vanilla 装配的不只有 Core IR，还包括 Composite 输入与失效来源。即使 IR 相同，关联的 Composite 输入或外部失效来源变化也可以要求 Reconciler 重编。Composite 定义拓扑不兼容时，Vanilla 会准备新的 retained state，成功后才替换原状态。这里的定义拓扑指注册的能力组合，与下一节 Scene 中图元的父子关系是两种结构。
+批次更新按最终输入重算受影响元素，复用仍有效的产物。上下文沿声明结构传递，失效沿依赖传播；Scope 变化可能使整个子树重算。名称索引和输出组装仍可能遍历整树，因此局部编译不等于整次更新只有局部成本。普通 React／Vanilla 输入更新尚未接入此批次入口。
 
 <SourceLinks
   sources={[
-    { label: 'Source 比较与依赖传播', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
-    { label: 'update、fallback 与 run 的选择', path: 'packages/kernel/runtime/src/runtime/computation.ts' },
-    { label: 'Reconciler Computation 接入', path: 'packages/kernel/reconciler/src/runtime/computation.ts' },
-    { label: 'Vanilla 的来源和生命周期装配', path: 'packages/kernel/vanilla/src/processing/internal/controller.ts' },
+    { label: '会话批次与版本约束', path: 'packages/kernel/reconciler/src/session.ts' },
+    { label: '元素调度与依赖失效', path: 'packages/kernel/reconciler/src/weave/reconcile.ts' },
+    { label: '候选状态隔离与恢复', path: 'packages/kernel/reconciler/src/weave/transaction.ts' },
   ]}
 />
 
-本节仅简要说明调度与计算的大体流程；依赖调度、执行策略及事务生命周期的详细说明，见 [Runtime 开发包文档](/kernel/packages/runtime)。
+## 宿主提交
 
-## 编译状态与身份
+Vanilla DOM 通过 `createRetainedRenderTarget` 把 renderer 接入会话输出目标，并将 `ProcessingResult` 的发布与宿主提交组合起来。目标准备新的 frame 和配置；编译结果变化时生成 `replaceScene`，仅配置更新时生成空操作 Patch。当前接线不会从完整结果差异自动生成逐图元 Patch。
 
-Reconciler 为每个版本保留绘制产物的来源与身份。Weave 另外持有基础元素的输入、Core 编译状态和直接关联；稳定身份本身不意味着已经复用编译结果。这里有三层信息：
+Scene 快照根据编译 provenance 记录图元身份、owner 与拓扑，供 Render 验证和水合使用。这些身份不等于 Weave 批次中的节点地址，也不保证宿主进行局部更新。
 
-- 语义身份：标识产生图元的 IR 对象；本例 A 的身份路径包含 `root / node / A`。
-- 图元身份：标识该对象的一次具体输出。一个带文字的 Node 可以产生包含形状和文字的 group，不能把 Node id 与每个图元简单视为一一对应。
-- Scene topology：记录图元身份、语义 owner、父级、顺序和在图元树中的位置，供前后产物匹配。
-
-Core 在单次编译中记录声明、命名空间与输出图元的来源关系；Reconciler 结合这些来源信息和候选版本，使用 Runtime 的身份构造能力生成身份。作者在声明中提供的 `id` 会保留到 IR，成为生成身份的依据。完整运行时身份由领域标识 `owner` 和路径段数组 `path` 组成，其中 Core 文档的 `owner` 为 `@retikz/core/document`。
-
-以本例的节点 A 为例，身份按“作者 id → 语义身份 → 图元身份”逐层生成。一个声明可以产生多个图元，因此同一个语义身份下还会派生出不同的图元身份。表中的斜线表示 `path` 数组中路径段的分隔。
-
-| 层次     | 生成依据                                                                                                                           |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| 作者 id  | 本例在节点声明中指定 `id: 'A'`                                                                                                     |
-| 语义身份 | Reconciler 在父级身份路径后追加节点类型与有效且唯一的 id；根节点 A 得到 `root / node / A`                                          |
-| 图元身份 | 在语义身份路径后追加 `emission`、输出角色与该角色的输出序号；例如 A 的首个节点分组为 `root / node / A / emission / node:group / 0` |
-
-对于匿名、重复 id 或编译生成的对象等，Reconciler 使用包含候选 revision、对象种类与位置索引的路径来建立语义身份，再从中派生图元身份。这类身份仅用于当前候选版本，不能据此承诺跨次复用；重复 id 的判断遵循编译时所在的命名空间。
-
-对于 A 这样具有稳定身份的节点，只要父级身份、对象类型和 id 等身份组成部分保持稳定，即使填充色改变，Reconciler 仍能匹配前后属于 A 的图元。身份稳定只解决“对应谁”，当前完整替换仍会重新编译，局部复用需要后续调度器决定。
+React Layout 先订阅成功发布的 `ProcessingResult`，再构建宿主输出。Reconciler 输出目标的回滚保证不覆盖 React 自身的提交周期。
 
 <SourceLinks
   sources={[
-    { label: '语义 owner 与图元身份', path: 'packages/kernel/reconciler/src/scene/identity.ts' },
-    { label: '完整 Scene Runtime 快照', path: 'packages/kernel/reconciler/src/scene/snapshot.ts' },
-  ]}
-/>
-
-### Weave 编译构建
-
-基础元素的完整输入由 Weave 建立声明树，Root 持有编译环境与定位索引，节点持有自身输入、有效上下文和 Core 编译状态。Scope 先准备上下文，再完成子元素与包络；Path 在所属容器的引用就绪后计算。名称读取事实形成节点关联，但当前尚不据此执行跨批次局部失效传播。
-
-<ComponentPreview files="update-reuse" size="xl" hideCode type="flow" />
-
-| 输入                          | 当前准备路径                                   |
-| ----------------------------- | ---------------------------------------------- |
-| Node、Coordinate、Path、Scope | 构建 Weave，调用 Core 单元素编译并组装完整输出 |
-| 含 Composite                  | Core 完整准备，保留 probe、实例输入和附属产物  |
-
-即使本例只改 A 的颜色，当前也会重新准备包含 A、B 的候选树。失败时保留旧结果；成功更新生成独占的 `replaceScene`，不能从存在 Patch 推断发生了局部计算。
-
-<SourceLinks
-  sources={[
-    { label: 'Weave 构建与 Core 调用', path: 'packages/kernel/reconciler/src/weave/reconcile.ts' },
-    { label: '完整准备与候选输出', path: 'packages/kernel/reconciler/src/runtime/computation.ts' },
-    { label: '更新与事务回归', path: 'packages/kernel/reconciler/tests/reconcile/core-computation.test.ts' },
-  ]}
-/>
-
-## 画面提交
-
-Reconciler 交出的 **SceneRuntimeSnapshot** 包含完整 Scene、版本与拓扑；**ScenePatch** 包含 `baseRevision`、`nextRevision` 和操作列表。当前更新携带整份替换快照；Patch 契约仍允许后续调度器表达局部操作。接收方必须把 Patch 与正确的上一版本配对。
-
-在 Vanilla 的 DOM retained 挂载中，Render 接收本次编译结果与 Patch，根据后端能力执行局部更新或整幅替换，并作为 **Participant**（提交参与者）配合 Runtime 完成提交或回滚。准备渲染操作时，Render 会验证版本、Patch 与目标快照的一致性；不支持某种局部操作可以转成 `replaceScene`，无效 Patch 则会被拒绝。
-
-因此，Reconciler 是否减少 Core 的几何计算，与后端是否局部更新是两个判断。SVG 与 Canvas 消费相同的 Scene 契约，具体怎样组织 DOM 修改或 Canvas 绘制由各自后端负责。
-
-React Layout 的路径不同：Vanilla 控制器先提交 `ProcessingResult`，React 订阅该结果；SVG 宿主由完整结果构建描述树，Canvas 宿主消费 frame。这里不能把 Render Participant 的回滚保证直接套到 React 自身的提交周期。
-
-<SourceLinks
-  sources={[
-    { label: 'Vanilla DOM 装配 Render Participant', path: 'packages/kernel/vanilla/src/dom/retained.ts' },
-    { label: 'Patch 验证、后端能力与提交 token', path: 'packages/kernel/render/src/runtime/participant.ts' },
-    { label: 'React 从 ProcessingResult 构建宿主输出', path: 'packages/kernel/react/src/render/processing-result.tsx' },
+    { label: 'Vanilla DOM 目标装配', path: 'packages/kernel/vanilla/src/dom/retained.ts' },
+    { label: '候选帧、Patch 与提交', path: 'packages/kernel/render/src/runtime/target.ts' },
+    { label: 'Scene 快照与身份', path: 'packages/kernel/reconciler/src/scene/snapshot.ts' },
+    { label: 'React 显示处理结果', path: 'packages/kernel/react/src/render/processing-result.tsx' },
   ]}
 />
 
 ## 失败处理
 
-以 Vanilla DOM 的事务路径为例，计算完成还不代表新版本已经发布。所有参与者先 prepare，再依次 commit、读取候选结果；这些步骤成功后，Runtime 才同步发布 Source、计算结果和 revision。
+准备阶段保留旧结果。会话先准备输出目标，再提交候选 Weave 状态和目标；两者成功后才发布新结果。完整替换使用新树，发布成功前不会替换旧树。
 
 <ComponentPreview files="update-commit" size="lg" hideCode type="flow" />
 
-发布前失败时，Runtime 清理候选结果，并逆序回滚已准备的参与者；回滚成功后保留上一份已提交状态。若回滚本身失败，Runtime 进入 broken 状态并阻止继续正常读写，此时不能再保证宿主已经恢复。初始化没有上一份成功画面，失败会直接使创建过程抛错。
+提交失败时，会话先回滚目标，再恢复候选 Weave 状态。恢复成功后仍可读取旧结果；恢复失败则进入 broken 状态并禁止正常读写，需要释放会话。准备函数尚未返回提交 token 就失败时，由该函数负责清理自身已取得的资源。
 
-发布后的观察通知或资源清理异常记录为诊断，不撤销已发布版本。Vanilla 订阅者抛错同样不会回滚完成的更新。React Layout 对后续控制器更新失败保留最后一次成功结果，并转交诊断；这保证了编译失败不会用一个不完整结果替换当前显示输入。
+发布后的告警回调、trace 或提交 token 清理失败记录为诊断，不撤销已发布版本。Vanilla 只通知成功发布的处理结果；React 更新失败时保留最后一次成功结果。
 
 <SourceLinks
   sources={[
-    { label: '发布、回滚与 broken 边界', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
-    { label: '参与者 prepare / commit / rollback', path: 'packages/kernel/runtime/src/runtime/participant.ts' },
-    { label: '控制器成功结果与订阅通知', path: 'packages/kernel/vanilla/src/processing/internal/controller.ts' },
-    { label: 'React 更新失败保留结果', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
+    { label: '发布、回滚与 broken 边界', path: 'packages/kernel/reconciler/src/session.ts' },
+    { label: '宿主状态恢复', path: 'packages/kernel/render/src/runtime/target.ts' },
+    { label: 'React 保留成功结果', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
   ]}
 />
 
 ## 完整实现流程
 
-下面沿 Vanilla DOM retained 分支定位实现。图中函数名是源码阅读锚点，包含内部成员；它们不是需要应用逐个调用的接入步骤。
+下面定位普通 Vanilla DOM 输入替换的实现。成员名用于源码阅读，不是应用需要逐个调用的 API。
 
 <ComponentPreview files="update-implementation" size="lg" hideCode type="flow" />
 
-先从控制器的输入更新进入 `RuntimeManager.update`，再看 `createCoreComputation` 的 `update` 与 `run` 分支。基础元素通过 `prepareWeaveCompilation` 准备树与输出；含 Composite 的输入进入 `prepareSceneCompilation`。最后沿 Render Participant 的 prepare 与 Runtime 的发布边界，确认结果何时成为当前状态。React 入口可回到 Layout 的订阅与 `ProcessingResultHost` 阅读显示部分。
+从 `prepareProcessingInput` 进入控制器，再沿 `ReconcilerSession.replace` 查看 Weave／Composite 分支。`publish` 调用目标准备和提交，Render 目标将候选结果物化为宿主帧；最后会话发布结果，控制器通知订阅者。
 
 ## 延伸阅读
 
 <LinkedSections
   items={[
-    { title: 'Runtime', description: '深入了解数据源、依赖调度与事务生命周期', url: '/kernel/packages/runtime' },
+    { title: 'Core 编译流程', description: '单元素编译、组装与 Weave 接入', url: '/kernel/packages/core/compilation' },
     {
       title: '编译产物',
-      description: '理解 Scene、附加产物、空间句柄与诊断',
+      description: 'Scene、附加产物、空间句柄与诊断',
       url: '/kernel/packages/core/compilation-output',
     },
-    { title: 'Render', description: '了解 SVG 与 Canvas 后端的消费边界', url: '/kernel/packages/render' },
+    { title: 'Render', description: 'SVG 与 Canvas 的消费及提交边界', url: '/kernel/packages/render' },
   ]}
 />

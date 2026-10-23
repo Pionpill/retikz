@@ -3,21 +3,21 @@ import type { Lang } from '@/i18n';
 /** 增量更新机制图文案 */
 export const text: Record<Lang, Record<string, [string, string]>> = {
   zh: {
-    edge0: ['fallback', ''],
+    edge0: ['准备输出', ''],
     prepare: ['prepareProcessingInput', 'Vanilla 整理新输入'],
-    runtime: ['RuntimeManager.update', '准备来源与调度计算'],
-    update: ['createCoreComputation', 'update 请求完整重建'],
-    full: ['run', 'Weave / Core 完整准备'],
-    render: ['Render Participant', '验证 Patch 并准备提交'],
-    publish: ['publishUpdate', '宿主成功后发布版本'],
+    runtime: ['ReconcilerSession.replace', '准备完整替换'],
+    update: ['Weave / Core', '按输入类别编译'],
+    full: ['publish', '协调候选状态与目标'],
+    render: ['输出目标', '准备帧并提交宿主'],
+    publish: ['发布结果', '成功后通知订阅者'],
   },
   en: {
-    edge0: ['fallback', ''],
+    edge0: ['Prepare output', ''],
     prepare: ['prepareProcessingInput', 'Vanilla prepares input'],
-    runtime: ['RuntimeManager.update', 'Prepare Sources and schedule'],
-    update: ['createCoreComputation', 'update requests full preparation'],
-    full: ['run', 'Prepare through Weave / Core'],
-    render: ['Render Participant', 'Validate Patch and prepare'],
-    publish: ['publishUpdate', 'Publish after host success'],
+    runtime: ['ReconcilerSession.replace', 'Prepare complete replacement'],
+    update: ['Weave / Core', 'Compile by input kind'],
+    full: ['publish', 'Coordinate state and target'],
+    render: ['Output target', 'Prepare frame and commit host'],
+    publish: ['Publish result', 'Then notify subscribers'],
   },
 };
