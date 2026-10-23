@@ -1,4 +1,5 @@
 import type { ShapeDefinition } from '../../contract';
+import { createProviderRegistry } from '../registry';
 import { ellipseShape } from './ellipse';
 import { polygon } from './polygon';
 import { rectangle } from './rectangle';
@@ -9,3 +10,12 @@ export const BUILTIN_SHAPES: ReadonlyMap<string, ShapeDefinition> = new Map([
   [ellipseShape.name, ellipseShape],
   [polygon.name, polygon],
 ]);
+
+/** 解析 shape provider 注册表：内置项先注册，自定义项后注册并复用统一冲突诊断 */
+export const resolveShapeRegistry = (shapes?: ReadonlyArray<ShapeDefinition>): ReadonlyMap<string, ShapeDefinition> =>
+  createProviderRegistry({
+    capability: 'shape',
+    builtins: BUILTIN_SHAPES,
+    custom: shapes,
+    keyOf: definition => definition.name,
+  });

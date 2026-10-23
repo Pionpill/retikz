@@ -2,17 +2,17 @@
 
 ## 分层目录与文件
 
-| Owner / 职责                   | 目录与文件名                                                           | 说明                                                                       |
-| ------------------------------ | ---------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Source IR 契约                 | `schemas/<domain>.ts` 或 `schemas/<group>/<domain>.ts`                 | 只放 schema 与其 `IRXxx` 类型                                              |
-| 外部 unknown 输入              | `parse/<domain>/parse.ts` 或小型 `parse/<domain>.ts`                   | `parseXxx()` 将 unknown、JSON、字符串或序列化 DSL 校验为 IR                |
-| Vanilla API authoring          | `normalize/<domain>/normalize.ts`、owner-local `types.ts`              | `normalizeXxx()` 无 compile context 地把 `InputXxx` 转为 IR                |
-| 纵向领域内部解析               | `resolve/<domain>/resolve.ts`、`types.ts`                              | `resolveXxx()` 消费 Source IR 与 context，产出 Canonical 或领域 Resolution |
-| 扩展 contract                  | `contract/<capability>/types.ts`、`define.ts`、`index.ts`              | 只放 contract 类型与 `defineXxx()`                                         |
-| 内置 provider 与 registry      | `providers/<capability>/definitions.ts`、`registry.ts`、`<builtin>.ts` | `registry.ts` 合并并诊断；`definitions.ts` 组装内置项                      |
-| Compile / pipeline domain 阶段 | `compile/<domain>/lower.ts`、`layout.ts`、`emit.ts`                    | context 生命周期与调度留在 orchestration；领域解析回 `resolve/`            |
-| Shared vocabulary              | `shared/<topic>/{constants,types,utils,index}.ts`                      | 小型 topic 使用单文件                                                      |
-| React DSL                      | `kernel/{components,protocol,adapter,runtime}`、`sugar/`、`render/`    | 公共组件文件使用 PascalCase，其余文件遵循通用形式                          |
+| Owner / 职责                   | 目录与文件名                                                        | 说明                                                                       |
+| ------------------------------ | ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Source IR 契约                 | `schemas/<domain>.ts` 或 `schemas/<group>/<domain>.ts`              | 只放 schema 与其 `IRXxx` 类型                                              |
+| 外部 unknown 输入              | `parse/<domain>/parse.ts` 或小型 `parse/<domain>.ts`                | `parseXxx()` 将 unknown、JSON、字符串或序列化 DSL 校验为 IR                |
+| Vanilla API authoring          | `normalize/<domain>/normalize.ts`、owner-local `types.ts`           | `normalizeXxx()` 无 compile context 地把 `InputXxx` 转为 IR                |
+| 纵向领域内部解析               | `resolve/<domain>/resolve.ts`、`types.ts`                           | `resolveXxx()` 消费 Source IR 与 context，产出 Canonical 或领域 Resolution |
+| 扩展 contract                  | `contract/<capability>/types.ts`、`define.ts`、`index.ts`           | 只放 contract 类型与 `defineXxx()`                                         |
+| 内置 provider 与 registry      | `providers/<capability>.ts` 或 `providers/<capability>/`            | 简单能力单文件组织内置项与注册；独立实现较多时按语义分目录                 |
+| Compile / pipeline domain 阶段 | `compile/<domain>/lower.ts`、`layout.ts`、`emit.ts`                 | context 生命周期与调度留在 orchestration；领域解析回 `resolve/`            |
+| Shared vocabulary              | `shared/<topic>/{constants,types,utils,index}.ts`                   | 小型 topic 使用单文件                                                      |
+| React DSL                      | `kernel/{components,protocol,adapter,runtime}`、`sugar/`、`render/` | 公共组件文件使用 PascalCase，其余文件遵循通用形式                          |
 
 不得为了套用本表而新建占位目录、泛化 `helpers.ts` 或纯转发 shim。
 

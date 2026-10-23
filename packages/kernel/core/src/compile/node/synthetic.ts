@@ -3,9 +3,8 @@ import type { CenteredBox } from '@retikz/math';
 import { circle } from '@retikz/math';
 
 import type { BoundaryDefinition, ShapeDefinition, Transform } from '../../contract';
-import { BUILTIN_BOUNDARIES } from '../../providers/boundary';
-import type { ProviderRegistry } from '../../providers/registry/index';
-import { BUILTIN_SHAPES } from '../../providers/shape';
+import { BUILTIN_BOUNDARIES, BUILTIN_SHAPES } from '../../providers';
+import type { ProviderRegistry } from '../../providers';
 import { resolveNode } from '../../resolve';
 import type { PositionTargetResolveContext } from '../../resolve/position';
 import type { IRNode, IRPosition } from '../../schemas';

@@ -1,7 +1,7 @@
 import type { JsonObject } from '@retikz/foundation';
 
 import type { ClipDefinition, ClipShape } from '../../contract';
-import { providerDefinitionOf } from '../../providers/registry';
+import { providerDefinitionOf } from '../../providers';
 import type { IRClip } from '../../schemas';
 import { createCompositeContractError } from '../diagnostics';
 import { parseProviderPayload } from '../provider-payload';

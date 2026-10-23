@@ -4,9 +4,10 @@ import type {
   PatternDefinition,
   PatternEmitContext,
   ResolvedPatternLineStyle,
-} from '../../contract';
-import { definePattern } from '../../contract';
-import { BuiltinPatternShape } from '../../schemas';
+} from '../contract';
+import { definePattern } from '../contract';
+import { BuiltinPatternShape } from '../schemas';
+import { createProviderRegistry } from './registry';
 
 const DEFAULT_PATTERN_SIZE = 8;
 
@@ -123,3 +124,14 @@ export const BUILTIN_PATTERNS: ReadonlyMap<string, PatternDefinition> = new Map(
   [gridPattern.name, gridPattern],
   [dotsPattern.name, dotsPattern],
 ]);
+
+/** 解析 pattern provider 注册表：内置项先注册，自定义项后注册并复用统一冲突诊断 */
+export const resolvePatternRegistry = (
+  patterns?: ReadonlyArray<PatternDefinition>,
+): ReadonlyMap<string, PatternDefinition> =>
+  createProviderRegistry({
+    capability: 'pattern shape',
+    builtins: BUILTIN_PATTERNS,
+    custom: patterns,
+    keyOf: definition => definition.name,
+  });

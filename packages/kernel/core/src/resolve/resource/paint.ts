@@ -1,6 +1,6 @@
 import type { PatternDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { providerDefinitionOf } from '../../providers/registry';
+import { providerDefinitionOf } from '../../providers';
 import type { IRPaint } from '../../schemas';
 import { resolvePatternStyle } from './pattern';
 import type { PaintResolution, PatternResolution } from './types';

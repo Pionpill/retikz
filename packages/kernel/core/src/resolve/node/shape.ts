@@ -2,8 +2,8 @@ import type { JsonObject, JsonValue } from '@retikz/foundation';
 
 import type { ShapeDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { ProviderRegistry } from '../../providers/registry';
-import { providerDefinitionOf } from '../../providers/registry';
+import type { ProviderRegistry } from '../../providers';
+import { providerDefinitionOf } from '../../providers';
 import type { IRNode, IRShapeRef } from '../../schemas';
 import { BuiltinShape } from '../../schemas';
 import { parseProviderPayload } from '../provider-payload';

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { BUILTIN_CLIPS } from '../../src/providers/clip';
-import { providerDefinitionOf, createProviderRegistry } from '../../src/providers/registry/index';
+import { providerDefinitionOf, createProviderRegistry } from '../../src/providers/registry';
 
 type MockProvider = {
   name: string;

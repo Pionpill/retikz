@@ -2,11 +2,12 @@ import type { CenteredBox } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { enum as zodEnum, number, strictObject } from 'zod';
 
-import type { BoundaryDefinition, PathCommand, ShapeDefinition } from '../../contract';
-import { defineBoundary } from '../../contract';
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { BoundaryFit, BuiltinShape } from '../../schemas';
-import { ellipseShape, rectangle } from '../shape';
+import type { BoundaryDefinition, PathCommand, ShapeDefinition } from '../contract';
+import { defineBoundary } from '../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
+import { BoundaryFit, BuiltinShape } from '../schemas';
+import { createProviderRegistry } from './registry';
+import { ellipseShape, rectangle } from './shape';
 
 const builtinBoundaryParamsSchema = strictObject({
   fit: zodEnum(BoundaryFit)
@@ -121,3 +122,14 @@ export const BUILTIN_BOUNDARIES: ReadonlyMap<string, BoundaryDefinition> = new M
   [rectangleBoundary.name, rectangleBoundary],
   [ellipseBoundary.name, ellipseBoundary],
 ]);
+
+/** 解析 boundary provider 注册表：内置项先注册，自定义项后注册并复用统一冲突诊断 */
+export const resolveBoundaryRegistry = (
+  boundaries?: ReadonlyArray<BoundaryDefinition>,
+): ReadonlyMap<string, BoundaryDefinition> =>
+  createProviderRegistry({
+    capability: 'boundary',
+    builtins: BUILTIN_BOUNDARIES,
+    custom: boundaries,
+    keyOf: definition => definition.name,
+  });

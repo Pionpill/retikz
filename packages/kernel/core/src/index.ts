@@ -2,7 +2,29 @@ export * from './compile';
 export * from './contract';
 export * from './error';
 export * from './parse';
-export * from './providers';
+export {
+  BUILTIN_ARROWS,
+  BUILTIN_BOUNDARIES,
+  BUILTIN_CLIPS,
+  BUILTIN_PATH_GENERATORS,
+  BUILTIN_PATH_KINDS,
+  BUILTIN_PATTERNS,
+  BUILTIN_SHAPES,
+  ellipseShape,
+  polygon,
+  rectangle,
+  resolveArrowRegistry,
+  resolveBoundaryRegistry,
+  resolveClipRegistry,
+  resolveCompositeRegistry,
+  resolveCoreThemeColors,
+  resolveDefaultCoreThemeColors,
+  resolvePathGeneratorRegistry,
+  resolvePathKindRegistry,
+  resolvePatternRegistry,
+  resolveShapeRegistry,
+  resolveThemeRegistry,
+} from './providers';
 export {
   DEFAULT_RESOLVED_THEME,
   mergeArrowDefaults,

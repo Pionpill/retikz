@@ -1,6 +1,6 @@
 import { assertNonEmptyString } from '@retikz/foundation';
 
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 
 /**
  * 创建能力注册表所需的内置项、自定义项与键提取规则

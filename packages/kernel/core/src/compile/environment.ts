@@ -10,17 +10,24 @@ import type {
   ThemeDefinition,
 } from '../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
-import { resolveArrowRegistry } from '../providers/arrow';
-import { resolveBoundaryRegistry } from '../providers/boundary';
-import { resolveClipRegistry } from '../providers/clip';
-import { resolveCompositeRegistry } from '../providers/composite';
-import { resolvePathGeneratorRegistry } from '../providers/path-generator';
-import { resolvePathKindRegistry } from '../providers/path-kind';
-import { resolvePatternRegistry } from '../providers/pattern';
-import { resolveShapeRegistry } from '../providers/shape';
-import { resolveThemeRegistry } from '../providers/theme';
-import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE, DEFAULT_LAYOUT_PADDING, DEFAULT_NODE_DISTANCE } from './constants';
-import { DEFAULT_MAX_COMPOSITE_DEPTH } from './constants';
+import {
+  resolveArrowRegistry,
+  resolveBoundaryRegistry,
+  resolveClipRegistry,
+  resolveCompositeRegistry,
+  resolvePathGeneratorRegistry,
+  resolvePathKindRegistry,
+  resolvePatternRegistry,
+  resolveShapeRegistry,
+  resolveThemeRegistry,
+} from '../providers';
+import {
+  DEFAULT_FONT_SIZE,
+  DEFAULT_LABEL_DISTANCE,
+  DEFAULT_LAYOUT_PADDING,
+  DEFAULT_NODE_DISTANCE,
+  DEFAULT_MAX_COMPOSITE_DEPTH,
+} from './constants';
 import { DEFAULT_MAX_CLIP_DEPTH } from './resource';
 import { createRound, DEFAULT_PRECISION } from './scene';
 import { fallbackMeasurer } from './text';

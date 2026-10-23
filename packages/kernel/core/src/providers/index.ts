@@ -5,5 +5,6 @@ export * from './composite';
 export * from './path-generator';
 export * from './path-kind';
 export * from './pattern';
+export * from './registry';
 export * from './shape';
 export * from './theme';

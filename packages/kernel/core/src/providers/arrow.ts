@@ -1,6 +1,7 @@
-import type { ArrowDefinition, ArrowEmitContext, ScenePrimitive } from '../../contract';
-import { defineArrow } from '../../contract';
-import { BuiltinArrowShape } from '../../schemas';
+import type { ArrowDefinition, ArrowEmitContext, ScenePrimitive } from '../contract';
+import { defineArrow } from '../contract';
+import { BuiltinArrowShape } from '../schemas';
+import { createProviderRegistry } from './registry';
 
 /** 实心闭合三角 / V 形的 path 工厂：填充走 context.fill（无 override = contextStroke） */
 const filledPath = (context: ArrowEmitContext, points: ReadonlyArray<[number, number]>): ScenePrimitive => ({
@@ -135,3 +136,12 @@ export const BUILTIN_ARROWS: ReadonlyMap<string, ArrowDefinition> = new Map([
   [circleArrow.name, circleArrow],
   [openCircleArrow.name, openCircleArrow],
 ]);
+
+/** 解析 arrow provider 注册表：内置项先注册，自定义项后注册并复用统一冲突诊断 */
+export const resolveArrowRegistry = (arrows?: ReadonlyArray<ArrowDefinition>): ReadonlyMap<string, ArrowDefinition> =>
+  createProviderRegistry({
+    capability: 'arrow',
+    builtins: BUILTIN_ARROWS,
+    custom: arrows,
+    keyOf: definition => definition.name,
+  });

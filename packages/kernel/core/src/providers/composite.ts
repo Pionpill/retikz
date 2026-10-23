@@ -1,5 +1,5 @@
-import type { AnyCompositeDefinition } from '../../contract';
-import { createProviderRegistry } from '../registry/index';
+import type { AnyCompositeDefinition } from '../contract';
+import { createProviderRegistry } from './registry';
 
 const keyOfComposite = (definition: AnyCompositeDefinition): string => `${definition.namespace}.${definition.type}`;
 

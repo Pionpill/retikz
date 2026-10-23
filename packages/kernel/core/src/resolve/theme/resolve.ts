@@ -1,5 +1,5 @@
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { resolveCoreThemeColors, resolveDefaultCoreThemeColors, resolveThemeRegistry } from '../../providers/theme';
+import { resolveCoreThemeColors, resolveDefaultCoreThemeColors, resolveThemeRegistry } from '../../providers';
 import type { IRTheme } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import { ThemeMode } from '../../shared';

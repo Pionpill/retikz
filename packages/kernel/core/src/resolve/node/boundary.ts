@@ -2,7 +2,7 @@ import type { JsonObject } from '@retikz/foundation';
 
 import type { BoundaryDefinition, ShapeDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { ProviderRegistry } from '../../providers/registry';
+import type { ProviderRegistry } from '../../providers';
 import type { IRBoundary } from '../../schemas';
 import { parseProviderPayload } from '../provider-payload';
 import type { BoundaryReferenceResolution } from './types';

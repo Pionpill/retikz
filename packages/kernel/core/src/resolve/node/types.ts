@@ -2,7 +2,7 @@ import type { JsonObject } from '@retikz/foundation';
 import type { BoundsInsets, CenteredBox } from '@retikz/math';
 
 import type { BoundaryDefinition, PatternDefinition, ShapeDefinition } from '../../contract';
-import type { ProviderRegistry } from '../../providers/registry';
+import type { ProviderRegistry } from '../../providers';
 import type {
   IRBoundary,
   IRNode,
