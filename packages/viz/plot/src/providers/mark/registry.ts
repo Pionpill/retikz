@@ -6,7 +6,6 @@ import type {
   CoordinateFrame,
   MarkChannels,
   MarkInstanceInput,
-  MarkDefinition,
   MarkLoweringContext,
 } from '../../contract';
 import { extractMarkType } from '../../contract';
@@ -15,18 +14,16 @@ import type { IRPlotMarkOperation } from '../../schemas';
 import { BuiltinPlotMark } from '../../schemas';
 import { intervalMarkDefinition, pathMarkDefinition, pointMarkDefinition, relationMarkDefinition } from './features';
 
-const asAnyMarkDefinition = <T extends IRPlotMarkOperation>(def: MarkDefinition<T>): AnyMarkDefinition => def;
-
 /**
  * mark lowering 行为注册表：每个内置 mark 对应一个注册项（lowerMark 按 type 查表分发）
  * @description 对齐仓库已有 composite / coordinate 工厂注册范式；新增内置 mark = 加一条注册项，不改 lowerMark。
  *   Plot mark schema 仍是静态单一真源，不由此表组装
  */
 export const MARK_REGISTRY: Record<BuiltinPlotMark, AnyMarkDefinition> = {
-  [BuiltinPlotMark.Point]: asAnyMarkDefinition(pointMarkDefinition),
-  [BuiltinPlotMark.Path]: asAnyMarkDefinition(pathMarkDefinition),
-  [BuiltinPlotMark.Interval]: asAnyMarkDefinition(intervalMarkDefinition),
-  [BuiltinPlotMark.Relation]: asAnyMarkDefinition(relationMarkDefinition),
+  [BuiltinPlotMark.Point]: pointMarkDefinition,
+  [BuiltinPlotMark.Path]: pathMarkDefinition,
+  [BuiltinPlotMark.Interval]: intervalMarkDefinition,
+  [BuiltinPlotMark.Relation]: relationMarkDefinition,
 };
 
 /** 内置 mark definition registry（按 type 索引）；内置与自定义 mark 共享同一分派流程 */

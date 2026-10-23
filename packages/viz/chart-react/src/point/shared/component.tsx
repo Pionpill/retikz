@@ -164,8 +164,8 @@ const rootDeclarationConflictError = (slot: string, declaration: string): Retikz
     `chart react: ${slot} cannot be provided by both the concrete Chart root prop and ${declaration}`,
   );
 
-const presentationOf = <TSource extends IRChartSource>(
-  rootPresentation: TSource['presentation'] | undefined,
+const presentationOf = (
+  rootPresentation: IRChartSource['presentation'] | undefined,
   declarationPresentation: TypedPointChartDeclarations<PointFactoryInput>['presentation'],
 ): Partial<Record<'title' | 'subtitle' | 'note' | 'source', unknown>> => {
   const presentation: Partial<Record<'title' | 'subtitle' | 'note' | 'source', unknown>> = {};
@@ -307,7 +307,7 @@ export const createTypedChartInput = <
   const effectivePlotExtension = hasRootPlotExtension ? rootPlotExtension : declaredPlotExtension;
   const effectiveLowerOptions = lowerOptionsWithPlotRuntimeOf(lowerOptions, plotAuthoring?.runtime ?? {});
 
-  const presentation = presentationOf<TSource>(rootPresentation, declarations.presentation);
+  const presentation = presentationOf(rootPresentation, declarations.presentation);
   const effectiveLayout = hasRootLayout ? rootLayout : declarations.layout?.props.layout;
   const effectiveCoordinate = hasRootCoordinate ? rootCoordinate : declarations.coordinate?.props.coordinate;
 

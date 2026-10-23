@@ -1,5 +1,4 @@
 import type {
-  EntityKindDefinition,
   EntityPredicateDefinition,
   EntityRoleDefinition,
   GraphDefinitionOptions,
@@ -18,39 +17,23 @@ import {
 } from '../relation';
 import { resolveGraphThemeRegistry } from '../theme';
 
-type GraphDefinitionCollectionKey = keyof GraphDefinitionOptions;
-
-const definitionKeyOf = {
-  entityRoles: (definition: EntityRoleDefinition) => definition.role,
-  entityKinds: (definition: EntityKindDefinition) => JSON.stringify([definition.role, definition.kind]),
-  entityPredicates: (definition: EntityPredicateDefinition) => definition.name,
-  relationRoles: (definition: RelationRoleDefinition) => definition.role,
-  relationKinds: (definition: RelationKindDefinition) => definition.kind,
-  relationPredicates: (definition: RelationPredicateDefinition) => definition.name,
-  graphThemeDefinitions: (definition: GraphThemeDefinition) => definition.name,
-} as const;
-
-const definitionLabelOf = {
-  entityRoles: 'Entity role',
-  entityKinds: 'Entity kind',
-  entityPredicates: 'Entity predicate',
-  relationRoles: 'Relation role',
-  relationKinds: 'Relation kind',
-  relationPredicates: 'Relation predicate',
-  graphThemeDefinitions: 'Graph theme',
-} as const;
-
 /** 按公开 key 与对象 identity 合并一次 provider assembly 的 definition 集合 */
-const mergeDefinitionCollection = <TKey extends GraphDefinitionCollectionKey>(
-  optionSets: ReadonlyArray<GraphDefinitionOptions>,
-  collectionKey: TKey,
-): NonNullable<GraphDefinitionOptions[TKey]> => {
-  type Definition = NonNullable<GraphDefinitionOptions[TKey]>[number];
-  const definitions = new Map<string, Definition>();
-  const keyOf = definitionKeyOf[collectionKey] as (definition: Definition) => string;
+const mergeDefinitionCollection = <TDefinition>(
+  collections: ReadonlyArray<ReadonlyArray<TDefinition> | undefined>,
+  options: {
+    /** 当前合并的能力字段，用于冲突诊断 */
+    capability: keyof GraphDefinitionOptions;
+    /** 错误消息中的能力名称 */
+    label: string;
+    /** 定义的稳定注册键 */
+    keyOf: (definition: TDefinition) => string;
+  },
+): ReadonlyArray<TDefinition> => {
+  const definitions = new Map<string, TDefinition>();
+  const { capability, label, keyOf } = options;
 
-  for (const options of optionSets) {
-    for (const definition of options[collectionKey] ?? []) {
+  for (const collection of collections) {
+    for (const definition of collection ?? []) {
       const key = keyOf(definition);
       const existing = definitions.get(key);
       if (existing === undefined) {
@@ -61,14 +44,14 @@ const mergeDefinitionCollection = <TKey extends GraphDefinitionCollectionKey>(
       if (!Object.is(existing, definition)) {
         throw new RetikzGraphError({
           code: RetikzGraphErrorCode.DefinitionConflict,
-          message: `${definitionLabelOf[collectionKey]} '${key}' received a different definition object in one provider assembly.`,
-          details: { capability: collectionKey, key },
+          message: `${label} '${key}' received a different definition object in one provider assembly.`,
+          details: { capability, key },
         });
       }
     }
   }
 
-  return Object.freeze([...definitions.values()]) as NonNullable<GraphDefinitionOptions[TKey]>;
+  return Object.freeze([...definitions.values()]);
 };
 
 /** 一次 Graph definition 装配共享的已解析 registries */
@@ -93,13 +76,62 @@ export type ResolvedGraphDefinitionOptions = Readonly<{
 export const mergeGraphDefinitionOptions = (
   optionSets: ReadonlyArray<GraphDefinitionOptions>,
 ): GraphDefinitionOptions => ({
-  entityRoles: mergeDefinitionCollection(optionSets, 'entityRoles'),
-  entityKinds: mergeDefinitionCollection(optionSets, 'entityKinds'),
-  entityPredicates: mergeDefinitionCollection(optionSets, 'entityPredicates'),
-  relationRoles: mergeDefinitionCollection(optionSets, 'relationRoles'),
-  relationKinds: mergeDefinitionCollection(optionSets, 'relationKinds'),
-  relationPredicates: mergeDefinitionCollection(optionSets, 'relationPredicates'),
-  graphThemeDefinitions: mergeDefinitionCollection(optionSets, 'graphThemeDefinitions'),
+  entityRoles: mergeDefinitionCollection(
+    optionSets.map(options => options.entityRoles),
+    {
+      capability: 'entityRoles',
+      label: 'Entity role',
+      keyOf: definition => definition.role,
+    },
+  ),
+  entityKinds: mergeDefinitionCollection(
+    optionSets.map(options => options.entityKinds),
+    {
+      capability: 'entityKinds',
+      label: 'Entity kind',
+      keyOf: definition => JSON.stringify([definition.role, definition.kind]),
+    },
+  ),
+  entityPredicates: mergeDefinitionCollection(
+    optionSets.map(options => options.entityPredicates),
+    {
+      capability: 'entityPredicates',
+      label: 'Entity predicate',
+      keyOf: definition => definition.name,
+    },
+  ),
+  relationRoles: mergeDefinitionCollection(
+    optionSets.map(options => options.relationRoles),
+    {
+      capability: 'relationRoles',
+      label: 'Relation role',
+      keyOf: definition => definition.role,
+    },
+  ),
+  relationKinds: mergeDefinitionCollection(
+    optionSets.map(options => options.relationKinds),
+    {
+      capability: 'relationKinds',
+      label: 'Relation kind',
+      keyOf: definition => definition.kind,
+    },
+  ),
+  relationPredicates: mergeDefinitionCollection(
+    optionSets.map(options => options.relationPredicates),
+    {
+      capability: 'relationPredicates',
+      label: 'Relation predicate',
+      keyOf: definition => definition.name,
+    },
+  ),
+  graphThemeDefinitions: mergeDefinitionCollection(
+    optionSets.map(options => options.graphThemeDefinitions),
+    {
+      capability: 'graphThemeDefinitions',
+      label: 'Graph theme',
+      keyOf: definition => definition.name,
+    },
+  ),
 });
 
 /** 一次性校验并解析 Graph definition options */
