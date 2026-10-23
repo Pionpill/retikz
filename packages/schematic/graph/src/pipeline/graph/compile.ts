@@ -9,5 +9,5 @@ import { graphScopeProps } from './lower';
 export const createCompileGraph =
   (options: ResolvedGraphDefinitionOptions) =>
   (source: IRGraph, context: CompositeCompileContext): CompositeCompileResult => ({
-    children: [context.scope(graphScopeProps(source), resolveGraph(source, options, context.theme))],
+    children: [context.createScope(graphScopeProps(source), resolveGraph(source, options, context.theme))],
   });

@@ -40,6 +40,23 @@ const pathWithLabel = (pathProps: Record<string, unknown>, label: Record<string,
 // ===========================================================================
 
 describe('Happy: StepLabel 样式字段落地', () => {
+  it('单行文本对象的字体、颜色与透明度覆盖参与测量和输出', () => {
+    const scene = compileToScene(
+      pathWithLabel(
+        { style: { opacity: 0.5 } },
+        {
+          font: { size: 12 },
+          opacity: 0.5,
+          text: [{ text: 'A', font: { size: 24, weight: 'bold' }, fill: 'red', opacity: 0.4 }],
+        },
+      ),
+      { measureText: (_text, font) => ({ width: font.size * 2, height: font.size }) },
+    ).scene;
+    const label = flatten(scene.primitives).find(primitive => primitive.type === 'text');
+    expect(label).toMatchObject({ fontSize: 24, fontWeight: 'bold', fill: 'red', measuredWidth: 48 });
+    expect(label?.opacity).toBeCloseTo(0.1);
+  });
+
   it('step_label_text_color_applies：textColor=red → TextPrim.fill=red', () => {
     expect(labelOf(pathWithLabel({}, { textColor: 'red' }))?.fill).toBe('red');
   });

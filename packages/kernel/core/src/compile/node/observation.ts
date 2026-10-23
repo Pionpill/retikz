@@ -216,20 +216,20 @@ export const projectNodeOwnerOutput = (
   const shapeParams = layout.shape.params;
   const observationRect = observationRectOf(layout, round);
   const shapeOutline =
-    layout.shape.definition.outline === undefined
+    layout.shape.definition.computeOutline === undefined
       ? null
       : readClosedOutline(
           `Shape '${layout.shape.name}'`,
-          layout.shape.definition.outline,
+          layout.shape.definition.computeOutline,
           observationRect,
           shapeParams,
         ).map(command => roundPathCommand(command, round));
   const shapeKeyPoints =
-    layout.shape.definition.keyPoints === undefined
+    layout.shape.definition.computeKeyPoints === undefined
       ? null
       : readKeyPoints(
           `Shape '${layout.shape.name}'`,
-          layout.shape.definition.keyPoints,
+          layout.shape.definition.computeKeyPoints,
           observationRect,
           shapeParams,
         ).map(point => ({
@@ -248,11 +248,11 @@ export const projectNodeOwnerOutput = (
       state?.connectionEnvelopeWarnings === undefined ? undefined : new Set(state.connectionEnvelopeWarnings),
   });
   const boundaryOutline =
-    boundaryGeometry.def.outline === undefined
+    boundaryGeometry.def.computeOutline === undefined
       ? null
       : readClosedOutline(
           `Boundary '${boundaryGeometry.def.name}'`,
-          boundaryGeometry.def.outline,
+          boundaryGeometry.def.computeOutline,
           boundaryGeometry.rect,
           boundaryGeometry.params,
         ).map(command => roundPathCommand(command, round));

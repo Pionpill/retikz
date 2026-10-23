@@ -150,7 +150,7 @@ const polygonVertices = (bounds: CenteredBox, params: PolygonParams): Array<Posi
 export const polygon = defineShape<PolygonParams>({
   name: BuiltinShape.Polygon,
   paramsSchema: polygonParamsSchema,
-  circumscribe: (hw, hh, params) => {
+  computeCircumscribedHalfAxes: (hw, hh, params) => {
     if (isAspectRatioDiamond(params)) return diamondHalfAxesFor(hw, hh, params.aspectRatio);
 
     const radius = circumradiusFor(hw, hh, params);
@@ -166,7 +166,7 @@ export const polygon = defineShape<PolygonParams>({
 
     return { halfWidth, halfHeight };
   },
-  boundaryPoint: (bounds: CenteredBox, toward: Position, params): Position => {
+  computeBoundaryPoint: (bounds: CenteredBox, toward: Position, params): Position => {
     // 带 rotate 的 rect 下取世界系顶点环；rayOrigin = 几何中心（= rect 中心 = node position）
     const verts = polygonVertices(bounds, params);
     const segments: Array<ContourSegment> = verticesToSegments(verts);
@@ -175,19 +175,19 @@ export const polygon = defineShape<PolygonParams>({
 
     return hit ?? center;
   },
-  anchor: (bounds: CenteredBox, name: ShapeAnchorName): Position | undefined => {
+  resolveAnchor: (bounds: CenteredBox, name: ShapeAnchorName): Position | undefined => {
     if (name === CenterAnchor.Center) return undefined;
     return isDirectionalAnchor(name) ? rect.anchor(bounds, name) : undefined;
   },
-  connectionEnvelope: (bounds, kind, params) => {
+  computeConnectionEnvelope: (bounds, kind, params) => {
     return pointsConnectionEnvelope(polygonLocalVerticesForBounds(bounds, params), kind);
   },
-  outline: (bounds, params) => {
+  computeOutline: (bounds, params) => {
     const vertices = polygonVertices(bounds, params);
     const segments: Array<ContourSegment> = verticesToSegments(vertices);
     return contourToPathCommands(contourCommands(segments, params.cornerRadius), value => value);
   },
-  keyPoints: (bounds, params) =>
+  computeKeyPoints: (bounds, params) =>
     polygonVertices(bounds, params).map((position, index) => ({ name: `vertex-${index}`, position })),
   *emit(bounds: CenteredBox, style, round, params): Iterable<ScenePrimitive> {
     // emit 收轴对齐 rect（rotate=0）；顶点世界坐标 → 折线段 → rounded-contour 命令 → path

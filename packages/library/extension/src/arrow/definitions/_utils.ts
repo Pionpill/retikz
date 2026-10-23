@@ -22,6 +22,11 @@ export const filledPath = (context: ArrowEmitContext, points: ReadonlyArray<[num
     { kind: 'close' },
   ],
   fill: context.fill,
+  stroke: context.stroke,
+  dashPattern: context.dashPattern,
+  dashOffset: context.dashOffset,
+  strokeLinecap: context.lineCap,
+  strokeLinejoin: context.lineJoin,
 });
 
 /** 创建空心闭合标记路径 */
@@ -39,7 +44,10 @@ export const hollowPath = (
   fill: 'none',
   stroke: context.stroke,
   strokeWidth: context.lineWidth,
-  ...(options.strokeLinejoin === undefined ? {} : { strokeLinejoin: options.strokeLinejoin }),
+  strokeLinejoin: context.lineJoin ?? options.strokeLinejoin,
+  dashPattern: context.dashPattern,
+  dashOffset: context.dashOffset,
+  strokeLinecap: context.lineCap,
 });
 
 /** 创建由一条或多条开放线段组成的描边标记路径 */
@@ -55,4 +63,8 @@ export const openStrokePath = (
   fill: 'none',
   stroke: context.stroke,
   strokeWidth: context.lineWidth,
+  dashPattern: context.dashPattern,
+  dashOffset: context.dashOffset,
+  strokeLinecap: context.lineCap,
+  strokeLinejoin: context.lineJoin,
 });

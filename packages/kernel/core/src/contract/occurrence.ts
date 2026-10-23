@@ -42,7 +42,7 @@ export const isCompileOccurrenceEqual = (left: CompileOccurrenceLocator, right: 
       segment.kind === right.expansionPath[index]?.kind && segment.index === right.expansionPath[index]?.index,
   );
 
-const sourceIndexesOf = (sourcePath: string): Array<number> =>
+const collectSourceIndexes = (sourcePath: string): Array<number> =>
   Array.from(sourcePath.matchAll(/children\[(\d+)\]/g), match => Number(match[1]));
 
 const compareIndexes = (left: ReadonlyArray<number>, right: ReadonlyArray<number>): number => {
@@ -58,7 +58,10 @@ const compareIndexes = (left: ReadonlyArray<number>, right: ReadonlyArray<number
 
 /** 按 canonical 逻辑树 preorder 比较两个 compile occurrence */
 export const compareCompileOccurrences = (left: CompileOccurrenceLocator, right: CompileOccurrenceLocator): number => {
-  const sourceDifference = compareIndexes(sourceIndexesOf(left.sourcePath), sourceIndexesOf(right.sourcePath));
+  const sourceDifference = compareIndexes(
+    collectSourceIndexes(left.sourcePath),
+    collectSourceIndexes(right.sourcePath),
+  );
   if (sourceDifference !== 0) return sourceDifference;
 
   return compareIndexes(

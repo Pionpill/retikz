@@ -30,7 +30,7 @@ export type CompositeRuntimeInputContext = Readonly<{
   /** 当前 Source 位置的同步输入；未绑定时为 undefined */
   runtimeInput: unknown;
   /** 选择当前 composite 原始 Source 的作者子项并转交全部子树绑定 */
-  sourceChild: (path: CompositeInputPath) => CompositeBoundChild;
+  selectSourceChild: (path: CompositeInputPath) => CompositeBoundChild;
   /** 为生成的子项显式提供相对 child 的运行时绑定 */
   bindChild: (child: IRChild, bindings: ReadonlyArray<CompositeInputBinding>) => CompositeBoundChild;
 }>;
@@ -48,7 +48,7 @@ export type CompositeRuntimeInputScope = Readonly<{
 const snapshots = new WeakMap<CompositeInputBindings, CompositeRuntimeInputScope>();
 
 /** 精确读取 Source 路径，不使用继承属性或模糊字段匹配 */
-const sourceAtPath = (source: unknown, path: CompositeInputPath): unknown => {
+const readSourceAtPath = (source: unknown, path: CompositeInputPath): unknown => {
   let current = source;
 
   for (const segment of path) {
@@ -89,7 +89,7 @@ export const captureCompositeInputScope = (
       );
 
     paths.add(key);
-    const target = sourceAtPath(snapshot, binding.path);
+    const target = readSourceAtPath(snapshot, binding.path);
     if (target === null || typeof target !== 'object' || !('namespace' in target) || !('type' in target))
       throw new RetikzCoreError(
         RetikzCoreErrorCode.CompositeContractViolation,
@@ -124,7 +124,7 @@ export const selectCompositeInputScope = (
   scope: CompositeRuntimeInputScope,
   path: CompositeInputPath,
 ): CompositeRuntimeInputScope => ({
-  source: sourceAtPath(scope.source, path),
+  source: readSourceAtPath(scope.source, path),
   sourcePath: [...(scope.sourcePath ?? []), ...path],
   bindings: scope.bindings
     .filter(binding => path.every((segment, index) => binding.path[index] === segment))
@@ -144,6 +144,6 @@ export const createCompositeInputBindings = (
 };
 
 /** 校验运行时绑定属于指定 Source，不执行编译或派发诊断 */
-export const validateCompositeInputBindings = (source: IRScene, inputs: CompositeInputBindings | undefined): void => {
+export const assertCompositeInputBindings = (source: IRScene, inputs: CompositeInputBindings | undefined): void => {
   if (inputs !== undefined) resolveCompositeInputScope(source, inputs);
 };

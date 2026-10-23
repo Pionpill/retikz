@@ -53,8 +53,8 @@ describe('rectangle cornerRadius — boundary aware', () => {
   it('rect_boundary_aware：朝角方向 r>0 落 fillet 弧（≠ 直角顶点），r=0 = 直角顶点', () => {
     const rect = aaRect(120, 120); // 正方形：朝 [1,1] 方向命中右下角
     const toward: Position = [1000, 1000];
-    const sharp = rectangle.boundaryPoint(rect, toward, {});
-    const rounded = rectangle.boundaryPoint(rect, toward, { cornerRadius: 24 });
+    const sharp = rectangle.computeBoundaryPoint(rect, toward, {});
+    const rounded = rectangle.computeBoundaryPoint(rect, toward, { cornerRadius: 24 });
 
     // 直角顶点离中心最远（半对角线）；倒角后该方向边界更靠近中心
     const distSharp = Math.hypot(sharp[0], sharp[1]);
@@ -70,8 +70,8 @@ describe('rectangle cornerRadius — boundary aware', () => {
   it('rect_boundary_aware_edge_unchanged：朝边中点方向（非角）r>0 与 r=0 相同（边未被倒角影响）', () => {
     const rect = aaRect(120, 80);
     const toward: Position = [1000, 0]; // 朝 +x 边中点
-    const sharp = rectangle.boundaryPoint(rect, toward, {});
-    const rounded = rectangle.boundaryPoint(rect, toward, { cornerRadius: 10 });
+    const sharp = rectangle.computeBoundaryPoint(rect, toward, {});
+    const rounded = rectangle.computeBoundaryPoint(rect, toward, { cornerRadius: 10 });
 
     expect(rounded[0]).toBeCloseTo(sharp[0], 6);
     expect(rounded[1]).toBeCloseTo(sharp[1], 6);
@@ -97,7 +97,7 @@ describe('rectangle cornerRadius — r=0 等价于现状矩形边求交', () => 
 
     for (const toward of towards) {
       const expected = sharpRectangleBoundary(rect, toward);
-      const got = rectangle.boundaryPoint(rect, toward, {});
+      const got = rectangle.computeBoundaryPoint(rect, toward, {});
 
       expect(got[0]).toBeCloseTo(expected[0], 9);
       expect(got[1]).toBeCloseTo(expected[1], 9);
@@ -108,8 +108,8 @@ describe('rectangle cornerRadius — r=0 等价于现状矩形边求交', () => 
     const rect = aaRect(120, 80);
 
     for (const toward of towards) {
-      const omitted = rectangle.boundaryPoint(rect, toward, {});
-      const zero = rectangle.boundaryPoint(rect, toward, { cornerRadius: 0 });
+      const omitted = rectangle.computeBoundaryPoint(rect, toward, {});
+      const zero = rectangle.computeBoundaryPoint(rect, toward, { cornerRadius: 0 });
 
       expect(zero[0]).toBeCloseTo(omitted[0], 9);
       expect(zero[1]).toBeCloseTo(omitted[1], 9);
@@ -121,7 +121,7 @@ describe('rectangle cornerRadius — r=0 等价于现状矩形边求交', () => 
 
     for (const toward of towards) {
       const expected = sharpRectangleBoundary(rect, toward);
-      const got = rectangle.boundaryPoint(rect, toward, {});
+      const got = rectangle.computeBoundaryPoint(rect, toward, {});
 
       expect(got[0]).toBeCloseTo(expected[0], 9);
       expect(got[1]).toBeCloseTo(expected[1], 9);

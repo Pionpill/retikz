@@ -77,7 +77,7 @@ All three Q nodes keep the same visible circle and connection direction. The mid
 
 As a result, `margin` pushes connection endpoints and standard border anchors outward and expands the node's layout footprint, but never redraws the visual shape. Shape-specific anchors and edge points stay on the original contour. If a shape does not implement a standard directional anchor, core falls back to its bounding rectangle.
 
-A regular connection surface first derives its rectangle from `fit`, then applies `gap`; automatic endpoints, numeric-angle anchors, and standard named anchors share that resolved result. Core ellipse and polygon, along with injected star and contour shapes, provide shape-aware `tight` envelopes. Rectangle gives the same result for `tight` and `bounds`, while injected Sector uses bounds in this release. If a custom shape omits `connectionEnvelope`, `tight` safely falls back to bounds and emits one structured warning.
+A regular connection surface first derives its rectangle from `fit`, then applies `gap`; automatic endpoints, numeric-angle anchors, and standard named anchors share that resolved result. Core ellipse and polygon, along with injected star and contour shapes, provide shape-aware `tight` envelopes. Rectangle gives the same result for `tight` and `bounds`, while injected Sector uses bounds in this release. If a custom shape omits `computeConnectionEnvelope`, `tight` safely falls back to bounds and emits one structured warning.
 
 <SourceLinks
   sources={[
@@ -462,7 +462,7 @@ The execution order is:
 1. Resolve `node.shape`; normalize `circle` / `diamond` presets to real provider names and params
 2. Look up the definition in one shape registry; built-ins and custom definitions do not fork into separate consumption paths
 3. Validate through the JSON-object guard and the definition's `paramsSchema`
-4. Call `circumscribe` for Node layout, geometry hooks for connections and anchors, `connectionEnvelope` for regular tight-fit surfaces, and `emit` for drawing
+4. Call `computeCircumscribedHalfAxes` for Node layout, geometry hooks for connections and anchors, `computeConnectionEnvelope` for regular tight-fit surfaces, and `emit` for drawing
 
 <SourceLinks
   sources={[

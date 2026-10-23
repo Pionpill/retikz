@@ -184,9 +184,9 @@ describe('CompileOptions.onWarn', () => {
     const customShape = defineShape({
       name: 'custom-without-envelope',
       paramsSchema: strictObject({}),
-      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
-      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
-      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
+      computeCircumscribedHalfAxes: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedHalfAxes,
+      computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
+      resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
       emit: BUILTIN_SHAPES.get('rectangle')!.emit,
     });
     const ir = scene([

@@ -3,7 +3,7 @@ import { cloneAndFreezeJson } from '../../shared/json';
 import type { SpatialHandleDeclaration } from './handle';
 
 /** 检查 owner 内的身份冲突与几何不变量，并脱离、冻结空间声明 */
-export const validateSpatialHandleDeclarations = (
+export const snapshotSpatialHandleDeclarations = (
   owner: string,
   declarations: ReadonlyArray<SpatialHandleDeclaration>,
 ): ReadonlyArray<SpatialHandleDeclaration> => {

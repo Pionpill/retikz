@@ -23,37 +23,6 @@ export const mergeArrowDefaults = (a: IRArrowDetail, b: IRArrowDetail): IRArrowD
   return out;
 };
 
-/** 清除端点专属颜色，让它跟随 path 箭头主色 */
-const dropArrowEndColor = (end: IRArrowStyle): IRArrowStyle => {
-  const next = { ...end };
-  delete next.color;
-  return next;
-};
-
-/** 解析 path 最终箭头样式，合并 scope 默认值、path 主色和显式 arrow 配置 */
-const resolveArrowDetail = (
-  explicit: IRArrowDetail | undefined,
-  scopeDefaults: EffectiveScopeDefaults,
-  masterColor: string | undefined,
-): IRArrowDetail | undefined => {
-  let acc: IRArrowDetail = { ...scopeDefaults.path?.arrow };
-  let touched = scopeDefaults.path?.arrow !== undefined;
-
-  if (masterColor !== undefined) {
-    acc.color = masterColor;
-    if (acc.start !== undefined) acc.start = dropArrowEndColor(acc.start);
-    if (acc.end !== undefined) acc.end = dropArrowEndColor(acc.end);
-    touched = true;
-  }
-
-  if (explicit) {
-    acc = mergeArrowDefaults(acc, explicit);
-    touched = true;
-  }
-
-  return touched ? acc : undefined;
-};
-
 const arrowMarkFromDetail = (detail: IRArrowStyle | undefined): Omit<IRArrowMark, 'kind'> => {
   if (detail === undefined) return {};
   return mergeProperties([detail], { shouldOverride: value => value !== undefined });
@@ -69,8 +38,8 @@ const resolveArrowMark = (
   mark: IRArrowMark,
   { pos, scopeDefaults, masterColor }: ResolveArrowMarkContext,
 ): IRArrowMark => {
-  const detail = resolveArrowDetail(undefined, scopeDefaults, masterColor);
-  if (detail === undefined) return mark;
+  const detail = scopeDefaults.path?.arrow;
+  if (detail === undefined) return masterColor === undefined ? mark : { ...mark, color: masterColor };
 
   const { start, end, ...top } = detail;
   const side = pos === 0 ? start : pos === 1 ? end : undefined;
@@ -80,6 +49,7 @@ const resolveArrowMark = (
     ...arrowMarkFromDetail(top),
     ...arrowMarkFromDetail(side),
     ...mergeProperties([mark], { shouldOverride: value => value !== undefined }),
+    ...(masterColor === undefined ? {} : { color: masterColor }),
   };
 };
 

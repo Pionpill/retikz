@@ -50,13 +50,13 @@ type DefinitionIndex = Readonly<{
 type CoreDefinitionCollection = ReadonlyArray<AnyCoreProviderDefinition> | undefined;
 
 /** 把完整 key 格式化为面向作者的诊断名称 */
-const keyName = (key: CoreProviderKey): string =>
+const formatProviderKey = (key: CoreProviderKey): string =>
   key.capability === CoreProviderCapability.Composite
     ? `${key.capability}:${key.namespace}.${key.type}`
     : `${key.capability}:${key.name}`;
 
 /** 按能力与完整键读取提供者，避免字符串拼接歧义 */
-const providerAt = (index: ProviderIndex, key: CoreProviderKey): ProviderEntry | undefined => {
+const findProvider = (index: ProviderIndex, key: CoreProviderKey): ProviderEntry | undefined => {
   if (key.capability === CoreProviderCapability.Composite) {
     return index.composites.get(key.namespace)?.get(key.type);
   }
@@ -88,7 +88,10 @@ const setProvider = (index: ProviderIndex, entry: ProviderEntry): void => {
 };
 
 /** 判断两组有序依赖是否逐项使用相同完整 key */
-const sameDependencies = (left: ReadonlyArray<CoreProviderKey>, right: ReadonlyArray<CoreProviderKey>): boolean =>
+const isProviderDependencyListEqual = (
+  left: ReadonlyArray<CoreProviderKey>,
+  right: ReadonlyArray<CoreProviderKey>,
+): boolean =>
   left.length === right.length &&
   left.every((dependency, index) => {
     const candidate = right[index];
@@ -115,7 +118,7 @@ const mergeDatasets = (entry: ProviderEntry, provider: CoreDependencyProvider): 
     if (!Object.is(entry.datasets.get(reference), value)) {
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Contract,
-        `resolveCoreProviderDependencies: provider ${keyName(entry.key)} dataset "${reference}" conflicts by identity`,
+        `resolveCoreProviderDependencies: provider ${formatProviderKey(entry.key)} dataset "${reference}" conflicts by identity`,
       );
     }
   }
@@ -136,7 +139,7 @@ const buildProviderIndex = (
 
     for (const provider of contribution.providers) {
       const dependencies = [...provider.dependencies];
-      const existing = providerAt(index, provider.key);
+      const existing = findProvider(index, provider.key);
       if (existing === undefined) {
         const entry: ProviderEntry = {
           key: provider.key,
@@ -152,14 +155,14 @@ const buildProviderIndex = (
       if (existing.makeDefinition !== provider.makeDefinition) {
         throw new RetikzCoreError(
           RetikzCoreErrorCode.Contract,
-          `resolveCoreProviderDependencies: provider ${keyName(provider.key)} has conflicting maker references`,
+          `resolveCoreProviderDependencies: provider ${formatProviderKey(provider.key)} has conflicting maker references`,
         );
       }
 
-      if (!sameDependencies(existing.dependencies, dependencies)) {
+      if (!isProviderDependencyListEqual(existing.dependencies, dependencies)) {
         throw new RetikzCoreError(
           RetikzCoreErrorCode.Contract,
-          `resolveCoreProviderDependencies: provider ${keyName(provider.key)} has conflicting ordered dependencies`,
+          `resolveCoreProviderDependencies: provider ${formatProviderKey(provider.key)} has conflicting ordered dependencies`,
         );
       }
 
@@ -186,15 +189,18 @@ const buildProviderIndex = (
 };
 
 /** 预检根节点的可达闭包并生成稳定的依赖优先顺序 */
-const reachableProviders = (index: ProviderIndex, roots: ReadonlyArray<CoreProviderKey>): Array<ProviderEntry> => {
+const collectReachableProviders = (
+  index: ProviderIndex,
+  roots: ReadonlyArray<CoreProviderKey>,
+): Array<ProviderEntry> => {
   const ordered: Array<ProviderEntry> = [];
   const state = new Map<ProviderEntry, 'visiting' | 'visited'>();
   const stack: Array<ProviderEntry> = [];
 
   const visit = (key: CoreProviderKey, parent?: ProviderEntry): void => {
-    const entry = providerAt(index, key);
+    const entry = findProvider(index, key);
     if (entry === undefined) {
-      const chain = [...stack.map(candidate => keyName(candidate.key)), keyName(key)].join(' -> ');
+      const chain = [...stack.map(candidate => formatProviderKey(candidate.key)), formatProviderKey(key)].join(' -> ');
       const relation = parent === undefined ? 'root' : 'dependency';
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Contract,
@@ -206,9 +212,10 @@ const reachableProviders = (index: ProviderIndex, roots: ReadonlyArray<CoreProvi
     if (currentState === 'visited') return;
     if (currentState === 'visiting') {
       const cycleStart = stack.indexOf(entry);
-      const cycle = [...stack.slice(cycleStart).map(candidate => keyName(candidate.key)), keyName(entry.key)].join(
-        ' -> ',
-      );
+      const cycle = [
+        ...stack.slice(cycleStart).map(candidate => formatProviderKey(candidate.key)),
+        formatProviderKey(entry.key),
+      ].join(' -> ');
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Contract,
         `resolveCoreProviderDependencies: provider cycle ${cycle}`,
@@ -230,23 +237,24 @@ const reachableProviders = (index: ProviderIndex, roots: ReadonlyArray<CoreProvi
 };
 
 /** 从路径种类 schema 读取提供者键 */
-const pathKindName = (definition: AnyPathKindDefinition): string => definition.name;
+const pathKindNameOf = (definition: AnyPathKindDefinition): string => definition.name;
 
 type DefinitionIdentity =
   | Readonly<{ capability: NamedProviderCapability; name: string }>
   | Readonly<{ capability: typeof CoreProviderCapability.Composite; namespace: string; type: string }>;
 
 /** 在接受创建函数输出前推断被擦除定义所属的能力 */
-const definitionCapabilityOf = (definition: AnyCoreProviderDefinition): CoreProviderCapability => {
+const resolveDefinitionCapability = (definition: AnyCoreProviderDefinition): CoreProviderCapability => {
   if ('namespace' in definition && 'type' in definition) return CoreProviderCapability.Composite;
-  if ('circumscribe' in definition && 'boundaryPoint' in definition) return CoreProviderCapability.Shape;
+  if ('computeCircumscribedHalfAxes' in definition && 'computeBoundaryPoint' in definition)
+    return CoreProviderCapability.Shape;
   if ('lineContactX' in definition && 'emit' in definition) return CoreProviderCapability.Arrow;
   if ('name' in definition && 'emit' in definition) return CoreProviderCapability.Pattern;
   if ('paramsSchema' in definition && 'generate' in definition) return CoreProviderCapability.PathGenerator;
   if ('kind' in definition && 'schema' in definition && 'resolve' in definition && 'lower' in definition)
     return CoreProviderCapability.Clip;
 
-  if ('paramsSchema' in definition && 'boundaryPoint' in definition) return CoreProviderCapability.Boundary;
+  if ('paramsSchema' in definition && 'computeBoundaryPoint' in definition) return CoreProviderCapability.Boundary;
   if ('compile' in definition && 'schema' in definition) return CoreProviderCapability.BuiltinPathKind;
 
   throw new RetikzCoreError(
@@ -256,14 +264,14 @@ const definitionCapabilityOf = (definition: AnyCoreProviderDefinition): CoreProv
 };
 
 /** 从定义读取指定能力的注册表标识 */
-const definitionIdentity = (
+const resolveDefinitionIdentity = (
   capability: CoreProviderCapability,
   definition: AnyCoreProviderDefinition,
 ): DefinitionIdentity => {
-  if (definitionCapabilityOf(definition) !== capability) {
+  if (resolveDefinitionCapability(definition) !== capability) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Contract,
-      `resolveCoreProviderDependencies: expected ${capability} definition but received ${definitionCapabilityOf(definition)}`,
+      `resolveCoreProviderDependencies: expected ${capability} definition but received ${resolveDefinitionCapability(definition)}`,
     );
   }
 
@@ -281,7 +289,7 @@ const definitionIdentity = (
     case CoreProviderCapability.PathGenerator:
       return { capability, name: (definition as PathGeneratorDefinition).name };
     case CoreProviderCapability.BuiltinPathKind:
-      return { capability, name: pathKindName(definition as AnyPathKindDefinition) };
+      return { capability, name: pathKindNameOf(definition as AnyPathKindDefinition) };
     case CoreProviderCapability.Composite: {
       const composite = definition as AnyCompositeDefinition;
       return { capability, namespace: composite.namespace, type: composite.type };
@@ -290,8 +298,8 @@ const definitionIdentity = (
 };
 
 /** 判断定义标识是否与提供者键相同 */
-const definitionMatchesKey = (key: CoreProviderKey, definition: AnyCoreProviderDefinition): boolean => {
-  const identity = definitionIdentity(key.capability, definition);
+const doesDefinitionMatchKey = (key: CoreProviderKey, definition: AnyCoreProviderDefinition): boolean => {
+  const identity = resolveDefinitionIdentity(key.capability, definition);
   return key.capability === CoreProviderCapability.Composite
     ? identity.capability === CoreProviderCapability.Composite &&
         identity.namespace === key.namespace &&
@@ -339,7 +347,7 @@ const appendDefinition = (
   capability: CoreProviderCapability,
   definition: AnyCoreProviderDefinition,
 ): void => {
-  const identity = definitionIdentity(capability, definition);
+  const identity = resolveDefinitionIdentity(capability, definition);
   const existing =
     identity.capability === CoreProviderCapability.Composite
       ? definitionIndex.composites.get(identity.namespace)?.get(identity.type)
@@ -349,7 +357,7 @@ const appendDefinition = (
 
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Contract,
-      `resolveCoreProviderDependencies: definition conflict for ${keyName(
+      `resolveCoreProviderDependencies: definition conflict for ${formatProviderKey(
         capability === CoreProviderCapability.Composite
           ? {
               capability,
@@ -425,7 +433,7 @@ export const resolveCoreProviderDependencies = (
   options: ResolveCoreProviderDependenciesOptions,
 ): CoreProviderDefinitions => {
   const { index, roots, definitions: explicit } = buildProviderIndex(options);
-  const orderedProviders = reachableProviders(index, roots);
+  const orderedProviders = collectReachableProviders(index, roots);
   const definitions: MutableCoreProviderDefinitions = {
     shapes: [],
     boundaries: [],
@@ -444,11 +452,11 @@ export const resolveCoreProviderDependencies = (
   for (const provider of orderedProviders) {
     const datasets = Object.freeze(Object.fromEntries(provider.datasets));
     const definition = provider.makeDefinition(datasets);
-    if (!definitionMatchesKey(provider.key, definition)) {
-      const returnedIdentity = definitionIdentity(provider.key.capability, definition);
+    if (!doesDefinitionMatchKey(provider.key, definition)) {
+      const returnedIdentity = resolveDefinitionIdentity(provider.key.capability, definition);
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Contract,
-        `resolveCoreProviderDependencies: provider ${keyName(provider.key)} returned definition ${
+        `resolveCoreProviderDependencies: provider ${formatProviderKey(provider.key)} returned definition ${
           returnedIdentity.capability === CoreProviderCapability.Composite
             ? `${returnedIdentity.namespace}.${returnedIdentity.type}`
             : returnedIdentity.name

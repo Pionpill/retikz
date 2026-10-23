@@ -66,7 +66,7 @@ export const nodeSchemas = {
     descriptions: {
       text: '标签文字或混排行',
       textColor: '标签文字颜色，缺省沿继承链求值',
-      opacity: '标签自身不透明度，与节点不透明度相乘',
+      opacity: '标签不透明度覆盖；省略时继承节点整体不透明度',
       font: '标签字体覆盖，缺省字段继承节点字体',
       align: '标签视觉框沿附着点切线的对齐方式，缺省 middle',
       position: '命名方向、center、角度或边界比例位置，缺省 top',

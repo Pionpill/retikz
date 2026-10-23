@@ -10,16 +10,16 @@ type Position = IRPosition;
 const diode: ShapeDefinition = defineShape({
   name: 'diode',
   paramsSchema: z.strictObject({}),
-  circumscribe: (innerHalfWidth, innerHalfHeight) => ({
+  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 42),
     halfHeight: Math.max(innerHalfHeight, 22),
   }),
-  boundaryPoint: (rect, toward) => {
+  computeBoundaryPoint: (rect, toward) => {
     const localToward = worldToLocal(rect, toward);
     const terminal: Position = localToward[0] < 0 ? [-rect.width / 2, 0] : [rect.width / 2, 0];
     return localToWorld(rect, terminal);
   },
-  anchor: (rect, name) => {
+  resolveAnchor: (rect, name) => {
     if (name === 'left' || name === 'input') return localToWorld(rect, [-rect.width / 2, 0]);
     if (name === 'right' || name === 'output') return localToWorld(rect, [rect.width / 2, 0]);
     return undefined;

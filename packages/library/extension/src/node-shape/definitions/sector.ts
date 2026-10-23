@@ -7,7 +7,7 @@ import {
   contourToPathPrimitive,
   defineShape,
   filletContour,
-  pathPrimitiveStyle,
+  buildPathPrimitiveStyle,
 } from '@retikz/core';
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import {
@@ -212,12 +212,12 @@ const openSectorBoundaryPoint = (rect: CenteredBox, toward: Position, params: Se
 export const SectorShapeDefinition = defineShape<SectorShapeParams>({
   name: BuiltinExtensionShapeName.Sector,
   paramsSchema: SectorShapeParamsSchema,
-  circumscribe: (_halfWidth, _halfHeight, params) => computeSectorGeometry(params).aabbHalfAxes,
-  circumscribeOffset: params => {
+  computeCircumscribedHalfAxes: (_halfWidth, _halfHeight, params) => computeSectorGeometry(params).aabbHalfAxes,
+  computeCircumscribedOffset: params => {
     const { apexOffset } = computeSectorGeometry(params);
     return [-apexOffset[0], -apexOffset[1]];
   },
-  boundaryPoint: (rect, toward, params) => {
+  computeBoundaryPoint: (rect, toward, params) => {
     if (params.innerRadius === params.outerRadius) return openSectorBoundaryPoint(rect, toward, params);
 
     const { geometry, segments } = sectorSegments(rect, params);
@@ -226,7 +226,7 @@ export const SectorShapeDefinition = defineShape<SectorShapeParams>({
 
     return boundaryFromContour(segments, params.cornerRadius, originWorld, toward, fillets) ?? originWorld;
   },
-  anchor: (rect, name: ShapeAnchorName, params) => {
+  resolveAnchor: (rect, name: ShapeAnchorName, params) => {
     const geometry = computeSectorGeometry(params);
     const { innerRadius, outerRadius } = params;
     const { start, end, mid } = geometry.range;
@@ -249,7 +249,7 @@ export const SectorShapeDefinition = defineShape<SectorShapeParams>({
         return undefined;
     }
   },
-  connectionEnvelope: boundsConnectionEnvelope,
+  computeConnectionEnvelope: boundsConnectionEnvelope,
   *emit(rect, style, round, params): Iterable<ScenePrimitive> {
     if (params.innerRadius === params.outerRadius) {
       const geometry = computeSectorGeometry(params);
@@ -269,7 +269,7 @@ export const SectorShapeDefinition = defineShape<SectorShapeParams>({
             endAngle: end + rotationDegrees,
           },
         ],
-        ...pathPrimitiveStyle(style, { fill: 'transparent' }),
+        ...buildPathPrimitiveStyle(style, { fill: 'transparent' }),
       };
 
       return;

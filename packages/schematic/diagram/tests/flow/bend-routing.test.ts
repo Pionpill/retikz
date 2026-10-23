@@ -210,7 +210,7 @@ describe('Flow bend routing', () => {
 
     expect(() =>
       executeFlowLayout({ ...LayeredFlowLayoutDefinition, layout: () => JSON.parse(outputJson) }, routingInput()),
-    ).toThrow('closed relation output');
+    ).toThrow('expected a resolved endpoint target');
   });
 
   it('uses reserved labels as a secondary score but never trades a clear node route for a clear label', () => {

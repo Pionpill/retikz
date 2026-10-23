@@ -125,6 +125,8 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 一个面板集中控制 `arrow` 方向、六种 Core 基础箭头与两种 Extension 可选箭头、颜色、透明度和尺寸。开启“分别配置起末”后，`start` / `end` 会逐字段覆盖顶层形状与颜色；关闭时两端共用顶层配置。面板已显式注入它使用的 Extension 定义。省略 `arrowDetail` 的默认值是继承路径颜色的 `stealth`，长度和宽度都是 8。
 
+端点箭头和中段 mark 都应用 Path 整体透明度与 mark 自身透明度的乘积；自定义图元已有的透明度再与该乘积相乘，显式 `0` 保持完全透明。
+
 <ComponentPreview
   files={['arrow-appearance', 'arrow-appearance.preview.tsx']}
   size="lg"
@@ -143,7 +145,7 @@ Core 默认提供六种基础箭头，其中包括空心三角、空心 Stealth 
 补充说明：
 
 - 多节点路径（如 a → b → c）按段独立 clip，但箭头**只**贴在整体起点 / 终点——中间节点不会出现额外箭头
-- **合并语义**：`start` / `end` 子对象的字段优先；子对象未填的字段回退到顶层默认；顶层未填的字段回退到内置默认。例：`arrowDetail={{ shape: 'stealth', start: { color: 'red' } }}` → 起末都用 `stealth`，起端用红色，末端继承路径描边色
+- **合并语义**：先合并公共配置、端点配置和 mark 实例，再由 Path 的有效 `color` 覆盖 mark 的 `color`。具体 `stroke` / `fill` 优先于宏颜色。没有 Path 主色时保留箭头主色；两者都缺失时跟随宿主描边。例如 Path 为 `color=blue`、`stroke=red` 时，mark 的 `color=green` 仍得到蓝色；显式 `fill=green` 则保留绿色。
 - **空心形状会静默忽略 `fill`**：`shape ∈ { open / openStealth / openDiamond / openCircle }` 时，`fill` 字段被静默丢弃——空心形状由 `color`（描边色） + `lineWidth`（描边粗细）共同决定视觉，写 `fill='red'` 不会渲染红色填充
 
 `scale` 乘到 `length` / `width` 之后，例如 `length=10, scale=1.5` 的实际长度是 15。

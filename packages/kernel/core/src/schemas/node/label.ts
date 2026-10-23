@@ -56,7 +56,7 @@ export const NodeLabelPinSchema = strictObject({
 export const NodeLabelConfigSchema = object({
   ...createLabelVisualStyleShape({
     textColor: 'Label text color; falls back to currentColor.',
-    opacity: 'Label-only opacity, multiplied with node opacity when both are set.',
+    opacity: 'Label opacity override; omitted values inherit the node overall opacity.',
     font: 'Label font overrides. Missing fields inherit from the parent node font.',
   }),
   align: BoundaryLabelSchema.shape.align

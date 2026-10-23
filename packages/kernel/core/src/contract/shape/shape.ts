@@ -119,7 +119,7 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
   /**
    * 根据内容半轴和 params 计算完整 shape 的外接 AABB 半轴
    */
-  circumscribe: (
+  computeCircumscribedHalfAxes: (
     innerHalfWidth: number,
     innerHalfHeight: number,
     params: TParams,
@@ -128,36 +128,36 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
    * 外接 AABB 中心相对 node `position` 的未旋转局部偏移
    * @default [0, 0]
    */
-  circumscribeOffset?: (params: TParams) => Position;
+  computeCircumscribedOffset?: (params: TParams) => Position;
   /**
    * 返回从 rect 中心指向 `toward` 的射线与 shape 边界的交点
    * @description `rect` 可包含旋转；实现需要按需转换坐标
    */
-  boundaryPoint: (rect: CenteredBox, toward: Position, params: TParams) => Position;
+  computeBoundaryPoint: (rect: CenteredBox, toward: Position, params: TParams) => Position;
   /**
    * 解析命名 anchor 的世界坐标；不支持时返回 `undefined`
    */
-  anchor: (rect: CenteredBox, name: ShapeAnchorName, params: TParams) => Position | undefined;
+  resolveAnchor: (rect: CenteredBox, name: ShapeAnchorName, params: TParams) => Position | undefined;
   /**
    * 返回安全包含视觉几何轮廓的规则连接面半轴
    * @description 结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩。未提供时 tight boundary 回退到 bounds 并发出 warning
    * @default undefined
    */
-  connectionEnvelope?: (
+  computeConnectionEnvelope?: (
     rect: CenteredBox,
     kind: ConnectionEnvelopeKind,
     params: TParams,
   ) => ConnectionEnvelope | undefined;
   /** 返回与 rect 同坐标系的精确闭合视觉轮廓；空数组表示合法空几何 */
-  outline?: (rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>;
+  computeOutline?: (rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>;
   /** 返回 provider 命名的稳定结构关键点；名称在同一实例内必须唯一 */
-  keyPoints?: (rect: CenteredBox, params: TParams) => ReadonlyArray<GeometryKeyPoint>;
+  computeKeyPoints?: (rect: CenteredBox, params: TParams) => ReadonlyArray<GeometryKeyPoint>;
   /**
    * 解析标准 side 上 `t ∈ [0, 1]` 的比例点
    * @description `rect` 可包含旋转；未实现表示该 shape 不支持 side anchor
    * @default undefined
    */
-  edgePoint?: (rect: CenteredBox, side: Side, t: number, params: TParams) => Position;
+  computeEdgePoint?: (rect: CenteredBox, side: Side, t: number, params: TParams) => Position;
   /**
    * 生成轴对齐 rect 内的视觉 primitive
    */

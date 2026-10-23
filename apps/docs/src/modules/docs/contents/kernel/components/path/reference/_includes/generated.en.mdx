@@ -696,7 +696,7 @@ export type SmoothStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ArrowEmitContext"} path={"packages/kernel/core/src/contract/arrow.ts"} startLine={7}>ArrowEmitContext</ApiSourceLink>
+#### <ApiSourceLink label={"ArrowEmitContext"} path={"packages/kernel/core/src/contract/arrow.ts"} startLine={8}>ArrowEmitContext</ApiSourceLink>
 
 Resolved colors, stroke width, and rounding function used to generate marker geometry
 
@@ -706,12 +706,16 @@ Resolved colors, stroke width, and rounding function used to generate marker geo
 
 <ApiTable>
 
-| Member      | Type                    | Default | Description                                                                                    |
-| ----------- | ----------------------- | ------- | ---------------------------------------------------------------------------------------------- |
-| `fill`      | `PaintValue`            | —       | Fill color, the main color for solid arrows; processed according to `hollow` for hollow arrows |
-| `lineWidth` | `number`                | —       | Stroke width in marker-local user units, used to draw hollow outlines                          |
-| `round`     | `(n: number) => number` | —       | Precision rounding shared with compile and render to keep geometry consistent                  |
-| `stroke`    | `PaintValue`            | —       | Stroke color; without an override, `{ kind: 'contextStroke' }` inherits the path stroke        |
+| Member         | Type                          | Default | Description                                                                                                                              |
+| -------------- | ----------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `dashOffset?`  | `IRArrowStyle['dashOffset']`  | —       | Resolved dash offset                                                                                                                     |
+| `dashPattern?` | `IRArrowStyle['dashPattern']` | —       | Resolved dash pattern; omission preserves the definition default                                                                         |
+| `fill`         | `PaintValue`                  | —       | Fill color, the main color for solid arrows; processed according to `hollow` for hollow arrows                                           |
+| `lineCap?`     | `IRArrowStyle['lineCap']`     | —       | Resolved stroke cap                                                                                                                      |
+| `lineJoin?`    | `IRArrowStyle['lineJoin']`    | —       | Resolved stroke join; omission preserves the definition default                                                                          |
+| `lineWidth`    | `number`                      | —       | Stroke width in marker-local user units, used to draw hollow outlines                                                                    |
+| `round`        | `(n: number) => number`       | —       | Precision rounding shared with compile and render to keep geometry consistent                                                            |
+| `stroke`       | `PaintValue`                  | —       | Effective stroke; filled definitions have no outline by default, while hollow definitions without a master color inherit the host stroke |
 
 </ApiTable>
 
@@ -724,6 +728,10 @@ export type ArrowEmitContext = {
   stroke: PaintValue;
   fill: PaintValue;
   lineWidth: number;
+  dashPattern?: IRArrowStyle['dashPattern'];
+  dashOffset?: IRArrowStyle['dashOffset'];
+  lineCap?: IRArrowStyle['lineCap'];
+  lineJoin?: IRArrowStyle['lineJoin'];
   round: (n: number) => number;
 };
 ```
@@ -803,7 +811,7 @@ export type PathLabelGeometryOptions = Omit<IRPathLabel, 'text' | 'textColor' | 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathGeneratorGenerateContext"} path={"packages/kernel/core/src/contract/path-generator.ts"} startLine={13}>PathGeneratorGenerateContext</ApiSourceLink>
+#### <ApiSourceLink label={"PathGeneratorGenerateContext"} path={"packages/kernel/core/src/contract/path-generator.ts"} startLine={11}>PathGeneratorGenerateContext</ApiSourceLink>
 
 All coordinates are local to the current Path; the owning GroupPrim applies the Scope transform to the returned commands
 
@@ -841,7 +849,7 @@ export type PathGeneratorGenerateContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={106}>PathKindBoundaryLabelInput</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={104}>PathKindBoundaryLabelInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -875,7 +883,7 @@ export type PathKindBoundaryLabelInput = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindCompileContext"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={123}>PathKindCompileContext</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindCompileContext"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={121}>PathKindCompileContext</ApiSourceLink>
 
 A custom kind can take over output completely or reuse standard stroke logic through callbacks
 
@@ -929,7 +937,7 @@ export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwner
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindCompileResult"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={15}>PathKindCompileResult</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindCompileResult"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={13}>PathKindCompileResult</ApiSourceLink>
 
 A path-kind definition compiles a high-level path into Scene primitives in the current Path's local coordinates and returns points in that same space for bounds and transform calculations
 
@@ -1148,7 +1156,7 @@ export type InputStep =
 
 ## Extension definitions and registration
 
-#### <ApiSourceLink label={"ArrowDefinition"} path={"packages/kernel/core/src/contract/arrow.ts"} startLine={22}>ArrowDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ArrowDefinition"} path={"packages/kernel/core/src/contract/arrow.ts"} startLine={31}>ArrowDefinition</ApiSourceLink>
 
 Describes marker dimensions, contact points, and geometry generation; the definition itself is not IR
 
@@ -1158,18 +1166,18 @@ Describes marker dimensions, contact points, and geometry generation; the defini
 
 <ApiTable>
 
-| Member           | Type                                                  | Default                      | Description                                                                                                              |
-| ---------------- | ----------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `backX`          | `number`                                              | —                            | Promised back edge of the base marker geometry along its axis; must not lie beyond the line contact point                |
-| `baseSize?`      | `number`                                              | `10`                         | Marker-local base size (viewBox `0 0 baseSize baseSize`, refY = baseSize/2); defaults to 10                              |
-| `defaultLength?` | `number`                                              | `8`                          | Fallback arrow length; defaults to 8                                                                                     |
-| `defaultWidth?`  | `number`                                              | `8`                          | Fallback arrow width; defaults to 8                                                                                      |
-| `emit`           | `(ctx: ArrowEmitContext) => Iterable<ScenePrimitive>` | —                            | Basic Scene primitives in local coordinates; the render container supplies endpoint placement and host context           |
-| `hollow?`        | `boolean`                                             | `false`                      | Hollow flag: when true, stroke defines the outline and lineWidth adjusts the contact point                               |
-| `lineContactX`   | `number`                                              | —                            | Base line contact point, used for path shortening and marker refX                                                        |
-| `name`           | `string`                                              | —                            | Arrow name referenced by IR `marks[].mark.shape`; authoring input uses `arrowDetail.shape`                               |
-| `outerInset?`    | `number`                                              | `hollow ? lineWidth / 2 : 0` | Outer-outline compensation in marker-local coordinates; defaults to lineWidth/2 for hollow arrows and 0 for solid arrows |
-| `tipX?`          | `number`                                              | `baseSize`                   | Tip x coordinate used for shortening; defaults to baseSize                                                               |
+| Member           | Type                                                  | Default                      | Description                                                                                                                                                                                                                                                                                                          |
+| ---------------- | ----------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backX`          | `number`                                              | —                            | Promised back edge of the base marker geometry along its axis; must not lie beyond the line contact point                                                                                                                                                                                                            |
+| `baseSize?`      | `number`                                              | `10`                         | Marker-local base size (viewBox `0 0 baseSize baseSize`, refY = baseSize/2); defaults to 10                                                                                                                                                                                                                          |
+| `defaultLength?` | `number`                                              | `8`                          | Fallback arrow length; defaults to 8                                                                                                                                                                                                                                                                                 |
+| `defaultWidth?`  | `number`                                              | `8`                          | Fallback arrow width; defaults to 8                                                                                                                                                                                                                                                                                  |
+| `emit`           | `(ctx: ArrowEmitContext) => Iterable<ScenePrimitive>` | —                            | Generates basic Scene primitives in arrow-local coordinates from resolved styles<br />Called during compilation; the definition applies context styles to the generated primitives. The surrounding pipeline handles arrow scaling, rotation, and placement, while the rendering backend performs the actual drawing |
+| `hollow?`        | `boolean`                                             | `false`                      | Hollow flag: when true, stroke defines the outline and lineWidth adjusts the contact point                                                                                                                                                                                                                           |
+| `lineContactX`   | `number`                                              | —                            | Base line contact point, used for path shortening and marker refX                                                                                                                                                                                                                                                    |
+| `name`           | `string`                                              | —                            | Arrow name referenced by IR `marks[].mark.shape`; authoring input uses `arrowDetail.shape`                                                                                                                                                                                                                           |
+| `outerInset?`    | `number`                                              | `hollow ? lineWidth / 2 : 0` | Outer-outline compensation in marker-local coordinates; defaults to lineWidth/2 for hollow arrows and 0 for solid arrows                                                                                                                                                                                             |
+| `tipX?`          | `number`                                              | `baseSize`                   | Tip x coordinate used for shortening; defaults to baseSize                                                                                                                                                                                                                                                           |
 
 </ApiTable>
 
@@ -1196,7 +1204,7 @@ export type ArrowDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathGeneratorDefinition"} path={"packages/kernel/core/src/contract/path-generator.ts"} startLine={33}>PathGeneratorDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PathGeneratorDefinition"} path={"packages/kernel/core/src/contract/path-generator.ts"} startLine={31}>PathGeneratorDefinition</ApiSourceLink>
 
 Describes JSON parameters, resolvable target parameters, and command generation; the definition itself is not IR
 
@@ -1232,7 +1240,7 @@ export type PathGeneratorDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindDefinition"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={165}>PathKindDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindDefinition"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={163}>PathKindDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1263,7 +1271,7 @@ export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutp
 
 </DocTabs>
 
-#### <ApiSourceLink label={"definePathKind"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={242}>definePathKind</ApiSourceLink>
+#### <ApiSourceLink label={"definePathKind"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={216}>definePathKind</ApiSourceLink>
 
 <DocTabs defaultValue="without-owner-output">
 
@@ -1273,12 +1281,11 @@ Define a path kind that does not publish owner output
 
 <ApiTable variant="parameters">
 
-| Category        | Name         | Type / signature                   | Description                                                                                        |
-| --------------- | ------------ | ---------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Type parameters | `TPath`      | `extends IRPathBase = IRPathBase`  | Path type parsed by the definition schema; defaults to IRPathBase                                  |
-| Parameters      | `definition` | `PathKindDefinition<TPath, never>` | Definition containing the name, complete path schema, and compile function                         |
-| Returns         | —            | `PathKindDefinition<TPath, never>` | The original validated definition, preserving the path type without copying or modifying the input |
-| Throws          | —            | —                                  | RetikzCoreError when name is empty or whitespace-only, or schema has no parse function             |
+| Category        | Name         | Type / signature                   | Description                                                                                     |
+| --------------- | ------------ | ---------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Type parameters | `TPath`      | `extends IRPathBase = IRPathBase`  | Path type parsed by the definition schema; defaults to IRPathBase                               |
+| Parameters      | `definition` | `PathKindDefinition<TPath, never>` | Definition containing the name, complete path schema, and compile function                      |
+| Returns         | —            | `PathKindDefinition<TPath, never>` | The original definition object, preserving the path type without copying or modifying the input |
 
 </ApiTable>
 
@@ -1290,13 +1297,12 @@ Define a path kind that publishes owner output
 
 <ApiTable variant="parameters">
 
-| Category        | Name           | Type / signature                          | Description                                                                                                |
-| --------------- | -------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Type parameters | `TPath`        | `extends IRPathBase`                      | Path type parsed by the definition schema                                                                  |
-|                 | `TOwnerOutput` | `extends JsonValue`                       | JSON output type published through the compile context                                                     |
-| Parameters      | `definition`   | `PathKindDefinition<TPath, TOwnerOutput>` | A path definition including its ownerOutput publication flag                                               |
-| Returns         | —              | `PathKindDefinition<TPath, TOwnerOutput>` | The original validated definition, preserving path and output types without copying or modifying the input |
-| Throws          | —              | —                                         | RetikzCoreError when name is empty or whitespace-only, or schema has no parse function                     |
+| Category        | Name           | Type / signature                          | Description                                                                                             |
+| --------------- | -------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Type parameters | `TPath`        | `extends IRPathBase`                      | Path type parsed by the definition schema                                                               |
+|                 | `TOwnerOutput` | `extends JsonValue`                       | JSON output type published through the compile context                                                  |
+| Parameters      | `definition`   | `PathKindDefinition<TPath, TOwnerOutput>` | A path definition including its ownerOutput publication flag                                            |
+| Returns         | —              | `PathKindDefinition<TPath, TOwnerOutput>` | The original definition object, preserving path and output types without copying or modifying the input |
 
 </ApiTable>
 
@@ -1313,7 +1319,7 @@ Define a path kind that publishes owner output
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineArrow"} path={"packages/kernel/core/src/contract/arrow.ts"} startLine={69}>defineArrow</ApiSourceLink>
+#### <ApiSourceLink label={"defineArrow"} path={"packages/kernel/core/src/contract/arrow.ts"} startLine={83}>defineArrow</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1342,7 +1348,7 @@ export declare const defineArrow: (def: ArrowDefinition) => ArrowDefinition;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"definePathGenerator"} path={"packages/kernel/core/src/contract/path-generator.ts"} startLine={60}>definePathGenerator</ApiSourceLink>
+#### <ApiSourceLink label={"definePathGenerator"} path={"packages/kernel/core/src/contract/path-generator.ts"} startLine={57}>definePathGenerator</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1350,11 +1356,10 @@ export declare const defineArrow: (def: ArrowDefinition) => ArrowDefinition;
 
 <ApiTable variant="parameters">
 
-| Category   | Name  | Type / signature          | Description                                                                                  |
-| ---------- | ----- | ------------------------- | -------------------------------------------------------------------------------------------- |
-| Parameters | `def` | `PathGeneratorDefinition` | Definition containing the path generator name, parameter schema, and command generator       |
-| Returns    | —     | `PathGeneratorDefinition` | The original definition object after name validation, without copying or modifying the input |
-| Throws     | —     | —                         | RetikzCoreError when name is empty or contains only whitespace                               |
+| Category   | Name  | Type / signature          | Description                                                                            |
+| ---------- | ----- | ------------------------- | -------------------------------------------------------------------------------------- |
+| Parameters | `def` | `PathGeneratorDefinition` | Definition containing the path generator name, parameter schema, and command generator |
+| Returns    | —     | `PathGeneratorDefinition` | The original definition object, without copying or modifying the input                 |
 
 </ApiTable>
 

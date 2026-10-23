@@ -5,7 +5,7 @@ import type { infer as ZodInfer } from 'zod';
 import { strictObject } from 'zod';
 
 import type { ScenePrimitive } from '../../contract';
-import { defineShape, rectOutlinePathCommands, verticesToSegments } from '../../contract';
+import { defineShape, computeRectangleOutlinePathCommands, verticesToSegments } from '../../contract';
 import { BuiltinShape } from '../../schemas';
 import { CenterAnchor, boundaryFromContour, boundsConnectionEnvelope, isDirectionalAnchor, rect } from '../../shared';
 import { rectPrimitiveStyle } from './style';
@@ -39,8 +39,8 @@ const rectVertices = (bounds: CenteredBox): Array<Position> => {
 export const rectangle = defineShape<RectangleParams>({
   name: BuiltinShape.Rectangle,
   paramsSchema: rectangleParamsSchema,
-  circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
-  boundaryPoint: (bounds: CenteredBox, toward: Position, params): Position => {
+  computeCircumscribedHalfAxes: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
+  computeBoundaryPoint: (bounds: CenteredBox, toward: Position, params): Position => {
     const verts = rectVertices(bounds);
     const segments: Array<ContourSegment> = verticesToSegments(verts);
     const center: Position = [bounds.x, bounds.y];
@@ -48,14 +48,14 @@ export const rectangle = defineShape<RectangleParams>({
 
     return hit ?? center;
   },
-  anchor: (r, name) => {
+  resolveAnchor: (r, name) => {
     if (name === CenterAnchor.Center) return undefined;
     return isDirectionalAnchor(name) ? rect.anchor(r, name) : undefined;
   },
-  edgePoint: (r, side, t) => rect.edgePoint(r, side, t),
-  connectionEnvelope: boundsConnectionEnvelope,
-  outline: (bounds, params) => rectOutlinePathCommands(bounds, params.cornerRadius),
-  keyPoints: bounds => {
+  computeEdgePoint: (r, side, t) => rect.edgePoint(r, side, t),
+  computeConnectionEnvelope: boundsConnectionEnvelope,
+  computeOutline: (bounds, params) => computeRectangleOutlinePathCommands(bounds, params.cornerRadius),
+  computeKeyPoints: bounds => {
     const vertices = rectVertices(bounds);
     return [
       { name: 'top-left', position: vertices[0] },

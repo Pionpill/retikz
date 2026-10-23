@@ -35,12 +35,19 @@ const buildEmitContext = (
 ): ArrowEmitContext => {
   const { visual, definition } = resolution;
   const contextStroke: PaintValue = { kind: 'contextStroke' };
-  const stroke: PaintValue = resolvePaint(visual.stroke) ?? visual.color ?? contextStroke;
-  const fill: PaintValue = definition.hollow
-    ? contextStroke
-    : (resolvePaint(visual.fill) ?? visual.color ?? contextStroke);
+  const stroke: PaintValue = resolvePaint(visual.stroke) ?? contextStroke;
+  const fill: PaintValue = definition.hollow ? contextStroke : (resolvePaint(visual.fill) ?? contextStroke);
 
-  return { stroke, fill, lineWidth: visual.lineWidth, round };
+  return {
+    stroke,
+    fill,
+    lineWidth: visual.lineWidth,
+    round,
+    dashPattern: visual.dashPattern,
+    dashOffset: visual.dashOffset,
+    lineCap: visual.lineCap,
+    lineJoin: visual.lineJoin,
+  };
 };
 
 /** 把箭头视觉输入物化为 Scene 端点箭头描述 */
@@ -51,20 +58,7 @@ const emitArrowEnd = (
 ): ResolvedArrowEnd => {
   const { visual, geometry, definition } = resolution;
   const ctx = buildEmitContext(resolution, round, resolvePaint);
-  const applyStyle = (prim: ScenePrimitive): ScenePrimitive => {
-    if (prim.type === 'group') return { ...prim, children: prim.children.map(applyStyle) };
-    if (prim.type === 'text') return prim;
-    return {
-      ...prim,
-      ...(visual.stroke === undefined ? {} : { stroke: ctx.stroke }),
-      ...(visual.fill === undefined || definition.hollow ? {} : { fill: ctx.fill }),
-      ...(visual.dashPattern === undefined ? {} : { dashPattern: visual.dashPattern }),
-      ...(visual.dashOffset === undefined ? {} : { dashOffset: visual.dashOffset }),
-      ...(visual.lineCap === undefined ? {} : { strokeLinecap: visual.lineCap }),
-      ...(visual.lineJoin === undefined ? {} : { strokeLinejoin: visual.lineJoin }),
-    };
-  };
-  const marker = emitArrowMarkerPrimitives(visual.shape, definition, ctx).map(applyStyle);
+  const marker = emitArrowMarkerPrimitives(visual.shape, definition, ctx);
   const out: ResolvedArrowEnd = {
     shape: visual.shape,
     baseSize: geometry.baseSize,

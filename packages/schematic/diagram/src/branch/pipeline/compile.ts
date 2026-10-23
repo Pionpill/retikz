@@ -168,7 +168,7 @@ export const compileBranchDiagram = (
     return {
       allocationBounds: foundation.frame.allocationBounds,
       children: [
-        context.scope(
+        context.createScope(
           scope,
           [context.replay(foundation.frame)],
           artifact.nodes.map(node => ({

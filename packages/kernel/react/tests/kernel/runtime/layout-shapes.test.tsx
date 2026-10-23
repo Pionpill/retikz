@@ -16,18 +16,18 @@ const radialShape = (): ShapeDefinition =>
   defineShape({
     name: 'hexagon',
     paramsSchema: strictObject({}),
-    circumscribe: (hw, hh) => {
+    computeCircumscribedHalfAxes: (hw, hh) => {
       const r = Math.hypot(hw, hh);
       return { halfWidth: r, halfHeight: r };
     },
-    boundaryPoint: (rect, toward) => {
+    computeBoundaryPoint: (rect, toward) => {
       const [lx, ly] = worldToLocal(rect, toward);
       const len = Math.hypot(lx, ly) || 1;
       const r = rect.width / 2;
 
       return localToWorld(rect, [(lx / len) * r, (ly / len) * r]);
     },
-    anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+    resolveAnchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
     *emit(rect, style): Iterable<ScenePrimitive> {
       yield {
         type: 'ellipse',
@@ -46,7 +46,7 @@ const fixedBoundary = (): BoundaryDefinition =>
   defineBoundary({
     name: 'pin',
     paramsSchema: strictObject({}),
-    boundaryPoint: rect => [rect.x + 7, rect.y],
+    computeBoundaryPoint: rect => [rect.x + 7, rect.y],
   });
 
 const customClip = (): ClipDefinition =>

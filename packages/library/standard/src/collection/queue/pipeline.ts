@@ -32,14 +32,15 @@ export const compileQueue = (source: IRQueue, context: CompositeCompileContext):
             { type: 'step', kind: 'line', to: [width, height] },
           ],
     };
-    extra.push(context.scope({}, [path]));
+    extra.push(context.createScope({}, [path]));
   }
   if (cells.length > 0) {
     const [dx, dy] = linearDirectionVector(layout.direction);
     const half = dx === 0 ? height / 2 : width / 2;
     const point = (distance: number): [number, number] => [width / 2 + dx * distance, height / 2 + dy * distance];
-    if (input) extra.push(context.scope({}, [createOperationArrow(input, [point(half + 32), point(half + 8)])]));
-    if (output) extra.push(context.scope({}, [createOperationArrow(output, [point(-half - 8), point(-half - 32)])]));
+    if (input) extra.push(context.createScope({}, [createOperationArrow(input, [point(half + 32), point(half + 8)])]));
+    if (output)
+      extra.push(context.createScope({}, [createOperationArrow(output, [point(-half - 8), point(-half - 32)])]));
   }
   return compileCells(
     cells,

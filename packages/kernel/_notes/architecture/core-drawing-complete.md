@@ -95,6 +95,8 @@ Core shared colors 是跨包 value contract，不是领域 palette。Core Inspec
 
 ### 5.3 是否形成闭环
 
+按[上层属性完整承接原则](../../../../notes/architecture/atomic-contract-design.md#24-上层完整承接适用的底层属性)，逐项核对适用的基础图元属性在 Source、resolve、Definition 上下文、Scene 和 renderer 中的消费位置。未开放字段须有明确的职责边界；类型允许、对象中出现同名字段或某个内置示例可用，不能代替完整消费证据。
+
 ```text
 schema / input 可表达
 contract 可扩展或明确封闭

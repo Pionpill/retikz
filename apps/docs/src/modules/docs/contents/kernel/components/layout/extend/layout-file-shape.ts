@@ -73,16 +73,16 @@ const toPathCommands = (
 export const fileShape: ShapeDefinition = defineShape({
   name: FileShapeName,
   paramsSchema: z.strictObject({}),
-  circumscribe: (halfWidth, halfHeight) => ({
+  computeCircumscribedHalfAxes: (halfWidth, halfHeight) => ({
     halfWidth: Math.max(halfWidth, 42),
     halfHeight: Math.max(halfHeight, 52),
   }),
-  boundaryPoint: (bounds, toward) => {
+  computeBoundaryPoint: (bounds, toward) => {
     const localToward = worldToLocal(bounds, toward);
     const boundary = findFileBoundaryPoint(createFileVertices(bounds), localToward);
     return localToWorld(bounds, boundary);
   },
-  anchor: (bounds, name) => {
+  resolveAnchor: (bounds, name) => {
     if (name === CenterAnchor.Center || !isDirectionalAnchor(name)) return undefined;
 
     const toward = rect.anchor(bounds, name);

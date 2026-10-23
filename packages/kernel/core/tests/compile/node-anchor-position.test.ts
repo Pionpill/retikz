@@ -264,8 +264,8 @@ describe('Node anchor-to-anchor position', () => {
       name: 'wide',
       paramsSchema: strictObject({}),
       resolveRect: context => ({ ...context.visualRect, width: 120, height: 20 }),
-      boundaryPoint: rect => [rect.x, rect.y],
-      anchor: (rect, name) => (name === 'right' ? [rect.x + rect.width / 2, rect.y] : undefined),
+      computeBoundaryPoint: rect => [rect.x, rect.y],
+      resolveAnchor: (rect, name) => (name === 'right' ? [rect.x + rect.width / 2, rect.y] : undefined),
     });
     const layouts = compileLayouts(
       scene([

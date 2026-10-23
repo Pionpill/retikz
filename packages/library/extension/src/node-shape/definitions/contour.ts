@@ -57,7 +57,7 @@ const worldVertices = (rect: CenteredBox, params: ContourShapeParams): Array<Pos
 export const ContourShapeDefinition = defineShape<ContourShapeParams>({
   name: BuiltinExtensionShapeName.Contour,
   paramsSchema: ContourShapeParamsSchema,
-  circumscribe: (_halfWidth, _halfHeight, params) => {
+  computeCircumscribedHalfAxes: (_halfWidth, _halfHeight, params) => {
     const bounds = boundsOf(params.points);
     if (bounds === undefined) {
       throw new RetikzExtensionError({
@@ -69,16 +69,16 @@ export const ContourShapeDefinition = defineShape<ContourShapeParams>({
 
     return halfAxesOfBounds(bounds);
   },
-  circumscribeOffset: () => [0, 0],
-  boundaryPoint: (rect, toward, params) => {
+  computeCircumscribedOffset: () => [0, 0],
+  computeBoundaryPoint: (rect, toward, params) => {
     const center: Position = [rect.x, rect.y];
     return (
       boundaryFromContour(verticesToSegments(worldVertices(rect, params)), params.cornerRadius, center, toward) ??
       center
     );
   },
-  anchor: () => undefined,
-  connectionEnvelope: (_rect, kind, params) => pointsConnectionEnvelope(centeredPoints(params), kind),
+  resolveAnchor: () => undefined,
+  computeConnectionEnvelope: (_rect, kind, params) => pointsConnectionEnvelope(centeredPoints(params), kind),
   *emit(rect, style, round, params): Iterable<ScenePrimitive> {
     const commands = contourToPathCommands(
       contourCommands(verticesToSegments(worldVertices(rect, params)), params.cornerRadius),

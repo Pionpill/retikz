@@ -52,15 +52,15 @@ const fixedBoundary = (name: string, x: number): BoundaryDefinition =>
   defineBoundary({
     name,
     paramsSchema: strictObject({}),
-    boundaryPoint: rect => [rect.x + x, rect.y],
+    computeBoundaryPoint: rect => [rect.x + x, rect.y],
   });
 
 const outlinedBoundary = (): BoundaryDefinition =>
   defineBoundary({
     name: 'outlined',
     paramsSchema: strictObject({}),
-    boundaryPoint: rect => [rect.x + rect.width / 2, rect.y],
-    outline: rect => [
+    computeBoundaryPoint: rect => [rect.x + rect.width / 2, rect.y],
+    computeOutline: rect => [
       { kind: 'move', to: [rect.x - rect.width / 2, rect.y - rect.height / 2] },
       { kind: 'line', to: [rect.x + rect.width / 2, rect.y - rect.height / 2] },
       { kind: 'line', to: [rect.x + rect.width / 2, rect.y + rect.height / 2] },
@@ -86,7 +86,7 @@ describe('Boundary provider contract', () => {
     const parametric = defineBoundary({
       name: 'pin',
       paramsSchema: strictObject({ offset: number().positive() }),
-      boundaryPoint: (rect, _toward, params) => [rect.x + Number(params.offset), rect.y],
+      computeBoundaryPoint: (rect, _toward, params) => [rect.x + Number(params.offset), rect.y],
     });
 
     expect(lineEndpoint({ boundaries: [parametric] }, { type: 'pin', params: { offset: 11 } })).toEqual([11, 0]);
@@ -100,9 +100,9 @@ describe('Boundary provider contract', () => {
     const shapeBoundary = defineShape({
       name: 'shape-surface',
       paramsSchema: strictObject({}),
-      circumscribe: () => ({ halfWidth: 20, halfHeight: 20 }),
-      boundaryPoint: rect => [rect.x + 13, rect.y],
-      anchor: () => undefined,
+      computeCircumscribedHalfAxes: () => ({ halfWidth: 20, halfHeight: 20 }),
+      computeBoundaryPoint: rect => [rect.x + 13, rect.y],
+      resolveAnchor: () => undefined,
       *emit(): Iterable<ScenePrimitive> {},
     });
 
@@ -113,9 +113,9 @@ describe('Boundary provider contract', () => {
     const sameNameShape = defineShape({
       name: 'same',
       paramsSchema: strictObject({}),
-      circumscribe: () => ({ halfWidth: 20, halfHeight: 20 }),
-      boundaryPoint: rect => [rect.x + 17, rect.y],
-      anchor: () => undefined,
+      computeCircumscribedHalfAxes: () => ({ halfWidth: 20, halfHeight: 20 }),
+      computeBoundaryPoint: rect => [rect.x + 17, rect.y],
+      resolveAnchor: () => undefined,
       *emit(): Iterable<ScenePrimitive> {},
     });
 
@@ -131,7 +131,7 @@ describe('Boundary provider contract', () => {
     const parametric = defineBoundary({
       name: 'pin',
       paramsSchema: strictObject({ offset: number().positive() }),
-      boundaryPoint: (rect, _toward, params) => [rect.x + Number(params.offset), rect.y],
+      computeBoundaryPoint: (rect, _toward, params) => [rect.x + Number(params.offset), rect.y],
     });
 
     expect(() => lineEndpoint({ boundaries: [parametric] }, { type: 'pin', params: { offset: -1 } })).toThrow();
@@ -147,7 +147,7 @@ describe('Boundary provider contract', () => {
     const boundary = outlinedBoundary();
     const rect: CenteredBox = { x: 4, y: 5, width: 10, height: 6, rotate: 0 };
 
-    expect(boundary.outline?.(rect, {})).toEqual([
+    expect(boundary.computeOutline?.(rect, {})).toEqual([
       { kind: 'move', to: [-1, 2] },
       { kind: 'line', to: [9, 2] },
       { kind: 'line', to: [9, 8] },
@@ -160,7 +160,7 @@ describe('Boundary provider contract', () => {
     const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
 
     for (const boundary of BUILTIN_BOUNDARIES.values()) {
-      const outline = boundary.outline?.(rect, { fit: 'tight', gap: 0 });
+      const outline = boundary.computeOutline?.(rect, { fit: 'tight', gap: 0 });
 
       expect(outline).toBeDefined();
       expect(outline?.at(-1)).toEqual({ kind: 'close' });

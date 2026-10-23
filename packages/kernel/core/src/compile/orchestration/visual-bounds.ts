@@ -1,7 +1,7 @@
 import { DEG_TO_RAD, boundsOf, boundsToRect } from '@retikz/math';
 import type { BoundsRect } from '@retikz/math';
 
-import { sceneTextBounds } from '../../contract';
+import { computeSceneTextBounds } from '../../contract';
 import type { GroupPrim, PathCommand, PathPrim, ScenePrimitive, SceneResource, Transform } from '../../contract';
 import type { IRPosition, ResolvedDropShadow } from '../../schemas';
 import { CANONICAL_STROKE_MITER_LIMIT } from '../constants';
@@ -289,7 +289,7 @@ const primitiveBounds = (
   if (primitive.type === 'text') {
     if (primitive.opacity === 0) return undefined;
 
-    return sceneTextBounds(primitive);
+    return computeSceneTextBounds(primitive);
   }
 
   if (primitive.type === 'group') {

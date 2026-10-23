@@ -123,7 +123,7 @@ it('matches full layout slots for requested axes under content, fixed, and const
             child: ChildSchema,
           }),
           compile: (_node, context) => {
-            const bound = context.sourceChild(['child']);
+            const bound = context.selectSourceChild(['child']);
             const full = context.layoutChild(bound, proposal);
             if (full.kind === 'failed') return context.raise(full.failure);
             for (const axis of ['x', 'y', 'both'] as const) {

@@ -6,6 +6,7 @@ keywords: Scope、defaults、Node、Path、label、arrow、font、reset
 # ADR-067：宿主持有的完整默认配置
 
 - 状态：Accepted
+- 后续关系：[071](./071-macro-visual-property-resolution.md) 替代本文箭头主色优先级：Path 有效主色同时覆盖 mark 实例主色，具体 paint 仍优先；其余宿主默认值规则保持有效
 - 决策日期：2026-10-23
 - 主责：Core；React / Vanilla 等价暴露，领域包消费 Core 默认配置契约
 - 关联：[v0.5 roadmap](./roadmap.md) · [036](./036-source-ir-semantic-grouping.md) · [037](./037-theme-source-fragments.md) · [066](./066-complete-visual-style.md) · [Core 绘图完备设计](../../../architecture/core-drawing-complete.md)

@@ -77,7 +77,6 @@ const nodeEntries: ReadonlyArray<{ owner: string } & Omit<ApiReferenceEntry, 'so
       'BoundaryDefinition',
       'BoundaryDefinitionInput',
       'BoundaryFitContext',
-      'BoundaryAnchorName',
       'BUILTIN_BOUNDARIES',
     ],
   },
