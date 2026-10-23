@@ -1,4 +1,5 @@
 import {
+  CascadingGraphicStyleSchema,
   OpacitySchema,
   FontSchema,
   NodeDefaultSchema,
@@ -34,11 +35,17 @@ export const TableCellBackgroundDefaultsSchema = strictObject({
   .describe('Sparse background defaults for an existing Table Cell box.');
 
 const TableCellContentStyleDefaultsStyleSchema = strictObject({
-  color: ScopeSchema.shape.defaults.unwrap().shape.style.unwrap().shape.color.nullable().optional(),
-  fill: ScopeSchema.shape.defaults.unwrap().shape.style.unwrap().shape.fill.nullable().optional(),
-  stroke: ScopeSchema.shape.defaults.unwrap().shape.style.unwrap().shape.stroke.nullable().optional(),
-  strokeWidth: ScopeSchema.shape.defaults.unwrap().shape.style.unwrap().shape.strokeWidth.nullable().optional(),
-  opacity: ScopeSchema.shape.defaults.unwrap().shape.style.unwrap().shape.opacity.nullable().optional(),
+  color: CascadingGraphicStyleSchema.shape.color.nullable().optional(),
+  fill: CascadingGraphicStyleSchema.shape.fill.nullable().optional(),
+  stroke: CascadingGraphicStyleSchema.shape.stroke.nullable().optional(),
+  strokeWidth: CascadingGraphicStyleSchema.shape.strokeWidth.nullable().optional(),
+  opacity: CascadingGraphicStyleSchema.shape.opacity.nullable().optional(),
+  dashPattern: CascadingGraphicStyleSchema.shape.dashPattern.nullable().optional(),
+  dashOffset: CascadingGraphicStyleSchema.shape.dashOffset.nullable().optional(),
+  lineCap: CascadingGraphicStyleSchema.shape.lineCap.nullable().optional(),
+  lineJoin: CascadingGraphicStyleSchema.shape.lineJoin.nullable().optional(),
+  shadow: CascadingGraphicStyleSchema.shape.shadow.nullable().optional(),
+  blendMode: CascadingGraphicStyleSchema.shape.blendMode.nullable().optional(),
 })
   .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table Cell content style defaults'))
   .describe('Sparse Core Scope style defaults for Table Cell content.');
