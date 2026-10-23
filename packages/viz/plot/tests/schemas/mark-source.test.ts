@@ -118,7 +118,11 @@ describe('Mark Source field encodings and fixed properties', () => {
   it('uses the relation geometry discriminator independently of mark construction', () => {
     const input = {
       type: 'relation',
-      properties: { source: { id: 'a' }, target: { id: 'b' }, geometry: { kind: 'path' } },
+      properties: {
+        source: { anchorId: { template: 'a' } },
+        target: { anchorId: { template: 'b' } },
+        geometry: { kind: 'path' },
+      },
     };
     expect(MarkSchema.parse(input)).toEqual({
       ...input,
@@ -138,7 +142,13 @@ describe('Mark Source field encodings and fixed properties', () => {
       transform: [],
       contributeToDomain: false,
     },
-    { type: 'relation', kind: 'ribbon', source: { id: 'a' }, target: { id: 'b' }, ribbon: { width: 2 } },
+    {
+      type: 'relation',
+      kind: 'ribbon',
+      source: { anchorId: { template: 'a' } },
+      target: { anchorId: { template: 'b' } },
+      ribbon: { width: 2 },
+    },
   ])('rejects obsolete external mark structures %j', input => {
     expect(MarkSchema.safeParse(input).success).toBe(false);
   });
@@ -204,7 +214,7 @@ describe('Mark Source field encodings and fixed properties', () => {
     expect(
       MarkSchema.safeParse({
         type: 'relation',
-        properties: { source: { id: 'a' }, target: { id: 'b' }, geometry },
+        properties: { source: { anchorId: { template: 'a' } }, target: { anchorId: { template: 'b' } }, geometry },
       }).success,
     ).toBe(false);
   });
@@ -214,8 +224,8 @@ describe('Mark Source field encodings and fixed properties', () => {
       MarkSchema.safeParse({
         type: 'relation',
         properties: {
-          source: { id: 'a' },
-          target: { id: 'b' },
+          source: { anchorId: { template: 'a' } },
+          target: { anchorId: { template: 'b' } },
           geometry: { kind: 'path' },
           endpoints: { source: { size: 3 } },
         },

@@ -41,7 +41,7 @@ RelationMark 是底层关系路径 mark：它不重新发明箭头、标签或�
 
 | 表现形态         | 关键属性                            | 说明                                                                          |
 | ---------------- | ----------------------------------- | ----------------------------------------------------------------------------- |
-| 点到点关系       | `source` / `target`                 | 按 id 或生成规则引用已有节点，再用默认 `move -> line` 路径连接                |
+| 点到点关系       | `source` / `target`                 | 按生成锚点规则引用已有节点，再用默认 `move -> line` 路径连接                  |
 | 带中间点路径     | `path.via` / `path.route[].to`      | 中间投影点会生成 core `Coordinate`，后续也能继续被 id 引用                    |
 | 几何标签         | `label`                             | 降低到 core `Path.label`；path 和 ribbon 共享同一套 host label                |
 | step 标签        | `path.label` / `path.route[].label` | 降低到 core step label；显式 step label 优先于 shorthand                      |
@@ -179,7 +179,7 @@ Source IR 的 `endpoints` 节点可以通过 `autoPadding` 参与边缘留白，
 
 | 属性                  | 类型                                                | 默认值          | 描述                                                                                   |
 | --------------------- | --------------------------------------------------- | --------------- | -------------------------------------------------------------------------------------- |
-| `source` / `target`   | `RelationMarkProps['source']`                       | 必填            | 起点与终点；可直接引用 id、按行生成 anchor id，或从当前行投影坐标                      |
+| `source` / `target`   | `RelationMarkProps['source']`                       | 必填            | 起点与终点；可按行生成 anchor id，或从当前行投影坐标                                   |
 | `autoPadding?`        | `IRPlotPointAutoPadding`                            | `false`         | 端点节点的自动留白策略；仅 Source IR 配置了 endpoints 时参与，详见 PointMark 留白说明  |
 | `kind?`               | <ApiValues name="RelationGeometryKind" />           | `path`          | 每行生成普通 Path 或 ribbon Path                                                       |
 | `label?`              | `RelationMarkProps['label']`                        | —               | 整条关系的 geometry label                                                              |

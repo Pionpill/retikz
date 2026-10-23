@@ -162,8 +162,8 @@ describe('RelationMark and anchorId lowering', () => {
         {
           type: 'relation',
           properties: {
-            source: { id: 'A' },
-            target: { id: 'B' },
+            source: { anchorId: { template: 'A' } },
+            target: { anchorId: { template: 'B' } },
             geometry: { kind: 'path', options: { marks: [{ pos: 1, mark: { kind: 'arrow', length: 8 } }] } },
           },
         },
@@ -175,8 +175,8 @@ describe('RelationMark and anchorId lowering', () => {
         {
           type: 'relation',
           properties: {
-            source: { id: 'A' },
-            target: { id: 'B' },
+            source: { anchorId: { template: 'A' } },
+            target: { anchorId: { template: 'B' } },
             geometry: { kind: 'path', options: { arrow: '->', arrowDetail: { end: { length: 8 } } } },
           },
         },
@@ -198,9 +198,9 @@ describe('RelationMark and anchorId lowering', () => {
         {
           type: 'relation',
           properties: {
-            source: { id: 'A' },
-            target: { id: 'B' },
-            geometry: { kind: 'path', via: [{ id: 'C' }], route: [{ kind: 'line' }] },
+            source: { anchorId: { template: 'A' } },
+            target: { anchorId: { template: 'B' } },
+            geometry: { kind: 'path', via: [{ anchorId: { template: 'C' } }], route: [{ kind: 'line' }] },
           },
         },
       ]),
@@ -303,25 +303,30 @@ describe('RelationMark and anchorId lowering', () => {
     expect(coordinates.map(coordinate => coordinate.id)).toEqual(['way.A', 'way.B']);
   });
 
-  it('lowers direct id source-target refs to core Path node targets', () => {
+  it('lowers fixed generated anchor source-target refs to core Path node targets', () => {
     const root = expandOf(
       baseSpec([
         {
+          type: 'point',
+          encodings: { anchorId: 'id', position: { x: { field: 'x' }, y: { field: 'y' } } },
+          properties: { anchorId: { prefix: 'pt' } },
+        },
+        {
           type: 'relation',
           properties: {
-            source: { id: 'A', anchor: 'right' },
-            target: { id: 'B', anchor: 'left' },
+            source: { anchorId: { template: 'pt.A' }, anchor: 'right' },
+            target: { anchorId: { template: 'pt.B' }, anchor: 'left' },
             geometry: { kind: 'path', options: { marks: [{ pos: 1, mark: { kind: 'arrow', length: 10, width: 7 } }] } },
           },
         },
       ]),
-      { d: [rows[0]] },
+      { d: rows },
     );
-    const [path] = collectPaths(markLayer(root, 0));
+    const [path] = collectPaths(markLayer(root, 1));
 
     expect(path.marks).toEqual([{ pos: 1, mark: { kind: 'arrow', length: 10, width: 7 } }]);
-    expect(path.children[0]).toMatchObject({ kind: 'move', to: { id: 'A', anchor: 'right' } });
-    expect(path.children[1]).toMatchObject({ kind: 'line', to: { id: 'B', anchor: 'left' } });
+    expect(path.children[0]).toMatchObject({ kind: 'move', to: { id: 'pt.A', anchor: 'right' } });
+    expect(path.children[1]).toMatchObject({ kind: 'line', to: { id: 'pt.B', anchor: 'left' } });
   });
 
   it('lowers generated source-target anchors to a core Path with labels and path mark config', () => {
@@ -666,7 +671,7 @@ describe('RelationMark and anchorId lowering', () => {
       {
         type: 'relation',
         encodings: { target: { position: { x: { field: 'targetAngle' }, y: { field: 'targetRadius' } } } },
-        properties: { source: { id: 'A' }, geometry: { kind: 'path', interpolation: 'polar' } },
+        properties: { source: { anchorId: { template: 'A' } }, geometry: { kind: 'path', interpolation: 'polar' } },
       },
     ]);
 
@@ -1050,8 +1055,8 @@ describe('RelationMark and anchorId lowering', () => {
         {
           type: 'relation',
           properties: {
-            source: { id: 'A' },
-            target: { id: 'B' },
+            source: { anchorId: { template: 'A' } },
+            target: { anchorId: { template: 'B' } },
             geometry: { kind: 'path', route: [{ kind: 'line' }], routing: { kind: 'line' } },
           },
         },
@@ -1063,8 +1068,8 @@ describe('RelationMark and anchorId lowering', () => {
         {
           type: 'relation',
           properties: {
-            source: { id: 'A' },
-            target: { id: 'B' },
+            source: { anchorId: { template: 'A' } },
+            target: { anchorId: { template: 'B' } },
             geometry: { kind: 'path', routing: { kind: 'orthogonal' } },
           },
         },

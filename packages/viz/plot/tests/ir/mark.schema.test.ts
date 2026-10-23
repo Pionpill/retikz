@@ -12,6 +12,19 @@ const gradientPaint = {
 };
 
 describe('MarkSchema (contract)', () => {
+  it.each(['source', 'target'])('rejects direct core ids in relation %s targets', role => {
+    const properties = {
+      source: { anchorId: { template: 'pt.A' } },
+      target: { anchorId: { template: 'pt.B' } },
+      geometry: { kind: 'path' },
+    };
+    expect(MarkSchema.safeParse({ type: 'relation', properties }).success).toBe(true);
+    for (const target of [{ id: 'A' }, { id: 'A', anchorId: { template: 'pt.A' } }]) {
+      expect(MarkSchema.safeParse({ type: 'relation', properties: { ...properties, [role]: target } }).success).toBe(
+        false,
+      );
+    }
+  });
   it('点方向契约可 JSON round-trip，非法方向声明被拒绝', () => {
     const mark = {
       type: 'point',
@@ -893,8 +906,8 @@ describe('MarkSchema (contract)', () => {
       properties: {
         autoPadding: false,
         label: { position: 0.5, placement: 'inside' },
-        source: { id: 'A' },
-        target: { id: 'B' },
+        source: { anchorId: { template: 'A' } },
+        target: { anchorId: { template: 'B' } },
         geometry: { kind: 'path' },
       },
     };
@@ -934,8 +947,8 @@ describe('MarkSchema (contract)', () => {
         properties: {
           endpoints,
           autoPadding: false,
-          source: { id: 'A' },
-          target: { id: 'B' },
+          source: { anchorId: { template: 'A' } },
+          target: { anchorId: { template: 'B' } },
           geometry: { kind: 'path' },
         },
       }),
@@ -986,8 +999,8 @@ describe('MarkSchema (contract)', () => {
       type: 'relation',
       properties: {
         autoPadding: false,
-        source: { id: 'A' },
-        target: { id: 'B' },
+        source: { anchorId: { template: 'A' } },
+        target: { anchorId: { template: 'B' } },
         geometry: { kind: 'path', route: [{ kind: 'fold', via: '-|-' }] },
       },
     };
@@ -1001,8 +1014,8 @@ describe('MarkSchema (contract)', () => {
         type: 'relation',
         properties: {
           autoPadding: false,
-          source: { id: 'A' },
-          target: { id: 'B' },
+          source: { anchorId: { template: 'A' } },
+          target: { anchorId: { template: 'B' } },
           geometry: { kind: 'path', routing: { kind: 'orthogonal', via: '-|-' } },
         },
       }),
@@ -1081,8 +1094,8 @@ describe('Polar interpolation mark contract', () => {
         type: 'relation',
         properties: {
           autoPadding: false,
-          source: { id: 'A' },
-          target: { id: 'B' },
+          source: { anchorId: { template: 'A' } },
+          target: { anchorId: { template: 'B' } },
           geometry: { kind: 'path', interpolation: 'spline' },
         },
       }),

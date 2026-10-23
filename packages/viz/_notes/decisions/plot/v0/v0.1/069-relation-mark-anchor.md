@@ -26,7 +26,7 @@ ADR-059/060 早期草稿曾规划 `LinkMark` / `link` 作为 `ribbon` 的替代�
 - path 为有效路径顶点生成 core `Coordinate`，供 relation 指向。
 - custom mark 可通过 lowering context 注册 anchors，与内置 mark 同机制。
 
-`RelationMark` 支持 `source`、`target`、`via`、`route`、`label`、`path`。target ref 包含 node、anchor、projected 三类：node 直转 core NodeTarget；anchor 通过当前 row 生成 id 后转 NodeTarget；projected 通过 coordinate frame 投影，必要时生成 core Coordinate。
+`RelationMark` 支持 `source`、`target`、`via`、`route`、`label`、`path`。target ref 包含 anchor、projected 两类：anchor 通过当前 row 生成 id 后转 NodeTarget；projected 通过 coordinate frame 投影，必要时生成 core Coordinate。
 
 默认 route 是 `move(source) -> line(via...) -> line(target)`。显式 `route` 使用 core step 的 JSON-safe 子集；step target 扩展为 PlotTargetRef。`path` passthrough core Path 顶层能力，但对象字段首批只做常量传递。
 
@@ -43,6 +43,10 @@ ADR-059/060 早期草稿曾规划 `LinkMark` / `link` 作为 `ribbon` 的替代�
 - 新增 public `RelationMark`、`AnchorId`、`PlotTargetRef`、`RelationRouteStep` 等 schema / 类型。
 - React 新增 `<RelationMark>`，并给 Point / Path / Interval props 增加 `anchorId`。
 - core 不改动；只消费 core Coordinate、Path、NodeTarget、StepLabel 等既有能力。
+
+## 目标引用边界
+
+Plot 不提供直接填写 Core id 的目标引用。引用 Plot 图元时，通过字段、模板或运行时生成器解析锚点，并验证其由当前 Plot 注册；坐标投影继续由 Plot 生成 Coordinate。Core 自身的 NodeTarget id 契约不变。固定模板仍须命中已注册的 Plot 锚点，不构成直接 Core id 引用的替代入口。
 
 ## 长期边界
 

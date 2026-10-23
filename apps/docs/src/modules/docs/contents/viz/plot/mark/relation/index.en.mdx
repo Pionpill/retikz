@@ -39,15 +39,15 @@ Under polar2D, RelationMark inherits coordinate interpolation only for a default
 
 RelationMark is the low-level relationship path mark. It does not reinvent arrows, labels, or routed lines; it turns relationship data into a core `Path.children` step sequence. Dependency lines, flow lines, reference lines, and labeled graphConnectors are all different configurations of the same source-target path.
 
-| Presentation            | Key props                           | Notes                                                                                                       |
-| ----------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Point-to-point relation | `source` / `target`                 | Reference existing nodes by id or generated anchor rules, then connect with the default `move -> line` path |
-| Waypoint path           | `path.via` / `path.route[].to`      | Projected waypoints generate core `Coordinate` elements, so later ids can reference them                    |
-| Geometry label          | `label`                             | Lowers to core `Path.label`; path and ribbon relations share the same host label                            |
-| Step label              | `path.label` / `path.route[].label` | Lowers to core step label; explicit step labels win over shorthand                                          |
-| Core Path capabilities  | `path.options`                      | Passes through path-only options such as marks, rounded corners, and dash patterns                          |
-| Path ribbon kind        | `kind="ribbon"` / `ribbon`          | Lowers source-target rows into core `Path` objects with `kind: 'ribbon'` for Sankey-style bands             |
-| Shared style            | `style`                             | Shared paint and opacity fields used by both path and ribbon relations                                      |
+| Presentation            | Key props                           | Notes                                                                                                 |
+| ----------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Point-to-point relation | `source` / `target`                 | Reference existing nodes by generated anchor rules, then connect with the default `move -> line` path |
+| Waypoint path           | `path.via` / `path.route[].to`      | Projected waypoints generate core `Coordinate` elements, so later ids can reference them              |
+| Geometry label          | `label`                             | Lowers to core `Path.label`; path and ribbon relations share the same host label                      |
+| Step label              | `path.label` / `path.route[].label` | Lowers to core step label; explicit step labels win over shorthand                                    |
+| Core Path capabilities  | `path.options`                      | Passes through path-only options such as marks, rounded corners, and dash patterns                    |
+| Path ribbon kind        | `kind="ribbon"` / `ribbon`          | Lowers source-target rows into core `Path` objects with `kind: 'ribbon'` for Sankey-style bands       |
+| Shared style            | `style`                             | Shared paint and opacity fields used by both path and ribbon relations                                |
 
 ## Examples
 
@@ -179,7 +179,7 @@ This table keeps only RelationMark-specific props and props whose meaning is red
 
 | Prop                  | Type                                                | Default             | Description                                                                                                         |
 | --------------------- | --------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `source` / `target`   | `RelationMarkProps['source']`                       | Required            | Start and end targets: direct id, row-generated anchor id, or projected coordinate                                  |
+| `source` / `target`   | `RelationMarkProps['source']`                       | Required            | Start and end targets: row-generated anchor id or projected coordinate                                              |
 | `autoPadding?`        | `IRPlotPointAutoPadding`                            | `false`             | Endpoint node padding policy; applies when Source IR defines endpoints. See PointMark padding                       |
 | `kind?`               | <ApiValues name="RelationGeometryKind" />           | `path`              | Create an ordinary Path or ribbon Path for each row                                                                 |
 | `label?`              | `RelationMarkProps['label']`                        | —                   | Geometry label for the whole relation                                                                               |

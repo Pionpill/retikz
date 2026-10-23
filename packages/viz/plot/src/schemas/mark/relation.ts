@@ -395,8 +395,7 @@ export const RelationMarkSchema = strictObject({
       }
       if (
         (target !== undefined &&
-          ('id' in target ||
-            ('anchorId' in target && target.anchorId !== undefined) ||
+          (('anchorId' in target && target.anchorId !== undefined) ||
             target.anchor !== undefined ||
             target.offset !== undefined ||
             target.boundary !== undefined)) ||
@@ -405,7 +404,7 @@ export const RelationMarkSchema = strictObject({
         ctx.addIssue({
           code: 'custom',
           path: ['properties', role],
-          message: 'Endpoint glyph targets cannot use anchor, offset, boundary, id or anchorId',
+          message: 'Endpoint glyph targets cannot use anchor, offset, boundary or anchorId',
         });
       }
     }
