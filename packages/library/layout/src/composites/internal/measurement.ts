@@ -11,7 +11,7 @@ export const measureLayoutAxis = (
   proposal: LayoutProposal,
   axis: 'x' | 'y',
 ): number => {
-  const probe = context.measureChild(context.sourceChild(['children', sourceIndex, 'child']), proposal, axis);
+  const probe = context.measureChild(context.selectSourceChild(['children', sourceIndex, 'child']), proposal, axis);
   if (probe.kind === 'failed') return context.raise(probe.failure);
   if (probe.result.axis === 'x') return probe.result.width;
   if (probe.result.axis === 'y') return probe.result.height;

@@ -12,7 +12,7 @@
 | 布局与组合     | 支持上下文布局、完整 Scope 输出及跨 namespace 空间引用                 | [007](./007-layout-aware-composite.md)、[009](./009-contextual-composite-layout.md)、[017](./017-layout-proposal-probe-contract.md)、[020](./020-layout-aware-scope-output.md)、[028](./028-qualified-spatial-handles.md)                                                                             |
 | 增量运行时     | 完成 Reconciler 编译树、依赖响应与同步增量计算闭环                     | [011](./011-runtime-identity-source-registry.md)、[012](./012-computation-transaction-lifecycle.md)、[013](./013-incremental-core-compile.md)、[014](./014-scene-patch-retained-renderer.md)、[016](./016-runtime-execution-policy.md)                                                                |
 | 基础契约与入口 | 建立 Foundation、统一 authoring 与能力依赖接入                         | [019](./019-core-atomic-contracts.md)、[023](./023-foundation-package.md)、[026](./026-foundation-schema-primitives.md)、[027](./027-composite-dependency-provider-graph.md)、[029](./029-vanilla-authoring-normalization.md)                                                                         |
-| 颜色与 Source  | 统一颜色解析、Theme 来源、Source 分组与 schema 边界                    | [024](./024-lightweight-theme-resolution.md)、[032](./032-contextual-color-resolution.md)、[035](./035-json-undefined-field-contracts.md)、[036](./036-source-ir-semantic-grouping.md)、[037](./037-theme-source-fragments.md)                                                                        |
+| 颜色与 Source  | 统一颜色解析、Theme 来源、Source 分组与 schema 边界                    | [024](./024-lightweight-theme-resolution.md)、[032](./032-contextual-color-resolution.md)、[035](./035-json-undefined-field-contracts.md)、[036](./036-source-ir-semantic-grouping.md)、[037](./037-theme-source-fragments.md)、[071](./071-macro-visual-property-resolution.md)                      |
 | 路径与诊断     | 完善裁剪、居中标签断线、箭头重叠与 Inspect                             | [021](./021-extensible-inspector-content.md)、[031](./031-single-clip-definition.md)、[033](./033-stroke-path-label-interruption.md)、[034](./034-path-endpoint-arrow-overlap.md)、[039](./039-builtin-inspection.md)                                                                                 |
 | Scope 外框     | 在保持内容包络、锚点与布局不变的前提下添加背景装饰                     | [044](./044-scope-frame.md)                                                                                                                                                                                                                                                                           |
 | 候选方向       | Headless Interaction、协作并发、渐进物化与生成会话；不作为本版本必交项 | [040](./040-cooperative-concurrent-runtime.md)、[041](./041-progressive-materialization.md)、[042](./042-generation-session.md)                                                                                                                                                                       |
@@ -136,6 +136,7 @@ Reconciler 按以下能力依赖顺序推进；各阶段共同构成本版本目
 
 - 统一轻量 Theme、上下文颜色与 Source 语义分组。
 - 收敛默认片段和 schema 边界，使源输入不承载冗余派生状态。
+- 完整承接上层职责内适用的基础绘制属性，统一实例配置与 Definition 消费边界：[072](./072-complete-drawing-property-propagation.md)。
 - 默认配置按宿主组织，完整支持标签与箭头默认、字体继承及宿主级重置：[067](./067-host-owned-defaults.md)。
 
 预期效果：

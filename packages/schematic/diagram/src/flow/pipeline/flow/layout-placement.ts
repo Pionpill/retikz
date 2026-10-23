@@ -189,7 +189,7 @@ export const createFlowLayoutExecutionContext = (
         const compileContext: CompositeCompileContext = {
           ...context,
           proposal: intrinsicLayoutProposal('natural'),
-          sourceChild: path => children[path[1] as number],
+          selectSourceChild: path => children[path[1] as number],
         };
 
         // 所有 relation 基于同一输入取最大标签尺寸，避免遍历顺序影响结果
@@ -260,7 +260,7 @@ export const createFlowLayoutExecutionContext = (
         ...context,
         evaluation: { kind: 'layout' },
         proposal: intrinsicLayoutProposal('natural'),
-        sourceChild: path => children[path[1] as number],
+        selectSourceChild: path => children[path[1] as number],
       }).artifact;
       if (artifact === undefined) return placementFailure(input, 'FlexLayout returned no placement artifact.');
 

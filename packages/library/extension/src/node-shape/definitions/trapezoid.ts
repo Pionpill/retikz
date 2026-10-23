@@ -69,7 +69,7 @@ const trapezoidVertices =
 export const TrapezoidShapeDefinition = defineShape<TrapezoidShapeParams>({
   name: BuiltinExtensionShapeName.Trapezoid,
   paramsSchema: TrapezoidShapeParamsSchema,
-  circumscribe: (innerHalfWidth, innerHalfHeight, params) => {
+  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight, params) => {
     const ratio = shortSideRatioOf(params);
     const sharp =
       shortSideOf(params) === 'top' || shortSideOf(params) === 'bottom'
@@ -85,10 +85,11 @@ export const TrapezoidShapeDefinition = defineShape<TrapezoidShapeParams>({
       trapezoidVertices(params),
     );
   },
-  boundaryPoint: (bounds, toward, params) =>
+  computeBoundaryPoint: (bounds, toward, params) =>
     polygonBoundaryPoint(bounds, toward, params.cornerRadius, trapezoidVertices(params)),
-  anchor: polygonAnchor,
-  connectionEnvelope: (bounds, kind, params) => polygonConnectionEnvelope(bounds, kind, trapezoidVertices(params)),
+  resolveAnchor: polygonAnchor,
+  computeConnectionEnvelope: (bounds, kind, params) =>
+    polygonConnectionEnvelope(bounds, kind, trapezoidVertices(params)),
   emit: (bounds, style, round, params) =>
     emitPolygon(bounds, style, round, params.cornerRadius, trapezoidVertices(params)),
   scaleParams: (params, scaleX, scaleY) => ({

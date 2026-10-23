@@ -164,12 +164,12 @@ export const compileTree = (source: IRTree, context: CompositeCompileContext): C
       paths.push({ ...path, type: 'path', children: [{ type: 'step', kind: 'move', to: from }, step] });
     }
   }
-  const children: Array<IRChild | ReturnType<typeof context.scope>> = [
+  const children: Array<IRChild | ReturnType<typeof context.createScope>> = [
     ...nodes,
     // 匿名节点与内部路径共享局部命名空间，显式节点仍可从外部引用
-    context.scope({ localNamespace: true }, [
+    context.createScope({ localNamespace: true }, [
       ...anonymousNodes,
-      ...(paths.length === 0 ? [] : [context.scope({ zIndex: -1 }, paths)]),
+      ...(paths.length === 0 ? [] : [context.createScope({ zIndex: -1 }, paths)]),
     ]),
   ];
   if (label !== undefined)
@@ -187,6 +187,8 @@ export const compileTree = (source: IRTree, context: CompositeCompileContext): C
     });
   return {
     allocationBounds,
-    children: [context.scope(scope, children, [{ id: 'container', role: 'container', bounds: allocationBounds }])],
+    children: [
+      context.createScope(scope, children, [{ id: 'container', role: 'container', bounds: allocationBounds }]),
+    ],
   };
 };

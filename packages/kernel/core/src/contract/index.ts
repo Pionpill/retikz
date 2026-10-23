@@ -3,7 +3,7 @@ export * from './boundary';
 export * from './box-spacing';
 export * from './clip';
 export * from './composite/definition';
-export { createCompositeInputBindings, validateCompositeInputBindings } from './composite/input';
+export { assertCompositeInputBindings, createCompositeInputBindings } from './composite/input';
 export type {
   CompositeBoundChild,
   CompositeInputBinding,

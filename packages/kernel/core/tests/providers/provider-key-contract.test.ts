@@ -26,9 +26,9 @@ describe('provider key contract', () => {
     const ring = defineShape({
       name: 'ring',
       paramsSchema: object({}),
-      circumscribe: () => ({ halfWidth: 10, halfHeight: 10 }),
-      boundaryPoint: rect => [rect.x + rect.width / 2, rect.y],
-      anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+      computeCircumscribedHalfAxes: () => ({ halfWidth: 10, halfHeight: 10 }),
+      computeBoundaryPoint: rect => [rect.x + rect.width / 2, rect.y],
+      resolveAnchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
       emit: () => [{ type: 'ellipse', cx: 0, cy: 0, rx: 10, ry: 10 }],
     });
     const ir: IRScene = {
@@ -44,9 +44,9 @@ describe('provider key contract', () => {
     const rectangle = defineShape({
       name: 'rectangle',
       paramsSchema: object({}),
-      circumscribe: () => ({ halfWidth: 1, halfHeight: 1 }),
-      boundaryPoint: rect => [rect.x + rect.width / 2, rect.y],
-      anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+      computeCircumscribedHalfAxes: () => ({ halfWidth: 1, halfHeight: 1 }),
+      computeBoundaryPoint: rect => [rect.x + rect.width / 2, rect.y],
+      resolveAnchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
       emit: () => [],
     });
     const ir: IRScene = {

@@ -66,7 +66,9 @@ const bracket = defineArrow({
 
 `overlap: 1` 对齐的是最终视觉后缘，尺寸缩放与空心轮廓都会参与计算。改变重叠比例只移动端点装饰及其接合处，不重写节点锚点或路径逻辑采样。中间的 mark 只按局部切线定向，不作为端点缩短路径。
 
-未显式指定箭头颜色时，内容使用 `contextStroke`，在绘制时绑定最近宿主路径的描边，包括所属 Scene 中的绘制资源。内置与注入的箭头共用同一注册与解析路径。空心内容显式设置 `fill: 'none'`，其他默认值与普通图元一致。
+Path 的有效 `color` 覆盖箭头自身的 `color`；箭头具体 `stroke` / `fill` 优先于宏颜色。实心定义默认 `stroke: 'none'`，使用 `fill` 表达主色；自定义实心内容如需同色线条，也可将上下文 `fill` 用作该线条的描边。空心定义通过 `stroke` 表达主色，并输出 `fill: 'none'`。需要颜色而两级主色都缺失时，使用 `contextStroke` 绑定最近宿主路径描边，包括 Scene 绘制资源。
+
+`emit` 接收已解析的 `stroke`、`fill`、`lineWidth`，以及可选的 `dashPattern`、`dashOffset`、`lineCap`、`lineJoin`。需要响应这些选项的图元应主动读取上下文，端帽和连接分别写入基础图元的 `strokeLinecap` 与 `strokeLinejoin`。Core 不再递归覆盖输出图元的样式，因此固定的多色细节可以保留。内置与自定义定义遵循同一规则；透明度仍由箭头容器应用，不要再乘到每个子图元。
 
 <SourceLinks
   sources={[

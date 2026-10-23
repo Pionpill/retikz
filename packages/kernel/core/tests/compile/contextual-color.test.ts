@@ -27,6 +27,31 @@ const textOf = (scene: IRScene, value: string): TextPrim =>
   textsOf(scene).find(text => text.lines.some(line => line.text === value))!;
 
 describe('Core contextual color compile', () => {
+  it('子级主色不覆盖继承的具体描边，Node 和 Path 的文字使用子级主色', () => {
+    const scene = sceneOf([
+      {
+        type: 'scope',
+        defaults: { style: { color: 'red', stroke: 'black' } },
+        children: [
+          { type: 'node', position: [0, 0], text: 'node', style: { color: 'blue' } },
+          {
+            type: 'path',
+            style: { color: 'blue' },
+            label: { text: 'path' },
+            children: [
+              { type: 'step', kind: 'move', to: [0, 30] },
+              { type: 'step', kind: 'line', to: [100, 30] },
+            ],
+          },
+        ],
+      },
+    ]);
+    expect(rectOf(scene).stroke).toBe('black');
+    expect(pathsOf(scene)[0].stroke).toBe('black');
+    expect(textOf(scene, 'node').fill).toBe('blue');
+    expect(textOf(scene, 'path').fill).toBe('blue');
+  });
+
   it.each([
     [ThemeMode.Light, '#d6e0eb', '#5c85ad'],
     [ThemeMode.Dark, '#0a141f', '#29527a'],
@@ -139,7 +164,7 @@ describe('Core contextual color compile', () => {
     expect(path.fill).toBe('#adc2d6');
     expect(path.stroke).toBe('#d6e0eb');
     expect(textOf(scene, 'edge').fill).toBe('#85a3c2');
-    expect(path.arrowEnd?.marker[0]).toMatchObject({ fill: '#d6e1eb' });
+    expect(path.arrowEnd?.marker[0]).toMatchObject({ fill: '#ccd9e6' });
   });
 
   it('延迟 Path 捕获其所在 nested Theme mode，且 Scene 颜色槽位不残留 number', () => {

@@ -246,3 +246,47 @@ describe('Mark Source field encodings and fixed properties', () => {
     expect(MarkSchema.parse(input)).toMatchObject(input);
   });
 });
+
+describe('Core graphic style input contract', () => {
+  it.each(['point', 'path', 'interval'])('preserves contextual paint and scalar opacity for %s through JSON', type => {
+    const parsed = MarkSchema.parse({
+      type,
+      encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+      properties: {
+        fill: 0,
+        stroke: 1,
+        opacity: 0.6,
+        dashOffset: -3,
+        lineCap: 'square',
+        lineJoin: 'bevel',
+      },
+    });
+    expect(parsed.properties).toMatchObject({
+      fill: 0,
+      stroke: 1,
+      opacity: 0.6,
+      dashOffset: -3,
+      lineCap: 'square',
+      lineJoin: 'bevel',
+    });
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
+  });
+  it.each([
+    { strokeWidth: -1 },
+    { opacity: { overall: 0.5, extra: 0.2 } },
+    { fill: -0.1 },
+    { stroke: 1.1 },
+    { opacity: 1.1 },
+    { opacity: { fill: -0.1 } },
+    { dashOffset: Infinity },
+    { lineCap: 'triangle' },
+    { lineJoin: 'smooth' },
+  ])('rejects invalid external graphic style %j', properties => {
+    for (const type of ['point', 'path', 'interval']) {
+      expect(
+        MarkSchema.safeParse({ type, encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } }, properties })
+          .success,
+      ).toBe(false);
+    }
+  });
+});

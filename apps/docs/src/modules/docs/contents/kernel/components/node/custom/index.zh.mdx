@@ -28,6 +28,8 @@ description: 定义、注册并使用独立于节点外观的连接面
 
 用 `defineBoundary` 声明稳定的 registry key、参数 schema 和射线交点。无参数时仍提供 `z.strictObject({})`，让所有 payload 都经过同一校验路径。
 
+`computeOutline` 是可选方法，主要供 Inspect 调试时显示连接面轮廓，一般可以省略。省略它不影响普通连线的连接点或锚点计算，只是 Inspect 无法显示精确连接面轮廓；实现它也不会让连接面在正常绘制中显示。
+
 ```ts
 import { defineBoundary } from '@retikz/core';
 import { z } from 'zod';
@@ -35,9 +37,9 @@ import { z } from 'zod';
 export const horizontalPorts = defineBoundary({
   name: 'horizontal-ports',
   paramsSchema: z.strictObject({}),
-  boundaryPoint: (rect, toward) =>
+  computeBoundaryPoint: (rect, toward) =>
     toward[0] < rect.x ? [rect.x - rect.width / 2, rect.y] : [rect.x + rect.width / 2, rect.y],
-  anchor: (rect, name) => {
+  resolveAnchor: (rect, name) => {
     if (name === 'left') return [rect.x - rect.width / 2, rect.y];
     if (name === 'right') return [rect.x + rect.width / 2, rect.y];
     return undefined;
@@ -45,9 +47,9 @@ export const horizontalPorts = defineBoundary({
 });
 ```
 
-`boundaryPoint` 收到的是该 boundary 最终解析出的 `rect`；未提供 `resolveRect` 时，它就是视觉 shape 已经算好的节点外接框。`rect.x` / `rect.y` 是中心坐标，`width` / `height` 是完整宽高；例如左边界为 `rect.x - rect.width / 2`。`toward` 是连线从节点中心指向的目标点。带参数的连接面把参数写进 `{ type, params }`，其中 `params` 必须是可 JSON 序列化的数据；函数只存在于 definition，不进入 IR（中间表示）。
+`computeBoundaryPoint` 收到的是该 boundary 最终解析出的 `rect`；未提供 `resolveRect` 时，它就是视觉 shape 已经算好的节点外接框。`rect.x` / `rect.y` 是中心坐标，`width` / `height` 是完整宽高；例如左边界为 `rect.x - rect.width / 2`。`toward` 是连线从节点中心指向的目标点。带参数的连接面把参数写进 `{ type, params }`，其中 `params` 必须是可 JSON 序列化的数据；函数只存在于 definition，不进入 IR（中间表示）。
 
-需要在交点计算前调整连接面尺寸时，实现可选的 `resolveRect(context, params)`。`context.visualRect` 是视觉外接框，`context.connectionEnvelope(kind)` 则返回能包住视觉形状的规则轮廓，`kind` 可选 `'circle'`、`'ellipse'` 或 `'rectangle'`；后者会复用同一节点内的缓存。返回矩形必须具有有限坐标和正宽高，否则编译会立即报错。
+需要在交点计算前调整连接面尺寸时，实现可选的 `resolveRect(context, params)`。`context.visualRect` 是视觉外接框，`context.computeConnectionEnvelope(kind)` 则返回能包住视觉形状的规则轮廓，`kind` 可选 `'circle'`、`'ellipse'` 或 `'rectangle'`；后者会复用同一节点内的缓存。返回矩形必须具有有限坐标和正宽高，否则编译会立即报错。
 
 ### 带参数的连接面
 
@@ -57,7 +59,7 @@ export const horizontalPorts = defineBoundary({
 const biasedPorts = defineBoundary({
   name: 'biased-ports',
   paramsSchema: z.strictObject({ bias: z.number().min(-1).max(1) }),
-  boundaryPoint: (rect, toward, { bias }) => [
+  computeBoundaryPoint: (rect, toward, { bias }) => [
     toward[0] < rect.x ? rect.x - rect.width / 2 : rect.x + rect.width / 2,
     rect.y + (rect.height / 2) * bias,
   ],
@@ -118,7 +120,7 @@ const view = mount(document.getElementById('diagram')!, input, { compile: { boun
 - **未知名字**：错误会同时列出已注册 boundaries 与 shapes，并提示检查 `boundaries` / `shapes` 注入。
 - **非法参数**：`paramsSchema` 在调用几何函数前校验，失败时会带上对应的 `.boundary.params` IR 路径。
 - **非法解析矩形**：`resolveRect` 返回非有限坐标、非正宽高或内部抛错时，错误会带 boundary 名和 Node IR 路径。
-- **未知 anchor**：`anchor` 可省略或返回 `undefined`；标准方位会回退到外接矩形，形状专属名字仍交给视觉 shape 解析。
+- **未知 anchor**：`resolveAnchor` 可省略或返回 `undefined`；标准方位会回退到外接矩形，形状专属名字仍交给视觉 shape 解析。
 - **无绘制职责**：连接面不能改变节点尺寸、形状或内容；这些需求属于 Shape Definition 或 Node props。
 
 两个常见失败入口会在编译期立即抛错：

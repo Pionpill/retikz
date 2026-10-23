@@ -8,13 +8,13 @@ import type {
   SpatialOwnerSelector,
 } from './handle';
 
-const ownerMatches = (owner: SpatialHandleOwner, selector: SpatialOwnerSelector): boolean =>
+const doesOwnerMatchSelector = (owner: SpatialHandleOwner, selector: SpatialOwnerSelector): boolean =>
   owner.namespace === selector.namespace &&
   (selector.type === undefined || owner.type === selector.type) &&
   (selector.instanceId === undefined || owner.instanceId === selector.instanceId) &&
   (selector.occurrence === undefined || isCompileOccurrenceEqual(owner.occurrence, selector.occurrence));
 
-const withinMatches = (
+const doesOwnerPathMatchSelectors = (
   ancestors: ReadonlyArray<SpatialHandleOwner>,
   selectors: ReadonlyArray<SpatialOwnerSelector>,
 ): boolean => {
@@ -22,17 +22,18 @@ const withinMatches = (
   if (selectors.length > ancestors.length) return false;
 
   for (let start = 0; start <= ancestors.length - selectors.length; start += 1) {
-    if (selectors.every((selector, index) => ownerMatches(ancestors[start + index], selector))) return true;
+    if (selectors.every((selector, index) => doesOwnerMatchSelector(ancestors[start + index], selector))) return true;
   }
 
   return false;
 };
 
-const entryMatches = (entry: QualifiedSpatialHandle, selector: SpatialHandleSelector): boolean => {
+const doesEntryMatchSelector = (entry: QualifiedSpatialHandle, selector: SpatialHandleSelector): boolean => {
   const owner = entry.ownerPath.at(-1);
   if (owner === undefined) return false;
-  if (selector.owner !== undefined && !ownerMatches(owner, selector.owner)) return false;
-  if (selector.within !== undefined && !withinMatches(entry.ownerPath.slice(0, -1), selector.within)) return false;
+  if (selector.owner !== undefined && !doesOwnerMatchSelector(owner, selector.owner)) return false;
+  if (selector.within !== undefined && !doesOwnerPathMatchSelectors(entry.ownerPath.slice(0, -1), selector.within))
+    return false;
   if (selector.id !== undefined && entry.id !== selector.id && !entry.aliasIds?.includes(selector.id)) return false;
   if (selector.role !== undefined && entry.role !== selector.role) return false;
   if (selector.tags !== undefined && !selector.tags.every(tag => entry.tags.includes(tag))) return false;
@@ -44,7 +45,8 @@ const entryMatches = (entry: QualifiedSpatialHandle, selector: SpatialHandleSele
 export const selectSpatialHandles = (
   index: SpatialHandleIndex,
   selector: SpatialHandleSelector,
-): ReadonlyArray<QualifiedSpatialHandle> => Object.freeze(index.entries.filter(entry => entryMatches(entry, selector)));
+): ReadonlyArray<QualifiedSpatialHandle> =>
+  Object.freeze(index.entries.filter(entry => doesEntryMatchSelector(entry, selector)));
 
 /** 要求 selector 恰好解析到一个 qualified spatial handle */
 export const resolveSpatialHandle = (

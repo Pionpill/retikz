@@ -1,16 +1,17 @@
 import {
-  PathFillRuleSchema,
-  PathLineCapSchema,
-  PathLineJoinSchema,
-  PathScaleSchema,
   CssColorSchema,
   OpacitySchema,
   PathDecorationSchema,
   PathStrokeSchema,
   PathTransformSchema,
+  GraphicOpacityValueSchema,
+  GraphicEffectsSchema,
+  GraphicFillSchema,
+  GraphicStrokeSchema,
+  PathFillSchema,
 } from '@retikz/core';
-import type { ValueOf } from '@retikz/foundation';
 import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
+import type { ValueOf } from '@retikz/foundation';
 import { boolean, discriminatedUnion, enum as zodEnum, literal, never, number, strictObject, union } from 'zod';
 import type { infer as ZodInfer } from 'zod';
 
@@ -19,48 +20,6 @@ import { PathEncodingSchema, PositionEncodingSchema } from '../encoding';
 import { AnchorIdSchema, hasValidAnchorSource } from './anchor';
 import { BuiltinPlotMark, markBase } from './base';
 import { MarkPathLabelListSchema } from './label';
-import {
-  MarkOpacityStyleSchema,
-  MarkFillStyleSchema,
-  MarkStrokeStyleSchema,
-  MarkZIndexStyleSchema,
-  MarkNumberStyleSchema,
-  MarkDashPatternStyleSchema,
-  MarkShadowStyleSchema,
-  MarkBlendModeStyleSchema,
-  MarkNonnegativeNumberStyleSchema,
-} from './style';
-
-/** 校验路径线帽的固定形状 */
-export const PathLineCapStyleSchema = PathLineCapSchema.describe('path lineCap style value');
-
-/** 校验路径拐角连接的固定形状 */
-export const PathLineJoinStyleSchema = PathLineJoinSchema.describe('path lineJoin style value');
-
-/** 校验路径圆角的固定非负半径 */
-export const PathCornerRadiusStyleSchema = NonNegativeNumberSchema.describe('path cornerRadius style value');
-
-/** 校验路径填充规则的固定环绕规则 */
-export const PathFillRuleStyleSchema = PathFillRuleSchema.describe('path fillRule style value');
-
-/** 校验路径缩放的固定统一与双轴倍率 */
-export const PathScaleStyleSchema = PathScaleSchema.describe('path scale style value');
-
-/** 路径宿主复用的固定样式字段 */
-const corePathStyle = {
-  fill: MarkFillStyleSchema.optional().describe('Core Path fill paint: fixed CSS color / IRPaint'),
-  stroke: MarkStrokeStyleSchema.optional().describe('Core Path stroke paint: fixed CSS color / IRPaint'),
-  zIndex: MarkZIndexStyleSchema.optional().describe('Core Path zIndex: fixed integer'),
-  rotate: MarkNumberStyleSchema.optional().describe('Core Path rotate: fixed angle'),
-  scale: PathScaleStyleSchema.optional().describe('Core Path scale: fixed number / {x,y}'),
-  fillRule: PathFillRuleStyleSchema.optional().describe('Core Path fillRule: fixed nonzero / evenodd'),
-  marks: PathDecorationSchema.shape.marks
-    .optional()
-    .describe('Static core Path marks placed along the lowered path; use endpoint marks for arrows'),
-  dashPattern: MarkDashPatternStyleSchema.optional().describe('Core Path dashPattern: fixed number array'),
-  shadow: MarkShadowStyleSchema.optional().describe('Core Path shadow: fixed preset / object'),
-  blendMode: MarkBlendModeStyleSchema.optional().describe('Core Path blendMode: fixed blend mode'),
-};
 
 /** 开放轨迹跨缺值连接段的常量描边覆盖 */
 export const PlotPathConnectNullsStyleSchema = PathStrokeSchema.extend({
@@ -149,9 +108,13 @@ export const PathClosureSchema = discriminatedUnion('kind', [
 
 /** 校验按记录顺序连接为一维轨迹的路径标记 */
 export const PathPropertiesSchema = strictObject({
-  connection: zodEnum(CoordinateConnection).default(CoordinateConnection.Coordinate).optional(),
   ...PathTransformSchema.shape,
   ...PathDecorationSchema.shape,
+  ...GraphicFillSchema.shape,
+  ...GraphicStrokeSchema.shape,
+  ...GraphicEffectsSchema.shape,
+  ...PathFillSchema.shape,
+  connection: zodEnum(CoordinateConnection).default(CoordinateConnection.Coordinate).optional(),
   color: CssColorSchema.optional(),
   closed: boolean()
     .optional()
@@ -170,14 +133,11 @@ export const PathPropertiesSchema = strictObject({
   interpolation: zodEnum(PolarInterpolation)
     .optional()
     .describe('Polar2D connection-space override; omit to inherit the resolved coordinate interpolation'),
-  strokeWidth: MarkNonnegativeNumberStyleSchema.optional().describe('Path stroke width: fixed core Path stroke width'),
-  opacity: MarkOpacityStyleSchema.optional(),
-  lineCap: PathLineCapStyleSchema.optional().describe('Path stroke endpoint style: fixed core Path lineCap'),
-  lineJoin: PathLineJoinStyleSchema.optional().describe('Path stroke join style: fixed core Path lineJoin'),
-  cornerRadius: PathCornerRadiusStyleSchema.optional().describe(
+  opacity: GraphicOpacityValueSchema.optional(),
+  cornerRadius: NonNegativeNumberSchema.optional().describe(
     'Path geometric corner radius: fixed core Path cornerRadius',
   ),
-  ...corePathStyle,
+  zIndex: number().int().optional(),
   anchorId: AnchorIdSchema.optional().describe(
     'Stable id rule for generated per-datum core Coordinates along this path',
   ),
@@ -224,9 +184,3 @@ export type IRPlotPathClosure = ZodInfer<typeof PathClosureSchema>;
 
 /** path mark（折线 / 轮廓） */
 export type IRPlotPathMark = ZodInfer<typeof PathMarkSchema>;
-
-/** PathMark 填充规则样式值 */
-export type IRPlotPathFillRuleStyle = ZodInfer<typeof PathFillRuleStyleSchema>;
-
-/** PathMark scale 绑定样式值 */
-export type IRPlotPathScaleStyle = ZodInfer<typeof PathScaleStyleSchema>;

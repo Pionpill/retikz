@@ -208,7 +208,7 @@ describe('plain Node proposal consumption', () => {
     const doubleWidthShape = {
       ...BUILTIN_SHAPES.get('rectangle')!,
       name: 'double-width',
-      circumscribe: (halfWidth: number, halfHeight: number) => ({
+      computeCircumscribedHalfAxes: (halfWidth: number, halfHeight: number) => ({
         halfWidth: halfWidth * 2,
         halfHeight,
       }),
@@ -235,7 +235,7 @@ describe('plain Node proposal consumption', () => {
     const nonMonotonicShape = {
       ...BUILTIN_SHAPES.get('rectangle')!,
       name: 'non-monotonic',
-      circumscribe: (_halfWidth: number, halfHeight: number) => ({
+      computeCircumscribedHalfAxes: (_halfWidth: number, halfHeight: number) => ({
         halfWidth: halfHeight <= 5 ? 30 : halfHeight <= 10 ? 20 : 35,
         halfHeight,
       }),

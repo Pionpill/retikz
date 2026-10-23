@@ -206,9 +206,9 @@ describe('resolveEdgePoint 边上比例点', () => {
     const noEdge: ShapeDefinition = defineShape({
       name: 'noEdge',
       paramsSchema: strictObject({}),
-      circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
-      boundaryPoint: r => [r.x, r.y],
-      anchor: (r, name) => (name === 'center' ? [r.x, r.y] : undefined),
+      computeCircumscribedHalfAxes: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
+      computeBoundaryPoint: r => [r.x, r.y],
+      resolveAnchor: (r, name) => (name === 'center' ? [r.x, r.y] : undefined),
       *emit() {},
     });
     const layout: NodeLayout = {

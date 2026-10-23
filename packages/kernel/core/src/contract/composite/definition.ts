@@ -51,7 +51,7 @@ export type AnyCompositeDefinition = {
 );
 
 /** 把 composite registration schema 规范化为可读取 provider key 的对象分支 */
-const objectSchemasOf = (schema: ZodType): Array<ZodObject> => {
+const resolveObjectSchemas = (schema: ZodType): Array<ZodObject> => {
   if (schema instanceof ZodObject) return [schema];
   if (!(schema instanceof ZodUnion)) {
     throw new RetikzCoreError(
@@ -80,8 +80,8 @@ const objectSchemasOf = (schema: ZodType): Array<ZodObject> => {
 };
 
 /** 从 composite 对象分支中读取并校验共同 namespace / type literal */
-const literalValueOf = (schema: ZodType, field: 'namespace' | 'type'): string => {
-  const objects = objectSchemasOf(schema);
+const resolveLiteralValue = (schema: ZodType, field: 'namespace' | 'type'): string => {
+  const objects = resolveObjectSchemas(schema);
   const values = objects.map((object, index) => {
     const node = object.shape[field];
     const path = objects.length === 1 ? `schema.${field}` : `schema union option ${index}.${field}`;
@@ -130,8 +130,8 @@ export const defineComposite = <
 >(
   definition: CompositeDefinition<TNode, TNamespace, TType, TArtifact> & TDefinition,
 ): TDefinition => {
-  const namespace = literalValueOf(definition.schema, 'namespace');
-  const type = literalValueOf(definition.schema, 'type');
+  const namespace = resolveLiteralValue(definition.schema, 'namespace');
+  const type = resolveLiteralValue(definition.schema, 'type');
   if (definition.namespace !== namespace) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Contract,

@@ -258,7 +258,7 @@ const emitNodeLabelContentPrimitive = (
         laid,
         {
           color: labelProperties.textColor,
-          opacity: labelProperties.opacity,
+          opacity: labelProperties.opacity ?? properties.opacity,
           segments: inlineSegmentPaintsOf(labelProperties.text.segments),
         },
         originX,

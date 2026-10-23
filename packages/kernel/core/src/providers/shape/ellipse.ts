@@ -62,15 +62,15 @@ const ellipseKeyPoints = (bounds: CenteredBox) => {
 export const ellipseShape = defineShape<EllipseParams>({
   name: BuiltinShape.Ellipse,
   paramsSchema: ellipseParamsSchema,
-  circumscribe: (hw, hh, params) =>
+  computeCircumscribedHalfAxes: (hw, hh, params) =>
     mathEllipse.circumscribedHalfAxes({ halfWidth: hw, halfHeight: hh }, params.circumscribe),
-  boundaryPoint: (r, toward) => mathEllipse.boundaryPoint(mathEllipse.inscribedInBox(r), toward),
-  anchor: (r, name) => {
+  computeBoundaryPoint: (r, toward) => mathEllipse.boundaryPoint(mathEllipse.inscribedInBox(r), toward),
+  resolveAnchor: (r, name) => {
     if (name === CenterAnchor.Center) return undefined;
     return isDirectionalAnchor(name) ? ellipse.anchor(mathEllipse.inscribedInBox(r), name) : undefined;
   },
-  edgePoint: (r, side, t) => ellipse.edgePoint(mathEllipse.inscribedInBox(r), side, t),
-  connectionEnvelope: (r, kind) => {
+  computeEdgePoint: (r, side, t) => ellipse.edgePoint(mathEllipse.inscribedInBox(r), side, t),
+  computeConnectionEnvelope: (r, kind) => {
     const halfWidth = r.width / 2;
     const halfHeight = r.height / 2;
     if (kind === 'circle') {
@@ -80,8 +80,8 @@ export const ellipseShape = defineShape<EllipseParams>({
 
     return { halfWidth, halfHeight };
   },
-  outline: bounds => ellipseOutline(bounds),
-  keyPoints: bounds => ellipseKeyPoints(bounds),
+  computeOutline: bounds => ellipseOutline(bounds),
+  computeKeyPoints: bounds => ellipseKeyPoints(bounds),
   *emit(r, style, round): Iterable<ScenePrimitive> {
     yield {
       type: 'ellipse',

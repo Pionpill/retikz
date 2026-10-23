@@ -58,7 +58,7 @@ const withoutCornerRadius = (style: ShapeStylePassthrough): Omit<ShapeStylePasst
 };
 
 /** 将 shape style 落到 path primitive；过滤 cornerRadius 并补默认 fill / stroke / strokeWidth */
-export const pathPrimitiveStyle = (
+export const buildPathPrimitiveStyle = (
   style: ResolvedShapeStyle,
   options?: { fill?: PathPrim['fill'] },
 ): PathPrimitiveStyle => {

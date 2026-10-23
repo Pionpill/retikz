@@ -223,7 +223,7 @@ export const compileFrame = (sourceFrame: IRFrame, context: CompositeCompileCont
     ],
   };
 
-  const root = context.scope(authoredScopePropsOf(frame), [
+  const root = context.createScope(authoredScopePropsOf(frame), [
     border,
     body.replay,
     ...(title === undefined ? [] : [title.replay]),

@@ -49,7 +49,7 @@ const hexagonVertices =
 export const HexagonShapeDefinition = defineShape<HexagonShapeParams>({
   name: BuiltinExtensionShapeName.Hexagon,
   paramsSchema: HexagonShapeParamsSchema,
-  circumscribe: (innerHalfWidth, innerHalfHeight, params) => {
+  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight, params) => {
     const sharp = { halfWidth: innerHalfWidth + shoulderDepthOf(params), halfHeight: innerHalfHeight };
     return circumscribeRoundedPolygon(
       BuiltinExtensionShapeName.Hexagon,
@@ -60,10 +60,10 @@ export const HexagonShapeDefinition = defineShape<HexagonShapeParams>({
       hexagonVertices(params),
     );
   },
-  boundaryPoint: (bounds, toward, params) =>
+  computeBoundaryPoint: (bounds, toward, params) =>
     polygonBoundaryPoint(bounds, toward, params.cornerRadius, hexagonVertices(params)),
-  anchor: polygonAnchor,
-  connectionEnvelope: (bounds, kind, params) => polygonConnectionEnvelope(bounds, kind, hexagonVertices(params)),
+  resolveAnchor: polygonAnchor,
+  computeConnectionEnvelope: (bounds, kind, params) => polygonConnectionEnvelope(bounds, kind, hexagonVertices(params)),
   emit: (bounds, style, round, params) =>
     emitPolygon(bounds, style, round, params.cornerRadius, hexagonVertices(params)),
   scaleParams: (params, scaleX, scaleY) => ({

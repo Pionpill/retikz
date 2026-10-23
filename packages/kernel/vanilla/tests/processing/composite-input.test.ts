@@ -74,7 +74,7 @@ describe('prepared composite input consumption', () => {
       type: 'outer',
       schema: CompositeBaseSchema.extend({ namespace: literal('fixture'), type: literal('outer'), child: ChildSchema }),
       compile: (_node, context) => {
-        const child = context.sourceChild(['child']);
+        const child = context.selectSourceChild(['child']);
         const probe = context.layoutChild(child, NaturalLayoutProposal);
         if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
 

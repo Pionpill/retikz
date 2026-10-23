@@ -173,6 +173,7 @@ export const emitInlineMarkPrimitives = ({
         strokeWidth,
         round,
         contextStroke: baseProps.stroke ?? 'currentColor',
+        hostOpacity: baseProps.opacity,
       }),
     );
     boundsPoints.push(sample.point);

@@ -26,10 +26,10 @@ const shapeDefinitionOf = (name: string) =>
   defineShape({
     name,
     paramsSchema: strictObject({}),
-    circumscribe: (halfWidth, halfHeight) => ({ halfWidth, halfHeight }),
-    boundaryPoint: (_rect, toward) => toward,
+    computeCircumscribedHalfAxes: (halfWidth, halfHeight) => ({ halfWidth, halfHeight }),
+    computeBoundaryPoint: (_rect, toward) => toward,
     emit: () => [],
-    anchor: () => undefined,
+    resolveAnchor: () => undefined,
   });
 
 const compositeDefinitionOf = (namespace: string, type: string): AnyCompositeDefinition =>

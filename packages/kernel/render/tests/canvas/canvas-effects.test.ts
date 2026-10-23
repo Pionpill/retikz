@@ -1,9 +1,51 @@
 import { createCanvas } from '@napi-rs/canvas';
 import type { PathPrim, RectPrim, ResolvedArrowEnd, Scene } from '@retikz/core';
+import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { drawScene } from '../../src/canvas/draw-scene';
 import { renderToSvgString } from '../../src/svg/serialize/to-string';
+
+it('编译后的中段mark在SVG和Canvas中保留透明度乘积', () => {
+  const scene = compileToScene(
+    {
+      type: 'scene',
+      version: 1,
+      children: [
+        {
+          type: 'path',
+          style: { opacity: 0.5, stroke: 'none' },
+          marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'square', opacity: 0.4 } }],
+          children: [
+            { type: 'step', kind: 'move', to: [0, 20] },
+            { type: 'step', kind: 'line', to: [40, 20] },
+          ],
+        },
+      ],
+    },
+    {
+      arrows: [
+        {
+          name: 'square',
+          backX: 0,
+          lineContactX: 5,
+          emit: () => [
+            {
+              type: 'group',
+              children: [{ type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: 'red', opacity: 0.5 }],
+            },
+          ],
+        },
+      ],
+    },
+  ).scene;
+  const svg = renderToSvgString(scene, { idPrefix: 'inline-opacity' });
+  expect(svg).toMatch(/<rect\b[^>]*opacity="0\.1"/);
+  const canvas = createCanvas(40, 40);
+  const context = canvas.getContext('2d');
+  drawScene(context as unknown as CanvasRenderingContext2D, scene);
+  expect(Math.abs(context.getImageData(20, 20, 1, 1).data[3] - 255 * 0.1)).toBeLessThanOrEqual(1);
+});
 
 /** 最小可绘制的端点箭头规格（验证箭头随主路径一起进 shadow / blend 状态绘制） */
 const arrowEndSpec: ResolvedArrowEnd = {

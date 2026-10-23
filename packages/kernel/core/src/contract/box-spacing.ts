@@ -4,7 +4,7 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import type { IRBoxSpacing } from '../schemas';
 
 /** 构造四边同值的 spacing 结果 */
-const boxInsets = (value: number): BoundsInsets => ({
+const buildUniformBoxInsets = (value: number): BoundsInsets => ({
   top: value,
   right: value,
   bottom: value,
@@ -24,7 +24,7 @@ export const resolveBoxSpacing = (value: number | IRBoxSpacing | undefined, fall
   }
 
   if (typeof value === 'number') {
-    return boxInsets(value);
+    return buildUniformBoxInsets(value);
   }
 
   const base = value?.default ?? fallback;

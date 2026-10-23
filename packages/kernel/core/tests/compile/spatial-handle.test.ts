@@ -207,7 +207,11 @@ describe('qualified spatial handle compile', () => {
       }),
       compile: (_node, context) => ({
         children: [
-          context.scope({}, [], [{ id: 'layout', role: 'layout-card', bounds: { x: 2, y: 3, width: 4, height: 5 } }]),
+          context.createScope(
+            {},
+            [],
+            [{ id: 'layout', role: 'layout-card', bounds: { x: 2, y: 3, width: 4, height: 5 } }],
+          ),
         ],
       }),
     });
@@ -280,8 +284,8 @@ describe('qualified spatial handle compile', () => {
         type: literal('reachableCard'),
       }),
       compile: (_node, context) => {
-        void context.scope({}, [], [declaration]);
-        return { children: [context.scope({}, [], [declaration])] };
+        void context.createScope({}, [], [declaration]);
+        return { children: [context.createScope({}, [], [declaration])] };
       },
     });
 
@@ -303,8 +307,8 @@ describe('qualified spatial handle compile', () => {
       }),
       compile: (_node, context) => ({
         children: [
-          context.scope({}, [], [declaration]),
-          context.scope({}, [], [{ ...declaration, id: 'other', aliasIds: ['body'] }]),
+          context.createScope({}, [], [declaration]),
+          context.createScope({}, [], [{ ...declaration, id: 'other', aliasIds: ['body'] }]),
         ],
       }),
     });
@@ -323,7 +327,7 @@ describe('qualified spatial handle compile', () => {
         type: literal('invalidDiscardedCard'),
       }),
       compile: (_node, context) => {
-        void context.scope({}, [], [{ id: 'body', role: 'card', bounds: { x: 0, y: 0, width: -1, height: 1 } }]);
+        void context.createScope({}, [], [{ id: 'body', role: 'card', bounds: { x: 0, y: 0, width: -1, height: 1 } }]);
         return { children: [] };
       },
     });

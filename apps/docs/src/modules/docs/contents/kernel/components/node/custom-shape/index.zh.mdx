@@ -35,18 +35,18 @@ import { z } from 'zod';
 const badge = defineShape({
   name: 'badge',
   paramsSchema: z.strictObject({}),
-  circumscribe: (halfWidth, halfHeight) => ({
+  computeCircumscribedHalfAxes: (halfWidth, halfHeight) => ({
     halfWidth: halfWidth + 8,
     halfHeight: halfHeight + 4,
   }),
-  boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
-  anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
-  connectionEnvelope: BUILTIN_SHAPES.get('rectangle')!.connectionEnvelope,
+  computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
+  resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
+  computeConnectionEnvelope: BUILTIN_SHAPES.get('rectangle')!.computeConnectionEnvelope,
   emit: BUILTIN_SHAPES.get('rectangle')!.emit,
 });
 ```
 
-定义至少回答四个问题：内容需要多大的外接框、连线朝某方向时停在哪里、认识哪些专属 anchor、最终输出哪些 `ScenePrimitive`。如果希望内置 circle / ellipse 的 `fit: 'tight'` 贴合该形状，还应提供 `connectionEnvelope`；上例直接复用矩形的安全包络。字段签名集中在 [API 参考](/kernel/components/node/reference)。
+定义至少回答四个问题：内容需要多大的外接框、连线朝某方向时停在哪里、认识哪些专属 anchor、最终输出哪些 `ScenePrimitive`。如果希望内置 circle / ellipse 的 `fit: 'tight'` 贴合该形状，还应提供 `computeConnectionEnvelope`；上例直接复用矩形的安全包络。字段签名集中在 [API 参考](/kernel/components/node/reference)。
 
 ### 带参数的形状
 
@@ -64,7 +64,7 @@ const badge = defineShape({
 
 ### 语义连接点
 
-有些图形不能用“中心射线与可见轮廓求交”表达连接规则。二极管把 `boundaryPoint` 收敛到左右端子，并通过 `anchor` 暴露 `input` / `output`；视觉仍可由多个 primitive 组成。
+有些图形不能用“中心射线与可见轮廓求交”表达连接规则。二极管把 `computeBoundaryPoint` 收敛到左右端子，并通过 `resolveAnchor` 暴露 `input` / `output`；视觉仍可由多个 primitive 组成。
 
 <ComponentPreview files="diode" size="sm" />
 
@@ -90,22 +90,22 @@ IR 只写注册名或带参引用；宿主负责在每次编译时提供相同�
 
 ## 错误与限制
 
-| 情况                         | 结果与排查入口                                                    |
-| ---------------------------- | ----------------------------------------------------------------- |
-| `name` 为空                  | 注册阶段报 provider key 必须是非空字符串                          |
-| 与内置或另一个自定义项同名   | 注册阶段报 `duplicate shape registration`；内置形状不能覆盖       |
-| IR 引用了未注册名称          | 编译报 `Unknown provider`，包含请求名称并列出可用名称             |
-| params 不是 JSON object      | 编译在 `node.shape.params` 路径报 JSON 校验错误                   |
-| params 不符合 `paramsSchema` | 编译同时报告 shape 名、IR 路径与 zod 细节                         |
-| `anchor` 不认识专属名称      | 返回 `undefined` 后由编译层报 `Unknown anchor`                    |
-| 未实现 `edgePoint`           | 使用 `{ side, fraction }` 时编译报该 shape 不支持 side anchors    |
-| 未实现 `connectionEnvelope`  | 内置 boundary 的 `fit: 'tight'` 回退到 bounds，并产生一次 warning |
-| 返回非法连接包络             | 编译报错；半轴必须是有限正数，circle 的两个半轴还必须相等         |
+| 情况                               | 结果与排查入口                                                    |
+| ---------------------------------- | ----------------------------------------------------------------- |
+| `name` 为空                        | 注册阶段报 provider key 必须是非空字符串                          |
+| 与内置或另一个自定义项同名         | 注册阶段报 `duplicate shape registration`；内置形状不能覆盖       |
+| IR 引用了未注册名称                | 编译报 `Unknown provider`，包含请求名称并列出可用名称             |
+| params 不是 JSON object            | 编译在 `node.shape.params` 路径报 JSON 校验错误                   |
+| params 不符合 `paramsSchema`       | 编译同时报告 shape 名、IR 路径与 zod 细节                         |
+| `resolveAnchor` 不认识专属名称     | 返回 `undefined` 后由编译层报 `Unknown anchor`                    |
+| 未实现 `computeEdgePoint`          | 使用 `{ side, fraction }` 时编译报该 shape 不支持 side anchors    |
+| 未实现 `computeConnectionEnvelope` | 内置 boundary 的 `fit: 'tight'` 回退到 bounds，并产生一次 warning |
+| 返回非法连接包络                   | 编译报错；半轴必须是有限正数，circle 的两个半轴还必须相等         |
 
 <ComponentAlert
   type="warn"
   title="局部坐标与旋转不要混用"
-  description="emit 收到轴对齐 rect，节点旋转由编译器统一包在外层 group；boundaryPoint / anchor 回答世界坐标里的连接点，收到的 rect 可带旋转。涉及旋转时先用 worldToLocal 进入局部系，计算后再用 localToWorld 返回世界系。"
+  description="emit 收到轴对齐 rect，节点旋转由编译器统一包在外层 group；computeBoundaryPoint / resolveAnchor 回答世界坐标里的连接点，收到的 rect 可带旋转。涉及旋转时先用 worldToLocal 进入局部系，计算后再用 localToWorld 返回世界系。"
 />
 
 默认 `scaleParams` 会按 `Math.sqrt(sx * sy)` 深度缩放 params 中的所有数值叶子。长度参数适合这个默认值；角度、计数或枚举数值必须自行实现 `scaleParams`，只缩放真正的长度。

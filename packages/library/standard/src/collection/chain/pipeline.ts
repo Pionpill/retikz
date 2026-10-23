@@ -77,7 +77,9 @@ export const compileChain = (source: IRChain, context: CompositeCompileContext):
       height: down ? block.width : block.height,
       scope,
       decoration: { style: defaultCell?.style, label },
-      extra: [context.scope({ localNamespace: true, defaults: { reset: ['node'] } }, [...referenceNodes, ...paths])],
+      extra: [
+        context.createScope({ localNamespace: true, defaults: { reset: ['node'] } }, [...referenceNodes, ...paths]),
+      ],
     },
     context,
   );

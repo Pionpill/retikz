@@ -110,7 +110,7 @@ export const createProbeLeafDefinition = (records: Array<ProbeRecord> = []): Any
 
       return {
         allocationBounds: { x: 0, y: 0, width, height },
-        children: [context.scope({ id: node.id }, [pathForVisualBounds(node)])],
+        children: [context.createScope({ id: node.id }, [pathForVisualBounds(node)])],
       };
     },
   });

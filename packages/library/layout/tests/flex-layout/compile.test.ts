@@ -99,7 +99,7 @@ const createLeafDefinition = (logs: Array<ProbeLog>) =>
                 } as const,
               ]),
         ],
-        children: [context.scope({ id: node.id }, [])],
+        children: [context.createScope({ id: node.id }, [])],
       };
     },
   });

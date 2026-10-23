@@ -78,7 +78,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 - It also accepts the center `'center'`, an angle such as `30`, or a boundary fraction such as `{ boundary: 'right', fraction: 0.25 }`; centered labels have no collision avoidance
 - `placement` defaults to `'outside'`; use `'inside'` to place the label inside the border
 - `font` / `textColor` use explicit label values first, then `Scope.defaults.node.label`, and finally inherit missing values from the node
-- `opacity` is 0..1 and multiplies the node opacity
+- `opacity` is 0..1. An explicit value overrides the node's overall opacity; omitting it inherits that value. Plain and mixed text follow the same rule, with segment opacity multiplying the effective label opacity
 
 <ComponentPreview
   files={['node-label-list', 'node-label-list.preview.tsx']}

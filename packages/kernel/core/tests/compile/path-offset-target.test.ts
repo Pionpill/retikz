@@ -192,7 +192,7 @@ describe('OffsetPosition: step.to compile resolve', () => {
         paramsSchema: strictObject({}).superRefine(() => {
           parseCount += 1;
         }),
-        boundaryPoint: rect => [rect.x, rect.y],
+        computeBoundaryPoint: rect => [rect.x, rect.y],
       });
       const countedStroke = definePathKind({
         name: 'counted-stroke',

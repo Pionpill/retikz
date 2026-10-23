@@ -11,6 +11,8 @@ Structure 已经决定 Cell 是谁、位于哪里，但原始标量还不是最�
   description="普通文本表格会自动使用内置 text presentation；只有需要自定义值呈现或直接嵌入图形内容时才需要本页。"
 />
 
+Source defaults 的 `content.defaults.style` 直接复用 Core 的级联样式字段，支持 `dashPattern`、`dashOffset`、`lineCap`、`lineJoin`、`shadow` 和 `blendMode`。省略字段表示继承，显式 `null` 清除继承值；边框的 `dashPattern` 仍要求各段长度大于 0。
+
 ## 从原始值到带样式内容
 
 <ComponentPreview files="table-presentation-flow" hideCode size="xxxl" />

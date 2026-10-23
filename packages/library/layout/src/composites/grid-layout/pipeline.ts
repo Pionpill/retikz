@@ -109,7 +109,7 @@ const requiredProbe = (
   sourceIndex: number,
   proposal: LayoutProposal,
 ): LayoutChildResult => {
-  const probe = context.layoutChild(context.sourceChild(['children', sourceIndex, 'child']), proposal);
+  const probe = context.layoutChild(context.selectSourceChild(['children', sourceIndex, 'child']), proposal);
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
   return probe.result;
 };
@@ -476,7 +476,7 @@ export function compileGridLayout(
       transforms: [{ kind: 'translate', x: placed.translation.x, y: placed.translation.y }],
     });
   });
-  const scope = context.scope(
+  const scope = context.createScope(
     node.overflow === LayoutOverflow.Clip ? { clip: layoutClipOf(allocation) } : {},
     outputChildren,
   );

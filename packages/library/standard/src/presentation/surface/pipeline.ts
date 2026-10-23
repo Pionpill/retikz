@@ -60,7 +60,7 @@ export const compileSurface = (sourceSurface: IRSurface, context: CompositeCompi
   const surface = resolveSurface(sourceSurface);
   const child = requiredLayoutProbe(
     context,
-    { child: context.sourceChild(['child']), occurrence: 0 },
+    { child: context.selectSourceChild(['child']), occurrence: 0 },
     childProposal(surface, context.proposal),
   );
 
@@ -78,7 +78,7 @@ export const compileSurface = (sourceSurface: IRSurface, context: CompositeCompi
       },
     ],
   });
-  const content = context.scope(
+  const content = context.createScope(
     {
       zIndex: 0,
       ...(surface.overflow === LayoutOverflow.Clip ? { clip: surfaceClip(width, height, cornerRadius) } : {}),
@@ -132,7 +132,7 @@ export const compileSurface = (sourceSurface: IRSurface, context: CompositeCompi
   return {
     allocationBounds,
     children: [
-      context.scope(
+      context.createScope(
         scopeProps,
         [...background, content, ...border],
         [

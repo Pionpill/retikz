@@ -125,7 +125,7 @@ Path 则直接把同一个对象传给目标 `<Step>` 的 `label`：
 
 `<Path label>` 作用于整条路径，`<Step label>` 只作用于当前步骤。下面观察同一块文字如何形成断口：文字仍在原位置，线在文字边界两侧停止。
 
-`label.text` 与 Node 复用同一种文字块输入（TextBlock）：可写单个字符串（其中 `\n` 是硬换行），也可写行数组并给每行单独设置 `fill` / `font`。所有行仍是同一个标签块，共享锚点、`position`、`side`、`sloped` 与 `interrupt`；断口按整个文字块的视觉边界计算，不会把每一行拆成独立标签。
+`label.text` 与 Node 复用同一种文字块输入（TextBlock）：可写单个字符串（其中 `\n` 是硬换行），也可写行数组并给每行单独设置 `fill` / `font` / `opacity`。只有一行时这些覆盖仍然生效，行级字号也参与测量和断口计算。行或片段的透明度再乘标签与 Path 的透明度。所有行仍是同一个标签块，共享锚点、`position`、`side`、`sloped` 与 `interrupt`；断口按整个文字块的视觉边界计算，不会把每一行拆成独立标签。
 
 <ComponentPreview files="path-label-interruption" size="lg" />
 

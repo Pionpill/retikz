@@ -92,7 +92,7 @@ Name lookup and geometric point selection are separate steps. `id` selects a reg
 
 Without an explicit anchor, a position target reads the object center. Node anchor placement also uses `selfAnchor`, the current node's anchor to align with the target; it defaults to center. A bare node target in a path may later be clipped to the outline. The center obtained here is a reference point; path compilation determines the final endpoint.
 
-Anchors are not a fixed set of coordinates beside an object. `resolveAnchorRef` reads the bound shape / boundary capability and current geometry. Edge fractions use the shape's `edgePoint` capability. Coordinate registers a zero-size layout that supplies a position without drawing a visible primitive.
+Anchors are not a fixed set of coordinates beside an object. `resolveAnchorRef` reads the bound shape / boundary capability and current geometry. Edge fractions use the shape's `computeEdgePoint` capability. Coordinate registers a zero-size layout that supplies a position without drawing a visible primitive.
 
 Aligning a Node's own anchor requires a provisional layout because its dimensions and rotation affect that point. Core projects the layout into world space, subtracts the self-anchor from the target point, converts this world displacement back to local space, and moves both node geometry and content. A self-reference, an undefined target, or a Scope still being laid out causes this compilation to fail.
 

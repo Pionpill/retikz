@@ -43,7 +43,7 @@ const createLeafDefinition = (logs: Array<ProbeLog>) =>
           height: node.height,
         },
         children: [
-          context.scope(
+          context.createScope(
             { id: node.id },
             [],
             [

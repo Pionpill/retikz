@@ -78,7 +78,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 - 还可写中心 `'center'`、角度 `30`，或边界比例 `{ boundary: 'right', fraction: 0.25 }`；中心标签不做重叠避让
 - `placement` 默认 `'outside'`，写 `'inside'` 可放在边框内侧
 - `font` / `textColor` 优先使用标签显式值，再使用 `Scope.defaults.node.label`，仍未提供的值从节点继承
-- `opacity` 为 0..1，与节点透明度相乘
+- `opacity` 为 0..1，显式值覆盖节点整体透明度；省略时继承节点整体透明度。普通文字与混排遵循同一规则，片段透明度再与标签的有效透明度相乘
 
 <ComponentPreview
   files={['node-label-list', 'node-label-list.preview.tsx']}

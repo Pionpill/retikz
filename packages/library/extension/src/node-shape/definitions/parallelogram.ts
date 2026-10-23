@@ -65,7 +65,7 @@ const parallelogramVertices =
 export const ParallelogramShapeDefinition = defineShape<ParallelogramShapeParams>({
   name: BuiltinExtensionShapeName.Parallelogram,
   paramsSchema: ParallelogramShapeParamsSchema,
-  circumscribe: (innerHalfWidth, innerHalfHeight, params) => {
+  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight, params) => {
     const sharp = {
       halfWidth: innerHalfWidth + Math.abs(slantOffset(innerHalfHeight, params)),
       halfHeight: innerHalfHeight,
@@ -79,10 +79,11 @@ export const ParallelogramShapeDefinition = defineShape<ParallelogramShapeParams
       parallelogramVertices(params),
     );
   },
-  boundaryPoint: (bounds, toward, params) =>
+  computeBoundaryPoint: (bounds, toward, params) =>
     polygonBoundaryPoint(bounds, toward, params.cornerRadius, parallelogramVertices(params)),
-  anchor: polygonAnchor,
-  connectionEnvelope: (bounds, kind, params) => polygonConnectionEnvelope(bounds, kind, parallelogramVertices(params)),
+  resolveAnchor: polygonAnchor,
+  computeConnectionEnvelope: (bounds, kind, params) =>
+    polygonConnectionEnvelope(bounds, kind, parallelogramVertices(params)),
   emit: (bounds, style, round, params) =>
     emitPolygon(bounds, style, round, params.cornerRadius, parallelogramVertices(params)),
   scaleParams: (params, scaleX, scaleY) => ({

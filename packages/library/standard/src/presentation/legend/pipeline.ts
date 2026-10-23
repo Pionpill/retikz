@@ -415,7 +415,7 @@ const compileLegendRamp = (
   ];
 
   const allocationScope = replayLayoutChildren(context, allPlaced, allocation, node.overflow);
-  const authoredRootScope = context.scope(authoredScopeProps, [allocationScope]);
+  const authoredRootScope = context.createScope(authoredScopeProps, [allocationScope]);
 
   return {
     children: [authoredRootScope],
@@ -614,7 +614,7 @@ export const compileLegend = (
   ];
 
   const allocationScope = replayLayoutChildren(context, allPlaced, allocation, node.overflow);
-  const authoredRootScope = context.scope(authoredScopeProps, [allocationScope]);
+  const authoredRootScope = context.createScope(authoredScopeProps, [allocationScope]);
 
   const artifactItems = finalItems.map(item =>
     Object.freeze({
