@@ -1063,6 +1063,7 @@ export type InspectCoordinateProps = Omit<CoordinateProps, 'authoring'> & {
 | 输出   | `artifacts?`             | `CompileArtifactOptions`                              | —                             | 请求生成的编译附加产物                                                                                   |
 | 扩展   | `extensions?`            | `LayoutExtensions`                                    | —                             | 按能力分类的运行时扩展注册，复用 Core 编译契约                                                           |
 |        | `lowerTex?`              | `LowerTex`                                            | —                             | 公式下沉能力                                                                                             |
+|        | `measureText?`           | `TextMeasurer`                                        | —                             | 自定义文字测量；省略时使用 Vanilla 的环境测量与估算降级                                                  |
 
 </ApiTable>
 

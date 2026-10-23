@@ -1053,6 +1053,7 @@ export type InspectCoordinateProps = Omit<CoordinateProps, 'authoring'> & {
 | Output     | `artifacts?`             | `CompileArtifactOptions`                              | —                             | Compilation artifacts requested for generation                                                                                                                                 |
 | Extensions | `extensions?`            | `LayoutExtensions`                                    | —                             | Runtime extensions grouped by capability, using the Core compilation contract                                                                                                  |
 |            | `lowerTex?`              | `LowerTex`                                            | —                             | Formula lowering capability                                                                                                                                                    |
+|            | `measureText?`           | `TextMeasurer`                                        | —                             | Custom text measurement; defaults to Vanilla environment measurement with an estimation fallback                                                                               |
 
 </ApiTable>
 

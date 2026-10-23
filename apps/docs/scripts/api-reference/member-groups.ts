@@ -194,6 +194,7 @@ export const apiReferenceMemberGroups: Readonly<Partial<Record<string, ApiRefere
       artifacts: 'Output',
       extensions: 'Extensions',
       lowerTex: 'Extensions',
+      measureText: 'Extensions',
     },
   },
   '@retikz/react#LayoutProps': {

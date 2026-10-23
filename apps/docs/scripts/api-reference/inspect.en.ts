@@ -1,4 +1,6 @@
 const translations: Record<string, string> = {
+  '自定义文字测量；省略时使用 Vanilla 的环境测量与估算降级':
+    'Custom text measurement; defaults to Vanilla environment measurement with an estimation fallback',
   'subject 类型由所属者契约确定，context 类型由选项解析恢复':
     'The owner contract determines the subject type; option parsing restores the context type',
   所属者发布的被观察对象类型: 'Observed subject type published by its owner',
