@@ -119,6 +119,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '注册表 key，由 IR `boundary` 引用': 'Registry key referenced by IR `boundary`',
   '返回与解析后 rect 同坐标系的精确闭合连接面轮廓；空数组表示合法空几何':
     'Return an exact closed boundary outline in the resolved rect coordinate system; an empty array is valid empty geometry',
+  '可选，主要供 Inspect 调试时显示连接面轮廓，通常可以省略。省略不影响连接点或锚点计算，但 Inspect 无法显示精确连接面轮廓；提供此方法不会让连接面在正常绘制中显示':
+    'Optional and primarily used by Inspect to visualize the boundary for debugging; it can usually be omitted. Omitting it does not affect connection point or anchor calculations, but Inspect cannot display the exact boundary outline. Providing it does not make the boundary visible during normal rendering',
   '运行时连接面参数的 schema': 'Runtime schema for boundary parameters',
   '根据视觉 shape 和实例 params 解析本连接面使用的矩形':
     'Resolve the boundary rectangle from the visual shape and instance parameters',

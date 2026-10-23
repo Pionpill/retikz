@@ -172,7 +172,7 @@ declare const compositeCompileChildBrand: unique symbol;
 
 /**
  * 复合组件的 compile-local 输出 child
- * @description 只能由当前 composite callback 的 `replay()` 或 `scope()` 创建，不能读取、伪造、序列化、跨 callback 或跨 compile 使用
+ * @description 只能由当前 composite callback 的 `replay()` 或 `createScope()` 创建，不能读取、伪造、序列化、跨 callback 或跨 compile 使用
  */
 export type CompositeCompileChild = Readonly<{
   [compositeCompileChildBrand]: never;
@@ -263,7 +263,7 @@ export type CompositeCompileContext = CompositeRuntimeInputContext &
     proposal: LayoutProposal;
     /**
      * 创建使用局部 Theme 的编译上下文，复用当前 callback 的 probe、replay 与输入所有权
-     * @description 通过 Core 已注册的 Theme definitions 解析覆盖；测量与目标查询使用解析后的主题，不修改父上下文。最终输出仍须由 scope() 声明同一主题边界
+     * @description 通过 Core 已注册的 Theme definitions 解析覆盖；测量与目标查询使用解析后的主题，不修改父上下文。最终输出仍须由 createScope() 声明同一主题边界
      */
     withTheme: (theme: NonNullable<IRScopeProps['theme']>) => CompositeCompileContext;
     /**
@@ -295,7 +295,7 @@ export type CompositeCompileContext = CompositeRuntimeInputContext &
      * @param children 普通 IR child 或当前 callback 创建的 opaque child
      * @param spatialHandles 附着到该 Scope 局部坐标并在最终可达 output tree 中发布的空间声明
      */
-    scope: (
+    createScope: (
       props: CompositeCompileScopeProps,
       children: ReadonlyArray<IRChild | CompositeCompileChild | CompositeBoundChild>,
       spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>,
@@ -306,7 +306,7 @@ export type CompositeCompileContext = CompositeRuntimeInputContext &
 export type CompositeCompileResult<TArtifact extends JsonValue = never> = Readonly<{
   /** 普通 IR、绑定子项或当前回调创建的运行时输出 */
   children: ReadonlyArray<IRChild | CompositeCompileChild | CompositeBoundChild>;
-  /** 当前组件局部坐标中的空间声明；输出含带位置或变换的普通 Scope 时改用 scope() 的局部声明 */
+  /** 当前组件局部坐标中的空间声明；输出含带位置或变换的普通 Scope 时改用 createScope() 的局部声明 */
   spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>;
   /** 组件对父布局声明的布局占用；省略时合并最终子项 */
   allocationBounds?: Readonly<BoundsRect>;

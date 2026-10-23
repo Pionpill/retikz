@@ -54,7 +54,7 @@ Core 通过注入的 `measureText` 取得度量，不直接读取 DOM。测量�
 - **视觉形状**：形状包住“正文盒 + padding”后，结合尺寸约束得到的轮廓。
 - **布局占位**：在节点外框基础上考虑 `margin` 与旋转，供父级布局分配空间。
 
-形状的 `circumscribe` 接收内容半宽、半高，返回能够容纳它的形状外框。矩形通常直接包住内容；圆形需要更大的直径才能容纳同一个矩形内容区。
+形状的 `computeCircumscribedHalfAxes` 接收内容半宽、半高，返回能够容纳它的形状外框。矩形通常直接包住内容；圆形需要更大的直径才能容纳同一个矩形内容区。
 
 下图假定正文盒已经测得为 `40 × 24`，使用无旋转的矩形、四边 `padding = 8`、`minimumSize = { width: 80, height: 48 }` 和 `margin = 6`，且没有固定 `width`。为便于观察，图形等比放大；灰色点线表示计算范围，不是额外绘制的节点边框。
 
@@ -77,7 +77,10 @@ Core 通过注入的 `measureText` 取得度量，不直接读取 DOM。测量�
 
 <SourceLinks
   sources={[
-    { label: '内容预算、circumscribe 与尺寸约束', path: 'packages/kernel/core/src/compile/node/layout.ts' },
+    {
+      label: '内容预算、computeCircumscribedHalfAxes 与尺寸约束',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
+    },
     { label: '形状定义的包围契约', path: 'packages/kernel/core/src/contract/shape/shape.ts' },
   ]}
 />

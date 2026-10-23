@@ -2,6 +2,7 @@ import type { IRPaint } from '@retikz/core';
 import { PlotAxis, PointMark } from '@retikz/plot-react';
 import type { PointMarkProps } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
+import type { FC } from 'react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
 
@@ -18,7 +19,14 @@ const gradientFill: IRPaint = {
 
 /** 图形参数 */
 export type PointStylePreviewValues = {
-  paintMode: 'field' | 'solid' | 'gradient';
+  paintMode: 'field' | 'solid' | 'gradient' | 'weight';
+  /** 虚线相位与端点形状 */
+  dashOffset: number;
+  lineCap: 'butt' | 'round' | 'square';
+  lineJoin: 'miter' | 'round' | 'bevel';
+  shape: 'circle' | 'rectangle';
+  weight: number;
+  scalarOpacity: boolean;
   fill: string;
   stroke: string;
   strokeWidth: number;
@@ -40,9 +48,16 @@ export type PointStylePreviewValues = {
 };
 
 /** 绘制示例图形 */
-export const PointStylePreview = (values: PointStylePreviewValues) => {
+export const PointStylePreview: FC<PointStylePreviewValues> = values => {
   const usesFieldColor = values.paintMode === 'field';
-  const fill = values.paintMode === 'gradient' ? gradientFill : values.paintMode === 'solid' ? values.fill : undefined;
+  const fill =
+    values.paintMode === 'weight'
+      ? values.weight
+      : values.paintMode === 'gradient'
+        ? gradientFill
+        : values.paintMode === 'solid'
+          ? values.fill
+          : undefined;
   const pointProps: PointMarkProps = {
     encodings: {
       position: { x: { field: 'x' }, y: { field: 'y' } },
@@ -51,13 +66,19 @@ export const PointStylePreview = (values: PointStylePreviewValues) => {
     },
     properties: {
       fill,
+      dashOffset: values.dashOffset,
+      lineCap: values.lineCap,
+      lineJoin: values.lineJoin,
+      shape: values.shape,
       stroke: values.stroke,
       strokeWidth: values.strokeWidth,
-      opacity: {
-        overall: values.opacity,
-        fill: values.fillOpacity,
-        stroke: values.strokeOpacity,
-      },
+      opacity: values.scalarOpacity
+        ? values.opacity
+        : {
+            overall: values.opacity,
+            fill: values.fillOpacity,
+            stroke: values.strokeOpacity,
+          },
       size: values.size,
       dashed: values.dashed,
       dotted: values.dotted,

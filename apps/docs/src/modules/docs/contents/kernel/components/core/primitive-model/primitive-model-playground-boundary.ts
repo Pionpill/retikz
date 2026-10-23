@@ -86,7 +86,8 @@ const guideRect = (
   const envelope =
     boundary === 'rectangle' || fit === 'bounds'
       ? boundsConnectionEnvelope(rect, kind)
-      : (visual.definition.connectionEnvelope?.(rect, kind, visual.params) ?? boundsConnectionEnvelope(rect, kind));
+      : (visual.definition.computeConnectionEnvelope?.(rect, kind, visual.params) ??
+        boundsConnectionEnvelope(rect, kind));
 
   return {
     ...rect,
@@ -102,16 +103,16 @@ const guideRect = (
 export const primitiveModelBoundaryGuideShape = defineShape<BoundaryGuideParams>({
   name: 'primitive-model-boundary-guide',
   paramsSchema: boundaryGuideParamsSchema,
-  circumscribe: (innerHalfWidth, innerHalfHeight, params) => {
+  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight, params) => {
     const visual = visualShapeOf(params.shape);
-    return visual.definition.circumscribe(innerHalfWidth, innerHalfHeight, visual.params);
+    return visual.definition.computeCircumscribedHalfAxes(innerHalfWidth, innerHalfHeight, visual.params);
   },
-  circumscribeOffset: params => {
+  computeCircumscribedOffset: params => {
     const visual = visualShapeOf(params.shape);
-    return visual.definition.circumscribeOffset?.(visual.params) ?? [0, 0];
+    return visual.definition.computeCircumscribedOffset?.(visual.params) ?? [0, 0];
   },
-  boundaryPoint: rect => [rect.x, rect.y],
-  anchor: () => undefined,
+  computeBoundaryPoint: rect => [rect.x, rect.y],
+  resolveAnchor: () => undefined,
   *emit(rect, style, round, params) {
     if (params.boundary === 'shape') return;
 

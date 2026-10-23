@@ -35,18 +35,18 @@ import { z } from 'zod';
 const badge = defineShape({
   name: 'badge',
   paramsSchema: z.strictObject({}),
-  circumscribe: (halfWidth, halfHeight) => ({
+  computeCircumscribedHalfAxes: (halfWidth, halfHeight) => ({
     halfWidth: halfWidth + 8,
     halfHeight: halfHeight + 4,
   }),
-  boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
-  anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
-  connectionEnvelope: BUILTIN_SHAPES.get('rectangle')!.connectionEnvelope,
+  computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
+  resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
+  computeConnectionEnvelope: BUILTIN_SHAPES.get('rectangle')!.computeConnectionEnvelope,
   emit: BUILTIN_SHAPES.get('rectangle')!.emit,
 });
 ```
 
-A definition answers at least four questions: how large the content's outer box must be, where a connection stops in a target direction, which shape-specific anchors exist, and which `ScenePrimitive` values are emitted. To make built-in circle / ellipse boundaries with `fit: 'tight'` follow the shape closely, also provide `connectionEnvelope`; the example reuses rectangle's safe envelope. See [API reference](/kernel/components/node/reference) for the field signatures.
+A definition answers at least four questions: how large the content's outer box must be, where a connection stops in a target direction, which shape-specific anchors exist, and which `ScenePrimitive` values are emitted. To make built-in circle / ellipse boundaries with `fit: 'tight'` follow the shape closely, also provide `computeConnectionEnvelope`; the example reuses rectangle's safe envelope. See [API reference](/kernel/components/node/reference) for the field signatures.
 
 ### Parametric shapes
 
@@ -64,7 +64,7 @@ The `ngon` example uses one definition for any regular polygon. Adjusting `sides
 
 ### Semantic connection points
 
-Some graphics cannot express their connection rules as “intersect a ray from the center with the visible contour.” The diode constrains `boundaryPoint` to its left and right terminals and exposes `input` / `output` through `anchor`, while its visual still consists of multiple primitives.
+Some graphics cannot express their connection rules as “intersect a ray from the center with the visible contour.” The diode constrains `computeBoundaryPoint` to its left and right terminals and exposes `input` / `output` through `resolveAnchor`, while its visual still consists of multiple primitives.
 
 <ComponentPreview files="diode" size="sm" />
 
@@ -90,22 +90,22 @@ The IR stores only the registry name or parametric reference; the host must prov
 
 ## Errors and limitations
 
-| Case                                      | Result and diagnostic                                                               |
-| ----------------------------------------- | ----------------------------------------------------------------------------------- |
-| Empty `name`                              | Registration rejects a provider key that is not a non-empty string                  |
-| Same name as a built-in or custom item    | Registration throws `duplicate shape registration`; built-ins cannot be overridden  |
-| IR references an unregistered name        | Compile throws `Unknown provider` with the requested name and available names       |
-| params are not a JSON object              | Compile reports JSON validation at the `node.shape.params` path                     |
-| params fail `paramsSchema`                | Compile reports the shape name, IR path, and zod details                            |
-| `anchor` does not recognize a custom name | Returning `undefined` lets compile throw `Unknown anchor`                           |
-| `edgePoint` is omitted                    | Using `{ side, fraction }` reports that the shape does not support side anchors     |
-| `connectionEnvelope` is omitted           | A built-in boundary with `fit: 'tight'` falls back to bounds and emits one warning  |
-| Invalid connection envelope               | Compile fails; axes must be finite and positive, and a circle's two axes must match |
+| Case                                             | Result and diagnostic                                                               |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| Empty `name`                                     | Registration rejects a provider key that is not a non-empty string                  |
+| Same name as a built-in or custom item           | Registration throws `duplicate shape registration`; built-ins cannot be overridden  |
+| IR references an unregistered name               | Compile throws `Unknown provider` with the requested name and available names       |
+| params are not a JSON object                     | Compile reports JSON validation at the `node.shape.params` path                     |
+| params fail `paramsSchema`                       | Compile reports the shape name, IR path, and zod details                            |
+| `resolveAnchor` does not recognize a custom name | Returning `undefined` lets compile throw `Unknown anchor`                           |
+| `computeEdgePoint` is omitted                    | Using `{ side, fraction }` reports that the shape does not support side anchors     |
+| `computeConnectionEnvelope` is omitted           | A built-in boundary with `fit: 'tight'` falls back to bounds and emits one warning  |
+| Invalid connection envelope                      | Compile fails; axes must be finite and positive, and a circle's two axes must match |
 
 <ComponentAlert
   type="warn"
   title="Keep local coordinates and rotation separate"
-  description="emit receives an axis-aligned rect; the compiler applies the Node rotation through an outer group. boundaryPoint / anchor answer world-space connection points and may receive a rotated rect. When rotation matters, enter local space with worldToLocal, calculate there, then return through localToWorld."
+  description="emit receives an axis-aligned rect; the compiler applies the Node rotation through an outer group. computeBoundaryPoint / resolveAnchor answer world-space connection points and may receive a rotated rect. When rotation matters, enter local space with worldToLocal, calculate there, then return through localToWorld."
 />
 
 By default, `scaleParams` deep-scales every numeric leaf by `Math.sqrt(sx * sy)`. That default suits lengths. Shapes with angles, counts, or numeric enum values must implement `scaleParams` and scale only actual lengths.

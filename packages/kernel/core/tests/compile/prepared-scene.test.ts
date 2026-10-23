@@ -6,7 +6,7 @@ import {
   createCompositeInputBindings,
   prepareSceneCompilation,
   RetikzCoreErrorCode,
-  validateCompositeInputBindings,
+  assertCompositeInputBindings,
 } from '../../src';
 
 const scene: IRScene = {
@@ -62,9 +62,9 @@ describe('静态编译准备', () => {
 
   it('配对检查不编译并拒绝过期绑定', () => {
     const bindings = createCompositeInputBindings(scene, []);
-    expect(validateCompositeInputBindings(scene, bindings)).toBeUndefined();
-    expect(validateCompositeInputBindings(scene, undefined)).toBeUndefined();
-    expect(() => validateCompositeInputBindings({ ...scene, children: [] }, bindings)).toThrow(
+    expect(assertCompositeInputBindings(scene, bindings)).toBeUndefined();
+    expect(assertCompositeInputBindings(scene, undefined)).toBeUndefined();
+    expect(() => assertCompositeInputBindings({ ...scene, children: [] }, bindings)).toThrow(
       expect.objectContaining({ code: RetikzCoreErrorCode.CompositeContractViolation }),
     );
   });

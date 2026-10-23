@@ -45,7 +45,7 @@ describe('NodeLayout boundary / shapes', () => {
     const shapes = new Map(resolveShapeRegistry());
     const rectangle = shapes.get('rectangle')!;
     const envelope = vi.fn(() => ({ halfWidth: 30, halfHeight: 30 }));
-    shapes.set('rectangle', { ...rectangle, connectionEnvelope: envelope });
+    shapes.set('rectangle', { ...rectangle, computeConnectionEnvelope: envelope });
     const layout = layoutOf({ type: 'node', position: [0, 0], boundary: 'circle' }, shapes);
     const context = createNodeGeometryContext();
     const projected = projectLayoutWithTransform(layout, composeScopeTransform([]));
@@ -61,7 +61,7 @@ describe('NodeLayout boundary / shapes', () => {
 
   it('同一节点变换后的 tight fallback 警告只发一次，不同编译上下文独立', () => {
     const shapes = new Map(resolveShapeRegistry());
-    shapes.set('rectangle', { ...shapes.get('rectangle')!, connectionEnvelope: undefined });
+    shapes.set('rectangle', { ...shapes.get('rectangle')!, computeConnectionEnvelope: undefined });
     const layout = layoutOf({ type: 'node', position: [0, 0], boundary: 'circle' }, shapes);
     const warn = vi.fn();
     const context = createNodeGeometryContext();

@@ -7,6 +7,12 @@ import { pointStyleI18n } from './point-style.i18n';
 
 /** 点外观 playground 的稳定控件 id */
 export const POINT_STYLE_CONTROL_IDS = {
+  dashOffset: 'point-style-dash-offset',
+  lineCap: 'point-style-line-cap',
+  lineJoin: 'point-style-line-join',
+  shape: 'point-style-shape',
+  weight: 'point-style-weight',
+  scalarOpacity: 'point-style-scalar-opacity',
   dotted: 'point-style-dotted',
   dashPattern: 'point-style-dashPattern',
   blendMode: 'point-style-blendMode',
@@ -39,6 +45,58 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       },
       {
         controls: [
+          {
+            kind: 'range',
+            id: POINT_STYLE_CONTROL_IDS.dashOffset,
+            label: i18n.dashOffset,
+            defaultValue: 0,
+            min: -12,
+            max: 12,
+            step: 1,
+          },
+          {
+            kind: 'select',
+            id: POINT_STYLE_CONTROL_IDS.lineCap,
+            label: i18n.lineCap,
+            defaultValue: 'butt',
+            options: [
+              { value: 'butt', label: i18n.butt },
+              { value: 'round', label: i18n.round },
+              { value: 'square', label: i18n.square },
+            ],
+          },
+          {
+            kind: 'select',
+            id: POINT_STYLE_CONTROL_IDS.lineJoin,
+            label: i18n.lineJoin,
+            defaultValue: 'miter',
+            options: [
+              { value: 'miter', label: i18n.miter },
+              { value: 'round', label: i18n.round },
+              { value: 'bevel', label: i18n.bevel },
+            ],
+          },
+          {
+            kind: 'select',
+            id: POINT_STYLE_CONTROL_IDS.shape,
+            label: i18n.shape,
+            defaultValue: 'circle',
+            options: [
+              { value: 'circle', label: i18n.circle },
+              { value: 'rectangle', label: i18n.rectangle },
+            ],
+          },
+          {
+            kind: 'range',
+            id: POINT_STYLE_CONTROL_IDS.weight,
+            label: i18n.weight,
+            defaultValue: 0.5,
+            min: 0,
+            max: 1,
+            step: 0.05,
+            visibleWhen: { controlId: POINT_STYLE_CONTROL_IDS.paintMode, oneOf: ['weight'] },
+          },
+          { kind: 'switch', id: POINT_STYLE_CONTROL_IDS.scalarOpacity, label: i18n.scalarOpacity, defaultValue: false },
           { kind: 'switch', id: POINT_STYLE_CONTROL_IDS.dotted, label: i18n.dotted, defaultValue: false },
           { kind: 'switch', id: POINT_STYLE_CONTROL_IDS.dashPattern, label: i18n.dashPattern, defaultValue: false },
           {
@@ -91,6 +149,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
               { value: 'field', label: i18n.regionField },
               { value: 'solid', label: i18n.solidColor },
               { value: 'gradient', label: i18n.gradientFill },
+              { value: 'weight', label: i18n.weight },
             ],
           },
           {
@@ -113,6 +172,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
           {
             kind: 'range',
             id: POINT_STYLE_CONTROL_IDS.fillOpacity,
+            visibleWhen: { controlId: POINT_STYLE_CONTROL_IDS.scalarOpacity, oneOf: [false] },
             label: i18n.fillOpacity,
             defaultValue: 1,
             min: 0.15,
@@ -122,6 +182,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
           {
             kind: 'range',
             id: POINT_STYLE_CONTROL_IDS.strokeOpacity,
+            visibleWhen: { controlId: POINT_STYLE_CONTROL_IDS.scalarOpacity, oneOf: [false] },
             label: i18n.strokeOpacity,
             defaultValue: 1,
             min: 0.15,
@@ -173,6 +234,12 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     controls: pointStyleControls,
     canonicalValues: {
       [POINT_STYLE_CONTROL_IDS.coordinate]: 'cartesian2D',
+      [POINT_STYLE_CONTROL_IDS.dashOffset]: 0,
+      [POINT_STYLE_CONTROL_IDS.lineCap]: 'butt',
+      [POINT_STYLE_CONTROL_IDS.lineJoin]: 'miter',
+      [POINT_STYLE_CONTROL_IDS.shape]: 'circle',
+      [POINT_STYLE_CONTROL_IDS.weight]: 0.5,
+      [POINT_STYLE_CONTROL_IDS.scalarOpacity]: false,
       [POINT_STYLE_CONTROL_IDS.dotted]: false,
       [POINT_STYLE_CONTROL_IDS.dashPattern]: false,
       [POINT_STYLE_CONTROL_IDS.blendMode]: 'normal',
@@ -196,6 +263,12 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
         label: i18n.fieldEncoding,
         values: {
           [POINT_STYLE_CONTROL_IDS.coordinate]: 'cartesian2D',
+          [POINT_STYLE_CONTROL_IDS.dashOffset]: 0,
+          [POINT_STYLE_CONTROL_IDS.lineCap]: 'butt',
+          [POINT_STYLE_CONTROL_IDS.lineJoin]: 'miter',
+          [POINT_STYLE_CONTROL_IDS.shape]: 'circle',
+          [POINT_STYLE_CONTROL_IDS.weight]: 0.5,
+          [POINT_STYLE_CONTROL_IDS.scalarOpacity]: false,
           [POINT_STYLE_CONTROL_IDS.dotted]: false,
           [POINT_STYLE_CONTROL_IDS.dashPattern]: false,
           [POINT_STYLE_CONTROL_IDS.blendMode]: 'normal',
@@ -218,6 +291,12 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
         label: i18n.gradientEmphasis,
         values: {
           [POINT_STYLE_CONTROL_IDS.coordinate]: 'cartesian2D',
+          [POINT_STYLE_CONTROL_IDS.dashOffset]: 0,
+          [POINT_STYLE_CONTROL_IDS.lineCap]: 'butt',
+          [POINT_STYLE_CONTROL_IDS.lineJoin]: 'miter',
+          [POINT_STYLE_CONTROL_IDS.shape]: 'circle',
+          [POINT_STYLE_CONTROL_IDS.weight]: 0.5,
+          [POINT_STYLE_CONTROL_IDS.scalarOpacity]: false,
           [POINT_STYLE_CONTROL_IDS.dotted]: false,
           [POINT_STYLE_CONTROL_IDS.dashPattern]: false,
           [POINT_STYLE_CONTROL_IDS.blendMode]: 'normal',
@@ -237,6 +316,10 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       },
     ],
     relatedApis: [
+      'PointMark.properties.dashOffset',
+      'PointMark.properties.lineCap',
+      'PointMark.properties.lineJoin',
+      'PointMark.properties.shape',
       'PointMark.dotted',
       'PointMark.dashPattern',
       'PointMark.blendMode',

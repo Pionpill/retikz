@@ -173,10 +173,10 @@ export const markChannelEncoding = (mark: IRPlotMark, target: string): IRPlotCha
 export const markProperty = <T>(mark: IRPlotMark, target: string): T | undefined => {
   if (markChannelEncoding(mark, target) !== undefined) return undefined;
   const properties: Record<string, unknown> | undefined = mark.properties;
-  const opacity = properties?.opacity as { overall?: number; fill?: number; stroke?: number } | undefined;
-  if (target === 'opacity') return opacity?.overall as T | undefined;
-  if (target === 'fillOpacity') return opacity?.fill as T | undefined;
-  if (target === 'strokeOpacity') return opacity?.stroke as T | undefined;
+  const opacity = properties?.opacity as number | { overall?: number; fill?: number; stroke?: number } | undefined;
+  if (target === 'opacity') return (typeof opacity === 'number' ? opacity : opacity?.overall) as T | undefined;
+  if (target === 'fillOpacity') return (typeof opacity === 'number' ? undefined : opacity?.fill) as T | undefined;
+  if (target === 'strokeOpacity') return (typeof opacity === 'number' ? undefined : opacity?.stroke) as T | undefined;
   return properties?.[target] as T | undefined;
 };
 

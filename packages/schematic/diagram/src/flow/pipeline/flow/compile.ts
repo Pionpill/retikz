@@ -327,7 +327,7 @@ export const createCompileFlowDiagram =
 
     return {
       allocationBounds: foundation.frame.allocationBounds,
-      children: [context.scope(flowScopeProps(source), [context.replay(foundation.frame)], spatialHandles)],
+      children: [context.createScope(flowScopeProps(source), [context.replay(foundation.frame)], spatialHandles)],
       artifact,
     };
   };

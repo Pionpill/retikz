@@ -9,7 +9,7 @@ export const verticesToSegments = (vertices: Array<Position>): Array<LineSegment
   vertices.map((from, index) => ({ kind: 'line', from, to: vertices[(index + 1) % vertices.length] }));
 
 /** 把带旋转的矩形轮廓算子转换为结构化 PathCommand */
-export const rectOutlinePathCommands = (
+export const computeRectangleOutlinePathCommands = (
   bounds: {
     x: number;
     y: number;
@@ -101,7 +101,7 @@ type PathPrimitiveStyle = Pick<
 >;
 
 /** 把形状样式投影到路径图元，忽略只属于节点盒的 cornerRadius */
-export const pathPrimitiveStyle = (
+export const buildPathPrimitiveStyle = (
   style: ResolvedShapeStyle,
   options?: Readonly<{ fill?: PathPrim['fill'] }>,
 ): PathPrimitiveStyle => {
@@ -120,5 +120,5 @@ export const pathPrimitiveStyle = (
 export const contourToPathPrimitive = (commands: Array<PathCommand>, style: ResolvedShapeStyle): PathPrim => ({
   type: 'path',
   commands,
-  ...pathPrimitiveStyle(style),
+  ...buildPathPrimitiveStyle(style),
 });

@@ -20,15 +20,15 @@ const FONT = { family: 'Arial, sans-serif' } as const;
 export const circuitMeter: ShapeDefinition = defineShape({
   name: 'circuit-meter',
   paramsSchema: z.strictObject({}),
-  circumscribe: (innerHalfWidth, innerHalfHeight) => {
+  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight) => {
     const radius = Math.sqrt(innerHalfWidth * innerHalfWidth + innerHalfHeight * innerHalfHeight);
     return { halfWidth: radius + 27.5, halfHeight: radius };
   },
-  boundaryPoint: (rect, toward) => {
+  computeBoundaryPoint: (rect, toward) => {
     const terminal: Position = worldToLocal(rect, toward)[0] < 0 ? [-rect.width / 2, 0] : [rect.width / 2, 0];
     return localToWorld(rect, terminal);
   },
-  anchor: (rect, name) => {
+  resolveAnchor: (rect, name) => {
     if (name === 'center') return [rect.x, rect.y];
     if (name === 'left' || name === 'input') return localToWorld(rect, [-rect.width / 2, 0]);
     if (name === 'right' || name === 'output') return localToWorld(rect, [rect.width / 2, 0]);

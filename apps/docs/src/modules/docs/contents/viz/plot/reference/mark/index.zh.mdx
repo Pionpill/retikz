@@ -5,6 +5,8 @@ description: 查询 Plot 点、路径、区间与关系图元 schema。
 
 图元是图形语法的几何输出层。仅支持 Point、Path、Interval、Relation 四类内置图元，未知类型在 schema 入口被拒绝。
 
+固定样式的 `fill` / `stroke` 复用 Core 的 PaintValue：支持 CSS 颜色、0 到 1 的主色权重或结构化 Paint。`opacity` 支持数值（等同于 `overall`）或独立的 `overall` / `fill` / `stroke` 因子对象；Relation 的固定图元样式遵循相同规则。
+
 ## MarkSchema
 
 <ZodSchema name="MarkSchema" description="Point、Path、Interval 与 Relation 内置图元的判别联合。" />

@@ -22,7 +22,7 @@ const registry = new Map([
 const shapeAwareVisual = {
   ...rectangle,
   name: 'shape-aware-visual',
-  connectionEnvelope: (_rect: CenteredBox, kind: 'circle' | 'ellipse' | 'rectangle') => {
+  computeConnectionEnvelope: (_rect: CenteredBox, kind: 'circle' | 'ellipse' | 'rectangle') => {
     if (kind === 'circle') return { halfWidth: 12, halfHeight: 12 };
     if (kind === 'ellipse') return { halfWidth: 14, halfHeight: 8 };
     return { halfWidth: 20, halfHeight: 10 };
@@ -32,7 +32,7 @@ const shapeAwareVisual = {
 const customWithoutEnvelope = {
   ...rectangle,
   name: 'custom-without-envelope',
-  connectionEnvelope: undefined,
+  computeConnectionEnvelope: undefined,
 };
 
 type BoundaryTestContext = BoundaryGeometryResolveContext & {
@@ -79,7 +79,7 @@ describe('resolveBoundary', () => {
     const r = resolveBoundary('circle', resolveContext());
 
     expect(r.def.name).toBe('circle');
-    expect(r.def.boundaryPoint(r.rect, [0, -100], r.params)[1]).toBeCloseTo(-Math.hypot(20, 10));
+    expect(r.def.computeBoundaryPoint(r.rect, [0, -100], r.params)[1]).toBeCloseTo(-Math.hypot(20, 10));
     expect(r.rect.width).toBeCloseTo(2 * Math.hypot(20, 10));
     expect(r.rect.height).toBeCloseTo(2 * Math.hypot(20, 10));
     expect(r.rect.x).toBe(0);
@@ -87,8 +87,8 @@ describe('resolveBoundary', () => {
 
   it("'circle' → connection surface circumscribes the visual AABB", () => {
     const r = resolveBoundary('circle', resolveContext());
-    const corner = r.def.boundaryPoint(r.rect, [20, 10], r.params);
-    const right = r.def.boundaryPoint(r.rect, [100, 0], r.params);
+    const corner = r.def.computeBoundaryPoint(r.rect, [20, 10], r.params);
+    const right = r.def.computeBoundaryPoint(r.rect, [100, 0], r.params);
 
     expect(corner[0]).toBeCloseTo(20);
     expect(corner[1]).toBeCloseTo(10);
@@ -99,8 +99,8 @@ describe('resolveBoundary', () => {
   it("'circle' → rotated surface preserves corner enclosure and standard anchors", () => {
     const rotatedRect: CenteredBox = { x: 5, y: -7, width: 40, height: 20, rotate: Math.PI / 2 };
     const r = resolveBoundary('circle', resolveContext({ visualRect: rotatedRect }));
-    const corner = r.def.boundaryPoint(r.rect, [-5, 13], r.params);
-    const top = r.def.anchor?.(r.rect, 'top', r.params);
+    const corner = r.def.computeBoundaryPoint(r.rect, [-5, 13], r.params);
+    const top = r.def.resolveAnchor?.(r.rect, 'top', r.params);
 
     expect(corner[0]).toBeCloseTo(-5);
     expect(corner[1]).toBeCloseTo(13);
@@ -110,8 +110,8 @@ describe('resolveBoundary', () => {
 
   it("'ellipse' → connection surface circumscribes the visual AABB", () => {
     const r = resolveBoundary('ellipse', resolveContext());
-    const corner = r.def.boundaryPoint(r.rect, [20, 10], r.params);
-    const right = r.def.boundaryPoint(r.rect, [100, 0], r.params);
+    const corner = r.def.computeBoundaryPoint(r.rect, [20, 10], r.params);
+    const right = r.def.computeBoundaryPoint(r.rect, [100, 0], r.params);
 
     expect(corner[0]).toBeCloseTo(20);
     expect(corner[1]).toBeCloseTo(10);
@@ -122,8 +122,8 @@ describe('resolveBoundary', () => {
   it("'ellipse' → rotated surface preserves corner enclosure and standard anchors", () => {
     const rotatedRect: CenteredBox = { x: 5, y: -7, width: 40, height: 20, rotate: Math.PI / 2 };
     const r = resolveBoundary('ellipse', resolveContext({ visualRect: rotatedRect }));
-    const corner = r.def.boundaryPoint(r.rect, [-5, 13], r.params);
-    const top = r.def.anchor?.(r.rect, 'top', r.params);
+    const corner = r.def.computeBoundaryPoint(r.rect, [-5, 13], r.params);
+    const top = r.def.resolveAnchor?.(r.rect, 'top', r.params);
 
     expect(corner[0]).toBeCloseTo(-5);
     expect(corner[1]).toBeCloseTo(13);
@@ -209,7 +209,7 @@ describe('resolveBoundary', () => {
   it('无效 shape envelope 与 gap 产生非正半轴时 fail-loud', () => {
     const invalidVisual = {
       ...shapeAwareVisual,
-      connectionEnvelope: () => ({ halfWidth: 0, halfHeight: 0 }),
+      computeConnectionEnvelope: () => ({ halfWidth: 0, halfHeight: 0 }),
     };
 
     expect(() => resolveBoundary('circle', resolveContext({ visualDef: invalidVisual }))).toThrow(/envelope/i);
@@ -226,7 +226,7 @@ describe('resolveBoundary', () => {
       name: 'invalid-rotate',
       paramsSchema: strictObject({}),
       resolveRect: context => ({ ...context.visualRect, rotate: Number.NaN }),
-      boundaryPoint: rect => [rect.x, rect.y],
+      computeBoundaryPoint: rect => [rect.x, rect.y],
     });
 
     expect(() =>
@@ -245,7 +245,7 @@ describe('resolveBoundary', () => {
     );
 
     expect(r.def.name).toBe('circle');
-    expect(r.def.boundaryPoint(r.rect, [0, -100], r.params)[1]).toBeCloseTo(-Math.hypot(20, 10));
+    expect(r.def.computeBoundaryPoint(r.rect, [0, -100], r.params)[1]).toBeCloseTo(-Math.hypot(20, 10));
   });
 });
 

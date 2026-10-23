@@ -202,7 +202,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         zh: '执行与辅助契约',
         en: 'Execution and supporting contracts',
       },
-      members: ['BoundaryAnchorName', 'BoundaryFitContext', 'NodeTextColor'],
+      members: ['BoundaryFitContext', 'NodeTextColor'],
       schemas: [],
     },
     {

@@ -1,4 +1,13 @@
-import type { IRChild, IRPathLabel, IRNode, IRNodeDefault, IRNodeLabel, IRPaint, IRPath, IRScope } from '@retikz/core';
+import type {
+  IRChild,
+  IRPathLabel,
+  IRNode,
+  IRNodeDefault,
+  IRNodeLabel,
+  IRPaintValue,
+  IRPath,
+  IRScope,
+} from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import { readSourceIndex, readSourceIndices } from '@retikz/data';
 
@@ -25,7 +34,6 @@ import {
   markChannelEncoding,
 } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
-import type { IRPlotMarkOpacityStyle } from '../../../schemas';
 import type {
   IRPlotLabelEncoding,
   IRPlotAnchorId,
@@ -46,8 +54,8 @@ export const LINE_STROKE_WIDTH = 2;
 /** 无 color 编码时的回退填充 */
 export const DEFAULT_FILL = 'currentColor';
 
-/** mark lowering 可使用的字符串颜色或 core paint */
-export type MarkPaint = string | IRPaint;
+/** mark lowering 复用 Core 的颜色、主色权重与结构化 paint */
+export type MarkPaint = IRPaintValue;
 
 /**
  * 按通道名读取逐行值 resolver
@@ -93,7 +101,7 @@ export const colorGroupedScope = (
 
 /** 提取透明度常量因子，字段绑定留给通道解析 */
 export const constantMarkOpacity = (
-  opacity: IRPlotMarkOpacityStyle | undefined,
+  opacity: NonNullable<IRNodeDefault['style']>['opacity'],
 ): NonNullable<IRNodeDefault['style']>['opacity'] => {
   return opacity;
 };

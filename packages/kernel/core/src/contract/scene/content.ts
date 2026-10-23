@@ -34,7 +34,7 @@ export const visitSceneContent = (
       active.delete(value);
     }
   };
-  const reference = (id: string, kind: SceneResource['kind'], site: SceneContentSite): void => {
+  const visitResourceReference = (id: string, kind: SceneResource['kind'], site: SceneContentSite): void => {
     const resource = resources.get(id);
     if (resource === undefined || resource.kind !== kind) {
       fail(site.path, `expected ${kind} resource '${id}'`);
@@ -61,7 +61,7 @@ export const visitSceneContent = (
     enter(primitive, site.path, () => {
       visit(primitive, site);
       if (primitive.type === 'group') {
-        if (primitive.clipRef !== undefined) reference(primitive.clipRef, 'clip', site);
+        if (primitive.clipRef !== undefined) visitResourceReference(primitive.clipRef, 'clip', site);
         primitive.children.forEach((child, index) => walk(child, { ...site, path: `${site.path}.children[${index}]` }));
         return;
       }
@@ -69,7 +69,7 @@ export const visitSceneContent = (
       for (const field of ['fill', 'stroke'] as const) {
         const paint = primitive[field];
         if (typeof paint === 'object' && paint.kind === 'resourceRef')
-          reference(paint.id, 'paint', { ...site, path: `${site.path}.${field}` });
+          visitResourceReference(paint.id, 'paint', { ...site, path: `${site.path}.${field}` });
       }
       if (primitive.type === 'path') {
         for (const field of ['arrowStart', 'arrowEnd'] as const) {

@@ -453,10 +453,10 @@ const cellOutputOf = (
     ...(probe.semantic.source === undefined ? {} : { source: probe.semantic.source }),
   };
   if (!placement.replayContent)
-    return context.scope({ ...(probe.semantic.id === undefined ? {} : { id: probe.semantic.id }), meta }, []);
+    return context.createScope({ ...(probe.semantic.id === undefined ? {} : { id: probe.semantic.id }), meta }, []);
 
   const replay = context.replay(probe.final);
-  const transformed = context.scope(
+  const transformed = context.createScope(
     {
       transforms: [
         { kind: 'translate', x: placement.translation.x, y: placement.translation.y },
@@ -466,7 +466,7 @@ const cellOutputOf = (
     [replay],
   );
 
-  return context.scope(
+  return context.createScope(
     {
       ...(probe.semantic.id === undefined ? {} : { id: probe.semantic.id }),
       meta,
@@ -751,7 +751,7 @@ export const resolvePresentedTableTransaction = (
     cells: placements,
   });
   const cellOutputs = probes.map((probe, index) => cellOutputOf(context, probe, placements[index]));
-  const root = context.scope(
+  const root = context.createScope(
     {
       localNamespace: true,
       ...(tableId === undefined ? {} : { id: tableId }),

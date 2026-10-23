@@ -84,12 +84,12 @@ const horizontalBoundaryPoint = (rect: CenteredBox, toward: Position): Position 
 const circuitBattery: ShapeDefinition = defineShape({
   name: 'circuit-battery',
   paramsSchema: z.strictObject({}),
-  circumscribe: (innerHalfWidth, innerHalfHeight) => ({
+  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 4 + BATTERY_LEAD),
     halfHeight: Math.max(innerHalfHeight, 14),
   }),
-  boundaryPoint: horizontalBoundaryPoint,
-  anchor: batteryAnchor,
+  computeBoundaryPoint: horizontalBoundaryPoint,
+  resolveAnchor: batteryAnchor,
   *emit(rect, style, round) {
     const stroke = style.stroke ?? 'currentColor';
     const strokeWidth = style.strokeWidth ?? STROKE_WIDTH;
@@ -150,12 +150,12 @@ const circuitBattery: ShapeDefinition = defineShape({
 const circuitSwitch: ShapeDefinition = defineShape({
   name: 'circuit-switch',
   paramsSchema: z.strictObject({}),
-  circumscribe: (innerHalfWidth, innerHalfHeight) => ({
+  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 11 + SWITCH_LEAD),
     halfHeight: Math.max(innerHalfHeight, 13),
   }),
-  boundaryPoint: horizontalBoundaryPoint,
-  anchor: horizontalTerminalAnchor,
+  computeBoundaryPoint: horizontalBoundaryPoint,
+  resolveAnchor: horizontalTerminalAnchor,
   *emit(rect, style, round) {
     const stroke = style.stroke ?? 'currentColor';
     const strokeWidth = style.strokeWidth ?? STROKE_WIDTH;
@@ -218,12 +218,12 @@ const circuitSwitch: ShapeDefinition = defineShape({
 const circuitResistor: ShapeDefinition = defineShape({
   name: 'circuit-resistor',
   paramsSchema: z.strictObject({}),
-  circumscribe: (innerHalfWidth, innerHalfHeight) => ({
+  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 26 + RESISTOR_LEAD),
     halfHeight: Math.max(innerHalfHeight, 12),
   }),
-  boundaryPoint: horizontalBoundaryPoint,
-  anchor: horizontalTerminalAnchor,
+  computeBoundaryPoint: horizontalBoundaryPoint,
+  resolveAnchor: horizontalTerminalAnchor,
   *emit(rect, style, round) {
     const stroke = style.stroke ?? 'currentColor';
     const strokeWidth = style.strokeWidth ?? STROKE_WIDTH;
@@ -272,12 +272,12 @@ const circuitResistor: ShapeDefinition = defineShape({
 const circuitRheostat: ShapeDefinition = defineShape({
   name: 'circuit-rheostat',
   paramsSchema: z.strictObject({}),
-  circumscribe: (innerHalfWidth, innerHalfHeight) => ({
+  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 26 + RESISTOR_LEAD),
     halfHeight: Math.max(innerHalfHeight, 12),
   }),
-  boundaryPoint: horizontalBoundaryPoint,
-  anchor: horizontalTerminalAnchor,
+  computeBoundaryPoint: horizontalBoundaryPoint,
+  resolveAnchor: horizontalTerminalAnchor,
   *emit(rect, style, round) {
     const stroke = style.stroke ?? 'currentColor';
     const strokeWidth = style.strokeWidth ?? STROKE_WIDTH;

@@ -23,6 +23,31 @@ const findLabel = (prims: Array<ScenePrimitive>, text: string): TextPrim | undef
   collectTexts(prims).find(t => t.lines.some(l => (typeof l === 'string' ? l : l.text) === text));
 
 describe('Node label', () => {
+  it.each([undefined, 0, 0.4])('普通、混排标签及默认引线使用标签透明度，省略时继承节点：%s', opacity => {
+    const scene = compileToScene({
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'node',
+          style: { opacity: 0.5 },
+          label: [
+            { text: 'plain', pin: true, ...(opacity === undefined ? {} : { opacity }) },
+            {
+              text: { segments: [{ text: 'mixed', opacity: 0.5 }] },
+              pin: { opacity: 0.7 },
+              ...(opacity === undefined ? {} : { opacity }),
+            },
+          ],
+        },
+      ],
+    }).scene;
+    expect(findLabel(scene.primitives, 'plain')?.opacity).toBe(opacity ?? 0.5);
+    expect(findLabel(scene.primitives, 'mixed')?.opacity).toBe(0.5 * (opacity ?? 0.5));
+    const pins = scene.primitives.filter(primitive => primitive.type === 'path');
+    expect(pins.map(pin => pin.opacity)).toEqual([opacity ?? 0.5, 0.7]);
+  });
+
   describe('基本生成', () => {
     it('单对象 label → 一个 TextPrim', () => {
       const ir: IRScene = {

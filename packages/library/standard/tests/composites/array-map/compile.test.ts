@@ -341,7 +341,7 @@ const custom = defineComposite({
 
     return {
       allocationBounds: bounds,
-      children: [context.scope({}, [], [{ id: 'content', role: 'foreign', bounds }])],
+      children: [context.createScope({}, [], [{ id: 'content', role: 'foreign', bounds }])],
     };
   },
 });

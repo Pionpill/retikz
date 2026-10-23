@@ -28,6 +28,8 @@ A boundary owns only “where the connection stops” and “where standard dire
 
 Use `defineBoundary` to declare a stable registry key, parameter schema, and ray intersection. Even parameterless definitions provide `z.strictObject({})`, so every payload follows the same validation path.
 
+The optional `computeOutline` method is primarily used by Inspect to visualize the boundary for debugging and can usually be omitted. Omitting it does not affect connection point or anchor calculations for ordinary connections; Inspect simply cannot display the exact boundary outline. Implementing it does not make the boundary visible during normal rendering.
+
 ```ts
 import { defineBoundary } from '@retikz/core';
 import { z } from 'zod';
@@ -35,9 +37,9 @@ import { z } from 'zod';
 export const horizontalPorts = defineBoundary({
   name: 'horizontal-ports',
   paramsSchema: z.strictObject({}),
-  boundaryPoint: (rect, toward) =>
+  computeBoundaryPoint: (rect, toward) =>
     toward[0] < rect.x ? [rect.x - rect.width / 2, rect.y] : [rect.x + rect.width / 2, rect.y],
-  anchor: (rect, name) => {
+  resolveAnchor: (rect, name) => {
     if (name === 'left') return [rect.x - rect.width / 2, rect.y];
     if (name === 'right') return [rect.x + rect.width / 2, rect.y];
     return undefined;
@@ -45,9 +47,9 @@ export const horizontalPorts = defineBoundary({
 });
 ```
 
-`boundaryPoint` receives the boundary's final resolved `rect`. Without `resolveRect`, this is the node box already derived by the visual shape. `rect.x` / `rect.y` are center coordinates and `width` / `height` are full dimensions; for example, the left edge is `rect.x - rect.width / 2`. `toward` is the connection target measured from the node center. Parameterized boundaries use `{ type, params }`, where `params` must remain JSON-serializable. Functions stay in the definition and never enter IR (the intermediate representation).
+`computeBoundaryPoint` receives the boundary's final resolved `rect`. Without `resolveRect`, this is the node box already derived by the visual shape. `rect.x` / `rect.y` are center coordinates and `width` / `height` are full dimensions; for example, the left edge is `rect.x - rect.width / 2`. `toward` is the connection target measured from the node center. Parameterized boundaries use `{ type, params }`, where `params` must remain JSON-serializable. Functions stay in the definition and never enter IR (the intermediate representation).
 
-Implement optional `resolveRect(context, params)` when the surface needs to resize before intersection. `context.visualRect` is the visual AABB, while `context.connectionEnvelope(kind)` returns a regular contour enclosing the visual shape; `kind` accepts `'circle'`, `'ellipse'`, or `'rectangle'` and shares a node-local cache. The returned rect must have finite coordinates and positive width and height, or compilation fails immediately.
+Implement optional `resolveRect(context, params)` when the surface needs to resize before intersection. `context.visualRect` is the visual AABB, while `context.computeConnectionEnvelope(kind)` returns a regular contour enclosing the visual shape; `kind` accepts `'circle'`, `'ellipse'`, or `'rectangle'` and shares a node-local cache. The returned rect must have finite coordinates and positive width and height, or compilation fails immediately.
 
 ### Parameterized boundaries
 
@@ -57,7 +59,7 @@ The definition's schema owns the parameters and infers the callback's third argu
 const biasedPorts = defineBoundary({
   name: 'biased-ports',
   paramsSchema: z.strictObject({ bias: z.number().min(-1).max(1) }),
-  boundaryPoint: (rect, toward, { bias }) => [
+  computeBoundaryPoint: (rect, toward, { bias }) => [
     toward[0] < rect.x ? rect.x - rect.width / 2 : rect.x + rect.width / 2,
     rect.y + (rect.height / 2) * bias,
   ],
@@ -118,7 +120,7 @@ Provide a `diagram` container and call `view.dispose()` before removing it.
 - **Unknown name**: the error lists registered boundaries and shapes and points to the `boundaries` / `shapes` options.
 - **Invalid params**: `paramsSchema` runs before any geometry function and reports the corresponding `.boundary.params` IR path.
 - **Invalid resolved rect**: a non-finite or non-positive `resolveRect` result, or an exception inside the hook, reports the boundary name and Node IR path.
-- **Unknown anchor**: `anchor` may be omitted or return `undefined`; standard directions fall back to the node box, while shape-specific names still resolve through the visual shape.
+- **Unknown anchor**: `resolveAnchor` may be omitted or return `undefined`; standard directions fall back to the node box, while shape-specific names still resolve through the visual shape.
 - **No drawing responsibility**: a boundary cannot change node size, shape, or content; use a Shape Definition or Node props for those concerns.
 
 Two common failures throw immediately during compilation:

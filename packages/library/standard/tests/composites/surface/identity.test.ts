@@ -173,7 +173,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
       compile: (value, context) => ({
         allocationBounds: { x: 0, y: 0, width: 10, height: 6 },
         children: [
-          context.scope(
+          context.createScope(
             { id: value.id },
             [],
             [

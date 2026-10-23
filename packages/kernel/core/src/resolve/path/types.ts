@@ -187,8 +187,6 @@ export type ArrowMarkVisual = Readonly<{
   length: number;
   /** 应用 scale 前的箭头宽度参数 */
   width: number;
-  /** 已解析的箭头主色 */
-  color?: string;
   /** 实心箭头的可选填充色，空心箭头不保留该值 */
   fill?: PaintResolutionInput;
   /** 已解析的描边 */

@@ -1,5 +1,15 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '有效描边；实心定义默认无轮廓，空心定义缺少主色时继承宿主描边':
+    'Effective stroke; filled definitions have no outline by default, while hollow definitions without a master color inherit the host stroke',
+  '原定义对象，保留路径和产物类型，不复制或修改输入':
+    'The original definition object, preserving path and output types without copying or modifying the input',
+  '原定义对象，保留路径类型，不复制或修改输入':
+    'The original definition object, preserving the path type without copying or modifying the input',
+  '已解析的虚线节奏；省略时使用定义自身的默认': 'Resolved dash pattern; omission preserves the definition default',
+  已解析的虚线偏移: 'Resolved dash offset',
+  已解析的描边端帽: 'Resolved stroke cap',
+  '已解析的描边连接；省略时使用定义自身的默认': 'Resolved stroke join; omission preserves the definition default',
   '所属者产物的 JSON 类型；默认 never 时不能声明 ownerOutput，否则必须声明发布产物':
     'JSON type of the owner output; the default never disallows ownerOutput, while other types require declaring the published output',
   'RetikzCoreError 当 name 为空或仅含空白字符、schema 没有 parse 函数时':
@@ -280,8 +290,13 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Marker-local base size (viewBox `0 0 baseSize baseSize`, refY = baseSize/2); defaults to 10',
   '默认箭头长度（length fallback）；缺省 8': 'Fallback arrow length; defaults to 8',
   '默认箭头宽度（width fallback）；缺省 8': 'Fallback arrow width; defaults to 8',
-  '局部坐标中的基础场景图元；渲染容器负责端点定位与宿主上下文':
-    'Basic Scene primitives in local coordinates; the render container supplies endpoint placement and host context',
+  '根据已解析样式，生成箭头局部坐标中的基础场景图元':
+    'Generates basic Scene primitives in arrow-local coordinates from resolved styles',
+  '编译时调用，由定义将上下文样式应用到生成的图元。外层负责箭头的缩放、旋转和定位，渲染后端负责实际绘制':
+    'Called during compilation; the definition applies context styles to the generated primitives. The surrounding pipeline handles arrow scaling, rotation, and placement, while the rendering backend performs the actual drawing',
+  '已解析的填充、描边样式及精度取整函数': 'Resolved fill and stroke styles and the precision rounding function',
+  '组成箭头外观的基础场景图元序列，使用本定义的 baseSize 局部坐标系':
+    'A sequence of basic Scene primitives forming the arrow, using this definition’s baseSize local coordinate system',
   '空心标志：true 时由描边表达外轮廓，并按 lineWidth 修正接触点':
     'Hollow flag: when true, stroke defines the outline and lineWidth adjusts the contact point',
   '线接触点静态 base，决定 path shrink 与 marker refX':

@@ -1,3 +1,4 @@
+import type { IRGraphicStyle } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import type {
   IRPlotPointMark,
@@ -6,7 +7,6 @@ import type {
   IRPlotRelationMark,
   IRPlotMarkNodeLabel,
   IRPlotMarkPathLabel,
-  IRPlotMarkOpacityStyle,
   IRPlotChannel,
   IRPlotRelationPathGeometry,
   IRPlotRelationRouteStep,
@@ -62,7 +62,7 @@ export type InputPlotIntervalMark = Omit<IRPlotIntervalMark, 'type'> &
 
 export type InputPlotCoreNodeChannels = Pick<InputPlotPointMark, 'encodings' | 'properties'>;
 export type InputPlotCorePathChannels = Pick<InputPlotPathMark, 'encodings' | 'properties'>;
-export type InputPlotOpacity = IRPlotMarkOpacityStyle;
+export type InputPlotOpacity = NonNullable<IRGraphicStyle['opacity']>;
 export type InputPlotNodeLabel = string | IRPlotMarkNodeLabel;
 export type InputPlotPathLabel = string | IRPlotMarkPathLabel;
 export type InputPlotMarkNodeLabel = string | IRPlotMarkNodeLabel;

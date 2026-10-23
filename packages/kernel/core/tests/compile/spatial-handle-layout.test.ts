@@ -44,7 +44,7 @@ const parent = defineComposite({
 
     return {
       children: [
-        context.scope(
+        context.createScope(
           { position: [7, 8] },
           [context.replay(probe.result, { transforms: [{ kind: 'translate', x: 30, y: 40 }] })],
           [{ id: 'frame', role: 'parent', bounds: { x: 0, y: 0, width: 10, height: 10 } }],

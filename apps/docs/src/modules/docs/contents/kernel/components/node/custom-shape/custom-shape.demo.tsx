@@ -50,7 +50,7 @@ const createHexagon = (): ShapeDefinition =>
   defineShape({
     name: 'hexagon',
     paramsSchema: z.strictObject({}),
-    circumscribe: (hw, hh) => {
+    computeCircumscribedHalfAxes: (hw, hh) => {
       const corners: Array<Position> = [
         [hw, hh],
         [hw, -hh],
@@ -65,12 +65,12 @@ const createHexagon = (): ShapeDefinition =>
 
       return { halfWidth: halfAxis, halfHeight: halfAxis };
     },
-    boundaryPoint: (rect, toward) => {
+    computeBoundaryPoint: (rect, toward) => {
       const localToward = worldToLocal(rect, toward);
       const boundary = findHexagonBoundaryPoint(rect.width / 2, localToward);
       return localToWorld(rect, boundary);
     },
-    anchor: () => undefined,
+    resolveAnchor: () => undefined,
     *emit(rect, style, round) {
       const vertices = createHexagonVertices(rect.width / 2);
       const commands: Array<PathCommand> = vertices.map((vertex, index) => {

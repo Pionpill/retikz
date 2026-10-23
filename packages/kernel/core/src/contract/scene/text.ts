@@ -102,7 +102,7 @@ export type TextPrim = {
 };
 
 /** 从已度量尺寸、对齐和基线推导文本矩形，供边界与命中消费 */
-export const sceneTextBounds = (primitive: TextPrim): BoundsRect => {
+export const computeSceneTextBounds = (primitive: TextPrim): BoundsRect => {
   const x =
     primitive.align === 'start'
       ? primitive.x

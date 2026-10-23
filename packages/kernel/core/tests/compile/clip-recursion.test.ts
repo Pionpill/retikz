@@ -85,7 +85,9 @@ describe('clip recursion guard', () => {
       }),
       compile: (_, context) => ({
         children: [
-          context.scope({ clip: { kind: 'recursive', depth: 2 } }, [{ type: 'node', position: [0, 0], text: 'A' }]),
+          context.createScope({ clip: { kind: 'recursive', depth: 2 } }, [
+            { type: 'node', position: [0, 0], text: 'A' },
+          ]),
         ],
       }),
     });

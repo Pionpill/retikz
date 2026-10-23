@@ -5,7 +5,7 @@ import type {
   CompositeReplayWrapper,
   SpatialHandleDeclaration,
 } from '../../contract';
-import { validateSpatialHandleDeclarations } from '../../contract';
+import { snapshotSpatialHandleDeclarations } from '../../contract';
 import type { CompositeRuntimeInputScope } from '../../contract/composite';
 import { createCompositeContractError } from '../../resolve/diagnostics';
 import type { IRChild } from '../../schemas';
@@ -16,7 +16,7 @@ import type { CompositeCompileOwner, CompositeCompileSession, CompositeRuntimeOu
 /** 把通用 declaration validator 的失败提升为带 provider owner 的 contract error */
 export const validateCompositeSpatialHandles = (owner: string, value: ReadonlyArray<SpatialHandleDeclaration>) => {
   try {
-    return validateSpatialHandleDeclarations(owner, value);
+    return snapshotSpatialHandleDeclarations(owner, value);
   } catch (cause) {
     const detail = cause instanceof Error ? cause.message : String(cause);
     throw createCompositeContractError(detail, { cause });

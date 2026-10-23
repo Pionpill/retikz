@@ -723,10 +723,7 @@ const drawPrim = (
         }
       }
 
-      const groupOpacity = 'opacity' in p && typeof p.opacity === 'number' ? p.opacity : undefined;
-      withOpacity(ctx, groupOpacity, () => {
-        for (const child of p.children) drawPrim(ctx, child, options, resources, state);
-      });
+      for (const child of p.children) drawPrim(ctx, child, options, resources, state);
       ctx.restore();
       break;
     }

@@ -1,6 +1,16 @@
-import { CssColorSchema } from '@retikz/core';
-import type { ValueOf } from '@retikz/foundation';
+import {
+  CssColorSchema,
+  PaintValueSchema,
+  GraphicOpacityValueSchema,
+  GraphicEffectsSchema,
+  NodeLayoutSchema,
+  NodeSchema,
+  NodeStrokeSchema,
+  TextLayoutSchema,
+  TextVisualSchema,
+} from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
+import type { ValueOf } from '@retikz/foundation';
 import { discriminatedUnion, enum as zodEnum, literal, number, strictObject } from 'zod';
 import type { infer as ZodInfer } from 'zod';
 
@@ -9,13 +19,6 @@ import { ChannelSchema, NodeEncodingSchema, Position2DEncodingSchema, PositionIn
 import { AnchorIdSchema, hasValidAnchorSource } from './anchor';
 import { BuiltinPlotMark, markBase } from './base';
 import { MarkNodeLabelListSchema } from './label';
-import {
-  MarkOpacityStyleSchema,
-  MarkFillStyleSchema,
-  MarkNonnegativeNumberStyleSchema,
-  MarkStrokeStyleSchema,
-  nodeStyleFields,
-} from './style';
 
 /**
  * interval 单维区间来源关键字（暴露给用户；裸 `'band'` 等同样可用）
@@ -83,6 +86,9 @@ export const IntervalBoundsSchema = strictObject({
 
 /** 校验由各角色区间与坐标系共同确定几何的区间标记 */
 export const IntervalPropertiesSchema = strictObject({
+  ...NodeStrokeSchema.shape,
+  ...GraphicEffectsSchema.shape,
+  ...TextLayoutSchema.shape,
   connection: zodEnum(CoordinateConnection).default(CoordinateConnection.Coordinate).optional(),
   color: CssColorSchema.optional(),
   bounds: IntervalBoundsSchema.optional().describe(
@@ -91,22 +97,25 @@ export const IntervalPropertiesSchema = strictObject({
   interpolation: zodEnum(PolarInterpolation)
     .optional()
     .describe('Polar2D cell-boundary override; omit to inherit the resolved coordinate interpolation'),
-  strokeWidth: MarkNonnegativeNumberStyleSchema.optional().describe(
-    'Interval cell stroke width: fixed core Node stroke width',
+  fill: PaintValueSchema.optional().describe(
+    'Interval cell fill: fixed CSS color, master color weight, or structured paint',
   ),
-  fill: MarkFillStyleSchema.optional().describe('Interval cell fill paint: fixed CSS color / IRPaint'),
-  stroke: MarkStrokeStyleSchema.optional().describe('Interval cell stroke paint: fixed CSS color / IRPaint'),
-  opacity: MarkOpacityStyleSchema.optional(),
+  opacity: GraphicOpacityValueSchema.optional(),
   padAngle: NonNegativeNumberSchema.optional().describe(
     'Angular gap in degrees applied to polar cells; each cell shrinks by half this angle on both sides before sector or chord-contour projection. Cartesian cells ignore it',
   ),
-  pull: MarkNonnegativeNumberStyleSchema.optional().describe(
+  pull: NonNegativeNumberSchema.optional().describe(
     'Static radial offset in user units for polar cells; moves the local projection center along the final mid angle before sector or chord-contour projection',
   ),
   anchorId: AnchorIdSchema.optional().describe(
     'Stable id rule written to each generated core interval Node; takes precedence over datumIdField for the node id',
   ),
-  ...nodeStyleFields,
+  font: TextVisualSchema.shape.font,
+  padding: NodeLayoutSchema.shape.padding,
+  margin: NodeLayoutSchema.shape.margin,
+  scale: NodeSchema.shape.scale,
+  boundary: NodeSchema.shape.boundary,
+  cornerRadius: NodeSchema.shape.cornerRadius,
   label: MarkNodeLabelListSchema.optional().describe(
     'Node-host label: lowered onto each datum Node.label (core border-relative placement)',
   ),

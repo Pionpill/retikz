@@ -130,5 +130,5 @@ export const replayLayoutChildren = (
       transforms: [{ kind: 'translate', x: child.translation.x, y: child.translation.y }],
     }),
   );
-  return context.scope(overflow === LayoutOverflow.Clip ? { clip: layoutClipOf(allocation) } : {}, replayed);
+  return context.createScope(overflow === LayoutOverflow.Clip ? { clip: layoutClipOf(allocation) } : {}, replayed);
 };

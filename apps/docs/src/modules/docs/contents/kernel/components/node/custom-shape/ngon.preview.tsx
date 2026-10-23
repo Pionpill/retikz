@@ -44,7 +44,7 @@ const ngon = defineShape({
   paramsSchema: z.strictObject({
     sides: z.number().int().min(3).describe('Number of sides of the regular polygon (>= 3).'),
   }),
-  circumscribe: (hw, hh, params) => {
+  computeCircumscribedHalfAxes: (hw, hh, params) => {
     const corners: Array<Position> = [
       [hw, hh],
       [hw, -hh],
@@ -59,12 +59,12 @@ const ngon = defineShape({
 
     return { halfWidth: halfAxis, halfHeight: halfAxis };
   },
-  boundaryPoint: (rect, toward, params) => {
+  computeBoundaryPoint: (rect, toward, params) => {
     const localToward = worldToLocal(rect, toward);
     const boundary = findNgonBoundaryPoint(rect.width / 2, params.sides, localToward);
     return localToWorld(rect, boundary);
   },
-  anchor: (_rect, _name, params) => {
+  resolveAnchor: (_rect, _name, params) => {
     void params;
     return undefined;
   },

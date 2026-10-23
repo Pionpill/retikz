@@ -138,7 +138,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       compile: (value, context) => {
         const laid = resolvedResultOf(context, value.child);
         const replay = context.replay(laid);
-        const placement = context.scope(
+        const placement = context.createScope(
           {
             transforms: [
               { kind: 'scale', x: 2, y: 3 },
@@ -150,7 +150,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
 
         return {
           children: [
-            context.scope(
+            context.createScope(
               {
                 id: 'cell',
                 clip: { kind: 'rect', x: 0, y: 0, width: 30, height: 20 },
@@ -209,7 +209,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
         const laid = resolvedResultOf(context, node('target', [1, 0]));
         return {
           children: [
-            context.scope({ transforms: [{ kind: 'translate', x: 10, y: 0 }] }, [
+            context.createScope({ transforms: [{ kind: 'translate', x: 10, y: 0 }] }, [
               context.replay(laid),
               node('raw', [2, 0]),
             ]),
@@ -259,9 +259,9 @@ describe('layout-aware composite runtime wrapper tree', () => {
       }),
       compile: (_value, context) => ({
         children: [
-          context.scope({ id: 'empty', meta: { empty: true } }, []),
+          context.createScope({ id: 'empty', meta: { empty: true } }, []),
           node('plain', [20, 0]),
-          context.scope({ id: 'late', zIndex: 5 }, [node('inside', [10, 0])]),
+          context.createScope({ id: 'late', zIndex: 5 }, [node('inside', [10, 0])]),
         ],
       }),
     });
@@ -283,7 +283,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('allFields') }),
       compile: (_value, context) => ({
         children: [
-          context.scope(
+          context.createScope(
             {
               id: 'all',
               localNamespace: true,
@@ -336,7 +336,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
         const laid = resolvedResultOf(context, node('replayed'));
         return {
           children: [
-            context.scope(
+            context.createScope(
               {
                 defaults: {
                   style: { color: 'red' },
@@ -392,7 +392,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
         const laid = resolvedResultOf(context, { namespace: 'test', type: 'styledReplayLeaf' });
         return {
           children: [
-            context.scope(
+            context.createScope(
               {
                 defaults: { style: { fill: 'purple' } },
               },
@@ -432,7 +432,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
         const replay = context.replay(laid);
 
         return {
-          children: [context.scope({ id: 'a' }, [replay]), context.scope({ id: 'b' }, [replay])],
+          children: [context.createScope({ id: 'a' }, [replay]), context.createScope({ id: 'b' }, [replay])],
         };
       },
     });
@@ -547,8 +547,8 @@ describe('layout-aware composite runtime wrapper tree', () => {
         const laid = resolvedResultOf(context, { namespace: 'test', type: 'preflightArtifactLeaf' });
         retainedResult = laid;
         replayHandle = context.replay(laid);
-        scopeHandle = context.scope({ clip: { kind: 'conditionalPreflightClip', fail: value.fail } }, [
-          context.scope({}, []),
+        scopeHandle = context.createScope({ clip: { kind: 'conditionalPreflightClip', fail: value.fail } }, [
+          context.createScope({}, []),
         ]);
 
         return {
@@ -626,7 +626,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       type: 'repeatedScopeHandle',
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('repeatedScopeHandle') }),
       compile: (_value, context) => {
-        const scope = context.scope({ id: 'only-once' }, [node('inside')]);
+        const scope = context.createScope({ id: 'only-once' }, [node('inside')]);
         return { children: [scope, scope] };
       },
     });
@@ -683,7 +683,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       type: 'consumer',
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('consumer') }),
       compile: (_value, context) => ({
-        children: [context.scope({}, [foreignHandle ?? context.replay(foreignResult!)])],
+        children: [context.createScope({}, [foreignHandle ?? context.replay(foreignResult!)])],
       }),
     });
 
@@ -733,7 +733,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       type: 'forgedChild',
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('forgedChild') }),
       compile: (_value, context) => ({
-        children: [context.scope({}, [{} as CompositeCompileChild])],
+        children: [context.createScope({}, [{} as CompositeCompileChild])],
       }),
     });
     const forgedResult = defineComposite({
@@ -773,8 +773,8 @@ describe('layout-aware composite runtime wrapper tree', () => {
         });
         return {
           children: [
-            context.scope({ clip: { kind: 'rect', x: -10, y: -10, width: 20, height: 20 } }, [
-              context.scope({}, [context.replay(laid)]),
+            context.createScope({ clip: { kind: 'rect', x: -10, y: -10, width: 20, height: 20 } }, [
+              context.createScope({}, [context.replay(laid)]),
             ]),
           ],
         };
@@ -816,7 +816,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
           children: [{ namespace: 'test', type: 'artifactLeaf' }],
         });
         return {
-          children: [context.scope({ id: 'outer' }, [context.scope({}, [context.replay(laid)])])],
+          children: [context.createScope({ id: 'outer' }, [context.createScope({}, [context.replay(laid)])])],
           artifact: { parent: true },
         };
       },
@@ -859,7 +859,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
         const laid = resolvedResultOf(context, node('secret'));
         return {
           children: [
-            context.scope({ id: 'local', localNamespace: true }, [context.replay(laid)]),
+            context.createScope({ id: 'local', localNamespace: true }, [context.replay(laid)]),
             {
               type: 'path',
               children: [
@@ -891,7 +891,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, node('shared', [10, 0]));
         return {
-          children: [context.scope({ id: 'local', localNamespace: true }, [context.replay(laid)])],
+          children: [context.createScope({ id: 'local', localNamespace: true }, [context.replay(laid)])],
         };
       },
     });
@@ -924,7 +924,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
           ],
         });
         return {
-          children: [context.scope({ localNamespace: true }, [context.replay(laid)])],
+          children: [context.createScope({ localNamespace: true }, [context.replay(laid)])],
         };
       },
     });
@@ -952,7 +952,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
         const animations = [{ ...fade, keyframes: fade.keyframes.map(frame => ({ ...frame })) }];
         const children: Array<IRChild | CompositeCompileChild> = [node('original')];
         const props = { id: 'detached', transforms, clip, meta, animations };
-        const wrapper = context.scope(props, children);
+        const wrapper = context.createScope(props, children);
 
         transforms[0].x = 99;
         clip.width = 99;
@@ -989,7 +989,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
         const laid = resolvedResultOf(context, node('optional-fields'));
         return {
           children: [
-            context.scope({ id: undefined, defaults: { style: { fill: undefined } } }, [
+            context.createScope({ id: undefined, defaults: { style: { fill: undefined } } }, [
               context.replay(laid, { transforms: [{ kind: 'scale', x: 1, y: undefined }], clip: undefined }),
             ]),
           ],
@@ -1052,7 +1052,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('discardedResultScope') }),
       compile: (_value, context) => {
         const discarded = resolvedResultOf(context, node('discarded-result'));
-        return { children: [context.scope({}, [discarded as unknown as CompositeCompileChild])] };
+        return { children: [context.createScope({}, [discarded as unknown as CompositeCompileChild])] };
       },
     });
 
@@ -1091,18 +1091,18 @@ describe('layout-aware composite runtime wrapper tree', () => {
           y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
         });
         const border = resolvedResultOf(context, { namespace: 'test', type: 'borderLeaf' });
-        const cell = context.scope(
+        const cell = context.createScope(
           {
             id: 'cell-0-0',
             clip: { kind: 'rect', x: 0, y: 0, width: 40, height: 20 },
             meta: { row: 0, column: 0 },
           },
-          [context.scope({ transforms: [{ kind: 'translate', x: 5, y: 6 }] }, [context.replay(content)])],
+          [context.createScope({ transforms: [{ kind: 'translate', x: 5, y: 6 }] }, [context.replay(content)])],
         );
 
         return {
           children: [
-            context.scope({ id: 'table-root', localNamespace: true }, [
+            context.createScope({ id: 'table-root', localNamespace: true }, [
               node('allocation-sentinel'),
               cell,
               context.replay(border),

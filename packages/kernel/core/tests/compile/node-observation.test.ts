@@ -79,7 +79,7 @@ describe('Node 观测几何', () => {
   });
 
   it('观测边界不新增或吞掉主图后续连接面 warning', () => {
-    const { connectionEnvelope: omitted, ...shape } = BUILTIN_SHAPES.get('rectangle')!;
+    const { computeConnectionEnvelope: omitted, ...shape } = BUILTIN_SHAPES.get('rectangle')!;
     void omitted;
     const children: IRScene['children'] = [
       {
@@ -157,7 +157,12 @@ describe('Node 观测几何', () => {
   it('不启用或不选择时不调用几何出口；启用不增加文字度量或改变 primary', () => {
     const outline = vi.fn((): Array<PathCommand> => []);
     const keyPoints = vi.fn(() => []);
-    const definition: ShapeDefinition = { ...BUILTIN_SHAPES.get('rectangle')!, name: 'custom', outline, keyPoints };
+    const definition: ShapeDefinition = {
+      ...BUILTIN_SHAPES.get('rectangle')!,
+      name: 'custom',
+      computeOutline: outline,
+      computeKeyPoints: keyPoints,
+    };
     const measureText = vi.fn(() => ({ width: 10, height: 12 }));
     const options = { shapes: [definition], measureText };
     const primary = compileToScene(source, options);
@@ -180,7 +185,11 @@ describe('Node 观测几何', () => {
   });
 
   it('缺失 capability 使用 null，无正文不伪造文本盒', () => {
-    const { outline: omittedOutline, keyPoints: omittedPoints, ...base } = BUILTIN_SHAPES.get('rectangle')!;
+    const {
+      computeOutline: omittedOutline,
+      computeKeyPoints: omittedPoints,
+      ...base
+    } = BUILTIN_SHAPES.get('rectangle')!;
     void omittedOutline;
     void omittedPoints;
     const { observations } = capture(
@@ -212,7 +221,7 @@ describe('Node 观测几何', () => {
     ],
   ])('%s 是 Core contract failure，而不是不支持', (_label, outline) => {
     expect(() =>
-      capture(source, { shapes: [{ ...BUILTIN_SHAPES.get('rectangle')!, name: 'custom', outline }] }),
+      capture(source, { shapes: [{ ...BUILTIN_SHAPES.get('rectangle')!, name: 'custom', computeOutline: outline }] }),
     ).toThrow(RetikzCoreError);
   });
 
@@ -223,7 +232,7 @@ describe('Node 观测几何', () => {
           {
             ...BUILTIN_SHAPES.get('rectangle')!,
             name: 'custom',
-            keyPoints: () => [
+            computeKeyPoints: () => [
               { name: 'same', position: [0, 0] },
               { name: 'same', position: [1, 1] },
             ],

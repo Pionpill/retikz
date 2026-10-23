@@ -10,10 +10,10 @@ const makeDefinition = () =>
   defineShape({
     name: 'cross',
     paramsSchema: strictObject({}),
-    circumscribe: (halfWidth, halfHeight) => ({ halfWidth, halfHeight }),
-    boundaryPoint: (_bounds, toward) => toward,
+    computeCircumscribedHalfAxes: (halfWidth, halfHeight) => ({ halfWidth, halfHeight }),
+    computeBoundaryPoint: (_bounds, toward) => toward,
     emit: () => [],
-    anchor: () => undefined,
+    resolveAnchor: () => undefined,
   });
 
 const provider = (make: CoreDependencyProvider['makeDefinition']): CoreDependencyProvider => ({

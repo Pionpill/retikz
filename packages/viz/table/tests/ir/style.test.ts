@@ -60,3 +60,17 @@ describe('Table Source defaults schema', () => {
     expect(() => TableSchema.parse({ ...base, styleTokens: { callback: () => null } })).toThrow();
   });
 });
+
+it('边框复用 Core 线宽与偏移，但虚线段仍必须为正数', () => {
+  const input = (border: unknown) => ({ layout: { borders: { horizontal: border } } });
+  expect(
+    TableDefaultsSchema.parse(input({ kind: 'line', width: 0, dashOffset: -2, dashPattern: [3, 2] })),
+  ).toMatchObject(input({ kind: 'line', width: 0, dashOffset: -2, dashPattern: [3, 2] }));
+  for (const border of [
+    { kind: 'line', width: -1 },
+    { kind: 'line', dashOffset: Infinity },
+    { kind: 'line', dashPattern: [0, 2] },
+  ]) {
+    expect(TableDefaultsSchema.safeParse(input(border)).success).toBe(false);
+  }
+});

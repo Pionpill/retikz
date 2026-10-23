@@ -9,12 +9,12 @@ type Position = IRPosition;
 const horizontalPorts: BoundaryDefinition = defineBoundary({
   name: 'horizontal-ports',
   paramsSchema: z.strictObject({}),
-  boundaryPoint: (rect, toward) => {
+  computeBoundaryPoint: (rect, toward) => {
     const terminal: Position =
       toward[0] < rect.x ? [rect.x - rect.width / 2, rect.y] : [rect.x + rect.width / 2, rect.y];
     return terminal;
   },
-  anchor: (rect, name) => {
+  resolveAnchor: (rect, name) => {
     if (name === 'center') return [rect.x, rect.y];
     if (name === 'left') return [rect.x - rect.width / 2, rect.y];
     if (name === 'right') return [rect.x + rect.width / 2, rect.y];

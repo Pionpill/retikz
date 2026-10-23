@@ -50,7 +50,7 @@ export const compileStack = (source: IRStack, context: CompositeCompileContext):
         index === 0 ? { type: 'step', kind: 'move', to: point } : { type: 'step', kind: 'line', to: point },
       ),
     };
-    extra.push(context.scope({}, [path]));
+    extra.push(context.createScope({}, [path]));
   }
   if (cells.length > 0) {
     const [dx, dy] = linearDirectionVector(direction);
@@ -63,13 +63,13 @@ export const compileStack = (source: IRStack, context: CompositeCompileContext):
     ];
     if (input)
       extra.push(
-        context.scope({}, [
+        context.createScope({}, [
           createOperationArrow(input, [point(-separation - 24, 32), point(-separation, 32), point(-separation, 8)]),
         ]),
       );
     if (output)
       extra.push(
-        context.scope({}, [
+        context.createScope({}, [
           createOperationArrow(output, [point(separation, 8), point(separation, 32), point(separation + 24, 32)]),
         ]),
       );

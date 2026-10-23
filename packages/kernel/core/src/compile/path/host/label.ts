@@ -104,8 +104,8 @@ export const emitLabelPrimitive = (
     }),
   );
 
-  // 单行纯文本沿用既有 TextPrim 输出；其它内容统一按一个文本块布局。
-  if (sourceLines.length > 1 || resolvedLines[0].mixed) {
+  // 无行级覆盖的单行纯文本直接输出；带样式的行与混排共用完整布局和绘制链路。
+  if (sourceLines.length > 1 || resolvedLines[0].mixed || resolvedLines[0].style !== undefined) {
     const ctx: LineLayoutContext = {
       measureText,
       lowerTex: texCtx?.lowerTex,

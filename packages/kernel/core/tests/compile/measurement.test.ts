@@ -139,14 +139,14 @@ it.each(['source', 'generated', 'bound'])(
         const generated = { namespace: 'measurement-test', type: 'cached-leaf' };
         const candidate =
           mode === 'source'
-            ? context.sourceChild(['child'])
+            ? context.selectSourceChild(['child'])
             : mode === 'bound'
               ? context.bindChild(generated, [{ path: [], input: 'ready' }])
               : generated;
         const probe = context.measureChild(candidate, NaturalLayoutProposal, 'x');
         if (probe.kind === 'failed') return context.raise(probe.failure);
         if (probe.result.axis === 'x') seen.push(probe.result.width);
-        return { children: [context.sourceChild(['child'])] };
+        return { children: [context.selectSourceChild(['child'])] };
       },
     });
     const outer = defineComposite({
@@ -154,7 +154,7 @@ it.each(['source', 'generated', 'bound'])(
       type: 'outer',
       schema: schema('outer').extend({ child: ChildSchema }),
       compile: (_node, context) => {
-        const child = context.sourceChild(['child']);
+        const child = context.selectSourceChild(['child']);
         const first = context.layoutChild(child, NaturalLayoutProposal);
         if (first.kind === 'failed') return context.raise(first.failure);
         const second = context.layoutChild(child, { x: { kind: 'exact', value: 50 }, y: NaturalLayoutProposal.y });
@@ -238,7 +238,7 @@ it('separates theme environments and accepts non-JSON runtime bindings', () => {
     type: 'environment-parent',
     schema: schema('environment-parent').extend({ child: ChildSchema }),
     compile: (_node, context) => {
-      const bound = context.sourceChild(['child']);
+      const bound = context.selectSourceChild(['child']);
       for (const themed of [context, context.withTheme({ mode: 'dark' }), context]) {
         const result = themed.measureChild(bound, NaturalLayoutProposal, 'x');
         if (result.kind === 'failed') return themed.raise(result.failure);
@@ -311,7 +311,7 @@ it.each([false, true])(
       type: 'position-wrapper',
       schema: schema('position-wrapper').extend({ child: ChildSchema }),
       compile: (_node, context): CompositeEvaluationResult => {
-        const measured = context.measureChild(context.sourceChild(['child']), NaturalLayoutProposal, 'x');
+        const measured = context.measureChild(context.selectSourceChild(['child']), NaturalLayoutProposal, 'x');
         if (measured.kind === 'failed') return context.raise(measured.failure);
         return { kind: 'contribution', contribution: measured.result };
       },
@@ -322,7 +322,7 @@ it.each([false, true])(
       schema: schema('position-host').extend({ first: ChildSchema, second: ChildSchema }),
       compile: (_node, context) => {
         for (const key of ['first', 'second']) {
-          const child = context.sourceChild([key]);
+          const child = context.selectSourceChild([key]);
           for (let i = 0; i < 2; i++) {
             expect(context.measureChild(child, NaturalLayoutProposal, 'x')).toEqual({
               kind: 'resolved',
@@ -381,7 +381,7 @@ it('isolates full fallback candidates and publishes only the independent final r
     type: 'fallback-host',
     schema: schema('fallback-host').extend({ child: ChildSchema }),
     compile: (_node, context) => {
-      const child = context.sourceChild(['child']);
+      const child = context.selectSourceChild(['child']);
       const first = context.measureChild(child, NaturalLayoutProposal, 'x');
       expect(context.measureChild(child, NaturalLayoutProposal, 'x')).toEqual(first);
       expect(calls).toBe(1);
@@ -420,7 +420,7 @@ it('recomputes reference-dependent sizes after ancestor namespace changes', () =
     type: 'reference-query',
     schema: schema('reference-query').extend({ child: ChildSchema }),
     compile: (_node, context) => {
-      const result = context.measureChild(context.sourceChild(['child']), NaturalLayoutProposal, 'x');
+      const result = context.measureChild(context.selectSourceChild(['child']), NaturalLayoutProposal, 'x');
       if (result.kind === 'failed') return context.raise(result.failure);
       if (result.result.axis === 'x') widths.push(result.result.width);
       return { children: [] };
@@ -437,7 +437,7 @@ it('recomputes reference-dependent sizes after ancestor namespace changes', () =
           id: 'target',
           position: [context.proposal.x.kind === 'exact' ? context.proposal.x.value : 0, 0],
         },
-        context.sourceChild(['child']),
+        context.selectSourceChild(['child']),
       ],
     }),
   });
@@ -447,7 +447,7 @@ it('recomputes reference-dependent sizes after ancestor namespace changes', () =
     schema: schema('reference-outer').extend({ child: ChildSchema }),
     compile: (_node, context) => {
       for (const width of [20, 40]) {
-        const probe = context.layoutChild(context.sourceChild(['child']), {
+        const probe = context.layoutChild(context.selectSourceChild(['child']), {
           x: { kind: 'exact', value: width },
           y: NaturalLayoutProposal.y,
         });
