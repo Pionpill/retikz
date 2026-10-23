@@ -1,8 +1,6 @@
-import { NonBlankStringSchema, NormalizedFractionSchema, PositiveNumberSchema } from '@retikz/foundation';
-import { discriminatedUnion, enum as zodEnum, literal, number, object, strictObject, tuple, union } from 'zod';
+import { discriminatedUnion, literal, number, object, strictObject } from 'zod';
 
-import { Anchor } from '../../shared';
-import { AbsoluteTargetSchema, PolarPositionSchema, PositionSchema } from '../position';
+import { AtPositionSchema, BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema } from '../position';
 import { AngleDegreesSchema } from '../scalar';
 import { ScopeSelfPointSchema } from '../scope-point';
 
@@ -16,34 +14,21 @@ const TranslateSchema = object({
 /** 校验按角度和距离指定的平移 */
 const PolarTranslateSchema = object({
   kind: literal('polar-translate').describe('Discriminator for polar translate.'),
-  origin: union([NonBlankStringSchema, PositionSchema, PolarPositionSchema])
-    .optional()
-    .describe(
-      'Origin reference: node id string, Cartesian [x, y], or nested PolarPosition. Omitted fields use [0, 0].',
-    ),
-  angle: AngleDegreesSchema.describe('Angle in degrees measured from the positive x axis.'),
-  radius: number().describe(
-    'Radius / distance in user units; negative values are accepted (equivalent to angle + 180°).',
-  ),
+  ...PolarPositionSchema.shape,
 }).describe('Polar translate transform lowered to Cartesian translate at compile time.');
 
 /** 校验相对已有节点的方向平移 */
 const AtTranslateSchema = object({
   kind: literal('at-translate').describe('Discriminator for direction-relative translate.'),
-  direction: zodEnum(Anchor).describe('Canonical direction enum (8 values, shared with AtPosition.direction).'),
-  of: NonBlankStringSchema.describe('Referenced node id; must already be defined.'),
-  distance: PositiveNumberSchema.optional().describe(
-    'Distance along direction in user units. Omitted fields use CompileOptions.nodeDistance, then 24.',
-  ),
+  ...AtPositionSchema.shape,
 }).describe('Direction-relative translate transform lowered to Cartesian translate at compile time.');
 
 /** 校验相对参考位置的坐标偏移 */
 const OffsetTranslateSchema = object({
   kind: literal('offset-translate').describe('Discriminator for offset-from-reference translate.'),
-  of: union([NonBlankStringSchema, PositionSchema, PolarPositionSchema]).describe(
-    'Reference base point: node id string, Cartesian [x, y], or PolarPosition.',
-  ),
-  offset: tuple([number(), number()])
+  ...OffsetPositionSchema.shape,
+  // 平移允许省略偏移量，此时直接移动到参考点
+  offset: OffsetPositionSchema.shape.offset
     .optional()
     .describe(
       'Additional [dx, dy] offset in user units; omit = [0, 0] so the transform translates exactly to the referent.',
@@ -53,10 +38,7 @@ const OffsetTranslateSchema = object({
 /** 校验按两点之间的比例指定的平移 */
 const BetweenTranslateSchema = object({
   kind: literal('between-translate').describe('Discriminator for proportional translate between two endpoints.'),
-  between: tuple([AbsoluteTargetSchema, AbsoluteTargetSchema]).describe(
-    'Two absolute endpoints; path-relative targets are excluded.',
-  ),
-  fraction: NormalizedFractionSchema.describe('Proportion from the first endpoint to the second endpoint.'),
+  ...BetweenPositionSchema.shape,
 }).describe('Proportional translate transform lowered to Cartesian translate at compile time.');
 
 /** 校验旋转角度与可选支点 */
