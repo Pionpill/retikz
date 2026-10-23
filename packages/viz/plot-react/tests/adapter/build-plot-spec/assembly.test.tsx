@@ -292,7 +292,7 @@ describe('buildPlotIR 装配', () => {
             source: { anchorId: 'from' },
             target: { anchorId: 'to' },
             color: 'kind',
-            label: { content: 'label' },
+            label: { text: 'label' },
           }}
           properties={{
             source: { anchorId: { prefix: 'pt' } },
@@ -316,7 +316,7 @@ describe('buildPlotIR 装配', () => {
       encodings: {
         source: { anchorId: 'from' },
         target: { anchorId: 'to' },
-        label: { content: 'label' },
+        label: { text: 'label' },
         color: { field: 'kind', scale: '__color' },
       },
       properties: {
@@ -349,7 +349,7 @@ describe('buildPlotIR 装配', () => {
         encodings={{
           source: { anchorId: 'sourceId' },
           target: { anchorId: 'targetId' },
-          label: { content: 'deltaLabel' },
+          label: { text: 'deltaLabel' },
         }}
         properties={{
           source: { anchorId: { prefix: 'trend' } },
@@ -367,7 +367,7 @@ describe('buildPlotIR 装配', () => {
       encodings: {
         source: { anchorId: 'sourceId' },
         target: { anchorId: 'targetId' },
-        label: { content: 'deltaLabel' },
+        label: { text: 'deltaLabel' },
       },
       properties: {
         source: { anchorId: { prefix: 'trend' } },

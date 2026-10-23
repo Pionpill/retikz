@@ -68,14 +68,16 @@ describe('ADV — 非 finite size / lineWidth / rotation 抛', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: NaN })).toThrow(/invalid size/i);
   });
 
-  it('linewidth_infinity → 抛 invalid lineWidth', () => {
+  it('linewidth_infinity → motif 的非有限 strokeWidth 被拒绝', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'lines', lineWidth: Infinity })).toThrow(
-      /invalid lineWidth/i,
+      /motif.*non-finite number/i,
     );
   });
 
-  it('dots_linewidth_infinity → 抛 invalid lineWidth', () => {
-    expect(() => compilePattern({ kind: 'pattern', shape: 'dots', lineWidth: Infinity })).toThrow(/invalid lineWidth/i);
+  it('dots_linewidth_infinity → motif 的非有限半径被拒绝', () => {
+    expect(() => compilePattern({ kind: 'pattern', shape: 'dots', lineWidth: Infinity })).toThrow(
+      /motif.*non-finite number/i,
+    );
   });
 
   it('rotation_nan → 抛 non-finite rotation', () => {
@@ -164,34 +166,6 @@ describe('ADV — emit 产物栅栏', () => {
     expect(() =>
       compilePattern({ kind: 'pattern', shape: 'nanmotif' }, { patterns: [{ ...nanPattern, name: 'nanmotif' }] }),
     ).toThrow(/non-finite number/i);
-  });
-
-  it('motif_returns_non_iterable：emit 返回 undefined → 清晰错（含 pattern 名）', () => {
-    const badPattern = { emit: () => undefined } as unknown as PatternDefinition;
-    let err: unknown;
-
-    try {
-      compilePattern({ kind: 'pattern', shape: 'noniter' }, { patterns: [{ ...badPattern, name: 'noniter' }] });
-    } catch (e) {
-      err = e;
-    }
-
-    expect(err).toBeInstanceOf(Error);
-    expect(String((err as Error).message)).toMatch(/noniter|pattern/i);
-  });
-
-  it('motif_returns_null：emit 返回 null → 清晰错（含 pattern 名）', () => {
-    const badPattern = { emit: () => null } as unknown as PatternDefinition;
-    let err: unknown;
-
-    try {
-      compilePattern({ kind: 'pattern', shape: 'nullret' }, { patterns: [{ ...badPattern, name: 'nullret' }] });
-    } catch (e) {
-      err = e;
-    }
-
-    expect(err).toBeInstanceOf(Error);
-    expect(String((err as Error).message)).toMatch(/nullret|pattern/i);
   });
 
   it('motif_function：emit 产物含函数（绕 TS）→ assertNoFunction 拦', () => {

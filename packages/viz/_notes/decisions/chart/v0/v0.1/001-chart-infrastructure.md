@@ -17,7 +17,7 @@ Plot 已拥有 GoG schema、definition / registry、lowering、provenance 与 lo
 
 ## 核心决策
 
-Chart type 是官方维护的封闭目录，不提供 `defineChart`、Chart registry 或运行时 recipe 注入。每个 type 由严格 IRChart variant 与静态 recipe 定义；未知 type 必须 fail-loud。需要自定义图形时直接使用 Plot，自定义 Mark、Scale、Coordinate 等横向能力继续通过 Plot definition / registry 扩展。
+Chart type 是官方维护的封闭目录，不提供 `defineChart`、Chart registry 或运行时 recipe 注入。每个 type 由严格 IRChart variant 与静态 recipe 定义；未知 type 必须 fail-loud。需要自定义图形时直接使用 Plot，Mark 使用 Plot 的内置类型集合，Scale、Coordinate 等横向能力继续通过 Plot definition / registry 扩展。
 
 每个 recipe 声明完整 Plot 配方、不可撤销的核心成员、可调整的表现性默认和稳定语义目标；统一 resolver 负责应用覆盖与扩展、复验核心不变量、生成最终 IRPlot、结构化诊断和 inspection。不同 type 不得各自发明 merge、错误或 adapter 语义。
 

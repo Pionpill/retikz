@@ -5,7 +5,7 @@ keywords: 'mark、markDefinitions、IRPlot.marks、IRPlotMarkOperation、MarkDef
 
 # ADR-064：开放自定义 mark
 
-状态：Accepted
+状态：Superseded by [023](../v0.2/023-closed-mark-vocabulary.md)
 发布：`@retikz/plot` `0.1.0-alpha.12`
 
 ## 背景

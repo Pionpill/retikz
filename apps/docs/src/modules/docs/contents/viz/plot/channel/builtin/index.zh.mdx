@@ -152,7 +152,7 @@ label 在图元旁附加说明文字，保留节点主体的形状。它适合�
 | `label.pin`       | 布尔值                        | 是否显示标签引线。                     |
 | `label.textColor` | 颜色                          | 标签文字颜色配置。                     |
 
-字段标签写作 `encodings.label: { content: 'name' }`，布局写作 `properties.label: { position: 'top', distance: 12, pin: true }`。固定文字写入 `properties.label.content`；多条标签的编码与属性按数组索引对应。
+字段标签写作 `encodings.label: { text: 'name' }`，布局写作 `properties.label: { position: 'top', distance: 12, pin: true }`。固定文字写入 `properties.label.text`；多条标签的编码与属性按数组索引对应。
 
 示例使用 tag 字段标注三个节点。切换标签位置、调整距离或关闭引线，观察标签变化；节点主体和数据位置保持不变。
 

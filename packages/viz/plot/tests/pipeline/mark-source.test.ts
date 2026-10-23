@@ -191,9 +191,9 @@ describe('mark field and property lowering', () => {
           type: 'point',
           encodings: {
             position: { x: { field: 'x' }, y: { field: 'y' } },
-            label: [{ content: 'a' }, { content: 'b' }],
+            label: [{ text: 'a' }, { text: 'b' }],
           },
-          properties: { label: [{ position: 'left', content: 'ignored' }, { position: 'right' }] },
+          properties: { label: [{ position: 'left', text: 'ignored' }, { position: 'right' }] },
         },
       ],
       [{ x: 2, y: 3, a: 'first', b: 'second' }],

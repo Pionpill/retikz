@@ -33,7 +33,7 @@ export type MarkValueResolverOptions<T> = {
 };
 
 /**
- * 把 schema 定义的 mark 样式值解析为「行 → 属性值」函数，供内置 mark 与自定义 mark 复用
+ * 把 schema 定义的 mark 样式值解析为「行 → 属性值」函数，供内置图元复用
  * @template T 字段解析器产出的视觉值类型
  * @param encoding 字段编码；省略时不产生解析结果
  * @param model 当前数据的完整字段模型

@@ -59,7 +59,7 @@ describe('contract mark host label lowering', () => {
         {
           type: 'path',
           encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
-          properties: { label: { content: 'trend', position: 'midway', side: 'top', sloped: true } },
+          properties: { label: { text: 'trend', position: 'midway', side: 'top', sloped: true } },
         },
       ]),
       {
@@ -82,7 +82,7 @@ describe('contract mark host label lowering', () => {
         {
           type: 'path',
           encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
-          properties: { label: { content: 'trend', position: 'midway', side: 'top' } },
+          properties: { label: { text: 'trend', position: 'midway', side: 'top' } },
         },
       ]),
       {
@@ -104,7 +104,7 @@ describe('contract mark host label lowering', () => {
         {
           type: 'path',
           encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
-          properties: { label: { content: { segments: [{ text: 'trend ' }, { tex: 'x' }] }, position: 'midway' } },
+          properties: { label: { text: { segments: [{ text: 'trend ' }, { tex: 'x' }] }, position: 'midway' } },
         },
       ]),
       {
@@ -126,7 +126,7 @@ describe('contract mark host label lowering', () => {
         {
           type: 'relation',
           encodings: {
-            label: { content: 'label' },
+            label: { text: 'label' },
             source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
             target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
           },
@@ -154,7 +154,7 @@ describe('contract mark host label lowering', () => {
             target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
           },
           properties: {
-            label: { content: 'flow', position: 'midway', side: 'center', sloped: true },
+            label: { text: 'flow', position: 'midway', side: 'center', sloped: true },
             geometry: { kind: 'ribbon', width: 12 },
           },
         },
@@ -181,7 +181,7 @@ describe('label field styles and shorthand', () => {
           type: 'path',
           encodings: {
             position: { x: { field: 'x' }, y: { field: 'y' } },
-            label: ['name', { content: 'value', font: { size: 'size', weight: 'weight' }, distance: 'gap' }],
+            label: ['name', { text: 'value', font: { size: 'size', weight: 'weight' }, distance: 'gap' }],
           },
           properties: { label: ['fallback', { font: { family: 'serif' }, side: 'bottom' }] },
         },
@@ -206,7 +206,7 @@ describe('label field styles and shorthand', () => {
           {
             type: 'path',
             encodings: { position: { x: { field: 'x' }, y: { field: 'y' } }, label: { font: { size: 'size' } } },
-            properties: { label: { content: 'constant', font: { size: 12 } } },
+            properties: { label: { text: 'constant', font: { size: 12 } } },
           },
         ]),
         {
@@ -298,14 +298,14 @@ describe('label dependencies and target contracts', () => {
 
   it('checks final host constraints after combining fields and fixed properties', () => {
     expect(() =>
-      expandOf(fixedDomains([constantPoint({ placement: 'placement' }, { content: 'x', pin: true })]), {
+      expandOf(fixedDomains([constantPoint({ placement: 'placement' }, { text: 'x', pin: true })]), {
         d: [{ placement: 'inside' }],
       }),
     ).toThrow(/label.*host constraints/i);
   });
 
   it('does not shift style indices when an earlier label has missing content', () => {
-    const root = expandOf(fixedDomains([constantPoint(['missing', { content: 'name', font: { size: 'size' } }])]), {
+    const root = expandOf(fixedDomains([constantPoint(['missing', { text: 'name', font: { size: 'size' } }])]), {
       d: [{ missing: null, name: 'second', size: 15 }],
     });
     expect(collectNodes(root)[0].label).toEqual({ text: 'second', font: { size: 15 } });
@@ -356,10 +356,9 @@ it('compiles encoded font leaves into the same measured scene as fixed label val
   const encoded = expandOf(fixedDomains([constantPoint({ font: { size: 'size', weight: 'weight' } })]), {
     d: [{ size: 24, weight: 700 }],
   });
-  const fixed = expandOf(
-    fixedDomains([constantPoint(undefined, { content: 'fixed', font: { size: 24, weight: 700 } })]),
-    { d: [] },
-  );
+  const fixed = expandOf(fixedDomains([constantPoint(undefined, { text: 'fixed', font: { size: 24, weight: 700 } })]), {
+    d: [],
+  });
   const compile = (scope: IRScope) => compileToScene({ version: 1, type: 'scene', children: [scope] }).scene;
   expect(compile(encoded)).toEqual(compile(fixed));
 });

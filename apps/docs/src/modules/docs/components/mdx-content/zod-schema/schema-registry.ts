@@ -2216,10 +2216,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PathEncoding',
     url: '/viz/plot/reference/encoding#pathencodingschema',
   },
-  MarkLabelContentSchema: {
-    schema: IRPlot.MarkLabelContentSchema,
-    label: 'MarkLabelContent',
-    url: '/viz/plot/reference/mark#marklabelcontentschema',
+  MarkLabelTextSchema: {
+    schema: IRPlot.MarkLabelTextSchema,
+    label: 'MarkLabelText',
+    url: '/viz/plot/reference/mark#marklabeltextschema',
   },
   PathMarkEncodingSchema: {
     schema: IRPlot.PathMarkEncodingSchema,
@@ -2311,11 +2311,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'Mark',
     url: '/viz/plot/reference/mark#markschema',
   },
-  MarkOperationSchema: {
-    schema: IRPlot.MarkOperationSchema,
-    label: 'MarkOperation',
-    url: '/viz/plot/reference/mark#markoperationschema',
-  },
   MarkPlacementSchema: {
     schema: IRPlot.MarkPlacementSchema,
     label: 'MarkPlacement',
@@ -2405,11 +2400,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IRPlot.RelationRouteStepSchema,
     label: 'RelationRouteStep',
     url: '/viz/plot/reference/mark#relationroutestepschema',
-  },
-  CustomMarkSchema: {
-    schema: IRPlot.CustomMarkSchema,
-    label: 'CustomMark',
-    url: '/viz/plot/reference/mark#custommarkschema',
   },
   PlotTargetRefSchema: {
     schema: IRPlot.PlotTargetRefSchema,

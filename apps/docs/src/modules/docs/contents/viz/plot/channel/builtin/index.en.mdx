@@ -152,7 +152,7 @@ label adds an annotation beside a mark while keeping the node body visible. Use 
 | `label.pin`       | Boolean                          | Whether to show a label pin.                  |
 | `label.textColor` | Color                            | Label text color.                             |
 
-Use `encodings.label: { content: 'name' }` for field content and `properties.label: { position: 'top', distance: 12, pin: true }` for layout. Fixed text belongs to `properties.label.content`. Multiple labels match encodings and properties by array index.
+Use `encodings.label: { text: 'name' }` for field content and `properties.label: { position: 'top', distance: 12, pin: true }` for layout. Fixed text belongs to `properties.label.text`. Multiple labels match encodings and properties by array index.
 
 The example labels three nodes with the tag field. Change the label position, distance, or pin while the node bodies and data positions stay fixed.
 

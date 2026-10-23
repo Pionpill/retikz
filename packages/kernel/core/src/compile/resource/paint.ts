@@ -30,7 +30,9 @@ export type PaintRegistry = {
   resources: () => Array<SceneResource>;
 };
 
-const isPatternEmitResult = (value: PatternEmitOutput): value is PatternEmitResult => 'motif' in value;
+/** 区分完整 tile 输出与可能携带单个同名元数据字段的图元 iterable */
+const isPatternEmitResult = (value: PatternEmitOutput): value is PatternEmitResult =>
+  'tileSize' in value && 'motif' in value;
 
 /** 生成与对象属性插入顺序无关的 paint resource key */
 const paintKeyOf = (value: unknown): string => {

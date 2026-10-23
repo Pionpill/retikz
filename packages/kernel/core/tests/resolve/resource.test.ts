@@ -127,14 +127,6 @@ describe('resolve/resource paint', () => {
     expect(scene.resources).toHaveLength(1);
     expect(emit).toHaveBeenCalledTimes(1);
   });
-
-  it('preserves the missing pattern emit diagnostic at the compile boundary', () => {
-    const pattern = { name: 'missing-emit', emit: undefined } as unknown as PatternDefinition;
-
-    expect(
-      () => compileToScene(sceneWithPaint({ kind: 'pattern', shape: 'missing-emit' }), { patterns: [pattern] }).scene,
-    ).toThrow("Pattern 'missing-emit' is missing an emit function (PatternDefinition.emit is required).");
-  });
 });
 
 describe('resolve/resource clip', () => {

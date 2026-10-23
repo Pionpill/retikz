@@ -47,11 +47,6 @@ const anchorTargetFields = {
     .describe('Core target boundary override; true means shape, false omits the override'),
 };
 
-const DirectPlotTargetRefSchema = strictObject({
-  id: NonBlankStringSchema.describe('Existing core Node / Coordinate id'),
-  ...anchorTargetFields,
-}).describe('Direct core target reference by id');
-
 const GeneratedAnchorPlotTargetRefSchema = strictObject({
   anchorId: AnchorIdSchema.describe('Anchor id rule evaluated against the current relation row'),
   ...anchorTargetFields,
@@ -62,12 +57,10 @@ const ProjectedPlotTargetRefSchema = strictObject({
   ...anchorTargetFields,
 }).describe('Projected coordinate target from the current relation row');
 
-/** 校验关系或注解使用的直接标识、生成锚点或投影坐标目标 */
-export const PlotTargetRefSchema = union([
-  DirectPlotTargetRefSchema,
-  GeneratedAnchorPlotTargetRefSchema,
-  ProjectedPlotTargetRefSchema,
-]).describe('Relation/annotation target reference: direct core id, generated mark anchor id, or projected coordinate');
+/** 校验关系使用的生成锚点或投影坐标目标 */
+export const PlotTargetRefSchema = union([GeneratedAnchorPlotTargetRefSchema, ProjectedPlotTargetRefSchema]).describe(
+  'Relation target reference: generated mark anchor id or projected coordinate',
+);
 
 /** 校验关系目标的字段依赖，固定引用与构造仍由 properties 表达 */
 export const PlotTargetEncodingSchema = strictObject({

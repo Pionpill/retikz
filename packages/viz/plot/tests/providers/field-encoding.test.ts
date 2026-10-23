@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { channelField, channelScale, markChannelEncoding, markProperty } from '../../src/contract';
 import { positionValue } from '../../src/contract';
-import { resolveMarkRegistry } from '../../src/providers';
+import { MARK_REGISTRY } from '../../src/providers';
 import { channelValue, createFieldCollector, labelOf } from '../../src/providers/channel';
 import { isSingleMark, collectMarkFields } from '../../src/resolve/mark';
 
-const markContext = { registry: resolveMarkRegistry() };
+const markContext = { registry: MARK_REGISTRY };
 import { PointMarkSchema } from '../../src/schemas';
 
 describe('field encoding consumption', () => {

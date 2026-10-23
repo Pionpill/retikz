@@ -2089,7 +2089,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const badPattern = definePattern({
       name: 'badEmitPattern',
       emit: (() => [
-        { type: 'group', children: [{ type: 'rect', x: 0, y: 0, width: -1, height: 2 }] },
+        { type: 'group', children: [{ type: 'rect', x: 0, y: 0, width: NaN, height: 2 }] },
       ]) as unknown as () => Iterable<ScenePrimitive>,
     });
     const badClip = defineClip({

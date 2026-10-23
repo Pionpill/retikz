@@ -95,8 +95,11 @@ describe('Scatter Chart encoding resolution', () => {
       },
     ]);
     expect(result.plot.marks[0]).toMatchObject({
-      kind: 'data',
-      encodings: { position: { x: 'species', y: 'meanMargin' }, color: 'maxIntensity', shape: 'island' },
+      encodings: {
+        position: { x: { field: 'species' }, y: { field: 'meanMargin' } },
+        color: 'maxIntensity',
+        shape: 'island',
+      },
     });
   });
 
@@ -146,8 +149,7 @@ describe('Scatter Chart encoding resolution', () => {
       { operation: { kind: 'jitter', params: { axis: 'y', yField: 'margin', amount: 0.5 } } },
     ]);
     expect(result.plot.marks[0]).toMatchObject({
-      kind: 'data',
-      encodings: { position: { x: 'amountShare', y: 'margin' } },
+      encodings: { position: { x: { field: 'amountShare' }, y: { field: 'margin' } } },
     });
   });
 
@@ -424,8 +426,10 @@ describe('Scatter Chart encoding resolution', () => {
 
     for (const mark of result.plot.marks) {
       expect(mark).toMatchObject({
-        kind: 'data',
-        encodings: { position: { x: 'species', y: 'meanMargin' }, size: { field: 'weight', scale: 'weightSizeScale' } },
+        encodings: {
+          position: { x: { field: 'species' }, y: { field: 'meanMargin' } },
+          size: { field: 'weight', scale: 'weightSizeScale' },
+        },
       });
     }
   });

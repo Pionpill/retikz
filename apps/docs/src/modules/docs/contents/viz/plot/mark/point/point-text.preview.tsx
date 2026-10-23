@@ -54,7 +54,7 @@ export const PointTextPreview = (values: PointTextPreviewValues) => {
       ? {
           encodings: {
             color: 'region',
-            label: { content: values.textField, font: { size: 'labelSize', weight: 'labelWeight' } },
+            label: { text: values.textField, font: { size: 'labelSize', weight: 'labelWeight' } },
             position: { x: { field: 'x' }, y: { field: 'y' } },
           },
           properties: {

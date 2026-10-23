@@ -1,5 +1,5 @@
 import type { JsonObject } from '@retikz/foundation';
-import type { IRPlotMarkOperation } from '@retikz/plot';
+import type { IRPlotMark } from '@retikz/plot';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import { ChartWarningCode } from '../../warning';
@@ -12,7 +12,7 @@ type AuthoredChartMarkResolution = Readonly<{
   kind: string;
   index: number;
   override: boolean;
-  plotMarks: ReadonlyArray<IRPlotMarkOperation>;
+  plotMarks: ReadonlyArray<IRPlotMark>;
 }>;
 
 type ChartMarksResolution = Readonly<{
@@ -21,15 +21,12 @@ type ChartMarksResolution = Readonly<{
 }>;
 
 type ChartSemanticMarksResolution = Readonly<{
-  marks: ReadonlyArray<IRPlotMarkOperation>;
+  marks: ReadonlyArray<IRPlotMark>;
   warnings: ReadonlyArray<ChartResolveWarning>;
 }>;
 
 /** 为一个 Chart 语义 mark 组写入 Plot 默认颜色组，并隔离局部颜色组 */
-const withDefaultColorGroup = (
-  marks: ReadonlyArray<IRPlotMarkOperation>,
-  groupIndex: number,
-): ReadonlyArray<IRPlotMarkOperation> =>
+const withDefaultColorGroup = (marks: ReadonlyArray<IRPlotMark>, groupIndex: number): ReadonlyArray<IRPlotMark> =>
   marks.map(mark => {
     const localColorGroup = mark.defaultColorGroup;
     const defaultColorGroup =
@@ -73,7 +70,7 @@ const resolveOneMark = (
   mark: JsonObject,
   binding: ChartMarkBinding,
   resolvedEncodings: JsonObject,
-): ReadonlyArray<IRPlotMarkOperation> => {
+): ReadonlyArray<IRPlotMark> => {
   const resolution = binding.definition.resolve({
     chartType: source.recipe.chartType,
     source: mark,
@@ -174,7 +171,7 @@ export const resolveChartSemanticMarks = (
 
     return { kind: group.kind, plotMarks: [...group.plotMarks] };
   });
-  const additions: Array<ReadonlyArray<IRPlotMarkOperation>> = [];
+  const additions: Array<ReadonlyArray<IRPlotMark>> = [];
   const warnings: Array<ChartResolveWarning> = [];
 
   for (const mark of authored.authoredMarks) {

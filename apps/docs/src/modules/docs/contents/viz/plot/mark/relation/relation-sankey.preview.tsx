@@ -45,7 +45,7 @@ export const RelationSankeyPreview = (values: RelationSankeyPreviewValues) => (
             y: { from: { field: 'nodeY0' }, to: { field: 'nodeY1' } },
           },
           fill: 'nodeFill',
-          label: { content: 'nodeLabel' },
+          label: { text: 'nodeLabel' },
         }}
         properties={{
           bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } },

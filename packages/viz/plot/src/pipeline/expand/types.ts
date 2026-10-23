@@ -15,7 +15,6 @@ import type {
   AnchorIdGenerator,
   AnyChannelDefinition,
   AnyCoordinateDefinition,
-  AnyMarkDefinition,
   AnyPositionAdjustmentDefinition,
   AnyScaleDefinition,
   PlotThemeDefinition,
@@ -60,8 +59,6 @@ export type PlotDefinitions = {
   scales?: Array<AnyScaleDefinition>;
   /** 自定义 channel definitions；position、mark、node 与 path channel 共用 registry */
   channels?: Array<AnyChannelDefinition>;
-  /** 自定义 mark definitions；未注册或冲突的 type 会 fail-loud */
-  marks?: Array<AnyMarkDefinition>;
   /** 自定义 Position Adjustment definitions；内置与自定义按 kind 共用 registry */
   positionAdjustments?: ReadonlyArray<AnyPositionAdjustmentDefinition>;
   /** 自定义字段格式 definitions；definition 提供蕴含类型与 canonical parser */

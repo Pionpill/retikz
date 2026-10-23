@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { treeifyError } from 'zod';
 
-import { ChannelSchema, MarkOperationSchema, PointMarkSchema, PositionEncodingSchema } from '../../src';
+import { ChannelSchema, MarkSchema, PointMarkSchema, PositionEncodingSchema } from '../../src';
 
 describe('Mark Source field encodings and fixed properties', () => {
   it('preserves field strings and explicitly scaled bindings through JSON', () => {
@@ -20,7 +21,7 @@ describe('Mark Source field encodings and fixed properties', () => {
       contributeToDomain: true,
       properties: { ...input.properties, autoPadding: 'max-radius' },
     });
-    expect(MarkOperationSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
   it('accepts a field name or an explicit field and scale pair', () => {
@@ -49,7 +50,7 @@ describe('Mark Source field encodings and fixed properties', () => {
     expect(PositionEncodingSchema.safeParse({ ' ': 'value' }).success).toBe(false);
     const result = PositionEncodingSchema.safeParse({ x: { field: 'height', scale: 'x' } });
     expect(result.success).toBe(false);
-    if (!result.success) expect(result.error.issues.some(issue => issue.path[0] === 'x')).toBe(true);
+    if (!result.success) expect(treeifyError(result.error).properties).toHaveProperty('x');
   });
 
   it('retains both authored sources so resolution can apply encoding precedence', () => {
@@ -73,9 +74,9 @@ describe('Mark Source field encodings and fixed properties', () => {
       transforms: [],
       contributeToDomain: false,
     };
-    const parsed = MarkOperationSchema.parse(input);
+    const parsed = MarkSchema.parse(input);
     expect(parsed).toMatchObject(input);
-    expect(MarkOperationSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
   it('keeps transforms omission distinct from an explicit empty chain', () => {
@@ -85,8 +86,8 @@ describe('Mark Source field encodings and fixed properties', () => {
       properties: {},
       contributeToDomain: false,
     };
-    expect(MarkOperationSchema.parse(input)).not.toHaveProperty('transforms');
-    expect(MarkOperationSchema.parse({ ...input, transforms: [] })).toHaveProperty('transforms', []);
+    expect(MarkSchema.parse(input)).not.toHaveProperty('transforms');
+    expect(MarkSchema.parse({ ...input, transforms: [] })).toHaveProperty('transforms', []);
   });
 
   it('keeps path geometry properties separate from series and order roles', () => {
@@ -100,7 +101,7 @@ describe('Mark Source field encodings and fixed properties', () => {
       },
       properties: { connection: 'coordinate', curve: 'linear', strokeWidth: 2 },
     };
-    expect(MarkOperationSchema.parse(input)).toEqual({ ...input, contributeToDomain: true });
+    expect(MarkSchema.parse(input)).toEqual({ ...input, contributeToDomain: true });
   });
 
   it('places interval construction modes in properties and endpoints in encodings', () => {
@@ -112,15 +113,19 @@ describe('Mark Source field encodings and fixed properties', () => {
       },
       properties: { connection: 'coordinate', bounds: { x: { kind: 'band' }, y: { kind: 'extent' } }, fill: 'blue' },
     };
-    expect(MarkOperationSchema.parse(input)).toEqual({ ...input, contributeToDomain: true });
+    expect(MarkSchema.parse(input)).toEqual({ ...input, contributeToDomain: true });
   });
 
   it('uses the relation geometry discriminator independently of mark construction', () => {
     const input = {
       type: 'relation',
-      properties: { source: { id: 'a' }, target: { id: 'b' }, geometry: { kind: 'path' } },
+      properties: {
+        source: { anchorId: { template: 'a' } },
+        target: { anchorId: { template: 'b' } },
+        geometry: { kind: 'path' },
+      },
     };
-    expect(MarkOperationSchema.parse(input)).toEqual({
+    expect(MarkSchema.parse(input)).toEqual({
       ...input,
       contributeToDomain: true,
       properties: { ...input.properties, autoPadding: false },
@@ -138,9 +143,15 @@ describe('Mark Source field encodings and fixed properties', () => {
       transform: [],
       contributeToDomain: false,
     },
-    { type: 'relation', kind: 'ribbon', source: { id: 'a' }, target: { id: 'b' }, ribbon: { width: 2 } },
+    {
+      type: 'relation',
+      kind: 'ribbon',
+      source: { anchorId: { template: 'a' } },
+      target: { anchorId: { template: 'b' } },
+      ribbon: { width: 2 },
+    },
   ])('rejects obsolete external mark structures %j', input => {
-    expect(MarkOperationSchema.safeParse(input).success).toBe(false);
+    expect(MarkSchema.safeParse(input).success).toBe(false);
   });
 
   it('validates extension binding shape without silently dropping malformed input', () => {
@@ -165,9 +176,9 @@ describe('Mark Source field encodings and fixed properties', () => {
       type: 'point',
       encodings: {
         position: { x: { field: 'x' }, y: { field: 'y' } },
-        label: [{ content: 'name' }, { content: 'value' }],
+        label: [{ text: 'name' }, { text: 'value' }],
       },
-      properties: { label: [{ content: 'fixed', placement: 'outside' }, { displayFormat: '.2f' }] },
+      properties: { label: [{ text: 'fixed', placement: 'outside' }, { displayFormat: '.2f' }] },
     };
     expect(PointMarkSchema.parse(input)).toMatchObject(input);
   });
@@ -192,7 +203,7 @@ describe('Mark Source field encodings and fixed properties', () => {
       },
       properties: { geometry: { kind: 'ribbon' } },
     };
-    expect(MarkOperationSchema.parse(input)).toMatchObject(input);
+    expect(MarkSchema.parse(input)).toMatchObject(input);
   });
 
   it.each([
@@ -202,20 +213,20 @@ describe('Mark Source field encodings and fixed properties', () => {
     { kind: 'ribbon', width: 2, options: { interpolation: 'linear' } },
   ])('retains relation geometry validation %j', geometry => {
     expect(
-      MarkOperationSchema.safeParse({
+      MarkSchema.safeParse({
         type: 'relation',
-        properties: { source: { id: 'a' }, target: { id: 'b' }, geometry },
+        properties: { source: { anchorId: { template: 'a' } }, target: { anchorId: { template: 'b' } }, geometry },
       }).success,
     ).toBe(false);
   });
 
   it('rejects endpoint glyphs on references that are not projected positions', () => {
     expect(
-      MarkOperationSchema.safeParse({
+      MarkSchema.safeParse({
         type: 'relation',
         properties: {
-          source: { id: 'a' },
-          target: { id: 'b' },
+          source: { anchorId: { template: 'a' } },
+          target: { anchorId: { template: 'b' } },
           geometry: { kind: 'path' },
           endpoints: { source: { size: 3 } },
         },
@@ -232,6 +243,6 @@ describe('Mark Source field encodings and fixed properties', () => {
       },
       properties: { endpoints: { source: { size: 3, fill: 'red' } }, geometry: { kind: 'path' } },
     };
-    expect(MarkOperationSchema.parse(input)).toMatchObject(input);
+    expect(MarkSchema.parse(input)).toMatchObject(input);
   });
 });

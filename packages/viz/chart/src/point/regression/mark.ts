@@ -1,7 +1,7 @@
 import type { IRDataTransform } from '@retikz/data';
 import { BuiltinDataTransform } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
-import type { IRPlotMarkOperation } from '@retikz/plot';
+import type { IRPlotMark } from '@retikz/plot';
 import { BuiltinPlotMark } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
@@ -71,7 +71,7 @@ export const resolveRegressionMarkGroup = (
   encodings: JsonObject,
   properties: IRRegressionChartProperties,
   hidePoints?: boolean,
-): readonly [IRPlotMarkOperation, ...Array<IRPlotMarkOperation>] => {
+): readonly [IRPlotMark, ...Array<IRPlotMark>] => {
   const x = requiredFieldOf(encodings, 'x', ['recipe', 'encodings', 'x']);
   const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
   const series = seriesMappingOf(encodings);
@@ -88,7 +88,7 @@ export const resolveRegressionMarkGroup = (
   }
 
   /** 在共享数据上创建一条 mark-local 趋势，仅额外项显式 stroke 可覆盖分类色 */
-  const createTrend = (settings: IRRegressionChartProperties, explicitStroke = false): IRPlotMarkOperation => {
+  const createTrend = (settings: IRRegressionChartProperties, explicitStroke = false): IRPlotMark => {
     const smooth: IRDataTransform = {
       kind: BuiltinDataTransform.Smooth,
       params: {
@@ -103,7 +103,7 @@ export const resolveRegressionMarkGroup = (
       },
     };
     const trend = settings.trend ?? {};
-    const path: IRPlotMarkOperation = {
+    const path: IRPlotMark = {
       type: BuiltinPlotMark.Path,
       transforms: [{ operation: smooth }],
       encodings: {
@@ -126,7 +126,7 @@ export const resolveRegressionMarkGroup = (
   };
 
   const point = hidePoints ? undefined : resolvePointMark(pointEncodings, pointProperties);
-  const trends: [IRPlotMarkOperation, ...Array<IRPlotMarkOperation>] = [
+  const trends: [IRPlotMark, ...Array<IRPlotMark>] = [
     createTrend(properties),
     ...(properties.extraMethods ?? []).map(extra =>
       createTrend(

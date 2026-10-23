@@ -11,7 +11,7 @@ import type {
 } from '../../contract';
 import { ChannelDefinitionKind, markProperty, labelEntries, labelEncodingBindings } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import type { IRPlotMarkOperation, IRPlotLabelEncoding } from '../../schemas';
+import type { IRPlotMark, IRPlotLabelEncoding } from '../../schemas';
 import { resolveMarkOperation } from '../mark';
 import type { ChannelResolveContext } from './types';
 
@@ -32,7 +32,7 @@ export const resolveChannelDefinition = (
 ): AnyChannelDefinition | undefined => context.channelRegistry.get(channel);
 
 /** 解析当前 mark 可消费的 channel definition，并组装 values/default/delivery/descriptor */
-export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelResolveContext): MarkChannels => {
+export const resolveMarkChannels = (mark: IRPlotMark, context: ChannelResolveContext): MarkChannels => {
   const assertChannelDelivery = (definition: AnyChannelDefinition): void => {
     if (
       (definition.kind === ChannelDefinitionKind.Scope ||
@@ -103,11 +103,7 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
 
   const definitionContext = definitionContextOf(context);
   const labelDeliveries: Array<LabelChannelDelivery> = [];
-  const labelSource = mark.encodings?.label as
-    | string
-    | IRPlotLabelEncoding
-    | Array<string | IRPlotLabelEncoding>
-    | undefined;
+  const labelSource = mark.encodings?.label;
   const host = operationResolution.definition.labelHost;
   for (const [index, label] of labelEntries<IRPlotLabelEncoding>(labelSource).entries()) {
     for (const [target, binding] of labelEncodingBindings(label)) {

@@ -23,9 +23,7 @@ export const LabelFontEncodingSchema = strictObject({
  */
 export const LabelEncodingSchema = strictObject({
   /** 内容字段；格式由固定属性 displayFormat 控制 */
-  content: NonBlankStringSchema.optional().describe(
-    'Label content field; formatting is configured in fixed properties',
-  ),
+  text: NonBlankStringSchema.optional().describe('Label text field; formatting is configured in fixed properties'),
   font: LabelFontEncodingSchema.optional(),
   textColor: ChannelSchema.optional(),
   /** 标签自身的标量透明度，不使用图元的 overall / fill / stroke 对象 */

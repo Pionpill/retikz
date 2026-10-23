@@ -18,7 +18,7 @@ import { CoordinateConnection, PolarInterpolation } from '../coordinate';
 import { PathEncodingSchema, PositionEncodingSchema } from '../encoding';
 import { AnchorIdSchema, hasValidAnchorSource } from './anchor';
 import { BuiltinPlotMark, markBase } from './base';
-import { pathHostLabel } from './label';
+import { MarkPathLabelListSchema } from './label';
 import {
   MarkOpacityStyleSchema,
   MarkFillStyleSchema,
@@ -181,7 +181,7 @@ export const PathPropertiesSchema = strictObject({
   anchorId: AnchorIdSchema.optional().describe(
     'Stable id rule for generated per-datum core Coordinates along this path',
   ),
-  ...pathHostLabel,
+  label: MarkPathLabelListSchema.optional().describe('Path-host label: lowered onto the generated core Path.label'),
 }).describe('Fixed data path properties and construction rules');
 
 /** 校验按顶点组织的路径或逐实例完整端点，输入形态互斥 */

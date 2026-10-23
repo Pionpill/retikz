@@ -4,7 +4,7 @@ import type {
   IRPlotCoordinateOperation,
   IRPlotFacetConfiguration,
   IRPlotGuide,
-  IRPlotMarkOperation,
+  IRPlotMark,
   IRPlotScaleOperation,
 } from '@retikz/plot';
 import {
@@ -56,7 +56,7 @@ const isPositionMark = (mark: InputPlotMark): boolean =>
   mark.type === BuiltinPlotMark.Path || mark.type === BuiltinPlotMark.Point || mark.type === BuiltinPlotMark.Interval;
 
 /** 移除 mark 上的 authoring-only binding 字段 */
-const stripMarkBindings = (mark: InputPlotMark): IRPlotMarkOperation => {
+const stripMarkBindings = (mark: InputPlotMark): IRPlotMark => {
   const { xAxisId: _xAxisId, yAxisId: _yAxisId, facetId: _facetId, trackId: _trackId, ...rest } = mark;
   void _xAxisId;
   void _yAxisId;
@@ -77,7 +77,7 @@ const stripGuideBindings = (guide: InputPlotGuide): IRPlotGuide => {
 };
 
 /** 把 mark 绑定到解析后的 coordinate view */
-const withMarkScope = (mark: InputPlotMark, coordinateView: string | undefined): IRPlotMarkOperation => {
+const withMarkScope = (mark: InputPlotMark, coordinateView: string | undefined): IRPlotMark => {
   const stripped = stripMarkBindings(mark);
   return coordinateView === undefined ? stripped : { ...stripped, coordinateView };
 };

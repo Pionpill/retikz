@@ -181,13 +181,13 @@ The explicit `data.reference` must match the dataset name `rows`. All four entri
 
 `encodings` selects fields to read; `properties` supplies fixed values. React, Vanilla, and JSON use the same groups. Named components and factories supply `type` and `kind`; JSON marks declare both explicitly.
 
-| Target              | Field encoding                           | Fixed property                                        |
-| ------------------- | ---------------------------------------- | ----------------------------------------------------- |
-| Horizontal position | `encodings.position.x: { field: 'gdp' }` | `encodings.position.x: { value: 400 }`                |
-| Color               | `encodings.color: 'region'`              | `properties.color: 'crimson'`                         |
-| Size                | `encodings.size: 'population'`           | `properties.size: 12`                                 |
-| Shape               | `encodings.shape: 'region'`              | `properties.shape: 'circle'`                          |
-| Label content       | `encodings.label: { content: 'abbr' }`   | `properties.label: { content: 'A', position: 'top' }` |
+| Target              | Field encoding                           | Fixed property                                     |
+| ------------------- | ---------------------------------------- | -------------------------------------------------- |
+| Horizontal position | `encodings.position.x: { field: 'gdp' }` | `encodings.position.x: { value: 400 }`             |
+| Color               | `encodings.color: 'region'`              | `properties.color: 'crimson'`                      |
+| Size                | `encodings.size: 'population'`           | `properties.size: 12`                              |
+| Shape               | `encodings.shape: 'region'`              | `properties.shape: 'circle'`                       |
+| Label content       | `encodings.label: { text: 'abbr' }`      | `properties.label: { text: 'A', position: 'top' }` |
 
 Write a field name for an ordinary binding. To select a declared scale, use `{ field: 'population', scale: 'populationSize' }`. Coordinates own position scales. Use `{ field: 'gdp' }` to bind a position field, `{ value: 80 }` for a constant, or an edge for a view boundary.
 

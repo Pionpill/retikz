@@ -7,7 +7,7 @@ import { utcFormat as d3UtcFormat } from 'd3-time-format';
 
 import type { FieldCollector, ResolveLabel } from '../../../contract';
 import { channelField } from '../../../contract';
-import type { IRPlotChannel, IRPlotMarkLabelContent } from '../../../schemas';
+import type { IRPlotChannel, IRPlotMarkLabelText } from '../../../schemas';
 
 /**
  * 读取字段编码在当前行中的原始值
@@ -41,22 +41,22 @@ const applyDisplayFormat = (value: unknown, displayFormat: string, fieldType: Da
 /**
  * text 内容通道某行解析为标签串
  * @description resolveLabel 最高优先；有字段编码时读取字段，否则使用固定内容
- * @param content 固定文本内容
+ * @param text 固定文本内容
  * @param row 当前图元使用的数据行
  * @param fieldType 字段类型；temporal 使用 UTC 时间格式，其余使用数值格式
- * @param resolveLabel 优先于声明内容的运行时标签回调；省略时读取 content
+ * @param resolveLabel 优先于声明内容的运行时标签回调；省略时读取 text
  * @param field 可选的字段编码；无效值不回退到固定内容
  * @param displayFormat 字段值的显示格式
  * @returns 格式化文本或常量内容；字段为空或没有内容时返回 undefined
  */
 export const labelOf = (
-  content: IRPlotMarkLabelContent | undefined,
+  text: IRPlotMarkLabelText | undefined,
   row: ExternalRow,
   fieldType?: DataFieldType,
   resolveLabel?: ResolveLabel,
   field?: string,
   displayFormat?: string,
-): IRPlotMarkLabelContent | string | undefined => {
+): IRPlotMarkLabelText | string | undefined => {
   if (resolveLabel !== undefined) return String(resolveLabel(row));
   if (field !== undefined) {
     const value = resolveFieldPath(row, field);
@@ -64,7 +64,7 @@ export const labelOf = (
 
     return displayFormat !== undefined ? applyDisplayFormat(value, displayFormat, fieldType) : String(value);
   }
-  return content;
+  return text;
 };
 
 /**

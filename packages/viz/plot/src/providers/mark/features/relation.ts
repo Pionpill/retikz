@@ -20,7 +20,6 @@ import type {
   CoordinateFrame,
   FieldCollector,
   MarkChannels,
-  MarkDefinition,
   MarkLoweringContext,
   PolarCoordinateFrame,
 } from '../../../contract';
@@ -60,6 +59,7 @@ import {
   pathChannelKinds,
   resolveGeometryMarkLabels,
 } from '../shared';
+import type { MarkDefinition } from '../types';
 import { POINT_DEFAULT_RADIUS } from './point-glyph';
 import { pointGlyphStyle } from './point-glyph';
 
@@ -200,7 +200,6 @@ const resolveTarget = (
 ): TargetResolution | null => {
   if (targetEncodingOf(mark, role)?.position !== undefined)
     return resolveProjectedTarget(mark, ref, row, frame, ctx, transformedIndex, role, forceCoordinate);
-  if (ref !== undefined && 'id' in ref) return { target: { id: ref.id, ...targetExtras(ref) }, coordinates: [] };
   if (ctx?.anchors === undefined) {
     throw new RetikzPlotError(
       `lowerPlots: relation ${role} target uses generated anchorId but no AnchorRegistry is available`,

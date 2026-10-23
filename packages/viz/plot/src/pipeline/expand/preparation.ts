@@ -28,13 +28,12 @@ import { RetikzPlotError } from '../../error';
 import { isSingleMark } from '../../resolve';
 import { resolvePlotDataExecution } from '../../resolve';
 import { resolveComposition, resolveFacetPanels } from '../../resolve/composition';
-import type { IRPlot, IRPlotMarkOperation } from '../../schemas';
+import type { IRPlot, IRPlotMark } from '../../schemas';
 import { preparePlotRegistries, prepareRows } from './data';
 import type { LowerPlotsOptions } from './types';
 
-/** 每个 mark 的 Data 声明；开放 mark 扩展仍遵守相同包装 */
-export const plotMarkTransformsOf = (mark: IRPlotMarkOperation): Array<IRDataTransformDeclaration> =>
-  mark.transforms ?? [];
+/** 读取内置图元的局部 Data 变换声明 */
+export const plotMarkTransformsOf = (mark: IRPlotMark): Array<IRDataTransformDeclaration> => mark.transforms ?? [];
 
 /**
  * 全部作用域先固定实现，再绑定本次根与实际分区进行单次计算

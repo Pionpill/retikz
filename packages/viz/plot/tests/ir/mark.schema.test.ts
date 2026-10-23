@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CustomMarkSchema, IntervalBoundsSchema, MarkOperationSchema, MarkSchema } from '../../src/schemas/mark';
+import { IntervalBoundsSchema, MarkSchema } from '../../src/schemas/mark';
 
 const gradientPaint = {
   kind: 'linearGradient',
@@ -12,6 +12,19 @@ const gradientPaint = {
 };
 
 describe('MarkSchema (contract)', () => {
+  it.each(['source', 'target'])('rejects direct core ids in relation %s targets', role => {
+    const properties = {
+      source: { anchorId: { template: 'pt.A' } },
+      target: { anchorId: { template: 'pt.B' } },
+      geometry: { kind: 'path' },
+    };
+    expect(MarkSchema.safeParse({ type: 'relation', properties }).success).toBe(true);
+    for (const target of [{ id: 'A' }, { id: 'A', anchorId: { template: 'pt.A' } }]) {
+      expect(MarkSchema.safeParse({ type: 'relation', properties: { ...properties, [role]: target } }).success).toBe(
+        false,
+      );
+    }
+  });
   it('点方向契约可 JSON round-trip，非法方向声明被拒绝', () => {
     const mark = {
       type: 'point',
@@ -81,30 +94,13 @@ describe('MarkSchema (contract)', () => {
       properties: { autoPadding: 'max-radius' },
     };
 
-    expect(MarkOperationSchema.parse(JSON.parse(JSON.stringify(mark)))).toEqual({ ...mark, contributeToDomain: true });
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(mark)))).toEqual({ ...mark, contributeToDomain: true });
     expect(() =>
-      MarkOperationSchema.parse({
+      MarkSchema.parse({
         ...mark,
         defaultColorGroup: '   ',
       }),
     ).toThrow();
-  });
-
-  it('custom_mark_accepts_default_color_group', () => {
-    const mark = { type: 'custom-symbol', defaultColorGroup: 'observations', properties: { value: 1 } };
-
-    expect(MarkOperationSchema.parse(mark)).toEqual({ ...mark, contributeToDomain: true });
-  });
-
-  it('custom_mark_reports_deep_non_json_leaf_path', () => {
-    const result = CustomMarkSchema.safeParse({
-      type: 'custom-symbol',
-      properties: { nested: [0, { bad: Symbol('invalid') }] },
-    });
-
-    expect(result.success).toBe(false);
-
-    if (!result.success) expect(result.error.issues.at(0)?.path).toEqual(['properties', 'nested']);
   });
 
   // 错误路径
@@ -116,12 +112,12 @@ describe('MarkSchema (contract)', () => {
       properties: { autoPadding: 'max-radius' },
     };
 
-    expect(MarkOperationSchema.parse(mark)).toEqual({ ...mark, contributeToDomain: true });
+    expect(MarkSchema.parse(mark)).toEqual({ ...mark, contributeToDomain: true });
   });
 
   it('mark_layer_rejects_fractional_zindex_and_unknown_fields', () => {
     expect(() =>
-      MarkOperationSchema.parse({
+      MarkSchema.parse({
         type: 'point',
         layer: { zIndex: 1.5 },
         encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -129,7 +125,7 @@ describe('MarkSchema (contract)', () => {
       }),
     ).toThrow();
     expect(() =>
-      MarkOperationSchema.parse({
+      MarkSchema.parse({
         type: 'point',
         layer: { zIndex: 1, order: 2 },
         encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -768,7 +764,7 @@ describe('MarkSchema (contract)', () => {
   it('mark_interval_label_valid', () => {
     const m = {
       type: 'interval',
-      encodings: { label: { content: 'revenue' }, position: { x: { field: 'month' }, y: { field: 'revenue' } } },
+      encodings: { label: { text: 'revenue' }, position: { x: { field: 'month' }, y: { field: 'revenue' } } },
       properties: {
         connection: 'coordinate',
         label: { displayFormat: ',.0f', position: 'top', distance: 6, pin: true },
@@ -784,7 +780,7 @@ describe('MarkSchema (contract)', () => {
       encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
       properties: {
         connection: 'coordinate',
-        label: { content: 'trend', position: 'midway', side: 'top', sloped: true },
+        label: { text: 'trend', position: 'midway', side: 'top', sloped: true },
       },
     };
 
@@ -798,7 +794,7 @@ describe('MarkSchema (contract)', () => {
   it('mark_label_core_style_fields_valid', () => {
     const m = {
       type: 'interval',
-      encodings: { label: { content: 'revenue' }, position: { x: { field: 'month' }, y: { field: 'revenue' } } },
+      encodings: { label: { text: 'revenue' }, position: { x: { field: 'month' }, y: { field: 'revenue' } } },
       properties: {
         connection: 'coordinate',
         label: {
@@ -868,7 +864,7 @@ describe('MarkSchema (contract)', () => {
       MarkSchema.safeParse({
         type: 'interval',
         encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
-        properties: { connection: 'coordinate', label: { content: 'label', pin: { stroke: '   ' } } },
+        properties: { connection: 'coordinate', label: { text: 'label', pin: { stroke: '   ' } } },
       }).success,
     ).toBe(false);
   });
@@ -877,7 +873,7 @@ describe('MarkSchema (contract)', () => {
     const m = {
       type: 'point',
       encodings: { position: { x: { field: 'px' }, y: { field: 'py' } } },
-      properties: { autoPadding: 'max-radius', label: { content: 'x', position: 30 } },
+      properties: { autoPadding: 'max-radius', label: { text: 'x', position: 30 } },
     };
 
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
@@ -888,7 +884,7 @@ describe('MarkSchema (contract)', () => {
       MarkSchema.parse({
         type: 'interval',
         encodings: { position: { x: { field: 'm' }, y: { field: 'r' } } },
-        properties: { connection: 'coordinate', label: { content: {} } },
+        properties: { connection: 'coordinate', label: { text: {} } },
       }),
     ).toThrow();
   });
@@ -898,7 +894,7 @@ describe('MarkSchema (contract)', () => {
       MarkSchema.parse({
         type: 'path',
         encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
-        properties: { connection: 'coordinate', label: { content: 'trend', pin: true } },
+        properties: { connection: 'coordinate', label: { text: 'trend', pin: true } },
       }),
     ).toThrow();
   });
@@ -906,12 +902,12 @@ describe('MarkSchema (contract)', () => {
   it('mark_relation_label_valid_and_json_round_trip', () => {
     const m = {
       type: 'relation',
-      encodings: { label: { content: 'label' } },
+      encodings: { label: { text: 'label' } },
       properties: {
         autoPadding: false,
         label: { position: 0.5, side: 'center' },
-        source: { id: 'A' },
-        target: { id: 'B' },
+        source: { anchorId: { template: 'A' } },
+        target: { anchorId: { template: 'B' } },
         geometry: { kind: 'path' },
       },
     };
@@ -961,8 +957,8 @@ describe('MarkSchema (contract)', () => {
         properties: {
           endpoints,
           autoPadding: false,
-          source: { id: 'A' },
-          target: { id: 'B' },
+          source: { anchorId: { template: 'A' } },
+          target: { anchorId: { template: 'B' } },
           geometry: { kind: 'path' },
         },
       }),
@@ -1013,8 +1009,8 @@ describe('MarkSchema (contract)', () => {
       type: 'relation',
       properties: {
         autoPadding: false,
-        source: { id: 'A' },
-        target: { id: 'B' },
+        source: { anchorId: { template: 'A' } },
+        target: { anchorId: { template: 'B' } },
         geometry: { kind: 'path', route: [{ kind: 'fold', via: '-|-' }] },
       },
     };
@@ -1028,8 +1024,8 @@ describe('MarkSchema (contract)', () => {
         type: 'relation',
         properties: {
           autoPadding: false,
-          source: { id: 'A' },
-          target: { id: 'B' },
+          source: { anchorId: { template: 'A' } },
+          target: { anchorId: { template: 'B' } },
           geometry: { kind: 'path', routing: { kind: 'orthogonal', via: '-|-' } },
         },
       }),
@@ -1065,16 +1061,6 @@ describe('MarkSchema (contract)', () => {
     };
 
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
-  });
-
-  it('custom_mark_accepts_local_transform', () => {
-    const m = {
-      type: 'dot',
-      transforms: [{ operation: { kind: 'top-n', params: { field: 'score', n: 3 } } }],
-      encodings: { position: { x: { field: 'x' }, y: { field: 'score' } } },
-    };
-
-    expect(MarkOperationSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 });
 
@@ -1118,8 +1104,8 @@ describe('Polar interpolation mark contract', () => {
         type: 'relation',
         properties: {
           autoPadding: false,
-          source: { id: 'A' },
-          target: { id: 'B' },
+          source: { anchorId: { template: 'A' } },
+          target: { anchorId: { template: 'B' } },
           geometry: { kind: 'path', interpolation: 'spline' },
         },
       }),
