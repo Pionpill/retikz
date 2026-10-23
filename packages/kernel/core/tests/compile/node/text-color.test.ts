@@ -275,7 +275,10 @@ describe('Node auto-contrast cascade and precedence', () => {
               style: { fill: '#000000', textColor: AUTO_CONTRAST },
             },
           ],
-          defaults: { label: { textColor: 'orange', color: 'green' } },
+          defaults: {
+            node: { label: { textColor: 'orange', color: 'green' } },
+            path: { label: { textColor: 'orange', color: 'green' } },
+          },
         },
       ],
     };

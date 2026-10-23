@@ -1,5 +1,14 @@
-import { OpacitySchema, FontSchema, NodeDefaultSchema, PaintValueSchema, ScopeSchema } from '@retikz/core';
-import { strictObject, union } from 'zod';
+import {
+  OpacitySchema,
+  FontSchema,
+  NodeDefaultSchema,
+  PathDefaultSchema,
+  NodeLabelDefaultSchema,
+  PathLabelDefaultSchema,
+  PaintValueSchema,
+  ScopeSchema,
+} from '@retikz/core';
+import { strictObject } from 'zod';
 
 import { TableCellBordersDefaultsSchema, TableCellBordersSchema } from '../border';
 
@@ -43,33 +52,28 @@ const TableCellNullableFontSchema = strictObject({
   .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table Cell font defaults'))
   .describe('Sparse Core font defaults whose null leaves clear lower Table defaults.');
 
-const TableCellNodeDefaultsSchema = NodeDefaultSchema.refine(
-  value => Object.keys(value).length > 0,
-  requireAtLeastOneField('Table Cell Node defaults'),
-);
+const TableCellNodeLabelDefaultsSchema = strictObject({
+  ...NodeLabelDefaultSchema.shape,
+  font: TableCellNullableFontSchema.optional(),
+}).refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table Cell Node label defaults'));
 
-const TableCellNodeDefaultsWithNullableFontSchema = NodeDefaultSchema.extend({
-  style: NodeDefaultSchema.shape.style
-    .unwrap()
-    .extend({ font: TableCellNullableFontSchema.optional() })
-    .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table Cell Node style defaults')),
-})
-  .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table Cell Node defaults'))
-  .describe('Table Cell Node defaults with leaf-level font clearing.');
+const TableCellPathLabelDefaultsSchema = PathLabelDefaultSchema.extend({
+  font: TableCellNullableFontSchema.optional(),
+}).refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table Cell Path label defaults'));
 
-const TableCellLabelDefaultsSchema = ScopeSchema.shape.defaults
-  .unwrap()
-  .shape.label.unwrap()
-  .extend({ font: TableCellNullableFontSchema.optional() })
-  .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table Cell Label defaults'))
-  .describe('Table Cell Label defaults with leaf-level font clearing.');
+const TableCellNodeDefaultsSchema = NodeDefaultSchema.extend({
+  style: NodeDefaultSchema.shape.style.unwrap().extend({ font: TableCellNullableFontSchema.optional() }).optional(),
+  label: TableCellNodeLabelDefaultsSchema.optional(),
+}).refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table Cell Node defaults'));
+
+const TableCellPathDefaultsSchema = PathDefaultSchema.extend({
+  label: TableCellPathLabelDefaultsSchema.optional(),
+}).refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table Cell Path defaults'));
 
 const TableCellScopeDefaultsSchema = strictObject({
   style: TableCellContentStyleDefaultsStyleSchema.nullable().optional(),
-  node: union([TableCellNodeDefaultsSchema, TableCellNodeDefaultsWithNullableFontSchema]).nullable().optional(),
-  path: ScopeSchema.shape.defaults.unwrap().shape.path.nullable().optional(),
-  label: TableCellLabelDefaultsSchema.nullable().optional(),
-  arrow: ScopeSchema.shape.defaults.unwrap().shape.arrow.nullable().optional(),
+  node: TableCellNodeDefaultsSchema.nullable().optional(),
+  path: TableCellPathDefaultsSchema.nullable().optional(),
   reset: ScopeSchema.shape.defaults.unwrap().shape.reset.nullable().optional(),
 })
   .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table Cell Scope defaults'))

@@ -26,8 +26,8 @@ const sparseDefaults = {
       content: {
         defaults: {
           style: { color: '#0f172a' },
-          node: { style: { font: { family: 'serif' } } },
-          label: { font: { weight: 500 } },
+          node: { style: { font: { family: 'serif' } }, label: { font: { weight: 500 } } },
+          path: { label: { font: { weight: 500 } } },
         },
       },
     },

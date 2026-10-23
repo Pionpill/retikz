@@ -79,7 +79,7 @@ describe('rootScope 的空覆盖与命名空间边界', () => {
     { defaults: { style: {} } },
     { defaults: { style: { fill: undefined } } },
     { defaults: {} },
-    { defaults: { node: { style: {}, layout: {} }, path: { style: {} }, label: {}, arrow: {} } },
+    { defaults: { node: { style: {}, layout: {}, label: {} }, path: { style: {}, label: {}, arrow: {} } } },
     { defaults: { node: { style: { fill: undefined } }, reset: false } },
     { defaults: { reset: [] } },
   ];
@@ -181,7 +181,7 @@ describe('Happy：Layout 级联样式 → 子图元继承', () => {
   it('layout_labeldefault_inherits：labelDefault={{textColor:green}} → 边 label 文字继承', () => {
     const prims = layoutPrims(
       {
-        defaults: { label: { textColor: 'green' } },
+        defaults: { node: { label: { textColor: 'green' } }, path: { label: { textColor: 'green' } } },
       },
       <>
         <Node id="a" position={[0, 0]}>
@@ -255,7 +255,7 @@ describe('边界：无样式 / 空 children / 单通道', () => {
     // 空对象 default 是 no-op，不应无谓包一层空 scope 改变 IR 拓扑（避免无谓的空 scope）
     const emptyDefaults = layoutIR(
       {
-        defaults: { node: {}, path: {}, label: {}, arrow: {} },
+        defaults: { node: { label: {} }, path: { label: {}, arrow: {} } },
       },
       children,
     );

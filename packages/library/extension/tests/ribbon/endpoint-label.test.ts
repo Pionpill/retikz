@@ -194,8 +194,8 @@ it('inherits Kernel label font and color, multiplies opacity, and retains host m
       {
         type: 'scope',
         defaults: {
-          label: { textColor: 'blue', font: { size: 18, weight: 'bold' } },
-          path: { style: { opacity: 0.5 } },
+          node: { label: { textColor: 'blue', font: { size: 18, weight: 'bold' } } },
+          path: { style: { opacity: 0.5 }, label: { textColor: 'blue', font: { size: 18, weight: 'bold' } } },
         },
         children: [
           {
@@ -274,8 +274,8 @@ describe('Whole Ribbon transforms', () => {
             id: 'ribbon',
             meta: { owner: 'connection' },
             kind: 'ribbon',
-            rotate,
-            scale,
+            ...(rotate === undefined ? {} : { rotate }),
+            ...(scale === undefined ? {} : { scale }),
             kindOptions: { width: { kind: 'fixed', value: 20 }, end: { label: { text: 'target' } } },
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },

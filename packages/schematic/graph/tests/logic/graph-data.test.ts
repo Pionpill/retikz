@@ -63,17 +63,11 @@ const graph = {
     { type: 'scope', position: [0, 0], children: [{ type: 'node', position: [0, 0], text: 'Legend' }] },
   ],
   meta: { source: 'architecture-catalog' },
-  style: { fill: 'lightblue', opacity: 0.8 },
   defaults: {
-    node: {
-      style: { fill: 'white' },
-    },
-    path: {
-      style: { stroke: 'green' },
-    },
-    label: { font: { size: 10 } },
-    arrow: { shape: 'stealth', scale: 1.5 },
+    style: { fill: 'lightblue', opacity: 0.8 },
     reset: ['path'],
+    node: { style: { fill: 'white' }, label: { font: { size: 10 } } },
+    path: { style: { stroke: 'green' }, label: { font: { size: 10 } }, arrow: { shape: 'stealth', scale: 1.5 } },
   },
 } as const;
 

@@ -263,7 +263,7 @@ export const emitPathKindPrimitive = (
     });
   const emitBoundaryLabels = (input: ReadonlyArray<PathKindBoundaryLabelInput>): ReadonlyArray<ScenePrimitive> =>
     input.map(request => {
-      const labelDefault = pendingPath.scopeDefaults.label ?? {};
+      const labelDefault = pendingPath.scopeDefaults.path?.label ?? {};
       const styled = resolvePathLabelColors(
         resolvePathLabel(request.label, labelDefault, resolution.path.color),
         labelDefault.color ?? resolution.path.color,

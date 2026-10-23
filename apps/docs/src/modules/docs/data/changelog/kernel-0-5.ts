@@ -378,6 +378,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: 'BREAKING：默认配置归属宿主', en: 'BREAKING: host-owned defaults' },
+          content: {
+            zh: '将 defaults.label 分别迁移到 defaults.node.label 与 defaults.path.label，将 defaults.arrow 迁移到 defaults.path.arrow。标签默认支持除 text 外的完整配置，只装饰已有内容；字体逐字段继承。reset 仅接受 node / path，并同时清除对应标签与箭头默认；true 清除所有默认通道。',
+            en: 'Move defaults.label to defaults.node.label and defaults.path.label, and defaults.arrow to defaults.path.arrow. Label defaults support every configuration field except text and only decorate existing content; fonts inherit field by field. Reset accepts only node / path and clears their decoration defaults too; true resets all default channels.',
+          },
+        },
+        {
           label: { zh: '视觉样式完整消费', en: 'Complete visual style support' },
           content: {
             zh: '补齐通用描边端帽与连接样式、后代默认阴影和混合模式；引线支持 paint 与独立透明度，箭头支持 paint 与虚线。分段行支持行级样式，公式继承行字号并可单独覆盖。',

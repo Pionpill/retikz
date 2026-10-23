@@ -77,7 +77,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 - `position` defaults to `'top'` and accepts `'top'`, `'top-right'`, `'right'`, `'bottom-right'`, `'bottom'`, `'bottom-left'`, `'left'`, and `'top-left'`
 - It also accepts the center `'center'`, an angle such as `30`, or a boundary fraction such as `{ boundary: 'right', fraction: 0.25 }`; centered labels have no collision avoidance
 - `placement` defaults to `'outside'`; use `'inside'` to place the label inside the border
-- `font` / `textColor` use explicit label values first, then `Scope.defaults.label`, and finally inherit missing values from the node
+- `font` / `textColor` use explicit label values first, then `Scope.defaults.node.label`, and finally inherit missing values from the node
 - `opacity` is 0..1 and multiplies the node opacity
 
 <ComponentPreview

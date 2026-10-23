@@ -659,9 +659,13 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IR.PathDefaultSchema,
     label: 'PathDefault',
   },
-  LabelDefaultSchema: {
-    schema: IR.LabelDefaultSchema,
-    label: 'LabelDefault',
+  NodeLabelDefaultSchema: {
+    schema: IR.NodeLabelDefaultSchema,
+    label: 'NodeLabelDefault',
+  },
+  PathLabelDefaultSchema: {
+    schema: IR.PathLabelDefaultSchema,
+    label: 'PathLabelDefault',
   },
   TransformSchema: {
     schema: IR.TransformSchema,

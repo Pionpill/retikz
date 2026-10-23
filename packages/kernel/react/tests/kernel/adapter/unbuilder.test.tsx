@@ -1039,16 +1039,17 @@ describe('convertIRToReactNode', () => {
 
             defaults: {
               style: { color: 'blue', stroke: 'red', strokeWidth: 2, opacity: 0.8 },
+              reset: ['node', 'path'],
               node: {
                 shape: 'circle',
                 style: { fill: 'lightblue', textColor: NodeTextColor.Contrast, font: { size: 12 } },
+                label: { textColor: 'gray', font: { size: 10 } },
               },
               path: {
                 style: { stroke: 'green', dashPattern: [4, 2] },
+                label: { textColor: 'gray', font: { size: 10 } },
+                arrow: { shape: 'stealth', scale: 1.5 },
               },
-              label: { textColor: 'gray', font: { size: 10 } },
-              arrow: { shape: 'stealth', scale: 1.5 },
-              reset: ['label', 'arrow'],
             },
           },
         ],

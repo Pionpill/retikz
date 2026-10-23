@@ -259,7 +259,11 @@ Scope 的后代不能通过命名引用使用任一祖先 Scope 的中心、锚�
 
 Theme 与样式默认值是两条独立通道：`defaults.reset` 不重置 Theme，Theme 也不直接填充 Node / Path 的颜色。省略 `style` 时使用所属包的默认基线；在嵌套 `Scope` 中省略 `style` 会继承外层风格，不能重置为基线。
 
-**样式默认值。** Scope 同时提供 `defaults.style.color`、`defaults.style` 中的共享视觉属性与 `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow`。这些值逐字段向内继承，元素显式值优先；`defaults.reset` 只切断指定通道的外层继承。
+**样式默认值。** Scope 同时提供 `defaults.style.color`、`defaults.style` 中的共享视觉属性与 `defaults.node` / `defaults.path`。这些值逐字段向内继承，元素显式值优先；`defaults.reset` 只切断指定通道的外层继承。
+
+标签默认归宿主所有：`defaults.node.label` 支持节点标签的位置、对齐、距离、旋转、引线及视觉配置；`defaults.path.label` 支持路径和步骤标签的沿线位置、倾斜、断线及视觉配置；`defaults.path.arrow` 配置已有箭头及其两端覆盖。这些片段不包含标签正文，也不创建标签或箭头。
+
+`font` 在嵌套 Scope 与实例之间按字段继承，只改字号不会清除字体族或字重。`reset: ['node']` 同时切断节点与其标签默认；`reset: ['path']` 同时切断路径、标签和箭头默认；`true` 切断两个宿主通道，当前层配置仍然生效。
 
 共享描边包含 `stroke`、`strokeWidth`、`dashPattern` 和 `dashOffset`。例如 `defaults: { style: { dashPattern: [6, 2], dashOffset: -2 } }` 同时影响后代 Node 边框和 Path。当前层的通道默认覆盖共享默认，元素显式样式再覆盖通道默认；虚线数组整体替换，`dashOffset: 0` 可覆盖继承相位。省略字段继续继承，使用 `defaults: { reset: ['node'] }` 可切断 Node 通道的外层虚线而保留 Path 通道；空虚线数组不合法。
 
@@ -344,6 +348,26 @@ Theme 与样式默认值是两条独立通道：`defaults.reset` 不重置 Theme
 - 零缩放可以用于视觉效果，但跨越它反算局部坐标会失败。
 - 同一命名空间的重复 id 会警告并采用后定义；可复用子图用 `localNamespace` 隔离内部 id。
 - 基础 Scope 不提供布局检查属性；需要检查子树时使用 Layout 包的 `LayoutInspectScope`。
+
+## 按宿主设置标签与箭头默认值
+
+节点标签和路径标签分别配置。下面的标签只提供内容，其位置、间距、字体和箭头外观从宿主默认继承；没有 label 或 arrow 的图元不会因此产生装饰。
+
+```tsx
+<Scope
+  defaults={{
+    node: { label: { position: 'bottom', distance: 12, font: { size: 14 } } },
+    path: {
+      label: { side: 'top', distance: 8, sloped: true },
+      arrow: { length: 10 },
+    },
+  }}
+>
+  <Node id="a" position={[0, 0]} label={{ text: 'A' }} />
+  <Node id="b" position={[100, 0]} label={{ text: 'B' }} />
+  <Draw way={['a', 'b']} arrow="->" label={{ text: 'A → B' }} />
+</Scope>
+```
 
 ## 延伸阅读
 

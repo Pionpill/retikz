@@ -41,11 +41,9 @@ describe('Source 语义分组', () => {
 
       defaults: {
         style: { stroke: 'blue' },
-        node: { style: { font: { size: 12 } }, layout: { padding: 0 } },
-        path: { style: { lineCap: 'round' } },
-        label: { font: { size: 10 } },
-        arrow: { scale: 2 },
         reset: ['node'],
+        node: { style: { font: { size: 12 } }, layout: { padding: 0 }, label: { font: { size: 10 } } },
+        path: { style: { lineCap: 'round' }, label: { font: { size: 10 } }, arrow: { scale: 2 } },
       },
     };
 

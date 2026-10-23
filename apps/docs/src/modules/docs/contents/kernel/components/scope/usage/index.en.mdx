@@ -259,7 +259,11 @@ Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The
 
 Theme and style defaults are independent channels. `defaults.reset` does not reset Theme, and Theme does not fill Node or Path colors. Omitting `style` uses the owning package's default baseline; within a nested `Scope`, omitting `style` inherits the outer style and cannot reset to that baseline.
 
-**Style defaults.** Scope also exposes `defaults.style.color`, shared visual properties, and `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow`. Values cascade per field, explicit element values win, and `defaults.reset` cuts only selected outer channels.
+**Style defaults.** Scope also exposes `defaults.style.color`, shared visual properties, and `defaults.node` / `defaults.path`. Values cascade per field, explicit element values win, and `defaults.reset` cuts only selected outer channels.
+
+Decoration defaults belong to their hosts. `defaults.node.label` configures existing node labels, including attachment, alignment, distance, rotation, leader lines, and appearance. `defaults.path.label` configures existing path and step labels, including position, slope, interruption, and appearance. `defaults.path.arrow` configures existing arrow marks and endpoint overrides. These fragments contain no label text and create neither labels nor arrows.
+
+Font fields inherit independently across nested Scopes and instances: changing size retains the family and weight. `reset: ['node']` clears inherited node and node-label defaults; `reset: ['path']` clears path, label, and arrow defaults. `true` clears both host channels; declarations on the current Scope still apply.
 
 Shared stroke fields include `stroke`, `strokeWidth`, `dashPattern`, and `dashOffset`. For example, `defaults: { style: { dashPattern: [6, 2], dashOffset: -2 } }` affects both descendant Node borders and Paths. Current-scope channel defaults override shared defaults, and explicit element styles override channel defaults. Dash arrays replace the entire inherited array; `dashOffset: 0` overrides an inherited phase. Omitted fields inherit. Use `defaults: { reset: ['node'] }` to cut off inherited Node dashes while retaining Path defaults; empty dash arrays are invalid.
 
@@ -350,6 +354,26 @@ The following are the props most relevant to this page. See the [API reference](
 - Zero scaling is valid visually, but inverse coordinate projection across it fails.
 - Duplicate ids in one namespace warn and use the later definition. Use `localNamespace` to isolate reusable child ids.
 - Base Scope has no layout-inspection props; use the Layout package’s `LayoutInspectScope` for subtree inspection.
+
+## Set label and arrow defaults by host
+
+Configure node and path labels separately. The labels below provide content while their placement, spacing, fonts, and arrow appearance inherit from host defaults. Elements without a label or arrow do not gain decorations.
+
+```tsx
+<Scope
+  defaults={{
+    node: { label: { position: 'bottom', distance: 12, font: { size: 14 } } },
+    path: {
+      label: { side: 'top', distance: 8, sloped: true },
+      arrow: { length: 10 },
+    },
+  }}
+>
+  <Node id="a" position={[0, 0]} label={{ text: 'A' }} />
+  <Node id="b" position={[100, 0]} label={{ text: 'B' }} />
+  <Draw way={['a', 'b']} arrow="->" label={{ text: 'A → B' }} />
+</Scope>
+```
 
 ## Further reading
 

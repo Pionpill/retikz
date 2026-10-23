@@ -2,6 +2,8 @@ import { mergeProperties } from '@retikz/foundation';
 
 import type { IRScope, IRScopeDefaults, StyleChannel } from '../../schemas';
 import { mergeArrowDefaults } from './arrow';
+import { mergeFont } from './font';
+import { mergeNodeLabelDefaults, mergePathLabelDefaults } from './label';
 import { mergeGraphicStyle } from './opacity';
 import type { EffectiveScopeDefaults } from './types';
 
@@ -23,28 +25,29 @@ export const resolveScopeDefaults = <TScope extends Pick<IRScope, 'defaults'>>(
   const shouldOverride = (value: unknown) => value !== undefined;
   let node = cutsStyleChannel(reset, 'node') ? undefined : parent.node;
   let path = cutsStyleChannel(reset, 'path') ? undefined : parent.path;
-  let label = cutsStyleChannel(reset, 'label') ? undefined : parent.label;
-  let arrow = cutsStyleChannel(reset, 'arrow') ? undefined : parent.arrow;
 
   if (style !== undefined || defaults.node !== undefined) {
-    const { style: nodeStyle, layout, ...geometry } = defaults.node ?? {};
+    const { style: nodeStyle, layout, label, ...geometry } = defaults.node ?? {};
     node = {
       geometry: { ...node?.geometry, ...mergeProperties([geometry], { shouldOverride }) },
-      style: mergeGraphicStyle(node?.style, style, nodeStyle),
+      style: {
+        ...mergeGraphicStyle(node?.style, style, nodeStyle),
+        font: mergeFont(node?.style.font, nodeStyle?.font),
+      },
+      label: mergeNodeLabelDefaults(node?.label, label),
       layout: { ...node?.layout, ...mergeProperties([layout], { shouldOverride }) },
     };
   }
 
   if (style !== undefined || defaults.path !== undefined) {
-    const { style: pathStyle, ...geometry } = defaults.path ?? {};
+    const { style: pathStyle, label, arrow, ...geometry } = defaults.path ?? {};
     path = {
       geometry: { ...path?.geometry, ...mergeProperties([geometry], { shouldOverride }) },
       style: mergeGraphicStyle(path?.style, style, pathStyle),
+      label: mergePathLabelDefaults(path?.label, label),
+      arrow: arrow === undefined ? path?.arrow : mergeArrowDefaults(path?.arrow ?? {}, arrow),
     };
   }
 
-  if (defaults.label !== undefined) label = { ...label, ...mergeProperties([defaults.label], { shouldOverride }) };
-  if (defaults.arrow !== undefined) arrow = mergeArrowDefaults(arrow ?? {}, defaults.arrow);
-
-  return { node, path, label, arrow, scopeColor: style?.color ?? parent.scopeColor };
+  return { node, path, scopeColor: style?.color ?? parent.scopeColor };
 };

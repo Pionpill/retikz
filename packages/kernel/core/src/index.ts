@@ -5,7 +5,9 @@ export * from './parse';
 export * from './providers';
 export {
   DEFAULT_RESOLVED_THEME,
+  mergeArrowDefaults,
   mergeGraphicStyle,
+  mergeNodeLabelDefaults,
   resolvePathLabelPlacement,
   resolveGraphicOpacity,
   resolveTheme,

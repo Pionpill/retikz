@@ -532,15 +532,13 @@ describe('Graph Source and child authoring', () => {
               strokeWidth: 2,
               opacity: { overall: 0.8, fill: 0.7, stroke: 0.9 },
             },
-            node: {
-              style: { fill: 'white' },
-            },
+            reset: ['path'],
+            node: { style: { fill: 'white' }, label: { font: { size: 10 } } },
             path: {
               style: { stroke: 'green' },
+              label: { font: { size: 10 } },
+              arrow: { shape: 'stealth', scale: 1.5 },
             },
-            label: { font: { size: 10 } },
-            arrow: { shape: 'stealth', scale: 1.5 },
-            reset: ['path'],
           },
         },
         createElement(Node, { id: 'child', position: [0, 0] }),
@@ -577,15 +575,9 @@ describe('Graph Source and child authoring', () => {
             strokeWidth: 2,
             opacity: { overall: 0.8, fill: 0.7, stroke: 0.9 },
           },
-          node: {
-            style: { fill: 'white' },
-          },
-          path: {
-            style: { stroke: 'green' },
-          },
-          label: { font: { size: 10 } },
-          arrow: { shape: 'stealth', scale: 1.5 },
           reset: ['path'],
+          node: { style: { fill: 'white' }, label: { font: { size: 10 } } },
+          path: { style: { stroke: 'green' }, label: { font: { size: 10 } }, arrow: { shape: 'stealth', scale: 1.5 } },
         },
       },
     ]);

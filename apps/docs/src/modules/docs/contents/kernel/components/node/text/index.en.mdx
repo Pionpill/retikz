@@ -158,7 +158,7 @@ import { NodeTextColor } from '@retikz/core';
 
 - Core statically supports CSS named colors, 3/4/6/8-digit hex, and legacy / modern `rgb()` and `hsl()`; it never reads DOM styles, theme variables, or page pixels
 - Translucent / missing fills, `opacity.fill < 1`, gradients, patterns, images, `var()`, and `currentColor` use the fixed `currentColor` fallback and emit `TEXT_AUTO_CONTRAST_UNRESOLVED`
-- Per-line / segment `fill`, explicit label colors, and `defaults.label` still win. The keyword affects only body text, labels, and pins that ultimately inherit the Node text color
+- Per-line / segment `fill`, explicit label colors, and `defaults.node.label` still win. The keyword affects only body text, labels, and pins that ultimately inherit the Node text color
 
 Both text lines and segmented lines accept `fill`, `opacity`, and `font`. Segmented lines inherit the block font, then apply line defaults and segment overrides. A segment that changes only weight keeps the line size and family. Math uses the effective line size unless its `fontSize` overrides it; `em` is relative to that line and `rem` to the root size. The TeX integration controls math fonts.
 

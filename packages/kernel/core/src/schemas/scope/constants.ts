@@ -19,10 +19,6 @@ export const ScopeStyleChannel = {
   Node: 'node',
   /** path 默认样式通道 */
   Path: 'path',
-  /** label 默认样式通道 */
-  Label: 'label',
-  /** arrow 默认样式通道 */
-  Arrow: 'arrow',
 } as const;
 
 /** scope 包络形状名联合（'rectangle' | 'circle'） */

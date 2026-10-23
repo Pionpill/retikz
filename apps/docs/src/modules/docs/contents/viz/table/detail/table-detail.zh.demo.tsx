@@ -17,8 +17,8 @@ const defaultAppearance = {
     content: {
       defaults: {
         style: { color: '#1e3a8a' },
-        node: { style: { font: { family: 'serif', weight: 400 } } },
-        label: { font: { family: 'serif', weight: 400 } },
+        node: { style: { font: { family: 'serif', weight: 400 } }, label: { font: { family: 'serif', weight: 400 } } },
+        path: { label: { font: { family: 'serif', weight: 400 } } },
       },
     },
   },
@@ -27,8 +27,8 @@ const defaultAppearance = {
     content: {
       defaults: {
         style: { color: '#7c2d12' },
-        node: { style: { font: { family: 'serif', weight: 500 } } },
-        label: { font: { family: 'serif', weight: 500 } },
+        node: { style: { font: { family: 'serif', weight: 500 } }, label: { font: { family: 'serif', weight: 500 } } },
+        path: { label: { font: { family: 'serif', weight: 500 } } },
       },
     },
   },

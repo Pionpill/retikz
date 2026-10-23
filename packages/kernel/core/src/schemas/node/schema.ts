@@ -82,14 +82,13 @@ export const NodeLabelPinSchema = strictObject({
   ),
 }).describe('Leader line style overrides for an outside node label.');
 
-/** 校验附属标签的文本、附着位置、视觉样式与引线描述 */
-export const NodeLabelSchema = object({
+/** 校验节点标签的非内容配置及内外放置与引线约束 */
+export const NodeLabelConfigSchema = object({
   ...createLabelVisualStyleShape({
     textColor: 'Label text color; falls back to currentColor.',
     opacity: 'Label-only opacity, multiplied with node opacity when both are set.',
     font: 'Label font overrides. Missing fields inherit from the parent node font.',
   }),
-  text: LabelTextContentSchema,
   align: BoundaryLabelSchema.shape.align
     .unwrap()
     .optional()
@@ -130,7 +129,12 @@ export const NodeLabelSchema = object({
       });
     }
   })
-  .describe('Extra text attached around a node border. Multiple labels supported via array form on `Node.label`.');
+  .describe('Node label configuration without text content.');
+
+/** 校验附着于节点边界的标签内容与配置 */
+export const NodeLabelSchema = NodeLabelConfigSchema.safeExtend({ text: LabelTextContentSchema }).describe(
+  'Extra text attached around a node border. Multiple labels supported via array form on `Node.label`.',
+);
 
 /** 校验节点可使用的坐标与相对定位方式 */
 const SharedNodePositionSchema = union([

@@ -99,7 +99,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
         const probe = context.layoutChild(
           {
             type: 'scope',
-            defaults: { label: { font: { size: 12 } } },
+            defaults: { node: { label: { font: { size: 12 } } }, path: { label: { font: { size: 12 } } } },
             children: [{ namespace: 'test', type: 'proposalLeaf' }],
           },
           {

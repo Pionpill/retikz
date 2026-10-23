@@ -158,7 +158,7 @@ import { NodeTextColor } from '@retikz/core';
 
 - Core 静态支持 CSS named color、3/4/6/8 位 hex，以及 legacy / modern `rgb()`、`hsl()`；不读取 DOM、主题变量或页面像素
 - 透明 / 缺省 fill、`opacity.fill < 1`、gradient、pattern、image、`var()`、`currentColor` 等无法闭合求值的背景使用固定 `currentColor` fallback，并发出 `TEXT_AUTO_CONTRAST_UNRESOLVED`
-- 行 / segment 的 `fill`、label 的显式颜色和 `defaults.label` 仍优先；关键字只影响最终继承 Node 文字颜色的正文、label 与 pin
+- 行 / segment 的 `fill`、label 的显式颜色和 `defaults.node.label` 仍优先；关键字只影响最终继承 Node 文字颜色的正文、label 与 pin
 
 单文本行与分段行都支持 `fill`、`opacity` 和 `font`。分段行先继承块级字体，再应用行级默认和片段覆盖；片段只改字重时，字号和字体族仍继承所在行。公式采用所在行的有效字号，也可用公式片段的 `fontSize` 单独设置；`em` 相对所在行字号，`rem` 相对根字号。公式字体由 TeX 接入方处理。
 

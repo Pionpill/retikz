@@ -46,8 +46,11 @@ describe('Source defaults Cell mapping', () => {
         content: {
           defaults: {
             style: { color: '#123456' },
-            node: { style: { font: { family: 'sans-serif', weight: 500 } } },
-            label: { font: { family: 'sans-serif', weight: 500 } },
+            node: {
+              style: { font: { family: 'sans-serif', weight: 500 } },
+              label: { font: { family: 'sans-serif', weight: 500 } },
+            },
+            path: { label: { font: { family: 'sans-serif', weight: 500 } } },
           },
         },
         borders: { bottom: { kind: 'line', stroke: '#e4e4e7', width: 1 } },
@@ -63,8 +66,11 @@ describe('Source defaults Cell mapping', () => {
         content: {
           defaults: {
             style: { color: '#18181b' },
-            node: { style: { font: { family: 'monospace', weight: 400 } } },
-            label: { font: { family: 'sans-serif', weight: 400 } },
+            node: {
+              style: { font: { family: 'monospace', weight: 400 } },
+              label: { font: { family: 'sans-serif', weight: 400 } },
+            },
+            path: { label: { font: { family: 'sans-serif', weight: 400 } } },
           },
         },
       },

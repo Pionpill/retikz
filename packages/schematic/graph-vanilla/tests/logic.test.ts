@@ -287,15 +287,9 @@ describe('normalizeGraph', () => {
       meta: { source: 'architecture-catalog' },
       defaults: {
         style: { fill: 'lightblue', opacity: { overall: 0.8 } },
-        node: {
-          style: { fill: 'white' },
-        },
-        path: {
-          style: { stroke: 'green' },
-        },
-        label: { font: { size: 10 } },
-        arrow: { shape: 'stealth', scale: 1.5 },
         reset: ['path' as const],
+        node: { style: { fill: 'white' }, label: { font: { size: 10 } } },
+        path: { style: { stroke: 'green' }, label: { font: { size: 10 } }, arrow: { shape: 'stealth', scale: 1.5 } },
       },
     };
 

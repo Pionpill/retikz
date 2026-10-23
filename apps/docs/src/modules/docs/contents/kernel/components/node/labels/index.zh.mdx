@@ -77,7 +77,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 - `position` 默认 `'top'`，支持 `'top'`、`'top-right'`、`'right'`、`'bottom-right'`、`'bottom'`、`'bottom-left'`、`'left'`、`'top-left'` 八个方向
 - 还可写中心 `'center'`、角度 `30`，或边界比例 `{ boundary: 'right', fraction: 0.25 }`；中心标签不做重叠避让
 - `placement` 默认 `'outside'`，写 `'inside'` 可放在边框内侧
-- `font` / `textColor` 优先使用标签显式值，再使用 `Scope.defaults.label`，仍未提供的值从节点继承
+- `font` / `textColor` 优先使用标签显式值，再使用 `Scope.defaults.node.label`，仍未提供的值从节点继承
 - `opacity` 为 0..1，与节点透明度相乘
 
 <ComponentPreview

@@ -4,9 +4,9 @@ import type { infer as ZodInfer, input as ZodInput } from 'zod';
 import type { IRComposite } from '../composite';
 import type { IRCoordinate } from '../coordinate';
 import type { IRNode } from '../node';
-import type { ArrowDetailSchema, IRPathBase } from '../path';
+import type { IRPathBase } from '../path';
 import type { ScopeStyleChannel } from './constants';
-import type { LabelDefaultSchema, NodeDefaultSchema, PathDefaultSchema } from './schema';
+import type { NodeLabelDefaultSchema, PathLabelDefaultSchema, NodeDefaultSchema, PathDefaultSchema } from './schema';
 import type {
   ScopeFrameSchema,
   ScopeDefaultsSchema,
@@ -16,17 +16,17 @@ import type {
   ScopePropsSchema,
 } from './schema';
 
-/** every node 默认样式（排除 type / id / position / text / label 的全部 node 样式字段） */
+/** 节点主体、布局与已有标签的默认配置 */
 export type IRNodeDefault = ZodInfer<typeof NodeDefaultSchema>;
 
-/** every path 默认样式（排除 type / children / arrow / arrowDetail） */
+/** 路径主体、几何及已有标签和箭头的默认配置 */
 export type IRPathDefault = ZodInfer<typeof PathDefaultSchema>;
 
-/** every label 默认样式（color / textColor / opacity / font） */
-export type IRLabelDefault = ZodInfer<typeof LabelDefaultSchema>;
+/** 节点已有标签的默认配置 */
+export type IRNodeLabelDefault = ZodInfer<typeof NodeLabelDefaultSchema>;
 
-/** every arrow 默认样式（= ArrowDetail） */
-export type IRArrowDefault = ZodInfer<typeof ArrowDetailSchema>;
+/** 路径与步骤已有标签的默认配置 */
+export type IRPathLabelDefault = ZodInfer<typeof PathLabelDefaultSchema>;
 
 /** Scope 锚点定位允许的闭合目标 */
 export type IRScopePositionTarget = ZodInput<typeof ScopePositionTargetSchema>;
@@ -54,7 +54,7 @@ export type IRScopeFrame = ZodInput<typeof ScopeFrameSchema>;
 /**
  * Scope IR 类型——手写而非 z.infer 派生
  * @description ChildSchema 通过 z.lazy 延迟回灌，z.infer 推断 children 元素时拿不到精确的 IRNode | IRPath | IRCoordinate | IRScope union；手写让 children 类型显式表达递归 union。
- *   Scope 通过 defaults.style 提供级联视觉默认值，并在 defaults 中提供四个专属通道与 reset 继承屏障
+ *   Scope 通过 defaults.style 提供级联视觉默认值，并在 defaults 中提供两个宿主通道与 reset 继承屏障
  */
 export type IRScope = IRScopeProps & {
   /** 固定为 scope 的容器判别字段 */

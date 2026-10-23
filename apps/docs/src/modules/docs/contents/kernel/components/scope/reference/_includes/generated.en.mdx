@@ -162,7 +162,7 @@ export type InputScope = InputScopeBase & {
 
 #### <ApiSourceLink label={"IRScope"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={59}>IRScope</ApiSourceLink>
 
-ChildSchema is populated lazily through z.lazy, so an explicit declaration preserves the recursive union of child types. Scope provides shared visual defaults through defaults.style, and four dedicated channels plus a reset barrier through defaults.
+ChildSchema is populated lazily through z.lazy, so an explicit declaration preserves the recursive union of child types. Scope provides shared visual defaults through defaults.style, and two host channels plus a reset barrier through defaults.
 
 <DocTabs defaultValue="members">
 
@@ -204,7 +204,7 @@ export type IRScope = IRScopeProps & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopeAnchorPosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={35}>IRScopeAnchorPosition</ApiSourceLink> / <ApiSourceLink label={"ScopeAnchorPositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={60}>ScopeAnchorPositionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopeAnchorPosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={35}>IRScopeAnchorPosition</ApiSourceLink> / <ApiSourceLink label={"ScopeAnchorPositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={56}>ScopeAnchorPositionSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -238,7 +238,7 @@ export type IRScopeAnchorPosition = ZodInput<typeof ScopeAnchorPositionSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopeDefaults"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={66}>IRScopeDefaults</ApiSourceLink> / <ApiSourceLink label={"ScopeDefaultsSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={74}>ScopeDefaultsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopeDefaults"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={66}>IRScopeDefaults</ApiSourceLink> / <ApiSourceLink label={"ScopeDefaultsSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={70}>ScopeDefaultsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -246,14 +246,12 @@ export type IRScopeAnchorPosition = ZodInput<typeof ScopeAnchorPositionSchema>;
 
 <ApiTable>
 
-| Member   | Type                                                                                                                                                                                                                                                                                                                  | Default | Description                                                                                                                |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `arrow?` | `ZodInfer<typeof ScopeDefaultsSchema.shape["arrow"]>`                                                                                                                                                                                                                                                                 | —       | Default style applied to arrows in this scope.                                                                             |
-| `label?` | `{ color?: string \| undefined; textColor?: string \| number \| undefined; opacity?: number \| undefined; font?: { family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; } \| undefined; }` | —       | Default style applied to node labels and step labels in this scope.                                                        |
-| `node?`  | `ZodInfer<typeof ScopeDefaultsSchema.shape["node"]>`                                                                                                                                                                                                                                                                  | —       | Default style applied to nodes in this scope. Independent from the other default channels.                                 |
-| `path?`  | `ZodInfer<typeof ScopeDefaultsSchema.shape["path"]>`                                                                                                                                                                                                                                                                  | —       | Default style applied to path-like drawables in this scope. Arrows use the separate `defaults.arrow` channel.              |
-| `reset?` | `false \| true \| Array<"path" \| "node" \| "label" \| "arrow">`                                                                                                                                                                                                                                                      | —       | Inheritance barrier for style defaults. Use true for all channels, or list node, path, label, and arrow channels to reset. |
-| `style?` | `ZodInfer<typeof ScopeDefaultsSchema.shape["style"]>`                                                                                                                                                                                                                                                                 | —       | Shared graphic defaults inherited by descendants.                                                                          |
+| Member   | Type                                                  | Default | Description                                                                                                                                   |
+| -------- | ----------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `node?`  | `ZodInfer<typeof ScopeDefaultsSchema.shape["node"]>`  | —       | Default style applied to nodes in this scope. Independent from the other default channels.                                                    |
+| `path?`  | `ZodInfer<typeof ScopeDefaultsSchema.shape["path"]>`  | —       | Default style applied to path-like drawables in this scope. Includes label and arrow defaults.                                                |
+| `reset?` | `false \| true \| Array<"path" \| "node">`            | —       | Inheritance barrier for style defaults. Use true for all channels, or list node and path host channels to reset, including their decorations. |
+| `style?` | `ZodInfer<typeof ScopeDefaultsSchema.shape["style"]>` | —       | Shared graphic defaults inherited by descendants.                                                                                             |
 
 </ApiTable>
 
@@ -275,7 +273,7 @@ export type IRScopeDefaults = ZodInfer<typeof ScopeDefaultsSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopeFrame"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={52}>IRScopeFrame</ApiSourceLink> / <ApiSourceLink label={"ScopeFrameSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={100}>ScopeFrameSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopeFrame"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={52}>IRScopeFrame</ApiSourceLink> / <ApiSourceLink label={"ScopeFrameSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={94}>ScopeFrameSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -310,7 +308,7 @@ A frame stores decoration spacing and independent styling, without an id, events
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopePosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={38}>IRScopePosition</ApiSourceLink> / <ApiSourceLink label={"ScopePositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={69}>ScopePositionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopePosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={38}>IRScopePosition</ApiSourceLink> / <ApiSourceLink label={"ScopePositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={65}>ScopePositionSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -330,7 +328,7 @@ export type IRScopePosition = ZodInput<typeof ScopePositionSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopePositionTarget"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={32}>IRScopePositionTarget</ApiSourceLink> / <ApiSourceLink label={"ScopePositionTargetSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={55}>ScopePositionTargetSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopePositionTarget"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={32}>IRScopePositionTarget</ApiSourceLink> / <ApiSourceLink label={"ScopePositionTargetSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={51}>ScopePositionTargetSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -390,13 +388,13 @@ export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame' | 'po
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScopeSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={156}>ScopeSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={150}>ScopeSchema</ApiSourceLink>
 
 <ZodSchema shallow name="ScopeSchema" />
 
 `Scope.theme` contains only sparse `style` / `mode` environment selectors, inherited per field. Core resolves shared colors; descendant composites consume this environment according to their own contracts. `defaults.reset` does not reset Theme.
 
-#### <ApiSourceLink label={"ScopeFrameStyleSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={92}>ScopeFrameStyleSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeFrameStyleSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={86}>ScopeFrameStyleSchema</ApiSourceLink>
 
 <ZodSchema name="ScopeFrameStyleSchema" shallow />
 

@@ -1,4 +1,11 @@
-import { ArrowDetailSchema, FontSchema, LabelDefaultSchema, NodeDefaultSchema, PathDefaultSchema } from '@retikz/core';
+import {
+  ArrowDetailSchema,
+  FontSchema,
+  NodeLabelDefaultSchema,
+  PathLabelDefaultSchema,
+  NodeDefaultSchema,
+  PathDefaultSchema,
+} from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { TableCellPlanSource } from '../../src';
@@ -73,6 +80,8 @@ describe('Table Cell plan lineage contract', () => {
       fields.forEach(field => {
         if (field === 'font') {
           Object.keys(FontSchema.shape).forEach(fontField => expected.add(`${prefix}/font/${fontField}`));
+        } else if (field === 'opacity' && prefix.endsWith('/style')) {
+          for (const factor of ['overall', 'fill', 'stroke']) expected.add(`${prefix}/opacity/${factor}`);
         } else {
           expected.add(`${prefix}/${field}`);
         }
@@ -88,14 +97,15 @@ describe('Table Cell plan lineage contract', () => {
     for (const [channel, schema] of Object.entries({ node: NodeDefaultSchema, path: PathDefaultSchema })) {
       addLeaves(
         `/content/defaults/${channel}`,
-        Object.keys(schema.shape).filter(field => field !== 'style' && field !== 'layout'),
+        Object.keys(schema.shape).filter(field => !['style', 'layout', 'label', 'arrow'].includes(field)),
       );
       addLeaves(`/content/defaults/${channel}/style`, Object.keys(schema.shape.style.unwrap().shape));
     }
 
     addLeaves('/content/defaults/node/layout', Object.keys(NodeDefaultSchema.shape.layout.unwrap().shape));
-    addLeaves('/content/defaults/label', Object.keys(LabelDefaultSchema.shape));
-    addLeaves('/content/defaults/arrow', Object.keys(ArrowDetailSchema.shape));
+    addLeaves('/content/defaults/node/label', Object.keys(NodeLabelDefaultSchema.shape));
+    addLeaves('/content/defaults/path/label', Object.keys(PathLabelDefaultSchema.shape));
+    addLeaves('/content/defaults/path/arrow', Object.keys(ArrowDetailSchema.shape));
 
     expect(new Set(Object.values(TableCellAppearanceTracePath))).toEqual(expected);
   });

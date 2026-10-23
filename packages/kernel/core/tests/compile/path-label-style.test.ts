@@ -121,7 +121,7 @@ describe('交互: labelDefault / 相乘 / 零破坏', () => {
               ],
             },
           ],
-          defaults: { label: { textColor: 'gray' } },
+          defaults: { node: { label: { textColor: 'gray' } }, path: { label: { textColor: 'gray' } } },
         },
       ],
     };
@@ -146,7 +146,7 @@ describe('交互: labelDefault / 相乘 / 零破坏', () => {
               style: { color: 'crimson' },
             },
           ],
-          defaults: { label: { textColor: 'gray' } },
+          defaults: { node: { label: { textColor: 'gray' } }, path: { label: { textColor: 'gray' } } },
         },
       ],
     };
@@ -170,7 +170,7 @@ describe('交互: labelDefault / 相乘 / 零破坏', () => {
               ],
             },
           ],
-          defaults: { label: { font: { size: 10 } } },
+          defaults: { node: { label: { font: { size: 10 } } }, path: { label: { font: { size: 10 } } } },
         },
       ],
     };

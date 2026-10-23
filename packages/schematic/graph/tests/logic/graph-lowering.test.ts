@@ -23,15 +23,9 @@ describe('Graph Scope lowering', () => {
       ],
       defaults: {
         style: { fill: 'lightblue' },
-        node: {
-          style: { dashed: true },
-        },
-        path: {
-          style: { lineCap: 'round' },
-        },
-        label: { font: { size: 11 } },
-        arrow: { length: 12 },
         reset: ['path'],
+        node: { style: { dashed: true }, label: { font: { size: 11 } } },
+        path: { style: { lineCap: 'round' }, label: { font: { size: 11 } }, arrow: { length: 12 } },
       },
     });
 
@@ -53,22 +47,16 @@ describe('Graph Scope lowering', () => {
           id: 'first',
           role: 'activity',
           position: [0, 0],
-          style: { opacity: 0.5 },
+          style: { opacity: { overall: 0.5 } },
         },
         { type: 'node', id: 'plain', position: [50, 0] },
       ],
 
       defaults: {
         style: { fill: 'lightblue' },
-        node: {
-          style: { dashed: true },
-        },
-        path: {
-          style: { lineCap: 'round' },
-        },
-        label: { font: { size: 11 } },
-        arrow: { length: 12 },
         reset: ['path'],
+        node: { style: { dashed: true }, label: { font: { size: 11 } } },
+        path: { style: { lineCap: 'round' }, label: { font: { size: 11 } }, arrow: { length: 12 } },
       },
     });
   });

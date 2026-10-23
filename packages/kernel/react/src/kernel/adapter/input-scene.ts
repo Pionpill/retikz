@@ -590,22 +590,15 @@ export const pickScopeStyle = (scope: ScopeStyleProps): Partial<ScopeStyleProps>
   const picked = pickDefined(scope, SCOPE_STYLE_FIELDS);
   const defaults = picked.defaults;
   if (defaults !== undefined) {
-    const { style: nodeStyle, layout: nodeLayout, ...nodeGeometry } = defaults.node ?? {};
-    const { style: pathStyle, ...pathGeometry } = defaults.path ?? {};
+    const { style: nodeStyle, layout: nodeLayout, label: nodeLabel, ...nodeGeometry } = defaults.node ?? {};
+    const { style: pathStyle, label: pathLabel, arrow, ...pathGeometry } = defaults.path ?? {};
     const reset = defaults.reset;
     const hasReset = reset === true || (Array.isArray(reset) && reset.length > 0);
     const hasDefaults =
       hasReset ||
-      [
-        defaults.style,
-        nodeStyle,
-        nodeLayout,
-        nodeGeometry,
-        pathStyle,
-        pathGeometry,
-        defaults.label,
-        defaults.arrow,
-      ].some(hasDefinedFields);
+      [defaults.style, nodeStyle, nodeLayout, nodeGeometry, pathStyle, pathGeometry, nodeLabel, pathLabel, arrow].some(
+        hasDefinedFields,
+      );
     if (!hasDefaults) delete picked.defaults;
   }
 

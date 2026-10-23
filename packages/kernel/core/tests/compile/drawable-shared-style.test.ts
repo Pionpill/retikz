@@ -207,31 +207,24 @@ describe('Drawable shared style resolution', () => {
       type: 'scope',
       children: [linePath({ label: { text: 'flow' } })],
       defaults: {
-        path: {
-          style: { color: 'red' },
-        },
-        label: { textColor: 'blue' },
+        node: { label: { textColor: 'blue' } },
+        path: { style: { color: 'red' }, label: { textColor: 'blue' } },
       },
     });
 
-    expect(parsed.defaults?.path).toEqual({ style: { color: 'red' } });
-    expect(parsed.defaults?.label).toEqual({ textColor: 'blue' });
+    expect(parsed.defaults?.path?.style).toEqual({ color: 'red' });
+    expect(parsed.defaults?.node?.label).toEqual({ textColor: 'blue' });
   });
 
   it('drawable-shared-arrow-default-independent：arrowDefault 不进入 pathDefault 默认样式', () => {
     const parsed = ScopeSchema.parse({
       type: 'scope',
       children: [linePath()],
-      defaults: {
-        path: {
-          style: { color: 'red' },
-        },
-        arrow: { shape: 'circle' },
-      },
+      defaults: { path: { style: { color: 'red' }, arrow: { shape: 'circle' } } },
     });
 
-    expect(parsed.defaults?.path).toEqual({ style: { color: 'red' } });
-    expect(parsed.defaults?.arrow).toEqual({ shape: 'circle' });
+    expect(parsed.defaults?.path?.style).toEqual({ color: 'red' });
+    expect(parsed.defaults?.path?.arrow).toEqual({ shape: 'circle' });
     expect(PathDefaultSchema.safeParse({ marks: arrowMarks('->') }).success).toBe(false);
   });
 

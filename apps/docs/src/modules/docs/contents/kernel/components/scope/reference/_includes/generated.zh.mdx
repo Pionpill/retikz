@@ -163,7 +163,7 @@ export type InputScope = InputScopeBase & {
 #### <ApiSourceLink label={"IRScope"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={59}>IRScope</ApiSourceLink>
 
 ChildSchema 通过 z.lazy 延迟回灌，z.infer 推断 children 元素时拿不到精确的 IRNode | IRPath | IRCoordinate | IRScope union；手写让 children 类型显式表达递归 union。
-Scope 通过 defaults.style 提供级联视觉默认值，并在 defaults 中提供四个专属通道与 reset 继承屏障
+Scope 通过 defaults.style 提供级联视觉默认值，并在 defaults 中提供两个宿主通道与 reset 继承屏障
 
 <DocTabs defaultValue="members">
 
@@ -205,7 +205,7 @@ export type IRScope = IRScopeProps & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopeAnchorPosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={35}>IRScopeAnchorPosition</ApiSourceLink> / <ApiSourceLink label={"ScopeAnchorPositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={60}>ScopeAnchorPositionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopeAnchorPosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={35}>IRScopeAnchorPosition</ApiSourceLink> / <ApiSourceLink label={"ScopeAnchorPositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={56}>ScopeAnchorPositionSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -248,7 +248,7 @@ export type IRScopeAnchorPosition = ZodInput<typeof ScopeAnchorPositionSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopeDefaults"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={66}>IRScopeDefaults</ApiSourceLink> / <ApiSourceLink label={"ScopeDefaultsSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={74}>ScopeDefaultsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopeDefaults"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={66}>IRScopeDefaults</ApiSourceLink> / <ApiSourceLink label={"ScopeDefaultsSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={70}>ScopeDefaultsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -256,14 +256,12 @@ export type IRScopeAnchorPosition = ZodInput<typeof ScopeAnchorPositionSchema>;
 
 <ApiTable>
 
-| 成员     | 类型                                                                                                                                                                                                                                                                                                                  | 默认值 | 说明                                                                          |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------- |
-| `arrow?` | `ZodInfer<typeof ScopeDefaultsSchema.shape["arrow"]>`                                                                                                                                                                                                                                                                 | —      | 箭头默认样式                                                                  |
-| `label?` | `{ color?: string \| undefined; textColor?: string \| number \| undefined; opacity?: number \| undefined; font?: { family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; } \| undefined; }` | —      | 节点标签与步骤标签的默认文字样式                                              |
-| `node?`  | `ZodInfer<typeof ScopeDefaultsSchema.shape["node"]>`                                                                                                                                                                                                                                                                  | —      | 节点默认样式，与其他通道独立                                                  |
-| `path?`  | `ZodInfer<typeof ScopeDefaultsSchema.shape["path"]>`                                                                                                                                                                                                                                                                  | —      | 路径类图元默认样式；箭头使用独立 arrow 通道                                   |
-| `reset?` | `false \| true \| Array<"path" \| "node" \| "label" \| "arrow">`                                                                                                                                                                                                                                                      | —      | 继承屏障：true 重置全部通道，或列出 node、path、label、arrow 中需要重置的通道 |
-| `style?` | `ZodInfer<typeof ScopeDefaultsSchema.shape["style"]>`                                                                                                                                                                                                                                                                 | —      | 后代共享视觉默认值，逐字段继承与覆盖                                          |
+| 成员     | 类型                                                  | 默认值 | 说明                                                            |
+| -------- | ----------------------------------------------------- | ------ | --------------------------------------------------------------- |
+| `node?`  | `ZodInfer<typeof ScopeDefaultsSchema.shape["node"]>`  | —      | 节点默认样式，与其他通道独立                                    |
+| `path?`  | `ZodInfer<typeof ScopeDefaultsSchema.shape["path"]>`  | —      | 路径主体、已有标签与箭头的默认配置                              |
+| `reset?` | `false \| true \| Array<"path" \| "node">`            | —      | 继承屏障：true 重置全部通道，或列出 node、path 中需要重置的通道 |
+| `style?` | `ZodInfer<typeof ScopeDefaultsSchema.shape["style"]>` | —      | 后代共享视觉默认值，逐字段继承与覆盖                            |
 
 </ApiTable>
 
@@ -285,10 +283,11 @@ export type IRScopeDefaults = ZodInfer<typeof ScopeDefaultsSchema>;
   description="后代默认值通道及其继承屏障。"
   descriptions={{
     node: '节点默认样式，与其他通道独立',
-    path: '路径类图元默认样式；箭头使用独立 arrow 通道',
-    label: '节点标签与步骤标签的默认文字样式',
-    arrow: '箭头默认样式',
-    reset: '继承屏障：true 重置全部通道，或列出 node、path、label、arrow 中需要重置的通道',
+    path: '路径主体、已有标签与箭头的默认配置',
+    'node.label': '已有节点标签的完整非内容默认配置',
+    'path.label': '已有路径与步骤标签的完整非内容默认配置',
+    'path.arrow': '已有箭头的默认配置，不创建箭头',
+    reset: '继承屏障：true 重置全部通道，或列出 node、path 中需要重置的通道',
   }}
 />
 
@@ -296,7 +295,7 @@ export type IRScopeDefaults = ZodInfer<typeof ScopeDefaultsSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopeFrame"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={52}>IRScopeFrame</ApiSourceLink> / <ApiSourceLink label={"ScopeFrameSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={100}>ScopeFrameSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopeFrame"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={52}>IRScopeFrame</ApiSourceLink> / <ApiSourceLink label={"ScopeFrameSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={94}>ScopeFrameSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -335,7 +334,7 @@ export type IRScopeFrame = ZodInput<typeof ScopeFrameSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopePosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={38}>IRScopePosition</ApiSourceLink> / <ApiSourceLink label={"ScopePositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={69}>ScopePositionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopePosition"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={38}>IRScopePosition</ApiSourceLink> / <ApiSourceLink label={"ScopePositionSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={65}>ScopePositionSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -355,7 +354,7 @@ export type IRScopePosition = ZodInput<typeof ScopePositionSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopePositionTarget"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={32}>IRScopePositionTarget</ApiSourceLink> / <ApiSourceLink label={"ScopePositionTargetSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={55}>ScopePositionTargetSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopePositionTarget"} path={"packages/kernel/core/src/schemas/scope/types.ts"} startLine={32}>IRScopePositionTarget</ApiSourceLink> / <ApiSourceLink label={"ScopePositionTargetSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={51}>ScopePositionTargetSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -419,7 +418,7 @@ export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame' | 'po
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScopeSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={156}>ScopeSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={150}>ScopeSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -443,10 +442,11 @@ export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame' | 'po
     transforms: '依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析',
     position: '父坐标系中的原点位置，或局部变换后的锚点对齐；缺省为 [0, 0]',
     'defaults.node': '只作用于 node 的默认样式；不包含 id、position、text 等结构字段',
-    'defaults.path': '只作用于 path-like drawable 的默认样式；箭头使用独立 defaults.arrow 通道',
-    'defaults.label': 'node label 与 step / geometry label 共用的默认文字样式',
-    'defaults.arrow': '箭头默认外观，字段与 ArrowDetailSchema 相同',
-    'defaults.reset': '样式继承屏障：true 重置全部通道，或列出 node / path / label / arrow 中需要重置的通道',
+    'defaults.path': '路径主体、标签与箭头的默认配置',
+    'defaults.node.label': '已有节点标签的完整非内容默认配置，不创建标签',
+    'defaults.path.label': '已有路径和步骤标签的完整非内容默认配置',
+    'defaults.path.arrow': '箭头默认外观，字段与 ArrowDetailSchema 相同',
+    'defaults.reset': '样式继承屏障：true 重置全部通道，或列出 node / path（包含各自装饰） 中需要重置的通道',
     zIndex: 'scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序',
     clip: '以 scope 局部坐标描述的裁剪区域',
     boundingShape: '给 scope id 生成的合成引用边界：rectangle 或 circle',
@@ -458,7 +458,7 @@ export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame' | 'po
 
 `Scope.theme` 只包含稀疏的 `style` / `mode` 环境选择器，逐字段继承。Core 解析共享颜色，后代 Composite 按自身契约消费该环境；`defaults.reset` 不重置 Theme。
 
-#### <ApiSourceLink label={"ScopeFrameStyleSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={92}>ScopeFrameStyleSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeFrameStyleSchema"} path={"packages/kernel/core/src/schemas/scope/schema.ts"} startLine={86}>ScopeFrameStyleSchema</ApiSourceLink>
 
 <ZodSchema name="ScopeFrameStyleSchema" shallow />
 

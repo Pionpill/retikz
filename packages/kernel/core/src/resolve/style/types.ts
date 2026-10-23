@@ -1,6 +1,7 @@
 import type {
   IRArrowDetail,
-  IRLabelDefault,
+  IRNodeLabelDefault,
+  IRPathLabelDefault,
   IRNodeDefault,
   IRNodeLayout,
   IRNodeStyle,
@@ -13,29 +14,28 @@ export type EffectiveScopeDefaults = Readonly<{
   /** 节点默认值，style 已按层合入共同样式，颜色尚未展开 */
   node?: Readonly<{
     /** 形状、边界与变换等几何默认值 */
-    geometry: Readonly<Omit<IRNodeDefault, 'style' | 'layout'>>;
+    geometry: Readonly<Omit<IRNodeDefault, 'style' | 'layout' | 'label'>>;
     /** 尚未应用元素主色的外观默认值 */
     style: Readonly<IRNodeStyle>;
     /** 节点布局默认值 */
     layout: Readonly<IRNodeLayout>;
+    /** 已有节点标签的有效默认值 */
+    label?: Readonly<IRNodeLabelDefault>;
   }>;
   /** 路径默认值，style 已按层合入共同样式 */
   path?: Readonly<{
     /** 路径整体几何默认值 */
-    geometry: Readonly<Omit<IRPathDefault, 'style'>>;
+    geometry: Readonly<Omit<IRPathDefault, 'style' | 'label' | 'arrow'>>;
     /** 路径外观默认值 */
     style: Readonly<IRPathStyle>;
+    /** 已有路径与步骤标签的有效默认值 */
+    label?: Readonly<IRPathLabelDefault>;
+    /** 已声明箭头的有效默认值 */
+    arrow?: Readonly<IRArrowDetail>;
   }>;
-  /** 标签默认值，宿主颜色在元素解析时应用 */
-  label?: EffectiveLabelDefault;
-  /** 箭头默认值，undefined 与显式空配置保持区别 */
-  arrow?: Readonly<IRArrowDetail>;
   /** 外框继承的共同主色，不受元素通道的 reset 影响 */
   scopeColor?: string;
 }>;
-
-/** label 默认值经过级联后的有效视图 */
-export type EffectiveLabelDefault = Readonly<IRLabelDefault>;
 
 /** Scene 与几何消费的独立不透明度因子 */
 export type GraphicOpacityResolution = {

@@ -571,7 +571,7 @@ const resolveSteps = (
 export const resolvePath = (path: IRPathBase, context: PathResolveContext): PathResolution => {
   const styled = context.scopeDefaults === undefined ? path : resolveEffectivePath(path, context.scopeDefaults);
   const irPath = context.irPath ?? 'path';
-  const labelDefault = context.scopeDefaults?.label ?? {};
+  const labelDefault = context.scopeDefaults?.path?.label ?? {};
   const labelMasterColor = labelDefault.color ?? styled.style?.color;
   const colorsResolved = resolvePathContextualColors(styled, context, irPath, labelMasterColor);
   const canAutomaticallyInterrupt = isBuiltinStrokePath(colorsResolved) && hasNoEffectivePathFill(colorsResolved);

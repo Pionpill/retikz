@@ -13,10 +13,10 @@ import type {
   IRTextSegment,
 } from '../../schemas';
 import { NodeSchema } from '../../schemas';
+import type { IRNodeLabelDefault } from '../../schemas';
 import { resolvePaint } from '../resource';
-import { resolveGraphicOpacity } from '../style';
+import { resolveGraphicOpacity, mergeNodeLabelDefaults } from '../style';
 import { resolveContextualColor, resolveDashPattern, resolveDropShadow, resolveEffectiveNodeStyle } from '../style';
-import type { EffectiveLabelDefault } from '../style';
 import type { ResolvedInlineSourceSegment, ResolvedLabelTextContent, ResolvedTextLine } from '../text';
 import { resolveBoundaryReference } from './boundary';
 import { resolveNodeShape } from './shape';
@@ -109,38 +109,22 @@ type PrimaryColorResolvedMaterializedNode = Omit<PrimaryColorResolvedNode, 'labe
 /** 按有效 labelDefault 补齐一个标签，并保留显式字段优先级 */
 const expandNodeLabel = (
   label: IRNodeLabel,
-  labelDefault: EffectiveLabelDefault,
+  labelDefault: IRNodeLabelDefault,
   labelDistance: number,
 ): MaterializedNodeLabel => {
+  const { color, ...configuration } = mergeNodeLabelDefaults(labelDefault, label);
   const normalized: MaterializedNodeLabel = {
-    ...label,
-    align: label.align ?? 'middle',
-    position: expandNodeLabelPosition(label.position),
-    placement: label.placement ?? 'outside',
-    distance: label.distance ?? labelDistance,
+    ...configuration,
+    text: label.text,
+    align: configuration.align ?? 'middle',
+    position: expandNodeLabelPosition(configuration.position),
+    placement: configuration.placement ?? 'outside',
+    distance: configuration.distance ?? labelDistance,
   };
-  const defaultTextColor = labelDefault.textColor ?? labelDefault.color;
-  if (normalized.textColor === undefined && defaultTextColor !== undefined) normalized.textColor = defaultTextColor;
-  const defaultFont = labelDefault.font;
-  if (defaultFont !== undefined) {
-    const font = {
-      ...(defaultFont.family === undefined && normalized.font?.family === undefined
-        ? {}
-        : { family: normalized.font?.family ?? defaultFont.family }),
-      ...(defaultFont.size === undefined && normalized.font?.size === undefined
-        ? {}
-        : { size: normalized.font?.size ?? defaultFont.size }),
-      ...(defaultFont.weight === undefined && normalized.font?.weight === undefined
-        ? {}
-        : { weight: normalized.font?.weight ?? defaultFont.weight }),
-      ...(defaultFont.style === undefined && normalized.font?.style === undefined
-        ? {}
-        : { style: normalized.font?.style ?? defaultFont.style }),
-    };
-    if (Object.keys(font).length > 0) normalized.font = font;
+  if (normalized.textColor === undefined && color !== undefined) normalized.textColor = color;
+  if (normalized.placement === 'inside' && normalized.pin) {
+    throw new RetikzCoreError(RetikzCoreErrorCode.Resolve, 'Node label pin is only supported for outside placement');
   }
-
-  if (normalized.opacity === undefined && labelDefault.opacity !== undefined) normalized.opacity = labelDefault.opacity;
 
   return normalized;
 };
@@ -148,7 +132,7 @@ const expandNodeLabel = (
 /** 展开单标签与标签数组为等价数组写法 */
 const expandNodeLabels = (
   label: IRNode['label'],
-  labelDefault: EffectiveLabelDefault,
+  labelDefault: IRNodeLabelDefault,
   labelDistance: number,
 ): Array<MaterializedNodeLabel> | undefined =>
   label === undefined
@@ -348,7 +332,7 @@ const resolveNodeLabelColors = (
 /** 在 auto-contrast 后确定正文、label segment 与 pin 的派生颜色 */
 const resolveNodeDependentColors = (
   node: PrimaryColorResolvedMaterializedNode,
-  labelDefault: EffectiveLabelDefault,
+  labelDefault: IRNodeLabelDefault,
   context: NodeResolveContext,
   labelWasArray: boolean,
 ): ResolvedNodeSource => {
@@ -386,7 +370,7 @@ const resolveNodeDependentColors = (
 /** 解析 Node 的样式、静态默认值、provider 与布局前 canonical 形态 */
 export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeResolution => {
   const effectiveNode = resolveEffectiveNodeStyle(source, context.scopeDefaults);
-  const effectiveLabelDefault = context.scopeDefaults.label ?? {};
+  const effectiveLabelDefault = context.scopeDefaults.node?.label ?? {};
   const labelWasArray = Array.isArray(effectiveNode.label);
   const labelsMaterialized: MaterializedNodeSource = {
     ...effectiveNode,

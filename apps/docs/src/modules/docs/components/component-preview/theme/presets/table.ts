@@ -17,8 +17,11 @@ const styles = {
           content: {
             defaults: {
               style: { color: '#111111' },
-              node: { style: { font: { family: 'serif', weight: 400 } } },
-              label: { font: { family: 'serif', weight: 400 } },
+              node: {
+                style: { font: { family: 'serif', weight: 400 } },
+                label: { font: { family: 'serif', weight: 400 } },
+              },
+              path: { label: { font: { family: 'serif', weight: 400 } } },
             },
           },
         },
@@ -26,8 +29,11 @@ const styles = {
           content: {
             defaults: {
               style: { color: '#111111' },
-              node: { style: { font: { family: 'serif', weight: 600 } } },
-              label: { font: { family: 'serif', weight: 600 } },
+              node: {
+                style: { font: { family: 'serif', weight: 600 } },
+                label: { font: { family: 'serif', weight: 600 } },
+              },
+              path: { label: { font: { family: 'serif', weight: 600 } } },
             },
           },
           borders: { bottom: line('#111111', 0.8) },
@@ -43,8 +49,11 @@ const styles = {
           content: {
             defaults: {
               style: { color: '#f5f5f5' },
-              node: { style: { font: { family: 'serif', weight: 400 } } },
-              label: { font: { family: 'serif', weight: 400 } },
+              node: {
+                style: { font: { family: 'serif', weight: 400 } },
+                label: { font: { family: 'serif', weight: 400 } },
+              },
+              path: { label: { font: { family: 'serif', weight: 400 } } },
             },
           },
         },
@@ -53,8 +62,11 @@ const styles = {
           content: {
             defaults: {
               style: { color: '#f5f5f5' },
-              node: { style: { font: { family: 'serif', weight: 600 } } },
-              label: { font: { family: 'serif', weight: 600 } },
+              node: {
+                style: { font: { family: 'serif', weight: 600 } },
+                label: { font: { family: 'serif', weight: 600 } },
+              },
+              path: { label: { font: { family: 'serif', weight: 600 } } },
             },
           },
           borders: { bottom: line('#a3a3a3', 0.8) },

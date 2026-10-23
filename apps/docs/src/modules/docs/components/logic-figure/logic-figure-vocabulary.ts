@@ -129,8 +129,8 @@ export const logicFigureTableThemeStyle = defineTableThemeStyle({
         body: {
           content: {
             defaults: {
-              node: { style: { font: { size: 14 } } },
-              label: { font: { size: 14 } },
+              node: { style: { font: { size: 14 } }, label: { font: { size: 14 } } },
+              path: { label: { font: { size: 14 } } },
             },
           },
         },
@@ -138,8 +138,8 @@ export const logicFigureTableThemeStyle = defineTableThemeStyle({
           background: { fill: 'lightgray', fillOpacity: 0.3 },
           content: {
             defaults: {
-              node: { style: { font: { size: 12, weight: 'bold' } } },
-              label: { font: { size: 12, weight: 'bold' } },
+              node: { style: { font: { size: 12, weight: 'bold' } }, label: { font: { size: 12, weight: 'bold' } } },
+              path: { label: { font: { size: 12, weight: 'bold' } } },
             },
           },
         },

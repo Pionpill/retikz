@@ -36,8 +36,8 @@ const resolveArrowDetail = (
   scopeDefaults: EffectiveScopeDefaults,
   masterColor: string | undefined,
 ): IRArrowDetail | undefined => {
-  let acc: IRArrowDetail = { ...scopeDefaults.arrow };
-  let touched = scopeDefaults.arrow !== undefined;
+  let acc: IRArrowDetail = { ...scopeDefaults.path?.arrow };
+  let touched = scopeDefaults.path?.arrow !== undefined;
 
   if (masterColor !== undefined) {
     acc.color = masterColor;

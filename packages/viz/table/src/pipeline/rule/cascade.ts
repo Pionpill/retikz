@@ -1,5 +1,5 @@
-import type { IRGraphicStyle } from '@retikz/core';
-import { mergeGraphicStyle } from '@retikz/core';
+import type { IRGraphicStyle, IRNodeLabelDefault } from '@retikz/core';
+import { mergeGraphicStyle, mergeArrowDefaults, mergeNodeLabelDefaults } from '@retikz/core';
 
 import type { TableCellAppearanceTracePath, TableCellPlanSource } from '../../contract';
 import { TableCellAppearanceTracePathSchema } from '../../contract';
@@ -8,9 +8,20 @@ import { TableCellAppearanceSchema, TableCellContentStyleSchema } from '../../sc
 import { deepFreeze } from '../../shared';
 import type { TableCellAppearanceTrace } from './types';
 
-const CONTENT_ATOMIC_FIELDS = ['color', 'fill', 'stroke', 'strokeWidth'] as const;
+const CONTENT_ATOMIC_FIELDS = [
+  'color',
+  'fill',
+  'stroke',
+  'strokeWidth',
+  'dashPattern',
+  'dashOffset',
+  'lineCap',
+  'lineJoin',
+  'shadow',
+  'blendMode',
+] as const;
 
-const DEFAULT_FIELDS = ['node', 'path', 'label', 'arrow'] as const;
+const DEFAULT_FIELDS = ['node', 'path'] as const;
 
 const FONT_FIELDS = ['family', 'size', 'weight', 'style'] as const;
 
@@ -107,11 +118,11 @@ export const cascadeTableCellAppearance = (
             if (value === undefined) return;
 
             const fieldPath = `${prefix}/${field}`;
-            if (field === 'opacity' && (channel === 'node' || channel === 'path') && prefix.endsWith('/style')) {
+            if (field === 'opacity' && prefix.endsWith('/style')) {
               applyOpacity(destination, value as IRGraphicStyle['opacity'], prefix);
               return;
             }
-            if (field === 'font' && (channel === 'node' || channel === 'label')) {
+            if (field === 'font') {
               const font = structuredClone(destination.font ?? {}) as Record<string, unknown>;
               FONT_FIELDS.forEach(fontField => {
                 const fontValue = (value as Record<string, unknown>)[fontField];
@@ -125,18 +136,35 @@ export const cascadeTableCellAppearance = (
               return;
             }
 
+            if (field === 'pin') {
+              const merged = mergeNodeLabelDefaults(
+                { pin: destination.pin as IRNodeLabelDefault['pin'] },
+                { pin: value as IRNodeLabelDefault['pin'] },
+              );
+              destination.pin = structuredClone(merged.pin);
+              setTrace(trace, fieldPath, source);
+              return;
+            }
+            if ((field === 'start' || field === 'end') && prefix.endsWith('/arrow')) {
+              const merged = mergeArrowDefaults({ [field]: destination[field] }, { [field]: value });
+              destination[field] = structuredClone(merged[field]);
+              setTrace(trace, fieldPath, source);
+              return;
+            }
             removeTraceSubtree(trace, fieldPath);
             destination[field] = structuredClone(value);
             setTrace(trace, fieldPath, source);
           });
         };
 
-        const { style, layout, ...root } = defaultPatch as Record<string, unknown>;
+        const { style, layout, label, arrow, ...root } = defaultPatch as Record<string, unknown>;
         applyFields(target, root, `/content/defaults/${channel}`);
 
         for (const [group, fields] of [
           ['style', style],
           ['layout', layout],
+          ['label', label],
+          ['arrow', arrow],
         ] as const) {
           if (fields === undefined) continue;
 

@@ -109,11 +109,13 @@ describe('Array / Map container labels', () => {
   });
 
   it('inherits label defaults and container text style without inheriting cell role styles', () => {
-    const defaults = { label: { font: { size: 21 }, textColor: 'green' } };
+    const defaults = { node: { label: { font: { size: 21 }, textColor: 'green' } } };
     const label = { text: 'label inherited' };
     const expected = labelsOf([{ type: 'scope', defaults, children: [host(label)] }]);
 
     for (const source of sources) expect(labelsOf([{ ...source, label, defaults }])).toEqual(expected);
+    for (const source of sources)
+      expect(labelsOf([{ type: 'scope', defaults, children: [{ ...source, label }] }])).toEqual(expected);
 
     for (const source of sources)
       expect(

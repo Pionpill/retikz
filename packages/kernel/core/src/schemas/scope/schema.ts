@@ -3,50 +3,49 @@ import { array, boolean, enum as zodEnum, lazy, literal, number, strictObject, u
 
 import { AnimationTrackSchema } from '../animation';
 import { ClipSchema } from '../clip';
-import { FontSchema } from '../font';
-import { NodeSchema } from '../node';
-import { ArrowDetailSchema, PathSchema, PathGeometrySchema, PathTransformSchema } from '../path';
+import { NodeSchema, NodeLabelConfigSchema } from '../node';
+import { ArrowDetailSchema, PathLabelSchema, PathSchema, PathGeometrySchema, PathTransformSchema } from '../path';
 import { NodeTargetSchema, PositionSchema } from '../position';
 import { getRecursiveChildSchema } from '../recursive';
 import { ScopeSelfPointSchema } from '../scope-point';
-import {
-  CascadingGraphicStyleSchema,
-  ContextualColorSchema,
-  CssColorSchema,
-  GraphicStyleSchema,
-  OpacitySchema,
-} from '../style';
+import { CascadingGraphicStyleSchema, CssColorSchema, GraphicStyleSchema } from '../style';
 import { ThemeSchema } from '../theme';
 import { TransformSchema } from '../transform';
 import { ScopeBoundingShape, ScopeStyleChannel } from './constants';
 
-/** 节点默认值仅继承明确允许的几何与命名分组 */
-export const NodeDefaultSchema = strictObject(NodeSchema.shape).pick({
-  shape: true,
-  boundary: true,
-  cornerRadius: true,
-  rotate: true,
-  scale: true,
-  style: true,
-  layout: true,
+/** 节点已有标签的稀疏配置；主色供标签颜色派生 */
+export const NodeLabelDefaultSchema = NodeLabelConfigSchema.safeExtend({
+  color: CssColorSchema.optional().describe('Master color for node labels; textColor falls back to it.'),
+}).strict();
+
+/** 路径与步骤已有标签的稀疏配置 */
+export const PathLabelDefaultSchema = PathLabelSchema.omit({ text: true }).extend({
+  color: CssColorSchema.optional().describe('Master color for path and step labels; textColor falls back to it.'),
 });
 
-/** 路径默认值仅继承视觉与整体几何 */
+/** 节点主体、布局与已有标签的默认配置 */
+export const NodeDefaultSchema = strictObject(NodeSchema.shape)
+  .pick({
+    shape: true,
+    boundary: true,
+    cornerRadius: true,
+    rotate: true,
+    scale: true,
+    style: true,
+    layout: true,
+  })
+  .extend({
+    label: NodeLabelDefaultSchema.optional().describe('Defaults for existing node labels; does not create labels.'),
+  });
+
+/** 路径主体、几何及已有标签和箭头的默认配置 */
 export const PathDefaultSchema = strictObject({
   style: PathSchema.shape.style,
   cornerRadius: PathGeometrySchema.shape.cornerRadius,
   ...PathTransformSchema.shape,
+  label: PathLabelDefaultSchema.optional().describe('Defaults for existing path and step labels.'),
+  arrow: ArrowDetailSchema.optional().describe('Defaults for existing arrow marks; does not create marks.'),
 });
-
-/** 校验作用域内节点标签与路径步骤标签共用的默认视觉样式 */
-export const LabelDefaultSchema = strictObject({
-  color: CssColorSchema.optional().describe('Master color for labels in this scope; textColor falls back to it.'),
-  textColor: ContextualColorSchema.optional().describe(
-    'Default label text color: an exact CSS color or a weight derived from the effective label / host master color.',
-  ),
-  opacity: OpacitySchema.optional().describe('Default label opacity.'),
-  font: FontSchema.optional().describe('Default label font (family / size / weight / style); per-field fallback.'),
-}).describe('Default style applied to node labels and step labels in this scope.');
 
 /** Scope 锚点对齐的父坐标系目标 */
 export const ScopePositionTargetSchema = union([PositionSchema, strictObject(NodeTargetSchema.shape)]).describe(
@@ -74,14 +73,12 @@ export const ScopeDefaultsSchema = strictObject({
     'Default style applied to nodes in this scope. Independent from the other default channels.',
   ),
   path: PathDefaultSchema.optional().describe(
-    'Default style applied to path-like drawables in this scope. Arrows use the separate `defaults.arrow` channel.',
+    'Default style applied to path-like drawables in this scope. Includes label and arrow defaults.',
   ),
-  label: LabelDefaultSchema.optional().describe('Default style applied to node labels and step labels in this scope.'),
-  arrow: ArrowDetailSchema.optional().describe('Default style applied to arrows in this scope.'),
   reset: union([boolean(), array(zodEnum(ScopeStyleChannel))])
     .optional()
     .describe(
-      'Inheritance barrier for style defaults. Use true for all channels, or list node, path, label, and arrow channels to reset.',
+      'Inheritance barrier for style defaults. Use true for all channels, or list node and path host channels to reset, including their decorations.',
     ),
 }).describe('Named descendant defaults and their inheritance barrier.');
 

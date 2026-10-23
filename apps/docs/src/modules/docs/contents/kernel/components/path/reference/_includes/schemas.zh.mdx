@@ -282,9 +282,10 @@
       '标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Extension Ribbon 等面状宿主在未指定 side 时放在内部',
     distance: 'side 偏移距离，默认与 Path step label 一致',
     gap: '文字断口两侧的额外间距；仅在 interrupt 生效时使用',
-    textColor: '标签文字色；缺省回退 scope defaults.label → 宿主 path 主色 color → currentColor（跟主色不跟 stroke）',
+    textColor:
+      '标签文字色；缺省回退 scope defaults.path.label → 宿主 path 主色 color → currentColor（跟主色不跟 stroke）',
     opacity: '标签独立透明度 0..1；与所属 path opacity 相乘（跨 scope 不复合）',
-    font: '标签字体覆盖（family / size / weight / style 均可选）；逐字段回退 defaults.label → 渲染端默认',
+    font: '标签字体覆盖（family / size / weight / style 均可选）；逐字段回退 defaults.path.label → 渲染端默认',
   }}
 />
 

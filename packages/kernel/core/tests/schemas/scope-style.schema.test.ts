@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ArrowDetailSchema,
-  LabelDefaultSchema,
+  NodeLabelDefaultSchema,
   NodeDefaultSchema,
   PathDefaultSchema,
   ScopePropsSchema,
@@ -41,7 +41,7 @@ describe('ScopePropsSchema 可复用 Scope authored fragment', () => {
     const props = {
       transforms: [{ kind: 'scale' as const, x: 1.5, pivot: [2, 3] as [number, number] }],
       position: { kind: 'anchor', target: [10, 20] as [number, number] },
-      defaults: { style: { fill: 'lightblue' }, node: { style: { fill: 'white' } }, reset: ['label' as const] },
+      defaults: { style: { fill: 'lightblue' }, reset: ['node', 'path'], node: { style: { fill: 'white' } } },
     };
     const parsed = ScopePropsSchema.parse(JSON.parse(JSON.stringify(props)));
 
@@ -198,10 +198,10 @@ describe('PathDefaultSchema（every path 默认）', () => {
   });
 });
 
-describe('LabelDefaultSchema（every label 默认）', () => {
+describe('NodeLabelDefaultSchema（every label 默认）', () => {
   it('接受 color / textColor / opacity / font', () => {
     expect(
-      LabelDefaultSchema.safeParse({
+      NodeLabelDefaultSchema.safeParse({
         color: 'red',
         textColor: 'gray',
         opacity: 0.6,
@@ -211,21 +211,21 @@ describe('LabelDefaultSchema（every label 默认）', () => {
   });
 
   it('接受空对象', () => {
-    expect(LabelDefaultSchema.safeParse({}).success).toBe(true);
+    expect(NodeLabelDefaultSchema.safeParse({}).success).toBe(true);
   });
 
   it('接受数值派生 textColor，但拒绝数值 label master', () => {
-    expect(LabelDefaultSchema.safeParse({ textColor: 0.6 }).success).toBe(true);
-    expect(LabelDefaultSchema.safeParse({ color: 0.6 }).success).toBe(false);
+    expect(NodeLabelDefaultSchema.safeParse({ textColor: 0.6 }).success).toBe(true);
+    expect(NodeLabelDefaultSchema.safeParse({ color: 0.6 }).success).toBe(false);
   });
 
   it('拒未知字段（strict）', () => {
-    expect(LabelDefaultSchema.safeParse({ nope: 1 }).success).toBe(false);
+    expect(NodeLabelDefaultSchema.safeParse({ nope: 1 }).success).toBe(false);
   });
 
   it('opacity 越界拒', () => {
-    expect(LabelDefaultSchema.safeParse({ opacity: 1.5 }).success).toBe(false);
-    expect(LabelDefaultSchema.safeParse({ opacity: -0.1 }).success).toBe(false);
+    expect(NodeLabelDefaultSchema.safeParse({ opacity: 1.5 }).success).toBe(false);
+    expect(NodeLabelDefaultSchema.safeParse({ opacity: -0.1 }).success).toBe(false);
   });
 });
 
@@ -322,15 +322,8 @@ describe('ScopeSchema 四通道 every-X', () => {
         type: 'scope',
         children: [],
         defaults: {
-          node: {
-            shape: 'circle',
-            style: { fill: 'lightblue' },
-          },
-          path: {
-            style: { stroke: 'green' },
-          },
-          label: { font: { size: 10 } },
-          arrow: { shape: 'stealth', scale: 1.5 },
+          node: { shape: 'circle', style: { fill: 'lightblue' }, label: { font: { size: 10 } } },
+          path: { style: { stroke: 'green' }, label: { font: { size: 10 } }, arrow: { shape: 'stealth', scale: 1.5 } },
         },
       }).success,
     ).toBe(true);
@@ -373,7 +366,7 @@ describe('ScopeSchema resetStyle 屏障', () => {
       ScopeSchema.safeParse({
         type: 'scope',
         children: [],
-        defaults: { reset: ['node', 'path', 'label', 'arrow'] },
+        defaults: { reset: ['node', 'path'] },
       }).success,
     ).toBe(true);
   });
@@ -412,16 +405,13 @@ describe('Scope 样式 JSON round-trip', () => {
       ],
       defaults: {
         style: { color: 'blue', strokeWidth: 2 },
-        node: {
-          shape: 'circle' as const,
-          style: { fill: 'lightblue' },
-        },
+        reset: ['node', 'path'],
+        node: { shape: 'circle' as const, style: { fill: 'lightblue' }, label: { font: { size: 10 } } },
         path: {
           style: { stroke: 'green' },
+          label: { font: { size: 10 } },
+          arrow: { shape: 'stealth' as const, scale: 1.5 },
         },
-        label: { font: { size: 10 } },
-        arrow: { shape: 'stealth' as const, scale: 1.5 },
-        reset: ['label' as const],
       },
     };
     const restored = ScopeSchema.parse(JSON.parse(JSON.stringify(ir)));
