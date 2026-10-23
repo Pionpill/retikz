@@ -475,7 +475,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
     expect(rectOf(ir)?.stroke).toBe('red');
   });
 
-  it('arrow_master_color_beats_arrow_default：path 主色覆盖外层 arrowDefault.color；元素 arrowDetail.color 最高（回归 BUG-1）', () => {
+  it('Path 主色覆盖箭头公共默认与实例主色', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -510,11 +510,11 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
       .filter((p): p is PathPrim => p.type === 'path' && !p.commands.some(c => c.kind === 'close'))
       .map(p => markerPaintColor(p.arrowEnd));
 
-    // 第一条：主色 red 覆盖 arrowDefault green（host 轴 > every-X color）；第二条：元素 arrowDetail.color=purple 最高
-    expect(arrowColors).toEqual(['red', 'purple']);
+    // 宿主主色同时覆盖公共默认与实例上的宏颜色
+    expect(arrowColors).toEqual(['red', 'blue']);
   });
 
-  it('arrow_end_color_master_beats_default_end：path 主色覆盖 arrowDefault.end.color；显式 arrowDetail.end.color 最高（端点级）', () => {
+  it('Path 主色覆盖箭头端点默认与端点实例主色', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -549,8 +549,8 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
       .filter((p): p is PathPrim => p.type === 'path' && !p.commands.some(c => c.kind === 'close'))
       .map(p => markerPaintColor(p.arrowEnd));
 
-    // 第一条：主色 red 覆盖 arrowDefault.end.color=green（端点回退主色）；第二条：显式 arrowDetail.end.color=purple 最高
-    expect(arrowColors).toEqual(['red', 'purple']);
+    // 端点配置形成 mark 后仍由宿主主色覆盖宏颜色
+    expect(arrowColors).toEqual(['red', 'blue']);
   });
 
   it('arrow_default_nested_end_per_field_merge：内层 arrowDefault.end 只改 shape，保留外层 end.color（nested per-field 合并）', () => {

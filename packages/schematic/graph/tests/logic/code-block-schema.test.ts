@@ -41,7 +41,7 @@ describe('Code content Source contracts', () => {
       localNamespace: true,
     };
 
-    expect(schema.parse(source)).toEqual(source);
+    expect(schema.parse(source)).toEqual({ ...source, position: [0, 0] });
     expect(schema.safeParse({ ...source, minWidth: 201 }).success).toBe(false);
 
     for (const extra of [{ children: [] }, { presentation: {} }, { tokens: {} }, { name: '' }]) {

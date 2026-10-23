@@ -249,7 +249,9 @@ describe('Extension optional arrow definitions', () => {
     );
 
     expect(customized?.commands.at(-1)).toEqual({ kind: 'line', to: [89.7, 0] });
-    expect(customized?.arrowEnd).toMatchObject({ refX: 0, markerWidth: 12, markerHeight: 18 });
+    expect(customized?.arrowEnd).toMatchObject({ markerWidth: 12, markerHeight: 18 });
+    // 半线宽接缝换算到 marker 局部坐标，保持箭头尖端位置
+    expect(customized?.arrowEnd?.refX).toBeCloseTo((0.5 * 10) / 12);
     expect(SquareArrowDefinition).toMatchObject({ backX: 0, lineContactX: 0 });
     expect(OpenSquareArrowDefinition).toMatchObject({ backX: 1, hollow: true, lineContactX: 1, tipX: 9 });
   });
@@ -398,10 +400,10 @@ describe('Extension optional arrow definitions', () => {
     expect(customized?.commands.at(-1)).toEqual({ kind: 'line', to: [99.3, 0] });
     expect(customized?.arrowEnd).toMatchObject({
       shape: 'straightBarb',
-      refX: 8,
       markerWidth: 12,
       markerHeight: 18,
     });
+    expect(customized?.arrowEnd?.refX).toBeCloseTo(8 + (0.5 * 10) / 12);
     expect(customized?.arrowEnd?.marker[0]).toMatchObject({ stroke: '#f00', strokeWidth: 2 });
 
     const reversed = firstPath(
@@ -500,7 +502,8 @@ describe('Extension optional arrow definitions', () => {
     const customized = firstPath(compileToScene(customizedScene, { arrows: [BarArrowDefinition] }).scene.primitives);
 
     expect(customized?.commands.at(-1)).toEqual({ kind: 'line', to: [99.3, 0] });
-    expect(customized?.arrowEnd).toMatchObject({ refX: 8, markerWidth: 12, markerHeight: 18, opacity: 0.4 });
+    expect(customized?.arrowEnd).toMatchObject({ markerWidth: 12, markerHeight: 18, opacity: 0.4 });
+    expect(customized?.arrowEnd?.refX).toBeCloseTo(8 + (0.5 * 10) / 12);
     expect(customized?.arrowEnd?.marker[0]).toMatchObject({ stroke: '#f00', strokeWidth: 2 });
 
     const reversed = firstPath(

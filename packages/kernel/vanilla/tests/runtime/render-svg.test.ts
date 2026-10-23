@@ -152,7 +152,7 @@ describe('@retikz/vanilla renderToSvgString', () => {
   });
 
   it('passes clip providers to compile options', () => {
-    expect(() => renderToSvgString(clipIr)).toThrow(/options\.clips/i);
+    expect(() => renderToSvgString(clipIr)).toThrow(/Unknown provider 'circleFrame'/);
 
     const svg = renderToSvgString(clipIr, {
       compile: { clips: [circleFrameClip()] },

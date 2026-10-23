@@ -22,24 +22,3 @@ export * from './mark';
 export * from './path';
 export * from './point';
 export * from './relation';
-export {
-  MarkBlendModeStyleSchema,
-  MarkColorStyleSchema,
-  MarkDashPatternStyleSchema,
-  MarkFillStyleSchema,
-  MarkNonnegativeNumberStyleSchema,
-  MarkNumberStyleSchema,
-  MarkOpacityFactorStyleSchema,
-  MarkOpacityStyleSchema,
-  MarkShadowStyleSchema,
-  MarkStrokeStyleSchema,
-  MarkZIndexStyleSchema,
-  NodeAxisScaleStyleSchema,
-  NodeBooleanStyleSchema,
-  NodeBoundaryStyleSchema,
-  NodeBoxSpacingStyleSchema,
-  NodeFontStyleSchema,
-  NodePositiveNumberStyleSchema,
-  NodeTextAlignStyleSchema,
-} from './style';
-export type { IRPlotMarkOpacityStyle } from './style';

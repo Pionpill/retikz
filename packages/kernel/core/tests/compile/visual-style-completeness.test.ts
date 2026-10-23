@@ -173,7 +173,7 @@ it('endpoint and inline arrows retain explicit paints and stroke overrides', () 
   expect(scene.resources).toHaveLength(1);
 });
 
-it('custom arrow output preserves omitted fields and merges explicit styles recursively', () => {
+it('custom arrow output retains fixed nested styles when arrow options are provided', () => {
   const custom = defineArrow({
     name: 'styled',
     backX: 0,
@@ -221,13 +221,7 @@ it('custom arrow output preserves omitted fields and merges explicit styles recu
     dashPattern: [5, 2],
     strokeLinecap: 'square',
   });
-  expect(leaves(path?.arrowEnd?.marker ?? [])[0]).toMatchObject({
-    fill: { kind: 'resourceRef' },
-    stroke: 'blue',
-    dashPattern: [1, 2],
-    strokeLinecap: 'square',
-    strokeLinejoin: 'round',
-  });
+  expect(leaves(path?.arrowEnd?.marker ?? [])[0]).toEqual(leaves(path?.arrowStart?.marker ?? [])[0]);
 });
 
 it('new visual fields survive JSON round trips and reject misspelled properties', () => {

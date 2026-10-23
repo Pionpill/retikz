@@ -5,6 +5,8 @@ description: Query the Plot schemas for point, path, interval, and relation mark
 
 Marks are the geometry-output layer of the graphics grammar. Point, Path, Interval, and Relation form a closed discriminated union. Unknown mark types are rejected at the schema boundary.
 
+Fixed `fill` / `stroke` reuse Core PaintValue: CSS colors, a master color weight from 0 to 1, or structured Paint. `opacity` accepts a number (equivalent to `overall`) or an object with independent `overall` / `fill` / `stroke` factors. Relation primitive styles follow the same rules.
+
 ## MarkSchema
 
 <ZodSchema name="MarkSchema" />

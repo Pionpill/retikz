@@ -141,16 +141,19 @@ describe('Block-family Source schemas', () => {
     expect(Graph.BlockRowSchema.parse({ namespace: 'graph', type: 'blockRow', content: 'name' })).toEqual({
       namespace: 'graph',
       type: 'blockRow',
+      position: [0, 0],
       content: 'name',
     });
     expect(Graph.BlockRowSchema.parse({ namespace: 'graph', type: 'blockRow', content: ['name', 'string'] })).toEqual({
       namespace: 'graph',
       type: 'blockRow',
+      position: [0, 0],
       content: ['name', 'string'],
     });
     expect(Graph.BlockRowSchema.parse({ namespace: 'graph', type: 'blockRow', content: [] })).toEqual({
       namespace: 'graph',
       type: 'blockRow',
+      position: [0, 0],
       content: [],
     });
     expect(
@@ -180,7 +183,7 @@ describe('Block-family Source schemas', () => {
       type: 'blockRow',
       content,
     });
-    expect(Graph.BlockRowSchema.parse(JSON.parse(JSON.stringify(row)))).toEqual(row);
+    expect(Graph.BlockRowSchema.parse(JSON.parse(JSON.stringify(row)))).toEqual({ ...row, position: [0, 0] });
     expect(Graph.createBlockRow({ content: { text: 'single', align: 'end' } })).toEqual({
       namespace: 'graph',
       type: 'blockRow',
@@ -285,10 +288,12 @@ describe('Block-family Source schemas', () => {
     expect(Graph.BlockSectionSchema.parse({ namespace: 'graph', type: 'blockSection' })).toEqual({
       namespace: 'graph',
       type: 'blockSection',
+      position: [0, 0],
     });
     expect(Graph.BlockRowSchema.parse({ namespace: 'graph', type: 'blockRow', children: [] })).toEqual({
       namespace: 'graph',
       type: 'blockRow',
+      position: [0, 0],
       children: [],
     });
     expect(
@@ -359,7 +364,7 @@ describe('Block-family Source schemas', () => {
     ).toBe(false);
   });
 
-  it('round-trips only sparse JSON-safe Source facts', () => {
+  it('round-trips JSON-safe Source facts and materializes Scope position defaults', () => {
     const sources = [
       Graph.createBlock({ children: [textChild('content')] }),
       Graph.createBlockHeader({ title: { text: 'Header' } }),
@@ -369,7 +374,9 @@ describe('Block-family Source schemas', () => {
     const schemas = [Graph.BlockSchema, Graph.BlockHeaderSchema, Graph.BlockSectionSchema, Graph.BlockRowSchema];
 
     sources.forEach((source, index) => {
-      expect(schemas[index]?.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);
+      expect(schemas[index]?.parse(JSON.parse(JSON.stringify(source)))).toEqual(
+        source.type === 'blockHeader' ? source : { ...source, position: [0, 0] },
+      );
     });
   });
 });

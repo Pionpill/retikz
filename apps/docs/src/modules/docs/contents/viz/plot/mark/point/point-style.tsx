@@ -7,6 +7,12 @@ import { PointStylePreview } from './point-style.preview';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values =>
   PointStylePreview({
+    dashOffset: values[POINT_STYLE_CONTROL_IDS.dashOffset],
+    lineCap: values[POINT_STYLE_CONTROL_IDS.lineCap],
+    lineJoin: values[POINT_STYLE_CONTROL_IDS.lineJoin],
+    shape: values[POINT_STYLE_CONTROL_IDS.shape],
+    weight: values[POINT_STYLE_CONTROL_IDS.weight],
+    scalarOpacity: values[POINT_STYLE_CONTROL_IDS.scalarOpacity],
     paintMode: values[POINT_STYLE_CONTROL_IDS.paintMode],
     fill: values[POINT_STYLE_CONTROL_IDS.fill],
     stroke: values[POINT_STYLE_CONTROL_IDS.stroke],
