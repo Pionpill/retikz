@@ -2,7 +2,7 @@ import { discriminatedUnion, literal, number, object, strictObject } from 'zod';
 
 import { AtPositionSchema, BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema } from '../position';
 import { AngleDegreesSchema } from '../scalar';
-import { ScopeSelfPointSchema } from '../scope-point';
+import { ScopeSelfPointSchema } from '../scope/self-point';
 
 /** 校验水平和竖直平移量 */
 const TranslateSchema = object({

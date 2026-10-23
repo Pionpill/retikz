@@ -14,6 +14,7 @@ import type {
   ScopePositionTargetSchema,
   ScopePropsSchema,
 } from './schema';
+import type { ScopeSelfPointSchema } from './self-point';
 
 /** 节点主体、布局与已有标签的默认配置 */
 export type IRNodeDefault = ZodInfer<typeof NodeDefaultSchema>;
@@ -58,3 +59,6 @@ export type IRScope = IRScopeProps & {
 };
 
 export type IRScopeDefaults = ZodInfer<typeof ScopeDefaultsSchema>;
+
+/** Scope 固有局部坐标系中的自身参照点 */
+export type IRScopeSelfPoint = ZodInfer<typeof ScopeSelfPointSchema>;

@@ -7,11 +7,11 @@ import { NodeSchema, NodeLabelConfigSchema } from '../node';
 import { ArrowDetailSchema, PathLabelSchema, PathSchema, PathGeometrySchema, PathTransformSchema } from '../path';
 import { NodeTargetSchema, PositionSchema } from '../position';
 import { getRecursiveChildSchema } from '../recursive';
-import { ScopeSelfPointSchema } from '../scope-point';
 import { CascadingGraphicStyleSchema, CssColorSchema } from '../style';
 import { ThemeSchema } from '../theme';
 import { TransformSchema } from '../transform';
 import { ScopeBoundingShape, ScopeStyleChannel } from './constants';
+import { ScopeSelfPointSchema } from './self-point';
 
 /** 节点已有标签的稀疏配置；主色供标签颜色派生 */
 export const NodeLabelDefaultSchema = NodeLabelConfigSchema.safeExtend({
