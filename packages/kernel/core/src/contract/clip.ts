@@ -1,8 +1,6 @@
 import type { JsonObject } from '@retikz/foundation';
-import { assertNonEmptyString } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
-import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import type { IRClip } from '../schemas';
 import type { SceneClipPath } from './scene';
 
@@ -133,16 +131,10 @@ export type ClipDefinition<TClip extends ClipLike = ClipLike, TShape extends Cli
 /**
  * 定义 clip 注册项，并做最小 key 校验
  * @remarks 当前只集中封装泛型擦除边界；保留入口用于对齐 registry API，并为未来校验或归一化预留空间
- * @throws 当 kind 为空字符串时
  */
 const defineClipImplementation = (
   definition: ClipDefinitionResolvedInput<ClipLike, ClipShape> | ClipDefinitionIdentityInput<ClipShape>,
 ): ClipDefinition => {
-  assertNonEmptyString(
-    definition.kind,
-    'clip provider key',
-    () => new RetikzCoreError(RetikzCoreErrorCode.Contract, 'clip provider key must be a non-empty string.'),
-  );
   if (definition.resolve === undefined) {
     return {
       ...definition,

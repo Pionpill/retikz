@@ -42,41 +42,19 @@ export const validateReadonlyLayers = (
     }
   };
 
-  if (!Array.isArray(input))
-    throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Render readonly layers must be an array');
   if (input.length === 0) return EMPTY_READONLY_LAYERS;
 
   const keys = new Set<string>();
 
   for (const layer of input) {
-    if (typeof layer !== 'object' || layer === null)
-      throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Render readonly layer must be an object');
-    if (typeof layer.key !== 'string' || layer.key.trim().length === 0) {
-      throw new RetikzRenderError(
-        RetikzRenderErrorCode.Runtime,
-        'Render readonly layer key must be a non-empty string',
-      );
-    }
-
     if (keys.has(layer.key))
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, `Duplicate Render readonly layer key "${layer.key}"`);
 
     keys.add(layer.key);
-    if (
-      !Array.isArray(layer.transform) ||
-      layer.transform.length !== 6 ||
-      !layer.transform.every((value: unknown) => typeof value === 'number' && Number.isFinite(value))
-    ) {
+    if (!layer.transform.every(Number.isFinite)) {
       throw new RetikzRenderError(
         RetikzRenderErrorCode.Runtime,
         `Render readonly layer "${layer.key}" transform must contain six finite numbers`,
-      );
-    }
-
-    if (typeof layer.scene !== 'object' || layer.scene === null || !Array.isArray(layer.scene.primitives)) {
-      throw new RetikzRenderError(
-        RetikzRenderErrorCode.Runtime,
-        `Render readonly layer "${layer.key}" Scene is invalid`,
       );
     }
 

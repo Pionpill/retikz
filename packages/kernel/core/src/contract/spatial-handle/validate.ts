@@ -1,124 +1,48 @@
-import type { JsonObject } from '@retikz/foundation';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { cloneAndFreezeJson } from '../../shared/json';
 import type { SpatialHandleDeclaration } from './handle';
 
-const declarationFields = new Set(['id', 'aliasIds', 'role', 'bounds', 'tags', 'payload']);
-
-const boundsFields = new Set(['x', 'y', 'width', 'height']);
-
-const fail = (owner: string, detail: string): never => {
-  throw new RetikzCoreError(
-    RetikzCoreErrorCode.Contract,
-    `${owner} returned an invalid spatial handle declaration: ${detail}.`,
-  );
-};
-
-const requireRecord = (owner: string, value: unknown, detail: string): Record<string, unknown> => {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) fail(owner, detail);
-  return value as Record<string, unknown>;
-};
-
-const requireNonEmptyString = (owner: string, value: unknown, field: string): string => {
-  if (typeof value !== 'string' || value.length === 0) return fail(owner, `${field} must be a non-empty string`);
-  return value;
-};
-
-/** 校验、脱离并冻结同一 composite occurrence 的全部局部空间声明 */
+/** 检查 owner 内的身份冲突与几何不变量，并脱离、冻结空间声明 */
 export const validateSpatialHandleDeclarations = (
   owner: string,
-  value: unknown,
+  declarations: ReadonlyArray<SpatialHandleDeclaration>,
 ): ReadonlyArray<SpatialHandleDeclaration> => {
-  const inputs = Array.isArray(value) ? value : fail(owner, 'spatialHandles must be an array');
+  const fail = (detail: string): never => {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Contract,
+      `${owner} returned an invalid spatial handle declaration: ${detail}.`,
+    );
+  };
   const ids = new Set<string>();
-  const declarations = inputs.map((input: unknown, index: number): SpatialHandleDeclaration => {
-    const location = `spatialHandles[${index}]`;
-    const declaration = requireRecord(owner, input, `${location} must be an object`);
-    const unsupported = Object.keys(declaration).filter(field => !declarationFields.has(field));
-    if (unsupported.length > 0) fail(owner, `${location} contains unsupported field '${unsupported[0]}'`);
-
-    const id = requireNonEmptyString(owner, declaration.id, `${location}.id`);
-    if (ids.has(id)) fail(owner, `duplicate spatial handle id '${id}'`);
-    ids.add(id);
-    let aliasIds: ReadonlyArray<string> | undefined;
-    if (declaration.aliasIds !== undefined) {
-      const aliases = Array.isArray(declaration.aliasIds)
-        ? declaration.aliasIds
-        : fail(owner, `${location}.aliasIds must be an array`);
-      aliasIds = Object.freeze(
-        aliases.map((alias: unknown, aliasIndex: number) => {
-          const aliasId = requireNonEmptyString(owner, alias, `${location}.aliasIds[${aliasIndex}]`);
-          if (ids.has(aliasId)) fail(owner, `duplicate spatial handle id '${aliasId}'`);
-          ids.add(aliasId);
-
-          return aliasId;
-        }),
-      );
-    }
-
-    const role = requireNonEmptyString(owner, declaration.role, `${location}.role`);
-
-    const rawBounds = requireRecord(owner, declaration.bounds, `${location}.bounds must be an object`);
-    const unsupportedBounds = Object.keys(rawBounds).filter(field => !boundsFields.has(field));
-    if (unsupportedBounds.length > 0) {
-      fail(owner, `${location}.bounds contains unsupported field '${unsupportedBounds[0]}'`);
-    }
-
-    const readFinite = (field: 'x' | 'y' | 'width' | 'height'): number => {
-      const number = rawBounds[field];
-      if (typeof number !== 'number' || !Number.isFinite(number)) {
-        return fail(owner, `${location}.bounds.${field} must be finite`);
+  return Object.freeze(
+    declarations.map((declaration, index) => {
+      for (const id of [declaration.id, ...(declaration.aliasIds ?? [])]) {
+        if (ids.has(id)) fail(`duplicate spatial handle id '${id}'`);
+        ids.add(id);
       }
-
-      return number;
-    };
-
-    const x = readFinite('x');
-    const y = readFinite('y');
-    const width = readFinite('width');
-    const height = readFinite('height');
-    if (width < 0) fail(owner, `${location}.bounds.width must be nonnegative`);
-    if (height < 0) fail(owner, `${location}.bounds.height must be nonnegative`);
-
-    let tags: ReadonlyArray<string> | undefined;
-    if (declaration.tags !== undefined) {
-      const rawTags = Array.isArray(declaration.tags)
-        ? declaration.tags
-        : fail(owner, `${location}.tags must be an array`);
-      const seenTags = new Set<string>();
-      tags = Object.freeze(
-        rawTags.map((tag: unknown, tagIndex: number) => {
-          const resolved = requireNonEmptyString(owner, tag, `${location}.tags[${tagIndex}]`);
-          if (seenTags.has(resolved)) fail(owner, `${location}.tags contains duplicate tag '${resolved}'`);
-          seenTags.add(resolved);
-
-          return resolved;
-        }),
-      );
-    }
-
-    let payload: Readonly<JsonObject> | undefined;
-    if (declaration.payload !== undefined) {
-      const rawPayload = requireRecord(owner, declaration.payload, `${location}.payload must be a JSON object`);
-
-      try {
-        payload = cloneAndFreezeJson(rawPayload, `${owner} ${location}.payload`) as Readonly<JsonObject>;
-      } catch (cause) {
-        const detail = cause instanceof Error ? cause.message : String(cause);
-        fail(owner, `${location}.payload must be JSON-safe: ${detail}`);
+      const { x, y, width, height } = declaration.bounds;
+      for (const [field, value] of Object.entries({ x, y, width, height })) {
+        if (!Number.isFinite(value)) fail(`spatialHandles[${index}].bounds.${field} must be finite`);
       }
-    }
-
-    return Object.freeze({
-      id,
-      ...(aliasIds === undefined ? {} : { aliasIds }),
-      role,
-      bounds: Object.freeze({ x, y, width, height }),
-      ...(tags === undefined ? {} : { tags }),
-      ...(payload === undefined ? {} : { payload }),
-    });
-  });
-
-  return Object.freeze(declarations);
+      if (width < 0) fail(`spatialHandles[${index}].bounds.width must be nonnegative`);
+      if (height < 0) fail(`spatialHandles[${index}].bounds.height must be nonnegative`);
+      const tags = new Set<string>();
+      for (const tag of declaration.tags ?? []) {
+        if (tags.has(tag)) fail(`spatialHandles[${index}].tags contains duplicate tag '${tag}'`);
+        tags.add(tag);
+      }
+      return Object.freeze({
+        id: declaration.id,
+        role: declaration.role,
+        bounds: Object.freeze({ x, y, width, height }),
+        ...(declaration.aliasIds === undefined ? {} : { aliasIds: Object.freeze([...declaration.aliasIds]) }),
+        ...(declaration.tags === undefined ? {} : { tags: Object.freeze([...declaration.tags]) }),
+        ...(declaration.payload === undefined
+          ? {}
+          : {
+              payload: cloneAndFreezeJson(declaration.payload, `${owner} spatialHandles[${index}].payload`),
+            }),
+      });
+    }),
+  );
 };

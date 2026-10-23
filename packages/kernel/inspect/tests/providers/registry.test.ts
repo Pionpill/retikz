@@ -73,17 +73,6 @@ describe('Inspector registry', () => {
     expect(resolveRegistry(createInspectorRegistry([registered])).require(registered)).toBe(registered);
   });
 
-  it('does not trust a caller-frozen definition with an invalid owner', () => {
-    const invalidDefinition = Object.freeze({
-      ...definition('test', 'invalid'),
-      owner: Object.freeze({ kind: 'path' as const, name: ' ' }),
-    });
-
-    expect(() => createInspectorRegistry([invalidDefinition])).toThrow(
-      'Inspector owner name must be a non-empty string.',
-    );
-  });
-
   it('allows multiple keys for one owner and resolves each key', () => {
     const registry = createInspectorRegistry([definition('third-party', 'points'), definition('third-party', 'curve')]);
     const resolvedRegistry = resolveRegistry(registry);

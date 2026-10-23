@@ -2,7 +2,7 @@ import type { IRGraphicStyle } from '@retikz/core';
 import { mergeGraphicStyle } from '@retikz/core';
 import type { JsonObject, JsonValue } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
-import { BuiltinPlotMark, PointMarkSchema } from '@retikz/plot';
+import { BuiltinPlotMark } from '@retikz/plot';
 
 import type { ChartMarkResolveContext } from '../../_chart/contract/mark';
 import { pointFieldMappingOf, requiredFieldOf } from './encoding';
@@ -91,7 +91,7 @@ export const resolvePointMark = (
   const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
   const bindings: JsonObject = { position: { x: { field: x }, y: { field: y } } };
   const fixed: JsonObject = {};
-  const mark: JsonObject = { type: BuiltinPlotMark.Point, encodings: bindings, properties: fixed };
+  const mark: IRPlotMarkOperation = { type: BuiltinPlotMark.Point, encodings: bindings, properties: fixed };
   if (options.coordinateView !== undefined) mark.coordinateView = options.coordinateView;
   for (const name of pointVisualSlots) {
     if (name === 'opacity') continue;
@@ -106,7 +106,7 @@ export const resolvePointMark = (
   for (const name of pointConstantPropertySlots) copyConstantProperty(fixed, properties, name);
   for (const name of pointRawPropertySlots) copyRawProperty(fixed, properties, name);
 
-  return PointMarkSchema.parse(mark);
+  return mark;
 };
 
 const objectOf = (source: JsonObject, key: string): JsonObject => {

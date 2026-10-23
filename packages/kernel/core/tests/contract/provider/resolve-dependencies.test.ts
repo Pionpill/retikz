@@ -105,21 +105,6 @@ describe('resolveCoreProviderDependencies', () => {
     expect(compositeNamesOf(resolved.composites ?? [])).toEqual(['a.b/c', 'a/b.c']);
   });
 
-  it.each([
-    { name: 'root namespace', root: compositeKey('', 'card') },
-    { name: 'root type', root: compositeKey('third', '') },
-    { name: 'root provider name', root: shapeKey('') },
-  ])('rejects an empty $name before materialization', ({ root }) => {
-    const makeDefinition = vi.fn(() => definitionOf(root.capability === 'composite' ? root : shapeKey('third')));
-
-    expect(() =>
-      resolveCoreProviderDependencies({
-        contributions: [contributionOf([root], [providerOf(root, { makeDefinition })])],
-      }),
-    ).toThrow(/non-empty/);
-    expect(makeDefinition).not.toHaveBeenCalled();
-  });
-
   it('materializes only the reachable dependency-first closure with a stable first-reach tie break', () => {
     const shared = compositeKey('shared', 'base');
     const left = compositeKey('left', 'card');

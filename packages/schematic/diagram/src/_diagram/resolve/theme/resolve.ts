@@ -6,7 +6,6 @@ import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type { DiagramThemeDefinition } from '../../contract';
 import { getDefaultDiagramTheme } from '../../providers';
 import type { IRDiagramDefaults, IRDiagramDefaultsPresentationText, IRDiagramPresentationText } from '../../schemas';
-import { DiagramDefaultsSchema } from '../../schemas';
 import type { EffectiveDiagramTextAppearance, EffectiveDiagramTheme, EffectiveDiagramThemeFrame } from './types';
 
 type DiagramDefaultsFrame = NonNullable<IRDiagramDefaults['frame']>;
@@ -96,7 +95,7 @@ const resolveRegisteredDefaults = (
   }
 
   try {
-    return DiagramDefaultsSchema.parse(definition.resolve(theme));
+    return structuredClone(definition.resolve(theme));
   } catch (cause) {
     throw new RetikzDiagramError({
       code: RetikzDiagramErrorCode.DefinitionCallbackFailed,
@@ -134,7 +133,7 @@ export const resolveDiagramTheme = (
 ): EffectiveDiagramTheme => {
   const neutral = getDefaultDiagramTheme(theme);
   const registered = resolveRegisteredDefaults(theme, styles);
-  const source = inline === undefined ? undefined : DiagramDefaultsSchema.parse(inline);
+  const source = inline;
   const defaults = mergeDiagramDefaults(mergeDiagramDefaults(neutral, registered), source);
 
   return Object.freeze({

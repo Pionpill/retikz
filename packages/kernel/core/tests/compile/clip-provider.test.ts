@@ -73,23 +73,6 @@ const roundedRectClip = (): ClipDefinition =>
   });
 
 describe('clip providers', () => {
-  it.each(['', ' ', '\u2003', '\ufeff'])('rejects a blank clip provider key with the established error (%j)', kind => {
-    expect(() =>
-      defineClip({
-        kind,
-        schema: strictObject({ kind: literal(kind) }),
-        resolve: () => ({ kind }),
-        lower: () => ({
-          commands: [
-            { kind: 'move', to: [0, 0] },
-            { kind: 'line', to: [1, 1] },
-          ],
-          fillRule: 'nonzero',
-        }),
-      }),
-    ).toThrowError('clip provider key must be a non-empty string.');
-  });
-
   it('compiles one same-kind custom definition through options.clips only', () => {
     const scene = compileToScene(clippedIr({ kind: 'roundedRect', x: 0, y: 0, width: 40, height: 30, r: 5 }), {
       clips: [roundedRectClip()],

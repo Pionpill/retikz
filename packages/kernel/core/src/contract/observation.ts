@@ -1,8 +1,6 @@
 import type { JsonValue } from '@retikz/foundation';
-import { assertNonEmptyString } from '@retikz/foundation';
 import type { AffineMatrix, CenteredBox, Position } from '@retikz/math';
 
-import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import type { IRChild } from '../schemas';
 import type { ResolvedTheme } from '../shared';
 import type { CompileOccurrenceLocator } from './occurrence';
@@ -261,18 +259,6 @@ export type ClipOwnerOutput = {
 export const defineCompileObserver = <TOutput>(
   definition: CompileObserverDefinition<TOutput>,
 ): CompileObserverDefinition<TOutput> => {
-  if (typeof definition.key !== 'string')
-    throw new RetikzCoreError(RetikzCoreErrorCode.Contract, 'defineCompileObserver: key must be a non-empty string.');
-
-  assertNonEmptyString(
-    definition.key,
-    'defineCompileObserver: key',
-    () => new RetikzCoreError(RetikzCoreErrorCode.Contract, 'defineCompileObserver: key must be a non-empty string.'),
-  );
-  if (typeof definition.createSession !== 'function') {
-    throw new RetikzCoreError(RetikzCoreErrorCode.Contract, 'defineCompileObserver: createSession must be a function.');
-  }
-
   return definition;
 };
 

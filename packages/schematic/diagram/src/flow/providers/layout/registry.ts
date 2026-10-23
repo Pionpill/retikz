@@ -1,9 +1,5 @@
-import { assertNonEmptyString, assertPlainDataContainers } from '@retikz/foundation';
-import type { RelationDirection } from '@retikz/graph';
-
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type { FlowLayoutCatalogEntry, FlowLayoutDefinition } from '../../contract';
-import { FlowDirection, FlowPlacementKind, FlowRoutingKind } from '../../shared';
 import { BUILTIN_FLOW_LAYOUT_DEFINITIONS } from './definitions';
 import { LayeredFlowLayoutDefinition } from './layered';
 
@@ -29,34 +25,6 @@ export type ResolvedFlowLayoutRegistry = Readonly<{
   defaultLayout: FlowLayoutDefinition;
 }>;
 
-const RELATION_DIRECTIONS = new Set<RelationDirection>(['none', 'forward', 'reverse', 'both']);
-
-const ROUTING_KINDS = new Set(Object.values(FlowRoutingKind));
-
-const FLOW_DIRECTIONS = new Set(Object.values(FlowDirection));
-
-const DEFINITION_KEYS = new Set(['name', 'description', 'capabilities', 'defaults', 'layout']);
-
-const CAPABILITY_KEYS = new Set([
-  'placementKinds',
-  'compoundScopes',
-  'groupEndpoints',
-  'crossScopeRelations',
-  'cycles',
-  'selfLoops',
-  'endpointPlacement',
-  'parallelRelations',
-  'relationLabels',
-  'relationDirections',
-  'routing',
-]);
-
-const DEFAULT_KEYS = new Set(['direction', 'nodeGap', 'rankGap', 'placementGap', 'routing']);
-
-const PLACEMENT_GAP_KEYS = new Set(['horizontal', 'vertical']);
-
-const ROUTING_DEFAULT_KEYS = new Set(['kind', 'orthogonalCornerRadius']);
-
 const invalidDefinition = (definition: FlowLayoutDefinition, reason: string, cause?: unknown): never => {
   throw new RetikzDiagramError({
     code: RetikzDiagramErrorCode.DefinitionInvalid,
@@ -70,15 +38,12 @@ const invalidDefinition = (definition: FlowLayoutDefinition, reason: string, cau
 export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): FlowLayoutDefinition => {
   const validateUniqueValues = <T>(
     values: ReadonlyArray<T>,
-    allowed: ReadonlySet<T>,
     label: string,
     layoutDefinition: FlowLayoutDefinition,
   ): void => {
     if (values.length === 0) invalidDefinition(layoutDefinition, `${label} must not be empty.`);
     const unique = new Set(values);
     if (unique.size !== values.length) invalidDefinition(layoutDefinition, `${label} must not contain duplicates.`);
-    if (values.some(value => !allowed.has(value)))
-      invalidDefinition(layoutDefinition, `${label} contains an unsupported value.`);
   };
 
   const validateFiniteNonNegative = (value: number, label: string, layoutDefinition: FlowLayoutDefinition): void => {
@@ -86,54 +51,9 @@ export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): 
       invalidDefinition(layoutDefinition, `${label} must be finite and non-negative.`);
   };
 
-  const validateExactKeys = (
-    value: object,
-    expectedKeys: ReadonlySet<string>,
-    label: string,
-    layoutDefinition: FlowLayoutDefinition,
-    requiredKeys: ReadonlySet<string> = expectedKeys,
-  ): void => {
-    const keys = Object.keys(value);
-    if (keys.some(key => !expectedKeys.has(key)) || [...requiredKeys].some(key => !keys.includes(key))) {
-      invalidDefinition(layoutDefinition, `${label} must use the closed public contract.`);
-    }
-  };
-
-  validateExactKeys(definition, DEFINITION_KEYS, 'definition', definition);
-  assertNonEmptyString(
-    definition.name,
-    'Flow Layout Definition',
-    () =>
-      new RetikzDiagramError({
-        code: RetikzDiagramErrorCode.DefinitionInvalid,
-        message: `Flow Layout Definition '${definition.name}' is invalid: name must be a non-empty string.`,
-        details: { capability: 'flow-layout', key: definition.name, reason: 'name must be a non-empty string.' },
-      }),
-  );
-  assertNonEmptyString(
-    definition.description,
-    'Flow Layout Definition description',
-    () =>
-      new RetikzDiagramError({
-        code: RetikzDiagramErrorCode.DefinitionInvalid,
-        message: `Flow Layout Definition '${definition.name}' is invalid: description must be a non-empty string.`,
-        details: { capability: 'flow-layout', key: definition.name, reason: 'description must be a non-empty string.' },
-      }),
-  );
   const capabilities = definition.capabilities;
   const defaults = definition.defaults;
 
-  try {
-    assertPlainDataContainers(capabilities, 'Flow Layout Definition capabilities');
-    assertPlainDataContainers(defaults, 'Flow Layout Definition defaults');
-  } catch (cause) {
-    return invalidDefinition(definition, 'capabilities and defaults must use JSON-safe plain data containers.', cause);
-  }
-
-  validateExactKeys(capabilities, CAPABILITY_KEYS, 'capabilities', definition);
-  validateExactKeys(defaults, DEFAULT_KEYS, 'defaults', definition);
-  validateExactKeys(defaults.placementGap, PLACEMENT_GAP_KEYS, 'defaults.placementGap', definition);
-  validateExactKeys(defaults.routing, ROUTING_DEFAULT_KEYS, 'defaults.routing', definition, new Set(['kind']));
   if (capabilities.groupEndpoints && !capabilities.compoundScopes) {
     invalidDefinition(definition, 'groupEndpoints requires compoundScopes.');
   }
@@ -142,28 +62,20 @@ export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): 
     invalidDefinition(definition, 'crossScopeRelations requires compoundScopes.');
   }
 
-  validateUniqueValues(capabilities.relationDirections, RELATION_DIRECTIONS, 'relationDirections', definition);
+  validateUniqueValues(capabilities.relationDirections, 'relationDirections', definition);
   validateUniqueValues(
     capabilities.routing.map(item => item.kind),
-    ROUTING_KINDS,
     'routing',
     definition,
   );
 
   for (const item of capabilities.routing) {
     if (item.kind === 'curve' || item.kind === 'cubic') {
-      validateExactKeys(item, new Set(['kind', 'modes']), 'routing capability', definition);
-      validateUniqueValues(item.modes, new Set(['auto', 'explicit']), 'routing modes', definition);
-    } else validateExactKeys(item, new Set(['kind']), 'routing capability', definition);
+      validateUniqueValues(item.modes, 'routing modes', definition);
+    }
   }
 
-  validateUniqueValues(
-    capabilities.placementKinds,
-    new Set(Object.values(FlowPlacementKind)),
-    'placementKinds',
-    definition,
-  );
-  if (!FLOW_DIRECTIONS.has(defaults.direction)) invalidDefinition(definition, 'defaults.direction is unsupported.');
+  validateUniqueValues(capabilities.placementKinds, 'placementKinds', definition);
   validateFiniteNonNegative(defaults.nodeGap, 'defaults.nodeGap', definition);
   validateFiniteNonNegative(defaults.rankGap, 'defaults.rankGap', definition);
   validateFiniteNonNegative(defaults.placementGap.horizontal, 'defaults.placementGap.horizontal', definition);
@@ -184,7 +96,6 @@ export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): 
   }
 
   if (radius !== undefined) validateFiniteNonNegative(radius, 'defaults.routing.orthogonalCornerRadius', definition);
-  if (typeof definition.layout !== 'function') invalidDefinition(definition, 'layout must be a synchronous function.');
 
   return definition;
 };

@@ -203,19 +203,12 @@ describe('Flow layout callback execution', () => {
     expect(Object.isFrozen(result.relations[0]?.route.points)).toBe(true);
   });
 
-  it('rejects Promise and non-plain callback outputs with the Definition callback error', () => {
+  it('rejects non-plain callback outputs at the snapshot boundary', () => {
     const executeFlowLayout = getExecuteFlowLayout();
 
     expect(executeFlowLayout).toBeDefined();
 
     if (executeFlowLayout === undefined) return;
-
-    const promiseDefinition = definition(() => output());
-    Object.defineProperty(promiseDefinition, 'layout', { value: () => Promise.resolve(output()) });
-    expectDiagramError(
-      () => executeFlowLayout(promiseDefinition, input),
-      RetikzDiagramErrorCode.DefinitionCallbackFailed,
-    );
 
     const nonPlainOutput = Object.assign(new Map(), output());
     expectDiagramError(
@@ -235,14 +228,9 @@ describe('Flow layout callback execution', () => {
 
     if (executeFlowLayout === undefined) return;
 
-    const relationWithIdentity = {
-      ...output(),
-      relations: [{ ...output().relations[0], id: 'synthetic-relation' }],
-    };
     const invalidOutputs: Array<FlowLayoutOutput> = [
       { ...output(), elements: [...output().elements].reverse() },
       { ...output(), relations: [] },
-      relationWithIdentity,
       {
         ...output(),
         elements: [{ ...output().elements[0], bounds: { x: 0, y: 0, width: 11, height: 10 } }, output().elements[1]],

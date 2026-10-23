@@ -1,5 +1,3 @@
-import { assertNonEmptyString } from '@retikz/foundation';
-
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type { FlowThemeDefinition } from '../../contract';
 
@@ -10,16 +8,6 @@ export const resolveFlowThemeRegistry = (
   const registry = new Map<string, FlowThemeDefinition>();
 
   for (const definition of custom ?? []) {
-    assertNonEmptyString(
-      definition.name,
-      'Flow theme',
-      () =>
-        new RetikzDiagramError({
-          code: RetikzDiagramErrorCode.DefinitionInvalid,
-          message: 'Flow theme name must be a non-empty string.',
-          details: { capability: 'flow-theme', key: definition.name },
-        }),
-    );
     const existing = registry.get(definition.name);
     if (existing === definition) continue;
     if (existing !== undefined) {

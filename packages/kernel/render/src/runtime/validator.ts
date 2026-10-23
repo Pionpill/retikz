@@ -600,10 +600,8 @@ const validateOperationShape = (operation: ScenePatchOperation): void => {
     return;
   }
 
-  if (kind === 'replaceScene') {
-    validateSceneRuntimeSnapshot(Reflect.get(candidate, 'snapshot') as SceneRuntimeSnapshot);
-    return;
-  }
+  // replacement 的完整快照由 patch 分支统一校验
+  if (kind === 'replaceScene') return;
 
   return patchError({ reason: 'unknown-operation-kind', operation });
 };
@@ -807,7 +805,9 @@ const validateScenePatchInternal = (
   if (replacements.length > 0) {
     if (patch.operations.length !== 1 || replacements.length !== 1) patchError({ reason: 'replace-not-exclusive' });
     const replacement = replacements[0];
-    validateSceneRuntimeSnapshot(replacement.snapshot);
+    if (replacement.snapshot !== next && replacement.snapshot !== current) {
+      validateSceneRuntimeSnapshot(replacement.snapshot);
+    }
     if (!sceneRuntimeSnapshotEquals(replacement.snapshot, next)) mismatchError({ reason: 'replace-mismatch' });
 
     return;

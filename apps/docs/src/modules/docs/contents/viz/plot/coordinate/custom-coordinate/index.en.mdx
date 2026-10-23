@@ -106,8 +106,8 @@ Tangents need not be normalized, but must be finite and nonzero. Return `null` a
     {
       label: 'Merge built-in and custom coordinates into one registry',
       path: 'packages/viz/plot/src/providers/coordinate/registry.ts',
-      startLine: 22,
-      endLine: 48,
+      startLine: 12,
+      endLine: 47,
     },
     {
       label: 'Coordinate lookup and unregistered-type error',
@@ -147,15 +147,15 @@ coordinate: { type: 'bridge', archHeigth: 60 }
 
 Public exports:
 
-| Import from `@retikz/plot`           | Use                                                          |
-| ------------------------------------ | ------------------------------------------------------------ |
-| `defineCoordinate`                   | Builds a coordinate definition from schema, roles, resolve   |
-| `CoordinateDefinition`               | Full role and resolve runtime contract                       |
-| `CoordinateScaleBinding`             | Bidirectional mapping between roles and operation fields     |
-| `CoordinateDefinitionResolveContext` | Domain, scale, canvas, and guide resolution entry points     |
-| `createCoordinateFrame`              | Builds point, tangent, and optional Cell projection frame    |
-| `readCoordinateScaleNames`           | Reads named scales by canonical role through the Definition  |
-| `bindCoordinateScaleNames`           | Writes bindings and validates the coordinate operation again |
+| Import from `@retikz/plot`           | Use                                                                   |
+| ------------------------------------ | --------------------------------------------------------------------- |
+| `defineCoordinate`                   | Builds a coordinate definition from schema, roles, resolve            |
+| `CoordinateDefinition`               | Full role and resolve runtime contract                                |
+| `CoordinateScaleBinding`             | Bidirectional mapping between roles and operation fields              |
+| `CoordinateDefinitionResolveContext` | Domain, scale, canvas, and guide resolution entry points              |
+| `createCoordinateFrame`              | Builds point, tangent, and optional Cell projection frame             |
+| `readCoordinateScaleNames`           | Reads named scales by canonical role from an already parsed operation |
+| `bindCoordinateScaleNames`           | Writes bindings into an already precisely parsed operation            |
 
 Host injection:
 

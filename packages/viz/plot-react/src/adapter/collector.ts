@@ -1,6 +1,5 @@
 import type { ExternalRow } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
-import { JsonObjectSchema } from '@retikz/foundation';
 import type {
   CollectionContext,
   PlotAuthoringDeclarations,
@@ -43,7 +42,7 @@ const declarationKindOf = (element: ReactElement): PlotDeclarationKind | undefin
   return undefined;
 };
 
-/** 清理嵌套对象中的可选属性，保留数组位置及其它值交由 JSON 边界校验 */
+/** 清理已识别 marker 的嵌套可选属性并保留数组位置 */
 const omitOptionalProperties = (value: unknown): unknown => {
   if (Array.isArray(value)) return value.map(omitOptionalProperties);
   if (value === null || typeof value !== 'object') return value;
@@ -66,7 +65,8 @@ const plainPropsOf = (props: Record<string, unknown>, overrides: Record<string, 
     plain[key] = omitOptionalProperties(value);
   }
 
-  return JsonObjectSchema.parse(plain);
+  // 仅消费 declarationKindOf 已识别的 marker props；领域输入由对应组件类型约束
+  return plain as JsonObject;
 };
 
 const isRawIterable = (value: unknown): value is Iterable<unknown> =>

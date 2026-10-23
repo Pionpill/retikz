@@ -1,5 +1,4 @@
 import type { IRChild } from '@retikz/core';
-import { ScalarValueSchema } from '@retikz/data';
 
 import type {
   AnyCellFormatterDefinition,
@@ -58,9 +57,7 @@ const formatCell = (
     const definition = cellFormatterDefinitionOf(name, registry);
     const parsedOptions = deepFreeze(definition.optionsSchema.parse(plan.formatter.options ?? {}));
     const context = formatterContextOf(cell);
-    const value = ScalarValueSchema.parse(
-      definition.format({ value: parsedPayload.value, context }, parsedOptions as never),
-    );
+    const value = definition.format({ value: parsedPayload.value, context }, parsedOptions as never);
 
     return deepFreeze({
       kind: TableCellPayloadKind.Value,

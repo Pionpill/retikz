@@ -58,16 +58,6 @@ describe('provider registry contract', () => {
     expect(() => providerDefinitionOf(registry, 'gamma')).toThrow(/Unknown provider 'gamma'.*available: alpha, beta/s);
   });
 
-  it.each(['', ' ', '\u2003'])('rejects_blank_provider_keys_at_registration_time (%j)', key => {
-    expect(() =>
-      createProviderRegistry({
-        capability: 'mock provider',
-        builtins: new Map([[key, provider(key)]]),
-        keyOf: def => def.name,
-      }),
-    ).toThrowError('mock provider provider key must be a non-empty string.');
-  });
-
   it('defaults_omitted_collections_to_empty_registries', () => {
     const registry = createProviderRegistry<MockProvider>({ capability: 'mock provider', keyOf: def => def.name });
     expect(registry.size).toBe(0);

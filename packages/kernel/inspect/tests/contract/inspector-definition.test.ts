@@ -1,23 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { strictObject, string } from 'zod';
 
-import { defineInspector, RetikzInspectError, RetikzInspectErrorCode } from '../../src';
-
-const expectInspectNonEmptyError = (action: () => unknown, label: string): void => {
-  let caught: unknown;
-
-  try {
-    action();
-  } catch (error) {
-    caught = error;
-  }
-
-  expect(caught).toBeInstanceOf(RetikzInspectError);
-  expect(caught).toMatchObject({
-    code: RetikzInspectErrorCode.Contract,
-    message: `${label} must be a non-empty string.`,
-  });
-};
+import { defineInspector } from '../../src';
 
 describe('Inspector definition', () => {
   it('preserves the frozen independent owner and option contracts', () => {
@@ -34,43 +18,5 @@ describe('Inspector definition', () => {
 
     expect(definition).toMatchObject({ namespace: 'test', type: 'bounds' });
     expect(Object.isFrozen(definition)).toBe(true);
-  });
-
-  it.each([
-    ['namespace', ' '],
-    ['type', '\u2003'],
-  ] as const)('rejects a blank %s with the established error text', (field, value) => {
-    const label = `Inspector ${field}`;
-    expectInspectNonEmptyError(
-      () =>
-        defineInspector({
-          namespace: field === 'namespace' ? value : 'test',
-          type: field === 'type' ? value : 'bounds',
-          owner: { kind: 'path', name: 'stroke' },
-          optionsSchema: strictObject({}),
-          resolveOptions: options => options,
-          inspect: () => [],
-        }),
-      label,
-    );
-  });
-
-  it.each([
-    ['path name', 'Inspector owner name', { kind: 'path', name: '\ufeff' }],
-    ['composite namespace', 'Inspector owner namespace', { kind: 'composite', namespace: ' ', type: 'box' }],
-    ['composite type', 'Inspector owner type', { kind: 'composite', namespace: 'demo', type: '\u2003' }],
-  ] as const)('rejects a blank %s owner field', (_field, label, owner) => {
-    expectInspectNonEmptyError(
-      () =>
-        defineInspector({
-          namespace: 'test',
-          type: 'invalid-owner',
-          owner,
-          optionsSchema: strictObject({}),
-          resolveOptions: options => options,
-          inspect: () => [],
-        }),
-      label,
-    );
   });
 });

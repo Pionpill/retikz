@@ -1,15 +1,9 @@
 import type { IRScene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite, defineTheme } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { literal, strictObject, string, ZodError } from 'zod';
+import { literal, strictObject, string } from 'zod';
 
-import {
-  compileInspectionToScene,
-  createInspectorRegistry,
-  defineInspector,
-  RetikzInspectError,
-  RetikzInspectErrorCode,
-} from '../../src';
+import { compileInspectionToScene, createInspectorRegistry, defineInspector, RetikzInspectError } from '../../src';
 
 const key = { namespace: 'test', type: 'artifact' };
 
@@ -265,34 +259,6 @@ describe('Inspection compile driver', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(RetikzInspectError);
       expect((error as RetikzInspectError).details.origin).toMatchObject({ stage: 'fragment', outputIndex: 0 });
-    }
-  });
-
-  it('reports invalid callback data from the Core Child owner schema', () => {
-    const registry = createInspectorRegistry([
-      defineInspector({
-        ...key,
-        owner,
-        optionsSchema: strictObject({}),
-        resolveOptions: options => options,
-        inspect: () =>
-          ({
-            type: 'node',
-            position: [0, 0],
-            text: 'invalid',
-            extension: () => 'not JSON',
-          }) as unknown as { type: 'node'; position: [number, number]; text: string },
-      }),
-    ]);
-
-    try {
-      compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } });
-      throw new Error('expected compile to fail');
-    } catch (error) {
-      expect(error).toBeInstanceOf(RetikzInspectError);
-      expect((error as RetikzInspectError).code).toBe(RetikzInspectErrorCode.CompileFailed);
-      expect((error as RetikzInspectError).cause).toBeInstanceOf(ZodError);
-      expect((error as RetikzInspectError).details.origin).toMatchObject({ stage: 'output', outputIndex: 0 });
     }
   });
 

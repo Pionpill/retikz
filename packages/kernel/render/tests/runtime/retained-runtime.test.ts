@@ -261,15 +261,12 @@ describe('captureRuntimeConfig', () => {
           { registration: 0, handlers: {} },
         ],
       },
-      { cachePolicy: 'forever' },
       { animation: { snapshotAt: Number.NaN } },
       { canvas: { width: -1 } },
       { canvas: { height: Number.POSITIVE_INFINITY } },
-      { animation: new Date() },
-      { handlerContributions: [{ registration: 0, handlers: new Date() }] },
     ]) {
       try {
-        captureRuntimeConfig(input as unknown as RenderRuntimeConfigInput);
+        captureRuntimeConfig(input);
         throw new Error('expected invalid config to fail');
       } catch (error) {
         expect(error).toEqual(

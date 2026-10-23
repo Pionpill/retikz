@@ -173,19 +173,18 @@ type CoordinateScaleBindingDefinition = Readonly<{
 }>;
 
 /**
- * 按 Definition 契约读取 coordinate operation 的位置 scale 名称
+ * 按 Definition 契约读取已精确解析的 coordinate operation 的位置 scale 名称
  * @template TCoordinateOperation 坐标系 schema 解析的操作类型，关联尺度绑定与坐标解析
  */
 export const readCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoordinateOperation>(
   definition: CoordinateScaleBindingDefinition,
   operation: TCoordinateOperation,
 ): CoordinateScaleNames => {
-  const parsedOperation = definition.schema.parse(operation) as TCoordinateOperation;
-  const authoredScaleNames = definition.scaleBinding?.read(parsedOperation as never);
+  const authoredScaleNames = definition.scaleBinding?.read(operation as never);
   const scaleNames: Partial<Record<DimensionRole, string>> = {};
 
   for (const role of definition.roles) {
-    const scaleName = authoredScaleNames === undefined ? Reflect.get(parsedOperation, role) : authoredScaleNames[role];
+    const scaleName = authoredScaleNames === undefined ? Reflect.get(operation, role) : authoredScaleNames[role];
     if (typeof scaleName === 'string') scaleNames[role] = scaleName;
   }
 
@@ -194,7 +193,7 @@ export const readCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoor
 
 /**
  * 按 Definition 契约把位置 scale 名称写回 coordinate operation
- * @description 自定义 hook 与默认同名字段路径都必须再次通过 Definition schema，避免 Chart 组装出 Plot 无法消费的 operation
+ * @description 消费已精确解析的 operation；自定义 hook 与默认同名字段路径直接返回类型化绑定结果，不重复解析
  * @template TCoordinateOperation 坐标系 schema 解析的操作类型，关联尺度绑定与坐标解析
  */
 export const bindCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoordinateOperation>(
@@ -202,7 +201,6 @@ export const bindCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoor
   operation: TCoordinateOperation,
   scaleNames: CoordinateScaleNames,
 ): TCoordinateOperation => {
-  const parsedOperation = definition.schema.parse(operation) as TCoordinateOperation;
   const applicableScaleNames: Partial<Record<DimensionRole, string>> = {};
 
   for (const role of definition.roles) {
@@ -212,10 +210,10 @@ export const bindCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoor
 
   const candidate =
     definition.scaleBinding === undefined
-      ? { ...parsedOperation, ...applicableScaleNames }
-      : definition.scaleBinding.bind(parsedOperation as never, applicableScaleNames);
+      ? { ...operation, ...applicableScaleNames }
+      : definition.scaleBinding.bind(operation as never, applicableScaleNames);
 
-  return definition.schema.parse(candidate) as TCoordinateOperation;
+  return candidate as TCoordinateOperation;
 };
 
 /**

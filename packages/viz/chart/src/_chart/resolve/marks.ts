@@ -100,10 +100,9 @@ export const resolveChartMarks = (
 
   for (const [index, mark] of authoredMarks.entries()) {
     const kind = mark.kind;
-    if (typeof kind !== 'string' || kind.length === 0) {
-      throw invalidMark('Chart mark kind must be a non-empty string', ['recipe', 'marks', index, 'kind']);
+    if (typeof kind !== 'string') {
+      throw invalidMark('Chart mark kind must be a string', ['recipe', 'marks', index, 'kind']);
     }
-
     const binding = recipe.marks.find(candidate => candidate.definition.kind === kind);
     if (binding === undefined) {
       throw new RetikzChartError({

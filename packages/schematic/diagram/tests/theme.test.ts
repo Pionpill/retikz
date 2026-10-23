@@ -2,7 +2,7 @@ import type { ResolvedTheme } from '@retikz/core';
 import { DEFAULT_RESOLVED_THEME, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { DiagramThemeDefinition, IRDiagramDefaults } from '../src/_diagram';
+import type { DiagramThemeDefinition } from '../src/_diagram';
 import {
   defineDiagramTheme,
   DiagramDefaultsSchema,
@@ -45,7 +45,7 @@ describe('Diagram Theme Definition and registry', () => {
     expect(resolveDiagramDefinitionOptions().diagramThemeDefinitions.size).toBe(0);
   });
 
-  it('rejects duplicate and blank Definition names with Diagram-owned diagnostics', () => {
+  it('rejects duplicate Definition names with Diagram-owned diagnostics', () => {
     const first = defineDiagramTheme({
       name: 'brand',
       resolve: () => ({ presentation: { title: { style: { opacity: 1 } } } }),
@@ -55,13 +55,7 @@ describe('Diagram Theme Definition and registry', () => {
       resolve: () => ({ presentation: { description: { style: { opacity: 1 } } } }),
     });
 
-    for (const run of [
-      () => resolveDiagramThemeRegistry([first, second]),
-      () =>
-        resolveDiagramThemeRegistry([
-          { name: ' ', resolve: () => ({ presentation: { title: { style: { opacity: 1 } } } }) },
-        ]),
-    ]) {
+    for (const run of [() => resolveDiagramThemeRegistry([first, second])]) {
       try {
         run();
 
@@ -225,29 +219,5 @@ describe('Diagram Theme cascade', () => {
     expect(resolveDiagramTheme(themeWith({ name: 'empty' }), registryOf(definition))).toEqual(
       resolveDiagramTheme(themeWith({}), registryOf()),
     );
-  });
-
-  it.each([
-    [
-      'unknown output field',
-      () => {
-        const output: IRDiagramDefaults = { presentation: { title: { style: { opacity: 1 } } } };
-        Object.defineProperty(output, 'unknown', { value: true, enumerable: true });
-        return output;
-      },
-    ],
-  ])('rejects %s from a runtime Definition callback', (_name, resolve) => {
-    const definition = defineDiagramTheme({ name: 'invalid', resolve });
-
-    try {
-      resolveDiagramTheme(themeWith({ name: 'invalid' }), registryOf(definition));
-
-      expect.unreachable('Expected invalid Definition output');
-    } catch (error) {
-      if (!(error instanceof RetikzDiagramError)) throw error;
-
-      expect(error.code).toBe(RetikzDiagramErrorCode.DefinitionCallbackFailed);
-      expect(error.cause).toBeDefined();
-    }
   });
 });

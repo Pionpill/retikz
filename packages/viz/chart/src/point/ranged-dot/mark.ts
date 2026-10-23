@@ -1,6 +1,6 @@
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
-import { BuiltinPlotMark, RelationMarkSchema } from '@retikz/plot';
+import { BuiltinPlotMark } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
 import { defineChartMark } from '../../_chart/contract';
@@ -77,7 +77,7 @@ export const resolveRangedDotMark = (
   const style = rangeStyleOf(range);
   const path = rangePathOf(range);
 
-  return RelationMarkSchema.parse({
+  return {
     type: BuiltinPlotMark.Relation,
     encodings: {
       source: { position: { x: { field: start }, y: { field: category } } },
@@ -90,7 +90,7 @@ export const resolveRangedDotMark = (
       geometry: { kind: 'path', ...path },
       endpoints: { source, target },
     },
-  });
+  };
 };
 
 const mergedPropertiesOf = (context: ChartMarkResolveContext, source: IRRangedDotMark): IRRangedDotChartProperties => {

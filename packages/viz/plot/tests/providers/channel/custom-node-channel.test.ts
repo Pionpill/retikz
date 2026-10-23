@@ -306,19 +306,6 @@ describe('custom node channel registry', () => {
     ).toThrow(/duplicate custom channel/);
   });
 
-  it('empty_custom_channel_name_fails_loud', () => {
-    const bad = defineNodeChannel<number>({
-      channel: '',
-      output: { outputKind: 'number', range: [0, 1] },
-      resolve: () => undefined,
-      deliver: () => {},
-    });
-
-    expect(() => lowerPlot(scatterSpec(), { d: rows }, { ...opts([bad]), textMeasurer: measureLabel })).toThrow(
-      /non-empty channel name/,
-    );
-  });
-
   // 交互：自定义通道 + 内置 size 同图各自生效（size→radius、intensity→opacity）
   it('custom_channel_coexists_with_builtin_size', () => {
     const spec = PlotSchema.parse({

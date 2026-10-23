@@ -1,5 +1,3 @@
-import { assertNonEmptyString } from '@retikz/foundation';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 
 /**
@@ -29,7 +27,7 @@ export type ProviderRegistry<TDefinition> = ReadonlyMap<string, TDefinition>;
 /**
  * 按内置项、自定义项顺序创建新的能力注册表
  * @template TDefinition 注册项的完整类型，原样保留在返回的注册表中
- * @throws RetikzCoreError 注册键为空或重复时抛出；自定义项不能覆盖内置项
+ * @throws RetikzCoreError 注册键重复时抛出；自定义项不能覆盖内置项
  */
 export const createProviderRegistry = <TDefinition>({
   capability,
@@ -37,23 +35,10 @@ export const createProviderRegistry = <TDefinition>({
   custom = [],
   keyOf,
 }: CreateProviderRegistryOptions<TDefinition>): ProviderRegistry<TDefinition> => {
-  const registry = new Map<string, TDefinition>();
-  const assertProviderKey = (key: string): void => {
-    assertNonEmptyString(
-      key,
-      `${capability} provider key`,
-      () => new RetikzCoreError(RetikzCoreErrorCode.Provider, `${capability} provider key must be a non-empty string.`),
-    );
-  };
-
-  for (const [key, definition] of builtins) {
-    assertProviderKey(key);
-    registry.set(key, definition);
-  }
+  const registry = new Map(builtins);
 
   for (const definition of custom) {
     const key = keyOf(definition);
-    assertProviderKey(key);
     if (registry.has(key)) {
       throw new RetikzCoreError(RetikzCoreErrorCode.Provider, `duplicate ${capability} registration: "${key}"`);
     }

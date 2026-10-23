@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ZodType } from 'zod';
 import { literal, number, strictObject } from 'zod';
 
-import type { ClipShape, IRScene, SceneClipPath } from '../../src';
+import type { ClipShape, IRScene } from '../../src';
 import { compileToScene, defineClip } from '../../src';
 
 type TicketClip = {
@@ -26,23 +26,6 @@ const TicketClipShapeSchema: ZodType<TicketClipShape> = strictObject({
 });
 
 describe('Clip definition contract', () => {
-  it.each(['', ' ', '\u2003', '\ufeff'])('rejects a blank clip kind (%j)', kind => {
-    expect(() =>
-      defineClip({
-        kind,
-        schema: strictObject({ kind: literal(kind) }),
-        resolve: () => ({ kind }),
-        lower: (): SceneClipPath => ({
-          commands: [
-            { kind: 'move', to: [0, 0] },
-            { kind: 'line', to: [1, 1] },
-          ],
-          fillRule: 'nonzero',
-        }),
-      }),
-    ).toThrowError('clip provider key must be a non-empty string.');
-  });
-
   it('keeps spec parsing, typed resolve, and lower on one typed definition', () => {
     const definition = defineClip<TicketClip, TicketClipShape>({
       kind: 'ticket',

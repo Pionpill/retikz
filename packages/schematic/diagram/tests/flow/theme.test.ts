@@ -27,7 +27,7 @@ describe('Flow Theme Definition and registry', () => {
     expect(defineFlowTheme(definition)).toBe(definition);
   });
 
-  it('deduplicates the same identity and rejects blank or conflicting names', () => {
+  it('deduplicates the same identity and rejects conflicting names', () => {
     const brand = defineFlowTheme({
       name: 'brand',
       resolve: () => ({ entity: { style: { opacity: 0.8 } } }),
@@ -35,10 +35,7 @@ describe('Flow Theme Definition and registry', () => {
 
     expect([...resolveFlowThemeRegistry([brand, brand]).keys()]).toEqual(['brand']);
 
-    for (const run of [
-      () => resolveFlowThemeRegistry([{ name: ' ', resolve: () => ({}) }]),
-      () => resolveFlowThemeRegistry([brand, { ...brand }]),
-    ]) {
+    for (const run of [() => resolveFlowThemeRegistry([brand, { ...brand }])]) {
       expect(run).toThrowError(RetikzDiagramError);
     }
   });
@@ -79,8 +76,6 @@ describe('Flow Theme Definition and registry', () => {
         throw new Error('external callback failed');
       },
     ],
-    ['removed tokens wrapper', () => ({ entity: {}, tokens: {} })],
-    ['structural field', () => ({ entity: { style: { opacity: 1, shape: 'circle' } } })],
   ])('wraps invalid %s output with the Definition as cause', (_label, resolve) => {
     const source = parseTestFlowDiagram({
       namespace: 'diagram',

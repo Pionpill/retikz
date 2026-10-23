@@ -52,7 +52,6 @@ it('骨架与显式格输出相同，行列坐标身份独立于标号', () => {
     'cell:m-1-1',
   ]);
   expect(getMatrixCellId('m', 2, 3)).toBe('m-2-3');
-  expect(() => getMatrixCellId('', 0, 0)).toThrow();
 });
 it('共享轨道按最大需求确定，固定小格不拉伸，空内容仅保留padding', () => {
   const result = compile({

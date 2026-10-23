@@ -4,7 +4,6 @@ import { mergeGraphicStyle, mergeArrowDefaults, mergeNodeLabelDefaults } from '@
 import type { TableCellAppearanceTracePath, TableCellPlanSource } from '../../contract';
 import { TableCellAppearanceTracePathSchema } from '../../contract';
 import type { IRTableCellAppearance } from '../../schemas';
-import { TableCellAppearanceSchema, TableCellContentStyleSchema } from '../../schemas';
 import { deepFreeze } from '../../shared';
 import type { TableCellAppearanceTrace } from './types';
 
@@ -178,7 +177,7 @@ export const cascadeTableCellAppearance = (
       content.defaults = defaults;
     }
 
-    next.content = TableCellContentStyleSchema.parse(content);
+    next.content = content;
   }
 
   if (patch.borders !== undefined) {
@@ -191,5 +190,5 @@ export const cascadeTableCellAppearance = (
     next.borders = borders;
   }
 
-  return deepFreeze({ appearance: TableCellAppearanceSchema.parse(next), trace });
+  return deepFreeze({ appearance: next, trace });
 };

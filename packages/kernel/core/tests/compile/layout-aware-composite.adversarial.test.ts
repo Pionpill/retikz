@@ -445,7 +445,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(/test\.invalidNestedProposal.*proposal.*finite and non-negative/i);
   });
 
-  it('keeps hostile proposal reflection fatal when a parent discards the nested probe', () => {
+  it('keeps hostile proposal access fatal when a parent discards the nested probe', () => {
     const nested = defineComposite({
       namespace: 'test',
       type: 'hostileNestedProposal',
@@ -455,8 +455,8 @@ describe('layout-aware composite constraints and bounds', () => {
       }),
       compile: (_, context) => {
         const hostileProposal = new Proxy(NaturalLayoutProposal, {
-          ownKeys: () => {
-            throw new Error('hostile proposal keys');
+          get: () => {
+            throw new Error('hostile proposal access');
           },
         });
         context.layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, hostileProposal);
@@ -542,90 +542,6 @@ describe('layout-aware composite constraints and bounds', () => {
       }),
     ).not.toThrow();
     expect([...reads.values()]).toEqual([...reads.values()].map(() => 1));
-  });
-
-  it.each([
-    {
-      x: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
-    },
-    {
-      x: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
-      y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
-      z: { kind: LayoutAxisProposalKind.Exact, value: 10 },
-    },
-    {
-      x: { kind: LayoutAxisProposalKind.Exact, value: 10, min: 0 },
-      y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
-    },
-    {
-      x: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural, max: 10 },
-      y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
-    },
-  ])('rejects missing axes and unsupported proposal fields in %o', proposal => {
-    const definition = defineComposite({
-      namespace: 'test',
-      type: 'unsupportedConstraintField',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('unsupportedConstraintField'),
-      }),
-      compile: (_, { layoutChild }) => {
-        layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, proposal as never);
-        return { children: [] };
-      },
-    });
-
-    expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'unsupportedConstraintField' }), { composites: [definition] }),
-    ).toThrow(/test\.unsupportedConstraintField.*children\[0\].*proposal/i);
-  });
-
-  it('rejects unknown layout proposal kinds', () => {
-    const definition = defineComposite({
-      namespace: 'test',
-      type: 'unknownConstraintKind',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('unknownConstraintKind'),
-      }),
-      compile: (_, { layoutChild }) => {
-        layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, {
-          x: { kind: 'mystery', value: 10 },
-          y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
-        } as never);
-        return { children: [] };
-      },
-    });
-
-    expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'unknownConstraintKind' }), {
-        composites: [definition],
-      }),
-    ).toThrow(/test\.unknownConstraintKind.*children\[0\].*proposal.*mystery/i);
-  });
-
-  it('rejects unknown intrinsic proposal modes', () => {
-    const definition = defineComposite({
-      namespace: 'test',
-      type: 'unknownIntrinsicMode',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('unknownIntrinsicMode'),
-      }),
-      compile: (_, { layoutChild }) => {
-        layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, {
-          x: { kind: LayoutAxisProposalKind.Intrinsic, mode: 'preferred' },
-          y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
-        } as never);
-        return { children: [] };
-      },
-    });
-
-    expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'unknownIntrinsicMode' }), {
-        composites: [definition],
-      }),
-    ).toThrow(/test\.unknownIntrinsicMode.*children\[0\].*proposal.*preferred/i);
   });
 
   it('preserves explicit zero and canonicalizes negative zero before child dispatch and slot resolution', () => {
@@ -2245,8 +2161,9 @@ describe('layout-aware composite constraints and bounds', () => {
     };
 
     for (const variant of ['shape', 'arrow', 'pattern', 'clip', 'pathGenerator'] as const) {
-      expect(() =>
-        compileToScene(sceneOf({ namespace: 'test', type: 'malformedProviderParent', variant }), options),
+      expect(
+        () => compileToScene(sceneOf({ namespace: 'test', type: 'malformedProviderParent', variant }), options),
+        variant,
       ).toThrow(/emit|primitive|invalid|root shape|path command|output validation|subpath/i);
     }
   });
@@ -2856,7 +2773,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(xReads).toBe(1);
   });
 
-  it('omits an allowed explicit undefined Scene field only after exact-key and metadata validation', () => {
+  it('omits an optional undefined Scene field while detaching the primitive', () => {
     const shapeOf = (name: string, primitive: ScenePrimitive) =>
       defineShape({
         name,
@@ -2874,25 +2791,6 @@ describe('layout-aware composite constraints and bounds', () => {
       height: 10,
       cornerRadius: undefined,
     });
-    const invalidShapes = [
-      shapeOf('unsupportedUndefinedSceneShape', {
-        type: 'rect',
-        x: 0,
-        y: 0,
-        width: 10,
-        height: 10,
-        unsupported: undefined,
-      } as unknown as ScenePrimitive),
-      shapeOf('metadataUndefinedSceneShape', {
-        type: 'rect',
-        x: 0,
-        y: 0,
-        width: 10,
-        height: 10,
-        meta: { bad: undefined },
-      } as unknown as ScenePrimitive),
-    ];
-
     const result = compileToScene(
       sceneOf({ type: 'node', position: [0, 0], shape: { type: 'optionalUndefinedSceneShape', params: {} } }),
       { shapes: [validShape] },
@@ -2902,14 +2800,6 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(rect).toBeDefined();
     expect(Object.hasOwn(rect as object, 'cornerRadius')).toBe(false);
     expect(Object.isFrozen(rect)).toBe(false);
-
-    for (const shape of invalidShapes) {
-      expect(() =>
-        compileToScene(sceneOf({ type: 'node', position: [0, 0], shape: { type: shape.name, params: {} } }), {
-          shapes: [shape],
-        }),
-      ).toThrow(RetikzCoreError);
-    }
   });
 
   it('rejects explicit undefined and sparse Scene or Marker arrays before primitive validation', () => {

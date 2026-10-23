@@ -17,7 +17,6 @@ import {
   defineCellVisualScale,
   defineTableStructure,
   defineTableTheme,
-  RetikzTableError,
   TABLE_NAMESPACE,
   TableComposite,
   TableRowKind,
@@ -112,13 +111,6 @@ describe('Table runtime contribution', () => {
     expect(provider?.dependencies).toEqual([]);
     expect(provider?.datasets.sales).toBe(rows);
     expect(Object.keys(provider?.datasets ?? {})).toEqual(['sales', '@@retikz/table/runtime/panel%2Fa%20b']);
-  });
-
-  it.each(['', '  ', '\u2003', '\ufeff'])('rejects blank references with the Table prefix (%j)', reference => {
-    expect(() => createTableRuntimeContribution({ reference })).toThrowError(RetikzTableError);
-    expect(() => createTableRuntimeContribution({ reference })).toThrowError(
-      'table runtime contribution reference must be a non-empty string.',
-    );
   });
 
   it('rejects collisions with the reserved runtime dataset key', () => {

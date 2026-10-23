@@ -497,40 +497,6 @@ describe('Graph Scope and Theme compile semantics', () => {
     );
   });
 
-  it('rejects an unknown Graph style field even when its value is undefined', () => {
-    const style = { color: '#ffffff', unknown: undefined };
-    const definition = {
-      name: 'unknown-undefined-style-field',
-      resolve: () => ({ defaults: { entity: { style } } }),
-    };
-
-    expect(() =>
-      Graph.resolveGraphTheme(themeWithName(definition.name), new Map([[definition.name, definition]])),
-    ).toThrowError(
-      expect.objectContaining({
-        code: Graph.RetikzGraphErrorCode.DefinitionCallbackFailed,
-        details: { capability: 'graph-theme', key: definition.name },
-      }),
-    );
-  });
-
-  it('rejects an unknown Group shell field even when its value is undefined', () => {
-    const defaults = { cornerRadius: 0, unknown: undefined };
-    const definition = {
-      name: 'unknown-undefined-group-field',
-      resolve: () => ({ defaults: { group: defaults } }),
-    };
-
-    expect(() =>
-      Graph.resolveGraphTheme(themeWithName(definition.name), new Map([[definition.name, definition]])),
-    ).toThrowError(
-      expect.objectContaining({
-        code: Graph.RetikzGraphErrorCode.DefinitionCallbackFailed,
-        details: { capability: 'graph-theme', key: definition.name },
-      }),
-    );
-  });
-
   it('keeps the unregistered Graph Theme diagnostic unchanged', () => {
     try {
       Graph.resolveGraphTheme(themeWithName('missing-style'), new Map());

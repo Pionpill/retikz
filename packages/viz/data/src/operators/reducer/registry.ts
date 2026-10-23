@@ -114,12 +114,11 @@ export const reducerOutputDescriptors = (
   return definition.outputs(parseReducerOperation(definition, operation));
 };
 
-/** 对一组 rows 执行 reducer operation，并允许 context 注入自定义 reducer registry */
-export const applyReducerOperation = (
-  rows: Array<ExternalRow>,
+/** 精确解析 reducer operation，返回本次请求内可供多个分组复用的计算入口 */
+export const resolveReducerComputation = (
   operation: IRDataReducerOperation,
   context: TransformContext,
-): ExternalRow => {
+): ((rows: Array<ExternalRow>) => ExternalRow) => {
   const registry = context.statisticsReducerRegistry ?? resolveStatisticsReducerRegistry();
   const definition = reducerDefinitionOf(operation, registry);
   const parsed = parseReducerOperation(definition, operation);
@@ -130,21 +129,30 @@ export const applyReducerOperation = (
   if (implementation === undefined)
     throw new RetikzDataError(`data: reducer "${operation.kind}" has no local implementation`);
 
-  let out: ExternalRow;
+  return rows => {
+    let out: ExternalRow;
 
-  try {
-    out = implementation.reduce(rows, parsed, context);
-  } catch (cause) {
-    throw new RetikzDataError(`data: reducer "${operation.kind}" failed`, { cause });
-  }
+    try {
+      out = implementation.reduce(rows, parsed, context);
+    } catch (cause) {
+      throw new RetikzDataError(`data: reducer "${operation.kind}" failed`, { cause });
+    }
 
-  const outputFields = definition.outputs(parsed).map(descriptor => descriptor.field);
-  context.lineage?.recordReducerOperation({
-    operation,
-    rows,
-    inputFields: definition.inputFields?.(parsed) ?? [],
-    outputFields,
-  });
+    const outputFields = definition.outputs(parsed).map(descriptor => descriptor.field);
+    context.lineage?.recordReducerOperation({
+      operation,
+      rows,
+      inputFields: definition.inputFields?.(parsed) ?? [],
+      outputFields,
+    });
 
-  return out;
+    return out;
+  };
 };
+
+/** 独立调用时解析参数后执行一次计算 */
+export const applyReducerOperation = (
+  rows: Array<ExternalRow>,
+  operation: IRDataReducerOperation,
+  context: TransformContext,
+): ExternalRow => resolveReducerComputation(operation, context)(rows);

@@ -106,8 +106,8 @@ const spec = {
     {
       label: '内置与自定义坐标系合并到统一注册表',
       path: 'packages/viz/plot/src/providers/coordinate/registry.ts',
-      startLine: 22,
-      endLine: 48,
+      startLine: 12,
+      endLine: 47,
     },
     {
       label: '坐标系 lookup 与未注册错误',
@@ -154,8 +154,8 @@ coordinate: { type: 'bridge', archHeigth: 60 }
 | `CoordinateScaleBinding`             | 声明 role 与 operation 比例尺字段之间的双向映射        |
 | `CoordinateDefinitionResolveContext` | 查询数据域、scale、画布和 guide 解析入口               |
 | `createCoordinateFrame`              | 构造统一的点、切向与可选 Cell 投影 frame               |
-| `readCoordinateScaleNames`           | 按 Definition 读取统一 role 的命名比例尺               |
-| `bindCoordinateScaleNames`           | 按 Definition 写回并重新校验 coordinate operation      |
+| `readCoordinateScaleNames`           | 从已精确解析的 operation 读取统一 role 的命名比例尺    |
+| `bindCoordinateScaleNames`           | 向已精确解析的 coordinate operation 写回比例尺绑定     |
 
 宿主注入：
 

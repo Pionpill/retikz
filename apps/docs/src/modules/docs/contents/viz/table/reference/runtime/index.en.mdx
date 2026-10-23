@@ -109,7 +109,7 @@ Standalone `theme` writes the root Core Scene Theme. An embedded Table does not 
       label: 'Runtime contribution merge and frozen copied containers',
       path: 'packages/viz/table/src/pipeline/contribution/contribution.ts',
       startLine: 18,
-      endLine: 70,
+      endLine: 64,
     },
   ]}
 />
@@ -194,7 +194,7 @@ const riskScale = defineCellVisualScale({
 | `domain` / `range` | JSON-safe domain and color sequence produced by the same resolution                    |
 | `edges?`           | Strictly increasing thresholds for a `swatch` descriptor                               |
 
-Table validates the JSON shape of options / domain, Core CSS colors from range / evaluator, form-array relationships, and deterministic repeated evaluation. It also copies and freezes descriptor data. Finite runtime checks cannot prove that an arbitrary evaluator matches every descriptor value, so a custom Definition author must keep `of()` semantically aligned with `legendForm`, `domain`, `range`, and `edges`.
+Table parses options through the Definition’s precise schema, then checks form-array relationships, finite ordered thresholds, and deterministic repeated evaluation. Descriptor data is copied and frozen. Authors ensure that domain, range, and evaluator results satisfy their types; scalar and color schemas are not rerun for each value. Authors must also keep `of()` consistent with the descriptor.
 
 The built-ins are `ordinal-color`, `sequential-color`, and `threshold-color`. An encoding produces a descriptor seed only when it explicitly authors `legend: { ... }` and the resolution is nonempty. Alpha.3 closes at that seed; automatic Standard Legend rendering, `legendLayout`, and the final Legend-artifact join are planned for Table alpha.6.
 
@@ -209,8 +209,8 @@ The built-ins are `ordinal-color`, `sequential-color`, and `threshold-color`. An
     {
       label: 'Runtime guards for options, resolution, and evaluator output',
       path: 'packages/viz/table/src/providers/encoding/resolve.ts',
-      startLine: 37,
-      endLine: 125,
+      startLine: 12,
+      endLine: 92,
     },
   ]}
 />

@@ -2,9 +2,8 @@ import { mergeGraphicStyle } from '@retikz/core';
 import type { ResolvedTheme } from '@retikz/core';
 import type { JsonObject, JsonValue } from '@retikz/foundation';
 import { mergeProperties } from '@retikz/foundation';
-import { array, strictObject } from 'zod';
 
-import type { CodeBlockTokens, GraphThemeDefinition, GraphThemeSource, GraphThemeResolution } from '../../contract';
+import type { CodeBlockTokens, GraphThemeDefinition, GraphThemeResolution } from '../../contract';
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import { getDefaultGraphThemePreset } from '../../providers';
 import type {
@@ -19,7 +18,6 @@ import type {
   IRGraphRule,
   IRGraphSurfaceDefaults,
 } from '../../schemas';
-import { GraphDefaultsSchema, GraphRuleSchema } from '../../schemas';
 import type { GraphAuthorLayer } from './types';
 
 /** 按字段覆盖一个已选定的命名组，空组不物化 */
@@ -126,13 +124,6 @@ const mergeRules = (defaults: ReadonlyArray<IRGraphRule>, overrides: ReadonlyArr
   ...defaults,
   ...(overrides ?? []),
 ];
-
-const GraphThemeSourceSchema = strictObject({
-  defaults: GraphDefaultsSchema.optional(),
-  rules: array(GraphRuleSchema).optional(),
-});
-
-const parseGraphThemeSource = (source: GraphThemeSource): GraphThemeSource => GraphThemeSourceSchema.parse(source);
 
 const jsonEqual = (left: JsonValue, right: JsonValue): boolean => {
   if (Array.isArray(left) || Array.isArray(right)) {
@@ -272,7 +263,7 @@ export const resolveGraphTheme = (
 
   try {
     const { codeBlockTokens, ...fragments } = definition.resolve(theme);
-    const source = parseGraphThemeSource(fragments);
+    const source = structuredClone(fragments);
 
     return {
       defaults: mergeGraphDefaults(baseline.defaults, source.defaults) ?? baseline.defaults,

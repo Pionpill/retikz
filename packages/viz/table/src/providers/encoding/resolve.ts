@@ -1,7 +1,4 @@
-import { CssColorSchema } from '@retikz/core';
 import type { IRDataScalarValue } from '@retikz/data';
-import { ScalarValueSchema } from '@retikz/data';
-import { array, enum as zodEnum, number } from 'zod';
 
 import type {
   AnyCellVisualScaleDefinition,
@@ -12,16 +9,6 @@ import { RetikzTableError } from '../../error';
 import type { IRTableVisualScaleRef } from '../../schemas';
 import { deepFreeze } from '../../shared';
 import { cellVisualScaleDefinitionOf } from './registry';
-
-const EdgesSchema = array(number()).superRefine((edges, context) => {
-  edges.forEach((edge, index) => {
-    if (index > 0 && edge <= edges[index - 1]) {
-      context.addIssue({ code: 'custom', path: [index], message: 'edges must be strictly increasing' });
-    }
-  });
-});
-
-const LegendFormSchema = zodEnum(['ramp', 'swatch']);
 
 /** package-private visual scale 消费输入 */
 export type ResolveCellVisualScaleInput = Readonly<{
@@ -37,29 +24,17 @@ export type ResolveCellVisualScaleInput = Readonly<{
 
 /** 收窄自定义 definition 返回的 resolution，并包装自然调用的 evaluator 输出 */
 const guardResolution = (name: string, resolution: CellVisualScaleResolution): CellVisualScaleResolution => {
-  const domain = resolution.domain.map((value, index) => {
-    const result = ScalarValueSchema.safeParse(value);
-    if (!result.success)
-      throw new RetikzTableError(`table: visual scale "${name}" domain ${index} must be a JSON scalar`);
-
-    return result.data;
-  });
-  const range = resolution.range.map((color, index) => {
-    const result = CssColorSchema.safeParse(color);
-    if (!result.success)
-      throw new RetikzTableError(`table: visual scale "${name}" range ${index} must be a valid color string`);
-
-    return result.data;
-  });
+  const domain = [...resolution.domain];
+  const range = [...resolution.range];
   if (range.length === 0) throw new RetikzTableError(`table: visual scale "${name}" range must be non-empty`);
 
-  const edges = resolution.edges === undefined ? undefined : EdgesSchema.parse([...resolution.edges]);
-  const legendForm = LegendFormSchema.safeParse(resolution.legendForm);
-  if (!legendForm.success) {
-    throw new RetikzTableError(`table: visual scale "${name}" legendForm must be ramp or swatch`);
+  const edges = resolution.edges === undefined ? undefined : [...resolution.edges];
+  if (edges?.some((edge, index) => !Number.isFinite(edge) || (index > 0 && edge <= edges[index - 1]))) {
+    throw new RetikzTableError(`table: visual scale "${name}" edges must be finite and strictly increasing`);
   }
+  const legendForm = resolution.legendForm;
 
-  if (legendForm.data === 'ramp') {
+  if (legendForm === 'ramp') {
     if (domain.length !== 2 || range.length !== 2 || edges !== undefined) {
       throw new RetikzTableError(
         `table: visual scale "${name}" ramp requires two domain and range endpoints without edges`,
@@ -78,22 +53,10 @@ const guardResolution = (name: string, resolution: CellVisualScaleResolution): C
   }
 
   const evaluator = resolution.of;
-  if (typeof evaluator !== 'function') {
-    throw new RetikzTableError(`table: visual scale "${name}" evaluator must be a function`);
-  }
-
   const observed = new Map<IRDataScalarValue, string | undefined>();
 
   const guardedOf = (value: IRDataScalarValue): string | undefined => {
-    const output = evaluator(value);
-    const guarded = output === undefined ? undefined : CssColorSchema.safeParse(output);
-    if (guarded !== undefined && !guarded.success) {
-      throw new RetikzTableError(
-        `table: visual scale "${name}" evaluator output must be a valid color string or undefined`,
-      );
-    }
-
-    const color = guarded === undefined ? undefined : guarded.data;
+    const color = evaluator(value);
     if (observed.has(value) && observed.get(value) !== color) {
       throw new RetikzTableError(
         `table: visual scale "${name}" evaluator must be deterministic for repeated scalar values`,
@@ -107,7 +70,7 @@ const guardResolution = (name: string, resolution: CellVisualScaleResolution): C
 
   return deepFreeze({
     of: guardedOf,
-    legendForm: legendForm.data,
+    legendForm,
     domain,
     range,
     ...(edges === undefined ? {} : { edges }),

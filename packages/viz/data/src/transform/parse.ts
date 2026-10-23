@@ -92,14 +92,17 @@ export const resolveParsedDataTransforms = (
   options: DataTransformResolveOptions = {},
 ): DataTransformResolution => {
   let model = inputModel;
+  const registries = {
+    statisticsReducerRegistry: options.statisticsReducerRegistry ?? resolveStatisticsReducerRegistry(),
+    rowSelectorRegistry: options.rowSelectorRegistry ?? resolveRowSelectorRegistry(),
+    regressionRegistry: options.regressionRegistry ?? resolveRegressionRegistry(),
+  };
   const stages = declarations.map(({ definition, declaration }, operationIndex) => {
     try {
       const operation = declaration.operation;
       const context: TransformSemanticContext = {
         model,
-        statisticsReducerRegistry: options.statisticsReducerRegistry ?? resolveStatisticsReducerRegistry(),
-        rowSelectorRegistry: options.rowSelectorRegistry ?? resolveRowSelectorRegistry(),
-        regressionRegistry: options.regressionRegistry ?? resolveRegressionRegistry(),
+        ...registries,
       };
 
       for (const field of definition.inputFields?.(operation as never, context) ?? []) {

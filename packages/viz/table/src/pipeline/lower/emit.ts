@@ -1,8 +1,6 @@
-import type { IRNode, IRPath } from '@retikz/core';
-import { PaintValueSchema } from '@retikz/core';
+import type { IRNode, IRPath, IRPaintValue } from '@retikz/core';
 import type { BoundsRect } from '@retikz/math';
 
-import { TableBorderPathMetaSchema } from '../../contract';
 import type { IRTableCellBackground } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 import type { TableBorderEdge } from '../layout';
@@ -52,7 +50,7 @@ export const emitTableCellBackground = (
     ],
     style: {
       color: masterColor,
-      fill: PaintValueSchema.parse(background.fill),
+      fill: structuredClone(background.fill) as IRPaintValue,
       stroke: 'none',
       opacity: { fill: background.fillOpacity ?? 1, stroke: 0 },
     },
@@ -63,7 +61,7 @@ export const emitTableCellBackground = (
 export const emitTableBorderPath = (edge: TableBorderEdge, tableId?: string): IRPath => ({
   type: 'path',
   ...(tableId === undefined ? {} : { id: `${tableId}/border/${edge.key}` }),
-  meta: TableBorderPathMetaSchema.parse(tableBorderPathMetaOf(edge, tableId)),
+  meta: tableBorderPathMetaOf(edge, tableId),
   children: [
     { type: 'step', kind: 'move', to: [edge.start.x, edge.start.y] },
     { type: 'step', kind: 'line', to: [edge.end.x, edge.end.y] },
@@ -71,7 +69,7 @@ export const emitTableBorderPath = (edge: TableBorderEdge, tableId?: string): IR
   style: {
     fill: 'none',
     color: edge.style.color,
-    stroke: PaintValueSchema.parse(edge.style.stroke),
+    stroke: structuredClone(edge.style.stroke) as IRPaintValue,
     strokeWidth: edge.style.width,
     ...(edge.style.dashPattern === undefined ? {} : { dashPattern: [...edge.style.dashPattern] }),
     dashOffset: edge.style.dashOffset,

@@ -576,17 +576,9 @@ const validateRoute = (
 const normalizeAndValidateOutput = (
   definition: FlowLayoutDefinition,
   input: FlowLayoutInput,
-  value: unknown,
+  value: FlowLayoutOutput,
   context: FlowLayoutExecutionContext,
 ): FlowLayoutOutput => {
-  if (!isPlainRecord(value) || !hasExactKeys(value, ['elements', 'relations'])) {
-    return invalidOutput(definition, [], 'expected a closed output record.');
-  }
-
-  if (!Array.isArray(value.elements) || !Array.isArray(value.relations)) {
-    return invalidOutput(definition, [], 'elements and relations must be arrays.');
-  }
-
   const inputElements = flattenElements(input.elements);
   if (value.elements.length !== inputElements.length) {
     invalidOutput(definition, ['elements'], 'element coverage must exactly match input order.');
@@ -594,10 +586,6 @@ const normalizeAndValidateOutput = (
 
   const elements = value.elements.map((elementValue, index) => {
     const path = ['elements', index] as const;
-    if (!isPlainRecord(elementValue) || !hasExactKeys(elementValue, ['id', 'bounds'])) {
-      return invalidOutput(definition, path, 'expected a closed element output record.');
-    }
-
     const expected = inputElements[index];
     if (elementValue.id !== expected.id) {
       return invalidOutput(definition, [...path, 'id'], 'element ids and order must exactly match input.', [
@@ -616,10 +604,6 @@ const normalizeAndValidateOutput = (
 
   const relations = value.relations.map((relationValue, index) => {
     const path = ['relations', index] as const;
-    if (!isPlainRecord(relationValue) || !hasExactKeys(relationValue, ['source', 'target', 'route'], ['labelBounds'])) {
-      return invalidOutput(definition, path, 'expected a closed relation output record.');
-    }
-
     const expected = input.relations[index];
 
     const parseEndpoint = (end: 'source' | 'target'): FlowEndpointTarget => {
@@ -817,7 +801,7 @@ export const executeFlowLayout = (
     },
   });
 
-  let callbackOutput: unknown;
+  let callbackOutput: FlowLayoutOutput;
 
   try {
     callbackOutput = definition.layout(inputSnapshot, executionContext);
@@ -834,16 +818,7 @@ export const executeFlowLayout = (
     return callbackFailed(definition, 'layout callback threw.', cause);
   }
 
-  if (
-    callbackOutput !== null &&
-    (typeof callbackOutput === 'object' || typeof callbackOutput === 'function') &&
-    'then' in callbackOutput &&
-    typeof callbackOutput.then === 'function'
-  ) {
-    return callbackFailed(definition, 'layout callback must return synchronously.');
-  }
-
-  let detachedOutput: unknown;
+  let detachedOutput: FlowLayoutOutput;
 
   try {
     detachedOutput = cloneAndFreezeJson(callbackOutput, `Flow Layout Definition '${definition.name}' output`);

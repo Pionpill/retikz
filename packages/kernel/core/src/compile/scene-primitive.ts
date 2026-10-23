@@ -35,7 +35,7 @@ export const failProviderOutput = (owner: string, detail: string): never => {
 };
 
 /**
- * 物化 provider plain JSON 输出，并保留对象 undefined 字段供完整契约校验
+ * 物化 provider plain JSON 输出，同时省略对象的可选 undefined 字段
  * @template T 校验并复制为 JSON 快照的提供者输出类型
  */
 export const snapshotProviderOutputJson = <T>(owner: string, value: T, path: string): T => {
@@ -123,7 +123,7 @@ export const snapshotProviderOutputJson = <T>(owner: string, value: T, path: str
 
       for (const key of stringKeys) {
         const descriptor = readDataDescriptor(objectInput, key, currentPath);
-        output[key] = descriptor.value === undefined ? undefined : snapshot(descriptor.value, `${currentPath}.${key}`);
+        if (descriptor.value !== undefined) output[key] = snapshot(descriptor.value, `${currentPath}.${key}`);
       }
 
       return output;
@@ -133,30 +133,6 @@ export const snapshotProviderOutputJson = <T>(owner: string, value: T, path: str
   };
 
   return snapshot(value, path) as T;
-};
-
-/**
- * 从已验证且归 Core 所有的 provider snapshot 递归省略对象 undefined 字段
- * @template T 原地移除 undefined 属性并原样返回的对象类型
- */
-export const omitProviderOutputUndefined = <T>(value: T): T => {
-  if (value === null || typeof value !== 'object') return value;
-  if (Array.isArray(value)) {
-    value.forEach(omitProviderOutputUndefined);
-    return value;
-  }
-
-  const record = value as Record<string, unknown>;
-
-  for (const key of Object.keys(record)) {
-    if (record[key] === undefined) {
-      delete record[key];
-    } else {
-      omitProviderOutputUndefined(record[key]);
-    }
-  }
-
-  return value;
 };
 
 /** 读取对象的全部自有字符串键，并拒绝 symbol、隐藏字段与 accessor */
@@ -435,40 +411,10 @@ const visitScenePrimitive = (
   path: string,
   context: SceneValidationContext,
 ): void => {
-  const value = providerOutputRecord(owner, primitive, path);
-  const commonFields = ['type', 'id', 'meta', 'animations', 'hitTest'];
-
-  // 对公开输出保留 JSON 图完整性检查，不重新解析已类型化的字段结构
-  if (value.meta !== undefined) assertProviderOutputJsonValue(owner, value.meta, `${path}.meta`);
-  if (value.animations !== undefined) assertProviderOutputJsonValue(owner, value.animations, `${path}.animations`);
+  const value = primitive as Record<string, unknown>;
 
   switch (value.type) {
     case 'rect':
-      assertProviderOutputKeys(
-        owner,
-        value,
-        [
-          ...commonFields,
-          'x',
-          'y',
-          'width',
-          'height',
-          'fill',
-          'fillOpacity',
-          'stroke',
-          'strokeOpacity',
-          'strokeWidth',
-          'dashPattern',
-          'dashOffset',
-          'strokeLinecap',
-          'strokeLinejoin',
-          'cornerRadius',
-          'opacity',
-          'shadow',
-          'blendMode',
-        ],
-        path,
-      );
       assertProviderOutputFinite(owner, value.x, `${path}.x`);
       assertProviderOutputFinite(owner, value.y, `${path}.y`);
       assertProviderOutputFinite(owner, value.width, `${path}.width`, true);
@@ -478,31 +424,6 @@ const visitScenePrimitive = (
 
       return;
     case 'ellipse':
-      assertProviderOutputKeys(
-        owner,
-        value,
-        [
-          ...commonFields,
-          'cx',
-          'cy',
-          'rx',
-          'ry',
-          'rotate',
-          'fill',
-          'fillOpacity',
-          'stroke',
-          'strokeOpacity',
-          'strokeWidth',
-          'dashPattern',
-          'dashOffset',
-          'strokeLinecap',
-          'strokeLinejoin',
-          'opacity',
-          'shadow',
-          'blendMode',
-        ],
-        path,
-      );
       assertProviderOutputFinite(owner, value.cx, `${path}.cx`);
       assertProviderOutputFinite(owner, value.cy, `${path}.cy`);
       assertProviderOutputFinite(owner, value.rx, `${path}.rx`, true);
@@ -512,50 +433,20 @@ const visitScenePrimitive = (
 
       return;
     case 'path': {
-      assertProviderOutputKeys(
-        owner,
-        value,
-        [
-          ...commonFields,
-          'commands',
-          'fill',
-          'fillOpacity',
-          'fillRule',
-          'stroke',
-          'strokeOpacity',
-          'strokeWidth',
-          'dashPattern',
-          'dashOffset',
-          'strokeLinecap',
-          'strokeLinejoin',
-          'arrowStart',
-          'arrowEnd',
-          'opacity',
-          'shadow',
-          'blendMode',
-        ],
-        path,
-      );
       assertProviderOutputPathEnums(owner, value, path);
 
       for (const field of ['arrowStart', 'arrowEnd'] as const) {
         if (value[field] === undefined) continue;
 
-        const arrow = providerOutputRecord(owner, value[field], `${path}.${field}`);
-        assertProviderOutputKeys(
-          owner,
-          arrow,
-          ['shape', 'baseSize', 'refX', 'markerWidth', 'markerHeight', 'opacity', 'marker'],
-          `${path}.${field}`,
-        );
+        const arrow = value[field] as Record<string, unknown>;
         if (typeof arrow.shape !== 'string') failProviderOutput(owner, `an invalid ${path}.${field}.shape`);
         assertProviderOutputFinite(owner, arrow.baseSize, `${path}.${field}.baseSize`, true);
         assertProviderOutputFinite(owner, arrow.refX, `${path}.${field}.refX`);
         assertProviderOutputFinite(owner, arrow.markerWidth, `${path}.${field}.markerWidth`, true);
         assertProviderOutputFinite(owner, arrow.markerHeight, `${path}.${field}.markerHeight`, true);
         assertProviderOutputUnitInterval(owner, arrow, 'opacity', `${path}.${field}`);
-        const marker = providerOutputArray(owner, arrow.marker, `${path}.${field}.marker`);
-        providerOutputArray(owner, marker, `${path}.${field}.marker`).forEach((child, index) =>
+        const marker = arrow.marker as Array<unknown>;
+        marker.forEach((child, index) =>
           visitScenePrimitive(owner, child, `${path}.${field}.marker[${index}]`, context),
         );
       }
@@ -565,28 +456,6 @@ const visitScenePrimitive = (
       return;
     }
     case 'text': {
-      assertProviderOutputKeys(
-        owner,
-        value,
-        [
-          ...commonFields,
-          'x',
-          'y',
-          'lines',
-          'fontSize',
-          'fontFamily',
-          'fontWeight',
-          'fontStyle',
-          'align',
-          'baseline',
-          'lineHeight',
-          'measuredWidth',
-          'measuredHeight',
-          'fill',
-          'opacity',
-        ],
-        path,
-      );
       assertProviderOutputFinite(owner, value.x, `${path}.x`);
       assertProviderOutputFinite(owner, value.y, `${path}.y`);
       assertProviderOutputFinite(owner, value.fontSize, `${path}.fontSize`, true);
@@ -594,16 +463,10 @@ const visitScenePrimitive = (
       assertProviderOutputFinite(owner, value.measuredWidth, `${path}.measuredWidth`, true);
       assertProviderOutputFinite(owner, value.measuredHeight, `${path}.measuredHeight`, true);
 
-      const lines = providerOutputArray(owner, value.lines, `${path}.lines`);
+      const lines = value.lines as Array<unknown>;
       if (lines.length === 0) failProviderOutput(owner, `an invalid ${path}.lines`);
       lines.forEach((line, index) => {
-        const candidate = providerOutputRecord(owner, line, `${path}.lines[${index}]`);
-        assertProviderOutputKeys(
-          owner,
-          candidate,
-          ['text', 'fontSize', 'fontFamily', 'fontWeight', 'fontStyle', 'fill', 'opacity'],
-          `${path}.lines[${index}]`,
-        );
+        const candidate = line as Record<string, unknown>;
         if (typeof candidate.text !== 'string') failProviderOutput(owner, `an invalid ${path}.lines[${index}].text`);
         assertProviderOutputOptionalFinite(owner, candidate, 'fontSize', `${path}.lines[${index}]`, true);
         if (candidate.fontFamily !== undefined && typeof candidate.fontFamily !== 'string')
@@ -648,11 +511,10 @@ const visitScenePrimitive = (
       return;
     }
     case 'group': {
-      assertProviderOutputKeys(owner, value, [...commonFields, 'transforms', 'clipRef', 'children'], path);
       assertProviderOutputTransforms(owner, value.transforms, `${path}.transforms`);
       if (value.clipRef !== undefined && typeof value.clipRef !== 'string')
         failProviderOutput(owner, `an invalid ${path}.clipRef`);
-      const children = providerOutputArray(owner, value.children, `${path}.children`);
+      const children = value.children as Array<unknown>;
       if (context.active.has(value)) failProviderOutput(owner, `a cyclic ${path}`);
       context.active.add(value);
 
@@ -693,7 +555,7 @@ export const validateScenePrimitives = (owner: string, emitted: unknown): Array<
     return [...(emitted as Iterable<unknown>)].map(primitive => {
       const snapshot = snapshotProviderOutputJson(owner, primitive, 'Scene primitive');
       assertValidScenePrimitive(owner, snapshot);
-      return omitProviderOutputUndefined(snapshot);
+      return snapshot;
     });
   });
 };

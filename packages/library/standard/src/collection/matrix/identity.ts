@@ -1,4 +1,4 @@
-import { NonBlankStringSchema, NonNegativeIntegerSchema } from '@retikz/foundation';
+import { NonNegativeIntegerSchema } from '@retikz/foundation';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../shared/errors';
 
@@ -8,17 +8,13 @@ import { RetikzStandardError, RetikzStandardErrorCode } from '../../shared/error
  * @param row 非负安全整数行坐标
  * @param column 非负安全整数列坐标
  * @returns 由 Matrix id 和零基行列坐标组成的单元格 id
- * @throws 参数非法时抛出 RetikzStandardError
+ * @throws 下标不是非负整数时抛出 RetikzStandardError
  */
 export const getMatrixCellId = (matrixId: string, row: number, column: number): string => {
-  if (
-    !NonBlankStringSchema.safeParse(matrixId).success ||
-    !NonNegativeIntegerSchema.safeParse(row).success ||
-    !NonNegativeIntegerSchema.safeParse(column).success
-  )
+  if (!NonNegativeIntegerSchema.safeParse(row).success || !NonNegativeIntegerSchema.safeParse(column).success)
     throw new RetikzStandardError({
       code: RetikzStandardErrorCode.AuthoringInvalid,
-      message: 'Matrix cell identity requires a nonblank id and nonnegative integer coordinates.',
+      message: 'Matrix cell identity requires nonnegative integer coordinates.',
       details: { matrixId, row, column },
     });
 

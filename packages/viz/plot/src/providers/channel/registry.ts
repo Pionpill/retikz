@@ -74,17 +74,13 @@ export type ChannelRegistry = Map<string, AnyChannelDefinition> & {
  * @description 名称索引保留首个同名内置定义；definitions 保留全部定义和注册顺序
  * @param options 自定义定义与标签回调；省略时仅注册内置定义
  * @returns 新建的名称索引及其完整定义列表
- * @throws {RetikzPlotError} 自定义名称为空、重复或与内置保留名称冲突
+ * @throws {RetikzPlotError} 自定义名称重复或与内置保留名称冲突
  */
 export const resolveChannelRegistry = (options: ChannelRegistryOptions = {}): ChannelRegistry => {
   const registry = new Map<string, AnyChannelDefinition>() as ChannelRegistry;
   const definitions: Array<AnyChannelDefinition> = [];
 
   const addDefinition = (def: AnyChannelDefinition): void => {
-    if (def.channel.trim() === '') {
-      throw new RetikzPlotError('lowerPlots: channel definition must use a non-empty channel name');
-    }
-
     definitions.push(def);
     if (!registry.has(def.channel)) registry.set(def.channel, def);
   };

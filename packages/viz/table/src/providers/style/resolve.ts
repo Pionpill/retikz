@@ -1,10 +1,8 @@
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
-import { strictObject } from 'zod';
 
 import type { TableThemeDefinition } from '../../contract';
 import { RetikzTableError } from '../../error';
 import type { IRTableDefaults } from '../../schemas';
-import { TableDefaultsSchema } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 import { deepFreeze } from '../../shared';
 import { getDefaultTableDefaults } from './presets';
@@ -15,10 +13,6 @@ const defaultTheme: TableThemeContext = {
   mode: ThemeMode.Light,
   colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
 };
-
-const TableThemeSourceSchema = strictObject({
-  defaults: TableDefaultsSchema.optional(),
-}).describe('Table Theme source containing sparse Source defaults.');
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -125,7 +119,7 @@ export const mergeTableDefaults = (
     result.defaultVisual = mergeRecord(isRecord(result.defaultVisual) ? result.defaultVisual : {}, patch.defaultVisual);
   }
 
-  return TableDefaultsSchema.parse(pruneClearedRecords(result, true));
+  return pruneClearedRecords(result, true) as IRTableDefaults;
 };
 
 const sourceRecordsOf = (layers: ReadonlyArray<TableThemeDefaultsSource>): ReadonlyArray<TableThemeDefaultsSource> =>
@@ -155,7 +149,7 @@ export const resolveTableThemeDefaults = (
   ];
   if (definition !== undefined) {
     try {
-      const source = TableThemeSourceSchema.parse(definition.resolve(effectiveTheme));
+      const source = clone(definition.resolve(effectiveTheme));
       layers.push({
         kind: 'style',
         path: `$style/${name}/${mode}`,

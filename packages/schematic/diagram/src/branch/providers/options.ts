@@ -15,13 +15,6 @@ export const resolveBranchDefinitionOptions = (optionSets: ReadonlyArray<BranchD
     if (options.defaultBranchLayout !== undefined) names.add(options.defaultBranchLayout);
 
     for (const definition of options.branchLayouts ?? []) {
-      if (definition.name.trim().length === 0)
-        throw new RetikzDiagramError({
-          code: RetikzDiagramErrorCode.DefinitionInvalid,
-          message: 'Branch layout name must not be empty.',
-          details: { capability: 'branch-layout' },
-        });
-
       const previous = registry.get(definition.name);
       if (previous !== undefined && previous !== definition)
         throw new RetikzDiagramError({

@@ -17,10 +17,6 @@ export const resolveCoordinateRegistry = (
     const seen = new Set<string>();
 
     for (const role of roles) {
-      if (role.trim() === '') {
-        throw new RetikzPlotError(`lowerPlots: coordinate "${type}" must declare a non-empty coordinate role`);
-      }
-
       if (seen.has(role)) {
         throw new RetikzPlotError(`lowerPlots: coordinate "${type}" has duplicate coordinate role: "${role}"`);
       }

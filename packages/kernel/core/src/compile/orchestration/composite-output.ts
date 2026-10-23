@@ -3,6 +3,7 @@ import type {
   CompositeBoundChild,
   CompositeCompileScopeProps,
   CompositeReplayWrapper,
+  SpatialHandleDeclaration,
 } from '../../contract';
 import { validateSpatialHandleDeclarations } from '../../contract';
 import type { CompositeRuntimeInputScope } from '../../contract/composite';
@@ -13,7 +14,7 @@ import { withProviderOutputValidationBoundary } from '../scene-primitive';
 import type { CompositeCompileOwner, CompositeCompileSession, CompositeRuntimeOutputChild } from './types';
 
 /** 把通用 declaration validator 的失败提升为带 provider owner 的 contract error */
-export const validateCompositeSpatialHandles = (owner: string, value: unknown) => {
+export const validateCompositeSpatialHandles = (owner: string, value: ReadonlyArray<SpatialHandleDeclaration>) => {
   try {
     return validateSpatialHandleDeclarations(owner, value);
   } catch (cause) {
@@ -67,7 +68,11 @@ export const snapshotCompositeLayoutChild = (owner: string, value: unknown, inde
   snapshotCompositeCallbackChild(owner, value, `layoutChild input at probe ${index}`);
 
 /** 校验直接声明的空间区域，带变换的子 Scope 应在自身局部坐标声明 */
-export const validateCompositeSpatialOutput = (owner: string, value: unknown, children: ReadonlyArray<IRChild>) => {
+export const validateCompositeSpatialOutput = (
+  owner: string,
+  value: ReadonlyArray<SpatialHandleDeclaration> | undefined,
+  children: ReadonlyArray<IRChild>,
+) => {
   const spatialHandles = value === undefined ? undefined : validateCompositeSpatialHandles(owner, value);
   if ((spatialHandles?.length ?? 0) > 0 && containsGeneratedSpatialScope(children)) {
     throw createCompositeContractError(
@@ -128,7 +133,7 @@ export const createCompositeScopeChild = (
   owner: CompositeCompileOwner,
   props: CompositeCompileScopeProps,
   children: unknown,
-  spatialHandles?: unknown,
+  spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>,
 ): CompositeCompileChild =>
   withProviderOutputValidationBoundary(owner.label, () => {
     if (!Array.isArray(children)) {

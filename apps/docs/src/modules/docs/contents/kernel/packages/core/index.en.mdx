@@ -80,6 +80,8 @@ console.log(result.scene);
 
 The entry accepts typed IR. External input such as JSON should first pass through the appropriate schema validation. Compile options can supply text measurement, formula handling and extension definitions.
 
+Authors of TypeScript extensions are responsible for names and callback results satisfying their declared contracts; registries still check name collisions. Open parameters are parsed against the selected Definition’s precise schema. Data that is already typed does not need to be parsed again at every internal stage. Compilation still checks references, geometry values and output ownership, and preserves the required snapshot isolation.
+
 ## Package boundaries
 
 | Core owns                                                          | Collaborators own                                                                             |

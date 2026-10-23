@@ -10,7 +10,6 @@ import type {
   IRFlowDefaultsGroupCaptionText,
   IRFlowLayoutIntent,
 } from '../../schemas';
-import { FlowDefaultsSchema } from '../../schemas';
 
 const mergeFields = <T extends object>(base: T | undefined, override: T | undefined): T | undefined => {
   const merged = mergeProperties<Partial<T>>([base, override], { shouldOverride: value => value !== undefined });
@@ -128,7 +127,7 @@ const resolveRegisteredDefaults = (
   }
 
   try {
-    return FlowDefaultsSchema.parse(definition.resolve(theme));
+    return structuredClone(definition.resolve(theme));
   } catch (cause) {
     throw new RetikzDiagramError({
       code: RetikzDiagramErrorCode.DefinitionCallbackFailed,
@@ -146,6 +145,6 @@ export const resolveFlowTheme = (
   inline?: IRFlowDefaults,
 ): IRFlowDefaults => {
   const registered = resolveRegisteredDefaults(theme, styles);
-  const source = inline === undefined ? undefined : FlowDefaultsSchema.parse(inline);
+  const source = inline;
   return mergeFlowDefaults(registered, source);
 };

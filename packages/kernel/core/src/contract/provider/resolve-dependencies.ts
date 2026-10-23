@@ -55,27 +55,6 @@ const keyName = (key: CoreProviderKey): string =>
     ? `${key.capability}:${key.namespace}.${key.type}`
     : `${key.capability}:${key.name}`;
 
-/** 校验公开提供者图键 */
-const assertProviderKey = (key: CoreProviderKey, path: string): void => {
-  if (key.capability === CoreProviderCapability.Composite) {
-    if (key.namespace.length === 0 || key.type.length === 0) {
-      throw new RetikzCoreError(
-        RetikzCoreErrorCode.Contract,
-        `resolveCoreProviderDependencies: ${path} must have a non-empty namespace and type`,
-      );
-    }
-
-    return;
-  }
-
-  if (key.name.length === 0) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Contract,
-      `resolveCoreProviderDependencies: ${path} must have a non-empty name`,
-    );
-  }
-};
-
 /** 按能力与完整键读取提供者，避免字符串拼接歧义 */
 const providerAt = (index: ProviderIndex, key: CoreProviderKey): ProviderEntry | undefined => {
   if (key.capability === CoreProviderCapability.Composite) {
@@ -126,15 +105,8 @@ const sameDependencies = (left: ReadonlyArray<CoreProviderKey>, right: ReadonlyA
   });
 
 /** 合并同一提供者键的数据集引用 */
-const mergeDatasets = (entry: ProviderEntry, provider: CoreDependencyProvider, path: string): void => {
+const mergeDatasets = (entry: ProviderEntry, provider: CoreDependencyProvider): void => {
   for (const [reference, value] of Object.entries(provider.datasets)) {
-    if (reference.length === 0) {
-      throw new RetikzCoreError(
-        RetikzCoreErrorCode.Contract,
-        `resolveCoreProviderDependencies: ${path}.datasets contains an empty reference`,
-      );
-    }
-
     if (!entry.datasets.has(reference)) {
       entry.datasets.set(reference, value);
       continue;
@@ -159,19 +131,11 @@ const buildProviderIndex = (
   };
   const roots: Array<CoreProviderKey> = [];
 
-  for (const [contributionIndex, contribution] of options.contributions.entries()) {
-    for (const [rootIndex, root] of contribution.roots.entries()) {
-      assertProviderKey(root, `contributions[${contributionIndex}].roots[${rootIndex}]`);
-      roots.push(root);
-    }
+  for (const contribution of options.contributions) {
+    roots.push(...contribution.roots);
 
-    for (const [providerIndex, provider] of contribution.providers.entries()) {
-      const path = `contributions[${contributionIndex}].providers[${providerIndex}]`;
-      assertProviderKey(provider.key, `${path}.key`);
-      const dependencies = provider.dependencies.map((dependency, dependencyIndex) => {
-        assertProviderKey(dependency, `${path}.dependencies[${dependencyIndex}]`);
-        return dependency;
-      });
+    for (const provider of contribution.providers) {
+      const dependencies = [...provider.dependencies];
       const existing = providerAt(index, provider.key);
       if (existing === undefined) {
         const entry: ProviderEntry = {
@@ -180,7 +144,7 @@ const buildProviderIndex = (
           datasets: new Map(),
           makeDefinition: provider.makeDefinition,
         };
-        mergeDatasets(entry, provider, path);
+        mergeDatasets(entry, provider);
         setProvider(index, entry);
         continue;
       }
@@ -199,7 +163,7 @@ const buildProviderIndex = (
         );
       }
 
-      mergeDatasets(existing, provider, path);
+      mergeDatasets(existing, provider);
     }
   }
 
