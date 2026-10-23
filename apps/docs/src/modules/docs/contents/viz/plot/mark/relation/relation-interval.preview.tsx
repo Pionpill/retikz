@@ -76,7 +76,7 @@ export const RelationIntervalPreview = (values: RelationIntervalPreviewValues) =
               routing: { kind: 'orthogonal', via: '-|', labelStep: 'main' },
               label: {
                 position: values[RELATION_INTERVAL_CONTROL_IDS.labelPosition],
-                ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
+                side: labelSide,
                 sloped: values[RELATION_INTERVAL_CONTROL_IDS.labelSloped],
                 textColor: 'currentColor',
                 font: { size: 10, weight: 'bold' },
@@ -103,7 +103,7 @@ export const RelationIntervalPreview = (values: RelationIntervalPreviewValues) =
               routing: { kind: 'orthogonal', via: '-|', labelStep: 'main' },
               label: {
                 position: values[RELATION_INTERVAL_CONTROL_IDS.labelPosition],
-                ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
+                side: labelSide,
                 sloped: values[RELATION_INTERVAL_CONTROL_IDS.labelSloped],
                 textColor: 'currentColor',
                 font: { size: 10, weight: 'bold' },

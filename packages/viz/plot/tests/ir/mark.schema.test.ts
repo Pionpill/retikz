@@ -909,7 +909,7 @@ describe('MarkSchema (contract)', () => {
       encodings: { label: { content: 'label' } },
       properties: {
         autoPadding: false,
-        label: { position: 0.5, placement: 'inside' },
+        label: { position: 0.5, side: 'center' },
         source: { id: 'A' },
         target: { id: 'B' },
         geometry: { kind: 'path' },
@@ -920,6 +920,16 @@ describe('MarkSchema (contract)', () => {
       ...m,
       contributeToDomain: true,
     });
+  });
+
+  it('路径标签编码不接受节点专属 placement', () => {
+    expect(
+      MarkSchema.safeParse({
+        type: 'relation',
+        encodings: { label: { placement: 'labelPlacement' } },
+        properties: { source: { id: 'A' }, target: { id: 'B' }, geometry: { kind: 'path' } },
+      }).success,
+    ).toBe(false);
   });
 
   it('mark_relation_accepts_projected_endpoint_glyphs', () => {

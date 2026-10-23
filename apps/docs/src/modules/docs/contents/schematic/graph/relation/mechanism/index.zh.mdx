@@ -52,7 +52,7 @@ React / Vanilla 入口把字符串端点归一为 NodeTarget，并把 way 或 St
 
 没有 route 时，下沉生成 `move(source) → line(target)`；显式 route 直接成为 Path.children，不检查首尾是否等于语义端点，也不追加自动接线。sourceMarker / targetMarker 分别成为位置 0 / 1 的 Arrow marks，shape lookup、箭头缩短与绘制交给 Core。
 
-labels 被转为 Path.label。单个 label 的文字颜色、不透明度优先，font 按子字段继承；没有 placement 和 side 时设为 inside，使标签默认居于中心线。多个标签仍是独立标签，不合成一个新文字模型。
+labels 被转为 Path.label。单个 label 的文字颜色、不透明度优先，font 按子字段继承；没有 side 时设为 center，使标签默认居于中心线。多个标签仍是独立标签，不合成一个新文字模型。
 
 `id` 和非冲突 Core Path 字段继续传递；关系专属字段在此被去除。由 Core 统一处理未解析端点、重复 id 与位置表达式。
 

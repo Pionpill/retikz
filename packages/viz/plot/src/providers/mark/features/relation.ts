@@ -720,9 +720,9 @@ export const lowerRelation = (
           kind: 'ribbon',
           style,
           ...(zIndex !== undefined ? { zIndex } : {}),
-          ...(label !== undefined ? { label } : {}),
           kindOptions: {
             ...ribbonOptions,
+            ...(label !== undefined ? { label } : {}),
             width:
               endWidth === undefined
                 ? { kind: 'fixed', value: width }

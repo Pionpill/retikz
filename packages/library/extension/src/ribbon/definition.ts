@@ -29,6 +29,7 @@ const createDefinition = (
           round: context.round,
           materializePath: context.materializePath,
           emitHostLabels: context.emitHostLabels,
+          resolveHostLabel: context.resolveHostLabel,
           emitBoundaryLabels: context.emitBoundaryLabels,
         },
         profileRegistry,

@@ -117,7 +117,7 @@ export const flowRouteLabelBounds = (
   if (sample === undefined) return undefined;
 
   const { width, height } = relation.labelSize;
-  const distance = placement.placement === 'inside' ? 0 : placement.distance;
+  const distance = placement.distance;
   const [x, y] = sample.point;
   const rectangle = { x: x - width / 2, y: y - height / 2, width, height };
   if (placement.side === 'top') rectangle.y = y - distance - height;

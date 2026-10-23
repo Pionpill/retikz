@@ -40,7 +40,7 @@ description: 配置 Flow 曲线路由、组合分组与固定布局，并统一�
   caption="切换自动角度与手动角度，移动障碍观察有限候选选择；移动标签、切换倾斜和中断，观察同一曲线上的标签布局。"
 />
 
-紧凑 `label: '继续'` 沿用默认标签策略。完整对象 `label: { text: '继续', position: 0.5, sloped: true }` 开放 Core PathLabel 的全部配置：`position`、`side`、`sloped`、`placement`、`distance`、`interrupt`、`gap`、`textColor`、`font` 和 `opacity`。`position` 使用曲线参数而非等弧长；`sloped` 跟随切线，`interrupt` 与 `gap` 控制标签处的描边间隙。完整对象即使只填 text，也使用完整标签默认。字体字段逐项继承，标签自身外观优先于关系外观。预留盒帮助布局评分，最终文字和节点边界裁剪仍由 Core 绘制。
+紧凑 `label: '继续'` 沿用默认标签策略。完整对象 `label: { text: '继续', position: 0.5, sloped: true }` 开放 Core PathLabel 的全部配置：`position`、`side`、`sloped`、`distance`、`interrupt`、`gap`、`textColor`、`font` 和 `opacity`。`position` 使用曲线参数而非等弧长；`sloped` 跟随切线，`interrupt` 与 `gap` 控制标签处的描边间隙。完整对象即使只填 text，也使用完整标签默认。字体字段逐项继承，标签自身外观优先于关系外观。预留盒帮助布局评分，最终文字和节点边界裁剪仍由 Core 绘制。
 
 ### 贝塞尔曲线
 

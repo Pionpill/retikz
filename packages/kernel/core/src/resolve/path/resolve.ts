@@ -121,7 +121,7 @@ export const resolvePathLabelPlacement = (
   label: PathLabelGeometryOptions,
   canAutomaticallyInterrupt: boolean,
 ): CanonicalPathLabelPlacement => {
-  const side = label.side ?? (label.sloped === true || label.placement === 'inside' ? 'center' : 'top');
+  const side = label.side ?? (label.sloped === true ? 'center' : 'top');
   return {
     ...label,
     position:

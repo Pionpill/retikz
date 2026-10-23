@@ -174,7 +174,7 @@ export type RibbonWidthProfileDefinitionInput<TParams extends JsonObject = JsonO
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RibbonPathKindDefinition"} path={"packages/library/extension/src/ribbon/definition.ts"} startLine={46}>RibbonPathKindDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"RibbonPathKindDefinition"} path={"packages/library/extension/src/ribbon/definition.ts"} startLine={47}>RibbonPathKindDefinition</ApiSourceLink>
 
 需要在当前图的 pathKinds 中显式装配，不自动注册
 
@@ -182,7 +182,7 @@ export type RibbonWidthProfileDefinitionInput<TParams extends JsonObject = JsonO
 export const RibbonPathKindDefinition = createDefinition([], []);
 ```
 
-#### <ApiSourceLink label={"createRibbonPathKindDefinition"} path={"packages/library/extension/src/ribbon/definition.ts"} startLine={54}>createRibbonPathKindDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"createRibbonPathKindDefinition"} path={"packages/library/extension/src/ribbon/definition.ts"} startLine={55}>createRibbonPathKindDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -333,12 +333,12 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
     rotate: '绕包围盒中心旋转的角度。',
     scale: '绕包围盒中心缩放的比例。',
     cornerRadius: '几何圆角半径。',
-    label: 'Path 共享几何标签；当前仅 centerline 模式支持。',
+    label: '不接受顶层标签；中心线标签配置在 kindOptions.label。',
     marks: '沿路径放置的方向标记。',
   }}
 />
 
-#### <ApiSourceLink label={"RibbonPathOptionsSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={160}>RibbonPathOptionsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RibbonPathOptionsSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={180}>RibbonPathOptionsSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -351,6 +351,7 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
     start: '起点端面方向、端帽与标签。',
     end: '终点端面方向、端帽与标签。',
     align: '生成带状轮廓时，中心线位于哪一侧。',
+    label: '中心线标签，接受单个对象或非空数组，各项可独立设置内外位置。',
     upper: 'boundary 模式的开放上边界 Step 序列。',
     lower: 'boundary 模式的开放下边界 Step 序列。',
   }}
@@ -358,7 +359,16 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
 
 `centerline` 必须提供带 `kind` 的 `width` 对象。`boundary` 必须提供 `upper` 与 `lower`，且不能使用中心线宽度字段。
 
-#### <ApiSourceLink label={"CenterlineRibbonPathOptionsSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={138}>CenterlineRibbonPathOptionsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RibbonLabelSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={146}>RibbonLabelSchema</ApiSourceLink>
+
+<ZodSchema
+  shallow
+  name="RibbonLabelSchema"
+  description="流带中心线标签，复用路径标签的文字和视觉字段，不接受描边断线配置。"
+  descriptions={{ placement: '标签放在流带内部或外部；省略时按外部放置，inside 且未指定 side 时居中。' }}
+/>
+
+#### <ApiSourceLink label={"CenterlineRibbonPathOptionsSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={155}>CenterlineRibbonPathOptionsSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -366,7 +376,7 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
   description="中心线模式：width 必填；端点可配置 direction、cap 与 label，mode 可省略。"
 />
 
-#### <ApiSourceLink label={"BoundaryRibbonPathOptionsSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={153}>BoundaryRibbonPathOptionsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"BoundaryRibbonPathOptionsSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={173}>BoundaryRibbonPathOptionsSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -374,7 +384,7 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
   description="边界模式：mode、upper、lower 必填，不接受中心线专属字段。"
 />
 
-#### <ApiSourceLink label={"RibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={80}>RibbonWidthSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={88}>RibbonWidthSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -382,11 +392,11 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
   description="按 kind 区分 fixed、taper、stops、profile；严格分支禁止混用字段。"
 />
 
-#### <ApiSourceLink label={"FixedRibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={66}>FixedRibbonWidthSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FixedRibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={74}>FixedRibbonWidthSchema</ApiSourceLink>
 
 <ZodSchema shallow name="FixedRibbonWidthSchema" description="kind 为 fixed；value 是必填的非负固定宽度。" />
 
-#### <ApiSourceLink label={"TaperRibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={72}>TaperRibbonWidthSchema</ApiSourceLink>
+#### <ApiSourceLink label={"TaperRibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={80}>TaperRibbonWidthSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -394,7 +404,7 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
   description="kind 为 taper；start、end 均必填且非负，interpolation 默认 linear，也可使用 smooth。"
 />
 
-#### <ApiSourceLink label={"RibbonEndpointSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={102}>RibbonEndpointSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RibbonEndpointSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={110}>RibbonEndpointSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -407,7 +417,7 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
   }}
 />
 
-#### <ApiSourceLink label={"StopsRibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={48}>StopsRibbonWidthSchema</ApiSourceLink>
+#### <ApiSourceLink label={"StopsRibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={56}>StopsRibbonWidthSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -420,7 +430,7 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
   }}
 />
 
-#### <ApiSourceLink label={"ProfileRibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={59}>ProfileRibbonWidthSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ProfileRibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={67}>ProfileRibbonWidthSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -433,7 +443,7 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
   }}
 />
 
-#### <ApiSourceLink label={"RibbonArcCapSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={29}>RibbonArcCapSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RibbonArcCapSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={37}>RibbonArcCapSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -446,7 +456,7 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
   }}
 />
 
-#### <ApiSourceLink label={"RibbonFixedSamplingSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={113}>RibbonFixedSamplingSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RibbonFixedSamplingSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={121}>RibbonFixedSamplingSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -455,7 +465,7 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
   descriptions={{ kind: '固定为 fixed。', samples: '横截面样本数，整数 2–512。' }}
 />
 
-#### <ApiSourceLink label={"RibbonAdaptiveSamplingSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={123}>RibbonAdaptiveSamplingSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RibbonAdaptiveSamplingSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={131}>RibbonAdaptiveSamplingSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -468,9 +478,9 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
   }}
 />
 
-端点的 `label` 直接使用 Kernel [BoundaryLabelSchema](/kernel/components/node/reference#boundarylabelschema)，与 `cap` 并列；无需 Ribbon 专属标签 Schema。
+端点的 `label` 直接使用 Kernel [BoundaryLabelSchema](/kernel/components/node/reference#boundarylabelschema)，与 `cap` 并列；无需 Ribbon 专属端点标签 Schema。
 
-#### <ApiSourceLink label={"RibbonDirectionSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={88}>RibbonDirectionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RibbonDirectionSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={96}>RibbonDirectionSchema</ApiSourceLink>
 
 <ZodSchema
   shallow

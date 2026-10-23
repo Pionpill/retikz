@@ -80,11 +80,12 @@ describe('Drawable shared schema', () => {
   });
 
   it('reuses path labels for step labels and path host labels', () => {
-    const label = { text: '128', position: 0.75, placement: 'inside', sloped: true };
+    const label = { text: '128', position: 0.75, sloped: true };
 
     expect(StepLabelSchema.parse(label)).toEqual(label);
     expect(PathSchema.parse(path({ label })).label).toEqual(label);
     expect(StepLabelSchema).toBe(PathLabelSchema);
+    expect(PathLabelSchema.safeParse({ ...label, placement: 'inside' }).success).toBe(false);
   });
 
   it('keeps edge label sides canonical and rejects parser sugar aliases', () => {

@@ -40,6 +40,7 @@ describe('Ribbon endpoint labels', () => {
             type: 'path',
             kind: 'ribbon',
             kindOptions: {
+              label: { text: 'flow', placement: 'inside' },
               width: { kind: 'fixed', value: 20 },
               start: { label: { text: 'source' } },
               end: { label: { text: ['target', 'detail'], rotate: 30 } },
@@ -48,7 +49,6 @@ describe('Ribbon endpoint labels', () => {
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },
             ],
-            label: { text: 'flow', placement: 'inside' },
           },
         ],
       },

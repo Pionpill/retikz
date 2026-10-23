@@ -54,8 +54,6 @@ The responsibilities in one compile are:
     {
       label: 'Ribbon outline and label output',
       path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
-      startLine: 108,
-      endLine: 201,
     },
   ]}
 />
@@ -175,8 +173,6 @@ Width interpolation and side connection are separate steps: the former determine
     {
       label: 'Add width stops to sample positions',
       path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
-      startLine: 166,
-      endLine: 181,
     },
   ]}
 />
@@ -205,8 +201,6 @@ Only the two end closures are new lines; the sides remain the supplied lines, BÃ
     {
       label: 'Materialize upper and lower sides',
       path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
-      startLine: 122,
-      endLine: 137,
     },
     {
       label: 'Preserve sides and close with lines',
@@ -267,8 +261,6 @@ Core then uses the text rotation to compute the layout box's projected half-exte
     {
       label: 'Label sampling and final output',
       path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
-      startLine: 184,
-      endLine: 201,
     },
   ]}
 />
@@ -279,7 +271,7 @@ Core then uses the text rotation to compute the layout box's projected half-exte
 - Duplicate Path kind names or duplicate profile names with different identities fail during registry or provider-graph assembly instead of being overwritten by order
 - `centerline` requires top-level `children`, plus a `width` object discriminated by `kind`
 - `boundary` requires two valid open Step sequences in `upper` and `lower`, and rejects top-level `children` and centerline width fields
-- `boundary` currently rejects Path `label`; label placement depends on centerline samples and boundary offsets
+- `boundary` currently rejects `kindOptions.label`; label placement depends on centerline samples and boundary offsets
 - Centerline sampling is configured through `sampling`; unknown profiles, invalid `params`, and negative or non-finite `widthAt` results fail with the path location
 - Multiple moves, close commands, zero-length whole paths, or invalid arc caps never silently produce an empty primitive
 

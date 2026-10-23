@@ -1024,6 +1024,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
       schemas: [
         'RibbonPathSchema',
         'RibbonPathOptionsSchema',
+        'RibbonLabelSchema',
         'CenterlineRibbonPathOptionsSchema',
         'BoundaryRibbonPathOptionsSchema',
         'RibbonWidthSchema',

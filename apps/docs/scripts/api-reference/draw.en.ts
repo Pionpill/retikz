@@ -323,8 +323,10 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '自定义 kind 可以完全接管输出，也可以调用回调复用标准描边逻辑':
     'A custom kind can take over output completely or reuse standard stroke logic through callbacks',
   '已解析的 renderer-neutral 宿主外观': 'Resolved renderer-neutral host appearance',
-  '编译共享宿主标签，并支持 kind 提供边界偏移':
-    'Compile shared host labels with optional boundary offsets supplied by the kind',
+  '编译共享宿主标签，并支持 kind 提供侧向距离':
+    'Compile shared host labels with optional side offsets supplied by the kind',
+  '合并宿主标签默认配置，供路径种类在采样前确定标签位置':
+    'Merge host label defaults before the path kind samples label positions',
   '复用 core 标准描边编译逻辑；不传 path 时使用当前 `path`':
     "Reuse Core's standard stroke compiler; omission uses the current `path`",
   '物化选定 steps，不应用 marker、dash、fill 或 kind-specific geometry':

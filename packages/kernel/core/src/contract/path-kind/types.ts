@@ -1,16 +1,7 @@
 import type { JsonValue } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
-import type {
-  IRBoundaryLabel,
-  IRPathLabel,
-  IRLine,
-  IRMathSegment,
-  IRPathBase,
-  IRPosition,
-  IRStep,
-  IRTextSegment,
-} from '../../schemas';
+import type { IRBoundaryLabel, IRPathLabel, IRPathBase, IRPosition, IRStep } from '../../schemas';
 import type { CompileOwnerOutputDefinition, CompileOwnerOutputPublisher } from '../observation';
 import type { PathCommand, PathPrim, ScenePrimitive } from '../scene';
 import type { StrokePathOwnerOutput } from './owner-output';
@@ -81,33 +72,20 @@ export type ResolvedPathKindAppearance = Readonly<
     >
 >;
 
-type PathKindInlineSegment<T> = T extends unknown ? Omit<T, 'fill'> & { fill?: string } : never;
-
-type PathKindLabelTextLine =
-  | string
-  | (Omit<Extract<IRLine, { text: string }>, 'fill'> & { fill?: string })
-  | {
-      segments: Array<PathKindInlineSegment<IRTextSegment | IRMathSegment>>;
-    };
-
-type PathKindLabelText = PathKindLabelTextLine | Array<PathKindLabelTextLine>;
-
 /** Path kind 请求宿主标签编译时提供的已定位几何信息，不包含 Stroke 专属 interruption */
-export type PathKindLabel = Omit<IRPathLabel, 'position' | 'side' | 'distance' | 'textColor' | 'text' | 'interrupt'> & {
+export type PathKindLabel = Omit<IRPathLabel, 'position' | 'side' | 'distance' | 'interrupt' | 'gap'> & {
   /** 标签在宿主路径上的归一化位置 */
   position: number;
   /** 标签相对路径的放置侧，center 表示居中 */
-  side: NonNullable<IRPathLabel['side']> | 'center';
+  side: NonNullable<IRPathLabel['side']>;
   /** 标签相对宿主边界的间距 */
   distance: number;
-  /** 已解析为颜色字符串的可选文字色 */
-  textColor?: string;
-  /** 待排版的标签文本及行内内容 */
-  text: PathKindLabelText;
 };
 
 /** Path kind 请求宿主标签编译时提供的已定位几何信息 */
 export type PathKindLabelInput = Readonly<{
+  /** 标签配置相对宿主的来源路径，用于诊断 */
+  sourcePath: string;
   /** 按请求顺序排列的宿主标签 */
   labels: ReadonlyArray<PathKindLabel>;
   /** 与标签逐项对应的几何采样点及切线 */
@@ -117,8 +95,8 @@ export type PathKindLabelInput = Readonly<{
       point: IRPosition;
       /** 宿主在采样点的切向量 */
       tangent: IRPosition;
-      /** 从采样线到宿主边界的偏移，省略时视为零 */
-      boundaryOffset?: number;
+      /** 已由路径种类计算的侧向距离，省略时使用标签 distance */
+      sideOffset?: number;
     }>
   >;
 }>;
@@ -152,7 +130,9 @@ export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwner
    * 复用 core 标准描边编译逻辑；不传 path 时使用当前 `path`
    */
   emitStroke: EmitStroke;
-  /** 编译共享宿主标签，并支持 kind 提供边界偏移 */
+  /** 合并宿主标签默认配置，供路径种类在采样前确定标签位置 */
+  resolveHostLabel: (label: IRPathLabel) => IRPathLabel;
+  /** 编译共享宿主标签，并支持 kind 提供侧向距离 */
   emitHostLabels: (input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>;
   /** 通过 Kernel 共享布局编译已定位的边界标签 */
   emitBoundaryLabels: (input: ReadonlyArray<PathKindBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>;

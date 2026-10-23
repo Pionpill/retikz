@@ -7,11 +7,13 @@ import { BoundaryRibbonPathOptionsSchema, CenterlineRibbonPathOptionsSchema } fr
 export const RibbonPathSchema = union([
   PathSchema.extend({
     kind: literal('ribbon'),
+    label: never().optional(),
     kindOptions: CenterlineRibbonPathOptionsSchema,
     children: PathSchema.shape.children.unwrap(),
   }),
   PathSchema.extend({
     kind: literal('ribbon'),
+    label: never().optional(),
     kindOptions: BoundaryRibbonPathOptionsSchema,
     children: never().optional(),
   }),

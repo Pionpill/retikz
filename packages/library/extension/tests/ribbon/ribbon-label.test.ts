@@ -3,7 +3,7 @@ import { compileToScene as compileCoreToScene, StepLabelSchema } from '@retikz/c
 import { curve } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import { RibbonPathKindDefinition, RibbonPathSchema } from '../../src/ribbon';
+import { RibbonLabelSchema, RibbonPathKindDefinition, RibbonPathSchema } from '../../src/ribbon';
 
 const ASCENT_FACTOR = 0.8;
 
@@ -21,9 +21,9 @@ const defaultRibbonChildren: Array<IRStep> = [
 ];
 
 const normalizeRibbonInput = (input: Record<string, unknown> = {}): IRPathBase => {
-  const { kind, width, start, end, align, sampling, upper, lower, children, ...pathProps } = input;
+  const { kind, width, start, end, align, sampling, upper, lower, children, label, ...pathProps } = input;
   const kindOptions = Object.fromEntries(
-    Object.entries({ mode: kind, width, start, end, align, sampling, upper, lower }).filter(
+    Object.entries({ mode: kind, width, start, end, align, sampling, upper, lower, label }).filter(
       ([, value]) => value !== undefined,
     ),
   );
@@ -89,7 +89,12 @@ const pathPrims = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrim> =
   flatten(primitives).filter((primitive): primitive is PathPrim => primitive.type === 'path');
 
 describe('Ribbon label schema', () => {
-  it('接受与 StepLabel 相同的 label vocabulary，并保持 JSON round-trip', () => {
+  it('仅中心线参数接受标签，数组不能为空', () => {
+    expect(RibbonSchema.safeParse({ ...ribbon(), label: { text: 'x' } }).success).toBe(false);
+    expect(RibbonSchema.safeParse(ribbon({ label: [] })).success).toBe(false);
+    expect(RibbonLabelSchema.safeParse({ text: 'x', interrupt: true }).success).toBe(false);
+  });
+  it('在 kindOptions 中保存流带标签，并保持 JSON round-trip', () => {
     const label = {
       text: '128',
       position: 'near-end',
@@ -101,9 +106,10 @@ describe('Ribbon label schema', () => {
       font: { size: 10, weight: 'bold' },
     };
 
-    expect(StepLabelSchema.parse(label)).toEqual(label);
+    expect(RibbonLabelSchema.parse(label)).toEqual(label);
+    expect(StepLabelSchema.safeParse(label).success).toBe(false);
     expect(RibbonSchema.parse(JSON.parse(JSON.stringify(ribbon({ label }))))).toMatchObject({
-      label,
+      kindOptions: { label },
     });
   });
 
@@ -116,6 +122,31 @@ describe('Ribbon label schema', () => {
 });
 
 describe('Ribbon label compile', () => {
+  it('嵌套标签继承宿主位置与字体默认，并逐项覆盖样式和内外位置', () => {
+    const compiled = compileToScene(
+      scene([
+        {
+          type: 'scope',
+          defaults: { path: { label: { position: 0.25, font: { size: 18, weight: 'bold' }, textColor: 'crimson' } } },
+          children: [
+            ribbon({
+              label: [
+                { text: 'inside', placement: 'inside' },
+                { text: 'outside', side: 'top', font: { size: 12 } },
+              ],
+            }),
+          ],
+        },
+      ]),
+      { padding: 0 },
+    ).scene;
+    const inside = textOf(compiled.primitives, 'inside');
+    const outside = textOf(compiled.primitives, 'outside');
+    expect(inside).toMatchObject({ x: 25, fontSize: 18, fontWeight: 'bold', fill: 'crimson' });
+    expect(outside).toMatchObject({ x: 25, fontSize: 12, fontWeight: 'bold', fill: 'crimson' });
+    expect(visualMiddle(inside!)).toBeCloseTo(0);
+    expect(visualBottom(outside!)).toBeCloseTo(-9);
+  });
   it('在 centerline midpoint 发出 label，并保留 ribbon path 作为第一个 primitive', () => {
     const compiled = compileToScene(scene([ribbon({ label: { text: 'mid', position: 'midway' } })]), {
       padding: 0,
@@ -342,6 +373,6 @@ describe('Ribbon label compile', () => {
       ],
     });
 
-    expect(() => compileToScene(scene([boundary])).scene).toThrow(/centerline ribbon labels/i);
+    expect(RibbonSchema.safeParse(boundary).success).toBe(false);
   });
 });

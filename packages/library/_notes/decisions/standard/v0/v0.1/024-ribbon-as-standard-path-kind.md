@@ -95,7 +95,7 @@ type IRRibbonPathOptions = Readonly<{
 - `centerline` 继续使用 Path 顶层 `children` 作为中心线；必须提供整体 `width`，或同时提供 `start.width` 与 `end.width`
 - `boundary` 继续使用 `kindOptions.upper` 与 `kindOptions.lower`，并禁止顶层 `children`
 - `samples` 与 `sampling` 互斥；boundary 和 centerline 各自不适用的字段继续 fail-loud
-- Path 顶层 style、label、id、meta、animation、transform 与 relation host 语义保持共享，不复制到 options
+- Path 顶层 style、id、meta、animation、transform 与 relation host 语义保持共享，不复制到 options。Ribbon 中心线标签由 `kindOptions.label` 持有，接受单对象或非空数组，复用 Core 文本与视觉字段，并由 Ribbon 扩展 `placement`；不接受顶层 `label`，boundary 模式不支持中心线标签
 - 未写 `kindOptions`、options schema 校验失败、profile 缺失或 Ribbon 几何不变量失败均 fail-loud，并包含 `ribbon`、字段路径或 provider 名
 
 旧的 `ribbon` 顶层字段直接删除，不保留 alias、双字段接受或 normalize fallback。这是 0.x breaking migration；作者把 `ribbon: {...}` 改为 `kindOptions: {...}`。本 ADR 不新增专用 Ribbon authoring sugar。
@@ -115,6 +115,7 @@ type PathKindCompileContext<TPath extends IRPathBase, TOwnerOutput> = Readonly<{
   ownerOutput: CompileOwnerOutputPublisher<TOwnerOutput>;
   materializePath: (input?: Readonly<{ children?: ReadonlyArray<IRStep> }>) => MaterializedPath;
   emitStroke: EmitStroke;
+  resolveHostLabel: (label: IRPathLabel) => IRPathLabel;
   emitHostLabels: (input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>;
   appearance: ResolvedPathKindAppearance;
   round: (value: number) => number;
@@ -126,7 +127,7 @@ type PathKindCompileContext<TPath extends IRPathBase, TOwnerOutput> = Readonly<{
 - `materializePath` 负责把选定 steps 经过 Core target / anchor / boundary clip、relative target、Path Generator、rounded corner 和结构化 command lowering，得到当前 Path 局部坐标系内的确定性路径事实；它不应用 Stroke marker、dash、shrink、fill 或 Ribbon 宽度
 - `materializePath` 只返回结构化 commands 与几何 bounds；如何把 commands 转成 Ribbon segment、如何限制开放子路径以及如何采样由 Standard Ribbon 拥有。它不暴露 Core 私有 cache、namespace stack 或 orchestration state
 - `emitStroke` 保持普通 Stroke Path Kind 与需要描边组合的第三方 kind 复用，并可发布既有 Stroke owner output
-- `emitHostLabels` 按 Path 的共享 label、host opacity、style inheritance、TeX 与 warning 语义生成 label primitives；Path Kind 提供归一化位置上的 anchor、tangent 与可选 boundary offset，不复制文本和 label 编译
+- `resolveHostLabel` 在几何采样前合并 Path 标签默认配置；`emitHostLabels` 复用文字颜色解析、host opacity、TeX 与 warning 语义生成 label primitives。Path Kind 提供 anchor、tangent 与已计算的侧向距离；Ribbon 独立解释 inside/outside，Core 通用路径标签不持有 placement
 - `appearance` 是 Core 已解析的 Path fill、stroke、opacity、shadow 与 blend mode 等 renderer-neutral appearance，只读且不包含 Ribbon 字段；`round` 与同次 compile 的输出精度一致
 
 Core 服务只接受和返回显式只读数据，相同上下文调用结果确定，不允许 definition 读取或修改 compiler 私有状态。Path Kind definition 仍返回 `primitives + boundsPoints`，Core 继续统一处理 Path 外层 Scope、transform、layout bounds、observation、provenance 与 diagnostics。

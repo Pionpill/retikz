@@ -150,7 +150,7 @@ describe('Relation lowering', () => {
       {
         text: 'default',
         position: 0.25,
-        placement: 'inside',
+        side: 'center',
         textColor: '#334155',
         font: { family: 'Inter', size: 14 },
         opacity: 0.8,

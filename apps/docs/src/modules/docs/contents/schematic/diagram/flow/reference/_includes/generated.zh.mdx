@@ -685,11 +685,10 @@ export declare const FlowRelation: {
               | 'very-near-end'
               | 'at-end'
               | undefined;
-            side?: 'top' | 'right' | 'bottom' | 'left' | undefined;
+            side?: 'top' | 'right' | 'bottom' | 'left' | 'center' | undefined;
             sloped?: boolean | undefined;
             interrupt?: boolean | undefined;
             gap?: number | undefined;
-            placement?: 'outside' | 'inside' | undefined;
             distance?: number | undefined;
             textColor?: string | number | undefined;
             opacity?: number | undefined;
@@ -1495,15 +1494,14 @@ export type FlowLayoutExecutionContext = Readonly<{
 
 <ApiTable>
 
-| 成员                  | 类型                                                                                                                 | 默认值 | 说明                                                                                                            |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------- |
-| `readonly distance?`  | `number`                                                                                                             | —      | side 偏移距离，默认与 Path step label 一致                                                                      |
-| `readonly gap?`       | `number`                                                                                                             | —      | 文字断口两侧的额外间距；仅在 interrupt 生效时使用                                                               |
-| `readonly interrupt?` | `false \| true`                                                                                                      | —      | 是否请求在兼容宿主描边中产生文字断口；省略时由宿主策略决定，无填充内置 Stroke 的 canonical center 自动启用      |
-| `readonly placement?` | `"outside" \| "inside"`                                                                                              | —      | 标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Extension Ribbon 等面状宿主在未指定 side 时放在内部 |
-| `readonly position?`  | `number \| "at-start" \| "very-near-start" \| "near-start" \| "midway" \| "near-end" \| "very-near-end" \| "at-end"` | —      | 沿段归一化位置：7 个 keyword 或 0..1 数字；默认 midway                                                          |
-| `readonly side?`      | `"right" \| "left" \| "top" \| "bottom"`                                                                             | —      | 标签相对锚点的可写方位：top / bottom / left / right。center 只在 resolve 后产生，不能作为 IR side 写入          |
-| `readonly sloped?`    | `false \| true`                                                                                                      | —      | 是否沿采样点切线旋转标签；为 true 且省略 side 时 canonicalize 为 center，显式 side 仍控制方位                   |
+| 成员                  | 类型                                                                                                                 | 默认值 | 说明                                                                                                        |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------- |
+| `readonly distance?`  | `number`                                                                                                             | —      | side 偏移距离，默认与 Path step label 一致                                                                  |
+| `readonly gap?`       | `number`                                                                                                             | —      | 文字断口两侧的额外间距；仅在 interrupt 生效时使用                                                           |
+| `readonly interrupt?` | `false \| true`                                                                                                      | —      | 是否请求在兼容宿主描边中产生文字断口；省略时由宿主策略决定，无填充内置 Stroke 的 canonical center 自动启用  |
+| `readonly position?`  | `number \| "at-start" \| "very-near-start" \| "near-start" \| "midway" \| "near-end" \| "very-near-end" \| "at-end"` | —      | 沿段归一化位置：7 个 keyword 或 0..1 数字；默认 midway                                                      |
+| `readonly side?`      | `"right" \| "left" \| "center" \| "top" \| "bottom"`                                                                 | —      | 标签相对锚点的方位：top / bottom / left / right / center。center 放在线上，是否沿切线旋转由 sloped 独立控制 |
+| `readonly sloped?`    | `false \| true`                                                                                                      | —      | 是否沿采样点切线旋转标签；为 true 且省略 side 时 canonicalize 为 center，显式 side 仍控制方位               |
 
 </ApiTable>
 

@@ -54,8 +54,6 @@ description: Ribbon 从 Path kind 解析到 Scene 轮廓的编译路径
     {
       label: 'Ribbon 轮廓与标签输出',
       path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
-      startLine: 108,
-      endLine: 201,
     },
   ]}
 />
@@ -175,8 +173,6 @@ $$
     {
       label: '宽度节点加入采样位置',
       path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
-      startLine: 166,
-      endLine: 181,
     },
   ]}
 />
@@ -205,8 +201,6 @@ $$
     {
       label: '上下边界物化入口',
       path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
-      startLine: 122,
-      endLine: 137,
     },
     {
       label: '保留边界并直线封口',
@@ -267,8 +261,6 @@ $$
     {
       label: '标签采样与最终输出',
       path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
-      startLine: 184,
-      endLine: 201,
     },
   ]}
 />
@@ -279,7 +271,7 @@ $$
 - 同名 Path kind 或同名但不同 identity 的 profile 在 registry / provider graph 组装时失败，不按顺序覆盖
 - `centerline` 需要顶层 `children`，并且必须提供带 `kind` 的 `width` 分支对象
 - `boundary` 需要 `upper` 与 `lower` 两条合法开放 step 序列，且禁止顶层 `children` 与中心线宽度字段
-- `boundary` 当前不支持 Path `label`；标签定位依赖 centerline 的采样位置与边界偏移
+- `boundary` 当前不支持 `kindOptions.label`；标签定位依赖 centerline 的采样位置与边界偏移
 - 中心线只通过 `sampling` 控制采样；未知 profile、非法 `params`、负数或非有限 `widthAt` 结果都会带路径位置 fail-loud
 - 多 move、close、零长度整体路径或无效 arc cap 不会静默生成空图元
 

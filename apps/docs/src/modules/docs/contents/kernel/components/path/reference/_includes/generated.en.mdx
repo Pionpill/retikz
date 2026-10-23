@@ -740,15 +740,14 @@ export type ArrowEmitContext = {
 
 <ApiTable>
 
-| Member       | Type                                           | Default | Description                                                                                                 |
-| ------------ | ---------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------- |
-| `distance`   | `number`                                       | —       | Distance relative to the host                                                                               |
-| `gap`        | `number`                                       | —       | Gap around the stroke interruption                                                                          |
-| `interrupt`  | `boolean`                                      | —       | Whether to interrupt the host stroke                                                                        |
-| `placement?` | `"outside" \| "inside"`                        | —       | Path label placement mode. outside uses side offset; inside lets area hosts place labels within their band. |
-| `position`   | `number`                                       | —       | Normalized position along the path                                                                          |
-| `side`       | `NonNullable<IRPathLabel['side']> \| 'center'` | —       | Side relative to the host                                                                                   |
-| `sloped?`    | `false \| true`                                | —       | Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`.                    |
+| Member      | Type                                           | Default | Description                                                                              |
+| ----------- | ---------------------------------------------- | ------- | ---------------------------------------------------------------------------------------- |
+| `distance`  | `number`                                       | —       | Distance relative to the host                                                            |
+| `gap`       | `number`                                       | —       | Gap around the stroke interruption                                                       |
+| `interrupt` | `boolean`                                      | —       | Whether to interrupt the host stroke                                                     |
+| `position`  | `number`                                       | —       | Normalized position along the path                                                       |
+| `side`      | `NonNullable<IRPathLabel['side']> \| 'center'` | —       | Side relative to the host                                                                |
+| `sloped?`   | `false \| true`                                | —       | Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`. |
 
 </ApiTable>
 
@@ -781,15 +780,14 @@ export type CanonicalPathLabelPlacement = Omit<
 
 <ApiTable>
 
-| Member       | Type                                                                                                                 | Default | Description                                                                                                             |
-| ------------ | -------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `distance?`  | `number`                                                                                                             | —       | Side offset distance in user units. Defaults to the same distance as Path step labels.                                  |
-| `gap?`       | `number`                                                                                                             | —       | Extra clearance in user units on each side of an interrupted host stroke gap. Defaults to 4.                            |
-| `interrupt?` | `false \| true`                                                                                                      | —       | Whether this label requests a gap in a compatible host stroke. Omitted values use the host policy.                      |
-| `placement?` | `"outside" \| "inside"`                                                                                              | —       | Path label placement mode. outside uses side offset; inside lets area hosts place labels within their band.             |
-| `position?`  | `number \| "at-start" \| "very-near-start" \| "near-start" \| "midway" \| "near-end" \| "very-near-end" \| "at-end"` | —       | Position along the step: keyword or normalized number. Parameter meaning follows the step kind.                         |
-| `side?`      | `"top" \| "right" \| "bottom" \| "left"`                                                                             | —       | Authored side relative to the label anchor. An omitted value canonicalizes to `top`, or `center` when `sloped` is true. |
-| `sloped?`    | `false \| true`                                                                                                      | —       | Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`.                                |
+| Member       | Type                                                                                                                 | Default | Description                                                                                                                                       |
+| ------------ | -------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `distance?`  | `number`                                                                                                             | —       | Side offset distance in user units. Defaults to the same distance as Path step labels.                                                            |
+| `gap?`       | `number`                                                                                                             | —       | Extra clearance in user units on each side of an interrupted host stroke gap. Defaults to 4.                                                      |
+| `interrupt?` | `false \| true`                                                                                                      | —       | Whether this label requests a gap in a compatible host stroke. Omitted values use the host policy.                                                |
+| `position?`  | `number \| "at-start" \| "very-near-start" \| "near-start" \| "midway" \| "near-end" \| "very-near-end" \| "at-end"` | —       | Position along the step: keyword or normalized number. Parameter meaning follows the step kind.                                                   |
+| `side?`      | `"top" \| "right" \| "bottom" \| "left" \| "center"`                                                                 | —       | Side relative to the label anchor; center places text on the path independently of sloped. Omitted values use top, or center when sloped is true. |
+| `sloped?`    | `false \| true`                                                                                                      | —       | Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`.                                                          |
 
 </ApiTable>
 
@@ -843,7 +841,7 @@ export type PathGeneratorGenerateContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={127}>PathKindBoundaryLabelInput</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={105}>PathKindBoundaryLabelInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -877,7 +875,7 @@ export type PathKindBoundaryLabelInput = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindCompileContext"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={144}>PathKindCompileContext</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindCompileContext"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={122}>PathKindCompileContext</ApiSourceLink>
 
 A custom kind can take over output completely or reuse standard stroke logic through callbacks
 
@@ -893,11 +891,12 @@ A custom kind can take over output completely or reuse standard stroke logic thr
 | `TOwnerOutput` (Type parameter) | `extends JsonValue = never`                                                                   | —       | Type of the JSON output published through ownerOutput.publish; defaults to never, indicating that no owner output is published                                                                                                                                |
 | `appearance`                    | `ResolvedPathKindAppearance`                                                                  | —       | Resolved renderer-neutral host appearance                                                                                                                                                                                                                     |
 | `emitBoundaryLabels`            | `(input: ReadonlyArray<PathKindBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>`         | —       | Compiles positioned boundary labels through shared Kernel layout                                                                                                                                                                                              |
-| `emitHostLabels`                | `(input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>`                                | —       | Compile shared host labels with optional boundary offsets supplied by the kind                                                                                                                                                                                |
+| `emitHostLabels`                | `(input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>`                                | —       | Compile shared host labels with optional side offsets supplied by the kind                                                                                                                                                                                    |
 | `emitStroke`                    | `EmitStroke`                                                                                  | —       | Reuse Core's standard stroke compiler; omission uses the current `path`                                                                                                                                                                                       |
 | `materializePath`               | `(input?: Readonly<{`<br />`children?: ReadonlyArray<IRStep>;`<br />`}>) => MaterializedPath` | —       | Materialize selected steps without applying markers, dashes, fill, or kind-specific geometry                                                                                                                                                                  |
 | `ownerOutput`                   | `CompileOwnerOutputPublisher<TOwnerOutput>`                                                   | —       | Publisher for the final output owned by the current Path kind                                                                                                                                                                                                 |
 | `path`                          | `TPath`                                                                                       | —       | Path subject parsed through this definition's complete schema                                                                                                                                                                                                 |
+| `resolveHostLabel`              | `(label: IRPathLabel) => IRPathLabel`                                                         | —       | Merge host label defaults before the path kind samples label positions                                                                                                                                                                                        |
 | `round`                         | `(value: number) => number`                                                                   | —       | Rounding function shared with the current compilation                                                                                                                                                                                                         |
 | `wrapOutput`                    | `(output: PathKindCompileResult) => PathKindCompileResult`                                    | —       | Wraps complete custom geometry output, includes host-label bounds, and applies Path rotate / scale and metadata<br />Call once after emitting all labels and return the result directly; emitStroke results are already wrapped and must not be wrapped again |
 
@@ -917,6 +916,7 @@ export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwner
     }>,
   ) => MaterializedPath;
   emitStroke: EmitStroke;
+  resolveHostLabel: (label: IRPathLabel) => IRPathLabel;
   emitHostLabels: (input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>;
   emitBoundaryLabels: (input: ReadonlyArray<PathKindBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>;
   wrapOutput: (output: PathKindCompileResult) => PathKindCompileResult;
@@ -929,7 +929,7 @@ export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwner
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindCompileResult"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={23}>PathKindCompileResult</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindCompileResult"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={14}>PathKindCompileResult</ApiSourceLink>
 
 A path-kind definition compiles a high-level path into Scene primitives in the current Path's local coordinates and returns points in that same space for bounds and transform calculations
 
@@ -961,13 +961,13 @@ export type PathKindCompileResult = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"WayDSL"} path={"packages/kernel/core/src/parse/way.ts"} startLine={182}>WayDSL</ApiSourceLink>
+#### <ApiSourceLink label={"WayDSL"} path={"packages/kernel/core/src/parse/way.ts"} startLine={176}>WayDSL</ApiSourceLink>
 
 ```ts
 export type WayDSL = Array<WayItem>;
 ```
 
-#### <ApiSourceLink label={"WayItem"} path={"packages/kernel/core/src/parse/way.ts"} startLine={164}>WayItem</ApiSourceLink>
+#### <ApiSourceLink label={"WayItem"} path={"packages/kernel/core/src/parse/way.ts"} startLine={158}>WayItem</ApiSourceLink>
 
 Node-id strings, Cartesian points, and polar points become line steps (the first becomes move). Relative objects become IR relative/relativeAccumulate targets. horizontalTo/verticalTo become axis-line. A bare via or `{via,fraction}` combines with the next target into a fold. DrawWay.Cycle closes the subpath. curve/cubic/bend consume the next target, while arc/circle/ellipse use the previous position as center without consuming the next item. Internal Cycle/Relative/Accumulate strings avoid collisions with node ids
 
@@ -989,7 +989,7 @@ export type WayItem =
   | WayAxisLineOp;
 ```
 
-#### <ApiSourceLink label={"DrawWay"} path={"packages/kernel/core/src/parse/way.ts"} startLine={33}>DrawWay</ApiSourceLink>
+#### <ApiSourceLink label={"DrawWay"} path={"packages/kernel/core/src/parse/way.ts"} startLine={32}>DrawWay</ApiSourceLink>
 
 Cycle closes to the way start and must be referenced through DrawWay.Cycle. Hv/Vh/Hvh/Vhv describe two- or three-segment folds. Relative/Accumulate discriminate relative-offset items: Relative preserves prevEnd, while Accumulate updates it cumulatively. A const object with as const avoids TypeScript enum reverse mappings and literal incompatibility
 
@@ -1073,7 +1073,7 @@ export declare const samplePathRoute: (
 
 ## Direct calls
 
-#### <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={30}>path</ApiSourceLink> / <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={184}>InputPath</ApiSourceLink>
+#### <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={30}>path</ApiSourceLink> / <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={180}>InputPath</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1121,7 +1121,7 @@ export type InputPath = InputPathBase & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputStep"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={151}>InputStep</ApiSourceLink>
+#### <ApiSourceLink label={"InputStep"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={147}>InputStep</ApiSourceLink>
 
 ```ts
 export type InputStep =
@@ -1232,7 +1232,7 @@ export type PathGeneratorDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindDefinition"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={184}>PathKindDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindDefinition"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={164}>PathKindDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1378,65 +1378,65 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
 
 <ZodSchema shallow name="PathSchema" />
 
-#### <ApiSourceLink label={"StepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={359}>StepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"StepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={354}>StepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="StepSchema" />
 
-#### <ApiSourceLink label={"MoveStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={67}>MoveStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"MoveStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={62}>MoveStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="MoveStepSchema" />
 
-#### <ApiSourceLink label={"LineStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={74}>LineStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"LineStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={69}>LineStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="LineStepSchema" />
 
-#### <ApiSourceLink label={"AxisLineStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={87}>AxisLineStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"AxisLineStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={82}>AxisLineStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="AxisLineStepSchema" />
 
-#### <ApiSourceLink label={"FoldStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={125}>FoldStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FoldStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={120}>FoldStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="FoldStepSchema" />
 
-#### <ApiSourceLink label={"CycleStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={130}>CycleStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CycleStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={125}>CycleStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="CycleStepSchema" />
 
-#### <ApiSourceLink label={"CurveStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={139}>CurveStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CurveStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={134}>CurveStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="CurveStepSchema" />
 
-#### <ApiSourceLink label={"CubicStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={148}>CubicStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CubicStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={143}>CubicStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="CubicStepSchema" />
 
 Either tangent angle selects tangent mode; the omitted outgoing/incoming angle defaults to 0/180. Angles are absolute screen angles (0 right, 90 down). Looseness defaults to 1 and affects only tangent mode.
 
-#### <ApiSourceLink label={"BendStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={179}>BendStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"BendStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={174}>BendStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="BendStepSchema" />
 
-#### <ApiSourceLink label={"ArcStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={251}>ArcStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArcStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={246}>ArcStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="ArcStepSchema" />
 
-#### <ApiSourceLink label={"CirclePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={275}>CirclePathStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CirclePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={270}>CirclePathStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="CirclePathStepSchema" />
 
-#### <ApiSourceLink label={"EllipsePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={301}>EllipsePathStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"EllipsePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={296}>EllipsePathStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="EllipsePathStepSchema" />
 
-#### <ApiSourceLink label={"RectangleStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={306}>RectangleStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RectangleStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={301}>RectangleStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="RectangleStepSchema" />
 
-#### <ApiSourceLink label={"SmoothStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={324}>SmoothStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"SmoothStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={319}>SmoothStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="SmoothStepSchema" />
 
-#### <ApiSourceLink label={"GeneratorStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={341}>GeneratorStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"GeneratorStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={336}>GeneratorStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="GeneratorStepSchema" />
 

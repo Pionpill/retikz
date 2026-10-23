@@ -72,13 +72,13 @@ export const LABEL_CHANNELS: ReadonlyArray<LabelChannelDefinition> = [
   ),
   labelChannel('textColor', common(NodeLabelSchema.shape.textColor), 'color'),
   labelChannel('opacity', common(NodeLabelSchema.shape.opacity), 'opacity'),
-  ...(['position', 'placement', 'distance'] as const).map(target =>
+  ...(['position', 'distance'] as const).map(target =>
     labelChannel(target, {
       node: NodeLabelSchema.shape[target],
       geometry: PathLabelSchema.shape[target],
     }),
   ),
-  ...(['align', 'rotate', 'keepUpright'] as const).map(target =>
+  ...(['placement', 'align', 'rotate', 'keepUpright'] as const).map(target =>
     labelChannel(target, { node: NodeLabelSchema.shape[target] }),
   ),
   ...(['side', 'sloped'] as const).map(target => labelChannel(target, { geometry: PathLabelSchema.shape[target] })),

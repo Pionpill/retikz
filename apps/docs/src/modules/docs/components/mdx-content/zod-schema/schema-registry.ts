@@ -104,6 +104,7 @@ import {
   TaperRibbonWidthSchema,
   RibbonWidthSchema,
   CenterlineRibbonPathOptionsSchema,
+  RibbonLabelSchema,
   BoundaryRibbonPathOptionsSchema,
   RibbonAdaptiveSamplingSchema,
   RibbonArcCapSchema,
@@ -811,6 +812,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: CenterlineRibbonPathOptionsSchema,
     label: 'CenterlineRibbonPathOptions',
     url: '/library/extension/ribbon/reference#centerlineribbonpathoptionsschema',
+  },
+  RibbonLabelSchema: {
+    schema: RibbonLabelSchema,
+    label: 'RibbonLabel',
+    url: '/library/extension/ribbon/reference#ribbonlabelschema',
   },
   BoundaryRibbonPathOptionsSchema: {
     schema: BoundaryRibbonPathOptionsSchema,

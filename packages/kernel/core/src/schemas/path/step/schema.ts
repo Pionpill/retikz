@@ -19,7 +19,7 @@ import { PositionSchema } from '../../position';
 import { AngleDegreesSchema } from '../../scalar';
 import { createLabelVisualStyleShape, TextBlockSchema } from '../../text';
 import { NodeTargetSchema, TargetSchema } from '../target';
-import { BendDirection, FoldStepVia, PathLabelPlacement, PathLabelPosition, PathCloseMode } from './constants';
+import { BendDirection, FoldStepVia, PathLabelPosition, PathCloseMode } from './constants';
 
 /** 校验附着于路径类宿主、由中心线采样确定位置的文本标签 */
 export const PathLabelSchema = strictObject({
@@ -34,10 +34,10 @@ export const PathLabelSchema = strictObject({
   position: union([zodEnum(PathLabelPosition), NormalizedFractionSchema])
     .optional()
     .describe('Position along the step: keyword or normalized number. Parameter meaning follows the step kind.'),
-  side: zodEnum(Side)
+  side: union([zodEnum(Side), literal('center')])
     .optional()
     .describe(
-      'Authored side relative to the label anchor. An omitted value canonicalizes to `top`, or `center` when `sloped` is true.',
+      'Side relative to the label anchor; center places text on the path independently of sloped. Omitted values use top, or center when sloped is true.',
     ),
   sloped: boolean()
     .optional()
@@ -48,11 +48,6 @@ export const PathLabelSchema = strictObject({
   gap: NonNegativeNumberSchema.optional().describe(
     'Extra clearance in user units on each side of an interrupted host stroke gap. Defaults to 4.',
   ),
-  placement: zodEnum(PathLabelPlacement)
-    .optional()
-    .describe(
-      'Path label placement mode. outside uses side offset; inside lets area hosts place labels within their band.',
-    ),
   distance: NonNegativeNumberSchema.optional().describe(
     'Side offset distance in user units. Defaults to the same distance as Path step labels.',
   ),

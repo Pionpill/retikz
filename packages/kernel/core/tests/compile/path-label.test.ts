@@ -57,6 +57,30 @@ const linePathHostLabelIR = (label: NonNullable<Parameters<typeof JSON.stringify
 });
 
 describe('path.label：stroke host label 几何', () => {
+  it('显式 center 将标签放在线上，同时允许保持水平', () => {
+    const scene = compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        children: [
+          {
+            type: 'path',
+            label: { text: 'center', side: 'center', sloped: false, interrupt: false },
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [100, 100] },
+            ],
+          },
+        ],
+      },
+      { padding: 0 },
+    ).scene;
+    const label = findTextPrims(scene.primitives)[0];
+    expect(label.x).toBeCloseTo(50);
+    expect(visualMiddle(label)).toBeCloseTo(50);
+    expect(findLabelGroupPrim(scene.primitives)).toBeUndefined();
+    expect(resolvePathLabelPlacement({ side: 'center', sloped: false }, true).interrupt).toBe(true);
+  });
   it('public route sampling matches host label sampling', () => {
     const commands = [
       { kind: 'move' as const, to: [0, 0] as [number, number] },

@@ -132,7 +132,7 @@ export const previewControlContract = {
   relatedApis: [
     'RelationMark.path',
     'RelationMark.path.label.side',
-    'RelationMark.path.label.placement',
+    'RelationMark.path.label.side',
     'RelationMark.style',
     'PointMark.label.position',
   ],

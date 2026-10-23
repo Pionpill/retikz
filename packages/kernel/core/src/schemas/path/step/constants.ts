@@ -1,11 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
 
-/** 路径标签相对于宿主内部或外部的放置方式 */
-export const PathLabelPlacement = {
-  Outside: 'outside',
-  Inside: 'inside',
-} as const;
-
 /** path-like 路径标签沿段的位置关键字 */
 export const PathLabelPosition = {
   /** 段起点 */
@@ -55,8 +49,6 @@ export const PathCloseMode = {
   /** 连接到圆心形成扇形 */
   Sector: 'sector',
 } as const;
-
-export type PathLabelPlacement = ValueOf<typeof PathLabelPlacement>;
 
 /** path-like 路径标签沿段的位置关键字取值 */
 export type PathLabelPosition = ValueOf<typeof PathLabelPosition>;

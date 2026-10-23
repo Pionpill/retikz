@@ -685,11 +685,10 @@ export declare const FlowRelation: {
               | 'very-near-end'
               | 'at-end'
               | undefined;
-            side?: 'top' | 'right' | 'bottom' | 'left' | undefined;
+            side?: 'top' | 'right' | 'bottom' | 'left' | 'center' | undefined;
             sloped?: boolean | undefined;
             interrupt?: boolean | undefined;
             gap?: number | undefined;
-            placement?: 'outside' | 'inside' | undefined;
             distance?: number | undefined;
             textColor?: string | number | undefined;
             opacity?: number | undefined;
@@ -1492,15 +1491,14 @@ export type FlowLayoutExecutionContext = Readonly<{
 
 <ApiTable>
 
-| Member                | Type                                                                                                                 | Default | Description                                                                                                             |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `readonly distance?`  | `number`                                                                                                             | —       | Side offset distance in user units. Defaults to the same distance as Path step labels.                                  |
-| `readonly gap?`       | `number`                                                                                                             | —       | Extra clearance in user units on each side of an interrupted host stroke gap. Defaults to 4.                            |
-| `readonly interrupt?` | `false \| true`                                                                                                      | —       | Whether this label requests a gap in a compatible host stroke. Omitted values use the host policy.                      |
-| `readonly placement?` | `"outside" \| "inside"`                                                                                              | —       | Path label placement mode. outside uses side offset; inside lets area hosts place labels within their band.             |
-| `readonly position?`  | `number \| "at-start" \| "very-near-start" \| "near-start" \| "midway" \| "near-end" \| "very-near-end" \| "at-end"` | —       | Position along the step: keyword or normalized number. Parameter meaning follows the step kind.                         |
-| `readonly side?`      | `"right" \| "left" \| "top" \| "bottom"`                                                                             | —       | Authored side relative to the label anchor. An omitted value canonicalizes to `top`, or `center` when `sloped` is true. |
-| `readonly sloped?`    | `false \| true`                                                                                                      | —       | Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`.                                |
+| Member                | Type                                                                                                                 | Default | Description                                                                                                                                       |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly distance?`  | `number`                                                                                                             | —       | Side offset distance in user units. Defaults to the same distance as Path step labels.                                                            |
+| `readonly gap?`       | `number`                                                                                                             | —       | Extra clearance in user units on each side of an interrupted host stroke gap. Defaults to 4.                                                      |
+| `readonly interrupt?` | `false \| true`                                                                                                      | —       | Whether this label requests a gap in a compatible host stroke. Omitted values use the host policy.                                                |
+| `readonly position?`  | `number \| "at-start" \| "very-near-start" \| "near-start" \| "midway" \| "near-end" \| "very-near-end" \| "at-end"` | —       | Position along the step: keyword or normalized number. Parameter meaning follows the step kind.                                                   |
+| `readonly side?`      | `"right" \| "left" \| "center" \| "top" \| "bottom"`                                                                 | —       | Side relative to the label anchor; center places text on the path independently of sloped. Omitted values use top, or center when sloped is true. |
+| `readonly sloped?`    | `false \| true`                                                                                                      | —       | Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`.                                                          |
 
 </ApiTable>
 

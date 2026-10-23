@@ -247,16 +247,36 @@ export const emitPathKindPrimitive = (
   });
 
   const hostLabelBoundsPoints: Array<IRPosition> = [];
+  const resolveHostLabel: PathKindCompileContext['resolveHostLabel'] = label =>
+    resolvePathLabel(label, pendingPath.scopeDefaults.path?.label ?? {}, resolution.path.color);
   const emitHostLabels = (input: PathKindLabelInput): ReadonlyArray<ScenePrimitive> =>
     input.labels.flatMap((label, index) => {
       const sample = input.samples[index];
-      const emittedLabel = emitLabelPrimitive({ ...label, interrupt: false, gap: label.gap ?? 4 }, sample, {
-        measureText: context.measureText,
-        round: context.round,
-        rootFontSize: context.rootFontSize,
-        hostOpacity: resolution.path.opacity,
-        placement: { boundaryOffset: sample.boundaryOffset },
-      });
+      const labelDefault = pendingPath.scopeDefaults.path?.label ?? {};
+      const sourcePath = `${irPath}.${input.sourcePath}[${index}]`;
+      const { side, ...labelSource } = label;
+      const styled = resolvePathLabelColors(
+        labelSource,
+        labelDefault.color ?? resolution.path.color,
+        { mode: pendingPath.theme.mode },
+        sourcePath,
+      );
+      const emittedLabel = emitLabelPrimitive(
+        { ...styled, position: label.position, side, distance: label.distance, interrupt: false, gap: 0 },
+        sample,
+        {
+          measureText: context.measureText,
+          round: context.round,
+          rootFontSize: context.rootFontSize,
+          hostOpacity: resolution.path.opacity,
+          placement: { sideOffset: sample.sideOffset },
+          tex: {
+            lowerTex: context.lowerTex,
+            gatingOn: context.lowerTex !== undefined,
+            warn: (code, message) => targetWarn(code, message, { irPath: sourcePath }),
+          },
+        },
+      );
       hostLabelBoundsPoints.push(...emittedLabel.boundsPoints);
 
       return [emittedLabel.primitive];
@@ -294,6 +314,7 @@ export const emitPathKindPrimitive = (
     materializePath,
     emitStroke,
     emitHostLabels,
+    resolveHostLabel,
     emitBoundaryLabels,
     wrapOutput: output => {
       const boundsPoints = [...output.boundsPoints, ...hostLabelBoundsPoints];

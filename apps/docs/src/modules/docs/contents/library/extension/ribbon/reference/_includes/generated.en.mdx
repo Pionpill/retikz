@@ -174,7 +174,7 @@ export type RibbonWidthProfileDefinitionInput<TParams extends JsonObject = JsonO
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RibbonPathKindDefinition"} path={"packages/library/extension/src/ribbon/definition.ts"} startLine={46}>RibbonPathKindDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"RibbonPathKindDefinition"} path={"packages/library/extension/src/ribbon/definition.ts"} startLine={47}>RibbonPathKindDefinition</ApiSourceLink>
 
 Must be explicitly supplied through pathKinds for the current drawing; not automatically registered
 
@@ -182,7 +182,7 @@ Must be explicitly supplied through pathKinds for the current drawing; not autom
 export const RibbonPathKindDefinition = createDefinition([], []);
 ```
 
-#### <ApiSourceLink label={"createRibbonPathKindDefinition"} path={"packages/library/extension/src/ribbon/definition.ts"} startLine={54}>createRibbonPathKindDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"createRibbonPathKindDefinition"} path={"packages/library/extension/src/ribbon/definition.ts"} startLine={55}>createRibbonPathKindDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -322,7 +322,7 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
   description="Complete Ribbon Path input; mode determines the centerline or boundary constraints."
 />
 
-#### <ApiSourceLink label={"RibbonPathOptionsSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={160}>RibbonPathOptionsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RibbonPathOptionsSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={180}>RibbonPathOptionsSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -332,7 +332,15 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
 
 `centerline` requires a `width` object discriminated by `kind`. `boundary` requires `upper` and `lower` and excludes centerline width fields.
 
-#### <ApiSourceLink label={"CenterlineRibbonPathOptionsSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={138}>CenterlineRibbonPathOptionsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RibbonLabelSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={146}>RibbonLabelSchema</ApiSourceLink>
+
+<ZodSchema
+  shallow
+  name="RibbonLabelSchema"
+  description="Ribbon centerline label reusing Path text and visual fields, without stroke interruption options."
+/>
+
+#### <ApiSourceLink label={"CenterlineRibbonPathOptionsSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={155}>CenterlineRibbonPathOptionsSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -340,7 +348,7 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
   description="Centerline mode: width is required; endpoints can set direction, cap, and label. Mode may be omitted."
 />
 
-#### <ApiSourceLink label={"BoundaryRibbonPathOptionsSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={153}>BoundaryRibbonPathOptionsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"BoundaryRibbonPathOptionsSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={173}>BoundaryRibbonPathOptionsSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -348,7 +356,7 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
   description="Boundary mode requires mode, upper, and lower and rejects centerline-only fields."
 />
 
-#### <ApiSourceLink label={"RibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={80}>RibbonWidthSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={88}>RibbonWidthSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -356,7 +364,7 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
   description="Discriminated union of fixed, taper, stops, and profile. Strict branches reject mixed fields."
 />
 
-#### <ApiSourceLink label={"FixedRibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={66}>FixedRibbonWidthSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FixedRibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={74}>FixedRibbonWidthSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -364,7 +372,7 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
   description="kind is fixed; value is the required nonnegative constant width."
 />
 
-#### <ApiSourceLink label={"TaperRibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={72}>TaperRibbonWidthSchema</ApiSourceLink>
+#### <ApiSourceLink label={"TaperRibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={80}>TaperRibbonWidthSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -372,7 +380,7 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
   description="kind is taper; start and end are required nonnegative widths. Interpolation defaults to linear and also supports smooth."
 />
 
-#### <ApiSourceLink label={"RibbonEndpointSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={102}>RibbonEndpointSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RibbonEndpointSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={110}>RibbonEndpointSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -380,11 +388,11 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
   description="One ribbon endpoint: optional section direction, cap, and boundary label; direction defaults to auto."
 />
 
-#### <ApiSourceLink label={"StopsRibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={48}>StopsRibbonWidthSchema</ApiSourceLink>
+#### <ApiSourceLink label={"StopsRibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={56}>StopsRibbonWidthSchema</ApiSourceLink>
 
 <ZodSchema shallow name="StopsRibbonWidthSchema" description="A width curve defined by position and width stops." />
 
-#### <ApiSourceLink label={"ProfileRibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={59}>ProfileRibbonWidthSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ProfileRibbonWidthSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={67}>ProfileRibbonWidthSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -392,21 +400,21 @@ export declare const defineRibbonWidthProfile: <TParams extends JsonObject = Jso
   description="A registered width profile reference with JSON parameters."
 />
 
-#### <ApiSourceLink label={"RibbonArcCapSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={29}>RibbonArcCapSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RibbonArcCapSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={37}>RibbonArcCapSchema</ApiSourceLink>
 
 <ZodSchema shallow name="RibbonArcCapSchema" description="An explicit circular arc cap closing an endpoint." />
 
-#### <ApiSourceLink label={"RibbonFixedSamplingSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={113}>RibbonFixedSamplingSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RibbonFixedSamplingSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={121}>RibbonFixedSamplingSchema</ApiSourceLink>
 
 <ZodSchema shallow name="RibbonFixedSamplingSchema" description="A fixed number of cross-section samples." />
 
-#### <ApiSourceLink label={"RibbonAdaptiveSamplingSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={123}>RibbonAdaptiveSamplingSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RibbonAdaptiveSamplingSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={131}>RibbonAdaptiveSamplingSchema</ApiSourceLink>
 
 <ZodSchema shallow name="RibbonAdaptiveSamplingSchema" description="Choose samples from path length and tolerance." />
 
-Endpoint `label` directly uses Kernel [BoundaryLabelSchema](/kernel/components/node/reference#boundarylabelschema), alongside `cap`. There is no Ribbon-specific label schema.
+Endpoint `label` directly uses Kernel [BoundaryLabelSchema](/kernel/components/node/reference#boundarylabelschema), alongside `cap`. Endpoint labels need no Ribbon-specific schema.
 
-#### <ApiSourceLink label={"RibbonDirectionSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={88}>RibbonDirectionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RibbonDirectionSchema"} path={"packages/library/extension/src/ribbon/schema.ts"} startLine={96}>RibbonDirectionSchema</ApiSourceLink>
 
 <ZodSchema
   shallow

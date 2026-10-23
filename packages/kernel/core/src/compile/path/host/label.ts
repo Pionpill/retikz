@@ -32,11 +32,8 @@ export type LabelTexContext = {
 
 /** step label 放置时额外需要的宿主几何信息 */
 export type LabelPlacementContext = {
-  /**
-   * 面状宿主在采样点处从中心线到边界的半宽
-   * @default 0
-   */
-  boundaryOffset?: number;
+  /** 宿主计算的侧向距离，省略时使用标签自身的 distance */
+  sideOffset?: number;
 };
 
 /** step label emit 所需上下文 */
@@ -54,7 +51,7 @@ export type EmitLabelPrimitiveContext = {
   hostOpacity?: number;
   /** 公式识别、降解和诊断能力；省略时不启用公式识别 */
   tex?: LabelTexContext;
-  /** 面状宿主的边界偏移，用于计算标签内外放置位置 */
+  /** 宿主提供的标签几何定位结果 */
   placement?: LabelPlacementContext;
 };
 
@@ -88,9 +85,7 @@ export const emitLabelPrimitive = (
   const side = label.side;
   const sloped = label.sloped === true;
   const sideDistance = label.distance;
-  const boundaryOffset = placementCtx?.boundaryOffset ?? 0;
-  const sideOffset =
-    label.placement === 'inside' ? Math.max(0, boundaryOffset - sideDistance) : boundaryOffset + sideDistance;
+  const sideOffset = placementCtx?.sideOffset ?? sideDistance;
   const labelOpacity = combineOpacity(label.opacity, hostOpacity);
 
   const gatingOn = texCtx?.gatingOn ?? false;

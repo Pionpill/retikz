@@ -144,7 +144,7 @@ describe('contract mark host label lowering', () => {
     expect(path.children.some(step => 'label' in step && step.label !== undefined)).toBe(false);
   });
 
-  it('relation-ribbon-host-label：RelationMark 顶层 label lowering 到 core ribbon Path.label', () => {
+  it('RelationMark 标签下沉到 Ribbon kindOptions.label', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -154,7 +154,7 @@ describe('contract mark host label lowering', () => {
             target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
           },
           properties: {
-            label: { content: 'flow', position: 'midway', placement: 'inside', sloped: true },
+            label: { content: 'flow', position: 'midway', side: 'center', sloped: true },
             geometry: { kind: 'ribbon', width: 12 },
           },
         },
@@ -168,7 +168,8 @@ describe('contract mark host label lowering', () => {
 
     expect(ribbon.kind).toBe('ribbon');
     expect(ribbon.kindOptions).toMatchObject({ width: { kind: 'fixed', value: 12 } });
-    expect(ribbon.label).toEqual({ text: 'flow', position: 'midway', placement: 'inside', sloped: true });
+    expect(ribbon.kindOptions?.label).toEqual({ text: 'flow', position: 'midway', side: 'center', sloped: true });
+    expect(ribbon.label).toBeUndefined();
   });
 });
 
