@@ -71,6 +71,10 @@ packages/viz/_notes/decisions/chart/v0/v0.1/001-example.md
 - 文件、测试位置、fixture、命令或证据映射不清：更新 `PLAN.md` / `TEST_CONTRACT.md`；物质性改变计划后重新执行 Plan Gate。
 - 不得为了让测试可写而把具体 case、内部 helper 或测试路径反向塞进 ADR。
 
+## 跨包验证缓存
+
+- 修改 workspace 依赖包源码后，在消费包运行 Vitest 验证时显式加 `--fsModuleCache=false`，确保结果来自当前依赖源码，例如 `pnpm --filter @retikz/render exec vitest run --fsModuleCache=false <test-file>`；不以可能复用旧模块的缓存结果作为跨包验收证据，不为单次验证修改全仓缓存配置。
+
 ## 常见错误
 
 - 只列 happy path：必须列默认值、边界或错误反例。
