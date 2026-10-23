@@ -18,6 +18,9 @@ export const PathEncodingSchema = VisualEncodingSchema.extend({
   lineCap: ChannelSchema.optional(),
   lineJoin: ChannelSchema.optional(),
   cornerRadius: ChannelSchema.optional(),
-  /** 单标签或非空多标签数组；字符串表示内容字段，各项与固定标签按索引配对 */
-  label: union([pathLabelEncoding, array(pathLabelEncoding).min(1)]).optional(),
+  label: union([pathLabelEncoding, array(pathLabelEncoding).min(1)])
+    .optional()
+    .describe(
+      'Single label binding or non-empty array; strings bind text fields, and entries match fixed labels by index',
+    ),
 }).describe('Declared path-host visual field targets');
