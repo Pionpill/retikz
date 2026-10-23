@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { CompileOptions } from '../../../src/compile/compile';
 import { compileToScene } from '../../../src/compile/compile';
 import type {
-  MarkerPrimitive,
+  ScenePrimitive,
   PaintResource,
   PatternDefinition,
   ResolvedPatternTile,
@@ -17,7 +17,7 @@ import type { IRPaint, IRScene } from '../../../src/schemas';
  * 来自 Bug Hunter 的边角 IR / pattern def。`compileToScene` 直接消费 IR、不再跑 zod schema，故
  * size / lineWidth / rotation 的 number / positive 校验在手搓 IR 时被绕过——现在 compile 是唯一关口，
  * 非 finite / 非正 size / rotation 在 `resolvePatternTile` 抛清晰错，motif 非 finite 坐标由共享
- * `validateMarkerPrimitives` 的 finite 栅栏拦下（与 arrow 路径对齐），守 Scene 100% JSON 可序列化。
+ * `materializeScenePrimitives` 的 finite 栅栏拦下（与 arrow 路径对齐），守 Scene 100% JSON 可序列化。
  * 可接受的边角（空 motif / dedup / override / 错误质量 / 交叉资源 / background 透传）保持稳定行为
  */
 
@@ -112,7 +112,7 @@ describe('ADV — 极端 / 非正 size', () => {
   it('size_huge_overflow：size=1e308 + emit 做 size×1e10 溢出 Infinity 坐标 → finite 栅栏抛', () => {
     const overflowPattern: PatternDefinition = {
       name: 'overflowPattern',
-      emit: ({ size }): Array<MarkerPrimitive> => [{ type: 'rect', x: 0, y: 0, width: size * 1e10, height: size }],
+      emit: ({ size }): Array<ScenePrimitive> => [{ type: 'rect', x: 0, y: 0, width: size * 1e10, height: size }],
     };
 
     expect(() =>
@@ -158,7 +158,7 @@ describe('ADV — emit 产物栅栏', () => {
   it('motif_nonfinite_coords：custom emit 产 NaN 坐标 → finite 栅栏抛（含 pattern 名）', () => {
     const nanPattern: PatternDefinition = {
       name: 'nanPattern',
-      emit: (): Array<MarkerPrimitive> => [{ type: 'ellipse', cx: NaN, cy: 0, rx: 0 / 0, ry: 1, fill: 'red' }],
+      emit: (): Array<ScenePrimitive> => [{ type: 'ellipse', cx: NaN, cy: 0, rx: 0 / 0, ry: 1, fill: 'red' }],
     };
 
     expect(() =>
@@ -243,7 +243,7 @@ describe('ADV — emit 产物栅栏', () => {
   });
 
   it('empty_motif：emit 返回 [] → 空 tile，不崩', () => {
-    const emptyPattern: PatternDefinition = { name: 'empty', emit: (): Array<MarkerPrimitive> => [] };
+    const emptyPattern: PatternDefinition = { name: 'empty', emit: (): Array<ScenePrimitive> => [] };
     const tile = tileOf({ kind: 'pattern', shape: 'empty' }, { patterns: [{ ...emptyPattern, name: 'empty' }] });
 
     expect(tile?.motif).toEqual([]);
@@ -303,7 +303,7 @@ describe('ADV — dedup / override / 交叉', () => {
     const customLines: PatternDefinition = {
       name: 'customLines',
       defaultSize: 8,
-      emit: ({ size, color }): Array<MarkerPrimitive> => [
+      emit: ({ size, color }): Array<ScenePrimitive> => [
         {
           type: 'path',
           commands: [
@@ -399,7 +399,7 @@ describe('ADV — dedup / override / 交叉', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 describe('ADV — duplicate registration / background', () => {
   it('duplicate_builtin_name_rejected_even_if_unused：注册同名内置但场景未用 → 仍失败', () => {
-    const customLines: PatternDefinition = { name: 'lines', emit: (): Array<MarkerPrimitive> => [] };
+    const customLines: PatternDefinition = { name: 'lines', emit: (): Array<ScenePrimitive> => [] };
 
     expect(
       () =>

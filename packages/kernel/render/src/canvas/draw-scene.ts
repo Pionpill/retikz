@@ -2,24 +2,20 @@ import type {
   BlendMode,
   IRDropShadow,
   IRPaint,
-  MarkerFill,
-  MarkerPrimitive,
   PaintValue,
-  PathCommand,
+  ScenePrimitive,
   ResolvedArrowEnd,
   ResolvedPatternTile,
   Scene,
-  ScenePrimitive,
   SceneResource,
   TextPrim,
 } from '@retikz/core';
 
+import { validateSceneContent } from '../shared';
 import {
-  commandArcStart,
-  commandEndpoint,
-  commandEndTangent,
-  commandStartTangent,
   countScenePrimitiveOccurrences,
+  startArrowPlacement,
+  endArrowPlacement,
   firstLineDy,
   parseHexColor,
   pathBounds,
@@ -31,7 +27,14 @@ import { buildGradientStrokeStyle, fillObjectGradient } from './gradient-paint';
 import { applyClip, applyTransform, buildPath, DEG_TO_RAD, roundedRectPath } from './path-geometry';
 import type { CanvasWarning, DrawOptions, UnsupportedCanvasFeature } from './types';
 
-const warnUnsupported = (options: DrawOptions, feature: UnsupportedCanvasFeature, message: string): void => {
+/** 资源内容继承的绘制上下文，不创建独立 authoring 节点 */
+type SceneDrawOptions = DrawOptions & {
+  hostId?: string;
+  resourceContent?: boolean;
+  contextStroke?: PaintValue;
+};
+
+const warnUnsupported = (options: SceneDrawOptions, feature: UnsupportedCanvasFeature, message: string): void => {
   const warning: CanvasWarning = { feature, message };
   if (options.warnUnsupported) {
     options.warnUnsupported(warning);
@@ -45,7 +48,7 @@ const warnUnsupported = (options: DrawOptions, feature: UnsupportedCanvasFeature
  * 解析颜色串：`currentColor` → `DrawOptions.currentColor`（缺省保持原串）
  * @description canvas 不继承 CSS `color`，故主题色 `currentColor` 需显式解析；其余颜色原样返回
  */
-const resolveColor = (color: string | undefined, options: DrawOptions): string | undefined => {
+const resolveColor = (color: string | undefined, options: SceneDrawOptions): string | undefined => {
   if (color === 'currentColor' && options.currentColor !== undefined) return options.currentColor;
   return color;
 };
@@ -220,7 +223,7 @@ const resolvePaintStyle = (
   ctx: CanvasRenderingContext2D,
   paint: PaintValue | undefined,
   contextStroke: string | undefined,
-  options: DrawOptions,
+  options: SceneDrawOptions,
   resources: ResourceMap,
 ): string | CanvasGradient | CanvasPattern | undefined => {
   if (paint === undefined) return undefined;
@@ -231,7 +234,7 @@ const resolvePaintStyle = (
   if (resource !== undefined && resource.kind === 'paint') {
     const spec = resource.spec;
     if (spec.kind === 'pattern' && resource.tile !== undefined) {
-      const pattern = buildPattern(ctx, resource.tile, options);
+      const pattern = buildPattern(ctx, resource.tile, options, resources);
       if (pattern !== undefined) return pattern;
     }
   }
@@ -266,7 +269,7 @@ const fillImage = (
   spec: ImagePaint,
   bbox: BBox,
   fillOpacity: number | undefined,
-  options: DrawOptions,
+  options: SceneDrawOptions,
 ): void => {
   const img = options.getImage?.(spec.href) ?? null;
   if (img === null) {
@@ -304,7 +307,7 @@ const fillCurrentPath = (
   stroke: PaintValue | undefined,
   fillOpacity: number | undefined,
   fillRule: CanvasFillRule | undefined,
-  options: DrawOptions,
+  options: SceneDrawOptions,
   resources: ResourceMap,
   bbox: BBox,
 ): void => {
@@ -355,7 +358,7 @@ const strokeCurrentPath = (
   strokeWidth: number | undefined,
   dashPattern: Array<number> | undefined,
   dashOffset: number | undefined,
-  options: DrawOptions,
+  options: SceneDrawOptions,
   resources: ResourceMap,
   bbox: BBox,
   state: DrawState,
@@ -398,7 +401,7 @@ const strokeCurrentPath = (
   if (strokeOpacity !== undefined) ctx.restore();
 };
 
-const resolveFontFamily = (fontFamily: string | undefined, options: DrawOptions): string => {
+const resolveFontFamily = (fontFamily: string | undefined, options: SceneDrawOptions): string => {
   if (typeof fontFamily === 'string' && fontFamily.trim().length > 0) return fontFamily;
   if (typeof options.defaultFontFamily === 'string' && options.defaultFontFamily.trim().length > 0) {
     return options.defaultFontFamily;
@@ -412,13 +415,13 @@ const buildFont = (
   fontFamily: string | undefined,
   fontWeight: string | number | undefined,
   fontStyle: string | undefined,
-  options: DrawOptions,
+  options: SceneDrawOptions,
 ): string =>
   [fontStyle, fontWeight, `${fontSize}px`, resolveFontFamily(fontFamily, options)]
     .filter(part => part !== undefined && part !== '')
     .join(' ');
 
-const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim, options: DrawOptions): void => {
+const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim, options: SceneDrawOptions): void => {
   ctx.font = buildFont(p.fontSize, p.fontFamily, p.fontWeight, p.fontStyle, options);
   ctx.textAlign = p.align === 'middle' ? 'center' : p.align;
   ctx.textBaseline = p.baseline;
@@ -464,107 +467,17 @@ const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim, options: DrawOptio
 
 type Point = [number, number];
 
-type DrawableCommand = Exclude<PathCommand, { kind: 'move' | 'close' }>;
-
-type DrawableSegment = {
-  command: DrawableCommand;
-  from: Point;
-};
-
-const drawableSegments = (commands: ReadonlyArray<PathCommand>): Array<DrawableSegment> => {
-  const segments: Array<DrawableSegment> = [];
-  let cursor: Point | null = null;
-  let subpathStart: Point | null = null;
-
-  for (const command of commands) {
-    if (command.kind === 'move') {
-      cursor = [command.to[0], command.to[1]];
-      subpathStart = cursor;
-      continue;
-    }
-
-    if (command.kind === 'close') {
-      cursor = subpathStart;
-      continue;
-    }
-
-    const from = cursor ?? (command.kind === 'arc' || command.kind === 'ellipseArc' ? commandArcStart(command) : null);
-    if (from) segments.push({ command, from });
-    cursor = commandEndpoint(command);
-    if (subpathStart === null && from) subpathStart = from;
-  }
-
-  return segments;
-};
-
-/**
- * 末端箭头定位：终点 + 入射切线角（指向终点的方向）
- * @description 使用最后一条可绘制命令的几何终点与解析切线；无法判向则角度取 0
- */
-const endArrowPlacement = (commands: ReadonlyArray<PathCommand>): { vertex: Point; angle: number } | null => {
-  const segment = drawableSegments(commands).at(-1);
-  if (!segment) return null;
-
-  const vertex = commandEndpoint(segment.command);
-  if (!vertex) return null;
-
-  const tangent = commandEndTangent(segment.command, segment.from);
-  const angle = tangent ? Math.atan2(tangent[1], tangent[0]) : 0;
-
-  return { vertex, angle };
-};
-
-/**
- * 起点箭头定位：起点 + 离开切线角的反向（对应 SVG `orient="auto-start-reverse"`）
- * @description 使用第一条可绘制命令的几何起点与解析切线；无法判向则角度取 0
- */
-const startArrowPlacement = (commands: ReadonlyArray<PathCommand>): { vertex: Point; angle: number } | null => {
-  const segment = drawableSegments(commands).at(0);
-  if (!segment) return null;
-
-  const tangent = commandStartTangent(segment.command, segment.from);
-  const angle = tangent ? Math.atan2(tangent[1], tangent[0]) + Math.PI : 0;
-
-  return { vertex: segment.from, angle };
-};
-
-/** 将 marker 的宿主描边引用绑定为 Scene paint 后复用普通图元绘制 */
-const drawMarkerPrim = (
-  ctx: CanvasRenderingContext2D,
-  prim: MarkerPrimitive,
-  pathStroke: string | undefined,
-  options: DrawOptions,
-  resources: ResourceMap,
-  state: DrawState,
-): void => {
-  if (prim.type === 'group') {
-    ctx.save();
-    for (const transform of prim.transforms ?? []) applyTransform(ctx, transform);
-    for (const child of prim.children) drawMarkerPrim(ctx, child, pathStroke, options, resources, state);
-    ctx.restore();
-    return;
-  }
-  const resolveMarkerPaint = (paint: MarkerFill | undefined): PaintValue | undefined =>
-    typeof paint === 'object' && paint.kind === 'contextStroke' ? (pathStroke ?? String(ctx.strokeStyle)) : paint;
-  drawPrim(
-    ctx,
-    { ...prim, fill: resolveMarkerPaint(prim.fill), stroke: resolveMarkerPaint(prim.stroke) },
-    options,
-    resources,
-    state,
-  );
-};
-
 /**
  * pattern paint server 填充：离屏渲染 motif tile → ctx.createPattern('repeat')
- * @description tile 已由 compile 解析（size / background / rotation / motif 几何）。motif 复用 drawMarkerPrim
+ * @description tile 已由 compile 解析（size / background / rotation / motif 几何）。motif 复用普通图元绘制
  *   画进 size×size 离屏 context；contextStroke / currentColor 走 options.currentColor（缺省黑）。rotation 经
  *   pattern.setTransform 旋转。缺 createOffscreen 工厂返回 undefined（caller 据此降级告警）
  */
 const buildPattern = (
   ctx: CanvasRenderingContext2D,
   tile: ResolvedPatternTile,
-  options: DrawOptions,
+  options: SceneDrawOptions,
+  resources: ResourceMap,
 ): CanvasPattern | undefined => {
   const off = options.createOffscreen?.(tile.size, tile.size) ?? null;
   if (off === null) return undefined;
@@ -576,7 +489,9 @@ const buildPattern = (
   const motifColor = options.currentColor ?? '#000';
 
   for (const prim of tile.motif)
-    drawMarkerPrim(off, prim, motifColor, options, new Map(), { gradientPatterns: new Map() });
+    drawPrim(off, prim, { ...options, resourceContent: true, contextStroke: motifColor }, resources, {
+      gradientPatterns: new Map(),
+    });
   const pattern = ctx.createPattern(off.canvas, 'repeat');
   if (pattern === null) return undefined;
   if (tile.rotation) {
@@ -598,8 +513,8 @@ const drawArrowMarker = (
   vertex: Point,
   angle: number,
   strokeWidth: number,
-  pathStroke: string | undefined,
-  options: DrawOptions,
+  pathStroke: PaintValue | undefined,
+  options: SceneDrawOptions,
   resources: ResourceMap,
   state: DrawState,
 ): void => {
@@ -614,23 +529,32 @@ const drawArrowMarker = (
   ctx.scale((spec.markerWidth * strokeWidth) / spec.baseSize, (spec.markerHeight * strokeWidth) / spec.baseSize);
   ctx.translate(-spec.refX, -spec.baseSize / 2);
 
-  for (const prim of spec.marker) drawMarkerPrim(ctx, prim, pathStroke, options, resources, state);
+  for (const prim of spec.marker)
+    drawPrim(ctx, prim, { ...options, resourceContent: true, contextStroke: pathStroke }, resources, state);
   ctx.restore();
 };
 
 const drawPrim = (
   ctx: CanvasRenderingContext2D,
   p: ScenePrimitive,
-  options: DrawOptions,
+  options: SceneDrawOptions,
   resources: ResourceMap,
   state: DrawState,
 ): void => {
+  options = { ...options, hostId: options.resourceContent ? options.hostId : (p.id ?? options.hostId) };
+  if (p.type !== 'group' && p.type !== 'text') {
+    const bindPaint = (paint: PaintValue | undefined): PaintValue | undefined =>
+      typeof paint === 'object' && paint.kind === 'contextStroke'
+        ? (options.contextStroke ?? options.currentColor ?? '#000')
+        : paint;
+    p = { ...p, fill: bindPaint(p.fill), stroke: bindPaint(p.stroke) };
+  }
   ctx.save();
 
   // 动画：把该 prim 的 tracks 在「有效时刻」应用到 ctx（transform / dash）并取覆盖后的 prim（opacity / 色 / 线宽）。
   // per-id 虚拟时钟经 resolvePrimAnimation 折算各 id 的有效时刻 / 模式（skip=渲染 base）；缺省退回全局 time + 仅自动播。
   if (p.animations !== undefined && p.animations.length > 0) {
-    const resolution = options.resolvePrimAnimation?.(p.id);
+    const resolution = options.resolvePrimAnimation?.(options.hostId);
     const primTime = resolution?.mode === 'at' ? resolution.time : options.time;
     if (resolution?.mode !== 'skip' && primTime !== undefined) {
       p = applyPrimAnimations(ctx, p, primTime, {
@@ -746,7 +670,7 @@ const drawPrim = (
 
             if (p.arrowStart || p.arrowEnd) {
               const strokeWidth = p.strokeWidth ?? 1;
-              const pathStroke = typeof p.stroke === 'string' ? resolveColor(p.stroke, options) : undefined;
+              const pathStroke = p.stroke;
               if (p.arrowStart) {
                 const placement = startArrowPlacement(p.commands);
                 if (placement)
@@ -813,6 +737,7 @@ const drawPrim = (
 
 /** 绘制已编译 Scene 到 Canvas 2D context */
 export const drawScene = (ctx: CanvasRenderingContext2D, scene: Scene, options: DrawOptions = {}): void => {
+  validateSceneContent(scene);
   const resources: ResourceMap = new Map((scene.resources ?? []).map(r => [r.id, r]));
   const state: DrawState = { gradientPatterns: new Map() };
 

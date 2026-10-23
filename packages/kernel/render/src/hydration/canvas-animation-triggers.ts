@@ -1,4 +1,5 @@
-import type { Scene, ScenePrimitive } from '@retikz/core';
+import type { Scene } from '@retikz/core';
+import { visitSceneContent } from '@retikz/core';
 
 import { geometryOf } from './context';
 import type { ElementHandlers, HydrationHandlers } from './events';
@@ -8,30 +9,20 @@ const EVENT_NAMES = new Set<string>(Object.values(RetikzEvent));
 
 const isRetikzEventName = (event: string): event is RetikzEvent => EVENT_NAMES.has(event);
 
-const walkPrimitives = (
-  primitives: ReadonlyArray<ScenePrimitive>,
-  visit: (primitive: ScenePrimitive) => void,
-): void => {
-  for (const primitive of primitives) {
-    visit(primitive);
-    if (primitive.type === 'group') walkPrimitives(primitive.children, visit);
-  }
-};
-
 /** Scene 中含 canvas `{ onEvent }` trigger 的 id → 事件名集合 */
 export const collectCanvasAnimationEventTriggers = (scene: Scene): Map<string, Set<RetikzEvent>> => {
   const triggers = new Map<string, Set<RetikzEvent>>();
-  walkPrimitives(scene.primitives, primitive => {
-    if (primitive.id === undefined || primitive.animations === undefined) return;
+  visitSceneContent(scene, (primitive, { hostId }) => {
+    if (hostId === undefined || primitive.animations === undefined) return;
 
     for (const track of primitive.animations) {
       const trigger = track.trigger;
       if (typeof trigger !== 'object') continue;
       if (!isRetikzEventName(trigger.onEvent)) continue;
 
-      const set = triggers.get(primitive.id) ?? new Set<RetikzEvent>();
+      const set = triggers.get(hostId) ?? new Set<RetikzEvent>();
       set.add(trigger.onEvent);
-      triggers.set(primitive.id, set);
+      triggers.set(hostId, set);
     }
   });
 
@@ -67,9 +58,9 @@ export const withCanvasAnimationEventHandlers = (
 /** Scene 中含 `visible` trigger 的 id 集合 */
 export const collectCanvasVisibleAnimationIds = (scene: Scene): Set<string> => {
   const ids = new Set<string>();
-  walkPrimitives(scene.primitives, primitive => {
-    if (primitive.id === undefined || primitive.animations === undefined) return;
-    if (primitive.animations.some(track => track.trigger === 'visible')) ids.add(primitive.id);
+  visitSceneContent(scene, (primitive, { hostId }) => {
+    if (hostId === undefined || primitive.animations === undefined) return;
+    if (primitive.animations.some(track => track.trigger === 'visible')) ids.add(hostId);
   });
 
   return ids;

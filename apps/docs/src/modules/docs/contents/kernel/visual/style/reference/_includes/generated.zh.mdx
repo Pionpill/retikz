@@ -245,7 +245,7 @@ export type PatternEmitContext = {
 #### <ApiSourceLink label={"PatternEmitOutput"} path={"packages/kernel/core/src/contract/pattern/types.ts"} startLine={78}>PatternEmitOutput</ApiSourceLink>
 
 ```ts
-export type PatternEmitOutput = Iterable<MarkerPrimitive> | PatternEmitResult;
+export type PatternEmitOutput = Iterable<ScenePrimitive> | PatternEmitResult;
 ```
 
 #### <ApiSourceLink label={"PatternEmitResult"} path={"packages/kernel/core/src/contract/pattern/types.ts"} startLine={70}>PatternEmitResult</ApiSourceLink>
@@ -258,10 +258,10 @@ export type PatternEmitOutput = Iterable<MarkerPrimitive> | PatternEmitResult;
 
 <ApiTable>
 
-| 成员       | 类型                        | 默认值 | 说明                                             |
-| ---------- | --------------------------- | ------ | ------------------------------------------------ |
-| `motif`    | `Iterable<MarkerPrimitive>` | —      | 局部 tile 坐标中的 motif 几何                    |
-| `tileSize` | `number`                    | —      | 最终 tile 周期（user units），必须为 finite 正数 |
+| 成员       | 类型                       | 默认值 | 说明                                             |
+| ---------- | -------------------------- | ------ | ------------------------------------------------ |
+| `motif`    | `Iterable<ScenePrimitive>` | —      | 局部 tile 坐标中的 motif 几何                    |
+| `tileSize` | `number`                   | —      | 最终 tile 周期（user units），必须为 finite 正数 |
 
 </ApiTable>
 
@@ -272,7 +272,7 @@ export type PatternEmitOutput = Iterable<MarkerPrimitive> | PatternEmitResult;
 ```ts
 export type PatternEmitResult = {
   tileSize: number;
-  motif: Iterable<MarkerPrimitive>;
+  motif: Iterable<ScenePrimitive>;
 };
 ```
 

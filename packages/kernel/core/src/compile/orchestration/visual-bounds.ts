@@ -1,6 +1,7 @@
 import { DEG_TO_RAD, boundsOf, boundsToRect } from '@retikz/math';
 import type { BoundsRect } from '@retikz/math';
 
+import { sceneTextBounds } from '../../contract';
 import type { GroupPrim, PathCommand, PathPrim, ScenePrimitive, SceneResource, Transform } from '../../contract';
 import type { IRPosition, ResolvedDropShadow } from '../../schemas';
 import { CANONICAL_STROKE_MITER_LIMIT } from '../constants';
@@ -288,23 +289,7 @@ const primitiveBounds = (
   if (primitive.type === 'text') {
     if (primitive.opacity === 0) return undefined;
 
-    const x =
-      primitive.align === 'start'
-        ? primitive.x
-        : primitive.align === 'middle'
-          ? primitive.x - primitive.measuredWidth / 2
-          : primitive.x - primitive.measuredWidth;
-    const y =
-      primitive.baseline === 'top'
-        ? primitive.y
-        : primitive.baseline === 'middle'
-          ? primitive.y - primitive.measuredHeight / 2
-          : primitive.baseline === 'alphabetic'
-            ? // alphabetic 锚点属于首行，后续行向下展开，不能把整块高度都扣到首行上方
-              primitive.y - primitive.measuredHeight + (primitive.lines.length - 1) * primitive.lineHeight
-            : primitive.y - primitive.measuredHeight;
-
-    return { x, y, width: primitive.measuredWidth, height: primitive.measuredHeight };
+    return sceneTextBounds(primitive);
   }
 
   if (primitive.type === 'group') {

@@ -1,4 +1,4 @@
-import type { MarkerFill, MarkerPrimitive } from '../scene';
+import type { PaintValue, ScenePrimitive } from '../scene';
 
 /**
  * arrow emit 的运行时上下文
@@ -6,9 +6,9 @@ import type { MarkerFill, MarkerPrimitive } from '../scene';
  */
 export type ArrowEmitContext = {
   /** 描边颜色（无 override 时 = `{ kind: 'contextStroke' }`，继承 path stroke） */
-  stroke: MarkerFill;
+  stroke: PaintValue;
   /** 填充颜色（实心箭头主导色；空心箭头会按 `hollow` 处理后传入） */
-  fill: MarkerFill;
+  fill: PaintValue;
   /** 描边粗细（marker 局部坐标，user units）；空心箭头据此画外轮廓 */
   lineWidth: number;
   /** 精度取整函数（与 compile/render 同一 round，保几何一致） */
@@ -56,6 +56,6 @@ export type ArrowDefinition = {
    * @default 8
    */
   defaultWidth?: number;
-  /** 局部坐标 marker 几何（renderer-agnostic）；adapter 把产物嵌进 `<marker>` */
-  emit: (ctx: ArrowEmitContext) => Iterable<MarkerPrimitive>;
+  /** 局部坐标中的基础场景图元；渲染容器负责端点定位与宿主上下文 */
+  emit: (ctx: ArrowEmitContext) => Iterable<ScenePrimitive>;
 };

@@ -215,7 +215,7 @@ export type PatternEmitContext = {
 #### <ApiSourceLink label={"PatternEmitOutput"} path={"packages/kernel/core/src/contract/pattern/types.ts"} startLine={78}>PatternEmitOutput</ApiSourceLink>
 
 ```ts
-export type PatternEmitOutput = Iterable<MarkerPrimitive> | PatternEmitResult;
+export type PatternEmitOutput = Iterable<ScenePrimitive> | PatternEmitResult;
 ```
 
 #### <ApiSourceLink label={"PatternEmitResult"} path={"packages/kernel/core/src/contract/pattern/types.ts"} startLine={70}>PatternEmitResult</ApiSourceLink>
@@ -228,10 +228,10 @@ For patterns whose period differs from `context.size`; the compiler validates an
 
 <ApiTable>
 
-| Member     | Type                        | Default | Description                                                  |
-| ---------- | --------------------------- | ------- | ------------------------------------------------------------ |
-| `motif`    | `Iterable<MarkerPrimitive>` | —       | Motif geometry in local tile coordinates                     |
-| `tileSize` | `number`                    | —       | Final tile period in user units; must be finite and positive |
+| Member     | Type                       | Default | Description                                                  |
+| ---------- | -------------------------- | ------- | ------------------------------------------------------------ |
+| `motif`    | `Iterable<ScenePrimitive>` | —       | Motif geometry in local tile coordinates                     |
+| `tileSize` | `number`                   | —       | Final tile period in user units; must be finite and positive |
 
 </ApiTable>
 
@@ -242,7 +242,7 @@ For patterns whose period differs from `context.size`; the compiler validates an
 ```ts
 export type PatternEmitResult = {
   tileSize: number;
-  motif: Iterable<MarkerPrimitive>;
+  motif: Iterable<ScenePrimitive>;
 };
 ```
 

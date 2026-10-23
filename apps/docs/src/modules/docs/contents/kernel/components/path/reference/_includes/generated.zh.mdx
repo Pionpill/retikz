@@ -710,10 +710,10 @@ export type SmoothStepProps = {
 
 | 成员        | 类型                    | 默认值 | 说明                                                                       |
 | ----------- | ----------------------- | ------ | -------------------------------------------------------------------------- |
-| `fill`      | `MarkerFill`            | —      | 填充颜色（实心箭头主导色；空心箭头会按 `hollow` 处理后传入）               |
+| `fill`      | `PaintValue`            | —      | 填充颜色（实心箭头主导色；空心箭头会按 `hollow` 处理后传入）               |
 | `lineWidth` | `number`                | —      | 描边粗细（marker 局部坐标，user units）；空心箭头据此画外轮廓              |
 | `round`     | `(n: number) => number` | —      | 精度取整函数（与 compile/render 同一 round，保几何一致）                   |
-| `stroke`    | `MarkerFill`            | —      | 描边颜色（无 override 时 = `{ kind: 'contextStroke' }`，继承 path stroke） |
+| `stroke`    | `PaintValue`            | —      | 描边颜色（无 override 时 = `{ kind: 'contextStroke' }`，继承 path stroke） |
 
 </ApiTable>
 
@@ -723,8 +723,8 @@ export type SmoothStepProps = {
 
 ```ts
 export type ArrowEmitContext = {
-  stroke: MarkerFill;
-  fill: MarkerFill;
+  stroke: PaintValue;
+  fill: PaintValue;
   lineWidth: number;
   round: (n: number) => number;
 };
@@ -1161,18 +1161,18 @@ export type InputStep =
 
 <ApiTable>
 
-| 成员             | 类型                                                   | 默认值                       | 说明                                                                               |
-| ---------------- | ------------------------------------------------------ | ---------------------------- | ---------------------------------------------------------------------------------- |
-| `backX`          | `number`                                               | —                            | marker 基础几何沿箭头轴向承诺的包络后缘，必须不晚于线接触点                        |
-| `baseSize?`      | `number`                                               | `10`                         | marker 局部基准边长（viewBox `0 0 baseSize baseSize`，refY = baseSize/2）；缺省 10 |
-| `defaultLength?` | `number`                                               | `8`                          | 默认箭头长度（length fallback）；缺省 8                                            |
-| `defaultWidth?`  | `number`                                               | `8`                          | 默认箭头宽度（width fallback）；缺省 8                                             |
-| `emit`           | `(ctx: ArrowEmitContext) => Iterable<MarkerPrimitive>` | —                            | 局部坐标 marker 几何（renderer-agnostic）；adapter 把产物嵌进 `<marker>`           |
-| `hollow?`        | `boolean`                                              | `false`                      | 空心标志：true 时由描边表达外轮廓，并按 lineWidth 修正接触点                       |
-| `lineContactX`   | `number`                                               | —                            | 线接触点静态 base，决定 path shrink 与 marker refX                                 |
-| `name`           | `string`                                               | —                            | arrow 名称，由 IR `marks[].mark.shape` 引用；作者侧使用 `arrowDetail.shape`        |
-| `outerInset?`    | `number`                                               | `hollow ? lineWidth / 2 : 0` | 外轮廓补偿量（marker 局部坐标）；缺省时空心箭头用 lineWidth/2，实心箭头用 0        |
-| `tipX?`          | `number`                                               | `baseSize`                   | 尖端 x（shrink 用）；缺省 = baseSize                                               |
+| 成员             | 类型                                                  | 默认值                       | 说明                                                                               |
+| ---------------- | ----------------------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------- |
+| `backX`          | `number`                                              | —                            | marker 基础几何沿箭头轴向承诺的包络后缘，必须不晚于线接触点                        |
+| `baseSize?`      | `number`                                              | `10`                         | marker 局部基准边长（viewBox `0 0 baseSize baseSize`，refY = baseSize/2）；缺省 10 |
+| `defaultLength?` | `number`                                              | `8`                          | 默认箭头长度（length fallback）；缺省 8                                            |
+| `defaultWidth?`  | `number`                                              | `8`                          | 默认箭头宽度（width fallback）；缺省 8                                             |
+| `emit`           | `(ctx: ArrowEmitContext) => Iterable<ScenePrimitive>` | —                            | 局部坐标中的基础场景图元；渲染容器负责端点定位与宿主上下文                         |
+| `hollow?`        | `boolean`                                             | `false`                      | 空心标志：true 时由描边表达外轮廓，并按 lineWidth 修正接触点                       |
+| `lineContactX`   | `number`                                              | —                            | 线接触点静态 base，决定 path shrink 与 marker refX                                 |
+| `name`           | `string`                                              | —                            | arrow 名称，由 IR `marks[].mark.shape` 引用；作者侧使用 `arrowDetail.shape`        |
+| `outerInset?`    | `number`                                              | `hollow ? lineWidth / 2 : 0` | 外轮廓补偿量（marker 局部坐标）；缺省时空心箭头用 lineWidth/2，实心箭头用 0        |
+| `tipX?`          | `number`                                              | `baseSize`                   | 尖端 x（shrink 用）；缺省 = baseSize                                               |
 
 </ApiTable>
 
@@ -1191,7 +1191,7 @@ export type ArrowDefinition = {
   tipX?: number;
   defaultLength?: number;
   defaultWidth?: number;
-  emit: (ctx: ArrowEmitContext) => Iterable<MarkerPrimitive>;
+  emit: (ctx: ArrowEmitContext) => Iterable<ScenePrimitive>;
 };
 ```
 

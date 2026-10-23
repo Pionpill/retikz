@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import type { CompileOptions } from '../../../src/compile/compile';
 import { compileToScene } from '../../../src/compile/compile';
 import type {
-  MarkerEllipsePrim,
-  MarkerPathPrim,
-  MarkerPrimitive,
+  EllipsePrim,
+  PathPrim,
+  ScenePrimitive,
   PaintResource,
   PatternDefinition,
   PatternEmitContext,
@@ -52,19 +52,19 @@ const tileOf = (spec: IRPaint, opts?: CompileOptions): ResolvedPatternTile | und
   firstPatternResource(compileToScene(patternNodeIR(spec), opts).scene.resources)?.tile;
 
 /** 取 tile.motif 里首个 path 原语 */
-const firstMotifPath = (tile: ResolvedPatternTile | undefined): MarkerPathPrim | undefined =>
-  (tile?.motif ?? []).find((m): m is MarkerPathPrim => m.type === 'path');
+const firstMotifPath = (tile: ResolvedPatternTile | undefined): PathPrim | undefined =>
+  (tile?.motif ?? []).find((m): m is PathPrim => m.type === 'path');
 
 /** 取 tile.motif 中的全部 path 原语 */
-const motifPaths = (tile: ResolvedPatternTile | undefined): Array<MarkerPathPrim> =>
-  (tile?.motif ?? []).filter((motif): motif is MarkerPathPrim => motif.type === 'path');
+const motifPaths = (tile: ResolvedPatternTile | undefined): Array<PathPrim> =>
+  (tile?.motif ?? []).filter((motif): motif is PathPrim => motif.type === 'path');
 
 /** 取 tile.motif 里首个 ellipse 原语 */
-const firstMotifEllipse = (tile: ResolvedPatternTile | undefined): MarkerEllipsePrim | undefined =>
-  (tile?.motif ?? []).find((m): m is MarkerEllipsePrim => m.type === 'ellipse');
+const firstMotifEllipse = (tile: ResolvedPatternTile | undefined): EllipsePrim | undefined =>
+  (tile?.motif ?? []).find((m): m is EllipsePrim => m.type === 'ellipse');
 
 /** 把 motif path 命令序列拍成紧凑 d 串（move/line/close，golden 对比用） */
-const pathD = (prim: MarkerPathPrim): string =>
+const pathD = (prim: PathPrim): string =>
   prim.commands
     .map(c => {
       if (c.kind === 'move') return `M${c.to[0]},${c.to[1]}`;
@@ -80,7 +80,7 @@ const customPattern = (): PatternDefinition =>
   definePattern({
     name: 'customPattern',
     defaultSize: 10,
-    emit: ({ size, color, lineWidth }): Array<MarkerPrimitive> => [
+    emit: ({ size, color, lineWidth }): Array<ScenePrimitive> => [
       {
         type: 'path',
         commands: [
@@ -98,9 +98,9 @@ const multiPrimPattern = (): PatternDefinition =>
   definePattern({
     name: 'multiPrimPattern',
     defaultSize: 12,
-    emit: ({ size, color, background }): Array<MarkerPrimitive> => [
+    emit: ({ size, color, background }): Array<ScenePrimitive> => [
       ...(background
-        ? ([{ type: 'rect', x: 0, y: 0, width: size, height: size, fill: background }] as Array<MarkerPrimitive>)
+        ? ([{ type: 'rect', x: 0, y: 0, width: size, height: size, fill: background }] as Array<ScenePrimitive>)
         : []),
       { type: 'ellipse', cx: size / 2, cy: size / 2, rx: 2, ry: 2, fill: color },
       {
@@ -501,15 +501,6 @@ describe('Pattern registry — error path', () => {
         }).scene,
     ).toThrow(/duplicate pattern shape registration: "lines"/);
   });
-
-  it('motif_rejects_text：emit 返回含 text 的 primitive → 运行时窄子集栅栏拒', () => {
-    const badMotif: unknown = [{ type: 'text', x: 0, y: 0, lines: [], measuredWidth: 0, measuredHeight: 0 }];
-    const externalEmit = (): unknown => badMotif;
-    const badPattern = { name: 'bad', emit: externalEmit } as unknown as PatternDefinition;
-    const ir = patternNodeIR({ kind: 'pattern', shape: 'bad' });
-
-    expect(() => compileToScene(ir, { patterns: [{ ...badPattern, name: 'bad' }] }).scene).toThrow();
-  });
 });
 
 describe('Pattern registry — interaction', () => {
@@ -521,7 +512,7 @@ describe('Pattern registry — interaction', () => {
     expect(mp?.stroke).toBe('currentColor');
   });
 
-  it('custom_motif_multiple_prims：emit 产多 MarkerPrimitive（背景 rect + 多 motif 元素）', () => {
+  it('custom_motif_multiple_prims：emit 产多 ScenePrimitive（背景 rect + 多 motif 元素）', () => {
     const opts: CompileOptions = { patterns: [{ ...multiPrimPattern(), name: 'multi' }] };
     const tile = firstPatternResource(
       compileToScene(patternNodeIR({ kind: 'pattern', shape: 'multi', background: '#fff' }), opts).scene.resources,

@@ -1,13 +1,9 @@
-import type { ArrowEmitContext, MarkerFill, MarkerPrimitive, PathCommand, ResolvedArrowEnd } from '../../../contract';
+import type { ArrowEmitContext, PaintValue, ScenePrimitive, PathCommand, ResolvedArrowEnd } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { ArrowMarkResolution } from '../../../resolve';
-import {
-  createCompositeContractError,
-  createLayoutProbeRecoverableError,
-  safeThrownDetail,
-} from '../../../resolve/diagnostics';
+import { createLayoutProbeRecoverableError, safeThrownDetail } from '../../../resolve/diagnostics';
 import type { PaintResolver } from '../../resource';
-import { validateMarkerPrimitives } from '../../resource';
+import { materializeScenePrimitives } from '../../resource';
 import { shortenEndpointContacts } from './endpoint-contact';
 import type { EndpointArrowSpecs } from './endpoint-contact';
 
@@ -16,14 +12,8 @@ const emitArrowMarkerPrimitives = (
   shape: string,
   def: ArrowMarkResolution['definition'],
   ctx: ArrowEmitContext,
-): Array<MarkerPrimitive> => {
-  if (typeof def.emit !== 'function') {
-    throw createCompositeContractError(
-      `Arrow '${shape}' is missing an emit function (ArrowDefinition.emit is required).`,
-    );
-  }
-
-  let emitted: unknown;
+): Array<ScenePrimitive> => {
+  let emitted: Iterable<ScenePrimitive>;
 
   try {
     emitted = def.emit(ctx);
@@ -34,7 +24,7 @@ const emitArrowMarkerPrimitives = (
     });
   }
 
-  return validateMarkerPrimitives(`Arrow '${shape}'`, emitted);
+  return materializeScenePrimitives(`Arrow '${shape}'`, emitted);
 };
 
 /** 构造 ArrowDefinition.emit 的上下文 */
@@ -44,9 +34,9 @@ const buildEmitContext = (
   resolvePaint: PaintResolver,
 ): ArrowEmitContext => {
   const { visual, definition } = resolution;
-  const contextStroke: MarkerFill = { kind: 'contextStroke' };
-  const stroke: MarkerFill = resolvePaint(visual.stroke) ?? visual.color ?? contextStroke;
-  const fill: MarkerFill = definition.hollow
+  const contextStroke: PaintValue = { kind: 'contextStroke' };
+  const stroke: PaintValue = resolvePaint(visual.stroke) ?? visual.color ?? contextStroke;
+  const fill: PaintValue = definition.hollow
     ? contextStroke
     : (resolvePaint(visual.fill) ?? visual.color ?? contextStroke);
 
@@ -61,8 +51,9 @@ const emitArrowEnd = (
 ): ResolvedArrowEnd => {
   const { visual, geometry, definition } = resolution;
   const ctx = buildEmitContext(resolution, round, resolvePaint);
-  const applyStyle = (prim: MarkerPrimitive): MarkerPrimitive => {
+  const applyStyle = (prim: ScenePrimitive): ScenePrimitive => {
     if (prim.type === 'group') return { ...prim, children: prim.children.map(applyStyle) };
+    if (prim.type === 'text') return prim;
     return {
       ...prim,
       ...(visual.stroke === undefined ? {} : { stroke: ctx.stroke }),

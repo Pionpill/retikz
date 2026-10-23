@@ -1,6 +1,7 @@
 import type { JsonObject } from '@retikz/foundation';
 
-import type { IRAnimationTrack } from '../../schemas';
+import type { ClipFillRule, IRAnimationTrack } from '../../schemas';
+import type { PathCommand } from './path';
 import type { ScenePrimitive } from './scene';
 
 /** Translate transform：沿 x / y 平移（user units） */
@@ -49,6 +50,24 @@ export type ScaleTransform = {
  * @description 按数组顺序应用（与 SVG transform 多操作列表语义一致）；角度=度，缩放 y 缺省等比 x，rotate cx/cy 缺省绕原点。每个 kind 有对应 named type export
  */
 export type Transform = TranslateTransform | RotateTransform | ScaleTransform;
+
+/** renderer、bounds 与 hit-test 共同消费的规范裁剪路径 */
+export type SceneClipPath = {
+  /** 按 authored 子路径顺序保存的结构化命令 */
+  commands: Array<PathCommand>;
+  /** 整条裁剪路径使用的显式填充规则 */
+  fillRule: ClipFillRule;
+};
+
+/** 由 GroupPrim 引用的具名 Scene 裁剪资源 */
+export type ClipResource = {
+  /** 标识场景裁剪资源 */
+  kind: 'clip';
+  /** 供场景图元引用的资源标识 */
+  id: string;
+  /** 后端无关的完整裁剪路径 */
+  path: SceneClipPath;
+};
 
 /** 编组：把若干 primitive 用结构化 transforms 包起来 */
 export type GroupPrim = {

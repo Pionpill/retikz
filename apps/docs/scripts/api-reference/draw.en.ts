@@ -280,8 +280,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Marker-local base size (viewBox `0 0 baseSize baseSize`, refY = baseSize/2); defaults to 10',
   '默认箭头长度（length fallback）；缺省 8': 'Fallback arrow length; defaults to 8',
   '默认箭头宽度（width fallback）；缺省 8': 'Fallback arrow width; defaults to 8',
-  '局部坐标 marker 几何（renderer-agnostic）；adapter 把产物嵌进 `<marker>`':
-    'Renderer-independent marker geometry in local coordinates; an adapter embeds the result in `<marker>`',
+  '局部坐标中的基础场景图元；渲染容器负责端点定位与宿主上下文':
+    'Basic Scene primitives in local coordinates; the render container supplies endpoint placement and host context',
   '空心标志：true 时由描边表达外轮廓，并按 lineWidth 修正接触点':
     'Hollow flag: when true, stroke defines the outline and lineWidth adjusts the contact point',
   '线接触点静态 base，决定 path shrink 与 marker refX':

@@ -117,6 +117,7 @@ Reconciler 按以下能力依赖顺序推进；各阶段共同构成本版本目
 
 - 建立 Foundation，收敛通用契约和基础 schema 所有权。
 - 统一 authoring 入口与 composite 依赖接入，减少平行解释。
+- 箭头与 Pattern 内容统一使用基础场景图元，定义侧封装归能力 owner，补齐资源与运行时消费：[070](./070-marker-scene-primitives.md)。
 - Composite 统一使用 compile，布局能力按需调用，移除独立展开通道：[052](./052-unified-composite-compilation.md)。
 - 支持共享异步作者准备与实例运行时输入，保持同步编译和原子发布：[047](./047-async-authoring-preparation.md)、[048](./048-composite-runtime-input.md)。
 

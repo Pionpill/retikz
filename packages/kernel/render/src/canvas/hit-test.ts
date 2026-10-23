@@ -1,5 +1,8 @@
+import { sceneTextBounds } from '@retikz/core';
 import type { Scene, SceneClipPath, ScenePrimitive } from '@retikz/core';
 
+import { validateSceneContent } from '../shared';
+import { startArrowPlacement, endArrowPlacement } from '../shared';
 import { applyTransform, buildClipPath, buildPath, DEG_TO_RAD, roundedRectPath } from './path-geometry';
 
 /** hitTest 命中点（Scene user units 坐标系） */
@@ -43,7 +46,7 @@ const resolveContext = (options: HitTestOptions | undefined): CanvasRenderingCon
   return fallbackContext;
 };
 
-/** 在当前 context 上构建图元自身的填充 / 点测路径（transform 已由调用方压栈）；text 无路径返回 false */
+/** 在当前变换下构建图元点测路径；文本使用基础契约的已度量矩形 */
 const buildPrimPath = (ctx: CanvasRenderingContext2D, prim: ScenePrimitive): boolean => {
   switch (prim.type) {
     case 'rect':
@@ -56,7 +59,12 @@ const buildPrimPath = (ctx: CanvasRenderingContext2D, prim: ScenePrimitive): boo
     case 'path':
       buildPath(ctx, prim.commands);
       return true;
-    case 'text':
+    case 'text': {
+      const bounds = sceneTextBounds(prim);
+      ctx.beginPath();
+      ctx.rect(bounds.x, bounds.y, bounds.width, bounds.height);
+      return true;
+    }
     case 'group':
       return false;
   }
@@ -64,7 +72,9 @@ const buildPrimPath = (ctx: CanvasRenderingContext2D, prim: ScenePrimitive): boo
 
 /** 该图元的填充是否可命中（fill 存在且非 'none'） */
 const hasFill = (prim: ScenePrimitive): boolean => {
-  if (prim.type === 'text' || prim.type === 'group') return false;
+  if (prim.type === 'group') return false;
+  if (prim.type === 'text')
+    return prim.fill !== 'none' || prim.lines.some(line => line.fill !== undefined && line.fill !== 'none');
   const { fill } = prim;
   return fill !== undefined && fill !== 'none';
 };
@@ -108,6 +118,7 @@ const insideClip = (ctx: CanvasRenderingContext2D, path: SceneClipPath | undefin
  *   的 id，空白处返回 null。函数不进 IR、纯 runtime 定位层
  */
 export const hitTest = (scene: Scene, point: HitPoint, options?: HitTestOptions): string | null => {
+  validateSceneContent(scene);
   const ctx = resolveContext(options);
   if (ctx === null) return null;
 
@@ -117,10 +128,10 @@ export const hitTest = (scene: Scene, point: HitPoint, options?: HitTestOptions)
   );
 
   // 逆 z-order：后画的在上，先测最后画的；命中即返回最近 id-bearing 祖先 id。
-  const walk = (prim: ScenePrimitive, nearestId: string | undefined): string | null => {
+  const walk = (prim: ScenePrimitive, nearestId: string | undefined, resourceContent = false): string | null => {
     if (prim.hitTest === false) return null;
 
-    const selfId = prim.id ?? nearestId;
+    const selfId = resourceContent ? nearestId : (prim.id ?? nearestId);
     if (prim.type === 'group') {
       ctx.save();
 
@@ -134,7 +145,7 @@ export const hitTest = (scene: Scene, point: HitPoint, options?: HitTestOptions)
       let result: string | null = null;
 
       for (let i = prim.children.length - 1; i >= 0; i--) {
-        result = walk(prim.children[i], selfId);
+        result = walk(prim.children[i], selfId, resourceContent);
         if (result !== null) break;
       }
 
@@ -143,6 +154,29 @@ export const hitTest = (scene: Scene, point: HitPoint, options?: HitTestOptions)
       return result;
     }
 
+    if (prim.type === 'path') {
+      for (const [spec, placement] of [
+        [prim.arrowEnd, endArrowPlacement(prim.commands)],
+        [prim.arrowStart, startArrowPlacement(prim.commands)],
+      ] as const) {
+        if (!spec || !placement) continue;
+        ctx.save();
+        ctx.translate(placement.vertex[0], placement.vertex[1]);
+        ctx.rotate(placement.angle);
+        ctx.scale(
+          (spec.markerWidth * (prim.strokeWidth ?? 1)) / spec.baseSize,
+          (spec.markerHeight * (prim.strokeWidth ?? 1)) / spec.baseSize,
+        );
+        ctx.translate(-spec.refX, -spec.baseSize / 2);
+        let result: string | null = null;
+        for (let index = spec.marker.length - 1; index >= 0; index--) {
+          result = walk(spec.marker[index], selfId, true);
+          if (result !== null) break;
+        }
+        ctx.restore();
+        if (result !== null) return result;
+      }
+    }
     return hitPrim(ctx, prim, point, strokeTolerance) ? (selfId ?? null) : null;
   };
 

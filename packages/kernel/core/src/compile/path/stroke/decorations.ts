@@ -6,7 +6,7 @@ import type { ArrowMarkResolution, CanonicalPath } from '../../../resolve';
 import type { IRPathBase, IRPosition } from '../../../schemas';
 import type { PaintResolver } from '../../resource';
 import type { PathPrimitiveEmitResult } from '../types';
-import { buildMarkMarkerGroup, markerContextStroke } from './marks';
+import { buildMarkMarkerGroup } from './marks';
 import type { PathBasePropsWithStrokeWidth } from './output';
 import { sampleStrokePath } from './sampling';
 import { emitEndpointArrowMark, emitMarkArrow } from './shrink';
@@ -172,7 +172,7 @@ export const emitInlineMarkPrimitives = ({
       buildMarkMarkerGroup(spec, sample, {
         strokeWidth,
         round,
-        contextStroke: markerContextStroke(baseProps.stroke, spec.marker),
+        contextStroke: baseProps.stroke ?? 'currentColor',
       }),
     );
     boundsPoints.push(sample.point);

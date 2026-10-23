@@ -10,7 +10,6 @@ import {
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import type { PaintResolver } from '../resource';
-import { validateMarkerPrimitives } from '../resource';
 import { validateScenePrimitives } from '../scene-primitive';
 import { emitInlineLine, inlineSegmentPaintsOf, toAlphabeticBaselineY } from '../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
@@ -126,7 +125,7 @@ export const emitNodeShapePrimitives = (
     });
   }
 
-  return validateScenePrimitives(`Shape '${layout.shape.name}'`, emitted, validateMarkerPrimitives);
+  return validateScenePrimitives(`Shape '${layout.shape.name}'`, emitted);
 };
 
 /** 发出节点正文图元 */

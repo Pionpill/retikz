@@ -1,4 +1,4 @@
-import type { MarkerPrimitive, PathPrim, ResolvedArrowEnd } from '@retikz/core';
+import type { ScenePrimitive, PathPrim, ResolvedArrowEnd } from '@retikz/core';
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -14,7 +14,7 @@ const markerIdFor = (spec: ResolvedArrowEnd): string => {
 
 /** 构造一个已解析 ResolvedArrowEnd（emit-in-compile 后的形态）；marker 颜色用来区分不同 detail */
 const resolvedSpec = (shape: string, fill?: string): ResolvedArrowEnd => {
-  const path: MarkerPrimitive = {
+  const path: ScenePrimitive = {
     type: 'path',
     commands: [{ kind: 'move', to: [0, 0] }],
     ...(fill !== undefined ? { fill } : {}),

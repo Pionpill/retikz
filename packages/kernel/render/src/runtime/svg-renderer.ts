@@ -1012,9 +1012,15 @@ const groupSvgWaapiElements = (
   for (const descriptor of descriptors) {
     let owner: Readonly<{ identity: SceneIdentity; element: SVGElement }> | undefined;
 
+    const resourceHost = descriptor.getAttribute('data-retikz-animation-owner');
     for (const node of snapshot.topology) {
       const occurrence = elements.get(node.identity);
-      if (occurrence === undefined || (occurrence !== descriptor && !occurrence.contains(descriptor))) continue;
+      if (occurrence === undefined) continue;
+      if (resourceHost !== null && resourceHost === node.publicId) {
+        owner = { identity: node.identity, element: occurrence };
+        break;
+      }
+      if (occurrence !== descriptor && !occurrence.contains(descriptor)) continue;
       if (owner === undefined || owner.element.contains(occurrence))
         owner = { identity: node.identity, element: occurrence };
     }

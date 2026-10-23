@@ -1,4 +1,4 @@
-import type { Scene } from '@retikz/core';
+import type { Scene, ScenePrimitive } from '@retikz/core';
 import { compileToScene, defineArrow } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -427,4 +427,51 @@ describe('Scene 禁用命中', () => {
 
     expect(hitTest(base, { x: 50, y: 50 }, { context2d: createGeometryContext() })).toBe('below');
   });
+});
+
+it.each<ScenePrimitive>([
+  { type: 'rect', id: 'local', x: 0, y: 0, width: 10, height: 10, fill: 'red' },
+  {
+    type: 'text',
+    id: 'local',
+    x: 0,
+    y: 0,
+    lines: [{ text: 'A' }],
+    fontSize: 10,
+    lineHeight: 10,
+    measuredWidth: 10,
+    measuredHeight: 10,
+    align: 'start',
+    baseline: 'top',
+    fill: 'red',
+  },
+])('arrow $type content hits its host and excludes disabled local subtrees', content => {
+  const scene: Scene = {
+    layout: { x: 0, y: 0, width: 100, height: 100 },
+    primitives: [
+      {
+        type: 'path',
+        id: 'host',
+        fill: 'none',
+        stroke: 'black',
+        strokeWidth: 1,
+        commands: [
+          { kind: 'move', to: [0, 20] },
+          { kind: 'line', to: [30, 20] },
+        ],
+        arrowEnd: { shape: 'test', baseSize: 10, refX: 10, markerWidth: 10, markerHeight: 10, marker: [content] },
+      },
+    ],
+  };
+  const options = { context2d: createGeometryContext() };
+  expect(hitTest(scene, { x: 25, y: 23 }, options)).toBe('host');
+  scene.primitives = scene.primitives.map(primitive =>
+    primitive.type === 'path' && primitive.arrowEnd
+      ? {
+          ...primitive,
+          arrowEnd: { ...primitive.arrowEnd, marker: [{ ...content, hitTest: false }] },
+        }
+      : primitive,
+  );
+  expect(hitTest(scene, { x: 25, y: 23 }, options)).toBeNull();
 });

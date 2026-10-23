@@ -3,12 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type {
   EllipsePrim,
-  MarkerFill,
-  MarkerPrimitive,
+  PaintValue,
+  ScenePrimitive,
   PathPrim,
   RectPrim,
   ResolvedArrowEnd,
-  ScenePrimitive,
   TextPrim,
 } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
@@ -52,9 +51,9 @@ const textWith = (ir: IRScene, content: string): TextPrim | undefined =>
 const markerPaintColor = (spec: ResolvedArrowEnd | undefined): string | undefined => {
   if (!spec) return undefined;
 
-  const pickFill = (f: MarkerFill | undefined): string | undefined => (typeof f === 'string' ? f : undefined);
+  const pickFill = (f: PaintValue | undefined): string | undefined => (typeof f === 'string' ? f : undefined);
 
-  const walk = (prims: ReadonlyArray<MarkerPrimitive>): string | undefined => {
+  const walk = (prims: ReadonlyArray<ScenePrimitive>): string | undefined => {
     for (const p of prims) {
       if (p.type === 'group') {
         const c = walk(p.children);
@@ -62,7 +61,7 @@ const markerPaintColor = (spec: ResolvedArrowEnd | undefined): string | undefine
         continue;
       }
 
-      const c = pickFill(p.fill) ?? (typeof p.stroke === 'string' ? p.stroke : undefined);
+      const c = pickFill(p.fill) ?? (p.type !== 'text' && typeof p.stroke === 'string' ? p.stroke : undefined);
       if (c !== undefined && c !== 'context-stroke') return c;
     }
 

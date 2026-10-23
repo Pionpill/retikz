@@ -21,7 +21,6 @@ import {
   createStrokePathGeometry,
   splitStrokePathAtInterruptions,
 } from './interruption';
-import { assertArrowCanInheritStroke } from './marks';
 import { emitPathBaseProps, wrapPathPrimitiveOutput } from './output';
 import { applyRoundedCorners } from './rounded-corners';
 import { createStrokeSamplingCollector } from './sampling';
@@ -375,7 +374,6 @@ const emitCanonicalPathPrimitive = (
     round,
     irPath,
   });
-  assertArrowCanInheritStroke(baseProps.stroke, arrows);
 
   // shrink 在 compile 阶段计算，与 emit 落点无关；按视觉输入把首末段端点向内缩短
   // 让 line 端点接在 hollow arrow 尾部外缘，不贯穿 back outline；shrink=0 的实心 shape 跳过

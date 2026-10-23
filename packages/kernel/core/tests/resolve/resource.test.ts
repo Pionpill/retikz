@@ -3,7 +3,7 @@ import { array, literal, number, strictObject, tuple } from 'zod';
 
 import { compileToScene } from '../../src/compile/compile';
 import { createRound } from '../../src/compile/scene';
-import type { ClipDefinition, ClipResolveContext, MarkerPrimitive, PatternDefinition } from '../../src/contract';
+import type { ClipDefinition, ClipResolveContext, ScenePrimitive, PatternDefinition } from '../../src/contract';
 import { defineClip, definePattern } from '../../src/contract';
 import { resolveClipRegistry } from '../../src/providers/clip';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
@@ -41,7 +41,7 @@ describe('resolve/resource paint', () => {
   it('binds custom pattern and applies shape/style priority in resolve', () => {
     const custom = definePattern({
       name: 'custom',
-      emit: (): Array<MarkerPrimitive> => [],
+      emit: (): Array<ScenePrimitive> => [],
     });
     const resolved = resolvePaint(
       {
@@ -102,7 +102,7 @@ describe('resolve/resource paint', () => {
   });
 
   it('emits a deduplicated pattern resource once', () => {
-    const emit = vi.fn((): Array<MarkerPrimitive> => []);
+    const emit = vi.fn((): Array<ScenePrimitive> => []);
     const pattern = definePattern({ name: 'dedupe-pattern', emit });
     const scene = compileToScene(
       {

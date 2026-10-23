@@ -14,7 +14,6 @@ import type {
   CompositeCompileContext,
   LayoutProposal,
   LowerTex,
-  MarkerPrimitive,
   ScenePrimitive,
   TextMeasurer,
 } from '../../src';
@@ -2169,13 +2168,13 @@ describe('layout-aware composite constraints and bounds', () => {
       name: 'badEmitArrow',
       backX: 0,
       lineContactX: 0,
-      emit: (() => [{ type: 'rect', x: 0, y: 0, width: -1, height: 2 }]) as unknown as () => Iterable<MarkerPrimitive>,
+      emit: (() => [{ type: 'rect', x: 0, y: 0, width: -1, height: 2 }]) as unknown as () => Iterable<ScenePrimitive>,
     });
     const badPattern = definePattern({
       name: 'badEmitPattern',
       emit: (() => [
         { type: 'group', children: [{ type: 'rect', x: 0, y: 0, width: -1, height: 2 }] },
-      ]) as unknown as () => Iterable<MarkerPrimitive>,
+      ]) as unknown as () => Iterable<ScenePrimitive>,
     });
     const badClip = defineClip({
       kind: 'badResolvedClip',
@@ -2295,7 +2294,7 @@ describe('layout-aware composite constraints and bounds', () => {
         emit: () => [primitive],
       }),
     );
-    const cyclicMarkerGroup: { type: 'group'; children: Array<MarkerPrimitive> } = {
+    const cyclicMarkerGroup: { type: 'group'; children: Array<ScenePrimitive> } = {
       type: 'group',
       children: [],
     };
@@ -2442,7 +2441,7 @@ describe('layout-aware composite constraints and bounds', () => {
       name: 'symbolKeyMarkerArrow',
       backX: 0,
       lineContactX: 0,
-      emit: () => [symbolMarker as unknown as MarkerPrimitive],
+      emit: () => [symbolMarker as unknown as ScenePrimitive],
     });
     const symbolClipShape: Record<PropertyKey, unknown> = {
       kind: 'symbolKeyClip',
@@ -2542,7 +2541,7 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     const markerTrap = new Error('marker iterator trap');
     const markerIterable = {
-      [Symbol.iterator]: (): Iterator<MarkerPrimitive> => ({
+      [Symbol.iterator]: (): Iterator<ScenePrimitive> => ({
         next: () => {
           throw markerTrap;
         },
@@ -2929,7 +2928,7 @@ describe('layout-aware composite constraints and bounds', () => {
         name: `lossyMarkerArrayArrow${index}`,
         backX: 0,
         lineContactX: 0,
-        emit: () => [{ type: 'group', children } as unknown as MarkerPrimitive],
+        emit: () => [{ type: 'group', children } as unknown as ScenePrimitive],
       });
 
       expect(() =>

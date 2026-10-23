@@ -378,6 +378,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: 'BREAKING：箭头与图案复用基础图元', en: 'BREAKING: arrows and patterns use basic primitives' },
+          content: {
+            zh: '删除 MarkerPrimitive、MarkerPathPrim、MarkerEllipsePrim、MarkerRectPrim、MarkerGroupPrim 与 MarkerFill。Arrow / Pattern 定义改为返回 ScenePrimitive，颜色复用 PaintValue；空心内容显式使用 fill: none。文本须已度量，内容可以使用场景裁剪、绘制资源、动画与有限嵌套图元；播放状态按宿主隔离，局部 id 不创建独立更新或命中目标。',
+            en: 'MarkerPrimitive, MarkerPathPrim, MarkerEllipsePrim, MarkerRectPrim, MarkerGroupPrim, and MarkerFill are removed. Arrow and Pattern definitions return ScenePrimitive and use PaintValue; hollow content explicitly uses fill: none. Text must be measured. Content can use Scene clips, paint resources, animation, and finite nested primitives. Playback state is isolated per host, and local ids create no independent update or hit targets.',
+          },
+        },
+        {
           label: { zh: 'BREAKING：移除角度 Schema 别名', en: 'BREAKING: remove the angle schema alias' },
           content: {
             zh: '移除 `AngleDegreesSchema` 导出；自定义 Schema 直接使用 Zod `number()`，并在字段描述中注明角度单位。现有角度字段的数值校验、约束和默认值保持不变。',

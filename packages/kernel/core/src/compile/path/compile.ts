@@ -27,7 +27,6 @@ import { createOwnerOutputPublisher } from '../orchestration';
 import { pathTargetViewOf } from '../orchestration';
 import type { PendingPathEmission } from '../orchestration';
 import type { PaintRegistry } from '../resource';
-import { validateMarkerPrimitives } from '../resource';
 import {
   snapshotProviderPosition,
   validateScenePrimitives,
@@ -69,7 +68,7 @@ const validatePathKindCompileResult = (
     }
 
     const result = value as Record<string, unknown>;
-    const primitives = validateScenePrimitives(`Path kind '${kind}'`, result.primitives, validateMarkerPrimitives);
+    const primitives = validateScenePrimitives(`Path kind '${kind}'`, result.primitives);
     const rawBoundsPoints = result.boundsPoints;
     if (!Array.isArray(rawBoundsPoints)) {
       throw createCompositeContractError(`Path kind '${kind}' must return boundsPoints as an array.`);

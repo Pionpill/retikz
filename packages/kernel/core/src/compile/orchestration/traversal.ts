@@ -78,7 +78,7 @@ import {
   normalizeLayoutProbeError,
   raiseLayoutChildFailure,
 } from '../probe-failure';
-import { createClipRegistry, createPaintRegistry, remapPrimitiveResources } from '../resource';
+import { createClipRegistry, createPaintRegistry, importSceneResources, remapPrimitiveResources } from '../resource';
 import { withProviderOutputValidationBoundary } from '../scene-primitive';
 import {
   createIntrinsicScopeLayout,
@@ -1025,20 +1025,7 @@ export const compileChildrenToPrimitives = (
 
     const transforms = wrapper?.transforms;
     const authoredPreliminary = transaction.scopeChainApplied ? undefined : authoredPreliminaryTransforms;
-    const resourceIds = new Map<string, string>();
-
-    for (const resource of transaction.resources) {
-      if (resource.kind === 'paint') {
-        const imported = runtime.context.paint.importResolved(resource);
-        if (typeof imported !== 'object' || imported.kind !== 'resourceRef') {
-          throw createCompileInvariantError('internal: imported paint did not produce a resourceRef');
-        }
-
-        resourceIds.set(resource.id, imported.id);
-      } else {
-        resourceIds.set(resource.id, runtime.context.clip.importPath(resource.path));
-      }
-    }
+    const resourceIds = importSceneResources(transaction.resources, runtime.context.paint, runtime.context.clip);
 
     const wrapperClipRef =
       wrapperClipShape === undefined ? undefined : runtime.context.clip.importResolved(wrapperClipShape);

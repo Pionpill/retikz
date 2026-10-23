@@ -1,6 +1,6 @@
 import type {
-  MarkerPathPrim,
-  MarkerPrimitive,
+  PathPrim,
+  ScenePrimitive,
   PatternDefinition,
   PatternEmitContext,
   ResolvedPatternLineStyle,
@@ -15,8 +15,8 @@ const DEFAULT_STROKE_WIDTH = 1;
 const withBackground = (
   context: PatternEmitContext,
   tileSize: number,
-  motif: ReadonlyArray<MarkerPrimitive>,
-): Array<MarkerPrimitive> =>
+  motif: ReadonlyArray<ScenePrimitive>,
+): Array<ScenePrimitive> =>
   context.background === undefined
     ? [...motif]
     : [{ type: 'rect', x: 0, y: 0, width: tileSize, height: tileSize, fill: context.background }, ...motif];
@@ -34,10 +34,7 @@ const baseLineStyleOf = (context: PatternEmitContext): ResolvedPatternLineStyle 
 /** 已解析 Pattern 线型到 marker path 描边字段的统一映射 */
 const markerLineStyleOf = (
   style: ResolvedPatternLineStyle,
-): Pick<
-  MarkerPathPrim,
-  'stroke' | 'strokeWidth' | 'dashPattern' | 'dashOffset' | 'strokeLinecap' | 'strokeLinejoin'
-> => ({
+): Pick<PathPrim, 'stroke' | 'strokeWidth' | 'dashPattern' | 'dashOffset' | 'strokeLinecap' | 'strokeLinejoin'> => ({
   stroke: style.color,
   strokeWidth: style.lineWidth ?? DEFAULT_STROKE_WIDTH,
   ...(style.dashPattern === undefined ? {} : { dashPattern: style.dashPattern }),
@@ -47,7 +44,7 @@ const markerLineStyleOf = (
 });
 
 /** 构建一个水平线 motif */
-const horizontalLineOf = (tileSize: number, y: number, style: ResolvedPatternLineStyle): MarkerPathPrim => ({
+const horizontalLineOf = (tileSize: number, y: number, style: ResolvedPatternLineStyle): PathPrim => ({
   type: 'path',
   commands: [
     { kind: 'move', to: [0, y] },
@@ -81,7 +78,7 @@ const linesPattern = definePattern({
 const gridPattern = definePattern({
   name: BuiltinPatternShape.Grid,
   defaultSize: DEFAULT_PATTERN_SIZE,
-  emit: (context): Array<MarkerPrimitive> => {
+  emit: (context): Array<ScenePrimitive> => {
     const half = context.round(context.size / 2);
     const baseStyle = baseLineStyleOf(context);
 
@@ -110,7 +107,7 @@ const gridPattern = definePattern({
 const dotsPattern = definePattern({
   name: BuiltinPatternShape.Dots,
   defaultSize: DEFAULT_PATTERN_SIZE,
-  emit: (context): Array<MarkerPrimitive> => {
+  emit: (context): Array<ScenePrimitive> => {
     const radius = context.round(context.lineWidth ?? context.size / 5);
     const center = context.round(context.size / 2);
 

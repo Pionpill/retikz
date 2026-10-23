@@ -1,16 +1,16 @@
-import type { ArrowDefinition, ArrowEmitContext, MarkerPrimitive } from '../../contract';
+import type { ArrowDefinition, ArrowEmitContext, ScenePrimitive } from '../../contract';
 import { defineArrow } from '../../contract';
 import { BuiltinArrowShape } from '../../schemas';
 
 /** 实心闭合三角 / V 形的 path 工厂：填充走 context.fill（无 override = contextStroke） */
-const filledPath = (context: ArrowEmitContext, points: ReadonlyArray<[number, number]>): MarkerPrimitive => ({
+const filledPath = (context: ArrowEmitContext, points: ReadonlyArray<[number, number]>): ScenePrimitive => ({
   type: 'path',
   commands: [
     { kind: 'move', to: points[0] },
     ...points.slice(1).map((p): { kind: 'line'; to: [number, number] } => ({ kind: 'line', to: p })),
     { kind: 'close' },
   ],
-  fill: typeof context.fill === 'string' ? context.fill : { kind: 'contextStroke' },
+  fill: context.fill,
 });
 
 /** 实心三角箭头：基础线接触点在 marker 左边界 */
@@ -59,14 +59,15 @@ const stealthArrow = defineArrow({
 });
 
 /** 构造空心箭头轮廓，描边继承当前路径的颜色与宽度 */
-const hollowPath = (context: ArrowEmitContext, points: ReadonlyArray<[number, number]>): MarkerPrimitive => ({
+const hollowPath = (context: ArrowEmitContext, points: ReadonlyArray<[number, number]>): ScenePrimitive => ({
   type: 'path',
   commands: [
     { kind: 'move', to: points[0] },
     ...points.slice(1).map((p): { kind: 'line'; to: [number, number] } => ({ kind: 'line', to: p })),
     { kind: 'close' },
   ],
-  stroke: typeof context.stroke === 'string' ? context.stroke : { kind: 'contextStroke' },
+  fill: 'none',
+  stroke: context.stroke,
   strokeWidth: context.lineWidth,
   strokeLinejoin: 'miter',
 });
@@ -100,7 +101,7 @@ const circleArrow = defineArrow({
       cy: 5,
       rx: 5,
       ry: 5,
-      fill: typeof context.fill === 'string' ? context.fill : { kind: 'contextStroke' },
+      fill: context.fill,
     },
   ],
 });
@@ -118,7 +119,8 @@ const openCircleArrow = defineArrow({
       cy: 5,
       rx: 4.25,
       ry: 4.25,
-      stroke: typeof context.stroke === 'string' ? context.stroke : { kind: 'contextStroke' },
+      fill: 'none',
+      stroke: context.stroke,
       strokeWidth: context.lineWidth,
     },
   ],

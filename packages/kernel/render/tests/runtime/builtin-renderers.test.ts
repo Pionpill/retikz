@@ -278,6 +278,86 @@ const createCorePair = (currentSource: IRScene, nextSource: IRScene) => {
 
 afterEach(() => vi.restoreAllMocks());
 
+it('共享 Pattern 文本在 retained 提交与回滚时对所有宿主原子生效', () => {
+  const source: IRScene = {
+    type: 'scene',
+    version: 1,
+    children: ['A', 'B'].map((id, index) => ({
+      type: 'node',
+      id,
+      position: [index * 40, 0],
+      style: { fill: { kind: 'pattern', shape: 'dots' } },
+    })),
+  };
+  const pair = createCorePair(source, source);
+  const withText = (snapshot: SceneRuntimeSnapshot, text: string): SceneRuntimeSnapshot => ({
+    ...snapshot,
+    scene: {
+      ...snapshot.scene,
+      resources: snapshot.scene.resources.map(resource =>
+        resource.kind === 'paint' && resource.tile
+          ? {
+              ...resource,
+              tile: {
+                ...resource.tile,
+                motif: [
+                  {
+                    type: 'text',
+                    id: 'local',
+                    x: 0,
+                    y: 0,
+                    lines: [{ text }],
+                    fontSize: 8,
+                    lineHeight: 8,
+                    measuredWidth: 5,
+                    measuredHeight: 8,
+                    align: 'start',
+                    baseline: 'top',
+                    fill: 'red',
+                  },
+                ],
+              },
+            }
+          : resource,
+      ),
+    },
+  });
+  const current = withText(pair.current, 'old');
+  const next = withText(pair.next, 'new');
+  const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+  const renderer = builtinRetainedRendererFactory({
+    backend: 'svg',
+    host,
+    immutableOptions: { backend: 'svg', idPrefix: 'resource-update' },
+  });
+  const executor = getRetainedRendererExecutor(renderer);
+  if (!executor) throw new Error('expected retained renderer');
+  const mount = executor.prepareMount(frameOf(current), {}, 'create');
+  mount.commit();
+  mount.dispose();
+  const values = () => Array.from(host.querySelectorAll('pattern text'), element => element.textContent);
+  expect(values()).toEqual(['old', 'old']);
+  const update = executor.prepare(
+    {
+      baseRevision: current.revision,
+      nextRevision: next.revision,
+      operations: [{ kind: 'setResources', resources: next.scene.resources }],
+    },
+    frameOf(next),
+    {},
+  );
+  expect(values()).toEqual(['old', 'old']);
+  update.commit();
+  expect(values()).toEqual(['new', 'new']);
+  expect(executor.read().frame.primary.revision).toBe(next.revision);
+  update.rollback();
+  expect(values()).toEqual(['old', 'old']);
+  expect(executor.read().frame.primary.revision).toBe(current.revision);
+  expect(host.querySelector('[data-retikz-id="local"]')).toBeNull();
+  update.dispose();
+  executor.dispose();
+});
+
 describe('builtin retained renderers', () => {
   it('SVG retained renderer 原子替换有序 readonly layers，rollback 恢复旧整帧', () => {
     const pair = createCorePair(scene('#ef4444'), scene('#22c55e'));

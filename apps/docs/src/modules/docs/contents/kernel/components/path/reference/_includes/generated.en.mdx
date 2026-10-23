@@ -708,10 +708,10 @@ Resolved colors, stroke width, and rounding function used to generate marker geo
 
 | Member      | Type                    | Default | Description                                                                                    |
 | ----------- | ----------------------- | ------- | ---------------------------------------------------------------------------------------------- |
-| `fill`      | `MarkerFill`            | —       | Fill color, the main color for solid arrows; processed according to `hollow` for hollow arrows |
+| `fill`      | `PaintValue`            | —       | Fill color, the main color for solid arrows; processed according to `hollow` for hollow arrows |
 | `lineWidth` | `number`                | —       | Stroke width in marker-local user units, used to draw hollow outlines                          |
 | `round`     | `(n: number) => number` | —       | Precision rounding shared with compile and render to keep geometry consistent                  |
-| `stroke`    | `MarkerFill`            | —       | Stroke color; without an override, `{ kind: 'contextStroke' }` inherits the path stroke        |
+| `stroke`    | `PaintValue`            | —       | Stroke color; without an override, `{ kind: 'contextStroke' }` inherits the path stroke        |
 
 </ApiTable>
 
@@ -721,8 +721,8 @@ Resolved colors, stroke width, and rounding function used to generate marker geo
 
 ```ts
 export type ArrowEmitContext = {
-  stroke: MarkerFill;
-  fill: MarkerFill;
+  stroke: PaintValue;
+  fill: PaintValue;
   lineWidth: number;
   round: (n: number) => number;
 };
@@ -1158,18 +1158,18 @@ Describes marker dimensions, contact points, and geometry generation; the defini
 
 <ApiTable>
 
-| Member           | Type                                                   | Default                      | Description                                                                                                              |
-| ---------------- | ------------------------------------------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `backX`          | `number`                                               | —                            | Promised back edge of the base marker geometry along its axis; must not lie beyond the line contact point                |
-| `baseSize?`      | `number`                                               | `10`                         | Marker-local base size (viewBox `0 0 baseSize baseSize`, refY = baseSize/2); defaults to 10                              |
-| `defaultLength?` | `number`                                               | `8`                          | Fallback arrow length; defaults to 8                                                                                     |
-| `defaultWidth?`  | `number`                                               | `8`                          | Fallback arrow width; defaults to 8                                                                                      |
-| `emit`           | `(ctx: ArrowEmitContext) => Iterable<MarkerPrimitive>` | —                            | Renderer-independent marker geometry in local coordinates; an adapter embeds the result in `<marker>`                    |
-| `hollow?`        | `boolean`                                              | `false`                      | Hollow flag: when true, stroke defines the outline and lineWidth adjusts the contact point                               |
-| `lineContactX`   | `number`                                               | —                            | Base line contact point, used for path shortening and marker refX                                                        |
-| `name`           | `string`                                               | —                            | Arrow name referenced by IR `marks[].mark.shape`; authoring input uses `arrowDetail.shape`                               |
-| `outerInset?`    | `number`                                               | `hollow ? lineWidth / 2 : 0` | Outer-outline compensation in marker-local coordinates; defaults to lineWidth/2 for hollow arrows and 0 for solid arrows |
-| `tipX?`          | `number`                                               | `baseSize`                   | Tip x coordinate used for shortening; defaults to baseSize                                                               |
+| Member           | Type                                                  | Default                      | Description                                                                                                              |
+| ---------------- | ----------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `backX`          | `number`                                              | —                            | Promised back edge of the base marker geometry along its axis; must not lie beyond the line contact point                |
+| `baseSize?`      | `number`                                              | `10`                         | Marker-local base size (viewBox `0 0 baseSize baseSize`, refY = baseSize/2); defaults to 10                              |
+| `defaultLength?` | `number`                                              | `8`                          | Fallback arrow length; defaults to 8                                                                                     |
+| `defaultWidth?`  | `number`                                              | `8`                          | Fallback arrow width; defaults to 8                                                                                      |
+| `emit`           | `(ctx: ArrowEmitContext) => Iterable<ScenePrimitive>` | —                            | Basic Scene primitives in local coordinates; the render container supplies endpoint placement and host context           |
+| `hollow?`        | `boolean`                                             | `false`                      | Hollow flag: when true, stroke defines the outline and lineWidth adjusts the contact point                               |
+| `lineContactX`   | `number`                                              | —                            | Base line contact point, used for path shortening and marker refX                                                        |
+| `name`           | `string`                                              | —                            | Arrow name referenced by IR `marks[].mark.shape`; authoring input uses `arrowDetail.shape`                               |
+| `outerInset?`    | `number`                                              | `hollow ? lineWidth / 2 : 0` | Outer-outline compensation in marker-local coordinates; defaults to lineWidth/2 for hollow arrows and 0 for solid arrows |
+| `tipX?`          | `number`                                              | `baseSize`                   | Tip x coordinate used for shortening; defaults to baseSize                                                               |
 
 </ApiTable>
 
@@ -1188,7 +1188,7 @@ export type ArrowDefinition = {
   tipX?: number;
   defaultLength?: number;
   defaultWidth?: number;
-  emit: (ctx: ArrowEmitContext) => Iterable<MarkerPrimitive>;
+  emit: (ctx: ArrowEmitContext) => Iterable<ScenePrimitive>;
 };
 ```
 

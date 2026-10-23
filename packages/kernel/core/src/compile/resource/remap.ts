@@ -1,5 +1,8 @@
-import type { PaintValue, ScenePrimitive } from '../../contract';
+import type { PaintValue, ScenePrimitive, SceneResource } from '../../contract';
+import { visitSceneContent } from '../../contract';
 import { createCompileInvariantError } from '../probe-failure';
+import type { ClipRegistry } from './clip';
+import type { PaintRegistry } from './paint';
 
 const remapPaint = (paint: PaintValue | undefined, ids: ReadonlyMap<string, string>): PaintValue | undefined => {
   if (paint === undefined || typeof paint === 'string' || paint.kind === 'contextStroke') return paint;
@@ -30,9 +33,84 @@ export const remapPrimitiveResources = (
 
   if (primitive.type === 'text') return { ...primitive };
 
+  const arrows =
+    primitive.type === 'path'
+      ? {
+          ...(primitive.arrowStart
+            ? {
+                arrowStart: {
+                  ...primitive.arrowStart,
+                  marker: primitive.arrowStart.marker.map(child => remapPrimitiveResources(child, ids)),
+                },
+              }
+            : {}),
+          ...(primitive.arrowEnd
+            ? {
+                arrowEnd: {
+                  ...primitive.arrowEnd,
+                  marker: primitive.arrowEnd.marker.map(child => remapPrimitiveResources(child, ids)),
+                },
+              }
+            : {}),
+        }
+      : {};
   return {
     ...primitive,
+    ...arrows,
     fill: remapPaint(primitive.fill, ids),
     stroke: remapPaint(primitive.stroke, ids),
   };
+};
+
+/** 按依赖顺序导入资源，并重映射 Pattern 内容中的引用 */
+export const importSceneResources = (
+  resources: ReadonlyArray<SceneResource>,
+  paint: PaintRegistry,
+  clip: ClipRegistry,
+): Map<string, string> => {
+  const ids = new Map<string, string>();
+  const byId = new Map(resources.map(resource => [resource.id, resource]));
+  const dependencies = (primitives: Array<ScenePrimitive>): void => {
+    visitSceneContent({ primitives, resources: [...resources] }, primitive => {
+      if (primitive.type === 'group') {
+        if (primitive.clipRef !== undefined) insert(primitive.clipRef);
+      } else if (primitive.type !== 'text') {
+        for (const value of [primitive.fill, primitive.stroke]) {
+          if (typeof value === 'object' && value.kind === 'resourceRef') insert(value.id);
+        }
+      }
+    });
+  };
+  const insert = (id: string): void => {
+    if (ids.has(id)) return;
+    const resource = byId.get(id);
+    if (!resource) throw createCompileInvariantError(`resource '${id}' was not imported`);
+    if (resource.kind === 'clip') {
+      ids.set(id, clip.importPath(resource.path));
+      return;
+    }
+    if (resource.tile) dependencies(resource.tile.motif);
+    const imported = paint.importResolved(
+      resource.tile
+        ? {
+            ...resource,
+            tile: {
+              ...resource.tile,
+              motif: resource.tile.motif.map(primitive => remapPrimitiveResources(primitive, ids)),
+            },
+          }
+        : resource,
+    );
+    if (typeof imported !== 'object' || imported.kind !== 'resourceRef') {
+      throw createCompileInvariantError(`paint resource '${id}' did not produce a resourceRef`);
+    }
+    ids.set(id, imported.id);
+  };
+  // 先检查依赖闭包，避免导入时因循环发布部分资源
+  for (const resource of resources) {
+    if (resource.kind === 'paint' && resource.tile)
+      visitSceneContent({ primitives: resource.tile.motif, resources: [...resources] }, () => {});
+  }
+  for (const resource of resources) insert(resource.id);
+  return ids;
 };

@@ -1,5 +1,5 @@
 import type { IRPatternLineStyle, IRPatternPaint } from '../../schemas';
-import type { MarkerPrimitive } from '../scene';
+import type { ScenePrimitive } from '../scene';
 
 /** Pattern definition 消费的已解析线条样式 */
 export type ResolvedPatternLineStyle = {
@@ -71,11 +71,11 @@ export type PatternEmitResult = {
   /** 最终 tile 周期（user units），必须为 finite 正数 */
   tileSize: number;
   /** 局部 tile 坐标中的 motif 几何 */
-  motif: Iterable<MarkerPrimitive>;
+  motif: Iterable<ScenePrimitive>;
 };
 
 /** Pattern definition 可返回默认周期的 motif iterable，或显式 tile 周期结果 */
-export type PatternEmitOutput = Iterable<MarkerPrimitive> | PatternEmitResult;
+export type PatternEmitOutput = Iterable<ScenePrimitive> | PatternEmitResult;
 
 /**
  * 可注册的 pattern 定义

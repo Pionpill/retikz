@@ -1,12 +1,9 @@
 import type { Position } from '@retikz/math';
 
-import type { MarkerPrimitive, ScenePrimitive } from '../contract';
+import type { ScenePrimitive } from '../contract';
 import { createCompositeContractError } from '../resolve/diagnostics';
 import { withProviderOutputValidationBoundary as validateProviderOutput } from '../resolve/provider-validation';
 import { BlendMode, FontStyle, PathFillRule, PathLineCap, PathLineJoin } from '../schemas';
-
-/** provider output runtime validation 使用的 marker 子集验证入口 */
-export type MarkerPrimitiveValidator = (owner: string, marker: unknown) => ReadonlyArray<MarkerPrimitive>;
 
 /**
  * 在 provider 返回后的统一边界把未知 validation failure 分类为 fatal contract error
@@ -429,7 +426,6 @@ const assertSceneStyle = (owner: string, value: Record<string, unknown>, path: s
 /** Scene recursive validation 所需的 active-path 与 Marker 子集入口 */
 type SceneValidationContext = Readonly<{
   active: WeakSet<object>;
-  validateMarkerPrimitives: MarkerPrimitiveValidator;
 }>;
 
 /** 递归校验单个 Scene primitive 并沿当前 group 路径检测循环 */
@@ -559,7 +555,9 @@ const visitScenePrimitive = (
         assertProviderOutputFinite(owner, arrow.markerHeight, `${path}.${field}.markerHeight`, true);
         assertProviderOutputUnitInterval(owner, arrow, 'opacity', `${path}.${field}`);
         const marker = providerOutputArray(owner, arrow.marker, `${path}.${field}.marker`);
-        context.validateMarkerPrimitives(`${owner} ${field}`, marker);
+        providerOutputArray(owner, marker, `${path}.${field}.marker`).forEach((child, index) =>
+          visitScenePrimitive(owner, child, `${path}.${field}.marker[${index}]`, context),
+        );
       }
 
       assertSceneStyle(owner, value, path);
@@ -672,23 +670,17 @@ const visitScenePrimitive = (
 };
 
 /** 校验单个第三方 Shape primitive 的完整 Core Scene runtime contract */
-const assertValidScenePrimitive: (
-  owner: string,
-  primitive: unknown,
-  validateMarkerPrimitives: MarkerPrimitiveValidator,
-) => asserts primitive is ScenePrimitive = (owner, primitive, validateMarkerPrimitives) => {
+const assertValidScenePrimitive: (owner: string, primitive: unknown) => asserts primitive is ScenePrimitive = (
+  owner,
+  primitive,
+) => {
   visitScenePrimitive(owner, primitive, 'Scene primitive', {
     active: new WeakSet(),
-    validateMarkerPrimitives,
   });
 };
 
 /** 在统一 fatal boundary 内物化并校验 Shape provider 发出的 Scene primitive 列表 */
-export const validateScenePrimitives = (
-  owner: string,
-  emitted: unknown,
-  validateMarkerPrimitives: MarkerPrimitiveValidator,
-): Array<ScenePrimitive> =>
+export const validateScenePrimitives = (owner: string, emitted: unknown): Array<ScenePrimitive> =>
   withProviderOutputValidationBoundary(owner, () => {
     if (
       emitted === null ||
@@ -700,7 +692,7 @@ export const validateScenePrimitives = (
 
     return [...(emitted as Iterable<unknown>)].map(primitive => {
       const snapshot = snapshotProviderOutputJson(owner, primitive, 'Scene primitive');
-      assertValidScenePrimitive(owner, snapshot, validateMarkerPrimitives);
+      assertValidScenePrimitive(owner, snapshot);
       return omitProviderOutputUndefined(snapshot);
     });
   });
