@@ -104,6 +104,7 @@ import {
   TaperRibbonWidthSchema,
   RibbonWidthSchema,
   CenterlineRibbonPathOptionsSchema,
+  RibbonLabelSchema,
   BoundaryRibbonPathOptionsSchema,
   RibbonAdaptiveSamplingSchema,
   RibbonArcCapSchema,
@@ -514,9 +515,9 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
 
     localizations: {
       zh: {
-        description: 'Scene 或 Scope 的稀疏 Theme 环境选择；style 与 mode 分别继承',
+        description: 'Scene 或 Scope 的稀疏 Theme 环境选择；name 与 mode 分别继承',
         descriptions: {
-          style: '显式视觉人格名称；省略时继承外层值，根级省略时使用 owner 默认 baseline',
+          name: '显式主题名称；省略时继承外层值，根级省略时使用 owner 默认 baseline',
           mode: '明暗环境：light 或 dark；省略时继承外层值',
         },
       },
@@ -573,16 +574,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/packages/foundation/reference#normalizedfractionschema',
   },
 
-  ScopeFrameSchema: {
-    schema: IR.ScopeFrameSchema,
-    label: 'ScopeFrame',
-    url: '/kernel/components/scope/reference#irscopeframe--scopeframeschema',
-  },
-  ScopeFrameStyleSchema: {
-    schema: IR.ScopeFrameStyleSchema,
-    label: 'ScopeFrameStyle',
-    url: '/kernel/components/scope/reference#scopeframestyleschema',
-  },
   ScopeSchema: { schema: IR.ScopeSchema, label: 'Scope', url: '/kernel/components/scope/reference#scopeschema' },
   AnchorRefSchema: {
     schema: IR.AnchorRefSchema,
@@ -659,9 +650,13 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IR.PathDefaultSchema,
     label: 'PathDefault',
   },
-  LabelDefaultSchema: {
-    schema: IR.LabelDefaultSchema,
-    label: 'LabelDefault',
+  NodeLabelDefaultSchema: {
+    schema: IR.NodeLabelDefaultSchema,
+    label: 'NodeLabelDefault',
+  },
+  PathLabelDefaultSchema: {
+    schema: IR.PathLabelDefaultSchema,
+    label: 'PathLabelDefault',
   },
   TransformSchema: {
     schema: IR.TransformSchema,
@@ -751,16 +746,16 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
   TextBlockSchema: { schema: IR.TextBlockSchema, label: 'TextBlock' },
   LineSchema: { schema: IR.LineSchema, label: 'Line' },
-  StyledLineSchema: {
-    schema: IR.StyledLineSchema,
-    label: 'StyledLine',
+  TextLineSchema: {
+    schema: IR.TextLineSchema,
+    label: 'TextLine',
   },
-  MixedLineSchema: {
-    schema: IR.MixedLineSchema,
-    label: 'MixedLine',
+  SegmentedLineSchema: {
+    schema: IR.SegmentedLineSchema,
+    label: 'SegmentedLine',
   },
-  TextRunSchema: { schema: IR.TextRunSchema, label: 'TextRun' },
-  MathRunSchema: { schema: IR.MathRunSchema, label: 'MathRun' },
+  TextSegmentSchema: { schema: IR.TextSegmentSchema, label: 'TextSegment' },
+  MathSegmentSchema: { schema: IR.MathSegmentSchema, label: 'MathSegment' },
   ShapeRefSchema: { schema: IR.ShapeRefSchema, label: 'ShapeRef' },
   BoundarySchema: {
     schema: IR.BoundarySchema,
@@ -789,10 +784,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PathStructure',
   },
   PathSchema: { schema: IR.PathSchema, label: 'Path', url: '/kernel/components/path/reference#pathschema' },
-  DrawableStyleSchema: {
-    schema: IR.DrawableStyleSchema,
-    label: 'DrawableStyle',
-  },
   DrawableInstanceSchema: {
     schema: IR.DrawableInstanceSchema,
     label: 'DrawableInstance',
@@ -821,6 +812,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: CenterlineRibbonPathOptionsSchema,
     label: 'CenterlineRibbonPathOptions',
     url: '/library/extension/ribbon/reference#centerlineribbonpathoptionsschema',
+  },
+  RibbonLabelSchema: {
+    schema: RibbonLabelSchema,
+    label: 'RibbonLabel',
+    url: '/library/extension/ribbon/reference#ribbonlabelschema',
   },
   BoundaryRibbonPathOptionsSchema: {
     schema: BoundaryRibbonPathOptionsSchema,
@@ -922,11 +918,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PathLabel',
     url: '/kernel/components/path/reference#pathlabelschema',
   },
-  StepLabelSchema: { schema: IR.StepLabelSchema, label: 'StepLabel' },
-  ControlPointSchema: {
-    schema: IR.ControlPointSchema,
-    label: 'ControlPoint',
-  },
   TargetSchema: { schema: IR.TargetSchema, label: 'Target' },
   PositionSchema: { schema: IR.PositionSchema, label: 'Position' },
   PolarPositionSchema: {
@@ -977,10 +968,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   GraphicEffectsSchema: {
     schema: IR.GraphicEffectsSchema,
     label: 'GraphicEffects',
-  },
-  StrokeStyleSchema: {
-    schema: IR.StrokeStyleSchema,
-    label: 'StrokeStyle',
   },
   StrokeWidthSchema: {
     schema: IR.StrokeWidthSchema,
@@ -1194,9 +1181,9 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'ArrowDetail',
     url: '/kernel/components/path/reference#arrowdetailschema',
   },
-  ArrowEndDetailSchema: {
-    schema: IR.ArrowEndDetailSchema,
-    label: 'ArrowEndDetail',
+  ArrowStyleSchema: {
+    schema: IR.ArrowStyleSchema,
+    label: 'ArrowStyle',
     url: '/kernel/components/path/reference#arrowenddetailschema',
   },
 
@@ -2229,10 +2216,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PathEncoding',
     url: '/viz/plot/reference/encoding#pathencodingschema',
   },
-  MarkLabelContentSchema: {
-    schema: IRPlot.MarkLabelContentSchema,
-    label: 'MarkLabelContent',
-    url: '/viz/plot/reference/mark#marklabelcontentschema',
+  MarkLabelTextSchema: {
+    schema: IRPlot.MarkLabelTextSchema,
+    label: 'MarkLabelText',
+    url: '/viz/plot/reference/mark#marklabeltextschema',
   },
   PathMarkEncodingSchema: {
     schema: IRPlot.PathMarkEncodingSchema,
@@ -2324,11 +2311,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'Mark',
     url: '/viz/plot/reference/mark#markschema',
   },
-  MarkOperationSchema: {
-    schema: IRPlot.MarkOperationSchema,
-    label: 'MarkOperation',
-    url: '/viz/plot/reference/mark#markoperationschema',
-  },
   MarkPlacementSchema: {
     schema: IRPlot.MarkPlacementSchema,
     label: 'MarkPlacement',
@@ -2418,11 +2400,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IRPlot.RelationRouteStepSchema,
     label: 'RelationRouteStep',
     url: '/viz/plot/reference/mark#relationroutestepschema',
-  },
-  CustomMarkSchema: {
-    schema: IRPlot.CustomMarkSchema,
-    label: 'CustomMark',
-    url: '/viz/plot/reference/mark#custommarkschema',
   },
   PlotTargetRefSchema: {
     schema: IRPlot.PlotTargetRefSchema,

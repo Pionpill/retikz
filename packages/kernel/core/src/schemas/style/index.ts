@@ -1,3 +1,3 @@
-export * from './primitives';
-export * from './schema';
-export * from './types';
+export * from './effects';
+export * from './paint';
+export * from './graphic';

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { BuiltinCompileWarningCode } from '../../src/compile/constants';
 import {
-  parseInlineRuns,
+  parseInlineSegments,
   resolveFont,
   resolveFontSize,
   resolveTextLine,
@@ -38,7 +38,7 @@ describe('resolve text', () => {
         gatingOn: false,
       }),
     ).toMatchObject({
-      runs: [{ text: 'a $x$ b', font: inheritedFont }],
+      segments: [{ text: 'a $x$ b', font: inheritedFont }],
       plainText: 'a $x$ b',
       hasMath: false,
       mixed: false,
@@ -50,7 +50,7 @@ describe('resolve text', () => {
         gatingOn: true,
       }),
     ).toMatchObject({
-      runs: [{ text: 'a ', font: inheritedFont }, { tex: 'x' }, { text: ' b', font: inheritedFont }],
+      segments: [{ text: 'a ', font: inheritedFont }, { tex: 'x' }, { text: ' b', font: inheritedFont }],
       plainText: 'a  b',
       hasMath: true,
       mixed: true,
@@ -67,7 +67,7 @@ describe('resolve text', () => {
       },
     );
 
-    expect(resolved.runs).toEqual([
+    expect(resolved.segments).toEqual([
       {
         text: 'styled',
         fill: 'red',
@@ -84,10 +84,10 @@ describe('resolve text', () => {
     expect(resolved.mixed).toBe(false);
   });
 
-  it('preserves explicit mixed runs and resolves text-run fonts', () => {
+  it('preserves explicit mixed segments and resolves text-segment fonts', () => {
     const resolved = resolveTextLine(
       {
-        runs: [
+        segments: [
           { text: 'a', font: { family: 'mono' } },
           { tex: 'x', fill: 'blue' },
         ],
@@ -99,9 +99,9 @@ describe('resolve text', () => {
       },
     );
 
-    expect(resolved.runs).toEqual([
+    expect(resolved.segments).toEqual([
       { text: 'a', font: { size: 18, family: 'mono', weight: 400 } },
-      { tex: 'x', fill: 'blue' },
+      { tex: 'x', fill: 'blue', fontSize: 18 },
     ]);
     expect(resolved.hasMath).toBe(true);
     expect(resolved.mixed).toBe(true);
@@ -127,6 +127,6 @@ describe('resolve text', () => {
   });
 
   it('keeps the inline parser available from the text resolver owner', () => {
-    expect(parseInlineRuns('$x$', true)).toEqual({ runs: [{ tex: 'x' }], hasMath: true, warn: false });
+    expect(parseInlineSegments('$x$', true)).toEqual({ segments: [{ tex: 'x' }], hasMath: true, warn: false });
   });
 });

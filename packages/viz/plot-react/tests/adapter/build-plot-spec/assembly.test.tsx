@@ -220,7 +220,7 @@ describe('buildPlotIR 装配', () => {
           opacity: { overall: 0.6 },
           lineCap: 'round',
           lineJoin: 'bevel',
-          roundedCorners: 4,
+          cornerRadius: 4,
           marks: [{ pos: 1, mark: { kind: 'arrow' } }],
         }}
       />,
@@ -234,7 +234,7 @@ describe('buildPlotIR 装配', () => {
         strokeWidth: 3,
         lineCap: 'round',
         lineJoin: 'bevel',
-        roundedCorners: 4,
+        cornerRadius: 4,
         marks: [{ pos: 1, mark: { kind: 'arrow' } }],
         opacity: { overall: 0.6 },
       },
@@ -292,13 +292,13 @@ describe('buildPlotIR 装配', () => {
             source: { anchorId: 'from' },
             target: { anchorId: 'to' },
             color: 'kind',
-            label: { content: 'label' },
+            label: { text: 'label' },
           }}
           properties={{
             source: { anchorId: { prefix: 'pt' } },
             target: { anchorId: { prefix: 'pt' } },
             label: { position: 'midway' },
-            geometry: { kind: 'path', options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], roundedCorners: 6 } },
+            geometry: { kind: 'path', options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], cornerRadius: 6 } },
           }}
         />
       </>,
@@ -316,14 +316,14 @@ describe('buildPlotIR 装配', () => {
       encodings: {
         source: { anchorId: 'from' },
         target: { anchorId: 'to' },
-        label: { content: 'label' },
+        label: { text: 'label' },
         color: { field: 'kind', scale: '__color' },
       },
       properties: {
         source: { anchorId: { prefix: 'pt' } },
         target: { anchorId: { prefix: 'pt' } },
         label: { position: 'midway' },
-        geometry: { kind: 'path', options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], roundedCorners: 6 } },
+        geometry: { kind: 'path', options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], cornerRadius: 6 } },
       },
     });
     expect(() => PlotSchema.parse(spec)).not.toThrow();
@@ -349,7 +349,7 @@ describe('buildPlotIR 装配', () => {
         encodings={{
           source: { anchorId: 'sourceId' },
           target: { anchorId: 'targetId' },
-          label: { content: 'deltaLabel' },
+          label: { text: 'deltaLabel' },
         }}
         properties={{
           source: { anchorId: { prefix: 'trend' } },
@@ -367,7 +367,7 @@ describe('buildPlotIR 装配', () => {
       encodings: {
         source: { anchorId: 'sourceId' },
         target: { anchorId: 'targetId' },
-        label: { content: 'deltaLabel' },
+        label: { text: 'deltaLabel' },
       },
       properties: {
         source: { anchorId: { prefix: 'trend' } },

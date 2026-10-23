@@ -4,7 +4,7 @@ import {
   createCompositeInputBindings,
   resolveCoreProviderDependencies,
   resolveTheme,
-  resolveThemeStyleRegistry,
+  resolveThemeRegistry,
 } from '@retikz/core';
 
 import type {
@@ -27,12 +27,12 @@ const createInputEmbedThemeContextResolver = (
   scene: InputScene,
   compile: CompileOptions | undefined,
 ): InputEmbedThemeContextResolver => {
-  const themeStyles = compile?.themeStyles;
-  const registry = resolveThemeStyleRegistry(themeStyles);
+  const themeDefinitions = compile?.themeDefinitions;
+  const registry = resolveThemeRegistry(themeDefinitions);
   const createContext = (theme: InputEmbedThemeContext['theme']): InputEmbedThemeContext =>
     Object.freeze({
       theme,
-      ...(themeStyles === undefined ? {} : { themeStyles }),
+      ...(themeDefinitions === undefined ? {} : { themeDefinitions }),
     });
 
   return Object.freeze({

@@ -1562,9 +1562,9 @@ describe('preview controls registry', () => {
       resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-path-style')]),
       resolvePreviewControls(controlModules[buildLangControlsKey(segments, 'builtin-path-style', 'en')]),
     ];
-    const visibleIds = (definition: PreviewControlsDefinition | undefined, roundedCorners: number) =>
+    const visibleIds = (definition: PreviewControlsDefinition | undefined, cornerRadius: number) =>
       definition?.presentation === 'panel'
-        ? resolveVisiblePreviewControlSections(definition.sections, { roundedCorners }).flatMap(section =>
+        ? resolveVisiblePreviewControlSections(definition.sections, { cornerRadius }).flatMap(section =>
             section.controls.map(field => field.id),
           )
         : [];
@@ -1574,10 +1574,10 @@ describe('preview controls registry', () => {
 
       if (!definition || definition.presentation !== 'panel') continue;
 
-      const roundedCorners = getPreviewControlFields(definition).find(field => field.id === 'roundedCorners');
+      const cornerRadius = getPreviewControlFields(definition).find(field => field.id === 'cornerRadius');
 
-      expect(roundedCorners?.kind).toBe('range');
-      expect(roundedCorners?.defaultValue).toBe(0);
+      expect(cornerRadius?.kind).toBe('range');
+      expect(cornerRadius?.defaultValue).toBe(0);
       expect(visibleIds(definition, 0)).toContain('lineJoin');
       expect(visibleIds(definition, 8)).not.toContain('lineJoin');
     }

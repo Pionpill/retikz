@@ -12,7 +12,7 @@
 
 > 在 grammar-of-graphics 边界内，新增同类可视化语义时，应能通过统一的 Plot IR、扩展契约和 lowering 管线映射到 Core IR，无需由 chart preset、adapter、demo 或 renderer 私造平行可视化模型。
 
-Visualization Complete 不表示内置所有图表类型。它保证 Encoding、Scale、Coordinate、Mark、Guide、Layer / Scope 等语法轴可以组合和扩展，并能消费 Data Complete、下沉 Drawing Complete。
+Visualization Complete 不表示内置所有图表类型。它保证 Encoding、Scale、Coordinate、Mark、Guide、Layer / Scope 等语法轴可以组合，并在各自契约允许的边界内扩展；Mark 采用封闭内置类型集合，不开放运行时自定义图元，并能消费 Data Complete、下沉 Drawing Complete。
 
 ## 2. 包角色与端到端管线
 

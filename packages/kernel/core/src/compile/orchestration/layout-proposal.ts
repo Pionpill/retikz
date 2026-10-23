@@ -2,7 +2,7 @@ import type { BoundsRect } from '@retikz/math';
 
 import type { LayoutAxisProposal, LayoutProposal } from '../../contract';
 import type { CompileOccurrenceLocator } from '../../contract';
-import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
+import { LayoutAxisProposalKind } from '../../contract';
 import { createCompositeContractError, isCompositeContractError } from '../../resolve/diagnostics';
 import { formatCompileOccurrence } from '../artifact';
 
@@ -16,123 +16,56 @@ const invalidProposal = (compositeKey: string, occurrence: CompileOccurrenceLoca
   );
 };
 
-/** 校验对象只含指定自有字段 */
-const validateKeys = (
-  input: Record<PropertyKey, unknown>,
-  allowedKeys: ReadonlySet<PropertyKey>,
-  label: string,
-  compositeKey: string,
-  occurrence: CompileOccurrenceLocator,
-): void => {
-  const unsupportedKeys = Reflect.ownKeys(input).filter(key => !allowedKeys.has(key));
-  if (unsupportedKeys.length > 0) {
-    invalidProposal(
-      compositeKey,
-      occurrence,
-      `${label} contains unsupported field(s): ${unsupportedKeys.map(String).join(', ')}`,
-    );
-  }
-};
-
 /** 校验并规范化有限非负数 */
 const finiteNonNegative = (
-  value: unknown,
+  value: number,
   field: string,
   compositeKey: string,
   occurrence: CompileOccurrenceLocator,
 ): number => {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+  if (!Number.isFinite(value) || value < 0) {
     return invalidProposal(compositeKey, occurrence, `${field} must be finite and non-negative`);
   }
 
   return canonicalizeZero(value);
 };
 
-/** 校验、脱离并冻结单轴 proposal */
+/** 校验数值不变量并脱离、冻结单轴 proposal */
 const cloneLayoutAxisProposal = (
-  axis: unknown,
+  axis: LayoutAxisProposal,
   axisName: 'x' | 'y',
   compositeKey: string,
   occurrence: CompileOccurrenceLocator,
 ): LayoutAxisProposal => {
-  if (axis === null || typeof axis !== 'object' || Array.isArray(axis)) {
-    return invalidProposal(compositeKey, occurrence, `${axisName} must be an object`);
-  }
-
-  const input = axis as Record<PropertyKey, unknown>;
-  const kind = input.kind;
+  const { kind } = axis;
   if (kind === LayoutAxisProposalKind.Intrinsic) {
-    validateKeys(input, new Set(['kind', 'mode']), axisName, compositeKey, occurrence);
-    const mode = input.mode;
-    if (mode !== LayoutIntrinsicMode.Minimum && mode !== LayoutIntrinsicMode.Natural) {
-      return invalidProposal(compositeKey, occurrence, `${axisName}.mode has unknown value '${String(mode)}'`);
-    }
-
-    return Object.freeze({ kind: LayoutAxisProposalKind.Intrinsic, mode });
+    return Object.freeze({ kind, mode: axis.mode });
   }
-
   if (kind === LayoutAxisProposalKind.Range) {
-    validateKeys(input, new Set(['kind', 'min', 'max']), axisName, compositeKey, occurrence);
-    if (!Object.hasOwn(input, 'min')) {
-      return invalidProposal(compositeKey, occurrence, `${axisName}.min is required`);
-    }
-
-    const minValue = input.min;
-    const maxValue = input.max;
-    const min = finiteNonNegative(minValue, `${axisName}.min`, compositeKey, occurrence);
-    const max =
-      maxValue === undefined ? undefined : finiteNonNegative(maxValue, `${axisName}.max`, compositeKey, occurrence);
+    const min = finiteNonNegative(axis.min, `${axisName}.min`, compositeKey, occurrence);
+    const upper = axis.max;
+    const max = upper === undefined ? undefined : finiteNonNegative(upper, `${axisName}.max`, compositeKey, occurrence);
     if (max !== undefined && min > max) {
       return invalidProposal(compositeKey, occurrence, `${axisName}.min must not exceed ${axisName}.max`);
     }
-
-    return Object.freeze({
-      kind: LayoutAxisProposalKind.Range,
-      min,
-      ...(max === undefined ? {} : { max }),
-    });
+    return Object.freeze({ kind, min, ...(max === undefined ? {} : { max }) });
   }
-
-  if (kind === LayoutAxisProposalKind.Exact) {
-    validateKeys(input, new Set(['kind', 'value']), axisName, compositeKey, occurrence);
-    if (!Object.hasOwn(input, 'value')) {
-      return invalidProposal(compositeKey, occurrence, `${axisName}.value is required`);
-    }
-
-    const value = input.value;
-
-    return Object.freeze({
-      kind: LayoutAxisProposalKind.Exact,
-      value: finiteNonNegative(value, `${axisName}.value`, compositeKey, occurrence),
-    });
-  }
-
-  return invalidProposal(compositeKey, occurrence, `${axisName}.kind has unknown value '${String(kind)}'`);
+  return Object.freeze({
+    kind,
+    value: finiteNonNegative(axis.value, `${axisName}.value`, compositeKey, occurrence),
+  });
 };
 
-/** 校验、脱离、规范化并递归冻结完整双轴 proposal */
+/** 校验数值、脱离并冻结已类型化的双轴 proposal */
 export const cloneLayoutProposal = (
-  proposal: unknown,
+  proposal: LayoutProposal,
   compositeKey: string,
   occurrence: CompileOccurrenceLocator,
 ): LayoutProposal => {
   try {
-    if (proposal === null || typeof proposal !== 'object' || Array.isArray(proposal)) {
-      return invalidProposal(compositeKey, occurrence, 'expected an object with x and y axes');
-    }
-
-    const input = proposal as Record<PropertyKey, unknown>;
-    validateKeys(input, new Set(['x', 'y']), 'proposal', compositeKey, occurrence);
-    if (!Object.hasOwn(input, 'x') || !Object.hasOwn(input, 'y')) {
-      return invalidProposal(compositeKey, occurrence, 'both x and y axes are required');
-    }
-
-    const x = input.x;
-    const y = input.y;
-
     return Object.freeze({
-      x: cloneLayoutAxisProposal(x, 'x', compositeKey, occurrence),
-      y: cloneLayoutAxisProposal(y, 'y', compositeKey, occurrence),
+      x: cloneLayoutAxisProposal(proposal.x, 'x', compositeKey, occurrence),
+      y: cloneLayoutAxisProposal(proposal.y, 'y', compositeKey, occurrence),
     });
   } catch (cause) {
     if (isCompositeContractError(cause)) throw cause;

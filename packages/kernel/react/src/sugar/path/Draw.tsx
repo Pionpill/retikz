@@ -12,7 +12,7 @@ export type DrawProps = Readonly<{
   /** TikZ 风格的路径走向简写 */
   way: WayDSL;
   /** 折线拐角几何圆角半径 */
-  roundedCorners?: IRPath['roundedCorners'];
+  cornerRadius?: IRPath['cornerRadius'];
   /** 路径级箭头方向 */
   arrow?: PathProps['arrow'];
   /** 箭头详细配置 */

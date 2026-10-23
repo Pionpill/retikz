@@ -429,7 +429,7 @@ describe('[ADV] 未注册 / 名称边角', () => {
     ]);
     const err = catchCompile(ir, {});
 
-    expect(err?.message).toContain("Unknown path generator 'sin'; available: (none registered)");
+    expect(err?.message).toContain("Unknown provider 'sin'; available: (none registered)");
   });
 
   it('name_case_mismatch：大小写敏感', () => {

@@ -58,7 +58,7 @@ const source: ServiceSource = {
   logic: { body: { kind: 'text', text: 'loadUser(id)' } },
 };
 const Example: FC = () => (
-  <Layout extensions={{ themeStyles: [coreStyle] }}>
+  <Layout extensions={{ themeDefinitions: [coreStyle] }}>
     <ServiceBlock {...source} />
   </Layout>
 );
@@ -81,7 +81,7 @@ const source: ServiceSource = {
 const input = scene({ children: [{ type: 'embed', kind: adapter.kind, props: source }] });
 const view = mount(document.getElementById('diagram')!, input, {
   adapters: [adapter],
-  compile: { themeStyles: [coreStyle] },
+  compile: { themeDefinitions: [coreStyle] },
 });
 // view.dispose() on teardown
 ```
@@ -91,7 +91,7 @@ const view = mount(document.getElementById('diagram')!, input, {
 
 ### Theme configuration
 
-`GraphThemeStyleSource.codeBlockTokens` is runtime configuration rather than IR. Register a named theme in both Core `themeStyles` and the contribution's `graphThemeStyles`. The Graph definition generates internal appearance from the effective Core theme.
+`GraphThemeSource.codeBlockTokens` is runtime configuration rather than IR. Register a named theme in both Core `themeDefinitions` and the contribution's `graphThemeDefinitions`. The Graph definition generates internal appearance from the effective Core theme.
 
 | Token               | Default                      | Purpose                                     |
 | ------------------- | ---------------------------- | ------------------------------------------- |

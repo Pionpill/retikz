@@ -3,7 +3,7 @@ import {
   AnchorRefSchema,
   Side,
   BendStepSchema,
-  ControlPointSchema,
+  PositionSchema,
   PathLabelSchema,
   ScopePropsSchema,
   SmoothStepSchema,
@@ -109,17 +109,17 @@ export const FlowBezierRoutingSchema = union([
   strictObject({ kind: literal(FlowRoutingKind.Curve) }),
   strictObject({
     kind: literal(FlowRoutingKind.Curve),
-    control: ControlPointSchema.describe(
+    control: PositionSchema.describe(
       'Explicit quadratic control in Flow root coordinates; subtract artifact drawing.origin when copying a control from an artifact.',
     ),
   }),
   strictObject({ kind: literal(FlowRoutingKind.Cubic) }),
   strictObject({
     kind: literal(FlowRoutingKind.Cubic),
-    control1: ControlPointSchema.describe(
+    control1: PositionSchema.describe(
       'Explicit source tangent control in Flow root coordinates; must accompany control2.',
     ),
-    control2: ControlPointSchema.describe(
+    control2: PositionSchema.describe(
       'Explicit target tangent control in Flow root coordinates; must accompany control1.',
     ),
   }),
@@ -296,16 +296,16 @@ const hasFlowEntityText = (text: IRTextBlock): boolean => {
   return text.some(line => {
     if (typeof line === 'string') return line.trim().length > 0;
     if ('text' in line) return line.text.trim().length > 0;
-    return line.runs.some(run => ('text' in run ? run.text : run.tex).trim().length > 0);
+    return line.segments.some(segment => ('text' in segment ? segment.text : segment.tex).trim().length > 0);
   });
 };
 
 const FlowEntityTextSchema = TextBlockSchema.refine(hasFlowEntityText, {
-  message: 'Flow Entity text must contain at least one non-whitespace text or TeX run.',
+  message: 'Flow Entity text must contain at least one non-whitespace text or TeX segment.',
 });
 
 const FlowRelationLabelTextSchema = TextBlockSchema.refine(hasFlowEntityText, {
-  message: 'Flow Relation label must contain at least one non-whitespace text or TeX run.',
+  message: 'Flow Relation label must contain at least one non-whitespace text or TeX segment.',
 });
 
 const FlowRelationLabelSchema = union([
@@ -316,7 +316,7 @@ const FlowRelationLabelSchema = union([
 /** 校验将投影为单个 Graph 实体的 Flow 节点输入 */
 export const FlowEntitySchema = strictObject({
   id: NonBlankStringSchema.describe('Flow-wide authored Entity identity.'),
-  text: FlowEntityTextSchema.describe('Required Core TextBlock with at least one non-whitespace text or TeX run.'),
+  text: FlowEntityTextSchema.describe('Required Core TextBlock with at least one non-whitespace text or TeX segment.'),
   role: EntityRoleSchema.optional().describe('Open Graph Entity role; omission resolves to concept.'),
   kind: NonBlankStringSchema.optional().describe('Open stable kind within the selected Entity role.'),
   group: EntitySchema.shape.group.describe('Optional Graph visual color grouping identifier.'),

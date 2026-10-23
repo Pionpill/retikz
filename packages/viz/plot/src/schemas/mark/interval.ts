@@ -8,7 +8,7 @@ import { CoordinateConnection, PolarInterpolation } from '../coordinate';
 import { ChannelSchema, NodeEncodingSchema, Position2DEncodingSchema, PositionInputSchema } from '../encoding';
 import { AnchorIdSchema, hasValidAnchorSource } from './anchor';
 import { BuiltinPlotMark, markBase } from './base';
-import { nodeHostLabel } from './label';
+import { MarkNodeLabelListSchema } from './label';
 import {
   MarkOpacityStyleSchema,
   MarkFillStyleSchema,
@@ -107,7 +107,9 @@ export const IntervalPropertiesSchema = strictObject({
     'Stable id rule written to each generated core interval Node; takes precedence over datumIdField for the node id',
   ),
   ...nodeStyleFields,
-  ...nodeHostLabel,
+  label: MarkNodeLabelListSchema.optional().describe(
+    'Node-host label: lowered onto each datum Node.label (core border-relative placement)',
+  ),
 }).describe('Fixed interval construction rules and appearance');
 
 /** 校验区间角色的字段来源 */

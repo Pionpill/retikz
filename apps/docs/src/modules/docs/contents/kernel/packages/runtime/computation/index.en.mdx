@@ -561,33 +561,6 @@ Observers run synchronously in registry dependency order. The event outcome belo
   ]}
 />
 
-## Core application
-
-Reconciler wraps Core drawing compilation in a Computation. Its public `createCoreComputation(options)` factory returns a compilation token. It consumes the document Source, retains state for incremental compilation internally, and exposes compilation output and a Scene snapshot.
-
-```ts
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
-import { createRuntimeSourceRegistry, createRuntimeComputationRegistry } from '@retikz/runtime';
-
-const compile = createCoreComputation({});
-const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-const computations = createRuntimeComputationRegistry({ sources, computations: [compile] });
-// Pass these registries and the initial document input to createRuntime
-// runtime.result(compile).value.output.result.scene is the published Scene
-```
-
-This maps to the three responsibilities above: `run` compiles a complete document, `update` tries supported local updates and falls back when inapplicable, and `result` separates internal compiler state from public results. Runtime does not interpret drawing primitives or compilation algorithms. Core supplies those rules, which its own documentation explains in detail.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Core computation and incremental branches',
-      path: 'packages/kernel/reconciler/src/runtime/computation.ts',
-    },
-    { label: 'Core public result view', path: 'packages/kernel/reconciler/src/runtime/public.ts' },
-  ]}
-/>
-
 ## Related props
 
 Only public members used in this chapter are listed; follow the source links below for complete declarations and default behavior.

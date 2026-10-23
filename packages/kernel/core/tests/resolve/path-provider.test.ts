@@ -92,7 +92,7 @@ describe('resolve/path provider bindings', () => {
   it('fails unknown path kinds through the resolver registry diagnostic', () => {
     expect(() =>
       resolvePathWithBuiltinProviders(path({ kind: 'missing' }), { pathKinds: resolvePathKindRegistry() }),
-    ).toThrow(/Unknown path kind 'missing'.*available: stroke/s);
+    ).toThrow(/Unknown provider 'missing'.*available: stroke/s);
   });
 
   it('reports unknown generator and arrow names from the resolver', () => {
@@ -103,7 +103,7 @@ describe('resolve/path provider bindings', () => {
         }),
         { irPath: 'children[0].path' },
       ),
-    ).toThrow(/Unknown path generator 'missing-generator'.*options\.pathGenerators/s);
+    ).toThrow(/Unknown provider 'missing-generator'.*available:/s);
 
     expect(() =>
       resolveStrokePathWithBuiltinProviders(
@@ -112,7 +112,7 @@ describe('resolve/path provider bindings', () => {
           irPath: 'children[0].path',
         },
       ),
-    ).toThrow(/Unknown arrow shape 'missing-arrow'.*options\.arrows/s);
+    ).toThrow(/Unknown provider 'missing-arrow'.*available:/s);
   });
 
   it('reports provider payload failures with the source IR locator', () => {

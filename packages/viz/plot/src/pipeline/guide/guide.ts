@@ -832,21 +832,21 @@ const cartesianAxisSideFromEdge = (edge: string): CartesianAxisSide => {
   return edge;
 };
 
-const assertCartesianAxisSideCompatible = (side: CartesianAxisSide, isX: boolean): void => {
-  if (isX && side !== AxisCardinalSide.Top && side !== AxisCardinalSide.Bottom) {
-    throw new RetikzPlotError(
-      `lowerPlots: cartesian x axis only supports top or bottom side placement (got "${side}")`,
-    );
-  }
-
-  if (!isX && side !== AxisCardinalSide.Left && side !== AxisCardinalSide.Right) {
-    throw new RetikzPlotError(
-      `lowerPlots: cartesian y axis only supports left or right side placement (got "${side}")`,
-    );
-  }
-};
-
 const cartesianAxisSideOf = (guide: IRPlotAxisGuide, isX: boolean): CartesianAxisSide => {
+  const assertCartesianAxisSideCompatible = (side: CartesianAxisSide, isXAxis: boolean): void => {
+    if (isXAxis && side !== AxisCardinalSide.Top && side !== AxisCardinalSide.Bottom) {
+      throw new RetikzPlotError(
+        `lowerPlots: cartesian x axis only supports top or bottom side placement (got "${side}")`,
+      );
+    }
+
+    if (!isXAxis && side !== AxisCardinalSide.Left && side !== AxisCardinalSide.Right) {
+      throw new RetikzPlotError(
+        `lowerPlots: cartesian y axis only supports left or right side placement (got "${side}")`,
+      );
+    }
+  };
+
   const placement = guide.placement;
   if (placement === undefined || placement.kind === AxisPlacementKind.Auto) {
     return isX ? AxisCardinalSide.Bottom : AxisCardinalSide.Left;

@@ -26,7 +26,7 @@ Core-default `rectangle` / `ellipse` / `polygon` definitions and custom definiti
 
 ## Define the capability
 
-Use `defineShape()` to declare the registry name, parameter schema, and geometry responsibilities. Parameterless shapes use `z.strictObject({})`. This minimal definition reuses rectangle geometry while changing the registry name and layout footprint.
+Use `defineShape()` to declare the registry name, parameter schema, and geometry responsibilities. Registry names have type `string`; use `ShapeDefinition['name']` when annotating a name instead of maintaining a separate union of built-in names. Parameterless shapes use `z.strictObject({})`. This minimal definition reuses rectangle geometry while changing the registry name and layout footprint.
 
 ```ts
 import { BUILTIN_SHAPES, defineShape } from '@retikz/core';
@@ -39,10 +39,10 @@ const badge = defineShape({
     halfWidth: halfWidth + 8,
     halfHeight: halfHeight + 4,
   }),
-  boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-  anchor: BUILTIN_SHAPES.rectangle.anchor,
-  connectionEnvelope: BUILTIN_SHAPES.rectangle.connectionEnvelope,
-  emit: BUILTIN_SHAPES.rectangle.emit,
+  boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+  anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
+  connectionEnvelope: BUILTIN_SHAPES.get('rectangle')!.connectionEnvelope,
+  emit: BUILTIN_SHAPES.get('rectangle')!.emit,
 });
 ```
 
@@ -90,17 +90,17 @@ The IR stores only the registry name or parametric reference; the host must prov
 
 ## Errors and limitations
 
-| Case                                      | Result and diagnostic                                                                 |
-| ----------------------------------------- | ------------------------------------------------------------------------------------- |
-| Empty `name`                              | Registration rejects a provider key that is not a non-empty string                    |
-| Same name as a built-in or custom item    | Registration throws `duplicate shape registration`; built-ins cannot be overridden    |
-| IR references an unregistered name        | Compile throws `Unknown shape`, lists available names, and points to `options.shapes` |
-| params are not a JSON object              | Compile reports JSON validation at the `node.shape.params` path                       |
-| params fail `paramsSchema`                | Compile reports the shape name, IR path, and zod details                              |
-| `anchor` does not recognize a custom name | Returning `undefined` lets compile throw `Unknown anchor`                             |
-| `edgePoint` is omitted                    | Using `{ side, fraction }` reports that the shape does not support side anchors       |
-| `connectionEnvelope` is omitted           | A built-in boundary with `fit: 'tight'` falls back to bounds and emits one warning    |
-| Invalid connection envelope               | Compile fails; axes must be finite and positive, and a circle's two axes must match   |
+| Case                                      | Result and diagnostic                                                               |
+| ----------------------------------------- | ----------------------------------------------------------------------------------- |
+| Empty `name`                              | Registration rejects a provider key that is not a non-empty string                  |
+| Same name as a built-in or custom item    | Registration throws `duplicate shape registration`; built-ins cannot be overridden  |
+| IR references an unregistered name        | Compile throws `Unknown provider` with the requested name and available names       |
+| params are not a JSON object              | Compile reports JSON validation at the `node.shape.params` path                     |
+| params fail `paramsSchema`                | Compile reports the shape name, IR path, and zod details                            |
+| `anchor` does not recognize a custom name | Returning `undefined` lets compile throw `Unknown anchor`                           |
+| `edgePoint` is omitted                    | Using `{ side, fraction }` reports that the shape does not support side anchors     |
+| `connectionEnvelope` is omitted           | A built-in boundary with `fit: 'tight'` falls back to bounds and emits one warning  |
+| Invalid connection envelope               | Compile fails; axes must be finite and positive, and a circle's two axes must match |
 
 <ComponentAlert
   type="warn"

@@ -26,7 +26,7 @@ export const RangedDotChartInputEmbedAdapter = createChartInputEmbedAdapter(
     return buildPointChartRuntime(
       source,
       parts,
-      createRangedDotChartProviderContribution(parts.themeDefinitions, parts.lowerOptions),
+      createRangedDotChartProviderContribution(parts.chartThemeDefinitions, parts.lowerOptions),
     );
   },
 );

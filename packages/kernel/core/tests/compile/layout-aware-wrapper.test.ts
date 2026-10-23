@@ -3,7 +3,6 @@ import { boolean, literal, number, strictObject } from 'zod';
 
 import type {
   CompositeCompileChild,
-  CompositeCompileScopeProps,
   IRAnimationTrack,
   IRChild,
   IRPaint,
@@ -99,7 +98,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
         const probe = context.layoutChild(
           {
             type: 'scope',
-            defaults: { label: { font: { size: 12 } } },
+            defaults: { node: { label: { font: { size: 12 } } }, path: { label: { font: { size: 12 } } } },
             children: [{ namespace: 'test', type: 'proposalLeaf' }],
           },
           {
@@ -456,7 +455,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
           type: 'node',
           id: 'same',
           position: [20, 0],
-          text: [{ runs: [{ tex: 'x' }] }],
+          text: [{ segments: [{ tex: 'x' }] }],
         });
         const replay = context.replay(laid);
 
@@ -491,13 +490,6 @@ describe('layout-aware composite runtime wrapper tree', () => {
         if (spec.fail) throw new Error('runtime Scope clip failed');
         return { kind: 'conditionalPreflightClip', x: -10, y: -10, width: 20, height: 20 };
       },
-      shapeSchema: strictObject({
-        kind: literal('conditionalPreflightClip'),
-        x: number(),
-        y: number(),
-        width: number().nonnegative(),
-        height: number().nonnegative(),
-      }),
       lower: shape => ({
         commands: [
           { kind: 'move', to: [shape.x, shape.y] },
@@ -988,72 +980,27 @@ describe('layout-aware composite runtime wrapper tree', () => {
     expect(JSON.stringify(result.scene.primitives)).not.toContain('mutated');
   });
 
-  it.each([
-    ['unknown key', { unknown: true }],
-    ['empty id', { id: '' }],
-    ['invalid localNamespace', { localNamespace: 'yes' }],
-    ['fractional zIndex', { zIndex: 1.5 }],
-    ['infinite zIndex', { zIndex: Infinity }],
-    ['invalid boundingShape', { boundingShape: 'triangle' }],
-    ['non-json meta', { meta: { bad: undefined } }],
-    ['invalid clip', { clip: { kind: 'rect', x: 0, y: 0, width: -1, height: 10 } }],
-    ['invalid animations', { animations: [{}] }],
-    ['malformed transform', { transforms: [{ kind: 'translate', x: 0 }] }],
-    ['non-finite transform', { transforms: [{ kind: 'scale', x: NaN }] }],
-  ])('rejects invalid runtime Scope props: %s', (_name, rawProps) => {
+  it('保留类型化 Scope 与回放配置中可选字段的省略语义', () => {
     const definition = defineComposite({
       namespace: 'test',
-      type: 'invalidProps',
-      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('invalidProps') }),
-      compile: (_value, context) => ({
-        children: [context.scope(rawProps as CompositeCompileScopeProps, [])],
-      }),
-    });
-
-    expect(() =>
-      compileToScene(scene([{ namespace: 'test', type: 'invalidProps' }]), { composites: [definition] }),
-    ).toThrow(/Composite 'test\.invalidProps'.*(invalid|finite|unknown|JSON|unsupported)/i);
-  });
-
-  it('rejects non-array replay transforms with the current composite occurrence', () => {
-    const definition = defineComposite({
-      namespace: 'test',
-      type: 'invalidReplayTransforms',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('invalidReplayTransforms'),
-      }),
+      type: 'optionalWrapperFields',
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('optionalWrapperFields') }),
       compile: (_value, context) => {
-        const laid = resolvedResultOf(context, node('content'));
-        return { children: [context.replay(laid, { transforms: {} } as never)] };
+        const laid = resolvedResultOf(context, node('optional-fields'));
+        return {
+          children: [
+            context.scope({ id: undefined, defaults: { style: { fill: undefined } } }, [
+              context.replay(laid, { transforms: [{ kind: 'scale', x: 1, y: undefined }], clip: undefined }),
+            ]),
+          ],
+        };
       },
     });
 
-    expect(() =>
-      compileToScene(scene([{ namespace: 'test', type: 'invalidReplayTransforms' }]), {
-        composites: [definition],
-      }),
-    ).toThrow(/Composite 'test\.invalidReplayTransforms'.*invalid.*replay.*transforms/i);
-  });
-
-  it('finishes invalid replay wrapper preflight before consuming the result', () => {
-    const definition = defineComposite({
-      namespace: 'test',
-      type: 'atomicReplayPreflight',
-      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('atomicReplayPreflight') }),
-      compile: (_value, context) => {
-        const laid = resolvedResultOf(context, node('preflight'));
-
-        expect(() => context.replay(laid, { transforms: {} } as never)).toThrow(/invalid.*transforms/i);
-        return { children: [context.replay(laid)] };
-      },
-    });
-
-    const result = compileToScene(scene([{ namespace: 'test', type: 'atomicReplayPreflight' }]), {
+    const result = compileToScene(scene([{ namespace: 'test', type: 'optionalWrapperFields' }]), {
       composites: [definition],
     });
-
-    expect(JSON.stringify(result.scene.primitives).match(/preflight/g)).toHaveLength(1);
+    expect(JSON.stringify(result.scene.primitives).match(/optional-fields/g)).toHaveLength(1);
   });
 
   it('applies replay placement before a parent-allocation-coordinate clip without mutating result bounds', () => {

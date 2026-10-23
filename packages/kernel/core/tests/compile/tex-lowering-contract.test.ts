@@ -5,7 +5,7 @@ import type { GroupPrim, PathPrim } from '../../src/contract';
 
 describe('[tex-lowering] multi-path contract', () => {
   it('按 paint order 输出多条路径并解析宿主颜色与透明度', () => {
-    const line = layoutInlineLine([{ tex: 'x' }], {
+    const line = layoutInlineLine([{ tex: 'x', fontSize: 16 }], {
       measureText: fallbackMeasurer,
       font: { size: 16 },
       warn: () => undefined,
@@ -41,7 +41,7 @@ describe('[tex-lowering] multi-path contract', () => {
 
     const [group] = emitInlineLine(
       line,
-      { color: '#333', opacity: 0.5, runs: [{ fill: '#0af', opacity: 0.8 }] },
+      { color: '#333', opacity: 0.5, segments: [{ fill: '#0af', opacity: 0.8 }] },
       0,
       6,
       value => value,
@@ -72,7 +72,7 @@ describe('[tex-lowering] multi-path contract', () => {
   });
 
   it('仅 currentColor 回退到宿主默认色，none 不输出 paint', () => {
-    const line = layoutInlineLine([{ tex: 'x' }], {
+    const line = layoutInlineLine([{ tex: 'x', fontSize: 16 }], {
       measureText: fallbackMeasurer,
       font: { size: 16 },
       warn: () => undefined,
@@ -90,7 +90,7 @@ describe('[tex-lowering] multi-path contract', () => {
       }),
     });
 
-    const [group] = emitInlineLine(line, { runs: [{}] }, 0, 1, value => value) as Array<GroupPrim>;
+    const [group] = emitInlineLine(line, { segments: [{}] }, 0, 1, value => value) as Array<GroupPrim>;
     const [path] = group.children as Array<PathPrim>;
 
     expect(path).not.toHaveProperty('fill');
@@ -111,7 +111,7 @@ describe('[tex-lowering] multi-path contract', () => {
       height: 1,
       depth: 0,
     };
-    const line = layoutInlineLine([{ tex: 'x' }], {
+    const line = layoutInlineLine([{ tex: 'x', fontSize: 16 }], {
       measureText: fallbackMeasurer,
       font: { size: 16 },
       warn: () => undefined,
@@ -121,7 +121,7 @@ describe('[tex-lowering] multi-path contract', () => {
     command.to[0] = 99;
     lowered.paths.length = 0;
 
-    const [group] = emitInlineLine(line, { runs: [{}] }, 0, 1, value => value) as Array<GroupPrim>;
+    const [group] = emitInlineLine(line, { segments: [{}] }, 0, 1, value => value) as Array<GroupPrim>;
     const [path] = group.children as Array<PathPrim>;
 
     expect(path.commands).toEqual([{ kind: 'move', to: [0, 0] }]);

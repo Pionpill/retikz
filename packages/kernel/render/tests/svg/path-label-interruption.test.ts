@@ -70,7 +70,8 @@ describe('SVG Stroke Path label interruption', () => {
   it('keeps marker-end on the original terminal drawable instead of a closing-edge fragment', () => {
     const svg = render(closedPath({ marks: [{ pos: 1, mark: { kind: 'arrow' } }] }));
 
-    expect(svg).toMatch(/d="M 0 0 L 100 0 L 100 94\.9"[^>]*marker-end=/);
+    expect(svg).toContain('d="M 0 0 L 100 0 L 100 94.9"');
+    expect(svg).toContain('transform="translate(100 94.9) rotate(90)');
     expect(svg).toContain('d="M 100 100 L 40.35 40.35"');
     expect(svg).toContain('d="M 19.65 19.65 L 0 0"');
   });

@@ -4,7 +4,6 @@ import type { BoundsInsets, BoundsRect } from '@retikz/math';
 
 import type {
   AnyCoordinateDefinition,
-  AnyMarkDefinition,
   AnyScaleDefinition,
   CoordinateFrame,
   DimensionRole,
@@ -14,7 +13,8 @@ import type {
   ProvenanceContext,
   TickSet,
 } from '../../contract';
-import type { IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotMarkOperation } from '../../schemas';
+import type { AnyMarkDefinition } from '../../providers';
+import type { IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotMark } from '../../schemas';
 import type { PlotLabelMeasure } from '../../shared';
 import type { MarkPaddingContext } from '../scale';
 
@@ -23,7 +23,7 @@ export type MarkDataView = {
   /** Source marks数组中的稳定序号 */
   markIndex: number;
   /** 当前scope消费的mark operation */
-  mark: IRPlotMarkOperation;
+  mark: IRPlotMark;
   /** 当前作用域的完整数据行与字段模型 */
   dataView: DataView;
 };
@@ -81,7 +81,7 @@ export type CoordinateResolveContext = {
   provenance?: ProvenanceContext;
   /** 已合并的 coordinate definitions */
   /** 当前请求的图元定义，供实例来源解析 */
-  markRegistry: ReadonlyMap<string, AnyMarkDefinition>;
+  markRegistry: Readonly<Record<IRPlotMark['type'], AnyMarkDefinition>>;
   coordinateRegistry: ReadonlyMap<string, AnyCoordinateDefinition>;
   /** 已合并的 scale definitions */
   scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>;

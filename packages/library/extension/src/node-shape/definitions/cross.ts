@@ -55,16 +55,6 @@ type CrossGeometry = {
   offset: Position;
 };
 
-/** 规范化 Cross 的轴向宽度，按轴向值再回退到 default */
-const normalizeCrossAxisValue = (
-  value: number | CrossDimension | CrossHeight | undefined,
-  axis: 'horizontal' | 'vertical',
-  fallback: number,
-): number => {
-  if (typeof value === 'number') return value;
-  return value?.[axis] ?? value?.default ?? fallback;
-};
-
 /** 规范化 Cross 的方向高度，按方向、轴向、default 的顺序回退 */
 const normalizeCrossSideValue = (
   value: number | CrossHeight | undefined,
@@ -82,6 +72,16 @@ const crossGeometry = (
   fallbackHalfWidth: number,
   fallbackHalfHeight: number,
 ): CrossGeometry => {
+  /** 规范化 Cross 的轴向宽度，按轴向值再回退到 default */
+  const normalizeCrossAxisValue = (
+    value: number | CrossDimension | CrossHeight | undefined,
+    axis: 'horizontal' | 'vertical',
+    fallback: number,
+  ): number => {
+    if (typeof value === 'number') return value;
+    return value?.[axis] ?? value?.default ?? fallback;
+  };
+
   const horizontalWidth = normalizeCrossAxisValue(params.width, 'horizontal', (fallbackHalfHeight * 2) / 3);
   const verticalWidth = normalizeCrossAxisValue(params.width, 'vertical', (fallbackHalfWidth * 2) / 3);
   const topHeight = normalizeCrossSideValue(params.height, 'top', 'vertical', fallbackHalfHeight);

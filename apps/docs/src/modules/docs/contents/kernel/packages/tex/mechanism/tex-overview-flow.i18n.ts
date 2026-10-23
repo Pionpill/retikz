@@ -18,7 +18,7 @@ export const texOverviewFlowI18n: Record<
     emit: ['基线布局与输出', { text: '路径 → Scene', fill: 'gray', font: { size: 'sm' } }],
   },
   en: {
-    recognize: ['Recognize', { text: 'Text → math run', fill: 'gray', font: { size: 'sm' } }],
+    recognize: ['Recognize', { text: 'Text → math segment', fill: 'gray', font: { size: 'sm' } }],
     typeset: ['Typeset', { text: 'Formula → SVG', fill: 'gray', font: { size: 'sm' } }],
     convert: ['Convert', { text: 'SVG → paths', fill: 'gray', font: { size: 'sm' } }],
     emit: ['Lay out and emit', { text: 'Paths → Scene', fill: 'gray', font: { size: 'sm' } }],

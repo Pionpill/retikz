@@ -71,11 +71,11 @@ Combines node appearance with interval positions, grouping and bound encodings.
 
 <ZodSchema name="LabelEncodingSchema" />
 
-`encodings.label: 'name'` is shorthand for `{ content: 'name' }`, a field binding; `properties.label: 'Highlight'` is fixed text. Use an object for additional settings. Non-empty arrays can mix strings and objects, with one label per entry.
+`encodings.label: 'name'` is shorthand for `{ text: 'name' }`, a field binding; `properties.label: 'Highlight'` is fixed text. Use an object for additional settings. Non-empty arrays can mix strings and objects, with one label per entry.
 
 | Target                      | Encoding                                                     |
 | --------------------------- | ------------------------------------------------------------ |
-| `content`                   | Field name; fixed `displayFormat` controls formatting        |
+| `text`                      | Field name; fixed `displayFormat` controls formatting        |
 | `font.size`, `font.weight`  | Field name or numeric `{ field, scale }` mapping             |
 | `font.family`, `font.style` | Field name; reads the font family or style directly          |
 | `textColor`, `opacity`      | Field name or explicit scale; opacity is a label-only scalar |
@@ -91,7 +91,7 @@ Unencoded font leaves retain fixed settings and inheritance. Failed bindings do 
 
 <ZodSchema
   name="NodeLabelEncodingSchema"
-  description="Node labels add align, rotate and keepUpright to the shared position, placement and distance targets."
+  description="Node labels add placement, align, rotate and keepUpright to the shared position and distance targets."
 />
 
 ### PathLabelEncodingSchema

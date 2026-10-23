@@ -1,6 +1,6 @@
 import type { EntityKindDefinition, EntityPredicateDefinition, EntityRoleDefinition } from './entity';
 import type { RelationKindDefinition, RelationPredicateDefinition, RelationRoleDefinition } from './relation';
-import type { GraphThemeStyleDefinition } from './theme';
+import type { GraphThemeDefinition } from './theme';
 
 /** 配置一组共享 Graph definitions 的运行时扩展 */
 export type GraphDefinitionOptions = Readonly<{
@@ -35,8 +35,8 @@ export type GraphDefinitionOptions = Readonly<{
    */
   relationPredicates?: ReadonlyArray<RelationPredicateDefinition>;
   /**
-   * 与 Core Theme style 同名的 Graph Theme definitions
+   * 与 Core Theme 同名的 Graph Theme definitions
    * @default []
    */
-  graphThemeStyles?: ReadonlyArray<GraphThemeStyleDefinition>;
+  graphThemeDefinitions?: ReadonlyArray<GraphThemeDefinition>;
 }>;

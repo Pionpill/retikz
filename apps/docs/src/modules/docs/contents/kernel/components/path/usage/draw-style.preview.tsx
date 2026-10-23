@@ -2,7 +2,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** 图形参数 */
 export type DrawStylePreviewValues = {
-  roundedCorners: number;
+  cornerRadius: number;
   arrow: '->' | 'none' | '<-' | '<->';
   stroke: string;
   strokeWidth: number;
@@ -22,7 +22,7 @@ export const DrawStylePreview = (values: DrawStylePreviewValues) => {
       </Node>
       <Draw
         way={['A', [120, -50], [120, 50], [240, 50], [240, -50], 'B']}
-        roundedCorners={values.roundedCorners}
+        cornerRadius={values.cornerRadius}
         arrow={values.arrow}
         style={{
           stroke: values.stroke,

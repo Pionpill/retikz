@@ -29,7 +29,7 @@ export const metricsImplementationI18n: Record<Lang, Record<string, [string, str
     node: ['compileResolvedNode', 'Content size → node bounds'],
     scene: ['Scene', 'text / path and resolved geometry'],
     render: ['Render', 'Draw SVG / Canvas'],
-    mixed: ['Inline runs', ''],
+    mixed: ['Inline segments', ''],
     plain: ['Plain text', ''],
   },
 };

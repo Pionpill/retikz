@@ -1,11 +1,10 @@
 import type { JsonObject } from '@retikz/foundation';
 
 import type { ClipDefinition, ClipShape } from '../../contract';
-import { providerDefinitionOf } from '../../providers/registry';
+import { providerDefinitionOf } from '../../providers';
 import type { IRClip } from '../../schemas';
 import { createCompositeContractError } from '../diagnostics';
 import { parseProviderPayload } from '../provider-payload';
-import { withProviderOutputValidationBoundary } from '../provider-validation';
 import type { ClipResolution, ClipShapeResolution } from './types';
 
 /** Clip provider 解析所需的 registry 和 locator 上下文 */
@@ -19,7 +18,7 @@ export type ClipResolveContext = Readonly<{
 /** 绑定 definition 并解析 provider params；provider resolve 保留到 compile resource 阶段执行 */
 export const resolveClip = (clip: IRClip, context: ClipResolveContext): ClipResolution => {
   const kind = clip.kind;
-  const definition = providerDefinitionOf(context.clips, kind, { capability: 'clip', optionName: 'clips' });
+  const definition = providerDefinitionOf(context.clips, kind);
   const parsed = parseProviderPayload({
     capability: 'clip',
     providerName: kind,
@@ -40,26 +39,9 @@ export const resolveClip = (clip: IRClip, context: ClipResolveContext): ClipReso
   return { spec: clip, kind, definition, params, resolve };
 };
 
-/** 通过同一个 Clip registry 绑定 definition 并校验完整 shape snapshot */
+/** 通过同一个 Clip registry 绑定已类型化 shape 的 definition */
 export const resolveClipShape = (shape: ClipShape, context: ClipResolveContext): ClipShapeResolution => {
   const kind = shape.kind;
-  const definition = providerDefinitionOf(context.clips, kind, { capability: 'clip', optionName: 'clips' });
-  const parsed = withProviderOutputValidationBoundary(`Clip provider 'clip:${kind}'`, () =>
-    parseProviderPayload({
-      capability: 'clip',
-      providerName: kind,
-      irPath: context.irPath ?? 'clip shape',
-      payloadName: 'shapeSchema',
-      schema: definition.shapeSchema,
-      value: shape,
-    }),
-  );
-  const params = parsed as JsonObject;
-  if (params.kind !== kind) {
-    throw createCompositeContractError(
-      `Clip provider 'clip:${kind}' shapeSchema returned kind '${String(params.kind)}' instead of '${kind}'.`,
-    );
-  }
-
-  return { spec: shape, kind, definition, params: params as ClipShape };
+  const definition = providerDefinitionOf(context.clips, kind);
+  return { spec: shape, kind, definition, params: shape };
 };

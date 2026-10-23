@@ -34,7 +34,7 @@ describe('@retikz/diagram package shell', () => {
         FlowDiagramProviderKey: expect.any(Object),
         createFlowDiagramProviderContribution: expect.any(Function),
         defineFlowLayout: expect.any(Function),
-        defineFlowThemeStyle: expect.any(Function),
+        defineFlowTheme: expect.any(Function),
       }),
     );
     expect(flowExports).not.toHaveProperty('DIAGRAM_NAMESPACE');
@@ -53,7 +53,7 @@ describe('@retikz/diagram package shell', () => {
         DiagramFrameSchema: expect.any(Object),
         DiagramPresentationSchema: expect.any(Object),
         DiagramDefaultsSchema: expect.any(Object),
-        defineDiagramThemeStyle: expect.any(Function),
+        defineDiagramTheme: expect.any(Function),
         lowerDiagramFoundation: expect.any(Function),
         resolveDiagramFoundation: expect.any(Function),
       }),

@@ -1,5 +1,5 @@
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
-import { useTheme, useThemeStyles } from '@retikz/react';
+import { useTheme, useThemeDefinitions } from '@retikz/react';
 import type { FC } from 'react';
 import { useMemo } from 'react';
 
@@ -21,21 +21,21 @@ export type RoutingSceneProps = Readonly<{ values: PreviewControlValuesFor<typeo
 const RoutingScene: FC<RoutingSceneProps> = props => {
   const { values } = props;
   const theme = useTheme();
-  const themeStyles = useThemeStyles();
+  const themeDefinitions = useThemeDefinitions();
   const viewBox = useMemo(() => {
     const { ir, contributions } = buildPreviewIR(() => renderFlowRoutingPreview(values));
     const result = compileToScene(
       { ...ir, theme },
       {
         ...resolveCoreProviderDependencies({ contributions }),
-        themeStyles,
+        themeDefinitions,
         measureText: browserMeasurer,
       },
     );
     const bounds = result.spatialHandles.entries.find(handle => handle.id === 'element:a')!.geometry.bounds;
 
     return { x: bounds.x + bounds.width / 2 - 120, y: bounds.y + bounds.height / 2 - 140, width: 400, height: 330 };
-  }, [values, theme, themeStyles]);
+  }, [values, theme, themeDefinitions]);
 
   return renderFlowRoutingPreview(values, { viewBox });
 };

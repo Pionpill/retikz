@@ -17,7 +17,7 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
 
   for (const [id, [x, y]] of entries) {
     const layout: NodeLayout = {
-      shape: { name: 'rectangle', definition: BUILTIN_SHAPES.rectangle, params: {} },
+      shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
       geometry: {
         rect: { x, y, width: 0, height: 0, rotate: 0 },
         contentCenter: [x, y],
@@ -25,8 +25,8 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
         contentSize: { width: 0, height: 0 },
       },
       boundary: {
-        name: BUILTIN_SHAPES.rectangle.name,
-        definition: BUILTIN_SHAPES.rectangle,
+        name: BUILTIN_SHAPES.get('rectangle')!.name,
+        definition: BUILTIN_SHAPES.get('rectangle')!,
         params: {},
         isShape: true,
       },
@@ -38,7 +38,7 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
 };
 
 const layoutForProjection = (): NodeLayout => ({
-  shape: { name: 'rectangle', definition: BUILTIN_SHAPES.rectangle, params: {} },
+  shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x: 10, y: 20, width: 30, height: 40, rotate: 0 },
     contentCenter: [10, 20],
@@ -46,8 +46,8 @@ const layoutForProjection = (): NodeLayout => ({
     contentSize: { width: 30, height: 40 },
   },
   boundary: {
-    name: BUILTIN_SHAPES.rectangle.name,
-    definition: BUILTIN_SHAPES.rectangle,
+    name: BUILTIN_SHAPES.get('rectangle')!.name,
+    definition: BUILTIN_SHAPES.get('rectangle')!,
     params: {},
     isShape: true,
   },

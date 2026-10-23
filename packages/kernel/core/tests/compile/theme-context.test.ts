@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import type { IRChild, IRScene, ResolvedTheme } from '../../src';
-import { compileToScene, CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '../../src';
+import { compileToScene, CompositeBaseSchema, defineComposite, defineTheme, ThemeMode } from '../../src';
 
 const sceneOf = (children: Array<IRChild>, theme?: IRScene['theme']): IRScene => ({
   type: 'scene',
@@ -56,7 +56,7 @@ describe('Theme compile context', () => {
 
   it('通过同一 Core style registry 解析自定义 style', () => {
     const observed: Array<ResolvedTheme> = [];
-    const brand = defineThemeStyle({
+    const brand = defineTheme({
       name: 'brand',
       resolve: ({ mode }) => ({
         semantic: {
@@ -69,14 +69,14 @@ describe('Theme compile context', () => {
       }),
     });
 
-    compileToScene(sceneOf([{ namespace: 'theme-test', type: 'probe' }], { style: 'brand', mode: ThemeMode.Dark }), {
+    compileToScene(sceneOf([{ namespace: 'theme-test', type: 'probe' }], { name: 'brand', mode: ThemeMode.Dark }), {
       composites: [createProbe(observed)],
-      themeStyles: [brand],
+      themeDefinitions: [brand],
     });
 
     expect(observed).toHaveLength(1);
     expect(observed[0]).toMatchObject({
-      style: 'brand',
+      name: 'brand',
       mode: ThemeMode.Dark,
       colors: { categorical: ['#aabbcc'], semantic: { error: '#ffaaaa', guide: '#cccccc' } },
     });

@@ -33,7 +33,7 @@ export const TABLE_LAYOUT_HOST_PROP_KEYS = [
   'height',
   'viewBox',
   'theme',
-  'themeStyles',
+  'themeDefinitions',
   'className',
   'containerStyle',
   'renderer',
@@ -102,7 +102,7 @@ const lowerOptionsOf = (props: TableCommonProps): LowerTablesOptions => ({
   formatterDefinitions: props.formatterDefinitions,
   presentationDefinitions: props.presentationDefinitions,
   visualScaleDefinitions: props.visualScaleDefinitions,
-  tableThemeStyles: props.tableThemeStyles,
+  tableThemeDefinitions: props.tableThemeDefinitions,
   formatDefinitions: props.formatDefinitions,
   fieldOrderDefinitions: props.fieldOrderDefinitions,
   transformDefinitions: props.transformDefinitions,
@@ -114,26 +114,6 @@ const lowerOptionsOf = (props: TableCommonProps): LowerTablesOptions => ({
   rowSelectorImplementations: props.rowSelectorImplementations,
   regressionImplementations: props.regressionImplementations,
 });
-
-/** 从共享 props 精确提取 React Layout 宿主选项 */
-const hostPropsOf = (props: TableCommonProps): ReactTableRuntime['display'] =>
-  Object.fromEntries(
-    TABLE_LAYOUT_HOST_PROP_KEYS.flatMap(key => {
-      const value = props[key];
-      if (value === undefined) return [];
-      return [[key === 'containerStyle' ? 'style' : key, value]];
-    }),
-  );
-
-/** 收集 embedded Table 不支持的 standalone-only props */
-const unsupportedEmbeddedPropsOf = (props: TableCommonProps): Array<string> => {
-  const unsupported: Array<string> = TABLE_LAYOUT_HOST_PROP_KEYS.filter(key => Object.hasOwn(props, key));
-  if (Object.hasOwn(props, 'onManifest')) unsupported.push('onManifest');
-  const plainProps = props as TableCommonProps & { embeddables?: unknown };
-  if (Object.hasOwn(plainProps, 'embeddables')) unsupported.push('embeddables');
-
-  return unsupported;
-};
 
 /** 统一 DetailTable 的 columns props 与 marker children authoring */
 const detailColumnsOf = (props: DetailTableProps<unknown>): Array<TableDetailColumnInput> => {
@@ -202,6 +182,26 @@ export const resolveReactTableRuntime = (
   props: AnyTableProps,
   options: Readonly<{ embedded?: boolean }> = {},
 ): ReactTableRuntime => {
+  /** 从共享 props 精确提取 React Layout 宿主选项 */
+  const hostPropsOf = (hostProps: TableCommonProps): ReactTableRuntime['display'] =>
+    Object.fromEntries(
+      TABLE_LAYOUT_HOST_PROP_KEYS.flatMap(key => {
+        const value = hostProps[key];
+        if (value === undefined) return [];
+        return [[key === 'containerStyle' ? 'style' : key, value]];
+      }),
+    );
+
+  /** 收集 embedded Table 不支持的 standalone-only props */
+  const unsupportedEmbeddedPropsOf = (embeddedProps: TableCommonProps): Array<string> => {
+    const unsupported: Array<string> = TABLE_LAYOUT_HOST_PROP_KEYS.filter(key => Object.hasOwn(embeddedProps, key));
+    if (Object.hasOwn(embeddedProps, 'onManifest')) unsupported.push('onManifest');
+    const plainProps = embeddedProps as TableCommonProps & { embeddables?: unknown };
+    if (Object.hasOwn(plainProps, 'embeddables')) unsupported.push('embeddables');
+
+    return unsupported;
+  };
+
   let table: InputTableVariant;
   let datasets: ExternalDatasets;
   let datasetSource: ExternalDatasets | Array<ExternalRow>;

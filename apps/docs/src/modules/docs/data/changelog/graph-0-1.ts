@@ -33,8 +33,8 @@ const graphMilestones: Array<SubVersion> = [
       {
         label: { zh: '容器继承 Graph Theme', en: 'Containers inherit Graph Theme' },
         content: {
-          zh: 'Graph Theme style 统一提供 Entity、Relation、Group 与 Block 默认。`defaultGraph` 按 Source 的 `style`、`layout` 与 Surface 根字段为后代提供显式默认，`graphRules` 独立保存有序条件规则；容器自身外壳只消费进入位置的 Theme 与祖先默认，实例字段最终优先。',
-          en: 'Graph Theme styles provide defaults for Entity, Relation, Group, and Block. `defaultGraph` follows Source `style`, `layout`, and root Surface fields for descendants, while `graphRules` holds ordered conditional rules separately. A container shell uses its incoming Theme and ancestor defaults, with explicit instance fields taking final priority.',
+          zh: 'Graph Theme 统一提供 Entity、Relation、Group 与 Block 默认。`defaultGraph` 按 Source 的 `style`、`layout` 与 Surface 根字段为后代提供显式默认，`graphRules` 独立保存有序条件规则；容器自身外壳只消费进入位置的 Theme 与祖先默认，实例字段最终优先。',
+          en: 'Graph Themes provide defaults for Entity, Relation, Group, and Block. `defaultGraph` follows Source `style`, `layout`, and root Surface fields for descendants, while `graphRules` holds ordered conditional rules separately. A container shell uses its incoming Theme and ancestor defaults, with explicit instance fields taking final priority.',
         },
       },
       {
@@ -109,8 +109,8 @@ const graphMilestones: Array<SubVersion> = [
       {
         label: { zh: '稀疏 Graph Theme 与上下文颜色', en: 'Sparse Graph Theme and contextual colors' },
         content: {
-          zh: '`GraphThemeStyleDefinition.resolve()` 返回稀疏 `GraphThemeStyleOverrides`；resolver 先补 Neutral baseline 与默认 rules，再追加自定义 rules。`graphTheme` 只影响可见 Entity / Relation；派生 fill、stroke、文字、label 与 marker token 可使用 `[0, 1]` 主色权重，并由 Core 按最终主色和 Theme mode 确定。',
-          en: '`GraphThemeStyleDefinition.resolve()` returns sparse `GraphThemeStyleOverrides`; resolve fills the Neutral baseline and default rules before appending custom rules. `graphTheme` affects visible Entities and Relations only, while derived fill, stroke, text, label, and marker tokens may use `[0, 1]` master-color weights resolved by Core from the final master color and Theme mode.',
+          zh: '`GraphThemeDefinition.resolve()` 返回稀疏 `GraphThemeOverrides`；resolver 先补 Neutral baseline 与默认 rules，再追加自定义 rules。`graphTheme` 只影响可见 Entity / Relation；派生 fill、stroke、文字、label 与 marker token 可使用 `[0, 1]` 主色权重，并由 Core 按最终主色和 Theme mode 确定。',
+          en: '`GraphThemeDefinition.resolve()` returns sparse `GraphThemeOverrides`; resolve fills the Neutral baseline and default rules before appending custom rules. `graphTheme` affects visible Entities and Relations only, while derived fill, stroke, text, label, and marker tokens may use `[0, 1]` master-color weights resolved by Core from the final master color and Theme mode.',
         },
       },
       {

@@ -21,13 +21,6 @@ type IndexedRule = Readonly<{
   parsedOptions: JsonObject;
 }>;
 
-/** 将选择目标格式化为用于去重的稳定键 */
-const formatTargetKey = (target: InspectionSelectionTarget): string => {
-  if (target.kind === 'scene') return 'scene';
-  if (target.kind === 'subtree') return `subtree:${target.sourcePath}`;
-  return `self:authored:${target.locator.sourcePath}:${target.locator.occurrenceIndex ?? '*'}`;
-};
-
 /** 收集 IR 中可用于选择的作者节点路径与子树路径 */
 const collectAuthoredPaths = (ir: IRScene) => {
   const selfPaths = new Set<string>();
@@ -86,6 +79,13 @@ export const admitInspectionSelection = (
   registry: InspectorRegistry,
   selection: InspectionSelection,
 ): ReadonlyArray<IndexedRule> => {
+  /** 将选择目标格式化为用于去重的稳定键 */
+  const formatTargetKey = (target: InspectionSelectionTarget): string => {
+    if (target.kind === 'scene') return 'scene';
+    if (target.kind === 'subtree') return `subtree:${target.sourcePath}`;
+    return `self:authored:${target.locator.sourcePath}:${target.locator.occurrenceIndex ?? '*'}`;
+  };
+
   const authoredPaths = collectAuthoredPaths(ir);
   const requestKeys = new Set<string>();
 

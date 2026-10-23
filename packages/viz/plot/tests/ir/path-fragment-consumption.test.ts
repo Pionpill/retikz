@@ -4,7 +4,7 @@ import { RelationMarkSchema, RelationPathGeometrySchema, RelationPathSpecificOpt
 
 const options = {
   style: { dashPattern: [4, 2], fillRule: 'evenodd' as const, lineCap: 'round' as const, lineJoin: 'bevel' as const },
-  roundedCorners: 2,
+  cornerRadius: 2,
   rotate: 15,
   scale: 1.25,
   marks: [{ pos: 0.5, mark: { kind: 'arrow' as const, shape: 'stealth' } }],
@@ -25,7 +25,11 @@ describe('Plot atomic path fragment consumption', () => {
 
     const relation = RelationMarkSchema.parse({
       type: 'relation',
-      properties: { source: { id: 'source' }, target: { id: 'target' }, geometry: { kind: 'path', options } },
+      properties: {
+        source: { anchorId: { template: 'source' } },
+        target: { anchorId: { template: 'target' } },
+        geometry: { kind: 'path', options },
+      },
     });
 
     expect(relation.properties.geometry.options).toEqual(options);

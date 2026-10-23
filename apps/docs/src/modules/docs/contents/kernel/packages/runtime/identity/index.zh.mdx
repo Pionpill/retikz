@@ -1,6 +1,6 @@
 ---
 title: Identity · 身份
-description: 标识状态中的实体，理解身份的创建、比较、收集与查找，以及 Core 的应用示例
+description: 标识状态中的实体，理解身份的创建、比较、收集与查找
 ---
 
 [Source · 来源](/kernel/packages/runtime/source)介绍了如何定义、注册和管理一份状态。当状态包含一张图时，还需要区分图中的各个节点：节点 A 从红色变成蓝色，它仍是同一个节点；另一张图中也有节点 A，却不能把两者混在一起。
@@ -220,21 +220,6 @@ const graph = defineRuntimeSource<GraphState, GraphState, GraphState, never>({
 <ComponentPreview files="identity-flow" size="sm" hideCode type="flow" />
 
 `createRuntimeIdentity` 创建单个身份；`runtimeIdentityEquals` 直接比较两个身份，不需要查找表。需要查询集合时，将身份列表交给 `createRuntimeIdentityLookup`，再通过 `has` 查询、`values` 列举。Source 的 `collectIdentities` 则把完整列表交给 Runtime 做内部校验与保存，不会向调用方返回图中的查询对象。
-
-## Core 应用
-
-Reconciler 根据 Core 编译来源为 Scene 记录语义 owner 与图元身份。对于根下显式 id 为 A、在名称空间内唯一且非生成的普通节点，其语义 owner 可以表示为：
-
-```ts
-import { createRuntimeIdentity } from '@retikz/runtime';
-
-const root = createRuntimeIdentity('@retikz/core/document', ['root']);
-const nodeA = createRuntimeIdentity('@retikz/core/document', [...root.path, 'node', 'A']);
-```
-
-这里的 owner 使用文档来源的注册键。实际图元身份还会附加发射角色与序号；匿名、重名和生成元素使用候选版本内的身份。该映射服务 Scene 快照、Render 与水合，不用于输入快照 diff，也不是 Weave 的节点更新地址。
-
-<SourceLinks sources={[{ label: 'Scene identity', path: 'packages/kernel/reconciler/src/scene/identity.ts' }]} />
 
 ## 相关属性
 

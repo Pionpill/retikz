@@ -1,10 +1,15 @@
 const translations: Record<string, string> = {
+  '自定义文字测量；省略时使用 Vanilla 的环境测量与估算降级':
+    'Custom text measurement; defaults to Vanilla environment measurement with an estimation fallback',
+  'subject 类型由所属者契约确定，context 类型由选项解析恢复':
+    'The owner contract determines the subject type; option parsing restores the context type',
+  所属者发布的被观察对象类型: 'Observed subject type published by its owner',
+  由所属者提供的被观察对象类型: 'Observed subject type provided by its owner',
   检查器的注册键: 'Inspector key',
   '规范化后可 JSON 序列化的选项': 'canonical JSON-safe options',
   注册项的命名空间: 'registry namespace',
   注册项的类型: 'registry type',
-  '经 subjectSchema 校验后交给 inspect 的观察对象类型':
-    'Observed subject type validated by subjectSchema and passed to inspect',
+  由所属者提供的观察对象类型: 'Observed subject type provided by its owner',
   'optionsSchema 应用默认与变换后的选项类型': 'Options type after optionsSchema applies defaults and transforms',
   'resolveOptions 输出、供 inspect 上下文消费的选项类型':
     'Options type returned by resolveOptions and consumed by the inspect context',
@@ -250,8 +255,8 @@ const translations: Record<string, string> = {
     "One object or an array; each label accepts `text`, optional `position` and `distance`, and inherited styles. Position accepts an eight-direction enum or angle in degrees (`label=30:foo` equals `position: 30`), defaulting to 'top'; distance defaults to 12",
   "六种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例 partway `{ between: [A, B], fraction }` / 锚点对齐 `{ kind: 'anchor', target, selfAnchor? }`。锚点对齐会先完成当前 Node 的文本、shape、padding、margin、scale、rotate 布局，再整体平移；双方 anchor 缺省为 center":
     "Six forms: Cartesian `[x, y]`, polar `{ angle, radius, origin? }`, relative `{ direction, of, distance? }`, offset `{ of, offset }`, partway `{ between: [A, B], fraction }`, or anchor alignment `{ kind: 'anchor', target, selfAnchor? }`. Anchor alignment lays out the node's text, shape, padding, margin, scale, and rotation before translating the whole node; both anchors default to center",
-  '`string` 单行（可含 `$...$` 公式）/ `Array<string | IRLine>` 多行可对单行覆盖 fill / opacity / font，\n或行内混排 `{ runs: [{ text }, { tex }] }`（每 run 可单独着色）':
-    'A single-line `string` (optionally containing `$...$` formulas), multiline `Array<string | IRLine>` with per-line fill, opacity, and font overrides, or inline mixed content `{ runs: [{ text }, { tex }] }` with per-run colors',
+  '`string` 单行（可含 `$...$` 公式）/ `Array<string | IRLine>` 多行可对单行覆盖 fill / opacity / font，\n或行内混排 `{ segments: [{ text }, { tex }] }`（每 segment 可单独着色）':
+    'A single-line `string` (optionally containing `$...$` formulas), multiline `Array<string | IRLine>` with per-line fill, opacity, and font overrides, or inline mixed content `{ segments: [{ text }, { tex }] }` with per-segment colors',
   '路径级时间轴动画；渲染端播放或降级为静态，不参与布局':
     'Path timeline animations, played by the renderer or rendered statically, without participating in layout',
   路径级箭头方向: 'Arrow direction for the path',

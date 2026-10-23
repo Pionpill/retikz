@@ -1,5 +1,5 @@
 import type { IRScene } from '@retikz/core';
-import { compileToScene, CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '@retikz/core';
+import { compileToScene, CompositeBaseSchema, defineComposite, defineTheme, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
@@ -27,7 +27,7 @@ const labeledBox = defineComposite({
         shape: 'rectangle',
         text: node.text,
         style: {
-          fill: context.theme.style === 'academic' && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
+          fill: context.theme.name === 'academic' && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
         },
       },
     ],
@@ -38,11 +38,11 @@ const labeledBox = defineComposite({
 const ir: IRScene = {
   version: 1,
   type: 'scene',
-  theme: { style: 'academic', mode: ThemeMode.Dark },
+  theme: { name: 'academic', mode: ThemeMode.Dark },
   children: [{ namespace: 'example', type: 'labeledBox', text: 'Hi' }],
 };
 
-const academicTheme = defineThemeStyle({
+const academicTheme = defineTheme({
   name: 'academic',
   resolve: () => ({
     semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00', guide: '#666666' },
@@ -52,7 +52,7 @@ const academicTheme = defineThemeStyle({
 
 describe('Tier 2 composite —— renderer 对照', () => {
   it('composite IR → Scene → svg 渲染出 rect', () => {
-    const result = compileToScene(ir, { composites: [labeledBox], themeStyles: [academicTheme] });
+    const result = compileToScene(ir, { composites: [labeledBox], themeDefinitions: [academicTheme] });
     const { scene } = result;
     const svg = renderToSvgString(scene, { idPrefix: 'r' });
 
@@ -65,7 +65,7 @@ describe('Tier 2 composite —— renderer 对照', () => {
   });
 
   it('Theme-aware Composite物化后的同一 Scene由SVG与Canvas等价消费', () => {
-    const result = compileToScene(ir, { composites: [labeledBox], themeStyles: [academicTheme] });
+    const result = compileToScene(ir, { composites: [labeledBox], themeDefinitions: [academicTheme] });
     const { scene } = result;
     const calls: Array<string> = [];
     const fillStyles: Array<string> = [];

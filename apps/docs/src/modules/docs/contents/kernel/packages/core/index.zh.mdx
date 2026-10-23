@@ -43,6 +43,10 @@ Core 先解析节点的样式和形状，结合文字度量确定尺寸，再解
 
 <PackageManagerInstall packages="@retikz/core" />
 
+`PathTransformSchema` 只包含整条路径的 `rotate` 与 `scale`；`cornerRadius` 属于 `PathGeometrySchema`，用于将折线拐角改成圆角。
+
+组合描边 schema 时，`GraphicStrokeSchema` 统一提供线宽、虚线序列、偏移和 `stroke` 颜色或绘制资源。`NodeStrokeSchema` 增加 `dashed`、`dotted` 快捷设置，优先级为 `dashPattern > dashed > dotted`；`PathStrokeSchema` 增加 `lineCap`、`lineJoin`。这些片段的类型分别由 schema 推导为 `IRGraphicStroke`、`IRNodeStroke` 和 `IRPathStroke`。通用的 `GraphicStyleSchema` 与 `CascadingGraphicStyleSchema` 组合完整描边字段，支持虚线序列与相位偏移。
+
 内置连接面名称使用 `BuiltinBoundary`，自定义连接面通过编译选项 `boundaries` 注册；`IRBoundary` 接受内置名称、自定义 boundary 或 shape 名称，以及 `{ type, params }` 引用。内置编译警告码使用 `BuiltinCompileWarningCode`，开放类型 `CompileWarningCode` 同时接受自定义警告码。
 
 声明图形时使用 Core 的 `IRScene` 等 IR 类型；处理编译后的路径命令时使用 Core 的 `PathCommand`。纯坐标和向量类型 `Position`、`Vector2` 从 `@retikz/math` 导入。
@@ -75,6 +79,8 @@ console.log(result.scene);
 `compileToScene` 同步返回 `CompileResult`。其中 `scene` 可交给渲染器；`artifacts` 与 `spatialHandles` 分别承载附加产物和空间句柄，具体内容见[编译产物](/kernel/packages/core/compilation-output)。这次调用只完成编译，画面绘制由 Render 或适配层继续完成。
 
 入口接收已类型化的 IR。来自 JSON 等外部输入的数据应先经过对应 schema 校验；文字测量、公式处理和扩展定义等能力可通过编译选项接入。
+
+通过 TypeScript 定义扩展时，作者负责保证名称和回调返回值满足声明的契约；注册表仍检查名称冲突。开放参数会在选中具体 Definition 后通过其 schema 精确解析。内部已经类型化的数据不需要在每个阶段重复解析；编译仍检查引用是否存在、几何数值是否有效及输出归属，并保留必要的快照隔离。
 
 ## 包边界
 

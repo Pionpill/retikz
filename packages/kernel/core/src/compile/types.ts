@@ -9,7 +9,7 @@ import type {
   Scene,
   SpatialHandleIndex,
 } from '../contract';
-import type { CoreProviderDefinitions, ThemeStyleDefinition } from '../contract';
+import type { CoreProviderDefinitions, ThemeDefinition } from '../contract';
 import type { LowerTex, TextMeasurer } from './text';
 import type { CompileWarning } from './warning';
 
@@ -197,8 +197,8 @@ export type CompileLayoutOptions = {
 
 /** 运行时注入的 provider 注册表 */
 export type CompileProviderOptions = Omit<CoreProviderDefinitions, 'composites'> & {
-  /** 运行时注入的 Core Theme style definitions */
-  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
+  /** 运行时注入的 Core Theme definitions */
+  themeDefinitions?: ReadonlyArray<ThemeDefinition>;
 };
 
 /**

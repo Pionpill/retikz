@@ -30,7 +30,7 @@ export const LineSeriesPreview = (values: LineSeriesPreviewValues) => {
           order: 'month',
           ...(grouping === 'series' ? { series: 'city' } : {}),
           ...(grouping === 'color' ? { color: 'city' } : {}),
-          ...(grouped && values.showLabels ? { label: { content: 'city' } } : {}),
+          ...(grouped && values.showLabels ? { label: { text: 'city' } } : {}),
           position: { x: { field: x }, y: { field: 'score' } },
         }}
         properties={{

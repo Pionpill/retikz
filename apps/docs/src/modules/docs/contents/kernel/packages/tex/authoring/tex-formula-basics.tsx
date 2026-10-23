@@ -12,7 +12,7 @@ export const previewSource = {
   deriveIR: false,
 } satisfies PreviewSourceConfig;
 
-/** 展示字符串公式、显式 math run 与 display 公式的中文基础写法 */
+/** 展示字符串公式、显式 math segment 与 display 公式的中文基础写法 */
 const Demo: FC<{ lang?: Lang }> = props => {
   const { lang = 'zh' } = props;
   const i18n = texFormulaBasicsI18n[lang];
@@ -31,7 +31,9 @@ const Demo: FC<{ lang?: Lang }> = props => {
       </Node>
       <Node
         position={[0, 0]}
-        text={[{ runs: [{ text: i18n.explicitMathRun }, { tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'crimson' }] }]}
+        text={[
+          { segments: [{ text: i18n.explicitMathSegment }, { tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'crimson' }] },
+        ]}
         style={{ stroke: 'none', font: { size: 18 } }}
         layout={{ padding: 0 }}
       />

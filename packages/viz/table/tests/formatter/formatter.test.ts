@@ -72,7 +72,7 @@ describe('Cell formatter registry', () => {
     expect(() => cellFormatterDefinitionOf('missing', registry)).toThrow(/not registered/i);
   });
 
-  it('fails loud for empty, duplicate, and built-in-conflicting names', () => {
+  it('fails loud for duplicate and built-in-conflicting names', () => {
     const formatterOf = (name: string) =>
       defineCellFormatter({
         name,
@@ -83,7 +83,6 @@ describe('Cell formatter registry', () => {
 
     expect(() => resolveCellFormatterRegistry([formatter, formatterOf('custom')])).toThrow(/duplicate.*custom/i);
     expect(() => resolveCellFormatterRegistry([formatterOf('identity')])).toThrow(/duplicate.*identity/i);
-    expect(() => resolveCellFormatterRegistry([formatterOf('  ')])).toThrow(/non-empty/i);
   });
 });
 
@@ -191,18 +190,10 @@ describe('formatted Table model', () => {
       optionsSchema: strictObject({}).transform(() => ({ value: Number.NaN })),
       format: (_input, options) => (Number.isNaN(options.value) ? 'transformed' : 'unexpected'),
     });
-    const invalidOutput = defineCellFormatter({
-      name: 'invalid-output',
-      optionsSchema: strictObject({}),
-      format: () => ({ invalid: true }) as unknown as string,
-    });
 
     expect(
       formatDefaultTable(modelOf(1, { name: 'transformed-options' }), [transformedOptions]).cells[0],
     ).toMatchObject({ value: 'transformed' });
-    expect(() => formatDefaultTable(modelOf(1, { name: 'invalid-output' }), [invalidOutput])).toThrow(
-      /formatter "invalid-output".*cell "cell\.0"/i,
-    );
 
     const providerCause = new Error('provider failed');
     const thrown = defineCellFormatter({

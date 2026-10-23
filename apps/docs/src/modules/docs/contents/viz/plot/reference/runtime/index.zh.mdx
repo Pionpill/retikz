@@ -1,4 +1,4 @@
-﻿---
+---
 title: 运行时总览
 description: 查询 React、Vanilla 与直接 Plot IR 如何汇入同一 lowering，在 Core 编译后输出 Scene、渲染结果与独立运行时产物。
 ---
@@ -23,7 +23,7 @@ Plot 根和图元局部 `transform` 保存 `{ operation, dataExecution? }` 声�
 
 React 与 Vanilla 提供不同的 authoring 和宿主接线，但不复制 Plot 算法。Standalone `<Plot>` 把 `XxxProps` / children 桥接为 Plot Vanilla 的 `InputPlotEmbed`，交给同一份 `PlotInputEmbedAdapter`；`embedPlot()` 创建可放入 Vanilla `scene()` 的 `InputEmbed`，配合 `PlotInputEmbedAdapter` 完成 `InputPlot -> IRPlot` 归一与下沉。`renderPlot()` 则保留为独立的无 DOM SSR 与 lineage 入口。
 
-`<Plot theme>` 是 Plot 面板所在 Core Scope 的局部 Theme，只选择该 Plot 的 `style` 与 `mode`。它不同于 Plot owner 持久化的 `defaultPlot` / `plotRules`。Vanilla `renderPlot(spec, data, { theme })` 把 `theme` 写入根 `IRScene.theme`，作为整个编译 Scene 的 Core Theme；它不会改写 `spec.defaultPlot` 或 `spec.plotRules`。
+`<Plot theme>` 是 Plot 面板所在 Core Scope 的局部 Theme，只选择该 Plot 的 `name` 与 `mode`。它不同于 Plot owner 持久化的 `defaultPlot` / `plotRules`。Vanilla `renderPlot(spec, data, { theme })` 把 `theme` 写入根 `IRScene.theme`，作为整个编译 Scene 的 Core Theme；它不会改写 `spec.defaultPlot` 或 `spec.plotRules`。
 
 三条入口最终都委托 `@retikz/plot` 解析数据、比例尺、坐标系、图元与辅助，再把 Core IR 交还统一编译链。SVG、Canvas 与 SVG 字符串是输出形态；SSR 是 Vanilla 可运行的宿主场景，不是另一套 Plot 语义。
 
@@ -46,11 +46,11 @@ React DSL 只收集 JSX / props 并调度 Plot Vanilla；Vanilla 的 `plot()` �
 
 运行时选项按职责分为三组；对应的 `PlotLayoutOverrides`、`PlotDefinitions`、`PlotImplementations` 类型均从 `@retikz/plot` 导出，可独立声明并复用：
 
-| 分组              | 字段                                                                                                                                                                                |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `layout`          | `width`、`height`、`fontSize`、`margin`                                                                                                                                             |
-| `definitions`     | `coordinates`、`transforms`、`statisticsReducers`、`rowSelectors`、`regressions`、`scales`、`channels`、`marks`、`positionAdjustments`、`formats`、`fieldOrders`、`plotThemeStyles` |
-| `implementations` | `transforms`、`statisticsReducers`、`rowSelectors`、`regressions`                                                                                                                   |
+| 分组              | 字段                                                                                                                                                                                     |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `layout`          | `width`、`height`、`fontSize`、`margin`                                                                                                                                                  |
+| `definitions`     | `coordinates`、`transforms`、`statisticsReducers`、`rowSelectors`、`regressions`、`scales`、`channels`、`marks`、`positionAdjustments`、`formats`、`fieldOrders`、`plotThemeDefinitions` |
+| `implementations` | `transforms`、`statisticsReducers`、`rowSelectors`、`regressions`                                                                                                                        |
 
 例如 `renderPlot(spec, data, { layout: { width: 480, height: 300 } })`。React 的 `width` / `height` 仍声明 Plot IR 尺寸，`layout` 则提供运行时布局默认值；IR 尺寸优先。
 

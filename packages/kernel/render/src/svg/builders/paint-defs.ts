@@ -4,7 +4,8 @@ import { DEFAULT_EPSILON } from '@retikz/math';
 import { gradientLineFromAngle, parseHexColor } from '../../shared';
 import type { SvgNode } from '../types';
 import { compact } from './attrs';
-import { buildMarkerPrim } from './marker-prim';
+import { buildPrim } from './prim';
+import type { BuildContext } from './prim';
 
 /** fit → SVG preserveAspectRatio（cover 为缺省） */
 const fitToPAR = (fit: 'fill' | 'contain' | 'cover' | undefined): string =>
@@ -118,9 +119,9 @@ const buildConicGradient = (spec: Extract<IRPaint, { kind: 'conicGradient' }>, i
 /**
  * 物化已解析 pattern tile（emit-in-compile 产物）成 `<pattern>` SvgNode
  * @description 宽高 = `tile.size`、`patternUnits=userSpaceOnUse`（tile 固定 user units）、可选整体旋转；
- *   `tile.motif`（`MarkerPrimitive[]`）复用 `buildMarkerPrim` 物化（contextStroke → context-stroke）
+ *   `tile.motif`（`ScenePrimitive[]`）复用 `buildMarkerPrim` 物化（contextStroke → context-stroke）
  */
-const buildPatternTile = (tile: ResolvedPatternTile, id: string): SvgNode => ({
+const buildPatternTile = (tile: ResolvedPatternTile, id: string, context: BuildContext): SvgNode => ({
   tag: 'pattern',
   attrs: compact({
     id,
@@ -129,7 +130,7 @@ const buildPatternTile = (tile: ResolvedPatternTile, id: string): SvgNode => ({
     patternUnits: 'userSpaceOnUse',
     patternTransform: tile.rotation ? `rotate(${tile.rotation})` : undefined,
   }),
-  children: tile.motif.map(prim => buildMarkerPrim(prim)),
+  children: tile.motif.map(prim => buildPrim(prim, context)),
 });
 
 /**
@@ -137,7 +138,7 @@ const buildPatternTile = (tile: ResolvedPatternTile, id: string): SvgNode => ({
  * @description gradient / image 用 objectBoundingBox（随形状缩放）；pattern 用 userSpaceOnUse（tile 固定 user units）。
  *   `id` 已由 caller 加实例前缀。pattern 资源缺 `tile` 是不该出现的 compile bug → 产空 `<pattern id>` 兜底、不抛
  */
-export const buildPaintDef = (resource: PaintResource, id: string): SvgNode => {
+export const buildPaintDef = (resource: PaintResource, id: string, context: BuildContext = {}): SvgNode => {
   const spec: IRPaint = resource.spec;
 
   switch (spec.kind) {
@@ -166,7 +167,7 @@ export const buildPaintDef = (resource: PaintResource, id: string): SvgNode => {
     case 'conicGradient':
       return buildConicGradient(spec, id);
     case 'pattern':
-      return resource.tile ? buildPatternTile(resource.tile, id) : { tag: 'pattern', attrs: { id } };
+      return resource.tile ? buildPatternTile(resource.tile, id, context) : { tag: 'pattern', attrs: { id } };
     case 'image':
       return {
         tag: 'pattern',

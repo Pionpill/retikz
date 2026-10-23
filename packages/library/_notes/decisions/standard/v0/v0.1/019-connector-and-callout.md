@@ -61,7 +61,7 @@ type ConnectorAppearanceInput = Pick<
   | 'dashOffset'
   | 'lineCap'
   | 'lineJoin'
-  | 'roundedCorners'
+  | 'cornerRadius'
   | 'marks'
   | 'zIndex'
 >;
@@ -76,7 +76,7 @@ quadratic、cubic 与 bend 字段直接复用 Core curve / cubic / bend 的公�
 ## Connector 行为
 
 - role 是开放字符串；内置 flow、branch、dependency、feedback 只提供 authoring 常量，不触发 style preset
-- appearance 只开放上方列出的 Core stroke Path 字段，不接受 fill、path kind、children、label、id、meta、animation、rotate 或 scale。默认是 1-unit solid currentColor stroke 与 Core 默认 end arrow mark，roundedCorners 为 0，zIndex 为 0；显式字段逐项覆盖默认值，其中 `marks` 替换默认 end arrow mark 而不是与其合并
+- appearance 只开放上方列出的 Core stroke Path 字段，不接受 fill、path kind、children、label、id、meta、animation、rotate 或 scale。默认是 1-unit solid currentColor stroke 与 Core 默认 end arrow mark，cornerRadius 为 0，zIndex 为 0；显式字段逐项覆盖默认值，其中 `marks` 替换默认 end arrow mark 而不是与其合并
 - label 完整复用 Core `IRGeometryLabelInput`：支持文本 / TeX、字体、颜色、side、sloped、distance 与 position，不增加 Connector 私有 label 字段，也不接受任意复合 `IRChild`
 - label 直接进入 lowered Core Path 的最后一个 drawable step；position 的默认值、归一化范围、该 step 的采样与失败语义完全沿用 Core step label，不由 Standard 重新测量或计算。straight、orthogonal、quadratic、cubic 与 bend 的最后一个 step 表示完整 route；polyline 的 label 明确定位于连接终点的最后一段
 - from / to 与中间整体 target 在所在 namespace 注册阶段闭合后随 Core pending Path 解析，可以引用同一可见 namespace 中位于 GraphConnector 前后的目标；带 `section` 的 GraphFrame target 在当前 Core 下明确 fail-loud，不编码为扁平 id

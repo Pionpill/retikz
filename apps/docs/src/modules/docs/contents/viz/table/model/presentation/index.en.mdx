@@ -23,10 +23,10 @@ Selectors and encodings always read the canonical raw value, not formatted text.
 
 Both paths produce one Core child in source-Cell canonical order and retain only explicit identity. They differ in who constructs the content:
 
-| Payload   | Stored value                                                              | How it becomes a Core child                |
-| --------- | ------------------------------------------------------------------------- | ------------------------------------------ |
-| `value`   | Ordinary values such as `string`, `number`, and `boolean`                 | Formatter and Presentation registries      |
-| `content` | Any renderable content, such as text, icons, Nodes, or composite graphics | Validate directly; bypass both Definitions |
+| Payload   | Stored value                                                              | How it becomes a Core child                    |
+| --------- | ------------------------------------------------------------------------- | ---------------------------------------------- |
+| `value`   | Ordinary values such as `string`, `number`, and `boolean`                 | Formatter and Presentation registries          |
+| `content` | Any renderable content, such as text, icons, Nodes, or composite graphics | Consume typed content; bypass both Definitions |
 
 `value` stores ordinary Cell values, such as a name string, an amount number, or a boolean state. Presentation decides how those values are displayed.
 
@@ -47,9 +47,9 @@ A custom formatter only performs scalar-to-scalar conversion, and its output mus
 
 A value Cell uses built-in identity when no formatter is named and built-in `text` when no presentation is named. `text` converts the scalar into a zero-padding Core Node without stroke or fill; `null` becomes an empty string.
 
-Custom Formatter and Presentation Definitions each have a stable name, a precise options schema, and one callback. Runtime merges built-in and custom Definitions into their respective registries. Empty keys and duplicate registrations fail loudly while identifying the provider key during registry construction. During per-Cell dispatch, an unregistered name, invalid options, non-scalar formatter output, or non-JSON-safe Presentation output fails loudly while retaining the Definition name and an explicit Cell id or canonical address.
+Custom Formatter and Presentation Definitions each provide a stable name, a precise options schema, and one callback. Built-in and custom Definitions share the registries; duplicate registrations, unknown names, and invalid options produce errors. Authors are responsible for names and callback results satisfying the type contract. Callback errors retain their original cause, Definition name, and explicit Cell id or canonical address.
 
-Presentation output must still pass the Core child schema. Built-in text and custom graphics therefore share measurement, layout, replay, and renderers instead of introducing a second Table-specific rendering language.
+Presentation output is consumed as a typed Core child, then copied and frozen for measurement, layout, and replay without another Core child schema parse. Built-in text and custom graphics share the same rendering semantics.
 
 ## What Presentation does not own
 
@@ -65,10 +65,10 @@ The same Presentation Definition can therefore serve different table forms, whil
 <SourceLinks
   sources={[
     {
-      label: 'Core child validation, Presentation invocation, and content style',
+      label: 'Presentation invocation, output snapshots, and content style',
       path: 'packages/viz/table/src/pipeline/presentation/present.ts',
       startLine: 12,
-      endLine: 56,
+      endLine: 53,
     },
     {
       label: 'Presentation carriers align by canonical order and explicit Cell identity',

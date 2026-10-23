@@ -11,14 +11,14 @@ import { normalizeGraphAuthoringChildren } from './semantic-children';
 /** Block Row embed 的 Source authoring 输入 */
 export type BlockRowInputEmbedProps = WithoutInputType<InputBlockRow>;
 
-const inputOf = (props: BlockRowInputEmbedProps): InputBlockRow => {
-  return { type: 'blockRow', ...props };
-};
-
 /** Block Row Source 的 InputEmbed adapter */
 export const BlockRowInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockRowInputEmbedProps> = {
   kind: BlockRowEmbedKind,
   lower: (props, context) => {
+    const inputOf = (inputProps: BlockRowInputEmbedProps): InputBlockRow => {
+      return { type: 'blockRow', ...inputProps };
+    };
+
     const input = inputOf(props);
     const inputChildren = 'content' in input ? undefined : input.children;
     const normalized = normalizeGraphAuthoringChildren(inputChildren ?? [], context, 'BlockRow.children');

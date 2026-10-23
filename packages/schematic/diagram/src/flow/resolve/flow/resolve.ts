@@ -529,7 +529,7 @@ const projectFlowGroups = (
 
 /** 把 Flow Source 与 definitions 确定为唯一 Canonical Flow */
 export const resolveFlowDiagram = (source: IRFlowDiagram, context: FlowResolveContext): CanonicalFlowDiagram => {
-  const defaults = resolveFlowTheme(context.theme, context.flowThemeStyles, source.defaultFlow);
+  const defaults = resolveFlowTheme(context.theme, context.flowThemeDefinitions, source.defaultFlow);
   const state: ResolveState = {
     graph: resolveGraphDefinitionOptions(context.graph),
     defaults,

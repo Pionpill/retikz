@@ -38,9 +38,9 @@ Presentation 只接受可选且唯一的 title、description、legend；出现�
 }
 ```
 
-text 必需且完整复用 Core TextBlock，支持单行、多行、逐行样式及 text / math runs；内容合法性沿 Core schema。Diagram 不额外 trim，也不将显式内容折叠为区域省略。style 只接受 textColor/font/opacity，layout 只接受 align/lineHeight/maxTextWidth。
+text 必需且完整复用 Core TextBlock，支持单行、多行、逐行样式及 text / math segments；内容合法性沿 Core schema。Diagram 不额外 trim，也不将显式内容折叠为区域省略。style 只接受 textColor/font/opacity，layout 只接受 align/lineHeight/maxTextWidth。
 
-区域不接受任意 Core child 或完整 Node，position、shape、boundary、padding、margin、stroke 与 identity 不能混入文本。Defaults 提供块级表现，TextBlock 内显式行 / run 样式仍沿 Core 继承。
+区域不接受任意 Core child 或完整 Node，position、shape、boundary、padding、margin、stroke 与 identity 不能混入文本。Defaults 提供块级表现，TextBlock 内显式行 / segment 样式仍沿 Core 继承。
 
 ## 显式 Legend
 

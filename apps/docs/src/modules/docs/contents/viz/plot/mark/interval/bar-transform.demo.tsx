@@ -17,7 +17,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       encodings={{
         bounds: { y: { from: { field: 'y0' }, to: { field: 'y1' } } },
         color: 'segment',
-        label: { content: 'store' },
+        label: { text: 'store' },
         position: { x: { field: 'segment' } },
       }}
       properties={{ bounds: { y: { kind: 'extent' } } }}

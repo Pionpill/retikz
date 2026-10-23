@@ -20,7 +20,7 @@ An ArrowDefinition serves both Path endpoints and `marks[].mark.shape`. It does 
 
 ## Minimal result
 
-A custom arrow extends **endpoint marker geometry**. IR stores only an open shape name and visual parameters. After the host injects an `ArrowDefinition`, core resolves it from the shared registry and emits renderer-neutral `MarkerPrimitive` geometry during compilation.
+A custom arrow extends **endpoint marker geometry**. IR stores only an open shape name and visual parameters. After the host injects an `ArrowDefinition`, core resolves it from the shared registry and emits renderer-neutral `ScenePrimitive` geometry during compilation.
 
 The example below registers a hollow `bracket` arrow through `<Layout extensions={{ arrows }}>`. Its definition, injection, and Draw usage live in one runnable file.
 
@@ -48,7 +48,8 @@ const bracket = defineArrow({
         { kind: 'line', to: [2, 9] },
         { kind: 'line', to: [8, 9] },
       ],
-      stroke: typeof stroke === 'string' ? stroke : { kind: 'contextStroke' },
+      fill: 'none',
+      stroke,
       strokeWidth: lineWidth,
     },
   ],
@@ -65,11 +66,11 @@ An arrow definition supplies three distinct positions: `backX` is its back edge,
 
 `overlap: 1` aligns the final visual back edge, including scaling and hollow outlines. Overlap moves the endpoint decoration and its contact without changing the node anchor or logical path sampling. An interior mark follows the local tangent without shortening the path as an endpoint would.
 
-Without an explicit arrow color, the marker uses `contextStroke`, inheriting its host path's stroke at rendering time. Resource paints such as gradients require an explicit solid arrow color. Built-in and injected arrows share registration and resolution.
+Without an explicit color, `contextStroke` binds to the nearest host path stroke, including Scene paint resources. Built-in and custom definitions use the same registry and compilation path.
 
 <SourceLinks
   sources={[
-    { label: 'Arrow geometry contract', path: 'packages/kernel/core/src/contract/arrow/types.ts', startLine: 4 },
+    { label: 'Arrow geometry contract', path: 'packages/kernel/core/src/contract/arrow.ts' },
     {
       label: 'Inherited color and marker materialization',
       path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
@@ -139,17 +140,16 @@ Without a fixed color, the same arrow definition follows each path stroke. Compa
 
 ## Errors and limitations
 
-| Case                                                    | Result                                                          |
-| ------------------------------------------------------- | --------------------------------------------------------------- |
-| Empty name                                              | Registry rejects the non-empty key contract                     |
-| Duplicate Core, Standard, or custom name                | Registry merge reports a duplicate registration                 |
-| Unknown `arrowDetail.shape`                             | Compile lists available names and `options.arrows`              |
-| Invalid `baseSize`, back / contact / tip, or dimensions | Compile rejects invalid marker geometry                         |
-| Unknown primitive or non-finite geometry                | Marker validation prevents invalid Scene output                 |
-| Recursive arrows, clips, or text in marker              | The narrow `MarkerPrimitive` contract rejects them              |
-| Path uses an IRPaint stroke                             | Marker cannot inherit a resource paint; set a solid arrow color |
+| Case                                                    | Result                                             |
+| ------------------------------------------------------- | -------------------------------------------------- |
+| Empty name                                              | Registry rejects the non-empty key contract        |
+| Duplicate Core, Standard, or custom name                | Registry merge reports a duplicate registration    |
+| Unknown `arrowDetail.shape`                             | Compile lists available names and `options.arrows` |
+| Invalid `baseSize`, back / contact / tip, or dimensions | Compile rejects invalid marker geometry            |
 
-MarkerPrimitive allows only `path`, `ellipse`, `rect`, and groups containing the same subset. Do not return SVG `<marker>` elements, Canvas objects, text layout, or external paint resource references.
+`emit` returns `Iterable<ScenePrimitive>` with the full path, ellipse, rect, text, and group contracts. Text must already be measured. Paint and clip references must exist in the same Scene; missing, wrong-kind, or cyclic references fail. Finite nested arrows and Patterns are supported. Definition-side wrappers may derive from basic primitives and must be converted before returning. Set `fill: 'none'` explicitly for hollow content; defaults match ordinary primitives.
+
+Content animations share the scene clock with independent playback origins per host: triggering A does not restart B. Local `id` and `meta` do not create independent update nodes. Arrow hits belong to the host; `hitTest: false` excludes the corresponding subtree.
 
 ## Related props
 

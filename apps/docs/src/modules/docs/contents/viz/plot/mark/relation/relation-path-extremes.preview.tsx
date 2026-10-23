@@ -49,7 +49,7 @@ export const RelationPathExtremesPreview = (values: RelationPathExtremesPreviewV
             },
             label: {
               position: values[RELATION_PATH_CONTROL_IDS.labelPosition],
-              ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
+              side: labelSide,
               sloped: true,
               textColor: 'currentColor',
               font: { size: 11, weight: 'bold' },

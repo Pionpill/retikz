@@ -27,9 +27,9 @@
 | 几何   | `arrow?`          | `InputPath['arrow']`          | `'none'`   | 路径级箭头方向<br />`'->'` 终点 / `'<-'` 起点 / `'<->'` 两端；省略或 `'none'` 无箭头                                                                                                            |
 |        | `arrowDetail?`    | `InputPath['arrowDetail']`    | —          | 箭头详细配置<br />顶层默认 + 可选 `start` / `end` 子对象逐字段 merge override。空心 shape<br />（open / openStealth / openDiamond / openCircle）上 `fill` silent no-op                          |
 |        | `arrowPlacement?` | `InputPath['arrowPlacement']` | —          | 箭头端点放置配置<br />`overlap` 为实际端点共享值，`start` / `end` 可逐端覆盖；比例从默认位置插值到最终视觉后缘与逻辑端点对齐的位置                                                              |
+|        | `cornerRadius?`   | `IRPath['cornerRadius']`      | —          | 折线拐角几何圆角半径（TikZ `rounded corners=`）<br />对每个 line↔line 接缝插切圆弧、改路径几何（区别于 lineJoin 仅描边）；curve / arc / bezier / fold 接缝保持尖；按相邻段长 clamp；省略 = 尖角 |
 |        | `marks?`          | `IRPath['marks']`             | —          | 沿路径在归一化位置放标记（首批仅箭头）<br />每个 `{ pos, mark }`：`pos∈[0,1]`，`mark.kind:'arrow'` + 视觉子集（shape 为已注册箭头名，方向随路径切线）                                           |
 |        | `rotate?`         | `IRPath['rotate']`            | —          | 整条 path 旋转（度，绕包围盒中心，正向 = 屏幕 y-down 视觉顺时针）<br />等价把 path 包一层绕其包围盒中心旋转的 Scope；端点先在当前 scope resolve 再整体旋转                                      |
-|        | `roundedCorners?` | `IRPath['roundedCorners']`    | —          | 折线拐角几何圆角半径（TikZ `rounded corners=`）<br />对每个 line↔line 接缝插切圆弧、改路径几何（区别于 lineJoin 仅描边）；curve / arc / bezier / fold 接缝保持尖；按相邻段长 clamp；省略 = 尖角 |
 |        | `scale?`          | `IRPath['scale']`             | —          | 整条 path 缩放（绕包围盒中心）：number 等比，或 `{ x, y }` 非等比                                                                                                                               |
 | 样式   | `style?`          | `InputPath['style']`          | —          | 实例视觉覆盖，逐字段覆盖继承默认值                                                                                                                                                              |
 |        | `zIndex?`         | `IRPath['zIndex']`            | `0`        | 显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层子节点间生效                                                                                                                       |
@@ -64,7 +64,7 @@ export type PathProps = HydrationEventProps & {
   id?: IRPath['id'];
   meta?: IRPath['meta'];
   animations?: IRPath['animations'];
-  roundedCorners?: IRPath['roundedCorners'];
+  cornerRadius?: IRPath['cornerRadius'];
   arrow?: InputPath['arrow'];
   arrowDetail?: InputPath['arrowDetail'];
   arrowPlacement?: InputPath['arrowPlacement'];
@@ -96,7 +96,7 @@ React 只负责 JSX sugar；`normalizePath` 是 `way` 的唯一 parser 调度位
 | `readonly arrow?`          | `PathProps['arrow']`          | —      | 路径级箭头方向                     |
 | `readonly arrowDetail?`    | `PathProps['arrowDetail']`    | —      | 箭头详细配置                       |
 | `readonly arrowPlacement?` | `PathProps['arrowPlacement']` | —      | 箭头端点放置配置                   |
-| `readonly roundedCorners?` | `IRPath['roundedCorners']`    | —      | 折线拐角几何圆角半径               |
+| `readonly cornerRadius?`   | `IRPath['cornerRadius']`      | —      | 折线拐角几何圆角半径               |
 | `readonly style?`          | `InputPath['style']`          | —      | 实例视觉覆盖，逐字段覆盖继承默认值 |
 | `readonly way`             | `WayDSL`                      | —      | TikZ 风格的路径走向简写            |
 | `readonly zIndex?`         | `IRPath['zIndex']`            | —      | 同层 stack 顺序                    |
@@ -113,7 +113,7 @@ export declare const Draw: FC<DrawProps>;
 export type DrawProps = Readonly<{
   style?: InputPath['style'];
   way: WayDSL;
-  roundedCorners?: IRPath['roundedCorners'];
+  cornerRadius?: IRPath['cornerRadius'];
   arrow?: PathProps['arrow'];
   arrowDetail?: PathProps['arrowDetail'];
   arrowPlacement?: PathProps['arrowPlacement'];
@@ -698,7 +698,7 @@ export type SmoothStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ArrowEmitContext"} path={"packages/kernel/core/src/contract/arrow/types.ts"} startLine={7}>ArrowEmitContext</ApiSourceLink>
+#### <ApiSourceLink label={"ArrowEmitContext"} path={"packages/kernel/core/src/contract/arrow.ts"} startLine={7}>ArrowEmitContext</ApiSourceLink>
 
 提供已解析的颜色、描边粗细和取整函数，供定义生成 marker 几何
 
@@ -710,10 +710,10 @@ export type SmoothStepProps = {
 
 | 成员        | 类型                    | 默认值 | 说明                                                                       |
 | ----------- | ----------------------- | ------ | -------------------------------------------------------------------------- |
-| `fill`      | `MarkerFill`            | —      | 填充颜色（实心箭头主导色；空心箭头会按 `hollow` 处理后传入）               |
+| `fill`      | `PaintValue`            | —      | 填充颜色（实心箭头主导色；空心箭头会按 `hollow` 处理后传入）               |
 | `lineWidth` | `number`                | —      | 描边粗细（marker 局部坐标，user units）；空心箭头据此画外轮廓              |
 | `round`     | `(n: number) => number` | —      | 精度取整函数（与 compile/render 同一 round，保几何一致）                   |
-| `stroke`    | `MarkerFill`            | —      | 描边颜色（无 override 时 = `{ kind: 'contextStroke' }`，继承 path stroke） |
+| `stroke`    | `PaintValue`            | —      | 描边颜色（无 override 时 = `{ kind: 'contextStroke' }`，继承 path stroke） |
 
 </ApiTable>
 
@@ -723,8 +723,8 @@ export type SmoothStepProps = {
 
 ```ts
 export type ArrowEmitContext = {
-  stroke: MarkerFill;
-  fill: MarkerFill;
+  stroke: PaintValue;
+  fill: PaintValue;
   lineWidth: number;
   round: (n: number) => number;
 };
@@ -742,15 +742,14 @@ export type ArrowEmitContext = {
 
 <ApiTable>
 
-| 成员         | 类型                                           | 默认值 | 说明                                                                                                            |
-| ------------ | ---------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------- |
-| `distance`   | `number`                                       | —      | 相对宿主的距离                                                                                                  |
-| `gap`        | `number`                                       | —      | 断口留白                                                                                                        |
-| `interrupt`  | `boolean`                                      | —      | 是否中断宿主描边                                                                                                |
-| `placement?` | `"outside" \| "inside"`                        | —      | 标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Extension Ribbon 等面状宿主在未指定 side 时放在内部 |
-| `position`   | `number`                                       | —      | 路径上的归一化位置                                                                                              |
-| `side`       | `NonNullable<IRPathLabel['side']> \| 'center'` | —      | 相对宿主的方向                                                                                                  |
-| `sloped?`    | `false \| true`                                | —      | 是否沿采样点切线旋转标签；为 true 且省略 side 时 canonicalize 为 center，显式 side 仍控制方位                   |
+| 成员        | 类型                                           | 默认值 | 说明                                                                                          |
+| ----------- | ---------------------------------------------- | ------ | --------------------------------------------------------------------------------------------- |
+| `distance`  | `number`                                       | —      | 相对宿主的距离                                                                                |
+| `gap`       | `number`                                       | —      | 断口留白                                                                                      |
+| `interrupt` | `boolean`                                      | —      | 是否中断宿主描边                                                                              |
+| `position`  | `number`                                       | —      | 路径上的归一化位置                                                                            |
+| `side`      | `NonNullable<IRPathLabel['side']> \| 'center'` | —      | 相对宿主的方向                                                                                |
+| `sloped?`   | `false \| true`                                | —      | 是否沿采样点切线旋转标签；为 true 且省略 side 时 canonicalize 为 center，显式 side 仍控制方位 |
 
 </ApiTable>
 
@@ -783,15 +782,14 @@ export type CanonicalPathLabelPlacement = Omit<
 
 <ApiTable>
 
-| 成员         | 类型                                                                                                                 | 默认值 | 说明                                                                                                            |
-| ------------ | -------------------------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------- |
-| `distance?`  | `number`                                                                                                             | —      | side 偏移距离，默认与 Path step label 一致                                                                      |
-| `gap?`       | `number`                                                                                                             | —      | 文字断口两侧的额外间距；仅在 interrupt 生效时使用                                                               |
-| `interrupt?` | `false \| true`                                                                                                      | —      | 是否请求在兼容宿主描边中产生文字断口；省略时由宿主策略决定，无填充内置 Stroke 的 canonical center 自动启用      |
-| `placement?` | `"outside" \| "inside"`                                                                                              | —      | 标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Extension Ribbon 等面状宿主在未指定 side 时放在内部 |
-| `position?`  | `number \| "at-start" \| "very-near-start" \| "near-start" \| "midway" \| "near-end" \| "very-near-end" \| "at-end"` | —      | 沿段归一化位置：7 个 keyword 或 0..1 数字；默认 midway                                                          |
-| `side?`      | `"top" \| "right" \| "bottom" \| "left"`                                                                             | —      | 标签相对锚点的可写方位：top / bottom / left / right。center 只在 resolve 后产生，不能作为 IR side 写入          |
-| `sloped?`    | `false \| true`                                                                                                      | —      | 是否沿采样点切线旋转标签；为 true 且省略 side 时 canonicalize 为 center，显式 side 仍控制方位                   |
+| 成员         | 类型                                                                                                                 | 默认值 | 说明                                                                                                        |
+| ------------ | -------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------- |
+| `distance?`  | `number`                                                                                                             | —      | side 偏移距离，默认与 Path step label 一致                                                                  |
+| `gap?`       | `number`                                                                                                             | —      | 文字断口两侧的额外间距；仅在 interrupt 生效时使用                                                           |
+| `interrupt?` | `false \| true`                                                                                                      | —      | 是否请求在兼容宿主描边中产生文字断口；省略时由宿主策略决定，无填充内置 Stroke 的 canonical center 自动启用  |
+| `position?`  | `number \| "at-start" \| "very-near-start" \| "near-start" \| "midway" \| "near-end" \| "very-near-end" \| "at-end"` | —      | 沿段归一化位置：7 个 keyword 或 0..1 数字；默认 midway                                                      |
+| `side?`      | `"top" \| "right" \| "bottom" \| "left" \| "center"`                                                                 | —      | 标签相对锚点的方位：top / bottom / left / right / center。center 放在线上，是否沿切线旋转由 sloped 独立控制 |
+| `sloped?`    | `false \| true`                                                                                                      | —      | 是否沿采样点切线旋转标签；为 true 且省略 side 时 canonicalize 为 center，显式 side 仍控制方位               |
 
 </ApiTable>
 
@@ -807,7 +805,7 @@ export type PathLabelGeometryOptions = Omit<IRPathLabel, 'text' | 'textColor' | 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathGeneratorGenerateContext"} path={"packages/kernel/core/src/contract/path-generator/types.ts"} startLine={11}>PathGeneratorGenerateContext</ApiSourceLink>
+#### <ApiSourceLink label={"PathGeneratorGenerateContext"} path={"packages/kernel/core/src/contract/path-generator.ts"} startLine={13}>PathGeneratorGenerateContext</ApiSourceLink>
 
 坐标均位于当前 Path 的局部坐标系，返回的命令由所属 GroupPrim 统一应用 scope transform
 
@@ -845,7 +843,7 @@ export type PathGeneratorGenerateContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={127}>PathKindBoundaryLabelInput</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={106}>PathKindBoundaryLabelInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -879,7 +877,7 @@ export type PathKindBoundaryLabelInput = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindCompileContext"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={144}>PathKindCompileContext</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindCompileContext"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={123}>PathKindCompileContext</ApiSourceLink>
 
 自定义 kind 可以完全接管输出，也可以调用回调复用标准描边逻辑
 
@@ -895,11 +893,12 @@ export type PathKindBoundaryLabelInput = Readonly<{
 | `TOwnerOutput` (泛型) | `extends JsonValue = never`                                                                   | —      | 通过 ownerOutput.publish 发布的 JSON 产物类型；默认 never 表示不发布所属者产物                                                                               |
 | `appearance`          | `ResolvedPathKindAppearance`                                                                  | —      | 已解析的 renderer-neutral 宿主外观                                                                                                                           |
 | `emitBoundaryLabels`  | `(input: ReadonlyArray<PathKindBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>`         | —      | 通过 Kernel 共享布局编译已定位的边界标签                                                                                                                     |
-| `emitHostLabels`      | `(input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>`                                | —      | 编译共享宿主标签，并支持 kind 提供边界偏移                                                                                                                   |
+| `emitHostLabels`      | `(input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>`                                | —      | 编译共享宿主标签，并支持 kind 提供侧向距离                                                                                                                   |
 | `emitStroke`          | `EmitStroke`                                                                                  | —      | 复用 core 标准描边编译逻辑；不传 path 时使用当前 `path`                                                                                                      |
 | `materializePath`     | `(input?: Readonly<{`<br />`children?: ReadonlyArray<IRStep>;`<br />`}>) => MaterializedPath` | —      | 物化选定 steps，不应用 marker、dash、fill 或 kind-specific geometry                                                                                          |
 | `ownerOutput`         | `CompileOwnerOutputPublisher<TOwnerOutput>`                                                   | —      | 当前 Path kind 的最终所属者产物 publisher                                                                                                                    |
 | `path`                | `TPath`                                                                                       | —      | 经该 definition 完整 schema 解析后的 path subject                                                                                                            |
+| `resolveHostLabel`    | `(label: IRPathLabel) => IRPathLabel`                                                         | —      | 合并宿主标签默认配置，供路径种类在采样前确定标签位置                                                                                                         |
 | `round`               | `(value: number) => number`                                                                   | —      | 与本次 compile 一致的取整函数                                                                                                                                |
 | `wrapOutput`          | `(output: PathKindCompileResult) => PathKindCompileResult`                                    | —      | 包装自定义几何的完整输出，汇总宿主标签边界并应用 Path rotate / scale 与元数据<br />在全部标签发射后调用一次并直接返回；emitStroke 的结果已包装，不应再次调用 |
 
@@ -919,6 +918,7 @@ export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwner
     }>,
   ) => MaterializedPath;
   emitStroke: EmitStroke;
+  resolveHostLabel: (label: IRPathLabel) => IRPathLabel;
   emitHostLabels: (input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>;
   emitBoundaryLabels: (input: ReadonlyArray<PathKindBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>;
   wrapOutput: (output: PathKindCompileResult) => PathKindCompileResult;
@@ -931,7 +931,7 @@ export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwner
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindCompileResult"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={23}>PathKindCompileResult</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindCompileResult"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={15}>PathKindCompileResult</ApiSourceLink>
 
 path kind definition 把高层 path 形态编译成当前 Path 局部坐标系中的 Scene primitive，
 并返回同一坐标系内参与 bbox / transform 计算的关键点集合
@@ -964,13 +964,13 @@ export type PathKindCompileResult = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"WayDSL"} path={"packages/kernel/core/src/parse/way.ts"} startLine={182}>WayDSL</ApiSourceLink>
+#### <ApiSourceLink label={"WayDSL"} path={"packages/kernel/core/src/parse/way.ts"} startLine={176}>WayDSL</ApiSourceLink>
 
 ```ts
 export type WayDSL = Array<WayItem>;
 ```
 
-#### <ApiSourceLink label={"WayItem"} path={"packages/kernel/core/src/parse/way.ts"} startLine={164}>WayItem</ApiSourceLink>
+#### <ApiSourceLink label={"WayItem"} path={"packages/kernel/core/src/parse/way.ts"} startLine={158}>WayItem</ApiSourceLink>
 
 节点 id 字符串/笛卡尔/极坐标 → line（首项 move）；`{position,type}` 相对偏移对象 → IR relative/relativeAccumulate；horizontalTo/verticalTo → axis-line；四种裸 via 或 `{via,fraction}` 与下一项合并 fold；DrawWay.Cycle → cycle；curve/cubic/bend infix 与下一项合并；arc/circle/ellipse infix 以上一项为圆心不消耗下一项。Cycle/Relative/Accumulate 底层字符串刻意写丑避节点 id 撞结构
 
@@ -992,7 +992,7 @@ export type WayItem =
   | WayAxisLineOp;
 ```
 
-#### <ApiSourceLink label={"DrawWay"} path={"packages/kernel/core/src/parse/way.ts"} startLine={33}>DrawWay</ApiSourceLink>
+#### <ApiSourceLink label={"DrawWay"} path={"packages/kernel/core/src/parse/way.ts"} startLine={32}>DrawWay</ApiSourceLink>
 
 Cycle 闭合到 way 起点（底层字符串故意写丑避节点 id 冲突，只通过 DrawWay.Cycle 引用）；Hv/Vh/Hvh/Vhv 是两段或三段折角算子；Relative/Accumulate 相对偏移 way item 的 type 鉴别值（Relative=TikZ `(+x,+y)` 不推进 prevEnd，Accumulate=TikZ `(++x,++y)` 累积更新）。用 const + as const 而非 TS enum 避免 reverse-mapping 与字面量不互通
 
@@ -1076,7 +1076,7 @@ export declare const samplePathRoute: (
 
 ## 直接调用
 
-#### <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={30}>path</ApiSourceLink> / <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={184}>InputPath</ApiSourceLink>
+#### <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={30}>path</ApiSourceLink> / <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={172}>InputPath</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1096,9 +1096,9 @@ export declare const samplePathRoute: (
 | 几何   | `arrow?`          | `InputPathArrowDirection`             | —      | 路径级箭头方向                                                                                                                                                                          |
 |        | `arrowDetail?`    | `IRArrowDetail`                       | —      | 箭头的顶层默认与端点覆盖配置                                                                                                                                                            |
 |        | `arrowPlacement?` | `InputPathArrowPlacement`             | —      | 箭头端点的共享与逐端放置配置                                                                                                                                                            |
+|        | `cornerRadius?`   | `number`                              | —      | 线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同                                                                                                                            |
 |        | `marks?`          | `InputPath["marks"]`                  | —      | 沿路径放方向标记：每项 `{ pos, endpointOverlap?, mark }`，`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线；endpointOverlap 只适用于内置 Stroke Path 实际选中的端点 mark |
 |        | `rotate?`         | `number`                              | —      | 整条 path 旋转角（度，绕包围盒中心）                                                                                                                                                    |
-|        | `roundedCorners?` | `number`                              | —      | 线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同                                                                                                                            |
 |        | `scale?`          | `number \| { x: number; y: number; }` | —      | 整条 path 缩放（数字等比，或 `{ x, y }` 非等比，绕包围盒中心）                                                                                                                          |
 | 样式   | `style?`          | `InputPath["style"]`                  | —      | 当前实例的视觉覆盖，按字段继承与覆盖                                                                                                                                                    |
 |        | `zIndex?`         | `number`                              | —      | 显式栈序：大者在上；缺省 0、同值保持声明顺序；只在同层子节点间生效                                                                                                                      |
@@ -1124,7 +1124,7 @@ export type InputPath = InputPathBase & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputStep"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={151}>InputStep</ApiSourceLink>
+#### <ApiSourceLink label={"InputStep"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={139}>InputStep</ApiSourceLink>
 
 ```ts
 export type InputStep =
@@ -1151,7 +1151,7 @@ export type InputStep =
 
 ## 扩展定义与注册
 
-#### <ApiSourceLink label={"ArrowDefinition"} path={"packages/kernel/core/src/contract/arrow/types.ts"} startLine={22}>ArrowDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ArrowDefinition"} path={"packages/kernel/core/src/contract/arrow.ts"} startLine={22}>ArrowDefinition</ApiSourceLink>
 
 描述箭头 marker 的尺寸、接触点和几何生成能力；定义本身不进入 IR
 
@@ -1161,18 +1161,18 @@ export type InputStep =
 
 <ApiTable>
 
-| 成员             | 类型                                                   | 默认值                       | 说明                                                                               |
-| ---------------- | ------------------------------------------------------ | ---------------------------- | ---------------------------------------------------------------------------------- |
-| `backX`          | `number`                                               | —                            | marker 基础几何沿箭头轴向承诺的包络后缘，必须不晚于线接触点                        |
-| `baseSize?`      | `number`                                               | `10`                         | marker 局部基准边长（viewBox `0 0 baseSize baseSize`，refY = baseSize/2）；缺省 10 |
-| `defaultLength?` | `number`                                               | `8`                          | 默认箭头长度（length fallback）；缺省 8                                            |
-| `defaultWidth?`  | `number`                                               | `8`                          | 默认箭头宽度（width fallback）；缺省 8                                             |
-| `emit`           | `(ctx: ArrowEmitContext) => Iterable<MarkerPrimitive>` | —                            | 局部坐标 marker 几何（renderer-agnostic）；adapter 把产物嵌进 `<marker>`           |
-| `hollow?`        | `boolean`                                              | `false`                      | 空心标志：true 时由描边表达外轮廓，并按 lineWidth 修正接触点                       |
-| `lineContactX`   | `number`                                               | —                            | 线接触点静态 base，决定 path shrink 与 marker refX                                 |
-| `name`           | `string`                                               | —                            | arrow 名称，由 IR `marks[].mark.shape` 引用；作者侧使用 `arrowDetail.shape`        |
-| `outerInset?`    | `number`                                               | `hollow ? lineWidth / 2 : 0` | 外轮廓补偿量（marker 局部坐标）；缺省时空心箭头用 lineWidth/2，实心箭头用 0        |
-| `tipX?`          | `number`                                               | `baseSize`                   | 尖端 x（shrink 用）；缺省 = baseSize                                               |
+| 成员             | 类型                                                  | 默认值                       | 说明                                                                               |
+| ---------------- | ----------------------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------- |
+| `backX`          | `number`                                              | —                            | marker 基础几何沿箭头轴向承诺的包络后缘，必须不晚于线接触点                        |
+| `baseSize?`      | `number`                                              | `10`                         | marker 局部基准边长（viewBox `0 0 baseSize baseSize`，refY = baseSize/2）；缺省 10 |
+| `defaultLength?` | `number`                                              | `8`                          | 默认箭头长度（length fallback）；缺省 8                                            |
+| `defaultWidth?`  | `number`                                              | `8`                          | 默认箭头宽度（width fallback）；缺省 8                                             |
+| `emit`           | `(ctx: ArrowEmitContext) => Iterable<ScenePrimitive>` | —                            | 局部坐标中的基础场景图元；渲染容器负责端点定位与宿主上下文                         |
+| `hollow?`        | `boolean`                                             | `false`                      | 空心标志：true 时由描边表达外轮廓，并按 lineWidth 修正接触点                       |
+| `lineContactX`   | `number`                                              | —                            | 线接触点静态 base，决定 path shrink 与 marker refX                                 |
+| `name`           | `string`                                              | —                            | arrow 名称，由 IR `marks[].mark.shape` 引用；作者侧使用 `arrowDetail.shape`        |
+| `outerInset?`    | `number`                                              | `hollow ? lineWidth / 2 : 0` | 外轮廓补偿量（marker 局部坐标）；缺省时空心箭头用 lineWidth/2，实心箭头用 0        |
+| `tipX?`          | `number`                                              | `baseSize`                   | 尖端 x（shrink 用）；缺省 = baseSize                                               |
 
 </ApiTable>
 
@@ -1191,7 +1191,7 @@ export type ArrowDefinition = {
   tipX?: number;
   defaultLength?: number;
   defaultWidth?: number;
-  emit: (ctx: ArrowEmitContext) => Iterable<MarkerPrimitive>;
+  emit: (ctx: ArrowEmitContext) => Iterable<ScenePrimitive>;
 };
 ```
 
@@ -1199,7 +1199,7 @@ export type ArrowDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathGeneratorDefinition"} path={"packages/kernel/core/src/contract/path-generator/types.ts"} startLine={31}>PathGeneratorDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PathGeneratorDefinition"} path={"packages/kernel/core/src/contract/path-generator.ts"} startLine={33}>PathGeneratorDefinition</ApiSourceLink>
 
 描述 JSON 参数、可解析 target 参数和命令生成能力；定义本身不进入 IR
 
@@ -1235,7 +1235,7 @@ export type PathGeneratorDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindDefinition"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={184}>PathKindDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindDefinition"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={165}>PathKindDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1243,10 +1243,10 @@ export type PathGeneratorDefinition = {
 
 <ApiTable>
 
-| 成员                  | 类型                              | 默认值 | 说明                                                                                     |
-| --------------------- | --------------------------------- | ------ | ---------------------------------------------------------------------------------------- |
-| `TPath` (泛型)        | `extends IRPathBase = IRPathBase` | —      | 完整路径 schema 的解析结果类型，同时决定编译上下文的 path 字段；默认使用 IRPathBase      |
-| `TOwnerOutput` (泛型) | `extends JsonValue = never`       | —      | 所属者产物的 JSON 类型；默认 never 时不能声明 ownerOutput，否则必须提供对应的产物 schema |
+| 成员                  | 类型                              | 默认值 | 说明                                                                                |
+| --------------------- | --------------------------------- | ------ | ----------------------------------------------------------------------------------- |
+| `TPath` (泛型)        | `extends IRPathBase = IRPathBase` | —      | 完整路径 schema 的解析结果类型，同时决定编译上下文的 path 字段；默认使用 IRPathBase |
+| `TOwnerOutput` (泛型) | `extends JsonValue = never`       | —      | 所属者产物的 JSON 类型；默认 never 时不能声明 ownerOutput，否则必须声明发布产物     |
 
 </ApiTable>
 
@@ -1266,7 +1266,7 @@ export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutp
 
 </DocTabs>
 
-#### <ApiSourceLink label={"definePathKind"} path={"packages/kernel/core/src/contract/path-kind/define.ts"} startLine={70}>definePathKind</ApiSourceLink>
+#### <ApiSourceLink label={"definePathKind"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={242}>definePathKind</ApiSourceLink>
 
 <DocTabs defaultValue="without-owner-output">
 
@@ -1276,12 +1276,12 @@ export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutp
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称         | 类型 / 签名                        | 说明                                                                                                       |
-| ------ | ------------ | ---------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| 泛型   | `TPath`      | `extends IRPathBase = IRPathBase`  | 经定义 schema 解析后的路径类型，默认使用 IRPathBase                                                        |
-| 参数   | `definition` | `PathKindDefinition<TPath, never>` | 包含名称、完整路径 schema 和编译函数的定义                                                                 |
-| 返回值 | —            | `PathKindDefinition<TPath, never>` | 校验后的原定义对象，保留路径类型，不复制或修改输入                                                         |
-| 错误   | —            | —                                  | RetikzCoreError 当 name 为空或仅含空白字符、schema 没有 parse 函数，或提供的 ownerOutput.schema 不是对象时 |
+| 类别   | 名称         | 类型 / 签名                        | 说明                                                                 |
+| ------ | ------------ | ---------------------------------- | -------------------------------------------------------------------- |
+| 泛型   | `TPath`      | `extends IRPathBase = IRPathBase`  | 经定义 schema 解析后的路径类型，默认使用 IRPathBase                  |
+| 参数   | `definition` | `PathKindDefinition<TPath, never>` | 包含名称、完整路径 schema 和编译函数的定义                           |
+| 返回值 | —            | `PathKindDefinition<TPath, never>` | 校验后的原定义对象，保留路径类型，不复制或修改输入                   |
+| 错误   | —            | —                                  | RetikzCoreError 当 name 为空或仅含空白字符、schema 没有 parse 函数时 |
 
 </ApiTable>
 
@@ -1293,13 +1293,13 @@ export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutp
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称           | 类型 / 签名                               | 说明                                                                                                       |
-| ------ | -------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| 泛型   | `TPath`        | `extends IRPathBase`                      | 经定义 schema 解析后的路径类型                                                                             |
-|        | `TOwnerOutput` | `extends JsonValue`                       | 由 ownerOutput.schema 校验、通过编译上下文发布的 JSON 产物类型                                             |
-| 参数   | `definition`   | `PathKindDefinition<TPath, TOwnerOutput>` | 包含路径定义及 ownerOutput.schema 的定义                                                                   |
-| 返回值 | —              | `PathKindDefinition<TPath, TOwnerOutput>` | 校验后的原定义对象，保留路径和产物类型，不复制或修改输入                                                   |
-| 错误   | —              | —                                         | RetikzCoreError 当 name 为空或仅含空白字符、schema 没有 parse 函数，或提供的 ownerOutput.schema 不是对象时 |
+| 类别   | 名称           | 类型 / 签名                               | 说明                                                                 |
+| ------ | -------------- | ----------------------------------------- | -------------------------------------------------------------------- |
+| 泛型   | `TPath`        | `extends IRPathBase`                      | 经定义 schema 解析后的路径类型                                       |
+|        | `TOwnerOutput` | `extends JsonValue`                       | 通过编译上下文发布的 JSON 产物类型                                   |
+| 参数   | `definition`   | `PathKindDefinition<TPath, TOwnerOutput>` | 包含路径定义及 ownerOutput 发布标记的定义                            |
+| 返回值 | —              | `PathKindDefinition<TPath, TOwnerOutput>` | 校验后的原定义对象，保留路径和产物类型，不复制或修改输入             |
+| 错误   | —              | —                                         | RetikzCoreError 当 name 为空或仅含空白字符、schema 没有 parse 函数时 |
 
 </ApiTable>
 
@@ -1316,7 +1316,7 @@ export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutp
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineArrow"} path={"packages/kernel/core/src/contract/arrow/define.ts"} startLine={9}>defineArrow</ApiSourceLink>
+#### <ApiSourceLink label={"defineArrow"} path={"packages/kernel/core/src/contract/arrow.ts"} startLine={69}>defineArrow</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1345,7 +1345,7 @@ export declare const defineArrow: (def: ArrowDefinition) => ArrowDefinition;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"definePathGenerator"} path={"packages/kernel/core/src/contract/path-generator/define.ts"} startLine={13}>definePathGenerator</ApiSourceLink>
+#### <ApiSourceLink label={"definePathGenerator"} path={"packages/kernel/core/src/contract/path-generator.ts"} startLine={60}>definePathGenerator</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1377,7 +1377,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
 
 ## 配置与校验
 
-#### <ApiSourceLink label={"PathSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={129}>PathSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathSchema"} path={"packages/kernel/core/src/schemas/path/path.ts"} startLine={148}>PathSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1410,18 +1410,18 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
     zIndex: '显式栈序：大者在上；缺省 0、同值保持声明顺序；只在同层子节点间生效',
     rotate: '整条 path 旋转角（度，绕包围盒中心）',
     scale: '整条 path 缩放（数字等比，或 `{ x, y }` 非等比，绕包围盒中心）',
-    roundedCorners: '线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同',
+    cornerRadius: '线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同',
     label: '附着在 Path 或其它 path-like 宿主上的路径标签',
     marks:
       "沿路径放方向标记：每项 `{ pos, endpointOverlap?, mark }`，`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线；endpointOverlap 只适用于内置 Stroke Path 实际选中的端点 mark",
   }}
 />
 
-#### <ApiSourceLink label={"StepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={359}>StepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"StepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={354}>StepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="StepSchema" description="单个路径动作；通过 kind 字段选择具体 step 变体。" />
 
-#### <ApiSourceLink label={"MoveStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={67}>MoveStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"MoveStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={65}>MoveStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1434,7 +1434,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"LineStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={74}>LineStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"LineStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={72}>LineStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1448,7 +1448,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"AxisLineStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={87}>AxisLineStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"AxisLineStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={85}>AxisLineStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1463,7 +1463,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"FoldStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={125}>FoldStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FoldStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={123}>FoldStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1479,7 +1479,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"CycleStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={130}>CycleStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CycleStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={128}>CycleStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1491,7 +1491,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"CurveStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={139}>CurveStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CurveStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={134}>CurveStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1506,7 +1506,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"CubicStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={148}>CubicStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CubicStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={143}>CubicStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1522,7 +1522,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"BendStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={179}>BendStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"BendStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={179}>BendStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1542,7 +1542,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"ArcStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={251}>ArcStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArcStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={228}>ArcStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1559,7 +1559,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"CirclePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={275}>CirclePathStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CirclePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={268}>CirclePathStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1576,7 +1576,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"EllipsePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={301}>EllipsePathStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"EllipsePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={296}>EllipsePathStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1593,7 +1593,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"RectangleStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={306}>RectangleStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RectangleStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={301}>RectangleStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1608,7 +1608,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"SmoothStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={324}>SmoothStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"SmoothStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={319}>SmoothStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1623,7 +1623,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"GeneratorStepSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={341}>GeneratorStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"GeneratorStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={336}>GeneratorStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1640,7 +1640,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"PathLabelSchema"} path={"packages/kernel/core/src/schemas/path/step/schema.ts"} startLine={25}>PathLabelSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathLabelSchema"} path={"packages/kernel/core/src/schemas/path/label.ts"} startLine={32}>PathLabelSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1649,21 +1649,20 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   descriptions={{
     text: '标签文字；支持字符串、换行文本和 TextBlock 行数组',
     position: '沿段归一化位置：7 个 keyword 或 0..1 数字；默认 midway',
-    side: '标签相对锚点的可写方位：top / bottom / left / right。center 只在 resolve 后产生，不能作为 IR side 写入',
+    side: '标签相对锚点的方位：top / bottom / left / right / center。center 放在线上，是否沿切线旋转由 sloped 独立控制',
     sloped: '是否沿采样点切线旋转标签；为 true 且省略 side 时 canonicalize 为 center，显式 side 仍控制方位',
     interrupt:
       '是否请求在兼容宿主描边中产生文字断口；省略时由宿主策略决定，无填充内置 Stroke 的 canonical center 自动启用',
-    placement:
-      '标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Extension Ribbon 等面状宿主在未指定 side 时放在内部',
     distance: 'side 偏移距离，默认与 Path step label 一致',
     gap: '文字断口两侧的额外间距；仅在 interrupt 生效时使用',
-    textColor: '标签文字色；缺省回退 scope defaults.label → 宿主 path 主色 color → currentColor（跟主色不跟 stroke）',
+    textColor:
+      '标签文字色；缺省回退 scope defaults.path.label → 宿主 path 主色 color → currentColor（跟主色不跟 stroke）',
     opacity: '标签独立透明度 0..1；与所属 path opacity 相乘（跨 scope 不复合）',
-    font: '标签字体覆盖（family / size / weight / style 均可选）；逐字段回退 defaults.label → 渲染端默认',
+    font: '标签字体覆盖（family / size / weight / style 均可选）；逐字段回退 defaults.path.label → 渲染端默认',
   }}
 />
 
-#### <ApiSourceLink label={"ArrowMarkSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={39}>ArrowMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArrowMarkSchema"} path={"packages/kernel/core/src/schemas/path/path.ts"} startLine={64}>ArrowMarkSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1682,7 +1681,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"PathMarkPlacementSchema"} path={"packages/kernel/core/src/schemas/path/path/schema.ts"} startLine={48}>PathMarkPlacementSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathMarkPlacementSchema"} path={"packages/kernel/core/src/schemas/path/path.ts"} startLine={73}>PathMarkPlacementSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1695,7 +1694,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"ArrowDetailSchema"} path={"packages/kernel/core/src/schemas/path/arrow/schema.ts"} startLine={39}>ArrowDetailSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArrowDetailSchema"} path={"packages/kernel/core/src/schemas/path/arrow.ts"} startLine={62}>ArrowDetailSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1716,12 +1715,12 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"ArrowEndDetailSchema"} path={"packages/kernel/core/src/schemas/path/arrow/schema.ts"} startLine={13}>ArrowEndDetailSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArrowStyleSchema"} path={"packages/kernel/core/src/schemas/path/arrow.ts"} startLine={35}>ArrowStyleSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
-  name="ArrowEndDetailSchema"
-  description="单个箭头端点的视觉覆盖配置，不递归包含 start / end。"
+  name="ArrowStyleSchema"
+  description="箭头的形状、尺寸与视觉样式，供端点箭头和沿路径箭头标记复用。"
   descriptions={{
     shape: '箭头形状名（开放字符串，含 `CompileOptions.arrows` 扩展名）；缺省时继承顶层，顶层也缺省时回退 stealth',
     scale: '等比缩放因子',

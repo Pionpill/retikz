@@ -171,6 +171,8 @@ Core 默认提供六种基础箭头，其中包括空心三角、空心 Stealth 
 
 `arrowPlacement` 是作者侧写法，归一化后写入端点 mark 的 `endpointOverlap` 字段；直接编写 IR 时使用后者。它必须对应实际端点箭头。没有箭头、配置未创建的单端、直接 IR 中的中段 mark、同侧未选中的重复端点 mark，以及非内置 Stroke Path 上的 `endpointOverlap` 都会明确报错，不会静默忽略。
 
+箭头的 `stroke`、`fill` 接受颜色、渐变和图案，`dashPattern`、`dashOffset`、`lineCap`、`lineJoin` 控制描边。`color` 仍是派生颜色的主色。显式字段覆盖自定义箭头输出中的同名样式，未填写字段保留定义自身的样式；空心箭头忽略 `fill`。端点箭头和中段标记使用相同规则。
+
 ## 相关属性
 
 以下列出本页直接配置的箭头属性；完整字段与所有可注册 shape 见 [API 参考](/kernel/components/path/reference)。
@@ -190,7 +192,7 @@ Core 默认提供六种基础箭头，其中包括空心三角、空心 Stealth 
       kind: 'property',
       type: 'IRArrowDetail',
       description:
-        '共享默认与单端覆盖：\n\n- `IRArrowEndDetail`：`{ shape?: string; scale?: number; length?: number; width?: number; color?: string; fill?: string; opacity?: number; lineWidth?: number }`\n- `start?: IRArrowEndDetail` / `end?: IRArrowEndDetail`：仅覆盖已填写字段，其余回退共享默认\n\n`shape` 可取 `normal`、`open`、`stealth`、`openStealth`、`circle`、`openCircle`，或已注册名称；Extension 还提供 `diamond` 与 `openDiamond`。空心形状忽略 fill，实心形状忽略 lineWidth。默认 stealth，length / width 均为 8；scale 乘在二者之后，颜色与透明度继承路径。',
+        '共享默认与单端覆盖：\n\n- `IRArrowStyle`：`{ shape?: string; scale?: number; length?: number; width?: number; color?: string | number; stroke?: IRPaintValue; fill?: IRPaintValue; opacity?: number; lineWidth?: number; dashPattern?: Array<number>; dashOffset?: number; lineCap?: PathLineCap; lineJoin?: PathLineJoin }`\n- `start?: IRArrowStyle` / `end?: IRArrowStyle`：仅覆盖已填写字段，其余回退共享默认\n\n`shape` 可取 `normal`、`open`、`stealth`、`openStealth`、`circle`、`openCircle`，或已注册名称；Extension 还提供 `diamond` 与 `openDiamond`。空心形状忽略 fill，实心形状忽略 lineWidth。默认 stealth，length / width 均为 8；scale 乘在二者之后，颜色与透明度继承路径。',
     },
     {
       name: 'arrowPlacement',

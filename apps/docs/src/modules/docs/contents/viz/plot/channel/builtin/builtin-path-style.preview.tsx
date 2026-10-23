@@ -11,7 +11,7 @@ export type BuiltinPathStylePreviewValues = {
   opacity: number;
   lineCap: 'butt' | 'round' | 'square';
   lineJoin: 'round' | 'miter' | 'bevel';
-  roundedCorners: number;
+  cornerRadius: number;
 };
 
 /** 绘制示例图形 */
@@ -47,7 +47,7 @@ export const BuiltinPathStylePreview = (
           dashPattern,
           lineCap: values.lineCap,
           lineJoin: values.lineJoin,
-          roundedCorners: values.roundedCorners,
+          cornerRadius: values.cornerRadius,
         }}
       />
       <PlotAxis dimension="x" />

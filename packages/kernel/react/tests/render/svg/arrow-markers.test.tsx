@@ -1,4 +1,4 @@
-import type { MarkerPrimitive, PathCommand, ResolvedArrowEnd } from '@retikz/core';
+import type { ScenePrimitive, PathCommand, ResolvedArrowEnd } from '@retikz/core';
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -10,7 +10,7 @@ type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
  * ArrowMarker 物化测试（emit-in-compile 契约）
  * @description ArrowMarker 不再 switch shape / 算几何——只**物化**已解析的 `ResolvedArrowEnd`：
  *   wrapper 参数（viewBox `0 0 baseSize baseSize` / refX / refY=baseSize/2 / markerWidth / markerHeight）来自
- *   spec，内部元素来自 `spec.marker`（`MarkerPrimitive[]`，core 已产）。内置 8 的 d-string 回归改成：给定
+ *   spec，内部元素来自 `spec.marker`（`ScenePrimitive[]`，core 已产）。内置 8 的 d-string 回归改成：给定
  *   resolved marker 几何 → 物化的 path d 等价旧值。
  *   ArrowMarker 是 FC——直接调函数拿 ReactElement 检查
  */
@@ -76,7 +76,7 @@ describe('ArrowMarker: wrapper 参数物化自 spec（不再 switch / 不算几�
 
 describe('ArrowMarker: marker 几何物化（spec.marker → SVG 元素）', () => {
   it('单 path marker → 物化出一个 <path>，d 等价 commands', () => {
-    const marker: Array<MarkerPrimitive> = [
+    const marker: Array<ScenePrimitive> = [
       {
         type: 'path',
         commands: [
@@ -98,7 +98,7 @@ describe('ArrowMarker: marker 几何物化（spec.marker → SVG 元素）', () 
   });
 
   it('contextStroke fill → SVG context-stroke（主题反应不冻结）', () => {
-    const marker: Array<MarkerPrimitive> = [
+    const marker: Array<ScenePrimitive> = [
       { type: 'path', commands: [{ kind: 'move', to: [0, 0] }], fill: { kind: 'contextStroke' } },
     ];
     const inner = innerEls(render(spec({ marker })));
@@ -107,7 +107,7 @@ describe('ArrowMarker: marker 几何物化（spec.marker → SVG 元素）', () 
   });
 
   it('ellipse marker → 物化出 <ellipse>，cx/cy/rx/ry 透传', () => {
-    const marker: Array<MarkerPrimitive> = [{ type: 'ellipse', cx: 5, cy: 5, rx: 5, ry: 5, fill: 'black' }];
+    const marker: Array<ScenePrimitive> = [{ type: 'ellipse', cx: 5, cy: 5, rx: 5, ry: 5, fill: 'black' }];
     const inner = innerEls(render(spec({ marker })));
 
     expect(inner[0].type).toBe('ellipse');
@@ -115,7 +115,7 @@ describe('ArrowMarker: marker 几何物化（spec.marker → SVG 元素）', () 
   });
 
   it('group marker → 物化出 <g> 并递归子元素', () => {
-    const marker: Array<MarkerPrimitive> = [
+    const marker: Array<ScenePrimitive> = [
       {
         type: 'group',
         children: [

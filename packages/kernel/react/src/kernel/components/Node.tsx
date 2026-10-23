@@ -70,7 +70,7 @@ export type NodeProps = HydrationEventProps & {
   /**
    * 显式 text，优先级高于 children
    * @description `string` 单行（可含 `$...$` 公式）/ `Array<string | IRLine>` 多行可对单行覆盖 fill / opacity / font，
-   *   或行内混排 `{ runs: [{ text }, { tex }] }`（每 run 可单独着色）
+   *   或行内混排 `{ segments: [{ text }, { tex }] }`（每 segment 可单独着色）
    */
   text?: string | Array<IRLine>;
   /** 圆角半径（用户单位）；只对 `rectangle` shape 生效。建议用形状 params 形式 `shape={{ type: 'rectangle', params: { cornerRadius } }}` */

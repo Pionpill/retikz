@@ -31,7 +31,7 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
 
 /** 构造一个 width/height 已知、中心已知的 0-rotate 测试 layout，供 computeScopeBoundingBox 单元测试 */
 const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => ({
-  shape: { name: 'rectangle', definition: BUILTIN_SHAPES.rectangle, params: {} },
+  shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x: cx, y: cy, width: w, height: h, rotate: 0 },
     contentCenter: [cx, cy],
@@ -39,8 +39,8 @@ const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => (
     contentSize: { width: w, height: h },
   },
   boundary: {
-    name: BUILTIN_SHAPES.rectangle.name,
-    definition: BUILTIN_SHAPES.rectangle,
+    name: BUILTIN_SHAPES.get('rectangle')!.name,
+    definition: BUILTIN_SHAPES.get('rectangle')!,
     params: {},
     isShape: true,
   },
@@ -77,7 +77,7 @@ describe('computeScopeBoundingBox / createScopeRectangleLayout 单元测试', ()
     const layout = createScopeRectangleLayout({ id: 'g', bbox: null, fallbackOrigin: [50, 50] });
 
     expect(layout.shape.name).toBe('rectangle');
-    expect(layout.shape.definition).toBe(BUILTIN_SHAPES.rectangle);
+    expect(layout.shape.definition).toBe(BUILTIN_SHAPES.get('rectangle')!);
     expect(layout.geometry.rect.x).toBe(50);
     expect(layout.geometry.rect.y).toBe(50);
     expect(layout.geometry.rect.width).toBe(0);

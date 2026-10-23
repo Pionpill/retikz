@@ -1,7 +1,8 @@
-import type { CanonicalInlineRun, ParsedInlineRuns, ResolvedMathRun, SourceInlineRun } from './types';
+import type { CanonicalInlineSegment, ParsedInlineSegments, ResolvedMathSegment, SourceInlineSegment } from './types';
 
-/** 判断 run 是否为公式 run */
-export const isMathRun = (run: SourceInlineRun | CanonicalInlineRun): run is ResolvedMathRun => 'tex' in run;
+/** 判断 segment 是否为公式 segment */
+export const isMathSegment = (segment: SourceInlineSegment | CanonicalInlineSegment): segment is ResolvedMathSegment =>
+  'tex' in segment;
 
 /** 从指定位置查找下一个未转义公式闭合符 */
 const findClose = (raw: string, from: number, display: boolean): number => {
@@ -29,18 +30,18 @@ const findClose = (raw: string, from: number, display: boolean): number => {
   return -1;
 };
 
-/** 把行内文本 shorthand 解析为 text/math run；未开启 TeX 时原样返回文本 */
-export const parseInlineRuns = (raw: string, gatingOn: boolean): ParsedInlineRuns => {
-  if (!gatingOn) return { runs: [{ text: raw }], hasMath: false, warn: false };
+/** 把行内文本 shorthand 解析为 text/math segment；未开启 TeX 时原样返回文本 */
+export const parseInlineSegments = (raw: string, gatingOn: boolean): ParsedInlineSegments => {
+  if (!gatingOn) return { segments: [{ text: raw }], hasMath: false, warn: false };
 
-  const runs: Array<SourceInlineRun> = [];
+  const segments: Array<SourceInlineSegment> = [];
   let buffer = '';
   let warn = false;
   let hasMath = false;
 
   const flushText = (): void => {
     if (buffer !== '') {
-      runs.push({ text: buffer });
+      segments.push({ text: buffer });
       buffer = '';
     }
   };
@@ -68,7 +69,7 @@ export const parseInlineRuns = (raw: string, gatingOn: boolean): ParsedInlineRun
       const tex = raw.slice(index + delimiterLength, close);
       flushText();
       if (tex !== '') {
-        runs.push(display ? { tex, displayMode: true } : { tex });
+        segments.push(display ? { tex, displayMode: true } : { tex });
         hasMath = true;
       }
 
@@ -81,7 +82,7 @@ export const parseInlineRuns = (raw: string, gatingOn: boolean): ParsedInlineRun
   }
 
   flushText();
-  if (runs.length === 0) runs.push({ text: '' });
+  if (segments.length === 0) segments.push({ text: '' });
 
-  return { runs, hasMath, warn };
+  return { segments, hasMath, warn };
 };

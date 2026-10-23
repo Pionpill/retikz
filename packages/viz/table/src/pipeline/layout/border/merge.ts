@@ -1,5 +1,4 @@
 import type { ResolvedTableBorderLine } from '../../../contract/manifest';
-import { TableBorderContributionSchema } from '../../../contract/manifest';
 import { RetikzTableError } from '../../../error';
 import { deepFreeze } from '../../../shared';
 import type { ResolvedTableBorderAtom, TableBorderEdge, TableBorderVertex } from './types';
@@ -72,7 +71,7 @@ const edgeOf = (atom: ResolvedTableBorderAtom): TableBorderEdge => {
     throw new RetikzTableError(`table: visible Border Graph atom "${atom.key}" must have a line winner`);
   }
 
-  const contributors = atom.contributors.map(contribution => TableBorderContributionSchema.parse(contribution));
+  const contributors = structuredClone(atom.contributors);
   const winner = contributors.find(contribution => contribution.key === atom.winner.key);
   if (winner?.kind !== 'line') {
     throw new RetikzTableError(`table: visible Border Graph atom "${atom.key}" winner must match its contributors`);

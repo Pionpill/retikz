@@ -48,4 +48,23 @@ describe('Table Legend descriptor schema', () => {
       TableLegendDescriptorSchema.parse({ ...threshold, form: 'ramp', domain: [0, 1], range: ['#fff', '#000'] }),
     ).toThrow();
   });
+
+  it('requires exactly two ramp endpoints while preserving omitted threshold edges', () => {
+    const ramp = {
+      encodingId: 'score',
+      channel: 'backgroundFill',
+      scaleName: 'sequential-color',
+      form: 'ramp',
+      domain: [0, 1],
+      range: ['white', 'black'],
+    };
+    expect(TableLegendDescriptorSchema.parse(ramp)).toEqual(ramp);
+    expect(TableLegendDescriptorSchema.parse({ ...ramp, edges: undefined })).toEqual({ ...ramp, edges: undefined });
+    for (const domain of [[], [0], [0, 1, 2]]) {
+      expect(TableLegendDescriptorSchema.safeParse({ ...ramp, domain }).success).toBe(false);
+    }
+    for (const range of [[], ['white'], ['white', 'gray', 'black']]) {
+      expect(TableLegendDescriptorSchema.safeParse({ ...ramp, range }).success).toBe(false);
+    }
+  });
 });

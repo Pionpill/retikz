@@ -69,7 +69,7 @@ The preview shows the final geometry. We will follow the same path as its `{ id:
   sources={[
     { label: 'Synchronous entry and return value', path: 'packages/kernel/core/src/compile/compile.ts' },
     { label: 'CompileOptions / CompileResult', path: 'packages/kernel/core/src/compile/types.ts' },
-    { label: 'External scene validation', path: 'packages/kernel/core/src/schemas/scene/schema.ts' },
+    { label: 'External scene validation', path: 'packages/kernel/core/src/schemas/scene/scene.ts' },
   ]}
 />
 
@@ -105,7 +105,7 @@ Traversal also creates state for this execution: emitted primitives, accumulated
     { label: 'Dependency and resource context', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
     {
       label: 'Register built-in and external definitions',
-      path: 'packages/kernel/core/src/providers/registry/registry.ts',
+      path: 'packages/kernel/core/src/providers/registry.ts',
     },
     { label: 'Traversal state and named lookup', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
   ]}
@@ -482,7 +482,7 @@ Warnings and fatal errors have different outcomes. Recoverable cases follow the 
   sources={[
     { label: 'Scene assembly and warning dispatch', path: 'packages/kernel/core/src/compile/compile.ts' },
     { label: 'Compile result and artifact types', path: 'packages/kernel/core/src/compile/types.ts' },
-    { label: 'Spatial index types', path: 'packages/kernel/core/src/contract/spatial-handle/types.ts' },
+    { label: 'Spatial index types', path: 'packages/kernel/core/src/contract/spatial-handle/handle.ts' },
     { label: 'Automatic canvas bounds', path: 'packages/kernel/core/src/compile/scene/layout.ts' },
     { label: 'Renderer-neutral Scene contract', path: 'packages/kernel/core/src/contract/scene/scene.ts' },
   ]}
@@ -595,23 +595,23 @@ Core and Weave share `formatCompileChildPath(prefix, index, type?)` to construct
 
 Weave is the compilation tree retained by Reconciler. Each node holds its own input, effective context and Core compilation state. The root holds the environment, Scene configuration, container index and version-specific read records. Automatically assigned Scope addresses stay outside the IR and do not affect drawing envelopes.
 
-Runtime holds a stable WeaveRoot directly as the tree entry. Nodes and Root each retain committed current and candidate pending states; parent-child links, dependencies and indexes reference stable node objects. Candidate writes isolate the affected state and mutable collections while sharing unchanged Core products read-only. Changing a child’s properties does not copy its Scope’s children array; changing membership does. Commit switches the states touched by the batch and retains recovery references until confirmation. A node reference does not provide a historical snapshot.
+The Reconciler session holds a stable WeaveRoot through its Weave reconciler as the tree entry. Nodes and Root each retain committed current and candidate pending states; parent-child links, dependencies and indexes reference stable node objects. Candidate writes isolate the affected state and mutable collections while sharing unchanged Core products read-only. Changing a child’s properties does not copy its Scope’s children array; changing membership does. Commit switches the states touched by the batch and retains recovery references until confirmation. A node reference does not provide a historical snapshot.
 
 Basic elements create nodes and bindings in declaration order. Node and Coordinate consume references visible at their declaration site. Scope prepares context, compiles its children and envelope, then completes its deferred paths. A top-level Path can wait for nodes in both Scopes to be published. `createCompileNamespaceRegistry` preserves same-frame replacement diagnostics; `projectScopeCompileLayouts` and `projectPublishedCompileLayout` reuse Core's envelope-contribution and final reference-projection rules.
 
-Reconciler then asks Core to assemble the complete output. `createCompileProvenanceTracker` retains primitive ownership through resource remapping and Scope wrapping, pairing final provenance paths with the sorted Scene without another full compilation. Runtime retains the previous result if preparation fails and publishes the matching tree and output only after success.
+Reconciler then asks Core to assemble the complete output. `createCompileProvenanceTracker` retains primitive ownership through resource remapping and Scope wrapping, pairing final provenance paths with the sorted Scene without another full compilation. The Reconciler session retains the previous result if preparation fails and publishes the matching tree and output only after success.
 
 The internal Weave reconciler accepts WeaveBatch on a mounted Root: it applies insert, update and remove operations in order, then computes from the final inputs. Context follows declaration links and dependency invalidation follows consumers. Scope preparation, child layout, envelopes and final projections follow Core's evaluation order, preserving deferred Path references. Unaffected compiled products can be reused while their inputs, declaration positions and name bindings remain valid. Active observation sessions or diagnostics that require regeneration cause the relevant elements to be recomputed. Invalidation is conservative: a Scope change may recompute its entire subtree, without style/layout filtering.
 
 Updates return complete output with commit, finish and rollback operations. Preparation preserves committed state; rollback remains available after commit until final confirmation releases recovery references. Rebuilding name indexes, provenance and output may still traverse the whole tree, so local compilation does not imply local total update cost.
 
-The public Runtime input remains a complete IR snapshot. Replacing it rebuilds the basic-element tree and publishes `replaceScene`; the internal batch entry is not connected to public Runtime, React or Vanilla APIs. Input containing Composite elements retains Core full preparation, including probes, instance inputs, artifacts and spatial handles. This path does not fabricate an expanded tree that claims to support local updates.
+Reconciler `replace` accepts complete IR and recompiles it; `update` accepts a `WeaveBatch` for an existing basic-element tree. A batch must belong to the current session result, and Composite scenes do not support that entry. Ordinary React and Vanilla input updates still use complete replacement. The Render commit target converts changed compilation output to `replaceScene`; this does not imply fine-grained backend Patch updates. Composite input uses Core full preparation, preserving probes, instance inputs, artifacts and spatial handles.
 
 <SourceLinks
   sources={[
     { label: 'Weave construction and Core calls', path: 'packages/kernel/reconciler/src/weave/reconcile.ts' },
     { label: 'Weave state ownership', path: 'packages/kernel/reconciler/src/weave/types.ts' },
     { label: 'Candidate isolation and recovery', path: 'packages/kernel/reconciler/src/weave/transaction.ts' },
-    { label: 'Runtime publication boundary', path: 'packages/kernel/reconciler/src/runtime/computation.ts' },
+    { label: 'Reconciler session and publication boundary', path: 'packages/kernel/reconciler/src/session.ts' },
   ]}
 />

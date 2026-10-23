@@ -5,9 +5,9 @@ import { RetikzDataError } from '../error';
 import { resolveFieldPath } from '../model';
 import { finiteFieldValuesOf } from '../operators';
 import type { IRDataReducerOperation } from '../operators/reducer';
-import { applyReducerOperation, BuiltinReducerOperationKind, reducerOutputFields } from '../operators/reducer';
+import { resolveReducerComputation, BuiltinReducerOperationKind, reducerOutputFields } from '../operators/reducer';
 import type { IRDataSelectorOperation, RowSelection } from '../operators/selector';
-import { applySelectorOperation } from '../operators/selector';
+import { resolveSelectorComputation } from '../operators/selector';
 import type { ExternalRow } from '../shared';
 import type { TransformComputation } from './computation';
 import { computeTransformValue, runTransformComputation } from './computation';
@@ -33,10 +33,29 @@ export type GroupComputation = Readonly<{
   ) => Array<RowSelection> | Promise<Array<RowSelection>>;
 }>;
 
-const synchronousGroupComputation = (context: TransformContext): GroupComputation => ({
-  reduce: (rows, operation) => applyReducerOperation(rows, operation, context),
-  select: (rows, operation) => applySelectorOperation(rows, operation, context),
-});
+/** 本次分组计算内复用每个 operation 的精确解析结果 */
+const synchronousGroupComputation = (context: TransformContext): GroupComputation => {
+  const reducers = new Map<IRDataReducerOperation, ReturnType<typeof resolveReducerComputation>>();
+  const selectors = new Map<IRDataSelectorOperation, ReturnType<typeof resolveSelectorComputation>>();
+  return {
+    reduce: (rows, operation) => {
+      let reduce = reducers.get(operation);
+      if (reduce === undefined) {
+        reduce = resolveReducerComputation(operation, context);
+        reducers.set(operation, reduce);
+      }
+      return reduce(rows);
+    },
+    select: (rows, operation) => {
+      let select = selectors.get(operation);
+      if (select === undefined) {
+        select = resolveSelectorComputation(operation, context);
+        selectors.set(operation, select);
+      }
+      return select(rows);
+    },
+  };
+};
 
 /** reducer 动态输出字段的运行时冲突约束 */
 type ReducerOutputConstraints = {
@@ -74,10 +93,8 @@ function* computeReducerMetrics(
   rows: Array<ExternalRow>,
   metrics: ReadonlyArray<IRDataReducerOperation>,
   context: TransformContext,
-  constraints: ReducerOutputConstraints = {},
   computation: GroupComputation = synchronousGroupComputation(context),
 ): TransformComputation<ExternalRow> {
-  validateReducerMetrics(metrics, context, constraints);
   const out: ExternalRow = {};
 
   for (const metric of metrics)
@@ -92,7 +109,10 @@ export const applyReducerMetrics = (
   metrics: ReadonlyArray<IRDataReducerOperation>,
   context: TransformContext,
   constraints: ReducerOutputConstraints = {},
-): ExternalRow => runTransformComputation(computeReducerMetrics(rows, metrics, context, constraints));
+): ExternalRow => {
+  validateReducerMetrics(metrics, context, constraints);
+  return runTransformComputation(computeReducerMetrics(rows, metrics, context));
+};
 
 /** 从 selector operation 中取出可回填的数值字段；rank-only selector 返回 undefined */
 const selectorValueFieldOf = (selector: IRDataAnnotateSelector['selector']): string | undefined => {
@@ -130,22 +150,21 @@ export function* computeSummarize(
   computation: GroupComputation,
 ): TransformComputation<Array<ExternalRow>> {
   const output: Array<ExternalRow> = [];
+  let validated = false;
 
   for (const group of groupRowsByFields(rows, operation.params.groupBy)) {
+    if (!validated) {
+      validateReducerMetrics(operation.params.metrics, context, {
+        reservedFields: new Set(operation.params.groupBy ?? []),
+        reservedLabel: 'a groupBy field',
+      });
+      validated = true;
+    }
     output.push(
       context.groupProvenance(
         {
           ...group.values,
-          ...(yield* computeReducerMetrics(
-            group.rows,
-            operation.params.metrics,
-            context,
-            {
-              reservedFields: new Set(operation.params.groupBy ?? []),
-              reservedLabel: 'a groupBy field',
-            },
-            computation,
-          )),
+          ...(yield* computeReducerMetrics(group.rows, operation.params.metrics, context, computation)),
         },
         group.rows,
       ),
@@ -203,21 +222,20 @@ export function* computeAnnotate(
   computation: GroupComputation,
 ): TransformComputation<Array<ExternalRow>> {
   const output: Array<ExternalRow> = [];
+  let validated = false;
 
   for (const group of groupRowsByFields(rows, operation.params.groupBy)) {
+    if (!validated) {
+      validateReducerMetrics(operation.params.metrics ?? [], context, {
+        reservedFields: new Set((operation.params.selectors ?? []).map(selector => selector.as)),
+        reservedLabel: 'an annotate selector output field',
+      });
+      validated = true;
+    }
     const metricFields =
       operation.params.metrics === undefined
         ? {}
-        : yield* computeReducerMetrics(
-            group.rows,
-            operation.params.metrics,
-            context,
-            {
-              reservedFields: new Set((operation.params.selectors ?? []).map(selector => selector.as)),
-              reservedLabel: 'an annotate selector output field',
-            },
-            computation,
-          );
+        : yield* computeReducerMetrics(group.rows, operation.params.metrics, context, computation);
     const selectorFields =
       operation.params.selectors === undefined
         ? {}

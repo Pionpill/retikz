@@ -41,6 +41,7 @@ const ownerRef = (file: string): OwnerRef | undefined => {
   if (parts.length < 3) return undefined;
 
   const [layer, owner] = parts;
+  if (layer === 'schemas') return { root: 'schemas', rootPath: join(SRC_ROOT, 'schemas') };
   if (owner.endsWith('.ts')) return undefined;
 
   const rootPath = join(SRC_ROOT, layer, owner);

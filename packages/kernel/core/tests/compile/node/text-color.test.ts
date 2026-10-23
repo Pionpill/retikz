@@ -120,8 +120,8 @@ describe('Node auto-contrast consumers and warnings', () => {
         {
           type: 'node',
           position: [0, 0],
-          text: [{ runs: [{ text: 'body' }, { text: 'mixed body' }] }],
-          label: [{ text: 'label' }, { text: { runs: [{ text: 'mixed' }] } }],
+          text: [{ segments: [{ text: 'body' }, { text: 'mixed body' }] }],
+          label: [{ text: 'label' }, { text: { segments: [{ text: 'mixed' }] } }],
           style: {
             fill: {
               kind: 'linearGradient',
@@ -180,7 +180,7 @@ describe('Node auto-contrast consumers and warnings', () => {
             position: [0, 0],
             text: [{ text: 'body', fill: 'red' }],
             label: {
-              text: { runs: [{ text: 'label', fill: 'blue' }] },
+              text: { segments: [{ text: 'label', fill: 'blue' }] },
               textColor: 'green',
               pin: { stroke: 'purple' },
             },
@@ -199,7 +199,7 @@ describe('Node auto-contrast consumers and warnings', () => {
     const ir = sceneOf({
       text: [{ text: 'body', fill: 'red' }],
       label: {
-        text: { runs: [{ text: 'label', fill: 'blue' }] },
+        text: { segments: [{ text: 'label', fill: 'blue' }] },
         pin: true,
       },
       style: { fill: '#000000', textColor: AUTO_CONTRAST },
@@ -246,7 +246,7 @@ describe('Node auto-contrast cascade and precedence', () => {
 
   it('label 与 run 显式颜色优先于 resolved Node 自动色', () => {
     const ir = sceneOf({
-      text: [{ runs: [{ text: 'inherited' }, { text: 'explicit', fill: 'red' }] }],
+      text: [{ segments: [{ text: 'inherited' }, { text: 'explicit', fill: 'red' }] }],
       label: [{ text: 'node-color' }, { text: 'label-color', textColor: 'blue' }],
       style: { fill: '#000000', textColor: AUTO_CONTRAST },
     });
@@ -275,7 +275,10 @@ describe('Node auto-contrast cascade and precedence', () => {
               style: { fill: '#000000', textColor: AUTO_CONTRAST },
             },
           ],
-          defaults: { label: { textColor: 'orange', color: 'green' } },
+          defaults: {
+            node: { label: { textColor: 'orange', color: 'green' } },
+            path: { label: { textColor: 'orange', color: 'green' } },
+          },
         },
       ],
     };

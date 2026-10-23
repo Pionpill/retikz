@@ -58,7 +58,7 @@ const source: ServiceSource = {
   logic: { body: { kind: 'text', text: 'loadUser(id)' } },
 };
 const Example: FC = () => (
-  <Layout extensions={{ themeStyles: [coreStyle] }}>
+  <Layout extensions={{ themeDefinitions: [coreStyle] }}>
     <ServiceBlock {...source} />
   </Layout>
 );
@@ -81,7 +81,7 @@ const source: ServiceSource = {
 const input = scene({ children: [{ type: 'embed', kind: adapter.kind, props: source }] });
 const view = mount(document.getElementById('diagram')!, input, {
   adapters: [adapter],
-  compile: { themeStyles: [coreStyle] },
+  compile: { themeDefinitions: [coreStyle] },
 });
 // view.dispose() on teardown
 ```
@@ -91,7 +91,7 @@ const view = mount(document.getElementById('diagram')!, input, {
 
 ### 主题配置
 
-`GraphThemeStyleSource.codeBlockTokens` 是运行时配置，不进入 IR。具名主题同时在 Core `themeStyles` 和 contribution 的 `graphThemeStyles` 注册；Graph definition 根据有效 Core theme 生成内部视觉。
+`GraphThemeSource.codeBlockTokens` 是运行时配置，不进入 IR。具名主题同时在 Core `themeDefinitions` 和 contribution 的 `graphThemeDefinitions` 注册；Graph definition 根据有效 Core theme 生成内部视觉。
 
 | Token               | 默认值                       | 用途                       |
 | ------------------- | ---------------------------- | -------------------------- |

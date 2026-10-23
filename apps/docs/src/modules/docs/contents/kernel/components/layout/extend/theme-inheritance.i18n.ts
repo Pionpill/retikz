@@ -5,7 +5,7 @@ export const themeInheritanceI18n: Record<
   Lang,
   {
     title: string;
-    style: string;
+    name: string;
     mode: string;
     academic: string;
     vibrant: string;
@@ -17,7 +17,7 @@ export const themeInheritanceI18n: Record<
 > = {
   zh: {
     title: '主题配置',
-    style: '主题风格',
+    name: '主题风格',
     mode: '明暗模式',
     academic: '学术',
     vibrant: '活力',
@@ -28,7 +28,7 @@ export const themeInheritanceI18n: Record<
   },
   en: {
     title: 'Theme configuration',
-    style: 'Theme style',
+    name: 'Theme',
     mode: 'Color mode',
     academic: 'Academic',
     vibrant: 'Vibrant',

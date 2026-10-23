@@ -79,7 +79,7 @@ export type InspectorContext<TOptions extends JsonObject = JsonObject> = Readonl
 
 /**
  * 独立于 Core owner Definition 的 Inspector 定义
- * @template TSubject 经 subjectSchema 校验后交给 inspect 的观察对象类型
+ * @template TSubject 由所属者提供的观察对象类型
  * @template TParsedOptions optionsSchema 应用默认与变换后的选项类型
  * @template TResolvedOptions resolveOptions 输出、供 inspect 上下文消费的选项类型
  * @template TSourceOptions 合并前的原始选项输入类型，默认与 TParsedOptions 相同
@@ -96,8 +96,6 @@ export type InspectorDefinition<
   type: string;
   /** 被观察的 Core owner */
   owner: CompileObservationOwner;
-  /** Core owner output 之后的第二层 subject schema */
-  subjectSchema: ZodType<TSubject>;
   /** 唯一 options 契约；合并原始输入后应用默认值与变换 */
   optionsSchema: ZodType<TParsedOptions, TSourceOptions>;
   /** 将 schema 解析后的有效 options 转为 callback 消费态 */
@@ -111,7 +109,7 @@ export type InspectorDefinition<
 /**
  * 作者侧 Inspector 定义；仅在对应输入输出可由默认行为满足时允许省略选项字段
  *
- * @template TSubject 通过 subject schema 解析后的被观察对象类型
+ * @template TSubject 由所属者提供的被观察对象类型
  * @template TParsedOptions options schema 解析后的 options 类型
  * @template TResolvedOptions callback 消费的已解析 options 类型
  * @template TSourceOptions 传入 options schema 前的原始 options 输入类型
@@ -162,11 +160,6 @@ export type AnyInspectorDefinition = Readonly<{
   type: string;
   /** 被观察的 Core owner */
   owner: CompileObservationOwner;
-  /** 擦除后仍恢复 JSON-safe subject */
-  subjectSchema: Readonly<{
-    /** 校验被观察值并恢复可序列化的 subject */
-    parse: (value: unknown) => JsonValue;
-  }>;
   /** 擦除后仍产出已应用默认值与变换的 JSON object options */
   optionsSchema: Readonly<{
     /** 校验合并后的原始选项并应用 schema 默认值与变换 */
@@ -176,7 +169,7 @@ export type AnyInspectorDefinition = Readonly<{
   resolveOptions: (options: never) => JsonObject;
   /** 合并已准入的原始 options，不消费 schema 变换后的结果 */
   mergeOptionsInput?: (inheritedOptionsInput: never, localOptionsInput: never) => JsonObject;
-  /** 具体 subject/context 类型由调用前的 schema 恢复 */
+  /** subject 类型由所属者契约确定，context 类型由选项解析恢复 */
   inspect: (subject: never, context: never) => InspectorOutput;
 }>;
 

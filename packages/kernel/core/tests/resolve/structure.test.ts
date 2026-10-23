@@ -60,7 +60,7 @@ describe('resolve source structure', () => {
   it('keeps composite provider binding in resolve', () => {
     expect(source('src/resolve/index.ts')).toContain("export * from './composite';");
 
-    const lower = source('src/compile/orchestration/composite.ts');
+    const lower = source('src/compile/orchestration/composite-output.ts');
     const traversal = source('src/compile/orchestration/traversal.ts');
 
     expect(lower).not.toContain('parseProviderPayload');
@@ -80,7 +80,7 @@ describe('resolve source structure', () => {
     ].join('\n');
     const pathLabel = source('src/compile/path/host/label.ts');
 
-    expect(compileText).not.toContain('parseInlineRuns');
+    expect(compileText).not.toContain('parseInlineSegments');
     expect(compileText).not.toContain('resolveFontSize');
     expect(nodeLayout).not.toContain('resolveLineRunsWithWarning');
     expect(nodeLayout).not.toContain('resolveFontSize');

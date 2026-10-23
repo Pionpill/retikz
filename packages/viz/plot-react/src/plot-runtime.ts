@@ -117,9 +117,9 @@ const dataFieldNamesOf = (rows: Array<ExternalRow>): ReadonlySet<string> => {
 };
 
 /** 将 React spec 入口的显式展示覆盖装配到 Plot Source IR */
-const applyPlotPropsToSpec = <TSource>(
+const applyPlotPropsToSpec = (
   spec: IRPlot,
-  props: Pick<PlotProps<TSource>, 'width' | 'height' | 'defaultPlot' | 'plotRules' | 'dataExecution'>,
+  props: Pick<IRPlot, 'width' | 'height' | 'defaultPlot' | 'plotRules' | 'dataExecution'>,
 ): IRPlot => {
   if (spec.dataExecution !== undefined && props.dataExecution !== undefined)
     throw new RetikzPlotReactError('Plot dataExecution is declared in both spec and root props');

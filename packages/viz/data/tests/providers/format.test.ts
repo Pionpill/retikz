@@ -65,12 +65,7 @@ describe('field format provider runtime', () => {
     expect(resolveFormatRegistry().has('currency')).toBe(false);
   });
 
-  it('rejects empty and duplicate format registrations', () => {
-    const empty = defineFieldFormat({
-      name: '',
-      impliedType: DataFieldType.Continuous,
-      parse: () => 0,
-    });
+  it('rejects duplicate format registrations', () => {
     const duplicateBuiltin = defineFieldFormat({
       name: BuiltinDataFieldFormat.Percent,
       impliedType: DataFieldType.Continuous,
@@ -82,7 +77,6 @@ describe('field format provider runtime', () => {
       parse: () => 0,
     });
 
-    expect(() => resolveFormatRegistry([empty])).toThrow('data: field format name must be a non-empty string');
     expect(() => resolveFormatRegistry([duplicateBuiltin])).toThrow(
       'data: duplicate field format registration: "percent"',
     );

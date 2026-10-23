@@ -5,7 +5,7 @@ import type {
   IRChild,
   IRTheme,
   ResolvedTheme,
-  ThemeStyleDefinition,
+  ThemeDefinition,
 } from '@retikz/core';
 
 import type { InputChild } from '../scene';
@@ -38,8 +38,8 @@ export type NormalizedInputEmbedChildren = Readonly<{
 export type InputEmbedThemeContext = Readonly<{
   /** Scene / Scope 链解析后的有效 Theme */
   theme: ResolvedTheme;
-  /** 调用方提供的 Core Theme style definitions */
-  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
+  /** 调用方提供的 Core Theme definitions */
+  themeDefinitions?: ReadonlyArray<ThemeDefinition>;
 }>;
 
 /** processing 注入给 InputScene normalizer 的 Scope Theme 解析器 */
@@ -86,8 +86,8 @@ export type InputEmbedContext = {
   identityPath: Array<string>;
   /** processing 已准备的有效 Theme */
   theme?: ResolvedTheme;
-  /** processing 传递的 Core Theme style definitions */
-  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
+  /** processing 传递的 Core Theme definitions */
+  themeDefinitions?: ReadonlyArray<ThemeDefinition>;
   /** 在当前根 Scene traversal 中归一化嵌入 slot 的已类型化 authoring 子项 */
   normalizeChildren?: (children: ReadonlyArray<InputChild>) => NormalizedInputEmbedChildren;
 };

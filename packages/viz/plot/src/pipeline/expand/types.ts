@@ -15,10 +15,9 @@ import type {
   AnchorIdGenerator,
   AnyChannelDefinition,
   AnyCoordinateDefinition,
-  AnyMarkDefinition,
   AnyPositionAdjustmentDefinition,
   AnyScaleDefinition,
-  PlotThemeStyleDefinition,
+  PlotThemeDefinition,
   ResolveLabel,
 } from '../../contract';
 import type { PlotLabelMeasure } from '../../shared';
@@ -41,8 +40,8 @@ export type PlotLayoutOverrides = {
 export type PlotDefinitions = {
   /** 当前请求注入的分类顺序定义 */
   fieldOrders?: ReadonlyArray<FieldOrderDefinition>;
-  /** 运行时注入的 Plot Theme style definitions */
-  plotThemeStyles?: ReadonlyArray<PlotThemeStyleDefinition>;
+  /** 运行时注入的 Plot Theme definitions */
+  plotThemeDefinitions?: ReadonlyArray<PlotThemeDefinition>;
   /**
    * 自定义坐标系 definition 数组（运行时函数，不进 IR）：spec 的 `coordinate: {type:<customType>, ...config}` 据此解析投影
    * @description 让用户插入任意坐标系几何（曲线一维 / 拱形 x 轴等），无需给坐标系枚举塞成员、也不破坏 IR JSON 化。未注册 type → fail-loud
@@ -60,8 +59,6 @@ export type PlotDefinitions = {
   scales?: Array<AnyScaleDefinition>;
   /** 自定义 channel definitions；position、mark、node 与 path channel 共用 registry */
   channels?: Array<AnyChannelDefinition>;
-  /** 自定义 mark definitions；未注册或冲突的 type 会 fail-loud */
-  marks?: Array<AnyMarkDefinition>;
   /** 自定义 Position Adjustment definitions；内置与自定义按 kind 共用 registry */
   positionAdjustments?: ReadonlyArray<AnyPositionAdjustmentDefinition>;
   /** 自定义字段格式 definitions；definition 提供蕴含类型与 canonical parser */

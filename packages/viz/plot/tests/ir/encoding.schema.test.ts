@@ -160,7 +160,7 @@ it('round-trips shorthand labels and rejects cross-host or invalid font bindings
   const point = {
     type: 'point',
     encodings: { label: ['name', { font: { family: 'family', size: 'size' } }] },
-    properties: { label: ['fixed', { content: 'other' }] },
+    properties: { label: ['fixed', { text: 'other' }] },
   };
   expect(PointMarkSchema.parse(JSON.parse(JSON.stringify(point)))).toMatchObject(point);
   expect(PointMarkSchema.safeParse({ type: 'point', encodings: { label: { sloped: 's' } } }).success).toBe(false);

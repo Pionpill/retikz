@@ -1,6 +1,6 @@
 import { pointAtArcAngle } from '@retikz/math';
 
-import type { IRPosition, IRResolvablePosition } from '../../schemas';
+import type { IRPosition } from '../../schemas';
 import {
   AnchorUnitVectorByAnchor,
   isAtPositionLike,
@@ -10,7 +10,7 @@ import {
   isPolarPositionLike,
   isPositionTuple,
 } from '../../shared';
-import type { PositionResolution, PositionResolveContext } from './types';
+import type { PositionResolution, PositionResolveContext, ResolvablePosition } from './types';
 
 /** 从 position referent 中提取诊断用节点 id；只读输入，不解析 namespace */
 export const nodeIdFromPositionReferent = (reference: unknown): string | undefined =>
@@ -46,7 +46,7 @@ const resolutionOfWorld = (worldPoint: IRPosition, context: PositionResolveConte
  * @description tuple、polar 与 offset 使用局部度量；命名引用从世界坐标反投影；解析失败返回 null
  */
 export const resolvePosition = (
-  position: IRResolvablePosition,
+  position: ResolvablePosition,
   context: PositionResolveContext,
 ): PositionResolution | null => {
   if (typeof position === 'string') {

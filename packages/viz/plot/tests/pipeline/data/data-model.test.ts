@@ -169,7 +169,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       marks: [
         {
           type: 'interval',
-          encodings: { label: { content: 'lbl' }, position: { x: { field: 'month' }, y: { field: 'revenue' } } },
+          encodings: { label: { text: 'lbl' }, position: { x: { field: 'month' }, y: { field: 'revenue' } } },
           properties: { label: {} },
         },
         { type: 'point', encodings: { text: 'note', position: { x: { field: 'month' }, y: { field: 'revenue' } } } },

@@ -99,14 +99,14 @@ x、y、z 全部必填。
 <ZodSchema
   name="LabelEncodingSchema"
   description="标签内容与外观字段，与 properties.label 按相同索引组合。"
-  descriptions={{ content: '当前数据行中的标签内容字段。' }}
+  descriptions={{ text: '当前数据行中的标签内容字段。' }}
 />
 
-`encodings.label: 'name'` 等价于 `{ content: 'name' }`，表示字段绑定；`properties.label: '重点'` 表示固定文字。需要细化时改用对象，非空数组可混合字符串与对象，每一项对应一个标签。
+`encodings.label: 'name'` 等价于 `{ text: 'name' }`，表示字段绑定；`properties.label: '重点'` 表示固定文字。需要细化时改用对象，非空数组可混合字符串与对象，每一项对应一个标签。
 
 | 目标                        | 编码形式                                    |
 | --------------------------- | ------------------------------------------- |
-| `content`                   | 字段名，格式由固定属性 `displayFormat` 控制 |
+| `text`                      | 字段名，格式由固定属性 `displayFormat` 控制 |
 | `font.size`、`font.weight`  | 字段名，或 `{ field, scale }` 数值映射      |
 | `font.family`、`font.style` | 字段名，直接读取字体族或字形                |
 | `textColor`、`opacity`      | 字段名或显式尺度；透明度为标签自身的标量    |
@@ -122,7 +122,7 @@ x、y、z 全部必填。
 
 <ZodSchema
   name="NodeLabelEncodingSchema"
-  description="节点标签额外支持 align、rotate、keepUpright，与共同的 position、placement、distance 字段。"
+  description="节点标签额外支持 placement、align、rotate、keepUpright，并复用共同的 position、distance 字段。"
 />
 
 ### PathLabelEncodingSchema

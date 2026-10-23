@@ -1,10 +1,9 @@
-import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it, vi } from 'vitest';
-import { array, intersection, literal, number, object, strictObject, tuple } from 'zod';
+import { array, literal, number, strictObject, tuple } from 'zod';
 
 import { compileToScene } from '../../src/compile/compile';
 import { createRound } from '../../src/compile/scene';
-import type { ClipDefinition, ClipResolveContext, MarkerPrimitive, PatternDefinition } from '../../src/contract';
+import type { ClipDefinition, ClipResolveContext, ScenePrimitive, PatternDefinition } from '../../src/contract';
 import { defineClip, definePattern } from '../../src/contract';
 import { resolveClipRegistry } from '../../src/providers/clip';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
@@ -42,7 +41,7 @@ describe('resolve/resource paint', () => {
   it('binds custom pattern and applies shape/style priority in resolve', () => {
     const custom = definePattern({
       name: 'custom',
-      emit: (): Array<MarkerPrimitive> => [],
+      emit: (): Array<ScenePrimitive> => [],
     });
     const resolved = resolvePaint(
       {
@@ -71,7 +70,7 @@ describe('resolve/resource paint', () => {
 
   it('reports unknown pattern provider at the resolve boundary', () => {
     expect(() => resolvePaint({ kind: 'pattern', shape: 'missing' }, patternContext())).toThrow(
-      /Unknown pattern shape 'missing'/,
+      /Unknown provider 'missing'/,
     );
   });
 
@@ -103,7 +102,7 @@ describe('resolve/resource paint', () => {
   });
 
   it('emits a deduplicated pattern resource once', () => {
-    const emit = vi.fn((): Array<MarkerPrimitive> => []);
+    const emit = vi.fn((): Array<ScenePrimitive> => []);
     const pattern = definePattern({ name: 'dedupe-pattern', emit });
     const scene = compileToScene(
       {
@@ -128,14 +127,6 @@ describe('resolve/resource paint', () => {
     expect(scene.resources).toHaveLength(1);
     expect(emit).toHaveBeenCalledTimes(1);
   });
-
-  it('preserves the missing pattern emit diagnostic at the compile boundary', () => {
-    const pattern = { name: 'missing-emit', emit: undefined } as unknown as PatternDefinition;
-
-    expect(
-      () => compileToScene(sceneWithPaint({ kind: 'pattern', shape: 'missing-emit' }), { patterns: [pattern] }).scene,
-    ).toThrow("Pattern 'missing-emit' is missing an emit function (PatternDefinition.emit is required).");
-  });
 });
 
 describe('resolve/resource clip', () => {
@@ -150,10 +141,6 @@ describe('resolve/resource clip', () => {
       points: array(tuple([number(), number()])).min(3),
     }),
     resolve: polygonResolve,
-    shapeSchema: strictObject({
-      kind: literal('polygon'),
-      points: array(tuple([number(), number()])).min(3),
-    }),
     lower: shape => ({
       commands: [
         { kind: 'move', to: shape.points[0] },
@@ -198,7 +185,6 @@ describe('resolve/resource clip', () => {
       kind: 'leaf',
       schema: strictObject({ kind: literal('leaf'), radius: number().positive() }),
       resolve: leafResolve,
-      shapeSchema: strictObject({ kind: literal('leaf'), radius: number().positive() }),
       lower: shape => ({
         commands: [
           { kind: 'move', to: [0, 0] },
@@ -223,10 +209,6 @@ describe('resolve/resource clip', () => {
         child: strictObject({ kind: literal('leaf'), radius: number().positive() }),
       }),
       resolve: wrapperResolve,
-      shapeSchema: strictObject({
-        kind: literal('wrapper'),
-        child: intersection(object({ kind: NonBlankStringSchema }), JsonObjectSchema),
-      }),
       lower: (shape, context) => context.lower(shape.child),
     });
     const clips = resolveClipRegistry([wrapper, leaf]);
@@ -277,6 +259,8 @@ describe('resolve/resource clip', () => {
   });
 
   it('reports unknown clip provider at the resolve boundary', () => {
-    expect(() => resolveClip({ kind: 'missing' }, { clips: resolveClipRegistry() })).toThrow(/Unknown clip 'missing'/);
+    expect(() => resolveClip({ kind: 'missing' }, { clips: resolveClipRegistry() })).toThrow(
+      /Unknown provider 'missing'/,
+    );
   });
 });

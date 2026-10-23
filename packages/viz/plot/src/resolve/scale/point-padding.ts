@@ -5,7 +5,7 @@ import { RetikzPlotError } from '../../error';
 import { POINT_DEFAULT_RADIUS, SIZE_MAX_RADIUS } from '../../providers';
 import type { IRPlotChannel } from '../../schemas';
 import type { IRPlotPointAutoPadding, IRPlotScaleOperation } from '../../schemas';
-import { isBuiltinMark, PointPropertiesSchema, RelationPropertiesSchema } from '../../schemas';
+import { PointPropertiesSchema, RelationPropertiesSchema } from '../../schemas';
 import type { MarkDataView } from '../coordinate';
 
 /** 一个坐标角色的图元留白需求 */
@@ -19,7 +19,7 @@ export type PointPaddingResolution = {
 /** 读取 Point / Relation 的自动策略，忽略没有节点半径语义的其它图元 */
 export const pointAutoPaddingOf = (view: MarkDataView): IRPlotPointAutoPadding => {
   const mark = view.mark;
-  if (!isBuiltinMark(mark)) return false;
+
   if (mark.type === 'point')
     return mark.properties?.autoPadding ?? PointPropertiesSchema.shape.autoPadding.unwrap().parse(undefined);
   if (mark.type === 'relation' && mark.properties.endpoints !== undefined)
@@ -87,7 +87,7 @@ export const resolvePointPadding = (
       continue;
     }
     const mark = view.mark;
-    if (!isBuiltinMark(mark)) continue;
+
     let radius = 0;
     if (mark.type === 'point') radius = maximumRadiusOf(mark.encodings.size ?? mark.properties?.size, scales);
     else if (mark.type === 'relation') {

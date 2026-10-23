@@ -25,7 +25,7 @@ export const TransformTableComparison: FC<TransformTableComparisonProps> = props
     headerRowSize: { kind: 'fixed' as const, value: 28 },
   };
   return (
-    <Layout theme={{ style: 'docs.logic' }}>
+    <Layout theme={{ name: 'docs.logic' }}>
       <Node position={[-140, -24]} style={{ stroke: 'none' }}>
         {before}
       </Node>

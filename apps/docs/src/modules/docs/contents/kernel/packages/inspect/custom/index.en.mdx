@@ -11,7 +11,7 @@ Start with [Built-in inspection](/kernel/packages/inspect/builtins). Use built-i
 
 ## Define the capability
 
-The preview includes `endpoint-inspector.ts`, the shared definition for both hosts. Copy that file, then choose an integration below. `namespace` and `type` form the registry key. `owner: { kind: 'path', name: 'stroke' }` selects an existing stroke Path result, validated by `subjectSchema`. The callback reads commands and returns ordinary Core drawing elements for auxiliary compilation.
+The preview includes `endpoint-inspector.ts`, the shared definition for both hosts. Copy that file, then choose an integration below. `namespace` and `type` form the registry key. `owner: { kind: 'path', name: 'stroke' }` selects an existing stroke Path result, typed as `StrokePathOwnerOutput` by the author; the driver does not parse the output again. The callback reads commands and returns ordinary Core drawing elements for auxiliary compilation.
 
 This example has no custom configuration, so it omits `optionsSchema` and `resolveOptions`. Add a schema when options are needed; add a resolver only when consumption requires a different representation.
 

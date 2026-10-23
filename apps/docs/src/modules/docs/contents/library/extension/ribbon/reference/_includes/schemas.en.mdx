@@ -26,6 +26,14 @@ These schemas are public exports from `@retikz/extension`. `RibbonPathSchema` va
   description="Centerline mode: width is required; endpoints can set direction, cap, and label. Mode may be omitted."
 />
 
+## RibbonLabelSchema
+
+<ZodSchema
+  shallow
+  name="RibbonLabelSchema"
+  description="Ribbon centerline label reusing Path text and visual fields, without stroke interruption options."
+/>
+
 ## BoundaryRibbonPathOptionsSchema
 
 <ZodSchema
@@ -90,7 +98,7 @@ These schemas are public exports from `@retikz/extension`. `RibbonPathSchema` va
 
 <ZodSchema shallow name="RibbonAdaptiveSamplingSchema" description="Choose samples from path length and tolerance." />
 
-Endpoint `label` directly uses Kernel [BoundaryLabelSchema](/kernel/components/node/reference#boundarylabelschema), alongside `cap`. There is no Ribbon-specific label schema.
+Endpoint `label` directly uses Kernel [BoundaryLabelSchema](/kernel/components/node/reference#boundarylabelschema), alongside `cap`. Endpoint labels need no Ribbon-specific schema.
 
 ## RibbonDirectionSchema
 

@@ -4,7 +4,7 @@ import type { BranchDiagramDefinitionOptions } from '@retikz/diagram/branch';
 export const branchDiagramDefinitionOptionsOf = (
   props: BranchDiagramDefinitionOptions,
 ): BranchDiagramDefinitionOptions => ({
-  diagramThemeStyles: props.diagramThemeStyles,
+  diagramThemeDefinitions: props.diagramThemeDefinitions,
   branchLayouts: props.branchLayouts,
   defaultBranchLayout: props.defaultBranchLayout,
   entityRoles: props.entityRoles,
@@ -13,5 +13,5 @@ export const branchDiagramDefinitionOptionsOf = (
   relationRoles: props.relationRoles,
   relationKinds: props.relationKinds,
   relationPredicates: props.relationPredicates,
-  graphThemeStyles: props.graphThemeStyles,
+  graphThemeDefinitions: props.graphThemeDefinitions,
 });

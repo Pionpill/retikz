@@ -142,7 +142,7 @@ export const previewControlContract = {
     'RelationMark.style',
     'RelationMark.path.label',
     'RelationMark.path.label.side',
-    'RelationMark.path.label.placement',
+    'RelationMark.path.label.side',
     'PointMark.label.position',
     'PointMark.opacity.fill',
   ],

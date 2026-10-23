@@ -1,3 +1,4 @@
+export * from './command-schema';
 export * from './collections';
 export * from './definitions';
 export * from './providers';

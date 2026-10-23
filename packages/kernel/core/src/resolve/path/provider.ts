@@ -1,10 +1,11 @@
 import type { ArrowDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { providerDefinitionOf } from '../../providers/registry';
+import { providerDefinitionOf } from '../../providers';
 import type { IRArrowMark, IRPathBase } from '../../schemas';
 import { ARROW_MARKER_DEFAULT_SIZE, ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH, DEFAULT_ARROW_SHAPE } from '../../schemas';
 import { createCompositeContractError } from '../diagnostics';
 import { parseProviderPayload } from '../provider-payload';
+import { resolvePaint } from '../resource';
 import type {
   ArrowMarkGeometry,
   ArrowMarkResolution,
@@ -31,10 +32,7 @@ export const resolvePathKind = (
   irPath: string,
 ): PathKindResolution => {
   const kind = path.kind ?? 'stroke';
-  const definition = providerDefinitionOf(context.pathKinds, kind, {
-    capability: 'path kind',
-    optionName: 'pathKinds',
-  });
+  const definition = providerDefinitionOf(context.pathKinds, kind);
   const parsed = parseProviderPayload({
     capability: 'path kind',
     providerName: kind,
@@ -54,10 +52,7 @@ export const resolvePathGenerator = (
   context: PathResolveContext,
   irPath: string,
 ): PathGeneratorResolution => {
-  const definition = providerDefinitionOf(context.pathGenerators, step.name, {
-    capability: 'path generator',
-    optionName: 'pathGenerators',
-  });
+  const definition = providerDefinitionOf(context.pathGenerators, step.name);
   const paramsPath = `${irPath}.params`;
   const params = parseProviderPayload({
     capability: 'path generator',
@@ -113,10 +108,7 @@ const assertFiniteArrowGeometry = (shape: string, definition: ArrowDefinition): 
 /** 解析 arrow mark 的有效视觉属性与几何输入 */
 export const resolveArrowMark = (mark: ResolvedArrowMark, context: PathResolveContext): ArrowMarkResolution => {
   const shape = mark.shape ?? DEFAULT_ARROW_SHAPE;
-  const definition = providerDefinitionOf(context.arrows, shape, {
-    capability: 'arrow shape',
-    optionName: 'arrows',
-  });
+  const definition = providerDefinitionOf(context.arrows, shape);
   assertFiniteArrowGeometry(shape, definition);
   const visual: ArrowMarkVisual = {
     shape,
@@ -124,8 +116,13 @@ export const resolveArrowMark = (mark: ResolvedArrowMark, context: PathResolveCo
     length: mark.length ?? definition.defaultLength ?? ARROW_MARKER_DEFAULT_SIZE,
     width: mark.width ?? definition.defaultWidth ?? ARROW_MARKER_DEFAULT_SIZE,
     ...(mark.color === undefined ? {} : { color: mark.color }),
-    ...(definition.hollow || mark.fill === undefined ? {} : { fill: mark.fill }),
+    ...(definition.hollow || mark.fill === undefined ? {} : { fill: resolvePaint(mark.fill, context) }),
     ...(mark.opacity === undefined ? {} : { opacity: mark.opacity }),
+    stroke: resolvePaint(mark.stroke, context),
+    dashPattern: mark.dashPattern,
+    dashOffset: mark.dashOffset,
+    lineCap: mark.lineCap,
+    lineJoin: mark.lineJoin,
     lineWidth: mark.lineWidth ?? ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
   };
   const baseSize = definition.baseSize ?? ARROW_GEOMETRY_BASE_SIZE;

@@ -1,5 +1,5 @@
 import type { JsonObject, NonEmptyReadonlyArray } from '@retikz/foundation';
-import type { IRPlotMarkOperation } from '@retikz/plot';
+import type { IRPlotMark } from '@retikz/plot';
 import type { ZodType } from 'zod';
 
 /** Chart mark resolver 的窄 typed context */
@@ -20,7 +20,7 @@ export type ChartMarkResolveContext = Readonly<{
 /** Chart mark 的确定输出 */
 export type ChartMarkResolution = Readonly<{
   /** 当前 Chart mark 解析得到的非空 Plot mark 序列 */
-  marks: NonEmptyReadonlyArray<IRPlotMarkOperation>;
+  marks: NonEmptyReadonlyArray<IRPlotMark>;
 }>;
 
 /** 一个可被 recipe 白名单消费的 Chart mark Definition */

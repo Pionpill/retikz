@@ -69,7 +69,7 @@ zod schema 仍是唯一真源；JSON-Schema 是**生成物**，随源码 `gen:sc
 实现期踩过的坑，必须照做否则产物不稳定 / 跨 target 串味：
 
 - **id 命名靠 globalRegistry，但用后还原**。`.describe()` 在 zod v4 已把 schema 登记进 `globalRegistry`（带 description）。给具名实体注入 `id`（导出名去 `Schema` 后缀）也写在 globalRegistry。**不能**用 `metadata: localRegistry` 旁路——实测那样只读到 entity 级描述、丢掉字段级描述（50 vs 474 条）。所以用 globalRegistry，但每个 target 生成完把注入的 id **还原**（`globalRegistry.remove` / 还原原 meta），让多 target 同进程互不污染。
-- **id 分配确定**：同一 schema 实例被多名导出（别名，如 `ArrowDetailSchema` / `ArrowDefaultSchema` 指同一实例）时，按导出名**字典序最小**胜出、归属取胜者所在分片；否则结果随运行时（tsx / vitest）的导出枚举顺序漂移。
+- **id 分配确定**：同一 schema 实例被多名导出（多个别名指向同一实例）时，按导出名**字典序最小**胜出、归属取胜者所在分片；否则结果随运行时（tsx / vitest）的导出枚举顺序漂移。
 - **`reused: 'inline'`**：已注册 id 的实体进 `$defs`，其余复用片段内联——避免一堆匿名 `__schemaN`，利于阅读。
 - **`unrepresentable: 'throw'`**：IR 设计上 100% JSON 可序列化，出现无法表达的构造（transform / custom）即 fail-loud。
 - 未归类的 `$def`（如 plot 引用到的 core 基类）兜底进 root 分片，不丢。

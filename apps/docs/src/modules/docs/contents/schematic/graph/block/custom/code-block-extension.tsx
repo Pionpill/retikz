@@ -1,4 +1,4 @@
-import { defineThemeStyle } from '@retikz/core';
+import { defineTheme } from '@retikz/core';
 import {
   CodeBlockPropsSchema,
   CodeLogicSchema,
@@ -7,7 +7,7 @@ import {
   createBlockSection,
   createCodeBlockContribution,
   defineCodeBlock,
-  defineGraphThemeStyle,
+  defineGraphTheme,
 } from '@retikz/graph';
 import { Layout } from '@retikz/react';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
@@ -64,9 +64,9 @@ const service = defineCodeBlock({
   ],
 });
 
-const coreStyle = defineThemeStyle({ name: 'service-example', resolve: () => ({}) });
+const coreStyle = defineTheme({ name: 'service-example', resolve: () => ({}) });
 
-const graphStyle = defineGraphThemeStyle({
+const graphStyle = defineGraphTheme({
   name: coreStyle.name,
   resolve: theme => ({
     defaults: { block: { background: { fill: theme.mode === 'dark' ? '#172033' : '#f8fafc' } } },
@@ -78,7 +78,7 @@ const graphStyle = defineGraphThemeStyle({
   }),
 });
 
-const contribution = createCodeBlockContribution(service, { graphThemeStyles: [graphStyle] });
+const contribution = createCodeBlockContribution(service, { graphThemeDefinitions: [graphStyle] });
 
 const adapter: InputEmbedAdapter<ServiceSource> = {
   kind: 'example.serviceBlock',
@@ -105,7 +105,7 @@ const Demo: FC<CodeBlockExtensionProps> = props => {
   const i18n = codeBlockExtensionI18n[lang ?? 'zh'];
 
   return (
-    <Layout viewBox={{ x: -12, y: -12, width: 584, height: 190 }} extensions={{ themeStyles: [coreStyle] }}>
+    <Layout viewBox={{ x: -12, y: -12, width: 584, height: 190 }} extensions={{ themeDefinitions: [coreStyle] }}>
       {(['light', 'dark'] as const).map((mode, index) => (
         <ServiceBlock
           key={mode}
@@ -116,7 +116,7 @@ const Demo: FC<CodeBlockExtensionProps> = props => {
           name="UserService"
           description={i18n.description}
           width={270}
-          theme={{ style: coreStyle.name, mode }}
+          theme={{ name: coreStyle.name, mode }}
           position={[index * 290, 0]}
           logic={{
             id: 'logic',

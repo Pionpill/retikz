@@ -31,14 +31,6 @@ Use `position={[x, y]}` to place the group origin in its parent coordinates, and
 
 For JSX organization alone, extract a React component. For automatic Flex or Grid arrangement, use the [Layout package](/library/layout). For circle, path, or compound clipping, check [Extension clipping](/library/extension/clip) before defining a new capability.
 
-## Envelope frame
-
-`frame` decorates the existing content envelope with an independent fill, stroke, and frame shadow. `style` and `defaults` continue to control child inheritance; the frame shares only the effective color context.
-
-`frame.padding` expands decoration without changing child positions, layout allocation, or Scope anchors. Frames do not participate in hit testing, and empty scopes produce no frame. `boundingShape` selects a rectangle or circle. Use Standard Surface to allocate space or constrain container dimensions.
-
-See [frame usage](/kernel/components/scope/usage#envelope-frame).
-
 ## Contents
 
 <LinkedSections

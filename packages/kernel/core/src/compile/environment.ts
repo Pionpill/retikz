@@ -7,20 +7,27 @@ import type {
   PathGeneratorDefinition,
   PatternDefinition,
   ShapeDefinition,
-  ThemeStyleDefinition,
+  ThemeDefinition,
 } from '../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
-import { resolveArrowRegistry } from '../providers/arrow';
-import { resolveBoundaryRegistry } from '../providers/boundary';
-import { resolveClipRegistry } from '../providers/clip';
-import { resolveCompositeRegistry } from '../providers/composite';
-import { resolvePathGeneratorRegistry } from '../providers/path-generator';
-import { resolvePathKindRegistry } from '../providers/path-kind';
-import { resolvePatternRegistry } from '../providers/pattern';
-import { resolveShapeRegistry } from '../providers/shape';
-import { resolveThemeStyleRegistry } from '../providers/theme';
-import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE, DEFAULT_LAYOUT_PADDING, DEFAULT_NODE_DISTANCE } from './constants';
-import { DEFAULT_MAX_COMPOSITE_DEPTH } from './constants';
+import {
+  resolveArrowRegistry,
+  resolveBoundaryRegistry,
+  resolveClipRegistry,
+  resolveCompositeRegistry,
+  resolvePathGeneratorRegistry,
+  resolvePathKindRegistry,
+  resolvePatternRegistry,
+  resolveShapeRegistry,
+  resolveThemeRegistry,
+} from '../providers';
+import {
+  DEFAULT_FONT_SIZE,
+  DEFAULT_LABEL_DISTANCE,
+  DEFAULT_LAYOUT_PADDING,
+  DEFAULT_NODE_DISTANCE,
+  DEFAULT_MAX_COMPOSITE_DEPTH,
+} from './constants';
 import { DEFAULT_MAX_CLIP_DEPTH } from './resource';
 import { createRound, DEFAULT_PRECISION } from './scene';
 import { fallbackMeasurer } from './text';
@@ -29,7 +36,7 @@ import type { CompileOptions } from './types';
 /** 编译能力定义、稳定配置与宿主服务；不持有输入树或本次资源工作区 */
 export type CompileEnvironment = Readonly<{
   /** Core 主题风格注册表 */
-  themeStyles: ReadonlyMap<string, ThemeStyleDefinition>;
+  themeDefinitions: ReadonlyMap<string, ThemeDefinition>;
   /** 文字度量函数 */
   measureText: NonNullable<CompileOptions['measureText']>;
   /** 运行时注入的 TeX lowering 钩子 */
@@ -93,10 +100,10 @@ export const createCompileEnvironment = (options: CompileEnvironmentOptions = {}
 
   const patterns = resolvePatternRegistry(options.patterns);
   const composites = resolveCompositeRegistry(options.composites);
-  const themeStyles = resolveThemeStyleRegistry(options.themeStyles);
+  const themeDefinitions = resolveThemeRegistry(options.themeDefinitions);
 
   return Object.freeze({
-    themeStyles,
+    themeDefinitions,
     measureText: options.measureText ?? fallbackMeasurer,
     lowerTex: options.lowerTex,
     composites,

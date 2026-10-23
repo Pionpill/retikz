@@ -168,10 +168,19 @@ describe('resolveNode', () => {
 
       defaults: {
         style: { color: 'red' },
-        label: {
-          textColor: 'blue',
-          opacity: 0.5,
-          font: { family: 'default', size: 20, weight: 'bold' },
+        node: {
+          label: {
+            textColor: 'blue',
+            opacity: 0.5,
+            font: { family: 'default', size: 20, weight: 'bold' },
+          },
+        },
+        path: {
+          label: {
+            textColor: 'blue',
+            opacity: 0.5,
+            font: { family: 'default', size: 20, weight: 'bold' },
+          },
         },
       },
     });

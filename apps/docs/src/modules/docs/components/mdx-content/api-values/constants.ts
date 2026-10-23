@@ -13,7 +13,7 @@ import {
   FontWeightKeyword,
   PathLabelPosition,
   NodeTextAlign,
-  PathCloseMode,
+  CirclePathCloseMode,
   PathFillRule,
   BuiltinPathKind,
   PathLineCap,
@@ -224,8 +224,8 @@ export const API_VALUE_REGISTRY = {
   PairMeasureOperationKind: {
     values: Object.values(PairMeasureOperationKind),
   },
-  PathCloseMode: {
-    values: Object.values(PathCloseMode),
+  CirclePathCloseMode: {
+    values: Object.values(CirclePathCloseMode),
   },
   PathCurve: {
     values: Object.values(PathCurve),

@@ -11,22 +11,9 @@ import type {
 } from '../../contract';
 import { ChannelDefinitionKind, markProperty, labelEntries, labelEncodingBindings } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import type { IRPlotMarkOperation, IRPlotLabelEncoding } from '../../schemas';
+import type { IRPlotMark, IRPlotLabelEncoding } from '../../schemas';
 import { resolveMarkOperation } from '../mark';
 import type { ChannelResolveContext } from './types';
-
-const assertChannelDelivery = (definition: AnyChannelDefinition): void => {
-  if (
-    (definition.kind === ChannelDefinitionKind.Scope ||
-      definition.kind === ChannelDefinitionKind.Node ||
-      definition.kind === ChannelDefinitionKind.Path) &&
-    typeof definition.deliver !== 'function'
-  ) {
-    throw new RetikzPlotError(
-      `lowerPlots: custom ${definition.kind} channel "${definition.channel}" must provide deliver (how its resolved value lands on the core ${definition.kind})`,
-    );
-  }
-};
 
 const definitionContextOf = (context: ChannelResolveContext): ChannelDefinitionResolveContext => ({
   node: context.node,
@@ -45,7 +32,20 @@ export const resolveChannelDefinition = (
 ): AnyChannelDefinition | undefined => context.channelRegistry.get(channel);
 
 /** 解析当前 mark 可消费的 channel definition，并组装 values/default/delivery/descriptor */
-export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelResolveContext): MarkChannels => {
+export const resolveMarkChannels = (mark: IRPlotMark, context: ChannelResolveContext): MarkChannels => {
+  const assertChannelDelivery = (definition: AnyChannelDefinition): void => {
+    if (
+      (definition.kind === ChannelDefinitionKind.Scope ||
+        definition.kind === ChannelDefinitionKind.Node ||
+        definition.kind === ChannelDefinitionKind.Path) &&
+      typeof definition.deliver !== 'function'
+    ) {
+      throw new RetikzPlotError(
+        `lowerPlots: custom ${definition.kind} channel "${definition.channel}" must provide deliver (how its resolved value lands on the core ${definition.kind})`,
+      );
+    }
+  };
+
   const operationResolution = resolveMarkOperation(mark, { registry: context.markRegistry });
   const operation = operationResolution.operation;
   const channelKinds = operationResolution.definition.channelKinds?.(operation as never);
@@ -70,7 +70,12 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
     if (structuredTargets.has(channel)) continue;
     const definition = context.channelRegistry.get(channel);
     if (!definition) throw new RetikzPlotError(`lowerPlots: channel "${channel}" is not registered`);
-    if (channelKinds !== undefined && !channelKinds.has(definition.kind))
+    if (
+      channelKinds !== undefined &&
+      !context.channelRegistry.definitions.some(
+        candidate => candidate.channel === channel && channelKinds.has(candidate.kind),
+      )
+    )
       throw new RetikzPlotError(`lowerPlots: mark "${mark.type}" does not consume channel "${channel}"`);
   }
 
@@ -98,11 +103,7 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
 
   const definitionContext = definitionContextOf(context);
   const labelDeliveries: Array<LabelChannelDelivery> = [];
-  const labelSource = mark.encodings?.label as
-    | string
-    | IRPlotLabelEncoding
-    | Array<string | IRPlotLabelEncoding>
-    | undefined;
+  const labelSource = mark.encodings?.label;
   const host = operationResolution.definition.labelHost;
   for (const [index, label] of labelEntries<IRPlotLabelEncoding>(labelSource).entries()) {
     for (const [target, binding] of labelEncodingBindings(label)) {

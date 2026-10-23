@@ -78,7 +78,7 @@ export const lowerRelation = (
 
     return {
       ...label,
-      ...(label.placement === undefined && label.side === undefined ? { placement: 'inside' as const } : {}),
+      ...(label.side === undefined ? { side: 'center' as const } : {}),
       ...(textColor === undefined ? {} : { textColor }),
       ...(font === undefined ? {} : { font }),
       opacity,

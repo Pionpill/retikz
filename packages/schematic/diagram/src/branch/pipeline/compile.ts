@@ -90,7 +90,7 @@ export const compileBranchDiagram = (
     const relation = relations.get(JSON.stringify([segment.source, segment.target]))!.source;
     children.push({
       ...relation,
-      roundedCorners: segment.cornerRadius,
+      cornerRadius: segment.cornerRadius,
       route: [
         { type: 'step', kind: 'move', to: relation.source },
         ...segment.points

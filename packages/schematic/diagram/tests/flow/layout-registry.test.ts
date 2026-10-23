@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
 import type { FlowLayoutDefinition } from '../../src/flow';
 import { defineFlowLayout, FlowDiagramSchema, getFlowLayoutCatalog } from '../../src/flow';
-import { resolveFlowLayoutRegistry, resolveFlowThemeStyleRegistry } from '../../src/flow/providers';
+import { resolveFlowLayoutRegistry, resolveFlowThemeRegistry } from '../../src/flow/providers';
 import { assertFlowLayoutCapabilities, deriveFlowLayoutCapabilities, resolveFlowDiagram } from '../../src/flow/resolve';
 import { parseTestFlowDiagram } from './fixtures';
 
@@ -107,7 +107,7 @@ describe('Flow Layout capability preflight', () => {
     });
     const canonical = resolveFlowDiagram(source, {
       theme: DEFAULT_RESOLVED_THEME,
-      flowThemeStyles: resolveFlowThemeStyleRegistry(),
+      flowThemeDefinitions: resolveFlowThemeRegistry(),
     });
 
     expect(deriveFlowLayoutCapabilities(customDefinition(), canonical).map(item => item.name)).toEqual([
@@ -141,7 +141,7 @@ describe('Flow Layout capability preflight', () => {
     });
     const canonical = resolveFlowDiagram(source, {
       theme: DEFAULT_RESOLVED_THEME,
-      flowThemeStyles: resolveFlowThemeStyleRegistry(),
+      flowThemeDefinitions: resolveFlowThemeRegistry(),
     });
 
     try {

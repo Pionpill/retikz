@@ -43,8 +43,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '自定义 Entity kind definitions': 'Custom Entity kind definitions',
   '自定义 Entity predicate definitions': 'Custom Entity predicate definitions',
   '自定义 Entity role definitions': 'Custom Entity role definitions',
-  '与 Core Theme style 同名的 Graph Theme definitions':
-    'Graph Theme definitions named after their corresponding Core Theme styles',
+  '与 Core Theme 同名的 Graph Theme definitions': 'Graph Theme definitions named after their corresponding Core Themes',
   '自定义 Relation kind definitions': 'Custom Relation kind definitions',
   '自定义 Relation predicate definitions': 'Custom Relation predicate definitions',
   '自定义 Relation role definitions': 'Custom Relation role definitions',

@@ -1,4 +1,4 @@
-import type { BlendMode, IRDropShadow, PaintValue, ResolvedArrowEnd, ScenePrimitive } from '@retikz/core';
+import type { BlendMode, IRDropShadow, PaintValue, PathPrim, ResolvedArrowEnd, ScenePrimitive } from '@retikz/core';
 
 import { firstLineDy } from '../../shared';
 import { buildPathD } from '../path-d-builder';
@@ -14,6 +14,16 @@ type DominantBaseline = 'text-before-edge' | 'central' | 'text-after-edge' | 'al
  * @description 资源缺省时回退裸 `url(#id)`（无实例前缀）；arrow marker 缺省不引用
  */
 export type BuildContext = {
+  /** 文档容器定位箭头后，复用普通图元绘制内容 */
+  arrowContentFor?: (primitive: PathPrim) => Array<SvgNode>;
+  /** 资源局部绘制上下文中最近路径的描边 */
+  contextStroke?: PaintValue;
+  /** 解析主树图元所属的宿主上下文 */
+  forPrimitive?: (primitive: ScenePrimitive) => BuildContext;
+  /** 资源内容不将局部身份写入宿主 DOM 索引 */
+  resourceContent?: boolean;
+  /** 资源使用处继承的播放宿主 */
+  hostId?: string;
   /** 按 arrow 端点 spec 查 `<marker id>` id 的回调（按 detail hash 区分起末异形 / 异色） */
   arrowMarkerIdFor?: (spec: ResolvedArrowEnd) => string;
   /** paint 资源 id → `url(#...)` 引用（加实例前缀避免跨实例撞）；缺省 `url(#id)` */
@@ -112,11 +122,15 @@ const shadowFilterRef = (
  */
 const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
   const paintRefUrl = context.paintRefUrl ?? ((id: string) => `url(#${id})`);
+  const bindPaint = (paint: PaintValue | undefined): PaintValue | undefined =>
+    typeof paint === 'object' && paint.kind === 'contextStroke' && context.contextStroke !== undefined
+      ? context.contextStroke
+      : paint;
 
   switch (p.type) {
     case 'rect': {
-      const f = paintToSvg(p.fill, paintRefUrl);
-      const s = paintToSvg(p.stroke, paintRefUrl);
+      const f = paintToSvg(bindPaint(p.fill), paintRefUrl);
+      const s = paintToSvg(bindPaint(p.stroke), paintRefUrl);
 
       return withStyle(
         {
@@ -134,6 +148,8 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
             'stroke-width': p.strokeWidth,
             'stroke-dasharray': p.dashPattern?.join(' '),
             'stroke-dashoffset': p.dashOffset,
+            'stroke-linecap': p.strokeLinecap,
+            'stroke-linejoin': p.strokeLinejoin,
             rx: p.cornerRadius,
             ry: p.cornerRadius,
             opacity: p.opacity,
@@ -145,8 +161,8 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
     }
     case 'ellipse': {
       const transform = p.rotate ? `rotate(${p.rotate} ${p.cx} ${p.cy})` : undefined;
-      const f = paintToSvg(p.fill, paintRefUrl);
-      const s = paintToSvg(p.stroke, paintRefUrl);
+      const f = paintToSvg(bindPaint(p.fill), paintRefUrl);
+      const s = paintToSvg(bindPaint(p.stroke), paintRefUrl);
 
       return withStyle(
         {
@@ -165,6 +181,8 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
             'stroke-width': p.strokeWidth,
             'stroke-dasharray': p.dashPattern?.join(' '),
             'stroke-dashoffset': p.dashOffset,
+            'stroke-linecap': p.strokeLinecap,
+            'stroke-linejoin': p.strokeLinejoin,
             opacity: p.opacity,
             filter: shadowFilterRef(p.shadow, context.shadowIdFor),
           }),
@@ -220,8 +238,8 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
     case 'path': {
       const startId = p.arrowStart && context.arrowMarkerIdFor ? context.arrowMarkerIdFor(p.arrowStart) : undefined;
       const endId = p.arrowEnd && context.arrowMarkerIdFor ? context.arrowMarkerIdFor(p.arrowEnd) : undefined;
-      const f = paintToSvg(p.fill, paintRefUrl);
-      const s = paintToSvg(p.stroke, paintRefUrl);
+      const f = paintToSvg(bindPaint(p.fill), paintRefUrl);
+      const s = paintToSvg(bindPaint(p.stroke), paintRefUrl);
 
       return withStyle(
         {
@@ -274,8 +292,37 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
  *   transform wrapper `<g>`）；无 decorate（动画关闭或无 animations）时原样返回 base
  */
 export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNode => {
-  const node = buildPrimRaw(p, context);
-  const decorated = context.decorate ? context.decorate(node, p) : node;
+  context = context.forPrimitive?.(p) ?? context;
+  let node = buildPrimRaw(p, context);
+  if (p.type === 'path' && context.arrowContentFor && (p.arrowStart || p.arrowEnd)) {
+    const arrows = context.arrowContentFor(p);
+    const pathTracks = p.animations?.filter(track => track.property === 'pathDraw');
+    const attrs = compact({
+      'data-retikz-id': node.attrs['data-retikz-id'],
+      opacity: node.attrs.opacity,
+      filter: node.attrs.filter,
+    });
+    delete node.attrs['data-retikz-id'];
+    delete node.attrs.opacity;
+    delete node.attrs.filter;
+    if (context.resourceContent && pathTracks?.length && context.hostId !== undefined) {
+      node.attrs['data-retikz-animation-owner'] = context.hostId;
+    }
+    const pathNode =
+      context.decorate && pathTracks?.length
+        ? context.decorate(node, { ...p, id: context.resourceContent ? context.hostId : p.id, animations: pathTracks })
+        : node;
+    node = { tag: 'g', attrs, children: [pathNode, ...arrows] };
+    p = { ...p, animations: p.animations?.filter(track => track.property !== 'pathDraw') };
+  }
+  if (context.resourceContent) {
+    delete node.attrs['data-retikz-id'];
+    if (p.animations?.length && context.hostId !== undefined) {
+      node.attrs['data-retikz-animation-owner'] = context.hostId;
+    }
+  }
+  const animationPrimitive = context.resourceContent ? { ...p, id: context.hostId } : p;
+  const decorated = context.decorate ? context.decorate(node, animationPrimitive) : node;
   if (p.hitTest === false) decorated.attrs['pointer-events'] = 'none';
 
   return decorated;

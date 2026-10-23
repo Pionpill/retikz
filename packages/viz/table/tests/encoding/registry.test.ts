@@ -25,11 +25,10 @@ describe('Cell visual scale registry', () => {
     expect(() => cellVisualScaleDefinitionOf('missing', registry)).toThrow(/not registered/i);
   });
 
-  it('fails loud for empty, duplicate, and built-in-conflicting names', () => {
+  it('fails loud for duplicate and built-in-conflicting names', () => {
     expect(() => resolveCellVisualScaleRegistry([customScale('same'), customScale('same')])).toThrow(
       /duplicate.*same/i,
     );
     expect(() => resolveCellVisualScaleRegistry([customScale('ordinal-color')])).toThrow(/duplicate.*ordinal-color/i);
-    expect(() => resolveCellVisualScaleRegistry([customScale('  ')])).toThrow(/non-empty/i);
   });
 });

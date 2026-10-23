@@ -12,14 +12,11 @@ const CircuitDemo: FC = () => (
   <Layout extensions={{ shapes: [...circuitShapes, circuitMeter] }}>
     <Scope
       defaults={{
+        node: { style: { font: FONT, stroke: 'none' }, layout: { padding: 0 }, label: { font: { ...FONT, size: 14 } } },
         path: {
           style: { stroke: INK, strokeWidth: 1.5, lineCap: 'round', lineJoin: 'round' },
+          label: { font: { ...FONT, size: 14 } },
         },
-        node: {
-          style: { font: FONT, stroke: 'none' },
-          layout: { padding: 0 },
-        },
-        label: { font: { ...FONT, size: 14 } },
       }}
     >
       <Switch id="switch" position={[175, 100]} />

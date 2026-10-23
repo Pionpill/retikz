@@ -40,7 +40,7 @@ export const PlotPaletteResolutionSchema = strictObject({
 
 /** Plot-owned defaults resolution 与 inspection 契约 */
 export const PlotThemeResolutionSchema = strictObject({
-  style: NonBlankStringSchema.optional().describe('Optional Core Theme style selecting a Plot definition'),
+  name: NonBlankStringSchema.optional().describe('Optional Core Theme selecting a Plot definition'),
   mode: zodEnum(ThemeMode).describe('Effective Core Theme mode selecting the Neutral Plot defaults'),
   defaults: PlotDefaultsSchema.describe('Resolved Plot defaults before dimension-specific Axis rules'),
   layers: array(PlotDefaultsSourceRecordSchema).min(1).describe('Plot defaults sources in their actual cascade order'),

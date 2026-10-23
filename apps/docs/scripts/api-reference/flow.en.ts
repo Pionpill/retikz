@@ -115,10 +115,10 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   'RetikzDiagramError 布局定义无效、名称冲突或默认布局未注册时抛出':
     'RetikzDiagramError is thrown for an invalid layout definition, conflicting names, or an unregistered default layout',
   '不含 namespace 与 type 的类型化 Flow 声明': 'Typed Flow declarations without namespace and type',
-  '与 Core Theme style 同名的 Diagram Theme definitions；使用命名主题时需提供匹配定义':
-    'Diagram Theme definitions with the same name as a Core Theme style; a named theme requires a matching definition',
-  '与 Core Theme style 同名的 Flow Theme definitions；使用命名主题时需提供匹配定义':
-    'Flow Theme definitions with the same name as a Core Theme style; a named theme requires a matching definition',
+  '与 Core Theme 同名的 Diagram Theme definitions；使用命名主题时需提供匹配定义':
+    'Diagram Theme definitions with the same name as a Core Theme; a named theme requires a matching definition',
+  '与 Core Theme 同名的 Flow Theme definitions；使用命名主题时需提供匹配定义':
+    'Flow Theme definitions with the same name as a Core Theme; a named theme requires a matching definition',
   传入的同一个布局定义对象: 'The same layout definition object passed in',
   '保留 input 对象引用的 embed 节点，不在此处执行布局':
     'An embed node that retains the input object reference without running layout here',
@@ -163,8 +163,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   'Flow 批量 Entity 的 React 编写参数': 'React authoring props for a batch of Flow Entities',
   'Flow 批量 Relation 的 React 编写参数': 'React authoring props for a batch of Flow Relations',
   'FlowDiagram React 编写参数': 'React authoring props for FlowDiagram',
-  '与 Core Theme style 同名的 Flow Theme definitions': 'Flow Theme definitions sharing a Core Theme style name',
-  '与 Core Theme style 同名的 Graph Theme definitions': 'Graph Theme definitions sharing a Core Theme style name',
+  '与 Core Theme 同名的 Flow Theme definitions': 'Flow Theme definitions sharing a Core Theme name',
+  '与 Core Theme 同名的 Graph Theme definitions': 'Graph Theme definitions sharing a Core Theme name',
   '从同一次真实 registry 投影稳定的 JSON-safe catalog': 'Project a stable JSON-safe catalog from the live registry',
   '创建 Flow Diagram Source root 的 authoring embed 节点': 'Create an authoring embed for a Flow Diagram Source root',
   '创建 Flow Diagram 及全部 Graph / Foundation 依赖的完整provider contribution':

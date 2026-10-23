@@ -1,4 +1,3 @@
-import { NodeOwnerOutputSchema } from '../../contract';
 import type { IRNode } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect } from '../../shared/geometry';
@@ -41,7 +40,7 @@ export const compileNode = (input: IRNode, context: NodeCompileContext): Element
               },
             ]
           : [],
-        observations: collectElementObservation(context, { kind: 'node' }, NodeOwnerOutputSchema, () =>
+        observations: collectElementObservation(context, { kind: 'node' }, () =>
           projectNodeOwnerOutput(layout, context.environment.round, workspace.nodeGeometry),
         ),
         bounds: [

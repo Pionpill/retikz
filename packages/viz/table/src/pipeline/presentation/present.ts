@@ -1,5 +1,4 @@
 import type { IRChild } from '@retikz/core';
-import { ChildSchema } from '@retikz/core';
 
 import type { AnyCellPresentationDefinition, CellPresentationInput } from '../../contract';
 import { RetikzTableError } from '../../error';
@@ -9,11 +8,6 @@ import type { DeepReadonly } from '../../shared';
 import { deepFreeze } from '../../shared';
 
 const errorMessageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));
-
-/** 把未知内容收窄为 detached、递归冻结的 Core child */
-export const parsePresentedChild = (value: unknown): IRChild => {
-  return deepFreeze(ChildSchema.parse(value));
-};
 
 /** 把有实际效果的 content style 应用为单层匿名 Core Scope */
 export const applyTableCellContentStyle = (
@@ -52,7 +46,7 @@ export const presentCellValue = (
   try {
     const definition = cellPresentationDefinitionOf(name, registry);
     const parsedOptions = deepFreeze(definition.optionsSchema.parse(presentation.options ?? {}));
-    return parsePresentedChild(definition.present(input, parsedOptions as never));
+    return deepFreeze(structuredClone(definition.present(input, parsedOptions as never)));
   } catch (error) {
     throw new RetikzTableError(`${prefix}: ${errorMessageOf(error)}`, { cause: error });
   }

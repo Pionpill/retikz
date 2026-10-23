@@ -108,6 +108,6 @@ export const chartThemeDefinitionsOf = (
   theme: ResolvedTheme,
   themes: ReadonlyMap<string, ChartThemeDefinition>,
 ): ReadonlyArray<ChartThemeDefinition> => {
-  if (theme.style === undefined) return [];
-  return chartThemeChainOf(theme.style, themes, ['theme', 'style']);
+  if (theme.name === undefined) return [];
+  return chartThemeChainOf(theme.name, themes, ['theme', 'name']);
 };

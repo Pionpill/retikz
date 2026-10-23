@@ -358,7 +358,7 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
     expect(scene.resources).toBeUndefined();
   });
 
-  it('arrow × gradient stroke：未显式 arrow 纯色时 fail-loud', () => {
+  it('arrow × gradient stroke：未覆盖箭头颜色时复用路径绘制资源', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -375,7 +375,12 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
       ],
     };
 
-    expect(() => compileToScene(ir).scene).toThrow(/arrow.*stroke.*IRPaint|IRPaint.*arrow/i);
+    const scene = compileToScene(ir).scene;
+    const path = pathsOf(scene.primitives)[0];
+
+    expect(path.stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
+    expect(path.arrowEnd?.marker[0]).toMatchObject({ fill: { kind: 'contextStroke' } });
+    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: grad }]);
   });
 
   it('arrow × gradient stroke：显式 arrowDetail.color 时允许，marker 使用纯色', () => {

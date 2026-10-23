@@ -162,7 +162,7 @@ Each column uses one width setting: short text above and the same longer sentenc
 
 <ComponentPreview files="node-width-comparison" size="md" />
 
-A fixed width must accommodate the effective minimum size, padding, and shape geometry. If an unbreakable word or mixed content still cannot fit, compilation fails rather than clipping it or shrinking its font. See [text](/kernel/components/node/text#multiple-lines-and-wrapping) for multiline and mixed-run limits.
+A fixed width must accommodate the effective minimum size, padding, and shape geometry. If an unbreakable word or mixed content still cannot fit, compilation fails rather than clipping it or shrinking its font. See [text](/kernel/components/node/text#multiple-lines-and-wrapping) for multiline and mixed-segment limits.
 
 ## Additional notes
 
@@ -256,7 +256,11 @@ The following are the props most relevant to this page. See the [API reference](
       description: 'Choose positions, anchors, and connection surfaces',
       url: '/kernel/components/node/extend',
     },
-    { title: 'Node text', description: 'Write multi-line content and mixed runs', url: '/kernel/components/node/text' },
+    {
+      title: 'Node text',
+      description: 'Write multi-line content and mixed segments',
+      url: '/kernel/components/node/text',
+    },
     {
       title: 'label · Label',
       description: 'Place annotations and leader lines',

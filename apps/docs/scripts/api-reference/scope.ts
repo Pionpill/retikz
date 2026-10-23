@@ -12,11 +12,10 @@ const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 export const scopeSchemaLocalizations = {
   ScopeSchema: {
     descriptions: {
-      frame: '位于子图下方的固有包络装饰，不参与布局或命中',
       'defaults.style': '后代共享视觉默认值，逐字段继承与覆盖',
       defaults: '后代默认值通道及继承屏障',
       type: '判别字段，标记此子节点为 scope',
-      theme: '当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色',
+      theme: '当前子树的稀疏 Theme 覆盖；name 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色',
       'defaults.style.color': '作用域级主色；可向 node、path、label 与 arrow 的对应颜色字段级联',
       'defaults.style.fill': '作用域级默认填充；CSS color 字符串或 IRPaint',
       'defaults.style.opacity.fill': '作用域级默认填充不透明度 0..1',
@@ -29,10 +28,11 @@ export const scopeSchemaLocalizations = {
       transforms: '依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析',
       position: '父坐标系中的原点位置，或局部变换后的锚点对齐；缺省为 [0, 0]',
       'defaults.node': '只作用于 node 的默认样式；不包含 id、position、text 等结构字段',
-      'defaults.path': '只作用于 path-like drawable 的默认样式；箭头使用独立 defaults.arrow 通道',
-      'defaults.label': 'node label 与 step / geometry label 共用的默认文字样式',
-      'defaults.arrow': '箭头默认外观，字段与 ArrowDetailSchema 相同',
-      'defaults.reset': '样式继承屏障：true 重置全部通道，或列出 node / path / label / arrow 中需要重置的通道',
+      'defaults.path': '路径主体、标签与箭头的默认配置',
+      'defaults.node.label': '已有节点标签的完整非内容默认配置，不创建标签',
+      'defaults.path.label': '已有路径和步骤标签的完整非内容默认配置',
+      'defaults.path.arrow': '箭头默认外观，字段与 ArrowDetailSchema 相同',
+      'defaults.reset': '样式继承屏障：true 重置全部通道，或列出 node / path（包含各自装饰） 中需要重置的通道',
       zIndex: 'scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序',
       clip: '以 scope 局部坐标描述的裁剪区域',
       boundingShape: '给 scope id 生成的合成引用边界：rectangle 或 circle',
@@ -40,9 +40,6 @@ export const scopeSchemaLocalizations = {
       animations: '作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承',
       children: '可递归包含 node、path、coordinate、scope 或 Tier 2 composite',
     },
-  },
-  ScopeFrameSchema: {
-    descriptions: { padding: '均匀装饰间距，默认 0；不参与布局', style: '独立外框样式，仅共享有效颜色上下文' },
   },
   ScopeAnchorPositionSchema: {
     descriptions: {
@@ -55,10 +52,11 @@ export const scopeSchemaLocalizations = {
     descriptions: {
       style: '后代共享视觉默认值，逐字段继承与覆盖',
       node: '节点默认样式，与其他通道独立',
-      path: '路径类图元默认样式；箭头使用独立 arrow 通道',
-      label: '节点标签与步骤标签的默认文字样式',
-      arrow: '箭头默认样式',
-      reset: '继承屏障：true 重置全部通道，或列出 node、path、label、arrow 中需要重置的通道',
+      path: '路径主体、已有标签与箭头的默认配置',
+      'node.label': '已有节点标签的完整非内容默认配置',
+      'path.label': '已有路径与步骤标签的完整非内容默认配置',
+      'path.arrow': '已有箭头的默认配置，不创建箭头',
+      reset: '继承屏障：true 重置全部通道，或列出 node、path 中需要重置的通道',
     },
   },
 };
@@ -123,7 +121,6 @@ export const scopeApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> 
         symbols: [
           'IRScope',
           'IRScopeProps',
-          'IRScopeFrame',
           'IRScopePosition',
           'IRScopeAnchorPosition',
           'IRScopePositionTarget',

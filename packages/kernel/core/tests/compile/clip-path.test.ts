@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { array, enum as zodEnum, literal, strictObject } from 'zod';
+import { literal, strictObject } from 'zod';
 
-import type { ClipDefinition, ClipResource, ClipShape, IRClip, IRClipFillRule, IRScene, PathCommand } from '../../src';
-import { compileToScene, defineClip, PathCommandSchema } from '../../src';
+import type { ClipDefinition, ClipResource, ClipShape, IRClip, ClipFillRule, IRScene, PathCommand } from '../../src';
+import { compileToScene, defineClip } from '../../src';
 
 type TestPathClipShape = ClipShape & {
   kind: string;
   commands: Array<PathCommand>;
-  fillRule?: IRClipFillRule;
+  fillRule?: ClipFillRule;
 };
 
 const clippedIr = (clip: IRClip): IRScene => ({
@@ -16,7 +16,7 @@ const clippedIr = (clip: IRClip): IRScene => ({
   children: [{ type: 'scope', clip, children: [{ type: 'node', position: [0, 0], text: 'A' }] }],
 });
 
-const pathOperation = (kind: string, commands: Array<PathCommand>, fillRule?: IRClipFillRule): ClipDefinition =>
+const pathOperation = (kind: string, commands: Array<PathCommand>, fillRule?: ClipFillRule): ClipDefinition =>
   defineClip({
     kind,
     schema: strictObject({ kind: literal(kind) }),
@@ -28,17 +28,12 @@ const pathOperation = (kind: string, commands: Array<PathCommand>, fillRule?: IR
       };
       return shape;
     },
-    shapeSchema: strictObject({
-      kind: literal(kind),
-      commands: array(PathCommandSchema),
-      fillRule: zodEnum(['nonzero', 'evenodd']).optional(),
-    }),
     lower: shape => ({ commands: shape.commands, fillRule: shape.fillRule ?? 'nonzero' }),
   });
 
 const compilePath = (
   commands: Array<PathCommand>,
-  options: Readonly<{ fillRule?: IRClipFillRule; precision?: number }> = {},
+  options: Readonly<{ fillRule?: ClipFillRule; precision?: number }> = {},
 ): ClipResource['path'] => {
   const kind = 'testPath';
   const scene = compileToScene(clippedIr({ kind }), {

@@ -1,5 +1,4 @@
 import type { ClipOwnerOutput, IRChild, IRPosition, PathCommand } from '@retikz/core';
-import { ClipOwnerOutputSchema } from '@retikz/core';
 import { mergeProperties } from '@retikz/foundation';
 import type { output as ZodOutput } from 'zod';
 
@@ -44,7 +43,6 @@ const firstPathPosition = (commands: ReadonlyArray<PathCommand>): IRPosition | u
 export const CLIP_INSPECTOR = defineInspector({
   ...CLIP_INSPECTOR_KEY,
   owner: { kind: 'clip' },
-  subjectSchema: ClipOwnerOutputSchema,
   optionsSchema: ClipInspectOptionsSchema,
   mergeOptionsInput: (inherited, local) => ({
     ...inherited,

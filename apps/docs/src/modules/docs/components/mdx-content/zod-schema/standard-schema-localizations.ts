@@ -83,11 +83,12 @@ const pageLocalizations = {
       '/union/0/field/"animations"': '作用于容器整体的动画轨道，不影响布局，也不向子图元传播',
       '/union/0/field/"defaults"': '后代默认样式及其继承屏障',
       '/union/0/field/"defaults"/field/"node"': '节点默认样式，与其他通道独立',
-      '/union/0/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
-      '/union/0/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
-      '/union/0/field/"defaults"/field/"arrow"': '箭头默认样式',
+      '/union/0/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.path.arrow',
+      '/union/0/field/"defaults"/field/"node"/field/"label"': '节点标签与路径步骤标签的默认样式',
+      '/union/0/field/"defaults"/field/"path"/field/"label"': '节点标签与路径步骤标签的默认样式',
+      '/union/0/field/"defaults"/field/"path"/field/"arrow"': '箭头默认样式',
       '/union/0/field/"defaults"/field/"reset"':
-        '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
+        '默认样式继承屏障：true 重置全部，或指定 node、path（包含各自装饰） 通道',
       '/union/0/field/"items"': '按顺序排列的单元格；字符串默认只提供文字',
       '/union/0/field/"cellIdMode"':
         '身份来源：explicit 仅显式 id，string 使用 items 字符串，index 由 Array id 与零基下标生成',
@@ -173,11 +174,12 @@ const pageLocalizations = {
       '/union/1/field/"animations"': '作用于容器整体的动画轨道，不影响布局，也不向子图元传播',
       '/union/1/field/"defaults"': '后代默认样式及其继承屏障',
       '/union/1/field/"defaults"/field/"node"': '节点默认样式，与其他通道独立',
-      '/union/1/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
-      '/union/1/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
-      '/union/1/field/"defaults"/field/"arrow"': '箭头默认样式',
+      '/union/1/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.path.arrow',
+      '/union/1/field/"defaults"/field/"node"/field/"label"': '节点标签与路径步骤标签的默认样式',
+      '/union/1/field/"defaults"/field/"path"/field/"label"': '节点标签与路径步骤标签的默认样式',
+      '/union/1/field/"defaults"/field/"path"/field/"arrow"': '箭头默认样式',
       '/union/1/field/"defaults"/field/"reset"':
-        '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
+        '默认样式继承屏障：true 重置全部，或指定 node、path（包含各自装饰） 通道',
       '/union/1/field/"items"': '此分支禁止显式单元格',
       '/union/1/field/"data"': '递归展示 JSON 数组，默认不推导单元格 id',
       '/union/1/field/"dataExpand"':
@@ -261,11 +263,12 @@ const pageLocalizations = {
       '/union/2/field/"animations"': '作用于容器整体的动画轨道，不影响布局，也不向子图元传播',
       '/union/2/field/"defaults"': '后代默认样式及其继承屏障',
       '/union/2/field/"defaults"/field/"node"': '节点默认样式，与其他通道独立',
-      '/union/2/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
-      '/union/2/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
-      '/union/2/field/"defaults"/field/"arrow"': '箭头默认样式',
+      '/union/2/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.path.arrow',
+      '/union/2/field/"defaults"/field/"node"/field/"label"': '节点标签与路径步骤标签的默认样式',
+      '/union/2/field/"defaults"/field/"path"/field/"label"': '节点标签与路径步骤标签的默认样式',
+      '/union/2/field/"defaults"/field/"path"/field/"arrow"': '箭头默认样式',
       '/union/2/field/"defaults"/field/"reset"':
-        '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
+        '默认样式继承屏障：true 重置全部，或指定 node、path（包含各自装饰） 通道',
       '/union/2/field/"cellIdMode"': '身份来源：explicit 默认不生成 id，index 由 Array id 与零基下标生成；禁止 string',
       '/union/2/field/"defaultCell"/field/"style"': 'Array / Map 单元格的稀疏外观覆盖',
       '/union/2/field/"defaultCell"/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
@@ -357,11 +360,12 @@ const pageLocalizations = {
       '/union/0/field/"animations"': '作用于容器整体的动画轨道，不影响布局，也不向子图元传播',
       '/union/0/field/"defaults"': '后代默认样式及其继承屏障',
       '/union/0/field/"defaults"/field/"node"': '节点默认样式，与其他通道独立',
-      '/union/0/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
-      '/union/0/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
-      '/union/0/field/"defaults"/field/"arrow"': '箭头默认样式',
+      '/union/0/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.path.arrow',
+      '/union/0/field/"defaults"/field/"node"/field/"label"': '节点标签与路径步骤标签的默认样式',
+      '/union/0/field/"defaults"/field/"path"/field/"label"': '节点标签与路径步骤标签的默认样式',
+      '/union/0/field/"defaults"/field/"path"/field/"arrow"': '箭头默认样式',
       '/union/0/field/"defaults"/field/"reset"':
-        '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
+        '默认样式继承屏障：true 重置全部，或指定 node、path（包含各自装饰） 通道',
       '/union/0/field/"entries"': '按顺序展示的键值对，不是 JavaScript Map',
       '/union/0/field/"entries"/array/field/"key"': '键单元格',
       '/union/0/field/"entries"/array/field/"key"/union/1/field/"id"': '当前容器内唯一的可选单元格 id',
@@ -531,11 +535,12 @@ const pageLocalizations = {
       '/union/1/field/"animations"': '作用于容器整体的动画轨道，不影响布局，也不向子图元传播',
       '/union/1/field/"defaults"': '后代默认样式及其继承屏障',
       '/union/1/field/"defaults"/field/"node"': '节点默认样式，与其他通道独立',
-      '/union/1/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
-      '/union/1/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
-      '/union/1/field/"defaults"/field/"arrow"': '箭头默认样式',
+      '/union/1/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.path.arrow',
+      '/union/1/field/"defaults"/field/"node"/field/"label"': '节点标签与路径步骤标签的默认样式',
+      '/union/1/field/"defaults"/field/"path"/field/"label"': '节点标签与路径步骤标签的默认样式',
+      '/union/1/field/"defaults"/field/"path"/field/"arrow"': '箭头默认样式',
       '/union/1/field/"defaults"/field/"reset"':
-        '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
+        '默认样式继承屏障：true 重置全部，或指定 node、path（包含各自装饰） 通道',
       '/union/1/field/"entries"': '此分支禁止显式单元格',
       '/union/1/field/"data"': '递归展示 JSON 对象，不推导单元格 id',
       '/union/1/field/"dataExpand"':
@@ -635,11 +640,12 @@ const pageLocalizations = {
       '/union/2/field/"animations"': '作用于容器整体的动画轨道，不影响布局，也不向子图元传播',
       '/union/2/field/"defaults"': '后代默认样式及其继承屏障',
       '/union/2/field/"defaults"/field/"node"': '节点默认样式，与其他通道独立',
-      '/union/2/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
-      '/union/2/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
-      '/union/2/field/"defaults"/field/"arrow"': '箭头默认样式',
+      '/union/2/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.path.arrow',
+      '/union/2/field/"defaults"/field/"node"/field/"label"': '节点标签与路径步骤标签的默认样式',
+      '/union/2/field/"defaults"/field/"path"/field/"label"': '节点标签与路径步骤标签的默认样式',
+      '/union/2/field/"defaults"/field/"path"/field/"arrow"': '箭头默认样式',
       '/union/2/field/"defaults"/field/"reset"':
-        '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
+        '默认样式继承屏障：true 重置全部，或指定 node、path（包含各自装饰） 通道',
       '/union/2/field/"defaultCell"/field/"style"': '共同单元格样式及键值角色覆盖',
       '/union/2/field/"defaultCell"/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
       '/union/2/field/"defaultCell"/field/"style"/field/"stroke"': '描边颜色或绘制对象',
@@ -751,7 +757,7 @@ const shapeDescriptions: Record<string, string> = {
   meta: '透传至 Scene 的 JSON 元数据，编译器不解释其内容',
   animations: '作用于图形的声明式动画，不参与布局且不跨作用域继承',
   zIndex: '同级图形的绘制层级，数值越大越靠上',
-  roundedCorners: '线段接头的几何圆角，与描边转角样式独立',
+  cornerRadius: '几何圆角半径；矩形按短边长度的一半限制，折线按相邻线段长度限制',
   rotate: '绕图形包络中心旋转的角度',
   scale: '绕图形包络中心缩放',
   label: '附着于路径的标签',
@@ -778,7 +784,6 @@ const shapeDescriptions: Record<string, string> = {
   width: '矩形宽度',
   height: '矩形高度',
   side: '正方形边长',
-  cornerRadius: '矩形圆角半径，限制为短边长度的一半',
   sides: '正多边形边数，至少为 3',
   sideLength: '正多边形边长',
   points: '星形外顶点数量，至少为 2',
@@ -809,25 +814,25 @@ for (const name of ['AxesSchema', 'FrameSchema', 'SurfaceSchema']) {
   };
 }
 standardSchemaLocalizations.ArcSchema = shapeLocalization(
-  'id meta animations zIndex roundedCorners rotate scale label marks style namespace type center radius startAngle endAngle sweepAngle close',
+  'id meta animations zIndex cornerRadius rotate scale label marks style namespace type center radius startAngle endAngle sweepAngle close',
 );
 standardSchemaLocalizations.CircleSchema = shapeLocalization(
-  'id meta animations zIndex roundedCorners rotate scale label marks style namespace type startAngle endAngle sweepAngle closed center radius diameter from to inset outset fit corner1 corner2 box',
+  'id meta animations zIndex cornerRadius rotate scale label marks style namespace type startAngle endAngle sweepAngle closed center radius diameter from to inset outset fit corner1 corner2 box',
 );
 standardSchemaLocalizations.EllipseSchema = shapeLocalization(
-  'id meta animations zIndex roundedCorners rotate scale label marks style namespace type startAngle endAngle sweepAngle closed center radius diameterX diameterY inset outset corner1 corner2 box',
+  'id meta animations zIndex cornerRadius rotate scale label marks style namespace type startAngle endAngle sweepAngle closed center radius diameterX diameterY inset outset corner1 corner2 box',
 );
 standardSchemaLocalizations.PolygonSchema = shapeLocalization(
-  'id meta animations zIndex roundedCorners rotate scale label marks style namespace type center sides radius sideLength',
+  'id meta animations zIndex cornerRadius rotate scale label marks style namespace type center sides radius sideLength',
 );
 standardSchemaLocalizations.RectangleSchema = shapeLocalization(
-  'id meta animations zIndex roundedCorners rotate scale label marks style namespace type cornerRadius corner1 corner2 center width height side',
+  'id meta animations zIndex cornerRadius rotate scale label marks style namespace type corner1 corner2 center width height side',
 );
 standardSchemaLocalizations.SectorSchema = shapeLocalization(
-  'id meta animations zIndex roundedCorners rotate scale label marks style namespace type startAngle endAngle sweepAngle center radius innerRadius',
+  'id meta animations zIndex cornerRadius rotate scale label marks style namespace type startAngle endAngle sweepAngle center radius innerRadius',
 );
 standardSchemaLocalizations.StarSchema = shapeLocalization(
-  'id meta animations zIndex roundedCorners rotate scale label marks style namespace type center points outerRadius innerRadius innerRatio',
+  'id meta animations zIndex cornerRadius rotate scale label marks style namespace type center points outerRadius innerRadius innerRatio',
 );
 
 const frameHeaderDescriptions = {

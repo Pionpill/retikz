@@ -1,9 +1,5 @@
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import {
-  resolveCoreThemeStyleColors,
-  resolveDefaultCoreThemeColors,
-  resolveThemeStyleRegistry,
-} from '../../providers/theme';
+import { resolveCoreThemeColors, resolveDefaultCoreThemeColors, resolveThemeRegistry } from '../../providers';
 import type { IRTheme } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import { ThemeMode } from '../../shared';
@@ -22,24 +18,24 @@ export const resolveTheme = (
   parent: ResolvedTheme,
   sparse: IRTheme | undefined,
   path: string,
-  styles = resolveThemeStyleRegistry(),
+  definitions = resolveThemeRegistry(),
 ): ResolvedTheme => {
   if (sparse === undefined) return parent;
 
-  const style = sparse.style ?? parent.style;
+  const name = sparse.name ?? parent.name;
   const mode = sparse.mode ?? parent.mode;
-  if (style === parent.style && mode === parent.mode) return parent;
+  if (name === parent.name && mode === parent.mode) return parent;
 
-  if (style === undefined) return Object.freeze({ mode, colors: resolveDefaultCoreThemeColors(mode) });
+  if (name === undefined) return Object.freeze({ mode, colors: resolveDefaultCoreThemeColors(mode) });
 
-  const definition = styles.get(style);
+  const definition = definitions.get(name);
   if (definition === undefined)
-    throw new RetikzCoreError(RetikzCoreErrorCode.Resolve, `Theme style '${style}' is not registered at ${path}.`);
+    throw new RetikzCoreError(RetikzCoreErrorCode.Resolve, `Theme name '${name}' is not registered at ${path}.`);
 
   try {
-    return Object.freeze({ style, mode, colors: resolveCoreThemeStyleColors(mode, definition.resolve({ mode })) });
+    return Object.freeze({ name, mode, colors: resolveCoreThemeColors(mode, definition.resolve({ mode })) });
   } catch (cause) {
-    throw new RetikzCoreError(RetikzCoreErrorCode.Resolve, `Theme style '${style}' resolution failed at ${path}.`, {
+    throw new RetikzCoreError(RetikzCoreErrorCode.Resolve, `Theme name '${name}' resolution failed at ${path}.`, {
       cause,
     });
   }

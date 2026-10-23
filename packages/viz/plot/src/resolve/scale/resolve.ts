@@ -11,8 +11,8 @@ import type {
 import { isBuiltinScaleOperation } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { safeExtent } from '../../providers';
-import type { IRPlotMarkOperation, IRPlotScale, IRPlotScaleOperation } from '../../schemas';
-import { isBuiltinMark, PathClosureKind, BuiltinPlotMark, BuiltinPlotScale } from '../../schemas';
+import type { IRPlotMark, IRPlotScale, IRPlotScaleOperation } from '../../schemas';
+import { PathClosureKind, BuiltinPlotMark, BuiltinPlotScale } from '../../schemas';
 import { resolvePaddedDomain } from './domain';
 import type { ScaleResolveContext } from './types';
 
@@ -253,7 +253,7 @@ export const assertScaleFieldCompatible = (
  */
 export const assertBaselineScaleCompatible = (
   valueScaleType: string,
-  marks: ReadonlyArray<IRPlotMarkOperation>,
+  marks: ReadonlyArray<IRPlotMark>,
   context: ScaleResolveContext,
 ): void => {
   const def = context.registry.get(valueScaleType);
@@ -261,11 +261,10 @@ export const assertBaselineScaleCompatible = (
 
   const hasBaselineMark = marks.some(
     mark =>
-      isBuiltinMark(mark) &&
-      (mark.type === BuiltinPlotMark.Interval ||
-        (mark.type === BuiltinPlotMark.Path &&
-          (mark.properties?.closure?.kind === PathClosureKind.Baseline ||
-            mark.properties?.closure?.kind === PathClosureKind.Stack))),
+      mark.type === BuiltinPlotMark.Interval ||
+      (mark.type === BuiltinPlotMark.Path &&
+        (mark.properties?.closure?.kind === PathClosureKind.Baseline ||
+          mark.properties?.closure?.kind === PathClosureKind.Stack)),
   );
   if (hasBaselineMark) {
     throw new RetikzPlotError(

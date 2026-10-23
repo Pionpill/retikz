@@ -8,13 +8,16 @@ import { resolveBoundary as resolveBoundaryGeometry } from '../../src/compile/no
 import type { BoundaryDefinition, ShapeDefinition } from '../../src/contract';
 import { defineBoundary } from '../../src/contract';
 import { resolveBoundaryRegistry } from '../../src/providers/boundary';
-import type { ProviderCollection } from '../../src/providers/registry';
+import type { ProviderRegistry } from '../../src/providers/registry';
 import { ellipseShape, rectangle } from '../../src/providers/shape';
 import { boundaryKey, resolveBoundaryReference } from '../../src/resolve/node';
 
 const visualRect: CenteredBox = { x: 0, y: 0, width: 40, height: 20, rotate: 0 };
 
-const registry = [rectangle, ellipseShape];
+const registry = new Map([
+  [rectangle.name, rectangle],
+  [ellipseShape.name, ellipseShape],
+]);
 
 const shapeAwareVisual = {
   ...rectangle,
@@ -33,8 +36,8 @@ const customWithoutEnvelope = {
 };
 
 type BoundaryTestContext = BoundaryGeometryResolveContext & {
-  shapeRegistry: ProviderCollection<ShapeDefinition>;
-  boundaryRegistry: ProviderCollection<BoundaryDefinition>;
+  shapeRegistry: ProviderRegistry<ShapeDefinition>;
+  boundaryRegistry: ProviderRegistry<BoundaryDefinition>;
 };
 
 const resolveContext = (overrides: Partial<BoundaryTestContext> = {}): BoundaryTestContext => ({
@@ -227,13 +230,19 @@ describe('resolveBoundary', () => {
     });
 
     expect(() =>
-      resolveBoundary('invalid-rotate', resolveContext({ boundaryRegistry: [invalidRotateBoundary] })),
+      resolveBoundary(
+        'invalid-rotate',
+        resolveContext({ boundaryRegistry: new Map([[invalidRotateBoundary.name, invalidRotateBoundary]]) }),
+      ),
     ).toThrow(/finite|invalid rect/i);
   });
 
   it('boundary provider beats registered same-name shape fallback', () => {
     const fakeCircle = { ...ellipseShape, name: 'circle' };
-    const r = resolveBoundary('circle', resolveContext({ shapeRegistry: [...registry, fakeCircle] }));
+    const r = resolveBoundary(
+      'circle',
+      resolveContext({ shapeRegistry: new Map([...registry, [fakeCircle.name, fakeCircle]]) }),
+    );
 
     expect(r.def.name).toBe('circle');
     expect(r.def.boundaryPoint(r.rect, [0, -100], r.params)[1]).toBeCloseTo(-Math.hypot(20, 10));

@@ -43,6 +43,10 @@ The figure specifies minimum node sizes to make the connection boundaries clear.
 
 <PackageManagerInstall packages="@retikz/core" />
 
+`PathTransformSchema` contains only whole-path `rotate` and `scale`; `cornerRadius` belongs to `PathGeometrySchema` and rounds line-to-line joints.
+
+For stroke schema composition, `GraphicStrokeSchema` provides width, dash lengths, dash offset, and the `stroke` color or paint resource. `NodeStrokeSchema` adds the `dashed` and `dotted` presets, with precedence `dashPattern > dashed > dotted`; `PathStrokeSchema` adds `lineCap` and `lineJoin`. Their inferred types are `IRGraphicStroke`, `IRNodeStroke`, and `IRPathStroke`, respectively. The general `GraphicStyleSchema` and `CascadingGraphicStyleSchema` compose the complete stroke contract, including dash patterns and offsets.
+
 Use `BuiltinBoundary` for built-in connection surface names and register custom surfaces through the `boundaries` compile option. `IRBoundary` accepts built-in names, custom boundary or shape names, and `{ type, params }` references. Use `BuiltinCompileWarningCode` for built-in compilation warning codes; the open `CompileWarningCode` type also accepts custom codes.
 
 Use Core IR types such as `IRScene` to declare drawings, and Core's `PathCommand` for compiled path commands. Import the plain coordinate and vector types `Position` and `Vector2` from `@retikz/math`.
@@ -75,6 +79,8 @@ console.log(result.scene);
 `compileToScene` synchronously returns a `CompileResult`. Its `scene` can be passed to a renderer; `artifacts` and `spatialHandles` carry additional artifacts and spatial handles. See [Compilation Output](/kernel/packages/core/compilation-output) for details. This call compiles the drawing; Render or an adapter handles its display.
 
 The entry accepts typed IR. External input such as JSON should first pass through the appropriate schema validation. Compile options can supply text measurement, formula handling and extension definitions.
+
+Authors of TypeScript extensions are responsible for names and callback results satisfying their declared contracts; registries still check name collisions. Open parameters are parsed against the selected Definition’s precise schema. Data that is already typed does not need to be parsed again at every internal stage. Compilation still checks references, geometry values and output ownership, and preserves the required snapshot isolation.
 
 ## Package boundaries
 

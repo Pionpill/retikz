@@ -8,7 +8,6 @@ import type {
   CoordinateFrame,
   FieldCollector,
   MarkChannels,
-  MarkDefinition,
   MarkLoweringContext,
   MarkProvenance,
 } from '../../../contract';
@@ -48,6 +47,7 @@ import {
   mapMarkRoles,
   mappedRoleValue,
 } from '../shared';
+import type { MarkDefinition } from '../types';
 import { lowerPathEndpoints } from './path-endpoints';
 
 /**

@@ -4,10 +4,10 @@ import { describe, expect, it } from 'vitest';
 import type { MarkChannels } from '../../../src/contract';
 import type { CoordinateFrame, PositionScale } from '../../../src/contract';
 import { createCoordinateFrame } from '../../../src/contract';
-import { lowerMark, resolveMarkRegistry } from '../../../src/providers';
+import { lowerMark, MARK_REGISTRY } from '../../../src/providers';
 import { createPolarCoordinate } from '../../../src/providers';
 import { resolveMarkOperation, resolveMarkInstances } from '../../../src/resolve/mark';
-import type { IRPlotMarkOperation } from '../../../src/schemas';
+import type { IRPlotMark } from '../../../src/schemas';
 import { IntervalMarkSchema, PathMarkSchema } from '../../../src/schemas';
 
 const scale: PositionScale = {
@@ -152,7 +152,7 @@ describe('coordinate connection geometry', () => {
 });
 
 /** 通过普通 Mark 注册入口验证坐标能力 */
-const lowerGeometry = (mark: IRPlotMarkOperation, frame: CoordinateFrame, channels: MarkChannels) => {
-  const resolution = resolveMarkOperation(mark, { registry: resolveMarkRegistry() });
+const lowerGeometry = (mark: IRPlotMark, frame: CoordinateFrame, channels: MarkChannels) => {
+  const resolution = resolveMarkOperation(mark, { registry: MARK_REGISTRY });
   return lowerMark(resolution, resolveMarkInstances(resolution, []), frame, channels);
 };

@@ -1,7 +1,6 @@
 import { resolveBoxSpacing } from '@retikz/core';
 
 import type { SemanticTableModel, TableStructureOutput } from '../../contract';
-import { TableStructureOutputSchema } from '../../contract/structure';
 import { RetikzTableError } from '../../error';
 import { resolveTableStructureRegistry, tableStructureDefinitionOf } from '../../providers';
 import type { IRManualTableStructure, IRTableStructureOperation } from '../../schemas';
@@ -66,7 +65,7 @@ export const normalizeTableStructure = (
     const preciseOperation = definition.schema.parse(operation) as IRTableStructureOperation;
     const context = createTableStructureContext(options.data, options.datasets ?? {}, options.preparedData);
     const providerOutput = definition.build(preciseOperation as never, context);
-    const output = deepFreeze(TableStructureOutputSchema.parse(providerOutput));
+    const output = deepFreeze(structuredClone(providerOutput));
     const manualRows =
       operation.kind === TableStructureKind.Manual ? (operation as IRManualTableStructure).rows : undefined;
     validateTableStructureOutput(

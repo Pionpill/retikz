@@ -1,21 +1,11 @@
 import type { IRChild, IRScope } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 
-import type {
-  AnyMarkDefinition,
-  CoordinateFrame,
-  MarkChannels,
-  MarkInstanceInput,
-  MarkDefinition,
-  MarkLoweringContext,
-} from '../../contract';
-import { extractMarkType } from '../../contract';
-import { RetikzPlotError } from '../../error';
-import type { IRPlotMarkOperation } from '../../schemas';
+import type { CoordinateFrame, MarkChannels, MarkInstanceInput, MarkLoweringContext } from '../../contract';
+import type { IRPlotMark } from '../../schemas';
 import { BuiltinPlotMark } from '../../schemas';
 import { intervalMarkDefinition, pathMarkDefinition, pointMarkDefinition, relationMarkDefinition } from './features';
-
-const asAnyMarkDefinition = <T extends IRPlotMarkOperation>(def: MarkDefinition<T>): AnyMarkDefinition => def;
+import type { AnyMarkDefinition } from './types';
 
 /**
  * mark lowering 行为注册表：每个内置 mark 对应一个注册项（lowerMark 按 type 查表分发）
@@ -23,37 +13,10 @@ const asAnyMarkDefinition = <T extends IRPlotMarkOperation>(def: MarkDefinition<
  *   Plot mark schema 仍是静态单一真源，不由此表组装
  */
 export const MARK_REGISTRY: Record<BuiltinPlotMark, AnyMarkDefinition> = {
-  [BuiltinPlotMark.Point]: asAnyMarkDefinition(pointMarkDefinition),
-  [BuiltinPlotMark.Path]: asAnyMarkDefinition(pathMarkDefinition),
-  [BuiltinPlotMark.Interval]: asAnyMarkDefinition(intervalMarkDefinition),
-  [BuiltinPlotMark.Relation]: asAnyMarkDefinition(relationMarkDefinition),
-};
-
-/** 内置 mark definition registry（按 type 索引）；内置与自定义 mark 共享同一分派流程 */
-const BUILTIN_MARK_REGISTRY: ReadonlyMap<string, AnyMarkDefinition> = new Map(
-  Object.values(MARK_REGISTRY).map(def => [extractMarkType(def.schema), def] as const),
-);
-
-/** 内置 mark definition 列表；主要供诊断与测试确认内置覆盖。自定义 definition 不写入此表，而是在每次 lowering 时合并 */
-export const BUILTIN_MARKS: ReadonlyArray<AnyMarkDefinition> = Object.values(MARK_REGISTRY);
-
-/**
- * 解析 mark registry
- * @description 内置 mark 总是先注册；用户自定义 definition 不能覆盖内置 type，也不能彼此重复
- */
-export const resolveMarkRegistry = (custom?: ReadonlyArray<AnyMarkDefinition>): Map<string, AnyMarkDefinition> => {
-  const registry = new Map<string, AnyMarkDefinition>(BUILTIN_MARK_REGISTRY);
-
-  for (const def of custom ?? []) {
-    const type = extractMarkType(def.schema);
-    if (registry.has(type)) {
-      throw new RetikzPlotError(`lowerPlots: duplicate mark registration: "${type}"`);
-    }
-
-    registry.set(type, def);
-  }
-
-  return registry;
+  [BuiltinPlotMark.Point]: pointMarkDefinition,
+  [BuiltinPlotMark.Path]: pathMarkDefinition,
+  [BuiltinPlotMark.Interval]: intervalMarkDefinition,
+  [BuiltinPlotMark.Relation]: relationMarkDefinition,
 };
 
 const isScopeLayer = (layer: IRChild | null): layer is IRScope =>
@@ -61,7 +24,7 @@ const isScopeLayer = (layer: IRChild | null): layer is IRScope =>
 
 const applyScopeChannelDeliveries = (
   layer: IRChild | null,
-  mark: IRPlotMarkOperation,
+  mark: IRPlotMark,
   rows: Array<ExternalRow>,
   channels: MarkChannels,
 ): IRChild | null => {
@@ -81,7 +44,7 @@ const applyScopeChannelDeliveries = (
  *   markProvenance 给定（provenance 开）→ 给图层 / series Path / datum Node 绑 id + 来源 meta
  */
 export const lowerMark = (
-  resolution: { definition: AnyMarkDefinition; operation: IRPlotMarkOperation },
+  resolution: { definition: AnyMarkDefinition; operation: IRPlotMark },
   instances: MarkInstanceInput,
   frame: CoordinateFrame,
   channels: MarkChannels = {},

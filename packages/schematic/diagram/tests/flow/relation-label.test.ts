@@ -187,7 +187,6 @@ describe('Flow relation path labels', () => {
       sloped: true,
       interrupt: true,
       gap: 3,
-      placement: 'outside',
     };
     const source = FlowDiagramSchema.parse({
       namespace: 'diagram',

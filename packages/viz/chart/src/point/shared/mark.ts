@@ -1,15 +1,18 @@
 import type { IRGraphicStyle } from '@retikz/core';
 import { mergeGraphicStyle } from '@retikz/core';
 import type { JsonObject, JsonValue } from '@retikz/foundation';
-import type { IRPlotMarkOperation } from '@retikz/plot';
-import { BuiltinPlotMark, PointMarkSchema } from '@retikz/plot';
+import type { IRPlotPointMark } from '@retikz/plot';
+import { BuiltinPlotMark } from '@retikz/plot';
 
 import type { ChartMarkResolveContext } from '../../_chart/contract/mark';
 import { pointFieldMappingOf, requiredFieldOf } from './encoding';
 import type { IRPointEncoding, IRPointProperties } from './schema';
 
 /** 将 Chart 字段映射下沉为 Plot 字段简写或具名尺度绑定 */
-export const markEncodingOf = (encodings: JsonObject, name: string): string | JsonObject | undefined => {
+export const markEncodingOf = (
+  encodings: JsonObject,
+  name: string,
+): string | { field: string; scale: string } | undefined => {
   if (!Object.hasOwn(encodings, name)) return undefined;
   const mapping = pointFieldMappingOf(encodings[name], ['recipe', 'encodings', name]);
   return mapping.scale === undefined ? mapping.field : { field: mapping.field, scale: mapping.scale };
@@ -86,12 +89,12 @@ export const resolvePointMark = (
   encodings: JsonObject,
   properties: JsonObject,
   options: Readonly<{ coordinateView?: string }> = {},
-): IRPlotMarkOperation => {
+): IRPlotPointMark => {
   const x = requiredFieldOf(encodings, 'x', ['recipe', 'encodings', 'x']);
   const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
-  const bindings: JsonObject = { position: { x: { field: x }, y: { field: y } } };
+  const bindings: IRPlotPointMark['encodings'] = { position: { x: { field: x }, y: { field: y } } };
   const fixed: JsonObject = {};
-  const mark: JsonObject = { type: BuiltinPlotMark.Point, encodings: bindings, properties: fixed };
+  const mark: IRPlotPointMark = { type: BuiltinPlotMark.Point, encodings: bindings, properties: fixed };
   if (options.coordinateView !== undefined) mark.coordinateView = options.coordinateView;
   for (const name of pointVisualSlots) {
     if (name === 'opacity') continue;
@@ -106,7 +109,7 @@ export const resolvePointMark = (
   for (const name of pointConstantPropertySlots) copyConstantProperty(fixed, properties, name);
   for (const name of pointRawPropertySlots) copyRawProperty(fixed, properties, name);
 
-  return PointMarkSchema.parse(mark);
+  return mark;
 };
 
 const objectOf = (source: JsonObject, key: string): JsonObject => {

@@ -133,7 +133,7 @@ describe('[svg-effects] drop shadow', () => {
     expect(out).not.toContain('filter=');
   });
 
-  it('带端点箭头的 path + shadow → marker-end 与 filter 同在该 path 元素上（箭头随主路径一起被滤镜）', () => {
+  it('applies one shadow to the path and its arrow content', () => {
     const path: PathPrim = {
       type: 'path',
       commands: [
@@ -146,8 +146,7 @@ describe('[svg-effects] drop shadow', () => {
     };
     const out = renderToSvgString(sceneOf([path]), { idPrefix: 'd1' });
 
-    // SVG filter / mix-blend-mode 是元素级：marker-end 与 filter 落在同一 <path> 上 → 箭头随主路径一起进滤镜
-    expect(out).toMatch(/<path\b[^>]*\bmarker-end="url\(#retikz-arrow-[^"]+"[^>]*\bfilter="url\(#retikz-shadow-[^"]+"/);
+    expect(out).toMatch(/<g filter="url\(#retikz-shadow-[^"]+"[^>]*><path[^>]+\/><g transform=/);
   });
 
   it('shadow on ellipse + path 也注入 filter', () => {

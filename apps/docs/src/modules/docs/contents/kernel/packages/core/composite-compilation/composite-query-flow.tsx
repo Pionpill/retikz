@@ -96,7 +96,7 @@ const Figure: FC<CompositeQueryFlowProps> = props => {
           ]}
           arrow="->"
           style={{ stroke: '#777777' }}
-          label={{ ...labelOf(label), placement: 'inside', sloped: false, position: 0.5, interrupt: true, gap: 4 }}
+          label={{ ...labelOf(label), side: 'center', sloped: false, position: 0.5, interrupt: true, gap: 4 }}
         />
       ))}
     </Layout>

@@ -1,7 +1,7 @@
 import type * as RetikzCore from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
-import { definePlotThemeStyle } from '@retikz/plot';
+import { definePlotTheme } from '@retikz/plot';
 import type * as RetikzVanilla from '@retikz/vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
 import { describe, expect, it, vi } from 'vitest';
@@ -48,7 +48,7 @@ const contextOf = (id: string): InputEmbedContext => ({
   identityPath: ['chart', id],
 });
 
-const plotThemeStyle = definePlotThemeStyle({
+const plotTheme = definePlotTheme({
   name: 'brand',
   resolve: () => ({}),
 });
@@ -57,13 +57,13 @@ describe('Plot Vanilla runtime style options', () => {
   it('SSR renderPlot passes Core style definitions and keeps Plot style definitions in lowering', () => {
     compileCalls.length = 0;
 
-    expect(renderPlot(spec, data, { definitions: { plotThemeStyles: [plotThemeStyle] }, themeStyles: [] })).toBe(
+    expect(renderPlot(spec, data, { definitions: { plotThemeDefinitions: [plotTheme] }, themeDefinitions: [] })).toBe(
       '<svg />',
     );
 
-    const options = compileCalls.at(-1)?.[1] as { themeStyles?: Array<unknown> } | undefined;
+    const options = compileCalls.at(-1)?.[1] as { themeDefinitions?: Array<unknown> } | undefined;
 
-    expect(options?.themeStyles).toEqual([]);
+    expect(options?.themeDefinitions).toEqual([]);
   });
 
   it('embedded PlotInputEmbedAdapter keeps runtime style definitions out of the contribution payload', () => {

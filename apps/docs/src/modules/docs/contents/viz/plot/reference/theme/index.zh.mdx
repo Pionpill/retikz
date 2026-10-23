@@ -3,21 +3,21 @@ title: 契约 - 主题
 description: 使用与 Plot Source 结构一致的稀疏 Plot defaults 与 Axis rules。
 ---
 
-Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`。Plot 始终先建立随 `mode` 与 Core shared categorical 变化的默认 baseline；显式 `style` 再选择同名领域 definition，并只覆盖它明确返回的 defaults 与 Axis rules。发布包不内置命名 style；本站通过公开 Core / Plot definitions 注入 Academic、Vibrant、Clean 三个参考 preset。`IRPlot` 不重复声明 Core 的 `style` / `mode`；主题只控制视觉默认，不改变数据、坐标、Axis 是否存在、minor tick source 或 mark 结构。
+Plot 从当前位置的 Core effective Theme 读取 `name` 与 `mode`。Plot 始终先建立随 `mode` 与 Core shared categorical 变化的默认 baseline；显式 `style` 再选择同名领域 definition，并只覆盖它明确返回的 defaults 与 Axis rules。发布包不内置命名 style；本站通过公开 Core / Plot definitions 注入 Academic、Vibrant、Clean 三个参考 preset。`IRPlot` 不重复声明 Core 的 `name` / `mode`；主题只控制视觉默认，不改变数据、坐标、Axis 是否存在、minor tick source 或 mark 结构。
 
 <ComponentPreview files="theme-tokens" size="lg" />
 
 示例把 `defaultPlot.typography.textColor` 设为字符串主色 `#2563EB`，再用 `0.08` 派生绘图区背景、用 `0.25` 派生 grid 描边；categorical palette 仍由字符串颜色组成。defaults 沿用 Plot IR 的嵌套 Source 字段；上下文颜色与 opacity 仍由各自字段表达。
 
-绘图区字段 `plotArea.fill` 只填充二维坐标中扣除 axis、legend 与布局预留后的 Plot area；`plotArea.border` 独立描绘其边界，可用 `false` 关闭继承的边框。直角坐标绘制矩形，极坐标绘制圆形，facet 按面板分别绘制；一维坐标不生成绘图区表面。坐标轴标签区、facet 间隙和外围 Chart canvas 保持透明。React、Vanilla 和 plain JSON 都把同一 defaults 与 rule 原样交给 Plot resolver，adapter 不补自己的 preset；Core Theme 提供 effective `style` / `mode` 与 shared colors。
+绘图区字段 `plotArea.fill` 只填充二维坐标中扣除 axis、legend 与布局预留后的 Plot area；`plotArea.border` 独立描绘其边界，可用 `false` 关闭继承的边框。直角坐标绘制矩形，极坐标绘制圆形，facet 按面板分别绘制；一维坐标不生成绘图区表面。坐标轴标签区、facet 间隙和外围 Chart canvas 保持透明。React、Vanilla 和 plain JSON 都把同一 defaults 与 rule 原样交给 Plot resolver，adapter 不补自己的 preset；Core Theme 提供 effective `name` / `mode` 与 shared colors。
 
 本站参考 Vibrant preset 在 Light 下使用浅蓝灰绘图区，在 Dark 下使用深色绘图区；默认 baseline、Academic 与 Clean 保持透明。Academic 默认不显示网格，并使用与默认轴线同色同宽的绘图区边框。显式 `defaultPlot.plotArea.fill` / `border` 仍按正常级联覆盖 preset，具体 Axis grid 配置也保留优先级。
 
 ## 命名 style
 
-用 definePlotThemeStyle 及其 name、resolve callback 注册运行时 style。callback 接收 effective Core Theme，返回稀疏 defaults 与有序 Axis rules。Definition 可通过 Plot、lowerPlots 或 renderPlot 的 definitions.plotThemeStyles 注入，也可使用 PlotThemeProvider。
+用 definePlotTheme 及其 name、resolve callback 注册运行时 style。callback 接收 effective Core Theme，返回稀疏 defaults 与有序 Axis rules。Definition 可通过 Plot、lowerPlots 或 renderPlot 的 definitions.plotThemeDefinitions 注入，也可使用 PlotThemeProvider。
 
-Core 的 theme prop 选择宿主 style 与 mode。Plot defaults 是持久化的 Plot Source 字段，在 IRPlot、InputPlot 与 runtime 输入中使用相同的嵌套路径。
+Core 的 theme prop 选择宿主 name 与 mode。Plot defaults 是持久化的 Plot Source 字段，在 IRPlot、InputPlot 与 runtime 输入中使用相同的嵌套路径。
 
 ## 级联与边界
 
@@ -172,7 +172,7 @@ resolvePlotTheme 返回 IRPlotThemeResolution，包含 effective mode、解析�
 <ZodSchema
   name="PlotThemeResolutionSchema"
   descriptions={{
-    style: '选择 Plot definition 的 Core Theme style。',
+    name: '选择 Plot definition 的 Core Theme。',
     mode: '选择 Neutral Plot defaults 的有效 Theme mode。',
     defaults: 'Axis dimension rules 之前解析出的 Plot defaults。',
     'defaults.plotArea': '解析后的绘图区视觉默认值。',

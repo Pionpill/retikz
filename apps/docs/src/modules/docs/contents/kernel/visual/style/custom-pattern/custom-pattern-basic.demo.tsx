@@ -4,7 +4,7 @@ import type { FC } from 'react';
 
 /**
  * 自定义 pattern motif：十字（cross）图案，与内置 lines / dots / grid 不同。
- * emit 在局部 tile 坐标系（0..size）产 MarkerPrimitive；color / lineWidth 来自 ctx（size 来自 spec.size ?? defaultSize）。
+ * emit 在局部 tile 坐标系（0..size）产 ScenePrimitive；color / lineWidth 来自 ctx（size 来自 spec.size ?? defaultSize）。
  */
 const cross = definePattern({
   name: 'cross',

@@ -1,24 +1,18 @@
 import type { ResolvedTheme } from '@retikz/core';
-import { strictObject } from 'zod';
 
-import type { PlotThemeStyleDefinition } from '../../contract';
+import type { PlotThemeDefinition } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import { getNeutralPlotDefaults, resolvePlotThemeStyleRegistry } from '../../providers/theme';
+import { getNeutralPlotDefaults, resolvePlotThemeRegistry } from '../../providers/theme';
 import { getNeutralAxisRules } from '../../providers/theme/preset';
-import type { IRPlot, IRPlotAxisRule, IRPlotAxisRules, IRPlotDefaults, IRPlotThemeResolution } from '../../schemas';
-import { PlotAxisRulesSchema, PlotDefaultsSchema, PlotThemeLayerKind, PlotThemeResolutionSchema } from '../../schemas';
+import type { IRPlot, IRPlotAxisRule, IRPlotDefaults, IRPlotThemeResolution } from '../../schemas';
+import { PlotThemeLayerKind } from '../../schemas';
 import { applyPlotDefaults } from './mapping';
-
-const PlotThemeStyleSourceSchema = strictObject({
-  defaults: PlotDefaultsSchema.optional(),
-  rules: PlotAxisRulesSchema.optional(),
-});
 
 type DefaultsLayer = Readonly<{
   kind: (typeof PlotThemeLayerKind)[keyof typeof PlotThemeLayerKind];
   path: string;
   defaults?: IRPlotDefaults;
-  rules?: IRPlotAxisRules;
+  rules?: ReadonlyArray<IRPlotAxisRule>;
 }>;
 
 const sourceRecordsOf = (layers: ReadonlyArray<DefaultsLayer>) =>
@@ -42,13 +36,13 @@ const ruleSourcesOf = (layers: ReadonlyArray<DefaultsLayer>) =>
 export const resolvePlotTheme = (
   effectiveTheme: ResolvedTheme,
   input: Pick<IRPlot, 'defaultPlot' | 'plotRules'> = {},
-  plotThemeStyles: ReadonlyArray<PlotThemeStyleDefinition> | undefined = undefined,
+  plotThemeDefinitions: ReadonlyArray<PlotThemeDefinition> | undefined = undefined,
 ): IRPlotThemeResolution => {
-  const { style, mode } = effectiveTheme;
-  const styles = resolvePlotThemeStyleRegistry(plotThemeStyles);
-  const definition = style === undefined ? undefined : styles.get(style);
-  if (style !== undefined && definition === undefined) {
-    throw new RetikzPlotError("Plot theme style '" + style + "' is not registered.");
+  const { name, mode } = effectiveTheme;
+  const definitions = resolvePlotThemeRegistry(plotThemeDefinitions);
+  const definition = name === undefined ? undefined : definitions.get(name);
+  if (name !== undefined && definition === undefined) {
+    throw new RetikzPlotError("Plot theme '" + name + "' is not registered.");
   }
 
   const layers: Array<DefaultsLayer> = [
@@ -61,15 +55,15 @@ export const resolvePlotTheme = (
   ];
   if (definition !== undefined) {
     try {
-      const source = PlotThemeStyleSourceSchema.parse(definition.resolve(effectiveTheme));
+      const source = structuredClone(definition.resolve(effectiveTheme));
       layers.push({
         kind: PlotThemeLayerKind.Style,
-        path: '$style/' + style + '/' + mode,
+        path: '$style/' + name + '/' + mode,
         ...(source.defaults === undefined ? {} : { defaults: source.defaults }),
         ...(source.rules === undefined ? {} : { rules: source.rules }),
       });
     } catch (cause) {
-      throw new RetikzPlotError("Plot theme style '" + style + "' resolution failed.", { cause });
+      throw new RetikzPlotError("Plot theme '" + name + "' resolution failed.", { cause });
     }
   }
 
@@ -86,18 +80,32 @@ export const resolvePlotTheme = (
     (resolvedDefaults, layer) => applyPlotDefaults(resolvedDefaults, layer.defaults),
     {},
   );
-  if (defaults.palette === undefined) {
+  const palette = defaults.palette;
+  if (
+    palette === undefined ||
+    palette.categorical === undefined ||
+    palette.series === undefined ||
+    palette.sequential === undefined ||
+    palette.diverging === undefined ||
+    palette.shape === undefined
+  ) {
     throw new RetikzPlotError('Plot Neutral defaults must provide a complete palette.');
   }
 
-  return PlotThemeResolutionSchema.parse({
-    ...(style === undefined ? {} : { style }),
+  return {
+    ...(name === undefined ? {} : { name }),
     mode,
     defaults,
     layers: sourceRecordsOf(layers),
     rules: ruleSourcesOf(layers),
-    palette: defaults.palette,
-  });
+    palette: {
+      categorical: [...palette.categorical],
+      series: [...palette.series],
+      sequential: palette.sequential,
+      diverging: palette.diverging,
+      shape: structuredClone(palette.shape),
+    },
+  };
 };
 
 /** 仅供 Chart 在不复制 Plot 级联语义时构造其转发 defaults 输入 */

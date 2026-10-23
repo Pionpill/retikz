@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { array, literal, number, strictObject, tuple } from 'zod';
 
 import type { ClipResource, ClipShape, GroupPrim, IRPaint, IRScene, ScenePrimitive, SceneResource } from '../../src';
-import { compileToScene, defineClip, PositionSchema } from '../../src';
+import { compileToScene, defineClip } from '../../src';
 
 type TestPolygonClipShape = ClipShape & {
   kind: 'polygon';
@@ -16,7 +16,6 @@ const polygonClip = defineClip<{ kind: 'polygon'; points: Array<[number, number]
     points: array(tuple([number(), number()])).min(3),
   }),
   resolve: spec => ({ kind: 'polygon', points: spec.points }),
-  shapeSchema: strictObject({ kind: literal('polygon'), points: array(PositionSchema).min(3) }),
   lower: shape => ({
     commands: [
       { kind: 'move', to: shape.points[0] },
@@ -74,10 +73,10 @@ describe('clip 非 finite 守卫：必须编译期抛、绝不进 Scene', () => 
     });
   }
 
-  it('抛出的错误信息含 kind + 字段线索（清晰错）', () => {
+  it('抛出的错误信息包含无效输入字段', () => {
     expect(
       () => compileToScene(handcraftedScope({ kind: 'rect', x: 0, y: 0, width: Infinity, height: 10 })).scene,
-    ).toThrow(/rect/i);
+    ).toThrow(/width/i);
   });
 });
 

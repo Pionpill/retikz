@@ -1,6 +1,8 @@
-import { ClipFillRuleSchema, ClipSchema, PathCommandSchema, PositionSchema } from '@retikz/core';
+import { ClipFillRuleSchema, ClipSchema, PositionSchema } from '@retikz/core';
 import { PositiveNumberSchema } from '@retikz/foundation';
 import { array, literal, number, strictObject } from 'zod';
+
+import { PathClipCommandSchema } from './command-schema';
 
 /** 校验以圆心与正半径定义的圆形裁切区域 */
 export const CircleClipSchema = strictObject({
@@ -28,7 +30,7 @@ export const PolygonClipSchema = strictObject({
 /** 校验由非空路径命令与填充规则定义的裁切区域 */
 export const PathClipSchema = strictObject({
   kind: literal('path').describe('Discriminator for path clip regions.'),
-  commands: array(PathCommandSchema).min(1).describe('Structured path commands for the clip region.'),
+  commands: array(PathClipCommandSchema).min(1).describe('Structured path commands for the clip region.'),
   fillRule: ClipFillRuleSchema.optional().describe('Fill rule for the path clip.'),
 }).describe('Path clip region.');
 

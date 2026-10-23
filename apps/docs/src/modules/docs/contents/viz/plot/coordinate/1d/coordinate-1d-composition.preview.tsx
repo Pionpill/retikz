@@ -48,7 +48,7 @@ export const Coordinate1dCompositionPreview = (values: Coordinate1dCompositionPr
         encodings={{
           anchorId: 'thingId',
           fill: 'relationColor',
-          ...(values.sourceLabelVisible ? { label: { content: 'thingLabel' } } : {}),
+          ...(values.sourceLabelVisible ? { label: { text: 'thingLabel' } } : {}),
           position: { x: { field: 'thingX' } },
         }}
         properties={{

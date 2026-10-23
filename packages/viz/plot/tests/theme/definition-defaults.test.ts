@@ -2,12 +2,12 @@ import type { ResolvedTheme } from '@retikz/core';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { definePlotThemeStyle, resolvePlotTheme } from '../../src';
+import { definePlotTheme, resolvePlotTheme } from '../../src';
 
 describe('Plot theme definition closure', () => {
   it('custom definition receives the effective Core theme and contributes Source defaults/rules', () => {
     let received: ResolvedTheme | undefined;
-    const style = definePlotThemeStyle({
+    const style = definePlotTheme({
       name: 'definition-defaults',
       resolve: theme => {
         received = theme;
@@ -18,7 +18,7 @@ describe('Plot theme definition closure', () => {
       },
     });
     const theme: ResolvedTheme = {
-      style: style.name,
+      name: style.name,
       mode: ThemeMode.Dark,
       colors: {
         semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706', guide: '#6b7280' },
@@ -42,6 +42,6 @@ describe('Plot theme definition closure', () => {
       colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
     };
 
-    expect(() => resolvePlotTheme({ ...theme, style: 'missing' })).toThrow(/not registered/);
+    expect(() => resolvePlotTheme({ ...theme, name: 'missing' })).toThrow(/not registered/);
   });
 });

@@ -1,7 +1,7 @@
 import type { ResolvedTheme } from '@retikz/core';
 import type { IRSurface } from '@retikz/standard/presentation';
 
-import type { DiagramThemeStyleDefinition } from '../../contract';
+import type { DiagramThemeDefinition } from '../../contract';
 import type { IRDiagramDefaults, IRDiagramFrame, IRDiagramPresentation } from '../../schemas';
 import type { EffectiveDiagramTheme } from '../theme';
 
@@ -20,7 +20,7 @@ export type DiagramFoundationResolveContext = Readonly<{
   /** 当前宿主已经解析的 Core 主题 */
   theme: ResolvedTheme;
   /** 可供当前图示选择的主题样式定义 */
-  diagramThemeStyles: ReadonlyMap<string, DiagramThemeStyleDefinition>;
+  diagramThemeDefinitions: ReadonlyMap<string, DiagramThemeDefinition>;
 }>;
 
 /** Diagram Foundation 解析后的完整 Frame */

@@ -15,7 +15,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '作者输入不接受版本号；归一化时写入当前 IR 版本':
     'Authoring input excludes a version; normalization supplies the current IR version',
   '作者侧场景标识，不写入持久化 Scene IR': 'Authoring scene identity, excluded from persisted Scene IR',
-  '场景根主题，只填写需要覆盖的 style 与 mode': 'Root theme; specify only style and mode overrides',
+  '场景根主题，只填写需要覆盖的 name 与 mode': 'Root theme; specify only name and mode overrides',
   '显式取景矩形；省略时由编译结果按内容计算': 'Explicit viewport; compilation derives it from content when omitted',
   '场景根动画轨道，省略时不添加根动画': 'Scene-root animation tracks; omitted means no root animation',
   'children 模式不接受显式 layers': 'The children variant excludes explicit layers',
@@ -74,7 +74,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Compile the complete drawing whenever input changes, without retaining incremental execution state',
   '通过 mode 选择图形更新方式；retained 支持更新策略和诊断回调，static 不接受这两个选项':
     'Select how drawings update through mode; retained supports an update strategy and diagnostics callback, while static accepts neither option',
-  主题样式定义: 'Theme style definitions',
+  主题样式定义: 'Theme definitions',
   '通过 JSX 声明的图形内容': 'Drawing content declared with JSX',
   处理作者输入的编译驱动: 'Compile driver that processes authoring input',
   '直接传入 ir 时使用的事件处理函数表': 'Event handlers used when ir is supplied directly',
@@ -116,7 +116,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   图案定义: 'Pattern definitions',
   路径生成器定义: 'Path generator definitions',
   路径种类定义: 'Path kind definitions',
-  '运行时注入的 Core Theme style definitions': 'Core theme style definitions registered at runtime',
+  '运行时注入的 Core Theme definitions': 'Core theme definitions registered at runtime',
   '运行时注入的 Tier 2 composite 展开逻辑': 'Tier 2 composite definitions registered at runtime',
   'Tier 2 composite 展开逻辑': 'Tier 2 composite expansion logic',
   'Core 不预留官方 namespace 名称；未注册的 namespace/type 会触发 warning，并跳过该 composite 节点，重复的完整 namespace/type 键在注册期报错':
@@ -162,7 +162,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   宿主内联样式: 'Host inline styles',
   '写入 Scene 根并由后代 Composite 继承的 Theme':
     'Theme written to the Scene root and inherited by descendant Composites',
-  'Core Theme style definitions': 'Core Theme style definitions',
+  'Core Theme definitions': 'Core Theme definitions',
   显式视框: 'Explicit viewport',
   'SVG 或 Canvas CSS 宽度；缺省取内容宽度，单轴数值尺寸按内容比例补齐另一轴':
     'CSS width of SVG or Canvas; defaults to content width, with a single numeric axis deriving the other from the content aspect ratio',

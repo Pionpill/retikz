@@ -1,4 +1,4 @@
-import { isBuiltinMark, PlotSchema } from '@retikz/plot';
+import { PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { createHistogramSpec } from '../../../../plot/tests/helpers/plot-spec-fixtures';
@@ -33,7 +33,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     expect(spec.transform).toEqual(expected.transform);
     expect(mark).toMatchObject(expected.marks[0]);
 
-    if (!isBuiltinMark(mark) || mark.type !== 'interval') throw new Error('expected interval mark');
+    if (mark.type !== 'interval') throw new Error('expected interval mark');
 
     // histogram：仅 y 高度通道、无 encoding.x
     expect(mark.encodings?.position?.y).toEqual({ field: 'binCount' });

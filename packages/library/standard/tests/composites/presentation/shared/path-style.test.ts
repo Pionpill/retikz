@@ -19,7 +19,7 @@ describe('Standard presentation path style fragments', () => {
 
     expect(StandardPathStrokeStyleSchema.parse(value)).toEqual(value);
     expect(StandardPathStrokeStyleSchema.safeParse({ fill: 'blue' }).success).toBe(false);
-    expect(StandardPathStrokeStyleSchema.safeParse({ ...value, roundedCorners: 2 }).success).toBe(false);
+    expect(StandardPathStrokeStyleSchema.safeParse({ ...value, cornerRadius: 2 }).success).toBe(false);
     expect(StandardPathStrokeStyleSchema.safeParse({ ...value, strokeWidth: -1 }).success).toBe(false);
     expect(StandardPathStrokeStyleSchema.safeParse({ ...value, dashPattern: [] }).success).toBe(false);
     expect(StandardPathStrokeStyleSchema.safeParse({ ...value, unknown: true }).success).toBe(false);

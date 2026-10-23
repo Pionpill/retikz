@@ -271,8 +271,8 @@ describe('Layout Core layout capability gate', () => {
       name: 'layout-core-gate-shape',
       paramsSchema: strictObject({}),
       circumscribe: () => ({ halfWidth: 10, halfHeight: 5 }),
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
       *emit(): Iterable<ScenePrimitive> {
         yield { type: 'rect', x: -10, y: -5, width: 20, height: 10, fill: '#2563eb' };
       },
@@ -299,7 +299,7 @@ describe('Layout Core layout capability gate', () => {
     const mixed = probeChild(
       {
         ...plainNode(''),
-        text: [{ runs: [{ text: 'aa ' }, { tex: 'x' }] }],
+        text: [{ segments: [{ text: 'aa ' }, { tex: 'x' }] }],
       },
       exactAtomicProposal,
       { lowerTex },
@@ -307,7 +307,7 @@ describe('Layout Core layout capability gate', () => {
     const tex = probeChild(
       {
         ...plainNode(''),
-        text: [{ runs: [{ tex: 'x' }] }],
+        text: [{ segments: [{ tex: 'x' }] }],
       },
       exactAtomicProposal,
       { lowerTex },
@@ -338,7 +338,7 @@ describe('Layout Core layout capability gate', () => {
                 id: 'selected-node',
                 position: [0, 0],
                 shape: 'layout-core-gate-shape',
-                text: [{ runs: [{ tex: 'x' }] }],
+                text: [{ segments: [{ tex: 'x' }] }],
                 layout: { padding: 0, margin: 0 },
               },
             ],

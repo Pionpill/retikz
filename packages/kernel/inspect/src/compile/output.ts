@@ -1,5 +1,4 @@
 import type { Scene, ScenePrimitive } from '@retikz/core';
-import { ChildSchema } from '@retikz/core';
 import { cloneAndFreezeJson } from '@retikz/foundation';
 
 import type { InspectorFragment, InspectorOutput } from '../contract';
@@ -19,7 +18,7 @@ export const cloneAndFreezeInspectionJson = <T>(value: T, label: string): T => {
   }
 };
 
-/** callback output 做 JSON-safe 脱离与 Core child schema 恢复 */
+/** callback output 组装 fragment 并脱离、冻结快照 */
 export const snapshotInspectorOutput = (output: InspectorOutput): ReadonlyArray<InspectorFragment> => {
   const outputValues = Array.isArray(output) ? output : [output];
   return Object.freeze(
@@ -29,9 +28,9 @@ export const snapshotInspectorOutput = (output: InspectorOutput): ReadonlyArray<
           ? {
               type: 'fragment',
               coordinateSpace: outputValue.coordinateSpace,
-              child: ChildSchema.parse(outputValue.child),
+              child: outputValue.child,
             }
-          : { type: 'fragment', coordinateSpace: 'local', child: ChildSchema.parse(outputValue) };
+          : { type: 'fragment', coordinateSpace: 'local', child: outputValue };
       return cloneAndFreezeInspectionJson(fragment, `Inspector output ${index}`);
     }),
   );

@@ -20,7 +20,7 @@ const inputOf = (props: GraphInputEmbedProps): InputGraph => {
     relationRoles: _relationRoles,
     relationKinds: _relationKinds,
     relationPredicates: _relationPredicates,
-    graphThemeStyles: _graphThemeStyles,
+    graphThemeDefinitions: _graphThemeDefinitions,
     ...input
   } = props;
   void _entityRoles;
@@ -29,7 +29,7 @@ const inputOf = (props: GraphInputEmbedProps): InputGraph => {
   void _relationRoles;
   void _relationKinds;
   void _relationPredicates;
-  void _graphThemeStyles;
+  void _graphThemeDefinitions;
 
   return { type: 'graph', ...input };
 };

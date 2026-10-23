@@ -17,10 +17,12 @@ export const chainSchemaLocalization = {
     '/union/0/field/"animations"': '作用于容器整体的动画轨道，不影响布局，也不向子图元传播',
     '/union/0/field/"defaults"': '后代默认样式及其继承屏障',
     '/union/0/field/"defaults"/field/"node"': '节点默认样式，与其他通道独立',
-    '/union/0/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
-    '/union/0/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
-    '/union/0/field/"defaults"/field/"arrow"': '箭头默认样式',
-    '/union/0/field/"defaults"/field/"reset"': '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
+    '/union/0/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.path.arrow',
+    '/union/0/field/"defaults"/field/"node"/field/"label"': '节点标签与路径步骤标签的默认样式',
+    '/union/0/field/"defaults"/field/"path"/field/"label"': '节点标签与路径步骤标签的默认样式',
+    '/union/0/field/"defaults"/field/"path"/field/"arrow"': '箭头默认样式',
+    '/union/0/field/"defaults"/field/"reset"':
+      '默认样式继承屏障：true 重置全部，或指定 node、path（包含各自装饰） 通道',
     '/union/0/field/"defaultCell"/field/"style"': '集合 单元格的稀疏外观覆盖',
     '/union/0/field/"defaultCell"/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
     '/union/0/field/"defaultCell"/field/"style"/field/"opacity"': '主要图形整体透明度',
@@ -58,7 +60,7 @@ export const chainSchemaLocalization = {
       '原样传递到 Scene 的动画轨道，不影响布局或包围盒，不跨作用域继承',
     '/union/0/field/"defaultConnection"/field/"path"/field/"zIndex"':
       '同级图元的绘制层级，较大值在上；省略为零，同层按原始顺序',
-    '/union/0/field/"defaultConnection"/field/"path"/field/"roundedCorners"': '线段接点的几何圆角半径；省略时保留尖角',
+    '/union/0/field/"defaultConnection"/field/"path"/field/"cornerRadius"': '线段接点的几何圆角半径；省略时保留尖角',
     '/union/0/field/"defaultConnection"/field/"path"/field/"rotate"':
       '绕路径包围盒中心旋转；先解析端点，再整体应用旋转',
     '/union/0/field/"defaultConnection"/field/"path"/field/"scale"': '绕路径包围盒中心缩放，与旋转使用相同中心',
@@ -186,7 +188,7 @@ export const chainSchemaLocalization = {
       '原样传递到 Scene 的动画轨道，不影响布局或包围盒，不跨作用域继承',
     '/union/0/field/"items"/array/union/2/field/"defaultConnection"/field/"path"/field/"zIndex"':
       '同级图元的绘制层级，较大值在上；省略为零，同层按原始顺序',
-    '/union/0/field/"items"/array/union/2/field/"defaultConnection"/field/"path"/field/"roundedCorners"':
+    '/union/0/field/"items"/array/union/2/field/"defaultConnection"/field/"path"/field/"cornerRadius"':
       '线段接点的几何圆角半径；省略时保留尖角',
     '/union/0/field/"items"/array/union/2/field/"defaultConnection"/field/"path"/field/"rotate"':
       '绕路径包围盒中心旋转；先解析端点，再整体应用旋转',
@@ -247,10 +249,12 @@ export const chainSchemaLocalization = {
     '/union/1/field/"animations"': '作用于容器整体的动画轨道，不影响布局，也不向子图元传播',
     '/union/1/field/"defaults"': '后代默认样式及其继承屏障',
     '/union/1/field/"defaults"/field/"node"': '节点默认样式，与其他通道独立',
-    '/union/1/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
-    '/union/1/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
-    '/union/1/field/"defaults"/field/"arrow"': '箭头默认样式',
-    '/union/1/field/"defaults"/field/"reset"': '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
+    '/union/1/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.path.arrow',
+    '/union/1/field/"defaults"/field/"node"/field/"label"': '节点标签与路径步骤标签的默认样式',
+    '/union/1/field/"defaults"/field/"path"/field/"label"': '节点标签与路径步骤标签的默认样式',
+    '/union/1/field/"defaults"/field/"path"/field/"arrow"': '箭头默认样式',
+    '/union/1/field/"defaults"/field/"reset"':
+      '默认样式继承屏障：true 重置全部，或指定 node、path（包含各自装饰） 通道',
     '/union/1/field/"defaultCell"/field/"style"': '集合 单元格的稀疏外观覆盖',
     '/union/1/field/"defaultCell"/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
     '/union/1/field/"defaultCell"/field/"style"/field/"opacity"': '主要图形整体透明度',
@@ -288,7 +292,7 @@ export const chainSchemaLocalization = {
       '原样传递到 Scene 的动画轨道，不影响布局或包围盒，不跨作用域继承',
     '/union/1/field/"defaultConnection"/field/"path"/field/"zIndex"':
       '同级图元的绘制层级，较大值在上；省略为零，同层按原始顺序',
-    '/union/1/field/"defaultConnection"/field/"path"/field/"roundedCorners"': '线段接点的几何圆角半径；省略时保留尖角',
+    '/union/1/field/"defaultConnection"/field/"path"/field/"cornerRadius"': '线段接点的几何圆角半径；省略时保留尖角',
     '/union/1/field/"defaultConnection"/field/"path"/field/"rotate"':
       '绕路径包围盒中心旋转；先解析端点，再整体应用旋转',
     '/union/1/field/"defaultConnection"/field/"path"/field/"scale"': '绕路径包围盒中心缩放，与旋转使用相同中心',
@@ -339,10 +343,12 @@ export const chainSchemaLocalization = {
     '/union/2/field/"animations"': '作用于容器整体的动画轨道，不影响布局，也不向子图元传播',
     '/union/2/field/"defaults"': '后代默认样式及其继承屏障',
     '/union/2/field/"defaults"/field/"node"': '节点默认样式，与其他通道独立',
-    '/union/2/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
-    '/union/2/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
-    '/union/2/field/"defaults"/field/"arrow"': '箭头默认样式',
-    '/union/2/field/"defaults"/field/"reset"': '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
+    '/union/2/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.path.arrow',
+    '/union/2/field/"defaults"/field/"node"/field/"label"': '节点标签与路径步骤标签的默认样式',
+    '/union/2/field/"defaults"/field/"path"/field/"label"': '节点标签与路径步骤标签的默认样式',
+    '/union/2/field/"defaults"/field/"path"/field/"arrow"': '箭头默认样式',
+    '/union/2/field/"defaults"/field/"reset"':
+      '默认样式继承屏障：true 重置全部，或指定 node、path（包含各自装饰） 通道',
     '/union/2/field/"defaultCell"/field/"style"': '集合 单元格的稀疏外观覆盖',
     '/union/2/field/"defaultCell"/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
     '/union/2/field/"defaultCell"/field/"style"/field/"opacity"': '主要图形整体透明度',
@@ -380,7 +386,7 @@ export const chainSchemaLocalization = {
       '原样传递到 Scene 的动画轨道，不影响布局或包围盒，不跨作用域继承',
     '/union/2/field/"defaultConnection"/field/"path"/field/"zIndex"':
       '同级图元的绘制层级，较大值在上；省略为零，同层按原始顺序',
-    '/union/2/field/"defaultConnection"/field/"path"/field/"roundedCorners"': '线段接点的几何圆角半径；省略时保留尖角',
+    '/union/2/field/"defaultConnection"/field/"path"/field/"cornerRadius"': '线段接点的几何圆角半径；省略时保留尖角',
     '/union/2/field/"defaultConnection"/field/"path"/field/"rotate"':
       '绕路径包围盒中心旋转；先解析端点，再整体应用旋转',
     '/union/2/field/"defaultConnection"/field/"path"/field/"scale"': '绕路径包围盒中心缩放，与旋转使用相同中心',

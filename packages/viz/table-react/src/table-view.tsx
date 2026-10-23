@@ -11,7 +11,7 @@ import { useCallback, useMemo, useRef } from 'react';
 
 import { RetikzTableReactError } from './error';
 import type { ReactTableRuntime } from './table-runtime';
-import { useTableThemeStyles } from './theme-context';
+import { useTableThemeDefinitions } from './theme-context';
 
 /** standalone Table 运行时交给 Layout 的内部 InputEmbed 组件属性 */
 type TableRuntimeEmbedProps = InputTable<unknown>;
@@ -37,7 +37,8 @@ const isRootTableArtifact = (artifact: CompileArtifact): artifact is TableCompil
 /** 共享 standalone Table runtime view，不作为公开组件导出 */
 export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({ runtime }) => {
   const { table, lowerOptions, composites, onManifest, display } = runtime;
-  const { shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, themeStyles, ...hostProps } = display;
+  const { shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, themeDefinitions, ...hostProps } =
+    display;
   const tableKey = JSON.stringify(table);
   const stableTable = useMemo<InputTableVariant>(() => JSON.parse(tableKey) as InputTableVariant, [tableKey]);
   const { datasetReference, datasetSource } = runtime;
@@ -53,7 +54,7 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
     formatterDefinitions,
     presentationDefinitions,
     structureDefinitions,
-    tableThemeStyles,
+    tableThemeDefinitions,
     visualScaleDefinitions,
     formatDefinitions,
     fieldOrderDefinitions,
@@ -67,12 +68,12 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
     regressionImplementations,
   } = lowerOptions;
 
-  const ambientTableThemeStyles = useTableThemeStyles();
-  const effectiveTableThemeStyles = useMemo(() => {
-    if (ambientTableThemeStyles === undefined) return tableThemeStyles;
-    if (tableThemeStyles === undefined) return ambientTableThemeStyles;
-    return [...ambientTableThemeStyles, ...tableThemeStyles];
-  }, [ambientTableThemeStyles, tableThemeStyles]);
+  const ambientTableThemeDefinitions = useTableThemeDefinitions();
+  const effectiveTableThemeDefinitions = useMemo(() => {
+    if (ambientTableThemeDefinitions === undefined) return tableThemeDefinitions;
+    if (tableThemeDefinitions === undefined) return ambientTableThemeDefinitions;
+    return [...ambientTableThemeDefinitions, ...tableThemeDefinitions];
+  }, [ambientTableThemeDefinitions, tableThemeDefinitions]);
 
   const stableLowerOptions = useMemo(
     () => ({
@@ -80,7 +81,9 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
       ...(presentationDefinitions === undefined ? {} : { presentationDefinitions }),
       ...(structureDefinitions === undefined ? {} : { structureDefinitions }),
       ...(visualScaleDefinitions === undefined ? {} : { visualScaleDefinitions }),
-      ...(effectiveTableThemeStyles === undefined ? {} : { tableThemeStyles: effectiveTableThemeStyles }),
+      ...(effectiveTableThemeDefinitions === undefined
+        ? {}
+        : { tableThemeDefinitions: effectiveTableThemeDefinitions }),
       formatDefinitions,
       fieldOrderDefinitions,
       transformDefinitions,
@@ -93,7 +96,7 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
       regressionImplementations,
     }),
     [
-      effectiveTableThemeStyles,
+      effectiveTableThemeDefinitions,
       formatterDefinitions,
       presentationDefinitions,
       structureDefinitions,
@@ -157,7 +160,7 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
       runtime={{ preparation: 'async', signal: runtime.signal }}
       onArtifacts={onManifest === undefined ? undefined : handleArtifacts}
       {...hostProps}
-      extensions={{ shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, themeStyles }}
+      extensions={{ shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, themeDefinitions }}
     >
       {inputChild}
     </Layout>

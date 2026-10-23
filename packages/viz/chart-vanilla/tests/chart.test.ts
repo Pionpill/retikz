@@ -1,6 +1,6 @@
 import type { IRChartSource } from '@retikz/chart';
 import { defineChartTheme } from '@retikz/chart';
-import { defineThemeStyle } from '@retikz/core';
+import { defineTheme } from '@retikz/core';
 import {
   defineTransformImplementation,
   defineRegressionImplementation,
@@ -11,7 +11,7 @@ import {
   defineRegression,
 } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
-import { definePlotThemeStyle } from '@retikz/plot';
+import { definePlotTheme } from '@retikz/plot';
 import type { AnyInputEmbed } from '@retikz/vanilla';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
@@ -145,45 +145,45 @@ describe('Chart Vanilla authoring', () => {
   });
 
   it('forwards named Theme definitions and Plot lowering options without putting them in Source', () => {
-    const themeDefinitions = [defineChartTheme({ name: 'scatter-theme', defaults: { layout: { gap: 8 } } })];
+    const chartThemeDefinitions = [defineChartTheme({ name: 'scatter-theme', defaults: { layout: { gap: 8 } } })];
     const lowerOptions = { datasetFieldMaps: { rows: { x: 'x' } } } as const;
     const result = scatterChart({
       data: rows,
       encodings: { x: 'x', y: 'y' },
-      themeDefinitions,
+      chartThemeDefinitions,
       lowerOptions,
     });
 
-    expect(result.props.themeDefinitions).toBe(themeDefinitions);
+    expect(result.props.chartThemeDefinitions).toBe(chartThemeDefinitions);
     expect(result.props.lowerOptions).toBe(lowerOptions);
-    expect(sourceOf(result)).not.toHaveProperty('themeDefinitions');
+    expect(sourceOf(result)).not.toHaveProperty('chartThemeDefinitions');
   });
 
-  it('keeps the Core host Theme and Theme style definitions in the authoring result and SSR', () => {
-    const hostThemeStyle = defineThemeStyle({
+  it('keeps the Core host Theme and Theme definitions in the authoring result and SSR', () => {
+    const hostTheme = defineTheme({
       name: 'host-style',
       resolve: () => ({ categorical: ['#123456'] }),
     });
     const result = scatterChart({
       data: rows,
       encodings: { x: 'x', y: 'y' },
-      theme: { style: 'host-style', mode: 'dark' },
-      themeStyles: [hostThemeStyle],
-      themeDefinitions: [
+      theme: { name: 'host-style', mode: 'dark' },
+      themeDefinitions: [hostTheme],
+      chartThemeDefinitions: [
         defineChartTheme({
           name: 'host-style',
           defaults: { background: { fill: '#ffffff' } },
         }),
       ],
       lowerOptions: {
-        definitions: { plotThemeStyles: [definePlotThemeStyle({ name: 'host-style', resolve: () => ({}) })] },
+        definitions: { plotThemeDefinitions: [definePlotTheme({ name: 'host-style', resolve: () => ({}) })] },
       },
     });
 
-    expect(result.props.theme).toEqual({ style: 'host-style', mode: 'dark' });
-    expect(result.props.themeStyles).toEqual([hostThemeStyle]);
+    expect(result.props.theme).toEqual({ name: 'host-style', mode: 'dark' });
+    expect(result.props.themeDefinitions).toEqual([hostTheme]);
     expect(sourceOf(result)).not.toHaveProperty('theme');
-    expect(sourceOf(result)).not.toHaveProperty('themeStyles');
+    expect(sourceOf(result)).not.toHaveProperty('chartThemeDefinitions');
     expect(renderChart(result, { adapters }).svg).toContain('#123456');
   });
 

@@ -5,7 +5,6 @@ import type {
   FieldCollector,
   MarkChannels,
   MarkInstanceInput,
-  MarkDefinition,
   MarkLoweringContext,
 } from '../../../contract';
 import { markProperty, unencodedMarkProperties, markInstances, markInstanceKey } from '../../../contract';
@@ -32,6 +31,7 @@ import {
   fixedRoleValue,
   resolveNodeMarkLabels,
 } from '../shared';
+import type { MarkDefinition } from '../types';
 import { pointGlyphStyle } from './point-glyph';
 import { POINT_DEFAULT_RADIUS } from './point-glyph';
 

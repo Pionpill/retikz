@@ -43,14 +43,24 @@ const BranchDiagramComponent: FC<BranchDiagramProps> = props => {
     pathGenerators,
     pathKinds,
     composites,
-    themeStyles,
+    themeDefinitions,
     ...hostProps
   } = branchDiagramLayoutHostPropsOf(props);
 
   return (
     <Layout
       {...hostProps}
-      extensions={{ shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, composites, themeStyles }}
+      extensions={{
+        shapes,
+        boundaries,
+        clips,
+        arrows,
+        patterns,
+        pathGenerators,
+        pathKinds,
+        composites,
+        themeDefinitions,
+      }}
     >
       <BranchRuntimeEmbed id={input.id ?? generatedId} input={input} />
     </Layout>

@@ -21,7 +21,7 @@ import {
   PreviewRelation,
   PreviewThemeDefinitionBundle,
   PreviewThemeProvider,
-  PreviewThemeStyle,
+  PreviewTheme,
   resolvePreviewTheme,
 } from '../../src/modules/docs/components/component-preview/theme';
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
@@ -31,11 +31,11 @@ import ThemeInheritance from '../../src/modules/docs/contents/kernel/components/
 import ScatterResponsiveDemo from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.zh.demo';
 import { useComponentPreviewStore } from '../../src/modules/docs/store';
 
-const originalThemeStyle = useComponentPreviewStore.getState().themeStyle;
+const originalTheme = useComponentPreviewStore.getState().themeName;
 
 afterEach(() => {
   vi.restoreAllMocks();
-  useComponentPreviewStore.getState().setThemeStyle(originalThemeStyle);
+  useComponentPreviewStore.getState().setTheme(originalTheme);
   document.body.replaceChildren();
 });
 
@@ -47,7 +47,7 @@ describe('ComponentPreview global theme', () => {
     { mode: ThemeMode.Dark, color: 'hsl(210, 76%, 64%)' },
   ])('applies the named $mode theme to the responsive Scatter demo', ({ mode, color }) => {
     const markup = renderToStaticMarkup(
-      <PreviewThemeProvider theme={{ style: PreviewThemeStyle.Vibrant, mode }}>
+      <PreviewThemeProvider theme={{ name: PreviewTheme.Vibrant, mode }}>
         <PreviewDimensionsContext.Provider value={{ width: 720, height: 440 }}>
           <ScatterResponsiveDemo />
         </PreviewDimensionsContext.Provider>
@@ -66,7 +66,7 @@ describe('ComponentPreview global theme', () => {
     document.body.appendChild(container);
     const root = createRoot(container);
 
-    for (const style of [PreviewThemeStyle.Default, PreviewThemeStyle.Vibrant, PreviewThemeStyle.Default]) {
+    for (const style of [PreviewTheme.Default, PreviewTheme.Vibrant, PreviewTheme.Default]) {
       await act(async () => {
         root.render(
           <PreviewThemeProvider theme={resolvePreviewTheme(style, ThemeMode.Light)}>
@@ -77,7 +77,7 @@ describe('ComponentPreview global theme', () => {
         );
         await Promise.resolve();
       });
-      const color = style === PreviewThemeStyle.Default ? 'hsl(210, 38%, 48%)' : 'hsl(210, 70%, 54%)';
+      const color = style === PreviewTheme.Default ? 'hsl(210, 38%, 48%)' : 'hsl(210, 70%, 54%)';
 
       expect(container.innerHTML).toContain(color);
     }
@@ -96,23 +96,23 @@ describe('ComponentPreview global theme', () => {
     expect(markup).toContain('#dbeafe');
   });
 
-  it('writes the selected ThemeStyle and ThemeMode as a Core selector', () => {
-    expect(resolvePreviewTheme(PreviewThemeStyle.Academic, ThemeMode.Dark)).toEqual({
-      style: PreviewThemeStyle.Academic,
+  it('writes the selected Theme and ThemeMode as a Core selector', () => {
+    expect(resolvePreviewTheme(PreviewTheme.Academic, ThemeMode.Dark)).toEqual({
+      name: PreviewTheme.Academic,
       mode: ThemeMode.Dark,
     });
   });
 
   it('omits style when the docs default option is selected', () => {
-    expect(resolvePreviewTheme(PreviewThemeStyle.Default, ThemeMode.Light)).toEqual({ mode: ThemeMode.Light });
+    expect(resolvePreviewTheme(PreviewTheme.Default, ThemeMode.Light)).toEqual({ mode: ThemeMode.Light });
   });
 
   it('PreviewThemeProvider bridges persisted IDs to the React ambient Theme', () => {
-    useComponentPreviewStore.getState().setThemeStyle(PreviewThemeStyle.Clean);
+    useComponentPreviewStore.getState().setTheme(PreviewTheme.Clean);
 
     const ThemeReader: FC = () => {
       const theme = useTheme();
-      return <output>{theme?.style}</output>;
+      return <output>{theme?.name}</output>;
     };
 
     const container = document.createElement('div');
@@ -126,17 +126,17 @@ describe('ComponentPreview global theme', () => {
       );
     });
 
-    expect(container.textContent).toBe(PreviewThemeStyle.Clean);
+    expect(container.textContent).toBe(PreviewTheme.Clean);
 
     act(() => root.unmount());
   });
 
   it('keeps the Core default baseline when an explicit preview theme omits style', () => {
-    useComponentPreviewStore.getState().setThemeStyle(PreviewThemeStyle.Vibrant);
+    useComponentPreviewStore.getState().setTheme(PreviewTheme.Vibrant);
 
     const ThemeReader: FC = () => {
       const theme = useTheme();
-      return <output>{theme?.style ?? 'default'}</output>;
+      return <output>{theme?.name ?? 'default'}</output>;
     };
 
     const container = document.createElement('div');
@@ -155,12 +155,12 @@ describe('ComponentPreview global theme', () => {
     act(() => root.unmount());
   });
 
-  it('keeps an explicit preview ThemeStyle above later global changes', () => {
-    useComponentPreviewStore.getState().setThemeStyle(PreviewThemeStyle.Clean);
+  it('keeps an explicit preview Theme above later global changes', () => {
+    useComponentPreviewStore.getState().setTheme(PreviewTheme.Clean);
 
     const ThemeReader: FC = () => {
       const theme = useTheme();
-      return <output>{theme?.style}</output>;
+      return <output>{theme?.name}</output>;
     };
 
     const container = document.createElement('div');
@@ -168,17 +168,17 @@ describe('ComponentPreview global theme', () => {
     const root = createRoot(container);
     act(() => {
       root.render(
-        <PreviewThemeProvider theme={{ style: PreviewThemeStyle.Academic, mode: ThemeMode.Light }}>
+        <PreviewThemeProvider theme={{ name: PreviewTheme.Academic, mode: ThemeMode.Light }}>
           <ThemeReader />
         </PreviewThemeProvider>,
       );
     });
 
-    expect(container.textContent).toBe(PreviewThemeStyle.Academic);
+    expect(container.textContent).toBe(PreviewTheme.Academic);
 
-    act(() => useComponentPreviewStore.getState().setThemeStyle(PreviewThemeStyle.Vibrant));
+    act(() => useComponentPreviewStore.getState().setTheme(PreviewTheme.Vibrant));
 
-    expect(container.textContent).toBe(PreviewThemeStyle.Academic);
+    expect(container.textContent).toBe(PreviewTheme.Academic);
 
     act(() => root.unmount());
   });
@@ -210,7 +210,7 @@ describe('ComponentPreview global theme', () => {
 
     expect(() =>
       renderToStaticMarkup(
-        <PreviewThemeProvider theme={{ style: PreviewThemeStyle.Academic, mode: ThemeMode.Light }}>
+        <PreviewThemeProvider theme={{ name: PreviewTheme.Academic, mode: ThemeMode.Light }}>
           <PreviewDetailTable
             id="preview-table"
             dataRef="people"
@@ -222,10 +222,10 @@ describe('ComponentPreview global theme', () => {
     ).not.toThrow();
   });
 
-  it('makes the selected Chart ThemeStyle available to standalone Chart previews', () => {
+  it('makes the selected Chart Theme available to standalone Chart previews', () => {
     expect(() =>
       renderToStaticMarkup(
-        <PreviewThemeProvider theme={{ style: PreviewThemeStyle.Vibrant, mode: ThemeMode.Light }}>
+        <PreviewThemeProvider theme={{ name: PreviewTheme.Vibrant, mode: ThemeMode.Light }}>
           <ScatterChart>
             <ChartData data={[{ income: 12000, life: 74 }]} />
             <ScatterEncodings x="income" y="life" />
@@ -301,14 +301,14 @@ describe('ComponentPreview global theme', () => {
     const graphRecord = graph as Readonly<Record<string, unknown>>;
     const graphOptions = (graphRecord.input as Readonly<Record<string, unknown>> | undefined) ?? graphRecord;
 
-    expect(graphOptions).toMatchObject({ graphThemeStyles: PreviewThemeDefinitionBundle.graph });
+    expect(graphOptions).toMatchObject({ graphThemeDefinitions: PreviewThemeDefinitionBundle.graph });
 
     for (const component of [PreviewEntity, PreviewRelation]) {
       const embedded = component.createInputEmbedProps?.({}, { id: 'preview', kind: component.inputEmbedAdapter.kind });
       const record = embedded as Readonly<Record<string, unknown>>;
       const options = (record.input as Readonly<Record<string, unknown>> | undefined) ?? record;
 
-      expect(options).not.toHaveProperty('graphThemeStyles');
+      expect(options).not.toHaveProperty('graphThemeDefinitions');
     }
   });
 
@@ -319,12 +319,12 @@ describe('ComponentPreview global theme', () => {
       </Layout>
     ));
     const output = buildVanillaPreview(preview, {
-      theme: { mode: ThemeMode.Light, style: PreviewThemeDefinitionBundle.graph[0].name },
+      theme: { mode: ThemeMode.Light, name: PreviewThemeDefinitionBundle.graph[0].name },
     });
 
     expect(output.svg).toContain('<svg');
     expect(output.code).toContain('createGraphProviders');
     expect(output.code).toContain('normalizeScene(source, { adapters }).ir');
-    expect(output.code).not.toMatch(/entity\([^)]*graphThemeStyles/s);
+    expect(output.code).not.toMatch(/entity\([^)]*graphThemeDefinitions/s);
   });
 });

@@ -1,7 +1,7 @@
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { defineTableThemeStyle, resolveTableThemeDefaults } from '../../src';
+import { defineTableTheme, resolveTableThemeDefaults } from '../../src';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { resolveTableCellPlans } from '../../src/pipeline/rule';
 
@@ -23,8 +23,8 @@ describe('Source defaults Cell mapping', () => {
       { kind: 'detail', columns: [{ id: 'value', field: 'value' }] },
       { data: { reference: 'rows' }, datasets: { rows: [{ value: 1 }] } },
     );
-    const defaultTable = resolveTableThemeDefaults({ style: 'mapping', mode: ThemeMode.Light, colors: lightColors }, [
-      defineTableThemeStyle({
+    const defaultTable = resolveTableThemeDefaults({ name: 'mapping', mode: ThemeMode.Light, colors: lightColors }, [
+      defineTableTheme({
         name: 'mapping',
         resolve: () => ({
           defaults: {
@@ -46,8 +46,11 @@ describe('Source defaults Cell mapping', () => {
         content: {
           defaults: {
             style: { color: '#123456' },
-            node: { style: { font: { family: 'sans-serif', weight: 500 } } },
-            label: { font: { family: 'sans-serif', weight: 500 } },
+            node: {
+              style: { font: { family: 'sans-serif', weight: 500 } },
+              label: { font: { family: 'sans-serif', weight: 500 } },
+            },
+            path: { label: { font: { family: 'sans-serif', weight: 500 } } },
           },
         },
         borders: { bottom: { kind: 'line', stroke: '#e4e4e7', width: 1 } },
@@ -63,8 +66,11 @@ describe('Source defaults Cell mapping', () => {
         content: {
           defaults: {
             style: { color: '#18181b' },
-            node: { style: { font: { family: 'monospace', weight: 400 } } },
-            label: { font: { family: 'sans-serif', weight: 400 } },
+            node: {
+              style: { font: { family: 'monospace', weight: 400 } },
+              label: { font: { family: 'sans-serif', weight: 400 } },
+            },
+            path: { label: { font: { family: 'sans-serif', weight: 400 } } },
           },
         },
       },
@@ -83,9 +89,9 @@ describe('Source defaults Cell mapping', () => {
       { data: { reference: 'rows' }, datasets: { rows: [{ value: 1 }] } },
     );
     const defaultTable = resolveTableThemeDefaults(
-      { style: 'transparent', mode: ThemeMode.Light, colors: lightColors },
+      { name: 'transparent', mode: ThemeMode.Light, colors: lightColors },
       [
-        defineTableThemeStyle({
+        defineTableTheme({
           name: 'transparent',
           resolve: () => ({
             defaults: {

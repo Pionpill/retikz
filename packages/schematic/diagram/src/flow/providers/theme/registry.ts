@@ -1,33 +1,21 @@
-import { assertNonEmptyString } from '@retikz/foundation';
-
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
-import type { FlowThemeStyleDefinition } from '../../contract';
+import type { FlowThemeDefinition } from '../../contract';
 
-/** 组装 Flow Theme style registry，同一 Definition identity 只保留一次 */
-export const resolveFlowThemeStyleRegistry = (
-  custom: ReadonlyArray<FlowThemeStyleDefinition> | undefined = undefined,
-): ReadonlyMap<string, FlowThemeStyleDefinition> => {
-  const registry = new Map<string, FlowThemeStyleDefinition>();
+/** 组装 Flow Theme registry，同一 Definition identity 只保留一次 */
+export const resolveFlowThemeRegistry = (
+  custom: ReadonlyArray<FlowThemeDefinition> | undefined = undefined,
+): ReadonlyMap<string, FlowThemeDefinition> => {
+  const registry = new Map<string, FlowThemeDefinition>();
 
   for (const definition of custom ?? []) {
-    assertNonEmptyString(
-      definition.name,
-      'Flow theme style',
-      () =>
-        new RetikzDiagramError({
-          code: RetikzDiagramErrorCode.DefinitionInvalid,
-          message: 'Flow theme style name must be a non-empty string.',
-          details: { capability: 'flow-theme-style', key: definition.name },
-        }),
-    );
     const existing = registry.get(definition.name);
     if (existing === definition) continue;
     if (existing !== undefined) {
       throw new RetikzDiagramError({
         code: RetikzDiagramErrorCode.DefinitionDuplicate,
-        message: `Flow theme style '${definition.name}' is already registered.`,
+        message: `Flow theme '${definition.name}' is already registered.`,
         details: {
-          capability: 'flow-theme-style',
+          capability: 'flow-theme',
           key: definition.name,
           availableKeys: [...registry.keys()],
         },

@@ -26,7 +26,7 @@ export const BubbleChartInputEmbedAdapter = createChartInputEmbedAdapter(
     return buildPointChartRuntime(
       source,
       parts,
-      createBubbleChartProviderContribution(parts.themeDefinitions, parts.lowerOptions),
+      createBubbleChartProviderContribution(parts.chartThemeDefinitions, parts.lowerOptions),
     );
   },
 );

@@ -2,10 +2,6 @@ import type { IRChartPresentation, IRChartPresentationRegion } from '@retikz/cha
 
 import type { InputChartPresentation, InputChartPresentationRegion } from './types';
 
-/** 把 Vanilla presentation shorthand 归一为固定四槽位正式区域 */
-const presentationRegionOf = (input: InputChartPresentationRegion): IRChartPresentationRegion =>
-  typeof input === 'string' || Array.isArray(input) ? { text: input } : input;
-
 /** 把 Vanilla presentation shorthand 归一为固定四槽位
  *
  * Plot 不写入 Source presentation；Chart resolver 在消费时负责插入固定 Plot 槽位
@@ -14,6 +10,10 @@ export const normalizeChartPresentation = (
   input: InputChartPresentation,
   existing: IRChartPresentation | undefined = undefined,
 ): IRChartPresentation | undefined => {
+  /** 把 Vanilla presentation shorthand 归一为固定四槽位正式区域 */
+  const presentationRegionOf = (region: InputChartPresentationRegion): IRChartPresentationRegion =>
+    typeof region === 'string' || Array.isArray(region) ? { text: region } : region;
+
   const presentation: IRChartPresentation = {
     ...(existing?.title === undefined ? {} : { title: existing.title }),
     ...(existing?.subtitle === undefined ? {} : { subtitle: existing.subtitle }),

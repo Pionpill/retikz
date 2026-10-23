@@ -9,7 +9,7 @@ Ribbon reuses Path commands, styles, centerline labels, and transforms. See the 
 
 ## Endpoints and caps
 
-Each endpoint section defaults to the normal of the centerline endpoint tangent. Set `start.direction` and `end.direction` independently to override the section axis. Caps connect the two attachments using the final section frame; the outward normal faces backward at the start and forward at the end. Configure the two caps independently. `Path.label` follows the centerline tangent. Side-to-cap joins are not forced to be smooth. All fields below belong to `kindOptions`.
+Each endpoint section defaults to the normal of the centerline endpoint tangent. Set `start.direction` and `end.direction` independently to override the section axis. Caps connect the two attachments using the final section frame; the outward normal faces backward at the start and forward at the end. Configure the two caps independently. `Path.kindOptions.label` follows the centerline tangent. Side-to-cap joins are not forced to be smooth. All fields below belong to `kindOptions`.
 
 | Group             | Property            | Values and meaning                                                                                                                                                          |
 | ----------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -26,7 +26,7 @@ Each endpoint section defaults to the normal of the centerline endpoint tangent.
 
 The `cap.name` and `cap.params` rows describe fields nested in either `start.cap` or `end.cap`.
 
-`direction` specifies the section axis as an angle in degrees, a nonzero vector `[x, y]`, or polar coordinates `{ angle, radius, origin? }`; it defaults to `auto`. `90` gives a vertical section, useful for horizontal Sankey ribbons. It does not reroute the centerline. Caps and cap labels follow the final section frame, while `Path.label` keeps its original centerline position and rotation. Polar coordinates cannot reference a node origin, the resolved vector must be nonzero, and the section axis cannot be parallel to the endpoint tangent.
+`direction` specifies the section axis as an angle in degrees, a nonzero vector `[x, y]`, or polar coordinates `{ angle, radius, origin? }`; it defaults to `auto`. `90` gives a vertical section, useful for horizontal Sankey ribbons. It does not reroute the centerline. Caps and cap labels follow the final section frame, while `Path.kindOptions.label` keeps its original centerline position and rotation. Polar coordinates cannot reference a node origin, the resolved vector must be nonzero, and the section axis cannot be parallel to the endpoint tangent.
 
 The demo starts with a cubic Bézier curve. Choose “Custom angle” independently in “Start section” and “End section” to rotate the corresponding `Step.control1` / `Step.control2` handle. This keeps each endpoint tangent perpendicular to its section and reshapes the entire centerline and ribbon outline. Auto mode preserves that endpoint's default control point. Setting both angles to 90° makes the centerline horizontal with vertical sections.
 
@@ -44,7 +44,7 @@ Arc angle is a demo control for the central angle; it derives `center`, `radius`
 
 ## Cap labels
 
-`start.label` / `end.label` sit alongside `cap` and use the shared boundary-label options. They follow the final cap boundary independently of the centerline `Path.label` in [Basic usage](/library/extension/ribbon/usage), making them suitable for chord connection endpoints. Sector names still belong to the sector host.
+`start.label` / `end.label` sit alongside `cap` and use the shared boundary-label options. They follow the final cap boundary independently of the centerline `Path.kindOptions.label` in [Basic usage](/library/extension/ribbon/usage), making them suitable for chord connection endpoints. Sector names still belong to the sector host.
 
 | Group         | Property            | Values and meaning                                                                        |
 | ------------- | ------------------- | ----------------------------------------------------------------------------------------- |
@@ -60,7 +60,7 @@ Arc angle is a demo control for the central angle; it derives `center`, `radius`
 |               | `label.textColor`   | Text color, including `currentColor`                                                      |
 |               | `label.opacity`     | 0–1, multiplied by host opacity                                                           |
 
-Here `label.*` belongs to `start.label` or `end.label`, not `Path.label`. Endpoints already determine the attachment, so `position`, `side`, and `sloped` are not accepted. Inside placement does not guarantee containment, and outside placement does not avoid collisions with other objects.
+Here `label.*` belongs to `start.label` or `end.label`, not `Path.kindOptions.label`. Endpoints already determine the attachment, so `position`, `side`, and `sloped` are not accepted. Inside placement does not guarantee containment, and outside placement does not avoid collisions with other objects.
 
 Change the cap to see the labels follow the final cap boundary. Then adjust placement, distance, and text rotation. A/B mark the start and end. This example uses `tangent` and `keepUpright: true`; choose a custom angle to compare the text orientation independently.
 
@@ -87,7 +87,7 @@ Each side is an open Step sequence starting with its own `move`. The example kee
 
 ## Constraints
 
-`boundary` does not read top-level `children` and cannot be combined with centerline width rules. It currently rejects Path `label`. Both boundaries must be valid open Step sequences.
+`boundary` does not read top-level `children` and cannot be combined with centerline width rules. It currently rejects `kindOptions.label`. Both boundaries must be valid open Step sequences.
 
 `boundary` preserves the original curves and does not accept sampling, start/end, or endpoint-label options.
 

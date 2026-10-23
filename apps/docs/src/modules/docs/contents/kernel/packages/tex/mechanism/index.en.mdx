@@ -19,9 +19,9 @@ Follow the same `x^2` formula through four stages below. The final diagram maps 
 
 ## Recognize the formula
 
-A math run is a formula segment in a text line, as opposed to an ordinary text segment. After the host injects `lowerTex`, Core recognizes `$...$` / `$$...$$` as formula segments in inline and display mode respectively. In this example, `$x^2$` becomes source `x^2` in inline mode. Without a lowerer, the string stays ordinary text.
+A math segment is a formula segment in a text line, as opposed to an ordinary text segment. After the host injects `lowerTex`, Core recognizes `$...$` / `$$...$$` as formula segments in inline and display mode respectively. In this example, `$x^2$` becomes source `x^2` in inline mode. Without a lowerer, the string stays ordinary text.
 
-Callers can also declare a formula segment directly in structured text: this is an explicit math run, requiring no dollar-delimiter recognition. Because it already explicitly requests formula layout, a missing lowerer skips the segment with a diagnostic instead of falling back to ordinary text.
+Callers can also declare a formula segment directly in structured text: this is an explicit math segment, requiring no dollar-delimiter recognition. Because it already explicitly requests formula layout, a missing lowerer skips the segment with a diagnostic instead of falling back to ordinary text.
 
 Core passes the source, `displayMode`, and font size to synchronous `LowerTex`. Host color is resolved when painting and does not participate in lowering. This separates text layout from formula typesetting: Core does not need to know how MathJax lays out the formula.
 
@@ -30,7 +30,7 @@ This page follows the inline example. Display mode also calls the lowerer throug
 <SourceLinks
   sources={[
     { label: 'String formula recognition and gating', path: 'packages/kernel/core/src/resolve/text/inline.ts' },
-    { label: 'Lowering calls for formula runs', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+    { label: 'Lowering calls for formula segments', path: 'packages/kernel/core/src/compile/text/layout.ts' },
   ]}
 />
 
@@ -108,13 +108,13 @@ Failures have two diagnostic levels: the Tex lowerer reports the specific cause 
 
 An “error node” in the table means the returned SVG contains MathJax's `data-mml-node="merror"` marker, not that the engine returned a different data type.
 
-| Scenario                                      | Observable result                                                                                                          |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| String formula without an injected lowerer    | `$...$` / `$$...$$` remains ordinary text and does not enter formula parsing                                               |
-| Explicit math run without an injected lowerer | The segment is skipped and reports `TEX_LOWERER_MISSING`; text runs on the same line continue rendering                    |
-| MathJax returns an error node                 | The lowerer returns `null`, reports `mathjax-error`, then Core reports `TEX_INVALID`; this deterministic failure is cached |
-| SVG is unsupported or malformed               | The full formula is rejected and reports `unsupported-svg` or `malformed-svg`, then Core `TEX_INVALID`; it is cached       |
-| `engine.convert` throws                       | The lowerer returns `null`, reports `engine-error`, then Core `TEX_INVALID`; this transient failure is not cached          |
+| Scenario                                          | Observable result                                                                                                          |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| String formula without an injected lowerer        | `$...$` / `$$...$$` remains ordinary text and does not enter formula parsing                                               |
+| Explicit math segment without an injected lowerer | The segment is skipped and reports `TEX_LOWERER_MISSING`; text segments on the same line continue rendering                |
+| MathJax returns an error node                     | The lowerer returns `null`, reports `mathjax-error`, then Core reports `TEX_INVALID`; this deterministic failure is cached |
+| SVG is unsupported or malformed                   | The full formula is rejected and reports `unsupported-svg` or `malformed-svg`, then Core `TEX_INVALID`; it is cached       |
+| `engine.convert` throws                           | The lowerer returns `null`, reports `engine-error`, then Core `TEX_INVALID`; this transient failure is not cached          |
 
 <SourceLinks
   sources={[
@@ -131,7 +131,7 @@ This is asynchronous preparation before the main flow, not work repeated for eve
 
 `useLowerTex`, exported by `@retikz/tex/react`, is React-only. It keys a shared MathJax engine by the effective extension set; Vanilla callers instead `await createMathJaxLowerTex()` and inject `compile.lowerTex` themselves.
 
-The host connects preparation to compilation: React puts the returned lowerer into compile configuration once the hook is ready; Vanilla awaits creation before compiling with it. To include formulas in the first output, wait for readiness before submitting that compile. Compiling earlier without a lowerer follows the string/explicit-run branches above; compilation does not automatically wait for the engine.
+The host connects preparation to compilation: React puts the returned lowerer into compile configuration once the hook is ready; Vanilla awaits creation before compiling with it. To include formulas in the first output, wait for readiness before submitting that compile. Compiling earlier without a lowerer follows the string/explicit-segment branches above; compilation does not automatically wait for the engine.
 
 <ComponentPreview files="tex-react-lifecycle" size="xs" type="flow" hideCode />
 

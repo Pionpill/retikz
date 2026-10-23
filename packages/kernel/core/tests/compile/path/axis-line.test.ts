@@ -564,7 +564,7 @@ describe('compile path: axis-line', () => {
         { type: 'step', kind: 'axis-line', axis: 'horizontal', to: [20, 10] },
         { type: 'step', kind: 'line', to: [20, 20] },
       ],
-      { roundedCorners: 4 },
+      { cornerRadius: 4 },
     );
 
     expect(commands.some(command => command.kind === 'arc')).toBe(true);

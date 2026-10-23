@@ -19,7 +19,7 @@ const wayOf = (values: DrawLabelPreviewValues): WayDSL => {
 export type DrawLabelPreviewValues = {
   segmentKind: 'line' | '-|' | '|-' | 'curve';
   position: number;
-  side: 'top' | 'bottom' | 'left' | 'right';
+  side: 'top' | 'bottom' | 'left' | 'right' | 'center';
   sloped: boolean;
   textColor: string;
 };

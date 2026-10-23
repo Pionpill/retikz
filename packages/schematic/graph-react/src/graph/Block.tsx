@@ -67,23 +67,6 @@ type CollectedSlot = Readonly<{
   adapters: ReadonlyArray<AnyInputEmbedAdapter>;
 }>;
 
-const collectOptionalSlot = (
-  children: ReactNode | undefined,
-  embedIdPrefix: string,
-  label: string,
-): CollectedSlot | undefined => {
-  const collected = collectGraphChildren(children, embedIdPrefix);
-  if (collected.children.length === 0) return undefined;
-  if (collected.children.length !== 1) {
-    throw structureError(label, `${label} requires at most one child.`, {
-      expectedCount: 1,
-      receivedCount: collected.children.length,
-    });
-  }
-
-  return { child: collected.children[0], adapters: collected.adapters };
-};
-
 const createBlockInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
   const { children, ...input } = props as BlockProps;
   const collected = collectGraphChildren(children, context.id);
@@ -108,6 +91,23 @@ Block.inputEmbedAdapter = BlockInputEmbedAdapter;
 Block.createInputEmbedProps = createBlockInput;
 
 const createBlockHeaderInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
+  const collectOptionalSlot = (
+    children: ReactNode | undefined,
+    embedIdPrefix: string,
+    label: string,
+  ): CollectedSlot | undefined => {
+    const collected = collectGraphChildren(children, embedIdPrefix);
+    if (collected.children.length === 0) return undefined;
+    if (collected.children.length !== 1) {
+      throw structureError(label, `${label} requires at most one child.`, {
+        expectedCount: 1,
+        receivedCount: collected.children.length,
+      });
+    }
+
+    return { child: collected.children[0], adapters: collected.adapters };
+  };
+
   const { icon: iconNode, trail: trailNode, ...input } = props as BlockHeaderProps;
   const icon = collectOptionalSlot(iconNode, `${context.id}:icon`, 'BlockHeader.icon');
   const trail = collectOptionalSlot(trailNode, `${context.id}:trail`, 'BlockHeader.trail');

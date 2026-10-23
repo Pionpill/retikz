@@ -23,7 +23,7 @@ description: 配置主题、注入能力、读取编译结果并控制更新
 
 <ComponentPreview files={['layout-shape-injection', 'layout-file-shape.ts']} size="sm" />
 
-`extensions` 还支持连接边界（`boundaries`）、裁剪区（`clips`）、箭头（`arrows`）、图案（`patterns`）、路径生成器（`pathGenerators`）、路径类型（`pathKinds`）、复合组件（`composites`）和主题风格（`themeStyles`）。这些定义统一通过 `extensions` 进入对应注册表，由编译过程消费。
+`extensions` 还支持连接边界（`boundaries`）、裁剪区（`clips`）、箭头（`arrows`）、图案（`patterns`）、路径生成器（`pathGenerators`）、路径类型（`pathKinds`）、复合组件（`composites`）和主题风格（`themeDefinitions`）。这些定义统一通过 `extensions` 进入对应注册表，由编译过程消费。
 
 本节只展示形状扩展的接入方式；其他能力的定义与使用将在后续对应主题的自定义指南中分别说明。完整字段见 [API 参考](/kernel/components/layout/reference)。
 

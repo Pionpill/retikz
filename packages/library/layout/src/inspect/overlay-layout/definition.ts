@@ -1,6 +1,5 @@
 import { defineInspector } from '@retikz/inspect';
 
-import { OverlayLayoutArtifactSchema } from '../../composites/overlay-layout';
 import { LAYOUT_NAMESPACE } from '../../shared';
 import { resolveOverlayLayoutInspectOptions } from '../resolve/overlay-layout';
 import { mergeLayoutInspectOptionsInput } from '../resolve/shared';
@@ -18,7 +17,6 @@ export const OVERLAY_LAYOUT_INSPECTOR_KEY = Object.freeze({
 export const OVERLAY_LAYOUT_INSPECTOR = defineInspector({
   ...OVERLAY_LAYOUT_INSPECTOR_KEY,
   owner: { kind: 'composite', namespace: LAYOUT_NAMESPACE, type: 'overlayLayout' },
-  subjectSchema: OverlayLayoutArtifactSchema,
   optionsSchema: OverlayLayoutInspectOptionsSchema,
   resolveOptions: resolveOverlayLayoutInspectOptions,
   mergeOptionsInput: mergeLayoutInspectOptionsInput,

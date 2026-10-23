@@ -130,7 +130,6 @@ export const normalizePlotRoot = (
     // 自定义坐标系：IR 直接存 { type:<customType>, ...config }；roles / 投影函数来自运行时 CoordinateDefinition
     if (
       typeof coordinateInput !== 'object' ||
-      coordinateInput.type.trim().length === 0 ||
       BUILTIN_COORDINATE_INPUT_TYPES.has(coordinateInput.type) ||
       coordinateInput.type === 'custom'
     ) {

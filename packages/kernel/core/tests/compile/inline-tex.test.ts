@@ -134,13 +134,13 @@ f'(x) &= 2ax + b
     expect(textPrims(primitives).length).toBeGreaterThan(0);
   });
 
-  it('supports explicit runs with per-run fill', () => {
+  it('supports explicit segments with per-segment fill', () => {
     const { primitives } = compile([
       {
         type: 'node',
         id: 'a',
         position: [0, 0],
-        text: [{ runs: [{ text: 'E=' }, { tex: 'mc^2', fill: '#ff0000' }] }],
+        text: [{ segments: [{ text: 'E=' }, { tex: 'mc^2', fill: '#ff0000' }] }],
       } as never,
     ]);
     const glyphs = glyphPaths(primitives);

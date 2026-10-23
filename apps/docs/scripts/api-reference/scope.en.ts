@@ -18,17 +18,16 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '作者侧 Scope 输入': 'Scope authoring input',
   '可选编译驱动自行解释的运行时载荷，不进入 Core IR':
     'Optional runtime payload interpreted by a compile driver; excluded from Core IR',
-  可省略默认值的包络装饰: 'Envelope decoration whose defaulted fields may be omitted',
   '无法由 authoring 字段唯一识别时显式指定 Scope 类别':
     'Explicitly identify a Scope when its authoring fields do not uniquely identify it',
   '局部变换、样式、裁剪与引用配置': 'Local transforms, styles, clipping, and reference configuration',
   '按声明顺序保留的子图元，不复制子数组': 'Children retained in declaration order; the array is not copied',
   '保留配置与子图元引用的 Scope 输入，尚未归一化或编译':
     'Scope input retaining options and child references, before normalization or compilation',
-  'Scope IR 类型——手写而非 z.infer 派生': 'Scope IR type, declared explicitly rather than inferred with z.infer',
-  'ChildSchema 通过 z.lazy 延迟回灌，z.infer 推断 children 元素时拿不到精确的 IRNode | IRPath | IRCoordinate | IRScope union；手写让 children 类型显式表达递归 union。\n  Scope 通过 defaults.style 提供级联视觉默认值，并在 defaults 中提供四个专属通道与 reset 继承屏障':
-    'ChildSchema is populated lazily through z.lazy, so an explicit declaration preserves the recursive union of child types. Scope provides shared visual defaults through defaults.style, and four dedicated channels plus a reset barrier through defaults.',
-  'Scope 外框的可省略默认值输入': 'Scope frame input with optional defaulted fields',
+  '分组容器及其递归子项，支持局部变换和样式继承':
+    'A grouping container with recursive children, local transforms, and style inheritance',
+  'ChildSchema 通过 z.lazy 延迟回灌，z.infer 推断 children 元素时拿不到精确的 IRNode | IRPath | IRCoordinate | IRScope union；手写让 children 类型显式表达递归 union。\n  Scope 通过 defaults.style 提供级联视觉默认值，并在 defaults 中提供两个宿主通道与 reset 继承屏障':
+    'ChildSchema is populated lazily through z.lazy, so an explicit declaration preserves the recursive union of child types. Scope provides shared visual defaults through defaults.style, and two host channels plus a reset barrier through defaults.',
   'Scope 最终锚点对齐放置': 'Final anchor-aligned Scope placement',
   'Scope 除 `type` 与递归 `children` 外的完整 authored 属性集合':
     'Complete authored Scope properties excluding `type` and recursive `children`',
@@ -42,8 +41,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '为一组图元设置局部样式、命名空间、变换、裁剪和引用包络':
     'Configure local styles, namespaces, transforms, clipping, and reference bounds for a group of elements',
 
-  '固有包络的独立外框；位于内容下方，不参与布局、引用或命中':
-    'Independent intrinsic-envelope frame below all content; excluded from layout, references, and hit testing',
   '单击该图元（DOM `click`）': 'Click on this element (DOM `click`)',
   '双击该图元（DOM `dblclick`）': 'Double-click on this element (DOM `dblclick`)',
   '指针在该图元上按下（DOM `pointerdown`）': 'Pointer pressed on this element (DOM `pointerdown`)',
@@ -95,8 +92,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '显式栈序：作用于 scope 整体在父层的位置（不影响 scope 内部子元素相对栈序）；缺省 0 = 声明顺序':
     'Explicit stacking order of the whole Scope among siblings, without changing child order; defaults to 0, preserving declaration order',
   '后代共享视觉默认值，逐字段继承与覆盖': 'Shared descendant visual defaults, inherited and overridden per field',
-  'Scope 通过 defaults.style 提供级联视觉默认值，并在 defaults 中提供四个专属通道与 reset 继承屏障':
-    'Scope supplies cascading visual defaults through defaults.style, with four dedicated channels and the reset inheritance barrier in defaults',
+  'Scope 通过 defaults.style 提供级联视觉默认值，并在 defaults 中提供两个宿主通道与 reset 继承屏障':
+    'Scope supplies cascading visual defaults through defaults.style, with two host channels and the reset inheritance barrier in defaults',
   'Scope 的级联视觉覆盖与后代默认通道，Layout 通过 rootScope 承载':
     'Cascading visual overrides and child-default channels for Scope; Layout carries them through rootScope',
   '作用域级视觉覆盖；已声明字段按层级向后代 Composite 逐字段继承':

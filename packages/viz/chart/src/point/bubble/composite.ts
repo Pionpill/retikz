@@ -8,12 +8,12 @@ import { BubbleChartDefinition } from './recipe';
 
 /** 创建只安装 Bubble recipe 的 Point family provider contribution */
 export const createBubbleChartProviderContribution = (
-  themeDefinitions: ReadonlyArray<ChartThemeDefinition> = [],
+  chartThemeDefinitions: ReadonlyArray<ChartThemeDefinition> = [],
   lowerOptions: LowerPlotsOptions = {},
 ): ChartProviderContribution =>
   createChartProviderContribution({
     family: ChartFamily.Point,
     recipe: BubbleChartDefinition,
-    themeDefinitions,
+    chartThemeDefinitions,
     lowerOptions,
   });

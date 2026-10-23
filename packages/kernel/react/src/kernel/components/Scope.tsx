@@ -47,8 +47,6 @@ export type ScopeProps = ScopeStyleProps &
      * @default 'rectangle'
      */
     boundingShape?: IRScope['boundingShape'];
-    /** 固有包络的独立外框；位于内容下方，不参与布局、引用或命中 */
-    frame?: IRScope['frame'];
     /** 用户自定义元数据；可在事件 / 水合上下文中读取，不参与布局，也不下传给子元素。须为 JSON 可序列化对象 */
     meta?: IRScope['meta'];
     /** scope 整体的时间轴动画；渲染端播放或降级为静态，不参与布局，也不下传给子元素 */

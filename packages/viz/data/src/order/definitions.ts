@@ -58,7 +58,6 @@ export const resolveFieldOrderRegistry = (
 ): ReadonlyMap<string, FieldOrderDefinition> => {
   const registry = new Map(BUILTIN_FIELD_ORDERS.map(definition => [definition.name, definition]));
   for (const definition of definitions) {
-    if (definition.name.trim().length === 0) throw new RetikzDataError('data: field order name must not be blank');
     if (registry.has(definition.name))
       throw new RetikzDataError(`data: duplicate field order registration "${definition.name}"`);
     registry.set(definition.name, definition);

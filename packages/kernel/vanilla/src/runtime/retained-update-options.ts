@@ -17,18 +17,6 @@ const isPlainRecord = (value: unknown): value is Record<PropertyKey, unknown> =>
   return prototype === Object.prototype || prototype === null;
 };
 
-/** 校验普通对象只含可枚举 data properties */
-const assertDataRecord: (value: unknown) => asserts value is Record<string, unknown> = value => {
-  if (!isPlainRecord(value)) return invalidUpdateOptions(value);
-
-  for (const key of Reflect.ownKeys(value)) {
-    const descriptor = Object.getOwnPropertyDescriptor(value, key);
-    if (typeof key !== 'string' || descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
-      invalidUpdateOptions(value);
-    }
-  }
-};
-
 /** 复制 dense data-property 数组并拒绝 accessor、symbol、extra key 与 sparse slot */
 const cloneArray = (value: ReadonlyArray<unknown>, ancestors: WeakSet<object>): ReadonlyArray<unknown> => {
   const keys = Reflect.ownKeys(value);
@@ -86,6 +74,18 @@ const cloneAndFreeze = <T>(value: T, ancestors = new WeakSet<object>()): T => {
 
 /** 校验并捕获 retained update 可变配置，避免后续 hydrate 读取用户可变别名 */
 export const captureRetainedUpdateOptions = (input: unknown): RetainedVanillaUpdateOptions => {
+  /** 校验普通对象只含可枚举 data properties */
+  const assertDataRecord: (value: unknown) => asserts value is Record<string, unknown> = value => {
+    if (!isPlainRecord(value)) return invalidUpdateOptions(value);
+
+    for (const key of Reflect.ownKeys(value)) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (typeof key !== 'string' || descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
+        invalidUpdateOptions(value);
+      }
+    }
+  };
+
   try {
     assertDataRecord(input);
     const animation = input.animation;

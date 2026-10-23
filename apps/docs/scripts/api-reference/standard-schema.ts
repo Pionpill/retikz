@@ -63,8 +63,14 @@ const addDescription = (
 
 const shared = {
   ...scopeSchemaLocalizations,
-  ScopePropsSchema: scopeSchemaLocalizations.ScopeSchema,
-  PathBaseSchema: { descriptions: pathSchemaDescriptions },
+  ScopePropsSchema: {
+    descriptions: Object.fromEntries(
+      Object.entries(scopeSchemaLocalizations.ScopeSchema.descriptions).filter(
+        ([key]) => key !== 'type' && key !== 'children',
+      ),
+    ),
+  },
+  PathSchema: { descriptions: pathSchemaDescriptions },
   ...nodeSchemas,
 };
 
@@ -118,6 +124,7 @@ export const createStandardApiReferenceMdx = (
   createApiReferenceMdx(
     {
       ...config,
+      schemaLocalizations: { ...shared, ...config.schemaLocalizations },
       reachableSchemas: {
         CellSchema: MapSchema.options[0].shape.entries.unwrap().unwrap().element.shape.key.options[1],
       },

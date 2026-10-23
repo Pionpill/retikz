@@ -30,14 +30,14 @@ const recipe = defineChartRecipe({
   resolveEncodings: resolveDirectEncodings,
   resolve: () => ({
     scaffold: { scales: [], spatial: { coordinate: { type: 'cartesian2D' }, replaceable: false } },
-    semanticMarks: [{ kind: 'fixture', plotMarks: [{ type: 'point', kind: 'data' }] }],
+    semanticMarks: [{ kind: 'fixture', plotMarks: [{ type: 'point', encodings: { position: { x: { value: 0 } } } }] }],
   }),
 });
 
 const mark = defineChartMark({
   kind: 'fixture',
   schema: strictObject({ kind: literal('fixture') }),
-  resolve: () => ({ marks: [{ type: 'point', kind: 'data' }] }),
+  resolve: () => ({ marks: [{ type: 'point', encodings: { position: { x: { value: 0 } } } }] }),
 });
 
 describe('Chart Definition contracts', () => {
@@ -53,7 +53,7 @@ describe('Chart Definition contracts', () => {
         {
           family: 'fixture',
           recipe: defineChartRecipe({ ...recipe, encodingSlots: ['x', 'x'] }),
-          themeDefinitions: [],
+          chartThemeDefinitions: [],
         },
       ]),
     ).toThrow();
@@ -68,7 +68,9 @@ describe('Chart Definition contracts', () => {
         return [{ type: 'axis', dimension: 'x', grid: true }];
       },
     });
-    const registry = resolveChartProviderRegistry([{ family: 'fixture', recipe: guideRecipe, themeDefinitions: [] }]);
+    const registry = resolveChartProviderRegistry([
+      { family: 'fixture', recipe: guideRecipe, chartThemeDefinitions: [] },
+    ]);
     const source = recipeSourceSchema.parse({
       namespace: 'chart',
       type: 'fixture',
@@ -80,7 +82,7 @@ describe('Chart Definition contracts', () => {
       resolveSelectedChart(source, {
         theme: DEFAULT_RESOLVED_THEME,
         recipe: guideRecipe,
-        themeDefinitions: [],
+        chartThemeDefinitions: [],
         runtime: registry.runtime,
       }).plot.guides,
     ).toEqual([{ type: 'axis', dimension: 'x', grid: true }]);

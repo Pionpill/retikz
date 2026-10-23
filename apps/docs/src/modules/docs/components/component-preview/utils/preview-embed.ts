@@ -19,14 +19,17 @@ import { resolveInputEmbedAdapter } from '@retikz/react';
 import type { ReactNode } from 'react';
 import { createElement, Fragment, isValidElement } from 'react';
 
-type PlotStandaloneProps = Pick<LayoutProps & LayoutExtensions, 'className' | 'style' | 'renderer' | 'themeStyles'> &
+type PlotStandaloneProps = Pick<
+  LayoutProps & LayoutExtensions,
+  'className' | 'style' | 'renderer' | 'themeDefinitions'
+> &
   PlotLineageProps;
 
 const PLOT_STANDALONE_PROP_KEYS = [
   'className',
   'style',
   'renderer',
-  'themeStyles',
+  'themeDefinitions',
   'lineage',
   'hostLineageMetadata',
   'onLineage',
@@ -68,7 +71,7 @@ const FLOW_HOST_PROP_KEYS = [
   'pathGenerators',
   'pathKinds',
   'composites',
-  'themeStyles',
+  'themeDefinitions',
   'lowerTex',
   'artifacts',
   'onArtifacts',

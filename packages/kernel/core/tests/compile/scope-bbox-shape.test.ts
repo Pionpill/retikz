@@ -31,7 +31,7 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
 
 /** 构造一个 width/height 已知、中心已知的 0-rotate 测试 layout */
 const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => ({
-  shape: { name: 'rectangle', definition: BUILTIN_SHAPES.rectangle, params: {} },
+  shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x: cx, y: cy, width: w, height: h, rotate: 0 },
     contentCenter: [cx, cy],
@@ -39,8 +39,8 @@ const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => (
     contentSize: { width: w, height: h },
   },
   boundary: {
-    name: BUILTIN_SHAPES.rectangle.name,
-    definition: BUILTIN_SHAPES.rectangle,
+    name: BUILTIN_SHAPES.get('rectangle')!.name,
+    definition: BUILTIN_SHAPES.get('rectangle')!,
     params: {},
     isShape: true,
   },

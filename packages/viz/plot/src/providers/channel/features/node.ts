@@ -28,7 +28,7 @@ import {
   isBuiltinScaleOperation,
 } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
-import type { IRPlot, IRPlotLinearScale, IRPlotMarkOperation, IRPlotChannel, IRPlotSqrtScale } from '../../../schemas';
+import type { IRPlot, IRPlotLinearScale, IRPlotMark, IRPlotChannel, IRPlotSqrtScale } from '../../../schemas';
 import { BuiltinPlotScale } from '../../../schemas';
 import { resolveLinearScale, resolveSqrtScale } from '../../scale';
 import { PLOT_SHAPE_PALETTE } from '../../theme';
@@ -200,7 +200,7 @@ export const resolveNumericNodeChannel = (
  */
 export const resolveSizeChannel = (
   ctx: NodeChannelDefinitionResolveContext,
-  mark: IRPlotMarkOperation,
+  mark: IRPlotMark,
 ): ChannelResolution<number> | undefined => {
   const { node, rows, model } = ctx;
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
@@ -291,7 +291,7 @@ export const resolveSizeChannel = (
  */
 export const resolveShapeChannel = (
   ctx: NodeChannelDefinitionResolveContext,
-  mark: IRPlotMarkOperation,
+  mark: IRPlotMark,
 ): ChannelResolution<JsonValue> | undefined => {
   const { rows, model } = ctx;
   const channel = markChannelEncoding(mark, 'shape');

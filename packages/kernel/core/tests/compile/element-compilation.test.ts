@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { literal, strictObject, string } from 'zod';
+import { literal } from 'zod';
 
 import type { CompileBinding, CompileOutput, IRPathBase } from '../../src';
 import { definePathKind, PathSchema } from '../../src';
@@ -83,7 +83,7 @@ describe('独立元素编译', () => {
     const kind = definePathKind({
       name: 'cached-path',
       schema: PathSchema.extend({ kind: literal('cached-path') }),
-      ownerOutput: { schema: strictObject({ label: string() }) },
+      ownerOutput: true,
       compile: context => {
         calls += 1;
         if (context.ownerOutput.requested) context.ownerOutput.publish({ label: 'cached' });
@@ -146,11 +146,11 @@ describe('独立元素编译', () => {
   it('复用绘制片段不再次调用自定义 shape provider，引用投影不修改旧布局', () => {
     let emitted = 0;
     const definition: ShapeDefinition = {
-      ...BUILTIN_SHAPES.rectangle,
+      ...BUILTIN_SHAPES.get('rectangle')!,
       name: 'counted',
       emit: (...args) => {
         emitted += 1;
-        return BUILTIN_SHAPES.rectangle.emit(...args);
+        return BUILTIN_SHAPES.get('rectangle')!.emit(...args);
       },
     };
     const environment = createCompileEnvironment({ shapes: [definition] });
@@ -175,7 +175,7 @@ describe('独立元素编译', () => {
     expect(emitted).toBe(count);
   });
 
-  it('嵌套外框经过祖先裁剪时保持全量可见边界和资源语义', () => {
+  it('嵌套作用域经过祖先裁剪时保持全量可见边界和资源语义', () => {
     const environment = createCompileEnvironment();
     const context = { environment, context: resolveScopeContext({}, environment), irPath: 'children[0].scope' };
     const outer: Omit<IRScope, 'children'> = {
@@ -184,7 +184,7 @@ describe('独立元素编译', () => {
       position: [20, 30],
       clip: { kind: 'rect', x: -10, y: -10, width: 20, height: 20 },
     };
-    const inner: Omit<IRScope, 'children'> = { type: 'scope', id: 'inner', position: [5, 8], frame: { padding: 15 } };
+    const inner: Omit<IRScope, 'children'> = { type: 'scope', id: 'inner', position: [5, 8] };
     const input: IRNode = { type: 'node', position: [0, 0], text: 'A' };
     const a = prepareScopeCompilation(outer, context);
     if (a.status !== 'compiled') throw new Error('expected outer');
@@ -320,7 +320,7 @@ describe('独立元素编译', () => {
   it('已编译 Scope 与子节点组装后等价于全量输出', () => {
     const environment = createCompileEnvironment();
     const parent = resolveScopeContext({}, environment);
-    const scopeInput = { type: 'scope' as const, position: [30, 40] as [number, number], frame: { padding: 4 } };
+    const scopeInput = { type: 'scope' as const, position: [30, 40] as [number, number] };
     const context = { environment, context: parent, irPath: 'scene.children[0].scope' };
     const prepared = prepareScopeCompilation(scopeInput, context);
     if (prepared.status !== 'compiled') throw new Error('expected scope preparation');

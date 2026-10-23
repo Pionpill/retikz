@@ -33,7 +33,7 @@ describe('<Layout lowerTex> multi-path passthrough', () => {
   it('把 custom lowerer 的多条路径与 paint 交给同一 Core consumer', () => {
     const svg = renderToStaticMarkup(
       <Layout lowerTex={lowerTex}>
-        <Node position={[0, 0]} text={[{ runs: [{ tex: 'x', fill: 'royalblue' }] }]} />
+        <Node position={[0, 0]} text={[{ segments: [{ tex: 'x', fill: 'royalblue' }] }]} />
       </Layout>,
     );
 

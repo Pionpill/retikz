@@ -1,6 +1,6 @@
 import type { JsonObject } from '@retikz/foundation';
-import type { IRPlotMarkOperation } from '@retikz/plot';
-import { BuiltinPlotMark, RelationMarkSchema } from '@retikz/plot';
+import type { IRPlotMark } from '@retikz/plot';
+import { BuiltinPlotMark } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
 import { defineChartMark } from '../../_chart/contract';
@@ -62,10 +62,7 @@ const fieldMappingOf = (
 };
 
 /** 把一个 Ranged Dot semantic mark 解析为原子 projected Relation */
-export const resolveRangedDotMark = (
-  encodings: JsonObject,
-  properties: IRRangedDotChartProperties,
-): IRPlotMarkOperation => {
+export const resolveRangedDotMark = (encodings: JsonObject, properties: IRRangedDotChartProperties): IRPlotMark => {
   const category = requiredFieldOf(encodings, 'category', ['recipe', 'encodings', 'category']);
   const start = requiredFieldOf(encodings, 'start', ['recipe', 'encodings', 'start']);
   const end = requiredFieldOf(encodings, 'end', ['recipe', 'encodings', 'end']);
@@ -77,7 +74,7 @@ export const resolveRangedDotMark = (
   const style = rangeStyleOf(range);
   const path = rangePathOf(range);
 
-  return RelationMarkSchema.parse({
+  return {
     type: BuiltinPlotMark.Relation,
     encodings: {
       source: { position: { x: { field: start }, y: { field: category } } },
@@ -90,7 +87,7 @@ export const resolveRangedDotMark = (
       geometry: { kind: 'path', ...path },
       endpoints: { source, target },
     },
-  });
+  };
 };
 
 const mergedPropertiesOf = (context: ChartMarkResolveContext, source: IRRangedDotMark): IRRangedDotChartProperties => {

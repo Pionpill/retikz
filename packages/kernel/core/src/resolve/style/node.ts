@@ -1,6 +1,7 @@
 import { mergeProperties } from '@retikz/foundation';
 
 import type { IRNode, IRNodeStyle } from '../../schemas';
+import { mergeFont } from './font';
 import { mergeGraphicStyle } from './opacity';
 import type { EffectiveScopeDefaults } from './types';
 
@@ -8,6 +9,8 @@ import type { EffectiveScopeDefaults } from './types';
 export const resolveEffectiveNodeStyle = (node: IRNode, scopeDefaults: EffectiveScopeDefaults): IRNode => {
   const defaults = scopeDefaults.node;
   const style = mergeGraphicStyle<IRNodeStyle>(defaults?.style, node.style);
+  const font = mergeFont(defaults?.style.font, node.style?.font);
+  if (font !== undefined) style.font = font;
   const layout = {
     ...defaults?.layout,
     ...mergeProperties([node.layout ?? {}], { shouldOverride: value => value !== undefined }),

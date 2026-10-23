@@ -41,9 +41,6 @@ type LowerTexStateEntry = {
 
 const engineEntries = new Map<string, EngineEntry>();
 
-/** 根据规范化配置生成 React engine 缓存键 */
-const formatEngineCacheKey = (extensions: ReadonlyArray<MathJaxExtension>): string => extensions.join(',');
-
 /** 获取或创建按有效 extension 集合分桶的共享 MathJax 引擎条目 */
 const getOrCreateEngineEntry = (extensions: Array<MathJaxExtension>, engineKey: string): EngineEntry => {
   const cachedEntry = engineEntries.get(engineKey);
@@ -88,6 +85,9 @@ const getOrCreateEngineEntry = (extensions: Array<MathJaxExtension>, engineKey: 
  * ```
  */
 export const useLowerTex = (options?: MathJaxLowerTexOptions): MathJaxLowerTexState => {
+  /** 根据规范化配置生成 React engine 缓存键 */
+  const formatEngineCacheKey = (extensions: ReadonlyArray<MathJaxExtension>): string => extensions.join(',');
+
   const extensions = resolveMathJaxExtensions(options);
   const engineKey = formatEngineCacheKey(extensions);
   const diagnosticRef = useRef(options?.onDiagnostic);

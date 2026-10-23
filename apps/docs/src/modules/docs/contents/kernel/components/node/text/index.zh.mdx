@@ -3,7 +3,7 @@ title: Text · 文本
 description: 编写节点正文、多行和行内样式，控制折行与对齐
 ---
 
-节点正文由 `text` 或 children 提供；显式 `text` 优先。多行排布由 Node 管理，React 的 `<Text>` 只为其中一整行设置样式。同一行需要多段样式时使用 `{ runs }`，不能把 Text 当成行内 span。
+节点正文由 `text` 或 children 提供；显式 `text` 优先。多行排布由 Node 管理，React 的 `<Text>` 只为其中一整行设置样式。同一行需要多段样式时使用 `{ segments }`，不能把 Text 当成行内 span。
 
 先阅读[基础用法](/kernel/components/node/usage)，再按本页组织节点正文。
 
@@ -136,10 +136,10 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 ## 行内混排
 
-下面两段文字仍在同一行；Vanilla API 和 IR 也使用同一 `text` 数据结构。只要正文包含 `{ runs }` 或已解析的公式，整个文本块就走混排布局，不按 `maxTextWidth` 自动折行；需要换行时显式拆成多个行数组项。公式接入见 [TeX](/kernel/packages/tex)。
+下面两段文字仍在同一行；Vanilla API 和 IR 也使用同一 `text` 数据结构。只要正文包含 `{ segments }` 或已解析的公式，整个文本块就走混排布局，不按 `maxTextWidth` 自动折行；需要换行时显式拆成多个行数组项。公式接入见 [TeX](/kernel/packages/tex)。
 
 ```tsx
-<Node position={[0, 0]} text={[{ runs: [{ text: 'Status: ' }, { text: 'ready', fill: 'green' }] }]} />
+<Node position={[0, 0]} text={[{ segments: [{ text: 'Status: ' }, { text: 'ready', fill: 'green' }] }]} />
 ```
 
 ## 自动黑白对比色
@@ -158,7 +158,9 @@ import { NodeTextColor } from '@retikz/core';
 
 - Core 静态支持 CSS named color、3/4/6/8 位 hex，以及 legacy / modern `rgb()`、`hsl()`；不读取 DOM、主题变量或页面像素
 - 透明 / 缺省 fill、`opacity.fill < 1`、gradient、pattern、image、`var()`、`currentColor` 等无法闭合求值的背景使用固定 `currentColor` fallback，并发出 `TEXT_AUTO_CONTRAST_UNRESOLVED`
-- 行 / run 的 `fill`、label 的显式颜色和 `defaults.label` 仍优先；关键字只影响最终继承 Node 文字颜色的正文、label 与 pin
+- 行 / segment 的 `fill`、label 的显式颜色和 `defaults.node.label` 仍优先；关键字只影响最终继承 Node 文字颜色的正文、label 与 pin
+
+单文本行与分段行都支持 `fill`、`opacity` 和 `font`。分段行先继承块级字体，再应用行级默认和片段覆盖；片段只改字重时，字号和字体族仍继承所在行。公式采用所在行的有效字号，也可用公式片段的 `fontSize` 单独设置；`em` 相对所在行字号，`rem` 相对根字号。公式字体由 TeX 接入方处理。
 
 ## 错误与限制
 
@@ -179,10 +181,10 @@ Text 只在 Node 中生效，每个 Text 的 children 是字符串或数字。�
         description: `显式提供节点正文，优先于 \`children\`：
 
 - \`string\`：普通字符串是一行；其中的 \`\\n\` 形成硬分行，也可含 \`$...$\` 公式 sugar
-- \`Array<IRLine>\`：多行数组至少包含一行；每项可为 \`string\`、\`{ text, fill?, opacity?, font? }\`，或 \`{ runs: Array<IRTextRun | IRMathRun> }\`
+- \`Array<IRLine>\`：多行数组至少包含一行；每项可为 \`string\`、\`{ text, fill?, opacity?, font? }\`，或 \`{ segments: Array<IRTextSegment | IRMathSegment>, fill?, opacity?, font? }\`
   - 文字段：\`{ text, fill?, opacity?, font? }\`
-  - 公式段：\`{ tex, displayMode?, fill?, opacity? }\`，需要 \`lowerTex\`
-  - \`runs\` 在同一基线上依次排版文字和公式`,
+  - 公式段：\`{ tex, displayMode?, fontSize?, fill?, opacity? }\`，需要 \`lowerTex\`
+  - \`segments\` 在同一基线上依次排版文字和公式`,
 },
 {
   name: 'children',

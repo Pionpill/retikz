@@ -33,9 +33,9 @@ Core obtains metrics through the injected `measureText` function; it does not re
 
 Plain text is split at explicit line breaks, then wrapped at available break positions within the width limit: words for Western text and characters for CJK. An unbreakable segment wider than the limit remains intact. Content width is the widest physical line; height is the number of physical lines multiplied by `lineHeight`. This includes line spacing and differs from the glyph height itself.
 
-Math or explicit `runs` content is measured fragment by fragment, then aligned to a shared baseline within each line. Widths are added; the required extents above and below the baseline are taken separately. Each line slot is tall enough for those fragments. **Content that mixes formulas with plain text does not use plain-text automatic wrapping**; setting a width does not imply that formulas will wrap.
+Math or explicit `segments` content is measured fragment by fragment, then aligned to a shared baseline within each line. Widths are added; the required extents above and below the baseline are taken separately. Each line slot is tall enough for those fragments. **Content that mixes formulas with plain text does not use plain-text automatic wrapping**; setting a width does not imply that formulas will wrap.
 
-Within one plain-text layout pass, repeated measurements of the same text and font are reused during wrapping. This cache belongs to the current node layout. The outer compile context also shares successful metrics by text and font parameters across nodes and probes. Neither cache survives another compilation, and a width change still requires layout to run again. See [Query evaluation and caching](/kernel/packages/core/composite-compilation#query-evaluation-and-caching).
+Within one plain-text layout pass, repeated measurements of the same text and font are reused during wrapping. This cache belongs to the current node layout. The outer compile context also shares successful metrics by text and font parameters across nodes and probes. Neither cache survives another compilation, and a width change still requires layout to segment again. See [Query evaluation and caching](/kernel/packages/core/composite-compilation#query-evaluation-and-caching).
 
 <SourceLinks
   sources={[
@@ -81,7 +81,7 @@ Asymmetric padding can also make the visual box center differ from the content c
       label: 'Content budgets, circumscribe, and size constraints',
       path: 'packages/kernel/core/src/compile/node/layout.ts',
     },
-    { label: 'Shape containment contract', path: 'packages/kernel/core/src/contract/shape/types.ts' },
+    { label: 'Shape containment contract', path: 'packages/kernel/core/src/contract/shape/shape.ts' },
   ]}
 />
 
@@ -134,7 +134,7 @@ When the same layout is referenced repeatedly, Core reuses calculated connection
 
 ## Complete implementation flow
 
-The flow below follows a plain-text node. The left side shows layout stages; the right side shows consumers of the result. Geometry queries run when needed, without precomputing every anchor before emission.
+The flow below follows a plain-text node. The left side shows layout stages; the right side shows consumers of the result. Geometry queries segment when needed, without precomputing every anchor before emission.
 
 <ComponentPreview files="layout-implementation" size="xl" hideCode type="flow" />
 

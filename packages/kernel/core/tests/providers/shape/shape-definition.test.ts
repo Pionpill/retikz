@@ -22,17 +22,17 @@ const DIAMOND_PARAMS = { sides: 4, rotate: 0 } as const;
 
 describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
   it('rectangle is identity', () => {
-    expect(BUILTIN_SHAPES.rectangle.circumscribe(10, 6, NO_PARAMS)).toEqual({ halfWidth: 10, halfHeight: 6 });
+    expect(BUILTIN_SHAPES.get('rectangle')!.circumscribe(10, 6, NO_PARAMS)).toEqual({ halfWidth: 10, halfHeight: 6 });
   });
 
   it('circle (= ellipse equal) = √(hw²+hh²) on both axes', () => {
     const r = Math.hypot(10, 6);
 
-    expect(BUILTIN_SHAPES.ellipse.circumscribe(10, 6, EQUAL_PARAMS)).toEqual({ halfWidth: r, halfHeight: r });
+    expect(BUILTIN_SHAPES.get('ellipse')!.circumscribe(10, 6, EQUAL_PARAMS)).toEqual({ halfWidth: r, halfHeight: r });
   });
 
   it('ellipse = inner × √2', () => {
-    expect(BUILTIN_SHAPES.ellipse.circumscribe(10, 6, NO_PARAMS)).toEqual({
+    expect(BUILTIN_SHAPES.get('ellipse')!.circumscribe(10, 6, NO_PARAMS)).toEqual({
       halfWidth: 10 * SQRT2,
       halfHeight: 6 * SQRT2,
     });
@@ -40,7 +40,7 @@ describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
 
   it('diamond (= polygon 4/0) 外接 AABB：顶点在坐标轴上，AABB 半轴相等', () => {
     // polygon{4,0} 是视觉菱形：外接圆 R = (hw + hh)，顶点在东西南北方向。
-    const r = BUILTIN_SHAPES.polygon.circumscribe(10, 6, DIAMOND_PARAMS);
+    const r = BUILTIN_SHAPES.get('polygon')!.circumscribe(10, 6, DIAMOND_PARAMS);
 
     expect(r.halfWidth).toBeCloseTo(16, 6);
     expect(r.halfHeight).toBeCloseTo(16, 6);
@@ -50,28 +50,28 @@ describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
 describe('BUILTIN_SHAPES.anchor returns canonical anchors, undefined otherwise', () => {
   const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
   it('rectangle named anchors', () => {
-    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'center', NO_PARAMS)).toBeUndefined();
-    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'top', NO_PARAMS)).toEqual([0, -5]);
-    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'right', NO_PARAMS)).toEqual([10, 0]);
-    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'bottom-left', NO_PARAMS)).toEqual([-10, 5]);
+    expect(BUILTIN_SHAPES.get('rectangle')!.anchor(rect, 'center', NO_PARAMS)).toBeUndefined();
+    expect(BUILTIN_SHAPES.get('rectangle')!.anchor(rect, 'top', NO_PARAMS)).toEqual([0, -5]);
+    expect(BUILTIN_SHAPES.get('rectangle')!.anchor(rect, 'right', NO_PARAMS)).toEqual([10, 0]);
+    expect(BUILTIN_SHAPES.get('rectangle')!.anchor(rect, 'bottom-left', NO_PARAMS)).toEqual([-10, 5]);
   });
 
   it('canonical directional anchors remain accepted by built-in providers', () => {
-    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'top', NO_PARAMS)).toEqual([0, -5]);
-    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'bottom-left', NO_PARAMS)).toEqual([-10, 5]);
+    expect(BUILTIN_SHAPES.get('rectangle')!.anchor(rect, 'top', NO_PARAMS)).toEqual([0, -5]);
+    expect(BUILTIN_SHAPES.get('rectangle')!.anchor(rect, 'bottom-left', NO_PARAMS)).toEqual([-10, 5]);
   });
 
   it('unknown anchor name → undefined (caller throws clear error)', () => {
-    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'foobar', NO_PARAMS)).toBeUndefined();
-    expect(BUILTIN_SHAPES.ellipse.anchor(rect, 'middle', EQUAL_PARAMS)).toBeUndefined();
-    expect(BUILTIN_SHAPES.polygon.anchor(rect, '', DIAMOND_PARAMS)).toBeUndefined();
+    expect(BUILTIN_SHAPES.get('rectangle')!.anchor(rect, 'foobar', NO_PARAMS)).toBeUndefined();
+    expect(BUILTIN_SHAPES.get('ellipse')!.anchor(rect, 'middle', EQUAL_PARAMS)).toBeUndefined();
+    expect(BUILTIN_SHAPES.get('polygon')!.anchor(rect, '', DIAMOND_PARAMS)).toBeUndefined();
   });
 });
 
 describe('boundaryPoint honours rect.rotate (rotate-bearing rect)', () => {
   it('rectangle rotated 90° clips toward +x at the rotated short half-axis', () => {
     const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: Math.PI / 2 };
-    const [px, py] = BUILTIN_SHAPES.rectangle.boundaryPoint(rect, [100, 0], NO_PARAMS);
+    const [px, py] = BUILTIN_SHAPES.get('rectangle')!.boundaryPoint(rect, [100, 0], NO_PARAMS);
 
     expect(px).toBeCloseTo(5, 6);
     expect(py).toBeCloseTo(0, 6);
@@ -82,7 +82,7 @@ describe('emit runs in axis-aligned space and returns Iterable<ScenePrimitive>',
   const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
   const style: ResolvedShapeStyle = { fill: 'red', stroke: 'blue', strokeWidth: 2 };
   it('rectangle → single RectPrim', () => {
-    const prims = [...BUILTIN_SHAPES.rectangle.emit(rect, style, id, NO_PARAMS)];
+    const prims = [...BUILTIN_SHAPES.get('rectangle')!.emit(rect, style, id, NO_PARAMS)];
 
     expect(prims).toHaveLength(1);
     expect(prims[0].type).toBe('rect');
@@ -90,7 +90,7 @@ describe('emit runs in axis-aligned space and returns Iterable<ScenePrimitive>',
 
   it('circle (= ellipse equal) emit → EllipsePrim with rx === ry', () => {
     const square: CenteredBox = { x: 0, y: 0, width: 20, height: 20, rotate: 0 };
-    const prims = [...BUILTIN_SHAPES.ellipse.emit(square, style, id, EQUAL_PARAMS)];
+    const prims = [...BUILTIN_SHAPES.get('ellipse')!.emit(square, style, id, EQUAL_PARAMS)];
 
     expect(prims[0].type).toBe('ellipse');
 
@@ -98,7 +98,7 @@ describe('emit runs in axis-aligned space and returns Iterable<ScenePrimitive>',
   });
 
   it('diamond (= polygon 4/0) → PathPrim with 4 vertices + close', () => {
-    const prims = [...BUILTIN_SHAPES.polygon.emit(rect, style, id, DIAMOND_PARAMS)];
+    const prims = [...BUILTIN_SHAPES.get('polygon')!.emit(rect, style, id, DIAMOND_PARAMS)];
 
     expect(prims[0].type).toBe('path');
 
@@ -194,9 +194,9 @@ describe('BUILTIN_SHAPES outline contract', () => {
   const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
 
   it('publishes explicit closed outlines for rectangle, ellipse, and polygon', () => {
-    const rectangleOutline = BUILTIN_SHAPES.rectangle.outline?.(rect, NO_PARAMS);
-    const ellipseOutline = BUILTIN_SHAPES.ellipse.outline?.(rect, NO_PARAMS);
-    const polygonOutline = BUILTIN_SHAPES.polygon.outline?.(rect, DIAMOND_PARAMS);
+    const rectangleOutline = BUILTIN_SHAPES.get('rectangle')!.outline?.(rect, NO_PARAMS);
+    const ellipseOutline = BUILTIN_SHAPES.get('ellipse')!.outline?.(rect, NO_PARAMS);
+    const polygonOutline = BUILTIN_SHAPES.get('polygon')!.outline?.(rect, DIAMOND_PARAMS);
 
     expect(rectangleOutline).toBeDefined();
     expect(ellipseOutline).toBeDefined();
@@ -207,9 +207,9 @@ describe('BUILTIN_SHAPES outline contract', () => {
   });
 
   it('publishes stable named key points for the built-in shape family', () => {
-    const rectangleKeyPoints = BUILTIN_SHAPES.rectangle.keyPoints?.(rect, NO_PARAMS);
-    const ellipseKeyPoints = BUILTIN_SHAPES.ellipse.keyPoints?.(rect, NO_PARAMS);
-    const polygonKeyPoints = BUILTIN_SHAPES.polygon.keyPoints?.(rect, DIAMOND_PARAMS);
+    const rectangleKeyPoints = BUILTIN_SHAPES.get('rectangle')!.keyPoints?.(rect, NO_PARAMS);
+    const ellipseKeyPoints = BUILTIN_SHAPES.get('ellipse')!.keyPoints?.(rect, NO_PARAMS);
+    const polygonKeyPoints = BUILTIN_SHAPES.get('polygon')!.keyPoints?.(rect, DIAMOND_PARAMS);
 
     expect(rectangleKeyPoints).toBeDefined();
     expect(ellipseKeyPoints).toBeDefined();
@@ -225,17 +225,17 @@ describe('BUILTIN_SHAPES.edgePoint —— 内置 4 shape 必实现，落真实�
 
   it('直边 / 周长类 shape（rectangle / ellipse）实现 edgePoint', () => {
     // circle preset 复用 ellipse edgePoint；diamond preset 复用 polygon（正多边形无 4 named side 语义、edgePoint 为可选不实现）。
-    expect(typeof BUILTIN_SHAPES.rectangle.edgePoint).toBe('function');
-    expect(typeof BUILTIN_SHAPES.ellipse.edgePoint).toBe('function');
+    expect(typeof BUILTIN_SHAPES.get('rectangle')!.edgePoint).toBe('function');
+    expect(typeof BUILTIN_SHAPES.get('ellipse')!.edgePoint).toBe('function');
   });
 
   it('rectangle.edgePoint 委托 rect 几何（top 上边中点）', () => {
-    expect(BUILTIN_SHAPES.rectangle.edgePoint!(r, 'top', 0.5, NO_PARAMS)).toEqual([0, -5]);
+    expect(BUILTIN_SHAPES.get('rectangle')!.edgePoint!(r, 'top', 0.5, NO_PARAMS)).toEqual([0, -5]);
   });
 
   it('circle (= ellipse equal) edgePoint（外接框 20×20 → radius 10，right t=0.5）', () => {
     const square: CenteredBox = { x: 0, y: 0, width: 20, height: 20, rotate: 0 };
-    const p = BUILTIN_SHAPES.ellipse.edgePoint!(square, 'right', 0.5, EQUAL_PARAMS);
+    const p = BUILTIN_SHAPES.get('ellipse')!.edgePoint!(square, 'right', 0.5, EQUAL_PARAMS);
 
     expect(p[0]).toBeCloseTo(10, 6);
     expect(p[1]).toBeCloseTo(0, 6);
@@ -243,7 +243,7 @@ describe('BUILTIN_SHAPES.edgePoint —— 内置 4 shape 必实现，落真实�
 
   it('ellipse.edgePoint：外接框 ×√2 后落椭圆周（right t=0.5 = (rx, 0)）', () => {
     // shapes/ellipse 把 CenteredBox(width) → rx = width/2 / √2？实际由 toEllipse 决定，仅校验在周长上
-    const p = BUILTIN_SHAPES.ellipse.edgePoint!(r, 'right', 0.5, NO_PARAMS);
+    const p = BUILTIN_SHAPES.get('ellipse')!.edgePoint!(r, 'right', 0.5, NO_PARAMS);
 
     // right 中点必在 +x 轴上
     expect(p[1]).toBeCloseTo(0, 6);
@@ -251,6 +251,6 @@ describe('BUILTIN_SHAPES.edgePoint —— 内置 4 shape 必实现，落真实�
   });
 
   it('polygon（diamond preset）不实现 edgePoint（正多边形无 named side 语义）', () => {
-    expect(BUILTIN_SHAPES.polygon.edgePoint).toBeUndefined();
+    expect(BUILTIN_SHAPES.get('polygon')!.edgePoint).toBeUndefined();
   });
 });

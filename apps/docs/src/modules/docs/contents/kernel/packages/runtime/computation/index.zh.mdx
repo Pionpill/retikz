@@ -547,30 +547,6 @@ const observedDistance = defineRuntimeComputation<number>({
   ]}
 />
 
-## Core 应用
-
-Reconciler 将 Core 图文档编译包装成一项 Computation。公开工厂 `createCoreComputation(options)` 创建编译计算 Token；它消费文档来源，内部保存增量编译需要的状态，并向外提供编译结果和 Scene 快照。
-
-```ts
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/reconciler';
-import { createRuntimeSourceRegistry, createRuntimeComputationRegistry } from '@retikz/runtime';
-
-const compile = createCoreComputation({});
-const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-const computations = createRuntimeComputationRegistry({ sources, computations: [compile] });
-// 将这两个注册表与文档初始输入交给 createRuntime
-// runtime.result(compile).value.output.result.scene 是已发布的 Scene
-```
-
-这个应用对应了前面的三项职责：`run` 从完整文档编译，`update` 尝试支持的局部更新并在不适用时回退，`result` 将内部编译状态与公开结果分开。Runtime 不理解图元或编译算法，这些规则由 Core 提供，具体展开见 Core 文档。
-
-<SourceLinks
-  sources={[
-    { label: 'Core 计算定义与增量分支', path: 'packages/kernel/reconciler/src/runtime/computation.ts' },
-    { label: 'Core 公开结果视图', path: 'packages/kernel/reconciler/src/runtime/public.ts' },
-  ]}
-/>
-
 ## 相关属性
 
 这里只收录本篇涉及的公开成员；完整声明与默认行为可从下方源码入口回查。

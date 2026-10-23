@@ -30,17 +30,10 @@ import type {
   IRPlotChannel,
   IRPlotCoordinateOperation,
   IRPlotIntervalMark,
-  IRPlotMarkOperation,
+  IRPlotMark,
   IRPlotScaleOperation,
 } from '../../schemas';
-import {
-  IntervalBoundKind,
-  isBuiltinMark,
-  PathClosureKind,
-  PlotGuide,
-  BuiltinPlotMark,
-  BuiltinPlotScale,
-} from '../../schemas';
+import { IntervalBoundKind, PathClosureKind, PlotGuide, BuiltinPlotMark, BuiltinPlotScale } from '../../schemas';
 import { isSingleMark } from '../mark';
 import {
   assertBaselineScaleCompatible,
@@ -116,9 +109,9 @@ const intervalProportionalAxisTicks = (
   return values.length > 0 ? { values, labels } : undefined;
 };
 
-/** 读取 Mark 的位置编码；自定义 Mark 未声明位置编码时返回 undefined */
-const markEncoding = (mark: IRPlotMarkOperation): Record<string, IRPlotPositionInput | undefined> | undefined =>
-  (mark as { encodings?: { position?: Record<string, IRPlotPositionInput | undefined> } }).encodings?.position;
+/** 读取内置图元的单点位置编码 */
+const markEncoding = (mark: IRPlotMark): Record<string, IRPlotPositionInput | undefined> | undefined =>
+  mark.type === 'relation' ? undefined : mark.encodings?.position;
 
 /** 非位置 encoding key：这些键有专属语义，不参与 CoordinateDefinition.roles 校验 */
 
@@ -130,13 +123,11 @@ const markEncoding = (mark: IRPlotMarkOperation): Record<string, IRPlotPositionI
 const assertKnownPositionEncodingRoles = (
   coordinateType: string,
   roles: ReadonlyArray<DimensionRole>,
-  marks: ReadonlyArray<IRPlotMarkOperation>,
+  marks: ReadonlyArray<IRPlotMark>,
 ): void => {
   const roleSet = new Set<string>(roles);
 
   for (const mark of marks) {
-    if (!isBuiltinMark(mark)) continue;
-
     const encoding = Object.assign({}, ...markPositionInputs(mark));
     const properties =
       mark.properties !== undefined && 'position' in mark.properties ? (mark.properties.position ?? {}) : {};
@@ -178,14 +169,11 @@ const assertValidGuideDimensions = (
 const assertRequiredPositionChannels = (
   coordinateType: string,
   roles: ReadonlyArray<DimensionRole>,
-  marks: ReadonlyArray<IRPlotMarkOperation>,
+  marks: ReadonlyArray<IRPlotMark>,
 ): void => {
   const required = roles;
 
   for (const mark of marks) {
-    // 自定义 mark：必填位置通道由其 MarkDefinition.lower 自行 fail-loud，不在通用校验内强制
-    if (!isBuiltinMark(mark)) continue;
-
     // relation 通过 source / target 定位，不要求 encoding 位置通道
     if (mark.type === BuiltinPlotMark.Relation) continue;
 
@@ -270,7 +258,7 @@ export const resolveCoordinateFrame = (
   const collectValues = (
     role: DimensionRole,
     axis: 'primary' | 'secondary' | undefined,
-    pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined,
+    pick: (mark: IRPlotMark) => IRPlotChannel | undefined,
     includeBaseline: boolean,
   ): Array<unknown> => {
     const out: Array<unknown> = [];
@@ -281,7 +269,7 @@ export const resolveCoordinateFrame = (
       const inputs: Array<ExternalRow | undefined> = isSingleMark(mark, { registry: context.markRegistry })
         ? [undefined]
         : dataView.rows;
-      if (isBuiltinMark(mark) && mark.type === BuiltinPlotMark.Interval) {
+      if (mark.type === BuiltinPlotMark.Interval) {
         const bound = resolveIntervalBound(mark, role);
         if (bound.kind === IntervalBoundKind.Full) continue;
         if (bound.kind === IntervalBoundKind.Proportional) {
@@ -305,7 +293,6 @@ export const resolveCoordinateFrame = (
       node.marks.some(
         mark =>
           mark.contributeToDomain !== false &&
-          isBuiltinMark(mark) &&
           mark.type === BuiltinPlotMark.Interval &&
           intervalContributesBaseline(mark, axis),
       )
@@ -314,7 +301,7 @@ export const resolveCoordinateFrame = (
 
     if (includeBaseline) {
       for (const mark of node.marks) {
-        if (mark.contributeToDomain !== false && isBuiltinMark(mark) && mark.type === BuiltinPlotMark.Path) {
+        if (mark.contributeToDomain !== false && mark.type === BuiltinPlotMark.Path) {
           if (mark.properties?.closure?.kind === PathClosureKind.Baseline) {
             out.push(mark.properties.closure.baseline ?? 0);
           } else if (mark.properties?.closure?.kind === PathClosureKind.Stack) {
@@ -332,11 +319,7 @@ export const resolveCoordinateFrame = (
     const hasRegularRoleTicks = node.marks.some(mark => {
       const channel = markEncoding(mark)?.[role];
       if (channel === undefined) return false;
-      return !(
-        isBuiltinMark(mark) &&
-        mark.type === BuiltinPlotMark.Interval &&
-        !intervalBoundConsumesRoleChannel(mark, role)
-      );
+      return !(mark.type === BuiltinPlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role));
     });
     if (hasRegularRoleTicks) return undefined;
 
@@ -345,7 +328,7 @@ export const resolveCoordinateFrame = (
 
     for (const { mark, dataView } of markDataViewsForRole(role)) {
       const markRows = dataView.rows;
-      if (!isBuiltinMark(mark) || mark.type !== BuiltinPlotMark.Interval) continue;
+      if (mark.type !== BuiltinPlotMark.Interval) continue;
 
       const ticks = intervalProportionalAxisTicks(mark, role, markRows);
       if (ticks === undefined) continue;
@@ -414,7 +397,7 @@ export const resolveCoordinateFrame = (
   const resolveScaleForRole = (
     role: DimensionRole,
     scaleName: string | undefined,
-    pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined,
+    pick: (mark: IRPlotMark) => IRPlotChannel | undefined,
     values: Array<unknown>,
   ): IRPlotScaleOperation => {
     const types = roleFieldTypes(role);
@@ -540,7 +523,8 @@ export const resolveCoordinateFrame = (
   };
 
   const paddedScales = new Map<string, PositionScale>();
-  const coordinateScaleNames = readCoordinateScaleNames(coordinateDefinition, coordinateOperation);
+  const parsedCoordinateOperation = coordinateDefinition.schema.parse(coordinateOperation) as IRPlotCoordinateOperation;
+  const coordinateScaleNames = readCoordinateScaleNames(coordinateDefinition, parsedCoordinateOperation);
   const hasMarkPadding = roles.some(role => {
     const values = collectValues(role, undefined, roleChannelOf(role), role === 'y');
     const scale = resolveScaleForDefinitionRole(role, coordinateScaleNames[role], values);
@@ -723,8 +707,7 @@ export const resolveCoordinateFrame = (
   };
 
   // legend 预留：按 position 在对应边让出带宽，plotArea 据此收窄（决策 ⑩）
-  const parsedCoordinateOperation = coordinateDefinition.schema.parse(coordinateOperation) as never;
-  const resolution = coordinateDefinition.resolve(parsedCoordinateOperation, {
+  const resolution = coordinateDefinition.resolve(parsedCoordinateOperation as never, {
     width,
     height,
     fontSize,

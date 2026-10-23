@@ -32,6 +32,6 @@ export type { PlotDslProps, PlotIRProps, PlotLineageProps, PlotPanelProps, PlotP
 export { Plot } from './Plot';
 export type { ResolvedPlotAuthoring, ResolvePlotAuthoringOptions } from './plot-runtime';
 export { resolvePlotAuthoring, resolvePlotLineage } from './plot-runtime';
-export { usePlotThemeStyles } from './theme-context';
+export { usePlotThemeDefinitions } from './theme-context';
 export type { PlotThemeProviderProps } from './theme-provider';
 export { PlotThemeProvider } from './theme-provider';

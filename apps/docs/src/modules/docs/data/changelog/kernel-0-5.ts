@@ -378,6 +378,58 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: 'BREAKING：箭头与图案复用基础图元', en: 'BREAKING: arrows and patterns use basic primitives' },
+          content: {
+            zh: '删除 MarkerPrimitive、MarkerPathPrim、MarkerEllipsePrim、MarkerRectPrim、MarkerGroupPrim 与 MarkerFill。Arrow / Pattern 定义改为返回 ScenePrimitive，颜色复用 PaintValue；空心内容显式使用 fill: none。文本须已度量，内容可以使用场景裁剪、绘制资源、动画与有限嵌套图元；播放状态按宿主隔离，局部 id 不创建独立更新或命中目标。',
+            en: 'MarkerPrimitive, MarkerPathPrim, MarkerEllipsePrim, MarkerRectPrim, MarkerGroupPrim, and MarkerFill are removed. Arrow and Pattern definitions return ScenePrimitive and use PaintValue; hollow content explicitly uses fill: none. Text must be measured. Content can use Scene clips, paint resources, animation, and finite nested primitives. Playback state is isolated per host, and local ids create no independent update or hit targets.',
+          },
+        },
+        {
+          label: { zh: 'BREAKING：移除角度 Schema 别名', en: 'BREAKING: remove the angle schema alias' },
+          content: {
+            zh: '移除 `AngleDegreesSchema` 导出；自定义 Schema 直接使用 Zod `number()`，并在字段描述中注明角度单位。现有角度字段的数值校验、约束和默认值保持不变。',
+            en: 'The `AngleDegreesSchema` export is removed. Use Zod `number()` in custom schemas and describe the angle unit on each field. Existing angle validation, constraints, and defaults remain unchanged.',
+          },
+        },
+        {
+          label: {
+            zh: 'BREAKING：统一主题名称与定义注册',
+            en: 'BREAKING: consistent theme names and definition registries',
+          },
+          content: {
+            zh: '主题选择字段由 `theme.style` 改为 `theme.name`；类型使用 `ThemeName` / `ThemeDefinition`，注册集合统一使用 `themeDefinitions` 及各领域前缀。Chart 的领域定义使用 `chartThemeDefinitions`，宿主 Core 定义使用 `themeDefinitions`。实际 `style` 配置对象及主题继承、颜色和覆盖优先级保持不变；旧名称移除。',
+            en: 'The theme selector changes from `theme.style` to `theme.name`. Types use `ThemeName` / `ThemeDefinition`, and registries use `themeDefinitions` with domain prefixes. Chart domain definitions use `chartThemeDefinitions`, while host Core definitions use `themeDefinitions`. Actual `style` configuration objects, theme inheritance, colors, and override priority remain unchanged. Old names are removed.',
+          },
+        },
+        {
+          label: { zh: 'BREAKING：移除 Scope 外框', en: 'BREAKING: remove Scope frames' },
+          content: {
+            zh: '删除 Scope.frame 及相关类型、Schema 和编译绘制。Scope 保留包络、定位和引用；已有外框配置需改用 Standard Surface / Frame，React、Vanilla 和直接 IR 使用同一契约。',
+            en: 'Removes Scope.frame, its types and schemas, and frame rendering. Scope retains its envelope, placement, and references. Replace frame configuration with Standard Surface / Frame; React, Vanilla, and direct IR share the same contract.',
+          },
+        },
+        {
+          label: { zh: 'BREAKING：默认配置归属宿主', en: 'BREAKING: host-owned defaults' },
+          content: {
+            zh: '将 defaults.label 分别迁移到 defaults.node.label 与 defaults.path.label，将 defaults.arrow 迁移到 defaults.path.arrow。标签默认支持除 text 外的完整配置，只装饰已有内容；字体逐字段继承。reset 仅接受 node / path，并同时清除对应标签与箭头默认；true 清除所有默认通道。',
+            en: 'Move defaults.label to defaults.node.label and defaults.path.label, and defaults.arrow to defaults.path.arrow. Label defaults support every configuration field except text and only decorate existing content; fonts inherit field by field. Reset accepts only node / path and clears their decoration defaults too; true resets all default channels.',
+          },
+        },
+        {
+          label: { zh: '视觉样式完整消费', en: 'Complete visual style support' },
+          content: {
+            zh: '补齐通用描边端帽与连接样式、后代默认阴影和混合模式；引线支持 paint 与独立透明度，箭头支持 paint 与虚线。分段行支持行级样式，公式继承行字号并可单独覆盖。',
+            en: 'Completes shared stroke caps and joins, descendant shadow/blend defaults, leader paints and independent opacity, and arrow paints and dashes. Segmented lines support line styles; math inherits the line size with optional overrides.',
+          },
+        },
+        {
+          label: { zh: '共享虚线描边', en: 'Shared dashed strokes' },
+          content: {
+            zh: '`Scope.defaults.style` 支持 `dashPattern` 与 `dashOffset`，Node 与 Path 按既有通道优先级继承。',
+            en: '`Scope.defaults.style` supports `dashPattern` and `dashOffset`, inherited by Node and Path through existing channel precedence.',
+          },
+        },
+        {
           label: { zh: '移除旧输入 diff 协议', en: 'Remove the old input diff protocol' },
           content: {
             zh: '移除 CoreChange 及其增删改移动类型、CoreComputationDiagnosticCode 和旧快照 diff 校验。完整输入继续重建并提交 replaceScene；Weave 批次执行尚未接入。Runtime 通用 ChangeSet 与图元身份契约保持不变。',
@@ -487,13 +539,6 @@ export const kernelV05: Release = {
           content: {
             zh: 'grow、growUp、pulse、spin、flash、blink、wiggle 及专属选项迁至 @retikz/extension 根入口。Core 保留基础预设与通用轨道工具；效果默认值、已保存轨道 JSON 和播放机制不变，旧 Core 导入不再保留。Kernel 与 Extension 双语文档和 API 参考同步按归属拆分。',
             en: 'grow, growUp, pulse, spin, flash, blink, wiggle and their options move to the @retikz/extension root. Core retains basic presets and track utilities. Defaults, saved track JSON and playback are unchanged; old Core imports are removed. Bilingual Kernel and Extension guides and API references follow their sources.',
-          },
-        },
-        {
-          label: { zh: 'Scope 包络外框', en: 'Scope envelope frames' },
-          content: {
-            zh: '`Scope.frame` 为固有包络添加独立填充、描边、图案与阴影，支持均匀装饰间距；不改变布局、锚点或命中。React、Vanilla 与直接 IR 使用同一契约。Scene 的 `hitTest: false` 在 SVG、Canvas 与 retained 更新中排除装饰命中。',
-            en: '`Scope.frame` adds independent fill, stroke, patterns, shadows, and uniform decoration spacing to the intrinsic envelope without changing layout, anchors, or hit regions. React, Vanilla, and direct IR share the contract. Scene `hitTest: false` excludes decoration from SVG, Canvas, and retained hit testing.',
           },
         },
         {
@@ -761,8 +806,8 @@ export const kernelV05: Release = {
             {
               label: { zh: 'Theme Composite 上下文', en: 'Theme composite context' },
               content: {
-                zh: '`ThemeStyle` / `ThemeMode`、严格 `ThemeSchema` 与 `ResolvedTheme` 成为 Core 公共契约；Theme 变化进入 retained compile input，无法证明更窄依赖时保守 full fallback，并保持与 fresh compile 等价。',
-                en: '`ThemeStyle`, `ThemeMode`, strict `ThemeSchema`, and `ResolvedTheme` become public Core contracts. Theme changes enter retained compile input and conservatively full-fallback when a narrower dependency cannot be proven, preserving fresh-compile equivalence.',
+                zh: '`Theme` / `ThemeMode`、严格 `ThemeSchema` 与 `ResolvedTheme` 成为 Core 公共契约；Theme 变化进入 retained compile input，无法证明更窄依赖时保守 full fallback，并保持与 fresh compile 等价。',
+                en: '`Theme`, `ThemeMode`, strict `ThemeSchema`, and `ResolvedTheme` become public Core contracts. Theme changes enter retained compile input and conservatively full-fallback when a narrower dependency cannot be proven, preserving fresh-compile equivalence.',
               },
             },
             {
@@ -771,8 +816,8 @@ export const kernelV05: Release = {
                 en: 'BREAKING: Lightweight Theme selectors and shared colors',
               },
               content: {
-                zh: '`Theme` 现在只持久化稀疏 `style / mode`；`ResolvedTheme` 在解析期提供 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。省略 `style` 时使用默认基线；`defineThemeStyle` 与 `themeStyles` 注册 Core runtime resolver，应用 style 必须由实际消费的 Plot、Chart 等 owner 提供同名 resolver，缺失项会 fail-loud。函数与完整 token map 不进入 IR、snapshot 或 JSON。',
-                en: '`Theme` now persists only sparse `style / mode`; `ResolvedTheme` provides a detached, frozen `colors.semantic` view and non-empty `colors.categorical` palette during resolution. Omitting `style` selects the default baseline; `defineThemeStyle` and `themeStyles` register Core runtime resolvers, and each application style must provide a same-named resolver for every consuming owner such as Plot or Chart. Missing entries fail loudly. Functions and complete token maps never enter IR, snapshots, or JSON.',
+                zh: '`Theme` 现在只持久化稀疏 `style / mode`；`ResolvedTheme` 在解析期提供 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。省略 `style` 时使用默认基线；`defineTheme` 与 `themeDefinitions` 注册 Core runtime resolver，应用 style 必须由实际消费的 Plot、Chart 等 owner 提供同名 resolver，缺失项会 fail-loud。函数与完整 token map 不进入 IR、snapshot 或 JSON。',
+                en: '`Theme` now persists only sparse `style / mode`; `ResolvedTheme` provides a detached, frozen `colors.semantic` view and non-empty `colors.categorical` palette during resolution. Omitting `style` selects the default baseline; `defineTheme` and `themeDefinitions` register Core runtime resolvers, and each application style must provide a same-named resolver for every consuming owner such as Plot or Chart. Missing entries fail loudly. Functions and complete token maps never enter IR, snapshots, or JSON.',
               },
             },
             {
@@ -954,6 +999,13 @@ export const kernelV05: Release = {
         en: 'Drawing updates can preserve unchanged SVG elements and reduce Canvas repainting, with rendering, events, and animation state committed together.',
       },
       highlights: [
+        {
+          label: { zh: '视觉样式完整消费', en: 'Complete visual style support' },
+          content: {
+            zh: 'SVG 与 Canvas 统一执行矩形、椭圆和箭头的端帽、连接样式与 paint；SVG 箭头资源使用实例隔离的引用。',
+            en: 'SVG and Canvas render caps, joins, and paints on rectangles, ellipses, and arrows consistently. SVG arrow paint references are scoped to each instance.',
+          },
+        },
         {
           label: { zh: 'Retained renderer runtime', en: 'Retained renderer runtime' },
           content: {

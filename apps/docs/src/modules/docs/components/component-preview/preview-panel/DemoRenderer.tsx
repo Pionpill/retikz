@@ -15,7 +15,7 @@ export type DemoRendererProps = {
   lang?: Lang;
   /** 当前渲染目标。 */
   rendererMode: RendererMode;
-  /** 当前预览实际生效的 ThemeStyle。 */
+  /** 当前预览实际生效的 Theme。 */
   theme?: PreviewTheme;
   /** 当前预览使用的明暗选择。 */
 };

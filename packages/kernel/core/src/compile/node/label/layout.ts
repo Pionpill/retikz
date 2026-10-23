@@ -59,7 +59,7 @@ export const measureNodeLabels = (
     const isMixed = resolved.mixed;
 
     const laid = isMixed
-      ? layoutInlineLine(resolved.runs, {
+      ? layoutInlineLine(resolved.segments, {
           measureText: measureLabelText,
           lowerTex: texLowering?.lowerTex,
           font: labTextFont,

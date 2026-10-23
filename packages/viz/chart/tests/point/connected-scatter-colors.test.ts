@@ -9,7 +9,7 @@ import { ConnectedScatterChartDefinition } from '../../src/point/connected-scatt
 import { ConnectedScatterChartSchema } from '../../src/point/connected-scatter/schema';
 
 const runtime = resolveChartProviderRegistry([
-  { family: 'point', recipe: ConnectedScatterChartDefinition, themeDefinitions: [] },
+  { family: 'point', recipe: ConnectedScatterChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const palette = ['#ff0000', '#00ff00', '#0000ff'];
@@ -44,7 +44,7 @@ const chartOf = (properties: Record<string, unknown> = {}, series = true, extras
   return resolveSelectedChart(source, {
     theme: DEFAULT_RESOLVED_THEME,
     recipe: ConnectedScatterChartDefinition,
-    themeDefinitions: [],
+    chartThemeDefinitions: [],
     runtime,
   }).plot;
 };
@@ -67,8 +67,8 @@ const materialize = (children: Array<IRChild>, node: IRNodeDefault = {}, path: I
         ),
       };
 
-    if (isNode(child)) return { ...node, ...child, style: { ...node.style, ...child.style } };
-    if (isPath(child)) return { ...path, ...child, style: { ...path.style, ...child.style } };
+    if (isNode(child)) return { ...node, ...child, label: child.label, style: { ...node.style, ...child.style } };
+    if (isPath(child)) return { ...path, ...child, label: child.label, style: { ...path.style, ...child.style } };
 
     return child;
   });

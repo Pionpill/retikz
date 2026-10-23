@@ -174,11 +174,11 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
   });
 };
 
-/** discriminated union 兜底，编译期保证穷举 */
-const assertNever = (x: never): never => x;
-
 /** 单个 IR child → 对应 Kernel element；走 discriminated union 穷举 */
 const childToElement = (child: IRKernelChild, key: number): ReactNode => {
+  /** discriminated union 兜底，编译期保证穷举 */
+  const assertNever = (x: never): never => x;
+
   switch (child.type) {
     case 'node':
       return createElement(Node, { key, ...nodePropsFromIR(child) });

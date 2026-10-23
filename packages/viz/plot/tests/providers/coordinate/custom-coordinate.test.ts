@@ -175,11 +175,11 @@ const uvCoordinate = defineCoordinate({
   resolve: (_operation, context) => {
     const uValues = context.collectRoleValues('x');
     const vValues = context.collectRoleValues('y');
-    const uScale = context.buildPositionScale(context.resolveScaleForRole('u', undefined, uValues), uValues, [
+    const uScale = context.buildPositionScale(context.resolveScaleForRole('x', undefined, uValues), uValues, [
       0,
       context.width,
     ]);
-    const vScale = context.buildPositionScale(context.resolveScaleForRole('v', undefined, vValues), vValues, [
+    const vScale = context.buildPositionScale(context.resolveScaleForRole('y', undefined, vValues), vValues, [
       context.height,
       0,
     ]);

@@ -1,13 +1,13 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
 import { mergeGraphDefinitionOptions } from '@retikz/graph';
 
-import type { DiagramThemeStyleDefinition } from '../../_diagram';
-import { resolveDiagramThemeStyleRegistry } from '../../_diagram';
+import type { DiagramThemeDefinition } from '../../_diagram';
+import { resolveDiagramThemeRegistry } from '../../_diagram';
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../errors';
-import type { FlowDiagramDefinitionOptions, FlowThemeStyleDefinition } from '../contract';
+import type { FlowDiagramDefinitionOptions, FlowThemeDefinition } from '../contract';
 import type { ResolvedFlowLayoutRegistry } from './layout';
 import { resolveFlowLayoutRegistry } from './layout';
-import { resolveFlowThemeStyleRegistry } from './theme';
+import { resolveFlowThemeRegistry } from './theme';
 
 type NamedDefinition = Readonly<{ name: string }>;
 
@@ -57,15 +57,15 @@ const graphOptionsOf = (options: FlowDiagramDefinitionOptions): GraphDefinitionO
   relationRoles: options.relationRoles,
   relationKinds: options.relationKinds,
   relationPredicates: options.relationPredicates,
-  graphThemeStyles: options.graphThemeStyles,
+  graphThemeDefinitions: options.graphThemeDefinitions,
 });
 
 /** Flow Diagram compile 共享的已解析 registries 与默认 Definition */
 export type ResolvedFlowDiagramDefinitionOptions = Readonly<{
   /** 有效的 Diagram 外框与呈现主题定义 */
-  diagramThemeStyles: ReadonlyMap<string, DiagramThemeStyleDefinition>;
+  diagramThemeDefinitions: ReadonlyMap<string, DiagramThemeDefinition>;
   /** 有效的 Flow 元素与关系主题定义 */
-  flowThemeStyles: ReadonlyMap<string, FlowThemeStyleDefinition>;
+  flowThemeDefinitions: ReadonlyMap<string, FlowThemeDefinition>;
   /** 可用布局定义及其默认选择 */
   flowLayouts: ResolvedFlowLayoutRegistry;
   /** 交给 Graph 投影与编译的扩展定义 */
@@ -76,18 +76,18 @@ export type ResolvedFlowDiagramDefinitionOptions = Readonly<{
 export const resolveFlowDiagramDefinitionOptions = (
   optionSets: ReadonlyArray<FlowDiagramDefinitionOptions>,
 ): ResolvedFlowDiagramDefinitionOptions => {
-  const diagramThemeStyles = mergeNamedDefinitions(
+  const diagramThemeDefinitions = mergeNamedDefinitions(
     optionSets,
-    options => options.diagramThemeStyles,
-    'diagram-theme-style',
+    options => options.diagramThemeDefinitions,
+    'diagram-theme',
   );
-  const flowThemeStyles = mergeNamedDefinitions(optionSets, options => options.flowThemeStyles, 'flow-theme-style');
+  const flowThemeDefinitions = mergeNamedDefinitions(optionSets, options => options.flowThemeDefinitions, 'flow-theme');
   const flowLayouts = mergeNamedDefinitions(optionSets, options => options.flowLayouts, 'flow-layout');
   const defaultFlowLayout = mergeDefaultFlowLayout(optionSets);
 
   return {
-    diagramThemeStyles: resolveDiagramThemeStyleRegistry(diagramThemeStyles),
-    flowThemeStyles: resolveFlowThemeStyleRegistry(flowThemeStyles),
+    diagramThemeDefinitions: resolveDiagramThemeRegistry(diagramThemeDefinitions),
+    flowThemeDefinitions: resolveFlowThemeRegistry(flowThemeDefinitions),
     flowLayouts: resolveFlowLayoutRegistry({ flowLayouts, defaultFlowLayout }),
     graph: mergeGraphDefinitionOptions(optionSets.map(graphOptionsOf)),
   };

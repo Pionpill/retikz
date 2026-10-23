@@ -16,7 +16,7 @@ import { PreviewErrorBoundary } from './PreviewErrorBoundary';
 import { PreviewViewport } from './PreviewViewport';
 import { resolvePreviewControlContract } from './registry';
 import { buildPreviewSource } from './source-panel';
-import { isPreviewThemeStyleDocument, PreviewThemeStyle, usePreviewTheme } from './theme';
+import { isPreviewThemeDocument, PreviewTheme, usePreviewTheme } from './theme';
 import type {
   AlignKey,
   ComponentPreviewFiles,
@@ -25,7 +25,7 @@ import type {
   PreviewControlsDefinition,
   PreviewControlsOptions,
   PreviewFigureType,
-  PreviewThemeStyleSelection,
+  PreviewThemeSelection,
   SizeKey,
 } from './types';
 import { normalizeComponentPreviewFiles } from './utils';
@@ -102,7 +102,7 @@ const LoadedComponentPreview: FC<ComponentPreviewProps> = props => {
   const [mode, setMode] = useState(initialMode);
   const [sourceRequested, setSourceRequested] = useState(false);
   const requestSource = useCallback(() => setSourceRequested(true), []);
-  const [themeStyleSelection, setThemeStyleSelection] = useState<PreviewThemeStyleSelection>('inherit');
+  const [themeNameSelection, setThemeSelection] = useState<PreviewThemeSelection>('inherit');
   const controlOptions = controls ?? {};
   const { name, diffFrom, sourceFiles } = useMemo(() => normalizeComponentPreviewFiles(files), [files]);
   const loc = useDocLocation();
@@ -113,9 +113,9 @@ const LoadedComponentPreview: FC<ComponentPreviewProps> = props => {
   const segments = useMemo(() => ctxSegments ?? (loc ? docPathSegments(loc) : null), [ctxSegments, loc]);
   const isSchematicPreview = segments?.[0] === 'schematic' || name.startsWith('/schematic/');
   const isDataPreview = (segments?.[0] === 'viz' && segments[1] === 'data') || name.startsWith('/viz/data/');
-  const enableThemeSwitch = !isSchematicPreview && !isDataPreview && isPreviewThemeStyleDocument(segments?.[0]);
-  const effectiveThemeStyleSelection = enableThemeSwitch ? themeStyleSelection : PreviewThemeStyle.Default;
-  const previewTheme = usePreviewTheme(effectiveThemeStyleSelection);
+  const enableThemeSwitch = !isSchematicPreview && !isDataPreview && isPreviewThemeDocument(segments?.[0]);
+  const effectiveThemeSelection = enableThemeSwitch ? themeNameSelection : PreviewTheme.Default;
+  const previewTheme = usePreviewTheme(effectiveThemeSelection);
   const controlsDisabled = controlOptions.name === false;
   const explicitControlsName = typeof controlOptions.name === 'string' ? controlOptions.name : null;
 
@@ -293,8 +293,8 @@ const LoadedComponentPreview: FC<ComponentPreviewProps> = props => {
       controlSlots={resolvedControlSlots}
       dialogActions={dialogActions}
       enableThemeSwitch={enableThemeSwitch}
-      themeStyleSelection={effectiveThemeStyleSelection}
-      onThemeStyleChange={setThemeStyleSelection}
+      themeNameSelection={effectiveThemeSelection}
+      onThemeChange={setThemeSelection}
       caption={caption}
     />
   );
