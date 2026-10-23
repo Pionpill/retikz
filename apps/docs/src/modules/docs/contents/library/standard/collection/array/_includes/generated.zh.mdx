@@ -20,7 +20,6 @@ data、items、skeleton 与 ArrayItem children 内容入口互斥；全部省略
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | 以 scope 局部坐标描述的裁剪区域                                                                |
 | `defaultCell?`    | `IRArray['defaultCell']`                                                                 | —            | 共享单元格默认配置                                                                             |
 | `defaults?`       | `IRArray['defaults']`                                                                    | —            | 后代默认值通道及继承屏障                                                                       |
-| `frame?`          | `IRScopeFrame`                                                                           | —            | 可省略默认值的包络装饰                                                                         |
 | `id?`             | `string`                                                                                 | —            | 可选引用 id；始终注册到父级命名空间                                                            |
 | `index?`          | `IRArray['index']`                                                                       | `false`      | false 隐藏索引；true 或对象启用索引带                                                          |
 | `label?`          | `IRArray['label']`                                                                       | —            | 容器附属标签，通过 position 与 distance 定位                                                   |
@@ -222,7 +221,6 @@ items、data 与 skeleton 三选一；dataExpand 仅用于 data 入口。其余�
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | 以 scope 局部坐标描述的裁剪区域                                                                |
 | `defaultCell?`    | `IRArray['defaultCell']`                                                                 | —            | 共享单元格默认配置                                                                             |
 | `defaults?`       | `IRArray['defaults']`                                                                    | —            | 后代默认值通道及继承屏障                                                                       |
-| `frame?`          | `IRScopeFrame`                                                                           | —            | 可省略默认值的包络装饰                                                                         |
 | `id?`             | `string`                                                                                 | —            | 可选引用 id；始终注册到父级命名空间                                                            |
 | `index?`          | `IRArray['index']`                                                                       | `false`      | false 隐藏索引；true 或对象启用索引带                                                          |
 | `label?`          | `IRArray['label']`                                                                       | —            | 容器附属标签，通过 position 与 distance 定位                                                   |
@@ -341,7 +339,6 @@ export declare const ArrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputA
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | 以 scope 局部坐标描述的裁剪区域                                                                |
 | `defaultCell?`    | `IRArray["defaultCell"]`                                                                 | —            | 共享单元格默认配置                                                                             |
 | `defaults?`       | `IRScopeProps['defaults']`                                                               | —            | 后代默认值通道及继承屏障                                                                       |
-| `frame?`          | `IRScopeFrame`                                                                           | —            | 可省略默认值的包络装饰                                                                         |
 | `id?`             | `string`                                                                                 | —            | 可选引用 id；始终注册到父级命名空间                                                            |
 | `index?`          | `IRArray["index"]`                                                                       | `false`      | false 隐藏索引；true 或对象启用索引带                                                          |
 | `label?`          | `IRArray["label"]`                                                                       | —            | 容器附属标签，通过 position 与 distance 定位                                                   |

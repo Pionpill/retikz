@@ -17,7 +17,6 @@
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —      | 以 scope 局部坐标描述的裁剪区域                                                                |
 | `defaultCell?`    | `IRMap['defaultCell']`                                                                   | —      | 共享单元格默认配置                                                                             |
 | `defaults?`       | `IRMap['defaults']`                                                                      | —      | 后代默认值通道及继承屏障                                                                       |
-| `frame?`          | `IRScopeFrame`                                                                           | —      | 可省略默认值的包络装饰                                                                         |
 | `id?`             | `string`                                                                                 | —      | 可选引用 id；始终注册到父级命名空间                                                            |
 | `label?`          | `IRMap['label']`                                                                         | —      | 容器附属标签，通过 position 与 distance 定位                                                   |
 | `layout?`         | `{ gap?: number \| { row: number; column: number; } \| undefined; }`                     | —      | Map 双列布局与间距                                                                             |
@@ -302,7 +301,6 @@ export type MapValueProps = CellMarkerProps;
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —      | 以 scope 局部坐标描述的裁剪区域                                                                |
 | `defaultCell?`    | `IRMap['defaultCell']`                                                                   | —      | 共享单元格默认配置                                                                             |
 | `defaults?`       | `IRMap['defaults']`                                                                      | —      | 后代默认值通道及继承屏障                                                                       |
-| `frame?`          | `IRScopeFrame`                                                                           | —      | 可省略默认值的包络装饰                                                                         |
 | `id?`             | `string`                                                                                 | —      | 可选引用 id；始终注册到父级命名空间                                                            |
 | `label?`          | `IRMap['label']`                                                                         | —      | 容器附属标签，通过 position 与 distance 定位                                                   |
 | `layout?`         | `{ gap?: number \| { row: number; column: number; } \| undefined; }`                     | —      | Map 双列布局与间距                                                                             |
@@ -420,7 +418,6 @@ export declare const MapInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMap
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —      | 以 scope 局部坐标描述的裁剪区域                                                                |
 | `defaultCell?`    | `IRMap["defaultCell"]`                                                                   | —      | 共享单元格默认配置                                                                             |
 | `defaults?`       | `IRScopeProps['defaults']`                                                               | —      | 后代默认值通道及继承屏障                                                                       |
-| `frame?`          | `IRScopeFrame`                                                                           | —      | 可省略默认值的包络装饰                                                                         |
 | `id?`             | `string`                                                                                 | —      | 可选引用 id；始终注册到父级命名空间                                                            |
 | `label?`          | `IRMap["label"]`                                                                         | —      | 容器附属标签，通过 position 与 distance 定位                                                   |
 | `layout?`         | `{ gap?: number \| { row: number; column: number; } \| undefined; }`                     | —      | Map 双列布局与间距                                                                             |

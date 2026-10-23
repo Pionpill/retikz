@@ -137,7 +137,6 @@ export type BlockSectionProps = Omit<BlockSectionInputEmbedProps, 'type' | 'chil
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | 局部坐标系中的裁剪区域                                 |
 | `cornerRadius?`   | `number`                                                                                                                                                                                                           | —       | 外框圆角                                               |
 | `defaults?`       | `BlockRowProps["defaults"]`                                                                                                                                                                                        | —       | 后代默认样式及继承屏障                                 |
-| `frame?`          | `BlockRowProps["frame"]`                                                                                                                                                                                           | —       | 固有包络装饰，不参与布局                               |
 | `gap?`            | `number`                                                                                                                                                                                                           | —       | 直接内容项之间的间距，用户单位                         |
 | `id?`             | `string`                                                                                                                                                                                                           | —       | 可选引用 id，注册到父命名空间                          |
 | `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —       | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
@@ -216,7 +215,6 @@ export type BlockRowProps = BlockRowPropsVariant<BlockRowInputEmbedProps>;
 | `cornerRadius?`      | `number`                                                                                                                                                                                                           | —       | 外框圆角                                                 |
 | `defaultGraph?`      | `BlockInputEmbedProps["defaultGraph"]`                                                                                                                                                                             | —       | 可见后代 Entity、Relation、Group、Block 的稀疏默认值     |
 | `defaults?`          | `BlockInputEmbedProps["defaults"]`                                                                                                                                                                                 | —       | 后代默认样式及继承屏障                                   |
-| `frame?`             | `BlockInputEmbedProps["frame"]`                                                                                                                                                                                    | —       | 固有包络装饰，不参与布局                                 |
 | `gap?`               | `number`                                                                                                                                                                                                           | —       | 直接内容项之间的间距，用户单位                           |
 | `graphRules?`        | `BlockInputEmbedProps["graphRules"]`                                                                                                                                                                               | —       | 可见后代 Entity / Relation 的有序条件规则                |
 | `id?`                | `string`                                                                                                                                                                                                           | —       | 可选引用 id，注册到父命名空间                            |
@@ -299,7 +297,6 @@ export type BlockHeaderInputEmbedProps = WithoutInputType<InputBlockHeader>;
 | `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | 局部坐标系中的裁剪区域                                 |
 | `cornerRadius?`      | `number`                                                                                                                                                                                                           | —       | 外框圆角                                               |
 | `defaults?`          | `BlockSectionInputEmbedProps["defaults"]`                                                                                                                                                                          | —       | 后代默认样式及继承屏障                                 |
-| `frame?`             | `BlockSectionInputEmbedProps["frame"]`                                                                                                                                                                             | —       | 固有包络装饰，不参与布局                               |
 | `gap?`               | `number`                                                                                                                                                                                                           | —       | 直接内容项之间的间距，用户单位                         |
 | `id?`                | `string`                                                                                                                                                                                                           | —       | 可选引用 id，注册到父命名空间                          |
 | `localNamespace?`    | `false \| true`                                                                                                                                                                                                    | —       | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
@@ -343,7 +340,6 @@ export type BlockSectionInputEmbedProps = WithoutInputType<InputBlockSection>;
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | 局部坐标系中的裁剪区域                                 |
 | `cornerRadius?`   | `number`                                                                                                                                                                                                           | —       | 外框圆角                                               |
 | `defaults?`       | `BlockRowInputEmbedProps["defaults"]`                                                                                                                                                                              | —       | 后代默认样式及继承屏障                                 |
-| `frame?`          | `BlockRowInputEmbedProps["frame"]`                                                                                                                                                                                 | —       | 固有包络装饰，不参与布局                               |
 | `gap?`            | `number`                                                                                                                                                                                                           | —       | 直接内容项之间的间距，用户单位                         |
 | `id?`             | `string`                                                                                                                                                                                                           | —       | 可选引用 id，注册到父命名空间                          |
 | `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —       | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
@@ -524,7 +520,6 @@ export type InputBlockSection = Omit<BlockSectionCreateOptions, 'children'> &
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | 局部坐标系中的裁剪区域                                 |
 | `cornerRadius?`   | `number`                                                                                                                                                                                                           | —       | 外框圆角                                               |
 | `defaults?`       | `InputBlockRow["defaults"]`                                                                                                                                                                                        | —       | 后代默认样式及继承屏障                                 |
-| `frame?`          | `InputBlockRow["frame"]`                                                                                                                                                                                           | —       | 固有包络装饰，不参与布局                               |
 | `gap?`            | `number`                                                                                                                                                                                                           | —       | 直接内容项之间的间距，用户单位                         |
 | `id?`             | `string`                                                                                                                                                                                                           | —       | 可选引用 id，注册到父命名空间                          |
 | `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —       | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
@@ -706,7 +701,6 @@ export type BlockSectionCreateOptions = Omit<IRBlockSection, 'namespace' | 'type
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | 局部坐标系中的裁剪区域                                 |
 | `cornerRadius?`   | `number`                                                                                                                                                                                                           | —       | 外框圆角                                               |
 | `defaults?`       | `BlockRowCreateOptions["defaults"]`                                                                                                                                                                                | —       | 后代默认样式及继承屏障                                 |
-| `frame?`          | `BlockRowCreateOptions["frame"]`                                                                                                                                                                                   | —       | 固有包络装饰，不参与布局                               |
 | `gap?`            | `number`                                                                                                                                                                                                           | —       | 直接内容项之间的间距，用户单位                         |
 | `id?`             | `string`                                                                                                                                                                                                           | —       | 可选引用 id，注册到父命名空间                          |
 | `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —       | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
@@ -1099,7 +1093,6 @@ export type IRBlockHeader = ZodInfer<typeof BlockHeaderSchema>;
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | 局部坐标系中的裁剪区域                                 |
 | `cornerRadius?`   | `number`                                                                                                                                                                                                           | —       | 外框圆角                                               |
 | `defaults?`       | `IRBlockRow["defaults"]`                                                                                                                                                                                           | —       | 后代默认样式及继承屏障                                 |
-| `frame?`          | `IRBlockRow["frame"]`                                                                                                                                                                                              | —       | 固有包络装饰，不参与布局                               |
 | `gap?`            | `number`                                                                                                                                                                                                           | —       | 直接内容项之间的间距，用户单位                         |
 | `id?`             | `string`                                                                                                                                                                                                           | —       | 可选引用 id，注册到父命名空间                          |
 | `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —       | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
@@ -1211,7 +1204,6 @@ export type IRBlockText = ZodInfer<typeof BlockTextSchema>;
 | `defaultGraph?`   | `IRCodeBlockProps['defaultGraph']`                                                                                                                                                                                 | —       | 可见后代 Entity、Relation、Group、Block 的稀疏默认值     |
 | `defaults?`       | `IRCodeBlockProps['defaults']`                                                                                                                                                                                     | —       | 后代默认样式及继承屏障                                   |
 | `description?`    | `string`                                                                                                                                                                                                           | —       | 可选实体说明                                             |
-| `frame?`          | `IRCodeBlockProps['frame']`                                                                                                                                                                                        | —       | 固有包络装饰，不参与布局                                 |
 | `gap?`            | `number`                                                                                                                                                                                                           | —       | 直接内容项之间的间距，用户单位                           |
 | `graphRules?`     | `IRCodeBlockProps['graphRules']`                                                                                                                                                                                   | —       | 可见后代 Entity / Relation 的有序条件规则                |
 | `icon?`           | `IRCodeBlockProps['icon']`                                                                                                                                                                                         | —       | 省略使用实体默认图标，null 隐藏，child 替换              |
@@ -1486,7 +1478,6 @@ export type IRCodeSignature = ZodInfer<typeof CodeSignatureSchema>;
   descriptions={{
     namespace: '命名空间，固定为 graph',
     type: '当前组件的记录判别字段',
-    frame: '固有包络装饰，不参与布局',
     theme: '子树的稀疏主题覆盖',
     id: '可选引用 id，注册到父命名空间',
     localNamespace: '使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级',
@@ -1520,7 +1511,6 @@ export type IRCodeSignature = ZodInfer<typeof CodeSignatureSchema>;
   descriptions={{
     namespace: '命名空间，固定为 graph',
     type: '当前组件的记录判别字段',
-    frame: '固有包络装饰，不参与布局',
     theme: '子树的稀疏主题覆盖',
     id: '可选引用 id，注册到父命名空间',
     localNamespace: '使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级',
@@ -1551,7 +1541,6 @@ export type IRCodeSignature = ZodInfer<typeof CodeSignatureSchema>;
   descriptions={{
     namespace: '命名空间，固定为 graph',
     type: '当前组件的记录判别字段',
-    frame: '固有包络装饰，不参与布局',
     theme: '子树的稀疏主题覆盖',
     id: '可选引用 id，注册到父命名空间',
     localNamespace: '使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级',
@@ -1580,7 +1569,6 @@ export type IRCodeSignature = ZodInfer<typeof CodeSignatureSchema>;
   name="CodeBlockPropsSchema"
   shallow
   descriptions={{
-    frame: '固有包络装饰，不参与布局',
     theme: '子树的稀疏主题覆盖',
     id: '可选引用 id，注册到父命名空间',
     localNamespace: '使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级',
