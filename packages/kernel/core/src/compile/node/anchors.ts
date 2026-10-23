@@ -94,7 +94,7 @@ export const boundaryPointOf = (
 ): Position => {
   const layout = 'geometry' in input ? nodeReferenceViewOf(input) : input;
   const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, warn, state);
-  const raw = def.boundaryPoint(inflateRect(rect, layout.margin), toward, params);
+  const raw = def.computeBoundaryPoint(inflateRect(rect, layout.margin), toward, params);
   return snapshotProviderPosition(`Boundary '${boundaryKey(boundary)}' boundaryPoint`, raw);
 };
 
@@ -114,7 +114,7 @@ export const clipNodePolyline = (
   const boundaryAt = (position: Position): Position =>
     snapshotProviderPosition(
       `Boundary '${boundaryKey(boundary)}' boundaryPoint`,
-      def.boundaryPoint(outer, position, params),
+      def.computeBoundaryPoint(outer, position, params),
     );
   const contains = (position: Position): boolean =>
     point.isEqual(position, center) || point.distance(center, position) <= point.distance(center, boundaryAt(position));
@@ -153,7 +153,7 @@ export const anchorOf = (
     if (name === CenterAnchor.Center) {
       const own = snapshotOptionalProviderPosition(
         `Shape '${layout.shapeName}' anchor`,
-        layout.shapeDef.anchor(layout.rect, CenterAnchor.Center, layout.shapeParams),
+        layout.shapeDef.resolveAnchor(layout.rect, CenterAnchor.Center, layout.shapeParams),
       );
       return own ?? [layout.rect.x, layout.rect.y];
     }
@@ -163,7 +163,7 @@ export const anchorOf = (
       const shapeRect = applyMargin ? inflateRect(layout.rect, layout.margin) : layout.rect;
       const own = snapshotOptionalProviderPosition(
         `Shape '${layout.shapeName}' anchor`,
-        layout.shapeDef.anchor(shapeRect, name, layout.shapeParams),
+        layout.shapeDef.resolveAnchor(shapeRect, name, layout.shapeParams),
       );
       if (own !== undefined) return own;
 
@@ -180,7 +180,7 @@ export const anchorOf = (
 
     const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, undefined, state);
     const anchorRect = applyMargin ? inflateRect(rect, layout.margin) : rect;
-    const raw = def.anchor?.(anchorRect, name, params);
+    const raw = def.resolveAnchor?.(anchorRect, name, params);
     const p =
       snapshotOptionalProviderPosition(`Boundary '${boundaryKey(boundary)}' anchor`, raw) ??
       fallbackBoundaryAnchor(anchorRect, name);
@@ -196,7 +196,7 @@ export const anchorOf = (
   // 形状专属命名 anchor 恒走视觉形状。
   const p = snapshotOptionalProviderPosition(
     `Shape '${layout.shapeName}' anchor`,
-    layout.shapeDef.anchor(layout.rect, name, layout.shapeParams),
+    layout.shapeDef.resolveAnchor(layout.rect, name, layout.shapeParams),
   );
   if (p === undefined) {
     throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `Unknown anchor '${name}' for shape '${layout.shapeName}'`);
@@ -226,7 +226,7 @@ export const angleBoundaryOf = (
 
   // 局部方向转为世界方向。
   const toward: Position = [boundaryRect.x + lx * cosR - ly * sinR, boundaryRect.y + lx * sinR + ly * cosR];
-  const raw = def.boundaryPoint(boundaryRect, toward, params);
+  const raw = def.computeBoundaryPoint(boundaryRect, toward, params);
 
   return snapshotProviderPosition(`Boundary '${boundaryKey(boundary)}' boundaryPoint`, raw);
 };

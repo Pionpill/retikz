@@ -168,7 +168,7 @@ describe('layout-aware composite', () => {
         expect(
           local.resolvePathTargets({ child: source, source: { id: 'target', anchor: 'right' }, points: [] }).source,
         ).toEqual([20, 0]);
-        return { children: [context.scope({ theme: { name: 'compact' } }, [context.replay(probe.result)])] };
+        return { children: [context.createScope({ theme: { name: 'compact' } }, [context.replay(probe.result)])] };
       },
     });
     const result = compileToScene(sceneOf({ namespace: 'test', type: 'themed-parent' }), {

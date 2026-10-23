@@ -63,7 +63,7 @@ const connectionEnvelopeOf = (kind: ConnectionEnvelopeKind, context: BoundaryGeo
   const cached = context.connectionEnvelopeCache?.get(cacheKey);
   if (cached !== undefined) return cached;
 
-  const rawOwn = context.visualDef.connectionEnvelope?.(context.visualRect, kind, context.visualParams);
+  const rawOwn = context.visualDef.computeConnectionEnvelope?.(context.visualRect, kind, context.visualParams);
   const own =
     rawOwn === undefined
       ? undefined
@@ -141,7 +141,7 @@ export const resolveBoundary = (
       rawRect = boundaryDef.resolveRect(
         {
           visualRect: context.visualRect,
-          connectionEnvelope: kind => connectionEnvelopeOf(kind, context),
+          computeConnectionEnvelope: kind => connectionEnvelopeOf(kind, context),
         },
         resolution.params,
       );

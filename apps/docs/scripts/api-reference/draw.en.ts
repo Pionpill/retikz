@@ -290,8 +290,13 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Marker-local base size (viewBox `0 0 baseSize baseSize`, refY = baseSize/2); defaults to 10',
   '默认箭头长度（length fallback）；缺省 8': 'Fallback arrow length; defaults to 8',
   '默认箭头宽度（width fallback）；缺省 8': 'Fallback arrow width; defaults to 8',
-  '局部坐标中的基础场景图元；渲染容器负责端点定位与宿主上下文':
-    'Basic Scene primitives in local coordinates; the render container supplies endpoint placement and host context',
+  '根据已解析样式，生成箭头局部坐标中的基础场景图元':
+    'Generates basic Scene primitives in arrow-local coordinates from resolved styles',
+  '编译时调用，由定义将上下文样式应用到生成的图元。外层负责箭头的缩放、旋转和定位，渲染后端负责实际绘制':
+    'Called during compilation; the definition applies context styles to the generated primitives. The surrounding pipeline handles arrow scaling, rotation, and placement, while the rendering backend performs the actual drawing',
+  '已解析的填充、描边样式及精度取整函数': 'Resolved fill and stroke styles and the precision rounding function',
+  '组成箭头外观的基础场景图元序列，使用本定义的 baseSize 局部坐标系':
+    'A sequence of basic Scene primitives forming the arrow, using this definition’s baseSize local coordinate system',
   '空心标志：true 时由描边表达外轮廓，并按 lineWidth 修正接触点':
     'Hollow flag: when true, stroke defines the outline and lineWidth adjusts the contact point',
   '线接触点静态 base，决定 path shrink 与 marker refX':

@@ -45,13 +45,13 @@ const container = defineComposite({
     child: ChildSchema,
   }),
   compile: (_node, context) => {
-    const child = context.sourceChild(['child']);
+    const child = context.selectSourceChild(['child']);
     const first = probe(context, child);
     const second = probe(context, child);
 
     expect(second.allocationBounds).toEqual(first.allocationBounds);
 
-    return { children: [context.scope({ theme: { mode: 'dark' } }, [context.replay(second)])] };
+    return { children: [context.createScope({ theme: { mode: 'dark' } }, [context.replay(second)])] };
   },
 });
 
@@ -197,7 +197,9 @@ describe('composite instance runtime input', () => {
         type: literal('duplicateSource'),
         child: ChildSchema,
       }),
-      compile: (_node, context) => ({ children: [context.sourceChild(['child']), context.sourceChild(['child'])] }),
+      compile: (_node, context) => ({
+        children: [context.selectSourceChild(['child']), context.selectSourceChild(['child'])],
+      }),
     });
     const source = sceneOf([{ namespace: 'fixture', type: 'duplicateSource', child: leaf() }]);
 

@@ -106,7 +106,7 @@ export const allocateFlowContainerWidths = (
       ...context,
       evaluation: { kind: 'layout' },
       proposal: intrinsicLayoutProposal('natural'),
-      sourceChild: path => children[path[1] as number],
+      selectSourceChild: path => children[path[1] as number],
     }).artifact;
     if (artifact === undefined) return widthFailure(owner, 'Flex allocation returned no artifact.');
 

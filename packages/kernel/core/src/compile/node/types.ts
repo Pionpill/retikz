@@ -21,11 +21,11 @@ export type BoundaryGeometryDefinition = {
   /** provider 名称 */
   name: string;
   /** 返回与解析后 rect 同坐标系的精确闭合连接面轮廓；空数组表示合法空几何 */
-  outline?: (rect: CenteredBox, params: JsonObject) => ReadonlyArray<PathCommand>;
+  computeOutline?: (rect: CenteredBox, params: JsonObject) => ReadonlyArray<PathCommand>;
   /** 按方向求连接点 */
-  boundaryPoint: (rect: CenteredBox, toward: Position, params: JsonObject) => Position;
+  computeBoundaryPoint: (rect: CenteredBox, toward: Position, params: JsonObject) => Position;
   /** 求命名 anchor */
-  anchor?: (rect: CenteredBox, name: string, params: JsonObject) => Position | undefined;
+  resolveAnchor?: (rect: CenteredBox, name: string, params: JsonObject) => Position | undefined;
 };
 
 /** 已按视觉 rect 解析出的连接面几何 */

@@ -74,7 +74,7 @@ const ArtifactLeafDefinition = defineComposite({
           ]),
     ],
     children: [
-      context.scope(
+      context.createScope(
         { id: node.id },
         node.visualSize === undefined
           ? []

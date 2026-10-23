@@ -1562,7 +1562,7 @@ export const compileChildrenToPrimitives = (
     const authoredChildren = new Map<string, CompositeBoundChild>();
     const runtimeInputContext: CompositeRuntimeInputContext = Object.freeze({
       runtimeInput: sourceInputs.bindings.find(input => input.path.length === 0)?.input,
-      sourceChild: path => {
+      selectSourceChild: path => {
         const pathKey = JSON.stringify(path);
         const existing = authoredChildren.get(pathKey);
         if (existing !== undefined) return existing;
@@ -2074,7 +2074,7 @@ export const compileChildrenToPrimitives = (
         replay: (layoutResult, wrapper) =>
           createCompositeReplayChild(runtime.context.session, owner, layoutResult, wrapper),
         raise: failure => raiseLayoutChildFailure(runtime.context.session.failures, owner, failure),
-        scope: (props, children, spatialHandles) =>
+        createScope: (props, children, spatialHandles) =>
           createCompositeScopeChild(runtime.context.session, owner, props, children, spatialHandles),
       });
 

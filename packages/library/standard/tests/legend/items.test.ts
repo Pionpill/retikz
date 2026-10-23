@@ -79,7 +79,7 @@ const createLeafDefinition = (logs: Array<ProbeLog>) =>
 
       return {
         allocationBounds: { x: node.originX, y: node.originY, width, height },
-        children: [context.scope({ id: node.id }, [])],
+        children: [context.createScope({ id: node.id }, [])],
       };
     },
   });
@@ -725,7 +725,7 @@ describe('Legend items compile contract', () => {
       artifactSchema: strictObject({ role: literal('sample') }),
       compile: (_, context) => ({
         allocationBounds: { x: 0, y: 0, width: 16, height: 10 },
-        children: [context.scope({ id: 'typed-sample' }, [])],
+        children: [context.createScope({ id: 'typed-sample' }, [])],
         artifact: { role: 'sample' },
       }),
     });

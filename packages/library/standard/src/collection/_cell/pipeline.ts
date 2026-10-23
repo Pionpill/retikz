@@ -141,7 +141,7 @@ const emitCell = (placed: CellPlacement, context: CompositeCompileContext): Comp
   const cx = Math.max(0, Math.min(width, (width + padding.left - padding.right) / 2));
   const cy = Math.max(0, Math.min(height, (height + padding.top - padding.bottom) / 2));
 
-  return context.scope(
+  return context.createScope(
     {
       transforms: [{ kind: 'translate', x, y }],
       defaults: {
@@ -159,7 +159,7 @@ const emitCell = (placed: CellPlacement, context: CompositeCompileContext): Comp
       ...(result === undefined
         ? []
         : [
-            context.scope(
+            context.createScope(
               { zIndex: 0, ...(cell.layout.overflow === 'clip' ? { clip: surfaceClip(width, height, radius) } : {}) },
               [
                 context.replay(result, {
@@ -279,5 +279,5 @@ export const compileCells = (
     });
   }
 
-  return { allocationBounds, children: [context.scope(scope, children, handles)] };
+  return { allocationBounds, children: [context.createScope(scope, children, handles)] };
 };

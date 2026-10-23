@@ -20,9 +20,9 @@ export const createCompileGroup =
     return {
       allocationBounds: { x: 0, y: 0, width, height },
       children: [
-        context.scope(groupScopeProps(source), [
+        context.createScope(groupScopeProps(source), [
           context.replay(surface),
-          context.scope(
+          context.createScope(
             {
               defaults: { reset: ['node'] },
             },

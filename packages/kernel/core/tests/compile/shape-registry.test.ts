@@ -21,18 +21,18 @@ const radialShape = (): ShapeDefinition =>
   defineShape({
     name: 'hexagon',
     paramsSchema: strictObject({}),
-    circumscribe: (hw, hh) => {
+    computeCircumscribedHalfAxes: (hw, hh) => {
       const r = Math.hypot(hw, hh);
       return { halfWidth: r, halfHeight: r };
     },
-    boundaryPoint: (rect, toward) => {
+    computeBoundaryPoint: (rect, toward) => {
       const [lx, ly] = worldToLocal(rect, toward);
       const len = Math.hypot(lx, ly) || 1;
       const r = rect.width / 2;
 
       return localToWorld(rect, [(lx / len) * r, (ly / len) * r]);
     },
-    anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+    resolveAnchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
     *emit(rect, style): Iterable<ScenePrimitive> {
       yield {
         type: 'ellipse',
@@ -52,9 +52,9 @@ const chipShape = (): ShapeDefinition =>
   defineShape({
     name: 'chip',
     paramsSchema: strictObject({}),
-    circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
-    boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
-    anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
+    computeCircumscribedHalfAxes: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
+    computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
+    resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
     *emit(rect): Iterable<ScenePrimitive> {
       const hw = rect.width / 2;
       yield {
@@ -234,8 +234,10 @@ describe('Shape registry — boundary', () => {
     const sentinelRect: ShapeDefinition = {
       ...BUILTIN_SHAPES.get('rectangle')!,
       name: 'sentinelRect',
-      anchor: (rect, name) =>
-        name === 'sentinel' ? [rect.x + 77, rect.y + 88] : BUILTIN_SHAPES.get('rectangle')!.anchor(rect, name, {}),
+      resolveAnchor: (rect, name) =>
+        name === 'sentinel'
+          ? [rect.x + 77, rect.y + 88]
+          : BUILTIN_SHAPES.get('rectangle')!.resolveAnchor(rect, name, {}),
     };
     const ir: IRScene = {
       version: 1,
@@ -285,9 +287,12 @@ describe('Shape registry — error path', () => {
     const strictShape = defineShape({
       name: 'scaledBox',
       paramsSchema: strictObject({ scale: number().positive() }),
-      circumscribe: (hw, hh, params) => ({ halfWidth: hw * params.scale, halfHeight: hh * params.scale }),
-      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
-      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
+      computeCircumscribedHalfAxes: (hw, hh, params) => ({
+        halfWidth: hw * params.scale,
+        halfHeight: hh * params.scale,
+      }),
+      computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
+      resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
       *emit(rect, style): Iterable<ScenePrimitive> {
         yield {
           type: 'rect',

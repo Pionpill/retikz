@@ -26,13 +26,14 @@ export type EllipticCapsuleShapeParams = EllipticCapShapeParams;
 export const EllipticCapsuleShapeDefinition = defineShape<EllipticCapsuleShapeParams>({
   name: BuiltinExtensionShapeName.EllipticCapsule,
   paramsSchema: EllipticCapShapeParamsSchema,
-  circumscribe: circumscribeEllipticCaps,
-  boundaryPoint: (bounds, toward, params) => localToWorld(bounds, ellipticCapLocalBoundary(bounds, toward, params)),
-  anchor: (bounds, name) => {
+  computeCircumscribedHalfAxes: circumscribeEllipticCaps,
+  computeBoundaryPoint: (bounds, toward, params) =>
+    localToWorld(bounds, ellipticCapLocalBoundary(bounds, toward, params)),
+  resolveAnchor: (bounds, name) => {
     if (name === CenterAnchor.Center) return undefined;
     return isDirectionalAnchor(name) ? rect.anchor(bounds, name) : undefined;
   },
-  connectionEnvelope: (bounds, kind) => boundsConnectionEnvelope(bounds, kind),
+  computeConnectionEnvelope: (bounds, kind) => boundsConnectionEnvelope(bounds, kind),
   *emit(bounds, style, round, params): Iterable<ScenePrimitive> {
     yield contourToPathPrimitive(ellipticCapCommands(bounds, params, round, false), style);
   },

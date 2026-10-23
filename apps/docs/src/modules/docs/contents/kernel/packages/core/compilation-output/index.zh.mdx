@@ -593,7 +593,7 @@ console.log(body.geometry.bounds); // { x: 20, y: 30, width: 100, height: 20 }
 
 `selectSpatialHandles` 返回所有匹配条目，没有匹配时返回空数组；`resolveSpatialHandle` 要求恰好一个匹配，没有匹配或匹配多个都会抛错。例子中只有一张卡片，所以 owner 类型与局部 id 足以唯一定位；存在多张同类卡片时，还需用 owner 的 `instanceId`、`occurrence` 或祖先条件 `within` 缩小范围。`instanceId` 来自组件声明并由其 schema 接受的 `id`，不能仅靠 Definition 类型区分实例。
 
-这里的矩形由组件主动声明，Core 不会从节点图元自动推导它。若区域属于回调生成的带变换 Scope，应通过 `context.scope(props, children, spatialHandles)` 将声明附着到该 Scope 的局部坐标，而不是把 Scope 内的局部矩形直接放到复合结果顶层。
+这里的矩形由组件主动声明，Core 不会从节点图元自动推导它。若区域属于回调生成的带变换 Scope，应通过 `context.createScope(props, children, spatialHandles)` 将声明附着到该 Scope 的局部坐标，而不是把 Scope 内的局部矩形直接放到复合结果顶层。
 
 实际消费可参考 [Flow 的边界示例](/schematic/diagram/flow/extended)：示例从编译结果中读取元素的空间边界，用于显示边界辅助信息。应用同样可以用查询结果放置选中框或定位浮层，无需扫描 Scene 图元反推组件区域。
 
@@ -737,7 +737,7 @@ type CompileWarning = {
 
 默认不收集来源。设置 `execution.captureProvenance: true` 后，返回的 `provenance` 记录本次编译中的实体来源、命名空间注册和最终图元发射关系。其不透明键只在本次结果内有效。Reconciler 用这些事实建立跨版本身份和 Scene Patch，Core 本身不持有增量状态。
 
-与此配套，`validateCompositeInputBindings(ir, bindings)` 只检查 Composite 输入绑定与完整 IR 是否配对，不执行编译。未提供绑定时直接通过；不匹配时抛出 Core 的 `CompositeContractViolation` 错误。
+与此配套，`assertCompositeInputBindings(ir, bindings)` 只检查 Composite 输入绑定与完整 IR 是否配对，不执行编译。未提供绑定时直接通过；不匹配时抛出 Core 的 `CompositeContractViolation` 错误。
 
 <SourceLinks
   sources={[

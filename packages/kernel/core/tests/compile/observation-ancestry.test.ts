@@ -241,7 +241,7 @@ describe('最终观测树', () => {
 
         return {
           children: [
-            context.scope({ transforms: [{ kind: 'translate', x: 20, y: 30 }] }, [
+            context.createScope({ transforms: [{ kind: 'translate', x: 20, y: 30 }] }, [
               context.replay(selected.result, {
                 transforms: [{ kind: 'translate', x: 100, y: 200 }],
                 clip: { kind: 'rect', x: 90, y: 190, width: 100, height: 40 },

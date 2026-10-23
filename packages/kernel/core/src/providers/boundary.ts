@@ -52,14 +52,14 @@ const boundsEllipseHalfAxes = (rect: CenteredBox): { halfWidth: number; halfHeig
 
 /** 复用已解析 Shape provider 的精确轮廓能力，避免 Boundary 维护第二套几何公式 */
 const outlineFromShape = (shape: ShapeDefinition, rect: CenteredBox): ReadonlyArray<PathCommand> => {
-  if (shape.outline === undefined) {
+  if (shape.computeOutline === undefined) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.CompositeContractViolation,
       `Builtin shape '${shape.name}' must provide an outline for its builtin boundary.`,
     );
   }
 
-  return shape.outline(rect, {});
+  return shape.computeOutline(rect, {});
 };
 
 /** 圆形连接面：通过视觉外接矩形的外接圆复用 ellipse shape 几何 */
@@ -67,7 +67,7 @@ const circleBoundary = defineBoundary({
   name: BuiltinShape.Circle,
   paramsSchema: builtinBoundaryParamsSchema,
   resolveRect: (context, params: BuiltinBoundaryParams) => {
-    const base = params.fit === BoundaryFit.Tight ? context.connectionEnvelope('circle') : context.visualRect;
+    const base = params.fit === BoundaryFit.Tight ? context.computeConnectionEnvelope('circle') : context.visualRect;
     const halfAxes =
       params.fit === BoundaryFit.Tight
         ? { halfWidth: base.width / 2, halfHeight: base.height / 2 }
@@ -75,9 +75,9 @@ const circleBoundary = defineBoundary({
 
     return withGap(base, halfAxes.halfWidth, halfAxes.halfHeight, params.gap, BuiltinShape.Circle);
   },
-  boundaryPoint: ellipseShape.boundaryPoint,
-  anchor: ellipseShape.anchor,
-  outline: rect => outlineFromShape(ellipseShape, rect),
+  computeBoundaryPoint: ellipseShape.computeBoundaryPoint,
+  resolveAnchor: ellipseShape.resolveAnchor,
+  computeOutline: rect => outlineFromShape(ellipseShape, rect),
 });
 
 /** 矩形连接面：直接复用 rectangle shape 的连接面实现 */
@@ -93,9 +93,9 @@ const rectangleBoundary = defineBoundary({
       BuiltinShape.Rectangle,
     );
   },
-  boundaryPoint: rectangle.boundaryPoint,
-  anchor: rectangle.anchor,
-  outline: rect => outlineFromShape(rectangle, rect),
+  computeBoundaryPoint: rectangle.computeBoundaryPoint,
+  resolveAnchor: rectangle.resolveAnchor,
+  computeOutline: rect => outlineFromShape(rectangle, rect),
 });
 
 /** 椭圆连接面：通过视觉外接矩形的外接椭圆复用 ellipse shape 几何 */
@@ -103,7 +103,7 @@ const ellipseBoundary = defineBoundary({
   name: BuiltinShape.Ellipse,
   paramsSchema: builtinBoundaryParamsSchema,
   resolveRect: (context, params: BuiltinBoundaryParams) => {
-    const base = params.fit === BoundaryFit.Tight ? context.connectionEnvelope('ellipse') : context.visualRect;
+    const base = params.fit === BoundaryFit.Tight ? context.computeConnectionEnvelope('ellipse') : context.visualRect;
     const halfAxes =
       params.fit === BoundaryFit.Tight
         ? { halfWidth: base.width / 2, halfHeight: base.height / 2 }
@@ -111,9 +111,9 @@ const ellipseBoundary = defineBoundary({
 
     return withGap(base, halfAxes.halfWidth, halfAxes.halfHeight, params.gap, BuiltinShape.Ellipse);
   },
-  boundaryPoint: ellipseShape.boundaryPoint,
-  anchor: ellipseShape.anchor,
-  outline: rect => outlineFromShape(ellipseShape, rect),
+  computeBoundaryPoint: ellipseShape.computeBoundaryPoint,
+  resolveAnchor: ellipseShape.resolveAnchor,
+  computeOutline: rect => outlineFromShape(ellipseShape, rect),
 });
 
 /** 内置 boundary provider 注册项 */

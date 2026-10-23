@@ -22,9 +22,9 @@ const ringShape = (): ShapeDefinition =>
   defineShape({
     name: 'ring',
     paramsSchema: strictObject({ r: number() }),
-    circumscribe: (_hw, _hh, params) => ({ halfWidth: params.r, halfHeight: params.r }),
-    boundaryPoint: (rect: CenteredBox, _toward: Position, params): Position => [rect.x + params.r, rect.y],
-    anchor: (rect: CenteredBox, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+    computeCircumscribedHalfAxes: (_hw, _hh, params) => ({ halfWidth: params.r, halfHeight: params.r }),
+    computeBoundaryPoint: (rect: CenteredBox, _toward: Position, params): Position => [rect.x + params.r, rect.y],
+    resolveAnchor: (rect: CenteredBox, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
     *emit(rect: CenteredBox, _style, _round, params): Iterable<ScenePrimitive> {
       yield {
         type: 'ellipse',
@@ -44,9 +44,9 @@ const looseShape = (): ShapeDefinition =>
   defineShape({
     name: 'loose',
     paramsSchema: object({}).passthrough() as unknown as ZodType<JsonObject>,
-    circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
-    boundaryPoint: (rect: CenteredBox): Position => [rect.x, rect.y],
-    anchor: (rect: CenteredBox, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+    computeCircumscribedHalfAxes: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
+    computeBoundaryPoint: (rect: CenteredBox): Position => [rect.x, rect.y],
+    resolveAnchor: (rect: CenteredBox, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
     *emit(rect: CenteredBox): Iterable<ScenePrimitive> {
       yield {
         type: 'rect',

@@ -129,20 +129,21 @@ const circumscribeCross = (halfWidth: number, halfHeight: number, params: CrossS
 export const CrossShapeDefinition = defineShape<CrossShapeParams>({
   name: BuiltinExtensionShapeName.Cross,
   paramsSchema: CrossShapeParamsSchema,
-  circumscribe: (halfWidth, halfHeight, params) => {
+  computeCircumscribedHalfAxes: (halfWidth, halfHeight, params) => {
     const geometry = circumscribeCross(halfWidth, halfHeight, params);
     return { halfWidth: geometry.halfWidth, halfHeight: geometry.halfHeight };
   },
-  circumscribeOffset: params => circumscribeCross(0, 0, params).offset,
-  boundaryPoint: (bounds, toward, params) => {
+  computeCircumscribedOffset: params => circumscribeCross(0, 0, params).offset,
+  computeBoundaryPoint: (bounds, toward, params) => {
     const center: Position = [bounds.x, bounds.y];
     return boundaryFromContour(verticesToSegments(crossVertices(bounds, params)), undefined, center, toward) ?? center;
   },
-  anchor: (bounds, name) => {
+  resolveAnchor: (bounds, name) => {
     if (name === CenterAnchor.Center) return undefined;
     return isDirectionalAnchor(name) ? rect.anchor(bounds, name) : undefined;
   },
-  connectionEnvelope: (bounds, kind, params) => pointsConnectionEnvelope(crossLocalVertices(bounds, params), kind),
+  computeConnectionEnvelope: (bounds, kind, params) =>
+    pointsConnectionEnvelope(crossLocalVertices(bounds, params), kind),
   *emit(bounds, style, round, params): Iterable<ScenePrimitive> {
     const commands = contourToPathCommands(contourCommands(verticesToSegments(crossVertices(bounds, params))), round);
     yield contourToPathPrimitive(commands, style);

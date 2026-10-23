@@ -77,13 +77,13 @@ const worldVertices = (rect: CenteredBox, geometry: StarGeometry): Array<Positio
 export const StarShapeDefinition = defineShape<StarShapeParams>({
   name: BuiltinExtensionShapeName.Star,
   paramsSchema: StarShapeParamsSchema,
-  circumscribe: (_halfWidth, _halfHeight, params) => starGeometry(params).aabbHalfAxes,
-  boundaryPoint: (rect, toward, params) => {
+  computeCircumscribedHalfAxes: (_halfWidth, _halfHeight, params) => starGeometry(params).aabbHalfAxes,
+  computeBoundaryPoint: (rect, toward, params) => {
     const vertices = worldVertices(rect, starGeometry(params));
     const center = localToWorld(rect, [0, 0]);
     return boundaryFromContour(verticesToSegments(vertices), params.cornerRadius, center, toward) ?? center;
   },
-  anchor: (rect, name: ShapeAnchorName, params) => {
+  resolveAnchor: (rect, name: ShapeAnchorName, params) => {
     const geometry = starGeometry(params);
     const tip = /^tip-(\d+)$/.exec(name);
     if (tip) {
@@ -99,7 +99,7 @@ export const StarShapeDefinition = defineShape<StarShapeParams>({
 
     return undefined;
   },
-  connectionEnvelope: (_rect, kind, params) => pointsConnectionEnvelope(starGeometry(params).vertices, kind),
+  computeConnectionEnvelope: (_rect, kind, params) => pointsConnectionEnvelope(starGeometry(params).vertices, kind),
   *emit(rect, style, round, params): Iterable<ScenePrimitive> {
     const commands = contourToPathCommands(
       contourCommands(verticesToSegments(worldVertices(rect, starGeometry(params))), params.cornerRadius),

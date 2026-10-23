@@ -65,7 +65,12 @@ export type ArrowDefinition = {
    * @default 8
    */
   defaultWidth?: number;
-  /** 局部坐标中的基础场景图元；渲染容器负责端点定位与宿主上下文 */
+  /**
+   * 根据已解析样式，生成箭头局部坐标中的基础场景图元
+   * @description 编译时调用，由定义将上下文样式应用到生成的图元。外层负责箭头的缩放、旋转和定位，渲染后端负责实际绘制
+   * @param ctx 已解析的填充、描边样式及精度取整函数
+   * @returns 组成箭头外观的基础场景图元序列，使用本定义的 baseSize 局部坐标系
+   */
   emit: (ctx: ArrowEmitContext) => Iterable<ScenePrimitive>;
 };
 

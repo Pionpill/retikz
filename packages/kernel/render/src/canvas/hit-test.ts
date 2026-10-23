@@ -1,4 +1,4 @@
-import { sceneTextBounds } from '@retikz/core';
+import { computeSceneTextBounds } from '@retikz/core';
 import type { Scene, SceneClipPath, ScenePrimitive } from '@retikz/core';
 
 import { validateSceneContent } from '../shared';
@@ -60,7 +60,7 @@ const buildPrimPath = (ctx: CanvasRenderingContext2D, prim: ScenePrimitive): boo
       buildPath(ctx, prim.commands);
       return true;
     case 'text': {
-      const bounds = sceneTextBounds(prim);
+      const bounds = computeSceneTextBounds(prim);
       ctx.beginPath();
       ctx.rect(bounds.x, bounds.y, bounds.width, bounds.height);
       return true;

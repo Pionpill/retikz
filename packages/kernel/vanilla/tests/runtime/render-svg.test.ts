@@ -58,7 +58,7 @@ const fixedBoundary = (): BoundaryDefinition =>
   defineBoundary({
     name: 'pin',
     paramsSchema: strictObject({}),
-    boundaryPoint: rect => [rect.x + 7, rect.y],
+    computeBoundaryPoint: rect => [rect.x + 7, rect.y],
   });
 
 const circleFrameClip = (): ClipDefinition =>

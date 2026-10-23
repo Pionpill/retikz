@@ -89,8 +89,8 @@ describe('polygon cornerRadius — boundary aware', () => {
   it('polygon_boundary_aware：朝顶点方向 r>0 落 fillet 弧（≠ 尖顶点），r=0 = 尖顶点', () => {
     const rect = squareRect();
     const toward: Position = [1000, 0]; // 朝 +x 顶点方向
-    const sharp = polygon.boundaryPoint(rect, toward, { sides: 4 });
-    const rounded = polygon.boundaryPoint(rect, toward, { sides: 4, cornerRadius: 20 });
+    const sharp = polygon.computeBoundaryPoint(rect, toward, { sides: 4 });
+    const rounded = polygon.computeBoundaryPoint(rect, toward, { sides: 4, cornerRadius: 20 });
 
     // 朝顶点方向：尖角点离中心最远（外接半径）；倒角后该方向边界更靠近中心
     const distSharp = Math.hypot(sharp[0], sharp[1]);
@@ -106,8 +106,8 @@ describe('polygon cornerRadius — boundary aware', () => {
   it('polygon_boundary_r0_eq_sharp：cornerRadius:0 boundary = 省略 cornerRadius', () => {
     const rect = squareRect();
     const toward: Position = [300, 130];
-    const omitted = polygon.boundaryPoint(rect, toward, { sides: 5, rotate: 12 });
-    const zero = polygon.boundaryPoint(rect, toward, { sides: 5, rotate: 12, cornerRadius: 0 });
+    const omitted = polygon.computeBoundaryPoint(rect, toward, { sides: 5, rotate: 12 });
+    const zero = polygon.computeBoundaryPoint(rect, toward, { sides: 5, rotate: 12, cornerRadius: 0 });
 
     expect(zero[0]).toBeCloseTo(omitted[0], 9);
     expect(zero[1]).toBeCloseTo(omitted[1], 9);
@@ -194,8 +194,8 @@ describe('polygon cornerRadius — scaleParams', () => {
 
 describe('polygon cornerRadius — circumscribe unchanged', () => {
   it('polygon_circumscribe_unchanged：cornerRadius 变化不改 circumscribe AABB', () => {
-    const noCorner = polygon.circumscribe(40, 30, { sides: 6 });
-    const withCorner = polygon.circumscribe(40, 30, { sides: 6, cornerRadius: 12 });
+    const noCorner = polygon.computeCircumscribedHalfAxes(40, 30, { sides: 6 });
+    const withCorner = polygon.computeCircumscribedHalfAxes(40, 30, { sides: 6, cornerRadius: 12 });
 
     expect(withCorner).toEqual(noCorner);
   });
@@ -203,13 +203,13 @@ describe('polygon cornerRadius — circumscribe unchanged', () => {
 
 describe('polygon diamond aspectRatio', () => {
   it('aspectRatio=1 preserves the existing diamond dimensions', () => {
-    expect(polygon.circumscribe(40, 30, { sides: 4 })).toEqual(
-      polygon.circumscribe(40, 30, { sides: 4, aspectRatio: 1 }),
+    expect(polygon.computeCircumscribedHalfAxes(40, 30, { sides: 4 })).toEqual(
+      polygon.computeCircumscribedHalfAxes(40, 30, { sides: 4, aspectRatio: 1 }),
     );
   });
 
   it('aspectRatio controls the four-sided diamond width-to-height ratio', () => {
-    const result = polygon.circumscribe(40, 30, { sides: 4, aspectRatio: 1.8 });
+    const result = polygon.computeCircumscribedHalfAxes(40, 30, { sides: 4, aspectRatio: 1.8 });
 
     expect(result.halfWidth / result.halfHeight).toBeCloseTo(1.8, 10);
     expect(result.halfWidth).toBeCloseTo(94, 10);
@@ -219,14 +219,14 @@ describe('polygon diamond aspectRatio', () => {
   it('boundaryPoint and connectionEnvelope reuse the same anisotropic diamond contour', () => {
     const bounds = squareRect(100);
     const params = { sides: 4, aspectRatio: 1.8 } as const;
-    const right = polygon.boundaryPoint({ ...bounds, width: 180 }, [1000, 0], params);
-    const top = polygon.boundaryPoint(bounds, [0, 1000], params);
+    const right = polygon.computeBoundaryPoint({ ...bounds, width: 180 }, [1000, 0], params);
+    const top = polygon.computeBoundaryPoint(bounds, [0, 1000], params);
 
     expect(right[0]).toBeCloseTo(90, 10);
     expect(right[1]).toBeCloseTo(0, 10);
     expect(top[0]).toBeCloseTo(0, 10);
     expect(top[1]).toBeCloseTo(50, 10);
-    expect(polygon.connectionEnvelope!({ ...bounds, width: 180 }, 'rectangle', params)).toEqual({
+    expect(polygon.computeConnectionEnvelope!({ ...bounds, width: 180 }, 'rectangle', params)).toEqual({
       halfWidth: 90,
       halfHeight: 50,
     });

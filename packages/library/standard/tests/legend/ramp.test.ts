@@ -51,7 +51,7 @@ const compileRamp = (child: IRChild, proposal?: LayoutProposal) => {
             ? node.exactAllocationHeight
             : node.height,
       },
-      children: [context.scope({ id: node.id }, [])],
+      children: [context.createScope({ id: node.id }, [])],
     }),
   });
   const harness = defineComposite({

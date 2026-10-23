@@ -87,7 +87,7 @@ const captureSurfaceContentPlacement = (
   const content = context.bindChild(surface.child, []);
   compileSurface(surface, {
     ...context,
-    sourceChild: () => content,
+    selectSourceChild: () => content,
     layoutChild: (child, proposal) => {
       const probe = context.layoutChild(child, proposal);
       if (child === content && probe.kind === LayoutChildProbeKind.Resolved) {
@@ -117,7 +117,7 @@ const collectFoundationFlexRegions = (
     ...context,
     evaluation: { kind: 'layout' },
     proposal,
-    sourceChild: path => children[path[1] as number],
+    selectSourceChild: path => children[path[1] as number],
   }).artifact;
   if (artifact === undefined) return foundationCompositionFailure('FlexLayout returned no placement artifact.');
 
