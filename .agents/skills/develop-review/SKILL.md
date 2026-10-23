@@ -41,6 +41,7 @@ git status --short
 
 - 补查 Oxlint 未覆盖的约束：按 `standard-name` 检查泛型命名与 export 顺序；生产源码不得创建或调用原生 Error 家族及 `globalThis` 变体，只有 `RetikzError` 可直接继承原生错误，派生类遵循根 AGENTS 命名契约
 - 改动涉及 React Compiler 配置或 gating 时，核对官方配置契约、gating 函数的导入和布尔返回语义；不以 lint 通过代替此项审查
+- 删除泛型前追踪输入输出关联、推断返回类型和调用方约束，不按名称或出现次数判冗余；简化 key 泛型时同步检查残留名称类型、取键分支和集合表示，不用 `Record<string, T>` 假定任意键都存在
 
 每条 finding 必须有代码位置和成因，不能只写“可以优化”。
 
