@@ -7,7 +7,7 @@ import { boxInsets } from '../../src/compile/node';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const makeLayout = (_id: string, x = 0, y = 0): NodeLayout => ({
-  shape: { name: 'rectangle', definition: BUILTIN_SHAPES.rectangle, params: {} },
+  shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x, y, width: 0, height: 0, rotate: 0 },
     contentCenter: [x, y],
@@ -15,8 +15,8 @@ const makeLayout = (_id: string, x = 0, y = 0): NodeLayout => ({
     contentSize: { width: 0, height: 0 },
   },
   boundary: {
-    name: BUILTIN_SHAPES.rectangle.name,
-    definition: BUILTIN_SHAPES.rectangle,
+    name: BUILTIN_SHAPES.get('rectangle')!.name,
+    definition: BUILTIN_SHAPES.get('rectangle')!,
     params: {},
     isShape: true,
   },

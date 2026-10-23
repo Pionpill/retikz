@@ -7,7 +7,6 @@ import type {
 } from '../../contract';
 import { definePattern } from '../../contract';
 import { BuiltinPatternShape } from '../../schemas';
-import { defineBuiltinProviderArray } from '../registry/index';
 
 const DEFAULT_PATTERN_SIZE = 8;
 
@@ -122,8 +121,8 @@ const dotsPattern = definePattern({
 });
 
 /** 内置 pattern provider 注册项 */
-export const BUILTIN_PATTERNS = defineBuiltinProviderArray<PatternDefinition, BuiltinPatternShape>([
-  linesPattern,
-  gridPattern,
-  dotsPattern,
+export const BUILTIN_PATTERNS: ReadonlyMap<string, PatternDefinition> = new Map([
+  [linesPattern.name, linesPattern],
+  [gridPattern.name, gridPattern],
+  [dotsPattern.name, dotsPattern],
 ]);

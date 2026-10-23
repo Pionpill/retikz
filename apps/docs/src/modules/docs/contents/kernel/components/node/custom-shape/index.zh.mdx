@@ -26,7 +26,7 @@ Core 默认 `rectangle` / `ellipse` / `polygon` 与自定义项经过同一套 r
 
 ## 定义能力
 
-用 `defineShape()` 声明注册名、参数 schema 和几何职责。无参形状使用 `z.strictObject({})`；下面的最小定义复用矩形几何，只改变注册名和占位大小。
+用 `defineShape()` 声明注册名、参数 schema 和几何职责。注册名使用开放的 `string`；需要标注名称类型时，可直接使用 `ShapeDefinition['name']`，无需另建内置名称联合类型。无参形状使用 `z.strictObject({})`；下面的最小定义复用矩形几何，只改变注册名和占位大小。
 
 ```ts
 import { BUILTIN_SHAPES, defineShape } from '@retikz/core';
@@ -39,10 +39,10 @@ const badge = defineShape({
     halfWidth: halfWidth + 8,
     halfHeight: halfHeight + 4,
   }),
-  boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-  anchor: BUILTIN_SHAPES.rectangle.anchor,
-  connectionEnvelope: BUILTIN_SHAPES.rectangle.connectionEnvelope,
-  emit: BUILTIN_SHAPES.rectangle.emit,
+  boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+  anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
+  connectionEnvelope: BUILTIN_SHAPES.get('rectangle')!.connectionEnvelope,
+  emit: BUILTIN_SHAPES.get('rectangle')!.emit,
 });
 ```
 

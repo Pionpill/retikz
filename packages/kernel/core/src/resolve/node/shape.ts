@@ -2,7 +2,7 @@ import type { JsonObject, JsonValue } from '@retikz/foundation';
 
 import type { ShapeDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { ProviderCollection } from '../../providers/registry';
+import type { ProviderRegistry } from '../../providers/registry';
 import { providerDefinitionOf } from '../../providers/registry';
 import type { IRNode, IRShapeRef } from '../../schemas';
 import { BuiltinShape } from '../../schemas';
@@ -15,7 +15,7 @@ export type NodeShapeResolveInput = {
   /** 待解析节点 */
   node: Pick<IRNode, 'shape' | 'cornerRadius'>;
   /** shape 注册表 */
-  shapes: ProviderCollection<ShapeDefinition>;
+  shapes: ProviderRegistry<ShapeDefinition>;
   /** x 轴缩放 */
   scaleX: number;
   /** y 轴缩放 */

@@ -7,8 +7,12 @@ const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: '
 
 describe('Core minimal builtin providers', () => {
   it('keeps only the base shape, arrow, clip, and path-generator collections', () => {
-    expect(BUILTIN_SHAPES.map(definition => definition.name)).toEqual(['rectangle', 'ellipse', 'polygon']);
-    expect(BUILTIN_ARROWS.map(definition => definition.name)).toEqual([
+    expect([...BUILTIN_SHAPES.values()].map(definition => definition.name)).toEqual([
+      'rectangle',
+      'ellipse',
+      'polygon',
+    ]);
+    expect([...BUILTIN_ARROWS.values()].map(definition => definition.name)).toEqual([
       'normal',
       'open',
       'stealth',
@@ -16,8 +20,8 @@ describe('Core minimal builtin providers', () => {
       'circle',
       'openCircle',
     ]);
-    expect(BUILTIN_CLIPS.map(definition => definition.kind)).toEqual(['rect']);
-    expect(BUILTIN_CLIPS[0]).toEqual(
+    expect([...BUILTIN_CLIPS.values()].map(definition => definition.kind)).toEqual(['rect']);
+    expect(BUILTIN_CLIPS.get('rect')).toEqual(
       expect.objectContaining({
         kind: 'rect',
         schema: expect.anything(),
@@ -25,7 +29,7 @@ describe('Core minimal builtin providers', () => {
         lower: expect.any(Function),
       }),
     );
-    expect(BUILTIN_PATH_GENERATORS).toEqual([]);
+    expect(BUILTIN_PATH_GENERATORS.size).toBe(0);
   });
 
   it('requires optional Standard definitions when IR names an optional provider', () => {

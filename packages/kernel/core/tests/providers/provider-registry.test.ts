@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { BUILTIN_CLIPS } from '../../src/providers/clip';
-import {
-  defineKeyedProviderArray,
-  providerDefinitionOf,
-  resolveProviderRegistry,
-} from '../../src/providers/registry/index';
+import { providerDefinitionOf, resolveProviderRegistry } from '../../src/providers/registry/index';
 
 type MockProvider = {
   name: string;
@@ -16,14 +12,17 @@ const provider = (name: string, value = 1): MockProvider => ({ name, value });
 
 describe('provider registry contract', () => {
   it('merges_builtin_and_custom_definitions_into_a_readonly_map', () => {
+    const builtins = new Map([['builtin', provider('builtin')]]);
     const registry = resolveProviderRegistry({
       capability: 'mock provider',
-      builtins: [provider('builtin')],
+      builtins,
       custom: [provider('custom')],
       keyOf: def => def.name,
     });
 
     expect([...registry.keys()]).toEqual(['builtin', 'custom']);
+    expect([...builtins.keys()]).toEqual(['builtin']);
+    expect(registry.get('builtin')).toBe(builtins.get('builtin'));
     expect(
       providerDefinitionOf(registry, 'custom', { capability: 'mock provider', optionName: 'mockProviders' }),
     ).toEqual(provider('custom'));
@@ -33,7 +32,7 @@ describe('provider registry contract', () => {
     expect(() =>
       resolveProviderRegistry({
         capability: 'mock provider',
-        builtins: [provider('builtin')],
+        builtins: new Map([['builtin', provider('builtin')]]),
         custom: [provider('builtin', 2)],
         keyOf: def => def.name,
       }),
@@ -44,7 +43,6 @@ describe('provider registry contract', () => {
     expect(() =>
       resolveProviderRegistry({
         capability: 'mock provider',
-        builtins: [],
         custom: [provider('custom'), provider('custom', 2)],
         keyOf: def => def.name,
       }),
@@ -54,7 +52,7 @@ describe('provider registry contract', () => {
   it('unknown_lookup_message_lists_registered_names_and_option_name', () => {
     const registry = resolveProviderRegistry({
       capability: 'mock provider',
-      builtins: [provider('alpha')],
+      builtins: new Map([['alpha', provider('alpha')]]),
       custom: [provider('beta')],
       keyOf: def => def.name,
     });
@@ -68,27 +66,18 @@ describe('provider registry contract', () => {
     expect(() =>
       resolveProviderRegistry({
         capability: 'mock provider',
-        builtins: [provider(key)],
-        custom: [],
+        builtins: new Map([[key, provider(key)]]),
         keyOf: def => def.name,
       }),
     ).toThrowError('mock provider provider key must be a non-empty string.');
   });
 
-  it('indexes_builtin_provider_arrays_by_custom_keys', () => {
-    const providers = defineKeyedProviderArray(
-      [
-        { kind: 'alpha', value: 1 },
-        { kind: 'beta', value: 2 },
-      ],
-      definition => definition.kind,
-    );
-
-    expect(providers.alpha).toEqual({ kind: 'alpha', value: 1 });
-    expect(providers.beta).toEqual({ kind: 'beta', value: 2 });
+  it('defaults_omitted_collections_to_empty_registries', () => {
+    const registry = resolveProviderRegistry<MockProvider>({ capability: 'mock provider', keyOf: def => def.name });
+    expect(registry.size).toBe(0);
   });
 
   it('indexes_retained_builtin_clips_by_kind', () => {
-    expect(BUILTIN_CLIPS.rect.kind).toBe('rect');
+    expect(BUILTIN_CLIPS.get('rect')!.kind).toBe('rect');
   });
 });

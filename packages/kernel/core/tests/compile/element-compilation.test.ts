@@ -146,11 +146,11 @@ describe('独立元素编译', () => {
   it('复用绘制片段不再次调用自定义 shape provider，引用投影不修改旧布局', () => {
     let emitted = 0;
     const definition: ShapeDefinition = {
-      ...BUILTIN_SHAPES.rectangle,
+      ...BUILTIN_SHAPES.get('rectangle')!,
       name: 'counted',
       emit: (...args) => {
         emitted += 1;
-        return BUILTIN_SHAPES.rectangle.emit(...args);
+        return BUILTIN_SHAPES.get('rectangle')!.emit(...args);
       },
     };
     const environment = createCompileEnvironment({ shapes: [definition] });

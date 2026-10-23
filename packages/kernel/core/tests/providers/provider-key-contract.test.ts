@@ -35,7 +35,7 @@ const expectCoreNonEmptyError = (action: () => unknown, code: RetikzCoreErrorCod
 
 describe('provider key contract', () => {
   it('shape_definitions_declare_their_registry_name', () => {
-    const shapeNames = BUILTIN_SHAPES.map(def => def.name).sort();
+    const shapeNames = [...BUILTIN_SHAPES.values()].map(def => def.name).sort();
 
     expect(shapeNames).toContain('rectangle');
     expect(shapeNames).toContain('ellipse');
@@ -120,7 +120,7 @@ describe('provider key contract', () => {
   );
 
   it('path_kind_definitions_are_keyed_by_definition_name', () => {
-    const pathKindNames = BUILTIN_PATH_KINDS.map(def => def.name).sort();
+    const pathKindNames = [...BUILTIN_PATH_KINDS.values()].map(def => def.name).sort();
 
     expect(pathKindNames).toEqual(['stroke']);
   });

@@ -578,23 +578,23 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BUILTIN_BOUNDARIES"} path={"packages/kernel/core/src/providers/boundary/definitions.ts"} startLine={125}>BUILTIN_BOUNDARIES</ApiSourceLink>
+#### <ApiSourceLink label={"BUILTIN_BOUNDARIES"} path={"packages/kernel/core/src/providers/boundary/definitions.ts"} startLine={124}>BUILTIN_BOUNDARIES</ApiSourceLink>
 
 ```ts
-export const BUILTIN_BOUNDARIES = defineBuiltinProviderArray<BoundaryDefinition, BuiltinBoundaryProviderName>([
-  circleBoundary,
-  rectangleBoundary,
-  ellipseBoundary,
+export const BUILTIN_BOUNDARIES: ReadonlyMap<string, BoundaryDefinition> = new Map([
+  [circleBoundary.name, circleBoundary],
+  [rectangleBoundary.name, rectangleBoundary],
+  [ellipseBoundary.name, ellipseBoundary],
 ]);
 ```
 
-#### <ApiSourceLink label={"BUILTIN_SHAPES"} path={"packages/kernel/core/src/providers/shape/definitions.ts"} startLine={15}>BUILTIN_SHAPES</ApiSourceLink>
+#### <ApiSourceLink label={"BUILTIN_SHAPES"} path={"packages/kernel/core/src/providers/shape/definitions.ts"} startLine={14}>BUILTIN_SHAPES</ApiSourceLink>
 
 ```ts
-export const BUILTIN_SHAPES = defineBuiltinProviderArray<ShapeDefinition, BuiltinShapeProviderName>([
-  rectangle,
-  ellipseShape,
-  polygon,
+export const BUILTIN_SHAPES: ReadonlyMap<string, ShapeDefinition> = new Map([
+  [rectangle.name, rectangle],
+  [ellipseShape.name, ellipseShape],
+  [polygon.name, polygon],
 ]);
 ```
 

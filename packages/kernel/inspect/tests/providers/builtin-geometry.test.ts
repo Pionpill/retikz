@@ -186,7 +186,7 @@ describe('内置几何检查', () => {
   });
 
   it('仅对启用的缺失几何facet报告UnsupportedGeometry，并继续绘制外框', () => {
-    const { outline, keyPoints, ...shape } = BUILTIN_SHAPES.rectangle;
+    const { outline, keyPoints, ...shape } = BUILTIN_SHAPES.get('rectangle')!;
     void outline;
     void keyPoints;
     const ir: IRScene = {

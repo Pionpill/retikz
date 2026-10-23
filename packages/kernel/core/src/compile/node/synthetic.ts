@@ -4,7 +4,7 @@ import { circle } from '@retikz/math';
 
 import type { BoundaryDefinition, ShapeDefinition, Transform } from '../../contract';
 import { BUILTIN_BOUNDARIES } from '../../providers/boundary';
-import type { ProviderCollection } from '../../providers/registry/index';
+import type { ProviderRegistry } from '../../providers/registry/index';
 import { BUILTIN_SHAPES } from '../../providers/shape';
 import { resolveNode } from '../../resolve';
 import type { PositionTargetResolveContext } from '../../resolve/position';
@@ -28,9 +28,9 @@ const SYNTHETIC_POSITION_CONTEXT: PositionTargetResolveContext = {
 /** synthetic layout 构造使用的 shape / boundary 注册表 */
 export type SyntheticLayoutRegistryContext = {
   /** shape 注册表 */
-  shapes?: ProviderCollection<ShapeDefinition>;
+  shapes?: ProviderRegistry<ShapeDefinition>;
   /** boundary 注册表 */
-  boundaries?: ProviderCollection<BoundaryDefinition>;
+  boundaries?: ProviderRegistry<BoundaryDefinition>;
 };
 
 /** synthetic rectangle layout 输入 */

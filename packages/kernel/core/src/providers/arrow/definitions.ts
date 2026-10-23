@@ -1,7 +1,6 @@
 import type { ArrowDefinition, ArrowEmitContext, MarkerPrimitive } from '../../contract';
 import { defineArrow } from '../../contract';
 import { BuiltinArrowShape } from '../../schemas';
-import { defineBuiltinProviderArray } from '../registry/index';
 
 /** 实心闭合三角 / V 形的 path 工厂：填充走 context.fill（无 override = contextStroke） */
 const filledPath = (context: ArrowEmitContext, points: ReadonlyArray<[number, number]>): MarkerPrimitive => ({
@@ -126,7 +125,11 @@ const openCircleArrow = defineArrow({
 });
 
 /** 内置基础箭头注册项；与 `CompileOptions.arrows` 合并时复用统一注册和重复键诊断 */
-export const BUILTIN_ARROWS = defineBuiltinProviderArray<
-  ArrowDefinition,
-  'normal' | 'open' | 'stealth' | 'openStealth' | 'circle' | 'openCircle'
->([normalArrow, openArrow, stealthArrow, openStealthArrow, circleArrow, openCircleArrow]);
+export const BUILTIN_ARROWS: ReadonlyMap<string, ArrowDefinition> = new Map([
+  [normalArrow.name, normalArrow],
+  [openArrow.name, openArrow],
+  [stealthArrow.name, stealthArrow],
+  [openStealthArrow.name, openStealthArrow],
+  [circleArrow.name, circleArrow],
+  [openCircleArrow.name, openCircleArrow],
+]);

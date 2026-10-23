@@ -1513,9 +1513,9 @@ describe('layout-aware composite constraints and bounds', () => {
       name: 'malformedProbeShape',
       paramsSchema: strictObject({}),
       circumscribe: () => ({ halfWidth: Number.NaN, halfHeight: 1 }),
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
-      emit: BUILTIN_SHAPES.rectangle.emit,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
+      emit: BUILTIN_SHAPES.get('rectangle')!.emit,
     });
     const shapeParent = defineComposite({
       namespace: 'test',
@@ -1748,9 +1748,9 @@ describe('layout-aware composite constraints and bounds', () => {
             },
           },
         ),
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
-      emit: BUILTIN_SHAPES.rectangle.emit,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
+      emit: BUILTIN_SHAPES.get('rectangle')!.emit,
     });
     const parent = defineComposite({
       namespace: 'test',
@@ -1791,17 +1791,17 @@ describe('layout-aware composite constraints and bounds', () => {
     const hostileShape = defineShape({
       name: 'hostilePointShape',
       paramsSchema: strictObject({}),
-      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-      boundaryPoint: variant === 'boundaryPoint' ? hostilePoint : BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: variant === 'shapeAnchor' ? hostilePoint : BUILTIN_SHAPES.rectangle.anchor,
-      edgePoint: variant === 'shapeEdgePoint' ? hostilePoint : BUILTIN_SHAPES.rectangle.edgePoint,
-      emit: BUILTIN_SHAPES.rectangle.emit,
+      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+      boundaryPoint: variant === 'boundaryPoint' ? hostilePoint : BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: variant === 'shapeAnchor' ? hostilePoint : BUILTIN_SHAPES.get('rectangle')!.anchor,
+      edgePoint: variant === 'shapeEdgePoint' ? hostilePoint : BUILTIN_SHAPES.get('rectangle')!.edgePoint,
+      emit: BUILTIN_SHAPES.get('rectangle')!.emit,
     });
     const hostileBoundary = defineBoundary({
       name: 'hostilePointBoundary',
       paramsSchema: strictObject({}),
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: variant === 'boundaryAnchor' ? hostilePoint : BUILTIN_SHAPES.rectangle.anchor,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: variant === 'boundaryAnchor' ? hostilePoint : BUILTIN_SHAPES.get('rectangle')!.anchor,
     });
     const parent = defineComposite({
       namespace: 'test',
@@ -1864,10 +1864,10 @@ describe('layout-aware composite constraints and bounds', () => {
             },
           },
         ),
-      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
-      emit: BUILTIN_SHAPES.rectangle.emit,
+      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
+      emit: BUILTIN_SHAPES.get('rectangle')!.emit,
     });
     const parent = defineComposite({
       namespace: 'test',
@@ -1905,7 +1905,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const hostileEnvelopeShape = defineShape({
       name: 'hostileEnvelopeShape',
       paramsSchema: strictObject({}),
-      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
+      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
       connectionEnvelope: () =>
         new Proxy(
           { halfWidth: 10, halfHeight: 10 },
@@ -1915,9 +1915,9 @@ describe('layout-aware composite constraints and bounds', () => {
             },
           },
         ),
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
-      emit: BUILTIN_SHAPES.rectangle.emit,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
+      emit: BUILTIN_SHAPES.get('rectangle')!.emit,
     });
     const hostileBoundary = defineBoundary({
       name: 'hostileRectBoundary',
@@ -1928,8 +1928,8 @@ describe('layout-aware composite constraints and bounds', () => {
             throw new Error('hostile boundary rect reflection');
           },
         }),
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
     });
     const parent = defineComposite({
       namespace: 'test',
@@ -1982,8 +1982,8 @@ describe('layout-aware composite constraints and bounds', () => {
       name: 'nullishRectBoundary',
       paramsSchema: strictObject({}),
       resolveRect: () => output as never,
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
     });
     const parent = defineComposite({
       namespace: 'test',
@@ -2160,9 +2160,9 @@ describe('layout-aware composite constraints and bounds', () => {
     const badShape = defineShape({
       name: 'badEmitShape',
       paramsSchema: strictObject({}),
-      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
       emit: (() => [{ type: 'rect', x: 0, y: 0, width: -1, height: 2 }]) as unknown as () => Iterable<ScenePrimitive>,
     });
     const badArrow = defineArrow({
@@ -2289,9 +2289,9 @@ describe('layout-aware composite constraints and bounds', () => {
       defineShape({
         name,
         paramsSchema: strictObject({}),
-        circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-        boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-        anchor: BUILTIN_SHAPES.rectangle.anchor,
+        circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+        boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+        anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
         emit: () => [primitive],
       }),
     );
@@ -2424,9 +2424,9 @@ describe('layout-aware composite constraints and bounds', () => {
       defineShape({
         name,
         paramsSchema: strictObject({}),
-        circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-        boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-        anchor: BUILTIN_SHAPES.rectangle.anchor,
+        circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+        boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+        anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
         emit: () => [primitive],
       }),
     );
@@ -2535,9 +2535,9 @@ describe('layout-aware composite constraints and bounds', () => {
     const proxyShape = defineShape({
       name: 'proxyTrapShape',
       paramsSchema: strictObject({}),
-      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
       emit: () => [sceneProxy as unknown as ScenePrimitive],
     });
     const markerTrap = new Error('marker iterator trap');
@@ -2644,9 +2644,9 @@ describe('layout-aware composite constraints and bounds', () => {
     const dynamicShape = defineShape({
       name: 'dynamicScenePrimitiveShape',
       paramsSchema: strictObject({}),
-      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
       emit: () => [dynamicRect],
     });
 
@@ -2664,9 +2664,9 @@ describe('layout-aware composite constraints and bounds', () => {
     const farShape = defineShape({
       name: 'nonFiniteVisualBoundsShape',
       paramsSchema: strictObject({}),
-      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
       emit: () => [{ type: 'rect', x: Number.MAX_VALUE, y: 0, width: Number.MAX_VALUE, height: 10, fill: '#000' }],
     });
     const parent = defineComposite({
@@ -2820,9 +2820,9 @@ describe('layout-aware composite constraints and bounds', () => {
       paramsSchema: strictObject({}),
       circumscribe: () => circumscribed,
       circumscribeOffset: () => offset,
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
-      emit: BUILTIN_SHAPES.rectangle.emit,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
+      emit: BUILTIN_SHAPES.get('rectangle')!.emit,
     });
 
     const result = compileToScene(
@@ -2862,9 +2862,9 @@ describe('layout-aware composite constraints and bounds', () => {
       defineShape({
         name,
         paramsSchema: strictObject({}),
-        circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-        boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-        anchor: BUILTIN_SHAPES.rectangle.anchor,
+        circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+        boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+        anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
         emit: () => [primitive],
       });
     const validShape = shapeOf('optionalUndefinedSceneShape', {
@@ -2920,9 +2920,9 @@ describe('layout-aware composite constraints and bounds', () => {
       const shape = defineShape({
         name: `lossySceneArrayShape${index}`,
         paramsSchema: strictObject({}),
-        circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-        boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-        anchor: BUILTIN_SHAPES.rectangle.anchor,
+        circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+        boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+        anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
         emit: () => [{ type: 'group', children } as unknown as ScenePrimitive],
       });
       const arrow = defineArrow({
@@ -2959,9 +2959,9 @@ describe('layout-aware composite constraints and bounds', () => {
     const throwingShape = defineShape({
       name: 'throwingHostileProxyShape',
       paramsSchema: strictObject({}),
-      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
       emit: () => {
         throw hostileThrown.proxy;
       },
@@ -3027,9 +3027,9 @@ describe('layout-aware composite constraints and bounds', () => {
     const throwingShape = defineShape({
       name: 'throwingSelfPrototypeProxyShape',
       paramsSchema: strictObject({}),
-      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
       emit: () => {
         throw selfReturningProxy;
       },

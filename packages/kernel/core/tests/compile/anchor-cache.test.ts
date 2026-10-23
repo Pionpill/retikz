@@ -20,7 +20,11 @@ const makeLayout = (
 ): NodeLayout => {
   // circle / diamond 是内置 shape preset：circle → ellipse 等轴、diamond → polygon 4/0。
   const def =
-    shape === 'circle' ? BUILTIN_SHAPES.ellipse : shape === 'diamond' ? BUILTIN_SHAPES.polygon : BUILTIN_SHAPES[shape];
+    shape === 'circle'
+      ? BUILTIN_SHAPES.get('ellipse')!
+      : shape === 'diamond'
+        ? BUILTIN_SHAPES.get('polygon')!
+        : BUILTIN_SHAPES.get(shape)!;
   return {
     shape: {
       name: shape,

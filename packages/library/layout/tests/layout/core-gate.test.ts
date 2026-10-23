@@ -271,8 +271,8 @@ describe('Layout Core layout capability gate', () => {
       name: 'layout-core-gate-shape',
       paramsSchema: strictObject({}),
       circumscribe: () => ({ halfWidth: 10, halfHeight: 5 }),
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
       *emit(): Iterable<ScenePrimitive> {
         yield { type: 'rect', x: -10, y: -5, width: 20, height: 10, fill: '#2563eb' };
       },

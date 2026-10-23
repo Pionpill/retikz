@@ -2,7 +2,7 @@ import type { JsonObject } from '@retikz/foundation';
 import type { BoundsInsets, CenteredBox } from '@retikz/math';
 
 import type { BoundaryDefinition, PatternDefinition, ShapeDefinition } from '../../contract';
-import type { ProviderCollection } from '../../providers/registry';
+import type { ProviderRegistry } from '../../providers/registry';
 import type {
   IRBoundary,
   IRNode,
@@ -210,9 +210,9 @@ export type NodeResolveContext = {
   /** 当前节点所在位置的 Theme 明暗模式 */
   mode: ThemeMode;
   /** shape provider 注册表 */
-  shapes: ProviderCollection<ShapeDefinition>;
+  shapes: ProviderRegistry<ShapeDefinition>;
   /** boundary provider 注册表 */
-  boundaries: ProviderCollection<BoundaryDefinition>;
+  boundaries: ProviderRegistry<BoundaryDefinition>;
   /** 当前有效 pattern provider registry */
   patterns: ReadonlyMap<string, PatternDefinition>;
   /** 资源尺寸圆整规则 */

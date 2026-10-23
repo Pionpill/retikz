@@ -216,7 +216,7 @@ export type LayoutExtensions = Readonly<{
   pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
   /**
    * Tier 2 composite 展开逻辑
-   * @default BUILTIN_COMPOSITES
+   * @default []
    */
   composites?: ReadonlyArray<AnyCompositeDefinition>;
   /**

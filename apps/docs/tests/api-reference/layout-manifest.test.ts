@@ -53,7 +53,7 @@ describe('Layout API 公开范围', () => {
     expect(extensions).toContain('ReadonlyArray<ClipDefinition>');
     expect(extensions).toContain('ReadonlyArray<AnyCompositeDefinition>');
     expect(extensions).toContain('`BUILTIN_ARROWS`');
-    expect(extensions).toContain('`BUILTIN_COMPOSITES`');
+    expect(extensions).toContain('`[]`');
     expect(extensions).toContain('`ThemeDefinitionsContext`');
     expect(extensions).not.toContain('import("');
     expect(extensions).not.toContain('$ZodTypeInternals');

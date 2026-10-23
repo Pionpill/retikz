@@ -45,7 +45,7 @@ const compileToRibbonScene = (input: IRScene, options: Parameters<typeof compile
 
 describe('builtin path generator and Extension Ribbon width profile', () => {
   it('Core has no builtin path generators', () => {
-    expect(BUILTIN_PATH_GENERATORS).toEqual([]);
+    expect(BUILTIN_PATH_GENERATORS.size).toBe(0);
   });
 
   it('builtin_bulge_without_options_and_peak_midpoint', () => {

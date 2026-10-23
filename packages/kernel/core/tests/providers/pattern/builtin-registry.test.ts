@@ -570,12 +570,12 @@ describe('Pattern registry — interaction', () => {
 
 describe('Pattern registry — BUILTIN_PATTERNS 注册表结构', () => {
   it('内置 3 注册键穷尽（lines / dots / grid）', () => {
-    expect(BUILTIN_PATTERNS.map(def => def.name).sort()).toEqual(['dots', 'grid', 'lines']);
+    expect([...BUILTIN_PATTERNS.values()].map(def => def.name).sort()).toEqual(['dots', 'grid', 'lines']);
   });
 
   it('内置 3 defaultSize 对齐几何契约（缺省 8）', () => {
-    expect(BUILTIN_PATTERNS.lines.defaultSize).toBe(8);
-    expect(BUILTIN_PATTERNS.dots.defaultSize).toBe(8);
-    expect(BUILTIN_PATTERNS.grid.defaultSize).toBe(8);
+    expect(BUILTIN_PATTERNS.get('lines')!.defaultSize).toBe(8);
+    expect(BUILTIN_PATTERNS.get('dots')!.defaultSize).toBe(8);
+    expect(BUILTIN_PATTERNS.get('grid')!.defaultSize).toBe(8);
   });
 });

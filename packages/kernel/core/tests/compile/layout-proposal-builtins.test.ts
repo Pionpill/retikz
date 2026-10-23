@@ -206,7 +206,7 @@ describe('plain Node proposal consumption', () => {
       },
     );
     const doubleWidthShape = {
-      ...BUILTIN_SHAPES.rectangle,
+      ...BUILTIN_SHAPES.get('rectangle')!,
       name: 'double-width',
       circumscribe: (halfWidth: number, halfHeight: number) => ({
         halfWidth: halfWidth * 2,
@@ -233,7 +233,7 @@ describe('plain Node proposal consumption', () => {
 
   it('preserves the best real allocation across non-monotonic custom shape feedback', () => {
     const nonMonotonicShape = {
-      ...BUILTIN_SHAPES.rectangle,
+      ...BUILTIN_SHAPES.get('rectangle')!,
       name: 'non-monotonic',
       circumscribe: (_halfWidth: number, halfHeight: number) => ({
         halfWidth: halfHeight <= 5 ? 30 : halfHeight <= 10 ? 20 : 35,
@@ -431,7 +431,7 @@ describe('fixed built-in geometry proposal refusal', () => {
 
   it('normalizes negative zero in non-empty primitive visual bounds', () => {
     const negativeZeroVisualShape = {
-      ...BUILTIN_SHAPES.rectangle,
+      ...BUILTIN_SHAPES.get('rectangle')!,
       name: 'negative-zero-visual',
       *emit(): Iterable<ScenePrimitive> {
         yield { type: 'rect', x: -0, y: -0, width: 10, height: 10, fill: '#000' };

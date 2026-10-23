@@ -327,10 +327,10 @@ describe('Core Runtime Computation replacement style update', () => {
 
   it('自定义 ShapeDefinition 可读取 fill 时保守 full fallback', () => {
     const fillSensitiveShape = defineShape({
-      ...BUILTIN_SHAPES.rectangle,
+      ...BUILTIN_SHAPES.get('rectangle')!,
       name: 'fill-sensitive',
       *emit(rect, style, round, params) {
-        yield* BUILTIN_SHAPES.rectangle.emit(
+        yield* BUILTIN_SHAPES.get('rectangle')!.emit(
           { ...rect, width: style.fill === '#22c55e' ? rect.width * 2 : rect.width },
           style,
           round,

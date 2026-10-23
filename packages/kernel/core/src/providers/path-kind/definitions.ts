@@ -18,4 +18,6 @@ const strokePathKind = definePathKind<IRPathBase, StrokePathOwnerOutput>({
 });
 
 /** 内置 path kind provider 注册项 */
-export const BUILTIN_PATH_KINDS: ReadonlyArray<AnyPathKindDefinition> = [strokePathKind];
+export const BUILTIN_PATH_KINDS: ReadonlyMap<string, AnyPathKindDefinition> = new Map([
+  [strokePathKind.name, strokePathKind],
+]);

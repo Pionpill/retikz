@@ -26,7 +26,7 @@ Core-default `rectangle` / `ellipse` / `polygon` definitions and custom definiti
 
 ## Define the capability
 
-Use `defineShape()` to declare the registry name, parameter schema, and geometry responsibilities. Parameterless shapes use `z.strictObject({})`. This minimal definition reuses rectangle geometry while changing the registry name and layout footprint.
+Use `defineShape()` to declare the registry name, parameter schema, and geometry responsibilities. Registry names have type `string`; use `ShapeDefinition['name']` when annotating a name instead of maintaining a separate union of built-in names. Parameterless shapes use `z.strictObject({})`. This minimal definition reuses rectangle geometry while changing the registry name and layout footprint.
 
 ```ts
 import { BUILTIN_SHAPES, defineShape } from '@retikz/core';
@@ -39,10 +39,10 @@ const badge = defineShape({
     halfWidth: halfWidth + 8,
     halfHeight: halfHeight + 4,
   }),
-  boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-  anchor: BUILTIN_SHAPES.rectangle.anchor,
-  connectionEnvelope: BUILTIN_SHAPES.rectangle.connectionEnvelope,
-  emit: BUILTIN_SHAPES.rectangle.emit,
+  boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+  anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
+  connectionEnvelope: BUILTIN_SHAPES.get('rectangle')!.connectionEnvelope,
+  emit: BUILTIN_SHAPES.get('rectangle')!.emit,
 });
 ```
 

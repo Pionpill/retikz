@@ -71,7 +71,7 @@ const outlinedBoundary = (): BoundaryDefinition =>
 
 describe('Boundary provider contract', () => {
   it('builtin boundary params 应用 schema 默认值，并允许有限负 gap', () => {
-    for (const boundary of BUILTIN_BOUNDARIES) {
+    for (const boundary of BUILTIN_BOUNDARIES.values()) {
       expect(boundary.paramsSchema.parse({})).toEqual({ fit: 'tight', gap: 0 });
       expect(boundary.paramsSchema.parse({ fit: 'bounds', gap: -3 })).toEqual({ fit: 'bounds', gap: -3 });
       expect(() => boundary.paramsSchema.parse({ gap: Number.POSITIVE_INFINITY })).toThrow();
@@ -159,7 +159,7 @@ describe('Boundary provider contract', () => {
   it('built-in circle, rectangle, and ellipse boundaries publish explicit closed outlines', () => {
     const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
 
-    for (const boundary of BUILTIN_BOUNDARIES) {
+    for (const boundary of BUILTIN_BOUNDARIES.values()) {
       const outline = boundary.outline?.(rect, { fit: 'tight', gap: 0 });
 
       expect(outline).toBeDefined();

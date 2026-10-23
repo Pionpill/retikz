@@ -6,7 +6,6 @@ import type { BoundaryDefinition, PathCommand, ShapeDefinition } from '../../con
 import { defineBoundary } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { BoundaryFit, BuiltinShape } from '../../schemas';
-import { defineBuiltinProviderArray } from '../registry/index';
 import { ellipseShape, rectangle } from '../shape';
 
 const builtinBoundaryParamsSchema = strictObject({
@@ -61,11 +60,6 @@ const outlineFromShape = (shape: ShapeDefinition, rect: CenteredBox): ReadonlyAr
 
   return shape.outline(rect, {});
 };
-
-export type BuiltinBoundaryProviderName = Extract<
-  BuiltinShape,
-  typeof BuiltinShape.Circle | typeof BuiltinShape.Rectangle | typeof BuiltinShape.Ellipse
->;
 
 /** 圆形连接面：通过视觉外接矩形的外接圆复用 ellipse shape 几何 */
 const circleBoundary = defineBoundary({
@@ -122,8 +116,8 @@ const ellipseBoundary = defineBoundary({
 });
 
 /** 内置 boundary provider 注册项 */
-export const BUILTIN_BOUNDARIES = defineBuiltinProviderArray<BoundaryDefinition, BuiltinBoundaryProviderName>([
-  circleBoundary,
-  rectangleBoundary,
-  ellipseBoundary,
+export const BUILTIN_BOUNDARIES: ReadonlyMap<string, BoundaryDefinition> = new Map([
+  [circleBoundary.name, circleBoundary],
+  [rectangleBoundary.name, rectangleBoundary],
+  [ellipseBoundary.name, ellipseBoundary],
 ]);
