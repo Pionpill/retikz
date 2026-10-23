@@ -9,7 +9,7 @@ import { useId, useMemo } from 'react';
 
 import { RetikzGraphReactError, RetikzGraphReactErrorCode } from '../errors';
 import type { GraphEmbeddableComponent } from '../shared';
-import { useGraphThemeStyles } from '../theme-context';
+import { useGraphThemeDefinitions } from '../theme-context';
 import type { GraphLayoutHostProps } from './authoring';
 import { collectGraphChildren, graphLayoutHostPropKeys, graphLayoutHostPropsOf } from './authoring';
 
@@ -67,7 +67,7 @@ const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: 
     pathGenerators: _pathGenerators,
     pathKinds: _pathKinds,
     composites: _composites,
-    themeStyles: _themeStyles,
+    themeDefinitions: _themeDefinitions,
     lowerTex: _lowerTex,
     artifacts: _artifacts,
     onArtifacts: _onArtifacts,
@@ -99,7 +99,7 @@ const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: 
   void _pathGenerators;
   void _pathKinds;
   void _composites;
-  void _themeStyles;
+  void _themeDefinitions;
   void _lowerTex;
   void _artifacts;
   void _onArtifacts;
@@ -140,22 +140,22 @@ GraphRuntimeEmbed.createInputEmbedProps = props => {
 
 const GraphComponent: FC<GraphProps> = props => {
   const generatedId = useId();
-  const ambientGraphThemeStyles = useGraphThemeStyles();
+  const ambientGraphThemeDefinitions = useGraphThemeDefinitions();
   const collected = useMemo(() => {
     const result = collectGraphInput(props, props.id ?? generatedId, false);
-    if (ambientGraphThemeStyles === undefined) return result;
+    if (ambientGraphThemeDefinitions === undefined) return result;
 
     return {
       ...result,
       input: {
         ...result.input,
-        graphThemeStyles:
-          result.input.graphThemeStyles === undefined
-            ? ambientGraphThemeStyles
-            : [...ambientGraphThemeStyles, ...result.input.graphThemeStyles],
+        graphThemeDefinitions:
+          result.input.graphThemeDefinitions === undefined
+            ? ambientGraphThemeDefinitions
+            : [...ambientGraphThemeDefinitions, ...result.input.graphThemeDefinitions],
       },
     };
-  }, [ambientGraphThemeStyles, generatedId, props]);
+  }, [ambientGraphThemeDefinitions, generatedId, props]);
   const {
     shapes,
     boundaries,
@@ -165,14 +165,24 @@ const GraphComponent: FC<GraphProps> = props => {
     pathGenerators,
     pathKinds,
     composites,
-    themeStyles,
+    themeDefinitions,
     ...hostProps
   } = graphLayoutHostPropsOf(props);
 
   return (
     <Layout
       {...hostProps}
-      extensions={{ shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, composites, themeStyles }}
+      extensions={{
+        shapes,
+        boundaries,
+        clips,
+        arrows,
+        patterns,
+        pathGenerators,
+        pathKinds,
+        composites,
+        themeDefinitions,
+      }}
     >
       <GraphRuntimeEmbed input={collected.input} adapters={collected.adapters} />
     </Layout>

@@ -1,47 +1,47 @@
 import type { ChartThemeDefinition } from '@retikz/chart';
-import type { ThemeStyleDefinition } from '@retikz/core';
-import type { FlowDiagramDefinitionOptions, FlowThemeStyleDefinition } from '@retikz/diagram/flow';
-import type { GraphThemeStyleDefinition } from '@retikz/graph';
+import type { ThemeDefinition } from '@retikz/core';
+import type { FlowDiagramDefinitionOptions, FlowThemeDefinition } from '@retikz/diagram/flow';
+import type { GraphThemeDefinition } from '@retikz/graph';
 import type { EntityKindDefinition, RelationKindDefinition } from '@retikz/graph';
-import type { PlotThemeStyleDefinition } from '@retikz/plot';
-import type { TableThemeStyleDefinition } from '@retikz/table';
+import type { PlotThemeDefinition } from '@retikz/plot';
+import type { TableThemeDefinition } from '@retikz/table';
 import { createContext, useContext } from 'react';
 
 import {
-  logicFigureCoreThemeStyle,
-  logicFigureDiagramThemeStyle,
+  logicFigureCoreTheme,
+  logicFigureDiagramTheme,
   logicFigureEntityDefinitions,
-  logicFigureFlowThemeStyle,
-  logicFigureGraphThemeStyle,
+  logicFigureFlowTheme,
+  logicFigureGraphTheme,
   logicFigureRelationKinds,
 } from '../../../logic-figure';
 import { PreviewChartThemeDefinitions } from './chart';
-import { PreviewCoreThemeStyles } from './core';
-import { PreviewPlotThemeStyles } from './plot';
-import { PreviewTableThemeStyles } from './table';
+import { PreviewCoreThemeDefinitions } from './core';
+import { PreviewPlotThemeDefinitions } from './plot';
+import { PreviewTableThemeDefinitions } from './table';
 
 /** docs reference preset 的 owner-local definition arrays */
 export type PreviewThemeDefinitions = Readonly<{
-  core: ReadonlyArray<ThemeStyleDefinition>;
-  diagram: NonNullable<FlowDiagramDefinitionOptions['diagramThemeStyles']>;
-  flow: ReadonlyArray<FlowThemeStyleDefinition>;
-  plot: ReadonlyArray<PlotThemeStyleDefinition>;
+  core: ReadonlyArray<ThemeDefinition>;
+  diagram: NonNullable<FlowDiagramDefinitionOptions['diagramThemeDefinitions']>;
+  flow: ReadonlyArray<FlowThemeDefinition>;
+  plot: ReadonlyArray<PlotThemeDefinition>;
   chart: ReadonlyArray<ChartThemeDefinition>;
-  table: ReadonlyArray<TableThemeStyleDefinition>;
-  graph: ReadonlyArray<GraphThemeStyleDefinition>;
+  table: ReadonlyArray<TableThemeDefinition>;
+  graph: ReadonlyArray<GraphThemeDefinition>;
   graphEntityKinds: ReadonlyArray<EntityKindDefinition>;
   graphRelationKinds: ReadonlyArray<RelationKindDefinition>;
 }>;
 
 /** docs reference preset 的稳定 definition bundle */
 export const PreviewThemeDefinitionBundle: PreviewThemeDefinitions = Object.freeze({
-  core: [...PreviewCoreThemeStyles, logicFigureCoreThemeStyle],
-  diagram: [logicFigureDiagramThemeStyle],
-  flow: [logicFigureFlowThemeStyle],
-  plot: PreviewPlotThemeStyles,
+  core: [...PreviewCoreThemeDefinitions, logicFigureCoreTheme],
+  diagram: [logicFigureDiagramTheme],
+  flow: [logicFigureFlowTheme],
+  plot: PreviewPlotThemeDefinitions,
   chart: PreviewChartThemeDefinitions,
-  table: PreviewTableThemeStyles,
-  graph: [logicFigureGraphThemeStyle],
+  table: PreviewTableThemeDefinitions,
+  graph: [logicFigureGraphTheme],
   graphEntityKinds: logicFigureEntityDefinitions,
   graphRelationKinds: logicFigureRelationKinds,
 });

@@ -140,7 +140,7 @@ export type BranchDiagramLayoutHostProps = Pick<
   | 'pathGenerators'
   | 'pathKinds'
   | 'composites'
-  | 'themeStyles'
+  | 'themeDefinitions'
   | 'lowerTex'
   | 'artifacts'
   | 'onArtifacts'
@@ -371,12 +371,12 @@ export type BranchLayoutSegmentOutput = Readonly<{
 | `readonly defaultBranchLayout?` | `string`                                                                                 | —       | Uses lanes by default                                                                                                                           |
 | `defaultDiagram?`               | `InputBranchDiagram['defaultDiagram']`                                                   | —       | Sparse Diagram defaults using the formal Presentation and Frame Source paths.                                                                   |
 | `defaults?`                     | `InputBranchDiagram['defaults']`                                                         | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
-| `readonly diagramThemeStyles?`  | `ReadonlyArray<DiagramThemeStyleDefinition>`                                             | `[]`    | Diagram theme definitions matching the Core theme style name; named themes require a matching definition                                        |
+| `readonly diagramThemeDefinitions?` | `ReadonlyArray<DiagramThemeDefinition>`                                                  | `[]`    | Diagram theme definitions matching the Core theme name; named themes require a matching definition                                              |
 | `readonly entityKinds?`         | `ReadonlyArray<EntityKindDefinition>`                                                    | `[]`    | Custom Entity kind definitions                                                                                                                  |
 | `readonly entityPredicates?`    | `ReadonlyArray<EntityPredicateDefinition>`                                               | `[]`    | Custom Entity predicate definitions                                                                                                             |
 | `readonly entityRoles?`         | `ReadonlyArray<EntityRoleDefinition>`                                                    | `[]`    | Custom Entity role definitions                                                                                                                  |
 | `frame?`                        | `InputBranchDiagram['frame']`                                                            | —       | Diagram instance-level arrangement, spacing, and Surface overrides.                                                                             |
-| `readonly graphThemeStyles?`    | `ReadonlyArray<GraphThemeStyleDefinition>`                                               | `[]`    | Graph theme definitions matching the Core theme style name                                                                                      |
+| `readonly graphThemeDefinitions?`   | `ReadonlyArray<GraphThemeDefinition>`                                                    | `[]`    | Graph theme definitions matching the Core theme name                                                                                            |
 | `id?`                           | `string`                                                                                 | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
 | `layout?`                       | `IRBranchLayoutIntent`                                                                   | —       | Overrides for branch direction and clear gaps; layout resolution fills omitted values                                                           |
 | `localNamespace?`               | `false \| true`                                                                          | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
@@ -388,7 +388,7 @@ export type BranchLayoutSegmentOutput = Readonly<{
 | `readonly relationKinds?`       | `ReadonlyArray<RelationKindDefinition>`                                                  | `[]`    | Custom Relation kind definitions                                                                                                                |
 | `readonly relationPredicates?`  | `ReadonlyArray<RelationPredicateDefinition>`                                             | `[]`    | Custom Relation predicate definitions                                                                                                           |
 | `readonly relationRoles?`       | `ReadonlyArray<RelationRoleDefinition>`                                                  | `[]`    | Custom Relation role definitions                                                                                                                |
-| `theme?`                        | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `theme?`                            | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                 | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
 | `transforms?`                   | `InputBranchDiagram['transforms']`                                                       | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
 | `zIndex?`                       | `number`                                                                                 | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
 | `input` (Parameter)             | `BranchDiagramInputEmbedProps`                                                           | —       | Branch declarations and runtime extensions; the adapter assembles Source and providers during compilation                                       |
@@ -554,11 +554,11 @@ export declare const branchDiagramDefinitionOptionsOf: (
 | ------------------------------- | -------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------- |
 | `readonly branchLayouts?`       | `ReadonlyArray<BranchLayoutDefinition>`      | —       | Additional named layouts; existing definitions cannot be overridden                                      |
 | `readonly defaultBranchLayout?` | `string`                                     | —       | Uses lanes by default                                                                                    |
-| `readonly diagramThemeStyles?`  | `ReadonlyArray<DiagramThemeStyleDefinition>` | `[]`    | Diagram theme definitions matching the Core theme style name; named themes require a matching definition |
+| `readonly diagramThemeDefinitions?` | `ReadonlyArray<DiagramThemeDefinition>`      | `[]`    | Diagram theme definitions matching the Core theme name; named themes require a matching definition |
 | `readonly entityKinds?`         | `ReadonlyArray<EntityKindDefinition>`        | `[]`    | Custom Entity kind definitions                                                                           |
 | `readonly entityPredicates?`    | `ReadonlyArray<EntityPredicateDefinition>`   | `[]`    | Custom Entity predicate definitions                                                                      |
 | `readonly entityRoles?`         | `ReadonlyArray<EntityRoleDefinition>`        | `[]`    | Custom Entity role definitions                                                                           |
-| `readonly graphThemeStyles?`    | `ReadonlyArray<GraphThemeStyleDefinition>`   | `[]`    | Graph theme definitions matching the Core theme style name                                               |
+| `readonly graphThemeDefinitions?`   | `ReadonlyArray<GraphThemeDefinition>`        | `[]`    | Graph theme definitions matching the Core theme name                                               |
 | `readonly relationKinds?`       | `ReadonlyArray<RelationKindDefinition>`      | `[]`    | Custom Relation kind definitions                                                                         |
 | `readonly relationPredicates?`  | `ReadonlyArray<RelationPredicateDefinition>` | `[]`    | Custom Relation predicate definitions                                                                    |
 | `readonly relationRoles?`       | `ReadonlyArray<RelationRoleDefinition>`      | `[]`    | Custom Relation role definitions                                                                         |

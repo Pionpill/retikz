@@ -30,8 +30,8 @@ already own renderable children and therefore bypass formatter and presentation 
 stay in the JSON-safe `IRTable` and are resolved by the Table owner. The resolved
 `TableLayoutManifest` records effective `style`, `themeMode`, and resolved Source-field provenance
 as output metadata.
-Custom styles register the same name in Core through `compile.themeStyles` and in Table through
-`lower.tableThemeStyles`; a consumed style without its Table definition fails loudly.
+Custom styles register the same name in Core through `compile.themeDefinitions` and in Table through
+`lower.tableThemeDefinitions`; a consumed style without its Table definition fails loudly.
 
 Use `lowerTables(datasets, options)` to register the layout-aware Table composite definition with
 `@retikz/core`. For a standalone Table, `compileTable(spec, datasets, options)` performs one Core

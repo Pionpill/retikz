@@ -26,7 +26,7 @@ export const ConnectedScatterChartInputEmbedAdapter = createChartInputEmbedAdapt
     return buildPointChartRuntime(
       source,
       parts,
-      createConnectedScatterChartProviderContribution(parts.themeDefinitions, parts.lowerOptions),
+      createConnectedScatterChartProviderContribution(parts.chartThemeDefinitions, parts.lowerOptions),
     );
   },
 );

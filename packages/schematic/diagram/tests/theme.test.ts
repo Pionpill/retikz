@@ -2,14 +2,14 @@ import type { ResolvedTheme } from '@retikz/core';
 import { DEFAULT_RESOLVED_THEME, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { DiagramThemeStyleDefinition, IRDiagramDefaults } from '../src/_diagram';
+import type { DiagramThemeDefinition, IRDiagramDefaults } from '../src/_diagram';
 import {
-  defineDiagramThemeStyle,
+  defineDiagramTheme,
   DiagramDefaultsSchema,
   getDefaultDiagramTheme,
   resolveDiagramDefinitionOptions,
   resolveDiagramTheme,
-  resolveDiagramThemeStyleRegistry,
+  resolveDiagramThemeRegistry,
 } from '../src/_diagram';
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../src/errors';
 
@@ -19,46 +19,46 @@ const themeWith = (overrides: Partial<ResolvedTheme>): ResolvedTheme => ({
 });
 
 const registryOf = (
-  ...definitions: ReadonlyArray<DiagramThemeStyleDefinition>
-): ReadonlyMap<string, DiagramThemeStyleDefinition> => resolveDiagramThemeStyleRegistry(definitions);
+  ...definitions: ReadonlyArray<DiagramThemeDefinition>
+): ReadonlyMap<string, DiagramThemeDefinition> => resolveDiagramThemeRegistry(definitions);
 
 describe('Diagram Theme Definition and registry', () => {
   it('keeps the exact Definition object as a typed identity', () => {
-    const definition: DiagramThemeStyleDefinition = {
+    const definition: DiagramThemeDefinition = {
       name: 'brand',
       resolve: () => ({ presentation: { title: { style: { textColor: '#123456' } } } }),
     };
 
-    expect(defineDiagramThemeStyle(definition)).toBe(definition);
+    expect(defineDiagramTheme(definition)).toBe(definition);
   });
 
   it('resolves Definition options once into the shared read-only style registry', () => {
-    const definition = defineDiagramThemeStyle({
+    const definition = defineDiagramTheme({
       name: 'brand',
       resolve: () => ({ presentation: { title: { style: { textColor: '#123456' } } } }),
     });
 
-    const resolved = resolveDiagramDefinitionOptions({ diagramThemeStyles: [definition] });
+    const resolved = resolveDiagramDefinitionOptions({ diagramThemeDefinitions: [definition] });
 
-    expect(resolved.diagramThemeStyles).toBeInstanceOf(Map);
-    expect(resolved.diagramThemeStyles.get('brand')).toBe(definition);
-    expect(resolveDiagramDefinitionOptions().diagramThemeStyles.size).toBe(0);
+    expect(resolved.diagramThemeDefinitions).toBeInstanceOf(Map);
+    expect(resolved.diagramThemeDefinitions.get('brand')).toBe(definition);
+    expect(resolveDiagramDefinitionOptions().diagramThemeDefinitions.size).toBe(0);
   });
 
   it('rejects duplicate and blank Definition names with Diagram-owned diagnostics', () => {
-    const first = defineDiagramThemeStyle({
+    const first = defineDiagramTheme({
       name: 'brand',
       resolve: () => ({ presentation: { title: { style: { opacity: 1 } } } }),
     });
-    const second = defineDiagramThemeStyle({
+    const second = defineDiagramTheme({
       name: 'brand',
       resolve: () => ({ presentation: { description: { style: { opacity: 1 } } } }),
     });
 
     for (const run of [
-      () => resolveDiagramThemeStyleRegistry([first, second]),
+      () => resolveDiagramThemeRegistry([first, second]),
       () =>
-        resolveDiagramThemeStyleRegistry([
+        resolveDiagramThemeRegistry([
           { name: ' ', resolve: () => ({ presentation: { title: { style: { opacity: 1 } } } }) },
         ]),
     ]) {
@@ -69,7 +69,7 @@ describe('Diagram Theme Definition and registry', () => {
       } catch (error) {
         if (!(error instanceof RetikzDiagramError)) throw error;
 
-        expect(error.details).toMatchObject({ capability: 'diagram-theme-style' });
+        expect(error.details).toMatchObject({ capability: 'diagram-theme' });
 
         if (error.code === RetikzDiagramErrorCode.DefinitionDuplicate) {
           expect(error.details).toMatchObject({ key: 'brand', availableKeys: ['brand'] });
@@ -130,7 +130,7 @@ describe('Diagram Neutral Theme', () => {
 
 describe('Diagram Theme cascade', () => {
   it('applies named defaults then author defaults with whole-font replacement', () => {
-    const definition = defineDiagramThemeStyle({
+    const definition = defineDiagramTheme({
       name: 'brand',
       resolve: theme => ({
         frame: {
@@ -151,7 +151,7 @@ describe('Diagram Theme cascade', () => {
       presentation: { title: { style: { opacity: 0.75, font: { size: 24, style: 'normal' } } } },
     });
 
-    const resolved = resolveDiagramTheme(themeWith({ style: 'brand' }), registryOf(definition), inline);
+    const resolved = resolveDiagramTheme(themeWith({ name: 'brand' }), registryOf(definition), inline);
 
     expect(resolved.frame.padding).toEqual({ top: 0, right: 0, bottom: 0, left: 20 });
     expect(resolved.frame.background).toEqual({ fill: '#f8fafc', opacity: { fill: 0.8 } });
@@ -164,14 +164,14 @@ describe('Diagram Theme cascade', () => {
   });
 
   it('ignores empty and undefined author groups without discarding the named defaults', () => {
-    const definition = defineDiagramThemeStyle({
+    const definition = defineDiagramTheme({
       name: 'paper',
       resolve: () => ({
         frame: { padding: 12 },
         presentation: { title: { style: { font: { family: 'serif', size: 24 } } } },
       }),
     });
-    const theme = themeWith({ style: 'paper' });
+    const theme = themeWith({ name: 'paper' });
     const baseline = resolveDiagramTheme(theme, registryOf(definition));
     const empty = resolveDiagramTheme(theme, registryOf(definition), {
       frame: { padding: undefined },
@@ -183,7 +183,7 @@ describe('Diagram Theme cascade', () => {
 
   it('fails when the effective Core style lacks a same-named Diagram Definition', () => {
     try {
-      resolveDiagramTheme(themeWith({ style: 'missing' }), registryOf());
+      resolveDiagramTheme(themeWith({ name: 'missing' }), registryOf());
 
       expect.unreachable('Expected missing Diagram style failure');
     } catch (error) {
@@ -191,7 +191,7 @@ describe('Diagram Theme cascade', () => {
 
       expect(error.code).toBe(RetikzDiagramErrorCode.DefinitionNotRegistered);
       expect(error.details).toMatchObject({
-        capability: 'diagram-theme-style',
+        capability: 'diagram-theme',
         key: 'missing',
         availableKeys: [],
       });
@@ -200,7 +200,7 @@ describe('Diagram Theme cascade', () => {
 
   it('preserves callback exceptions as the cause of a Diagram error', () => {
     const cause = new Error('external callback failed');
-    const definition = defineDiagramThemeStyle({
+    const definition = defineDiagramTheme({
       name: 'broken',
       resolve: () => {
         throw cause;
@@ -208,7 +208,7 @@ describe('Diagram Theme cascade', () => {
     });
 
     try {
-      resolveDiagramTheme(themeWith({ style: 'broken' }), registryOf(definition));
+      resolveDiagramTheme(themeWith({ name: 'broken' }), registryOf(definition));
 
       expect.unreachable('Expected callback failure');
     } catch (error) {
@@ -220,9 +220,9 @@ describe('Diagram Theme cascade', () => {
   });
 
   it('accepts empty Definition defaults as a no-op', () => {
-    const definition = defineDiagramThemeStyle({ name: 'empty', resolve: () => ({}) });
+    const definition = defineDiagramTheme({ name: 'empty', resolve: () => ({}) });
 
-    expect(resolveDiagramTheme(themeWith({ style: 'empty' }), registryOf(definition))).toEqual(
+    expect(resolveDiagramTheme(themeWith({ name: 'empty' }), registryOf(definition))).toEqual(
       resolveDiagramTheme(themeWith({}), registryOf()),
     );
   });
@@ -237,10 +237,10 @@ describe('Diagram Theme cascade', () => {
       },
     ],
   ])('rejects %s from a runtime Definition callback', (_name, resolve) => {
-    const definition = defineDiagramThemeStyle({ name: 'invalid', resolve });
+    const definition = defineDiagramTheme({ name: 'invalid', resolve });
 
     try {
-      resolveDiagramTheme(themeWith({ style: 'invalid' }), registryOf(definition));
+      resolveDiagramTheme(themeWith({ name: 'invalid' }), registryOf(definition));
 
       expect.unreachable('Expected invalid Definition output');
     } catch (error) {

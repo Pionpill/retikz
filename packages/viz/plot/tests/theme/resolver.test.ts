@@ -3,20 +3,20 @@ import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import * as plot from '../../src';
-import type { PlotThemeStyleDefinition } from '../../src/contract';
+import type { PlotThemeDefinition } from '../../src/contract';
 import { getNeutralPlotDefaults } from '../../src/providers/theme';
 import { resolvePlotAxisDefaults } from '../../src/resolve/theme';
 import { PlotDefaultsSchema, PlotThemeResolutionSchema } from '../../src/schemas';
 
-const themeOf = (style: string | undefined, mode: ResolvedTheme['mode']): ResolvedTheme => ({
-  ...(style === undefined ? {} : { style }),
+const themeOf = (name: string | undefined, mode: ResolvedTheme['mode']): ResolvedTheme => ({
+  ...(name === undefined ? {} : { name }),
   mode,
   colors: resolveDefaultCoreThemeColors(mode),
 });
 
 describe('Plot defaults resolver', () => {
   it('让 style defaults 高于 Core shared categorical colors，并记录实际来源 layer', () => {
-    const style = plot.definePlotThemeStyle({
+    const style = plot.definePlotTheme({
       name: 'brand',
       resolve: () => ({
         defaults: {
@@ -46,7 +46,7 @@ describe('Plot defaults resolver', () => {
   });
 
   it('按 Neutral、style、Source 顺序合并 defaults，并保留 palette 数组整体替换', () => {
-    const style = plot.definePlotThemeStyle({
+    const style = plot.definePlotTheme({
       name: 'brand',
       resolve: () => ({
         defaults: {
@@ -72,7 +72,7 @@ describe('Plot defaults resolver', () => {
   });
 
   it('按 rule source 顺序追加并可按 dimension 重放，后声明规则优先', () => {
-    const style = plot.definePlotThemeStyle({
+    const style = plot.definePlotTheme({
       name: 'brand-rules',
       resolve: () => ({
         rules: [{ select: { dimension: 'x' }, axis: { line: { stroke: '#style-line' } } }],
@@ -119,17 +119,17 @@ describe('Plot defaults resolver', () => {
 
   it('未知 style、重复 definition 与 callback cause 均 fail loud', () => {
     expect(() => plot.resolvePlotTheme(themeOf('missing', ThemeMode.Light))).toThrow(
-      /Plot theme style 'missing' is not registered/,
+      /Plot theme 'missing' is not registered/,
     );
 
-    const duplicate = plot.definePlotThemeStyle({ name: 'duplicate', resolve: () => ({}) });
+    const duplicate = plot.definePlotTheme({ name: 'duplicate', resolve: () => ({}) });
 
     expect(() => plot.resolvePlotTheme(themeOf('duplicate', ThemeMode.Light), {}, [duplicate, duplicate])).toThrow(
       /already registered/,
     );
 
     const cause = new Error('custom Plot style failed');
-    const throwing: PlotThemeStyleDefinition = {
+    const throwing: PlotThemeDefinition = {
       name: 'throwing',
       resolve: () => {
         throw cause;

@@ -45,7 +45,7 @@ const Demo: FC = () => (
     </Node>
 
     <Node
-      id="theme-style"
+      id="theme"
       position={[-80, 95]}
       cornerRadius={4}
       style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
@@ -112,7 +112,7 @@ const Demo: FC = () => (
 
     <Draw way={['legend-guide', 'legend-resolver']} arrow="->" />
     <Draw way={['descriptors', 'legend-resolver']} arrow="->" />
-    <Draw way={['theme-style', 'legend-resolver']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw way={['theme', 'legend-resolver']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
     <Draw way={['legend-resolver', 'swatch-form']} arrow="->" />
     <Draw way={['legend-resolver', 'ramp-form']} arrow="->" />
     <Draw way={['legend-resolver', 'symbol-form']} arrow="->" />

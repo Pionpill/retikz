@@ -5,7 +5,7 @@ keywords: 'Theme、Style、主题、style definition、token'
 
 # ADR-024：轻量 Theme IR 与可扩展 Style 解析
 
-- 状态：Accepted
+- 状态：Accepted（主题选择字段及 ThemeStyle 系列命名由 [069](./069-theme-naming.md) 替代）
 - 决策日期：2026-08-08
 - 关联：[ADR-018](./018-inherited-theme-context.md) · [ADR-022](./022-theme-token-namespace-context.md)
 - Supersedes：ADR-022 中将 namespaced token bag、Theme token Definition / Contribution 与其 registry 写入 Core Theme IR 的决策。ADR-018 的 Scene / Scope 继承、Composite context、probe / replay 与 adapter 等价性继续有效

@@ -1,13 +1,7 @@
-import { defineThemeStyle } from '@retikz/core';
+import { defineTheme } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import {
-  compileTable,
-  defineTableThemeStyle,
-  mergeTableDefaults,
-  TableLayoutManifestSchema,
-  TableSchema,
-} from '../../src';
+import { compileTable, defineTableTheme, mergeTableDefaults, TableLayoutManifestSchema, TableSchema } from '../../src';
 
 const baseManual = {
   namespace: 'table',
@@ -204,16 +198,16 @@ describe('Table Source defaults', () => {
 
 describe('Cell padding defaults', () => {
   const options = {
-    theme: { style: 'padding', mode: 'light' },
+    theme: { name: 'padding', mode: 'light' },
     lower: {
-      tableThemeStyles: [
-        defineTableThemeStyle({
+      tableThemeDefinitions: [
+        defineTableTheme({
           name: 'padding',
           resolve: () => ({ defaults: { defaultCellLayout: { body: { padding: 4 }, columnHeader: { padding: 6 } } } }),
         }),
       ],
     },
-    compile: { padding: 0, themeStyles: [defineThemeStyle({ name: 'padding', resolve: () => ({}) })] },
+    compile: { padding: 0, themeDefinitions: [defineTheme({ name: 'padding', resolve: () => ({}) })] },
   } as const;
 
   it('preserves sparse JSON padding defaults and rejects invalid padding and unrelated fields', () => {

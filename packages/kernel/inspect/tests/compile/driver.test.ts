@@ -1,5 +1,5 @@
 import type { IRScene } from '@retikz/core';
-import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineTheme } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string, ZodError } from 'zod';
 
@@ -94,7 +94,7 @@ describe('Inspection compile driver', () => {
           };
         }
       | undefined;
-    const themeStyle = defineThemeStyle({
+    const themeName = defineTheme({
       name: 'inspect-brand',
       resolve: () => ({
         semantic: { error: '#error', success: '#success', warning: '#warning', guide: '#guide' },
@@ -115,8 +115,8 @@ describe('Inspection compile driver', () => {
     ]);
 
     compileInspectionToScene(
-      { ...ir, theme: { style: themeStyle.name } },
-      { registry, selection, compileOptions: { composites: [composite], themeStyles: [themeStyle] } },
+      { ...ir, theme: { name: themeName.name } },
+      { registry, selection, compileOptions: { composites: [composite], themeDefinitions: [themeName] } },
     );
 
     expect(appearance).toEqual({

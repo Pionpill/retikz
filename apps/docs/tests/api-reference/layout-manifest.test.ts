@@ -48,13 +48,13 @@ describe('Layout API 公开范围', () => {
       'pathKinds',
       'patterns',
       'shapes',
-      'themeStyles',
+      'themeDefinitions',
     ]);
     expect(extensions).toContain('ReadonlyArray<ClipDefinition>');
     expect(extensions).toContain('ReadonlyArray<AnyCompositeDefinition>');
     expect(extensions).toContain('`BUILTIN_ARROWS`');
     expect(extensions).toContain('`BUILTIN_COMPOSITES`');
-    expect(extensions).toContain('`ThemeStylesContext`');
+    expect(extensions).toContain('`ThemeDefinitionsContext`');
     expect(extensions).not.toContain('import("');
     expect(extensions).not.toContain('$ZodTypeInternals');
     expect(extensions).toContain('<DocTabs defaultValue="members">');

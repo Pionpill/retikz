@@ -83,13 +83,13 @@ export const resolveChartTheme = (
   source: IRChartSource,
   context: Readonly<{
     theme: ResolvedTheme;
-    themeDefinitions: ReadonlyArray<ChartThemeDefinition>;
+    chartThemeDefinitions: ReadonlyArray<ChartThemeDefinition>;
   }>,
 ): ChartThemeResolution => {
   let defaults = neutralChartDefaultsOf(context.theme.mode);
   let defaultPlot: IRPlotDefaults | undefined;
 
-  for (const definition of context.themeDefinitions) {
+  for (const definition of context.chartThemeDefinitions) {
     defaults = mergeChartDefaults(defaults, definition.defaults);
     defaultPlot = mergePlotDefaults(defaultPlot, definition.defaultPlot);
   }

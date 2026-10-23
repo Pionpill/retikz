@@ -91,11 +91,11 @@ Cell `appearance.content.defaults.style` sets cascading content colors and opaci
 
 ## Table Source defaults
 
-Core Theme `style` / `mode` comes from the host `Layout` or `renderTable(..., { theme })`. Table builds an owner-local baseline for the mode, then merges the same-named `TableThemeStyleDefinition` result shaped as `{ defaults?: IRTableDefaults }`. Source `defaultTable`, `defaultAppearance`, `defaultVisual`, and explicit `layout.borders` override earlier defaults in order; Cell-local configuration, visual encodings, and ordered rules then complete the final plan.
+Core Theme `name` / `mode` comes from the host `Layout` or `renderTable(..., { theme })`. Table builds an owner-local baseline for the mode, then merges the same-named `TableThemeDefinition` result shaped as `{ defaults?: IRTableDefaults }`. Source `defaultTable`, `defaultAppearance`, `defaultVisual`, and explicit `layout.borders` override earlier defaults in order; Cell-local configuration, visual encodings, and ordered rules then complete the final plan.
 
 `defaultAppearance`, `defaultVisual`, and `defaultTable` are sparse objects. They provide defaults only for existing Cells, borders, or visual encodings and never create Cells, rules, borders, encodings, or Legends. `layout.borders.outer` is a sparse physical-side object with independent `top`, `right`, `bottom`, and `left` candidates.
 
-Published packages do not pre-register named Core or Table definitions. This site's `academic`, `vibrant`, and `clean` reference styles follow the same rule as application-defined styles: inject the same name into both consuming owners. Standalone `compileTable` receives the Core definition through `compile.themeStyles` and the Table definition through `lower.tableThemeStyles`. Missing the matching Table definition fails loudly in the Table resolver.
+Published packages do not pre-register named Core or Table definitions. This site's `academic`, `vibrant`, and `clean` reference styles follow the same rule as application-defined styles: inject the same name into both consuming owners. Standalone `compileTable` receives the Core definition through `compile.themeDefinitions` and the Table definition through `lower.tableThemeDefinitions`. Missing the matching Table definition fails loudly in the Table resolver.
 
 ### TableCellBackgroundDefaultsSchema
 
@@ -121,7 +121,7 @@ Published packages do not pre-register named Core or Table definitions. This sit
 
 <ZodSchema name="TableDefaultsSchema" />
 
-Omitting `style` selects the Table owner-local baseline for the host mode. This site's `academic` reference follows a publication / booktabs direction, `vibrant` uses strong colors with a light surface, and `clean` removes as much nonessential decoration as possible. An injected definition returns only sparse defaults for the current mode; the baseline fills the rest, and Source defaults can target only defaultable visual fields of existing structure and encodings. The resolved manifest records complete defaults and the actual cascade layers; `themeMode` is output metadata, not an IRTable input field.
+Omitting `name` selects the Table owner-local baseline for the host mode. This site's `academic` reference follows a publication / booktabs direction, `vibrant` uses strong colors with a light surface, and `clean` removes as much nonessential decoration as possible. An injected definition returns only sparse defaults for the current mode; the baseline fills the rest, and Source defaults can target only defaultable visual fields of existing structure and encodings. The resolved manifest records complete defaults and the actual cascade layers; `themeMode` is output metadata, not an IRTable input field.
 
 ## Related
 

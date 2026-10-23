@@ -12,7 +12,7 @@ import { usePreviewTheme } from './usePreviewTheme';
 export type PreviewThemeProviderProps = {
   /** ComponentPreview 动态渲染内容 */
   children?: ReactNode;
-  /** 单张预览显式选择的 ThemeStyle；缺省时跟随全局设置 */
+  /** 单张预览显式选择的 Theme；缺省时跟随全局设置 */
   theme?: PreviewTheme;
   /** 单张预览的明暗选择；inherit 或缺省时跟随站点主题 */
 };
@@ -25,11 +25,13 @@ export const PreviewThemeProvider: FC<PreviewThemeProviderProps> = props => {
 
   return (
     <PreviewThemeDefinitionsContext.Provider value={PreviewThemeDefinitionBundle}>
-      <ThemeProvider theme={resolvedTheme} themeStyles={PreviewThemeDefinitionBundle.core}>
-        <GraphThemeProvider graphThemeStyles={PreviewThemeDefinitionBundle.graph}>
-          <ChartThemeProvider themeDefinitions={PreviewThemeDefinitionBundle.chart}>
-            <PlotThemeProvider plotThemeStyles={PreviewThemeDefinitionBundle.plot}>
-              <TableThemeProvider tableThemeStyles={PreviewThemeDefinitionBundle.table}>{children}</TableThemeProvider>
+      <ThemeProvider theme={resolvedTheme} themeDefinitions={PreviewThemeDefinitionBundle.core}>
+        <GraphThemeProvider graphThemeDefinitions={PreviewThemeDefinitionBundle.graph}>
+          <ChartThemeProvider chartThemeDefinitions={PreviewThemeDefinitionBundle.chart}>
+            <PlotThemeProvider plotThemeDefinitions={PreviewThemeDefinitionBundle.plot}>
+              <TableThemeProvider tableThemeDefinitions={PreviewThemeDefinitionBundle.table}>
+                {children}
+              </TableThemeProvider>
             </PlotThemeProvider>
           </ChartThemeProvider>
         </GraphThemeProvider>

@@ -9,7 +9,7 @@ import { ConnectedScatterChartDefinition } from '../../src/point/connected-scatt
 import { ConnectedScatterChartSchema } from '../../src/point/connected-scatter/schema';
 
 const runtime = resolveChartProviderRegistry([
-  { family: 'point', recipe: ConnectedScatterChartDefinition, themeDefinitions: [] },
+  { family: 'point', recipe: ConnectedScatterChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const palette = ['#ff0000', '#00ff00', '#0000ff'];
@@ -44,7 +44,7 @@ const chartOf = (properties: Record<string, unknown> = {}, series = true, extras
   return resolveSelectedChart(source, {
     theme: DEFAULT_RESOLVED_THEME,
     recipe: ConnectedScatterChartDefinition,
-    themeDefinitions: [],
+    chartThemeDefinitions: [],
     runtime,
   }).plot;
 };

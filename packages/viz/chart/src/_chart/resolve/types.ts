@@ -61,7 +61,7 @@ export type SelectedChartResolveContext<TSource extends IRChartSource = IRChartS
   /** 与当前精确 Chart Source 配对的 recipe 定义 */
   recipe: ChartRecipeDefinition<TSource>;
   /** 当前编译边界可见的 Chart 主题定义 */
-  themeDefinitions: ReadonlyArray<ChartThemeDefinition>;
+  chartThemeDefinitions: ReadonlyArray<ChartThemeDefinition>;
   /** 与当前Plot lowering共享的owner Definition注册表 */
   runtime: ChartEncodingRuntime;
 }>;

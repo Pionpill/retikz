@@ -3,7 +3,7 @@ import type {
   EntityPredicateDefinition,
   EntityRoleDefinition,
   GraphDefinitionOptions,
-  GraphThemeStyleDefinition,
+  GraphThemeDefinition,
   RelationKindDefinition,
   RelationPredicateDefinition,
   RelationRoleDefinition,
@@ -16,7 +16,7 @@ import {
   resolveRelationPredicateRegistry,
   resolveRelationRoleRegistry,
 } from '../relation';
-import { resolveGraphThemeStyleRegistry } from '../theme';
+import { resolveGraphThemeRegistry } from '../theme';
 
 type GraphDefinitionCollectionKey = keyof GraphDefinitionOptions;
 
@@ -27,7 +27,7 @@ const definitionKeyOf = {
   relationRoles: (definition: RelationRoleDefinition) => definition.role,
   relationKinds: (definition: RelationKindDefinition) => definition.kind,
   relationPredicates: (definition: RelationPredicateDefinition) => definition.name,
-  graphThemeStyles: (definition: GraphThemeStyleDefinition) => definition.name,
+  graphThemeDefinitions: (definition: GraphThemeDefinition) => definition.name,
 } as const;
 
 const definitionLabelOf = {
@@ -37,7 +37,7 @@ const definitionLabelOf = {
   relationRoles: 'Relation role',
   relationKinds: 'Relation kind',
   relationPredicates: 'Relation predicate',
-  graphThemeStyles: 'Graph theme style',
+  graphThemeDefinitions: 'Graph theme',
 } as const;
 
 /** 按公开 key 与对象 identity 合并一次 provider assembly 的 definition 集合 */
@@ -86,7 +86,7 @@ export type ResolvedGraphDefinitionOptions = Readonly<{
   /** 按名称索引的关系 predicate 定义 */
   relationPredicates: ReadonlyMap<string, RelationPredicateDefinition>;
   /** 按名称索引的 Graph 主题样式定义 */
-  graphThemeStyles: ReadonlyMap<string, GraphThemeStyleDefinition>;
+  graphThemeDefinitions: ReadonlyMap<string, GraphThemeDefinition>;
 }>;
 
 /** 合并一次 provider assembly 内的 Graph options，并按 definition identity 去重 */
@@ -99,7 +99,7 @@ export const mergeGraphDefinitionOptions = (
   relationRoles: mergeDefinitionCollection(optionSets, 'relationRoles'),
   relationKinds: mergeDefinitionCollection(optionSets, 'relationKinds'),
   relationPredicates: mergeDefinitionCollection(optionSets, 'relationPredicates'),
-  graphThemeStyles: mergeDefinitionCollection(optionSets, 'graphThemeStyles'),
+  graphThemeDefinitions: mergeDefinitionCollection(optionSets, 'graphThemeDefinitions'),
 });
 
 /** 一次性校验并解析 Graph definition options */
@@ -118,6 +118,6 @@ export const resolveGraphDefinitionOptions = (options: GraphDefinitionOptions = 
     relationRoles,
     relationKinds,
     relationPredicates,
-    graphThemeStyles: resolveGraphThemeStyleRegistry(options.graphThemeStyles),
+    graphThemeDefinitions: resolveGraphThemeRegistry(options.graphThemeDefinitions),
   };
 };

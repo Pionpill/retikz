@@ -22,4 +22,4 @@ export * from './provider';
 export * from './scene';
 export * from './shape';
 export * from './spatial-handle';
-export * from './theme-style';
+export * from './theme';

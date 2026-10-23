@@ -123,7 +123,7 @@ Pass these options through the extensions prop of Layout. Each field accepts an 
 | `readonly pathKinds?`      | `ReadonlyArray<AnyPathKindDefinition>`   | `BUILTIN_PATH_KINDS`      | Path kind definitions            |
 | `readonly patterns?`       | `ReadonlyArray<PatternDefinition>`       | `BUILTIN_PATTERNS`        | Pattern definitions              |
 | `readonly shapes?`         | `ReadonlyArray<ShapeDefinition>`         | `BUILTIN_SHAPES`          | Shape definitions                |
-| `readonly themeStyles?`    | `ReadonlyArray<ThemeStyleDefinition>`    | `ThemeStylesContext`      | Theme style definitions          |
+| `readonly themeDefinitions?` | `ReadonlyArray<ThemeDefinition>`         | `ThemeDefinitionsContext` | Theme definitions                |
 
 </ApiTable>
 
@@ -141,7 +141,7 @@ export type LayoutExtensions = Readonly<{
   pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
   pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
   composites?: ReadonlyArray<AnyCompositeDefinition>;
-  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
+  themeDefinitions?: ReadonlyArray<ThemeDefinition>;
 }>;
 ```
 
@@ -394,7 +394,7 @@ export type InputLayer = {
 | `animations?` | `IRScene['animations']` | —       | Scene-root animation tracks; omitted means no root animation                      |
 | `authoring?`  | `unknown`               | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR   |
 | `id?`         | `string`                | —       | Authoring scene identity, excluded from persisted Scene IR                        |
-| `theme?`      | `IRScene['theme']`      | —       | Root theme; specify only style and mode overrides                                 |
+| `theme?`      | `IRScene['theme']`      | —       | Root theme; specify only name and mode overrides                                  |
 | `type?`       | `'scene'`               | —       | Optional scene discriminator; fixed to scene after normalization                  |
 | `version?`    | `never`                 | —       | Authoring input excludes a version; normalization supplies the current IR version |
 | `viewBox?`    | `IRViewBox`             | —       | Explicit viewport; compilation derives it from content when omitted               |
@@ -456,7 +456,7 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
 | `children`    | `ReadonlyArray<InputChild>` | —       | Ordered children placed in the implicit default layer during normalization        |
 | `id?`         | `string`                    | —       | Authoring scene identity, excluded from persisted Scene IR                        |
 | `layers?`     | `never`                     | —       | The children variant excludes explicit layers                                     |
-| `theme?`      | `IRScene['theme']`          | —       | Root theme; specify only style and mode overrides                                 |
+| `theme?`      | `IRScene['theme']`          | —       | Root theme; specify only name and mode overrides                                  |
 | `type?`       | `'scene'`                   | —       | Optional scene discriminator; fixed to scene after normalization                  |
 | `version?`    | `never`                     | —       | Authoring input excludes a version; normalization supplies the current IR version |
 | `viewBox?`    | `IRViewBox`                 | —       | Explicit viewport; compilation derives it from content when omitted               |
@@ -493,7 +493,7 @@ export type InputSceneChildren = InputSceneBase & {
 | `children?`   | `never`                     | —       | The layers variant excludes top-level children                                    |
 | `id?`         | `string`                    | —       | Authoring scene identity, excluded from persisted Scene IR                        |
 | `layers`      | `ReadonlyArray<InputLayer>` | —       | Explicit layers, normalized after a stable sort by zIndex                         |
-| `theme?`      | `IRScene['theme']`          | —       | Root theme; specify only style and mode overrides                                 |
+| `theme?`      | `IRScene['theme']`          | —       | Root theme; specify only name and mode overrides                                  |
 | `type?`       | `'scene'`                   | —       | Optional scene discriminator; fixed to scene after normalization                  |
 | `version?`    | `never`                     | —       | Authoring input excludes a version; normalization supplies the current IR version |
 | `viewBox?`    | `IRViewBox`                 | —       | Explicit viewport; compilation derives it from content when omitted               |
@@ -529,7 +529,7 @@ export type InputSceneLayers = InputSceneBase & {
 | ------------- | ------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------- |
 | `animations?` | `ZodInfer<typeof SceneSchema.shape["animations"]>`                        | —       | Scene-root animation tracks, including viewBox framing animations; omitting this field adds no root tracks. |
 | `children`    | `Array<IRChild>`                                                          | —       | Ordered top-level scene children; an empty array is allowed.                                                |
-| `theme?`      | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the style and mode fields to override.                                      |
+| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.                                       |
 | `type`        | `"scene"`                                                                 | —       | Discriminator marking this object as the root scene                                                         |
 | `version`     | `1`                                                                       | —       | Scene data format version; currently must be 1, independent of the package version.                         |
 | `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`                | —       | Explicit framing; when omitted, bounds are computed from content plus padding.                              |

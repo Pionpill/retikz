@@ -1,11 +1,11 @@
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { definePlotThemeStyle, resolvePlotTheme } from '../../src';
+import { definePlotTheme, resolvePlotTheme } from '../../src';
 
 describe('Plot defaults inspection', () => {
   it('记录 Neutral、style、Source 的真实 defaults/rules/palette 来源', () => {
-    const style = definePlotThemeStyle({
+    const style = definePlotTheme({
       name: 'inspection-style',
       resolve: () => ({
         defaults: { palette: { series: ['#style-series'] } },
@@ -14,7 +14,7 @@ describe('Plot defaults inspection', () => {
     });
     const result = resolvePlotTheme(
       {
-        style: style.name,
+        name: style.name,
         mode: ThemeMode.Light,
         colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
       },

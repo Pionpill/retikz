@@ -656,7 +656,7 @@ export const compileChildrenToPrimitives = (
       generatedOccurrence === undefined
         ? `${formatCompileChildPath(locatorPrefix, index, 'scope')}.theme`
         : `${formatCompileOccurrence(generatedOccurrence)}.scope.theme`;
-    const theme = resolveTheme(frame.theme, child.theme, themePath, context.themeStyles);
+    const theme = resolveTheme(frame.theme, child.theme, themePath, context.themeDefinitions);
     const scopeGeometryContext = {
       positionContext: positionContextOf(frame.scopeChain),
       irPath: formatCompileChildPath(locatorPrefix, index, 'scope'),
@@ -1804,7 +1804,7 @@ export const compileChildrenToPrimitives = (
         ...runtimeInputContext,
         theme,
         withTheme: override =>
-          createLayoutContext(resolveTheme(theme, override, `${compositeIrPath}.theme`, context.themeStyles)),
+          createLayoutContext(resolveTheme(theme, override, `${compositeIrPath}.theme`, context.themeDefinitions)),
         proposal: cloneLayoutProposal(frame.childProposal ?? NaturalLayoutProposal, key, occurrence),
         evaluation:
           options.measurementAxis !== undefined && child === rootChildren[0]

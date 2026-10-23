@@ -515,7 +515,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
 
     localizations: {
       zh: {
-        description: 'Scene 或 Scope 的稀疏 Theme 环境选择；style 与 mode 分别继承',
+        description: 'Scene 或 Scope 的稀疏 Theme 环境选择；name 与 mode 分别继承',
         descriptions: {
           style: '显式视觉人格名称；省略时继承外层值，根级省略时使用 owner 默认 baseline',
           mode: '明暗环境：light 或 dark；省略时继承外层值',

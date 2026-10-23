@@ -1,4 +1,4 @@
-﻿export type { AnimationMode } from './animation-context';
+export type { AnimationMode } from './animation-context';
 export { AnimationModeContext, useAnimationMode } from './animation-context';
 export type { AnimationModeProviderProps } from './AnimationModeProvider';
 export { AnimationModeProvider } from './AnimationModeProvider';
@@ -11,6 +11,6 @@ export { RendererModeProvider } from './RendererModeProvider';
 export type { LayoutRetainedRuntimeOptions, LayoutRuntimeOptions, LayoutStaticRuntimeOptions } from './runtime-options';
 export { LayoutRuntimeMode } from './runtime-options';
 export { ThemeContext, useTheme } from './theme-context';
-export { useThemeStyles } from './theme-styles-context';
+export { useThemeDefinitions } from './theme-definitions-context';
 export type { ThemeProviderProps } from './ThemeProvider';
 export { ThemeProvider } from './ThemeProvider';

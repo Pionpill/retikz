@@ -1,5 +1,5 @@
 import type { IRNode, IRScene, Scene } from '@retikz/core';
-import { CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineTheme, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
@@ -40,14 +40,14 @@ describe('toSceneResult runtime metadata', () => {
             type: 'node',
             position: [0, 0],
             style: {
-              fill: context.theme.style === 'academic' && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
+              fill: context.theme.name === 'academic' && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
             },
           },
         ],
       }),
     });
-    const theme = { style: 'academic', mode: ThemeMode.Dark };
-    const themeStyle = defineThemeStyle({
+    const theme = { name: 'academic', mode: ThemeMode.Dark };
+    const themeName = defineTheme({
       name: 'academic',
       resolve: () => ({
         semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00', guide: '#666666' },
@@ -56,12 +56,12 @@ describe('toSceneResult runtime metadata', () => {
     });
     const child = { namespace: 'theme-test', type: 'box' } as const;
     const vanilla = toSceneResult(inputScene({ theme, children: [child] }), {
-      compile: { composites: [definition], themeStyles: [themeStyle] },
+      compile: { composites: [definition], themeDefinitions: [themeName] },
     });
     const direct = toSceneResult(
       { type: 'scene', version: 1, theme, children: [child] },
       {
-        compile: { composites: [definition], themeStyles: [themeStyle] },
+        compile: { composites: [definition], themeDefinitions: [themeName] },
       },
     );
 

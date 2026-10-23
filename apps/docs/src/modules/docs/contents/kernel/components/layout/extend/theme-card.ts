@@ -51,7 +51,7 @@ export const themeCardComposite = defineComposite({
       text: node.label,
       cornerRadius: 10,
       style: {
-        fill: resolveCardFill(context.theme.style, context.theme.mode),
+        fill: resolveCardFill(context.theme.name, context.theme.mode),
         stroke: colors.semantic.warning,
         strokeWidth: 2,
         textColor: colors.semantic.error,

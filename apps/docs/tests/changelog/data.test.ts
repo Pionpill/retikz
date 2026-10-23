@@ -175,7 +175,7 @@ describe('changelog data', () => {
       'Sections default to an `8` corner radius and padding with a `currentColor / 0.037` background',
     );
     expect(serialized).toContain('Core-compatible instance fields');
-    expect(serialized).toContain('`GraphThemeStyleOverrides`');
+    expect(serialized).toContain('`GraphThemeOverrides`');
     expect(serialized).toContain('before appending custom rules');
     expect(serialized).toContain('Callout, Container');
     expect(serialized).toContain('`IRBlock`');

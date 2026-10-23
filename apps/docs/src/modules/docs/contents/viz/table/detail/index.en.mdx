@@ -37,7 +37,7 @@ For JSX-local column declarations, use `DetailColumn` children:
 
 Choose either `columns` or `DetailColumn` children. Both forms produce the same detail-table spec, and every `DetailTable` root prop other than `columns` is available in both forms.
 
-Table first resolves the final plan for each Cell. The host `theme.mode` establishes the Table owner-local default preset; an explicit `theme.style` then applies the injected sparse Table defaults with the same name. Shared `colors.categorical` supplies the common categorical palette, and Source `defaultTable`, `defaultAppearance`, `defaultCellLayout`, `defaultVisual`, and explicit `layout.borders` override those defaults in order. Column configuration supplies formatter/presentation references and local appearance; `encodings` map raw data to color; and declaration-ordered `rules` apply the final matching overrides, including formatter or presentation winners. Only then does the winning formatter turn a raw field value into its display value. These defaults and layout fields enter the JSON-safe IRTable; the host `theme` propagates through the Core Scene / Scope.
+Table first resolves the final plan for each Cell. The host `theme.mode` establishes the Table owner-local default preset; an explicit `theme.name` then applies the injected sparse Table defaults with the same name. Shared `colors.categorical` supplies the common categorical palette, and Source `defaultTable`, `defaultAppearance`, `defaultCellLayout`, `defaultVisual`, and explicit `layout.borders` override those defaults in order. Column configuration supplies formatter/presentation references and local appearance; `encodings` map raw data to color; and declaration-ordered `rules` apply the final matching overrides, including formatter or presentation winners. Only then does the winning formatter turn a raw field value into its display value. These defaults and layout fields enter the JSON-safe IRTable; the host `theme` propagates through the Core Scene / Scope.
 
 ## Examples
 
@@ -55,7 +55,7 @@ The example gives body and header Cells separate string content masters, then de
   type="tip"
   title="Keep Theme and host CSS separate"
   description={
-    'The host theme.mode establishes the Table owner-local default preset, an explicit theme.style applies the injected sparse Table definition with the same name, Source defaults provide the final local default fragments, and React standalone host CSS continues to use containerStyle.'
+    'The host theme.mode establishes the Table owner-local default preset, an explicit theme.name applies the injected sparse Table definition with the same name, Source defaults provide the final local default fragments, and React standalone host CSS continues to use containerStyle.'
   }
 />
 
@@ -251,8 +251,8 @@ result.manifest;
 | `structureDefinitions?`          | `DetailTableProps['structureDefinitions']`                                | `[]`           | Custom structure definitions                                                      |
 | `presentationDefinitions?`       | `DetailTableProps['presentationDefinitions']`                             | `[]`           | Custom Cell presentation definitions                                              |
 | `visualScaleDefinitions?`        | `DetailTableProps['visualScaleDefinitions']`                              | `[]`           | Custom Cell visual-scale definitions                                              |
-| `themeStyles?`                   | `DetailTableProps['themeStyles']`                                         | `[]`           | Standalone Core Theme style definitions; supplied by the outer host when embedded |
-| `tableThemeStyles?`              | `DetailTableProps['tableThemeStyles']`                                    | `[]`           | Table baseline definitions sharing the Core style name                            |
+| `themeDefinitions?`              | `DetailTableProps['themeDefinitions']`                                    | `[]`           | Standalone Core Theme definitions; supplied by the outer host when embedded       |
+| `tableThemeDefinitions?`         | `DetailTableProps['tableThemeDefinitions']`                               | `[]`           | Table baseline definitions sharing the Core theme name                            |
 | `composites?`                    | `DetailTableProps['composites']`                                          | `[]`           | Definitions required by Tier 2 Cell content                                       |
 | `onManifest?`                    | `DetailTableProps['onManifest']`                                          | —              | Standalone layout artifact callback; unsupported when embedded                    |
 | `width?` / `height?`             | `DetailTableProps['width']`                                               | —              | Host size; does not change Table layout proposals                                 |

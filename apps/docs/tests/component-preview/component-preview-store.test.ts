@@ -1,21 +1,21 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { PreviewThemeStyle } from '../../src/modules/docs/components/component-preview/theme';
+import { PreviewTheme } from '../../src/modules/docs/components/component-preview/theme';
 import { useComponentPreviewStore } from '../../src/modules/docs/store/useComponentPreviewStore';
 
 const originalDefaultOpen = useComponentPreviewStore.getState().controlPanelDefaultOpen;
 
 const originalThemeMode = useComponentPreviewStore.getState().themeMode;
 
-const originalThemeStyle = useComponentPreviewStore.getState().themeStyle;
+const originalTheme = useComponentPreviewStore.getState().themeName;
 
 const originalRangePlaybackDuration = useComponentPreviewStore.getState().rangePlaybackDuration;
 
 afterEach(() => {
   useComponentPreviewStore.getState().setControlPanelDefaultOpen(originalDefaultOpen);
   useComponentPreviewStore.getState().setThemeMode(originalThemeMode);
-  useComponentPreviewStore.getState().setThemeStyle(originalThemeStyle);
+  useComponentPreviewStore.getState().setTheme(originalTheme);
   useComponentPreviewStore.getState().setRangePlaybackDuration(originalRangePlaybackDuration);
 });
 
@@ -54,12 +54,12 @@ describe('ComponentPreview store controls panel preference', () => {
     expect(useComponentPreviewStore.getState().rangePlaybackDuration).toBe(500);
   });
 
-  it('stores the global preview ThemeStyle', () => {
-    expect(useComponentPreviewStore.getState().themeStyle).toBe(PreviewThemeStyle.Default);
+  it('stores the global preview Theme', () => {
+    expect(useComponentPreviewStore.getState().themeName).toBe(PreviewTheme.Default);
 
-    useComponentPreviewStore.getState().setThemeStyle(PreviewThemeStyle.Academic);
+    useComponentPreviewStore.getState().setTheme(PreviewTheme.Academic);
 
-    expect(useComponentPreviewStore.getState().themeStyle).toBe(PreviewThemeStyle.Academic);
+    expect(useComponentPreviewStore.getState().themeName).toBe(PreviewTheme.Academic);
   });
 
   it('不保存 panel 宽度或实例级映射', () => {

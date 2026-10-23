@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { defineThemeStyle, ThemeMode } from '@retikz/core';
+import { defineTheme, ThemeMode } from '@retikz/core';
 import type {
   InputEmbedAdapter,
   ProcessingController,
@@ -16,7 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Layout, Node, Scope } from '../../../src';
 
-const testThemeStyle = defineThemeStyle({
+const testTheme = defineTheme({
   name: 'academic',
   resolve: () => ({
     semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00', guide: '#666666' },
@@ -324,7 +324,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
 
     await act(() =>
       root.render(
-        <Layout theme={{ style: 'academic', mode: ThemeMode.Light }} extensions={{ themeStyles: [testThemeStyle] }}>
+        <Layout theme={{ name: 'academic', mode: ThemeMode.Light }} extensions={{ themeDefinitions: [testTheme] }}>
           <Scope theme={{ mode: ThemeMode.Dark }}>
             <ThemeProbe />
           </Scope>
@@ -334,8 +334,8 @@ describe('<Layout> 的 Vanilla Input processing', () => {
 
     expect(receiveContext).toHaveBeenCalledWith(
       expect.objectContaining({
-        theme: expect.objectContaining({ style: 'academic', mode: ThemeMode.Dark }),
-        themeStyles: [testThemeStyle],
+        theme: expect.objectContaining({ name: 'academic', mode: ThemeMode.Dark }),
+        themeDefinitions: [testTheme],
       }),
     );
 

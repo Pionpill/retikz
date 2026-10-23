@@ -3,7 +3,7 @@ import {
   createBlockHeader,
   createCodeBlockContribution,
   defineCodeBlock,
-  defineGraphThemeStyle,
+  defineGraphTheme,
 } from '@retikz/graph';
 import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 import {
@@ -28,12 +28,12 @@ const definition = defineCodeBlock({
   ],
 });
 
-const style = defineGraphThemeStyle({
+const style = defineGraphTheme({
   name: 'custom',
   resolve: () => ({ codeBlockTokens: { accentColor: '#123456' } }),
 });
 
-const contribution = createCodeBlockContribution(definition, { graphThemeStyles: [style] });
+const contribution = createCodeBlockContribution(definition, { graphThemeDefinitions: [style] });
 
 const coreStyle = { name: 'custom', resolve: () => ({}) };
 
@@ -42,7 +42,7 @@ const source = schema.parse({
   type: 'service',
   id: 'service',
   name: 'Service',
-  theme: { style: 'custom', mode: 'dark' },
+  theme: { name: 'custom', mode: 'dark' },
 });
 
 const adapter: InputEmbedAdapter<typeof source> = {
@@ -72,18 +72,18 @@ describe('Custom code block React authoring', () => {
 
     const actual = processToStaticInputResult(input.scene, {
       adapters: synchronousAdapters(input.adapters),
-      compile: { themeStyles: [coreStyle] },
+      compile: { themeDefinitions: [coreStyle] },
     });
     const vanilla = processToStaticInputResult(
       { children: [embed] },
-      { adapters: [adapter], compile: { themeStyles: [coreStyle] } },
+      { adapters: [adapter], compile: { themeDefinitions: [coreStyle] } },
     );
     const direct = processToStaticInputResult(
       { type: 'scene', version: 1, children: [source] },
       {
         compile: prepareProcessingInput(
           { children: [embed] },
-          { adapters: [adapter], compile: { themeStyles: [coreStyle] } },
+          { adapters: [adapter], compile: { themeDefinitions: [coreStyle] } },
         ).coreOptions,
       },
     );
@@ -93,7 +93,7 @@ describe('Custom code block React authoring', () => {
 
     const retained = createProcessingController(input.scene, {
       adapters: synchronousAdapters(input.adapters),
-      compile: { themeStyles: [coreStyle] },
+      compile: { themeDefinitions: [coreStyle] },
     });
 
     expect(retained.read().scene).toEqual(actual.scene);

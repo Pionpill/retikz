@@ -8,12 +8,12 @@ import { RangedDotChartDefinition } from './recipe';
 
 /** 创建只安装 Ranged Dot recipe 的 provider contribution */
 export const createRangedDotChartProviderContribution = (
-  themeDefinitions: ReadonlyArray<ChartThemeDefinition> = [],
+  chartThemeDefinitions: ReadonlyArray<ChartThemeDefinition> = [],
   lowerOptions: LowerPlotsOptions = {},
 ): ChartProviderContribution =>
   createChartProviderContribution({
     family: ChartFamily.Point,
     recipe: RangedDotChartDefinition,
-    themeDefinitions,
+    chartThemeDefinitions,
     lowerOptions,
   });

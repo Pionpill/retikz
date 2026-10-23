@@ -1,25 +1,25 @@
-import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineTheme } from '@retikz/core';
 import type { CellPresentationInput } from '@retikz/table';
 import {
   defineCellFormatter,
   TableSchema,
   defineCellPresentation,
   defineCellVisualScale,
-  defineTableThemeStyle,
+  defineTableTheme,
 } from '@retikz/table';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
 import { detailTable, manualTable, renderTable } from '../../src';
 
-const cleanCoreTheme = defineThemeStyle({
+const cleanCoreTheme = defineTheme({
   name: 'clean',
   resolve: () => ({
     categorical: ['#112233'],
   }),
 });
 
-const cleanTableTheme = defineTableThemeStyle({
+const cleanTableTheme = defineTableTheme({
   name: 'clean',
   resolve: () => ({
     defaults: {
@@ -111,14 +111,14 @@ describe('renderTable', () => {
     });
     const result = renderTable(spec, {
       artifacts: true,
-      theme: { style: 'clean', mode: 'dark' },
-      compile: { themeStyles: [cleanCoreTheme] },
-      lowerOptions: { tableThemeStyles: [cleanTableTheme], visualScaleDefinitions: [visualScale] },
+      theme: { name: 'clean', mode: 'dark' },
+      compile: { themeDefinitions: [cleanCoreTheme] },
+      lowerOptions: { tableThemeDefinitions: [cleanTableTheme], visualScaleDefinitions: [visualScale] },
     });
 
     expect(result.svg).toContain('#123456');
     expect(result.manifest).toMatchObject({
-      style: { style: 'clean', themeMode: 'dark' },
+      style: { name: 'clean', themeMode: 'dark' },
       encodings: [{ id: 'palette', scaleName: 'vanilla-palette', cellIndices: [0] }],
       legendDescriptors: [
         {
@@ -139,9 +139,9 @@ describe('renderTable', () => {
     const baseline = renderTable(manualTable({ rows: [['Ada']] }), { artifacts: true });
     const clean = renderTable(manualTable({ rows: [['Ada']] }), {
       artifacts: true,
-      theme: { style: 'clean', mode: 'light' },
-      compile: { themeStyles: [cleanCoreTheme] },
-      lowerOptions: { tableThemeStyles: [cleanTableTheme] },
+      theme: { name: 'clean', mode: 'light' },
+      compile: { themeDefinitions: [cleanCoreTheme] },
+      lowerOptions: { tableThemeDefinitions: [cleanTableTheme] },
     });
 
     expect(baseline.manifest).toMatchObject({
@@ -151,7 +151,7 @@ describe('renderTable', () => {
       ],
     });
     expect(clean.manifest).toMatchObject({
-      style: { style: 'clean', themeMode: 'light' },
+      style: { name: 'clean', themeMode: 'light' },
       cells: [
         {
           appearance: {

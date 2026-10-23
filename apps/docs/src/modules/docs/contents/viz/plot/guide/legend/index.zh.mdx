@@ -113,7 +113,7 @@ PlotLegend 会按 `channel` 和可选 `scale` 找到通道描述与 scale。颜�
 | `orient?`     | <ApiValues name="LegendOrient" />   | 按 `position` | 条目排布方向；左右默认 vertical，上下默认 horizontal                                                                                               |
 | `ticks?`      | `PlotLegendProps['ticks']`          | 按形态        | ramp 支持完整刻度来源；size 当前只读取 `count`；离散色块和 shape 忽略                                                                              |
 | `tickLabels?` | `PlotLegendProps['tickLabels']`     | `true`        | 用 `false` 隐藏标签；`format` 用于 ramp 的刻度标签                                                                                                 |
-| `style?`      | `PlotLegendProps['style']`          | theme legend  | 本地图例视觉 token；控制色块 / 色带尺寸、间距与文字样式。size 符号默认用 `symbolFit:'fit'` 收进 `symbolSize` 盒子，需保留实绘半径时用 `'preserve'` |
+| `name?`       | `PlotLegendProps['style']`          | theme legend  | 本地图例视觉 token；控制色块 / 色带尺寸、间距与文字样式。size 符号默认用 `symbolFit:'fit'` 收进 `symbolSize` 盒子，需保留实绘半径时用 `'preserve'` |
 | `layer?`      | `PlotLegendProps['layer']`          | 图例层        | 覆盖整个图例 scope 的语义层级                                                                                                                      |
 
 `PlotLegendProps['ticks']` 在各图例形态中的支持范围：

@@ -35,7 +35,7 @@ describe('@retikz/table public API', () => {
     expect(Table).toHaveProperty('TableVisualScaleRefSchema');
     expect(Table).toHaveProperty('TableLegendDescriptorSchema');
     expect(Table).toHaveProperty('defineCellVisualScale');
-    expect(Table).toHaveProperty('defineTableThemeStyle');
+    expect(Table).toHaveProperty('defineTableTheme');
     expect(Table).toHaveProperty('TableDefaultsSchema');
     expect(Table).toHaveProperty('TableAppearanceDefaultsSchema');
     expect(Table).toHaveProperty('TableVisualDefaultsSchema');

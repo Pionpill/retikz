@@ -61,7 +61,7 @@ A Definition contains a capability's implementation and parameter contract. `sha
 | `shapes` / `boundaries`                   | Node shapes and connection boundaries | Node configuration resolution                          |
 | `patterns` / `clips`                      | Pattern paints and clipping           | Corresponding paint or clip resolution and compilation |
 | `pathKinds` / `pathGenerators` / `arrows` | Path kinds, generators, and arrows    | Corresponding path and arrow processing                |
-| `themeStyles`                             | Theme styles                          | Root or local theme resolution                         |
+| `themeDefinitions`                        | Themes                                | Root or local theme resolution                         |
 | `composites`                              | Composite compilation                 | Traversal of a composite item                          |
 
 After Node styles and defaults are merged, `resolveNodeShape` looks up the effective `shape`, parses parameters with the Definition's `paramsSchema`, and returns `{ name, definition, params }`. An omitted shape selects `rectangle`. `circle` first expands into `ellipse` with equal-dimension parameters, then looks up that definition.
@@ -117,9 +117,9 @@ A child Scope derives a new effective configuration without changing its parent;
 
 ## Theme resolution
 
-The theme records the current style, mode, and shared colors. `resolveTheme` inherits `style` and `mode` independently. A local Scope specifying only `mode: 'dark'` keeps the parent style and regenerates shared colors for that mode. If both selectors remain unchanged, resolution reuses the parent theme.
+The theme records the current theme name, mode, and shared colors. `resolveTheme` inherits `name` and `mode` independently. A local Scope specifying only `mode: 'dark'` keeps the parent theme name and regenerates shared colors for that mode. If both selectors remain unchanged, resolution reuses the parent theme.
 
-`theme.style` names a `ThemeStyleDefinition`, looked up in `themeStyles` and evaluated through `resolve({ mode })`. Without a selected style, Core supplies default colors for the mode. A node's `style` instead holds properties such as fill and stroke; it serves a different purpose from the theme selector.
+`theme.name` names a `ThemeDefinition`, looked up in `themeDefinitions` and evaluated through `resolve({ mode })`. Without a selected style, Core supplies default colors for the mode. A node's `style` instead holds properties such as fill and stroke; it serves a different purpose from the theme selector.
 
 Shared theme colors are available to their consumers. Basic node resolution takes `mode` from the theme and combines it with the effective node master color to resolve numeric colors. It does not copy the entire theme color table into node styles. If an upper component generates node styles from a theme, those fields subsequently enter Core resolution as ordinary IR styles.
 

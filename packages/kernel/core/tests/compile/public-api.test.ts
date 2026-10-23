@@ -13,7 +13,7 @@ describe('core public compile exports', () => {
     expect('resolveCompositeDependencies' in core).toBe(false);
     expect(core.BuiltinCompileWarningCode).toBeDefined();
     expect(core.ThemeSchema).toBeDefined();
-    expect('ThemeStyle' in core).toBe(false);
+    expect('Theme' in core).toBe(false);
     expect(core.ThemeMode).toBeDefined();
     expect(core.ThemeTokenSource).toEqual({
       Inherit: 'inherit',

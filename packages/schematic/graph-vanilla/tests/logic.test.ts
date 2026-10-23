@@ -50,7 +50,7 @@ const definitionOptionKeys = [
   'relationRoles',
   'relationKinds',
   'relationPredicates',
-  'graphThemeStyles',
+  'graphThemeDefinitions',
 ] as const;
 
 const contextOf = (id: string, kind: string): InputEmbedContext => ({
@@ -722,7 +722,7 @@ describe('Graph Vanilla embed adapters', () => {
       relationRoles: [relationRole],
       relationKinds: [],
       relationPredicates: [],
-      graphThemeStyles: [],
+      graphThemeDefinitions: [],
     } as const;
     const graphContribution = lower(
       graph({

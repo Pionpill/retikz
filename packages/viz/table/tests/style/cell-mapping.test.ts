@@ -1,7 +1,7 @@
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { defineTableThemeStyle, resolveTableThemeDefaults } from '../../src';
+import { defineTableTheme, resolveTableThemeDefaults } from '../../src';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { resolveTableCellPlans } from '../../src/pipeline/rule';
 
@@ -23,8 +23,8 @@ describe('Source defaults Cell mapping', () => {
       { kind: 'detail', columns: [{ id: 'value', field: 'value' }] },
       { data: { reference: 'rows' }, datasets: { rows: [{ value: 1 }] } },
     );
-    const defaultTable = resolveTableThemeDefaults({ style: 'mapping', mode: ThemeMode.Light, colors: lightColors }, [
-      defineTableThemeStyle({
+    const defaultTable = resolveTableThemeDefaults({ name: 'mapping', mode: ThemeMode.Light, colors: lightColors }, [
+      defineTableTheme({
         name: 'mapping',
         resolve: () => ({
           defaults: {
@@ -89,9 +89,9 @@ describe('Source defaults Cell mapping', () => {
       { data: { reference: 'rows' }, datasets: { rows: [{ value: 1 }] } },
     );
     const defaultTable = resolveTableThemeDefaults(
-      { style: 'transparent', mode: ThemeMode.Light, colors: lightColors },
+      { name: 'transparent', mode: ThemeMode.Light, colors: lightColors },
       [
-        defineTableThemeStyle({
+        defineTableTheme({
           name: 'transparent',
           resolve: () => ({
             defaults: {

@@ -7,7 +7,7 @@ Start with [Basic usage](/kernel/components/layout/usage). Use the options below
 
 ## Theme configuration
 
-`theme` selects the theme for descendant Composites (compound components); it does not automatically style ordinary Node / Path primitives. Use each primitive's `style` and `rootScope` for figure-wide defaults. Switch the theme style and color mode in the panel to observe color changes on the same card; its position and dimensions stay fixed.
+`theme` selects the theme for descendant Composites (compound components); it does not automatically style ordinary Node / Path primitives. Use each primitive's `style` and `rootScope` for figure-wide defaults. Switch the theme and color mode in the panel to observe color changes on the same card; its position and dimensions stay fixed.
 
 <ComponentPreview
   files={['theme-inheritance', 'theme-inheritance.preview.tsx', 'theme-card.ts']}
@@ -23,7 +23,7 @@ Pass extension definitions by capability through `Layout.extensions`. `shapes` i
 
 <ComponentPreview files={['layout-shape-injection', 'layout-file-shape.ts']} size="sm" />
 
-`extensions` also supports connection boundaries (`boundaries`), clipping regions (`clips`), arrows (`arrows`), patterns (`patterns`), path generators (`pathGenerators`), path kinds (`pathKinds`), composites (`composites`), and theme styles (`themeStyles`). These definitions enter their respective registries through `extensions` and are consumed during compilation.
+`extensions` also supports connection boundaries (`boundaries`), clipping regions (`clips`), arrows (`arrows`), patterns (`patterns`), path generators (`pathGenerators`), path kinds (`pathKinds`), composites (`composites`), and themes (`themeDefinitions`). These definitions enter their respective registries through `extensions` and are consumed during compilation.
 
 This section demonstrates shape injection only; later custom-usage guides for each topic explain how to define and use the other capabilities. See the [API reference](/kernel/components/layout/reference) for the complete fields.
 

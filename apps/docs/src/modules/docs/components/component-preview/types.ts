@@ -3,7 +3,7 @@ import type { FC, ReactNode } from 'react';
 
 import type { Lang } from '@/i18n';
 
-import type { PreviewThemeStyleValue } from './theme';
+import type { PreviewThemeName } from './theme';
 
 /** 预览区平移 / 缩放状态。 */
 export type Transform = { x: number; y: number; scale: number };
@@ -24,7 +24,7 @@ export type ComponentPreviewDemoComponent = FC<ComponentPreviewDemoProps>;
 export type PreviewThemeMode = 'inherit' | 'light' | 'dark';
 
 /** 单张预览的主题风格选择；inherit 表示跟随 docs 全局设置。 */
-export type PreviewThemeStyleSelection = 'inherit' | PreviewThemeStyleValue;
+export type PreviewThemeSelection = 'inherit' | PreviewThemeName;
 
 /** 叙述性图示的说明类型。 */
 export type PreviewFigureType = 'flow' | 'illustration';

@@ -255,9 +255,9 @@ Scope 的后代不能通过命名引用使用任一祖先 Scope 的中心、锚�
 
 ## 补充说明
 
-**局部 Theme。** `<Scope theme>` 把稀疏的 `style` / `mode` selector 写入 `IRScope.theme`，只影响其后代 Composite。字段逐项继承：例如 `{ mode: ThemeMode.Dark }` 只切换明暗环境，仍保留外层的 `style`。编译时 Core 根据当前 style registry 重新生成 shared colors；未注册的 style 会立即报错。完整示例见 [Layout 的可继承 Theme](/kernel/components/layout/extend#主题配置)。
+**局部 Theme。** `<Scope theme>` 把稀疏的 `name` / `mode` selector 写入 `IRScope.theme`，只影响其后代 Composite。字段逐项继承：例如 `{ mode: ThemeMode.Dark }` 只切换明暗环境，仍保留外层的 `name`。编译时 Core 根据当前 theme registry 重新生成 shared colors；未注册的主题 会立即报错。完整示例见 [Layout 的可继承 Theme](/kernel/components/layout/extend#主题配置)。
 
-Theme 与样式默认值是两条独立通道：`defaults.reset` 不重置 Theme，Theme 也不直接填充 Node / Path 的颜色。省略 `style` 时使用所属包的默认基线；在嵌套 `Scope` 中省略 `style` 会继承外层风格，不能重置为基线。
+Theme 与样式默认值是两条独立通道：`defaults.reset` 不重置 Theme，Theme 也不直接填充 Node / Path 的颜色。省略 `name` 时使用所属包的默认基线；在嵌套 `Scope` 中省略 `name` 会继承外层风格，不能重置为基线。
 
 **样式默认值。** Scope 同时提供 `defaults.style.color`、`defaults.style` 中的共享视觉属性与 `defaults.node` / `defaults.path`。这些值逐字段向内继承，元素显式值优先；`defaults.reset` 只切断指定通道的外层继承。
 

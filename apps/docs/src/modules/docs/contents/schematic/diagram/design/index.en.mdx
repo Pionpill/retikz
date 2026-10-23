@@ -57,7 +57,7 @@ Flow owns measurement, layout, and routing, then delegates drawing to Graph. Its
 
 ## Appearance defaults do not create content
 
-Themes provide an appearance baseline, `defaultDiagram` supplies explicit author defaults, and instance fields take final precedence. `theme.style` selects same-name Definitions, while `theme.mode` selects light or dark mode. These settings do not replace content and relation declarations.
+Themes provide an appearance baseline, `defaultDiagram` supplies explicit author defaults, and instance fields take final precedence. `theme.name` selects same-name Definitions, while `theme.mode` selects light or dark mode. These settings do not replace content and relation declarations.
 
 `defaultDiagram.presentation.title/description` follows the formal supporting-region paths and contains only `style.textColor/font/opacity` and `layout.align/lineHeight/maxTextWidth`, without `text`. Setting a default title font does not create a title; font configurations replace as a whole.
 

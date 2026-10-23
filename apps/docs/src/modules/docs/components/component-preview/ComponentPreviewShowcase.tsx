@@ -25,7 +25,7 @@ import type {
   PreviewControlsDefinition,
   PreviewControlSlot,
   PreviewThemeMode,
-  PreviewThemeStyleSelection,
+  PreviewThemeSelection,
 } from './types';
 
 /** Showcase 共用卡片与全屏的状态，尺寸由实际容器提供 */
@@ -55,9 +55,9 @@ export type ComponentPreviewShowcaseProps = {
   /** 显示主题风格选择 */
   enableThemeSwitch: boolean;
   /** 当前主题风格 */
-  themeStyleSelection: PreviewThemeStyleSelection;
+  themeNameSelection: PreviewThemeSelection;
   /** 更新主题风格 */
-  onThemeStyleChange?: (selection: PreviewThemeStyleSelection) => void;
+  onThemeChange?: (selection: PreviewThemeSelection) => void;
   /** 打开 AI 面板并填入当前演示上下文 */
   onAskAi?: () => void;
   /** 预览区域尺寸样式 */
@@ -81,8 +81,8 @@ export const ComponentPreviewShowcase: FC<ComponentPreviewShowcaseProps> = props
     themeMode,
     onThemeModeChange,
     enableThemeSwitch,
-    themeStyleSelection,
-    onThemeStyleChange,
+    themeNameSelection,
+    onThemeChange,
     className,
     onAskAi,
     width: previewWidth = 0,
@@ -90,7 +90,7 @@ export const ComponentPreviewShowcase: FC<ComponentPreviewShowcaseProps> = props
 
   const [codeExpanded, setCodeExpanded] = useState(false);
   const [tab, setTab] = useState<'preview' | 'data' | 'code'>('preview');
-  const theme = usePreviewTheme(themeStyleSelection, themeMode);
+  const theme = usePreviewTheme(themeNameSelection, themeMode);
   const display = sourceState.display(true);
   const views = sourceState.views;
 
@@ -146,9 +146,9 @@ export const ComponentPreviewShowcase: FC<ComponentPreviewShowcaseProps> = props
                 onThemeModeChange={onThemeModeChange}
                 lang={lang}
                 enableThemeSwitch={enableThemeSwitch}
-                themeStyle={theme.style}
-                themeStyleSelection={themeStyleSelection}
-                onThemeStyleChange={onThemeStyleChange}
+                themeName={theme.name}
+                themeNameSelection={themeNameSelection}
+                onThemeChange={onThemeChange}
               />
             ) : null}
           </div>

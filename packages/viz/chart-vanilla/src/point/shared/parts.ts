@@ -44,7 +44,7 @@ export type TypedChartParts<TSource extends IRChartSource, TNative = never> = Re
   /** 当前数据准备请求的取消信号 */
   signal?: AbortSignal;
   /** 当前 chartType 可用的主题定义 */
-  themeDefinitions?: TypedChartCommonInput<TSource>['themeDefinitions'];
+  chartThemeDefinitions?: TypedChartCommonInput<TSource>['chartThemeDefinitions'];
   /** 共享 Plot 下沉能力及定义的选项 */
   lowerOptions?: LowerPlotsOptions;
   /** 在图表外包裹的可选面板输入 */
@@ -66,7 +66,7 @@ export const typedChartPartsOf = <TSource extends IRChartSource, TNative>(
     layout,
     coordinate,
     id,
-    themeDefinitions,
+    chartThemeDefinitions,
     background,
     defaultChart,
     lowerOptions,
@@ -92,7 +92,7 @@ export const typedChartPartsOf = <TSource extends IRChartSource, TNative>(
     ...(input.dataBindings === undefined ? {} : { dataBindings: input.dataBindings }),
     ...(input.dataTransformExecutor === undefined ? {} : { dataTransformExecutor: input.dataTransformExecutor }),
     ...(input.signal === undefined ? {} : { signal: input.signal }),
-    ...(themeDefinitions === undefined ? {} : { themeDefinitions }),
+    ...(chartThemeDefinitions === undefined ? {} : { chartThemeDefinitions }),
     ...(lowerOptions === undefined ? {} : { lowerOptions }),
     ...(panel === undefined ? {} : { panel }),
   };

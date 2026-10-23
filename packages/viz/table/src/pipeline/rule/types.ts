@@ -31,7 +31,7 @@ export type TableDefaultsLayer = DeepReadonly<{
 /** 同次 Table compile 使用的完整 defaults resolution */
 export type ResolvedTableDefaults = DeepReadonly<{
   /** 可选 Core style 名称 */
-  style?: string;
+  name?: string;
   /** 有效 Core Theme mode */
   mode: ThemeMode;
   /** 已按来源顺序合并的 defaults */

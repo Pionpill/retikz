@@ -16,7 +16,7 @@ const flow = (group: Omit<Flow.IRFlowGroup, 'id' | 'children'>): Flow.IRFlowDiag
 });
 
 const resolve = (source: Flow.IRFlowDiagram) =>
-  resolveFlowDiagram(source, { theme: DEFAULT_RESOLVED_THEME, flowThemeStyles: new Map() });
+  resolveFlowDiagram(source, { theme: DEFAULT_RESOLVED_THEME, flowThemeDefinitions: new Map() });
 
 const compile = (source: Flow.IRFlowDiagram, options: Flow.FlowDiagramDefinitionOptions = {}) =>
   compileToScene(

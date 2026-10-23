@@ -7,17 +7,18 @@ type PlotAuthoringRuntime = Readonly<{
 /** 合并 ambient Plot theme 与 concrete Chart 的 lowering options */
 export const lowerOptionsWithAmbientThemeOf = (
   lowerOptions: LowerPlotsOptions | undefined,
-  ambientThemeStyles: PlotDefinitions['plotThemeStyles'],
+  ambientThemeDefinitions: PlotDefinitions['plotThemeDefinitions'],
 ): LowerPlotsOptions | undefined => {
-  if (ambientThemeStyles === undefined || ambientThemeStyles.length === 0) return lowerOptions;
+  if (ambientThemeDefinitions === undefined || ambientThemeDefinitions.length === 0) return lowerOptions;
 
-  const explicit = lowerOptions?.definitions?.plotThemeStyles;
+  const explicit = lowerOptions?.definitions?.plotThemeDefinitions;
 
   return {
     ...lowerOptions,
     definitions: {
       ...lowerOptions?.definitions,
-      plotThemeStyles: explicit === undefined ? ambientThemeStyles : [...ambientThemeStyles, ...explicit],
+      plotThemeDefinitions:
+        explicit === undefined ? ambientThemeDefinitions : [...ambientThemeDefinitions, ...explicit],
     },
   };
 };

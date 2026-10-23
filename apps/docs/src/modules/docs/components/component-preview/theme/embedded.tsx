@@ -12,18 +12,18 @@ import { DetailTable as RuntimeDetailTable, ManualTable as RuntimeManualTable } 
 import type { FC } from 'react';
 
 import { PreviewThemeDefinitionBundle } from './presets/context';
-import { PreviewPlotThemeStyles } from './presets/plot';
-import { PreviewTableThemeStyles } from './presets/table';
+import { PreviewPlotThemeDefinitions } from './presets/plot';
+import { PreviewTableThemeDefinitions } from './presets/table';
 
 /** 只为绕过 React context 的 Layout-embedded adapter 补齐 docs Plot definitions */
-const withPlotThemeStyles = (props: PlotProps): PlotProps => ({
+const withPlotThemeDefinitions = (props: PlotProps): PlotProps => ({
   ...props,
   definitions: {
     ...props.definitions,
-    plotThemeStyles:
-      props.definitions?.plotThemeStyles === undefined
-        ? PreviewPlotThemeStyles
-        : [...PreviewPlotThemeStyles, ...props.definitions.plotThemeStyles],
+    plotThemeDefinitions:
+      props.definitions?.plotThemeDefinitions === undefined
+        ? PreviewPlotThemeDefinitions
+        : [...PreviewPlotThemeDefinitions, ...props.definitions.plotThemeDefinitions],
   },
 });
 
@@ -35,15 +35,15 @@ export const PreviewPlot = Object.assign(((props: PlotProps) => <RuntimePlot {..
   isTier2Embeddable: true as const,
   inputEmbedAdapter: runtimePlotAdapter,
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) =>
-    RuntimePlot.createInputEmbedProps(withPlotThemeStyles(props as PlotProps)),
+    RuntimePlot.createInputEmbedProps(withPlotThemeDefinitions(props as PlotProps)),
 });
 
-const withGraphThemeStyles = (props: GraphProps): GraphProps => ({
+const withGraphThemeDefinitions = (props: GraphProps): GraphProps => ({
   ...props,
-  graphThemeStyles:
-    props.graphThemeStyles === undefined
+  graphThemeDefinitions:
+    props.graphThemeDefinitions === undefined
       ? PreviewThemeDefinitionBundle.graph
-      : [...new Set([...PreviewThemeDefinitionBundle.graph, ...props.graphThemeStyles])],
+      : [...new Set([...PreviewThemeDefinitionBundle.graph, ...props.graphThemeDefinitions])],
 });
 
 /** docs preview 的 Graph 边界，显式覆盖 Layout-embedded runtime definitions */
@@ -54,7 +54,7 @@ export const PreviewGraph: typeof RuntimeGraph = Object.assign(
     isTier2Embeddable: true as const,
     inputEmbedAdapter: RuntimeGraph.inputEmbedAdapter,
     createInputEmbedProps: (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) =>
-      RuntimeGraph.createInputEmbedProps?.(withGraphThemeStyles(props as GraphProps), context),
+      RuntimeGraph.createInputEmbedProps?.(withGraphThemeDefinitions(props as GraphProps), context),
   },
 );
 
@@ -82,43 +82,45 @@ export const PreviewRelation: typeof RuntimeRelation = Object.assign(
   },
 );
 
-const withFlowThemeStyles = (props: FlowDiagramProps): FlowDiagramProps => ({
+const withFlowThemeDefinitions = (props: FlowDiagramProps): FlowDiagramProps => ({
   ...props,
-  diagramThemeStyles:
-    props.diagramThemeStyles === undefined
+  diagramThemeDefinitions:
+    props.diagramThemeDefinitions === undefined
       ? PreviewThemeDefinitionBundle.diagram
-      : [...PreviewThemeDefinitionBundle.diagram, ...props.diagramThemeStyles],
-  flowThemeStyles:
-    props.flowThemeStyles === undefined
+      : [...PreviewThemeDefinitionBundle.diagram, ...props.diagramThemeDefinitions],
+  flowThemeDefinitions:
+    props.flowThemeDefinitions === undefined
       ? PreviewThemeDefinitionBundle.flow
-      : [...PreviewThemeDefinitionBundle.flow, ...props.flowThemeStyles],
-  graphThemeStyles:
-    props.graphThemeStyles === undefined
+      : [...PreviewThemeDefinitionBundle.flow, ...props.flowThemeDefinitions],
+  graphThemeDefinitions:
+    props.graphThemeDefinitions === undefined
       ? PreviewThemeDefinitionBundle.graph
-      : [...new Set([...PreviewThemeDefinitionBundle.graph, ...props.graphThemeStyles])],
+      : [...new Set([...PreviewThemeDefinitionBundle.graph, ...props.graphThemeDefinitions])],
 });
 
 /** docs preview 的 FlowDiagram 边界，显式覆盖全部同名 Theme definitions */
 export const PreviewFlowDiagram: typeof RuntimeFlowDiagram = Object.assign(
-  ((props: FlowDiagramProps) => <RuntimeFlowDiagram {...withFlowThemeStyles(props)} />) as FC<FlowDiagramProps>,
+  ((props: FlowDiagramProps) => <RuntimeFlowDiagram {...withFlowThemeDefinitions(props)} />) as FC<FlowDiagramProps>,
   {
     displayName: 'PreviewFlowDiagram',
     isTier2Embeddable: true as const,
     inputEmbedAdapter: RuntimeFlowDiagram.inputEmbedAdapter,
     createInputEmbedProps: (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) =>
-      RuntimeFlowDiagram.createInputEmbedProps(withFlowThemeStyles(props as FlowDiagramProps), context),
+      RuntimeFlowDiagram.createInputEmbedProps(withFlowThemeDefinitions(props as FlowDiagramProps), context),
   },
 );
 
 /** 只为绕过 React context 的 Layout-embedded adapter 补齐 docs Table definitions */
-const withTableThemeStyles = <TProps extends { tableThemeStyles?: DetailTableProps['tableThemeStyles'] }>(
+const withTableThemeDefinitions = <
+  TProps extends { tableThemeDefinitions?: DetailTableProps['tableThemeDefinitions'] },
+>(
   props: TProps,
 ): TProps => ({
   ...props,
-  tableThemeStyles:
-    props.tableThemeStyles === undefined
-      ? PreviewTableThemeStyles
-      : [...PreviewTableThemeStyles, ...props.tableThemeStyles],
+  tableThemeDefinitions:
+    props.tableThemeDefinitions === undefined
+      ? PreviewTableThemeDefinitions
+      : [...PreviewTableThemeDefinitions, ...props.tableThemeDefinitions],
 });
 
 /** docs preview 的 DetailTable 边界 */
@@ -129,7 +131,7 @@ export const PreviewDetailTable: InputEmbeddableTableComponent<DetailTableProps>
     isTier2Embeddable: true as const,
     inputEmbedAdapter: RuntimeDetailTable.inputEmbedAdapter,
     createInputEmbedProps: (props: Readonly<Record<string, unknown>>) =>
-      RuntimeDetailTable.createInputEmbedProps(withTableThemeStyles(props as DetailTableProps)),
+      RuntimeDetailTable.createInputEmbedProps(withTableThemeDefinitions(props as DetailTableProps)),
   },
 );
 
@@ -141,24 +143,26 @@ export const PreviewManualTable: InputEmbeddableTableComponent<ManualTableProps>
     isTier2Embeddable: true as const,
     inputEmbedAdapter: RuntimeManualTable.inputEmbedAdapter,
     createInputEmbedProps: (props: Readonly<Record<string, unknown>>) =>
-      RuntimeManualTable.createInputEmbedProps(withTableThemeStyles(props as ManualTableProps)),
+      RuntimeManualTable.createInputEmbedProps(withTableThemeDefinitions(props as ManualTableProps)),
   },
 );
 
-const withBranchThemeStyles = (props: BranchDiagramProps): BranchDiagramProps => ({
+const withBranchThemeDefinitions = (props: BranchDiagramProps): BranchDiagramProps => ({
   ...props,
-  diagramThemeStyles: [...PreviewThemeDefinitionBundle.diagram, ...(props.diagramThemeStyles ?? [])],
-  graphThemeStyles: [...new Set([...PreviewThemeDefinitionBundle.graph, ...(props.graphThemeStyles ?? [])])],
+  diagramThemeDefinitions: [...PreviewThemeDefinitionBundle.diagram, ...(props.diagramThemeDefinitions ?? [])],
+  graphThemeDefinitions: [...new Set([...PreviewThemeDefinitionBundle.graph, ...(props.graphThemeDefinitions ?? [])])],
 });
 
 /** 共享 Diagram 与 Graph 主题的 Branch 文档预览 */
 export const PreviewBranchDiagram: typeof RuntimeBranchDiagram = Object.assign(
-  ((props: BranchDiagramProps) => <RuntimeBranchDiagram {...withBranchThemeStyles(props)} />) as FC<BranchDiagramProps>,
+  ((props: BranchDiagramProps) => (
+    <RuntimeBranchDiagram {...withBranchThemeDefinitions(props)} />
+  )) as FC<BranchDiagramProps>,
   {
     displayName: 'PreviewBranchDiagram',
     isTier2Embeddable: true as const,
     inputEmbedAdapter: RuntimeBranchDiagram.inputEmbedAdapter,
     createInputEmbedProps: (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) =>
-      RuntimeBranchDiagram.createInputEmbedProps(withBranchThemeStyles(props as BranchDiagramProps), context),
+      RuntimeBranchDiagram.createInputEmbedProps(withBranchThemeDefinitions(props as BranchDiagramProps), context),
   },
 );

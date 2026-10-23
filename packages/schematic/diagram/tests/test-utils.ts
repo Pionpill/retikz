@@ -4,7 +4,7 @@ import type {
   IRChild,
   IRScope,
   LayoutProposal,
-  ThemeStyleDefinition,
+  ThemeDefinition,
 } from '@retikz/core';
 import {
   ChildSchema,
@@ -59,7 +59,7 @@ const createTestDiagramFoundationDefinition = (
           ...(source.frame === undefined ? {} : { frame: source.frame }),
           ...(source.defaultDiagram === undefined ? {} : { defaultDiagram: source.defaultDiagram }),
         },
-        { theme: context.theme, diagramThemeStyles: options.diagramThemeStyles },
+        { theme: context.theme, diagramThemeDefinitions: options.diagramThemeDefinitions },
       );
       const surface = lowerDiagramFoundation(resolution, source.drawing);
       const result = context.layoutChild(surface, proposal ?? context.proposal);
@@ -99,7 +99,7 @@ export type TestFoundationCompileOptions = Readonly<{
   /** 用于构造 Foundation provider 的定义选项 */
   diagram?: DiagramDefinitionOptions;
   /** 测试编译使用的 Core 主题样式定义 */
-  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
+  themeDefinitions?: ReadonlyArray<ThemeDefinition>;
   /** 注入 Foundation 测量过程的布局提案 */
   proposal?: LayoutProposal;
 }>;
@@ -129,7 +129,7 @@ export const compileTestDiagramFoundation = (
     { version: 1, type: 'scene', children: [child] },
     {
       ...definitions,
-      themeStyles: options.themeStyles,
+      themeDefinitions: options.themeDefinitions,
       padding: 0,
       measureText: text => ({ width: text.length * 8, height: 10, ascent: 8, descent: 2 }),
     },

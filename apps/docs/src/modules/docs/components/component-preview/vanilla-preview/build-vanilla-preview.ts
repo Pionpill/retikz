@@ -672,7 +672,7 @@ const convertGraphChild = (
         entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds,
         relationKinds: PreviewThemeDefinitionBundle.graphRelationKinds,
         ...(children === undefined ? {} : { children }),
-        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
+        graphThemeDefinitions: PreviewThemeDefinitionBundle.graph,
       });
     }
     case 'group': {
@@ -941,7 +941,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
             providers: createGraphProviders({
               entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds,
               relationKinds: PreviewThemeDefinitionBundle.graphRelationKinds,
-              graphThemeStyles: PreviewThemeDefinitionBundle.graph,
+              graphThemeDefinitions: PreviewThemeDefinitionBundle.graph,
             }),
           },
         ],
@@ -951,7 +951,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
 
   const compile = {
     ...resolvedDefinitions,
-    themeStyles: PreviewThemeDefinitionBundle.core,
+    themeDefinitions: PreviewThemeDefinitionBundle.core,
     measureText: options.measureText ?? browserPreviewMeasurer,
   };
 
@@ -1165,9 +1165,9 @@ const buildChartCode = (
       ...typedChartAuthoringInput(typedSource, datasets),
       data: '__DATASET__',
       ...(options.theme === undefined ? {} : { theme: options.theme }),
-      themeStyles: '__CORE_THEME_STYLES__',
-      themeDefinitions: '__CHART_THEME_STYLES__',
-      lowerOptions: { definitions: { plotThemeStyles: '__PLOT_THEME_STYLES__' } },
+      themeDefinitions: '__CORE_THEME_STYLES__',
+      chartThemeDefinitions: '__CHART_THEME_STYLES__',
+      lowerOptions: { definitions: { plotThemeDefinitions: '__PLOT_THEME_STYLES__' } },
     })
       .replace("'__DATASET__'", dataExpression)
       .replace("'__CORE_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.core')
@@ -1200,9 +1200,9 @@ const buildChartPreview = (
   const input = {
     ...typedChartAuthoringInput(chart, datasets),
     ...(options.theme === undefined ? {} : { theme: options.theme }),
-    themeStyles: PreviewThemeDefinitionBundle.core,
-    themeDefinitions: PreviewThemeDefinitionBundle.chart,
-    lowerOptions: { definitions: { plotThemeStyles: PreviewThemeDefinitionBundle.plot } },
+    themeDefinitions: PreviewThemeDefinitionBundle.core,
+    chartThemeDefinitions: PreviewThemeDefinitionBundle.chart,
+    lowerOptions: { definitions: { plotThemeDefinitions: PreviewThemeDefinitionBundle.plot } },
   };
 
   const runtime = (() => {
@@ -1318,9 +1318,9 @@ const buildFlowCode = (source: IRFlowDiagram, preview: PreviewIR, options: Build
     ...flowAuthoringInput(source),
     entityKinds: '__GRAPH_ENTITY_KINDS__',
     relationKinds: '__GRAPH_RELATION_KINDS__',
-    diagramThemeStyles: '__DIAGRAM_THEME_STYLES__',
-    flowThemeStyles: '__FLOW_THEME_STYLES__',
-    graphThemeStyles: '__GRAPH_THEME_STYLES__',
+    diagramThemeDefinitions: '__DIAGRAM_THEME_STYLES__',
+    flowThemeDefinitions: '__FLOW_THEME_STYLES__',
+    graphThemeDefinitions: '__GRAPH_THEME_STYLES__',
   };
   const authoringCode = formatVanillaValue(authoring)
     .replace("'__GRAPH_ENTITY_KINDS__'", 'PreviewThemeDefinitionBundle.graphEntityKinds')
@@ -1334,7 +1334,7 @@ const buildFlowCode = (source: IRFlowDiagram, preview: PreviewIR, options: Build
     children: '__FLOW_CHILDREN__',
   }).replace("'__FLOW_CHILDREN__'", `[flowDiagram(${authoringCode})]`);
 
-  return `import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, {\n  adapters: [FlowDiagramInputEmbedAdapter],\n  output: ${formatVanillaValue(outputSize(preview))},\n  compile: { themeStyles: PreviewThemeDefinitionBundle.core },\n});\n`;
+  return `import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, {\n  adapters: [FlowDiagramInputEmbedAdapter],\n  output: ${formatVanillaValue(outputSize(preview))},\n  compile: { themeDefinitions: PreviewThemeDefinitionBundle.core },\n});\n`;
 };
 
 const buildFlowPreview = (
@@ -1351,9 +1351,9 @@ const buildFlowPreview = (
         ...flowAuthoringInput(source),
         entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds,
         relationKinds: PreviewThemeDefinitionBundle.graphRelationKinds,
-        diagramThemeStyles: PreviewThemeDefinitionBundle.diagram,
-        flowThemeStyles: PreviewThemeDefinitionBundle.flow,
-        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
+        diagramThemeDefinitions: PreviewThemeDefinitionBundle.diagram,
+        flowThemeDefinitions: PreviewThemeDefinitionBundle.flow,
+        graphThemeDefinitions: PreviewThemeDefinitionBundle.graph,
       }),
     ],
   });
@@ -1364,7 +1364,7 @@ const buildFlowPreview = (
       adapters: [FlowDiagramInputEmbedAdapter],
       output: outputSize(preview),
       compile: {
-        themeStyles: PreviewThemeDefinitionBundle.core,
+        themeDefinitions: PreviewThemeDefinitionBundle.core,
         measureText: options.measureText ?? browserPreviewMeasurer,
       },
     }),
@@ -1384,8 +1384,8 @@ const buildBranchCode = (source: IRBranchDiagram, preview: PreviewIR, options: B
     ...branchAuthoringInput(source),
     entityKinds: '__GRAPH_ENTITY_KINDS__',
     relationKinds: '__GRAPH_RELATION_KINDS__',
-    diagramThemeStyles: '__DIAGRAM_THEME_STYLES__',
-    graphThemeStyles: '__GRAPH_THEME_STYLES__',
+    diagramThemeDefinitions: '__DIAGRAM_THEME_STYLES__',
+    graphThemeDefinitions: '__GRAPH_THEME_STYLES__',
   };
   const authoringCode = formatVanillaValue(authoring)
     .replace("'__GRAPH_ENTITY_KINDS__'", 'PreviewThemeDefinitionBundle.graphEntityKinds')
@@ -1398,7 +1398,7 @@ const buildBranchCode = (source: IRBranchDiagram, preview: PreviewIR, options: B
     children: '__BRANCH_CHILDREN__',
   }).replace("'__BRANCH_CHILDREN__'", `[branchDiagram(${authoringCode})]`);
 
-  return `import { branchDiagram, BranchDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/branch';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, {\n  adapters: [BranchDiagramInputEmbedAdapter],\n  output: ${formatVanillaValue(outputSize(preview))},\n  compile: { themeStyles: PreviewThemeDefinitionBundle.core },\n});\n`;
+  return `import { branchDiagram, BranchDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/branch';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, {\n  adapters: [BranchDiagramInputEmbedAdapter],\n  output: ${formatVanillaValue(outputSize(preview))},\n  compile: { themeDefinitions: PreviewThemeDefinitionBundle.core },\n});\n`;
 };
 
 const buildBranchPreview = (
@@ -1415,8 +1415,8 @@ const buildBranchPreview = (
         ...branchAuthoringInput(source),
         entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds,
         relationKinds: PreviewThemeDefinitionBundle.graphRelationKinds,
-        diagramThemeStyles: PreviewThemeDefinitionBundle.diagram,
-        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
+        diagramThemeDefinitions: PreviewThemeDefinitionBundle.diagram,
+        graphThemeDefinitions: PreviewThemeDefinitionBundle.graph,
       }),
     ],
   });
@@ -1427,7 +1427,7 @@ const buildBranchPreview = (
       adapters: [BranchDiagramInputEmbedAdapter],
       output: outputSize(preview),
       compile: {
-        themeStyles: PreviewThemeDefinitionBundle.core,
+        themeDefinitions: PreviewThemeDefinitionBundle.core,
         measureText: options.measureText ?? browserPreviewMeasurer,
       },
     }),

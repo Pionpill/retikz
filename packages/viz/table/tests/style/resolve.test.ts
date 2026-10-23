@@ -2,7 +2,7 @@ import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import {
-  defineTableThemeStyle,
+  defineTableTheme,
   getDefaultTableDefaults,
   mergeTableDefaults,
   resolveTableThemeDefaults,
@@ -116,7 +116,7 @@ describe('Table Source defaults resolution', () => {
   });
 
   it('resolves a same-name style definition into a Source defaults layer', () => {
-    const brand = defineTableThemeStyle({
+    const brand = defineTableTheme({
       name: 'brand',
       resolve: theme => ({
         defaults: {
@@ -131,7 +131,7 @@ describe('Table Source defaults resolution', () => {
     });
     const theme = {
       ...lightTheme,
-      style: 'brand',
+      name: 'brand',
       colors: { ...lightTheme.colors, categorical: ['red'] },
     } as const;
 
@@ -145,7 +145,7 @@ describe('Table Source defaults resolution', () => {
       { kind: 'neutral', path: '$default/light' },
       { kind: 'style', path: '$style/brand/light' },
     ]);
-    expect(() => resolveTableThemeDefaults(theme)).toThrow(/Table theme style 'brand'.*not registered/i);
+    expect(() => resolveTableThemeDefaults(theme)).toThrow(/Table theme 'brand'.*not registered/i);
     expect(() => resolveTableThemeDefaults(theme, [brand, brand])).toThrow(/already registered/i);
   });
 
@@ -153,14 +153,14 @@ describe('Table Source defaults resolution', () => {
     expect(() => TableDefaultsSchema.parse({ unknown: true })).toThrow(/unknown/i);
 
     const cause = new Error('custom Table style failed');
-    const definition = defineTableThemeStyle({
+    const definition = defineTableTheme({
       name: 'throwing-style',
       resolve: () => {
         throw cause;
       },
     });
 
-    expect(() => resolveTableThemeDefaults({ ...lightTheme, style: definition.name }, [definition])).toThrowError(
+    expect(() => resolveTableThemeDefaults({ ...lightTheme, name: definition.name }, [definition])).toThrowError(
       expect.objectContaining({ code: RetikzTableErrorCode.Default, cause }),
     );
   });

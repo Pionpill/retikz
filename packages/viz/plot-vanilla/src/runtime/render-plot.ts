@@ -1,4 +1,4 @@
-import type { IRScene, ThemeStyleDefinition } from '@retikz/core';
+import type { IRScene, ThemeDefinition } from '@retikz/core';
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type {
@@ -16,7 +16,7 @@ type RenderPlotThemeOptions = {
   /** 在根 Scene 的 Core effective Theme 位置生效 */
   theme?: IRScene['theme'];
   /** Core 主题风格定义 */
-  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
+  themeDefinitions?: ReadonlyArray<ThemeDefinition>;
 };
 
 /** renderPlot 的默认选项；不启用图元链路时保持 SVG 字符串返回值 */
@@ -69,14 +69,14 @@ const renderPlotImpl = (
       ...(options.theme !== undefined ? { theme: options.theme } : {}),
       children: [spec],
     },
-    { ...providerDefinitions, themeStyles: options.themeStyles },
+    { ...providerDefinitions, themeDefinitions: options.themeDefinitions },
   ).scene;
   const svg = renderToSvgString(scene, { output: { width: options.layout?.width, height: options.layout?.height } });
   if (!isLineageOptions(options)) return svg;
 
   const { lineage } = lowerPlotWithLineage(spec, data, {
     ...options,
-    environment: { theme: options.theme, compile: { themeStyles: options.themeStyles } },
+    environment: { theme: options.theme, compile: { themeDefinitions: options.themeDefinitions } },
   });
 
   return { svg, lineage };

@@ -52,7 +52,7 @@ export const resolveBranchDefinitionOptions = (optionSets: ReadonlyArray<BranchD
 
   const options: BranchDiagramDefinitionOptions = {
     ...mergeGraphDefinitionOptions(optionSets),
-    diagramThemeStyles: [...new Set(optionSets.flatMap(value => value.diagramThemeStyles ?? []))],
+    diagramThemeDefinitions: [...new Set(optionSets.flatMap(value => value.diagramThemeDefinitions ?? []))],
   };
 
   return { definition, options };

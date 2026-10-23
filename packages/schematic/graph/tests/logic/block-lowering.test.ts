@@ -2,7 +2,7 @@ import type { CompileWarning, IRNode, LayoutProposal } from '@retikz/core';
 import {
   compileToScene,
   BuiltinCompileWarningCode,
-  defineThemeStyle,
+  defineTheme,
   LayoutAxisProposalKind,
   resolveCoreProviderDependencies,
 } from '@retikz/core';
@@ -79,7 +79,7 @@ describe('Block-family layout-aware lowering', () => {
 
   it('applies named Graph Theme defaults to the Block root shell', () => {
     const styleName = 'block-shell';
-    const graphStyle = Graph.defineGraphThemeStyle({
+    const graphStyle = Graph.defineGraphTheme({
       name: styleName,
       resolve: () => ({
         defaults: {
@@ -95,12 +95,12 @@ describe('Block-family layout-aware lowering', () => {
       {
         type: 'scene',
         version: 1,
-        theme: { style: styleName },
+        theme: { name: styleName },
         children: [Graph.createBlock({})],
       },
       {
-        composites: Graph.createGraphDefinitions({ graphThemeStyles: [graphStyle] }),
-        themeStyles: [defineThemeStyle({ name: styleName, resolve: () => ({}) })],
+        composites: Graph.createGraphDefinitions({ graphThemeDefinitions: [graphStyle] }),
+        themeDefinitions: [defineTheme({ name: styleName, resolve: () => ({}) })],
         padding: 0,
       },
     );
@@ -121,7 +121,7 @@ describe('Block-family layout-aware lowering', () => {
 
   it('replaces a themed Block border as one complete explicit Source field', () => {
     const styleName = 'block-explicit-shell';
-    const graphStyle = Graph.defineGraphThemeStyle({
+    const graphStyle = Graph.defineGraphTheme({
       name: styleName,
       resolve: () => ({
         defaults: {
@@ -137,12 +137,12 @@ describe('Block-family layout-aware lowering', () => {
       {
         type: 'scene',
         version: 1,
-        theme: { style: styleName },
+        theme: { name: styleName },
         children: [Graph.createBlock({ border: { stroke: '#dc2626', strokeWidth: 2 } })],
       },
       {
-        composites: Graph.createGraphDefinitions({ graphThemeStyles: [graphStyle] }),
-        themeStyles: [defineThemeStyle({ name: styleName, resolve: () => ({}) })],
+        composites: Graph.createGraphDefinitions({ graphThemeDefinitions: [graphStyle] }),
+        themeDefinitions: [defineTheme({ name: styleName, resolve: () => ({}) })],
         padding: 0,
       },
     );

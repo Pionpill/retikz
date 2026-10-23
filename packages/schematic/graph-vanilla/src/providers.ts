@@ -23,7 +23,7 @@ const hasDefinitionOptions = (options: GraphDefinitionOptions): boolean =>
   options.relationRoles !== undefined ||
   options.relationKinds !== undefined ||
   options.relationPredicates !== undefined ||
-  options.graphThemeStyles !== undefined;
+  options.graphThemeDefinitions !== undefined;
 
 /** 从 adapter props 提取只供 provider dataset 使用的 Graph definitions */
 export const graphDefinitionOptionsOf = (props: GraphDefinitionOptions): GraphDefinitionOptions => ({
@@ -33,7 +33,7 @@ export const graphDefinitionOptionsOf = (props: GraphDefinitionOptions): GraphDe
   relationRoles: props.relationRoles,
   relationKinds: props.relationKinds,
   relationPredicates: props.relationPredicates,
-  graphThemeStyles: props.graphThemeStyles,
+  graphThemeDefinitions: props.graphThemeDefinitions,
 });
 
 /** 创建以指定 Graph semantic provider 为根的完整依赖贡献 */

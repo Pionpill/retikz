@@ -378,6 +378,16 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: {
+            zh: 'BREAKING：统一主题名称与定义注册',
+            en: 'BREAKING: consistent theme names and definition registries',
+          },
+          content: {
+            zh: '主题选择字段由 `theme.style` 改为 `theme.name`；类型使用 `ThemeName` / `ThemeDefinition`，注册集合统一使用 `themeDefinitions` 及各领域前缀。Chart 的领域定义使用 `chartThemeDefinitions`，宿主 Core 定义使用 `themeDefinitions`。实际 `style` 配置对象及主题继承、颜色和覆盖优先级保持不变；旧名称移除。',
+            en: 'The theme selector changes from `theme.style` to `theme.name`. Types use `ThemeName` / `ThemeDefinition`, and registries use `themeDefinitions` with domain prefixes. Chart domain definitions use `chartThemeDefinitions`, while host Core definitions use `themeDefinitions`. Actual `style` configuration objects, theme inheritance, colors, and override priority remain unchanged. Old names are removed.',
+          },
+        },
+        {
           label: { zh: 'BREAKING：移除 Scope 外框', en: 'BREAKING: remove Scope frames' },
           content: {
             zh: '删除 Scope.frame 及相关类型、Schema 和编译绘制。Scope 保留包络、定位和引用；已有外框配置需改用 Standard Surface / Frame，React、Vanilla 和直接 IR 使用同一契约。',
@@ -782,8 +792,8 @@ export const kernelV05: Release = {
             {
               label: { zh: 'Theme Composite 上下文', en: 'Theme composite context' },
               content: {
-                zh: '`ThemeStyle` / `ThemeMode`、严格 `ThemeSchema` 与 `ResolvedTheme` 成为 Core 公共契约；Theme 变化进入 retained compile input，无法证明更窄依赖时保守 full fallback，并保持与 fresh compile 等价。',
-                en: '`ThemeStyle`, `ThemeMode`, strict `ThemeSchema`, and `ResolvedTheme` become public Core contracts. Theme changes enter retained compile input and conservatively full-fallback when a narrower dependency cannot be proven, preserving fresh-compile equivalence.',
+                zh: '`Theme` / `ThemeMode`、严格 `ThemeSchema` 与 `ResolvedTheme` 成为 Core 公共契约；Theme 变化进入 retained compile input，无法证明更窄依赖时保守 full fallback，并保持与 fresh compile 等价。',
+                en: '`Theme`, `ThemeMode`, strict `ThemeSchema`, and `ResolvedTheme` become public Core contracts. Theme changes enter retained compile input and conservatively full-fallback when a narrower dependency cannot be proven, preserving fresh-compile equivalence.',
               },
             },
             {
@@ -792,8 +802,8 @@ export const kernelV05: Release = {
                 en: 'BREAKING: Lightweight Theme selectors and shared colors',
               },
               content: {
-                zh: '`Theme` 现在只持久化稀疏 `style / mode`；`ResolvedTheme` 在解析期提供 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。省略 `style` 时使用默认基线；`defineThemeStyle` 与 `themeStyles` 注册 Core runtime resolver，应用 style 必须由实际消费的 Plot、Chart 等 owner 提供同名 resolver，缺失项会 fail-loud。函数与完整 token map 不进入 IR、snapshot 或 JSON。',
-                en: '`Theme` now persists only sparse `style / mode`; `ResolvedTheme` provides a detached, frozen `colors.semantic` view and non-empty `colors.categorical` palette during resolution. Omitting `style` selects the default baseline; `defineThemeStyle` and `themeStyles` register Core runtime resolvers, and each application style must provide a same-named resolver for every consuming owner such as Plot or Chart. Missing entries fail loudly. Functions and complete token maps never enter IR, snapshots, or JSON.',
+                zh: '`Theme` 现在只持久化稀疏 `style / mode`；`ResolvedTheme` 在解析期提供 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。省略 `style` 时使用默认基线；`defineTheme` 与 `themeDefinitions` 注册 Core runtime resolver，应用 style 必须由实际消费的 Plot、Chart 等 owner 提供同名 resolver，缺失项会 fail-loud。函数与完整 token map 不进入 IR、snapshot 或 JSON。',
+                en: '`Theme` now persists only sparse `style / mode`; `ResolvedTheme` provides a detached, frozen `colors.semantic` view and non-empty `colors.categorical` palette during resolution. Omitting `style` selects the default baseline; `defineTheme` and `themeDefinitions` register Core runtime resolvers, and each application style must provide a same-named resolver for every consuming owner such as Plot or Chart. Missing entries fail loudly. Functions and complete token maps never enter IR, snapshots, or JSON.',
               },
             },
             {

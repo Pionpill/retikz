@@ -1,5 +1,5 @@
 import type { IRChartSource } from '@retikz/chart';
-import type { CoreProviderContribution, IRScene, ThemeStyleDefinition } from '@retikz/core';
+import type { CoreProviderContribution, IRScene, ThemeDefinition } from '@retikz/core';
 import type { ExternalDatasets, DataInputBindings, DataTransformExecutor } from '@retikz/data';
 import type { LowerPlotsOptions } from '@retikz/plot';
 import type { InputScope } from '@retikz/vanilla';
@@ -36,5 +36,5 @@ export type ChartHostThemeInput = Readonly<{
   /** 创建时声明的 Core 根 Theme */
   theme?: IRScene['theme'];
   /** 创建时声明的 Core Theme definitions */
-  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
+  themeDefinitions?: ReadonlyArray<ThemeDefinition>;
 }>;

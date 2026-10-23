@@ -1,6 +1,6 @@
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
-import { definePlotThemeStyle } from '@retikz/plot';
+import { definePlotTheme } from '@retikz/plot';
 import type * as RetikzReact from '@retikz/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
@@ -34,7 +34,7 @@ const spec: IRPlot = {
 
 const data: ExternalDatasets = { sales: [{ x: 0, y: 1 }] };
 
-const plotThemeStyle = definePlotThemeStyle({
+const plotTheme = definePlotTheme({
   name: 'brand',
   resolve: () => ({}),
 });
@@ -44,12 +44,12 @@ describe('Plot React InputEmbed routing', () => {
     capturedLayouts.length = 0;
 
     renderToStaticMarkup(
-      <Plot spec={spec} data={data} themeStyles={[]} definitions={{ plotThemeStyles: [plotThemeStyle] }} />,
+      <Plot spec={spec} data={data} themeDefinitions={[]} definitions={{ plotThemeDefinitions: [plotTheme] }} />,
     );
 
     const layout = capturedLayouts.at(-1);
 
-    expect(layout?.extensions).toEqual({ themeStyles: [] });
+    expect(layout?.extensions).toEqual({ themeDefinitions: [] });
     expect(layout).not.toHaveProperty('ir');
     expect(layout).not.toHaveProperty('composites');
     expect(Reflect.has(Plot, 'inputEmbedAdapter')).toBe(true);
@@ -62,7 +62,7 @@ describe('Plot React InputEmbed routing', () => {
     capturedLayouts.length = 0;
 
     renderToStaticMarkup(
-      <PlotThemeProvider plotThemeStyles={[plotThemeStyle]}>
+      <PlotThemeProvider plotThemeDefinitions={[plotTheme]}>
         <Plot spec={spec} data={data} />
       </PlotThemeProvider>,
     );
@@ -70,9 +70,9 @@ describe('Plot React InputEmbed routing', () => {
     const layout = capturedLayouts.at(-1);
 
     expect(
-      (layout!.children as { props?: { lowerOptions?: { definitions?: { plotThemeStyles?: unknown } } } }).props
-        ?.lowerOptions?.definitions?.plotThemeStyles,
-    ).toEqual([plotThemeStyle]);
+      (layout!.children as { props?: { lowerOptions?: { definitions?: { plotThemeDefinitions?: unknown } } } }).props
+        ?.lowerOptions?.definitions?.plotThemeDefinitions,
+    ).toEqual([plotTheme]);
   });
 
   it('preserves the React panel identity and authoring props on the InputEmbed', () => {

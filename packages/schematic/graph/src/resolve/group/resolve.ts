@@ -15,5 +15,5 @@ export const resolveGroup = (
 ): CanonicalGroup => ({
   source,
   children: resolveGroupChildren(source, options),
-  shellAppearance: resolveGraphTheme(theme, options.graphThemeStyles).defaults.group ?? {},
+  shellAppearance: resolveGraphTheme(theme, options.graphThemeDefinitions).defaults.group ?? {},
 });

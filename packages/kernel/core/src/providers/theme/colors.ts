@@ -1,6 +1,6 @@
 import { array, strictObject } from 'zod';
 
-import type { ThemeStyleColorOverrides } from '../../contract';
+import type { ThemeColorOverrides } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { CssColorSchema } from '../../schemas';
 import type { CoreSemanticColors, CssColorValue, NonEmptyReadonlyArray, ResolvedThemeColors } from '../../shared';
@@ -103,7 +103,7 @@ const CORE_COLOR_PRESETS: Readonly<Record<ThemeMode, ResolvedThemeColors>> = Obj
   ),
 });
 
-const ThemeStyleColorOverridesSchema = strictObject({
+const ThemeColorOverridesSchema = strictObject({
   semantic: strictObject({
     error: CssColorSchema.optional(),
     success: CssColorSchema.optional(),
@@ -119,13 +119,10 @@ export const resolveDefaultCoreThemeColors = (mode: ThemeMode): ResolvedThemeCol
   return freezeColorView(preset.semantic, preset.categorical);
 };
 
-/** 按当前 mode 的默认 shared colors 补全一层 Theme style 稀疏覆盖 */
-export const resolveCoreThemeStyleColors = (
-  mode: ThemeMode,
-  overrides: ThemeStyleColorOverrides,
-): ResolvedThemeColors => {
+/** 按当前 mode 的默认 shared colors 补全一层 Theme 稀疏覆盖 */
+export const resolveCoreThemeColors = (mode: ThemeMode, overrides: ThemeColorOverrides): ResolvedThemeColors => {
   const preset = CORE_COLOR_PRESETS[mode];
-  const parsed = ThemeStyleColorOverridesSchema.parse(overrides);
+  const parsed = ThemeColorOverridesSchema.parse(overrides);
 
   return freezeColorView(
     {

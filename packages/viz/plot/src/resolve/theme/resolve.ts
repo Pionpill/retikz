@@ -1,15 +1,15 @@
 import type { ResolvedTheme } from '@retikz/core';
 import { strictObject } from 'zod';
 
-import type { PlotThemeStyleDefinition } from '../../contract';
+import type { PlotThemeDefinition } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import { getNeutralPlotDefaults, resolvePlotThemeStyleRegistry } from '../../providers/theme';
+import { getNeutralPlotDefaults, resolvePlotThemeRegistry } from '../../providers/theme';
 import { getNeutralAxisRules } from '../../providers/theme/preset';
 import type { IRPlot, IRPlotAxisRule, IRPlotAxisRules, IRPlotDefaults, IRPlotThemeResolution } from '../../schemas';
 import { PlotAxisRulesSchema, PlotDefaultsSchema, PlotThemeLayerKind, PlotThemeResolutionSchema } from '../../schemas';
 import { applyPlotDefaults } from './mapping';
 
-const PlotThemeStyleSourceSchema = strictObject({
+const PlotThemeSourceSchema = strictObject({
   defaults: PlotDefaultsSchema.optional(),
   rules: PlotAxisRulesSchema.optional(),
 });
@@ -42,13 +42,13 @@ const ruleSourcesOf = (layers: ReadonlyArray<DefaultsLayer>) =>
 export const resolvePlotTheme = (
   effectiveTheme: ResolvedTheme,
   input: Pick<IRPlot, 'defaultPlot' | 'plotRules'> = {},
-  plotThemeStyles: ReadonlyArray<PlotThemeStyleDefinition> | undefined = undefined,
+  plotThemeDefinitions: ReadonlyArray<PlotThemeDefinition> | undefined = undefined,
 ): IRPlotThemeResolution => {
-  const { style, mode } = effectiveTheme;
-  const styles = resolvePlotThemeStyleRegistry(plotThemeStyles);
-  const definition = style === undefined ? undefined : styles.get(style);
-  if (style !== undefined && definition === undefined) {
-    throw new RetikzPlotError("Plot theme style '" + style + "' is not registered.");
+  const { name, mode } = effectiveTheme;
+  const definitions = resolvePlotThemeRegistry(plotThemeDefinitions);
+  const definition = name === undefined ? undefined : definitions.get(name);
+  if (name !== undefined && definition === undefined) {
+    throw new RetikzPlotError("Plot theme '" + name + "' is not registered.");
   }
 
   const layers: Array<DefaultsLayer> = [
@@ -61,15 +61,15 @@ export const resolvePlotTheme = (
   ];
   if (definition !== undefined) {
     try {
-      const source = PlotThemeStyleSourceSchema.parse(definition.resolve(effectiveTheme));
+      const source = PlotThemeSourceSchema.parse(definition.resolve(effectiveTheme));
       layers.push({
         kind: PlotThemeLayerKind.Style,
-        path: '$style/' + style + '/' + mode,
+        path: '$style/' + name + '/' + mode,
         ...(source.defaults === undefined ? {} : { defaults: source.defaults }),
         ...(source.rules === undefined ? {} : { rules: source.rules }),
       });
     } catch (cause) {
-      throw new RetikzPlotError("Plot theme style '" + style + "' resolution failed.", { cause });
+      throw new RetikzPlotError("Plot theme '" + name + "' resolution failed.", { cause });
     }
   }
 
@@ -91,7 +91,7 @@ export const resolvePlotTheme = (
   }
 
   return PlotThemeResolutionSchema.parse({
-    ...(style === undefined ? {} : { style }),
+    ...(name === undefined ? {} : { name }),
     mode,
     defaults,
     layers: sourceRecordsOf(layers),

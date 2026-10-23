@@ -17,7 +17,7 @@ export type ChartPanelProps = Readonly<{
 /** Chart React 命名主题 Definition 输入 */
 export type ChartThemeDefinitionsProps = Readonly<{
   /** 当前具体 chartType provider 可见的命名 Chart Theme Definition */
-  themeDefinitions?: ReadonlyArray<ChartThemeDefinition>;
+  chartThemeDefinitions?: ReadonlyArray<ChartThemeDefinition>;
   /** Plot lowering runtime options；不写入 Chart Source */
   lowerOptions?: LowerPlotsOptions;
 }>;

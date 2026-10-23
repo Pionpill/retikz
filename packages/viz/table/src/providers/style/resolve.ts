@@ -1,14 +1,14 @@
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { strictObject } from 'zod';
 
-import type { TableThemeStyleDefinition } from '../../contract';
+import type { TableThemeDefinition } from '../../contract';
 import { RetikzTableError } from '../../error';
 import type { IRTableDefaults } from '../../schemas';
 import { TableDefaultsSchema } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 import { deepFreeze } from '../../shared';
 import { getDefaultTableDefaults } from './presets';
-import { resolveTableThemeStyleRegistry } from './registry';
+import { resolveTableThemeRegistry } from './registry';
 import type { TableThemeContext, TableThemeDefaultsResolution, TableThemeDefaultsSource } from './types';
 
 const defaultTheme: TableThemeContext = {
@@ -16,9 +16,9 @@ const defaultTheme: TableThemeContext = {
   colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
 };
 
-const TableThemeStyleSourceSchema = strictObject({
+const TableThemeSourceSchema = strictObject({
   defaults: TableDefaultsSchema.optional(),
-}).describe('Table Theme style source containing sparse Source defaults.');
+}).describe('Table Theme source containing sparse Source defaults.');
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -138,13 +138,13 @@ const sourceRecordsOf = (layers: ReadonlyArray<TableThemeDefaultsSource>): Reado
 /** 按 Core Theme、Table style 与 style definition 解析 Table defaults */
 export const resolveTableThemeDefaults = (
   effectiveTheme: TableThemeContext = defaultTheme,
-  tableThemeStyles: ReadonlyArray<TableThemeStyleDefinition> | undefined = undefined,
+  tableThemeDefinitions: ReadonlyArray<TableThemeDefinition> | undefined = undefined,
 ): TableThemeDefaultsResolution => {
-  const { style, mode } = effectiveTheme;
-  const styles = resolveTableThemeStyleRegistry(tableThemeStyles);
-  const definition = style === undefined ? undefined : styles.get(style);
-  if (style !== undefined && definition === undefined) {
-    throw new RetikzTableError(`Table theme style '${style}' is not registered.`);
+  const { name, mode } = effectiveTheme;
+  const definitions = resolveTableThemeRegistry(tableThemeDefinitions);
+  const definition = name === undefined ? undefined : definitions.get(name);
+  if (name !== undefined && definition === undefined) {
+    throw new RetikzTableError(`Table theme '${name}' is not registered.`);
   }
 
   const neutralDefaults = mergeTableDefaults(getDefaultTableDefaults(mode), {
@@ -155,14 +155,14 @@ export const resolveTableThemeDefaults = (
   ];
   if (definition !== undefined) {
     try {
-      const source = TableThemeStyleSourceSchema.parse(definition.resolve(effectiveTheme));
+      const source = TableThemeSourceSchema.parse(definition.resolve(effectiveTheme));
       layers.push({
         kind: 'style',
-        path: `$style/${style}/${mode}`,
+        path: `$style/${name}/${mode}`,
         ...(source.defaults === undefined ? {} : { defaults: source.defaults }),
       });
     } catch (cause) {
-      throw new RetikzTableError(`Table theme style '${style}' resolution failed.`, { cause });
+      throw new RetikzTableError(`Table theme '${name}' resolution failed.`, { cause });
     }
   }
 
@@ -172,7 +172,7 @@ export const resolveTableThemeDefaults = (
   );
 
   return deepFreeze({
-    ...(style === undefined ? {} : { style }),
+    ...(name === undefined ? {} : { name }),
     mode,
     defaults,
     layers: sourceRecordsOf(layers),

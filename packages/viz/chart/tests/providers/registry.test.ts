@@ -40,9 +40,9 @@ const recipe = defineChartRecipe({
 describe('active Chart provider registry', () => {
   it('builds one exact Point schema union for active recipes', () => {
     const registry = resolveChartProviderRegistry([
-      { family: 'point', recipe: eraseChartRecipeDefinition(ScatterChartDefinition), themeDefinitions: [] },
-      { family: 'point', recipe: eraseChartRecipeDefinition(BubbleChartDefinition), themeDefinitions: [] },
-      { family: 'point', recipe: eraseChartRecipeDefinition(RegressionChartDefinition), themeDefinitions: [] },
+      { family: 'point', recipe: eraseChartRecipeDefinition(ScatterChartDefinition), chartThemeDefinitions: [] },
+      { family: 'point', recipe: eraseChartRecipeDefinition(BubbleChartDefinition), chartThemeDefinitions: [] },
+      { family: 'point', recipe: eraseChartRecipeDefinition(RegressionChartDefinition), chartThemeDefinitions: [] },
     ]);
 
     expect([...registry.recipes.keys()]).toEqual(['scatter', 'bubble', 'regression']);
@@ -59,17 +59,21 @@ describe('active Chart provider registry', () => {
   it('deduplicates identical recipes and rejects duplicate identities or family mismatches', () => {
     expect(
       resolveChartProviderRegistry([
-        { family: 'point', recipe, themeDefinitions: [] },
-        { family: 'point', recipe, themeDefinitions: [] },
+        { family: 'point', recipe, chartThemeDefinitions: [] },
+        { family: 'point', recipe, chartThemeDefinitions: [] },
       ]).recipes.get('fixture'),
     ).toBe(recipe);
     expect(() =>
       resolveChartProviderRegistry([
-        { family: 'point', recipe, themeDefinitions: [] },
-        { family: 'point', recipe: defineChartRecipe({ ...recipe, resolve: recipe.resolve }), themeDefinitions: [] },
+        { family: 'point', recipe, chartThemeDefinitions: [] },
+        {
+          family: 'point',
+          recipe: defineChartRecipe({ ...recipe, resolve: recipe.resolve }),
+          chartThemeDefinitions: [],
+        },
       ]),
     ).toThrow();
-    expect(() => resolveChartProviderRegistry([{ family: 'line', recipe, themeDefinitions: [] }])).toThrow(
+    expect(() => resolveChartProviderRegistry([{ family: 'line', recipe, chartThemeDefinitions: [] }])).toThrow(
       /family|line|point/i,
     );
   });
@@ -87,7 +91,11 @@ describe('active Chart provider registry', () => {
       defaultPlot: { palette: { categorical: ['#222222'] } },
     });
     const registry = resolveChartProviderRegistry([
-      { family: 'point', recipe: eraseChartRecipeDefinition(ScatterChartDefinition), themeDefinitions: [base, clean] },
+      {
+        family: 'point',
+        recipe: eraseChartRecipeDefinition(ScatterChartDefinition),
+        chartThemeDefinitions: [base, clean],
+      },
     ]);
     const source = registry.schema.parse({
       namespace: 'chart',
@@ -101,7 +109,7 @@ describe('active Chart provider registry', () => {
       },
     });
     const resolution = resolveChartFromProvider(source, {
-      theme: { ...DEFAULT_RESOLVED_THEME, style: 'clean' },
+      theme: { ...DEFAULT_RESOLVED_THEME, name: 'clean' },
       registry,
     });
 
@@ -121,7 +129,9 @@ describe('active Chart provider registry', () => {
   it('wraps invalid Definition shapes at the registry boundary', () => {
     const invalid = Object.defineProperty({ name: 'invalid' }, 'defaults', { enumerable: true, value: { recipe: {} } });
 
-    expect(() => resolveChartProviderRegistry([{ family: 'point', recipe, themeDefinitions: [invalid] }])).toThrowError(
+    expect(() =>
+      resolveChartProviderRegistry([{ family: 'point', recipe, chartThemeDefinitions: [invalid] }]),
+    ).toThrowError(
       expect.objectContaining({ code: RetikzChartErrorCode.InvalidRegistry, cause: expect.any(ZodError) }),
     );
   });

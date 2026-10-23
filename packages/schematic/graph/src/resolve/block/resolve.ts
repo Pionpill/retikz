@@ -19,6 +19,6 @@ export const resolveBlock = (
   return {
     source: resolvedSource,
     minWidth: resolvedSource.minWidth ?? DEFAULT_BLOCK_MIN_WIDTH,
-    shellAppearance: resolveGraphTheme(theme, options.graphThemeStyles).defaults.block ?? {},
+    shellAppearance: resolveGraphTheme(theme, options.graphThemeDefinitions).defaults.block ?? {},
   };
 };

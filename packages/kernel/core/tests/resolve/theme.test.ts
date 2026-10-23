@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
 
-import { defineThemeStyle } from '../../src/contract';
+import { defineTheme } from '../../src/contract';
 import { RetikzCoreErrorCode } from '../../src/error';
 import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../src/resolve/theme';
 import { ThemeMode } from '../../src/shared';
 
 describe('resolve theme', () => {
-  it('inherits the parent style and mode when the sparse selector omits them', () => {
-    const brand = defineThemeStyle({
+  it('inherits the parent name and mode when the sparse selector omits them', () => {
+    const brand = defineTheme({
       name: 'brand-inheritance',
       resolve: ({ mode }) => ({
         semantic: {
@@ -23,44 +23,44 @@ describe('resolve theme', () => {
     const styles = new Map([[brand.name, brand]]);
     const parent = resolveTheme(
       DEFAULT_RESOLVED_THEME,
-      { style: brand.name, mode: ThemeMode.Light },
+      { name: brand.name, mode: ThemeMode.Light },
       'scene.theme',
       styles,
     );
     const child = resolveTheme(parent, { mode: ThemeMode.Dark }, 'scene.children[0].theme', styles);
 
-    expect(parent.style).toBe(brand.name);
-    expect(child.style).toBe(brand.name);
+    expect(parent.name).toBe(brand.name);
+    expect(child.name).toBe(brand.name);
     expect(child.mode).toBe(ThemeMode.Dark);
     expect(child.colors.semantic.error).toBe('#ffaaaa');
     expect(child).not.toBe(parent);
   });
 
-  it('resolves default colors for an explicit mode without a style', () => {
+  it('resolves default colors for an explicit mode without a name', () => {
     const resolved = resolveTheme(DEFAULT_RESOLVED_THEME, { mode: ThemeMode.Dark }, 'scene.theme');
 
     expect(resolved).toMatchObject({
       mode: ThemeMode.Dark,
       colors: { categorical: expect.any(Array) },
     });
-    expect(resolved).not.toHaveProperty('style');
+    expect(resolved).not.toHaveProperty('name');
     expect(Object.isFrozen(resolved)).toBe(true);
   });
 
-  it('resolves a registered style with the selected mode', () => {
-    const brand = defineThemeStyle({
+  it('resolves a registered name with the selected mode', () => {
+    const brand = defineTheme({
       name: 'brand',
       resolve: ({ mode }) => ({ semantic: { error: mode === ThemeMode.Dark ? '#ffaaaa' : '#aa0000' } }),
     });
 
     const resolved = resolveTheme(
       DEFAULT_RESOLVED_THEME,
-      { style: 'brand', mode: ThemeMode.Dark },
+      { name: 'brand', mode: ThemeMode.Dark },
       'scene.theme',
       new Map([[brand.name, brand]]),
     );
 
-    expect(resolved).toMatchObject({ style: 'brand', mode: ThemeMode.Dark });
+    expect(resolved).toMatchObject({ name: 'brand', mode: ThemeMode.Dark });
     expect(resolved.colors.semantic.error).toBe('#ffaaaa');
     expect(resolved.colors.semantic.success).toBe(
       resolveTheme(DEFAULT_RESOLVED_THEME, { mode: ThemeMode.Dark }, 'default.theme').colors.semantic.success,
@@ -73,10 +73,10 @@ describe('resolve theme', () => {
 
   it('replaces only an explicitly provided categorical palette', () => {
     const categorical: [string] = ['#112233'];
-    const brand = defineThemeStyle({ name: 'brand-palette', resolve: () => ({ categorical }) });
+    const brand = defineTheme({ name: 'brand-palette', resolve: () => ({ categorical }) });
     const resolved = resolveTheme(
       DEFAULT_RESOLVED_THEME,
-      { style: brand.name },
+      { name: brand.name },
       'scene.theme',
       new Map([[brand.name, brand]]),
     );
@@ -89,10 +89,10 @@ describe('resolve theme', () => {
   });
 
   it('uses the mode default when a sparse semantic role is explicitly undefined', () => {
-    const brand = defineThemeStyle({ name: 'brand-undefined', resolve: () => ({ semantic: { guide: undefined } }) });
+    const brand = defineTheme({ name: 'brand-undefined', resolve: () => ({ semantic: { guide: undefined } }) });
     const resolved = resolveTheme(
       DEFAULT_RESOLVED_THEME,
-      { style: brand.name, mode: ThemeMode.Dark },
+      { name: brand.name, mode: ThemeMode.Dark },
       'scene.theme',
       new Map([[brand.name, brand]]),
     );
@@ -102,10 +102,10 @@ describe('resolve theme', () => {
     );
   });
 
-  it('wraps a Theme style callback exception without replacing its cause', () => {
-    const cause = new Error('custom Theme style failed');
-    const definition = defineThemeStyle({
-      name: 'throwing-style',
+  it('wraps a Theme name callback exception without replacing its cause', () => {
+    const cause = new Error('custom Theme name failed');
+    const definition = defineTheme({
+      name: 'throwing-name',
       resolve: () => {
         throw cause;
       },
@@ -114,7 +114,7 @@ describe('resolve theme', () => {
     expect(() =>
       resolveTheme(
         DEFAULT_RESOLVED_THEME,
-        { style: definition.name },
+        { name: definition.name },
         'scene.theme',
         new Map([[definition.name, definition]]),
       ),
@@ -126,30 +126,30 @@ describe('resolve theme', () => {
     );
   });
 
-  it('strictly validates external style color outputs after undefined fallback', () => {
+  it('strictly validates external name color outputs after undefined fallback', () => {
     const colorsWithUnknown = { semantic: { error: '#aa0000' } };
     Object.defineProperty(colorsWithUnknown, 'unknown', { enumerable: true, value: undefined });
-    const unknownColorField = defineThemeStyle({
+    const unknownColorField = defineTheme({
       name: 'brand-unknown-color-field',
       resolve: () => colorsWithUnknown,
     });
     const semanticWithUnknown = { error: '#aa0000' };
     Object.defineProperty(semanticWithUnknown, 'unknown', { enumerable: true, value: undefined });
-    const unknownSemanticRole = defineThemeStyle({
+    const unknownSemanticRole = defineTheme({
       name: 'brand-unknown',
       resolve: () => ({ semantic: semanticWithUnknown }),
     });
-    const blank = defineThemeStyle({
+    const blank = defineTheme({
       name: 'brand-blank',
       resolve: () => ({ semantic: { error: '   ' } }),
     });
     const emptyCategorical: [string] = ['#112233'];
     emptyCategorical.pop();
-    const empty = defineThemeStyle({
+    const empty = defineTheme({
       name: 'brand-empty',
       resolve: () => ({ categorical: emptyCategorical }),
     });
-    const blankCategorical = defineThemeStyle({
+    const blankCategorical = defineTheme({
       name: 'brand-blank-categorical',
       resolve: () => ({ categorical: [''] }),
     });
@@ -158,7 +158,7 @@ describe('resolve theme', () => {
       expect(() =>
         resolveTheme(
           DEFAULT_RESOLVED_THEME,
-          { style: definition.name },
+          { name: definition.name },
           'scene.theme',
           new Map([[definition.name, definition]]),
         ),
@@ -171,7 +171,7 @@ describe('resolve theme', () => {
     }
   });
 
-  it('projects external style color object outputs through the owner schema', () => {
+  it('projects external name color object outputs through the owner schema', () => {
     class EmptyStyleOutput {}
 
     const getterOutput = Object.defineProperty({}, 'semantic', {
@@ -221,7 +221,7 @@ describe('resolve theme', () => {
       expect(
         Reflect.apply(resolveTheme, undefined, [
           DEFAULT_RESOLVED_THEME,
-          { style: definition.name },
+          { name: definition.name },
           'scene.theme',
           new Map([[definition.name, definition]]),
         ]).colors.semantic.error,
@@ -230,9 +230,9 @@ describe('resolve theme', () => {
     }
   });
 
-  it('fails with the selector path when the style is not registered', () => {
-    expect(() => resolveTheme(DEFAULT_RESOLVED_THEME, { style: 'missing' }, 'scope.theme')).toThrow(
-      "Theme style 'missing' is not registered at scope.theme.",
+  it('fails with the selector path when the name is not registered', () => {
+    expect(() => resolveTheme(DEFAULT_RESOLVED_THEME, { name: 'missing' }, 'scope.theme')).toThrow(
+      "Theme name 'missing' is not registered at scope.theme.",
     );
   });
 });

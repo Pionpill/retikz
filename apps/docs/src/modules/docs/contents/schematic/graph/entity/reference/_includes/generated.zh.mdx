@@ -352,7 +352,7 @@ export type EntityRoleDefinition = Readonly<{
 | `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`        | `[]`   | 自定义 Entity kind definitions                     |
 | `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`   | `[]`   | 自定义 Entity predicate definitions                |
 | `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`        | `[]`   | 自定义 Entity role definitions                     |
-| `readonly graphThemeStyles?`   | `ReadonlyArray<GraphThemeStyleDefinition>`   | `[]`   | 与 Core Theme style 同名的 Graph Theme definitions |
+| `readonly graphThemeDefinitions?` | `ReadonlyArray<GraphThemeDefinition>`        | `[]`   | 与 Core Theme 同名的 Graph Theme definitions |
 | `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`      | `[]`   | 自定义 Relation kind definitions                   |
 | `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | `[]`   | 自定义 Relation predicate definitions              |
 | `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | `[]`   | 自定义 Relation role definitions                   |
@@ -371,7 +371,7 @@ export type GraphDefinitionOptions = Readonly<{
   relationRoles?: ReadonlyArray<RelationRoleDefinition>;
   relationKinds?: ReadonlyArray<RelationKindDefinition>;
   relationPredicates?: ReadonlyArray<RelationPredicateDefinition>;
-  graphThemeStyles?: ReadonlyArray<GraphThemeStyleDefinition>;
+  graphThemeDefinitions?: ReadonlyArray<GraphThemeDefinition>;
 }>;
 ```
 

@@ -253,7 +253,7 @@ export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
   const themes = new Map<string, ChartThemeDefinition>();
   const themeSources = new Map<string, ChartThemeDefinition>();
   const parsedThemes = new Map<ChartThemeDefinition, ChartThemeDefinition>();
-  const themeDefinitions: Array<ChartThemeDefinition> = [];
+  const chartThemeDefinitions: Array<ChartThemeDefinition> = [];
   const seenContributions = new Set<ChartRecipeProviderContributionInput<TSource>>();
 
   for (const [index, contribution] of contributions.entries()) {
@@ -273,12 +273,12 @@ export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
 
     recipes.set(recipe.chartType, recipe);
 
-    for (const theme of contribution.themeDefinitions) themeDefinitions.push(theme);
+    for (const theme of contribution.chartThemeDefinitions) chartThemeDefinitions.push(theme);
   }
 
   const recipeMap = createReadonlyMap(recipes);
 
-  for (const theme of themeDefinitions) {
+  for (const theme of chartThemeDefinitions) {
     const parsedTheme = parsedThemes.get(theme) ?? parseChartThemeDefinition(theme, recipeMap);
     parsedThemes.set(theme, parsedTheme);
     const existingThemeSource = themeSources.get(parsedTheme.name);

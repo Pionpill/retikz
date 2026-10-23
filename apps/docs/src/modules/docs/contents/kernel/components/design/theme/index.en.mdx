@@ -1,6 +1,6 @@
 ---
 title: Theme
-description: Theme carries style, light or dark mode, and shared colors that higher-level composites translate into explicit primitive styles.
+description: Theme carries a name, light or dark mode, and shared colors that higher-level composites translate into explicit primitive styles.
 ---
 
 When figures share a visual style, pass a theme environment instead of repeating colors on every object. Theme describes the environment; primitive styles describe the final drawing. They are separate channels.
@@ -22,7 +22,7 @@ Changing a theme therefore does not guarantee that handwritten Node or Path elem
 
 ## Shared Theme
 
-Kernel provides a default neutral color baseline through Core, supporting `light` and `dark` modes. It applies when no style is inherited or explicitly selected. The root defaults to `light`; there is no need to specify `style: 'neutral'`.
+Kernel provides a default neutral color baseline through Core, supporting `light` and `dark` modes. It applies when no style is inherited or explicitly selected. The root defaults to `light`; there is no need to specify `name: 'neutral'`.
 
 | Shared content     | Purpose                                     |
 | ------------------ | ------------------------------------------- |
@@ -38,11 +38,11 @@ The default categorical palette contains 16 colors. Light and dark modes preserv
 
 Theme has two data representations with different purposes: `IRTheme` stores author selections, while `ResolvedTheme` is the effective environment available to composites at the current compilation location.
 
-| Data                  | Fields                     | Meaning                                               |
-| --------------------- | -------------------------- | ----------------------------------------------------- |
-| `IRTheme`             | `style?`, `mode?`          | Sparse selections; omitted fields inherit             |
-| `ResolvedTheme`       | `style?`, `mode`, `colors` | Read-only result of inheritance and style resolution  |
-| `ResolvedThemeColors` | `semantic`, `categorical`  | Shared semantic colors and active categorical palette |
+| Data                  | Fields                    | Meaning                                               |
+| --------------------- | ------------------------- | ----------------------------------------------------- |
+| `IRTheme`             | `name?`, `mode?`          | Sparse selections; omitted fields inherit             |
+| `ResolvedTheme`       | `name?`, `mode`, `colors` | Read-only result of inheritance and style resolution  |
+| `ResolvedThemeColors` | `semantic`, `categorical` | Shared semantic colors and active categorical palette |
 
 This outline shows only the data shape. `Color` means a CSS color string, not an additional public type:
 
@@ -63,7 +63,7 @@ ResolvedTheme
 
 ## Inheritance
 
-IRScene is the persistable root drawing declaration, and Scope is a local group within it; the compiled Scene is the result consumed by renderers. Theme inherits field by field: an inner mode override keeps the outer style, and an inner style override keeps the outer mode.
+IRScene is the persistable root drawing declaration, and Scope is a local group within it; the compiled Scene is the result consumed by renderers. Theme inherits field by field: an inner mode override keeps the outer name, and an inner name override keeps the outer mode.
 
 For example, if the root uses Academic/light and a child group only selects dark mode, that child gets Academic/dark rather than another style. Theme inheritance is distinct from inheritance of node style defaults.
 

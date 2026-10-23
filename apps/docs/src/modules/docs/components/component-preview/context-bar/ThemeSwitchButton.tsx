@@ -14,36 +14,36 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib';
 
-import type { PreviewThemeStyleValue } from '../theme';
-import { getPreviewThemeStyleIcon, PreviewThemeStyleLabelKeys, PreviewThemeStyleOptions } from '../theme';
-import type { PreviewThemeStyleSelection } from '../types';
+import type { PreviewThemeName } from '../theme';
+import { getPreviewThemeIcon, PreviewThemeLabelKeys, PreviewThemeOptions } from '../theme';
+import type { PreviewThemeSelection } from '../types';
 
-export type ThemeStyleSwitchButtonProps = {
+export type ThemeSwitchButtonProps = {
   /** 当前局部选择；inherit 表示跟随全局。 */
-  selection: PreviewThemeStyleSelection;
-  /** 当前实际生效的 ThemeStyle。 */
-  effectiveStyle: PreviewThemeStyleValue;
+  selection: PreviewThemeSelection;
+  /** 当前实际生效的 Theme。 */
+  effectiveStyle: PreviewThemeName;
   /** 更新当前局部选择。 */
-  onSelectionChange: (selection: PreviewThemeStyleSelection) => void;
+  onSelectionChange: (selection: PreviewThemeSelection) => void;
   /** 下拉打开状态变化。 */
   onOpenChange?: (open: boolean) => void;
   /** 按钮附加样式。 */
   className?: string;
 };
 
-const isThemeStyleSelection = (value: string): value is PreviewThemeStyleSelection =>
-  value === 'inherit' || PreviewThemeStyleOptions.some(option => option === value);
+const isThemeSelection = (value: string): value is PreviewThemeSelection =>
+  value === 'inherit' || PreviewThemeOptions.some(option => option === value);
 
-/** 切换单张 ComponentPreview 的 ThemeStyle。 */
-export const ThemeStyleSwitchButton: FC<ThemeStyleSwitchButtonProps> = props => {
+/** 切换单张 ComponentPreview 的 Theme。 */
+export const ThemeSwitchButton: FC<ThemeSwitchButtonProps> = props => {
   const { selection, effectiveStyle, onSelectionChange, onOpenChange, className } = props;
   const { t } = useTranslation();
-  const label = t('preview.themeStyle');
+  const label = t('preview.themeName');
 
   return (
     <DropdownMenu modal={false} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger
-        aria-label="Theme style"
+        aria-label="Theme"
         title={label}
         className={cn(
           buttonVariants({ variant: 'ghost', size: 'icon' }),
@@ -51,24 +51,24 @@ export const ThemeStyleSwitchButton: FC<ThemeStyleSwitchButtonProps> = props => 
           className,
         )}
       >
-        {createElement(getPreviewThemeStyleIcon(effectiveStyle), { 'aria-hidden': true, className: 'size-3.5' })}
+        {createElement(getPreviewThemeIcon(effectiveStyle), { 'aria-hidden': true, className: 'size-3.5' })}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuRadioGroup
           value={selection}
           onValueChange={value => {
-            if (isThemeStyleSelection(value)) onSelectionChange(value);
+            if (isThemeSelection(value)) onSelectionChange(value);
           }}
         >
           <DropdownMenuRadioItem value="inherit">
             <Globe2 className="size-4" />
-            {t('preview.themeStyleFollowGlobal')}
+            {t('preview.themeNameFollowGlobal')}
           </DropdownMenuRadioItem>
           <DropdownMenuSeparator />
-          {PreviewThemeStyleOptions.map(option => (
+          {PreviewThemeOptions.map(option => (
             <DropdownMenuRadioItem key={option} value={option}>
-              {createElement(getPreviewThemeStyleIcon(option), { 'aria-hidden': true, className: 'size-4' })}
-              {t(PreviewThemeStyleLabelKeys[option])}
+              {createElement(getPreviewThemeIcon(option), { 'aria-hidden': true, className: 'size-4' })}
+              {t(PreviewThemeLabelKeys[option])}
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>

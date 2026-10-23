@@ -714,7 +714,7 @@ describe('buildPreviewSource', () => {
     const second = buildPreviewSource(
       createInput({
         vanillaSvg,
-        theme: { style: 'vibrant', tokens: { core: { 'palette.categorical': ['#303030'] } } },
+        theme: { name: 'vibrant', tokens: { core: { 'palette.categorical': ['#303030'] } } },
       }),
     );
 

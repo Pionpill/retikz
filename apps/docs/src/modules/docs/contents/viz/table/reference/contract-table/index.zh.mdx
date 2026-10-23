@@ -236,11 +236,11 @@ Cell 的 `appearance.content.defaults.style` 设置内容级联颜色与透明�
 
 ## Table Source defaults
 
-Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme })` 提供。Table 按 mode 建立 owner-local 默认 baseline，再合并同名 `TableThemeStyleDefinition` 返回的 `{ defaults?: IRTableDefaults }`。Source 的 `defaultTable`、`defaultAppearance`、`defaultVisual` 与显式 `layout.borders` 按顺序覆盖前面的 defaults；Cell 的局部配置、visual encoding 与有序 rules 再完成最终计划。
+Core Theme 的 `name` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme })` 提供。Table 按 mode 建立 owner-local 默认 baseline，再合并同名 `TableThemeDefinition` 返回的 `{ defaults?: IRTableDefaults }`。Source 的 `defaultTable`、`defaultAppearance`、`defaultVisual` 与显式 `layout.borders` 按顺序覆盖前面的 defaults；Cell 的局部配置、visual encoding 与有序 rules 再完成最终计划。
 
 `defaultAppearance`、`defaultVisual` 与 `defaultTable` 都是稀疏对象，只能为已经存在的 Cell、border 或 visual encoding 提供默认值，不会创建 Cell、rule、border、encoding 或 Legend。`layout.borders.outer` 是按物理方向组织的稀疏对象，可分别设置 `top`、`right`、`bottom`、`left`。
 
-发布包不预注册命名的 Core 或 Table definitions。本站的 `academic`、`vibrant`、`clean` 与应用自定义 style 一样，必须在实际消费它的两个 owner 中注入同名 definition：standalone `compileTable` 通过 `compile.themeStyles` 注入 Core definition，并通过 `lower.tableThemeStyles` 注入 Table definition；缺少 Table 同名 definition 会在 Table resolver fail-loud。
+发布包不预注册命名的 Core 或 Table definitions。本站的 `academic`、`vibrant`、`clean` 与应用自定义 style 一样，必须在实际消费它的两个 owner 中注入同名 definition：standalone `compileTable` 通过 `compile.themeDefinitions` 注入 Core definition，并通过 `lower.tableThemeDefinitions` 注入 Table definition；缺少 Table 同名 definition 会在 Table resolver fail-loud。
 
 ### TableCellBackgroundDefaultsSchema
 
@@ -310,7 +310,7 @@ Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme
   }}
 />
 
-省略 `style` 时按 host mode 使用 Table owner-local 默认 baseline；本站提供的 `academic` 偏出版 / booktabs，`vibrant` 使用鲜明颜色与浅底，`clean` 尽量移除非必要装饰。注入 definition 只返回当前 mode 需要改变的稀疏 defaults，其余由 baseline 补全；Source defaults 只能覆盖现有结构与编码的可默认化视觉字段。解析后的 manifest 记录完整 resolved defaults 与实际 cascade layers，其中 `themeMode` 是输出元数据，不是 IRTable 输入字段。
+省略 `name` 时按 host mode 使用 Table owner-local 默认 baseline；本站提供的 `academic` 偏出版 / booktabs，`vibrant` 使用鲜明颜色与浅底，`clean` 尽量移除非必要装饰。注入 definition 只返回当前 mode 需要改变的稀疏 defaults，其余由 baseline 补全；Source defaults 只能覆盖现有结构与编码的可默认化视觉字段。解析后的 manifest 记录完整 resolved defaults 与实际 cascade layers，其中 `themeMode` 是输出元数据，不是 IRTable 输入字段。
 
 ## 相关
 

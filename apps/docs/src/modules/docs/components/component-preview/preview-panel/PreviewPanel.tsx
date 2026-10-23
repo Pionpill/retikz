@@ -28,7 +28,7 @@ export type PreviewPanelProps = {
   lang?: Lang;
   /** 当前源码视图提供的不可变渲染函数。 */
   activeRender?: (rendererMode: RendererMode) => ReactNode;
-  /** 当前预览实际生效的 ThemeStyle。 */
+  /** 当前预览实际生效的 Theme。 */
   theme?: PreviewTheme;
   /** 当前预览使用的明暗选择。 */
   /** 针对当前面板 runtime 求值的控制定义。 */

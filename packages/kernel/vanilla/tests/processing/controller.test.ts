@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { IRScene } from '@retikz/core';
-import { CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineTheme, ThemeMode } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 import { literal } from 'zod';
 
@@ -52,7 +52,7 @@ describe('Vanilla processing', () => {
   });
 
   it('在同一 Scope 链中把有效 Theme 交给 InputEmbed adapter', () => {
-    const themeStyle = defineThemeStyle({
+    const themeName = defineTheme({
       name: 'academic',
       resolve: () => ({
         semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00', guide: '#666666' },
@@ -62,8 +62,8 @@ describe('Vanilla processing', () => {
     const adapter: InputEmbedAdapter<Record<string, never>> = {
       kind: 'theme-probe',
       lower: (_props, context) => {
-        expect(context.theme).toMatchObject({ style: 'academic', mode: ThemeMode.Dark });
-        expect(context.themeStyles).toEqual([themeStyle]);
+        expect(context.theme).toMatchObject({ name: 'academic', mode: ThemeMode.Dark });
+        expect(context.themeDefinitions).toEqual([themeName]);
 
         return {
           node: { type: 'node', id: 'theme-probe', position: [0, 0] },
@@ -74,7 +74,7 @@ describe('Vanilla processing', () => {
 
     const prepared = prepareProcessingInput(
       {
-        theme: { style: 'academic', mode: ThemeMode.Light },
+        theme: { name: 'academic', mode: ThemeMode.Light },
         children: [
           {
             type: 'scope',
@@ -83,7 +83,7 @@ describe('Vanilla processing', () => {
           },
         ],
       },
-      { adapters: [adapter], compile: { themeStyles: [themeStyle] } },
+      { adapters: [adapter], compile: { themeDefinitions: [themeName] } },
     );
 
     expect(prepared.source.children).toEqual([

@@ -2,30 +2,30 @@ import { BrushCleaning, CircleDot, GraduationCap, Sparkles } from 'lucide-react'
 import { describe, expect, it } from 'vitest';
 
 import {
-  getPreviewThemeStyleIcon,
-  isPreviewThemeStyleDocument,
-  PreviewThemeStyle,
-  PreviewThemeStyleOptions,
+  getPreviewThemeIcon,
+  isPreviewThemeDocument,
+  PreviewTheme,
+  PreviewThemeOptions,
 } from '../../src/modules/docs/components/component-preview/theme';
 
 describe('preview theme settings icons', () => {
-  it('maps each ThemeStyle to its semantic icon', () => {
-    expect(getPreviewThemeStyleIcon(PreviewThemeStyle.Default)).toBe(CircleDot);
-    expect(getPreviewThemeStyleIcon(PreviewThemeStyle.Academic)).toBe(GraduationCap);
-    expect(getPreviewThemeStyleIcon(PreviewThemeStyle.Vibrant)).toBe(Sparkles);
-    expect(getPreviewThemeStyleIcon(PreviewThemeStyle.Clean)).toBe(BrushCleaning);
+  it('maps each Theme to its semantic icon', () => {
+    expect(getPreviewThemeIcon(PreviewTheme.Default)).toBe(CircleDot);
+    expect(getPreviewThemeIcon(PreviewTheme.Academic)).toBe(GraduationCap);
+    expect(getPreviewThemeIcon(PreviewTheme.Vibrant)).toBe(Sparkles);
+    expect(getPreviewThemeIcon(PreviewTheme.Clean)).toBe(BrushCleaning);
   });
 
   it('exposes four flat style options for Viz docs', () => {
-    expect(PreviewThemeStyleOptions).toEqual([
-      PreviewThemeStyle.Default,
-      PreviewThemeStyle.Academic,
-      PreviewThemeStyle.Vibrant,
-      PreviewThemeStyle.Clean,
+    expect(PreviewThemeOptions).toEqual([
+      PreviewTheme.Default,
+      PreviewTheme.Academic,
+      PreviewTheme.Vibrant,
+      PreviewTheme.Clean,
     ]);
-    expect(isPreviewThemeStyleDocument('viz')).toBe(true);
-    expect(isPreviewThemeStyleDocument('schematic')).toBe(false);
-    expect(isPreviewThemeStyleDocument('kernel')).toBe(false);
-    expect(isPreviewThemeStyleDocument(undefined)).toBe(false);
+    expect(isPreviewThemeDocument('viz')).toBe(true);
+    expect(isPreviewThemeDocument('schematic')).toBe(false);
+    expect(isPreviewThemeDocument('kernel')).toBe(false);
+    expect(isPreviewThemeDocument(undefined)).toBe(false);
   });
 });

@@ -38,7 +38,7 @@ export const ViewBoxSchema = strictObject({
 export const SceneSchema = strictObject({
   type: literal('scene').describe('Discriminator marking this object as the root scene'),
   version: literal(1).describe('Scene data format version; currently must be 1, independent of the package version.'),
-  theme: ThemeSchema.optional().describe('Root theme selection; sets only the style and mode fields to override.'),
+  theme: ThemeSchema.optional().describe('Root theme selection; sets only the name and mode fields to override.'),
   children: array(ChildSchema).describe('Ordered top-level scene children; an empty array is allowed.'),
   viewBox: ViewBoxSchema.optional().describe(
     'Explicit framing; when omitted, bounds are computed from content plus padding.',

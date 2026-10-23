@@ -124,7 +124,7 @@ export type ScopeStyleProps = {
 |        | `position?`       | `IRScopePosition`                                                                        | —      | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
 |        | `transforms?`     | `ReadonlyArray<InputTransform>`                                                          | —      | 局部变换列表，最后一项先作用于局部点；省略时不施加局部变换                                     |
 | 样式   | `defaults?`       | `InputScope["defaults"]`                                                                 | —      | 后代默认值通道及继承屏障                                                                       |
-|        | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
+|        | `theme?`          | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                 | —      | 当前子树的稀疏 Theme 覆盖；name 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
 |        | `zIndex?`         | `number`                                                                                 | —      | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
 | 动画   | `animations?`     | `InputScope["animations"]`                                                               | —      | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
 | 运行时 | `authoring?`      | `unknown`                                                                                | —      | 可选编译驱动自行解释的运行时载荷，不进入 Core IR                                               |
@@ -179,7 +179,7 @@ Scope 通过 defaults.style 提供级联视觉默认值，并在 defaults 中提
 |        | `position?`       | `IRScopePosition`                                                                        | —      | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
 |        | `transforms?`     | `IRScopeProps['transforms']`                                                             | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
 | 样式   | `defaults?`       | `IRScopeProps['defaults']`                                                               | —      | 后代默认值通道及继承屏障                                                                       |
-|        | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
+|        | `theme?`          | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                 | —      | 当前子树的稀疏 Theme 覆盖；name 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
 |        | `zIndex?`         | `number`                                                                                 | —      | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
 | 动画   | `animations?`     | `IRScopeProps['animations']`                                                             | —      | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
 | 运行时 | `meta?`           | `Record<string, JsonValue>`                                                              | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
@@ -353,7 +353,7 @@ export type IRScopePositionTarget = ZodInput<typeof ScopePositionTargetSchema>;
 | `localNamespace?` | `false \| true`                                                                          | —      | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
 | `meta?`           | `Record<string, JsonValue>`                                                              | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
 | `position?`       | `IRScopePosition`                                                                        | —      | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
+| `theme?`          | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                 | —      | 当前子树的稀疏 Theme 覆盖；name 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
 | `transforms?`     | `IRScopeProps["transforms"]`                                                             | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
 | `zIndex?`         | `number`                                                                                 | —      | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
 
@@ -383,7 +383,7 @@ export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'position'> &
     'defaults.style': '后代共享视觉默认值，逐字段继承与覆盖',
     defaults: '后代默认值通道及继承屏障',
     type: '判别字段，标记此子节点为 scope',
-    theme: '当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色',
+    theme: '当前子树的稀疏 Theme 覆盖；name 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色',
     'defaults.style.color': '作用域级主色；可向 node、path、label 与 arrow 的对应颜色字段级联',
     'defaults.style.fill': '作用域级默认填充；CSS color 字符串或 IRPaint',
     'defaults.style.opacity.fill': '作用域级默认填充不透明度 0..1',
@@ -410,7 +410,7 @@ export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'position'> &
   }}
 />
 
-`Scope.theme` 只包含稀疏的 `style` / `mode` 环境选择器，逐字段继承。Core 解析共享颜色，后代 Composite 按自身契约消费该环境；`defaults.reset` 不重置 Theme。
+`Scope.theme` 只包含稀疏的 `name` / `mode` 环境选择器，逐字段继承。Core 解析共享颜色，后代 Composite 按自身契约消费该环境；`defaults.reset` 不重置 Theme。
 
 #### <ApiSourceLink label={"ScopeSelfPointSchema"} path={"packages/kernel/core/src/schemas/scope-point/schema.ts"} startLine={9}>ScopeSelfPointSchema</ApiSourceLink>
 

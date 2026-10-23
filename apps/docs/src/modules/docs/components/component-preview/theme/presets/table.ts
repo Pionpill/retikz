@@ -1,11 +1,11 @@
 import type { ResolvedTheme } from '@retikz/core';
 import type { IRTableDefaults } from '@retikz/table';
-import { defineTableThemeStyle, TableDefaultsSchema } from '@retikz/table';
+import { defineTableTheme, TableDefaultsSchema } from '@retikz/table';
 
-import { logicFigureTableThemeStyle } from '../../../logic-figure';
-import { PreviewThemeStyle } from '../constants';
+import { logicFigureTableTheme } from '../../../logic-figure';
+import { PreviewTheme } from '../constants';
 
-type ReferenceStyle = Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'default'>;
+type ReferenceStyle = Exclude<(typeof PreviewTheme)[keyof typeof PreviewTheme], 'default'>;
 
 const line = (stroke: string, width: number) => ({ kind: 'line' as const, stroke, width });
 
@@ -139,9 +139,9 @@ const defaultsOf = (style: ReferenceStyle, theme: ResolvedTheme): IRTableDefault
   TableDefaultsSchema.parse(structuredClone(styles[style][theme.mode]));
 
 /** docs 维护的三个 Table reference Theme definitions */
-export const PreviewTableThemeStyles = [
-  ...[PreviewThemeStyle.Academic, PreviewThemeStyle.Vibrant, PreviewThemeStyle.Clean].map(style =>
-    defineTableThemeStyle({ name: style, resolve: theme => ({ defaults: defaultsOf(style, theme) }) }),
+export const PreviewTableThemeDefinitions = [
+  ...[PreviewTheme.Academic, PreviewTheme.Vibrant, PreviewTheme.Clean].map(style =>
+    defineTableTheme({ name: style, resolve: theme => ({ defaults: defaultsOf(style, theme) }) }),
   ),
-  logicFigureTableThemeStyle,
+  logicFigureTableTheme,
 ];

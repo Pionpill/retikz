@@ -61,7 +61,7 @@ export const createBuiltinInspectPreviewSource = (
       adapters: synchronousInputAdaptersOf(authoring.adapters),
       compile: {
         clips: props.extensions?.clips,
-        themeStyles: PreviewThemeDefinitionBundle.core,
+        themeDefinitions: PreviewThemeDefinitionBundle.core,
         measureText: browserMeasurer,
       },
       compileDriver: createInspectionVanillaDriver({ registry: props.registry, selection: config.selection }),
@@ -84,7 +84,7 @@ const input: InputScene = JSON.parse(JSON.stringify(config.input), (key, value) 
 );
 
 export const svg = renderToSvgString(input, {
-  compile: { ${hasClip ? 'clips: [PathClipDefinition], ' : ''}themeStyles: PreviewThemeDefinitionBundle.core, measureText: browserMeasurer },
+  compile: { ${hasClip ? 'clips: [PathClipDefinition], ' : ''}themeDefinitions: PreviewThemeDefinitionBundle.core, measureText: browserMeasurer },
   compileDriver: createInspectionVanillaDriver({
     registry: createDefaultInspectorRegistry(),
     selection: config.selection as InspectionSelection,

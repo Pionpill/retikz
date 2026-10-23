@@ -57,7 +57,7 @@ export const createCompileContext = (
     nodeGeometry: createNodeGeometryContext(),
     runtimeInputs: resolveCompositeInputScope(ir, options.compositeInputs),
     loweredIr: ir,
-    theme: resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme', environment.themeStyles),
+    theme: resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme', environment.themeDefinitions),
     measureText,
     onWarn,
     observation: options.observation,

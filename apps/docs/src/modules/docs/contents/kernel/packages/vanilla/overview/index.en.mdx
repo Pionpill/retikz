@@ -51,7 +51,7 @@ const view = mount(document.querySelector('#diagram')!, input);
 
 `renderToSvgString` needs no DOM, so it suits SSR, build-time generation, and saving SVG. `mount` hosts a browser view, creating SVG by default or Canvas with `renderer: 'canvas'`. The returned `view` owns later `update`, interaction hydration, animation controls, and disposal.
 
-`scene({ theme: { style, mode } })` writes a sparse Theme to the Input root, while `scope({ theme }, children)` uses the same local-inheritance form. Normalization copies Theme objects rather than mutating caller input; both routes finally use the same Core Theme and compile contract.
+`scene({ theme: { name, mode } })` writes a sparse Theme to the Input root, while `scope({ theme }, children)` uses the same local-inheritance form. Normalization copies Theme objects rather than mutating caller input; both routes finally use the same Core Theme and compile contract.
 
 ## Input normalization and processing
 

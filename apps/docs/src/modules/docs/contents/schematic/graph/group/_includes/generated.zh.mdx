@@ -70,7 +70,7 @@ export type GroupProps = Omit<InputGroup, 'children'> &
 | `overflow?`          | `"clip" \| "visible"`                                                                                                                                                                                              | —       | 内容溢出行为，外围标签不受此项裁剪                     |
 | `padding?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | 内容与外框内边距，编译时默认 10                        |
 | `position?`          | `GroupInputEmbedProps["position"]`                                                                                                                                                                                 | `[0,0]` | 父坐标系中的原点位置或局部变换后的锚点对齐             |
-| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | 子树的稀疏主题覆盖                                     |
+| `theme?`             | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                           | —       | 子树的稀疏主题覆盖                                     |
 | `transforms?`        | `GroupInputEmbedProps["transforms"]`                                                                                                                                                                               | —       | 局部变换，数组最后一项先作用于局部点                   |
 | `zIndex?`            | `number`                                                                                                                                                                                                           | —       | 容器整体在同级中的绘制顺序                             |
 
@@ -180,7 +180,7 @@ export type GroupCreateOptions = Omit<IRGroup, 'namespace' | 'type'>;
 | `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`        | `[]`   | 自定义 Entity kind definitions                     |
 | `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`   | `[]`   | 自定义 Entity predicate definitions                |
 | `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`        | `[]`   | 自定义 Entity role definitions                     |
-| `readonly graphThemeStyles?`   | `ReadonlyArray<GraphThemeStyleDefinition>`   | `[]`   | 与 Core Theme style 同名的 Graph Theme definitions |
+| `readonly graphThemeDefinitions?` | `ReadonlyArray<GraphThemeDefinition>`        | `[]`   | 与 Core Theme 同名的 Graph Theme definitions |
 | `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`      | `[]`   | 自定义 Relation kind definitions                   |
 | `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | `[]`   | 自定义 Relation predicate definitions              |
 | `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | `[]`   | 自定义 Relation role definitions                   |
@@ -199,7 +199,7 @@ export type GraphDefinitionOptions = Readonly<{
   relationRoles?: ReadonlyArray<RelationRoleDefinition>;
   relationKinds?: ReadonlyArray<RelationKindDefinition>;
   relationPredicates?: ReadonlyArray<RelationPredicateDefinition>;
-  graphThemeStyles?: ReadonlyArray<GraphThemeStyleDefinition>;
+  graphThemeDefinitions?: ReadonlyArray<GraphThemeDefinition>;
 }>;
 ```
 

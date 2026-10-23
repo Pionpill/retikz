@@ -19,7 +19,7 @@ import { ScatterChartDefinition } from '../../src/point/scatter/recipe';
 import { ScatterChartSchema } from '../../src/point/scatter/schema';
 
 const registry = resolveChartProviderRegistry([
-  { family: 'point', recipe: ScatterChartDefinition, themeDefinitions: [] },
+  { family: 'point', recipe: ScatterChartDefinition, chartThemeDefinitions: [] },
 ]);
 
 const resolveScatter = (
@@ -37,7 +37,7 @@ const resolveScatter = (
   return resolveSelectedChart(source, {
     theme: DEFAULT_RESOLVED_THEME,
     recipe: ScatterChartDefinition,
-    themeDefinitions: [],
+    chartThemeDefinitions: [],
     runtime,
   });
 };
@@ -484,7 +484,7 @@ describe('Scatter Chart encoding resolution', () => {
       {
         family: 'point',
         recipe: ScatterChartDefinition,
-        themeDefinitions: [],
+        chartThemeDefinitions: [],
         runtimeDefinitions: { transforms: [copyField], statisticsReducers: [range], scales: [mono] },
       },
     ]);
@@ -571,7 +571,7 @@ describe('Scatter Chart encoding resolution', () => {
       {
         family: 'point',
         recipe: ScatterChartDefinition,
-        themeDefinitions: [],
+        chartThemeDefinitions: [],
         runtimeDefinitions: { scales: [renamed] },
       },
     ]);

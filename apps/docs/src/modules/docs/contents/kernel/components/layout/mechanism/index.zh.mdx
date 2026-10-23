@@ -149,14 +149,14 @@ SVG 和 Canvas 共用这套显示尺寸计算。CSS 字符串不会被当作绘�
 
 Layout 只设置 `{ mode: 'light' }` 时，仍能保留外层选择的 `clean` 风格：主题按字段合并，后面未提供的字段会继续继承。这里的两个字段都属于 `theme`：
 
-- **theme.style**：选择主题风格，如 `clean`；与宿主 CSS 的 `style` prop 不同。
+- **theme.name**：选择主题风格，如 `clean`；与宿主 CSS 的 `style` prop 不同。
 - **theme.mode**：选择明暗模式，如 `dark` 或 `light`。
 
-下图从上到下是覆盖顺序。ThemeProvider 提供 `{ style: 'clean', mode: 'dark' }`，输入场景不设置主题，Layout 的 `theme` prop 只提供 `{ mode: 'light' }`。沿 `theme.style`、`theme.mode` 两列分别往下读，注意 `—` 表示“未提供”，不是清空。
+下图从上到下是覆盖顺序。ThemeProvider 提供 `{ name: 'clean', mode: 'dark' }`，输入场景不设置主题，Layout 的 `theme` prop 只提供 `{ mode: 'light' }`。沿 `theme.name`、`theme.mode` 两列分别往下读，注意 `—` 表示“未提供”，不是清空。
 
 <ComponentPreview files="layout-theme-overlays" size="lg" type="illustration" hideCode />
 
-最终主题中的 `style: 'clean'` 来自 Provider，`mode: 'light'` 来自 Layout。若输入场景也提供主题，它会先覆盖 Provider，再接受 Layout 的覆盖。`mergeThemeOverlays` 逐层只写入已提供的字段，嵌套 ThemeProvider 也复用这套规则。
+最终主题中的 `name: 'clean'` 来自 Provider，`mode: 'light'` 来自 Layout。若输入场景也提供主题，它会先覆盖 Provider，再接受 Layout 的覆盖。`mergeThemeOverlays` 逐层只写入已提供的字段，嵌套 ThemeProvider 也复用这套规则。
 
 合并主题和设置绘图样式是两个问题。**Composite** 是接收高层描述、再展开为基础图元的组合能力，可以消费主题生成自己的图元样式。`theme`、`rootScope` 和宿主 `style` 分别作用于以下位置，不构成同一个配置对象的三层优先级：
 

@@ -2,35 +2,35 @@ import { globSync, readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 
 import * as corePackage from '@retikz/core';
-import { resolveCoreThemeStyleColors, ThemeMode } from '@retikz/core';
+import { resolveCoreThemeColors, ThemeMode } from '@retikz/core';
 import { resolvePlotTheme } from '@retikz/plot';
 import { resolveTableThemeDefaults } from '@retikz/table';
 import { describe, expect, it } from 'vitest';
 
 import {
   PreviewChartThemeDefinitions,
-  PreviewCoreThemeStyles,
-  PreviewPlotThemeStyles,
-  PreviewTableThemeStyles,
+  PreviewCoreThemeDefinitions,
+  PreviewPlotThemeDefinitions,
+  PreviewTableThemeDefinitions,
   PreviewThemeDefinitionBundle,
-  PreviewThemeStyle,
-  PreviewThemeStyleOptions,
+  PreviewTheme,
+  PreviewThemeOptions,
 } from '@/modules/docs/components/component-preview/theme';
 
 describe('docs-owned theme presets', () => {
-  it('发布包不公开命名 ThemeStyle，docs 维持四个闭合选择项', () => {
-    expect('ThemeStyle' in corePackage).toBe(false);
-    expect(PreviewThemeStyleOptions).toEqual(['default', 'academic', 'vibrant', 'clean']);
+  it('发布包不公开命名 Theme，docs 维持四个闭合选择项', () => {
+    expect('Theme' in corePackage).toBe(false);
+    expect(PreviewThemeOptions).toEqual(['default', 'academic', 'vibrant', 'clean']);
   });
 
   it('三个参考风格只为 Core 与 Viz owner 提供同名 definition', () => {
-    const expected = [PreviewThemeStyle.Academic, PreviewThemeStyle.Vibrant, PreviewThemeStyle.Clean];
+    const expected = [PreviewTheme.Academic, PreviewTheme.Vibrant, PreviewTheme.Clean];
 
     for (const definitions of [
-      PreviewCoreThemeStyles,
-      PreviewPlotThemeStyles,
+      PreviewCoreThemeDefinitions,
+      PreviewPlotThemeDefinitions,
       PreviewChartThemeDefinitions,
-      PreviewTableThemeStyles,
+      PreviewTableThemeDefinitions,
     ]) {
       expect(definitions.map(definition => definition.name)).toEqual(expected);
     }
@@ -45,23 +45,23 @@ describe('docs-owned theme presets', () => {
   });
 
   it.each([ThemeMode.Light, ThemeMode.Dark])('Plot reference definitions 保留关键 Axis 与 shape 视觉值：%s', mode => {
-    const coreByName = new Map(PreviewCoreThemeStyles.map(definition => [definition.name, definition]));
+    const coreByName = new Map(PreviewCoreThemeDefinitions.map(definition => [definition.name, definition]));
 
-    for (const definition of PreviewPlotThemeStyles) {
+    for (const definition of PreviewPlotThemeDefinitions) {
       const core = coreByName.get(definition.name);
       if (core === undefined) throw new Error(`missing Core definition for ${definition.name}`);
 
-      const colors = resolveCoreThemeStyleColors(mode, core.resolve({ mode }));
-      const resolved = resolvePlotTheme({ style: definition.name, mode, colors }, {}, [definition]);
+      const colors = resolveCoreThemeColors(mode, core.resolve({ mode }));
+      const resolved = resolvePlotTheme({ name: definition.name, mode, colors }, {}, [definition]);
 
-      expect(resolved.defaults.axis?.line !== false).toBe(definition.name === PreviewThemeStyle.Academic);
+      expect(resolved.defaults.axis?.line !== false).toBe(definition.name === PreviewTheme.Academic);
 
-      if (definition.name === PreviewThemeStyle.Academic) {
+      if (definition.name === PreviewTheme.Academic) {
         expect(resolved.defaults.axis?.grid).toBe(false);
         expect(resolved.defaults.plotArea?.border).toEqual({ stroke: 'currentColor', strokeWidth: 1, drawOpacity: 1 });
 
         const sourceOverride = resolvePlotTheme(
-          { style: definition.name, mode, colors },
+          { name: definition.name, mode, colors },
           { defaultPlot: { plotArea: { border: false } } },
           [definition],
         );
@@ -70,14 +70,14 @@ describe('docs-owned theme presets', () => {
       }
 
       const expectedStyleRules =
-        definition.name === PreviewThemeStyle.Academic
+        definition.name === PreviewTheme.Academic
           ? [
               {
                 select: { dimension: ['x', 'y'] },
                 axis: { grid: false },
               },
             ]
-          : definition.name === PreviewThemeStyle.Vibrant
+          : definition.name === PreviewTheme.Vibrant
             ? [
                 {
                   select: { dimension: ['x', 'y'] },
@@ -122,22 +122,22 @@ describe('docs-owned theme presets', () => {
   });
 
   it.each([ThemeMode.Light, ThemeMode.Dark])('Table reference definitions 保留关键视觉值：%s', mode => {
-    const coreByName = new Map(PreviewCoreThemeStyles.map(definition => [definition.name, definition]));
-    const tableByName = new Map(PreviewTableThemeStyles.map(definition => [definition.name, definition]));
+    const coreByName = new Map(PreviewCoreThemeDefinitions.map(definition => [definition.name, definition]));
+    const tableByName = new Map(PreviewTableThemeDefinitions.map(definition => [definition.name, definition]));
 
-    const themeOf = (style: Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'default'>) => {
+    const themeOf = (style: Exclude<(typeof PreviewTheme)[keyof typeof PreviewTheme], 'default'>) => {
       const core = coreByName.get(style);
       if (core === undefined) throw new Error(`missing Core definition for ${style}`);
-      return { style, mode, colors: resolveCoreThemeStyleColors(mode, core.resolve({ mode })) };
+      return { name: style, mode, colors: resolveCoreThemeColors(mode, core.resolve({ mode })) };
     };
 
-    const academic = tableByName.get(PreviewThemeStyle.Academic);
-    const vibrant = tableByName.get(PreviewThemeStyle.Vibrant);
-    const clean = tableByName.get(PreviewThemeStyle.Clean);
+    const academic = tableByName.get(PreviewTheme.Academic);
+    const vibrant = tableByName.get(PreviewTheme.Vibrant);
+    const clean = tableByName.get(PreviewTheme.Clean);
     if (academic === undefined || vibrant === undefined || clean === undefined)
       throw new Error('missing Table definition');
 
-    const academicDefaults = resolveTableThemeDefaults(themeOf(PreviewThemeStyle.Academic), [academic]).defaults;
+    const academicDefaults = resolveTableThemeDefaults(themeOf(PreviewTheme.Academic), [academic]).defaults;
 
     expect(academicDefaults.defaultAppearance?.body?.content?.defaults?.node?.style?.font?.family).toBe('serif');
     expect(academicDefaults.layout?.borders?.outer?.top).toEqual({
@@ -146,14 +146,14 @@ describe('docs-owned theme presets', () => {
       width: 1.2,
     });
 
-    const vibrantDefaults = resolveTableThemeDefaults(themeOf(PreviewThemeStyle.Vibrant), [vibrant]).defaults;
+    const vibrantDefaults = resolveTableThemeDefaults(themeOf(PreviewTheme.Vibrant), [vibrant]).defaults;
 
     expect(vibrantDefaults.defaultAppearance?.body?.background?.fill).toBe(
       mode === ThemeMode.Light ? '#e5ecf6' : '#111827',
     );
     expect(vibrantDefaults.layout?.borders?.horizontal).toMatchObject({ kind: 'line', width: 1 });
 
-    const cleanDefaults = resolveTableThemeDefaults(themeOf(PreviewThemeStyle.Clean), [clean]).defaults;
+    const cleanDefaults = resolveTableThemeDefaults(themeOf(PreviewTheme.Clean), [clean]).defaults;
 
     expect(cleanDefaults.defaultAppearance?.body?.background?.fill).toBe('none');
     expect(cleanDefaults.layout?.borders?.horizontal).toEqual({ kind: 'none' });

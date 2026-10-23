@@ -236,9 +236,9 @@ const resolveTableDefaults = (
   spec:
     | Pick<IRTable, 'defaultAppearance' | 'defaultCellLayout' | 'layout' | 'defaultVisual' | 'defaultTable'>
     | undefined,
-  tableThemeStyles: LowerTablesOptions['tableThemeStyles'] | undefined,
+  tableThemeDefinitions: LowerTablesOptions['tableThemeDefinitions'] | undefined,
 ): ResolvedTableDefaults => {
-  const base = resolveTableThemeDefaults(theme, tableThemeStyles);
+  const base = resolveTableThemeDefaults(theme, tableThemeDefinitions);
   const layers: Array<ResolvedTableDefaults['layers'][number]> = [...base.layers];
 
   const append = (path: string, defaults: IRTableDefaults): void => {
@@ -265,7 +265,7 @@ const resolveTableDefaults = (
   );
 
   return deepFreeze({
-    ...(base.style === undefined ? {} : { style: base.style }),
+    ...(base.name === undefined ? {} : { name: base.name }),
     mode: base.mode,
     defaults,
     layers,
@@ -502,7 +502,7 @@ export const resolvePresentedTableTransaction = (
       colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
     } as const);
   const defaultTable = input.defaultTable ?? resolveTableDefaults(manifestTheme, undefined, undefined);
-  const manifestStyle = defaultTable.style;
+  const manifestThemeName = defaultTable.name;
   const cellContentMasterColor = (index: number): string =>
     presented.cells[index].appearance.content?.defaults?.style?.color ??
     (semantic.cells[index].location === TableCellLocation.ColumnHeader
@@ -768,7 +768,7 @@ export const resolvePresentedTableTransaction = (
   return {
     children: [root],
     manifest: buildTableLayoutManifest(tableId, semantic, layout, graph.edges, {
-      ...(manifestStyle === undefined ? {} : { style: manifestStyle }),
+      ...(manifestThemeName === undefined ? {} : { name: manifestThemeName }),
       themeMode: manifestTheme.mode,
       defaultTable,
       presented,
@@ -785,7 +785,7 @@ export const resolveTableTransaction = (
   options: LowerTablesOptions,
   context: CompositeCompileContext,
 ): ResolvedTableTransaction => {
-  const defaultTable = resolveTableDefaults(context.theme, spec, options.tableThemeStyles);
+  const defaultTable = resolveTableDefaults(context.theme, spec, options.tableThemeDefinitions);
   const semantic = normalizeTableStructure(spec.structure, {
     defaultCellLayout: defaultTable.defaults.defaultCellLayout,
     data: spec.data,

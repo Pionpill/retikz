@@ -123,7 +123,7 @@ export type LayoutProps = {
 | `readonly pathKinds?`      | `ReadonlyArray<AnyPathKindDefinition>`   | `BUILTIN_PATH_KINDS`      | 路径种类定义              |
 | `readonly patterns?`       | `ReadonlyArray<PatternDefinition>`       | `BUILTIN_PATTERNS`        | 图案定义                  |
 | `readonly shapes?`         | `ReadonlyArray<ShapeDefinition>`         | `BUILTIN_SHAPES`          | 形状定义                  |
-| `readonly themeStyles?`    | `ReadonlyArray<ThemeStyleDefinition>`    | `ThemeStylesContext`      | 主题样式定义              |
+| `readonly themeDefinitions?` | `ReadonlyArray<ThemeDefinition>`         | `ThemeDefinitionsContext` | 主题样式定义              |
 
 </ApiTable>
 
@@ -141,7 +141,7 @@ export type LayoutExtensions = Readonly<{
   pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
   pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
   composites?: ReadonlyArray<AnyCompositeDefinition>;
-  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
+  themeDefinitions?: ReadonlyArray<ThemeDefinition>;
 }>;
 ```
 
@@ -394,7 +394,7 @@ export type InputLayer = {
 | `animations?` | `IRScene['animations']` | —      | 场景根动画轨道，省略时不添加根动画               |
 | `authoring?`  | `unknown`               | —      | 可选编译驱动自行解释的运行时载荷，不进入 Core IR |
 | `id?`         | `string`                | —      | 作者侧场景标识，不写入持久化 Scene IR            |
-| `theme?`      | `IRScene['theme']`      | —      | 场景根主题，只填写需要覆盖的 style 与 mode       |
+| `theme?`      | `IRScene['theme']`      | —      | 场景根主题，只填写需要覆盖的 name 与 mode        |
 | `type?`       | `'scene'`               | —      | 可省略的场景类别；归一化后固定为 scene           |
 | `version?`    | `never`                 | —      | 作者输入不接受版本号；归一化时写入当前 IR 版本   |
 | `viewBox?`    | `IRViewBox`             | —      | 显式取景矩形；省略时由编译结果按内容计算         |
@@ -456,7 +456,7 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
 | `children`    | `ReadonlyArray<InputChild>` | —      | 有序子图元，归一化时置于隐式默认层               |
 | `id?`         | `string`                    | —      | 作者侧场景标识，不写入持久化 Scene IR            |
 | `layers?`     | `never`                     | —      | children 模式不接受显式 layers                   |
-| `theme?`      | `IRScene['theme']`          | —      | 场景根主题，只填写需要覆盖的 style 与 mode       |
+| `theme?`      | `IRScene['theme']`          | —      | 场景根主题，只填写需要覆盖的 name 与 mode        |
 | `type?`       | `'scene'`                   | —      | 可省略的场景类别；归一化后固定为 scene           |
 | `version?`    | `never`                     | —      | 作者输入不接受版本号；归一化时写入当前 IR 版本   |
 | `viewBox?`    | `IRViewBox`                 | —      | 显式取景矩形；省略时由编译结果按内容计算         |
@@ -493,7 +493,7 @@ export type InputSceneChildren = InputSceneBase & {
 | `children?`   | `never`                     | —      | layers 模式不接受顶层 children                   |
 | `id?`         | `string`                    | —      | 作者侧场景标识，不写入持久化 Scene IR            |
 | `layers`      | `ReadonlyArray<InputLayer>` | —      | 显式分层列表，按 zIndex 稳定排序后归一化         |
-| `theme?`      | `IRScene['theme']`          | —      | 场景根主题，只填写需要覆盖的 style 与 mode       |
+| `theme?`      | `IRScene['theme']`          | —      | 场景根主题，只填写需要覆盖的 name 与 mode        |
 | `type?`       | `'scene'`                   | —      | 可省略的场景类别；归一化后固定为 scene           |
 | `version?`    | `never`                     | —      | 作者输入不接受版本号；归一化时写入当前 IR 版本   |
 | `viewBox?`    | `IRViewBox`                 | —      | 显式取景矩形；省略时由编译结果按内容计算         |
@@ -529,7 +529,7 @@ export type InputSceneLayers = InputSceneBase & {
 | ------------- | ------------------------------------------------------------------------- | ------ | --------------------------------------------------------------- |
 | `animations?` | `ZodInfer<typeof SceneSchema.shape["animations"]>`                        | —      | 场景根动画轨道，可包含 viewBox 取景动画；省略时不添加根动画轨道 |
 | `children`    | `Array<IRChild>`                                                          | —      | 有顺序的顶层子节点列表，允许空数组                              |
-| `theme?`      | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —      | 场景根主题选择；只填写需要覆盖的 style 与 mode 字段             |
+| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —      | 场景根主题选择；只填写需要覆盖的 name 与 mode 字段              |
 | `type`        | `"scene"`                                                                 | —      | 判别字段，标记该对象为 scene 根节点                             |
 | `version`     | `1`                                                                       | —      | 场景数据格式版本，当前必须为 1，与包版本号无关                  |
 | `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`                | —      | 显式指定取景范围；省略时根据内容范围与留白自动计算              |
@@ -555,7 +555,7 @@ export type IRScene = ZodInfer<typeof SceneSchema>;
   descriptions={{
     version: '场景数据格式版本，当前必须为 1，与包版本号无关',
     type: '判别字段，标记该对象为 scene 根节点',
-    theme: '场景根主题选择；只填写需要覆盖的 style 与 mode 字段',
+    theme: '场景根主题选择；只填写需要覆盖的 name 与 mode 字段',
     children: '有顺序的顶层子节点列表，允许空数组',
     viewBox: '显式指定取景范围；省略时根据内容范围与留白自动计算',
     animations: '场景根动画轨道，可包含 viewBox 取景动画；省略时不添加根动画轨道',

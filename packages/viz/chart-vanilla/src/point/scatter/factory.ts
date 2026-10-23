@@ -26,7 +26,7 @@ export const ScatterChartInputEmbedAdapter = createChartInputEmbedAdapter(
     return buildPointChartRuntime(
       source,
       parts,
-      createScatterChartProviderContribution(parts.themeDefinitions, parts.lowerOptions),
+      createScatterChartProviderContribution(parts.chartThemeDefinitions, parts.lowerOptions),
     );
   },
 );

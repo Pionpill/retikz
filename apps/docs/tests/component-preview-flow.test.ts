@@ -1,5 +1,5 @@
 import type { IRScene } from '@retikz/core';
-import { resolveCoreThemeStyleColors, ThemeMode } from '@retikz/core';
+import { resolveCoreThemeColors, ThemeMode } from '@retikz/core';
 import { createFlowDiagramProviderContribution, FlowDiagramSchema } from '@retikz/diagram/flow';
 import { compositeOpaqueColor } from '@retikz/foundation';
 import type { FC } from 'react';
@@ -68,7 +68,7 @@ describe('Flow Diagram ComponentPreview', () => {
       sourceIr: scene,
       contributions: [
         createFlowDiagramProviderContribution({
-          flowThemeStyles: [],
+          flowThemeDefinitions: [],
         }),
       ],
       width: 420,
@@ -108,9 +108,9 @@ describe('Flow Diagram ComponentPreview', () => {
     const core = PreviewThemeDefinitionBundle.core.find(definition => definition.name === 'docs.logic');
     if (core === undefined) throw new Error('missing docs logic Core definition');
 
-    const colors = resolveCoreThemeStyleColors(mode, core.resolve({ mode }));
+    const colors = resolveCoreThemeColors(mode, core.resolve({ mode }));
     const result = buildVanillaPreview(preview, {
-      theme: { style: 'docs.logic', mode },
+      theme: { name: 'docs.logic', mode },
       measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
     });
 

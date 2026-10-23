@@ -1,10 +1,10 @@
 import type { ResolvedTheme, ThemeMode } from '@retikz/core';
 import type { IRPlotAxisRule, IRPlotDefaults } from '@retikz/plot';
-import { definePlotThemeStyle, BuiltinPlotColorScheme, PlotDefaultsSchema, PlotShapePaletteSchema } from '@retikz/plot';
+import { definePlotTheme, BuiltinPlotColorScheme, PlotDefaultsSchema, PlotShapePaletteSchema } from '@retikz/plot';
 
-import { PreviewThemeStyle } from '../constants';
+import { PreviewTheme } from '../constants';
 
-type ReferenceStyle = Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'default'>;
+type ReferenceStyle = Exclude<(typeof PreviewTheme)[keyof typeof PreviewTheme], 'default'>;
 
 const shapePalette = PlotShapePaletteSchema.parse([
   'circle',
@@ -88,11 +88,11 @@ const gridDefaultsOf = (mode: ThemeMode) => ({
 });
 
 const rulesOf = (style: ReferenceStyle, mode: ThemeMode): ReadonlyArray<IRPlotAxisRule> => {
-  if (style === PreviewThemeStyle.Academic) {
+  if (style === PreviewTheme.Academic) {
     return [{ select: { dimension: ['x', 'y'] }, axis: { grid: false } }];
   }
 
-  if (style === PreviewThemeStyle.Clean) {
+  if (style === PreviewTheme.Clean) {
     return [
       {
         select: { dimension: 'x' },
@@ -124,7 +124,7 @@ const defaultsOf = (style: ReferenceStyle, theme: ResolvedTheme): IRPlotDefaults
       : { kind: 'line' as const, length: preset.axis.tick, line: { stroke: 'currentColor' } };
 
   return PlotDefaultsSchema.parse({
-    ...(style === PreviewThemeStyle.Academic
+    ...(style === PreviewTheme.Academic
       ? { plotArea: { border: { stroke: 'currentColor', strokeWidth: 1, drawOpacity: 1 } } }
       : preset.area[theme.mode] === 'none'
         ? {}
@@ -132,7 +132,7 @@ const defaultsOf = (style: ReferenceStyle, theme: ResolvedTheme): IRPlotDefaults
     typography: { font: { family: preset.fontFamily, size: preset.fontSize } },
     axis: {
       ...(preset.axis.line ? {} : { line: false }),
-      ...(style === PreviewThemeStyle.Academic ? { grid: false } : {}),
+      ...(style === PreviewTheme.Academic ? { grid: false } : {}),
       ticks: { mark: tickMark },
       tickLabels: { font: { size: preset.axis.labelSize }, gap: preset.axis.labelGap },
       title: preset.axis.title ? { font: { size: preset.axis.titleSize } } : false,
@@ -153,13 +153,10 @@ const defaultsOf = (style: ReferenceStyle, theme: ResolvedTheme): IRPlotDefaults
 };
 
 /** docs 维护的三个 Plot reference Theme definitions */
-export const PreviewPlotThemeStyles = [
-  PreviewThemeStyle.Academic,
-  PreviewThemeStyle.Vibrant,
-  PreviewThemeStyle.Clean,
-].map(style =>
-  definePlotThemeStyle({
-    name: style,
-    resolve: theme => ({ defaults: defaultsOf(style, theme), rules: rulesOf(style, theme.mode) }),
-  }),
+export const PreviewPlotThemeDefinitions = [PreviewTheme.Academic, PreviewTheme.Vibrant, PreviewTheme.Clean].map(
+  style =>
+    definePlotTheme({
+      name: style,
+      resolve: theme => ({ defaults: defaultsOf(style, theme), rules: rulesOf(style, theme.mode) }),
+    }),
 );

@@ -1360,8 +1360,8 @@ export const vizV01: Release = {
                 en: 'BREAKING: Table visuals move to Core Theme',
               },
               content: {
-                zh: 'IRTable 与 Detail/Manual React props 不再接收旧的 preset、mode 或 flat token 字段；Core host `theme.style` / `theme.mode` 选择 style definition，`defaultTable` 与正式 Source defaults 提供稀疏覆盖。未知字段仍会按 owner schema fail-loud。',
-                en: 'IRTable and Detail/Manual React props no longer accept the former preset, mode, or flat-token fields. Core host `theme.style` / `theme.mode` selects the style definition, while `defaultTable` and formal Source defaults provide sparse overrides. Unknown fields still fail loudly through the owner schema.',
+                zh: 'IRTable 与 Detail/Manual React props 不再接收旧的 preset、mode 或 flat token 字段；Core host `theme.name` / `theme.mode` 选择 style definition，`defaultTable` 与正式 Source defaults 提供稀疏覆盖。未知字段仍会按 owner schema fail-loud。',
+                en: 'IRTable and Detail/Manual React props no longer accept the former preset, mode, or flat-token fields. Core host `theme.name` / `theme.mode` selects the style definition, while `defaultTable` and formal Source defaults provide sparse overrides. Unknown fields still fail loudly through the owner schema.',
               },
             },
             {

@@ -41,7 +41,7 @@ export type BranchDiagramLayoutHostProps = Pick<
   | 'pathGenerators'
   | 'pathKinds'
   | 'composites'
-  | 'themeStyles'
+  | 'themeDefinitions'
   | 'lowerTex'
   | 'artifacts'
   | 'onArtifacts'
@@ -76,7 +76,7 @@ export const branchDiagramLayoutHostPropKeys = [
   'pathGenerators',
   'pathKinds',
   'composites',
-  'themeStyles',
+  'themeDefinitions',
   'lowerTex',
   'artifacts',
   'onArtifacts',
@@ -153,7 +153,7 @@ export const collectBranchDiagramInput = (
     pathGenerators: _pathGenerators,
     pathKinds: _pathKinds,
     composites: _composites,
-    themeStyles: _themeStyles,
+    themeDefinitions: _themeDefinitions,
     lowerTex: _lowerTex,
     artifacts: _artifacts,
     onArtifacts: _onArtifacts,
@@ -186,7 +186,7 @@ export const collectBranchDiagramInput = (
   void _pathGenerators;
   void _pathKinds;
   void _composites;
-  void _themeStyles;
+  void _themeDefinitions;
   void _lowerTex;
   void _artifacts;
   void _onArtifacts;

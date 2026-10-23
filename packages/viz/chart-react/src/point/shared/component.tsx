@@ -2,7 +2,7 @@ import type { IRChartPlotExtension, IRChartSource } from '@retikz/chart';
 import type { InputChartCoordinate } from '@retikz/chart-vanilla';
 import type { IRScene } from '@retikz/core';
 import type { ExternalRow, DataInputBindings } from '@retikz/data';
-import { resolvePlotExtensionAuthoring, usePlotThemeStyles } from '@retikz/plot-react';
+import { resolvePlotExtensionAuthoring, usePlotThemeDefinitions } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
@@ -213,7 +213,7 @@ export const createTypedChartInput = <
     recipe,
     plotExtension: rootPlotExtension,
     panel,
-    themeDefinitions,
+    chartThemeDefinitions,
     lowerOptions,
   } = props;
   const rootRecipe = recipe as TypedChartRootRecipe<TInput> | undefined;
@@ -326,7 +326,7 @@ export const createTypedChartInput = <
     ...(theme === undefined ? {} : { theme }),
     ...(effectivePlotExtension === undefined ? {} : { plotExtension: effectivePlotExtension }),
     ...(panel === undefined ? {} : { panel }),
-    ...(themeDefinitions === undefined ? {} : { themeDefinitions }),
+    ...(chartThemeDefinitions === undefined ? {} : { chartThemeDefinitions }),
     ...(effectiveLowerOptions === undefined ? {} : { lowerOptions: effectiveLowerOptions }),
     ...(presentation.title === undefined ? {} : { title: presentation.title }),
     ...(presentation.subtitle === undefined ? {} : { subtitle: presentation.subtitle }),
@@ -357,19 +357,19 @@ export const createTypedChartComponent = <
   adapter: SynchronousInputEmbedAdapter<TInput>,
 ): InputEmbeddableChartComponent<TProps, TInput, SynchronousInputEmbedAdapter<TInput>> => {
   const Component: FC<TProps> = props => {
-    const { children, layout, lowerOptions, themeDefinitions } = props;
+    const { children, layout, lowerOptions, chartThemeDefinitions } = props;
     const ambientThemeDefinitions = useChartThemeDefinitions();
-    const ambientPlotThemeStyles = usePlotThemeStyles();
+    const ambientPlotThemeDefinitions = usePlotThemeDefinitions();
     const effectiveProps = useMemo<TProps>(() => {
-      const effectiveThemeDefinitions = mergeThemeDefinitions(themeDefinitions, ambientThemeDefinitions);
-      const effectiveLowerOptions = lowerOptionsWithAmbientThemeOf(lowerOptions, ambientPlotThemeStyles);
+      const effectiveThemeDefinitions = mergeThemeDefinitions(chartThemeDefinitions, ambientThemeDefinitions);
+      const effectiveLowerOptions = lowerOptionsWithAmbientThemeOf(lowerOptions, ambientPlotThemeDefinitions);
 
       return {
         ...props,
-        ...(effectiveThemeDefinitions === undefined ? {} : { themeDefinitions: effectiveThemeDefinitions }),
+        ...(effectiveThemeDefinitions === undefined ? {} : { chartThemeDefinitions: effectiveThemeDefinitions }),
         ...(effectiveLowerOptions === undefined ? {} : { lowerOptions: effectiveLowerOptions }),
       };
-    }, [ambientPlotThemeStyles, ambientThemeDefinitions, themeDefinitions, lowerOptions, props]);
+    }, [ambientPlotThemeDefinitions, ambientThemeDefinitions, chartThemeDefinitions, lowerOptions, props]);
     const standalone = prepareStandaloneChartDeclarations(children, layout);
     const embeddedProps = { ...effectiveProps, children: standalone.children } as TProps;
 

@@ -31,19 +31,19 @@ it('keeps data-transform source IR semantic without inline visual styles', () =>
   expect(source).not.toContain('"headerLayout"');
   expect(source).not.toContain('"bodyLayout"');
   expect(source).not.toContain('"defaultCellLayout"');
-  expect(preview.sourceIr.theme).toEqual({ style: 'docs.logic' });
+  expect(preview.sourceIr.theme).toEqual({ name: 'docs.logic' });
   expect(source).toContain('docs.logic.operation');
   expect(source).toContain('summarize');
 });
 
 it('preserves the Layout theme selector in source and runtime preview IR', () => {
   const Demo: FC = () => (
-    <Layout theme={{ style: 'docs.logic', mode: 'dark' }}>
+    <Layout theme={{ name: 'docs.logic', mode: 'dark' }}>
       <Node>Theme</Node>
     </Layout>
   );
   const preview = buildPreviewIR(Demo);
-  expect(preview.sourceIr.theme).toEqual({ style: 'docs.logic', mode: 'dark' });
+  expect(preview.sourceIr.theme).toEqual({ name: 'docs.logic', mode: 'dark' });
   expect(preview.ir.theme).toEqual(preview.sourceIr.theme);
 });
 

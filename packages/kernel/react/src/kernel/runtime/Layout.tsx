@@ -16,12 +16,12 @@ import type {
   PatternDefinition,
   ShapeDefinition,
   TextMeasurer,
-  ThemeStyleDefinition,
+  ThemeDefinition,
 } from '@retikz/core';
+import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import { resolveAnimationEnabled } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
-import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import type {
   InputScene,
   InputScope,
@@ -50,7 +50,7 @@ import { useRendererMode } from './renderer-context';
 import type { LayoutRuntimeOptions } from './runtime-options';
 import { captureLayoutRuntimeOptions, LayoutRuntimeMode } from './runtime-options';
 import { mergeThemeOverlays, useTheme } from './theme-context';
-import { mergeThemeStyleDefinitions, useThemeStyles } from './theme-styles-context';
+import { mergeThemeDefinitions, useThemeDefinitions } from './theme-definitions-context';
 
 const styleFontFamily = (style: CSSProperties | undefined): string | undefined => {
   const fontFamily = style?.fontFamily;
@@ -106,7 +106,7 @@ const warnOnce = (message: string): void => {
 
 /** 判断两个 sparse Theme 是否具有完全相同的 selector */
 const isSameTheme = (left: IRScene['theme'] | undefined, right: IRScene['theme'] | undefined): boolean =>
-  left?.style === right?.style && left?.mode === right?.mode;
+  left?.name === right?.name && left?.mode === right?.mode;
 
 /** 为固定 processing options 创建仅供 React 重挂载使用的内部 key */
 const createProcessingControllerKey = (): number => {
@@ -221,9 +221,9 @@ export type LayoutExtensions = Readonly<{
   composites?: ReadonlyArray<AnyCompositeDefinition>;
   /**
    * 主题样式定义
-   * @default ThemeStylesContext
+   * @default ThemeDefinitionsContext
    */
-  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
+  themeDefinitions?: ReadonlyArray<ThemeDefinition>;
 }>;
 
 /** React Layout 的公开属性 */
@@ -443,7 +443,7 @@ export const Layout: FC<LayoutProps> = props => {
     rootScope,
   } = props;
 
-  const { shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, composites, themeStyles } =
+  const { shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, composites, themeDefinitions } =
     extensions ?? {};
   const resolvedRuntime = captureLayoutRuntimeOptions(runtime);
   const isClientRendering = useSyncExternalStore(
@@ -461,9 +461,12 @@ export const Layout: FC<LayoutProps> = props => {
   const stablePathGenerators = canonicalizeDefinitionArray(pathGenerators);
   const stablePathKinds = canonicalizeDefinitionArray(pathKinds);
   const stableComposites = canonicalizeDefinitionArray(composites);
-  const ambientThemeStyles = useThemeStyles();
-  const stableThemeStyles = canonicalizeDefinitionArray(
-    useMemo(() => mergeThemeStyleDefinitions(ambientThemeStyles, themeStyles), [ambientThemeStyles, themeStyles]),
+  const ambientThemeDefinitions = useThemeDefinitions();
+  const stableThemeDefinitions = canonicalizeDefinitionArray(
+    useMemo(
+      () => mergeThemeDefinitions(ambientThemeDefinitions, themeDefinitions),
+      [ambientThemeDefinitions, themeDefinitions],
+    ),
   );
 
   const reducedMotion = usePrefersReducedMotion();
@@ -540,7 +543,7 @@ export const Layout: FC<LayoutProps> = props => {
         pathGenerators: stablePathGenerators,
         pathKinds: stablePathKinds,
         composites: stableComposites,
-        themeStyles: stableThemeStyles,
+        themeDefinitions: stableThemeDefinitions,
         lowerTex,
         artifacts: compileArtifacts,
       } satisfies CompileOptions,
@@ -563,7 +566,7 @@ export const Layout: FC<LayoutProps> = props => {
       stablePathGenerators,
       stablePathKinds,
       stableComposites,
-      stableThemeStyles,
+      stableThemeDefinitions,
       lowerTex,
       compileArtifacts,
     ],

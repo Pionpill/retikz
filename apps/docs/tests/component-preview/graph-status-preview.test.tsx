@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { resolveCoreThemeStyleColors, ThemeMode } from '@retikz/core';
+import { resolveCoreThemeColors, ThemeMode } from '@retikz/core';
 import { compositeOpaqueColor } from '@retikz/foundation';
 import { GraphStatus } from '@retikz/graph';
 import type { FC } from 'react';
@@ -78,7 +78,7 @@ describe('Graph status preview', () => {
 
       expect(entityShape?.getAttribute('fill')).not.toBe(initialFill);
       expect(entityShape?.getAttribute('stroke')).toBe(
-        compositeOpaqueColor(resolveCoreThemeStyleColors(mode, {}).semantic.error, '#ffffff', 1),
+        compositeOpaqueColor(resolveCoreThemeColors(mode, {}).semantic.error, '#ffffff', 1),
       );
 
       act(() => root.unmount());

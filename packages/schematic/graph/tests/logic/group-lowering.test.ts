@@ -1,5 +1,5 @@
 import type { CompileWarning, IRNode } from '@retikz/core';
-import { compileToScene, defineThemeStyle, resolveCoreProviderDependencies } from '@retikz/core';
+import { compileToScene, defineTheme, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
@@ -44,7 +44,7 @@ describe('Group layout-aware lowering', () => {
 
   it('applies named Graph Theme defaults to the Group root shell', () => {
     const styleName = 'group-shell';
-    const graphStyle = Graph.defineGraphThemeStyle({
+    const graphStyle = Graph.defineGraphTheme({
       name: styleName,
       resolve: () => ({
         defaults: {
@@ -60,12 +60,12 @@ describe('Group layout-aware lowering', () => {
       {
         type: 'scene',
         version: 1,
-        theme: { style: styleName },
+        theme: { name: styleName },
         children: [Graph.createGroup({})],
       },
       {
-        composites: Graph.createGraphDefinitions({ graphThemeStyles: [graphStyle] }),
-        themeStyles: [defineThemeStyle({ name: styleName, resolve: () => ({}) })],
+        composites: Graph.createGraphDefinitions({ graphThemeDefinitions: [graphStyle] }),
+        themeDefinitions: [defineTheme({ name: styleName, resolve: () => ({}) })],
         padding: 0,
       },
     );
@@ -86,7 +86,7 @@ describe('Group layout-aware lowering', () => {
 
   it('replaces a themed Group border as one complete explicit Source field', () => {
     const styleName = 'group-explicit-shell';
-    const graphStyle = Graph.defineGraphThemeStyle({
+    const graphStyle = Graph.defineGraphTheme({
       name: styleName,
       resolve: () => ({
         defaults: {
@@ -102,12 +102,12 @@ describe('Group layout-aware lowering', () => {
       {
         type: 'scene',
         version: 1,
-        theme: { style: styleName },
+        theme: { name: styleName },
         children: [Graph.createGroup({ border: { stroke: '#2563eb', strokeWidth: 2 } })],
       },
       {
-        composites: Graph.createGraphDefinitions({ graphThemeStyles: [graphStyle] }),
-        themeStyles: [defineThemeStyle({ name: styleName, resolve: () => ({}) })],
+        composites: Graph.createGraphDefinitions({ graphThemeDefinitions: [graphStyle] }),
+        themeDefinitions: [defineTheme({ name: styleName, resolve: () => ({}) })],
         padding: 0,
       },
     );

@@ -21,12 +21,12 @@ const translations: Partial<Record<string, string>> = {
     'A Branch Diagram embed carries Source authoring input and definitions',
   '追加的命名布局，不能覆盖其他定义': 'Additional named layouts; existing definitions cannot be overridden',
   '缺省使用 lanes': 'Uses lanes by default',
-  '与 Core Theme style 同名的 Diagram Theme definitions；使用命名主题时需提供匹配定义':
-    'Diagram theme definitions matching the Core theme style name; named themes require a matching definition',
+  '与 Core Theme 同名的 Diagram Theme definitions；使用命名主题时需提供匹配定义':
+    'Diagram theme definitions matching the Core theme name; named themes require a matching definition',
   '自定义 Entity kind definitions': 'Custom Entity kind definitions',
   '自定义 Entity predicate definitions': 'Custom Entity predicate definitions',
   '自定义 Entity role definitions': 'Custom Entity role definitions',
-  '与 Core Theme style 同名的 Graph Theme definitions': 'Graph theme definitions matching the Core theme style name',
+  '与 Core Theme 同名的 Graph Theme definitions': 'Graph theme definitions matching the Core theme name',
   '自定义 Relation kind definitions': 'Custom Relation kind definitions',
   '自定义 Relation predicate definitions': 'Custom Relation predicate definitions',
   '自定义 Relation role definitions': 'Custom Relation role definitions',

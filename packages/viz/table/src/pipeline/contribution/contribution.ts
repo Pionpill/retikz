@@ -27,7 +27,7 @@ const snapshotLowerOptions = (input: LowerTablesOptions): LowerTablesOptions =>
           'presentationDefinitions',
           'formatterDefinitions',
           'visualScaleDefinitions',
-          'tableThemeStyles',
+          'tableThemeDefinitions',
           'formatDefinitions',
           'fieldOrderDefinitions',
           'transformDefinitions',

@@ -15,7 +15,7 @@ export const scopeSchemaLocalizations = {
       'defaults.style': '后代共享视觉默认值，逐字段继承与覆盖',
       defaults: '后代默认值通道及继承屏障',
       type: '判别字段，标记此子节点为 scope',
-      theme: '当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色',
+      theme: '当前子树的稀疏 Theme 覆盖；name 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色',
       'defaults.style.color': '作用域级主色；可向 node、path、label 与 arrow 的对应颜色字段级联',
       'defaults.style.fill': '作用域级默认填充；CSS color 字符串或 IRPaint',
       'defaults.style.opacity.fill': '作用域级默认填充不透明度 0..1',

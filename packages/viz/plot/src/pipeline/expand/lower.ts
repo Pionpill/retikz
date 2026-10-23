@@ -523,7 +523,7 @@ export const lowerPlotWithDataArtifact = (
       defaultPlot: node.defaultPlot,
       plotRules: node.plotRules,
     },
-    options.definitions?.plotThemeStyles,
+    options.definitions?.plotThemeDefinitions,
   );
   const resolvedTheme = resolvePlotGuideTheme(themeResolution);
   const defaultColorPaletteIndices = defaultColorPaletteIndicesOf(node.marks);
