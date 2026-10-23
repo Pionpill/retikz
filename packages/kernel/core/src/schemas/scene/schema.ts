@@ -10,6 +10,7 @@ import { PathSchema } from '../path';
 import { registerRecursiveChildSchema } from '../recursive';
 import { ScopeSchema } from '../scope';
 import { ThemeSchema } from '../theme';
+import { CURRENT_IR_VERSION } from './constants';
 import type { IRChild } from './types';
 
 /** 递归校验内核图元或组合节点；领域扩展字段由注册定义继续校验 */
@@ -37,7 +38,9 @@ export const ViewBoxSchema = strictObject({
 /** 校验可序列化的绘图根场景及有序子项、主题和可选取景范围 */
 export const SceneSchema = strictObject({
   type: literal('scene').describe('Discriminator marking this object as the root scene'),
-  version: literal(1).describe('Scene data format version; currently must be 1, independent of the package version.'),
+  version: literal(CURRENT_IR_VERSION).describe(
+    `Scene data format version; currently must be ${CURRENT_IR_VERSION}, independent of the package version.`,
+  ),
   theme: ThemeSchema.optional().describe('Root theme selection; sets only the name and mode fields to override.'),
   children: array(ChildSchema).describe('Ordered top-level scene children; an empty array is allowed.'),
   viewBox: ViewBoxSchema.optional().describe(
