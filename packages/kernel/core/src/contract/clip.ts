@@ -1,8 +1,10 @@
 import type { JsonObject } from '@retikz/foundation';
+import { assertNonEmptyString } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
-import type { IRClip } from '../../schemas';
-import type { SceneClipPath } from '../scene';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
+import type { IRClip } from '../schemas';
+import type { SceneClipPath } from './scene';
 
 /** Clip Definition 解析并降低的开放 JSON 裁剪形状 */
 export type ClipShape = JsonObject & {
@@ -127,3 +129,29 @@ export type ClipDefinition<TClip extends ClipLike = ClipLike, TShape extends Cli
   /** registry 按所属者类型契约调用的擦除 lowering 入口 */
   lower: (shape: ClipShape, context: ClipLowerContext) => SceneClipPath;
 }>;
+
+/**
+ * 定义 clip 注册项，并做最小 key 校验
+ * @remarks 当前只集中封装泛型擦除边界；保留入口用于对齐 registry API，并为未来校验或归一化预留空间
+ * @throws 当 kind 为空字符串时
+ */
+const defineClipImplementation = (
+  definition: ClipDefinitionResolvedInput<ClipLike, ClipShape> | ClipDefinitionIdentityInput<ClipShape>,
+): ClipDefinition => {
+  assertNonEmptyString(
+    definition.kind,
+    'clip provider key',
+    () => new RetikzCoreError(RetikzCoreErrorCode.Contract, 'clip provider key must be a non-empty string.'),
+  );
+  if (definition.resolve === undefined) {
+    return {
+      ...definition,
+      resolve: spec => spec,
+    };
+  }
+
+  return definition;
+};
+
+/** 定义 clip 注册项，并在 identity clip 中派生默认解析 */
+export const defineClip = defineClipImplementation as DefineClip;

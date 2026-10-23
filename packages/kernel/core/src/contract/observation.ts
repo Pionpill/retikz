@@ -1,10 +1,13 @@
 import type { JsonValue } from '@retikz/foundation';
-import type { AffineMatrix } from '@retikz/math';
+import { assertNonEmptyString } from '@retikz/foundation';
+import type { AffineMatrix, CenteredBox, Position } from '@retikz/math';
 
-import type { IRChild } from '../../schemas';
-import type { ResolvedTheme } from '../../shared';
-import type { CompileOccurrenceLocator } from '../occurrence';
-import type { Scene } from '../scene';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
+import type { IRChild } from '../schemas';
+import type { ResolvedTheme } from '../shared';
+import type { CompileOccurrenceLocator } from './occurrence';
+import type { Scene, PathCommand, SceneClipPath } from './scene';
+import type { GeometryKeyPoint } from './shape';
 
 /** 能够声明最终编译产物的领域中立所属者 */
 export type CompileObservationOwner =
@@ -196,3 +199,99 @@ export type CompileObserverOutput<TOutput = unknown> = Readonly<{
   /** observer session 的 canonical output */
   value: TOutput;
 }>;
+
+/** Node 最终 occurrence 的局部几何与正文布局产物 */
+export type NodeOwnerOutput = {
+  /** 最终节点外框 */
+  rect: CenteredBox;
+  /** 节点形状的轮廓与关键点 */
+  shape: {
+    /** 形状注册名 */
+    name: string;
+    /** 闭合轮廓，未提供时为 null */
+    outline: Array<PathCommand> | null;
+    /** 命名关键点，未提供时为 null */
+    keyPoints: Array<GeometryKeyPoint> | null;
+  };
+  /** 节点连接边界的轮廓 */
+  boundary: {
+    /** 边界注册名 */
+    name: string;
+    /** 闭合轮廓，未提供时为 null */
+    outline: Array<PathCommand> | null;
+  };
+  /** 正文角点与物理文本行基线，无正文时为 null */
+  content: {
+    /** 正文四角，按轮廓顺序排列 */
+    corners: [Position, Position, Position, Position];
+    /** 各物理文本行的基线端点 */
+    baselines: Array<{ from: Position; to: Position }>;
+  } | null;
+};
+
+/** Scope 最终 occurrence 的固有包络产物 */
+export type ScopeOwnerOutput = {
+  /** 子节点决定的固有包络，无贡献时为 null */
+  envelope: {
+    /** 包络形状 */
+    shape: 'rectangle' | 'circle';
+    /** 包络外框 */
+    rect: CenteredBox;
+  } | null;
+};
+
+/** Coordinate 最终 occurrence 的已解析点产物 */
+export type CoordinateOwnerOutput = {
+  /** 坐标标识 */
+  id: string;
+  /** occurrence 局部坐标 */
+  position: Position;
+};
+
+/** 一次 Clip 应用的最终 lowering 路径产物 */
+export type ClipOwnerOutput = {
+  /** 最终裁剪路径 */
+  path: SceneClipPath;
+};
+
+/**
+ * 定义一次显式 observed compile observer
+ * @template TOutput 观察会话完成时产生的结果类型
+ */
+export const defineCompileObserver = <TOutput>(
+  definition: CompileObserverDefinition<TOutput>,
+): CompileObserverDefinition<TOutput> => {
+  if (typeof definition.key !== 'string')
+    throw new RetikzCoreError(RetikzCoreErrorCode.Contract, 'defineCompileObserver: key must be a non-empty string.');
+
+  assertNonEmptyString(
+    definition.key,
+    'defineCompileObserver: key',
+    () => new RetikzCoreError(RetikzCoreErrorCode.Contract, 'defineCompileObserver: key must be a non-empty string.'),
+  );
+  if (typeof definition.createSession !== 'function') {
+    throw new RetikzCoreError(RetikzCoreErrorCode.Contract, 'defineCompileObserver: createSession must be a function.');
+  }
+
+  return definition;
+};
+
+/** 判断两个编译 observation 所属者是否相同 */
+export const isCompileObservationOwnerEqual = (
+  left: CompileObservationOwner,
+  right: CompileObservationOwner,
+): boolean => {
+  if (left.kind !== right.kind) return false;
+
+  switch (left.kind) {
+    case 'path':
+      return right.kind === 'path' && left.name === right.name;
+    case 'composite':
+      return right.kind === 'composite' && left.namespace === right.namespace && left.type === right.type;
+    case 'node':
+    case 'scope':
+    case 'coordinate':
+    case 'clip':
+      return true;
+  }
+};

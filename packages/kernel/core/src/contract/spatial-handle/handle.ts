@@ -3,6 +3,11 @@ import type { BoundsRect } from '@retikz/math';
 
 import type { CompileOccurrenceLocator } from '../occurrence';
 
+/** spatial handle geometry 的首版判别值 */
+export const SpatialHandleGeometryKind = {
+  Rect: 'rect',
+} as const;
+
 /** Composite 在自身 allocation coordinate 中声明的局部空间区域 */
 export type SpatialHandleDeclaration = Readonly<{
   /** 当前 owner occurrence 内唯一的稳定 id */

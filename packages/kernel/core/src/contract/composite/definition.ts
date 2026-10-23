@@ -4,7 +4,52 @@ import type { ZodType } from 'zod';
 import { ZodLiteral, ZodObject, ZodUnion } from 'zod';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { CompositeDefinition } from './types';
+import type { CompositeCompileContext, CompositeEvaluationResult } from './layout';
+
+/**
+ * 复合组件统一注册契约
+ * @template TNode 经 schema 解析的组件声明
+ * @template TNamespace 注册命名空间
+ * @template TType 注册类型
+ * @template TArtifact JSON 编译产物类型，默认不声明产物
+ */
+export type CompositeDefinition<
+  TNode,
+  TNamespace extends string = string,
+  TType extends string = string,
+  TArtifact extends JsonValue = never,
+> = {
+  /** 注册命名空间 */
+  namespace: TNamespace;
+  /** 注册类型 */
+  type: TType;
+  /** 完整组件声明的 schema */
+  schema: ZodType<TNode>;
+  /** 在完整编译上下文中生成子项，布局能力按需调用 */
+  compile: (node: TNode, context: CompositeCompileContext) => CompositeEvaluationResult<TArtifact>;
+} & ([TArtifact] extends [never] ? { artifactSchema?: never } : { artifactSchema: ZodType<TArtifact> });
+
+/** registry 与 adapter 使用的异构复合定义，调用前恢复节点类型关联 */
+export type AnyCompositeDefinition = {
+  /** 注册命名空间 */
+  namespace: string;
+  /** 注册类型 */
+  type: string;
+  /** 完整组件声明的 schema */
+  schema: ZodType;
+} & (
+  | {
+      /** 生成当前组件的编译输出 */
+      compile: (node: never, context: CompositeCompileContext) => CompositeEvaluationResult<never>;
+      artifactSchema?: never;
+    }
+  | {
+      /** 生成当前组件的编译输出与可选产物 */
+      compile: (node: never, context: CompositeCompileContext) => CompositeEvaluationResult<JsonValue>;
+      /** JSON 产物的类型契约；回调输出不重复执行 Schema 解析 */
+      artifactSchema: ZodType<JsonValue>;
+    }
+);
 
 /** 把 composite registration schema 规范化为可读取 provider key 的对象分支 */
 const objectSchemasOf = (schema: ZodType): Array<ZodObject> => {

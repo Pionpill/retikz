@@ -1,4 +1,4 @@
-import type { CoreSemanticColors, CssColorValue, NonEmptyReadonlyArray, ThemeMode } from '../../shared';
+import type { CoreSemanticColors, CssColorValue, NonEmptyReadonlyArray, ThemeMode } from '../shared';
 
 /** Theme resolver 接收的闭合环境 */
 export type ThemeResolveContext = Readonly<{
@@ -21,3 +21,6 @@ export type ThemeDefinition = Readonly<{
   /** 按当前 mode 返回相对默认 shared colors 的稀疏覆盖 */
   resolve: (context: ThemeResolveContext) => ThemeColorOverrides;
 }>;
+
+/** 定义一个 Core Theme resolver */
+export const defineTheme = (definition: ThemeDefinition): ThemeDefinition => definition;

@@ -698,7 +698,7 @@ export type SmoothStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ArrowEmitContext"} path={"packages/kernel/core/src/contract/arrow/types.ts"} startLine={7}>ArrowEmitContext</ApiSourceLink>
+#### <ApiSourceLink label={"ArrowEmitContext"} path={"packages/kernel/core/src/contract/arrow.ts"} startLine={7}>ArrowEmitContext</ApiSourceLink>
 
 提供已解析的颜色、描边粗细和取整函数，供定义生成 marker 几何
 
@@ -805,7 +805,7 @@ export type PathLabelGeometryOptions = Omit<IRPathLabel, 'text' | 'textColor' | 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathGeneratorGenerateContext"} path={"packages/kernel/core/src/contract/path-generator/types.ts"} startLine={11}>PathGeneratorGenerateContext</ApiSourceLink>
+#### <ApiSourceLink label={"PathGeneratorGenerateContext"} path={"packages/kernel/core/src/contract/path-generator.ts"} startLine={13}>PathGeneratorGenerateContext</ApiSourceLink>
 
 坐标均位于当前 Path 的局部坐标系，返回的命令由所属 GroupPrim 统一应用 scope transform
 
@@ -843,7 +843,7 @@ export type PathGeneratorGenerateContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={105}>PathKindBoundaryLabelInput</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={106}>PathKindBoundaryLabelInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -877,7 +877,7 @@ export type PathKindBoundaryLabelInput = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindCompileContext"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={122}>PathKindCompileContext</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindCompileContext"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={123}>PathKindCompileContext</ApiSourceLink>
 
 自定义 kind 可以完全接管输出，也可以调用回调复用标准描边逻辑
 
@@ -931,7 +931,7 @@ export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwner
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindCompileResult"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={14}>PathKindCompileResult</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindCompileResult"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={15}>PathKindCompileResult</ApiSourceLink>
 
 path kind definition 把高层 path 形态编译成当前 Path 局部坐标系中的 Scene primitive，
 并返回同一坐标系内参与 bbox / transform 计算的关键点集合
@@ -1151,7 +1151,7 @@ export type InputStep =
 
 ## 扩展定义与注册
 
-#### <ApiSourceLink label={"ArrowDefinition"} path={"packages/kernel/core/src/contract/arrow/types.ts"} startLine={22}>ArrowDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ArrowDefinition"} path={"packages/kernel/core/src/contract/arrow.ts"} startLine={22}>ArrowDefinition</ApiSourceLink>
 
 描述箭头 marker 的尺寸、接触点和几何生成能力；定义本身不进入 IR
 
@@ -1199,7 +1199,7 @@ export type ArrowDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathGeneratorDefinition"} path={"packages/kernel/core/src/contract/path-generator/types.ts"} startLine={31}>PathGeneratorDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PathGeneratorDefinition"} path={"packages/kernel/core/src/contract/path-generator.ts"} startLine={33}>PathGeneratorDefinition</ApiSourceLink>
 
 描述 JSON 参数、可解析 target 参数和命令生成能力；定义本身不进入 IR
 
@@ -1235,7 +1235,7 @@ export type PathGeneratorDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindDefinition"} path={"packages/kernel/core/src/contract/path-kind/types.ts"} startLine={164}>PathKindDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PathKindDefinition"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={165}>PathKindDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1266,7 +1266,7 @@ export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutp
 
 </DocTabs>
 
-#### <ApiSourceLink label={"definePathKind"} path={"packages/kernel/core/src/contract/path-kind/define.ts"} startLine={56}>definePathKind</ApiSourceLink>
+#### <ApiSourceLink label={"definePathKind"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={242}>definePathKind</ApiSourceLink>
 
 <DocTabs defaultValue="without-owner-output">
 
@@ -1316,7 +1316,7 @@ export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutp
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineArrow"} path={"packages/kernel/core/src/contract/arrow/define.ts"} startLine={9}>defineArrow</ApiSourceLink>
+#### <ApiSourceLink label={"defineArrow"} path={"packages/kernel/core/src/contract/arrow.ts"} startLine={69}>defineArrow</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1345,7 +1345,7 @@ export declare const defineArrow: (def: ArrowDefinition) => ArrowDefinition;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"definePathGenerator"} path={"packages/kernel/core/src/contract/path-generator/define.ts"} startLine={13}>definePathGenerator</ApiSourceLink>
+#### <ApiSourceLink label={"definePathGenerator"} path={"packages/kernel/core/src/contract/path-generator.ts"} startLine={60}>definePathGenerator</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

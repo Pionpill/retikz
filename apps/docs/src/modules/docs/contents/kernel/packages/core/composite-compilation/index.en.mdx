@@ -21,7 +21,7 @@ The example throughout this page uses a parent container and a child path. The p
 
 <SourceLinks
   sources={[
-    { label: 'Composite callback and context contracts', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: 'Composite callback and context contracts', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     { label: 'Composite dispatch in traversal', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
   ]}
 />
@@ -107,7 +107,7 @@ Combining the child path and a text node needs no probe; use layout methods when
 
 <SourceLinks
   sources={[
-    { label: 'Unified compile and context contracts', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: 'Unified compile and context contracts', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     {
       label: 'Output children and runtime handles',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
@@ -199,7 +199,7 @@ Core resolves the slot from actual occupancy: `intrinsic` uses the actual size, 
       label: 'Proposal validation and slot calculation',
       path: 'packages/kernel/core/src/compile/orchestration/layout-proposal.ts',
     },
-    { label: 'Proposal, result, and guide contracts', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: 'Proposal, result, and guide contracts', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     {
       label: 'Node, Path, and Scope proposal behavior',
       path: 'packages/kernel/core/tests/compile/layout-proposal-builtins.test.ts',
@@ -268,7 +268,7 @@ These measurements let the parent compare candidates. Core also needs to retain 
   sources={[
     {
       label: 'Measurement result and alignment guide contracts',
-      path: 'packages/kernel/core/src/contract/composite/types.ts',
+      path: 'packages/kernel/core/src/contract/composite/layout.ts',
     },
     {
       label: 'Slot calculation from layout occupancy',
@@ -322,7 +322,7 @@ export type LayoutMeasurementProbe =
 The query returns slot dimensions allocated under the proposal, without actual bounds, baselines, or a replay token. Use `layoutChild` when those are needed; an existing full result that satisfies the final constraints can be replayed directly. A successful size query does not validate the entire subtree. Evaluation, caching, and commit are explained under “Probing and commit” below.
 
 <SourceLinks
-  sources={[{ label: 'Size query and result contracts', path: 'packages/kernel/core/src/contract/composite/types.ts' }]}
+  sources={[{ label: 'Size query and result contracts', path: 'packages/kernel/core/src/contract/composite/layout.ts' }]}
 />
 
 <ComponentAlert
@@ -375,7 +375,7 @@ This cache is released when the callback ends and is not shared across callbacks
 
 <SourceLinks
   sources={[
-    { label: 'Contribution and full-output contracts', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: 'Contribution and full-output contracts', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     {
       label: 'Isolated evaluation and contribution reuse',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
@@ -474,7 +474,7 @@ The parent may itself be a child of an outer container, so it also reports layou
     },
     {
       label: 'Placement wrapper and container output contracts',
-      path: 'packages/kernel/core/src/contract/composite/types.ts',
+      path: 'packages/kernel/core/src/contract/composite/layout.ts',
     },
   ]}
 />
@@ -512,7 +512,7 @@ If `layoutChild` fails, `raise` propagates the error to Core. On success, `repla
   sources={[
     {
       label: 'Unified compile, probe, and replay contracts',
-      path: 'packages/kernel/core/src/contract/composite/types.ts',
+      path: 'packages/kernel/core/src/contract/composite/layout.ts',
     },
   ]}
 />

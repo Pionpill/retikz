@@ -501,7 +501,7 @@ The node's `id` is optional; `occurrence` identifies its final compilation appea
 <SourceLinks
   sources={[
     { label: 'Artifact and node layout types', path: 'packages/kernel/core/src/compile/types.ts' },
-    { label: 'Occurrence locators', path: 'packages/kernel/core/src/contract/occurrence/types.ts' },
+    { label: 'Occurrence locators', path: 'packages/kernel/core/src/contract/occurrence.ts' },
     {
       label: 'FlexLayout artifact declaration',
       path: 'packages/library/layout/src/composites/flex-layout/composite.ts',
@@ -610,8 +610,8 @@ For an actual consumer, see [Flow’s bounds example](/schematic/diagram/flow/ex
 
 <SourceLinks
   sources={[
-    { label: 'Spatial index and entries', path: 'packages/kernel/core/src/contract/spatial-handle/types.ts' },
-    { label: 'Declarations and Scope ownership', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: 'Spatial index and entries', path: 'packages/kernel/core/src/contract/spatial-handle/handle.ts' },
+    { label: 'Declarations and Scope ownership', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     { label: 'Filtering and unique lookup', path: 'packages/kernel/core/src/contract/spatial-handle/query.ts' },
     {
       label: 'Flow bounds consumer',
@@ -707,7 +707,7 @@ Events are sorted and dispatched after final occurrences have been determined. T
   sources={[
     { label: 'Node inspector', path: 'packages/kernel/inspect/src/providers/node.ts' },
     { label: 'Inspection helper compilation', path: 'packages/kernel/inspect/src/compile/driver.ts' },
-    { label: 'Observer output', path: 'packages/kernel/core/src/contract/observation/types.ts' },
+    { label: 'Observer output', path: 'packages/kernel/core/src/contract/observation.ts' },
     {
       label: 'Observer session creation, selection and completion',
       path: 'packages/kernel/core/src/compile/orchestration/observation.ts',

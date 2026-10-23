@@ -1,18 +1,80 @@
-import type { JsonValue } from '@retikz/foundation';
+import type { ValueOf, JsonValue } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
-import type { ZodType } from 'zod';
 
 import type { IRChild, IRClip, IRPosition, IRScopeProps, IRTarget } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { Transform } from '../scene';
 import type { SpatialHandleDeclaration } from '../spatial-handle';
-import type {
-  LayoutAlignmentGuideDimension,
-  LayoutAxisProposalKind,
-  LayoutChildProbeKind,
-  LayoutIntrinsicMode,
-} from './constants';
 import type { CompositeBoundChild, CompositeRuntimeInputContext } from './input';
+
+/** 单轴布局提案的判别值 */
+export const LayoutAxisProposalKind = {
+  /** 请求子节点的内在尺寸贡献 */
+  Intrinsic: 'intrinsic',
+  /** 请求子节点在指定尺寸范围内布局 */
+  Range: 'range',
+  /** 要求子节点使用固定尺寸 */
+  Exact: 'exact',
+} as const;
+
+/** 内在尺寸提案的查询模式 */
+export const LayoutIntrinsicMode = {
+  /** 最小合法尺寸贡献 */
+  Minimum: 'minimum',
+  /** 自然尺寸贡献 */
+  Natural: 'natural',
+} as const;
+
+/** 对齐参考线所属的一维坐标轴 */
+export const LayoutAlignmentGuideDimension = {
+  /** 水平轴 */
+  X: 'x',
+  /** 垂直轴 */
+  Y: 'y',
+} as const;
+
+/** Core 提供的稳定对齐参考线名称 */
+export const BuiltinLayoutAlignmentGuideName = {
+  /** 首行基线 */
+  FirstBaseline: 'first-baseline',
+  /** 末行基线 */
+  LastBaseline: 'last-baseline',
+} as const;
+
+/** 子节点探测结果的判别值 */
+export const LayoutChildProbeKind = {
+  /** 探测成功 */
+  Resolved: 'resolved',
+  /** 探测失败 */
+  Failed: 'failed',
+} as const;
+
+/** 根布局感知复合节点使用的深冻结自然尺寸提案 */
+export const NaturalLayoutProposal = Object.freeze({
+  x: Object.freeze({
+    kind: LayoutAxisProposalKind.Intrinsic,
+    mode: LayoutIntrinsicMode.Natural,
+  }),
+  y: Object.freeze({
+    kind: LayoutAxisProposalKind.Intrinsic,
+    mode: LayoutIntrinsicMode.Natural,
+  }),
+}) satisfies LayoutProposal;
+
+/** 单轴 layout proposal 的判别值 */
+export type LayoutAxisProposalKind = ValueOf<typeof LayoutAxisProposalKind>;
+
+/** intrinsic contribution 查询模式 */
+export type LayoutIntrinsicMode = ValueOf<typeof LayoutIntrinsicMode>;
+
+/** alignment guide 所属维度的判别值 */
+export type LayoutAlignmentGuideDimension = ValueOf<typeof LayoutAlignmentGuideDimension>;
+
+/** Core 内置 alignment guide 的稳定名称 */
+export type BuiltinLayoutAlignmentGuideName = ValueOf<typeof BuiltinLayoutAlignmentGuideName>;
+
+/** child probe 的结果判别值 */
+export type LayoutChildProbeKind = ValueOf<typeof LayoutChildProbeKind>;
 
 /** 父布局传给 child 单轴的上下文化尺寸 proposal */
 export type LayoutAxisProposal =
@@ -252,48 +314,3 @@ export type CompositeCompileResult<TArtifact extends JsonValue = never> = Readon
   alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
 }> &
   ([TArtifact] extends [never] ? { artifact?: never } : { artifact?: TArtifact });
-
-/**
- * 复合组件统一注册契约
- * @template TNode 经 schema 解析的组件声明
- * @template TNamespace 注册命名空间
- * @template TType 注册类型
- * @template TArtifact JSON 编译产物类型，默认不声明产物
- */
-export type CompositeDefinition<
-  TNode,
-  TNamespace extends string = string,
-  TType extends string = string,
-  TArtifact extends JsonValue = never,
-> = {
-  /** 注册命名空间 */
-  namespace: TNamespace;
-  /** 注册类型 */
-  type: TType;
-  /** 完整组件声明的 schema */
-  schema: ZodType<TNode>;
-  /** 在完整编译上下文中生成子项，布局能力按需调用 */
-  compile: (node: TNode, context: CompositeCompileContext) => CompositeEvaluationResult<TArtifact>;
-} & ([TArtifact] extends [never] ? { artifactSchema?: never } : { artifactSchema: ZodType<TArtifact> });
-
-/** registry 与 adapter 使用的异构复合定义，调用前恢复节点类型关联 */
-export type AnyCompositeDefinition = {
-  /** 注册命名空间 */
-  namespace: string;
-  /** 注册类型 */
-  type: string;
-  /** 完整组件声明的 schema */
-  schema: ZodType;
-} & (
-  | {
-      /** 生成当前组件的编译输出 */
-      compile: (node: never, context: CompositeCompileContext) => CompositeEvaluationResult<never>;
-      artifactSchema?: never;
-    }
-  | {
-      /** 生成当前组件的编译输出与可选产物 */
-      compile: (node: never, context: CompositeCompileContext) => CompositeEvaluationResult<JsonValue>;
-      /** JSON 产物的类型契约；回调输出不重复执行 Schema 解析 */
-      artifactSchema: ZodType<JsonValue>;
-    }
-);

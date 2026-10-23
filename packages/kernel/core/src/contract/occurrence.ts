@@ -1,4 +1,37 @@
-import type { CompileOccurrenceLocator } from './types';
+import type { ValueOf } from '@retikz/foundation';
+
+/** compile occurrence 展开路径的阶段类别 */
+export const CompileExpansionKind = {
+  /** provider 输出结果中的 child 序号 */
+  Output: 'output',
+  /** layout probe 结果中的 child 序号 */
+  Probe: 'probe',
+  /** replay 结果中的 child 序号 */
+  Replay: 'replay',
+  /** 生成 scope 子节点中的 child 序号 */
+  ScopeChild: 'scopeChild',
+  /** 一次逻辑 Clip 应用中的稳定序号 */
+  Clip: 'clip',
+} as const;
+
+/** compile occurrence 展开路径的阶段类别取值 */
+export type CompileExpansionKind = ValueOf<typeof CompileExpansionKind>;
+
+/** compile dispatch、展开与输出相对原始 occurrence 的结构化路径段 */
+export type CompileExpansionSegment = Readonly<{
+  /** 路径段类别 */
+  kind: CompileExpansionKind;
+  /** 同类输出中的稳定索引 */
+  index: number;
+}>;
+
+/** 同一次 canonical compile 内确定的 occurrence locator */
+export type CompileOccurrenceLocator = Readonly<{
+  /** 最近的原始输入 IR occurrence */
+  sourcePath: string;
+  /** 从原始 occurrence 到 provider 产物的结构化索引链 */
+  expansionPath: ReadonlyArray<CompileExpansionSegment>;
+}>;
 
 /** 判断两个编译 occurrence 是否完全相同 */
 export const isCompileOccurrenceEqual = (left: CompileOccurrenceLocator, right: CompileOccurrenceLocator): boolean =>

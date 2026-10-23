@@ -2,7 +2,7 @@ import type { JsonObject } from '@retikz/foundation';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { cloneAndFreezeJson } from '../../shared/json';
-import type { SpatialHandleDeclaration } from './types';
+import type { SpatialHandleDeclaration } from './handle';
 
 const declarationFields = new Set(['id', 'aliasIds', 'role', 'bounds', 'tags', 'payload']);
 

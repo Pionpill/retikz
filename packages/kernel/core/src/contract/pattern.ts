@@ -1,5 +1,5 @@
-import type { IRPatternLineStyle, IRPatternPaint } from '../../schemas';
-import type { ScenePrimitive } from '../scene';
+import type { IRPatternLineStyle, IRPatternPaint } from '../schemas';
+import type { ScenePrimitive } from './scene';
 
 /** Pattern definition 消费的已解析线条样式 */
 export type ResolvedPatternLineStyle = {
@@ -92,3 +92,9 @@ export type PatternDefinition = {
   /** 局部 tile 坐标中的 motif 几何 */
   emit: (ctx: PatternEmitContext) => PatternEmitOutput;
 };
+
+/**
+ * 定义 pattern motif 注册项
+ * @remarks 当前是 typed identity；保留入口用于对齐 registry API，并为未来校验或归一化预留空间
+ */
+export const definePattern = (def: PatternDefinition): PatternDefinition => def;

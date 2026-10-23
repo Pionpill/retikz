@@ -6,7 +6,7 @@ import type {
   SpatialHandleOwner,
   SpatialHandleSelector,
   SpatialOwnerSelector,
-} from './types';
+} from './handle';
 
 const ownerMatches = (owner: SpatialHandleOwner, selector: SpatialOwnerSelector): boolean =>
   owner.namespace === selector.namespace &&

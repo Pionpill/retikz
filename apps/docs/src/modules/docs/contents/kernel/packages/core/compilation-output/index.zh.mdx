@@ -493,7 +493,7 @@ for (const artifact of result.artifacts) {
 <SourceLinks
   sources={[
     { label: '产物与节点布局类型', path: 'packages/kernel/core/src/compile/types.ts' },
-    { label: '出现位置与展开路径', path: 'packages/kernel/core/src/contract/occurrence/types.ts' },
+    { label: '出现位置与展开路径', path: 'packages/kernel/core/src/contract/occurrence.ts' },
     { label: 'FlexLayout 产物声明', path: 'packages/library/layout/src/composites/flex-layout/composite.ts' },
     { label: 'FlexLayout 产物返回', path: 'packages/library/layout/src/composites/flex-layout/pipeline.ts' },
     { label: 'FlexLayout 产物结构', path: 'packages/library/layout/src/composites/flex-layout/schema.ts' },
@@ -599,8 +599,8 @@ console.log(body.geometry.bounds); // { x: 20, y: 30, width: 100, height: 20 }
 
 <SourceLinks
   sources={[
-    { label: '空间索引与条目', path: 'packages/kernel/core/src/contract/spatial-handle/types.ts' },
-    { label: '空间声明与 Scope 归属', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: '空间索引与条目', path: 'packages/kernel/core/src/contract/spatial-handle/handle.ts' },
+    { label: '空间声明与 Scope 归属', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     { label: '筛选与唯一查询', path: 'packages/kernel/core/src/contract/spatial-handle/query.ts' },
     {
       label: 'Flow 边界的实际消费',
@@ -690,7 +690,7 @@ Inspect 在这套 Core API 上继续生成检查框，具体过程如下：
   sources={[
     { label: '节点检查器', path: 'packages/kernel/inspect/src/providers/node.ts' },
     { label: '检查辅助图形编译', path: 'packages/kernel/inspect/src/compile/driver.ts' },
-    { label: '观察器输出', path: 'packages/kernel/core/src/contract/observation/types.ts' },
+    { label: '观察器输出', path: 'packages/kernel/core/src/contract/observation.ts' },
     { label: '观察会话建立、选择与完成', path: 'packages/kernel/core/src/compile/orchestration/observation.ts' },
     { label: '最终事件排序与派发', path: 'packages/kernel/core/src/compile/orchestration/observation-output.ts' },
   ]}
