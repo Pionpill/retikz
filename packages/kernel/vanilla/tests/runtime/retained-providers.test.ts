@@ -6,7 +6,7 @@ import type {
   ClipShape,
   SceneClipPath,
 } from '@retikz/core';
-import { defineClip, PathSchema, StrokePathOwnerOutputSchema } from '@retikz/core';
+import { defineClip, PathSchema } from '@retikz/core';
 import { RetikzRenderErrorCode } from '@retikz/render/runtime';
 import { describe, expect, it } from 'vitest';
 import type { ZodType } from 'zod';
@@ -19,7 +19,7 @@ import {
 
 const pathKindSchema = PathSchema.extend({ kind: literal('retained-fixture') });
 
-const ownerOutput = { schema: StrokePathOwnerOutputSchema };
+const ownerOutput = true;
 
 const initialResult = { primitives: [], boundsPoints: [] };
 
@@ -36,11 +36,6 @@ type RetainedClipShape = ClipShape & {
 };
 
 const retainedClipSchema: ZodType<RetainedClip> = strictObject({
-  kind: literal('retainedClip'),
-  size: number().positive(),
-});
-
-const retainedClipShapeSchema: ZodType<RetainedClipShape> = strictObject({
   kind: literal('retainedClip'),
   size: number().positive(),
 });
@@ -69,13 +64,11 @@ const createClipDefinition = (
   resolve: RetainedClipResolve = spec => ({ kind: 'retainedClip', size: spec.size }),
   lower: RetainedClipLower = () => initialClipPath,
   schema: ZodType<RetainedClip> = retainedClipSchema,
-  shapeSchema: ZodType<RetainedClipShape> = retainedClipShapeSchema,
 ): ClipDefinition =>
   defineClip<RetainedClip, RetainedClipShape>({
     kind: 'retainedClip',
     schema,
     resolve,
-    shapeSchema,
     lower,
   });
 
@@ -96,7 +89,6 @@ describe('retained Path Kind definitions', () => {
       kind: 'retainedClip',
       schema: retainedClipSchema,
       resolve,
-      shapeSchema: retainedClipShapeSchema,
       lower,
     });
   });
@@ -174,16 +166,11 @@ describe('retained Path Kind definitions', () => {
       size: number().positive(),
       changed: boolean().optional(),
     }) as unknown as ZodType<RetainedClip>;
-    const changedShapeSchema = strictObject({
-      kind: literal('retainedClip'),
-      size: number().positive(),
-      changed: boolean().optional(),
-    }) as unknown as ZodType<RetainedClipShape>;
+
     const renamed = defineClip({
       kind: 'renamedClip',
       schema: strictObject({ kind: literal('renamedClip'), size: number().positive() }),
       resolve: spec => ({ kind: 'renamedClip', size: spec.size }),
-      shapeSchema: strictObject({ kind: literal('renamedClip'), size: number().positive() }),
       lower: () => initialClipPath,
     });
     const changedFields = { ...createClipDefinition(), metadata: true } as unknown as ClipDefinition;
@@ -192,9 +179,7 @@ describe('retained Path Kind definitions', () => {
     expect(() => retained.prepare({ clips: [createClipDefinition(undefined, undefined, changedSchema)] })).toThrow(
       invalid,
     );
-    expect(() =>
-      retained.prepare({ clips: [createClipDefinition(undefined, undefined, retainedClipSchema, changedShapeSchema)] }),
-    ).toThrow(invalid);
+
     expect(() => retained.prepare({ clips: [changedFields] })).toThrow(invalid);
   });
 

@@ -2,7 +2,7 @@ import type { JsonValue } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
 import type { IRBoundaryLabel, IRPathLabel, IRPathBase, IRPosition, IRStep } from '../../schemas';
-import type { CompileOwnerOutputDefinition, CompileOwnerOutputPublisher } from '../observation';
+import type { CompileOwnerOutputPublisher } from '../observation';
 import type { PathCommand, PathPrim, ScenePrimitive } from '../scene';
 import type { StrokePathOwnerOutput } from './owner-output';
 
@@ -154,12 +154,12 @@ export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwner
  */
 export type PathKindOwnerOutputBranch<TOwnerOutput extends JsonValue> = [TOwnerOutput] extends [never]
   ? Readonly<{ ownerOutput?: never }>
-  : Readonly<{ ownerOutput: CompileOwnerOutputDefinition<TOwnerOutput> }>;
+  : Readonly<{ ownerOutput: true }>;
 
 /**
  * 注册路径种类的解析、编译与可选所属者产物契约
  * @template TPath 完整路径 schema 的解析结果类型，同时决定编译上下文的 path 字段；默认使用 IRPathBase
- * @template TOwnerOutput 所属者产物的 JSON 类型；默认 never 时不能声明 ownerOutput，否则必须提供对应的产物 schema
+ * @template TOwnerOutput 所属者产物的 JSON 类型；默认 never 时不能声明 ownerOutput，否则必须声明发布产物
  */
 export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutput extends JsonValue = never> = {
   /** 非空 path kind registry key */
@@ -178,6 +178,6 @@ export type AnyPathKindDefinition = Readonly<{
   schema: ZodType;
   /** 只在恢复当前 definition 后调用的擦除编译入口 */
   compile: (context: never) => AnyPathKindCompileResult | null;
-  /** 可选最终所属者产物 schema */
-  ownerOutput?: CompileOwnerOutputDefinition;
+  /** 是否发布最终所属者产物 */
+  ownerOutput?: true;
 }>;

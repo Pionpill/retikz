@@ -1,4 +1,3 @@
-import { CoordinateOwnerOutputSchema } from '../../contract';
 import { createLayoutProbeRecoverableError } from '../../resolve/diagnostics';
 import { resolvePosition } from '../../resolve/position';
 import type { IRCoordinate } from '../../schemas';
@@ -21,12 +20,7 @@ export const compileCoordinate = (
         `Cannot resolve position for coordinate ${input.id}; polar.origin or at.of may reference an undefined node`,
       );
     }
-    const observations = collectElementObservation(
-      context,
-      { kind: 'coordinate' },
-      CoordinateOwnerOutputSchema,
-      () => ({ id: input.id, position }),
-    );
+    const observations = collectElementObservation(context, { kind: 'coordinate' }, () => ({ id: input.id, position }));
     return Object.freeze({
       irPath: context.irPath,
       id: input.id,

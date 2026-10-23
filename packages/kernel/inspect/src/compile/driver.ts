@@ -68,7 +68,7 @@ const createInspectionCompileError = (message: string, origin: InspectionDiagnos
     details: { origin },
   });
 
-/** 创建 subject 解析或 Inspector 回调失败时使用的诊断来源 */
+/** 创建 subject 快照或 Inspector 回调失败时使用的诊断来源 */
 const createInspectionDiagnosticOrigin = (
   stage: 'subject' | 'inspect',
   request: ResolvedInspectionRequest,
@@ -115,7 +115,7 @@ const compileInspectionObserverOutput = (
 
     try {
       subject = cloneAndFreezeInspectionJson(
-        definition.subjectSchema.parse(capturedObservation.observation.value),
+        capturedObservation.observation.value,
         `Inspector '${definition.namespace}/${definition.type}' subject`,
       );
     } catch (cause) {

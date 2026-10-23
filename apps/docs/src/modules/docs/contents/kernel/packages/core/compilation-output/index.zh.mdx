@@ -638,7 +638,7 @@ type CompileObserverOutput<TOutput = unknown> = Readonly<{
 在 Core 层，通过 `observeCompileToScene(ir, options, observers)` 开启观测：第三个参数传入观察器定义；下面没有额外编译选项，因此第二个参数传 `undefined`。这个最小例子只读取节点几何，尚未绘制检查框。
 
 ```ts
-import { NodeOwnerOutputSchema, observeCompileToScene } from '@retikz/core';
+import { type NodeOwnerOutput, observeCompileToScene } from '@retikz/core';
 import type { CompileObservation, CompileObserverDefinition } from '@retikz/core';
 
 const nodeObserver: CompileObserverDefinition<ReadonlyArray<CompileObservation>> = {
@@ -648,7 +648,7 @@ const nodeObserver: CompileObserverDefinition<ReadonlyArray<CompileObservation>>
     return {
       select: site => site.owner.kind === 'node',
       observe: observation => {
-        const node = NodeOwnerOutputSchema.parse(observation.value);
+        const node = observation.value as NodeOwnerOutput;
         console.log(node.rect, node.content?.corners);
         observations.push(observation);
       },
@@ -671,7 +671,7 @@ console.log(result.primary.scene);
 console.log(result.observerOutputs[0]);
 ```
 
-`select` 选中所有节点，`observe` 接收每个最终节点的输出，并用 `NodeOwnerOutputSchema` 解析节点几何。`createSession` 内的数组只属于本次编译，`complete` 返回它作为观察器结果。因此 `observerOutputs[0]` 的 `key` 为 `example/node-geometry`，`value` 是收集到的观测事件数组；原图在 `primary.scene`。
+`select` 选中所有节点，`observe` 接收每个最终节点的输出，并按 `NodeOwnerOutput` 类型读取节点几何，不重复解析内部产物。`createSession` 内的数组只属于本次编译，`complete` 返回它作为观察器结果。因此 `observerOutputs[0]` 的 `key` 为 `example/node-geometry`，`value` 是收集到的观测事件数组；原图在 `primary.scene`。
 
 Inspect 在这套 Core API 上继续生成检查框，具体过程如下：
 

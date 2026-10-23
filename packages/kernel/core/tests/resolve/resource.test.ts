@@ -1,6 +1,5 @@
-import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it, vi } from 'vitest';
-import { array, intersection, literal, number, object, strictObject, tuple } from 'zod';
+import { array, literal, number, strictObject, tuple } from 'zod';
 
 import { compileToScene } from '../../src/compile/compile';
 import { createRound } from '../../src/compile/scene';
@@ -150,10 +149,6 @@ describe('resolve/resource clip', () => {
       points: array(tuple([number(), number()])).min(3),
     }),
     resolve: polygonResolve,
-    shapeSchema: strictObject({
-      kind: literal('polygon'),
-      points: array(tuple([number(), number()])).min(3),
-    }),
     lower: shape => ({
       commands: [
         { kind: 'move', to: shape.points[0] },
@@ -198,7 +193,6 @@ describe('resolve/resource clip', () => {
       kind: 'leaf',
       schema: strictObject({ kind: literal('leaf'), radius: number().positive() }),
       resolve: leafResolve,
-      shapeSchema: strictObject({ kind: literal('leaf'), radius: number().positive() }),
       lower: shape => ({
         commands: [
           { kind: 'move', to: [0, 0] },
@@ -223,10 +217,6 @@ describe('resolve/resource clip', () => {
         child: strictObject({ kind: literal('leaf'), radius: number().positive() }),
       }),
       resolve: wrapperResolve,
-      shapeSchema: strictObject({
-        kind: literal('wrapper'),
-        child: intersection(object({ kind: NonBlankStringSchema }), JsonObjectSchema),
-      }),
       lower: (shape, context) => context.lower(shape.child),
     });
     const clips = resolveClipRegistry([wrapper, leaf]);

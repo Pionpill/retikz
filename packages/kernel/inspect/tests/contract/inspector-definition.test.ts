@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { null as zodNull, number, strictObject, string } from 'zod';
+import { strictObject, string } from 'zod';
 
 import { defineInspector, RetikzInspectError, RetikzInspectErrorCode } from '../../src';
 
@@ -25,7 +25,6 @@ describe('Inspector definition', () => {
       namespace: 'test',
       type: 'bounds',
       owner: { kind: 'composite', namespace: 'demo', type: 'box' },
-      subjectSchema: strictObject({ width: number() }),
       optionsSchema: strictObject({ color: string().optional() }),
       resolveOptions: value => ({
         color: value.color ?? '#000000',
@@ -48,7 +47,6 @@ describe('Inspector definition', () => {
           namespace: field === 'namespace' ? value : 'test',
           type: field === 'type' ? value : 'bounds',
           owner: { kind: 'path', name: 'stroke' },
-          subjectSchema: zodNull(),
           optionsSchema: strictObject({}),
           resolveOptions: options => options,
           inspect: () => [],
@@ -68,7 +66,6 @@ describe('Inspector definition', () => {
           namespace: 'test',
           type: 'invalid-owner',
           owner,
-          subjectSchema: zodNull(),
           optionsSchema: strictObject({}),
           resolveOptions: options => options,
           inspect: () => [],

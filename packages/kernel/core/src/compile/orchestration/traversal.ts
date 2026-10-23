@@ -25,15 +25,7 @@ import type {
   SpatialHandleOwner,
   Transform,
 } from '../../contract';
-import {
-  ClipOwnerOutputSchema,
-  CompileExpansionKind,
-  CoordinateOwnerOutputSchema,
-  LayoutChildProbeKind,
-  NaturalLayoutProposal,
-  NodeOwnerOutputSchema,
-  ScopeOwnerOutputSchema,
-} from '../../contract';
+import { CompileExpansionKind, LayoutChildProbeKind, NaturalLayoutProposal } from '../../contract';
 import type { CompositeRuntimeInputScope } from '../../contract/composite';
 import { captureCompositeInputScope, selectCompositeInputScope } from '../../contract/composite';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
@@ -309,18 +301,17 @@ export const compileChildrenToPrimitives = (
     owner: CompileObservationOwner,
     occurrence: CompileOccurrenceLocator,
     frame: TraversalFrame,
-    schema: { parse: (value: unknown) => unknown },
-    project: () => unknown,
+    project: () => JsonValue,
   ): void => {
     const output = createOwnerOutputPublisher(
       Object.freeze(owner),
       occurrence.sourcePath,
-      { schema },
+      true,
       runtime.context.observation,
     );
     if (!output.publisher.requested) return;
 
-    output.publisher.publish(project() as JsonValue);
+    output.publisher.publish(project());
     const value = output.value();
     if (value === undefined) throw createCompileInvariantError('internal: Kernel owner output was not published');
 
@@ -352,7 +343,6 @@ export const compileChildrenToPrimitives = (
         expansionPath: [...host.expansionPath, { kind: CompileExpansionKind.Clip, index: 0 }],
       },
       frame,
-      ClipOwnerOutputSchema,
       () => {
         const resource = runtime.context.clip.resources().find(candidate => candidate.id === clipRef);
         if (resource === undefined) throw createCompileInvariantError('internal: observed clip resource is missing');
@@ -457,12 +447,8 @@ export const compileChildrenToPrimitives = (
 
     const { layout, properties } = compilation;
     const globalLayout = scopeTransformsContext.project(layout, scopeChain);
-    publishKernelObservation(
-      { kind: 'node' },
-      occurrence ?? { sourcePath: nodeIrPath, expansionPath: [] },
-      frame,
-      NodeOwnerOutputSchema,
-      () => projectNodeOwnerOutput(layout, runtime.context.round, runtime.context.nodeGeometry),
+    publishKernelObservation({ kind: 'node' }, occurrence ?? { sourcePath: nodeIrPath, expansionPath: [] }, frame, () =>
+      projectNodeOwnerOutput(layout, runtime.context.round, runtime.context.nodeGeometry),
     );
     if (child.id) {
       runtime.state.namespaceStack.register(child.id, globalLayout, `${nodeIrPath}.id`);
@@ -529,7 +515,7 @@ export const compileChildrenToPrimitives = (
     }
 
     const globalCenter = scopeChain.length === 0 ? localCenter : scopeTransformsContext.apply(localCenter, scopeChain);
-    publishKernelObservation({ kind: 'coordinate' }, occurrence, frame, CoordinateOwnerOutputSchema, () => ({
+    publishKernelObservation({ kind: 'coordinate' }, occurrence, frame, () => ({
       id: child.id,
       position: localCenter,
     }));
@@ -757,7 +743,6 @@ export const compileChildrenToPrimitives = (
           scopeChain: scopeTransformsContext.append(frame.scopeChain, scopeTransforms),
           compileObservationSink: frame.compileObservationSink,
         },
-        ScopeOwnerOutputSchema,
         () => ({
           envelope:
             scopeLayouts.length === 0

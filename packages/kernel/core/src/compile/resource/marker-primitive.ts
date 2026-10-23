@@ -6,7 +6,6 @@ import {
   assertProviderOutputKeys,
   assertProviderOutputOptionalFinite,
   assertProviderOutputPaint,
-  assertProviderOutputPathCommands,
   assertProviderOutputPathEnums,
   assertProviderOutputTransforms,
   assertProviderOutputUnitInterval,
@@ -120,7 +119,6 @@ const visitMarkerPrimitive = (
         ],
         'marker primitive',
       );
-      assertProviderOutputPathCommands(owner, candidate.commands, 'marker path');
       assertProviderOutputPathEnums(owner, candidate, path);
       assertMarkerStrokeStyle(owner, candidate, path, allowPaintResources);
 

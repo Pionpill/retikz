@@ -63,9 +63,7 @@ export type ClipDefinitionResolvedInput<TClip extends ClipLike, TShape extends C
   resolve: {
     bivarianceHack: (spec: TClip, context: ClipResolveContext) => TShape;
   }['bivarianceHack'];
-  /** 完整 ClipShape snapshot 的 Zod schema */
-  shapeSchema: ZodType<TShape>;
-  /** 把已校验的同 kind ClipShape 降低为渲染无关路径 */
+  /** 把已解析的同 kind ClipShape 降低为渲染无关路径 */
   lower: {
     bivarianceHack: (shape: TShape, context: ClipLowerContext) => SceneClipPath;
   }['bivarianceHack'];
@@ -78,13 +76,11 @@ export type ClipDefinitionResolvedInput<TClip extends ClipLike, TShape extends C
 export type ClipDefinitionIdentityInput<TShape extends ClipShape> = {
   /** 注册表 key，与 spec 和 shape 的 kind 一致 */
   kind: TShape['kind'];
-  /** 同时校验 spec 与完整 ClipShape snapshot */
+  /** 校验作者输入的 spec */
   schema: ZodType<TShape>;
   /** @default spec => spec */
   resolve?: never;
-  /** @default schema */
-  shapeSchema?: never;
-  /** 把已校验的 ClipShape 降低为渲染无关路径 */
+  /** 把已解析的 ClipShape 降低为渲染无关路径 */
   lower: {
     bivarianceHack: (shape: TShape, context: ClipLowerContext) => SceneClipPath;
   }['bivarianceHack'];
@@ -102,12 +98,12 @@ export type ClipDefinitionInput<TClip extends ClipLike, TShape extends ClipShape
 /** 定义 clip 的公开 authoring 入口 */
 export type DefineClip = {
   /**
-   * 当 spec 已是完整 ClipShape 时，派生 identity resolve 与 shapeSchema
+   * 当 spec 已是完整 ClipShape 时，派生 identity resolve
    * @template TShape 完整裁剪形状类型，关联解析结果与 lowering 输入
    */
   <TShape extends ClipShape>(definition: ClipDefinitionIdentityInput<TShape>): ClipDefinition<TShape, TShape>;
   /**
-   * 当 spec 需要解析为完整 ClipShape 时，显式声明 resolve 与 shapeSchema
+   * 当 spec 需要解析为完整 ClipShape 时，显式声明 resolve
    * @template TClip 由 schema 校验并交给 resolve 的裁剪声明类型
    * @template TShape 完整裁剪形状类型，关联解析结果与 lowering 输入
    */
@@ -128,8 +124,6 @@ export type ClipDefinition<TClip extends ClipLike = ClipLike, TShape extends Cli
   schema: ZodType<TClip>;
   /** registry 只在 spec schema parse 后调用的擦除解析入口 */
   resolve: (spec: ClipLike, context: ClipResolveContext) => ClipShape;
-  /** 完整 ClipShape snapshot 的 Zod schema */
-  shapeSchema: ZodType<TShape>;
-  /** registry 只在 shapeSchema parse 后调用的擦除 lowering 入口 */
+  /** registry 按所属者类型契约调用的擦除 lowering 入口 */
   lower: (shape: ClipShape, context: ClipLowerContext) => SceneClipPath;
 }>;

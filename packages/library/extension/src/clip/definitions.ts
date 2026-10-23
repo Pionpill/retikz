@@ -1,7 +1,4 @@
-import { ClipFillRuleSchema, defineClip, PathCommandSchema, PositionSchema } from '@retikz/core';
-import { JsonObjectSchema, NonBlankStringSchema, PositiveNumberSchema } from '@retikz/foundation';
-import type { ZodType } from 'zod';
-import { array, intersection, literal, number, object, strictObject } from 'zod';
+import { defineClip } from '@retikz/core';
 
 import { CircleClipSchema, CompoundClipSchema, EllipseClipSchema, PathClipSchema, PolygonClipSchema } from './schema';
 import type {
@@ -17,49 +14,11 @@ import type {
   PolygonClipShape,
 } from './types';
 
-const OpenClipShapeSchema = intersection(
-  object({ kind: NonBlankStringSchema.describe('Clip definition discriminator.') }),
-  JsonObjectSchema,
-);
-
-const CircleClipShapeSchema: ZodType<CircleClipShape> = strictObject({
-  kind: literal('circle'),
-  cx: number(),
-  cy: number(),
-  r: PositiveNumberSchema,
-});
-
-const EllipseClipShapeSchema: ZodType<EllipseClipShape> = strictObject({
-  kind: literal('ellipse'),
-  cx: number(),
-  cy: number(),
-  rx: PositiveNumberSchema,
-  ry: PositiveNumberSchema,
-});
-
-const PolygonClipShapeSchema: ZodType<PolygonClipShape> = strictObject({
-  kind: literal('polygon'),
-  points: array(PositionSchema).min(3),
-});
-
-const PathClipShapeSchema: ZodType<PathClipShape> = strictObject({
-  kind: literal('path'),
-  commands: array(PathCommandSchema).min(1),
-  fillRule: ClipFillRuleSchema.optional(),
-});
-
-const CompoundClipShapeSchema: ZodType<CompoundClipShape> = strictObject({
-  kind: literal('compound'),
-  children: array(OpenClipShapeSchema).min(1),
-  fillRule: ClipFillRuleSchema.optional(),
-});
-
 /** Extension 提供的完整圆形裁剪 Definition */
 export const CircleClipDefinition = defineClip<IRCircleClip, CircleClipShape>({
   kind: 'circle',
   schema: CircleClipSchema,
   resolve: spec => ({ kind: 'circle', cx: spec.cx, cy: spec.cy, r: spec.r }),
-  shapeSchema: CircleClipShapeSchema,
   lower: (shape, context) => ({
     commands: [
       { kind: 'move', to: [context.round(shape.cx) + context.round(shape.r), context.round(shape.cy)] },
@@ -75,7 +34,6 @@ export const EllipseClipDefinition = defineClip<IREllipseClip, EllipseClipShape>
   kind: 'ellipse',
   schema: EllipseClipSchema,
   resolve: spec => ({ kind: 'ellipse', cx: spec.cx, cy: spec.cy, rx: spec.rx, ry: spec.ry }),
-  shapeSchema: EllipseClipShapeSchema,
   lower: (shape, context) => ({
     commands: [
       { kind: 'move', to: [context.round(shape.cx) + context.round(shape.rx), context.round(shape.cy)] },
@@ -98,7 +56,6 @@ export const PolygonClipDefinition = defineClip<IRPolygonClip, PolygonClipShape>
   kind: 'polygon',
   schema: PolygonClipSchema,
   resolve: spec => ({ kind: 'polygon', points: spec.points }),
-  shapeSchema: PolygonClipShapeSchema,
   lower: shape => ({
     commands: [
       { kind: 'move', to: shape.points[0] },
@@ -118,7 +75,6 @@ export const PathClipDefinition = defineClip<IRPathClip, PathClipShape>({
     commands: spec.commands,
     ...(spec.fillRule === undefined ? {} : { fillRule: spec.fillRule }),
   }),
-  shapeSchema: PathClipShapeSchema,
   lower: shape => ({ commands: shape.commands, fillRule: shape.fillRule ?? 'nonzero' }),
 });
 
@@ -131,7 +87,6 @@ export const CompoundClipDefinition = defineClip<IRCompoundClip, CompoundClipSha
     children: spec.children.map(child => context.resolve(child)),
     ...(spec.fillRule === undefined ? {} : { fillRule: spec.fillRule }),
   }),
-  shapeSchema: CompoundClipShapeSchema,
   lower: (shape, context) => ({
     commands: shape.children.flatMap(child => context.lower(child).commands),
     fillRule: shape.fillRule ?? 'nonzero',

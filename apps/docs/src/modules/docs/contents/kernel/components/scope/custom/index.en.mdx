@@ -28,7 +28,7 @@ The rounded rectangle below clips two circular nodes. The code panel initially s
 
 ## Define the capability
 
-Keep the Definition in a reusable module, such as `rounded-rect-clip.ts`. When the spec already is the complete shape, provide only `schema` and `lower`: `defineClip` derives `resolve: spec => spec` and reuses that schema as `shapeSchema`. Supply `resolve` and `shapeSchema` explicitly only when shorthand, references, or configuration resolve to another shape. `lower` returns a structured path, never an SVG string or Canvas callback.
+Keep the Definition in a reusable module, such as `rounded-rect-clip.ts`. When the spec already is the complete shape, provide only `schema` and `lower`: `defineClip` derives `resolve: spec => spec`. Supply `resolve` explicitly only when shorthand, references, or configuration resolve to another shape. The intermediate shape follows a TypeScript contract without repeated parsing. `lower` returns a structured path, never an SVG string or Canvas callback.
 
 ```ts
 import type { PathCommand } from '@retikz/core';
@@ -207,8 +207,7 @@ These are the members most often used to define, inject, and reference a custom 
       name: 'defineClip',
       kind: 'function',
       type: 'DefineClip',
-      description:
-        'Creates a registrable clipping capability. Omit `resolve` and `shapeSchema` when the input already is the full shape',
+      description: 'Creates a registrable clipping capability. Omit `resolve` when the input already is the full shape',
     },
     {
       name: 'ClipDefinition',

@@ -54,7 +54,6 @@ const customClip = (): ClipDefinition =>
     kind: 'customClip',
     schema: strictObject({ kind: literal('customClip') }),
     resolve: () => ({ kind: 'customClip' }),
-    shapeSchema: strictObject({ kind: literal('customClip') }),
     lower: () => ({
       commands: [
         { kind: 'move', to: [0, 0] },

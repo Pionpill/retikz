@@ -1,15 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { array, literal, number, strictObject } from 'zod';
+import { literal, number, strictObject } from 'zod';
 
 import type { ClipShape, IRClip, IRScene, PathCommand } from '../../src';
-import {
-  compileToScene,
-  CompositeBaseSchema,
-  defineClip,
-  defineComposite,
-  PathCommandSchema,
-  RetikzCoreError,
-} from '../../src';
+import { compileToScene, CompositeBaseSchema, defineClip, defineComposite, RetikzCoreError } from '../../src';
 
 const clippedIr = (clip: IRClip): IRScene => ({
   version: 1,
@@ -42,7 +35,6 @@ const RecursiveClipDefinition = defineClip<RecursiveClip, RecursiveClipShape>({
 
     return { kind: 'recursive', commands };
   },
-  shapeSchema: strictObject({ kind: literal('recursive'), commands: array(PathCommandSchema) }),
   lower: shape => ({ commands: shape.commands, fillRule: 'nonzero' }),
 });
 
@@ -50,7 +42,6 @@ const OperationCycleDefinition = defineClip({
   kind: 'operationCycle',
   schema: strictObject({ kind: literal('operationCycle') }),
   resolve: (spec, context) => context.resolve(spec),
-  shapeSchema: strictObject({ kind: literal('operationCycle') }),
   lower: () => ({
     commands: [
       { kind: 'move', to: [0, 0] },
@@ -64,7 +55,6 @@ const LowerCycleDefinition = defineClip({
   kind: 'lowerCycle',
   schema: strictObject({ kind: literal('lowerCycle') }),
   resolve: () => ({ kind: 'lowerCycle' }),
-  shapeSchema: strictObject({ kind: literal('lowerCycle') }),
   lower: (shape, context) => context.lower(shape),
 });
 
@@ -159,7 +149,6 @@ describe('clip failure boundaries', () => {
       kind: 'malformed',
       schema: strictObject({ kind: literal('malformed') }),
       resolve: () => ({ kind: 'malformed' }),
-      shapeSchema: strictObject({ kind: literal('malformed') }),
       lower: () => ({ commands: [], fillRule: 'nonzero' }),
     });
 

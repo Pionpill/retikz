@@ -1,7 +1,3 @@
-import { NonNegativeNumberSchema } from '@retikz/foundation';
-import type { ZodType } from 'zod';
-import { literal, number, strictObject } from 'zod';
-
 import type { ClipDefinition } from '../../contract';
 import type { RectClipShape } from '../../contract';
 import { defineClip } from '../../contract';
@@ -25,21 +21,11 @@ const keyOfBuiltinClip = (definition: ClipDefinition): BuiltinClipProviderName =
   }
 };
 
-/** 矩形 clip provider：将 IR rect spec 直接映射为 Scene rect clip */
-const RectClipShapeSchema: ZodType<RectClipShape> = strictObject({
-  kind: literal('rect'),
-  x: number(),
-  y: number(),
-  width: NonNegativeNumberSchema,
-  height: NonNegativeNumberSchema,
-});
-
 /** Core 内置的完整矩形 Clip Definition */
 const rectClip = defineClip<IRRectClip, RectClipShape>({
   kind: 'rect',
   schema: RectClipSchema,
   resolve: spec => ({ kind: 'rect', x: spec.x, y: spec.y, width: spec.width, height: spec.height }),
-  shapeSchema: RectClipShapeSchema,
   lower: shape => ({
     commands: [
       { kind: 'move', to: [shape.x, shape.y] },

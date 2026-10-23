@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { array, enum as zodEnum, literal, strictObject } from 'zod';
+import { literal, strictObject } from 'zod';
 
 import type { ClipDefinition, ClipResource, ClipShape, IRClip, ClipFillRule, IRScene, PathCommand } from '../../src';
-import { compileToScene, defineClip, PathCommandSchema } from '../../src';
+import { compileToScene, defineClip } from '../../src';
 
 type TestPathClipShape = ClipShape & {
   kind: string;
@@ -28,11 +28,6 @@ const pathOperation = (kind: string, commands: Array<PathCommand>, fillRule?: Cl
       };
       return shape;
     },
-    shapeSchema: strictObject({
-      kind: literal(kind),
-      commands: array(PathCommandSchema),
-      fillRule: zodEnum(['nonzero', 'evenodd']).optional(),
-    }),
     lower: shape => ({ commands: shape.commands, fillRule: shape.fillRule ?? 'nonzero' }),
   });
 

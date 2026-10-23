@@ -51,7 +51,7 @@ Core `PathKindDefinition` 因此把 provider identity 与完整 subject schema �
 type PathKindDefinition<TPath extends IRPathBase, TOwnerOutput extends JsonValue = never> = Readonly<{
   name: string;
   schema: z.ZodType<TPath>;
-  ownerOutput?: CompileOwnerOutputDefinition<TOwnerOutput>;
+  ownerOutput?: true;
   compile: (context: PathKindCompileContext<TPath, TOwnerOutput>) => PathKindCompileResult | null;
 }>;
 ```

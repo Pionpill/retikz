@@ -1,10 +1,13 @@
 const translations: Record<string, string> = {
+  'subject 类型由所属者契约确定，context 类型由选项解析恢复':
+    'The owner contract determines the subject type; option parsing restores the context type',
+  所属者发布的被观察对象类型: 'Observed subject type published by its owner',
+  由所属者提供的被观察对象类型: 'Observed subject type provided by its owner',
   检查器的注册键: 'Inspector key',
   '规范化后可 JSON 序列化的选项': 'canonical JSON-safe options',
   注册项的命名空间: 'registry namespace',
   注册项的类型: 'registry type',
-  '经 subjectSchema 校验后交给 inspect 的观察对象类型':
-    'Observed subject type validated by subjectSchema and passed to inspect',
+  由所属者提供的观察对象类型: 'Observed subject type provided by its owner',
   'optionsSchema 应用默认与变换后的选项类型': 'Options type after optionsSchema applies defaults and transforms',
   'resolveOptions 输出、供 inspect 上下文消费的选项类型':
     'Options type returned by resolveOptions and consumed by the inspect context',

@@ -49,7 +49,7 @@ export const InspectorDefinitionFlow: FC<InspectorDefinitionFlowProps> = props =
                   {
                     id: 'subject-schema',
                     layout: { minimumSize: { width: 0, height: 56 } },
-                    text: i18n.subjectSchema,
+                    text: i18n.subject,
                     role: 'activity',
                   },
                 ]}

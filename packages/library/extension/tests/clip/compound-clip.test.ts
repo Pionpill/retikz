@@ -1,7 +1,7 @@
 import type { ClipDefinition, IRScene, PathCommand } from '@retikz/core';
-import { compileToScene, defineClip, PathCommandSchema } from '@retikz/core';
+import { compileToScene, defineClip } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { array, literal, number, strictObject } from 'zod';
+import { literal, number, strictObject } from 'zod';
 
 import {
   CircleClipDefinition,
@@ -33,10 +33,6 @@ const roundedRectClip = (): ClipDefinition =>
       ];
       return { kind: 'roundedRect', commands };
     },
-    shapeSchema: strictObject({
-      kind: literal('roundedRect'),
-      commands: array(PathCommandSchema),
-    }),
     lower: shape => ({ commands: shape.commands, fillRule: 'nonzero' }),
   });
 

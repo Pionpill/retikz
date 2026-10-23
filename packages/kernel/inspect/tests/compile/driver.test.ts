@@ -1,5 +1,5 @@
 import type { IRScene } from '@retikz/core';
-import { CompositeBaseSchema, defineComposite, defineThemeStyle, NodeOwnerOutputSchema } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string, ZodError } from 'zod';
 
@@ -41,7 +41,6 @@ describe('Inspection compile driver', () => {
     const inspector = defineInspector({
       ...key,
       owner,
-      subjectSchema: strictObject({ label: string() }),
       optionsSchema: strictObject({ label: string().transform(label => `${label}!`) }),
       resolveOptions: options => options,
       inspect: (_subject, context) => [{ type: 'node', position: [0, 0], text: context.options.label }],
@@ -61,7 +60,6 @@ describe('Inspection compile driver', () => {
     const inspector = defineInspector({
       ...key,
       owner,
-      subjectSchema: strictObject({ label: string() }),
       optionsSchema: strictObject({}),
       resolveOptions: () => {
         throw cause;
@@ -107,7 +105,6 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: strictObject({ label: literal('settled') }),
         optionsSchema: strictObject({}),
         resolveOptions: options => options,
         inspect: (_subject, context) => {
@@ -135,7 +132,6 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: strictObject({ label: literal('settled') }),
         optionsSchema: strictObject({}),
         resolveOptions: options => options,
         inspect: (_subject, context) => [
@@ -170,7 +166,6 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: strictObject({ label: string() }),
         optionsSchema: strictObject({}),
         resolveOptions: options => options,
         inspect: (_subject, context) => {
@@ -210,7 +205,6 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: strictObject({ label: string() }),
         optionsSchema: strictObject({}),
         resolveOptions: options => options,
         inspect: () => ({ type: 'node', position: [0, 0], text: 'captured' }),
@@ -227,32 +221,20 @@ describe('Inspection compile driver', () => {
     expect(result.inspection?.entries).toHaveLength(1);
   });
 
-  it('validates all subjects before invoking any Inspector callback', () => {
-    let callbacks = 0;
+  it('passes the typed owner output directly to the Inspector callback', () => {
+    const subjects: Array<unknown> = [];
     const registry = createInspectorRegistry([
-      defineInspector({
+      defineInspector<{ label: string }>({
         ...key,
         owner,
-        subjectSchema: strictObject({ label: literal('different') }),
-        optionsSchema: strictObject({}),
-        resolveOptions: options => options,
-        inspect: () => {
-          callbacks += 1;
+        inspect: subject => {
+          subjects.push(subject);
           return [];
         },
       }),
     ]);
-
-    expect(() =>
-      compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } }),
-    ).toThrow(RetikzInspectError);
-    expect(callbacks).toBe(0);
-
-    try {
-      compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } });
-    } catch (error) {
-      expect((error as RetikzInspectError).details.origin).toMatchObject({ stage: 'subject', inspector: key });
-    }
+    compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } });
+    expect(subjects).toEqual([{ label: 'settled' }]);
   });
 
   it('rejects a cross-primary fragment reference with a fragment origin', () => {
@@ -260,7 +242,6 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: strictObject({ label: string() }),
         optionsSchema: strictObject({}),
         resolveOptions: options => options,
         inspect: () => ({
@@ -292,7 +273,6 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: strictObject({ label: string() }),
         optionsSchema: strictObject({}),
         resolveOptions: options => options,
         inspect: () =>
@@ -332,7 +312,6 @@ describe('Inspection compile driver', () => {
     const nodeInspector = defineInspector({
       ...nodeKey,
       owner: { kind: 'node' as const },
-      subjectSchema: NodeOwnerOutputSchema,
       optionsSchema: strictObject({}),
       resolveOptions: options => options,
       inspect: (_subject, context) => {

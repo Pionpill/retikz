@@ -4,15 +4,7 @@ import type { Position } from '@retikz/math';
 import type { MarkerPrimitive, ScenePrimitive } from '../contract';
 import { createCompositeContractError } from '../resolve/diagnostics';
 import { withProviderOutputValidationBoundary as validateProviderOutput } from '../resolve/provider-validation';
-import {
-  AnimationTrackSchema,
-  BlendMode,
-  FontStyle,
-  PathCommandSchema,
-  PathFillRule,
-  PathLineCap,
-  PathLineJoin,
-} from '../schemas';
+import { AnimationTrackSchema, BlendMode, FontStyle, PathFillRule, PathLineCap, PathLineJoin } from '../schemas';
 
 /** provider output runtime validation 使用的 marker 子集验证入口 */
 export type MarkerPrimitiveValidator = (owner: string, marker: unknown) => ReadonlyArray<MarkerPrimitive>;
@@ -348,19 +340,6 @@ export const assertProviderOutputTransforms = (owner: string, value: unknown, pa
   });
 };
 
-/** 校验 Scene/Marker 的结构化 path command 数组 */
-export const assertProviderOutputPathCommands = (owner: string, value: unknown, path: string): void => {
-  providerOutputArray(owner, value, path).forEach((command, index) => {
-    assertProviderOutputJsonValue(owner, command, `${path}[${index}]`);
-    const parsed = PathCommandSchema.safeParse(command);
-    if (!parsed.success || !equalProviderOutputJson(command, parsed.data)) {
-      throw createCompositeContractError(`${owner} emit produced an invalid ${path} command at index ${index}.`, {
-        ...(!parsed.success ? { cause: parsed.error } : {}),
-      });
-    }
-  });
-};
-
 /** 校验 Scene/Marker path 的 fill/stroke enum 字段 */
 export const assertProviderOutputPathEnums = (owner: string, value: Record<string, unknown>, path: string): void => {
   if (value.fillRule !== undefined && !Object.values(PathFillRule).includes(value.fillRule as never)) {
@@ -612,7 +591,6 @@ const visitScenePrimitive = (
         path,
       );
       assertSceneCommon(owner, value, path);
-      assertProviderOutputPathCommands(owner, value.commands, `${path}.commands`);
       assertProviderOutputPathEnums(owner, value, path);
 
       for (const field of ['arrowStart', 'arrowEnd'] as const) {

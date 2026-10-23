@@ -600,7 +600,7 @@ export type RetikzInspectErrorOptions = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CLIP_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/clip.ts"} startLine={14}>CLIP_INSPECTOR_KEY</ApiSourceLink>
+#### <ApiSourceLink label={"CLIP_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/clip.ts"} startLine={13}>CLIP_INSPECTOR_KEY</ApiSourceLink>
 
 ```ts
 export const CLIP_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'clip' });
@@ -619,7 +619,7 @@ Inspects the complete boundary of each clip application, including holes, withou
   }}
 />
 
-#### <ApiSourceLink label={"COORDINATE_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/coordinate.ts"} startLine={14}>COORDINATE_INSPECTOR_KEY</ApiSourceLink>
+#### <ApiSourceLink label={"COORDINATE_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/coordinate.ts"} startLine={13}>COORDINATE_INSPECTOR_KEY</ApiSourceLink>
 
 ```ts
 export const COORDINATE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'coordinate' });
@@ -637,7 +637,7 @@ Inspects the resolved coordinate point.
 
 See [Built-in inspection](/kernel/packages/inspect/builtins) for usage and [Custom usage](/kernel/packages/inspect/custom) for custom Inspector option contracts.
 
-#### <ApiSourceLink label={"NODE_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/node.ts"} startLine={23}>NODE_INSPECTOR_KEY</ApiSourceLink>
+#### <ApiSourceLink label={"NODE_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/node.ts"} startLine={22}>NODE_INSPECTOR_KEY</ApiSourceLink>
 
 ```ts
 export const NODE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'node' });
@@ -651,7 +651,7 @@ All eight Node options default to `true` after the Inspector is selected.
 
 <ZodSchema name="NodeInspectOptionsSchema" />
 
-#### <ApiSourceLink label={"PATH_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/path.ts"} startLine={10}>PATH_INSPECTOR_KEY</ApiSourceLink>
+#### <ApiSourceLink label={"PATH_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/path.ts"} startLine={9}>PATH_INSPECTOR_KEY</ApiSourceLink>
 
 ```ts
 export const PATH_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'path' });
@@ -689,7 +689,7 @@ export const RetikzInspectErrorCode = {
 export type RetikzInspectErrorCode = ValueOf<typeof RetikzInspectErrorCode>;
 ```
 
-#### <ApiSourceLink label={"SCOPE_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/scope.ts"} startLine={21}>SCOPE_INSPECTOR_KEY</ApiSourceLink>
+#### <ApiSourceLink label={"SCOPE_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/scope.ts"} startLine={20}>SCOPE_INSPECTOR_KEY</ApiSourceLink>
 
 ```ts
 export const SCOPE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'scope' });
@@ -779,7 +779,7 @@ export declare const mergeInspectorRegistries: (...registries: ReadonlyArray<Ins
 
 ## Extension definitions and registration
 
-#### <ApiSourceLink label={"AnyInspectorDefinitionInput"} path={"packages/kernel/inspect/src/contract/types.ts"} startLine={184}>AnyInspectorDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"AnyInspectorDefinitionInput"} path={"packages/kernel/inspect/src/contract/types.ts"} startLine={177}>AnyInspectorDefinitionInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -789,13 +789,12 @@ export declare const mergeInspectorRegistries: (...registries: ReadonlyArray<Ins
 
 | Member                        | Type                                                                     | Default | Description                                                                                |
 | ----------------------------- | ------------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------ |
-| `readonly inspect`            | `(subject: never, context: never) => InspectorOutput`                    | —       | Concrete subject and context types are restored by the schema before invocation            |
+| `readonly inspect`            | `(subject: never, context: never) => InspectorOutput`                    | —       | The owner contract determines the subject type; option parsing restores the context type   |
 | `readonly mergeOptionsInput?` | `(inheritedOptionsInput: never, localOptionsInput: never) => JsonObject` | —       | Merges admitted raw options, without consuming schema-transformed results                  |
 | `readonly namespace`          | `string`                                                                 | —       | registry namespace                                                                         |
 | `readonly optionsSchema?`     | `Readonly<{`<br />`parse: (value: unknown) => JsonObject;`<br />`}>`     | —       | Produces JSON object options with defaults and transforms applied, even after type erasure |
 | `readonly owner`              | `CompileObservationOwner`                                                | —       | Core owner being observed                                                                  |
 | `readonly resolveOptions?`    | `(options: never) => JsonObject`                                         | —       | Concrete options type restored by the admission schema                                     |
-| `readonly subjectSchema`      | `Readonly<{`<br />`parse: (value: unknown) => JsonValue;`<br />`}>`      | —       | Restores a JSON-safe subject even after type erasure                                       |
 | `readonly type`               | `string`                                                                 | —       | registry type                                                                              |
 
 </ApiTable>
@@ -815,7 +814,7 @@ export type AnyInspectorDefinitionInput = WithOptionalProperties<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InspectorDefinitionInput"} path={"packages/kernel/inspect/src/contract/types.ts"} startLine={119}>InspectorDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InspectorDefinitionInput"} path={"packages/kernel/inspect/src/contract/types.ts"} startLine={117}>InspectorDefinitionInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -825,7 +824,7 @@ export type AnyInspectorDefinitionInput = WithOptionalProperties<
 
 | Member                              | Type                                         | Default | Description                                                 |
 | ----------------------------------- | -------------------------------------------- | ------- | ----------------------------------------------------------- |
-| `TSubject` (Type parameter)         | `extends JsonValue = JsonValue`              | —       | Observed subject type parsed by the subject schema          |
+| `TSubject` (Type parameter)         | `extends JsonValue = JsonValue`              | —       | Observed subject type provided by its owner                 |
 | `TParsedOptions` (Type parameter)   | `extends JsonObject = Record<string, never>` | —       | Options type parsed by the options schema                   |
 | `TResolvedOptions` (Type parameter) | `extends JsonObject = TParsedOptions`        | —       | Resolved options type consumed by the callback              |
 | `TSourceOptions` (Type parameter)   | `extends JsonObject = TParsedOptions`        | —       | Raw options input type before it reaches the options schema |
@@ -950,7 +949,7 @@ export declare const createInspectorRegistry: (
 
 | Category        | Name               | Type / signature                                                                       | Description                                                                                                                                       |
 | --------------- | ------------------ | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Type parameters | `TSubject`         | `extends JsonValue`                                                                    | Observed subject type parsed by the subject schema                                                                                                |
+| Type parameters | `TSubject`         | `extends JsonValue`                                                                    | Observed subject type published by its owner                                                                                                      |
 |                 | `TParsedOptions`   | `extends JsonObject = Record<string, never>`                                           | Options type parsed by the options schema                                                                                                         |
 |                 | `TResolvedOptions` | `extends JsonObject = TParsedOptions`                                                  | Resolved options type consumed by the callback                                                                                                    |
 |                 | `TSourceOptions`   | `extends JsonObject = TParsedOptions`                                                  | Raw options input type before it reaches the options schema                                                                                       |

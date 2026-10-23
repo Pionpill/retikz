@@ -83,7 +83,7 @@ Core 遍历候选站点时，通过 observer 的 `select()` 调用 `canInspectio
 | Core 提供的内容                               | Inspect 如何使用                                                           |
 | --------------------------------------------- | -------------------------------------------------------------------------- |
 | `CompileObservation.owner` 与 `occurrence`    | 让 request 按所属者与实例位置，精确匹配被观测对象的最终实例                |
-| `CompileObservation.value`                    | 作为 `subjectSchema` 校验的最终产物，供 `inspect()` 读取                   |
+| `CompileObservation.value`                    | 作为已类型化的最终产物，直接供 `inspect()` 读取                            |
 | `CompileObservationContext.theme`             | 为辅助内容分配与当前 occurrence 一致的主题与语义颜色                       |
 | `CompileObservationContext.compileFragment()` | 在当前 Theme、Scope 样式和 provider 环境中隔离编译 Inspector 返回的普通 IR |
 
@@ -160,9 +160,9 @@ request 可以声明在场景、authored 子树或对象上；其 `options: true
 
 ## 生成辅助描述
 
-上一阶段解决的是“对哪个实例、用什么配置”；这一阶段解决的是“读取该实例的哪些结果，画出什么辅助内容”。合并后的 options 经 `optionsSchema` 补默认值和 `resolveOptions` 展开简写后成为回调配置；observation 的 `value` 则走另一条数据通道，经 `subjectSchema` 校验后成为回调读取的 subject。配置与被观测几何不能混为一谈。
+上一阶段解决的是“对哪个实例、用什么配置”；这一阶段解决的是“读取该实例的哪些结果，画出什么辅助内容”。合并后的 options 经 `optionsSchema` 补默认值和 `resolveOptions` 展开简写后成为回调配置；observation 的 `value` 则走另一条数据通道，按所属者类型契约直接成为回调读取的 subject。配置与被观测几何不能混为一谈。
 
-对于匹配请求，driver 先用 `subjectSchema` 校验并冻结 observation 的 value，再把它作为 subject 交给 `inspect(subject, context)`。控制点观测因此读取 Core 已求出的曲线几何，返回控制点和辅助线的普通 IR，不重新计算主图。
+对于匹配请求，driver 将 observation 的 value 隔离为只读快照，直接作为 subject 交给 `inspect(subject, context)`。控制点观测因此读取 Core 已求出的曲线几何，返回控制点和辅助线的普通 IR，不重新计算主图。
 
 图中两路输入在 `inspect()` 汇合：左侧配置决定“显示什么”，右侧几何提供“画在哪里”。下排承接回调输出，依次整理片段、隔离编译，再由宿主转换为只读图层；箭头表示数据交接，不表示配置与几何校验并发执行。
 
@@ -212,7 +212,7 @@ driver 将回调输出经 `snapshotInspectorOutput()` 整理为片段，逐个�
 | `InspectionCompileResult.inspection`  | 有序辅助平面；所有 callback 无输出时为 `null` |
 | `InspectionCompileResult.diagnostics` | 观测器回调与隔离片段产生的结构化警告列表      |
 
-`RetikzInspectError.details.origin.stage` 标明失败发生在选择、最终产物（`subjectSchema`）校验、`inspect` callback、输出规范化、辅助片段编译或最终组装。重复 registry key、未注册 request、owner 不匹配以及 schema 失败都会终止该次检查编译，不会交付部分辅助结果。
+`RetikzInspectError.details.origin.stage` 标明失败发生在选择、最终产物快照处理、`inspect` callback、输出规范化、辅助片段编译或最终组装。重复 registry key、未注册 request、owner 不匹配以及输入选项 schema 失败都会终止该次检查编译，不会交付部分辅助结果。
 
 <SourceLinks
   sources={[{ label: '编译结果、辅助平面与诊断结构', path: 'packages/kernel/inspect/src/compile/types.ts' }]}

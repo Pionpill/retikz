@@ -70,6 +70,6 @@ export type ClipShapeResolution = Readonly<{
   kind: string;
   /** 已绑定的完整 Clip Definition */
   definition: ClipDefinition;
-  /** shapeSchema parse 后的 JSON shape */
+  /** 已解析的 JSON shape */
   params: ClipShape;
 }>;

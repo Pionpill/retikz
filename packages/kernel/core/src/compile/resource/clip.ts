@@ -8,14 +8,7 @@ import {
 } from '../../resolve/diagnostics';
 import type { ClipResolution } from '../../resolve/resource';
 import { resolveClipShape } from '../../resolve/resource';
-import {
-  assertProviderOutputKeys,
-  assertProviderOutputPathCommands,
-  providerOutputArray,
-  providerOutputRecord,
-  snapshotProviderOutputJson,
-  withProviderOutputValidationBoundary,
-} from '../scene-primitive';
+import { snapshotProviderOutputJson, withProviderOutputValidationBoundary } from '../scene-primitive';
 
 /** 解析裁剪形状、登记可复用资源并接收隔离布局探测结果的编译期接口 */
 export type ClipRegistry = {
@@ -213,39 +206,22 @@ const assertClipPathGrammar = (commands: ReadonlyArray<PathCommand>, owner: stri
   }
 };
 
-/** 物化 operation provider 输出，并只收窄开放 ClipShape 的共同判别契约 */
-const snapshotResolvedClipShape = (shape: unknown, owner: string): ClipShape =>
-  withProviderOutputValidationBoundary(owner, () => {
-    const snapshot = snapshotProviderOutputJson(owner, shape, 'root shape');
-    const record = providerOutputRecord(owner, snapshot, 'root shape');
-    if (typeof record.kind !== 'string' || record.kind.trim().length === 0) {
-      throw createCompositeContractError(`${owner} resolve returned a root shape without a non-empty string kind.`);
-    }
-
-    return record as ClipShape;
-  });
+/** 隔离 operation provider 返回的形状快照 */
+const snapshotResolvedClipShape = (shape: ClipShape, owner: string): ClipShape =>
+  withProviderOutputValidationBoundary(
+    owner,
+    () => snapshotProviderOutputJson(owner, shape, 'root shape'),
+  );
 
 /** 物化并规范化 ClipShape lower 输出，建立唯一 SceneClipPath 字段顺序 */
-const canonicalizeClipPath = (path: unknown, owner: string, round: (n: number) => number): SceneClipPath =>
+const canonicalizeClipPath = (path: SceneClipPath, owner: string, round: (n: number) => number): SceneClipPath =>
   withProviderOutputValidationBoundary(owner, () => {
-    const snapshot = snapshotProviderOutputJson(owner, path, 'SceneClipPath');
-    const record = providerOutputRecord(owner, snapshot, 'SceneClipPath');
-    assertProviderOutputKeys(owner, record, ['commands', 'fillRule'], 'SceneClipPath');
-    const commands = providerOutputArray(owner, record.commands, 'SceneClipPath.commands');
-    if (commands.length === 0) {
-      throw createCompositeContractError(`${owner} lower returned an empty SceneClipPath.commands.`);
-    }
-
-    assertProviderOutputPathCommands(owner, commands, 'SceneClipPath.commands');
-    if (record.fillRule !== 'nonzero' && record.fillRule !== 'evenodd') {
-      throw createCompositeContractError(`${owner} lower returned an invalid SceneClipPath.fillRule.`);
-    }
-
-    assertClipPathGrammar(commands as Array<PathCommand>, owner);
+    const { commands, fillRule } = path;
+    assertClipPathGrammar(commands, owner);
 
     return {
-      commands: (commands as Array<PathCommand>).map(command => roundCommand(command, round)),
-      fillRule: record.fillRule,
+      commands: commands.map(command => roundCommand(command, round)),
+      fillRule,
     };
   });
 
@@ -266,7 +242,7 @@ export const createClipRegistry = (
 
     try {
       consumeClipTraversalEdge(guard, `clip operation '${kind}'`);
-      let resolved: unknown;
+      let resolved: ClipShape;
 
       try {
         resolved = definition.resolve(params as { kind: string }, {
@@ -305,7 +281,7 @@ export const createClipRegistry = (
       const enteredParams = params === shape ? [] : enterClipTraversalObjects(guard, [params], 'clip shape');
 
       try {
-        let lowered: unknown;
+        let lowered: SceneClipPath;
 
         try {
           const lower = definition.lower;

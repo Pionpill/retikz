@@ -655,7 +655,7 @@ Consider inspecting a node whose text is `Hello`. Enabling the node inspector's 
 At the Core level, enable observation with `observeCompileToScene(ir, options, observers)`. Pass observer definitions as the third argument; this example uses `undefined` for the second argument because it needs no extra compile options. It reads node geometry without drawing inspection boxes.
 
 ```ts
-import { NodeOwnerOutputSchema, observeCompileToScene } from '@retikz/core';
+import { type NodeOwnerOutput, observeCompileToScene } from '@retikz/core';
 import type { CompileObservation, CompileObserverDefinition } from '@retikz/core';
 
 const nodeObserver: CompileObserverDefinition<ReadonlyArray<CompileObservation>> = {
@@ -665,7 +665,7 @@ const nodeObserver: CompileObserverDefinition<ReadonlyArray<CompileObservation>>
     return {
       select: site => site.owner.kind === 'node',
       observe: observation => {
-        const node = NodeOwnerOutputSchema.parse(observation.value);
+        const node = observation.value as NodeOwnerOutput;
         console.log(node.rect, node.content?.corners);
         observations.push(observation);
       },
@@ -688,7 +688,7 @@ console.log(result.primary.scene);
 console.log(result.observerOutputs[0]);
 ```
 
-`select` chooses all nodes. `observe` receives each final node output and parses its geometry with `NodeOwnerOutputSchema`. The array inside `createSession` belongs to this compilation, and `complete` returns it as the observer result. Thus `observerOutputs[0]` has the key `example/node-geometry` and a `value` containing the collected observation events; the original drawing is in `primary.scene`.
+`select` chooses all nodes. `observe` receives each final node output and reads its geometry as `NodeOwnerOutput` without parsing internal output again. The array inside `createSession` belongs to this compilation, and `complete` returns it as the observer result. Thus `observerOutputs[0]` has the key `example/node-geometry` and a `value` containing the collected observation events; the original drawing is in `primary.scene`.
 
 Inspect builds on this Core API to generate inspection boxes:
 

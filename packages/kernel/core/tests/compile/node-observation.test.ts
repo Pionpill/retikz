@@ -1,13 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { CompileObservation, CompileOptions, IRNode, IRScene, PathCommand, ShapeDefinition } from '../../src';
-import {
-  BUILTIN_SHAPES,
-  compileToScene,
-  NodeOwnerOutputSchema,
-  observeCompileToScene,
-  RetikzCoreError,
-} from '../../src';
+import { BUILTIN_SHAPES, compileToScene, observeCompileToScene, RetikzCoreError } from '../../src';
+import type { NodeOwnerOutput } from '../../src';
 import { flattenPrims } from '../helpers/flatten';
 
 const source: IRScene = {
@@ -50,7 +45,7 @@ describe('Node 观测几何', () => {
       { precision: 0 },
     );
 
-    expect(NodeOwnerOutputSchema.parse(observations[0]?.value).rect.rotate).toBeCloseTo(Math.PI / 6, 12);
+    expect((observations[0].value as NodeOwnerOutput).rect.rotate).toBeCloseTo(Math.PI / 6, 12);
   });
 
   it.each([
@@ -74,8 +69,8 @@ describe('Node 观测几何', () => {
     const options = { precision: 0 };
     const wholeDegree = capture(sceneOf(30), options);
     const fractionalDegree = capture(sceneOf(30.49), options);
-    const wholeOutput = NodeOwnerOutputSchema.parse(wholeDegree.observations[0]?.value);
-    const fractionalOutput = NodeOwnerOutputSchema.parse(fractionalDegree.observations[0]?.value);
+    const wholeOutput = wholeDegree.observations[0].value as NodeOwnerOutput;
+    const fractionalOutput = fractionalDegree.observations[0].value as NodeOwnerOutput;
 
     expect(fractionalDegree.result.primary.scene).toEqual(wholeDegree.result.primary.scene);
     expect(fractionalOutput.shape.outline).toEqual(wholeOutput.shape.outline);
@@ -148,7 +143,7 @@ describe('Node 观测几何', () => {
       const renderedBaselines = textPrimitives.flatMap(primitive =>
         primitive.lines.map((_line, index) => primitive.y + index * primitive.lineHeight),
       );
-      const output = NodeOwnerOutputSchema.parse(observations[0]?.value);
+      const output = observations[0].value as NodeOwnerOutput;
 
       expect(output.content?.baselines).toHaveLength(3);
 
@@ -181,7 +176,7 @@ describe('Node 观测几何', () => {
     expect(measureText).toHaveBeenCalledTimes(measurementCount);
     expect(keyPoints).toHaveBeenCalledTimes(1);
     expect(observations).toHaveLength(1);
-    expect(NodeOwnerOutputSchema.parse(observations[0]?.value).shape.outline).toEqual([]);
+    expect((observations[0].value as NodeOwnerOutput).shape.outline).toEqual([]);
   });
 
   it('缺失 capability 使用 null，无正文不伪造文本盒', () => {
@@ -193,7 +188,7 @@ describe('Node 观测几何', () => {
       { shapes: [{ ...base, name: 'custom' }] },
     );
 
-    expect(NodeOwnerOutputSchema.parse(observations[0]?.value)).toMatchObject({
+    expect(observations[0].value as NodeOwnerOutput).toMatchObject({
       shape: { outline: null, keyPoints: null },
       boundary: { outline: null },
       content: null,

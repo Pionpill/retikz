@@ -1,4 +1,4 @@
-import { PathCommandSchema } from '@retikz/core';
+import type { SceneClipPath } from '@retikz/core';
 import type {
   RuntimeScene,
   RuntimeScenePrimitive,
@@ -91,12 +91,7 @@ const isCanonicalClipPath = (value: unknown): boolean => {
   let activeSubpath = false;
   let hasDrawingSegment = false;
 
-  for (const commandValue of value.commands) {
-    const parsed = PathCommandSchema.safeParse(commandValue);
-    if (!parsed.success) return false;
-
-    const command = parsed.data;
-
+  for (const command of value.commands as SceneClipPath['commands']) {
     switch (command.kind) {
       case 'move':
         activeSubpath = true;
@@ -598,11 +593,7 @@ const validateOperationShape = (operation: ScenePatchOperation): void => {
     const identity = Reflect.get(candidate, 'identity');
     const parent = Reflect.get(candidate, 'parent');
     const before = Reflect.get(candidate, 'before');
-    if (
-      !isSceneIdentity(identity) ||
-      !isSceneIdentity(parent) ||
-      (before !== undefined && !isSceneIdentity(before))
-    ) {
+    if (!isSceneIdentity(identity) || !isSceneIdentity(parent) || (before !== undefined && !isSceneIdentity(before))) {
       return patchError(operation);
     }
 

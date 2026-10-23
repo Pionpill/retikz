@@ -22,7 +22,6 @@ describe('Core minimal builtin providers', () => {
         kind: 'rect',
         schema: expect.anything(),
         resolve: expect.any(Function),
-        shapeSchema: expect.anything(),
         lower: expect.any(Function),
       }),
     );

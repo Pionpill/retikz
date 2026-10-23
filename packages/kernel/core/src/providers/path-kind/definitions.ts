@@ -1,6 +1,6 @@
 import type { AnyPathKindDefinition } from '../../contract';
 import type { StrokePathOwnerOutput } from '../../contract';
-import { definePathKind, StrokePathOwnerOutputSchema } from '../../contract';
+import { definePathKind } from '../../contract';
 import type { IRPathBase } from '../../schemas';
 import { BuiltinPathKind, StrokePathSchema } from '../../schemas';
 
@@ -8,7 +8,7 @@ import { BuiltinPathKind, StrokePathSchema } from '../../schemas';
 const strokePathKind = definePathKind<IRPathBase, StrokePathOwnerOutput>({
   name: BuiltinPathKind.Stroke,
   schema: StrokePathSchema,
-  ownerOutput: { schema: StrokePathOwnerOutputSchema },
+  ownerOutput: true,
   compile: context =>
     context.ownerOutput.requested
       ? context.emitStroke(context.path, {

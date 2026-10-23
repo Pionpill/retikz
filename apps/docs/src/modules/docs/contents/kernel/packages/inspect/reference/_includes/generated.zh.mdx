@@ -600,7 +600,7 @@ export type RetikzInspectErrorOptions = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CLIP_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/clip.ts"} startLine={14}>CLIP_INSPECTOR_KEY</ApiSourceLink>
+#### <ApiSourceLink label={"CLIP_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/clip.ts"} startLine={13}>CLIP_INSPECTOR_KEY</ApiSourceLink>
 
 ```ts
 export const CLIP_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'clip' });
@@ -619,7 +619,7 @@ export const CLIP_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'clip
   }}
 />
 
-#### <ApiSourceLink label={"COORDINATE_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/coordinate.ts"} startLine={14}>COORDINATE_INSPECTOR_KEY</ApiSourceLink>
+#### <ApiSourceLink label={"COORDINATE_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/coordinate.ts"} startLine={13}>COORDINATE_INSPECTOR_KEY</ApiSourceLink>
 
 ```ts
 export const COORDINATE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'coordinate' });
@@ -637,7 +637,7 @@ export const COORDINATE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type:
 
 内置用法见 [内置观测](/kernel/packages/inspect/builtins)，自定义 Inspector 的选项契约见 [自定义用法](/kernel/packages/inspect/custom)。
 
-#### <ApiSourceLink label={"NODE_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/node.ts"} startLine={23}>NODE_INSPECTOR_KEY</ApiSourceLink>
+#### <ApiSourceLink label={"NODE_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/node.ts"} startLine={22}>NODE_INSPECTOR_KEY</ApiSourceLink>
 
 ```ts
 export const NODE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'node' });
@@ -662,7 +662,7 @@ export const NODE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'node
   }}
 />
 
-#### <ApiSourceLink label={"PATH_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/path.ts"} startLine={10}>PATH_INSPECTOR_KEY</ApiSourceLink>
+#### <ApiSourceLink label={"PATH_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/path.ts"} startLine={9}>PATH_INSPECTOR_KEY</ApiSourceLink>
 
 ```ts
 export const PATH_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'path' });
@@ -699,7 +699,7 @@ export const RetikzInspectErrorCode = {
 export type RetikzInspectErrorCode = ValueOf<typeof RetikzInspectErrorCode>;
 ```
 
-#### <ApiSourceLink label={"SCOPE_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/scope.ts"} startLine={21}>SCOPE_INSPECTOR_KEY</ApiSourceLink>
+#### <ApiSourceLink label={"SCOPE_INSPECTOR_KEY"} path={"packages/kernel/inspect/src/providers/scope.ts"} startLine={20}>SCOPE_INSPECTOR_KEY</ApiSourceLink>
 
 ```ts
 export const SCOPE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'scope' });
@@ -789,7 +789,7 @@ export declare const mergeInspectorRegistries: (...registries: ReadonlyArray<Ins
 
 ## 扩展定义与注册
 
-#### <ApiSourceLink label={"AnyInspectorDefinitionInput"} path={"packages/kernel/inspect/src/contract/types.ts"} startLine={184}>AnyInspectorDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"AnyInspectorDefinitionInput"} path={"packages/kernel/inspect/src/contract/types.ts"} startLine={177}>AnyInspectorDefinitionInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -797,16 +797,15 @@ export declare const mergeInspectorRegistries: (...registries: ReadonlyArray<Ins
 
 <ApiTable>
 
-| 成员                          | 类型                                                                     | 默认值 | 说明                                                 |
-| ----------------------------- | ------------------------------------------------------------------------ | ------ | ---------------------------------------------------- |
-| `readonly inspect`            | `(subject: never, context: never) => InspectorOutput`                    | —      | 具体 subject/context 类型由调用前的 schema 恢复      |
-| `readonly mergeOptionsInput?` | `(inheritedOptionsInput: never, localOptionsInput: never) => JsonObject` | —      | 合并已准入的原始 options，不消费 schema 变换后的结果 |
-| `readonly namespace`          | `string`                                                                 | —      | 注册项的命名空间                                     |
-| `readonly optionsSchema?`     | `Readonly<{`<br />`parse: (value: unknown) => JsonObject;`<br />`}>`     | —      | 擦除后仍产出已应用默认值与变换的 JSON object options |
-| `readonly owner`              | `CompileObservationOwner`                                                | —      | 被观察的 Core owner                                  |
-| `readonly resolveOptions?`    | `(options: never) => JsonObject`                                         | —      | 具体 options 类型由准入 schema 恢复                  |
-| `readonly subjectSchema`      | `Readonly<{`<br />`parse: (value: unknown) => JsonValue;`<br />`}>`      | —      | 擦除后仍恢复 JSON-safe subject                       |
-| `readonly type`               | `string`                                                                 | —      | 注册项的类型                                         |
+| 成员                          | 类型                                                                     | 默认值 | 说明                                                     |
+| ----------------------------- | ------------------------------------------------------------------------ | ------ | -------------------------------------------------------- |
+| `readonly inspect`            | `(subject: never, context: never) => InspectorOutput`                    | —      | subject 类型由所属者契约确定，context 类型由选项解析恢复 |
+| `readonly mergeOptionsInput?` | `(inheritedOptionsInput: never, localOptionsInput: never) => JsonObject` | —      | 合并已准入的原始 options，不消费 schema 变换后的结果     |
+| `readonly namespace`          | `string`                                                                 | —      | 注册项的命名空间                                         |
+| `readonly optionsSchema?`     | `Readonly<{`<br />`parse: (value: unknown) => JsonObject;`<br />`}>`     | —      | 擦除后仍产出已应用默认值与变换的 JSON object options     |
+| `readonly owner`              | `CompileObservationOwner`                                                | —      | 被观察的 Core owner                                      |
+| `readonly resolveOptions?`    | `(options: never) => JsonObject`                                         | —      | 具体 options 类型由准入 schema 恢复                      |
+| `readonly type`               | `string`                                                                 | —      | 注册项的类型                                             |
 
 </ApiTable>
 
@@ -825,7 +824,7 @@ export type AnyInspectorDefinitionInput = WithOptionalProperties<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InspectorDefinitionInput"} path={"packages/kernel/inspect/src/contract/types.ts"} startLine={119}>InspectorDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InspectorDefinitionInput"} path={"packages/kernel/inspect/src/contract/types.ts"} startLine={117}>InspectorDefinitionInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -835,7 +834,7 @@ export type AnyInspectorDefinitionInput = WithOptionalProperties<
 
 | 成员                      | 类型                                         | 默认值 | 说明                                          |
 | ------------------------- | -------------------------------------------- | ------ | --------------------------------------------- |
-| `TSubject` (泛型)         | `extends JsonValue = JsonValue`              | —      | 通过 subject schema 解析后的被观察对象类型    |
+| `TSubject` (泛型)         | `extends JsonValue = JsonValue`              | —      | 由所属者提供的被观察对象类型                  |
 | `TParsedOptions` (泛型)   | `extends JsonObject = Record<string, never>` | —      | options schema 解析后的 options 类型          |
 | `TResolvedOptions` (泛型) | `extends JsonObject = TParsedOptions`        | —      | callback 消费的已解析 options 类型            |
 | `TSourceOptions` (泛型)   | `extends JsonObject = TParsedOptions`        | —      | 传入 options schema 前的原始 options 输入类型 |
@@ -960,7 +959,7 @@ export declare const createInspectorRegistry: (
 
 | 类别   | 名称               | 类型 / 签名                                                                            | 说明                                                                                      |
 | ------ | ------------------ | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| 泛型   | `TSubject`         | `extends JsonValue`                                                                    | 通过 subject schema 解析后的被观察对象类型                                                |
+| 泛型   | `TSubject`         | `extends JsonValue`                                                                    | 所属者发布的被观察对象类型                                                                |
 |        | `TParsedOptions`   | `extends JsonObject = Record<string, never>`                                           | options schema 解析后的 options 类型                                                      |
 |        | `TResolvedOptions` | `extends JsonObject = TParsedOptions`                                                  | callback 消费的已解析 options 类型                                                        |
 |        | `TSourceOptions`   | `extends JsonObject = TParsedOptions`                                                  | 传入 options schema 前的原始 options 输入类型                                             |

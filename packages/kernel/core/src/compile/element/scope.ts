@@ -1,5 +1,5 @@
 import type { GroupPrim } from '../../contract';
-import { ClipOwnerOutputSchema, CompileExpansionKind, ScopeOwnerOutputSchema } from '../../contract';
+import { CompileExpansionKind } from '../../contract';
 import { resolveClip } from '../../resolve/resource';
 import { ScopeBoundingShape } from '../../schemas';
 import type { NodeLayout } from '../node';
@@ -82,7 +82,6 @@ export const compileScope = (
               ancestors: [...(context.ancestors ?? []), { owner: { kind: 'scope' }, occurrence }],
             },
             { kind: 'clip' },
-            ClipOwnerOutputSchema,
             () => ({ path: clipResource.path }),
           );
     return Object.freeze({
@@ -96,20 +95,15 @@ export const compileScope = (
         bounds: [],
         observations: [
           ...clipObservations,
-          ...collectElementObservation(
-            { ...context, context: preparation.scope },
-            { kind: 'scope' },
-            ScopeOwnerOutputSchema,
-            () => ({
-              envelope:
-                layouts.length === 0
-                  ? null
-                  : {
-                      shape: input.boundingShape === ScopeBoundingShape.Circle ? 'circle' : 'rectangle',
-                      rect: envelope.geometry.rect,
-                    },
-            }),
-          ),
+          ...collectElementObservation({ ...context, context: preparation.scope }, { kind: 'scope' }, () => ({
+            envelope:
+              layouts.length === 0
+                ? null
+                : {
+                    shape: input.boundingShape === ScopeBoundingShape.Circle ? 'circle' : 'rectangle',
+                    rect: envelope.geometry.rect,
+                  },
+          })),
         ],
       }),
     });

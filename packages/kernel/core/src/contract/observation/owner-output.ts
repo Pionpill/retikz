@@ -1,95 +1,58 @@
-import { NonBlankStringSchema } from '@retikz/foundation';
-import type { infer as ZodInfer } from 'zod';
-import { array, literal, number, strictObject, tuple, union } from 'zod';
+import type { CenteredBox, Position } from '@retikz/math';
 
-import { ClipFillRuleSchema, PathCommandSchema, PositionSchema } from '../../schemas';
-
-const RectOwnerOutputSchema = strictObject({
-  x: number().describe('Rect center x in the owner-local coordinate system.'),
-  y: number().describe('Rect center y in the owner-local coordinate system.'),
-  width: number().describe('Rect width in user units.'),
-  height: number().describe('Rect height in user units.'),
-  rotate: number().optional().describe('Rect rotation in radians.'),
-}).describe('Owner-local rectangle with an optional rotation.');
-
-const GeometryKeyPointOwnerOutputSchema = strictObject({
-  name: NonBlankStringSchema.describe('Provider-defined unique key-point name.'),
-  position: PositionSchema.describe('Key-point position in the owner-local coordinate system.'),
-}).describe('Named structural key point supplied by a Shape provider.');
-
-const NodeShapeOwnerOutputSchema = strictObject({
-  name: NonBlankStringSchema.describe('Resolved Shape provider name.'),
-  outline: array(PathCommandSchema)
-    .nullable()
-    .describe('Exact closed Shape outline, or null when the provider does not expose one.'),
-  keyPoints: array(GeometryKeyPointOwnerOutputSchema)
-    .nullable()
-    .describe('Stable named Shape key points, or null when the provider does not expose them.'),
-}).describe('Settled Shape geometry published for a Node occurrence.');
-
-const NodeBoundaryOwnerOutputSchema = strictObject({
-  name: NonBlankStringSchema.describe('Resolved Boundary provider name.'),
-  outline: array(PathCommandSchema)
-    .nullable()
-    .describe('Exact closed Boundary outline, or null when the provider does not expose one.'),
-}).describe('Settled Boundary geometry published for a Node occurrence.');
-
-const NodeContentOwnerOutputSchema = strictObject({
-  corners: tuple([PositionSchema, PositionSchema, PositionSchema, PositionSchema]).describe(
-    'Content-box corners in top-left, top-right, bottom-right, bottom-left order.',
-  ),
-  baselines: array(
-    strictObject({
-      from: PositionSchema.describe('Baseline start point.'),
-      to: PositionSchema.describe('Baseline end point.'),
-    }).describe('One physical text-line baseline.'),
-  ).describe('Physical baselines from the same settled text layout.'),
-}).describe('Settled Node content-box geometry.');
-
-/** Node 最终 occurrence 的局部几何与正文布局产物 schema */
-export const NodeOwnerOutputSchema = strictObject({
-  rect: RectOwnerOutputSchema.describe('Settled Node outer rectangle in occurrence-local coordinates.'),
-  shape: NodeShapeOwnerOutputSchema,
-  boundary: NodeBoundaryOwnerOutputSchema,
-  content: NodeContentOwnerOutputSchema.nullable().describe('Settled content geometry, or null for no content.'),
-}).describe('Settled Node owner output exposed to compile observers.');
+import type { PathCommand, SceneClipPath } from '../scene';
+import type { GeometryKeyPoint } from '../shape';
 
 /** Node 最终 occurrence 的局部几何与正文布局产物 */
-export type NodeOwnerOutput = ZodInfer<typeof NodeOwnerOutputSchema>;
-
-const ScopeEnvelopeOwnerOutputSchema = strictObject({
-  shape: union([literal('rectangle'), literal('circle')]).describe('Intrinsic envelope shape.'),
-  rect: RectOwnerOutputSchema.describe('Intrinsic envelope rectangle before Scope transforms and placement.'),
-}).describe('Intrinsic Scope envelope.');
-
-/** Scope 最终 occurrence 的固有包络产物 schema */
-export const ScopeOwnerOutputSchema = strictObject({
-  envelope: ScopeEnvelopeOwnerOutputSchema.nullable().describe(
-    'Intrinsic Scope envelope, or null when no child layout contributes to it.',
-  ),
-}).describe('Settled Scope owner output exposed to compile observers.');
+export type NodeOwnerOutput = {
+  /** 最终节点外框 */
+  rect: CenteredBox;
+  /** 节点形状的轮廓与关键点 */
+  shape: {
+    /** 形状注册名 */
+    name: string;
+    /** 闭合轮廓，未提供时为 null */
+    outline: Array<PathCommand> | null;
+    /** 命名关键点，未提供时为 null */
+    keyPoints: Array<GeometryKeyPoint> | null;
+  };
+  /** 节点连接边界的轮廓 */
+  boundary: {
+    /** 边界注册名 */
+    name: string;
+    /** 闭合轮廓，未提供时为 null */
+    outline: Array<PathCommand> | null;
+  };
+  /** 正文角点与物理文本行基线，无正文时为 null */
+  content: {
+    /** 正文四角，按轮廓顺序排列 */
+    corners: [Position, Position, Position, Position];
+    /** 各物理文本行的基线端点 */
+    baselines: Array<{ from: Position; to: Position }>;
+  } | null;
+};
 
 /** Scope 最终 occurrence 的固有包络产物 */
-export type ScopeOwnerOutput = ZodInfer<typeof ScopeOwnerOutputSchema>;
-
-/** Coordinate 最终 occurrence 的已解析点产物 schema */
-export const CoordinateOwnerOutputSchema = strictObject({
-  id: NonBlankStringSchema.describe('Resolved Coordinate id.'),
-  position: PositionSchema.describe('Resolved Coordinate position in occurrence-local coordinates.'),
-}).describe('Settled Coordinate owner output exposed to compile observers.');
+export type ScopeOwnerOutput = {
+  /** 子节点决定的固有包络，无贡献时为 null */
+  envelope: {
+    /** 包络形状 */
+    shape: 'rectangle' | 'circle';
+    /** 包络外框 */
+    rect: CenteredBox;
+  } | null;
+};
 
 /** Coordinate 最终 occurrence 的已解析点产物 */
-export type CoordinateOwnerOutput = ZodInfer<typeof CoordinateOwnerOutputSchema>;
-
-const SceneClipPathOwnerOutputSchema = strictObject({
-  commands: array(PathCommandSchema).describe('Final lowered structured clip commands.'),
-  fillRule: ClipFillRuleSchema.describe('Explicit fill rule for the lowered clip path.'),
-}).describe('Final lowered clip path; subpaths may rely on fill-rule implicit closure.');
-
-/** 一次 Clip 应用的最终 lowering 路径产物 schema */
-export const ClipOwnerOutputSchema = strictObject({
-  path: SceneClipPathOwnerOutputSchema.describe('Final lowered path for one logical Clip application.'),
-}).describe('Settled Clip owner output exposed to compile observers.');
+export type CoordinateOwnerOutput = {
+  /** 坐标标识 */
+  id: string;
+  /** occurrence 局部坐标 */
+  position: Position;
+};
 
 /** 一次 Clip 应用的最终 lowering 路径产物 */
-export type ClipOwnerOutput = ZodInfer<typeof ClipOwnerOutputSchema>;
+export type ClipOwnerOutput = {
+  /** 最终裁剪路径 */
+  path: SceneClipPath;
+};

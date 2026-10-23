@@ -7,7 +7,7 @@ import { createRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { null as zodNull, strictObject } from 'zod';
+import { strictObject } from 'zod';
 
 import { createInspectorRegistry, defineInspector, PATH_INSPECTOR_KEY } from '../../src';
 import { BUILTIN_INSPECTORS } from '../../src/providers';
@@ -149,7 +149,6 @@ describe('@retikz/inspect/react authoring and driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: zodNull(),
         optionsSchema: strictObject({}),
         resolveOptions: options => options,
         inspect: () => [],

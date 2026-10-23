@@ -28,7 +28,7 @@ description: 为 Scope 定义新的 JSON-safe 裁剪形状，并在 React 或 Va
 
 ## 定义能力
 
-将 Definition 放在可复用模块中，例如 `rounded-rect-clip.ts`。当 spec 本身已是完整 shape 时，只写 `schema` 与 `lower`：`defineClip` 会派生 `resolve: spec => spec`，并复用该 schema 作为 `shapeSchema`。需要将简写、引用或配置解析为另一种 shape 时，才显式提供 `resolve` 与 `shapeSchema`。`lower` 返回结构化路径，而不是 SVG 字符串或 Canvas callback。
+将 Definition 放在可复用模块中，例如 `rounded-rect-clip.ts`。当 spec 本身已是完整 shape 时，只写 `schema` 与 `lower`：`defineClip` 会派生 `resolve: spec => spec`。需要将简写、引用或配置解析为另一种 shape 时，才显式提供 `resolve`；内部 shape 由 TypeScript 契约约束，不重复解析。`lower` 返回结构化路径，而不是 SVG 字符串或 Canvas callback。
 
 ```ts
 import type { PathCommand } from '@retikz/core';
@@ -207,7 +207,7 @@ provider graph 中的 `{ capability: 'clip', name: kind }` provider 同样产出
       name: 'defineClip',
       kind: 'function',
       type: 'DefineClip',
-      description: '创建可注册的裁剪能力；输入已是完整形状时可省略 `resolve` 与 `shapeSchema`',
+      description: '创建可注册的裁剪能力；输入已是完整形状时可省略 `resolve`',
     },
     {
       name: 'ClipDefinition',

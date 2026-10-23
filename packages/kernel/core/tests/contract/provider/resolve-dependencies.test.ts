@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { literal, number, strictObject } from 'zod';
+import { literal, strictObject } from 'zod';
 
 import type {
   AnyCompositeDefinition,
@@ -53,7 +53,6 @@ const clipDefinitionOf = (name: string) =>
     kind: name,
     schema: strictObject({ kind: literal(name) }),
     resolve: () => ({ kind: name, size: 4 }),
-    shapeSchema: strictObject({ kind: literal(name), size: number().positive() }),
     lower: shape => ({
       commands: [
         { kind: 'move', to: [0, 0] },

@@ -34,7 +34,7 @@ const Demo: FC = () => (
       cornerRadius={4}
       style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
     >
-      shapeSchema + lower
+      typed shape → lower
     </Node>
     <Node
       id="path"

@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { PathCommandSchema } from '../../src/schemas';
+import { PathClipCommandSchema } from '../../src/clip';
 
-describe('PathCommandSchema strict object behavior', () => {
+describe('PathClipCommandSchema strict object behavior', () => {
   it('move command rejects unknown fields', () => {
-    expect(PathCommandSchema.safeParse({ kind: 'move', to: [0, 0], typo: true }).success).toBe(false);
+    expect(PathClipCommandSchema.safeParse({ kind: 'move', to: [0, 0], typo: true }).success).toBe(false);
   });
 
   it('arc command rejects unknown fields', () => {
     expect(
-      PathCommandSchema.safeParse({
+      PathClipCommandSchema.safeParse({
         kind: 'arc',
         center: [0, 0],
         radius: 10,
@@ -21,6 +21,6 @@ describe('PathCommandSchema strict object behavior', () => {
   });
 
   it('close command rejects unknown fields', () => {
-    expect(PathCommandSchema.safeParse({ kind: 'close', reason: 'done' }).success).toBe(false);
+    expect(PathClipCommandSchema.safeParse({ kind: 'close', reason: 'done' }).success).toBe(false);
   });
 });

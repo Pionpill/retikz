@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { literal, strictObject, string } from 'zod';
+import { literal } from 'zod';
 
 import type { CompileBinding, CompileOutput, IRPathBase } from '../../src';
 import { definePathKind, PathSchema } from '../../src';
@@ -83,7 +83,7 @@ describe('独立元素编译', () => {
     const kind = definePathKind({
       name: 'cached-path',
       schema: PathSchema.extend({ kind: literal('cached-path') }),
-      ownerOutput: { schema: strictObject({ label: string() }) },
+      ownerOutput: true,
       compile: context => {
         calls += 1;
         if (context.ownerOutput.requested) context.ownerOutput.publish({ label: 'cached' });

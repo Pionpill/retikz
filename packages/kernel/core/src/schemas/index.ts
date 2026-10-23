@@ -10,7 +10,6 @@ export * from './kernel';
 export * from './node';
 export * from './paint';
 export * from './path';
-export * from './path-command';
 export * from './position';
 export * from './scalar';
 export * from './scene';

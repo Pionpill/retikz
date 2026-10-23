@@ -27,12 +27,11 @@ const defineClipImplementation = (
     return {
       ...definition,
       resolve: spec => spec,
-      shapeSchema: definition.schema,
     };
   }
 
   return definition;
 };
 
-/** 定义 clip 注册项，并在 identity clip 中派生默认解析与 shapeSchema */
+/** 定义 clip 注册项，并在 identity clip 中派生默认解析 */
 export const defineClip = defineClipImplementation as DefineClip;

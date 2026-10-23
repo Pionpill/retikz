@@ -1,6 +1,5 @@
 import type { JsonValue } from '@retikz/foundation';
 import type { AffineMatrix } from '@retikz/math';
-import type { ZodType } from 'zod';
 
 import type { IRChild } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
@@ -49,17 +48,8 @@ export type CompileObservationAncestor = Readonly<{
 }>;
 
 /**
- * 所属者产物的 JSON schema 契约
- * @template TValue 所属者 schema 校验、发布和观察的 JSON 产物类型
- */
-export type CompileOwnerOutputDefinition<TValue extends JsonValue = JsonValue> = Readonly<{
-  /** 校验并恢复所属者最终产物的 schema */
-  schema: ZodType<TValue>;
-}>;
-
-/**
  * Path kind 在需要时发布最终产物的编译期 publisher
- * @template TValue 所属者 schema 校验、发布和观察的 JSON 产物类型
+ * @template TValue 所属者发布和观察的 JSON 产物类型
  */
 export type CompileOwnerOutputPublisher<TValue extends JsonValue = JsonValue> = Readonly<{
   /** 当前编译是否至少被一个 observer 选中 */
@@ -135,7 +125,7 @@ export type CompileFragmentDiagnostic = Readonly<{
 
 /**
  * 一次最终所属者产物观察事件
- * @template TValue 所属者 schema 校验、发布和观察的 JSON 产物类型
+ * @template TValue 所属者发布和观察的 JSON 产物类型
  */
 export type CompileObservation<TValue extends JsonValue = JsonValue> = Readonly<{
   /** 所属者身份 */
@@ -144,7 +134,7 @@ export type CompileObservation<TValue extends JsonValue = JsonValue> = Readonly<
   occurrence: CompileOccurrenceLocator;
   /** 从外到内排列的最终逻辑容器链条，不包括当前 observation 自身 */
   ancestors: ReadonlyArray<CompileObservationAncestor>;
-  /** 已按所属者 schema 校验并冻结的产物 */
+  /** 已隔离并冻结的所属者产物 */
   value: TValue;
   /** 从所属者局部坐标到主 Scene 坐标的仿射矩阵 */
   transform: AffineMatrix;

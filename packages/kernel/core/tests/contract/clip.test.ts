@@ -32,7 +32,6 @@ describe('Clip definition contract', () => {
         kind,
         schema: strictObject({ kind: literal(kind) }),
         resolve: () => ({ kind }),
-        shapeSchema: strictObject({ kind: literal(kind) }),
         lower: (): SceneClipPath => ({
           commands: [
             { kind: 'move', to: [0, 0] },
@@ -44,12 +43,11 @@ describe('Clip definition contract', () => {
     ).toThrowError('clip provider key must be a non-empty string.');
   });
 
-  it('keeps spec parsing, shape parsing, resolve, and lower on one typed definition', () => {
+  it('keeps spec parsing, typed resolve, and lower on one typed definition', () => {
     const definition = defineClip<TicketClip, TicketClipShape>({
       kind: 'ticket',
       schema: TicketClipSchema,
       resolve: spec => ({ kind: 'ticket', size: spec.size }),
-      shapeSchema: TicketClipShapeSchema,
       lower: shape => ({
         commands: [
           { kind: 'move', to: [0, 0] },
@@ -59,7 +57,6 @@ describe('Clip definition contract', () => {
       }),
     });
 
-    expect(definition.shapeSchema).toBe(TicketClipShapeSchema);
     expect(
       definition.lower(
         { kind: 'ticket', size: 4 },
@@ -79,7 +76,7 @@ describe('Clip definition contract', () => {
     });
   });
 
-  it('derives identity resolve and shapeSchema from a ClipShape schema', () => {
+  it('derives identity resolve from a ClipShape schema', () => {
     const definition = defineClip({
       kind: 'ticket',
       schema: TicketClipShapeSchema,
@@ -93,7 +90,6 @@ describe('Clip definition contract', () => {
     });
     const spec = { kind: 'ticket', size: 4 } as const;
 
-    expect(definition.shapeSchema).toBe(TicketClipShapeSchema);
     expect(definition.resolve(spec, { round: value => value, resolve: () => spec })).toBe(spec);
 
     const scene: IRScene = {

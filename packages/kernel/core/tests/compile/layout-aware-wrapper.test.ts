@@ -491,13 +491,6 @@ describe('layout-aware composite runtime wrapper tree', () => {
         if (spec.fail) throw new Error('runtime Scope clip failed');
         return { kind: 'conditionalPreflightClip', x: -10, y: -10, width: 20, height: 20 };
       },
-      shapeSchema: strictObject({
-        kind: literal('conditionalPreflightClip'),
-        x: number(),
-        y: number(),
-        width: number().nonnegative(),
-        height: number().nonnegative(),
-      }),
       lower: shape => ({
         commands: [
           { kind: 'move', to: [shape.x, shape.y] },

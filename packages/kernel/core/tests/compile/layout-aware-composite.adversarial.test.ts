@@ -1,8 +1,7 @@
 import type { JsonValue } from '@retikz/foundation';
-import { NonBlankStringSchema, RetikzError } from '@retikz/foundation';
-import { JsonObjectSchema } from '@retikz/foundation';
+import { RetikzError } from '@retikz/foundation';
 import { describe, expect, it, vi } from 'vitest';
-import { array, boolean, custom, enum as zodEnum, intersection, literal, number, object, strictObject } from 'zod';
+import { boolean, custom, enum as zodEnum, literal, number, strictObject } from 'zod';
 
 import type {
   ClipShape,
@@ -2221,7 +2220,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect({ boundsPointsReads, xReads }).toEqual({ boundsPointsReads: 1, xReads: 1 });
   });
 
-  it('lets structurally malformed shape, arrow, pattern, clip, and path-generator outputs pierce a discarded probe', () => {
+  it('lets invalid provider geometry and clip grammar pierce a discarded probe', () => {
     const badShape = defineShape({
       name: 'badEmitShape',
       paramsSchema: strictObject({}),
@@ -2245,13 +2244,9 @@ describe('layout-aware composite constraints and bounds', () => {
     const badClip = defineClip({
       kind: 'badResolvedClip',
       schema: strictObject({ kind: literal('badResolvedClip') }),
-      resolve: () => ({ kind: 'badResolvedClip', width: -1 }),
-      shapeSchema: strictObject({ kind: literal('badResolvedClip'), width: number().positive() }),
+      resolve: () => ({ kind: 'badResolvedClip' }),
       lower: () => ({
-        commands: [
-          { kind: 'move', to: [0, 0] },
-          { kind: 'line', to: [1, 1] },
-        ],
+        commands: [{ kind: 'line', to: [1, 1] }],
         fillRule: 'nonzero',
       }),
     });
@@ -2317,7 +2312,7 @@ describe('layout-aware composite constraints and bounds', () => {
     for (const variant of ['shape', 'arrow', 'pattern', 'clip', 'pathGenerator'] as const) {
       expect(() =>
         compileToScene(sceneOf({ namespace: 'test', type: 'malformedProviderParent', variant }), options),
-      ).toThrow(/emit|primitive|invalid|root shape|path command|output validation/i);
+      ).toThrow(/emit|primitive|invalid|root shape|path command|output validation|subpath/i);
     }
   });
 
@@ -2384,10 +2379,6 @@ describe('layout-aware composite constraints and bounds', () => {
       kind: 'cyclicCompoundClip',
       schema: strictObject({ kind: literal('cyclicCompoundClip') }),
       resolve: () => cyclicClipShape,
-      shapeSchema: strictObject({
-        kind: literal('cyclicCompoundClip'),
-        children: array(intersection(object({ kind: NonBlankStringSchema }), JsonObjectSchema)),
-      }),
       lower: () => ({
         commands: [
           { kind: 'move', to: [0, 0] },
@@ -2541,13 +2532,6 @@ describe('layout-aware composite constraints and bounds', () => {
       kind: 'symbolKeyClip',
       schema: strictObject({ kind: literal('symbolKeyClip') }),
       resolve: () => symbolClipShape as unknown as ClipShape,
-      shapeSchema: strictObject({
-        kind: literal('symbolKeyClip'),
-        x: number(),
-        y: number(),
-        width: number().nonnegative(),
-        height: number().nonnegative(),
-      }),
       lower: shape => ({
         commands: [
           { kind: 'move', to: [shape.x as number, shape.y as number] },
@@ -2662,13 +2646,6 @@ describe('layout-aware composite constraints and bounds', () => {
       kind: 'proxyTrapClip',
       schema: strictObject({ kind: literal('proxyTrapClip') }),
       resolve: () => clipProxy as unknown as ClipShape,
-      shapeSchema: strictObject({
-        kind: literal('proxyTrapClip'),
-        x: number(),
-        y: number(),
-        width: number().nonnegative(),
-        height: number().nonnegative(),
-      }),
       lower: () => ({
         commands: [
           { kind: 'move', to: [0, 0] },
@@ -2853,13 +2830,6 @@ describe('layout-aware composite constraints and bounds', () => {
       kind: 'dynamicClipShape',
       schema: strictObject({ kind: literal('dynamicClipShape') }),
       resolve: () => dynamicShape,
-      shapeSchema: strictObject({
-        kind: literal('dynamicClipShape'),
-        x: number(),
-        y: number(),
-        width: number().nonnegative(),
-        height: number().nonnegative(),
-      }),
       lower: shape => ({
         commands: [
           { kind: 'move', to: [shape.x, shape.y] },
@@ -3197,7 +3167,6 @@ describe('layout-aware composite constraints and bounds', () => {
           if (stage === 'resolve') throw new Error('ordinary clip resolve failure');
           return { kind: 'ordinaryThrowingClip' };
         },
-        shapeSchema: strictObject({ kind: literal('ordinaryThrowingClip') }),
         lower: () => {
           if (stage === 'lower') throw new Error('ordinary clip lower failure');
 
