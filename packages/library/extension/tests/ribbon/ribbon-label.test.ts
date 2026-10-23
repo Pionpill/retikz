@@ -1,5 +1,5 @@
 import type { GroupPrim, IRPathBase, IRScene, IRStep, PathPrim, ScenePrimitive, TextPrim } from '@retikz/core';
-import { compileToScene as compileCoreToScene, StepLabelSchema } from '@retikz/core';
+import { compileToScene as compileCoreToScene, PathLabelSchema } from '@retikz/core';
 import { curve } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
@@ -107,7 +107,7 @@ describe('Ribbon label schema', () => {
     };
 
     expect(RibbonLabelSchema.parse(label)).toEqual(label);
-    expect(StepLabelSchema.safeParse(label).success).toBe(false);
+    expect(PathLabelSchema.safeParse(label).success).toBe(false);
     expect(RibbonSchema.parse(JSON.parse(JSON.stringify(ribbon({ label }))))).toMatchObject({
       kindOptions: { label },
     });

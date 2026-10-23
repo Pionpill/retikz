@@ -160,10 +160,10 @@ describe('path.label：stroke host label 几何', () => {
 
 describe('step.label：line 段的 label 几何', () => {
   it('schema rejects sloped as a side value and accepts sloped as a boolean flag', async () => {
-    const { StepLabelSchema } = await import('../../src/schemas/path/step');
+    const { PathLabelSchema } = await import('../../src/schemas/path/step');
 
-    expect(StepLabelSchema.safeParse({ text: 'x', side: 'sloped' }).success).toBe(false);
-    expect(StepLabelSchema.safeParse({ text: 'x', sloped: true }).success).toBe(true);
+    expect(PathLabelSchema.safeParse({ text: 'x', side: 'sloped' }).success).toBe(false);
+    expect(PathLabelSchema.safeParse({ text: 'x', sloped: true }).success).toBe(true);
   });
 
   it('默认 (position=midway, side=top)：TextPrim 落在中点上方，align=middle baseline=bottom', () => {
@@ -1152,55 +1152,55 @@ describe('label on ellipsePath：同 circlePath 角度参数化（非弧长）',
 });
 
 describe('label.position schema 边界：异常值由 zod 拒绝（不在 compile 阶段 clamp）', () => {
-  // 用 IR 通过 PathSchema / StepLabelSchema 解析；构造直接喂 path schema 验证
+  // 用 IR 通过 PathSchema / PathLabelSchema 解析；构造直接喂 path schema 验证
   it('label_position_bottom_0_rejected：position=-0.1 → schema 校验失败', async () => {
-    const { StepLabelSchema } = await import('../../src/schemas/path/step');
-    const result = StepLabelSchema.safeParse({ text: 'x', position: -0.1 });
+    const { PathLabelSchema } = await import('../../src/schemas/path/step');
+    const result = PathLabelSchema.safeParse({ text: 'x', position: -0.1 });
 
     expect(result.success).toBe(false);
   });
 
   it('label_position_top_1_rejected：position=1.5 → schema 校验失败', async () => {
-    const { StepLabelSchema } = await import('../../src/schemas/path/step');
-    const result = StepLabelSchema.safeParse({ text: 'x', position: 1.5 });
+    const { PathLabelSchema } = await import('../../src/schemas/path/step');
+    const result = PathLabelSchema.safeParse({ text: 'x', position: 1.5 });
 
     expect(result.success).toBe(false);
   });
 
   it('label_unknown_keyword_rejected：position="unknown" → schema 校验失败', async () => {
-    const { StepLabelSchema } = await import('../../src/schemas/path/step');
-    const result = StepLabelSchema.safeParse({ text: 'x', position: 'unknown' });
+    const { PathLabelSchema } = await import('../../src/schemas/path/step');
+    const result = PathLabelSchema.safeParse({ text: 'x', position: 'unknown' });
 
     expect(result.success).toBe(false);
   });
 
   it('label_compat_position_alias_keywords_accepted', async () => {
-    const { StepLabelSchema } = await import('../../src/schemas/path/step');
+    const { PathLabelSchema } = await import('../../src/schemas/path/step');
 
-    // compat: these position aliases remain accepted StepLabelSchema input.
+    // compat: these position aliases remain accepted PathLabelSchema input.
     for (const k of ['midway', 'near-start', 'near-end']) {
-      const result = StepLabelSchema.safeParse({ text: 'x', position: k });
+      const result = PathLabelSchema.safeParse({ text: 'x', position: k });
 
       expect(result.success).toBe(true);
     }
   });
 
   it('label_all_7_keywords_accepted：7 个新 keyword 全部合法', async () => {
-    const { StepLabelSchema } = await import('../../src/schemas/path/step');
+    const { PathLabelSchema } = await import('../../src/schemas/path/step');
     const keywords = ['at-start', 'very-near-start', 'near-start', 'midway', 'near-end', 'very-near-end', 'at-end'];
 
     for (const k of keywords) {
-      const result = StepLabelSchema.safeParse({ text: 'x', position: k });
+      const result = PathLabelSchema.safeParse({ text: 'x', position: k });
 
       expect(result.success).toBe(true);
     }
   });
 
   it('label_numeric_0_and_1_accepted：边界 0 / 1 合法', async () => {
-    const { StepLabelSchema } = await import('../../src/schemas/path/step');
+    const { PathLabelSchema } = await import('../../src/schemas/path/step');
 
-    expect(StepLabelSchema.safeParse({ text: 'x', position: 0 }).success).toBe(true);
-    expect(StepLabelSchema.safeParse({ text: 'x', position: 1 }).success).toBe(true);
+    expect(PathLabelSchema.safeParse({ text: 'x', position: 0 }).success).toBe(true);
+    expect(PathLabelSchema.safeParse({ text: 'x', position: 1 }).success).toBe(true);
   });
 });
 
@@ -1210,43 +1210,43 @@ describe('label.position schema 边界：异常值由 zod 拒绝（不在 compil
 
 describe('label.position adversarial：构造让实现挂的输入', () => {
   it('adv_NaN_rejected：position=NaN → zod 拒绝（NaN 不在 [0,1] 区间）', async () => {
-    const { StepLabelSchema } = await import('../../src/schemas/path/step');
-    const result = StepLabelSchema.safeParse({ text: 'x', position: Number.NaN });
+    const { PathLabelSchema } = await import('../../src/schemas/path/step');
+    const result = PathLabelSchema.safeParse({ text: 'x', position: Number.NaN });
 
     expect(result.success).toBe(false);
   });
 
   it('adv_Infinity_rejected：position=+Infinity → 拒绝', async () => {
-    const { StepLabelSchema } = await import('../../src/schemas/path/step');
-    const result = StepLabelSchema.safeParse({ text: 'x', position: Number.POSITIVE_INFINITY });
+    const { PathLabelSchema } = await import('../../src/schemas/path/step');
+    const result = PathLabelSchema.safeParse({ text: 'x', position: Number.POSITIVE_INFINITY });
 
     expect(result.success).toBe(false);
   });
 
   it('adv_neg_zero_accepted：position=-0 → 接受（IEEE -0 == 0 在数学上等价 t=0）', async () => {
-    const { StepLabelSchema } = await import('../../src/schemas/path/step');
-    const result = StepLabelSchema.safeParse({ text: 'x', position: -0 });
+    const { PathLabelSchema } = await import('../../src/schemas/path/step');
+    const result = PathLabelSchema.safeParse({ text: 'x', position: -0 });
 
     expect(result.success).toBe(true);
   });
 
   it('adv_just_top_1_rejected：position=1.0000000001 → 拒绝', async () => {
-    const { StepLabelSchema } = await import('../../src/schemas/path/step');
-    const result = StepLabelSchema.safeParse({ text: 'x', position: 1.0000000001 });
+    const { PathLabelSchema } = await import('../../src/schemas/path/step');
+    const result = PathLabelSchema.safeParse({ text: 'x', position: 1.0000000001 });
 
     expect(result.success).toBe(false);
   });
 
   it('adv_boolean_rejected：position=true → 拒绝（不是 enum 也不是 number）', async () => {
-    const { StepLabelSchema } = await import('../../src/schemas/path/step');
-    const result = StepLabelSchema.safeParse({ text: 'x', position: true });
+    const { PathLabelSchema } = await import('../../src/schemas/path/step');
+    const result = PathLabelSchema.safeParse({ text: 'x', position: true });
 
     expect(result.success).toBe(false);
   });
 
   it('adv_null_rejected：position=null → 拒绝（optional 接受 undefined 但不接受 null）', async () => {
-    const { StepLabelSchema } = await import('../../src/schemas/path/step');
-    const result = StepLabelSchema.safeParse({ text: 'x', position: null });
+    const { PathLabelSchema } = await import('../../src/schemas/path/step');
+    const result = PathLabelSchema.safeParse({ text: 'x', position: null });
 
     expect(result.success).toBe(false);
   });
@@ -1272,15 +1272,15 @@ describe('label.position adversarial：构造让实现挂的输入', () => {
   });
 
   it('adv_keyword_camelCase_rejected：position="atStart" 驼峰拒绝（必须 kebab）', async () => {
-    const { StepLabelSchema } = await import('../../src/schemas/path/step');
-    const result = StepLabelSchema.safeParse({ text: 'x', position: 'atStart' });
+    const { PathLabelSchema } = await import('../../src/schemas/path/step');
+    const result = PathLabelSchema.safeParse({ text: 'x', position: 'atStart' });
 
     expect(result.success).toBe(false);
   });
 
   it('adv_keyword_space_rejected：position="at start" 含空格拒绝（parser sugar 用空格 retikz 用连字符）', async () => {
-    const { StepLabelSchema } = await import('../../src/schemas/path/step');
-    const result = StepLabelSchema.safeParse({ text: 'x', position: 'at start' });
+    const { PathLabelSchema } = await import('../../src/schemas/path/step');
+    const result = PathLabelSchema.safeParse({ text: 'x', position: 'at start' });
 
     expect(result.success).toBe(false);
   });

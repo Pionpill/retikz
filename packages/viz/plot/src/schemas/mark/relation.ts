@@ -6,7 +6,7 @@ import {
   PathGeometrySchema,
   PathStrokeSchema,
   PositionSchema,
-  StepLabelSchema,
+  PathLabelSchema,
 } from '@retikz/core';
 import { CenterlineRibbonPathOptionsSchema, TaperRibbonWidthSchema } from '@retikz/extension';
 import type { ValueOf } from '@retikz/foundation';
@@ -88,8 +88,8 @@ export type RelationOrthogonalLabelStep = ValueOf<typeof RelationOrthogonalLabel
 export const RelationTransformSchema = MarkTransformSchema;
 
 /** 校验关系路径步骤标签的固定配置 */
-export const RelationStepLabelSchema = StepLabelSchema.extend({
-  text: StepLabelSchema.shape.text.optional(),
+export const RelationStepLabelSchema = PathLabelSchema.extend({
+  text: PathLabelSchema.shape.text.optional(),
 }).describe('Fixed step label properties; field text is supplied by the corresponding encoding');
 
 /** 校验仅供普通路径关系使用的 Core Path 选项 */

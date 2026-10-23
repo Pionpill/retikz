@@ -38,9 +38,9 @@ export const BendDirection = {
   Right: 'right',
 } as const;
 
-/** 圆 / 椭圆 path 局部弧段闭合方式 */
-export const PathCloseMode = {
-  /** 完整闭合路径 */
+/** 圆或椭圆路径的闭合方式 */
+export const CirclePathCloseMode = {
+  /** 完整圆或椭圆，不指定起止角 */
   Closed: 'closed',
   /** 以弦连接弧段两端 */
   Chord: 'chord',
@@ -58,5 +58,5 @@ export type FoldStepVia = ValueOf<typeof FoldStepVia>;
 /** bend step 弯曲侧取值 */
 export type BendDirection = ValueOf<typeof BendDirection>;
 
-/** 圆 / 椭圆 path 局部弧段闭合方式取值 */
-export type PathCloseMode = ValueOf<typeof PathCloseMode>;
+/** 圆或椭圆路径的闭合方式取值 */
+export type CirclePathCloseMode = ValueOf<typeof CirclePathCloseMode>;

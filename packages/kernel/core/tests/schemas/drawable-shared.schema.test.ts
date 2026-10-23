@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { DrawableInstanceSchema, GraphicStyleSchema, PathLabelSchema, PathSchema, StepLabelSchema } from '../../src';
+import { DrawableInstanceSchema, GraphicStyleSchema, PathLabelSchema, PathSchema } from '../../src';
 
 const steps = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -82,9 +82,8 @@ describe('Drawable shared schema', () => {
   it('reuses path labels for step labels and path host labels', () => {
     const label = { text: '128', position: 0.75, sloped: true };
 
-    expect(StepLabelSchema.parse(label)).toEqual(label);
+    expect(PathLabelSchema.parse(label)).toEqual(label);
     expect(PathSchema.parse(path({ label })).label).toEqual(label);
-    expect(StepLabelSchema).toBe(PathLabelSchema);
     expect(PathLabelSchema.safeParse({ ...label, placement: 'inside' }).success).toBe(false);
   });
 

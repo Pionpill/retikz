@@ -1,4 +1,4 @@
-import { PositionSchema, TargetSchema, StepLabelSchema } from '@retikz/core';
+import { PositionSchema, TargetSchema, PathLabelSchema } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { literal, strictObject, union } from 'zod';
 
@@ -9,7 +9,7 @@ const properties = {
   namespace: literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
   type: literal('sector').describe('Composite type for the sector shape.'),
   ...ShapeAnglesSchema.shape,
-  label: StepLabelSchema.optional(),
+  label: PathLabelSchema.optional(),
 };
 
 /** Sector 的持久化几何契约 */

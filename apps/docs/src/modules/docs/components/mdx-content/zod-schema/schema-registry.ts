@@ -918,11 +918,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PathLabel',
     url: '/kernel/components/path/reference#pathlabelschema',
   },
-  StepLabelSchema: { schema: IR.StepLabelSchema, label: 'StepLabel' },
-  ControlPointSchema: {
-    schema: IR.ControlPointSchema,
-    label: 'ControlPoint',
-  },
   TargetSchema: { schema: IR.TargetSchema, label: 'Target' },
   PositionSchema: { schema: IR.PositionSchema, label: 'Position' },
   PolarPositionSchema: {

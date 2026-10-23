@@ -3,7 +3,7 @@ import {
   AnchorRefSchema,
   Side,
   BendStepSchema,
-  ControlPointSchema,
+  PositionSchema,
   PathLabelSchema,
   ScopePropsSchema,
   SmoothStepSchema,
@@ -109,17 +109,17 @@ export const FlowBezierRoutingSchema = union([
   strictObject({ kind: literal(FlowRoutingKind.Curve) }),
   strictObject({
     kind: literal(FlowRoutingKind.Curve),
-    control: ControlPointSchema.describe(
+    control: PositionSchema.describe(
       'Explicit quadratic control in Flow root coordinates; subtract artifact drawing.origin when copying a control from an artifact.',
     ),
   }),
   strictObject({ kind: literal(FlowRoutingKind.Cubic) }),
   strictObject({
     kind: literal(FlowRoutingKind.Cubic),
-    control1: ControlPointSchema.describe(
+    control1: PositionSchema.describe(
       'Explicit source tangent control in Flow root coordinates; must accompany control2.',
     ),
-    control2: ControlPointSchema.describe(
+    control2: PositionSchema.describe(
       'Explicit target tangent control in Flow root coordinates; must accompany control1.',
     ),
   }),

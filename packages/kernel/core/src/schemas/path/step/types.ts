@@ -1,12 +1,12 @@
 import type { infer as ZodInfer } from 'zod';
 
+import type { PositionSchema } from '../../position';
 import type {
   ArcStepSchema,
   AxisLineStepSchema,
   AxisLineTargetSchema,
   BendStepSchema,
   CirclePathStepSchema,
-  ControlPointSchema,
   CubicStepSchema,
   CurveStepSchema,
   CycleStepSchema,
@@ -36,7 +36,7 @@ export type IRStepAnisotropicRadius = ZodInfer<typeof StepAnisotropicRadiusSchem
 export type IRStepRadius = ZodInfer<typeof StepRadiusSchema>;
 
 /** 控制点类型（曲线 step 用） */
-export type IRControlPoint = ZodInfer<typeof ControlPointSchema>;
+export type IRControlPoint = ZodInfer<typeof PositionSchema>;
 
 /** Move step：移动游标但不绘制 */
 export type IRMoveStep = ZodInfer<typeof MoveStepSchema>;

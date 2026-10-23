@@ -19,7 +19,7 @@ import { PositionSchema } from '../../position';
 import { AngleDegreesSchema } from '../../scalar';
 import { createLabelVisualStyleShape, TextBlockSchema } from '../../text';
 import { NodeTargetSchema, TargetSchema } from '../target';
-import { BendDirection, FoldStepVia, PathLabelPosition, PathCloseMode } from './constants';
+import { BendDirection, FoldStepVia, PathLabelPosition, CirclePathCloseMode } from './constants';
 
 /** 校验附着于路径类宿主、由中心线采样确定位置的文本标签 */
 export const PathLabelSchema = strictObject({
@@ -55,9 +55,6 @@ export const PathLabelSchema = strictObject({
   'Path label spec attached to a path-like host; compiled as one text block positioned from a centerline sample.',
 );
 
-/** 复用路径标签规则，校验路径步骤附属标签 */
-export const StepLabelSchema = PathLabelSchema;
-
 /** 校验只移动路径游标、不绘制线段的动作 */
 export const MoveStepSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
@@ -70,7 +67,7 @@ export const LineStepSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('line').describe('Draw a straight line from the current cursor to the target.'),
   to: TargetSchema.describe('Destination point of the line segment'),
-  label: StepLabelSchema.optional().describe('Edge label attached to this line segment'),
+  label: PathLabelSchema.optional().describe('Edge label attached to this line segment'),
 }).describe('Line action: straight-line segment from cursor to target');
 
 /** 校验轴向直线支持的笛卡尔位置或节点目标 */
@@ -84,7 +81,7 @@ export const AxisLineStepSchema = strictObject({
   kind: literal('axis-line').describe('Draw one horizontal or vertical segment by projecting a target.'),
   axis: zodEnum(['horizontal', 'vertical']).describe('Local host axis preserved by the projected segment.'),
   to: AxisLineTargetSchema.describe('Target reference projected onto the selected local host axis.'),
-  label: StepLabelSchema.optional().describe('Edge label attached to this projected line segment'),
+  label: PathLabelSchema.optional().describe('Edge label attached to this projected line segment'),
 }).describe('Axis-line action: project a target to one local host axis and draw one straight segment.');
 
 /** 折线路径步骤共用的终点和标签字段 */
@@ -92,7 +89,7 @@ const FoldStepCommonShape = {
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('fold').describe('Folded orthogonal segment from cursor to target.'),
   to: TargetSchema.describe('Destination point of the folded segment'),
-  label: StepLabelSchema.optional().describe(
+  label: PathLabelSchema.optional().describe(
     'Edge label attached to this folded segment; positioned along the corresponding leg by `position`.',
   ),
 };
@@ -127,16 +124,13 @@ export const CycleStepSchema = strictObject({
   kind: literal('cycle').describe('Close the path back to the most recent move target.'),
 }).describe('Cycle action: close the current sub-path back to its starting point; carries no `to` field');
 
-/** 校验贝塞尔曲线控制点的位置 */
-export const ControlPointSchema = PositionSchema.describe('Bezier control point position.');
-
 /** 校验由一个控制点决定弯曲形状的二次贝塞尔动作 */
 export const CurveStepSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('curve').describe('Quadratic Bezier curve from cursor to target with one control point.'),
   to: TargetSchema.describe('Destination point of the curve'),
-  control: ControlPointSchema.describe('Single control point for the quadratic Bezier'),
-  label: StepLabelSchema.optional().describe('Edge label attached to this quadratic Bezier'),
+  control: PositionSchema.describe('Single control point for the quadratic Bezier'),
+  label: PathLabelSchema.optional().describe('Edge label attached to this quadratic Bezier'),
 }).describe('Curve action: quadratic Bezier; one control point shapes the bend');
 
 /** 校验由两个控制点分别控制两端切线的三次贝塞尔动作 */
@@ -144,9 +138,9 @@ export const CubicStepSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('cubic').describe('Cubic Bezier curve from cursor to target with two control points.'),
   to: TargetSchema.describe('Destination point of the cubic curve'),
-  control1: ControlPointSchema.describe('First control point (influences the start tangent)'),
-  control2: ControlPointSchema.describe('Second control point (influences the end tangent)'),
-  label: StepLabelSchema.optional().describe('Edge label attached to this cubic Bezier'),
+  control1: PositionSchema.describe('First control point (influences the start tangent)'),
+  control2: PositionSchema.describe('Second control point (influences the end tangent)'),
+  label: PathLabelSchema.optional().describe('Edge label attached to this cubic Bezier'),
 }).describe('Cubic action: cubic Bezier; two control points give precise tangent control at both ends');
 
 /** 对称 bend 角度的权威约束与默认 */
@@ -184,7 +178,7 @@ export const BendStepSchema = strictObject({
   outAngle: BendOutAngleSchema.unwrap().optional(),
   inAngle: BendInAngleSchema.unwrap().optional(),
   looseness: BendLoosenessSchema.unwrap().optional(),
-  label: StepLabelSchema.optional().describe('Edge label attached to this bend segment'),
+  label: PathLabelSchema.optional().describe('Edge label attached to this bend segment'),
 }).describe('Bend action: shorthand for an arc-like cubic; control points computed at compile time');
 
 /** 校验分别指定 x 与 y 方向半径的对象 */
@@ -223,8 +217,8 @@ const refinePartialAngles = (
   }
 };
 
-/** 校验圆弧步骤的基本字段，角度关系由最终校验补充 */
-const ArcStepBaseSchema = strictObject({
+/** 校验从路径游标出发的圆弧或椭圆弧动作 */
+export const ArcStepSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('arc').describe(
     'Arc segment sweeping from startAngle to endAngle around a center. Use radius as a number or `{ x, y }`.',
@@ -237,13 +231,10 @@ const ArcStepBaseSchema = strictObject({
   ),
   radius: StepRadiusSchema.describe('Arc radius. Number creates a circular arc; `{ x, y }` creates an elliptical arc.'),
   center: TargetSchema.optional().describe('Explicit arc center. Omitted fields use the current cursor as center.'),
-  label: StepLabelSchema.optional().describe('Edge label attached to this arc'),
+  label: PathLabelSchema.optional().describe('Edge label attached to this arc'),
 }).describe(
   'Arc action: circular or elliptical arc around a center (cursor by default, or explicit). Pen is left at the arc endpoint.',
 );
-
-/** 校验从路径游标出发的圆弧或椭圆弧动作 */
-export const ArcStepSchema = ArcStepBaseSchema;
 
 /** 校验圆形路径步骤的基本字段 */
 const CirclePathStepBaseSchema = strictObject({
@@ -258,10 +249,10 @@ const CirclePathStepBaseSchema = strictObject({
   endAngle: AngleDegreesSchema.optional().describe(
     'Partial-circle end angle in degrees; sweep direction inferred from startAngle vs endAngle.',
   ),
-  closed: zodEnum(PathCloseMode)
+  closed: zodEnum(CirclePathCloseMode)
     .optional()
     .describe('Closing mode for a circle path: closed, chord, sector, or open. With angles, omitted fields use chord.'),
-  label: StepLabelSchema.optional().describe('Edge label attached to this circle'),
+  label: PathLabelSchema.optional().describe('Edge label attached to this circle'),
 }).describe(
   'CirclePath action: full circle (no angles, pen returns to center) or partial arc (with angles, closed per chord/open).',
 );
@@ -282,12 +273,12 @@ const EllipsePathStepBaseSchema = strictObject({
     'Partial-ellipse start angle in degrees (parametric, same convention as arc). Give both startAngle and endAngle for a partial ellipse, or neither for a full ellipse.',
   ),
   endAngle: AngleDegreesSchema.optional().describe('Partial-ellipse end angle in degrees.'),
-  closed: zodEnum(PathCloseMode)
+  closed: zodEnum(CirclePathCloseMode)
     .optional()
     .describe(
       'Closing mode for an ellipse path: closed, chord, sector, or open. With angles, omitted fields use chord.',
     ),
-  label: StepLabelSchema.optional().describe('Edge label attached to this ellipse'),
+  label: PathLabelSchema.optional().describe('Edge label attached to this ellipse'),
 }).describe(
   'EllipsePath action: full ellipse (no angles, pen returns to center) or partial elliptical arc (with angles, closed per chord/open).',
 );
@@ -327,7 +318,7 @@ export const SmoothStepSchema = strictObject({
       'Through-points after the cursor, in order. The cursor is the implicit first knot and ends at the last point.',
     ),
   tension: SmoothTensionSchema.unwrap().optional().describe(SmoothTensionSchema.description!),
-  label: StepLabelSchema.optional().describe(
+  label: PathLabelSchema.optional().describe(
     'Edge label attached to the generated curve; positioned along the produced cubic commands by Bezier parameter (same as curve / cubic step labels).',
   ),
 }).describe('Smooth action: a curve passing through the cursor and the given points, compiled to cubic Beziers.');
@@ -345,7 +336,7 @@ export const GeneratorStepSchema = strictObject({
   params: JsonObjectSchema.describe(
     'JSON parameter object passed to the generator. The registered generator validates its own parameter fields.',
   ),
-  label: StepLabelSchema.optional().describe(
+  label: PathLabelSchema.optional().describe(
     'Edge label attached to the generated segment; positioned along the produced commands.',
   ),
 }).describe('Generator action: produce a sub-path by invoking a built-in or registered path generator.');
