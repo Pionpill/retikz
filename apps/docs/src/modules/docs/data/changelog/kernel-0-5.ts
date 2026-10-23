@@ -378,6 +378,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: 'BREAKING：主色传播与箭头绘制上下文', en: 'BREAKING: master colors and arrow drawing contexts' },
+          content: {
+            zh: 'Path 的有效 color 覆盖 mark 的 color，具体 stroke / fill 仍优先。Arrow Definition 直接消费已解析的绘制上下文，包括虚线、端帽和连接样式；Core 不再覆盖输出图元的局部样式。实心定义默认无描边，需要同色线条的自定义定义改用上下文 fill。透明度语义保持不变。',
+            en: 'The effective Path color overrides mark color, while explicit stroke / fill still takes precedence. Arrow Definitions consume resolved drawing contexts, including dash, cap, and join styles; Core no longer overwrites emitted local styles. Filled definitions have no stroke by default; custom definitions needing lines in the master color should use context fill. Opacity semantics are unchanged.',
+          },
+        },
+        {
           label: { zh: 'BREAKING：箭头与图案复用基础图元', en: 'BREAKING: arrows and patterns use basic primitives' },
           content: {
             zh: '删除 MarkerPrimitive、MarkerPathPrim、MarkerEllipsePrim、MarkerRectPrim、MarkerGroupPrim 与 MarkerFill。Arrow / Pattern 定义改为返回 ScenePrimitive，颜色复用 PaintValue；空心内容显式使用 fill: none。文本须已度量，内容可以使用场景裁剪、绘制资源、动画与有限嵌套图元；播放状态按宿主隔离，局部 id 不创建独立更新或命中目标。',

@@ -131,6 +131,7 @@ describe('Extension optional arrow definitions', () => {
           { kind: 'close' },
         ],
         fill: '#abcdef',
+        stroke: '#123456',
       },
     ]);
     expect([...OpenDiamondArrowDefinition.emit(context)]).toEqual([
@@ -160,6 +161,7 @@ describe('Extension optional arrow definitions', () => {
           { kind: 'close' },
         ],
         fill: '#abcdef',
+        stroke: '#123456',
       },
     ]);
     expect([...OpenKiteArrowDefinition.emit(context)]).toEqual([
@@ -203,6 +205,7 @@ describe('Extension optional arrow definitions', () => {
           { kind: 'close' },
         ],
         fill: '#abcdef',
+        stroke: '#123456',
       },
     ]);
     expect([...OpenSquareArrowDefinition.emit(context)]).toEqual([

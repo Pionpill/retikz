@@ -135,15 +135,7 @@ export const emitPathKindPrimitive = (
   const emitStroke = (nextPath?: IRPathBase, request?: EmitStrokeOwnerOutputOptions) => {
     const source = nextPath ?? path;
     const sourceResolution = resolutionOf(source);
-    const strokeColor = sourceResolution.path.color;
-    const strokeSource = {
-      ...sourceResolution,
-      path: {
-        ...sourceResolution.path,
-        ...(sourceResolution.path.stroke === undefined && strokeColor !== undefined ? { stroke: strokeColor } : {}),
-      },
-    };
-    const strokeResolution = resolveStrokePathProviders(strokeSource, {
+    const strokeResolution = resolveStrokePathProviders(sourceResolution, {
       mode: pendingPath.theme.mode,
       pathKinds: context.pathKinds,
       pathGenerators: context.pathGenerators,

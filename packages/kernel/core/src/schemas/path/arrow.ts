@@ -47,7 +47,7 @@ export const ArrowStyleSchema = strictObject({
     'Arrow-tip width perpendicular to the path, in user units. Defaults to the shape definition value, or 8.',
   ),
   color: ContextualColorSchema.optional().describe(
-    'Arrow color override. A number derives from the effective path color; omitted arrows inherit the path stroke.',
+    'Arrow master color when the path has no effective color. The effective path color overrides this field; explicit arrow stroke and fill take precedence. Without either master color, arrows inherit the path stroke.',
   ),
   fill: PaintValueSchema.optional().describe(
     'Fill override for solid arrow shapes. A number derives from the effective arrow color; hollow definitions ignore fill.',

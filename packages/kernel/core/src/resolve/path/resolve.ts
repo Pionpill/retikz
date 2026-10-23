@@ -390,9 +390,9 @@ const resolvePathContextualColors = (
     style: {
       ...visual,
       ...(fill === undefined ? {} : { fill: resolvePathPaint(fill, masterColor, context, `${irPath}.style.fill`) }),
-      ...(stroke === undefined
+      ...(stroke === undefined && masterColor === undefined
         ? {}
-        : { stroke: resolvePathPaint(stroke, masterColor, context, `${irPath}.style.stroke`) }),
+        : { stroke: resolvePathPaint(stroke ?? masterColor, masterColor, context, `${irPath}.style.stroke`) }),
     },
     ...(children === undefined
       ? {}

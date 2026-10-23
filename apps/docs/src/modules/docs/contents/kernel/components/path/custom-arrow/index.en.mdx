@@ -66,7 +66,9 @@ An arrow definition supplies three distinct positions: `backX` is its back edge,
 
 `overlap: 1` aligns the final visual back edge, including scaling and hollow outlines. Overlap moves the endpoint decoration and its contact without changing the node anchor or logical path sampling. An interior mark follows the local tangent without shortening the path as an endpoint would.
 
-Without an explicit color, `contextStroke` binds to the nearest host path stroke, including Scene paint resources. Built-in and custom definitions use the same registry and compilation path.
+The effective Path `color` overrides the arrow's own `color`; explicit arrow `stroke` / `fill` takes precedence over either master color. Filled definitions default to `stroke: 'none'` and use `fill` for the master color; custom filled content can also use context `fill` to draw lines in that color. Hollow definitions use `stroke` for color and emit `fill: 'none'`. When a color is needed and both master colors are absent, `contextStroke` binds to the nearest host path stroke, including Scene paint resources.
+
+`emit` receives resolved `stroke`, `fill`, and `lineWidth`, plus optional `dashPattern`, `dashOffset`, `lineCap`, and `lineJoin`. Primitives that respond to these options must read the context; map caps and joins to primitive `strokeLinecap` and `strokeLinejoin`. Core no longer recursively overrides emitted styles, so fixed multicolor details remain intact. Built-in and custom definitions follow the same rule. Arrow opacity is still applied by the container; do not multiply it into each child primitive again.
 
 <SourceLinks
   sources={[

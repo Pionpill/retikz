@@ -143,7 +143,7 @@ Core 默认提供六种基础箭头，其中包括空心三角、空心 Stealth 
 补充说明：
 
 - 多节点路径（如 a → b → c）按段独立 clip，但箭头**只**贴在整体起点 / 终点——中间节点不会出现额外箭头
-- **合并语义**：`start` / `end` 子对象的字段优先；子对象未填的字段回退到顶层默认；顶层未填的字段回退到内置默认。例：`arrowDetail={{ shape: 'stealth', start: { color: 'red' } }}` → 起末都用 `stealth`，起端用红色，末端继承路径描边色
+- **合并语义**：先合并公共配置、端点配置和 mark 实例，再由 Path 的有效 `color` 覆盖 mark 的 `color`。具体 `stroke` / `fill` 优先于宏颜色。没有 Path 主色时保留箭头主色；两者都缺失时跟随宿主描边。例如 Path 为 `color=blue`、`stroke=red` 时，mark 的 `color=green` 仍得到蓝色；显式 `fill=green` 则保留绿色。
 - **空心形状会静默忽略 `fill`**：`shape ∈ { open / openStealth / openDiamond / openCircle }` 时，`fill` 字段被静默丢弃——空心形状由 `color`（描边色） + `lineWidth`（描边粗细）共同决定视觉，写 `fill='red'` 不会渲染红色填充
 
 `scale` 乘到 `length` / `width` 之后，例如 `length=10, scale=1.5` 的实际长度是 15。

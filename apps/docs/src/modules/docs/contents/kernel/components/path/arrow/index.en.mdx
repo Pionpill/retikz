@@ -143,7 +143,7 @@ Core provides six basic arrows by default, including hollow triangle, hollow ste
 Additional notes:
 
 - Multi-node paths (e.g. a → b → c) clip per-segment, but the arrow only attaches to the overall **start** / **end** — never to intermediate nodes
-- **Merge semantics**: sub-object fields win first; fields not in the sub-object fall back to the top-level defaults; fields not at the top level fall back to the built-in defaults. Example: `arrowDetail={{ shape: 'stealth', start: { color: 'red' } }}` → both ends use stealth, start in red, end inherits the path stroke
+- **Merge semantics**: merge shared, endpoint, and mark instance options first. The effective Path `color` then overrides mark `color`; explicit `stroke` / `fill` takes precedence over master colors. Without a Path master color, the arrow keeps its own color; without either, it follows the host stroke. With Path `color=blue` and `stroke=red`, mark `color=green` still produces blue, while explicit `fill=green` remains green.
 - **Hollow shapes silently ignore `fill`**: when `shape ∈ { open / openStealth / openDiamond / openCircle }`, the `fill` field is silently dropped. Hollow shapes are driven entirely by `color` (stroke) + `lineWidth` (stroke width); writing `fill='red'` will not render a red fill
 
 `scale` multiplies after `length` / `width`; for example, `length=10, scale=1.5` produces an effective length of 15.

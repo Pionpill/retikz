@@ -1,5 +1,15 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '有效描边；实心定义默认无轮廓，空心定义缺少主色时继承宿主描边':
+    'Effective stroke; filled definitions have no outline by default, while hollow definitions without a master color inherit the host stroke',
+  '原定义对象，保留路径和产物类型，不复制或修改输入':
+    'The original definition object, preserving path and output types without copying or modifying the input',
+  '原定义对象，保留路径类型，不复制或修改输入':
+    'The original definition object, preserving the path type without copying or modifying the input',
+  '已解析的虚线节奏；省略时使用定义自身的默认': 'Resolved dash pattern; omission preserves the definition default',
+  已解析的虚线偏移: 'Resolved dash offset',
+  已解析的描边端帽: 'Resolved stroke cap',
+  '已解析的描边连接；省略时使用定义自身的默认': 'Resolved stroke join; omission preserves the definition default',
   '所属者产物的 JSON 类型；默认 never 时不能声明 ownerOutput，否则必须声明发布产物':
     'JSON type of the owner output; the default never disallows ownerOutput, while other types require declaring the published output',
   'RetikzCoreError 当 name 为空或仅含空白字符、schema 没有 parse 函数时':

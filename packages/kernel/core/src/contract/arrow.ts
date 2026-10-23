@@ -1,3 +1,4 @@
+import type { IRArrowStyle } from '../schemas';
 import type { PaintValue, ScenePrimitive } from './scene';
 
 /**
@@ -5,12 +6,20 @@ import type { PaintValue, ScenePrimitive } from './scene';
  * @description 提供已解析的颜色、描边粗细和取整函数，供定义生成 marker 几何
  */
 export type ArrowEmitContext = {
-  /** 描边颜色（无 override 时 = `{ kind: 'contextStroke' }`，继承 path stroke） */
+  /** 有效描边；实心定义默认无轮廓，空心定义缺少主色时继承宿主描边 */
   stroke: PaintValue;
   /** 填充颜色（实心箭头主导色；空心箭头会按 `hollow` 处理后传入） */
   fill: PaintValue;
   /** 描边粗细（marker 局部坐标，user units）；空心箭头据此画外轮廓 */
   lineWidth: number;
+  /** 已解析的虚线节奏；省略时使用定义自身的默认 */
+  dashPattern?: IRArrowStyle['dashPattern'];
+  /** 已解析的虚线偏移 */
+  dashOffset?: IRArrowStyle['dashOffset'];
+  /** 已解析的描边端帽 */
+  lineCap?: IRArrowStyle['lineCap'];
+  /** 已解析的描边连接；省略时使用定义自身的默认 */
+  lineJoin?: IRArrowStyle['lineJoin'];
   /** 精度取整函数（与 compile/render 同一 round，保几何一致） */
   round: (n: number) => number;
 };
