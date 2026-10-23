@@ -1,6 +1,6 @@
 import type { JsonObject } from '@retikz/foundation';
-import type { IRPlotMarkOperation } from '@retikz/plot';
-import { BuiltinPlotPositionAdjustment, PointMarkSchema } from '@retikz/plot';
+import type { IRPlotMark } from '@retikz/plot';
+import { BuiltinPlotPositionAdjustment } from '@retikz/plot';
 
 import type { ChartMarkDefinition } from '../../_chart/contract';
 import { defineChartMark } from '../../_chart/contract';
@@ -12,11 +12,11 @@ import { StripChartMarkSchema } from './schema';
 export const resolveStripPointMark = (
   encodings: JsonObject,
   properties: JsonObject & Readonly<{ jitter?: IRStripChartJitter }>,
-): IRPlotMarkOperation => {
+): IRPlotMark => {
   const point = resolvePointMark(encodings, properties);
   const jitter = properties.jitter;
 
-  return PointMarkSchema.parse({
+  return {
     ...point,
     properties: {
       ...point.properties,
@@ -29,7 +29,7 @@ export const resolveStripPointMark = (
         ],
       },
     },
-  });
+  };
 };
 
 /** Strip Chart 的 authored mark Definition */

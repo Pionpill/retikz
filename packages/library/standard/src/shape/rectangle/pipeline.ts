@@ -5,6 +5,8 @@ import type { IRRectangle } from './types';
 
 /** 将 Rectangle 意图下沉为单一 Core Path */
 export const lowerRectangle = (source: IRRectangle): IRPath => {
+  const { cornerRadius: _cornerRadius, ...pathProperties } = shapePathProperties(source);
+  void _cornerRadius;
   let from: IRTarget;
   let to: IRTarget;
   if ('corner2' in source) {
@@ -21,7 +23,7 @@ export const lowerRectangle = (source: IRRectangle): IRPath => {
   }
 
   return {
-    ...shapePathProperties(source),
+    ...pathProperties,
     type: 'path',
     children: [
       { type: 'step', kind: 'move', to: from },

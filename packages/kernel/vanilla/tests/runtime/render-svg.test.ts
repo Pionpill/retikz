@@ -78,13 +78,6 @@ const circleFrameClip = (): ClipDefinition =>
       outer: spec.outer,
       inner: spec.inner,
     }),
-    shapeSchema: strictObject({
-      kind: literal('circleFrame'),
-      cx: number(),
-      cy: number(),
-      outer: number().positive(),
-      inner: number().positive(),
-    }),
     lower: shape => ({
       commands: [
         { kind: 'move', to: [shape.cx + shape.outer, shape.cy] },

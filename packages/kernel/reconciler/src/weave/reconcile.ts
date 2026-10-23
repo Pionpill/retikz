@@ -566,7 +566,6 @@ export class WeaveReconciler {
       });
     if (child.localNamespace) this.provenance.popNamespaceFrame();
     const layouts = projectScopeCompileLayouts(child, state.compiled.envelope, nested.layouts, transforms);
-    this.provenance.recordPrimitives(state.compiled.output.primitives, semanticOwner, 'scope-frame');
     const output = assembleScopeOutput(
       state.compiled,
       nested.outputs([...(context.transforms ?? []), ...transforms]),

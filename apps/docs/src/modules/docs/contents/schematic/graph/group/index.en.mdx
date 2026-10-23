@@ -178,6 +178,8 @@ const view = mount(document.getElementById('diagram')!, ir, { compile: { composi
 
 `caption` is the title and description region inside the shell. It can sit above or below the body and arrange its items horizontally or vertically. Use the controls below to adjust its position, direction, and spacing. The title defaults to `sm` without bold weight; the description defaults to `xs` with reduced opacity
 
+Use `GroupCaptionDirection.Horizontal` or `GroupCaptionDirection.Vertical` for `caption.direction` to arrange the caption horizontally or vertically.
+
 <ComponentPreview
   files={['group-basic', 'group-basic.preview.tsx']}
   size="lg"
@@ -233,7 +235,7 @@ Place FlexLayout / GridLayout inside Group when objects need arrangement. The la
 ### Arbitrary children and Graph Theme
 
 - `children` directly uses Core `IRChild`: Entity, Relation, Group, Node, Path, Scope, Layout, Plot, or any registered composite
-- `defaults.node`, `defaults.path`, `defaults.label`, Core `theme`, transforms, placement, clipping, and namespaces retain Scope semantics
+- `defaults.node`, `defaults.path`, `defaults.node.label` / `defaults.path.label`, Core `theme`, transforms, placement, clipping, and namespaces retain Scope semantics
 - A named Graph Theme supplies the Group root shell `background`, `border`, and `cornerRadius` baseline. Explicit Source fields win and use complete top-level field replacement instead of deep-merging inside `border` or `background`
 - `defaultGraph` affects visible Entity / Relation descendants and descendant Group / Block shells; `graphRules` matches only descendant Entities and Relations. Neither affects this Group’s own shell, caption, boundary labels, or ordinary Core children
 - Changing the content `theme` or setting Core `defaults.reset` preserves author defaults and rules. This shell uses the incoming theme and ancestor defaults

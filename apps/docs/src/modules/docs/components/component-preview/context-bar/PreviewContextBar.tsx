@@ -7,11 +7,11 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { Lang } from '@/i18n';
 import { cn } from '@/lib';
 
-import type { PreviewThemeStyleValue } from '../theme';
-import { PreviewThemeStyle } from '../theme';
-import type { PreviewFigureType, PreviewThemeMode, PreviewThemeStyleSelection } from '../types';
+import type { PreviewThemeName } from '../theme';
+import { PreviewTheme } from '../theme';
+import type { PreviewFigureType, PreviewThemeMode, PreviewThemeSelection } from '../types';
 import { FigureGuideButton } from './FigureGuideButton';
-import { ThemeStyleSwitchButton } from './ThemeStyleSwitchButton';
+import { ThemeSwitchButton } from './ThemeSwitchButton';
 
 export type PreviewContextBarProps = {
   /** 将主题工具放在常显工具栏中 */
@@ -26,14 +26,14 @@ export type PreviewContextBarProps = {
   figureType?: PreviewFigureType;
   /** 当前文档语言。 */
   lang?: Lang;
-  /** 是否显示单预览 ThemeStyle 切换器。 */
+  /** 是否显示单预览 Theme 切换器。 */
   enableThemeSwitch?: boolean;
-  /** 当前预览实际生效的 ThemeStyle。 */
-  themeStyle?: PreviewThemeStyleValue;
-  /** 当前单预览 ThemeStyle 选择。 */
-  themeStyleSelection?: PreviewThemeStyleSelection;
-  /** 更新当前单预览 ThemeStyle 选择。 */
-  onThemeStyleChange?: (themeStyle: PreviewThemeStyleSelection) => void;
+  /** 当前预览实际生效的 Theme。 */
+  themeName?: PreviewThemeName;
+  /** 当前单预览 Theme 选择。 */
+  themeNameSelection?: PreviewThemeSelection;
+  /** 更新当前单预览 Theme 选择。 */
+  onThemeChange?: (themeName: PreviewThemeSelection) => void;
 };
 
 /** 悬浮在预览内容上方的局部主题切换 */
@@ -46,14 +46,14 @@ export const PreviewContextBar: FC<PreviewContextBarProps> = props => {
     figureType,
     lang = 'zh',
     enableThemeSwitch = false,
-    themeStyle,
-    themeStyleSelection = 'inherit',
-    onThemeStyleChange,
+    themeName,
+    themeNameSelection = 'inherit',
+    onThemeChange,
   } = props;
   const { t } = useTranslation();
-  const [themeStyleMenuOpen, setThemeStyleMenuOpen] = useState(false);
+  const [themeNameMenuOpen, setThemeMenuOpen] = useState(false);
   const [figureGuideOpen, setFigureGuideOpen] = useState(false);
-  const effectiveThemeStyle = themeStyle ?? PreviewThemeStyle.Default;
+  const effectiveTheme = themeName ?? PreviewTheme.Default;
 
   return (
     <div
@@ -62,7 +62,7 @@ export const PreviewContextBar: FC<PreviewContextBarProps> = props => {
         inline
           ? 'relative'
           : 'pointer-events-none absolute top-2 left-1/2 z-20 -translate-x-1/2 opacity-0 transition-opacity group-hover/preview-context:pointer-events-auto group-hover/preview-context:opacity-100 group-focus-within/preview-context:pointer-events-auto group-focus-within/preview-context:opacity-100',
-        (themeStyleMenuOpen || figureGuideOpen) && 'pointer-events-auto opacity-100',
+        (themeNameMenuOpen || figureGuideOpen) && 'pointer-events-auto opacity-100',
       )}
     >
       <div className="flex items-center gap-2">
@@ -108,12 +108,12 @@ export const PreviewContextBar: FC<PreviewContextBarProps> = props => {
             {!iconOnly ? <span>{t('preview.themeDark')}</span> : null}
           </ToggleGroupItem>
         </ToggleGroup>
-        {enableThemeSwitch && onThemeStyleChange ? (
-          <ThemeStyleSwitchButton
-            selection={themeStyleSelection}
-            effectiveStyle={effectiveThemeStyle}
-            onSelectionChange={onThemeStyleChange}
-            onOpenChange={setThemeStyleMenuOpen}
+        {enableThemeSwitch && onThemeChange ? (
+          <ThemeSwitchButton
+            selection={themeNameSelection}
+            effectiveStyle={effectiveTheme}
+            onSelectionChange={onThemeChange}
+            onOpenChange={setThemeMenuOpen}
             className="size-8 border border-input bg-background shadow-xs"
           />
         ) : null}

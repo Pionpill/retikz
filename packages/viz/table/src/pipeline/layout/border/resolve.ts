@@ -22,22 +22,6 @@ const compareContributions = (left: TableBorderContribution, right: TableBorderC
   return left.sourceOrderKey.localeCompare(right.sourceOrderKey);
 };
 
-/** 验证 atom 几何为 finite 正向轴对齐线段 */
-const validateAtomGeometry = (atom: TableBorderAtom): void => {
-  const values = [atom.start.x, atom.start.y, atom.end.x, atom.end.y];
-  if (!values.every(Number.isFinite)) {
-    throw new RetikzTableError(`table: Border Graph atom "${atom.key}" geometry must be finite`);
-  }
-
-  const valid =
-    atom.orientation === 'horizontal'
-      ? atom.start.y === atom.end.y && atom.end.x >= atom.start.x
-      : atom.start.x === atom.end.x && atom.end.y >= atom.start.y;
-  if (!valid) {
-    throw new RetikzTableError(`table: Border Graph atom "${atom.key}" must be a positive ${atom.orientation} segment`);
-  }
-};
-
 const SideRank = { top: 0, right: 1, bottom: 2, left: 3 } as const;
 
 /** 按 collapse numeric key 或 separate row/column/side 形成 canonical atom 顺序 */
@@ -67,6 +51,24 @@ const compareAtoms = (left: TableBorderAtom, right: TableBorderAtom): number => 
 export const resolveTableBorderAtoms = (
   atoms: ReadonlyArray<TableBorderAtom>,
 ): ReadonlyArray<ResolvedTableBorderAtom> => {
+  /** 验证 atom 几何为 finite 正向轴对齐线段 */
+  const validateAtomGeometry = (atom: TableBorderAtom): void => {
+    const values = [atom.start.x, atom.start.y, atom.end.x, atom.end.y];
+    if (!values.every(Number.isFinite)) {
+      throw new RetikzTableError(`table: Border Graph atom "${atom.key}" geometry must be finite`);
+    }
+
+    const valid =
+      atom.orientation === 'horizontal'
+        ? atom.start.y === atom.end.y && atom.end.x >= atom.start.x
+        : atom.start.x === atom.end.x && atom.end.y >= atom.start.y;
+    if (!valid) {
+      throw new RetikzTableError(
+        `table: Border Graph atom "${atom.key}" must be a positive ${atom.orientation} segment`,
+      );
+    }
+  };
+
   const seenContributionKeys = new Set<string>();
   const seenAtomKeys = new Set<string>();
   const resolved = [...atoms].sort(compareAtoms).map(atom => {

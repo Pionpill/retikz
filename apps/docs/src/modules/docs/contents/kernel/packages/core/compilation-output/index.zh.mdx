@@ -219,7 +219,7 @@ Core 支持节点形状等多种自定义能力，其中许多会在编译过程
     { label: 'paint 登记、去重与导入', path: 'packages/kernel/core/src/compile/resource/paint.ts' },
     { label: '裁剪降低与资源登记', path: 'packages/kernel/core/src/compile/resource/clip.ts' },
     { label: '资源与引用契约', path: 'packages/kernel/core/src/contract/scene/paint.ts' },
-    { label: '裁剪资源结构', path: 'packages/kernel/core/src/contract/scene/clip.ts' },
+    { label: '裁剪资源结构', path: 'packages/kernel/core/src/contract/scene/group.ts' },
   ]}
 />
 
@@ -297,7 +297,7 @@ Core 在编译时筛选轨道所属层级：根级的非 `viewBox` 轨道、元�
 
 <SourceLinks
   sources={[
-    { label: '动画轨道与关键帧', path: 'packages/kernel/core/src/schemas/animation/schema.ts' },
+    { label: '动画轨道与关键帧', path: 'packages/kernel/core/src/schemas/scene/animation.ts' },
     { label: '根级与元素级轨道筛选', path: 'packages/kernel/core/src/compile/orchestration/animation.ts' },
     { label: '场景动画装配', path: 'packages/kernel/core/src/compile/compile.ts' },
   ]}
@@ -347,7 +347,7 @@ type CompileExpansionKind = 'output' | 'probe' | 'replay' | 'scopeChild' | 'clip
 
 ### 复合产物
 
-复合组件通过 `artifactSchema` 声明领域结果结构，Core 校验后将结果包装为以下记录；这里将泛型简化为默认类型：
+复合组件通过 `artifactSchema` 声明领域结果类型，回调作者负责满足该契约。Core 不对已类型化产物重新执行 Schema 解析，只保留 JSON 快照隔离，并将结果包装为以下记录；这里将泛型简化为默认类型：
 
 ```ts
 type CompositeCompileArtifact = Readonly<{
@@ -493,7 +493,7 @@ for (const artifact of result.artifacts) {
 <SourceLinks
   sources={[
     { label: '产物与节点布局类型', path: 'packages/kernel/core/src/compile/types.ts' },
-    { label: '出现位置与展开路径', path: 'packages/kernel/core/src/contract/occurrence/types.ts' },
+    { label: '出现位置与展开路径', path: 'packages/kernel/core/src/contract/occurrence.ts' },
     { label: 'FlexLayout 产物声明', path: 'packages/library/layout/src/composites/flex-layout/composite.ts' },
     { label: 'FlexLayout 产物返回', path: 'packages/library/layout/src/composites/flex-layout/pipeline.ts' },
     { label: 'FlexLayout 产物结构', path: 'packages/library/layout/src/composites/flex-layout/schema.ts' },
@@ -599,8 +599,8 @@ console.log(body.geometry.bounds); // { x: 20, y: 30, width: 100, height: 20 }
 
 <SourceLinks
   sources={[
-    { label: '空间索引与条目', path: 'packages/kernel/core/src/contract/spatial-handle/types.ts' },
-    { label: '空间声明与 Scope 归属', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: '空间索引与条目', path: 'packages/kernel/core/src/contract/spatial-handle/handle.ts' },
+    { label: '空间声明与 Scope 归属', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     { label: '筛选与唯一查询', path: 'packages/kernel/core/src/contract/spatial-handle/query.ts' },
     {
       label: 'Flow 边界的实际消费',
@@ -638,7 +638,7 @@ type CompileObserverOutput<TOutput = unknown> = Readonly<{
 在 Core 层，通过 `observeCompileToScene(ir, options, observers)` 开启观测：第三个参数传入观察器定义；下面没有额外编译选项，因此第二个参数传 `undefined`。这个最小例子只读取节点几何，尚未绘制检查框。
 
 ```ts
-import { NodeOwnerOutputSchema, observeCompileToScene } from '@retikz/core';
+import { type NodeOwnerOutput, observeCompileToScene } from '@retikz/core';
 import type { CompileObservation, CompileObserverDefinition } from '@retikz/core';
 
 const nodeObserver: CompileObserverDefinition<ReadonlyArray<CompileObservation>> = {
@@ -648,7 +648,7 @@ const nodeObserver: CompileObserverDefinition<ReadonlyArray<CompileObservation>>
     return {
       select: site => site.owner.kind === 'node',
       observe: observation => {
-        const node = NodeOwnerOutputSchema.parse(observation.value);
+        const node = observation.value as NodeOwnerOutput;
         console.log(node.rect, node.content?.corners);
         observations.push(observation);
       },
@@ -671,7 +671,7 @@ console.log(result.primary.scene);
 console.log(result.observerOutputs[0]);
 ```
 
-`select` 选中所有节点，`observe` 接收每个最终节点的输出，并用 `NodeOwnerOutputSchema` 解析节点几何。`createSession` 内的数组只属于本次编译，`complete` 返回它作为观察器结果。因此 `observerOutputs[0]` 的 `key` 为 `example/node-geometry`，`value` 是收集到的观测事件数组；原图在 `primary.scene`。
+`select` 选中所有节点，`observe` 接收每个最终节点的输出，并按 `NodeOwnerOutput` 类型读取节点几何，不重复解析内部产物。`createSession` 内的数组只属于本次编译，`complete` 返回它作为观察器结果。因此 `observerOutputs[0]` 的 `key` 为 `example/node-geometry`，`value` 是收集到的观测事件数组；原图在 `primary.scene`。
 
 Inspect 在这套 Core API 上继续生成检查框，具体过程如下：
 
@@ -690,7 +690,7 @@ Inspect 在这套 Core API 上继续生成检查框，具体过程如下：
   sources={[
     { label: '节点检查器', path: 'packages/kernel/inspect/src/providers/node.ts' },
     { label: '检查辅助图形编译', path: 'packages/kernel/inspect/src/compile/driver.ts' },
-    { label: '观察器输出', path: 'packages/kernel/core/src/contract/observation/types.ts' },
+    { label: '观察器输出', path: 'packages/kernel/core/src/contract/observation.ts' },
     { label: '观察会话建立、选择与完成', path: 'packages/kernel/core/src/compile/orchestration/observation.ts' },
     { label: '最终事件排序与派发', path: 'packages/kernel/core/src/compile/orchestration/observation-output.ts' },
   ]}

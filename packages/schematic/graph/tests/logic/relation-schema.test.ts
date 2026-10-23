@@ -11,7 +11,7 @@ describe('Relation visual contract', () => {
       source: { id: 'a' },
       target: { id: 'b' },
       style: { stroke: 0, opacity: 0, strokeWidth: 0, shadow: 'sm', blendMode: 'multiply', lineJoin: 'bevel' },
-      roundedCorners: 0,
+      cornerRadius: 0,
       rotate: -30,
       scale: { x: 2, y: 1 },
     };

@@ -61,7 +61,7 @@ describe('Draw: 基础展开', () => {
     const out = ir(
       <Draw
         way={['a', 'b']}
-        roundedCorners={6}
+        cornerRadius={6}
         arrow="<->"
         arrowDetail={{ shape: 'stealth' }}
         zIndex={5}
@@ -83,7 +83,7 @@ describe('Draw: 基础展开', () => {
 
     expect(out.children[0]).toMatchObject({
       type: 'path',
-      roundedCorners: 6,
+      cornerRadius: 6,
       marks: [
         { pos: 0, mark: { kind: 'arrow', shape: 'stealth' } },
         { pos: 1, mark: { kind: 'arrow', shape: 'stealth' } },

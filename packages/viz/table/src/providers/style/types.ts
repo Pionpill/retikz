@@ -4,7 +4,7 @@ import type { IRTableDefaults } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 
 /** Table style resolver 使用的 Core effective Theme 形态 */
-export type TableThemeContext = Pick<ResolvedTheme, 'style' | 'mode' | 'colors'>;
+export type TableThemeContext = Pick<ResolvedTheme, 'name' | 'mode' | 'colors'>;
 
 /** Table defaults 来源在 resolver inspection 中的稳定分类 */
 export type TableThemeDefaultsLayerKind = 'neutral' | 'style';
@@ -22,7 +22,7 @@ export type TableThemeDefaultsSource = DeepReadonly<{
 /** Table defaults resolver 的完整环境与来源结果 */
 export type TableThemeDefaultsResolution = DeepReadonly<{
   /** 可选的有效 Core style 名称 */
-  style?: string;
+  name?: string;
   /** 有效 Core Theme mode */
   mode: ThemeMode;
   /** baseline 与 style definition 合并后的 defaults */

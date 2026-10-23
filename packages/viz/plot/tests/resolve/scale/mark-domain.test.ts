@@ -1,11 +1,10 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { literal, strictObject } from 'zod';
+import { literal } from 'zod';
 
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
-import { pointMarkDefinition } from '../../../src/providers/mark';
 import { resolveScaleRegistry } from '../../../src/providers/scale';
-import { LinearScaleSchema, PointMarkSchema, PlotSchema } from '../../../src/schemas';
+import { LinearScaleSchema, PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
 const rows = [
@@ -422,31 +421,18 @@ describe('mark padding final geometry', () => {
 });
 
 describe('mark padding capabilities', () => {
-  it('dispatches custom scales and marks through their existing definition registries', () => {
+  it('dispatches custom scales with builtin marks through the scale registry', () => {
     const linear = resolveScaleRegistry().get('linear')!;
     const customScale = { ...linear, schema: LinearScaleSchema.extend({ type: literal('custom-affine') }) };
-    const customMark = {
-      ...pointMarkDefinition,
-      schema: strictObject({ ...PointMarkSchema.shape, type: literal('custom-dot') }),
-      lower: ((mark, data, frame, channels, context) =>
-        pointMarkDefinition.lower(
-          { ...mark, type: 'point' },
-          data,
-          frame,
-          channels,
-          context,
-        )) satisfies typeof pointMarkDefinition.lower,
-    };
     const base = plotOf();
     const spec = PlotSchema.parse({
       ...base,
       scales: base.scales.map(scale => (scale.name === 'x' ? { ...scale, type: 'custom-affine' } : scale)),
-      marks: base.marks.map(mark => ({ ...mark, type: 'custom-dot' })),
     });
     const result = lowerPlotWithDataArtifact(
       spec,
       { rows },
-      { definitions: { scales: [customScale], marks: [customMark] }, textMeasurer: measureLabel },
+      { definitions: { scales: [customScale] }, textMeasurer: measureLabel },
     );
     const frame = [...result.dataArtifact.frameByCoordinateScopeId.values()][0];
     const scale = frame.roleScales!.x!;

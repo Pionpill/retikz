@@ -1,6 +1,6 @@
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import type { IRChild, IRPath, IRScope } from '@retikz/core';
-import { isBuiltinMark, lowerPlotWithLineage } from '@retikz/plot';
+import { lowerPlotWithLineage } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
@@ -9,7 +9,7 @@ import { ConnectedScatterChartSchema } from '../../src/point/connected-scatter';
 import { ConnectedScatterChartDefinition } from '../../src/point/connected-scatter/recipe';
 
 const runtime = resolveChartProviderRegistry([
-  { family: 'point', recipe: ConnectedScatterChartDefinition, themeDefinitions: [] },
+  { family: 'point', recipe: ConnectedScatterChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const plotOf = (path: Record<string, unknown> = {}, marks: Array<Record<string, unknown>> = []) => {
@@ -31,7 +31,7 @@ const plotOf = (path: Record<string, unknown> = {}, marks: Array<Record<string, 
   return resolveSelectedChart(source, {
     theme: DEFAULT_RESOLVED_THEME,
     recipe: ConnectedScatterChartDefinition,
-    themeDefinitions: [],
+    chartThemeDefinitions: [],
     runtime,
   }).plot;
 };
@@ -47,8 +47,7 @@ describe('Connected Scatter connection curves', () => {
   it('仅为排序后各序列内部的缺口生成独立描边，保留曲线与观测点', () => {
     const plot = plotOf({ curve: 'catmullRom', connectNulls: { stroke: '#ff0000', strokeWidth: 4 } });
     const path = plot.marks[0];
-    if (!isBuiltinMark(path) || path.type !== 'path' || path.encodings.position === undefined)
-      throw new Error('Expected path mark');
+    if (path.type !== 'path' || path.encodings.position === undefined) throw new Error('Expected path mark');
 
     path.encodings.series = 'group';
     const datasets = {

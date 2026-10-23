@@ -26,7 +26,7 @@ export const RegressionChartInputEmbedAdapter = createChartInputEmbedAdapter(
     return buildPointChartRuntime(
       source,
       parts,
-      createRegressionChartProviderContribution(parts.themeDefinitions, parts.lowerOptions),
+      createRegressionChartProviderContribution(parts.chartThemeDefinitions, parts.lowerOptions),
     );
   },
 );

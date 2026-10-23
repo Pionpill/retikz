@@ -400,3 +400,74 @@ describe('stroke IRPaint schema', () => {
     ).toThrow();
   });
 });
+
+describe('外部图案输入的线型约束', () => {
+  it('dashpattern_nonarray → 抛 invalid dashPattern', () => {
+    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'ignoreStyle', dashPattern: '4 2' })).toThrow(
+      /dashPattern/i,
+    );
+  });
+
+  it('dashpattern_empty_or_negative → 抛 invalid dashPattern', () => {
+    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'ignoreStyle', dashPattern: [] })).toThrow(/dashPattern/i);
+    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'ignoreStyle', dashPattern: [4, -2] })).toThrow(
+      /dashPattern/i,
+    );
+  });
+
+  it('dashoffset_infinity → 抛 invalid dashOffset', () => {
+    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'ignoreStyle', dashOffset: Infinity })).toThrow(
+      /dashOffset/i,
+    );
+  });
+
+  it('linecap_unknown → 抛 invalid lineCap', () => {
+    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'ignoreStyle', lineCap: 'triangle' })).toThrow(/lineCap/i);
+  });
+
+  it('linejoin_unknown → 抛 invalid lineJoin', () => {
+    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'ignoreStyle', lineJoin: 'curve' })).toThrow(/lineJoin/i);
+  });
+
+  it('preset_nonboolean → 抛对应字段错误', () => {
+    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'ignoreStyle', dashed: 'yes' })).toThrow(/dashed/i);
+    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'ignoreStyle', dotted: 1 })).toThrow(/dotted/i);
+  });
+
+  it.each([
+    ['period_nan', { period: NaN, overrides: [{ index: 0, style: {} }] }],
+    ['period_infinity', { period: Infinity, overrides: [{ index: 0, style: {} }] }],
+    ['period_too_small', { period: 1, overrides: [{ index: 0, style: {} }] }],
+    ['period_too_large', { period: 513, overrides: [{ index: 0, style: {} }] }],
+    ['period_fractional', { period: 2.5, overrides: [{ index: 0, style: {} }] }],
+    ['period_string', { period: '3', overrides: [{ index: 0, style: {} }] }],
+    ['index_negative', { period: 3, overrides: [{ index: -1, style: {} }] }],
+    ['index_out_of_range', { period: 3, overrides: [{ index: 3, style: {} }] }],
+    [
+      'index_duplicate',
+      {
+        period: 3,
+        overrides: [
+          { index: 1, style: {} },
+          { index: 1, style: { dashed: true } },
+        ],
+      },
+    ],
+  ])('%s → 抛 lineStyleCycle 诊断', (_label, lineStyleCycle) => {
+    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'ignoreStyle', lineStyleCycle })).toThrow(
+      /lineStyleCycle/i,
+    );
+  });
+
+  it.each([
+    ['horizontalStyle dashed', 'horizontalStyle', { dashed: 'yes' }],
+    ['horizontalStyle dashPattern', 'horizontalStyle', { dashPattern: [] }],
+    ['verticalStyle dashOffset', 'verticalStyle', { dashOffset: Infinity }],
+    ['verticalStyle lineCap', 'verticalStyle', { lineCap: 'triangle' }],
+    ['verticalStyle lineJoin', 'verticalStyle', { lineJoin: 'curve' }],
+  ])('%s 非法 → 抛字段诊断', (_label, field, style) => {
+    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'ignoreStyle', [field]: style })).toThrow(
+      new RegExp(field, 'i'),
+    );
+  });
+});

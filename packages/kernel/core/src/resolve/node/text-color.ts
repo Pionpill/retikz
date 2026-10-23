@@ -3,14 +3,14 @@ import { parseStaticCssColor } from '@retikz/foundation';
 
 import type { IRLine, IRNode, IRNodeLabel } from '../../schemas';
 import { NodeTextColor } from '../../schemas';
+import type { IRNodeLabelDefault } from '../../schemas';
 import { resolveGraphicOpacity } from '../style';
-import type { EffectiveLabelDefault } from '../style';
 import type { PrimaryColorResolvedNode } from './types';
 
 /** 判断正文行是否仍消费 Node 文字颜色 */
 const bodyLineInheritsNodeTextColor = (line: IRLine): boolean => {
   if (typeof line === 'string') return true;
-  if ('runs' in line) return line.runs.some(run => run.fill === undefined);
+  if ('segments' in line) return line.segments.some(segment => segment.fill === undefined);
   return line.fill === undefined;
 };
 
@@ -22,19 +22,20 @@ const bodyInheritsNodeTextColor = (text: IRNode['text']): boolean => {
 };
 
 /** 判断 label 的正文或 pin 是否仍消费 Node 文字颜色 */
-const labelInheritsNodeTextColor = (label: IRNodeLabel, labelDefault: EffectiveLabelDefault): boolean => {
+const labelInheritsNodeTextColor = (label: IRNodeLabel, labelDefault: IRNodeLabelDefault): boolean => {
   if (label.textColor !== undefined || labelDefault.textColor !== undefined || labelDefault.color !== undefined) {
     return false;
   }
 
-  const textInherits = typeof label.text === 'string' || label.text.runs.some(run => run.fill === undefined);
+  const textInherits =
+    typeof label.text === 'string' || label.text.segments.some(segment => segment.fill === undefined);
   const pinInherits = label.pin === true || (typeof label.pin === 'object' && label.pin.stroke === undefined);
 
   return textInherits || pinInherits;
 };
 
 /** 判断至少一个真实文本或 pin 消费者是否继承 Node 文字颜色 */
-const hasNodeTextColorConsumer = (node: IRNode, labelDefault: EffectiveLabelDefault): boolean => {
+const hasNodeTextColorConsumer = (node: IRNode, labelDefault: IRNodeLabelDefault): boolean => {
   if (bodyInheritsNodeTextColor(node.text)) return true;
   if (node.label === undefined) return false;
 
@@ -77,7 +78,7 @@ const contrastingBlackOrWhite = (color: ParsedCssColor): '#000000' | '#ffffff' =
  */
 export const resolveNodeTextColor = <TNode extends PrimaryColorResolvedNode>(
   node: TNode,
-  labelDefault: EffectiveLabelDefault,
+  labelDefault: IRNodeLabelDefault,
   warn: (code: string, message: string) => void,
 ): TNode => {
   if (node.style?.textColor !== NodeTextColor.Contrast) return node;

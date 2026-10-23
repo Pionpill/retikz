@@ -14,7 +14,7 @@ export type PointGlyphStyleSource = Pick<
 >;
 
 /** 组装 Point 与 Relation endpoint 共用的 circle glyph 样式 */
-export const pointGlyphStyle = (fill: MarkPaint, mark: PointGlyphStyleSource): IRNodeDefault => {
+export const pointGlyphStyle = (fill: MarkPaint, mark: PointGlyphStyleSource): Omit<IRNodeDefault, 'label'> => {
   const padding = mark.padding;
   const minimumSize = mark.minimumSize;
   const stroke = mark.stroke;

@@ -241,7 +241,9 @@ it('Surface 完整 Scope 属性透传独立外框', () => {
   const surface = createSurface({
     namespace: 'standard',
     type: 'surface',
-    frame: { padding: 8, style: { fill: 'red' } },
+    padding: 8,
+    background: { fill: 'red' },
+    meta: { owner: 'surface' },
     child: { type: 'node', position: [0, 0], text: 'A' },
   });
   const { scene } = compileToScene(
@@ -250,6 +252,6 @@ it('Surface 完整 Scope 属性透传独立外框', () => {
   );
   const serialized = JSON.stringify(scene.primitives);
 
-  expect(serialized).toContain('"hitTest":false');
+  expect(serialized).toContain('"owner":"surface"');
   expect(serialized).toContain('"fill":"red"');
 });

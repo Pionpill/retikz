@@ -190,7 +190,7 @@ These are the arrow props configured on this page. See the [API reference](/kern
       kind: 'property',
       type: 'IRArrowDetail',
       description:
-        'Shared defaults and per-end overrides:\n\n- `IRArrowEndDetail`: `{ shape?: string; scale?: number; length?: number; width?: number; color?: string; fill?: string; opacity?: number; lineWidth?: number }`\n- `start?: IRArrowEndDetail` / `end?: IRArrowEndDetail`: override specified fields and inherit the rest\n\n`shape` accepts `normal`, `open`, `stealth`, `openStealth`, `circle`, `openCircle`, or a registered name; Standard also provides `diamond` and `openDiamond`. Hollow shapes ignore fill; filled shapes ignore lineWidth. Defaults to stealth with length / width of 8; scale multiplies both, while color and opacity inherit from the path.',
+        'Shared defaults and per-end overrides:\n\n- `IRArrowStyle`: `{ shape?: string; scale?: number; length?: number; width?: number; color?: string | number; stroke?: IRPaintValue; fill?: IRPaintValue; opacity?: number; lineWidth?: number; dashPattern?: Array<number>; dashOffset?: number; lineCap?: PathLineCap; lineJoin?: PathLineJoin }`\n- `start?: IRArrowStyle` / `end?: IRArrowStyle`: override specified fields and inherit the rest\n\n`shape` accepts `normal`, `open`, `stealth`, `openStealth`, `circle`, `openCircle`, or a registered name; Standard also provides `diamond` and `openDiamond`. Hollow shapes ignore fill; filled shapes ignore lineWidth. Defaults to stealth with length / width of 8; scale multiplies both, while color and opacity inherit from the path.',
     },
     {
       name: 'arrowPlacement',

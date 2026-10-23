@@ -159,7 +159,7 @@ describe('compile font size presets and relative units', () => {
         {
           type: 'node',
           position: [0, 0],
-          text: [{ runs: [{ tex: 'x' }] }],
+          text: [{ segments: [{ tex: 'x' }] }],
           style: { font: { size: 'sm' } },
         },
       ],

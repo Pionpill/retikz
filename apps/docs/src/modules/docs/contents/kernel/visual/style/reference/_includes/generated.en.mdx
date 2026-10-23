@@ -8,7 +8,7 @@ blendMode uses the string values of the public `BlendMode` constant and has no s
 
 ## Patterns
 
-#### <ApiSourceLink label={"IRPatternLineStyle"} path={"packages/kernel/core/src/schemas/paint/types.ts"} startLine={21}>IRPatternLineStyle</ApiSourceLink> / <ApiSourceLink label={"PatternLineStyleSchema"} path={"packages/kernel/core/src/schemas/paint/schema.ts"} startLine={57}>PatternLineStyleSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPatternLineStyle"} path={"packages/kernel/core/src/schemas/style/paint.ts"} startLine={230}>IRPatternLineStyle</ApiSourceLink> / <ApiSourceLink label={"PatternLineStyleSchema"} path={"packages/kernel/core/src/schemas/style/paint.ts"} startLine={99}>PatternLineStyleSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -47,7 +47,7 @@ export type IRPatternLineStyle = ZodInfer<typeof PatternLineStyleSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRPatternLineStyleCycle"} path={"packages/kernel/core/src/schemas/paint/types.ts"} startLine={24}>IRPatternLineStyleCycle</ApiSourceLink> / <ApiSourceLink label={"PatternLineStyleCycleSchema"} path={"packages/kernel/core/src/schemas/paint/schema.ts"} startLine={80}>PatternLineStyleCycleSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPatternLineStyleCycle"} path={"packages/kernel/core/src/schemas/style/paint.ts"} startLine={233}>IRPatternLineStyleCycle</ApiSourceLink> / <ApiSourceLink label={"PatternLineStyleCycleSchema"} path={"packages/kernel/core/src/schemas/style/paint.ts"} startLine={130}>PatternLineStyleCycleSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -80,7 +80,7 @@ export type IRPatternLineStyleCycle = ZodInfer<typeof PatternLineStyleCycleSchem
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRPatternPaint"} path={"packages/kernel/core/src/schemas/paint/types.ts"} startLine={18}>IRPatternPaint</ApiSourceLink>
+#### <ApiSourceLink label={"IRPatternPaint"} path={"packages/kernel/core/src/schemas/style/paint.ts"} startLine={227}>IRPatternPaint</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -126,7 +126,7 @@ export type IRPatternPaint = Extract<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PatternDefinition"} path={"packages/kernel/core/src/contract/pattern/types.ts"} startLine={84}>PatternDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PatternDefinition"} path={"packages/kernel/core/src/contract/pattern.ts"} startLine={84}>PatternDefinition</ApiSourceLink>
 
 Defines the default base size and motif geometry generator; the definition itself does not enter IR
 
@@ -160,7 +160,7 @@ export type PatternDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PatternEmitContext"} path={"packages/kernel/core/src/contract/pattern/types.ts"} startLine={32}>PatternEmitContext</ApiSourceLink>
+#### <ApiSourceLink label={"PatternEmitContext"} path={"packages/kernel/core/src/contract/pattern.ts"} startLine={32}>PatternEmitContext</ApiSourceLink>
 
 Provides base size, base style, optional directional/cyclic styles, and rounding for motif generation
 
@@ -212,13 +212,13 @@ export type PatternEmitContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PatternEmitOutput"} path={"packages/kernel/core/src/contract/pattern/types.ts"} startLine={78}>PatternEmitOutput</ApiSourceLink>
+#### <ApiSourceLink label={"PatternEmitOutput"} path={"packages/kernel/core/src/contract/pattern.ts"} startLine={78}>PatternEmitOutput</ApiSourceLink>
 
 ```ts
-export type PatternEmitOutput = Iterable<MarkerPrimitive> | PatternEmitResult;
+export type PatternEmitOutput = Iterable<ScenePrimitive> | PatternEmitResult;
 ```
 
-#### <ApiSourceLink label={"PatternEmitResult"} path={"packages/kernel/core/src/contract/pattern/types.ts"} startLine={70}>PatternEmitResult</ApiSourceLink>
+#### <ApiSourceLink label={"PatternEmitResult"} path={"packages/kernel/core/src/contract/pattern.ts"} startLine={70}>PatternEmitResult</ApiSourceLink>
 
 For patterns whose period differs from `context.size`; the compiler validates and writes the final Scene tile
 
@@ -228,10 +228,10 @@ For patterns whose period differs from `context.size`; the compiler validates an
 
 <ApiTable>
 
-| Member     | Type                        | Default | Description                                                  |
-| ---------- | --------------------------- | ------- | ------------------------------------------------------------ |
-| `motif`    | `Iterable<MarkerPrimitive>` | —       | Motif geometry in local tile coordinates                     |
-| `tileSize` | `number`                    | —       | Final tile period in user units; must be finite and positive |
+| Member     | Type                       | Default | Description                                                  |
+| ---------- | -------------------------- | ------- | ------------------------------------------------------------ |
+| `motif`    | `Iterable<ScenePrimitive>` | —       | Motif geometry in local tile coordinates                     |
+| `tileSize` | `number`                   | —       | Final tile period in user units; must be finite and positive |
 
 </ApiTable>
 
@@ -242,7 +242,7 @@ For patterns whose period differs from `context.size`; the compiler validates an
 ```ts
 export type PatternEmitResult = {
   tileSize: number;
-  motif: Iterable<MarkerPrimitive>;
+  motif: Iterable<ScenePrimitive>;
 };
 ```
 
@@ -250,9 +250,7 @@ export type PatternEmitResult = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BuiltinPatternShape"} path={"packages/kernel/core/src/schemas/paint/constants.ts"} startLine={8}>BuiltinPatternShape</ApiSourceLink>
-
-Three built-in motifs: `lines` (horizontal hatching), `dots`, and `grid`. Their tile geometry is emitted at compile time by PatternDefinition.emit in BUILTIN_PATTERNS.
+#### <ApiSourceLink label={"BuiltinPatternShape"} path={"packages/kernel/core/src/schemas/style/paint.ts"} startLine={33}>BuiltinPatternShape</ApiSourceLink>
 
 ```ts
 export const BuiltinPatternShape = {
@@ -264,7 +262,7 @@ export const BuiltinPatternShape = {
 export type BuiltinPatternShape = ValueOf<typeof BuiltinPatternShape>;
 ```
 
-#### <ApiSourceLink label={"definePattern"} path={"packages/kernel/core/src/contract/pattern/define.ts"} startLine={7}>definePattern</ApiSourceLink>
+#### <ApiSourceLink label={"definePattern"} path={"packages/kernel/core/src/contract/pattern.ts"} startLine={100}>definePattern</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -295,7 +293,7 @@ export declare const definePattern: (def: PatternDefinition) => PatternDefinitio
 
 ## Shadows
 
-#### <ApiSourceLink label={"IRDropShadow"} path={"packages/kernel/core/src/schemas/effects/types.ts"} startLine={6}>IRDropShadow</ApiSourceLink> / <ApiSourceLink label={"DropShadowSchema"} path={"packages/kernel/core/src/schemas/effects/schema.ts"} startLine={8}>DropShadowSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDropShadow"} path={"packages/kernel/core/src/schemas/style/effects.ts"} startLine={95}>IRDropShadow</ApiSourceLink> / <ApiSourceLink label={"DropShadowSchema"} path={"packages/kernel/core/src/schemas/style/effects.ts"} startLine={67}>DropShadowSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -310,7 +308,7 @@ export declare const definePattern: (def: PatternDefinition) => PatternDefinitio
 | `offsetX?` | `number`                                          | —       | —           |
 | `offsetY?` | `number`                                          | —       | —           |
 | `opacity?` | `number`                                          | —       | —           |
-| `preset?`  | `"none" \| "sm" \| "lg" \| "xl" \| "2xl" \| "md"` | —       | —           |
+| `preset?`  | `"none" \| "sm" \| "md" \| "lg" \| "xl" \| "2xl"` | —       | —           |
 
 </ApiTable>
 
@@ -332,7 +330,7 @@ export type IRDropShadow = ZodInfer<typeof DropShadowSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ShadowPreset"} path={"packages/kernel/core/src/schemas/effects/constants.ts"} startLine={10}>ShadowPreset</ApiSourceLink>
+#### <ApiSourceLink label={"ShadowPreset"} path={"packages/kernel/core/src/schemas/style/effects.ts"} startLine={13}>ShadowPreset</ApiSourceLink>
 
 The preset string `shadow="md"` is equivalent to `{ preset: 'md' }`; SHADOW_PRESETS is the source for preset expansion. `none` explicitly disables shadow (described here as equivalent to omission, reserving scope cascading).
 
@@ -351,7 +349,7 @@ export type ShadowPreset = ValueOf<typeof ShadowPreset>;
 
 ## Blending
 
-#### <ApiSourceLink label={"BlendMode"} path={"packages/kernel/core/src/schemas/effects/constants.ts"} startLine={38}>BlendMode</ApiSourceLink>
+#### <ApiSourceLink label={"BlendMode"} path={"packages/kernel/core/src/schemas/style/effects.ts"} startLine={41}>BlendMode</ApiSourceLink>
 
 Shared SVG mix-blend-mode and Canvas globalCompositeOperation modes using W3C compositing mathematics. `normal` is an explicit value equivalent to omission for overriding.
 
@@ -380,14 +378,14 @@ export type BlendMode = ValueOf<typeof BlendMode>;
 
 ## Configuration and validation
 
-#### <ApiSourceLink label={"PatternPaintSchema"} path={"packages/kernel/core/src/schemas/paint/schema.ts"} startLine={115}>PatternPaintSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PatternPaintSchema"} path={"packages/kernel/core/src/schemas/style/paint.ts"} startLine={165}>PatternPaintSchema</ApiSourceLink>
 
 <ZodSchema name="PatternPaintSchema" />
 
-#### <ApiSourceLink label={"PatternShapeNameSchema"} path={"packages/kernel/core/src/schemas/paint/schema.ts"} startLine={16}>PatternShapeNameSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PatternShapeNameSchema"} path={"packages/kernel/core/src/schemas/style/paint.ts"} startLine={56}>PatternShapeNameSchema</ApiSourceLink>
 
 <ZodSchema name="PatternShapeNameSchema" />
 
-#### <ApiSourceLink label={"PatternLineStyleOverrideSchema"} path={"packages/kernel/core/src/schemas/paint/schema.ts"} startLine={71}>PatternLineStyleOverrideSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PatternLineStyleOverrideSchema"} path={"packages/kernel/core/src/schemas/style/paint.ts"} startLine={121}>PatternLineStyleOverrideSchema</ApiSourceLink>
 
 <ZodSchema name="PatternLineStyleOverrideSchema" />

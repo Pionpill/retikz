@@ -1,8 +1,7 @@
-import type { GroupPrim, MarkerPrimitive, PaintResource, RectPrim, ScenePrimitive, TextPrim } from '@retikz/core';
+import type { GroupPrim, ScenePrimitive, PaintResource, RectPrim, TextPrim } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { collectArrowEnds } from '../../../src/svg/builders/arrow-collect';
-import { buildMarkerPrim } from '../../../src/svg/builders/marker-prim';
 import { buildPaintDef } from '../../../src/svg/builders/paint-defs';
 import { buildPrim } from '../../../src/svg/builders/prim';
 
@@ -138,9 +137,9 @@ describe('buildPrim —— primitive → SvgNode', () => {
   });
 });
 
-describe('buildMarkerPrim —— marker primitive → SvgNode', () => {
+describe('buildPrim —— marker primitive → SvgNode', () => {
   it('marker-group-transform：group.transforms 应落到 SVG g.transform', () => {
-    const group: MarkerPrimitive = {
+    const group: ScenePrimitive = {
       type: 'group',
       transforms: [
         { kind: 'translate', x: 2, y: 3 },
@@ -157,7 +156,7 @@ describe('buildMarkerPrim —— marker primitive → SvgNode', () => {
         },
       ],
     };
-    const node = buildMarkerPrim(group);
+    const node = buildPrim(group);
 
     expect(node.tag).toBe('g');
     expect(node.attrs.transform).toBe('translate(2 3) rotate(45)');

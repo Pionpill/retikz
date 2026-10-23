@@ -36,10 +36,7 @@ export const ProvenanceRecordPreview: FC<ProvenanceRecordPreviewProps> = props =
         <section className="min-w-0" style={{ width: configurationWidth }}>
           <h3 className="mb-2 text-sm font-medium">{i18n.output}</h3>
           <div className="overflow-x-auto">
-            <Layout
-              theme={{ style: 'docs.logic' }}
-              viewBox={{ x: 0, y: 0, width: 210, height: (rows.length + 1) * 26 }}
-            >
+            <Layout theme={{ name: 'docs.logic' }} viewBox={{ x: 0, y: 0, width: 210, height: (rows.length + 1) * 26 }}>
               <PreviewDetailTable
                 id="lineage-result"
                 dataRef="result"

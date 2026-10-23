@@ -16,14 +16,14 @@ describe('Code block theme tokens', () => {
   });
 
   it('merges sparse tokens without changing the existing defaults and rules path', () => {
-    const definition = Graph.defineGraphThemeStyle({
+    const definition = Graph.defineGraphTheme({
       name: 'custom',
       resolve: () => ({
         defaults: { block: { cornerRadius: 12 } },
         codeBlockTokens: { accentColor: '#123456', codeFontFamily: undefined, sectionBackground: { fill: '#abcdef' } },
       }),
     });
-    const theme = { ...DEFAULT_RESOLVED_THEME, style: 'custom' };
+    const theme = { ...DEFAULT_RESOLVED_THEME, name: 'custom' };
     const styles = new Map([[definition.name, definition]]);
     const result = Graph.resolveGraphTheme(theme, styles);
 
@@ -37,13 +37,13 @@ describe('Code block theme tokens', () => {
 
   it('preserves the cause of a theme callback and rejects missing style registrations', () => {
     const cause = new Error('theme failed');
-    const definition = Graph.defineGraphThemeStyle({
+    const definition = Graph.defineGraphTheme({
       name: 'custom',
       resolve: () => {
         throw cause;
       },
     });
-    const theme = { ...DEFAULT_RESOLVED_THEME, style: 'custom' };
+    const theme = { ...DEFAULT_RESOLVED_THEME, name: 'custom' };
 
     expect(() => Graph.resolveCodeBlockTokens(theme, new Map())).toThrow(Graph.RetikzGraphError);
     expect(() => Graph.resolveCodeBlockTokens(theme, new Map([[definition.name, definition]]))).toThrow(

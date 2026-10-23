@@ -103,16 +103,6 @@ const parseFiniteSvgNumber = (value: string | undefined, fallback?: number): num
   return parsed;
 };
 
-/** 解析限制在 `0..1` 区间内的 SVG 透明度属性 */
-const parseSvgUnitInterval = (value: string | undefined): number | undefined => {
-  if (value === undefined) return undefined;
-
-  const parsed = parseFiniteSvgNumber(value);
-  if (parsed < 0 || parsed > 1) throwMalformedSvgError(`SVG opacity must be within 0..1: ${value}`);
-
-  return parsed;
-};
-
 /** 解析 inline style，并保留当前 SVG lowering 支持的样式属性 */
 const parseStyle = (value: string | undefined): ParsedStyle => {
   const style: ParsedStyle = {};
@@ -154,6 +144,16 @@ const resolvePaintContext = (
   parent: PaintContext,
   node: SvgNode,
 ): { paint: PaintContext; opacity?: number; hasOpacity: boolean } => {
+  /** 解析限制在 `0..1` 区间内的 SVG 透明度属性 */
+  const parseSvgUnitInterval = (value: string | undefined): number | undefined => {
+    if (value === undefined) return undefined;
+
+    const parsed = parseFiniteSvgNumber(value);
+    if (parsed < 0 || parsed > 1) throwMalformedSvgError(`SVG opacity must be within 0..1: ${value}`);
+
+    return parsed;
+  };
+
   if (readSvgAttribute(node, 'clip-path') !== undefined) {
     throwUnsupportedSvgError('SVG clip-path is not supported');
   }

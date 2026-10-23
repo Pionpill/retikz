@@ -1,6 +1,6 @@
 ---
 title: '@retikz/render'
-description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 retained Runtime 原子提交 Patch、事件、动画与水合状态。
+description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 retained 提交目标 原子提交 Patch、事件、动画与水合状态。
 ---
 
 > 这里是包文档，不是组件教程；写图请从 [组件](/kernel/components/layout) 开始。
@@ -9,23 +9,23 @@ description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 retaine
 
 ## 职责一览
 
-| 主题             | 职责                                                   | 何时查阅                               |
-| ---------------- | ------------------------------------------------------ | -------------------------------------- |
-| SVG              | Scene → 矢量 DOM，或 SSR / 构建期的字符串输出          | 默认选它：要清晰矢量、CSS 命中、无障碍 |
-| Canvas           | Scene → 像素位图，即时模式绘制 + 命中查询              | 图元成百上千、高频重绘、性能优先       |
-| Retained Runtime | 在 Runtime transaction 中 prepare / commit Scene Patch | 需要稳定宿主 identity 与增量更新       |
-| 只读图层         | 在主图之后物化领域中立的普通 Scene 图层                | 接入检查器、编辑器或其它只读辅助内容   |
-| 水合             | 静态出图后按 id 把事件 handler 绑回图元（两后端共用）  | 给图加点击 / 悬停等交互                |
+| 主题          | 职责                                                  | 何时查阅                               |
+| ------------- | ----------------------------------------------------- | -------------------------------------- |
+| SVG           | Scene → 矢量 DOM，或 SSR / 构建期的字符串输出         | 默认选它：要清晰矢量、CSS 命中、无障碍 |
+| Canvas        | Scene → 像素位图，即时模式绘制 + 命中查询             | 图元成百上千、高频重绘、性能优先       |
+| Retained 提交 | 在 Reconciler 会话中准备与提交 Scene 和配置           | 需要稳定宿主 identity 与增量更新       |
+| 只读图层      | 在主图之后物化领域中立的普通 Scene 图层               | 接入检查器、编辑器或其它只读辅助内容   |
+| 水合          | 静态出图后按 id 把事件 handler 绑回图元（两后端共用） | 给图加点击 / 悬停等交互                |
 
-## Retained Runtime
+## Retained 提交
 
-`createRetainedRenderParticipant()` 把 Core Computation、`RenderRuntimeSourceDefinition` 与一个 retained renderer 接入同一 Runtime Runtime。首次 transaction 物化完整 Scene，后续 transaction 把 Scene Patch 与 renderer config 一起 prepare；只有所有 participant 都成功 commit 后，DOM / bitmap、事件、动画控制器与公开 read 才推进到同一 revision。失败 transaction 不发布新 revision，并尝试 rollback；rollback 成功时旧宿主继续可用，rollback 自身失败时 Runtime 进入 broken，需要 dispose 后重新创建。
+`createRetainedRenderTarget()` 创建连接 Reconciler 会话与 retained renderer 的提交目标。Vanilla 将它与处理结果发布组合成一个目标：先准备候选帧与配置，再提交宿主，成功后才发布会话结果。首次提交物化完整 Scene；编译结果变化时生成 `replaceScene`，仅配置变化时使用空操作 Patch 并保留编译结果。提交失败时恢复宿主与编译状态；恢复失败会使 Reconciler 会话进入 broken 状态，需要释放后重新创建。
 
 最终 dispose 会对 hydration、animation 与 image loader 做反向 best-effort cleanup。SVG WAAPI binding 或 Canvas clock 一旦开始清理，公开 controls 与事件 / 可见性回调立即失活；animation、observer、listener、inline style ownership、visibility listener 与 clock 分别清理，成功项不重复，失败项保留给后续 dispose 重试。
 
-`RenderRuntimeConfigInput` 是 closed transaction config：`handlerContributions` 按注册序合并水合 handler，`animation` 控制播放、截帧与扩展 registry，`cachePolicy` 保留未来 layer 失效优化的 hint，`canvas.width` / `canvas.height` 声明 Canvas CSS user-space 尺寸。alpha.2 的 SVG / Canvas renderer 只校验和冻结 `cachePolicy`，尚不按 auto / static / dynamic 启用 layer 复用。Canvas 尺寸字段省略时从 committed Scene layout 推导，再乘 session-lifetime DPR 得到设备像素；尺寸更新与位图绘制原子 commit，dirty reuse 仅在目标尺寸稳定时成立。
+`RenderRuntimeConfigInput` 是 closed transaction config：`handlerContributions` 按注册序合并水合 handler，`animation` 控制播放、截帧与扩展 registry，`cachePolicy` 保留未来 layer 失效优化的 hint，`canvas.width` / `canvas.height` 声明 Canvas CSS user-space 尺寸。当前 SVG / Canvas renderer 只校验和冻结 `cachePolicy`，尚不按 auto / static / dynamic 启用 layer 复用。Canvas 尺寸字段省略时从 committed Scene layout 推导，再乘 session-lifetime DPR 得到设备像素；尺寸更新与位图绘制原子 commit，dirty reuse 仅在目标尺寸稳定时成立。
 
-这些 retained API 从 `@retikz/render/runtime` 导入，不从 `@retikz/render` package root 导出。第三方后端通过 `RetainedRendererFactory` 创建 nominal SVG / Canvas renderer，并声明 `none` / `group` / `entity` capability。Render participant 会校验 Snapshot / Patch lineage；后端无法解释某个 Patch 时，统一降级为完整 Scene replacement 并发布 diagnostic。
+这些 retained API 从 `@retikz/render/runtime` 导入，不从 `@retikz/render` package root 导出。第三方后端通过 `RetainedRendererFactory` 创建 nominal SVG / Canvas renderer，并声明 `none` / `group` / `entity` capability。Render 提交目标校验 Snapshot / Patch 的版本与结果对应关系；无效 Patch 会被拒绝。当前接线对编译变化生成完整替换，后端能力声明不意味着会话自动产生细粒度操作。
 
 ### 主图与只读图层
 
@@ -47,42 +47,9 @@ Static API 使用 `StaticRenderFrame { primary: Scene, layers }`，retained rend
 
 <SourceLinks
   sources={[
-    {
-      label: 'Render Runtime 公开配置输入',
-      path: 'packages/kernel/render/src/runtime/config.ts',
-      startLine: 32,
-      endLine: 56,
-    },
-    {
-      label: 'Closed config capture',
-      path: 'packages/kernel/render/src/runtime/config.ts',
-      startLine: 229,
-      endLine: 308,
-    },
-    {
-      label: 'Render Runtime config owner',
-      path: 'packages/kernel/render/src/runtime/config.ts',
-      startLine: 314,
-      endLine: 327,
-    },
-    {
-      label: 'Retained renderer 创建与 participant 注册',
-      path: 'packages/kernel/render/src/runtime/participant.ts',
-      startLine: 502,
-      endLine: 628,
-    },
-    {
-      label: 'Retained prepare / commit / rollback',
-      path: 'packages/kernel/render/src/runtime/participant.ts',
-      startLine: 629,
-      endLine: 748,
-    },
-    {
-      label: 'Retained public read 与 dispose',
-      path: 'packages/kernel/render/src/runtime/participant.ts',
-      startLine: 749,
-      endLine: 764,
-    },
+    { label: 'Retained config', path: 'packages/kernel/render/src/runtime/config.ts' },
+    { label: 'Reconciler commit target', path: 'packages/kernel/render/src/runtime/target.ts' },
+    { label: 'Session publication and recovery', path: 'packages/kernel/reconciler/src/session.ts' },
     {
       label: 'SVG WAAPI 独立资源 cleanup',
       path: 'packages/kernel/render/src/animation/retained/binding.ts',

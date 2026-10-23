@@ -2,7 +2,7 @@ import type { IRChartPlotExtension, IRChartSource } from '@retikz/chart';
 import type { InputChartCoordinate } from '@retikz/chart-vanilla';
 import type { IRScene } from '@retikz/core';
 import type { ExternalRow, DataInputBindings } from '@retikz/data';
-import { resolvePlotExtensionAuthoring, usePlotThemeStyles } from '@retikz/plot-react';
+import { resolvePlotExtensionAuthoring, usePlotThemeDefinitions } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
@@ -84,48 +84,38 @@ type TypedChartRootRecipe<TInput extends PointFactoryInput> = Readonly<{
   marks?: TInput['marks'];
 }>;
 
-const dataFieldNamesOf = (rows: Array<ExternalRow>): ReadonlySet<string> =>
-  new Set(rows.flatMap(row => Object.keys(row)));
-
-const extensionPropPath = (path: ChartDeclarationPath, prop: string): ChartDeclarationPath => [...path, 'props', prop];
-
 const plotExtensionContextOf = (
   data: ChartDataProps,
   extension: IRChartPlotExtension | undefined,
   extensionPath: ChartDeclarationPath,
-): PlotExtensionAuthoringContext => ({
-  data: { reference: data.reference ?? 'chart.data', ...(data.model === undefined ? {} : { model: data.model }) },
-  ...(data.model === undefined ? {} : { model: data.model }),
-  dataFieldNames: dataFieldNamesOf(data.data),
-  ...(extension?.scales === undefined
-    ? {}
-    : { scales: { value: extension.scales, path: extensionPropPath(extensionPath, 'scales') } }),
-  ...(extension?.composition === undefined
-    ? {}
-    : { composition: { value: extension.composition, path: extensionPropPath(extensionPath, 'composition') } }),
-  ...(extension?.guides === undefined
-    ? {}
-    : { guides: { value: extension.guides, path: extensionPropPath(extensionPath, 'guides') } }),
-  ...(extension?.marks === undefined
-    ? {}
-    : { marks: { value: extension.marks, path: extensionPropPath(extensionPath, 'marks') } }),
-  ...(extension?.transform === undefined ? {} : { dataTransforms: extension.transform }),
-});
+): PlotExtensionAuthoringContext => {
+  const dataFieldNamesOf = (rows: Array<ExternalRow>): ReadonlySet<string> =>
+    new Set(rows.flatMap(row => Object.keys(row)));
 
-const plotExtensionOf = (
-  extension: IRChartPlotExtension | undefined,
-  fragment: ReturnType<typeof resolvePlotExtensionAuthoring>['fragment'] | undefined,
-): IRChartPlotExtension | undefined => {
-  if (fragment === undefined) return extension;
+  const extensionPropPath = (path: ChartDeclarationPath, prop: string): ChartDeclarationPath => [
+    ...path,
+    'props',
+    prop,
+  ];
 
-  const passive = {
-    ...(extension?.defaultPlot === undefined ? {} : { defaultPlot: extension.defaultPlot }),
-    ...(extension?.plotRules === undefined ? {} : { plotRules: extension.plotRules }),
-    ...(extension?.meta === undefined ? {} : { meta: extension.meta }),
+  return {
+    data: { reference: data.reference ?? 'chart.data', ...(data.model === undefined ? {} : { model: data.model }) },
+    ...(data.model === undefined ? {} : { model: data.model }),
+    dataFieldNames: dataFieldNamesOf(data.data),
+    ...(extension?.scales === undefined
+      ? {}
+      : { scales: { value: extension.scales, path: extensionPropPath(extensionPath, 'scales') } }),
+    ...(extension?.composition === undefined
+      ? {}
+      : { composition: { value: extension.composition, path: extensionPropPath(extensionPath, 'composition') } }),
+    ...(extension?.guides === undefined
+      ? {}
+      : { guides: { value: extension.guides, path: extensionPropPath(extensionPath, 'guides') } }),
+    ...(extension?.marks === undefined
+      ? {}
+      : { marks: { value: extension.marks, path: extensionPropPath(extensionPath, 'marks') } }),
+    ...(extension?.transform === undefined ? {} : { dataTransforms: extension.transform }),
   };
-  const combined = { ...passive, ...fragment };
-
-  return Object.keys(combined).length === 0 ? undefined : combined;
 };
 
 const extensionPartsOf = (
@@ -146,26 +136,13 @@ const extensionPartsOf = (
   };
 };
 
-const assertEmbeddedChartLayout = (declaration: CollectedChartDeclaration<ChartLayoutProps> | undefined): void => {
-  if (declaration === undefined) return;
-
-  const unsupportedDimensions = (['width', 'height'] as const).filter(dimension =>
-    Object.hasOwn(declaration.props, dimension),
-  );
-  if (unsupportedDimensions.length === 0) return;
-
-  throw new RetikzChartReactError(
-    `chart react: embedded Chart does not support ChartLayout ${unsupportedDimensions.join(', ')}; move host dimensions to the outer <Layout>`,
-  );
-};
-
 const rootDeclarationConflictError = (slot: string, declaration: string): RetikzChartReactError =>
   new RetikzChartReactError(
     `chart react: ${slot} cannot be provided by both the concrete Chart root prop and ${declaration}`,
   );
 
-const presentationOf = <TSource extends IRChartSource>(
-  rootPresentation: TSource['presentation'] | undefined,
+const presentationOf = (
+  rootPresentation: IRChartSource['presentation'] | undefined,
   declarationPresentation: TypedPointChartDeclarations<PointFactoryInput>['presentation'],
 ): Partial<Record<'title' | 'subtitle' | 'note' | 'source', unknown>> => {
   const presentation: Partial<Record<'title' | 'subtitle' | 'note' | 'source', unknown>> = {};
@@ -200,6 +177,35 @@ export const createTypedChartInput = <
   factory: (input: TInput) => InputEmbed<TInput>,
   encodingsDeclarationName: string,
 ): TInput => {
+  const assertEmbeddedChartLayout = (declaration: CollectedChartDeclaration<ChartLayoutProps> | undefined): void => {
+    if (declaration === undefined) return;
+
+    const unsupportedDimensions = (['width', 'height'] as const).filter(dimension =>
+      Object.hasOwn(declaration.props, dimension),
+    );
+    if (unsupportedDimensions.length === 0) return;
+
+    throw new RetikzChartReactError(
+      `chart react: embedded Chart does not support ChartLayout ${unsupportedDimensions.join(', ')}; move host dimensions to the outer <Layout>`,
+    );
+  };
+
+  const plotExtensionOf = (
+    extension: IRChartPlotExtension | undefined,
+    fragment: ReturnType<typeof resolvePlotExtensionAuthoring>['fragment'] | undefined,
+  ): IRChartPlotExtension | undefined => {
+    if (fragment === undefined) return extension;
+
+    const passive = {
+      ...(extension?.defaultPlot === undefined ? {} : { defaultPlot: extension.defaultPlot }),
+      ...(extension?.plotRules === undefined ? {} : { plotRules: extension.plotRules }),
+      ...(extension?.meta === undefined ? {} : { meta: extension.meta }),
+    };
+    const combined = { ...passive, ...fragment };
+
+    return Object.keys(combined).length === 0 ? undefined : combined;
+  };
+
   const {
     id,
     background,
@@ -213,7 +219,7 @@ export const createTypedChartInput = <
     recipe,
     plotExtension: rootPlotExtension,
     panel,
-    themeDefinitions,
+    chartThemeDefinitions,
     lowerOptions,
   } = props;
   const rootRecipe = recipe as TypedChartRootRecipe<TInput> | undefined;
@@ -307,7 +313,7 @@ export const createTypedChartInput = <
   const effectivePlotExtension = hasRootPlotExtension ? rootPlotExtension : declaredPlotExtension;
   const effectiveLowerOptions = lowerOptionsWithPlotRuntimeOf(lowerOptions, plotAuthoring?.runtime ?? {});
 
-  const presentation = presentationOf<TSource>(rootPresentation, declarations.presentation);
+  const presentation = presentationOf(rootPresentation, declarations.presentation);
   const effectiveLayout = hasRootLayout ? rootLayout : declarations.layout?.props.layout;
   const effectiveCoordinate = hasRootCoordinate ? rootCoordinate : declarations.coordinate?.props.coordinate;
 
@@ -326,7 +332,7 @@ export const createTypedChartInput = <
     ...(theme === undefined ? {} : { theme }),
     ...(effectivePlotExtension === undefined ? {} : { plotExtension: effectivePlotExtension }),
     ...(panel === undefined ? {} : { panel }),
-    ...(themeDefinitions === undefined ? {} : { themeDefinitions }),
+    ...(chartThemeDefinitions === undefined ? {} : { chartThemeDefinitions }),
     ...(effectiveLowerOptions === undefined ? {} : { lowerOptions: effectiveLowerOptions }),
     ...(presentation.title === undefined ? {} : { title: presentation.title }),
     ...(presentation.subtitle === undefined ? {} : { subtitle: presentation.subtitle }),
@@ -357,19 +363,19 @@ export const createTypedChartComponent = <
   adapter: SynchronousInputEmbedAdapter<TInput>,
 ): InputEmbeddableChartComponent<TProps, TInput, SynchronousInputEmbedAdapter<TInput>> => {
   const Component: FC<TProps> = props => {
-    const { children, layout, lowerOptions, themeDefinitions } = props;
+    const { children, layout, lowerOptions, chartThemeDefinitions } = props;
     const ambientThemeDefinitions = useChartThemeDefinitions();
-    const ambientPlotThemeStyles = usePlotThemeStyles();
+    const ambientPlotThemeDefinitions = usePlotThemeDefinitions();
     const effectiveProps = useMemo<TProps>(() => {
-      const effectiveThemeDefinitions = mergeThemeDefinitions(themeDefinitions, ambientThemeDefinitions);
-      const effectiveLowerOptions = lowerOptionsWithAmbientThemeOf(lowerOptions, ambientPlotThemeStyles);
+      const effectiveThemeDefinitions = mergeThemeDefinitions(chartThemeDefinitions, ambientThemeDefinitions);
+      const effectiveLowerOptions = lowerOptionsWithAmbientThemeOf(lowerOptions, ambientPlotThemeDefinitions);
 
       return {
         ...props,
-        ...(effectiveThemeDefinitions === undefined ? {} : { themeDefinitions: effectiveThemeDefinitions }),
+        ...(effectiveThemeDefinitions === undefined ? {} : { chartThemeDefinitions: effectiveThemeDefinitions }),
         ...(effectiveLowerOptions === undefined ? {} : { lowerOptions: effectiveLowerOptions }),
       };
-    }, [ambientPlotThemeStyles, ambientThemeDefinitions, themeDefinitions, lowerOptions, props]);
+    }, [ambientPlotThemeDefinitions, ambientThemeDefinitions, chartThemeDefinitions, lowerOptions, props]);
     const standalone = prepareStandaloneChartDeclarations(children, layout);
     const embeddedProps = { ...effectiveProps, children: standalone.children } as TProps;
 

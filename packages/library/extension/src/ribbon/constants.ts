@@ -1,5 +1,13 @@
 import type { ValueOf } from '@retikz/foundation';
 
+/** 标签放在流带内部或外部 */
+export const RibbonLabelPlacement = {
+  Outside: 'outside',
+  Inside: 'inside',
+} as const;
+
+export type RibbonLabelPlacement = ValueOf<typeof RibbonLabelPlacement>;
+
 /** 选择从中心线生成轮廓或保留作者提供的两条边界 */
 export const RibbonMode = {
   /** 从开放中心线与宽度规则生成带状轮廓 */

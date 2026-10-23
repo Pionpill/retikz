@@ -89,7 +89,7 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
         warningMessage: 'Unbalanced `$` in node text; the trailing fragment is kept literal.',
       }),
     );
-    const anyMixed = rawLines.some(spec => typeof spec === 'object' && 'runs' in spec);
+    const anyMixed = rawLines.some(spec => typeof spec === 'object' && 'segments' in spec);
     const anyMath = resolved.some(r => r.hasMath);
     if (anyMath || anyMixed) {
       const blockFont: TextFont = { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle };
@@ -101,7 +101,7 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
       };
       let cursor = 0;
       const blockLines = resolved.map(r => {
-        const laid = layoutInlineLine(r.runs, ctx);
+        const laid = layoutInlineLine(r.segments, ctx);
         const slot = Math.max(lineHeight, laid.ascent + laid.descent);
         const baselineOffset = cursor + (slot - (laid.ascent + laid.descent)) / 2 + laid.ascent;
         cursor += slot;

@@ -5,7 +5,7 @@ description: 自定义图案通过 PatternDefinition 生成重复单元，使用
 
 ## 定义与注册
 
-从 `@retikz/core` 导入 definePattern。定义提供 name、可选 defaultSize 和 emit；emit 接收已经解析的尺寸、颜色与线型，返回局部坐标中的 MarkerPrimitive。
+从 `@retikz/core` 导入 definePattern。定义提供 name、可选 defaultSize 和 emit；emit 接收已经解析的尺寸、颜色与线型，返回局部坐标中的 ScenePrimitive。
 
 下面定义 cross，将它传给 Layout.extensions.patterns，并通过 fill.shape 引用同一名称。
 
@@ -26,7 +26,9 @@ React 使用 `extensions={{ patterns: [cross] }}`；Vanilla 在 mount / renderTo
 
 ## 错误与限制
 
-名称必须在当前编译 registry 中可用。重复单元使用结构化 MarkerPrimitive，不接受 DOM、函数或任意文本图元。emit 的异常和非法输出会在编译边界报告；不要依赖静默回退。background、方向样式和周期样式由定义按需要消费，收到参数并不意味着编译器会自动替自定义图案绘制它们。
+名称必须在当前编译 registry 中可用。重复单元使用完整的 ScenePrimitive 契约，包括已度量文本、裁剪、动画和有限嵌套内容；不接受 DOM、函数或未度量文本。资源引用使用所属 Scene 的命名空间，缺失、种类不匹配或循环依赖会报告错误。已类型化的定义作者负责满足基础图元契约；emit 异常保留原始原因。
+
+资源动画共享场景时钟，各宿主独立控制播放起点，同一宿主内的 tile 共享播放状态。局部 id 不创建独立更新节点，每个 tile 也不创建命中目标。background、方向样式和周期样式由定义按需要消费，收到参数并不意味着编译器会自动替自定义图案绘制它们。
 
 ## 相关属性
 

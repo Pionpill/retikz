@@ -22,12 +22,12 @@ export const PathRoundedCornersPreview = (values: PathRoundedCornersPreviewValue
         <Step to={[0, -25]} />
       </Path>
 
-      <Path roundedCorners={values.radius} style={{ stroke: '#93c5fd', strokeWidth: values.strokeWidth }}>
+      <Path cornerRadius={values.radius} style={{ stroke: '#93c5fd', strokeWidth: values.strokeWidth }}>
         <Step kind="move" to={[-150, 85]} />
         <Step to={[0, 85]} />
         <Step to={[0, 25]} />
       </Path>
-      <Path roundedCorners={values.radius} style={{ stroke: '#2563eb', strokeWidth: 2 }}>
+      <Path cornerRadius={values.radius} style={{ stroke: '#2563eb', strokeWidth: 2 }}>
         <Step kind="move" to={[-150, 85]} />
         <Step to={[0, 85]} />
         <Step to={[0, 25]} />

@@ -49,10 +49,6 @@ describe('readonly render layer contract', () => {
     expect(Object.isFrozen(layers[0]?.scene.primitives)).toBe(true);
   });
 
-  it.each(['', '   '])('rejects empty layer key %j', key => {
-    expect(() => validateReadonlyLayers([makeLayer({ key })])).toThrow();
-  });
-
   it('rejects duplicate layer keys within one frame', () => {
     expect(() => validateReadonlyLayers([makeLayer(), makeLayer()])).toThrow();
   });

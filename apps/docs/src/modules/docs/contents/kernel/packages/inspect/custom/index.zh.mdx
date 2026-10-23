@@ -11,7 +11,7 @@ description: 定义并注册端点 Inspector，在 React 与 Vanilla 中生成�
 
 ## 定义能力
 
-预览源码中的 `endpoint-inspector.ts` 是两种宿主共用的定义，复制该文件后再选择下面一种接入方式。`namespace` 与 `type` 组成注册键；`owner: { kind: 'path', name: 'stroke' }` 选择已有的描边路径产物，`subjectSchema` 校验其结构。回调读取命令并返回普通 Core 图元，驱动再编译辅助层。
+预览源码中的 `endpoint-inspector.ts` 是两种宿主共用的定义，复制该文件后再选择下面一种接入方式。`namespace` 与 `type` 组成注册键；`owner: { kind: 'path', name: 'stroke' }` 选择已有的描边路径产物，作者通过 `StrokePathOwnerOutput` 声明回调消费的类型，驱动不重复解析产物。回调读取命令并返回普通 Core 图元，驱动再编译辅助层。
 
 本例没有自定义配置，因此省略 `optionsSchema` 与 `resolveOptions`。需要选项时，先声明 schema；只有消费态不同于解析结果时才提供 resolver，不必写恒等函数。
 

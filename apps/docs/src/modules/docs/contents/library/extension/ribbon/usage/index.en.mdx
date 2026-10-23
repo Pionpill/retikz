@@ -194,21 +194,21 @@ Switch between `fixed`, `taper`, `stops`, and `profile` to compare constant widt
 
 ## Label placement
 
-Configure labels through `Path.label`. Positions follow accumulated arc length along the centerline. Inside labels sit on the centerline; outside labels are offset from the corresponding boundary. Sloped labels follow the local centerline tangent.
+Configure labels through `Path.kindOptions.label`. Positions follow accumulated arc length along the centerline. Inside labels sit on the centerline; outside labels are offset from the corresponding boundary. Sloped labels follow the local centerline tangent.
 
-Ribbon reuses the Kernel [Path geometry label](/kernel/components/path/label), including its text, font, and appearance fields. Ribbon supplies centerline samples and band-width offsets. Path geometry labels currently support tangent rotation through `sloped`, but not an arbitrary `label.rotate` angle; that field belongs to Node labels. `interrupt` / `gap` apply to compatible stroke hosts, not Ribbon.
+`kindOptions.label` accepts one label object or a non-empty array, with independent `placement` for each label. Ribbon reuses the text, font, and appearance fields of Kernel [Path geometry labels](/kernel/components/path/label) and computes inside/outside positions. Labels still inherit the host's path-label defaults. Use `sloped` for rotation; `rotate` and the stroke interruption fields `interrupt` / `gap` are not accepted. Generic Path labels do not expose `placement`.
 
-| Property          | Values                                                  | Explanation                                                                                                                |
-| ----------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `label.text`      | Text, line arrays, or rich text                         | Label content using the Kernel text-block contract                                                                         |
-| `label.position`  | 0–1, or keywords such as `at-start`, `midway`, `at-end` | Position along the centerline; numbers are arc-length fractions. Defaults to the midpoint                                  |
-| `label.placement` | `inside`, `outside`                                     | Inside or outside placement; omission uses outside offset behavior. Use inside without side for a centered label           |
-| `label.side`      | `top`, `bottom`, `left`, `right`, `center`              | Side relative to the label anchor; uses canvas axes without `sloped`, and rotates with the centerline tangent when enabled |
-| `label.distance`  | Number                                                  | Gap between an outside label and the ribbon boundary; defaults to 4                                                        |
-| `label.sloped`    | `true`, `false`                                         | Rotate along the local centerline tangent, independently of the endpoint section direction                                 |
-| `label.textColor` | Color or `currentColor`                                 | The demo inherits the current text color for readability inside and outside the band                                       |
-| `label.font`      | Font configuration                                      | Shared Kernel font settings, including `size`, `family`, `weight`, and `style`                                             |
-| `label.opacity`   | 0–1                                                     | Label opacity, multiplied by host opacity                                                                                  |
+| Property                      | Values                                                  | Explanation                                                                                                                |
+| ----------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `kindOptions.label.text`      | Text, line arrays, or rich text                         | Label content using the Kernel text-block contract                                                                         |
+| `kindOptions.label.position`  | 0–1, or keywords such as `at-start`, `midway`, `at-end` | Position along the centerline; numbers are arc-length fractions. Defaults to the midpoint                                  |
+| `kindOptions.label.placement` | `inside`, `outside`                                     | Inside or outside placement; omission uses outside offset behavior. Use inside without side for a centered label           |
+| `kindOptions.label.side`      | `top`, `bottom`, `left`, `right`, `center`              | Side relative to the label anchor; uses canvas axes without `sloped`, and rotates with the centerline tangent when enabled |
+| `kindOptions.label.distance`  | Number                                                  | Gap between an outside label and the ribbon boundary; defaults to 4                                                        |
+| `kindOptions.label.sloped`    | `true`, `false`                                         | Rotate along the local centerline tangent, independently of the endpoint section direction                                 |
+| `kindOptions.label.textColor` | Color or `currentColor`                                 | The demo inherits the current text color for readability inside and outside the band                                       |
+| `kindOptions.label.font`      | Font configuration                                      | Shared Kernel font settings, including `size`, `family`, `weight`, and `style`                                             |
+| `kindOptions.label.opacity`   | 0–1                                                     | Label opacity, multiplied by host opacity                                                                                  |
 
 Drag “Position” to move the label along the curve. Select outside placement, then change its side to compare offsets from the boundary. Toggle rotation to compare horizontal text with text following the local tangent. The centerline and widths remain fixed so that label changes are easy to compare.
 
@@ -218,7 +218,7 @@ Drag “Position” to move the label along the curve. Select outside placement,
   size="md"
 />
 
-`left` / `right` change the offset at the current label position; use `label.position: 0` / `1` to select the start or end. Left/right offsets do not guarantee that the label lies entirely outside the ribbon outline.
+`left` / `right` change the offset at the current label position; use `kindOptions.label.position: 0` / `1` to select the start or end. Left/right offsets do not guarantee that the label lies entirely outside the ribbon outline.
 
 ## Styling
 

@@ -17,10 +17,11 @@ export const treeSchemaLocalization = {
     '/field/"animations"': '作用于容器整体的动画轨道，不影响布局，也不向子图元传播',
     '/field/"defaults"': '后代默认样式及其继承屏障',
     '/field/"defaults"/field/"node"': '节点默认样式，与其他通道独立',
-    '/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
-    '/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
-    '/field/"defaults"/field/"arrow"': '箭头默认样式',
-    '/field/"defaults"/field/"reset"': '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
+    '/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.path.arrow',
+    '/field/"defaults"/field/"node"/field/"label"': '节点标签与路径步骤标签的默认样式',
+    '/field/"defaults"/field/"path"/field/"label"': '节点标签与路径步骤标签的默认样式',
+    '/field/"defaults"/field/"path"/field/"arrow"': '箭头默认样式',
+    '/field/"defaults"/field/"reset"': '默认样式继承屏障：true 重置全部，或指定 node、path（包含各自装饰） 通道',
     '/field/"defaultNode"': '所有节点的稀疏形状、外观与布局覆盖',
     '/field/"defaultNode"/field/"shape"': '节点形状；覆盖合并后默认为 circle',
     '/field/"defaultNode"/field/"style"': '节点外观；各字段独立覆盖默认值',
@@ -33,7 +34,7 @@ export const treeSchemaLocalization = {
       '透传至Scene的JSON元数据，编译器不解释其内容',
     '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"animations"': '声明式动画轨道，不影响布局或包围盒',
     '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"zIndex"': '同组绘制顺序，数值较大时在上方',
-    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"roundedCorners"':
+    '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"cornerRadius"':
       '线段连接处的几何圆角，与描边lineJoin独立',
     '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"rotate"': '围绕路径包围盒中心旋转整个边框',
     '/field/"defaultConnection"/union/1/union/0/field/"path"/field/"scale"': '围绕路径包围盒中心缩放整个边框',
@@ -72,7 +73,7 @@ export const treeSchemaLocalization = {
       '透传至Scene的JSON元数据，编译器不解释其内容',
     '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"animations"': '声明式动画轨道，不影响布局或包围盒',
     '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"zIndex"': '同组绘制顺序，数值较大时在上方',
-    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"roundedCorners"':
+    '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"cornerRadius"':
       '线段连接处的几何圆角，与描边lineJoin独立',
     '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"rotate"': '围绕路径包围盒中心旋转整个边框',
     '/field/"defaultConnection"/union/1/union/1/field/"path"/field/"scale"': '围绕路径包围盒中心缩放整个边框',

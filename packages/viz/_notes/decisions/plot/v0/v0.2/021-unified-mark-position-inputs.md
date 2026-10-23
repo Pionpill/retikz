@@ -111,7 +111,7 @@ contributeToDomain 统一成为 Mark 的域贡献控制，默认 true；普通�
 
 常量位置不自动创建字段图例；非位置字段编码继续按既有规则建立图例。数据驱动显式路径的两个端点属于同一记录实例；独立实例只有声明及视图身份，不可通过 datum locator 冒充数据行。分组顶点路径继续保持既有系列、分段与取值粒度，首行外观规则不因本次统一而改变。
 
-内置与自定义 Mark 继续经同一 MarkDefinition、defineMark、registry 和领域解析链路。字段依赖由已声明的编码目标及 collectFields 契约收集，不能扫描任意 properties 对象寻找同名 field；移除 Definition 中以 annotation 命名的分支，独立实例与数据实例能力归入统一 Mark 的几何消费契约。自定义 Mark 必须明确支持的几何输入和独立实例消费能力；不支持的组合明确诊断，不伪造一条数据调用旧的逐行实现。
+Mark 采用 [023](./023-closed-mark-vocabulary.md) 的封闭内置类型集合，由内部行为定义与领域解析链路消费。字段依赖由已声明的编码目标及 collectFields 契约收集，不能扫描任意 properties 对象寻找同名 field；移除 Definition 中以 annotation 命名的分支，独立实例与数据实例能力归入统一 Mark 的几何消费契约。各内置图元必须明确支持的几何输入和独立实例消费能力；不支持的组合明确诊断。
 
 MarkDefinition 的 schema 统一覆盖该类型支持的几何形态；lower、placement.targets 与 domainPadding 统一消费以下运行时实例输入，其余 frame、channels、context 的职责保持不变：
 

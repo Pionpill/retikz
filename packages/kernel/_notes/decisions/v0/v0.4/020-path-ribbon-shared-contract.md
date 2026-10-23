@@ -17,7 +17,7 @@ keywords: 'Path、Ribbon、shared、contract、DrawableStyleSchema、DrawableMet
 
 Path 是唯一 path-like IR host。共享字段由 `DrawableStyleSchema` 与 `DrawableMetaSchema` 承载：颜色、fill、opacity、shadow、blendMode、zIndex 等 drawable 级字段由两类 Path kind 共用
 
-Path-only 字段继续属于 stroke path，包括 dash、arrow、lineCap、lineJoin、roundedCorners、marks、children 等；ribbon-only 字段进入 `Path.ribbon`，包括 mode、width、start/end、interpolation、align、samples/sampling、upper/lower。`Path.label` 统一复用 `GeometryLabelSchema`
+Path-only 字段继续属于 stroke path，包括 dash、arrow、lineCap、lineJoin、cornerRadius、marks、children 等；ribbon-only 字段进入 `Path.ribbon`，包括 mode、width、start/end、interpolation、align、samples/sampling、upper/lower。`Path.label` 统一复用 `GeometryLabelSchema`
 
 内置和自定义 path kind 必须通过同一 registry 消费共享 contract；内置 Ribbon 不得走私有入口
 

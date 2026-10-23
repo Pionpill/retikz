@@ -2,8 +2,8 @@ import type { ExternalRow } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
 
 import { RetikzPlotError } from '../error';
-import type { IRPlotPositionInput, IRPlotMarkOperation } from '../schemas';
-import { isBuiltinMark, BuiltinPlotMark } from '../schemas';
+import type { IRPlotPositionInput, IRPlotMark } from '../schemas';
+import { BuiltinPlotMark } from '../schemas';
 import type { PositionScale } from './scale';
 
 /** 从位置输入提取真正的数据字段依赖 */
@@ -29,8 +29,8 @@ export const mapPositionInput = (
     : scale.coordinate(positionValue(input, row));
 
 /** 按几何结构枚举实际消费的位置，不扫描任意属性中的 field */
-export const markPositionInputs = (mark: IRPlotMarkOperation): Array<Partial<Record<string, IRPlotPositionInput>>> => {
-  if (isBuiltinMark(mark) && mark.type === BuiltinPlotMark.Relation) {
+export const markPositionInputs = (mark: IRPlotMark): Array<Partial<Record<string, IRPlotPositionInput>>> => {
+  if (mark.type === BuiltinPlotMark.Relation) {
     const refs = [mark.encodings?.source, mark.encodings?.target];
     if (mark.properties.geometry.kind === 'path') {
       refs.push(...(mark.encodings?.geometry?.via ?? []));

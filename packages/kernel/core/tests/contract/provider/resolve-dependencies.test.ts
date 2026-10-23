@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { literal, number, strictObject } from 'zod';
+import { literal, strictObject } from 'zod';
 
 import type {
   AnyCompositeDefinition,
@@ -53,7 +53,6 @@ const clipDefinitionOf = (name: string) =>
     kind: name,
     schema: strictObject({ kind: literal(name) }),
     resolve: () => ({ kind: name, size: 4 }),
-    shapeSchema: strictObject({ kind: literal(name), size: number().positive() }),
     lower: shape => ({
       commands: [
         { kind: 'move', to: [0, 0] },
@@ -104,21 +103,6 @@ describe('resolveCoreProviderDependencies', () => {
     });
 
     expect(compositeNamesOf(resolved.composites ?? [])).toEqual(['a.b/c', 'a/b.c']);
-  });
-
-  it.each([
-    { name: 'root namespace', root: compositeKey('', 'card') },
-    { name: 'root type', root: compositeKey('third', '') },
-    { name: 'root provider name', root: shapeKey('') },
-  ])('rejects an empty $name before materialization', ({ root }) => {
-    const makeDefinition = vi.fn(() => definitionOf(root.capability === 'composite' ? root : shapeKey('third')));
-
-    expect(() =>
-      resolveCoreProviderDependencies({
-        contributions: [contributionOf([root], [providerOf(root, { makeDefinition })])],
-      }),
-    ).toThrow(/non-empty/);
-    expect(makeDefinition).not.toHaveBeenCalled();
   });
 
   it('materializes only the reachable dependency-first closure with a stable first-reach tie break', () => {

@@ -60,7 +60,7 @@ type InputSceneBase = Omit<IRScene, 'type' | 'version' | 'children'> & {
   version?: never;
   /** 作者侧场景标识，不写入持久化 Scene IR */
   id?: string;
-  /** 场景根主题，只填写需要覆盖的 style 与 mode */
+  /** 场景根主题，只填写需要覆盖的 name 与 mode */
   theme?: IRScene['theme'];
   /** 显式取景矩形；省略时由编译结果按内容计算 */
   viewBox?: IRViewBox;

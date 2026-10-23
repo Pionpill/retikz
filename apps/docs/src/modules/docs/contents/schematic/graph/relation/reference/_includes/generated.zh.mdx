@@ -52,7 +52,8 @@ export type RelationProps = Omit<InputRelation, 'type'> &
 | 成员                   | 类型                                                                                                                                                                                                  | 默认值 | 说明                                                                                    |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------- |
 | `animations?`          | `RelationInputEmbedProps["animations"]`                                                                                                                                                               | —      | 原样传递的动画轨道，不参与布局和边界计算                                                |
-| `direction?`           | `"none" \| "reverse" \| "both" \| "forward"`                                                                                                                                                          | —      | 显式语义方向，覆盖 kind / role 默认且须在允许集合内                                     |
+| `cornerRadius?`        | `number`                                                                                                                                                                                              | —      | 线段转角的几何圆角，区别于描边 lineJoin                                                 |
+| `direction?`           | `"reverse" \| "none" \| "both" \| "forward"`                                                                                                                                                          | —      | 显式语义方向，覆盖 kind / role 默认且须在允许集合内                                     |
 | `group?`               | `string`                                                                                                                                                                                              | —      | Graph 根内的分类色分组 key，不创建 Group 容器                                           |
 | `id?`                  | `string`                                                                                                                                                                                              | —      | 可选稳定引用 id；省略不自动生成                                                         |
 | `kind?`                | `string`                                                                                                                                                                                              | —      | 开放子类型 key，必须属于选定 role                                                       |
@@ -64,14 +65,13 @@ export type RelationProps = Omit<InputRelation, 'type'> &
 | `predicate?`           | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                                                                                                                                  | —      | 已注册的精确语义名称及 JSON 参数                                                        |
 | `role`                 | `OpenString<ValueOf<{ readonly Association: "association"; readonly Dependency: "dependency"; readonly Generalization: "generalization"; readonly Flow: "flow"; readonly Influence: "influence"; }>>` | —      | 开放关系角色 key，运行时须注册                                                          |
 | `rotate?`              | `number`                                                                                                                                                                                              | —      | 路径绕边界中心旋转，端点先求值                                                          |
-| `roundedCorners?`      | `number`                                                                                                                                                                                              | —      | 线段转角的几何圆角，区别于描边 lineJoin                                                 |
 | `scale?`               | `number \| { x: number; y: number; }`                                                                                                                                                                 | —      | 路径绕边界中心缩放                                                                      |
 | `readonly source`      | `InputRelationEndpoint`                                                                                                                                                                               | —      | —                                                                                       |
-| `sourceMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                                    | —      | 起点 marker 的外观覆盖，不包含 shape                                                    |
+| `sourceMarker?`        | `RelationInputEmbedProps["sourceMarker"]`                                                                                                                                                             | —      | 起点 marker 的外观覆盖，不包含 shape                                                    |
 | `status?`              | `"error" \| "success" \| "warning" \| "disabled"`                                                                                                                                                     | —      | 可选闭合状态：error、success、warning、disabled                                         |
 | `style?`               | `RelationInputEmbedProps["style"]`                                                                                                                                                                    | —      | 路径外观覆盖，不包含填充字段                                                            |
 | `readonly target`      | `InputRelationEndpoint`                                                                                                                                                                               | —      | —                                                                                       |
-| `targetMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                                    | —      | 终点 marker 的外观覆盖，不包含 shape                                                    |
+| `targetMarker?`        | `RelationInputEmbedProps["targetMarker"]`                                                                                                                                                             | —      | 终点 marker 的外观覆盖，不包含 shape                                                    |
 | `zIndex?`              | `number`                                                                                                                                                                                              | —      | 同级绘制顺序，越大越靠上；省略为 0，同值保留原顺序                                      |
 | `input` (参数)         | `RelationInputEmbedProps`                                                                                                                                                                             | —      | 关系编写字段，端点可使用 id 字符串，路径可使用 way                                      |
 | 返回值                 | `InputEmbed<RelationInputEmbedProps>`                                                                                                                                                                 | —      | 供 Vanilla 内容树使用的 embed 节点，由 RelationInputEmbedAdapter 转换为 Relation Source |
@@ -129,7 +129,8 @@ export type RelationInputEmbedProps = WithoutInputType<InputRelation>;
 | 成员                   | 类型                                                                                                                                                                                                  | 默认值 | 说明                                                          |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------- |
 | `animations?`          | `InputRelation["animations"]`                                                                                                                                                                         | —      | 原样传递的动画轨道，不参与布局和边界计算                      |
-| `direction?`           | `"none" \| "reverse" \| "both" \| "forward"`                                                                                                                                                          | —      | 显式语义方向，覆盖 kind / role 默认且须在允许集合内           |
+| `cornerRadius?`        | `number`                                                                                                                                                                                              | —      | 线段转角的几何圆角，区别于描边 lineJoin                       |
+| `direction?`           | `"reverse" \| "none" \| "both" \| "forward"`                                                                                                                                                          | —      | 显式语义方向，覆盖 kind / role 默认且须在允许集合内           |
 | `group?`               | `string`                                                                                                                                                                                              | —      | Graph 根内的分类色分组 key，不创建 Group 容器                 |
 | `id?`                  | `string`                                                                                                                                                                                              | —      | 可选稳定引用 id；省略不自动生成                               |
 | `kind?`                | `string`                                                                                                                                                                                              | —      | 开放子类型 key，必须属于选定 role                             |
@@ -141,14 +142,13 @@ export type RelationInputEmbedProps = WithoutInputType<InputRelation>;
 | `predicate?`           | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                                                                                                                                  | —      | 已注册的精确语义名称及 JSON 参数                              |
 | `role`                 | `OpenString<ValueOf<{ readonly Association: "association"; readonly Dependency: "dependency"; readonly Generalization: "generalization"; readonly Flow: "flow"; readonly Influence: "influence"; }>>` | —      | 开放关系角色 key，运行时须注册                                |
 | `rotate?`              | `number`                                                                                                                                                                                              | —      | 路径绕边界中心旋转，端点先求值                                |
-| `roundedCorners?`      | `number`                                                                                                                                                                                              | —      | 线段转角的几何圆角，区别于描边 lineJoin                       |
 | `scale?`               | `number \| { x: number; y: number; }`                                                                                                                                                                 | —      | 路径绕边界中心缩放                                            |
 | `readonly source`      | `InputRelationEndpoint`                                                                                                                                                                               | —      | —                                                             |
-| `sourceMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                                    | —      | 起点 marker 的外观覆盖，不包含 shape                          |
+| `sourceMarker?`        | `InputRelation["sourceMarker"]`                                                                                                                                                                       | —      | 起点 marker 的外观覆盖，不包含 shape                          |
 | `status?`              | `"error" \| "success" \| "warning" \| "disabled"`                                                                                                                                                     | —      | 可选闭合状态：error、success、warning、disabled               |
 | `style?`               | `InputRelation["style"]`                                                                                                                                                                              | —      | 路径外观覆盖，不包含填充字段                                  |
 | `readonly target`      | `InputRelationEndpoint`                                                                                                                                                                               | —      | —                                                             |
-| `targetMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                                    | —      | 终点 marker 的外观覆盖，不包含 shape                          |
+| `targetMarker?`        | `InputRelation["targetMarker"]`                                                                                                                                                                       | —      | 终点 marker 的外观覆盖，不包含 shape                          |
 | `readonly type`        | `'relation'`                                                                                                                                                                                          | —      | 关系编写输入的判别字段                                        |
 | `zIndex?`              | `number`                                                                                                                                                                                              | —      | 同级绘制顺序，越大越靠上；省略为 0，同值保留原顺序            |
 | `input` (参数)         | `InputRelation`                                                                                                                                                                                       | —      | 带 type 判别字段的关系编写输入                                |
@@ -339,15 +339,15 @@ export type RelationCreateOptions = Omit<ZodInfer<typeof RelationSchema>, 'names
 
 <ApiTable>
 
-| 成员                           | 类型                                         | 默认值 | 说明                                               |
-| ------------------------------ | -------------------------------------------- | ------ | -------------------------------------------------- |
-| `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`        | `[]`   | 自定义 Entity kind definitions                     |
-| `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`   | `[]`   | 自定义 Entity predicate definitions                |
-| `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`        | `[]`   | 自定义 Entity role definitions                     |
-| `readonly graphThemeStyles?`   | `ReadonlyArray<GraphThemeStyleDefinition>`   | `[]`   | 与 Core Theme style 同名的 Graph Theme definitions |
-| `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`      | `[]`   | 自定义 Relation kind definitions                   |
-| `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | `[]`   | 自定义 Relation predicate definitions              |
-| `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | `[]`   | 自定义 Relation role definitions                   |
+| 成员                              | 类型                                         | 默认值 | 说明                                         |
+| --------------------------------- | -------------------------------------------- | ------ | -------------------------------------------- |
+| `readonly entityKinds?`           | `ReadonlyArray<EntityKindDefinition>`        | `[]`   | 自定义 Entity kind definitions               |
+| `readonly entityPredicates?`      | `ReadonlyArray<EntityPredicateDefinition>`   | `[]`   | 自定义 Entity predicate definitions          |
+| `readonly entityRoles?`           | `ReadonlyArray<EntityRoleDefinition>`        | `[]`   | 自定义 Entity role definitions               |
+| `readonly graphThemeDefinitions?` | `ReadonlyArray<GraphThemeDefinition>`        | `[]`   | 与 Core Theme 同名的 Graph Theme definitions |
+| `readonly relationKinds?`         | `ReadonlyArray<RelationKindDefinition>`      | `[]`   | 自定义 Relation kind definitions             |
+| `readonly relationPredicates?`    | `ReadonlyArray<RelationPredicateDefinition>` | `[]`   | 自定义 Relation predicate definitions        |
+| `readonly relationRoles?`         | `ReadonlyArray<RelationRoleDefinition>`      | `[]`   | 自定义 Relation role definitions             |
 
 </ApiTable>
 
@@ -363,7 +363,7 @@ export type GraphDefinitionOptions = Readonly<{
   relationRoles?: ReadonlyArray<RelationRoleDefinition>;
   relationKinds?: ReadonlyArray<RelationKindDefinition>;
   relationPredicates?: ReadonlyArray<RelationPredicateDefinition>;
-  graphThemeStyles?: ReadonlyArray<GraphThemeStyleDefinition>;
+  graphThemeDefinitions?: ReadonlyArray<GraphThemeDefinition>;
 }>;
 ```
 
@@ -667,6 +667,7 @@ export declare const defineRelationRole: (definition: RelationRoleDefinition) =>
 | 成员                   | 类型                                                                                                                                                                                  | 默认值 | 说明                                                                      |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------- |
 | `animations?`          | `Array<IRAnimationTrack>`                                                                                                                                                             | —      | 原样传递的动画轨道，不参与布局和边界计算                                  |
+| `cornerRadius?`        | `number`                                                                                                                                                                              | —      | 线段转角的几何圆角，区别于描边 lineJoin                                   |
 | `direction?`           | <ApiValues name="RelationDirection" />                                                                                                                                                | —      | 显式语义方向，覆盖 kind / role 默认且须在允许集合内                       |
 | `group?`               | `string`                                                                                                                                                                              | —      | Graph 根内的分类色分组 key，不创建 Group 容器                             |
 | `id?`                  | `string`                                                                                                                                                                              | —      | 可选稳定引用 id；省略不自动生成                                           |
@@ -680,7 +681,6 @@ export declare const defineRelationRole: (definition: RelationRoleDefinition) =>
 | `predicate?`           | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                                                                                                                  | —      | 已注册的精确语义名称及 JSON 参数                                          |
 | `role`                 | <ApiValues name="BuiltinRelationRole" /> \| `string`                                                                                                                                  | —      | 开放关系角色 key，运行时须注册                                            |
 | `rotate?`              | `number`                                                                                                                                                                              | —      | 路径绕边界中心旋转，端点先求值                                            |
-| `roundedCorners?`      | `number`                                                                                                                                                                              | —      | 线段转角的几何圆角，区别于描边 lineJoin                                   |
 | `route?`               | `Array<IRGraphRelationRouteStep>`                                                                                                                                                     | —      | 至少两个 Core Step 的完整路径序列，使用 Graph 根坐标空间且禁止 step.label |
 | `scale?`               | `number \| { x: number; y: number; }`                                                                                                                                                 | —      | 路径绕边界中心缩放                                                        |
 | `source`               | `IRNodeTarget`                                                                                                                                                                        | —      | Core 起点目标引用                                                         |
@@ -716,7 +716,7 @@ export type IRGraphRelation = ZodInfer<typeof RelationSchema>;
     meta: '透传到绘制产物的 JSON 元信息，编译器不解释',
     animations: '原样传递的动画轨道，不参与布局和边界计算',
     zIndex: '同级绘制顺序，越大越靠上；省略为 0，同值保留原顺序',
-    roundedCorners: '线段转角的几何圆角，区别于描边 lineJoin',
+    cornerRadius: '线段转角的几何圆角，区别于描边 lineJoin',
     rotate: '路径绕边界中心旋转，端点先求值',
     scale: '路径绕边界中心缩放',
     style: '路径外观覆盖，不包含填充字段',
@@ -763,12 +763,12 @@ export type IRGraphRelation = ZodInfer<typeof RelationSchema>;
 
 <ApiTable>
 
-| 成员         | 类型               | 默认值 | 说明             |
-| ------------ | ------------------ | ------ | ---------------- |
-| `color?`     | `string \| number` | —      | 端点标记主色     |
-| `fill?`      | `string \| number` | —      | 端点标记填充     |
-| `lineWidth?` | `number`           | —      | 端点标记描边宽度 |
-| `opacity?`   | `number`           | —      | 端点标记不透明度 |
+| 成员         | 类型                                                                 | 默认值 | 说明             |
+| ------------ | -------------------------------------------------------------------- | ------ | ---------------- |
+| `color?`     | `string \| number`                                                   | —      | 端点标记主色     |
+| `fill?`      | `ZodInfer<typeof GraphRelationMarkerAppearanceSchema.shape["fill"]>` | —      | 端点标记填充     |
+| `lineWidth?` | `number`                                                             | —      | 端点标记描边宽度 |
+| `opacity?`   | `number`                                                             | —      | 端点标记不透明度 |
 
 </ApiTable>
 

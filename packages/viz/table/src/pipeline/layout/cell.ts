@@ -77,20 +77,6 @@ const validatePadding = (padding: Readonly<BoundsInsets>): void => {
   assertFiniteNonnegative(padding.left, 'padding left');
 };
 
-const validateTrackLayouts = (tracks: ReadonlyArray<TableTrackLayout>, axis: string): void => {
-  tracks.forEach((track, index) => {
-    if (track.index !== index) {
-      throw new RetikzTableError(`table: ${axis} track ${index} has non-canonical index ${track.index}`);
-    }
-
-    if (!Number.isFinite(track.offset)) {
-      throw new RetikzTableError(`table: ${axis} track ${index} offset must be finite`);
-    }
-
-    assertFiniteNonnegative(track.size, `${axis} track ${index} size`);
-  });
-};
-
 const validateStartAndSpan = (start: number, span: number, count: number, axis: string): void => {
   if (!Number.isInteger(start) || start < 0) {
     throw new RetikzTableError(`table: ${axis}Index must be a nonnegative integer`);
@@ -137,6 +123,20 @@ export const computeTableCellOuterSize = (
 
 /** 从 canonical row / column tracks 计算包含内部 gaps 的 Cell box */
 export const computeTableCellBox = (input: ComputeTableCellBoxInput): BoundsRect => {
+  const validateTrackLayouts = (tracks: ReadonlyArray<TableTrackLayout>, axis: string): void => {
+    tracks.forEach((track, index) => {
+      if (track.index !== index) {
+        throw new RetikzTableError(`table: ${axis} track ${index} has non-canonical index ${track.index}`);
+      }
+
+      if (!Number.isFinite(track.offset)) {
+        throw new RetikzTableError(`table: ${axis} track ${index} offset must be finite`);
+      }
+
+      assertFiniteNonnegative(track.size, `${axis} track ${index} size`);
+    });
+  };
+
   validateTrackLayouts(input.rows, 'row');
   validateTrackLayouts(input.columns, 'column');
   validateStartAndSpan(input.rowIndex, input.rowSpan, input.rows.length, 'row');

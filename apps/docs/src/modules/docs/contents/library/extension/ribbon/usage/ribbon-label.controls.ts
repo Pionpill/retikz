@@ -42,5 +42,5 @@ export const ribbonLabelControls = definePreviewControls({
 export const previewControlContract = {
   controls: ribbonLabelControls,
   canonicalValues: { position: 0.5, placement: 'inside', side: 'top', sloped: true },
-  relatedApis: ['Path.label'],
+  relatedApis: ['Path.kindOptions.label'],
 } satisfies PreviewControlContract;

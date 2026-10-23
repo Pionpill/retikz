@@ -21,7 +21,7 @@ import type {
   PreviewControlState,
   PreviewFigureType,
   PreviewThemeMode,
-  PreviewThemeStyleSelection,
+  PreviewThemeSelection,
   RendererMode,
 } from '../types';
 import { PreviewControlPanel } from './PreviewControlPanel';
@@ -45,13 +45,13 @@ export type PreviewWorkspaceProps = {
   figureType?: PreviewFigureType;
   /** 当前预览使用的局部主题 */
   themeMode: PreviewThemeMode;
-  /** 当前预览实际生效的 ThemeStyle */
-  /** 是否显示单预览 ThemeStyle 切换器 */
+  /** 当前预览实际生效的 Theme */
+  /** 是否显示单预览 Theme 切换器 */
   enableThemeSwitch?: boolean;
-  /** 当前单预览 ThemeStyle 选择 */
-  themeStyleSelection?: PreviewThemeStyleSelection;
-  /** 更新当前单预览 ThemeStyle 选择 */
-  onThemeStyleChange?: (themeStyle: PreviewThemeStyleSelection) => void;
+  /** 当前单预览 Theme 选择 */
+  themeNameSelection?: PreviewThemeSelection;
+  /** 更新当前单预览 Theme 选择 */
+  onThemeChange?: (themeName: PreviewThemeSelection) => void;
   /** 更新局部主题 */
   onThemeModeChange: (themeMode: PreviewThemeMode) => void;
   /** 属性面板当前是否打开 */
@@ -133,8 +133,8 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
     figureType,
     themeMode,
     enableThemeSwitch = false,
-    themeStyleSelection = 'inherit',
-    onThemeStyleChange,
+    themeNameSelection = 'inherit',
+    onThemeChange,
     onThemeModeChange,
     controlPanelOpen,
     controlPanelDefaultSize,
@@ -151,7 +151,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
     pinControlsOnClick,
   } = props;
 
-  const previewTheme = usePreviewTheme(themeStyleSelection, themeMode);
+  const previewTheme = usePreviewTheme(themeNameSelection, themeMode);
   const controlsLocked = useComponentPreviewStore(state => state.controlsLocked);
   const { direction, workspaceRef } = usePreviewWorkspaceDirection();
   const defaultControlPanelSize =
@@ -184,9 +184,9 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
           figureType={figureType}
           lang={lang}
           enableThemeSwitch={enableThemeSwitch}
-          themeStyle={previewTheme.style}
-          themeStyleSelection={themeStyleSelection}
-          onThemeStyleChange={onThemeStyleChange}
+          themeName={previewTheme.name}
+          themeNameSelection={themeNameSelection}
+          onThemeChange={onThemeChange}
         />
       ) : null}
       <PreviewPanel

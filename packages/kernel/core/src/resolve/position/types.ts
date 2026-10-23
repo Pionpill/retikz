@@ -1,4 +1,12 @@
-import type { IRAbsoluteTarget, IRBetweenPosition, IRNodeTarget, IRPosition } from '../../schemas';
+import type {
+  IRAbsoluteTarget,
+  IRBetweenPosition,
+  IRNodeTarget,
+  IRPosition,
+  PolarPosition,
+  IRAtPosition,
+  IROffsetPosition,
+} from '../../schemas';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../node';
 
 /** 位置引用的布局生命周期 */
@@ -66,3 +74,12 @@ export type PositionTargetResolution = Readonly<{
 
 /** Absolute target 尚未投影到当前 Scope 局部空间的世界绑定结果 */
 export type PositionTargetWorldResolution = Omit<PositionTargetResolution, 'point'>;
+
+/** 位置解析器接受的坐标、引用与定位配置 */
+export type ResolvablePosition =
+  | IRPosition
+  | PolarPosition
+  | IRAtPosition
+  | IROffsetPosition
+  | IRBetweenPosition
+  | string;

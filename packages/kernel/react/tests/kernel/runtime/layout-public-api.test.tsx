@@ -1,4 +1,4 @@
-import { definePathKind, PathBaseSchema } from '@retikz/core';
+import { definePathKind, PathSchema } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { infer as ZodInfer } from 'zod';
@@ -28,7 +28,7 @@ describe('Layout public API', () => {
   });
 
   it('pathKinds 接受带完整 subject schema 的自定义 Definition', () => {
-    const schema = PathBaseSchema.extend({ kind: literal('precise-options') });
+    const schema = PathSchema.extend({ kind: literal('precise-options') });
     const definition = definePathKind<ZodInfer<typeof schema>>({
       name: 'precise-options',
       schema,

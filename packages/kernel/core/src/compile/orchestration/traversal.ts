@@ -25,15 +25,7 @@ import type {
   SpatialHandleOwner,
   Transform,
 } from '../../contract';
-import {
-  ClipOwnerOutputSchema,
-  CompileExpansionKind,
-  CoordinateOwnerOutputSchema,
-  LayoutChildProbeKind,
-  NaturalLayoutProposal,
-  NodeOwnerOutputSchema,
-  ScopeOwnerOutputSchema,
-} from '../../contract';
+import { CompileExpansionKind, LayoutChildProbeKind, NaturalLayoutProposal } from '../../contract';
 import type { CompositeRuntimeInputScope } from '../../contract/composite';
 import { captureCompositeInputScope, selectCompositeInputScope } from '../../contract/composite';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
@@ -86,10 +78,9 @@ import {
   normalizeLayoutProbeError,
   raiseLayoutChildFailure,
 } from '../probe-failure';
-import { createClipRegistry, createPaintRegistry, remapPrimitiveResources } from '../resource';
+import { createClipRegistry, createPaintRegistry, importSceneResources, remapPrimitiveResources } from '../resource';
 import { withProviderOutputValidationBoundary } from '../scene-primitive';
 import {
-  emitScopeFrame,
   createIntrinsicScopeLayout,
   resolveScopePositionTarget,
   resolveFinalScopeTransforms,
@@ -310,18 +301,17 @@ export const compileChildrenToPrimitives = (
     owner: CompileObservationOwner,
     occurrence: CompileOccurrenceLocator,
     frame: TraversalFrame,
-    schema: { parse: (value: unknown) => unknown },
-    project: () => unknown,
+    project: () => JsonValue,
   ): void => {
     const output = createOwnerOutputPublisher(
       Object.freeze(owner),
       occurrence.sourcePath,
-      { schema },
+      true,
       runtime.context.observation,
     );
     if (!output.publisher.requested) return;
 
-    output.publisher.publish(project() as JsonValue);
+    output.publisher.publish(project());
     const value = output.value();
     if (value === undefined) throw createCompileInvariantError('internal: Kernel owner output was not published');
 
@@ -353,7 +343,6 @@ export const compileChildrenToPrimitives = (
         expansionPath: [...host.expansionPath, { kind: CompileExpansionKind.Clip, index: 0 }],
       },
       frame,
-      ClipOwnerOutputSchema,
       () => {
         const resource = runtime.context.clip.resources().find(candidate => candidate.id === clipRef);
         if (resource === undefined) throw createCompileInvariantError('internal: observed clip resource is missing');
@@ -458,12 +447,8 @@ export const compileChildrenToPrimitives = (
 
     const { layout, properties } = compilation;
     const globalLayout = scopeTransformsContext.project(layout, scopeChain);
-    publishKernelObservation(
-      { kind: 'node' },
-      occurrence ?? { sourcePath: nodeIrPath, expansionPath: [] },
-      frame,
-      NodeOwnerOutputSchema,
-      () => projectNodeOwnerOutput(layout, runtime.context.round, runtime.context.nodeGeometry),
+    publishKernelObservation({ kind: 'node' }, occurrence ?? { sourcePath: nodeIrPath, expansionPath: [] }, frame, () =>
+      projectNodeOwnerOutput(layout, runtime.context.round, runtime.context.nodeGeometry),
     );
     if (child.id) {
       runtime.state.namespaceStack.register(child.id, globalLayout, `${nodeIrPath}.id`);
@@ -530,7 +515,7 @@ export const compileChildrenToPrimitives = (
     }
 
     const globalCenter = scopeChain.length === 0 ? localCenter : scopeTransformsContext.apply(localCenter, scopeChain);
-    publishKernelObservation({ kind: 'coordinate' }, occurrence, frame, CoordinateOwnerOutputSchema, () => ({
+    publishKernelObservation({ kind: 'coordinate' }, occurrence, frame, () => ({
       id: child.id,
       position: localCenter,
     }));
@@ -616,19 +601,12 @@ export const compileChildrenToPrimitives = (
     const scopeIrPath = formatCompileChildPath(locatorPrefix, index, 'scope');
     const hasScopeTransforms = scopeTransforms.length > 0;
     const isPrunable =
-      (input.framePrimitives?.length ?? 0) === 0 &&
-      scopePrimitiveSink.length === 0 &&
-      !hasScopeTransforms &&
-      child.id === undefined &&
-      child.clip === undefined;
+      scopePrimitiveSink.length === 0 && !hasScopeTransforms && child.id === undefined && child.clip === undefined;
     if (isPrunable) return;
 
     const group: GroupPrim = {
       type: 'group',
-      children: [
-        ...(input.framePrimitives ?? []),
-        ...stableSortByZIndex(sealSink(scopePrimitiveSink), runtime.state.zIndexOf),
-      ],
+      children: stableSortByZIndex(sealSink(scopePrimitiveSink), runtime.state.zIndexOf),
     };
     if (child.id !== undefined) group.id = child.id;
     if (child.meta !== undefined) group.meta = child.meta;
@@ -678,7 +656,7 @@ export const compileChildrenToPrimitives = (
       generatedOccurrence === undefined
         ? `${formatCompileChildPath(locatorPrefix, index, 'scope')}.theme`
         : `${formatCompileOccurrence(generatedOccurrence)}.scope.theme`;
-    const theme = resolveTheme(frame.theme, child.theme, themePath, context.themeStyles);
+    const theme = resolveTheme(frame.theme, child.theme, themePath, context.themeDefinitions);
     const scopeGeometryContext = {
       positionContext: positionContextOf(frame.scopeChain),
       irPath: formatCompileChildPath(locatorPrefix, index, 'scope'),
@@ -716,7 +694,6 @@ export const compileChildrenToPrimitives = (
     const scopeCompileObservations: TraversalFrame['compileObservationSink'] = [];
     const scopeSpatialHandles: TraversalFrame['spatialHandleSink'] = [];
     let scopeTransforms: Array<Transform> = [];
-    let framePrimitives: Array<ScenePrimitive> = [];
 
     try {
       const scopeFrame: TraversalFrame = {
@@ -749,19 +726,6 @@ export const compileChildrenToPrimitives = (
       }
 
       const intrinsicLayout = createIntrinsicScopeLayout(child, scopeLayouts, runtime.context);
-      if (child.frame !== undefined && scopeLayouts.length > 0) {
-        framePrimitives = emitScopeFrame(
-          child,
-          intrinsicLayout,
-          scopeFrame.scopeDefaults,
-          theme.mode,
-          context,
-          context.paint.register,
-          scopeOccurrence.sourcePath,
-        );
-        if (semanticOwner !== undefined)
-          runtime.state.provenanceTracker?.recordPrimitives(framePrimitives, semanticOwner, 'scope-frame');
-      }
 
       scopeTransforms = resolveFinalScopeTransforms(
         child,
@@ -779,7 +743,6 @@ export const compileChildrenToPrimitives = (
           scopeChain: scopeTransformsContext.append(frame.scopeChain, scopeTransforms),
           compileObservationSink: frame.compileObservationSink,
         },
-        ScopeOwnerOutputSchema,
         () => ({
           envelope:
             scopeLayouts.length === 0
@@ -882,7 +845,6 @@ export const compileChildrenToPrimitives = (
     }
 
     const clipRef = emitScopeGroup(child, {
-      framePrimitives,
       index,
       scopeTransforms,
       scopePrimitiveSink,
@@ -913,32 +875,6 @@ export const compileChildrenToPrimitives = (
         frame.boundsSink.push({
           points: contribution.points.map(point => scopeTransformsContext.apply(point, scopeTransforms)),
           shadow: contribution.shadow,
-        });
-      }
-    }
-
-    if (framePrimitives.length > 0) {
-      const decorationBounds = optionalVisualBoundsOfPrimitives(
-        [
-          {
-            type: 'group',
-            children: framePrimitives,
-            transforms: scopeTransforms,
-            ...(clipRef === undefined ? {} : { clipRef }),
-          },
-        ],
-        [...context.paint.resources(), ...context.clip.resources()],
-      );
-      if (decorationBounds !== undefined) {
-        const { x, y, width, height } = decorationBounds;
-        frame.boundsSink.push({
-          decoration: true,
-          points: [
-            [x, y],
-            [x + width, y],
-            [x, y + height],
-            [x + width, y + height],
-          ],
         });
       }
     }
@@ -1089,20 +1025,7 @@ export const compileChildrenToPrimitives = (
 
     const transforms = wrapper?.transforms;
     const authoredPreliminary = transaction.scopeChainApplied ? undefined : authoredPreliminaryTransforms;
-    const resourceIds = new Map<string, string>();
-
-    for (const resource of transaction.resources) {
-      if (resource.kind === 'paint') {
-        const imported = runtime.context.paint.importResolved(resource);
-        if (typeof imported !== 'object' || imported.kind !== 'resourceRef') {
-          throw createCompileInvariantError('internal: imported paint did not produce a resourceRef');
-        }
-
-        resourceIds.set(resource.id, imported.id);
-      } else {
-        resourceIds.set(resource.id, runtime.context.clip.importPath(resource.path));
-      }
-    }
+    const resourceIds = importSceneResources(transaction.resources, runtime.context.paint, runtime.context.clip);
 
     const wrapperClipRef =
       wrapperClipShape === undefined ? undefined : runtime.context.clip.importResolved(wrapperClipShape);
@@ -1868,7 +1791,7 @@ export const compileChildrenToPrimitives = (
         ...runtimeInputContext,
         theme,
         withTheme: override =>
-          createLayoutContext(resolveTheme(theme, override, `${compositeIrPath}.theme`, context.themeStyles)),
+          createLayoutContext(resolveTheme(theme, override, `${compositeIrPath}.theme`, context.themeDefinitions)),
         proposal: cloneLayoutProposal(frame.childProposal ?? NaturalLayoutProposal, key, occurrence),
         evaluation:
           options.measurementAxis !== undefined && child === rootChildren[0]
@@ -1912,6 +1835,7 @@ export const compileChildrenToPrimitives = (
           const cacheKey = JSON.stringify([
             identityOf(inputs?.source ?? nextChild),
             inputs === undefined ? identityOf(owner) : null,
+            inputs?.sourcePath,
             clonedChild,
             axis,
             clonedProposal,
@@ -2254,18 +2178,10 @@ export const compileChildrenToPrimitives = (
           throw createCompositeContractError(`Composite '${key}' returned artifact without artifactSchema.`);
         }
 
-        let parsedArtifact: JsonValue;
-
-        try {
-          parsedArtifact = callable.artifactSchema.parse(resultArtifact);
-        } catch (cause) {
-          throw createCompositeContractError(`${owner.label} returned an invalid artifact.`, { cause });
-        }
-
         let frozenArtifact: JsonValue;
 
         try {
-          frozenArtifact = cloneAndFreezeJson(parsedArtifact, `Composite '${key}' artifact`);
+          frozenArtifact = cloneAndFreezeJson(resultArtifact, `Composite '${key}' artifact`);
         } catch (cause) {
           const detail = safeThrownDetail(cause);
           throw createCompositeContractError(`${owner.label} returned a non-JSON artifact: ${detail}`, { cause });

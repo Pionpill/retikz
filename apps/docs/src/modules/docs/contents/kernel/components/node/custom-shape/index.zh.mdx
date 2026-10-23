@@ -26,7 +26,7 @@ Core 默认 `rectangle` / `ellipse` / `polygon` 与自定义项经过同一套 r
 
 ## 定义能力
 
-用 `defineShape()` 声明注册名、参数 schema 和几何职责。无参形状使用 `z.strictObject({})`；下面的最小定义复用矩形几何，只改变注册名和占位大小。
+用 `defineShape()` 声明注册名、参数 schema 和几何职责。注册名使用开放的 `string`；需要标注名称类型时，可直接使用 `ShapeDefinition['name']`，无需另建内置名称联合类型。无参形状使用 `z.strictObject({})`；下面的最小定义复用矩形几何，只改变注册名和占位大小。
 
 ```ts
 import { BUILTIN_SHAPES, defineShape } from '@retikz/core';
@@ -39,10 +39,10 @@ const badge = defineShape({
     halfWidth: halfWidth + 8,
     halfHeight: halfHeight + 4,
   }),
-  boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-  anchor: BUILTIN_SHAPES.rectangle.anchor,
-  connectionEnvelope: BUILTIN_SHAPES.rectangle.connectionEnvelope,
-  emit: BUILTIN_SHAPES.rectangle.emit,
+  boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+  anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
+  connectionEnvelope: BUILTIN_SHAPES.get('rectangle')!.connectionEnvelope,
+  emit: BUILTIN_SHAPES.get('rectangle')!.emit,
 });
 ```
 
@@ -90,17 +90,17 @@ IR 只写注册名或带参引用；宿主负责在每次编译时提供相同�
 
 ## 错误与限制
 
-| 情况                         | 结果与排查入口                                                       |
-| ---------------------------- | -------------------------------------------------------------------- |
-| `name` 为空                  | 注册阶段报 provider key 必须是非空字符串                             |
-| 与内置或另一个自定义项同名   | 注册阶段报 `duplicate shape registration`；内置形状不能覆盖          |
-| IR 引用了未注册名称          | 编译报 `Unknown shape`，列出可用名称并提示通过 `options.shapes` 注入 |
-| params 不是 JSON object      | 编译在 `node.shape.params` 路径报 JSON 校验错误                      |
-| params 不符合 `paramsSchema` | 编译同时报告 shape 名、IR 路径与 zod 细节                            |
-| `anchor` 不认识专属名称      | 返回 `undefined` 后由编译层报 `Unknown anchor`                       |
-| 未实现 `edgePoint`           | 使用 `{ side, fraction }` 时编译报该 shape 不支持 side anchors       |
-| 未实现 `connectionEnvelope`  | 内置 boundary 的 `fit: 'tight'` 回退到 bounds，并产生一次 warning    |
-| 返回非法连接包络             | 编译报错；半轴必须是有限正数，circle 的两个半轴还必须相等            |
+| 情况                         | 结果与排查入口                                                    |
+| ---------------------------- | ----------------------------------------------------------------- |
+| `name` 为空                  | 注册阶段报 provider key 必须是非空字符串                          |
+| 与内置或另一个自定义项同名   | 注册阶段报 `duplicate shape registration`；内置形状不能覆盖       |
+| IR 引用了未注册名称          | 编译报 `Unknown provider`，包含请求名称并列出可用名称             |
+| params 不是 JSON object      | 编译在 `node.shape.params` 路径报 JSON 校验错误                   |
+| params 不符合 `paramsSchema` | 编译同时报告 shape 名、IR 路径与 zod 细节                         |
+| `anchor` 不认识专属名称      | 返回 `undefined` 后由编译层报 `Unknown anchor`                    |
+| 未实现 `edgePoint`           | 使用 `{ side, fraction }` 时编译报该 shape 不支持 side anchors    |
+| 未实现 `connectionEnvelope`  | 内置 boundary 的 `fit: 'tight'` 回退到 bounds，并产生一次 warning |
+| 返回非法连接包络             | 编译报错；半轴必须是有限正数，circle 的两个半轴还必须相等         |
 
 <ComponentAlert
   type="warn"

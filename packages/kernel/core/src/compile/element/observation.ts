@@ -9,11 +9,10 @@ import type { ElementCompileOptions } from './types';
 export const collectElementObservation = (
   context: ElementCompileOptions,
   owner: CompileObservationOwner,
-  schema: { parse: (value: unknown) => unknown },
   project: () => JsonValue,
 ): ReadonlyArray<CompileObservationContribution> => {
   const occurrence = freezeOccurrence(context.occurrence ?? { sourcePath: context.irPath, expansionPath: [] });
-  const output = createOwnerOutputPublisher(owner, occurrence.sourcePath, { schema }, context.observation);
+  const output = createOwnerOutputPublisher(owner, occurrence.sourcePath, true, context.observation);
   if (!output.publisher.requested) return [];
   output.publisher.publish(project());
   const value = output.value();

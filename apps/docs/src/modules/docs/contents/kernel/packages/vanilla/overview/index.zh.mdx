@@ -51,7 +51,7 @@ const view = mount(document.querySelector('#diagram')!, input);
 
 `renderToSvgString` 可安全用于 SSR、构建期生成或保存 SVG；`mount` 用于浏览器宿主，默认创建 SVG，也可以通过 `renderer: 'canvas'` 切换到 Canvas。返回的 `view` 负责后续 `update`、交互水合、动画控制与释放。
 
-`scene({ theme: { style, mode } })` 会把稀疏 Theme 写入 Input 根，`scope({ theme }, children)` 复用同一局部继承写法。归一化复制 Theme 对象，不修改调用方输入；最终两条路径都交给同一份 Core Theme 与 compile 契约。
+`scene({ theme: { name, mode } })` 会把稀疏 Theme 写入 Input 根，`scope({ theme }, children)` 复用同一局部继承写法。归一化复制 Theme 对象，不修改调用方输入；最终两条路径都交给同一份 Core Theme 与 compile 契约。
 
 ## 输入归一与 processing
 

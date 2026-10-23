@@ -16,7 +16,7 @@ import {
   compileToScene,
   CompositeBaseSchema,
   defineComposite,
-  defineThemeStyle,
+  defineTheme,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
@@ -144,7 +144,7 @@ describe('layout-aware composite', () => {
             position: [0, 0],
             shape: 'rectangle',
             layout: {
-              width: context.theme.style === 'compact' ? 40 : 80,
+              width: context.theme.name === 'compact' ? 40 : 80,
               padding: 0,
               margin: 0,
               minimumSize: { height: 20 },
@@ -160,7 +160,7 @@ describe('layout-aware composite', () => {
       compile: (_source, context) => {
         const source = { namespace: 'test', type: 'themed-child' };
         const bound = context.bindChild(source, []);
-        const local = context.withTheme({ style: 'compact' });
+        const local = context.withTheme({ name: 'compact' });
         const probe = local.layoutChild(bound, NaturalLayoutProposal);
         if (probe.kind === 'failed') return local.raise(probe.failure);
         expect(probe.result.allocationBounds.width).toBe(40);
@@ -168,12 +168,12 @@ describe('layout-aware composite', () => {
         expect(
           local.resolvePathTargets({ child: source, source: { id: 'target', anchor: 'right' }, points: [] }).source,
         ).toEqual([20, 0]);
-        return { children: [context.scope({ theme: { style: 'compact' } }, [context.replay(probe.result)])] };
+        return { children: [context.scope({ theme: { name: 'compact' } }, [context.replay(probe.result)])] };
       },
     });
     const result = compileToScene(sceneOf({ namespace: 'test', type: 'themed-parent' }), {
       composites: [parent, child],
-      themeStyles: [defineThemeStyle({ name: 'compact', resolve: () => ({}) })],
+      themeDefinitions: [defineTheme({ name: 'compact', resolve: () => ({}) })],
     });
     const rectangles = (items: ReadonlyArray<ScenePrimitive>): Array<Extract<ScenePrimitive, { type: 'rect' }>> =>
       items.flatMap(item => (item.type === 'group' ? rectangles(item.children) : item.type === 'rect' ? [item] : []));

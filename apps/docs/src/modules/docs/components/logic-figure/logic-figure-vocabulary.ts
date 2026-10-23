@@ -1,9 +1,9 @@
-﻿import { defineThemeStyle, ThemeMode } from '@retikz/core';
+import { defineTheme, ThemeMode } from '@retikz/core';
 import type { FlowDiagramProps } from '@retikz/diagram-react/flow';
-import { defineFlowThemeStyle } from '@retikz/diagram/flow';
-import { defineEntityKind, defineGraphThemeStyle, defineRelationKind, BuiltinRelationRole } from '@retikz/graph';
+import { defineFlowTheme } from '@retikz/diagram/flow';
+import { defineEntityKind, defineGraphTheme, defineRelationKind, BuiltinRelationRole } from '@retikz/graph';
 import type { GraphProps } from '@retikz/graph-react';
-import { defineTableThemeStyle } from '@retikz/table';
+import { defineTableTheme } from '@retikz/table';
 
 /** Docs 逻辑图使用的稳定 Entity kind */
 export const LogicFigureEntityKind = {
@@ -120,7 +120,7 @@ export const logicFigureRelationKinds: NonNullable<GraphProps['relationKinds']> 
 const logicFigureThemeName = 'docs.logic';
 
 /** 站点逻辑图中的表格统一使用紧凑正文与加粗表头 */
-export const logicFigureTableThemeStyle = defineTableThemeStyle({
+export const logicFigureTableTheme = defineTableTheme({
   name: logicFigureThemeName,
   resolve: () => ({
     defaults: {
@@ -129,8 +129,8 @@ export const logicFigureTableThemeStyle = defineTableThemeStyle({
         body: {
           content: {
             defaults: {
-              node: { style: { font: { size: 14 } } },
-              label: { font: { size: 14 } },
+              node: { style: { font: { size: 14 } }, label: { font: { size: 14 } } },
+              path: { label: { font: { size: 14 } } },
             },
           },
         },
@@ -138,8 +138,8 @@ export const logicFigureTableThemeStyle = defineTableThemeStyle({
           background: { fill: 'lightgray', fillOpacity: 0.3 },
           content: {
             defaults: {
-              node: { style: { font: { size: 12, weight: 'bold' } } },
-              label: { font: { size: 12, weight: 'bold' } },
+              node: { style: { font: { size: 12, weight: 'bold' } }, label: { font: { size: 12, weight: 'bold' } } },
+              path: { label: { font: { size: 12, weight: 'bold' } } },
             },
           },
         },
@@ -161,16 +161,16 @@ export const logicFigureTableThemeStyle = defineTableThemeStyle({
 });
 
 /** 站点逻辑图沿用 Core 默认色板，只在 Graph 层提供语义外观 */
-export const logicFigureCoreThemeStyle = defineThemeStyle({ name: logicFigureThemeName, resolve: () => ({}) });
+export const logicFigureCoreTheme = defineTheme({ name: logicFigureThemeName, resolve: () => ({}) });
 
 /** 站点逻辑图不覆盖 Diagram 布局默认值 */
-export const logicFigureDiagramThemeStyle = {
+export const logicFigureDiagramTheme = {
   name: logicFigureThemeName,
   resolve: () => ({}),
 };
 
 /** 站点逻辑图沿用 Flow 布局默认值 */
-export const logicFigureFlowThemeStyle = defineFlowThemeStyle({ name: logicFigureThemeName, resolve: () => ({}) });
+export const logicFigureFlowTheme = defineFlowTheme({ name: logicFigureThemeName, resolve: () => ({}) });
 
 const logicFigureRules: NonNullable<LogicFigureFlowGraphProps['graphRules']> = [
   {
@@ -191,7 +191,7 @@ const logicFigureRules: NonNullable<LogicFigureFlowGraphProps['graphRules']> = [
 ];
 
 /** Secondary 使用独立于主色与 group 的中性浅底，状态由文字颜色保留 */
-export const logicFigureGraphThemeStyle = defineGraphThemeStyle({
+export const logicFigureGraphTheme = defineGraphTheme({
   name: logicFigureThemeName,
   resolve: theme => ({
     defaults: {
@@ -241,7 +241,7 @@ export const logicFigureGraphThemeStyle = defineGraphThemeStyle({
 
 type LogicFigureFlowGraphProps = Pick<
   FlowDiagramProps,
-  'entityKinds' | 'relationKinds' | 'graphRules' | 'theme' | 'graphThemeStyles'
+  'entityKinds' | 'relationKinds' | 'graphRules' | 'theme' | 'graphThemeDefinitions'
 >;
 
 /** Docs Relation kind 对应的稳定 Graph role */
@@ -251,8 +251,8 @@ export const logicFigureRelationRoleByKind: Readonly<Record<LogicFigureRelationK
 
 /** 提供 Docs logic vocabulary 与主题定义；样式规则由主题按 kind 匹配 */
 export const logicFigureGraphProps = (): LogicFigureFlowGraphProps => ({
-  theme: { style: logicFigureThemeName },
-  graphThemeStyles: [logicFigureGraphThemeStyle],
+  theme: { name: logicFigureThemeName },
+  graphThemeDefinitions: [logicFigureGraphTheme],
   entityKinds: logicFigureEntityDefinitions,
   relationKinds: logicFigureRelationKinds,
 });

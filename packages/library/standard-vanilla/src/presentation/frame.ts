@@ -44,15 +44,6 @@ type FrameNode = Extract<InputEmbedContribution['node'], { type: 'node' }>;
 
 const isFrameNode = (child: InputChild): child is FrameNode => child.type === 'node' && !('namespace' in child);
 
-/** 将已归一化的 Node 转换为 Frame header input */
-const headerInputOf = (child: FrameNode): FrameTitleInput | FrameDescriptionInput => {
-  const { type: _type, position: _position, ...header } = child;
-  void _type;
-  void _position;
-
-  return header as FrameTitleInput | FrameDescriptionInput;
-};
-
 /** 创建 JSON-safe 的 Frame 主标题输入 */
 export const frameTitle = (input: FrameTitleInput): IRFrameTitle => ({ ...input });
 
@@ -63,6 +54,15 @@ export const frameDescription = (input: FrameDescriptionInput): IRFrameDescripti
 export const FrameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFrame> = {
   kind: StandardFrameEmbedKind,
   lower: (props, context) => {
+    /** 将已归一化的 Node 转换为 Frame header input */
+    const headerInputOf = (child: FrameNode): FrameTitleInput | FrameDescriptionInput => {
+      const { type: _type, position: _position, ...header } = child;
+      void _type;
+      void _position;
+
+      return header as FrameTitleInput | FrameDescriptionInput;
+    };
+
     const { children, headers, id, ...input } = props;
     const normalizeChildren = context.normalizeChildren;
     if (normalizeChildren === undefined) {

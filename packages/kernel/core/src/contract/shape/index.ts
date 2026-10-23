@@ -1,3 +1,2 @@
-export * from './define';
 export * from './outline';
-export * from './types';
+export * from './shape';

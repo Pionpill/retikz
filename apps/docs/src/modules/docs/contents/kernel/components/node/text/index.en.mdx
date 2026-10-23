@@ -1,9 +1,9 @@
 ---
 title: Node text
-description: Write node content, style lines and runs, and control wrapping and alignment
+description: Write node content, style lines and segments, and control wrapping and alignment
 ---
 
-Supply node content through `text` or children; explicit `text` wins. Node owns the multi-line layout, while React `<Text>` styles one complete line. For several styles within a line, use `{ runs }`; Text is not an inline span.
+Supply node content through `text` or children; explicit `text` wins. Node owns the multi-line layout, while React `<Text>` styles one complete line. For several styles within a line, use `{ segments }`; Text is not an inline span.
 
 Read [Basic usage](/kernel/components/node/usage) first, then use this page to organize node text.
 
@@ -134,12 +134,12 @@ These two nodes compile to identical output:
 
 <ComponentPreview files="text-vs-prop" size="sm" />
 
-## Mixed runs within a line
+## Mixed segments within a line
 
-Both runs below remain on one line. Vanilla API and IR use the same `text` data structure. If any line contains `{ runs }` or a resolved formula, the whole text block uses mixed layout and does not wrap automatically at `maxTextWidth`. Split the content into separate line-array items when a break is needed. For formulas, see [TeX](/kernel/packages/tex).
+Both segments below remain on one line. Vanilla API and IR use the same `text` data structure. If any line contains `{ segments }` or a resolved formula, the whole text block uses mixed layout and does not wrap automatically at `maxTextWidth`. Split the content into separate line-array items when a break is needed. For formulas, see [TeX](/kernel/packages/tex).
 
 ```tsx
-<Node position={[0, 0]} text={[{ runs: [{ text: 'Status: ' }, { text: 'ready', fill: 'green' }] }]} />
+<Node position={[0, 0]} text={[{ segments: [{ text: 'Status: ' }, { text: 'ready', fill: 'green' }] }]} />
 ```
 
 ## Automatic black-or-white contrast
@@ -158,13 +158,15 @@ import { NodeTextColor } from '@retikz/core';
 
 - Core statically supports CSS named colors, 3/4/6/8-digit hex, and legacy / modern `rgb()` and `hsl()`; it never reads DOM styles, theme variables, or page pixels
 - Translucent / missing fills, `opacity.fill < 1`, gradients, patterns, images, `var()`, and `currentColor` use the fixed `currentColor` fallback and emit `TEXT_AUTO_CONTRAST_UNRESOLVED`
-- Per-line / run `fill`, explicit label colors, and `defaults.label` still win. The keyword affects only body text, labels, and pins that ultimately inherit the Node text color
+- Per-line / segment `fill`, explicit label colors, and `defaults.node.label` still win. The keyword affects only body text, labels, and pins that ultimately inherit the Node text color
+
+Both text lines and segmented lines accept `fill`, `opacity`, and `font`. Segmented lines inherit the block font, then apply line defaults and segment overrides. A segment that changes only weight keeps the line size and family. Math uses the effective line size unless its `fontSize` overrides it; `em` is relative to that line and `rem` to the root size. The TeX integration controls math fonts.
 
 ## Errors and limitations
 
 Text only works inside Node and takes string or number children. Block alignment, line height, and wrapping width belong to `Node.layout.align`, `lineHeight`, and `maxTextWidth`; per-line fonts belong to Text `font`.
 
-Automatic wrapping applies only to plain-text blocks; mixed runs and formulas do not wrap automatically. A fixed `layout.width` does not clip text: compilation fails if the content cannot fit.
+Automatic wrapping applies only to plain-text blocks; mixed segments and formulas do not wrap automatically. A fixed `layout.width` does not clip text: compilation fails if the content cannot fit.
 
 ## Related props
 
@@ -179,10 +181,10 @@ These members provide body text, wrapping, and per-line overrides. See the [API 
         description: `Supplies explicit node text and wins over \`children\`:
 
 - \`string\`: one line by default; \`\\n\` makes hard breaks and \`$...$\` formula sugar is allowed
-- \`Array<IRLine>\`: a multiline array with at least one line. Each item may be \`string\`, \`{ text, fill?, opacity?, font? }\`, or \`{ runs: Array<IRTextRun | IRMathRun> }\`
-  - Text run: \`{ text, fill?, opacity?, font? }\`
-  - Math run: \`{ tex, displayMode?, fill?, opacity? }\`, which requires \`lowerTex\`
-  - \`runs\` lay out text and formulas in order on one baseline`,
+- \`Array<IRLine>\`: a multiline array with at least one line. Each item may be \`string\`, \`{ text, fill?, opacity?, font? }\`, or \`{ segments: Array<IRTextSegment | IRMathSegment>, fill?, opacity?, font? }\`
+  - Text segment: \`{ text, fill?, opacity?, font? }\`
+  - Math segment: \`{ tex, displayMode?, fontSize?, fill?, opacity? }\`, which requires \`lowerTex\`
+  - \`segments\` lay out text and formulas in order on one baseline`,
 },
 {
   name: 'children',

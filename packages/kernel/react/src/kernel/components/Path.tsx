@@ -30,7 +30,7 @@ export type PathProps = HydrationEventProps & {
    * 折线拐角几何圆角半径（TikZ `rounded corners=`）
    * @description 对每个 line↔line 接缝插切圆弧、改路径几何（区别于 lineJoin 仅描边）；curve / arc / bezier / fold 接缝保持尖；按相邻段长 clamp；省略 = 尖角
    */
-  roundedCorners?: IRPath['roundedCorners'];
+  cornerRadius?: IRPath['cornerRadius'];
   /**
    * 路径级箭头方向
    * @description `'->'` 终点 / `'<-'` 起点 / `'<->'` 两端；省略或 `'none'` 无箭头

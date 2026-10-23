@@ -51,7 +51,7 @@ describe('buildSvgDocument —— 边界', () => {
 });
 
 describe('buildSvgDocument —— 交互', () => {
-  it('arrow-start-end-dedup：两端 spec 相同 → marker 去重成 1 个，marker-start / marker-end 引同 id', () => {
+  it('places both arrow ends in the owning path container', () => {
     const path: PathPrim = {
       type: 'path',
       commands: [
@@ -64,19 +64,12 @@ describe('buildSvgDocument —— 交互', () => {
     };
     const scene: Scene = { primitives: [path], layout };
     const doc = buildSvgDocument(scene, { idPrefix: 'd1' });
-    const defs = childByTag(doc, 'defs');
-
-    expect(defs).toBeDefined();
-
-    const markers = (defs?.children ?? []).filter((c): c is SvgNode => typeof c !== 'string' && c.tag === 'marker');
-
-    expect(markers).toHaveLength(1);
-
-    const markerId = markers[0].attrs.id;
-    const pathNode = (doc.children ?? []).find((c): c is SvgNode => typeof c !== 'string' && c.tag === 'path');
-
-    expect(pathNode?.attrs['marker-start']).toBe(`url(#${markerId})`);
-    expect(pathNode?.attrs['marker-end']).toBe(`url(#${markerId})`);
+    const group = childByTag(doc, 'g');
+    const children = group?.children?.filter((child): child is SvgNode => typeof child !== 'string');
+    expect(children).toHaveLength(3);
+    expect(children?.[0].tag).toBe('path');
+    expect(children?.[1].attrs.transform).toContain('translate(0 0) rotate(180)');
+    expect(children?.[2].attrs.transform).toContain('translate(10 0) rotate(0)');
   });
 
   it('idprefix-determinism：同 scene + 同 idPrefix 逐字一致；不同 idPrefix → 资源 id 无交集', () => {

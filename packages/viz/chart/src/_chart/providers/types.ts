@@ -17,7 +17,7 @@ export type ChartRecipeProviderContribution = Readonly<{
   /** 当前 provider 唯一携带的泛型已擦除 recipe Definition */
   recipe: AnyChartRecipeDefinition;
   /** 当前编译边界可见的命名主题 Definition */
-  themeDefinitions: ReadonlyArray<ChartThemeDefinition>;
+  chartThemeDefinitions: ReadonlyArray<ChartThemeDefinition>;
   /** 与同次Plot lowering共享的runtime Definition数组 */
   runtimeDefinitions?: ChartRuntimeDefinitionOptions;
 }>;

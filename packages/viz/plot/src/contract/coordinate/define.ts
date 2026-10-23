@@ -3,12 +3,7 @@ import type { ExternalRow, IRDataScalarValue } from '@retikz/data';
 import type { BoundsInsets, Position } from '@retikz/math';
 import type { ZodType } from 'zod';
 
-import type {
-  IRPlotAxisGuide,
-  IRPlotCoordinateOperation,
-  IRPlotMarkOperation,
-  IRPlotScaleOperation,
-} from '../../schemas';
+import type { IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotMark, IRPlotScaleOperation } from '../../schemas';
 import type { PlotLabelMeasure } from '../../shared';
 import type { CoordinateDomainPaddingCapability } from '../domain-padding';
 import type { GuideContext, LoweredGuide } from '../guide';
@@ -127,7 +122,7 @@ export type CoordinateDefinitionResolveContext = {
     range: readonly [number, number],
   ) => PositionScale;
   /** 校验 interval / area 等依赖 baseline 的 mark 是否可安全使用当前 scale 类型（type 串，含自定义） */
-  assertBaselineScaleCompatible: (scaleType: string, marks: ReadonlyArray<IRPlotMarkOperation>) => void;
+  assertBaselineScaleCompatible: (scaleType: string, marks: ReadonlyArray<IRPlotMark>) => void;
   /** 当前 plot 内所有 axis guide；definition 决定如何将其下沉到 grid / axis 层 */
   axisGuides: ReadonlyArray<IRPlotAxisGuide>;
   /** 下沉直线 / 内置 guide 的通用入口 */
@@ -142,7 +137,7 @@ export type CoordinateDefinitionResolveContext = {
   /** 已解析的外部数据行；高级坐标系可按需读取完整数据 */
   rows: Array<ExternalRow>;
   /** 当前 plot 的 mark 列表；主要用于 scale 兼容性与坐标系特定校验 */
-  marks: ReadonlyArray<IRPlotMarkOperation>;
+  marks: ReadonlyArray<IRPlotMark>;
 };
 
 /**
@@ -173,19 +168,18 @@ type CoordinateScaleBindingDefinition = Readonly<{
 }>;
 
 /**
- * 按 Definition 契约读取 coordinate operation 的位置 scale 名称
+ * 按 Definition 契约读取已精确解析的 coordinate operation 的位置 scale 名称
  * @template TCoordinateOperation 坐标系 schema 解析的操作类型，关联尺度绑定与坐标解析
  */
 export const readCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoordinateOperation>(
   definition: CoordinateScaleBindingDefinition,
   operation: TCoordinateOperation,
 ): CoordinateScaleNames => {
-  const parsedOperation = definition.schema.parse(operation) as TCoordinateOperation;
-  const authoredScaleNames = definition.scaleBinding?.read(parsedOperation as never);
+  const authoredScaleNames = definition.scaleBinding?.read(operation as never);
   const scaleNames: Partial<Record<DimensionRole, string>> = {};
 
   for (const role of definition.roles) {
-    const scaleName = authoredScaleNames === undefined ? Reflect.get(parsedOperation, role) : authoredScaleNames[role];
+    const scaleName = authoredScaleNames === undefined ? Reflect.get(operation, role) : authoredScaleNames[role];
     if (typeof scaleName === 'string') scaleNames[role] = scaleName;
   }
 
@@ -194,7 +188,7 @@ export const readCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoor
 
 /**
  * 按 Definition 契约把位置 scale 名称写回 coordinate operation
- * @description 自定义 hook 与默认同名字段路径都必须再次通过 Definition schema，避免 Chart 组装出 Plot 无法消费的 operation
+ * @description 消费已精确解析的 operation；自定义 hook 与默认同名字段路径直接返回类型化绑定结果，不重复解析
  * @template TCoordinateOperation 坐标系 schema 解析的操作类型，关联尺度绑定与坐标解析
  */
 export const bindCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoordinateOperation>(
@@ -202,7 +196,6 @@ export const bindCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoor
   operation: TCoordinateOperation,
   scaleNames: CoordinateScaleNames,
 ): TCoordinateOperation => {
-  const parsedOperation = definition.schema.parse(operation) as TCoordinateOperation;
   const applicableScaleNames: Partial<Record<DimensionRole, string>> = {};
 
   for (const role of definition.roles) {
@@ -212,10 +205,10 @@ export const bindCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoor
 
   const candidate =
     definition.scaleBinding === undefined
-      ? { ...parsedOperation, ...applicableScaleNames }
-      : definition.scaleBinding.bind(parsedOperation as never, applicableScaleNames);
+      ? { ...operation, ...applicableScaleNames }
+      : definition.scaleBinding.bind(operation as never, applicableScaleNames);
 
-  return definition.schema.parse(candidate) as TCoordinateOperation;
+  return candidate as TCoordinateOperation;
 };
 
 /**

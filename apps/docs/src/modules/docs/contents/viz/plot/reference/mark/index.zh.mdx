@@ -1,17 +1,13 @@
 ---
 title: 契约 - 图元
-description: 查询 Plot 点、路径、区间、标注、关系与自定义图元 schema。
+description: 查询 Plot 点、路径、区间与关系图元 schema。
 ---
 
-图元是图形语法的几何输出层。内置图元使用精确判别联合，自定义图元则保留 JSON-safe 开放配置，并在 lowering 时由对应 `MarkDefinition` 校验。
+图元是图形语法的几何输出层。仅支持 Point、Path、Interval、Relation 四类内置图元，未知类型在 schema 入口被拒绝。
 
 ## MarkSchema
 
 <ZodSchema name="MarkSchema" description="Point、Path、Interval 与 Relation 内置图元的判别联合。" />
-
-## MarkOperationSchema
-
-<ZodSchema name="MarkOperationSchema" description="内置数据图元、显式标注或运行时注册自定义图元的联合。" />
 
 所有图元都可用 `defaultColorGroup` 声明默认颜色共享关系。同名组只按首次出现位置消费一个 `palette.series` 槽位；未分组图元各自按声明顺序消费。显式颜色编码或常量 paint 仍然优先。
 
@@ -145,7 +141,7 @@ description: 查询 Plot 点、路径、区间、标注、关系与自定义图�
     opacity: '路径整体不透明度。',
     lineCap: '路径端点样式。',
     lineJoin: '路径连接处样式。',
-    roundedCorners: '几何圆角半径。',
+    cornerRadius: '几何圆角半径。',
     fill: 'Core Path 填充 paint。',
     stroke: 'Core Path 描边 paint。',
     'opacity.stroke': 'Core Path 描边不透明度。',
@@ -281,7 +277,7 @@ description: 查询 Plot 点、路径、区间、标注、关系与自定义图�
 
 ### PlotTargetRefSchema
 
-<ZodSchema name="PlotTargetRefSchema" description="直接 Core id、每行生成的锚点 id，或在当前坐标视图中投影的目标。" />
+<ZodSchema name="PlotTargetRefSchema" description="每行生成的锚点 id，或在当前坐标视图中投影的目标。" />
 
 ### RelationPathGeometrySchema
 
@@ -299,11 +295,10 @@ description: 查询 Plot 点、路径、区间、标注、关系与自定义图�
     'label.font': '标签字体覆盖；缺失字段继承 Scope 标签默认值。',
     'label.text': '常量 Core step 标签文本、混合文本或数据字段绑定。',
     'label.position': '标签沿 step 的关键词或归一化位置；参数含义由 step 类型决定。',
-    'label.side': '相对标签锚点的标准侧，默认 top。',
+    'label.side': '相对标签锚点的方向，center 表示居中；默认 top，sloped 为 true 时默认 center。',
     'label.sloped': '是否沿采样切线旋转，并由 side 决定标签方位。',
     'label.interrupt': '是否请求在兼容宿主的描边中形成断口；省略时由宿主策略决定。',
     'label.gap': '断口两侧的额外留白，单位为用户单位，默认 4。',
-    'label.placement': '标签放置方式：outside 按 side 外偏，inside 由区域 host 放在内部。',
     'label.distance': '标签相对锚点的侧向偏移距离，单位为用户坐标。',
     options: '仅 path 关系使用的 Core Path 选项。',
     'options.style': '路径专属的视觉覆盖分组。',
@@ -311,7 +306,7 @@ description: 查询 Plot 点、路径、区间、标注、关系与自定义图�
     'options.style.fillRule': '自交或嵌套子路径的填充规则。',
     'options.style.lineCap': '描边端点形状；省略使用 butt。',
     'options.style.lineJoin': '描边拐角形状；省略使用 miter。',
-    'options.roundedCorners': '线段连接处的几何圆角半径；省略保持尖角。',
+    'options.cornerRadius': '线段连接处的几何圆角半径；省略保持尖角。',
     'options.rotate': '围绕路径包围盒中心旋转整条路径。',
     'options.scale': '围绕路径包围盒中心缩放整条路径。',
     'options.marks': '沿路径归一化位置放置的 mark，方向跟随路径切线。',
@@ -380,28 +375,11 @@ description: 查询 Plot 点、路径、区间、标注、关系与自定义图�
     'label.font': '标签字体覆盖；缺失字段继承 Scope 标签默认值。',
     'label.text': '常量 Core step 标签文本、混合文本或数据字段绑定。',
     'label.position': '标签沿 step 的关键词或归一化位置；参数含义由 step 类型决定。',
-    'label.side': '相对标签锚点的标准侧，默认 top。',
+    'label.side': '相对标签锚点的方向，center 表示居中；默认 top，sloped 为 true 时默认 center。',
     'label.sloped': '是否沿采样切线旋转，并由 side 决定标签方位。',
     'label.interrupt': '是否请求在兼容宿主的描边中形成断口；省略时由宿主策略决定。',
     'label.gap': '断口两侧的额外留白，单位为用户单位，默认 4。',
-    'label.placement': '标签放置方式：outside 按 side 外偏，inside 由区域 host 放在内部。',
     'label.distance': '标签相对锚点的侧向偏移距离，单位为用户坐标。',
-  }}
-/>
-
-## CustomMarkSchema
-
-<ZodSchema
-  name="CustomMarkSchema"
-  description="由运行时 MarkDefinition 校验和 lowering 的开放 JSON 图元操作。"
-  descriptions={{
-    defaultColorIndex: '默认分类色索引；省略时按默认颜色分组分配',
-    type: '已注册的自定义图元类型，不得与内置类型冲突。',
-    transform: '在 Plot 根变换之后执行的图元局部变换。',
-    layer: '自定义图元外层 Scope 的语义图层覆盖。',
-    coordinateView: '用于投影的坐标视图 id。',
-    defaultColorGroup: '省略显式颜色时共享同一个顺序色板槽位的语义组。',
-    encoding: '用于比例尺推断与 Definition 消费的位置、非位置通道。',
   }}
 />
 
@@ -428,9 +406,11 @@ description: 查询 Plot 点、路径、区间、标注、关系与自定义图�
 
 ## 图元标签
 
-### MarkLabelContentSchema
+固定标签使用可选的 `text` 字段；省略时可由同一索引的 `encodings.label.text` 提供内容。两处均未提供有效文字时不生成标签，字符串简写保持相同语义。
 
-<ZodSchema name="MarkLabelContentSchema" description="图元标签的固定 Core 文本内容。" />
+### MarkLabelTextSchema
+
+<ZodSchema name="MarkLabelTextSchema" description="图元标签的固定 Core 文本内容。" />
 
 ### MarkNodeLabelSchema
 
@@ -448,7 +428,7 @@ description: 查询 Plot 点、路径、区间、标注、关系与自定义图�
     rotate: '无旋转、径向、切向或显式角度。',
     keepUpright: '旋转文本倒置时是否翻转 180 度保持正立。',
     pin: '外侧标签的引导线开关或样式。',
-    content: '固定标签文本；编码内容写入 encodings.label 的相同索引。',
+    text: '固定标签文本；编码内容写入 encodings.label 的相同索引。',
     displayFormat: '字段内容的显示格式。',
   }}
 />
@@ -469,7 +449,7 @@ description: 查询 Plot 点、路径、区间、标注、关系与自定义图�
     gap: '断口两侧的额外留白，单位为用户单位，默认 4。',
     placement: '外侧偏移或区域 host 内部放置。',
     distance: '标签侧向偏移距离。',
-    content: '固定标签文本；编码内容写入 encodings.label 的相同索引。',
+    text: '固定标签文本；编码内容写入 encodings.label 的相同索引。',
     displayFormat: '字段内容的显示格式。',
   }}
 />

@@ -21,7 +21,6 @@ import {
   createStrokePathGeometry,
   splitStrokePathAtInterruptions,
 } from './interruption';
-import { assertArrowCanInheritStroke } from './marks';
 import { emitPathBaseProps, wrapPathPrimitiveOutput } from './output';
 import { applyRoundedCorners } from './rounded-corners';
 import { createStrokeSamplingCollector } from './sampling';
@@ -321,13 +320,13 @@ const emitCanonicalPathPrimitive = (
   // 折线几何圆角：对 line step ↔ line step 的内接缝插入圆弧
   // 在 shrink / split / marks 之前作用于未变换的 commands；缺省或 0 时逐字不变
   let roundedCommands = false;
-  if (path.roundedCorners !== undefined && path.roundedCorners > 0) {
+  if (path.cornerRadius !== undefined && path.cornerRadius > 0) {
     const before = commands.length;
     const next = applyRoundedCorners({
       commands,
       provenance,
       sourceStepIndexes: stepIndexes,
-      radius: path.roundedCorners,
+      radius: path.cornerRadius,
       round,
     });
 
@@ -370,11 +369,11 @@ const emitCanonicalPathPrimitive = (
   });
 
   const { arrows, inlineMarks } = emitPathEndpointDecorations(path, {
+    resolvePaint,
     arrowResolutions: resolution.arrows,
     round,
     irPath,
   });
-  assertArrowCanInheritStroke(baseProps.stroke, arrows);
 
   // shrink 在 compile 阶段计算，与 emit 落点无关；按视觉输入把首末段端点向内缩短
   // 让 line 端点接在 hollow arrow 尾部外缘，不贯穿 back outline；shrink=0 的实心 shape 跳过
@@ -421,6 +420,7 @@ const emitCanonicalPathPrimitive = (
     inlineMarks,
     segmentSamplers,
     roundedCommands,
+    resolvePaint,
     arrowResolutions: resolution.arrows,
     baseProps,
     round,

@@ -1,4 +1,4 @@
 export * from './clip';
-export * from './marker-primitive';
+export * from './scene-content';
 export * from './paint';
 export * from './remap';

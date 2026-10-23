@@ -2,11 +2,11 @@ import type { ExternalRow } from '@retikz/data';
 
 import type { CoordinateFrame, DimensionRole, PositionScale } from '../../../contract';
 import { positionField, positionValue, mapPositionInput } from '../../../contract';
-import type { IRPlotChannel, IRPlotMarkOperation, IRPlotMark } from '../../../schemas';
+import type { IRPlotChannel, IRPlotMark } from '../../../schemas';
 import type { IRPlotPositionInput } from '../../../schemas';
 
 /** 读取已声明的角色位置输入 */
-export const positionForRole = (mark: IRPlotMarkOperation, role: string): IRPlotPositionInput | undefined =>
+export const positionForRole = (mark: IRPlotMark, role: string): IRPlotPositionInput | undefined =>
   (mark.encodings?.position as Partial<Record<string, IRPlotPositionInput>> | undefined)?.[role];
 
 /**
@@ -18,7 +18,7 @@ export const channelForRole = (mark: IRPlotMark, role: DimensionRole): IRPlotCha
 };
 
 /** 读取位置角色的有效固定值；字段绑定存在时不回退 */
-export const fixedRoleValue = (mark: IRPlotMarkOperation, role: DimensionRole) => {
+export const fixedRoleValue = (mark: IRPlotMark, role: DimensionRole) => {
   const input = positionForRole(mark, role);
   return input === undefined || 'field' in input ? undefined : 'value' in input ? input.value : input;
 };
@@ -34,7 +34,7 @@ export const roleValues = (mark: IRPlotMark, row: ExternalRow | undefined, frame
 
 /** 映射数据角色，并将固定边缘解析到最终尺度范围 */
 export const mapMarkRoles = (
-  mark: IRPlotMarkOperation,
+  mark: IRPlotMark,
   values: ReadonlyArray<unknown>,
   frame: CoordinateFrame,
 ): ReadonlyArray<number> | null => {

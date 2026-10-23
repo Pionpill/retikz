@@ -45,16 +45,16 @@ Use `createGraphDefinitions(options)` or `createGraphProviders(options)` to asse
 Graph Theme style Definitions return sparse overrides relative to the mode-aware default preset. A style can change one token without repeating the complete Entity and Relation baseline:
 
 ```ts
-import { createGraphDefinitions, defineGraphThemeStyle } from '@retikz/graph';
+import { createGraphDefinitions, defineGraphTheme } from '@retikz/graph';
 
-const compact = defineGraphThemeStyle({
+const compact = defineGraphTheme({
   name: 'compact',
   resolve: () => ({
     defaults: { entity: { style: { strokeWidth: 1.5 } } },
   }),
 });
 
-const composites = createGraphDefinitions({ graphThemeStyles: [compact] });
+const composites = createGraphDefinitions({ graphThemeDefinitions: [compact] });
 ```
 
 The resolver applies the Neutral defaults, sparse named-style defaults, built-in rules, named-style rules, Graph-local defaults and rules, and explicit Entity / Relation style in that order. Named-style rules append after built-in rules; omitting rules or returning `rules: []` does not clear the built-in rules.

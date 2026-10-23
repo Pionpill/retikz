@@ -1,11 +1,11 @@
 import type { ScenePrimitive } from '@retikz/core';
-import { compileToScene, defineThemeStyle, resolveCoreProviderDependencies } from '@retikz/core';
-import { defineGraphThemeStyle } from '@retikz/graph';
+import { compileToScene, defineTheme, resolveCoreProviderDependencies } from '@retikz/core';
+import { defineGraphTheme } from '@retikz/graph';
 import { describe, expect, it } from 'vitest';
 
-import { defineDiagramThemeStyle } from '../../src/_diagram';
+import { defineDiagramTheme } from '../../src/_diagram';
 import type { FlowLayoutDefinition } from '../../src/flow';
-import { defineFlowThemeStyle, LayeredFlowLayoutDefinition } from '../../src/flow';
+import { defineFlowTheme, LayeredFlowLayoutDefinition } from '../../src/flow';
 import { FlowDiagramSchema, FlowDiagramArtifactSchema, createFlowDiagramProviderContribution } from '../../src/flow';
 
 const source = (fill = true, fixed = false) => ({
@@ -75,23 +75,23 @@ describe('Flow 容器宽度', () => {
   it('局部主题改变字号时，测量与最终外框仍保持行等宽', () => {
     const name = 'compact';
     const result = compileToScene(
-      { type: 'scene', version: 1, children: [FlowDiagramSchema.parse({ ...source(), theme: { style: name } })] },
+      { type: 'scene', version: 1, children: [FlowDiagramSchema.parse({ ...source(), theme: { name } })] },
       {
         ...resolveCoreProviderDependencies({
           contributions: [
             createFlowDiagramProviderContribution({
-              graphThemeStyles: [
-                defineGraphThemeStyle({
+              graphThemeDefinitions: [
+                defineGraphTheme({
                   name,
                   resolve: () => ({ defaults: { entity: { style: { font: { size: 14 } } } } }),
                 }),
               ],
-              flowThemeStyles: [defineFlowThemeStyle({ name, resolve: () => ({}) })],
-              diagramThemeStyles: [defineDiagramThemeStyle({ name, resolve: () => ({}) })],
+              flowThemeDefinitions: [defineFlowTheme({ name, resolve: () => ({}) })],
+              diagramThemeDefinitions: [defineDiagramTheme({ name, resolve: () => ({}) })],
             }),
           ],
         }),
-        themeStyles: [defineThemeStyle({ name, resolve: () => ({}) })],
+        themeDefinitions: [defineTheme({ name, resolve: () => ({}) })],
         measureText: (text, font) => ({
           width: (text.length * font.size) / 2,
           height: font.size,

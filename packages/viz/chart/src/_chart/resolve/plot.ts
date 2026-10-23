@@ -138,16 +138,24 @@ const resolveChartCoordinate = (
   }
 
   try {
+    const parsedRecipe =
+      recipeCoordinate === undefined || recipeDefinition === undefined
+        ? undefined
+        : (recipeDefinition.schema.parse(recipeCoordinate) as IRPlotCoordinateOperation);
+    const parsedAuthored =
+      authoredCoordinate === undefined || authoredDefinition === undefined
+        ? undefined
+        : (authoredDefinition.schema.parse(authoredCoordinate) as IRPlotCoordinateOperation);
     const scaleNames = {
-      ...(recipeCoordinate === undefined || recipeDefinition === undefined
+      ...(parsedRecipe === undefined || recipeDefinition === undefined
         ? {}
-        : readCoordinateScaleNames(recipeDefinition, recipeCoordinate)),
-      ...(authoredCoordinate === undefined || authoredDefinition === undefined
+        : readCoordinateScaleNames(recipeDefinition, parsedRecipe)),
+      ...(parsedAuthored === undefined || authoredDefinition === undefined
         ? {}
-        : readCoordinateScaleNames(authoredDefinition, authoredCoordinate)),
+        : readCoordinateScaleNames(authoredDefinition, parsedAuthored)),
       ...encodings.positionScales,
     };
-    return bindCoordinateScaleNames(selectedDefinition, selectedCoordinate, scaleNames);
+    return bindCoordinateScaleNames(selectedDefinition, parsedAuthored ?? parsedRecipe!, scaleNames);
   } catch (error) {
     if (error instanceof ZodError) {
       const coordinatePath = authoredCoordinate === undefined ? ['recipe', 'spatial', 'coordinate'] : ['coordinate'];

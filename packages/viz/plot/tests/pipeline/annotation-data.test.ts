@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
 import { preparePlotData } from '../../src/pipeline/expand/preparation';
 import { createPlotLineageLocator, lowerPlotWithLineage } from '../../src/pipeline/lineage';
-import { MarkOperationSchema, PlotSchema } from '../../src/schemas';
+import { MarkSchema, PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
 
 const leaves = (child: IRChild): Array<IRNode | IRPath> =>
@@ -53,19 +53,19 @@ const options = { textMeasurer: measureLabel };
 
 describe('data-bound annotations', () => {
   it('preserves empty transforms and field bindings through JSON', () => {
-    const source = MarkOperationSchema.parse({
+    const source = MarkSchema.parse({
       ...point,
       transforms: [],
       encodings: { position: { y: { value: 2 }, x: { field: 'x' } } },
       properties: { ...point.properties },
       contributeToDomain: false,
     });
-    expect(MarkOperationSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);
+    expect(MarkSchema.safeParse({ ...point, position: { x: { field: 'x', value: 1 }, y: { value: 2 } } }).success).toBe(
+      false,
+    );
     expect(
-      MarkOperationSchema.safeParse({ ...point, position: { x: { field: 'x', value: 1 }, y: { value: 2 } } }).success,
-    ).toBe(false);
-    expect(
-      MarkOperationSchema.safeParse({ ...point, position: { x: { value: { edge: 'end' } }, y: { value: 2 } } }).success,
+      MarkSchema.safeParse({ ...point, position: { x: { value: { edge: 'end' } }, y: { value: 2 } } }).success,
     ).toBe(false);
   });
 
@@ -303,7 +303,7 @@ describe('data-bound annotations', () => {
       ],
     };
     const original = leaves(lowerPlot(source, data, options));
-    source.marks[1] = MarkOperationSchema.parse({ ...source.marks[1], contributeToDomain: true });
+    source.marks[1] = MarkSchema.parse({ ...source.marks[1], contributeToDomain: true });
     const included = leaves(lowerPlot(source, data, options));
     expect(original[1]).not.toEqual(included[1]);
     expect(included).toHaveLength(4);
@@ -336,7 +336,7 @@ describe('data-bound annotations', () => {
     const source = plot([{ ...path, transforms: summarize, properties: { ...path.properties } }]);
     source.dataExecution = { root: { mode: 'builtin' }, marks: { mode: 'external', external: 'fixture' } };
     expect(() => lowerPlot(source, { rows }, options)).toThrow(/async preparation/i);
-    source.marks[0] = MarkOperationSchema.parse({
+    source.marks[0] = MarkSchema.parse({
       ...path,
       transforms: summarize.map(declaration => ({
         ...declaration,

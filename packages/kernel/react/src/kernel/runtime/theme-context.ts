@@ -10,7 +10,7 @@ export const mergeThemeOverlays = (
     if (layer === undefined) return current;
 
     return {
-      ...(layer.style === undefined ? current : { ...current, style: layer.style }),
+      ...(layer.name === undefined ? current : { ...current, name: layer.name }),
       ...(layer.mode === undefined ? {} : { mode: layer.mode }),
     };
   }, {});

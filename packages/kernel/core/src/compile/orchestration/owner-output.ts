@@ -10,7 +10,7 @@ import type { CompileObservationRuntime } from './observation';
 export const createOwnerOutputPublisher = (
   owner: CompileObservationOwner,
   sourcePath: string,
-  definition: { schema: { parse: (value: unknown) => unknown } } | undefined,
+  enabled: boolean | undefined,
   observation: CompileObservationRuntime | undefined,
 ): Readonly<{
   keys: ReadonlyArray<string>;
@@ -19,9 +19,7 @@ export const createOwnerOutputPublisher = (
   value: () => JsonValue | undefined;
 }> => {
   const keys =
-    definition === undefined || observation === undefined
-      ? []
-      : observation.select(Object.freeze({ owner, sourcePath }));
+    enabled !== true || observation === undefined ? [] : observation.select(Object.freeze({ owner, sourcePath }));
   let hasPublished = false;
   let published: JsonValue | undefined;
   const publisher: CompileOwnerOutputPublisher<JsonValue> = Object.freeze({
@@ -32,20 +30,12 @@ export const createOwnerOutputPublisher = (
         throw createCompositeContractError(`Owner '${sourcePath}' published its compile output more than once.`);
       }
 
-      if (definition === undefined) {
+      if (enabled !== true) {
         throw createCompileInvariantError('internal: selected owner output has no definition');
       }
 
-      let parsed: unknown;
-
       try {
-        parsed = definition.schema.parse(value);
-      } catch (cause) {
-        throw createCompositeContractError(`Owner '${sourcePath}' returned an invalid owner output.`, { cause });
-      }
-
-      try {
-        published = cloneAndFreezeJson(parsed, `Owner '${sourcePath}' output`) as JsonValue;
+        published = cloneAndFreezeJson(value, `Owner '${sourcePath}' output`);
       } catch (cause) {
         throw createCompositeContractError(`Owner '${sourcePath}' returned a non-JSON owner output.`, { cause });
       }

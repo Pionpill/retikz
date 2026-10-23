@@ -21,7 +21,7 @@ Definition 统一提供 `compile(node, context)`。`node` 是 schema 解析后�
 
 <SourceLinks
   sources={[
-    { label: '复合组件回调与上下文契约', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: '复合组件回调与上下文契约', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     { label: '遍历器中的复合组件调度', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
   ]}
 />
@@ -107,7 +107,7 @@ const definition = defineComposite({
 
 <SourceLinks
   sources={[
-    { label: '统一 compile 与上下文契约', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: '统一 compile 与上下文契约', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     { label: '输出子项与运行时句柄', path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts' },
   ]}
 />
@@ -187,7 +187,7 @@ Core 根据真实占用解析槽位：`intrinsic` 取实际尺寸，`range` 将�
 <SourceLinks
   sources={[
     { label: '提案校验与槽位尺寸计算', path: 'packages/kernel/core/src/compile/orchestration/layout-proposal.ts' },
-    { label: '提案、布局结果与对齐线契约', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: '提案、布局结果与对齐线契约', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     {
       label: 'Node、Path 与 Scope 的提案行为验证',
       path: 'packages/kernel/core/tests/compile/layout-proposal-builtins.test.ts',
@@ -254,7 +254,7 @@ export type LayoutChildResult = Readonly<{
 
 <SourceLinks
   sources={[
-    { label: '测量结果与对齐线契约', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: '测量结果与对齐线契约', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     { label: '从布局占用计算槽位', path: 'packages/kernel/core/src/compile/orchestration/layout-proposal.ts' },
   ]}
 />
@@ -304,7 +304,7 @@ export type LayoutMeasurementProbe =
 查询返回的是按提案分配的槽位尺寸，不含真实边界、基线或重放令牌。需要这些信息时使用 `layoutChild`；已有符合最终约束的完整结果则可直接重放。尺寸查询成功不代表整棵子树已通过完整编译校验。具体求值、缓存与提交过程见下文“试算与提交”。
 
 <SourceLinks
-  sources={[{ label: '尺寸查询与返回值契约', path: 'packages/kernel/core/src/contract/composite/types.ts' }]}
+  sources={[{ label: '尺寸查询与返回值契约', path: 'packages/kernel/core/src/contract/composite/layout.ts' }]}
 />
 
 <ComponentAlert
@@ -355,7 +355,7 @@ export type LayoutMeasurementProbe =
 
 <SourceLinks
   sources={[
-    { label: '贡献与完整输出契约', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: '贡献与完整输出契约', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     { label: '隔离求值与贡献复用', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
     { label: '编译内文字度量共享', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
     { label: 'Flow 路线与端点查询复用', path: 'packages/schematic/diagram/src/flow/pipeline/flow/compile.ts' },
@@ -428,7 +428,7 @@ Core 因此把每次完整布局查询作为一次隔离试算：它可以读取
   sources={[
     { label: '重放句柄与 Scope 输出创建', path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts' },
     { label: '输出预检、资源导入与重放提交', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
-    { label: '放置外壳与容器输出契约', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: '放置外壳与容器输出契约', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
   ]}
 />
 
@@ -462,7 +462,7 @@ const definition = defineComposite({
 `layoutChild` 返回失败时，`raise` 将错误交回 Core；成功时，`replay` 把结果转成待输出子项，最后由 `children` 交给 Core 提交。测量得到的槽位、边界和候选子图至此连接起来。
 
 <SourceLinks
-  sources={[{ label: 'compile、试算与重放的统一契约', path: 'packages/kernel/core/src/contract/composite/types.ts' }]}
+  sources={[{ label: 'compile、试算与重放的统一契约', path: 'packages/kernel/core/src/contract/composite/layout.ts' }]}
 />
 
 ## 完整实现流程

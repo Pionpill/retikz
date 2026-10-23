@@ -107,7 +107,7 @@ describe('resolvePath', () => {
               type: 'step',
               kind: 'line',
               to: [1, 0],
-              label: { text: 'inside', placement: 'inside', sloped: true },
+              label: { text: 'sloped', sloped: true },
             },
           ],
         }),

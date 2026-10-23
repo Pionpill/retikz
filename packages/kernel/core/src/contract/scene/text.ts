@@ -1,6 +1,7 @@
 import type { JsonObject } from '@retikz/foundation';
+import type { BoundsRect } from '@retikz/math';
 
-import type { IRAnimationTrack, IRFont, IRTextRun } from '../../schemas';
+import type { IRAnimationTrack, IRFont, IRTextSegment } from '../../schemas';
 
 type SceneFontWeight = NonNullable<IRFont['weight']> | (string & {});
 
@@ -37,7 +38,7 @@ export type TextLine = {
    * 行级透明度 0..1 覆盖；缺省走块级
    * @default TextPrim.opacity
    */
-  opacity?: IRTextRun['opacity'];
+  opacity?: IRTextSegment['opacity'];
 };
 
 /**
@@ -98,4 +99,25 @@ export type TextPrim = {
    * @default 1
    */
   opacity?: number;
+};
+
+/** 从已度量尺寸、对齐和基线推导文本矩形，供边界与命中消费 */
+export const sceneTextBounds = (primitive: TextPrim): BoundsRect => {
+  const x =
+    primitive.align === 'start'
+      ? primitive.x
+      : primitive.align === 'middle'
+        ? primitive.x - primitive.measuredWidth / 2
+        : primitive.x - primitive.measuredWidth;
+  const y =
+    primitive.baseline === 'top'
+      ? primitive.y
+      : primitive.baseline === 'middle'
+        ? primitive.y - primitive.measuredHeight / 2
+        : primitive.baseline === 'alphabetic'
+          ? // alphabetic 锚点属于首行，后续行向下展开，不能把整块高度都扣到首行上方
+            primitive.y - primitive.measuredHeight + (primitive.lines.length - 1) * primitive.lineHeight
+          : primitive.y - primitive.measuredHeight;
+
+  return { x, y, width: primitive.measuredWidth, height: primitive.measuredHeight };
 };

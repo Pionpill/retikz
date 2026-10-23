@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   CompositeCoreProviderKey,
   CoreDependencyProvider,
   CoreProviderContribution,
@@ -63,7 +63,7 @@ export const createChartProviderContribution = <TSource extends IRChartSource>(
     /** 当前 provider 安装的具体 chartType Definition */
     recipe: ChartRecipeDefinition<TSource>;
     /** 当前编译边界可见的命名 Theme Definition */
-    themeDefinitions?: ReadonlyArray<ChartThemeDefinition>;
+    chartThemeDefinitions?: ReadonlyArray<ChartThemeDefinition>;
     /** 与Plot provider共享的lowering runtime Definition */
     lowerOptions?: LowerPlotsOptions;
   }>,
@@ -79,7 +79,7 @@ export const createChartProviderContribution = <TSource extends IRChartSource>(
   const contribution: ChartRecipeProviderContribution = Object.freeze({
     family: input.family,
     recipe: eraseChartRecipeDefinition(input.recipe),
-    themeDefinitions: Object.freeze([...(input.themeDefinitions ?? [])]),
+    chartThemeDefinitions: Object.freeze([...(input.chartThemeDefinitions ?? [])]),
     runtimeDefinitions: Object.freeze({
       ...(input.lowerOptions?.definitions?.coordinates === undefined
         ? {}

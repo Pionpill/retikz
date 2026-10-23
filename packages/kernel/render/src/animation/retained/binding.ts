@@ -210,6 +210,13 @@ export const bindWaapiDescriptorElements = (
     elements.forEach(element => {
       if (cleanupStarted) return;
 
+      const ownerId = element.getAttribute('data-retikz-animation-owner');
+      const triggerElement =
+        ownerId === null
+          ? element
+          : (Array.from(element.closest('svg')?.querySelectorAll('[data-retikz-id]') ?? []).find(
+              candidate => candidate.getAttribute('data-retikz-id') === ownerId,
+            ) ?? element);
       const raw = element.getAttribute('data-retikz-anim');
       if (!raw) return;
 
@@ -293,7 +300,7 @@ export const bindWaapiDescriptorElements = (
           pendingObservers.add(observer);
 
           try {
-            observer.observe(element);
+            observer.observe(triggerElement);
           } finally {
             registrationInProgress = false;
           }
@@ -323,11 +330,11 @@ export const bindWaapiDescriptorElements = (
             if (created && retainAnimation(created)) animation = created;
           };
 
-          const cleanup = () => element.removeEventListener(trigger.onEvent, handler);
+          const cleanup = () => triggerElement.removeEventListener(trigger.onEvent, handler);
           pendingListenerCleanups.add(cleanup);
 
           try {
-            element.addEventListener(trigger.onEvent, handler);
+            triggerElement.addEventListener(trigger.onEvent, handler);
           } catch (cause) {
             pendingListenerCleanups.add(cleanup);
             if (hasCleanupStarted()) cleanupComplete = false;

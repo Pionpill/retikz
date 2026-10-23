@@ -12,6 +12,7 @@ import type {
   RibbonCapSchema,
   RibbonEndpointSchema,
   RibbonPathOptionsSchema,
+  RibbonLabelSchema,
   RibbonSamplingSchema,
   RibbonWidthSchema,
   RibbonWidthStopSchema,
@@ -41,6 +42,8 @@ export type IRRibbonEndpoint = ZodInput<typeof RibbonEndpointSchema>;
 export type IRRibbonSampling = ZodInput<typeof RibbonSamplingSchema>;
 
 export type IRRibbonPathOptions = ZodInput<typeof RibbonPathOptionsSchema>;
+
+export type IRRibbonLabel = ZodInput<typeof RibbonLabelSchema>;
 
 /** Extension Ribbon 完整 Path subject */
 export type IRRibbonPath = ZodInfer<typeof CompleteRibbonPathSchema>;

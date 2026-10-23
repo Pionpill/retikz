@@ -12,10 +12,12 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 
 - IR 必须 100% JSON 可序列化，不接收函数、ReactNode、class 实例或 renderer 专属对象。
 - 公开 IR 类型从同一 schema 的输入或输出派生，不手写平行字段定义。
+- 枚举与名称类型以 const object 为真源：封闭枚举用 `ValueOf<typeof Xxx>`，开放名称用 `OpenString<BuiltinXxx>`，受限子集从常量类型精确提取或排除，不绕经 schema 推导；对应 schema 复用同一常量。对象、数组、结构联合及含转换或品牌约束的类型仍从 schema 派生，不得因简化类型而改变值域。
 - 静态默认值使用真实 `.default()`，供运行时、JSON Schema 与 LLM 共享；resolver 读取权威字段 schema 的缺省结果，不复制默认常量。上下文默认仍由 resolver 确定。
 - 继承合并消费原始配置，缺省与 undefined 不覆盖父级。直接 parse 结果中的默认字段视为显式值，JSON 往返不恢复省略意图。需要继承的 ZodDefault 字段用 `.unwrap().optional()` 精确投影，不重复约束和 describe。
 - schema 负责 Source IR 契约、静态默认与可在 Source IR 表达的跨字段校验；`resolve/` 负责 context lookup、优先级、默认应用时机、Canonical 化后不变量和值转换；pipeline / compile 负责 context 生命周期、调度、lowering 与 emit
 - JSON、持久化配置等外部数据只在 owner schema / parse 入口用 Zod 完成一次校验，并直接使用 `parse` / `safeParse` 的成功结果作为 Source IR；不得在 schema 前后增加通用 JSON walker、`undefined` 过滤、字段清理、结构优化、克隆、冻结或第二次通用 JSON schema 复核。Vanilla API 的 `normalizeXxx` 只把 `InputXxx` 组装为 IR，纵向领域 `resolveXxx` 将 IR 与当前 context 确定为 Canonical / Resolution。不要在内部重复做 schema 已覆盖的类型判断，或为 TypeScript 已经排除的类型错误增加 `throw`
+- Schema 运行时解析用于外部数据入口，内部调用与跨包传递不重复执行结构校验；例如 Core 已生成的 Scene 交给官方 renderer 时不重新 parse，外部反序列化的 Scene 则在入口校验。已类型化的 Tier 2 封装和扩展回调由作者负责满足契约，不强制 Schema 解析；用户编写的代码不等同于外部数据。内部可复用 schema 派生类型、读取权威默认值，但不因此重新解析完整对象；仅检查当前阶段新增的领域不变量和上下文约束。
 - 只有独立的 runtime callback 变异隔离或公开 immutable output 契约，才可在精确 schema parse 之后单独复制或冻结；这类操作不属于 Source IR 校验，内部 canonical 数据和中间对象不额外复制或冻结
 - 闭合对象 schema 优先用 `z.strictObject({...})`；不要新增 `z.object({...}).strict()`，除非已有链式组合无法直接表达。
 - 字段级约束写在字段 schema 上；跨字段、跨 kind 规则放最终 schema 的 `.superRefine(...)`。
@@ -24,15 +26,7 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 
 ## 文件分层
 
-先按能力归属组织，再按职责拆文件。目录仅聚合彼此独立的子域时，各子域的常量、schema 与派生类型放在各自模块，不集中到父目录的 `constants.ts` / `types.ts`；例如 reducer、selector、regression 各自持有声明。下表适用于单个能力确需拆文件的情况，不是固定文件模板；只有真实共享且语义稳定的声明才提取到共同 owner。
-
-| 文件                                | 职责                                                          |
-| ----------------------------------- | ------------------------------------------------------------- |
-| `schemas/<capability>/constants.ts` | 本 schema 私有 const object enum、关键字常量                  |
-| `schemas/<capability>/schema.ts`    | Zod schema、`.describe(...)`、必要 refinement                 |
-| `schemas/<capability>/types.ts`     | `IRXxx`、const object 派生类型及其 TS 组合                    |
-| `shared/`                           | 跨 schema / contract / providers / compile 复用的词汇与纯工具 |
-
+默认按语义单文件组织，将同一概念的常量、Schema 与派生类型就近放置；单一消费领域或职责强相关的概念归入同一领域目录。目录归属看 owner 内的语义职责，上层通过公共入口复用不决定内部归组。只有内容较多且职责或依赖确需独立维护时才拆 `constants.ts` / `schema.ts` / `types.ts`，不套固定模板、不设机械行数阈值、不保留转发文件。目录聚合不自动扩大公共导出。
 不要把 IR schema 放到 `contract` / `providers` / `compile`。新增 shared 内容先读 [shared](shared.md)。
 
 ## 命名
@@ -106,7 +100,7 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 - 对 discriminator 字段，说明它是 discriminator 以及该值对应的变体语义。
 - 对 provider 名称、custom key、fallback 策略，明确“可自定义”与“未注册在领域 resolve 期处理”的边界。
 - 不写实现故事、历史背景、ADR、renderer 细节或长示例。
-- `schemas/**/schema.ts` 不写 JSDoc；schema 与字段的契约说明统一使用英文 `.describe(...)`。`types.ts`、`constants.ts` 的导出类型、非 schema 常量和重要 helper 默认写中文 JSDoc，纯推断 / 重命名别名（如 `ValueOf`、`z.infer`）可省略。
+- 按符号职责组织说明，不按文件名区分：Schema 与字段契约使用英文 `.describe(...)`，必要中文 JSDoc 简述用途；非 Schema 导出类型、常量和重要 helper 默认写中文 JSDoc，纯推断 / 重命名别名（如 `ValueOf`、`z.infer`）可省略。
 
 非 schema 符号的公共注释按 [JSDoc](../../docs-doc-reference/references/jsdoc.md)；不重复维护 tag 写法。
 

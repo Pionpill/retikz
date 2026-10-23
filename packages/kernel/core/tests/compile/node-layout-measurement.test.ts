@@ -147,14 +147,14 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('skips explicit math runs and warns when lowerTex is missing', () => {
+  it('skips explicit math segments and warns when lowerTex is missing', () => {
     const { layouts, warnings } = collectLayouts(
       scene([
         {
           type: 'node',
           id: 'explicit',
           position: [0, 0],
-          text: [{ runs: [{ text: 'A' }, { tex: 'x' }, { text: 'B' }] }],
+          text: [{ segments: [{ text: 'A' }, { tex: 'x' }, { text: 'B' }] }],
           style: { font: { size: 10 } },
         },
       ]),

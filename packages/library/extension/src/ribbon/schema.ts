@@ -1,5 +1,5 @@
 import type { IRStep } from '@retikz/core';
-import { AngleDegreesSchema, BoundaryLabelSchema, PolarPositionSchema, StepSchema, Vector2Schema } from '@retikz/core';
+import { BoundaryLabelSchema, PathLabelSchema, PolarPositionSchema, StepSchema, Vector2Schema } from '@retikz/core';
 import {
   createOpenStringSchema,
   JsonObjectSchema,
@@ -12,6 +12,7 @@ import { array, discriminatedUnion, enum as zodEnum, literal, number, strictObje
 
 import {
   RibbonAlignment,
+  RibbonLabelPlacement,
   RibbonArcCapSweep,
   BuiltinRibbonCap,
   RibbonTaperInterpolation,
@@ -86,7 +87,7 @@ export const RibbonWidthSchema = discriminatedUnion('kind', [
 
 /** Core 坐标 Schema 接受 unknown；这里将作者输入限定为公开方向类型，运行时仍复用其完整校验 */
 export const RibbonDirectionSchema = union([
-  AngleDegreesSchema.describe('Direction angle in degrees, where 0 points to the positive x axis.'),
+  number().describe('Direction angle in degrees, where 0 points to the positive x axis.'),
   Vector2Schema.refine(([x, y]) => x !== 0 || y !== 0, {
     message: 'Ribbon direction vector must not be zero length.',
   }).describe(
@@ -134,8 +135,20 @@ export const RibbonSamplingSchema = discriminatedUnion('kind', [
   'Ribbon boundary sampling strategy; additional feature points are preserved independently of the base sample count.',
 );
 
+/** 流带中心线标签，支持带内和带外放置 */
+export const RibbonLabelSchema = PathLabelSchema.omit({ interrupt: true, gap: true }).extend({
+  placement: zodEnum(RibbonLabelPlacement)
+    .optional()
+    .describe(
+      'Place the label inside or outside the ribbon. Omitted values use outside; inside defaults side to center.',
+    ),
+});
+
 /** 中心线模式的独立输入契约 */
 export const CenterlineRibbonPathOptionsSchema = strictObject({
+  label: union([RibbonLabelSchema, array(RibbonLabelSchema).min(1)])
+    .optional()
+    .describe('One centerline label or a non-empty label array, each with its own placement.'),
   mode: literal('centerline').optional().default('centerline').describe('Build an outline from an open centerline.'),
   width: RibbonWidthSchema.describe('Required discriminated width strategy.'),
   start: RibbonEndpointSchema.prefault({}).describe('Start section and cap.'),

@@ -1,6 +1,5 @@
 import { defineInspector } from '@retikz/inspect';
 
-import { FlexLayoutArtifactSchema } from '../../composites/flex-layout';
 import { LAYOUT_NAMESPACE } from '../../shared';
 import { resolveFlexLayoutInspectOptions } from '../resolve/flex-layout';
 import { mergeLayoutInspectOptionsInput } from '../resolve/shared';
@@ -18,7 +17,6 @@ export const FLEX_LAYOUT_INSPECTOR_KEY = Object.freeze({
 export const FLEX_LAYOUT_INSPECTOR = defineInspector({
   ...FLEX_LAYOUT_INSPECTOR_KEY,
   owner: { kind: 'composite', namespace: LAYOUT_NAMESPACE, type: 'flexLayout' },
-  subjectSchema: FlexLayoutArtifactSchema,
   optionsSchema: FlexLayoutInspectOptionsSchema,
   resolveOptions: resolveFlexLayoutInspectOptions,
   mergeOptionsInput: mergeLayoutInspectOptionsInput,

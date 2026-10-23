@@ -36,7 +36,7 @@ describe('relate transform', () => {
           type: 'relation',
           transforms: [{ operation }],
           encodings: {
-            label: { content: 'deltaLabel' },
+            label: { text: 'deltaLabel' },
             source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
             target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
           },

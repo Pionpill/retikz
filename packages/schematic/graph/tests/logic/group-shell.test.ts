@@ -1,5 +1,5 @@
 import type { IRChild, CompositeCompileContext } from '@retikz/core';
-import { compileToScene, CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
+import { compileToScene, CompositeBaseSchema, defineComposite, defineTheme } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import type { BoundsInsets, BoundsRect } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
@@ -48,7 +48,7 @@ const compileMeasurement = (
   group: IRGroup,
   measureGroupShell: MeasureGroupShell,
   options: GraphDefinitionOptions = {},
-  themeStyle?: string,
+  themeName?: string,
 ): GroupShellMetrics => {
   const definition = defineComposite({
     namespace: 'graph-shell-test',
@@ -61,14 +61,12 @@ const compileMeasurement = (
     {
       type: 'scene',
       version: 1,
-      ...(themeStyle === undefined ? {} : { theme: { style: themeStyle } }),
+      ...(themeName === undefined ? {} : { theme: { name: themeName } }),
       children: [{ namespace: 'graph-shell-test', type: 'measurement', group }],
     },
     {
       composites: [...Graph.createGraphDefinitions(options), definition],
-      ...(themeStyle === undefined
-        ? {}
-        : { themeStyles: [defineThemeStyle({ name: themeStyle, resolve: () => ({}) })] }),
+      ...(themeName === undefined ? {} : { themeDefinitions: [defineTheme({ name: themeName, resolve: () => ({}) })] }),
       padding: 0,
     },
   );
@@ -131,7 +129,7 @@ describe('Graph Group shell composition', () => {
     });
     const styleName = 'measurement-shell';
     let resolutionCount = 0;
-    const style = Graph.defineGraphThemeStyle({
+    const style = Graph.defineGraphTheme({
       name: styleName,
       resolve: () => {
         resolutionCount += 1;
@@ -147,7 +145,7 @@ describe('Graph Group shell composition', () => {
       },
     });
 
-    expect(compileMeasurement(group, measureGroupShell, { graphThemeStyles: [style] }, styleName)).toEqual(
+    expect(compileMeasurement(group, measureGroupShell, { graphThemeDefinitions: [style] }, styleName)).toEqual(
       compileMeasurement(group, measureGroupShell),
     );
     expect(resolutionCount).toBe(1);

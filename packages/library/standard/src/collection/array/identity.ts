@@ -1,4 +1,4 @@
-import { NonBlankStringSchema, NonNegativeIntegerSchema } from '@retikz/foundation';
+import { NonNegativeIntegerSchema } from '@retikz/foundation';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../shared/errors';
 
@@ -7,13 +7,13 @@ import { RetikzStandardError, RetikzStandardErrorCode } from '../../shared/error
  * @param arrayId 非空白 Array id
  * @param index 直属单元格的非负整数下标
  * @returns 由 arrayId、连字符与零基下标组成的单元格 id
- * @throws 参数非法时抛出 RetikzStandardError
+ * @throws 下标不是非负整数时抛出 RetikzStandardError
  */
 export const getArrayCellId = (arrayId: string, index: number): string => {
-  if (!NonBlankStringSchema.safeParse(arrayId).success || !NonNegativeIntegerSchema.safeParse(index).success) {
+  if (!NonNegativeIntegerSchema.safeParse(index).success) {
     throw new RetikzStandardError({
       code: RetikzStandardErrorCode.AuthoringInvalid,
-      message: 'Array cell identity requires a nonblank array id and a nonnegative integer index.',
+      message: 'Array cell identity requires a nonnegative integer index.',
       details: { arrayId, index },
     });
   }

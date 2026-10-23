@@ -117,18 +117,6 @@ const runtimeComputationTokens = new WeakSet<object>();
 
 const runtimeComputationExecutors = new WeakMap<object, RuntimeComputationErasedExecutor>();
 
-/** 创建 result dispose 失败的非致命诊断 */
-const resultDisposeDiagnostic = (computation: RuntimeComputationToken, cause: unknown): RuntimeDiagnostic =>
-  Object.freeze({
-    code: BuiltinRuntimeDiagnosticCode.ResultDisposeFailed,
-    phase: 'result-dispose',
-    severity: 'error',
-    message: getRuntimeDiagnosticMessage(cause),
-    owner: computation.id.owner,
-    computation: computation.id,
-    cause,
-  });
-
 /** 创建 Computation Definition 输入错误 */
 const invalidComputation = (
   code: typeof RetikzRuntimeErrorCode.ComputationIdInvalid | typeof RetikzRuntimeErrorCode.ComputationTokenInvalid,
@@ -202,6 +190,18 @@ export const defineRuntimeComputation = <
 
   /** 释放一个已捕获 result，并把 throw 隔离为 secondary diagnostic */
   const retireResult = (result: TResult): ReadonlyArray<RuntimeDiagnostic> => {
+    /** 创建 result dispose 失败的非致命诊断 */
+    const resultDisposeDiagnostic = (computation: RuntimeComputationToken, cause: unknown): RuntimeDiagnostic =>
+      Object.freeze({
+        code: BuiltinRuntimeDiagnosticCode.ResultDisposeFailed,
+        phase: 'result-dispose',
+        severity: 'error',
+        message: getRuntimeDiagnosticMessage(cause),
+        owner: computation.id.owner,
+        computation: computation.id,
+        cause,
+      });
+
     if (dispose === undefined) return Object.freeze([]);
 
     try {

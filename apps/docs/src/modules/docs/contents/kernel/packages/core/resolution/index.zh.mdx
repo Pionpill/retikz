@@ -61,7 +61,7 @@ Definition 保存一种能力的实现与参数契约。IR 中的 `shape: 'recta
 | `shapes` / `boundaries`                   | 节点形状与连接边界     | 节点配置解析                    |
 | `patterns` / `clips`                      | 图案填充与裁剪         | 对应 paint 或 clip 的解析与编译 |
 | `pathKinds` / `pathGenerators` / `arrows` | 路径类型、生成器与箭头 | 对应路径及箭头处理              |
-| `themeStyles`                             | 主题风格               | 根主题或局部主题解析            |
+| `themeDefinitions`                        | 主题风格               | 根主题或局部主题解析            |
 | `composites`                              | 复合项的编译能力       | 遍历遇到复合项                  |
 
 Node 在样式与默认值合并后，由 `resolveNodeShape` 按有效的 `shape` 查找定义，通过该 Definition 的 `paramsSchema` 解析参数，返回 `{ name, definition, params }`。未指定形状时选择 `rectangle`；`circle` 则先展开为 `ellipse` 和等宽高参数，再查询定义。
@@ -73,7 +73,7 @@ Node 的连接边界随后通过 `resolveBoundaryReference` 解析。它可以�
 <SourceLinks
   sources={[
     { label: '上下文与注册表装配', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
-    { label: '重名检查与名称查询', path: 'packages/kernel/core/src/providers/registry/registry.ts' },
+    { label: '重名检查与名称查询', path: 'packages/kernel/core/src/providers/registry.ts' },
     { label: '形状名称、参数与能力绑定', path: 'packages/kernel/core/src/resolve/node/shape.ts' },
     { label: '连接边界解析', path: 'packages/kernel/core/src/resolve/node/boundary.ts' },
   ]}
@@ -117,9 +117,9 @@ Scope 的 `defaults.reset` 可以切断选定的样式通道。设为 `['node']`
 
 ## 主题解析
 
-主题记录当前风格、明暗模式和共享颜色。`resolveTheme` 按字段继承 `style` 与 `mode`：局部 Scope 只写 `mode: 'dark'` 时，保留父级风格，并重新生成该模式下的共享颜色。两个选择项都未改变时，直接复用父主题。
+主题记录当前风格、明暗模式和共享颜色。`resolveTheme` 按字段继承 `name` 与 `mode`：局部 Scope 只写 `mode: 'dark'` 时，保留父级风格，并重新生成该模式下的共享颜色。两个选择项都未改变时，直接复用父主题。
 
-`theme.style` 是 `ThemeStyleDefinition` 的名称，解析时从 `themeStyles` 查找并调用它的 `resolve({ mode })`。未选择风格时，使用 Core 对应模式的默认颜色。节点的 `style` 是填充、描边等属性记录，与这个主题选择项各有用途。
+`theme.name` 是 `ThemeDefinition` 的名称，解析时从 `themeDefinitions` 查找并调用它的 `resolve({ mode })`。未选择风格时，使用 Core 对应模式的默认颜色。节点的 `style` 是填充、描边等属性记录，与这个主题选择项各有用途。
 
 共享主题颜色供相应消费方读取。基础节点解析从主题中取得 `mode`，再结合有效的节点主色处理数值颜色；它不会自动把整份主题颜色表复制到节点样式上。上层组件若按主题生成节点样式，这些字段随后按普通 IR 样式参与 Core 解析。
 

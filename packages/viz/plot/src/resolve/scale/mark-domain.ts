@@ -9,7 +9,7 @@ import type {
 } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { DomainPaddingClearanceSchema } from '../../schemas';
-import type { IRPlotMarkDomainPadding, IRPlotScaleOperation, IRPlotMarkOperation } from '../../schemas';
+import type { IRPlotMarkDomainPadding, IRPlotScaleOperation, IRPlotMark } from '../../schemas';
 import { resolveMarkChannels } from '../channel';
 import type { ChannelResolveContext } from '../channel';
 import type { MarkDataView } from '../coordinate';
@@ -44,7 +44,7 @@ export const createMarkPaddingContext = (
   let revision = 0;
   const targets = new WeakMap<object, WeakMap<Array<ExternalRow>, Map<string, Array<DomainPaddingTarget>>>>();
   const mappings = new Map<string, DomainPaddingScale>();
-  const protectedMarks = new WeakMap<PositionScale, ReadonlyArray<string | IRPlotMarkOperation>>();
+  const protectedMarks = new WeakMap<PositionScale, ReadonlyArray<string | IRPlotMark>>();
   const groups = new Map<
     string,
     { observations: Map<string, DomainPaddingObservation>; padding?: MarkPaddingResolution }
@@ -208,7 +208,7 @@ export const createMarkPaddingContext = (
     },
     placedTargetsOf: (view: MarkDataView, frame: CoordinateFrame): MarkPositionResolution | undefined =>
       place?.(view, frame),
-    protects: (scale: PositionScale | undefined, mark: IRPlotMarkOperation): boolean =>
+    protects: (scale: PositionScale | undefined, mark: IRPlotMark): boolean =>
       scale !== undefined &&
       (protectedMarks
         .get(scale)
@@ -265,7 +265,7 @@ export const createMarkPaddingContext = (
       mapping: DomainPaddingScale,
       initialRange: readonly [number, number],
       minimum: MarkPaddingResolution = { lower: 0, upper: 0 },
-      participants?: ReadonlyArray<IRPlotMarkOperation>,
+      participants?: ReadonlyArray<IRPlotMark>,
     ): PositionScale => {
       let group = groups.get(groupKey);
       if (group === undefined) {

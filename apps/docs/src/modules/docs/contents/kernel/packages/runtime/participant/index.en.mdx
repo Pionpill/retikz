@@ -9,9 +9,7 @@ description: Define participants that consume Sources and computation results an
 
 A Participant can update the DOM, replace a Canvas frame, or manage host state. Failure in its preparation, commit, or read prevents publication and triggers rollback of prepared objects. Its logic therefore helps determine whether the transaction succeeds, and its new read view becomes publicly readable only after successful publication.
 
-For example, updating an SVG document through Vanilla must update both its public processing result and the actual drawing. Publishing a new result when the SVG update fails would leave data and drawing inconsistent. Vanilla connects the processing result and renderer as separate commit participants: publish only when all succeed, or retain both previous states when failure is followed by successful rollback.
-
-`runtime.update(...)` executes the transaction; `runtime.participant(token)` reads a participant’s latest successfully published result without triggering a commit. The following count and display-buffer example explains the protocol, and [Vanilla application](#vanilla-application) connects it to the actual integration.
+`runtime.update(...)` executes the transaction; `runtime.participant(token)` reads a participant’s latest successfully published result without triggering a commit. The following standalone count and display-buffer example publishes the new count and its display together only after both computation and display commits succeed.
 
 ## Overall flow
 
@@ -357,42 +355,7 @@ After candidate computations finish, Runtime processes selected participants by 
 After publication, Runtime calls computation `observeCommit` callbacks, retires replaced Source values and results, and finally disposes transaction objects. Runtime queries expose successfully published state; restoring the host depends on the participant’s rollback implementation.
 
 <SourceLinks
-  sources={[
-    { label: 'Runtime commit orchestration', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
-    { label: 'Retained renderer participant', path: 'packages/kernel/render/src/runtime/participant.ts' },
-  ]}
-/>
-
-## Vanilla application
-
-Vanilla’s retained DOM integration connects **Core computation, processing-result publication and renderer commits** to one Runtime. When updating an SVG, Core first produces candidate compilation output, then two participants prepare their own state:
-
-| Object                        | Commit responsibility                                                                                                  | Public read                                               |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| Processing-result participant | Build a new `ProcessingResult` from Core output, replace the previous result on commit, and restore it on rollback     | The processing result exposed by Vanilla                  |
-| Renderer participant          | Apply the Scene and rendering configuration to SVG or Canvas, restoring state through the rollback protocol on failure | The committed `frame` and optional `animation` controller |
-
-Vanilla registers both in the `participants` array passed to `createRuntime`. An update first calls `runtime.update(...)`. Only after it returns successfully does Vanilla obtain the new processing result through `runtime.participant(resultParticipant)` and update its public cache. The renderer-side read wrapper also delegates to `runtime.participant(rendererParticipant)` to obtain the renderer’s committed public view.
-
-The diagram follows a successful update: Core candidate output feeds both participants inside the transaction. After publication, Vanilla and the renderer wrapper each read their cache through `runtime.participant(...)`, exposing processing results to callers and frames or animation controls to the host. Neither participant reads the other.
-
-<ComponentPreview files="participant-vanilla" size="sm" hideCode type="flow" />
-
-Suppose Core has computed a new Scene but the renderer fails during commit. Runtime attempts to roll back the prepared participants. Successful rollback keeps the previous processing result, drawing and read caches consistent; Vanilla does not return the candidate processing result as a successful update. If rollback also fails, the failure state described above applies, and drawing/data consistency can no longer be assumed.
-
-Here, `runtime.result(coreComputation)` reads compilation output, while participant reads expose results owned by the external commit layer. Both are gated by successful publication, but their contents and owners differ. A host could retain committed state itself; the shared read API instead reuses Runtime’s publication cache, avoiding separate success/rollback cache switching in every consumer.
-
-Renderer integration uses `createRetainedRenderParticipant` from `@retikz/render` with the `continuous` policy to follow published revisions. Ordinary Vanilla users work through its higher-level interfaces and generally do not need to handle Runtime participant tokens directly.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Processing-result participant, registration and post-success reads',
-      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
-    },
-    { label: 'Connecting renderer participants in Vanilla DOM', path: 'packages/kernel/vanilla/src/dom/retained.ts' },
-    { label: 'Renderer commits and public read wrapper', path: 'packages/kernel/render/src/runtime/participant.ts' },
-  ]}
+  sources={[{ label: 'Runtime commit orchestration', path: 'packages/kernel/runtime/src/runtime/runtime.ts' }]}
 />
 
 ## Related props

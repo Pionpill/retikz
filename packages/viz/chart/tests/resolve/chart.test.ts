@@ -28,7 +28,7 @@ const recipe = defineChartRecipe({
       definition: defineChartMark({
         kind: 'annotation',
         schema: strictObject({ kind: literal('annotation') }),
-        resolve: () => ({ marks: [{ type: 'point', id: 'annotation', kind: 'data' }] }),
+        resolve: () => ({ marks: [{ type: 'point', id: 'annotation', encodings: { position: { x: { value: 0 } } } }] }),
       }),
       inherit: {},
     },
@@ -46,7 +46,9 @@ const recipe = defineChartRecipe({
       spatial: { coordinate: { type: 'cartesian2D' }, replaceable: true },
       guides: { value: [], replaceable: true },
     },
-    semanticMarks: [{ kind: 'demo', plotMarks: [{ type: 'point', id: 'semantic', kind: 'data' }] }],
+    semanticMarks: [
+      { kind: 'demo', plotMarks: [{ type: 'point', id: 'semantic', encodings: { position: { x: { value: 0 } } } }] },
+    ],
   }),
 });
 
@@ -64,7 +66,7 @@ const resolve = (input = source) => {
     {
       family: 'point',
       recipe,
-      themeDefinitions: [
+      chartThemeDefinitions: [
         defineChartTheme({
           name: 'clean',
           defaults: { layout: { gap: 8 } },
@@ -74,9 +76,9 @@ const resolve = (input = source) => {
     },
   ]);
   return resolveSelectedChart(input, {
-    theme: { ...DEFAULT_RESOLVED_THEME, style: 'clean' },
+    theme: { ...DEFAULT_RESOLVED_THEME, name: 'clean' },
     recipe,
-    themeDefinitions: [registry.themes.get('clean')!],
+    chartThemeDefinitions: [registry.themes.get('clean')!],
     runtime: registry.runtime,
   });
 };

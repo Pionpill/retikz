@@ -5,7 +5,7 @@ description: Custom patterns emit a repeating tile through PatternDefinition and
 
 ## Define and register
 
-Import definePattern from `@retikz/core`. Supply a name, optional defaultSize, and emit. Emit receives resolved size, color, and line styles and returns MarkerPrimitive geometry in tile-local coordinates.
+Import definePattern from `@retikz/core`. Supply a name, optional defaultSize, and emit. Emit receives resolved size, color, and line styles and returns ScenePrimitive geometry in tile-local coordinates.
 
 This example defines cross, registers it through Layout.extensions.patterns, and references the same name in fill.shape.
 
@@ -26,7 +26,9 @@ Returning a geometry iterable keeps context.size as the period. Return `{ tileSi
 
 ## Errors and limitations
 
-Names must exist in the active compile registry. Tiles use structured MarkerPrimitive geometry, not DOM, functions, or arbitrary text primitives. Emit exceptions and invalid output are reported at the compile boundary; do not rely on silent fallback. Custom definitions consume background, directional styles, and cycles explicitly; receiving these fields does not make the compiler draw them automatically.
+Names must exist in the active compile registry. Tiles use the full ScenePrimitive contract, including measured text, clipping, animation, and finite nested content. DOM objects, functions, and unmeasured text are not valid primitives. References use the owning Scene resource namespace; missing, wrong-kind, or cyclic references fail. Typed definition authors are responsible for the primitive contract, and emit failures preserve their original cause.
+
+Resource animations share the scene clock with independent playback origins per host. Tiles within one host share playback state. Local ids do not create independent update nodes, and tiles do not create separate hit targets. Custom definitions consume background, directional styles, and cycles explicitly; receiving these fields does not make the compiler draw them automatically.
 
 ## Related props
 

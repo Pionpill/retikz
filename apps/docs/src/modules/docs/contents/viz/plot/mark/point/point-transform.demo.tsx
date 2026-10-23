@@ -17,7 +17,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       encodings={{
         size: 'orders',
         color: 'region',
-        label: { content: 'rep' },
+        label: { text: 'rep' },
         position: { x: { field: 'region' }, y: { field: 'orders' } },
       }}
     />

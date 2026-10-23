@@ -162,15 +162,15 @@ describe('React JSX Input 场景', () => {
   });
 });
 
-it('Scope 外框在 React、Vanilla 和 IR roundtrip 中保持等价', () => {
+it('Scope 包络在 React、Vanilla 和 IR roundtrip 中保持等价', () => {
   const input = createInputScene(
-    <Scope frame={{ padding: 12, style: { fill: 'red' } }}>
+    <Scope id="group" boundingShape="circle">
       <Node position={[0, 0]} />
     </Scope>,
   );
   const ir = normalizeScene(input.scene).ir;
 
-  expect(ir.children[0]).toMatchObject({ frame: { padding: 12, style: { fill: 'red' } } });
+  expect(ir.children[0]).toMatchObject({ id: 'group', boundingShape: 'circle' });
 
   const scope = ir.children[0];
   if ('namespace' in scope || scope.type !== 'scope') throw new Error('expected Kernel scope');

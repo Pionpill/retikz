@@ -35,9 +35,7 @@ export const nodeSchemas = {
       color: '图元主色，未单独覆盖的描边、填充和标签可由它派生',
       fill: '填充：精确颜色、主色权重或 Paint',
       stroke: '描边：精确颜色、主色权重或 Paint',
-      opacity: '整个图元的不透明度',
-      'opacity.fill': '填充不透明度',
-      'opacity.stroke': '描边不透明度',
+      opacity: '整体透明度或独立的 overall、fill、stroke 因子',
       shadow: '投影预设或投影配置，不影响节点形状尺寸',
       blendMode: '图元与背景的混合模式',
       strokeWidth: '边框宽度，单位为用户单位；省略时默认 1',
@@ -45,6 +43,8 @@ export const nodeSchemas = {
       dotted: '点线预设，被 dashPattern 或 dashed 覆盖',
       dashPattern: '显式虚线段与间隔长度，优先于 dashed 和 dotted',
       dashOffset: '虚线起点偏移，允许正数、零或负数',
+      lineCap: '描边端帽形状',
+      lineJoin: '描边拐角连接形状',
       textColor: '文字颜色或主色权重；contrast 根据静态填充选择黑白，缺省为 currentColor',
       font: '正文字体覆盖，缺省字段沿用文字默认值',
     },
@@ -84,10 +84,13 @@ export const nodeSchemas = {
   NodeLabelPinSchema: {
     description: '外侧节点标签的引线样式',
     descriptions: {
+      opacity: '引线独立透明度；省略时使用标签的有效透明度',
       stroke: '引线颜色或由标签主色派生的权重',
       strokeWidth: '引线宽度，单位为用户单位；默认 1',
       dashPattern: '引线虚线段与间隔长度',
       dashOffset: '虚线起点偏移，允许正数、零或负数',
+      lineCap: '描边端帽形状',
+      lineJoin: '描边拐角连接形状',
     },
   },
   CoordinateSchema: {

@@ -23,9 +23,7 @@ export const LabelFontEncodingSchema = strictObject({
  */
 export const LabelEncodingSchema = strictObject({
   /** 内容字段；格式由固定属性 displayFormat 控制 */
-  content: NonBlankStringSchema.optional().describe(
-    'Label content field; formatting is configured in fixed properties',
-  ),
+  text: NonBlankStringSchema.optional().describe('Label text field; formatting is configured in fixed properties'),
   font: LabelFontEncodingSchema.optional(),
   textColor: ChannelSchema.optional(),
   /** 标签自身的标量透明度，不使用图元的 overall / fill / stroke 对象 */
@@ -34,9 +32,7 @@ export const LabelEncodingSchema = strictObject({
   position: NonBlankStringSchema.optional().describe(
     'Attachment position field; values follow the label host contract',
   ),
-  placement: NonBlankStringSchema.optional().describe(
-    'Inside or outside placement field, interpreted by the label host',
-  ),
+  placement: NonBlankStringSchema.optional().describe('Inside or outside placement field for node labels only'),
   distance: NonBlankStringSchema.optional().describe('Label offset distance field in user units'),
 })
   .catchall(ChannelSchema.transform((binding): JsonValue => binding))
@@ -53,6 +49,7 @@ export const NodeLabelEncodingSchema = LabelEncodingSchema.extend({
 
 /** 校验路径标签的字段编码，支持侧向放置和沿切线旋转，排除节点专属字段 */
 export const PathLabelEncodingSchema = LabelEncodingSchema.extend({
+  placement: never().optional(),
   side: NonBlankStringSchema.optional(),
   sloped: NonBlankStringSchema.optional(),
   align: never().optional(),

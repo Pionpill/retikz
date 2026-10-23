@@ -1,7 +1,7 @@
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import type { JsonObject } from '@retikz/foundation';
-import type { IRPlotMarkOperation, IRPlotScaleOperation } from '@retikz/plot';
+import type { IRPlotMark, IRPlotScaleOperation } from '@retikz/plot';
 import { defineScale, PathMarkSchema, PositionScaleContinuity, lowerPlotWithLineage } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
@@ -35,27 +35,27 @@ import { StripChartDefinition } from '../../src/point/strip/recipe';
 import { StripChartSchema } from '../../src/point/strip/schema';
 
 const runtime = resolveChartProviderRegistry([
-  { family: 'point', recipe: ScatterChartDefinition, themeDefinitions: [] },
+  { family: 'point', recipe: ScatterChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const bubbleRuntime = resolveChartProviderRegistry([
-  { family: 'point', recipe: BubbleChartDefinition, themeDefinitions: [] },
+  { family: 'point', recipe: BubbleChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const regressionRuntime = resolveChartProviderRegistry([
-  { family: 'point', recipe: RegressionChartDefinition, themeDefinitions: [] },
+  { family: 'point', recipe: RegressionChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const connectedScatterRuntime = resolveChartProviderRegistry([
-  { family: 'point', recipe: ConnectedScatterChartDefinition, themeDefinitions: [] },
+  { family: 'point', recipe: ConnectedScatterChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const rangedDotRuntime = resolveChartProviderRegistry([
-  { family: 'point', recipe: RangedDotChartDefinition, themeDefinitions: [] },
+  { family: 'point', recipe: RangedDotChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const stripRuntime = resolveChartProviderRegistry([
-  { family: 'point', recipe: StripChartDefinition, themeDefinitions: [] },
+  { family: 'point', recipe: StripChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const resolve = <TSource extends IRChartSource>(
@@ -77,13 +77,13 @@ const resolveChart = <TSource extends IRChartSource>(
   resolveSelectedChart(source, {
     theme: DEFAULT_RESOLVED_THEME,
     recipe: definition,
-    themeDefinitions: [],
+    chartThemeDefinitions: [],
     runtime: activeRuntime,
   });
 
 const scaleDefaultsContextOf = (
   source: IRChartSource,
-  chartMarks: ReadonlyArray<IRPlotMarkOperation>,
+  chartMarks: ReadonlyArray<IRPlotMark>,
   scales: ReadonlyArray<IRPlotScaleOperation>,
 ): ChartScaleDefaultsResolveContext => ({
   identifyMark: index => `__chart.mark.${index}`,
@@ -277,7 +277,7 @@ describe('Point Chart recipe Definitions', () => {
       {
         family: 'point',
         recipe: StripChartDefinition,
-        themeDefinitions: [],
+        chartThemeDefinitions: [],
         runtimeDefinitions: { scales: [customDiscreteScale] },
       },
     ]).runtime;
@@ -788,7 +788,7 @@ describe('Point Chart recipe Definitions', () => {
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
       recipe: ScatterChartDefinition,
-      themeDefinitions: [],
+      chartThemeDefinitions: [],
       runtime,
     });
 
@@ -920,7 +920,7 @@ describe('Point Chart recipe Definitions', () => {
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
       recipe: RangedDotChartDefinition,
-      themeDefinitions: [],
+      chartThemeDefinitions: [],
       runtime: rangedDotRuntime,
     });
 
@@ -947,7 +947,7 @@ describe('Point Chart recipe Definitions', () => {
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
       recipe: RangedDotChartDefinition,
-      themeDefinitions: [],
+      chartThemeDefinitions: [],
       runtime: rangedDotRuntime,
     });
 
@@ -975,7 +975,7 @@ describe('Point Chart recipe Definitions', () => {
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
       recipe: RangedDotChartDefinition,
-      themeDefinitions: [],
+      chartThemeDefinitions: [],
       runtime: rangedDotRuntime,
     });
 
@@ -1002,10 +1002,10 @@ describe('Point Chart recipe Definitions', () => {
   });
 
   it('forwards Point offsets and labels as raw mark properties exactly once', () => {
-    const result = resolve(ScatterChartDefinition, { x: 'x', y: 'y' }, { dx: 3, dy: -2, label: { content: 'A' } });
+    const result = resolve(ScatterChartDefinition, { x: 'x', y: 'y' }, { dx: 3, dy: -2, label: { text: 'A' } });
     const [mark] = result.semanticMarks[0].plotMarks;
 
-    expect(mark).toMatchObject({ properties: { dx: 3, dy: -2, label: { content: 'A' } } });
+    expect(mark).toMatchObject({ properties: { dx: 3, dy: -2, label: { text: 'A' } } });
   });
 
   it('Regression adds ordered fits without duplicating observations and inherits sampling and style', () => {
@@ -1179,7 +1179,7 @@ describe('Point Chart recipe Definitions', () => {
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
       recipe: RegressionChartDefinition,
-      themeDefinitions: [],
+      chartThemeDefinitions: [],
       runtime: regressionRuntime,
     });
 
@@ -1201,7 +1201,7 @@ describe('Point Chart recipe Definitions', () => {
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
       recipe: RegressionChartDefinition,
-      themeDefinitions: [],
+      chartThemeDefinitions: [],
       runtime: regressionRuntime,
     });
     const [point, path] = result.plot.marks;
@@ -1231,7 +1231,7 @@ describe('Point Chart recipe Definitions', () => {
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
       recipe: ConnectedScatterChartDefinition,
-      themeDefinitions: [],
+      chartThemeDefinitions: [],
       runtime: connectedScatterRuntime,
     });
 
@@ -1298,7 +1298,7 @@ describe('Point Chart recipe Definitions', () => {
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
       recipe: RegressionChartDefinition,
-      themeDefinitions: [],
+      chartThemeDefinitions: [],
       runtime: regressionRuntime,
     });
 
@@ -1347,7 +1347,7 @@ describe('Point Chart recipe Definitions', () => {
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
       recipe: RegressionChartDefinition,
-      themeDefinitions: [],
+      chartThemeDefinitions: [],
       runtime: regressionRuntime,
     });
 
@@ -1417,7 +1417,7 @@ describe('Point Chart recipe Definitions', () => {
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
       recipe: BubbleChartDefinition,
-      themeDefinitions: [],
+      chartThemeDefinitions: [],
       runtime: bubbleRuntime,
     });
 
@@ -1449,7 +1449,7 @@ describe('Point Chart recipe Definitions', () => {
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
       recipe: BubbleChartDefinition,
-      themeDefinitions: [],
+      chartThemeDefinitions: [],
       runtime: bubbleRuntime,
     });
 
@@ -1498,7 +1498,7 @@ describe('Point Chart recipe Definitions', () => {
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
       recipe: ScatterChartDefinition,
-      themeDefinitions: [],
+      chartThemeDefinitions: [],
       runtime,
     });
 

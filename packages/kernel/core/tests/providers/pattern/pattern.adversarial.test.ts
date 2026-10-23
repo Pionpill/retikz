@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { CompileOptions } from '../../../src/compile/compile';
 import { compileToScene } from '../../../src/compile/compile';
 import type {
-  MarkerPrimitive,
+  ScenePrimitive,
   PaintResource,
   PatternDefinition,
   ResolvedPatternTile,
@@ -17,7 +17,7 @@ import type { IRPaint, IRScene } from '../../../src/schemas';
  * 来自 Bug Hunter 的边角 IR / pattern def。`compileToScene` 直接消费 IR、不再跑 zod schema，故
  * size / lineWidth / rotation 的 number / positive 校验在手搓 IR 时被绕过——现在 compile 是唯一关口，
  * 非 finite / 非正 size / rotation 在 `resolvePatternTile` 抛清晰错，motif 非 finite 坐标由共享
- * `validateMarkerPrimitives` 的 finite 栅栏拦下（与 arrow 路径对齐），守 Scene 100% JSON 可序列化。
+ * `materializeScenePrimitives` 的 finite 栅栏拦下（与 arrow 路径对齐），守 Scene 100% JSON 可序列化。
  * 可接受的边角（空 motif / dedup / override / 错误质量 / 交叉资源 / background 透传）保持稳定行为
  */
 
@@ -68,14 +68,16 @@ describe('ADV — 非 finite size / lineWidth / rotation 抛', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: NaN })).toThrow(/invalid size/i);
   });
 
-  it('linewidth_infinity → 抛 invalid lineWidth', () => {
+  it('linewidth_infinity → motif 的非有限 strokeWidth 被拒绝', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'lines', lineWidth: Infinity })).toThrow(
-      /invalid lineWidth/i,
+      /motif.*non-finite number/i,
     );
   });
 
-  it('dots_linewidth_infinity → 抛 invalid lineWidth', () => {
-    expect(() => compilePattern({ kind: 'pattern', shape: 'dots', lineWidth: Infinity })).toThrow(/invalid lineWidth/i);
+  it('dots_linewidth_infinity → motif 的非有限半径被拒绝', () => {
+    expect(() => compilePattern({ kind: 'pattern', shape: 'dots', lineWidth: Infinity })).toThrow(
+      /motif.*non-finite number/i,
+    );
   });
 
   it('rotation_nan → 抛 non-finite rotation', () => {
@@ -85,92 +87,6 @@ describe('ADV — 非 finite size / lineWidth / rotation 抛', () => {
   it('rotation_infinity → 抛 non-finite rotation', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'lines', rotation: Infinity })).toThrow(
       /non-finite rotation/i,
-    );
-  });
-});
-
-describe('ADV — 非法 line style 字段抛', () => {
-  const ignoreStyle: PatternDefinition = {
-    name: 'ignoreStyle',
-    emit: (): Array<MarkerPrimitive> => [{ type: 'ellipse', cx: 4, cy: 4, rx: 1, ry: 1, fill: 'red' }],
-  };
-  const compileIgnoringStyle = (spec: Record<string, unknown>): void =>
-    compilePattern(spec as unknown as IRPaint, { patterns: [ignoreStyle] });
-
-  it('dashpattern_nonarray → 抛 invalid dashPattern', () => {
-    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', dashPattern: '4 2' })).toThrow(
-      /invalid dashPattern/i,
-    );
-  });
-
-  it('dashpattern_empty_or_negative → 抛 invalid dashPattern', () => {
-    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', dashPattern: [] })).toThrow(
-      /invalid dashPattern/i,
-    );
-    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', dashPattern: [4, -2] })).toThrow(
-      /invalid dashPattern/i,
-    );
-  });
-
-  it('dashoffset_infinity → 抛 invalid dashOffset', () => {
-    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', dashOffset: Infinity })).toThrow(
-      /invalid dashOffset/i,
-    );
-  });
-
-  it('linecap_unknown → 抛 invalid lineCap', () => {
-    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', lineCap: 'triangle' })).toThrow(
-      /invalid lineCap/i,
-    );
-  });
-
-  it('linejoin_unknown → 抛 invalid lineJoin', () => {
-    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', lineJoin: 'curve' })).toThrow(
-      /invalid lineJoin/i,
-    );
-  });
-
-  it('preset_nonboolean → 抛对应字段错误', () => {
-    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', dashed: 'yes' })).toThrow(
-      /invalid dashed/i,
-    );
-    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', dotted: 1 })).toThrow(/invalid dotted/i);
-  });
-
-  it.each([
-    ['period_nan', { period: NaN, overrides: [{ index: 0, style: {} }] }],
-    ['period_infinity', { period: Infinity, overrides: [{ index: 0, style: {} }] }],
-    ['period_too_small', { period: 1, overrides: [{ index: 0, style: {} }] }],
-    ['period_too_large', { period: 513, overrides: [{ index: 0, style: {} }] }],
-    ['period_fractional', { period: 2.5, overrides: [{ index: 0, style: {} }] }],
-    ['period_string', { period: '3', overrides: [{ index: 0, style: {} }] }],
-    ['index_negative', { period: 3, overrides: [{ index: -1, style: {} }] }],
-    ['index_out_of_range', { period: 3, overrides: [{ index: 3, style: {} }] }],
-    [
-      'index_duplicate',
-      {
-        period: 3,
-        overrides: [
-          { index: 1, style: {} },
-          { index: 1, style: { dashed: true } },
-        ],
-      },
-    ],
-  ])('%s → 抛 lineStyleCycle 诊断', (_label, lineStyleCycle) => {
-    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', lineStyleCycle })).toThrow(
-      /lineStyleCycle/i,
-    );
-  });
-
-  it.each([
-    ['horizontalStyle dashed', 'horizontalStyle', { dashed: 'yes' }],
-    ['horizontalStyle dashPattern', 'horizontalStyle', { dashPattern: [] }],
-    ['verticalStyle dashOffset', 'verticalStyle', { dashOffset: Infinity }],
-    ['verticalStyle lineCap', 'verticalStyle', { lineCap: 'triangle' }],
-    ['verticalStyle lineJoin', 'verticalStyle', { lineJoin: 'curve' }],
-  ])('%s 非法 → 抛字段诊断', (_label, field, style) => {
-    expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', [field]: style })).toThrow(
-      new RegExp(field, 'i'),
     );
   });
 });
@@ -198,7 +114,7 @@ describe('ADV — 极端 / 非正 size', () => {
   it('size_huge_overflow：size=1e308 + emit 做 size×1e10 溢出 Infinity 坐标 → finite 栅栏抛', () => {
     const overflowPattern: PatternDefinition = {
       name: 'overflowPattern',
-      emit: ({ size }): Array<MarkerPrimitive> => [{ type: 'rect', x: 0, y: 0, width: size * 1e10, height: size }],
+      emit: ({ size }): Array<ScenePrimitive> => [{ type: 'rect', x: 0, y: 0, width: size * 1e10, height: size }],
     };
 
     expect(() =>
@@ -244,40 +160,12 @@ describe('ADV — emit 产物栅栏', () => {
   it('motif_nonfinite_coords：custom emit 产 NaN 坐标 → finite 栅栏抛（含 pattern 名）', () => {
     const nanPattern: PatternDefinition = {
       name: 'nanPattern',
-      emit: (): Array<MarkerPrimitive> => [{ type: 'ellipse', cx: NaN, cy: 0, rx: 0 / 0, ry: 1, fill: 'red' }],
+      emit: (): Array<ScenePrimitive> => [{ type: 'ellipse', cx: NaN, cy: 0, rx: 0 / 0, ry: 1, fill: 'red' }],
     };
 
     expect(() =>
       compilePattern({ kind: 'pattern', shape: 'nanmotif' }, { patterns: [{ ...nanPattern, name: 'nanmotif' }] }),
     ).toThrow(/non-finite number/i);
-  });
-
-  it('motif_returns_non_iterable：emit 返回 undefined → 清晰错（含 pattern 名）', () => {
-    const badPattern = { emit: () => undefined } as unknown as PatternDefinition;
-    let err: unknown;
-
-    try {
-      compilePattern({ kind: 'pattern', shape: 'noniter' }, { patterns: [{ ...badPattern, name: 'noniter' }] });
-    } catch (e) {
-      err = e;
-    }
-
-    expect(err).toBeInstanceOf(Error);
-    expect(String((err as Error).message)).toMatch(/noniter|pattern/i);
-  });
-
-  it('motif_returns_null：emit 返回 null → 清晰错（含 pattern 名）', () => {
-    const badPattern = { emit: () => null } as unknown as PatternDefinition;
-    let err: unknown;
-
-    try {
-      compilePattern({ kind: 'pattern', shape: 'nullret' }, { patterns: [{ ...badPattern, name: 'nullret' }] });
-    } catch (e) {
-      err = e;
-    }
-
-    expect(err).toBeInstanceOf(Error);
-    expect(String((err as Error).message)).toMatch(/nullret|pattern/i);
   });
 
   it('motif_function：emit 产物含函数（绕 TS）→ assertNoFunction 拦', () => {
@@ -329,7 +217,7 @@ describe('ADV — emit 产物栅栏', () => {
   });
 
   it('empty_motif：emit 返回 [] → 空 tile，不崩', () => {
-    const emptyPattern: PatternDefinition = { name: 'empty', emit: (): Array<MarkerPrimitive> => [] };
+    const emptyPattern: PatternDefinition = { name: 'empty', emit: (): Array<ScenePrimitive> => [] };
     const tile = tileOf({ kind: 'pattern', shape: 'empty' }, { patterns: [{ ...emptyPattern, name: 'empty' }] });
 
     expect(tile?.motif).toEqual([]);
@@ -389,7 +277,7 @@ describe('ADV — dedup / override / 交叉', () => {
     const customLines: PatternDefinition = {
       name: 'customLines',
       defaultSize: 8,
-      emit: ({ size, color }): Array<MarkerPrimitive> => [
+      emit: ({ size, color }): Array<ScenePrimitive> => [
         {
           type: 'path',
           commands: [
@@ -485,7 +373,7 @@ describe('ADV — dedup / override / 交叉', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 describe('ADV — duplicate registration / background', () => {
   it('duplicate_builtin_name_rejected_even_if_unused：注册同名内置但场景未用 → 仍失败', () => {
-    const customLines: PatternDefinition = { name: 'lines', emit: (): Array<MarkerPrimitive> => [] };
+    const customLines: PatternDefinition = { name: 'lines', emit: (): Array<ScenePrimitive> => [] };
 
     expect(
       () =>

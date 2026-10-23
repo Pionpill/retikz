@@ -14,8 +14,32 @@ export const resolveOverlayLayout = (source: IROverlayLayout): CanonicalOverlayL
   children: (source.children ?? OverlayLayoutSchema.shape.children.parse(undefined)).map(item => ({
     ...item,
     margin: resolveBoxSpacing(item.margin, 0),
-    placement: OverlayLayoutItemSchema.shape.placement.parse(item.placement),
-    offset: OverlayLayoutItemSchema.shape.offset.parse(item.offset),
+    placement:
+      item.placement === undefined
+        ? OverlayLayoutItemSchema.shape.placement.parse(undefined)
+        : item.placement.kind === 'aligned'
+          ? item.placement
+          : {
+              ...item.placement,
+              anchor: {
+                x:
+                  item.placement.anchor?.x ??
+                  OverlayLayoutItemSchema.shape.placement
+                    .unwrap()
+                    .options[1].shape.anchor.unwrap()
+                    .shape.x.parse(undefined),
+                y:
+                  item.placement.anchor?.y ??
+                  OverlayLayoutItemSchema.shape.placement
+                    .unwrap()
+                    .options[1].shape.anchor.unwrap()
+                    .shape.y.parse(undefined),
+              },
+            },
+    offset: {
+      x: item.offset?.x ?? OverlayLayoutItemSchema.shape.offset.unwrap().shape.x.parse(undefined),
+      y: item.offset?.y ?? OverlayLayoutItemSchema.shape.offset.unwrap().shape.y.parse(undefined),
+    },
     sizeParticipation: item.sizeParticipation ?? OverlayLayoutItemSchema.shape.sizeParticipation.parse(undefined),
     zIndex: item.zIndex ?? OverlayLayoutItemSchema.shape.zIndex.parse(undefined),
   })),

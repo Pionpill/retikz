@@ -27,29 +27,26 @@ const resolveConnection = (
   return { route, path };
 };
 
-/** 骨架结构只转换符号与显式分支 */
-const skeletonItems = (items: NonNullable<IRChainSkeleton['items']>): Array<IRChainItem> =>
-  items.map(item =>
-    typeof item === 'string'
-      ? item === ''
-        ? { kind: 'cell' }
-        : item
-      : { kind: 'parallel', branches: item.branches.map(branchItems => ({ items: skeletonItems(branchItems) })) },
-  );
-
 /** 解析三入口及各并行块的字段继承 */
 export const resolveChain = (source: IRChain): CanonicalChain => {
-  const layout = ChainParallelLayoutSchema.parse(
-    source.layout === undefined
-      ? {}
-      : {
-          gap: source.layout.gap,
-          branchGap: source.layout.branchGap,
-          branchAlign: source.layout.branchAlign,
-          spacing: source.layout.spacing,
-          justify: source.layout.justify,
-        },
-  );
+  /** 骨架结构只转换符号与显式分支 */
+  const skeletonItems = (items: NonNullable<IRChainSkeleton['items']>): Array<IRChainItem> =>
+    items.map(item =>
+      typeof item === 'string'
+        ? item === ''
+          ? { kind: 'cell' }
+          : item
+        : { kind: 'parallel', branches: item.branches.map(branchItems => ({ items: skeletonItems(branchItems) })) },
+    );
+
+  const resolveLayout = (value: IRChain['layout']): CanonicalChainLayout => ({
+    gap: value?.gap ?? ChainParallelLayoutSchema.shape.gap.parse(undefined),
+    branchGap: value?.branchGap ?? ChainParallelLayoutSchema.shape.branchGap.parse(undefined),
+    branchAlign: value?.branchAlign ?? ChainParallelLayoutSchema.shape.branchAlign.parse(undefined),
+    spacing: value?.spacing ?? ChainParallelLayoutSchema.shape.spacing.parse(undefined),
+    justify: value?.justify ?? ChainParallelLayoutSchema.shape.justify.parse(undefined),
+  });
+  const layout = resolveLayout(source.layout);
 
   const connection = resolveConnection(source.defaultConnection);
   const visit = (
@@ -67,7 +64,7 @@ export const resolveChain = (source: IRChain): CanonicalChain => {
           }),
         };
 
-      const nestedLayout = ChainParallelLayoutSchema.parse({ ...parentLayout, ...item.layout });
+      const nestedLayout = resolveLayout({ ...parentLayout, ...item.layout });
       const nestedConnection = resolveConnection(item.defaultConnection, parentConnection);
 
       return {

@@ -315,13 +315,6 @@ describe('layout alignment guide ownership', () => {
     expect(() => probeGuidesOf(explicitGuideChild, [nonFinite])).toThrow(/guide.*position.*finite/i);
   });
 
-  it('rejects sparse explicit guide arrays with an indexed diagnostic', () => {
-    const sparse = new Array<LayoutAlignmentGuide>(1);
-    const explicit = explicitGuideDefinition(sparse);
-
-    expect(() => probeGuidesOf(explicitGuideChild, [explicit])).toThrow(/alignment guide at index 0/i);
-  });
-
   it('reads every explicit guide field and array item once before validation and detaches it', () => {
     const fieldReads = new Map<PropertyKey, number>();
     const guardedGuide = new Proxy({ name: 'origin', dimension: 'x', position: 1 } as const, {

@@ -20,7 +20,6 @@ describe('Inspection diagnostics', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: strictObject({ ok: boolean() }),
         optionsSchema: strictObject({}),
         resolveOptions: options => options,
         inspect: (_subject, context) => {

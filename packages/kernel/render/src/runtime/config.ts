@@ -4,8 +4,7 @@ import type { RuntimeDeepReadonly } from '@retikz/reconciler';
 import type { AnimationPropertyRegistry, EasingRegistry } from '../animation';
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { HydrationHandlers } from '../hydration';
-import { RetikzEvent } from '../hydration';
-import { cloneAndFreezeRuntimeValue, isPlainObject } from './shared';
+import { cloneAndFreezeRuntimeValue } from './shared';
 
 /** Render runtime config 的固定 owner key */
 export const RENDER_RUNTIME_SOURCE_KEY = '@retikz/render:runtime-config' as const;
@@ -61,250 +60,39 @@ const invalidRuntimeInput = (cause: unknown): never => {
   throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid, cause });
 };
 
-/** 只从 own data descriptors 捕获稠密数组，避免继承方法或 accessor 参与校验 */
-const captureDenseArray = (value: unknown): ReadonlyArray<unknown> | undefined => {
-  if (!Array.isArray(value)) return undefined;
-
-  const keys = Reflect.ownKeys(value);
-  const lengthDescriptor = Object.getOwnPropertyDescriptor(value, 'length');
-  if (
-    lengthDescriptor === undefined ||
-    lengthDescriptor.enumerable ||
-    !('value' in lengthDescriptor) ||
-    typeof lengthDescriptor.value !== 'number' ||
-    !Number.isSafeInteger(lengthDescriptor.value) ||
-    lengthDescriptor.value < 0 ||
-    keys.length !== lengthDescriptor.value + 1 ||
-    keys.some(key => typeof key !== 'string')
-  ) {
-    return undefined;
-  }
-
-  const captured: Array<unknown> = [];
-
-  for (let index = 0; index < lengthDescriptor.value; index += 1) {
-    const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
-    if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) return undefined;
-    captured.push(descriptor.value);
-  }
-
-  return captured;
-};
-
-const assertPlainRecord: (value: unknown) => asserts value is Record<PropertyKey, unknown> = value => {
-  if (typeof value !== 'object' || value === null || Array.isArray(value) || !isPlainObject(value)) {
-    return invalidRuntimeInput(value);
-  }
-};
-
-/** 读取已经证明为 enumerable data property 的值，不触发用户 accessor */
-const readDataProperty = (value: object, key: PropertyKey): unknown => {
-  const descriptor = Object.getOwnPropertyDescriptor(value, key);
-  if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
-    return invalidRuntimeInput(value);
-  }
-
-  return descriptor.value;
-};
-
-const assertAllowedKeys = (value: object, allowed: ReadonlySet<string>): void => {
-  for (const key of Reflect.ownKeys(value)) {
-    if (typeof key !== 'string' || !allowed.has(key)) return invalidRuntimeInput(value);
-    readDataProperty(value, key);
-  }
-};
-
-const defineCapturedValue = (target: Record<PropertyKey, unknown>, key: string, value: unknown): void => {
-  Object.defineProperty(target, key, {
-    value,
-    enumerable: true,
-    configurable: false,
-    writable: false,
-  });
-};
-
-const captureHandlers = (handlers: unknown): HydrationHandlers => {
-  assertPlainRecord(handlers);
-  const captured = Object.create(null) as Record<PropertyKey, unknown>;
-  const eventNames = new Set<string>(Object.values(RetikzEvent));
-
-  for (const identifier of Reflect.ownKeys(handlers)) {
-    if (typeof identifier !== 'string') return invalidRuntimeInput(handlers);
-
-    const elementHandlers = readDataProperty(handlers, identifier);
-    assertPlainRecord(elementHandlers);
-    const capturedElement = Object.create(null) as Record<PropertyKey, unknown>;
-
-    for (const eventName of Reflect.ownKeys(elementHandlers)) {
-      if (typeof eventName !== 'string' || !eventNames.has(eventName)) {
-        return invalidRuntimeInput(elementHandlers);
-      }
-
-      const handler = readDataProperty(elementHandlers, eventName);
-      if (typeof handler !== 'function') return invalidRuntimeInput(elementHandlers);
-
-      defineCapturedValue(capturedElement, eventName, handler);
-    }
-
-    defineCapturedValue(captured, identifier, capturedElement);
-  }
-
-  return captured as HydrationHandlers;
-};
-
-const captureRegistry = <TValue>(
-  value: unknown,
-  captureEntry: (entry: unknown) => TValue,
-): Record<string, TValue> | undefined => {
-  if (value === undefined) return undefined;
-
-  assertPlainRecord(value);
-  const captured = Object.create(null) as Record<PropertyKey, unknown>;
-
-  for (const key of Reflect.ownKeys(value)) {
-    if (typeof key !== 'string') return invalidRuntimeInput(value);
-    defineCapturedValue(captured, key, captureEntry(readDataProperty(value, key)));
-  }
-
-  return captured as Record<string, TValue>;
-};
-
-const captureEasing = (entry: unknown): EasingRegistry[string] => {
-  if (typeof entry === 'function') return entry as EasingRegistry[string];
-
-  const tuple = captureDenseArray(entry);
-  if (
-    tuple === undefined ||
-    tuple.length !== 4 ||
-    !tuple.every(item => typeof item === 'number' && Number.isFinite(item))
-  ) {
-    return invalidRuntimeInput(entry);
-  }
-
-  return tuple as EasingRegistry[string];
-};
-
-const captureAnimationProperty = (entry: unknown): AnimationPropertyRegistry[string] => {
-  assertPlainRecord(entry);
-  assertAllowedKeys(entry, new Set(['interpolate', 'applyCanvas']));
-  const interpolate = readDataProperty(entry, 'interpolate');
-  const applyCanvas = readDataProperty(entry, 'applyCanvas');
-  if (typeof interpolate !== 'function' || typeof applyCanvas !== 'function') return invalidRuntimeInput(entry);
-
-  return {
-    interpolate: interpolate as AnimationPropertyRegistry[string]['interpolate'],
-    applyCanvas: applyCanvas as AnimationPropertyRegistry[string]['applyCanvas'],
-  };
-};
-
-const normalizeContributions = (value: unknown): ReadonlyArray<RenderHandlerContribution> | undefined => {
-  if (value === undefined) return undefined;
-
-  const captured = captureDenseArray(value);
-  if (captured === undefined) return invalidRuntimeInput(value);
-
-  const registrations = new Set<number>();
-  const contributions = captured.map(candidate => {
-    assertPlainRecord(candidate);
-    assertAllowedKeys(candidate, new Set(['registration', 'handlers']));
-    const registration = readDataProperty(candidate, 'registration');
-    const handlers = readDataProperty(candidate, 'handlers');
-    if (
-      typeof registration !== 'number' ||
-      !Number.isSafeInteger(registration) ||
-      registration < 0 ||
-      registrations.has(registration)
-    ) {
-      return invalidRuntimeInput(candidate);
-    }
-
-    registrations.add(registration);
-
-    return { registration, handlers: captureHandlers(handlers) };
-  });
-
-  return contributions.sort((left, right) => left.registration - right.registration);
-};
-
+/** 捕获一次配置快照，并检查数值范围和本次注册关系 */
 export const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRuntimeConfig => {
   try {
-    const candidate: unknown = input;
-    assertPlainRecord(candidate);
-    assertAllowedKeys(candidate, new Set(['handlerContributions', 'animation', 'canvas', 'cachePolicy']));
-    const cachePolicy = Object.hasOwn(candidate, 'cachePolicy')
-      ? readDataProperty(candidate, 'cachePolicy')
-      : undefined;
-    if (cachePolicy !== undefined && !Object.values(RenderCachePolicy).includes(cachePolicy as RenderCachePolicy)) {
-      return invalidRuntimeInput(input);
+    const captured = cloneAndFreezeRuntimeValue(input);
+    const registrations = new Set<number>();
+    const contributions = captured.handlerContributions
+      ?.map(contribution => {
+        const { registration } = contribution;
+        if (!Number.isSafeInteger(registration) || registration < 0 || registrations.has(registration)) {
+          return invalidRuntimeInput(contribution);
+        }
+        registrations.add(registration);
+        return contribution;
+      })
+      .sort((left, right) => left.registration - right.registration);
+    const { animation, canvas, cachePolicy } = captured;
+    if (animation?.snapshotAt !== undefined && (!Number.isFinite(animation.snapshotAt) || animation.snapshotAt < 0)) {
+      return invalidRuntimeInput(animation);
     }
-
-    const contributions = normalizeContributions(
-      Object.hasOwn(candidate, 'handlerContributions')
-        ? readDataProperty(candidate, 'handlerContributions')
-        : undefined,
-    );
-    const animation = Object.hasOwn(candidate, 'animation') ? readDataProperty(candidate, 'animation') : undefined;
-    let normalizedAnimation: RenderRuntimeConfigInput['animation'];
-    if (animation !== undefined) {
-      assertPlainRecord(animation);
-      assertAllowedKeys(animation, new Set(['enabled', 'snapshotAt', 'easings', 'properties']));
-      const enabled = Object.hasOwn(animation, 'enabled') ? readDataProperty(animation, 'enabled') : undefined;
-      const snapshotAt = Object.hasOwn(animation, 'snapshotAt') ? readDataProperty(animation, 'snapshotAt') : undefined;
-      const easings = captureRegistry(
-        Object.hasOwn(animation, 'easings') ? readDataProperty(animation, 'easings') : undefined,
-        captureEasing,
-      );
-      const properties = captureRegistry(
-        Object.hasOwn(animation, 'properties') ? readDataProperty(animation, 'properties') : undefined,
-        captureAnimationProperty,
-      );
-      if (enabled !== undefined && typeof enabled !== 'boolean') return invalidRuntimeInput(animation);
-      if (
-        snapshotAt !== undefined &&
-        (typeof snapshotAt !== 'number' || !Number.isFinite(snapshotAt) || snapshotAt < 0)
-      ) {
-        return invalidRuntimeInput(animation);
-      }
-
-      normalizedAnimation = {
-        ...(enabled === undefined ? {} : { enabled }),
-        ...(snapshotAt === undefined ? {} : { snapshotAt }),
-        ...(easings === undefined ? {} : { easings }),
-        ...(properties === undefined ? {} : { properties }),
-      };
+    for (const easing of Object.values(animation?.easings ?? {})) {
+      if (typeof easing !== 'function' && !easing.every(Number.isFinite)) return invalidRuntimeInput(easing);
     }
-
-    const canvas = Object.hasOwn(candidate, 'canvas') ? readDataProperty(candidate, 'canvas') : undefined;
-    let normalizedCanvas: RenderRuntimeConfigInput['canvas'];
-    if (canvas !== undefined) {
-      assertPlainRecord(canvas);
-      assertAllowedKeys(canvas, new Set(['width', 'height']));
-      const width = Object.hasOwn(canvas, 'width') ? readDataProperty(canvas, 'width') : undefined;
-      const height = Object.hasOwn(canvas, 'height') ? readDataProperty(canvas, 'height') : undefined;
-      if (width !== undefined && (typeof width !== 'number' || !Number.isFinite(width) || width < 0)) {
-        return invalidRuntimeInput(canvas);
-      }
-
-      if (height !== undefined && (typeof height !== 'number' || !Number.isFinite(height) || height < 0)) {
-        return invalidRuntimeInput(canvas);
-      }
-
-      normalizedCanvas = {
-        ...(width === undefined ? {} : { width }),
-        ...(height === undefined ? {} : { height }),
-      };
+    for (const dimension of [canvas?.width, canvas?.height]) {
+      if (dimension !== undefined && (!Number.isFinite(dimension) || dimension < 0)) return invalidRuntimeInput(canvas);
     }
-
-    const normalized = {
-      ...(contributions === undefined ? {} : { handlerContributions: contributions }),
-      ...(normalizedAnimation === undefined ? {} : { animation: normalizedAnimation }),
-      ...(normalizedCanvas === undefined ? {} : { canvas: normalizedCanvas }),
-      ...(cachePolicy === undefined ? {} : { cachePolicy: cachePolicy as RenderCachePolicy }),
-    };
-
-    return cloneAndFreezeRuntimeValue(normalized);
+    return Object.freeze({
+      ...(contributions === undefined ? {} : { handlerContributions: Object.freeze(contributions) }),
+      ...(animation === undefined ? {} : { animation }),
+      ...(canvas === undefined ? {} : { canvas }),
+      ...(cachePolicy === undefined ? {} : { cachePolicy }),
+    });
   } catch (cause) {
-    if (isRetikzRenderError(cause)) throw cause;
+    if (isRetikzRenderError(cause) && cause.code === RetikzRenderErrorCode.RetainedRuntimeInputInvalid) throw cause;
     return invalidRuntimeInput(cause);
   }
 };

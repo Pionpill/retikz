@@ -33,7 +33,7 @@ describe('Node auto-contrast textColor keyword', () => {
         text: [
           { text: 'line', fill: 0.6 },
           {
-            runs: [
+            segments: [
               { text: 'run', fill: 0.5 },
               { tex: 'x', fill: 0.4 },
             ],

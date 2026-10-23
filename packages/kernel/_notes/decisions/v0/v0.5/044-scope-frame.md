@@ -5,7 +5,7 @@ keywords: Scope、frame、包络、背景、padding、图案、shadow、无环�
 
 # ADR-044：Scope 内容包络外框
 
-- 状态：Accepted
+- 状态：Superseded（外框能力由 [068](./068-remove-scope-frame.md) 移除，Scene hitTest 契约保留）
 - 决策日期：2026-09-19
 - 关联：[v0.5 roadmap](./roadmap.md) · [Scope 锚点与变换](./002-scope-anchor-and-transform-pivot.md) · [完整 Scope 输出](./020-layout-aware-scope-output.md) · [组效果边界](../v0.4/030-group-scope-effect-boundary.md) · [Drawing Complete](../../../architecture/core-drawing-complete.md)
 

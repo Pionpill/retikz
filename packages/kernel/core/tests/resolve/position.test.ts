@@ -8,7 +8,7 @@ import type { IRNodeTarget, IRPosition, IRTransform } from '../../src/schemas';
 
 const rectangleBoundary: BoundaryReferenceResolution = {
   name: 'rectangle',
-  definition: BUILTIN_SHAPES.rectangle,
+  definition: BUILTIN_SHAPES.get('rectangle')!,
   params: {},
   isShape: true,
 };
@@ -21,7 +21,7 @@ const reference = (
   const node: NodeReferenceView = {
     id,
     shapeName: 'rectangle',
-    shapeDef: BUILTIN_SHAPES.rectangle,
+    shapeDef: BUILTIN_SHAPES.get('rectangle')!,
     shapeParams: {},
     rect: { x: center[0], y: center[1], width: 20, height: 10 },
     margin: { top: 0, right: 0, bottom: 0, left: 0 },

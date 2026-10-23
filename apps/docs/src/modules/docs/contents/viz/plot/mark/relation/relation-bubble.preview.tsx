@@ -25,7 +25,7 @@ export const RelationBubblePreview = (values: RelationBubblePreviewValues) => {
           size: 'value',
           color: 'segment',
           anchorId: 'id',
-          label: { content: 'label' },
+          label: { text: 'label' },
           position: { x: { field: 'x' }, y: { field: 'y' } },
         }}
         properties={{
@@ -52,11 +52,11 @@ export const RelationBubblePreview = (values: RelationBubblePreviewValues) => {
             kind: 'path',
             label: {
               position: values.labelPosition,
-              ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
+              side: labelSide,
               sloped: values.labelSloped,
               textColor: 'currentColor',
             },
-            options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], roundedCorners: 8 },
+            options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], cornerRadius: 8 },
           },
         }}
       />

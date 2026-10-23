@@ -7,4 +7,4 @@ export * from './plan';
 export * from './preparation';
 export * from './presentation';
 export * from './structure/public';
-export * from './theme-style';
+export * from './theme';

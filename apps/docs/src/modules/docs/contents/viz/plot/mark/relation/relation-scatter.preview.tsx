@@ -32,7 +32,7 @@ export const RelationScatterPreview = (values: RelationScatterPreviewValues) => 
         encodings={{
           anchorId: 'id',
           color: 'group',
-          label: { content: 'label' },
+          label: { text: 'label' },
           position: { x: { field: 'x' }, y: { field: 'y' } },
         }}
         properties={{
@@ -62,7 +62,7 @@ export const RelationScatterPreview = (values: RelationScatterPreviewValues) => 
             kind: 'path',
             label: {
               position: values.labelPosition,
-              ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
+              side: labelSide,
               sloped: values.labelSloped,
               textColor: 'currentColor',
             },

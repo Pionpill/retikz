@@ -4,16 +4,16 @@ import { renderToSvgString } from '@retikz/vanilla';
 
 import type { RenderTable, RenderTableArtifactOptions, RenderTableArtifactResult, RenderTableOptions } from './types';
 
-/** 判断 renderTable 是否请求 artifact sidecar */
-const requestsArtifacts = (
-  options: RenderTableOptions | RenderTableArtifactOptions,
-): options is RenderTableArtifactOptions => options.artifacts === true;
-
 /** 执行 Table schema 校验、lowering、Core compile 与 SVG 输出 */
 const renderTableImpl = (
   spec: IRTable,
   options: RenderTableOptions | RenderTableArtifactOptions = {},
 ): string | RenderTableArtifactResult => {
+  /** 判断 renderTable 是否请求 artifact sidecar */
+  const requestsArtifacts = (
+    renderOptions: RenderTableOptions | RenderTableArtifactOptions,
+  ): renderOptions is RenderTableArtifactOptions => renderOptions.artifacts === true;
+
   const data = options.data ?? {};
   const lowerOptions = options.lowerOptions ?? {};
   const result = compileTable(spec, data, {

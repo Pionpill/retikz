@@ -10,7 +10,7 @@ import {
   PreviewContextBar,
   PreviewThemeBoundary,
 } from '../../src/modules/docs/components/component-preview/context-bar';
-import { PreviewThemeStyle } from '../../src/modules/docs/components/component-preview/theme';
+import { PreviewTheme } from '../../src/modules/docs/components/component-preview/theme';
 
 beforeAll(async () => {
   await i18n.changeLanguage('zh');
@@ -36,24 +36,24 @@ describe('PreviewContextBar', () => {
     expect(markup).not.toContain('border-b');
   });
 
-  it('启用后在暗色 toggle 右侧追加纯图标 ThemeStyle 菜单', () => {
+  it('启用后在暗色 toggle 右侧追加纯图标 Theme 菜单', () => {
     const markup = renderToStaticMarkup(
       <PreviewContextBar
         themeMode="inherit"
         onThemeModeChange={() => undefined}
         enableThemeSwitch
-        themeStyle={PreviewThemeStyle.Academic}
-        themeStyleSelection="inherit"
-        onThemeStyleChange={() => undefined}
+        themeName={PreviewTheme.Academic}
+        themeNameSelection="inherit"
+        onThemeChange={() => undefined}
       />,
     );
 
-    expect(markup).toContain('aria-label="Theme style"');
+    expect(markup).toContain('aria-label="Theme"');
     expect(markup).toContain('lucide-graduation-cap');
-    expect(markup.indexOf('Preview theme dark')).toBeLessThan(markup.indexOf('aria-label="Theme style"'));
+    expect(markup.indexOf('Preview theme dark')).toBeLessThan(markup.indexOf('aria-label="Theme"'));
   });
 
-  it('把 ThemeStyle 菜单显示为与明暗 ToggleGroup 分隔的独立按钮', async () => {
+  it('把 Theme 菜单显示为与明暗 ToggleGroup 分隔的独立按钮', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -63,9 +63,9 @@ describe('PreviewContextBar', () => {
           themeMode="inherit"
           onThemeModeChange={() => undefined}
           enableThemeSwitch
-          themeStyle={PreviewThemeStyle.Academic}
-          themeStyleSelection="inherit"
-          onThemeStyleChange={() => undefined}
+          themeName={PreviewTheme.Academic}
+          themeNameSelection="inherit"
+          onThemeChange={() => undefined}
         />,
       );
     });
@@ -81,7 +81,7 @@ describe('PreviewContextBar', () => {
     await act(() => root.unmount());
   });
 
-  it('ThemeStyle 下拉打开后保持原上下文栏可见', async () => {
+  it('Theme 下拉打开后保持原上下文栏可见', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -91,9 +91,9 @@ describe('PreviewContextBar', () => {
           themeMode="inherit"
           onThemeModeChange={() => undefined}
           enableThemeSwitch
-          themeStyle={PreviewThemeStyle.Academic}
-          themeStyleSelection="inherit"
-          onThemeStyleChange={() => undefined}
+          themeName={PreviewTheme.Academic}
+          themeNameSelection="inherit"
+          onThemeChange={() => undefined}
         />,
       );
     });

@@ -6,7 +6,8 @@ import {
   GraphicOpacitySchema,
   GraphicPaintSchema,
   GraphicStyleSchema,
-  PathBaseSchema,
+  GraphicStrokeSchema,
+  NodeStrokeSchema,
   PathDecorationSchema,
   PathDefaultSchema,
   PathFillSchema,
@@ -14,8 +15,8 @@ import {
   PathSchema,
   PathStrokeSchema,
   PathStructureSchema,
+  PathTransformSchema,
   StrokePathSchema,
-  StrokeStyleSchema,
 } from '../../src';
 
 const steps = [
@@ -52,22 +53,37 @@ describe('Core atomic drawing contracts', () => {
   it('parses shared stroke style and path stroke fragments', () => {
     const stroke = { strokeWidth: 2, dashPattern: [4, 2], dashOffset: -1 };
 
-    expect(StrokeStyleSchema.parse(stroke)).toEqual(stroke);
-    expect(StrokeStyleSchema.safeParse({ strokeWidth: -1 }).success).toBe(false);
-    expect(StrokeStyleSchema.safeParse({ dashPattern: [] }).success).toBe(false);
-    expect(StrokeStyleSchema.safeParse({ dashPattern: [4, -2] }).success).toBe(false);
+    expect(GraphicStrokeSchema.parse(stroke)).toEqual(stroke);
+    expect(GraphicStrokeSchema.safeParse({ strokeWidth: -1 }).success).toBe(false);
+    expect(GraphicStrokeSchema.safeParse({ dashPattern: [] }).success).toBe(false);
+    expect(GraphicStrokeSchema.safeParse({ dashPattern: [4, -2] }).success).toBe(false);
 
-    const pathStroke = { ...stroke, lineCap: 'round' as const, lineJoin: 'bevel' as const };
+    const graphicStroke = { ...stroke, stroke: 'red' };
+    expect(GraphicStrokeSchema.parse(graphicStroke)).toEqual(graphicStroke);
+    expect(GraphicStrokeSchema.safeParse({ dashed: true }).success).toBe(false);
+    expect(GraphicStyleSchema.safeParse({ dashPattern: [4, 2] }).success).toBe(true);
+    expect(CascadingGraphicStyleSchema.safeParse({ dashOffset: 1 }).success).toBe(true);
+    expect(NodeStrokeSchema.parse({ ...graphicStroke, dashed: true, dotted: true })).toEqual({
+      ...graphicStroke,
+      dashed: true,
+      dotted: true,
+    });
+    expect(NodeStrokeSchema.safeParse({ lineCap: 'round' }).success).toBe(true);
+
+    const pathStroke = { ...graphicStroke, lineCap: 'round' as const, lineJoin: 'bevel' as const };
 
     expect(PathStrokeSchema.parse(pathStroke)).toEqual(pathStroke);
     expect(PathStrokeSchema.safeParse({ ...pathStroke, fillRule: 'evenodd' }).success).toBe(false);
+    expect(PathStrokeSchema.safeParse({ dashed: true }).success).toBe(false);
   });
 
   it('parses path fill, geometry, decoration, and structure independently', () => {
+    expect(PathTransformSchema.parse({ rotate: 30, scale: 2 })).toEqual({ rotate: 30, scale: 2 });
+    expect(PathTransformSchema.safeParse({ cornerRadius: 3 }).success).toBe(false);
     expect(PathFillSchema.parse({ fillRule: 'evenodd' })).toEqual({ fillRule: 'evenodd' });
     expect(PathFillSchema.safeParse({ lineCap: 'round' }).success).toBe(false);
 
-    const geometry = { roundedCorners: 3, rotate: 45, scale: 2, children: steps };
+    const geometry = { cornerRadius: 3, rotate: 45, scale: 2, children: steps };
 
     expect(PathGeometrySchema.parse(geometry)).toEqual(geometry);
     expect(PathGeometrySchema.safeParse({ scale: 0 }).success).toBe(false);
@@ -88,7 +104,7 @@ describe('Core atomic drawing contracts', () => {
     const path = {
       type: 'path' as const,
       children: steps,
-      roundedCorners: 2,
+      cornerRadius: 2,
       rotate: 15,
       scale: 1.25,
       label: { text: 'edge' },
@@ -116,15 +132,15 @@ describe('Core atomic drawing contracts', () => {
     expect(GraphicStyleSchema.shape.stroke).toBe(GraphicPaintSchema.shape.stroke);
     expect(GraphicStyleSchema.shape.opacity).toBe(GraphicOpacitySchema.shape.opacity);
     expect(GraphicStyleSchema.shape.shadow).toBe(GraphicEffectsSchema.shape.shadow);
-    expect(GraphicStyleSchema.shape.strokeWidth).toBe(StrokeStyleSchema.shape.strokeWidth);
-    expect(CascadingGraphicStyleSchema.shape.strokeWidth).toBe(StrokeStyleSchema.shape.strokeWidth);
-    expect(PathBaseSchema.shape.type).toBe(PathStructureSchema.shape.type);
-    expect(PathBaseSchema.shape.kind).toBe(PathStructureSchema.shape.kind);
-    expect(PathBaseSchema.shape.style.unwrap().shape.dashPattern).toBe(PathStrokeSchema.shape.dashPattern);
-    expect(PathBaseSchema.shape.style.unwrap().shape.fillRule).toBe(PathFillSchema.shape.fillRule);
-    expect(PathBaseSchema.shape.children).toBe(PathGeometrySchema.shape.children);
-    expect(PathBaseSchema.shape.label).toBe(PathDecorationSchema.shape.label);
-    expect(PathBaseSchema.shape.marks).toBe(PathDecorationSchema.shape.marks);
+    expect(GraphicStyleSchema.shape.strokeWidth).toBe(GraphicStrokeSchema.shape.strokeWidth);
+    expect(CascadingGraphicStyleSchema.shape.strokeWidth).toBe(GraphicStrokeSchema.shape.strokeWidth);
+    expect(PathSchema.shape.type).toBe(PathStructureSchema.shape.type);
+    expect(PathSchema.shape.kind).toBe(PathStructureSchema.shape.kind);
+    expect(PathSchema.shape.style.unwrap().shape.dashPattern).toBe(PathStrokeSchema.shape.dashPattern);
+    expect(PathSchema.shape.style.unwrap().shape.fillRule).toBe(PathFillSchema.shape.fillRule);
+    expect(PathSchema.shape.children).toBe(PathGeometrySchema.shape.children);
+    expect(PathSchema.shape.label).toBe(PathDecorationSchema.shape.label);
+    expect(PathSchema.shape.marks).toBe(PathDecorationSchema.shape.marks);
     expect(PathDefaultSchema.shape.style.unwrap().shape.color).toBe(GraphicStyleSchema.shape.color);
     expect(PathDefaultSchema.shape.style.unwrap().shape.shadow).toBe(GraphicStyleSchema.shape.shadow);
     expect(PathDefaultSchema.shape.style.unwrap().shape.strokeWidth).toBe(PathStrokeSchema.shape.strokeWidth);
@@ -141,7 +157,7 @@ describe('Core atomic drawing contracts', () => {
       dashPattern: [4, 2],
       lineJoin: 'round' as const,
       fillRule: 'evenodd' as const,
-      roundedCorners: 4,
+      cornerRadius: 4,
       scale: { x: 1.5, y: 2 },
       label: { text: 'edge' },
       marks: [mark],
@@ -152,14 +168,12 @@ describe('Core atomic drawing contracts', () => {
       ...GraphicPaintSchema.parse(JSON.parse(JSON.stringify({ color: value.color }))),
       ...GraphicOpacitySchema.parse(JSON.parse(JSON.stringify({ opacity: value.opacity }))),
       ...GraphicEffectsSchema.parse(JSON.parse(JSON.stringify({ shadow: value.shadow }))),
-      ...StrokeStyleSchema.parse(
+      ...GraphicStrokeSchema.parse(
         JSON.parse(JSON.stringify({ strokeWidth: value.strokeWidth, dashPattern: value.dashPattern })),
       ),
       ...PathStrokeSchema.parse(JSON.parse(JSON.stringify({ lineJoin: value.lineJoin }))),
       ...PathFillSchema.parse(JSON.parse(JSON.stringify({ fillRule: value.fillRule }))),
-      ...PathGeometrySchema.parse(
-        JSON.parse(JSON.stringify({ roundedCorners: value.roundedCorners, scale: value.scale })),
-      ),
+      ...PathGeometrySchema.parse(JSON.parse(JSON.stringify({ cornerRadius: value.cornerRadius, scale: value.scale }))),
       ...PathDecorationSchema.parse(JSON.parse(JSON.stringify({ label: value.label, marks: value.marks }))),
       ...PathStructureSchema.parse(JSON.parse(JSON.stringify({ type: value.type, kind: value.kind }))),
     };

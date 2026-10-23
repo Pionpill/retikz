@@ -11,10 +11,6 @@ export type TransformRowGroup = {
   values: ExternalRow;
 };
 
-/** 生成分组 key；缺失值按 null 参与序列化，保证同组缺失值稳定合并 */
-const groupKeyOf = (row: ExternalRow, fields: ReadonlyArray<string>): string =>
-  JSON.stringify(fields.map(field => resolveFieldPath(row, field) ?? null));
-
 /** 按字段列表逐层分组，每层保留父组内键值首次出现顺序，组内成员保持输入顺序 */
 export const groupRowsByFields = (
   rows: Array<ExternalRow>,
@@ -26,6 +22,10 @@ export const groupRowsByFields = (
 
   /** 按当前字段拆分父组，并按插入顺序展开下一层 */
   const appendGroups = (members: Array<ExternalRow>, fieldIndex: number): void => {
+    /** 生成分组 key；缺失值按 null 参与序列化，保证同组缺失值稳定合并 */
+    const groupKeyOf = (row: ExternalRow, groupFields: ReadonlyArray<string>): string =>
+      JSON.stringify(groupFields.map(field => resolveFieldPath(row, field) ?? null));
+
     if (fieldIndex === fields.length) {
       const row = members[0];
       const values: ExternalRow = {};

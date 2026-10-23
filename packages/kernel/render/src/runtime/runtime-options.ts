@@ -1,3 +1,5 @@
+import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
+import { visitSceneContent } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
 import type { RuntimeScenePrimitive, SceneRuntimeSnapshot } from '@retikz/reconciler';
 import type { SceneIdentity } from '@retikz/reconciler';
@@ -34,6 +36,26 @@ const primitiveAtPath = (
   }
 
   return primitive;
+};
+
+/** 收集当前 occurrence 及资源内容的轨道，不纳入独立 authoring 子节点 */
+export const occurrenceAnimationTracks = (
+  primitive: RuntimeScenePrimitive | undefined,
+  resources: SceneRuntimeSnapshot['scene']['resources'],
+): Array<IRAnimationTrack> => {
+  if (!primitive) return [];
+  const content = primitive as unknown as ScenePrimitive;
+  const tracks: Array<IRAnimationTrack> = [];
+  visitSceneContent(
+    {
+      primitives: [content.type === 'group' ? { ...content, children: [] } : content],
+      resources: resources as unknown as Scene['resources'],
+    },
+    current => {
+      if (current.animations) tracks.push(...current.animations);
+    },
+  );
+  return tracks;
 };
 
 /** Animated occurrence descriptor 变化类型 */
@@ -74,16 +96,15 @@ export const diffSceneAnimationDescriptors = (
 ): SceneAnimationDescriptorDiff => {
   const currentEntries =
     current?.topology.flatMap(node => {
-      const animations = primitiveAtPath(current, node.primitivePath)?.animations;
-      return animations === undefined || animations.length === 0
-        ? []
-        : ([[node.identity, { animations, publicId: node.publicId }]] as const);
+      const animations = occurrenceAnimationTracks(
+        primitiveAtPath(current, node.primitivePath),
+        current.scene.resources,
+      );
+      return animations.length === 0 ? [] : ([[node.identity, { animations, publicId: node.publicId }]] as const);
     }) ?? [];
   const nextEntries = next.topology.flatMap(node => {
-    const animations = primitiveAtPath(next, node.primitivePath)?.animations;
-    return animations === undefined || animations.length === 0
-      ? []
-      : ([[node.identity, { animations, publicId: node.publicId }]] as const);
+    const animations = occurrenceAnimationTracks(primitiveAtPath(next, node.primitivePath), next.scene.resources);
+    return animations.length === 0 ? [] : ([[node.identity, { animations, publicId: node.publicId }]] as const);
   });
   const currentByIdentity = createSceneIdentityMap(currentEntries);
   const nextByIdentity = createSceneIdentityMap(nextEntries);

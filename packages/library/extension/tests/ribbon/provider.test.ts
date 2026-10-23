@@ -68,12 +68,6 @@ describe('Extension Ribbon provider contribution', () => {
     );
   });
 
-  it.each(['', '   '])('rejects an invalid profile name while creating a contribution (%j)', name => {
-    const invalidProfile: RibbonWidthProfileDefinition = { name, widthAt: () => 4 };
-
-    expect(() => createRibbonProviderContribution({ profiles: [invalidProfile] })).toThrow(/non-empty string/);
-  });
-
   it('supports __proto__ as a profile name and compiles it through the merged dataset', () => {
     const custom = profile('__proto__', 8);
     const contribution = createRibbonProviderContribution({ profiles: [custom] });

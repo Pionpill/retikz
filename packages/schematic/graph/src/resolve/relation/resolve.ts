@@ -136,7 +136,7 @@ const resolveRelationThemeStructure = (
   relation: CanonicalRelation,
   context: RelationStructureResolveContext,
 ): IRGraphRelationRuleStructure | undefined => {
-  const graphTheme = resolveGraphTheme(context.theme, context.graphThemeStyles);
+  const graphTheme = resolveGraphTheme(context.theme, context.graphThemeDefinitions);
   const selectorContext = selectorContextOf(context);
   const subject = relationSubject(relation);
   let structure: IRGraphRelationRuleStructure | undefined;
@@ -329,7 +329,7 @@ export const resolveRelationAppearance = (
   relation: CanonicalRelation,
   context: RelationAppearanceResolveContext,
 ): EffectiveRelationAppearance => {
-  const graphTheme = resolveGraphTheme(context.theme, context.graphThemeStyles);
+  const graphTheme = resolveGraphTheme(context.theme, context.graphThemeDefinitions);
   const selectorContext = selectorContextOf(context);
   const subject = relationSubject(relation);
   let appearance: EffectiveRelationAppearance = graphTheme.defaults.relation ?? {};

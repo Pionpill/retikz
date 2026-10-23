@@ -255,41 +255,6 @@ Initialization captures the first state. An update prepares a candidate and comp
   ]}
 />
 
-## Core application
-
-Reconciler treats the complete Scene IR—a structured description of a drawing document—as one Source, rather than creating a Source for each node. It defines `CoreSourceDefinition` once when the module loads and reuses that token for initialization, updates and compilation. This excerpt omits imports and the type declaration:
-
-```ts
-export const CoreSourceDefinition = defineRuntimeSource({
-  key: CORE_SOURCE_KEY, // '@retikz/core/document'
-  value: {
-    capture: input => cloneAndFreezeJson(input, 'CoreSourceDefinition input'),
-    read: value => value,
-    equals: jsonStructuralEquals,
-  },
-});
-```
-
-Input, internal value and read value all use the Scene IR structure: `capture` stores an independent read-only document, `read` exposes that document, and `equals` compares document contents. The two JSON helpers are internal Core utilities; consumers simply import the existing token.
-
-After declaring this Source dependency, Core's compilation computation reads the document through the same token. This excerpt shows the read inside its callback:
-
-```ts
-const source = view.snapshot(CoreSourceDefinition).value;
-// Pass source to Core compilation to produce a Scene
-```
-
-See the [starter example](/kernel/packages/runtime/usage) for supplying definitions and data to an instance; full initialization and update orchestration belong to the Runtime chapter.
-
-The token identifies the Source definition and stores no document data. Multiple Runtime instances can reuse it while owning independent state. This example connects the earlier steps—define rules, capture input, read state—to a real consumer. Core documentation covers compilation and incremental updates in detail.
-
-<SourceLinks
-  sources={[
-    { label: 'Core document Source definition', path: 'packages/kernel/reconciler/src/runtime/source.ts' },
-    { label: 'Source reads in Core compilation', path: 'packages/kernel/reconciler/src/runtime/computation.ts' },
-  ]}
-/>
-
 ## Related props
 
 Only public members used in this chapter are listed; follow the source links below for complete declarations and default behavior.

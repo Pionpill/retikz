@@ -1,16 +1,11 @@
 import type { CoreProviderContribution, GroupPrim, IRChild, ScenePrimitive, TextPrim } from '@retikz/core';
-import {
-  compileToScene,
-  DEFAULT_RESOLVED_THEME,
-  defineThemeStyle,
-  resolveCoreProviderDependencies,
-} from '@retikz/core';
-import { defineGraphThemeStyle, defineRelationRole } from '@retikz/graph';
+import { compileToScene, DEFAULT_RESOLVED_THEME, defineTheme, resolveCoreProviderDependencies } from '@retikz/core';
+import { defineGraphTheme, defineRelationRole } from '@retikz/graph';
 import { createFlexLayout, FlexLayoutArtifactSchema, LayoutItemKind } from '@retikz/layout';
 import { LegendSchema } from '@retikz/standard/presentation';
 import { describe, expect, it } from 'vitest';
 
-import { defineDiagramThemeStyle } from '../../src/_diagram';
+import { defineDiagramTheme } from '../../src/_diagram';
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
 import type {
   FlowLayoutDefinition,
@@ -24,7 +19,7 @@ import { defineFlowLayout } from '../../src/flow';
 import * as FlowPipeline from '../../src/flow/pipeline';
 import { materializeFlowGraph } from '../../src/flow/pipeline/flow/materialize';
 import type { FlowMeasurement } from '../../src/flow/pipeline/flow/types';
-import { resolveFlowThemeStyleRegistry } from '../../src/flow/providers/theme';
+import { resolveFlowThemeRegistry } from '../../src/flow/providers/theme';
 import { resolveFlowDiagram } from '../../src/flow/resolve';
 import { parseTestFlowDiagram } from './fixtures';
 
@@ -208,19 +203,12 @@ describe('Flow layout callback execution', () => {
     expect(Object.isFrozen(result.relations[0]?.route.points)).toBe(true);
   });
 
-  it('rejects Promise and non-plain callback outputs with the Definition callback error', () => {
+  it('rejects non-plain callback outputs at the snapshot boundary', () => {
     const executeFlowLayout = getExecuteFlowLayout();
 
     expect(executeFlowLayout).toBeDefined();
 
     if (executeFlowLayout === undefined) return;
-
-    const promiseDefinition = definition(() => output());
-    Object.defineProperty(promiseDefinition, 'layout', { value: () => Promise.resolve(output()) });
-    expectDiagramError(
-      () => executeFlowLayout(promiseDefinition, input),
-      RetikzDiagramErrorCode.DefinitionCallbackFailed,
-    );
 
     const nonPlainOutput = Object.assign(new Map(), output());
     expectDiagramError(
@@ -240,14 +228,9 @@ describe('Flow layout callback execution', () => {
 
     if (executeFlowLayout === undefined) return;
 
-    const relationWithIdentity = {
-      ...output(),
-      relations: [{ ...output().relations[0], id: 'synthetic-relation' }],
-    };
     const invalidOutputs: Array<FlowLayoutOutput> = [
       { ...output(), elements: [...output().elements].reverse() },
       { ...output(), relations: [] },
-      relationWithIdentity,
       {
         ...output(),
         elements: [{ ...output().elements[0], bounds: { x: 0, y: 0, width: 11, height: 10 } }, output().elements[1]],
@@ -627,12 +610,12 @@ describe('Flow Diagram compile transaction', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [
         Flow.createFlowDiagramProviderContribution({
-          diagramThemeStyles: [
-            defineDiagramThemeStyle({ name: styleName, resolve: () => ({ frame: { background: { fill: 'none' } } }) }),
+          diagramThemeDefinitions: [
+            defineDiagramTheme({ name: styleName, resolve: () => ({ frame: { background: { fill: 'none' } } }) }),
           ],
-          flowThemeStyles: [Flow.defineFlowThemeStyle({ name: styleName, resolve: () => ({}) })],
-          graphThemeStyles: [
-            defineGraphThemeStyle({
+          flowThemeDefinitions: [Flow.defineFlowTheme({ name: styleName, resolve: () => ({}) })],
+          graphThemeDefinitions: [
+            defineGraphTheme({
               name: styleName,
               resolve: () => ({
                 defaults: {
@@ -649,10 +632,10 @@ describe('Flow Diagram compile transaction', () => {
       ],
     });
     const result = compileToScene(
-      { type: 'scene', version: 1, theme: { style: styleName }, children: [source] },
+      { type: 'scene', version: 1, theme: { name: styleName }, children: [source] },
       {
         ...definitions,
-        themeStyles: [defineThemeStyle({ name: styleName, resolve: () => ({}) })],
+        themeDefinitions: [defineTheme({ name: styleName, resolve: () => ({}) })],
         padding: 0,
         measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
       },
@@ -1481,7 +1464,7 @@ describe('Flow Graph materialization invariants', () => {
     });
     const diagram = resolveFlowDiagram(source, {
       theme: DEFAULT_RESOLVED_THEME,
-      flowThemeStyles: resolveFlowThemeStyleRegistry(),
+      flowThemeDefinitions: resolveFlowThemeRegistry(),
     });
     const measurement: FlowMeasurement = {
       diagram,

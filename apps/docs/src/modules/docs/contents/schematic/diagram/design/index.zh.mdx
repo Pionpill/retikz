@@ -57,7 +57,7 @@ Flow 负责测量、布局与路由，并将结果交给 Graph 绘制。它有�
 
 ## 默认样式不创造内容
 
-Theme 提供外观基线，`defaultDiagram` 提供作者的显式默认值，实例字段最后覆盖。命名主题通过 `theme.style` 选择同名 Definition，明暗模式由 `theme.mode` 指定；这些设置不代替内容与关系声明。
+Theme 提供外观基线，`defaultDiagram` 提供作者的显式默认值，实例字段最后覆盖。命名主题通过 `theme.name` 选择同名 Definition，明暗模式由 `theme.mode` 指定；这些设置不代替内容与关系声明。
 
 `defaultDiagram.presentation.title/description` 与正式说明区域路径一致，只包含 `style.textColor/font/opacity` 和 `layout.align/lineHeight/maxTextWidth`，不包含 `text`。设置标题默认字体不会创建一个标题；字体配置整体替换。
 

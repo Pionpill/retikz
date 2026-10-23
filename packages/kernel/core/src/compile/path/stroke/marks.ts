@@ -1,61 +1,10 @@
 import { RAD_TO_DEG } from '@retikz/math';
 import type { CurveSegmentSample } from '@retikz/math';
 
-import type {
-  GroupPrim,
-  MarkerFill,
-  MarkerPrimitive,
-  PaintValue,
-  ResolvedArrowEnd,
-  ScenePrimitive,
-  Transform,
-} from '../../../contract';
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
+import type { GroupPrim, PaintValue, ScenePrimitive, ResolvedArrowEnd, Transform } from '../../../contract';
 
-const resolveMarkerContextFill = (value: MarkerFill, contextStroke: string): string =>
-  typeof value === 'string' ? value : contextStroke;
-
-const markerFillUsesContextStroke = (value: MarkerFill | undefined): boolean => typeof value === 'object';
-
-const markerPrimUsesContextStroke = (prim: MarkerPrimitive): boolean => {
-  if (prim.type === 'group') return prim.children.some(markerPrimUsesContextStroke);
-  return markerFillUsesContextStroke(prim.fill) || markerFillUsesContextStroke(prim.stroke);
-};
-
-/**
- * 检查箭头是否能继承路径描边色
- * @throws RetikzCoreError 路径使用结构化 paint 且箭头内存在继承描边色的图元时抛出
- */
-export const assertArrowCanInheritStroke = (
-  stroke: PaintValue | undefined,
-  arrows: { arrowStart?: ResolvedArrowEnd; arrowEnd?: ResolvedArrowEnd },
-): void => {
-  if (stroke === undefined || typeof stroke === 'string') return;
-
-  const usesContextStroke =
-    (arrows.arrowStart?.marker.some(markerPrimUsesContextStroke) ?? false) ||
-    (arrows.arrowEnd?.marker.some(markerPrimUsesContextStroke) ?? false);
-  if (!usesContextStroke) return;
-
-  throw new RetikzCoreError(
-    RetikzCoreErrorCode.Compile,
-    'Path arrow cannot inherit a IRPaint stroke; set arrowDetail.color or endpoint color to an explicit CSS color.',
-  );
-};
-
-/**
- * 取得标记可继承的 CSS 描边色；缺省时使用 currentColor
- * @throws RetikzCoreError 描边是渐变或图案等结构化 paint 时抛出
- */
-export const markerContextStroke = (stroke: PaintValue | undefined): string => {
-  if (stroke === undefined) return 'currentColor';
-  if (typeof stroke === 'string') return stroke;
-
-  throw new RetikzCoreError(
-    RetikzCoreErrorCode.Compile,
-    'Path mark cannot inherit a IRPaint stroke; set the mark or arrow color to an explicit CSS color.',
-  );
-};
+const resolveMarkerContextFill = (value: PaintValue, contextStroke: PaintValue): PaintValue =>
+  typeof value === 'object' && value.kind === 'contextStroke' ? contextStroke : value;
 
 /** marker 放置所需上下文 */
 export type BuildMarkMarkerGroupContext = {
@@ -64,16 +13,16 @@ export type BuildMarkMarkerGroupContext = {
   /** 舍入标记放置变换中的数值 */
   round: (n: number) => number;
   /** 替换标记内部继承描边色占位的 CSS 颜色 */
-  contextStroke: string;
+  contextStroke: PaintValue;
 };
 
 /** marker 图元 → Scene 图元：结构同构，仅把 fill/stroke 的 contextStroke 解析成具体描边色（递归 group） */
-const markerPrimToScene = (prim: MarkerPrimitive, contextStroke: string): ScenePrimitive => {
+const markerPrimToScene = (prim: ScenePrimitive, contextStroke: PaintValue): ScenePrimitive => {
+  if (prim.type === 'text') return prim;
   if (prim.type === 'group') {
     return { ...prim, children: prim.children.map(c => markerPrimToScene(c, contextStroke)) };
   }
 
-  // marker 窄子集 ⊂ Scene 图元；解析 contextStroke 后即合法 Scene 图元，cast 作用域仅此一处
   return {
     ...prim,
     ...(prim.fill !== undefined && { fill: resolveMarkerContextFill(prim.fill, contextStroke) }),
@@ -102,5 +51,10 @@ export const buildMarkMarkerGroup = (
     { kind: 'translate', x: round(-spec.refX), y: round(-refY) },
   ];
 
-  return { type: 'group', transforms, children: spec.marker.map(p => markerPrimToScene(p, contextStroke)) };
+  return {
+    type: 'group',
+    transforms,
+    ...(spec.opacity === undefined ? {} : { opacity: spec.opacity }),
+    children: spec.marker.map(p => markerPrimToScene(p, contextStroke)),
+  };
 };

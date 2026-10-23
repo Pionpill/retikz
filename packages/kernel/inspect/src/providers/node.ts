@@ -1,5 +1,4 @@
 import type { IRChild, IRPosition, NodeOwnerOutput } from '@retikz/core';
-import { NodeOwnerOutputSchema } from '@retikz/core';
 import { mergeProperties } from '@retikz/foundation';
 import type { output as ZodOutput } from 'zod';
 
@@ -22,17 +21,17 @@ type NodeInspectorOptions = ZodOutput<typeof NodeInspectOptionsSchema>;
 /** 内置 Core Node Inspector key */
 export const NODE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'node' });
 
-/** 从 PathCommand 列表取第一个可标记位置 */
-const firstPathPosition = (commands: NodeOwnerOutput['shape']['outline']): IRPosition | undefined => {
-  const command = commands?.find(candidate => candidate.kind === 'move');
-  return command?.kind === 'move' ? command.to : undefined;
-};
-
 /** 创建 Node 几何检查输出，并保持每个 facet 的样式独立 */
 const inspectNodeGeometry = (
   subject: NodeOwnerOutput,
   context: InspectorContext<NodeInspectorOptions>,
 ): InspectorOutput => {
+  /** 从 PathCommand 列表取第一个可标记位置 */
+  const firstPathPosition = (commands: NodeOwnerOutput['shape']['outline']): IRPosition | undefined => {
+    const command = commands?.find(candidate => candidate.kind === 'move');
+    return command?.kind === 'move' ? command.to : undefined;
+  };
+
   const color = context.appearance.scopeColor;
   const output: Array<IRChild> = [];
   const labels: Array<IRChild> = [];
@@ -146,7 +145,6 @@ const inspectNodeGeometry = (
 export const NODE_INSPECTOR = defineInspector({
   ...NODE_INSPECTOR_KEY,
   owner: { kind: 'node' },
-  subjectSchema: NodeOwnerOutputSchema,
   optionsSchema: NodeInspectOptionsSchema,
   mergeOptionsInput: (inherited, local) => ({
     ...inherited,

@@ -1,5 +1,4 @@
 import type { IRChild, IRPosition, IRStep, PathCommand, StrokePathOwnerOutput } from '@retikz/core';
-import { StrokePathOwnerOutputSchema } from '@retikz/core';
 import { mergeProperties } from '@retikz/foundation';
 
 import { defineInspector } from '../contract';
@@ -245,7 +244,6 @@ const inspectionChildrenOf = (
 export const PATH_INSPECTOR = defineInspector({
   ...PATH_INSPECTOR_KEY,
   owner: { kind: 'path', name: 'stroke' },
-  subjectSchema: StrokePathOwnerOutputSchema,
   optionsSchema: PathInspectOptionsSchema,
   mergeOptionsInput: (inherited, local) => ({
     ...inherited,

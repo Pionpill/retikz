@@ -51,7 +51,7 @@ export const matrixSchemaLocalization = {
     '/union/0/field/"defaults"/field/"node"/field/"layout"/field/"minimumSize"/union/0': '大于或等于零的有限数值',
     '/union/0/field/"defaults"/field/"node"/field/"layout"/field/"padding"/union/0': '大于或等于零的有限数值',
     '/union/0/field/"defaults"/field/"node"/field/"layout"/field/"margin"/union/0': '大于或等于零的有限数值',
-    '/union/0/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
+    '/union/0/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.path.arrow',
     '/union/0/field/"defaults"/field/"path"/field/"style"/field/"color"':
       '主色，描边、填充、标签与箭头可继承，独立设置优先',
     '/union/0/field/"defaults"/field/"path"/field/"style"/field/"fill"': '填充颜色或绘制对象',
@@ -83,9 +83,11 @@ export const matrixSchemaLocalization = {
       '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
     '/union/0/field/"defaults"/field/"path"/field/"style"/field/"lineJoin"':
       '折角样式，省略为 miter；round 圆角，bevel 切角',
-    '/union/0/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
-    '/union/0/field/"defaults"/field/"arrow"': '箭头默认样式',
-    '/union/0/field/"defaults"/field/"reset"': '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
+    '/union/0/field/"defaults"/field/"node"/field/"label"': '节点标签与路径步骤标签的默认样式',
+    '/union/0/field/"defaults"/field/"path"/field/"label"': '节点标签与路径步骤标签的默认样式',
+    '/union/0/field/"defaults"/field/"path"/field/"arrow"': '箭头默认样式',
+    '/union/0/field/"defaults"/field/"reset"':
+      '默认样式继承屏障：true 重置全部，或指定 node、path（包含各自装饰） 通道',
     '/union/0/field/"defaultCell"/field/"style"': '集合 单元格的稀疏外观覆盖',
     '/union/0/field/"defaultCell"/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
     '/union/0/field/"defaultCell"/field/"style"/field/"opacity"': '单元格整体透明度',
@@ -286,7 +288,7 @@ export const matrixSchemaLocalization = {
     '/union/1/field/"defaults"/field/"node"/field/"layout"/field/"minimumSize"/union/0': '大于或等于零的有限数值',
     '/union/1/field/"defaults"/field/"node"/field/"layout"/field/"padding"/union/0': '大于或等于零的有限数值',
     '/union/1/field/"defaults"/field/"node"/field/"layout"/field/"margin"/union/0': '大于或等于零的有限数值',
-    '/union/1/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
+    '/union/1/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.path.arrow',
     '/union/1/field/"defaults"/field/"path"/field/"style"/field/"color"':
       '主色，描边、填充、标签与箭头可继承，独立设置优先',
     '/union/1/field/"defaults"/field/"path"/field/"style"/field/"fill"': '填充颜色或绘制对象',
@@ -318,9 +320,11 @@ export const matrixSchemaLocalization = {
       '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
     '/union/1/field/"defaults"/field/"path"/field/"style"/field/"lineJoin"':
       '折角样式，省略为 miter；round 圆角，bevel 切角',
-    '/union/1/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
-    '/union/1/field/"defaults"/field/"arrow"': '箭头默认样式',
-    '/union/1/field/"defaults"/field/"reset"': '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
+    '/union/1/field/"defaults"/field/"node"/field/"label"': '节点标签与路径步骤标签的默认样式',
+    '/union/1/field/"defaults"/field/"path"/field/"label"': '节点标签与路径步骤标签的默认样式',
+    '/union/1/field/"defaults"/field/"path"/field/"arrow"': '箭头默认样式',
+    '/union/1/field/"defaults"/field/"reset"':
+      '默认样式继承屏障：true 重置全部，或指定 node、path（包含各自装饰） 通道',
     '/union/1/field/"defaultCell"/field/"style"': '集合 单元格的稀疏外观覆盖',
     '/union/1/field/"defaultCell"/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
     '/union/1/field/"defaultCell"/field/"style"/field/"opacity"': '单元格整体透明度',
@@ -476,7 +480,7 @@ export const matrixSchemaLocalization = {
     '/union/2/field/"defaults"/field/"node"/field/"layout"/field/"minimumSize"/union/0': '大于或等于零的有限数值',
     '/union/2/field/"defaults"/field/"node"/field/"layout"/field/"padding"/union/0': '大于或等于零的有限数值',
     '/union/2/field/"defaults"/field/"node"/field/"layout"/field/"margin"/union/0': '大于或等于零的有限数值',
-    '/union/2/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
+    '/union/2/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.path.arrow',
     '/union/2/field/"defaults"/field/"path"/field/"style"/field/"color"':
       '主色，描边、填充、标签与箭头可继承，独立设置优先',
     '/union/2/field/"defaults"/field/"path"/field/"style"/field/"fill"': '填充颜色或绘制对象',
@@ -508,9 +512,11 @@ export const matrixSchemaLocalization = {
       '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
     '/union/2/field/"defaults"/field/"path"/field/"style"/field/"lineJoin"':
       '折角样式，省略为 miter；round 圆角，bevel 切角',
-    '/union/2/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
-    '/union/2/field/"defaults"/field/"arrow"': '箭头默认样式',
-    '/union/2/field/"defaults"/field/"reset"': '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
+    '/union/2/field/"defaults"/field/"node"/field/"label"': '节点标签与路径步骤标签的默认样式',
+    '/union/2/field/"defaults"/field/"path"/field/"label"': '节点标签与路径步骤标签的默认样式',
+    '/union/2/field/"defaults"/field/"path"/field/"arrow"': '箭头默认样式',
+    '/union/2/field/"defaults"/field/"reset"':
+      '默认样式继承屏障：true 重置全部，或指定 node、path（包含各自装饰） 通道',
     '/union/2/field/"defaultCell"/field/"style"': '集合 单元格的稀疏外观覆盖',
     '/union/2/field/"defaultCell"/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
     '/union/2/field/"defaultCell"/field/"style"/field/"opacity"': '单元格整体透明度',

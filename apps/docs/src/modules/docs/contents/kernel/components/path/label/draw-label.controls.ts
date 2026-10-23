@@ -41,6 +41,7 @@ const createControls = (lang: Lang) => {
             label: i18n.side,
             defaultValue: 'top',
             options: [
+              { value: 'center', label: i18n.center },
               { value: 'top', label: i18n.top },
               { value: 'bottom', label: i18n.bottom },
               { value: 'left', label: i18n.left },

@@ -16,8 +16,8 @@ export const createPreviewControlContract = (lang: Lang) => {
           controls: [
             {
               kind: 'select',
-              id: 'style',
-              label: i18n.style,
+              id: 'name',
+              label: i18n.name,
               defaultValue: 'academic',
               options: [
                 { value: 'default', label: i18n.default },
@@ -40,7 +40,7 @@ export const createPreviewControlContract = (lang: Lang) => {
         },
       ],
     }),
-    canonicalValues: { style: 'academic', mode: 'light' },
+    canonicalValues: { name: 'academic', mode: 'light' },
     relatedApis: ['Layout.theme'],
   } satisfies PreviewControlContract;
 };

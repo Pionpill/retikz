@@ -181,13 +181,13 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 `encodings` 指定读取哪些字段，`properties` 指定固定值。React、Vanilla 和 JSON 使用相同分组；具名组件与工厂补齐 `type`、`kind`，直接 JSON Mark 则显式声明这两个字段。
 
-| 目标     | 字段编码                                 | 固定属性                                              |
-| -------- | ---------------------------------------- | ----------------------------------------------------- |
-| 横向位置 | `encodings.position.x: { field: 'gdp' }` | `encodings.position.x: { value: 400 }`                |
-| 颜色     | `encodings.color: 'region'`              | `properties.color: 'crimson'`                         |
-| 大小     | `encodings.size: 'population'`           | `properties.size: 12`                                 |
-| 形状     | `encodings.shape: 'region'`              | `properties.shape: 'circle'`                          |
-| 标签内容 | `encodings.label: { content: 'abbr' }`   | `properties.label: { content: 'A', position: 'top' }` |
+| 目标     | 字段编码                                 | 固定属性                                           |
+| -------- | ---------------------------------------- | -------------------------------------------------- |
+| 横向位置 | `encodings.position.x: { field: 'gdp' }` | `encodings.position.x: { value: 400 }`             |
+| 颜色     | `encodings.color: 'region'`              | `properties.color: 'crimson'`                      |
+| 大小     | `encodings.size: 'population'`           | `properties.size: 12`                              |
+| 形状     | `encodings.shape: 'region'`              | `properties.shape: 'circle'`                       |
+| 标签内容 | `encodings.label: { text: 'abbr' }`      | `properties.label: { text: 'A', position: 'top' }` |
 
 普通绑定直接写字段名。需要指定已声明的比例尺时写 `{ field: 'population', scale: 'populationSize' }`。位置的比例尺由坐标角色决定；`position.x`、`position.y` 使用 `{ field: 'gdp' }` 绑定字段，使用 `{ value: 80 }` 指定常量，也可以使用 edge 指向视图边界。
 

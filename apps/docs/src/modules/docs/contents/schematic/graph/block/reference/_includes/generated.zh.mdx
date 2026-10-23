@@ -137,7 +137,6 @@ export type BlockSectionProps = Omit<BlockSectionInputEmbedProps, 'type' | 'chil
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | 局部坐标系中的裁剪区域                                 |
 | `cornerRadius?`   | `number`                                                                                                                                                                                                           | —       | 外框圆角                                               |
 | `defaults?`       | `BlockRowProps["defaults"]`                                                                                                                                                                                        | —       | 后代默认样式及继承屏障                                 |
-| `frame?`          | `BlockRowProps["frame"]`                                                                                                                                                                                           | —       | 固有包络装饰，不参与布局                               |
 | `gap?`            | `number`                                                                                                                                                                                                           | —       | 直接内容项之间的间距，用户单位                         |
 | `id?`             | `string`                                                                                                                                                                                                           | —       | 可选引用 id，注册到父命名空间                          |
 | `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —       | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
@@ -145,7 +144,7 @@ export type BlockSectionProps = Omit<BlockSectionInputEmbedProps, 'type' | 'chil
 | `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —       | 内容溢出行为，visible 或 clip                          |
 | `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | 内容与外框的内边距                                     |
 | `position?`       | `BlockRowProps["position"]`                                                                                                                                                                                        | `[0,0]` | 父坐标系中的原点位置或局部变换后的锚点对齐             |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | 子树的稀疏主题覆盖                                     |
+| `theme?`          | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                           | —       | 子树的稀疏主题覆盖                                     |
 | `transforms?`     | `BlockRowProps["transforms"]`                                                                                                                                                                                      | —       | 局部变换，数组最后一项先作用于局部点                   |
 | `zIndex?`         | `number`                                                                                                                                                                                                           | —       | 容器整体在同级中的绘制顺序                             |
 
@@ -216,7 +215,6 @@ export type BlockRowProps = BlockRowPropsVariant<BlockRowInputEmbedProps>;
 | `cornerRadius?`      | `number`                                                                                                                                                                                                           | —       | 外框圆角                                                 |
 | `defaultGraph?`      | `BlockInputEmbedProps["defaultGraph"]`                                                                                                                                                                             | —       | 可见后代 Entity、Relation、Group、Block 的稀疏默认值     |
 | `defaults?`          | `BlockInputEmbedProps["defaults"]`                                                                                                                                                                                 | —       | 后代默认样式及继承屏障                                   |
-| `frame?`             | `BlockInputEmbedProps["frame"]`                                                                                                                                                                                    | —       | 固有包络装饰，不参与布局                                 |
 | `gap?`               | `number`                                                                                                                                                                                                           | —       | 直接内容项之间的间距，用户单位                           |
 | `graphRules?`        | `BlockInputEmbedProps["graphRules"]`                                                                                                                                                                               | —       | 可见后代 Entity / Relation 的有序条件规则                |
 | `id?`                | `string`                                                                                                                                                                                                           | —       | 可选引用 id，注册到父命名空间                            |
@@ -226,7 +224,7 @@ export type BlockRowProps = BlockRowPropsVariant<BlockRowInputEmbedProps>;
 | `overflow?`          | `"clip" \| "visible"`                                                                                                                                                                                              | —       | 内容溢出行为，visible 或 clip                            |
 | `padding?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | 内容与外框的内边距                                       |
 | `position?`          | `BlockInputEmbedProps["position"]`                                                                                                                                                                                 | `[0,0]` | 父坐标系中的原点位置或局部变换后的锚点对齐               |
-| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | 子树的稀疏主题覆盖                                       |
+| `theme?`             | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                           | —       | 子树的稀疏主题覆盖                                       |
 | `transforms?`        | `BlockInputEmbedProps["transforms"]`                                                                                                                                                                               | —       | 局部变换，数组最后一项先作用于局部点                     |
 | `width?`             | `number`                                                                                                                                                                                                           | —       | 含水平 padding 的固定外层总宽度                          |
 | `zIndex?`            | `number`                                                                                                                                                                                                           | —       | 容器整体在同级中的绘制顺序                               |
@@ -299,7 +297,6 @@ export type BlockHeaderInputEmbedProps = WithoutInputType<InputBlockHeader>;
 | `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | 局部坐标系中的裁剪区域                                 |
 | `cornerRadius?`      | `number`                                                                                                                                                                                                           | —       | 外框圆角                                               |
 | `defaults?`          | `BlockSectionInputEmbedProps["defaults"]`                                                                                                                                                                          | —       | 后代默认样式及继承屏障                                 |
-| `frame?`             | `BlockSectionInputEmbedProps["frame"]`                                                                                                                                                                             | —       | 固有包络装饰，不参与布局                               |
 | `gap?`               | `number`                                                                                                                                                                                                           | —       | 直接内容项之间的间距，用户单位                         |
 | `id?`                | `string`                                                                                                                                                                                                           | —       | 可选引用 id，注册到父命名空间                          |
 | `localNamespace?`    | `false \| true`                                                                                                                                                                                                    | —       | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
@@ -307,7 +304,7 @@ export type BlockHeaderInputEmbedProps = WithoutInputType<InputBlockHeader>;
 | `overflow?`          | `"clip" \| "visible"`                                                                                                                                                                                              | —       | 内容溢出行为，visible 或 clip                          |
 | `padding?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | 内容与外框的内边距                                     |
 | `position?`          | `BlockSectionInputEmbedProps["position"]`                                                                                                                                                                          | `[0,0]` | 父坐标系中的原点位置或局部变换后的锚点对齐             |
-| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | 子树的稀疏主题覆盖                                     |
+| `theme?`             | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                           | —       | 子树的稀疏主题覆盖                                     |
 | `title?`             | `BlockSectionInputEmbedProps["title"]`                                                                                                                                                                             | —       | 可选分区标题，位于 children 前                         |
 | `transforms?`        | `BlockSectionInputEmbedProps["transforms"]`                                                                                                                                                                        | —       | 局部变换，数组最后一项先作用于局部点                   |
 | `zIndex?`            | `number`                                                                                                                                                                                                           | —       | 容器整体在同级中的绘制顺序                             |
@@ -343,7 +340,6 @@ export type BlockSectionInputEmbedProps = WithoutInputType<InputBlockSection>;
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | 局部坐标系中的裁剪区域                                 |
 | `cornerRadius?`   | `number`                                                                                                                                                                                                           | —       | 外框圆角                                               |
 | `defaults?`       | `BlockRowInputEmbedProps["defaults"]`                                                                                                                                                                              | —       | 后代默认样式及继承屏障                                 |
-| `frame?`          | `BlockRowInputEmbedProps["frame"]`                                                                                                                                                                                 | —       | 固有包络装饰，不参与布局                               |
 | `gap?`            | `number`                                                                                                                                                                                                           | —       | 直接内容项之间的间距，用户单位                         |
 | `id?`             | `string`                                                                                                                                                                                                           | —       | 可选引用 id，注册到父命名空间                          |
 | `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —       | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
@@ -351,7 +347,7 @@ export type BlockSectionInputEmbedProps = WithoutInputType<InputBlockSection>;
 | `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —       | 内容溢出行为，visible 或 clip                          |
 | `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | 内容与外框的内边距                                     |
 | `position?`       | `BlockRowInputEmbedProps["position"]`                                                                                                                                                                              | `[0,0]` | 父坐标系中的原点位置或局部变换后的锚点对齐             |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | 子树的稀疏主题覆盖                                     |
+| `theme?`          | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                           | —       | 子树的稀疏主题覆盖                                     |
 | `transforms?`     | `BlockRowInputEmbedProps["transforms"]`                                                                                                                                                                            | —       | 局部变换，数组最后一项先作用于局部点                   |
 | `zIndex?`         | `number`                                                                                                                                                                                                           | —       | 容器整体在同级中的绘制顺序                             |
 
@@ -524,7 +520,6 @@ export type InputBlockSection = Omit<BlockSectionCreateOptions, 'children'> &
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | 局部坐标系中的裁剪区域                                 |
 | `cornerRadius?`   | `number`                                                                                                                                                                                                           | —       | 外框圆角                                               |
 | `defaults?`       | `InputBlockRow["defaults"]`                                                                                                                                                                                        | —       | 后代默认样式及继承屏障                                 |
-| `frame?`          | `InputBlockRow["frame"]`                                                                                                                                                                                           | —       | 固有包络装饰，不参与布局                               |
 | `gap?`            | `number`                                                                                                                                                                                                           | —       | 直接内容项之间的间距，用户单位                         |
 | `id?`             | `string`                                                                                                                                                                                                           | —       | 可选引用 id，注册到父命名空间                          |
 | `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —       | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
@@ -532,7 +527,7 @@ export type InputBlockSection = Omit<BlockSectionCreateOptions, 'children'> &
 | `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —       | 内容溢出行为，visible 或 clip                          |
 | `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | 内容与外框的内边距                                     |
 | `position?`       | `InputBlockRow["position"]`                                                                                                                                                                                        | `[0,0]` | 父坐标系中的原点位置或局部变换后的锚点对齐             |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | 子树的稀疏主题覆盖                                     |
+| `theme?`          | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                           | —       | 子树的稀疏主题覆盖                                     |
 | `transforms?`     | `InputBlockRow["transforms"]`                                                                                                                                                                                      | —       | 局部变换，数组最后一项先作用于局部点                   |
 | `readonly type?`  | `'blockRow'`                                                                                                                                                                                                       | —       | —                                                      |
 | `zIndex?`         | `number`                                                                                                                                                                                                           | —       | 容器整体在同级中的绘制顺序                             |
@@ -706,7 +701,6 @@ export type BlockSectionCreateOptions = Omit<IRBlockSection, 'namespace' | 'type
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | 局部坐标系中的裁剪区域                                 |
 | `cornerRadius?`   | `number`                                                                                                                                                                                                           | —       | 外框圆角                                               |
 | `defaults?`       | `BlockRowCreateOptions["defaults"]`                                                                                                                                                                                | —       | 后代默认样式及继承屏障                                 |
-| `frame?`          | `BlockRowCreateOptions["frame"]`                                                                                                                                                                                   | —       | 固有包络装饰，不参与布局                               |
 | `gap?`            | `number`                                                                                                                                                                                                           | —       | 直接内容项之间的间距，用户单位                         |
 | `id?`             | `string`                                                                                                                                                                                                           | —       | 可选引用 id，注册到父命名空间                          |
 | `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —       | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
@@ -714,7 +708,7 @@ export type BlockSectionCreateOptions = Omit<IRBlockSection, 'namespace' | 'type
 | `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —       | 内容溢出行为，visible 或 clip                          |
 | `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | 内容与外框的内边距                                     |
 | `position?`       | `BlockRowCreateOptions["position"]`                                                                                                                                                                                | `[0,0]` | 父坐标系中的原点位置或局部变换后的锚点对齐             |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | 子树的稀疏主题覆盖                                     |
+| `theme?`          | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                           | —       | 子树的稀疏主题覆盖                                     |
 | `transforms?`     | `BlockRowCreateOptions["transforms"]`                                                                                                                                                                              | —       | 局部变换，数组最后一项先作用于局部点                   |
 | `zIndex?`         | `number`                                                                                                                                                                                                           | —       | 容器整体在同级中的绘制顺序                             |
 
@@ -873,15 +867,15 @@ export type CodeBlockDefinition<TSource extends IRCodeBlock> = Readonly<{
 
 <ApiTable>
 
-| 成员                           | 类型                                         | 默认值 | 说明                                               |
-| ------------------------------ | -------------------------------------------- | ------ | -------------------------------------------------- |
-| `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`        | `[]`   | 自定义 Entity kind definitions                     |
-| `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`   | `[]`   | 自定义 Entity predicate definitions                |
-| `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`        | `[]`   | 自定义 Entity role definitions                     |
-| `readonly graphThemeStyles?`   | `ReadonlyArray<GraphThemeStyleDefinition>`   | `[]`   | 与 Core Theme style 同名的 Graph Theme definitions |
-| `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`      | `[]`   | 自定义 Relation kind definitions                   |
-| `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | `[]`   | 自定义 Relation predicate definitions              |
-| `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | `[]`   | 自定义 Relation role definitions                   |
+| 成员                              | 类型                                         | 默认值 | 说明                                         |
+| --------------------------------- | -------------------------------------------- | ------ | -------------------------------------------- |
+| `readonly entityKinds?`           | `ReadonlyArray<EntityKindDefinition>`        | `[]`   | 自定义 Entity kind definitions               |
+| `readonly entityPredicates?`      | `ReadonlyArray<EntityPredicateDefinition>`   | `[]`   | 自定义 Entity predicate definitions          |
+| `readonly entityRoles?`           | `ReadonlyArray<EntityRoleDefinition>`        | `[]`   | 自定义 Entity role definitions               |
+| `readonly graphThemeDefinitions?` | `ReadonlyArray<GraphThemeDefinition>`        | `[]`   | 与 Core Theme 同名的 Graph Theme definitions |
+| `readonly relationKinds?`         | `ReadonlyArray<RelationKindDefinition>`      | `[]`   | 自定义 Relation kind definitions             |
+| `readonly relationPredicates?`    | `ReadonlyArray<RelationPredicateDefinition>` | `[]`   | 自定义 Relation predicate definitions        |
+| `readonly relationRoles?`         | `ReadonlyArray<RelationRoleDefinition>`      | `[]`   | 自定义 Relation role definitions             |
 
 </ApiTable>
 
@@ -897,7 +891,7 @@ export type GraphDefinitionOptions = Readonly<{
   relationRoles?: ReadonlyArray<RelationRoleDefinition>;
   relationKinds?: ReadonlyArray<RelationKindDefinition>;
   relationPredicates?: ReadonlyArray<RelationPredicateDefinition>;
-  graphThemeStyles?: ReadonlyArray<GraphThemeStyleDefinition>;
+  graphThemeDefinitions?: ReadonlyArray<GraphThemeDefinition>;
 }>;
 ```
 
@@ -1099,7 +1093,6 @@ export type IRBlockHeader = ZodInfer<typeof BlockHeaderSchema>;
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | 局部坐标系中的裁剪区域                                 |
 | `cornerRadius?`   | `number`                                                                                                                                                                                                           | —       | 外框圆角                                               |
 | `defaults?`       | `IRBlockRow["defaults"]`                                                                                                                                                                                           | —       | 后代默认样式及继承屏障                                 |
-| `frame?`          | `IRBlockRow["frame"]`                                                                                                                                                                                              | —       | 固有包络装饰，不参与布局                               |
 | `gap?`            | `number`                                                                                                                                                                                                           | —       | 直接内容项之间的间距，用户单位                         |
 | `id?`             | `string`                                                                                                                                                                                                           | —       | 可选引用 id，注册到父命名空间                          |
 | `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —       | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
@@ -1108,7 +1101,7 @@ export type IRBlockHeader = ZodInfer<typeof BlockHeaderSchema>;
 | `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —       | 内容溢出行为，visible 或 clip                          |
 | `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | 内容与外框的内边距                                     |
 | `position?`       | `IRBlockRow["position"]`                                                                                                                                                                                           | `[0,0]` | 父坐标系中的原点位置或局部变换后的锚点对齐             |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | 子树的稀疏主题覆盖                                     |
+| `theme?`          | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                           | —       | 子树的稀疏主题覆盖                                     |
 | `transforms?`     | `IRBlockRow["transforms"]`                                                                                                                                                                                         | —       | 局部变换，数组最后一项先作用于局部点                   |
 | `type`            | `"blockRow"`                                                                                                                                                                                                       | —       | 当前组件的记录判别字段                                 |
 | `zIndex?`         | `number`                                                                                                                                                                                                           | —       | 容器整体在同级中的绘制顺序                             |
@@ -1211,7 +1204,6 @@ export type IRBlockText = ZodInfer<typeof BlockTextSchema>;
 | `defaultGraph?`   | `IRCodeBlockProps['defaultGraph']`                                                                                                                                                                                 | —       | 可见后代 Entity、Relation、Group、Block 的稀疏默认值     |
 | `defaults?`       | `IRCodeBlockProps['defaults']`                                                                                                                                                                                     | —       | 后代默认样式及继承屏障                                   |
 | `description?`    | `string`                                                                                                                                                                                                           | —       | 可选实体说明                                             |
-| `frame?`          | `IRCodeBlockProps['frame']`                                                                                                                                                                                        | —       | 固有包络装饰，不参与布局                                 |
 | `gap?`            | `number`                                                                                                                                                                                                           | —       | 直接内容项之间的间距，用户单位                           |
 | `graphRules?`     | `IRCodeBlockProps['graphRules']`                                                                                                                                                                                   | —       | 可见后代 Entity / Relation 的有序条件规则                |
 | `icon?`           | `IRCodeBlockProps['icon']`                                                                                                                                                                                         | —       | 省略使用实体默认图标，null 隐藏，child 替换              |
@@ -1224,7 +1216,7 @@ export type IRBlockText = ZodInfer<typeof BlockTextSchema>;
 | `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —       | 内容溢出行为，visible 或 clip                            |
 | `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | 内容与外框的内边距                                       |
 | `position?`       | `IRCodeBlockProps['position']`                                                                                                                                                                                     | `[0,0]` | 父坐标系中的原点位置或局部变换后的锚点对齐               |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | 子树的稀疏主题覆盖                                       |
+| `theme?`          | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                           | —       | 子树的稀疏主题覆盖                                       |
 | `trail?`          | `IRCodeBlockProps['trail']`                                                                                                                                                                                        | —       | 省略使用实体默认尾项，null 隐藏，child 替换              |
 | `transforms?`     | `IRCodeBlockProps['transforms']`                                                                                                                                                                                   | —       | 局部变换，数组最后一项先作用于局部点                     |
 | `type`            | `string`                                                                                                                                                                                                           | —       | 代码块组件定义的注册类型                                 |
@@ -1486,7 +1478,6 @@ export type IRCodeSignature = ZodInfer<typeof CodeSignatureSchema>;
   descriptions={{
     namespace: '命名空间，固定为 graph',
     type: '当前组件的记录判别字段',
-    frame: '固有包络装饰，不参与布局',
     theme: '子树的稀疏主题覆盖',
     id: '可选引用 id，注册到父命名空间',
     localNamespace: '使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级',
@@ -1520,7 +1511,6 @@ export type IRCodeSignature = ZodInfer<typeof CodeSignatureSchema>;
   descriptions={{
     namespace: '命名空间，固定为 graph',
     type: '当前组件的记录判别字段',
-    frame: '固有包络装饰，不参与布局',
     theme: '子树的稀疏主题覆盖',
     id: '可选引用 id，注册到父命名空间',
     localNamespace: '使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级',
@@ -1551,7 +1541,6 @@ export type IRCodeSignature = ZodInfer<typeof CodeSignatureSchema>;
   descriptions={{
     namespace: '命名空间，固定为 graph',
     type: '当前组件的记录判别字段',
-    frame: '固有包络装饰，不参与布局',
     theme: '子树的稀疏主题覆盖',
     id: '可选引用 id，注册到父命名空间',
     localNamespace: '使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级',
@@ -1580,7 +1569,6 @@ export type IRCodeSignature = ZodInfer<typeof CodeSignatureSchema>;
   name="CodeBlockPropsSchema"
   shallow
   descriptions={{
-    frame: '固有包络装饰，不参与布局',
     theme: '子树的稀疏主题覆盖',
     id: '可选引用 id，注册到父命名空间',
     localNamespace: '使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级',

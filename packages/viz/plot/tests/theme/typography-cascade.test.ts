@@ -1,7 +1,7 @@
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { definePlotThemeStyle } from '../../src/contract';
+import { definePlotTheme } from '../../src/contract';
 import {
   resolveAxisGuideTokens,
   resolveLegendGuideTokens,
@@ -17,7 +17,7 @@ const theme = {
 
 describe('Plot typography cascade', () => {
   it('后来源 typography 覆盖早来源 Axis/Legend 专用文本，显式 guide 字段最高', () => {
-    const style = definePlotThemeStyle({
+    const style = definePlotTheme({
       name: 'early-specialized',
       resolve: () => ({
         defaults: {

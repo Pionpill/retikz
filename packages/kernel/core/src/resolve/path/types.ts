@@ -76,11 +76,13 @@ type WithResolvedStepLabel<TStep extends IRStep> = TStep extends unknown
 export type ResolvedStepSource = WithResolvedStepLabel<IRStep>;
 
 /** 已把 arrow 派生颜色确定为字符串的 mark */
-export type ResolvedArrowMark = Omit<IRArrowMark, 'color' | 'fill'> & {
+export type ResolvedArrowMark = Omit<IRArrowMark, 'color' | 'fill' | 'stroke'> & {
   /** 已确定的箭头主色 */
   color?: string;
   /** 已确定的箭头填充 */
-  fill?: string;
+  fill?: string | IRPaint;
+  /** 已解析的描边 */
+  stroke?: string | IRPaint;
 };
 
 /** 已把所有上下文颜色确定为字符串的 Path Source 投影 */
@@ -188,7 +190,17 @@ export type ArrowMarkVisual = Readonly<{
   /** 已解析的箭头主色 */
   color?: string;
   /** 实心箭头的可选填充色，空心箭头不保留该值 */
-  fill?: string;
+  fill?: PaintResolutionInput;
+  /** 已解析的描边 */
+  stroke?: PaintResolutionInput;
+  /** 显式虚线序列 */
+  dashPattern?: IRArrowMark['dashPattern'];
+  /** 虚线相位偏移 */
+  dashOffset?: number;
+  /** 描边端帽 */
+  lineCap?: IRArrowMark['lineCap'];
+  /** 描边连接形状 */
+  lineJoin?: IRArrowMark['lineJoin'];
   /** 与宿主路径不透明度相乘的箭头不透明度 */
   opacity?: number;
   /** 空心箭头在定义基准坐标中的描边宽度 */

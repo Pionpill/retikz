@@ -29,12 +29,15 @@ import { useMemo } from 'react';
 
 import { RetikzPlotReactError } from './error';
 import { resolvePlotAuthoring } from './plot-runtime';
-import { usePlotThemeStyles } from './theme-context';
+import { usePlotThemeDefinitions } from './theme-context';
 
 /** <Plot> 作为 Layout 子面板时可直接承接的 Scope 输入 */
 export type PlotPanelProps = InputPlotPanel;
 
-type PlotLayoutHostProps = Pick<LayoutProps & LayoutExtensions, 'className' | 'style' | 'renderer' | 'themeStyles'>;
+type PlotLayoutHostProps = Pick<
+  LayoutProps & LayoutExtensions,
+  'className' | 'style' | 'renderer' | 'themeDefinitions'
+>;
 
 /** React adapter 暴露的运行时图元链路 props */
 export type PlotLineageProps = {
@@ -53,7 +56,7 @@ const PLOT_STANDALONE_PROP_KEYS = [
   'className',
   'style',
   'renderer',
-  'themeStyles',
+  'themeDefinitions',
   'lineage',
   'hostLineageMetadata',
   'onLineage',
@@ -199,7 +202,7 @@ const plotContentPropsOf = <TSource,>(props: PlotProps<TSource>): PlotProps<TSou
     className: _className,
     style: _style,
     renderer: _renderer,
-    themeStyles: _themeStyles,
+    themeDefinitions: _themeDefinitions,
     lineage: _lineage,
     hostLineageMetadata: _hostLineageMetadata,
     onLineage: _onLineage,
@@ -208,7 +211,7 @@ const plotContentPropsOf = <TSource,>(props: PlotProps<TSource>): PlotProps<TSou
   void _className;
   void _style;
   void _renderer;
-  void _themeStyles;
+  void _themeDefinitions;
   void _lineage;
   void _hostLineageMetadata;
   void _onLineage;
@@ -235,20 +238,21 @@ const EmbeddablePlotContent = Object.assign(PlotContent, {
 });
 
 const PlotComponent: FC<PlotProps<unknown>> = props => {
-  const { className, style, renderer, themeStyles, onLineage } = props;
-  const ambientPlotThemeStyles = usePlotThemeStyles();
+  const { className, style, renderer, themeDefinitions, onLineage } = props;
+  const ambientPlotThemeDefinitions = usePlotThemeDefinitions();
   const lineageDriver = useMemo(() => createPlotLineageCompileDriver(), []);
   const effectiveProps = useMemo(() => {
-    if (ambientPlotThemeStyles === undefined) return props;
-    const explicit = props.definitions?.plotThemeStyles;
+    if (ambientPlotThemeDefinitions === undefined) return props;
+    const explicit = props.definitions?.plotThemeDefinitions;
     return {
       ...props,
       definitions: {
         ...props.definitions,
-        plotThemeStyles: explicit === undefined ? ambientPlotThemeStyles : [...ambientPlotThemeStyles, ...explicit],
+        plotThemeDefinitions:
+          explicit === undefined ? ambientPlotThemeDefinitions : [...ambientPlotThemeDefinitions, ...explicit],
       },
     };
-  }, [ambientPlotThemeStyles, props]);
+  }, [ambientPlotThemeDefinitions, props]);
   const contentProps = plotContentPropsOf(effectiveProps);
   const authored = resolvePlotAuthoring(contentProps);
   const panel = createPlotPanelInput(contentProps);
@@ -258,7 +262,7 @@ const PlotComponent: FC<PlotProps<unknown>> = props => {
       className={className}
       style={style}
       renderer={renderer}
-      extensions={{ themeStyles }}
+      extensions={{ themeDefinitions }}
       runtime={{ preparation: 'async', signal: props.signal }}
       compileDriver={lineageDriver}
     >

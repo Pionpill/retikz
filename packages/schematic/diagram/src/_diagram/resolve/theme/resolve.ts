@@ -3,10 +3,9 @@ import { resolveBoxSpacing } from '@retikz/core';
 import { mergeProperties } from '@retikz/foundation';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
-import type { DiagramThemeStyleDefinition } from '../../contract';
+import type { DiagramThemeDefinition } from '../../contract';
 import { getDefaultDiagramTheme } from '../../providers';
 import type { IRDiagramDefaults, IRDiagramDefaultsPresentationText, IRDiagramPresentationText } from '../../schemas';
-import { DiagramDefaultsSchema } from '../../schemas';
 import type { EffectiveDiagramTextAppearance, EffectiveDiagramTheme, EffectiveDiagramThemeFrame } from './types';
 
 type DiagramDefaultsFrame = NonNullable<IRDiagramDefaults['frame']>;
@@ -82,26 +81,26 @@ export const mergeDiagramDefaults = (
 
 const resolveRegisteredDefaults = (
   theme: ResolvedTheme,
-  registry: ReadonlyMap<string, DiagramThemeStyleDefinition>,
+  registry: ReadonlyMap<string, DiagramThemeDefinition>,
 ): IRDiagramDefaults | undefined => {
-  if (theme.style === undefined) return undefined;
+  if (theme.name === undefined) return undefined;
 
-  const definition = registry.get(theme.style);
+  const definition = registry.get(theme.name);
   if (definition === undefined) {
     throw new RetikzDiagramError({
       code: RetikzDiagramErrorCode.DefinitionNotRegistered,
-      message: `Diagram theme style '${theme.style}' is not registered.`,
-      details: { capability: 'diagram-theme-style', key: theme.style, availableKeys: [...registry.keys()] },
+      message: `Diagram theme '${theme.name}' is not registered.`,
+      details: { capability: 'diagram-theme', key: theme.name, availableKeys: [...registry.keys()] },
     });
   }
 
   try {
-    return DiagramDefaultsSchema.parse(definition.resolve(theme));
+    return structuredClone(definition.resolve(theme));
   } catch (cause) {
     throw new RetikzDiagramError({
       code: RetikzDiagramErrorCode.DefinitionCallbackFailed,
-      message: `Diagram theme style '${theme.style}' resolution failed.`,
-      details: { capability: 'diagram-theme-style', key: theme.style },
+      message: `Diagram theme '${theme.name}' resolution failed.`,
+      details: { capability: 'diagram-theme', key: theme.name },
       cause,
     });
   }
@@ -129,12 +128,12 @@ const completeText = (slice: IRDiagramDefaultsPresentationText | undefined): Eff
 /** 按 Core effective Theme、注册 Definition 与 Source defaults 解析完整 Diagram appearance */
 export const resolveDiagramTheme = (
   theme: ResolvedTheme,
-  styles: ReadonlyMap<string, DiagramThemeStyleDefinition>,
+  styles: ReadonlyMap<string, DiagramThemeDefinition>,
   inline?: IRDiagramDefaults,
 ): EffectiveDiagramTheme => {
   const neutral = getDefaultDiagramTheme(theme);
   const registered = resolveRegisteredDefaults(theme, styles);
-  const source = inline === undefined ? undefined : DiagramDefaultsSchema.parse(inline);
+  const source = inline;
   const defaults = mergeDiagramDefaults(mergeDiagramDefaults(neutral, registered), source);
 
   return Object.freeze({

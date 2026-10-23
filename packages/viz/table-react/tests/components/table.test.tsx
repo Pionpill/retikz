@@ -1,5 +1,5 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
-import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineTheme } from '@retikz/core';
 import { Layout, ThemeProvider } from '@retikz/react';
 import type { IRTable, TableStructureOutput } from '@retikz/table';
 import {
@@ -7,7 +7,7 @@ import {
   createManualTableIR,
   defineCellVisualScale,
   defineTableStructure,
-  defineTableThemeStyle,
+  defineTableTheme,
   TABLE_NAMESPACE,
   TableSchema,
   TableComposite,
@@ -22,14 +22,14 @@ import { literal, strictObject, string } from 'zod';
 
 import { DetailTable, ManualTable, Table, TableThemeProvider } from '../../src';
 
-const cleanCoreTheme = defineThemeStyle({
+const cleanCoreTheme = defineTheme({
   name: 'clean',
   resolve: () => ({
     categorical: ['#112233'],
   }),
 });
 
-const cleanTableTheme = defineTableThemeStyle({
+const cleanTableTheme = defineTableTheme({
   name: 'clean',
   resolve: () => ({
     defaults: {
@@ -152,8 +152,8 @@ describe('Table React components', () => {
   it('uses the effective Core Theme to select a different Table preset', () => {
     const defaultTheme = renderToStaticMarkup(<Table spec={createManualTableIR({ rows: [['Ada']] })} />);
     const clean = renderToStaticMarkup(
-      <ThemeProvider theme={{ style: 'clean', mode: 'light' }} themeStyles={[cleanCoreTheme]}>
-        <TableThemeProvider tableThemeStyles={[cleanTableTheme]}>
+      <ThemeProvider theme={{ name: 'clean', mode: 'light' }} themeDefinitions={[cleanCoreTheme]}>
+        <TableThemeProvider tableThemeDefinitions={[cleanTableTheme]}>
           <Table spec={createManualTableIR({ rows: [['Ada']] })} />
         </TableThemeProvider>
       </ThemeProvider>,

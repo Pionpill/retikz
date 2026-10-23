@@ -38,9 +38,9 @@ Switch the backend with one prop — same JSX, same IR:
 <Layout renderer="canvas">{/* ... */}</Layout>
 ```
 
-`ThemeProvider` supplies an ambient sparse Core Theme and optional `themeStyles` definitions to
+`ThemeProvider` supplies an ambient sparse Core Theme and optional `themeDefinitions` definitions to
 descendant Layouts. Omitting `style` selects the package baseline; applications inject named
-style names through `defineThemeStyle` and the matching owner-local definitions they consume.
+style names through `defineTheme` and the matching owner-local definitions they consume.
 
 ## Exports
 

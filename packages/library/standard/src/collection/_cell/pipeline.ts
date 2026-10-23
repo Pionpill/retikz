@@ -84,8 +84,8 @@ export const measureCell = (
             type: 'scope',
             defaults: {
               ...(color === undefined ? {} : { style: { color } }),
-              node: { style: textStyle },
-              label: textStyle,
+              node: { style: textStyle, label: textStyle },
+              path: { label: textStyle },
             },
             children: [cell.content],
           },
@@ -223,22 +223,28 @@ export const compileCells = (
     const { font, textColor, color, opacity } = decoration.style ?? {};
     children.push({
       type: 'scope',
-      defaults: { reset: ['node'] },
       children: [
         {
           type: 'node',
           position: [allocationBounds.width / 2, allocationBounds.height / 2],
           shape: 'rectangle',
+          boundary: 'shape',
+          rotate: 0,
+          scale: 1,
+          cornerRadius: 0,
           style: {
             fill: 'none',
             stroke: 'none',
             strokeWidth: 0,
+            shadow: 'none',
+            blendMode: 'normal',
             ...(font === undefined ? {} : { font }),
             ...(textColor === undefined ? {} : { textColor }),
             ...(color === undefined ? {} : { color }),
             ...(opacity === undefined ? {} : { opacity }),
           },
           layout: {
+            width: allocationBounds.width,
             minimumSize: { width: allocationBounds.width, height: allocationBounds.height },
             padding: 0,
             margin: 0,

@@ -17,10 +17,10 @@ import type {
   PreparedPlotData,
 } from '../contract';
 import { RetikzPlotError } from '../error';
-import { resolveMarkRegistry } from '../providers';
+import { MARK_REGISTRY } from '../providers';
 import { isSingleMark } from '../resolve';
 import { resolvePlotLineageOptions } from '../resolve/lineage';
-import type { IRPlot, IRPlotMarkOperation, IRPlotScaleOperation } from '../schemas';
+import type { IRPlot, IRPlotMark, IRPlotScaleOperation } from '../schemas';
 import { CoordinateArrangementKind } from '../schemas';
 import type { PlotDataArtifact } from './expand/lower';
 import type { PlotStandaloneOptions } from './expand/standalone';
@@ -59,10 +59,20 @@ const toJsonValue = (value: unknown): JsonValue | undefined => {
   return String(value);
 };
 
+/** 编码中的 JSON 值与尚未物化的可选字段 */
+type EncodingValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | ReadonlyArray<EncodingValue>
+  | { [key: string]: EncodingValue };
+
 /** 按已校验的编码目标路径记录字段；固定属性不建立数据 lineage */
-const markEncodingFields = (mark: IRPlotMarkOperation): PlotMarkLineage['encoding'] => {
+const markEncodingFields = (mark: IRPlotMark): PlotMarkLineage['encoding'] => {
   const out: NonNullable<PlotMarkLineage['encoding']> = [];
-  const visit = (binding: JsonValue | undefined, channel: string): void => {
+  const visit = (binding: EncodingValue, channel: string): void => {
     if (typeof binding === 'string') {
       out.push({ channel, field: binding });
       return;
@@ -229,7 +239,7 @@ const buildPlotLineage = (
       : hostMetadataOf(lineageOptions.hostMetadata, options.hostLineageMetadata);
 
   spec.marks.forEach((mark, markIndex) => {
-    if (isSingleMark(mark, { registry: resolveMarkRegistry(options.definitions?.marks) })) {
+    if (isSingleMark(mark, { registry: MARK_REGISTRY })) {
       marks.push({
         markIndex,
         markType: mark.type,

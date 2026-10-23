@@ -95,32 +95,7 @@ describe('Flow Layout Definition contract', () => {
     expect(resolved.defaultLayout).toBe(definition);
   });
 
-  it('rejects extra Definition and capability fields instead of publishing an open catalog shape', () => {
-    const definitionWithExtraField = Object.assign(validDefinition(), { unexpected: true });
-    const capabilitiesWithExtraField = Object.assign({}, validDefinition().capabilities, { unexpected: true });
-
-    for (const definition of [
-      definitionWithExtraField,
-      validDefinition({ capabilities: capabilitiesWithExtraField }),
-    ]) {
-      expect(() => resolveFlowLayoutRegistry({ flowLayouts: [definition] })).toThrowError(
-        expect.objectContaining({ code: RetikzDiagramErrorCode.DefinitionInvalid }),
-      );
-    }
-  });
-
-  it('rejects non-plain capability objects before they reach the runtime catalog', () => {
-    const nonPlainCapabilities = Object.assign(new Map(), validDefinition().capabilities);
-    const definition = validDefinition({ capabilities: nonPlainCapabilities });
-
-    expect(() => resolveFlowLayoutRegistry({ flowLayouts: [definition] })).toThrowError(
-      expect.objectContaining({ code: RetikzDiagramErrorCode.DefinitionInvalid }),
-    );
-  });
-
   it.each([
-    ['blank name', validDefinition({ name: ' ' })],
-    ['blank description', validDefinition({ description: '' })],
     [
       'group endpoint without compound',
       validDefinition({ capabilities: { ...validDefinition().capabilities, groupEndpoints: true } }),

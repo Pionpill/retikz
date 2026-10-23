@@ -75,15 +75,15 @@ Within a compile context, metrics for identical text and font combinations are r
 
 ## Inline formulas
 
-When A contains text mixed with formulas, text still goes to the measurer and formula runs go to `lowerTex`. The MathJax integration in `@retikz/tex` initializes its engine asynchronously, then supplies a synchronous lowerer. Core does not wait for the engine to load during layout.
+When A contains text mixed with formulas, text still goes to the measurer and formula segments go to `lowerTex`. The MathJax integration in `@retikz/tex` initializes its engine asynchronously, then supplies a synchronous lowerer. Core does not wait for the engine to load during layout.
 
 Formulas follow TeX → MathJax SVG → `LoweredTex` paths and metrics → Core `PathPrim` → Render. Their dimensions come from SVG lowering rather than Canvas text measurement; both SVG and Canvas backends consume the same path primitives. See [TeX Implementation](/kernel/packages/tex/mechanism) for the conversion details.
 
-The lowered result's `width` determines horizontal space. `height - depth` is the height above the baseline, and `depth` is the depth below it. Core adds run widths and takes the maximum ascent and descent separately to form the line's baseline box. The mixed line's slot height is the greater of the configured line height and this box height, giving tall formulas enough room between lines.
+The lowered result's `width` determines horizontal space. `height - depth` is the height above the baseline, and `depth` is the depth below it. Core adds segment widths and takes the maximum ascent and descent separately to form the line's baseline box. The mixed line's slot height is the greater of the configured line height and this box height, giving tall formulas enough room between lines.
 
-Text runs then become Scene text primitives. Formula paths enter translated groups positioned against the same baseline. The backend still draws ordinary text glyphs; formulas are already paths. The mixed-content branch lays out the resolved lines and does not apply the plain-text branch's `maxTextWidth` automatic wrapping.
+Text segments then become Scene text primitives. Formula paths enter translated groups positioned against the same baseline. The backend still draws ordinary text glyphs; formulas are already paths. The mixed-content branch lays out the resolved lines and does not apply the plain-text branch's `maxTextWidth` automatic wrapping.
 
-Without a lowerer, `$...$` inside a string stays literal text, while an explicit math run produces a warning and is skipped. If an installed lowerer returns `null`, Core also warns and skips that formula, continuing with the remaining runs. Applications that do not want an intermediate result should wait for initialization to succeed before displaying the formula scene.
+Without a lowerer, `$...$` inside a string stays literal text, while an explicit math segment produces a warning and is skipped. If an installed lowerer returns `null`, Core also warns and skips that formula, continuing with the remaining segments. Applications that do not want an intermediate result should wait for initialization to succeed before displaying the formula scene.
 
 <SourceLinks
   sources={[

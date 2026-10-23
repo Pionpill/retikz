@@ -43,14 +43,24 @@ const FlowDiagramComponent: FC<FlowDiagramProps> = props => {
     pathGenerators,
     pathKinds,
     composites,
-    themeStyles,
+    themeDefinitions,
     ...hostProps
   } = flowDiagramLayoutHostPropsOf(props);
 
   return (
     <Layout
       {...hostProps}
-      extensions={{ shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, composites, themeStyles }}
+      extensions={{
+        shapes,
+        boundaries,
+        clips,
+        arrows,
+        patterns,
+        pathGenerators,
+        pathKinds,
+        composites,
+        themeDefinitions,
+      }}
     >
       <FlowRuntimeEmbed id={input.id ?? generatedId} input={input} />
     </Layout>

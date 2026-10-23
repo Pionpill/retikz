@@ -1,6 +1,6 @@
 import type { CompileObservation, IRScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { null as zodNull, number, strictObject, string } from 'zod';
+import { strictObject, string } from 'zod';
 
 import { createInspectorRegistry, defineInspector, RetikzInspectError } from '../../src';
 import { resolveInspectionSelection } from '../../src/compile/selection';
@@ -12,7 +12,6 @@ const key = { namespace: 'test', type: 'box' };
 const definition = defineInspector({
   ...key,
   owner,
-  subjectSchema: strictObject({ value: number() }),
   optionsSchema: strictObject({ label: string().default('default'), tone: string().default('normal') }),
   mergeOptionsInput: (inherited, local) => ({ ...inherited, ...local }),
   inspect: () => [],
@@ -70,7 +69,6 @@ describe('Inspection selection', () => {
     const rawDefinition = {
       ...key,
       owner,
-      subjectSchema: definition.subjectSchema,
       optionsSchema: strictObject({ count: string().default('2').transform(Number) }),
       inspect: () => [],
     };
@@ -94,7 +92,6 @@ describe('Inspection selection', () => {
     const inspector = defineInspector({
       ...key,
       owner,
-      subjectSchema: definition.subjectSchema,
       optionsSchema: strictObject({ count: string().default('2').transform(Number) }),
       resolveOptions: options => ({ label: options.count.toFixed(1) }),
       inspect: (_subject, context) => ({ type: 'node', position: [0, 0], content: context.options.label }),
@@ -143,7 +140,6 @@ describe('Inspection selection', () => {
     const transformed = defineInspector({
       ...key,
       owner,
-      subjectSchema: definition.subjectSchema,
       inspect: () => [],
       optionsSchema: strictObject({
         label: string()
@@ -280,7 +276,6 @@ describe('Inspection selection', () => {
     const pathDefinition = defineInspector({
       ...key,
       owner: { kind: 'path' as const, name: 'stroke' },
-      subjectSchema: zodNull(),
       optionsSchema: strictObject({}),
       resolveOptions: options => options,
       inspect: () => [],
@@ -400,7 +395,6 @@ describe('Inspection selection', () => {
     const pathDefinition = defineInspector({
       ...pathKey,
       owner: { kind: 'path' as const, name: 'stroke' },
-      subjectSchema: strictObject({ value: number() }),
       optionsSchema: strictObject({}),
       resolveOptions: options => options,
       inspect: () => [],
@@ -455,7 +449,6 @@ describe('Inspection selection', () => {
     const clipDefinition = defineInspector({
       ...clipKey,
       owner: { kind: 'clip' as const },
-      subjectSchema: strictObject({ value: number() }),
       optionsSchema: strictObject({}),
       resolveOptions: options => options,
       inspect: () => [],

@@ -17,8 +17,12 @@ const NodeWidthComparison: FC<NodeWidthComparisonProps> = props => {
     <Layout>
       <Scope
         defaults={{
-          node: { style: { font: { size: 12 } }, layout: { padding: 8 } },
-          label: { font: { size: 12 }, textColor: 'gray' },
+          node: {
+            style: { font: { size: 12 } },
+            layout: { padding: 8 },
+            label: { font: { size: 12 }, textColor: 'gray' },
+          },
+          path: { label: { font: { size: 12 }, textColor: 'gray' } },
         }}
       >
         <Node position={[-230, 0]} layout={{ width: 120 }} label={{ text: 'width: 120' }} text={text.short} />

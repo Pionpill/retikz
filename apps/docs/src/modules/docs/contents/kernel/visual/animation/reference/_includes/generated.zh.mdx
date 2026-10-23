@@ -433,7 +433,7 @@ export declare const stagger: (
 
 ## 动画声明
 
-#### <ApiSourceLink label={"IRAnimationTrack"} path={"packages/kernel/core/src/schemas/animation/types.ts"} startLine={7}>IRAnimationTrack</ApiSourceLink> / <ApiSourceLink label={"AnimationTrackSchema"} path={"packages/kernel/core/src/schemas/animation/schema.ts"} startLine={66}>AnimationTrackSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRAnimationTrack"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={198}>IRAnimationTrack</ApiSourceLink> / <ApiSourceLink label={"AnimationTrackSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={122}>AnimationTrackSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -450,7 +450,7 @@ export declare const stagger: (
 | `fill?`       | `"none" \| "forwards" \| "backwards" \| "both"`                                                                                                                                                                                                                               | —      | —    |
 | `iterations?` | `number \| "infinite"`                                                                                                                                                                                                                                                        | —      | —    |
 | `keyframes`   | `Array<{ at: number; value: JsonValue; easing?: OpenString<ValueOf<{ readonly Linear: "linear"; readonly Ease: "ease"; readonly EaseIn: "ease-in"; readonly EaseOut: "ease-out"; readonly EaseInOut: "ease-in-out"; }>> \| [number, number, number, number] \| undefined; }>` | —      | —    |
-| `origin?`     | `"center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| [number, number]`                                                                                                                                      | —      | —    |
+| `origin?`     | `"top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| [number, number] \| "center"`                                                                                                                                      | —      | —    |
 | `property`    | `ZodInfer<typeof AnimationTrackSchema.shape["property"]>`                                                                                                                                                                                                                     | —      | —    |
 | `trigger?`    | `"load" \| "visible" \| "manual" \| { onEvent: string; }`                                                                                                                                                                                                                     | —      | —    |
 
@@ -491,7 +491,7 @@ export type IRAnimationTrack = ZodInfer<typeof AnimationTrackSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRKeyframe"} path={"packages/kernel/core/src/schemas/animation/types.ts"} startLine={10}>IRKeyframe</ApiSourceLink> / <ApiSourceLink label={"KeyframeSchema"} path={"packages/kernel/core/src/schemas/animation/schema.ts"} startLine={33}>KeyframeSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRKeyframe"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={201}>IRKeyframe</ApiSourceLink> / <ApiSourceLink label={"KeyframeSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={89}>KeyframeSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -533,7 +533,7 @@ export type IRKeyframe = ZodInfer<typeof KeyframeSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnimationDirection"} path={"packages/kernel/core/src/schemas/animation/constants.ts"} startLine={35}>AnimationDirection</ApiSourceLink>
+#### <ApiSourceLink label={"AnimationDirection"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={47}>AnimationDirection</ApiSourceLink>
 
 ```ts
 export const AnimationDirection = {
@@ -546,7 +546,7 @@ export const AnimationDirection = {
 export type AnimationDirection = ValueOf<typeof AnimationDirection>;
 ```
 
-#### <ApiSourceLink label={"AnimationFill"} path={"packages/kernel/core/src/schemas/animation/constants.ts"} startLine={43}>AnimationFill</ApiSourceLink>
+#### <ApiSourceLink label={"AnimationFill"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={55}>AnimationFill</ApiSourceLink>
 
 ```ts
 export const AnimationFill = {
@@ -559,7 +559,7 @@ export const AnimationFill = {
 export type AnimationFill = ValueOf<typeof AnimationFill>;
 ```
 
-#### <ApiSourceLink label={"AnimationTrigger"} path={"packages/kernel/core/src/schemas/animation/constants.ts"} startLine={51}>AnimationTrigger</ApiSourceLink>
+#### <ApiSourceLink label={"AnimationTrigger"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={63}>AnimationTrigger</ApiSourceLink>
 
 ```ts
 export const AnimationTrigger = { Load: 'load', Visible: 'visible', Manual: 'manual' } as const;
@@ -567,7 +567,7 @@ export const AnimationTrigger = { Load: 'load', Visible: 'visible', Manual: 'man
 export type AnimationTrigger = ValueOf<typeof AnimationTrigger>;
 ```
 
-#### <ApiSourceLink label={"BuiltinAnimationEasing"} path={"packages/kernel/core/src/schemas/animation/constants.ts"} startLine={26}>BuiltinAnimationEasing</ApiSourceLink>
+#### <ApiSourceLink label={"BuiltinAnimationEasing"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={38}>BuiltinAnimationEasing</ApiSourceLink>
 
 ```ts
 export const BuiltinAnimationEasing = {
@@ -581,7 +581,7 @@ export const BuiltinAnimationEasing = {
 export type BuiltinAnimationEasing = ValueOf<typeof BuiltinAnimationEasing>;
 ```
 
-#### <ApiSourceLink label={"BuiltinAnimationProperty"} path={"packages/kernel/core/src/schemas/animation/constants.ts"} startLine={10}>BuiltinAnimationProperty</ApiSourceLink>
+#### <ApiSourceLink label={"BuiltinAnimationProperty"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={22}>BuiltinAnimationProperty</ApiSourceLink>
 
 `viewBox` 仅在 scene 根合法（镜头），元素级 viewBox track 由 compile / render 拒；
 `pathDraw` 是 0..1 路径画出进度；`scaleX` / `scaleY` 是非均匀缩放（柱状图从基线长出等），`scale` 是均匀缩放；
@@ -731,19 +731,19 @@ export type EasingRegistry = Record<string, CubicBezier | EasingFn>;
 
 ## 配置与校验
 
-#### <ApiSourceLink label={"EasingSchema"} path={"packages/kernel/core/src/schemas/animation/schema.ts"} startLine={25}>EasingSchema</ApiSourceLink>
+#### <ApiSourceLink label={"EasingSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={81}>EasingSchema</ApiSourceLink>
 
 `EasingSchema` 接受内置 / 自定义缓动名称，或 cubic-bezier 四元组 `[x1, y1, x2, y2]`。
 
 <ZodSchema name="EasingSchema" description="缓动名称或 cubic-bezier 四元组。" />
 
-#### <ApiSourceLink label={"TriggerSchema"} path={"packages/kernel/core/src/schemas/animation/schema.ts"} startLine={51}>TriggerSchema</ApiSourceLink>
+#### <ApiSourceLink label={"TriggerSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={107}>TriggerSchema</ApiSourceLink>
 
 `TriggerSchema` 接受 `load`、`visible`、`manual`，或带事件名的对象。IR 只保存事件名，不保存回调函数。
 
 <ZodSchema name="TriggerSchema" description="内置播放触发器或事件触发描述。" />
 
-#### <ApiSourceLink label={"EventTriggerSchema"} path={"packages/kernel/core/src/schemas/animation/schema.ts"} startLine={46}>EventTriggerSchema</ApiSourceLink>
+#### <ApiSourceLink label={"EventTriggerSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={102}>EventTriggerSchema</ApiSourceLink>
 
 <ZodSchema
   name="EventTriggerSchema"
@@ -753,7 +753,7 @@ export type EasingRegistry = Record<string, CubicBezier | EasingFn>;
   }}
 />
 
-#### <ApiSourceLink label={"OriginSchema"} path={"packages/kernel/core/src/schemas/animation/schema.ts"} startLine={56}>OriginSchema</ApiSourceLink>
+#### <ApiSourceLink label={"OriginSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={112}>OriginSchema</ApiSourceLink>
 
 `OriginSchema` 接受 canonical anchor 名，或元素局部坐标 `[x, y]`。它只影响 scale、scaleX、scaleY 与 rotate。
 

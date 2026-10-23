@@ -1,6 +1,6 @@
 import type { PatternDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { providerDefinitionOf } from '../../providers/registry';
+import { providerDefinitionOf } from '../../providers';
 import type { IRPaint } from '../../schemas';
 import { resolvePatternStyle } from './pattern';
 import type { PaintResolution, PatternResolution } from './types';
@@ -24,10 +24,7 @@ const resolvePattern = (
   spec: Extract<IRPaint, { kind: 'pattern' }>,
   context: PaintResolveContext,
 ): PatternResolution => {
-  const definition = providerDefinitionOf(context.patterns, spec.shape, {
-    capability: 'pattern shape',
-    optionName: 'patterns',
-  });
+  const definition = providerDefinitionOf(context.patterns, spec.shape);
   const rawSize = spec.size ?? definition.defaultSize ?? DEFAULT_PATTERN_SIZE;
   if (!Number.isFinite(rawSize) || rawSize <= 0) {
     throw new RetikzCoreError(

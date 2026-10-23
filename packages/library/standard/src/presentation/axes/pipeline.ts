@@ -24,6 +24,11 @@ type AxesOriginLabel = Exclude<CanonicalAxes['origin']['label'], false>;
 
 /** 将 Standard Axes 规则确定性下沉为已有 Core Path 与 Node */
 export const lowerAxes = (axes: IRAxes): IRScope => {
+  const createOriginLabel = (label: AxesOriginLabel, origin: IRPosition): IRNode => {
+    const resolved = label;
+    return createTextNode([origin[0] - resolved.offset, origin[1] + resolved.offset], resolved.text, resolved.style);
+  };
+
   const { namespace: _namespace, type: _type, origin, x, y, ...scopeProps } = resolveAxes(axes);
   void _namespace;
   void _type;
@@ -156,11 +161,6 @@ const createAxisLabel = (
       : [originX, originY - direction * (length + resolved.offset)];
 
   return createTextNode(position, resolved.text, resolved.style);
-};
-
-const createOriginLabel = (label: AxesOriginLabel, origin: IRPosition): IRNode => {
-  const resolved = label;
-  return createTextNode([origin[0] - resolved.offset, origin[1] + resolved.offset], resolved.text, resolved.style);
 };
 
 /** 将刻度完整长度分配到轴线两侧 */

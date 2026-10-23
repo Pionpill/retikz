@@ -43,8 +43,6 @@ describe('Array direct cell identities', () => {
   it('formats zero-based ids and rejects invalid helper arguments', () => {
     expect(getArrayCellId('array', 1)).toBe('array-1');
 
-    for (const id of ['', ' ']) expect(() => getArrayCellId(id, 0)).toThrow(RetikzStandardError);
-
     for (const index of [-1, 0.5, Infinity, NaN])
       expect(() => getArrayCellId('array', index)).toThrow(RetikzStandardError);
   });

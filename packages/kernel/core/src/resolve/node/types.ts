@@ -2,7 +2,7 @@ import type { JsonObject } from '@retikz/foundation';
 import type { BoundsInsets, CenteredBox } from '@retikz/math';
 
 import type { BoundaryDefinition, PatternDefinition, ShapeDefinition } from '../../contract';
-import type { ProviderCollection } from '../../providers/registry';
+import type { ProviderRegistry } from '../../providers';
 import type {
   IRBoundary,
   IRNode,
@@ -25,7 +25,7 @@ import type { ResolvedLabelTextContent, ResolvedTextLine } from '../text';
 /** 已把派生颜色确定为字符串的 Node label pin */
 export type ResolvedNodeLabelPin = Omit<Exclude<IRNodeLabel['pin'], boolean | undefined>, 'stroke'> & {
   /** 已确定的引线颜色 */
-  stroke?: string;
+  stroke?: PaintResolutionInput;
 };
 
 /** 已把 Node 自身派生颜色确定为字符串、但尚未处理正文和 label 的中间形态 */
@@ -210,9 +210,9 @@ export type NodeResolveContext = {
   /** 当前节点所在位置的 Theme 明暗模式 */
   mode: ThemeMode;
   /** shape provider 注册表 */
-  shapes: ProviderCollection<ShapeDefinition>;
+  shapes: ProviderRegistry<ShapeDefinition>;
   /** boundary provider 注册表 */
-  boundaries: ProviderCollection<BoundaryDefinition>;
+  boundaries: ProviderRegistry<BoundaryDefinition>;
   /** 当前有效 pattern provider registry */
   patterns: ReadonlyMap<string, PatternDefinition>;
   /** 资源尺寸圆整规则 */

@@ -1,14 +1,13 @@
-import { StrokePathOwnerOutputSchema } from '@retikz/core';
+import type { StrokePathOwnerOutput } from '@retikz/core';
 import { defineInspector } from '@retikz/inspect';
 
 /** Registry key shared by both hosts. */
 export const endpointInspectorKey = { namespace: 'docs', type: 'path-endpoints' };
 
 /** Mark explicit path endpoints using final owner geometry. */
-export const endpointInspector = defineInspector({
+export const endpointInspector = defineInspector<StrokePathOwnerOutput>({
   ...endpointInspectorKey,
   owner: { kind: 'path', name: 'stroke' },
-  subjectSchema: StrokePathOwnerOutputSchema,
   inspect: (subject, context) => {
     const markers = subject.commands.flatMap(command =>
       'to' in command

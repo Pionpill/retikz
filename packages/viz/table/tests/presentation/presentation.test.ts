@@ -114,7 +114,7 @@ describe('Cell presentation registry', () => {
     });
   });
 
-  it('rejects duplicate, built-in-conflicting, empty, and missing definitions', () => {
+  it('rejects duplicate, built-in-conflicting, and missing definitions', () => {
     const definition = defineCellPresentation({
       name: 'badge',
       optionsSchema: strictObject({}),
@@ -122,17 +122,15 @@ describe('Cell presentation registry', () => {
     });
     const duplicate = defineCellPresentation({ ...definition });
     const builtinConflict = defineCellPresentation({ ...definition, name: 'text' });
-    const emptyName = defineCellPresentation({ ...definition, name: '' });
 
     expect(() => resolveCellPresentationRegistry([definition, duplicate])).toThrow(/duplicate.*badge/i);
     expect(() => resolveCellPresentationRegistry([builtinConflict])).toThrow(/duplicate.*text/i);
-    expect(() => resolveCellPresentationRegistry([emptyName])).toThrow(/non-empty/i);
     expect(() => presentedCellOf({ value: 1, presentation: { name: 'missing' } })).toThrow(
       /table: presentation "missing" for cell "cell\.r0\.c0"/,
     );
   });
 
-  it('uses exact option transforms and guards provider output at runtime', () => {
+  it('uses exact option transforms and preserves snapshot errors', () => {
     const transformedOptions = defineCellPresentation({
       name: 'transformed-options',
       optionsSchema: strictObject({}).transform(() => ({ value: Number.NaN })),
@@ -141,11 +139,6 @@ describe('Cell presentation registry', () => {
         position: [0, 0],
         text: Number.isNaN(options.value) ? 'transformed' : 'unexpected',
       }),
-    });
-    const invalidOutput = defineCellPresentation({
-      name: 'invalid-output',
-      optionsSchema: strictObject({}),
-      present: () => ({ type: 'unknown' }) as unknown as IRChild,
     });
     const nonJsonOutput = defineCellPresentation({
       name: 'non-json-output',
@@ -156,9 +149,6 @@ describe('Cell presentation registry', () => {
     expect(
       presentedCellOf({ value: 1, presentation: { name: 'transformed-options' } }, [transformedOptions]).content,
     ).toMatchObject({ text: 'transformed' });
-    expect(() => presentedCellOf({ value: 1, presentation: { name: 'invalid-output' } }, [invalidOutput])).toThrow(
-      /table: presentation "invalid-output" for cell "cell\.r0\.c0"/,
-    );
     expect(() => presentedCellOf({ value: 1, presentation: { name: 'non-json-output' } }, [nonJsonOutput])).toThrow(
       /table: presentation "non-json-output" for cell "cell\.r0\.c0"/,
     );

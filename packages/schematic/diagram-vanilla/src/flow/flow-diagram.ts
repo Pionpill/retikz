@@ -12,8 +12,8 @@ export type FlowDiagramInputEmbedProps = InputFlowDiagram & FlowDiagramDefinitio
 
 const inputOf = (props: FlowDiagramInputEmbedProps): InputFlowDiagram => {
   const {
-    diagramThemeStyles: _diagramThemeStyles,
-    flowThemeStyles: _flowThemeStyles,
+    diagramThemeDefinitions: _diagramThemeDefinitions,
+    flowThemeDefinitions: _flowThemeDefinitions,
     flowLayouts: _flowLayouts,
     defaultFlowLayout: _defaultFlowLayout,
     entityRoles: _entityRoles,
@@ -22,11 +22,11 @@ const inputOf = (props: FlowDiagramInputEmbedProps): InputFlowDiagram => {
     relationRoles: _relationRoles,
     relationKinds: _relationKinds,
     relationPredicates: _relationPredicates,
-    graphThemeStyles: _graphThemeStyles,
+    graphThemeDefinitions: _graphThemeDefinitions,
     ...input
   } = props;
-  void _diagramThemeStyles;
-  void _flowThemeStyles;
+  void _diagramThemeDefinitions;
+  void _flowThemeDefinitions;
   void _flowLayouts;
   void _defaultFlowLayout;
   void _entityRoles;
@@ -35,7 +35,7 @@ const inputOf = (props: FlowDiagramInputEmbedProps): InputFlowDiagram => {
   void _relationRoles;
   void _relationKinds;
   void _relationPredicates;
-  void _graphThemeStyles;
+  void _graphThemeDefinitions;
 
   return input;
 };

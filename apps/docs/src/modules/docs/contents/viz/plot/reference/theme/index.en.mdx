@@ -3,7 +3,7 @@ title: Contract - Theme
 description: Define sparse Plot defaults and Axis rules that follow the Plot Source structure.
 ---
 
-Plot reads `style` and `mode` from the Core effective Theme at its current Scene or Scope position. It always builds a default baseline from the mode and Core shared categorical palette first; an explicit `style` then selects the same-named domain definition and overrides only the defaults and Axis rules that definition returns. Published packages include no named styles; this site injects Academic, Vibrant, and Clean reference presets through the public Core and Plot definition contracts. `IRPlot` does not repeat Core `style` or `mode`; themes affect visual defaults only, not data, coordinates, Axis creation, minor tick sources, or mark structure.
+Plot reads `name` and `mode` from the Core effective Theme at its current Scene or Scope position. It always builds a default baseline from the mode and Core shared categorical palette first; an explicit `style` then selects the same-named domain definition and overrides only the defaults and Axis rules that definition returns. Published packages include no named styles; this site injects Academic, Vibrant, and Clean reference presets through the public Core and Plot definition contracts. `IRPlot` does not repeat Core `style` or `mode`; themes affect visual defaults only, not data, coordinates, Axis creation, minor tick sources, or mark structure.
 
 <ComponentPreview files="theme-tokens" size="lg" />
 
@@ -15,9 +15,9 @@ The site's Vibrant reference preset uses a light blue-gray Plot area in Light mo
 
 ## Named styles
 
-Use definePlotThemeStyle with a name and resolve callback to register a runtime style. The callback receives the effective Core Theme and returns sparse defaults and ordered Axis rules. Inject definitions through definitions.plotThemeStyles on Plot, lowerPlots, or renderPlot, or with PlotThemeProvider.
+Use definePlotTheme with a name and resolve callback to register a runtime style. The callback receives the effective Core Theme and returns sparse defaults and ordered Axis rules. Inject definitions through definitions.plotThemeDefinitions on Plot, lowerPlots, or renderPlot, or with PlotThemeProvider.
 
-The Core theme prop selects the host style and mode. Plot defaults are persisted Plot Source fields and use the same nested paths in IRPlot, InputPlot, and runtime inputs.
+The Core theme prop selects the host name and mode. Plot defaults are persisted Plot Source fields and use the same nested paths in IRPlot, InputPlot, and runtime inputs.
 
 ## Cascade and boundaries
 

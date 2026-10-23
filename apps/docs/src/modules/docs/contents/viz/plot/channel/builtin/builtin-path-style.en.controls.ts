@@ -70,7 +70,7 @@ export const builtinPathStyleControls = definePreviewControls({
           id: 'lineJoin',
           label: 'lineJoin',
           defaultValue: PathLineJoin.Round,
-          visibleWhen: { controlId: 'roundedCorners', oneOf: [0] },
+          visibleWhen: { controlId: 'cornerRadius', oneOf: [0] },
           options: [
             { value: PathLineJoin.Miter, label: 'miter' },
             { value: PathLineJoin.Round, label: 'round' },
@@ -79,8 +79,8 @@ export const builtinPathStyleControls = definePreviewControls({
         },
         {
           kind: 'range',
-          id: 'roundedCorners',
-          label: 'roundedCorners',
+          id: 'cornerRadius',
+          label: 'cornerRadius',
           defaultValue: 0,
           min: 0,
           max: 20,
@@ -101,7 +101,7 @@ export const previewControlContract = {
     dashMode: 'solid',
     lineCap: PathLineCap.Round,
     lineJoin: PathLineJoin.Round,
-    roundedCorners: 0,
+    cornerRadius: 0,
   },
   presetSelector: { label: 'Preset', customLabel: 'Custom' },
   presets: [
@@ -115,7 +115,7 @@ export const previewControlContract = {
         dashMode: 'solid',
         lineCap: PathLineCap.Round,
         lineJoin: PathLineJoin.Round,
-        roundedCorners: 8,
+        cornerRadius: 8,
       },
     },
     {
@@ -128,7 +128,7 @@ export const previewControlContract = {
         dashMode: 'dashed',
         lineCap: PathLineCap.Butt,
         lineJoin: PathLineJoin.Miter,
-        roundedCorners: 0,
+        cornerRadius: 0,
       },
     },
   ],
@@ -139,6 +139,6 @@ export const previewControlContract = {
     'PathMark.dashPattern',
     'PathMark.lineCap',
     'PathMark.lineJoin',
-    'PathMark.roundedCorners',
+    'PathMark.cornerRadius',
   ],
 } satisfies PreviewControlContract;

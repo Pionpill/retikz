@@ -1,4 +1,4 @@
-import type { ThemeMode, ThemeStyleValue } from '@retikz/core';
+import type { ThemeMode, ThemeName } from '@retikz/core';
 import type { output as ZodOutput } from 'zod';
 
 import type {
@@ -15,7 +15,7 @@ import type { ResolvedTableCellPlan, ResolvedTableDefaults, ResolvedTableEncodin
 /** manifest 中的 style、plan 与 encoding lineage 输入 */
 export type BuildTableManifestContext = Readonly<{
   /** 当前有效 Core Theme 的 style */
-  style?: ThemeStyleValue;
+  name?: ThemeName;
   /** 当前有效 Core Theme 的 mode */
   themeMode: ThemeMode;
   /** 同次 resolved Table defaults */
@@ -106,7 +106,7 @@ export const buildTableLayoutManifest = (
       atoms: edge.atoms,
     })),
     style: {
-      ...(manifestContext.style === undefined ? {} : { style: manifestContext.style }),
+      ...(manifestContext.name === undefined ? {} : { name: manifestContext.name }),
       themeMode: manifestContext.themeMode,
       defaults: structuredClone(manifestContext.defaultTable.defaults),
       layers: structuredClone(manifestContext.defaultTable.layers),

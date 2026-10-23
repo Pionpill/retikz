@@ -1,15 +1,15 @@
 import { mergeProperties } from '@retikz/foundation';
 
-import type { IRPathLabel, IRPathBase, IRPathStyle, IRStep } from '../../schemas';
+import type { IRPathLabelDefault, IRPathLabel, IRPathBase, IRPathStyle, IRStep } from '../../schemas';
 import { resolvePathMarks } from './arrow';
 import { resolvePathLabel } from './label';
 import { mergeGraphicStyle } from './opacity';
-import type { EffectiveLabelDefault, EffectiveScopeDefaults } from './types';
+import type { EffectiveScopeDefaults } from './types';
 
 /** 替换 path children 中各 step 的 label 为已解析 effective label */
 const resolveStepLabels = (
   children: ReadonlyArray<IRStep>,
-  labelDefault: EffectiveLabelDefault,
+  labelDefault: IRPathLabelDefault,
   masterColor: string | undefined,
 ): Array<IRStep> =>
   children.map(step => {
@@ -22,7 +22,7 @@ const resolveStepLabels = (
 
 const resolvePathLabelField = (
   label: IRPathLabel | Array<IRPathLabel> | undefined,
-  labelDefault: EffectiveLabelDefault,
+  labelDefault: IRPathLabelDefault,
   masterColor: string | undefined,
 ): IRPathLabel | Array<IRPathLabel> | undefined => {
   if (label === undefined) return undefined;
@@ -45,7 +45,7 @@ export const resolveEffectivePath = (path: IRPathBase, scopeDefaults: EffectiveS
     style,
   };
 
-  const labelDefault = scopeDefaults.label ?? {};
+  const labelDefault = scopeDefaults.path?.label ?? {};
   effective.marks = resolvePathMarks(path.marks, scopeDefaults, masterColor);
   if (path.children !== undefined) {
     effective.children = resolveStepLabels(path.children, labelDefault, masterColor);

@@ -29,20 +29,20 @@ const assertViewBoxInput = (viewBox: IRViewBox): void => {
   }
 };
 
-/** 校验 round 后真正进入 Scene 的 viewBox layout */
-const assertRoundedViewBoxLayout = (layout: BoundsRect): BoundsRect => {
-  if (!isPositiveBoundsRect(layout)) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Compile,
-      `viewBox rounds to an invalid layout (x=${String(layout.x)}, y=${String(layout.y)}, width=${String(layout.width)}, height=${String(layout.height)}); check precision and coordinate magnitude.`,
-    );
-  }
-
-  return layout;
-};
-
 /** 把显式 viewBox 转为 Scene.layout，并做输入和输出守卫 */
 export const viewBoxToLayout = (viewBox: IRViewBox, round: (n: number) => number): BoundsRect => {
+  /** 校验 round 后真正进入 Scene 的 viewBox layout */
+  const assertRoundedViewBoxLayout = (layout: BoundsRect): BoundsRect => {
+    if (!isPositiveBoundsRect(layout)) {
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Compile,
+        `viewBox rounds to an invalid layout (x=${String(layout.x)}, y=${String(layout.y)}, width=${String(layout.width)}, height=${String(layout.height)}); check precision and coordinate magnitude.`,
+      );
+    }
+
+    return layout;
+  };
+
   assertViewBoxInput(viewBox);
   return assertRoundedViewBoxLayout(roundLayout(viewBox, round));
 };

@@ -365,7 +365,7 @@ it('returns a collinear baseline when clear and expands for a reserved label', (
     ...input.relations[0],
     routing: { kind: 'straight' as const },
     labelSize: { width: 35, height: 25 },
-    labelPlacement: { placement: 'inside' as const, position: 0.5 },
+    labelPlacement: { side: 'center' as const, position: 0.5 },
   };
   const result = routeFlowRelations({ ...input, relations: [other, ...input.relations] }, clear);
 

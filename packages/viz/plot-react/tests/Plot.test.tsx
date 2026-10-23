@@ -84,7 +84,7 @@ const geometry = (svg: string) => {
 };
 
 describe('<Plot spec data> 薄包装', () => {
-  it.each(['className', 'style', 'renderer', 'themeStyles', 'lineage', 'hostLineageMetadata', 'onLineage'])(
+  it.each(['className', 'style', 'renderer', 'themeDefinitions', 'lineage', 'hostLineageMetadata', 'onLineage'])(
     '拒绝 embedded Plot 自有的 standalone prop %s，包括显式 undefined',
     standaloneProp => {
       expect(() =>
@@ -105,7 +105,7 @@ describe('<Plot spec data> 薄包装', () => {
 
   it('用一个 SVG host 渲染 standalone/anonymous embedded Plot，并继承外层 Theme mode', () => {
     const standalone = renderToStaticMarkup(
-      <Plot spec={spec} data={data} className="plot-host" style={{ maxWidth: 480 }} themeStyles={[]} />,
+      <Plot spec={spec} data={data} className="plot-host" style={{ maxWidth: 480 }} themeDefinitions={[]} />,
     );
     const embedded = renderToStaticMarkup(
       <Layout theme={{ mode: 'dark' }}>

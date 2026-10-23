@@ -26,14 +26,23 @@ export type CanonicalQueue = Omit<
 export const resolveQueue = (source: IRQueue): CanonicalQueue => {
   const { items, data, dataExpand, skeleton, layout, border, padding, ...common } = source;
   const cells = items ?? expandLinearCells(data !== undefined ? { data, dataExpand } : { skeleton });
-  const path = QueueBorderSchema.parse(typeof border === 'object' ? border : {});
-  const style = QueueBorderSchema.shape.style.unwrap().parse(path.style ?? {});
+  const path = typeof border === 'object' ? border : {};
+  const styleSchema = QueueBorderSchema.shape.style.unwrap().shape;
+  const style = {
+    ...path.style,
+    stroke: path.style?.stroke ?? styleSchema.stroke.parse(undefined),
+    strokeWidth: path.style?.strokeWidth ?? styleSchema.strokeWidth.parse(undefined),
+    fill: path.style?.fill ?? styleSchema.fill.parse(undefined),
+  };
   return {
     ...common,
     items: cells.map(cell =>
       resolveCell(cell, { overallStyle: source.defaultCell?.style, overallLayout: source.defaultCell?.layout }),
     ),
-    layout: QueueLayoutSchema.parse(layout ?? {}),
+    layout: {
+      direction: layout?.direction ?? QueueLayoutSchema.shape.direction.parse(undefined),
+      gap: layout?.gap ?? QueueLayoutSchema.shape.gap.parse(undefined),
+    },
     padding: resolveBoxSpacing(padding ?? QueueSchema.options[0].shape.padding.parse(undefined), 0),
     ...(border === false ? {} : { border: { ...path, style } }),
   };

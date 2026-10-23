@@ -62,7 +62,7 @@ export const AnnotationPointPreview: FC<AnnotationPointValues> = values => {
               size: values.size,
               fill: 'darkorange',
               label: values.showLabel
-                ? { content: 'A', position: values.labelPosition, distance: values.distance }
+                ? { text: 'A', position: values.labelPosition, distance: values.distance }
                 : undefined,
             }}
           />

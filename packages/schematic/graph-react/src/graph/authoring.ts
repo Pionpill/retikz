@@ -46,7 +46,7 @@ export type GraphLayoutHostProps = Pick<
   | 'pathGenerators'
   | 'pathKinds'
   | 'composites'
-  | 'themeStyles'
+  | 'themeDefinitions'
   | 'lowerTex'
   | 'artifacts'
   | 'onArtifacts'
@@ -80,7 +80,7 @@ export const graphLayoutHostPropKeys = [
   'pathGenerators',
   'pathKinds',
   'composites',
-  'themeStyles',
+  'themeDefinitions',
   'lowerTex',
   'artifacts',
   'onArtifacts',

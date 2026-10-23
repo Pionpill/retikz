@@ -1,13 +1,10 @@
 import { mergeProperties } from '@retikz/foundation';
 
-import type { IRArrowDetail, IRArrowEndDetail, IRArrowMark, IRPathBase } from '../../schemas';
+import type { IRArrowDetail, IRArrowStyle, IRArrowMark, IRPathBase } from '../../schemas';
 import type { EffectiveScopeDefaults } from './types';
 
 /** 合并单侧箭头样式：下层只覆盖已声明字段，其余继承上层默认值 */
-const mergeArrowEnd = (
-  a: IRArrowEndDetail | undefined,
-  b: IRArrowEndDetail | undefined,
-): IRArrowEndDetail | undefined => {
+const mergeArrowEnd = (a: IRArrowStyle | undefined, b: IRArrowStyle | undefined): IRArrowStyle | undefined => {
   if (a === undefined) return b === undefined ? undefined : { ...b };
   if (b === undefined) return { ...a };
   return { ...a, ...mergeProperties([b], { shouldOverride: value => value !== undefined }) };
@@ -27,7 +24,7 @@ export const mergeArrowDefaults = (a: IRArrowDetail, b: IRArrowDetail): IRArrowD
 };
 
 /** 清除端点专属颜色，让它跟随 path 箭头主色 */
-const dropArrowEndColor = (end: IRArrowEndDetail): IRArrowEndDetail => {
+const dropArrowEndColor = (end: IRArrowStyle): IRArrowStyle => {
   const next = { ...end };
   delete next.color;
   return next;
@@ -39,8 +36,8 @@ const resolveArrowDetail = (
   scopeDefaults: EffectiveScopeDefaults,
   masterColor: string | undefined,
 ): IRArrowDetail | undefined => {
-  let acc: IRArrowDetail = { ...scopeDefaults.arrow };
-  let touched = scopeDefaults.arrow !== undefined;
+  let acc: IRArrowDetail = { ...scopeDefaults.path?.arrow };
+  let touched = scopeDefaults.path?.arrow !== undefined;
 
   if (masterColor !== undefined) {
     acc.color = masterColor;
@@ -57,7 +54,7 @@ const resolveArrowDetail = (
   return touched ? acc : undefined;
 };
 
-const arrowMarkFromDetail = (detail: IRArrowEndDetail | undefined): Omit<IRArrowMark, 'kind'> => {
+const arrowMarkFromDetail = (detail: IRArrowStyle | undefined): Omit<IRArrowMark, 'kind'> => {
   if (detail === undefined) return {};
   return mergeProperties([detail], { shouldOverride: value => value !== undefined });
 };

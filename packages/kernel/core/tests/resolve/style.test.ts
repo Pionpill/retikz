@@ -9,7 +9,7 @@ import {
   resolveEffectivePath,
 } from '../../src/resolve/style';
 import type { IRPathBase, IRScope } from '../../src/schemas';
-import { PathLabelSchema, NodeSchema, PathBaseSchema, SHADOW_PRESETS } from '../../src/schemas';
+import { PathLabelSchema, NodeSchema, PathSchema, SHADOW_PRESETS } from '../../src/schemas';
 
 const styleScope = (properties: Partial<IRScope>): IRScope => ({
   type: 'scope',
@@ -18,7 +18,7 @@ const styleScope = (properties: Partial<IRScope>): IRScope => ({
 });
 
 const pathOf = (properties: Partial<IRPathBase> = {}): IRPathBase =>
-  PathBaseSchema.parse({
+  PathSchema.parse({
     type: 'path',
     children: [
       { type: 'step', kind: 'move', to: [0, 0] },
@@ -48,11 +48,11 @@ describe('Scope effective defaults', () => {
       parent,
     );
     const node = resolveEffectiveNodeStyle({ type: 'node', position: [0, 0], style: { color: 'gold' } }, child);
-    expect(node.style).toMatchObject({ stroke: 'green', opacity: 0, fill: 'gold', textColor: 'gold' });
+    expect(node.style).toMatchObject({ stroke: 'green', opacity: { overall: 0 }, fill: 'gold', textColor: 'gold' });
     expect(resolveEffectivePath(pathOf(), child).style?.stroke).toBe('green');
     expect(resolveEffectiveNodeStyle({ type: 'node', position: [0, 0] }, parent).style).toMatchObject({
       stroke: 'blue',
-      opacity: 0.8,
+      opacity: { overall: 0.8 },
       fill: 'red',
     });
   });
@@ -62,33 +62,36 @@ describe('Scope effective defaults', () => {
       styleScope({
         defaults: {
           style: { color: 'red' },
-          node: { style: { fill: 'blue' } },
-          arrow: { color: 'purple', end: { color: 'green', scale: 2 } },
-          label: { textColor: 'orange' },
+          node: { style: { fill: 'blue' }, label: { textColor: 'orange' } },
+          path: { label: { textColor: 'orange' }, arrow: { color: 'purple', end: { color: 'green', scale: 2 } } },
         },
       }),
     );
-    const child = resolveScopeDefaults(styleScope({ defaults: { reset: ['node', 'arrow'], arrow: {} } }), parent);
+    const child = resolveScopeDefaults(
+      styleScope({ defaults: { reset: ['node', 'path'], path: { arrow: {} } } }),
+      parent,
+    );
     expect(resolveEffectiveNodeStyle({ type: 'node', position: [0, 0] }, child).style).toEqual({});
-    expect(child.scopeColor).toBe('red');
-    expect(child.label).toEqual({ textColor: 'orange' });
-    expect(child.arrow).toEqual({});
+    expect(child.node?.label).toBeUndefined();
+    expect(child.path?.label).toEqual({});
+    expect(child.path?.arrow).toEqual({});
     const marks = [{ pos: 1, mark: { kind: 'arrow' as const } }];
     expect(resolveEffectivePath(pathOf({ style: { color: 'gold' }, marks }), parent).marks?.[0]?.mark).toMatchObject({
       color: 'gold',
       scale: 2,
     });
     expect(resolveEffectivePath(pathOf({ marks }), parent).marks?.[0]?.mark).toMatchObject({ color: 'red', scale: 2 });
-    expect(parent.arrow).toEqual({ color: 'purple', end: { color: 'green', scale: 2 } });
+    expect(parent.path?.arrow).toEqual({ color: 'purple', end: { color: 'green', scale: 2 } });
     expect(resolveEffectiveNodeStyle({ type: 'node', position: [0, 0] }, parent).style?.fill).toBe('blue');
   });
 
   it('cuts only the channels named by resetStyle', () => {
     expect(cutsStyleChannel(['node'], 'node')).toBe(true);
     expect(cutsStyleChannel(['node'], 'path')).toBe(false);
-    expect(cutsStyleChannel(['label', 'arrow'], 'label')).toBe(true);
-    expect(cutsStyleChannel(['label', 'arrow'], 'arrow')).toBe(true);
-    expect(cutsStyleChannel(['label', 'arrow'], 'node')).toBe(false);
+    expect(cutsStyleChannel(['path'], 'path')).toBe(true);
+    expect(cutsStyleChannel(['path'], 'node')).toBe(false);
+    expect(cutsStyleChannel(true, 'node')).toBe(true);
+    expect(cutsStyleChannel([], 'path')).toBe(false);
   });
 
   it('propagates a scope master color to node and path channels', () => {
@@ -110,7 +113,10 @@ describe('Scope effective defaults', () => {
   it('applies label font fields by per-field priority', () => {
     const frame = resolveScopeDefaults(
       styleScope({
-        defaults: { label: { font: { family: 'default', size: 20, weight: 'bold' } } },
+        defaults: {
+          node: { label: { font: { family: 'default', size: 20, weight: 'bold' } } },
+          path: { label: { font: { family: 'default', size: 20, weight: 'bold' } } },
+        },
       }),
     );
     const label = PathLabelSchema.parse({ text: 'x', font: { family: 'label', size: 10 } });
@@ -125,11 +131,13 @@ describe('Scope effective defaults', () => {
     const frame = resolveScopeDefaults(
       styleScope({
         defaults: {
-          arrow: {
-            shape: 'stealth',
-            scale: 2,
-            start: { shape: 'triangle' },
-            end: { shape: 'circle' },
+          path: {
+            arrow: {
+              shape: 'stealth',
+              scale: 2,
+              start: { shape: 'triangle' },
+              end: { shape: 'circle' },
+            },
           },
         },
       }),

@@ -7,7 +7,7 @@ import type {
   AnyCellPresentationDefinition,
   AnyCellVisualScaleDefinition,
   AnyTableStructureDefinition,
-  TableThemeStyleDefinition,
+  TableThemeDefinition,
 } from '../../contract';
 import { RetikzTableError } from '../../error';
 import { extractTableStructureKind } from '../../providers';
@@ -25,7 +25,7 @@ const PRESENTATION_DEFINITIONS_KEY = 'presentationDefinitions';
 
 const VISUAL_SCALE_DEFINITIONS_KEY = 'visualScaleDefinitions';
 
-const TABLE_THEME_STYLES_KEY = 'tableThemeStyles';
+const TABLE_THEME_STYLES_KEY = 'tableThemeDefinitions';
 
 const DATA_OPTIONS_KEYS = new Set([
   'formatDefinitions',
@@ -136,10 +136,10 @@ const mergeLowerOptions = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): Lowe
     definition => definition.name,
     'visual scale definition',
   );
-  const tableThemeStyles = mergeByIdentity<TableThemeStyleDefinition>(
-    optionSets.map(options => options.tableThemeStyles),
+  const tableThemeDefinitions = mergeByIdentity<TableThemeDefinition>(
+    optionSets.map(options => options.tableThemeDefinitions),
     definition => definition.name,
-    'theme style definition',
+    'theme definition',
   );
 
   return {
@@ -198,7 +198,7 @@ const mergeLowerOptions = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): Lowe
     ...(formatterDefinitions.length === 0 ? {} : { formatterDefinitions }),
     ...(presentationDefinitions.length === 0 ? {} : { presentationDefinitions }),
     ...(visualScaleDefinitions.length === 0 ? {} : { visualScaleDefinitions }),
-    ...(tableThemeStyles.length === 0 ? {} : { tableThemeStyles }),
+    ...(tableThemeDefinitions.length === 0 ? {} : { tableThemeDefinitions }),
   };
 };
 

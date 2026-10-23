@@ -84,42 +84,16 @@ export const createVanillaCompileDriverSession = (
   input: VanillaCompileDriverInput,
 ): VanillaCompileDriverSession => {
   try {
-    const candidate: unknown = driver.create(input);
-    if (typeof candidate !== 'object' || candidate === null) {
-      throw new RetikzVanillaError(
-        RetikzVanillaErrorCode.Runtime,
-        'Vanilla compile driver must return a session object',
-      );
-    }
-
-    const cached = NORMALIZED_VANILLA_COMPILE_SESSIONS.get(candidate);
+    const session = driver.create(input);
+    const cached = NORMALIZED_VANILLA_COMPILE_SESSIONS.get(session);
     if (cached !== undefined) return cached;
-
-    const session = candidate as VanillaCompileDriverSession;
-    if (!Array.isArray(session.observers)) {
-      throw new RetikzVanillaError(
-        RetikzVanillaErrorCode.Runtime,
-        'Vanilla compile driver must return an observers array',
-      );
-    }
-
-    if (typeof session.resolve !== 'function') {
-      throw new RetikzVanillaError(
-        RetikzVanillaErrorCode.Runtime,
-        'Vanilla compile driver must provide resolve(coreOutput)',
-      );
-    }
-
-    if (session.commit !== undefined && typeof session.commit !== 'function') {
-      throw new RetikzVanillaError(RetikzVanillaErrorCode.Runtime, 'Vanilla compile driver commit must be a function');
-    }
 
     const normalized = Object.freeze({
       observers: Object.freeze([...session.observers]),
       resolve: session.resolve,
       ...(session.commit === undefined ? {} : { commit: session.commit }),
     });
-    NORMALIZED_VANILLA_COMPILE_SESSIONS.set(candidate, normalized);
+    NORMALIZED_VANILLA_COMPILE_SESSIONS.set(session, normalized);
 
     return normalized;
   } catch (cause) {
@@ -137,24 +111,13 @@ export const resolveVanillaCompileOutput = (
   if (cached !== undefined) return cached;
 
   try {
-    const candidate: unknown = session.resolve(coreOutput);
-    if (typeof candidate !== 'object' || candidate === null) {
-      throw new RetikzVanillaError(RetikzVanillaErrorCode.Runtime, 'Vanilla compile driver output must be an object');
-    }
-
-    const output = candidate as VanillaCompileOutput;
+    const output = session.resolve(coreOutput);
     if (output.primary !== coreOutput.result || output.observerOutputs !== coreOutput.observerOutputs) {
       throw new RetikzVanillaError(
         RetikzVanillaErrorCode.Runtime,
         'Vanilla compile driver must preserve the same-revision Core primary and observer outputs',
       );
     }
-
-    if (!Array.isArray(output.diagnostics))
-      throw new RetikzVanillaError(
-        RetikzVanillaErrorCode.Runtime,
-        'Vanilla compile driver diagnostics must be an array',
-      );
 
     const normalized = Object.freeze({
       primary: output.primary,

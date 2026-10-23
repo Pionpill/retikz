@@ -26,7 +26,7 @@ export const StripChartInputEmbedAdapter = createChartInputEmbedAdapter(
     return buildPointChartRuntime(
       source,
       parts,
-      createStripChartProviderContribution(parts.themeDefinitions, parts.lowerOptions),
+      createStripChartProviderContribution(parts.chartThemeDefinitions, parts.lowerOptions),
     );
   },
 );

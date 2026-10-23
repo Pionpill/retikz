@@ -87,11 +87,12 @@ export const renderRibbonLabelSupportPreview = (values: RibbonLabelSupportPrevie
       <Path
         kind="ribbon"
         kindOptions={{
+          label: { text: 'M', placement: 'inside', sloped: true },
           width: { kind: 'fixed', value: values.width },
           start: { cap, label: { ...label, text: 'A' } },
           end: { cap, label: { ...label, text: 'B' } },
         }}
-        label={{ text: 'M', placement: 'inside', sloped: true }}
+
         style={{ fill: 'dodgerblue', stroke: 'dodgerblue', strokeWidth: 2, opacity: { fill: 0.22 } }}
       >
         <Step kind="move" to={[-120, 0]} />

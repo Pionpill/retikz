@@ -6,12 +6,22 @@ import {
   TableFractionTrackSizeSchema,
   TableLayoutSchema,
   TableMinmaxTrackSizeSchema,
+  TableNoBorderSchema,
   TableTrackOverridesSchema,
   TableTrackSizeKind,
   TableTrackSizeSchema,
 } from '../../src';
 
 describe('Table layout schema', () => {
+  it('preserves finite integer border priorities without imposing a safe-integer bound', () => {
+    for (const priority of [-1e100, -1, 0, 1, 1e100]) {
+      expect(TableNoBorderSchema.parse({ kind: 'none', priority }).priority).toBe(priority);
+    }
+    for (const priority of [0.5, Number.MIN_VALUE, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(TableNoBorderSchema.safeParse({ kind: 'none', priority }).success).toBe(false);
+    }
+  });
+
   it('round-trips alpha.2 track sizing, gaps, and border defaults without materializing defaults', () => {
     const layout = {
       columnSize: { kind: TableTrackSizeKind.Auto },

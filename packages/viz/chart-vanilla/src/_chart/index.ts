@@ -37,12 +37,12 @@ type ChartRenderInput = InputEmbed<ChartHostThemeInput & { layout?: IRChartSourc
 
 /** 两种入口共用相同的Scene与Core配置，异步生命周期由Vanilla负责 */
 const chartRenderRequest = (input: ChartRenderInput, compile: RenderChartOptions['compile']) => {
-  const themeStyles =
-    input.props.themeStyles === undefined
-      ? compile?.themeStyles
-      : compile?.themeStyles === undefined
-        ? input.props.themeStyles
-        : [...input.props.themeStyles, ...compile.themeStyles];
+  const themeDefinitions =
+    input.props.themeDefinitions === undefined
+      ? compile?.themeDefinitions
+      : compile?.themeDefinitions === undefined
+        ? input.props.themeDefinitions
+        : [...input.props.themeDefinitions, ...compile.themeDefinitions];
   const layout = input.props.layout;
 
   return {
@@ -53,7 +53,7 @@ const chartRenderRequest = (input: ChartRenderInput, compile: RenderChartOptions
       ...(input.props.theme === undefined ? {} : { theme: input.props.theme }),
       children: [input],
     }),
-    compile: { ...compile, ...(themeStyles === undefined ? {} : { themeStyles }) },
+    compile: { ...compile, ...(themeDefinitions === undefined ? {} : { themeDefinitions }) },
   };
 };
 

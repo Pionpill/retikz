@@ -96,12 +96,11 @@ export const selectorInputFields = (
   return definition.inputFields?.(parseSelectorOperation(definition, operation)) ?? [];
 };
 
-/** 对一组 rows 执行 selector operation，并允许 context 注入自定义 selector registry */
-export const applySelectorOperation = (
-  rows: Array<ExternalRow>,
+/** 精确解析 selector operation，返回本次请求内可供多个分组复用的计算入口 */
+export const resolveSelectorComputation = (
   operation: IRDataSelectorOperation,
   context: TransformContext,
-): Array<RowSelection> => {
+): ((rows: Array<ExternalRow>) => Array<RowSelection>) => {
   const registry = context.rowSelectorRegistry ?? resolveRowSelectorRegistry();
   const definition = selectorDefinitionOf(operation, registry);
   const parsed = parseSelectorOperation(definition, operation);
@@ -112,20 +111,29 @@ export const applySelectorOperation = (
   if (implementation === undefined)
     throw new RetikzDataError(`data: selector "${operation.kind}" has no local implementation`);
 
-  let out: Array<RowSelection>;
+  return rows => {
+    let out: Array<RowSelection>;
 
-  try {
-    out = implementation.select(rows, parsed);
-  } catch (cause) {
-    throw new RetikzDataError(`data: selector "${operation.kind}" failed`, { cause });
-  }
+    try {
+      out = implementation.select(rows, parsed);
+    } catch (cause) {
+      throw new RetikzDataError(`data: selector "${operation.kind}" failed`, { cause });
+    }
 
-  context.lineage?.recordSelectorOperation({
-    operation,
-    rows,
-    selectedRows: out.map(selection => selection.row),
-    inputFields: definition.inputFields?.(parsed) ?? [],
-  });
+    context.lineage?.recordSelectorOperation({
+      operation,
+      rows,
+      selectedRows: out.map(selection => selection.row),
+      inputFields: definition.inputFields?.(parsed) ?? [],
+    });
 
-  return out;
+    return out;
+  };
 };
+
+/** 独立调用时解析参数后执行一次计算 */
+export const applySelectorOperation = (
+  rows: Array<ExternalRow>,
+  operation: IRDataSelectorOperation,
+  context: TransformContext,
+): Array<RowSelection> => resolveSelectorComputation(operation, context)(rows);

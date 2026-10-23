@@ -10,6 +10,8 @@ keywords: 'Theme、Source、xxxDefaults、theme'
 - 主责：Core 的跨包 Theme 协议；领域 Source、defaults 与规则由各领域 owner 持有
 - 关联：[alpha.4 roadmap](./roadmap.md) · [ADR-036 Source 分组](./036-source-ir-semantic-grouping.md) · [Core 绘图完备设计](../../../architecture/core-drawing-complete.md) · [视觉主题设计](../../../../../../notes/architecture/visual-theme-design.md) · [原子契约设计](../../../../../../notes/architecture/atomic-contract-design.md)
 
+> Core 默认通道、宿主装饰归属、reset 与字体覆盖粒度已由 [067](./067-host-owned-defaults.md) 替代；本文对应旧描述仅用于解释原决策，其余 Source 和领域边界继续有效
+
 ## 背景与目标
 
 Source 已用 style、layout、defaults 区分实例视觉、布局与后代默认。领域 Theme 若继续把这些字段压平为 token 或 appearance，就会重复维护路径、值契约和覆盖规则；只更新字段引用不能解决这一差异。

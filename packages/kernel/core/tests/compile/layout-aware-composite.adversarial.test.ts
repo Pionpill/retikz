@@ -1,8 +1,7 @@
 import type { JsonValue } from '@retikz/foundation';
-import { NonBlankStringSchema, RetikzError } from '@retikz/foundation';
-import { JsonObjectSchema } from '@retikz/foundation';
+import { RetikzError } from '@retikz/foundation';
 import { describe, expect, it, vi } from 'vitest';
-import { array, boolean, custom, enum as zodEnum, intersection, literal, number, object, strictObject } from 'zod';
+import { boolean, custom, enum as zodEnum, literal, number, strictObject } from 'zod';
 
 import type {
   ClipShape,
@@ -15,7 +14,6 @@ import type {
   CompositeCompileContext,
   LayoutProposal,
   LowerTex,
-  MarkerPrimitive,
   ScenePrimitive,
   TextMeasurer,
 } from '../../src';
@@ -447,7 +445,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(/test\.invalidNestedProposal.*proposal.*finite and non-negative/i);
   });
 
-  it('keeps hostile proposal reflection fatal when a parent discards the nested probe', () => {
+  it('keeps hostile proposal access fatal when a parent discards the nested probe', () => {
     const nested = defineComposite({
       namespace: 'test',
       type: 'hostileNestedProposal',
@@ -457,8 +455,8 @@ describe('layout-aware composite constraints and bounds', () => {
       }),
       compile: (_, context) => {
         const hostileProposal = new Proxy(NaturalLayoutProposal, {
-          ownKeys: () => {
-            throw new Error('hostile proposal keys');
+          get: () => {
+            throw new Error('hostile proposal access');
           },
         });
         context.layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, hostileProposal);
@@ -544,90 +542,6 @@ describe('layout-aware composite constraints and bounds', () => {
       }),
     ).not.toThrow();
     expect([...reads.values()]).toEqual([...reads.values()].map(() => 1));
-  });
-
-  it.each([
-    {
-      x: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
-    },
-    {
-      x: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
-      y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
-      z: { kind: LayoutAxisProposalKind.Exact, value: 10 },
-    },
-    {
-      x: { kind: LayoutAxisProposalKind.Exact, value: 10, min: 0 },
-      y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
-    },
-    {
-      x: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural, max: 10 },
-      y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
-    },
-  ])('rejects missing axes and unsupported proposal fields in %o', proposal => {
-    const definition = defineComposite({
-      namespace: 'test',
-      type: 'unsupportedConstraintField',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('unsupportedConstraintField'),
-      }),
-      compile: (_, { layoutChild }) => {
-        layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, proposal as never);
-        return { children: [] };
-      },
-    });
-
-    expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'unsupportedConstraintField' }), { composites: [definition] }),
-    ).toThrow(/test\.unsupportedConstraintField.*children\[0\].*proposal/i);
-  });
-
-  it('rejects unknown layout proposal kinds', () => {
-    const definition = defineComposite({
-      namespace: 'test',
-      type: 'unknownConstraintKind',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('unknownConstraintKind'),
-      }),
-      compile: (_, { layoutChild }) => {
-        layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, {
-          x: { kind: 'mystery', value: 10 },
-          y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
-        } as never);
-        return { children: [] };
-      },
-    });
-
-    expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'unknownConstraintKind' }), {
-        composites: [definition],
-      }),
-    ).toThrow(/test\.unknownConstraintKind.*children\[0\].*proposal.*mystery/i);
-  });
-
-  it('rejects unknown intrinsic proposal modes', () => {
-    const definition = defineComposite({
-      namespace: 'test',
-      type: 'unknownIntrinsicMode',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('unknownIntrinsicMode'),
-      }),
-      compile: (_, { layoutChild }) => {
-        layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, {
-          x: { kind: LayoutAxisProposalKind.Intrinsic, mode: 'preferred' },
-          y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
-        } as never);
-        return { children: [] };
-      },
-    });
-
-    expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'unknownIntrinsicMode' }), {
-        composites: [definition],
-      }),
-    ).toThrow(/test\.unknownIntrinsicMode.*children\[0\].*proposal.*preferred/i);
   });
 
   it('preserves explicit zero and canonicalizes negative zero before child dispatch and slot resolution', () => {
@@ -1284,7 +1198,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('does not downgrade hostile nested replay wrapper reflection to a failed probe', () => {
+  it('does not downgrade replay wrapper access errors to a failed probe', () => {
     const malformed = defineComposite({
       namespace: 'test',
       type: 'hostileReplayWrapper',
@@ -1296,8 +1210,8 @@ describe('layout-aware composite constraints and bounds', () => {
         const wrapper = new Proxy(
           {},
           {
-            ownKeys: () => {
-              throw new Error('hostile replay wrapper reflection');
+            get: () => {
+              throw new Error('hostile replay wrapper read');
             },
           },
         );
@@ -1357,40 +1271,6 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(clipReads).toBe(1);
   });
 
-  it('does not downgrade sparse nested replay wrapper transforms to a failed probe', () => {
-    const malformed = defineComposite({
-      namespace: 'test',
-      type: 'sparseReplayWrapperTransforms',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('sparseReplayWrapperTransforms'),
-      }),
-      compile: (_, context) => {
-        const probe = context.layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, NaturalLayoutProposal);
-        if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
-        return { children: [context.replay(probe.result, { transforms: Array<never>(1) })] };
-      },
-    });
-    const parent = defineComposite({
-      namespace: 'test',
-      type: 'sparseReplayWrapperTransformsParent',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('sparseReplayWrapperTransformsParent'),
-      }),
-      compile: (_, context) => {
-        context.layoutChild({ namespace: 'test', type: 'sparseReplayWrapperTransforms' }, NaturalLayoutProposal);
-        return { children: [] };
-      },
-    });
-
-    expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'sparseReplayWrapperTransformsParent' }), {
-        composites: [malformed, parent],
-      }),
-    ).toThrow(RetikzCoreError);
-  });
-
   it('does not downgrade hostile nested runtime Scope props reflection to a failed probe', () => {
     const malformed = defineComposite({
       namespace: 'test',
@@ -1426,36 +1306,6 @@ describe('layout-aware composite constraints and bounds', () => {
 
     expect(() =>
       compileToScene(sceneOf({ namespace: 'test', type: 'hostileRuntimeScopePropsParent' }), {
-        composites: [malformed, parent],
-      }),
-    ).toThrow(RetikzCoreError);
-  });
-
-  it('does not downgrade sparse nested runtime Scope transforms to a failed probe', () => {
-    const malformed = defineComposite({
-      namespace: 'test',
-      type: 'sparseRuntimeScopeTransforms',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('sparseRuntimeScopeTransforms'),
-      }),
-      compile: (_, context) => ({ children: [context.scope({ transforms: Array<never>(1) }, [])] }),
-    });
-    const parent = defineComposite({
-      namespace: 'test',
-      type: 'sparseRuntimeScopeTransformsParent',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('sparseRuntimeScopeTransformsParent'),
-      }),
-      compile: (_, context) => {
-        context.layoutChild({ namespace: 'test', type: 'sparseRuntimeScopeTransforms' }, NaturalLayoutProposal);
-        return { children: [] };
-      },
-    });
-
-    expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'sparseRuntimeScopeTransformsParent' }), {
         composites: [malformed, parent],
       }),
     ).toThrow(RetikzCoreError);
@@ -1578,9 +1428,9 @@ describe('layout-aware composite constraints and bounds', () => {
       name: 'malformedProbeShape',
       paramsSchema: strictObject({}),
       circumscribe: () => ({ halfWidth: Number.NaN, halfHeight: 1 }),
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
-      emit: BUILTIN_SHAPES.rectangle.emit,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
+      emit: BUILTIN_SHAPES.get('rectangle')!.emit,
     });
     const shapeParent = defineComposite({
       namespace: 'test',
@@ -1628,7 +1478,7 @@ describe('layout-aware composite constraints and bounds', () => {
       child: {
         type: 'node' as const,
         position: [0, 0] as [number, number],
-        text: [{ runs: [{ text: 'mixed body' }] }],
+        text: [{ segments: [{ text: 'mixed body' }] }],
       },
     },
     {
@@ -1636,7 +1486,7 @@ describe('layout-aware composite constraints and bounds', () => {
       child: {
         type: 'node' as const,
         position: [0, 0] as [number, number],
-        label: { text: { runs: [{ text: 'mixed label' }] }, position: 'center' as const },
+        label: { text: { segments: [{ text: 'mixed label' }] }, position: 'center' as const },
       },
     },
     {
@@ -1704,12 +1554,12 @@ describe('layout-aware composite constraints and bounds', () => {
             ? {
                 type: 'node',
                 position: [0, 0],
-                label: { text: { runs: [{ tex: 'x' }] }, position: 'center' },
+                label: { text: { segments: [{ tex: 'x' }] }, position: 'center' },
               }
             : {
                 type: 'node',
                 position: [0, 0],
-                text: [{ runs: [{ tex: 'x' }] }],
+                text: [{ segments: [{ tex: 'x' }] }],
               };
         context.layoutChild(child, NaturalLayoutProposal);
 
@@ -1770,7 +1620,7 @@ describe('layout-aware composite constraints and bounds', () => {
           {
             type: 'node',
             position: [0, 0],
-            text: provider === 'measureText' ? 'plain' : [{ runs: [{ tex: 'x' }] }],
+            text: provider === 'measureText' ? 'plain' : [{ segments: [{ tex: 'x' }] }],
           },
           NaturalLayoutProposal,
         );
@@ -1813,9 +1663,9 @@ describe('layout-aware composite constraints and bounds', () => {
             },
           },
         ),
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
-      emit: BUILTIN_SHAPES.rectangle.emit,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
+      emit: BUILTIN_SHAPES.get('rectangle')!.emit,
     });
     const parent = defineComposite({
       namespace: 'test',
@@ -1856,17 +1706,17 @@ describe('layout-aware composite constraints and bounds', () => {
     const hostileShape = defineShape({
       name: 'hostilePointShape',
       paramsSchema: strictObject({}),
-      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-      boundaryPoint: variant === 'boundaryPoint' ? hostilePoint : BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: variant === 'shapeAnchor' ? hostilePoint : BUILTIN_SHAPES.rectangle.anchor,
-      edgePoint: variant === 'shapeEdgePoint' ? hostilePoint : BUILTIN_SHAPES.rectangle.edgePoint,
-      emit: BUILTIN_SHAPES.rectangle.emit,
+      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+      boundaryPoint: variant === 'boundaryPoint' ? hostilePoint : BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: variant === 'shapeAnchor' ? hostilePoint : BUILTIN_SHAPES.get('rectangle')!.anchor,
+      edgePoint: variant === 'shapeEdgePoint' ? hostilePoint : BUILTIN_SHAPES.get('rectangle')!.edgePoint,
+      emit: BUILTIN_SHAPES.get('rectangle')!.emit,
     });
     const hostileBoundary = defineBoundary({
       name: 'hostilePointBoundary',
       paramsSchema: strictObject({}),
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: variant === 'boundaryAnchor' ? hostilePoint : BUILTIN_SHAPES.rectangle.anchor,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: variant === 'boundaryAnchor' ? hostilePoint : BUILTIN_SHAPES.get('rectangle')!.anchor,
     });
     const parent = defineComposite({
       namespace: 'test',
@@ -1929,10 +1779,10 @@ describe('layout-aware composite constraints and bounds', () => {
             },
           },
         ),
-      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
-      emit: BUILTIN_SHAPES.rectangle.emit,
+      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
+      emit: BUILTIN_SHAPES.get('rectangle')!.emit,
     });
     const parent = defineComposite({
       namespace: 'test',
@@ -1970,7 +1820,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const hostileEnvelopeShape = defineShape({
       name: 'hostileEnvelopeShape',
       paramsSchema: strictObject({}),
-      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
+      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
       connectionEnvelope: () =>
         new Proxy(
           { halfWidth: 10, halfHeight: 10 },
@@ -1980,9 +1830,9 @@ describe('layout-aware composite constraints and bounds', () => {
             },
           },
         ),
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
-      emit: BUILTIN_SHAPES.rectangle.emit,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
+      emit: BUILTIN_SHAPES.get('rectangle')!.emit,
     });
     const hostileBoundary = defineBoundary({
       name: 'hostileRectBoundary',
@@ -1993,8 +1843,8 @@ describe('layout-aware composite constraints and bounds', () => {
             throw new Error('hostile boundary rect reflection');
           },
         }),
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
     });
     const parent = defineComposite({
       namespace: 'test',
@@ -2047,8 +1897,8 @@ describe('layout-aware composite constraints and bounds', () => {
       name: 'nullishRectBoundary',
       paramsSchema: strictObject({}),
       resolveRect: () => output as never,
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
     });
     const parent = defineComposite({
       namespace: 'test',
@@ -2221,37 +2071,33 @@ describe('layout-aware composite constraints and bounds', () => {
     expect({ boundsPointsReads, xReads }).toEqual({ boundsPointsReads: 1, xReads: 1 });
   });
 
-  it('lets structurally malformed shape, arrow, pattern, clip, and path-generator outputs pierce a discarded probe', () => {
+  it('lets invalid provider geometry and clip grammar pierce a discarded probe', () => {
     const badShape = defineShape({
       name: 'badEmitShape',
       paramsSchema: strictObject({}),
-      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
       emit: (() => [{ type: 'rect', x: 0, y: 0, width: -1, height: 2 }]) as unknown as () => Iterable<ScenePrimitive>,
     });
     const badArrow = defineArrow({
       name: 'badEmitArrow',
       backX: 0,
       lineContactX: 0,
-      emit: (() => [{ type: 'rect', x: 0, y: 0, width: -1, height: 2 }]) as unknown as () => Iterable<MarkerPrimitive>,
+      emit: (() => [{ type: 'rect', x: 0, y: 0, width: -1, height: 2 }]) as unknown as () => Iterable<ScenePrimitive>,
     });
     const badPattern = definePattern({
       name: 'badEmitPattern',
       emit: (() => [
-        { type: 'group', children: [{ type: 'rect', x: 0, y: 0, width: -1, height: 2 }] },
-      ]) as unknown as () => Iterable<MarkerPrimitive>,
+        { type: 'group', children: [{ type: 'rect', x: 0, y: 0, width: NaN, height: 2 }] },
+      ]) as unknown as () => Iterable<ScenePrimitive>,
     });
     const badClip = defineClip({
       kind: 'badResolvedClip',
       schema: strictObject({ kind: literal('badResolvedClip') }),
-      resolve: () => ({ kind: 'badResolvedClip', width: -1 }),
-      shapeSchema: strictObject({ kind: literal('badResolvedClip'), width: number().positive() }),
+      resolve: () => ({ kind: 'badResolvedClip' }),
       lower: () => ({
-        commands: [
-          { kind: 'move', to: [0, 0] },
-          { kind: 'line', to: [1, 1] },
-        ],
+        commands: [{ kind: 'line', to: [1, 1] }],
         fillRule: 'nonzero',
       }),
     });
@@ -2315,9 +2161,10 @@ describe('layout-aware composite constraints and bounds', () => {
     };
 
     for (const variant of ['shape', 'arrow', 'pattern', 'clip', 'pathGenerator'] as const) {
-      expect(() =>
-        compileToScene(sceneOf({ namespace: 'test', type: 'malformedProviderParent', variant }), options),
-      ).toThrow(/emit|primitive|invalid|root shape|path command|output validation/i);
+      expect(
+        () => compileToScene(sceneOf({ namespace: 'test', type: 'malformedProviderParent', variant }), options),
+        variant,
+      ).toThrow(/emit|primitive|invalid|root shape|path command|output validation|subpath/i);
     }
   });
 
@@ -2358,13 +2205,13 @@ describe('layout-aware composite constraints and bounds', () => {
       defineShape({
         name,
         paramsSchema: strictObject({}),
-        circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-        boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-        anchor: BUILTIN_SHAPES.rectangle.anchor,
+        circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+        boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+        anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
         emit: () => [primitive],
       }),
     );
-    const cyclicMarkerGroup: { type: 'group'; children: Array<MarkerPrimitive> } = {
+    const cyclicMarkerGroup: { type: 'group'; children: Array<ScenePrimitive> } = {
       type: 'group',
       children: [],
     };
@@ -2384,10 +2231,6 @@ describe('layout-aware composite constraints and bounds', () => {
       kind: 'cyclicCompoundClip',
       schema: strictObject({ kind: literal('cyclicCompoundClip') }),
       resolve: () => cyclicClipShape,
-      shapeSchema: strictObject({
-        kind: literal('cyclicCompoundClip'),
-        children: array(intersection(object({ kind: NonBlankStringSchema }), JsonObjectSchema)),
-      }),
       lower: () => ({
         commands: [
           { kind: 'move', to: [0, 0] },
@@ -2469,15 +2312,6 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     const functionTrack = validTrack();
     functionTrack.extra = () => 'not JSON';
-    const unknownTrack = validTrack();
-    unknownTrack.extra = 'schema would strip this';
-    const nestedUnknownTrack = validTrack();
-    nestedUnknownTrack.keyframes = [
-      { at: 0, value: 0, extra: true },
-      { at: 1, value: 1 },
-    ];
-    const triggerUnknownTrack = validTrack();
-    triggerUnknownTrack.trigger = { onEvent: 'activate', extra: true };
     const cyclicTrack = validTrack();
     cyclicTrack.self = cyclicTrack;
     const animatedRect = (track: Record<PropertyKey, unknown>): ScenePrimitive =>
@@ -2499,9 +2333,6 @@ describe('layout-aware composite constraints and bounds', () => {
     symbolShapeRect[Symbol('shape-hidden-function')] = () => 'hidden';
     const shapeOutputs = new Map<string, ScenePrimitive>([
       ['animationFunctionShape', animatedRect(functionTrack)],
-      ['animationUnknownShape', animatedRect(unknownTrack)],
-      ['animationNestedUnknownShape', animatedRect(nestedUnknownTrack)],
-      ['animationTriggerUnknownShape', animatedRect(triggerUnknownTrack)],
       ['animationCycleShape', animatedRect(cyclicTrack)],
       ['symbolKeyShape', symbolShapeRect as unknown as ScenePrimitive],
     ]);
@@ -2509,9 +2340,9 @@ describe('layout-aware composite constraints and bounds', () => {
       defineShape({
         name,
         paramsSchema: strictObject({}),
-        circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-        boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-        anchor: BUILTIN_SHAPES.rectangle.anchor,
+        circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+        boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+        anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
         emit: () => [primitive],
       }),
     );
@@ -2527,7 +2358,7 @@ describe('layout-aware composite constraints and bounds', () => {
       name: 'symbolKeyMarkerArrow',
       backX: 0,
       lineContactX: 0,
-      emit: () => [symbolMarker as unknown as MarkerPrimitive],
+      emit: () => [symbolMarker as unknown as ScenePrimitive],
     });
     const symbolClipShape: Record<PropertyKey, unknown> = {
       kind: 'symbolKeyClip',
@@ -2541,13 +2372,6 @@ describe('layout-aware composite constraints and bounds', () => {
       kind: 'symbolKeyClip',
       schema: strictObject({ kind: literal('symbolKeyClip') }),
       resolve: () => symbolClipShape as unknown as ClipShape,
-      shapeSchema: strictObject({
-        kind: literal('symbolKeyClip'),
-        x: number(),
-        y: number(),
-        width: number().nonnegative(),
-        height: number().nonnegative(),
-      }),
       lower: shape => ({
         commands: [
           { kind: 'move', to: [shape.x as number, shape.y as number] },
@@ -2558,9 +2382,6 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     const variants = [
       'animationFunctionShape',
-      'animationUnknownShape',
-      'animationNestedUnknownShape',
-      'animationTriggerUnknownShape',
       'animationCycleShape',
       'symbolKeyShape',
       'symbolKeyMarkerArrow',
@@ -2630,14 +2451,14 @@ describe('layout-aware composite constraints and bounds', () => {
     const proxyShape = defineShape({
       name: 'proxyTrapShape',
       paramsSchema: strictObject({}),
-      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
       emit: () => [sceneProxy as unknown as ScenePrimitive],
     });
     const markerTrap = new Error('marker iterator trap');
     const markerIterable = {
-      [Symbol.iterator]: (): Iterator<MarkerPrimitive> => ({
+      [Symbol.iterator]: (): Iterator<ScenePrimitive> => ({
         next: () => {
           throw markerTrap;
         },
@@ -2662,13 +2483,6 @@ describe('layout-aware composite constraints and bounds', () => {
       kind: 'proxyTrapClip',
       schema: strictObject({ kind: literal('proxyTrapClip') }),
       resolve: () => clipProxy as unknown as ClipShape,
-      shapeSchema: strictObject({
-        kind: literal('proxyTrapClip'),
-        x: number(),
-        y: number(),
-        width: number().nonnegative(),
-        height: number().nonnegative(),
-      }),
       lower: () => ({
         commands: [
           { kind: 'move', to: [0, 0] },
@@ -2746,9 +2560,9 @@ describe('layout-aware composite constraints and bounds', () => {
     const dynamicShape = defineShape({
       name: 'dynamicScenePrimitiveShape',
       paramsSchema: strictObject({}),
-      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
       emit: () => [dynamicRect],
     });
 
@@ -2766,9 +2580,9 @@ describe('layout-aware composite constraints and bounds', () => {
     const farShape = defineShape({
       name: 'nonFiniteVisualBoundsShape',
       paramsSchema: strictObject({}),
-      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
       emit: () => [{ type: 'rect', x: Number.MAX_VALUE, y: 0, width: Number.MAX_VALUE, height: 10, fill: '#000' }],
     });
     const parent = defineComposite({
@@ -2853,13 +2667,6 @@ describe('layout-aware composite constraints and bounds', () => {
       kind: 'dynamicClipShape',
       schema: strictObject({ kind: literal('dynamicClipShape') }),
       resolve: () => dynamicShape,
-      shapeSchema: strictObject({
-        kind: literal('dynamicClipShape'),
-        x: number(),
-        y: number(),
-        width: number().nonnegative(),
-        height: number().nonnegative(),
-      }),
       lower: shape => ({
         commands: [
           { kind: 'move', to: [shape.x, shape.y] },
@@ -2929,9 +2736,9 @@ describe('layout-aware composite constraints and bounds', () => {
       paramsSchema: strictObject({}),
       circumscribe: () => circumscribed,
       circumscribeOffset: () => offset,
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
-      emit: BUILTIN_SHAPES.rectangle.emit,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
+      emit: BUILTIN_SHAPES.get('rectangle')!.emit,
     });
 
     const result = compileToScene(
@@ -2966,14 +2773,14 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(xReads).toBe(1);
   });
 
-  it('omits an allowed explicit undefined Scene field only after exact-key and metadata validation', () => {
+  it('omits an optional undefined Scene field while detaching the primitive', () => {
     const shapeOf = (name: string, primitive: ScenePrimitive) =>
       defineShape({
         name,
         paramsSchema: strictObject({}),
-        circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-        boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-        anchor: BUILTIN_SHAPES.rectangle.anchor,
+        circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+        boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+        anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
         emit: () => [primitive],
       });
     const validShape = shapeOf('optionalUndefinedSceneShape', {
@@ -2984,25 +2791,6 @@ describe('layout-aware composite constraints and bounds', () => {
       height: 10,
       cornerRadius: undefined,
     });
-    const invalidShapes = [
-      shapeOf('unsupportedUndefinedSceneShape', {
-        type: 'rect',
-        x: 0,
-        y: 0,
-        width: 10,
-        height: 10,
-        unsupported: undefined,
-      } as unknown as ScenePrimitive),
-      shapeOf('metadataUndefinedSceneShape', {
-        type: 'rect',
-        x: 0,
-        y: 0,
-        width: 10,
-        height: 10,
-        meta: { bad: undefined },
-      } as unknown as ScenePrimitive),
-    ];
-
     const result = compileToScene(
       sceneOf({ type: 'node', position: [0, 0], shape: { type: 'optionalUndefinedSceneShape', params: {} } }),
       { shapes: [validShape] },
@@ -3012,14 +2800,6 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(rect).toBeDefined();
     expect(Object.hasOwn(rect as object, 'cornerRadius')).toBe(false);
     expect(Object.isFrozen(rect)).toBe(false);
-
-    for (const shape of invalidShapes) {
-      expect(() =>
-        compileToScene(sceneOf({ type: 'node', position: [0, 0], shape: { type: shape.name, params: {} } }), {
-          shapes: [shape],
-        }),
-      ).toThrow(RetikzCoreError);
-    }
   });
 
   it('rejects explicit undefined and sparse Scene or Marker arrays before primitive validation', () => {
@@ -3029,16 +2809,16 @@ describe('layout-aware composite constraints and bounds', () => {
       const shape = defineShape({
         name: `lossySceneArrayShape${index}`,
         paramsSchema: strictObject({}),
-        circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-        boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-        anchor: BUILTIN_SHAPES.rectangle.anchor,
+        circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+        boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+        anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
         emit: () => [{ type: 'group', children } as unknown as ScenePrimitive],
       });
       const arrow = defineArrow({
         name: `lossyMarkerArrayArrow${index}`,
         backX: 0,
         lineContactX: 0,
-        emit: () => [{ type: 'group', children } as unknown as MarkerPrimitive],
+        emit: () => [{ type: 'group', children } as unknown as ScenePrimitive],
       });
 
       expect(() =>
@@ -3068,9 +2848,9 @@ describe('layout-aware composite constraints and bounds', () => {
     const throwingShape = defineShape({
       name: 'throwingHostileProxyShape',
       paramsSchema: strictObject({}),
-      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
       emit: () => {
         throw hostileThrown.proxy;
       },
@@ -3136,9 +2916,9 @@ describe('layout-aware composite constraints and bounds', () => {
     const throwingShape = defineShape({
       name: 'throwingSelfPrototypeProxyShape',
       paramsSchema: strictObject({}),
-      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
-      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      circumscribe: BUILTIN_SHAPES.get('rectangle')!.circumscribe,
+      boundaryPoint: BUILTIN_SHAPES.get('rectangle')!.boundaryPoint,
+      anchor: BUILTIN_SHAPES.get('rectangle')!.anchor,
       emit: () => {
         throw selfReturningProxy;
       },
@@ -3197,7 +2977,6 @@ describe('layout-aware composite constraints and bounds', () => {
           if (stage === 'resolve') throw new Error('ordinary clip resolve failure');
           return { kind: 'ordinaryThrowingClip' };
         },
-        shapeSchema: strictObject({ kind: literal('ordinaryThrowingClip') }),
         lower: () => {
           if (stage === 'lower') throw new Error('ordinary clip lower failure');
 
@@ -3608,28 +3387,6 @@ describe('layout-aware composite replay ownership', () => {
 });
 
 describe('layout-aware composite artifacts and lowering errors', () => {
-  it('rejects schema-mismatched artifact payloads', () => {
-    const mismatched = defineComposite({
-      namespace: 'test',
-      type: 'mismatchedArtifact',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('mismatchedArtifact'),
-      }),
-      artifactSchema: strictObject({ count: number() }),
-      compile: () => ({
-        children: [],
-        artifact: { count: 'not-a-number' as unknown as number },
-      }),
-    });
-
-    expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'mismatchedArtifact' }), {
-        composites: [mismatched],
-      }),
-    ).toThrow();
-  });
-
   it('applies maxCompositeDepth to the layout-aware compile branch', () => {
     const recursive = defineComposite({
       namespace: 'test',

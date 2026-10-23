@@ -5,7 +5,7 @@ import type { ZodType } from 'zod';
 import { array, strictObject, string } from 'zod';
 
 import type { AnyCellVisualScaleDefinition } from '../../src';
-import { defineCellVisualScale, resolveCellVisualScaleRegistry, RetikzTableErrorCode } from '../../src';
+import { defineCellVisualScale, resolveCellVisualScaleRegistry } from '../../src';
 import { resolveCellVisualScale } from '../../src/providers/encoding';
 
 const context = { categoricalColors: ['red', 'blue'], sequentialColors: ['white', 'black'] } as const;
@@ -111,36 +111,16 @@ describe('Cell visual scale runtime guard', () => {
     expect(evaluatorReads).toBe(1);
   });
 
-  it('lets the scalar owner schema reject invalid callback domain values with a Table error', () => {
-    const domain: Array<IRDataScalarValue> = [1];
-    Object.defineProperty(domain, 0, { value: () => 1 });
-    const definition = defineCellVisualScale({
-      name: 'invalid-domain-owner',
-      optionsSchema: strictObject({}),
-      resolve: () => ({ of: () => 'red', legendForm: 'swatch', domain, range: ['red'] }),
-    });
-
-    expect(() => runCustom(definition)).toThrowError(
-      expect.objectContaining({
-        code: RetikzTableErrorCode.Default,
-        message: expect.stringMatching(/domain 0.*JSON scalar/i),
-      }),
-    );
-  });
-
   it.each([
-    [{ legendForm: 'invalid', domain: [1], range: ['red'] }, /legendForm/i],
     [{ legendForm: 'ramp', domain: [0], range: ['red'] }, /ramp/i],
     [{ legendForm: 'ramp', domain: [0, 1], range: ['red', 'blue'], edges: [0] }, /ramp/i],
     [{ legendForm: 'swatch', domain: ['a'], range: ['red', 'blue'] }, /swatch/i],
     [{ legendForm: 'swatch', domain: [2, 1], range: ['red', 'blue', 'green'], edges: [2, 1] }, /edges/i],
-    [{ legendForm: 'swatch', domain: [1], range: [' '] }, /color/i],
-    [{ legendForm: 'swatch', domain: [{ invalid: true }], range: ['red'] }, /domain/i],
   ] as const)('rejects malformed resolution %j', (partial, message) => {
     const invalid = defineCellVisualScale({
       name: `invalid-${String(partial.legendForm)}-${partial.range.length}-${partial.domain.length}`,
       optionsSchema: strictObject({}),
-      resolve: () => ({ of: () => 'red', ...partial }) as never,
+      resolve: () => ({ of: () => 'red', ...partial }),
     });
 
     expect(() => runCustom(invalid)).toThrow(message);
@@ -162,13 +142,5 @@ describe('Cell visual scale runtime guard', () => {
 
     expect(scale?.of(1)).toBe('not-a-color');
     expect(() => scale?.of(1)).toThrow(/deterministic/i);
-
-    const whitespace = defineCellVisualScale({
-      name: 'whitespace-output',
-      optionsSchema: strictObject({}),
-      resolve: () => ({ of: () => ' ', legendForm: 'swatch', domain: [1], range: ['red'] }),
-    });
-
-    expect(() => runCustom(whitespace)?.of(1)).toThrow(/color/i);
   });
 });

@@ -137,7 +137,7 @@ const runNestedFixture = (): FixtureRun => {
               type: 'node',
               id: 'shared-identity',
               position: [200, 0],
-              text: [{ runs: [{ tex: 'x' }] }],
+              text: [{ segments: [{ tex: 'x' }] }],
               style: { fill: failedPaint },
             },
             { namespace: 'nested-gate', type: 'failing' },

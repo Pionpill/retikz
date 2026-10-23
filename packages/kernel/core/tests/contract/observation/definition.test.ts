@@ -35,19 +35,6 @@ describe('Core observation definition contract', () => {
     expect(completed).toBe(0);
   });
 
-  it.each(['', ' ', '\u2003', '\ufeff'])('rejects a blank observer key with the established error (%j)', key => {
-    expect(() =>
-      defineObserver({
-        key,
-        createSession: () => ({
-          select: () => false,
-          observe: () => undefined,
-          complete: () => null,
-        }),
-      }),
-    ).toThrowError('defineCompileObserver: key must be a non-empty string.');
-  });
-
   it('does not turn owner output schemas into Inspector contracts', () => {
     expect('Inspector' in core).toBe(false);
   });

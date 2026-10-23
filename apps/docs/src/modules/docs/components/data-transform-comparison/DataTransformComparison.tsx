@@ -74,7 +74,7 @@ export const DataTransformComparison: FC<DataTransformComparisonProps> = props =
 
   return (
     <Layout
-      theme={{ style: 'docs.logic' }}
+      theme={{ name: 'docs.logic' }}
       viewBox={{
         x: -115 - sourceWidth,
         y: -maxTableHeight / 2 - 20,

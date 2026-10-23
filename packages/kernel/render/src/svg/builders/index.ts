@@ -7,7 +7,6 @@
 export * from './arrow-markers';
 export * from './clip-defs';
 export * from './document';
-export * from './marker-prim';
 export * from './paint-defs';
 export * from './prim';
 export * from './readonly-layer';

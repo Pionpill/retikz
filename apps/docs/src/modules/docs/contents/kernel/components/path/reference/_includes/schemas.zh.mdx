@@ -35,7 +35,7 @@
     zIndex: '显式栈序：大者在上；缺省 0、同值保持声明顺序；只在同层子节点间生效',
     rotate: '整条 path 旋转角（度，绕包围盒中心）',
     scale: '整条 path 缩放（数字等比，或 `{ x, y }` 非等比，绕包围盒中心）',
-    roundedCorners: '线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同',
+    cornerRadius: '线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同',
     label: '附着在 Path 或其它 path-like 宿主上的路径标签',
     marks:
       "沿路径放方向标记：每项 `{ pos, endpointOverlap?, mark }`，`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线；endpointOverlap 只适用于内置 Stroke Path 实际选中的端点 mark",
@@ -274,17 +274,16 @@
   descriptions={{
     text: '标签文字；支持字符串、换行文本和 TextBlock 行数组',
     position: '沿段归一化位置：7 个 keyword 或 0..1 数字；默认 midway',
-    side: '标签相对锚点的可写方位：top / bottom / left / right。center 只在 resolve 后产生，不能作为 IR side 写入',
+    side: '标签相对锚点的方位：top / bottom / left / right / center。center 放在线上，是否沿切线旋转由 sloped 独立控制',
     sloped: '是否沿采样点切线旋转标签；为 true 且省略 side 时 canonicalize 为 center，显式 side 仍控制方位',
     interrupt:
       '是否请求在兼容宿主描边中产生文字断口；省略时由宿主策略决定，无填充内置 Stroke 的 canonical center 自动启用',
-    placement:
-      '标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Extension Ribbon 等面状宿主在未指定 side 时放在内部',
     distance: 'side 偏移距离，默认与 Path step label 一致',
     gap: '文字断口两侧的额外间距；仅在 interrupt 生效时使用',
-    textColor: '标签文字色；缺省回退 scope defaults.label → 宿主 path 主色 color → currentColor（跟主色不跟 stroke）',
+    textColor:
+      '标签文字色；缺省回退 scope defaults.path.label → 宿主 path 主色 color → currentColor（跟主色不跟 stroke）',
     opacity: '标签独立透明度 0..1；与所属 path opacity 相乘（跨 scope 不复合）',
-    font: '标签字体覆盖（family / size / weight / style 均可选）；逐字段回退 defaults.label → 渲染端默认',
+    font: '标签字体覆盖（family / size / weight / style 均可选）；逐字段回退 defaults.path.label → 渲染端默认',
   }}
 />
 
@@ -341,12 +340,12 @@
   }}
 />
 
-## ArrowEndDetailSchema
+## ArrowStyleSchema
 
 <ZodSchema
   shallow
-  name="ArrowEndDetailSchema"
-  description="单个箭头端点的视觉覆盖配置，不递归包含 start / end。"
+  name="ArrowStyleSchema"
+  description="箭头的形状、尺寸与视觉样式，供端点箭头和沿路径箭头标记复用。"
   descriptions={{
     shape: '箭头形状名（开放字符串，含 `CompileOptions.arrows` 扩展名）；缺省时继承顶层，顶层也缺省时回退 stealth',
     scale: '等比缩放因子',

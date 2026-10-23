@@ -10,6 +10,8 @@ keywords: 'Source、style、defaults、layout、theme'
 - 修订日期：2026-09-05
 - 关联：[alpha.4 roadmap](./roadmap.md) · [ADR-035](./035-json-undefined-field-contracts.md) · [v0.5 roadmap](./roadmap.md) · [Core 绘图完备设计](../../../architecture/core-drawing-complete.md) · [包职能设计](../../../../../../notes/architecture/package-responsibility-design.md)
 
+> Core 默认通道、宿主装饰归属、reset 与字体覆盖粒度已由 [067](./067-host-owned-defaults.md) 替代；本文对应旧描述仅用于解释原决策，其余 Source 和领域边界继续有效
+
 ## 背景与目标
 
 此前 Node、Path 与 Scope Source IR 把结构、identity、几何、视觉覆盖、布局参数与继承默认值展开到根层。同类视觉字段在元素与默认通道间重复出现，缺少稳定的关注点边界。
@@ -84,7 +86,7 @@ type IRPath = {
   id?: string;
   children?: Array<IRStep>;
   style?: IRPathStyle;
-  roundedCorners?: number;
+  cornerRadius?: number;
   rotate?: number;
   scale?: IRPathScale;
   label?: IRGeometryLabel | Array<IRGeometryLabel>;
@@ -102,7 +104,7 @@ Scope 把共享级联视觉默认值收进 `defaults.style`，与后代专属默
 ```ts
 type IRNodeDefault = Pick<IRNode, 'shape' | 'boundary' | 'cornerRadius' | 'rotate' | 'scale' | 'style' | 'layout'>;
 
-type IRPathDefault = Pick<IRPath, 'style' | 'roundedCorners' | 'rotate' | 'scale'>;
+type IRPathDefault = Pick<IRPath, 'style' | 'cornerRadius' | 'rotate' | 'scale'>;
 
 type IRScopeDefaults = {
   style?: IRCascadingGraphicStyle;

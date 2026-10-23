@@ -1,12 +1,12 @@
 import type { AnyTransformDefinition, TransformContext, IRDataTransformDeclaration } from '@retikz/data';
 import { collectTransformFields, resolveTransformRegistry } from '@retikz/data';
 
-import type { AnyMarkDefinition } from '../contract';
-import { createFieldCollector, resolveMarkRegistry } from '../providers';
+import type { AnyMarkDefinition } from '../providers';
+import { createFieldCollector, MARK_REGISTRY } from '../providers';
 import { collectMarkFields } from '../resolve/mark';
-import type { IRPlot, IRPlotMarkOperation } from '../schemas';
+import type { IRPlot, IRPlotMark } from '../schemas';
 
-const markTransformOf = (mark: IRPlotMarkOperation): Array<IRDataTransformDeclaration> | undefined => mark.transforms;
+const markTransformOf = (mark: IRPlotMark): Array<IRDataTransformDeclaration> | undefined => mark.transforms;
 
 /**
  * 按执行顺序收集 transform 管线依赖的外部字段，并返回管线结束后的派生字段集合
@@ -40,7 +40,7 @@ const collectTransformPipelineFields = (
 export const collectSourceFields = (
   spec: IRPlot,
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition> = resolveTransformRegistry(),
-  markRegistry: ReadonlyMap<string, AnyMarkDefinition> = resolveMarkRegistry(),
+  markRegistry: Readonly<Record<IRPlotMark['type'], AnyMarkDefinition>> = MARK_REGISTRY,
   transformContext?: TransformContext,
 ): Set<string> => {
   const fields = new Set<string>();

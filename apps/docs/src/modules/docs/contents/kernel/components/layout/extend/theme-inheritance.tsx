@@ -9,7 +9,7 @@ export const previewControls = previewControlContract.controls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values =>
   ThemeInheritancePreview({
-    style: values.style,
+    name: values.name,
     mode: values.mode,
   }),
 );

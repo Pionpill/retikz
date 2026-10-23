@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IRPath } from '../../src/schemas/path/path';
-import { PathSchema } from '../../src/schemas/path/path';
+import type { IRPath } from '../../src/schemas';
+import { PathSchema } from '../../src/schemas';
 
 /** 构造带 id 的最简合法 IRPath（两段 step，满足 children.min(2)） */
 const pathWithId = (id: string): IRPath => ({

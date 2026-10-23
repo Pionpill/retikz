@@ -1,9 +1,9 @@
 ---
 title: Formula Authoring
-description: Write and lay out LaTeX in Node text with inline formulas, display formulas, or explicit math runs
+description: Write and lay out LaTeX in Node text with inline formulas, display formulas, or explicit math segments
 ---
 
-When Node text needs LaTeX, continue to author formulas with `$...$`, `$$...$$`, or explicit math runs. After [installation and integration](/kernel/packages/tex), `@retikz/tex` converts them into glyph paths that Core consumes, so SVG and Canvas share the same formula result.
+When Node text needs LaTeX, continue to author formulas with `$...$`, `$$...$$`, or explicit math segments. After [installation and integration](/kernel/packages/tex), `@retikz/tex` converts them into glyph paths that Core consumes, so SVG and Canvas share the same formula result.
 
 <ComponentAlert
   type="tip"
@@ -13,24 +13,24 @@ When Node text needs LaTeX, continue to author formulas with `$...$`, `$$...$$`,
 
 ## Basic usage
 
-Start with the three common forms: an inline formula in a string, a display formula in a string, and an explicit math run whose style can be controlled independently. The static demo below puts all three in one Layout so you can see their behavior in text:
+Start with the three common forms: an inline formula in a string, a display formula in a string, and an explicit math segment whose style can be controlled independently. The static demo below puts all three in one Layout so you can see their behavior in text:
 
 <ComponentPreview
   files="tex-formula-basics"
   size="sm"
-  caption="One Layout shows an inline formula, an explicit math run, and a display formula together."
+  caption="One Layout shows an inline formula, an explicit math segment, and a display formula together."
 />
 
-Core parses formula sugar in a string into text runs and math runs:
+Core parses formula sugar in a string into text segments and math segments:
 
-| Form                    | Meaning                                          |
-| ----------------------- | ------------------------------------------------ |
-| `$...$`                 | An inline formula aligned to the text baseline   |
-| `$$...$$`               | A display formula with roomier vertical metrics  |
-| `\\$`                   | A literal dollar sign, not a formula delimiter   |
-| `{ tex, displayMode? }` | An explicit math run with local color or opacity |
+| Form                    | Meaning                                              |
+| ----------------------- | ---------------------------------------------------- |
+| `$...$`                 | An inline formula aligned to the text baseline       |
+| `$$...$$`               | A display formula with roomier vertical metrics      |
+| `\\$`                   | A literal dollar sign, not a formula delimiter       |
+| `{ tex, displayMode? }` | An explicit math segment with local color or opacity |
 
-An explicit run can mix with ordinary text runs:
+An explicit segment can mix with ordinary text segments:
 
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
@@ -48,7 +48,7 @@ export const Formula = () => {
 
   return (
     <Layout lowerTex={state.lowerTex}>
-      <Node text={[{ runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: ' (length)' }] }]} />
+      <Node text={[{ segments: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: ' (length)' }] }]} />
     </Layout>
   );
 };
@@ -68,7 +68,7 @@ const input = scene({
   children: [
     node({
       id: 'formula',
-      text: [{ runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: ' (length)' }] }],
+      text: [{ segments: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: ' (length)' }] }],
     }),
   ],
 });
@@ -78,7 +78,7 @@ const svg = renderToSvgString(input, { compile: { lowerTex } });
 </DocTab>
 </DocTabs>
 
-`displayMode` changes formula metrics; it does not split one Node into several Nodes. A multiline LaTeX environment remains one formula fragment in the same line layout. Use a text run for CJK annotations instead of relying on MathJax `\\text{}` for CJK font coverage.
+`displayMode` changes formula metrics; it does not split one Node into several Nodes. A multiline LaTeX environment remains one formula fragment in the same line layout. Use a text segment for CJK annotations instead of relying on MathJax `\\text{}` for CJK font coverage.
 
 ## Edit and preview
 

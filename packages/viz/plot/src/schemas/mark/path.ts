@@ -18,7 +18,7 @@ import { CoordinateConnection, PolarInterpolation } from '../coordinate';
 import { PathEncodingSchema, PositionEncodingSchema } from '../encoding';
 import { AnchorIdSchema, hasValidAnchorSource } from './anchor';
 import { BuiltinPlotMark, markBase } from './base';
-import { pathHostLabel } from './label';
+import { MarkPathLabelListSchema } from './label';
 import {
   MarkOpacityStyleSchema,
   MarkFillStyleSchema,
@@ -38,7 +38,7 @@ export const PathLineCapStyleSchema = PathLineCapSchema.describe('path lineCap s
 export const PathLineJoinStyleSchema = PathLineJoinSchema.describe('path lineJoin style value');
 
 /** 校验路径圆角的固定非负半径 */
-export const PathRoundedCornersStyleSchema = NonNegativeNumberSchema.describe('path roundedCorners style value');
+export const PathCornerRadiusStyleSchema = NonNegativeNumberSchema.describe('path cornerRadius style value');
 
 /** 校验路径填充规则的固定环绕规则 */
 export const PathFillRuleStyleSchema = PathFillRuleSchema.describe('path fillRule style value');
@@ -174,14 +174,14 @@ export const PathPropertiesSchema = strictObject({
   opacity: MarkOpacityStyleSchema.optional(),
   lineCap: PathLineCapStyleSchema.optional().describe('Path stroke endpoint style: fixed core Path lineCap'),
   lineJoin: PathLineJoinStyleSchema.optional().describe('Path stroke join style: fixed core Path lineJoin'),
-  roundedCorners: PathRoundedCornersStyleSchema.optional().describe(
-    'Path geometric corner radius: fixed core Path roundedCorners',
+  cornerRadius: PathCornerRadiusStyleSchema.optional().describe(
+    'Path geometric corner radius: fixed core Path cornerRadius',
   ),
   ...corePathStyle,
   anchorId: AnchorIdSchema.optional().describe(
     'Stable id rule for generated per-datum core Coordinates along this path',
   ),
-  ...pathHostLabel,
+  label: MarkPathLabelListSchema.optional().describe('Path-host label: lowered onto the generated core Path.label'),
 }).describe('Fixed data path properties and construction rules');
 
 /** 校验按顶点组织的路径或逐实例完整端点，输入形态互斥 */

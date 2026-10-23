@@ -1,10 +1,10 @@
-import type { IRPathLabel, PathCommand, PathKindCompileResult, PathKindLabel, ScenePrimitive } from '@retikz/core';
+import type { PathCommand, PathKindCompileResult, PathKindLabel, ScenePrimitive } from '@retikz/core';
 
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../errors';
 import type { RibbonCapDefinition } from '../cap-types';
 import type { RibbonWidthProfileDefinition } from '../profile-types';
 import { resolveRibbonOptions, resolveRibbonWidth } from '../resolve';
-import type { IRRibbonPath } from '../types';
+import type { IRRibbonPath, IRRibbonLabel } from '../types';
 import {
   commandsToSegmentInputs,
   directionToSectionAxis,
@@ -29,9 +29,9 @@ const LABEL_POSITION: Record<string, number> = {
   'at-end': 1,
 };
 
-type ResolvedRibbonLabel = Omit<IRPathLabel, 'textColor' | 'text'> & Pick<PathKindLabel, 'textColor' | 'text'>;
+type ResolvedRibbonLabel = PathKindLabel & Pick<IRRibbonLabel, 'placement'>;
 
-const canonicalizeLabel = (label: ResolvedRibbonLabel): PathKindLabel => ({
+const canonicalizeLabel = (label: IRRibbonLabel): ResolvedRibbonLabel => ({
   ...label,
   position:
     label.position === undefined
@@ -43,21 +43,26 @@ const canonicalizeLabel = (label: ResolvedRibbonLabel): PathKindLabel => ({
   distance: label.distance ?? 4,
 });
 
-const labelsOf = (path: IRRibbonPath): Array<PathKindLabel> => {
-  if (path.label === undefined) return [];
-  const labels = (Array.isArray(path.label) ? path.label : [path.label]) as Array<ResolvedRibbonLabel>;
-  return labels.map(canonicalizeLabel);
+const labelsOf = (
+  label: IRRibbonLabel | Array<IRRibbonLabel> | undefined,
+  context: EmitRibbonPrimitiveContext,
+): Array<ResolvedRibbonLabel> => {
+  if (label === undefined) return [];
+  const labels = Array.isArray(label) ? label : [label];
+  return labels.map(({ placement, ...source }) =>
+    canonicalizeLabel({ ...context.resolveHostLabel(source), placement }),
+  );
 };
 
 const materializedSamples = (
   segments: ReadonlyArray<RibbonSegment>,
   totalLength: number,
-  labels: ReadonlyArray<PathKindLabel>,
+  labels: ReadonlyArray<ResolvedRibbonLabel>,
   widthAt: (offset: number) => number,
   endpointAxes: { start?: [number, number]; end?: [number, number] },
   align: 'center' | 'left' | 'right',
   round: (value: number) => number,
-): Array<Readonly<{ point: [number, number]; tangent: [number, number]; boundaryOffset?: number }>> =>
+): Array<Readonly<{ point: [number, number]; tangent: [number, number]; sideOffset?: number }>> =>
   labels.map(label => {
     const offset = Math.max(0, Math.min(1, label.position));
     const sample = sampleAtDistance(segments, totalLength, offset * totalLength);
@@ -70,21 +75,23 @@ const materializedSamples = (
       round,
     });
 
+    const boundaryOffset =
+      label.side === 'bottom'
+        ? align === 'left'
+          ? 0
+          : align === 'right'
+            ? section.width
+            : section.width / 2
+        : align === 'right'
+          ? 0
+          : align === 'left'
+            ? section.width
+            : section.width / 2;
     return {
       point: section.center,
       tangent: sample.tangent,
-      boundaryOffset:
-        label.side === 'bottom'
-          ? align === 'left'
-            ? 0
-            : align === 'right'
-              ? section.width
-              : section.width / 2
-          : align === 'right'
-            ? 0
-            : align === 'left'
-              ? section.width
-              : section.width / 2,
+      sideOffset:
+        label.placement === 'inside' ? Math.max(0, boundaryOffset - label.distance) : boundaryOffset + label.distance,
     };
   });
 
@@ -93,12 +100,10 @@ const resultOf = (
   outline: { commands: Array<PathCommand>; points: Array<[number, number]> },
   context: EmitRibbonPrimitiveContext,
   labels: ReadonlyArray<PathKindLabel> = [],
-  samples: ReadonlyArray<
-    Readonly<{ point: [number, number]; tangent: [number, number]; boundaryOffset?: number }>
-  > = [],
+  samples: ReadonlyArray<Readonly<{ point: [number, number]; tangent: [number, number]; sideOffset?: number }>> = [],
 ): PathKindCompileResult => {
   const labelPrimitives: ReadonlyArray<ScenePrimitive> =
-    labels.length === 0 ? [] : context.emitHostLabels({ labels, samples });
+    labels.length === 0 ? [] : context.emitHostLabels({ labels, samples, sourcePath: 'kindOptions.label' });
   return {
     primitives: [styledPrimitiveFromOutline(ribbon, outline, context.appearance), ...labelPrimitives],
     boundsPoints: [...outline.points, ...samples.map(sample => sample.point)],
@@ -119,14 +124,6 @@ export const emitRibbonPrimitive = (
   const ribbon: RibbonLike = { ...path, ...options };
 
   if (ribbon.mode === 'boundary') {
-    if (path.label !== undefined) {
-      throw new RetikzExtensionError({
-        code: RetikzExtensionErrorCode.PipelineInvariant,
-        message: 'Ribbon label first version only supports centerline ribbon labels.',
-        details: { mode: ribbon.mode },
-      });
-    }
-
     const outline = boundaryOutlineCommands({
       upper: context.materializePath({ children: ribbon.upper }).commands,
       lower: context.materializePath({ children: ribbon.lower }).commands,
@@ -181,7 +178,7 @@ export const emitRibbonPrimitive = (
     round: context.round,
   });
 
-  const labels = labelsOf(path);
+  const labels = labelsOf(ribbon.label, context);
   const samples = materializedSamples(
     segments,
     totalLength,

@@ -2,20 +2,23 @@ import type { BoundsRect } from '@retikz/math';
 
 import type { IRAnimationTrack } from '../../schemas';
 import type { EllipsePrim } from './ellipse';
-import type { GroupPrim } from './group';
-import type { SceneResource } from './paint';
+import type { ClipResource, GroupPrim } from './group';
+import type { PaintResource } from './paint';
 import type { PathPrim } from './path';
 import type { RectPrim } from './rect';
 import type { TextPrim } from './text';
-
-export type { ClipResource, SceneClipPath } from './clip';
-export type { PaintResource, PaintValue, ResolvedPatternTile, SceneResource } from './paint';
 
 /**
  * Scene primitive：渲染目标无关的最大公约子集
  * @description 所有 adapter（SVG/Canvas/PDF/Skia）都应能消费；不允许出现 SVG-only 或 Canvas-only 特性（filter/marker/imageData）
  */
 export type ScenePrimitive = RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim;
+
+/**
+ * Scene 级渲染无关资源
+ * @description 通过 `kind` 区分 paint 与 clip，id 在各资源类型间保持稳定且不冲突
+ */
+export type SceneResource = PaintResource | ClipResource;
 
 /** 场景：渲染目标无关的"已布局好的图元集合 + layout" */
 export type Scene = {

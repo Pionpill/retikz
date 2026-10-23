@@ -75,7 +75,7 @@ already carry renderable children.
 
 Detail and manual roots forward the JSON-safe `rules`, `encodings`, `defaultAppearance`,
 `defaultVisual`, `defaultTable`, and `layout` fields to the same IRTable contract as plain
-authoring. Core `theme.style` / `theme.mode` selects the Table baseline, while the sparse Source
+authoring. Core `theme.name` / `theme.mode` selects the Table baseline, while the sparse Source
 defaults fields form the Table defaults cascade. Standalone host CSS uses `containerStyle`; embedded
 Tables receive Theme and other host capabilities from the outer `Layout` and reject standalone-only
 host props.
@@ -89,8 +89,8 @@ definitions, and extra composites remain runtime inputs outside Table IR.
 
 Formatter, structure, presentation, visual-scale, and Table Theme style definitions use the same
 `LowerTablesOptions` and lowering contract in standalone and embedded modes. Standalone custom
-styles receive the Core definition through `themeStyles` and the same-named Table definition through
-`tableThemeStyles`; embedded roots receive the Core definition from the outer Layout and package the
+styles receive the Core definition through `themeDefinitions` and the same-named Table definition through
+`tableThemeDefinitions`; embedded roots receive the Core definition from the outer Layout and package the
 Table definition through `createTableRuntimeContribution()`. A visual-scale
 resolution exposes `of`, `legendForm`, `domain`, `range`, and optional `edges`; opted-in encodings
 copy the descriptor fields into the Table manifest. Alpha.3 intentionally ends at that seed;

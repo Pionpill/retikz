@@ -9,7 +9,7 @@ describe('宿主标签简写与详细配置', () => {
   it('详细字段标签与手写 IR 等价', () => {
     const spec = buildPlotIR(
       <IntervalMark
-        encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { content: 'revenue' } }}
+        encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { text: 'revenue' } }}
         properties={{ label: { position: 'top', distance: 6, displayFormat: ',.0f' } }}
       />,
       '__plot',
@@ -17,7 +17,7 @@ describe('宿主标签简写与详细配置', () => {
     const mark = spec.marks[0];
 
     expect(mark.type).toBe('interval');
-    expect(mark.encodings).toMatchObject({ label: { content: 'revenue' } });
+    expect(mark.encodings).toMatchObject({ label: { text: 'revenue' } });
     expect(mark.properties?.label).toEqual({
       displayFormat: ',.0f',
       position: 'top',
@@ -29,7 +29,7 @@ describe('宿主标签简写与详细配置', () => {
   it('标签引线保留显式开关', () => {
     const spec = buildPlotIR(
       <PointMark
-        encodings={{ position: { x: { field: 'px' }, y: { field: 'py' } }, label: { content: 'lbl' } }}
+        encodings={{ position: { x: { field: 'px' }, y: { field: 'py' } }, label: { text: 'lbl' } }}
         properties={{ label: { pin: true } }}
       />,
       '__plot',
@@ -42,7 +42,7 @@ describe('宿主标签简写与详细配置', () => {
   it('label core style props pass through', () => {
     const spec = buildPlotIR(
       <IntervalMark
-        encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { content: 'revenue' } }}
+        encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { text: 'revenue' } }}
         properties={{
           label: {
             textColor: '#334155',
@@ -71,14 +71,14 @@ describe('宿主标签简写与详细配置', () => {
   it('字符串与常量标签数组保持内容与顺序，零间距和关闭引线不会丢失', () => {
     const spec = buildPlotIR(
       <PointMark
-        encodings={{ position: { x: { field: 'px' }, y: { field: 'py' } }, label: [{ content: 'name' }, {}] }}
-        properties={{ label: [{}, { content: 'fixed', distance: 0, pin: false }] }}
+        encodings={{ position: { x: { field: 'px' }, y: { field: 'py' } }, label: [{ text: 'name' }, {}] }}
+        properties={{ label: [{}, { text: 'fixed', distance: 0, pin: false }] }}
       />,
       '__plot',
     );
     expect(spec.marks[0]).toMatchObject({
-      encodings: { label: [{ content: 'name' }, {}] },
-      properties: { label: [{}, { content: 'fixed', distance: 0, pin: false }] },
+      encodings: { label: [{ text: 'name' }, {}] },
+      properties: { label: [{}, { text: 'fixed', distance: 0, pin: false }] },
     });
     expect(PlotSchema.safeParse(spec).success).toBe(true);
   });
@@ -176,7 +176,7 @@ it('React and Vanilla preserve split opacity and label declarations', () => {
   const encodings = {
     position: { x: { field: 'x' }, y: { field: 'y' } },
     opacity: { fill: { field: 'alpha', scale: 'alpha-scale' } },
-    label: { content: 'name' },
+    label: { text: 'name' },
   };
   const properties = {
     opacity: { overall: 0.5, stroke: 0 },

@@ -7,6 +7,55 @@ import { visualBoundsOfPrimitives } from '../../src/compile/orchestration/visual
 const boundsOf = (primitives: ReadonlyArray<ScenePrimitive>, resources: ReadonlyArray<SceneResource> = []) =>
   visualBoundsOfPrimitives(primitives, resources);
 
+it('箭头中的已度量文本和裁剪共同决定可视边界', () => {
+  const text: TextPrim = {
+    type: 'text',
+    x: 0,
+    y: 0,
+    lines: [{ text: 'wide' }],
+    fontSize: 8,
+    lineHeight: 8,
+    measuredWidth: 20,
+    measuredHeight: 8,
+    align: 'start',
+    baseline: 'top',
+    fill: 'black',
+  };
+  const path = (content: ScenePrimitive): ScenePrimitive => ({
+    type: 'path',
+    commands: [
+      { kind: 'move', to: [20, 20] },
+      { kind: 'line', to: [30, 20] },
+    ],
+    stroke: 'black',
+    strokeWidth: 1,
+    arrowEnd: { shape: 'text', baseSize: 10, refX: 0, markerWidth: 10, markerHeight: 10, marker: [content] },
+  });
+  const full = boundsOf([path(text)]);
+  const clipped = boundsOf(
+    [path({ type: 'group', clipRef: 'window', children: [text] })],
+    [
+      {
+        kind: 'clip',
+        id: 'window',
+        path: {
+          fillRule: 'nonzero',
+          commands: [
+            { kind: 'move', to: [0, 0] },
+            { kind: 'line', to: [5, 0] },
+            { kind: 'line', to: [5, 10] },
+            { kind: 'line', to: [0, 10] },
+            { kind: 'close' },
+          ],
+        },
+      },
+    ],
+  );
+  expect(full.x + full.width).toBe(50);
+  expect(clipped.x + clipped.width).toBe(35);
+  expect(full.y).toBe(15);
+});
+
 describe('canonical visual bounds', () => {
   it.each<{ baseline: TextPrim['baseline']; y: number }>([
     { baseline: 'alphabetic', y: 20 },

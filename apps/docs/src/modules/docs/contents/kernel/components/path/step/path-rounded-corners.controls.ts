@@ -48,7 +48,7 @@ export const createPreviewControlContract = (lang: Lang) =>
   ({
     controls: createControls(lang),
     canonicalValues: { radius: 36, strokeWidth: 24, lineJoin: 'round' },
-    relatedApis: ['Path.roundedCorners', 'Path.style.strokeWidth', 'Path.style.lineJoin'],
+    relatedApis: ['Path.cornerRadius', 'Path.style.strokeWidth', 'Path.style.lineJoin'],
   }) satisfies PreviewControlContract;
 
 /** 默认中文预览契约 */

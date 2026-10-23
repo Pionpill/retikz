@@ -20,7 +20,6 @@ import type {
   CoordinateFrame,
   FieldCollector,
   MarkChannels,
-  MarkDefinition,
   MarkLoweringContext,
   PolarCoordinateFrame,
 } from '../../../contract';
@@ -60,6 +59,7 @@ import {
   pathChannelKinds,
   resolveGeometryMarkLabels,
 } from '../shared';
+import type { MarkDefinition } from '../types';
 import { POINT_DEFAULT_RADIUS } from './point-glyph';
 import { pointGlyphStyle } from './point-glyph';
 
@@ -200,7 +200,6 @@ const resolveTarget = (
 ): TargetResolution | null => {
   if (targetEncodingOf(mark, role)?.position !== undefined)
     return resolveProjectedTarget(mark, ref, row, frame, ctx, transformedIndex, role, forceCoordinate);
-  if (ref !== undefined && 'id' in ref) return { target: { id: ref.id, ...targetExtras(ref) }, coordinates: [] };
   if (ctx?.anchors === undefined) {
     throw new RetikzPlotError(
       `lowerPlots: relation ${role} target uses generated anchorId but no AnchorRegistry is available`,
@@ -524,7 +523,6 @@ const orthogonalRoute = (
   label: IRStepLabel | undefined,
 ): Array<IRStep> => {
   const via = routing.via;
-  if (via === undefined) throw new RetikzPlotError('lowerPlots: orthogonal relation routing requires via');
 
   const steps: Array<IRStep> = [{ type: 'step', kind: RelationRouteStepKind.Move, to: targets[0] }];
   const candidates: Array<{ stepIndex: number; length: number }> = [];
@@ -721,9 +719,9 @@ export const lowerRelation = (
           kind: 'ribbon',
           style,
           ...(zIndex !== undefined ? { zIndex } : {}),
-          ...(label !== undefined ? { label } : {}),
           kindOptions: {
             ...ribbonOptions,
+            ...(label !== undefined ? { label } : {}),
             width:
               endWidth === undefined
                 ? { kind: 'fixed', value: width }

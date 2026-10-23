@@ -169,7 +169,7 @@ export const resolveEntityAppearance = (
   entity: CanonicalEntity,
   context: EntityAppearanceResolveContext,
 ): EffectiveEntityAppearance => {
-  const graphTheme = resolveGraphTheme(context.theme, context.graphThemeStyles);
+  const graphTheme = resolveGraphTheme(context.theme, context.graphThemeDefinitions);
   const selectorContext = selectorContextOf(context);
   const subject = entitySubjectOf(entity);
   let appearance: EffectiveEntityAppearance = graphTheme.defaults.entity ?? {};

@@ -5,7 +5,8 @@
  *   纯 runtime（触 DOM），与 evaluate/oklch 等纯数学分开；缺 rAF / IntersectionObserver / element.animate 的环境
  *   （SSR / 老浏览器）优雅退化
  */
-import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
+import type { IRAnimationTrack, Scene } from '@retikz/core';
+import { visitSceneContent } from '@retikz/core';
 
 import { isAutoplayTrigger } from './channels';
 import { bindWaapiDescriptorElements } from './retained';
@@ -234,26 +235,11 @@ export const prefersReducedMotion = (): boolean =>
 export const resolveAnimationEnabled = (explicit: boolean | undefined, reducedMotion: boolean): boolean =>
   explicit ?? !reducedMotion;
 
-/** 递归判断 prim 树是否有任意 animations */
-const primsHaveAnimations = (prims: ReadonlyArray<ScenePrimitive>): boolean =>
-  prims.some(p => (p.animations?.length ?? 0) > 0 || (p.type === 'group' && primsHaveAnimations(p.children)));
+/** 判断场景及箭头、Pattern 内容是否包含动画 */
+export const sceneHasAnimations = (scene: Scene): boolean => collectTracks(scene).length > 0;
 
-/** scene 是否含任意动画（元素级或 scene 根镜头） */
-export const sceneHasAnimations = (scene: Scene): boolean =>
-  (scene.animations?.length ?? 0) > 0 || primsHaveAnimations(scene.primitives);
-
-/** 递归判断 prim 树是否有自动播放（load/缺省）track */
-const primsHaveAutoplay = (prims: ReadonlyArray<ScenePrimitive>): boolean =>
-  prims.some(
-    p => (p.animations ?? []).some(isAutoplayTrigger) || (p.type === 'group' && primsHaveAutoplay(p.children)),
-  );
-
-/**
- * scene 是否含「自动播放」(load/缺省) track（元素级或根镜头）
- * @description Canvas runtime 据此决定是否自动 `clock.play()`；全为 visible/manual/onEvent → 不自动起钟
- */
-export const sceneHasAutoplayTrigger = (scene: Scene): boolean =>
-  (scene.animations ?? []).some(isAutoplayTrigger) || primsHaveAutoplay(scene.primitives);
+/** 检查完整内容闭包中的自动播放轨道 */
+export const sceneHasAutoplayTrigger = (scene: Scene): boolean => collectTracks(scene).some(isAutoplayTrigger);
 
 /** 一条 track 的活动结束时刻（毫秒）；iterations infinite → Infinity */
 const trackEndMs = (track: IRAnimationTrack): number => {
@@ -265,14 +251,9 @@ const trackEndMs = (track: IRAnimationTrack): number => {
 const collectTracks = (scene: Scene): Array<IRAnimationTrack> => {
   const out: Array<IRAnimationTrack> = [...(scene.animations ?? [])];
 
-  const walk = (prims: ReadonlyArray<ScenePrimitive>): void => {
-    for (const p of prims) {
-      if (p.animations) out.push(...p.animations);
-      if (p.type === 'group') walk(p.children);
-    }
-  };
-
-  walk(scene.primitives);
+  visitSceneContent(scene, primitive => {
+    if (primitive.animations) out.push(...primitive.animations);
+  });
 
   return out;
 };

@@ -18,7 +18,7 @@ Standard 当前为 `circle`、`ellipse`、`polygon`、`path`、`compound` 分别
 
 ## 决策：五种官方裁剪各由一个完整 Definition 和 Provider 提供
 
-`CircleClipDefinition`、`EllipseClipDefinition`、`PolygonClipDefinition`、`PathClipDefinition` 与 `CompoundClipDefinition` 改为 [Core v0.5 ADR-031](../../../../../../kernel/_notes/decisions/v0/v0.5/031-single-clip-definition.md) 定义的完整 ClipDefinition。每个 definition 的 spec kind、resolved shape kind 与 registry kind 相同，并在同一对象上提供 `schema`、`resolve`、`shapeSchema` 与 `lower`。Circle、Ellipse、Polygon 与 Path 继续保持现有字段和几何；Compound 的 authored children 继续是开放 `IRClip`，resolved children 继续是开放 `ClipShape`，并通过当前 Clip registry 递归解析和降低。
+`CircleClipDefinition`、`EllipseClipDefinition`、`PolygonClipDefinition`、`PathClipDefinition` 与 `CompoundClipDefinition` 改为 [Core v0.5 ADR-031](../../../../../../kernel/_notes/decisions/v0/v0.5/031-single-clip-definition.md) 定义的完整 ClipDefinition。每个 definition 的 spec kind、resolved shape kind 与 registry kind 相同，并在同一对象上提供 `schema`、`resolve` 与 `lower`，中间产物依赖 TypeScript 契约，不重复做 Schema 解析。Circle、Ellipse、Polygon 与 Path 继续保持现有字段和几何；Compound 的 authored children 继续是开放 `IRClip`，resolved children 继续是开放 `ClipShape`，并通过当前 Clip registry 递归解析和降低。
 
 Standard 只保留 `StandardClipDefinitions` 作为五种完整 definitions 的集合。删除 `StandardClipShapeDefinitions`、五个 `XxxClipShapeDefinition` 与五个 `XxxClipShapeProvider`。`StandardClipProviders` 只包含五个 `clip` providers；每个 provider 直接生成同 kind 的完整 definition，不再声明 `clipShape` 依赖。Compound 的动态 child definitions 仍由实际消费方显式贡献为 roots/catalog，Standard 不扫描 IR、不自动安装全量集合，也不通过根入口产生副作用注册。
 

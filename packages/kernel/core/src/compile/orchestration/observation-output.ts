@@ -7,14 +7,6 @@ import type { CompileObservationRuntime } from './observation';
 import { compileObservedFragment } from './observation-fragment';
 import type { CompileObservationContribution } from './types';
 
-/** 把 owner identity 转为同 occurrence 下的稳定排序键 */
-const ownerKeyOf = (entry: CompileObservationContribution): string =>
-  entry.owner.kind === 'composite'
-    ? `composite:${entry.owner.namespace}.${entry.owner.type}`
-    : entry.owner.kind === 'path'
-      ? `path:${entry.owner.name}`
-      : entry.owner.kind;
-
 /** 把 observation entry 的 scope chain 投影为局部坐标到 Scene 坐标的仿射矩阵 */
 const matrixOf = (entry: CompileObservationContribution): readonly [number, number, number, number, number, number] => {
   const origin = applyTransformChain([0, 0], entry.scopeChain);
@@ -37,6 +29,14 @@ export const dispatchCompileObservations = (
   runtime: CompileObservationRuntime | undefined,
   context: CompileContext,
 ): ReadonlyArray<CompileObserverOutput> => {
+  /** 把 owner identity 转为同 occurrence 下的稳定排序键 */
+  const ownerKeyOf = (entry: CompileObservationContribution): string =>
+    entry.owner.kind === 'composite'
+      ? `composite:${entry.owner.namespace}.${entry.owner.type}`
+      : entry.owner.kind === 'path'
+        ? `path:${entry.owner.name}`
+        : entry.owner.kind;
+
   if (runtime === undefined) return Object.freeze([]);
 
   const ordered = entries

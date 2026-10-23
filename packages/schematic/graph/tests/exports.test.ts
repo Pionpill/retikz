@@ -138,7 +138,7 @@ describe('@retikz/graph package boundary', () => {
     });
     expect(graphExports.defineEntityPredicate).toBeTypeOf('function');
     expect(graphExports.defineRelationPredicate).toBeTypeOf('function');
-    expect(graphExports.defineGraphThemeStyle).toBeTypeOf('function');
+    expect(graphExports.defineGraphTheme).toBeTypeOf('function');
     expect(graphExports.GraphRelationStructureTokenOverridesSchema).toBeDefined();
 
     for (const name of [

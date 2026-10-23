@@ -1,6 +1,6 @@
 ---
 title: Identity
-description: Identify entities within state through identity creation, comparison, collection and lookup, with a Core example
+description: Identify entities within state through identity creation, comparison, collection and lookup
 ---
 
 [Source](/kernel/packages/runtime/source) explains how to define, register and manage state. When that state contains a graph, individual nodes also need to be distinguished: node A remains the same node when its color changes, but node A in another graph is a different entity.
@@ -221,21 +221,6 @@ Identities support two common paths: compare two directly, or organize a complet
 <ComponentPreview files="identity-flow" size="sm" hideCode type="flow" />
 
 `createRuntimeIdentity` creates one identity. `runtimeIdentityEquals` compares two identities directly without a lookup. For collection queries, pass an identity list to `createRuntimeIdentityLookup`, then use `has` to query and `values` to enumerate it. A Source's `collectIdentities` supplies a complete list for internal Runtime validation and storage; it does not return the query object shown in the figure to callers.
-
-## Core application
-
-Reconciler derives semantic owners and primitive identities from Core compilation provenance. For a non-generated root child with an explicit id A that is unique within its namespace, the semantic owner can be represented as:
-
-```ts
-import { createRuntimeIdentity } from '@retikz/runtime';
-
-const root = createRuntimeIdentity('@retikz/core/document', ['root']);
-const nodeA = createRuntimeIdentity('@retikz/core/document', [...root.path, 'node', 'A']);
-```
-
-The owner uses the document Source key. Primitive identities additionally include an emission role and ordinal; anonymous, duplicate-name and generated elements use candidate-local identities. This mapping serves Scene snapshots, Render and hydration. It is neither an input snapshot diff index nor a Weave update address.
-
-<SourceLinks sources={[{ label: 'Scene identity', path: 'packages/kernel/reconciler/src/scene/identity.ts' }]} />
 
 ## Related props
 

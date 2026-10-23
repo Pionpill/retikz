@@ -51,8 +51,6 @@ type SurfaceContentPlacement = Readonly<{
 const isFlexLayout = (child: IRChild): child is IRFlexLayout =>
   'namespace' in child && child.namespace === 'layout' && child.type === 'flexLayout';
 
-const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
-
 /** 把 Layout artifact 的 container-local region 平移到 Foundation frame 坐标 */
 const translateFoundationRegion = (
   item: LayoutArtifactItemBase,
@@ -112,6 +110,8 @@ const collectFoundationFlexRegions = (
   resolution: DiagramFoundationResolution,
   state: FoundationPlacementState,
 ): void => {
+  const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
+
   const children = flex.children?.map(item => context.bindChild(item.child, [])) ?? [];
   const artifact = compileFlexLayout(flex, {
     ...context,
