@@ -447,3 +447,91 @@ describe('channel core coverage (contract)', () => {
     expect(path.marks).toBeUndefined();
   });
 });
+
+describe('shared graphic style delivery', () => {
+  it.each(['point', 'path', 'interval'])('delivers fixed and encoded stroke fields for %s', type => {
+    const make = (encoded: boolean) =>
+      PlotSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [
+          { type: 'linear', name: 'x' },
+          { type: 'linear', name: 'y' },
+        ],
+        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+        marks: [
+          {
+            type,
+            encodings: {
+              position: { x: { field: 'x' }, y: { field: 'y' } },
+              ...(encoded ? { dashOffset: 'offset', lineCap: 'cap', lineJoin: 'join' } : {}),
+            },
+            properties: { dashOffset: -2, lineCap: 'round', lineJoin: 'bevel', fill: 0, stroke: 0.4, opacity: 0.6 },
+          },
+        ],
+      });
+    for (const encoded of [false, true]) {
+      const output = expandOf(make(encoded), {
+        d: [
+          { x: 0, y: 1, offset: 3, cap: 'square', join: 'miter' },
+          { x: 1, y: 2, offset: 3, cap: 'square', join: 'miter' },
+        ],
+      });
+      const elements = type === 'path' ? collectPaths(output) : collectNodes(output);
+      expect(elements.length).toBeGreaterThan(0);
+      expect(elements[0].style).toMatchObject({
+        dashOffset: encoded ? 3 : -2,
+        lineCap: encoded ? 'square' : 'round',
+        lineJoin: encoded ? 'miter' : 'bevel',
+      });
+      const fixedStyle = { fill: 0, stroke: 0.4, opacity: { overall: 0.6 } };
+      if (type === 'path') expect(elements[0].style).toMatchObject(fixedStyle);
+      else
+        expect(collectScopes(output)).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              defaults: expect.objectContaining({
+                node: expect.objectContaining({ style: expect.objectContaining(fixedStyle) }),
+              }),
+            }),
+          ]),
+        );
+    }
+  });
+  it('retains scalar overall opacity when a fill factor is encoded', () => {
+    const spec = PlotSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'point',
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } }, opacity: { fill: 'alpha' } },
+          properties: { opacity: 0.4, text: 'label', textColor: 0.2 },
+        },
+      ],
+    });
+    const output = expandOf(spec, {
+      d: [
+        { x: 0, y: 0, alpha: 0 },
+        { x: 1, y: 1, alpha: 1 },
+      ],
+    });
+    expect(collectNodes(output)[0].style).toMatchObject({ textColor: 0.2, opacity: { fill: 0.2 } });
+    expect(collectScopes(output)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          defaults: expect.objectContaining({
+            node: expect.objectContaining({ style: expect.objectContaining({ opacity: { overall: 0.4 } }) }),
+          }),
+        }),
+      ]),
+    );
+  });
+});

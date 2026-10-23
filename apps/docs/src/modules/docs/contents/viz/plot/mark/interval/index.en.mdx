@@ -148,14 +148,18 @@ By default, `x` supplies a category band and `y` supplies an interval from 0 to 
 
 For horizontal bars, set `direction="horizontal"`, bind the numeric field to `x`, and bind the category field to `y`. In polar mode, the example uses angular categories and radial values, so the horizontal option is unavailable. Adjust corners, stroke, opacity, and labels to inspect the resulting appearance.
 
-| Property                           | Meaning            | Details                                                             |
-| ---------------------------------- | ------------------ | ------------------------------------------------------------------- |
-| `x`, `y`                           | Position fields    | Field names or paths; angle and radius in polar coordinates         |
-| `direction`                        | Bar direction      | Defaults to `vertical`; `horizontal` swaps category and value roles |
-| `color`, `fill`                    | Region color       | `color` binds a field; `fill` accepts a field or constant           |
-| `cornerRadius`                     | Rounded corners    | Decorates the projected region without changing the data interval   |
-| `stroke`, `strokeWidth`, `opacity` | Stroke and opacity | Style the resulting region                                          |
-| `label`                            | Data labels        | A field name, node label configuration, or ordered array            |
+| Property                           | Meaning               | Details                                                                                                          |
+| ---------------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `x`, `y`                           | Position fields       | Field names or paths; angle and radius in polar coordinates                                                      |
+| `direction`                        | Bar direction         | Defaults to `vertical`; `horizontal` swaps category and value roles                                              |
+| `color`, `fill`                    | Region color          | `color` binds a field; `fill` accepts a field or constant                                                        |
+| `cornerRadius`                     | Rounded corners       | Decorates the projected region without changing the data interval                                                |
+| `dashOffset`                       | Dash offset           | Finite positive or negative offset; combines with `dashPattern` and supports fixed properties or field encodings |
+| `lineCap`, `lineJoin`              | Stroke caps and joins | Caps: butt / round / square; joins: miter / round / bevel; fixed properties or field encodings                   |
+| `stroke`, `strokeWidth`, `opacity` | Stroke and opacity    | Style the resulting region                                                                                       |
+| `label`                            | Data labels           | A field name, node label configuration, or ordered array                                                         |
+
+Fixed `fill` and `stroke` accept CSS colors, structured Paint, or a master color weight from 0 to 1 (`0` is valid). Fixed `opacity: 0.6` is equivalent to `{ overall: 0.6 }`. `encodings.opacity` still binds `overall`, `fill`, and `stroke` separately and overrides only the matching fixed factor.
 
 <ComponentPreview
   mode="showcase"

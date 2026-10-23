@@ -199,14 +199,18 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 描边色、线宽、虚线和透明度控制路径外观。极坐标下 `monotoneX`、`monotoneY` 按 `linear` 处理。
 
-| 属性          | 含义     | 说明                                                                                      |
-| ------------- | -------- | ----------------------------------------------------------------------------------------- |
-| `curve`       | 连接方式 | 默认 `linear`；可选择阶梯或平滑曲线。极坐标中的 `monotoneX`、`monotoneY` 按 `linear` 处理 |
-| `stroke`      | 描边颜色 | 支持字段或常量；需要强制常量时使用 `{ kind: 'constant', value }`                          |
-| `strokeWidth` | 描边宽度 | 支持常量或字段映射，值非负                                                                |
-| `dashPattern` | 虚线间隔 | 数值数组交替指定实线段与间隔长度；示例的虚线开关控制此属性                                |
-| `opacity`     | 透明度   | 控制整体或填充、描边的不透明度                                                            |
-| `closed`      | 首尾连接 | 是否把末点连回首点；不决定两点之间采用哪种曲线                                            |
+| 属性                  | 含义             | 说明                                                                                      |
+| --------------------- | ---------------- | ----------------------------------------------------------------------------------------- |
+| `curve`               | 连接方式         | 默认 `linear`；可选择阶梯或平滑曲线。极坐标中的 `monotoneX`、`monotoneY` 按 `linear` 处理 |
+| `dashOffset`          | 虚线偏移         | 有限正负数；与 `dashPattern` 配合，支持固定属性和字段编码                                 |
+| `lineCap`、`lineJoin` | 描边端点与连接角 | 线帽为 butt / round / square，连接角为 miter / round / bevel；支持固定属性和字段编码      |
+| `stroke`              | 描边颜色         | 支持字段或常量；需要强制常量时使用 `{ kind: 'constant', value }`                          |
+| `strokeWidth`         | 描边宽度         | 支持常量或字段映射，值非负                                                                |
+| `dashPattern`         | 虚线间隔         | 数值数组交替指定实线段与间隔长度；示例的虚线开关控制此属性                                |
+| `opacity`             | 透明度           | 控制整体或填充、描边的不透明度                                                            |
+| `closed`              | 首尾连接         | 是否把末点连回首点；不决定两点之间采用哪种曲线                                            |
+
+固定 `fill`、`stroke` 可使用 CSS 颜色、结构化 Paint 或 0–1 的主色权重（`0` 也是有效值）。固定 `opacity: 0.6` 等价于 `{ overall: 0.6 }`；`encodings.opacity` 仍按 `overall`、`fill`、`stroke` 分量绑定，只覆盖对应的固定分量。
 
 <ComponentPreview
   mode="showcase"

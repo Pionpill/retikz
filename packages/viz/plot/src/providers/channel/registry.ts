@@ -38,6 +38,7 @@ export const BUILTIN_CHANNEL_NAMES: ReadonlySet<string> = new Set<string>([
   'dashed',
   'dotted',
   'dashPattern',
+  'dashOffset',
   'font',
   'boundary',
   'shadow',

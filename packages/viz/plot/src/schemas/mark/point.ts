@@ -1,4 +1,16 @@
-import { BoxSizeSchema, ShapeValueSchema, NodeLayoutSchema, NodeSchema } from '@retikz/core';
+import {
+  ShapeValueSchema,
+  NodeLayoutSchema,
+  NodeSchema,
+  CssColorSchema,
+  PaintValueSchema,
+  GraphicOpacityValueSchema,
+  GraphicEffectsSchema,
+  NodeStrokeSchema,
+  TextLayoutSchema,
+  TextVisualSchema,
+  ContextualColorSchema,
+} from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { enum as zodEnum, literal, number, strictObject, union } from 'zod';
 import type { infer as ZodInfer } from 'zod';
@@ -9,27 +21,6 @@ import { AnchorIdSchema, hasValidAnchorSource } from './anchor';
 import { PointAutoPaddingSchema } from './auto-padding';
 import { BuiltinPlotMark, markBase } from './base';
 import { MarkNodeLabelListSchema } from './label';
-import {
-  MarkOpacityStyleSchema,
-  MarkColorStyleSchema,
-  MarkFillStyleSchema,
-  MarkNonnegativeNumberStyleSchema,
-  MarkNumberStyleSchema,
-  MarkStrokeStyleSchema,
-  MarkZIndexStyleSchema,
-  nodeStyleFields,
-} from './style';
-
-const StyleBoxSizeSchema = union([NonNegativeNumberSchema, BoxSizeSchema]);
-
-/** 校验点尺寸的非负常量半径 */
-export const PointSizeStyleSchema = NonNegativeNumberSchema.describe('point size value');
-
-/** 校验点形状的固定 Core 形状引用 */
-export const PointShapeStyleSchema = ShapeValueSchema.describe('point shape value');
-
-/** 校验节点盒尺寸的固定统一与宽高覆盖 */
-export const NodeBoxSizeStyleSchema = StyleBoxSizeSchema.describe('node box size style value');
 
 /** 校验节点相对屏幕或坐标角色的方向意图 */
 export const MarkOrientationSchema = union([
@@ -43,28 +34,34 @@ export const MarkOrientationSchema = union([
 
 /** 校验逐记录生成点图形或文本节点的点标记 */
 export const PointPropertiesSchema = strictObject({
+  ...NodeStrokeSchema.shape,
+  ...GraphicEffectsSchema.shape,
+  ...TextLayoutSchema.shape,
   orientation: MarkOrientationSchema.optional(),
   autoPadding: PointAutoPaddingSchema.default('max-radius').optional(),
-  color: MarkColorStyleSchema.optional().describe('Glyph color: fixed color; overrides constant fill'),
-  textColor: MarkColorStyleSchema.optional().describe(
-    'Text point color: fixed core Node textColor; only applied when encoding.text is set',
+  color: CssColorSchema.optional().describe('Glyph color: fixed color; overrides constant fill'),
+  textColor: ContextualColorSchema.optional().describe(
+    'Text point color: fixed CSS color or master color weight, applied to fixed or field-bound text',
   ),
-  size: PointSizeStyleSchema.optional().describe(
+  size: NonNegativeNumberSchema.optional().describe(
     'Glyph size: field-bound datum channel via a sqrt radius scale or constant final radius',
   ),
-  shape: PointShapeStyleSchema.optional().describe(
+  shape: ShapeValueSchema.optional().describe(
     'Glyph shape: field-bound categorical channel or constant core Node shape name',
   ),
-  fill: MarkFillStyleSchema.optional().describe('Glyph fill: fixed core Node fill paint'),
-  stroke: MarkStrokeStyleSchema.optional().describe('Glyph stroke paint: fixed core Node stroke paint'),
-  strokeWidth: MarkNonnegativeNumberStyleSchema.optional().describe('Glyph stroke width: fixed core Node stroke width'),
-  opacity: MarkOpacityStyleSchema.optional(),
-  rotate: MarkNumberStyleSchema.optional().describe('Glyph rotation in degrees: fixed angle'),
-  minimumSize: NodeBoxSizeStyleSchema.optional().describe(
+  fill: PaintValueSchema.optional().describe('Glyph fill: fixed core Node fill paint'),
+  opacity: GraphicOpacityValueSchema.optional(),
+  rotate: number().optional().describe('Glyph rotation in degrees: fixed angle'),
+  minimumSize: NodeLayoutSchema.shape.minimumSize.describe(
     'Minimum visual size: fixed number / {default,width,height}; overridden per datum by size',
   ),
-  zIndex: MarkZIndexStyleSchema.optional().describe('Drawing order hint: fixed zIndex'),
-  ...nodeStyleFields,
+  zIndex: number().int().optional().describe('Drawing order hint: fixed zIndex'),
+  font: TextVisualSchema.shape.font,
+  padding: NodeLayoutSchema.shape.padding,
+  margin: NodeLayoutSchema.shape.margin,
+  scale: NodeSchema.shape.scale,
+  boundary: NodeSchema.shape.boundary,
+  cornerRadius: NodeSchema.shape.cornerRadius,
   dx: number()
     .optional()
     .describe(
@@ -121,12 +118,3 @@ export type IRPlotPointMarkEncoding = ZodInfer<typeof PointMarkEncodingSchema>;
 export type IRPlotPointMark = ZodInfer<typeof PointMarkSchema>;
 
 export type IRPlotMarkOrientation = ZodInfer<typeof MarkOrientationSchema>;
-
-/** PointMark 尺寸样式值（field / constant） */
-export type IRPlotPointSizeStyle = ZodInfer<typeof PointSizeStyleSchema>;
-
-/** PointMark 形状样式值（field / constant） */
-export type IRPlotPointShapeStyle = ZodInfer<typeof PointShapeStyleSchema>;
-
-/** NodeMark 盒尺寸样式值（field / constant） */
-export type IRPlotNodeBoxSizeStyle = ZodInfer<typeof NodeBoxSizeStyleSchema>;

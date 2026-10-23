@@ -1,4 +1,7 @@
 import {
+  GraphicPaintSchema,
+  GraphicOpacitySchema,
+  StrokeWidthSchema,
   BendDirection,
   FoldStepVia,
   PathDecorationSchema,
@@ -7,10 +10,11 @@ import {
   PathStrokeSchema,
   PositionSchema,
   PathLabelSchema,
+  GraphicEffectsSchema,
 } from '@retikz/core';
 import { CenterlineRibbonPathOptionsSchema, TaperRibbonWidthSchema } from '@retikz/extension';
+import { NonBlankStringSchema, PositiveNumberSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import type { ValueOf } from '@retikz/foundation';
-import { NonBlankStringSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { array, discriminatedUnion, enum as zodEnum, literal, number, strictObject } from 'zod';
 import type { infer as ZodInfer } from 'zod';
 
@@ -21,16 +25,6 @@ import { PointAutoPaddingSchema } from './auto-padding';
 import { BuiltinPlotMark, MarkTransformSchema, markBase } from './base';
 import { MarkPathLabelListSchema } from './label';
 import { PointPropertiesSchema } from './point';
-import {
-  MarkBlendModeStyleSchema,
-  MarkOpacityStyleSchema,
-  MarkColorStyleSchema,
-  MarkFillStyleSchema,
-  MarkNonnegativeNumberStyleSchema,
-  MarkStrokeStyleSchema,
-  MarkZIndexStyleSchema,
-  MarkShadowStyleSchema,
-} from './style';
 
 /** 关系图元采用的路径或带状几何形态 */
 export const RelationGeometryKind = {
@@ -170,16 +164,11 @@ export const RelationRoutingSchema = discriminatedUnion('kind', [
 
 /** 校验各关系路径种类共用的图元视觉样式 */
 export const RelationPrimitiveStyleSchema = strictObject({
-  color: MarkColorStyleSchema.optional().describe('Shared relation master color: fixed color'),
-  fill: MarkFillStyleSchema.optional().describe('Shared relation fill paint: fixed CSS color / IRPaint'),
-  stroke: MarkStrokeStyleSchema.optional().describe('Shared relation stroke paint: fixed CSS color / IRPaint'),
-  strokeWidth: MarkNonnegativeNumberStyleSchema.optional().describe(
-    'Shared relation stroke width: fixed non-negative value',
-  ),
-  opacity: MarkOpacityStyleSchema.optional(),
-  shadow: MarkShadowStyleSchema.optional().describe('Shared relation shadow: fixed preset / object'),
-  blendMode: MarkBlendModeStyleSchema.optional().describe('Shared relation blendMode: fixed blend mode'),
-  zIndex: MarkZIndexStyleSchema.optional().describe('Shared relation zIndex: fixed integer'),
+  ...GraphicPaintSchema.shape,
+  ...GraphicOpacitySchema.shape,
+  ...GraphicEffectsSchema.shape,
+  strokeWidth: StrokeWidthSchema.optional(),
+  zIndex: number().int().optional().describe('Shared relation zIndex: fixed integer'),
 }).describe('Style fields shared by RelationMark path kinds');
 
 /** Relation projected target 可选端点 glyph 的封闭 Point 表现字段 */
@@ -256,10 +245,10 @@ export const RelationRibbonSpecificOptionsSchema = strictObject({
 
 /** 校验带状关系的起止宽度及专属几何选项 */
 export const RelationRibbonOptionsSchema = strictObject({
-  width: MarkNonnegativeNumberStyleSchema.optional().describe(
+  width: NonNegativeNumberSchema.optional().describe(
     'Ribbon width at the source side, or the whole width when endWidth is omitted',
   ),
-  endWidth: MarkNonnegativeNumberStyleSchema.optional().describe(
+  endWidth: NonNegativeNumberSchema.optional().describe(
     'Optional ribbon width at the target side; set together with width for tapered ribbons',
   ),
   options: RelationRibbonSpecificOptionsSchema.optional().describe(

@@ -148,14 +148,18 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 横向柱使用 `direction="horizontal"`，同时把数值字段放在 `x`、分类字段放在 `y`。示例切换到极坐标后使用角向分类和径向数值，不提供横向柱选项。调整圆角、描边、透明度与标签，可以观察区域外观的变化。
 
-| 属性                               | 含义         | 说明                                             |
-| ---------------------------------- | ------------ | ------------------------------------------------ |
-| `x`、`y`                           | 位置字段     | 字段名或字段路径；极坐标中分别对应角向与径向     |
-| `direction`                        | 柱方向       | 默认 `vertical`；`horizontal` 交换分类与数值角色 |
-| `color`、`fill`                    | 区域颜色     | `color` 绑定颜色字段；`fill` 支持字段或常量      |
-| `cornerRadius`                     | 圆角         | 装饰投影后的区域，不改变数据区间                 |
-| `stroke`、`strokeWidth`、`opacity` | 描边与透明度 | 控制最终区域的外观                               |
-| `label`                            | 数据标签     | 字符串绑定字段，也可传节点标签配置或有序数组     |
+| 属性                               | 含义             | 说明                                                                                 |
+| ---------------------------------- | ---------------- | ------------------------------------------------------------------------------------ |
+| `x`、`y`                           | 位置字段         | 字段名或字段路径；极坐标中分别对应角向与径向                                         |
+| `direction`                        | 柱方向           | 默认 `vertical`；`horizontal` 交换分类与数值角色                                     |
+| `color`、`fill`                    | 区域颜色         | `color` 绑定颜色字段；`fill` 支持字段或常量                                          |
+| `cornerRadius`                     | 圆角             | 装饰投影后的区域，不改变数据区间                                                     |
+| `dashOffset`                       | 虚线偏移         | 有限正负数；与 `dashPattern` 配合，支持固定属性和字段编码                            |
+| `lineCap`、`lineJoin`              | 描边端点与连接角 | 线帽为 butt / round / square，连接角为 miter / round / bevel；支持固定属性和字段编码 |
+| `stroke`、`strokeWidth`、`opacity` | 描边与透明度     | 控制最终区域的外观                                                                   |
+| `label`                            | 数据标签         | 字符串绑定字段，也可传节点标签配置或有序数组                                         |
+
+固定 `fill`、`stroke` 可使用 CSS 颜色、结构化 Paint 或 0–1 的主色权重（`0` 也是有效值）。固定 `opacity: 0.6` 等价于 `{ overall: 0.6 }`；`encodings.opacity` 仍按 `overall`、`fill`、`stroke` 分量绑定，只覆盖对应的固定分量。
 
 <ComponentPreview
   mode="showcase"
