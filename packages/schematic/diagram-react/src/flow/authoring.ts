@@ -133,18 +133,18 @@ const markerKindOf = (element: ReactElement): FlowMarkerKind | undefined => {
   return (element.type as Partial<FlowMarkerComponent<unknown>>).flowMarkerKind;
 };
 
-const childLabelOf = (child: ReactNode): string => {
-  if (!isValidElement(child)) return typeof child;
-  if (typeof child.type === 'string') return child.type;
-  if (typeof child.type === 'function') {
-    const component = child.type as { displayName?: string; name?: string };
-    return component.displayName ?? component.name ?? 'anonymous';
-  }
-
-  return 'unknown';
-};
-
 const invalidChild = (label: string, child: ReactNode, reason: string): never => {
+  const childLabelOf = (receivedChild: ReactNode): string => {
+    if (!isValidElement(receivedChild)) return typeof receivedChild;
+    if (typeof receivedChild.type === 'string') return receivedChild.type;
+    if (typeof receivedChild.type === 'function') {
+      const component = receivedChild.type as { displayName?: string; name?: string };
+      return component.displayName ?? component.name ?? 'anonymous';
+    }
+
+    return 'unknown';
+  };
+
   const received = childLabelOf(child);
   throw new RetikzDiagramReactFlowError({
     code: RetikzDiagramReactFlowErrorCode.ChildInvalid,
@@ -172,17 +172,17 @@ const registerFlowCollectionMarker = (
   if (isComplete) state.hasCompleteDeclaration = true;
 };
 
-/** 判断批量 Relation 单项是否为 endpoint tuple */
-const isFlowRelationTuple = (relationItem: FlowRelationItem): relationItem is readonly [string, string] =>
-  Array.isArray(relationItem);
-
 /** 将批量 Entity 单项投影为现有 Vanilla Input */
 const flowEntityInputOf = (entityItem: FlowEntityItem): InputFlowEntity =>
   typeof entityItem === 'string' ? { id: entityItem, text: entityItem } : entityItem;
 
 /** 将批量 Relation 单项投影为现有 Vanilla Input */
-const flowRelationInputOf = (relationItem: FlowRelationItem): InputFlowRelation =>
-  isFlowRelationTuple(relationItem) ? { source: relationItem[0], target: relationItem[1] } : relationItem;
+const flowRelationInputOf = (relationItem: FlowRelationItem): InputFlowRelation => {
+  /** 判断批量 Relation 单项是否为 endpoint tuple */
+  const isFlowRelationTuple = (item: FlowRelationItem): item is readonly [string, string] => Array.isArray(item);
+
+  return isFlowRelationTuple(relationItem) ? { source: relationItem[0], target: relationItem[1] } : relationItem;
+};
 
 const collectFlowElements = (
   children: ReactNode,

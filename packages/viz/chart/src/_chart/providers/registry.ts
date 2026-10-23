@@ -30,27 +30,20 @@ const invalidRegistry = (message: string, path: ReadonlyArray<string | number>, 
     ...(cause === undefined ? {} : { cause }),
   });
 
-const duplicateDefinition = (label: string, key: string): RetikzChartError =>
-  new RetikzChartError({
-    code: RetikzChartErrorCode.DuplicateDefinition,
-    message: `${label} "${key}" is registered more than once`,
-    details: { path: [label, key] },
-  });
-
-const literalStringOf = (schema: ZodObject, field: string, path: ReadonlyArray<string | number>): string => {
-  const fieldSchema = schema.shape[field];
-  if (!(fieldSchema instanceof ZodLiteral) || typeof fieldSchema.value !== 'string') {
-    throw invalidRegistry(`Chart recipe schema field "${field}" must be a string literal`, [...path, field]);
-  }
-
-  return fieldSchema.value;
-};
-
 const validateRecipeSchemaIdentity = (
   recipe: AnyChartRecipeDefinition,
   family: string,
   path: ReadonlyArray<string | number>,
 ): void => {
+  const literalStringOf = (schema: ZodObject, field: string, schemaPath: ReadonlyArray<string | number>): string => {
+    const fieldSchema = schema.shape[field];
+    if (!(fieldSchema instanceof ZodLiteral) || typeof fieldSchema.value !== 'string') {
+      throw invalidRegistry(`Chart recipe schema field "${field}" must be a string literal`, [...schemaPath, field]);
+    }
+
+    return fieldSchema.value;
+  };
+
   const sourceSchema = recipe.schema;
   if (!(sourceSchema instanceof ZodObject)) {
     throw invalidRegistry('Chart recipe schema must be a strict Source object schema', path);
@@ -181,14 +174,6 @@ const validateSlots = (recipe: AnyChartRecipeDefinition, path: ReadonlyArray<str
   }
 };
 
-const validateRecipe = (recipe: AnyChartRecipeDefinition, family: string, index: number): void => {
-  const path = ['recipes', index, recipe.chartType] as const;
-  if (recipe.chartType.length === 0) throw invalidRegistry('Chart recipe chartType must be non-empty', path);
-
-  validateRecipeSchemaIdentity(recipe, family, [...path, 'schema']);
-  validateSlots(recipe, [...path]);
-};
-
 const runtimeDefinitionKeys = [
   'coordinates',
   'transforms',
@@ -243,6 +228,21 @@ const resolveEncodingRuntime = (definitions: ChartRuntimeDefinitionOptions): Cha
 export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
   contributions: ReadonlyArray<ChartRecipeProviderContributionInput<TSource>>,
 ): ChartProviderRegistry => {
+  const validateRecipe = (recipe: AnyChartRecipeDefinition, family: string, index: number): void => {
+    const path = ['recipes', index, recipe.chartType] as const;
+    if (recipe.chartType.length === 0) throw invalidRegistry('Chart recipe chartType must be non-empty', path);
+
+    validateRecipeSchemaIdentity(recipe, family, [...path, 'schema']);
+    validateSlots(recipe, [...path]);
+  };
+
+  const duplicateDefinition = (label: string, key: string): RetikzChartError =>
+    new RetikzChartError({
+      code: RetikzChartErrorCode.DuplicateDefinition,
+      message: `${label} "${key}" is registered more than once`,
+      details: { path: [label, key] },
+    });
+
   if (contributions.length === 0)
     throw invalidRegistry('Chart provider requires at least one active recipe', ['recipes']);
 

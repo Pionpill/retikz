@@ -84,48 +84,38 @@ type TypedChartRootRecipe<TInput extends PointFactoryInput> = Readonly<{
   marks?: TInput['marks'];
 }>;
 
-const dataFieldNamesOf = (rows: Array<ExternalRow>): ReadonlySet<string> =>
-  new Set(rows.flatMap(row => Object.keys(row)));
-
-const extensionPropPath = (path: ChartDeclarationPath, prop: string): ChartDeclarationPath => [...path, 'props', prop];
-
 const plotExtensionContextOf = (
   data: ChartDataProps,
   extension: IRChartPlotExtension | undefined,
   extensionPath: ChartDeclarationPath,
-): PlotExtensionAuthoringContext => ({
-  data: { reference: data.reference ?? 'chart.data', ...(data.model === undefined ? {} : { model: data.model }) },
-  ...(data.model === undefined ? {} : { model: data.model }),
-  dataFieldNames: dataFieldNamesOf(data.data),
-  ...(extension?.scales === undefined
-    ? {}
-    : { scales: { value: extension.scales, path: extensionPropPath(extensionPath, 'scales') } }),
-  ...(extension?.composition === undefined
-    ? {}
-    : { composition: { value: extension.composition, path: extensionPropPath(extensionPath, 'composition') } }),
-  ...(extension?.guides === undefined
-    ? {}
-    : { guides: { value: extension.guides, path: extensionPropPath(extensionPath, 'guides') } }),
-  ...(extension?.marks === undefined
-    ? {}
-    : { marks: { value: extension.marks, path: extensionPropPath(extensionPath, 'marks') } }),
-  ...(extension?.transform === undefined ? {} : { dataTransforms: extension.transform }),
-});
+): PlotExtensionAuthoringContext => {
+  const dataFieldNamesOf = (rows: Array<ExternalRow>): ReadonlySet<string> =>
+    new Set(rows.flatMap(row => Object.keys(row)));
 
-const plotExtensionOf = (
-  extension: IRChartPlotExtension | undefined,
-  fragment: ReturnType<typeof resolvePlotExtensionAuthoring>['fragment'] | undefined,
-): IRChartPlotExtension | undefined => {
-  if (fragment === undefined) return extension;
+  const extensionPropPath = (path: ChartDeclarationPath, prop: string): ChartDeclarationPath => [
+    ...path,
+    'props',
+    prop,
+  ];
 
-  const passive = {
-    ...(extension?.defaultPlot === undefined ? {} : { defaultPlot: extension.defaultPlot }),
-    ...(extension?.plotRules === undefined ? {} : { plotRules: extension.plotRules }),
-    ...(extension?.meta === undefined ? {} : { meta: extension.meta }),
+  return {
+    data: { reference: data.reference ?? 'chart.data', ...(data.model === undefined ? {} : { model: data.model }) },
+    ...(data.model === undefined ? {} : { model: data.model }),
+    dataFieldNames: dataFieldNamesOf(data.data),
+    ...(extension?.scales === undefined
+      ? {}
+      : { scales: { value: extension.scales, path: extensionPropPath(extensionPath, 'scales') } }),
+    ...(extension?.composition === undefined
+      ? {}
+      : { composition: { value: extension.composition, path: extensionPropPath(extensionPath, 'composition') } }),
+    ...(extension?.guides === undefined
+      ? {}
+      : { guides: { value: extension.guides, path: extensionPropPath(extensionPath, 'guides') } }),
+    ...(extension?.marks === undefined
+      ? {}
+      : { marks: { value: extension.marks, path: extensionPropPath(extensionPath, 'marks') } }),
+    ...(extension?.transform === undefined ? {} : { dataTransforms: extension.transform }),
   };
-  const combined = { ...passive, ...fragment };
-
-  return Object.keys(combined).length === 0 ? undefined : combined;
 };
 
 const extensionPartsOf = (
@@ -144,19 +134,6 @@ const extensionPartsOf = (
     ...(Object.keys(extension).length === 0 ? {} : { extension }),
     path: declaration.path,
   };
-};
-
-const assertEmbeddedChartLayout = (declaration: CollectedChartDeclaration<ChartLayoutProps> | undefined): void => {
-  if (declaration === undefined) return;
-
-  const unsupportedDimensions = (['width', 'height'] as const).filter(dimension =>
-    Object.hasOwn(declaration.props, dimension),
-  );
-  if (unsupportedDimensions.length === 0) return;
-
-  throw new RetikzChartReactError(
-    `chart react: embedded Chart does not support ChartLayout ${unsupportedDimensions.join(', ')}; move host dimensions to the outer <Layout>`,
-  );
 };
 
 const rootDeclarationConflictError = (slot: string, declaration: string): RetikzChartReactError =>
@@ -200,6 +177,35 @@ export const createTypedChartInput = <
   factory: (input: TInput) => InputEmbed<TInput>,
   encodingsDeclarationName: string,
 ): TInput => {
+  const assertEmbeddedChartLayout = (declaration: CollectedChartDeclaration<ChartLayoutProps> | undefined): void => {
+    if (declaration === undefined) return;
+
+    const unsupportedDimensions = (['width', 'height'] as const).filter(dimension =>
+      Object.hasOwn(declaration.props, dimension),
+    );
+    if (unsupportedDimensions.length === 0) return;
+
+    throw new RetikzChartReactError(
+      `chart react: embedded Chart does not support ChartLayout ${unsupportedDimensions.join(', ')}; move host dimensions to the outer <Layout>`,
+    );
+  };
+
+  const plotExtensionOf = (
+    extension: IRChartPlotExtension | undefined,
+    fragment: ReturnType<typeof resolvePlotExtensionAuthoring>['fragment'] | undefined,
+  ): IRChartPlotExtension | undefined => {
+    if (fragment === undefined) return extension;
+
+    const passive = {
+      ...(extension?.defaultPlot === undefined ? {} : { defaultPlot: extension.defaultPlot }),
+      ...(extension?.plotRules === undefined ? {} : { plotRules: extension.plotRules }),
+      ...(extension?.meta === undefined ? {} : { meta: extension.meta }),
+    };
+    const combined = { ...passive, ...fragment };
+
+    return Object.keys(combined).length === 0 ? undefined : combined;
+  };
+
   const {
     id,
     background,

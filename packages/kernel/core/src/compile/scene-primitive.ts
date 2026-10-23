@@ -392,21 +392,21 @@ export const assertProviderOutputJsonValue = (owner: string, value: unknown, pat
   assertProviderOutputJsonValueWithActive(owner, value, path, new WeakSet());
 };
 
-/** 校验 Scene resolved shadow 的 required 字段与范围 */
-const assertResolvedShadow = (owner: string, value: unknown, path: string): void => {
-  if (value === undefined) return;
-
-  const shadow = providerOutputRecord(owner, value, path);
-  assertProviderOutputKeys(owner, shadow, ['offsetX', 'offsetY', 'blur', 'color', 'opacity'], path);
-  assertProviderOutputFinite(owner, shadow.offsetX, `${path}.offsetX`);
-  assertProviderOutputFinite(owner, shadow.offsetY, `${path}.offsetY`);
-  if (typeof shadow.color !== 'string') failProviderOutput(owner, `an invalid ${path}.color`);
-  assertProviderOutputOptionalFinite(owner, shadow, 'blur', path, true);
-  assertProviderOutputUnitInterval(owner, shadow, 'opacity', path);
-};
-
 /** 校验 Scene geometry primitive 的共享 paint/style 字段 */
 const assertSceneStyle = (owner: string, value: Record<string, unknown>, path: string): void => {
+  /** 校验 Scene resolved shadow 的 required 字段与范围 */
+  const assertResolvedShadow = (providerOwner: string, shadowValue: unknown, shadowPath: string): void => {
+    if (shadowValue === undefined) return;
+
+    const shadow = providerOutputRecord(providerOwner, shadowValue, shadowPath);
+    assertProviderOutputKeys(providerOwner, shadow, ['offsetX', 'offsetY', 'blur', 'color', 'opacity'], shadowPath);
+    assertProviderOutputFinite(providerOwner, shadow.offsetX, `${shadowPath}.offsetX`);
+    assertProviderOutputFinite(providerOwner, shadow.offsetY, `${shadowPath}.offsetY`);
+    if (typeof shadow.color !== 'string') failProviderOutput(providerOwner, `an invalid ${shadowPath}.color`);
+    assertProviderOutputOptionalFinite(providerOwner, shadow, 'blur', shadowPath, true);
+    assertProviderOutputUnitInterval(providerOwner, shadow, 'opacity', shadowPath);
+  };
+
   assertProviderOutputPaint(owner, value.fill, `${path}.fill`);
   assertProviderOutputPaint(owner, value.stroke, `${path}.stroke`);
   assertProviderOutputUnitInterval(owner, value, 'fillOpacity', path);
@@ -669,19 +669,19 @@ const visitScenePrimitive = (
   }
 };
 
-/** 校验单个第三方 Shape primitive 的完整 Core Scene runtime contract */
-const assertValidScenePrimitive: (owner: string, primitive: unknown) => asserts primitive is ScenePrimitive = (
-  owner,
-  primitive,
-) => {
-  visitScenePrimitive(owner, primitive, 'Scene primitive', {
-    active: new WeakSet(),
-  });
-};
-
 /** 在统一 fatal boundary 内物化并校验 Shape provider 发出的 Scene primitive 列表 */
-export const validateScenePrimitives = (owner: string, emitted: unknown): Array<ScenePrimitive> =>
-  withProviderOutputValidationBoundary(owner, () => {
+export const validateScenePrimitives = (owner: string, emitted: unknown): Array<ScenePrimitive> => {
+  /** 校验单个第三方 Shape primitive 的完整 Core Scene runtime contract */
+  const assertValidScenePrimitive: (owner: string, primitive: unknown) => asserts primitive is ScenePrimitive = (
+    providerOwner,
+    primitive,
+  ) => {
+    visitScenePrimitive(providerOwner, primitive, 'Scene primitive', {
+      active: new WeakSet(),
+    });
+  };
+
+  return withProviderOutputValidationBoundary(owner, () => {
     if (
       emitted === null ||
       (typeof emitted !== 'object' && typeof emitted !== 'function') ||
@@ -696,3 +696,4 @@ export const validateScenePrimitives = (owner: string, emitted: unknown): Array<
       return omitProviderOutputUndefined(snapshot);
     });
   });
+};

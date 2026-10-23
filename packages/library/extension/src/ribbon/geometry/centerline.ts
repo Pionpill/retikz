@@ -9,16 +9,6 @@ import type { RibbonSegment, RibbonSegmentInput } from './types';
 
 const LENGTH_SUBDIVISIONS = 16;
 
-const assertCursor = (cursor: IRPosition | undefined, command: PathCommand): IRPosition => {
-  if (cursor !== undefined) return cursor;
-
-  throw new RetikzExtensionError({
-    code: RetikzExtensionErrorCode.GeometryInvalid,
-    message: `Ribbon centerline command "${command.kind}" has no current point; start with a move step.`,
-    details: { command: command.kind },
-  });
-};
-
 /** 校验并归一化 ribbon 方向向量；零向量或非有限值直接报错 */
 export const normalizeVector = (vector: Vector2, source: string): Vector2 => {
   const normalized = vector2.normalizeOrNull(vector);
@@ -80,6 +70,16 @@ export const commandsToSegmentInputs = (
   commands: ReadonlyArray<PathCommand>,
   source = 'centerline',
 ): Array<RibbonSegmentInput> => {
+  const assertCursor = (cursor: IRPosition | undefined, command: PathCommand): IRPosition => {
+    if (cursor !== undefined) return cursor;
+
+    throw new RetikzExtensionError({
+      code: RetikzExtensionErrorCode.GeometryInvalid,
+      message: `Ribbon centerline command "${command.kind}" has no current point; start with a move step.`,
+      details: { command: command.kind },
+    });
+  };
+
   const inputs: Array<RibbonSegmentInput> = [];
   let cursor: IRPosition | undefined;
   let moveCount = 0;

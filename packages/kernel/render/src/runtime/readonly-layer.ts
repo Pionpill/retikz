@@ -17,20 +17,6 @@ export const EMPTY_READONLY_LAYERS: ReadonlyArray<RenderReadonlyLayer> = Object.
 
 const hasOwn = (value: object, key: PropertyKey): boolean => Object.prototype.hasOwnProperty.call(value, key);
 
-/** 递归拒绝只读图层 primitive 树中的公共身份、元数据与动画语义 */
-const assertPrimitiveHasNoPublicRuntimeSemantics = (primitive: ScenePrimitive): void => {
-  if (hasOwn(primitive, 'id') || hasOwn(primitive, 'meta') || hasOwn(primitive, 'animations')) {
-    throw new RetikzRenderError(
-      RetikzRenderErrorCode.Runtime,
-      'Render readonly layer Scene must not contain public id, meta, or animation fields',
-    );
-  }
-
-  if (primitive.type === 'group') {
-    for (const child of primitive.children) assertPrimitiveHasNoPublicRuntimeSemantics(child);
-  }
-};
-
 /** 深度冻结对象，同时继续遍历已经浅冻结的外层对象 */
 const deepFreeze = <T>(value: T): T => {
   if (typeof value !== 'object' || value === null) return value;
@@ -42,6 +28,20 @@ const deepFreeze = <T>(value: T): T => {
 export const validateReadonlyLayers = (
   input: ReadonlyArray<RenderReadonlyLayer>,
 ): ReadonlyArray<RenderReadonlyLayer> => {
+  /** 递归拒绝只读图层 primitive 树中的公共身份、元数据与动画语义 */
+  const assertPrimitiveHasNoPublicRuntimeSemantics = (primitive: ScenePrimitive): void => {
+    if (hasOwn(primitive, 'id') || hasOwn(primitive, 'meta') || hasOwn(primitive, 'animations')) {
+      throw new RetikzRenderError(
+        RetikzRenderErrorCode.Runtime,
+        'Render readonly layer Scene must not contain public id, meta, or animation fields',
+      );
+    }
+
+    if (primitive.type === 'group') {
+      for (const child of primitive.children) assertPrimitiveHasNoPublicRuntimeSemantics(child);
+    }
+  };
+
   if (!Array.isArray(input))
     throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Render readonly layers must be an array');
   if (input.length === 0) return EMPTY_READONLY_LAYERS;

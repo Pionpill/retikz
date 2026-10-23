@@ -9,25 +9,27 @@ import { GraphInputEmbedAdapter } from './graph';
 import { GroupInputEmbedAdapter } from './group';
 import { RelationInputEmbedAdapter } from './relation';
 
-/** 擦除 Graph Vanilla adapter 的具体 props 类型 */
-const eraseAdapter = <TProps>(
-  adapter: SynchronousInputEmbedAdapter<TProps>,
-): SynchronousInputEmbedAdapter<unknown> => ({
-  kind: adapter.kind,
-  lower: (props, context) => adapter.lower(props as TProps, context),
-});
-
 /**
  * 创建可一次性传给 Vanilla normalize 的 Graph adapter 集合
  * @returns 包含 Graph、Group、Block 家族、Entity 和 Relation 的新 adapter 数组
  */
-export const createGraphVanillaAdapters = (): Array<SynchronousInputEmbedAdapter<unknown>> => [
-  eraseAdapter(GraphInputEmbedAdapter),
-  eraseAdapter(GroupInputEmbedAdapter),
-  eraseAdapter(BlockInputEmbedAdapter),
-  eraseAdapter(BlockHeaderInputEmbedAdapter),
-  eraseAdapter(BlockSectionInputEmbedAdapter),
-  eraseAdapter(BlockRowInputEmbedAdapter),
-  eraseAdapter(EntityInputEmbedAdapter),
-  eraseAdapter(RelationInputEmbedAdapter),
-];
+export const createGraphVanillaAdapters = (): Array<SynchronousInputEmbedAdapter<unknown>> => {
+  /** 擦除 Graph Vanilla adapter 的具体 props 类型 */
+  const eraseAdapter = <TProps>(
+    adapter: SynchronousInputEmbedAdapter<TProps>,
+  ): SynchronousInputEmbedAdapter<unknown> => ({
+    kind: adapter.kind,
+    lower: (props, context) => adapter.lower(props as TProps, context),
+  });
+
+  return [
+    eraseAdapter(GraphInputEmbedAdapter),
+    eraseAdapter(GroupInputEmbedAdapter),
+    eraseAdapter(BlockInputEmbedAdapter),
+    eraseAdapter(BlockHeaderInputEmbedAdapter),
+    eraseAdapter(BlockSectionInputEmbedAdapter),
+    eraseAdapter(BlockRowInputEmbedAdapter),
+    eraseAdapter(EntityInputEmbedAdapter),
+    eraseAdapter(RelationInputEmbedAdapter),
+  ];
+};

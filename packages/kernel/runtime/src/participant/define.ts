@@ -13,14 +13,6 @@ const participantExecutors = new WeakMap<object, RuntimeCommitParticipantExecuto
 
 const participantOwnership = new WeakMap<object, 'unowned' | 'owned' | 'consumed'>();
 
-/** 创建 participant definition 输入错误 */
-const invalidParticipant = (cause: unknown) =>
-  new RetikzRuntimeError({
-    code: RetikzRuntimeErrorCode.ParticipantTokenInvalid,
-    phase: 'participant-definition',
-    cause,
-  });
-
 /**
  * 定义 nominal Runtime commit participant
  * @template TRead 提交参与者对宿主暴露的已提交只读视图类型
@@ -31,6 +23,14 @@ const invalidParticipant = (cause: unknown) =>
 export const defineRuntimeCommitParticipant = <TRead>(
   input: RuntimeCommitParticipantDefinitionInput<TRead>,
 ): RuntimeCommitParticipant<TRead> => {
+  /** 创建 participant definition 输入错误 */
+  const invalidParticipant = (cause: unknown) =>
+    new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.ParticipantTokenInvalid,
+      phase: 'participant-definition',
+      cause,
+    });
+
   const { key, sources = [], computations = [], revisionPolicy, tracePhases = [], prepare, read, dispose } = input;
   if (key.length === 0) throw invalidParticipant(input);
 

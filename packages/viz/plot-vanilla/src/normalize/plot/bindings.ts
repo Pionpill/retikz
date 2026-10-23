@@ -320,18 +320,18 @@ const normalizeFacetConfiguration = (facet: InputPlotFacet): IRPlotFacetConfigur
   };
 };
 
-/** 按显式 view、scaffold 模板或 authoring 默认解析 track view id */
-const scaffoldTrackViewIdOf = (
-  scaffold: Pick<InputPlotScaffold, 'id' | 'viewIdTemplate'>,
-  track: InputPlotScaffold['tracks'][number],
-): string => {
-  if (track.view !== undefined) return track.view;
-  if (scaffold.viewIdTemplate === undefined) return track.id;
-  return scaffold.viewIdTemplate.replaceAll('{arrangement}', scaffold.id).replaceAll('{track}', track.id);
-};
-
 /** 把 scaffold authoring 输入转为 canonical tracks arrangement */
 const normalizeScaffold = (scaffold: InputPlotScaffold, coordinate: IRPlotCoordinateOperation): SharedScaffold => {
+  /** 按显式 view、scaffold 模板或 authoring 默认解析 track view id */
+  const scaffoldTrackViewIdOf = (
+    sourceScaffold: Pick<InputPlotScaffold, 'id' | 'viewIdTemplate'>,
+    track: InputPlotScaffold['tracks'][number],
+  ): string => {
+    if (track.view !== undefined) return track.view;
+    if (sourceScaffold.viewIdTemplate === undefined) return track.id;
+    return sourceScaffold.viewIdTemplate.replaceAll('{arrangement}', sourceScaffold.id).replaceAll('{track}', track.id);
+  };
+
   const { coordinate: scaffoldCoordinate, spacing, resolve, ...rest } = scaffold;
   return {
     ...rest,

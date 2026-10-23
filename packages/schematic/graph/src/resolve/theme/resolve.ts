@@ -220,27 +220,27 @@ export type GraphThemeSelectorRegistryContext = Readonly<{
 const selectorKeys = (value: string | ReadonlyArray<string> | undefined): ReadonlyArray<string> =>
   value === undefined ? [] : typeof value === 'string' ? [value] : value;
 
-const assertSelectorKeysRegistered = (
-  keys: ReadonlyArray<string>,
-  registry: ReadonlySet<string> | ReadonlyMap<string, unknown>,
-  capability: string,
-): void => {
-  for (const key of keys) {
-    if (!registry.has(key)) {
-      throw new RetikzGraphError({
-        code: RetikzGraphErrorCode.DefinitionNotRegistered,
-        message: `${capability} selector key '${key}' is not registered.`,
-        details: { capability, key, availableKeys: [...registry.keys()] },
-      });
-    }
-  }
-};
-
 /** 校验 Theme selector 引用的全部开放 key 已在对应成员 registry 注册 */
 export const validateGraphThemeSelector = (
   selector: IRGraphEntityThemeSelector | IRGraphRelationThemeSelector | undefined,
   context: GraphThemeSelectorRegistryContext,
 ): void => {
+  const assertSelectorKeysRegistered = (
+    keys: ReadonlyArray<string>,
+    registry: ReadonlySet<string> | ReadonlyMap<string, unknown>,
+    capability: string,
+  ): void => {
+    for (const key of keys) {
+      if (!registry.has(key)) {
+        throw new RetikzGraphError({
+          code: RetikzGraphErrorCode.DefinitionNotRegistered,
+          message: `${capability} selector key '${key}' is not registered.`,
+          details: { capability, key, availableKeys: [...registry.keys()] },
+        });
+      }
+    }
+  };
+
   if (selector === undefined) return;
 
   const capabilityPrefix = context.member.toLowerCase();

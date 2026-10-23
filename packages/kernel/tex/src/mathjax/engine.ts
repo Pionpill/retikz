@@ -21,18 +21,6 @@ type AdaptorModule = { liteAdaptor: () => LiteAdaptor };
 
 type HandlerModule = { RegisterHTMLHandler: (adaptor: LiteAdaptor) => void };
 
-/** 根据有效 extension 集合生成 MathJax TeX package 顺序 */
-const getMathJaxPackages = (extensions: Array<MathJaxExtension>): Array<string> => {
-  const packages = ['base'];
-
-  for (const extension of extensions) {
-    if (extension === 'cases') packages.push('empheq');
-    packages.push(extension);
-  }
-
-  return packages;
-};
-
 /**
  * 创建基于可选 `mathjax-full` peer 的同步 TeX → SVG 引擎
  * @description 异步加载并配置 `mathjax-full`，返回可被 `createLowerTex` 反复同步调用的引擎。输入配置只影响启用的 TeX 扩展；返回值只负责 TeX → SVG，不承担 SVG 路径降解、缓存或 Core 注入
@@ -49,6 +37,18 @@ const getMathJaxPackages = (extensions: Array<MathJaxExtension>): Array<string> 
  * const svg = engine.convert('\\frac{1}{2}', { display: false });
  */
 export const createMathJaxEngine = async (options?: MathJaxEngineOptions): Promise<MathJaxSvgEngine> => {
+  /** 根据有效 extension 集合生成 MathJax TeX package 顺序 */
+  const getMathJaxPackages = (extensions: Array<MathJaxExtension>): Array<string> => {
+    const packages = ['base'];
+
+    for (const extension of extensions) {
+      if (extension === 'cases') packages.push('empheq');
+      packages.push(extension);
+    }
+
+    return packages;
+  };
+
   const extensions = resolveMathJaxExtensions(options);
   let modules: {
     mathJaxModule: MathJaxModule;

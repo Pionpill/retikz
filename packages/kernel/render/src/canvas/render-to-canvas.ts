@@ -18,15 +18,6 @@ const getDevicePixelRatio = (options: RenderOptions): number => {
   return typeof ratio === 'number' && Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
 };
 
-const assertPositiveFinite = (name: string, value: number): void => {
-  if (!Number.isFinite(value) || value <= 0) {
-    throw new RetikzRenderError(
-      RetikzRenderErrorCode.Canvas,
-      `renderToCanvas: ${name} must be a positive finite number.`,
-    );
-  }
-};
-
 const getCanvasDefaultFontFamily = (canvas: HTMLCanvasElement): string | undefined => {
   if (typeof getComputedStyle === 'undefined') return undefined;
   if (typeof Element === 'undefined' || !(canvas instanceof Element)) return undefined;
@@ -68,6 +59,15 @@ export const renderFrameToCanvas = (
   frame: StaticRenderFrame,
   options: RenderOptions = {},
 ): void => {
+  const assertPositiveFinite = (name: string, value: number): void => {
+    if (!Number.isFinite(value) || value <= 0) {
+      throw new RetikzRenderError(
+        RetikzRenderErrorCode.Canvas,
+        `renderToCanvas: ${name} must be a positive finite number.`,
+      );
+    }
+  };
+
   const scene = frame.primary;
   const layers = validateReadonlyLayers(frame.layers);
   const ctx = canvas.getContext('2d');

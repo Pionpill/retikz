@@ -17,25 +17,25 @@ import type { ResolvedTableCellPlan } from '../rule';
 
 const errorMessageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
-/** 从 canonical Cell 构造 detached、递归冻结的 formatter context */
-const formatterContextOf = (cell: SemanticTableCell): TableCellContext =>
-  deepFreeze({
-    ...(cell.id === undefined ? {} : { cellId: cell.id }),
-    ...(cell.rowId === undefined ? {} : { rowId: cell.rowId }),
-    ...(cell.columnId === undefined ? {} : { columnId: cell.columnId }),
-    rowIndex: cell.rowIndex,
-    columnIndex: cell.columnIndex,
-    location: cell.location,
-    roles: [...cell.roles],
-    ...(cell.source === undefined ? {} : { source: { ...cell.source } }),
-  });
-
 /** 把单个 canonical Cell 转换为 formatter 阶段结果 */
 const formatCell = (
   cell: SemanticTableCell,
   plan: ResolvedTableCellPlan,
   registry: ReadonlyMap<string, AnyCellFormatterDefinition>,
 ): FormattedTableCell => {
+  /** 从 canonical Cell 构造 detached、递归冻结的 formatter context */
+  const formatterContextOf = (sourceCell: SemanticTableCell): TableCellContext =>
+    deepFreeze({
+      ...(sourceCell.id === undefined ? {} : { cellId: sourceCell.id }),
+      ...(sourceCell.rowId === undefined ? {} : { rowId: sourceCell.rowId }),
+      ...(sourceCell.columnId === undefined ? {} : { columnId: sourceCell.columnId }),
+      rowIndex: sourceCell.rowIndex,
+      columnIndex: sourceCell.columnIndex,
+      location: sourceCell.location,
+      roles: [...sourceCell.roles],
+      ...(sourceCell.source === undefined ? {} : { source: { ...sourceCell.source } }),
+    });
+
   const parsedPayload = cell.payload;
   if (parsedPayload.kind === TableCellPayloadKind.Content) {
     return deepFreeze({
@@ -82,20 +82,21 @@ export type FormatTableOptions = Readonly<{
   formatterDefinitions?: ReadonlyArray<AnyCellFormatterDefinition>;
 }>;
 
-/** 校验 formatter plans 与 canonical Cells 同长同序，并校验显式 identity / kind */
-const assertPlanAlignment = (model: SemanticTableModel, plans: ReadonlyArray<ResolvedTableCellPlan>): void => {
-  if (model.cells.length !== plans.length)
-    throw new RetikzTableError('table: formatter plan Cell count differs from semantic model');
-
-  model.cells.forEach((cell, index) => {
-    const plan = plans[index];
-    if (plan.cellId !== cell.id) throw new RetikzTableError(`table: formatter plan Cell ${index} identity differs`);
-    if (plan.kind !== cell.payload.kind) throw new RetikzTableError(`table: formatter plan Cell ${index} kind differs`);
-  });
-};
-
 /** 把 canonical Table Cells 格式化为同 identity、同顺序的展示值模型 */
 export const formatTable = (model: SemanticTableModel, options: FormatTableOptions): FormattedTableModel => {
+  /** 校验 formatter plans 与 canonical Cells 同长同序，并校验显式 identity / kind */
+  const assertPlanAlignment = (sourceModel: SemanticTableModel, plans: ReadonlyArray<ResolvedTableCellPlan>): void => {
+    if (sourceModel.cells.length !== plans.length)
+      throw new RetikzTableError('table: formatter plan Cell count differs from semantic model');
+
+    sourceModel.cells.forEach((cell, index) => {
+      const plan = plans[index];
+      if (plan.cellId !== cell.id) throw new RetikzTableError(`table: formatter plan Cell ${index} identity differs`);
+      if (plan.kind !== cell.payload.kind)
+        throw new RetikzTableError(`table: formatter plan Cell ${index} kind differs`);
+    });
+  };
+
   assertPlanAlignment(model, options.cells);
   const semantic = deepFreeze(structuredClone(model));
   const registry = resolveCellFormatterRegistry(options.formatterDefinitions);

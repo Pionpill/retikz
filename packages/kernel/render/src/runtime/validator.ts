@@ -622,26 +622,26 @@ const comparePrimitivePaths = (left: ReadonlyArray<number>, right: ReadonlyArray
 const pathContains = (ancestor: ReadonlyArray<number>, descendant: ReadonlyArray<number>): boolean =>
   ancestor.length < descendant.length && ancestor.every((segment, index) => segment === descendant[index]);
 
-const validateSnapshotTargetOverlap = (snapshot: SceneRuntimeSnapshot, targets: SceneIdentityMap<true>): void => {
-  const paths = snapshot.topology
-    .filter(node => targets.has(node.identity))
-    .map(node => node.primitivePath)
-    .sort(comparePrimitivePaths);
-
-  for (let index = 1; index < paths.length; index += 1) {
-    const previous = paths[index - 1];
-    const current = paths[index];
-    if (pathContains(previous, current)) {
-      return patchError({ reason: 'overlapping-targets', ancestor: previous, descendant: current });
-    }
-  }
-};
-
 const validateNonOverlappingTargets = (
   operations: ReadonlyArray<ScenePatchOperation>,
   current: SceneRuntimeSnapshot,
   next: SceneRuntimeSnapshot,
 ): void => {
+  const validateSnapshotTargetOverlap = (snapshot: SceneRuntimeSnapshot, targets: SceneIdentityMap<true>): void => {
+    const paths = snapshot.topology
+      .filter(node => targets.has(node.identity))
+      .map(node => node.primitivePath)
+      .sort(comparePrimitivePaths);
+
+    for (let index = 1; index < paths.length; index += 1) {
+      const previous = paths[index - 1];
+      const currentPath = paths[index];
+      if (pathContains(previous, currentPath)) {
+        return patchError({ reason: 'overlapping-targets', ancestor: previous, descendant: currentPath });
+      }
+    }
+  };
+
   const targets = createSceneIdentityMap<true>(
     operations
       .map(operationTarget)

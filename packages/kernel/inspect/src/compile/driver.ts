@@ -44,22 +44,6 @@ type InspectionObserverOutput = Readonly<{
   diagnostics: ReadonlyArray<InspectionDiagnostic>;
 }>;
 
-/** 按当前 occurrence Theme 生成 Inspector callback 使用的冻结外观 */
-const inspectionAppearanceOf = (
-  colorScope: number,
-  theme: CompileObservationContext['theme'],
-): InspectorContext['appearance'] =>
-  Object.freeze({
-    colorScope,
-    scopeColor: categoricalColorAt(theme.colors.categorical, colorScope),
-    semanticColors: Object.freeze({
-      error: theme.colors.semantic.error,
-      success: theme.colors.semantic.success,
-      warning: theme.colors.semantic.warning,
-      guide: theme.colors.semantic.guide,
-    }),
-  });
-
 /** 创建带结构化 origin 的 Inspect compile 失败 */
 const createInspectionCompileError = (message: string, origin: InspectionDiagnosticOrigin): RetikzInspectError =>
   new RetikzInspectError({
@@ -75,26 +59,42 @@ const createInspectionDiagnosticOrigin = (
 ): InspectionDiagnosticOrigin =>
   Object.freeze({ stage, inspector: request.inspector, owner: request.owner, occurrence: request.occurrence });
 
-/** 创建 Inspect 输出或 fragment 编译失败时使用的诊断来源 */
-const createInspectionOutputDiagnosticOrigin = (
-  stage: 'output' | 'fragment',
-  request: ResolvedInspectionRequest,
-  outputIndex: number,
-): InspectionDiagnosticOrigin =>
-  Object.freeze({
-    stage,
-    inspector: request.inspector,
-    owner: request.owner,
-    occurrence: request.occurrence,
-    outputIndex,
-  });
-
 /** 将捕获的 observation 编译为 Inspect plane 与诊断结果 */
 const compileInspectionObserverOutput = (
   registry: InspectorRegistry,
   admittedRules: ReturnType<typeof admitInspectionSelection>,
   captured: ReadonlyArray<CapturedObservation>,
 ): InspectionObserverOutput => {
+  /** 按当前 occurrence Theme 生成 Inspector callback 使用的冻结外观 */
+  const inspectionAppearanceOf = (
+    colorScope: number,
+    theme: CompileObservationContext['theme'],
+  ): InspectorContext['appearance'] =>
+    Object.freeze({
+      colorScope,
+      scopeColor: categoricalColorAt(theme.colors.categorical, colorScope),
+      semanticColors: Object.freeze({
+        error: theme.colors.semantic.error,
+        success: theme.colors.semantic.success,
+        warning: theme.colors.semantic.warning,
+        guide: theme.colors.semantic.guide,
+      }),
+    });
+
+  /** 创建 Inspect 输出或 fragment 编译失败时使用的诊断来源 */
+  const createInspectionOutputDiagnosticOrigin = (
+    stage: 'output' | 'fragment',
+    request: ResolvedInspectionRequest,
+    outputIndex: number,
+  ): InspectionDiagnosticOrigin =>
+    Object.freeze({
+      stage,
+      inspector: request.inspector,
+      owner: request.owner,
+      occurrence: request.occurrence,
+      outputIndex,
+    });
+
   const resolvedRequests = resolveAdmittedInspectionSelection({
     registry,
     admittedRules,

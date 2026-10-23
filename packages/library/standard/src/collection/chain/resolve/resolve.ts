@@ -27,18 +27,18 @@ const resolveConnection = (
   return { route, path };
 };
 
-/** 骨架结构只转换符号与显式分支 */
-const skeletonItems = (items: NonNullable<IRChainSkeleton['items']>): Array<IRChainItem> =>
-  items.map(item =>
-    typeof item === 'string'
-      ? item === ''
-        ? { kind: 'cell' }
-        : item
-      : { kind: 'parallel', branches: item.branches.map(branchItems => ({ items: skeletonItems(branchItems) })) },
-  );
-
 /** 解析三入口及各并行块的字段继承 */
 export const resolveChain = (source: IRChain): CanonicalChain => {
+  /** 骨架结构只转换符号与显式分支 */
+  const skeletonItems = (items: NonNullable<IRChainSkeleton['items']>): Array<IRChainItem> =>
+    items.map(item =>
+      typeof item === 'string'
+        ? item === ''
+          ? { kind: 'cell' }
+          : item
+        : { kind: 'parallel', branches: item.branches.map(branchItems => ({ items: skeletonItems(branchItems) })) },
+    );
+
   const layout = ChainParallelLayoutSchema.parse(
     source.layout === undefined
       ? {}

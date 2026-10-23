@@ -9,10 +9,6 @@ const moveBlock = (block: ChainBlock, x: number, y: number) => {
   }
 };
 
-/** 根据短支路策略选择第一条轨道 */
-const computeTrackOffset = (count: number, total: number, justify: CanonicalChainLayout['justify']) =>
-  justify === 'end' ? total - count : justify === 'center' ? Math.floor((total - count) / 2) : 0;
-
 /** 拼装已经测量的直属序列 */
 const layoutChainSequence = (
   blocks: Array<ChainBlock>,
@@ -83,6 +79,10 @@ const layoutChainParallel = (
   connection: CanonicalChainConnection,
   parentHeight: number,
 ): ChainBlock => {
+  /** 根据短支路策略选择第一条轨道 */
+  const computeTrackOffset = (count: number, total: number, justify: CanonicalChainLayout['justify']) =>
+    justify === 'end' ? total - count : justify === 'center' ? Math.floor((total - count) / 2) : 0;
+
   const count = branches.reduce((maximum, branch) => Math.max(maximum, branch.length), 0);
   const tracks = layout.spacing === 'steps' ? Array<number>(count).fill(0) : undefined;
   if (tracks)

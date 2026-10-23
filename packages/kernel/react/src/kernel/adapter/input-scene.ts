@@ -95,15 +95,15 @@ const componentLabel = (type: unknown): string => {
   return String(type);
 };
 
-/** 判断字符串中的当前位置是否被反斜杠转义 */
-const isEscapedAt = (text: string, index: number): boolean => {
-  let slashCount = 0;
-  for (let cursor = index - 1; cursor >= 0 && text[cursor] === '\\'; cursor -= 1) slashCount += 1;
-  return slashCount % 2 === 1;
-};
-
 /** 按普通换行拆 Node 文本，同时保留 display TeX 内部的换行 */
 const splitChildTextLines = (text: string): Array<string> => {
+  /** 判断字符串中的当前位置是否被反斜杠转义 */
+  const isEscapedAt = (sourceText: string, index: number): boolean => {
+    let slashCount = 0;
+    for (let cursor = index - 1; cursor >= 0 && sourceText[cursor] === '\\'; cursor -= 1) slashCount += 1;
+    return slashCount % 2 === 1;
+  };
+
   const lines: Array<string> = [];
   let start = 0;
   let inDisplayTex = false;

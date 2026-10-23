@@ -66,38 +66,39 @@ const invalidDefinition = (definition: FlowLayoutDefinition, reason: string, cau
   });
 };
 
-const validateUniqueValues = <T>(
-  values: ReadonlyArray<T>,
-  allowed: ReadonlySet<T>,
-  label: string,
-  definition: FlowLayoutDefinition,
-): void => {
-  if (values.length === 0) invalidDefinition(definition, `${label} must not be empty.`);
-  const unique = new Set(values);
-  if (unique.size !== values.length) invalidDefinition(definition, `${label} must not contain duplicates.`);
-  if (values.some(value => !allowed.has(value)))
-    invalidDefinition(definition, `${label} contains an unsupported value.`);
-};
-
-const validateFiniteNonNegative = (value: number, label: string, definition: FlowLayoutDefinition): void => {
-  if (!Number.isFinite(value) || value < 0) invalidDefinition(definition, `${label} must be finite and non-negative.`);
-};
-
-const validateExactKeys = (
-  value: object,
-  expectedKeys: ReadonlySet<string>,
-  label: string,
-  definition: FlowLayoutDefinition,
-  requiredKeys: ReadonlySet<string> = expectedKeys,
-): void => {
-  const keys = Object.keys(value);
-  if (keys.some(key => !expectedKeys.has(key)) || [...requiredKeys].some(key => !keys.includes(key))) {
-    invalidDefinition(definition, `${label} must use the closed public contract.`);
-  }
-};
-
 /** 校验一个 Flow Layout Definition 的完整运行时保证 */
 export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): FlowLayoutDefinition => {
+  const validateUniqueValues = <T>(
+    values: ReadonlyArray<T>,
+    allowed: ReadonlySet<T>,
+    label: string,
+    layoutDefinition: FlowLayoutDefinition,
+  ): void => {
+    if (values.length === 0) invalidDefinition(layoutDefinition, `${label} must not be empty.`);
+    const unique = new Set(values);
+    if (unique.size !== values.length) invalidDefinition(layoutDefinition, `${label} must not contain duplicates.`);
+    if (values.some(value => !allowed.has(value)))
+      invalidDefinition(layoutDefinition, `${label} contains an unsupported value.`);
+  };
+
+  const validateFiniteNonNegative = (value: number, label: string, layoutDefinition: FlowLayoutDefinition): void => {
+    if (!Number.isFinite(value) || value < 0)
+      invalidDefinition(layoutDefinition, `${label} must be finite and non-negative.`);
+  };
+
+  const validateExactKeys = (
+    value: object,
+    expectedKeys: ReadonlySet<string>,
+    label: string,
+    layoutDefinition: FlowLayoutDefinition,
+    requiredKeys: ReadonlySet<string> = expectedKeys,
+  ): void => {
+    const keys = Object.keys(value);
+    if (keys.some(key => !expectedKeys.has(key)) || [...requiredKeys].some(key => !keys.includes(key))) {
+      invalidDefinition(layoutDefinition, `${label} must use the closed public contract.`);
+    }
+  };
+
   validateExactKeys(definition, DEFINITION_KEYS, 'definition', definition);
   assertNonEmptyString(
     definition.name,

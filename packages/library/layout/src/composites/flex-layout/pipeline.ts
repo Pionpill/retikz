@@ -104,16 +104,6 @@ const intrinsicProposal = (mode: 'minimum' | 'natural'): LayoutAxisProposal => (
 /** 创建 exact 单轴 proposal */
 const exactProposal = (value: number): LayoutAxisProposal => ({ kind: LayoutAxisProposalKind.Exact, value });
 
-/** 读取方向对应的 main/cross 物理轴 */
-const axesOf = (direction: CanonicalFlexLayout['direction']): Readonly<{ main: PhysicalAxis; cross: PhysicalAxis }> =>
-  direction === FlexLayoutDirection.Row || direction === FlexLayoutDirection.RowReverse
-    ? { main: 'x', cross: 'y' }
-    : { main: 'y', cross: 'x' };
-
-/** 判断 main traversal 是否沿物理轴反向 */
-const isMainReverse = (direction: CanonicalFlexLayout['direction']): boolean =>
-  direction === FlexLayoutDirection.RowReverse || direction === FlexLayoutDirection.ColumnReverse;
-
 /** 读取方向语义下的 main-start 与 main-end margin */
 const mainMarginsOf = (
   margin: LayoutInsets,
@@ -125,10 +115,6 @@ const mainMarginsOf = (
 
   return { start: margin.bottom, end: margin.top };
 };
-
-/** 读取 cross 物理轴的 leading 与 trailing margin */
-const crossMarginsOf = (margin: LayoutInsets, crossAxis: PhysicalAxis): Readonly<{ start: number; end: number }> =>
-  crossAxis === 'x' ? { start: margin.left, end: margin.right } : { start: margin.top, end: margin.bottom };
 
 /** 读取 allocation rect 的物理轴起点和尺寸 */
 const rectAxis = (rect: LayoutRect, axis: PhysicalAxis): Readonly<{ start: number; size: number }> =>
@@ -339,6 +325,22 @@ export function compileFlexLayout(
   sourceLayout: IRFlexLayout,
   context: CompositeCompileContext,
 ): CompositeEvaluationResult<FlexLayoutArtifact> {
+  /** 读取方向对应的 main/cross 物理轴 */
+  const axesOf = (
+    direction: CanonicalFlexLayout['direction'],
+  ): Readonly<{ main: PhysicalAxis; cross: PhysicalAxis }> =>
+    direction === FlexLayoutDirection.Row || direction === FlexLayoutDirection.RowReverse
+      ? { main: 'x', cross: 'y' }
+      : { main: 'y', cross: 'x' };
+
+  /** 判断 main traversal 是否沿物理轴反向 */
+  const isMainReverse = (direction: CanonicalFlexLayout['direction']): boolean =>
+    direction === FlexLayoutDirection.RowReverse || direction === FlexLayoutDirection.ColumnReverse;
+
+  /** 读取 cross 物理轴的 leading 与 trailing margin */
+  const crossMarginsOf = (margin: LayoutInsets, crossAxis: PhysicalAxis): Readonly<{ start: number; end: number }> =>
+    crossAxis === 'x' ? { start: margin.left, end: margin.right } : { start: margin.top, end: margin.bottom };
+
   const node = resolveFlexLayout(sourceLayout);
   const knownContribution = resolveKnownLayoutContribution(context, node.size);
   if (knownContribution !== undefined) return knownContribution;

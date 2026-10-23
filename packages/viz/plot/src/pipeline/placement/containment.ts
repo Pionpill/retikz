@@ -16,14 +16,6 @@ import type { IRPlotMarkOperation, IRPlotMarkPlacement } from '../../schemas';
 /** 单个 Mark 对各 role 提出的最终 range inset */
 export type MarkPlacementRangeOverrides = Partial<Record<DimensionRole, readonly [number, number]>>;
 
-const assertEnvelopeExtent = (kind: string, role: string, extent: { lower: number; upper: number }): void => {
-  if (!Number.isFinite(extent.lower) || extent.lower < 0 || !Number.isFinite(extent.upper) || extent.upper < 0) {
-    throw new RetikzPlotError(
-      `lowerPlots: position adjustment "${kind}" containment for role "${role}" must be finite and non-negative`,
-    );
-  }
-};
-
 /**
  * 在最终 Mark lowering 前解析 role-space containment，并提议收窄后的 role ranges
  * @description 只读 Definition.measure，不执行 initializer；最终 frame 会用提议 range 重新解析 guide 与 mark
@@ -38,6 +30,14 @@ export const resolveMarkPlacementRangeOverrides = (
   boundaryRanges?: Partial<Record<DimensionRole, readonly [number, number]>>,
   protectedRoles: ReadonlyArray<DimensionRole> = [],
 ): MarkPlacementRangeOverrides | undefined => {
+  const assertEnvelopeExtent = (kind: string, role: string, extent: { lower: number; upper: number }): void => {
+    if (!Number.isFinite(extent.lower) || extent.lower < 0 || !Number.isFinite(extent.upper) || extent.upper < 0) {
+      throw new RetikzPlotError(
+        `lowerPlots: position adjustment "${kind}" containment for role "${role}" must be finite and non-negative`,
+      );
+    }
+  };
+
   const placement = (resolution.operation.properties as { placement?: IRPlotMarkPlacement } | undefined)?.placement;
   if (placement === undefined) return undefined;
 
