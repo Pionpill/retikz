@@ -106,6 +106,13 @@ export const vizV02: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：BREAKING 对齐 Core 图形样式', en: 'Unreleased: BREAKING Core graphic style alignment' },
+          content: {
+            zh: 'Point、Path、Interval 支持固定与字段编码的 dashOffset；Point、Interval 补齐 lineCap、lineJoin。固定 fill/stroke 接受 Core 主色权重，opacity 可用数值表示 overall，并保留未被编码覆盖的因子。移除无独立语义的 Mark*StyleSchema、PointSizeStyleSchema、PointShapeStyleSchema、NodeBoxSizeStyleSchema、Path*StyleSchema 及对应冗余 IRPlot 样式类型，改用 @retikz/core 或 @retikz/foundation 的原子契约。',
+            en: 'Point, Path, and Interval support fixed and field-encoded dashOffset; Point and Interval add lineCap and lineJoin. Fixed fill/stroke accept Core master-color weights, and numeric opacity means overall while preserving factors not overridden by encodings. Redundant Mark*StyleSchema, PointSizeStyleSchema, PointShapeStyleSchema, NodeBoxSizeStyleSchema, Path*StyleSchema wrappers and corresponding IRPlot style aliases are removed; use atoms from @retikz/core or @retikz/foundation.',
+          },
+        },
+        {
           label: { zh: '待发布：标签字段样式', en: 'Unreleased: data-driven label styles' },
           content: {
             zh: 'Mark 标签支持字符串内容简写及混合标签数组。字号、字重、颜色、透明度与宿主附着属性可以绑定字段；字体按叶子覆盖，样式字段参与实例来源判断。JSON、Vanilla 与 React 使用同一契约。',

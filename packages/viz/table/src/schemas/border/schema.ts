@@ -1,5 +1,6 @@
+import { StrokeWidthSchema, StrokeDashOffsetSchema } from '@retikz/core';
 import { OpacitySchema, PaintValueSchema } from '@retikz/core';
-import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
+import { PositiveNumberSchema } from '@retikz/foundation';
 import { array, discriminatedUnion, enum as zodEnum, literal, number, strictObject } from 'zod';
 
 import { TableBorderKind, TableBorderMode } from './constants';
@@ -34,13 +35,13 @@ export const TableLineBorderSchema = strictObject({
   })
     .optional()
     .describe('Core paint for the border line. Omitted fields use currentColor.'),
-  width: NonNegativeNumberSchema.optional().describe('Nonnegative border width. Omitted fields use 1.'),
+  width: StrokeWidthSchema.optional().describe('Nonnegative border width. Omitted fields use 1.'),
   strokeOpacity: OpacitySchema.optional().describe('Border stroke opacity. Omitted fields use 1.'),
   dashPattern: array(PositiveNumberSchema)
     .min(1)
     .optional()
     .describe('Optional non-empty positive dash pattern; omission means solid.'),
-  dashOffset: number().optional().describe('Finite dash offset. Omitted fields use 0.'),
+  dashOffset: StrokeDashOffsetSchema.optional().describe('Finite dash offset. Omitted fields use 0.'),
   priority: TableBorderPrioritySchema.optional().describe('Finite integer conflict priority. Omitted fields use 0.'),
 }).describe('Core-compatible Table line border candidate.');
 

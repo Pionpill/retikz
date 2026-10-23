@@ -205,7 +205,7 @@ describe('Graph Scope and Theme compile semantics', () => {
 
     expect(scene).toContain('#d6e0eb');
     expect(scene).toContain('#85a3c2');
-    expect(scene).toContain('#d6e1eb');
+    expect(scene).toContain('#ccd9e6');
   });
 
   it('compiles Graph Core Theme/default channels and Graph rules through the emitted Scope', () => {

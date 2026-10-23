@@ -6,6 +6,8 @@
 
 统一 Mark 的字段编码、固定属性与局部数据变换结构，覆盖 Annotation 并保持 Chart 语义展开与继承规则，设计见 [020](./020-mark-encoding-properties.md)。
 
+图元外观复用 Core 原子契约，补齐描边、上下文颜色与透明度表达，设计见 [024](./024-core-graphic-style.md)。
+
 ## 重点功能
 
 | 重点能力           | 目标                                                                    | 相关 ADR                                                                                                                                                                                                                                                                                                                                         |

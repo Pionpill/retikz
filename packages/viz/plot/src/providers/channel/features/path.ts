@@ -1,5 +1,13 @@
 import type { IRPathScale } from '@retikz/core';
-import { DropShadowSchema, PathScaleSchema } from '@retikz/core';
+import {
+  PathLineCap,
+  PathLineJoin,
+  PathFillRule,
+  ShadowPreset,
+  BlendMode,
+  DropShadowSchema,
+  PathScaleSchema,
+} from '@retikz/core';
 import type { JsonValue } from '@retikz/foundation';
 import { JsonValueSchema } from '@retikz/foundation';
 import { isFiniteNumber } from '@retikz/math';
@@ -116,34 +124,26 @@ const pathNumericChannels: {
   }),
 };
 
-const lineCapValues = new Set(['butt', 'round', 'square']);
+const lineCapValues: ReadonlySet<string> = new Set(Object.values(PathLineCap));
 
-const lineJoinValues = new Set(['miter', 'round', 'bevel']);
+const lineJoinValues: ReadonlySet<string> = new Set(Object.values(PathLineJoin));
 
-const fillRuleValues = new Set(['nonzero', 'evenodd']);
+const fillRuleValues: ReadonlySet<string> = new Set(Object.values(PathFillRule));
 
-const shadowPresetValues = new Set(['none', 'sm', 'md', 'lg', 'xl', '2xl']);
+const shadowPresetValues: ReadonlySet<string> = new Set(Object.values(ShadowPreset));
 
-const blendModeValues = new Set([
-  'normal',
-  'multiply',
-  'screen',
-  'overlay',
-  'darken',
-  'lighten',
-  'color-dodge',
-  'color-burn',
-  'hard-light',
-  'soft-light',
-  'difference',
-  'exclusion',
-  'hue',
-  'saturation',
-  'color',
-  'luminosity',
-]);
+const blendModeValues: ReadonlySet<string> = new Set(Object.values(BlendMode));
 
 const directPathChannels = {
+  dashOffset: defineSimplePathChannel<number>(
+    'dashOffset',
+    { outputKind: 'number', range: [0, 0] },
+    value => (isFiniteNumber(value) ? value : undefined),
+    (path, value) => {
+      path.style = { ...path.style, dashOffset: value };
+    },
+  ),
+
   strokeOpacity: defineSimplePathChannel<number>(
     'strokeOpacity',
     { outputKind: 'number', range: [0.2, 1], clamp: true },
@@ -182,10 +182,10 @@ const directPathChannels = {
       path.scale = value as IRPathScale;
     },
   ),
-  fillRule: defineSimplePathChannel<'nonzero' | 'evenodd'>(
+  fillRule: defineSimplePathChannel<PathFillRule>(
     'fillRule',
     { outputKind: 'symbol', palette: [...fillRuleValues] },
-    value => (typeof value === 'string' && fillRuleValues.has(value) ? (value as 'nonzero' | 'evenodd') : undefined),
+    value => (typeof value === 'string' && fillRuleValues.has(value) ? (value as PathFillRule) : undefined),
     (path, value) => {
       path.style = { ...path.style, fillRule: value };
     },
@@ -225,28 +225,26 @@ const directPathChannels = {
 export const BUILTIN_PATH_CHANNELS = {
   ...pathNumericChannels,
   ...directPathChannels,
-  lineCap: definePathChannel<'butt' | 'round' | 'square'>({
+  lineCap: definePathChannel<PathLineCap>({
     channel: 'lineCap',
     output: { outputKind: 'symbol', palette: [...lineCapValues] },
     resolve: (ctx, mark) => {
-      return makeMarkValueResolver<'butt' | 'round' | 'square'>(markChannelEncoding(mark, 'lineCap'), ctx.model, {
+      return makeMarkValueResolver<PathLineCap>(markChannelEncoding(mark, 'lineCap'), ctx.model, {
         channelName: 'lineCap',
-        parse: value =>
-          typeof value === 'string' && lineCapValues.has(value) ? (value as 'butt' | 'round' | 'square') : undefined,
+        parse: value => (typeof value === 'string' && lineCapValues.has(value) ? (value as PathLineCap) : undefined),
       });
     },
     deliver: (path, value) => {
       path.style = { ...path.style, lineCap: value };
     },
   }),
-  lineJoin: definePathChannel<'miter' | 'round' | 'bevel'>({
+  lineJoin: definePathChannel<PathLineJoin>({
     channel: 'lineJoin',
     output: { outputKind: 'symbol', palette: [...lineJoinValues] },
     resolve: (ctx, mark) => {
-      return makeMarkValueResolver<'miter' | 'round' | 'bevel'>(markChannelEncoding(mark, 'lineJoin'), ctx.model, {
+      return makeMarkValueResolver<PathLineJoin>(markChannelEncoding(mark, 'lineJoin'), ctx.model, {
         channelName: 'lineJoin',
-        parse: value =>
-          typeof value === 'string' && lineJoinValues.has(value) ? (value as 'miter' | 'round' | 'bevel') : undefined,
+        parse: value => (typeof value === 'string' && lineJoinValues.has(value) ? (value as PathLineJoin) : undefined),
       });
     },
     deliver: (path, value) => {

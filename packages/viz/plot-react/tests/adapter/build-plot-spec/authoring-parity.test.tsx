@@ -1,13 +1,13 @@
 import { compileToScene } from '@retikz/core';
 import type { IRPlot } from '@retikz/plot';
-import { lowerPlots } from '@retikz/plot';
+import { lowerPlots, PlotSchema } from '@retikz/plot';
 import { normalizePlot } from '@retikz/plot-vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
 import { PlotFacet, PlotScaffold, PlotTrack } from '../../../src/components/composition';
 import { PlotAxis } from '../../../src/components/guides';
-import { PathMark, PointMark } from '../../../src/components/marks';
+import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks';
 import { PlotScale } from '../../../src/components/scales';
 
 const compilePlot = (spec: IRPlot, datasets: Parameters<typeof lowerPlots>[0]) =>
@@ -393,4 +393,52 @@ describe('React 与 framework-neutral authoring parity', () => {
     expect(plain).toThrow(/plot authoring:.*multiple binding props/i);
     expect(react).toThrow(/plot authoring:.*multiple binding props/i);
   });
+});
+
+it('三种图元在 React、Vanilla 与 JSON 入口保留同一份 Core 样式', () => {
+  const properties = {
+    fill: 0,
+    stroke: 0.4,
+    opacity: 0.6,
+    dashOffset: -2,
+    lineCap: 'round',
+    lineJoin: 'bevel',
+  } as const;
+  const intervalProperties = { ...properties, bounds: { x: { kind: 'band' }, y: { kind: 'span' } } } as const;
+  const encodings = {
+    position: { x: { field: 'x' }, y: { field: 'y' } },
+    dashOffset: 'offset',
+    lineCap: 'cap',
+    lineJoin: 'join',
+  };
+  const react = buildPlotIR(
+    <>
+      <PointMark properties={properties} encodings={encodings} />
+      <PathMark properties={properties} encodings={encodings} />
+      <IntervalMark properties={intervalProperties} encodings={encodings} />
+    </>,
+    'rows',
+  );
+  const plain = normalizePlot({
+    data: { reference: 'rows' },
+    scales: [
+      { type: 'band', name: '__x' },
+      { type: 'linear', name: '__y' },
+    ],
+    coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
+    marks: [
+      { type: 'point', properties, encodings },
+      { type: 'path', properties, encodings },
+      { type: 'interval', properties: intervalProperties, encodings },
+    ],
+  });
+  expect(react).toEqual(plain);
+  expect(react.marks).toEqual(
+    expect.arrayContaining(
+      ['point', 'path', 'interval'].map(type =>
+        expect.objectContaining({ type, properties: expect.objectContaining(properties), encodings }),
+      ),
+    ),
+  );
+  expect(PlotSchema.parse(JSON.parse(JSON.stringify(react)))).toEqual(PlotSchema.parse(plain));
 });

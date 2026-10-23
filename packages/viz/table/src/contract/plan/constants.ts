@@ -190,8 +190,6 @@ export const TableCellAppearanceTracePath = {
   ContentPathLabelDefaultInterrupt: '/content/defaults/path/label/interrupt',
   /** path 标签默认 gap */
   ContentPathLabelDefaultGap: '/content/defaults/path/label/gap',
-  /** path 标签默认 placement */
-  ContentPathLabelDefaultPlacement: '/content/defaults/path/label/placement',
   /** path 标签默认 distance */
   ContentPathLabelDefaultDistance: '/content/defaults/path/label/distance',
   /** path 标签字体 family */

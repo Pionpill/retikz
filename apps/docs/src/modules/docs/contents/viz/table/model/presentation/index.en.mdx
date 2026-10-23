@@ -11,6 +11,8 @@ Structure has decided which Cell this is and where it belongs, but a raw scalar 
   description="Plain text tables use the built-in text presentation automatically. Read this page when you need a custom value presentation or direct graphics content."
 />
 
+Source defaults `content.defaults.style` reuse Core cascading style fields, including `dashPattern`, `dashOffset`, `lineCap`, `lineJoin`, `shadow`, and `blendMode`. Omitted fields inherit; explicit `null` clears an inherited value. Border `dashPattern` segments must still be strictly positive.
+
 ## From raw value to styled content
 
 <ComponentPreview files="table-presentation-flow" hideCode size="xxxl" />

@@ -1,15 +1,14 @@
 import {
+  TextVisualSchema,
+  TextLayoutSchema,
+  GraphicElementOpacitySchema,
   ArrowStyleSchema,
-  ContextualColorSchema,
-  FontSchema,
   PathLabelPosition,
-  LineHeightSchema,
   OpacitySchema,
   PaintValueSchema,
   PathLineCapSchema,
   ShapeValueSchema,
   StrokeWidthSchema,
-  TextAlignSchema,
   TextBlockSchema,
   StrokeDashPatternSchema,
   StrokeDashOffsetSchema,
@@ -170,14 +169,12 @@ export const AxisGridLineStyleSchema = GuideLineStyleSchema.extend({
 
 /** 校验复用 Core 节点文本词汇的辅助文字样式 */
 export const GuideTextStyleSchema = strictObject({
-  font: FontSchema.optional().describe('Guide text font; missing fields inherit the plot text default'),
-  textColor: ContextualColorSchema.optional().describe(
+  ...TextVisualSchema.shape,
+  ...TextLayoutSchema.shape,
+  ...GraphicElementOpacitySchema.shape,
+  textColor: TextVisualSchema.shape.textColor.describe(
     'Guide text color or weight resolved from the Plot typography foreground; omit to inherit currentColor',
   ),
-  opacity: OpacitySchema.optional().describe('Guide text opacity'),
-  align: TextAlignSchema.optional().describe('Multi-line guide text alignment'),
-  lineHeight: LineHeightSchema.optional().describe('Guide text line height in user units'),
-  maxTextWidth: PositiveNumberSchema.optional().describe('Maximum guide text line width before wrapping'),
 }).describe('Shared guide text style fields mapped to core node text vocabulary');
 
 /** 校验固定间隔的候选刻度来源，优先级低于显式值、高于数量提示 */

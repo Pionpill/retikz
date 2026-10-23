@@ -299,3 +299,36 @@ describe('Cell padding defaults', () => {
     ).toEqual([]);
   });
 });
+
+describe('Core graphic defaults in Table content', () => {
+  it('inherits stroke and effect leaves while null clears only the selected leaf', () => {
+    const source = {
+      ...baseManual,
+      defaultTable: {
+        defaultAppearance: {
+          body: {
+            content: {
+              defaults: {
+                style: {
+                  dashPattern: [3, 2],
+                  dashOffset: -2,
+                  lineCap: 'round',
+                  lineJoin: 'bevel',
+                  shadow: 'sm',
+                  blendMode: 'multiply',
+                },
+              },
+            },
+          },
+        },
+      },
+      defaultAppearance: { body: { content: { defaults: { style: { dashOffset: null, shadow: null } } } } },
+    };
+    const result = compileSource(source);
+    const body = result.manifest.cells.find(cell => cell.location === 'body');
+    const style = body?.appearance.content?.defaults?.style;
+    expect(style).toMatchObject({ dashPattern: [3, 2], lineCap: 'round', lineJoin: 'bevel', blendMode: 'multiply' });
+    expect(style?.dashOffset).toBeUndefined();
+    expect(style?.shadow).toBeUndefined();
+  });
+});

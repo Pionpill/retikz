@@ -1,5 +1,21 @@
-import type { IRAxisScale, IRBoundary, IRBoxSize, IRBoxSpacing, IRFont, IRShapeValue } from '@retikz/core';
+import type {
+  IRContextualColor,
+  IRAxisScale,
+  IRBoundary,
+  IRBoxSize,
+  IRBoxSpacing,
+  IRFont,
+  IRShapeValue,
+} from '@retikz/core';
 import {
+  PathLineCapSchema,
+  PathLineJoinSchema,
+  PathLineCap,
+  PathLineJoin,
+  ShadowPreset,
+  BlendMode,
+  NodeTextAlign,
+  ContextualColorSchema,
   AxisScaleSchema,
   BoundarySchema,
   BoxSizeSchema,
@@ -430,30 +446,43 @@ const numericNodeChannels: {
   }),
 };
 
-const textAlignValues = new Set(['start', 'middle', 'end']);
+const textAlignValues: ReadonlySet<string> = new Set(Object.values(NodeTextAlign));
 
-const blendModeValues = new Set([
-  'normal',
-  'multiply',
-  'screen',
-  'overlay',
-  'darken',
-  'lighten',
-  'color-dodge',
-  'color-burn',
-  'hard-light',
-  'soft-light',
-  'difference',
-  'exclusion',
-  'hue',
-  'saturation',
-  'color',
-  'luminosity',
-]);
+const blendModeValues: ReadonlySet<string> = new Set(Object.values(BlendMode));
 
-const shadowPresetValues = new Set(['none', 'sm', 'md', 'lg', 'xl', '2xl']);
+const shadowPresetValues: ReadonlySet<string> = new Set(Object.values(ShadowPreset));
 
 const directNodeChannels = {
+  dashOffset: defineSimpleNodeChannel<number>(
+    'dashOffset',
+    { outputKind: 'number', range: [0, 0] },
+    value => (isFiniteNumber(value) ? value : undefined),
+    (node, value) => {
+      node.style = { ...node.style, dashOffset: value };
+    },
+  ),
+  lineCap: defineSimpleNodeChannel<PathLineCap>(
+    'lineCap',
+    { outputKind: 'symbol', palette: Object.values(PathLineCap) },
+    value => {
+      const parsed = PathLineCapSchema.safeParse(value);
+      return parsed.success ? parsed.data : undefined;
+    },
+    (node, value) => {
+      node.style = { ...node.style, lineCap: value };
+    },
+  ),
+  lineJoin: defineSimpleNodeChannel<PathLineJoin>(
+    'lineJoin',
+    { outputKind: 'symbol', palette: Object.values(PathLineJoin) },
+    value => {
+      const parsed = PathLineJoinSchema.safeParse(value);
+      return parsed.success ? parsed.data : undefined;
+    },
+    (node, value) => {
+      node.style = { ...node.style, lineJoin: value };
+    },
+  ),
   align: defineSimpleNodeChannel<'start' | 'middle' | 'end'>(
     'align',
     { outputKind: 'symbol', palette: [...textAlignValues] },
@@ -572,13 +601,16 @@ const directNodeChannels = {
   ),
 };
 
-const textColorNodeChannel: NodeChannelDefinition<string> = defineNodeChannel<string>({
+const textColorNodeChannel: NodeChannelDefinition<IRContextualColor> = defineNodeChannel<IRContextualColor>({
   channel: 'textColor',
   output: { outputKind: 'color' },
   resolve: (ctx, mark) =>
-    makeMarkValueResolver<string>(markChannelEncoding(mark, 'textColor'), ctx.model, {
+    makeMarkValueResolver<IRContextualColor>(markChannelEncoding(mark, 'textColor'), ctx.model, {
       channelName: 'textColor',
-      parse: value => (typeof value === 'string' ? value : undefined),
+      parse: value => {
+        const parsed = ContextualColorSchema.safeParse(value);
+        return parsed.success ? parsed.data : undefined;
+      },
     }),
   deliver: (node, value, context) => {
     if (context.nodeKind === 'pointText') node.style = { ...node.style, textColor: value };
@@ -618,7 +650,7 @@ export type BuiltinNodeChannels = {
   /** 映射 Node 的绘制排序层级 */
   zIndex: NodeChannelDefinition<number>;
   /** 映射 Node 文字颜色 */
-  textColor: NodeChannelDefinition<string>;
+  textColor: NodeChannelDefinition<IRContextualColor>;
   /** 映射点图元尺寸 */
   size: NodeChannelDefinition<number>;
   /** 映射点图元形状 */

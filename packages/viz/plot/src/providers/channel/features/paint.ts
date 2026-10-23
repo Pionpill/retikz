@@ -1,4 +1,4 @@
-import type { IRPaint } from '@retikz/core';
+import type { IRPaintValue } from '@retikz/core';
 import { coerceTimestamp, resolveFieldPath } from '@retikz/data';
 import { DataFieldType, BuiltinFieldOrderMode } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
@@ -28,7 +28,7 @@ export type ColorChannelDefinitionOptions = {
 };
 
 /** plot 通道可下沉到 core 的颜色或 paint 值 */
-export type PlotPaint = string | IRPaint;
+export type PlotPaint = IRPaintValue;
 
 /**
  * 创建 color-like mark 通道（color / fill / stroke）

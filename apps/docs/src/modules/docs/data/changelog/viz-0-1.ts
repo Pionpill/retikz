@@ -1286,6 +1286,13 @@ export const vizV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：内容默认描边与效果', en: 'Unreleased: content stroke and effect defaults' },
+          content: {
+            zh: '内容的 Source 默认样式补齐 dashPattern、dashOffset、lineCap、lineJoin、shadow、blendMode，复用 Core 级联字段并保留 null 清除继承值。边框 dashPattern 仍要求各段为正数。',
+            en: 'Content Source defaults add dashPattern, dashOffset, lineCap, lineJoin, shadow, and blendMode using Core cascading fields, preserving null to clear inherited values. Border dashPattern segments remain strictly positive.',
+          },
+        },
+        {
           label: { zh: '待发布：单元格内边距默认值', en: 'Unreleased: Cell padding defaults' },
           content: {
             zh: '新增 defaultCellLayout，按 body / columnHeader 为既有单元格提供 padding，主题 definition、defaultTable 与实例复用同一片段。显式单元格 padding（包括 0）优先，默认片段支持 null 清除；主题默认不展开进 Source IR。',
