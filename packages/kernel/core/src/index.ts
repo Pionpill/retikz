@@ -30,6 +30,7 @@ export {
   mergeArrowDefaults,
   mergeGraphicStyle,
   mergeNodeLabelDefaults,
+  resolveBoxSpacing,
   resolvePathLabelPlacement,
   resolveGraphicOpacity,
   resolveTheme,

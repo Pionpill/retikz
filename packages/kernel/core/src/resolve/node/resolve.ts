@@ -1,10 +1,7 @@
-import type { BoundsInsets } from '@retikz/math';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type {
   IRAxisScale,
   IRBoxSize,
-  IRBoxSpacing,
   IRLine,
   IRMathSegment,
   IRNode,
@@ -15,6 +12,7 @@ import type {
 import { NodeSchema } from '../../schemas';
 import type { IRNodeLabelDefault } from '../../schemas';
 import { resolvePaint } from '../resource';
+import { resolveBoxSpacing } from '../spacing';
 import { resolveGraphicOpacity, mergeNodeLabelDefaults } from '../style';
 import { resolveContextualColor, resolveDashPattern, resolveDropShadow, resolveEffectiveNodeStyle } from '../style';
 import type { ResolvedInlineSourceSegment, ResolvedLabelTextContent, ResolvedTextLine } from '../text';
@@ -33,28 +31,6 @@ import type {
 
 /** Node 缺省内边距 */
 const DEFAULT_NODE_PADDING = 8;
-
-/** 将单值构造成完整四边间距 */
-const boxInsets = (value: number): BoundsInsets => ({
-  top: value,
-  right: value,
-  bottom: value,
-  left: value,
-});
-
-/** 展开 Node 的单值或 CSS-like 四边间距 */
-const expandBoxSpacing = (value: number | IRBoxSpacing | undefined, fallback: number): BoundsInsets => {
-  if (typeof value === 'number') return boxInsets(value);
-
-  const base = value?.default ?? fallback;
-
-  return {
-    top: value?.top ?? value?.y ?? base,
-    right: value?.right ?? value?.x ?? base,
-    bottom: value?.bottom ?? value?.y ?? base,
-    left: value?.left ?? value?.x ?? base,
-  };
-};
 
 /** 展开 Node 的单值或轴向缩放 */
 const expandAxisScale = (value: number | IRAxisScale | undefined): CanonicalNode['scale'] => {
@@ -152,8 +128,8 @@ const expandNodeFields = (
   return {
     ...source,
     position: source.position ?? NodeSchema.shape.position.parse(undefined),
-    padding: expandBoxSpacing(source.padding, DEFAULT_NODE_PADDING),
-    margin: expandBoxSpacing(source.margin, 0),
+    padding: resolveBoxSpacing(source.padding, DEFAULT_NODE_PADDING),
+    margin: resolveBoxSpacing(source.margin, 0),
     minimumSize: expandBoxSize(source.minimumSize),
     scale: expandAxisScale(node.scale),
     text: expandNodeText(node.text),

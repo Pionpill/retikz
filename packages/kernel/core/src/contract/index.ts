@@ -1,6 +1,5 @@
 export * from './arrow';
 export * from './boundary';
-export * from './box-spacing';
 export * from './clip';
 export * from './composite/definition';
 export { assertCompositeInputBindings, createCompositeInputBindings } from './composite/input';
