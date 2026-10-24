@@ -62,6 +62,6 @@ export const createCompileContext = (
     onWarn,
     observation: options.observation,
     paint: createPaintRegistry(environment.round),
-    clip: createClipRegistry(environment.round, environment.clips, environment.maxClipDepth),
+    clip: createClipRegistry(environment.round, environment.maxClipDepth),
   };
 };

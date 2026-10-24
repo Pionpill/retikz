@@ -26,7 +26,7 @@ const ScopeClipResource: FC<ScopeClipResourceProps> = props => {
         <FlowGroup id="clip-geometry" caption={{ title: { text: t.stages[0] } }}>
           <FlowLayout id="clip-generation" kind="linear" direction="down" gap={36} itemWidth="match-largest">
             <FlowEntities
-              items={(['resolve', 'lower'] as const).map(id => ({
+              items={(['schema', 'lower'] as const).map(id => ({
                 id,
                 role: 'activity',
                 text: scopeFlowText(t.nodes[id]),
@@ -52,7 +52,7 @@ const ScopeClipResource: FC<ScopeClipResourceProps> = props => {
       </FlowLayout>
       <FlowRelations
         items={[
-          { source: 'resolve', target: 'lower' },
+          { source: 'schema', target: 'lower' },
           { source: 'lower', target: 'store', routing: { kind: 'orthogonal' } },
           { source: 'store', target: 'assemble' },
         ]}

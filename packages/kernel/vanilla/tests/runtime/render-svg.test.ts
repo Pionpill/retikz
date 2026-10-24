@@ -73,38 +73,38 @@ const circleFrameClip = (): ClipDefinition =>
         inner: number().positive(),
       }),
     }),
-    resolve: spec => ({
-      kind: 'circleFrame',
-      params: {
+
+    lower: spec => {
+      const params = {
         cx: spec.params.cx,
         cy: spec.params.cy,
         outer: spec.params.outer,
         inner: spec.params.inner,
-      },
-    }),
-    lower: shape => ({
-      commands: [
-        { kind: 'move', to: [shape.params.cx + shape.params.outer, shape.params.cy] },
-        {
-          kind: 'arc',
-          center: [shape.params.cx, shape.params.cy],
-          radius: shape.params.outer,
-          startAngle: 0,
-          endAngle: 360,
-        },
-        { kind: 'close' },
-        { kind: 'move', to: [shape.params.cx + shape.params.inner, shape.params.cy] },
-        {
-          kind: 'arc',
-          center: [shape.params.cx, shape.params.cy],
-          radius: shape.params.inner,
-          startAngle: 0,
-          endAngle: 360,
-        },
-        { kind: 'close' },
-      ],
-      fillRule: 'evenodd',
-    }),
+      };
+      return {
+        commands: [
+          { kind: 'move', to: [params.cx + params.outer, params.cy] },
+          {
+            kind: 'arc',
+            center: [params.cx, params.cy],
+            radius: params.outer,
+            startAngle: 0,
+            endAngle: 360,
+          },
+          { kind: 'close' },
+          { kind: 'move', to: [params.cx + params.inner, params.cy] },
+          {
+            kind: 'arc',
+            center: [params.cx, params.cy],
+            radius: params.inner,
+            startAngle: 0,
+            endAngle: 360,
+          },
+          { kind: 'close' },
+        ],
+        fillRule: 'evenodd',
+      };
+    },
   });
 
 const clipIr: IRScene = {

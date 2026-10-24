@@ -72,8 +72,7 @@ const definitionKey = (definition: ProviderDefinition): string => {
   if ('namespace' in definition && 'type' in definition)
     return `composite:${definition.namespace}\u0000${definition.type}`;
   if ('name' in definition && 'schema' in definition && 'compile' in definition) return `pathKind:${definition.name}`;
-  if ('kind' in definition && 'schema' in definition && 'resolve' in definition && 'lower' in definition)
-    return `clip:${definition.kind}`;
+  if ('kind' in definition && 'schema' in definition && 'lower' in definition) return `clip:${definition.kind}`;
 
   if ('kind' in definition) return invalidDefinitions(definition);
 

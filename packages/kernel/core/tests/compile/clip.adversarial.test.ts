@@ -1,25 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { array, literal, number, strictObject, tuple } from 'zod';
 
-import type { ClipResource, ClipShape, GroupPrim, IRPaint, IRScene, ScenePrimitive, SceneResource } from '../../src';
+import type { ClipResource, GroupPrim, IRPaint, IRScene, ScenePrimitive, SceneResource } from '../../src';
 import { compileToScene, defineClip } from '../../src';
 
-type TestPolygonClipShape = ClipShape & {
+const polygonClip = defineClip<{
   kind: 'polygon';
   /** 裁剪参数 */
-  params: {
-    points: Array<[number, number]>;
-  };
-};
-
-const polygonClip = defineClip<
-  {
-    kind: 'polygon';
-    /** 裁剪参数 */
-    params: { points: Array<[number, number]> };
-  },
-  TestPolygonClipShape
->({
+  params: { points: Array<[number, number]> };
+}>({
   kind: 'polygon',
   schema: strictObject({
     kind: literal('polygon'),
@@ -27,15 +16,18 @@ const polygonClip = defineClip<
       points: array(tuple([number(), number()])).min(3),
     }),
   }),
-  resolve: spec => ({ kind: 'polygon', params: { points: spec.params.points } }),
-  lower: shape => ({
-    commands: [
-      { kind: 'move', to: shape.params.points[0] },
-      ...shape.params.points.slice(1).map(to => ({ kind: 'line' as const, to })),
-      { kind: 'close' },
-    ],
-    fillRule: 'nonzero',
-  }),
+
+  lower: spec => {
+    const params = { points: spec.params.points };
+    return {
+      commands: [
+        { kind: 'move', to: params.points[0] },
+        ...params.points.slice(1).map(to => ({ kind: 'line' as const, to })),
+        { kind: 'close' },
+      ],
+      fillRule: 'nonzero',
+    };
+  },
 });
 
 const polygonOptions = { clips: [polygonClip] } as const;

@@ -53,16 +53,18 @@ const customClip = (): ClipDefinition =>
   defineClip({
     kind: 'customClip',
     schema: strictObject({ kind: literal('customClip'), params: strictObject({}) }),
-    resolve: () => ({ kind: 'customClip', params: {} }),
-    lower: () => ({
-      commands: [
-        { kind: 'move', to: [0, 0] },
-        { kind: 'line', to: [20, 0] },
-        { kind: 'line', to: [20, 20] },
-        { kind: 'close' },
-      ],
-      fillRule: 'nonzero',
-    }),
+
+    lower: () => {
+      return {
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [20, 0] },
+          { kind: 'line', to: [20, 20] },
+          { kind: 'close' },
+        ],
+        fillRule: 'nonzero',
+      };
+    },
   });
 
 const clippedIr: IRScene = {

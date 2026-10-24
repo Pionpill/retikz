@@ -138,7 +138,6 @@ describe('Extension Clip definition public contract', () => {
       expect(definition).toEqual(
         expect.objectContaining({
           schema: expect.anything(),
-          resolve: expect.any(Function),
           lower: expect.any(Function),
         }),
       );

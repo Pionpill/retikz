@@ -15,16 +15,18 @@ const customClip = (): ClipDefinition =>
   defineClip({
     kind: 'ticketClip',
     schema: strictObject({ kind: literal('ticketClip'), params: strictObject({}) }),
-    resolve: () => ({ kind: 'ticketClip', params: {} }),
-    lower: () => ({
-      commands: [
-        { kind: 'move', to: [0, 0] },
-        { kind: 'line', to: [20, 0] },
-        { kind: 'line', to: [10, 10] },
-        { kind: 'close' },
-      ],
-      fillRule: 'nonzero',
-    }),
+
+    lower: () => {
+      return {
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [20, 0] },
+          { kind: 'line', to: [10, 10] },
+          { kind: 'close' },
+        ],
+        fillRule: 'nonzero',
+      };
+    },
   });
 
 const input: InputScene = {

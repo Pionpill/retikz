@@ -1,16 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
-import type { ClipDefinition, ClipResource, ClipShape, IRClip, ClipFillRule, IRScene, PathCommand } from '../../src';
+import type { ClipDefinition, ClipResource, IRClip, ClipFillRule, IRScene, PathCommand } from '../../src';
 import { compileToScene, defineClip } from '../../src';
-
-type TestPathClipShape = ClipShape & {
-  kind: string;
-  params: {
-    commands: Array<PathCommand>;
-    fillRule?: ClipFillRule;
-  };
-};
 
 const clippedIr = (clip: IRClip): IRScene => ({
   version: 1,
@@ -22,17 +14,8 @@ const pathOperation = (kind: string, commands: Array<PathCommand>, fillRule?: Cl
   defineClip({
     kind,
     schema: strictObject({ kind: literal(kind), params: strictObject({}) }),
-    resolve: () => {
-      const shape: TestPathClipShape = {
-        kind,
-        params: {
-          commands,
-          ...(fillRule === undefined ? {} : { fillRule }),
-        },
-      };
-      return shape;
-    },
-    lower: shape => ({ commands: shape.params.commands, fillRule: shape.params.fillRule ?? 'nonzero' }),
+
+    lower: () => ({ commands, fillRule: fillRule ?? 'nonzero' }),
   });
 
 const compilePath = (

@@ -1,9 +1,9 @@
-import type { ClipDefinition, ClipShape } from '../../contract';
+import type { ClipDefinition } from '../../contract';
 import { providerDefinitionOf } from '../../providers';
 import type { IRClip } from '../../schemas';
 import { createCompositeContractError } from '../diagnostics';
 import { parseProviderPayload } from '../provider-payload';
-import type { ClipResolution, ClipShapeResolution } from './types';
+import type { ClipResolution } from './types';
 
 /** Clip provider 解析所需的 registry 和 locator 上下文 */
 export type ClipResolveContext = Readonly<{
@@ -13,7 +13,7 @@ export type ClipResolveContext = Readonly<{
   irPath?: string;
 }>;
 
-/** 绑定 definition 并解析 provider params；provider resolve 保留到 compile resource 阶段执行 */
+/** 绑定 definition 并解析 provider params；路径生成保留到 compile resource 阶段执行 */
 export const resolveClip = (clip: IRClip, context: ClipResolveContext): ClipResolution => {
   const kind = clip.kind;
   const definition = providerDefinitionOf(context.clips, kind);
@@ -35,11 +35,4 @@ export const resolveClip = (clip: IRClip, context: ClipResolveContext): ClipReso
   const resolve = (nested: IRClip): ClipResolution => resolveClip(nested, context);
 
   return { spec: clip, kind, definition, params, resolve };
-};
-
-/** 通过同一个 Clip registry 绑定已类型化 shape 的 definition */
-export const resolveClipShape = (shape: ClipShape, context: ClipResolveContext): ClipShapeResolution => {
-  const kind = shape.kind;
-  const definition = providerDefinitionOf(context.clips, kind);
-  return { spec: shape, kind, definition, params: shape };
 };

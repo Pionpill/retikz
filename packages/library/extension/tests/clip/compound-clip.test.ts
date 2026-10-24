@@ -26,16 +26,19 @@ const roundedRectClip = (): ClipDefinition =>
         radius: number().positive(),
       }),
     }),
-    resolve: spec => {
+
+    lower: spec => {
       const commands: Array<PathCommand> = [
         { kind: 'move', to: [spec.params.x, spec.params.y] },
         { kind: 'line', to: [spec.params.x + spec.params.width, spec.params.y] },
         { kind: 'line', to: [spec.params.x + spec.params.width, spec.params.y + spec.params.height] },
         { kind: 'close' },
       ];
-      return { kind: 'roundedRect', params: { commands } };
+      {
+        const params = { commands };
+        return { commands: params.commands, fillRule: 'nonzero' };
+      }
     },
-    lower: shape => ({ commands: shape.params.commands, fillRule: 'nonzero' }),
   });
 
 describe('Extension compound clip definition', () => {

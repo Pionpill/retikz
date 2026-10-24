@@ -211,7 +211,7 @@ Once the children finish, `replaceLayout` updates the placeholder to a resolved 
 
 ## Clipping and group output
 
-`clip` controls which parts of the subtree remain visible, independently of the reference envelope. A registered Clip Definition resolves the JSON clipping spec into a shape and then lowers it to a Scene clipping path.
+`clip` controls which parts of the subtree remain visible, independently of the reference envelope. A registered Clip Definition validates the JSON clipping spec with its schema, then lowers it directly to a Scene clipping path.
 
 - Clipping resource: a path stored separately in the Scene; identical paths share one resource within a compilation.
 - `clipRef`: the resource id held by a group, associating the clipping region with its children.
@@ -221,7 +221,7 @@ Built-in and custom definitions enter the same resolution path. The resulting pa
 
 <ComponentPreview files="scope-clip-resource" size="lg" type="flow" hideCode />
 
-Built-in and custom clips both use Clip Definition's `resolve` and `lower`. The resource table deduplicates the resulting paths, and the returned id becomes `GroupPrim.clipRef`.
+Built-in and custom clips both use Clip Definition's `lower`. The resource table deduplicates the resulting paths, and the returned id becomes `GroupPrim.clipRef`.
 
 **Core describes where to clip; Render performs the clipping.** Core stores the clipping path in `Scene.resources` and links it to the group through `clipRef`. It does not cut up or delete geometry outside the boundary in advance.
 
@@ -239,14 +239,14 @@ A group is emitted when there are child primitives, effective transforms, an id,
     {
       label: 'Resolve Clip Definitions and lower paths',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 226,
-      endLine: 308,
+      startLine: 231,
+      endLine: 259,
     },
     {
       label: 'Deduplicate resources within a compilation',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 310,
-      endLine: 342,
+      startLine: 261,
+      endLine: 276,
     },
     {
       label: 'Group pruning, transforms, and clipRef',

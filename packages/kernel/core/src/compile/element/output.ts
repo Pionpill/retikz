@@ -16,7 +16,7 @@ export const assembleCompileOutputs = (
   provenance?: CompileProvenanceTracker,
 ): CompileOutput => {
   const paint = createPaintRegistry(environment.round);
-  const clip = createClipRegistry(environment.round, environment.clips, environment.maxClipDepth);
+  const clip = createClipRegistry(environment.round, environment.maxClipDepth);
   const fragments: Array<{ zIndex: number; primitives: Array<ScenePrimitive> }> = [];
   const bounds: Array<CompileOutput['bounds'][number]> = [];
   const nodeLayouts: Array<NonNullable<CompileOutput['nodeLayouts']>[number]> = [];

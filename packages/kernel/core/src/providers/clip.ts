@@ -1,17 +1,12 @@
-import type { ClipDefinition, RectClipShape } from '../contract';
+import type { ClipDefinition } from '../contract';
 import { defineClip } from '../contract';
-import type { IRRectClip } from '../schemas';
 import { RectClipSchema } from '../schemas';
 import { createProviderRegistry } from './registry';
 
 /** Core 内置的完整矩形 Clip Definition */
-const rectClip = defineClip<IRRectClip, RectClipShape>({
+const rectClip = defineClip({
   kind: 'rect',
   schema: RectClipSchema,
-  resolve: spec => ({
-    kind: 'rect',
-    params: { x: spec.params.x, y: spec.params.y, width: spec.params.width, height: spec.params.height },
-  }),
   lower: shape => ({
     commands: [
       { kind: 'move', to: [shape.params.x, shape.params.y] },

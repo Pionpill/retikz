@@ -475,7 +475,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
   });
 
   it('preflights a nested runtime Scope clip before replay side effects become observable', () => {
-    let clipResolveCalls = 0;
+    let clipLowerCalls = 0;
     let replayHandle: CompositeCompileChild | undefined;
     let scopeHandle: CompositeCompileChild | undefined;
     let retainedResult: LayoutChildResult | undefined;
@@ -487,21 +487,24 @@ describe('layout-aware composite runtime wrapper tree', () => {
           fail: boolean(),
         }),
       }),
-      resolve: spec => {
-        clipResolveCalls += 1;
+
+      lower: spec => {
+        clipLowerCalls += 1;
         if (spec.params.fail) throw new Error('runtime Scope clip failed');
-        return { kind: 'conditionalPreflightClip', params: { x: -10, y: -10, width: 20, height: 20 } };
+        {
+          const params = { x: -10, y: -10, width: 20, height: 20 };
+          return {
+            commands: [
+              { kind: 'move', to: [params.x, params.y] },
+              { kind: 'line', to: [params.x + params.width, params.y] },
+              { kind: 'line', to: [params.x + params.width, params.y + params.height] },
+              { kind: 'line', to: [params.x, params.y + params.height] },
+              { kind: 'close' },
+            ],
+            fillRule: 'nonzero',
+          };
+        }
       },
-      lower: shape => ({
-        commands: [
-          { kind: 'move', to: [shape.params.x, shape.params.y] },
-          { kind: 'line', to: [shape.params.x + shape.params.width, shape.params.y] },
-          { kind: 'line', to: [shape.params.x + shape.params.width, shape.params.y + shape.params.height] },
-          { kind: 'line', to: [shape.params.x, shape.params.y + shape.params.height] },
-          { kind: 'close' },
-        ],
-        fillRule: 'nonzero',
-      }),
     });
     const artifactLeaf = defineComposite({
       namespace: 'test',
@@ -592,7 +595,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       }),
     ).toThrow(/runtime Scope clip failed/i);
     expect(warnings).toEqual([]);
-    expect(clipResolveCalls).toBe(1);
+    expect(clipLowerCalls).toBe(1);
     expect(context.paint.resources()).toEqual([]);
     expect(context.clip.resources()).toEqual([]);
     expect(namespaceStack.lookup('same')).toBeUndefined();
@@ -620,7 +623,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     expect(committed.scene.resources?.map(resource => resource.kind)).toEqual(['paint', 'clip']);
     expect(warnings.map(warning => warning.code)).toContain(BuiltinCompileWarningCode.DuplicateNodeId);
     expect(committed.artifacts.filter(isNodeLayoutCompileArtifact)).toHaveLength(2);
-    expect(clipResolveCalls).toBe(2);
+    expect(clipLowerCalls).toBe(2);
   });
 
   it('rejects a repeated runtime Scope handle during whole-tree preflight', () => {

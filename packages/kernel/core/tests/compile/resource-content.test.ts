@@ -68,7 +68,7 @@ describe('Scene resource dependency closure', () => {
       { kind: 'clip', id: 'window', path: { fillRule: 'nonzero', commands: [] } },
     ];
     const paint = createPaintRegistry(value => value);
-    const clip = createClipRegistry(value => value, new Map());
+    const clip = createClipRegistry(value => value);
     const ids = importSceneResources(resources, paint, clip);
     expect(ids.get('outer')).not.toBe(ids.get('inner'));
     const host = remapPrimitiveResources(

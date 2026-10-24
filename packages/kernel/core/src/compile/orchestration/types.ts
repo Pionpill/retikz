@@ -2,7 +2,7 @@ import type { JsonValue } from '@retikz/foundation';
 import type { AxisAlignedBounds } from '@retikz/math';
 
 import type {
-  ClipShape,
+  SceneClipPath,
   CompileObservationAncestor,
   CompileObservationOwner,
   CompileOccurrenceLocator,
@@ -450,8 +450,8 @@ export type EmitScopeGroupContext = {
   scopePrimitiveSink: Array<InternalScenePrimitive>;
   /** 接收作用域输出和布局贡献的父遍历帧 */
   frame: TraversalFrame;
-  /** runtime Scope 预检阶段已解析且尚未登记的 clip */
-  resolvedClipShape?: ClipShape;
+  /** runtime Scope 预检阶段已生成且尚未登记的裁剪路径 */
+  resolvedClipPath?: SceneClipPath;
   /** Scope child 的 semantic owner */
   semanticOwner?: CompileSemanticOwner;
 };

@@ -251,8 +251,7 @@ const resolveDefinitionCapability = (definition: AnyCoreProviderDefinition): Cor
   if ('lineContactX' in definition && 'emit' in definition) return CoreProviderCapability.Arrow;
   if ('name' in definition && 'emit' in definition) return CoreProviderCapability.Pattern;
   if ('paramsSchema' in definition && 'generate' in definition) return CoreProviderCapability.PathGenerator;
-  if ('kind' in definition && 'schema' in definition && 'resolve' in definition && 'lower' in definition)
-    return CoreProviderCapability.Clip;
+  if ('kind' in definition && 'schema' in definition && 'lower' in definition) return CoreProviderCapability.Clip;
 
   if ('paramsSchema' in definition && 'computeBoundaryPoint' in definition) return CoreProviderCapability.Boundary;
   if ('compile' in definition && 'schema' in definition) return CoreProviderCapability.BuiltinPathKind;

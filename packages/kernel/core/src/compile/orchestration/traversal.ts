@@ -3,7 +3,7 @@ import type { BoundsRect } from '@retikz/math';
 import { boundsToRect } from '@retikz/math';
 
 import type {
-  ClipShape,
+  SceneClipPath,
   CompileObservationOwner,
   CompileOccurrenceLocator,
   CompositeCompileChild,
@@ -596,7 +596,7 @@ export const compileChildrenToPrimitives = (
 
   /** 在需要可见输出时 emit scope group，并挂载 transform、clip 和动画 */
   const emitScopeGroup = (child: ScopeChild, input: EmitScopeGroupContext): string | undefined => {
-    const { index, scopeTransforms, scopePrimitiveSink, frame, resolvedClipShape, semanticOwner } = input;
+    const { index, scopeTransforms, scopePrimitiveSink, frame, resolvedClipPath, semanticOwner } = input;
     const { primitiveSink, locatorPrefix } = frame;
     const scopeIrPath = formatCompileChildPath(locatorPrefix, index, 'scope');
     const hasScopeTransforms = scopeTransforms.length > 0;
@@ -617,8 +617,8 @@ export const compileChildrenToPrimitives = (
     });
     if (scopeAnimations !== undefined) group.animations = scopeAnimations;
     if (hasScopeTransforms) group.transforms = [...scopeTransforms];
-    if (resolvedClipShape !== undefined) {
-      group.clipRef = runtime.context.clip.importResolved(resolvedClipShape);
+    if (resolvedClipPath !== undefined) {
+      group.clipRef = runtime.context.clip.importPath(resolvedClipPath);
     } else if (child.clip !== undefined) {
       group.clipRef = runtime.context.clip.register(
         resolveClipValue(child.clip, { clips: runtime.context.clips, irPath: `${scopeIrPath}.clip` }),
@@ -641,7 +641,7 @@ export const compileChildrenToPrimitives = (
     compositeDepth = options.compositeDepth ?? 0,
     semanticOwner?: CompileSemanticOwner,
     compileNested?: (scopeFrame: TraversalFrame, preliminaryTransforms: ReadonlyArray<Transform> | undefined) => void,
-    preResolvedClipShape?: ClipShape,
+    preResolvedClipPath?: SceneClipPath,
   ): void => {
     const { locatorPrefix, scopeDefaults } = frame;
     const scopeOccurrence = generatedOccurrence ?? {
@@ -850,7 +850,7 @@ export const compileChildrenToPrimitives = (
       scopePrimitiveSink,
       frame,
       ...(semanticOwner === undefined ? {} : { semanticOwner }),
-      ...(preResolvedClipShape === undefined ? {} : { resolvedClipShape: preResolvedClipShape }),
+      ...(preResolvedClipPath === undefined ? {} : { resolvedClipPath: preResolvedClipPath }),
     });
 
     for (const contribution of scopeBounds) {
@@ -965,7 +965,7 @@ export const compileChildrenToPrimitives = (
 
   type PreparedReplay = Readonly<{
     transaction: CompositeReplayTransaction;
-    wrapperClipShape?: ClipShape;
+    wrapperClipPath?: SceneClipPath;
   }>;
 
   /** replay transaction 捕获的 primitive resource ref 必须在提交前完整可解析 */
@@ -1010,7 +1010,7 @@ export const compileChildrenToPrimitives = (
     const prepared = preparedReplays.get(token);
     if (prepared === undefined) throw createCompileInvariantError('internal: replay was not preflighted before commit');
 
-    const { wrapperClipShape } = prepared;
+    const { wrapperClipPath } = prepared;
     const transaction =
       prepared.transaction.materialize !== undefined &&
       (prepared.transaction.styleFingerprint !== replayStyleFingerprint(frame.scopeDefaults) ||
@@ -1027,8 +1027,7 @@ export const compileChildrenToPrimitives = (
     const authoredPreliminary = transaction.scopeChainApplied ? undefined : authoredPreliminaryTransforms;
     const resourceIds = importSceneResources(transaction.resources, runtime.context.paint, runtime.context.clip);
 
-    const wrapperClipRef =
-      wrapperClipShape === undefined ? undefined : runtime.context.clip.importResolved(wrapperClipShape);
+    const wrapperClipRef = wrapperClipPath === undefined ? undefined : runtime.context.clip.importPath(wrapperClipPath);
     publishClipObservation(
       wrapperClipRef,
       replayOccurrence(occurrence, outputIndex, transaction.originOccurrence, transaction.originOccurrence),
@@ -1252,7 +1251,7 @@ export const compileChildrenToPrimitives = (
 
   type PreparedRuntimeOutput = Readonly<{
     output: CompositeRuntimeOutputChild;
-    scopeClipShape?: ClipShape;
+    scopeClipPath?: SceneClipPath;
   }>;
 
   type PreparedCompositeOutputs = Readonly<{
@@ -1316,15 +1315,15 @@ export const compileChildrenToPrimitives = (
           }
         }
 
-        const scopeClipShape =
+        const scopeClipPath =
           entry.child.props.clip === undefined
             ? undefined
-            : runtime.context.clip.resolve(
+            : runtime.context.clip.lower(
                 resolveClipValue(entry.child.props.clip, { clips: runtime.context.clips, irPath: 'clip' }),
               );
         preparedOutputs.set(handle, {
           output: entry.child,
-          ...(scopeClipShape === undefined ? {} : { scopeClipShape }),
+          ...(scopeClipPath === undefined ? {} : { scopeClipPath }),
         });
 
         for (const child of entry.child.children) if (isCompositeOutputHandle(child)) visitHandle(child);
@@ -1358,16 +1357,16 @@ export const compileChildrenToPrimitives = (
         );
       }
 
-      const wrapperClipShape =
+      const wrapperClipPath =
         entry.child.wrapper?.clip === undefined
           ? undefined
-          : runtime.context.clip.resolve(
+          : runtime.context.clip.lower(
               resolveClipValue(entry.child.wrapper.clip, { clips: runtime.context.clips, irPath: 'clip' }),
             );
       validateReplayResourceRefs(transaction);
       preparedReplays.set(entry.child.replay, {
         transaction,
-        ...(wrapperClipShape === undefined ? {} : { wrapperClipShape }),
+        ...(wrapperClipPath === undefined ? {} : { wrapperClipPath }),
       });
       transactionsToConsume.push(transaction);
     };
@@ -1406,7 +1405,7 @@ export const compileChildrenToPrimitives = (
     owner: CompositeCompileOwner,
     prepared: PreparedCompositeOutputs,
     semanticOwner?: CompileSemanticOwner,
-    preparedScopeClipShape?: ClipShape,
+    preparedScopeClipPath?: SceneClipPath,
     authoredPreliminaryTransforms?: ReadonlyArray<Transform>,
   ): void => {
     if (output.kind === 'bound') {
@@ -1509,12 +1508,12 @@ export const compileChildrenToPrimitives = (
             owner,
             prepared,
             scopeSemanticOwner,
-            preparedChild.scopeClipShape,
+            preparedChild.scopeClipPath,
             scopePreliminaryTransforms,
           );
         }
       },
-      preparedScopeClipShape,
+      preparedScopeClipPath,
     );
   };
 
@@ -1643,7 +1642,7 @@ export const compileChildrenToPrimitives = (
       };
 
       const paint = createPaintRegistry(context.round);
-      const clip = createClipRegistry(context.round, context.clips, context.maxClipDepth);
+      const clip = createClipRegistry(context.round, context.maxClipDepth);
       const probeProvenanceTracker =
         runtime.state.provenanceTracker === undefined ? undefined : createCompileProvenanceTracker();
       let probeWarningOccurrence = probeOccurrence;
@@ -2275,7 +2274,7 @@ export const compileChildrenToPrimitives = (
         owner,
         preparedOutputs,
         semanticOwner,
-        preparedOutputs.outputs.get(output)?.scopeClipShape,
+        preparedOutputs.outputs.get(output)?.scopeClipPath,
       );
     }
 

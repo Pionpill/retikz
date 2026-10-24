@@ -52,14 +52,17 @@ const clipDefinitionOf = (name: string) =>
   defineClip({
     kind: name,
     schema: strictObject({ kind: literal(name), params: strictObject({}) }),
-    resolve: () => ({ kind: name, params: { size: 4 } }),
-    lower: shape => ({
-      commands: [
-        { kind: 'move', to: [0, 0] },
-        { kind: 'line', to: [shape.params.size, shape.params.size] },
-      ],
-      fillRule: 'nonzero',
-    }),
+
+    lower: () => {
+      const params = { size: 4 };
+      return {
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [params.size, params.size] },
+        ],
+        fillRule: 'nonzero',
+      };
+    },
   });
 
 const definitionOf = (key: CoreProviderKey): AnyCoreProviderDefinition => {

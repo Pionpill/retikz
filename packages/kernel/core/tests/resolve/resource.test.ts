@@ -3,7 +3,7 @@ import { array, literal, number, strictObject, tuple } from 'zod';
 
 import { compileToScene } from '../../src/compile/compile';
 import { createRound } from '../../src/compile/scene';
-import type { ClipDefinition, ClipResolveContext, ScenePrimitive, PatternDefinition } from '../../src/contract';
+import type { ClipDefinition, ClipLowerContext, ScenePrimitive, PatternDefinition } from '../../src/contract';
 import { defineClip, definePattern } from '../../src/contract';
 import { resolveClipRegistry } from '../../src/providers/clip';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
@@ -130,18 +130,14 @@ describe('resolve/resource paint', () => {
 });
 
 describe('resolve/resource clip', () => {
-  const polygonResolve = vi.fn(
-    (spec: {
-      kind: 'polygon';
-      /** 裁剪参数 */
-      params: { points: Array<[number, number]> };
-    }) => ({
-      kind: 'polygon' as const,
-      params: {
-        points: spec.params.points,
-      },
-    }),
-  );
+  const polygonLower = vi.fn((spec: { kind: 'polygon'; params: { points: Array<[number, number]> } }) => ({
+    commands: [
+      { kind: 'move' as const, to: spec.params.points[0] },
+      ...spec.params.points.slice(1).map(to => ({ kind: 'line' as const, to })),
+      { kind: 'close' as const },
+    ],
+    fillRule: 'nonzero' as const,
+  }));
   const polygon: ClipDefinition = defineClip({
     kind: 'polygon',
     schema: strictObject({
@@ -150,15 +146,7 @@ describe('resolve/resource clip', () => {
         points: array(tuple([number(), number()])).min(3),
       }),
     }),
-    resolve: polygonResolve,
-    lower: shape => ({
-      commands: [
-        { kind: 'move', to: shape.params.points[0] },
-        ...shape.params.points.slice(1).map(to => ({ kind: 'line' as const, to })),
-        { kind: 'close' },
-      ],
-      fillRule: 'nonzero',
-    }),
+    lower: polygonLower,
   });
 
   it('binds clip definition and parsed params without invoking provider', () => {
@@ -187,57 +175,27 @@ describe('resolve/resource clip', () => {
         ],
       },
     });
-    expect(polygonResolve).not.toHaveBeenCalled();
+    expect(polygonLower).not.toHaveBeenCalled();
   });
 
   it('keeps recursive clip resolution in the bound registry closure', () => {
-    const leafResolve = vi.fn(
-      (spec: {
-        kind: 'leaf';
-        /** 裁剪参数 */
-        params: { radius: number };
-      }) => ({
-        kind: 'leaf' as const,
-        params: {
-          radius: spec.params.radius,
-        },
-      }),
-    );
+    const leafLower = vi.fn((spec: { kind: 'leaf'; params: { radius: number } }) => ({
+      commands: [
+        { kind: 'move' as const, to: [0, 0] as [number, number] },
+        { kind: 'line' as const, to: [spec.params.radius, 0] as [number, number] },
+        { kind: 'line' as const, to: [spec.params.radius, spec.params.radius] as [number, number] },
+        { kind: 'line' as const, to: [0, spec.params.radius] as [number, number] },
+        { kind: 'close' as const },
+      ],
+      fillRule: 'nonzero' as const,
+    }));
     const leaf = defineClip({
       kind: 'leaf',
       schema: strictObject({ kind: literal('leaf'), params: strictObject({ radius: number().positive() }) }),
-      resolve: leafResolve,
-      lower: shape => ({
-        commands: [
-          { kind: 'move', to: [0, 0] },
-          { kind: 'line', to: [shape.params.radius, 0] },
-          { kind: 'line', to: [shape.params.radius, shape.params.radius] },
-          { kind: 'line', to: [0, shape.params.radius] },
-          { kind: 'close' },
-        ],
-        fillRule: 'nonzero',
-      }),
+      lower: leafLower,
     });
-    const wrapperResolve = vi.fn(
-      (
-        spec: {
-          kind: 'wrapper';
-          /** 裁剪参数 */
-          params: {
-            child: {
-              kind: 'leaf';
-              /** 裁剪参数 */
-              params: { radius: number };
-            };
-          };
-        },
-        context: ClipResolveContext,
-      ) => ({
-        kind: 'wrapper' as const,
-        params: {
-          child: context.resolve(spec.params.child as IRClip),
-        },
-      }),
+    const wrapperLower = vi.fn((spec: { kind: 'wrapper'; params: { child: IRClip } }, context: ClipLowerContext) =>
+      context.lower(spec.params.child),
     );
     const wrapper = defineClip({
       kind: 'wrapper',
@@ -247,8 +205,7 @@ describe('resolve/resource clip', () => {
           child: strictObject({ kind: literal('leaf'), params: strictObject({ radius: number().positive() }) }),
         }),
       }),
-      resolve: wrapperResolve,
-      lower: (shape, context) => context.lower(shape.params.child),
+      lower: wrapperLower,
     });
     const clips = resolveClipRegistry([wrapper, leaf]);
     const resolution = resolveClip(
@@ -256,8 +213,8 @@ describe('resolve/resource clip', () => {
       { clips, irPath: 'children[0].scope.clip' },
     );
 
-    expect(wrapperResolve).not.toHaveBeenCalled();
-    expect(leafResolve).not.toHaveBeenCalled();
+    expect(wrapperLower).not.toHaveBeenCalled();
+    expect(leafLower).not.toHaveBeenCalled();
 
     const nested = resolution.resolve({ kind: 'leaf', params: { radius: 2 } });
 
@@ -293,8 +250,8 @@ describe('resolve/resource clip', () => {
         fillRule: 'nonzero',
       },
     });
-    expect(wrapperResolve).toHaveBeenCalledTimes(1);
-    expect(leafResolve).toHaveBeenCalledTimes(1);
+    expect(wrapperLower).toHaveBeenCalledTimes(1);
+    expect(leafLower).toHaveBeenCalledTimes(1);
   });
 
   it('reports unknown clip provider at the resolve boundary', () => {
