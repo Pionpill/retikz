@@ -35,7 +35,7 @@ const highlight = definePath<HighlightPath>({
 
     return {
       ...base,
-      primitives: base.primitives.flatMap<ScenePrimitive>(primitive =>
+      primitives: Array.from(base.primitives).flatMap<ScenePrimitive>(primitive =>
         primitive.type === 'path'
           ? [
               {

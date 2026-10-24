@@ -1,19 +1,9 @@
 import type { Transform } from '../../contract';
-import type { ScenePrimitive } from '../../contract';
 import type { StrokePathOwnerOutput } from '../../contract';
 import type { PathTargetView } from '../../resolve';
-import type { IRPosition } from '../../schemas';
 import type { PaintResolver } from '../resource';
 import type { LowerTex } from '../text';
 import type { CompileWarningInput } from '../warning';
-
-/** path emit 阶段产出的 Scene primitive 与 bbox 采样点 */
-export type PathPrimitiveEmitResult = {
-  /** 实际 Scene 输出 */
-  primitives: Array<ScenePrimitive>;
-  /** layout 与 path 级 rotate / scale 的几何依据 */
-  boundsPoints: Array<IRPosition>;
-};
 
 /** path emit 阶段的可选服务与诊断上下文 */
 export type PathEmitOptions = {

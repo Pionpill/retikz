@@ -19,6 +19,8 @@ If you only need another stroke color, width, dash, or arrow, use the existing P
 
 ## Minimal result
 
+The `primitives` and `boundsPoints` returned by `compile` accept `Iterable`, including arrays and one-shot iterators. Core materializes them into arrays when consuming the output. `emitStroke` and `wrapOutput` use the same `PathCompileResult` contract. Convert with `Array.from` before using array methods such as `map` or `flatMap`.
+
 A custom Path extends **how the whole path is emitted**. IR stores only an open `kind` and JSON-safe `kindOptions`. After the host injects a `PathDefinition`, core resolves it from the shared registry and lets it produce Scene primitives.
 
 The `highlight` kind below reuses Core stroke emission and emits a wide underlay and a thin centerline from one path. Its definition, `<Layout extensions={{ paths }}>` injection, and usage live in one runnable example.
@@ -56,7 +58,7 @@ const highlight = definePath<HighlightPath>({
     if (base === null) return null;
     return {
       ...base,
-      primitives: base.primitives.flatMap<ScenePrimitive>(primitive =>
+      primitives: Array.from(base.primitives).flatMap<ScenePrimitive>(primitive =>
         primitive.type === 'path'
           ? [
               { ...primitive, stroke: '#facc15' },
@@ -201,6 +203,6 @@ These are the members most often used to define, inject, and reference a custom 
 
 ## Wrapping custom geometry output
 
-When using `materializePath` to build Scene primitives yourself, call `context.wrapOutput({ primitives, boundsPoints })` after all `emitHostLabels` / `emitBoundaryLabels` calls and return that result directly. Core includes host-label layout bounds, applies Path `rotate` / `scale` around the complete bounds center, and handles the host `id`, `meta`, and animations.
+`materializePath` directly returns path commands in local coordinates without generating primitives or labels. When using these commands to build Scene primitives yourself, supply `boundsPoints` for the final geometry, call `context.wrapOutput({ primitives, boundsPoints })` after all `emitHostLabels` / `emitBoundaryLabels` calls, and return that result directly. Core includes host-label layout bounds, applies Path `rotate` / `scale` around the complete bounds center, and handles the host `id`, `meta`, and animations.
 
 `emitStroke` already wraps its output; use its result without calling `wrapOutput` again. Custom primitive bounds must use the same local coordinates as the primitives. Do not append untransformed primitives or bounds after wrapping.

@@ -2,9 +2,7 @@ import type {
   EmitStrokeOwnerOutputOptions,
   PathBoundaryLabelInput,
   PathCompileContext,
-  PathCompileResult,
   PathLabelInput,
-  PathPrim,
   ResolvedPathAppearance,
   ScenePrimitive,
   Transform,
@@ -32,7 +30,7 @@ import {
 import type { EffectiveScopeTransform } from '../transform';
 import type { CompileWarningInput } from '../warning';
 import { emitBoundaryLabelPrimitive, emitLabelPrimitive } from './host';
-import { emitPathPrimitive, wrapPathPrimitiveOutput } from './stroke';
+import { emitPathPrimitive, lowerStrokePathGeometry, wrapPathPrimitiveOutput } from './stroke';
 
 /** Path 宿主编译所需的显式服务与本次工作区 */
 export type PathCompileHost = Pick<
@@ -51,13 +49,7 @@ export type PathCompileHost = Pick<
   resolveTransform: (chain: ReadonlyArray<Transform>) => EffectiveScopeTransform;
 };
 /** 校验并脱离 BuiltinPath provider 返回的 primitive 与 bounds point */
-const validatePathCompileResult = (
-  kind: string,
-  value: unknown,
-): Readonly<{
-  result: PathCompileResult;
-  source: Record<string, unknown>;
-}> | null =>
+const validatePathCompileResult = (kind: string, value: unknown) =>
   withProviderOutputValidationBoundary(`Path '${kind}'`, () => {
     if (value === null) return null;
     if (typeof value !== 'object') {
@@ -67,11 +59,7 @@ const validatePathCompileResult = (
     const result = value as Record<string, unknown>;
     const primitives = validateScenePrimitives(`Path '${kind}'`, result.primitives);
     const rawBoundsPoints = result.boundsPoints;
-    if (!Array.isArray(rawBoundsPoints)) {
-      throw createCompositeContractError(`Path '${kind}' must return boundsPoints as an array.`);
-    }
-
-    const boundsPoints = Array.from(rawBoundsPoints, (point, index): IRPosition =>
+    const boundsPoints = Array.from(rawBoundsPoints as Iterable<IRPosition>, (point, index): IRPosition =>
       snapshotProviderPosition(`Path '${kind}' bounds point at index ${index}`, point),
     );
 
@@ -90,7 +78,7 @@ export const emitDefinedPath = (
   resolution: PathResolution,
   targetResolver: PathTargetResolver,
   context: PathCompileHost,
-): PathCompileResult | null => {
+) => {
   const { path, scopeChain } = pendingPath;
   const { irPath } = resolution;
   const targetWarn = (code: string, message: string, node?: { irPath?: string }): void =>
@@ -164,22 +152,17 @@ export const emitDefinedPath = (
     const source: IRPathBase = {
       ...pathWithoutKindOptions,
       kind: 'stroke',
-      ...(input?.children === undefined ? {} : { children: [...input.children] }),
+      children: (input?.children ?? path.children ?? []).map(step =>
+        'label' in step ? { ...step, label: undefined } : step,
+      ),
       label: undefined,
       marks: undefined,
       style: { ...path.style, color: undefined, fill: undefined, stroke: undefined, strokeWidth: undefined },
       rotate: undefined,
       scale: undefined,
     };
-    const emittedResolution = resolveStrokePathProviders(resolutionOf(source), {
-      mode: pendingPath.theme.mode,
-      paths: context.paths,
-      arrows: context.arrows,
-      patterns: context.patterns,
-      round: context.round,
-      irPath,
-    });
-    const emitted = emitPathPrimitive(emittedResolution, {
+    const emittedResolution = resolutionOf(source);
+    const geometry = lowerStrokePathGeometry(emittedResolution, {
       targetView: pathTargetViewOf(
         emittedResolution.targets,
         targetWarn,
@@ -191,24 +174,7 @@ export const emitDefinedPath = (
       options: emitOptions,
     });
 
-    const findPath = (primitives: ReadonlyArray<ScenePrimitive>): PathPrim | undefined => {
-      for (const primitive of primitives) {
-        if (primitive.type === 'path') return primitive;
-        if (primitive.type === 'group') {
-          const nested = findPath(primitive.children);
-          if (nested !== undefined) return nested;
-        }
-      }
-
-      return undefined;
-    };
-
-    const primitive = emitted === null ? undefined : findPath(emitted.primitives);
-
-    return {
-      commands: primitive?.commands ?? [],
-      boundsPoints: emitted?.boundsPoints ?? [],
-    };
+    return geometry?.commands ?? [];
   };
 
   const resolvedFill = resolution.path.fill === undefined ? undefined : emitOptions.resolvePaint(resolution.path.fill);
@@ -301,19 +267,21 @@ export const emitDefinedPath = (
     emitHostLabels,
     resolveHostLabel,
     emitBoundaryLabels,
-    wrapOutput: output => {
-      const boundsPoints = [...output.boundsPoints, ...hostLabelBoundsPoints];
-      const primitive = output.primitives.at(0);
-      if (primitive === undefined) return { ...output, boundsPoints };
+    wrapOutput: output =>
+      withProviderOutputValidationBoundary(`Path '${kind}'`, () => {
+        const boundsPoints = [...output.boundsPoints, ...hostLabelBoundsPoints];
+        const primitives = [...output.primitives];
+        const primitive = primitives.at(0);
+        if (primitive === undefined) return { primitives, boundsPoints };
 
-      return wrapPathPrimitiveOutput({
-        path: resolution.path,
-        primitive,
-        bodyPrims: output.primitives,
-        boundsPoints,
-        round: context.round,
-      });
-    },
+        return wrapPathPrimitiveOutput({
+          path: resolution.path,
+          primitive,
+          bodyPrims: primitives,
+          boundsPoints,
+          round: context.round,
+        });
+      }),
     appearance,
     round: context.round,
   });

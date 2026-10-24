@@ -19,6 +19,8 @@ description: 定义并注册整条 Path 的输出方式，复用公开的描边�
 
 ## 最小结果
 
+`compile` 返回的 `primitives` 和 `boundsPoints` 均接受 `Iterable`，可以提供数组或一次性迭代器。Core 消费输出时会将它们物化为数组。`emitStroke` 和 `wrapOutput` 也使用同一个 `PathCompileResult` 契约；需要使用 `map`、`flatMap` 等数组方法时，先用 `Array.from` 转换。
+
 自定义 Path 扩展的是**整条路径如何输出**。IR 只保存开放的 `kind` 与 JSON-safe `kindOptions`；宿主注入 `PathDefinition` 后，core 从统一 registry 找到 provider，并由它生成 Scene 图元。
 
 下面的 `highlight` kind 复用 Core 描边编译器，把一条路径输出为宽底线与细中心线两层图元。definition、`<Layout extensions={{ paths }}>` 注入和使用方式都包含在同一个示例中。
@@ -56,7 +58,7 @@ const highlight = definePath<HighlightPath>({
     if (base === null) return null;
     return {
       ...base,
-      primitives: base.primitives.flatMap<ScenePrimitive>(primitive =>
+      primitives: Array.from(base.primitives).flatMap<ScenePrimitive>(primitive =>
         primitive.type === 'path'
           ? [
               { ...primitive, stroke: '#facc15' },
@@ -201,6 +203,6 @@ const view = mount(document.getElementById('diagram')!, input, {
 
 ## 自行生成几何时的输出包装
 
-通过 `materializePath` 获取局部几何并自行生成 Scene 图元时，在全部 `emitHostLabels` / `emitBoundaryLabels` 调用之后，用 `context.wrapOutput({ primitives, boundsPoints })` 包装完整输出并直接返回。Core 会把宿主标签的布局边界加入 `boundsPoints`，以完整边界的中心应用 Path `rotate` / `scale`，并处理宿主 `id`、`meta` 和动画。
+`materializePath` 直接返回局部坐标系中的路径命令集合，不生成图元或标签。用这些命令自行生成 Scene 图元时，根据最终几何提供 `boundsPoints`，并在全部 `emitHostLabels` / `emitBoundaryLabels` 调用之后，用 `context.wrapOutput({ primitives, boundsPoints })` 包装完整输出并直接返回。Core 会把宿主标签的布局边界加入 `boundsPoints`，以完整边界的中心应用 Path `rotate` / `scale`，并处理宿主 `id`、`meta` 和动画。
 
 `emitStroke` 返回的结果已经完成这些包装，直接使用它的结果，不再次调用 `wrapOutput`。自定义图元的 `boundsPoints` 必须与图元使用同一局部坐标系；调用包装后不要继续添加未变换的图元或边界点。

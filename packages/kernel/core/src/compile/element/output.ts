@@ -73,7 +73,7 @@ export const assembleScopeOutput = (
   for (const child of children) {
     for (const contribution of child.bounds) {
       if (contribution.decoration) {
-        const box = collectLayoutBounds(undefined, contribution.points);
+        const box = collectLayoutBounds(undefined, contribution.boundsPoints);
         if (box !== undefined) {
           const projected = optionalVisualBoundsOfPrimitives(
             [{ ...group, children: [{ type: 'rect', ...boundsToRect(box), fill: 'black' }] }],
@@ -83,7 +83,7 @@ export const assembleScopeOutput = (
             const { x, y, width, height } = projected;
             bounds.push({
               decoration: true,
-              points: [
+              boundsPoints: [
                 [x, y],
                 [x + width, y],
                 [x, y + height],
@@ -96,7 +96,7 @@ export const assembleScopeOutput = (
       }
       bounds.push({
         ...contribution,
-        points: contribution.points.map(point => applyTransformChain(point, transforms)),
+        boundsPoints: contribution.boundsPoints.map(point => applyTransformChain(point, transforms)),
       });
     }
   }
@@ -105,7 +105,7 @@ export const assembleScopeOutput = (
     const { x, y, width, height } = decoration;
     bounds.push({
       decoration: true,
-      points: [
+      boundsPoints: [
         [x, y],
         [x + width, y],
         [x, y + height],

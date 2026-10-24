@@ -2,7 +2,7 @@ import { isFinitePoint } from '@retikz/math';
 
 import type { ScenePrimitive } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import type { CanonicalStep, PathTargetView, StrokePathResolution } from '../../../resolve';
+import type { CanonicalStep, PathTargetView, PathResolution, StrokePathResolution } from '../../../resolve';
 import type { IRPosition, IRTarget } from '../../../schemas';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
 import { cloneAndFreezeJson } from '../../../shared/json';
@@ -11,7 +11,7 @@ import type { PaintResolver } from '../../resource';
 import type { TextMeasurer } from '../../text';
 import { fallbackMeasurer } from '../../text';
 import { emitLabelPrimitive, pointOfTarget } from '../host';
-import type { PathEmitOptions, PathPrimitiveEmitResult } from '../types';
+import type { PathEmitOptions } from '../types';
 import { createPathCommandEmitter } from './commands';
 import { createStrokeCursor, isStrokeTargetStep } from './cursor';
 import { emitInlineMarkPrimitives, emitPathEndpointDecorations, pathEndpointArrows } from './decorations';
@@ -42,17 +42,10 @@ export type EmitPathPrimitiveContext = {
   options?: PathEmitOptions;
 };
 
-/**
- * 将 IR Path 输出为 PathPrim
- * @description 解析失败返回 null，并通过 `PathEmitOptions.onWarn` 报告 warning
- */
-const emitCanonicalPathPrimitive = (
-  resolution: StrokePathResolution,
-  context: EmitPathPrimitiveContext,
-): PathPrimitiveEmitResult | null => {
+/** 将路径步骤转换为共享的几何命令与采样数据 */
+export const lowerStrokePathGeometry = (resolution: PathResolution, context: EmitPathPrimitiveContext) => {
   const { targetView, round, measureText = fallbackMeasurer, options: pathEmitOptions = {} } = context;
   const { path } = resolution;
-  const canonicalPath = path;
   const canonicalSteps = path.children ?? [];
   const irPath = resolution.irPath;
 
@@ -61,10 +54,6 @@ const emitCanonicalPathPrimitive = (
   };
 
   const scopeChain = pathEmitOptions.scopeChain ?? [];
-
-  // paint 解析：有 registry 走去重派 id；无 registry 时纯色透传、IRPaint 退化为 undefined
-  const resolvePaint: PaintResolver =
-    pathEmitOptions.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
 
   // relative/relativeAccumulate target 已由 resolving 阶段绑定为当前 scope 的局部坐标
   const steps = [...canonicalSteps];
@@ -105,7 +94,6 @@ const emitCanonicalPathPrimitive = (
     lowerTex: pathEmitOptions.lowerTex,
     warn,
   });
-  const { labelPrimitives: labelPrims, segmentSamplers } = sampling;
 
   for (let i = 0; i < steps.length; i++) {
     cursor.advance(i);
@@ -305,7 +293,24 @@ const emitCanonicalPathPrimitive = (
     }
   }
 
-  const baseProps = emitPathBaseProps(canonicalPath, {
+  return { commands, stepIndexes, boundsPoints, endpointSource, sampling, roundedCommands };
+};
+
+/** 将标准描边几何编译为场景图元 */
+const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: EmitPathPrimitiveContext) => {
+  const { round, measureText = fallbackMeasurer, options: pathEmitOptions = {} } = context;
+  const { path, irPath } = resolution;
+  const geometry = lowerStrokePathGeometry(resolution, context);
+  if (geometry === null) return null;
+  const { commands, stepIndexes, boundsPoints, endpointSource, sampling, roundedCommands } = geometry;
+  const { labelPrimitives: labelPrims, segmentSamplers } = sampling;
+  const warn = (code: string, message: string, subPath = ''): void => {
+    pathEmitOptions.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
+  };
+  const resolvePaint: PaintResolver =
+    pathEmitOptions.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
+
+  const baseProps = emitPathBaseProps(path, {
     resolvePaint,
   });
   const strokeWidth = baseProps.strokeWidth;
@@ -471,7 +476,5 @@ const emitCanonicalPathPrimitive = (
 };
 
 /** 将已解析的 path 输出为路径图元 */
-export const emitPathPrimitive = (
-  resolution: StrokePathResolution,
-  context: EmitPathPrimitiveContext,
-): PathPrimitiveEmitResult | null => emitCanonicalPathPrimitive(resolution, context);
+export const emitPathPrimitive = (resolution: StrokePathResolution, context: EmitPathPrimitiveContext) =>
+  emitCanonicalPathPrimitive(resolution, context);

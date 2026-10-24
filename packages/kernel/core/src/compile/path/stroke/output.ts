@@ -2,7 +2,6 @@ import type { GroupPrim, ScenePrimitive } from '../../../contract';
 import type { CanonicalPath } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import type { PaintResolver } from '../../resource';
-import type { PathPrimitiveEmitResult } from '../types';
 import type { PathBaseProps } from './split';
 import { bboxCenter, buildPathTransforms, projectPathTransformPoints } from './transform';
 
@@ -65,7 +64,7 @@ export const wrapPathPrimitiveOutput = ({
   bodyPrims,
   boundsPoints,
   round,
-}: WrapPathPrimitiveOutputInput): PathPrimitiveEmitResult => {
+}: WrapPathPrimitiveOutputInput) => {
   if ((path.rotate !== undefined || path.scale !== undefined) && boundsPoints.length > 0) {
     const center = bboxCenter(boundsPoints);
     const transforms = buildPathTransforms({ rotate: path.rotate, scale: path.scale, center, round });

@@ -85,7 +85,7 @@ export type ElementCompileOptions = Readonly<{
 /** 元素本地可见边界的一项贡献，独立保留阴影语义 */
 export type CompileBounds = Readonly<{
   /** 本地边界点 */
-  points: ReadonlyArray<IRPosition>;
+  boundsPoints: ReadonlyArray<IRPosition>;
   /** 本项阴影 */
   shadow?: ResolvedDropShadow;
   /** 外框等装饰边界，祖先 clip 可裁减其可见范围 */

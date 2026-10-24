@@ -5,7 +5,6 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { ArrowMarkResolution, CanonicalPath } from '../../../resolve';
 import type { IRPathBase, IRPosition } from '../../../schemas';
 import type { PaintResolver } from '../../resource';
-import type { PathPrimitiveEmitResult } from '../types';
 import { buildMarkMarkerGroup } from './marks';
 import type { PathBasePropsWithStrokeWidth } from './output';
 import { sampleStrokePath } from './sampling';
@@ -146,7 +145,7 @@ export const emitInlineMarkPrimitives = ({
   baseProps,
   round,
   resolvePaint,
-}: EmitInlineMarkPrimitivesInput): PathPrimitiveEmitResult => {
+}: EmitInlineMarkPrimitivesInput) => {
   const primitives: Array<ScenePrimitive> = [];
   const boundsPoints: Array<IRPosition> = [];
   if (inlineMarks.length === 0 || segmentSamplers.length === 0) {

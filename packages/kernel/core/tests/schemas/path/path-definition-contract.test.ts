@@ -55,9 +55,9 @@ describe('Path full-subject contract', () => {
       name: 'service-probe',
       schema: PathSchema,
       compile: context => {
-        const materialized = context.materializePath();
+        const commands = context.materializePath();
         observed =
-          materialized.commands.length > 0 &&
+          commands.length > 0 &&
           typeof context.materializePath === 'function' &&
           typeof context.emitStroke === 'function' &&
           typeof context.emitHostLabels === 'function' &&

@@ -68,7 +68,7 @@ export const compilePath = (
         primitives: result?.primitives ?? [],
         resources: workspace.paint.resources(),
         observations: observations.map(observation => ({ ...observation, scopeChain: [] })),
-        bounds: result === null ? [] : [{ points: result.boundsPoints, shadow: resolution.path.shadow }],
+        bounds: result === null ? [] : [{ boundsPoints: result.boundsPoints, shadow: resolution.path.shadow }],
       }),
     });
   });

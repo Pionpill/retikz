@@ -100,7 +100,7 @@ export const assembleSceneCompilation = <const TComposites extends ReadonlyArray
   const output = assembleCompileOutputs(outputs, environment, metadata.provenanceTracker);
   let bounds: AxisAlignedBounds | undefined;
   for (const contribution of output.bounds) {
-    bounds = collectLayoutBounds(bounds, contribution.points, contribution.shadow);
+    bounds = collectLayoutBounds(bounds, contribution.boundsPoints, contribution.shadow);
   }
   const artifacts = [...(metadata.artifacts ?? [])];
   const diagnostics: Array<CompileWarningInput> = [...(metadata.diagnostics ?? [])];

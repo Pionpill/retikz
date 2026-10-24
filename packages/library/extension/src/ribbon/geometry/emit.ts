@@ -125,8 +125,8 @@ export const emitRibbonPrimitive = (
 
   if (ribbon.mode === 'boundary') {
     const outline = boundaryOutlineCommands({
-      upper: context.materializePath({ children: ribbon.upper }).commands,
-      lower: context.materializePath({ children: ribbon.lower }).commands,
+      upper: context.materializePath({ children: ribbon.upper }),
+      lower: context.materializePath({ children: ribbon.lower }),
     });
 
     return resultOf(ribbon, outline, context);
@@ -140,8 +140,8 @@ export const emitRibbonPrimitive = (
     });
   }
 
-  const materialized = context.materializePath({ children: ribbon.children });
-  const segmentInputs = commandsToSegmentInputs(materialized.commands, 'centerline');
+  const commands = context.materializePath({ children: ribbon.children });
+  const segmentInputs = commandsToSegmentInputs(commands, 'centerline');
   const rawSegments = segmentInputsToSegments(segmentInputs);
   const rawTotalLength = rawSegments.reduce((sum, segment) => sum + segment.length, 0);
   if (!Number.isFinite(rawTotalLength) || rawTotalLength <= 0) {

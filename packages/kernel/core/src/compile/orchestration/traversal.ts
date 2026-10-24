@@ -353,10 +353,10 @@ export const compileChildrenToPrimitives = (
   /** 把 allocation contribution 绑定到最近的显式 composite allocation boundary */
   const pushAllocation = (
     sink: TraversalFrame['allocationSink'],
-    points: Array<IRPosition>,
+    boundsPoints: Array<IRPosition>,
     allocationBoundary?: object,
   ): void => {
-    sink.push({ points, ...(allocationBoundary === undefined ? {} : { allocationBoundary }) });
+    sink.push({ boundsPoints, ...(allocationBoundary === undefined ? {} : { allocationBoundary }) });
   };
 
   /** 只保留当前 traversal 对外可见的 allocation contribution */
@@ -407,7 +407,7 @@ export const compileChildrenToPrimitives = (
           for (const prim of primitives) recordPrimitiveZIndex(runtime.state.zIndexOf, prim, pendingPath.zIndex);
           if (result !== null) {
             pendingPath.boundsSink.push({
-              points: [...result.boundsPoints],
+              boundsPoints: [...result.boundsPoints],
               shadow: resolution.path.shadow,
             });
             pushAllocation(pendingPath.allocationSink, [...result.boundsPoints], pendingPath.allocationBoundary);
@@ -485,8 +485,8 @@ export const compileChildrenToPrimitives = (
       rectOps.anchor(outerRect, Anchor.BottomLeft),
       rectOps.anchor(outerRect, Anchor.BottomRight),
     ];
-    frame.boundsSink.push({ points: nodeBoundsPoints, shadow: properties.shadow });
-    frame.boundsSink.push({ points: labelExtentPoints(layout) });
+    frame.boundsSink.push({ boundsPoints: nodeBoundsPoints, shadow: properties.shadow });
+    frame.boundsSink.push({ boundsPoints: labelExtentPoints(layout) });
     pushAllocation(frame.allocationSink, nodeBoundsPoints, frame.allocationBoundary);
     const alignmentGuides = alignmentGuidesOfNode(layout, runtime.context.round);
     if (alignmentGuides !== undefined) {
@@ -826,7 +826,7 @@ export const compileChildrenToPrimitives = (
       for (const contribution of effectiveAllocations(scopeAllocations)) {
         pushAllocation(
           frame.allocationSink,
-          contribution.points.map(point => scopeTransformsContext.apply(point, scopeTransforms)),
+          contribution.boundsPoints.map(point => scopeTransformsContext.apply(point, scopeTransforms)),
           frame.allocationBoundary,
         );
       }
@@ -853,7 +853,7 @@ export const compileChildrenToPrimitives = (
 
     for (const contribution of scopeBounds) {
       if (contribution.decoration === true) {
-        const bounds = collectLayoutBounds(undefined, contribution.points);
+        const bounds = collectLayoutBounds(undefined, contribution.boundsPoints);
         if (bounds === undefined) continue;
 
         const rectangle = boundsToRect(bounds);
@@ -868,10 +868,11 @@ export const compileChildrenToPrimitives = (
           ],
           context.clip.resources(),
         );
-        if (projected !== undefined) frame.boundsSink.push({ points: allocationPointsOf(projected), decoration: true });
+        if (projected !== undefined)
+          frame.boundsSink.push({ boundsPoints: allocationPointsOf(projected), decoration: true });
       } else {
         frame.boundsSink.push({
-          points: contribution.points.map(point => scopeTransformsContext.apply(point, scopeTransforms)),
+          boundsPoints: contribution.boundsPoints.map(point => scopeTransformsContext.apply(point, scopeTransforms)),
           shadow: contribution.shadow,
         });
       }
@@ -891,7 +892,7 @@ export const compileChildrenToPrimitives = (
   const boundsRectOf = (result: TraversalResult): Readonly<BoundsRect> =>
     (() => {
       const allocation = effectiveAllocations(result.allocations).reduce(
-        (current, contribution) => collectLayoutBounds(current, contribution.points),
+        (current, contribution) => collectLayoutBounds(current, contribution.boundsPoints),
         undefined as TraversalResult['layoutBounds'],
       );
       return allocation === undefined ? emptyBounds() : canonicalizeBoundsRect(boundsToRect(allocation));
@@ -1102,10 +1103,10 @@ export const compileChildrenToPrimitives = (
     if (wrapperClipRef === undefined) {
       for (const contribution of transaction.bounds) {
         frame.boundsSink.push({
-          points:
+          boundsPoints:
             transforms === undefined || transforms.length === 0
-              ? contribution.points
-              : contribution.points.map(point => scopeTransformsContext.apply(point, transforms)),
+              ? contribution.boundsPoints
+              : contribution.boundsPoints.map(point => scopeTransformsContext.apply(point, transforms)),
           shadow: contribution.shadow,
           ...(contribution.decoration === undefined ? {} : { decoration: contribution.decoration }),
         });
@@ -1117,7 +1118,7 @@ export const compileChildrenToPrimitives = (
       ]);
       if (visualBounds !== undefined)
         frame.boundsSink.push({
-          points: allocationPointsOf(visualBounds),
+          boundsPoints: allocationPointsOf(visualBounds),
           ...(transaction.bounds.some(contribution => contribution.decoration === true) ? { decoration: true } : {}),
         });
     }
@@ -1126,8 +1127,8 @@ export const compileChildrenToPrimitives = (
       pushAllocation(
         frame.allocationSink,
         transforms === undefined || transforms.length === 0
-          ? contribution.points
-          : contribution.points.map(point => scopeTransformsContext.apply(point, transforms)),
+          ? contribution.boundsPoints
+          : contribution.boundsPoints.map(point => scopeTransformsContext.apply(point, transforms)),
         frame.allocationBoundary,
       );
     }
@@ -2414,7 +2415,7 @@ export const compileChildrenToPrimitives = (
   for (const contribution of rootBounds) {
     runtime.state.layoutBounds = collectLayoutBounds(
       runtime.state.layoutBounds,
-      contribution.points,
+      contribution.boundsPoints,
       contribution.shadow,
     );
   }

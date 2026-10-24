@@ -460,7 +460,7 @@ export type LayoutBoundsContribution = {
   /** 包络装饰的可见范围，需要沿祖先裁剪收敛 */
   decoration?: true;
   /** 当前 frame 中的几何点 */
-  points: Array<IRPosition>;
+  boundsPoints: Array<IRPosition>;
   /** 与该点集关联的阴影外溢 */
   shadow?: ResolvedDropShadow;
   /** 位于该显式 composite allocation boundary 内时不直接贡献到外层 */

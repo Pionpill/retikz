@@ -2,7 +2,7 @@ import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
-import type { CompileWarning, IRScene, PathPrim, ScenePrimitive } from '../../src';
+import type { CompileWarning, IRScene, IRPosition, IRPathBase, PathCommand, PathPrim, ScenePrimitive } from '../../src';
 import { BuiltinCompileWarningCode, compileToScene, definePath, PathSchema } from '../../src';
 
 const steps = [
@@ -72,7 +72,7 @@ describe('Path registry', () => {
 
         return {
           ...base,
-          primitives: base.primitives.map(primitive =>
+          primitives: Array.from(base.primitives).map(primitive =>
             primitive.type === 'path' ? { ...primitive, stroke: context.path.kindOptions.stroke } : primitive,
           ),
         };
@@ -313,19 +313,183 @@ describe('Path registry', () => {
 });
 
 describe('Path output wrapping', () => {
+  const once = <T>(items: ReadonlyArray<T>): Iterable<T> => {
+    let consumed = false;
+    return {
+      [Symbol.iterator]: () => {
+        if (consumed) throw new Error('iterator consumed twice');
+        consumed = true;
+        return items[Symbol.iterator]();
+      },
+    };
+  };
+
+  it.each([false, true])('一次性输出保持图元顺序和布局结果（宿主包装：%s）', wrapped => {
+    const compile = (iterable: boolean) =>
+      compileToScene(scene([{ type: 'path', kind: 'iterable', rotate: 90 }]), {
+        padding: 0,
+        paths: [
+          definePath({
+            name: 'iterable',
+            schema: customPathSchema('iterable'),
+            compile: context => {
+              const primitives: Array<ScenePrimitive> = [
+                { type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: 'red' },
+                { type: 'rect', x: 10, y: 0, width: 10, height: 10, fill: 'blue' },
+              ];
+              const boundsPoints: Array<IRPosition> = [
+                [0, 0],
+                [20, 10],
+              ];
+              const output = {
+                primitives: iterable ? once(primitives) : primitives,
+                boundsPoints: iterable ? once(boundsPoints) : boundsPoints,
+              };
+              return wrapped ? context.wrapOutput(output) : output;
+            },
+          }),
+        ],
+      }).scene;
+    const expected = compile(false);
+    const actual = compile(true);
+    expect(actual).toEqual(expected);
+    expect(
+      flatten(actual.primitives)
+        .filter(primitive => primitive.type === 'rect')
+        .map(primitive => primitive.fill),
+    ).toEqual(['red', 'blue']);
+  });
+
+  it.each([false, true])('空迭代器产生空输出（宿主包装：%s）', wrapped => {
+    const definition = definePath({
+      name: 'empty-iterable',
+      schema: customPathSchema('empty-iterable'),
+      compile: context => {
+        const output = { primitives: once<ScenePrimitive>([]), boundsPoints: once<IRPosition>([]) };
+        return wrapped ? context.wrapOutput(output) : output;
+      },
+    });
+    expect(
+      compileToScene(scene([{ type: 'path', kind: definition.name }]), { paths: [definition] }).scene.primitives,
+    ).toEqual([]);
+  });
+
+  it.each([
+    [false, 'primitives'],
+    [true, 'primitives'],
+    [false, 'boundsPoints'],
+    [true, 'boundsPoints'],
+  ] as const)('迭代异常保留原始 cause（宿主包装：%s，字段：%s）', (wrapped, field) => {
+    const cause = new Error('iterator failed');
+    const failing = {
+      [Symbol.iterator]: (): Iterator<never> => ({
+        next: () => {
+          throw cause;
+        },
+      }),
+    };
+    const definition = definePath({
+      name: 'failing-iterable',
+      schema: customPathSchema('failing-iterable'),
+      compile: context => {
+        const output = {
+          primitives: field === 'primitives' ? failing : [],
+          boundsPoints: field === 'boundsPoints' ? failing : [],
+        };
+        return wrapped ? context.wrapOutput(output) : output;
+      },
+    });
+    expect(() => compileToScene(scene([{ type: 'path', kind: definition.name }]), { paths: [definition] })).toThrow(
+      expect.objectContaining({ cause }),
+    );
+  });
+
+  it.each([
+    { children: steps },
+    {
+      children: [
+        ...steps,
+        { type: 'step', kind: 'line', to: [100, 100] },
+        { type: 'step', kind: 'line', to: { relativeAccumulate: [50, 0] } },
+      ],
+      cornerRadius: 10,
+    },
+    {
+      children: [steps[0], { type: 'step', kind: 'rectangle', from: [10, 20], to: [80, 60] }],
+    },
+  ] satisfies Array<Pick<IRPathBase, 'children' | 'cornerRadius'>>)(
+    'materializes the same geometry as an undecorated stroke: %j',
+    input => {
+      let commands: ReadonlyArray<PathCommand> = [];
+      const custom = definePath({
+        name: 'geometry-probe',
+        schema: customPathSchema('geometry-probe'),
+        compile: context => {
+          commands = context.materializePath();
+          return null;
+        },
+      });
+      compileToScene(scene([{ ...input, type: 'path', kind: custom.name }]), { paths: [custom] });
+      const output = compileToScene(scene([{ ...input, type: 'path' }])).scene;
+      const primitive = flatten(output.primitives).find(item => item.type === 'path');
+      expect(primitive).toBeDefined();
+      expect(commands).toEqual(primitive?.commands);
+    },
+  );
+
+  it('materializes geometry without measuring labels or resolving marks', () => {
+    let measurements = 0;
+    let commands: ReadonlyArray<PathCommand> = [];
+    const custom = definePath({
+      name: 'geometry-only',
+      schema: customPathSchema('geometry-only'),
+      compile: context => {
+        commands = context.materializePath();
+        return null;
+      },
+    });
+    compileToScene(
+      scene([
+        {
+          type: 'path',
+          kind: custom.name,
+          children: [steps[0], { type: 'step', kind: 'line', to: [100, 0], label: { text: 'step label' } }],
+          label: { text: 'host label' },
+          marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'unused-arrow' } }],
+          rotate: 90,
+        },
+      ]),
+      {
+        paths: [custom],
+        measureText: () => {
+          measurements++;
+          return { width: 40, height: 20 };
+        },
+      },
+    );
+    expect(commands).toEqual([
+      { kind: 'move', to: [0, 0] },
+      { kind: 'line', to: [100, 0] },
+    ]);
+    expect(measurements).toBe(0);
+  });
+
   it('wraps custom geometry and shared labels in one host transform', () => {
     const custom = definePath({
       name: 'boundary-label-host',
       schema: customPathSchema('boundary-label-host'),
       compile: context => {
-        const geometry = context.materializePath();
+        const commands = context.materializePath();
         const labels = context.emitBoundaryLabels([
           { label: { text: 'target' }, point: [100, 0], outward: [1, 0], sourcePath: 'kindOptions.label' },
         ]);
 
         return context.wrapOutput({
-          primitives: [{ type: 'path', commands: [...geometry.commands] }, ...labels],
-          boundsPoints: [...geometry.boundsPoints],
+          primitives: once<ScenePrimitive>([{ type: 'path', commands: [...commands] }, ...labels]),
+          boundsPoints: once<IRPosition>([
+            [0, 0],
+            [100, 0],
+          ]),
         });
       },
     });
