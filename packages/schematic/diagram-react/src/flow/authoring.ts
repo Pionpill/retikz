@@ -41,8 +41,7 @@ export type FlowDiagramLayoutHostProps = Pick<
   | 'clips'
   | 'arrows'
   | 'patterns'
-  | 'pathGenerators'
-  | 'pathKinds'
+  | 'paths'
   | 'composites'
   | 'themeDefinitions'
   | 'lowerTex'
@@ -76,8 +75,7 @@ export const flowDiagramLayoutHostPropKeys = [
   'clips',
   'arrows',
   'patterns',
-  'pathGenerators',
-  'pathKinds',
+  'paths',
   'composites',
   'themeDefinitions',
   'lowerTex',
@@ -339,8 +337,7 @@ export const collectFlowDiagramInput = (
     clips: _clips,
     arrows: _arrows,
     patterns: _patterns,
-    pathGenerators: _pathGenerators,
-    pathKinds: _pathKinds,
+    paths: _paths,
     composites: _composites,
     themeDefinitions: _themeDefinitions,
     lowerTex: _lowerTex,
@@ -372,8 +369,7 @@ export const collectFlowDiagramInput = (
   void _clips;
   void _arrows;
   void _patterns;
-  void _pathGenerators;
-  void _pathKinds;
+  void _paths;
   void _composites;
   void _themeDefinitions;
   void _lowerTex;

@@ -15,7 +15,7 @@ import {
   NodeTextAlign,
   CirclePathCloseMode,
   PathFillRule,
-  BuiltinPathKind,
+  BuiltinPath,
   PathLineCap,
   PathLineJoin,
   BuiltinPatternShape,
@@ -239,8 +239,8 @@ export const API_VALUE_REGISTRY = {
   PathFillRule: {
     values: Object.values(PathFillRule),
   },
-  BuiltinPathKind: {
-    values: Object.values(BuiltinPathKind),
+  BuiltinPath: {
+    values: Object.values(BuiltinPath),
   },
   PathLineCap: {
     values: Object.values(PathLineCap),

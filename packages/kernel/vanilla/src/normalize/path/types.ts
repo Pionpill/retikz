@@ -127,14 +127,6 @@ export type InputSmoothStep = Omit<Extract<IRStep, { kind: 'smooth' }>, 'points'
   label?: InputStepLabel;
 };
 
-/** 以作者侧 target 组装的 generator 步骤 */
-export type InputGeneratorStep = Omit<Extract<IRStep, { kind: 'generator' }>, 'to' | 'label'> & {
-  /** 交给路径生成器的可选终点目标 */
-  to?: InputTarget;
-  /** 附着在生成路径上的可选标签 */
-  label?: InputStepLabel;
-};
-
 /** 作者侧路径步骤 */
 export type InputStep =
   | InputMoveStep
@@ -149,8 +141,7 @@ export type InputStep =
   | InputEllipsePathStep
   | InputArcStep
   | InputRectangleStep
-  | InputSmoothStep
-  | InputGeneratorStep;
+  | InputSmoothStep;
 
 /** 作者侧路径输入的公共字段 */
 type InputPathBase = Omit<IRPath, 'type' | 'children'> & {

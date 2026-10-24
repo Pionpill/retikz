@@ -2,19 +2,19 @@ import type { JsonValue } from '@retikz/foundation';
 import type { AxisAlignedBounds } from '@retikz/math';
 
 import type {
-  SceneClipPath,
   CompileObservationAncestor,
   CompileObservationOwner,
   CompileOccurrenceLocator,
-  CompositeCompileChild,
   CompositeBoundChild,
+  CompositeCompileChild,
   CompositeCompileScopeProps,
   CompositeReplay,
   CompositeReplayWrapper,
   LayoutAlignmentGuide,
-  LayoutProposal,
   LayoutContribution,
   LayoutMeasurementAxis,
+  LayoutProposal,
+  SceneClipPath,
   ScenePrimitive,
   SceneResource,
   SpatialHandleDeclaration,
@@ -314,8 +314,7 @@ export type TraversalContext = Pick<
   | 'patterns'
   | 'clips'
   | 'arrows'
-  | 'pathGenerators'
-  | 'pathKinds'
+  | 'paths'
   | 'paint'
   | 'clip'
   | 'composites'

@@ -17,8 +17,7 @@ import { createEmptyInputRuntimeMetaSnapshot, isInputScene, normalizeScene } fro
 import { createInputSceneTraversal } from '../normalize/scene';
 import { assertPreparationActive, prepareAuthoringContributions } from './authoring';
 import { createTextMeasurer } from './text-measurement';
-import type { PreparedProcessingInput, ProcessingOptions, ProcessingSource } from './types';
-import type { AsyncProcessingOptions } from './types';
+import type { AsyncProcessingOptions, PreparedProcessingInput, ProcessingOptions, ProcessingSource } from './types';
 
 const EMPTY_AUTHORING_SITES: ReadonlyArray<InputAuthoringSite> = Object.freeze([]);
 
@@ -58,8 +57,7 @@ const resolveCoreOptions = (
             clips: compile.clips,
             arrows: compile.arrows,
             patterns: compile.patterns,
-            pathGenerators: compile.pathGenerators,
-            pathKinds: compile.pathKinds,
+            paths: compile.paths,
             composites: compile.composites,
           },
   });

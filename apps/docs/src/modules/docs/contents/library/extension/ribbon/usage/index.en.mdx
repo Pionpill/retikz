@@ -9,7 +9,7 @@ Ribbon reuses Path commands, styles, centerline labels, and transforms. See the 
 
 ## Using this topic
 
-Use Ribbon for connections that need changing thickness or inside labels. Explicitly assemble `RibbonPathKindDefinition`, then set `kind="ribbon"` on Path. This result uses one open centerline and endpoint widths. Importing a Definition does not register it globally.
+Use Ribbon for connections that need changing thickness or inside labels. Explicitly assemble `RibbonPathDefinition`, then set `kind="ribbon"` on Path. This result uses one open centerline and endpoint widths. Importing a Definition does not register it globally.
 
 <ComponentPreview files="ribbon-basic" hideCode size="xs" />
 
@@ -27,11 +27,11 @@ Layout
 
 ```tsx
 import type { IRRibbonPathOptions } from '@retikz/extension';
-import { RibbonPathKindDefinition } from '@retikz/extension';
+import { RibbonPathDefinition } from '@retikz/extension';
 import { Layout, Path, Step } from '@retikz/react';
 
 export const Example = () => (
-  <Layout extensions={{ pathKinds: [RibbonPathKindDefinition] }}>
+  <Layout extensions={{ paths: [RibbonPathDefinition] }}>
     <Path
       kind="ribbon"
       kindOptions={{ width: { kind: 'taper', start: 32, end: 12 } } satisfies IRRibbonPathOptions}
@@ -50,7 +50,7 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import type { IRRibbonPathOptions } from '@retikz/extension';
-import { RibbonPathKindDefinition } from '@retikz/extension';
+import { RibbonPathDefinition } from '@retikz/extension';
 import { Layout } from '@retikz/react';
 
 const ir: IRScene = {
@@ -70,7 +70,7 @@ const ir: IRScene = {
   ],
 };
 
-export const Example = () => <Layout ir={ir} extensions={{ pathKinds: [RibbonPathKindDefinition] }} />;
+export const Example = () => <Layout ir={ir} extensions={{ paths: [RibbonPathDefinition] }} />;
 ```
 
 </DocTab>
@@ -78,7 +78,7 @@ export const Example = () => <Layout ir={ir} extensions={{ pathKinds: [RibbonPat
 
 ```ts
 import type { IRRibbonPathOptions } from '@retikz/extension';
-import { RibbonPathKindDefinition } from '@retikz/extension';
+import { RibbonPathDefinition } from '@retikz/extension';
 import { path, renderToSvgString, scene } from '@retikz/vanilla';
 
 const input = scene({
@@ -95,7 +95,7 @@ const input = scene({
   ],
 });
 
-console.log(renderToSvgString(input, { compile: { pathKinds: [RibbonPathKindDefinition] } }));
+console.log(renderToSvgString(input, { compile: { paths: [RibbonPathDefinition] } }));
 ```
 
 </DocTab>
@@ -104,7 +104,7 @@ console.log(renderToSvgString(input, { compile: { pathKinds: [RibbonPathKindDefi
 ```ts
 import type { IRScene } from '@retikz/core';
 import type { IRRibbonPathOptions } from '@retikz/extension';
-import { RibbonPathKindDefinition } from '@retikz/extension';
+import { RibbonPathDefinition } from '@retikz/extension';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -124,7 +124,7 @@ const ir: IRScene = {
   ],
 };
 
-console.log(renderToSvgString(ir, { compile: { pathKinds: [RibbonPathKindDefinition] } }));
+console.log(renderToSvgString(ir, { compile: { paths: [RibbonPathDefinition] } }));
 ```
 
 </DocTab>
@@ -249,7 +249,7 @@ Switch among solid, linear, radial, and conic fills. Gradients use two stops, se
 
 ## Related props
 
-These are the Ribbon path kind, width, and sampling options used on this page. See the [API Reference](/library/extension/ribbon/reference) for complete inputs and the [API reference](/library/extension/ribbon/reference) for Definition signatures.
+These are the Ribbon path, width, and sampling options used on this page. See the [API Reference](/library/extension/ribbon/reference) for complete inputs and the [API reference](/library/extension/ribbon/reference) for Definition signatures.
 
 <ComponentProps
   items={[
@@ -257,7 +257,7 @@ These are the Ribbon path kind, width, and sampling options used on this page. S
       name: 'Path.kind',
       kind: 'property',
       type: "'ribbon'",
-      description: 'Select the Ribbon Path kind assembled for this diagram',
+      description: 'Select the Ribbon Path assembled for this diagram',
     },
     {
       name: 'Path.kindOptions.width',

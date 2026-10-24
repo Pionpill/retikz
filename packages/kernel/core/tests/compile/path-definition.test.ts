@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import type { CompileWarning, IRScene, PathPrim, ScenePrimitive } from '../../src';
-import { compileToScene, BuiltinCompileWarningCode, definePathGenerator, definePathKind, PathSchema } from '../../src';
+import { BuiltinCompileWarningCode, compileToScene, definePath, PathSchema } from '../../src';
 
 const steps = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -34,8 +34,8 @@ const pathPrims = (ir: IRScene, options?: Parameters<typeof compileToScene>[1]):
 
 const customPathSchema = <TKind extends string>(kind: TKind) => PathSchema.extend({ kind: literal(kind) });
 
-describe('Path kind registry', () => {
-  it('compiles omitted kind as the built-in stroke path kind', () => {
+describe('Path registry', () => {
+  it('compiles omitted kind as the built-in stroke path', () => {
     const [prim] = pathPrims(
       scene([
         {
@@ -50,7 +50,7 @@ describe('Path kind registry', () => {
     expect(prim.fill).toBe('none');
   });
 
-  it('throws for unknown path kinds until a provider is registered', () => {
+  it('throws for unknown path definitions until a provider is registered', () => {
     expect(
       () =>
         compileToScene(
@@ -59,8 +59,8 @@ describe('Path kind registry', () => {
     ).toThrow(/Unknown provider 'missing'/);
   });
 
-  it('lets custom path kinds reuse the built-in stroke emitter', () => {
-    const highlight = definePathKind({
+  it('lets custom path definitions reuse the built-in stroke emitter', () => {
+    const highlight = definePath({
       name: 'highlight',
       schema: PathSchema.extend({
         kind: literal('highlight'),
@@ -88,7 +88,7 @@ describe('Path kind registry', () => {
           children: steps,
         },
       ] as IRScene['children']),
-      { pathKinds: [highlight] },
+      { paths: [highlight] },
     );
 
     expect(prim.stroke).toBe('gold');
@@ -96,7 +96,7 @@ describe('Path kind registry', () => {
 
   it('自定义 Path 无需 Stroke steps，仍接收分组 Source', () => {
     let observed: unknown;
-    const empty = definePathKind({
+    const empty = definePath({
       name: 'empty',
       schema: customPathSchema('empty'),
       compile: context => {
@@ -105,7 +105,7 @@ describe('Path kind registry', () => {
       },
     });
     const output = compileToScene(scene([{ type: 'path', kind: 'empty', style: { stroke: 'blue' } }]), {
-      pathKinds: [empty],
+      paths: [empty],
     });
 
     expect(output.scene.primitives).toEqual([]);
@@ -117,7 +117,7 @@ describe('Path kind registry', () => {
     let observedPosition: unknown;
     let observedStyle: unknown;
     let observedStroke: unknown;
-    const sourceStroke = definePathKind({
+    const sourceStroke = definePath({
       name: 'source-stroke',
       schema: customPathSchema('source-stroke'),
       compile: context => {
@@ -138,7 +138,7 @@ describe('Path kind registry', () => {
           children: [steps[0], { ...steps[1], label: { text: 'end', position: 'at-end' } }],
         },
       ] as IRScene['children']),
-      { pathKinds: [sourceStroke], padding: 0 },
+      { paths: [sourceStroke], padding: 0 },
     ).scene;
     const label = flatten(compiled.primitives).find(primitive => primitive.type === 'text');
 
@@ -149,20 +149,17 @@ describe('Path kind registry', () => {
   });
 
   it('does not resolve unused secondary providers for custom output', () => {
-    const silent = definePathKind({
+    const silent = definePath({
       name: 'silent',
       schema: customPathSchema('silent'),
       compile: () => null,
     });
-    const direct = definePathKind({
+    const direct = definePath({
       name: 'direct',
       schema: customPathSchema('direct'),
       compile: () => ({ primitives: [], boundsPoints: [] }),
     });
-    const children = [
-      steps[0],
-      { type: 'step' as const, kind: 'generator' as const, name: 'missing-generator', params: {} },
-    ];
+    const children = steps;
     const source = {
       type: 'path' as const,
       children,
@@ -170,15 +167,15 @@ describe('Path kind registry', () => {
     };
 
     expect(() =>
-      compileToScene(scene([{ ...source, kind: 'silent' }] as IRScene['children']), { pathKinds: [silent] }),
+      compileToScene(scene([{ ...source, kind: 'silent' }] as IRScene['children']), { paths: [silent] }),
     ).not.toThrow();
     expect(() =>
-      compileToScene(scene([{ ...source, kind: 'direct' }] as IRScene['children']), { pathKinds: [direct] }),
+      compileToScene(scene([{ ...source, kind: 'direct' }] as IRScene['children']), { paths: [direct] }),
     ).not.toThrow();
   });
 
-  it('rejects endpoint arrow overlap before a custom path kind provider can consume it', () => {
-    const custom = definePathKind({
+  it('rejects endpoint arrow overlap before a custom path provider can consume it', () => {
+    const custom = definePath({
       name: 'custom-overlap',
       schema: customPathSchema('custom-overlap'),
       compile: () => ({ primitives: [], boundsPoints: [] }),
@@ -192,44 +189,13 @@ describe('Path kind registry', () => {
       },
     ]);
 
-    expect(() => compileToScene(input, { pathKinds: [custom] })).toThrow(
+    expect(() => compileToScene(input, { paths: [custom] })).toThrow(
       /children\[0\]\.path\.marks\[0\]\.endpointOverlap.*built-in Stroke path/,
     );
   });
 
-  it('resolves only stroke providers when a custom kind emits stroke', () => {
-    let generatorCalls = 0;
-    const generator = definePathGenerator({
-      name: 'stroke-only-generator',
-      paramsSchema: strictObject({}),
-      generate: ({ from }) => {
-        generatorCalls += 1;
-        return [{ kind: 'line', to: [from[0] + 10, from[1]] }];
-      },
-    });
-    const strokeOnly = definePathKind({
-      name: 'stroke-only',
-      schema: customPathSchema('stroke-only'),
-      compile: context => context.emitStroke(),
-    });
-
-    expect(() =>
-      compileToScene(
-        scene([
-          {
-            type: 'path',
-            kind: 'stroke-only',
-            children: [steps[0], { type: 'step', kind: 'generator', name: 'stroke-only-generator', params: {} }],
-          },
-        ] as IRScene['children']),
-        { pathKinds: [strokeOnly], pathGenerators: [generator] },
-      ),
-    ).not.toThrow();
-    expect(generatorCalls).toBe(1);
-  });
-
   it('keeps custom short emitStroke ahead of secondary provider lookup', () => {
-    const shortStroke = definePathKind({
+    const shortStroke = definePath({
       name: 'short-stroke',
       schema: customPathSchema('short-stroke'),
       compile: context =>
@@ -252,7 +218,7 @@ describe('Path kind registry', () => {
 
     expect(() =>
       compileToScene(scene([source] as IRScene['children']), {
-        pathKinds: [shortStroke],
+        paths: [shortStroke],
         onWarn: warning => warnings.push(warning),
       }),
     ).not.toThrow();
@@ -262,7 +228,7 @@ describe('Path kind registry', () => {
 
   it('keeps the no-Inspector emitStroke result free of inspection-only subject data', () => {
     const observed: Array<ReadonlyArray<string>> = [];
-    const plain = definePathKind({
+    const plain = definePath({
       name: 'plain-stroke',
       schema: customPathSchema('plain-stroke'),
       compile: context => {
@@ -273,14 +239,14 @@ describe('Path kind registry', () => {
     });
 
     pathPrims(scene([{ type: 'path', kind: 'plain-stroke', children: steps }] as IRScene['children']), {
-      pathKinds: [plain],
+      paths: [plain],
     });
 
     expect(observed).toEqual([['primitives', 'boundsPoints']]);
   });
 
-  it('keeps custom path kind primitives in the transformed owner group', () => {
-    const badge = definePathKind({
+  it('keeps custom path primitives in the transformed owner group', () => {
+    const badge = definePath({
       name: 'badge',
       schema: customPathSchema('badge'),
       compile: () => ({
@@ -308,7 +274,7 @@ describe('Path kind registry', () => {
           ],
         },
       ] as IRScene['children']),
-      { pathKinds: [badge] },
+      { paths: [badge] },
     ).scene;
 
     expect(compiled.primitives).toHaveLength(1);
@@ -324,7 +290,7 @@ describe('Path kind registry', () => {
   });
 
   it('custom_path_kind_options_error_contains_provider_and_ir_path', () => {
-    const highlight = definePathKind({
+    const highlight = definePath({
       name: 'highlight',
       schema: PathSchema.extend({
         kind: literal('highlight'),
@@ -341,16 +307,14 @@ describe('Path kind registry', () => {
       },
     ] as IRScene['children']);
 
-    expect(() => compileToScene(ir, { pathKinds: [highlight] }).scene).toThrow(/path kind 'highlight'/);
-    expect(() => compileToScene(ir, { pathKinds: [highlight] }).scene).toThrow(
-      /children\[0\]\.path\.kindOptions\.stroke/,
-    );
+    expect(() => compileToScene(ir, { paths: [highlight] }).scene).toThrow(/path 'highlight'/);
+    expect(() => compileToScene(ir, { paths: [highlight] }).scene).toThrow(/children\[0\]\.path\.kindOptions\.stroke/);
   });
 });
 
-describe('Path kind output wrapping', () => {
+describe('Path output wrapping', () => {
   it('wraps custom geometry and shared labels in one host transform', () => {
-    const custom = definePathKind({
+    const custom = definePath({
       name: 'boundary-label-host',
       schema: customPathSchema('boundary-label-host'),
       compile: context => {
@@ -376,7 +340,7 @@ describe('Path kind output wrapping', () => {
           meta: { source: 'custom' },
         },
       ]),
-      { pathKinds: [custom], padding: 0, measureText: () => ({ width: 40, height: 20 }) },
+      { paths: [custom], padding: 0, measureText: () => ({ width: 40, height: 20 }) },
     ).scene;
 
     expect(output.layout.x).toBeCloseTo(62);
@@ -387,7 +351,7 @@ describe('Path kind output wrapping', () => {
   });
 
   it('does not wrap a delegated stroke result twice', () => {
-    const custom = definePathKind({
+    const custom = definePath({
       name: 'delegated',
       schema: customPathSchema('delegated'),
       compile: context => context.emitStroke(),
@@ -396,7 +360,7 @@ describe('Path kind output wrapping', () => {
     const builtin = compileToScene(scene([input]), { padding: 0 }).scene;
     const delegated = compileToScene(scene([{ ...input, kind: 'delegated' }]), {
       padding: 0,
-      pathKinds: [custom],
+      paths: [custom],
     }).scene;
 
     expect(delegated).toEqual(builtin);

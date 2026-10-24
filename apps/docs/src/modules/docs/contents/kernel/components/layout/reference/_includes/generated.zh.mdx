@@ -13,7 +13,7 @@
 
 ## 组件声明
 
-#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={413}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={230}>LayoutProps</ApiSourceLink>
+#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={407}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={224}>LayoutProps</ApiSourceLink>
 
 通过 children 声明图形，或通过 ir 传入完整场景；同时提供时使用 ir。默认使用 retained 模式处理后续更新，可通过 runtime 切换为 static 完整编译模式
 
@@ -103,7 +103,7 @@ export type LayoutProps = {
 
 ## 执行与辅助契约
 
-#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={181}>LayoutExtensions</ApiSourceLink>
+#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={180}>LayoutExtensions</ApiSourceLink>
 
 通过 Layout 的 extensions 属性传入，各字段接收对应的定义数组；这些运行时定义不写入可持久化的场景数据
 
@@ -113,17 +113,16 @@ export type LayoutProps = {
 
 <ApiTable>
 
-| 成员                         | 类型                                     | 默认值                    | 说明                      |
-| ---------------------------- | ---------------------------------------- | ------------------------- | ------------------------- |
-| `readonly arrows?`           | `ReadonlyArray<ArrowDefinition>`         | `BUILTIN_ARROWS`          | 箭头定义                  |
-| `readonly boundaries?`       | `ReadonlyArray<BoundaryDefinition>`      | `BUILTIN_BOUNDARIES`      | 连接表面定义              |
-| `readonly clips?`            | `ReadonlyArray<ClipDefinition>`          | `BUILTIN_CLIPS`           | 裁剪定义                  |
-| `readonly composites?`       | `ReadonlyArray<AnyCompositeDefinition>`  | `[]`                      | Tier 2 composite 展开逻辑 |
-| `readonly pathGenerators?`   | `ReadonlyArray<PathGeneratorDefinition>` | `BUILTIN_PATH_GENERATORS` | 路径生成器定义            |
-| `readonly pathKinds?`        | `ReadonlyArray<AnyPathKindDefinition>`   | `BUILTIN_PATH_KINDS`      | 路径种类定义              |
-| `readonly patterns?`         | `ReadonlyArray<PatternDefinition>`       | `BUILTIN_PATTERNS`        | 图案定义                  |
-| `readonly shapes?`           | `ReadonlyArray<ShapeDefinition>`         | `BUILTIN_SHAPES`          | 形状定义                  |
-| `readonly themeDefinitions?` | `ReadonlyArray<ThemeDefinition>`         | `ThemeDefinitionsContext` | 主题样式定义              |
+| 成员                         | 类型                                    | 默认值                    | 说明                      |
+| ---------------------------- | --------------------------------------- | ------------------------- | ------------------------- |
+| `readonly arrows?`           | `ReadonlyArray<ArrowDefinition>`        | `BUILTIN_ARROWS`          | 箭头定义                  |
+| `readonly boundaries?`       | `ReadonlyArray<BoundaryDefinition>`     | `BUILTIN_BOUNDARIES`      | 连接表面定义              |
+| `readonly clips?`            | `ReadonlyArray<ClipDefinition>`         | `BUILTIN_CLIPS`           | 裁剪定义                  |
+| `readonly composites?`       | `ReadonlyArray<AnyCompositeDefinition>` | `[]`                      | Tier 2 composite 展开逻辑 |
+| `readonly paths?`            | `ReadonlyArray<AnyPathDefinition>`      | `BUILTIN_PATHS`           | 路径定义                  |
+| `readonly patterns?`         | `ReadonlyArray<PatternDefinition>`      | `BUILTIN_PATTERNS`        | 图案定义                  |
+| `readonly shapes?`           | `ReadonlyArray<ShapeDefinition>`        | `BUILTIN_SHAPES`          | 形状定义                  |
+| `readonly themeDefinitions?` | `ReadonlyArray<ThemeDefinition>`        | `ThemeDefinitionsContext` | 主题样式定义              |
 
 </ApiTable>
 
@@ -138,8 +137,7 @@ export type LayoutExtensions = Readonly<{
   clips?: ReadonlyArray<ClipDefinition>;
   arrows?: ReadonlyArray<ArrowDefinition>;
   patterns?: ReadonlyArray<PatternDefinition>;
-  pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
-  pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
+  paths?: ReadonlyArray<AnyPathDefinition>;
   composites?: ReadonlyArray<AnyCompositeDefinition>;
   themeDefinitions?: ReadonlyArray<ThemeDefinition>;
 }>;

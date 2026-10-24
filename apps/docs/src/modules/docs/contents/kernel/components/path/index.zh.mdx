@@ -29,7 +29,7 @@ Draw 的 `way` 是便捷输入，不是另一种持久化图元。需要保存�
 
 节点形状和定位由[节点](/kernel/components/node)负责；一组图元的局部变换与裁剪见[范围](/kernel/components/scope)。可变宽带状关系使用 [Extension Ribbon](/library/extension/ribbon)，图的自动排布由对应领域组件负责。
 
-仅调整颜色、粗细或已有箭头不需要自定义。新增一种曲线段用路径生成器，改变整条路径的输出用自定义路径，新增端点轮廓用自定义箭头。三种教程分别说明定义、注入和引用，内部处理集中在实现原理。
+仅调整颜色、粗细或已有箭头不需要自定义。可复用曲线段可用函数或组件展开为现有步骤，改变整条路径的输出用自定义路径，新增端点轮廓用自定义箭头。扩展教程分别说明定义、注入和引用，内部处理集中在实现原理。
 
 ## 章节内容
 
@@ -46,11 +46,6 @@ Draw 的 `way` 是便捷输入，不是另一种持久化图元。需要保存�
     { title: '形状绘制', description: '圆、多边形、星形、弧与扇形的路径快捷写法', url: '/library/standard/shape/circle-ellipse' },
     { title: 'arrow · 箭头', description: '方向、形状与端点重叠', url: '/kernel/components/path/arrow' },
     { title: 'label · 标签', description: '范围、位置、朝向与描边断口', url: '/kernel/components/path/label' },
-    {
-      title: '自定义生成器',
-      description: '定义并注册新的曲线段',
-      url: '/kernel/components/path/custom-path-generator',
-    },
     { title: '自定义路径', description: '定义整条路径的输出', url: '/kernel/components/path/custom-path' },
     { title: '自定义箭头', description: '定义新的端点轮廓', url: '/kernel/components/path/custom-arrow' },
     { title: '实现原理', description: '解释输入、几何与输出之间的关系', url: '/kernel/components/path/mechanism' },

@@ -150,39 +150,6 @@ const emitCanonicalPathPrimitive = (
       if (absoluteAnchor) cursor.relativeBaseline = absoluteAnchor;
     }
 
-    if (
-      cursor.relativeBaseline &&
-      step.kind === 'generator' &&
-      originalStep.kind === 'generator' &&
-      originalStep.to !== undefined
-    ) {
-      let generatorTarget: IRPosition | null;
-      let updatesBaseline = true;
-      if (isRelativeTargetLike(originalStep.to)) {
-        generatorTarget = [
-          cursor.relativeBaseline[0] + originalStep.to.relative[0],
-          cursor.relativeBaseline[1] + originalStep.to.relative[1],
-        ];
-        updatesBaseline = false;
-      } else if (isRelativeAccumulateTargetLike(originalStep.to)) {
-        generatorTarget = [
-          cursor.relativeBaseline[0] + originalStep.to.relativeAccumulate[0],
-          cursor.relativeBaseline[1] + originalStep.to.relativeAccumulate[1],
-        ];
-      } else {
-        generatorTarget = pointOfTarget(originalStep.to, targetView, scopeChain);
-      }
-
-      if (generatorTarget) {
-        if (!isFinitePoint(generatorTarget)) {
-          throw new RetikzCoreError(RetikzCoreErrorCode.Compile, 'Generator target produced a non-finite endpoint.');
-        }
-
-        step = { ...step, to: generatorTarget };
-        if (updatesBaseline) cursor.relativeBaseline = generatorTarget;
-      }
-    }
-
     if (cursor.relativeBaseline && step.kind === 'smooth' && originalStep.kind === 'smooth') {
       let smoothBaseline: IRPosition = cursor.relativeBaseline;
       const points: Array<IRTarget> = [];
@@ -235,7 +202,7 @@ const emitCanonicalPathPrimitive = (
     }
 
     // move 自身不绘制；其 to 仅供下个绘制段的 findPrev 引用
-    // 显式 move 开启新游标，必须切断 arc/circle/ellipse/rectangle/generator 留给下一绘制段的 penOverride
+    // 显式 move 开启新游标，必须切断 arc/circle/ellipse/rectangle 留给下一绘制段的 penOverride
     if (step.kind === 'move') {
       cursor.clearPenOverride();
       continue;
@@ -245,8 +212,6 @@ const emitCanonicalPathPrimitive = (
       const lowered = lowerShapeStep(step, i, {
         targetView,
         scopeChain,
-        round,
-        generatorResolution: originalStep.kind === 'generator' ? resolution.generators.get(originalStep) : undefined,
         warn,
         commandEmitter,
         cursor,

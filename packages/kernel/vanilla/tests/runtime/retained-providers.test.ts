@@ -1,4 +1,4 @@
-import type { AnyPathKindDefinition, ClipDefinition, ClipLowerContext, SceneClipPath } from '@retikz/core';
+import type { AnyPathDefinition, ClipDefinition, ClipLowerContext, SceneClipPath } from '@retikz/core';
 import { defineClip, PathSchema } from '@retikz/core';
 import { RetikzRenderErrorCode } from '@retikz/render/runtime';
 import { describe, expect, it } from 'vitest';
@@ -10,7 +10,7 @@ import {
   createRetainedProviderDefinitions,
 } from '../../src/runtime/retained-providers';
 
-const pathKindSchema = PathSchema.extend({ kind: literal('retained-fixture') });
+const pathSchema = PathSchema.extend({ kind: literal('retained-fixture') });
 
 const ownerOutput = true;
 
@@ -62,12 +62,12 @@ const createClipDefinition = (
   });
 
 const createDefinition = (
-  schema: AnyPathKindDefinition['schema'] = pathKindSchema,
-  compile: AnyPathKindDefinition['compile'] = () => null,
+  schema: AnyPathDefinition['schema'] = pathSchema,
+  compile: AnyPathDefinition['compile'] = () => null,
   name = 'retained-fixture',
-): AnyPathKindDefinition => ({ name, schema, compile, ownerOutput });
+): AnyPathDefinition => ({ name, schema, compile, ownerOutput });
 
-describe('retained Path Kind definitions', () => {
+describe('retained Path Definition definitions', () => {
   it('captures every complete Clip callback and schema identity in clips', () => {
     const lower: RetainedClipLower = () => initialClipPath;
     const definition = createClipDefinition(lower);
@@ -151,32 +151,32 @@ describe('retained Path Kind definitions', () => {
     expect(() => retained.prepare({ clips: [changedFields] })).toThrow(invalid);
   });
 
-  it('copies the Path Kind name, full schema, owner output, and compile branch', () => {
+  it('copies the Path Definition name, full schema, owner output, and compile branch', () => {
     const initial = createDefinition();
-    const captured = captureCoreProviderDefinitions({ pathKinds: [initial] });
-    const copy = captured.pathKinds?.[0];
+    const captured = captureCoreProviderDefinitions({ paths: [initial] });
+    const copy = captured.paths?.[0];
 
     expect(copy).toMatchObject({
       name: 'retained-fixture',
-      schema: pathKindSchema,
+      schema: pathSchema,
       compile: initial.compile,
       ownerOutput,
     });
     expect(copy?.ownerOutput).toBe(ownerOutput);
     expect(copy && Object.hasOwn(copy, 'optionsSchema')).toBe(false);
 
-    const retained = createRetainedProviderDefinitions({ pathKinds: [initial] });
+    const retained = createRetainedProviderDefinitions({ paths: [initial] });
 
-    expect(retained.definitions.pathKinds?.[0]?.ownerOutput).toBe(ownerOutput);
+    expect(retained.definitions.paths?.[0]?.ownerOutput).toBe(ownerOutput);
   });
 
   it('allows same-name compile callback updates but rejects schema and slot-key changes', () => {
-    const initialCompile: AnyPathKindDefinition['compile'] = () => initialResult;
-    const initial = createDefinition(pathKindSchema, initialCompile);
-    const retained = createRetainedProviderDefinitions({ pathKinds: [initial] });
-    const nextCompile: AnyPathKindDefinition['compile'] = () => nextResult;
-    const next = createDefinition(pathKindSchema, nextCompile);
-    const changed = retained.prepare({ pathKinds: [next] });
+    const initialCompile: AnyPathDefinition['compile'] = () => initialResult;
+    const initial = createDefinition(pathSchema, initialCompile);
+    const retained = createRetainedProviderDefinitions({ paths: [initial] });
+    const nextCompile: AnyPathDefinition['compile'] = () => nextResult;
+    const next = createDefinition(pathSchema, nextCompile);
+    const changed = retained.prepare({ paths: [next] });
 
     expect(changed.changed).toBe(true);
 
@@ -188,26 +188,26 @@ describe('retained Path Kind definitions', () => {
     });
     const invalid = expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid });
 
-    expect(() => retained.prepare({ pathKinds: [createDefinition(changedSchema)] })).toThrow(invalid);
+    expect(() => retained.prepare({ paths: [createDefinition(changedSchema)] })).toThrow(invalid);
     expect(() =>
-      retained.prepare({ pathKinds: [createDefinition(pathKindSchema, initial.compile, 'renamed-fixture')] }),
+      retained.prepare({ paths: [createDefinition(pathSchema, initial.compile, 'renamed-fixture')] }),
     ).toThrow(invalid);
   });
 
   it('delegates through the stable compile branch and rolls back callback updates', () => {
-    const initialCompile: AnyPathKindDefinition['compile'] = () => initialResult;
-    const nextCompile: AnyPathKindDefinition['compile'] = () => nextResult;
-    const initial = createDefinition(pathKindSchema, initialCompile);
-    const retained = createRetainedProviderDefinitions({ pathKinds: [initial] });
-    const stableCompile = retained.definitions.pathKinds?.[0]?.compile;
+    const initialCompile: AnyPathDefinition['compile'] = () => initialResult;
+    const nextCompile: AnyPathDefinition['compile'] = () => nextResult;
+    const initial = createDefinition(pathSchema, initialCompile);
+    const retained = createRetainedProviderDefinitions({ paths: [initial] });
+    const stableCompile = retained.definitions.paths?.[0]?.compile;
 
     expect(stableCompile).toBeDefined();
 
-    if (stableCompile === undefined) throw new Error('Expected retained Path Kind compile delegate.');
+    if (stableCompile === undefined) throw new Error('Expected retained Path Definition compile delegate.');
 
     expect(stableCompile(undefined as never)).toBe(initialResult);
 
-    const changed = retained.prepare({ pathKinds: [createDefinition(pathKindSchema, nextCompile)] });
+    const changed = retained.prepare({ paths: [createDefinition(pathSchema, nextCompile)] });
 
     expect(stableCompile(undefined as never)).toBe(nextResult);
 

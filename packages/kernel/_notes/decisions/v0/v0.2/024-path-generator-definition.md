@@ -5,9 +5,15 @@ keywords: 'PathGeneratorDefinition、JSON、params、definePathGenerator、JsonO
 
 # ADR-024：PathGeneratorDefinition 注册面（外部曲线生成器 + JSON params + definePathGenerator）
 
-- 状态：Accepted（已实现）
+- 状态：Superseded（路径生成器能力已移除）
 - 决策日期：2026-05-24
 - 关联： · tikz-gap-analysis §3 Step（历史分析已删除） · [ADR-007 Shape Registry](./007-shape-registry.md)（注册面先例）· 本 milestone [ADR-023](./023-arrow-definition.md)（先实现）/ [ADR-025](./025-curve-transform-marking.md)
+
+## 当前决策
+
+删除路径生成器的 Definition、registry、编译回调与 generator 步骤，不保留兼容入口。参数化曲线通过作者侧函数或组件展开为已有路径步骤；需要整条路径自定义输出时使用 Path kind 扩展。现有路径步骤、目标解析与 Scene 路径命令继续由 Core 提供，不为作者侧参数封装维护独立的持久化步骤和运行时注册机制。
+
+以下保留原决策背景，不再描述当前公开能力。
 
 ## 背景 / 约束
 

@@ -19,7 +19,7 @@ const EMPTY_SELECTION: InspectionSelection = { rules: [] };
 
 type ObservationOwnerCounts = {
   kernel: Map<string, number>;
-  pathKinds: Map<string, number>;
+  paths: Map<string, number>;
   composites: Map<string, Map<string, number>>;
 };
 
@@ -31,13 +31,13 @@ const allocateObservationOwnerIndex = (
 ): number => {
   let counts = countsBySourcePath.get(sourcePath);
   if (counts === undefined) {
-    counts = { pathKinds: new Map(), composites: new Map(), kernel: new Map() };
+    counts = { paths: new Map(), composites: new Map(), kernel: new Map() };
     countsBySourcePath.set(sourcePath, counts);
   }
 
   if (owner.kind === 'path') {
-    const index = counts.pathKinds.get(owner.name) ?? 0;
-    counts.pathKinds.set(owner.name, index + 1);
+    const index = counts.paths.get(owner.name) ?? 0;
+    counts.paths.set(owner.name, index + 1);
     return index;
   }
 

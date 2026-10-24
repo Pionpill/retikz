@@ -31,7 +31,7 @@ export const PathFillRule = {
 } as const;
 
 /** 路径编译 kind 关键字 */
-export const BuiltinPathKind = {
+export const BuiltinPath = {
   /** 标准描边路径 */
   Stroke: 'stroke',
 } as const;
@@ -40,7 +40,7 @@ export const BuiltinPathKind = {
 export type PathFillRule = ValueOf<typeof PathFillRule>;
 
 /** 路径编译 kind 关键字类型 */
-export type BuiltinPathKind = ValueOf<typeof BuiltinPathKind>;
+export type BuiltinPath = ValueOf<typeof BuiltinPath>;
 
 /** 校验路径内部区域的填充规则 */
 export const PathFillRuleSchema = zodEnum(PathFillRule).describe('Path fill rule keyword.');
@@ -123,16 +123,12 @@ export const PathDecorationSchema = strictObject({
     .describe('Marks placed along the path at normalized positions; direction follows the path tangent.'),
 }).describe('Path decoration fields for host labels and along-path marks.');
 
-/** 校验开放路径种类的判别字段和能力选项 */
+/** 校验开放路径定义的判别字段和能力选项 */
 export const PathStructureSchema = strictObject({
   type: literal('path').describe('Discriminator marking this child as a path.'),
-  kind: createOpenStringSchema(BuiltinPathKind)
-    .optional()
-    .describe('Path kind provider name. Omitted means built-in `stroke`.'),
-  kindOptions: JsonObjectSchema.optional().describe(
-    'JSON-safe option object consumed by the selected path kind provider.',
-  ),
-}).describe('Path structure fields selecting an open path kind provider.');
+  kind: createOpenStringSchema(BuiltinPath).optional().describe('Path provider name. Omitted means built-in `stroke`.'),
+  kindOptions: JsonObjectSchema.optional().describe('JSON-safe option object consumed by the selected path provider.'),
+}).describe('Path structure fields selecting an open path provider.');
 
 /** 路径实例视觉覆盖 */
 export const PathStyleSchema = strictObject({
@@ -157,17 +153,17 @@ export const PathSchema = strictObject({
 
 /** 校验内置描边路径的观察对象，包含完整宿主约束 */
 export const StrokePathSchema = PathSchema.extend({
-  kind: literal(BuiltinPathKind.Stroke).optional().describe('Built-in stroke path kind. May be omitted.'),
+  kind: literal(BuiltinPath.Stroke).optional().describe('Built-in stroke path. May be omitted.'),
   /** 步骤数据留到编译时检查，由描边编译逻辑校验几何有效性并报告警告或错误 */
   children: array(unknown(), { error: 'Stroke paths require `children` steps.' }).describe(
     'Sequence of source step actions for the stroke path.',
   ),
-  kindOptions: never({ error: '`kindOptions` is not valid for the built-in `stroke` path kind.' })
+  kindOptions: never({ error: '`kindOptions` is not valid for the built-in `stroke` path.' })
     .optional()
-    .describe('Not accepted by the built-in stroke path kind.'),
+    .describe('Not accepted by the built-in stroke path.'),
 })
   .transform(path => path as ZodInfer<typeof PathSchema>)
-  .describe('Complete source subject schema for the built-in stroke path kind.');
+  .describe('Complete source subject schema for the built-in stroke path.');
 
 /** 路径整条缩放类型：number（等比）或 {x,y}（非等比） */
 export type IRPathScale = ZodInfer<typeof PathScaleSchema>;

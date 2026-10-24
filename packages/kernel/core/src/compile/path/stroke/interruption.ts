@@ -305,20 +305,9 @@ export const sampleStrokePathGeometry = (
   position: number,
 ): StrokeLabelSample | undefined => sampleGeometryOccurrences(geometry.occurrences, position);
 
-/** 按 source step 产生的 occurrence range 采样 step label */
-export const sampleStrokeStepGeometry = (
-  geometry: StrokePathGeometry,
-  sourceStepIndex: number,
-  position: number,
-): StrokeLabelSample | undefined =>
-  sampleGeometryOccurrences(
-    geometry.occurrences.filter(occurrence => occurrence.sourceStepIndex === sourceStepIndex),
-    position,
-  );
-
 /**
  * 按既有 step-local 参数语义采样 occurrence range
- * @description 普通 step 保持原有单 command 参数、fold / smooth 保持按产生 command 等分；generator 另走真实距离采样
+ * @description 普通 step 保持原有单 command 参数、fold / smooth 保持按产生 command 等分
  */
 export const sampleStrokeStepParameterGeometry = (
   geometry: StrokePathGeometry,

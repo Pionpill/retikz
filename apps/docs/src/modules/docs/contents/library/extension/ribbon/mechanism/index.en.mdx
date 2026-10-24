@@ -1,9 +1,9 @@
 ---
 title: Implementation
-description: How Ribbon compiles a Path kind into a Scene outline
+description: How Ribbon compiles a Path into a Scene outline
 ---
 
-This page traces how an assembled Path kind Definition compiles Ribbon into an ordinary Scene Path. Read [Basic usage](/library/extension/ribbon/usage) first.
+This page traces how an assembled Path Definition compiles Ribbon into an ordinary Scene Path. Read [Basic usage](/library/extension/ribbon/usage) first.
 
 ## Compile flow
 
@@ -16,7 +16,7 @@ Both modes reuse Core `materializePath`: `centerline` materializes `children`, b
 The responsibilities in one compile are:
 
 1. Core reads the open Path host, looks up the Definition for `kind`, and parses the subject with that Definition's complete schema
-2. The Extension Ribbon Definition resolves `kindOptions`, calls Core `materializePath` for commands after target, anchor, generator, and Step lowering
+2. The Extension Ribbon Definition resolves `kindOptions`, calls Core `materializePath` for commands after target, anchor, and Step lowering
 3. Extension applies width, sampling, alignment, caps, and profiles, then asks Core `emitHostLabels` to compile centerline labels and `emitBoundaryLabels` to compile endpoint labels
 4. Extension calls Core `wrapOutput` to apply Path rotate / scale to the outline and labels; Core wraps Scope, transforms, bounds, provenance, and diagnostics; renderers consume an ordinary Scene Path
 
@@ -35,11 +35,11 @@ The responsibilities in one compile are:
       endLine: 60,
     },
     {
-      label: 'Core host-neutral Path kind services',
-      path: 'packages/kernel/core/src/contract/path-kind.ts',
+      label: 'Core host-neutral Path services',
+      path: 'packages/kernel/core/src/contract/path.ts',
     },
     {
-      label: 'Core Path kind lookup and subject-schema parsing',
+      label: 'Core Path lookup and subject-schema parsing',
       path: 'packages/kernel/core/src/resolve/path/provider.ts',
       startLine: 27,
       endLine: 42,
@@ -265,8 +265,8 @@ Core then uses the text rotation to compute the layout box's projected half-exte
 
 ## Errors and limitations
 
-- Without a registered `ribbon` Definition, Core reports an unknown-kind error during Path kind lookup; Extension does not inject one silently
-- Duplicate Path kind names or duplicate profile names with different identities fail during registry or provider-graph assembly instead of being overwritten by order
+- Without a registered `ribbon` Definition, Core reports an unknown-kind error during Path lookup; Extension does not inject one silently
+- Duplicate Path names or duplicate profile names with different identities fail during registry or provider-graph assembly instead of being overwritten by order
 - `centerline` requires top-level `children`, plus a `width` object discriminated by `kind`
 - `boundary` requires two valid open Step sequences in `upper` and `lower`, and rejects top-level `children` and centerline width fields
 - `boundary` currently rejects `kindOptions.label`; label placement depends on centerline samples and boundary offsets

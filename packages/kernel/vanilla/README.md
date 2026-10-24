@@ -51,7 +51,7 @@ view.dispose();
 - DOM sub-entry: `@retikz/vanilla/dom` exports `mount`, `mountSvg`, `mountCanvas`, and `hydrate`
 - Tier 2 packages contribute through `InputEmbedAdapter`; callers provide adapters to the Vanilla processing or render options
 
-Core IR helpers, animation preset factories, and extension registrars such as `DrawWay`, `fadeIn`, `defineArrow`, and `definePathKind` should be imported from `@retikz/core`.
+Core IR helpers, animation preset factories, and extension registrars such as `DrawWay`, `fadeIn`, `defineArrow`, and `definePath` should be imported from `@retikz/core`.
 
 ## Docs
 

@@ -40,8 +40,8 @@ describe('Extension Ribbon provider contribution', () => {
 
     const definitions = resolveCoreProviderDependencies({ contributions: [first] });
 
-    expect(definitions.pathKinds).toHaveLength(1);
-    expect(definitions.pathKinds).toMatchObject([{ name: 'ribbon' }]);
+    expect(definitions.paths).toHaveLength(1);
+    expect(definitions.paths).toMatchObject([{ name: 'ribbon' }]);
   });
 
   it('merges repeated profile references from multiple contributions into one Ribbon definition', () => {
@@ -50,10 +50,10 @@ describe('Extension Ribbon provider contribution', () => {
     const second = createRibbonProviderContribution({ profiles: [custom] });
     const definitions = resolveCoreProviderDependencies({ contributions: [first, second] });
 
-    expect(definitions.pathKinds).toHaveLength(1);
+    expect(definitions.paths).toHaveLength(1);
     expect(() =>
       compileToScene(profileScene('custom'), {
-        pathKinds: definitions.pathKinds,
+        paths: definitions.paths,
         padding: 0,
       }),
     ).not.toThrow();
@@ -80,7 +80,7 @@ describe('Extension Ribbon provider contribution', () => {
 
     expect(() =>
       compileToScene(profileScene('__proto__'), {
-        pathKinds: definitions.pathKinds,
+        paths: definitions.paths,
         padding: 0,
       }),
     ).not.toThrow();

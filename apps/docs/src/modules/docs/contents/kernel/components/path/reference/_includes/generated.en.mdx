@@ -20,8 +20,8 @@ This component does not render DOM itself; `<Layout>` produces the final path fr
 | --------- | ----------------- | ----------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Main      | `children?`       | `ReactNode`                   | —          | All children should be `<Step />`                                                                                                                                                                                                                                                                                   |
 |           | `id?`             | `IRPath['id']`                | —          | Path id, used by other paths or positions to reference it and by hydration to bind event handlers                                                                                                                                                                                                                   |
-|           | `kind?`           | `IRPath['kind']`              | `'stroke'` | Path kind; defaults to built-in stroke. Register custom kinds through Layout.extensions.pathKinds                                                                                                                                                                                                                   |
-|           | `kindOptions?`    | `IRPath['kindOptions']`       | —          | JSON options for the selected path kind; built-in stroke does not accept this field                                                                                                                                                                                                                                 |
+|           | `kind?`           | `IRPath['kind']`              | `'stroke'` | Path; defaults to built-in stroke. Register custom kinds through Layout.extensions.paths                                                                                                                                                                                                                            |
+|           | `kindOptions?`    | `IRPath['kindOptions']`       | —          | JSON options for the selected path; built-in stroke does not accept this field                                                                                                                                                                                                                                      |
 |           | `label?`          | `IRPath['label']`             | —          | One or more geometry labels attached to the whole path                                                                                                                                                                                                                                                              |
 |           | `way?`            | `WayDSL`                      | —          | TikZ-style route shorthand, parsed into steps by Vanilla                                                                                                                                                                                                                                                            |
 | Geometry  | `arrow?`          | `InputPath['arrow']`          | `'none'`   | Path-level arrow direction<br />`'->'` at the end, `'<-'` at the start, or `'<->'` at both ends; omitted or `'none'` means no arrows                                                                                                                                                                                |
@@ -125,11 +125,11 @@ export type DrawProps = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Step"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={282}>Step</ApiSourceLink> / <ApiSourceLink label={"StepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={262}>StepProps</ApiSourceLink>
+#### <ApiSourceLink label={"Step"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={257}>Step</ApiSourceLink> / <ApiSourceLink label={"StepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={238}>StepProps</ApiSourceLink>
 
-Declares one path action, such as a move, line, curve, arc, closure, or generator segment
+Declare a path action such as moving, drawing a line or curve, drawing an arc, or closing a subpath
 
-Fourteen kinds: 'move', 'line' (default), 'axis-line' (single-axis projection), 'fold', 'cycle', 'curve' (quadratic Bézier), 'cubic', 'bend', 'arc', 'circlePath', 'ellipsePath', 'rectangle', 'smooth', and 'generator'. All except 'move', 'cycle', and 'rectangle' accept `label?: IRStepLabel`, equivalent to an `<EdgeLabel>` child with the prop taking precedence. 'smooth' uses `points` instead of `to`; 'generator' uses `name` and JSON-safe `params`. Named types for each kind support wrappers and derived props
+Thirteen kinds: 'move', 'line' (default), 'axis-line' (single-axis projection), 'fold', 'cycle', 'curve' (quadratic Bézier), 'cubic', 'bend', 'arc', 'circlePath', 'ellipsePath', 'rectangle', and 'smooth'. All except 'move', 'cycle', and 'rectangle' accept `label?: IRStepLabel`, equivalent to an `<EdgeLabel>` child with the prop taking precedence. 'smooth' uses `points` instead of `to`. Named types for each kind support wrappers and derived props
 
 ```ts
 export declare const Step: FC<StepProps>;
@@ -147,13 +147,12 @@ export type StepProps =
   | CirclePathStepProps
   | EllipsePathStepProps
   | RectangleStepProps
-  | SmoothStepProps
-  | GeneratorStepProps;
+  | SmoothStepProps;
 ```
 
 ## Execution and supporting contracts
 
-#### <ApiSourceLink label={"ArcStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={157}>ArcStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"ArcStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={149}>ArcStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -193,7 +192,7 @@ export type ArcStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AxisLineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={42}>AxisLineStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"AxisLineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={34}>AxisLineStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -229,7 +228,7 @@ export type AxisLineStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BendStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={129}>BendStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"BendStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={121}>BendStepProps</ApiSourceLink>
 
 Supports symmetric bends and asymmetric bends or loops. Explicit out/in angles take precedence during compilation. With all three omitted, defaults to a symmetric left bend. When `from == to`, explicit out/in angles create a loop
 
@@ -275,7 +274,7 @@ export type BendStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CirclePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={175}>CirclePathStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CirclePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={167}>CirclePathStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -315,7 +314,7 @@ export type CirclePathStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CubicStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={109}>CubicStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CubicStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={101}>CubicStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -353,7 +352,7 @@ export type CubicStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CurveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={95}>CurveStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CurveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={87}>CurveStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -389,7 +388,7 @@ export type CurveStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CycleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={89}>CycleStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CycleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={81}>CycleStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -417,7 +416,7 @@ export type CycleStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"EllipsePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={193}>EllipsePathStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"EllipsePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={185}>EllipsePathStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -457,7 +456,7 @@ export type EllipsePathStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FoldStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={71}>FoldStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"FoldStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={63}>FoldStepProps</ApiSourceLink>
 
 `-|` and `|-` use one turn; `-|-` and `|-|` use two turns, with normalized `fraction` controlling the middle leg
 
@@ -522,45 +521,7 @@ export type FoldStepProps = FoldStepBaseProps &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"GeneratorStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={244}>GeneratorStepProps</ApiSourceLink>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<ApiTable>
-
-| Member      | Type                      | Default | Description                                                                                                       |
-| ----------- | ------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
-| `children?` | `ReactNode`               | —       | Sugar form                                                                                                        |
-| `kind`      | `'generator'`             | —       | Discriminant for a generator step                                                                                 |
-| `label?`    | `InputStepLabel`          | —       | Edge label                                                                                                        |
-| `name`      | `IRGeneratorStep['name']` | —       | Path generator name: a built-in name or one registered through Layout extensions.pathGenerators                   |
-| `params`    | `JsonObject`              | —       | JSON-safe parameter object; target references must occupy top-level keys listed in the generator's `targetParams` |
-| `to?`       | `DslTarget`               | —       | Optional endpoint passed as `to` in the generator context                                                         |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type GeneratorStepProps = {
-  kind: 'generator';
-  name: IRGeneratorStep['name'];
-  to?: DslTarget;
-  params: JsonObject;
-  label?: InputStepLabel;
-  children?: ReactNode;
-};
-```
-
-</DocTab>
-
-</DocTabs>
-
-#### <ApiSourceLink label={"LineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={30}>LineStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"LineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={22}>LineStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -594,7 +555,7 @@ export type LineStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MoveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={22}>MoveStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"MoveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={14}>MoveStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -624,7 +585,7 @@ export type MoveStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RectangleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={211}>RectangleStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"RectangleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={203}>RectangleStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -658,7 +619,7 @@ export type RectangleStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"SmoothStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={227}>SmoothStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"SmoothStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={219}>SmoothStepProps</ApiSourceLink>
 
 The cursor is the implicit first knot; the curve passes through each entry in `points`, using centripetal Catmull–Rom converted to cubics. A preceding step must set the cursor, which ends at the last point. `tension` defaults to 1; values below 1 tighten the curve and values above 1 increase the bulge
 
@@ -740,7 +701,7 @@ export type ArrowEmitContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CanonicalPathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/types.ts"} startLine={39}>CanonicalPathLabelPlacement</ApiSourceLink>
+#### <ApiSourceLink label={"CanonicalPathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/types.ts"} startLine={31}>CanonicalPathLabelPlacement</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -780,7 +741,7 @@ export type CanonicalPathLabelPlacement = Omit<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathLabelGeometryOptions"} path={"packages/kernel/core/src/resolve/path/types.ts"} startLine={36}>PathLabelGeometryOptions</ApiSourceLink>
+#### <ApiSourceLink label={"PathLabelGeometryOptions"} path={"packages/kernel/core/src/resolve/path/types.ts"} startLine={28}>PathLabelGeometryOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -811,45 +772,7 @@ export type PathLabelGeometryOptions = Omit<IRPathLabel, 'text' | 'textColor' | 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathGeneratorGenerateContext"} path={"packages/kernel/core/src/contract/path-generator.ts"} startLine={11}>PathGeneratorGenerateContext</ApiSourceLink>
-
-All coordinates are local to the current Path; the owning GroupPrim applies the Scope transform to the returned commands
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<ApiTable>
-
-| Member            | Type                       | Default | Description                                                                         |
-| ----------------- | -------------------------- | ------- | ----------------------------------------------------------------------------------- |
-| `from`            | `Position`                 | —       | Current local cursor position: the preceding segment endpoint or subpath start      |
-| `params`          | `Record<string, unknown>`  | —       | Parameter object validated by paramsSchema                                          |
-| `resolvedTargets` | `Record<string, Position>` | —       | Resolution of top-level targetParams keys into the current Path's local coordinates |
-| `round`           | `(n: number) => number`    | —       | Precision rounding shared with compile and render                                   |
-| `to?`             | `Position`                 | —       | Local coordinates after resolving step.to; absent when the step omits `to`          |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type PathGeneratorGenerateContext = {
-  from: Position;
-  to?: Position;
-  params: Record<string, unknown>;
-  resolvedTargets: Record<string, Position>;
-  round: (n: number) => number;
-};
-```
-
-</DocTab>
-
-</DocTabs>
-
-#### <ApiSourceLink label={"PathKindBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={104}>PathKindBoundaryLabelInput</ApiSourceLink>
+#### <ApiSourceLink label={"PathBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path.ts"} startLine={104}>PathBoundaryLabelInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -871,7 +794,7 @@ export type PathGeneratorGenerateContext = {
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type PathKindBoundaryLabelInput = Readonly<{
+export type PathBoundaryLabelInput = Readonly<{
   label: IRBoundaryLabel;
   point: IRPosition;
   outward: IRPosition;
@@ -883,7 +806,7 @@ export type PathKindBoundaryLabelInput = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindCompileContext"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={121}>PathKindCompileContext</ApiSourceLink>
+#### <ApiSourceLink label={"PathCompileContext"} path={"packages/kernel/core/src/contract/path.ts"} startLine={121}>PathCompileContext</ApiSourceLink>
 
 A custom kind can take over output completely or reuse standard stroke logic through callbacks
 
@@ -897,16 +820,16 @@ A custom kind can take over output completely or reuse standard stroke logic thr
 | ------------------------------- | --------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `TPath` (Type parameter)        | `extends IRPathBase = IRPathBase`                                                             | —       | Path type parsed by the current path definition schema; determines the structure of the path field and defaults to IRPathBase                                                                                                                                 |
 | `TOwnerOutput` (Type parameter) | `extends JsonValue = never`                                                                   | —       | Type of the JSON output published through ownerOutput.publish; defaults to never, indicating that no owner output is published                                                                                                                                |
-| `appearance`                    | `ResolvedPathKindAppearance`                                                                  | —       | Resolved renderer-neutral host appearance                                                                                                                                                                                                                     |
-| `emitBoundaryLabels`            | `(input: ReadonlyArray<PathKindBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>`         | —       | Compiles positioned boundary labels through shared Kernel layout                                                                                                                                                                                              |
-| `emitHostLabels`                | `(input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>`                                | —       | Compile shared host labels with optional side offsets supplied by the kind                                                                                                                                                                                    |
+| `appearance`                    | `ResolvedPathAppearance`                                                                      | —       | Resolved renderer-neutral host appearance                                                                                                                                                                                                                     |
+| `emitBoundaryLabels`            | `(input: ReadonlyArray<PathBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>`             | —       | Compiles positioned boundary labels through shared Kernel layout                                                                                                                                                                                              |
+| `emitHostLabels`                | `(input: PathLabelInput) => ReadonlyArray<ScenePrimitive>`                                    | —       | Compile shared host labels with optional side offsets supplied by the kind                                                                                                                                                                                    |
 | `emitStroke`                    | `EmitStroke`                                                                                  | —       | Reuse Core's standard stroke compiler; omission uses the current `path`                                                                                                                                                                                       |
-| `materializePath`               | `(input?: Readonly<{`<br />`children?: ReadonlyArray<IRStep>;`<br />`}>) => MaterializedPath` | —       | Materialize selected steps without applying markers, dashes, fill, or kind-specific geometry                                                                                                                                                                  |
-| `ownerOutput`                   | `CompileOwnerOutputPublisher<TOwnerOutput>`                                                   | —       | Publisher for the final output owned by the current Path kind                                                                                                                                                                                                 |
+| `materializePath`               | `(input?: Readonly<{`<br />`children?: ReadonlyArray<IRStep>;`<br />`}>) => MaterializedPath` | —       | Materialize selected steps without applying markers, dashes, fill, or custom path geometry                                                                                                                                                                    |
+| `ownerOutput`                   | `CompileOwnerOutputPublisher<TOwnerOutput>`                                                   | —       | Publisher for the final output owned by the current Path                                                                                                                                                                                                      |
 | `path`                          | `TPath`                                                                                       | —       | Path subject parsed through this definition's complete schema                                                                                                                                                                                                 |
-| `resolveHostLabel`              | `(label: IRPathLabel) => IRPathLabel`                                                         | —       | Merge host label defaults before the path kind samples label positions                                                                                                                                                                                        |
+| `resolveHostLabel`              | `(label: IRPathLabel) => IRPathLabel`                                                         | —       | Merge host label defaults before the path samples label positions                                                                                                                                                                                             |
 | `round`                         | `(value: number) => number`                                                                   | —       | Rounding function shared with the current compilation                                                                                                                                                                                                         |
-| `wrapOutput`                    | `(output: PathKindCompileResult) => PathKindCompileResult`                                    | —       | Wraps complete custom geometry output, includes host-label bounds, and applies Path rotate / scale and metadata<br />Call once after emitting all labels and return the result directly; emitStroke results are already wrapped and must not be wrapped again |
+| `wrapOutput`                    | `(output: PathCompileResult) => PathCompileResult`                                            | —       | Wraps complete custom geometry output, includes host-label bounds, and applies Path rotate / scale and metadata<br />Call once after emitting all labels and return the result directly; emitStroke results are already wrapped and must not be wrapped again |
 
 </ApiTable>
 
@@ -915,7 +838,7 @@ A custom kind can take over output completely or reuse standard stroke logic thr
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwnerOutput extends JsonValue = never> = {
+export type PathCompileContext<TPath extends IRPathBase = IRPathBase, TOwnerOutput extends JsonValue = never> = {
   path: TPath;
   ownerOutput: CompileOwnerOutputPublisher<TOwnerOutput>;
   materializePath: (
@@ -925,10 +848,10 @@ export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwner
   ) => MaterializedPath;
   emitStroke: EmitStroke;
   resolveHostLabel: (label: IRPathLabel) => IRPathLabel;
-  emitHostLabels: (input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>;
-  emitBoundaryLabels: (input: ReadonlyArray<PathKindBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>;
-  wrapOutput: (output: PathKindCompileResult) => PathKindCompileResult;
-  appearance: ResolvedPathKindAppearance;
+  emitHostLabels: (input: PathLabelInput) => ReadonlyArray<ScenePrimitive>;
+  emitBoundaryLabels: (input: ReadonlyArray<PathBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>;
+  wrapOutput: (output: PathCompileResult) => PathCompileResult;
+  appearance: ResolvedPathAppearance;
   round: (value: number) => number;
 };
 ```
@@ -937,9 +860,9 @@ export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwner
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindCompileResult"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={13}>PathKindCompileResult</ApiSourceLink>
+#### <ApiSourceLink label={"PathCompileResult"} path={"packages/kernel/core/src/contract/path.ts"} startLine={13}>PathCompileResult</ApiSourceLink>
 
-A path-kind definition compiles a high-level path into Scene primitives in the current Path's local coordinates and returns points in that same space for bounds and transform calculations
+A path definition compiles a high-level path into Scene primitives in the current Path's local coordinates and returns points in that same space for bounds and transform calculations
 
 <DocTabs defaultValue="members">
 
@@ -959,7 +882,7 @@ A path-kind definition compiles a high-level path into Scene primitives in the c
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type PathKindCompileResult = {
+export type PathCompileResult = {
   primitives: Array<ScenePrimitive>;
   boundsPoints: Array<IRPosition>;
 };
@@ -1013,7 +936,7 @@ export const DrawWay = {
 } as const;
 ```
 
-#### <ApiSourceLink label={"resolvePathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/resolve.ts"} startLine={120}>resolvePathLabelPlacement</ApiSourceLink>
+#### <ApiSourceLink label={"resolvePathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/resolve.ts"} startLine={118}>resolvePathLabelPlacement</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1081,7 +1004,7 @@ export declare const samplePathRoute: (
 
 ## Direct calls
 
-#### <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={30}>path</ApiSourceLink> / <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={172}>InputPath</ApiSourceLink>
+#### <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={30}>path</ApiSourceLink> / <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={163}>InputPath</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1093,8 +1016,8 @@ export declare const samplePathRoute: (
 | --------- | ----------------- | ------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Main      | `children?`       | `ReadonlyArray<InputStep>`            | —       | Path steps; mutually exclusive with way                                                                                                                                      |
 |           | `id?`             | `string`                              | —       | Optional stable id used as a reference target for the Scene primitive emitted by this drawable element.                                                                      |
-|           | `kind?`           | `string & {} \| "stroke"`             | —       | Path kind provider name. Omitted means built-in `stroke`.                                                                                                                    |
-|           | `kindOptions?`    | `Record<string, JsonValue>`           | —       | JSON-safe option object consumed by the selected path kind provider.                                                                                                         |
+|           | `kind?`           | `string & {} \| "stroke"`             | —       | Path provider name. Omitted means built-in `stroke`.                                                                                                                         |
+|           | `kindOptions?`    | `Record<string, JsonValue>`           | —       | JSON-safe option object consumed by the selected path provider.                                                                                                              |
 |           | `label?`          | `InputPath["label"]`                  | —       | Host label attached to this path-like relation.                                                                                                                              |
 |           | `type?`           | `'path'`                              | —       | Explicit path category when authoring fields cannot identify it uniquely                                                                                                     |
 |           | `way?`            | `WayDSL`                              | —       | TikZ-style route shorthand                                                                                                                                                   |
@@ -1129,7 +1052,7 @@ export type InputPath = InputPathBase & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputStep"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={139}>InputStep</ApiSourceLink>
+#### <ApiSourceLink label={"InputStep"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={131}>InputStep</ApiSourceLink>
 
 ```ts
 export type InputStep =
@@ -1150,8 +1073,7 @@ export type InputStep =
   | InputEllipsePathStep
   | InputArcStep
   | InputRectangleStep
-  | InputSmoothStep
-  | InputGeneratorStep;
+  | InputSmoothStep;
 ```
 
 ## Extension definitions and registration
@@ -1204,43 +1126,7 @@ export type ArrowDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathGeneratorDefinition"} path={"packages/kernel/core/src/contract/path-generator.ts"} startLine={31}>PathGeneratorDefinition</ApiSourceLink>
-
-Describes JSON parameters, resolvable target parameters, and command generation; the definition itself is not IR
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<ApiTable>
-
-| Member          | Type                                                        | Default | Description                                                                                                                                             |
-| --------------- | ----------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `generate`      | `(ctx: PathGeneratorGenerateContext) => Array<PathCommand>` | —       | Generate low-level path commands from the context<br />Commands use the same local coordinates as the context and may contain `move` to start a subpath |
-| `name`          | `string`                                                    | —       | Generator name referenced by the generator step's `name`                                                                                                |
-| `paramsSchema`  | `ZodType<JsonObject>`                                       | —       | Instance parameter schema<br />Parsed output must be a JSON object                                                                                      |
-| `targetParams?` | `Array<string>`                                             | `[]`    | Top-level parameter keys to resolve into the current Path's local coordinates                                                                           |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type PathGeneratorDefinition = {
-  name: string;
-  paramsSchema: ZodType<JsonObject>;
-  targetParams?: Array<string>;
-  generate: (ctx: PathGeneratorGenerateContext) => Array<PathCommand>;
-};
-```
-
-</DocTab>
-
-</DocTabs>
-
-#### <ApiSourceLink label={"PathKindDefinition"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={163}>PathKindDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PathDefinition"} path={"packages/kernel/core/src/contract/path.ts"} startLine={163}>PathDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1260,32 +1146,32 @@ export type PathGeneratorDefinition = {
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutput extends JsonValue = never> = {
+export type PathDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutput extends JsonValue = never> = {
   name: string;
   schema: ZodType<TPath>;
-  compile: (context: PathKindCompileContext<TPath, TOwnerOutput>) => PathKindCompileResult | null;
-} & PathKindOwnerOutputBranch<TOwnerOutput>;
+  compile: (context: PathCompileContext<TPath, TOwnerOutput>) => PathCompileResult | null;
+} & PathOwnerOutputBranch<TOwnerOutput>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"definePathKind"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={216}>definePathKind</ApiSourceLink>
+#### <ApiSourceLink label={"definePath"} path={"packages/kernel/core/src/contract/path.ts"} startLine={214}>definePath</ApiSourceLink>
 
 <DocTabs defaultValue="without-owner-output">
 
 <DocTab value="without-owner-output" label="Members · Without owner output">
 
-Define a path kind that does not publish owner output
+Define a path that does not publish owner output
 
 <ApiTable variant="parameters">
 
-| Category        | Name         | Type / signature                   | Description                                                                                     |
-| --------------- | ------------ | ---------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Type parameters | `TPath`      | `extends IRPathBase = IRPathBase`  | Path type parsed by the definition schema; defaults to IRPathBase                               |
-| Parameters      | `definition` | `PathKindDefinition<TPath, never>` | Definition containing the name, complete path schema, and compile function                      |
-| Returns         | —            | `PathKindDefinition<TPath, never>` | The original definition object, preserving the path type without copying or modifying the input |
+| Category        | Name         | Type / signature                  | Description                                                                                     |
+| --------------- | ------------ | --------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Type parameters | `TPath`      | `extends IRPathBase = IRPathBase` | Path type parsed by the definition schema; defaults to IRPathBase                               |
+| Parameters      | `definition` | `PathDefinition<TPath, never>`    | Definition containing the name, complete path schema, and compile function                      |
+| Returns         | —            | `PathDefinition<TPath, never>`    | The original definition object, preserving the path type without copying or modifying the input |
 
 </ApiTable>
 
@@ -1293,16 +1179,16 @@ Define a path kind that does not publish owner output
 
 <DocTab value="with-owner-output" label="Members · With owner output">
 
-Define a path kind that publishes owner output
+Define a path that publishes owner output
 
 <ApiTable variant="parameters">
 
-| Category        | Name           | Type / signature                          | Description                                                                                             |
-| --------------- | -------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Type parameters | `TPath`        | `extends IRPathBase`                      | Path type parsed by the definition schema                                                               |
-|                 | `TOwnerOutput` | `extends JsonValue`                       | JSON output type published through the compile context                                                  |
-| Parameters      | `definition`   | `PathKindDefinition<TPath, TOwnerOutput>` | A path definition including its ownerOutput publication flag                                            |
-| Returns         | —              | `PathKindDefinition<TPath, TOwnerOutput>` | The original definition object, preserving path and output types without copying or modifying the input |
+| Category        | Name           | Type / signature                      | Description                                                                                             |
+| --------------- | -------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Type parameters | `TPath`        | `extends IRPathBase`                  | Path type parsed by the definition schema                                                               |
+|                 | `TOwnerOutput` | `extends JsonValue`                   | JSON output type published through the compile context                                                  |
+| Parameters      | `definition`   | `PathDefinition<TPath, TOwnerOutput>` | A path definition including its ownerOutput publication flag                                            |
+| Returns         | —              | `PathDefinition<TPath, TOwnerOutput>` | The original definition object, preserving path and output types without copying or modifying the input |
 
 </ApiTable>
 
@@ -1311,8 +1197,8 @@ Define a path kind that publishes owner output
 <DocTab value="definition" label="Type definition">
 
 ```ts
-<TPath extends IRPathBase = IRPathBase>(definition: PathKindDefinition<TPath, never>): PathKindDefinition<TPath, never>;
-<TPath extends IRPathBase, TOwnerOutput extends JsonValue>(definition: PathKindDefinition<TPath, TOwnerOutput>): PathKindDefinition<TPath, TOwnerOutput>;
+<TPath extends IRPathBase = IRPathBase>(definition: PathDefinition<TPath, never>): PathDefinition<TPath, never>;
+<TPath extends IRPathBase, TOwnerOutput extends JsonValue>(definition: PathDefinition<TPath, TOwnerOutput>): PathDefinition<TPath, TOwnerOutput>;
 ```
 
 </DocTab>
@@ -1348,102 +1234,69 @@ export declare const defineArrow: (def: ArrowDefinition) => ArrowDefinition;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"definePathGenerator"} path={"packages/kernel/core/src/contract/path-generator.ts"} startLine={57}>definePathGenerator</ApiSourceLink>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<ApiTable variant="parameters">
-
-| Category   | Name  | Type / signature          | Description                                                                            |
-| ---------- | ----- | ------------------------- | -------------------------------------------------------------------------------------- |
-| Parameters | `def` | `PathGeneratorDefinition` | Definition containing the path generator name, parameter schema, and command generator |
-| Returns    | —     | `PathGeneratorDefinition` | The original definition object, without copying or modifying the input                 |
-
-</ApiTable>
-
-> **Notes:** JSON-safe validation of generator output remains the responsibility of compilation
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export declare const definePathGenerator: (def: PathGeneratorDefinition) => PathGeneratorDefinition;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ## Configuration and validation
 
-#### <ApiSourceLink label={"PathSchema"} path={"packages/kernel/core/src/schemas/path/path.ts"} startLine={148}>PathSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathSchema"} path={"packages/kernel/core/src/schemas/path/path.ts"} startLine={144}>PathSchema</ApiSourceLink>
 
 <ZodSchema shallow name="PathSchema" />
 
-#### <ApiSourceLink label={"StepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={354}>StepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"StepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={330}>StepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="StepSchema" />
 
-#### <ApiSourceLink label={"MoveStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={65}>MoveStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"MoveStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={59}>MoveStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="MoveStepSchema" />
 
-#### <ApiSourceLink label={"LineStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={72}>LineStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"LineStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={66}>LineStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="LineStepSchema" />
 
-#### <ApiSourceLink label={"AxisLineStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={85}>AxisLineStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"AxisLineStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={79}>AxisLineStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="AxisLineStepSchema" />
 
-#### <ApiSourceLink label={"FoldStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={123}>FoldStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FoldStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={117}>FoldStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="FoldStepSchema" />
 
-#### <ApiSourceLink label={"CycleStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={128}>CycleStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CycleStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={122}>CycleStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="CycleStepSchema" />
 
-#### <ApiSourceLink label={"CurveStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={134}>CurveStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CurveStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={128}>CurveStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="CurveStepSchema" />
 
-#### <ApiSourceLink label={"CubicStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={143}>CubicStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CubicStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={137}>CubicStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="CubicStepSchema" />
 
 Either tangent angle selects tangent mode; the omitted outgoing/incoming angle defaults to 0/180. Angles are absolute screen angles (0 right, 90 down). Looseness defaults to 1 and affects only tangent mode.
 
-#### <ApiSourceLink label={"BendStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={179}>BendStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"BendStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={173}>BendStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="BendStepSchema" />
 
-#### <ApiSourceLink label={"ArcStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={228}>ArcStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArcStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={222}>ArcStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="ArcStepSchema" />
 
-#### <ApiSourceLink label={"CirclePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={268}>CirclePathStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CirclePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={262}>CirclePathStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="CirclePathStepSchema" />
 
-#### <ApiSourceLink label={"EllipsePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={296}>EllipsePathStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"EllipsePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={290}>EllipsePathStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="EllipsePathStepSchema" />
 
-#### <ApiSourceLink label={"RectangleStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={301}>RectangleStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RectangleStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={295}>RectangleStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="RectangleStepSchema" />
 
-#### <ApiSourceLink label={"SmoothStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={319}>SmoothStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"SmoothStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={313}>SmoothStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="SmoothStepSchema" />
-
-#### <ApiSourceLink label={"GeneratorStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={336}>GeneratorStepSchema</ApiSourceLink>
-
-<ZodSchema shallow name="GeneratorStepSchema" />
 
 #### <ApiSourceLink label={"PathLabelSchema"} path={"packages/kernel/core/src/schemas/path/label.ts"} startLine={32}>PathLabelSchema</ApiSourceLink>
 

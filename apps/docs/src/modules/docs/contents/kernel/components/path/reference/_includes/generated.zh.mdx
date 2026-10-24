@@ -20,8 +20,8 @@
 | ------ | ----------------- | ----------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 主要   | `children?`       | `ReactNode`                   | —          | 应当全部是 `<Step />`                                                                                                                                                                           |
 |        | `id?`             | `IRPath['id']`                | —          | 路径 id；其他 path / position 通过这个 id 引用本路径，也作为水合挂点供事件 handler 绑定                                                                                                         |
-|        | `kind?`           | `IRPath['kind']`              | `'stroke'` | 路径种类，省略时使用内置 stroke；自定义种类通过 Layout.extensions.pathKinds 注册                                                                                                                |
-|        | `kindOptions?`    | `IRPath['kindOptions']`       | —          | 所选路径种类的 JSON 参数；内置 stroke 不接受此字段                                                                                                                                              |
+|        | `kind?`           | `IRPath['kind']`              | `'stroke'` | 路径定义，省略时使用内置 stroke；自定义种类通过 Layout.extensions.paths 注册                                                                                                                    |
+|        | `kindOptions?`    | `IRPath['kindOptions']`       | —          | 所选路径定义的 JSON 参数；内置 stroke 不接受此字段                                                                                                                                              |
 |        | `label?`          | `IRPath['label']`             | —          | 附着于整条路径的一个或多个几何标签                                                                                                                                                              |
 |        | `way?`            | `WayDSL`                      | —          | TikZ 风格路径走向简写，由 Vanilla 统一解析为步骤                                                                                                                                                |
 | 几何   | `arrow?`          | `InputPath['arrow']`          | `'none'`   | 路径级箭头方向<br />`'->'` 终点 / `'<-'` 起点 / `'<->'` 两端；省略或 `'none'` 无箭头                                                                                                            |
@@ -125,11 +125,11 @@ export type DrawProps = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Step"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={282}>Step</ApiSourceLink> / <ApiSourceLink label={"StepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={262}>StepProps</ApiSourceLink>
+#### <ApiSourceLink label={"Step"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={257}>Step</ApiSourceLink> / <ApiSourceLink label={"StepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={238}>StepProps</ApiSourceLink>
 
-声明路径中的一个动作，例如移动、连线、曲线、圆弧、闭合或生成器片段
+声明路径中的一个动作，例如移动、连线、曲线、圆弧或闭合
 
-十四种 kind：'move' / 'line'（默认） / 'axis-line'（单轴投影连接） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线） / 'generator'（内置或注册路径生成器）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`，'generator' 用 `name` + JSON-safe `params`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生
+十三种 kind：'move' / 'line'（默认） / 'axis-line'（单轴投影连接） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生
 
 ```ts
 export declare const Step: FC<StepProps>;
@@ -147,13 +147,12 @@ export type StepProps =
   | CirclePathStepProps
   | EllipsePathStepProps
   | RectangleStepProps
-  | SmoothStepProps
-  | GeneratorStepProps;
+  | SmoothStepProps;
 ```
 
 ## 执行与辅助契约
 
-#### <ApiSourceLink label={"ArcStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={157}>ArcStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"ArcStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={149}>ArcStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -193,7 +192,7 @@ export type ArcStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AxisLineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={42}>AxisLineStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"AxisLineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={34}>AxisLineStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -229,7 +228,7 @@ export type AxisLineStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BendStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={129}>BendStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"BendStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={121}>BendStepProps</ApiSourceLink>
 
 支持对称弯与非对称弯 / 自环两种模式；同给时 out/in 优先（编译层）。
 三者全省时默认 left 对称弯。`from == to`（同节点 / 同坐标）配合 out/in 画自环
@@ -276,7 +275,7 @@ export type BendStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CirclePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={175}>CirclePathStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CirclePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={167}>CirclePathStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -316,7 +315,7 @@ export type CirclePathStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CubicStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={109}>CubicStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CubicStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={101}>CubicStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -354,7 +353,7 @@ export type CubicStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CurveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={95}>CurveStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CurveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={87}>CurveStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -390,7 +389,7 @@ export type CurveStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CycleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={89}>CycleStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CycleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={81}>CycleStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -418,7 +417,7 @@ export type CycleStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"EllipsePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={193}>EllipsePathStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"EllipsePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={185}>EllipsePathStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -458,7 +457,7 @@ export type EllipsePathStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FoldStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={71}>FoldStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"FoldStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={63}>FoldStepProps</ApiSourceLink>
 
 `-|` / `|-` 使用一个转折点；`-|-` / `|-|` 使用两个转折点，并可用归一化 `fraction` 调整中间腿位置
 
@@ -523,45 +522,7 @@ export type FoldStepProps = FoldStepBaseProps &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"GeneratorStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={244}>GeneratorStepProps</ApiSourceLink>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="属性">
-
-<ApiTable>
-
-| 成员        | 类型                      | 默认值 | 说明                                                                            |
-| ----------- | ------------------------- | ------ | ------------------------------------------------------------------------------- |
-| `children?` | `ReactNode`               | —      | sugar 形态                                                                      |
-| `kind`      | `'generator'`             | —      | 生成器 step 鉴别字面量                                                          |
-| `label?`    | `InputStepLabel`          | —      | 边标注                                                                          |
-| `name`      | `IRGeneratorStep['name']` | —      | path generator 名称；内置名或 `<Layout extensions={{ pathGenerators }}>` 注册名 |
-| `params`    | `JsonObject`              | —      | JSON-safe 参数对象；目标引用需写在 generator 的 `targetParams` 顶层 key 上      |
-| `to?`       | `DslTarget`               | —      | 可选终点，会作为 generator context 的 `to` 传入                                 |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type GeneratorStepProps = {
-  kind: 'generator';
-  name: IRGeneratorStep['name'];
-  to?: DslTarget;
-  params: JsonObject;
-  label?: InputStepLabel;
-  children?: ReactNode;
-};
-```
-
-</DocTab>
-
-</DocTabs>
-
-#### <ApiSourceLink label={"LineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={30}>LineStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"LineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={22}>LineStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -595,7 +556,7 @@ export type LineStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MoveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={22}>MoveStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"MoveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={14}>MoveStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -625,7 +586,7 @@ export type MoveStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RectangleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={211}>RectangleStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"RectangleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={203}>RectangleStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -659,7 +620,7 @@ export type RectangleStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"SmoothStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={227}>SmoothStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"SmoothStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={219}>SmoothStepProps</ApiSourceLink>
 
 游标为隐式首 knot，曲线依次穿过 `points` 每个点；编译期经 centripetal Catmull-Rom 转成 cubic 链。
 需前置 step 设游标；游标终于 `points` 末项。`tension` 缺省 1（标准 centripetal CR），&lt;1 更紧、>1 更鼓
@@ -742,7 +703,7 @@ export type ArrowEmitContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CanonicalPathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/types.ts"} startLine={39}>CanonicalPathLabelPlacement</ApiSourceLink>
+#### <ApiSourceLink label={"CanonicalPathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/types.ts"} startLine={31}>CanonicalPathLabelPlacement</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -782,7 +743,7 @@ export type CanonicalPathLabelPlacement = Omit<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathLabelGeometryOptions"} path={"packages/kernel/core/src/resolve/path/types.ts"} startLine={36}>PathLabelGeometryOptions</ApiSourceLink>
+#### <ApiSourceLink label={"PathLabelGeometryOptions"} path={"packages/kernel/core/src/resolve/path/types.ts"} startLine={28}>PathLabelGeometryOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -813,45 +774,7 @@ export type PathLabelGeometryOptions = Omit<IRPathLabel, 'text' | 'textColor' | 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathGeneratorGenerateContext"} path={"packages/kernel/core/src/contract/path-generator.ts"} startLine={11}>PathGeneratorGenerateContext</ApiSourceLink>
-
-坐标均位于当前 Path 的局部坐标系，返回的命令由所属 GroupPrim 统一应用 scope transform
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="属性">
-
-<ApiTable>
-
-| 成员              | 类型                       | 默认值 | 说明                                                      |
-| ----------------- | -------------------------- | ------ | --------------------------------------------------------- |
-| `from`            | `Position`                 | —      | 当前游标局部坐标（上一段终点 / sub-path 起点）            |
-| `params`          | `Record<string, unknown>`  | —      | paramsSchema 校验后的参数对象                             |
-| `resolvedTargets` | `Record<string, Position>` | —      | targetParams 顶层 key 到当前 Path 局部坐标的解析结果      |
-| `round`           | `(n: number) => number`    | —      | 精度取整函数，与 compile/render 使用同一 round            |
-| `to?`             | `Position`                 | —      | step.to resolve 后的局部坐标<br />缺省表示 step 未给 `to` |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type PathGeneratorGenerateContext = {
-  from: Position;
-  to?: Position;
-  params: Record<string, unknown>;
-  resolvedTargets: Record<string, Position>;
-  round: (n: number) => number;
-};
-```
-
-</DocTab>
-
-</DocTabs>
-
-#### <ApiSourceLink label={"PathKindBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={104}>PathKindBoundaryLabelInput</ApiSourceLink>
+#### <ApiSourceLink label={"PathBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path.ts"} startLine={104}>PathBoundaryLabelInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -873,7 +796,7 @@ export type PathGeneratorGenerateContext = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type PathKindBoundaryLabelInput = Readonly<{
+export type PathBoundaryLabelInput = Readonly<{
   label: IRBoundaryLabel;
   point: IRPosition;
   outward: IRPosition;
@@ -885,9 +808,9 @@ export type PathKindBoundaryLabelInput = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindCompileContext"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={121}>PathKindCompileContext</ApiSourceLink>
+#### <ApiSourceLink label={"PathCompileContext"} path={"packages/kernel/core/src/contract/path.ts"} startLine={121}>PathCompileContext</ApiSourceLink>
 
-自定义 kind 可以完全接管输出，也可以调用回调复用标准描边逻辑
+自定义路径可以完全接管输出，也可以调用回调复用标准描边逻辑
 
 <DocTabs defaultValue="members">
 
@@ -899,16 +822,16 @@ export type PathKindBoundaryLabelInput = Readonly<{
 | --------------------- | --------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `TPath` (泛型)        | `extends IRPathBase = IRPathBase`                                                             | —      | 经当前路径定义的 schema 解析后的路径类型，决定 path 字段的结构；默认使用 IRPathBase                                                                          |
 | `TOwnerOutput` (泛型) | `extends JsonValue = never`                                                                   | —      | 通过 ownerOutput.publish 发布的 JSON 产物类型；默认 never 表示不发布所属者产物                                                                               |
-| `appearance`          | `ResolvedPathKindAppearance`                                                                  | —      | 已解析的 renderer-neutral 宿主外观                                                                                                                           |
-| `emitBoundaryLabels`  | `(input: ReadonlyArray<PathKindBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>`         | —      | 通过 Kernel 共享布局编译已定位的边界标签                                                                                                                     |
-| `emitHostLabels`      | `(input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>`                                | —      | 编译共享宿主标签，并支持 kind 提供侧向距离                                                                                                                   |
+| `appearance`          | `ResolvedPathAppearance`                                                                      | —      | 已解析的 renderer-neutral 宿主外观                                                                                                                           |
+| `emitBoundaryLabels`  | `(input: ReadonlyArray<PathBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>`             | —      | 通过 Kernel 共享布局编译已定位的边界标签                                                                                                                     |
+| `emitHostLabels`      | `(input: PathLabelInput) => ReadonlyArray<ScenePrimitive>`                                    | —      | 编译共享宿主标签，并支持路径定义提供侧向距离                                                                                                                 |
 | `emitStroke`          | `EmitStroke`                                                                                  | —      | 复用 core 标准描边编译逻辑；不传 path 时使用当前 `path`                                                                                                      |
-| `materializePath`     | `(input?: Readonly<{`<br />`children?: ReadonlyArray<IRStep>;`<br />`}>) => MaterializedPath` | —      | 物化选定 steps，不应用 marker、dash、fill 或 kind-specific geometry                                                                                          |
-| `ownerOutput`         | `CompileOwnerOutputPublisher<TOwnerOutput>`                                                   | —      | 当前 Path kind 的最终所属者产物 publisher                                                                                                                    |
+| `materializePath`     | `(input?: Readonly<{`<br />`children?: ReadonlyArray<IRStep>;`<br />`}>) => MaterializedPath` | —      | 物化选定 steps，不应用 marker、dash、fill 或 custom path geometry                                                                                            |
+| `ownerOutput`         | `CompileOwnerOutputPublisher<TOwnerOutput>`                                                   | —      | 当前 Path 的最终所属者产物 publisher                                                                                                                         |
 | `path`                | `TPath`                                                                                       | —      | 经该 definition 完整 schema 解析后的 path subject                                                                                                            |
-| `resolveHostLabel`    | `(label: IRPathLabel) => IRPathLabel`                                                         | —      | 合并宿主标签默认配置，供路径种类在采样前确定标签位置                                                                                                         |
+| `resolveHostLabel`    | `(label: IRPathLabel) => IRPathLabel`                                                         | —      | 合并宿主标签默认配置，供路径定义在采样前确定标签位置                                                                                                         |
 | `round`               | `(value: number) => number`                                                                   | —      | 与本次 compile 一致的取整函数                                                                                                                                |
-| `wrapOutput`          | `(output: PathKindCompileResult) => PathKindCompileResult`                                    | —      | 包装自定义几何的完整输出，汇总宿主标签边界并应用 Path rotate / scale 与元数据<br />在全部标签发射后调用一次并直接返回；emitStroke 的结果已包装，不应再次调用 |
+| `wrapOutput`          | `(output: PathCompileResult) => PathCompileResult`                                            | —      | 包装自定义几何的完整输出，汇总宿主标签边界并应用 Path rotate / scale 与元数据<br />在全部标签发射后调用一次并直接返回；emitStroke 的结果已包装，不应再次调用 |
 
 </ApiTable>
 
@@ -917,7 +840,7 @@ export type PathKindBoundaryLabelInput = Readonly<{
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwnerOutput extends JsonValue = never> = {
+export type PathCompileContext<TPath extends IRPathBase = IRPathBase, TOwnerOutput extends JsonValue = never> = {
   path: TPath;
   ownerOutput: CompileOwnerOutputPublisher<TOwnerOutput>;
   materializePath: (
@@ -927,10 +850,10 @@ export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwner
   ) => MaterializedPath;
   emitStroke: EmitStroke;
   resolveHostLabel: (label: IRPathLabel) => IRPathLabel;
-  emitHostLabels: (input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>;
-  emitBoundaryLabels: (input: ReadonlyArray<PathKindBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>;
-  wrapOutput: (output: PathKindCompileResult) => PathKindCompileResult;
-  appearance: ResolvedPathKindAppearance;
+  emitHostLabels: (input: PathLabelInput) => ReadonlyArray<ScenePrimitive>;
+  emitBoundaryLabels: (input: ReadonlyArray<PathBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>;
+  wrapOutput: (output: PathCompileResult) => PathCompileResult;
+  appearance: ResolvedPathAppearance;
   round: (value: number) => number;
 };
 ```
@@ -939,9 +862,9 @@ export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwner
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathKindCompileResult"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={13}>PathKindCompileResult</ApiSourceLink>
+#### <ApiSourceLink label={"PathCompileResult"} path={"packages/kernel/core/src/contract/path.ts"} startLine={13}>PathCompileResult</ApiSourceLink>
 
-path kind definition 把高层 path 形态编译成当前 Path 局部坐标系中的 Scene primitive，
+path definition 把高层 path 形态编译成当前 Path 局部坐标系中的 Scene primitive，
 并返回同一坐标系内参与 bbox / transform 计算的关键点集合
 
 <DocTabs defaultValue="members">
@@ -962,7 +885,7 @@ path kind definition 把高层 path 形态编译成当前 Path 局部坐标系�
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type PathKindCompileResult = {
+export type PathCompileResult = {
   primitives: Array<ScenePrimitive>;
   boundsPoints: Array<IRPosition>;
 };
@@ -1016,7 +939,7 @@ export const DrawWay = {
 } as const;
 ```
 
-#### <ApiSourceLink label={"resolvePathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/resolve.ts"} startLine={120}>resolvePathLabelPlacement</ApiSourceLink>
+#### <ApiSourceLink label={"resolvePathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/resolve.ts"} startLine={118}>resolvePathLabelPlacement</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1084,7 +1007,7 @@ export declare const samplePathRoute: (
 
 ## 直接调用
 
-#### <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={30}>path</ApiSourceLink> / <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={172}>InputPath</ApiSourceLink>
+#### <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={30}>path</ApiSourceLink> / <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={163}>InputPath</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1096,8 +1019,8 @@ export declare const samplePathRoute: (
 | ------ | ----------------- | ------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 主要   | `children?`       | `ReadonlyArray<InputStep>`            | —      | 路径步骤序列；与 way 互斥                                                                                                                                                               |
 |        | `id?`             | `string`                              | —      | 可选稳定 id：供其它元素 anchor 引用，也是水合事件绑定的挂点（带 id 才能给 path 绑 onClick 等 handler）                                                                                  |
-|        | `kind?`           | `string & {} \| "stroke"`             | —      | Path kind provider 名；省略时使用内置 `stroke`                                                                                                                                          |
-|        | `kindOptions?`    | `Record<string, JsonValue>`           | —      | 由选定 Path kind provider 消费的 JSON-safe 参数对象；完整 schema 在后续解析                                                                                                             |
+|        | `kind?`           | `string & {} \| "stroke"`             | —      | Path provider 名；省略时使用内置 `stroke`                                                                                                                                               |
+|        | `kindOptions?`    | `Record<string, JsonValue>`           | —      | 由选定 Path provider 消费的 JSON-safe 参数对象；完整 schema 在后续解析                                                                                                                  |
 |        | `label?`          | `InputPath["label"]`                  | —      | 附着在 Path 或其它 path-like 宿主上的路径标签                                                                                                                                           |
 |        | `type?`           | `'path'`                              | —      | 无法由 authoring 字段唯一识别时显式指定路径类别                                                                                                                                         |
 |        | `way?`            | `WayDSL`                              | —      | TikZ 风格的路径走向简写                                                                                                                                                                 |
@@ -1132,7 +1055,7 @@ export type InputPath = InputPathBase & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputStep"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={139}>InputStep</ApiSourceLink>
+#### <ApiSourceLink label={"InputStep"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={131}>InputStep</ApiSourceLink>
 
 ```ts
 export type InputStep =
@@ -1153,8 +1076,7 @@ export type InputStep =
   | InputEllipsePathStep
   | InputArcStep
   | InputRectangleStep
-  | InputSmoothStep
-  | InputGeneratorStep;
+  | InputSmoothStep;
 ```
 
 ## 扩展定义与注册
@@ -1207,43 +1129,7 @@ export type ArrowDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathGeneratorDefinition"} path={"packages/kernel/core/src/contract/path-generator.ts"} startLine={31}>PathGeneratorDefinition</ApiSourceLink>
-
-描述 JSON 参数、可解析 target 参数和命令生成能力；定义本身不进入 IR
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="属性">
-
-<ApiTable>
-
-| 成员            | 类型                                                        | 默认值 | 说明                                                                                              |
-| --------------- | ----------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------- |
-| `generate`      | `(ctx: PathGeneratorGenerateContext) => Array<PathCommand>` | —      | 根据上下文生成低层 path 命令<br />返回命令使用与上下文一致的局部坐标；可返回 `move` 形成 sub-path |
-| `name`          | `string`                                                    | —      | generator 名称，由 generator step 的 `name` 引用                                                  |
-| `paramsSchema`  | `ZodType<JsonObject>`                                       | —      | 实例参数 schema<br />解析结果必须是 JSON object                                                   |
-| `targetParams?` | `Array<string>`                                             | `[]`   | 需要解析为当前 Path 局部坐标的 params 顶层 key                                                    |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type PathGeneratorDefinition = {
-  name: string;
-  paramsSchema: ZodType<JsonObject>;
-  targetParams?: Array<string>;
-  generate: (ctx: PathGeneratorGenerateContext) => Array<PathCommand>;
-};
-```
-
-</DocTab>
-
-</DocTabs>
-
-#### <ApiSourceLink label={"PathKindDefinition"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={163}>PathKindDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PathDefinition"} path={"packages/kernel/core/src/contract/path.ts"} startLine={163}>PathDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1263,32 +1149,32 @@ export type PathGeneratorDefinition = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutput extends JsonValue = never> = {
+export type PathDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutput extends JsonValue = never> = {
   name: string;
   schema: ZodType<TPath>;
-  compile: (context: PathKindCompileContext<TPath, TOwnerOutput>) => PathKindCompileResult | null;
-} & PathKindOwnerOutputBranch<TOwnerOutput>;
+  compile: (context: PathCompileContext<TPath, TOwnerOutput>) => PathCompileResult | null;
+} & PathOwnerOutputBranch<TOwnerOutput>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"definePathKind"} path={"packages/kernel/core/src/contract/path-kind.ts"} startLine={216}>definePathKind</ApiSourceLink>
+#### <ApiSourceLink label={"definePath"} path={"packages/kernel/core/src/contract/path.ts"} startLine={214}>definePath</ApiSourceLink>
 
 <DocTabs defaultValue="without-owner-output">
 
 <DocTab value="without-owner-output" label="属性 · 无所属者产物">
 
-定义不发布所属者产物的路径种类
+定义不发布所属者产物的路径定义
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称         | 类型 / 签名                        | 说明                                                |
-| ------ | ------------ | ---------------------------------- | --------------------------------------------------- |
-| 泛型   | `TPath`      | `extends IRPathBase = IRPathBase`  | 经定义 schema 解析后的路径类型，默认使用 IRPathBase |
-| 参数   | `definition` | `PathKindDefinition<TPath, never>` | 包含名称、完整路径 schema 和编译函数的定义          |
-| 返回值 | —            | `PathKindDefinition<TPath, never>` | 原定义对象，保留路径类型，不复制或修改输入          |
+| 类别   | 名称         | 类型 / 签名                       | 说明                                                |
+| ------ | ------------ | --------------------------------- | --------------------------------------------------- |
+| 泛型   | `TPath`      | `extends IRPathBase = IRPathBase` | 经定义 schema 解析后的路径类型，默认使用 IRPathBase |
+| 参数   | `definition` | `PathDefinition<TPath, never>`    | 包含名称、完整路径 schema 和编译函数的定义          |
+| 返回值 | —            | `PathDefinition<TPath, never>`    | 原定义对象，保留路径类型，不复制或修改输入          |
 
 </ApiTable>
 
@@ -1296,16 +1182,16 @@ export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutp
 
 <DocTab value="with-owner-output" label="属性 · 发布所属者产物">
 
-定义发布所属者产物的路径种类
+定义发布所属者产物的路径定义
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称           | 类型 / 签名                               | 说明                                             |
-| ------ | -------------- | ----------------------------------------- | ------------------------------------------------ |
-| 泛型   | `TPath`        | `extends IRPathBase`                      | 经定义 schema 解析后的路径类型                   |
-|        | `TOwnerOutput` | `extends JsonValue`                       | 通过编译上下文发布的 JSON 产物类型               |
-| 参数   | `definition`   | `PathKindDefinition<TPath, TOwnerOutput>` | 包含路径定义及 ownerOutput 发布标记的定义        |
-| 返回值 | —              | `PathKindDefinition<TPath, TOwnerOutput>` | 原定义对象，保留路径和产物类型，不复制或修改输入 |
+| 类别   | 名称           | 类型 / 签名                           | 说明                                             |
+| ------ | -------------- | ------------------------------------- | ------------------------------------------------ |
+| 泛型   | `TPath`        | `extends IRPathBase`                  | 经定义 schema 解析后的路径类型                   |
+|        | `TOwnerOutput` | `extends JsonValue`                   | 通过编译上下文发布的 JSON 产物类型               |
+| 参数   | `definition`   | `PathDefinition<TPath, TOwnerOutput>` | 包含路径定义及 ownerOutput 发布标记的定义        |
+| 返回值 | —              | `PathDefinition<TPath, TOwnerOutput>` | 原定义对象，保留路径和产物类型，不复制或修改输入 |
 
 </ApiTable>
 
@@ -1314,8 +1200,8 @@ export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutp
 <DocTab value="definition" label="类型定义">
 
 ```ts
-<TPath extends IRPathBase = IRPathBase>(definition: PathKindDefinition<TPath, never>): PathKindDefinition<TPath, never>;
-<TPath extends IRPathBase, TOwnerOutput extends JsonValue>(definition: PathKindDefinition<TPath, TOwnerOutput>): PathKindDefinition<TPath, TOwnerOutput>;
+<TPath extends IRPathBase = IRPathBase>(definition: PathDefinition<TPath, never>): PathDefinition<TPath, never>;
+<TPath extends IRPathBase, TOwnerOutput extends JsonValue>(definition: PathDefinition<TPath, TOwnerOutput>): PathDefinition<TPath, TOwnerOutput>;
 ```
 
 </DocTab>
@@ -1351,38 +1237,9 @@ export declare const defineArrow: (def: ArrowDefinition) => ArrowDefinition;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"definePathGenerator"} path={"packages/kernel/core/src/contract/path-generator.ts"} startLine={57}>definePathGenerator</ApiSourceLink>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="属性">
-
-<ApiTable variant="parameters">
-
-| 类别   | 名称  | 类型 / 签名               | 说明                                                 |
-| ------ | ----- | ------------------------- | ---------------------------------------------------- |
-| 参数   | `def` | `PathGeneratorDefinition` | 路径生成器名称、参数 schema 及命令生成函数组成的定义 |
-| 返回值 | —     | `PathGeneratorDefinition` | 原定义对象，不复制或修改输入                         |
-
-</ApiTable>
-
-> **备注：** generator 输出的 JSON-safe 校验仍由 compile 阶段负责
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export declare const definePathGenerator: (def: PathGeneratorDefinition) => PathGeneratorDefinition;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ## 配置与校验
 
-#### <ApiSourceLink label={"PathSchema"} path={"packages/kernel/core/src/schemas/path/path.ts"} startLine={148}>PathSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathSchema"} path={"packages/kernel/core/src/schemas/path/path.ts"} startLine={144}>PathSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1391,8 +1248,8 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   descriptions={{
     style: '当前实例的视觉覆盖，按字段继承与覆盖',
     type: '判别字段，标记此子节点为 path',
-    kind: 'Path kind provider 名；省略时使用内置 `stroke`',
-    kindOptions: '由选定 Path kind provider 消费的 JSON-safe 参数对象；完整 schema 在后续解析',
+    kind: 'Path provider 名；省略时使用内置 `stroke`',
+    kindOptions: '由选定 Path provider 消费的 JSON-safe 参数对象；完整 schema 在后续解析',
     'style.color': '主色（TikZ color=）；stroke / 箭头 / step label 未单设则随它（跟主色不跟 stroke）',
     'style.stroke':
       '描边 paint：任意 CSS color 字符串，或 IRPaint（线性 / 径向渐变、pattern、image）；默认 currentColor',
@@ -1422,11 +1279,11 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"StepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={354}>StepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"StepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={330}>StepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="StepSchema" description="单个路径动作；通过 kind 字段选择具体 step 变体。" />
 
-#### <ApiSourceLink label={"MoveStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={65}>MoveStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"MoveStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={59}>MoveStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1439,7 +1296,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"LineStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={72}>LineStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"LineStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={66}>LineStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1453,7 +1310,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"AxisLineStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={85}>AxisLineStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"AxisLineStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={79}>AxisLineStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1468,7 +1325,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"FoldStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={123}>FoldStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FoldStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={117}>FoldStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1484,7 +1341,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"CycleStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={128}>CycleStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CycleStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={122}>CycleStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1496,7 +1353,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"CurveStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={134}>CurveStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CurveStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={128}>CurveStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1511,7 +1368,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"CubicStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={143}>CubicStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CubicStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={137}>CubicStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1527,7 +1384,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"BendStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={179}>BendStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"BendStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={173}>BendStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1547,7 +1404,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"ArcStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={228}>ArcStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArcStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={222}>ArcStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1564,7 +1421,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"CirclePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={268}>CirclePathStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CirclePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={262}>CirclePathStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1581,7 +1438,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"EllipsePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={296}>EllipsePathStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"EllipsePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={290}>EllipsePathStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1598,7 +1455,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"RectangleStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={301}>RectangleStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RectangleStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={295}>RectangleStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1613,7 +1470,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   }}
 />
 
-#### <ApiSourceLink label={"SmoothStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={319}>SmoothStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"SmoothStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={313}>SmoothStepSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1625,23 +1482,6 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
     points: '游标之后依次经过的点列，至少一个；最后一点成为新游标',
     tension: '控制切线长度与曲线松紧的正数倍率；默认 1',
     label: '附着在整条平滑曲线上的边标注',
-  }}
-/>
-
-#### <ApiSourceLink label={"GeneratorStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={336}>GeneratorStepSchema</ApiSourceLink>
-
-<ZodSchema
-  shallow
-  name="GeneratorStepSchema"
-  description="生成器动作：委托本次已注册的自定义 path generator 产出子路径。"
-  descriptions={{
-    type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`generator` —— 把本段委托给 CompileOptions.pathGenerators 里按 `name` 查到的生成器，编译期把 from / to / params 变成底层 path 命令',
-    name: '生成器名；由 CompileOptions.pathGenerators 显式注册。未注册名 compile 期报错（错误会列可用名）。IR 只存字符串，生成器函数不进 IR',
-    to: '可选终点（作为段末传给生成器）；纯参数化曲线（闭环 / 定长波形等）不需要终点时可省略',
-    params:
-      '传给生成器的 JSON 参数对象（须为纯 JSON 对象，由 JsonObjectSchema 校验）；生成器自身用 paramsSchema 校验形态。generator targetParams 列出的顶层 key 会先把节点目标解析到当前 Path 的局部坐标再运行',
-    label: '边标注：附在生成段上的文字标签',
   }}
 />
 

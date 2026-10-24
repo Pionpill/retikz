@@ -43,8 +43,7 @@ export type GraphLayoutHostProps = Pick<
   | 'clips'
   | 'arrows'
   | 'patterns'
-  | 'pathGenerators'
-  | 'pathKinds'
+  | 'paths'
   | 'composites'
   | 'themeDefinitions'
   | 'lowerTex'
@@ -77,8 +76,7 @@ export const graphLayoutHostPropKeys = [
   'clips',
   'arrows',
   'patterns',
-  'pathGenerators',
-  'pathKinds',
+  'paths',
   'composites',
   'themeDefinitions',
   'lowerTex',

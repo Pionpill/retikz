@@ -48,7 +48,7 @@ boundary 决定“线停在哪一层表面”，`margin` 与 shape 如何影响�
 | 正交折线 | `'-\|'` / `'\|-'`        | 流程图、结构图         |
 | 曲线     | `{ bend }` / `{ curve }` | 避让、双向边、平滑关系 |
 
-完整 step 与 path kind 参数属于 [Draw](/kernel/components/path/usage)和 [Path schema](/kernel/components/path/reference)。关系页只给选择思路，不复制 API 字典。
+完整 step 与 path 参数属于 [Draw](/kernel/components/path/usage)和 [Path schema](/kernel/components/path/reference)。关系页只给选择思路，不复制 API 字典。
 
 路径内部可以相对上一段终点移动：`{ relative }` 临时偏移但不推进累计基准，`{ relativeAccumulate }` 偏移后把新终点作为下一段基准。React Sugar 也支持 `'+dx,dy'` / `'++dx,dy'`：
 
@@ -112,7 +112,7 @@ boundary 决定“线停在哪一层表面”，`margin` 与 shape 如何影响�
     },
     {
       title: 'Draw',
-      description: '查询 step、path kind、arrow 与 route API',
+      description: '查询 step、path、arrow 与 route API',
       url: '/kernel/components/path/usage',
     },
     {

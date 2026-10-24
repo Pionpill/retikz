@@ -3,16 +3,19 @@ import type { IRPathBase } from '../../schemas';
 import { filterAnimations } from '../orchestration';
 import { bindPathTarget } from '../orchestration';
 import type { CompileObservationContribution } from '../orchestration';
-import { emitPathKindPrimitive } from '../path';
+import { emitDefinedPath } from '../path';
 import { composeScopeTransform } from '../transform';
 import { runElementCompilation } from './context';
 import type { CompiledPath, ElementCompileOptions, ElementCompileResult } from './types';
 
 /** Path 单元素编译上下文 */
-export type PathCompileContext = ElementCompileOptions;
+export type PathElementCompileContext = ElementCompileOptions;
 
 /** 引用就绪后独立编译 Path，复用全量路径的 kind 宿主能力 */
-export const compilePath = (input: IRPathBase, context: PathCompileContext): ElementCompileResult<CompiledPath> =>
+export const compilePath = (
+  input: IRPathBase,
+  context: PathElementCompileContext,
+): ElementCompileResult<CompiledPath> =>
   runElementCompilation(context, workspace => {
     const path = {
       ...input,
@@ -38,7 +41,7 @@ export const compilePath = (input: IRPathBase, context: PathCompileContext): Ele
       irPath: context.irPath,
     });
     const observations: Array<CompileObservationContribution> = [];
-    const result = emitPathKindPrimitive(
+    const result = emitDefinedPath(
       {
         path,
         irPath: context.irPath,

@@ -1,5 +1,5 @@
 import type { CompileObservation, CompileObserverDefinition, ScenePrimitive } from '@retikz/core';
-import { definePathKind, PathSchema } from '@retikz/core';
+import { definePath, PathSchema } from '@retikz/core';
 import { compileToScene, prepareSceneCompilation } from '@retikz/core';
 import type { IRScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -313,7 +313,7 @@ it('祖先 Scope 几何引用失败，未来声明不会提前对 Node 可见', 
 
 it('自定义 Path 重用相同图元对象时保留各自的发射来源', () => {
   const primitive: ScenePrimitive = { type: 'rect', x: 0, y: 0, width: 10, height: 10 };
-  const kind = definePathKind({
+  const kind = definePath({
     name: 'shared-output',
     schema: PathSchema.extend({ kind: literal('shared-output') }),
     compile: () => ({
@@ -348,8 +348,8 @@ it('自定义 Path 重用相同图元对象时保留各自的发射来源', () =
       },
     ],
   };
-  const prepared = prepareWeaveCompilation(input, { pathKinds: [kind] });
-  expect(prepared.compilation.result).toEqual(compileToScene(input, { pathKinds: [kind] }));
+  const prepared = prepareWeaveCompilation(input, { paths: [kind] });
+  expect(prepared.compilation.result).toEqual(compileToScene(input, { paths: [kind] }));
   const owners = prepared.compilation.provenance?.emissions.map(emission => emission.owner);
   expect(new Set(owners).size).toBe(2);
 });

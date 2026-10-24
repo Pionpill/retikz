@@ -5,9 +5,13 @@ keywords: 'Builtin、path、generator、and、ribbon、width、profile、parabol
 
 # ADR-033: Builtin path generator and ribbon width profile
 
-- 状态：Accepted
+- 状态：Partially Superseded（路径生成器已移除；Ribbon width profile 保留）
 - 决策日期：2026-07-04
 - 关联：[ADR-032](./032-stroke-dash-offset.md) · [ADR-023](./023-provider-key-contract.md) · [ADR-021](./021-path-kind-registry.md)
+
+## 当前边界
+
+路径生成器部分随 [ADR-024](../v0.2/024-path-generator-definition.md) 的能力移除而失效，参数化曲线由作者侧函数或组件展开为已有步骤。Ribbon width profile 仍由 Extension 提供；下文关于 Core 内置 parabola 的描述仅作为历史记录。
 
 ## 背景
 

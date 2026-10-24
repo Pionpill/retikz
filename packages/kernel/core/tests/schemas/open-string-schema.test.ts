@@ -41,9 +41,9 @@ describe('Core registry-backed open string schemas', () => {
     expect(BoundarySchema.parse('custom.boundary')).toBe('custom.boundary');
     expect(EasingSchema.parse('custom.easing')).toBe('custom.easing');
     expect(AnchorRefSchema.parse('custom.anchor')).toBe('custom.anchor');
-    expect(PathStructureSchema.parse({ type: 'path', kind: 'custom.path-kind' })).toEqual({
+    expect(PathStructureSchema.parse({ type: 'path', kind: 'custom.path-definition' })).toEqual({
       type: 'path',
-      kind: 'custom.path-kind',
+      kind: 'custom.path-definition',
     });
     expect(
       AnimationTrackSchema.parse({

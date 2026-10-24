@@ -64,8 +64,7 @@ const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: 
     clips: _clips,
     arrows: _arrows,
     patterns: _patterns,
-    pathGenerators: _pathGenerators,
-    pathKinds: _pathKinds,
+    paths: _paths,
     composites: _composites,
     themeDefinitions: _themeDefinitions,
     lowerTex: _lowerTex,
@@ -96,8 +95,7 @@ const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: 
   void _clips;
   void _arrows;
   void _patterns;
-  void _pathGenerators;
-  void _pathKinds;
+  void _paths;
   void _composites;
   void _themeDefinitions;
   void _lowerTex;
@@ -156,18 +154,8 @@ const GraphComponent: FC<GraphProps> = props => {
       },
     };
   }, [ambientGraphThemeDefinitions, generatedId, props]);
-  const {
-    shapes,
-    boundaries,
-    clips,
-    arrows,
-    patterns,
-    pathGenerators,
-    pathKinds,
-    composites,
-    themeDefinitions,
-    ...hostProps
-  } = graphLayoutHostPropsOf(props);
+  const { shapes, boundaries, clips, arrows, patterns, paths, composites, themeDefinitions, ...hostProps } =
+    graphLayoutHostPropsOf(props);
 
   return (
     <Layout
@@ -178,8 +166,7 @@ const GraphComponent: FC<GraphProps> = props => {
         clips,
         arrows,
         patterns,
-        pathGenerators,
-        pathKinds,
+        paths,
         composites,
         themeDefinitions,
       }}

@@ -5,7 +5,7 @@ import type {
   IRChild,
   IRScope,
 } from '@retikz/core';
-import { CURRENT_IR_VERSION, BuiltinPathKind } from '@retikz/core';
+import { CURRENT_IR_VERSION, BuiltinPath } from '@retikz/core';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type {
@@ -544,7 +544,7 @@ const normalizeChild = (input: InputChild, ctx: NormalizeContext): IRChild => {
       Object.freeze({
         kind: 'path',
         sourcePath: `${ctx.sourcePath}.path`,
-        owner: { kind: 'path', name: path.kind ?? BuiltinPathKind.Stroke },
+        owner: { kind: 'path', name: path.kind ?? BuiltinPath.Stroke },
         type: 'path',
         authoring: input.authoring,
       }),

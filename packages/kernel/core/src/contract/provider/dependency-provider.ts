@@ -4,8 +4,7 @@ import type { ArrowDefinition } from '../arrow';
 import type { BoundaryDefinition } from '../boundary';
 import type { ClipDefinition } from '../clip';
 import type { AnyCompositeDefinition } from '../composite';
-import type { PathGeneratorDefinition } from '../path-generator';
-import type { AnyPathKindDefinition } from '../path-kind';
+import type { AnyPathDefinition } from '../path';
 import type { PatternDefinition } from '../pattern';
 import type { ShapeDefinition } from '../shape';
 
@@ -16,8 +15,7 @@ export const CoreProviderCapability = {
   Clip: 'clip',
   Arrow: 'arrow',
   Pattern: 'pattern',
-  PathGenerator: 'pathGenerator',
-  BuiltinPathKind: 'pathKind',
+  Path: 'path',
   Composite: 'composite',
 } as const;
 
@@ -52,8 +50,7 @@ export type AnyCoreProviderDefinition =
   | ClipDefinition
   | ArrowDefinition
   | PatternDefinition
-  | PathGeneratorDefinition
-  | AnyPathKindDefinition
+  | AnyPathDefinition
   | AnyCompositeDefinition;
 
 /** 按 Core 编译选项分类的提供者定义 */
@@ -68,10 +65,8 @@ export type CoreProviderDefinitions = Readonly<{
   arrows?: ReadonlyArray<ArrowDefinition>;
   /** 图案定义 */
   patterns?: ReadonlyArray<PatternDefinition>;
-  /** 路径生成器定义 */
-  pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
-  /** 路径种类定义 */
-  pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
+  /** 路径定义 */
+  paths?: ReadonlyArray<AnyPathDefinition>;
   /** 复合定义 */
   composites?: ReadonlyArray<AnyCompositeDefinition>;
 }>;

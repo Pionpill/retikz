@@ -20,7 +20,7 @@ export type CompileObservationOwner =
   | Readonly<{
       /** 当前被观测能力所属者的类别 */
       kind: 'path';
-      /** 被观测路径种类的注册名称 */
+      /** 被观测路径定义的注册名称 */
       name: string;
     }>
   | Readonly<{
@@ -49,7 +49,7 @@ export type CompileObservationAncestor = Readonly<{
 }>;
 
 /**
- * Path kind 在需要时发布最终产物的编译期 publisher
+ * Path 在需要时发布最终产物的编译期 publisher
  * @template TValue 所属者发布和观察的 JSON 产物类型
  */
 export type CompileOwnerOutputPublisher<TValue extends JsonValue = JsonValue> = Readonly<{

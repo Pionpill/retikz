@@ -1,4 +1,4 @@
-import type { IRNode, IRKernelScene, IRStep, IRKernelChild, IRKernelScope } from '@retikz/core';
+import type { IRKernelChild, IRKernelScene, IRKernelScope, IRNode, IRStep } from '@retikz/core';
 import type { ReactNode } from 'react';
 import { createElement } from 'react';
 
@@ -152,17 +152,6 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
 
   if (step.kind === 'move') {
     return createElement(Step, { key, kind: 'move', to: step.to });
-  }
-
-  if (step.kind === 'generator') {
-    return createElement(Step, {
-      key,
-      kind: 'generator',
-      name: step.name,
-      params: step.params,
-      ...(step.to !== undefined && { to: step.to }),
-      ...(step.label !== undefined && { label: step.label }),
-    });
   }
 
   // line（默认）

@@ -3,7 +3,7 @@ import { compileToScene as compileCoreToScene, PathLabelSchema } from '@retikz/c
 import { curve } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import { RibbonLabelSchema, RibbonPathKindDefinition, RibbonPathSchema } from '../../src/ribbon';
+import { RibbonLabelSchema, RibbonPathDefinition, RibbonPathSchema } from '../../src/ribbon';
 
 const ASCENT_FACTOR = 0.8;
 
@@ -48,12 +48,12 @@ const ribbon = (overrides: Record<string, unknown> = {}): IRPathBase =>
   });
 
 const compileToScene = (input: IRScene, options: Parameters<typeof compileCoreToScene>[1] = {}) => {
-  const supplied = options.pathKinds ?? [];
-  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? RibbonPathKindDefinition;
+  const supplied = options.paths ?? [];
+  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? RibbonPathDefinition;
 
   return compileCoreToScene(input, {
     ...options,
-    pathKinds: [ribbonDefinition, ...supplied.filter(definition => definition.name !== 'ribbon')],
+    paths: [ribbonDefinition, ...supplied.filter(definition => definition.name !== 'ribbon')],
   });
 };
 

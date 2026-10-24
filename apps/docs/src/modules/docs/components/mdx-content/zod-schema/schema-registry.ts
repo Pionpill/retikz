@@ -1156,11 +1156,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'SmoothStep',
     url: '/kernel/components/path/reference#smoothstepschema',
   },
-  GeneratorStepSchema: {
-    schema: IR.GeneratorStepSchema,
-    label: 'GeneratorStep',
-    url: '/kernel/components/path/reference#generatorstepschema',
-  },
 
   RelativeTargetSchema: {
     schema: IR.RelativeTargetSchema,

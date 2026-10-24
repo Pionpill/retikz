@@ -10,9 +10,7 @@ import type {
   ArrowMarkGeometry,
   ArrowMarkResolution,
   ArrowMarkVisual,
-  CanonicalStep,
-  PathGeneratorResolution,
-  PathKindResolution,
+  PathDefinitionResolution,
   PathResolution,
   PathResolveContext,
   ResolvedArrowMark,
@@ -25,16 +23,16 @@ const ARROW_GEOMETRY_BASE_SIZE = 10;
 /** 主路径进入 marker 接触边的描边宽度比例 */
 const ARROW_PATH_CONTACT_OVERLAP = 0.5;
 
-/** 解析 path kind provider */
-export const resolvePathKind = (
+/** 解析 path provider */
+export const resolvePathDefinition = (
   path: ResolvedPathSource,
   context: PathResolveContext,
   irPath: string,
-): PathKindResolution => {
+): PathDefinitionResolution => {
   const kind = path.kind ?? 'stroke';
-  const definition = providerDefinitionOf(context.pathKinds, kind);
+  const definition = providerDefinitionOf(context.paths, kind);
   const parsed = parseProviderPayload({
-    capability: 'path kind',
+    capability: 'path',
     providerName: kind,
     irPath,
     payloadName: 'path',
@@ -43,27 +41,6 @@ export const resolvePathKind = (
   });
 
   return { name: kind, definition, path: parsed as IRPathBase };
-};
-
-/** 解析 generator step 的 provider 与 params */
-export const resolvePathGenerator = (
-  step: Extract<CanonicalStep, { kind: 'generator' }>,
-  stepIndex: number,
-  context: PathResolveContext,
-  irPath: string,
-): PathGeneratorResolution => {
-  const definition = providerDefinitionOf(context.pathGenerators, step.name);
-  const paramsPath = `${irPath}.params`;
-  const params = parseProviderPayload({
-    capability: 'path generator',
-    providerName: step.name,
-    irPath: paramsPath,
-    payloadName: 'params',
-    schema: definition.paramsSchema,
-    value: step.params,
-  });
-
-  return { stepIndex, name: step.name, definition, params, irPath };
 };
 
 const assertFiniteArrowGeometry = (shape: string, definition: ArrowDefinition): void => {
@@ -183,23 +160,7 @@ export const resolveArrowMarks = (
   return resolutions;
 };
 
-/** 按 canonical step 对象绑定 path generator provider */
-export const resolvePathGenerators = (
-  steps: ReadonlyArray<CanonicalStep>,
-  context: PathResolveContext,
-  prefix: string,
-): ReadonlyMap<CanonicalStep, PathGeneratorResolution> => {
-  const resolutions = new Map<CanonicalStep, PathGeneratorResolution>();
-
-  for (const [index, step] of steps.entries()) {
-    if (step.kind !== 'generator') continue;
-    resolutions.set(step, resolvePathGenerator(step, index, context, `${prefix}.children[${index}]`));
-  }
-
-  return resolutions;
-};
-
-/** 为 stroke emitter 绑定实际会消费的 generator 与 arrow provider */
+/** 为 stroke emitter 绑定实际会消费的 arrow provider */
 export const resolveStrokePathProviders = (
   resolution: PathResolution,
   context: PathResolveContext,
@@ -212,13 +173,12 @@ export const resolveStrokePathProviders = (
   const children = path.children;
   const strokeTooShort = children === undefined || (children.length < 2 && children[0]?.kind !== 'rectangle');
   if (strokeTooShort) {
-    return { ...resolution, path, generators: new Map(), arrows: new Map() };
+    return { ...resolution, path, arrows: new Map() };
   }
 
   return {
     ...resolution,
     path,
-    generators: resolvePathGenerators(children, context, resolution.irPath),
     arrows: resolveArrowMarks(resolution.path.marks, context),
   };
 };

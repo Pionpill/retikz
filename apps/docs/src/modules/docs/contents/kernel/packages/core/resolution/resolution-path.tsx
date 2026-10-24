@@ -18,7 +18,7 @@ const ResolutionPath: FC<ResolutionPathProps> = props => {
   const text = resolutionPathI18n[lang];
   const stages = [
     { id: 'merge', name: 'resolveEffectivePath' },
-    { id: 'kind', name: 'resolvePathKind' },
+    { id: 'kind', name: 'resolvePathDefinition' },
     { id: 'canonical', name: 'canonicalizePath' },
     { id: 'paint', name: 'resolvePaint' },
     { id: 'result', name: 'PathResolution' },
@@ -26,7 +26,7 @@ const ResolutionPath: FC<ResolutionPathProps> = props => {
   ] as const;
   const products = [
     { id: 'effective', name: 'IRPathBase' },
-    { id: 'bound', name: 'PathKindResolution' },
+    { id: 'bound', name: 'PathDefinitionResolution' },
     { id: 'path', name: 'Expanded path fields' },
     { id: 'resolved', name: 'CanonicalPath' },
     { id: 'extras', name: 'irPath / targets' },

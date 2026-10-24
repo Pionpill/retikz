@@ -47,7 +47,7 @@ Keep A = [0, 0] and B = [120, 0], then add C = [0, 60] and D = [120, 60]. The up
 
 The second move sets both the pen position and subpath start to C, preserves A → B, and draws no line between B and C. A line to D followed by cycle returns along the same horizontal line to C, so C → D and D → C overlap in the final view. It does not return to A. The implementation remembers the latest move target rather than inferring the closure point from the first step of the whole path.
 
-A generator is also a step. It receives the local cursor and resolved target, then returns commands to the host Path. It does not own whole-path arrows, stroke, or final outer transforms. See [Step composition](/kernel/components/path/step) and [Custom generators](/kernel/components/path/custom-path-generator).
+Reusable curve segments can be expanded into existing path steps by functions or components. See [Step composition](/kernel/components/path/step).
 
 <SourceLinks
   sources={[
@@ -60,11 +60,6 @@ A generator is also a step. It receives the local cursor and resolved target, th
       label: 'Generate commands step by step',
       path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
       startLine: 60,
-    },
-    {
-      label: 'Validate generator parameters and output',
-      path: 'packages/kernel/core/src/compile/path/stroke/lower.ts',
-      startLine: 102,
     },
   ]}
 />
@@ -160,7 +155,7 @@ All three panels preserve A, B, and the curve's shape. Blue in the middle panel 
 
 Cubic Béziers, circular arcs, and elliptical arcs likewise retain their command types. When a gap crosses commands, their unremoved ranges are retained separately, then adjacent pieces within the same subpath are joined. Sampling, distance lookup, and shape-preserving slicing algorithms are explained in [Math · Curve slicing](/kernel/packages/math/algorithms#curve-slicing).
 
-Centered labels on unfilled built-in Stroke paths leave gaps by default; `interrupt: false` disables this. Conditions for filled paths and other Path kinds are covered in [Path labels](/kernel/components/path/label).
+Centered labels on unfilled built-in Stroke paths leave gaps by default; `interrupt: false` disables this. Conditions for filled paths and other Path definitions are covered in [Path labels](/kernel/components/path/label).
 
 <SourceLinks
   sources={[

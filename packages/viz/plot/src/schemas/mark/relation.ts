@@ -162,14 +162,14 @@ export const RelationRoutingSchema = discriminatedUnion('kind', [
   RelationOrthogonalRoutingSchema,
 ]).describe('Relation route strategy lowered to core Path steps after source and target refs are resolved');
 
-/** 校验各关系路径种类共用的图元视觉样式 */
+/** 校验各关系路径定义共用的图元视觉样式 */
 export const RelationPrimitiveStyleSchema = strictObject({
   ...GraphicPaintSchema.shape,
   ...GraphicOpacitySchema.shape,
   ...GraphicEffectsSchema.shape,
   strokeWidth: StrokeWidthSchema.optional(),
   zIndex: number().int().optional().describe('Shared relation zIndex: fixed integer'),
-}).describe('Style fields shared by RelationMark path kinds');
+}).describe('Style fields shared by RelationMark path definitions');
 
 /** Relation projected target 可选端点 glyph 的封闭 Point 表现字段 */
 export const RelationEndpointGlyphSchema = strictObject({
@@ -252,7 +252,7 @@ export const RelationRibbonOptionsSchema = strictObject({
     'Optional ribbon width at the target side; set together with width for tapered ribbons',
   ),
   options: RelationRibbonSpecificOptionsSchema.optional().describe(
-    'Core Path kind=ribbon options used only by ribbon relations',
+    'Core Path=ribbon options used only by ribbon relations',
   ),
 }).describe('Ribbon geometry configuration for RelationMark');
 

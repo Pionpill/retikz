@@ -91,7 +91,6 @@
     "draw": "Draw syntax",
     "arrow": "arrow",
     "step": "Step composition",
-    "pathGenerator": "Custom generators",
     "pathCustomPath": "Custom paths",
     "pathCustomArrow": "Custom arrows",
     "effects": "Effects",

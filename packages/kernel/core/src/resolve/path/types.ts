@@ -1,17 +1,9 @@
-import type { JsonObject } from '@retikz/foundation';
-
-import type {
-  AnyPathKindDefinition,
-  ArrowDefinition,
-  PathGeneratorDefinition,
-  PatternDefinition,
-  Transform,
-} from '../../contract';
+import type { AnyPathDefinition, ArrowDefinition, PatternDefinition, Transform } from '../../contract';
 import type {
   IRArrowMark,
-  IRPathLabel,
   IRPaint,
   IRPathBase,
+  IRPathLabel,
   IRPathStyle,
   IRPosition,
   IRStep,
@@ -153,28 +145,14 @@ export type CanonicalPath = Omit<
     shadow?: ResolvedDropShadow;
   };
 
-/** path kind provider 在 resolving 阶段绑定后的定义与 kindOptions */
-export type PathKindResolution = Readonly<{
-  /** 当前路径种类的注册名称 */
+/** path provider 在 resolving 阶段绑定后的定义与 kindOptions */
+export type PathDefinitionResolution = Readonly<{
+  /** 当前路径定义的注册名称 */
   name: string;
-  /** 与当前路径匹配的路径种类定义 */
-  definition: AnyPathKindDefinition;
+  /** 与当前路径匹配的路径定义 */
+  definition: AnyPathDefinition;
   /** 通过该 definition 完整 schema 解析后的 source subject */
   path: IRPathBase;
-}>;
-
-/** path generator step 在 resolving 阶段绑定后的定义与参数 */
-export type PathGeneratorResolution = Readonly<{
-  /** 生成器步骤在路径子步骤中的零基索引 */
-  stepIndex: number;
-  /** 路径生成器的注册名称 */
-  name: string;
-  /** 当前步骤匹配的生成器定义 */
-  definition: PathGeneratorDefinition;
-  /** 经生成器参数 schema 校验的 JSON 参数 */
-  params: JsonObject;
-  /** 用于定位生成器错误的 IR 路径 */
-  irPath: string;
 }>;
 
 /** arrow mark 的有效视觉属性 */
@@ -273,10 +251,8 @@ export type PathResolveContext = Readonly<{
   mode: ThemeMode;
   /** target/reference 解析能力 */
   targetResolver?: PathTargetResolver;
-  /** 路径种类能力注册表 */
-  pathKinds: ReadonlyMap<string, AnyPathKindDefinition>;
-  /** 路径生成器能力注册表 */
-  pathGenerators: ReadonlyMap<string, PathGeneratorDefinition>;
+  /** 路径定义能力注册表 */
+  paths: ReadonlyMap<string, AnyPathDefinition>;
   /** 箭头能力注册表 */
   arrows: ReadonlyMap<string, ArrowDefinition>;
   /** 图案填充能力注册表 */
@@ -309,15 +285,13 @@ export type PathResolution = Readonly<{
   path: CanonicalPath;
   /** 按步骤 locator 保存的 target 绑定 */
   targets: ReadonlyMap<string, TargetResolution>;
-  /** 已绑定的 path kind provider 与 options */
-  kind: PathKindResolution;
+  /** 已绑定的 path provider 与 options */
+  kind: PathDefinitionResolution;
 }>;
 
 /** stroke emitter 消费的、已绑定 secondary provider 的 path resolution */
 export type StrokePathResolution = PathResolution &
   Readonly<{
-    /** 按 canonical step 对象索引的 generator resolution */
-    generators: ReadonlyMap<CanonicalStep, PathGeneratorResolution>;
     /** 按 canonical arrow mark 对象索引的 arrow resolution */
     arrows: ReadonlyMap<IRArrowMark, ArrowMarkResolution>;
   }>;

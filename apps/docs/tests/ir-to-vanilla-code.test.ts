@@ -346,7 +346,7 @@ describe('irToVanillaCode', () => {
 });
 
 describe('irToVanillaCode fallback', () => {
-  it('rectangle/generator stay runnable as raw IR child', () => {
+  it('rectangle stays runnable as raw IR child', () => {
     const code = irToVanillaCode(
       ir([
         {

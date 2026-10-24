@@ -91,7 +91,6 @@
     "draw": "Draw · 路径写法",
     "arrow": "arrow · 箭头",
     "step": "Step · 路径组合",
-    "pathGenerator": "自定义生成器",
     "pathCustomPath": "自定义路径",
     "pathCustomArrow": "自定义箭头",
     "effects": "效果",

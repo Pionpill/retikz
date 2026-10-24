@@ -1,9 +1,9 @@
 ---
 title: 实现原理
-description: Ribbon 从 Path kind 解析到 Scene 轮廓的编译路径
+description: Ribbon 从 Path 解析到 Scene 轮廓的编译路径
 ---
 
-本页从已装配的 Path kind Definition 出发，追踪一次 Ribbon 编译如何得到普通 Scene Path。阅读前先了解[基础用法](/library/extension/ribbon/usage)。
+本页从已装配的 Path Definition 出发，追踪一次 Ribbon 编译如何得到普通 Scene Path。阅读前先了解[基础用法](/library/extension/ribbon/usage)。
 
 ## 编译流程
 
@@ -16,7 +16,7 @@ description: Ribbon 从 Path kind 解析到 Scene 轮廓的编译路径
 一次编译中的职责边界如下：
 
 1. Core 读取开放的 Path host，按 `kind` 查找当前图装配的 definition，并用该 definition 的完整 schema 解析 subject
-2. Extension Ribbon definition 解析 `kindOptions`，调用 Core `materializePath` 得到已经完成 target、anchor、generator 和 step lowering 的 commands
+2. Extension Ribbon definition 解析 `kindOptions`，调用 Core `materializePath` 得到已经完成 target、anchor 和 step lowering 的 commands
 3. Extension 根据 width、sampling、alignment、cap 和 profile 生成闭合轮廓，并通过 Core `emitHostLabels` 编译中心线标签，通过 `emitBoundaryLabels` 编译端点标签
 4. Extension 调用 Core `wrapOutput` 统一处理包含标签的 Path rotate / scale；Core 统一包裹 Scope、transform、bounds、provenance 与 diagnostics；renderer 只消费普通 Scene Path
 
@@ -35,11 +35,11 @@ description: Ribbon 从 Path kind 解析到 Scene 轮廓的编译路径
       endLine: 60,
     },
     {
-      label: 'Core Path kind 的通用 host 服务',
-      path: 'packages/kernel/core/src/contract/path-kind.ts',
+      label: 'Core Path 的通用 host 服务',
+      path: 'packages/kernel/core/src/contract/path.ts',
     },
     {
-      label: 'Core Path kind lookup 与 subject schema 解析',
+      label: 'Core Path lookup 与 subject schema 解析',
       path: 'packages/kernel/core/src/resolve/path/provider.ts',
       startLine: 27,
       endLine: 42,
@@ -265,8 +265,8 @@ $$
 
 ## 错误与限制
 
-- 未注册 `ribbon` definition 时，Core 会在 Path kind lookup 阶段报告未知 kind；Extension 不会偷偷自动注入
-- 同名 Path kind 或同名但不同 identity 的 profile 在 registry / provider graph 组装时失败，不按顺序覆盖
+- 未注册 `ribbon` definition 时，Core 会在 Path lookup 阶段报告未知 kind；Extension 不会偷偷自动注入
+- 同名 Path 或同名但不同 identity 的 profile 在 registry / provider graph 组装时失败，不按顺序覆盖
 - `centerline` 需要顶层 `children`，并且必须提供带 `kind` 的 `width` 分支对象
 - `boundary` 需要 `upper` 与 `lower` 两条合法开放 step 序列，且禁止顶层 `children` 与中心线宽度字段
 - `boundary` 当前不支持 `kindOptions.label`；标签定位依赖 centerline 的采样位置与边界偏移

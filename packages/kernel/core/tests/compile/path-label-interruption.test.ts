@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { strictObject } from 'zod';
 
 import type { GroupPrim, PathPrim, ScenePrimitive, TextMeasurer, TextPrim } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
-import { definePathGenerator } from '../../src/contract';
 import type { IRPath, IRScene } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
@@ -57,22 +55,6 @@ const lastLine = (path: PathPrim): [number, number] => {
   const command = [...path.commands].reverse().find(candidate => candidate.kind === 'line');
   if (command === undefined) throw new Error('missing line command');
   return command.to;
-};
-
-const rotationCenter = (primitives: ReadonlyArray<ScenePrimitive>, text: string): [number, number] => {
-  const group = flattenPrims(primitives).find(
-    (candidate): candidate is GroupPrim =>
-      candidate.type === 'group' &&
-      candidate.children.some(
-        (child): child is TextPrim => child.type === 'text' && child.lines.some(line => line.text === text),
-      ),
-  );
-  const transform = group?.transforms?.find(candidate => candidate.kind === 'rotate');
-  if (transform === undefined || transform.cx === undefined || transform.cy === undefined) {
-    throw new Error(`missing rotation group for '${text}'`);
-  }
-
-  return [transform.cx, transform.cy];
 };
 
 const coversX = (paths: ReadonlyArray<PathPrim>, x: number): boolean =>
@@ -442,46 +424,5 @@ describe('Stroke Path label interruption', () => {
     expect(fragments).toHaveLength(4);
     expect(coversX(fragments.slice(0, 2), 25)).toBe(false);
     expect(coversX(fragments.slice(2), 75)).toBe(false);
-  });
-
-  it('samples a generator label from its generated command walk before creating the gap', () => {
-    const stair = definePathGenerator({
-      name: 'interruption-stair',
-      paramsSchema: strictObject({}),
-      generate: ({ from, to }) => {
-        const end: [number, number] = to ?? [from[0] + 10, from[1] + 100];
-        return [
-          { kind: 'line' as const, to: [from[0] + 10, from[1]] as [number, number] },
-          { kind: 'line' as const, to: end },
-        ];
-      },
-    });
-    const scene = compile(
-      {
-        version: 1,
-        type: 'scene',
-        children: [
-          {
-            type: 'path',
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              {
-                type: 'step',
-                kind: 'generator',
-                name: 'interruption-stair',
-                to: [10, 100],
-                params: {},
-                label: { text: 'generator', position: 0.5, sloped: true },
-              },
-            ],
-            style: { stroke: STROKE },
-          },
-        ],
-      },
-      { pathGenerators: [stair] },
-    );
-
-    expect(rotationCenter(scene.primitives, 'generator')).toEqual([10, 45]);
-    expect(strokeFragments(scene.primitives)).toHaveLength(2);
   });
 });

@@ -68,7 +68,7 @@ Core 需要把“哪类对象的哪次最终结果”告诉 Inspect，先区分�
 
 每条通知通过三个字段说明结果：
 
-- `owner`（所属类别）：标识结果属于哪类对象；Path 还按 `name` 区分路径种类，不是 Inspector 的注册名。
+- `owner`（所属类别）：标识结果属于哪类对象；Path 还按 `name` 区分路径定义，不是 Inspector 的注册名。
 - `occurrence`（实例定位）：区分编译中实际产生的各个最终实例，不存储几何本身。
 - `value`（产物数据）：保存该实例已求出的几何等结果，供 Inspector 读取。
 
@@ -89,7 +89,7 @@ Core 遍历候选站点时，通过 observer 的 `select()` 调用 `canInspectio
 
 因此，自定义观测器的前提是：对应对象已经能在 Core 中发布最终产物。仅仅注册一个 Inspector，不会让原本不支持观测的对象自动产生 observation。Core 只提供这套通知与隔离编译能力，不负责查找 Inspector 或决定辅助内容的样式。
 
-曲线例子只使用 `path`；以下是 Core 当前支持的 observation owner 清单：`path`（按名称区分的最终 Path kind）、`node`（Node 的几何与正文布局）、`scope`（Scope 固有包络）、`coordinate`（已解析坐标点）、`clip`（一次逻辑 Clip application）和 `composite`（按命名空间与类型区分的复合组件）。内置 Inspector 分别绑定这些 owner；owner 没有发布最终产物时，注册 Inspector 也不会凭空增加观测。
+曲线例子只使用 `path`；以下是 Core 当前支持的 observation owner 清单：`path`（按名称区分的最终 Path）、`node`（Node 的几何与正文布局）、`scope`（Scope 固有包络）、`coordinate`（已解析坐标点）、`clip`（一次逻辑 Clip application）和 `composite`（按命名空间与类型区分的复合组件）。内置 Inspector 分别绑定这些 owner；owner 没有发布最终产物时，注册 Inspector 也不会凭空增加观测。
 
 每条 observation 还带有从外到内排列的 `ancestors`，记录它所在的 Scope / composite 链条及各自 occurrence。Inspector 可以用它解释层级或区分同一 owner 在不同容器中的实例，而不必从 source path 猜测父级。
 

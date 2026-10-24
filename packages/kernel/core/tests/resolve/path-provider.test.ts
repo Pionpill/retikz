@@ -1,14 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { literal, number, strictObject, string } from 'zod';
+import { literal, strictObject, string } from 'zod';
 
-import {
-  definePathGenerator,
-  definePathKind,
-  PathSchema,
-  resolveArrowRegistry,
-  resolvePathGeneratorRegistry,
-  resolvePathKindRegistry,
-} from '../../src';
+import { definePath, PathSchema, resolveArrowRegistry, resolvePathRegistry } from '../../src';
 import type { IRPathBase } from '../../src/schemas';
 import { resolvePathWithBuiltinProviders, resolveStrokePathWithBuiltinProviders } from './path-helper';
 
@@ -24,8 +17,8 @@ const path = (overrides: Partial<IRPathBase> = {}): IRPathBase => ({
 });
 
 describe('resolve/path provider bindings', () => {
-  it('binds builtin and custom path kind definitions and parses options once', () => {
-    const custom = definePathKind({
+  it('binds builtin and custom path definitions and parses options once', () => {
+    const custom = definePath({
       name: 'highlight',
       schema: PathSchema.extend({
         kind: literal('highlight'),
@@ -34,7 +27,7 @@ describe('resolve/path provider bindings', () => {
       compile: () => null,
     });
     const resolution = resolvePathWithBuiltinProviders(path({ kind: 'highlight', kindOptions: { stroke: 'gold' } }), {
-      pathKinds: resolvePathKindRegistry([custom]),
+      paths: resolvePathRegistry([custom]),
     });
 
     expect(resolution.kind.name).toBe('highlight');
@@ -43,8 +36,8 @@ describe('resolve/path provider bindings', () => {
     expect(resolvePathWithBuiltinProviders(path()).kind.name).toBe('stroke');
   });
 
-  it('reports unsupported explicit interruption before a custom strict path-kind schema parses the label', () => {
-    const strictRibbon = definePathKind({
+  it('reports unsupported explicit interruption before a custom strict path-definition schema parses the label', () => {
+    const strictRibbon = definePath({
       name: 'ribbon',
       schema: PathSchema.extend({
         kind: literal('ribbon'),
@@ -55,7 +48,7 @@ describe('resolve/path provider bindings', () => {
 
     expect(() =>
       resolvePathWithBuiltinProviders(path({ kind: 'ribbon', label: { text: 'unsupported', interrupt: false } }), {
-        pathKinds: resolvePathKindRegistry([strictRibbon]),
+        paths: resolvePathRegistry([strictRibbon]),
       }),
     ).toThrow(/label\.interrupt.*built-in stroke path/i);
   });
@@ -89,22 +82,13 @@ describe('resolve/path provider bindings', () => {
     ).toMatchObject([{ text: 'continuous', interrupt: false }]);
   });
 
-  it('fails unknown path kinds through the resolver registry diagnostic', () => {
-    expect(() =>
-      resolvePathWithBuiltinProviders(path({ kind: 'missing' }), { pathKinds: resolvePathKindRegistry() }),
-    ).toThrow(/Unknown provider 'missing'.*available: stroke/s);
+  it('fails unknown path definitions through the resolver registry diagnostic', () => {
+    expect(() => resolvePathWithBuiltinProviders(path({ kind: 'missing' }), { paths: resolvePathRegistry() })).toThrow(
+      /Unknown provider 'missing'.*available: stroke/s,
+    );
   });
 
-  it('reports unknown generator and arrow names from the resolver', () => {
-    expect(() =>
-      resolveStrokePathWithBuiltinProviders(
-        path({
-          children: [steps[0], { type: 'step', kind: 'generator', name: 'missing-generator', params: {} }],
-        }),
-        { irPath: 'children[0].path' },
-      ),
-    ).toThrow(/Unknown provider 'missing-generator'.*available:/s);
-
+  it('reports unknown arrow names from the resolver', () => {
     expect(() =>
       resolveStrokePathWithBuiltinProviders(
         path({ marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'missing-arrow' } }] }),
@@ -113,48 +97,6 @@ describe('resolve/path provider bindings', () => {
         },
       ),
     ).toThrow(/Unknown provider 'missing-arrow'.*available:/s);
-  });
-
-  it('reports provider payload failures with the source IR locator', () => {
-    const generator = definePathGenerator({
-      name: 'locator-generator',
-      paramsSchema: strictObject({ amount: number() }),
-      generate: ({ from }) => [{ kind: 'line', to: from }],
-    });
-
-    expect(() =>
-      resolveStrokePathWithBuiltinProviders(
-        path({
-          children: [steps[0], { type: 'step', kind: 'generator', name: 'locator-generator', params: {} }],
-        }),
-        { pathGenerators: resolvePathGeneratorRegistry([generator]), irPath: 'children[0].path' },
-      ),
-    ).toThrow(
-      /path generator 'locator-generator' failed params validation at children\[0\]\.path\.children\[1\]\.params/s,
-    );
-  });
-
-  it('binds generator definitions, parsed params, and step provenance', () => {
-    const generator = definePathGenerator({
-      name: 'bend',
-      paramsSchema: strictObject({ amount: number() }),
-      generate: ({ from }) => [{ kind: 'line', to: [from[0] + 1, from[1]] }],
-    });
-    const resolution = resolveStrokePathWithBuiltinProviders(
-      path({
-        children: [steps[0], { type: 'step', kind: 'generator', name: 'bend', params: { amount: 3 } }],
-      }),
-      { pathGenerators: resolvePathGeneratorRegistry([generator]), irPath: 'children[0].path' },
-    );
-    const [generatorResolution] = [...resolution.generators.values()];
-
-    expect(generatorResolution).toMatchObject({
-      stepIndex: 1,
-      name: 'bend',
-      definition: generator,
-      params: { amount: 3 },
-      irPath: 'children[0].path.children[1]',
-    });
   });
 
   it('binds arrow hollow visual defaults and geometry before marker emit', () => {

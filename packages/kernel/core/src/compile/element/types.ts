@@ -128,7 +128,7 @@ export type CompiledCoordinate = Readonly<{
   output?: CompileOutput;
 }>;
 
-/** Path 完整编译状态，自定义 kind 不要求具有单一中心线 */
+/** Path 完整编译状态，自定义路径不要求具有单一中心线 */
 export type CompiledPath = Readonly<{
   /** 元素在 IR 树中的来源路径 */
   irPath: string;

@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { compileToScene, definePathKind, PathSchema, resolvePathKindRegistry, StrokePathSchema } from '../../../src';
+import { compileToScene, definePath, PathSchema, resolvePathRegistry, StrokePathSchema } from '../../../src';
 
 const steps = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
   { type: 'step' as const, kind: 'line' as const, to: [10, 0] as [number, number] },
 ];
 
-describe('Path kind full-subject contract', () => {
+describe('Path full-subject contract', () => {
   it('accepts an open path host with any kind and JSON options', () => {
     expect(
       PathSchema.safeParse({
@@ -51,7 +51,7 @@ describe('Path kind full-subject contract', () => {
 
   it('exposes only domain-neutral path services to a custom kind', () => {
     let observed = false;
-    const custom = definePathKind({
+    const custom = definePath({
       name: 'service-probe',
       schema: PathSchema,
       compile: context => {
@@ -89,7 +89,7 @@ describe('Path kind full-subject contract', () => {
           },
         ],
       },
-      { pathKinds: [custom] },
+      { paths: [custom] },
     );
 
     expect(observed).toBe(true);
@@ -113,13 +113,13 @@ describe('Path kind full-subject contract', () => {
   });
 
   it('uses definition.name as the registry key independently of schema shape', () => {
-    const definition = definePathKind({
+    const definition = definePath({
       name: 'named-key',
       schema: PathSchema.extend({ kind: literal('custom') }),
       compile: () => null,
     });
 
     expect(definition.name).toBe('named-key');
-    expect(resolvePathKindRegistry([definition]).has('named-key')).toBe(true);
+    expect(resolvePathRegistry([definition]).has('named-key')).toBe(true);
   });
 });

@@ -1,13 +1,4 @@
-import type {
-  IRArcStep,
-  IRArrowMark,
-  IRAxisLineTarget,
-  IRGeneratorStep,
-  IRPath,
-  IRPathBase,
-  IRStep,
-  IRTarget,
-} from '@retikz/core';
+import type { IRArcStep, IRArrowMark, IRAxisLineTarget, IRPath, IRPathBase, IRStep, IRTarget } from '@retikz/core';
 import { AxisLineTargetSchema, parseTargetSugar, parseWay } from '@retikz/core';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
@@ -147,16 +138,6 @@ const normalizeStep = (input: InputStep): IRStep => {
         points: input.points.map(normalizeTarget),
         ...(input.label === undefined ? {} : { label: input.label }),
       };
-    case 'generator': {
-      const { to, label, ...step } = input;
-      const normalized: IRGeneratorStep = {
-        ...step,
-        ...(to === undefined ? {} : { to: normalizeTarget(to) }),
-        ...(label === undefined ? {} : { label }),
-      };
-
-      return normalized;
-    }
     case 'cycle':
       return input;
     case 'circlePath':
@@ -177,7 +158,7 @@ const normalizePathChildren = (children: ReadonlyArray<IRStep>): Array<IRStep> =
   if (selfContainedRectangle || children[0]?.kind === 'move') return [...children];
 
   const [first, ...rest] = children;
-  const target = 'to' in first && first.to !== undefined ? first.to : ([0, 0] as [number, number]);
+  const target = 'to' in first ? first.to : ([0, 0] as [number, number]);
 
   return [{ type: 'step', kind: 'move', to: target }, ...rest];
 };

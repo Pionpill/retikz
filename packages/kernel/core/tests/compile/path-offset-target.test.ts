@@ -3,7 +3,7 @@ import { literal, strictObject } from 'zod';
 
 import { compileToScene } from '../../src/compile/compile';
 import type { PathPrim, ScenePrimitive } from '../../src/contract';
-import { defineBoundary, definePathKind } from '../../src/contract';
+import { defineBoundary, definePath } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { PathSchema, TargetSchema } from '../../src/schemas';
 
@@ -185,7 +185,7 @@ describe('OffsetPosition: step.to compile resolve', () => {
       expect(ey).toBeCloseTo(20);
     });
 
-    it('custom BuiltinPathKind 重解析复用单次 binding，且 pending Path 之间隔离缓存', () => {
+    it('custom BuiltinPath 重解析复用单次 binding，且 pending Path 之间隔离缓存', () => {
       let parseCount = 0;
       const countedBoundary = defineBoundary({
         name: 'counted',
@@ -194,7 +194,7 @@ describe('OffsetPosition: step.to compile resolve', () => {
         }),
         computeBoundaryPoint: rect => [rect.x, rect.y],
       });
-      const countedStroke = definePathKind({
+      const countedStroke = definePath({
         name: 'counted-stroke',
         schema: PathSchema.extend({ kind: literal('counted-stroke') }),
         compile: context => context.emitStroke(context.path),
@@ -224,9 +224,7 @@ describe('OffsetPosition: step.to compile resolve', () => {
         ],
       };
 
-      expect(
-        () => compileToScene(ir, { boundaries: [countedBoundary], pathKinds: [countedStroke] }).scene,
-      ).not.toThrow();
+      expect(() => compileToScene(ir, { boundaries: [countedBoundary], paths: [countedStroke] }).scene).not.toThrow();
       expect(parseCount).toBe(2);
     });
   });

@@ -3,23 +3,23 @@ import type { BoundsRect } from '@retikz/math';
 import { boundsToRect } from '@retikz/math';
 
 import type {
-  SceneClipPath,
   CompileObservationOwner,
   CompileOccurrenceLocator,
-  CompositeCompileChild,
   CompositeBoundChild,
-  CompositeRuntimeInputContext,
+  CompositeCompileChild,
+  CompositeCompileContext,
+  CompositeCompileResult,
   CompositeCompileScopeProps,
+  CompositeContributionResult,
   CompositeReplay,
   CompositeReplayWrapper,
+  CompositeRuntimeInputContext,
   GroupPrim,
   LayoutChildResult,
   LayoutContribution,
   LayoutMeasurementAxis,
-  CompositeCompileResult,
-  CompositeContributionResult,
-  CompositeCompileContext,
   LayoutProposal,
+  SceneClipPath,
   ScenePrimitive,
   SceneResource,
   SpatialHandleOwner,
@@ -32,10 +32,10 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { BoundaryReferenceResolver, PathTargetResolver, TargetResolution } from '../../resolve';
 import {
   bindComposite,
-  resolveScopeDefaults,
   resolveBoundaryReference,
   resolveComposite,
   resolvePath as resolvePathValue,
+  resolveScopeDefaults,
   resolveTheme,
 } from '../../resolve';
 import {
@@ -61,16 +61,16 @@ import { NamespaceStack } from '../namespace';
 import type { NodeLayout } from '../node';
 import {
   alignmentGuidesOfNode,
-  projectNodeLayoutObservation,
   compileNodeState,
   createScopePlaceholderLayout,
   createSyntheticRectangleLayout,
   emitNodePrimitives,
   labelExtentPoints,
   outerRectOf,
+  projectNodeLayoutObservation,
   projectNodeOwnerOutput,
 } from '../node';
-import { emitPathKindPrimitive } from '../path';
+import { emitDefinedPath } from '../path';
 import {
   createCompileInvariantError,
   createLayoutChildFailure,
@@ -82,9 +82,9 @@ import { createClipRegistry, createPaintRegistry, importSceneResources, remapPri
 import { withProviderOutputValidationBoundary } from '../scene-primitive';
 import {
   createIntrinsicScopeLayout,
-  resolveScopePositionTarget,
   resolveFinalScopeTransforms,
   resolvePreliminaryScopeTransforms,
+  resolveScopePositionTarget,
 } from '../scope';
 import { createScopeTransformContext } from '../transform';
 import type { CompositeCompileArtifact } from '../types';
@@ -94,8 +94,8 @@ import { filterAnimations } from './animation';
 import { freezeCompileArtifact, freezeOccurrence, orderCompileArtifacts } from './artifact';
 import { canonicalizeBoundsRect, collectLayoutBounds } from './bounds';
 import {
-  createCompositeReplayChild,
   createCompositeBoundChild,
+  createCompositeReplayChild,
   createCompositeScopeChild,
   snapshotCompositeLayoutChild,
   snapshotCompositeOutputChild,
@@ -123,6 +123,7 @@ import {
 import { createCompileProvenanceTracker } from './provenance';
 import { replayPendingSpatialHandle } from './spatial-handle';
 import type {
+  CompileSemanticOwner,
   CompositeCompileOwner,
   CompositeReplayMaterializeContext,
   CompositeReplayTransaction,
@@ -132,7 +133,6 @@ import type {
   NodeChild,
   PathChild,
   PendingPathEmission,
-  CompileSemanticOwner,
   ScopeChild,
   ScopeLayoutPlaceholder,
   ScopeLayoutPlaceholderContext,
@@ -224,8 +224,7 @@ export const compileChildrenToPrimitives = (
       clips: context.clips,
       patterns: context.patterns,
       arrows: context.arrows,
-      pathGenerators: context.pathGenerators,
-      pathKinds: context.pathKinds,
+      paths: context.paths,
       paint: context.paint,
       clip: context.clip,
       composites: context.composites,
@@ -379,15 +378,14 @@ export const compileChildrenToPrimitives = (
             mode: pendingPath.theme.mode,
             scopeChain: pendingPath.scopeChain,
             targetResolver,
-            pathKinds: runtime.context.pathKinds,
-            pathGenerators: runtime.context.pathGenerators,
+            paths: runtime.context.paths,
             arrows: runtime.context.arrows,
             patterns: runtime.context.patterns,
             round: runtime.context.round,
             irPath: pendingPath.irPath,
           });
           const result = withWarningOccurrence(pendingPath.occurrence, () =>
-            emitPathKindPrimitive(pendingPath, resolution, targetResolver, {
+            emitDefinedPath(pendingPath, resolution, targetResolver, {
               ...runtime.context,
               resolveTransform: scopeTransformsContext.resolve,
             }),
@@ -1963,8 +1961,7 @@ export const compileChildrenToPrimitives = (
                   pointOfTarget: target => bindingOf(target)?.point ?? null,
                   bindTarget: target => bindingOf(target),
                 },
-                pathKinds: context.pathKinds,
-                pathGenerators: context.pathGenerators,
+                paths: context.paths,
                 arrows: context.arrows,
                 patterns: context.patterns,
                 round: context.round,

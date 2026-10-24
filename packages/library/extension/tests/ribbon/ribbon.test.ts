@@ -4,9 +4,9 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRRibbonPathOptions } from '../../src/ribbon';
 import {
-  createRibbonPathKindDefinition,
+  createRibbonPathDefinition,
   defineRibbonWidthProfile,
-  RibbonPathKindDefinition,
+  RibbonPathDefinition,
   RibbonPathSchema,
 } from '../../src/ribbon';
 
@@ -75,12 +75,12 @@ const ribbonWithDefaultSampling = (overrides: Record<string, unknown> = {}): IRP
 };
 
 const compileToScene = (input: IRScene, options: Parameters<typeof compileCoreToScene>[1] = {}) => {
-  const supplied = options.pathKinds ?? [];
-  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? RibbonPathKindDefinition;
+  const supplied = options.paths ?? [];
+  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? RibbonPathDefinition;
 
   return compileCoreToScene(input, {
     ...options,
-    pathKinds: [ribbonDefinition, ...supplied.filter(definition => definition.name !== 'ribbon')],
+    paths: [ribbonDefinition, ...supplied.filter(definition => definition.name !== 'ribbon')],
   });
 };
 
@@ -591,7 +591,7 @@ describe('compile ribbon', () => {
           sampling: { kind: 'fixed', samples: 2 },
         }),
       ]),
-      { pathKinds: [createRibbonPathKindDefinition({ profiles: [taper] })], padding: 0 },
+      { paths: [createRibbonPathDefinition({ profiles: [taper] })], padding: 0 },
     ).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
@@ -616,7 +616,7 @@ describe('compile ribbon', () => {
       expect(
         () =>
           compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'bad' } })]), {
-            pathKinds: [createRibbonPathKindDefinition({ profiles: [bad] })],
+            paths: [createRibbonPathDefinition({ profiles: [bad] })],
           }).scene,
       ).toThrow(/profile "bad"/);
     },

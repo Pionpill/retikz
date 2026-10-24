@@ -1,4 +1,4 @@
-import type { IRClip, IRPathBase, IRKernelScene } from '@retikz/core';
+import type { IRClip, IRKernelScene, IRPathBase } from '@retikz/core';
 import { CURRENT_IR_VERSION, NodeTextColor, SceneSchema } from '@retikz/core';
 import type { ReactElement } from 'react';
 import { isValidElement } from 'react';
@@ -1287,31 +1287,6 @@ describe('convertIRToReactNode', () => {
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'bend', to: [100, 0], outAngle: 30, inAngle: 150, looseness: 1.2 },
-            ],
-          },
-        ],
-      };
-
-      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
-    });
-
-    it('round-trips generator step：name / to / params / label', () => {
-      const ir: IRKernelScene = {
-        version: CURRENT_IR_VERSION,
-        type: 'scene',
-        children: [
-          {
-            type: 'path',
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              {
-                type: 'step',
-                kind: 'generator',
-                name: 'parabola',
-                to: [160, 0],
-                params: { control: [80, -70] },
-                label: { text: 'p', position: 'near-end' },
-              },
             ],
           },
         ],

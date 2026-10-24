@@ -16,7 +16,7 @@ Extension 是 Retikz 的拓展包，为图形提供更多节点形状、箭头�
 
 从包根导入对应的 `Definition`，即描述一种绘图能力的定义，然后传给当前图的绘图入口。React 使用 `Layout.extensions`，Vanilla 使用渲染选项的 `compile`。导入本身不会注册任何能力，每张图可以选择不同的定义。
 
-需要某一类的全部定义时，可使用 `ExtensionShapeDefinitions`、`ExtensionArrowDefinitions` 或 `ExtensionClipDefinitions` 集合；Ribbon 使用 `RibbonPathKindDefinition`。
+需要某一类的全部定义时，可使用 `ExtensionShapeDefinitions`、`ExtensionArrowDefinitions` 或 `ExtensionClipDefinitions` 集合；Ribbon 使用 `RibbonPathDefinition`。
 
 <ComponentAlert
   type="tip"

@@ -342,16 +342,10 @@ export const kernelSection: Array<Section> = [
             meta: { pageType: 'guide', audience: 'user' },
           },
           {
-            id: 'custom-path-generator',
-            label: 'kernel.pathGenerator',
-            difficulty: DocDifficulty.Advanced,
-            meta: extensionGuide('kernel.path-generator'),
-          },
-          {
             id: 'custom-path',
             label: 'kernel.pathCustomPath',
             difficulty: DocDifficulty.Advanced,
-            meta: extensionGuide('kernel.path-kind'),
+            meta: extensionGuide('kernel.path-definition'),
           },
           {
             id: 'custom-arrow',

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { resolveEffectivePath, resolveScopeDefaults } from '../../src/resolve/style';
 import { resolvePathWithBuiltinProviders } from './path-helper';
 
-describe('path kind host style', () => {
+describe('path host style', () => {
   it.each([
     ['cascade-only', undefined, { style: { color: 'gold' } }, 'gold'],
     ['pathDefault-only', undefined, { path: { style: { color: 'purple' } } }, 'purple'],
@@ -13,7 +13,7 @@ describe('path kind host style', () => {
       { style: { color: 'gold' }, path: { style: { color: 'purple' } } },
       'teal',
     ],
-  ])('keeps %s color effective until the selected path kind consumes it', (_, style, defaults, color) => {
+  ])('keeps %s color effective until the selected path consumes it', (_, style, defaults, color) => {
     const resolved = resolveEffectivePath(
       { type: 'path', kind: 'custom', children: [], style },
       resolveScopeDefaults({ type: 'scope', children: [], defaults }),

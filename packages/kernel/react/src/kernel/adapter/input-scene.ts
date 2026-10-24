@@ -372,25 +372,12 @@ const inputStepFromProps = (props: StepProps): InputStep => {
     };
   }
 
-  if (kind === 'smooth') {
-    const step = props as Extract<StepProps, { kind: 'smooth' }>;
-    return {
-      type: 'step',
-      kind: 'smooth',
-      points: step.points,
-      ...(step.tension === undefined ? {} : { tension: step.tension }),
-      ...(label === undefined ? {} : { label }),
-    };
-  }
-
-  const step = props as Extract<StepProps, { kind: 'generator' }>;
-
+  const step = props as Extract<StepProps, { kind: 'smooth' }>;
   return {
     type: 'step',
-    kind: 'generator',
-    name: step.name,
-    params: step.params,
-    ...(step.to === undefined ? {} : { to: step.to }),
+    kind: 'smooth',
+    points: step.points,
+    ...(step.tension === undefined ? {} : { tension: step.tension }),
     ...(label === undefined ? {} : { label }),
   };
 };
