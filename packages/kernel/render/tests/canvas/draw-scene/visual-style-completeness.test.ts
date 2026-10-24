@@ -69,8 +69,8 @@ it('rectangles and ellipses preserve dash caps and joins across renderers', () =
         stroke: 'red',
         strokeWidth: 2,
         dashPattern: [2, 1],
-        strokeLinecap: 'round',
-        strokeLinejoin: 'bevel',
+        lineCap: 'round',
+        lineJoin: 'bevel',
       },
       {
         type: 'ellipse',
@@ -81,8 +81,8 @@ it('rectangles and ellipses preserve dash caps and joins across renderers', () =
         stroke: 'blue',
         strokeWidth: 2,
         dashPattern: [2, 1],
-        strokeLinecap: 'square',
-        strokeLinejoin: 'round',
+        lineCap: 'square',
+        lineJoin: 'round',
       },
     ],
   };

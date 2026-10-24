@@ -1,4 +1,4 @@
-import type { GroupPrim, SceneClipPath, SceneResource } from '@retikz/core';
+import type { GroupPrimitive, SceneClipPath, SceneResource } from '@retikz/core';
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -71,8 +71,8 @@ describe('ClipDefs — canonical SceneClipPath 物化', () => {
   });
 });
 
-describe('renderPrim — GroupPrim.clipRef → <g clip-path>', () => {
-  const groupWithClip = (clipRef?: string): GroupPrim => ({
+describe('renderPrim — GroupPrimitive.clipRef → <g clip-path>', () => {
+  const groupWithClip = (clipRef?: string): GroupPrimitive => ({
     type: 'group',
     clipRef,
     children: [{ type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: 'red' }],

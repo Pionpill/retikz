@@ -9,7 +9,7 @@ const silent = { onWarn: () => {} };
 
 describe('emitNodePrimitives：带文本 Node 包 <g>', () => {
   // Happy path
-  it('带文本 Node → 单个 GroupPrim（无旋转时无 transform）', () => {
+  it('带文本 Node → 单个 GroupPrimitive（无旋转时无 transform）', () => {
     const ir = scene([{ type: 'node', position: [0, 0], text: 'A' }]);
     const prims = compileToScene(ir, silent).scene.primitives;
 
@@ -88,7 +88,7 @@ describe('emitNodePrimitives：带文本 Node 包 <g>', () => {
   });
 
   // 交互
-  it('带文本 + label → label TextPrim 在该 node 的 group 内', () => {
+  it('带文本 + label → label TextPrimitive 在该 node 的 group 内', () => {
     const ir = scene([{ type: 'node', position: [0, 0], text: 'A', label: { text: 'L' } }]);
     const prims = compileToScene(ir, silent).scene.primitives;
 

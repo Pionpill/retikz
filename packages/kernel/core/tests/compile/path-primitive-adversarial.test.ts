@@ -1,20 +1,20 @@
 ﻿import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { GroupPrim, PathCommand, PathPrim, ScenePrimitive } from '../../src/contract';
+import type { GroupPrimitive, PathCommand, PathPrimitive, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { arrowMarks } from '../helpers/arrow-marks';
 import { close, line, move } from '../helpers/path-command-factory';
 
-const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
-  prims.find((p): p is PathPrim => p.type === 'path');
+const findPathPrim = (prims: Array<ScenePrimitive>): PathPrimitive | undefined =>
+  prims.find((p): p is PathPrimitive => p.type === 'path');
 
 /**
  * Path primitive 边界与错误路径的补强测试。
  * 关注点不与 path.test.ts 的回归测试重叠——这里专门挖 commands / transforms 切换后的边界
  */
-describe('PathPrim.commands：结构化形态约束', () => {
-  it('PathPrim 持有 commands 字段（不再是 d 字符串）', () => {
+describe('PathPrimitive.commands：结构化形态约束', () => {
+  it('PathPrimitive 持有 commands 字段（不再是 d 字符串）', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -248,8 +248,8 @@ describe('PathPrim.commands：结构化形态约束', () => {
   });
 });
 
-describe('GroupPrim.transforms：结构化形态约束', () => {
-  it('rotate 节点 emit GroupPrim 持 transforms 数组（不再是 transform 字符串）', () => {
+describe('GroupPrimitive.transforms：结构化形态约束', () => {
+  it('rotate 节点 emit GroupPrimitive 持 transforms 数组（不再是 transform 字符串）', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -292,7 +292,7 @@ describe('GroupPrim.transforms：结构化形态约束', () => {
     expect(scene.primitives.find(p => p.type === 'group')).toBeUndefined();
   });
 
-  it('多 sub-path + arrow 包裹的 GroupPrim 不带 transforms（仅为分组）', () => {
+  it('多 sub-path + arrow 包裹的 GroupPrimitive 不带 transforms（仅为分组）', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -338,7 +338,7 @@ describe('GroupPrim.transforms：结构化形态约束', () => {
     };
     const scene = compileToScene(ir).scene;
     const labelGroup = scene.primitives.find(
-      (primitive): primitive is GroupPrim =>
+      (primitive): primitive is GroupPrimitive =>
         primitive.type === 'group' && primitive.transforms?.some(transform => transform.kind === 'rotate') === true,
     );
     const transforms = labelGroup?.transforms;
@@ -372,7 +372,7 @@ describe('交互：rotated node 与 path 在 rotated parent 中', () => {
     expect(grp?.type).toBe('group');
 
     if (grp?.type === 'group') {
-      const inner = grp.children.find((c): c is PathPrim => c.type === 'path');
+      const inner = grp.children.find((c): c is PathPrimitive => c.type === 'path');
 
       expect(inner).toBeDefined();
 
@@ -399,7 +399,7 @@ describe('边界 / 错误路径', () => {
     expect(findPathPrim(scene.primitives)).toBeUndefined();
   });
 
-  it('引用未定义节点 → 不产 PathPrim（防御性 null 返回）', () => {
+  it('引用未定义节点 → 不产 PathPrimitive（防御性 null 返回）', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

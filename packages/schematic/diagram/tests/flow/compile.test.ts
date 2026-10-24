@@ -1,4 +1,4 @@
-import type { CoreProviderContribution, GroupPrim, IRChild, ScenePrimitive, TextPrim } from '@retikz/core';
+import type { CoreProviderContribution, GroupPrimitive, IRChild, ScenePrimitive, TextPrimitive } from '@retikz/core';
 import { compileToScene, DEFAULT_RESOLVED_THEME, defineTheme, resolveCoreProviderDependencies } from '@retikz/core';
 import { defineGraphTheme, defineRelationRole } from '@retikz/graph';
 import { createFlexLayout, FlexLayoutArtifactSchema, LayoutItemKind } from '@retikz/layout';
@@ -155,14 +155,15 @@ const flattenPrimitives = (primitives: ReadonlyArray<ScenePrimitive>): Array<Sce
     primitive.type === 'group' ? [primitive, ...flattenPrimitives(primitive.children)] : [primitive],
   );
 
-const textPrimitive = (primitives: ReadonlyArray<ScenePrimitive>, text: string): TextPrim | undefined =>
+const textPrimitive = (primitives: ReadonlyArray<ScenePrimitive>, text: string): TextPrimitive | undefined =>
   flattenPrimitives(primitives).find(
-    (primitive): primitive is TextPrim => primitive.type === 'text' && primitive.lines.some(line => line.text === text),
+    (primitive): primitive is TextPrimitive =>
+      primitive.type === 'text' && primitive.lines.some(line => line.text === text),
   );
 
-const slopedLabelGroup = (primitives: ReadonlyArray<ScenePrimitive>, text: string): GroupPrim | undefined =>
+const slopedLabelGroup = (primitives: ReadonlyArray<ScenePrimitive>, text: string): GroupPrimitive | undefined =>
   flattenPrimitives(primitives).find(
-    (primitive): primitive is GroupPrim =>
+    (primitive): primitive is GroupPrimitive =>
       primitive.type === 'group' &&
       primitive.transforms?.some(transform => transform.kind === 'rotate') === true &&
       textPrimitive(primitive.children, text) !== undefined,
@@ -983,7 +984,7 @@ describe('Flow Diagram compile transaction', () => {
       relationLabel: string | Array<string> = 'edge-label',
     ): {
       hasDetail: boolean;
-      label: TextPrim;
+      label: TextPrimitive;
       labelSize: { width: number; height: number };
       rotation: number | undefined;
     } => {

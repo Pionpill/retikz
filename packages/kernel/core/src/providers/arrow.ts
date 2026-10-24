@@ -15,8 +15,8 @@ const filledPath = (context: ArrowEmitContext, points: ReadonlyArray<[number, nu
   stroke: context.stroke,
   dashPattern: context.dashPattern,
   dashOffset: context.dashOffset,
-  strokeLinecap: context.lineCap,
-  strokeLinejoin: context.lineJoin,
+  lineCap: context.lineCap,
+  lineJoin: context.lineJoin,
 });
 
 /** 实心三角箭头：基础线接触点在 marker 左边界 */
@@ -75,10 +75,10 @@ const hollowPath = (context: ArrowEmitContext, points: ReadonlyArray<[number, nu
   fill: 'none',
   stroke: context.stroke,
   strokeWidth: context.lineWidth,
-  strokeLinejoin: context.lineJoin ?? 'miter',
+  lineJoin: context.lineJoin ?? 'miter',
   dashPattern: context.dashPattern,
   dashOffset: context.dashOffset,
-  strokeLinecap: context.lineCap,
+  lineCap: context.lineCap,
 });
 
 /** Core 内置空心 stealth 箭头，保留实心 stealth 的倒钩轮廓 */
@@ -114,8 +114,8 @@ const circleArrow = defineArrow({
       stroke: context.stroke,
       dashPattern: context.dashPattern,
       dashOffset: context.dashOffset,
-      strokeLinecap: context.lineCap,
-      strokeLinejoin: context.lineJoin,
+      lineCap: context.lineCap,
+      lineJoin: context.lineJoin,
     },
   ],
 });
@@ -138,8 +138,8 @@ const openCircleArrow = defineArrow({
       strokeWidth: context.lineWidth,
       dashPattern: context.dashPattern,
       dashOffset: context.dashOffset,
-      strokeLinecap: context.lineCap,
-      strokeLinejoin: context.lineJoin,
+      lineCap: context.lineCap,
+      lineJoin: context.lineJoin,
     },
   ],
 });

@@ -79,7 +79,7 @@ it('shared effects and stroke geometry reach the scoped node', () => {
   });
   const output = leaves(compileToScene(source).scene.primitives);
   expect(output).toHaveLength(1);
-  expect(output[0]).toMatchObject({ strokeLinecap: 'round', strokeLinejoin: 'bevel', blendMode: 'multiply' });
+  expect(output[0]).toMatchObject({ lineCap: 'round', lineJoin: 'bevel', blendMode: 'multiply' });
   expect(output[0]).toHaveProperty('shadow');
 });
 
@@ -122,8 +122,8 @@ it('pin resolves paint resources and uses its own opacity and stroke geometry', 
   expect(pin).toMatchObject({
     stroke: { kind: 'resourceRef' },
     opacity: 0.8,
-    strokeLinecap: 'round',
-    strokeLinejoin: 'bevel',
+    lineCap: 'round',
+    lineJoin: 'bevel',
     dashPattern: [2, 3],
     dashOffset: 1,
   });
@@ -165,8 +165,8 @@ it('endpoint and inline arrows retain explicit paints and stroke overrides', () 
     fill: { kind: 'resourceRef' },
     dashPattern: [2, 1],
     dashOffset: 1,
-    strokeLinecap: 'round',
-    strokeLinejoin: 'bevel',
+    lineCap: 'round',
+    lineJoin: 'bevel',
   };
   expect(paths[0].arrowEnd?.marker[0]).toMatchObject(expected);
   expect(paths[1]).toMatchObject(expected);
@@ -191,7 +191,7 @@ it('custom arrow output retains fixed nested styles when arrow options are provi
             fill: 'green',
             stroke: 'blue',
             dashPattern: [5, 2],
-            strokeLinecap: 'square',
+            lineCap: 'square',
           },
         ],
       },
@@ -219,7 +219,7 @@ it('custom arrow output retains fixed nested styles when arrow options are provi
     fill: 'green',
     stroke: 'blue',
     dashPattern: [5, 2],
-    strokeLinecap: 'square',
+    lineCap: 'square',
   });
   expect(leaves(path?.arrowEnd?.marker ?? [])[0]).toEqual(leaves(path?.arrowStart?.marker ?? [])[0]);
 });
@@ -264,8 +264,8 @@ it('shared effects reach paths while explicit node resets win', () => {
     }),
   ).scene;
   const output = leaves(scene.primitives);
-  expect(output[0]).toMatchObject({ blendMode: 'normal', strokeLinecap: 'butt' });
+  expect(output[0]).toMatchObject({ blendMode: 'normal', lineCap: 'butt' });
   expect(output[0]).not.toHaveProperty('shadow');
-  expect(output[1]).toMatchObject({ blendMode: 'multiply', strokeLinecap: 'round' });
+  expect(output[1]).toMatchObject({ blendMode: 'multiply', lineCap: 'round' });
   expect(output[1]).toHaveProperty('shadow');
 });

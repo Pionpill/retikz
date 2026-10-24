@@ -1,5 +1,5 @@
 import type { ScenePrimitive } from '@retikz/core';
-import type { LayoutProposal, PathPrim } from '@retikz/core';
+import type { LayoutProposal, PathPrimitive } from '@retikz/core';
 import {
   ChildSchema,
   CompositeBaseSchema,
@@ -209,7 +209,9 @@ const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(node => (node.type === 'group' ? flat(node.children) : [node]));
 
 const connections = (result: ReturnType<typeof compile>) =>
-  flat(result.scene.primitives).filter((p): p is PathPrim => p.type === 'path' && p.meta?.chainConnection === true);
+  flat(result.scene.primitives).filter(
+    (p): p is PathPrimitive => p.type === 'path' && p.meta?.chainConnection === true,
+  );
 it('正交通道在完整分支之外，纵向与横向互为转置', () => {
   const source = {
     ...base,

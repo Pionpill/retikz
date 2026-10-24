@@ -83,7 +83,7 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
     for (const rect of rects) expect(rect.animations).toEqual([FADE]);
   });
 
-  it('text node track → 单层 GroupPrim 带 animations，子图元不带', () => {
+  it('text node track → 单层 GroupPrimitive 带 animations，子图元不带', () => {
     const prims = compileToScene(
       scene([{ type: 'node', id: 'n', position: [0, 0], text: 'A', animations: [FADE, SPIN] }]),
       silent,
@@ -95,7 +95,7 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
     for (const child of prims[0].children) expect(child.animations).toBeUndefined();
   });
 
-  it('path track → PathPrim 带 animations', () => {
+  it('path track → PathPrimitive 带 animations', () => {
     const prims = compileToScene(
       scene([
         {
@@ -117,7 +117,7 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
     for (const path of paths) expect(path.animations).toEqual([FADE]);
   });
 
-  it('scope track → GroupPrim 带 animations，子元素不继承', () => {
+  it('scope track → GroupPrimitive 带 animations，子元素不继承', () => {
     const prims = compileToScene(
       scene([{ type: 'scope', id: 's', animations: [FADE], children: [{ type: 'node', id: 'a', position: [0, 0] }] }]),
       silent,

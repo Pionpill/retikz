@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IRAnimationTrack, IRScene, PathCommand, ScenePrimitive, SceneResource, TextPrim } from '../../src';
+import type { IRAnimationTrack, IRScene, PathCommand, ScenePrimitive, SceneResource, TextPrimitive } from '../../src';
 import { compileToScene, defineArrow } from '../../src';
 import { visualBoundsOfPrimitives } from '../../src/compile/orchestration/visual-bounds';
 
@@ -8,7 +8,7 @@ const boundsOf = (primitives: ReadonlyArray<ScenePrimitive>, resources: Readonly
   visualBoundsOfPrimitives(primitives, resources);
 
 it('箭头中的已度量文本和裁剪共同决定可视边界', () => {
-  const text: TextPrim = {
+  const text: TextPrimitive = {
     type: 'text',
     x: 0,
     y: 0,
@@ -57,7 +57,7 @@ it('箭头中的已度量文本和裁剪共同决定可视边界', () => {
 });
 
 describe('canonical visual bounds', () => {
-  it.each<{ baseline: TextPrim['baseline']; y: number }>([
+  it.each<{ baseline: TextPrimitive['baseline']; y: number }>([
     { baseline: 'alphabetic', y: 20 },
     { baseline: 'top', y: 30 },
     { baseline: 'middle', y: 13 },
@@ -173,7 +173,7 @@ describe('canonical visual bounds', () => {
           ],
           stroke: '#000',
           strokeWidth: 2,
-          strokeLinejoin: 'miter',
+          lineJoin: 'miter',
         },
       ]),
     ).toEqual({ x: -10, y: -10, width: 30, height: 20 });
@@ -195,8 +195,8 @@ describe('canonical visual bounds', () => {
         { kind: 'line', to: [10, 0] },
       ],
       stroke: '#000',
-      strokeLinecap: 'square',
-      strokeLinejoin: 'round',
+      lineCap: 'square',
+      lineJoin: 'round',
       animations: [animation],
     };
 

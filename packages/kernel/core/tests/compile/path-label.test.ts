@@ -4,15 +4,15 @@ import type { TextMeasurer } from '../../src';
 import { samplePathRoute, resolvePathLabelPlacement } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
-import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/contract';
+import type { GroupPrimitive, ScenePrimitive, TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
-const findTextPrims = (prims: Array<ScenePrimitive>): Array<TextPrim> =>
-  prims.filter((p): p is TextPrim => p.type === 'text');
+const findTextPrims = (prims: Array<ScenePrimitive>): Array<TextPrimitive> =>
+  prims.filter((p): p is TextPrimitive => p.type === 'text');
 
-const findLabelGroupPrim = (prims: Array<ScenePrimitive>): GroupPrim | undefined =>
+const findLabelGroupPrim = (prims: Array<ScenePrimitive>): GroupPrimitive | undefined =>
   prims.find(
-    (primitive): primitive is GroupPrim =>
+    (primitive): primitive is GroupPrimitive =>
       primitive.type === 'group' &&
       primitive.transforms?.some(transform => transform.kind === 'rotate') === true &&
       primitive.children.some(child => child.type === 'text'),
@@ -20,11 +20,11 @@ const findLabelGroupPrim = (prims: Array<ScenePrimitive>): GroupPrim | undefined
 
 // core 统一 emit alphabetic 基线，故按字体度量从基线 y 还原单行文本块视觉上/中/下边，
 // 用于验证 label 实际落点（与 baseline 编码方式解耦）
-const visualTop = (t: TextPrim): number => t.y - t.fontSize * ASCENT_FACTOR;
+const visualTop = (t: TextPrimitive): number => t.y - t.fontSize * ASCENT_FACTOR;
 
-const visualBottom = (t: TextPrim): number => t.y + t.fontSize * DESCENT_FACTOR;
+const visualBottom = (t: TextPrimitive): number => t.y + t.fontSize * DESCENT_FACTOR;
 
-const visualMiddle = (t: TextPrim): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
+const visualMiddle = (t: TextPrimitive): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
 
 const linePathIR = (label: NonNullable<Parameters<typeof JSON.stringify>[0]>): IRScene => ({
   version: 1,
@@ -166,7 +166,7 @@ describe('step.label：line 段的 label 几何', () => {
     expect(PathLabelSchema.safeParse({ text: 'x', sloped: true }).success).toBe(true);
   });
 
-  it('默认 (position=midway, side=top)：TextPrim 落在中点上方，align=middle baseline=bottom', () => {
+  it('默认 (position=midway, side=top)：TextPrimitive 落在中点上方，align=middle baseline=bottom', () => {
     const scene = compileToScene(linePathIR({ text: 'accept' })).scene;
     const labels = findTextPrims(scene.primitives);
 
@@ -235,7 +235,7 @@ describe('step.label：line 段的 label 几何', () => {
     expect(grp).toBeDefined();
     expect(grp!.transforms).toEqual([{ kind: 'rotate', degrees: 0, cx: 5, cy: 0 }]);
 
-    const inner = grp!.children.find((c): c is TextPrim => c.type === 'text');
+    const inner = grp!.children.find((c): c is TextPrimitive => c.type === 'text');
 
     expect(inner).toBeDefined();
 
@@ -251,7 +251,7 @@ describe('step.label：line 段的 label 几何', () => {
     expect(grp).toBeDefined();
     expect(grp!.transforms).toEqual([{ kind: 'rotate', degrees: 0, cx: 5, cy: 0 }]);
 
-    const inner = grp!.children.find((c): c is TextPrim => c.type === 'text');
+    const inner = grp!.children.find((c): c is TextPrimitive => c.type === 'text');
 
     expect(inner).toBeDefined();
     expect(visualTop(inner!)).toBeGreaterThan(0);
@@ -264,7 +264,7 @@ describe('step.label：line 段的 label 几何', () => {
     expect(grp).toBeDefined();
     expect(grp!.transforms).toEqual([{ kind: 'rotate', degrees: 0, cx: 5, cy: 0 }]);
 
-    const inner = grp!.children.find((c): c is TextPrim => c.type === 'text');
+    const inner = grp!.children.find((c): c is TextPrimitive => c.type === 'text');
 
     expect(inner).toBeDefined();
     expect(visualMiddle(inner!)).toBeCloseTo(0, 2);
@@ -444,7 +444,7 @@ describe('step.label：覆盖各 step kind', () => {
     expect(t.y).toBeLessThan(0);
   });
 
-  it('move / cycle step 不挂 label——schema 已禁止；这里只验编译期同样不发 TextPrim', () => {
+  it('move / cycle step 不挂 label——schema 已禁止；这里只验编译期同样不发 TextPrimitive', () => {
     // schema 上 move/cycle 没 label 字段；构造一个对象绕过 TS（运行时 in-check 兜底）
     const ir = {
       version: 1,
@@ -465,7 +465,7 @@ describe('step.label：覆盖各 step kind', () => {
     expect(findTextPrims(scene.primitives)).toHaveLength(0);
   });
 
-  it('多个 step 各自带 label → 每个 step 一个 TextPrim，顺序与 step 一致', () => {
+  it('多个 step 各自带 label → 每个 step 一个 TextPrimitive，顺序与 step 一致', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

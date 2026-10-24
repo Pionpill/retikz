@@ -68,7 +68,7 @@ const bracket = defineArrow({
 
 Path 的有效 `color` 覆盖箭头自身的 `color`；箭头具体 `stroke` / `fill` 优先于宏颜色。实心定义默认 `stroke: 'none'`，使用 `fill` 表达主色；自定义实心内容如需同色线条，也可将上下文 `fill` 用作该线条的描边。空心定义通过 `stroke` 表达主色，并输出 `fill: 'none'`。需要颜色而两级主色都缺失时，使用 `contextStroke` 绑定最近宿主路径描边，包括 Scene 绘制资源。
 
-`emit` 接收已解析的 `stroke`、`fill`、`lineWidth`，以及可选的 `dashPattern`、`dashOffset`、`lineCap`、`lineJoin`。需要响应这些选项的图元应主动读取上下文，端帽和连接分别写入基础图元的 `strokeLinecap` 与 `strokeLinejoin`。Core 不再递归覆盖输出图元的样式，因此固定的多色细节可以保留。内置与自定义定义遵循同一规则；透明度仍由箭头容器应用，不要再乘到每个子图元。
+`emit` 接收已解析的 `stroke`、`fill`、`lineWidth`，以及可选的 `dashPattern`、`dashOffset`、`lineCap`、`lineJoin`。需要响应这些选项的图元应主动读取上下文，端帽和连接分别写入基础图元的 `lineCap` 与 `lineJoin`。Core 不再递归覆盖输出图元的样式，因此固定的多色细节可以保留。内置与自定义定义遵循同一规则；透明度仍由箭头容器应用，不要再乘到每个子图元。
 
 <SourceLinks
   sources={[

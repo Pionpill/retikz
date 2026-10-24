@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GroupPrim, IRScene, ScenePrimitive, TextPrim } from '../../src';
+import type { GroupPrimitive, IRScene, ScenePrimitive, TextPrimitive } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
-import type { PathPrim } from '../../src/contract';
+import type { PathPrimitive } from '../../src/contract';
 import type { IRPath } from '../../src/schemas';
 import { PathSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
@@ -10,9 +10,9 @@ import { close } from '../helpers/path-command-factory';
 
 const silent = { onWarn: () => {} };
 
-const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
-  const p = prims.find((x): x is PathPrim => x.type === 'path');
-  if (!p) throw new Error('expected a PathPrim in scene');
+const findPathPrim = (prims: Array<ScenePrimitive>): PathPrimitive => {
+  const p = prims.find((x): x is PathPrimitive => x.type === 'path');
+  if (!p) throw new Error('expected a PathPrimitive in scene');
   return p;
 };
 
@@ -24,17 +24,17 @@ const path = (...steps: Array<unknown>): IRScene => scene([{ type: 'path', child
 const pathWith = (config: Record<string, unknown>, ...steps: Array<unknown>): IRScene =>
   scene([{ type: 'path', ...config, children: steps as never }]);
 
-/** 取编译后首个 PathPrim 的 commands 的 kind 序列（结构化断言用） */
+/** 取编译后首个 PathPrimitive 的 commands 的 kind 序列（结构化断言用） */
 const kinds = (ir: IRScene): Array<string> =>
   findPathPrim(compileToScene(ir, silent).scene.primitives).commands.map(c => c.kind);
 
 /** 取 sloped label 的旋转锚点，作为文字沿最终路径定位的可观察结果 */
 const labelRotationCenter = (primitives: ReadonlyArray<ScenePrimitive>, text: string): [number, number] => {
   const labelGroup = flattenPrims(primitives).find(
-    (primitive): primitive is GroupPrim =>
+    (primitive): primitive is GroupPrimitive =>
       primitive.type === 'group' &&
       primitive.children.some(
-        (child): child is TextPrim => child.type === 'text' && child.lines.some(line => line.text === text),
+        (child): child is TextPrimitive => child.type === 'text' && child.lines.some(line => line.text === text),
       ),
   );
   const rotation = labelGroup?.transforms?.find(transform => transform.kind === 'rotate');
@@ -284,8 +284,8 @@ describe('cornerRadius 交互', () => {
 
     // mark 沿弧长归一化定位；倒角缩短了路径总弧长并改变中点几何，
     // 故倒角后 mark group 的 transforms（平移/旋转）应与尖角不同。
-    const markGroup = (ir: IRScene): GroupPrim | undefined => {
-      const walk = (list: ReadonlyArray<ScenePrimitive>): GroupPrim | undefined => {
+    const markGroup = (ir: IRScene): GroupPrimitive | undefined => {
+      const walk = (list: ReadonlyArray<ScenePrimitive>): GroupPrimitive | undefined => {
         for (const p of list) {
           if (p.type === 'group' && p.transforms && p.transforms.length > 0) return p;
           if (p.type === 'group') {
@@ -322,7 +322,7 @@ describe('cornerRadius 交互', () => {
     );
     const fragments = flattenPrims(
       compileToScene(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
-    ).filter((primitive): primitive is PathPrim => primitive.type === 'path' && primitive.stroke === '#13579b');
+    ).filter((primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.stroke === '#13579b');
 
     expect(fragments).toHaveLength(2);
     expect(fragments.some(fragment => fragment.commands.some(command => command.kind === 'arc'))).toBe(true);
@@ -362,11 +362,13 @@ describe('cornerRadius 交互', () => {
       { measureText: () => ({ width: 20, height: 10 }) },
     ).scene;
     const fragments = flattenPrims(compiledScene.primitives).filter(
-      (primitive): primitive is PathPrim => primitive.type === 'path' && primitive.stroke === '#13579b',
+      (primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.stroke === '#13579b',
     );
     const arcs = fragments
       .flatMap(fragment => fragment.commands)
-      .filter((command): command is Extract<PathPrim['commands'][number], { kind: 'arc' }> => command.kind === 'arc');
+      .filter(
+        (command): command is Extract<PathPrimitive['commands'][number], { kind: 'arc' }> => command.kind === 'arc',
+      );
     const rotationCenter = labelRotationCenter(compiledScene.primitives, label.text);
 
     expect(rotationCenter[0]).toBeCloseTo(roundedAnchor[0], 2);
@@ -401,7 +403,7 @@ describe('cornerRadius 交互', () => {
 
     // 变换顺序硬契约：几何先倒角（内层 path commands 不被 path transform 污染），
     // 旋转由外层 group 承担 → 旋转版内层 path commands 应与未旋转版逐字一致。
-    const findPath = (list: ReadonlyArray<ScenePrimitive>): PathPrim | undefined => {
+    const findPath = (list: ReadonlyArray<ScenePrimitive>): PathPrimitive | undefined => {
       for (const p of list) {
         if (p.type === 'path') return p;
         if (p.type === 'group') {
@@ -437,7 +439,7 @@ describe('cornerRadius 交互', () => {
     const roundedNoScale = scene([{ type: 'path', cornerRadius: 2, children: steps as never }]);
     const roundedScale = scene([{ type: 'path', cornerRadius: 2, scale: 2, children: steps as never }]);
 
-    const findPath = (list: ReadonlyArray<ScenePrimitive>): PathPrim | undefined => {
+    const findPath = (list: ReadonlyArray<ScenePrimitive>): PathPrimitive | undefined => {
       for (const p of list) {
         if (p.type === 'path') return p;
         if (p.type === 'group') {

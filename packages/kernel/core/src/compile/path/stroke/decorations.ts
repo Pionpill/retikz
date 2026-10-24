@@ -124,7 +124,7 @@ export type EmitInlineMarkPrimitivesInput = {
   roundedCommands: boolean;
   /** 已解析 arrow registry */
   arrowResolutions: ReadonlyMap<NonNullable<IRPathBase['marks']>[number]['mark'], ArrowMarkResolution>;
-  /** PathPrim 公共样式属性 */
+  /** PathPrimitive 公共样式属性 */
   baseProps: PathBasePropsWithStrokeWidth;
   /** 坐标取整函数 */
   round: (n: number) => number;

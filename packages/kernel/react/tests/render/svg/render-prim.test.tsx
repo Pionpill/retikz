@@ -1,4 +1,11 @@
-import type { GroupPrim, PathPrim, RectPrim, ResolvedArrowEnd, ScenePrimitive, TextPrim } from '@retikz/core';
+import type {
+  GroupPrimitive,
+  PathPrimitive,
+  RectPrimitive,
+  ResolvedArrowEnd,
+  ScenePrimitive,
+  TextPrimitive,
+} from '@retikz/core';
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -7,7 +14,7 @@ import { renderPrim } from '../../../src/render/svg';
 /** 测试在 node env 跑，不实际挂载——只检查返回的 React element 类型 / props 是否正确 */
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
-/** 构造一个已解析 ResolvedArrowEnd（emit-in-compile 后的 PathPrim.arrowStart / arrowEnd 形态） */
+/** 构造一个已解析 ResolvedArrowEnd（emit-in-compile 后的 PathPrimitive.arrowStart / arrowEnd 形态） */
 const resolvedSpec = (shape: string): ResolvedArrowEnd => ({
   shape,
   baseSize: 10,
@@ -18,7 +25,7 @@ const resolvedSpec = (shape: string): ResolvedArrowEnd => ({
 });
 
 describe('renderPrim: rect', () => {
-  const base: RectPrim = {
+  const base: RectPrimitive = {
     type: 'rect',
     x: 1,
     y: 2,
@@ -68,7 +75,7 @@ describe('renderPrim: ellipse', () => {
 });
 
 describe('renderPrim: path', () => {
-  const base: PathPrim = {
+  const base: PathPrimitive = {
     type: 'path',
     commands: [
       { kind: 'move', to: [0, 0] },
@@ -104,7 +111,7 @@ describe('renderPrim: path', () => {
 });
 
 describe('renderPrim: text', () => {
-  const base: TextPrim = {
+  const base: TextPrimitive = {
     type: 'text',
     x: 0,
     y: 0,
@@ -166,7 +173,7 @@ describe('renderPrim: text', () => {
 
 describe('renderPrim: group', () => {
   it('group prim → <g transform=...>，children 递归 renderPrim', () => {
-    const group: GroupPrim = {
+    const group: GroupPrimitive = {
       type: 'group',
       transforms: [{ kind: 'translate', x: 10, y: 20 }],
       children: [
@@ -207,7 +214,7 @@ describe('renderPrim: group', () => {
   });
 
   it('group transforms 缺省 / 空数组 → transform 属性 undefined', () => {
-    const group: GroupPrim = {
+    const group: GroupPrimitive = {
       type: 'group',
       children: [{ type: 'rect', x: 0, y: 0, width: 5, height: 5 }],
     };

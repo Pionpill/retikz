@@ -210,13 +210,13 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
 
 - 裁剪资源：Scene 单独保存的裁剪路径，同一次编译内相同路径复用同一资源。
 - `clipRef`：分组持有的资源 id，将裁剪区关联到该组子图元。
-- `GroupPrim`：Scene 的分组输出，承载子图元、最终变换以及可选的裁剪引用。
+- `GroupPrimitive`：Scene 的分组输出，承载子图元、最终变换以及可选的裁剪引用。
 
 图中内置与自定义能力从同一入口参与解析，生成的路径进入资源表；资源引用再与子图元、变换一起挂到 Scene 分组。整条链路不依赖 `scope.id`，没有 id 的 Scope 同样可以裁剪。
 
 <ComponentPreview files="scope-clip-resource" size="lg" type="flow" hideCode />
 
-内置和自定义裁剪都通过 Clip Definition 的 `lower` 处理；资源表根据最终路径去重，随后把返回的 id 写入 `GroupPrim.clipRef`。
+内置和自定义裁剪都通过 Clip Definition 的 `lower` 处理；资源表根据最终路径去重，随后把返回的 id 写入 `GroupPrimitive.clipRef`。
 
 **Core 负责描述“裁哪里”，Render 负责真正执行裁剪。** Core 把裁剪路径放进 `Scene.resources`，再用分组的 `clipRef` 指向它；不会提前把超出边界的图形切碎或删除。
 

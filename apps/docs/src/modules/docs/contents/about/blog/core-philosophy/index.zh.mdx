@@ -76,7 +76,7 @@ IR 是这三件事的公约数。一旦它存在，JSX 就是 IR 的一种"输�
 
 为什么要两 pass？因为节点和路径互相引用——节点位置可能依赖另一个节点的锚点，路径终点可能引用某个节点的方位。先把节点全部布完，路径再消费就不会撞上未定义引用。
 
-编译产物 `CompileResult` 同时包含 `scene` 与 immutable `artifacts`。`Scene` 由 5 种 primitive 组成：`RectPrim` / `EllipsePrim` / `TextPrim` / `PathPrim` / `GroupPrim`，外加一张渲染目标无关的资源表（渐变 / 图案 / 裁剪去重后挂稳定 id，由 adapter 物化成 `<defs>` / `<clipPath>`）。这是矢量图形的最大公约子集——SVG、Canvas、PDF、原生绘图都能直接消费，不依赖任何 runtime 特性。文字度量必须在此阶段完成（`measuredWidth` / `measuredHeight` 已填好）；artifact 也从同一次 canonical compile 产出，不靠第二次遍历。
+编译产物 `CompileResult` 同时包含 `scene` 与 immutable `artifacts`。`Scene` 由 5 种 primitive 组成：`RectPrimitive` / `EllipsePrimitive` / `TextPrimitive` / `PathPrimitive` / `GroupPrimitive`，外加一张渲染目标无关的资源表（渐变 / 图案 / 裁剪去重后挂稳定 id，由 adapter 物化成 `<defs>` / `<clipPath>`）。这是矢量图形的最大公约子集——SVG、Canvas、PDF、原生绘图都能直接消费，不依赖任何 runtime 特性。文字度量必须在此阶段完成（`measuredWidth` / `measuredHeight` 已填好）；artifact 也从同一次 canonical compile 产出，不靠第二次遍历。
 
 ```text
 IR (JSON)

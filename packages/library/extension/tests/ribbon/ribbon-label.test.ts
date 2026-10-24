@@ -1,4 +1,12 @@
-import type { GroupPrim, IRPathBase, IRScene, IRStep, PathPrim, ScenePrimitive, TextPrim } from '@retikz/core';
+import type {
+  GroupPrimitive,
+  IRPathBase,
+  IRScene,
+  IRStep,
+  PathPrimitive,
+  ScenePrimitive,
+  TextPrimitive,
+} from '@retikz/core';
 import { compileToScene as compileCoreToScene, PathLabelSchema } from '@retikz/core';
 import { curve } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
@@ -68,25 +76,26 @@ const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitiv
   return out;
 };
 
-const textOf = (primitives: ReadonlyArray<ScenePrimitive>, text: string): TextPrim | undefined =>
+const textOf = (primitives: ReadonlyArray<ScenePrimitive>, text: string): TextPrimitive | undefined =>
   flatten(primitives).find(
-    (primitive): primitive is TextPrim => primitive.type === 'text' && primitive.lines.some(line => line.text === text),
+    (primitive): primitive is TextPrimitive =>
+      primitive.type === 'text' && primitive.lines.some(line => line.text === text),
   );
 
-const visualBottom = (t: TextPrim): number => t.y + t.fontSize * DESCENT_FACTOR;
+const visualBottom = (t: TextPrimitive): number => t.y + t.fontSize * DESCENT_FACTOR;
 
-const visualMiddle = (t: TextPrim): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
+const visualMiddle = (t: TextPrimitive): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
 
-const slopedGroupOf = (primitives: ReadonlyArray<ScenePrimitive>, text: string): GroupPrim | undefined =>
+const slopedGroupOf = (primitives: ReadonlyArray<ScenePrimitive>, text: string): GroupPrimitive | undefined =>
   flatten(primitives).find(
-    (primitive): primitive is GroupPrim =>
+    (primitive): primitive is GroupPrimitive =>
       primitive.type === 'group' &&
       primitive.transforms?.some(transform => transform.kind === 'rotate') === true &&
       textOf(primitive.children, text) !== undefined,
   );
 
-const pathPrims = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrim> =>
-  flatten(primitives).filter((primitive): primitive is PathPrim => primitive.type === 'path');
+const pathPrims = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrimitive> =>
+  flatten(primitives).filter((primitive): primitive is PathPrimitive => primitive.type === 'path');
 
 describe('Ribbon label schema', () => {
   it('仅中心线参数接受标签，数组不能为空', () => {

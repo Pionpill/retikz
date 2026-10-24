@@ -276,7 +276,7 @@ Each row below shows an array state from our example. Group A and Group B contai
 
 Once A and B are registered, `flushPendingPathEmissions` looks up their layouts, resolves the path, and emits its primitives. With only node ids as targets, this example clips the endpoints to the connection boundaries. A's right edge at `[30, 0]` and B's left edge at `[150, 0]` become the visible segment endpoints.
 
-Core then finds the placeholder in its original array and replaces it with the actual PathPrim. Although computed after the nodes, the path remains at index 0. Once paths are filled, a stable `zIndex` sort preserves declaration order among equal values. All placeholders must be gone before Scene is returned.
+Core then finds the placeholder in its original array and replaces it with the actual PathPrimitive. Although computed after the nodes, the path remains at index 0. Once paths are filled, a stable `zIndex` sort preserves declaration order among equal values. All placeholders must be gone before Scene is returned.
 
 The final path contains these fields:
 
@@ -384,7 +384,7 @@ export type Scene = {
   animations?: Array<IRAnimationTrack>;
 };
 
-export type ScenePrimitive = RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim;
+export type ScenePrimitive = RectPrimitive | EllipsePrimitive | TextPrimitive | PathPrimitive | GroupPrimitive;
 ```
 
 </DocTab>

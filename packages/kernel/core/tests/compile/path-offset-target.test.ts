@@ -2,19 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { PathPrim, ScenePrimitive } from '../../src/contract';
+import type { PathPrimitive, ScenePrimitive } from '../../src/contract';
 import { defineBoundary, definePath } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { PathSchema, TargetSchema } from '../../src/schemas';
 
-const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
-  const p = prims.find((x): x is PathPrim => x.type === 'path');
-  if (!p) throw new Error('expected a PathPrim in scene');
+const findPathPrim = (prims: Array<ScenePrimitive>): PathPrimitive => {
+  const p = prims.find((x): x is PathPrimitive => x.type === 'path');
+  if (!p) throw new Error('expected a PathPrimitive in scene');
   return p;
 };
 
 /** 路径末段的 line endpoint（最后一条 line 命令的 to） */
-const lastLineEnd = (prim: PathPrim): [number, number] => {
+const lastLineEnd = (prim: PathPrimitive): [number, number] => {
   for (let i = prim.commands.length - 1; i >= 0; i--) {
     const cmd = prim.commands[i];
     if (cmd.kind === 'line') return [cmd.to[0], cmd.to[1]];
@@ -23,7 +23,7 @@ const lastLineEnd = (prim: PathPrim): [number, number] => {
   throw new Error('no line cmd found');
 };
 
-const firstMove = (prim: PathPrim): [number, number] => {
+const firstMove = (prim: PathPrimitive): [number, number] => {
   const cmd = prim.commands.find(c => c.kind === 'move');
   if (!cmd) throw new Error('no move cmd found');
   return [cmd.to[0], cmd.to[1]];
@@ -230,7 +230,7 @@ describe('OffsetPosition: step.to compile resolve', () => {
   });
 
   describe('错误路径', () => {
-    it('step.to=offset of 未定义 id → 整 path 不产出 PathPrim', () => {
+    it('step.to=offset of 未定义 id → 整 path 不产出 PathPrimitive', () => {
       const ir: IRScene = {
         version: 1,
         type: 'scene',

@@ -1,7 +1,7 @@
 import { RAD_TO_DEG } from '@retikz/math';
 import type { CurveSegmentSample } from '@retikz/math';
 
-import type { GroupPrim, PaintValue, ScenePrimitive, ResolvedArrowEnd, Transform } from '../../../contract';
+import type { GroupPrimitive, PaintValue, ScenePrimitive, ResolvedArrowEnd, Transform } from '../../../contract';
 import { combineOpacity } from '../../text';
 
 const resolveMarkerContextFill = (value: PaintValue, contextStroke: PaintValue): PaintValue =>
@@ -45,7 +45,7 @@ export const buildMarkMarkerGroup = (
   spec: ResolvedArrowEnd,
   sample: CurveSegmentSample,
   context: BuildMarkMarkerGroupContext,
-): GroupPrim => {
+): GroupPrimitive => {
   const { strokeWidth, round, contextStroke } = context;
   const angleDeg = Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG;
   const sx = (spec.markerWidth * strokeWidth) / spec.baseSize;

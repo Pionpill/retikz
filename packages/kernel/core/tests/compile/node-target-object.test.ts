@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { PathPrim, ScenePrimitive } from '../../src/contract';
+import type { PathPrimitive, ScenePrimitive } from '../../src/contract';
 import type { IRScene, IRTarget } from '../../src/schemas';
 
-const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
-  prims.find((x): x is PathPrim => x.type === 'path');
+const findPathPrim = (prims: Array<ScenePrimitive>): PathPrimitive | undefined =>
+  prims.find((x): x is PathPrimitive => x.type === 'path');
 
-const lastLineEnd = (prim: PathPrim): [number, number] => {
+const lastLineEnd = (prim: PathPrimitive): [number, number] => {
   for (let i = prim.commands.length - 1; i >= 0; i--) {
     const cmd = prim.commands[i];
     if (cmd.kind === 'line') return [cmd.to[0], cmd.to[1]];
@@ -34,7 +34,7 @@ const endOf = (target: IRTarget): [number, number] => {
   };
   const scene = compileToScene(ir).scene;
   const prim = findPathPrim(scene.primitives);
-  if (!prim) throw new Error('expected PathPrim');
+  if (!prim) throw new Error('expected PathPrimitive');
 
   return lastLineEnd(prim);
 };
@@ -98,7 +98,7 @@ describe('offset 世界系叠加', () => {
 });
 
 describe('错误路径', () => {
-  it('未定义 id → 不产 PathPrim', () => {
+  it('未定义 id → 不产 PathPrimitive', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -137,7 +137,7 @@ describe('Coordinate（零尺寸）anchor 退化', () => {
     };
     const scene = compileToScene(ir).scene;
     const prim = findPathPrim(scene.primitives);
-    if (!prim) throw new Error('expected PathPrim');
+    if (!prim) throw new Error('expected PathPrimitive');
 
     return lastLineEnd(prim);
   };

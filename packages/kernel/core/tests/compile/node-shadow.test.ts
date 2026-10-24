@@ -68,7 +68,7 @@ describe('[shadow] Happy', () => {
     });
   });
 
-  it('node-ellipse-shadow：circle/ellipse 节点 → EllipsePrim 带 shadow', () => {
+  it('node-ellipse-shadow：circle/ellipse 节点 → EllipsePrimitive 带 shadow', () => {
     const compiled = compileNode({ shape: 'circle', text: 'x', shadow: 'lg' });
     const el = findByType(compiled.primitives, 'ellipse');
 
@@ -161,7 +161,7 @@ describe('[shadow] 错误路径（schema 拒）', () => {
 // ════════════════ 交互 ════════════════
 
 describe('[shadow] 交互', () => {
-  it('shadow-text-not-inherited：Node text + shadow → TextPrim 不带 shadow，仅 shape 图元带', () => {
+  it('shadow-text-not-inherited：Node text + shadow → TextPrimitive 不带 shadow，仅 shape 图元带', () => {
     const compiled = compileNode({ shape: 'rectangle', text: 'hi', shadow: 'md' });
     const rect = findByType(compiled.primitives, 'rect');
     const text = findByType(compiled.primitives, 'text');

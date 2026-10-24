@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GroupPrim, IRPathBase, IRScene, PathCommand, PathPrim } from '../../../src';
+import type { GroupPrimitive, IRPathBase, IRScene, PathCommand, PathPrimitive } from '../../../src';
 import { compileToScene } from '../../../src';
 import { flattenPrims } from '../../helpers/flatten';
 
@@ -15,16 +15,17 @@ const pathPrimitive = (
     children?: IRScene['children'];
     arrows?: NonNullable<Parameters<typeof compileToScene>[1]>['arrows'];
   }> = {},
-): PathPrim => {
+): PathPrimitive => {
   const ir: IRScene = {
     version: 1,
     type: 'scene',
     children: input.children ?? [{ type: 'path', marks, children: steps }],
   };
   const primitive = flattenPrims(compileToScene(ir, { padding: 0, arrows: input.arrows }).scene.primitives).find(
-    (item): item is PathPrim => item.type === 'path' && (item.arrowStart !== undefined || item.arrowEnd !== undefined),
+    (item): item is PathPrimitive =>
+      item.type === 'path' && (item.arrowStart !== undefined || item.arrowEnd !== undefined),
   );
-  if (primitive === undefined) throw new Error('Expected an endpoint-arrow PathPrim');
+  if (primitive === undefined) throw new Error('Expected an endpoint-arrow PathPrimitive');
 
   return primitive;
 };
@@ -85,8 +86,8 @@ describe('compile path: endpoint arrow overlap', () => {
     logicalPath.marks = undefined;
     const logicalPrimitive = flattenPrims(
       compileToScene({ version: 1, type: 'scene', children: logicalChildren }, { padding: 0 }).scene.primitives,
-    ).find((item): item is PathPrim => item.type === 'path');
-    if (logicalPrimitive === undefined) throw new Error('Expected a logical PathPrim');
+    ).find((item): item is PathPrimitive => item.type === 'path');
+    if (logicalPrimitive === undefined) throw new Error('Expected a logical PathPrimitive');
 
     const logicalEndX = terminalPoint(logicalPrimitive.commands)[0];
     const primitive = pathPrimitive([], { children });
@@ -256,19 +257,19 @@ describe('compile path: endpoint arrow overlap', () => {
     const baseline = compile(0);
     const overlapped = compile(1);
     const baselinePath = baseline.find(
-      (primitive): primitive is PathPrim => primitive.type === 'path' && primitive.id === 'edge',
+      (primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.id === 'edge',
     );
     const overlappedPath = overlapped.find(
-      (primitive): primitive is PathPrim => primitive.type === 'path' && primitive.id === 'edge',
+      (primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.id === 'edge',
     );
     const baselineLabel = baseline.find(primitive => primitive.type === 'text');
     const overlappedLabel = overlapped.find(primitive => primitive.type === 'text');
     const baselineInlineGroup = baseline.find(
-      (primitive): primitive is GroupPrim =>
+      (primitive): primitive is GroupPrimitive =>
         primitive.type === 'group' && primitive.transforms?.some(transform => transform.kind === 'translate') === true,
     );
     const overlappedInlineGroup = overlapped.find(
-      (primitive): primitive is GroupPrim =>
+      (primitive): primitive is GroupPrimitive =>
         primitive.type === 'group' && primitive.transforms?.some(transform => transform.kind === 'translate') === true,
     );
 

@@ -2,7 +2,15 @@ import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
-import type { CompileWarning, IRScene, IRPosition, IRPathBase, PathCommand, PathPrim, ScenePrimitive } from '../../src';
+import type {
+  CompileWarning,
+  IRScene,
+  IRPosition,
+  IRPathBase,
+  PathCommand,
+  PathPrimitive,
+  ScenePrimitive,
+} from '../../src';
 import { BuiltinCompileWarningCode, compileToScene, definePath, PathSchema } from '../../src';
 
 const steps = [
@@ -27,9 +35,9 @@ const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitiv
   return out;
 };
 
-const pathPrims = (ir: IRScene, options?: Parameters<typeof compileToScene>[1]): Array<PathPrim> =>
+const pathPrims = (ir: IRScene, options?: Parameters<typeof compileToScene>[1]): Array<PathPrimitive> =>
   flatten(compileToScene(ir, { padding: 0, ...options }).scene.primitives).filter(
-    (primitive): primitive is PathPrim => primitive.type === 'path',
+    (primitive): primitive is PathPrimitive => primitive.type === 'path',
   );
 
 const customPathSchema = <TKind extends string>(kind: TKind) => PathSchema.extend({ kind: literal(kind) });

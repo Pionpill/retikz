@@ -1,11 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GroupPrim, IRScene, PathPrim, RotateTransform, ScaleTransform, ScenePrimitive } from '../../src';
+import type {
+  GroupPrimitive,
+  IRScene,
+  PathPrimitive,
+  RotateTransform,
+  ScaleTransform,
+  ScenePrimitive,
+} from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import { arrowMarks } from '../helpers/arrow-marks';
 
-/** 找顶层第一个带 transforms 的 GroupPrim */
-const findTransformGroup = (prims: ReadonlyArray<ScenePrimitive>): GroupPrim | undefined => {
+/** 找顶层第一个带 transforms 的 GroupPrimitive */
+const findTransformGroup = (prims: ReadonlyArray<ScenePrimitive>): GroupPrimitive | undefined => {
   for (const p of prims) {
     if (p.type === 'group' && p.transforms && p.transforms.length > 0) return p;
   }
@@ -13,8 +20,8 @@ const findTransformGroup = (prims: ReadonlyArray<ScenePrimitive>): GroupPrim | u
   return undefined;
 };
 
-/** 递归找首个 PathPrim */
-const findPathPrim = (prims: ReadonlyArray<ScenePrimitive>): PathPrim | undefined => {
+/** 递归找首个 PathPrimitive */
+const findPathPrim = (prims: ReadonlyArray<ScenePrimitive>): PathPrimitive | undefined => {
   for (const p of prims) {
     if (p.type === 'path') return p;
     if (p.type === 'group') {
@@ -42,7 +49,7 @@ const linePath = (extra: Record<string, unknown>): IRScene => ({
   ],
 });
 
-describe('path rotate → GroupPrim 包裹 + 支点为包围盒中心', () => {
+describe('path rotate → GroupPrimitive 包裹 + 支点为包围盒中心', () => {
   it('rotate=30 产 rotate transform，cx/cy = path bbox center [5,0]', () => {
     const compiled = compileToScene(linePath({ rotate: 30 })).scene;
     const group = findTransformGroup(compiled.primitives);

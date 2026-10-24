@@ -1,4 +1,4 @@
-import type { ConnectionEnvelopeKind, IRNode, PathPrim, ScenePrimitive, ShapeDefinition } from '@retikz/core';
+import type { ConnectionEnvelopeKind, IRNode, PathPrimitive, ScenePrimitive, ShapeDefinition } from '@retikz/core';
 import { boundsConnectionEnvelope, defineShape, ellipseShape, polygon, rectangle } from '@retikz/core';
 import { SectorShapeDefinition, StarShapeDefinition } from '@retikz/extension';
 import type { JsonObject } from '@retikz/foundation';
@@ -74,7 +74,7 @@ type BoundaryGuideParams = z.infer<typeof boundaryGuideParamsSchema>;
 type GuideShapePrimitive = Extract<ScenePrimitive, { type: 'ellipse' | 'rect' }>;
 
 /** 取 ellipse / rect primitive 与 Path 共享的视觉字段 */
-const guidePathStyle = (primitive: GuideShapePrimitive): Omit<PathPrim, 'type' | 'commands'> => ({
+const guidePathStyle = (primitive: GuideShapePrimitive): Omit<PathPrimitive, 'type' | 'commands'> => ({
   id: primitive.id,
   meta: primitive.meta,
   animations: primitive.animations,
@@ -92,7 +92,7 @@ const guidePathStyle = (primitive: GuideShapePrimitive): Omit<PathPrim, 'type' |
 
 /** 把 shape primitive 统一转为具有圆形 dash 端点的教学辅助轮廓 */
 const dottedGuidePrimitive = (primitive: ScenePrimitive): ScenePrimitive => {
-  if (primitive.type === 'path') return { ...primitive, strokeLinecap: 'round' };
+  if (primitive.type === 'path') return { ...primitive, lineCap: 'round' };
   if (primitive.type === 'group') {
     return { ...primitive, children: primitive.children.map(dottedGuidePrimitive) };
   }
@@ -114,8 +114,8 @@ const dottedGuidePrimitive = (primitive: ScenePrimitive): ScenePrimitive => {
           endAngle: 360,
         },
       ],
-      strokeLinecap: 'round',
-    } satisfies PathPrim;
+      lineCap: 'round',
+    } satisfies PathPrimitive;
   }
 
   if (primitive.type === 'rect') {
@@ -130,8 +130,8 @@ const dottedGuidePrimitive = (primitive: ScenePrimitive): ScenePrimitive => {
         { kind: 'line', to: [x, y + height] },
         { kind: 'close' },
       ],
-      strokeLinecap: 'round',
-    } satisfies PathPrim;
+      lineCap: 'round',
+    } satisfies PathPrimitive;
   }
 
   return primitive;

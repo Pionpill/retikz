@@ -1,11 +1,11 @@
 ﻿import { compileToScene } from '../../../src/compile/compile';
-import type { PathCommand, PathPrim, Scene, ScenePrimitive } from '../../../src/contract';
+import type { PathCommand, PathPrimitive, Scene, ScenePrimitive } from '../../../src/contract';
 import type { IRChild, IRPathBase, IRScene, IRStep } from '../../../src/schemas';
 
 /** 取顶层场景中的第一条路径；不存在时使测试失败 */
-export const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
-  const p = prims.find((x): x is PathPrim => x.type === 'path');
-  if (!p) throw new Error('expected a PathPrim in scene');
+export const findPathPrim = (prims: Array<ScenePrimitive>): PathPrimitive => {
+  const p = prims.find((x): x is PathPrimitive => x.type === 'path');
+  if (!p) throw new Error('expected a PathPrimitive in scene');
   return p;
 };
 

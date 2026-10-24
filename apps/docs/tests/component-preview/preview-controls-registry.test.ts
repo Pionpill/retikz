@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import type { NodeLayoutObservation, IRScene, ScenePrimitive, TextMeasurer, TextPrim } from '@retikz/core';
+import type { NodeLayoutObservation, IRScene, ScenePrimitive, TextMeasurer, TextPrimitive } from '@retikz/core';
 import { compileToScene, fallbackMeasurer, isNodeLayoutCompileArtifact } from '@retikz/core';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -226,7 +226,7 @@ const compileGeometryNode = (
 };
 
 /** 递归查找节点正文 Text primitive */
-const findTextPrimitive = (primitives: ReadonlyArray<ScenePrimitive>): TextPrim | undefined => {
+const findTextPrimitive = (primitives: ReadonlyArray<ScenePrimitive>): TextPrimitive | undefined => {
   for (const primitive of primitives) {
     if (primitive.type === 'text') return primitive;
     if (primitive.type === 'group') {
@@ -242,7 +242,7 @@ const findTextPrimitive = (primitives: ReadonlyArray<ScenePrimitive>): TextPrim 
 const compileBuiltinText = (
   text: string,
   values: { align: 'start' | 'middle' | 'end'; fontSize: number; lineHeight: number; maxTextWidth: number },
-): { layout: NodeLayoutObservation; text: TextPrim } => {
+): { layout: NodeLayoutObservation; text: TextPrimitive } => {
   const result = compileToScene(
     {
       type: 'scene',

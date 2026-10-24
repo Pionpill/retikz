@@ -2,24 +2,24 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileOptions } from '../../src/compile/compile';
 import { compileToScene } from '../../src/compile/compile';
-import type { ScenePrimitive, TextPrim } from '../../src/contract';
+import type { ScenePrimitive, TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
-const findText = (prims: Array<ScenePrimitive>): TextPrim | undefined =>
-  flattenPrims(prims).find((p): p is TextPrim => p.type === 'text');
+const findText = (prims: Array<ScenePrimitive>): TextPrimitive | undefined =>
+  flattenPrims(prims).find((p): p is TextPrimitive => p.type === 'text');
 
 /** width = 字符数（与字号无关），便于精确断言折行 */
 const opts: CompileOptions = { measureText: text => ({ width: [...text].length, height: 14 }) };
 
-const compileNode = (node: Record<string, unknown>): TextPrim => {
+const compileNode = (node: Record<string, unknown>): TextPrimitive => {
   const ir: IRScene = {
     version: 1,
     type: 'scene',
     children: [{ type: 'node', id: 'A', position: [0, 0], ...node }] as never,
   };
   const t = findText(compileToScene(ir, opts).scene.primitives);
-  if (!t) throw new Error('expected TextPrim');
+  if (!t) throw new Error('expected TextPrimitive');
 
   return t;
 };

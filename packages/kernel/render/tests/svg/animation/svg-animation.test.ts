@@ -1,4 +1,4 @@
-import type { IRAnimationTrack, PathPrim, RectPrim, Scene, ScenePrimitive } from '@retikz/core';
+import type { IRAnimationTrack, PathPrimitive, RectPrimitive, Scene, ScenePrimitive } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { buildSvgFragment, renderToSvgString } from '../../../src/svg';
@@ -16,7 +16,7 @@ const scene = (primitives: Array<ScenePrimitive>, animations?: Array<IRAnimation
   ...(animations ? { animations } : {}),
 });
 
-const rect = (extra: Partial<RectPrim> = {}): RectPrim => ({
+const rect = (extra: Partial<RectPrimitive> = {}): RectPrimitive => ({
   type: 'rect',
   x: 0,
   y: 0,
@@ -132,7 +132,7 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
   });
 
   it('strokeWidth + pathDraw 映射：pathLength/dasharray setup + stroke-dashoffset keyframes', () => {
-    const path: PathPrim = {
+    const path: PathPrimitive = {
       type: 'path',
       commands: [
         { kind: 'move', to: [0, 0] },
@@ -252,7 +252,7 @@ describe('静态截帧 {at:t}（烘焙 evaluateTrack 求值，不 emit 动画）
   });
 
   it('pathDraw 线性 at=200 → stroke-dashoffset 静态属性（1−value）+ pathLength', () => {
-    const path: PathPrim = {
+    const path: PathPrimitive = {
       type: 'path',
       commands: [
         { kind: 'move', to: [0, 0] },

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { GroupPrim, ScenePrimitive } from '../../src/contract';
+import type { GroupPrimitive, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { NodeSchema, ScopeSchema } from '../../src/schemas';
 
@@ -28,9 +28,9 @@ const line = (to: [number, number], zIndex?: number): IRScene['children'][number
 
 const silent = { onWarn: () => {} };
 
-const topGroup = (result: { primitives: Array<ScenePrimitive> }): GroupPrim => {
-  const g = result.primitives.find((p): p is GroupPrim => p.type === 'group');
-  if (!g) throw new Error('expected a top-level GroupPrim');
+const topGroup = (result: { primitives: Array<ScenePrimitive> }): GroupPrimitive => {
+  const g = result.primitives.find((p): p is GroupPrimitive => p.type === 'group');
+  if (!g) throw new Error('expected a top-level GroupPrimitive');
   return g;
 };
 

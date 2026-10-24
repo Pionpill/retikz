@@ -541,7 +541,7 @@ describe('跨 scope anchor 交互场景', () => {
     expect(Math.abs(end![1])).toBeLessThan(20);
   });
 
-  it('scope_emit_group_prim_anchor_global：Scene GroupPrim 子 node 在局部坐标；NamespaceStack layout 全局——path 端点取后者，二者一致无 drift', () => {
+  it('scope_emit_group_prim_anchor_global：Scene GroupPrimitive 子 node 在局部坐标；NamespaceStack layout 全局——path 端点取后者，二者一致无 drift', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -558,7 +558,7 @@ describe('跨 scope anchor 交互场景', () => {
     ]);
     const compiled = compileToScene(ir).scene;
 
-    // 顶层 GroupPrim 含 transforms translate(120, 0)；其 children 中 A 的 rect.x = 10（局部坐标）
+    // 顶层 GroupPrimitive 含 transforms translate(120, 0)；其 children 中 A 的 rect.x = 10（局部坐标）
     const group = compiled.primitives.find(p => p.type === 'group');
 
     expect(group).toBeDefined();

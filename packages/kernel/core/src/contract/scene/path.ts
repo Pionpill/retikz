@@ -1,18 +1,11 @@
-import type { JsonObject } from '@retikz/foundation';
-
+import type { ArrowShape, IRPosition, PathFillRule } from '../../schemas';
 import type {
-  ArrowShape,
-  BlendMode,
-  IRAnimationTrack,
-  IRGraphicStyle,
-  IRPathBase,
-  IRPosition,
-  PathFillRule,
-  PathLineCap,
-  PathLineJoin,
-  ResolvedDropShadow,
-} from '../../schemas';
-import type { PaintValue } from './paint';
+  ScenePrimitiveFill,
+  ScenePrimitiveOpacity,
+  ScenePrimitiveStroke,
+  ScenePrimitiveEffects,
+  ScenePrimitiveBase,
+} from './base';
 import type { ScenePrimitive } from './scene';
 
 /** 移动命令：移动游标到目标点，不绘制 */
@@ -141,69 +134,27 @@ export type ResolvedArrowEnd = {
   marker: Array<ScenePrimitive>;
 };
 
-/** 路径原语：结构化 commands 数组；adapter 在 render 时翻译为各自原生 API */
-export type PathPrim = {
-  /** 类型判别符 */
-  type: 'path';
-  /** 禁用该图元及其子树的指针命中；省略时保持正常命中 */
-  hitTest?: false;
-  /** 稳定挂点 id：compile 从 IR 元素 user id stamp，供 renderer emit data-retikz-id / canvas hit-test */
-  id?: string;
-  /** provenance 元数据：compile 从 IR 元素（node / path / scope）的 `meta` 原样 stamp，renderer 忽略（不进 DOM），交互层 / 工具链从 Scene 读 */
-  meta?: JsonObject;
-  /** 时间轴动画 tracks：compile 从 IR 元素的 animations 原样 stamp；renderer 能播则播、不能则渲染 settled 静态态并 warn（不丢图） */
-  animations?: Array<IRAnimationTrack>;
-  /** 结构化路径命令序列，按数组顺序绘制 */
-  commands: Array<PathCommand>;
-  /** 填充：纯色 / 资源表 paint server（gradient）/ contextStroke；不填表示不填充 */
-  fill?: PaintValue;
-  /**
-   * 填充透明度 0~1
-   * @default 1
-   */
-  fillOpacity?: number;
-  /**
-   * 填充规则：`nonzero`（默认）/ `evenodd`（环形 / 孔洞场景）
-   * @default 'nonzero'
-   */
-  fillRule?: PathFillRule;
-  /** 描边：纯色 / 资源表 paint server（gradient）/ contextStroke */
-  stroke?: PaintValue;
-  /**
-   * 描边透明度 0~1
-   * @default 1
-   */
-  strokeOpacity?: number;
-  /** 描边宽度 */
-  strokeWidth?: IRGraphicStyle['strokeWidth'];
-  /** 描边 dash pattern */
-  dashPattern?: NonNullable<IRPathBase['style']>['dashPattern'];
-  /** 描边 dash offset */
-  dashOffset?: NonNullable<IRPathBase['style']>['dashOffset'];
-  /**
-   * 端点形状
-   * @default 'butt'
-   */
-  strokeLinecap?: PathLineCap;
-  /**
-   * 拐点形状
-   * @default 'miter'
-   */
-  strokeLinejoin?: PathLineJoin;
-  /** 起点箭头视觉规格；undefined = 无箭头 */
-  arrowStart?: ResolvedArrowEnd;
-  /** 终点箭头视觉规格；undefined = 无箭头 */
-  arrowEnd?: ResolvedArrowEnd;
-  /**
-   * 整体透明度 0~1
-   * @default 1
-   */
-  opacity?: number;
-  /** 投影：解析后对象（preset 已展开 + 显式覆盖合并）；undefined = 无投影 */
-  shadow?: ResolvedDropShadow;
-  /**
-   * 混合模式：解析后值；undefined / normal = 普通 source-over
-   * @default 'normal'
-   */
-  blendMode?: BlendMode;
-};
+/** 路径图元的填充、描边与视觉效果 */
+export type PathPrimitiveAppearance = ScenePrimitiveFill &
+  ScenePrimitiveStroke &
+  ScenePrimitiveOpacity &
+  ScenePrimitiveEffects & {
+    /**
+     * 填充规则：`nonzero`（默认）/ `evenodd`（环形 / 孔洞场景）
+     * @default 'nonzero'
+     */
+    fillRule?: PathFillRule;
+  };
+
+/** 由结构化命令描述的路径图元 */
+export type PathPrimitive = ScenePrimitiveBase &
+  PathPrimitiveAppearance & {
+    /** 类型判别符 */
+    type: 'path';
+    /** 结构化路径命令序列，按数组顺序绘制 */
+    commands: Array<PathCommand>;
+    /** 起点箭头视觉规格；undefined = 无箭头 */
+    arrowStart?: ResolvedArrowEnd;
+    /** 终点箭头视觉规格；undefined = 无箭头 */
+    arrowEnd?: ResolvedArrowEnd;
+  };

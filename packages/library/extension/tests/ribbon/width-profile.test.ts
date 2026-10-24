@@ -1,4 +1,4 @@
-import type { IRScene, PathPrim, ScenePrimitive } from '@retikz/core';
+import type { IRScene, PathPrimitive, ScenePrimitive } from '@retikz/core';
 import { compileToScene as compileCoreToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -20,13 +20,13 @@ const flattenPrims = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePri
     primitive.type === 'group' ? [primitive, ...flattenPrims(primitive.children)] : [primitive],
   );
 
-const firstPathPrim = (primitives: Array<ScenePrimitive>): PathPrim => {
-  const prim = flattenPrims(primitives).find((item): item is PathPrim => item.type === 'path');
+const firstPathPrim = (primitives: Array<ScenePrimitive>): PathPrimitive => {
+  const prim = flattenPrims(primitives).find((item): item is PathPrimitive => item.type === 'path');
   if (prim === undefined) throw new Error('Expected a path primitive.');
   return prim;
 };
 
-const commandPoint = (command: PathPrim['commands'][number]): [number, number] => {
+const commandPoint = (command: PathPrimitive['commands'][number]): [number, number] => {
   if (!('to' in command)) throw new Error(`Expected a point command, got ${command.kind}.`);
   return command.to;
 };
@@ -85,7 +85,7 @@ describe('Extension Ribbon width profile', () => {
   });
 
   it('bulge_peak_equals_base_and_peak_less_than_base', () => {
-    const commandsFor = (base: number, peak: number): Array<PathPrim['commands'][number]> =>
+    const commandsFor = (base: number, peak: number): Array<PathPrimitive['commands'][number]> =>
       firstPathPrim(
         compileToRibbonScene(
           scene([

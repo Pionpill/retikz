@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { emitInlineLine, fallbackMeasurer, layoutInlineLine, snapshotLoweredTex } from '../../src/compile/text';
-import type { GroupPrim, PathPrim } from '../../src/contract';
+import type { GroupPrimitive, PathPrimitive } from '../../src/contract';
 
 describe('[tex-lowering] multi-path contract', () => {
   it('按 paint order 输出多条路径并解析宿主颜色与透明度', () => {
@@ -45,11 +45,11 @@ describe('[tex-lowering] multi-path contract', () => {
       0,
       6,
       value => value,
-    ) as Array<GroupPrim>;
+    ) as Array<GroupPrimitive>;
 
     expect(group.children).toHaveLength(2);
 
-    const [first, second] = group.children as Array<PathPrim>;
+    const [first, second] = group.children as Array<PathPrimitive>;
 
     expect(first).toMatchObject({
       type: 'path',
@@ -90,8 +90,8 @@ describe('[tex-lowering] multi-path contract', () => {
       }),
     });
 
-    const [group] = emitInlineLine(line, { segments: [{}] }, 0, 1, value => value) as Array<GroupPrim>;
-    const [path] = group.children as Array<PathPrim>;
+    const [group] = emitInlineLine(line, { segments: [{}] }, 0, 1, value => value) as Array<GroupPrimitive>;
+    const [path] = group.children as Array<PathPrimitive>;
 
     expect(path).not.toHaveProperty('fill');
     expect(path.stroke).toBe('currentColor');
@@ -121,8 +121,8 @@ describe('[tex-lowering] multi-path contract', () => {
     command.to[0] = 99;
     lowered.paths.length = 0;
 
-    const [group] = emitInlineLine(line, { segments: [{}] }, 0, 1, value => value) as Array<GroupPrim>;
-    const [path] = group.children as Array<PathPrim>;
+    const [group] = emitInlineLine(line, { segments: [{}] }, 0, 1, value => value) as Array<GroupPrimitive>;
+    const [path] = group.children as Array<PathPrimitive>;
 
     expect(path.commands).toEqual([{ kind: 'move', to: [0, 0] }]);
   });

@@ -1,5 +1,5 @@
 import { createCanvas } from '@napi-rs/canvas';
-import type { PathPrim, RectPrim, ResolvedArrowEnd, Scene } from '@retikz/core';
+import type { PathPrimitive, RectPrimitive, ResolvedArrowEnd, Scene } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -68,7 +68,7 @@ const arrowEndSpec: ResolvedArrowEnd = {
   ],
 };
 
-const arrowPathScene = (extra: Partial<PathPrim>): Scene =>
+const arrowPathScene = (extra: Partial<PathPrimitive>): Scene =>
   sceneOf([
     {
       type: 'path',
@@ -141,7 +141,7 @@ const makeRecordingCtx = (
   }) as unknown as CanvasRenderingContext2D;
 };
 
-const rectScene = (extra: Partial<RectPrim>): Scene =>
+const rectScene = (extra: Partial<RectPrimitive>): Scene =>
   sceneOf([{ type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: '#f00', ...extra }]);
 
 describe('[canvas-effects] drop shadow', () => {

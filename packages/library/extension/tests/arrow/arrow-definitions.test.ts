@@ -1,4 +1,4 @@
-import type { IRScene, PathPrim, ScenePrimitive } from '@retikz/core';
+import type { IRScene, PathPrimitive, ScenePrimitive } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -40,7 +40,7 @@ const arrowScene = (shape: string): IRScene => ({
   ],
 });
 
-const firstPath = (primitives: ReadonlyArray<ScenePrimitive>): PathPrim | undefined => {
+const firstPath = (primitives: ReadonlyArray<ScenePrimitive>): PathPrimitive | undefined => {
   for (const primitive of primitives) {
     if (primitive.type === 'path') return primitive;
     if (primitive.type === 'group') {
@@ -108,7 +108,7 @@ describe('Extension optional arrow definitions', () => {
     });
     expect(compiled[1]?.arrowEnd?.marker[0]).toMatchObject({
       type: 'path',
-      strokeLinejoin: 'round',
+      lineJoin: 'round',
     });
   });
 
@@ -147,7 +147,7 @@ describe('Extension optional arrow definitions', () => {
         fill: 'none',
         stroke: '#123456',
         strokeWidth: 2,
-        strokeLinejoin: 'round',
+        lineJoin: 'round',
       },
     ]);
     expect([...KiteArrowDefinition.emit(context)]).toEqual([
@@ -177,7 +177,7 @@ describe('Extension optional arrow definitions', () => {
         fill: 'none',
         stroke: '#123456',
         strokeWidth: 2,
-        strokeLinejoin: 'round',
+        lineJoin: 'round',
       },
     ]);
     expect(DiamondArrowDefinition).toMatchObject({ backX: 0, lineContactX: 0 });
@@ -221,7 +221,7 @@ describe('Extension optional arrow definitions', () => {
         fill: 'none',
         stroke: '#123456',
         strokeWidth: 2,
-        strokeLinejoin: 'round',
+        lineJoin: 'round',
       },
     ]);
 

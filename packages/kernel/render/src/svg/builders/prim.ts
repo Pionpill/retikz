@@ -1,4 +1,11 @@
-import type { BlendMode, IRDropShadow, PaintValue, PathPrim, ResolvedArrowEnd, ScenePrimitive } from '@retikz/core';
+import type {
+  BlendMode,
+  IRDropShadow,
+  PaintValue,
+  PathPrimitive,
+  ResolvedArrowEnd,
+  ScenePrimitive,
+} from '@retikz/core';
 
 import { firstLineDy } from '../../shared';
 import { buildPathD } from '../path-d-builder';
@@ -15,7 +22,7 @@ type DominantBaseline = 'text-before-edge' | 'central' | 'text-after-edge' | 'al
  */
 export type BuildContext = {
   /** 文档容器定位箭头后，复用普通图元绘制内容 */
-  arrowContentFor?: (primitive: PathPrim) => Array<SvgNode>;
+  arrowContentFor?: (primitive: PathPrimitive) => Array<SvgNode>;
   /** 资源局部绘制上下文中最近路径的描边 */
   contextStroke?: PaintValue;
   /** 解析主树图元所属的宿主上下文 */
@@ -28,7 +35,7 @@ export type BuildContext = {
   arrowMarkerIdFor?: (spec: ResolvedArrowEnd) => string;
   /** paint 资源 id → `url(#...)` 引用（加实例前缀避免跨实例撞）；缺省 `url(#id)` */
   paintRefUrl?: (id: string) => string;
-  /** clip 资源 id → `url(#...)` 引用（GroupPrim.clipRef 物化用）；缺省 `url(#id)` */
+  /** clip 资源 id → `url(#...)` 引用（GroupPrimitive.clipRef 物化用）；缺省 `url(#id)` */
   clipRefUrl?: (id: string) => string;
   /** 按已解析 IRDropShadow 查去重注册的 `<filter>` id（emit `filter="url(#id)"`）；缺省裸 hash id */
   shadowIdFor?: (shadow: IRDropShadow) => string;
@@ -148,8 +155,8 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
             'stroke-width': p.strokeWidth,
             'stroke-dasharray': p.dashPattern?.join(' '),
             'stroke-dashoffset': p.dashOffset,
-            'stroke-linecap': p.strokeLinecap,
-            'stroke-linejoin': p.strokeLinejoin,
+            'stroke-linecap': p.lineCap,
+            'stroke-linejoin': p.lineJoin,
             rx: p.cornerRadius,
             ry: p.cornerRadius,
             opacity: p.opacity,
@@ -181,8 +188,8 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
             'stroke-width': p.strokeWidth,
             'stroke-dasharray': p.dashPattern?.join(' '),
             'stroke-dashoffset': p.dashOffset,
-            'stroke-linecap': p.strokeLinecap,
-            'stroke-linejoin': p.strokeLinejoin,
+            'stroke-linecap': p.lineCap,
+            'stroke-linejoin': p.lineJoin,
             opacity: p.opacity,
             filter: shadowFilterRef(p.shadow, context.shadowIdFor),
           }),
@@ -255,8 +262,8 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
             'stroke-width': p.strokeWidth,
             'stroke-dasharray': p.dashPattern?.join(' '),
             'stroke-dashoffset': p.dashOffset,
-            'stroke-linecap': p.strokeLinecap,
-            'stroke-linejoin': p.strokeLinejoin,
+            'stroke-linecap': p.lineCap,
+            'stroke-linejoin': p.lineJoin,
             'marker-start': startId ? `url(#${startId})` : undefined,
             'marker-end': endId ? `url(#${endId})` : undefined,
             opacity: p.opacity,

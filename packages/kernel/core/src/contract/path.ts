@@ -3,7 +3,7 @@ import type { ZodType } from 'zod';
 
 import type { IRBoundaryLabel, IRPathLabel, IRPathBase, IRPosition, IRStep, IRTransform } from '../schemas';
 import type { CompileOwnerOutputPublisher } from './observation';
-import type { PathCommand, PathPrim, ScenePrimitive } from './scene';
+import type { PathCommand, PathPrimitiveAppearance, ScenePrimitive } from './scene';
 
 /**
  * path 编译结果
@@ -31,22 +31,7 @@ export type ResolvedPathAppearance = Readonly<
   {
     /** 宿主生效的主色，保留至选定的路径定义消费 */
     color?: NonNullable<IRPathBase['style']>['color'];
-  } & Pick<
-    PathPrim,
-    | 'fill'
-    | 'stroke'
-    | 'fillOpacity'
-    | 'fillRule'
-    | 'strokeOpacity'
-    | 'strokeWidth'
-    | 'dashPattern'
-    | 'dashOffset'
-    | 'strokeLinecap'
-    | 'strokeLinejoin'
-    | 'opacity'
-    | 'shadow'
-    | 'blendMode'
-  >
+  } & PathPrimitiveAppearance
 >;
 
 /** Path 请求宿主标签编译时提供的已定位几何信息，不包含 Stroke 专属 interruption */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IRScene, PathPrim, ScenePrimitive } from '../../src';
+import type { IRScene, PathPrimitive, ScenePrimitive } from '../../src';
 import { compileToScene, PathDefaultSchema, ScopeSchema } from '../../src';
 import { arrowMarks } from '../helpers/arrow-marks';
 
@@ -32,9 +32,9 @@ const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitiv
   return out;
 };
 
-const pathPrims = (ir: IRScene): Array<PathPrim> =>
+const pathPrims = (ir: IRScene): Array<PathPrimitive> =>
   flatten(compileToScene(ir, { padding: 0 }).scene.primitives).filter(
-    (primitive): primitive is PathPrim => primitive.type === 'path',
+    (primitive): primitive is PathPrimitive => primitive.type === 'path',
   );
 
 describe('Drawable shared style resolution', () => {
@@ -100,7 +100,7 @@ describe('Drawable shared style resolution', () => {
       { padding: 0 },
     ).scene;
     const primitives = flatten(compiled.primitives);
-    const prim = primitives.find((primitive): primitive is PathPrim => primitive.type === 'path');
+    const prim = primitives.find((primitive): primitive is PathPrimitive => primitive.type === 'path');
     const transformGroup = primitives.find(
       primitive =>
         primitive.type === 'group' &&
@@ -115,8 +115,8 @@ describe('Drawable shared style resolution', () => {
     expect(prim.strokeWidth).toBe(2);
     expect(prim.dashPattern).toEqual([4, 2]);
     expect(prim.dashOffset).toBe(1);
-    expect(prim.strokeLinecap).toBe('round');
-    expect(prim.strokeLinejoin).toBe('bevel');
+    expect(prim.lineCap).toBe('round');
+    expect(prim.lineJoin).toBe('bevel');
     expect(prim.commands.some(command => command.kind === 'arc')).toBe(true);
     expect(
       transformGroup?.type === 'group' &&

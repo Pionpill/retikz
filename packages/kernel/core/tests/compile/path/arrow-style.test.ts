@@ -105,8 +105,8 @@ describe('箭头有效样式', () => {
       stroke: 'red',
       dashPattern: [3, 2],
       dashOffset: 2,
-      strokeLinecap: 'round',
-      strokeLinejoin: 'bevel',
+      lineCap: 'round',
+      lineJoin: 'bevel',
     });
   });
 });

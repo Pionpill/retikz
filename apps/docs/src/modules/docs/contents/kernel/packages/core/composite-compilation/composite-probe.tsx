@@ -51,7 +51,7 @@ const CompositeProbe: FC<CompositeProbeProps> = props => {
         position={[355, 145]}
         label={{ text: t.detail, position: 'top', opacity: 0.8, font: { size: 12 } }}
         entries={[
-          { key: 'primitives', value: '[PathPrim]' },
+          { key: 'primitives', value: '[PathPrimitive]' },
           { key: 'namespaceChanges', value: '[]' },
           { key: 'resources', value: '[]' },
           { key: 'used', value: 'false' },

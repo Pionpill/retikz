@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GroupPrim, PathPrim, ScenePrimitive, TextMeasurer, TextPrim } from '../../src';
+import type { GroupPrimitive, PathPrimitive, ScenePrimitive, TextMeasurer, TextPrimitive } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import type { IRPath, IRScene } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
@@ -31,33 +31,34 @@ const horizontalHostLabelPath = (label: IRPath['label']): IRScene => ({
   ],
 });
 
-const strokeFragments = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrim> =>
+const strokeFragments = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrimitive> =>
   flattenPrims(primitives).filter(
-    (primitive): primitive is PathPrim => primitive.type === 'path' && primitive.stroke === STROKE,
+    (primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.stroke === STROKE,
   );
 
-const textPrim = (primitives: ReadonlyArray<ScenePrimitive>, text: string): TextPrim => {
+const textPrim = (primitives: ReadonlyArray<ScenePrimitive>, text: string): TextPrimitive => {
   const primitive = flattenPrims(primitives).find(
-    (candidate): candidate is TextPrim => candidate.type === 'text' && candidate.lines.some(line => line.text === text),
+    (candidate): candidate is TextPrimitive =>
+      candidate.type === 'text' && candidate.lines.some(line => line.text === text),
   );
   if (primitive === undefined) throw new Error(`missing text primitive '${text}'`);
 
   return primitive;
 };
 
-const firstMove = (path: PathPrim): [number, number] => {
+const firstMove = (path: PathPrimitive): [number, number] => {
   const command = path.commands.find(candidate => candidate.kind === 'move');
   if (command === undefined) throw new Error('missing move command');
   return command.to;
 };
 
-const lastLine = (path: PathPrim): [number, number] => {
+const lastLine = (path: PathPrimitive): [number, number] => {
   const command = [...path.commands].reverse().find(candidate => candidate.kind === 'line');
   if (command === undefined) throw new Error('missing line command');
   return command.to;
 };
 
-const coversX = (paths: ReadonlyArray<PathPrim>, x: number): boolean =>
+const coversX = (paths: ReadonlyArray<PathPrimitive>, x: number): boolean =>
   paths.some(path => {
     const from = firstMove(path);
     const to = lastLine(path);
@@ -156,7 +157,7 @@ describe('Stroke Path label interruption', () => {
       ],
     });
     const owner = scene.primitives.find(
-      (primitive): primitive is GroupPrim => primitive.type === 'group' && primitive.id === 'logical-edge',
+      (primitive): primitive is GroupPrimitive => primitive.type === 'group' && primitive.id === 'logical-edge',
     );
     const fragments = strokeFragments(owner?.children ?? []);
 

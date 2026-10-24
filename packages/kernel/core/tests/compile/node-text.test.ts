@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { ScenePrimitive, TextPrim } from '../../src/contract';
+import type { ScenePrimitive, TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
-const findText = (prims: Array<ScenePrimitive>): TextPrim | undefined =>
-  flattenPrims(prims).find((p): p is TextPrim => p.type === 'text');
+const findText = (prims: Array<ScenePrimitive>): TextPrimitive | undefined =>
+  flattenPrims(prims).find((p): p is TextPrimitive => p.type === 'text');
 
 describe('Node multi-line text', () => {
   it("text: 'Hello' 与 text: ['Hello'] 编译产出相同 lines", () => {
@@ -103,7 +103,7 @@ describe('Node multi-line text', () => {
     expect(t?.measuredHeight).toBeCloseTo(57.6, 1);
   });
 
-  it("align='start' → TextPrim.align='start' 且 x 偏到块左边", () => {
+  it("align='start' → TextPrimitive.align='start' 且 x 偏到块左边", () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -121,11 +121,11 @@ describe('Node multi-line text', () => {
 
     expect(t?.align).toBe('start');
 
-    // align=start 时 TextPrim.x = center.x - blockHalfWidth
+    // align=start 时 TextPrimitive.x = center.x - blockHalfWidth
     expect(t!.x).toBeLessThan(100);
   });
 
-  it("align='end' → TextPrim.align='end' 且 x 偏到块右边", () => {
+  it("align='end' → TextPrimitive.align='end' 且 x 偏到块右边", () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -145,7 +145,7 @@ describe('Node multi-line text', () => {
     expect(t!.x).toBeGreaterThan(100);
   });
 
-  it("默认 align='middle' → TextPrim.align='middle' 且 x = node 中心", () => {
+  it("默认 align='middle' → TextPrimitive.align='middle' 且 x = node 中心", () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -213,7 +213,7 @@ describe('Node multi-line text', () => {
     }
   });
 
-  it('不传 text 时不 emit TextPrim', () => {
+  it('不传 text 时不 emit TextPrimitive', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -266,7 +266,7 @@ describe('Node multi-line text', () => {
     // 第二行无任何覆盖
     expect(t?.lines[1]).toEqual({ text: 'normal' });
 
-    // 块级默认仍写在 TextPrim 顶层
+    // 块级默认仍写在 TextPrimitive 顶层
     expect(t?.fontSize).toBe(12);
     expect(t?.fontFamily).toBe('monospace');
   });

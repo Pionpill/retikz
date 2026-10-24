@@ -316,8 +316,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '解析结果必须是 JSON object': 'Parsed output must be a JSON object',
   '需要解析为当前 Path 局部坐标的 params 顶层 key':
     "Top-level parameter keys to resolve into the current Path's local coordinates",
-  '坐标均位于当前 Path 的局部坐标系，返回的命令由所属 GroupPrim 统一应用 scope transform':
-    'All coordinates are local to the current Path; the owning GroupPrim applies the Scope transform to the returned commands',
+  '坐标均位于当前 Path 的局部坐标系，返回的命令由所属 GroupPrimitive 统一应用 scope transform':
+    'All coordinates are local to the current Path; the owning GroupPrimitive applies the Scope transform to the returned commands',
   '当前游标局部坐标（上一段终点 / sub-path 起点）':
     'Current local cursor position: the preceding segment endpoint or subpath start',
   'paramsSchema 校验后的参数对象': 'Parameter object validated by paramsSchema',

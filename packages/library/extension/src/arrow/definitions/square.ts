@@ -43,7 +43,7 @@ export const OpenSquareArrowDefinition = defineArrow({
         [9, 9],
         [1, 9],
       ],
-      { strokeLinejoin: 'round' },
+      { lineJoin: 'round' },
     ),
   ],
 });

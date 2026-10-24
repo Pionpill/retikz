@@ -2,18 +2,18 @@ import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
 import type {
-  EllipsePrim,
+  EllipsePrimitive,
   PaintValue,
   ScenePrimitive,
-  PathPrim,
-  RectPrim,
+  PathPrimitive,
+  RectPrimitive,
   ResolvedArrowEnd,
-  TextPrim,
+  TextPrimitive,
 } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { arrowMarks } from '../helpers/arrow-marks';
 
-/** 递归展开 GroupPrim，把所有叶子 primitive 拍平（scope 子元素在 GroupPrim 内） */
+/** 递归展开 GroupPrimitive，把所有叶子 primitive 拍平（scope 子元素在 GroupPrimitive 内） */
 const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
   const out: Array<ScenePrimitive> = [];
 
@@ -27,18 +27,20 @@ const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
 
 const allPrims = (ir: IRScene): Array<ScenePrimitive> => flatten(compileToScene(ir).scene.primitives);
 
-const rectOf = (ir: IRScene): RectPrim | undefined => allPrims(ir).find((p): p is RectPrim => p.type === 'rect');
+const rectOf = (ir: IRScene): RectPrimitive | undefined =>
+  allPrims(ir).find((p): p is RectPrimitive => p.type === 'rect');
 
-const ellipseOf = (ir: IRScene): EllipsePrim | undefined =>
-  allPrims(ir).find((p): p is EllipsePrim => p.type === 'ellipse');
+const ellipseOf = (ir: IRScene): EllipsePrimitive | undefined =>
+  allPrims(ir).find((p): p is EllipsePrimitive => p.type === 'ellipse');
 
-const linePathOf = (ir: IRScene): PathPrim | undefined =>
-  allPrims(ir).find((p): p is PathPrim => p.type === 'path' && !p.commands.some(c => c.kind === 'close'));
+const linePathOf = (ir: IRScene): PathPrimitive | undefined =>
+  allPrims(ir).find((p): p is PathPrimitive => p.type === 'path' && !p.commands.some(c => c.kind === 'close'));
 
-const textsOf = (ir: IRScene): Array<TextPrim> => allPrims(ir).filter((p): p is TextPrim => p.type === 'text');
+const textsOf = (ir: IRScene): Array<TextPrimitive> =>
+  allPrims(ir).filter((p): p is TextPrimitive => p.type === 'text');
 
-/** 取指定文字内容的 TextPrim（node 文本 vs step label 文本区分） */
-const textWith = (ir: IRScene, content: string): TextPrim | undefined =>
+/** 取指定文字内容的 TextPrimitive（node 文本 vs step label 文本区分） */
+const textWith = (ir: IRScene, content: string): TextPrimitive | undefined =>
   textsOf(ir).find(t => t.lines[0]?.text === content);
 
 /**
@@ -507,7 +509,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
       ],
     };
     const arrowColors = allPrims(ir)
-      .filter((p): p is PathPrim => p.type === 'path' && !p.commands.some(c => c.kind === 'close'))
+      .filter((p): p is PathPrimitive => p.type === 'path' && !p.commands.some(c => c.kind === 'close'))
       .map(p => markerPaintColor(p.arrowEnd));
 
     // 宿主主色同时覆盖公共默认与实例上的宏颜色
@@ -546,7 +548,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
       ],
     };
     const arrowColors = allPrims(ir)
-      .filter((p): p is PathPrim => p.type === 'path' && !p.commands.some(c => c.kind === 'close'))
+      .filter((p): p is PathPrimitive => p.type === 'path' && !p.commands.some(c => c.kind === 'close'))
       .map(p => markerPaintColor(p.arrowEnd));
 
     // 端点配置形成 mark 后仍由宿主主色覆盖宏颜色

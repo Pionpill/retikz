@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { array, literal, number, strictObject, tuple } from 'zod';
 
-import type { ClipResource, GroupPrim, IRPaint, IRScene, ScenePrimitive, SceneResource } from '../../src';
+import type { ClipResource, GroupPrimitive, IRPaint, IRScene, ScenePrimitive, SceneResource } from '../../src';
 import { compileToScene, defineClip } from '../../src';
 
 const polygonClip = defineClip<{
@@ -38,11 +38,11 @@ const scene = (children: IRScene['children']): IRScene => ({
   children,
 });
 
-const firstGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrim | undefined =>
-  primitives.find((p): p is GroupPrim => p.type === 'group');
+const firstGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrimitive | undefined =>
+  primitives.find((p): p is GroupPrimitive => p.type === 'group');
 
-const allGroups = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrim> =>
-  primitives.filter((p): p is GroupPrim => p.type === 'group');
+const allGroups = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrimitive> =>
+  primitives.filter((p): p is GroupPrimitive => p.type === 'group');
 
 const clipResources = (resources: Array<SceneResource> | undefined): Array<ClipResource> =>
   (resources ?? []).filter((r): r is ClipResource => r.kind === 'clip');
@@ -363,7 +363,7 @@ describe('clip prune / 复合 scope', () => {
     expect(group?.clipRef).toBe(clipResources(compiled.resources)[0].id);
   });
 
-  it('嵌套 scope 各自带 clip → 内外两条资源、内层 GroupPrim 嵌在外层、各挂各的 clipRef', () => {
+  it('嵌套 scope 各自带 clip → 内外两条资源、内层 GroupPrimitive 嵌在外层、各挂各的 clipRef', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -386,7 +386,7 @@ describe('clip prune / 复合 scope', () => {
 
     expect(outer?.clipRef).toBeDefined();
 
-    const inner = outer?.children.find((c): c is GroupPrim => c.type === 'group');
+    const inner = outer?.children.find((c): c is GroupPrimitive => c.type === 'group');
 
     expect(inner).toBeDefined();
     expect(inner?.clipRef).toBeDefined();

@@ -47,7 +47,7 @@ export const OpenDiamondArrowDefinition = defineArrow({
         [9, 5],
         [5, 9],
       ],
-      { strokeLinejoin: 'round' },
+      { lineJoin: 'round' },
     ),
   ],
 });

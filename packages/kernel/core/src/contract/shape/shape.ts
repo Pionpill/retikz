@@ -42,9 +42,9 @@ export type GeometryKeyPoint = Readonly<{
  */
 export type ResolvedShapeStyle = {
   /** 描边线帽 */
-  strokeLinecap?: IRGraphicStyle['lineCap'];
+  lineCap?: IRGraphicStyle['lineCap'];
   /** 描边拐角连接 */
-  strokeLinejoin?: IRGraphicStyle['lineJoin'];
+  lineJoin?: IRGraphicStyle['lineJoin'];
   /**
    * 已解析填充 paint；缺省由 shape emit 按透明填充处理
    * @default 'transparent'

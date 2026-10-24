@@ -1,4 +1,4 @@
-import type { IRAnimationTrack, PathPrim, RectPrim, Scene, ScenePrimitive } from '@retikz/core';
+import type { IRAnimationTrack, PathPrimitive, RectPrimitive, Scene, ScenePrimitive } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createIdClockRegistry } from '../../src/animation';
@@ -76,7 +76,7 @@ const scene = (primitives: Array<ScenePrimitive>, animations?: Array<IRAnimation
   ...(animations ? { animations } : {}),
 });
 
-const rect = (extra: Partial<RectPrim> = {}): RectPrim => ({
+const rect = (extra: Partial<RectPrimitive> = {}): RectPrimitive => ({
   type: 'rect',
   x: 0,
   y: 0,
@@ -123,7 +123,7 @@ describe('Happy：drawScene({time}) 应用通道', () => {
   });
 
   it('pathDraw（有描边）→ setLineDash([len]) + lineDashOffset 设置', () => {
-    const path: PathPrim = {
+    const path: PathPrimitive = {
       type: 'path',
       commands: [
         { kind: 'move', to: [0, 0] },
@@ -149,7 +149,7 @@ describe('Happy：drawScene({time}) 应用通道', () => {
   });
 
   it('pathDraw v=1（settled）→ 不加 [len] dash override（避免曲线弧长低估留永久缺口）', () => {
-    const path: PathPrim = {
+    const path: PathPrimitive = {
       type: 'path',
       commands: [
         { kind: 'move', to: [0, 0] },

@@ -63,14 +63,14 @@ type Scene = {
 `Scene.primitives` is an array in drawing order. Rectangles, ellipses, text and paths describe resolved geometry. Group primitives retain children and can carry shared transforms, clip references and other properties.
 
 ```ts
-type ScenePrimitive = RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim;
+type ScenePrimitive = RectPrimitive | EllipsePrimitive | TextPrimitive | PathPrimitive | GroupPrimitive;
 ```
 
 These types fall into three categories by responsibility:
 
-- Geometric primitives (`RectPrim`, `EllipsePrim`, `PathPrim`): describe rectangles, ellipses and paths.
-- Text primitives (`TextPrim`): describe text, its layout and styling.
-- Group primitives (`GroupPrim`): organize child primitives and apply shared transforms and clipping.
+- Geometric primitives (`RectPrimitive`, `EllipsePrimitive`, `PathPrimitive`): describe rectangles, ellipses and paths.
+- Text primitives (`TextPrimitive`): describe text, its layout and styling.
+- Group primitives (`GroupPrimitive`): organize child primitives and apply shared transforms and clipping.
 
 <ComponentAlert
   type="tip"
@@ -92,7 +92,7 @@ These types fall into three categories by responsibility:
         <tbody>
           <tr>
             <td>
-              <code>RectPrim</code>
+              <code>RectPrimitive</code>
             </td>
             <td>
               <code>{'<rect>'}</code>
@@ -103,7 +103,7 @@ These types fall into three categories by responsibility:
           </tr>
           <tr>
             <td>
-              <code>EllipsePrim</code>
+              <code>EllipsePrimitive</code>
             </td>
             <td>
               <code>{'<ellipse>'}</code>
@@ -114,7 +114,7 @@ These types fall into three categories by responsibility:
           </tr>
           <tr>
             <td>
-              <code>TextPrim</code>
+              <code>TextPrimitive</code>
             </td>
             <td>
               <code>{'<text>'}</code>, <code>{'<tspan>'}</code>
@@ -125,7 +125,7 @@ These types fall into three categories by responsibility:
           </tr>
           <tr>
             <td>
-              <code>PathPrim</code>
+              <code>PathPrimitive</code>
             </td>
             <td>
               <code>{'<path>'}</code>
@@ -137,7 +137,7 @@ These types fall into three categories by responsibility:
           </tr>
           <tr>
             <td>
-              <code>GroupPrim</code>
+              <code>GroupPrimitive</code>
             </td>
             <td>
               <code>{'<g>'}</code>

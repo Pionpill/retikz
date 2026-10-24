@@ -304,7 +304,7 @@ describe('Canvas hitTest', () => {
     expect(hitTest(scene, { x: 50, y: 54 }, { context2d: ctx(), strokeTolerance: 5 })).toBe('line');
   });
 
-  it('nested-group-id：命中 GroupPrim 子图元 → 返回最近 id-bearing 祖先（group）id', () => {
+  it('nested-group-id：命中 GroupPrimitive 子图元 → 返回最近 id-bearing 祖先（group）id', () => {
     const scene: Scene = {
       layout: { x: 0, y: 0, width: 100, height: 100 },
       primitives: [

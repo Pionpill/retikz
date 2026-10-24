@@ -1,5 +1,5 @@
 import type {
-  PathPrim,
+  PathPrimitive,
   ScenePrimitive,
   PatternDefinition,
   PatternEmitContext,
@@ -35,17 +35,17 @@ const baseLineStyleOf = (context: PatternEmitContext): ResolvedPatternLineStyle 
 /** 已解析 Pattern 线型到 marker path 描边字段的统一映射 */
 const markerLineStyleOf = (
   style: ResolvedPatternLineStyle,
-): Pick<PathPrim, 'stroke' | 'strokeWidth' | 'dashPattern' | 'dashOffset' | 'strokeLinecap' | 'strokeLinejoin'> => ({
+): Pick<PathPrimitive, 'stroke' | 'strokeWidth' | 'dashPattern' | 'dashOffset' | 'lineCap' | 'lineJoin'> => ({
   stroke: style.color,
   strokeWidth: style.lineWidth ?? DEFAULT_STROKE_WIDTH,
   ...(style.dashPattern === undefined ? {} : { dashPattern: style.dashPattern }),
   ...(style.dashOffset === undefined ? {} : { dashOffset: style.dashOffset }),
-  ...(style.lineCap === undefined ? {} : { strokeLinecap: style.lineCap }),
-  ...(style.lineJoin === undefined ? {} : { strokeLinejoin: style.lineJoin }),
+  ...(style.lineCap === undefined ? {} : { lineCap: style.lineCap }),
+  ...(style.lineJoin === undefined ? {} : { lineJoin: style.lineJoin }),
 });
 
 /** 构建一个水平线 motif */
-const horizontalLineOf = (tileSize: number, y: number, style: ResolvedPatternLineStyle): PathPrim => ({
+const horizontalLineOf = (tileSize: number, y: number, style: ResolvedPatternLineStyle): PathPrimitive => ({
   type: 'path',
   commands: [
     { kind: 'move', to: [0, y] },

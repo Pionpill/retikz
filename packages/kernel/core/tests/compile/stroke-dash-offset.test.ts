@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { PathPrim, RectPrim, ScenePrimitive } from '../../src/contract';
+import type { PathPrimitive, RectPrimitive, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { NodeDefaultSchema, NodeSchema, PathDefaultSchema, PathSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
@@ -24,18 +24,18 @@ const strokePathWithOnlyOffset = (dashOffset: unknown): unknown => ({
   style: { dashOffset },
 });
 
-const firstPath = (primitives: Array<ScenePrimitive>, stroke: string): PathPrim | undefined =>
-  flattenPrims(primitives).find((p): p is PathPrim => p.type === 'path' && p.stroke === stroke);
+const firstPath = (primitives: Array<ScenePrimitive>, stroke: string): PathPrimitive | undefined =>
+  flattenPrims(primitives).find((p): p is PathPrimitive => p.type === 'path' && p.stroke === stroke);
 
-const firstRect = (primitives: Array<ScenePrimitive>, id: string): RectPrim | undefined =>
-  flattenPrims(primitives).find((p): p is RectPrim => p.type === 'rect' && p.id === id);
+const firstRect = (primitives: Array<ScenePrimitive>, id: string): RectPrimitive | undefined =>
+  flattenPrims(primitives).find((p): p is RectPrimitive => p.type === 'rect' && p.id === id);
 
-const strokeFragments = (primitives: Array<ScenePrimitive>, stroke: string): Array<PathPrim> =>
+const strokeFragments = (primitives: Array<ScenePrimitive>, stroke: string): Array<PathPrimitive> =>
   flattenPrims(primitives).filter(
-    (primitive): primitive is PathPrim => primitive.type === 'path' && primitive.stroke === stroke,
+    (primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.stroke === stroke,
   );
 
-const firstMoveX = (path: PathPrim): number => {
+const firstMoveX = (path: PathPrimitive): number => {
   const command = path.commands.find(candidate => candidate.kind === 'move');
   if (command === undefined) throw new Error('missing move command');
   return command.to[0];

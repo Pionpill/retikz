@@ -1,4 +1,4 @@
-import type { GroupPrim, IRAnimationTrack, RectPrim, Scene, ScenePrimitive } from '@retikz/core';
+import type { GroupPrimitive, IRAnimationTrack, RectPrimitive, Scene, ScenePrimitive } from '@retikz/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -24,7 +24,7 @@ const scene = (primitives: Array<ScenePrimitive>, animations?: Array<IRAnimation
   ...(animations ? { animations } : {}),
 });
 
-const rect = (extra: Partial<RectPrim> = {}): RectPrim => ({
+const rect = (extra: Partial<RectPrimitive> = {}): RectPrimitive => ({
   type: 'rect',
   x: 0,
   y: 0,
@@ -34,7 +34,7 @@ const rect = (extra: Partial<RectPrim> = {}): RectPrim => ({
   ...extra,
 });
 
-const group = (children: Array<ScenePrimitive>, extra: Partial<GroupPrim> = {}): GroupPrim => ({
+const group = (children: Array<ScenePrimitive>, extra: Partial<GroupPrimitive> = {}): GroupPrimitive => ({
   type: 'group',
   children,
   ...extra,

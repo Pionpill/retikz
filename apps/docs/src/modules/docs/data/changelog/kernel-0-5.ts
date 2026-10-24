@@ -1122,8 +1122,8 @@ export const kernelV05: Release = {
           version: 'alpha.1',
           date: '2026-07-26',
           summary: {
-            zh: '公开 renderer API 与 Scene primitive 不变；补齐多 `PathPrim` 的 fill / stroke / opacity 跨后端对照。',
-            en: 'Public renderer APIs and Scene primitives remain unchanged, with cross-backend coverage for fill, stroke, and opacity across multiple `PathPrim` values.',
+            zh: '公开 renderer API 与 Scene primitive 不变；补齐多 `PathPrimitive` 的 fill / stroke / opacity 跨后端对照。',
+            en: 'Public renderer APIs and Scene primitives remain unchanged, with cross-backend coverage for fill, stroke, and opacity across multiple `PathPrimitive` values.',
           },
           items: [],
         },

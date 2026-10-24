@@ -4,7 +4,7 @@ import { compileToScene } from '../../src/compile/compile';
 import { BuiltinCompileWarningCode } from '../../src/compile/constants';
 import type { LowerTex } from '../../src/compile/text';
 import type { CompileWarning } from '../../src/compile/warning';
-import type { PathPrim, ScenePrimitive, TextPrim } from '../../src/contract';
+import type { PathPrimitive, ScenePrimitive, TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
@@ -52,11 +52,11 @@ const compile = (
   return { primitives: out.primitives, warnings, width: out.layout.width };
 };
 
-const glyphPaths = (prims: Array<ScenePrimitive>): Array<PathPrim> =>
-  flattenPrims(prims).filter((p): p is PathPrim => p.type === 'path' && p.fillRule === 'evenodd');
+const glyphPaths = (prims: Array<ScenePrimitive>): Array<PathPrimitive> =>
+  flattenPrims(prims).filter((p): p is PathPrimitive => p.type === 'path' && p.fillRule === 'evenodd');
 
-const textPrims = (prims: Array<ScenePrimitive>): Array<TextPrim> =>
-  flattenPrims(prims).filter((p): p is TextPrim => p.type === 'text');
+const textPrims = (prims: Array<ScenePrimitive>): Array<TextPrimitive> =>
+  flattenPrims(prims).filter((p): p is TextPrimitive => p.type === 'text');
 
 describe('[inline-tex] node text', () => {
   it('renders a `$$...$$` node as a glyph block (no plain text prim)', () => {

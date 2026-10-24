@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene, ThemeMode } from '../../src';
-import type { PathPrim, RectPrim, ScenePrimitive, TextPrim } from '../../src/contract';
+import type { PathPrimitive, RectPrimitive, ScenePrimitive, TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
@@ -14,16 +14,16 @@ const sceneOf = (children: IRScene['children'], mode: ThemeMode = ThemeMode.Ligh
 
 const primitivesOf = (scene: IRScene): Array<ScenePrimitive> => flattenPrims(compileToScene(scene).scene.primitives);
 
-const rectOf = (scene: IRScene): RectPrim =>
-  primitivesOf(scene).find((primitive): primitive is RectPrim => primitive.type === 'rect')!;
+const rectOf = (scene: IRScene): RectPrimitive =>
+  primitivesOf(scene).find((primitive): primitive is RectPrimitive => primitive.type === 'rect')!;
 
-const pathsOf = (scene: IRScene): Array<PathPrim> =>
-  primitivesOf(scene).filter((primitive): primitive is PathPrim => primitive.type === 'path');
+const pathsOf = (scene: IRScene): Array<PathPrimitive> =>
+  primitivesOf(scene).filter((primitive): primitive is PathPrimitive => primitive.type === 'path');
 
-const textsOf = (scene: IRScene): Array<TextPrim> =>
-  primitivesOf(scene).filter((primitive): primitive is TextPrim => primitive.type === 'text');
+const textsOf = (scene: IRScene): Array<TextPrimitive> =>
+  primitivesOf(scene).filter((primitive): primitive is TextPrimitive => primitive.type === 'text');
 
-const textOf = (scene: IRScene, value: string): TextPrim =>
+const textOf = (scene: IRScene, value: string): TextPrimitive =>
   textsOf(scene).find(text => text.lines.some(line => line.text === value))!;
 
 describe('Core contextual color compile', () => {
@@ -187,7 +187,7 @@ describe('Core contextual color compile', () => {
       ]),
     ).scene;
     const path = flattenPrims(compiled.primitives).find(
-      (primitive): primitive is PathPrim => primitive.type === 'path',
+      (primitive): primitive is PathPrimitive => primitive.type === 'path',
     )!;
 
     expect(path.stroke).toBe('#0a141f');

@@ -1,4 +1,4 @@
-import type { ScenePrimitive, PathPrim, ResolvedArrowEnd } from '@retikz/core';
+import type { ScenePrimitive, PathPrimitive, ResolvedArrowEnd } from '@retikz/core';
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -23,7 +23,7 @@ const resolvedSpec = (shape: string, fill?: string): ResolvedArrowEnd => {
 };
 
 describe('renderPrim path: arrowStart / arrowEnd 是 ResolvedArrowEnd', () => {
-  const base: PathPrim = {
+  const base: PathPrimitive = {
     type: 'path',
     commands: [
       { kind: 'move', to: [0, 0] },
@@ -69,7 +69,7 @@ describe('renderPrim path: arrowStart / arrowEnd 是 ResolvedArrowEnd', () => {
 describe('renderPrim path: arrowEnd 字段顺序不影响 id', () => {
   // 这条是 contract test —— hash 应该对字段顺序稳定（即便 JSON.stringify 不保证，实现要排序键）
   // 我们这里用注入的 markerIdFor，所以仅验证 renderPrim 透传 spec 不动；hash 稳定由实际容器 hash 实现保证
-  const base: PathPrim = {
+  const base: PathPrimitive = {
     type: 'path',
     commands: [
       { kind: 'move', to: [0, 0] },

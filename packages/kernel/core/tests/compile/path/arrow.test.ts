@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../../src/compile/compile';
-import type { PathPrim, ScenePrimitive } from '../../../src/contract';
+import type { PathPrimitive, ScenePrimitive } from '../../../src/contract';
 import type { IRScene } from '../../../src/schemas';
 import { arrowMarks } from '../../helpers/arrow-marks';
 import { flattenPrims } from '../../helpers/flatten';
@@ -9,7 +9,7 @@ import { line, move } from '../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 
 describe('compile path: arrow 箭头', () => {
-  it("arrow: '->' → PathPrim arrowEnd shape='stealth'，arrowStart 不写", () => {
+  it("arrow: '->' → PathPrimitive arrowEnd shape='stealth'，arrowStart 不写", () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -93,8 +93,8 @@ describe('compile path: arrow 箭头', () => {
     expect(path.arrowEnd).toBeUndefined();
   });
 
-  it('多 sub-path + arrow → 拆成 GroupPrim：首段独占 arrowStart，末段独占 arrowEnd', () => {
-    // A → B → C 多节点路径，'->'。期望产出 GroupPrim 内 2 个 PathPrim：
+  it('多 sub-path + arrow → 拆成 GroupPrimitive：首段独占 arrowStart，末段独占 arrowEnd', () => {
+    // A → B → C 多节点路径，'->'。期望产出 GroupPrimitive 内 2 个 PathPrimitive：
     //   首段 d="M ... L ..."（无 arrow）
     //   末段 d="M ... L ..."（arrowEnd shape='stealth'）
     const ir: IRScene = {
@@ -121,7 +121,7 @@ describe('compile path: arrow 箭头', () => {
     expect(group).toBeDefined();
     expect(group?.children).toHaveLength(2);
 
-    const [first, last] = group!.children as Array<PathPrim>;
+    const [first, last] = group!.children as Array<PathPrimitive>;
 
     expect(first.arrowStart).toBeUndefined();
     expect(first.arrowEnd).toBeUndefined();
@@ -129,7 +129,7 @@ describe('compile path: arrow 箭头', () => {
     expect(last.arrowEnd?.shape).toBe('stealth');
   });
 
-  it('Core 内置 arrowDetail.shape 透传到 PathPrim 作为 arrowEnd / arrowStart 的 shape', () => {
+  it('Core 内置 arrowDetail.shape 透传到 PathPrimitive 作为 arrowEnd / arrowStart 的 shape', () => {
     for (const shape of ['normal', 'stealth'] as const) {
       const ir: IRScene = {
         version: 1,
@@ -216,7 +216,7 @@ describe('compile path: arrow 箭头', () => {
     expect(findPathPrim(compileToScene(ir).scene.primitives).arrowEnd?.shape).toBe('stealth');
   });
 
-  it('单 sub-path + arrow → 不拆 group，直接一个 PathPrim 挂 marker', () => {
+  it('单 sub-path + arrow → 不拆 group，直接一个 PathPrimitive 挂 marker', () => {
     // 直接坐标，无 boundary clip 差异，单 sub-path
     const ir: IRScene = {
       version: 1,
@@ -261,7 +261,7 @@ describe('compile path: arrow 箭头', () => {
     };
     const fragments = flattenPrims(
       compileToScene(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
-    ).filter((primitive): primitive is PathPrim => primitive.type === 'path' && primitive.stroke === '#13579b');
+    ).filter((primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.stroke === '#13579b');
 
     expect(fragments).toHaveLength(2);
     expect(fragments.filter(fragment => fragment.arrowStart !== undefined)).toHaveLength(1);
@@ -298,7 +298,7 @@ describe('compile path: arrow 箭头', () => {
     };
     const fragments = flattenPrims(
       compileToScene(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
-    ).filter((primitive): primitive is PathPrim => primitive.type === 'path' && primitive.stroke === '#13579b');
+    ).filter((primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.stroke === '#13579b');
     const startFragment = fragments.find(fragment => fragment.arrowStart !== undefined);
     const endFragment = fragments.find(fragment => fragment.arrowEnd !== undefined);
     const startMove = startFragment?.commands.find(command => command.kind === 'move');

@@ -4604,7 +4604,7 @@ describe('builtin retained renderers', () => {
       ],
       stroke: '#ef4444',
       strokeWidth: 10,
-      strokeLinejoin: 'miter',
+      lineJoin: 'miter',
     };
     const currentText: Extract<RuntimeScenePrimitive, Readonly<{ type: 'text' }>> = {
       type: 'text',

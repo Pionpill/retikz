@@ -23,7 +23,7 @@ export const previewSource = controlledPreview.source;
 
 /**
  * Scope 与 Node 两级 zIndex playground
- * @description Node zIndex 只在所属 Scope 内排序；Scope zIndex 决定整组 GroupPrim 在父层的上下位置
+ * @description Node zIndex 只在所属 Scope 内排序；Scope zIndex 决定整组 GroupPrimitive 在父层的上下位置
  */
 const Demo: FC = controlledPreview.Component;
 

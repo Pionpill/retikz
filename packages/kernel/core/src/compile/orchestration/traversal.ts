@@ -14,7 +14,7 @@ import type {
   CompositeReplay,
   CompositeReplayWrapper,
   CompositeRuntimeInputContext,
-  GroupPrim,
+  GroupPrimitive,
   LayoutChildResult,
   LayoutContribution,
   LayoutMeasurementAxis,
@@ -602,7 +602,7 @@ export const compileChildrenToPrimitives = (
       scopePrimitiveSink.length === 0 && !hasScopeTransforms && child.id === undefined && child.clip === undefined;
     if (isPrunable) return;
 
-    const group: GroupPrim = {
+    const group: GroupPrimitive = {
       type: 'group',
       children: stableSortByZIndex(sealSink(scopePrimitiveSink), runtime.state.zIndexOf),
     };
@@ -1046,9 +1046,9 @@ export const compileChildrenToPrimitives = (
           transforms === undefined || transforms.length === 0
             ? primitive
             : { type: 'group', transforms: [...transforms], children: [primitive] };
-        const wrapped: GroupPrim =
+        const wrapped: GroupPrimitive =
           wrapperClipRef === undefined
-            ? (placed as GroupPrim)
+            ? (placed as GroupPrimitive)
             : { type: 'group', clipRef: wrapperClipRef, children: [placed] };
         frame.primitiveSink.push(wrapped);
         committedPrimitives.push(wrapped);

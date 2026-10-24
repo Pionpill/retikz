@@ -30,7 +30,7 @@ describe('[blend] Happy', () => {
     expect(el!.blendMode).toBe('multiply');
   });
 
-  it('node-blend-rect：rectangle 节点 → RectPrim 带 blendMode', () => {
+  it('node-blend-rect：rectangle 节点 → RectPrimitive 带 blendMode', () => {
     const compiled = compileNode({ shape: 'rectangle', text: 'x', blendMode: 'screen' });
     const rect = findByType(compiled.primitives, 'rect');
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../../src/compile/compile';
-import type { PathPrim } from '../../../src/contract';
+import type { PathPrimitive } from '../../../src/contract';
 import type { IRScene } from '../../../src/schemas';
 import { arrowMarks } from '../../helpers/arrow-marks';
 import { flattenPrims } from '../../helpers/flatten';
@@ -166,7 +166,7 @@ describe("compile path: 'cycle' 闭合", () => {
     };
     const fragments = flattenPrims(
       compileToScene(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
-    ).filter((primitive): primitive is PathPrim => primitive.type === 'path' && primitive.stroke === '#13579b');
+    ).filter((primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.stroke === '#13579b');
 
     expect(fragments.length).toBeGreaterThanOrEqual(2);
     expect(fragments.flatMap(fragment => fragment.commands).some(command => command.kind === 'close')).toBe(false);

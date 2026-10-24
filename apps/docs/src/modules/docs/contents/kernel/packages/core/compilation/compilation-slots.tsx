@@ -35,7 +35,7 @@ const CompilationSlots: FC<CompilationSlotsProps> = props => {
         id="final"
         position={[0, 260]}
         label={{ text: text.final, font: { size: 12 }, opacity: 0.8 }}
-        items={[{ content: 'PathPrim', style: { color: 'dodgerblue' } }, 'Group A', 'Group B']}
+        items={[{ content: 'PathPrimitive', style: { color: 'dodgerblue' } }, 'Group A', 'Group B']}
         index
         defaultCell={{ style: { font: { size: 14 } }, layout: { width: 110, height: 32 } }}
       />

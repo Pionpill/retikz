@@ -1,7 +1,7 @@
 import { DEG_TO_RAD, localToWorld, rectOutline } from '@retikz/math';
 import type { ContourCommand, LineSegment, Position } from '@retikz/math';
 
-import type { PathCommand, PathPrim } from '../scene';
+import type { PathCommand, PathPrimitive } from '../scene';
 import type { ResolvedShapeStyle } from './shape';
 
 /** 将顶点环变换为闭合线段，供形状定义复用 */
@@ -85,7 +85,7 @@ export const contourToPathCommands = (
 type ShapeStylePassthrough = Omit<ResolvedShapeStyle, 'fill' | 'stroke' | 'strokeWidth'>;
 
 type PathPrimitiveStyle = Pick<
-  PathPrim,
+  PathPrimitive,
   | 'fill'
   | 'fillOpacity'
   | 'stroke'
@@ -93,8 +93,8 @@ type PathPrimitiveStyle = Pick<
   | 'strokeWidth'
   | 'dashPattern'
   | 'dashOffset'
-  | 'strokeLinecap'
-  | 'strokeLinejoin'
+  | 'lineCap'
+  | 'lineJoin'
   | 'opacity'
   | 'shadow'
   | 'blendMode'
@@ -103,7 +103,7 @@ type PathPrimitiveStyle = Pick<
 /** 把形状样式投影到路径图元，忽略只属于节点盒的 cornerRadius */
 export const buildPathPrimitiveStyle = (
   style: ResolvedShapeStyle,
-  options?: Readonly<{ fill?: PathPrim['fill'] }>,
+  options?: Readonly<{ fill?: PathPrimitive['fill'] }>,
 ): PathPrimitiveStyle => {
   const { fill, stroke, strokeWidth, cornerRadius: _cornerRadius, ...passthroughStyle } = style;
   void _cornerRadius;
@@ -117,7 +117,7 @@ export const buildPathPrimitiveStyle = (
 };
 
 /** 将已转换的轮廓命令与形状样式组合为路径图元 */
-export const contourToPathPrimitive = (commands: Array<PathCommand>, style: ResolvedShapeStyle): PathPrim => ({
+export const contourToPathPrimitive = (commands: Array<PathCommand>, style: ResolvedShapeStyle): PathPrimitive => ({
   type: 'path',
   commands,
   ...buildPathPrimitiveStyle(style),

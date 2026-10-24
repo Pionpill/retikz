@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { BuiltinCompileWarningCode } from '../../../src';
 import { compileToScene } from '../../../src/compile/compile';
 import type { CompileWarning } from '../../../src/compile/warning';
-import type { TextPrim } from '../../../src/contract';
+import type { TextPrimitive } from '../../../src/contract';
 import { chooseBlackOrWhiteForLuminance } from '../../../src/resolve/node';
 import type { IRNode, IRNodeStyle, IRScene } from '../../../src/schemas';
 import { flattenPrims } from '../../helpers/flatten';
@@ -17,15 +17,15 @@ const sceneOf = (node: Partial<IRNode>): IRScene =>
     children: [{ type: 'node', position: [0, 0], text: 'Status', ...node }],
   }) as unknown as IRScene;
 
-const textPrimitives = (ir: IRScene, warnings: Array<CompileWarning> = []): Array<TextPrim> =>
+const textPrimitives = (ir: IRScene, warnings: Array<CompileWarning> = []): Array<TextPrimitive> =>
   flattenPrims(compileToScene(ir, { onWarn: warning => warnings.push(warning) }).scene.primitives).filter(
-    (primitive): primitive is TextPrim => primitive.type === 'text',
+    (primitive): primitive is TextPrimitive => primitive.type === 'text',
   );
 
 const resolvedTextColor = (
   fill: IRNodeStyle['fill'],
   node: Partial<IRNode> = {},
-): { fill: TextPrim['fill'] | undefined; warnings: Array<CompileWarning> } => {
+): { fill: TextPrimitive['fill'] | undefined; warnings: Array<CompileWarning> } => {
   const warnings: Array<CompileWarning> = [];
   const [text] = textPrimitives(
     sceneOf({

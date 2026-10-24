@@ -5,7 +5,7 @@ import type { IRScene } from '../../../src/schemas';
 import { findPathPrim } from './helpers';
 
 describe('path 级 opacity / fillOpacity / strokeOpacity', () => {
-  it('opacity 透传到 PathPrim.opacity', () => {
+  it('opacity 透传到 PathPrimitive.opacity', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -45,7 +45,7 @@ describe('path 级 opacity / fillOpacity / strokeOpacity', () => {
     expect(findPathPrim(compileToScene(ir).scene.primitives).fillOpacity).toBe(0.3);
   });
 
-  it('IR strokeOpacity → PathPrim.strokeOpacity（命名映射，与 Node 一致）', () => {
+  it('IR strokeOpacity → PathPrimitive.strokeOpacity（命名映射，与 Node 一致）', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

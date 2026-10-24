@@ -8,7 +8,7 @@ import type {
   ResolvedPatternTile,
   Scene,
   SceneResource,
-  TextPrim,
+  TextPrimitive,
 } from '@retikz/core';
 
 import { validateSceneContent } from '../shared';
@@ -421,7 +421,7 @@ const buildFont = (
     .filter(part => part !== undefined && part !== '')
     .join(' ');
 
-const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim, options: SceneDrawOptions): void => {
+const drawText = (ctx: CanvasRenderingContext2D, p: TextPrimitive, options: SceneDrawOptions): void => {
   ctx.font = buildFont(p.fontSize, p.fontFamily, p.fontWeight, p.fontStyle, options);
   ctx.textAlign = p.align === 'middle' ? 'center' : p.align;
   ctx.textBaseline = p.baseline;
@@ -568,8 +568,8 @@ const drawPrim = (
 
   switch (p.type) {
     case 'rect':
-      ctx.lineCap = p.strokeLinecap ?? 'butt';
-      ctx.lineJoin = p.strokeLinejoin ?? 'miter';
+      ctx.lineCap = p.lineCap ?? 'butt';
+      ctx.lineJoin = p.lineJoin ?? 'miter';
       withBlend(ctx, p.blendMode, () =>
         withShadow(ctx, p.shadow, options.resolveCssColor, () =>
           withOpacity(ctx, p.opacity, () => {
@@ -602,8 +602,8 @@ const drawPrim = (
       );
       break;
     case 'ellipse':
-      ctx.lineCap = p.strokeLinecap ?? 'butt';
-      ctx.lineJoin = p.strokeLinejoin ?? 'miter';
+      ctx.lineCap = p.lineCap ?? 'butt';
+      ctx.lineJoin = p.lineJoin ?? 'miter';
       withBlend(ctx, p.blendMode, () =>
         withShadow(ctx, p.shadow, options.resolveCssColor, () =>
           withOpacity(ctx, p.opacity, () => {
@@ -650,8 +650,8 @@ const drawPrim = (
         withShadow(ctx, p.shadow, options.resolveCssColor, () =>
           withOpacity(ctx, p.opacity, () => {
             buildPath(ctx, p.commands);
-            if (p.strokeLinecap !== undefined) ctx.lineCap = p.strokeLinecap;
-            if (p.strokeLinejoin !== undefined) ctx.lineJoin = p.strokeLinejoin;
+            if (p.lineCap !== undefined) ctx.lineCap = p.lineCap;
+            if (p.lineJoin !== undefined) ctx.lineJoin = p.lineJoin;
 
             const bbox = pathBounds(p.commands);
             fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, p.fillRule, options, resources, bbox);

@@ -772,7 +772,7 @@ export type PathLabelGeometryOptions = Omit<IRPathLabel, 'text' | 'textColor' | 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path.ts"} startLine={83}>PathBoundaryLabelInput</ApiSourceLink>
+#### <ApiSourceLink label={"PathBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path.ts"} startLine={67}>PathBoundaryLabelInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -806,7 +806,7 @@ export type PathBoundaryLabelInput = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathCompileContext"} path={"packages/kernel/core/src/contract/path.ts"} startLine={100}>PathCompileContext</ApiSourceLink>
+#### <ApiSourceLink label={"PathCompileContext"} path={"packages/kernel/core/src/contract/path.ts"} startLine={84}>PathCompileContext</ApiSourceLink>
 
 A custom kind can take over output completely or reuse standard stroke logic through callbacks
 
@@ -1126,7 +1126,7 @@ export type ArrowDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathDefinition"} path={"packages/kernel/core/src/contract/path.ts"} startLine={133}>PathDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PathDefinition"} path={"packages/kernel/core/src/contract/path.ts"} startLine={117}>PathDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1163,7 +1163,7 @@ export type PathDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutput e
 
 </DocTabs>
 
-#### <ApiSourceLink label={"definePath"} path={"packages/kernel/core/src/contract/path.ts"} startLine={168}>definePath</ApiSourceLink>
+#### <ApiSourceLink label={"definePath"} path={"packages/kernel/core/src/contract/path.ts"} startLine={152}>definePath</ApiSourceLink>
 
 <DocTabs defaultValue="without-owner-output">
 
@@ -1247,7 +1247,7 @@ export declare const defineArrow: (def: ArrowDefinition) => ArrowDefinition;
 
 ## Configuration and validation
 
-#### <ApiSourceLink label={"PathSchema"} path={"packages/kernel/core/src/schemas/path/path.ts"} startLine={144}>PathSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathSchema"} path={"packages/kernel/core/src/schemas/path/path.ts"} startLine={142}>PathSchema</ApiSourceLink>
 
 <ZodSchema shallow name="PathSchema" />
 
@@ -1313,11 +1313,11 @@ Either tangent angle selects tangent mode; the omitted outgoing/incoming angle d
 
 <ZodSchema shallow name="PathLabelSchema" />
 
-#### <ApiSourceLink label={"ArrowMarkSchema"} path={"packages/kernel/core/src/schemas/path/path.ts"} startLine={64}>ArrowMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArrowMarkSchema"} path={"packages/kernel/core/src/schemas/path/path.ts"} startLine={62}>ArrowMarkSchema</ApiSourceLink>
 
 <ZodSchema shallow name="ArrowMarkSchema" />
 
-#### <ApiSourceLink label={"PathMarkPlacementSchema"} path={"packages/kernel/core/src/schemas/path/path.ts"} startLine={73}>PathMarkPlacementSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathMarkPlacementSchema"} path={"packages/kernel/core/src/schemas/path/path.ts"} startLine={71}>PathMarkPlacementSchema</ApiSourceLink>
 
 <ZodSchema shallow name="PathMarkPlacementSchema" />
 

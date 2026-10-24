@@ -1,4 +1,4 @@
-import type { IRPathBase, IRScene, IRStep, PathPrim, ScenePrimitive } from '@retikz/core';
+import type { IRPathBase, IRScene, IRStep, PathPrimitive, ScenePrimitive } from '@retikz/core';
 import { compileToScene as compileCoreToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -16,17 +16,17 @@ const scene = (children: IRScene['children']): IRScene => ({
   children,
 });
 
-const pathPrim = (primitive: ScenePrimitive): PathPrim => {
+const pathPrim = (primitive: ScenePrimitive): PathPrimitive => {
   expect(primitive.type).toBe('path');
-  return primitive as PathPrim;
+  return primitive as PathPrimitive;
 };
 
-const commandPoint = (command: PathPrim['commands'][number]): [number, number] => {
+const commandPoint = (command: PathPrimitive['commands'][number]): [number, number] => {
   if (!('to' in command)) throw new Error(`Expected a point command, got ${command.kind}.`);
   return command.to;
 };
 
-const ribbonCenterAt = (prim: PathPrim, sampleCount: number, sampleIndex: number): [number, number] => {
+const ribbonCenterAt = (prim: PathPrimitive, sampleCount: number, sampleIndex: number): [number, number] => {
   const left = commandPoint(prim.commands[sampleIndex]);
   const right = commandPoint(prim.commands[sampleCount * 2 - 1 - sampleIndex]);
   return [(left[0] + right[0]) / 2, (left[1] + right[1]) / 2];

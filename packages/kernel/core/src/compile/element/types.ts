@@ -1,7 +1,7 @@
 import type {
   CompileObservationAncestor,
   CompileOccurrenceLocator,
-  GroupPrim,
+  GroupPrimitive,
   LayoutProposal,
   ScenePrimitive,
   SceneResource,
@@ -153,7 +153,7 @@ export type CompiledScope = Readonly<{
   /** 局部内容包络，包含空内容时的既有退化布局 */
   envelope: NodeLayout;
   /** Scope 输出的包装属性，不包含 children */
-  group: Omit<GroupPrim, 'children'>;
+  group: Omit<GroupPrimitive, 'children'>;
   /** 自身装饰及其资源，不重复持有子输出 */
   output: CompileOutput;
 }>;

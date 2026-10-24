@@ -318,12 +318,12 @@ export const assertProviderOutputPathEnums = (owner: string, value: Record<strin
     failProviderOutput(owner, `an invalid ${path}.fillRule`);
   }
 
-  if (value.strokeLinecap !== undefined && !Object.values(PathLineCap).includes(value.strokeLinecap as never)) {
-    failProviderOutput(owner, `an invalid ${path}.strokeLinecap`);
+  if (value.lineCap !== undefined && !Object.values(PathLineCap).includes(value.lineCap as never)) {
+    failProviderOutput(owner, `an invalid ${path}.lineCap`);
   }
 
-  if (value.strokeLinejoin !== undefined && !Object.values(PathLineJoin).includes(value.strokeLinejoin as never)) {
-    failProviderOutput(owner, `an invalid ${path}.strokeLinejoin`);
+  if (value.lineJoin !== undefined && !Object.values(PathLineJoin).includes(value.lineJoin as never)) {
+    failProviderOutput(owner, `an invalid ${path}.lineJoin`);
   }
 };
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene, definePattern, visitSceneContent } from '../../src';
-import type { TextPrim, Scene, GroupPrim } from '../../src';
+import type { TextPrimitive, Scene, GroupPrimitive } from '../../src';
 import {
   createClipRegistry,
   createPaintRegistry,
@@ -11,7 +11,7 @@ import {
 
 describe('资源内容复用基础图元', () => {
   it('自定义 Pattern 保留已度量文本和基础图元样式', () => {
-    const text: TextPrim = {
+    const text: TextPrimitive = {
       type: 'text',
       x: 0,
       y: 0,
@@ -130,7 +130,7 @@ describe('Scene resource dependency closure', () => {
       ],
     };
     expect(() => visitSceneContent(scene, () => {})).toThrow(/cyclic/);
-    const group: GroupPrim = { type: 'group', children: [] };
+    const group: GroupPrimitive = { type: 'group', children: [] };
     group.children.push(group);
     expect(() => visitSceneContent({ primitives: [group] }, () => {})).toThrow(/cyclic/);
   });

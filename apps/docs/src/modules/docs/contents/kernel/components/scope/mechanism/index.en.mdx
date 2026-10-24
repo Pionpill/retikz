@@ -215,13 +215,13 @@ Once the children finish, `replaceLayout` updates the placeholder to a resolved 
 
 - Clipping resource: a path stored separately in the Scene; identical paths share one resource within a compilation.
 - `clipRef`: the resource id held by a group, associating the clipping region with its children.
-- `GroupPrim`: the Scene group containing child primitives, final transforms, and an optional clipping reference.
+- `GroupPrimitive`: the Scene group containing child primitives, final transforms, and an optional clipping reference.
 
 Built-in and custom definitions enter the same resolution path. The resulting path enters the resource table, and its reference joins the child primitives and transforms on the Scene group. This chain does not depend on `scope.id`: an anonymous Scope can clip its children too.
 
 <ComponentPreview files="scope-clip-resource" size="lg" type="flow" hideCode />
 
-Built-in and custom clips both use Clip Definition's `lower`. The resource table deduplicates the resulting paths, and the returned id becomes `GroupPrim.clipRef`.
+Built-in and custom clips both use Clip Definition's `lower`. The resource table deduplicates the resulting paths, and the returned id becomes `GroupPrimitive.clipRef`.
 
 **Core describes where to clip; Render performs the clipping.** Core stores the clipping path in `Scene.resources` and links it to the group through `clipRef`. It does not cut up or delete geometry outside the boundary in advance.
 

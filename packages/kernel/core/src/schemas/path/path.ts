@@ -12,7 +12,6 @@ import type { infer as ZodInfer } from 'zod';
 import { DrawableInstanceSchema } from '../scene/drawable';
 import {
   GraphicStrokeSchema,
-  StrokeCapJoinSchema,
   GraphicColorSchema,
   GraphicFillSchema,
   GraphicOpacitySchema,
@@ -57,7 +56,6 @@ export const PathScaleSchema = union([PositiveNumberSchema, PathAnisotropicScale
 /** 校验路径描边颜色、线宽、虚线、端点线帽与拐角样式 */
 export const PathStrokeSchema = strictObject({
   ...GraphicStrokeSchema.shape,
-  ...StrokeCapJoinSchema.shape,
 }).describe('Path stroke fields combining shared stroke style with path endpoint and join options.');
 
 /** 校验沿路径切线定向的箭头标记，shape 指定能力名称而非方向 */

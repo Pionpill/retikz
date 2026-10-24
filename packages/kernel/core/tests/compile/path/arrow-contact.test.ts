@@ -2,7 +2,7 @@ import { curve } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../../src';
-import type { IRScene, IRStep, PathPrim, ResolvedArrowEnd } from '../../../src';
+import type { IRScene, IRStep, PathPrimitive, ResolvedArrowEnd } from '../../../src';
 import { createStrokePathGeometry, curveSegmentOfOccurrence } from '../../../src/compile/path/stroke/interruption';
 import { applyTransformChain } from '../../../src/compile/transform';
 import { flattenPrims } from '../../helpers/flatten';
@@ -44,7 +44,7 @@ describe('endpoint arrow contact', () => {
       ],
     };
     const path = flattenPrims(compileToScene(ir, { padding: 0 }).scene.primitives).find(
-      (primitive): primitive is PathPrim => primitive.type === 'path' && primitive.arrowEnd !== undefined,
+      (primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.arrowEnd !== undefined,
     );
     if (path === undefined || path.arrowEnd === undefined) throw new Error('Expected endpoint arrow');
     const command = path.commands.at(-1);
@@ -109,7 +109,7 @@ describe('preserved endpoint geometry', () => {
       ],
     };
     const path = flattenPrims(compileToScene(scene, { padding: 0 }).scene.primitives).find(
-      (p): p is PathPrim => p.type === 'path',
+      (p): p is PathPrimitive => p.type === 'path',
     );
     if (!path?.arrowEnd) throw new Error('Missing arrow');
     expect(path.commands).toHaveLength(2);
@@ -135,7 +135,9 @@ describe('preserved endpoint geometry', () => {
         },
       ],
     };
-    const paths = flattenPrims(compileToScene(scene).scene.primitives).filter((p): p is PathPrim => p.type === 'path');
+    const paths = flattenPrims(compileToScene(scene).scene.primitives).filter(
+      (p): p is PathPrimitive => p.type === 'path',
+    );
     expect(paths.every(path => path.arrowEnd === undefined)).toBe(true);
   });
 
@@ -168,7 +170,7 @@ describe('preserved endpoint geometry', () => {
         ],
       };
       const paths = flattenPrims(compileToScene(scene, { padding: 0 }).scene.primitives).filter(
-        (p): p is PathPrim => p.type === 'path',
+        (p): p is PathPrimitive => p.type === 'path',
       );
       for (const start of [true, false]) {
         const path = paths.find(p => (start ? p.arrowStart : p.arrowEnd));
@@ -217,7 +219,7 @@ describe('preserved endpoint geometry', () => {
       ],
     };
     const path = flattenPrims(compileToScene(scene, { padding: 0 }).scene.primitives).find(
-      (p): p is PathPrim => p.type === 'path',
+      (p): p is PathPrimitive => p.type === 'path',
     );
     if (!path?.arrowEnd) throw new Error('Missing short-path arrow');
     const end = path.commands.at(-1);
