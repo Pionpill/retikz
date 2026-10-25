@@ -93,6 +93,8 @@
     "step": "Step · 路径组合",
     "pathCustomPath": "自定义路径",
     "pathCustomArrow": "自定义箭头",
+    "pathMark": "mark · 标记",
+    "pathCustomMark": "自定义标记",
     "effects": "效果",
     "effectsShadow": "shadow · 阴影",
     "effectsBlend": "blend · 混合",

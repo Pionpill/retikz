@@ -49,12 +49,7 @@ describe('C7：cycle 闭合段可承载 mark', () => {
       children: [
         {
           type: 'path',
-          marks: [
-            {
-              pos: (10 + 1.5 * Math.hypot(5, 8)) / (10 + 2 * Math.hypot(5, 8)),
-              mark: { kind: 'arrow', shape: 'stealth' },
-            },
-          ],
+          marks: [{ pos: (10 + 1.5 * Math.hypot(5, 8)) / (10 + 2 * Math.hypot(5, 8)), shape: 'stealth' }],
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -82,7 +77,7 @@ describe('C7：rectangle 段计入段数并可承载 mark', () => {
     children: [
       {
         type: 'path',
-        marks: [{ pos, mark: { kind: 'arrow', shape: 'stealth' } }],
+        marks: [{ pos, shape: 'stealth' }],
         children: [{ type: 'step', kind: 'rectangle', from: [0, 0], to: [40, 20] }],
       },
     ],

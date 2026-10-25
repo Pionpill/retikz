@@ -23,7 +23,7 @@ const Demo: FC = () => (
       radius={55}
       startAngle={20}
       endAngle={160}
-      marks={[{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }]}
+      marks={[{ pos: 0.5, shape: 'stealth' }]}
       style={{ strokeWidth: 2 }}
     />
   </Layout>

@@ -1,6 +1,6 @@
 ﻿---
-title: arrow · Arrows and marks
-description: Configure endpoint arrows and place marks at arbitrary arc-length positions
+title: arrow · Arrows
+description: Configure start and end arrows, appearance, and endpoint overlap
 ---
 
 Use `arrow.start` / `arrow.end` for endpoint arrows and `marks` for content along a path. Both can coexist. Start with [Basic usage](/kernel/components/path/usage) if you are new to paths.
@@ -59,60 +59,8 @@ Endpoint arrows shorten the main stroke according to their contact geometry so i
 
 ## Marks along a path
 
-Each `marks` entry contains `pos`, optional `rotate` / `scale`, and `mark`. `pos` is a fraction of the entire path's accumulated arc length, from 0 to 1. Sampling follows routing, node-boundary clipping, and geometric corner rounding, before endpoint shortening, label interruptions, and whole-path transforms.
+Use [mark · Marks](/kernel/components/path/mark) to place primitives at any position along a path. Marks can reuse registered arrows without shortening the path. See [Custom marks](/kernel/components/path/custom-mark) for new ordinary mark shapes.
 
-```tsx
-<Draw
-  way={[
-    [0, 0],
-    [30, 0],
-    [120, 60],
-  ]}
-  arrow="->"
-  marks={[
-    { pos: 0, mark: { kind: 'arrow', shape: 'circle' } },
-    { pos: 0.5, rotate: 'auto', mark: { kind: 'arrow', shape: 'stealth' } },
-    { pos: 1, rotate: 30, scale: 1.5, mark: { kind: 'arrow', shape: 'open' } },
-  ]}
-/>
-```
+## API Reference
 
-Marks only place primitives. They do not shorten strokes, cut holes, or avoid labels, even at `pos: 0` or `pos: 1`. Arrow-shaped marks reuse registered arrow definitions directly, anchor at the tip, and retain arrow sizing rules. They cannot specify `endpointOverlap`.
-
-Omitted `rotate` or `'auto'` follows the path tangent. A number specifies a fixed angle in path-local coordinates. `scale` adds a placement scale, defaulting to 1. Moves contribute no length; closing segments do. At a segment boundary the next nonzero segment supplies the direction; the final endpoint uses the incoming direction. A nonempty mark list on a wholly zero-length path fails.
-
-The main stroke and endpoint arrows paint first, marks paint in list order, and path labels paint last. Full mark content contributes to visual bounds and follows whole-path transforms.
-
-## Custom marks
-
-An ordinary mark emits basic Scene primitives with the local origin as its anchor. Its dimensions use user units and do not scale with host stroke width. Definitions stay outside JSON IR, which stores only a name and JSON parameters.
-
-```tsx
-import { defineMark } from '@retikz/core';
-import { Draw, Layout } from '@retikz/react';
-
-const dot = defineMark({
-  name: 'dot',
-  emit: (_params, { stroke }) => [{ type: 'ellipse', cx: 0, cy: 0, rx: 4, ry: 4, fill: stroke }],
-});
-
-export default () => (
-  <Layout extensions={{ marks: [dot] }}>
-    <Draw
-      way={[
-        [0, 0],
-        [120, 0],
-      ]}
-      marks={[{ pos: 0.5, mark: { kind: 'custom', name: 'dot', params: {} } }]}
-    />
-  </Layout>
-);
-```
-
-Register directly with `compileToScene(ir, { marks: [dot] })`. `emit(params, context)` returns `Iterable<ScenePrimitive>`; context supplies the host `stroke` and precision function `round`. Each definition interprets its own parameters. Fixed styles remain intact. Existing Scene resource references are supported, but their resources must exist.
-
-Mark hits belong to the host Path. `pointerEvents: 'none'` excludes content, and internal primitives do not become independent authoring nodes. Animation and nested content follow Scene contracts; reused definitions produce independent primitive instances. Unknown definitions, missing resources, and emission failures produce errors.
-
-## API reference
-
-See [Path API reference](/kernel/components/path/reference) for complete fields. Endpoints use `PathArrowSchema`, placements use `PathMarkPlacementSchema`, and ordinary definitions use `MarkDefinition`.
+See [Path API Reference](/kernel/components/path/reference) for the complete fields. Endpoint configuration uses `PathArrowSchema`.

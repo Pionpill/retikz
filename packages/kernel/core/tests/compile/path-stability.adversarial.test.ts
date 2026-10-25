@@ -327,14 +327,10 @@ describe('ATTACK 5: 退化 bbox + path transform', () => {
 describe('ATTACK 6: marks + path transform 交互（二次变换 / 定向污染）', () => {
   it('marks + rotate 同给：mark marker 坐标进 group 还是裸坐标（二次旋转风险）', () => {
     // 无 transform 基准
-    const baseScene = compileToScene(
-      linePath({ marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }] }),
-    ).scene;
+    const baseScene = compileToScene(linePath({ marks: [{ pos: 0.5, shape: 'stealth' }] })).scene;
 
     // 加 rotate
-    const rotScene = compileToScene(
-      linePath({ rotate: 90, marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }] }),
-    ).scene;
+    const rotScene = compileToScene(linePath({ rotate: 90, marks: [{ pos: 0.5, shape: 'stealth' }] })).scene;
 
     expect(expectAllFinite(baseScene).ok).toBe(true);
     expect(expectAllFinite(rotScene).ok).toBe(true);
@@ -364,7 +360,7 @@ describe('ATTACK 7: marks 落各段类型 + 零长段 tangent', () => {
             { type: 'step', kind: 'move', to: [2, 2] },
             { type: 'step', kind: 'line', to: [2, 2] },
           ],
-          { marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }] },
+          { marks: [{ pos: 0.5, shape: 'stealth' }] },
         ),
       ),
     ).toThrow(/zero-length/);
@@ -393,7 +389,7 @@ describe('ATTACK 7: marks 落各段类型 + 零长段 tangent', () => {
           { type: 'step', kind: 'move', to: [5, 5] },
           { type: 'step', kind: 'bend', to: [5, 5], outAngle: 60, inAngle: 120 },
         ],
-        { marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }] },
+        { marks: [{ pos: 0.5, shape: 'stealth' }] },
       ),
     ).scene;
 
@@ -404,8 +400,8 @@ describe('ATTACK 7: marks 落各段类型 + 零长段 tangent', () => {
     const scene = compileToScene(
       linePath({
         marks: [
-          { pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } },
-          { pos: 0.5, mark: { kind: 'arrow', shape: 'normal' } },
+          { pos: 0.5, shape: 'stealth' },
+          { pos: 0.5, shape: 'normal' },
         ],
       }),
     ).scene;
@@ -422,7 +418,7 @@ describe('ATTACK 8: mark 未注册箭头名 / 错误信息清晰度', () => {
     let err: Error | undefined;
 
     try {
-      compileToScene(linePath({ marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'ghostArrow' } }] }));
+      compileToScene(linePath({ marks: [{ pos: 0.5, shape: 'ghostArrow' }] }));
     } catch (e) {
       err = e as Error;
     }
@@ -438,7 +434,7 @@ describe('ATTACK 8: mark 未注册箭头名 / 错误信息清晰度', () => {
     let err: Error | undefined;
 
     try {
-      compileToScene(linePath({ marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: '->' } }] }));
+      compileToScene(linePath({ marks: [{ pos: 0.5, shape: '->' }] }));
     } catch (e) {
       err = e as Error;
     }
@@ -463,7 +459,7 @@ describe('ATTACK 9: out/in bend + rotate + marks 三合一 + arrow', () => {
           rotate: 37,
           scale: 0.5,
           arrow: { start: { shape: 'stealth' }, end: { shape: 'stealth' } },
-          marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'normal' } }],
+          marks: [{ pos: 0.5, shape: 'normal' }],
         },
       ),
     ).scene;
@@ -526,9 +522,7 @@ describe('ATTACK 10: path transform 嵌套 scope transform（双重变换）', (
 // =====================================================================
 describe('ATTACK 11: mark 视觉极值（length / scale 极大）', () => {
   it('mark.length=1e300 → markerWidth/baseSize 巨大 scale；finite', () => {
-    const scene = compileToScene(
-      linePath({ marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth', length: 1e300 } }] }),
-    ).scene;
+    const scene = compileToScene(linePath({ marks: [{ pos: 0.5, shape: 'stealth', length: 1e300 }] })).scene;
     const fin = expectAllFinite(scene);
 
     expect(fin.ok).toBe(true);
@@ -537,7 +531,7 @@ describe('ATTACK 11: mark 视觉极值（length / scale 极大）', () => {
 
   it('mark.scale=1e308 + length=10 → 10×1e308 = Infinity markerWidth → 编译期抛', () => {
     const ir = linePath({
-      marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth', scale: 1e308, length: 10 } }],
+      marks: [{ pos: 0.5, shape: 'stealth', scale: 1e308, length: 10 }],
     });
 
     expect(() => compileToScene(ir).scene).toThrow(/resolved length\/width is non-finite/i);

@@ -19,7 +19,7 @@ export const renderTreeConnectionsPreview = (values: TreeConnectionsPreviewValue
         ...(values.route === '-|-' || values.route === '|-|'
           ? { route: values.route, fraction: values.fraction }
           : { route: values.route }),
-        path: { marks: values.arrows ? [{ pos: 1, mark: { kind: 'arrow' } }] : [] },
+        path: { marks: values.arrows ? [{ pos: 1 }] : [] },
       }}
     />
     {values.reference && (

@@ -37,9 +37,7 @@ describe('marks → 中段 marker primitive', () => {
           {
             type: 'path',
             style: { opacity: 0.5 },
-            marks: [
-              { pos: 0.5, mark: { kind: 'arrow', shape: 'nested', ...(opacity === undefined ? {} : { opacity }) } },
-            ],
+            marks: [{ pos: 0.5, shape: 'nested', ...(opacity === undefined ? {} : { opacity }) }],
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },
@@ -74,29 +72,20 @@ describe('marks → 中段 marker primitive', () => {
 
   it('单个中点 mark 比无 mark 多产 primitive', () => {
     const without = leafCount(compileToScene(linePathIR()).scene.primitives);
-    const withMark = leafCount(
-      compileToScene(linePathIR([{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }])).scene.primitives,
-    );
+    const withMark = leafCount(compileToScene(linePathIR([{ pos: 0.5, shape: 'stealth' }])).scene.primitives);
 
     expect(withMark).toBeGreaterThan(without);
   });
 
   it('两个 mark 比一个 mark 再多产 primitive', () => {
-    const one = leafCount(compileToScene(linePathIR([{ pos: 0.5, mark: { kind: 'arrow' } }])).scene.primitives);
-    const two = leafCount(
-      compileToScene(
-        linePathIR([
-          { pos: 0.25, mark: { kind: 'arrow' } },
-          { pos: 0.75, mark: { kind: 'arrow' } },
-        ]),
-      ).scene.primitives,
-    );
+    const one = leafCount(compileToScene(linePathIR([{ pos: 0.5 }])).scene.primitives);
+    const two = leafCount(compileToScene(linePathIR([{ pos: 0.25 }, { pos: 0.75 }])).scene.primitives);
 
     expect(two).toBeGreaterThan(one);
   });
 
   it('mark 用自定义箭头名 → 注入注册表后编译不抛、产 marker', () => {
-    const ir = linePathIR([{ pos: 0.5, mark: { kind: 'arrow', shape: 'myTip' } }]);
+    const ir = linePathIR([{ pos: 0.5, shape: 'myTip' }]);
     const customArrow: Record<string, TestArrowDefinition> = {
       myTip: {
         backX: 0,
@@ -147,7 +136,7 @@ describe('marks → 中段 marker primitive', () => {
         {
           type: 'path',
           label: { text: 'gap', sloped: true },
-          marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }],
+          marks: [{ pos: 0.5, shape: 'stealth' }],
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
@@ -176,7 +165,7 @@ describe('marks → 中段 marker 随 strokeWidth 缩放（与端点箭头一致
       {
         type: 'path',
         ...(strokeWidth !== undefined ? { style: { strokeWidth } } : {}),
-        marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }],
+        marks: [{ pos: 0.5, shape: 'stealth' }],
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
           { type: 'step', kind: 'line', to: [10, 0] },

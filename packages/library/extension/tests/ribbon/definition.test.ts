@@ -1,5 +1,5 @@
-import type { IRScene } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import type { IRScene, ScenePrimitive } from '@retikz/core';
+import { compileToScene, visitSceneContent } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { RibbonPathDefinition } from '../../src/ribbon';
@@ -35,11 +35,16 @@ describe('Extension Ribbon definition', () => {
       type: 'path',
       kind: 'ribbon',
       kindOptions: { width: { kind: 'fixed', value: 4 }, sampling: { kind: 'fixed', samples: 2 } },
-      marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'missing' } }],
+      marks: [{ pos: 0.5, shape: 'missing' }],
       children: line,
     });
 
-    expect(scene.primitives.filter(value => value.type === 'path')).toHaveLength(1);
+    const contents: Array<ScenePrimitive> = [];
+    visitSceneContent(scene, primitive => {
+      if (primitive.type !== 'group') contents.push(primitive);
+    });
+    expect(contents).toHaveLength(1);
+    expect(contents[0]).toMatchObject({ type: 'path' });
   });
 
   it('emits a boundary ribbon from both explicit boundary paths', () => {

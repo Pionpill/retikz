@@ -278,7 +278,7 @@ describe('cornerRadius 交互', () => {
       { type: 'step', kind: 'line', to: [10, 0] },
       { type: 'step', kind: 'line', to: [10, 10] },
     ];
-    const marks: IRPath['marks'] = [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }];
+    const marks: IRPath['marks'] = [{ pos: 0.5, shape: 'stealth' }];
     const sharp = scene([{ type: 'path', marks, children: steps as never }]);
     const rounded = scene([{ type: 'path', cornerRadius: 3, marks, children: steps as never }]);
 

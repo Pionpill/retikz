@@ -210,7 +210,7 @@ describe('compile path: endpoint arrow overlap', () => {
             meta: { owner: 'probe' },
             label: { text: 'middle', position: 0.5, side: 'top' },
             arrow: { end: { shape: 'normal', endpointOverlap } },
-            marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'circle' } }],
+            marks: [{ pos: 0.5, shape: 'circle' }],
             children: steps,
           },
         ],

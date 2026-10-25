@@ -1,5 +1,34 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  标记图元生成上下文: 'Context for generating mark primitives',
+  自定义形状参数: 'Custom shape parameters',
+  已解析的描边: 'Resolved stroke',
+  已解析的填充: 'Resolved fill',
+  局部轮廓线宽: 'Outline width in local coordinates',
+  虚线节奏: 'Dash pattern',
+  虚线偏移: 'Dash offset',
+  描边端帽: 'Stroke line cap',
+  描边连接: 'Stroke line join',
+  坐标取整函数: 'Coordinate rounding function',
+  可注册的标记形状定义: 'Registerable mark shape definition',
+  注册名称: 'Registered name',
+  '局部基准正方形边长，默认 10': 'Local base-square size; defaults to 10',
+  '局部放置锚点，默认基准正方形中心': 'Local placement anchor; defaults to the base-square center',
+  '是否通过描边表达空心轮廓，默认 false': 'Whether stroke draws a hollow outline; defaults to false',
+  '默认长度参数，默认 8': 'Default length parameter; defaults to 8',
+  '默认宽度参数，默认 8': 'Default width parameter; defaults to 8',
+  根据已解析的样式和参数生成局部基础图元: 'Generate local primitives from resolved styles and parameters',
+  声明标记形状定义: 'Declare a mark shape definition',
+  增加端点接触与截断几何的箭头定义:
+    'Arrow definition extending mark generation with endpoint contact and shortening geometry',
+  '局部几何沿箭头轴向的包络后缘，必须不晚于线接触点':
+    'Back edge along the arrow axis; must not exceed the line contact coordinate',
+  '线接触点，决定路径截断与端点定位': 'Line contact coordinate for path shortening and endpoint placement',
+  '外轮廓补偿量，默认空心定义为 lineWidth / 2，实心定义为 0':
+    'Outline inset; defaults to lineWidth / 2 for hollow definitions and 0 for solid definitions',
+  '尖端横坐标，默认 baseSize；沿线放置时以尖端为锚点':
+    'Tip x-coordinate; defaults to baseSize and serves as the along-path anchor',
+  声明端点箭头定义: 'Declare an endpoint arrow definition',
   '端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头':
     'Endpoint arrow configuration, or a direction shorthand enabling the start, end, or both arrows',
   '支持方向简写 ->、<-、<->，或用 start 与 end 分别配置端点箭头':
@@ -233,8 +262,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '路径 id；其他 path / position 通过这个 id 引用本路径，也作为水合挂点供事件 handler 绑定':
     'Path id, used by other paths or positions to reference it and by hydration to bind event handlers',
   '沿路径在归一化位置放标记（首批仅箭头）': 'Place marks at normalized positions along the path; currently only arrows',
-  "每个 `{ pos, mark }`：`pos∈[0,1]`，`mark.kind:'arrow'` + 视觉子集（shape 为已注册箭头名，方向随路径切线）":
-    "Each `{ pos, mark }` uses `pos∈[0,1]` and `mark.kind:'arrow'` plus visual settings; shape is a registered arrow name and direction follows the path tangent",
   '用户自定义元数据；可在事件 / 水合上下文中读取，不参与布局。须为 JSON 可序列化对象':
     'JSON-serializable user metadata available in event and hydration contexts; does not participate in layout',
   '单击该图元（DOM `click`）': 'Click on this element (DOM `click`)',

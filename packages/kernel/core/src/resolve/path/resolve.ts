@@ -3,7 +3,7 @@ import { pointAtArcAngle } from '@retikz/math';
 import type { Transform } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type {
-  IRArrowStyle,
+  IRMarkStyle,
   IRLine,
   IRMathSegment,
   IRPaintValue,
@@ -38,7 +38,7 @@ import type {
   PathResolution,
   PathResolveContext,
   PathTargetResolver,
-  ResolvedArrowMark,
+  ResolvedMarkStyle,
   ResolvedPathLabel,
   ResolvedPathSource,
   ResolvedStepSource,
@@ -317,13 +317,13 @@ const resolveStepLabelColors = (
   };
 };
 
-/** 确定 arrow color 后再以该颜色为 master 确定 fill */
-const resolveArrowColors = (
-  mark: IRArrowStyle,
+/** 解析标记主色及派生填充色 */
+const resolveMarkColors = (
+  mark: IRMarkStyle,
   masterColor: string | undefined,
   context: PathResolveContext,
   fieldPath: string,
-): ResolvedArrowMark => {
+): ResolvedMarkStyle => {
   const { color, fill, stroke, ...source } = mark;
   const resolvedColor =
     color === undefined
@@ -393,7 +393,7 @@ const resolvePathContextualColors = (
               ? {}
               : {
                   start: {
-                    ...resolveArrowColors(arrow.start, masterColor, context, `${irPath}.arrow.start`),
+                    ...resolveMarkColors(arrow.start, masterColor, context, `${irPath}.arrow.start`),
                     endpointOverlap: arrow.start.endpointOverlap,
                   },
                 }),
@@ -401,7 +401,7 @@ const resolvePathContextualColors = (
               ? {}
               : {
                   end: {
-                    ...resolveArrowColors(arrow.end, masterColor, context, `${irPath}.arrow.end`),
+                    ...resolveMarkColors(arrow.end, masterColor, context, `${irPath}.arrow.end`),
                     endpointOverlap: arrow.end.endpointOverlap,
                   },
                 }),
@@ -426,14 +426,9 @@ const resolvePathContextualColors = (
       ? {}
       : {
           marks: marks.map((item, index) => ({
-            ...item,
-            mark:
-              item.mark.kind === 'arrow'
-                ? {
-                    ...resolveArrowColors(item.mark, masterColor, context, `${irPath}.marks[${index}].mark`),
-                    kind: 'arrow' as const,
-                  }
-                : item.mark,
+            ...resolveMarkColors(item, masterColor, context, `${irPath}.marks[${index}]`),
+            pos: item.pos,
+            rotate: item.rotate,
           })),
         }),
   };

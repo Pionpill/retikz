@@ -336,6 +336,12 @@ export const kernelSection: Array<Section> = [
             meta: { pageType: 'guide', audience: 'user' },
           },
           {
+            id: 'mark',
+            label: 'kernel.pathMark',
+            difficulty: DocDifficulty.Beginner,
+            meta: { pageType: 'guide', audience: 'user' },
+          },
+          {
             id: 'label',
             label: 'kernel.pathLabel',
             difficulty: DocDifficulty.Beginner,
@@ -352,6 +358,12 @@ export const kernelSection: Array<Section> = [
             label: 'kernel.pathCustomArrow',
             difficulty: DocDifficulty.Advanced,
             meta: extensionGuide('kernel.arrow'),
+          },
+          {
+            id: 'custom-mark',
+            label: 'kernel.pathCustomMark',
+            difficulty: DocDifficulty.Advanced,
+            meta: extensionGuide('kernel.mark'),
           },
           { id: 'mechanism', label: 'kernel.pathMechanism', difficulty: DocDifficulty.Internals },
           {

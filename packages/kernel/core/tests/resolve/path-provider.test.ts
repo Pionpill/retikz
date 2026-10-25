@@ -104,12 +104,12 @@ describe('resolve/path provider bindings', () => {
       lineContactX: 2,
       emit: () => [],
     };
-    const mark = { kind: 'arrow' as const, shape: 'hollowProbe', length: 12, scale: 2 };
-    const resolution = resolveStrokePathWithBuiltinProviders(path({ marks: [{ pos: 1, mark }] }), {
+    const mark = { shape: 'hollowProbe', length: 12, scale: 2 };
+    const resolution = resolveStrokePathWithBuiltinProviders(path({ arrow: { end: mark } }), {
       arrows: resolveArrowRegistry([arrow]),
     });
-    const resolvedMark = resolution.path.marks?.[0]?.mark;
-    if (resolvedMark?.kind !== 'arrow') throw new Error('Expected arrow mark');
+    const resolvedMark = resolution.path.arrow?.end;
+    if (resolvedMark === undefined) throw new Error('Expected endpoint arrow');
     const arrowResolution = resolution.arrows.get(resolvedMark);
 
     expect(arrowResolution?.definition).toBe(arrow);

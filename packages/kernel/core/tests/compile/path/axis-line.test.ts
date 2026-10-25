@@ -411,7 +411,7 @@ describe('compile path: axis-line', () => {
       children: [
         {
           type: 'path',
-          marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }],
+          marks: [{ pos: 0.5, shape: 'stealth' }],
           children: [
             { type: 'step', kind: 'move', to: [10, 20] },
             { type: 'step', kind: 'axis-line', axis: 'horizontal', to: [90, 80] },

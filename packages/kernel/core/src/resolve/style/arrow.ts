@@ -1,6 +1,6 @@
 import { mergeProperties } from '@retikz/foundation';
 
-import type { IRArrowDetail, IRArrowStyle, IRPathArrow, IRPathBase } from '../../schemas';
+import type { IRArrowDetail, IRMarkStyle, IRPathArrow, IRPathBase } from '../../schemas';
 import type { EffectiveScopeDefaults } from './types';
 
 /** 合并单侧箭头样式：下层只覆盖已声明字段，其余继承上层默认值 */
@@ -23,16 +23,16 @@ export const mergeArrowDefaults = (a: IRArrowDetail, b: IRArrowDetail): IRArrowD
   return out;
 };
 
-type ResolveArrowAppearanceContext = {
+type ResolveMarkAppearanceContext = {
   endpoint?: 'start' | 'end';
   scopeDefaults: EffectiveScopeDefaults;
   masterColor: string | undefined;
 };
 
-const resolveArrowAppearance = (
-  mark: IRArrowStyle,
-  { endpoint, scopeDefaults, masterColor }: ResolveArrowAppearanceContext,
-): IRArrowStyle => {
+const resolveMarkAppearance = (
+  mark: IRMarkStyle,
+  { endpoint, scopeDefaults, masterColor }: ResolveMarkAppearanceContext,
+): IRMarkStyle => {
   const detail = scopeDefaults.path?.arrow;
   if (detail === undefined) return masterColor === undefined ? mark : { ...mark, color: masterColor };
 
@@ -47,7 +47,7 @@ const resolveArrowAppearance = (
   };
 };
 
-/** 为 path marks 中的 arrow mark 补齐继承而来的箭头样式 */
+/** 为沿线标记补齐共享的默认外观 */
 export const resolvePathMarks = (
   marks: IRPathBase['marks'] | undefined,
   scopeDefaults: EffectiveScopeDefaults,
@@ -55,11 +55,9 @@ export const resolvePathMarks = (
 ): IRPathBase['marks'] | undefined => {
   if (marks === undefined) return undefined;
   return marks.map(item => ({
-    ...item,
-    mark:
-      item.mark.kind === 'arrow'
-        ? { ...resolveArrowAppearance(item.mark, { scopeDefaults, masterColor }), kind: 'arrow' }
-        : item.mark,
+    ...resolveMarkAppearance(item, { scopeDefaults, masterColor }),
+    pos: item.pos,
+    rotate: item.rotate,
   }));
 };
 
@@ -74,7 +72,7 @@ export const resolvePathArrows = (
   for (const endpoint of ['start', 'end'] as const) {
     const source = arrow[endpoint];
     if (source === undefined) continue;
-    const style = resolveArrowAppearance(source, { endpoint, scopeDefaults, masterColor });
+    const style = resolveMarkAppearance(source, { endpoint, scopeDefaults, masterColor });
     result[endpoint] = {
       ...style,
       endpointOverlap: source.endpointOverlap ?? scopeDefaults.path?.arrow?.[endpoint]?.endpointOverlap,

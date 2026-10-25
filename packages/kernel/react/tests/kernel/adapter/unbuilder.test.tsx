@@ -331,14 +331,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it("path-level arrow round-trip：'->'/'<-'/'<->' 字段透传保留", () => {
-    const cases: Array<NonNullable<IRPathBase['marks']>> = [
-      [{ pos: 1, mark: { kind: 'arrow' } }],
-      [{ pos: 0, mark: { kind: 'arrow' } }],
-      [
-        { pos: 0, mark: { kind: 'arrow' } },
-        { pos: 1, mark: { kind: 'arrow' } },
-      ],
-    ];
+    const cases: Array<NonNullable<IRPathBase['marks']>> = [[{ pos: 1 }], [{ pos: 0 }], [{ pos: 0 }, { pos: 1 }]];
 
     for (const marks of cases) {
       const ir: IRKernelScene = {
@@ -1251,7 +1244,7 @@ describe('convertIRToReactNode', () => {
             type: 'path',
             rotate: 30,
             scale: { x: 2, y: 1.5 },
-            marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth', scale: 1.2 } }],
+            marks: [{ pos: 0.5, shape: 'stealth', scale: 1.2 }],
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },

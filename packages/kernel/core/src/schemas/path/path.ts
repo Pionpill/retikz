@@ -1,13 +1,11 @@
 import type { ValueOf } from '@retikz/foundation';
 import {
   PositiveNumberSchema,
-  NonBlankStringSchema,
-  NormalizedFractionSchema,
   NonNegativeNumberSchema,
   createOpenStringSchema,
   JsonObjectSchema,
 } from '@retikz/foundation';
-import { enum as zodEnum, strictObject, union, literal, number, array, unknown, never, discriminatedUnion } from 'zod';
+import { enum as zodEnum, strictObject, union, literal, number, array, unknown, never } from 'zod';
 import type { infer as ZodInfer } from 'zod';
 
 import { DrawableInstanceSchema } from '../scene/drawable';
@@ -18,8 +16,9 @@ import {
   GraphicOpacitySchema,
   GraphicEffectsSchema,
 } from '../style/graphic';
-import { ArrowStyleSchema, PathArrowSchema } from './arrow';
+import { PathArrowSchema } from './arrow';
 import { PathLabelSchema } from './label';
+import { PathMarkPlacementSchema } from './mark';
 import { StepSchema } from './step';
 
 /** 路径填充规则关键字 */
@@ -58,36 +57,6 @@ export const PathScaleSchema = union([PositiveNumberSchema, PathAnisotropicScale
 export const PathStrokeSchema = strictObject({
   ...GraphicStrokeSchema.shape,
 }).describe('Path stroke fields combining shared stroke style with path endpoint and join options.');
-
-/** 校验沿路径切线定向的箭头标记，shape 指定能力名称而非方向 */
-export const ArrowMarkSchema = ArrowStyleSchema.extend({
-  kind: literal('arrow').describe('Discriminator marking this mark as an arrow tip.'),
-})
-  .strict()
-  .describe(
-    'Arrow mark placed along the path. Direction follows the path tangent; `shape` is an arrow provider name, not a direction token.',
-  );
-
-/** 校验由注册定义生成的普通标记 */
-export const CustomMarkSchema = strictObject({
-  kind: literal('custom').describe('Registered custom mark content.'),
-  name: NonBlankStringSchema.describe('Registered mark definition name.'),
-  params: JsonObjectSchema.optional().describe('JSON parameters interpreted by the mark definition.'),
-});
-
-/** 校验路径上的单个标记及其放置方式 */
-export const PathMarkPlacementSchema = strictObject({
-  pos: NormalizedFractionSchema.describe(
-    'Normalized arc-length position along the path before arrow shortening and label interruption.',
-  ),
-  rotate: union([literal('auto'), number()])
-    .optional()
-    .describe('Tangent orientation by default, or a fixed angle in degrees.'),
-  scale: PositiveNumberSchema.optional().describe('Placement scale. Defaults to one.'),
-  mark: discriminatedUnion('kind', [ArrowMarkSchema, CustomMarkSchema]).describe(
-    'Arrow appearance or a registered custom mark.',
-  ),
-}).describe('One mark placement along the path.');
 
 /** 校验路径填充区域的环绕判定字段 */
 export const PathFillSchema = strictObject({
@@ -178,9 +147,6 @@ export type IRPathScale = ZodInfer<typeof PathScaleSchema>;
 
 /** 路径描边片段类型 */
 export type IRPathStroke = ZodInfer<typeof PathStrokeSchema>;
-
-/** 路径中段箭头标记类型 */
-export type IRArrowMark = ZodInfer<typeof ArrowMarkSchema>;
 
 /** Path schema 的原始输出类型：供 kind 派生与特殊形态使用 */
 export type IRPathBase = ZodInfer<typeof PathSchema>;

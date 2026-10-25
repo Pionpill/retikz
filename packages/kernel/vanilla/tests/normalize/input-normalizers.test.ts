@@ -14,7 +14,7 @@ describe('Vanilla Input normalizers', () => {
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [100, 0] },
       ],
-      marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'circle' } }],
+      marks: [{ pos: 1, shape: 'circle' }],
     };
     const expected = normalizePath({ ...input, arrow: endpoints });
     expect(normalizePath(input)).toEqual(expected);

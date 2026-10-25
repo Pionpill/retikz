@@ -4,6 +4,10 @@ import type { CurveSegmentSample } from '@retikz/math';
 import type { GroupPrimitive, PaintValue, ScenePrimitive, ResolvedArrowEnd, Transform } from '../../../contract';
 import type { SceneResource } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
+import type { MarkResolution } from '../../../resolve';
+import { createLayoutProbeRecoverableError, safeThrownDetail } from '../../../resolve/diagnostics';
+import { materializeScenePrimitives } from '../../resource';
+import type { PaintResolver } from '../../resource';
 import { combineOpacity } from '../../text';
 
 /** 标记输出的资源引用及诊断位置 */
@@ -108,9 +112,10 @@ export const buildMarkMarkerGroup = (
   };
 };
 
-/** 将普通标记以原点为锚点放置，不缩放到宿主线宽 */
+/** 按统一尺寸和局部锚点放置标记图元 */
 export const placeMarkPrimitives = (
   primitives: Array<ScenePrimitive>,
+  resolution: MarkResolution,
   sample: CurveSegmentSample,
   context: BuildMarkMarkerGroupContext,
   resources: MarkResourceContext,
@@ -126,9 +131,56 @@ export const placeMarkPrimitives = (
           : Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG,
       ),
     },
-    { kind: 'scale', x: context.scale ?? 1, y: context.scale ?? 1 },
+    {
+      kind: 'scale',
+      x: context.round((resolution.geometry.resolvedLength * context.strokeWidth) / resolution.geometry.baseSize),
+      y: context.round((resolution.geometry.resolvedWidth * context.strokeWidth) / resolution.geometry.baseSize),
+    },
+    {
+      kind: 'translate',
+      x: context.round(-resolution.geometry.anchor[0]),
+      y: context.round(-resolution.geometry.anchor[1]),
+    },
   ],
   children: primitives.map(primitive =>
-    markerPrimToScene(primitive, context.contextStroke, context.hostOpacity, resources),
+    markerPrimToScene(
+      primitive,
+      context.contextStroke,
+      combineOpacity(resolution.visual.opacity, context.hostOpacity),
+      resources,
+    ),
   ),
 });
+
+/** 由共同定义生成箭头或沿线标记的局部图元 */
+export const emitMarkPrimitives = (
+  resolution: Pick<MarkResolution, 'mark' | 'visual' | 'definition'>,
+  round: (value: number) => number,
+  resolvePaint: PaintResolver,
+  owner: { label: string; providerKey: string },
+): Array<ScenePrimitive> => {
+  const { mark, visual, definition } = resolution;
+  const contextStroke: PaintValue = { kind: 'contextStroke' };
+  let emitted: Array<ScenePrimitive>;
+  try {
+    emitted = Array.from(
+      definition.emit({
+        params: mark.params ?? {},
+        stroke: resolvePaint(visual.stroke) ?? contextStroke,
+        fill: definition.hollow ? contextStroke : (resolvePaint(visual.fill) ?? contextStroke),
+        lineWidth: visual.lineWidth,
+        dashPattern: visual.dashPattern,
+        dashOffset: visual.dashOffset,
+        lineCap: visual.lineCap,
+        lineJoin: visual.lineJoin,
+        round,
+      }),
+    );
+  } catch (cause) {
+    throw createLayoutProbeRecoverableError(`${owner.label} emit failed: ${safeThrownDetail(cause)}`, {
+      cause,
+      providerKey: owner.providerKey,
+    });
+  }
+  return materializeScenePrimitives(owner.label, emitted);
+};

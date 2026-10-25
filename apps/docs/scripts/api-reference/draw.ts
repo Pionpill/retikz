@@ -101,7 +101,6 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
           'PathCompileResult',
           'defineArrow',
           'ArrowDefinition',
-          'ArrowEmitContext',
           'defineMark',
           'MarkDefinition',
           'MarkEmitContext',

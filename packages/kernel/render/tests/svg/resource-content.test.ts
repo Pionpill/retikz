@@ -259,7 +259,7 @@ it('普通标记的动画沿宿主事件上下文绑定且实例隔离', async (
           { type: 'step', kind: 'move', to: [0, index * 30] },
           { type: 'step', kind: 'line', to: [100, index * 30] },
         ],
-        marks: [{ pos: 0.5, mark: { kind: 'custom', name: 'animated' } }],
+        marks: [{ pos: 0.5, shape: 'animated' }],
       })),
     },
     { marks: [mark] },

@@ -485,7 +485,7 @@ it('普通标记命中宿主，局部 id 不创建独立目标，禁用内容可
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },
             ],
-            marks: [{ pos: 0.5, mark: { kind: 'custom', name: 'box' } }],
+            marks: [{ pos: 0.5, shape: 'box' }],
           },
         ],
       },
@@ -493,6 +493,7 @@ it('普通标记命中宿主，局部 id 不创建独立目标，禁用内容可
         marks: [
           {
             name: 'box',
+            anchor: [0, 0],
             emit: () => [
               {
                 type: 'rect',

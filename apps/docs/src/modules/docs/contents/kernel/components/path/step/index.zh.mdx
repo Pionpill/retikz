@@ -282,7 +282,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 ### 中段标记
 
-`marks` 沿路径放方向标记：每项 `{ pos, mark }`，`pos ∈ [0, 1]`（越界 schema 拒），`mark` 首批为 `{ kind: 'arrow', shape, ... }`（复用已注册箭头名 + 视觉子集，见 [自定义箭头](/kernel/components/path/custom-arrow)），**朝向由该点切线决定**（不是固定方向）。直线 / 贝塞尔 / 弧段都按切线定向。尺寸与端点箭头同口径**随 `strokeWidth` 缩放**：线越粗、标记越大。拖动面板中的两个位置值，可观察标记沿路径移动时如何持续跟随局部切线。
+`marks` 每项直接配置 `pos`、`shape` 与尺寸和外观字段，可通过 `params` 传递自定义参数。`pos ∈ [0, 1]` 表示整条路径的弧长比例，默认沿切线定向，可用 `rotate` 指定固定角度。尺寸与端点箭头一样随 `strokeWidth` 缩放。标记只放置图元，即使位于端点也不截断路径。
 
 <ComponentPreview
   files={['path-marks', 'path-marks.preview.tsx']}
@@ -457,7 +457,7 @@ const view = mount(document.getElementById('diagram')!, ir);
     {
       name: 'marks',
       kind: 'property',
-      type: "Array<{ pos: number; mark: { kind: 'arrow'; shape?: string; scale?: number; color?: string } }>",
+      type: 'Array<IRPathMark>',
       description: '在归一化位置放置沿路径切线定向的标记；当前支持的标记类型为箭头标记。',
     },
   ]}

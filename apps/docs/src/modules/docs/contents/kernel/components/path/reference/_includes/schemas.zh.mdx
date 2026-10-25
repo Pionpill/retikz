@@ -288,31 +288,23 @@
   descriptions={{ endpointOverlap: '进入逻辑端点的比例 0..1；0 为尖端对齐，1 为视觉后缘对齐' }}
 />
 
-## CustomMarkSchema
+## MarkStyleSchema
 
 <ZodSchema
   shallow
-  name="CustomMarkSchema"
-  description="引用普通标记定义及 JSON 参数。"
-  descriptions={{ kind: '固定为 custom', name: '已注册标记名称', params: '定义解释的 JSON 参数；省略时传入空对象' }}
-/>
-
-## ArrowMarkSchema
-
-<ZodSchema
-  shallow
-  name="ArrowMarkSchema"
-  description="复用箭头定义的沿路径标记，以尖端为锚点，不截断路径。"
+  name="MarkStyleSchema"
+  description="标记与箭头共用的形状、尺寸和外观字段。"
   descriptions={{
-    kind: '判别字段；当前支持 `arrow`',
-    shape: '箭头形状名（开放字符串，含 `CompileOptions.arrows` 扩展名）；缺省时回退 stealth',
-    scale: '等比缩放因子',
-    length: '尖长（user units）',
-    width: '尖宽（user units）',
-    color: '描边色 override',
-    fill: '填充色 override（空心 shape 忽略）',
-    opacity: '箭头透明度 0..1',
-    lineWidth: '空心 shape 描边粗细',
+    shape: '标记或箭头定义的注册名称；缺省为 stealth',
+    params: '定义解释的 JSON 参数，缺省为空对象',
+    scale: '长度和宽度的统一缩放，默认 1',
+    length: '沿路径方向的尺寸参数，最终尺寸随宿主线宽缩放',
+    width: '垂直路径方向的尺寸参数，最终尺寸随宿主线宽缩放',
+    color: '标记主色',
+    fill: '填充覆盖，空心定义忽略',
+    stroke: '描边覆盖',
+    opacity: '标记透明度，与宿主透明度相乘',
+    lineWidth: '局部轮廓线宽',
   }}
 />
 
@@ -321,12 +313,13 @@
 <ZodSchema
   shallow
   name="PathMarkPlacementSchema"
-  description="路径上的一个归一化标记位置及其 mark。"
+  description="沿路径放置的标记，直接组合位置、形状、尺寸与外观字段。"
   descriptions={{
     pos: '整条路径累计弧长的比例 0..1，在箭头截断和标签断线之前采样',
     rotate: '缺省或 auto 沿切线定向；数字为路径局部坐标中的固定角度',
-    scale: '额外放置缩放，默认 1',
-    mark: '箭头形标记或引用注册名称与 JSON 参数的普通标记',
+    scale: '长度和宽度的统一缩放，默认 1',
+    shape: '已注册标记或箭头名称',
+    params: '自定义 JSON 参数',
   }}
 />
 

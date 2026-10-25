@@ -228,11 +228,11 @@ it('标记定义回调更新可回滚且保持代理身份', () => {
   };
   const retained = createRetainedProviderDefinitions({ marks: [first] });
   const delegate = retained.definitions.marks?.[0];
-  const context = { stroke: 'red', round: Math.round };
-  expect(Array.from(delegate?.emit({}, context) ?? [])).toMatchObject([{ rx: 2 }]);
+  const context = { params: {}, stroke: 'red', fill: 'red', lineWidth: 1, round: Math.round };
+  expect(Array.from(delegate?.emit(context) ?? [])).toMatchObject([{ rx: 2 }]);
   const update = retained.prepare({ marks: [second] });
   expect(retained.definitions.marks?.[0]).toBe(delegate);
-  expect(Array.from(delegate?.emit({}, context) ?? [])).toMatchObject([{ rx: 4 }]);
+  expect(Array.from(delegate?.emit(context) ?? [])).toMatchObject([{ rx: 4 }]);
   update.rollback();
-  expect(Array.from(delegate?.emit({}, context) ?? [])).toMatchObject([{ rx: 2 }]);
+  expect(Array.from(delegate?.emit(context) ?? [])).toMatchObject([{ rx: 2 }]);
 });

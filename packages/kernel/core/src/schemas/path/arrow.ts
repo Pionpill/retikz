@@ -1,14 +1,9 @@
 import type { ValueOf, OpenString } from '@retikz/foundation';
-import {
-  createOpenStringSchema,
-  PositiveNumberSchema,
-  NonNegativeNumberSchema,
-  NormalizedFractionSchema,
-} from '@retikz/foundation';
+import { createOpenStringSchema, NormalizedFractionSchema } from '@retikz/foundation';
 import { strictObject } from 'zod';
 import type { infer as ZodInfer } from 'zod';
 
-import { GraphicStrokeSchema, ContextualColorSchema, PaintValueSchema, OpacitySchema } from '../style/graphic';
+import { MarkStyleSchema } from './mark';
 
 /** 内置箭头形状名称 */
 export const BuiltinArrowShape = {
@@ -37,31 +32,9 @@ export const ArrowShapeSchema = createOpenStringSchema(BuiltinArrowShape).descri
 );
 
 /** 校验箭头的形状、尺寸与视觉样式 */
-export const ArrowStyleSchema = strictObject({
-  ...GraphicStrokeSchema.omit({ strokeWidth: true }).shape,
-  shape: ArrowShapeSchema.optional().describe(
-    'Arrow shape provider name. Built-ins and registered custom names are accepted.',
-  ),
-  scale: PositiveNumberSchema.optional().describe(
-    'Uniform arrow-tip scale applied to both `length` and `width`. Defaults to 1.',
-  ),
-  length: NonNegativeNumberSchema.optional().describe(
-    'Arrow-tip length along the path direction, in user units. Defaults to the shape definition value, or 8.',
-  ),
-  width: NonNegativeNumberSchema.optional().describe(
-    'Arrow-tip width perpendicular to the path, in user units. Defaults to the shape definition value, or 8.',
-  ),
-  color: ContextualColorSchema.optional().describe(
-    'Arrow master color when the path has no effective color. The effective path color overrides this field; explicit arrow stroke and fill take precedence. Without either master color, arrows inherit the path stroke.',
-  ),
-  fill: PaintValueSchema.optional().describe(
-    'Fill override for solid arrow shapes. A number derives from the effective arrow color; hollow definitions ignore fill.',
-  ),
-  opacity: OpacitySchema.optional().describe('Arrow-only opacity. When omitted, the arrow follows the path opacity.'),
-  lineWidth: NonNegativeNumberSchema.optional().describe(
-    'Outline width for hollow arrow definitions, in user units. Solid arrow definitions ignore this field.',
-  ),
-}).describe('Arrow shape, dimensions, and visual style overrides.');
+export const ArrowStyleSchema = MarkStyleSchema.extend({
+  shape: ArrowShapeSchema.optional(),
+});
 
 /** 校验端点箭头的外观与接触重叠 */
 export const PathArrowEndSchema = ArrowStyleSchema.extend({

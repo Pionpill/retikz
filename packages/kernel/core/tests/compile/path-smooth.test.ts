@@ -310,7 +310,7 @@ describe('smooth step：交互', () => {
     const withMark: IRScene = scene([
       {
         type: 'path',
-        marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }],
+        marks: [{ pos: 0.5, shape: 'stealth' }],
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
           {

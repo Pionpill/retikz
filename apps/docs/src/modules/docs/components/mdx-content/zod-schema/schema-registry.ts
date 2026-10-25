@@ -922,11 +922,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PathArrowEnd',
     url: '/kernel/components/path/reference#patharrowendschema',
   },
-  CustomMarkSchema: {
-    schema: IR.CustomMarkSchema,
-    label: 'CustomMark',
-    url: '/kernel/components/path/reference#custommarkschema',
-  },
   StepSchema: { schema: IR.StepSchema, label: 'Step', url: '/kernel/components/path/reference#stepschema' },
   PathLabelSchema: {
     schema: IR.PathLabelSchema,
@@ -1181,10 +1176,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'RelativeAccumulateTarget',
   },
 
-  ArrowMarkSchema: {
-    schema: IR.ArrowMarkSchema,
-    label: 'ArrowMark',
-    url: '/kernel/components/path/reference#arrowmarkschema',
+  MarkStyleSchema: {
+    schema: IR.MarkStyleSchema,
+    label: 'MarkStyle',
+    url: '/kernel/components/path/reference#markstyleschema',
   },
   ArrowDetailSchema: {
     schema: IR.ArrowDetailSchema,

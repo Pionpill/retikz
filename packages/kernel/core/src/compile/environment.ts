@@ -99,6 +99,7 @@ export const createCompileEnvironment = (options: CompileEnvironmentOptions = {}
   }
 
   const patterns = resolvePatternRegistry(options.patterns);
+  const arrows = resolveArrowRegistry(options.arrows);
   const composites = resolveCompositeRegistry(options.composites);
   const themeDefinitions = resolveThemeRegistry(options.themeDefinitions);
 
@@ -118,8 +119,8 @@ export const createCompileEnvironment = (options: CompileEnvironmentOptions = {}
     boundaries: resolveBoundaryRegistry(options.boundaries),
     clips,
     maxClipDepth,
-    arrows: resolveArrowRegistry(options.arrows),
-    marks: resolveMarkRegistry(options.marks),
+    arrows,
+    marks: resolveMarkRegistry(options.marks, arrows),
     patterns,
     paths: resolvePathRegistry(options.paths),
   });

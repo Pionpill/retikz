@@ -93,6 +93,8 @@
     "step": "Step composition",
     "pathCustomPath": "Custom paths",
     "pathCustomArrow": "Custom arrows",
+    "pathMark": "mark · Marks",
+    "pathCustomMark": "Custom marks",
     "effects": "Effects",
     "effectsShadow": "Shadow",
     "effectsBlend": "Blend",

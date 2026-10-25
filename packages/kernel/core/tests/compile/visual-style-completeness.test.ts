@@ -151,16 +151,13 @@ it('endpoint and inline arrows retain explicit paints and stroke overrides', () 
         },
         marks: [0.5].map(pos => ({
           pos,
-          mark: {
-            kind: 'arrow',
-            shape: 'stealth',
-            stroke: gradient,
-            fill: gradient,
-            dashPattern: [2, 1],
-            dashOffset: 1,
-            lineCap: 'round',
-            lineJoin: 'bevel',
-          },
+          shape: 'stealth',
+          stroke: gradient,
+          fill: gradient,
+          dashPattern: [2, 1],
+          dashOffset: 1,
+          lineCap: 'round',
+          lineJoin: 'bevel',
         })),
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },

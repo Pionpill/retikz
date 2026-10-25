@@ -208,7 +208,7 @@ describe('preserved endpoint geometry', () => {
           type: 'path',
           style: { strokeWidth: 2 },
           arrow: { end: {} },
-          marks: [...(both ? [{ pos: 0, mark: { kind: 'arrow' as const } }] : [])],
+          marks: [...(both ? [{ pos: 0 }] : [])],
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [2, 0] },

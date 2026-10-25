@@ -353,7 +353,7 @@ describe('RelationMark and anchorId lowering', () => {
               label: { position: 'midway' },
               options: {
                 arrow: { end: {} },
-                marks: [{ pos: 0.5, mark: { kind: 'arrow' } }],
+                marks: [{ pos: 0.5 }],
               },
             },
           },
@@ -364,7 +364,7 @@ describe('RelationMark and anchorId lowering', () => {
     const [path] = collectPaths(markLayer(root, 1));
 
     expect(path.style?.color).toBe('#2563eb');
-    expect(path.marks).toEqual([{ pos: 0.5, mark: { kind: 'arrow' } }]);
+    expect(path.marks).toEqual([{ pos: 0.5 }]);
     expect(path.arrow).toEqual({ end: {} });
     expect(path.children[0]).toMatchObject({ kind: 'move', to: { id: 'pt.A' } });
     expect(path.children[1]).toMatchObject({

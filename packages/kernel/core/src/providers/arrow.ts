@@ -1,10 +1,10 @@
-import type { ArrowDefinition, ArrowEmitContext, ScenePrimitive } from '../contract';
+import type { ArrowDefinition, MarkEmitContext, ScenePrimitive } from '../contract';
 import { defineArrow } from '../contract';
 import { BuiltinArrowShape } from '../schemas';
 import { createProviderRegistry } from './registry';
 
 /** 实心闭合三角 / V 形的 path 工厂：填充走 context.fill（无 override = contextStroke） */
-const filledPath = (context: ArrowEmitContext, points: ReadonlyArray<[number, number]>): ScenePrimitive => ({
+const filledPath = (context: MarkEmitContext, points: ReadonlyArray<[number, number]>): ScenePrimitive => ({
   type: 'path',
   commands: [
     { kind: 'move', to: points[0] },
@@ -65,7 +65,7 @@ const stealthArrow = defineArrow({
 });
 
 /** 构造空心箭头轮廓，描边继承当前路径的颜色与宽度 */
-const hollowPath = (context: ArrowEmitContext, points: ReadonlyArray<[number, number]>): ScenePrimitive => ({
+const hollowPath = (context: MarkEmitContext, points: ReadonlyArray<[number, number]>): ScenePrimitive => ({
   type: 'path',
   commands: [
     { kind: 'move', to: points[0] },

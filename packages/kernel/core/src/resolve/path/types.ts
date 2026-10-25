@@ -1,6 +1,7 @@
 import type { AnyPathDefinition, ArrowDefinition, MarkDefinition, PatternDefinition, Transform } from '../../contract';
 import type {
-  IRArrowMark,
+  IRMarkStyle,
+  IRPathMark,
   IRArrowStyle,
   IRPaint,
   IRPathBase,
@@ -68,11 +69,11 @@ type WithResolvedStepLabel<TStep extends IRStep> = TStep extends unknown
 /** 已把 step label 派生颜色确定为字符串的步骤 */
 export type ResolvedStepSource = WithResolvedStepLabel<IRStep>;
 
-/** 已把 arrow 派生颜色确定为字符串的 mark */
-export type ResolvedArrowMark = Omit<IRArrowStyle, 'color' | 'fill' | 'stroke'> & {
-  /** 已确定的箭头主色 */
+/** 已解析上下文颜色的标记外观 */
+export type ResolvedMarkStyle = Omit<IRMarkStyle, 'color' | 'fill' | 'stroke'> & {
+  /** 已确定的标记主色 */
   color?: string;
-  /** 已确定的箭头填充 */
+  /** 已确定的标记填充 */
   fill?: string | IRPaint;
   /** 已解析的描边 */
   stroke?: string | IRPaint;
@@ -93,18 +94,11 @@ export type ResolvedPathSource = Omit<IRPathBase, 'style' | 'children' | 'label'
   label?: ResolvedPathLabel | Array<ResolvedPathLabel>;
   /** 已解析的端点箭头 */
   arrow?: {
-    start?: ResolvedArrowMark & { endpointOverlap?: number };
-    end?: ResolvedArrowMark & { endpointOverlap?: number };
+    start?: ResolvedMarkStyle & { endpointOverlap?: number };
+    end?: ResolvedMarkStyle & { endpointOverlap?: number };
   };
-  /** 已确定 arrow 颜色的 marks */
-  marks?: Array<
-    Omit<NonNullable<IRPathBase['marks']>[number], 'mark'> & {
-      /** 已解析上下文颜色的箭头标记 */
-      mark:
-        | (ResolvedArrowMark & { kind: 'arrow' })
-        | Extract<NonNullable<IRPathBase['marks']>[number]['mark'], { kind: 'custom' }>;
-    }
-  >;
+  /** 已解析颜色与放置配置的沿线标记 */
+  marks?: Array<ResolvedMarkStyle & Pick<IRPathMark, 'pos' | 'rotate'>>;
 };
 
 type WithCanonicalStepLabel<TStep extends ResolvedStepSource> = TStep extends unknown
@@ -163,8 +157,8 @@ export type PathDefinitionResolution = Readonly<{
   path: IRPathBase;
 }>;
 
-/** arrow mark 的有效视觉属性 */
-export type ArrowMarkVisual = Readonly<{
+/** 箭头与标记共用的有效视觉属性 */
+export type MarkVisual = Readonly<{
   /** 箭头形状定义的注册名称 */
   shape: string;
   /** 对有效长度与宽度共同应用的比例系数 */
@@ -178,13 +172,13 @@ export type ArrowMarkVisual = Readonly<{
   /** 已解析的描边 */
   stroke?: PaintResolutionInput;
   /** 显式虚线序列 */
-  dashPattern?: IRArrowMark['dashPattern'];
+  dashPattern?: IRMarkStyle['dashPattern'];
   /** 虚线相位偏移 */
   dashOffset?: number;
   /** 描边端帽 */
-  lineCap?: IRArrowMark['lineCap'];
+  lineCap?: IRMarkStyle['lineCap'];
   /** 描边连接形状 */
-  lineJoin?: IRArrowMark['lineJoin'];
+  lineJoin?: IRMarkStyle['lineJoin'];
   /** 与宿主路径不透明度相乘的箭头不透明度 */
   opacity?: number;
   /** 空心箭头在定义基准坐标中的描边宽度 */
@@ -218,7 +212,7 @@ export type ArrowMarkResolution = Readonly<{
   /** 当前箭头匹配的形状定义 */
   definition: ArrowDefinition;
   /** 完成默认值与颜色解析的视觉属性 */
-  visual: ArrowMarkVisual;
+  visual: MarkVisual;
   /** 用于端点放置和路径收缩的几何参数 */
   geometry: ArrowMarkGeometry;
 }>;
@@ -304,6 +298,18 @@ export type StrokePathResolution = PathResolution &
   Readonly<{
     /** 按 canonical arrow mark 对象索引的 arrow resolution */
     arrows: ReadonlyMap<IRArrowStyle, ArrowMarkResolution>;
-    /** 已绑定的普通标记定义 */
-    marks: ReadonlyMap<string, MarkDefinition>;
+    /** 按标记声明索引的解析结果 */
+    marks: ReadonlyMap<IRPathMark, MarkResolution>;
   }>;
+
+/** 标记的已解析定义、样式与放置几何 */
+export type MarkResolution = Readonly<{
+  /** 源样式与参数 */
+  mark: IRMarkStyle;
+  /** 已绑定的形状定义 */
+  definition: MarkDefinition;
+  /** 有效绘制样式 */
+  visual: MarkVisual;
+  /** 局部尺寸和锚点 */
+  geometry: { baseSize: number; resolvedLength: number; resolvedWidth: number; anchor: IRPosition };
+}>;

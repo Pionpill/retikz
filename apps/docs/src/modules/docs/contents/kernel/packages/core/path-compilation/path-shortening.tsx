@@ -28,7 +28,7 @@ const PathShortening: FC<PathShorteningProps> = props => {
               <Step kind="arc" center={[90, 0]} radius={90} startAngle={-180} endAngle={0} />
             )}
           </Path>
-          <Path style={{ stroke: 'dodgerblue', strokeWidth: 2 }} marks={[{ pos: 1, mark: { kind: 'arrow' } }]}>
+          <Path style={{ stroke: 'dodgerblue', strokeWidth: 2 }} marks={[{ pos: 1 }]}>
             <Step kind="move" to={[0, 0]} />
             {i === 0 ? (
               <Step kind="curve" control={[90, -100]} to={[180, 0]} />

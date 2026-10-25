@@ -463,7 +463,7 @@ describe('Path output wrapping', () => {
           kind: custom.name,
           children: [steps[0], { type: 'step', kind: 'line', to: [100, 0], label: { text: 'step label' } }],
           label: { text: 'host label' },
-          marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'unused-arrow' } }],
+          marks: [{ pos: 0.5, shape: 'unused-arrow' }],
           rotate: 90,
         },
       ]),

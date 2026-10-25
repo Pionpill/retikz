@@ -1,6 +1,6 @@
 import { compileToScene, prepareSceneCompilation } from '@retikz/core';
 import type { IRPath, ScenePrimitive, IRScene, CompileObservation, CompileObserverDefinition } from '@retikz/core';
-import type { JsonObject } from '@retikz/foundation';
+import type { MarkEmitContext } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { readWeaveCurrent, WeaveReconciler } from '../../src/weave';
@@ -431,7 +431,7 @@ it('宿主装饰默认更新与完整编译一致，并保留提交前结果', (
 it('普通标记参数和路径更新与完整编译保持一致', () => {
   const definition = {
     name: 'dot',
-    emit: (params: JsonObject): Array<ScenePrimitive> => [
+    emit: ({ params }: MarkEmitContext): Array<ScenePrimitive> => [
       { type: 'ellipse', cx: 0, cy: 0, rx: Number(params.radius), ry: 3, fill: 'red' },
     ],
   };
@@ -446,7 +446,7 @@ it('普通标记参数和路径更新与完整编译保持一致', () => {
           { type: 'step', kind: 'move', to: [0, 0] },
           { type: 'step', kind: 'line', to: [100, 0] },
         ],
-        marks: [{ pos: 0.5, mark: { kind: 'custom', name: 'dot', params: { radius: 2 } } }],
+        marks: [{ pos: 0.5, shape: 'dot', params: { radius: 2 } }],
       },
     ],
   };
@@ -461,7 +461,7 @@ it('普通标记参数和路径更新与完整编译保持一致', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [200, 0] },
     ],
-    marks: [{ pos: 0.75, mark: { kind: 'custom', name: 'dot', params: { radius: 6 } } }],
+    marks: [{ pos: 0.75, shape: 'dot', params: { radius: 6 } }],
   };
   const update = session.update({
     operations: [{ kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'host' }, input: path }],

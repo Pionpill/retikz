@@ -1,6 +1,6 @@
 ﻿---
-title: arrow · 箭头与标记
-description: 设置端点箭头，并在路径任意弧长位置放置标记
+title: arrow · 箭头
+description: 设置路径起点与终点的箭头、外观和端点重叠
 ---
 
 端点箭头使用 `arrow.start` / `arrow.end`；沿路径标记使用 `marks`。两者可以同时存在。首次绘图请先阅读[基础用法](/kernel/components/path/usage)。
@@ -57,62 +57,10 @@ Core 提供 `normal`、`open`、`stealth`、`openStealth`、`circle`、`openCirc
 
 端点箭头根据接触几何缩短主线，避免描边穿过空心箭头。进入节点后是否被遮挡仍取决于绘制顺序和 `zIndex`；重叠不会自动创建裁剪或改变节点填充。`endpointOverlap` 只适用于内置 Stroke Path 的端点箭头。
 
-## 沿路径放置标记
+## 沿路径标记
 
-`marks` 是放置列表，每项包含 `pos`、可选 `rotate` / `scale` 和 `mark`。`pos` 是整条路径累计弧长的比例，取值为 0～1。定位使用路由、节点边界裁切和几何圆角完成后的路径，在端点箭头截断、标签断线和整体变换之前采样。
-
-```tsx
-<Draw
-  way={[
-    [0, 0],
-    [30, 0],
-    [120, 60],
-  ]}
-  arrow="->"
-  marks={[
-    { pos: 0, mark: { kind: 'arrow', shape: 'circle' } },
-    { pos: 0.5, rotate: 'auto', mark: { kind: 'arrow', shape: 'stealth' } },
-    { pos: 1, rotate: 30, scale: 1.5, mark: { kind: 'arrow', shape: 'open' } },
-  ]}
-/>
-```
-
-标记只放置图元，不截断、不挖洞，也不避让标签。即使 `pos` 为 0 或 1，行为也相同。箭头形标记直接复用已注册的箭头定义，以尖端为锚点，尺寸沿用箭头规则。它不能配置 `endpointOverlap`。
-
-`rotate` 缺省或为 `'auto'` 时沿路径切线定向，数值表示路径局部坐标中的固定角度。`scale` 是额外的放置缩放，默认 1。跳跃的 `move` 不计入长度，闭合段计入长度；段交界采用下一非零段方向，末端采用进入方向。整条路径没有可定位长度时，非空标记列表会报错。
-
-主线和端点箭头先绘制，标记按列表顺序绘制，路径标签最后绘制。完整标记内容计入可视边界，并随路径整体变换。
-
-## 自定义标记
-
-普通标记输出基础 Scene 图元，局部原点是放置锚点，尺寸直接使用用户单位，不随宿主线宽缩放。定义不进入 JSON IR；IR 只保存名称和 JSON 参数。
-
-```tsx
-import { defineMark } from '@retikz/core';
-import { Draw, Layout } from '@retikz/react';
-
-const dot = defineMark({
-  name: 'dot',
-  emit: (_params, { stroke }) => [{ type: 'ellipse', cx: 0, cy: 0, rx: 4, ry: 4, fill: stroke }],
-});
-
-export default () => (
-  <Layout extensions={{ marks: [dot] }}>
-    <Draw
-      way={[
-        [0, 0],
-        [120, 0],
-      ]}
-      marks={[{ pos: 0.5, mark: { kind: 'custom', name: 'dot', params: {} } }]}
-    />
-  </Layout>
-);
-```
-
-直接编译时通过 `compileToScene(ir, { marks: [dot] })` 注册。`emit(params, context)` 返回 `Iterable<ScenePrimitive>`，上下文提供宿主 `stroke` 和精度函数 `round`。参数的领域含义由定义解释。固定样式保留；可使用既有 Scene 资源引用，但资源必须存在，不能凭空创建引用。
-
-标记命中归属所在 Path，`pointerEvents: 'none'` 可排除内容；内部图元不会成为独立作者节点。动画及嵌套内容沿用 Scene 契约，复用定义不会共享图元实例。未知定义、缺失资源或生成失败会报错。
+需要在路径中间或任意位置放置图元时，使用 [mark · 标记](/kernel/components/path/mark)。标记可以复用已注册箭头，但不会缩短路径。新的普通标记形状见[自定义标记](/kernel/components/path/custom-mark)。
 
 ## API 参考
 
-完整字段见 [Path API 参考](/kernel/components/path/reference)。端点采用 `PathArrowSchema`，放置项采用 `PathMarkPlacementSchema`，普通定义采用 `MarkDefinition`。
+完整字段见 [Path API 参考](/kernel/components/path/reference)，端点配置采用 `PathArrowSchema`。

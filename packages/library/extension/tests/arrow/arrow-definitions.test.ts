@@ -114,6 +114,7 @@ describe('Extension optional arrow definitions', () => {
 
   it('emits TikZ diamond and kite families with their frozen solid and open geometry', () => {
     const context = {
+      params: {},
       stroke: '#123456',
       fill: '#abcdef',
       lineWidth: 2,
@@ -188,6 +189,7 @@ describe('Extension optional arrow definitions', () => {
 
   it('emits TikZ square solid and open geometry with independent length and width scaling', () => {
     const context = {
+      params: {},
       stroke: '#123456',
       fill: '#abcdef',
       lineWidth: 2,
@@ -282,6 +284,7 @@ describe('Extension optional arrow definitions', () => {
 
   it('emits bar and crowFoot as deterministic open stroke geometry', () => {
     const context = {
+      params: {},
       stroke: { kind: 'contextStroke' } as const,
       fill: { kind: 'contextStroke' } as const,
       lineWidth: 2,
@@ -329,6 +332,7 @@ describe('Extension optional arrow definitions', () => {
 
     expect([
       ...definition.emit({
+        params: {},
         stroke: '#123456',
         fill: '#abcdef',
         lineWidth: 2,

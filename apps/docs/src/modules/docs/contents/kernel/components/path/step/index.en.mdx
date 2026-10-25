@@ -282,7 +282,7 @@ After installing `@retikz/inspect`, use `InspectLayout` and `InspectPath` to dis
 
 ### Mid-path marks
 
-`marks` places directional marks along the path: each `{ pos, mark }` has `pos ∈ [0, 1]` (out-of-range rejected by the schema), and `mark` is initially `{ kind: 'arrow', shape, ... }` (a registered arrow name + visual subset, see [Custom Arrows](/kernel/components/path/custom-arrow)), **oriented by the tangent at that point** (not a fixed direction). Lines, Béziers, and arcs are all tangent-oriented. Their size **scales with `strokeWidth`**, just like endpoint arrows: the thicker the line, the larger the mark. Move both position controls to watch the marks follow the local tangent as they travel along the path.
+`marks` entries directly contain `pos`, `shape`, sizing, and appearance fields, with custom arguments in `params`. `pos ∈ [0, 1]` is the whole-path arc-length fraction. Marks follow the tangent unless `rotate` supplies a fixed angle. Size scales with `strokeWidth`, just like endpoint arrows. Marks only place primitives and never shorten the path, including at endpoints.
 
 <ComponentPreview
   files={['path-marks', 'path-marks.preview.tsx']}
@@ -532,8 +532,9 @@ The following are the props most relevant to this page. See the [API reference](
     {
       name: 'marks',
       kind: 'property',
-      type: "Array<{ pos: number; mark: { kind: 'arrow'; shape?: string; scale?: number; color?: string } }>",
-      description: 'Place tangent-oriented marks at normalized path positions; the current mark kind is an arrow mark.',
+      type: 'Array<IRPathMark>',
+      description:
+        'Place tangent-oriented marks at normalized path positions; shape selects a registered mark or arrow definition.',
     },
   ]}
 />

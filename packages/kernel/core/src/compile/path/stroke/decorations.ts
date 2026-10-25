@@ -3,13 +3,12 @@ import type { SceneResource } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { CanonicalPath, StrokePathResolution } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
-import { materializeScenePrimitives } from '../../resource';
 import type { PaintResolver } from '../../resource';
 import type { StrokePathGeometry } from './interruption';
 import { sampleStrokeMarkGeometry } from './interruption';
-import { buildMarkMarkerGroup, placeMarkPrimitives } from './marks';
+import { emitMarkPrimitives, placeMarkPrimitives } from './marks';
 import type { PathBasePropsWithStrokeWidth } from './output';
-import { emitEndpointArrowMark, emitMarkArrow } from './shrink';
+import { emitEndpointArrowMark } from './shrink';
 
 /** 端点箭头及主线接触调整 */
 export type PathEndpointArrows = {
@@ -81,10 +80,8 @@ export type EmitPathMarksInput = {
   geometry: StrokePathGeometry;
   /** 按绘制顺序保存的标记放置列表 */
   placements: NonNullable<CanonicalPath['marks']>;
-  /** 箭头声明对应的解析结果 Map */
-  arrowResolutions: StrokePathResolution['arrows'];
-  /** 按名称索引的普通标记定义 Map */
-  markDefinitions: StrokePathResolution['marks'];
+  /** 按标记声明索引的解析结果 Map */
+  markResolutions: StrokePathResolution['marks'];
   /** 宿主有效外观 */
   baseProps: PathBasePropsWithStrokeWidth;
   /** 坐标取整函数 */
@@ -100,8 +97,7 @@ export const emitPathMarks = ({
   resources,
   geometry,
   placements,
-  arrowResolutions,
-  markDefinitions,
+  markResolutions,
   baseProps,
   round,
   resolvePaint,
@@ -110,7 +106,6 @@ export const emitPathMarks = ({
   const primitives: Array<ScenePrimitive> = [];
   const boundsPoints: Array<IRPosition> = [];
   for (const [index, placement] of placements.entries()) {
-    const { mark } = placement;
     const sample = sampleStrokeMarkGeometry(geometry, placement.pos);
     if (sample === undefined)
       throw new RetikzCoreError(
@@ -123,44 +118,21 @@ export const emitPathMarks = ({
       contextStroke: baseProps.stroke ?? 'currentColor',
       hostOpacity: baseProps.opacity,
       rotate: placement.rotate,
-      scale: placement.scale,
     };
-    if (mark.kind === 'arrow') {
-      const resolution = arrowResolutions.get(mark);
-      if (resolution === undefined)
-        throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `Missing arrow binding at ${irPath}.marks[${index}]`);
-      const spec = emitMarkArrow(resolution, round, resolvePaint);
-      spec.refX = resolution.geometry.tipX;
-      primitives.push(buildMarkMarkerGroup(spec, sample, context));
-    } else {
-      const definition = markDefinitions.get(mark.name);
-      if (definition === undefined)
-        throw new RetikzCoreError(
-          RetikzCoreErrorCode.Compile,
-          `Missing mark '${mark.name}' at ${irPath}.marks[${index}]`,
-        );
-      let content: Array<ScenePrimitive>;
-      try {
-        content = Array.from(definition.emit(mark.params ?? {}, { stroke: context.contextStroke, round }));
-      } catch (cause) {
-        throw new RetikzCoreError(
-          RetikzCoreErrorCode.Compile,
-          `Mark '${mark.name}' failed at ${irPath}.marks[${index}]`,
-          { cause },
-        );
-      }
-      primitives.push(
-        placeMarkPrimitives(
-          materializeScenePrimitives(`Mark '${mark.name}' at ${irPath}.marks[${index}]`, content),
-          sample,
-          context,
-          {
-            resourceMap: new Map((resources?.() ?? []).map(resource => [resource.id, resource])),
-            irPath: `${irPath}.marks[${index}]`,
-          },
-        ),
-      );
-    }
+    const resolution = markResolutions.get(placement);
+    const location = `${irPath}.marks[${index}]`;
+    if (resolution === undefined)
+      throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `Missing mark binding at ${location}`);
+    const content = emitMarkPrimitives(resolution, round, resolvePaint, {
+      label: `Mark '${resolution.definition.name}' at ${location}`,
+      providerKey: `mark:${resolution.definition.name}`,
+    });
+    primitives.push(
+      placeMarkPrimitives(content, resolution, sample, context, {
+        resourceMap: new Map((resources?.() ?? []).map(resource => [resource.id, resource])),
+        irPath: location,
+      }),
+    );
     boundsPoints.push(sample.point);
   }
   return { primitives, boundsPoints };

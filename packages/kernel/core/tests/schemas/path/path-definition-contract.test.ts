@@ -83,7 +83,7 @@ describe('Path full-subject contract', () => {
             type: 'path',
             kind: 'service-probe',
             label: { text: 'host label' },
-            marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'missing-for-materialization' } }],
+            marks: [{ pos: 0.5, shape: 'missing-for-materialization' }],
             children: steps,
             style: { color: 'red', fill: 'blue', blendMode: 'multiply', dashPattern: [2, 1] },
           },

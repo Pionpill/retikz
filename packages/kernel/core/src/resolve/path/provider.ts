@@ -1,19 +1,19 @@
-import type { ArrowDefinition, MarkDefinition } from '../../contract';
+import type { ArrowDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { providerDefinitionOf } from '../../providers';
 import type { IRArrowStyle, IRPathBase } from '../../schemas';
-import { ARROW_MARKER_DEFAULT_SIZE, ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH, DEFAULT_ARROW_SHAPE } from '../../schemas';
+import { DEFAULT_ARROW_SHAPE } from '../../schemas';
 import { createCompositeContractError } from '../diagnostics';
 import { parseProviderPayload } from '../provider-payload';
-import { resolvePaint } from '../resource';
+import { resolveMarkStyle } from './mark';
 import type {
   ArrowMarkGeometry,
   ArrowMarkResolution,
-  ArrowMarkVisual,
+  MarkResolution,
   PathDefinitionResolution,
   PathResolution,
   PathResolveContext,
-  ResolvedArrowMark,
+  ResolvedMarkStyle,
   ResolvedPathSource,
   StrokePathResolution,
 } from './types';
@@ -83,39 +83,18 @@ const assertFiniteArrowGeometry = (shape: string, definition: ArrowDefinition): 
 };
 
 /** 解析 arrow mark 的有效视觉属性与几何输入 */
-export const resolveArrowMark = (mark: ResolvedArrowMark, context: PathResolveContext): ArrowMarkResolution => {
+export const resolveArrowMark = (mark: ResolvedMarkStyle, context: PathResolveContext): ArrowMarkResolution => {
   const shape = mark.shape ?? DEFAULT_ARROW_SHAPE;
   const definition = providerDefinitionOf(context.arrows, shape);
   assertFiniteArrowGeometry(shape, definition);
-  const visual: ArrowMarkVisual = {
-    shape,
-    scale: mark.scale ?? 1,
-    length: mark.length ?? definition.defaultLength ?? ARROW_MARKER_DEFAULT_SIZE,
-    width: mark.width ?? definition.defaultWidth ?? ARROW_MARKER_DEFAULT_SIZE,
-    ...(definition.hollow ? {} : { fill: resolvePaint(mark.fill ?? mark.color, context) }),
-    ...(mark.opacity === undefined ? {} : { opacity: mark.opacity }),
-    stroke: resolvePaint(mark.stroke ?? (definition.hollow ? mark.color : 'none'), context),
-    dashPattern: mark.dashPattern,
-    dashOffset: mark.dashOffset,
-    lineCap: mark.lineCap,
-    lineJoin: mark.lineJoin,
-    lineWidth: mark.lineWidth ?? ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
-  };
-  const baseSize = definition.baseSize ?? ARROW_GEOMETRY_BASE_SIZE;
+  const shared = resolveMarkStyle(mark, definition, context);
+  const { visual } = shared;
+  const { baseSize, resolvedLength, resolvedWidth } = shared.geometry;
   const tipX = definition.tipX ?? baseSize;
   const contactX = definition.hollow ? definition.lineContactX - visual.lineWidth / 2 : definition.lineContactX;
-  const resolvedLength = visual.length * visual.scale;
-  const resolvedWidth = visual.width * visual.scale;
   const rawOuterInset = definition.outerInset ?? (definition.hollow ? visual.lineWidth / 2 : 0);
   const visualBackX = definition.backX - rawOuterInset;
   const boundaryOuterInset = (rawOuterInset * resolvedLength) / baseSize;
-  if (!Number.isFinite(resolvedLength) || !Number.isFinite(resolvedWidth)) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Resolve,
-      `Arrow '${shape}' resolved length/width is non-finite (length × scale overflowed); use smaller length / scale values.`,
-    );
-  }
-
   if (!Number.isFinite(boundaryOuterInset)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
@@ -150,14 +129,16 @@ export const resolveArrowMark = (mark: ResolvedArrowMark, context: PathResolveCo
   return { mark, definition, visual, geometry };
 };
 
-/** 为 path marks 解析全部 arrow provider */
-export const resolveArrowMarks = (
-  marks: ReadonlyArray<{ mark: ResolvedArrowMark }> | undefined,
+/** 解析显式端点箭头定义 */
+const resolveEndpointArrowProviders = (
+  arrow: ResolvedPathSource['arrow'],
   context: PathResolveContext,
 ): ReadonlyMap<IRArrowStyle, ArrowMarkResolution> => {
-  const resolutions = new Map<IRArrowStyle, ArrowMarkResolution>();
-  for (const item of marks ?? []) resolutions.set(item.mark, resolveArrowMark(item.mark, context));
-  return resolutions;
+  /** 按端点声明索引的箭头解析结果 Map */
+  const resolutionMap = new Map<IRArrowStyle, ArrowMarkResolution>();
+  for (const endpoint of [arrow?.start, arrow?.end])
+    if (endpoint !== undefined) resolutionMap.set(endpoint, resolveArrowMark(endpoint, context));
+  return resolutionMap;
 };
 
 /** 为 stroke emitter 绑定实际会消费的 arrow provider */
@@ -176,27 +157,22 @@ export const resolveStrokePathProviders = (
     return { ...resolution, path, arrows: new Map(), marks: new Map() };
   }
 
-  const marks = new Map<string, MarkDefinition>();
+  /** 按标记声明索引的解析结果 Map */
+  const marks = new Map<NonNullable<typeof path.marks>[number], MarkResolution>();
   for (const [index, placement] of (path.marks ?? []).entries()) {
-    if (placement.mark.kind !== 'custom') continue;
-    const definition = context.marks?.get(placement.mark.name);
+    const shape = placement.shape ?? DEFAULT_ARROW_SHAPE;
+    const definition = context.marks?.get(shape);
     if (definition === undefined)
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Provider,
-        `Unknown mark '${placement.mark.name}' at ${context.irPath}.marks[${index}].mark.name`,
+        `Unknown provider '${shape}' at ${context.irPath}.marks[${index}].shape; available: ${[...(context.marks?.keys() ?? [])].sort().join(', ') || '(none registered)'}.`,
       );
-    marks.set(placement.mark.name, definition);
+    marks.set(placement, resolveMarkStyle(placement, definition, context));
   }
   return {
     ...resolution,
     path,
-    arrows: resolveArrowMarks(
-      [
-        ...(path.marks ?? []).flatMap(({ mark }) => (mark.kind === 'arrow' ? [{ mark }] : [])),
-        ...[path.arrow?.start, path.arrow?.end].flatMap(mark => (mark === undefined ? [] : [{ mark }])),
-      ],
-      context,
-    ),
+    arrows: resolveEndpointArrowProviders(path.arrow, context),
     marks,
   };
 };

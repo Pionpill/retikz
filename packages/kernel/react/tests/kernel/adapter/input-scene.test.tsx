@@ -219,9 +219,7 @@ it('Scope 包络在 React、Vanilla 和 IR roundtrip 中保持等价', () => {
 
 it('React 与 Vanilla 保留独立端点箭头和任意位置标记', () => {
   const arrow = { end: { shape: 'circle', endpointOverlap: 0.5 } };
-  const marks: NonNullable<IRPath['marks']> = [
-    { pos: 0, rotate: 45, scale: 2, mark: { kind: 'custom', name: 'dot', params: { radius: 3 } } },
-  ];
+  const marks: NonNullable<IRPath['marks']> = [{ pos: 0, rotate: 45, scale: 2, shape: 'dot', params: { radius: 3 } }];
   const jsx = normalizeScene(
     createInputScene(
       <Draw
