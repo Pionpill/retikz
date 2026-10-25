@@ -314,6 +314,7 @@ export type TraversalContext = Pick<
   | 'patterns'
   | 'clips'
   | 'arrows'
+  | 'marks'
   | 'paths'
   | 'paint'
   | 'clip'

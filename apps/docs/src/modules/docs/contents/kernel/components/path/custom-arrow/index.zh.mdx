@@ -11,8 +11,8 @@ Core 默认提供 `normal`、`open`、`stealth`、`openStealth`、`circle` 与 `
 
 | 需求                           | 选择                                              |
 | ------------------------------ | ------------------------------------------------- |
-| 调整现有箭头尺寸、颜色或透明度 | `arrowDetail`                                     |
-| 起末端使用不同已注册造型       | `arrowDetail.start` / `end`                       |
+| 调整现有箭头尺寸、颜色或透明度 | `arrow.start` / `arrow.end`                       |
+| 起末端使用不同已注册造型       | `arrow.start` / `end`                             |
 | 增加新的端点轮廓               | 自定义箭头                                        |
 | 改变整条关系线的输出           | [自定义路径](/kernel/components/path/custom-path) |
 
@@ -93,8 +93,7 @@ import { Draw, Layout } from '@retikz/react';
       [0, 0],
       [120, 0],
     ]}
-    arrow="->"
-    arrowDetail={{ shape: 'bracket' }}
+    arrow={{ end: { shape: 'bracket' } }}
   />
 </Layout>;
 ```
@@ -117,8 +116,7 @@ const input = scene({
         [0, 0],
         [120, 0],
       ],
-      arrow: '->',
-      arrowDetail: { shape: 'bracket' },
+      arrow: { end: { shape: 'bracket' } },
     }),
   ],
 });
@@ -142,7 +140,7 @@ const view = mount(document.getElementById('diagram')!, input, {
 | ------------------------------------------- | -------------------------------------------- |
 | 名称为空                                    | registry 拒绝非空 key 约束                   |
 | 与已注册的 Core、Extension 或自定义箭头重名 | registry 合并时报重复注册                    |
-| `arrowDetail.shape` 未注册                  | 编译列出可用名称与 `options.arrows` 注入提示 |
+| `arrow.end.shape` 未注册                    | 编译列出可用名称与 `options.arrows` 注入提示 |
 | `baseSize`、back / contact / tip 或尺寸非法 | 编译拒绝无效 marker 几何                     |
 | 资源引用缺失或种类不匹配                    | 报告引用位置并拒绝无效场景                   |
 | 内容对象或资源依赖形成循环                  | 拒绝循环；有限嵌套箭头合法                   |
@@ -176,9 +174,9 @@ const view = mount(document.getElementById('diagram')!, input, {
       description: '在 React Layout 中注入箭头定义，供 Path 和 Draw 按名称解析。',
     },
     {
-      name: 'Draw.arrowDetail',
+      name: 'Draw.arrow',
       kind: 'property',
-      type: "DrawProps['arrowDetail']",
+      type: "DrawProps['arrow']",
       description: '为端点箭头指定已注册的 `shape` 与颜色、尺寸等视觉覆盖。',
     },
   ]}

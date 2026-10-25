@@ -99,6 +99,7 @@ export const RelationPathSpecificOptionsSchema = strictObject({
   cornerRadius: PathGeometrySchema.shape.cornerRadius,
   rotate: PathGeometrySchema.shape.rotate,
   scale: PathGeometrySchema.shape.scale,
+  arrow: PathDecorationSchema.shape.arrow,
   marks: PathDecorationSchema.shape.marks,
 })
   .partial()

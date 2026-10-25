@@ -1,4 +1,4 @@
-import type { AnyPathDefinition, ClipDefinition, ClipLowerContext, SceneClipPath } from '@retikz/core';
+import type { ScenePrimitive, AnyPathDefinition, ClipDefinition, ClipLowerContext, SceneClipPath } from '@retikz/core';
 import { defineClip, PathSchema } from '@retikz/core';
 import { RetikzRenderErrorCode } from '@retikz/render/runtime';
 import { describe, expect, it } from 'vitest';
@@ -215,4 +215,24 @@ describe('retained Path Definition definitions', () => {
 
     expect(stableCompile(undefined as never)).toBe(initialResult);
   });
+});
+
+it('标记定义回调更新可回滚且保持代理身份', () => {
+  const first = {
+    name: 'dot',
+    emit: (): Array<ScenePrimitive> => [{ type: 'ellipse', cx: 0, cy: 0, rx: 2, ry: 2 }],
+  };
+  const second = {
+    name: 'dot',
+    emit: (): Array<ScenePrimitive> => [{ type: 'ellipse', cx: 0, cy: 0, rx: 4, ry: 4 }],
+  };
+  const retained = createRetainedProviderDefinitions({ marks: [first] });
+  const delegate = retained.definitions.marks?.[0];
+  const context = { stroke: 'red', round: Math.round };
+  expect(Array.from(delegate?.emit({}, context) ?? [])).toMatchObject([{ rx: 2 }]);
+  const update = retained.prepare({ marks: [second] });
+  expect(retained.definitions.marks?.[0]).toBe(delegate);
+  expect(Array.from(delegate?.emit({}, context) ?? [])).toMatchObject([{ rx: 4 }]);
+  update.rollback();
+  expect(Array.from(delegate?.emit({}, context) ?? [])).toMatchObject([{ rx: 2 }]);
 });

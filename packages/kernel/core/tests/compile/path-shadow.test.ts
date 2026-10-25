@@ -4,8 +4,8 @@ import { compileToScene } from '../../src/compile/compile';
 import type { PathPrimitive, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { PathSchema, SHADOW_PRESETS } from '../../src/schemas';
-import { arrowMarks } from '../helpers/arrow-marks';
 import { flattenPrims } from '../helpers/flatten';
+import { pathArrows } from '../helpers/path-arrows';
 
 const silent = { onWarn: () => {} };
 
@@ -152,7 +152,7 @@ describe('[path-shadow] 交互', () => {
   it('path-arrow-spec-no-shadow-field：带 arrow 的 path + shadow → endpoint arrow spec 不冗余带 shadow 字段', () => {
     const prim = findPathPrim(
       compilePath({
-        marks: arrowMarks('->'),
+        arrow: pathArrows('->'),
         style: { stroke: 'steelblue', shadow: 'md' },
       }).primitives,
     );

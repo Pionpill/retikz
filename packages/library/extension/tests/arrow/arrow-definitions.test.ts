@@ -31,7 +31,7 @@ const arrowScene = (shape: string): IRScene => ({
   children: [
     {
       type: 'path',
-      marks: [{ pos: 1, mark: { kind: 'arrow', shape } }],
+      arrow: { end: { shape } },
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [100, 0] },
@@ -231,12 +231,7 @@ describe('Extension optional arrow definitions', () => {
       children: [
         {
           type: 'path',
-          marks: [
-            {
-              pos: 1,
-              mark: { kind: 'arrow', shape: 'openSquare', length: 12, width: 18, lineWidth: 2 },
-            },
-          ],
+          arrow: { end: { shape: 'openSquare', length: 12, width: 18, lineWidth: 2 } },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
@@ -265,10 +260,7 @@ describe('Extension optional arrow definitions', () => {
           children: [
             {
               type: 'path',
-              marks: [
-                { pos: 0, mark: { kind: 'arrow', shape: 'kite' } },
-                { pos: 1, mark: { kind: 'arrow', shape: 'openSquare' } },
-              ],
+              arrow: { start: { shape: 'kite' }, end: { shape: 'openSquare' } },
               children: [
                 { type: 'step', kind: 'move', to: [100, 0] },
                 { type: 'step', kind: 'line', to: [0, 0] },
@@ -373,19 +365,7 @@ describe('Extension optional arrow definitions', () => {
           children: [
             {
               type: 'path',
-              marks: [
-                {
-                  pos: 1,
-                  mark: {
-                    kind: 'arrow',
-                    shape: 'straightBarb',
-                    length: 12,
-                    width: 18,
-                    lineWidth: 2,
-                    color: '#f00',
-                  },
-                },
-              ],
+              arrow: { end: { shape: 'straightBarb', length: 12, width: 18, lineWidth: 2, color: '#f00' } },
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [100, 0] },
@@ -414,7 +394,7 @@ describe('Extension optional arrow definitions', () => {
           children: [
             {
               type: 'path',
-              marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'straightBarb' } }],
+              arrow: { end: { shape: 'straightBarb' } },
               children: [
                 { type: 'step', kind: 'move', to: [100, 0] },
                 { type: 'step', kind: 'line', to: [0, 0] },
@@ -436,10 +416,7 @@ describe('Extension optional arrow definitions', () => {
           children: [
             {
               type: 'path',
-              marks: [
-                { pos: 0, mark: { kind: 'arrow', shape: 'straightBarb' } },
-                { pos: 1, mark: { kind: 'arrow', shape: 'straightBarb' } },
-              ],
+              arrow: { start: { shape: 'straightBarb' }, end: { shape: 'straightBarb' } },
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [100, 0] },
@@ -478,20 +455,7 @@ describe('Extension optional arrow definitions', () => {
       children: [
         {
           type: 'path',
-          marks: [
-            {
-              pos: 1,
-              mark: {
-                kind: 'arrow',
-                shape: 'bar',
-                length: 12,
-                width: 18,
-                lineWidth: 2,
-                color: '#f00',
-                opacity: 0.4,
-              },
-            },
-          ],
+          arrow: { end: { shape: 'bar', length: 12, width: 18, lineWidth: 2, color: '#f00', opacity: 0.4 } },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
@@ -513,7 +477,7 @@ describe('Extension optional arrow definitions', () => {
           children: [
             {
               type: 'path',
-              marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'crowFoot' } }],
+              arrow: { end: { shape: 'crowFoot' } },
               children: [
                 { type: 'step', kind: 'move', to: [100, 0] },
                 { type: 'step', kind: 'line', to: [0, 0] },
@@ -535,10 +499,7 @@ describe('Extension optional arrow definitions', () => {
           children: [
             {
               type: 'path',
-              marks: [
-                { pos: 0, mark: { kind: 'arrow', shape: 'bar' } },
-                { pos: 1, mark: { kind: 'arrow', shape: 'crowFoot' } },
-              ],
+              arrow: { start: { shape: 'bar' }, end: { shape: 'crowFoot' } },
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [100, 0] },
@@ -566,7 +527,7 @@ describe('Extension optional arrow definitions', () => {
       children: [
         {
           type: 'path',
-          marks: [{ pos: 1, endpointOverlap: 1, mark: { kind: 'arrow', shape, scale: 2 } }],
+          arrow: { end: { shape, scale: 2, endpointOverlap: 1 } },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },

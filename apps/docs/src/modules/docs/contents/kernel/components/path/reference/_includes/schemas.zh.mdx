@@ -1,6 +1,6 @@
 本页收录绘制拥有的输入契约。`PathSchema` 接受开放的 `kind`；实际 kind 的完整 schema 再校验该路径。内置 `stroke` 通常需要至少两个步骤；单个自包含的 rectangle 步骤是例外，自定义 kind 的要求由其 definition 决定。
 
-`way`、`arrow` 与 `arrowPlacement` 是作者侧输入，由 Vanilla 转换成步骤或 `marks`；不会原样写入持久化 Path。`ArrowDetailSchema` 属于这条专属配置通道。
+`way` 由 Vanilla 转换成步骤。`arrow` 与 `marks` 在作者 API 和持久化 IR 中使用相同结构；`ArrowDetailSchema` 用于共享箭头默认配置。
 
 ## PathSchema
 
@@ -37,8 +37,8 @@
     scale: '整条 path 缩放（数字等比，或 `{ x, y }` 非等比，绕包围盒中心）',
     cornerRadius: '线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同',
     label: '附着在 Path 或其它 path-like 宿主上的路径标签',
-    marks:
-      "沿路径放方向标记：每项 `{ pos, endpointOverlap?, mark }`，`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线；endpointOverlap 只适用于内置 Stroke Path 实际选中的端点 mark",
+    arrow: '起末端箭头配置；start / end 分别声明外观与 endpointOverlap，并根据接触几何截断主线',
+    marks: '沿整条路径弧长放置内容；每项包含 pos、rotate、scale 和 mark，不改变宿主路径几何',
   }}
 />
 
@@ -270,12 +270,39 @@
   }}
 />
 
+## PathArrowSchema
+
+<ZodSchema
+  shallow
+  name="PathArrowSchema"
+  description="起末端箭头；只创建显式声明的端点。"
+  descriptions={{ start: '起点箭头', end: '终点箭头' }}
+/>
+
+## PathArrowEndSchema
+
+<ZodSchema
+  shallow
+  name="PathArrowEndSchema"
+  description="单端箭头的外观与接触配置。"
+  descriptions={{ endpointOverlap: '进入逻辑端点的比例 0..1；0 为尖端对齐，1 为视觉后缘对齐' }}
+/>
+
+## CustomMarkSchema
+
+<ZodSchema
+  shallow
+  name="CustomMarkSchema"
+  description="引用普通标记定义及 JSON 参数。"
+  descriptions={{ kind: '固定为 custom', name: '已注册标记名称', params: '定义解释的 JSON 参数；省略时传入空对象' }}
+/>
+
 ## ArrowMarkSchema
 
 <ZodSchema
   shallow
   name="ArrowMarkSchema"
-  description="路径上的箭头标记；端点箭头和中段方向标记共用同一结构。"
+  description="复用箭头定义的沿路径标记，以尖端为锚点，不截断路径。"
   descriptions={{
     kind: '判别字段；当前支持 `arrow`',
     shape: '箭头形状名（开放字符串，含 `CompileOptions.arrows` 扩展名）；缺省时回退 stealth',
@@ -296,9 +323,10 @@
   name="PathMarkPlacementSchema"
   description="路径上的一个归一化标记位置及其 mark。"
   descriptions={{
-    pos: '路径上的归一化位置 0..1；line-like step 按弧长，曲线 step 按参数位置',
-    endpointOverlap: '仅用于内置 Stroke Path 实际选中的端点箭头；0 保持现有默认放置，1 让最终视觉后缘对齐逻辑端点',
-    mark: '放置的标记；当前为沿路径切线定向的 ArrowMark',
+    pos: '整条路径累计弧长的比例 0..1，在箭头截断和标签断线之前采样',
+    rotate: '缺省或 auto 沿切线定向；数字为路径局部坐标中的固定角度',
+    scale: '额外放置缩放，默认 1',
+    mark: '箭头形标记或引用注册名称与 JSON 参数的普通标记',
   }}
 />
 
@@ -318,8 +346,8 @@
     fill: '填充色 override（仅实心 shape 生效）；空心 shape 上 silent no-op（写了静默丢）',
     opacity: '箭头独立透明度 0..1；缺省继承 path opacity',
     lineWidth: '空心 shape 描边粗细（user units）；默认 1.5；实心 shape 忽略',
-    start: '起端 override（仅 arrow 含起端时生效：`<-` / `<->`）',
-    end: '末端 override（仅 arrow 含末端时生效：`->` / `<->`）',
+    start: '起点默认覆盖，仅显式声明 arrow.start 时生效',
+    end: '终点默认覆盖，仅显式声明 arrow.end 时生效',
   }}
 />
 

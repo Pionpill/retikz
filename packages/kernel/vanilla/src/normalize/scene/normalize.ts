@@ -160,7 +160,7 @@ const hasNestedInput = (child: InputChild): boolean =>
   inputChildrenOf(child)?.some(nested => {
     if ('authoring' in nested) return true;
     if (nested.type === undefined || nested.type === 'embed') return true;
-    if (nested.type === 'path' && ('way' in nested || 'arrow' in nested || 'arrowDetail' in nested)) {
+    if (nested.type === 'path' && ('way' in nested || ('arrow' in nested && typeof nested.arrow === 'string'))) {
       return true;
     }
 
@@ -172,7 +172,8 @@ const isInputPath = (child: InputChild): child is InputPath =>
   !('namespace' in child) &&
   (child.type === undefined
     ? 'way' in child || hasInputPathSteps(child) || 'kind' in child
-    : child.type === 'path' && ('authoring' in child || 'way' in child || 'arrow' in child || 'arrowDetail' in child));
+    : child.type === 'path' &&
+      ('authoring' in child || 'way' in child || ('arrow' in child && typeof child.arrow === 'string')));
 
 /** 判断一个 child 是否为 Core Scope 或 InputScope */
 const isInputScope = (child: InputChild): child is InputScope =>

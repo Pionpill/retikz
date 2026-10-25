@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../../src/compile/compile';
 import type { PathPrimitive } from '../../../src/contract';
 import type { IRScene } from '../../../src/schemas';
-import { arrowMarks } from '../../helpers/arrow-marks';
 import { flattenPrims } from '../../helpers/flatten';
+import { pathArrows } from '../../helpers/path-arrows';
 import { arc, close, line, move } from '../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 
@@ -152,7 +152,7 @@ describe("compile path: 'cycle' 闭合", () => {
       children: [
         {
           type: 'path',
-          marks: arrowMarks('->'),
+          arrow: pathArrows('->'),
           label: { text: 'close', position: 0.9, sloped: true },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },

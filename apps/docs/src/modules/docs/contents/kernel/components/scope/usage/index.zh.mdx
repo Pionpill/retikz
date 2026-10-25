@@ -76,7 +76,7 @@ const ir: IRScene = {
         { type: 'node', id: 'B', position: [100, 0], text: 'B' },
         {
           type: 'path',
-          arrow: '->',
+          arrow: { end: {} },
           children: [
             { type: 'step', kind: 'move', to: { id: 'A' } },
             { type: 'step', kind: 'line', to: { id: 'B' } },
@@ -107,7 +107,7 @@ const input = scene({
     scope({ position: [80, 0] }, [
       node({ id: 'A', position: [0, 0], text: 'A' }),
       node({ id: 'B', position: [100, 0], text: 'B' }),
-      path({ way: ['A', 'B'], arrow: '->' }),
+      path({ way: ['A', 'B'], arrow: { end: {} } }),
     ]),
   ],
 });
@@ -139,7 +139,7 @@ const ir: IRScene = {
         { type: 'node', id: 'B', position: [100, 0], text: 'B' },
         {
           type: 'path',
-          arrow: '->',
+          arrow: { end: {} },
           children: [
             { type: 'step', kind: 'move', to: { id: 'A' } },
             { type: 'step', kind: 'line', to: { id: 'B' } },

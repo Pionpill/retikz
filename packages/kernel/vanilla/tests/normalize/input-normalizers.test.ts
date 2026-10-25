@@ -2,9 +2,27 @@ import type { IRPathBase } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { InputNode, InputPath, InputScene } from '../../src';
-import { InputPathArrowDirection, normalizeNode, normalizePath, normalizeScene } from '../../src';
+import { normalizeNode, normalizePath, normalizeScene } from '../../src';
 
 describe('Vanilla Input normalizers', () => {
+  it.each(['->', '<-', '<->'] as const)('箭头简写 %s 与显式端点对象等价，保留 marks', arrow => {
+    const endpoints = arrow === '->' ? { end: {} } : arrow === '<-' ? { start: {} } : { start: {}, end: {} };
+    const input: InputPath = {
+      type: 'path',
+      arrow,
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [100, 0] },
+      ],
+      marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'circle' } }],
+    };
+    const expected = normalizePath({ ...input, arrow: endpoints });
+    expect(normalizePath(input)).toEqual(expected);
+    expect(normalizeScene({ children: [input] }).ir.children[0]).toEqual(expected);
+    expect(normalizeScene({ children: [{ type: 'scope', children: [input] }] }).ir.children[0]).toMatchObject({
+      children: [expected],
+    });
+  });
   it('省略 Node position 时保留稀疏 Source', () => {
     expect(normalizeNode({ id: 'origin' })).toStrictEqual({ type: 'node', id: 'origin' });
   });
@@ -54,29 +72,17 @@ describe('Vanilla Input normalizers', () => {
     });
   });
 
-  it('路径箭头方向使用公开 const object enum 表达', () => {
-    expect(InputPathArrowDirection).toEqual({ None: 'none', Forward: '->', Backward: '<-', Both: '<->' });
-  });
-
   it('把共享箭头重叠比例与逐端覆盖映射到对应 endpoint placement', () => {
     const input = {
       way: [
         [0, 0],
         [24, 0],
       ],
-      arrow: '<->',
-      arrowPlacement: {
-        overlap: 0.5,
-        start: { overlap: 0 },
-        end: { overlap: 1 },
-      },
-    } satisfies InputPath & { arrowPlacement: unknown };
+      arrow: { start: { endpointOverlap: 0 }, end: { endpointOverlap: 1 } },
+    } satisfies InputPath;
 
     expect(normalizePath(input)).toMatchObject({
-      marks: [
-        { pos: 0, endpointOverlap: 0, mark: { kind: 'arrow' } },
-        { pos: 1, endpointOverlap: 1, mark: { kind: 'arrow' } },
-      ],
+      arrow: { start: { endpointOverlap: 0 }, end: { endpointOverlap: 1 } },
     });
   });
 
@@ -86,29 +92,10 @@ describe('Vanilla Input normalizers', () => {
         [0, 0],
         [24, 0],
       ],
-      arrow: '->',
-      arrowPlacement: { overlap: 0.5 },
-    } satisfies InputPath & { arrowPlacement: unknown };
+      arrow: { end: { endpointOverlap: 0.5 } },
+    } satisfies InputPath;
 
-    expect(normalizePath(input).marks).toEqual([{ pos: 1, endpointOverlap: 0.5, mark: { kind: 'arrow' } }]);
-  });
-
-  it.each([
-    { arrow: undefined, arrowPlacement: {}, expected: 'requires arrow' },
-    { arrow: 'none' as const, arrowPlacement: { overlap: 0.5 }, expected: 'requires arrow' },
-    { arrow: '->' as const, arrowPlacement: { start: { overlap: 0.5 } }, expected: 'start requires a start arrow' },
-    { arrow: '<-' as const, arrowPlacement: { end: { overlap: 0.5 } }, expected: 'end requires an end arrow' },
-  ])('拒绝没有对应箭头端点的 placement：$expected', ({ arrow, arrowPlacement, expected }) => {
-    const input = {
-      way: [
-        [0, 0],
-        [24, 0],
-      ],
-      ...(arrow === undefined ? {} : { arrow }),
-      arrowPlacement,
-    } satisfies InputPath & { arrowPlacement: unknown };
-
-    expect(() => normalizePath(input)).toThrow(expected);
+    expect(normalizePath(input).arrow).toEqual({ end: { endpointOverlap: 0.5 } });
   });
 
   it('将 typed Step 的字符串 target 收敛为 Core Path step', () => {

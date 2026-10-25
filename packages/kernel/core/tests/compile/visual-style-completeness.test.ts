@@ -138,7 +138,18 @@ it('endpoint and inline arrows retain explicit paints and stroke overrides', () 
       {
         type: 'path',
         style: { stroke: gradient },
-        marks: [0.5, 1].map(pos => ({
+        arrow: {
+          end: {
+            shape: 'stealth',
+            stroke: gradient,
+            fill: gradient,
+            dashPattern: [2, 1],
+            dashOffset: 1,
+            lineCap: 'round',
+            lineJoin: 'bevel',
+          },
+        },
+        marks: [0.5].map(pos => ({
           pos,
           mark: {
             kind: 'arrow',
@@ -203,10 +214,10 @@ it('custom arrow output retains fixed nested styles when arrow options are provi
     children: [
       {
         type: 'path',
-        marks: [
-          { pos: 0, mark: { kind: 'arrow', shape: 'styled' } },
-          { pos: 1, mark: { kind: 'arrow', shape: 'styled', fill: gradient, lineJoin: 'round', dashPattern: [1, 2] } },
-        ],
+        arrow: {
+          start: { shape: 'styled' },
+          end: { shape: 'styled', fill: gradient, lineJoin: 'round', dashPattern: [1, 2] },
+        },
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
           { type: 'step', kind: 'line', to: [100, 0] },

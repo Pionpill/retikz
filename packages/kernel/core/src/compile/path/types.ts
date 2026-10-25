@@ -1,4 +1,4 @@
-import type { Transform } from '../../contract';
+import type { SceneResource, Transform } from '../../contract';
 import type { StrokePathOwnerOutput } from '../../contract';
 import type { PathTargetView } from '../../resolve';
 import type { PaintResolver } from '../resource';
@@ -7,6 +7,8 @@ import type { CompileWarningInput } from '../warning';
 
 /** path emit 阶段的可选服务与诊断上下文 */
 export type PathEmitOptions = {
+  /** 当前编译资源，用于标记可视边界计算 */
+  resources?: () => ReadonlyArray<SceneResource>;
   /**
    * 警告收集器（由 compileToScene 传入）
    * 缺省时不发出警告

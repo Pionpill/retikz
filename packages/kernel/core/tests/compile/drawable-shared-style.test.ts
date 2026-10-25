@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRScene, PathPrimitive, ScenePrimitive } from '../../src';
 import { compileToScene, PathDefaultSchema, ScopeSchema } from '../../src';
-import { arrowMarks } from '../helpers/arrow-marks';
 
 const steps = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -225,7 +224,7 @@ describe('Drawable shared style resolution', () => {
 
     expect(parsed.defaults?.path?.style).toEqual({ color: 'red' });
     expect(parsed.defaults?.path?.arrow).toEqual({ shape: 'circle' });
-    expect(PathDefaultSchema.safeParse({ marks: arrowMarks('->') }).success).toBe(false);
+    expect(PathDefaultSchema.safeParse({ arrow: '->' }).success).toBe(false);
   });
 
   it('drawable-shared-doc-schema-export：共享 drawable schema 从 public barrel 导出', () => {

@@ -209,15 +209,14 @@ const view = mount(document.getElementById('diagram')!, ir);
     {
       name: 'arrow',
       kind: 'property',
-      type: "'none' | '->' | '<-' | '<->'",
-      description: '设置起点、终点或双端箭头方向',
+      type: "InputPath['arrow']",
+      description: '支持 ->、<-、<-> 简写，或用 start / end 设置端点外观与 endpointOverlap',
     },
     {
-      name: 'arrowDetail',
+      name: 'marks',
       kind: 'property',
-      type: 'IRArrowDetail',
-      description:
-        '共享外观：`{ shape?: string; scale?: number; length?: number; width?: number; color?: string; fill?: string; opacity?: number; lineWidth?: number }`。`start` / `end` 可用同一组字段覆盖单端；端点重叠见 `arrowPlacement`',
+      type: "IRPath['marks']",
+      description: '按整条路径弧长比例放置内容，不截断宿主描边',
     },
     {
       name: 'cornerRadius',

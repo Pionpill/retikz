@@ -2,6 +2,7 @@ import type {
   AnyCompositeDefinition,
   AnyPathDefinition,
   ArrowDefinition,
+  MarkDefinition,
   BoundaryDefinition,
   ClipDefinition,
   PatternDefinition,
@@ -11,6 +12,7 @@ import type {
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import {
   resolveArrowRegistry,
+  resolveMarkRegistry,
   resolveBoundaryRegistry,
   resolveClipRegistry,
   resolveCompositeRegistry,
@@ -65,6 +67,8 @@ export type CompileEnvironment = Readonly<{
   maxClipDepth: number;
   /** arrow provider 注册表 */
   arrows: ReadonlyMap<string, ArrowDefinition>;
+  /** 普通路径标记定义注册表 */
+  marks: ReadonlyMap<string, MarkDefinition>;
   /** pattern provider 注册表 */
   patterns: ReadonlyMap<string, PatternDefinition>;
   /** path provider 注册表 */
@@ -115,6 +119,7 @@ export const createCompileEnvironment = (options: CompileEnvironmentOptions = {}
     clips,
     maxClipDepth,
     arrows: resolveArrowRegistry(options.arrows),
+    marks: resolveMarkRegistry(options.marks),
     patterns,
     paths: resolvePathRegistry(options.paths),
   });

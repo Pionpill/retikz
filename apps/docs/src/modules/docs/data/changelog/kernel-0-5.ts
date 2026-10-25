@@ -378,6 +378,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: 'BREAKING：端点箭头与沿线标记分离', en: 'BREAKING: separate endpoint arrows and path marks' },
+          content: {
+            zh: '端点箭头统一使用 arrow.start / arrow.end，并负责接触与截断；marks 按截断前整条路径的弧长放置图元，包括首尾位置，且不截断主线。普通标记通过 defineMark 与 marks 定义数组注册，也可直接复用箭头定义。React、Vanilla 保留 ->、<-、<-> 方向简写，由 Vanilla 归一化为端点对象；JSON IR 只使用对象。arrowDetail、arrowPlacement 内容并入端点对象，原先承担端点箭头的 marks 需迁入 arrow。',
+            en: 'Endpoint arrows use arrow.start / arrow.end and own contact and shortening. Marks place primitives by arc length along the complete, unshortened path, including its endpoints, without shortening the stroke. Register ordinary marks through defineMark and the marks definition array, or reuse arrow definitions directly. React and Vanilla retain ->, <-, and <-> shorthands, normalized by Vanilla into endpoint objects; JSON IR uses objects only. Move arrowDetail and arrowPlacement settings into endpoint objects, and former endpoint-arrow marks into arrow.',
+          },
+        },
+        {
           label: { zh: '动画属性与关键帧值契约', en: 'Animation property and keyframe contracts' },
           content: {
             zh: '动画属性与缓动采用闭合枚举 AnimationProperty / AnimationEasing，移除自定义属性和具名缓动注册。轨道按属性约束关键帧类型与范围，新增 fillOpacity、strokeOpacity、dashOffset；SVG 采样与 Canvas 复用段缓动求值，pathDraw 优先于虚线偏移动画。',

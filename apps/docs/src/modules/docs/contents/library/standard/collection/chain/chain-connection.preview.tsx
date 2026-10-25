@@ -20,7 +20,13 @@ export const renderChainPreview = (values: ChainPreviewValues) => (
         ...(values.route === '-|-' || values.route === '|-|'
           ? { route: values.route, fraction: values.fraction }
           : { route: values.route }),
-        path: { arrow: values.arrow, style: { stroke: 'dodgerblue' } },
+        path: {
+          arrow: {
+            ...(values.arrow === '<->' ? { start: {} } : {}),
+            ...(values.arrow === '->' || values.arrow === '<->' ? { end: {} } : {}),
+          },
+          style: { stroke: 'dodgerblue' },
+        },
       }}
     />
   </Layout>

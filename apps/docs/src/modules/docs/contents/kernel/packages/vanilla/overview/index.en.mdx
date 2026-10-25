@@ -39,7 +39,7 @@ const input = scene({
       children: [
         node({ id: 'a', position: [0, 0], text: 'A' }),
         node({ id: 'b', position: [120, 0], text: 'B' }),
-        path({ id: 'edge', way: ['a', 'b'], marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
+        path({ id: 'edge', way: ['a', 'b'], arrow: { end: {} } }),
       ],
     }),
   ],

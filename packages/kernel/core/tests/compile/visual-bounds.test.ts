@@ -291,13 +291,7 @@ describe('canonical visual bounds', () => {
         children: [
           {
             type: 'path',
-            marks: [
-              {
-                pos: 1,
-                endpointOverlap,
-                mark: { kind: 'arrow', shape: 'empty-overlap-probe', length: 10, width: 10 },
-              },
-            ],
+            arrow: { end: { shape: 'empty-overlap-probe', length: 10, width: 10, endpointOverlap } },
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },

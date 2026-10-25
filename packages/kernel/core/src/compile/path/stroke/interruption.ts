@@ -276,13 +276,17 @@ const sampleGeometryOccurrences = (
   );
   if (!Number.isFinite(totalLength) || totalLength <= DISTANCE_EPSILON) return undefined;
 
+  const lastDrawableIndex = occurrences.findLastIndex(
+    occurrence => occurrence.logicalEnd - occurrence.logicalStart > DISTANCE_EPSILON,
+  );
   const target = clampUnit(position) * totalLength;
   let consumed = 0;
 
   for (let index = 0; index < occurrences.length; index += 1) {
     const occurrence = occurrences[index];
     const length = occurrence.logicalEnd - occurrence.logicalStart;
-    if (target < consumed + length - DISTANCE_EPSILON || index === occurrences.length - 1) {
+    if (length <= DISTANCE_EPSILON) continue;
+    if (target < consumed + length - DISTANCE_EPSILON || index === lastDrawableIndex) {
       const localDistance = Math.max(0, Math.min(length, target - consumed));
       const parameter = parameterAtOccurrenceDistance(occurrence, localDistance);
 
@@ -304,6 +308,30 @@ export const sampleStrokePathGeometry = (
   geometry: StrokePathGeometry,
   position: number,
 ): StrokeLabelSample | undefined => sampleGeometryOccurrences(geometry.occurrences, position);
+
+/** 沿路径采样标记，驻点使用前进侧切线，末端使用进入侧切线 */
+export const sampleStrokeMarkGeometry = (
+  geometry: StrokePathGeometry,
+  position: number,
+): CurveSegmentSample | undefined => {
+  const located = sampleStrokePathGeometry(geometry, position);
+  if (located === undefined) return undefined;
+  const { occurrence, logicalDistance, sample } = located;
+  const segment = curveSegmentOfOccurrence(occurrence);
+  if (segment.kind !== 'quadraticBezier' && segment.kind !== 'cubicBezier') return sample;
+  const t = parameterAtOccurrenceDistance(occurrence, logicalDistance - occurrence.logicalStart);
+  const inverse = 1 - t;
+  const derivative = (axis: 0 | 1): number =>
+    segment.kind === 'quadraticBezier'
+      ? 2 * (inverse * (segment.control[axis] - segment.from[axis]) + t * (segment.to[axis] - segment.control[axis]))
+      : 3 *
+        (inverse * inverse * (segment.control1[axis] - segment.from[axis]) +
+          2 * inverse * t * (segment.control2[axis] - segment.control1[axis]) +
+          t * t * (segment.to[axis] - segment.control2[axis]));
+  if (Math.hypot(derivative(0), derivative(1)) > DISTANCE_EPSILON) return sample;
+  const nearby = Math.min(1, Math.max(0, t + (position === 1 ? -1e-4 : 1e-4)));
+  return { point: sample.point, tangent: curve.sampleAt(segment, nearby).tangent };
+};
 
 /**
  * 按既有 step-local 参数语义采样 occurrence range

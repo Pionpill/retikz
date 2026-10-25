@@ -232,10 +232,7 @@ describe('PathSchema：marks 合法', () => {
     expect(
       PathSchema.safeParse(
         basePath({
-          marks: [
-            { pos: 0, mark: { kind: 'arrow' } },
-            { pos: 1, mark: { kind: 'arrow', shape: 'normal' } },
-          ],
+          arrow: { start: {}, end: { shape: 'normal' } },
         }),
       ).success,
     ).toBe(true);

@@ -29,7 +29,7 @@ const source: IRScene = {
     },
     {
       type: 'path',
-      marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'diamond' } }],
+      arrow: { end: { shape: 'diamond' } },
       children: [
         { type: 'step', kind: 'move', to: [60, 0] },
         { type: 'step', kind: 'line', to: [120, 0] },

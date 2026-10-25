@@ -21,7 +21,7 @@ import type { CompileEnvironment } from '../environment';
 import type { NodeGeometryContext } from '../node';
 import type { CompileObservationRuntime, PendingPathEmission } from '../orchestration';
 import { createOwnerOutputPublisher, freezeOccurrence, pathTargetViewOf } from '../orchestration';
-import type { PaintRegistry } from '../resource';
+import type { ClipRegistry, PaintRegistry } from '../resource';
 import {
   snapshotProviderPosition,
   validateScenePrimitives,
@@ -35,12 +35,14 @@ import { emitPathPrimitive, lowerStrokePathGeometry, wrapPathPrimitiveOutput } f
 /** Path 宿主编译所需的显式服务与本次工作区 */
 export type PathCompileHost = Pick<
   CompileEnvironment,
-  'round' | 'lowerTex' | 'rootFontSize' | 'paths' | 'arrows' | 'patterns' | 'measureText'
+  'round' | 'lowerTex' | 'rootFontSize' | 'paths' | 'arrows' | 'marks' | 'patterns' | 'measureText'
 > & {
   /** 本次几何缓存 */
   nodeGeometry: NodeGeometryContext;
   /** 本次绘制资源 */
   paint: PaintRegistry;
+  /** 本次裁剪资源 */
+  clip: ClipRegistry;
   /** 本次诊断收集器 */
   onWarn: (warning: CompileWarningInput) => void;
   /** 本次观察会话 */
@@ -94,6 +96,7 @@ export const emitDefinedPath = (
   );
 
   const emitOptions = {
+    resources: () => [...context.paint.resources(), ...context.clip.resources()],
     onWarn: context.onWarn,
     scopeChain,
     resolvePaint: context.paint.register,
@@ -111,6 +114,7 @@ export const emitDefinedPath = (
           targetResolver,
           paths: context.paths,
           arrows: context.arrows,
+          marks: context.marks,
           patterns: context.patterns,
           round: context.round,
           irPath,
@@ -123,6 +127,7 @@ export const emitDefinedPath = (
       mode: pendingPath.theme.mode,
       paths: context.paths,
       arrows: context.arrows,
+      marks: context.marks,
       patterns: context.patterns,
       round: context.round,
       irPath,

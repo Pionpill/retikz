@@ -824,16 +824,10 @@ describe('convertIRToReactNode', () => {
         children: [
           {
             type: 'path',
-            marks: [
-              {
-                pos: 0,
-                mark: { kind: 'arrow', shape: 'open', color: '#dc2626', opacity: 0.7 },
-              },
-              {
-                pos: 1,
-                mark: { kind: 'arrow', shape: 'stealth', color: '#1f2937', opacity: 0.7, scale: 1.5, fill: '#fde68a' },
-              },
-            ],
+            arrow: {
+              start: { shape: 'open', color: '#dc2626', opacity: 0.7 },
+              end: { shape: 'stealth', color: '#1f2937', opacity: 0.7, scale: 1.5, fill: '#fde68a' },
+            },
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },

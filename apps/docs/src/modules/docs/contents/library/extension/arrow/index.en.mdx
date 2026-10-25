@@ -3,7 +3,7 @@ title: arrow · Arrows
 description: Assemble diamond, kite, square, straight-barb, bar, and crow-foot endpoints on demand, with an API reference for each.
 ---
 
-These arrow Definitions add six optional geometries to path endpoints. After choosing filled, hollow, or open-line shapes, use path `arrowDetail` to adjust size and color.
+These arrow Definitions add six optional geometries to path endpoints. After choosing filled, hollow, or open-line shapes, use path `arrow.start` / `arrow.end` to adjust size and color.
 
 ## Using this topic
 
@@ -25,8 +25,7 @@ export const Example = () => (
         [0, 0],
         [160, 0],
       ]}
-      arrow="->"
-      arrowDetail={{ end: { shape: 'diamond' } }}
+      arrow={{ end: { shape: 'diamond' } }}
     />
   </Layout>
 );
@@ -46,8 +45,8 @@ const ir: IRScene = {
   children: [
     {
       type: 'path',
-      arrow: '->',
-      arrowDetail: { end: { shape: 'diamond' } },
+      arrow: { end: { shape: 'diamond' } },
+
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [160, 0] },
@@ -72,8 +71,7 @@ const input = scene({
         [0, 0],
         [160, 0],
       ],
-      arrow: '->',
-      arrowDetail: { end: { shape: 'diamond' } },
+      arrow: { end: { shape: 'diamond' } },
     }),
   ],
 });
@@ -95,8 +93,8 @@ const ir: IRScene = {
   children: [
     {
       type: 'path',
-      arrow: '->',
-      arrowDetail: { end: { shape: 'diamond' } },
+      arrow: { end: { shape: 'diamond' } },
+
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [160, 0] },
@@ -126,7 +124,7 @@ console.log(svg);
 
 #### DiamondArrowDefinition / OpenDiamondArrowDefinition
 
-Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrowDetail.end.shape`:
+Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
 
 | Definition                   | `shape`       | Default length × width |
 | ---------------------------- | ------------- | ---------------------- |
@@ -159,7 +157,7 @@ Change color, scale, and hollow stroke width to compare their paint.
 
 #### KiteArrowDefinition / OpenKiteArrowDefinition
 
-Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrowDetail.end.shape`:
+Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
 
 | Definition                | `shape`    | Default length × width |
 | ------------------------- | ---------- | ---------------------- |
@@ -192,7 +190,7 @@ Change length and width to see both filled and hollow contours stretch.
 
 #### SquareArrowDefinition / OpenSquareArrowDefinition
 
-Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrowDetail.end.shape`:
+Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
 
 | Definition                  | `shape`      | Default length × width |
 | --------------------------- | ------------ | ---------------------- |
@@ -225,7 +223,7 @@ Adjust length, width, and hollow stroke to compare the two square endpoints.
 
 #### StraightBarbArrowDefinition
 
-Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrowDetail.end.shape`:
+Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
 
 | Definition                    | `shape`        | Default length × width |
 | ----------------------------- | -------------- | ---------------------- |
@@ -257,7 +255,7 @@ Change length, width, and stroke width to inspect the open barb and its path con
 
 #### BarArrowDefinition
 
-Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrowDetail.end.shape`:
+Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
 
 | Definition           | `shape` | Default length × width |
 | -------------------- | ------- | ---------------------- |
@@ -293,7 +291,7 @@ Length sets the span along the path, width sets the bar span, and line width aff
 
 #### CrowFootArrowDefinition
 
-Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrowDetail.end.shape`:
+Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
 
 | Definition                | `shape`    | Default length × width |
 | ------------------------- | ---------- | ---------------------- |

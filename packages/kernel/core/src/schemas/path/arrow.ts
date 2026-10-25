@@ -1,5 +1,10 @@
 import type { ValueOf, OpenString } from '@retikz/foundation';
-import { createOpenStringSchema, PositiveNumberSchema, NonNegativeNumberSchema } from '@retikz/foundation';
+import {
+  createOpenStringSchema,
+  PositiveNumberSchema,
+  NonNegativeNumberSchema,
+  NormalizedFractionSchema,
+} from '@retikz/foundation';
 import { strictObject } from 'zod';
 import type { infer as ZodInfer } from 'zod';
 
@@ -58,12 +63,25 @@ export const ArrowStyleSchema = strictObject({
   ),
 }).describe('Arrow shape, dimensions, and visual style overrides.');
 
+/** 校验端点箭头的外观与接触重叠 */
+export const PathArrowEndSchema = ArrowStyleSchema.extend({
+  endpointOverlap: NormalizedFractionSchema.optional().describe('Endpoint contact overlap ratio. Defaults to zero.'),
+});
+
+/** 校验路径起点与终点的箭头声明 */
+export const PathArrowSchema = strictObject({
+  start: PathArrowEndSchema.optional().describe('Arrow at the start of the path.'),
+  end: PathArrowEndSchema.optional().describe('Arrow at the end of the path.'),
+});
+
+export type IRPathArrow = ZodInfer<typeof PathArrowSchema>;
+
 /** 校验两端箭头共用的视觉字段及逐端覆盖 */
 export const ArrowDetailSchema = ArrowStyleSchema.extend({
-  start: ArrowStyleSchema.optional().describe(
+  start: PathArrowEndSchema.optional().describe(
     'Per-start arrow override. Present fields override top-level arrowDetail defaults.',
   ),
-  end: ArrowStyleSchema.optional().describe(
+  end: PathArrowEndSchema.optional().describe(
     'Per-end arrow override. Present fields override top-level arrowDetail defaults.',
   ),
 })

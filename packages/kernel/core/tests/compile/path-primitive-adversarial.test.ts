@@ -3,7 +3,7 @@
 import { compileToScene } from '../../src/compile/compile';
 import type { GroupPrimitive, PathCommand, PathPrimitive, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
-import { arrowMarks } from '../helpers/arrow-marks';
+import { pathArrows } from '../helpers/path-arrows';
 import { close, line, move } from '../helpers/path-command-factory';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrimitive | undefined =>
@@ -302,7 +302,7 @@ describe('GroupPrimitive.transforms：结构化形态约束', () => {
         { type: 'node', id: 'C', position: [60, 60] },
         {
           type: 'path',
-          marks: arrowMarks('->'),
+          arrow: pathArrows('->'),
           children: [
             { type: 'step', kind: 'move', to: { id: 'A' } },
             { type: 'step', kind: 'line', to: { id: 'B' } },

@@ -1,6 +1,6 @@
 This page contains drawing-owned input contracts. `PathSchema` accepts an open `kind`; the selected kind then validates the complete path. Built-in `stroke` normally needs at least two steps, with a single self-contained rectangle step as an exception, while a custom kind defines its own requirements.
 
-`way`, `arrow`, and `arrowPlacement` are authoring inputs normalized by Vanilla into steps or `marks`; they are not stored unchanged in persistent Path IR. `ArrowDetailSchema` belongs to that authoring configuration.
+Vanilla normalizes `way` into steps. `arrow` and `marks` share the same structure in authoring APIs and persistent IR. `ArrowDetailSchema` supplies shared arrow defaults.
 
 ## PathSchema
 
@@ -67,6 +67,18 @@ Either tangent angle selects tangent mode; the omitted outgoing/incoming angle d
 ## PathLabelSchema
 
 <ZodSchema shallow name="PathLabelSchema" />
+
+## PathArrowSchema
+
+<ZodSchema shallow name="PathArrowSchema" />
+
+## PathArrowEndSchema
+
+<ZodSchema shallow name="PathArrowEndSchema" />
+
+## CustomMarkSchema
+
+<ZodSchema shallow name="CustomMarkSchema" />
 
 ## ArrowMarkSchema
 

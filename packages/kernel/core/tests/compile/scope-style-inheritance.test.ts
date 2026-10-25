@@ -11,7 +11,7 @@ import type {
   TextPrimitive,
 } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
-import { arrowMarks } from '../helpers/arrow-marks';
+import { pathArrows } from '../helpers/path-arrows';
 
 /** 递归展开 GroupPrimitive，把所有叶子 primitive 拍平（scope 子元素在 GroupPrimitive 内） */
 const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
@@ -89,7 +89,7 @@ describe('Happy: 主色级联 / 四通道', () => {
             { type: 'node', id: 'A', position: [0, 0], text: 'A' },
             {
               type: 'path',
-              marks: arrowMarks('->'),
+              arrow: pathArrows('->'),
               children: [
                 { type: 'step', kind: 'move', to: { id: 'A' } },
                 { type: 'step', kind: 'line', to: [60, 0], label: { text: 'e' } },
@@ -143,7 +143,7 @@ describe('Happy: 主色级联 / 四通道', () => {
       children: [
         {
           type: 'path',
-          marks: arrowMarks('->'),
+          arrow: pathArrows('->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [80, 40], label: { text: 'sin' } },
@@ -168,7 +168,7 @@ describe('Happy: 主色级联 / 四通道', () => {
           children: [
             {
               type: 'path',
-              marks: arrowMarks('->'),
+              arrow: pathArrows('->'),
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [50, 0] },
@@ -369,7 +369,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
               children: [
                 {
                   type: 'path',
-                  marks: arrowMarks('->'),
+                  arrow: pathArrows('->'),
                   children: [
                     { type: 'step', kind: 'move', to: [0, 0] },
                     { type: 'step', kind: 'line', to: [40, 0] },
@@ -487,7 +487,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
           children: [
             {
               type: 'path',
-              marks: arrowMarks('->'),
+              arrow: pathArrows('->'),
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [40, 0] },
@@ -496,7 +496,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
             },
             {
               type: 'path',
-              marks: arrowMarks('->', { color: 'purple' }),
+              arrow: pathArrows('->', { color: 'purple' }),
               children: [
                 { type: 'step', kind: 'move', to: [0, 50] },
                 { type: 'step', kind: 'line', to: [40, 50] },
@@ -526,7 +526,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
           children: [
             {
               type: 'path',
-              marks: arrowMarks('->'),
+              arrow: pathArrows('->'),
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [40, 0] },
@@ -535,7 +535,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
             },
             {
               type: 'path',
-              marks: arrowMarks('->', { end: { color: 'purple' } }),
+              arrow: pathArrows('->', { end: { color: 'purple' } }),
               children: [
                 { type: 'step', kind: 'move', to: [0, 50] },
                 { type: 'step', kind: 'line', to: [40, 50] },
@@ -568,7 +568,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
               children: [
                 {
                   type: 'path',
-                  marks: arrowMarks('->'),
+                  arrow: pathArrows('->'),
                   children: [
                     { type: 'step', kind: 'move', to: [0, 0] },
                     { type: 'step', kind: 'line', to: [40, 0] },

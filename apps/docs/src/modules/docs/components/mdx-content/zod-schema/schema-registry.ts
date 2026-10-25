@@ -912,6 +912,21 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PathMarkPlacement',
     url: '/kernel/components/path/reference#pathmarkplacementschema',
   },
+  PathArrowSchema: {
+    schema: IR.PathArrowSchema,
+    label: 'PathArrow',
+    url: '/kernel/components/path/reference#patharrowschema',
+  },
+  PathArrowEndSchema: {
+    schema: IR.PathArrowEndSchema,
+    label: 'PathArrowEnd',
+    url: '/kernel/components/path/reference#patharrowendschema',
+  },
+  CustomMarkSchema: {
+    schema: IR.CustomMarkSchema,
+    label: 'CustomMark',
+    url: '/kernel/components/path/reference#custommarkschema',
+  },
   StepSchema: { schema: IR.StepSchema, label: 'Step', url: '/kernel/components/path/reference#stepschema' },
   PathLabelSchema: {
     schema: IR.PathLabelSchema,

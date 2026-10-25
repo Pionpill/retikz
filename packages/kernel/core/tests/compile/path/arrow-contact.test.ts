@@ -16,7 +16,7 @@ describe('endpoint arrow contact', () => {
         {
           type: 'path',
           style: { strokeWidth: 2 },
-          marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'stealth' } }],
+          arrow: { end: { shape: 'stealth' } },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             ...(kind === 'line'
@@ -99,7 +99,7 @@ describe('preserved endpoint geometry', () => {
         {
           type: 'path',
           style: { strokeWidth: 2 },
-          marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+          arrow: { end: {} },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
@@ -127,7 +127,7 @@ describe('preserved endpoint geometry', () => {
       children: [
         {
           type: 'path',
-          marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+          arrow: { end: {} },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [0, 0] },
@@ -161,10 +161,7 @@ describe('preserved endpoint geometry', () => {
             type: 'path',
             style: { strokeWidth: 2 },
             ...(interrupt ? { label: [{ text: 'gap', position: 0.5, sloped: true, interrupt: true }] } : {}),
-            marks: [
-              { pos: 0, mark: { kind: 'arrow', length: 12, width: 4 } },
-              { pos: 1, mark: { kind: 'arrow', length: 12, width: 4 } },
-            ],
+            arrow: { start: { length: 12, width: 4 }, end: { length: 12, width: 4 } },
             children: [{ type: 'step', kind: 'move', to: [0, 0] }, step],
           },
         ],
@@ -210,7 +207,8 @@ describe('preserved endpoint geometry', () => {
         {
           type: 'path',
           style: { strokeWidth: 2 },
-          marks: [...(both ? [{ pos: 0, mark: { kind: 'arrow' as const } }] : []), { pos: 1, mark: { kind: 'arrow' } }],
+          arrow: { end: {} },
+          marks: [...(both ? [{ pos: 0, mark: { kind: 'arrow' as const } }] : [])],
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [2, 0] },

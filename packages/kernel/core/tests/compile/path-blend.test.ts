@@ -4,8 +4,8 @@ import { compileToScene } from '../../src/compile/compile';
 import type { PathPrimitive, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { BlendMode, PathSchema } from '../../src/schemas';
-import { arrowMarks } from '../helpers/arrow-marks';
 import { flattenPrims } from '../helpers/flatten';
+import { pathArrows } from '../helpers/path-arrows';
 
 const silent = { onWarn: () => {} };
 
@@ -94,7 +94,7 @@ describe('[path-blend] 交互', () => {
   it('blend-text-not-inherited（path 类比）：带 arrow 的 path + blendMode → arrow spec 不带 blendMode', () => {
     const prim = findPathPrim(
       compilePath({
-        marks: arrowMarks('->'),
+        arrow: pathArrows('->'),
         style: { stroke: 'cyan', blendMode: 'multiply' },
       }).primitives,
     );

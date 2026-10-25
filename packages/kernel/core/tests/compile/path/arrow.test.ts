@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../../src/compile/compile';
 import type { PathPrimitive, ScenePrimitive } from '../../../src/contract';
 import type { IRScene } from '../../../src/schemas';
-import { arrowMarks } from '../../helpers/arrow-marks';
 import { flattenPrims } from '../../helpers/flatten';
+import { pathArrows } from '../../helpers/path-arrows';
 import { line, move } from '../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 
@@ -16,7 +16,7 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          marks: arrowMarks('->'),
+          arrow: pathArrows('->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -38,7 +38,7 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          marks: arrowMarks('<-'),
+          arrow: pathArrows('<-'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -59,7 +59,7 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          marks: arrowMarks('<->'),
+          arrow: pathArrows('<->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -106,7 +106,7 @@ describe('compile path: arrow 箭头', () => {
         { type: 'node', id: 'C', position: [60, 60] },
         {
           type: 'path',
-          marks: arrowMarks('->'),
+          arrow: pathArrows('->'),
           children: [
             { type: 'step', kind: 'move', to: { id: 'A' } },
             { type: 'step', kind: 'line', to: { id: 'B' } },
@@ -137,7 +137,7 @@ describe('compile path: arrow 箭头', () => {
         children: [
           {
             type: 'path',
-            marks: arrowMarks('->', { shape }),
+            arrow: pathArrows('->', { shape }),
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [10, 0] },
@@ -165,7 +165,7 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          marks: arrowMarks('->', { shape }),
+          arrow: pathArrows('->', { shape }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
@@ -184,7 +184,7 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          marks: arrowMarks('->', { shape: 'normal' }),
+          arrow: pathArrows('->', { shape: 'normal' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
@@ -204,7 +204,7 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          marks: arrowMarks('->'),
+          arrow: pathArrows('->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -224,7 +224,7 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          marks: arrowMarks('->'),
+          arrow: pathArrows('->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -249,7 +249,7 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          marks: arrowMarks('<->'),
+          arrow: pathArrows('<->'),
           label: { text: 'gap', sloped: true },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
@@ -283,7 +283,7 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          marks: arrowMarks('<->'),
+          arrow: pathArrows('<->'),
           label: [
             { text: 'start', position: 0, sloped: true },
             { text: 'end', position: 1, sloped: true },

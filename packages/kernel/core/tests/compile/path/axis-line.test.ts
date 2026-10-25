@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRPosition, IRScene, IRStep, ScenePrimitive } from '../../../src';
 import { BuiltinCompileWarningCode, compileToScene } from '../../../src';
-import { arrowMarks } from '../../helpers/arrow-marks';
 import { flattenPrims } from '../../helpers/flatten';
+import { pathArrows } from '../../helpers/path-arrows';
 import { line, move } from '../../helpers/path-command-factory';
 import { findPathPrim, pathCommands } from './helpers';
 
@@ -66,7 +66,7 @@ describe('compile path: axis-line', () => {
             { type: 'node', id: 'target', position: [100, 0] },
             {
               type: 'path',
-              marks: arrowMarks('->', { shape: 'stealth' }),
+              arrow: pathArrows('->', { shape: 'stealth' }),
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'axis-line', axis: 'horizontal', to },

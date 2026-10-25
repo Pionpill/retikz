@@ -54,9 +54,22 @@ export type WrapPathPrimitiveOutputInput = {
   round: (n: number) => number;
 };
 
+/** 路径绘制进度保留在主体上，其余动画随整个宿主输出播放 */
+const assignPathAnimations = (owner: ScenePrimitive, primitive: ScenePrimitive, path: CanonicalPath): void => {
+  if (path.animations === undefined) return;
+  if (owner === primitive) {
+    owner.animations = path.animations;
+    return;
+  }
+  const drawing = path.animations.filter(track => track.property === 'pathDraw');
+  const remaining = path.animations.filter(track => track.property !== 'pathDraw');
+  if (drawing.length > 0) primitive.animations = drawing;
+  if (remaining.length > 0) owner.animations = remaining;
+};
+
 /**
  * 包装 path 最终输出
- * @description rotate / scale 需要最后包 GroupPrimitive；水合 id/meta/animations 只落在最外层主体 primitive
+ * @description rotate / scale 与标记共用宿主分组；id/meta 和整体动画归属宿主，pathDraw 归属主线
  */
 export const wrapPathPrimitiveOutput = ({
   path,
@@ -72,15 +85,16 @@ export const wrapPathPrimitiveOutput = ({
       const group: GroupPrimitive = { type: 'group', transforms, children: bodyPrims };
       if (path.id !== undefined) group.id = path.id;
       if (path.meta !== undefined) group.meta = path.meta;
-      if (path.animations !== undefined) group.animations = path.animations;
+      assignPathAnimations(group, primitive, path);
 
       return { primitives: [group], boundsPoints: projectPathTransformPoints(boundsPoints, transforms) };
     }
   }
 
-  if (path.id !== undefined) primitive.id = path.id;
-  if (path.meta !== undefined) primitive.meta = path.meta;
-  if (path.animations !== undefined) primitive.animations = path.animations;
+  const owner: ScenePrimitive = path.marks?.length ? { type: 'group', children: bodyPrims } : primitive;
+  if (path.id !== undefined) owner.id = path.id;
+  if (path.meta !== undefined) owner.meta = path.meta;
+  assignPathAnimations(owner, primitive, path);
 
-  return { primitives: bodyPrims, boundsPoints };
+  return { primitives: owner === primitive ? bodyPrims : [owner], boundsPoints };
 };

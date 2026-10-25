@@ -45,7 +45,7 @@ import { snapshotProviderPosition } from '../../src/compile/scene-primitive';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../src/error';
 import { isLayoutProbeRecoverableError } from '../../src/resolve/diagnostics';
 import { cloneAndFreezeJson } from '../../src/shared/json';
-import { arrowMarks } from '../helpers/arrow-marks';
+import { pathArrows } from '../helpers/path-arrows';
 
 const fixedMeasurer: TextMeasurer = text => ({
   width: text.length * 10,
@@ -308,7 +308,7 @@ describe('layout-aware composite constraints and bounds', () => {
         type: 'boundsProbe',
         child: {
           type: 'path',
-          marks: arrowMarks('->'),
+          arrow: pathArrows('->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
@@ -2077,7 +2077,7 @@ describe('layout-aware composite constraints and bounds', () => {
             : value.variant === 'arrow'
               ? {
                   type: 'path',
-                  marks: arrowMarks('->', { shape: 'badEmitArrow' }),
+                  arrow: pathArrows('->', { shape: 'badEmitArrow' }),
                   children: [
                     { type: 'step', kind: 'move', to: [0, 0] },
                     { type: 'step', kind: 'line', to: [10, 0] },
@@ -2203,7 +2203,7 @@ describe('layout-aware composite constraints and bounds', () => {
           value.variant === 'cyclicMarkerArrow'
             ? {
                 type: 'path',
-                marks: arrowMarks('->', { shape: 'cyclicMarkerArrow' }),
+                arrow: pathArrows('->', { shape: 'cyclicMarkerArrow' }),
                 children: [
                   { type: 'step', kind: 'move', to: [0, 0] },
                   { type: 'step', kind: 'line', to: [10, 0] },
@@ -2332,7 +2332,7 @@ describe('layout-aware composite constraints and bounds', () => {
           value.variant === 'symbolKeyMarkerArrow'
             ? {
                 type: 'path',
-                marks: arrowMarks('->', { shape: 'symbolKeyMarkerArrow' }),
+                arrow: pathArrows('->', { shape: 'symbolKeyMarkerArrow' }),
                 children: [
                   { type: 'step', kind: 'move', to: [0, 0] },
                   { type: 'step', kind: 'line', to: [10, 0] },
@@ -2439,7 +2439,7 @@ describe('layout-aware composite constraints and bounds', () => {
             : value.variant === 'marker'
               ? {
                   type: 'path',
-                  marks: arrowMarks('->', { shape: 'proxyTrapArrow' }),
+                  arrow: pathArrows('->', { shape: 'proxyTrapArrow' }),
                   children: [
                     { type: 'step', kind: 'move', to: [0, 0] },
                     { type: 'step', kind: 'line', to: [10, 0] },
@@ -2568,7 +2568,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const result = compileToScene(
       sceneOf({
         type: 'path',
-        marks: arrowMarks('->', { shape: 'dynamicMarkerPrimitiveArrow' }),
+        arrow: pathArrows('->', { shape: 'dynamicMarkerPrimitiveArrow' }),
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
           { type: 'step', kind: 'line', to: [10, 0] },
@@ -2741,7 +2741,7 @@ describe('layout-aware composite constraints and bounds', () => {
         compileToScene(
           sceneOf({
             type: 'path',
-            marks: arrowMarks('->', { shape: arrow.name }),
+            arrow: pathArrows('->', { shape: arrow.name }),
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [10, 0] },

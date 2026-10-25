@@ -285,7 +285,7 @@ it.each([
     const path = (points: ReadonlyArray<readonly [number, number]>) => ({
       type: 'path' as const,
       style: { stroke: 'currentColor', strokeWidth: 1, fill: 'none' },
-      marks: [{ pos: 1, mark: { kind: 'arrow' as const } }],
+      arrow: { end: {} },
       children: points.map((point, index) => ({
         type: 'step' as const,
         kind: index === 0 ? ('move' as const) : ('line' as const),

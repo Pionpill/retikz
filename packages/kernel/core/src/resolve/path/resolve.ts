@@ -3,7 +3,7 @@ import { pointAtArcAngle } from '@retikz/math';
 import type { Transform } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type {
-  IRArrowMark,
+  IRArrowStyle,
   IRLine,
   IRMathSegment,
   IRPaintValue,
@@ -104,12 +104,12 @@ const assertPathLabelInterruptionPolicy = (path: ResolvedPathSource, irPath: str
 const assertPathEndpointOverlapHost = (path: ResolvedPathSource, irPath: string): void => {
   if (isBuiltinStrokePath(path)) return;
 
-  for (const [index, placement] of (path.marks ?? []).entries()) {
+  for (const [index, placement] of Object.entries(path.arrow ?? {})) {
     if (placement.endpointOverlap === undefined) continue;
 
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
-      `Path endpoint arrow overlap at ${irPath}.marks[${index}].endpointOverlap is only supported by a built-in Stroke path.`,
+      `Path endpoint arrow overlap at ${irPath}.arrow.${index}.endpointOverlap is only supported by a built-in Stroke path.`,
     );
   }
 };
@@ -319,7 +319,7 @@ const resolveStepLabelColors = (
 
 /** 确定 arrow color 后再以该颜色为 master 确定 fill */
 const resolveArrowColors = (
-  mark: IRArrowMark,
+  mark: IRArrowStyle,
   masterColor: string | undefined,
   context: PathResolveContext,
   fieldPath: string,
@@ -371,7 +371,7 @@ const resolvePathContextualColors = (
   irPath: string,
   labelMasterColor: string | undefined,
 ): ResolvedPathSource => {
-  const { style, children, label, marks, ...source } = path;
+  const { style, children, label, marks, arrow, ...source } = path;
   const { fill, stroke, ...visual } = style ?? {};
   const masterColor = path.style?.color;
   const resolvedHostLabel =
@@ -385,6 +385,28 @@ const resolvePathContextualColors = (
 
   return {
     ...source,
+    ...(arrow === undefined
+      ? {}
+      : {
+          arrow: {
+            ...(arrow.start === undefined
+              ? {}
+              : {
+                  start: {
+                    ...resolveArrowColors(arrow.start, masterColor, context, `${irPath}.arrow.start`),
+                    endpointOverlap: arrow.start.endpointOverlap,
+                  },
+                }),
+            ...(arrow.end === undefined
+              ? {}
+              : {
+                  end: {
+                    ...resolveArrowColors(arrow.end, masterColor, context, `${irPath}.arrow.end`),
+                    endpointOverlap: arrow.end.endpointOverlap,
+                  },
+                }),
+          },
+        }),
     style: {
       ...visual,
       ...(fill === undefined ? {} : { fill: resolvePathPaint(fill, masterColor, context, `${irPath}.style.fill`) }),
@@ -405,7 +427,13 @@ const resolvePathContextualColors = (
       : {
           marks: marks.map((item, index) => ({
             ...item,
-            mark: resolveArrowColors(item.mark, masterColor, context, `${irPath}.marks[${index}].mark`),
+            mark:
+              item.mark.kind === 'arrow'
+                ? {
+                    ...resolveArrowColors(item.mark, masterColor, context, `${irPath}.marks[${index}].mark`),
+                    kind: 'arrow' as const,
+                  }
+                : item.mark,
           })),
         }),
   };

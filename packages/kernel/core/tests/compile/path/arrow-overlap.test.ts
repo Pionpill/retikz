@@ -10,7 +10,7 @@ const steps = [
 ];
 
 const pathPrimitive = (
-  marks: NonNullable<IRPathBase['marks']>,
+  arrow: NonNullable<IRPathBase['arrow']>,
   input: Readonly<{
     children?: IRScene['children'];
     arrows?: NonNullable<Parameters<typeof compileToScene>[1]>['arrows'];
@@ -19,7 +19,7 @@ const pathPrimitive = (
   const ir: IRScene = {
     version: 1,
     type: 'scene',
-    children: input.children ?? [{ type: 'path', marks, children: steps }],
+    children: input.children ?? [{ type: 'path', arrow, children: steps }],
   };
   const primitive = flattenPrims(compileToScene(ir, { padding: 0, arrows: input.arrows }).scene.primitives).find(
     (item): item is PathPrimitive =>
@@ -51,13 +51,9 @@ describe('compile path: endpoint arrow overlap', () => {
     { overlap: 0.5, expectedEndX: 96.25 },
     { overlap: 1, expectedEndX: 100 },
   ])('在默认位置与视觉后缘完整进入位置间推进终点 normal 箭头 $overlap', ({ overlap, expectedEndX }) => {
-    const placement: NonNullable<IRPathBase['marks']>[number] = {
-      pos: 1,
-      ...(overlap === undefined ? {} : { endpointOverlap: overlap }),
-      mark: { kind: 'arrow', shape: 'normal' },
-    };
+    const placement = { ...(overlap === undefined ? {} : { endpointOverlap: overlap }), shape: 'normal' };
 
-    expect(terminalPoint(pathPrimitive([placement]).commands)).toEqual([expectedEndX, 0]);
+    expect(terminalPoint(pathPrimitive({ end: placement }).commands)).toEqual([expectedEndX, 0]);
   });
 
   it('让放大的空心 stealth 在自动 NodeTarget 上按最终轮廓完整进入', () => {
@@ -66,13 +62,7 @@ describe('compile path: endpoint arrow overlap', () => {
       { type: 'node', id: 'target', position: [100, 0] },
       {
         type: 'path',
-        marks: [
-          {
-            pos: 1,
-            endpointOverlap: 1,
-            mark: { kind: 'arrow', shape: 'openStealth', length: 10, width: 10, scale: 2, lineWidth: 4 },
-          },
-        ],
+        arrow: { end: { shape: 'openStealth', length: 10, width: 10, scale: 2, lineWidth: 4, endpointOverlap: 1 } },
         children: [
           { type: 'step', kind: 'move', to: { id: 'source' } },
           { type: 'step', kind: 'line', to: { id: 'target' } },
@@ -83,14 +73,14 @@ describe('compile path: endpoint arrow overlap', () => {
     const logicalPath = logicalChildren[2];
     if (logicalPath.type !== 'path') throw new Error('Expected Path input');
 
-    logicalPath.marks = undefined;
+    logicalPath.arrow = undefined;
     const logicalPrimitive = flattenPrims(
       compileToScene({ version: 1, type: 'scene', children: logicalChildren }, { padding: 0 }).scene.primitives,
     ).find((item): item is PathPrimitive => item.type === 'path');
     if (logicalPrimitive === undefined) throw new Error('Expected a logical PathPrimitive');
 
     const logicalEndX = terminalPoint(logicalPrimitive.commands)[0];
-    const primitive = pathPrimitive([], { children });
+    const primitive = pathPrimitive({}, { children });
     const markerEndX = terminalPoint(primitive.commands)[0];
 
     expect(logicalEndX).toBe(92);
@@ -105,13 +95,9 @@ describe('compile path: endpoint arrow overlap', () => {
     { overlap: 0.5, expectedStartX: 3.75 },
     { overlap: 1, expectedStartX: 0 },
   ])('以镜像公式把起点 normal 箭头推进 $overlap', ({ overlap, expectedStartX }) => {
-    const placement: NonNullable<IRPathBase['marks']>[number] = {
-      pos: 0,
-      ...(overlap === undefined ? {} : { endpointOverlap: overlap }),
-      mark: { kind: 'arrow', shape: 'normal' },
-    };
+    const placement = { ...(overlap === undefined ? {} : { endpointOverlap: overlap }), shape: 'normal' };
 
-    expect(startPoint(pathPrimitive([placement]).commands)).toEqual([expectedStartX, 0]);
+    expect(startPoint(pathPrimitive({ start: placement }).commands)).toEqual([expectedStartX, 0]);
   });
 
   it('让自动 NodeTarget 的空心外轮廓保护随剩余未重叠比例衰减', () => {
@@ -120,25 +106,25 @@ describe('compile path: endpoint arrow overlap', () => {
       { type: 'node', id: 'target', position: [100, 0] },
       {
         type: 'path',
-        marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'openCircle' } }],
+        arrow: { end: { shape: 'openCircle' } },
         children: [
           { type: 'step', kind: 'move', to: { id: 'source' } },
           { type: 'step', kind: 'line', to: { id: 'target' } },
         ],
       },
     ];
-    const defaultEnd = terminalPoint(pathPrimitive([], { children }).commands)[0];
+    const defaultEnd = terminalPoint(pathPrimitive({}, { children }).commands)[0];
     const halfChildren = structuredClone(children);
     const fullChildren = structuredClone(children);
     const halfPath = halfChildren[2];
     const fullPath = fullChildren[2];
     if (halfPath.type !== 'path' || fullPath.type !== 'path') throw new Error('Expected Path inputs');
 
-    halfPath.marks = [{ pos: 1, endpointOverlap: 0.5, mark: { kind: 'arrow', shape: 'openCircle' } }];
-    fullPath.marks = [{ pos: 1, endpointOverlap: 1, mark: { kind: 'arrow', shape: 'openCircle' } }];
+    halfPath.arrow = { end: { shape: 'openCircle', endpointOverlap: 0.5 } };
+    fullPath.arrow = { end: { shape: 'openCircle', endpointOverlap: 1 } };
 
-    expect(terminalPoint(pathPrimitive([], { children: halfChildren }).commands)[0] - defaultEnd).toBeCloseTo(4.05, 8);
-    expect(terminalPoint(pathPrimitive([], { children: fullChildren }).commands)[0] - defaultEnd).toBeCloseTo(8.1, 8);
+    expect(terminalPoint(pathPrimitive({}, { children: halfChildren }).commands)[0] - defaultEnd).toBeCloseTo(4.05, 8);
+    expect(terminalPoint(pathPrimitive({}, { children: fullChildren }).commands)[0] - defaultEnd).toBeCloseTo(8.1, 8);
   });
 
   it('使用自定义 ArrowDefinition 的真实 back/contact/tip 几何', () => {
@@ -152,16 +138,8 @@ describe('compile path: endpoint arrow overlap', () => {
     };
     const endX = (endpointOverlap: number) =>
       terminalPoint(
-        pathPrimitive(
-          [
-            {
-              pos: 1,
-              endpointOverlap,
-              mark: { kind: 'arrow', shape: 'overlap-probe', length: 10, width: 10 },
-            },
-          ],
-          { arrows: [arrow] },
-        ).commands,
+        pathPrimitive({ end: { shape: 'overlap-probe', length: 10, width: 10, endpointOverlap } }, { arrows: [arrow] })
+          .commands,
       )[0];
 
     expect(endX(0)).toBe(94.5);
@@ -170,7 +148,7 @@ describe('compile path: endpoint arrow overlap', () => {
   });
 
   it('让 stealth 的倒钩后缘在完整重叠时落到逻辑端点', () => {
-    const primitive = pathPrimitive([{ pos: 1, endpointOverlap: 1, mark: { kind: 'arrow', shape: 'stealth' } }]);
+    const primitive = pathPrimitive({ end: { shape: 'stealth', endpointOverlap: 1 } });
 
     expect(terminalPoint(primitive.commands)).toEqual([102.4, 0]);
     expect(primitive.arrowEnd).toMatchObject({ refX: 3, markerWidth: 8 });
@@ -191,13 +169,7 @@ describe('compile path: endpoint arrow overlap', () => {
       emit: () => [],
     };
     const primitive = pathPrimitive(
-      [
-        {
-          pos: 1,
-          endpointOverlap: 1,
-          mark: { kind: 'arrow', shape: arrow.name, length, width: 10, scale },
-        },
-      ],
+      { end: { shape: arrow.name, length, width: 10, scale, endpointOverlap: 1 } },
       { arrows: [arrow] },
     );
 
@@ -215,16 +187,10 @@ describe('compile path: endpoint arrow overlap', () => {
     const endX = (endpointOverlap: number | undefined) => {
       const path: IRScene['children'][number] = {
         type: 'path',
-        marks: [
-          {
-            pos: 1,
-            ...(endpointOverlap === undefined ? {} : { endpointOverlap }),
-            mark: { kind: 'arrow', shape: 'normal' },
-          },
-        ],
+        arrow: { end: { shape: 'normal', endpointOverlap } },
         children: curveSteps,
       };
-      return terminalPoint(pathPrimitive([], { children: [path] }).commands)[0];
+      return terminalPoint(pathPrimitive({}, { children: [path] }).commands)[0];
     };
 
     expect(endX(undefined)).toBe(endX(0));
@@ -243,10 +209,8 @@ describe('compile path: endpoint arrow overlap', () => {
             id: 'edge',
             meta: { owner: 'probe' },
             label: { text: 'middle', position: 0.5, side: 'top' },
-            marks: [
-              { pos: 0.5, mark: { kind: 'arrow', shape: 'circle' } },
-              { pos: 1, endpointOverlap, mark: { kind: 'arrow', shape: 'normal' } },
-            ],
+            arrow: { end: { shape: 'normal', endpointOverlap } },
+            marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'circle' } }],
             children: steps,
           },
         ],
@@ -257,10 +221,10 @@ describe('compile path: endpoint arrow overlap', () => {
     const baseline = compile(0);
     const overlapped = compile(1);
     const baselinePath = baseline.find(
-      (primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.id === 'edge',
+      (primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.arrowEnd !== undefined,
     );
     const overlappedPath = overlapped.find(
-      (primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.id === 'edge',
+      (primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.arrowEnd !== undefined,
     );
     const baselineLabel = baseline.find(primitive => primitive.type === 'text');
     const overlappedLabel = overlapped.find(primitive => primitive.type === 'text');
@@ -273,8 +237,12 @@ describe('compile path: endpoint arrow overlap', () => {
         primitive.type === 'group' && primitive.transforms?.some(transform => transform.kind === 'translate') === true,
     );
 
-    expect(overlappedPath?.id).toBe(baselinePath?.id);
-    expect(overlappedPath?.meta).toEqual(baselinePath?.meta);
+    expect(overlapped.find(primitive => primitive.id !== undefined)?.id).toBe(
+      baseline.find(primitive => primitive.id !== undefined)?.id,
+    );
+    expect(overlapped.find(primitive => primitive.meta !== undefined)?.meta).toEqual(
+      baseline.find(primitive => primitive.meta !== undefined)?.meta,
+    );
     expect(overlappedPath?.commands).not.toEqual(baselinePath?.commands);
     expect(overlappedLabel).toEqual(baselineLabel);
     expect(overlappedInlineGroup?.transforms).toEqual(baselineInlineGroup?.transforms);
@@ -287,10 +255,7 @@ describe('compile path: endpoint arrow overlap', () => {
       children: [
         {
           type: 'path',
-          marks: [
-            { pos: 0, endpointOverlap: 1, mark: { kind: 'arrow', shape: 'normal' } },
-            { pos: 1, endpointOverlap: 1, mark: { kind: 'arrow', shape: 'normal' } },
-          ],
+          arrow: { start: { shape: 'normal', endpointOverlap: 1 }, end: { shape: 'normal', endpointOverlap: 1 } },
           children: [steps[0], { type: 'step', kind: 'line', to: [0.1, 0] }],
         },
       ],
@@ -309,18 +274,7 @@ describe('compile path: endpoint arrow overlap', () => {
       emit: () => [],
     };
 
-    expect(() =>
-      pathPrimitive(
-        [
-          {
-            pos: 1,
-            endpointOverlap: 0,
-            mark: { kind: 'arrow', shape: arrow.name },
-          },
-        ],
-        { arrows: [arrow] },
-      ),
-    ).not.toThrow();
+    expect(() => pathPrimitive({ end: { shape: arrow.name, endpointOverlap: 0 } }, { arrows: [arrow] })).not.toThrow();
   });
 
   it('拒绝非零重叠产生的非有限完整进入位移', () => {
@@ -333,42 +287,8 @@ describe('compile path: endpoint arrow overlap', () => {
       emit: () => [],
     };
 
-    expect(() =>
-      pathPrimitive(
-        [
-          {
-            pos: 1,
-            endpointOverlap: 1,
-            mark: { kind: 'arrow', shape: arrow.name },
-          },
-        ],
-        { arrows: [arrow] },
-      ),
-    ).toThrow(/full-entry shrink.*non-finite/i);
-  });
-
-  it('拒绝 inline placement 上的 endpointOverlap，并定位字段', () => {
-    const ir: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'path',
-          marks: [{ pos: 0.4, endpointOverlap: 0.5, mark: { kind: 'arrow' } }],
-          children: steps,
-        },
-      ],
-    };
-
-    expect(() => compileToScene(ir)).toThrow(/children\[0\]\.path\.marks\[0\]\.endpointOverlap/);
-  });
-
-  it('拒绝同侧未被选中的重复 endpoint placement，并定位字段', () => {
-    expect(() =>
-      pathPrimitive([
-        { pos: 1, mark: { kind: 'arrow' } },
-        { pos: 1, endpointOverlap: 0.5, mark: { kind: 'arrow' } },
-      ]),
-    ).toThrow(/children\[0\]\.path\.marks\[1\]\.endpointOverlap/);
+    expect(() => pathPrimitive({ end: { shape: arrow.name, endpointOverlap: 1 } }, { arrows: [arrow] })).toThrow(
+      /full-entry shrink.*non-finite/i,
+    );
   });
 });

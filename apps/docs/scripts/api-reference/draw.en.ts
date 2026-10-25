@@ -1,5 +1,30 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头':
+    'Endpoint arrow configuration, or a direction shorthand enabling the start, end, or both arrows',
+  '支持方向简写 ->、<-、<->，或用 start 与 end 分别配置端点箭头':
+    'Supports ->, <-, and <-> direction shorthands, or start and end objects for individual endpoint configuration',
+  起末端箭头配置: 'Endpoint arrow configuration',
+  路径起点与终点的箭头配置: 'Arrow configuration at the path start and end',
+  'start 与 end 分别启用端点箭头并处理路径截断':
+    'start and end independently enable endpoint arrows and stroke shortening',
+  '起末端箭头配置；start / end 分别声明外观与 endpointOverlap，并根据接触几何截断主线':
+    'Endpoint arrows: start / end configure appearance and endpointOverlap, shortening the stroke according to contact geometry',
+  '沿整条路径弧长放置内容；每项包含 pos、rotate、scale 和 mark，不改变宿主路径几何':
+    'Content placed by whole-path arc length, with pos, rotate, scale, and mark; does not change host geometry',
+  '起末端箭头配置，包含外观和端点重叠': 'Endpoint arrow appearance and overlap',
+  沿路径按弧长比例放置图元标记: 'Place primitive marks by arc-length fraction along the path',
+  '复用箭头外观或注册标记定义，任何位置均不截断路径':
+    'Reuse arrow appearance or registered mark definitions without shortening the path at any position',
+  '箭头注册名称，供端点箭头与箭头形标记的 shape 引用':
+    'Registered arrow name referenced by shape on endpoint arrows and arrow-shaped marks',
+  声明沿路径标记定义: 'Declare a mark definition for placement along paths',
+  可注册的沿路径标记定义: 'A registrable definition for marks along paths',
+  标记注册名称: 'Registered mark name',
+  生成以原点为放置锚点的局部基础图元: 'Emit local primitives anchored at the origin',
+  标记定义生成局部图元所需的宿主上下文: 'Host context for emitting mark-local primitives',
+  宿主路径的有效描边: 'Effective host path stroke',
+  编译坐标精度取整: 'Round coordinates to compile precision',
   "十三种 kind：'move' / 'line'（默认） / 'axis-line'（单轴投影连接） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生":
     "Thirteen kinds: 'move', 'line' (default), 'axis-line' (single-axis projection), 'fold', 'cycle', 'curve' (quadratic Bézier), 'cubic', 'bend', 'arc', 'circlePath', 'ellipsePath', 'rectangle', and 'smooth'. All except 'move', 'cycle', and 'rectangle' accept `label?: IRStepLabel`, equivalent to an `<EdgeLabel>` child with the prop taking precedence. 'smooth' uses `points` instead of `to`. Named types for each kind support wrappers and derived props",
   '声明路径中的一个动作，例如移动、连线、曲线、圆弧或闭合':

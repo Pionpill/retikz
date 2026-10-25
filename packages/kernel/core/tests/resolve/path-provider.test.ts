@@ -90,12 +90,9 @@ describe('resolve/path provider bindings', () => {
 
   it('reports unknown arrow names from the resolver', () => {
     expect(() =>
-      resolveStrokePathWithBuiltinProviders(
-        path({ marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'missing-arrow' } }] }),
-        {
-          irPath: 'children[0].path',
-        },
-      ),
+      resolveStrokePathWithBuiltinProviders(path({ arrow: { end: { shape: 'missing-arrow' } } }), {
+        irPath: 'children[0].path',
+      }),
     ).toThrow(/Unknown provider 'missing-arrow'.*available:/s);
   });
 
@@ -111,7 +108,9 @@ describe('resolve/path provider bindings', () => {
     const resolution = resolveStrokePathWithBuiltinProviders(path({ marks: [{ pos: 1, mark }] }), {
       arrows: resolveArrowRegistry([arrow]),
     });
-    const arrowResolution = resolution.arrows.get(resolution.path.marks?.[0]?.mark ?? mark);
+    const resolvedMark = resolution.path.marks?.[0]?.mark;
+    if (resolvedMark?.kind !== 'arrow') throw new Error('Expected arrow mark');
+    const arrowResolution = resolution.arrows.get(resolvedMark);
 
     expect(arrowResolution?.definition).toBe(arrow);
     expect(arrowResolution?.visual.fill).toBeUndefined();
@@ -146,10 +145,9 @@ describe('resolve/path provider bindings', () => {
     };
 
     expect(() =>
-      resolveStrokePathWithBuiltinProviders(
-        path({ marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'invalidGeometry' } }] }),
-        { arrows: resolveArrowRegistry([arrow]) },
-      ),
+      resolveStrokePathWithBuiltinProviders(path({ arrow: { end: { shape: 'invalidGeometry' } } }), {
+        arrows: resolveArrowRegistry([arrow]),
+      }),
     ).toThrow(expected);
   });
 
@@ -165,10 +163,9 @@ describe('resolve/path provider bindings', () => {
     };
 
     expect(() =>
-      resolveStrokePathWithBuiltinProviders(
-        path({ marks: [{ pos: 1, endpointOverlap: 0, mark: { kind: 'arrow', shape: arrow.name } }] }),
-        { arrows: resolveArrowRegistry([arrow]) },
-      ),
+      resolveStrokePathWithBuiltinProviders(path({ arrow: { end: { shape: arrow.name, endpointOverlap: 0 } } }), {
+        arrows: resolveArrowRegistry([arrow]),
+      }),
     ).toThrow(/resolved visual back.*non-finite/i);
   });
 });

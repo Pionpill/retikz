@@ -43,7 +43,7 @@ const ir: IRScene = {
     { type: 'coordinate', id: 'end', position: [60, 0] },
     {
       type: 'path',
-      marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+      arrow: { end: {} },
       children: [
         { type: 'step', kind: 'move', to: { id: 'start' } },
         { type: 'step', kind: 'line', to: { id: 'end' } },
@@ -65,7 +65,7 @@ const input = scene({
   children: [
     coordinate({ id: 'start', position: [-60, 0] }),
     coordinate({ id: 'end', position: [60, 0] }),
-    path({ way: ['start', 'end'], arrow: '->' }),
+    path({ way: ['start', 'end'], arrow: { end: {} } }),
   ],
 });
 const view = mount(document.getElementById('diagram')!, input);
@@ -86,7 +86,7 @@ const ir: IRScene = {
     { type: 'coordinate', id: 'end', position: [60, 0] },
     {
       type: 'path',
-      marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+      arrow: { end: {} },
       children: [
         { type: 'step', kind: 'move', to: { id: 'start' } },
         { type: 'step', kind: 'line', to: { id: 'end' } },

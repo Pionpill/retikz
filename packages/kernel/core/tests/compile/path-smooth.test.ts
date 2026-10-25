@@ -5,6 +5,7 @@ import { BuiltinCompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import type { CubicPathCommand, PathPrimitive, ScenePrimitive, TextPrimitive } from '../../src/contract';
 import { PathSchema, SmoothStepSchema } from '../../src/schemas';
+import { flattenPrims } from '../helpers/flatten';
 import { move } from '../helpers/path-command-factory';
 
 const silent = { onWarn: () => {} };
@@ -323,8 +324,8 @@ describe('smooth step：交互', () => {
         ],
       } as never,
     ]);
-    const baseCount = compileToScene(without, silent).scene.primitives.length;
-    const markCount = compileToScene(withMark, silent).scene.primitives.length;
+    const baseCount = flattenPrims(compileToScene(without, silent).scene.primitives).length;
+    const markCount = flattenPrims(compileToScene(withMark, silent).scene.primitives).length;
 
     expect(markCount).toBeGreaterThan(baseCount);
   });

@@ -84,7 +84,7 @@ describe('Core minimal builtin providers', () => {
         scene([
           {
             type: 'path',
-            marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'openStealth' } }],
+            arrow: { end: { shape: 'openStealth' } },
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },
@@ -102,7 +102,7 @@ describe('Core minimal builtin providers', () => {
         scene([
           {
             type: 'path',
-            marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'open' } }],
+            arrow: { end: { shape: 'open' } },
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },
@@ -120,10 +120,7 @@ describe('Core minimal builtin providers', () => {
         scene([
           {
             type: 'path',
-            marks: [
-              { pos: 0, mark: { kind: 'arrow', shape: 'circle' } },
-              { pos: 1, mark: { kind: 'arrow', shape: 'openCircle' } },
-            ],
+            arrow: { start: { shape: 'circle' }, end: { shape: 'openCircle' } },
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },

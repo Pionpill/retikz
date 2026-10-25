@@ -13,26 +13,22 @@ it('arrow paint resources render as scoped SVG references and Canvas gradients',
     children: [
       {
         type: 'path',
-        marks: [
-          {
-            pos: 1,
-            mark: {
-              kind: 'arrow',
-              shape: 'stealth',
-              fill: {
-                kind: 'linearGradient',
-                stops: [
-                  { offset: 0, color: 'red' },
-                  { offset: 1, color: 'blue' },
-                ],
-              },
-              stroke: 'black',
-              lineCap: 'round',
-              lineJoin: 'bevel',
-              dashPattern: [2, 1],
+        arrow: {
+          end: {
+            shape: 'stealth',
+            fill: {
+              kind: 'linearGradient',
+              stops: [
+                { offset: 0, color: 'red' },
+                { offset: 1, color: 'blue' },
+              ],
             },
+            stroke: 'black',
+            lineCap: 'round',
+            lineJoin: 'bevel',
+            dashPattern: [2, 1],
           },
-        ],
+        },
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
           { type: 'step', kind: 'line', to: [100, 0] },

@@ -1,7 +1,7 @@
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { AnyCompositeDefinition } from '../composite';
 import type { BoundaryDefinition, ShapeDefinition } from '../node';
-import type { AnyPathDefinition, ArrowDefinition } from '../path';
+import type { AnyPathDefinition, ArrowDefinition, MarkDefinition } from '../path';
 import type { ClipDefinition } from '../scope';
 import type { PatternDefinition } from '../style';
 import type {
@@ -33,6 +33,7 @@ type MutableCoreProviderDefinitions = {
   boundaries: Array<BoundaryDefinition>;
   clips: Array<ClipDefinition>;
   arrows: Array<ArrowDefinition>;
+  marks: Array<MarkDefinition>;
   patterns: Array<PatternDefinition>;
   paths: Array<AnyPathDefinition>;
   composites: Array<AnyCompositeDefinition>;
@@ -175,6 +176,7 @@ const buildProviderIndex = (
           ...(explicit.boundaries === undefined ? {} : { boundaries: [...explicit.boundaries] }),
           ...(explicit.clips === undefined ? {} : { clips: [...explicit.clips] }),
           ...(explicit.arrows === undefined ? {} : { arrows: [...explicit.arrows] }),
+          ...(explicit.marks === undefined ? {} : { marks: [...explicit.marks] }),
           ...(explicit.patterns === undefined ? {} : { patterns: [...explicit.patterns] }),
           ...(explicit.paths === undefined ? {} : { paths: [...explicit.paths] }),
           ...(explicit.composites === undefined ? {} : { composites: [...explicit.composites] }),
@@ -239,12 +241,16 @@ type DefinitionIdentity =
   | Readonly<{ capability: typeof CoreProviderCapability.Composite; namespace: string; type: string }>;
 
 /** 在接受创建函数输出前推断被擦除定义所属的能力 */
-const resolveDefinitionCapability = (definition: AnyCoreProviderDefinition): CoreProviderCapability => {
+const resolveDefinitionCapability = (
+  definition: AnyCoreProviderDefinition,
+  expected: CoreProviderCapability,
+): CoreProviderCapability => {
   if ('namespace' in definition && 'type' in definition) return CoreProviderCapability.Composite;
   if ('computeCircumscribedHalfAxes' in definition && 'computeBoundaryPoint' in definition)
     return CoreProviderCapability.Shape;
   if ('lineContactX' in definition && 'emit' in definition) return CoreProviderCapability.Arrow;
-  if ('name' in definition && 'emit' in definition) return CoreProviderCapability.Pattern;
+  if ('name' in definition && 'emit' in definition)
+    return expected === CoreProviderCapability.Mark ? CoreProviderCapability.Mark : CoreProviderCapability.Pattern;
   if ('kind' in definition && 'schema' in definition && 'lower' in definition) return CoreProviderCapability.Clip;
 
   if ('paramsSchema' in definition && 'computeBoundaryPoint' in definition) return CoreProviderCapability.Boundary;
@@ -261,10 +267,10 @@ const resolveDefinitionIdentity = (
   capability: CoreProviderCapability,
   definition: AnyCoreProviderDefinition,
 ): DefinitionIdentity => {
-  if (resolveDefinitionCapability(definition) !== capability) {
+  if (resolveDefinitionCapability(definition, capability) !== capability) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Contract,
-      `resolveCoreProviderDependencies: expected ${capability} definition but received ${resolveDefinitionCapability(definition)}`,
+      `resolveCoreProviderDependencies: expected ${capability} definition but received ${resolveDefinitionCapability(definition, capability)}`,
     );
   }
 
@@ -275,6 +281,8 @@ const resolveDefinitionIdentity = (
       return { capability, name: (definition as BoundaryDefinition).name };
     case CoreProviderCapability.Clip:
       return { capability, name: (definition as ClipDefinition).kind };
+    case CoreProviderCapability.Mark:
+      return { capability, name: (definition as MarkDefinition).name };
     case CoreProviderCapability.Arrow:
       return { capability, name: (definition as ArrowDefinition).name };
     case CoreProviderCapability.Pattern:
@@ -313,6 +321,9 @@ const appendByCapability = (
       return;
     case CoreProviderCapability.Clip:
       definitions.clips.push(definition as ClipDefinition);
+      return;
+    case CoreProviderCapability.Mark:
+      definitions.marks.push(definition as MarkDefinition);
       return;
     case CoreProviderCapability.Arrow:
       definitions.arrows.push(definition as ArrowDefinition);
@@ -387,6 +398,7 @@ const appendExplicitDefinitions = (
     [CoreProviderCapability.Boundary, explicit.boundaries],
     [CoreProviderCapability.Clip, explicit.clips],
     [CoreProviderCapability.Arrow, explicit.arrows],
+    [CoreProviderCapability.Mark, explicit.marks],
     [CoreProviderCapability.Pattern, explicit.patterns],
     [CoreProviderCapability.Path, explicit.paths],
     [CoreProviderCapability.Composite, explicit.composites],
@@ -404,6 +416,7 @@ const freezeResolvedDefinitions = (definitions: MutableCoreProviderDefinitions):
     ...(definitions.boundaries.length > 0 ? { boundaries: Object.freeze(definitions.boundaries) } : {}),
     ...(definitions.clips.length > 0 ? { clips: Object.freeze(definitions.clips) } : {}),
     ...(definitions.arrows.length > 0 ? { arrows: Object.freeze(definitions.arrows) } : {}),
+    ...(definitions.marks.length > 0 ? { marks: Object.freeze(definitions.marks) } : {}),
     ...(definitions.patterns.length > 0 ? { patterns: Object.freeze(definitions.patterns) } : {}),
     ...(definitions.paths.length > 0 ? { paths: Object.freeze(definitions.paths) } : {}),
     ...(definitions.composites.length > 0 ? { composites: Object.freeze(definitions.composites) } : {}),
@@ -425,6 +438,7 @@ export const resolveCoreProviderDependencies = (
     boundaries: [],
     clips: [],
     arrows: [],
+    marks: [],
     patterns: [],
     paths: [],
     composites: [],

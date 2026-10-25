@@ -220,3 +220,56 @@ it('clicking one host restarts only its Pattern animation', () => {
   expect(animations.map(animation => animation.play.mock.calls.length)).toEqual([1, 0]);
   controls.dispose();
 });
+
+it('普通标记的动画沿宿主事件上下文绑定且实例隔离', async () => {
+  const { compileToScene, defineMark } = await import('@retikz/core');
+  const mark = defineMark({
+    name: 'animated',
+    emit: () => [
+      {
+        type: 'rect',
+        id: 'local',
+        x: -3,
+        y: -3,
+        width: 6,
+        height: 6,
+        fill: 'red',
+        animations: [
+          {
+            property: 'opacity',
+            duration: 100,
+            trigger: { onEvent: 'click' },
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 1 },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+  const scene = compileToScene(
+    {
+      type: 'scene',
+      version: 1,
+      children: ['A', 'B'].map((id, index) => ({
+        type: 'path',
+        id,
+        children: [
+          { type: 'step', kind: 'move', to: [0, index * 30] },
+          { type: 'step', kind: 'line', to: [100, index * 30] },
+        ],
+        marks: [{ pos: 0.5, mark: { kind: 'custom', name: 'animated' } }],
+      })),
+    },
+    { marks: [mark] },
+  ).scene;
+  const svg = renderToSvgString(scene, { idPrefix: 'marks' });
+  expect(svg).toContain('data-retikz-animation-owner="A"');
+  expect(svg).toContain('data-retikz-animation-owner="B"');
+  expect(svg).not.toContain('data-retikz-id="local"');
+  const container = document.createElement('div');
+  container.innerHTML = svg;
+  expect(container.querySelectorAll('[data-retikz-animation-owner="A"]')).toHaveLength(1);
+  expect(container.querySelectorAll('[data-retikz-animation-owner="B"]')).toHaveLength(1);
+});

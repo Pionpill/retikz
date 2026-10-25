@@ -1,6 +1,7 @@
-import type { AnyPathDefinition, ArrowDefinition, PatternDefinition, Transform } from '../../contract';
+import type { AnyPathDefinition, ArrowDefinition, MarkDefinition, PatternDefinition, Transform } from '../../contract';
 import type {
   IRArrowMark,
+  IRArrowStyle,
   IRPaint,
   IRPathBase,
   IRPathLabel,
@@ -68,7 +69,7 @@ type WithResolvedStepLabel<TStep extends IRStep> = TStep extends unknown
 export type ResolvedStepSource = WithResolvedStepLabel<IRStep>;
 
 /** 已把 arrow 派生颜色确定为字符串的 mark */
-export type ResolvedArrowMark = Omit<IRArrowMark, 'color' | 'fill' | 'stroke'> & {
+export type ResolvedArrowMark = Omit<IRArrowStyle, 'color' | 'fill' | 'stroke'> & {
   /** 已确定的箭头主色 */
   color?: string;
   /** 已确定的箭头填充 */
@@ -78,7 +79,7 @@ export type ResolvedArrowMark = Omit<IRArrowMark, 'color' | 'fill' | 'stroke'> &
 };
 
 /** 已把所有上下文颜色确定为字符串的 Path Source 投影 */
-export type ResolvedPathSource = Omit<IRPathBase, 'style' | 'children' | 'label' | 'marks'> & {
+export type ResolvedPathSource = Omit<IRPathBase, 'style' | 'children' | 'label' | 'marks' | 'arrow'> & {
   /** 已确定上下文颜色的路径样式 */
   style?: Omit<IRPathStyle, 'fill' | 'stroke'> & {
     /** 已确定的路径填充 */
@@ -90,11 +91,18 @@ export type ResolvedPathSource = Omit<IRPathBase, 'style' | 'children' | 'label'
   children?: Array<ResolvedStepSource>;
   /** 已确定的宿主标签 */
   label?: ResolvedPathLabel | Array<ResolvedPathLabel>;
+  /** 已解析的端点箭头 */
+  arrow?: {
+    start?: ResolvedArrowMark & { endpointOverlap?: number };
+    end?: ResolvedArrowMark & { endpointOverlap?: number };
+  };
   /** 已确定 arrow 颜色的 marks */
   marks?: Array<
     Omit<NonNullable<IRPathBase['marks']>[number], 'mark'> & {
       /** 已解析上下文颜色的箭头标记 */
-      mark: ResolvedArrowMark;
+      mark:
+        | (ResolvedArrowMark & { kind: 'arrow' })
+        | Extract<NonNullable<IRPathBase['marks']>[number]['mark'], { kind: 'custom' }>;
     }
   >;
 };
@@ -206,7 +214,7 @@ export type ArrowMarkGeometry = Readonly<{
 /** arrow mark 在 resolving 阶段绑定的 provider、视觉属性与几何输入 */
 export type ArrowMarkResolution = Readonly<{
   /** 当前箭头标记的输入声明 */
-  mark: IRArrowMark;
+  mark: IRArrowStyle;
   /** 当前箭头匹配的形状定义 */
   definition: ArrowDefinition;
   /** 完成默认值与颜色解析的视觉属性 */
@@ -255,6 +263,8 @@ export type PathResolveContext = Readonly<{
   paths: ReadonlyMap<string, AnyPathDefinition>;
   /** 箭头能力注册表 */
   arrows: ReadonlyMap<string, ArrowDefinition>;
+  /** 普通标记注册表 */
+  marks?: ReadonlyMap<string, MarkDefinition>;
   /** 图案填充能力注册表 */
   patterns: ReadonlyMap<string, PatternDefinition>;
   /** 填充资源尺寸的数值舍入函数 */
@@ -293,5 +303,7 @@ export type PathResolution = Readonly<{
 export type StrokePathResolution = PathResolution &
   Readonly<{
     /** 按 canonical arrow mark 对象索引的 arrow resolution */
-    arrows: ReadonlyMap<IRArrowMark, ArrowMarkResolution>;
+    arrows: ReadonlyMap<IRArrowStyle, ArrowMarkResolution>;
+    /** 已绑定的普通标记定义 */
+    marks: ReadonlyMap<string, MarkDefinition>;
   }>;

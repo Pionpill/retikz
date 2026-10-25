@@ -31,7 +31,7 @@ describe('Draw: 基础展开', () => {
   it('与等价 Kernel Path 产出一致——Sugar 不引入新能力', () => {
     const sugarIR = ir(<Draw way={['a', 'b']} arrow="->" style={{ stroke: '#f00', strokeWidth: 2 }} />);
     const kernelIR = ir(
-      <Path marks={[{ pos: 1, mark: { kind: 'arrow' } }]} style={{ stroke: '#f00', strokeWidth: 2 }}>
+      <Path arrow="->" style={{ stroke: '#f00', strokeWidth: 2 }}>
         <Step kind="move" to="a" />
         <Step kind="line" to="b" />
       </Path>,
@@ -43,12 +43,11 @@ describe('Draw: 基础展开', () => {
   it('把 arrowPlacement 透传到与手写 endpoint mark 等价的 Path IR', () => {
     const props = {
       way: ['a', 'b'],
-      arrow: '->' as const,
-      arrowPlacement: { end: { overlap: 0.5 } },
+      arrow: { end: { endpointOverlap: 0.5 } },
     };
     const sugarIR = ir(<Draw {...props} />);
     const kernelIR = ir(
-      <Path marks={[{ pos: 1, endpointOverlap: 0.5, mark: { kind: 'arrow' } }]}>
+      <Path arrow={{ end: { endpointOverlap: 0.5 } }}>
         <Step kind="move" to="a" />
         <Step kind="line" to="b" />
       </Path>,
@@ -62,8 +61,8 @@ describe('Draw: 基础展开', () => {
       <Draw
         way={['a', 'b']}
         cornerRadius={6}
-        arrow="<->"
-        arrowDetail={{ shape: 'stealth' }}
+        arrow={{ start: { shape: 'stealth' }, end: { shape: 'stealth' } }}
+
         zIndex={5}
         style={{
           stroke: '#abc',
@@ -84,10 +83,7 @@ describe('Draw: 基础展开', () => {
     expect(out.children[0]).toMatchObject({
       type: 'path',
       cornerRadius: 6,
-      marks: [
-        { pos: 0, mark: { kind: 'arrow', shape: 'stealth' } },
-        { pos: 1, mark: { kind: 'arrow', shape: 'stealth' } },
-      ],
+      arrow: { start: { shape: 'stealth' }, end: { shape: 'stealth' } },
       zIndex: 5,
       style: {
         stroke: '#abc',

@@ -67,7 +67,7 @@ export const RelationScatterPreview = (values: RelationScatterPreviewValues) => 
               textColor: 'currentColor',
             },
             routing,
-            options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
+            options: { arrow: { end: {} } },
           },
         }}
       />

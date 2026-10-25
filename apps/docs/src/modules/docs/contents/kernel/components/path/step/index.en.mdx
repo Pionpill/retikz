@@ -235,7 +235,7 @@ Either `outAngle` or `inAngle` selects tangent mode; the omitted partner default
 
 ### Arrows
 
-`arrow` picks direction (`'->'` / `'<-'` / `'<->'` / `'none'`), `arrowDetail` owns visual shape / size / color fields, and `arrowPlacement` uses a normalized `[0,1]` ratio to move an arrow from its existing default to final-visual-back alignment at the logical endpoint, with shared and `start` / `end` overrides. All three are equivalent on `<Path>` and `<Draw>`. See **[Arrow](/kernel/components/path/arrow)** for the `0 / 0.5 / 1` comparison, failure boundaries, and complete API.
+`arrow.start` / `arrow.end` configure each endpoint's appearance and `endpointOverlap`. `marks` places content at arbitrary arc-length positions without shortening the main stroke. Both work equally on `<Path>` and `<Draw>`; see [Arrows and marks](/kernel/components/path/arrow).
 
 ### Endpoint connection surface
 
@@ -333,7 +333,7 @@ Besides a plain color string, `stroke` accepts an `IRPaint`. Linear / radial / c
   defaultSourceFile="path-stroke-paint.preview.tsx"
 />
 
-If a gradient-stroked path also has arrows, give `arrowDetail.color` or the endpoint `color` an explicit solid color; marker geometry cannot inherit a resource-backed stroke.
+Arrows and marks can consume the host's resource-backed stroke or specify their own fill and stroke.
 
 ### Stacking order
 

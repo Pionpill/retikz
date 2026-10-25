@@ -45,7 +45,7 @@ const ir: IRScene = {
     { type: 'node', id: 'b', position: [120, 60], text: 'B' },
     {
       type: 'path',
-      marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+      arrow: { end: {} },
       children: [
         { type: 'step', kind: 'move', to: { id: 'a' } },
         { type: 'step', kind: 'fold', via: '-|', to: { id: 'b' } },
@@ -67,7 +67,7 @@ const input = scene({
   children: [
     node({ id: 'a', position: [0, 0], text: 'A' }),
     node({ id: 'b', position: [120, 60], text: 'B' }),
-    path({ way: ['a', '-|', 'b'], arrow: '->' }),
+    path({ way: ['a', '-|', 'b'], arrow: { end: {} } }),
   ],
 });
 const view = mount(document.getElementById('diagram')!, input);
@@ -88,7 +88,7 @@ const ir: IRScene = {
     { type: 'node', id: 'b', position: [120, 60], text: 'B' },
     {
       type: 'path',
-      marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+      arrow: { end: {} },
       children: [
         { type: 'step', kind: 'move', to: { id: 'a' } },
         { type: 'step', kind: 'fold', via: '-|', to: { id: 'b' } },

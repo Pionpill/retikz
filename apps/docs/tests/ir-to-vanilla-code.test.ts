@@ -158,7 +158,7 @@ describe('irToVanillaCode', () => {
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [50, 50] },
           ],
-          arrow: '->',
+          arrow: { end: {} },
         },
       ]),
     );

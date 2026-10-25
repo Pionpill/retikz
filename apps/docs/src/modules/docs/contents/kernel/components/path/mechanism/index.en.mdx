@@ -9,7 +9,7 @@ Read [Basic usage](/kernel/components/path/usage) first. This page explains loca
 
 `<Draw way={['a', '-|', 'b']}>` describes the same route as a move to a followed by a fold to b. React Draw forwards input to Path; Vanilla's `normalizePath` calls `parseWay` to produce a uniform ordered sequence of steps.
 
-- Author input: convenient `way` values, string targets, and arrow shorthand
+- Author input: convenient `way` values and string targets
 - Source IR: JSON-serializable Path, Step, and marks, still containing node references
 - Path commands: concrete move, line, curve, and arc geometry after references have been resolved
 
@@ -17,7 +17,7 @@ The diagram separates normalization from coordinate calculation. Creating steps 
 
 <ComponentPreview files="draw-compilation" size="sm" hideCode type="flow" />
 
-At this entry, `arrow="->"` becomes an arrow mark at `pos: 1`. Per-end `arrowDetail` overrides and `arrowPlacement` overlap are included in that mark. When authoring IR directly, use `marks` rather than copying React's arrow shorthand fields.
+`arrow.start` / `arrow.end` and `marks` retain the same structure in React, Vanilla, and IR. Endpoint arrows shorten the stroke according to contact geometry. Marks place content along the entire path's arc length, even at either endpoint, without becoming endpoint arrows.
 
 <SourceLinks
   sources={[
@@ -25,12 +25,12 @@ At this entry, `arrow="->"` becomes an arrow mark at `pos: 1`. Per-end `arrowDet
     {
       label: 'Normalize way, steps, and arrows',
       path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts',
-      startLine: 186,
+      startLine: 88,
     },
     {
-      label: 'Convert arrow shorthand to marks',
+      label: 'Normalize path input',
       path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts',
-      startLine: 43,
+      startLine: 88,
     },
   ]}
 />

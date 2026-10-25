@@ -2,6 +2,7 @@ import type {
   AnyCompositeDefinition,
   AnyPathDefinition,
   ArrowDefinition,
+  MarkDefinition,
   BoundaryDefinition,
   ClipDefinition,
   CompileArtifact,
@@ -198,6 +199,8 @@ export type LayoutExtensions = Readonly<{
    * @default BUILTIN_ARROWS
    */
   arrows?: ReadonlyArray<ArrowDefinition>;
+  /** 沿路径放置的标记定义 */
+  marks?: ReadonlyArray<MarkDefinition>;
   /**
    * 图案定义
    * @default BUILTIN_PATTERNS
@@ -432,7 +435,7 @@ export const Layout: FC<LayoutProps> = props => {
     rootScope,
   } = props;
 
-  const { shapes, boundaries, clips, arrows, patterns, paths, composites, themeDefinitions } = extensions ?? {};
+  const { shapes, boundaries, clips, arrows, marks, patterns, paths, composites, themeDefinitions } = extensions ?? {};
   const resolvedRuntime = captureLayoutRuntimeOptions(runtime);
   const isClientRendering = useSyncExternalStore(
     subscribeClientRendering,
@@ -445,6 +448,7 @@ export const Layout: FC<LayoutProps> = props => {
   const stableBoundaries = canonicalizeDefinitionArray(boundaries);
   const stableClips = canonicalizeDefinitionArray(clips);
   const stableArrows = canonicalizeDefinitionArray(arrows);
+  const stableMarks = canonicalizeDefinitionArray(marks);
   const stablePatterns = canonicalizeDefinitionArray(patterns);
   const stablePaths = canonicalizeDefinitionArray(paths);
   const stableComposites = canonicalizeDefinitionArray(composites);
@@ -526,6 +530,7 @@ export const Layout: FC<LayoutProps> = props => {
         boundaries: stableBoundaries,
         clips: stableClips,
         arrows: stableArrows,
+        marks: stableMarks,
         patterns: stablePatterns,
         paths: stablePaths,
         composites: stableComposites,
@@ -548,6 +553,7 @@ export const Layout: FC<LayoutProps> = props => {
       stableBoundaries,
       stableClips,
       stableArrows,
+      stableMarks,
       stablePatterns,
       stablePaths,
       stableComposites,

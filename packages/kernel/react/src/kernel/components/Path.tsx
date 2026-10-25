@@ -32,22 +32,10 @@ export type PathProps = HydrationEventProps & {
    */
   cornerRadius?: IRPath['cornerRadius'];
   /**
-   * 路径级箭头方向
-   * @description `'->'` 终点 / `'<-'` 起点 / `'<->'` 两端；省略或 `'none'` 无箭头
-   * @default 'none'
+   * 路径起点与终点的箭头配置
+   * @description 支持方向简写 ->、<-、<->，或用 start 与 end 分别配置端点箭头
    */
   arrow?: InputPath['arrow'];
-  /**
-   * 箭头详细配置
-   * @description 顶层默认 + 可选 `start` / `end` 子对象逐字段 merge override。空心 shape
-   *   （open / openStealth / openDiamond / openCircle）上 `fill` silent no-op
-   */
-  arrowDetail?: InputPath['arrowDetail'];
-  /**
-   * 箭头端点放置配置
-   * @description `overlap` 为实际端点共享值，`start` / `end` 可逐端覆盖；比例从默认位置插值到最终视觉后缘与逻辑端点对齐的位置
-   */
-  arrowPlacement?: InputPath['arrowPlacement'];
   /**
    * 显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层子节点间生效
    * @default 0
@@ -63,8 +51,8 @@ export type PathProps = HydrationEventProps & {
    */
   scale?: IRPath['scale'];
   /**
-   * 沿路径在归一化位置放标记（首批仅箭头）
-   * @description 每个 `{ pos, mark }`：`pos∈[0,1]`，`mark.kind:'arrow'` + 视觉子集（shape 为已注册箭头名，方向随路径切线）
+   * 沿路径按弧长比例放置图元标记
+   * @description 复用箭头外观或注册标记定义，任何位置均不截断路径
    */
   marks?: IRPath['marks'];
   /** TikZ 风格路径走向简写，由 Vanilla 统一解析为步骤 */

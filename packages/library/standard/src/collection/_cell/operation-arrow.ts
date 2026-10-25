@@ -14,7 +14,7 @@ export const createOperationArrow = (
     style: OperationArrowSchema.unwrap()
       .options[1].shape.style.unwrap()
       .parse(options.style ?? {}),
-    marks: [{ pos: 1, mark: { kind: 'arrow', ...options.arrowDetail } }],
+    arrow: { end: { ...options.arrowDetail } },
     children: points.map((point, index) => ({ type: 'step', kind: index === 0 ? 'move' : 'line', to: point })),
   };
 };

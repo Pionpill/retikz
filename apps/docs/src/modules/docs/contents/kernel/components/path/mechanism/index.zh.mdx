@@ -9,7 +9,7 @@ description: 解释路径写法、游标、端点引用、箭头接合与标签�
 
 `<Draw way={['a', '-|', 'b']}>` 与先移动到 a、再折角连接 b 的两个 Step 表达同一条路线。React 的 Draw 只把输入交给 Path；Vanilla 的 `normalizePath` 再调用 `parseWay`，统一生成有序步骤。
 
-- 作者输入：为了便于编写而提供的 `way`、字符串目标与箭头简写
+- 作者输入：为了便于编写而提供的 `way` 与字符串目标
 - Source IR：可保存为 JSON 的 Path、Step 与 marks；仍保留节点引用
 - 路径命令：引用求值后得到的具体移动、直线、曲线与圆弧几何
 
@@ -17,7 +17,7 @@ description: 解释路径写法、游标、端点引用、箭头接合与标签�
 
 <ComponentPreview files="draw-compilation" size="sm" hideCode type="flow" />
 
-`arrow="->"` 在这一入口转换成 `pos: 1` 的箭头 mark；`arrowDetail` 的端点覆盖与 `arrowPlacement` 的重叠值一并进入该 mark。因此直接编写 IR 时应使用 `marks`，不复制 React 的箭头简写字段。
+`arrow.start` / `arrow.end` 与 `marks` 在 React、Vanilla 和 IR 中保持相同结构。端点箭头按接触几何截断主线；标记按整条路径弧长定位，只放置内容。标记即使位于首尾，也不转成端点箭头。
 
 <SourceLinks
   sources={[
@@ -25,9 +25,9 @@ description: 解释路径写法、游标、端点引用、箭头接合与标签�
     {
       label: 'way、步骤与箭头的统一入口',
       path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts',
-      startLine: 186,
+      startLine: 88,
     },
-    { label: '箭头简写转换为 marks', path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts', startLine: 43 },
+    { label: '路径输入归一化', path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts', startLine: 88 },
   ]}
 />
 

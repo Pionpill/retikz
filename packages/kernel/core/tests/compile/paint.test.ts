@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { PathPrimitive, RectPrimitive, ScenePrimitive } from '../../src/contract';
 import type { IRPaint, IRScene } from '../../src/schemas';
-import { arrowMarks } from '../helpers/arrow-marks';
 import { flattenPrims } from '../helpers/flatten';
+import { pathArrows } from '../helpers/path-arrows';
 
 const grad: IRPaint = {
   kind: 'linearGradient',
@@ -365,7 +365,7 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
       children: [
         {
           type: 'path',
-          marks: arrowMarks('->'),
+          arrow: pathArrows('->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -390,7 +390,7 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
       children: [
         {
           type: 'path',
-          marks: arrowMarks('->', { color: '#111' }),
+          arrow: pathArrows('->', { color: '#111' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },

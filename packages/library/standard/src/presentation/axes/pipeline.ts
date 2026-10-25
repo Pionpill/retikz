@@ -184,30 +184,19 @@ const createLinePath = (from: IRPosition, to: IRPosition, style: IRStandardPathS
 };
 
 const createAxisPath = (from: IRPosition, to: IRPosition, line: Exclude<AxesAxis['line'], false>): IRPath => {
-  const createArrowMark = (endpoint: 'start' | 'end'): NonNullable<IRPath['marks']>[number]['mark'] => {
-    const { start, end, ...shared } = line.arrowDetail ?? {};
-    return { kind: 'arrow', ...shared, ...(endpoint === 'start' ? start : end) };
-  };
-
-  const marks =
+  const { start, end, ...shared } = line.arrowDetail ?? {};
+  const arrow: IRPath['arrow'] =
     line.arrows === AxesArrowMode.None
       ? undefined
-      : line.arrows === AxesArrowMode.Both
-        ? [
-            { pos: 0, mark: createArrowMark('start') },
-            { pos: 1, mark: createArrowMark('end') },
-          ]
-        : [
-            {
-              pos: line.arrows === AxesArrowMode.Negative ? 0 : 1,
-              mark: createArrowMark(line.arrows === AxesArrowMode.Negative ? 'start' : 'end'),
-            },
-          ];
-
-  return {
-    ...createLinePath(from, to, line.style),
-    ...(marks === undefined ? {} : { marks }),
-  };
+      : {
+          ...(line.arrows === AxesArrowMode.Both || line.arrows === AxesArrowMode.Negative
+            ? { start: { ...shared, ...start } }
+            : {}),
+          ...(line.arrows === AxesArrowMode.Both || line.arrows === AxesArrowMode.Positive
+            ? { end: { ...shared, ...end } }
+            : {}),
+        };
+  return { ...createLinePath(from, to, line.style), ...(arrow === undefined ? {} : { arrow }) };
 };
 
 const createTextNode = (position: IRPosition, text: IRTextBlock, style: AxesTextStyle | undefined): IRNode => ({

@@ -1,18 +1,21 @@
+﻿---
+title: arrow · 箭头与标记
+description: 设置端点箭头，并在路径任意弧长位置放置标记
 ---
-title: arrow · 箭头
-description: 设置起末箭头的方向、造型、尺寸、颜色与端点重叠
----
 
-给路径端点添加箭头，分别控制方向、外观和端点重叠；首次绘图请先阅读[基础用法](/kernel/components/path/usage)。
+端点箭头使用 `arrow.start` / `arrow.end`；沿路径标记使用 `marks`。两者可以同时存在。首次绘图请先阅读[基础用法](/kernel/components/path/usage)。
 
-## 接入方式
+## 端点箭头
 
-下面四种写法都绘制同一条带双向箭头的路径；Vanilla 示例需要页面已有 `<div id="diagram"></div>`。
+React、Vanilla 和 JSON IR 使用同一对象结构。只声明需要的端点，空对象使用默认 `stealth` 箭头；省略端点就不会创建箭头。
 
-<ComponentPreview files="arrow-basic" size="xs" hideCode />
+React 和 Vanilla 还支持方向简写：`arrow="->"` 等价于 `{ end: {} }`，`arrow="<-"` 等价于 `{ start: {} }`，`arrow="<->"` 等价于 `{ start: {}, end: {} }`。简写由 Vanilla 归一化为端点对象；JSON IR 使用对象形式。需要指定形状、尺寸或重叠比例时使用端点对象。
 
-<DocTabs defaultValue="react-jsx">
-<DocTab value="react-jsx" label="React + JSX">
+```tsx
+<Draw way={['A', 'B']} arrow="->" />
+```
+
+<ComponentPreview files="arrow-basic" size="xs" />
 
 ```tsx
 import { Draw, Layout } from '@retikz/react';
@@ -24,206 +27,92 @@ export default () => (
         [0, 0],
         [120, 0],
       ]}
-      arrow="<->"
+      arrow={{ start: { shape: 'circle' }, end: { shape: 'stealth', scale: 1.5 } }}
     />
   </Layout>
 );
 ```
 
-</DocTab>
-<DocTab value="react-ir" label="React + IR">
+Vanilla 的 `path({ way, arrow })` 和 IR 的 `{ type: 'path', children, arrow }` 接受相同的 `arrow`。每个端点分别设置 `shape`、`color`、`fill`、`stroke`、`length`、`width`、`scale`、`opacity` 与轮廓字段。公共配置可以用对象展开复用。
 
-```tsx
-import type { IRScene } from '@retikz/core';
-import { Layout } from '@retikz/react';
+## 外观与默认值
 
-const ir: IRScene = {
-  version: 1,
-  type: 'scene',
-  children: [
-    {
-      type: 'path',
-      marks: [
-        { pos: 0, mark: { kind: 'arrow' } },
-        { pos: 1, mark: { kind: 'arrow' } },
-      ],
-      children: [
-        { type: 'step', kind: 'move', to: [0, 0] },
-        { type: 'step', kind: 'line', to: [120, 0] },
-      ],
-    },
-  ],
-};
-export default () => <Layout ir={ir} />;
-```
+Core 提供 `normal`、`open`、`stealth`、`openStealth`、`circle`、`openCircle`。Extension 中的额外箭头需通过 `Layout.extensions.arrows` 或 `CompileOptions.arrows` 注入；自定义名称使用同一注册表，见[自定义箭头](/kernel/components/path/custom-arrow)。
 
-</DocTab>
-<DocTab value="vanilla-api" label="Vanilla API">
+<ComponentPreview files="arrow-appearance" size="sm" />
 
-```ts
-import { path, scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+缺省长度和宽度均为 8；最终尺寸还乘以箭头的 `scale` 和宿主线宽。主色、具体填充及描边遵循箭头样式规则，宿主整体透明度与箭头透明度相乘，显式 `0` 保留。轮廓的 `lineWidth` 使用箭头局部坐标。
 
-const input = scene({
-  children: [
-    path({
-      way: [
-        [0, 0],
-        [120, 0],
-      ],
-      marks: [
-        { pos: 0, mark: { kind: 'arrow' } },
-        { pos: 1, mark: { kind: 'arrow' } },
-      ],
-    }),
-  ],
-});
-const view = mount(document.getElementById('diagram')!, input);
-```
-
-</DocTab>
-<DocTab value="vanilla-ir" label="Vanilla + IR">
-
-```ts
-import type { IRScene } from '@retikz/core';
-import { mount } from '@retikz/vanilla/dom';
-
-const ir: IRScene = {
-  version: 1,
-  type: 'scene',
-  children: [
-    {
-      type: 'path',
-      marks: [
-        { pos: 0, mark: { kind: 'arrow' } },
-        { pos: 1, mark: { kind: 'arrow' } },
-      ],
-      children: [
-        { type: 'step', kind: 'move', to: [0, 0] },
-        { type: 'step', kind: 'line', to: [120, 0] },
-      ],
-    },
-  ],
-};
-const view = mount(document.getElementById('diagram')!, ir);
-```
-
-</DocTab>
-</DocTabs>
-
-箭头由三个独立的 prop 控制：
-
-- **`arrow`**——方向枚举：`'->'` 终点 / `'<-'` 起点 / `'<->'` 两端 / `'none'`（缺省）= 无
-- **`arrowDetail`**——视觉详细配置对象，8 个顶层字段 + 可选 `start` / `end` 子对象。**省略时使用默认的 `stealth` 倒钩形状，颜色与透明度继承路径本身**
-- **`arrowPlacement`**——端点放置对象，用归一化 `overlap` 控制箭头进入逻辑端点的比例，并支持 `start` / `end` 单端覆盖
-
-三个 prop 同时挂在 `<Draw>` 和 `<Path>` 上，写法和效果完全一致——下文示例用 `<Draw>` 演示，`<Path>` 写法等价。
-
-缺省时箭头尖端附着在路径解析后的起点 / 终点，也不会在中间节点重复出现。需要让空心圆等箭头跨过 Node 边界时，用 `arrowPlacement` 调整端点放置；它不改变 NodeTarget、anchor、boundary 或路径的逻辑采样位置。
-
-## 方向、形状与外观
-
-一个面板集中控制 `arrow` 方向、六种 Core 基础箭头与两种 Extension 可选箭头、颜色、透明度和尺寸。开启“分别配置起末”后，`start` / `end` 会逐字段覆盖顶层形状与颜色；关闭时两端共用顶层配置。面板已显式注入它使用的 Extension 定义。省略 `arrowDetail` 的默认值是继承路径颜色的 `stealth`，长度和宽度都是 8。
-
-端点箭头和中段 mark 都应用 Path 整体透明度与 mark 自身透明度的乘积；自定义图元已有的透明度再与该乘积相乘，显式 `0` 保持完全透明。
-
-<ComponentPreview
-  files={['arrow-appearance', 'arrow-appearance.preview.tsx']}
-  size="lg"
-  defaultSourceFile="arrow-appearance.preview.tsx"
-/>
-
-Core 默认提供六种基础箭头，其中包括空心三角、空心 Stealth 与圆点箭头。其余实心 / 空心菱形箭头由 [`@retikz/extension`](/library/extension/arrow) 提供；使用 Extension 名称时，需要把对应 Definition 注入当前 `<Layout extensions={{ arrows }}>` 或 `CompileOptions.arrows`：
-
-| 实心                          | 空心                              | 典型用途             |
-| ----------------------------- | --------------------------------- | -------------------- |
-| `'normal'` Core 实心三角      | `'open'` Core 空心三角            | 基础三角 / UML 泛化  |
-| `'stealth'` Core 倒钩三角     | `'openStealth'` Core 空心倒钩     | 默认箭头、现代流程图 |
-| `'diamond'` Standard 实心菱形 | `'openDiamond'` Standard 空心菱形 | UML 组合 / 聚合      |
-| `'circle'` Core 实心圆点      | `'openCircle'` Core 空心圆点      | 连接点 / 空心端点    |
-
-补充说明：
-
-- 多节点路径（如 a → b → c）按段独立 clip，但箭头**只**贴在整体起点 / 终点——中间节点不会出现额外箭头
-- **合并语义**：先合并公共配置、端点配置和 mark 实例，再由 Path 的有效 `color` 覆盖 mark 的 `color`。具体 `stroke` / `fill` 优先于宏颜色。没有 Path 主色时保留箭头主色；两者都缺失时跟随宿主描边。例如 Path 为 `color=blue`、`stroke=red` 时，mark 的 `color=green` 仍得到蓝色；显式 `fill=green` 则保留绿色。
-- **空心形状会静默忽略 `fill`**：`shape ∈ { open / openStealth / openDiamond / openCircle }` 时，`fill` 字段被静默丢弃——空心形状由 `color`（描边色） + `lineWidth`（描边粗细）共同决定视觉，写 `fill='red'` 不会渲染红色填充
-
-`scale` 乘到 `length` / `width` 之后，例如 `length=10, scale=1.5` 的实际长度是 15。
+`defaults.path.arrow` 设置共享外观及 `start` / `end` 默认片段。共享外观同时用于端点箭头和箭头形标记；端点片段只用于对应的端点箭头。默认配置不会创建任何箭头或标记。
 
 ## 端点重叠
 
-`arrowPlacement.overlap` 在箭头的两种最终位置间归一化：`0` 保持现有默认放置，`0.5` 位于默认位置与完整进入位置的中点，`1` 让最终视觉后缘与逻辑端点对齐。后缘、路径接合点和尖端是三个不同的几何事实，因此带倒钩的 `stealth` 在比例为 `1` 时也会完整进入。
+`arrow.start.endpointOverlap` / `arrow.end.endpointOverlap` 控制箭头进入逻辑端点的比例。`0` 让尖端位于端点，`1` 让最终视觉后缘对齐端点，`0.5` 位于两者之间。此配置不改变 NodeTarget、边界解析或标记的逻辑采样位置。
 
-计算使用解析后的 `length × scale`，空心箭头还会计入 `lineWidth` 与外轮廓补偿。放大、缩小或覆盖长度后，`1` 仍表示整枚箭头的最终视觉后缘对齐，不是固定移动一段 user units。
+<ComponentPreview files="arrow-endpoint-overlap" size="sm" />
 
-<ComponentPreview
-  files={['arrow-endpoint-overlap', 'arrow-endpoint-overlap.preview.tsx']}
-  size="sm"
-  caption="切换 Core 内置箭头并拖动进入比例；重点观察放大的 stealth 尾翼在比例为 1 时完整进入 Pattern 矩形边界。"
-  defaultSourceFile="arrow-endpoint-overlap.preview.tsx"
-/>
+```tsx
+<Draw way={['A', 'B']} arrow={{ start: { endpointOverlap: 0 }, end: { shape: 'openCircle', endpointOverlap: 0.5 } }} />
+```
 
-顶层 `overlap` 只应用到 `arrow` 实际创建的端点；`start.overlap` / `end.overlap` 可逐端覆盖共享值，显式 `0` 会被保留。例如 `arrow="<->" arrowPlacement={{ overlap: 0.5, start: { overlap: 0 } }}` 只让末端进入一半。
+端点箭头根据接触几何缩短主线，避免描边穿过空心箭头。进入节点后是否被遮挡仍取决于绘制顺序和 `zIndex`；重叠不会自动创建裁剪或改变节点填充。`endpointOverlap` 只适用于内置 Stroke Path 的端点箭头。
 
-<ComponentAlert
-  type="warn"
-  title="重叠不会改变绘制顺序"
-  description="箭头进入节点后是否被遮挡仍由既有 zIndex 与声明顺序决定；arrowPlacement 不会自动创建裁剪、抬高箭头或改变节点填充。"
-/>
+## 沿路径放置标记
 
-`arrowPlacement` 是作者侧写法，归一化后写入端点 mark 的 `endpointOverlap` 字段；直接编写 IR 时使用后者。它必须对应实际端点箭头。没有箭头、配置未创建的单端、直接 IR 中的中段 mark、同侧未选中的重复端点 mark，以及非内置 Stroke Path 上的 `endpointOverlap` 都会明确报错，不会静默忽略。
+`marks` 是放置列表，每项包含 `pos`、可选 `rotate` / `scale` 和 `mark`。`pos` 是整条路径累计弧长的比例，取值为 0～1。定位使用路由、节点边界裁切和几何圆角完成后的路径，在端点箭头截断、标签断线和整体变换之前采样。
 
-箭头的 `stroke`、`fill` 接受颜色、渐变和图案，`dashPattern`、`dashOffset`、`lineCap`、`lineJoin` 控制描边。`color` 仍是派生颜色的主色。显式字段覆盖自定义箭头输出中的同名样式，未填写字段保留定义自身的样式；空心箭头忽略 `fill`。端点箭头和中段标记使用相同规则。
-
-## 相关属性
-
-以下列出本页直接配置的箭头属性；完整字段与所有可注册 shape 见 [API 参考](/kernel/components/path/reference)。
-
-<ComponentProps
-  items={[
-    {
-      name: 'arrow',
-      kind: 'property',
-      type: "InputPath['arrow'] = 'none' | '->' | '<-' | '<->'",
-      defaultValue: "'none'",
-      description:
-        "选择创建哪些端点箭头：`'->'` 仅终点、`'<-'` 仅起点、`'<->'` 两端、`'none'` 或省略时不创建箭头。它只决定端点，不会为多节点路径的中间节点添加箭头。",
-    },
-    {
-      name: 'arrowDetail',
-      kind: 'property',
-      type: 'IRArrowDetail',
-      description:
-        '共享默认与单端覆盖：\n\n- `IRArrowStyle`：`{ shape?: string; scale?: number; length?: number; width?: number; color?: string | number; stroke?: IRPaintValue; fill?: IRPaintValue; opacity?: number; lineWidth?: number; dashPattern?: Array<number>; dashOffset?: number; lineCap?: PathLineCap; lineJoin?: PathLineJoin }`\n- `start?: IRArrowStyle` / `end?: IRArrowStyle`：仅覆盖已填写字段，其余回退共享默认\n\n`shape` 可取 `normal`、`open`、`stealth`、`openStealth`、`circle`、`openCircle`，或已注册名称；Extension 还提供 `diamond` 与 `openDiamond`。空心形状忽略 fill，实心形状忽略 lineWidth。默认 stealth，length / width 均为 8；scale 乘在二者之后，颜色与透明度继承路径。',
-    },
-    {
-      name: 'arrowPlacement',
-      kind: 'property',
-      type: 'InputPathArrowPlacement { overlap?: number; start?: { overlap?: number }; end?: { overlap?: number } }',
-      description:
-        '`overlap` 必须在 `[0, 1]`：`0` 保持默认放置，`1` 让箭头最终视觉后缘对齐逻辑端点。顶层值供实际创建的端点共享，`start.overlap` / `end.overlap` 可逐端覆盖，且显式 `0` 会保留。只有相应端点箭头已由 `arrow` 创建时才能设置。',
-    },
+```tsx
+<Draw
+  way={[
+    [0, 0],
+    [30, 0],
+    [120, 60],
+  ]}
+  arrow="->"
+  marks={[
+    { pos: 0, mark: { kind: 'arrow', shape: 'circle' } },
+    { pos: 0.5, rotate: 'auto', mark: { kind: 'arrow', shape: 'stealth' } },
+    { pos: 1, rotate: 30, scale: 1.5, mark: { kind: 'arrow', shape: 'open' } },
   ]}
 />
+```
 
-## 延伸阅读
+标记只放置图元，不截断、不挖洞，也不避让标签。即使 `pos` 为 0 或 1，行为也相同。箭头形标记直接复用已注册的箭头定义，以尖端为锚点，尺寸沿用箭头规则。它不能配置 `endpointOverlap`。
 
-<LinkedSections
-  items={[
-    {
-      title: '基础用法',
-      description: '从连接两个节点开始，选择 Draw 或 Path 并设置基本路径外观',
-      url: '/kernel/components/path/usage',
-    },
-    {
-      title: '实现原理',
-      description: '解释路径写法如何变成步骤，以及引用、几何、箭头和标签如何产生最终结果',
-      url: '/kernel/components/path/mechanism',
-    },
-    {
-      title: 'API 参考',
-      description: '查询绘制组件、作者侧输入和扩展契约的公开 TypeScript 声明',
-      url: '/kernel/components/path/reference',
-    },
-  ]}
-/>
+`rotate` 缺省或为 `'auto'` 时沿路径切线定向，数值表示路径局部坐标中的固定角度。`scale` 是额外的放置缩放，默认 1。跳跃的 `move` 不计入长度，闭合段计入长度；段交界采用下一非零段方向，末端采用进入方向。整条路径没有可定位长度时，非空标记列表会报错。
+
+主线和端点箭头先绘制，标记按列表顺序绘制，路径标签最后绘制。完整标记内容计入可视边界，并随路径整体变换。
+
+## 自定义标记
+
+普通标记输出基础 Scene 图元，局部原点是放置锚点，尺寸直接使用用户单位，不随宿主线宽缩放。定义不进入 JSON IR；IR 只保存名称和 JSON 参数。
+
+```tsx
+import { defineMark } from '@retikz/core';
+import { Draw, Layout } from '@retikz/react';
+
+const dot = defineMark({
+  name: 'dot',
+  emit: (_params, { stroke }) => [{ type: 'ellipse', cx: 0, cy: 0, rx: 4, ry: 4, fill: stroke }],
+});
+
+export default () => (
+  <Layout extensions={{ marks: [dot] }}>
+    <Draw
+      way={[
+        [0, 0],
+        [120, 0],
+      ]}
+      marks={[{ pos: 0.5, mark: { kind: 'custom', name: 'dot', params: {} } }]}
+    />
+  </Layout>
+);
+```
+
+直接编译时通过 `compileToScene(ir, { marks: [dot] })` 注册。`emit(params, context)` 返回 `Iterable<ScenePrimitive>`，上下文提供宿主 `stroke` 和精度函数 `round`。参数的领域含义由定义解释。固定样式保留；可使用既有 Scene 资源引用，但资源必须存在，不能凭空创建引用。
+
+标记命中归属所在 Path，`pointerEvents: 'none'` 可排除内容；内部图元不会成为独立作者节点。动画及嵌套内容沿用 Scene 契约，复用定义不会共享图元实例。未知定义、缺失资源或生成失败会报错。
+
+## API 参考
+
+完整字段见 [Path API 参考](/kernel/components/path/reference)。端点采用 `PathArrowSchema`，放置项采用 `PathMarkPlacementSchema`，普通定义采用 `MarkDefinition`。

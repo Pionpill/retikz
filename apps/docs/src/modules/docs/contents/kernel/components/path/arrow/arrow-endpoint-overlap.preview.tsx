@@ -31,9 +31,16 @@ export const ArrowEndpointOverlapPreview = (values: ArrowEndpointOverlapPreviewV
     />
     <Draw
       way={['A', 'B']}
-      arrow="->"
-      arrowDetail={{ shape: values.shape, length: 14, width: 14, color: '#2563eb', lineWidth: 1.5 }}
-      arrowPlacement={{ overlap: values.overlap }}
+      arrow={{
+        end: {
+          shape: values.shape,
+          length: 14,
+          width: 14,
+          color: '#2563eb',
+          lineWidth: 1.5,
+          endpointOverlap: values.overlap,
+        },
+      }}
       style={{ stroke: '#2563eb', strokeWidth: 2 }}
     />
   </Layout>

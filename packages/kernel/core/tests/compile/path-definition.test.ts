@@ -171,7 +171,7 @@ describe('Path registry', () => {
     const source = {
       type: 'path' as const,
       children,
-      marks: [{ pos: 0.5, mark: { kind: 'arrow' as const, shape: 'missing-arrow' } }],
+      arrow: { end: { shape: 'missing-arrow' } },
     };
 
     expect(() =>
@@ -192,13 +192,13 @@ describe('Path registry', () => {
       {
         type: 'path',
         kind: 'custom-overlap',
-        marks: [{ pos: 1, endpointOverlap: 0.5, mark: { kind: 'arrow' } }],
+        arrow: { end: { endpointOverlap: 0.5 } },
         children: steps,
       },
     ]);
 
     expect(() => compileToScene(input, { paths: [custom] })).toThrow(
-      /children\[0\]\.path\.marks\[0\]\.endpointOverlap.*built-in Stroke path/,
+      /children\[0\]\.path\.arrow\.end\.endpointOverlap.*built-in Stroke path/,
     );
   });
 
@@ -221,7 +221,7 @@ describe('Path registry', () => {
         { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
         { type: 'step' as const, kind: 'line' as const, to: [10, 0] as [number, number] },
       ],
-      marks: [{ pos: 0.5, mark: { kind: 'arrow' as const, shape: 'missing-arrow' } }],
+      arrow: { end: { shape: 'missing-arrow' } },
     };
 
     expect(() =>

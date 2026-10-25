@@ -1,7 +1,7 @@
-import type { ArrowDefinition } from '../../contract';
+import type { ArrowDefinition, MarkDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { providerDefinitionOf } from '../../providers';
-import type { IRArrowMark, IRPathBase } from '../../schemas';
+import type { IRArrowStyle, IRPathBase } from '../../schemas';
 import { ARROW_MARKER_DEFAULT_SIZE, ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH, DEFAULT_ARROW_SHAPE } from '../../schemas';
 import { createCompositeContractError } from '../diagnostics';
 import { parseProviderPayload } from '../provider-payload';
@@ -154,8 +154,8 @@ export const resolveArrowMark = (mark: ResolvedArrowMark, context: PathResolveCo
 export const resolveArrowMarks = (
   marks: ReadonlyArray<{ mark: ResolvedArrowMark }> | undefined,
   context: PathResolveContext,
-): ReadonlyMap<IRArrowMark, ArrowMarkResolution> => {
-  const resolutions = new Map<IRArrowMark, ArrowMarkResolution>();
+): ReadonlyMap<IRArrowStyle, ArrowMarkResolution> => {
+  const resolutions = new Map<IRArrowStyle, ArrowMarkResolution>();
   for (const item of marks ?? []) resolutions.set(item.mark, resolveArrowMark(item.mark, context));
   return resolutions;
 };
@@ -173,12 +173,30 @@ export const resolveStrokePathProviders = (
   const children = path.children;
   const strokeTooShort = children === undefined || (children.length < 2 && children[0]?.kind !== 'rectangle');
   if (strokeTooShort) {
-    return { ...resolution, path, arrows: new Map() };
+    return { ...resolution, path, arrows: new Map(), marks: new Map() };
   }
 
+  const marks = new Map<string, MarkDefinition>();
+  for (const [index, placement] of (path.marks ?? []).entries()) {
+    if (placement.mark.kind !== 'custom') continue;
+    const definition = context.marks?.get(placement.mark.name);
+    if (definition === undefined)
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Provider,
+        `Unknown mark '${placement.mark.name}' at ${context.irPath}.marks[${index}].mark.name`,
+      );
+    marks.set(placement.mark.name, definition);
+  }
   return {
     ...resolution,
     path,
-    arrows: resolveArrowMarks(resolution.path.marks, context),
+    arrows: resolveArrowMarks(
+      [
+        ...(path.marks ?? []).flatMap(({ mark }) => (mark.kind === 'arrow' ? [{ mark }] : [])),
+        ...[path.arrow?.start, path.arrow?.end].flatMap(mark => (mark === undefined ? [] : [{ mark }])),
+      ],
+      context,
+    ),
+    marks,
   };
 };

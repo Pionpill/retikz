@@ -54,7 +54,7 @@ export const RelationPathExtremesPreview = (values: RelationPathExtremesPreviewV
               textColor: 'currentColor',
               font: { size: 11, weight: 'bold' },
             },
-            options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
+            options: { arrow: { end: {} } },
           },
         }}
       />

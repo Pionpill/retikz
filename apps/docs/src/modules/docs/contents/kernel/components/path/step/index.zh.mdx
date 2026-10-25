@@ -235,7 +235,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 ### 箭头
 
-`arrow` 控制方向（`'->'` / `'<-'` / `'<->'` / `'none'`），`arrowDetail` 统管 shape / size / color 等视觉规格，`arrowPlacement` 则用 `[0,1]` 的归一化比例让箭头从现有默认位置推进到最终视觉后缘与逻辑端点对齐，并支持共享值与 `start` / `end` 单端覆盖。三者在 `<Path>` 与 `<Draw>` 上等价；完整规则、`0 / 0.5 / 1` 对比 demo、失败边界和 API 参考见 **[Arrow](/kernel/components/path/arrow)** 专页。
+`arrow.start` / `arrow.end` 分别配置起末箭头的外观与 `endpointOverlap`。`marks` 在任意弧长位置放置内容，不截断主线；两者在 `<Path>` 与 `<Draw>` 上等价。完整规则和示例见[箭头与标记](/kernel/components/path/arrow)。
 
 ### 端点连接面
 
@@ -333,7 +333,7 @@ const view = mount(document.getElementById('diagram')!, ir);
   defaultSourceFile="path-stroke-paint.preview.tsx"
 />
 
-带箭头的路径如果用渐变描边，需要给 `arrowDetail.color` 或端点 `color` 一个显式纯色；箭头 marker 不能继承资源型描边。
+箭头与标记可以消费宿主的资源型描边，也可以显式指定自身的填充或描边。
 
 ### 栈序
 

@@ -1,4 +1,5 @@
 export * from './arrow';
+export * from './mark';
 export * from './boundary';
 export * from './clip';
 export * from './composite';

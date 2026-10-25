@@ -383,13 +383,7 @@ describe('Canvas hitTest', () => {
             {
               type: 'path',
               id: 'edge',
-              marks: [
-                {
-                  pos: 1,
-                  endpointOverlap,
-                  mark: { kind: 'arrow', shape: 'empty-overlap-probe', length: 10, width: 10, scale: 2 },
-                },
-              ],
+              arrow: { end: { shape: 'empty-overlap-probe', length: 10, width: 10, scale: 2, endpointOverlap } },
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [100, 0] },
@@ -474,4 +468,47 @@ it.each<ScenePrimitive>([
       : primitive,
   );
   expect(hitTest(scene, { x: 25, y: 23 }, options)).toBeNull();
+});
+
+it('普通标记命中宿主，局部 id 不创建独立目标，禁用内容可穿透', () => {
+  const compile = (disabled: boolean) =>
+    compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        children: [
+          {
+            type: 'path',
+            id: 'edge',
+            style: { stroke: 'none' },
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [100, 0] },
+            ],
+            marks: [{ pos: 0.5, mark: { kind: 'custom', name: 'box' } }],
+          },
+        ],
+      },
+      {
+        marks: [
+          {
+            name: 'box',
+            emit: () => [
+              {
+                type: 'rect',
+                id: 'local',
+                x: -5,
+                y: -5,
+                width: 10,
+                height: 10,
+                fill: 'red',
+                ...(disabled ? { pointerEvents: 'none' } : {}),
+              },
+            ],
+          },
+        ],
+      },
+    ).scene;
+  expect(hitTest(compile(false), { x: 50, y: 3 }, { context2d: createGeometryContext() })).toBe('edge');
+  expect(hitTest(compile(true), { x: 50, y: 3 }, { context2d: createGeometryContext() })).toBeNull();
 });

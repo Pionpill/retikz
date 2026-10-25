@@ -1,12 +1,13 @@
 import type { ValueOf } from '@retikz/foundation';
 import {
   PositiveNumberSchema,
+  NonBlankStringSchema,
   NormalizedFractionSchema,
   NonNegativeNumberSchema,
   createOpenStringSchema,
   JsonObjectSchema,
 } from '@retikz/foundation';
-import { enum as zodEnum, strictObject, union, literal, number, array, unknown, never } from 'zod';
+import { enum as zodEnum, strictObject, union, literal, number, array, unknown, never, discriminatedUnion } from 'zod';
 import type { infer as ZodInfer } from 'zod';
 
 import { DrawableInstanceSchema } from '../scene/drawable';
@@ -17,7 +18,7 @@ import {
   GraphicOpacitySchema,
   GraphicEffectsSchema,
 } from '../style/graphic';
-import { ArrowStyleSchema } from './arrow';
+import { ArrowStyleSchema, PathArrowSchema } from './arrow';
 import { PathLabelSchema } from './label';
 import { StepSchema } from './step';
 
@@ -67,16 +68,24 @@ export const ArrowMarkSchema = ArrowStyleSchema.extend({
     'Arrow mark placed along the path. Direction follows the path tangent; `shape` is an arrow provider name, not a direction token.',
   );
 
-/** 校验路径上的单个标记位置与端点重叠策略 */
+/** 校验由注册定义生成的普通标记 */
+export const CustomMarkSchema = strictObject({
+  kind: literal('custom').describe('Registered custom mark content.'),
+  name: NonBlankStringSchema.describe('Registered mark definition name.'),
+  params: JsonObjectSchema.optional().describe('JSON parameters interpreted by the mark definition.'),
+});
+
+/** 校验路径上的单个标记及其放置方式 */
 export const PathMarkPlacementSchema = strictObject({
   pos: NormalizedFractionSchema.describe(
-    'Normalized position along the path. Parameter meaning matches step labels: arc length for line-like steps and Bezier parameter for curve-like steps.',
+    'Normalized arc-length position along the path before arrow shortening and label interruption.',
   ),
-  endpointOverlap: NormalizedFractionSchema.optional().describe(
-    "Normalized interpolation from an endpoint arrow's default placement to final visual-back alignment with the logical endpoint. Only valid for the selected start or end arrow on a built-in Stroke path.",
-  ),
-  mark: ArrowMarkSchema.describe(
-    'The mark to place at this position; currently an arrow tip oriented by the path tangent.',
+  rotate: union([literal('auto'), number()])
+    .optional()
+    .describe('Tangent orientation by default, or a fixed angle in degrees.'),
+  scale: PositiveNumberSchema.optional().describe('Placement scale. Defaults to one.'),
+  mark: discriminatedUnion('kind', [ArrowMarkSchema, CustomMarkSchema]).describe(
+    'Arrow appearance or a registered custom mark.',
   ),
 }).describe('One mark placement along the path.');
 
@@ -113,6 +122,7 @@ export const PathGeometrySchema = strictObject({
 
 /** 校验附着于路径宿主的标签与沿路径标记 */
 export const PathDecorationSchema = strictObject({
+  arrow: PathArrowSchema.optional().describe('Endpoint arrows responsible for path shortening.'),
   label: union([PathLabelSchema, array(PathLabelSchema).min(1)])
     .optional()
     .describe('Host label attached to this path-like relation.'),

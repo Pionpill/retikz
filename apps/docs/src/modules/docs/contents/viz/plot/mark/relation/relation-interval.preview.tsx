@@ -81,7 +81,7 @@ export const RelationIntervalPreview = (values: RelationIntervalPreviewValues) =
                 textColor: 'currentColor',
                 font: { size: 10, weight: 'bold' },
               },
-              options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], style: lineOptions },
+              options: { arrow: { end: {} }, style: lineOptions },
             },
           }}
         />
@@ -108,7 +108,7 @@ export const RelationIntervalPreview = (values: RelationIntervalPreviewValues) =
                 textColor: 'currentColor',
                 font: { size: 10, weight: 'bold' },
               },
-              options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], style: lineOptions },
+              options: { arrow: { end: {} }, style: lineOptions },
             },
           }}
         />

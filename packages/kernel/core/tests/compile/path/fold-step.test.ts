@@ -433,10 +433,7 @@ it('折线退化后标签与双向箭头沿可见直线采样', () => {
     { type: 'node', id: 'A', position: [0, 0] },
     { type: 'node', id: 'B', position: [100, 5] },
   ];
-  const marks = [
-    { pos: 0, mark: { kind: 'arrow' as const } },
-    { pos: 1, mark: { kind: 'arrow' as const } },
-  ];
+  const arrow = { start: {}, end: {} };
   const actual = compileToScene({
     type: 'scene',
     version: 1,
@@ -444,7 +441,7 @@ it('折线退化后标签与双向箭头沿可见直线采样', () => {
       ...children,
       {
         type: 'path',
-        marks,
+        arrow,
         children: [
           { type: 'step', kind: 'move', to: { id: 'A' } },
           { type: 'step', kind: 'fold', via: '-|', to: { id: 'B' }, label: { text: 'mid' } },
@@ -458,7 +455,7 @@ it('折线退化后标签与双向箭头沿可见直线采样', () => {
     children: [
       {
         type: 'path',
-        marks,
+        arrow,
         children: [
           { type: 'step', kind: 'move', to: [8, 0] },
           { type: 'step', kind: 'line', to: [92, 0], label: { text: 'mid' } },

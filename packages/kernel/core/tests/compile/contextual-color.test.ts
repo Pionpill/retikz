@@ -141,12 +141,7 @@ describe('Core contextual color compile', () => {
     const scene = sceneOf([
       {
         type: 'path',
-        marks: [
-          {
-            pos: 1,
-            mark: { kind: 'arrow', shape: 'normal', color: 0.8, fill: 0.25 },
-          },
-        ],
+        arrow: { end: { shape: 'normal', color: 0.8, fill: 0.25 } },
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
           {

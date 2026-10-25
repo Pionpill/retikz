@@ -4,7 +4,6 @@ import type { IRPath, IRScene, ScenePrimitive } from '../../src';
 import { BuiltinCompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import type { Scene } from '../../src/contract';
-import { arrowMarks } from '../helpers/arrow-marks';
 
 /** 递归收集 Scene 里的数值坐标（commands / transforms / layout），用于检查是否有限 */
 const collectNumbers = (value: unknown, out: Array<number> = []): Array<number> => {
@@ -357,18 +356,18 @@ describe('ATTACK 6: marks + path transform 交互（二次变换 / 定向污染�
 // 攻击面 7：marking pos 落在各段类型（arc / cubic / fold / quad）+ 零长段
 // =====================================================================
 describe('ATTACK 7: marks 落各段类型 + 零长段 tangent', () => {
-  it('mark 落零长直线段（move+line 到同点）→ tangent normalize 回退 [1,0]，不 NaN', () => {
-    const scene = compileToScene(
-      pathIR(
-        [
-          { type: 'step', kind: 'move', to: [2, 2] },
-          { type: 'step', kind: 'line', to: [2, 2] },
-        ],
-        { marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }] },
+  it('mark 位于整条零长度路径时报告无法定位', () => {
+    expect(() =>
+      compileToScene(
+        pathIR(
+          [
+            { type: 'step', kind: 'move', to: [2, 2] },
+            { type: 'step', kind: 'line', to: [2, 2] },
+          ],
+          { marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }] },
+        ),
       ),
-    ).scene;
-
-    expect(expectAllFinite(scene).ok).toBe(true);
+    ).toThrow(/zero-length/);
   });
 
   it('mark 落 arc 段 pos=0 / pos=1（段边界采样）→ finite', () => {
@@ -379,10 +378,7 @@ describe('ATTACK 7: marks 落各段类型 + 零长段 tangent', () => {
           { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 5 },
         ],
         {
-          marks: [
-            { pos: 0, mark: { kind: 'arrow', shape: 'stealth' } },
-            { pos: 1, mark: { kind: 'arrow', shape: 'stealth' } },
-          ],
+          arrow: { start: { shape: 'stealth' }, end: { shape: 'stealth' } },
         },
       ),
     ).scene;
@@ -466,12 +462,8 @@ describe('ATTACK 9: out/in bend + rotate + marks 三合一 + arrow', () => {
         {
           rotate: 37,
           scale: 0.5,
-          marks: [
-            ...arrowMarks('<->'),
-            { pos: 0, mark: { kind: 'arrow', shape: 'stealth' } },
-            { pos: 0.5, mark: { kind: 'arrow', shape: 'normal' } },
-            { pos: 1, mark: { kind: 'arrow', shape: 'stealth' } },
-          ],
+          arrow: { start: { shape: 'stealth' }, end: { shape: 'stealth' } },
+          marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'normal' } }],
         },
       ),
     ).scene;

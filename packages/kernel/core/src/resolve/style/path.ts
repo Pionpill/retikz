@@ -1,7 +1,7 @@
 import { mergeProperties } from '@retikz/foundation';
 
 import type { IRPathLabelDefault, IRPathLabel, IRPathBase, IRPathStyle, IRStep } from '../../schemas';
-import { resolvePathMarks } from './arrow';
+import { resolvePathArrows, resolvePathMarks } from './arrow';
 import { resolvePathLabel } from './label';
 import { mergeGraphicStyle } from './opacity';
 import type { EffectiveScopeDefaults } from './types';
@@ -47,6 +47,7 @@ export const resolveEffectivePath = (path: IRPathBase, scopeDefaults: EffectiveS
 
   const labelDefault = scopeDefaults.path?.label ?? {};
   effective.marks = resolvePathMarks(path.marks, scopeDefaults, masterColor);
+  effective.arrow = resolvePathArrows(path.arrow, scopeDefaults, masterColor);
   if (path.children !== undefined) {
     effective.children = resolveStepLabels(path.children, labelDefault, masterColor);
   } else {

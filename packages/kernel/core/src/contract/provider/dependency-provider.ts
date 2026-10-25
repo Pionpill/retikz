@@ -2,7 +2,7 @@ import type { ValueOf } from '@retikz/foundation';
 
 import type { AnyCompositeDefinition } from '../composite';
 import type { BoundaryDefinition, ShapeDefinition } from '../node';
-import type { AnyPathDefinition, ArrowDefinition } from '../path';
+import type { AnyPathDefinition, ArrowDefinition, MarkDefinition } from '../path';
 import type { ClipDefinition } from '../scope';
 import type { PatternDefinition } from '../style';
 
@@ -12,6 +12,7 @@ export const CoreProviderCapability = {
   Boundary: 'boundary',
   Clip: 'clip',
   Arrow: 'arrow',
+  Mark: 'mark',
   Pattern: 'pattern',
   Path: 'path',
   Composite: 'composite',
@@ -47,6 +48,7 @@ export type AnyCoreProviderDefinition =
   | BoundaryDefinition
   | ClipDefinition
   | ArrowDefinition
+  | MarkDefinition
   | PatternDefinition
   | AnyPathDefinition
   | AnyCompositeDefinition;
@@ -61,6 +63,8 @@ export type CoreProviderDefinitions = Readonly<{
   clips?: ReadonlyArray<ClipDefinition>;
   /** 箭头定义 */
   arrows?: ReadonlyArray<ArrowDefinition>;
+  /** 普通路径标记定义 */
+  marks?: ReadonlyArray<MarkDefinition>;
   /** 图案定义 */
   patterns?: ReadonlyArray<PatternDefinition>;
   /** 路径定义 */

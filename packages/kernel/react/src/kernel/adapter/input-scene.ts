@@ -423,20 +423,11 @@ const inputNodeFromProps = (props: NodeProps): InputNode => {
 
 /** 把 <Path> props 组装为 Vanilla InputPath */
 const inputPathFromProps = (props: PathProps): InputPath => {
-  const isDirectPath =
-    props.authoring === undefined &&
-    props.arrow === undefined &&
-    props.arrowDetail === undefined &&
-    props.arrowPlacement === undefined &&
-    props.way === undefined &&
-    props.children === undefined;
+  const isDirectPath = props.authoring === undefined && props.way === undefined && props.children === undefined;
   return {
     ...(isDirectPath ? { type: 'path' as const } : {}),
     ...pickDefined(props, PATH_FIELDS),
     ...(props.authoring === undefined ? {} : { authoring: props.authoring }),
-    ...(props.arrow === undefined ? {} : { arrow: props.arrow }),
-    ...(props.arrowDetail === undefined ? {} : { arrowDetail: props.arrowDetail }),
-    ...(props.arrowPlacement === undefined ? {} : { arrowPlacement: props.arrowPlacement }),
     ...(props.way === undefined ? {} : { way: props.way }),
     ...(props.children === undefined ? {} : { children: readPathChildren(props.children) }),
   };

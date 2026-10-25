@@ -7,6 +7,7 @@ import type { IRPosition, IRTarget } from '../../../schemas';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
 import { cloneAndFreezeJson } from '../../../shared/json';
 import { BuiltinCompileWarningCode } from '../../constants';
+import { optionalVisualBoundsOfPrimitives } from '../../orchestration';
 import type { PaintResolver } from '../../resource';
 import type { TextMeasurer } from '../../text';
 import { fallbackMeasurer } from '../../text';
@@ -14,7 +15,7 @@ import { emitLabelPrimitive, pointOfTarget } from '../host';
 import type { PathEmitOptions } from '../types';
 import { createPathCommandEmitter } from './commands';
 import { createStrokeCursor, isStrokeTargetStep } from './cursor';
-import { emitInlineMarkPrimitives, emitPathEndpointDecorations, pathEndpointArrows } from './decorations';
+import { emitPathMarks, emitPathEndpointArrows, pathEndpointArrows } from './decorations';
 import type { StrokeInterruptionProtectedRange } from './interruption';
 import {
   createStrokeInterruptionIntervals,
@@ -61,6 +62,8 @@ export const lowerStrokePathGeometry = (resolution: PathResolution, context: Emi
   // 自包含 shape step（rectangle 自带 from/to 两对角、不依赖游标）单独成 path 合法；其余 step 至少需要起点和一段绘制
   const soloSelfContained = steps.length === 1 && steps[0].kind === 'rectangle';
   if (steps.length < 2 && !soloSelfContained) {
+    if (path.marks?.length)
+      throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `Cannot locate marks on an empty path at ${irPath}.marks`);
     warn(
       BuiltinCompileWarningCode.PathTooShort,
       `Path requires at least 2 steps (got ${steps.length}); the entire path is skipped`,
@@ -303,7 +306,7 @@ const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: E
   const geometry = lowerStrokePathGeometry(resolution, context);
   if (geometry === null) return null;
   const { commands, stepIndexes, boundsPoints, endpointSource, sampling, roundedCommands } = geometry;
-  const { labelPrimitives: labelPrims, segmentSamplers } = sampling;
+  const { labelPrimitives: labelPrims } = sampling;
   const warn = (code: string, message: string, subPath = ''): void => {
     pathEmitOptions.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
   };
@@ -338,7 +341,7 @@ const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: E
     ];
   });
 
-  const { arrows, inlineMarks } = emitPathEndpointDecorations(path, {
+  const arrows = emitPathEndpointArrows(path, {
     resolvePaint,
     arrowResolutions: resolution.arrows,
     round,
@@ -385,17 +388,27 @@ const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: E
     endpointProtections,
   );
 
-  const marks = emitInlineMarkPrimitives({
-    commands,
-    inlineMarks,
-    segmentSamplers,
-    roundedCommands,
+  const marks = emitPathMarks({
+    resources: pathEmitOptions.resources,
+    geometry: logicalGeometry,
+    placements: path.marks ?? [],
+    markDefinitions: resolution.marks,
+    irPath,
     resolvePaint,
     arrowResolutions: resolution.arrows,
     baseProps,
     round,
   });
   boundsPoints.push(...marks.boundsPoints);
+  const markBounds =
+    marks.primitives.length === 0
+      ? undefined
+      : optionalVisualBoundsOfPrimitives(marks.primitives, pathEmitOptions.resources?.() ?? []);
+  if (markBounds !== undefined)
+    boundsPoints.push(
+      [markBounds.x, markBounds.y],
+      [markBounds.x + markBounds.width, markBounds.y + markBounds.height],
+    );
 
   let endpointSpecs = pathEndpointArrows(arrows);
   const fragments = splitStrokePathAtInterruptions(logicalGeometry, interruptionIntervals, round, {
@@ -467,9 +480,9 @@ const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: E
 
   const bodyPrims: Array<ScenePrimitive> = [
     primitive,
+    ...marks.primitives,
     ...labelPrims,
     ...hostLabels.map(label => label.primitive),
-    ...marks.primitives,
   ];
 
   return wrapPathPrimitiveOutput({ path, primitive, bodyPrims, boundsPoints, round });

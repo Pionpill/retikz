@@ -1,193 +1,175 @@
-import type { CurveSegmentSample } from '@retikz/math';
-
-import type { PathCommand, ResolvedArrowEnd, ScenePrimitive } from '../../../contract';
+﻿import type { ResolvedArrowEnd, ScenePrimitive } from '../../../contract';
+import type { SceneResource } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import type { ArrowMarkResolution, CanonicalPath } from '../../../resolve';
-import type { IRPathBase, IRPosition } from '../../../schemas';
+import type { CanonicalPath, StrokePathResolution } from '../../../resolve';
+import type { IRPosition } from '../../../schemas';
+import { materializeScenePrimitives } from '../../resource';
 import type { PaintResolver } from '../../resource';
-import { buildMarkMarkerGroup } from './marks';
+import type { StrokePathGeometry } from './interruption';
+import { sampleStrokeMarkGeometry } from './interruption';
+import { buildMarkMarkerGroup, placeMarkPrimitives } from './marks';
 import type { PathBasePropsWithStrokeWidth } from './output';
-import { sampleStrokePath } from './sampling';
 import { emitEndpointArrowMark, emitMarkArrow } from './shrink';
 
-/** 端点箭头与中段 marks 分流结果 */
-export type PathEndpointDecorations = {
-  /** 起点 / 终点箭头规格与 shrink 信息 */
-  arrows: {
-    /** 选中的起点箭头规格 */
-    arrowStart?: ResolvedArrowEnd;
-    /** 选中的终点箭头规格 */
-    arrowEnd?: ResolvedArrowEnd;
-    /** 起点沿路径收缩的线宽倍数 */
-    shrinkStart: number;
-    /** 终点沿路径收缩的线宽倍数 */
-    shrinkEnd: number;
-    /** 起点箭头相对边界的外侧内缩系数，以线宽为单位 */
-    boundaryOuterInsetStart: number;
-    /** 终点箭头相对边界的外侧内缩系数，以线宽为单位 */
-    boundaryOuterInsetEnd: number;
-  };
-  /** 非端点 marks，稍后按 path 采样点 emit 成 Scene primitive */
-  inlineMarks: NonNullable<IRPathBase['marks']>;
+/** 端点箭头及主线接触调整 */
+export type PathEndpointArrows = {
+  /** 起点箭头内容 */
+  arrowStart?: ResolvedArrowEnd;
+  /** 终点箭头内容 */
+  arrowEnd?: ResolvedArrowEnd;
+  /** 起点接触截短量 */
+  shrinkStart: number;
+  /** 终点接触截短量 */
+  shrinkEnd: number;
+  /** 起点边界外轮廓补偿 */
+  boundaryOuterInsetStart: number;
+  /** 终点边界外轮廓补偿 */
+  boundaryOuterInsetEnd: number;
 };
 
-/** path 端点 mark 解析输入 */
-export type EmitPathEndpointDecorationsContext = {
-  /** resolving 阶段绑定的 arrow resolutions */
-  arrowResolutions: ReadonlyMap<NonNullable<IRPathBase['marks']>[number]['mark'], ArrowMarkResolution>;
+/** 端点箭头生成上下文 */
+export type EmitPathEndpointArrowsContext = {
+  /** 箭头声明对应的解析结果 Map */
+  arrowResolutions: StrokePathResolution['arrows'];
   /** 坐标取整函数 */
-  round: (n: number) => number;
-  /** Resolve scene paint resources */
+  round: (value: number) => number;
+  /** 绘制资源解析函数 */
   resolvePaint: PaintResolver;
-  /** 当前 Path 的 IR locator */
+  /** 宿主 IR 位置 */
   irPath: string;
 };
 
-/**
- * 将 `path.marks` 分流为端点箭头与中段 marks
- * @description pos=0 / pos=1 的首个 mark 会成为端点箭头；其余 mark 保持为 inline mark
- */
-export const emitPathEndpointDecorations = (
-  path: Pick<CanonicalPath, 'marks'>,
-  context: EmitPathEndpointDecorationsContext,
-): PathEndpointDecorations => {
-  const { arrowResolutions, round, irPath, resolvePaint } = context;
-  const arrows: PathEndpointDecorations['arrows'] = {
+/** 仅消费显式端点箭头，标记位置不影响截断 */
+export const emitPathEndpointArrows = (
+  path: Pick<CanonicalPath, 'arrow'>,
+  context: EmitPathEndpointArrowsContext,
+): PathEndpointArrows => {
+  const arrows: PathEndpointArrows = {
     shrinkStart: 0,
     shrinkEnd: 0,
     boundaryOuterInsetStart: 0,
     boundaryOuterInsetEnd: 0,
   };
-  const inlineMarks: NonNullable<IRPathBase['marks']> = [];
-
-  for (const [index, item] of (path.marks ?? []).entries()) {
-    if (item.pos === 0 && arrows.arrowStart === undefined) {
-      const resolved = emitEndpointArrowMark(
-        arrowResolutions.get(item.mark) ??
-          (() => {
-            throw new RetikzCoreError(
-              RetikzCoreErrorCode.Compile,
-              `Path arrow mark '${item.mark.shape ?? 'stealth'}' has no resolving-phase provider binding.`,
-            );
-          })(),
-        item.endpointOverlap ?? 0,
-        round,
-        resolvePaint,
-      );
-      arrows.arrowStart = resolved.spec;
-      arrows.shrinkStart = resolved.shrink;
-      arrows.boundaryOuterInsetStart = resolved.boundaryOuterInset;
-      continue;
-    }
-
-    if (item.pos === 1 && arrows.arrowEnd === undefined) {
-      const resolved = emitEndpointArrowMark(
-        arrowResolutions.get(item.mark) ??
-          (() => {
-            throw new RetikzCoreError(
-              RetikzCoreErrorCode.Compile,
-              `Path arrow mark '${item.mark.shape ?? 'stealth'}' has no resolving-phase provider binding.`,
-            );
-          })(),
-        item.endpointOverlap ?? 0,
-        round,
-        resolvePaint,
-      );
-      arrows.arrowEnd = resolved.spec;
-      arrows.shrinkEnd = resolved.shrink;
-      arrows.boundaryOuterInsetEnd = resolved.boundaryOuterInset;
-      continue;
-    }
-
-    if (item.endpointOverlap !== undefined) {
+  for (const endpoint of ['start', 'end'] as const) {
+    const arrow = path.arrow?.[endpoint];
+    if (arrow === undefined) continue;
+    const resolution = context.arrowResolutions.get(arrow);
+    if (resolution === undefined)
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Compile,
-        `Path endpoint arrow overlap at ${irPath}.marks[${index}].endpointOverlap requires the selected start or end arrow placement.`,
+        `Missing arrow binding at ${context.irPath}.arrow.${endpoint}`,
       );
+    const emitted = emitEndpointArrowMark(resolution, arrow.endpointOverlap ?? 0, context.round, context.resolvePaint);
+    if (endpoint === 'start') {
+      arrows.arrowStart = emitted.spec;
+      arrows.shrinkStart = emitted.shrink;
+      arrows.boundaryOuterInsetStart = emitted.boundaryOuterInset;
+    } else {
+      arrows.arrowEnd = emitted.spec;
+      arrows.shrinkEnd = emitted.shrink;
+      arrows.boundaryOuterInsetEnd = emitted.boundaryOuterInset;
     }
-
-    inlineMarks.push(item);
   }
-
-  return { arrows, inlineMarks };
+  return arrows;
 };
 
-/** 中段 mark emit 输入 */
-export type EmitInlineMarkPrimitivesInput = {
-  /** path commands；倒角后 mark 采样需要读取最终 commands */
-  commands: Array<PathCommand>;
-  /** 非端点 marks */
-  inlineMarks: NonNullable<IRPathBase['marks']>;
-  /** 每段几何采样器 */
-  segmentSamplers: Array<(t: number) => CurveSegmentSample>;
-  /** commands 是否已经被 cornerRadius 改写 */
-  roundedCommands: boolean;
-  /** 已解析 arrow registry */
-  arrowResolutions: ReadonlyMap<NonNullable<IRPathBase['marks']>[number]['mark'], ArrowMarkResolution>;
-  /** PathPrimitive 公共样式属性 */
+/** 沿线标记生成上下文 */
+export type EmitPathMarksInput = {
+  /** 当前编译资源，用于普通标记的引用诊断 */
+  resources?: () => ReadonlyArray<SceneResource>;
+  /** 截断前路径几何 */
+  geometry: StrokePathGeometry;
+  /** 按绘制顺序保存的标记放置列表 */
+  placements: NonNullable<CanonicalPath['marks']>;
+  /** 箭头声明对应的解析结果 Map */
+  arrowResolutions: StrokePathResolution['arrows'];
+  /** 按名称索引的普通标记定义 Map */
+  markDefinitions: StrokePathResolution['marks'];
+  /** 宿主有效外观 */
   baseProps: PathBasePropsWithStrokeWidth;
   /** 坐标取整函数 */
-  round: (n: number) => number;
-  /** Resolve scene paint resources */
+  round: (value: number) => number;
+  /** 绘制资源解析函数 */
   resolvePaint: PaintResolver;
+  /** 宿主 IR 位置 */
+  irPath: string;
 };
 
-/**
- * 将中段 marks 编译成按切线定向的 marker group
- * @description 未倒角时保持原有按段数均分采样；倒角后按最终 commands 总弧长采样
- */
-export const emitInlineMarkPrimitives = ({
-  commands,
-  inlineMarks,
-  segmentSamplers,
-  roundedCommands,
+/** 沿截断前路径的累计弧长放置标记内容 */
+export const emitPathMarks = ({
+  resources,
+  geometry,
+  placements,
   arrowResolutions,
+  markDefinitions,
   baseProps,
   round,
   resolvePaint,
-}: EmitInlineMarkPrimitivesInput) => {
+  irPath,
+}: EmitPathMarksInput) => {
   const primitives: Array<ScenePrimitive> = [];
   const boundsPoints: Array<IRPosition> = [];
-  if (inlineMarks.length === 0 || segmentSamplers.length === 0) {
-    return { primitives, boundsPoints };
-  }
-
-  const strokeWidth = baseProps.strokeWidth;
-
-  for (const { pos, mark } of inlineMarks) {
-    const sample = sampleStrokePath({ commands, segmentSamplers, roundedCommands, position: pos });
-    if (sample === undefined) continue;
-
-    const resolution = arrowResolutions.get(mark);
-    if (resolution === undefined) {
+  for (const [index, placement] of placements.entries()) {
+    const { mark } = placement;
+    const sample = sampleStrokeMarkGeometry(geometry, placement.pos);
+    if (sample === undefined)
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Compile,
-        `Path arrow mark '${mark.shape ?? 'stealth'}' has no resolving-phase provider binding.`,
+        `Cannot locate mark on a zero-length path at ${irPath}.marks[${index}]`,
+      );
+    const context = {
+      strokeWidth: baseProps.strokeWidth,
+      round,
+      contextStroke: baseProps.stroke ?? 'currentColor',
+      hostOpacity: baseProps.opacity,
+      rotate: placement.rotate,
+      scale: placement.scale,
+    };
+    if (mark.kind === 'arrow') {
+      const resolution = arrowResolutions.get(mark);
+      if (resolution === undefined)
+        throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `Missing arrow binding at ${irPath}.marks[${index}]`);
+      const spec = emitMarkArrow(resolution, round, resolvePaint);
+      spec.refX = resolution.geometry.tipX;
+      primitives.push(buildMarkMarkerGroup(spec, sample, context));
+    } else {
+      const definition = markDefinitions.get(mark.name);
+      if (definition === undefined)
+        throw new RetikzCoreError(
+          RetikzCoreErrorCode.Compile,
+          `Missing mark '${mark.name}' at ${irPath}.marks[${index}]`,
+        );
+      let content: Array<ScenePrimitive>;
+      try {
+        content = Array.from(definition.emit(mark.params ?? {}, { stroke: context.contextStroke, round }));
+      } catch (cause) {
+        throw new RetikzCoreError(
+          RetikzCoreErrorCode.Compile,
+          `Mark '${mark.name}' failed at ${irPath}.marks[${index}]`,
+          { cause },
+        );
+      }
+      primitives.push(
+        placeMarkPrimitives(
+          materializeScenePrimitives(`Mark '${mark.name}' at ${irPath}.marks[${index}]`, content),
+          sample,
+          context,
+          {
+            resourceMap: new Map((resources?.() ?? []).map(resource => [resource.id, resource])),
+            irPath: `${irPath}.marks[${index}]`,
+          },
+        ),
       );
     }
-
-    const spec = emitMarkArrow(resolution, round, resolvePaint);
-    primitives.push(
-      buildMarkMarkerGroup(spec, sample, {
-        strokeWidth,
-        round,
-        contextStroke: baseProps.stroke ?? 'currentColor',
-        hostOpacity: baseProps.opacity,
-      }),
-    );
     boundsPoints.push(sample.point);
   }
-
   return { primitives, boundsPoints };
 };
 
-/** 端点箭头字段：无箭头时不写 undefined key，保持 Scene 输出纯净 */
+/** 提取存在的端点箭头字段 */
 export const pathEndpointArrows = (
-  arrows: PathEndpointDecorations['arrows'],
-): { arrowStart?: ResolvedArrowEnd; arrowEnd?: ResolvedArrowEnd } => {
-  const endpointSpecs: { arrowStart?: ResolvedArrowEnd; arrowEnd?: ResolvedArrowEnd } = {};
-  if (arrows.arrowStart) endpointSpecs.arrowStart = arrows.arrowStart;
-  if (arrows.arrowEnd) endpointSpecs.arrowEnd = arrows.arrowEnd;
-
-  return endpointSpecs;
-};
+  arrows: PathEndpointArrows,
+): { arrowStart?: ResolvedArrowEnd; arrowEnd?: ResolvedArrowEnd } => ({
+  ...(arrows.arrowStart === undefined ? {} : { arrowStart: arrows.arrowStart }),
+  ...(arrows.arrowEnd === undefined ? {} : { arrowEnd: arrows.arrowEnd }),
+});

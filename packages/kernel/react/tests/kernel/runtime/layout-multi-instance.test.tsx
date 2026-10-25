@@ -54,13 +54,13 @@ describe('多 Layout 实例 marker id 隔离', () => {
     const svg = renderToStaticMarkup(
       <div>
         <Layout width={100} height={100}>
-          <Path arrow="->" arrowDetail={{ shape: 'stealth' }}>
+          <Path arrow={{ end: { shape: 'stealth' } }}>
             <Step kind="move" to={[0, 0]} />
             <Step kind="line" to={[80, 0]} />
           </Path>
         </Layout>
         <Layout width={100} height={100}>
-          <Path arrow="->" arrowDetail={{ shape: 'stealth' }}>
+          <Path arrow={{ end: { shape: 'stealth' } }}>
             <Step kind="move" to={[0, 0]} />
             <Step kind="line" to={[80, 0]} />
           </Path>
@@ -84,13 +84,13 @@ describe('多 Layout 实例 marker id 隔离', () => {
     const svg = renderToStaticMarkup(
       <div>
         <Layout width={100} height={100}>
-          <Path arrow="->" arrowDetail={{ shape: 'stealth', color: '#dc2626' }}>
+          <Path arrow={{ end: { shape: 'stealth', color: '#dc2626' } }}>
             <Step kind="move" to={[0, 0]} />
             <Step kind="line" to={[80, 0]} />
           </Path>
         </Layout>
         <Layout width={100} height={100} extensions={{ arrows: [TestOpenArrowDefinition] }}>
-          <Path arrow="->" arrowDetail={{ shape: 'testOpen' }}>
+          <Path arrow={{ end: { shape: 'testOpen' } }}>
             <Step kind="move" to={[0, 0]} />
             <Step kind="line" to={[80, 0]} />
           </Path>

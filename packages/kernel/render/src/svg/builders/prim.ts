@@ -312,14 +312,14 @@ export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNod
     delete node.attrs['data-retikz-id'];
     delete node.attrs.opacity;
     delete node.attrs.filter;
-    if (context.isResourceContent && pathTracks?.length && context.hostId !== undefined) {
+    if (pathTracks?.length && context.hostId !== undefined && (context.isResourceContent || p.id === undefined)) {
       node.attrs['data-retikz-animation-owner'] = context.hostId;
     }
     const pathNode =
       context.decorate && pathTracks?.length
         ? context.decorate(node, {
             ...p,
-            id: context.isResourceContent ? context.hostId : p.id,
+            id: context.isResourceContent ? context.hostId : (p.id ?? context.hostId),
             animations: pathTracks,
           })
         : node;
@@ -328,11 +328,11 @@ export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNod
   }
   if (context.isResourceContent) {
     delete node.attrs['data-retikz-id'];
-    if (p.animations?.length && context.hostId !== undefined) {
-      node.attrs['data-retikz-animation-owner'] = context.hostId;
-    }
   }
-  const animationPrimitive = context.isResourceContent ? { ...p, id: context.hostId } : p;
+  if (p.animations?.length && context.hostId !== undefined && (context.isResourceContent || p.id === undefined)) {
+    node.attrs['data-retikz-animation-owner'] = context.hostId;
+  }
+  const animationPrimitive = context.isResourceContent || p.id === undefined ? { ...p, id: context.hostId } : p;
   const decorated = context.decorate ? context.decorate(node, animationPrimitive) : node;
   if (p.pointerEvents === 'none') decorated.attrs['pointer-events'] = 'none';
 

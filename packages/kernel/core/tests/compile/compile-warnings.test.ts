@@ -16,7 +16,7 @@ describe('CompileOptions.onWarn', () => {
     const cases: Array<IRScene['children'][number]> = [
       {
         type: 'path',
-        marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'missing-arrow' } }],
+        arrow: { end: { shape: 'missing-arrow' } },
         children: [{ type: 'step', kind: 'move', to: [0, 0] }],
       },
     ];

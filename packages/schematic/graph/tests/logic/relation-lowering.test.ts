@@ -181,7 +181,7 @@ describe('Relation lowering', () => {
   ])('lowers the $role default to a solid path and target marker', ({ role, shape }) => {
     const lowered = lower(relation({ role }));
 
-    expect(lowered).toMatchObject({ marks: [{ pos: 1, mark: { kind: 'arrow', shape } }] });
+    expect(lowered).toMatchObject({ arrow: { end: { shape } } });
     expect(lowered).not.toHaveProperty('style.dashPattern');
   });
 
@@ -197,10 +197,10 @@ describe('Relation lowering', () => {
     const lowered = lower(relation({ role: 'association', kind: kind.kind }), { relationKinds: [kind] });
 
     expect(lowered).toMatchObject({
-      marks: [{ pos: 0, mark: { kind: 'arrow', shape: 'openDiamond' } }],
+      arrow: { start: { shape: 'openDiamond' } },
       style: { dashPattern: [4, 2] },
     });
-    expect(lowered.marks).toHaveLength(1);
+    expect(lowered.arrow?.end).toBeUndefined();
   });
 
   it('compiles a direct Relation between a Core Node and Scope target', () => {

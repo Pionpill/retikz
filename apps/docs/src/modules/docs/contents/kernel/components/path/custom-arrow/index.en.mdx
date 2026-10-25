@@ -11,8 +11,8 @@ Core provides the `normal`, `open`, `stealth`, `openStealth`, `circle`, and `ope
 
 | Need                                        | Choose                                              |
 | ------------------------------------------- | --------------------------------------------------- |
-| Resize or recolor an existing arrow         | `arrowDetail`                                       |
-| Use different registered shapes at each end | `arrowDetail.start` / `end`                         |
+| Resize or recolor an existing arrow         | `arrow.start` / `arrow.end`                         |
+| Use different registered shapes at each end | `arrow.start` / `end`                               |
 | Add a new endpoint outline                  | Custom Arrow                                        |
 | Change the output of the whole relation     | [Custom Paths](/kernel/components/path/custom-path) |
 
@@ -97,8 +97,7 @@ import { Draw, Layout } from '@retikz/react';
       [0, 0],
       [120, 0],
     ]}
-    arrow="->"
-    arrowDetail={{ shape: 'bracket' }}
+    arrow={{ end: { shape: 'bracket' } }}
   />
 </Layout>;
 ```
@@ -121,8 +120,7 @@ const input = scene({
         [0, 0],
         [120, 0],
       ],
-      arrow: '->',
-      arrowDetail: { shape: 'bracket' },
+      arrow: { end: { shape: 'bracket' } },
     }),
   ],
 });
@@ -146,7 +144,7 @@ Without a fixed color, the same arrow definition follows each path stroke. Compa
 | ------------------------------------------------------- | -------------------------------------------------- |
 | Empty name                                              | Registry rejects the non-empty key contract        |
 | Duplicate Core, Standard, or custom name                | Registry merge reports a duplicate registration    |
-| Unknown `arrowDetail.shape`                             | Compile lists available names and `options.arrows` |
+| Unknown `arrow.end.shape`                               | Compile lists available names and `options.arrows` |
 | Invalid `baseSize`, back / contact / tip, or dimensions | Compile rejects invalid marker geometry            |
 
 `emit` returns `Iterable<ScenePrimitive>` with the full path, ellipse, rect, text, and group contracts. Text must already be measured. Paint and clip references must exist in the same Scene; missing, wrong-kind, or cyclic references fail. Finite nested arrows and Patterns are supported. Definition-side wrappers may derive from basic primitives and must be converted before returning. Set `fill: 'none'` explicitly for hollow content; defaults match ordinary primitives.
@@ -179,9 +177,9 @@ These are the members most often used to define, inject, and reference a custom 
       description: 'Inject arrow definitions into a React Layout so Path and Draw can resolve them by name.',
     },
     {
-      name: 'Draw.arrowDetail',
+      name: 'Draw.arrow',
       kind: 'property',
-      type: "DrawProps['arrowDetail']",
+      type: "DrawProps['arrow']",
       description: 'Choose a registered endpoint `shape` and override visual details such as color and size.',
     },
   ]}

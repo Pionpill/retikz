@@ -2,6 +2,7 @@ import type {
   AnyCompositeDefinition,
   AnyPathDefinition,
   ArrowDefinition,
+  MarkDefinition,
   BoundaryDefinition,
   ClipDefinition,
   CoreProviderDefinitions,
@@ -15,6 +16,7 @@ type ProviderDefinition =
   | BoundaryDefinition
   | ClipDefinition
   | ArrowDefinition
+  | MarkDefinition
   | PatternDefinition
   | AnyPathDefinition
   | AnyCompositeDefinition;
@@ -128,6 +130,7 @@ const providerCollections = [
   'boundaries',
   'clips',
   'arrows',
+  'marks',
   'patterns',
   'paths',
   'composites',

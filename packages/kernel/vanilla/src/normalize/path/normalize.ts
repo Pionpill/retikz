@@ -1,89 +1,10 @@
-import type { IRArcStep, IRArrowMark, IRAxisLineTarget, IRPath, IRPathBase, IRStep, IRTarget } from '@retikz/core';
+import type { IRArcStep, IRAxisLineTarget, IRPath, IRStep, IRTarget } from '@retikz/core';
 import { AxisLineTargetSchema, parseTargetSugar, parseWay } from '@retikz/core';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type { InputAxisLineTarget, InputPath, InputStep, InputTarget } from './types';
 
-/** 从路径箭头细节生成单端 Source IR 标记 */
-const arrowMarkFromDetail = (detail: InputPath['arrowDetail'], endpoint: 'start' | 'end'): IRArrowMark => {
-  const base = detail ?? {};
-  const side = endpoint === 'start' ? base.start : base.end;
-  const shape = side?.shape ?? base.shape;
-  const scale = side?.scale ?? base.scale;
-  const length = side?.length ?? base.length;
-  const width = side?.width ?? base.width;
-  const color = side?.color ?? base.color;
-  const fill = side?.fill ?? base.fill;
-  const opacity = side?.opacity ?? base.opacity;
-  const lineWidth = side?.lineWidth ?? base.lineWidth;
-
-  return {
-    kind: 'arrow',
-    ...(shape === undefined ? {} : { shape }),
-    ...(scale === undefined ? {} : { scale }),
-    ...(length === undefined ? {} : { length }),
-    ...(width === undefined ? {} : { width }),
-    ...(color === undefined ? {} : { color }),
-    ...(fill === undefined ? {} : { fill }),
-    ...(opacity === undefined ? {} : { opacity }),
-    ...(lineWidth === undefined ? {} : { lineWidth }),
-  };
-};
-
-/** 汇总路径箭头语法糖与显式 marks */
-const normalizePathMarks = (input: InputPath): IRPathBase['marks'] | undefined => {
-  const marks: NonNullable<IRPathBase['marks']> = [];
-  const hasStartArrow = input.arrow === '<-' || input.arrow === '<->';
-  const hasEndArrow = input.arrow === '->' || input.arrow === '<->';
-  if (input.arrowPlacement !== undefined) {
-    if (!hasStartArrow && !hasEndArrow) {
-      throw new RetikzVanillaError(
-        RetikzVanillaErrorCode.Normalize,
-        'normalizePath: arrowPlacement requires arrow to create at least one endpoint',
-      );
-    }
-
-    if (input.arrowPlacement.start !== undefined && !hasStartArrow) {
-      throw new RetikzVanillaError(
-        RetikzVanillaErrorCode.Normalize,
-        'normalizePath: arrowPlacement.start requires a start arrow',
-      );
-    }
-
-    if (input.arrowPlacement.end !== undefined && !hasEndArrow) {
-      throw new RetikzVanillaError(
-        RetikzVanillaErrorCode.Normalize,
-        'normalizePath: arrowPlacement.end requires an end arrow',
-      );
-    }
-  }
-
-  if (input.arrow !== undefined && input.arrow !== 'none') {
-    if (hasStartArrow) {
-      const endpointOverlap = input.arrowPlacement?.start?.overlap ?? input.arrowPlacement?.overlap;
-      marks.push({
-        pos: 0,
-        ...(endpointOverlap === undefined ? {} : { endpointOverlap }),
-        mark: arrowMarkFromDetail(input.arrowDetail, 'start'),
-      });
-    }
-
-    if (hasEndArrow) {
-      const endpointOverlap = input.arrowPlacement?.end?.overlap ?? input.arrowPlacement?.overlap;
-      marks.push({
-        pos: 1,
-        ...(endpointOverlap === undefined ? {} : { endpointOverlap }),
-        mark: arrowMarkFromDetail(input.arrowDetail, 'end'),
-      });
-    }
-  }
-
-  if (input.marks !== undefined) marks.push(...input.marks);
-
-  return marks.length === 0 ? undefined : marks;
-};
-
-/** 将作者侧 target 组装为 Source IR target */
+/** 将作者目标写法转换为 IR 目标 */
 const normalizeTarget = (input: InputTarget): IRTarget => parseTargetSugar(input);
 
 /** 将作者侧 axis-line target 组装为受限的 Source IR target */
@@ -165,23 +86,9 @@ const normalizePathChildren = (children: ReadonlyArray<IRStep>): Array<IRStep> =
 
 /** 将作者侧路径输入组装为 Source IR */
 export const normalizePath = (input: InputPath): IRPath => {
-  const {
-    type: _type,
-    authoring: _authoring,
-    way,
-    arrow: _arrow,
-    arrowDetail: _arrowDetail,
-    arrowPlacement: _arrowPlacement,
-    children,
-    marks: _marks,
-    ...path
-  } = input;
+  const { type: _type, authoring: _authoring, way, children, arrow, ...path } = input;
   void _type;
   void _authoring;
-  void _arrow;
-  void _arrowDetail;
-  void _arrowPlacement;
-  void _marks;
   if (way !== undefined && children !== undefined) {
     throw new RetikzVanillaError(
       RetikzVanillaErrorCode.Normalize,
@@ -196,12 +103,18 @@ export const normalizePath = (input: InputPath): IRPath => {
   }
 
   const normalizedChildren = normalizePathChildren(authoredChildren);
-  const marks = normalizePathMarks(input);
+  const normalizedArrow =
+    typeof arrow === 'string'
+      ? {
+          ...(arrow === '<-' || arrow === '<->' ? { start: {} } : {}),
+          ...(arrow === '->' || arrow === '<->' ? { end: {} } : {}),
+        }
+      : arrow;
 
   return {
     type: 'path',
     ...path,
+    ...(normalizedArrow === undefined ? {} : { arrow: normalizedArrow }),
     children: normalizedChildren,
-    ...(marks === undefined ? {} : { marks }),
   };
 };
