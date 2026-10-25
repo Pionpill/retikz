@@ -1,6 +1,5 @@
 export { AnchorIdSchema, PlotTargetEncodingSchema, PlotTargetRefSchema } from './anchor';
 export type { IRPlotAnchorId, IRPlotTargetRef } from './anchor';
-export * from './auto-padding';
 export { BuiltinPlotMark, MarkTransformSchema, MarkValueKind } from './base';
 export type { IRPlotMarkTransform } from './base';
 export * from './interval';

@@ -21,10 +21,9 @@ import type { infer as ZodInfer } from 'zod';
 import { PolarInterpolation } from '../coordinate';
 import { ChannelSchema, PathEncodingSchema, VisualEncodingSchema } from '../encoding';
 import { PlotTargetEncodingSchema, PlotTargetRefSchema } from './anchor';
-import { PointAutoPaddingSchema } from './auto-padding';
 import { BuiltinPlotMark, MarkTransformSchema, markBase } from './base';
 import { MarkPathLabelListSchema } from './label';
-import { PointPropertiesSchema } from './point';
+import { PointAutoPaddingSchema, PointPropertiesSchema } from './point';
 
 /** 关系图元采用的路径或带状几何形态 */
 export const RelationGeometryKind = {
