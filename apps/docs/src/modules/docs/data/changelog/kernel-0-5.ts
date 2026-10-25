@@ -680,8 +680,8 @@ export const kernelV05: Release = {
           version: 'alpha.5',
           date: '2026-09-22',
           summary: {
-            zh: '新增 Scope.frame 外框与 Scene hitTest: false；spec 已是完整 ClipShape 时，defineClip 可只传 kind、schema、lower。BREAKING：grow、growUp、pulse、spin、flash、blink、wiggle 及专属选项改从 @retikz/extension 导入；基础预设、轨道 JSON 与播放机制不变。',
-            en: 'Adds Scope.frame and Scene hitTest: false. When a spec is already a complete ClipShape, defineClip accepts only kind, schema, and lower. BREAKING: import grow, growUp, pulse, spin, flash, blink, wiggle and their options from @retikz/extension. Basic presets, saved track JSON, and playback are unchanged.',
+            zh: '新增 Scope.frame 外框与 Scene pointerEvents: "none"；spec 已是完整 ClipShape 时，defineClip 可只传 kind、schema、lower。BREAKING：grow、growUp、pulse、spin、flash、blink、wiggle 及专属选项改从 @retikz/extension 导入；基础预设、轨道 JSON 与播放机制不变。',
+            en: 'Adds Scope.frame and Scene pointerEvents: "none". When a spec is already a complete ClipShape, defineClip accepts only kind, schema, and lower. BREAKING: import grow, growUp, pulse, spin, flash, blink, wiggle and their options from @retikz/extension. Basic presets, saved track JSON, and playback are unchanged.',
           },
           items: [],
         },
@@ -1077,8 +1077,8 @@ export const kernelV05: Release = {
           version: 'alpha.5',
           date: '2026-09-22',
           summary: {
-            zh: 'SVG 与 Canvas 支持 Scene 的 hitTest: false，排除装饰图元或整个子树的指针命中，保留绘制和 retained 更新。',
-            en: 'SVG and Canvas honor Scene hitTest: false, excluding decorative primitives or entire subtrees from pointer hits while preserving rendering and retained updates.',
+            zh: 'SVG 与 Canvas 支持 Scene 的 pointerEvents: "none"，排除装饰图元或整个子树的指针命中，保留绘制和 retained 更新。',
+            en: 'SVG and Canvas honor Scene pointerEvents: "none", excluding decorative primitives or entire subtrees from pointer hits while preserving rendering and retained updates.',
           },
           items: [],
         },

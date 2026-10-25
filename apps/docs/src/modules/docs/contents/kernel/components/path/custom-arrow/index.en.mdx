@@ -151,7 +151,7 @@ Without a fixed color, the same arrow definition follows each path stroke. Compa
 
 `emit` returns `Iterable<ScenePrimitive>` with the full path, ellipse, rect, text, and group contracts. Text must already be measured. Paint and clip references must exist in the same Scene; missing, wrong-kind, or cyclic references fail. Finite nested arrows and Patterns are supported. Definition-side wrappers may derive from basic primitives and must be converted before returning. Set `fill: 'none'` explicitly for hollow content; defaults match ordinary primitives.
 
-Content animations share the scene clock with independent playback origins per host: triggering A does not restart B. Local `id` and `meta` do not create independent update nodes. Arrow hits belong to the host; `hitTest: false` excludes the corresponding subtree.
+Content animations share the scene clock with independent playback origins per host: triggering A does not restart B. Local `id` and `meta` do not create independent update nodes. Arrow hits belong to the host; `pointerEvents: "none"` excludes the corresponding subtree.
 
 ## Related props
 

@@ -415,11 +415,11 @@ describe('Scene 禁用命中', () => {
         {
           type: 'group',
           id: 'scope',
-          children: [{ type: 'rect', hitTest: false, x: 0, y: 0, width: 100, height: 100, fill: 'blue' }],
+          children: [{ type: 'rect', pointerEvents: 'none', x: 0, y: 0, width: 100, height: 100, fill: 'blue' }],
         },
         {
           type: 'group',
-          hitTest: false,
+          pointerEvents: 'none',
           children: [{ type: 'rect', id: 'hidden-target', x: 0, y: 0, width: 100, height: 100, fill: 'green' }],
         },
       ],
@@ -469,7 +469,7 @@ it.each<ScenePrimitive>([
     primitive.type === 'path' && primitive.arrowEnd
       ? {
           ...primitive,
-          arrowEnd: { ...primitive.arrowEnd, marker: [{ ...content, hitTest: false }] },
+          arrowEnd: { ...primitive.arrowEnd, marker: [{ ...content, pointerEvents: 'none' }] },
         }
       : primitive,
   );

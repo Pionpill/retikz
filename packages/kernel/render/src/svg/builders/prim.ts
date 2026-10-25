@@ -334,7 +334,7 @@ export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNod
   }
   const animationPrimitive = context.isResourceContent ? { ...p, id: context.hostId } : p;
   const decorated = context.decorate ? context.decorate(node, animationPrimitive) : node;
-  if (p.hitTest === false) decorated.attrs['pointer-events'] = 'none';
+  if (p.pointerEvents === 'none') decorated.attrs['pointer-events'] = 'none';
 
   return decorated;
 };

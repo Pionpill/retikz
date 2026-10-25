@@ -125,7 +125,7 @@ export const hitTest = (scene: Scene, point: HitPoint, options?: HitTestOptions)
   const strokeTolerance = options?.strokeTolerance;
   // 逆 z-order：后画的在上，先测最后画的；命中即返回最近 id-bearing 祖先 id。
   const walk = (prim: ScenePrimitive, nearestId: string | undefined, isResourceContent = false): string | null => {
-    if (prim.hitTest === false) return null;
+    if (prim.pointerEvents === 'none') return null;
 
     const selfId = isResourceContent ? nearestId : (prim.id ?? nearestId);
     if (prim.type === 'group') {

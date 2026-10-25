@@ -149,7 +149,7 @@ const view = mount(document.getElementById('diagram')!, input, {
 
 `emit` 返回 `Iterable<ScenePrimitive>`，复用路径、椭圆、矩形、文本和分组的完整契约。文本必须已经度量；裁剪与绘制引用必须属于当前 Scene。不要返回 DOM、Canvas 对象或未度量的文本。定义处需要作者封装时，可从基础 Prim 派生类型，并在返回前转换为基础图元。
 
-内容动画共享场景时钟，但按宿主隔离播放起点；触发 A 不会重播 B。内容的 `id` 与 `meta` 保留为局部信息，不创建独立更新节点。箭头命中归宿主，内部 `hitTest: false` 排除对应子树。
+内容动画共享场景时钟，但按宿主隔离播放起点；触发 A 不会重播 B。内容的 `id` 与 `meta` 保留为局部信息，不创建独立更新节点。箭头命中归宿主，内部 `pointerEvents: "none"` 排除对应子树。
 
 ## 相关属性
 
