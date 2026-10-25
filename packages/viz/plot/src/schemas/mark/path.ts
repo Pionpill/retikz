@@ -12,7 +12,7 @@ import {
 } from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import type { ValueOf } from '@retikz/foundation';
-import { boolean, discriminatedUnion, enum as zodEnum, literal, never, number, strictObject, union } from 'zod';
+import { array, boolean, discriminatedUnion, enum as zodEnum, literal, never, number, strictObject, union } from 'zod';
 import type { infer as ZodInfer } from 'zod';
 
 import { CoordinateConnection, PolarInterpolation } from '../coordinate';
@@ -20,6 +20,7 @@ import { PathEncodingSchema, PositionEncodingSchema } from '../encoding';
 import { AnchorIdSchema, hasValidAnchorSource, PathEndpointSchema } from './anchor';
 import { BuiltinPlotMark, markBase } from './base';
 import { MarkPathLabelListSchema } from './label';
+import { PlotPathStepSchema } from './path-step';
 
 /** 开放轨迹跨缺值连接段的常量描边覆盖 */
 export const PlotPathConnectNullsStyleSchema = PathStrokeSchema.extend({
@@ -153,6 +154,7 @@ export const PathMarkEncodingSchema = union([
   PathEncodingSchema.extend({
     anchorId: NonBlankStringSchema.optional(),
     position: PositionEncodingSchema,
+    steps: never().optional(),
     from: never().optional(),
     to: never().optional(),
     series: NonBlankStringSchema.optional(),
@@ -162,7 +164,18 @@ export const PathMarkEncodingSchema = union([
   PathEncodingSchema.extend({
     anchorId: NonBlankStringSchema.optional(),
     from: PathEndpointSchema,
+    steps: never().optional(),
     to: PathEndpointSchema,
+    position: never().optional(),
+    series: never().optional(),
+    order: never().optional(),
+    closure: never().optional(),
+  }),
+  PathEncodingSchema.extend({
+    anchorId: NonBlankStringSchema.optional(),
+    steps: array(PlotPathStepSchema).min(2),
+    from: never().optional(),
+    to: never().optional(),
     position: never().optional(),
     series: never().optional(),
     order: never().optional(),
@@ -181,7 +194,19 @@ export const PathMarkSchema = strictObject({
     path: ['properties', 'anchorId'],
     message: 'anchorId requires exactly one of field, template, or generator',
   })
+  .superRefine((mark, context) => {
+    if (mark.encodings.steps === undefined) return;
+    for (const field of ['curve', 'closure', 'closed', 'connectNulls', 'interpolation', 'connection'] as const) {
+      if (mark.properties?.[field] !== undefined)
+        context.addIssue({
+          code: 'custom',
+          path: ['properties', field],
+          message: `Explicit steps cannot use ${field}`,
+        });
+    }
+  })
   .transform(mark => {
+    if (mark.encodings.steps !== undefined) return mark;
     if (mark.properties === undefined || mark.properties.connection !== undefined) return mark;
     const referencesMark =
       mark.encodings.from !== undefined && ('mark' in mark.encodings.from || 'mark' in mark.encodings.to);

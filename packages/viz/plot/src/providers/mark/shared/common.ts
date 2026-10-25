@@ -31,6 +31,7 @@ import {
   markProperty,
   positionField,
   markPositionInputs,
+  pathStepTargets,
   markChannelEncoding,
 } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
@@ -354,7 +355,7 @@ export const collectPositionRoleFields = (mark: PositionEncodedMark, fields: Fie
 /** 收集注册的直接视觉字段目标，结构目标由其宿主收集 */
 export const collectEncodingChannelFields = (mark: PositionEncodedMark, fields: FieldCollector): void => {
   for (const [target, binding] of Object.entries(mark.encodings ?? {})) {
-    if (['position', 'from', 'to', 'opacity', 'label', 'bounds', 'closure'].includes(target)) continue;
+    if (['position', 'from', 'to', 'steps', 'opacity', 'label', 'bounds', 'closure'].includes(target)) continue;
     fields.addChannel(binding as IRPlotChannel | undefined);
   }
 };
@@ -389,6 +390,10 @@ export const collectAnchorIdFields = (anchorId: IRPlotAnchorId | undefined, fiel
  * @description point / path / interval 共用 shared encoding；具体样式字段再由 node/path channel definition 派生收集
  */
 export const collectCommonEncodingFields = (mark: PositionEncodedMark, fields: FieldCollector): void => {
+  if (mark.type === 'path' && mark.encodings.steps !== undefined)
+    for (const step of mark.encodings.steps)
+      for (const { target } of pathStepTargets(step))
+        if ('mark' in target && 'field' in target.key) fields.addField(target.key.field);
   if (mark.type === 'path' && mark.encodings.from !== undefined)
     for (const endpoint of [mark.encodings.from, mark.encodings.to])
       if ('mark' in endpoint && 'field' in endpoint.key) fields.addField(endpoint.key.field);

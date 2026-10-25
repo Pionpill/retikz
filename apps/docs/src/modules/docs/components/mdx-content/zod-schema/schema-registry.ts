@@ -2356,6 +2356,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PathMark',
     url: '/viz/plot/reference/mark#pathmarkschema',
   },
+  PlotPathStepSchema: {
+    schema: IRPlot.PlotPathStepSchema,
+    label: 'PlotPathStep',
+    url: '/viz/plot/reference/mark#plotpathstepschema',
+  },
   IntervalMarkSchema: {
     schema: IRPlot.IntervalMarkSchema,
     label: 'IntervalMark',

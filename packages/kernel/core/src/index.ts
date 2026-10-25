@@ -195,6 +195,7 @@ export {
   SmoothStepSchema,
   SmoothTensionSchema,
   StepSchema,
+  createPathStepSchema,
   StrokeCapJoinSchema,
   StrokeDashOffsetSchema,
   StrokeDashPatternSchema,

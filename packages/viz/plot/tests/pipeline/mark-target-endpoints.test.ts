@@ -49,6 +49,25 @@ const flatten = (items: Array<ScenePrimitive>): Array<ScenePrimitive> =>
   items.flatMap(item => (item.type === 'group' ? flatten(item.children) : [item]));
 
 describe('Mark target connections', () => {
+  it('resolves step targets and rejects their forward declarations even for empty data', () => {
+    const stepped = {
+      type: 'path',
+      encodings: {
+        steps: [
+          { kind: 'move', to: connection.encodings.from },
+          { kind: 'bend', to: connection.encodings.to, outAngle: 30, inAngle: 150 },
+        ],
+      },
+    };
+    const lowered = lower(plot([nodes, stepped]), { data: rows });
+    expect(paths(lowered)).toHaveLength(2);
+    expect(paths(lowered)[0].children).toMatchObject([
+      { kind: 'move', to: { id: 'custom.a' } },
+      { kind: 'bend', to: { id: 'custom.b' }, outAngle: 30, inAngle: 150 },
+    ]);
+    expect(() => compileToScene({ version: 1, type: 'scene', children: [lowered] })).not.toThrow();
+    expect(() => lower(plot([stepped, nodes]), { data: [] })).toThrow(/declared before/);
+  });
   it('resolves target identity and compiles actual geometry', () => {
     const lowered = lower(plot([nodes, connection]), { data: rows }, { textMeasurer: measureLabel });
     const links = paths(lowered);

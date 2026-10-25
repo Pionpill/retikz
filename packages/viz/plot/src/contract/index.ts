@@ -8,6 +8,7 @@ export * from './lineage';
 export * from './locator';
 export * from './mark';
 export * from './position';
+export * from './path-step';
 export * from './position-adjustment';
 export * from './preparation';
 export * from './provenance';

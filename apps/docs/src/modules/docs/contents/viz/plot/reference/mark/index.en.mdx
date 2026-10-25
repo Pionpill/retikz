@@ -7,6 +7,15 @@ Marks are the geometry-output layer of the graphics grammar. Point, Path, Interv
 
 Fixed `fill` / `stroke` reuse Core PaintValue: CSS colors, a master color weight from 0 to 1, or structured Paint. `opacity` accepts a number (equivalent to `overall`) or an object with independent `overall` / `fill` / `stroke` factors. Relation primitive styles follow the same rules.
 
+## PlotPathStepSchema
+
+<ZodSchema
+  name="PlotPathStepSchema"
+  description="Constructs a path with Core steps after projecting data positions. Steps use kind and omit the type field."
+/>
+
+Targets accept Core drawing coordinates, Plot data positions, or mark references. Bezier control points accept only absolute coordinates or data positions. See [Path construction](/viz/plot/mark/path#path-construction).
+
 ## MarkSchema
 
 <ZodSchema name="MarkSchema" />

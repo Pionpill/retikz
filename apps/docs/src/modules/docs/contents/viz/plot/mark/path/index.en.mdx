@@ -326,6 +326,10 @@ The coordinate system defaults to `polar` for a continuous angular scale and `ch
   defaultSourceFile="line-radar.preview.tsx"
 />
 
+## Relationship usage
+
+Use `PathMark` to draw relationships between data coordinates or previously declared marks. Specify the connection targets, then use path steps to control the route between them.
+
 ### Mark targets
 
 An endpoint can reference generated geometry: `mark` selects the target Mark's `id`, and `key` selects an exposed instance identity. Declare targets before connections. The target uses `encodings.anchorId` to name its identity field; the connection uses `key.field` to read its current row or `key.value` for a fixed identity.
@@ -343,6 +347,50 @@ Coordinate endpoints and Mark references can be mixed. Node references accept `a
 | `offset`   | Drawing-space offset `[dx, dy]` after anchor resolution                                                                |
 
 Point and Interval expose individual nodes or regions. Vertex-based Paths expose data vertices with position and offset only; whole paths cannot be targets. References stay within the current facet. Incorrect declaration order, duplicate identities, and targets that were not generated produce errors.
+
+### Path construction
+
+Use `encodings.steps` for orthogonal connections, bends, or multi-segment routes. Field bindings produce one complete path per result row; a path with only constant positions and appearance produces one instance.
+
+React also accepts `PlotPathStep` children. Vanilla `normalizePlot` accepts `way` or `encodings.steps` on a path mark. All forms produce the same persisted steps.
+
+```text
+Plot
+└── PathMark
+    ├── PlotPathStep
+    └── PlotPathStep
+```
+
+This example draws curved arrows using each scatter point's `target` field:
+
+<ComponentPreview
+  mode="showcase"
+  files={['path-construction', 'path-construction.preview.tsx', 'path-construction.data.ts']}
+  defaultSourceFile="path-construction.preview.tsx"
+  size="md"
+/>
+
+For common routes, `way` starts at its first target and connects subsequent targets with lines. Insert a fold or curve operator to change a segment. The same relationships below use three-leg orthogonal connections:
+
+```tsx
+<PathMark
+  way={[{ mark: 'nodes', key: { field: 'id' } }, '-|-', { mark: 'nodes', key: { field: 'target' } }]}
+  arrow="->"
+  properties={{ cornerRadius: 5 }}
+/>
+```
+
+| Input                           | Purpose                                                                                |
+| ------------------------------- | -------------------------------------------------------------------------------------- |
+| `position`                      | Vertices across rows, with sorting, grouping, interpolation and missing-value handling |
+| `from` / `to`                   | One simple connection per row                                                          |
+| `steps` / `way` / step children | One complete constructed path per row; these inputs are mutually exclusive             |
+
+Full steps support `move`, `line`, `axis-line`, `fold`, `cycle`, `curve`, `cubic`, `bend`, `arc`, `circlePath`, `ellipsePath`, `rectangle`, `smooth`, and `generator`, with the same parameters as Core [Path steps](/kernel/components/path/step). `way` covers common shorthand; use explicit steps for full control. `arrow`, `arrowDetail`, and `arrowPlacement` follow the Core authoring shorthand.
+
+Data positions such as `{ x: { field: 'x' }, y: { field: 'y' } }`, including control points, pass through scales and coordinate projection before constructing the route. Tuples, radii, relative offsets and angles retain Core drawing-space units. Axis-line steps remain horizontal or vertical after projection.
+
+Data positions contribute to domains; target identities and fixed drawing coordinates do not. Explicit steps do not use `series`, `order`, `curve`, `closure`, `closed`, `connectNulls`, `interpolation`, or `connection`. Use steps such as `cycle` to close a path. An invalid data position fails the instance instead of dropping a step and reconnecting the remaining points.
 
 ## Errors and limitations
 

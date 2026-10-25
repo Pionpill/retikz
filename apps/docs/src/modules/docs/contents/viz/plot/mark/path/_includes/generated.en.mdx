@@ -2,30 +2,74 @@
 
 **Component properties**
 
-#### <ApiSourceLink label={"PathMarkProps"} path={"packages/viz/plot-react/src/components/marks.tsx"} startLine={12}>PathMarkProps</ApiSourceLink>
+#### <ApiSourceLink label={"PathMarkProps"} path={"packages/viz/plot-react/src/components/marks.tsx"} startLine={13}>PathMarkProps</ApiSourceLink>
 
-<DocTabs defaultValue="members">
+**Common members**
 
-<DocTab value="members" label="Members">
+<ApiTable>
 
-<ApiTable grouped>
+| Member                | Type                                | Default | Description                                  |
+| --------------------- | ----------------------------------- | ------- | -------------------------------------------- |
+| `arrow?`              | `InputPathArrowDirection`           | —       | Path arrow direction                         |
+| `arrowDetail?`        | `IRArrowDetail`                     | —       | Shared arrow defaults and endpoint overrides |
+| `arrowPlacement?`     | `InputPathArrowPlacement`           | —       | Shared and per-endpoint arrow placement      |
+| `contributeToDomain?` | `false \| true`                     | —       | —                                            |
+| `coordinateView?`     | `string`                            | —       | —                                            |
+| `defaultColorGroup?`  | `string`                            | —       | —                                            |
+| `defaultColorIndex?`  | `number`                            | —       | —                                            |
+| `facetId?`            | `string`                            | —       | —                                            |
+| `id?`                 | `string`                            | —       | —                                            |
+| `layer?`              | `{ zIndex?: number \| undefined; }` | —       | —                                            |
+| `properties?`         | `PathMarkProps["properties"]`       | —       | —                                            |
+| `resolveLabel?`       | `(row: ExternalRow) => string`      | —       | —                                            |
+| `trackId?`            | `string`                            | —       | —                                            |
+| `transforms?`         | `PathMarkProps["transforms"]`       | —       | —                                            |
+| `xAxisId?`            | `string`                            | —       | —                                            |
+| `yAxisId?`            | `string`                            | —       | —                                            |
 
-| Group     | Member                | Type                                | Default | Description |
-| --------- | --------------------- | ----------------------------------- | ------- | ----------- |
-| Main      | `id?`                 | `string`                            | —       | —           |
-| Data      | `contributeToDomain?` | `false \| true`                     | —       | —           |
-|           | `encodings`           | `InputPlotPathMark['encodings']`    | —       | —           |
-|           | `transforms?`         | `InputPlotPathMark['transforms']`   | —       | —           |
-| Geometry  | `coordinateView?`     | `string`                            | —       | —           |
-|           | `properties?`         | `InputPlotPathMark['properties']`   | —       | —           |
-|           | `xAxisId?`            | `string`                            | —       | —           |
-|           | `yAxisId?`            | `string`                            | —       | —           |
-| Layout    | `facetId?`            | `string`                            | —       | —           |
-|           | `trackId?`            | `string`                            | —       | —           |
-| Style     | `defaultColorGroup?`  | `string`                            | —       | —           |
-|           | `defaultColorIndex?`  | `number`                            | —       | —           |
-|           | `layer?`              | `{ zIndex?: number \| undefined; }` | —       | —           |
-| Callbacks | `resolveLabel?`       | `(row: ExternalRow) => string`      | —       | —           |
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="encodings">
+
+<DocTab value="encodings" label="Members · Explicit encodings">
+
+<ApiTable>
+
+| Member      | Type                          | Default | Description |
+| ----------- | ----------------------------- | ------- | ----------- |
+| `children?` | `never`                       | —       | —           |
+| `encodings` | `IRPlotPathMark['encodings']` | —       | —           |
+| `way?`      | `never`                       | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="way" label="Members · Way shorthand">
+
+<ApiTable>
+
+| Member       | Type                         | Default | Description |
+| ------------ | ---------------------------- | ------- | ----------- |
+| `children?`  | `never`                      | —       | —           |
+| `encodings?` | `PlotPathAppearanceEncoding` | —       | —           |
+| `way`        | `InputPlotPathWay`           | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="Members · Step children">
+
+<ApiTable>
+
+| Member       | Type                         | Default | Description |
+| ------------ | ---------------------------- | ------- | ----------- |
+| `children`   | `ReactNode`                  | —       | —           |
+| `encodings?` | `PlotPathAppearanceEncoding` | —       | —           |
+| `way?`       | `never`                      | —       | —           |
 
 </ApiTable>
 
@@ -34,14 +78,31 @@
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type PathMarkProps = InputPlotPathMark;
+export type PathMarkProps =
+  | Exclude<
+      InputPlotPathMark,
+      {
+        children: Array<IRPlotPathStep>;
+      }
+    >
+  | (Omit<
+      Extract<
+        InputPlotPathMark,
+        {
+          children: Array<IRPlotPathStep>;
+        }
+      >,
+      'children'
+    > & {
+      children: ReactNode;
+    });
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRPlotPathMark"} path={"packages/viz/plot/src/schemas/mark/path.ts"} startLine={202}>IRPlotPathMark</ApiSourceLink> / <ApiSourceLink label={"PathMarkSchema"} path={"packages/viz/plot/src/schemas/mark/path.ts"} startLine={174}>PathMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPlotPathMark"} path={"packages/viz/plot/src/schemas/mark/path.ts"} startLine={227}>IRPlotPathMark</ApiSourceLink> / <ApiSourceLink label={"PathMarkSchema"} path={"packages/viz/plot/src/schemas/mark/path.ts"} startLine={187}>PathMarkSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 

@@ -7,7 +7,7 @@ import {
   PositiveNumberSchema,
   NormalizedFractionSchema,
 } from '@retikz/foundation';
-import type { infer as ZodInfer, RefinementCtx } from 'zod';
+import type { infer as ZodInfer, RefinementCtx, ZodArray, ZodObject } from 'zod';
 import { array, boolean, discriminatedUnion, enum as zodEnum, literal, number, record, strictObject, union } from 'zod';
 
 import { CoordinateOperationSchema } from '../coordinate';
@@ -421,7 +421,7 @@ export const CoordinateCompositionSchema = strictObject({
   .describe('Plot-level coordinate view registry used by marks and axis guides');
 
 /** 校验不携带实际数据的可序列化绘图组合节点，编译时绑定外部数据并降低为 Core 图元 */
-export const PlotSchema = CompositeBaseSchema.extend({
+const plotBaseSchema = CompositeBaseSchema.extend({
   namespace: literal(PLOT_NAMESPACE).describe(
     'Tier 2 domain namespace; routes this node to the plot lowering registered via CompileOptions.composites',
   ),
@@ -461,84 +461,90 @@ export const PlotSchema = CompositeBaseSchema.extend({
   composition: CoordinateCompositionSchema.optional().describe(
     'Coordinate composition registry for Plot-internal coordinate views referenced by marks and axis guides',
   ),
-  marks: array(MarkSchema)
-    .min(1)
-    .describe('Built-in mark layers, drawn in array order (stable z-order): point, path, interval, or relation'),
   guides: array(GuideSchema)
     .optional()
     .describe(
       'Guide layers (axes, each with optional grid lines), derived from scales + coordinate; omit for no guides. Grid lines draw behind marks; axis lines / ticks / labels around the plot area.',
     ),
   meta: JsonObjectSchema.optional().describe('Free-form JSON-serializable source metadata copied into core IR meta'),
-})
-  .superRefine((spec, ctx) => {
-    const scaleNames = new Set<string>();
-    spec.scales.forEach((scale, index) => {
-      if (scaleNames.has(scale.name)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['scales', index, 'name'],
-          message: `scale name "${scale.name}" must be unique within a plot`,
-        });
-      }
+});
 
-      scaleNames.add(scale.name);
-    });
-    if (spec.coordinate === undefined && spec.composition === undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['coordinate'],
-        message: 'IRPlot requires either coordinate shorthand or composition',
+/** 保持图元 schema 的命名边界，避免根声明重复展开全部步骤与目标联合 */
+export const PlotSchema: ZodObject<typeof plotBaseSchema.shape & { marks: ZodArray<typeof MarkSchema> }> =
+  plotBaseSchema
+    .extend({
+      marks: array(MarkSchema)
+        .min(1)
+        .describe('Built-in mark layers, drawn in array order (stable z-order): point, path, interval, or relation'),
+    })
+    .superRefine((spec, ctx) => {
+      const scaleNames = new Set<string>();
+      spec.scales.forEach((scale, index) => {
+        if (scaleNames.has(scale.name)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['scales', index, 'name'],
+            message: `scale name "${scale.name}" must be unique within a plot`,
+          });
+        }
+
+        scaleNames.add(scale.name);
       });
-    }
+      if (spec.coordinate === undefined && spec.composition === undefined) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['coordinate'],
+          message: 'IRPlot requires either coordinate shorthand or composition',
+        });
+      }
 
-    if (spec.coordinate !== undefined && spec.composition !== undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['composition'],
-        message: 'IRPlot cannot use coordinate shorthand and composition together',
+      if (spec.coordinate !== undefined && spec.composition !== undefined) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['composition'],
+          message: 'IRPlot cannot use coordinate shorthand and composition together',
+        });
+      }
+
+      const viewIds =
+        spec.composition !== undefined
+          ? new Set([
+              ...(spec.composition.views ?? []).map(view => view.id),
+              ...(spec.composition.arrangements ?? []).flatMap(arrangement =>
+                arrangement.kind === CoordinateArrangementKind.Tracks
+                  ? arrangement.tracks.map(
+                      track =>
+                        track.view ??
+                        (arrangement.viewIdTemplate ?? '{arrangement}.track.{track}')
+                          .replaceAll('{arrangement}', arrangement.id)
+                          .replaceAll('{track}', track.id),
+                    )
+                  : [],
+              ),
+            ])
+          : new Set(['default']);
+
+      spec.marks.forEach((mark, index) => {
+        if (mark.coordinateView !== undefined && !viewIds.has(mark.coordinateView)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['marks', index, 'coordinateView'],
+            message: `coordinateView "${mark.coordinateView}" does not reference a registered coordinate view`,
+          });
+        }
       });
-    }
 
-    const viewIds =
-      spec.composition !== undefined
-        ? new Set([
-            ...(spec.composition.views ?? []).map(view => view.id),
-            ...(spec.composition.arrangements ?? []).flatMap(arrangement =>
-              arrangement.kind === CoordinateArrangementKind.Tracks
-                ? arrangement.tracks.map(
-                    track =>
-                      track.view ??
-                      (arrangement.viewIdTemplate ?? '{arrangement}.track.{track}')
-                        .replaceAll('{arrangement}', arrangement.id)
-                        .replaceAll('{track}', track.id),
-                  )
-                : [],
-            ),
-          ])
-        : new Set(['default']);
-
-    spec.marks.forEach((mark, index) => {
-      if (mark.coordinateView !== undefined && !viewIds.has(mark.coordinateView)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['marks', index, 'coordinateView'],
-          message: `coordinateView "${mark.coordinateView}" does not reference a registered coordinate view`,
-        });
-      }
-    });
-
-    spec.guides?.forEach((guide, index) => {
-      if (guide.type !== 'axis') return;
-      if (guide.coordinateView !== undefined && !viewIds.has(guide.coordinateView)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['guides', index, 'coordinateView'],
-          message: `coordinateView "${guide.coordinateView}" does not reference a registered coordinate view`,
-        });
-      }
-    });
-  })
-  .describe(
-    'Plot IR root: a JSON-serializable, data-free grammar-of-graphics composite node (namespace "plot"); bound to external data and lowered to core Scope/Node/Path/Step/Coordinate at compile time via lowerPlots',
-  );
+      spec.guides?.forEach((guide, index) => {
+        if (guide.type !== 'axis') return;
+        if (guide.coordinateView !== undefined && !viewIds.has(guide.coordinateView)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['guides', index, 'coordinateView'],
+            message: `coordinateView "${guide.coordinateView}" does not reference a registered coordinate view`,
+          });
+        }
+      });
+    })
+    .describe(
+      'Plot IR root: a JSON-serializable, data-free grammar-of-graphics composite node (namespace "plot"); bound to external data and lowered to core Scope/Node/Path/Step/Coordinate at compile time via lowerPlots',
+    );

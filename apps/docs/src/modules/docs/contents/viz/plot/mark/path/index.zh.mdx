@@ -325,6 +325,10 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
   defaultSourceFile="line-radar.preview.tsx"
 />
 
+## 关系用法
+
+用 `PathMark` 绘制关系连接时，端点可以来自数据坐标，也可以引用已声明的图元。先指定连接目标，再通过路径步骤控制连接路线。
+
 ### 图元目标
 
 端点也可以连接已生成的图元：`mark` 指定目标 Mark 的 `id`，`key` 指定它暴露的实例身份。先声明目标，再声明连线；目标 Mark 用 `encodings.anchorId` 指定身份字段，连线用 `key.field` 读取当前行，或用 `key.value` 指定固定身份。
@@ -342,6 +346,50 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 | `offset`   | 锚点解析后的绘图空间偏移 `[dx, dy]`                          |
 
 Point 与 Interval 引用单个节点或区域；顶点型 Path 引用数据顶点，只支持位置与偏移，不能把整条路径作为目标。引用不会跨分面查找；声明顺序错误、身份重复或目标未生成都会报错。
+
+### 路径构造
+
+需要折角、弯曲连接或多段路线时，用 `encodings.steps` 声明完整步骤。字段绑定会让每条结果数据生成一条路径；全部位置与外观都是常量时，只生成一条路径。
+
+React 可以把步骤写成 `PlotPathStep` 子组件，Vanilla 的 `normalizePlot` 则接受路径图元的 `way` 或 `encodings.steps`。三种写法最终保存为相同的步骤结构。
+
+```text
+Plot
+└── PathMark
+    ├── PlotPathStep
+    └── PlotPathStep
+```
+
+下面根据每个散点的 `target` 字段绘制弯曲箭头：
+
+<ComponentPreview
+  mode="showcase"
+  files={['path-construction', 'path-construction.preview.tsx', 'path-construction.data.ts']}
+  defaultSourceFile="path-construction.preview.tsx"
+  size="md"
+/>
+
+常见路线可用 `way` 简写：首个目标是起点，后续目标默认直线连接；在目标之间插入折线、曲线或弯曲算子，可以改变这一段的构造。下面将相同关系改成三段折线：
+
+```tsx
+<PathMark
+  way={[{ mark: 'nodes', key: { field: 'id' } }, '-|-', { mark: 'nodes', key: { field: 'target' } }]}
+  arrow="->"
+  properties={{ cornerRadius: 5 }}
+/>
+```
+
+| 输入                         | 用途                                         |
+| ---------------------------- | -------------------------------------------- |
+| `position`                   | 多行顶点，支持排序、分组、曲线插值与缺值处理 |
+| `from` / `to`                | 每条数据的一次简单连接                       |
+| `steps` / `way` / 步骤子组件 | 每条数据的一条完整构造路径；各入口互斥       |
+
+完整步骤支持 `move`、`line`、`axis-line`、`fold`、`cycle`、`curve`、`cubic`、`bend`、`arc`、`circlePath`、`ellipsePath`、`rectangle`、`smooth` 和 `generator`，参数与底层 [Path 步骤](/kernel/components/path/step) 一致。`way` 覆盖常见简写，完整控制参数使用步骤形式。`arrow`、`arrowDetail` 和 `arrowPlacement` 沿用底层箭头简写。
+
+数据位置 `{ x: { field: 'x' }, y: { field: 'y' } }` 先经过比例尺和坐标投影，再构造路线；控制点也遵循这个顺序。`[x, y]`、半径、相对偏移和角度使用 Core 绘图空间单位。单轴步骤始终沿投影后的水平或垂直方向。
+
+步骤中的数据位置参与 domain 推导，图元身份与固定绘图坐标不参与。显式步骤不使用 `series`、`order`、`curve`、`closure`、`closed`、`connectNulls`、`interpolation` 或 `connection`；闭合由 `cycle` 等步骤表达。某个数据位置无效时会报错，不会删掉该步骤后继续连接。
 
 ## 错误与限制
 

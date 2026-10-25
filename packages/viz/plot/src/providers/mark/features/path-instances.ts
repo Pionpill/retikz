@@ -16,9 +16,10 @@ import {
   DEFAULT_FILL,
   LINE_STROKE_WIDTH,
 } from '../shared';
+import { lowerPathSteps } from './path-steps';
 
-/** 按实例将两个完整端点连接为路径，共享坐标连接能力 */
-export const lowerPathEndpoints = (
+/** 按实例生成完整步骤或端点连接，共享路径宿主外观与追溯 */
+export const lowerPathInstances = (
   mark: IRPlotPathMark,
   input: MarkInstanceInput,
   frame: CoordinateFrame,
@@ -37,7 +38,6 @@ export const lowerPathEndpoints = (
         if (!Number.isFinite(mapped)) throw new RetikzPlotError('Path endpoint cannot map role ' + role);
         return mapped;
       });
-    if (mark.encodings.from === undefined) throw new RetikzPlotError('Endpoint path requires from and to');
     const properties = unencodedMarkProperties(mark) ?? {};
     const {
       connection,
@@ -56,7 +56,11 @@ export const lowerPathEndpoints = (
       ...style
     } = properties;
     let steps: Array<IRStep>;
-    if ('mark' in mark.encodings.from || 'mark' in mark.encodings.to) {
+    if (mark.encodings.steps !== undefined) {
+      steps = lowerPathSteps(mark, instance, frame, context);
+    } else if (mark.encodings.from === undefined) {
+      throw new RetikzPlotError('Instance path requires steps or endpoints');
+    } else if ('mark' in mark.encodings.from || 'mark' in mark.encodings.to) {
       if (connection === 'coordinate')
         throw new RetikzPlotError(
           `Path mark "${mark.id ?? context?.markIndex}" cannot use coordinate connection with mark targets`,

@@ -7,7 +7,7 @@ import {
   JsonObjectSchema,
 } from '@retikz/foundation';
 import { strictObject, literal, union, enum as zodEnum, discriminatedUnion, number, array } from 'zod';
-import type { RefinementCtx, infer as ZodInfer } from 'zod';
+import type { RefinementCtx, ZodType, infer as ZodInfer } from 'zod';
 
 import {
   DEFAULT_BEND_ANGLE,
@@ -378,6 +378,39 @@ export const StepSchema = discriminatedUnion('kind', [
     }
   })
   .describe('A single path action; the discriminator field is `kind`');
+
+/**
+ * 为数据绑定等上层路径模板复用步骤结构与约束，仅替换位置槽
+ * @description 返回不含节点 type 的步骤联合；目标、控制点和单轴目标分别保留各自值域
+ */
+export const createPathStepSchema = <TTarget extends ZodType, TControl extends ZodType, TAxisTarget extends ZodType>(
+  target: TTarget,
+  control: TControl,
+  axisTarget: TAxisTarget,
+) =>
+  discriminatedUnion('kind', [
+    MoveStepSchema.omit({ type: true }).extend({ to: target }),
+    LineStepSchema.omit({ type: true }).extend({ to: target }),
+    AxisLineStepSchema.omit({ type: true }).extend({ to: axisTarget }),
+    discriminatedUnion('via', [
+      TwoLegFoldStepSchema.omit({ type: true }).extend({ to: target }),
+      ThreeLegFoldStepSchema.omit({ type: true }).extend({ to: target }),
+    ]),
+    CycleStepSchema.omit({ type: true }),
+    CurveStepSchema.omit({ type: true }).extend({ to: target, control }),
+    CubicStepSchema.omit({ type: true }).extend({ to: target, control1: control, control2: control }),
+    BendStepSchema.omit({ type: true }).extend({ to: target }),
+    ArcStepSchema.omit({ type: true }).extend({ center: target.optional() }),
+    CirclePathStepBaseSchema.omit({ type: true }).superRefine((step, context) =>
+      refinePartialAngles(step, context, 'circlePath'),
+    ),
+    EllipsePathStepBaseSchema.omit({ type: true }).superRefine((step, context) =>
+      refinePartialAngles(step, context, 'ellipsePath'),
+    ),
+    RectangleStepSchema.omit({ type: true }).extend({ from: target, to: target }),
+    SmoothStepSchema.omit({ type: true }).extend({ points: array(target).min(1) }),
+    GeneratorStepSchema.omit({ type: true }).extend({ to: target.optional() }),
+  ]);
 
 /** 路径步骤附属标签的 IR 类型 */
 export type IRStepLabel = IRPathLabel;

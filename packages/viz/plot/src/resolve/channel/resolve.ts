@@ -43,6 +43,7 @@ export const resolveMarkChannels = (mark: IRPlotMark, context: ChannelResolveCon
   const structuredTargets = new Set([
     'position',
     'from',
+    'steps',
     'to',
     'bounds',
     'closure',

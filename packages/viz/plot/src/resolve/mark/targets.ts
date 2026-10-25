@@ -2,6 +2,7 @@ import type { IRNodeTarget } from '@retikz/core';
 import { resolveFieldPath } from '@retikz/data';
 
 import type { AnchorOwner, MarkTargetResolution } from '../../contract';
+import { pathStepTargets } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import type { IRPlotMark } from '../../schemas';
 
@@ -21,16 +22,29 @@ export const resolveMarkTargets = (marks: Array<IRPlotMark>, declarationOrder = 
     declarations.set(mark.id, mark);
   }
   for (const mark of marks) {
-    if (mark.type !== 'path' || mark.encodings.from === undefined) continue;
-    for (const role of ['from', 'to'] as const) {
-      const reference = mark.encodings[role];
+    if (mark.type !== 'path') continue;
+    const references =
+      mark.encodings.steps !== undefined
+        ? mark.encodings.steps.flatMap((step, index) =>
+            pathStepTargets(step).map(({ role, target }) => ({ role: `steps.${index}.${role}`, target })),
+          )
+        : mark.encodings.from === undefined
+          ? []
+          : [
+              { role: 'from', target: mark.encodings.from },
+              { role: 'to', target: mark.encodings.to },
+            ];
+    for (const { role, target: reference } of references) {
       if (!('mark' in reference)) continue;
       const context = `mark "${mark.id ?? declarationOrder.indexOf(mark)}" endpoint ${role} -> mark "${reference.mark}"`;
       const declaration = declarations.get(reference.mark);
       if (declaration === undefined) throw new RetikzPlotError(`Unknown target mark: ${context}`);
       if (declarationOrder.indexOf(declaration) >= declarationOrder.indexOf(mark))
         throw new RetikzPlotError(`Target mark must be declared before the connection: ${context}`);
-      if (declaration.type === 'relation' || (declaration.type === 'path' && declaration.encodings.from !== undefined))
+      if (
+        declaration.type === 'relation' ||
+        (declaration.type === 'path' && declaration.encodings.position === undefined)
+      )
         throw new RetikzPlotError(`Unsupported whole-path mark target: ${context}`);
       if (declaration.properties?.anchorId === undefined && declaration.encodings?.anchorId === undefined)
         throw new RetikzPlotError(`Target mark does not expose anchorId: ${context}`);

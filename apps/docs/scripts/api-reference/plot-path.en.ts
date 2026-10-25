@@ -1,5 +1,8 @@
 /** 路径公开属性的人工审阅英文说明 */
 const translations: Partial<Record<string, string>> = {
+  路径级箭头方向: 'Path arrow direction',
+  箭头的顶层默认与端点覆盖配置: 'Shared arrow defaults and endpoint overrides',
+  箭头端点的共享与逐端放置配置: 'Shared and per-endpoint arrow placement',
   为路径数据目标生成可引用锚点的命名规则: 'Naming rule for addressable path data anchors',
   路径混合模式: 'Path blend mode',
   '扩展通道绑定，会转发到 `encoding.channels`；字符串值按字段名处理':

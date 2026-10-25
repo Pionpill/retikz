@@ -48,7 +48,7 @@ import {
   mappedRoleValue,
 } from '../shared';
 import type { MarkDefinition } from '../types';
-import { lowerPathEndpoints } from './path-endpoints';
+import { lowerPathInstances } from './path-instances';
 
 /**
  * 取一行的位置通道值 → [xValue, yValue]（坐标系无关；投影交给 frame.project，frame 把 x/y 重解释为对应角色）
@@ -966,7 +966,8 @@ export const pathMarkDefinition: MarkDefinition<IRPlotPathMark> = {
     collectPathMarkChannelFields(mark, fields);
   },
   lower: (mark, input, frame, channels, context) => {
-    if (mark.encodings.from !== undefined) return lowerPathEndpoints(mark, input, frame, channels, context);
+    if (mark.encodings.from !== undefined || mark.encodings.steps !== undefined)
+      return lowerPathInstances(mark, input, frame, channels, context);
     if (input.kind === 'single') return null;
     return lowerPathLayer(mark, input.rows, frame, channels, context);
   },

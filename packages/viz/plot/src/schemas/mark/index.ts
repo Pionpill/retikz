@@ -19,5 +19,6 @@ export type {
 } from './label';
 export * from './mark';
 export * from './path';
+export * from './path-step';
 export * from './point';
 export * from './relation';

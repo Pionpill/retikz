@@ -40,7 +40,9 @@ const arrowMarkFromDetail = (detail: InputPath['arrowDetail'], endpoint: 'start'
 };
 
 /** 汇总路径箭头语法糖与显式 marks */
-const normalizePathMarks = (input: InputPath): IRPathBase['marks'] | undefined => {
+export const normalizePathMarks = (
+  input: Pick<InputPath, 'arrow' | 'arrowDetail' | 'arrowPlacement' | 'marks'>,
+): IRPathBase['marks'] | undefined => {
   const marks: NonNullable<IRPathBase['marks']> = [];
   const hasStartArrow = input.arrow === '<-' || input.arrow === '<->';
   const hasEndArrow = input.arrow === '->' || input.arrow === '<->';
