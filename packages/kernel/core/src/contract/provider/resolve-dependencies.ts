@@ -1,11 +1,9 @@
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { ArrowDefinition } from '../arrow';
-import type { BoundaryDefinition } from '../boundary';
-import type { ClipDefinition } from '../clip';
 import type { AnyCompositeDefinition } from '../composite';
-import type { AnyPathDefinition } from '../path';
-import type { PatternDefinition } from '../pattern';
-import type { ShapeDefinition } from '../shape';
+import type { BoundaryDefinition, ShapeDefinition } from '../node';
+import type { AnyPathDefinition, ArrowDefinition } from '../path';
+import type { ClipDefinition } from '../scope';
+import type { PatternDefinition } from '../style';
 import type {
   AnyCoreProviderDefinition,
   CoreDependencyProvider,

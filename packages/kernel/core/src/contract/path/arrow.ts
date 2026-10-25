@@ -1,5 +1,5 @@
-import type { IRArrowStyle } from '../schemas';
-import type { PaintValue, ScenePrimitive } from './scene';
+import type { IRArrowStyle } from '../../schemas';
+import type { PaintValue, ScenePrimitive } from '../scene';
 
 /**
  * arrow emit 的运行时上下文

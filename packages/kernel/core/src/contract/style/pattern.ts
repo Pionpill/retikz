@@ -1,5 +1,5 @@
-import type { IRPatternLineStyle, IRPatternPaint } from '../schemas';
-import type { ScenePrimitive } from './scene';
+import type { IRPatternLineStyle, IRPatternPaint } from '../../schemas';
+import type { ScenePrimitive } from '../scene';
 
 /** Pattern definition 消费的已解析线条样式 */
 export type ResolvedPatternLineStyle = {

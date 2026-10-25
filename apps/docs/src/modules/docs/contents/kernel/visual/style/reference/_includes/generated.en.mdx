@@ -126,7 +126,7 @@ export type IRPatternPaint = Extract<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PatternDefinition"} path={"packages/kernel/core/src/contract/pattern.ts"} startLine={84}>PatternDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PatternDefinition"} path={"packages/kernel/core/src/contract/style/pattern.ts"} startLine={84}>PatternDefinition</ApiSourceLink>
 
 Defines the default base size and motif geometry generator; the definition itself does not enter IR
 
@@ -160,7 +160,7 @@ export type PatternDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PatternEmitContext"} path={"packages/kernel/core/src/contract/pattern.ts"} startLine={32}>PatternEmitContext</ApiSourceLink>
+#### <ApiSourceLink label={"PatternEmitContext"} path={"packages/kernel/core/src/contract/style/pattern.ts"} startLine={32}>PatternEmitContext</ApiSourceLink>
 
 Provides base size, base style, optional directional/cyclic styles, and rounding for motif generation
 
@@ -212,13 +212,13 @@ export type PatternEmitContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PatternEmitOutput"} path={"packages/kernel/core/src/contract/pattern.ts"} startLine={78}>PatternEmitOutput</ApiSourceLink>
+#### <ApiSourceLink label={"PatternEmitOutput"} path={"packages/kernel/core/src/contract/style/pattern.ts"} startLine={78}>PatternEmitOutput</ApiSourceLink>
 
 ```ts
 export type PatternEmitOutput = Iterable<ScenePrimitive> | PatternEmitResult;
 ```
 
-#### <ApiSourceLink label={"PatternEmitResult"} path={"packages/kernel/core/src/contract/pattern.ts"} startLine={70}>PatternEmitResult</ApiSourceLink>
+#### <ApiSourceLink label={"PatternEmitResult"} path={"packages/kernel/core/src/contract/style/pattern.ts"} startLine={70}>PatternEmitResult</ApiSourceLink>
 
 For patterns whose period differs from `context.size`; the compiler validates and writes the final Scene tile
 
@@ -262,7 +262,7 @@ export const BuiltinPatternShape = {
 export type BuiltinPatternShape = ValueOf<typeof BuiltinPatternShape>;
 ```
 
-#### <ApiSourceLink label={"definePattern"} path={"packages/kernel/core/src/contract/pattern.ts"} startLine={100}>definePattern</ApiSourceLink>
+#### <ApiSourceLink label={"definePattern"} path={"packages/kernel/core/src/contract/style/pattern.ts"} startLine={100}>definePattern</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

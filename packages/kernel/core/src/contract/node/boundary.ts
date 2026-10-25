@@ -2,8 +2,8 @@ import type { JsonObject, OpenString } from '@retikz/foundation';
 import type { CenteredBox, Position } from '@retikz/math';
 import type { ZodType } from 'zod';
 
-import type { Anchor } from '../shared';
-import type { PathCommand } from './scene';
+import type { Anchor } from '../../shared';
+import type { PathCommand } from '../scene';
 import type { ConnectionEnvelopeKind } from './shape';
 
 /** Boundary provider 解析实例连接矩形时可用的视觉几何上下文 */

@@ -1,7 +1,7 @@
 import type { ZodType } from 'zod';
 
-import type { IRClip } from '../schemas';
-import type { SceneClipPath } from './scene';
+import type { IRClip } from '../../schemas';
+import type { SceneClipPath } from '../scene';
 
 /** 生成裁剪路径时可用的上下文 */
 export type ClipLowerContext = {

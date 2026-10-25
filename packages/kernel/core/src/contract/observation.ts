@@ -3,9 +3,9 @@ import type { AffineMatrix, CenteredBox, Position } from '@retikz/math';
 
 import type { IRChild } from '../schemas';
 import type { ResolvedTheme } from '../shared';
+import type { GeometryKeyPoint } from './node';
 import type { CompileOccurrenceLocator } from './occurrence';
 import type { Scene, PathCommand, SceneClipPath } from './scene';
-import type { GeometryKeyPoint } from './shape';
 
 /** 能够声明最终编译产物的领域中立所属者 */
 export type CompileObservationOwner =

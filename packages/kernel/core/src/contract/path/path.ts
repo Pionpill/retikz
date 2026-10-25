@@ -1,9 +1,9 @@
 import type { JsonValue } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
-import type { IRBoundaryLabel, IRPathLabel, IRPathBase, IRPosition, IRStep, IRTransform } from '../schemas';
-import type { CompileOwnerOutputPublisher } from './observation';
-import type { PathCommand, PathPrimitiveAppearance, ScenePrimitive } from './scene';
+import type { IRBoundaryLabel, IRPathLabel, IRPathBase, IRPosition, IRStep, IRTransform } from '../../schemas';
+import type { CompileOwnerOutputPublisher } from '../observation';
+import type { PathCommand, PathPrimitiveAppearance, ScenePrimitive } from '../scene';
 
 /**
  * path 编译结果
