@@ -369,7 +369,7 @@ export const assertProviderOutputJsonValue = (owner: string, value: unknown, pat
 };
 
 /** 校验 Scene geometry primitive 的共享 paint/style 字段 */
-const assertSceneStyle = (owner: string, value: Record<string, unknown>, path: string): void => {
+const assertSceneStyle = (owner: string, value: Record<string, unknown>, scenePath: string): void => {
   /** 校验 Scene resolved shadow 的 required 字段与范围 */
   const assertResolvedShadow = (providerOwner: string, shadowValue: unknown, shadowPath: string): void => {
     if (shadowValue === undefined) return;
@@ -383,20 +383,20 @@ const assertSceneStyle = (owner: string, value: Record<string, unknown>, path: s
     assertProviderOutputUnitInterval(providerOwner, shadow, 'opacity', shadowPath);
   };
 
-  assertProviderOutputPaint(owner, value.fill, `${path}.fill`);
-  assertProviderOutputPaint(owner, value.stroke, `${path}.stroke`);
-  assertProviderOutputUnitInterval(owner, value, 'fillOpacity', path);
-  assertProviderOutputUnitInterval(owner, value, 'strokeOpacity', path);
-  assertProviderOutputUnitInterval(owner, value, 'opacity', path);
-  assertProviderOutputOptionalFinite(owner, value, 'strokeWidth', path, true);
-  assertProviderOutputOptionalFinite(owner, value, 'dashOffset', path);
-  assertProviderOutputDashPattern(owner, value, path);
-  assertProviderOutputPathEnums(owner, value, path);
+  assertProviderOutputPaint(owner, value.fill, `${scenePath}.fill`);
+  assertProviderOutputPaint(owner, value.stroke, `${scenePath}.stroke`);
+  assertProviderOutputUnitInterval(owner, value, 'fillOpacity', scenePath);
+  assertProviderOutputUnitInterval(owner, value, 'strokeOpacity', scenePath);
+  assertProviderOutputUnitInterval(owner, value, 'opacity', scenePath);
+  assertProviderOutputOptionalFinite(owner, value, 'strokeWidth', scenePath, true);
+  assertProviderOutputOptionalFinite(owner, value, 'dashOffset', scenePath);
+  assertProviderOutputDashPattern(owner, value, scenePath);
+  assertProviderOutputPathEnums(owner, value, scenePath);
   if (value.blendMode !== undefined && !Object.values(BlendMode).includes(value.blendMode as never)) {
-    failProviderOutput(owner, `an invalid ${path}.blendMode`);
+    failProviderOutput(owner, `an invalid ${scenePath}.blendMode`);
   }
 
-  assertResolvedShadow(owner, value.shadow, `${path}.shadow`);
+  assertResolvedShadow(owner, value.shadow, `${scenePath}.shadow`);
 };
 
 /** Scene recursive validation 所需的 active-path 与 Marker 子集入口 */
@@ -408,118 +408,121 @@ type SceneValidationContext = Readonly<{
 const visitScenePrimitive = (
   owner: string,
   primitive: unknown,
-  path: string,
+  scenePath: string,
   context: SceneValidationContext,
 ): void => {
   const value = primitive as Record<string, unknown>;
 
   switch (value.type) {
     case 'rect':
-      assertProviderOutputFinite(owner, value.x, `${path}.x`);
-      assertProviderOutputFinite(owner, value.y, `${path}.y`);
-      assertProviderOutputFinite(owner, value.width, `${path}.width`, true);
-      assertProviderOutputFinite(owner, value.height, `${path}.height`, true);
-      assertProviderOutputOptionalFinite(owner, value, 'cornerRadius', path, true);
-      assertSceneStyle(owner, value, path);
+      assertProviderOutputFinite(owner, value.x, `${scenePath}.x`);
+      assertProviderOutputFinite(owner, value.y, `${scenePath}.y`);
+      assertProviderOutputFinite(owner, value.width, `${scenePath}.width`, true);
+      assertProviderOutputFinite(owner, value.height, `${scenePath}.height`, true);
+      assertProviderOutputOptionalFinite(owner, value, 'cornerRadius', scenePath, true);
+      assertSceneStyle(owner, value, scenePath);
 
       return;
     case 'ellipse':
-      assertProviderOutputFinite(owner, value.cx, `${path}.cx`);
-      assertProviderOutputFinite(owner, value.cy, `${path}.cy`);
-      assertProviderOutputFinite(owner, value.rx, `${path}.rx`, true);
-      assertProviderOutputFinite(owner, value.ry, `${path}.ry`, true);
-      assertProviderOutputOptionalFinite(owner, value, 'rotate', path);
-      assertSceneStyle(owner, value, path);
+      assertProviderOutputFinite(owner, value.cx, `${scenePath}.cx`);
+      assertProviderOutputFinite(owner, value.cy, `${scenePath}.cy`);
+      assertProviderOutputFinite(owner, value.rx, `${scenePath}.rx`, true);
+      assertProviderOutputFinite(owner, value.ry, `${scenePath}.ry`, true);
+      assertProviderOutputOptionalFinite(owner, value, 'rotate', scenePath);
+      assertSceneStyle(owner, value, scenePath);
 
       return;
     case 'path': {
-      assertProviderOutputPathEnums(owner, value, path);
+      assertProviderOutputPathEnums(owner, value, scenePath);
 
       for (const field of ['arrowStart', 'arrowEnd'] as const) {
         if (value[field] === undefined) continue;
 
         const arrow = value[field] as Record<string, unknown>;
-        if (typeof arrow.shape !== 'string') failProviderOutput(owner, `an invalid ${path}.${field}.shape`);
-        assertProviderOutputFinite(owner, arrow.baseSize, `${path}.${field}.baseSize`, true);
-        assertProviderOutputFinite(owner, arrow.refX, `${path}.${field}.refX`);
-        assertProviderOutputFinite(owner, arrow.markerWidth, `${path}.${field}.markerWidth`, true);
-        assertProviderOutputFinite(owner, arrow.markerHeight, `${path}.${field}.markerHeight`, true);
-        assertProviderOutputUnitInterval(owner, arrow, 'opacity', `${path}.${field}`);
+        if (typeof arrow.shape !== 'string') failProviderOutput(owner, `an invalid ${scenePath}.${field}.shape`);
+        assertProviderOutputFinite(owner, arrow.baseSize, `${scenePath}.${field}.baseSize`, true);
+        assertProviderOutputFinite(owner, arrow.refX, `${scenePath}.${field}.refX`);
+        assertProviderOutputFinite(owner, arrow.markerWidth, `${scenePath}.${field}.markerWidth`, true);
+        assertProviderOutputFinite(owner, arrow.markerHeight, `${scenePath}.${field}.markerHeight`, true);
+        assertProviderOutputUnitInterval(owner, arrow, 'opacity', `${scenePath}.${field}`);
         const marker = arrow.marker as Array<unknown>;
         marker.forEach((child, index) =>
-          visitScenePrimitive(owner, child, `${path}.${field}.marker[${index}]`, context),
+          visitScenePrimitive(owner, child, `${scenePath}.${field}.marker[${index}]`, context),
         );
       }
 
-      assertSceneStyle(owner, value, path);
+      assertSceneStyle(owner, value, scenePath);
 
       return;
     }
     case 'text': {
-      assertProviderOutputFinite(owner, value.x, `${path}.x`);
-      assertProviderOutputFinite(owner, value.y, `${path}.y`);
-      assertProviderOutputFinite(owner, value.fontSize, `${path}.fontSize`, true);
-      assertProviderOutputFinite(owner, value.lineHeight, `${path}.lineHeight`, true);
-      assertProviderOutputFinite(owner, value.measuredWidth, `${path}.measuredWidth`, true);
-      assertProviderOutputFinite(owner, value.measuredHeight, `${path}.measuredHeight`, true);
+      assertProviderOutputFinite(owner, value.x, `${scenePath}.x`);
+      assertProviderOutputFinite(owner, value.y, `${scenePath}.y`);
+      assertProviderOutputFinite(owner, value.fontSize, `${scenePath}.fontSize`, true);
+      assertProviderOutputFinite(owner, value.lineHeight, `${scenePath}.lineHeight`, true);
+      assertProviderOutputFinite(owner, value.measuredWidth, `${scenePath}.measuredWidth`, true);
+      assertProviderOutputFinite(owner, value.measuredHeight, `${scenePath}.measuredHeight`, true);
 
       const lines = value.lines as Array<unknown>;
-      if (lines.length === 0) failProviderOutput(owner, `an invalid ${path}.lines`);
+      if (lines.length === 0) failProviderOutput(owner, `an invalid ${scenePath}.lines`);
       lines.forEach((line, index) => {
         const candidate = line as Record<string, unknown>;
-        if (typeof candidate.text !== 'string') failProviderOutput(owner, `an invalid ${path}.lines[${index}].text`);
-        assertProviderOutputOptionalFinite(owner, candidate, 'fontSize', `${path}.lines[${index}]`, true);
+        if (typeof candidate.text !== 'string')
+          failProviderOutput(owner, `an invalid ${scenePath}.lines[${index}].text`);
+        assertProviderOutputOptionalFinite(owner, candidate, 'fontSize', `${scenePath}.lines[${index}]`, true);
         if (candidate.fontFamily !== undefined && typeof candidate.fontFamily !== 'string')
-          failProviderOutput(owner, `an invalid ${path}.lines[${index}].fontFamily`);
+          failProviderOutput(owner, `an invalid ${scenePath}.lines[${index}].fontFamily`);
         if (
           candidate.fontWeight !== undefined &&
           typeof candidate.fontWeight !== 'string' &&
           typeof candidate.fontWeight !== 'number'
         )
-          failProviderOutput(owner, `an invalid ${path}.lines[${index}].fontWeight`);
+          failProviderOutput(owner, `an invalid ${scenePath}.lines[${index}].fontWeight`);
 
         if (typeof candidate.fontWeight === 'number')
-          assertProviderOutputFinite(owner, candidate.fontWeight, `${path}.lines[${index}].fontWeight`, true);
+          assertProviderOutputFinite(owner, candidate.fontWeight, `${scenePath}.lines[${index}].fontWeight`, true);
         if (candidate.fontStyle !== undefined && !Object.values(FontStyle).includes(candidate.fontStyle as never))
-          failProviderOutput(owner, `an invalid ${path}.lines[${index}].fontStyle`);
+          failProviderOutput(owner, `an invalid ${scenePath}.lines[${index}].fontStyle`);
         if (candidate.fill !== undefined && typeof candidate.fill !== 'string')
-          failProviderOutput(owner, `an invalid ${path}.lines[${index}].fill`);
-        assertProviderOutputUnitInterval(owner, candidate, 'opacity', `${path}.lines[${index}]`);
+          failProviderOutput(owner, `an invalid ${scenePath}.lines[${index}].fill`);
+        assertProviderOutputUnitInterval(owner, candidate, 'opacity', `${scenePath}.lines[${index}]`);
       });
 
       if (value.fontFamily !== undefined && typeof value.fontFamily !== 'string')
-        failProviderOutput(owner, `an invalid ${path}.fontFamily`);
+        failProviderOutput(owner, `an invalid ${scenePath}.fontFamily`);
       if (
         value.fontWeight !== undefined &&
         typeof value.fontWeight !== 'string' &&
         typeof value.fontWeight !== 'number'
       )
-        failProviderOutput(owner, `an invalid ${path}.fontWeight`);
+        failProviderOutput(owner, `an invalid ${scenePath}.fontWeight`);
 
       if (typeof value.fontWeight === 'number')
-        assertProviderOutputFinite(owner, value.fontWeight, `${path}.fontWeight`, true);
+        assertProviderOutputFinite(owner, value.fontWeight, `${scenePath}.fontWeight`, true);
       if (value.fontStyle !== undefined && !Object.values(FontStyle).includes(value.fontStyle as never))
-        failProviderOutput(owner, `an invalid ${path}.fontStyle`);
+        failProviderOutput(owner, `an invalid ${scenePath}.fontStyle`);
       if (!['start', 'middle', 'end'].includes(String(value.align)))
-        failProviderOutput(owner, `an invalid ${path}.align`);
+        failProviderOutput(owner, `an invalid ${scenePath}.align`);
       if (!['top', 'middle', 'bottom', 'alphabetic'].includes(String(value.baseline)))
-        failProviderOutput(owner, `an invalid ${path}.baseline`);
+        failProviderOutput(owner, `an invalid ${scenePath}.baseline`);
       if (value.fill !== undefined && typeof value.fill !== 'string')
-        failProviderOutput(owner, `an invalid ${path}.fill`);
-      assertProviderOutputUnitInterval(owner, value, 'opacity', path);
+        failProviderOutput(owner, `an invalid ${scenePath}.fill`);
+      assertProviderOutputUnitInterval(owner, value, 'opacity', scenePath);
 
       return;
     }
     case 'group': {
-      assertProviderOutputTransforms(owner, value.transforms, `${path}.transforms`);
+      assertProviderOutputTransforms(owner, value.transforms, `${scenePath}.transforms`);
       if (value.clipRef !== undefined && typeof value.clipRef !== 'string')
-        failProviderOutput(owner, `an invalid ${path}.clipRef`);
+        failProviderOutput(owner, `an invalid ${scenePath}.clipRef`);
       const children = value.children as Array<unknown>;
-      if (context.active.has(value)) failProviderOutput(owner, `a cyclic ${path}`);
+      if (context.active.has(value)) failProviderOutput(owner, `a cyclic ${scenePath}`);
       context.active.add(value);
 
       try {
-        children.forEach((child, index) => visitScenePrimitive(owner, child, `${path}.children[${index}]`, context));
+        children.forEach((child, index) =>
+          visitScenePrimitive(owner, child, `${scenePath}.children[${index}]`, context),
+        );
       } finally {
         context.active.delete(value);
       }
