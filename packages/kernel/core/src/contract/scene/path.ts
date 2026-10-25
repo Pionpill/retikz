@@ -146,15 +146,20 @@ export type PathPrimitiveAppearance = ScenePrimitiveFill &
     fillRule?: PathFillRule;
   };
 
+/** 路径图元的绘制命令与起止箭头 */
+export type PathPrimitiveContent = {
+  /** 结构化路径命令序列，按数组顺序绘制 */
+  commands: Array<PathCommand>;
+  /** 起点箭头视觉规格；undefined = 无箭头 */
+  arrowStart?: ResolvedArrowEnd;
+  /** 终点箭头视觉规格；undefined = 无箭头 */
+  arrowEnd?: ResolvedArrowEnd;
+};
+
 /** 由结构化命令描述的路径图元 */
 export type PathPrimitive = ScenePrimitiveBase &
-  PathPrimitiveAppearance & {
+  PathPrimitiveAppearance &
+  PathPrimitiveContent & {
     /** 类型判别符 */
     type: 'path';
-    /** 结构化路径命令序列，按数组顺序绘制 */
-    commands: Array<PathCommand>;
-    /** 起点箭头视觉规格；undefined = 无箭头 */
-    arrowStart?: ResolvedArrowEnd;
-    /** 终点箭头视觉规格；undefined = 无箭头 */
-    arrowEnd?: ResolvedArrowEnd;
   };

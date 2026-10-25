@@ -68,10 +68,8 @@ export type ClipResource = {
   path: SceneClipPath;
 };
 
-/** 编组：把若干 primitive 用结构化 transforms 包起来 */
-export type GroupPrimitive = ScenePrimitiveBase & {
-  /** 类型判别符 */
-  type: 'group';
+/** 分组图元的子图元、变换与裁剪引用 */
+export type GroupPrimitiveContent = {
   /**
    * 结构化变换序列，按数组顺序应用；undefined / 空数组表示无变换
    * @default []
@@ -87,3 +85,10 @@ export type GroupPrimitive = ScenePrimitiveBase & {
   /** 组内子原语 */
   children: Array<ScenePrimitive>;
 };
+
+/** 编组：把若干 primitive 用结构化 transforms 包起来 */
+export type GroupPrimitive = ScenePrimitiveBase &
+  GroupPrimitiveContent & {
+    /** 类型判别符 */
+    type: 'group';
+  };

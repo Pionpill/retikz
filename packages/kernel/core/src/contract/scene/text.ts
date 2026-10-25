@@ -41,56 +41,61 @@ export type TextLine = {
   opacity?: IRTextSegment['opacity'];
 };
 
+/** 文本图元的文字内容、字体、定位与度量 */
+export type TextPrimitiveContent = {
+  /** 锚点横坐标（具体含义由 align 决定） */
+  x: number;
+  /** 锚点纵坐标（具体含义由 baseline 决定） */
+  y: number;
+  /** 至少 1 行；单行节点也用 `[{ text: 'Hello' }]` */
+  lines: Array<TextLine>;
+  /** 已解析的字号，采用场景坐标单位 */
+  fontSize: number;
+  /**
+   * 块级字体族
+   * @default 'sans-serif'
+   */
+  fontFamily?: IRFont['family'];
+  /**
+   * 块级字重
+   * @default 'normal'
+   */
+  fontWeight?: SceneFontWeight;
+  /**
+   * 块级字形
+   * @default 'normal'
+   */
+  fontStyle?: IRFont['style'];
+  /** 文本相对定位点的水平对齐方式 */
+  align: 'start' | 'middle' | 'end';
+  /** 定位点对应的文本基线方式 */
+  baseline: 'top' | 'middle' | 'bottom' | 'alphabetic';
+  /** 行高，多行下相邻行的垂直距离 */
+  lineHeight: number;
+  /** 编译期算好的整块文字宽度 = max line width */
+  measuredWidth: number;
+  /** 编译期解析的整块文字视觉盒高度 */
+  measuredHeight: number;
+  /**
+   * 块级文字颜色
+   * @default 'currentColor'
+   */
+  fill?: string;
+};
+
 /**
  * 文本原语（measuredWidth/Height 由 Scene 编译阶段算好）
  * @description 多行 lines 至少 1 行；renderer 按 lineHeight 堆叠每行、按 baseline 在 (x,y) 锚点上下对齐。顶层属性是块级默认，单行 TextLine 可覆盖
  */
 export type TextPrimitive = ScenePrimitiveBase &
-  Pick<ScenePrimitiveOpacity, 'opacity'> & {
+  Pick<ScenePrimitiveOpacity, 'opacity'> &
+  TextPrimitiveContent & {
     /** 标识文本场景图元 */
     type: 'text';
-    /** 锚点横坐标（具体含义由 align 决定） */
-    x: number;
-    /** 锚点纵坐标（具体含义由 baseline 决定） */
-    y: number;
-    /** 至少 1 行；单行节点也用 `[{ text: 'Hello' }]` */
-    lines: Array<TextLine>;
-    /** 已解析的字号，采用场景坐标单位 */
-    fontSize: number;
-    /**
-     * 块级字体族
-     * @default 'sans-serif'
-     */
-    fontFamily?: IRFont['family'];
-    /**
-     * 块级字重
-     * @default 'normal'
-     */
-    fontWeight?: SceneFontWeight;
-    /**
-     * 块级字形
-     * @default 'normal'
-     */
-    fontStyle?: IRFont['style'];
-    /** 文本相对定位点的水平对齐方式 */
-    align: 'start' | 'middle' | 'end';
-    /** 定位点对应的文本基线方式 */
-    baseline: 'top' | 'middle' | 'bottom' | 'alphabetic';
-    /** 行高，多行下相邻行的垂直距离 */
-    lineHeight: number;
-    /** 编译期算好的整块文字宽度 = max line width */
-    measuredWidth: number;
-    /** 编译期解析的整块文字视觉盒高度 */
-    measuredHeight: number;
-    /**
-     * 块级文字颜色
-     * @default 'currentColor'
-     */
-    fill?: string;
   };
 
 /** 从已度量尺寸、对齐和基线推导文本矩形，供边界与命中消费 */
-export const computeSceneTextBounds = (primitive: TextPrimitive): BoundsRect => {
+export const computeSceneTextBounds = (primitive: TextPrimitiveContent): BoundsRect => {
   const x =
     primitive.align === 'start'
       ? primitive.x
