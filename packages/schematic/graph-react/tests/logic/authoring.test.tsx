@@ -233,8 +233,7 @@ const hostPropKeys = [
   'animate',
   'snapshotAt',
   'animationRef',
-  'easings',
-  'animationProperties',
+
   'idPrefix',
   'nodeDistance',
   'fontSize',
@@ -680,8 +679,7 @@ describe('Graph standalone and embedded host classification', () => {
       animate: undefined,
       snapshotAt: undefined,
       animationRef: undefined,
-      easings: undefined,
-      animationProperties: undefined,
+
       idPrefix: undefined,
       nodeDistance: undefined,
       fontSize: undefined,

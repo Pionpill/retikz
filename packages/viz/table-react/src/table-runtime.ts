@@ -41,8 +41,7 @@ export const TABLE_LAYOUT_HOST_PROP_KEYS = [
   'snapshotAt',
   'animationRef',
   'animations',
-  'easings',
-  'animationProperties',
+
   'idPrefix',
   'nodeDistance',
   'fontSize',

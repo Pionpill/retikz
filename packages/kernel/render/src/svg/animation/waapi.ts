@@ -5,9 +5,7 @@
  */
 import type { IRAnimationTrack } from '@retikz/core';
 
-import type { EasingRegistry } from '../../animation';
 import type { ExpandedTrack } from './shared';
-import { easingToCss } from './shared';
 
 /** WAAPI keyframe：offset + 该 CSS 属性值（camelCase 键，直接喂 element.animate）+ 可选段 easing */
 export type WaapiKeyframe = {
@@ -64,12 +62,7 @@ const toDescriptorTrigger = (trigger: IRAnimationTrack['trigger']): WaapiDescrip
 };
 
 /** 展开后的交互 track → WAAPI descriptor */
-export const buildWaapiDescriptor = (
-  expanded: ExpandedTrack,
-  track: IRAnimationTrack,
-  registry: EasingRegistry | undefined,
-  onWarn: (message: string) => void,
-): WaapiDescriptor => {
+export const buildWaapiDescriptor = (expanded: ExpandedTrack, track: IRAnimationTrack): WaapiDescriptor => {
   const key = toCamel(expanded.cssProperty);
   const keyframes: Array<WaapiKeyframe> = expanded.frames.map(frame => ({
     offset: frame.offset,
@@ -83,7 +76,7 @@ export const buildWaapiDescriptor = (
     timing: {
       duration: track.duration,
       ...(track.delay !== undefined ? { delay: track.delay } : {}),
-      easing: easingToCss(track.easing, registry, onWarn),
+      easing: 'linear',
       iterations: track.iterations ?? 1,
       ...(track.direction !== undefined ? { direction: track.direction } : {}),
       fill: track.fill ?? 'forwards',

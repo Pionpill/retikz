@@ -4,23 +4,7 @@ import type { ValueOf } from '@retikz/foundation';
 import type { RuntimeScenePrimitive, SceneRuntimeSnapshot } from '@retikz/reconciler';
 import type { SceneIdentity } from '@retikz/reconciler';
 
-import type { EasingRegistry } from '../animation';
-import type { RenderRuntimeConfig } from './config';
 import { createSceneIdentityMap, runtimeStructuralEquals } from './shared';
-
-/** 把 deeply readonly config easing tuples 复制为 renderer 消费形态 */
-export const materializeEasingRegistry = (config: RenderRuntimeConfig): EasingRegistry | undefined => {
-  const source = config.animation?.easings;
-  if (source === undefined) return undefined;
-
-  const result: EasingRegistry = {};
-
-  for (const [name, easing] of Object.entries(source)) {
-    result[name] = typeof easing === 'function' ? easing : [easing[0], easing[1], easing[2], easing[3]];
-  }
-
-  return result;
-};
 
 /** 沿 canonical primitivePath 读取 occurrence 对应 primitive */
 const primitiveAtPath = (

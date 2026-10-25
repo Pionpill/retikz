@@ -31,8 +31,6 @@ export type TableLayoutHostProps = Pick<
   | 'snapshotAt'
   | 'animationRef'
   | 'animations'
-  | 'easings'
-  | 'animationProperties'
   | 'idPrefix'
   | 'nodeDistance'
   | 'fontSize'

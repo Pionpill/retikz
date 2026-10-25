@@ -14,6 +14,24 @@ export const apiReferenceBranchLabels: Readonly<
     >
   >
 > = {
+  '@retikz/core#IRAnimationTrack': [
+    {
+      value: 'opacity',
+      field: 'property',
+      type: '"opacity" | "fillOpacity" | "strokeOpacity" | "pathDraw"',
+      label: { zh: '透明度与进度', en: 'Opacity and progress' },
+    },
+    { value: 'stroke-width', field: 'property', type: '"strokeWidth"', label: { zh: '描边宽度', en: 'Stroke width' } },
+    { value: 'dash-offset', field: 'property', type: '"dashOffset"', label: { zh: '虚线偏移', en: 'Dash offset' } },
+    { value: 'color', field: 'property', type: '"fill" | "stroke"', label: { zh: '颜色', en: 'Color' } },
+    {
+      value: 'transform',
+      field: 'property',
+      type: '"translateX" | "translateY" | "rotate" | "scale" | "scaleX" | "scaleY"',
+      label: { zh: '变换', en: 'Transform' },
+    },
+    { value: 'camera', field: 'property', type: '"viewBox"', label: { zh: '镜头', en: 'Camera' } },
+  ],
   '@retikz/plot#ChannelDefinition': [
     { value: 'label', field: 'kind', type: '"label"', label: { zh: '标签', en: 'Label' } },
     { value: 'position', field: 'kind', type: '"position"', label: { zh: '位置', en: 'Position' } },

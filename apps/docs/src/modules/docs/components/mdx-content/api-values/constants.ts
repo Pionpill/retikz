@@ -1,8 +1,8 @@
 import {
   AnimationDirection,
-  BuiltinAnimationEasing,
+  AnimationEasing,
   AnimationFill,
-  BuiltinAnimationProperty,
+  AnimationProperty,
   AnimationTrigger,
   BendDirection,
   BlendMode,
@@ -93,14 +93,14 @@ export const API_VALUE_REGISTRY = {
   AnimationDirection: {
     values: Object.values(AnimationDirection),
   },
-  BuiltinAnimationEasing: {
-    values: Object.values(BuiltinAnimationEasing),
+  AnimationEasing: {
+    values: Object.values(AnimationEasing),
   },
   AnimationFill: {
     values: Object.values(AnimationFill),
   },
-  BuiltinAnimationProperty: {
-    values: Object.values(BuiltinAnimationProperty),
+  AnimationProperty: {
+    values: Object.values(AnimationProperty),
   },
   AnimationTrigger: {
     values: Object.values(AnimationTrigger),

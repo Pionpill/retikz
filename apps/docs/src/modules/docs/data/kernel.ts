@@ -485,12 +485,6 @@ export const kernelSection: Array<Section> = [
             meta: { pageType: 'guide', audience: 'user', sourceOfTruth: 'runtime' },
           },
           {
-            id: 'custom-animation',
-            label: 'kernel.visualCustomAnimation',
-            difficulty: DocDifficulty.Advanced,
-            meta: extensionGuide('kernel.animation'),
-          },
-          {
             id: 'mechanism',
             label: 'kernel.visualMechanism',
             difficulty: DocDifficulty.Internals,

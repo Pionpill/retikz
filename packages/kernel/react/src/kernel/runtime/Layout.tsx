@@ -18,7 +18,7 @@ import type {
   ThemeDefinition,
 } from '@retikz/core';
 import type { ReconcilerDiagnostic } from '@retikz/reconciler';
-import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
+import type { AnimationControls } from '@retikz/render/animation';
 import { resolveAnimationEnabled } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type {
@@ -275,10 +275,6 @@ export type LayoutProps = {
   animationRef?: Ref<AnimationControls | null>;
   /** Scene 根动画 */
   animations?: ReadonlyArray<IRAnimationTrack>;
-  /** 动画缓动函数注册表 */
-  easings?: EasingRegistry;
-  /** 可动画属性注册表 */
-  animationProperties?: AnimationPropertyRegistry;
   /**
    * SVG 资源 id 前缀；省略时由 React useId 生成
    * @default useId
@@ -424,8 +420,7 @@ export const Layout: FC<LayoutProps> = props => {
     snapshotAt,
     animationRef,
     animations: rootAnimations,
-    easings,
-    animationProperties,
+
     idPrefix,
     nodeDistance,
     fontSize,
@@ -583,8 +578,7 @@ export const Layout: FC<LayoutProps> = props => {
     animate,
     snapshotAt,
     animationRef,
-    easings,
-    animationProperties,
+
     idPrefix: resolvedIdPrefix,
     onArtifacts,
     onCompileResult,

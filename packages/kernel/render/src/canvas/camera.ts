@@ -5,7 +5,6 @@
  */
 import type { Scene } from '@retikz/core';
 
-import type { EasingRegistry } from '../animation';
 import { evaluateTrack, isAutoplayTrigger } from '../animation';
 
 /**
@@ -14,18 +13,13 @@ import { evaluateTrack, isAutoplayTrigger } from '../animation';
  *   **自动播**（load / 缺省）track，manual / visible / onEvent 镜头不随共享时钟自动播（trigger 语义，
  *   交 per-id 激活路径）。在绘制所有 prim 之前应用（caller 的 ctx.save/restore 作用域内）
  */
-export const applySceneCamera = (
-  ctx: CanvasRenderingContext2D,
-  scene: Scene,
-  time: number,
-  easings: EasingRegistry | undefined,
-): void => {
+export const applySceneCamera = (ctx: CanvasRenderingContext2D, scene: Scene, time: number): void => {
   const { x: lx, y: ly, width: lw, height: lh } = scene.layout;
 
   for (const track of scene.animations ?? []) {
     if (track.property !== 'viewBox' || !isAutoplayTrigger(track)) continue;
 
-    const result = evaluateTrack(track, time, { easings });
+    const result = evaluateTrack(track, time);
     if (!result || !Array.isArray(result.value)) continue;
 
     const [vx, vy, vw, vh] = result.value as Array<number>;

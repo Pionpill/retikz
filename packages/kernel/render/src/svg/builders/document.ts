@@ -1,6 +1,5 @@
 import type { PaintValue, Scene, ScenePrimitive } from '@retikz/core';
 
-import type { EasingRegistry } from '../../animation';
 import type { StaticRenderFrame } from '../../runtime';
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '../../runtime';
 import { validateSceneContent } from '../../shared';
@@ -33,8 +32,6 @@ export type BuildDocumentOptions = {
    * @description runtime 据 `{animate:false}` / `prefers-reduced-motion` 走静态路径时传 false
    */
   animate?: boolean;
-  /** 自定义 easing 注册表（名 → cubic-bezier 四元组进 CSS / 函数仅 JS） */
-  easings?: EasingRegistry;
   /** 动画降级诊断告警（pathDraw 无描边 / 自定义 property 无映射 / 自定义 easing 未注册）；缺省 console.warn */
   onAnimationWarn?: (message: string) => void;
   /**
@@ -59,7 +56,7 @@ export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): A
     options.snapshotAt !== undefined
       ? createSvgAnimationCollector({
           idPrefix: safeIdPrefix,
-          easings: options.easings,
+
           onWarn: options.onAnimationWarn,
           snapshotAt: options.snapshotAt,
         })
@@ -67,7 +64,7 @@ export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): A
         ? undefined
         : createSvgAnimationCollector({
             idPrefix: safeIdPrefix,
-            easings: options.easings,
+
             onWarn: options.onAnimationWarn,
           });
   const definitions = new Map<string, () => SvgNode>();

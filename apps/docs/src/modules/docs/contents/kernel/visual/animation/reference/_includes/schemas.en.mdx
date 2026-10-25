@@ -4,7 +4,14 @@ Core IR stores declarative animation data only: property names, keyframes, timin
 
 <ZodSchema name="AnimationTrackSchema" />
 
-Built-in properties further refine `value`: opacity, strokeWidth, translation, rotation, scale, and pathDraw use numbers; fill / stroke use color strings; scene-root viewBox uses `[x, y, width, height]`. Custom properties are interpreted by renderer-registered interpolators.
+Tracks discriminate keyframe values by `property`, keeping TypeScript types and runtime validation aligned:
+
+- `opacity`, `fillOpacity`, `strokeOpacity`, and `pathDraw`: values from 0 to 1
+- `strokeWidth`: nonnegative numbers; `dashOffset`, translation, rotation, and scale: finite numbers
+- `fill` and `stroke`: nonempty color strings, excluding gradient and image resource objects
+- Scene-root `viewBox`: a numeric `[x, y, width, height]` tuple with positive width and height
+
+Property names use `AnimationProperty`; easing presets use `AnimationEasing`. Unknown names are rejected by the schema.
 
 ## KeyframeSchema
 
@@ -12,7 +19,9 @@ Built-in properties further refine `value`: opacity, strokeWidth, translation, r
 
 ## EasingSchema
 
-`EasingSchema` accepts a built-in / custom easing name or a cubic-bezier tuple `[x1, y1, x2, y2]`.
+`EasingSchema` accepts a built-in easing name or a cubic-bezier tuple `[x1, y1, x2, y2]`.
+
+`x1` and `x2` must be between 0 and 1. `y1` and `y2` may exceed that range to express overshoot.
 
 <ZodSchema name="EasingSchema" />
 
@@ -32,4 +41,4 @@ Built-in properties further refine `value`: opacity, strokeWidth, translation, r
 
 <ZodSchema name="OriginSchema" />
 
-For presets, triggers, and fallback behavior at the component layer, see [Animation](/kernel/visual/animation/usage). For custom properties, interpolators, and the renderer registry, see [Custom Animation](/kernel/visual/animation/custom-animation).
+For presets, triggers, and fallback behavior at the component layer, see [Animation](/kernel/visual/animation/usage).

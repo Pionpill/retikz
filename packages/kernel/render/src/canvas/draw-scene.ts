@@ -557,8 +557,6 @@ const drawPrim = (
     const primTime = resolution?.mode === 'at' ? resolution.time : options.time;
     if (resolution?.mode !== 'skip' && primTime !== undefined) {
       p = applyPrimAnimations(ctx, p, primTime, {
-        easings: options.easings,
-        animationProperties: options.animationProperties,
         warn: message => warnUnsupported(options, 'animation', message),
         includeNonAutoplay: resolution?.mode === 'at' ? resolution.includeNonAutoplay : false,
       });
@@ -742,7 +740,7 @@ export const drawScene = (ctx: CanvasRenderingContext2D, scene: Scene, options: 
   const hasCamera = rootAnimationTime !== undefined && (scene.animations ?? []).some(t => t.property === 'viewBox');
   if (hasCamera) {
     ctx.save();
-    applySceneCamera(ctx, scene, rootAnimationTime, options.easings);
+    applySceneCamera(ctx, scene, rootAnimationTime);
   }
 
   for (const primitive of scene.primitives) drawPrim(ctx, primitive, options, resources, state);

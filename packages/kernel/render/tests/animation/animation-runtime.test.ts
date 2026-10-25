@@ -40,11 +40,25 @@ const group = (children: Array<ScenePrimitive>, extra: Partial<GroupPrimitive> =
   ...extra,
 });
 
-const track = (extra: Partial<IRAnimationTrack> = {}): IRAnimationTrack => ({
+const track = (
+  extra: Partial<
+    Extract<IRAnimationTrack, { property: 'opacity' | 'fillOpacity' | 'strokeOpacity' | 'pathDraw' }>
+  > = {},
+): IRAnimationTrack => ({
   property: 'opacity',
   keyframes: [
     { at: 0, value: 0 },
     { at: 1, value: 1 },
+  ],
+  duration: 400,
+  ...extra,
+});
+
+const cameraTrack = (extra: Partial<Extract<IRAnimationTrack, { property: 'viewBox' }>> = {}): IRAnimationTrack => ({
+  property: 'viewBox',
+  keyframes: [
+    { at: 0, value: [0, 0, 100, 100] },
+    { at: 1, value: [10, 10, 50, 50] },
   ],
   duration: 400,
   ...extra,
@@ -68,7 +82,7 @@ describe('sceneHasAnimations', () => {
   });
 
   it('scene 根镜头 track（无元素动画）→ true', () => {
-    expect(sceneHasAnimations(scene([rect()], [track({ property: 'viewBox' })]))).toBe(true);
+    expect(sceneHasAnimations(scene([rect()], [cameraTrack()]))).toBe(true);
   });
 
   it('空 animations 数组不算动画 → false', () => {
@@ -109,7 +123,7 @@ describe('sceneHasAutoplayTrigger', () => {
   });
 
   it('根镜头自动播放 track → true', () => {
-    expect(sceneHasAutoplayTrigger(scene([rect()], [track({ property: 'viewBox' })]))).toBe(true);
+    expect(sceneHasAutoplayTrigger(scene([rect()], [cameraTrack()]))).toBe(true);
   });
 });
 
@@ -129,10 +143,7 @@ describe('sceneAnimationDurationMs', () => {
   });
 
   it('多 track 取最大结束时刻（元素级 + 根镜头）', () => {
-    const s = scene(
-      [rect({ animations: [track({ duration: 300 })] })],
-      [track({ property: 'viewBox', duration: 100, delay: 800 })],
-    );
+    const s = scene([rect({ animations: [track({ duration: 300 })] })], [cameraTrack({ duration: 100, delay: 800 })]);
 
     expect(sceneAnimationDurationMs(s)).toBe(900);
   });

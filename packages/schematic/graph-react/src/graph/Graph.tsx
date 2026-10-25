@@ -54,8 +54,7 @@ const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: 
     animate: _animate,
     snapshotAt: _snapshotAt,
     animationRef: _animationRef,
-    easings: _easings,
-    animationProperties: _animationProperties,
+
     idPrefix: _idPrefix,
     nodeDistance: _nodeDistance,
     fontSize: _fontSize,
@@ -85,8 +84,7 @@ const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: 
   void _animate;
   void _snapshotAt;
   void _animationRef;
-  void _easings;
-  void _animationProperties;
+
   void _idPrefix;
   void _nodeDistance;
   void _fontSize;

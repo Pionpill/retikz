@@ -72,7 +72,63 @@ const GROW_UP: IRAnimationTrack = {
   easing: 'ease-out',
 };
 
-describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
+describe('Happy path：三载体与 scene 根动画', () => {
+  it.each([
+    { property: 'viewBox', value: ['x', 0, 100, 100] },
+    { property: 'viewBox', value: [0, 0, 0, 100] },
+    { property: 'viewBox', value: [0, 0, 100, -1] },
+    { property: 'opacity', value: 1.1 },
+    { property: 'fillOpacity', value: -0.1 },
+    { property: 'strokeOpacity', value: 2 },
+    { property: 'strokeWidth', value: -1 },
+    { property: 'pathDraw', value: 2 },
+    { property: 'fill', value: '' },
+    { property: 'stroke', value: 1 },
+  ])('拒绝属性值域以外的外部数据 %j', ({ property, value }) => {
+    expect(AnimationTrackSchema.safeParse({ property, keyframes: [{ at: 0, value }], duration: 100 }).success).toBe(
+      false,
+    );
+  });
+
+  it.each([
+    [-0.1, 0, 1, 1],
+    [0, 0, 1.1, 1],
+  ])('拒绝越界贝塞尔 x 控制点 %j', easing => {
+    expect(AnimationTrackSchema.safeParse({ ...FADE, easing }).success).toBe(false);
+  });
+
+  it('虚线偏移允许负值，缩放允许反射，颜色复用非空约束', () => {
+    for (const [property, value] of [
+      ['dashOffset', -10],
+      ['scaleX', -1],
+      ['fill', '#ff0000'],
+    ]) {
+      expect(AnimationTrackSchema.safeParse({ property, keyframes: [{ at: 0, value }], duration: 100 }).success).toBe(
+        true,
+      );
+    }
+  });
+  it.each(['blur', 'gradientStop', 'toString'])('外部 JSON 不接受未知属性 %s', property => {
+    expect(AnimationTrackSchema.safeParse({ ...FADE, property }).success).toBe(false);
+  });
+
+  it.each(['spring', 'constructor', 'toString'])('外部 JSON 不接受未知缓动 %s', easing => {
+    expect(AnimationTrackSchema.safeParse({ ...FADE, easing }).success).toBe(false);
+    expect(AnimationTrackSchema.safeParse({ ...FADE, keyframes: [{ at: 0, value: 0, easing }] }).success).toBe(false);
+  });
+
+  it('保留轨道和关键帧的贝塞尔四元组', () => {
+    expect(
+      AnimationTrackSchema.safeParse({
+        ...FADE,
+        easing: [0.34, 1.56, 0.64, 1],
+        keyframes: [
+          { at: 0, value: 0, easing: [0, 0, 1, 1] },
+          { at: 1, value: 1 },
+        ],
+      }).success,
+    ).toBe(true);
+  });
   it('node track → 平铺 shape 图元带 animations', () => {
     const prims = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [FADE] }]), silent).scene
       .primitives;
@@ -137,36 +193,6 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
     ).scene;
 
     expect(built.animations).toEqual([CAMERA]);
-  });
-
-  it('自定义 property（blur）+ 任意 value（含对象）→ 通过并原样透传（扩展口）', () => {
-    const custom: IRAnimationTrack = {
-      property: 'blur',
-      keyframes: [
-        { at: 0, value: 4 },
-        { at: 1, value: 0 },
-      ],
-      duration: 300,
-    };
-
-    // 自定义通道允许任意 JSON value（含嵌套对象），供 renderer 注册插值器解释
-    const objectValued: IRAnimationTrack = {
-      property: 'gradientStop',
-      keyframes: [
-        { at: 0, value: { offset: 0, color: 'red' } },
-        { at: 1, value: { offset: 1, color: 'blue' } },
-      ],
-      duration: 300,
-    };
-
-    expect(AnimationTrackSchema.safeParse(objectValued).success).toBe(true);
-
-    const prims = compileToScene(
-      scene([{ type: 'node', id: 'a', position: [0, 0], animations: [custom, objectValued] }]),
-      silent,
-    ).scene.primitives;
-
-    for (const rect of allOfType(prims, 'rect')) expect(rect.animations).toEqual([custom, objectValued]);
   });
 });
 

@@ -1,7 +1,6 @@
 import type { ValueOf } from '@retikz/foundation';
 import type { RuntimeDeepReadonly } from '@retikz/reconciler';
 
-import type { AnimationPropertyRegistry, EasingRegistry } from '../animation';
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { HydrationHandlers } from '../hydration';
 import { cloneAndFreezeRuntimeValue } from './shared';
@@ -37,10 +36,6 @@ export type RenderRuntimeConfigInput = Readonly<{
     enabled?: boolean;
     /** 可选静态采样时刻 */
     snapshotAt?: number;
-    /** 自定义 easing registry */
-    easings?: EasingRegistry;
-    /** 自定义 animation property registry */
-    properties?: AnimationPropertyRegistry;
   }>;
   /** Canvas CSS user-space 尺寸；省略字段时按 committed Scene layout 推导 */
   canvas?: Readonly<{
@@ -78,9 +73,6 @@ export const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRun
     const { animation, canvas, cachePolicy } = captured;
     if (animation?.snapshotAt !== undefined && (!Number.isFinite(animation.snapshotAt) || animation.snapshotAt < 0)) {
       return invalidRuntimeInput(animation);
-    }
-    for (const easing of Object.values(animation?.easings ?? {})) {
-      if (typeof easing !== 'function' && !easing.every(Number.isFinite)) return invalidRuntimeInput(easing);
     }
     for (const dimension of [canvas?.width, canvas?.height]) {
       if (dimension !== undefined && (!Number.isFinite(dimension) || dimension < 0)) return invalidRuntimeInput(canvas);

@@ -28,7 +28,6 @@ Core 提供 `fadeIn`、`scaleIn`、`slideIn`、`drawOn` 基础预设，以及 `c
 | 基础用法    | 使用预设与关键帧轨道                        | 完成第一个动画                 |
 | 组件对接    | 区分 Node、Path、Scope 与 Layout 的动画目标 | 决定移动单个图元、整组还是镜头 |
 | 扩展用法    | 组合触发、播放、镜头与静态输出              | 控制交互、编排节奏或导出静态帧 |
-| 自定义动画  | 扩展缓动与 Canvas 属性通道                  | 内置插值或属性不能满足需求     |
 | 实现原理    | 解释轨道编译与运行时求值                    | 理解动画目标和后端差异         |
 | API 参考    | 查询预设、控制句柄与扩展类型                | 精确编写调用                   |
 | Schema 参考 | 查询轨道、关键帧与触发器数据                | 构造或保存声明式动画           |
@@ -37,7 +36,7 @@ Core 提供 `fadeIn`、`scaleIn`、`slideIn`、`drawOn` 基础预设，以及 `c
 
 先使用预设表达常见入场或强调效果；需要精确时间与数值时编写关键帧。跨多个独立图元的整体运动使用 Scope，单个 Node、Path 的绑定范围则见组件对接页。
 
-动画轨道是可保存的数据，播放句柄和自定义函数属于运行时。动画不驱动自动布局重算；静态输出与减少动态效果策略也需要单独考虑。自定义 Canvas 属性通道不代表 SVG 自动具备相同能力，应在扩展前核对后端支持。
+动画轨道是可保存的数据，播放句柄属于运行时。动画属性与缓动名称使用固定枚举，也可以直接提供贝塞尔缓动控制点。动画不驱动自动布局重算；静态输出与减少动态效果策略也需要单独考虑。
 
 ## 章节内容
 
@@ -53,11 +52,6 @@ Core 提供 `fadeIn`、`scaleIn`、`slideIn`、`drawOn` 基础预设，以及 `c
       title: '扩展用法',
       description: '组合触发、播放、镜头与静态输出',
       url: '/kernel/visual/animation/extended-usage',
-    },
-    {
-      title: '自定义动画',
-      description: '扩展缓动与 Canvas 属性通道',
-      url: '/kernel/visual/animation/custom-animation',
     },
     { title: '实现原理', description: '解释轨道编译与运行时求值', url: '/kernel/visual/animation/mechanism' },
     { title: 'API 参考', description: '查询预设、控制句柄与扩展类型', url: '/kernel/visual/animation/reference' },

@@ -111,8 +111,7 @@ const mountStaticCanvas = (
       {
         devicePixelRatio: ratio,
         time,
-        easings: animation.easings,
-        animationProperties: canvasOptions.animationProperties,
+
         resolvePrimAnimation: id => resolvePrim(id, time),
       },
     );
@@ -201,8 +200,6 @@ const mountStaticCanvas = (
         {
           devicePixelRatio: ratio,
           time: animation.snapshotAt,
-          easings: animation.easings,
-          animationProperties: canvasOptions.animationProperties,
         },
       );
       return;
@@ -222,8 +219,7 @@ const mountStaticCanvas = (
             {
               devicePixelRatio: ratio,
               time,
-              easings: animation.easings,
-              animationProperties: canvasOptions.animationProperties,
+
               resolvePrimAnimation: id => resolvePrim(id, time),
             },
           ),

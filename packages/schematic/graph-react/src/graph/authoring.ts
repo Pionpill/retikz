@@ -33,8 +33,6 @@ export type GraphLayoutHostProps = Pick<
   | 'animate'
   | 'snapshotAt'
   | 'animationRef'
-  | 'easings'
-  | 'animationProperties'
   | 'idPrefix'
   | 'nodeDistance'
   | 'fontSize'
@@ -66,8 +64,7 @@ export const graphLayoutHostPropKeys = [
   'animate',
   'snapshotAt',
   'animationRef',
-  'easings',
-  'animationProperties',
+
   'idPrefix',
   'nodeDistance',
   'fontSize',

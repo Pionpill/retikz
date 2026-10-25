@@ -36,7 +36,6 @@ import type { SceneAnimationDescriptorDiff } from './runtime-options';
 import {
   diffSceneAnimationDescriptors,
   occurrenceAnimationTracks,
-  materializeEasingRegistry,
   SceneAnimationOccurrenceChangeKind,
 } from './runtime-options';
 import type { SceneIdentityMap } from './shared';
@@ -621,8 +620,7 @@ const createBitmap = (
       ...(animationFrame === undefined
         ? {}
         : { resolvePrimAnimation: (id: string | undefined) => animationFrame.resolvePrimAnimation(id, time ?? 0) }),
-      animationProperties: config.animation?.properties,
-      easings: materializeEasingRegistry(config),
+
       defaultFontFamily: hostStyle.defaultFontFamily,
       currentColor: hostStyle.currentColor,
       getImage,
@@ -723,8 +721,7 @@ const createIncrementalBitmap = (
       ...(animationFrame === undefined
         ? {}
         : { resolvePrimAnimation: (id: string | undefined) => animationFrame.resolvePrimAnimation(id, time ?? 0) }),
-      animationProperties: config.animation?.properties,
-      easings: materializeEasingRegistry(config),
+
       defaultFontFamily: hostStyle.defaultFontFamily,
       currentColor: hostStyle.currentColor,
       getImage,
@@ -1044,8 +1041,7 @@ const createCanvasAnimation = (
         devicePixelRatio: options.devicePixelRatio,
         time,
         rootAnimationTime: Math.max(0, time - rootTimelineStart),
-        animationProperties: animationConfig.animation?.properties,
-        easings: materializeEasingRegistry(animationConfig),
+
         resolvePrimAnimation: id => resolveWithRegistry(registry, id, time),
         getImage,
       },

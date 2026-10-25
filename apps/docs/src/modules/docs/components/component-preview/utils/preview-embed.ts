@@ -58,8 +58,6 @@ const FLOW_HOST_PROP_KEYS = [
   'animate',
   'snapshotAt',
   'animationRef',
-  'easings',
-  'animationProperties',
   'idPrefix',
   'nodeDistance',
   'fontSize',

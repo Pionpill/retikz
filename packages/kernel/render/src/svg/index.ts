@@ -22,6 +22,6 @@ export * from './transform-builder';
 export * from './view-box';
 
 // ============ 动画播放（SVG 后端）：CSS @keyframes + WAAPI 描述类型 ============
-export type { CubicBezier, EasingFn, EasingRegistry } from '../animation';
+export type { CubicBezier, EasingFn } from '../animation';
 export * from '../trace';
 export * from './animation';

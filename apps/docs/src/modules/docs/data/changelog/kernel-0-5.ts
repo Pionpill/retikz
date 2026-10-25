@@ -378,6 +378,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '动画属性与关键帧值契约', en: 'Animation property and keyframe contracts' },
+          content: {
+            zh: '动画属性与缓动采用闭合枚举 AnimationProperty / AnimationEasing，移除自定义属性和具名缓动注册。轨道按属性约束关键帧类型与范围，新增 fillOpacity、strokeOpacity、dashOffset；SVG 采样与 Canvas 复用段缓动求值，pathDraw 优先于虚线偏移动画。',
+            en: 'AnimationProperty and AnimationEasing are closed enums, replacing custom property and named-easing registries. Tracks constrain keyframe types and ranges by property and add fillOpacity, strokeOpacity, and dashOffset. SVG sampling and Canvas share segment easing; pathDraw takes precedence over animated dash offsets.',
+          },
+        },
+        {
           label: { zh: 'BREAKING：裁剪参数收口到 params', en: 'BREAKING: clip parameters move into params' },
           content: {
             zh: 'Clip 输入与解析后形状统一使用 { kind, params }。矩形、官方扩展和自定义裁剪均把几何字段放入必填 params；resolve/lower 分别读取 spec.params 和 shape.params。移除平铺参数写法，Scene 路径与渲染行为不变。',

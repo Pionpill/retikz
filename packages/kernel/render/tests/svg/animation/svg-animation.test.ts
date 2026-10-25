@@ -1,12 +1,13 @@
 import type { IRAnimationTrack, PathPrimitive, RectPrimitive, Scene, ScenePrimitive } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
+import { evaluateTrack } from '../../../src/animation';
 import { buildSvgFragment, renderToSvgString } from '../../../src/svg';
 import type { SvgNode } from '../../../src/svg/types';
 
 /**
  * SVG 动画播放：load→CSS @keyframes（SSR 零 JS）+ 交互→WAAPI 描述；property→SVG 映射；camera→group transform；
- *   {animate:false} 降级；pathDraw/自定义 property/自定义 easing 降级 warn；oklch 预采样；确定性
+ *   {animate:false} 降级；无描边的 pathDraw 降级 warn；oklch 预采样；确定性
  */
 const layout = { x: 0, y: 0, width: 100, height: 100 };
 
@@ -66,6 +67,88 @@ const collectWarns = () => {
 };
 
 describe('Happy：load CSS + 交互 WAAPI + camera', () => {
+  it('三项视觉通道同时支持播放与静态截帧', () => {
+    const animations: Array<IRAnimationTrack> = [
+      {
+        property: 'fillOpacity',
+        keyframes: [
+          { at: 0, value: 0 },
+          { at: 1, value: 1 },
+        ],
+        duration: 400,
+      },
+      {
+        property: 'strokeOpacity',
+        keyframes: [
+          { at: 0, value: 0 },
+          { at: 1, value: 0.5 },
+        ],
+        duration: 400,
+      },
+      {
+        property: 'dashOffset',
+        keyframes: [
+          { at: 0, value: -10 },
+          { at: 1, value: 10 },
+        ],
+        duration: 400,
+      },
+    ];
+    const input = scene([rect({ stroke: '#000', dashPattern: [4, 2], animations })]);
+    const snapshot = findTag(buildSvgFragment(input, { idPrefix: 't', snapshotAt: 200 }), 'rect');
+    expect(snapshot?.attrs).toMatchObject({ 'fill-opacity': 0.5, 'stroke-opacity': 0.25, 'stroke-dashoffset': 0 });
+    const css = String(findTag(buildSvgFragment(input, { idPrefix: 't' }), 'style')?.children?.[0]);
+    expect(css).toContain('50%{fill-opacity:0.5;');
+    expect(css).toContain('50%{stroke-opacity:0.25;');
+    expect(css).toContain('50%{stroke-dashoffset:0;');
+  });
+
+  it('颜色段缓动覆盖轨道缓动，WAAPI 样本与共享求值一致且不重复缓动', () => {
+    const color: IRAnimationTrack = {
+      property: 'fill',
+      trigger: 'manual',
+      duration: 400,
+      easing: 'ease-out',
+      keyframes: [
+        { at: 0, value: '#ff0000', easing: 'ease-in' },
+        { at: 1, value: '#0000ff' },
+      ],
+    };
+    const node = findTag(buildSvgFragment(scene([rect({ animations: [color] })]), { idPrefix: 't' }), 'rect');
+    const descriptors: Array<{
+      timing: { easing: string };
+      keyframes: Array<{ offset: number; fill: string; easing: string }>;
+    }> = JSON.parse(String(node?.attrs['data-retikz-anim']));
+    expect(descriptors[0].timing.easing).toBe('linear');
+    expect(descriptors[0].keyframes.find(frame => frame.offset === 0.5)).toMatchObject({
+      fill: evaluateTrack(color, 200)?.value,
+      easing: 'linear',
+    });
+    const cssColor: IRAnimationTrack = { ...color, trigger: 'load' };
+    const css = String(
+      findTag(buildSvgFragment(scene([rect({ animations: [cssColor] })]), { idPrefix: 't' }), 'style')?.children?.[0],
+    );
+    expect(css).toContain(`50%{fill:${String(evaluateTrack(color, 200)?.value)};`);
+  });
+
+  it.each([false, true])('SVG 跳过与 pathDraw 冲突的 dashOffset：%s', reverse => {
+    const draw: IRAnimationTrack = { ...FADE, property: 'pathDraw' };
+    const dash: IRAnimationTrack = {
+      property: 'dashOffset',
+      keyframes: [
+        { at: 0, value: 100 },
+        { at: 1, value: 200 },
+      ],
+      duration: 400,
+    };
+    const warnings = collectWarns();
+    const output = buildSvgFragment(
+      scene([rect({ stroke: '#000', animations: reverse ? [dash, draw] : [draw, dash] })]),
+      { idPrefix: 't', snapshotAt: 200, ...warnings },
+    );
+    expect(findTag(output, 'rect')?.attrs['stroke-dashoffset']).toBe(0.5);
+    expect(warnings.warnings.some(message => message.includes('dashOffset conflicts with pathDraw'))).toBe(true);
+  });
   it('load opacity track → <style> 含 @keyframes，元素挂 class + animation', () => {
     const out = buildSvgFragment(scene([rect({ animations: [FADE] })]), { idPrefix: 't' });
     const style = findTag(out, 'style');
@@ -98,8 +181,9 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
     const out = buildSvgFragment(scene([rect({ animations: [t] })]), { idPrefix: 't' });
     const css = String(findTag(out, 'style')!.children![0]);
 
-    // 旧实现丢弃 kf.easing；现逐帧透传为 CSS timing-function
-    expect(css).toContain('animation-timing-function:ease-in');
+    const midpoint = Number(/50%\{opacity:([^;]+)/.exec(css)?.[1]);
+    expect(midpoint).toBeCloseTo(Number(evaluateTrack(t, 200)?.value));
+    expect(midpoint).toBeLessThan(0.5);
   });
 
   it('transform track（scaleY + origin bottom）→ wrapper <g> + transform-origin + @keyframes scale', () => {
@@ -375,40 +459,6 @@ describe('错误 / 降级', () => {
 
     expect(w.warnings.some(m => m.includes('pathDraw'))).toBe(true);
     expect(findTag(out, 'style')).toBeUndefined();
-  });
-
-  it('自定义 property 无映射 → warn + skip', () => {
-    const w = collectWarns();
-    const blur: IRAnimationTrack = {
-      property: 'blur',
-      keyframes: [
-        { at: 0, value: 4 },
-        { at: 1, value: 0 },
-      ],
-      duration: 300,
-    };
-    const out = buildSvgFragment(scene([rect({ animations: [blur] })]), { idPrefix: 't', ...w });
-
-    expect(w.warnings.some(m => m.includes('blur'))).toBe(true);
-    expect(findTag(out, 'style')).toBeUndefined();
-  });
-
-  it('自定义 easing 未注册 → warn + linear 兜底', () => {
-    const w = collectWarns();
-    const track: IRAnimationTrack = { ...FADE, easing: 'spring' };
-    const out = buildSvgFragment(scene([rect({ animations: [track] })]), { idPrefix: 't', ...w });
-
-    expect(w.warnings.some(m => m.includes('spring'))).toBe(true);
-    expect(String(findTag(out, 'style')!.children![0])).toContain('linear');
-  });
-
-  it('原型成员名 easing 在普通空注册表中按未知名称降级', () => {
-    const w = collectWarns();
-    const track: IRAnimationTrack = { ...FADE, easing: 'toString' };
-    const out = buildSvgFragment(scene([rect({ animations: [track] })]), { idPrefix: 't', easings: {}, ...w });
-
-    expect(w.warnings).toContain('SVG animation: unknown easing "toString"; falling back to linear.');
-    expect(String(findTag(out, 'style')!.children![0])).toContain('linear');
   });
 });
 
