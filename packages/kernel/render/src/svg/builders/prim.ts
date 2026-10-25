@@ -28,7 +28,7 @@ export type BuildContext = {
   /** 解析主树图元所属的宿主上下文 */
   forPrimitive?: (primitive: ScenePrimitive) => BuildContext;
   /** 资源内容不将局部身份写入宿主 DOM 索引 */
-  resourceContent?: boolean;
+  isResourceContent?: boolean;
   /** 资源使用处继承的播放宿主 */
   hostId?: string;
   /** 按 arrow 端点 spec 查 `<marker id>` id 的回调（按 detail hash 区分起末异形 / 异色） */
@@ -312,23 +312,27 @@ export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNod
     delete node.attrs['data-retikz-id'];
     delete node.attrs.opacity;
     delete node.attrs.filter;
-    if (context.resourceContent && pathTracks?.length && context.hostId !== undefined) {
+    if (context.isResourceContent && pathTracks?.length && context.hostId !== undefined) {
       node.attrs['data-retikz-animation-owner'] = context.hostId;
     }
     const pathNode =
       context.decorate && pathTracks?.length
-        ? context.decorate(node, { ...p, id: context.resourceContent ? context.hostId : p.id, animations: pathTracks })
+        ? context.decorate(node, {
+            ...p,
+            id: context.isResourceContent ? context.hostId : p.id,
+            animations: pathTracks,
+          })
         : node;
     node = { tag: 'g', attrs, children: [pathNode, ...arrows] };
     p = { ...p, animations: p.animations?.filter(track => track.property !== 'pathDraw') };
   }
-  if (context.resourceContent) {
+  if (context.isResourceContent) {
     delete node.attrs['data-retikz-id'];
     if (p.animations?.length && context.hostId !== undefined) {
       node.attrs['data-retikz-animation-owner'] = context.hostId;
     }
   }
-  const animationPrimitive = context.resourceContent ? { ...p, id: context.hostId } : p;
+  const animationPrimitive = context.isResourceContent ? { ...p, id: context.hostId } : p;
   const decorated = context.decorate ? context.decorate(node, animationPrimitive) : node;
   if (p.hitTest === false) decorated.attrs['pointer-events'] = 'none';
 

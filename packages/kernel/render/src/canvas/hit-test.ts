@@ -1,7 +1,7 @@
 import { computeSceneTextBounds } from '@retikz/core';
 import type { Scene, SceneClipPath, ScenePrimitive } from '@retikz/core';
 
-import { validateSceneContent } from '../shared';
+import { resolveSceneResourceMap } from '../shared';
 import { startArrowPlacement, endArrowPlacement } from '../shared';
 import { applyTransform, buildClipPath, buildPath, DEG_TO_RAD, roundedRectPath } from './path-geometry';
 
@@ -118,25 +118,22 @@ const insideClip = (ctx: CanvasRenderingContext2D, path: SceneClipPath | undefin
  *   的 id，空白处返回 null。函数不进 IR、纯 runtime 定位层
  */
 export const hitTest = (scene: Scene, point: HitPoint, options?: HitTestOptions): string | null => {
-  validateSceneContent(scene);
+  const resourceMap = resolveSceneResourceMap(scene);
   const ctx = resolveContext(options);
   if (ctx === null) return null;
 
   const strokeTolerance = options?.strokeTolerance;
-  const clipResources = new Map(
-    (scene.resources ?? []).flatMap(r => (r.kind === 'clip' ? [[r.id, r.path] as const] : [])),
-  );
-
   // 逆 z-order：后画的在上，先测最后画的；命中即返回最近 id-bearing 祖先 id。
-  const walk = (prim: ScenePrimitive, nearestId: string | undefined, resourceContent = false): string | null => {
+  const walk = (prim: ScenePrimitive, nearestId: string | undefined, isResourceContent = false): string | null => {
     if (prim.hitTest === false) return null;
 
-    const selfId = resourceContent ? nearestId : (prim.id ?? nearestId);
+    const selfId = isResourceContent ? nearestId : (prim.id ?? nearestId);
     if (prim.type === 'group') {
       ctx.save();
 
       for (const transform of prim.transforms ?? []) applyTransform(ctx, transform);
-      const path = prim.clipRef !== undefined ? clipResources.get(prim.clipRef) : undefined;
+      const resource = prim.clipRef !== undefined ? resourceMap.get(prim.clipRef) : undefined;
+      const path = resource?.kind === 'clip' ? resource.path : undefined;
       if (!insideClip(ctx, path, point)) {
         ctx.restore();
         return null;
@@ -145,7 +142,7 @@ export const hitTest = (scene: Scene, point: HitPoint, options?: HitTestOptions)
       let result: string | null = null;
 
       for (let i = prim.children.length - 1; i >= 0; i--) {
-        result = walk(prim.children[i], selfId, resourceContent);
+        result = walk(prim.children[i], selfId, isResourceContent);
         if (result !== null) break;
       }
 

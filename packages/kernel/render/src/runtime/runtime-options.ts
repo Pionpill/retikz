@@ -22,24 +22,30 @@ const primitiveAtPath = (
   return primitive;
 };
 
+/** 按不可变 Runtime 快照复用图元动画索引，不跨快照保留派生状态 */
+const occurrenceAnimationCache = new WeakMap<SceneRuntimeSnapshot, Map<ScenePrimitive, Array<IRAnimationTrack>>>();
+
 /** 收集当前 occurrence 及资源内容的轨道，不纳入独立 authoring 子节点 */
 export const occurrenceAnimationTracks = (
   primitive: RuntimeScenePrimitive | undefined,
-  resources: SceneRuntimeSnapshot['scene']['resources'],
+  snapshot: SceneRuntimeSnapshot,
 ): Array<IRAnimationTrack> => {
   if (!primitive) return [];
-  const content = primitive as unknown as ScenePrimitive;
-  const tracks: Array<IRAnimationTrack> = [];
-  visitSceneContent(
-    {
-      primitives: [content.type === 'group' ? { ...content, children: [] } : content],
-      resources: resources as unknown as Scene['resources'],
-    },
-    current => {
-      if (current.animations) tracks.push(...current.animations);
-    },
-  );
-  return tracks;
+  let tracksByPrimitive = occurrenceAnimationCache.get(snapshot);
+  if (tracksByPrimitive === undefined) {
+    tracksByPrimitive = new Map();
+    let ownerTracks: Array<IRAnimationTrack> = [];
+    const index = tracksByPrimitive;
+    visitSceneContent(snapshot.scene as unknown as Scene, (current, context) => {
+      if (!context.isResourceContent) {
+        ownerTracks = [];
+        index.set(current, ownerTracks);
+      }
+      if (current.animations !== undefined) ownerTracks.push(...current.animations);
+    });
+    occurrenceAnimationCache.set(snapshot, tracksByPrimitive);
+  }
+  return tracksByPrimitive.get(primitive as unknown as ScenePrimitive) ?? [];
 };
 
 /** Animated occurrence descriptor 变化类型 */
@@ -80,14 +86,11 @@ export const diffSceneAnimationDescriptors = (
 ): SceneAnimationDescriptorDiff => {
   const currentEntries =
     current?.topology.flatMap(node => {
-      const animations = occurrenceAnimationTracks(
-        primitiveAtPath(current, node.primitivePath),
-        current.scene.resources,
-      );
+      const animations = occurrenceAnimationTracks(primitiveAtPath(current, node.primitivePath), current);
       return animations.length === 0 ? [] : ([[node.identity, { animations, publicId: node.publicId }]] as const);
     }) ?? [];
   const nextEntries = next.topology.flatMap(node => {
-    const animations = occurrenceAnimationTracks(primitiveAtPath(next, node.primitivePath), next.scene.resources);
+    const animations = occurrenceAnimationTracks(primitiveAtPath(next, node.primitivePath), next);
     return animations.length === 0 ? [] : ([[node.identity, { animations, publicId: node.publicId }]] as const);
   });
   const currentByIdentity = createSceneIdentityMap(currentEntries);

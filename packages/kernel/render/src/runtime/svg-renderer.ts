@@ -25,6 +25,7 @@ import {
   createSvgAnimationControls,
   resolvePointViaLayout,
 } from '../hydration';
+import { prepareRuntimeSceneContent } from '../shared';
 import type { SvgNode } from '../svg';
 import { buildSvgDocument, buildSvgFragment, buildSvgReadonlyLayer } from '../svg';
 import type { RenderRuntimeConfig } from './config';
@@ -1251,7 +1252,7 @@ const buildDescriptor = (
   config: RenderRuntimeConfig,
   options: RetainedSvgRendererImmutableOptions,
 ): SvgNode =>
-  buildSvgDocument(snapshot.scene as unknown as Scene, {
+  buildSvgDocument(prepareRuntimeSceneContent(snapshot.scene as unknown as Scene), {
     idPrefix: options.idPrefix,
     animate: config.animation?.enabled,
     snapshotAt: config.animation?.snapshotAt,

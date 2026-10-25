@@ -40,6 +40,25 @@ describe('资源内容复用基础图元', () => {
 });
 
 describe('Scene resource dependency closure', () => {
+  it('资源依赖失败时不向目标注册表发布部分内容', () => {
+    const paint = createPaintRegistry(value => value);
+    const clip = createClipRegistry(value => value);
+    const resources: NonNullable<Scene['resources']> = [
+      { kind: 'clip', id: 'window', path: { fillRule: 'nonzero', commands: [] } },
+      {
+        kind: 'paint',
+        id: 'tile',
+        spec: { kind: 'pattern', shape: 'custom' },
+        tile: {
+          size: 10,
+          motif: [{ type: 'rect', x: 0, y: 0, width: 1, height: 1, fill: { kind: 'resourceRef', id: 'tile' } }],
+        },
+      },
+    ];
+    expect(() => importSceneResources(resources, paint, clip)).toThrow(/cyclic/);
+    expect(paint.resources()).toEqual([]);
+    expect(clip.resources()).toEqual([]);
+  });
   it('重映射 Pattern 与嵌套箭头引用，保留相同 spec 的不同内容', () => {
     const resources: NonNullable<Scene['resources']> = [
       {
@@ -109,9 +128,9 @@ describe('Scene resource dependency closure', () => {
       layout: { x: 0, y: 0, width: 10, height: 10 },
       primitives: [{ type: 'rect', x: 0, y: 0, width: 1, height: 1, fill: { kind: 'resourceRef', id: 'missing' } }],
     };
-    expect(() => visitSceneContent(scene, () => {})).toThrow(/primitives\[0\].fill.*missing/);
+    expect(() => visitSceneContent(scene)).toThrow(/primitives\[0\].fill.*missing/);
     scene.resources = [{ kind: 'clip', id: 'missing', path: { fillRule: 'nonzero', commands: [] } }];
-    expect(() => visitSceneContent(scene, () => {})).toThrow(/expected paint resource/);
+    expect(() => visitSceneContent(scene)).toThrow(/expected paint resource/);
   });
   it('rejects cyclic Pattern dependencies and cyclic group objects', () => {
     const primitive = {
@@ -129,10 +148,10 @@ describe('Scene resource dependency closure', () => {
         { kind: 'paint', id: 'tile', spec: { kind: 'pattern', shape: 'dots' }, tile: { size: 10, motif: [primitive] } },
       ],
     };
-    expect(() => visitSceneContent(scene, () => {})).toThrow(/cyclic/);
+    expect(() => visitSceneContent(scene)).toThrow(/cyclic/);
     const group: GroupPrimitive = { type: 'group', children: [] };
     group.children.push(group);
-    expect(() => visitSceneContent({ primitives: [group] }, () => {})).toThrow(/cyclic/);
+    expect(() => visitSceneContent({ primitives: [group] })).toThrow(/cyclic/);
   });
   it('visits shared content per host without treating reuse as a cycle', () => {
     const content = { type: 'rect' as const, id: 'local', x: 0, y: 0, width: 1, height: 1 };
@@ -146,10 +165,15 @@ describe('Scene resource dependency closure', () => {
       })),
     };
     const owners: Array<string | undefined> = [];
+    const scenePaths: Array<string> = [];
     visitSceneContent(scene, (_, site) => {
-      if (site.resourceContent) owners.push(site.hostId);
+      if (site.isResourceContent) {
+        owners.push(site.hostId);
+        scenePaths.push(site.scenePath);
+      }
     });
     expect(owners).toEqual(['A', 'B']);
+    expect(scenePaths).toEqual(['primitives[0].arrowEnd.marker[0]', 'primitives[1].arrowEnd.marker[0]']);
     expect(content.id).toBe('local');
   });
 });

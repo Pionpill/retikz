@@ -82,6 +82,8 @@ const mountStaticCanvas = (
   // per-id 虚拟时钟登记表：ctx.animation 的 per-id 控制经它给各 id 叠加独立 offset / pause / active / stop
   const registry: IdClockRegistry = createIdClockRegistry();
   let visibleActivated = new Set<string>();
+  /** 当前绑定场景中使用 visible 触发器的宿主，更新场景时重新收集 */
+  let visibleIds = new Set<string>();
   let visibleTeardown: (() => void) | undefined;
 
   let currentScene: Scene;
@@ -123,12 +125,11 @@ const mountStaticCanvas = (
 
   /** Canvas visible trigger：按 canvas client rect 与 id 聚合 bbox 相交激活一次 */
   const activateVisibleTracks = (): void => {
-    const ids = collectCanvasVisibleAnimationIds(currentScene);
-    if (ids.size === 0) return;
+    if (visibleIds.size === 0) return;
 
     let changed = false;
 
-    for (const id of ids) {
+    for (const id of visibleIds) {
       if (visibleActivated.has(id)) continue;
       if (!isCanvasAnimationIdVisible(canvas, currentScene, id)) continue;
 
@@ -147,10 +148,11 @@ const mountStaticCanvas = (
     visibleActivated = new Set<string>();
     visibleTeardown?.();
     visibleTeardown = undefined;
+    visibleIds = new Set();
     if (!animate || !sceneHasAnimations(currentScene)) return;
 
-    const ids = collectCanvasVisibleAnimationIds(currentScene);
-    if (ids.size === 0 || typeof window === 'undefined') return;
+    visibleIds = collectCanvasVisibleAnimationIds(currentScene);
+    if (visibleIds.size === 0 || typeof window === 'undefined') return;
 
     // scroll / resize 高频触发：经 rAF 合帧——同一帧内多次事件只跑一次 activateVisibleTracks（去抖到下一帧）
     let scheduledRaf: number | undefined;

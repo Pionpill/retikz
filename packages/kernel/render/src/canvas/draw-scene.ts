@@ -11,7 +11,7 @@ import type {
   TextPrimitive,
 } from '@retikz/core';
 
-import { validateSceneContent } from '../shared';
+import { resolveSceneResourceMap } from '../shared';
 import {
   countScenePrimitiveOccurrences,
   startArrowPlacement,
@@ -30,7 +30,7 @@ import type { CanvasWarning, DrawOptions, UnsupportedCanvasFeature } from './typ
 /** 资源内容继承的绘制上下文，不创建独立 authoring 节点 */
 type SceneDrawOptions = DrawOptions & {
   hostId?: string;
-  resourceContent?: boolean;
+  isResourceContent?: boolean;
   contextStroke?: PaintValue;
 };
 
@@ -488,7 +488,7 @@ const buildPattern = (
   const motifColor = options.currentColor ?? '#000';
 
   for (const prim of tile.motif)
-    drawPrim(off, prim, { ...options, resourceContent: true, contextStroke: motifColor }, resources, {
+    drawPrim(off, prim, { ...options, isResourceContent: true, contextStroke: motifColor }, resources, {
       gradientPatterns: new Map(),
     });
   const pattern = ctx.createPattern(off.canvas, 'repeat');
@@ -529,7 +529,7 @@ const drawArrowMarker = (
   ctx.translate(-spec.refX, -spec.baseSize / 2);
 
   for (const prim of spec.marker)
-    drawPrim(ctx, prim, { ...options, resourceContent: true, contextStroke: pathStroke }, resources, state);
+    drawPrim(ctx, prim, { ...options, isResourceContent: true, contextStroke: pathStroke }, resources, state);
   ctx.restore();
 };
 
@@ -540,7 +540,7 @@ const drawPrim = (
   resources: ResourceMap,
   state: DrawState,
 ): void => {
-  options = { ...options, hostId: options.resourceContent ? options.hostId : (p.id ?? options.hostId) };
+  options = { ...options, hostId: options.isResourceContent ? options.hostId : (p.id ?? options.hostId) };
   if (p.type !== 'group' && p.type !== 'text') {
     const bindPaint = (paint: PaintValue | undefined): PaintValue | undefined =>
       typeof paint === 'object' && paint.kind === 'contextStroke'
@@ -731,8 +731,7 @@ const drawPrim = (
 
 /** 绘制已编译 Scene 到 Canvas 2D context */
 export const drawScene = (ctx: CanvasRenderingContext2D, scene: Scene, options: DrawOptions = {}): void => {
-  validateSceneContent(scene);
-  const resources: ResourceMap = new Map((scene.resources ?? []).map(r => [r.id, r]));
+  const resources = resolveSceneResourceMap(scene);
   const state: DrawState = { gradientPatterns: new Map() };
 
   // 镜头：给定 time 且 scene 根有 viewBox track 时，先叠一层取景变换（包住全部 prim）

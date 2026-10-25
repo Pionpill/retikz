@@ -69,21 +69,34 @@ export const importSceneResources = (
   clip: ClipRegistry,
 ): Map<string, string> => {
   const ids = new Map<string, string>();
-  const byId = new Map(resources.map(resource => [resource.id, resource]));
+  const resourceMap = new Map(resources.map(resource => [resource.id, resource]));
+  // 在任何导入发生前统一检查所有资源内容，共享依赖只校验一次
+  visitSceneContent({
+    primitives: resources.flatMap(resource =>
+      resource.kind === 'paint' && 'tile' in resource ? resource.tile.motif : [],
+    ),
+    resources: [...resources],
+  });
+  /** 仅收集图元树中的直接依赖，资源内容由 insert 按资源身份处理一次 */
   const dependencies = (primitives: Array<ScenePrimitive>): void => {
-    visitSceneContent({ primitives, resources: [...resources] }, primitive => {
+    for (const primitive of primitives) {
       if (primitive.type === 'group') {
         if (primitive.clipRef !== undefined) insert(primitive.clipRef);
+        dependencies(primitive.children);
       } else if (primitive.type !== 'text') {
         for (const value of [primitive.fill, primitive.stroke]) {
           if (typeof value === 'object' && value.kind === 'resourceRef') insert(value.id);
         }
+        if (primitive.type === 'path') {
+          if (primitive.arrowStart !== undefined) dependencies(primitive.arrowStart.marker);
+          if (primitive.arrowEnd !== undefined) dependencies(primitive.arrowEnd.marker);
+        }
       }
-    });
+    }
   };
   const insert = (id: string): void => {
     if (ids.has(id)) return;
-    const resource = byId.get(id);
+    const resource = resourceMap.get(id);
     if (!resource) throw createCompileInvariantError(`resource '${id}' was not imported`);
     if (resource.kind === 'clip') {
       ids.set(id, clip.importPath(resource.path));
@@ -106,11 +119,6 @@ export const importSceneResources = (
     }
     ids.set(id, imported.id);
   };
-  // 先检查依赖闭包，避免导入时因循环发布部分资源
-  for (const resource of resources) {
-    if (resource.kind === 'paint' && 'tile' in resource)
-      visitSceneContent({ primitives: resource.tile.motif, resources: [...resources] }, () => {});
-  }
   for (const resource of resources) insert(resource.id);
   return ids;
 };

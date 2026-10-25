@@ -126,4 +126,22 @@ describe('drawScene clip 裁剪', () => {
     expect(() => drawScene(context as unknown as CanvasRenderingContext2D, s)).toThrow(/expected clip resource 'nope'/);
     expect(context.calls.some(c => c.name === 'rect')).toBe(false);
   });
+
+  it('同一可变 Scene 修改资源后重新检查，失败时不绘制新图元', () => {
+    const scene: Scene = {
+      layout: { x: 0, y: 0, width: 100, height: 100 },
+      resources: [{ kind: 'clip', id: 'window', path: { fillRule: 'nonzero', commands: [] } }],
+      primitives: [
+        { type: 'group', clipRef: 'window', children: [{ type: 'rect', x: 0, y: 0, width: 10, height: 10 }] },
+      ],
+    };
+    const firstContext = createSpyCanvasContext();
+    drawScene(firstContext as unknown as CanvasRenderingContext2D, scene);
+    scene.resources?.splice(0);
+    const secondContext = createSpyCanvasContext();
+    expect(() => drawScene(secondContext as unknown as CanvasRenderingContext2D, scene)).toThrow(
+      /expected clip resource 'window'/,
+    );
+    expect(secondContext.calls.some(call => call.name === 'rect')).toBe(false);
+  });
 });

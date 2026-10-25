@@ -6,8 +6,8 @@
  *   （SSR / 老浏览器）优雅退化
  */
 import type { IRAnimationTrack, Scene } from '@retikz/core';
-import { visitSceneContent } from '@retikz/core';
 
+import { visitSceneAnimations } from '../shared';
 import { isAutoplayTrigger } from './channels';
 import { bindWaapiDescriptorElements } from './retained';
 
@@ -251,7 +251,7 @@ const trackEndMs = (track: IRAnimationTrack): number => {
 const collectTracks = (scene: Scene): Array<IRAnimationTrack> => {
   const out: Array<IRAnimationTrack> = [...(scene.animations ?? [])];
 
-  visitSceneContent(scene, primitive => {
+  visitSceneAnimations(scene, primitive => {
     if (primitive.animations) out.push(...primitive.animations);
   });
 

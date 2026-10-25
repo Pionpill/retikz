@@ -77,7 +77,7 @@ export const assemblePreparedScene = <const TComposites extends ReadonlyArray<An
     ...(resources.length === 0 ? {} : { resources }),
     ...(animations === undefined ? {} : { animations }),
   };
-  visitSceneContent(scene, () => {});
+  visitSceneContent(scene);
   return Object.freeze({
     result: Object.freeze({
       scene,
