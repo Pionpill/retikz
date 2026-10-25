@@ -40,7 +40,7 @@ export const visitSceneContent = (
       fail(site.path, `expected ${kind} resource '${id}'`);
       return;
     }
-    if (resource.kind === 'paint' && resource.tile !== undefined) {
+    if (resource.kind === 'paint' && 'tile' in resource) {
       const tile = resource.tile;
       enter(resource, site.path, () =>
         tile.motif.forEach((child, index) =>

@@ -105,7 +105,8 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
     idByKey.set(key, id);
     const resource = resourceOf(id);
     list.push(resource);
-    if (resource.kind === 'paint') idByKey.set(paintKeyOf({ spec: resource.spec, tile: resource.tile }), id);
+    if (resource.kind === 'paint')
+      idByKey.set(paintKeyOf({ spec: resource.spec, tile: 'tile' in resource ? resource.tile : undefined }), id);
 
     return id;
   };
@@ -117,21 +118,23 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
     const resolution: PaintResolution = paint;
     const key = paintKeyOf(resolution.spec);
     const id = insert(key, nextId => {
-      const resource: Extract<SceneResource, { kind: 'paint' }> = {
-        kind: 'paint',
-        id: nextId,
-        spec: resolution.spec,
-      };
-      if (resolution.pattern !== undefined) resource.tile = resolvePatternTile(resolution.pattern, round);
-
-      return resource;
+      if ('pattern' in resolution) {
+        return {
+          kind: 'paint',
+          id: nextId,
+          spec: resolution.spec,
+          tile: resolvePatternTile(resolution.pattern, round),
+        };
+      }
+      const spec = resolution.spec;
+      return spec.kind === 'image' ? { kind: 'paint', id: nextId, spec } : { kind: 'paint', id: nextId, spec };
     });
 
     return { kind: 'resourceRef', id };
   };
 
   const importResolved = (resource: Extract<SceneResource, { kind: 'paint' }>): PaintValue => {
-    const key = paintKeyOf({ spec: resource.spec, tile: resource.tile });
+    const key = paintKeyOf({ spec: resource.spec, tile: 'tile' in resource ? resource.tile : undefined });
     const id = insert(key, nextId => ({ ...resource, id: nextId }));
     return { kind: 'resourceRef', id };
   };

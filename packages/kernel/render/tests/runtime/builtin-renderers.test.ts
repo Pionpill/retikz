@@ -295,7 +295,7 @@ it('共享 Pattern 文本在 retained 提交与回滚时对所有宿主原子生
     scene: {
       ...snapshot.scene,
       resources: snapshot.scene.resources.map(resource =>
-        resource.kind === 'paint' && resource.tile
+        resource.kind === 'paint' && 'tile' in resource
           ? {
               ...resource,
               tile: {

@@ -232,8 +232,7 @@ const resolvePaintStyle = (
 
   const resource = resources.get(paint.id);
   if (resource !== undefined && resource.kind === 'paint') {
-    const spec = resource.spec;
-    if (spec.kind === 'pattern' && resource.tile !== undefined) {
+    if ('tile' in resource) {
       const pattern = buildPattern(ctx, resource.tile, options, resources);
       if (pattern !== undefined) return pattern;
     }

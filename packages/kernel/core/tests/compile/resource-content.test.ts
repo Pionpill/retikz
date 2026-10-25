@@ -33,9 +33,9 @@ describe('资源内容复用基础图元', () => {
       },
       { patterns: [pattern] },
     );
-    const resource = result.scene.resources?.find(item => item.kind === 'paint');
-    expect(resource?.kind === 'paint' ? resource.tile?.motif : undefined).toEqual([text]);
-    expect(resource?.kind === 'paint' ? resource.tile?.motif[0] : undefined).not.toBe(text);
+    const resource = result.scene.resources?.find(item => item.kind === 'paint' && 'tile' in item);
+    expect(resource?.tile.motif).toEqual([text]);
+    expect(resource?.tile.motif[0]).not.toBe(text);
   });
 });
 

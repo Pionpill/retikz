@@ -168,12 +168,13 @@ describe('buildPrim —— marker primitive → SvgNode', () => {
   });
 });
 
-describe('buildPaintDef —— 错误路径兜底', () => {
-  it('pattern-missing-tile：pattern 资源缺 tile（compile bug）→ 产空 <pattern id>、不抛', () => {
+describe('buildPaintDef —— 图案资源', () => {
+  it('空 motif 保留图案周期和资源标识', () => {
     const resource: PaintResource = {
       kind: 'paint',
       id: 'p1',
       spec: { kind: 'pattern', shape: 'dots' },
+      tile: { size: 8, motif: [] },
     };
 
     expect(() => buildPaintDef(resource, 'rid')).not.toThrow();
@@ -182,6 +183,8 @@ describe('buildPaintDef —— 错误路径兜底', () => {
 
     expect(node.tag).toBe('pattern');
     expect(node.attrs.id).toBe('rid');
+    expect(node.attrs.width).toBe(8);
+    expect(node.attrs.height).toBe(8);
     expect(node.children ?? []).toHaveLength(0);
   });
 });

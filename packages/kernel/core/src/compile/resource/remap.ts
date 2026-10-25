@@ -89,9 +89,9 @@ export const importSceneResources = (
       ids.set(id, clip.importPath(resource.path));
       return;
     }
-    if (resource.tile) dependencies(resource.tile.motif);
+    if ('tile' in resource) dependencies(resource.tile.motif);
     const imported = paint.importResolved(
-      resource.tile
+      'tile' in resource
         ? {
             ...resource,
             tile: {
@@ -108,7 +108,7 @@ export const importSceneResources = (
   };
   // 先检查依赖闭包，避免导入时因循环发布部分资源
   for (const resource of resources) {
-    if (resource.kind === 'paint' && resource.tile)
+    if (resource.kind === 'paint' && 'tile' in resource)
       visitSceneContent({ primitives: resource.tile.motif, resources: [...resources] }, () => {});
   }
   for (const resource of resources) insert(resource.id);

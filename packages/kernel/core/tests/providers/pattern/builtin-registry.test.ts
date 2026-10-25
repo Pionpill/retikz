@@ -6,7 +6,8 @@ import type {
   EllipsePrimitive,
   PathPrimitive,
   ScenePrimitive,
-  PaintResource,
+  PatternResource,
+  GradientResource,
   PatternDefinition,
   PatternEmitContext,
   ResolvedPatternTile,
@@ -44,8 +45,8 @@ const patternNodeIR = (spec: IRPaint, second?: IRPaint): IRScene => ({
 });
 
 /** 从 Scene.resources 取首个 pattern 资源（spec.kind === 'pattern'） */
-const firstPatternResource = (resources: Array<SceneResource> | undefined): PaintResource | undefined =>
-  (resources ?? []).find((r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern');
+const firstPatternResource = (resources: Array<SceneResource> | undefined): PatternResource | undefined =>
+  (resources ?? []).find((r): r is PatternResource => r.kind === 'paint' && r.spec.kind === 'pattern');
 
 /** 从 Scene.resources 取首个 pattern 资源的 tile（已解析 motif） */
 const tileOf = (spec: IRPaint, opts?: CompileOptions): ResolvedPatternTile | undefined =>
@@ -159,7 +160,7 @@ describe('Pattern registry — happy path', () => {
     const spec: IRPaint = { kind: 'pattern', shape: 'lines', size: 6 };
     const scene = compileToScene(patternNodeIR(spec, spec)).scene;
     const patternResources = (scene.resources ?? []).filter(
-      (r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern',
+      (r): r is PatternResource => r.kind === 'paint' && r.spec.kind === 'pattern',
     );
 
     expect(patternResources).toHaveLength(1);
@@ -470,13 +471,13 @@ describe('Pattern registry — boundary', () => {
 
     // gradient 资源无 tile、pattern 资源有 tile
     const gradRes = (scene.resources ?? []).find(
-      (r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'linearGradient',
+      (r): r is GradientResource => r.kind === 'paint' && r.spec.kind === 'linearGradient',
     );
     const patRes = (scene.resources ?? []).find(
-      (r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern',
+      (r): r is PatternResource => r.kind === 'paint' && r.spec.kind === 'pattern',
     );
 
-    expect(gradRes?.tile).toBeUndefined();
+    expect(gradRes).not.toHaveProperty('tile');
     expect(patRes?.tile).toBeDefined();
   });
 });

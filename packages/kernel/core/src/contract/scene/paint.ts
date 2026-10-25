@@ -39,17 +39,33 @@ export type ResolvedPatternTile = {
   motif: Array<ScenePrimitive>;
 };
 
-/**
- * paint 资源（gradient / pattern / image）
- * @description primitive 经 `{ kind:'resourceRef', id }` 引用；pattern 资源额外带已解析 `tile`
- */
-export type PaintResource = {
+/** 绘制资源的分类与标识 */
+type PaintResourceBase = {
   /** 标识场景绘制资源 */
   kind: 'paint';
   /** 供填充或描边引用的资源标识 */
   id: string;
-  /** 描述渐变、图案等绘制效果的 IR 声明 */
-  spec: IRPaint;
-  /** 已解析 pattern tile；仅 pattern 资源有，gradient / image 资源缺省 */
-  tile?: ResolvedPatternTile;
 };
+
+/** 线性、径向或锥形渐变资源 */
+export type GradientResource = PaintResourceBase & {
+  /** 渐变绘制声明 */
+  spec: Extract<IRPaint, { kind: 'linearGradient' | 'radialGradient' | 'conicGradient' }>;
+};
+
+/** 已编译局部图元的图案资源 */
+export type PatternResource = PaintResourceBase & {
+  /** 图案绘制声明 */
+  spec: Extract<IRPaint, { kind: 'pattern' }>;
+  /** 已解析的图案周期与局部图元 */
+  tile: ResolvedPatternTile;
+};
+
+/** 图像绘制资源 */
+export type ImageResource = PaintResourceBase & {
+  /** 图像来源与适配方式 */
+  spec: Extract<IRPaint, { kind: 'image' }>;
+};
+
+/** 供图元填充或描边引用的渐变、图案或图像资源 */
+export type PaintResource = GradientResource | PatternResource | ImageResource;

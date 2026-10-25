@@ -33,14 +33,22 @@ export type PatternResolution = Readonly<{
 }>;
 
 /** 已在 resolve 阶段确定的 paint resource 输入 */
-export type PaintResolution = Readonly<{
-  /** 内部 discriminator，不属于持久化 IR */
-  kind: 'paint';
-  /** 原始 paint spec */
-  spec: IRPaint;
-  /** pattern paint 的 provider 和样式解析结果 */
-  pattern?: PatternResolution;
-}>;
+export type PaintResolution = Readonly<
+  | {
+      /** 内部 discriminator，不属于持久化 IR */
+      kind: 'paint';
+      /** 原始 paint spec */
+      spec: Exclude<IRPaint, { kind: 'pattern' }>;
+    }
+  | {
+      /** 内部绘制资源分类 */
+      kind: 'paint';
+      /** 原始图案声明 */
+      spec: IRPatternPaint;
+      /** pattern paint 的 provider 和样式解析结果 */
+      pattern: PatternResolution;
+    }
+>;
 
 /** resolve 阶段可以产生的 paint 值 */
 export type PaintResolutionInput = string | PaintResolution;

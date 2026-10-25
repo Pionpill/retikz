@@ -56,9 +56,7 @@ export const resolvePaint = (
 ): string | PaintResolution | undefined => {
   if (paint === undefined || typeof paint === 'string') return paint;
 
-  return {
-    kind: 'paint',
-    spec: paint,
-    ...(paint.kind === 'pattern' ? { pattern: resolvePattern(paint, context) } : {}),
-  };
+  return paint.kind === 'pattern'
+    ? { kind: 'paint', spec: paint, pattern: resolvePattern(paint, context) }
+    : { kind: 'paint', spec: paint };
 };

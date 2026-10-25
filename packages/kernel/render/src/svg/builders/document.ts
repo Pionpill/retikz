@@ -108,7 +108,7 @@ export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): A
       },
       paintRefUrl: resourceId => {
         const resource = resources.get(resourceId);
-        const id = `retikz-paint-${safeIdPrefix}-${resourceId}${resource?.kind === 'paint' && resource.tile ? suffix : ''}`;
+        const id = `retikz-paint-${safeIdPrefix}-${resourceId}${resource?.kind === 'paint' && 'tile' in resource ? suffix : ''}`;
         if (resource?.kind === 'paint' && !definitions.has(id)) {
           definitions.set(id, () => buildPaintDef(resource, id, resourceContext()));
         }

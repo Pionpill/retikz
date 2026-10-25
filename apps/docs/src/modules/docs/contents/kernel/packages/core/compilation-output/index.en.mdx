@@ -185,11 +185,25 @@ The first rectangle has a local top-left corner at `[0, 0]`, which becomes `[20,
 ```ts
 type SceneResource = PaintResource | ClipResource;
 
-type PaintResource = {
+type PaintResource = GradientResource | PatternResource | ImageResource;
+
+type GradientResource = {
   kind: 'paint';
   id: string;
-  spec: IRPaint;
-  tile?: ResolvedPatternTile;
+  spec: Extract<IRPaint, { kind: 'linearGradient' | 'radialGradient' | 'conicGradient' }>;
+};
+
+type PatternResource = {
+  kind: 'paint';
+  id: string;
+  spec: Extract<IRPaint, { kind: 'pattern' }>;
+  tile: ResolvedPatternTile;
+};
+
+type ImageResource = {
+  kind: 'paint';
+  id: string;
+  spec: Extract<IRPaint, { kind: 'image' }>;
 };
 
 type ClipResource = {
