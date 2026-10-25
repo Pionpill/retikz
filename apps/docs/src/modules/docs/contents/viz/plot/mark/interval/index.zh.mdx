@@ -142,7 +142,9 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 ## 基础用法
 
-### 位置与方向
+### 位置
+
+#### 字段位置与区间
 
 默认的 `x` 提供分类槽，`y` 提供从 0 到值的区间。分类槽的宽度由 band 比例尺决定；可以通过比例尺的 `paddingInner` 调整柱间距。
 
@@ -167,6 +169,34 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
   controls={{ name: 'bar-basic' }}
   size="lg"
   defaultSourceFile="bar-position.preview.tsx"
+/>
+
+#### 常量与边界位置
+
+在 `encodings.bounds.x`、`encodings.bounds.y` 中设置 `from` 和 `to`，每个边界使用字段、常量或 edge；`properties.bounds` 的两轴设为 `{ kind: 'extent' }`。切换整个视图范围，观察 edge 边界如何覆盖当前坐标范围。
+
+<ComponentPreview
+  mode="showcase"
+  files={['reference-interval', 'reference-interval.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
+  defaultSourceFile="reference-interval.preview.tsx"
+  controls={{ name: 'reference-interval' }}
+  size="md"
+/>
+
+#### 统计结果位置
+
+下面通过局部 `summarize` 变换计算统计字段，再绑定到同一类 Mark。切换分组和完整视图范围，观察各组极值确定的参考区域；小点保留原始观测。
+
+<ComponentPreview
+  mode="showcase"
+  files={[
+    'reference-data-interval',
+    '/viz/plot/mark/shared/reference-data.preview.tsx',
+    '/viz/plot/mark/shared/reference-data.data.ts',
+  ]}
+  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
+  controls={{ name: 'reference-data-interval' }}
+  size="md"
 />
 
 ### 系列排列
@@ -301,32 +331,6 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
     { label: '便捷属性与系列排列归一化', path: 'packages/viz/plot-vanilla/src/normalize/plot/member-normalizer.ts' },
     { label: '区间解析、投影与 Node 下沉', path: 'packages/viz/plot/src/providers/mark/features/interval.ts' },
   ]}
-/>
-
-## 参考区间
-
-在 `encodings.bounds.x`、`encodings.bounds.y` 中设置 `from` 和 `to`，每个边界使用字段、常量或 edge；`properties.bounds` 的两轴设为 `{ kind: 'extent' }`。切换整个视图范围，观察 edge 边界如何覆盖当前坐标范围。
-
-以下参考图元显式设置 `contributeToDomain={false}`，不扩大主体数据的定义域。使用控件切换坐标系、位置、几何与标签。
-
-<ComponentPreview
-  files={['reference-interval', 'reference-interval.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
-  defaultSourceFile="reference-interval.preview.tsx"
-  controls={{ name: 'reference-interval' }}
-  size="md"
-/>
-
-下面通过局部 `summarize` 变换计算统计字段，再绑定到同一类 Mark。切换分组和完整视图范围，观察各组极值确定的参考区域；小点保留原始观测。
-
-<ComponentPreview
-  files={[
-    'reference-data-interval',
-    '/viz/plot/mark/shared/reference-data.preview.tsx',
-    '/viz/plot/mark/shared/reference-data.data.ts',
-  ]}
-  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
-  controls={{ name: 'reference-data-interval' }}
-  size="md"
 />
 
 ## API 参考

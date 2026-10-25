@@ -168,27 +168,55 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 Unless noted otherwise, the visual properties below support constant and field channels. Numbers, booleans, and objects can use constant shorthand; use explicit constant bindings for ambiguous strings such as colors. See [channel binding](/viz/plot/channel/binding) for field rules. Tables group properties by responsibility, and each demo combines properties from that group.
 
-### Position and size
+### Position
 
-`x` and `y` select the fields to read. Cartesian coordinates interpret them as horizontal and vertical positions; polar coordinates interpret `x` as angle and `y` as radius. Each row still produces one point.
+`encodings.position` specifies an input for each coordinate role. Cartesian coordinates use x and y for horizontal and vertical position; polar coordinates use x for angle and y for radius. Supply x in one dimension, x/y in two dimensions, and x/y/z in three dimensions.
 
-| Property      | Meaning              | Description                                                                                                                                                                    |
-| ------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `x`, `y`      | Position fields      | Component props accept field names or paths only: horizontal/vertical in Cartesian coordinates and angle/radius in polar coordinates. One-dimensional coordinates use only `x` |
-| `z`           | Third position field | For custom coordinates consuming a third position role; unused by built-in coordinates                                                                                         |
-| `size`        | Node radius          | Constants specify the radius directly; numeric fields use a square-root scale by default for area comparison. Negative values raise an error                                   |
-| `minimumSize` | Minimum visual size  | A number or an object with `width`, `height`, and `default`; `size` takes precedence for ordinary points. The Minimum size mode omits `size`                                   |
-| `color`       | Overall color        | This example colors regions categorically; see Appearance for the full set of paint properties                                                                                 |
+| Input      | Syntax                                  | Meaning                                                                       |
+| ---------- | --------------------------------------- | ----------------------------------------------------------------------------- |
+| Field      | `{ field: 'x' }`                        | Read a field from the current row, then map it through the scale              |
+| Constant   | `{ value: 50 }`                         | A fixed data-space value or category string, still mapped through the scale   |
+| Range edge | `{ edge: 'start' }` / `{ edge: 'end' }` | The start or end of the final coordinate role range, following range reversal |
 
-Keep the position fields fixed while comparing constant points with population bubbles, then change the fields to observe the positions.
+#### Field positions
+
+Switch the x/y fields and coordinate system to observe positions for the same data. The node radius stays fixed at 10.
 
 <ComponentPreview
   mode="showcase"
   files={['point-position', 'point-position.preview.tsx', 'point-api.data.ts']}
   controls={{ name: 'point-position' }}
   size="lg"
-  caption="Switch position, color, and size encodings to compare plain, categorical, and bubble scatter."
+  caption="Switch position fields and coordinate systems to observe node placement."
   defaultSourceFile="point-position.preview.tsx"
+/>
+
+#### Constant and boundary positions
+
+Use a constant for a fixed data position, or a range edge for the start or end of the coordinate range. Both can be mixed with fields. Adjust the constant positions below to see how nodes move in different coordinate systems.
+
+<ComponentPreview
+  mode="showcase"
+  files={['reference-point', 'reference-point.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
+  defaultSourceFile="reference-point.preview.tsx"
+  controls={{ name: 'reference-point' }}
+  size="md"
+/>
+
+#### Statistical positions
+
+The following example binds fields produced by a local `summarize` transform to the same Mark. Change the statistic or grouping to inspect the reference geometry generated for each result row; small points retain the original observations.
+
+<ComponentPreview
+  mode="showcase"
+  files={[
+    'reference-data-point',
+    '/viz/plot/mark/shared/reference-data.preview.tsx',
+    '/viz/plot/mark/shared/reference-data.data.ts',
+  ]}
+  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
+  controls={{ name: 'reference-data-point' }}
+  size="md"
 />
 
 ### Appearance
@@ -197,6 +225,8 @@ Fill, stroke and opacity change how points look. This example offers three color
 
 | Property              | Meaning               | Description                                                                                                                                                                                |
 | --------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `size`                | Node radius           | Constants specify the radius directly; numeric fields use a square-root scale by default for area comparison. Negative values raise an error                                               |
+| `minimumSize`         | Minimum visual size   | A number or an object with `width`, `height`, and `default`; `size` takes precedence for ordinary points. The Minimum size mode omits `size`                                               |
 | `color`               | Overall color         | Categorical fields map through a color scale; use an explicit constant binding for a fixed color. Explicit `fill` can override the node fill                                               |
 | `fill`                | Fill                  | Supports fields, constant colors, and Paint kinds `linearGradient`, `radialGradient`, `conicGradient`, `pattern`, and `image`; strings are interpreted as field names                      |
 | `dashOffset`          | Dash offset           | Finite positive or negative offset; combines with `dashPattern` and supports fixed properties or field encodings                                                                           |
@@ -214,6 +244,8 @@ Fill, stroke and opacity change how points look. This example offers three color
 Fixed `fill` and `stroke` accept CSS colors, structured Paint, or a master color weight from 0 to 1 (`0` is valid). Fixed `opacity: 0.6` is equivalent to `{ overall: 0.6 }`. `encodings.opacity` still binds `overall`, `fill`, and `stroke` separately and overrides only the matching fixed factor. `textColor` accepts a CSS color or a master color weight from 0 to 1.
 
 The example overlaps nodes in pairs to expose blending and drawing order. Disable custom dashes and dashed strokes before comparing dotted strokes. Switch between forward and reverse order to inspect overlapping edges.
+
+Choose a fixed radius, population-based size mapping, or minimum size. Minimum size mode omits `size` so that `minimumSize` determines the node size.
 
 <ComponentPreview
   mode="showcase"
@@ -455,32 +487,6 @@ Plot collects demands by each mark's actual position-scale binding. Maximum radi
     { label: 'Maximum radius and policy demands', path: 'packages/viz/plot/src/resolve/scale/point-padding.ts' },
     { label: 'Shared scale constraints', path: 'packages/viz/plot/src/resolve/scale/mark-domain.ts' },
   ]}
-/>
-
-## Reference points and text
-
-`encodings.position` requires consecutive roles: x in one dimension, x/y in two, and x/y/z in three. Use `{ field: 'fieldName' }`, `{ value: 50 }` (or a category string), or `{ edge: 'start' }` / `{ edge: 'end' }`. Constant positions retain shape, text, orientation, and label support.
-
-These reference marks set `contributeToDomain={false}` so they do not expand the data domain. Use the controls to change coordinates, positions, geometry, and labels.
-
-<ComponentPreview
-  files={['reference-point', 'reference-point.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
-  defaultSourceFile="reference-point.preview.tsx"
-  controls={{ name: 'reference-point' }}
-  size="md"
-/>
-
-The following example binds fields produced by a local `summarize` transform to the same Mark. Change the statistic or grouping to inspect the reference geometry generated for each result row; small points retain the original observations.
-
-<ComponentPreview
-  files={[
-    'reference-data-point',
-    '/viz/plot/mark/shared/reference-data.preview.tsx',
-    '/viz/plot/mark/shared/reference-data.data.ts',
-  ]}
-  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
-  controls={{ name: 'reference-data-point' }}
-  size="md"
 />
 
 ## API Reference

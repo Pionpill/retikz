@@ -191,7 +191,7 @@ The explicit `data.reference` must match the dataset name `rows`. All four entri
 
 Write a field name for an ordinary binding. To select a declared scale, use `{ field: 'population', scale: 'populationSize' }`. Coordinates own position scales. Use `{ field: 'gdp' }` to bind a position field, `{ value: 80 }` for a constant, or an edge for a view boundary.
 
-Fixed positions remain in data space: `encodings.position.y: { value: 80 }` means the data value 80, which passes through scale and coordinate projection. `{ edge: 'start' }` and `{ edge: 'end' }` refer to the final view range edges; see [annotations](/viz/plot/mark).
+Fixed positions remain in data space: `encodings.position.y: { value: 80 }` means the data value 80, which passes through scale and coordinate projection. `{ edge: 'start' }` and `{ edge: 'end' }` refer to the final view range edges; see [marks](/viz/plot/mark).
 
 An encoding wins over a fixed property at the same target. Missing fields or failed scale mappings raise errors instead of falling back to the fixed property. Other targets remain independent: encoding `opacity.overall` preserves fixed `opacity.fill` and `opacity.stroke` factors.
 

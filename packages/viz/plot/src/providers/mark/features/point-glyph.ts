@@ -10,13 +10,13 @@ export const POINT_DEFAULT_RADIUS = 5;
 /** Point 与 Relation endpoint 共用的 glyph 样式输入 */
 export type PointGlyphStyleSource = Pick<
   NonNullable<IRPlotPointMark['properties']>,
-  'padding' | 'minimumSize' | 'stroke' | 'strokeWidth' | 'opacity' | 'rotate'
+  'padding' | 'minimumSize' | 'size' | 'stroke' | 'strokeWidth' | 'opacity' | 'rotate'
 >;
 
 /** 组装 Point 与 Relation endpoint 共用的 circle glyph 样式 */
 export const pointGlyphStyle = (fill: MarkPaint, mark: PointGlyphStyleSource): Omit<IRNodeDefault, 'label'> => {
   const padding = mark.padding;
-  const minimumSize = mark.minimumSize;
+  const minimumSize = mark.size === undefined ? mark.minimumSize : mark.size * Math.SQRT2;
   const stroke = mark.stroke;
   const strokeWidth = mark.strokeWidth;
   const opacity = constantMarkOpacity(mark.opacity);

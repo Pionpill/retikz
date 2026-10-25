@@ -34,6 +34,8 @@ export type PointStylePreviewValues = {
   strokeOpacity: number;
   opacity: number;
   size: number;
+  sizeMode: 'fixed' | 'population' | 'minimum';
+  minimumSize: number;
   dashed: boolean;
   shadow: 'none' | 'md' | 'xl';
   /** 点线描边 */
@@ -62,6 +64,7 @@ export const PointStylePreview: FC<PointStylePreviewValues> = values => {
     encodings: {
       position: { x: { field: 'x' }, y: { field: 'y' } },
       zIndex: values.zIndex,
+      ...(values.sizeMode === 'population' ? { size: 'pop' } : {}),
       ...(usesFieldColor ? { color: 'region' } : {}),
     },
     properties: {
@@ -79,7 +82,8 @@ export const PointStylePreview: FC<PointStylePreviewValues> = values => {
             fill: values.fillOpacity,
             stroke: values.strokeOpacity,
           },
-      size: values.size,
+      size: values.sizeMode === 'fixed' ? values.size : undefined,
+      minimumSize: values.sizeMode === 'minimum' ? values.minimumSize : undefined,
       dashed: values.dashed,
       dotted: values.dotted,
       dashPattern: values.dashPattern ? [8, 3, 2, 3] : undefined,

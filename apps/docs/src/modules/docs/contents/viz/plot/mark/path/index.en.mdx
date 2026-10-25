@@ -148,17 +148,19 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 ## Basic usage
 
-### Position and order
+### Position
 
-`x` and `y` name position fields; `order` names the sorting field. For example, `x="month"`, `y="revenue"`, and `order="month"` connect revenue positions by month. Without `order`, PathMark follows array order; it does not automatically sort by x.
+#### Vertex positions and order
+
+`encodings.position` specifies each vertex position, and `encodings.order` selects the connection order. Bind x to month, y to revenue, and order to month to connect revenue values chronologically. Without order, PathMark follows the input row order.
 
 The example deliberately shuffles the rows. Switch connection order to compare a path that doubles back with monthly ordering. In polar coordinates, x represents angle and y represents radius.
 
-| Property          | Purpose           | Notes                                                                                                         |
-| ----------------- | ----------------- | ------------------------------------------------------------------------------------------------------------- |
-| `x`, `y`          | Position fields   | Field names or paths; horizontal and vertical in Cartesian coordinates, angle and radius in polar coordinates |
-| `order`           | Connection order  | Sort by this field before connecting; omit to preserve data array order                                       |
-| `Plot.coordinate` | Coordinate system | Determines position semantics; the example switches between `cartesian2D` and `polar2D`                       |
+| Property             | Purpose           | Notes                                                                                                 |
+| -------------------- | ----------------- | ----------------------------------------------------------------------------------------------------- |
+| `encodings.position` | Vertex positions  | Each role accepts a field, constant, or range edge; x/y represent horizontal/vertical or angle/radius |
+| `order`              | Connection order  | Sort by this field before connecting; omit to preserve data array order                               |
+| `Plot.coordinate`    | Coordinate system | Determines position semantics; the example switches between `cartesian2D` and `polar2D`               |
 
 <ComponentPreview
   mode="showcase"
@@ -167,6 +169,34 @@ The example deliberately shuffles the rows. Switch connection order to compare a
   size="lg"
   caption="Switch coordinate, position fields, and connection order to see how the same ordered points form a trajectory."
   defaultSourceFile="line-basic.preview.tsx"
+/>
+
+#### Endpoint positions
+
+Set two complete positions with `encodings.from` and `encodings.to`. Each role accepts a field, a constant, or a view edge. Endpoints and `encodings.position` vertices are mutually exclusive. `properties.connection` selects a coordinate-aware connection or a straight projected line; switch to polar coordinates to compare an arc with a chord.
+
+<ComponentPreview
+  mode="showcase"
+  files={['reference-path', 'reference-path.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
+  defaultSourceFile="reference-path.preview.tsx"
+  controls={{ name: 'reference-path' }}
+  size="md"
+/>
+
+#### Statistical positions
+
+The following example binds fields produced by a local `summarize` transform to the same Mark. Change the statistic or grouping to inspect the reference geometry generated for each result row; small points retain the original observations.
+
+<ComponentPreview
+  mode="showcase"
+  files={[
+    'reference-data-path',
+    '/viz/plot/mark/shared/reference-data.preview.tsx',
+    '/viz/plot/mark/shared/reference-data.data.ts',
+  ]}
+  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
+  controls={{ name: 'reference-data-path' }}
+  size="md"
 />
 
 ### Series and labels
@@ -368,32 +398,6 @@ The default polar connection depends on what the angle axis represents:
 - **Continuous angles default to sampled connections**: intermediate positions on the angle axis are meaningful. For example, angles vary continuously between 0° and 90°. Interpolating angle and radius before projection follows that angular progression; two positions with the same radius follow the circle instead of taking a straight shortcut.
 
 These are defaults chosen from the angle scale, not restrictions imposed by the coordinate system. Set `interpolation` explicitly to choose `chord` or `polar`. The `curve` option still determines how the resulting samples are connected.
-
-## Endpoint paths and reference lines
-
-Set two complete positions with `encodings.from` and `encodings.to`. Each role accepts a field, a constant, or a view edge. Endpoints and `encodings.position` vertices are mutually exclusive. `properties.connection` selects a coordinate-aware connection or a straight projected line; switch to polar coordinates to compare an arc with a chord.
-
-These reference marks set `contributeToDomain={false}` so they do not expand the data domain. Use the controls to change coordinates, positions, geometry, and labels.
-
-<ComponentPreview
-  files={['reference-path', 'reference-path.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
-  defaultSourceFile="reference-path.preview.tsx"
-  controls={{ name: 'reference-path' }}
-  size="md"
-/>
-
-The following example binds fields produced by a local `summarize` transform to the same Mark. Change the statistic or grouping to inspect the reference geometry generated for each result row; small points retain the original observations.
-
-<ComponentPreview
-  files={[
-    'reference-data-path',
-    '/viz/plot/mark/shared/reference-data.preview.tsx',
-    '/viz/plot/mark/shared/reference-data.data.ts',
-  ]}
-  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
-  controls={{ name: 'reference-data-path' }}
-  size="md"
-/>
 
 ## API Reference
 

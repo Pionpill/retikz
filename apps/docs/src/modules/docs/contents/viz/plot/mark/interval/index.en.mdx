@@ -142,7 +142,9 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 ## Basic usage
 
-### Position and direction
+### Position
+
+#### Field positions and intervals
 
 By default, `x` supplies a category band and `y` supplies an interval from 0 to the value. The band scale determines bar width; its `paddingInner` controls the gap between bars.
 
@@ -167,6 +169,34 @@ Fixed `fill` and `stroke` accept CSS colors, structured Paint, or a master color
   controls={{ name: 'bar-basic' }}
   size="lg"
   defaultSourceFile="bar-position.preview.tsx"
+/>
+
+#### Constant and boundary positions
+
+Set `from` and `to` under `encodings.bounds.x` and `encodings.bounds.y` using fields, constants, or edges. Set both roles in `properties.bounds` to `{ kind: 'extent' }`. Toggle the full view range to see edges follow the coordinate extent.
+
+<ComponentPreview
+  mode="showcase"
+  files={['reference-interval', 'reference-interval.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
+  defaultSourceFile="reference-interval.preview.tsx"
+  controls={{ name: 'reference-interval' }}
+  size="md"
+/>
+
+#### Statistical positions
+
+The following example binds fields produced by a local `summarize` transform to the same Mark. Change grouping and the full view range to inspect the reference regions determined by each group’s extrema; small points retain the original observations.
+
+<ComponentPreview
+  mode="showcase"
+  files={[
+    'reference-data-interval',
+    '/viz/plot/mark/shared/reference-data.preview.tsx',
+    '/viz/plot/mark/shared/reference-data.data.ts',
+  ]}
+  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
+  controls={{ name: 'reference-data-interval' }}
+  size="md"
 />
 
 ### Series arrangement
@@ -307,32 +337,6 @@ These construction lines explain the geometry. The implementation calculates rec
       path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
     },
   ]}
-/>
-
-## Reference intervals
-
-Set `from` and `to` under `encodings.bounds.x` and `encodings.bounds.y` using fields, constants, or edges. Set both roles in `properties.bounds` to `{ kind: 'extent' }`. Toggle the full view range to see edges follow the coordinate extent.
-
-These reference marks set `contributeToDomain={false}` so they do not expand the data domain. Use the controls to change coordinates, positions, geometry, and labels.
-
-<ComponentPreview
-  files={['reference-interval', 'reference-interval.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
-  defaultSourceFile="reference-interval.preview.tsx"
-  controls={{ name: 'reference-interval' }}
-  size="md"
-/>
-
-The following example binds fields produced by a local `summarize` transform to the same Mark. Change grouping and the full view range to inspect the reference regions determined by each group’s extrema; small points retain the original observations.
-
-<ComponentPreview
-  files={[
-    'reference-data-interval',
-    '/viz/plot/mark/shared/reference-data.preview.tsx',
-    '/viz/plot/mark/shared/reference-data.data.ts',
-  ]}
-  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
-  controls={{ name: 'reference-data-interval' }}
-  size="md"
 />
 
 ## API reference

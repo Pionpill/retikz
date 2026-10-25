@@ -148,17 +148,19 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 ## 基础用法
 
-### 位置与顺序
+### 位置
 
-`x`、`y` 是位置字段，`order` 是排序字段。例如 `x="month"`、`y="revenue"`、`order="month"` 表示按月份连接营收位置。省略 `order` 时沿用数据数组顺序，PathMark 不会自动按横坐标排序。
+#### 顶点位置与顺序
+
+`encodings.position` 指定每个顶点的位置，`encodings.order` 指定连接顺序。例如 x 绑定月份、y 绑定营收、order 绑定月份，就会按月份连接营收位置。省略 `order` 时沿用数据数组顺序，PathMark 不会自动按横坐标排序。
 
 示例故意打乱月份行。切换“连接顺序”，比较折返的路径与按月排列的路径；坐标切换后，极坐标中的 `x` 表示角向、`y` 表示径向。
 
-| 属性              | 含义     | 说明                                                                 |
-| ----------------- | -------- | -------------------------------------------------------------------- |
-| `x`、`y`          | 位置字段 | 指定字段名或字段路径；笛卡尔坐标对应横向和纵向，极坐标对应角向和径向 |
-| `order`           | 连接顺序 | 按字段排序后连线；省略时保留数据数组顺序                             |
-| `Plot.coordinate` | 坐标系   | 决定位置含义；示例在 `cartesian2D` 与 `polar2D` 之间切换             |
+| 属性                 | 含义     | 说明                                                                           |
+| -------------------- | -------- | ------------------------------------------------------------------------------ |
+| `encodings.position` | 顶点位置 | 各角色支持字段、常量或范围边界；笛卡尔坐标对应横向和纵向，极坐标对应角向和径向 |
+| `order`              | 连接顺序 | 按字段排序后连线；省略时保留数据数组顺序                                       |
+| `Plot.coordinate`    | 坐标系   | 决定位置含义；示例在 `cartesian2D` 与 `polar2D` 之间切换                       |
 
 <ComponentPreview
   mode="showcase"
@@ -167,6 +169,34 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
   size="lg"
   caption="切换坐标系、位置字段和连接顺序，观察同一组有序点如何形成轨迹。"
   defaultSourceFile="line-basic.preview.tsx"
+/>
+
+#### 端点位置
+
+通过 `encodings.from`、`encodings.to` 指定两个完整位置，每个角色可绑定字段、常量或视图边界。端点形式与 `encodings.position` 顶点形式互斥。`properties.connection` 选择沿坐标系连接或投影后的直线连接；切换极坐标，观察圆弧与弦的区别。
+
+<ComponentPreview
+  mode="showcase"
+  files={['reference-path', 'reference-path.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
+  defaultSourceFile="reference-path.preview.tsx"
+  controls={{ name: 'reference-path' }}
+  size="md"
+/>
+
+#### 统计结果位置
+
+下面通过局部 `summarize` 变换计算统计字段，再绑定到同一类 Mark。切换平均值 / 中位数或分组，观察每个结果行产生的独立参考图元；小点保留原始观测。
+
+<ComponentPreview
+  mode="showcase"
+  files={[
+    'reference-data-path',
+    '/viz/plot/mark/shared/reference-data.preview.tsx',
+    '/viz/plot/mark/shared/reference-data.data.ts',
+  ]}
+  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
+  controls={{ name: 'reference-data-path' }}
+  size="md"
 />
 
 ### 系列与标签
@@ -364,32 +394,6 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 - **连续角度默认采样连接**：角度轴上的中间位置也有意义，例如从 0° 到 90° 之间存在连续的角度。对角度和半径插值后再投影，才能表现沿角度变化的路径；同半径的两个位置由此沿圆周连接，而不会被一条直线抄近路。
 
 这是根据角度尺度选择的默认策略，不是坐标系的强制限制。可以通过 `interpolation` 显式选择 `chord` 或 `polar`；采样后的点如何连接，仍由 `curve` 决定。
-
-## 端点路径与参考线
-
-通过 `encodings.from`、`encodings.to` 指定两个完整位置，每个角色可绑定字段、常量或视图边界。端点形式与 `encodings.position` 顶点形式互斥。`properties.connection` 选择沿坐标系连接或投影后的直线连接；切换极坐标，观察圆弧与弦的区别。
-
-以下参考图元显式设置 `contributeToDomain={false}`，不扩大主体数据的定义域。使用控件切换坐标系、位置、几何与标签。
-
-<ComponentPreview
-  files={['reference-path', 'reference-path.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
-  defaultSourceFile="reference-path.preview.tsx"
-  controls={{ name: 'reference-path' }}
-  size="md"
-/>
-
-下面通过局部 `summarize` 变换计算统计字段，再绑定到同一类 Mark。切换平均值 / 中位数或分组，观察每个结果行产生的独立参考图元；小点保留原始观测。
-
-<ComponentPreview
-  files={[
-    'reference-data-path',
-    '/viz/plot/mark/shared/reference-data.preview.tsx',
-    '/viz/plot/mark/shared/reference-data.data.ts',
-  ]}
-  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
-  controls={{ name: 'reference-data-path' }}
-  size="md"
-/>
 
 ## API 参考
 
