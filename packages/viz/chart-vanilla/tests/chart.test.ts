@@ -2,11 +2,11 @@ import type { IRChartSource } from '@retikz/chart';
 import { defineChartTheme } from '@retikz/chart';
 import { defineTheme } from '@retikz/core';
 import {
+  applyTransformsToDataView,
+  createDataView,
+  resolveTransformRegistry,
   defineTransformImplementation,
   defineRegressionImplementation,
-  DataTransformBindingClass,
-  DataTransformFieldEffect,
-  DataTransformPhase,
   defineTransform,
   defineRegression,
 } from '@retikz/data';
@@ -259,11 +259,6 @@ describe('Chart Vanilla authoring', () => {
         kind: 'preserve',
         outputs: [{ field: operation.params.as, type: { from: operation.params.field } }],
       }),
-      schedule: {
-        phase: DataTransformPhase.FieldDerive,
-        bindingClass: DataTransformBindingClass.Field,
-        fieldEffect: DataTransformFieldEffect.Preserve,
-      },
     });
     const copyFieldImplementation = defineTransformImplementation({
       definition: copyField,
@@ -274,11 +269,11 @@ describe('Chart Vanilla authoring', () => {
       id: 'custom-transform',
       data: rows,
       encodings: {
-        x: {
-          transform: { operation: { kind: 'copy-chart-field', params: { field: 'x', as: 'copiedX' } } },
-          output: 'copiedX',
-        },
+        x: 'copiedX',
         y: 'y',
+      },
+      plotExtension: {
+        transform: [{ operation: { kind: 'copy-chart-field', params: { field: 'x', as: 'copiedX' } } }],
       },
       lowerOptions: {
         definitions: { transforms: [copyField] },
@@ -286,9 +281,30 @@ describe('Chart Vanilla authoring', () => {
       },
     });
 
-    expect(() => renderChart(chart, { adapters })).not.toThrow();
+    expect(renderChart(chart, { adapters }).svg.match(/<ellipse/g)).toHaveLength(rows.length);
     expect(JSON.stringify(sourceOf(chart))).toContain('copy-chart-field');
     expect(JSON.stringify(sourceOf(chart))).not.toMatch(/outputModel|apply/);
+
+    const prepared = applyTransformsToDataView(
+      createDataView(rows, [
+        { name: 'x', type: 'continuous' },
+        { name: 'y', type: 'continuous' },
+      ]),
+      [{ kind: 'copy-chart-field', params: { field: 'x', as: 'copiedX' } }],
+      {
+        registry: resolveTransformRegistry([copyField]),
+        transformImplementations: [copyFieldImplementation],
+      },
+    ).dataView;
+    expect(prepared.rows.map(row => row.copiedX)).toEqual(rows.map(row => row.x));
+    expect(prepared.model).toContainEqual(expect.objectContaining({ name: 'copiedX', type: 'continuous' }));
+    const fromResult = scatterChart({
+      data: [...prepared.rows],
+      dataModel: [...prepared.model],
+      encodings: { x: 'copiedX', y: 'y' },
+    });
+    expect(renderChart(fromResult, { adapters }).svg.match(/<ellipse/g)).toHaveLength(rows.length);
+    expect(sourceOf(fromResult).plotExtension).toBeUndefined();
   });
 
   it('normalizes typed Point factories to family plus chartType Source IR', () => {

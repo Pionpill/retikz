@@ -85,7 +85,7 @@ type ChartSource<TEncodings, TProperties, TMark, TRecipeThemeTokens> = {
 - 不承载 Chart `data`、`layout`、`type`、`chartType`、Chart-owned encodings / properties 或 recipe 默认
 - 只保存用户明确声明的 transform、scale、coordinate / composition、guide、theme、spatial root、附加 mark 与 meta 等 Plot-owned fragment
 - 单值结构、具名集合、mark 数组与 identity 冲突分别沿 Plot 自己的 replace、merge、append 与 fail-loud 规则处理
-- `plotExtension.transform` 先于 encoding-derived operation 执行；两者与 recipe mark、Chart mark、`plotExtension.marks` 最终共享一个 resolved data view
+- `plotExtension.transform` 先于 encoding 聚合 执行；两者与 recipe mark、Chart mark、`plotExtension.marks` 最终共享一个 resolved data view
 - `plotExtension.marks` 是完全显式的 Plot 内容，不自动继承 Chart encodings / properties，也不能自动保留 aggregate 前的 raw data view
 - normalizer 不为缺省值、data、尺寸或 recipe 生成内容创建空 `plotExtension`
 
@@ -153,10 +153,10 @@ Chart 共享稳定语义原子，不建立包含所有可选字段的宽 `Shared
 - position、color、size 等可以被 built-in semantic mark 或 authored Chart mark 消费
 - axis、guide 等共享 scaffold 可以读取相应数据角色
 - facet由encoding composition consumer消费，只影响分区与guide上下文，不广播给普通mark；轨道不进入Chart encoding，由作者通过`plotExtension`直接使用Plot静态`Tracks`
-- 字符串只表示 direct field shorthand；rich mapping 可以组合 direct field、单值 aggregate、Definition 明确允许的字段派生与 Plot named scale
+- 字符串只表示 direct field shorthand；rich mapping 可以组合 direct field、单值 aggregate 与 Plot named scale
 - 每个 chartType 的 strict schema 精确声明 slot、mapping union、scale family、数组语义与 composition 互斥，不提供跨 chartType 的 `ChartEncoding` / `RawEncodingValue`
 - 每个 recipe Definition 提供唯一的有序 `encodingSlots`；unused 检查、mark 继承、aggregate `groupBy` 与同阶段 operation 调度均消费这一个顺序
-- 字段类型、format 与分类order复用Data model；reducer / transform、scale与facet dimension直接组合Data / Plot owner schema，Chart不复制`ChartFieldType`或平行operation shape
+- 字段类型、format 与分类order复用Data model；reducer、scale与facet dimension直接组合Data / Plot owner schema，Chart不复制`ChartFieldType`或平行operation shape
 - registry-backed `kind` / `type` / `name` 复用 Foundation `OpenString` 与 owner 开放 schema；内置 const object enum 只提供常用提示，custom Definition 仍须通过 owner registry、output model与consumer compatibility
 
 每个 Definition 必须声明 slot 的 owner、consumer、目标语义与失败行为。字段同名不代表可以继承或映射。

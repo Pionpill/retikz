@@ -59,13 +59,11 @@ describe('Chart client preparation', () => {
         dataTransformExecutor={createDataTransformExecutor({ externalProviders: [{ name: 'fixture', provider }] })}
         dataExecution={{ mode: 'external', external: 'fixture' }}
         presentation={{ title: { text: 'Native output' } }}
+        plotExtension={{ transform: [{ operation: { kind: 'normalize', params: { field: 'y', as: 'ratio' } } }] }}
         recipe={{
           encodings: {
             x: 'x',
-            y: {
-              transform: { operation: { kind: 'normalize', params: { field: 'y', as: 'ratio' } } },
-              output: 'ratio',
-            },
+            y: 'ratio',
           },
         }}
       />

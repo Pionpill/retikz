@@ -46,8 +46,8 @@ Chart 封装完备要求：根字段形成稳定通用外壳；`type` 负责 fam
 - [ ] 不建立包含所有可选字段的宽 `SharedChartEncodingsSchema` / `SharedChartPropertiesSchema`
 - [ ] 与 Plot 语义、值域完全一致的属性直接复用 Plot 权威原子；Chart 只拥有领域收窄、默认和组合
 - [ ] 每个 encoding / property slot 都有明确 owner、consumer、目标语义和失败行为
-- [ ] 每个 recipe Definition 只有一个有序 `encodingSlots` 权威；schema消费、unused检查、mark继承、aggregate `groupBy`与同阶段operation调度不读取JSON属性顺序
-- [ ] 字符串encoding保持direct shorthand；rich mapping只组合当前slot允许的direct、scalar aggregate、derived transform、named scale与composition atom
+- [ ] 每个 recipe Definition 只有一个有序 `encodingSlots` 权威；schema消费、unused检查、mark继承、aggregate `groupBy`不读取JSON属性顺序
+- [ ] 字符串encoding保持direct shorthand；rich mapping只组合当前slot允许的direct、scalar aggregate、named scale与composition atom
 - [ ] Data field model是字段类型、format与分类order的唯一真源；Chart不增加`ChartFieldType`或Flint类型别名
 - [ ] reducer / transform、scale、facet dimension与options直接复用Data / Plot runtime schema，Chart不复制等价type或Zod shape
 - [ ] registry-backed operation discriminator复用Foundation `OpenString`与owner开放schema；内置enum不封闭custom Definition
@@ -72,7 +72,7 @@ Chart 封装完备要求：根字段形成稳定通用外壳；`type` 负责 fam
 - [ ] `false`、`0`、空数组和 schema 允许的空字符串不被 truthy fallback 吞掉
 - [ ] recipe 的表现默认不能撤销 chartType 的结构不变量
 - [ ] built-in mark、authored Chart marks 与 `plotExtension.marks` 的输出顺序确定
-- [ ] root transform先于encoding-derived operation；aggregate / derived后的resolved data view由semantic、authored与extension marks共享，不隐式保留raw分支
+- [ ] 显式 Data transform 先于 encoding 聚合；处理后的 resolved data view由semantic、authored与extension marks共享，不隐式保留raw分支
 - [ ] 空数据、非法字段、冲突 id、重复 scale、空间根冲突与 lower dependency 缺失均可诊断
 
 ## 6. Chart mark 完备

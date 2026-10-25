@@ -27,7 +27,6 @@ export const resolveChartEncodingMappings = <
     encodings: transforms.encodings,
     transform: transforms.records.map(record => ({
       operation: record.operation,
-      ...(record.dataExecution === undefined ? {} : { dataExecution: record.dataExecution }),
     })),
     scales: scales.scales,
     extensionScales: scales.extensionScales,

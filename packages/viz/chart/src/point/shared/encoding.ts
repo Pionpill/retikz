@@ -1,4 +1,4 @@
-import { DataFieldType, DataTransformFieldEffect, DataTransformPhase } from '@retikz/data';
+import { DataFieldType } from '@retikz/data';
 import type { JsonObject, JsonValue } from '@retikz/foundation';
 import type { IRPlotGuide } from '@retikz/plot';
 import { PlotGuide, BuiltinPlotScale } from '@retikz/plot';
@@ -50,23 +50,12 @@ type PointFieldEncodingSlot = 'x' | 'y' | 'color' | 'size' | 'opacity' | 'shape'
 
 type PointPositionFieldEncodingSlot = Extract<PointFieldEncodingSlot, 'x' | 'y'>;
 
-const pointPositionTransformCapabilities = [
-  { phase: DataTransformPhase.RowShape, fieldEffect: DataTransformFieldEffect.Replace },
-  { phase: DataTransformPhase.FieldDerive, fieldEffect: DataTransformFieldEffect.Preserve },
-  { phase: DataTransformPhase.FieldAdjust, fieldEffect: DataTransformFieldEffect.Preserve },
-] as const;
-
-const pointContinuousTransformCapabilities = [
-  { phase: DataTransformPhase.FieldDerive, fieldEffect: DataTransformFieldEffect.Preserve },
-] as const;
-
 /** 创建具体 Point chartType 的位置字段 mapping consumers */
 export const pointPositionFieldConsumersOf = (
   chartType: string,
 ): ReadonlyArray<ChartEncodingFieldConsumer<PointPositionFieldEncodingSlot>> => [
   {
     slot: 'x',
-    transforms: pointPositionTransformCapabilities,
     scale: {
       family: 'position',
       positionRole: 'x',
@@ -75,7 +64,6 @@ export const pointPositionFieldConsumersOf = (
   },
   {
     slot: 'y',
-    transforms: pointPositionTransformCapabilities,
     scale: {
       family: 'position',
       positionRole: 'y',
@@ -92,13 +80,11 @@ export const pointFieldConsumersOf = (
   { slot: 'color', scale: { family: 'channel' } },
   {
     slot: 'size',
-    transforms: pointContinuousTransformCapabilities,
     outputType: DataFieldType.Continuous,
     scale: { family: 'position', type: BuiltinPlotScale.Sqrt },
   },
   {
     slot: 'opacity',
-    transforms: pointContinuousTransformCapabilities,
     outputType: DataFieldType.Continuous,
     scale: { family: 'position', type: BuiltinPlotScale.Linear },
   },

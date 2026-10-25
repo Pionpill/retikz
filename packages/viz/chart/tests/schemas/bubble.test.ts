@@ -41,8 +41,7 @@ describe('Bubble Chart exact Source schema', () => {
         x: { field: 'income', scale: { operation: { type: 'log', name: 'incomeScale' } } },
         y: 'lifeExpectancy',
         size: {
-          transform: { operation: { kind: 'normalize', params: { field: 'population', as: 'populationShare' } } },
-          output: 'populationShare',
+          field: 'populationShare',
           scale: { operation: { type: 'sqrt', name: 'populationSize' } },
         },
         color: 'continent',
@@ -65,10 +64,7 @@ describe('Bubble Chart exact Source schema', () => {
         x: 'income',
         y: 'lifeExpectancy',
         size: {
-          transform: {
-            operation: { kind: 'custom.population', params: { field: 'population', as: 'adjustedPopulation' } },
-          },
-          output: 'adjustedPopulation',
+          field: 'adjustedPopulation',
         },
       }).success,
     ).toBe(true);
