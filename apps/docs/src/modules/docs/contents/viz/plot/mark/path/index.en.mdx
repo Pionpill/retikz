@@ -1,4 +1,4 @@
----
+﻿---
 title: PathMark
 description: Connect data positions in order with PathMark to draw lines, multiple series, polar outlines, and closed regions.
 ---
@@ -361,20 +361,24 @@ Plot
     └── PlotPathStep
 ```
 
-This example draws curved arrows using each scatter point's `target` field:
+This example connects the before and after bars in each pair and labels their difference. Switch path types to compare straight lines, bends, and orthogonal routes above the bars:
 
 <ComponentPreview
   mode="showcase"
   files={['path-construction', 'path-construction.preview.tsx', 'path-construction.data.ts']}
   defaultSourceFile="path-construction.preview.tsx"
-  size="md"
+  size="lg"
 />
 
 For common routes, `way` starts at its first target and connects subsequent targets with lines. Insert a fold or curve operator to change a segment. The same relationships below use three-leg orthogonal connections:
 
 ```tsx
 <PathMark
-  way={[{ mark: 'nodes', key: { field: 'id' } }, '-|-', { mark: 'nodes', key: { field: 'target' } }]}
+  way={[
+    { mark: 'bars', key: { field: 'sourceId' }, anchor: 'top' },
+    '-|-',
+    { mark: 'bars', key: { field: 'targetId' }, anchor: 'top' },
+  ]}
   arrow="->"
   properties={{ cornerRadius: 5 }}
 />

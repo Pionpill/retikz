@@ -5,7 +5,7 @@ export const pathConstructionI18n = {
   zh: {
     title: '路径构造',
     data: '数据',
-    rows: '散点连接',
+    rows: '成对柱状数据',
     geometry: '构造',
     appearance: '外观',
     kind: '路径类型',
@@ -29,11 +29,12 @@ export const pathConstructionI18n = {
     end: '终点',
     both: '双端',
     dashed: '虚线',
+    labelPosition: '关系标签位置',
   },
   en: {
     title: 'Path construction',
     data: 'Data',
-    rows: 'Scatter connections',
+    rows: 'Paired bars',
     geometry: 'Construction',
     appearance: 'Appearance',
     kind: 'Path type',
@@ -57,5 +58,6 @@ export const pathConstructionI18n = {
     end: 'End',
     both: 'Both ends',
     dashed: 'Dashed',
+    labelPosition: 'Relation label position',
   },
 } satisfies Record<Lang, Record<string, string>>;

@@ -1,4 +1,4 @@
----
+﻿---
 title: PathMark · 路径图元
 description: 用 PathMark 按顺序连接数据位置，绘制折线、多系列路径、极坐标轮廓和闭合区域。
 ---
@@ -360,20 +360,24 @@ Plot
     └── PlotPathStep
 ```
 
-下面根据每个散点的 `target` 字段绘制弯曲箭头：
+下面连接每组柱子的前后值，并标出差值。切换路径类型，对比直线、弯曲与经过柱顶上方的折线：
 
 <ComponentPreview
   mode="showcase"
   files={['path-construction', 'path-construction.preview.tsx', 'path-construction.data.ts']}
   defaultSourceFile="path-construction.preview.tsx"
-  size="md"
+  size="lg"
 />
 
 常见路线可用 `way` 简写：首个目标是起点，后续目标默认直线连接；在目标之间插入折线、曲线或弯曲算子，可以改变这一段的构造。下面将相同关系改成三段折线：
 
 ```tsx
 <PathMark
-  way={[{ mark: 'nodes', key: { field: 'id' } }, '-|-', { mark: 'nodes', key: { field: 'target' } }]}
+  way={[
+    { mark: 'bars', key: { field: 'sourceId' }, anchor: 'top' },
+    '-|-',
+    { mark: 'bars', key: { field: 'targetId' }, anchor: 'top' },
+  ]}
   arrow="->"
   properties={{ cornerRadius: 5 }}
 />

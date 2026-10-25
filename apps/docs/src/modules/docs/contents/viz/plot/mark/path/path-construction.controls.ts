@@ -21,7 +21,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
               kind: 'select',
               id: 'kind',
               label: t.kind,
-              defaultValue: 'bend',
+              defaultValue: 'fold',
               options: [
                 { value: 'line', label: t.line },
                 { value: 'bend', label: t.bend },
@@ -59,7 +59,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
               kind: 'select',
               id: 'via',
               label: t.via,
-              defaultValue: '-|-',
+              defaultValue: '-|',
               options: [
                 { value: '-|', label: t.hv },
                 { value: '|-', label: t.vh },
@@ -82,7 +82,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
               kind: 'range',
               id: 'radius',
               label: t.radius,
-              defaultValue: 5,
+              defaultValue: 0,
               min: 0,
               max: 20,
               step: 1,
@@ -94,6 +94,15 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
           label: t.appearance,
           controls: [
             { kind: 'range', id: 'width', label: t.width, defaultValue: 1.5, min: 0.5, max: 5, step: 0.5 },
+            {
+              kind: 'range',
+              id: 'labelPosition',
+              label: t.labelPosition,
+              defaultValue: 0.5,
+              min: 0,
+              max: 1,
+              step: 0.05,
+            },
             {
               kind: 'select',
               id: 'arrow',
@@ -111,15 +120,16 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       ],
     }),
     canonicalValues: {
-      kind: 'bend',
+      kind: 'fold',
       angle: 25,
       direction: 'left',
-      via: '-|-',
+      via: '-|',
       fraction: 0.5,
-      radius: 5,
+      radius: 0,
       width: 1.5,
       arrow: 'end',
       dashed: false,
+      labelPosition: 0.5,
     },
     relatedApis: [
       'PlotPathStep.kind',
@@ -131,6 +141,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       'PathMark.properties.strokeWidth',
       'PathMark.properties.dashPattern',
       'PathMark.arrow',
+      'PathMark.properties.label.position',
     ],
   } satisfies PreviewControlContract;
 };
