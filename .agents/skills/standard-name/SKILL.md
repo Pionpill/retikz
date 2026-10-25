@@ -9,6 +9,8 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 
 ## 通用形式
 
+- 错误码 const object enum 的成员名使用 PascalCase，字符串值使用 UPPER_SNAKE_CASE，并包含明确的包或领域前缀
+
 - 泛型参数使用 `T` 或 `T` 开头的 PascalCase 语义名，匹配 `^(T|T[A-Z][A-Za-z]+)$`，禁止首尾下划线；由 LLM 自审
 - 同组 re-export 按来源路径排序，具名导出成员按名称排序；存在初始化副作用依赖时保留执行次序，不为排序改变语义；由 LLM 自审
 

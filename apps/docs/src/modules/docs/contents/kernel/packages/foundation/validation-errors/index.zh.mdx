@@ -9,6 +9,8 @@ Foundation 将通用标量校验和错误形态放在一起：断言复用最小
 
 `RetikzErrorOptions`、`RetikzError` 与 `isRetikzError` 提供所有包共享的最小错误骨架。领域包（即拥有这次失败语义的 owner）应继承 `RetikzError` 并定义自己的错误码、详情和恢复语义；`RetikzFoundationError` 只承载 Foundation 自己拥有的原子失败。
 
+Retikz 各包的错误码成员名使用 PascalCase，字符串值使用带包或领域前缀的 UPPER_SNAKE_CASE，例如 `InvalidChartIR: 'CHART_INVALID_CHART_IR'`。调用方应使用对应包导出的错误码常量判断 `code`。
+
 ```ts
 import { assertPositiveNumber, RetikzError, type ValueOf } from '@retikz/foundation';
 
