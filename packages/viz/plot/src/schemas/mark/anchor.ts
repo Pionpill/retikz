@@ -1,9 +1,30 @@
-import { AnchorRefSchema, BoundarySchema, PositionSchema } from '@retikz/core';
+import { AnchorRefSchema, BoundarySchema, PositionSchema, NodeTargetSchema } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
-import { boolean, strictObject, union } from 'zod';
+import { boolean, number, strictObject, union } from 'zod';
 import type { infer as ZodInfer } from 'zod';
 
 import { PositionEncodingSchema } from '../encoding';
+
+/** 校验当前结果行的身份字段或固定身份 */
+export const MarkKeyInputSchema = union([
+  strictObject({ field: NonBlankStringSchema }),
+  strictObject({ value: union([NonBlankStringSchema, number()]) }),
+]);
+
+/** 校验同一视图内的 Mark 实例目标 */
+export const MarkTargetSchema = strictObject({
+  mark: NonBlankStringSchema.describe('Explicit target mark id in the current plot view'),
+  key: MarkKeyInputSchema.describe('Target identity value or field in the current connection row'),
+  anchor: NodeTargetSchema.shape.anchor,
+  offset: NodeTargetSchema.shape.offset,
+  boundary: NodeTargetSchema.shape.boundary,
+});
+
+/** 校验坐标输入或 Mark 实例引用 */
+export const PathEndpointSchema = union([PositionEncodingSchema, MarkTargetSchema]);
+
+export type IRPlotMarkTarget = ZodInfer<typeof MarkTargetSchema>;
+export type IRPlotPathEndpoint = ZodInfer<typeof PathEndpointSchema>;
 
 /** 校验生成 Core 节点或坐标标识的标记局部稳定锚点规则 */
 export const AnchorIdSchema = strictObject({

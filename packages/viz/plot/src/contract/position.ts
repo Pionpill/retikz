@@ -38,6 +38,12 @@ export const markPositionInputs = (mark: IRPlotMark): Array<Partial<Record<strin
     }
     return refs.flatMap(ref => (ref?.position === undefined ? [] : [ref.position]));
   }
+  if (mark.type === 'path' && mark.encodings.from !== undefined) {
+    const positions: Array<Partial<Record<string, IRPlotPositionInput>>> = [];
+    for (const endpoint of [mark.encodings.from, mark.encodings.to])
+      if (!('mark' in endpoint)) positions.push(endpoint);
+    return positions;
+  }
   const encodings = mark.encodings as
     | {
         position?: Partial<Record<string, IRPlotPositionInput>>;
@@ -46,7 +52,6 @@ export const markPositionInputs = (mark: IRPlotMark): Array<Partial<Record<strin
         bounds?: Partial<Record<string, { from?: IRPlotPositionInput; to?: IRPlotPositionInput }>>;
       }
     | undefined;
-  if (mark.type === 'path' && encodings?.from !== undefined) return [encodings.from, encodings.to ?? {}];
   if (mark.type === 'interval') {
     const positions = [encodings?.position ?? {}];
     for (const endpoint of ['from', 'to'] as const) {

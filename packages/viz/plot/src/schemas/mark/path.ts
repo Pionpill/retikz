@@ -17,7 +17,7 @@ import type { infer as ZodInfer } from 'zod';
 
 import { CoordinateConnection, PolarInterpolation } from '../coordinate';
 import { PathEncodingSchema, PositionEncodingSchema } from '../encoding';
-import { AnchorIdSchema, hasValidAnchorSource } from './anchor';
+import { AnchorIdSchema, hasValidAnchorSource, PathEndpointSchema } from './anchor';
 import { BuiltinPlotMark, markBase } from './base';
 import { MarkPathLabelListSchema } from './label';
 
@@ -114,7 +114,11 @@ export const PathPropertiesSchema = strictObject({
   ...GraphicStrokeSchema.shape,
   ...GraphicEffectsSchema.shape,
   ...PathFillSchema.shape,
-  connection: zodEnum(CoordinateConnection).default(CoordinateConnection.Coordinate).optional(),
+  connection: zodEnum(CoordinateConnection)
+    .optional()
+    .describe(
+      'Coordinate interpolation for coordinate endpoints; straight connection when an endpoint references a mark',
+    ),
   color: CssColorSchema.optional(),
   closed: boolean()
     .optional()
@@ -157,8 +161,8 @@ export const PathMarkEncodingSchema = union([
   }),
   PathEncodingSchema.extend({
     anchorId: NonBlankStringSchema.optional(),
-    from: PositionEncodingSchema,
-    to: PositionEncodingSchema,
+    from: PathEndpointSchema,
+    to: PathEndpointSchema,
     position: never().optional(),
     series: never().optional(),
     order: never().optional(),
@@ -176,6 +180,18 @@ export const PathMarkSchema = strictObject({
   .refine(hasValidAnchorSource, {
     path: ['properties', 'anchorId'],
     message: 'anchorId requires exactly one of field, template, or generator',
+  })
+  .transform(mark => {
+    if (mark.properties === undefined || mark.properties.connection !== undefined) return mark;
+    const referencesMark =
+      mark.encodings.from !== undefined && ('mark' in mark.encodings.from || 'mark' in mark.encodings.to);
+    return {
+      ...mark,
+      properties: {
+        ...mark.properties,
+        connection: referencesMark ? CoordinateConnection.Straight : CoordinateConnection.Coordinate,
+      },
+    };
   })
   .describe('Data path mark; segment appearance uses its first row');
 

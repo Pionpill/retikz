@@ -489,6 +489,10 @@ Plot collects demands by each mark's actual position-scale binding. Maximum radi
   ]}
 />
 
+## Mark references
+
+Set the Mark's `id` and its `encodings.anchorId` identity field so a later Path can connect to a node using `mark + key`. The key matches the final row's identity value, not the assembled Core id; templates and generators expose their output as the identity. Numeric `1` and string `'1'` identify the same instance and must not be duplicated within a Mark. See [Path Mark targets](/viz/plot/mark/path#mark-targets).
+
 ## API Reference
 
 `PointMarkProps` is exported by `@retikz/plot-react` and reuses `InputPlotPointMark` from `@retikz/plot-vanilla`. The table is generated from public declarations. `—` means the declaration has no field-level default annotation, not that rendering has no fallback. `PointMarkSchema` shows Source IR fields and constraints using the same descriptions as the [mark contract reference](/viz/plot/reference/mark).

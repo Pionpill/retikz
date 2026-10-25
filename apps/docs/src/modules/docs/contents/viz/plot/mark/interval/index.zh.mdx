@@ -333,6 +333,10 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
   ]}
 />
 
+## 图元引用
+
+为 Mark 设置 `id`，并用 `encodings.anchorId` 指定区域实例的身份字段，后面声明的 Path 即可用 `mark + key` 连接该区域。锚点和边界来自区域实际形状；同一 Mark 内身份必须唯一，目标不会跨分面查找。用法见 [Path 图元目标](/viz/plot/mark/path#图元目标)。
+
 ## API 参考
 
 标签内容可简写为 `encodings.label: 'name'`，固定文字写 `properties.label: '重点'`。对象形式支持 `font.size`、`font.weight`、`textColor` 等字段编码，多标签数组按索引配对；未编码的字体叶子继续继承。详见[标签编码](/viz/plot/reference/encoding#labelencodingschema)。

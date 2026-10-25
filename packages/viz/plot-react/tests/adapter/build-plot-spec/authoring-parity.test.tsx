@@ -14,6 +14,40 @@ const compilePlot = (spec: IRPlot, datasets: Parameters<typeof lowerPlots>[0]) =
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) });
 
 describe('React 与 framework-neutral authoring parity', () => {
+  it('图元目标端点在 React 与 Vanilla 中等价并完成 Core 编译', () => {
+    const position = { x: { field: 'x' }, y: { field: 'y' } };
+    const endpoints = {
+      from: { mark: 'nodes', key: { field: 'source' } },
+      to: { mark: 'nodes', key: { field: 'target' } },
+    };
+    const react = buildPlotIR(
+      <>
+        <PointMark id="nodes" encodings={{ position, anchorId: 'id' }} />
+        <PathMark encodings={endpoints} />
+      </>,
+      'points',
+    );
+    const plain = normalizePlot({
+      data: { reference: 'points' },
+      coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
+      scales: [
+        { name: '__x', type: 'linear' },
+        { name: '__y', type: 'linear' },
+      ],
+      marks: [
+        { type: 'point', id: 'nodes', encodings: { position, anchorId: 'id' } },
+        { type: 'path', encodings: endpoints },
+      ],
+    });
+    expect(react).toEqual(plain);
+    const datasets = {
+      points: [
+        { id: 'a', x: 1, y: 2, source: 'a', target: 'b' },
+        { id: 'b', x: 4, y: 5, source: 'b', target: 'a' },
+      ],
+    };
+    expect(compilePlot(react, datasets).scene).toEqual(compilePlot(plain, datasets).scene);
+  });
   it('点方向与旋转偏移在 React 与 Vanilla 入口等价', () => {
     const orientation = { kind: 'coordinate', role: 'x', align: 'normal' } as const;
     const react = buildPlotIR(

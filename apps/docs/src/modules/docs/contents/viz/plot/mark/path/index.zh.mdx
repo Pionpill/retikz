@@ -325,6 +325,24 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
   defaultSourceFile="line-radar.preview.tsx"
 />
 
+### 图元目标
+
+端点也可以连接已生成的图元：`mark` 指定目标 Mark 的 `id`，`key` 指定它暴露的实例身份。先声明目标，再声明连线；目标 Mark 用 `encodings.anchorId` 指定身份字段，连线用 `key.field` 读取当前行，或用 `key.value` 指定固定身份。
+
+<ComponentPreview mode="showcase" files={['mark-target']} size="md" />
+
+坐标端点与图元引用可以混用。引用节点时可设置 `anchor`、`boundary` 和 `offset`，由目标的实际几何确定连接位置。涉及图元引用时默认直连，不支持 `connection: 'coordinate'`。
+
+| 字段       | 含义                                                         |
+| ---------- | ------------------------------------------------------------ |
+| `mark`     | 同一视图内、先于当前连线声明的目标 Mark ID                   |
+| `key`      | `{ field: 'sourceId' }` 或 `{ value: 'A' }`；不经过比例尺    |
+| `anchor`   | 目标节点的锚点，可省略以使用自动连接                         |
+| `boundary` | 可选连接面覆盖；省略时沿用目标节点配置，默认使用自身形状边界 |
+| `offset`   | 锚点解析后的绘图空间偏移 `[dx, dy]`                          |
+
+Point 与 Interval 引用单个节点或区域；顶点型 Path 引用数据顶点，只支持位置与偏移，不能把整条路径作为目标。引用不会跨分面查找；声明顺序错误、身份重复或目标未生成都会报错。
+
 ## 错误与限制
 
 - 内置二维笛卡尔与极坐标支持路径及闭合区域；通用坐标帧只支持未设置 `closure` 且 `closed` 不为 `true` 的开放路径。

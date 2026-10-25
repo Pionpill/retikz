@@ -1,5 +1,12 @@
-export { AnchorIdSchema, PlotTargetEncodingSchema, PlotTargetRefSchema } from './anchor';
-export type { IRPlotAnchorId, IRPlotTargetRef } from './anchor';
+export {
+  AnchorIdSchema,
+  MarkKeyInputSchema,
+  MarkTargetSchema,
+  PathEndpointSchema,
+  PlotTargetEncodingSchema,
+  PlotTargetRefSchema,
+} from './anchor';
+export type { IRPlotAnchorId, IRPlotMarkTarget, IRPlotPathEndpoint, IRPlotTargetRef } from './anchor';
 export { BuiltinPlotMark, MarkTransformSchema, MarkValueKind } from './base';
 export type { IRPlotMarkTransform } from './base';
 export * from './interval';

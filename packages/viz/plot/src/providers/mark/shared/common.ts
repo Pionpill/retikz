@@ -339,9 +339,10 @@ export const attachMarkAnchor = <T extends IRNode | IRPath>(
     role,
     ...(instance.kind === 'single' ? { kind: 'single' } : { kind: 'row', transformedIndex: instance.transformedIndex }),
   };
-  const id = ctx.anchors.makeId(mark.properties?.anchorId ?? {}, instance, owner, mark.encodings?.anchorId);
-  ctx.anchors.register(id, owner);
-  return { ...node, id };
+  const identity = ctx.anchors.identify(mark.properties?.anchorId ?? {}, instance, owner, mark.encodings?.anchorId);
+  ctx.anchors.register(identity.id, owner);
+  if (node.type === 'node') ctx.targets?.register(identity, owner, 'node');
+  return { ...node, id: identity.id };
 };
 
 /** 收集坐标角色字段 */
@@ -388,6 +389,9 @@ export const collectAnchorIdFields = (anchorId: IRPlotAnchorId | undefined, fiel
  * @description point / path / interval 共用 shared encoding；具体样式字段再由 node/path channel definition 派生收集
  */
 export const collectCommonEncodingFields = (mark: PositionEncodedMark, fields: FieldCollector): void => {
+  if (mark.type === 'path' && mark.encodings.from !== undefined)
+    for (const endpoint of [mark.encodings.from, mark.encodings.to])
+      if ('mark' in endpoint && 'field' in endpoint.key) fields.addField(endpoint.key.field);
   collectPositionRoleFields(mark, fields);
   collectEncodingChannelFields(mark, fields);
   collectDatumLabelFields(mark, fields);

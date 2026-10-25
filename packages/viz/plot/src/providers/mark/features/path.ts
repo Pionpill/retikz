@@ -899,13 +899,14 @@ const pathAnchorCoordinates = (
       markIndex: ctx.markIndex,
       transformedIndex,
     };
-    const id = ctx.anchors.makeId(
+    const identity = ctx.anchors.identify(
       mark.properties?.anchorId ?? {},
       { kind: 'row', row, transformedIndex },
       owner,
       mark.encodings.anchorId,
     );
-    coordinates.push(ctx.anchors.coordinate(id, position, owner));
+    coordinates.push(ctx.anchors.coordinate(identity.id, position, owner));
+    ctx.targets?.register(identity, owner, 'coordinate');
   }
 
   return coordinates;

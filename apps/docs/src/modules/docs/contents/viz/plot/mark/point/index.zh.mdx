@@ -468,6 +468,10 @@ Plot 按图元实际使用的位置尺度汇总需求。最大半径加净空构
   ]}
 />
 
+## 图元引用
+
+设置 Mark 的 `id` 和 `encodings.anchorId` 身份字段后，后面声明的 Path 可以通过 `mark + key` 连接其中一个节点。`key` 匹配最终数据行的身份值，不是拼接后的 Core id；固定模板或生成器则以其输出作为身份。数值 `1` 与字符串 `'1'` 视为同一身份，同一 Mark 内不得重复。用法见 [Path 图元目标](/viz/plot/mark/path#图元目标)。
+
 ## API 参考
 
 `PointMarkProps` 从 `@retikz/plot-react` 导出，实际属性复用 `@retikz/plot-vanilla` 的 `InputPlotPointMark`。下表来自公开声明；`—` 表示声明未提供字段级默认值，不表示渲染时没有缺省行为。Source IR 的字段和约束由 `PointMarkSchema` 展示，沿用[图元契约参考](/viz/plot/reference/mark)的同一份说明。

@@ -326,6 +326,24 @@ The coordinate system defaults to `polar` for a continuous angular scale and `ch
   defaultSourceFile="line-radar.preview.tsx"
 />
 
+### Mark targets
+
+An endpoint can reference generated geometry: `mark` selects the target Mark's `id`, and `key` selects an exposed instance identity. Declare targets before connections. The target uses `encodings.anchorId` to name its identity field; the connection uses `key.field` to read its current row or `key.value` for a fixed identity.
+
+<ComponentPreview mode="showcase" files={['mark-target']} size="md" />
+
+Coordinate endpoints and Mark references can be mixed. Node references accept `anchor`, `boundary`, and `offset`, using the target's actual geometry. Any connection containing a Mark reference defaults to straight and rejects `connection: 'coordinate'`.
+
+| Field      | Meaning                                                                                                                |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `mark`     | Target Mark ID in the same view, declared before the connection                                                        |
+| `key`      | `{ field: 'sourceId' }` or `{ value: 'A' }`; no scale mapping                                                          |
+| `anchor`   | Target node anchor; omit for automatic connection                                                                      |
+| `boundary` | Optional connection-surface override; inherits the target node configuration, which defaults to its own shape boundary |
+| `offset`   | Drawing-space offset `[dx, dy]` after anchor resolution                                                                |
+
+Point and Interval expose individual nodes or regions. Vertex-based Paths expose data vertices with position and offset only; whole paths cannot be targets. References stay within the current facet. Incorrect declaration order, duplicate identities, and targets that were not generated produce errors.
+
 ## Errors and limitations
 
 - Built-in Cartesian 2D and polar 2D coordinates support paths and closed regions. Generic coordinate frames support open paths with no `closure` and `closed` other than `true`.

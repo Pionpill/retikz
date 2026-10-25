@@ -1,9 +1,9 @@
-import type { IRChild, IRPath } from '@retikz/core';
+import type { IRChild, IRPath, IRStep, IRTarget } from '@retikz/core';
 
 import type { CoordinateFrame, MarkChannels, MarkInstanceInput, MarkLoweringContext } from '../../../contract';
 import { mapPositionInput, markInstances, unencodedMarkProperties } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
-import type { IRPlotPathMark, IRPlotPositionInput } from '../../../schemas';
+import type { IRPlotPathMark, IRPlotPositionInput, IRPlotPathEndpoint } from '../../../schemas';
 import {
   attachMarkLayer,
   attachMarkAnchor,
@@ -38,8 +38,6 @@ export const lowerPathEndpoints = (
         return mapped;
       });
     if (mark.encodings.from === undefined) throw new RetikzPlotError('Endpoint path requires from and to');
-    const start = mapEndpoint(mark.encodings.from),
-      end = mapEndpoint(mark.encodings.to);
     const properties = unencodedMarkProperties(mark) ?? {};
     const {
       connection,
@@ -57,15 +55,48 @@ export const lowerPathEndpoints = (
       interpolation: _interpolation,
       ...style
     } = properties;
-    if (connection !== 'straight' && frame.projectSegment === undefined)
-      throw new RetikzPlotError('Coordinate connection requires projectSegment');
-    const points =
-      connection === 'straight'
-        ? [frame.projectMappedRoles?.(start), frame.projectMappedRoles?.(end)]
-        : frame.projectSegment!(start, end);
-    if (!points || points.length < 2 || points.some(point => !point || !point.every(Number.isFinite)))
-      throw new RetikzPlotError('Path endpoints require valid mapped-role projection');
-    const projected = points.filter((point): point is [number, number] => point != null);
+    let steps: Array<IRStep>;
+    if ('mark' in mark.encodings.from || 'mark' in mark.encodings.to) {
+      if (connection === 'coordinate')
+        throw new RetikzPlotError(
+          `Path mark "${mark.id ?? context?.markIndex}" cannot use coordinate connection with mark targets`,
+        );
+      const endpointTarget = (endpoint: IRPlotPathEndpoint, role: string): IRTarget => {
+        if ('mark' in endpoint) {
+          if (context?.targets === undefined) throw new RetikzPlotError('Mark target resolution requires a plot view');
+          return context.targets.reference(endpoint, instance, {
+            markType: mark.type,
+            markId: mark.id,
+            markIndex: context.markIndex,
+            role,
+            ...(instance.kind === 'row'
+              ? { kind: 'row', transformedIndex: instance.transformedIndex }
+              : { kind: 'single' }),
+          });
+        }
+        const projected = frame.projectMappedRoles?.(mapEndpoint(endpoint));
+        if (projected == null || !projected.every(Number.isFinite))
+          throw new RetikzPlotError('Path endpoint requires valid mapped-role projection');
+        return projected;
+      };
+      steps = [
+        { type: 'step', kind: 'move', to: endpointTarget(mark.encodings.from, 'from') },
+        { type: 'step', kind: 'line', to: endpointTarget(mark.encodings.to, 'to') },
+      ];
+    } else {
+      const start = mapEndpoint(mark.encodings.from),
+        end = mapEndpoint(mark.encodings.to);
+      if (connection !== 'straight' && frame.projectSegment === undefined)
+        throw new RetikzPlotError('Coordinate connection requires projectSegment');
+      const points =
+        connection === 'straight'
+          ? [frame.projectMappedRoles?.(start), frame.projectMappedRoles?.(end)]
+          : frame.projectSegment!(start, end);
+      if (!points || points.length < 2 || points.some(point => !point || !point.every(Number.isFinite)))
+        throw new RetikzPlotError('Path endpoints require valid mapped-role projection');
+      const projected = points.filter((point): point is [number, number] => point != null);
+      steps = pointsToSteps(projected, false) ?? [];
+    }
     const color =
       (row === undefined ? undefined : channelValueOf<string>(channels, 'color')?.(row)) ??
       channelDefaultOf<string>(channels, 'color') ??
@@ -80,7 +111,7 @@ export const lowerPathEndpoints = (
       ...(zIndex === undefined ? {} : { zIndex }),
       ...(resolvedLabels === undefined ? {} : { label: resolvedLabels }),
       style: { stroke: color, strokeWidth: LINE_STROKE_WIDTH, ...style },
-      children: pointsToSteps(projected, false) ?? [],
+      children: steps,
     };
     if (instance.kind === 'row') {
       applyPathChannelDeliveries(child, mark, instance.row, channels);
